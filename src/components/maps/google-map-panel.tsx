@@ -83,7 +83,6 @@ const MAP_CSS =
   ".ccr-av img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}" +
   ".ccr-pop-name{font-weight:700;color:#111827;font-size:14px;line-height:1.2;padding-right:18px;display:flex;align-items:center;gap:4px;min-width:0;}"
   + ".ccr-pop-name-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}" +
-  ".ccr-pop-sub{color:#6b7280;font-size:11px;font-weight:600;line-height:1.25;margin-top:2px;}" +
   // Verification seal — the SAME Instagram-style solid badge as <VerifiedSeal />
   // (see src/components/ui/verified-seal.tsx), inlined because this card is raw HTML.
   ".ccr-ver{display:inline-flex;flex:none;width:14px;height:14px;color:#009FD9;}" +
@@ -310,7 +309,6 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     const extraProfessions = Math.max(0, professionLabels.length - 1);
     const displayName = getProfessionalDisplayName(pro.fullName, pro.businessName);
     const primaryName = displayName.primaryDesktop;
-    const secondaryName = displayName.secondaryDesktop;
     const verifiedLabel = locale === "en" ? "Verified by ContrataCR" : "Verificado por ContrataCR";
     const verifiedMarkup = pro.verified
       ? `<span class="ccr-ver" role="img" aria-label="${verifiedLabel}" title="${verifiedLabel}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z" fill="currentColor"/><path d="m9 12 2 2 4-4" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`
@@ -332,7 +330,6 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
           `<div class="ccr-av">${avatarMarkup}</div>` +
           `<div style="min-width:0;">` +
             `<div class="ccr-pop-name"><span class="ccr-pop-name-text">${esc(primaryName)}</span>${verifiedMarkup}</div>` +
-            (secondaryName ? `<div class="ccr-pop-sub">${esc(secondaryName)}</div>` : "") +
             (primaryProfession ? `<div class="ccr-pop-prof"><span>${esc(primaryProfession)}</span>${extraProfessions > 0 ? `<span class="ccr-pop-more">+${extraProfessions}</span>` : ""}</div>` : "") +
             metricMarkup +
             (pro.priceLabel ? `<div class="${priceClass}">${esc(pro.priceLabel)}</div>` : "") +

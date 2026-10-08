@@ -159,130 +159,6 @@ export const PROVINCES: Province[] = [
   },
 ];
 
-export const CATEGORIES = [
-  // HOGAR Y CONSTRUCCIÓN
-  { id: "plomeria", icon: "" },
-  { id: "electricidad", icon: "" },
-  { id: "construccion", icon: "" },
-  { id: "pintura", icon: "" },
-  { id: "carpinteria", icon: "" },
-  { id: "remodelacion", icon: "" },
-  { id: "techos", icon: "" },
-  { id: "pisos", icon: "" },
-  { id: "impermeabilizacion", icon: "" },
-  { id: "fumigacion", icon: "" },
-  { id: "cerrajeria", icon: "" },
-  { id: "aire_acondicionado", icon: "" },
-  { id: "calentadores", icon: "" },
-  { id: "ventanas_puertas", icon: "" },
-  { id: "soldadura", icon: "" },
-  { id: "gypsum", icon: "" },
-  // JARDÍN Y EXTERIOR
-  { id: "jardineria", icon: "" },
-  { id: "poda_arboles", icon: "" },
-  { id: "paisajismo", icon: "" },
-  { id: "limpieza_piscinas", icon: "" },
-  { id: "riego_automatizado", icon: "" },
-  { id: "control_plagas", icon: "" },
-  // LIMPIEZA
-  { id: "limpieza", icon: "" },
-  { id: "limpieza_oficinas", icon: "" },
-  { id: "desinfeccion", icon: "" },
-  { id: "lavado_alfombras", icon: "" },
-  { id: "limpieza_post_construccion", icon: "" },
-  { id: "lavado_vehiculos", icon: "" },
-  // TECNOLOGÍA
-  { id: "reparacion_computadoras", icon: "" },
-  { id: "redes_internet", icon: "" },
-  { id: "camaras_seguridad", icon: "" },
-  { id: "domotica", icon: "" },
-  { id: "desarrollo_web", icon: "" },
-  { id: "diseno_grafico", icon: "" },
-  { id: "diseno_apps", icon: "" },
-  { id: "soporte_tecnico", icon: "" },
-  { id: "impresion_3d", icon: "" },
-  { id: "audio_video", icon: "" },
-  // SERVICIOS PROFESIONALES
-  { id: "contabilidad", icon: "" },
-  { id: "legal", icon: "" },
-  { id: "ingenieria_civil", icon: "" },
-  { id: "arquitectura", icon: "" },
-  { id: "topografia", icon: "" },
-  { id: "consultoria", icon: "" },
-  { id: "traduccion", icon: "" },
-  { id: "recursos_humanos", icon: "" },
-  { id: "marketing_digital", icon: "" },
-  { id: "fotografia", icon: "" },
-  { id: "produccion_video", icon: "" },
-  { id: "bienes_raices", icon: "" },
-  // SALUD Y BIENESTAR
-  { id: "entrenamiento_personal", icon: "" },
-  { id: "nutricion", icon: "" },
-  { id: "masajes", icon: "" },
-  { id: "psicologia", icon: "" },
-  { id: "fisioterapia", icon: "" },
-  { id: "enfermeria", icon: "" },
-  { id: "cuidado_adultos", icon: "" },
-  { id: "cuidado_infantil", icon: "" },
-  { id: "veterinaria", icon: "" },
-  { id: "peluqueria_canina", icon: "" },
-  // BELLEZA Y ESTÉTICA
-  { id: "peluqueria", icon: "" },
-  { id: "maquillaje", icon: "" },
-  { id: "unhas", icon: "" },
-  { id: "pestanas", icon: "" },
-  { id: "depilacion", icon: "" },
-  { id: "estetica_facial", icon: "" },
-  { id: "bronceado", icon: "" },
-  // EDUCACIÓN
-  { id: "tutorias", icon: "" },
-  { id: "idiomas", icon: "" },
-  { id: "musica", icon: "" },
-  { id: "matematicas", icon: "" },
-  { id: "preparacion_universitaria", icon: "" },
-  { id: "clases_manejo", icon: "" },
-  { id: "clases_cocina", icon: "" },
-  // MUDANZAS Y TRANSPORTE
-  { id: "mudanzas", icon: "" },
-  { id: "fletes", icon: "" },
-  { id: "mensajeria", icon: "" },
-  { id: "transporte_mascotas", icon: "" },
-  // EVENTOS
-  { id: "fotografia_eventos", icon: "" },
-  { id: "videografia", icon: "" },
-  { id: "dj_sonido", icon: "" },
-  { id: "catering", icon: "" },
-  { id: "decoracion", icon: "" },
-  { id: "animacion_infantil", icon: "" },
-  { id: "bartending", icon: "" },
-  // SEGURIDAD
-  { id: "guardas_seguridad", icon: "" },
-  { id: "alarmas", icon: "" },
-  { id: "cctv", icon: "" },
-  { id: "control_acceso", icon: "" },
-  // VEHÍCULOS Y MOVILIDAD
-  { id: "mecanica", icon: "" },
-  { id: "mecanica_bicicletas", icon: "" },
-  { id: "hojalateria", icon: "" },
-  { id: "electricidad_automotriz", icon: "" },
-  { id: "tapiceria", icon: "" },
-  { id: "detailing", icon: "" },
-  { id: "cambio_llantas", icon: "" },
-  // Legacy IDs kept for backwards compatibility
-  { id: "seguridad", icon: "" },
-  { id: "tecnologia", icon: "" },
-  { id: "ensenanza", icon: "" },
-  { id: "belleza", icon: "" },
-  { id: "mascotas", icon: "" },
-  { id: "diseno", icon: "" },
-  { id: "diseno_interiores", icon: "" },
-  { id: "herreria", icon: "" },
-  { id: "chapisteria", icon: "" },
-  { id: "eventos", icon: "" },
-] as const;
-
-export type CategoryId = (typeof CATEGORIES)[number]["id"];
-
 export function getCantonsByProvince(provinceId: string): Canton[] {
   return PROVINCES.find((p) => p.id === provinceId)?.cantons ?? [];
 }
@@ -302,19 +178,6 @@ export function getProvinceBySlugOrId(valor: string): Province | undefined {
   return PROVINCES.find((p) => p.slug === limpio) ?? PROVINCES.find((p) => p.id === limpio);
 }
 
-// Approximate province centroids (by province id) for the geolocation feature:
-// pick the nearest province to the user's coordinates for proximity sort + the
-// "cerca de mí" autofill. Coarse but reliable; finer ordering uses exact pins.
-export const PROVINCE_CENTROIDS: Record<string, { lat: number; lng: number }> = {
-  sj: { lat: 9.9281, lng: -84.0907 },
-  al: { lat: 10.0162, lng: -84.2116 },
-  ca: { lat: 9.8644, lng: -83.9194 },
-  he: { lat: 9.9985, lng: -84.1165 },
-  gu: { lat: 10.6267, lng: -85.4437 },
-  pu: { lat: 9.9762, lng: -84.8384 },
-  li: { lat: 9.9907, lng: -83.0359 },
-};
-
 /** Haversine distance in km between two lat/lng points. */
 export function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
   const R = 6371;
@@ -324,17 +187,6 @@ export function haversineKm(aLat: number, aLng: number, bLat: number, bLng: numb
     Math.sin(dLat / 2) ** 2 +
     Math.cos((aLat * Math.PI) / 180) * Math.cos((bLat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
-}
-
-/** The province id whose centroid is nearest to the given coordinates. */
-export function nearestProvinceId(lat: number, lng: number): string | undefined {
-  let best: string | undefined;
-  let bestD = Infinity;
-  for (const [id, c] of Object.entries(PROVINCE_CENTROIDS)) {
-    const d = haversineKm(lat, lng, c.lat, c.lng);
-    if (d < bestD) { bestD = d; best = id; }
-  }
-  return best;
 }
 
 export function getCantonById(id: string): Canton | undefined {

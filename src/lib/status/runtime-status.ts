@@ -1,4 +1,4 @@
-export type RuntimeStatusLevel = "info" | "warning" | "critical";
+type RuntimeStatusLevel = "info" | "warning" | "critical";
 
 export type OperationalStatusBanner = {
   id: string;
@@ -6,17 +6,11 @@ export type OperationalStatusBanner = {
   message: string;
   href?: string;
 };
-
-const TRUE_VALUES = new Set(["1", "true", "yes", "on"]);
 const LEVELS = new Set<RuntimeStatusLevel>(["info", "warning", "critical"]);
 
 function readEnv(name: string) {
   const value = process.env[name];
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
-}
-
-function isTruthy(value: string | undefined) {
-  return value ? TRUE_VALUES.has(value.toLowerCase()) : false;
 }
 
 function statusId(message: string, level: RuntimeStatusLevel) {
@@ -28,10 +22,6 @@ function statusId(message: string, level: RuntimeStatusLevel) {
     .replace(/^-|-$/g, "")
     .slice(0, 48);
   return `operational-${level}-${compact || "notice"}`;
-}
-
-export function isMaintenanceMode() {
-  return isTruthy(readEnv("APP_MAINTENANCE_MODE") ?? readEnv("NEXT_PUBLIC_MAINTENANCE_MODE"));
 }
 
 export function getOperationalStatusBanner(locale: string): OperationalStatusBanner | null {

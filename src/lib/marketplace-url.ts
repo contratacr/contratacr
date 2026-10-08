@@ -70,15 +70,6 @@ export function enlaceEmpleo(job: { id: string; title?: string | null }, baseUrl
   return `${base(baseUrl)}${prefijoActual()}${rutaEmpleo(job)}`;
 }
 
-/** contratacr.com/proyectos/fuga-en-la-cocina-1b93475f */
-export function enlaceProyecto(project: { id: string; title?: string | null }, baseUrl?: string): string {
-  return `${base(baseUrl)}${prefijoActual()}${rutaProyecto(project)}`;
-}
-/** Los 8 primeros del id: es lo que hace único al enlace. */
-export function codigoCorto(id: string): string {
-  return String(id ?? "").split("-")[0]?.toLowerCase() ?? "";
-}
-
 /**
  * Del tramo de la URL saca cómo buscar la ficha: el id completo si vino
  * entero, o el prefijo de 8 del enlace corto.

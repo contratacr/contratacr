@@ -1,6 +1,4 @@
 import { JobsBoard } from "@/components/jobs/jobs-board";
-import { getLocale } from "next-intl/server";
-import { getAllCategories, getCategoryLabel } from "@/lib/data/categories";
 import { recordServerInteraction } from "@/lib/analytics/server-events";
 import { type JobPost } from "@/lib/jobs";
 import { safeGetUser } from "@/lib/supabase/get-user";

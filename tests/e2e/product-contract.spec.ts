@@ -1,6 +1,5 @@
 import { expect, test } from "playwright/test";
 import esMessages from "../../messages/es.json";
-import enMessages from "../../messages/en.json";
 import { notificationContext, notificationHref } from "../../src/lib/notification-link";
 import { localizedNotificationCopy, TRANSLATED_NOTIFICATION_TYPES } from "../../src/lib/localized-notification";
 import { resolveAuthCallbackLocale } from "../../src/lib/auth/callback-locale";
@@ -153,10 +152,6 @@ test.describe("@contract product safety contracts", () => {
       expect([401, 403], `Expected ${name} to reject guest, got ${result.status}`).toContain(result.status);
     }
 
-    const guestAiHistory = await apiJson<{ conversations?: unknown[] }>(page, "/api/ai-assistant/history");
-    expect(guestAiHistory.status).toBe(200);
-    expect(guestAiHistory.body.conversations).toEqual([]);
-
     // Las citas se borraron (8-oct-2026): su API ya no existe.
     const malformedBooking = await apiJson(page, "/api/bookings", { method: "POST", body: {} });
     expect(malformedBooking.status).toBe(404);
@@ -190,30 +185,14 @@ test.describe("@contract product safety contracts", () => {
       { name: "owned media deletion", response: apiJson(page, "/api/upload/media", { method: "DELETE", body: { url: "https://assets.contratacr.com/not-owned.png" } }) },
       { name: "identity verification", response: apiJson(page, "/api/verify-identity", { method: "POST" }) },
       { name: "client connections", response: apiJson(page, "/api/client/connections") },
-      { name: "portfolio like", response: apiJson(page, "/api/portfolio-like", { method: "POST", body: {} }) },
       { name: "job post", response: apiJson(page, "/api/jobs/posts", { method: "POST", body: {} }) },
       { name: "chat attachment", response: apiJson(page, "/api/direct-chat/attachments", { method: "POST" }) },
       { name: "push register", response: apiJson(page, "/api/push/register", { method: "POST", body: {} }) },
-      { name: "push status", response: apiJson(page, "/api/push/status") },
-      { name: "push test", response: apiJson(page, "/api/push/test") },
-      { name: "payment receipt", response: apiJson(page, "/api/payments/receipt", { method: "POST" }) },
     ];
 
     const protectedResults = await Promise.all(protectedChecks.map(async ({ name, response }) => ({ name, result: await response })));
     for (const { name, result } of protectedResults) {
       expect([400, 401, 403], `Expected ${name} to stay closed to guests, got ${result.status}`).toContain(result.status);
     }
-
-    const subscription = await apiJson<{ enabled?: boolean; subscription?: unknown; payments?: unknown[] }>(page, "/api/payments/subscription");
-    expect(subscription.status).toBe(200);
-    expect(subscription.body).toEqual(expect.objectContaining({ enabled: false, subscription: null, payments: [] }));
-
-    const checkout = await apiJson(page, "/api/payments/subscription", { method: "POST" });
-    expect(checkout.status).toBe(404);
-    const manual = await apiJson(page, "/api/payments/subscription/manual", { method: "POST" });
-    expect(manual.status).toBe(404);
-    const webhook = await apiJson<{ ok?: boolean; ignored?: boolean }>(page, "/api/payments/webhook", { method: "POST" });
-    expect(webhook.status).toBe(200);
-    expect(webhook.body).toEqual(expect.objectContaining({ ok: true, ignored: true }));
   });
 });

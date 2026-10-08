@@ -31,8 +31,8 @@ function RotuloEnviarCotizacion({ t }: { t: (clave: string) => string }) {
   );
 }
 
-export function QuoteBlock({ bookingId, projectId, role, canCreate = false, defaultTitle, professionalName, asButton = false, clientName}: {
-  bookingId?: string | null; projectId?: string | null; role: "client" | "pro"; canCreate?: boolean; defaultTitle?: string; professionalName?: string | null;
+export function QuoteBlock({ projectId, role, canCreate = false, defaultTitle, professionalName, asButton = false, clientName}: {
+  projectId?: string | null; role: "client" | "pro"; canCreate?: boolean; defaultTitle?: string; professionalName?: string | null;
   /** Solo el botón, con la forma de los demás botones de la tarjeta: va en la fila de acciones. */
   asButton?: boolean;
   /** Nombre del cliente de la cita o del proyecto, para mostrarlo en el editor. */
@@ -42,7 +42,7 @@ export function QuoteBlock({ bookingId, projectId, role, canCreate = false, defa
   const locale = useLocale();
   const [editor, setEditor] = useState(false);
   const [detail, setDetail] = useState<Quote | null>(null);
-  const key = bookingId ?? projectId ?? "";
+  const key = projectId ?? "";
 
   // Todas las cotizaciones se piden una sola vez para la pantalla entera; cada
   // bloque saca las suyas de ahí. Antes cada tarjeta hacía su propia consulta y
@@ -51,8 +51,8 @@ export function QuoteBlock({ bookingId, projectId, role, canCreate = false, defa
   useEffect(() => { cargarCotizaciones(); }, []);
   const quotes = useMemo(() => {
     if (todas === null) return null;
-    return todas.filter((q) => (bookingId ? q.booking_id === bookingId : projectId ? q.project_id === projectId : false));
-  }, [todas, bookingId, projectId]);
+    return todas.filter((q) => (projectId ? q.project_id === projectId : false));
+  }, [todas, projectId]);
 
   if (!key || unavailable) return null;
   if (quotes === null) {
@@ -85,7 +85,7 @@ export function QuoteBlock({ bookingId, projectId, role, canCreate = false, defa
   const modales = (
     <>
       {editor && (
-        <QuoteEditorModal open onClose={() => setEditor(false)} bookingId={bookingId} projectId={projectId} defaultTitle={defaultTitle} clientName={clientName}
+        <QuoteEditorModal open onClose={() => setEditor(false)} projectId={projectId} defaultTitle={defaultTitle} clientName={clientName}
           onSent={(q) => { agregarCotizacion(q); setEditor(false); }} />
       )}
       {detail && (

@@ -1,5 +1,4 @@
 import { getLocale, getTranslations } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
 import { ServiciosPorSeccion, type SeccionDeServicios } from "@/components/landing/servicios-por-seccion";
 import { DEMANDA_DE_SERVICIOS } from "@/lib/data/home-categories";
 import { CATEGORY_GROUPS, CATEGORY_GROUP_LABELS_EN, getCategoryLabel } from "@/lib/data/categories";

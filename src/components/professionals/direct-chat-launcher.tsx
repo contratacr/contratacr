@@ -17,7 +17,6 @@ import { useContactGate } from "@/components/professionals/contact-gate";
 type DirectChatLauncherProps = {
   professionalId?: string;
   professionalName: string;
-  bookingId?: string;
   projectId?: string;
   contextTitle?: string;
   contextKind?: "promocion" | "empleo";
@@ -39,7 +38,6 @@ type DirectChatLauncherProps = {
 export function DirectChatLauncher({
   professionalId = "",
   professionalName,
-  bookingId,
   projectId,
   contextTitle,
   isOwn = false,
@@ -86,7 +84,6 @@ export function DirectChatLauncher({
       <MessageLauncher
         professionalId={professionalId}
         professionalName={professionalName}
-        bookingId={bookingId}
         projectId={projectId}
         contextTitle={contextTitle}
         isOwn={isOwn}
@@ -108,7 +105,6 @@ export function DirectChatLauncher({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           professionalId,
-          bookingId,
           professionalName,
           projectId,
           contextTitle,

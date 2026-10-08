@@ -9,7 +9,6 @@ import { SuccessIcon } from "@/components/ui/success-icon";
 interface LeaveReviewModalProps {
   professionalId: string;
   professionalName: string;
-  bookingId?: string;
   projectId?: string;
   contactId?: string;
   isAuthenticated?: boolean;
@@ -64,7 +63,6 @@ function guardarReseñaPropia(consulta: string, valor: ReseñaPropia) {
 export function LeaveReviewModal({
   professionalId,
   professionalName,
-  bookingId,
   projectId,
   contactId,
   isAuthenticated = true,
@@ -76,9 +74,7 @@ export function LeaveReviewModal({
   pedirNombre = false,
 }: LeaveReviewModalProps) {
   const t = useTranslations("reviewModal");
-  const query = bookingId
-    ? `bookingId=${bookingId}`
-    : projectId
+  const query = projectId
       ? `projectId=${projectId}`
       : contactId
         ? `contactId=${contactId}`
@@ -197,7 +193,7 @@ export function LeaveReviewModal({
         const response = await fetch("/api/reviews", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ professionalId, rating: draftRating, comment: draftComment.slice(0, 300), bookingId, projectId, contactId }),
+          body: JSON.stringify({ professionalId, rating: draftRating, comment: draftComment.slice(0, 300), projectId, contactId }),
         });
         const data = await response.json().catch(() => ({}));
         if (cancelled) return;
@@ -220,7 +216,7 @@ export function LeaveReviewModal({
 
     void submitPendingReview();
     return () => { cancelled = true; };
-  }, [bookingId, contactId, embedded, isAuthenticated, onClose, onSuccess, pendingReviewKey, professionalId, projectId, t]);
+  }, [contactId, embedded, isAuthenticated, onClose, onSuccess, pendingReviewKey, professionalId, projectId, t]);
 
   useEffect(() => {
     if (embedded) return;
@@ -279,7 +275,6 @@ export function LeaveReviewModal({
             professionalId,
             rating,
             comment: comment.trim(),
-            bookingId,
             projectId,
             contactId,
             ts: Date.now(),
@@ -299,7 +294,7 @@ export function LeaveReviewModal({
       const response = await fetch("/api/reviews", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ professionalId, rating, comment: comment.trim(), bookingId, projectId, contactId }),
+        body: JSON.stringify({ professionalId, rating, comment: comment.trim(), projectId, contactId }),
       });
       const data = await response.json();
       if (!response.ok) {

@@ -99,7 +99,3 @@ export function captureAttribution(): Attribution | null {
     return null;
   }
 }
-
-export function clearAttribution() {
-  try { window.localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
-}

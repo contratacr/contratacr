@@ -56,7 +56,7 @@ export function isExactWorkplacePin(workplace: SearchWorkplace) {
 }
 
 /** Every decision the URL implies, resolved once. */
-export function parseSearchParams(params: SearchPageParams) {
+function parseSearchParams(params: SearchPageParams) {
   const requestedSortBy = SORT_OPTIONS.has(params.sortBy ?? "") ? (params.sortBy as "rating" | "cercania" | "experience") : "rating";
   const legacyPriceUnit = isPriceUnit(params.precio) ? params.precio : undefined;
   const priceType = PRICE_AVAILABILITY_OPTIONS.has(params.precio ?? "") ? (params.precio as "visible" | "quote") : undefined;
@@ -128,7 +128,7 @@ export function experienceMonths(professional: SearchResult) {
   return Math.max(0, years) * 12 + Math.max(0, Math.min(11, months));
 }
 
-export function sortResults(results: SearchResult[], sortBy: string) {
+function sortResults(results: SearchResult[], sortBy: string) {
   const ratingTieBreak = (a: SearchResult, b: SearchResult) =>
     (b.ratingAvg ?? 0) - (a.ratingAvg ?? 0) ||
     (b.reviewCount ?? 0) - (a.reviewCount ?? 0) ||
@@ -148,7 +148,7 @@ export function sortResults(results: SearchResult[], sortBy: string) {
  * salir de primero solo por tener mejor nota: el que sí trabaja en el cantón
  * que buscaste es más útil aunque tenga una estrella menos.
  */
-export function localityTier(pro: SearchResult, filters: SearchFiltersResolved) {
+function localityTier(pro: SearchResult, filters: SearchFiltersResolved) {
   const provincia = filters.selectedProvinceId ? PROVINCES.find((p) => p.id === filters.selectedProvinceId) : undefined;
   const canton = provincia && filters.selectedCantonId
     ? provincia.cantons.find((c) => c.id === filters.selectedCantonId)

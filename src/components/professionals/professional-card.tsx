@@ -151,23 +151,14 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
     activeCategory && allProfessions.includes(activeCategory)
       ? [activeCategory]
       : allProfessions;
-  const mobileProfessionList = mobileDisplayProfessions.slice(0, 1);
   // Price split so the AMOUNT can be brand-blue and the /unit muted grey (matches the
   // target screenshots — e.g. "₡10 000" blue + " /hora" grey). A text price like
   // "Consultar precio" has no "/" and renders whole in grey.
   const priceLabel = primaryPricingLabel(professional.pricing, professional.hourlyRate, locale);
   const { amount: priceAmount, unit: priceUnit, taxSuffix: priceTaxSuffix } = splitPricingLabel(priceLabel);
   const mobileIsPriceOnRequest = Boolean(priceLabel && !priceUnit && !priceTaxSuffix);
-  const mobilePricePrimary = mobileIsPriceOnRequest
-    ? (locale === "en" ? "Price" : "Precio")
-    : priceAmount;
-  const mobilePriceSecondary = mobileIsPriceOnRequest
-    ? (locale === "en" ? "On request" : "A consultar")
-    : [priceUnit, priceTaxSuffix].filter(Boolean).join(" · ");
   const priceBoxClass = "max-w-[48%]";
   const isVerified = professional.verificationStatus === "verified";
-  const mobileExtraProfessions = mobileDisplayProfessions.length - mobileProfessionList.length;
-  const mobileServiceChipClass = "inline-flex max-w-full shrink-0 items-center whitespace-nowrap text-[12px] font-semibold leading-none text-[#6b7280]";
   // «+N servicios» abre el perfil: en azul, para que se lea como enlace.
   const moreProfessionsClass = "relative z-10 inline-flex shrink-0 items-center self-center align-middle leading-none text-[12px] font-bold text-[#007fae] transition-colors hover:text-[#009FD9] hover:underline";
   // A pro viewing their OWN card cannot request a service from themselves. The

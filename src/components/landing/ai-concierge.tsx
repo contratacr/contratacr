@@ -3,8 +3,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { prefijoDeIdioma, rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import {
-  MessageSquareText,
-  Bell,
   Menu,
   ArrowLeft,
   ArrowRight,

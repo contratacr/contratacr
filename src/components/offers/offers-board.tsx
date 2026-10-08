@@ -36,7 +36,6 @@ import {
   formatOfferBeforePrice,
   formatOfferPrice,
   offerDiscountPercent,
-  OFFER_TYPES,
   type ProfessionalOffer,
 } from "@/lib/offers";
 import { ScrollRail } from "@/components/ui/scroll-rail";
@@ -191,7 +190,6 @@ export function OffersBoard({
       href: window.location.href,
     });
   }, [canPost, currentUserId, nativeApp, offers.length, selectedId]);
-
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -611,8 +609,7 @@ function OfferImage({
   );
 }
 
-
-export function OfferSaveButton({
+function OfferSaveButton({
   offer,
   userId,
   pastilla = false,

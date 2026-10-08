@@ -27,7 +27,7 @@ import { avisarMomentoDeNotificacion } from "@/lib/push-moment";
 type Person = { id?: string; full_name?: string | null; avatar_url?: string | null };
 type Conversation = {
   id: string; client_id: string; professional_profile_id: string; professional_id?: string | null;
-  booking_id?: string | null; project_id?: string | null; proposal_id?: string | null;
+  project_id?: string | null; proposal_id?: string | null;
   subject?: string | null; last_message?: string | null; last_message_at?: string | null;
   status?: "open" | "archived" | "blocked";
   blocked_by?: string | null;
@@ -38,22 +38,20 @@ type Conversation = {
   professional_whatsapp?: string | null;
   professionals?: { id?: string; slug?: string | null; business_name?: string | null; profiles?: Person | null } | null;
   contexts?: Array<{
-    type: "booking" | "project" | "proposal" | "profile";
-    bookingId?: string | null;
+    type: "project" | "proposal" | "profile";
     projectId?: string | null;
     proposalId?: string | null;
     title?: string | null;
     status?: string | null;
     at?: string | null;
   }>;
-  context?: { type: "booking" | "project" | "proposal" | "profile"; title?: string | null; service_description?: string | null; status?: string | null; proposal_status?: string | null };
+  context?: { type: "project" | "proposal" | "profile"; title?: string | null; status?: string | null; proposal_status?: string | null };
 };
 type DirectAttachment = { path?: string; name: string; type: string; size: number; url?: string | null };
 type DirectMessage = { id: string; sender_id: string; body: string; created_at: string; attachment_urls?: DirectAttachment[]; edited_at?: string | null; deleted_at?: string | null; read_at?: string | null; delivered_at?: string | null; reply_to_id?: string | null };
 type SelectedAttachment = { id: string; file: File; previewUrl?: string };
 type PendingDraft = {
   professionalId?: string;
-  bookingId?: string;
   projectId?: string;
   contextTitle?: string;
   draftMessage?: string;
@@ -156,13 +154,12 @@ function buildPendingDraft(searchParams: URLSearchParams, userId: string | undef
 
   const professionalId = searchParams.get("professionalId") || undefined;
   const professionalName = searchParams.get("professionalName") || (isEn ? "Professional" : "Profesional");
-  const bookingId = searchParams.get("bookingId") || undefined;
   const projectId = searchParams.get("projectId") || undefined;
   const contextTitle = searchParams.get("contextTitle") || (isEn ? "General inquiry" : "Consulta general");
   const draftMessage = searchParams.get("draftMessage") || "";
   // «proposal» sigue existiendo como tipo porque hay conversaciones guardadas
   // que nacieron de una propuesta; lo que ya no se puede es abrir una nueva asi.
-  const contextType: "booking" | "project" | "proposal" | "profile" = bookingId ? "booking" : projectId ? "project" : "profile";
+  const contextType: "project" | "proposal" | "profile" = projectId ? "project" : "profile";
   const currentUserId = userId || "__current_user__";
   const pendingAsClient = Boolean(professionalId);
   const conversation: Conversation = {
@@ -170,7 +167,6 @@ function buildPendingDraft(searchParams: URLSearchParams, userId: string | undef
     client_id: pendingAsClient ? currentUserId : "__draft_client__",
     professional_id: professionalId,
     professional_profile_id: pendingAsClient ? "__draft_professional__" : currentUserId,
-    booking_id: bookingId ?? null,
     project_id: projectId ?? null,
     subject: contextTitle,
     last_message: isEn ? "New message" : "Nuevo mensaje",
@@ -185,23 +181,21 @@ function buildPendingDraft(searchParams: URLSearchParams, userId: string | undef
     context: {
       type: contextType,
       title: contextTitle,
-      service_description: bookingId ? contextTitle : null,
       status: "open",
     },
   };
   return {
     conversation,
-    payload: { professionalId, bookingId, projectId, contextTitle, draftMessage },
+    payload: { professionalId, projectId, contextTitle, draftMessage },
   };
 }
 
 function findExistingDraftConversation(rows: Conversation[], payload: PendingDraft | null) {
   if (!payload) return null;
   return rows.find((item) => {
-    if (payload.bookingId) return item.booking_id === payload.bookingId;
     if (payload.projectId && payload.professionalId) return item.project_id === payload.projectId && item.professional_id === payload.professionalId;
     if (payload.professionalId) {
-      return item.professional_id === payload.professionalId && !item.booking_id && !item.project_id && !item.proposal_id;
+      return item.professional_id === payload.professionalId && !item.project_id && !item.proposal_id;
     }
     return false;
   }) ?? null;
@@ -541,8 +535,8 @@ export function DirectChatInbox({ alCambiarSubvista }: {
     }, [isEn, user?.id]);
   const contextFor = useCallback((item: Conversation) => {
     const type = item.context?.type ?? "profile";
-    const labels = isEn ? { booking: "Appointment", project: "Project", proposal: "Reply", profile: "Profile" } : { booking: "Cita", project: "Proyecto", proposal: "Respuesta", profile: "Perfil" };
-    return { type, label: labels[type], title: item.context?.service_description || item.context?.title || item.subject || (isEn ? "General inquiry" : "Consulta general") };
+    const labels = isEn ? { project: "Project", proposal: "Reply", profile: "Profile" } : { project: "Proyecto", proposal: "Respuesta", profile: "Perfil" };
+    return { type, label: labels[type], title: item.context?.title || item.subject || (isEn ? "General inquiry" : "Consulta general") };
   }, [isEn]);
   const contextSummaryFor = useCallback((item: Conversation) => {
     const context = contextFor(item);
@@ -811,7 +805,6 @@ export function DirectChatInbox({ alCambiarSubvista }: {
     const params = new URLSearchParams({ draftChat: "1" });
     if (stored.payload.professionalId) params.set("professionalId", stored.payload.professionalId);
     if (stored.name) params.set("professionalName", stored.name);
-    if (stored.payload.bookingId) params.set("bookingId", stored.payload.bookingId);
     if (stored.payload.projectId) params.set("projectId", stored.payload.projectId);
     if (stored.payload.contextTitle) params.set("contextTitle", stored.payload.contextTitle);
     params.set("draftMessage", stored.text);
@@ -1111,7 +1104,6 @@ export function DirectChatInbox({ alCambiarSubvista }: {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             professionalId: pendingDraftPayload?.professionalId,
-            bookingId: pendingDraftPayload?.bookingId,
             projectId: pendingDraftPayload?.projectId,
             contextTitle: pendingDraftPayload?.contextTitle,
             openConversation: true,
@@ -1125,7 +1117,6 @@ export function DirectChatInbox({ alCambiarSubvista }: {
       const payload = activeId === DRAFT_CONVERSATION_ID && !selectedAttachments.length
         ? {
           professionalId: pendingDraftPayload?.professionalId,
-          bookingId: pendingDraftPayload?.bookingId,
           projectId: pendingDraftPayload?.projectId,
           contextTitle: pendingDraftPayload?.contextTitle,
           message: body,

@@ -5,7 +5,7 @@ const BLOCKED_REVIEW_PATTERNS = [
   /(https?:\/\/|www\.|@[\w.-]+)/i,
 ];
 
-export function normalizeReviewText(value: unknown) {
+function normalizeReviewText(value: unknown) {
   return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
 }
 

@@ -153,7 +153,7 @@ export function CategorySearch({
         <button type="button" onClick={openDropdown} className="flex h-full min-w-0 flex-1 items-center gap-2 text-left">
           {!selectedLabel && <Search className="h-4 w-4 shrink-0 text-[#68778d]" />}
           {selectedLabel ? (
-            <span className="truncate font-medium text-[#162543]">{selectedLabel}</span>
+            <span data-servicio-elegido className="truncate font-medium text-[#162543]">{selectedLabel}</span>
           ) : (
             <span className="truncate text-[#68778d]">{placeholder ?? t("placeholderDefault")}</span>
           )}

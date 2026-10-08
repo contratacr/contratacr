@@ -249,13 +249,13 @@ function emailShell(
  * dominio entero termine en No deseado —el problema que acabamos de arreglar
  * en las campañas—. Una insignia no es una urgencia.
  */
-export const MAX_AVISOS_DE_VERIFICACION = 2;
-export const DIAS_ENTRE_AVISOS = 30;
+const MAX_AVISOS_DE_VERIFICACION = 2;
+const DIAS_ENTRE_AVISOS = 30;
 /** Cuántos avisos salen por cada pulsada del botón del panel. */
-export const POR_TANDA_DE_VERIFICACION = 25;
+const POR_TANDA_DE_VERIFICACION = 25;
 
 /** Qué aviso toca ahora para esta persona, o `null` si ya no toca ninguno. */
-export async function avisoQueTocaDeVerificacion(
+async function avisoQueTocaDeVerificacion(
   admin: ReturnType<typeof createAdminClient>,
   profileId: string | null,
 ): Promise<"primero" | "recordatorio" | null> {

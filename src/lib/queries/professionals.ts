@@ -38,7 +38,6 @@ const NEAR_ME_RADIUS_KM = 25;
 // minutos de retraso en ver un profesional nuevo no le cambian la vida a nadie.
 const SEARCH_CACHE_SECONDS = 300;
 
-
 type LocationQueryMatch =
   | { type: "province"; id: string }
   | { type: "canton"; id: string; provinceId: string };
@@ -244,7 +243,7 @@ function isExactWorkplacePin(workplace: ProfessionalWorkplace | undefined): work
 }
 
 // Photos attach to a SERVICE INSTANCE (serviceId); `profession` kept for legacy.
-export type PortfolioItem = {
+type PortfolioItem = {
   url?: string;
   serviceId?: string;
   profession?: string;
@@ -259,7 +258,7 @@ export type PortfolioItem = {
 
 // Optional website/social links. Social networks are stored as usernames; the
 // website is stored as a normalized URL. Additive to "casos de éxito" photos.
-export type SocialLinks = { instagram?: string; facebook?: string; tiktok?: string; linkedin?: string; website?: string };
+type SocialLinks = { instagram?: string; facebook?: string; tiktok?: string; linkedin?: string; website?: string };
 
 export type ProfessionalDetail = ProfessionalCardData & {
   portfolioUrls: string[];
@@ -1101,16 +1100,16 @@ async function getProfessionalBySlugUncached(
       try {
         const { data: rj, error: reviewContextError } = await supabase
           .from("reviews")
-          .select("id, job_title, booking_id, project_id, whatsapp_contact_id, moderation_status")
+          .select("id, job_title, project_id, whatsapp_contact_id, moderation_status")
           .eq("professional_id", proRow.id);
         if (reviewContextError) throw reviewContextError;
         visibleReviewIds = new Set<string>();
-        for (const r of (rj ?? []) as { id: string; job_title?: string | null; booking_id?: string | null; project_id?: string | null; whatsapp_contact_id?: string | null; moderation_status?: string | null }[]) {
+        for (const r of (rj ?? []) as { id: string; job_title?: string | null; project_id?: string | null; whatsapp_contact_id?: string | null; moderation_status?: string | null }[]) {
           if (r.moderation_status !== "published") continue;
           visibleReviewIds.add(r.id);
           reviewContextMap[r.id] = {
             title: r.job_title ?? null,
-            source: r.booking_id || r.project_id ? "verified" : r.whatsapp_contact_id ? "contact" : "direct",
+            source: r.project_id ? "verified" : r.whatsapp_contact_id ? "contact" : "direct",
           };
         }
       } catch { /* column not migrated yet */ }

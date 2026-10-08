@@ -12,7 +12,6 @@ type ReviewRow = {
   rating: number;
   comment: string | null;
   job_title?: string | null;
-  booking_id?: string | null;
   project_id?: string | null;
   whatsapp_contact_id?: string | null;
   created_at: string;
@@ -36,13 +35,13 @@ export async function GET(req: Request) {
   const db = createAdminClient();
   const full = await db
     .from("reviews")
-    .select("id, professional_id, client_id, rating, comment, job_title, booking_id, project_id, whatsapp_contact_id, created_at, edited_at, client_name_snapshot, client_email_snapshot, moderation_status, moderation_reason, moderated_at")
+    .select("id, professional_id, client_id, rating, comment, job_title, project_id, whatsapp_contact_id, created_at, edited_at, client_name_snapshot, client_email_snapshot, moderation_status, moderation_reason, moderated_at")
     .order("created_at", { ascending: false })
     .limit(500);
 
   let rows = (full.data ?? []) as ReviewRow[];
   let error = full.error;
-  if (error && /job_title|booking_id|project_id|whatsapp_contact_id|client_.*snapshot|edited_at|column|schema cache|PGRST204/i.test(error.message)) {
+  if (error && /job_title|project_id|whatsapp_contact_id|client_.*snapshot|edited_at|column|schema cache|PGRST204/i.test(error.message)) {
     const fallback = await db
       .from("reviews")
       .select("id, professional_id, client_id, rating, comment, created_at")
@@ -80,11 +79,9 @@ export async function GET(req: Request) {
     // y si algún día hay abuso, se ve aquí primero.
     const source = row.whatsapp_contact_id
       ? row.client_id ? "WhatsApp" : "WhatsApp sin cuenta"
-      : row.booking_id
-        ? "Cita"
-        : row.project_id
-          ? "Proyecto"
-          : "Perfil";
+      : row.project_id
+        ? "Proyecto"
+        : "Perfil";
 
     return {
       id: row.id,

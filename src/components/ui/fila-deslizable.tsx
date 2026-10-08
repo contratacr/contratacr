@@ -21,11 +21,11 @@ import { cn } from "@/lib/utils";
 
 // La curva y los tiempos de iOS: arranca rápido y frena largo. Con 180ms
 // lineales la fila «saltaba»; así se desliza como en WhatsApp.
-export const CURVA_IOS = "cubic-bezier(0.22, 1, 0.36, 1)";
-export const SALIR_MS = 340;
+const CURVA_IOS = "cubic-bezier(0.22, 1, 0.36, 1)";
+const SALIR_MS = 340;
 // Cuánto hay que pasar el ancho de reposo de los botones para que cuente.
-export const MARGEN_DEL_PUNTO = 24;
-export const CERRAR_MS = 260;
+const MARGEN_DEL_PUNTO = 24;
+const CERRAR_MS = 260;
 
 // Dónde va el icono de la acción que se estira. Antes del punto de no retorno,
 // centrado en su botón; pasado, se desliza hasta quedar junto a la fila y la

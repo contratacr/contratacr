@@ -189,7 +189,6 @@ export function ProfileCompletion({
   const ignoredSet = new Set(ignored);
   const missing = items.filter((item) => !item.done && !ignoredSet.has(item.key));
   const optionalMissing = missing.filter((item) => item.optional);
-  const ignoredCount = items.filter((item) => !item.done && ignoredSet.has(item.key)).length;
   const profileComplete = missing.length === 0;
   const checklistHidden = dismissed || missing.length === 0;
 

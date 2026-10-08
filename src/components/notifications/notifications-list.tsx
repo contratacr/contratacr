@@ -82,7 +82,6 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
     : [];
   const [busy, setBusy] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
   const [globalMenuOpen, setGlobalMenuOpen] = useState(false);
   // De a 15, con «Ver notificaciones anteriores» al pie, como Facebook: con
   // las cien que se cargan de una vez la lista era una sábana sin final.
@@ -661,8 +660,6 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
               const message = notificationMessage(n);
               // Cada aviso se lee COMPLETO: «Tarda menos de un…» cortaba la mitad
               // del mensaje y había que adivinar el resto.
-              const canExpand = false;
-              const expanded = expandedIds.has(n.id);
               return (
               <li
                 key={n.id}
@@ -767,25 +764,6 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
                       <p className={cn("mt-0.5 text-[12px] font-semibold", !esNueva(n) ? "text-[#94a3b8]" : "text-[#0089bb]")}>
                         {notificationTime(n)}
                       </p>
-                      {canExpand && (
-                        <button
-                          type="button"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            setExpandedIds((current) => {
-                              const next = new Set(current);
-                              if (next.has(n.id)) next.delete(n.id);
-                              else next.add(n.id);
-                              return next;
-                            });
-                          }}
-                          className="mt-1 text-xs font-semibold text-[#009FD9] hover:underline"
-                        >
-                          {expanded
-                            ? (locale === "en" ? "Show less" : "Ver menos")
-                            : (locale === "en" ? "Show more" : "Ver más")}
-                        </button>
-                      )}
                     </div>
                   </div>
                   {esNueva(n) && (

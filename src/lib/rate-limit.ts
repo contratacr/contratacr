@@ -18,7 +18,7 @@ function sweep(now: number) {
 }
 
 /** Returns { ok } — false when the caller exceeded `limit` requests per `windowMs`. */
-export function rateLimit(key: string, limit: number, windowMs: number): { ok: boolean; retryAfter: number } {
+function rateLimit(key: string, limit: number, windowMs: number): { ok: boolean; retryAfter: number } {
   const now = Date.now();
   sweep(now);
   const b = buckets.get(key);
@@ -32,7 +32,7 @@ export function rateLimit(key: string, limit: number, windowMs: number): { ok: b
 }
 
 /** Best-effort client IP from proxy headers (Vercel/Cloudflare set x-forwarded-for). */
-export function clientIp(req: Request): string {
+function clientIp(req: Request): string {
   // En Cloudflare la IP real viene en cf-connecting-ip y no se puede falsear.
   // El primer valor de x-forwarded-for lo escribe quien hace la petición: con
   // él solo, bastaba inventarlo para saltarse cualquier límite.

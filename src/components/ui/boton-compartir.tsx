@@ -2,10 +2,8 @@
 
 import { useCallback, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { Link2, Share2 } from "lucide-react";
 import { AvisoFlotante } from "@/components/ui/aviso-flotante";
 import { useNativeShare } from "@/hooks/use-native-share";
-import { cn } from "@/lib/utils";
 import { compartirConHojaNativa } from "@/lib/compartir-nativo";
 
 /**
@@ -14,7 +12,7 @@ import { compartirConHojaNativa } from "@/lib/compartir-nativo";
  * `navigator.share`: mirando solo eso, el botón decía «Copiar enlace» y abría
  * la hoja del sistema. La cara y la acción tienen que responder a lo mismo.
  */
-export function esRaton() {
+function esRaton() {
   return typeof window !== "undefined" && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 }
 
@@ -62,50 +60,4 @@ export function useCompartir() {
 
   const avisoNodo: ReactNode = aviso ? <AvisoFlotante texto={aviso} onFin={() => setAviso(null)} /> : null;
   return { compartir, copiar, avisoNodo };
-}
-
-/**
- * Compartir una ficha. `sutil` es la forma que usan las fichas: ícono con
- * rótulo, sin borde y sin peso de botón. `onPress` lo deja delegar en quien ya
- * tiene su propia hoja de compartir.
- */
-export function BotonCompartir({ url, titulo, onPress, sutil = false, className }: { url?: string; titulo?: string; onPress?: () => void; sutil?: boolean; className?: string }) {
-  const t = useTranslations("profile");
-  const tMenu = useTranslations("menuFicha");
-  const { compartir, avisoNodo } = useCompartir();
-  // DICE LO QUE VA A HACER, Y NO PARPADEA. En computadora no hay hoja del
-  // sistema: el botón copia el enlace, así que dice «Copiar enlace», como
-  // LinkedIn. En el teléfono abre la hoja y dice «Compartir».
-  //
-  // Las dos caras se pintan SIEMPRE y elige el CSS (ver `data-ccr-compartir` en
-  // layout.tsx). Decidirlo con `navigator.share` —que solo existe en el
-  // navegador— hacía que el rótulo y el icono cambiaran al hidratar, en cada
-  // carga. La acción sigue mirando si hay hoja en el momento del toque, que es
-  // cuando importa.
-  const rotuloRaton = tMenu("copyLink");
-  const rotuloDedo = t("share");
-
-  return (
-    <>
-      <button
-        type="button"
-        onClick={() => { if (onPress) { onPress(); return; } if (url) void compartir(url, titulo); }}
-        // Para lectores de pantalla, la acción en una sola palabra: no pueden
-        // «ver» cuál de las dos caras está visible.
-        aria-label={rotuloDedo}
-        className={cn(
-          sutil
-            ? "inline-flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-[13px] font-bold text-[#52627a] transition-colors duration-200 hover:bg-[#eef3f8] hover:text-[#162543]"
-            : "inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-4 text-sm font-bold text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb]",
-          className,
-        )}
-      >
-        <CaraCompartir
-          dedo={<><Share2 className="h-4 w-4 shrink-0" />{rotuloDedo}</>}
-          raton={<><Link2 className="h-4 w-4 shrink-0" />{rotuloRaton}</>}
-        />
-      </button>
-      {avisoNodo}
-    </>
-  );
 }

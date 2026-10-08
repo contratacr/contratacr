@@ -33,7 +33,6 @@ jobs:
       GOOGLE_TRANSLATE_LOCATION: global
       WHATSAPP_CLOUD_TOKEN: ci-placeholder
       WHATSAPP_PHONE_NUMBER_ID: ci-placeholder
-      NEXT_PUBLIC_PAYMENTS_ENABLED: "false"
     steps:
       - name: Checkout
         uses: actions/checkout@v5

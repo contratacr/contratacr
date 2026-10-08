@@ -48,8 +48,6 @@ export const SUPPORT_CLOSE_REASONS = [
   },
 ] as const;
 
-export type SupportCloseReasonId = (typeof SUPPORT_CLOSE_REASONS)[number]["id"];
-
 export function supportCloseReason(id: string) {
   return SUPPORT_CLOSE_REASONS.find((reason) => reason.id === id) ?? null;
 }

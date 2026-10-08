@@ -9,7 +9,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useParams, useSearchParams } from "next/navigation";
 import {
   MapPin, Shield, ArrowLeft, Star, Briefcase, Banknote, BadgeCheck, Languages,
-  Flag, Award, SearchX, Globe, BadgePercent, Users, Share2, Link2, ChevronRight, Bookmark,
+  Flag, Award, SearchX, Globe, BadgePercent, Share2, Link2, ChevronRight, Bookmark,
   X, Ban,
 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
@@ -20,12 +20,11 @@ import { Link } from "@/i18n/navigation";
 import { rutaAnterior } from "@/lib/volver-por-historial";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
 import { getInitials, proDisplayName, cn } from "@/lib/utils";
 import { RecordRecentVisit } from "@/components/mobile/record-recent-visit";
 import { anyVideoConsultCategory, getCategoryLabel, esServicioDelCatalogo } from "@/lib/data/categories";
-import { casoProfession, countCases } from "@/lib/services";
+import { casoProfession } from "@/lib/services";
 import { addTaxIncludedToPriceLabel, formatServicePrice, primaryPricingLabel, splitPricingLabel } from "@/lib/pricing";
 import { languageLabel } from "@/lib/data/languages";
 import { insurerLabel } from "@/lib/data/insurers";
@@ -37,7 +36,6 @@ import { ReportProfileModal } from "@/components/professionals/report-profile-mo
 import { createClient } from "@/lib/supabase/client";
 import { getDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
 import { ProfessionalSchedule } from "@/components/professionals/professional-schedule";
-import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
 import { useGuardarProfesional, type SavedPro } from "@/components/professionals/save-button";
 import { MenuFicha } from "@/components/ui/menu-ficha";
 import { CaraCompartir, useCompartir } from "@/components/ui/boton-compartir";
@@ -647,9 +645,6 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   const placeAddress = locationText;
 
   const hasCasos = !!professional.portfolioUrls && professional.portfolioUrls.length > 0;
-  // Count CASES, not photos: 1 caso de éxito with 3 photos must read "1", not "3"
-  // (portfolioUrls is the flattened photo list). See countCases().
-  const casosCount = countCases(professional.portfolioItems, professional.portfolioUrls);
   const certificationsList = (professional.certifications ?? []).filter((c) => c?.name?.trim());
   const hasCerts = certificationsList.length > 0;
   // Group certifications by profession (legacy untagged → principal profession).
@@ -677,29 +672,6 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
     const url = enlacePerfil(professional.slug, process.env.NEXT_PUBLIC_APP_URL || window.location.origin);
     void compartirEnlace(url, professional.businessName?.trim() || proDisplayName(professional.fullName));
   }
-
-  // Favorites: the SAME system as the /buscar cards. Keyed on `professional.id`
-  // (the professionals row id the card also uses), so saving here reflects on the
-  // card and vice-versa. `isVerified` is derived exactly like the card. Self-favorite
-  // is blocked via the shared SelfActionModal (isOwn) — see SaveButton.
-  const savedPro: SavedPro = {
-    id: professional.id,
-    profileId: professional.profileId,
-    slug: professional.slug,
-    fullName: professional.fullName,
-    businessName: professional.businessName,
-    avatarUrl: professional.avatarUrl ?? undefined,
-    categoryIcon: professional.categoryIcon,
-    categoryId: professional.categoryId,
-    provinceName: professional.provinceName,
-    cantonName: professional.cantonName,
-    ratingAvg: professional.ratingAvg,
-    reviewCount: professional.reviewCount,
-    hourlyRate: professional.hourlyRate,
-    isVerified: professional.verificationStatus === "verified",
-    videoconsulta: professional.videoconsulta,
-    coverage: professional.coverage,
-  };
   const displayName = getProfessionalDisplayName(professional.fullName, professional.businessName);
   const visitaProfesional = {
     id: professional.slug ?? slug,
@@ -757,7 +729,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
             texto: guardarPro.etiqueta,
             onSelect: () => void guardarPro.alternar(),
           }]),
-          // Las dos caras pintadas y el CSS elige, como en `BotonCompartir`:
+          // Las dos caras pintadas y el CSS elige, como en `CaraCompartir`:
           // Chrome en macOS trae `navigator.share` y el menú decía «Compartir».
           {
             id: "compartir",
@@ -1116,8 +1088,6 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                               // services-only). No icon overlay on the photo; the action is a single
                               // "Solicitar servicio" that enters the existing request flow.
                               const rep = items.find((s) => s.description) ?? items.find((s) => s.price) ?? items[0];
-                              const yearsItem = items.find((s) => typeof (s as { years?: number }).years === "number" && ((s as { years?: number }).years ?? 0) > 0);
-                              const serviceYears = (yearsItem as { years?: number } | undefined)?.years;
                               const priced = items.find((s) => s.priceAmount || s.price || (s as { priceType?: string }).priceType === "a_convenir");
                               const priceLabel = priced
                                 ? formatServicePrice(priced.priceAmount, priced.priceType, locale)

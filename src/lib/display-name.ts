@@ -20,7 +20,7 @@ const BUSINESS_NAME_HINTS = new Set([
   "academia",
 ]);
 
-export function normalizeDisplayName(value?: string) {
+function normalizeDisplayName(value?: string) {
   return (value ?? "")
     .trim()
     .toLowerCase()
@@ -31,20 +31,13 @@ export function normalizeDisplayName(value?: string) {
     .trim();
 }
 
-export function looksLikeBusinessName(name?: string) {
+function looksLikeBusinessName(name?: string) {
   const normalized = normalizeDisplayName(name);
   if (!normalized) return false;
   const words = normalized.split(" ").filter(Boolean);
   if (words.some((word) => BUSINESS_NAME_HINTS.has(word))) return true;
   if (words.includes("y") && words.length >= 3) return true;
   return /[&+]/.test(name ?? "");
-}
-
-export function samePublicIdentity(personName?: string, businessName?: string) {
-  const person = normalizeDisplayName(personName);
-  const business = normalizeDisplayName(businessName);
-  if (!person || !business) return false;
-  return person === business || person.includes(business) || business.includes(person);
 }
 
 export function formatPersonDisplayName(name?: string, mode: "desktop" | "mobile" = "desktop") {
@@ -60,15 +53,11 @@ export function getProfessionalDisplayName(fullName: string, businessName?: stri
   const cleanBusinessName = businessName?.trim() || "";
   const personMobile = formatPersonDisplayName(fullName, "mobile");
   const personDesktop = formatPersonDisplayName(fullName, "desktop");
-  const showPersonSubtitle = false;
 
   return {
     primaryMobile: cleanBusinessName || personMobile,
     primaryDesktop: cleanBusinessName || personDesktop,
     personMobile,
     personDesktop,
-    secondaryMobile: showPersonSubtitle ? personMobile : "",
-    secondaryDesktop: showPersonSubtitle ? personDesktop : "",
-    hasSecondary: showPersonSubtitle,
   };
 }

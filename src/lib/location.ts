@@ -9,7 +9,7 @@
 // text: a searched cantón matches if it is covered directly, via its provincia,
 // or via whole-country coverage.
 
-export type CoverageLevel = "canton" | "provincia" | "country";
+type CoverageLevel = "canton" | "provincia" | "country";
 
 export type CoverageArea = {
   /** "canton" (provincia+cantón), "provincia" (whole province), "country" (everywhere). */
@@ -18,17 +18,6 @@ export type CoverageArea = {
   cantonId?: string;
   provinceName?: string;
   cantonName?: string;
-};
-
-export type LocatedWorkplace = {
-  id: string;
-  name: string;
-  address: string;
-  lat?: number;
-  lng?: number;
-  // Authoritative, user-selected administrative areas (NOT derived from the pin).
-  provinciaId?: string;
-  cantonId?: string;
 };
 
 /**

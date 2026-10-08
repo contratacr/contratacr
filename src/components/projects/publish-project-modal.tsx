@@ -45,7 +45,7 @@ const SENALES_DE_ANUNCIO: RegExp[] = [
 ];
 
 /** Dos señales, no una: cualquiera suelta también aparece en pedidos reales. */
-export function pareceAnuncioDeServicio(texto: string): boolean {
+function pareceAnuncioDeServicio(texto: string): boolean {
   const limpio = (texto ?? "").trim();
   if (limpio.length < 25) return false;
   return SENALES_DE_ANUNCIO.filter((r) => r.test(limpio)).length >= 2;

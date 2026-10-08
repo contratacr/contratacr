@@ -1,4 +1,3 @@
-import { idDesdeDireccion } from "@/lib/data/category-slug";
 import { hasBrokenVisibleText, repairVisibleText } from "@/lib/text/repair-visible-text";
 
 export type CategoryItem = {
@@ -489,7 +488,7 @@ export const OTHER_CATEGORY: CategoryItem = {
    `useCustomCategories`). `searchCategories` + `getCategoryLabel` consult it so an
    approved custom category behaves like any built-in one. Stays empty on the
    server (no fetch) — there `getCategoryLabel` falls back to a clean slug label. */
-export const CUSTOM_GROUP_ID = "otras";
+const CUSTOM_GROUP_ID = "otras";
 let CUSTOM_CATEGORIES: (CategoryItem & { groupId: string; groupLabel: string; labelEn?: string })[] = [];
 let CATEGORY_CATALOG_OVERRIDES = new Map<string, { label?: string; labelEn?: string; groupId?: string; keywords?: string[]; isHidden?: boolean }>();
 let CATEGORY_FEATURE_OVERRIDES = new Map<string, { esSalud?: boolean; supportsVideoconsulta?: boolean; isHidden?: boolean }>();
@@ -1714,19 +1713,6 @@ export function getCategoryLabel(id: string, locale?: string): string {
  *  usarlas sin arrastrar el catálogo entero al borde. */
 export { categorySlug } from "@/lib/data/category-slug";
 
-/** El identificador a partir de lo que venga en la dirección, ya comprobado
- *  contra el catálogo. Acepta la dirección nueva («aire-acondicionado») y
- *  también la llave tal cual («aire_acondicionado»), porque las direcciones
- *  viejas siguen llegando de Google y de enlaces ya compartidos. Devuelve null
- *  si ese servicio no existe. */
-export function getCategoryIdBySlug(valor: string): string | null {
-  if (!valor) return null;
-  const existe = (id: string) => getAllCategories().some((c) => c.id === id);
-  if (existe(valor)) return valor;
-  const llave = idDesdeDireccion(valor);
-  return existe(llave) ? llave : null;
-}
-
 /* ─── Get category GROUP label from group ID (locale-aware) ─── */
 export function getCategoryGroupLabel(groupId: string, locale?: string): string {
   if (isOtherCategoryGroup(groupId)) return locale === "en" ? "Other categories" : "Otras categorías";
@@ -1744,7 +1730,7 @@ export function getCategoryGroupLabel(groupId: string, locale?: string): string 
    where the age is central to the request). Pure WELLNESS/fitness services are NOT
    medical and must NEVER ask for a date of birth — e.g. `entrenamiento_personal`
    (personal trainer) and `masajes` (massage) were removed for that reason. ─── */
-export const HEALTH_CATEGORY_IDS = new Set<string>([
+const HEALTH_CATEGORY_IDS = new Set<string>([
   // Clinical / medical (patient + clinical age)
   "nutricion", "psicologia", "fisioterapia", "enfermeria",
   "psiquiatria", "odontologia", "ortodoncia", "pediatria", "optometria", "optica_lentes",
@@ -1761,19 +1747,6 @@ export function isHealthCategory(id?: string | null): boolean {
   return typeof override === "boolean" ? override : HEALTH_CATEGORY_IDS.has(id);
 }
 
-/* ─── CARE categories — a SUBSET of health that is CARE of a person (not a clinical
-   consult). Used only to pick natural wording in the booking "¿Para quién?" block:
-   a CARE recipient is "la persona", not "el paciente" (a niñera's child isn't a
-   "patient"). Everything else in HEALTH_CATEGORY_IDS is clinical → "paciente". ─── */
-export const CARE_CATEGORY_IDS = new Set<string>([
-  "cuidado_adultos", "cuidado_discapacidad", "cuidado_infantil",
-]);
-
-/** True if the category is CARE of a person (vs a clinical consult). */
-export function isCareCategory(id?: string | null): boolean {
-  return !!id && CARE_CATEGORY_IDS.has(id);
-}
-
 /** True if ANY of the professional's categories is a health category. */
 export function anyHealthCategory(ids?: (string | null | undefined)[]): boolean {
   return (ids ?? []).some((id) => isHealthCategory(id));
@@ -1784,7 +1757,7 @@ export function anyHealthCategory(ids?: (string | null | undefined)[]): boolean 
    Video consult categories. This is an explicit allow-list: some health services
    need in-person care, while some non-health services work very well remotely.
 */
-export const VIDEO_CONSULT_CATEGORY_IDS = new Set<string>([
+const VIDEO_CONSULT_CATEGORY_IDS = new Set<string>([
   "nutricion", "psicologia", "fisioterapia", "medicina_domicilio",
   "psiquiatria", "medico_especialista", "cardiologia", "terapia_lenguaje", "terapia_ocupacional",
   "contabilidad", "legal", "consultoria", "traduccion",
@@ -1859,13 +1832,6 @@ export function getMatchingCategoryIds(query: string): string[] {
     ...searchCategories(query).map((c) => c.id),
   ])];
 }
-
-/* ─── Legacy flat CATEGORIES array (kept for backwards compat) ─── */
-export const CATEGORIES = ALL_CATEGORIES.map(({ id, keywords }) => ({
-  id,
-  icon: "",
-  keywords,
-}));
 
 /* ── ARRANQUE EN EL NAVEGADOR ────────────────────────────────────────────────
    El documento trae el catálogo operativo en <script id="ccr-catalogo"> (lo pone

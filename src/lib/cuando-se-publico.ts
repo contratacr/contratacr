@@ -11,7 +11,7 @@
  * Se trunca, no se redondea: a las 23 h de publicado todavía es «Hace 23 h», no
  * «Ayer». Decir que algo es de ayer cuando es de hoy envejece la publicación.
  */
-export const DIAS_VISIBLES = 7;
+const DIAS_VISIBLES = 7;
 
 export function cuandoSePublico(iso: string | null | undefined, en: boolean): string {
   if (!iso) return "";

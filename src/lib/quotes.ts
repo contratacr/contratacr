@@ -1,7 +1,7 @@
 /** Cotizaciones: tipos y cálculo compartidos entre la API y la interfaz. */
 export type QuoteItem = { description: string; quantity: number; unit_price: number };
 export type QuoteTaxMode = "incluido" | "mas_iva" | "exento";
-export type QuoteStatus = "sent" | "accepted" | "declined" | "withdrawn";
+type QuoteStatus = "sent" | "accepted" | "declined" | "withdrawn";
 
 export type Quote = {
   id: string;
@@ -16,7 +16,6 @@ export type Quote = {
   public_code: string;
   /** Consecutivo del profesional (1, 2, 3…): sale en el documento y en el nombre del archivo. */
   quote_number: number | null;
-  booking_id: string | null;
   project_id: string | null;
   proposal_id: string | null;
   title: string | null;
@@ -34,25 +33,6 @@ export type Quote = {
   created_at: string;
   professional_name?: string | null;
 };
-
-/**
- * El enlace público: contratacr.com/c/k7m2xq9a. El código al azar es la llave —
- * sin él nadie puede abrir una cotización ajena, y por eso no se adivina—, así
- * que es lo único que el enlace necesita llevar. La forma larga que se envió
- * antes (…/cotizacion/sg-solutions-0003-k7m2xq9a) sigue abriendo lo mismo.
- *
- * La base es el sitio donde la cotización EXISTE: en test, test.contratacr.com;
- * en producción, contratacr.com. Solo las vistas previas de Vercel se mandan al
- * dominio de verdad, porque esa dirección no se comparte con nadie.
- */
-export function enlaceCotizacion(quote: Pick<Quote, "public_code" | "quote_number">, _proName = "", baseUrl?: string): string {
-  const origen = baseUrl || (typeof window !== "undefined" ? window.location.origin : "") || process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com";
-  let base = origen.replace(/\/$/, "");
-  if (/\.vercel\.app$/i.test(base.replace(/^https?:\/\//, "").split("/")[0])) base = "https://contratacr.com";
-  // Corto y sin ruido: el código es la llave y lo único que hace falta.
-  // Los enlaces largos que ya se enviaron siguen abriendo la misma cotización.
-  return `${base}/c/${quote.public_code}`;
-}
 
 /** De "sg-solutions-0003-k7m2xq9a" saca "k7m2xq9a": el código es lo último. */
 export function codigoDeEnlace(tramo: string): string {
@@ -95,9 +75,9 @@ export function whatsappDigits(phone: string | null | undefined): string {
   return d.length === 8 ? `506${d}` : d;
 }
 
-export const IVA_RATE = 0.13;
+const IVA_RATE = 0.13;
 export const QUOTE_MAX_ITEMS = 20;
-export const QUOTE_MAX_AMOUNT = 222_222_222;
+const QUOTE_MAX_AMOUNT = 222_222_222;
 
 export function quoteTotals(items: QuoteItem[], taxMode: QuoteTaxMode) {
   const subtotal = Math.round(items.reduce((acc, it) => acc + Math.max(0, it.quantity) * Math.max(0, it.unit_price), 0));

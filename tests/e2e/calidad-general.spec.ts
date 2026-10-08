@@ -93,7 +93,7 @@ test.describe("inglés", () => {
     await gotoOK(page, "/en");
     await expect(page.locator("html")).toHaveAttribute("lang", /^en/);
     await expect(page.getByText("Don't know who to call?")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Post a project" })).toBeVisible();
+    await expect(page.getByRole("main").getByRole("link", { name: "Post a project" })).toBeVisible();
     await expect(page.getByText(/No sabes a quién llamar|Crea un proyecto/)).toHaveCount(0);
 
     await gotoOK(page, "/en/publicar-proyecto?categoria=desarrollo_web");

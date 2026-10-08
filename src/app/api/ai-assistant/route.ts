@@ -766,8 +766,6 @@ type ProductIntent = {
   href?: (locale: Locale) => string;
 };
 
-const rx = (source: string) => new RegExp(source, "i");
-
 // LO QUE CONTRATACR PONE PARA ELEGIR BIEN, dicho igual en toda respuesta sobre
 // calidad, garantías o problemas: la plataforma da con qué comparar; la
 // contratación es un acuerdo directo entre cliente y profesional.

@@ -11,7 +11,7 @@
  * «Modalidad» o «Tipo de empleo» sirven con cinco vacantes; «Tipo de promoción»
  * no servía con ninguna cantidad, porque era vocabulario de quien publica.
  */
-export const USAR_FECHA_DESDE = 30;
+const USAR_FECHA_DESDE = 30;
 
 /** ¿Y el de fecha, que solo quita sobre una lista ya ordenada por reciente? */
 export function conFiltroDeFecha(total: number) {

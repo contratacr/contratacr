@@ -15,8 +15,7 @@ import { isSigningOut, signOutToHome } from "@/lib/auth/sign-out";
 import { useSearchParams } from "next/navigation";
 import {
   User, Award, Wrench,
-  ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, CreditCard,
-  ArrowLeft, ArrowRight, ChevronDown, ChevronRight, Sparkles, AlertCircle, MessageSquareMore, Home, LogOut, Users, CheckCircle2, FileText, Search, Camera, Eye, Trash2, Loader2,
+  ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, ArrowLeft, ArrowRight, ChevronDown, ChevronRight, Sparkles, AlertCircle, MessageSquareMore, Home, LogOut, Users, CheckCircle2, FileText, Search, Camera, Eye, Trash2, Loader2,
   BriefcaseBusiness, Star, ReceiptText, ExternalLink, Share2, BookOpen,
   } from "lucide-react";
 import { QuotesSection, cargarCotizaciones } from "@/components/quotes/quotes-section";
@@ -50,8 +49,6 @@ import { AccountPrivacySection } from "@/components/account/account-privacy";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { CloseAccountSection } from "@/components/account/close-account-section";
 import { SupportTickets } from "@/components/support/support-tickets";
-import { SubscriptionPanel } from "@/components/dashboard/pro/subscription-panel";
-import { PAYMENTS_ENABLED } from "@/lib/payments/config";
 import { createClient } from "@/lib/supabase/client";
 import { getInitials } from "@/lib/utils";
 import { canOffer } from "@/lib/auth/capabilities";
@@ -89,7 +86,6 @@ import { Modal } from "@/components/ui/modal";
 type Tab =
   | "home" | "profile" | "services" | "photos" | "quotes" | "verificacion"
   | "jobs" | "offers" | "publicaciones" | "completion"
-  | "suscripcion"
   | "sent_projects" | "applications" | "saved" | "connections"
   | "chat" | "notifications" | "soporte" | "cuenta" | "guides";
 
@@ -101,7 +97,7 @@ type ProData = Record<string, any>;
 // conjunto y cae en el inicio del panel.
 const ALL_TABS = new Set<Tab>([
   "home", "profile", "services", "photos", "quotes", "verificacion",
-  "jobs", "offers", "publicaciones", "completion", "suscripcion", "sent_projects", "applications", "saved", "connections",
+  "jobs", "offers", "publicaciones", "completion", "sent_projects", "applications", "saved", "connections",
   "chat", "notifications", "soporte", "cuenta", "guides",
 ]);
 
@@ -112,7 +108,6 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   photos: <Award className="h-4 w-4" />,
   quotes: <ReceiptText className="h-4 w-4" />,
   verificacion: <ShieldCheck className="h-4 w-4" />,
-  suscripcion: <CreditCard className="h-4 w-4" />,
   sent_projects: <ClipboardList className="h-4 w-4" />,
   applications: <BriefcaseBusiness className="h-4 w-4" />,
   saved: <Bookmark className="h-4 w-4" />,
@@ -132,7 +127,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
 // los filtros, no en la cabecera de la tarjeta: la cabecera solo existe de
 // 1024px para arriba y a media pantalla el subtítulo desaparecía.
 const TABS_WITH_SUBTITLE = new Set<Tab>([
-  "verificacion", "suscripcion", "completion",
+  "verificacion", "completion",
   "applications", "saved", "connections", "notifications", "cuenta", "guides",
 ]);
 
@@ -143,7 +138,7 @@ const TABS_WITH_SUBTITLE = new Set<Tab>([
 // Mode membership. The first three render only in "offer" mode, the next three
 // only in "use" mode; "profile" + the shared tabs are valid in both, so the mode
 // for those is taken from the URL (?mode=) or defaults to the account's capability.
-const OFFER_ONLY = new Set<Tab>(["services", "photos", "quotes", "verificacion", "suscripcion", "jobs", "offers", "completion"]);
+const OFFER_ONLY = new Set<Tab>(["services", "photos", "quotes", "verificacion", "jobs", "offers", "completion"]);
 // Ya no hay dos paneles: «Mis proyectos» es del profesional tanto como del
 // cliente —publicar un proyecto es publicar, tenga o no ficha—, así que ninguna
 // sección fuerza el panel de cliente. Se conserva el conjunto vacío porque el
@@ -166,7 +161,6 @@ const USE_ONLY = new Set<Tab>([]);
 // promociones comparten «Mis publicaciones», que es lo mismo: algo que publico.
 const OFFER_TABS: Tab[] = ([
   "sent_projects", "jobs", "offers", "quotes", "photos", "services", "profile", "saved", "soporte", "guides",
-  ...(PAYMENTS_ENABLED ? (["suscripcion"] as Tab[]) : []),
 ] as Tab[]).filter((tab) => EMPLEOS_VISIBLE || tab !== "jobs");
 const USE_TABS: Tab[] = ["sent_projects", "saved", "profile", "soporte", "guides"] as Tab[];
 // «Mis publicaciones» reúne TODO lo que uno saca a un tablero público: el
@@ -1324,15 +1318,6 @@ export default function DashboardPage() {
     scrollDashboardToPageTop();
   }
 
-  // The mode switch now lives in the panel header (sprint 518). Switching flips the global
-  // mode AND lands on the destination mode's MAIN tab, which re-asserts the mode via the
-  // urlForcedMode effect, so a switch from ANY section (incl. a mode-specific one) sticks.
-  function handleSwitchMode(next: Mode) {
-    if (next === mode) return;
-    setMode(next);
-    setTab("sent_projects");
-  }
-
   function returnAfterSectionSave() {
     const isMobilePanel = typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches;
 
@@ -1705,120 +1690,6 @@ export default function DashboardPage() {
     setTab(tab);
   }
 
-
-  function changePanelFromHeader(nextMode: Mode) {
-    if (nextMode === mode) return;
-    const isResponsivePanel = typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches;
-    if (!isResponsivePanel) {
-      handleSwitchMode(nextMode);
-      return;
-    }
-    setMode(nextMode);
-    setMobilePanelOpen(false);
-    const params = new URLSearchParams(window.location.search);
-    params.set("tab", "home");
-    params.delete("mode");
-    const query = params.toString();
-    window.history.replaceState(null, "", `${window.location.pathname}${query ? `?${query}` : ""}`);
-    scrollDashboardToPageTop();
-  }
-
-  function panelModeSelector() {
-    // El panel dejó de tener dos caras. «Mis publicaciones» reúne proyectos,
-    // empleos y promociones, y lo demás —Favoritos, Mi perfil, Soporte, Guías—
-    // siempre fue compartido, así que ya no queda nada que separar. Medido en
-    // producción: DOS de 289 profesionales usaron alguna vez el panel cliente.
-    // El parámetro ?mode= se sigue aceptando para no romper enlaces viejos.
-    return null;
-    // eslint-disable-next-line no-unreachable
-    if (!isProvider) return null;
-    const options: Array<{ value: Mode; label: string; icon: React.ReactNode }> = [
-      { value: "offer", label: locale === "en" ? "Professional" : "Profesional", icon: <BriefcaseBusiness className="h-4 w-4" /> },
-      { value: "use", label: locale === "en" ? "Client" : "Cliente", icon: <User className="h-4 w-4" /> },
-    ];
-    return (
-      <div data-panel-mode-selector className="mb-3 flex rounded-full bg-[#eef2f7] p-1">
-        {options.map((option) => {
-          const active = option.value === mode;
-          return (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => { if (!active) requestUnsavedAction(() => changePanelFromHeader(option.value)); }}
-              aria-pressed={active}
-              className={cn(
-                "inline-flex h-10 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full text-[13px] font-bold transition-colors",
-                active ? "bg-white text-[#009FD9] shadow-[0_6px_16px_-10px_rgba(15,23,42,0.5)]" : "text-[#526277] hover:text-[#162543]",
-              )}
-            >
-              {option.icon}
-              <span className="truncate">{option.label}</span>
-            </button>
-          );
-        })}
-      </div>
-    );
-  }
-
-  function navButton(tab: Tab) {
-    const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : tab === "chat" ? chatUnread : 0;
-    const label = panelTabLabel(tab);
-    return (
-      <button
-        key={tab}
-        data-testid={`panel-tab-${tab}`}
-        onClick={() => {
-          requestUnsavedAction(() => openPanelDestination(tab));
-        }}
-        className={cn(
-          "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-left",
-          activeTab === tab ? "bg-[#EBF5FB] text-[#009FD9]" : "text-[#374151] hover:bg-[#f3f4f6]"
-        )}
-      >
-        <span className="relative mr-1.5 inline-flex shrink-0">
-          {TAB_ICONS[tab]}
-          {badge > 0 && (
-            <span className="absolute -right-2.5 -top-2 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-[#009FD9] px-1 text-center text-[9px] font-bold leading-none text-white ring-2 ring-white">
-              {badge > 9 ? "9+" : badge}
-            </span>
-          )}
-        </span>
-        {label}
-      </button>
-    );
-  }
-
-  function topNavButton(tab: Tab) {
-    const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : tab === "chat" ? chatUnread : 0;
-    const label = panelTabLabel(tab);
-    return (
-      <button
-        key={tab}
-        type="button"
-        data-testid={`panel-tab-${tab}`}
-        onClick={() => {
-          requestUnsavedAction(() => openPanelDestination(tab));
-        }}
-        className={cn(
-          "relative inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full px-1.5 text-[12px] font-bold transition min-[1180px]:h-11 min-[1180px]:px-2 min-[1180px]:text-[12.5px] xl:px-2.5 xl:text-[13px]",
-          activeTab === tab
-            ? "text-[#0089bb]"
-            : "text-[#526277] hover:bg-[#EBF5FB] hover:text-[#0089bb]",
-        )}
-      >
-        <span className="relative inline-flex shrink-0">
-          {TAB_ICONS[tab]}
-          {badge > 0 && (
-            <span className="absolute -right-2.5 -top-2 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-[#009FD9] px-1 text-center text-[9px] font-bold leading-none text-white ring-2 ring-white">
-              {badge > 9 ? "9+" : badge}
-            </span>
-          )}
-        </span>
-        <span className="whitespace-nowrap">{label}</span>
-      </button>
-    );
-  }
-
   function desktopSidebarButton(tab: Tab) {
     const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : tab === "chat" ? chatUnread : 0;
     const label = panelTabLabel(tab);
@@ -1857,7 +1728,6 @@ export default function DashboardPage() {
     return (
       <aside className="hidden lg:block lg:w-[260px] lg:shrink-0">
         <div className="sticky top-[6.5rem]">
-          {panelModeSelector()}
           <div className="overflow-hidden rounded-[22px] border border-[#e5e7eb] bg-white shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)]">
             <div className="flex flex-col">
               <nav className="flex flex-col divide-y divide-[#eef2f6]">
@@ -1904,29 +1774,6 @@ export default function DashboardPage() {
     );
   }
 
-  function cambiarPanelCard() {
-    // Un solo panel: ver `panelModeSelector`.
-    return null;
-    // eslint-disable-next-line no-unreachable
-    if (!isProvider) return null;
-    const destino: Mode = mode === "offer" ? "use" : "offer";
-    const etiqueta = destino === "use" ? t("goToClientPanel") : t("goToProfessionalPanel");
-    return (
-      <button
-        type="button"
-        data-testid="panel-mode-switch"
-        onClick={() => requestUnsavedAction(() => changePanelFromHeader(destino))}
-        className="flex min-h-[60px] w-full items-center gap-3 rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3.5 text-left text-[15px] font-semibold text-[#162543] transition-colors hover:bg-[#f8fbfd]"
-      >
-        <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#52627a] [&>svg]:h-5 [&>svg]:w-5">
-          {destino === "use" ? <User /> : <BriefcaseBusiness />}
-        </span>
-        <span className="min-w-0 flex-1 truncate">{etiqueta}</span>
-        <ChevronRight className="h-4 w-4 shrink-0 text-[#b6c4d4]" />
-      </button>
-    );
-  }
-
   function mobileSectionButton(tab: Tab) {
     const label = panelTabLabel(tab);
     return (
@@ -1950,39 +1797,6 @@ export default function DashboardPage() {
         </span>
         <span className="min-w-0 flex-1 truncate">{label}</span>
         <ChevronRight className="h-4 w-4 shrink-0 text-[#b6c4d4]" />
-      </button>
-    );
-  }
-
-  function mobileUtilityButton({
-    keyName,
-    label,
-    icon,
-    onClick,
-  }: {
-    keyName: string;
-    label: string;
-    icon: React.ReactNode;
-    onClick: () => void;
-  }) {
-    return (
-      <button
-        key={keyName}
-        type="button"
-        onClick={onClick}
-        className={cn(
-          "flex min-h-14 w-full items-center gap-3 rounded-xl px-3.5 py-3 text-left text-[15px] font-semibold transition-colors",
-          "text-[#374151] hover:bg-[#f8fbfd]",
-        )}
-      >
-        <span
-          className={cn(
-            "inline-flex h-8 w-8 shrink-0 items-center justify-center text-[#64748b] [&>svg]:h-5 [&>svg]:w-5",
-          )}
-        >
-          {icon}
-        </span>
-        <span className="min-w-0 flex-1 truncate">{label}</span>
       </button>
     );
   }
@@ -2417,7 +2231,6 @@ export default function DashboardPage() {
                                 <div>
                                   <div className="flex flex-col gap-2.5">
                                     {ofrecerServiciosCard()}
-                                    {cambiarPanelCard()}
                                     {agruparPestanas(mobileSectionTabs).map((grupo, i) => (
                                       <div key={grupo[0] ?? i} className="flex flex-col gap-2.5">
                                         {grupo.map(mobileSectionButton)}
@@ -2553,7 +2366,6 @@ export default function DashboardPage() {
                             onSaved={(intent) => handleSaved(intent ?? "section")}
                           />
                         )}
-                        {activeTab === "suscripcion" && PAYMENTS_ENABLED && <SubscriptionPanel />}
                         {activeTab === "quotes" && (
                           <QuotesSection
                             proName={professionalDisplayName}

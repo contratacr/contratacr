@@ -16,7 +16,7 @@ export type ContactFlags = {
   hasContactEmail: boolean;
 };
 
-export function contactFlags(pro: ContactFields): ContactFlags {
+function contactFlags(pro: ContactFields): ContactFlags {
   const whatsapp = (pro.whatsapp ?? "").replace(/\D/g, "");
   const callPhone = (pro.callPhone ?? "").replace(/\D/g, "");
   return {

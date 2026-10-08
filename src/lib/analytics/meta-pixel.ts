@@ -83,10 +83,6 @@ export function trackMetaEvent(eventName: string, params?: Record<string, unknow
   enviar("track", eventName, params);
 }
 
-export function trackMetaCustomEvent(eventName: string, params?: Record<string, unknown>) {
-  enviar("trackCustom", eventName, params);
-}
-
 export function trackMetaPageView() {
   // La visita va directo a la cola del cargador (ya existe cuando esto corre):
   // guardada para la página siguiente quedaría con la dirección equivocada.

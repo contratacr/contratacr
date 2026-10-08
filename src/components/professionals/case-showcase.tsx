@@ -64,7 +64,6 @@ export function CaseShowcase({
   // Con dos profesiones o más el refinamiento ya aporta (los chips no compiten
   // con las pestañas de sección: son otro lenguaje visual).
   const showFilter = distinctProfs.length >= 2;
-  const countFor = (p: string) => cases.filter((c) => c.profession === p).length;
   // SIEMPRE hay un servicio marcado. Quitamos el chip «Todas» y, sin él,
   // «ninguno marcado» era un estado invisible: los chips se veían todos apagados
   // y aun así salía todo el trabajo junto, sin que nada dijera por qué.

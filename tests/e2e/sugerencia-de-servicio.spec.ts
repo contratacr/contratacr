@@ -25,11 +25,15 @@ test.describe("sugerencia de servicio al publicar", () => {
     // el admin); aquí va un servicio del código, que está en todas las bases.
     await puesto.fill("Electricista residencial");
     await expect(sugerencia).toContainText("¿Es de Electricidad?");
-    // Sugerir no es elegir: el campo sigue vacío hasta el toque.
-    await expect(page.locator("[data-destinatarios-vacante]")).toHaveCount(0);
+    // Sugerir no es elegir: el campo sigue vacío hasta el toque. Se mira el
+    // servicio ELEGIDO en el campo, no «Se le avisará a N…»: esa línea solo
+    // sale si hay profesionales de ese servicio, y en la base de CI puede no
+    // haber ninguno (falló así cada madrugada desde el 7-oct).
+    const elegido = page.locator("[data-servicio-elegido]").filter({ visible: true });
+    await expect(elegido).toHaveCount(0);
     await sugerencia.getByRole("button", { name: "Usar" }).click();
     await expect(sugerencia).toHaveCount(0);
-    await expect(page.locator("[data-destinatarios-vacante]")).toContainText(/de Electricidad\./, { timeout: 15_000 });
+    await expect(elegido).toHaveText("Electricidad", { timeout: 15_000 });
     // Elegir con «Usar» no abre el selector de servicios (en Safari del iPhone
     // el toque pasaba al primer botón de la <label> que envolvía el campo).
     const selector = page.getByPlaceholder(/Buscar servicio/);
@@ -40,9 +44,9 @@ test.describe("sugerencia de servicio al publicar", () => {
     // se avisa y se ofrece cambiarlo (sin cambiarlo solo).
     await puesto.fill("Plomero con experiencia");
     await expect(sugerencia).toContainText("Por el puesto, parece de Plomería.");
-    await expect(page.locator("[data-destinatarios-vacante]")).toContainText(/de Electricidad\./);
+    await expect(elegido).toHaveText("Electricidad");
     await sugerencia.getByRole("button", { name: "Cambiar" }).click();
-    await expect(page.locator("[data-destinatarios-vacante]")).toContainText(/de Plomería\./, { timeout: 15_000 });
+    await expect(elegido).toHaveText("Plomería", { timeout: 15_000 });
     await page.waitForTimeout(500);
     await expect(selector).toBeHidden();
 
@@ -50,7 +54,7 @@ test.describe("sugerencia de servicio al publicar", () => {
     await page.getByRole("button", { name: "Quitar servicio" }).filter({ visible: true }).first().click();
     await page.waitForTimeout(500);
     await expect(selector).toBeHidden();
-    await expect(page.locator("[data-destinatarios-vacante]")).toHaveCount(0);
+    await expect(elegido).toHaveCount(0);
   });
 
   test("el autocompletado gris del puesto calza exacto con lo que se escribe", async ({ page }) => {

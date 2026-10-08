@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { AvisoDeError } from "@/components/ui/etiqueta-campo";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { User as UserIcon, AlertCircle, Camera } from "lucide-react";
+import { User as UserIcon, Camera } from "lucide-react";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { useRouter } from "@/i18n/navigation";
 import { CedulaInput } from "@/components/ui/cedula-input";

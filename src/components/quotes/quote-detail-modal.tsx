@@ -4,10 +4,9 @@ import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Download, Loader2, Trash2, Undo2 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
-import { Button } from "@/components/ui/button";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { formatColones } from "@/lib/pricing";
-import { desgloseQuote, isQuoteExpired, nombreArchivoCotizacion, numeroCotizacion, whatsappDigits, type Quote } from "@/lib/quotes";
+import { desgloseQuote, isQuoteExpired, nombreArchivoCotizacion, numeroCotizacion, type Quote } from "@/lib/quotes";
 import { renderQuotePdf } from "@/lib/quote-image";
 import { MenuFicha } from "@/components/ui/menu-ficha";
 import { BotonCompartirCotizacion, QuoteShare } from "@/components/quotes/quote-share";
@@ -90,8 +89,8 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
     window.setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   }
 
-  const puedeRetirar = role === "pro" && quote.status === "sent" && !!(quote.booking_id || quote.project_id);
-  const puedeBorrar = role === "pro" && quote.status === "sent" && !quote.booking_id && !quote.project_id;
+  const puedeRetirar = role === "pro" && quote.status === "sent" && !!quote.project_id;
+  const puedeBorrar = role === "pro" && quote.status === "sent" && !quote.project_id;
   const abierta = quote.status === "sent" && !expirada;
   // El título del encabezado en UNA línea: el nombre del trabajo puede ser largo
   // y partido en tres renglones empujaba todo hacia abajo.

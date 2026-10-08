@@ -35,7 +35,7 @@ const CANDIDATOS_POR_GRUPO: string[][] = [
   ["psicologia", "fisioterapia", "nutricion"],             // salud
 ];
 
-export const OFICIOS_DE_ARRANQUE_FIJOS: string[] = CANDIDATOS_POR_GRUPO.map((grupo) => grupo[0]);
+const OFICIOS_DE_ARRANQUE_FIJOS: string[] = CANDIDATOS_POR_GRUPO.map((grupo) => grupo[0]);
 
 /** Elige los oficios con la cuenta de oferta en la mano. `minimo` es cuántos
  *  profesionales hacen que un oficio valga la pena ofrecerlo. */

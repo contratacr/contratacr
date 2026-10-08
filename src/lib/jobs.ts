@@ -60,7 +60,7 @@ const JOB_SEARCH_ALIASES: Record<string, string[]> = {
   ventas: ["vendedor", "vendedora", "ejecutivo de ventas", "asesor comercial", "comercial"],
 };
 
-export function normalizeJobSearch(value: string) {
+function normalizeJobSearch(value: string) {
   return value
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -136,8 +136,4 @@ export function formatJobSalary(job: Pick<JobPost, "salary_min" | "salary_max" |
     ? { hourly: "per hour", biweekly: "every two weeks", monthly: "per month", annual: "per year", project: "per project" }[job.salary_period]
     : SALARY_PERIODS[job.salary_period];
   return `${range} ${period}`;
-}
-
-export function splitJobLines(value: string) {
-  return value.split(/\r?\n/u).map((line) => line.trim()).filter(Boolean).slice(0, 20);
 }

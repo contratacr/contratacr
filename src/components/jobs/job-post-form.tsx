@@ -3,7 +3,7 @@
 import { flushSync } from "react-dom";
 
 import { rutaEmpleo } from "@/lib/marketplace-url";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { AvisoSinVerificar } from "@/components/ui/aviso-sin-verificar";
 import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";

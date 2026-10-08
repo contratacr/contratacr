@@ -17,8 +17,6 @@ export const SELF_MSG = {
   favorite: "favorite",
 } as const;
 
-export type SelfMsgKey = (typeof SELF_MSG)[keyof typeof SELF_MSG];
-
 // Shown when a professional triggers a CLIENT action on their OWN card/profile
 // (WhatsApp, call, save). We deliberately REVEAL every normal button
 // so the pro sees their profile exactly as clients do — then block the action

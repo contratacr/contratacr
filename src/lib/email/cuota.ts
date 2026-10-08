@@ -9,7 +9,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
  * que crea una cuenta no le llega el código: se queda afuera sin que nadie se
  * entere. Por eso cada nivel se corta a distinta altura.
  */
-export const TOPE_DIARIO = 300;
+const TOPE_DIARIO = 300;
 
 export type NivelDeCorreo = "critico" | "normal" | "masivo";
 

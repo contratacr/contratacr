@@ -69,7 +69,3 @@ export async function getSupplyCounts(): Promise<SupplyCounts> {
     return { byCategory: {}, byCategoryProvince: {}, total: 0, verified: 0 };
   }
 }
-
-export function supplyKey(categoryId: string, provinceId?: string | null) {
-  return provinceId ? `${categoryId}|${provinceId}` : categoryId;
-}

@@ -14,7 +14,7 @@ export type Mode = "use" | "offer";
 const KEY = "contratacr_mode";
 const EVENT = "ccr:mode-changed";
 
-export function readStoredMode(): Mode | null {
+function readStoredMode(): Mode | null {
   if (typeof window === "undefined") return null;
   try {
     const v = window.sessionStorage.getItem(KEY);

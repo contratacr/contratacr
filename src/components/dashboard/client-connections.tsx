@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarCheck, ClipboardList, ExternalLink, MessageSquareText, Repeat2, Search, Users, Wrench } from "lucide-react";
+import { ClipboardList, MessageSquareText, Repeat2, Search, Users, Wrench } from "lucide-react";
 import { ResponsiveVerifiedName } from "@/components/professionals/responsive-verified-name";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -22,16 +22,15 @@ type Connection = {
   categoryId: string | null;
   categoryLabel: string | null;
   lastInteractionAt: string | null;
-  source: "booking" | "project" | "contact" | "both";
+  source: "project" | "contact" | "both";
   status: string;
   title: string | null;
   count: number;
 };
 
 function SourceIcon({ source }: { source: Connection["source"] }) {
-  if (source === "contact") return <MessageSquareText className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />;
   if (source === "project") return <ClipboardList className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />;
-  return <CalendarCheck className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />;
+  return <MessageSquareText className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />;
 }
 
 const NO_CONNECTIONS: Connection[] = [];
@@ -130,11 +129,7 @@ export function ClientConnections() {
                 ) : (
                   <span className="inline-flex items-center gap-1">
                     <SourceIcon source={item.source} />
-                    {item.source === "booking"
-                      ? t("source.booking")
-                      : item.source === "project"
-                        ? t("source.project")
-                        : t("source.contact")}
+                    {item.source === "project" ? t("source.project") : t("source.contact")}
                   </span>
                 )}
               </div>

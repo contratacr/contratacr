@@ -96,19 +96,19 @@ export function getSavedPros(userId?: string): SavedPro[] {
   }
 }
 
-export function savePro(pro: SavedPro, userId?: string) {
+function savePro(pro: SavedPro, userId?: string) {
   const saved = getSavedPros(userId);
   if (!saved.find((p) => p.id === pro.id)) {
     localStorage.setItem(storageKey(userId), JSON.stringify([...saved, pro]));
   }
 }
 
-export function unsavePro(id: string, userId?: string) {
+function unsavePro(id: string, userId?: string) {
   const saved = getSavedPros(userId).filter((p) => p.id !== id);
   localStorage.setItem(storageKey(userId), JSON.stringify(saved));
 }
 
-export function isSaved(id: string, userId?: string): boolean {
+function isSaved(id: string, userId?: string): boolean {
   return getSavedPros(userId).some((p) => p.id === id);
 }
 
@@ -370,7 +370,7 @@ export function useGuardarProfesional({ pro, isOwn = false }: { pro: SavedPro; i
   return { guardado: saved, alternar: toggle, selfMsg, limpiarSelfMsg: () => setSelfMsg(null), etiqueta: saved ? t("savedLabel") : t("saveShort") };
 }
 
-export function SaveButton({ pro, className, isOwn = false, withLabel = false, bubble = false, sutil = false, corto = false }: SaveButtonProps) {
+function SaveButton({ pro, className, isOwn = false, withLabel = false, bubble = false, sutil = false, corto = false }: SaveButtonProps) {
   const t = useTranslations("card");
   const { guardado: saved, alternar: toggle, selfMsg, limpiarSelfMsg } = useGuardarProfesional({ pro, isOwn });
 

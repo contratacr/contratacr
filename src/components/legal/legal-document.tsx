@@ -7,7 +7,7 @@ import { SUPPORT_EMAIL } from "@/lib/constants";
 // ── Content model ──────────────────────────────────────────────────────────
 // Legal text is stored as data (verbatim Spanish) and rendered consistently.
 // Inline emphasis uses **bold**; the support email is auto-linked.
-export type LegalBlock =
+type LegalBlock =
   | { k: "p"; text: string }
   | { k: "sub"; text: string }
   | { k: "ul"; items: string[] }

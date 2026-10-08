@@ -15,7 +15,6 @@ import { useLugarDeLaBusqueda } from "@/hooks/use-lugar-de-la-busqueda";
 type MessageLauncherProps = {
   professionalId?: string;
   professionalName: string;
-  bookingId?: string;
   projectId?: string;
   contextTitle?: string;
   /** De dónde salió el botón, para empezar el mensaje con la frase que toca. */
@@ -36,7 +35,6 @@ type MessageLauncherProps = {
 function buildDraftHref({
   professionalId,
   professionalName,
-  bookingId,
   projectId,
   contextTitle,
   initialMessage,
@@ -48,7 +46,6 @@ function buildDraftHref({
   }
   if (professionalId) params.set("professionalId", professionalId);
   if (professionalName) params.set("professionalName", professionalName);
-  if (bookingId) params.set("bookingId", bookingId);
   if (projectId) params.set("projectId", projectId);
   if (contextTitle) params.set("contextTitle", contextTitle);
   if (initialMessage) params.set("draftMessage", initialMessage);
@@ -59,7 +56,6 @@ export function MessageLauncher(props: MessageLauncherProps) {
   const {
     professionalId = "",
     professionalName,
-    bookingId,
     projectId,
     contextTitle,
     isOwn = false,
@@ -95,7 +91,6 @@ export function MessageLauncher(props: MessageLauncherProps) {
   const mensajeSugerido = initialMessage || (() => {
     const tema = (contextTitle ?? "").trim();
     if (!tema) return "";
-    if (bookingId) return t("sugerencia.cita", { tema });
     if (projectId) return t("sugerencia.proyecto", { tema });
     if (contextKind === "promocion" || contextKind === "empleo") return t(`sugerencia.${contextKind}`, { tema });
     return lugarDeLaBusqueda
@@ -110,7 +105,7 @@ export function MessageLauncher(props: MessageLauncherProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          professionalId, bookingId, projectId, contextTitle,
+          professionalId, projectId, contextTitle,
           initialMessage: texto, openConversation: true,
         }),
       });

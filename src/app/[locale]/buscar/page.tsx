@@ -449,22 +449,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         zoom: 9,
       }
     : null;
-  const filtersFallback = (
-    <div className="rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-[0_2px_8px_rgba(15,23,42,0.05)]" aria-hidden="true">
-      <div className="mb-5 flex items-center justify-between">
-        <span className="ccr-delayed-loading ccr-skeleton-shimmer block h-5 w-20 rounded-md" />
-        <span className="ccr-delayed-loading ccr-skeleton-shimmer block h-4 w-12 rounded-md" />
-      </div>
-      <div className="space-y-5">
-        {[0, 1, 2, 3].map((item) => (
-          <div key={item} className="space-y-2">
-            <span className="ccr-delayed-loading ccr-skeleton-shimmer block h-3 w-20 rounded-md" />
-            <span className="ccr-delayed-loading ccr-skeleton-shimmer block h-10 w-full rounded-lg" />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
   const hasActiveFilters =
     !!selectedCategory ||
     !!selectedGroupId ||

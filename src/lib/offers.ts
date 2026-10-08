@@ -64,7 +64,7 @@ export function effectiveOfferStatus(
  * quería decir era «pregúntame». Se lee así, y se deja de calcular descuento
  * sobre ese 1 (salía «-100 %»).
  */
-export function precioAConvenir(offer: Pick<ProfessionalOffer, "price_now" | "currency">) {
+function precioAConvenir(offer: Pick<ProfessionalOffer, "price_now" | "currency">) {
   if (offer.price_now == null) return true;
   return offer.currency === "USD" ? offer.price_now < 1 : offer.price_now < 100;
 }

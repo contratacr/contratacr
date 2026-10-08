@@ -10,7 +10,7 @@ export function timingSafeSecretEqual(candidate: string | null, expected: string
   return timingSafeEqual(secretDigest(candidate), secretDigest(expected));
 }
 
-export function pushWorkerSecretFromRequest(request: Request) {
+function pushWorkerSecretFromRequest(request: Request) {
   const authorization = request.headers.get("authorization");
   if (authorization?.startsWith("Bearer ")) return authorization.slice("Bearer ".length).trim();
   return request.headers.get("x-push-worker-secret")?.trim() ?? null;

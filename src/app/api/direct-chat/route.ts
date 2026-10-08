@@ -24,7 +24,6 @@ type ConversationRow = {
   client_id: string;
   professional_id: string;
   professional_profile_id: string;
-  booking_id?: string | null;
   project_id?: string | null;
   proposal_id?: string | null;
   subject?: string | null;
@@ -114,10 +113,6 @@ async function enrichConversations(db: ReturnType<typeof createAdminClient>, row
   const clientIds = [...new Set(rows.map((row) => row.client_id))];
   // Un hilo puede arrastrar varios orígenes (una solicitud, luego un proyecto…).
   const listaContextos = (row: ConversationRow) => (Array.isArray(row.contexts) ? row.contexts as Array<Record<string, unknown>> : []);
-  const bookingIds = [...new Set(rows.flatMap((row) => [
-    ...(row.booking_id ? [row.booking_id] : []),
-    ...listaContextos(row).flatMap((ctx) => (ctx.bookingId ? [String(ctx.bookingId)] : [])),
-  ]))];
   const projectIds = [...new Set(rows.flatMap((row) => [
     ...(row.project_id ? [row.project_id] : []),
     ...listaContextos(row).flatMap((ctx) => (ctx.projectId ? [String(ctx.projectId)] : [])),
@@ -126,14 +121,12 @@ async function enrichConversations(db: ReturnType<typeof createAdminClient>, row
     ...(row.proposal_id ? [row.proposal_id] : []),
     ...listaContextos(row).flatMap((ctx) => (ctx.proposalId ? [String(ctx.proposalId)] : [])),
   ]))];
-  const [clientsResult, bookingsResult, projectsResult, proposalsResult] = await Promise.all([
+  const [clientsResult, projectsResult, proposalsResult] = await Promise.all([
     db.from("profiles").select("id, full_name, avatar_url").in("id", clientIds),
-    bookingIds.length ? db.from("bookings").select("id, service_description, status").in("id", bookingIds) : Promise.resolve({ data: [] }),
     projectIds.length ? db.from("projects").select("id, title, status").in("id", projectIds) : Promise.resolve({ data: [] }),
     proposalIds.length ? db.from("proposals").select("id, status").in("id", proposalIds) : Promise.resolve({ data: [] }),
   ]);
   const clients = new Map((clientsResult.data ?? []).map((row) => [row.id, row]));
-  const bookings = new Map((bookingsResult.data ?? []).map((row) => [row.id, row]));
   const projects = new Map((projectsResult.data ?? []).map((row) => [row.id, row]));
   const proposals = new Map((proposalsResult.data ?? []).map((row) => [row.id, row]));
   const withPush = await usersWithFreshPush(db, rows.flatMap((row) => [row.client_id, row.professional_profile_id]));
@@ -150,26 +143,20 @@ async function enrichConversations(db: ReturnType<typeof createAdminClient>, row
     // reached inside the app; the web already shows this number publicly.
     professional_whatsapp: professionalHasApp ? null : (whatsapp ?? null),
     client_profile: clients.get(row.client_id) ?? null,
-    context: row.booking_id
-      ? { type: "booking", ...(bookings.get(row.booking_id) ?? {}) }
-      : row.project_id
-        ? { type: row.proposal_id ? "proposal" : "project", ...(projects.get(row.project_id) ?? {}), proposal_status: row.proposal_id ? proposals.get(row.proposal_id)?.status : null }
-        : { type: "profile", title: row.subject ?? null, status: "open" },
+    context: row.project_id
+      ? { type: row.proposal_id ? "proposal" : "project", ...(projects.get(row.project_id) ?? {}), proposal_status: row.proposal_id ? proposals.get(row.proposal_id)?.status : null }
+      : { type: "profile", title: row.subject ?? null, status: "open" },
     contexts: listaContextos(row).map((ctx) => {
-      const bookingId = ctx.bookingId ? String(ctx.bookingId) : null;
       const projectId = ctx.projectId ? String(ctx.projectId) : null;
       const proposalId = ctx.proposalId ? String(ctx.proposalId) : null;
-      const booking = bookingId ? bookings.get(bookingId) : null;
       const project = projectId ? projects.get(projectId) : null;
       return {
-        type: proposalId ? "proposal" : projectId ? "project" : bookingId ? "booking" : "profile",
-        bookingId,
+        type: proposalId ? "proposal" : projectId ? "project" : "profile",
         projectId,
         proposalId,
-        title: (booking?.service_description as string | undefined)
-          || (project?.title as string | undefined)
+        title: (project?.title as string | undefined)
           || (ctx.title ? String(ctx.title) : null),
-        status: (booking?.status as string | undefined) || (project?.status as string | undefined) || null,
+        status: (project?.status as string | undefined) || null,
         at: ctx.at ? String(ctx.at) : null,
       };
     }),
@@ -338,7 +325,6 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const professionalId = String(body.professionalId ?? "");
   const conversationId = String(body.conversationId ?? "");
-  const bookingId = String(body.bookingId ?? "");
   const projectId = String(body.projectId ?? "");
   const contextTitle = limitTrimmedText(body.contextTitle, 160);
   const message = limitTrimmedText(body.message, 2000);
@@ -360,19 +346,14 @@ export async function POST(req: Request) {
     conversation = data as ConversationRow | null;
   } else {
     let clientId = user.id;
-    let resolvedProfessionalId = professionalId;
-    let resolvedBookingId: string | null = null;
+    const resolvedProfessionalId = professionalId;
     let resolvedProjectId: string | null = null;
     let subject = contextTitle || "Conversación desde un perfil";
 
-    if (bookingId) {
-      const { data: booking } = await db.from("bookings").select("id, client_id, professional_id, service_description").eq("id", bookingId).maybeSingle();
-      if (!booking) return NextResponse.json({ error: "Solicitud no encontrada." }, { status: 404 });
-      clientId = booking.client_id; resolvedProfessionalId = booking.professional_id; resolvedBookingId = booking.id; subject = booking.service_description;
-    // Abrir un chat DESDE una propuesta ya no existe: no hay propuestas. Las
-    // conversaciones que nacieron asi se siguen leyendo; lo que se retira es la
-    // puerta para crear nuevas.
-    } else if (projectId && professionalId) {
+    // Abrir un chat DESDE una propuesta ya no existe: no hay propuestas, y las
+    // citas se borraron (8-oct-2026). Las conversaciones que nacieron así se
+    // siguen leyendo; lo que se retira es la puerta para crear nuevas.
+    if (projectId && professionalId) {
       const { data: project } = await db.from("projects").select("id, client_id, title").eq("id", projectId).maybeSingle();
       if (!project) return NextResponse.json({ error: "Proyecto no encontrado." }, { status: 404 });
       clientId = project.client_id; resolvedProjectId = project.id; subject = project.title;
@@ -393,7 +374,7 @@ export async function POST(req: Request) {
       .limit(1)
       .maybeSingle();
     conversation = existing as ConversationRow | null;
-    if (conversation && contextTitle && !resolvedBookingId && !resolvedProjectId) {
+    if (conversation && contextTitle && !resolvedProjectId) {
       let { error: subjectError } = await db.from("direct_conversations")
         .update({
           subject: contextTitle,
@@ -421,10 +402,9 @@ export async function POST(req: Request) {
       conversation.client_deleted_at = null;
       conversation.professional_deleted_at = null;
     }
-    const nuevoOrigen = resolvedBookingId || resolvedProjectId
+    const nuevoOrigen = resolvedProjectId
       ? {
-        type: resolvedProjectId ? "project" : "booking",
-        bookingId: resolvedBookingId,
+        type: "project",
         projectId: resolvedProjectId,
         title: subject,
         at: new Date().toISOString(),
@@ -458,7 +438,7 @@ export async function POST(req: Request) {
     if (!conversation) {
       const base = {
         client_id: clientId, professional_id: resolvedProfessionalId, professional_profile_id: professionalProfileId,
-        booking_id: resolvedBookingId, project_id: resolvedProjectId, subject,
+        project_id: resolvedProjectId, subject,
       };
       let { data: inserted, error } = await db.from("direct_conversations")
         .insert({ ...base, contexts: nuevoOrigen ? [nuevoOrigen] : [] })
@@ -474,14 +454,12 @@ export async function POST(req: Request) {
       // más reciente y detrás quedan los anteriores.
       const previos = Array.isArray(conversation.contexts) ? conversation.contexts : [];
       const mismaClave = (item: Record<string, unknown>) =>
-        (item.bookingId ?? null) === nuevoOrigen.bookingId
-        && (item.projectId ?? null) === nuevoOrigen.projectId;
+        (item.projectId ?? null) === nuevoOrigen.projectId;
       if (!previos.some((item) => mismaClave(item as Record<string, unknown>))) {
         const siguientes = [nuevoOrigen, ...previos].slice(0, 12);
         const { error: ctxError } = await db.from("direct_conversations")
           .update({
             contexts: siguientes,
-            booking_id: resolvedBookingId ?? conversation.booking_id,
             project_id: resolvedProjectId ?? conversation.project_id,
             subject,
             updated_at: new Date().toISOString(),
@@ -492,7 +470,6 @@ export async function POST(req: Request) {
         }
         conversation.contexts = siguientes;
         conversation.subject = subject;
-        conversation.booking_id = resolvedBookingId ?? conversation.booking_id;
         conversation.project_id = resolvedProjectId ?? conversation.project_id;
       }
     }
@@ -573,7 +550,6 @@ export async function POST(req: Request) {
     data: {
       link: "/mensajes",
       conversation_id: conversation.id,
-      booking_id: conversation.booking_id,
       project_id: conversation.project_id,
       proposal_id: conversation.proposal_id,
     },

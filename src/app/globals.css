@@ -184,11 +184,6 @@ html.ccr-native-app.ccr-native-first-run-pending body {
   background: #f4f7fa !important;
 }
 
-.ccr-native-first-run-shell,
-html.ccr-native-app.ccr-native-first-run-pending .ccr-native-first-run-shell {
-  display: none !important;
-}
-
 html.ccr-native-app.ccr-native-first-run-pending body > *:not([data-testid="native-first-run-onboarding"]):not(#ccr-native-first-run-prepaint) {
   visibility: hidden !important;
 }
@@ -1041,14 +1036,6 @@ html body.ccr-search-filters-open .ccr-search-bottom-sheet {
   }
 }
 
-.ccr-native-app .ccr-panel-section-loading {
-  min-height: min(360px, calc(var(--app-visual-viewport-height) - 220px));
-}
-
-.ccr-native-app .ccr-form-loading-state {
-  min-height: min(520px, calc(var(--app-visual-viewport-height) - 180px));
-}
-
 .ccr-native-app .direct-chat-shell {
   height: var(--ccr-native-content-height);
   min-height: 0;
@@ -1283,24 +1270,6 @@ textarea::-webkit-scrollbar-track {
   margin-block: 8px;
 }
 
-.ccr-direct-chat-textarea {
-  scrollbar-gutter: stable;
-}
-
-.ccr-direct-chat-textarea::-webkit-scrollbar {
-  width: 5px;
-}
-
-.ccr-direct-chat-textarea::-webkit-scrollbar-track {
-  background: transparent;
-  margin: 10px 0;
-}
-
-.ccr-direct-chat-textarea::-webkit-scrollbar-thumb {
-  background: #c5d4df;
-  border-radius: 999px;
-}
-
 [data-ui="select-trigger"]:focus-visible,
 [data-ui="select-item"]:focus-visible {
   outline: none;
@@ -1435,12 +1404,6 @@ body.ccr-native-app.ccr-native-fullscreen-route .ccr-app-header,
 body.ccr-native-app.ccr-native-fullscreen-layer .ccr-app-header,
 body.ccr-native-app.ccr-native-fullscreen-route nav.ccr-native-bottom-nav,
 body.ccr-native-app.ccr-native-fullscreen-layer nav.ccr-native-bottom-nav { display: none !important; }
-
-/* Floating actions anchor to the viewport bottom; in the app that edge belongs
-   to the bottom nav, so they ride above it. */
-body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
-  bottom: calc(var(--ccr-barra-flotante, 0px) + 0.75rem) !important;
-}
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { min-height: 72px; background: #94a3b8; border-radius: 999px; }
 ::-webkit-scrollbar-thumb:hover { background: #64748b; }
@@ -1462,29 +1425,6 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
 .line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
 .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .line-clamp-3 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
-
-/* ─── Landing page animations ─── */
-
-@keyframes marquee-infinite {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-
-@keyframes slider-scroll {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-
-@keyframes float-phone {
-  0%, 100% { transform: translateY(0px) rotate(-3deg); }
-  50%       { transform: translateY(-18px) rotate(-3deg); }
-}
-
-@keyframes screen-fade {
-  0%, 30%    { opacity: 1; transform: translateY(0); }
-  35%, 65%   { opacity: 0; transform: translateY(-24px); }
-  70%, 100%  { opacity: 1; transform: translateY(0); }
-}
 
 @keyframes ai-concierge-float {
   0%, 100% { transform: translateY(0); }
@@ -1510,23 +1450,6 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
   }
 }
 
-.animate-marquee-infinite {
-  animation: marquee-infinite 32s linear infinite;
-}
-
-/* ─── Category carousel: ONE staggered (zigzag) track ───
-   A single horizontal band. Motion is TRANSFORM-based on `.cat-track` (JS rAF
-   for auto + arrow tweens + pointer drag) — NOT native scroll, which rounds
-   scrollLeft to integers and stalls a sub-pixel/frame auto-scroll. The track
-   holds the full set TWICE for a seamless loop; per-card right-margin keeps one
-   set width exact. `touch-action: pan-y` lets vertical page scroll through while
-   horizontal drags arrive as pointer events. Soft edge fade at the rails. */
-.cat-carousel {
-  overflow: hidden;
-  touch-action: pan-y;
-}
-.cat-carousel.is-dragging { cursor: grabbing; }
-
 /* Brief brand-blue flash when a "Completa tu perfil" item scrolls the user to the
    exact field to complete (profile editor). Border-radius keeps the ring rounded. */
 @keyframes fieldFlash {
@@ -1534,40 +1457,6 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
   25%      { box-shadow: 0 0 0 3px rgba(0, 159, 217, 0.5); }
 }
 .field-flash { animation: fieldFlash 1.5s ease-out; border-radius: 0.75rem; }
-.cat-track {
-  display: flex;
-  flex-wrap: nowrap;
-  width: max-content;
-}
-
-.animate-slider {
-  animation: slider-scroll 44s linear infinite;
-}
-
-.animate-float-phone {
-  animation: float-phone 5s ease-in-out infinite;
-}
-
-/* Hover scale for CTA buttons */
-.btn-hover-lift {
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-.btn-hover-lift:hover {
-  transform: scale(1.02);
-  box-shadow: 0 6px 24px rgba(0, 159, 217, 0.35);
-}
-
-/* Section baseline padding */
-.section-pad {
-  padding-top: 80px;
-  padding-bottom: 80px;
-}
-@media (max-width: 640px) {
-  .section-pad {
-    padding-top: 48px;
-    padding-bottom: 48px;
-  }
-}
 
 @media (max-width: 1023px) {
   body:not(.ccr-native-app) .ccr-support-thread {
@@ -1582,10 +1471,8 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
     border-radius: 0;
   }
 
-  .contratacr-chat-thread-open .dashboard-mobile-nav,
   .contratacr-chat-thread-open .ccr-app-header,
-  .contratacr-chat-thread-open [data-ai-concierge-button],
-  .contratacr-ai-open .dashboard-mobile-nav {
+  .contratacr-chat-thread-open [data-ai-concierge-button] {
     display: none !important;
   }
 
@@ -1774,11 +1661,6 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
     overflow-y: auto !important;
   }
 
-  body.ccr-native-app.contratacr-ai-open .ccr-ai-mobile-header-notice,
-  html.ccr-native-app body.contratacr-ai-open .ccr-ai-mobile-header-notice {
-    display: block !important;
-  }
-
   body.ccr-native-app.contratacr-ai-open .ccr-ai-footer-notice,
   html.ccr-native-app body.contratacr-ai-open .ccr-ai-footer-notice {
     display: none !important;
@@ -1823,132 +1705,6 @@ html.ccr-js .fade-in-up.visible > section > div > *:nth-child(3) { transition-de
 @keyframes tab-cards-in {
   from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }
-}
-.animate-tab-cards { animation: tab-cards-in 0.3s ease both; }
-
-/* ─── Accordion feature slide ─── */
-@keyframes accordion-open {
-  from { max-height: 0; opacity: 0; }
-  to   { max-height: 120px; opacity: 1; }
-}
-.accordion-open {
-  animation: accordion-open 0.3s cubic-bezier(0.4,0,0.2,1) forwards;
-  overflow: hidden;
-}
-
-/* ─── Card lift on hover ─── */
-.card-lift {
-  transition: transform 0.22s ease, box-shadow 0.22s ease;
-}
-.card-lift:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 16px 48px rgba(0,0,0,0.14);
-}
-
-/* ─── Underline tab indicator ─── */
-.tab-underline {
-  position: relative;
-}
-.tab-underline::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: #1a2744;
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.22s ease;
-}
-.tab-underline.active::after {
-  transform: scaleX(1);
-}
-
-/* ─── Photo card image zoom ─── */
-.img-zoom {
-  transition: transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94);
-}
-.group:hover .img-zoom {
-  transform: scale(1.07);
-}
-
-/* ─── Partner logo strip ─── */
-@keyframes logo-scroll {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-.animate-logo-scroll {
-  animation: logo-scroll 28s linear infinite;
-}
-
-/* ─── Number counter pulse ─── */
-@keyframes count-pulse {
-  0%, 100% { transform: scale(1); }
-  50%       { transform: scale(1.06); }
-}
-
-/* ─── Hero trust badge pop ─── */
-@keyframes trust-pop {
-  0%   { opacity: 0; transform: translateY(10px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-.animate-trust-pop {
-  animation: trust-pop 0.5s ease 0.4s both;
-}
-
-/* ─── Decorative blob / arc shapes (Thumbtack style) ─── */
-.blob-right {
-  position: absolute;
-  right: -120px;
-  top: -80px;
-  width: 580px;
-  height: 680px;
-  background: #EBF5FB;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.arc-bg {
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  width: 52%;
-  background: #EBF5FB;
-  border-radius: 50% 0 0 50%;
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* hide scrollbar for tab rows */
-.hide-scrollbar::-webkit-scrollbar { display: none; }
-.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-.ccr-location-tabs-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: #bfdbfe transparent;
-  touch-action: pan-x;
-  overscroll-behavior-x: contain;
-  -webkit-overflow-scrolling: touch;
-}
-
-.ccr-location-tabs-scroll::-webkit-scrollbar {
-  height: 3px;
-}
-
-.ccr-location-tabs-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.ccr-location-tabs-scroll::-webkit-scrollbar-thumb {
-  background: #bfdbfe;
-  border-radius: 999px;
-}
-
-.ccr-location-tabs-scroll:hover::-webkit-scrollbar-thumb {
-  background: #7dd3fc;
 }
 
 /* Featured brands: a compact logo ribbon immediately above the footer. */
@@ -2085,23 +1841,6 @@ html.ccr-js .fade-in-up.visible > section > div > *:nth-child(3) { transition-de
   }
 }
 
-/* ─── App section phone drift ─── */
-@keyframes phone-drift {
-  0%, 100% { transform: translateY(0) rotate(2deg); }
-  50%       { transform: translateY(-14px) rotate(2deg); }
-}
-.animate-phone-drift {
-  animation: phone-drift 6s ease-in-out infinite;
-}
-
-/* ─── Resource card overlay slide ─── */
-.resource-overlay {
-  transition: opacity 0.3s ease;
-}
-.resource-card:hover .resource-overlay {
-  opacity: 1 !important;
-}
-
 /* ─── Google Places autocomplete ───
    The new PlaceAutocompleteElement + the legacy `.pac-container` dropdown must
    float ABOVE modals/cards (the booking modal sits at z-50+), and the host cell
@@ -2134,46 +1873,12 @@ html.ccr-js .fade-in-up.visible > section > div > *:nth-child(3) { transition-de
   color-scheme: light;
 }
 
-@keyframes ccr-search-word-rise {
-  0% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  14% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  70% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(-72%);
-  }
-}
-
-@keyframes ccr-search-word-slide {
-  0%, 24% {
-    transform: translateY(0);
-  }
-  100% {
-    transform: translateY(-1.25em);
-  }
-}
-
 .ccr-search-filter-arrows-up [data-ui="select-trigger"] > svg {
   transform: rotate(180deg) !important;
 }
 
 .ccr-search-filter-arrows-down [data-ui="select-trigger"] > svg {
   transform: rotate(0deg) !important;
-}
-
-/* The profile's pinned action bar sits above the native bottom nav inside the app
-   and leaves room for itself at the end of the page on phones. */
-.ccr-native-app .ccr-profile-sticky-actions {
-  bottom: var(--ccr-native-live-bottom-nav-height, 0px);
 }
 
 /* Pictures that mount only once loaded (Radix avatars) reveal with a short fade
@@ -2409,12 +2114,6 @@ body.ccr-native-app:has(.ccr-native-search-panel) .ccr-native-bottom-nav {
 .ccr-caja-icono-plana {
   background: #eaf6fc;
   color: #162543;
-}
-
-.ccr-caja-icono-activa {
-  /* La caja del ícono ELEGIDO: azul de marca con degradado (la guía de la portada). */
-  background: linear-gradient(135deg, #33b8ea 0%, #0089c2 100%);
-  box-shadow: 0 10px 22px -10px rgba(0, 137, 194, 0.8);
 }
 
 .ccr-caja-icono {

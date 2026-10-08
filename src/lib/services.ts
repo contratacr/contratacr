@@ -55,29 +55,3 @@ export function countCases(items?: readonly unknown[] | null, urls?: readonly un
   }
   return Math.ceil((urls?.length ?? 0) / CASE_PHOTOS_PER_CASE);
 }
-
-export function serviceLabelMap(services: ServiceLike[]): Map<string, string> {
-  const norm = (s: string) => s.trim().toLowerCase();
-  const counts = new Map<string, number>();
-  for (const s of services) counts.set(norm(s.name), (counts.get(norm(s.name)) ?? 0) + 1);
-
-  const seen = new Map<string, number>();
-  const out = new Map<string, string>();
-  for (const s of services) {
-    const key = norm(s.name);
-    const name = s.name.trim();
-    if ((counts.get(key) ?? 0) <= 1) {
-      out.set(s.id, name);
-      continue;
-    }
-    const desc = s.description?.trim();
-    if (desc) {
-      out.set(s.id, `${name} — ${desc.length > 28 ? desc.slice(0, 28) + "…" : desc}`);
-    } else {
-      const n = (seen.get(key) ?? 0) + 1;
-      seen.set(key, n);
-      out.set(s.id, `${name} (${n})`);
-    }
-  }
-  return out;
-}

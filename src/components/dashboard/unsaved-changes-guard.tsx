@@ -25,7 +25,7 @@ function releaseNavigationBypass(delay = 250) {
 // A section-specific confirmation can coexist with this global guard. Keep the
 // guard disabled until React has committed both the restored form and
 // `dirty=false`; otherwise the same exit gesture can briefly open two dialogs.
-export function discardWithoutUnsavedDialog(action: () => void) {
+function discardWithoutUnsavedDialog(action: () => void) {
   if (typeof window === "undefined") {
     action();
     return;

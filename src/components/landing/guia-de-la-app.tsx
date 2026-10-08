@@ -28,13 +28,11 @@ const ICONOS = { profesionales: Search, proyectos: ClipboardList, empleos: Brief
 // paso no espera a que baje una imagen.
 export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
   const [activo, setActivo] = useState(0);
-  const [quieta, setQuieta] = useState(false);
   // La barra no se mueve con «timeupdate» (salta ~4 veces por segundo): es una
   // animación lineal de CSS que dura lo mismo que el video, como las historias
   // de Instagram. Se pausa si el video se pausa.
   const [duracion, setDuracion] = useState(0);
   const [corriendo, setCorriendo] = useState(false);
-  const [vuelta, setVuelta] = useState(0);
   const videos = useRef<(HTMLVideoElement | null)[]>([]);
   const caja = useRef<HTMLDivElement | null>(null);
   // Índice del video que ya está pintando cuadros: hasta entonces la imagen fija lo tapa.
@@ -184,7 +182,6 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
 
   const pestanasRef = useRef<HTMLDivElement | null>(null);
   const elegir = (i: number) => {
-    setQuieta(true);
     setActivo(i);
     // En el teléfono, al tocar una pestaña se encuadra la guía: pestañas arriba
     // (bajo la cabecera) y el video a la vista, sin que la persona tenga que bajar.
@@ -226,7 +223,7 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
                 {/* La barra de tiempo: cuánto falta para el siguiente paso. */}
                 {elegido && (
                   <span aria-hidden className="absolute inset-x-5 bottom-0 h-[3px] overflow-hidden rounded-full bg-[#e3f2fa]">
-                    <span key={`${activo}-${vuelta}`} className="ccr-guia-progreso block h-full w-full origin-left rounded-full bg-[#009FD9]" style={{ animationDuration: `${duracion}s`, animationPlayState: corriendo && duracion ? "running" : "paused" }} />
+                    <span key={activo} className="ccr-guia-progreso block h-full w-full origin-left rounded-full bg-[#009FD9]" style={{ animationDuration: `${duracion}s`, animationPlayState: corriendo && duracion ? "running" : "paused" }} />
                   </span>
                 )}
               </button>
@@ -261,7 +258,7 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
               </span>
               <span className="max-w-full truncate">{p.pestana}</span>
               <span aria-hidden className={cn("absolute inset-x-2 bottom-0 h-[3px] overflow-hidden rounded-full", elegido ? "bg-[#cfeaf7]" : "bg-transparent")}>
-                {elegido && <span key={`${activo}-${vuelta}`} className="ccr-guia-progreso block h-full w-full origin-left rounded-full bg-[#009FD9]" style={{ animationDuration: `${duracion}s`, animationPlayState: corriendo && duracion ? "running" : "paused" }} />}
+                {elegido && <span key={activo} className="ccr-guia-progreso block h-full w-full origin-left rounded-full bg-[#009FD9]" style={{ animationDuration: `${duracion}s`, animationPlayState: corriendo && duracion ? "running" : "paused" }} />}
               </span>
             </button>
           );
