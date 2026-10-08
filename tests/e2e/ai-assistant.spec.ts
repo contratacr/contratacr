@@ -411,7 +411,7 @@ test.describe("@seeded ContrataCR AI", () => {
     expect(requestReady.body.action).toBe("publish_request");
     expect(requestReady.body.answer).toMatch(/publicar/i);
     expect(requestReady.body.answer).not.toMatch(/voy a (?:proceder|crear|publicar)|creare|publicare/i);
-    expect(requestReady.body.ctaLabel).toBe("Publicar lo que necesito");
+    expect(requestReady.body.ctaLabel).toBe("Publicar proyecto");
     expect(requestReady.body.searchHref).toContain("tab=sent_projects");
     expect(requestReady.body.searchHref).toContain("openPublish=1");
     expect(requestReady.body.searchHref).toContain("categoria=carpinteria");

@@ -66,13 +66,14 @@ export async function cargarProyectosPublicos(limite = 100): Promise<ProyectoPub
   // cambia entre entornos. Si falla, el tablero sigue saliendo con el nombre
   // que se guardó al publicar.
   const idsDeClientes = [...new Set(filas.map((fila) => String(fila.client_id ?? "")).filter(Boolean))];
-  const cuentas = new Map<string, { nombre: string | null; foto: string | null }>();
+  const cuentas = new Map<string, { nombre: string | null; foto: string | null; verificada?: boolean }>();
   if (idsDeClientes.length > 0) {
-    const { data: perfiles } = await db.from("profiles").select("id, full_name, avatar_url").in("id", idsDeClientes);
+    const { data: perfiles } = await db.from("profiles").select("id, full_name, avatar_url, client_identity_status").in("id", idsDeClientes);
     for (const perfil of (perfiles ?? []) as Array<Record<string, unknown>>) {
       cuentas.set(String(perfil.id), {
         nombre: perfil.full_name ? repairVisibleText(String(perfil.full_name)) : null,
         foto: perfil.avatar_url ? String(perfil.avatar_url) : null,
+        verificada: perfil.client_identity_status === "verified",
       });
     }
   }
@@ -88,7 +89,7 @@ export async function cargarProyectosPublicos(limite = 100): Promise<ProyectoPub
  */
 function aProyectoPublico(
   fila: Record<string, unknown>,
-  cuenta: { nombre: string | null; foto: string | null } | undefined,
+  cuenta: { nombre: string | null; foto: string | null; verificada?: boolean } | undefined,
   locale: string,
 ): ProyectoPublico {
     const provinciaId = (fila.provincia_id as string | null) ?? null;
@@ -112,6 +113,7 @@ function aProyectoPublico(
       client_first_name: primerNombre(nombreDeLaCuenta),
       client_name: nombreDeLaCuenta || primerNombre(nombreDeLaCuenta),
       client_avatar_url: cuenta?.foto ?? null,
+      client_verified: cuenta?.verificada === true,
       allow_direct_contact: fila.allow_direct_contact !== false,
       // Apagado por omisión, y también cuando la columna todavía no existe:
       // que a alguien le llamen se concede, no se asume.
@@ -141,11 +143,12 @@ export async function cargarProyectoDelDueno(id: string, userId: string | null |
   if (error || !data) return null;
   const fila = data as unknown as Record<string, unknown>;
   if (String(fila.client_id ?? "") !== userId) return null;
-  const { data: perfil } = await db.from("profiles").select("full_name, avatar_url").eq("id", userId).maybeSingle();
-  const p = perfil as { full_name?: string | null; avatar_url?: string | null } | null;
+  const { data: perfil } = await db.from("profiles").select("full_name, avatar_url, client_identity_status").eq("id", userId).maybeSingle();
+  const p = perfil as { full_name?: string | null; avatar_url?: string | null; client_identity_status?: string | null } | null;
   return aProyectoPublico(fila, {
     nombre: p?.full_name ? repairVisibleText(String(p.full_name)) : null,
     foto: p?.avatar_url ? String(p.avatar_url) : null,
+    verificada: p?.client_identity_status === "verified",
   }, locale);
 }
 

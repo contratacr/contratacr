@@ -678,7 +678,7 @@ export function AccountMenu({
               <UserRound className="h-4 w-4 text-[#009FD9]" />
               {t("myPanel")}
             </Link>
-            {/* Ni «Mis proyectos» ni «Publicar lo que necesito» viven aquí: las
+            {/* Ni «Mis proyectos» ni «Publicar proyecto» viven aquí: las
                 dos cosas se hacen en el tablero de /proyectos, que ya está en el
                 menú. Repetirlas alargaba la lista sin llevar a ningún lado
                 nuevo. */}

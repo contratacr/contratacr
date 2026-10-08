@@ -66,6 +66,9 @@ interface ProfessionalScheduleProps {
   businessName?: string;
   /** Abre la lista completa de zonas (la pestaña Información de la ficha). */
   onVerZonas?: () => void;
+  /** Lo que va a la derecha de la zona, en la misma fila (el precio en la
+   *  tarjeta de resultados): «dónde y cuánto» en un solo renglón. */
+  alLadoDeLaZona?: ReactNode;
   /**
    * Debajo de esta tarjeta viene algo más —las redes del profesional, que las
    * pinta la ficha—. Sin eso, la raya que cierra la ubicación no separa nada:
@@ -145,7 +148,7 @@ function cubrePaisEntero(w: { level?: string; id?: string }, nombre: string) {
   return w.level === "country" || w.id === "wp_todo_costa_rica" || /^Todo Costa Rica$/i.test(nombre) || /^All of Costa Rica$/i.test(nombre);
 }
 
-export function ProfessionalSchedule({ professional, categoryName, searchedPlace, availabilityPublic, contactPreference = "ambas", videoConsultApplies = true, slots: allSlots, slotsInitiallyLoaded = true, activeCategory, isOwn = false, viewerPendiente = false, info, placeFallback = "", placeAddress = "", businessName = "", onVerZonas, stacked = false, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, syncWithSearchLoading = false, hayContenidoDespues = false}: ProfessionalScheduleProps) {
+export function ProfessionalSchedule({ professional, categoryName, searchedPlace, availabilityPublic, contactPreference = "ambas", videoConsultApplies = true, slots: allSlots, slotsInitiallyLoaded = true, activeCategory, isOwn = false, viewerPendiente = false, info, placeFallback = "", placeAddress = "", businessName = "", onVerZonas, alLadoDeLaZona, stacked = false, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, syncWithSearchLoading = false, hayContenidoDespues = false}: ProfessionalScheduleProps) {
   // ¿Se buscó una zona? Con una zona en la búsqueda, todo lo que sale la cubre.
   const zonaBuscada = Boolean(searchedPlace?.cantonName?.trim() || searchedPlace?.provinceName?.trim());
   const t = useTranslations("schedule");
@@ -661,10 +664,14 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
           // repetida: seis zonas gastaban tres renglones del sitio más caro de
           // la ficha y empujaban los botones de contactar hacia abajo. Arriba
           // queda lo justo para saber si sirve, y «+N zonas» lleva a la lista.
-          <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[12px] font-semibold leading-5 text-[#6b7280]" aria-label={t("location")}>
+          // En la tarjeta, con el precio a la derecha, la fila no salta de
+          // línea: la zona se recorta con «…» antes que el precio, que pesa
+          // más en la decisión (8-oct-2026).
+          <div data-testid="professional-card-location-row" className="flex min-w-0 items-center gap-3">
+          <p className={`flex min-w-0 items-center gap-x-1.5 gap-y-1 text-[12px] font-semibold leading-5 text-[#6b7280] ${alLadoDeLaZona ? "flex-1 flex-nowrap" : "flex-wrap"}`} aria-label={t("location")}>
             <span className="inline-flex min-w-0 items-center gap-1">
               {zonaPrincipalEsVideo ? <Video className="h-3 w-3 shrink-0" /> : <MapPin className="h-3 w-3 shrink-0" />}
-              <span className="min-w-0">{locTabLabel(primaryLocationTabs[0].label)}</span>
+              <span className={alLadoDeLaZona ? "min-w-0 truncate" : "min-w-0"}>{locTabLabel(primaryLocationTabs[0].label)}</span>
             </span>
             {/* «+N zonas más» cuando dice algo.
                 En la FICHA es un botón que abre Información con la lista entera.
@@ -690,10 +697,13 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
                   {t("moreZones", { count: zonasRestantes })}
                 </button>
               ) : (
-                <span className="shrink-0 font-bold text-[#52627a]">{t("moreZones", { count: zonasRestantes })}</span>
+                // En la tarjeta basta «+5»: el ícono de ubicación ya dice de qué.
+                <span className="shrink-0 font-bold text-[#52627a]" aria-label={t("moreZones", { count: zonasRestantes })}>+{zonasRestantes}</span>
               )
             )}
           </p>
+          {alLadoDeLaZona}
+          </div>
         )}
         {locationMenuOpen && extraLocationCount > 0 && (
           <div className="absolute right-0 top-[calc(100%+0.35rem)] z-[120] min-w-[13rem] max-w-[min(18rem,calc(100vw-3rem))] overflow-hidden rounded-lg border border-[#e5e7eb] bg-white py-1 shadow-[0_12px_30px_rgba(15,39,71,0.18)]" role="menu">

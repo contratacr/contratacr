@@ -10,7 +10,10 @@ import { supportsVideoConsultCategory, getCategoryLabel } from "@/lib/data/categ
 import { primaryPricingLabel, splitPricingLabel, type PricingTier } from "@/lib/pricing";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { ResponsiveServiceSummary } from "@/components/professionals/responsive-service-summary";
+import { CEDULA_COMPACTA, CedulaVerificada } from "@/components/ui/cedula-verificada";
+
 import { ResponsiveVerifiedName } from "@/components/professionals/responsive-verified-name";
+
 
 // A certification is a plain TEXT entry (no images): the certificate name, and
 // optionally the issuing institution + year. It belongs to a specific PROFESSION
@@ -120,6 +123,7 @@ interface ProfessionalCardProps {
 
 export function ProfessionalCard({ professional, className, searchedPlace, highlightMetric = "rating", slots = [], slotsInitiallyLoaded = true, activeCategory, viewerProfileId, rank, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, syncScheduleWithSearchLoading = false, searchReturnHref }: ProfessionalCardProps) {
   const tCard = useTranslations("card");
+  const tPerfil = useTranslations("profile");
   const tSchedule = useTranslations("schedule");
   const locale = useLocale();
   // Safe category label: if a translation key is missing, next-intl returns the
@@ -172,7 +176,8 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
   const isVerified = professional.verificationStatus === "verified";
   const mobileExtraProfessions = mobileDisplayProfessions.length - mobileProfessionList.length;
   const mobileServiceChipClass = "inline-flex max-w-full shrink-0 items-center whitespace-nowrap text-[12px] font-semibold leading-none text-[#6b7280]";
-  const moreProfessionsClass = "relative z-10 inline-flex shrink-0 items-center self-center align-middle leading-none text-[12px] font-bold text-[#6b7280] transition-colors hover:text-[#009FD9]";
+  // «+N servicios» abre el perfil: en azul, para que se lea como enlace.
+  const moreProfessionsClass = "relative z-10 inline-flex shrink-0 items-center self-center align-middle leading-none text-[12px] font-bold text-[#007fae] transition-colors hover:text-[#009FD9] hover:underline";
   // A pro viewing their OWN card cannot request a service from themselves. The
   // WhatsApp/Llamar/Solicitar actions now live together in the action zone (see
   // ProfessionalSchedule), so the card no longer renders separate top-row icons.
@@ -208,9 +213,6 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
   const casesLabel = locale === "en"
     ? `${portfolioCount} success ${portfolioCount === 1 ? "story" : "stories"}`
     : `${portfolioCount} ${portfolioCount === 1 ? "caso de éxito" : "casos de éxito"}`;
-  const ratingLabel = professional.reviewCount > 0
-    ? tCard("reviewsCount", { count: professional.reviewCount })
-    : tCard("noReviews");
   const desktopMetricClass = "relative z-10 inline-flex min-w-0 items-center gap-1 text-[12px] font-semibold leading-none text-[#5f6f86] transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30";
   const desktopMetric = (() => {
     if (highlightMetric === "successCases") {
@@ -249,7 +251,7 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
       >
         <Star className="h-3.5 w-3.5 shrink-0 fill-current text-[#f59e0b]" />
         <span className="font-bold tabular-nums text-[#162543]">{professional.ratingAvg.toFixed(1)}</span>
-        <span>{ratingLabel}</span>
+        <span>{tCard("reviewsCount", { count: professional.reviewCount })}</span>
       </Link>
     );
   })();
@@ -292,7 +294,7 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
       >
         <Star className="h-3.5 w-3.5 shrink-0 fill-current text-[#f59e0b]" />
         <span className="font-bold tabular-nums text-[#162543]">{professional.ratingAvg.toFixed(1)}</span>
-        <span className="whitespace-nowrap">{ratingLabel}</span>
+        <span className="whitespace-nowrap">{tCard("reviewsCount", { count: professional.reviewCount })}</span>
       </Link>
     );
   })();
@@ -318,7 +320,7 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
     <span
       data-testid="professional-card-mobile-price-primary"
       aria-label={mobilePriceText}
-      className="ml-auto min-w-0 shrink-0 whitespace-nowrap text-right text-[12px] font-bold leading-none text-[#009FD9]"
+      className="ml-auto min-w-0 shrink-0 whitespace-nowrap text-right text-[12px] font-bold leading-none text-[#009FD9] lg:hidden"
     >
       {mobilePriceText}
     </span>
@@ -385,14 +387,13 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
                   <h3 title={businessName ? businessName : professional.fullName} className="min-w-0 font-bold text-[#111827] text-[15px] leading-[1.1] hover:text-[#009FD9] transition-colors">
                     <ResponsiveVerifiedName
                       name={displayName.primaryDesktop}
-                      verified={isVerified}
+                      verified={false}
                       verifiedLabel={tCard("verifiedTitle")}
                     />
                   </h3>
                 </Link>
                 {desktopPrice}
               </div>
-
               {(displayProfessions.length > 0 || professional.isFeatured) && (
                 <ResponsiveServiceSummary
                   labels={mobileDisplayProfessions.map((cat) => catLabel(cat))}
@@ -401,22 +402,27 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
                   moreTitle={tCard("moreProfessions")}
                   featuredLabel={professional.isFeatured ? tCard("featured") : undefined}
                   testId="professional-card-service-summary"
-                  className="mt-1.5 flex w-full min-w-0 max-w-full items-baseline gap-1 overflow-hidden lg:hidden"
+                  className="mt-1.5 flex w-full min-w-0 max-w-full items-center gap-1 overflow-hidden lg:hidden"
                   itemClassName="inline-flex max-w-full shrink-0 items-baseline whitespace-nowrap text-[12px] font-semibold leading-none text-[#6b7280]"
                   itemTestId="professional-card-mobile-service"
                   moreTestId="professional-card-more-services"
                   moreClassName={moreProfessionsClass}
-                  moreSuffix={tCard("servicesSuffix")}
                   separator=","
                 />
               )}
-              {(mobileMetric || mobilePrice) && (
+              {/* La fila de CONFIANZA: reseñas y «Cédula verificada», en ese
+                  orden. Con reseñas, la cédula cierra la línea a la derecha,
+                  encima del precio; sola, se queda a la izquierda: 274 de 313
+                  profesionales tienen cédula y ninguna reseña, y a la derecha
+                  quedaba flotando. Sin «·»: la estrella y el sello ya separan.
+                  El precio bajó a la fila de la zona (8-oct-2026). */}
+              {(mobileMetric || isVerified) && (
                 <div
                   data-testid="professional-card-mobile-meta-row"
-                  className="mt-1.5 flex min-w-0 items-center justify-between gap-2 lg:hidden"
+                  className="mt-1.5 flex min-w-0 items-center justify-between gap-3 lg:hidden"
                 >
-                  {mobileMetric ?? <span className="min-w-0" />}
-                  {mobilePrice}
+                  {mobileMetric}
+                  {isVerified && <CedulaVerificada texto={tPerfil("cedulaVerificada")} className={CEDULA_COMPACTA} />}
                 </div>
               )}
             </div>
@@ -432,14 +438,16 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
                 profileHref={profileHref}
                 moreTitle={tCard("moreProfessions")}
                 featuredLabel={professional.isFeatured ? tCard("featured") : undefined}
-                moreSuffix={tCard("servicesSuffix")}
+                itemClassName="inline-flex max-w-full shrink-0 items-center whitespace-nowrap text-[12px] font-semibold leading-snug text-[#6b7280]"
+                moreClassName={moreProfessionsClass}
               />
             </div>
             </>
           )}
-          {desktopMetric && (
-          <div className="mt-1.5 hidden min-w-0 items-center justify-between gap-2 lg:flex">
+          {(desktopMetric || isVerified) && (
+          <div className="mt-1.5 hidden min-w-0 items-center gap-3 lg:flex">
               {desktopMetric}
+              {isVerified && <CedulaVerificada texto={tPerfil("cedulaVerificada")} className={CEDULA_COMPACTA} />}
           </div>
           )}
         </div>
@@ -467,6 +475,7 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
         isOwn={isOwn}
         placeFallback={placeFallback}
         placeAddress={placeAddress}
+        alLadoDeLaZona={mobilePrice}
         businessName={businessName ?? ""}
         forceContactOnly={forceContactOnly}
         preferredLocationId={preferredLocationId ?? (forceContactOnly ? "videoconsulta" : undefined)}

@@ -139,7 +139,7 @@
     "recent": "Recientes",
     "recentClear": "Borrar",
     "masBuscados": "Los más buscados",
-    "publishRequest": "Publicar lo que necesito",
+    "publishRequest": "Publicar proyecto",
     "register": "Registrarse",
     "loginOrRegister": "Ingresar o crear cuenta",
     "signUp": "Registrarme",
@@ -229,7 +229,6 @@
     "resultsIn": "{count, plural, one {# profesional} other {# profesionales}} en {location}",
     "thisArea": "esta área",
     "resultsInCR": "{count, plural, one {# profesional} other {# profesionales}} en Costa Rica",
-    "verifiedLegend": "Cédula verificada",
     "list": "Lista",
     "map": "Mapa",
     "viewResults": "Ver resultados",
@@ -237,7 +236,7 @@
     "noResults": {
       "title": "No encontramos resultados",
       "desc": "Intenta con otra categoría o amplía la zona de búsqueda.",
-      "publishCta": "Publicar lo que necesito"
+      "publishCta": "Publicar proyecto"
     },
     "pagination": {
       "label": "Paginación de resultados",
@@ -315,8 +314,8 @@
     "proyectoTarjeta": {
       "titulo": "¿No te decides?",
       "tituloVacio": "Nadie por aquí todavía",
-      "texto": "Publica lo que necesitas y los profesionales te contactan por WhatsApp.",
-      "boton": "Publicar lo que necesito",
+      "texto": "Publica tu proyecto y los profesionales te escriben por WhatsApp.",
+      "boton": "Publicar proyecto",
       "pie": "Gratis · Tu número no se publica"
     },
     "metaTitleGeneral": "Profesionales verificados en Costa Rica",
@@ -980,7 +979,7 @@
       "search": "Buscar servicios",
       "categories": "Servicios",
       "howItWorks": "Cómo usar",
-      "publish": "Publicar lo que necesito",
+      "publish": "Publicar proyecto",
       "offers": "Promociones"
     },
     "pros": {
@@ -1274,7 +1273,7 @@
       },
       "projects": {
         "title": "Mis proyectos",
-        "publish": "Publicar lo que necesito",
+        "publish": "Publicar proyecto",
         "empty": "Todavía no has publicado ningún proyecto",
         "emptyHint": "Publica lo que necesitas y los profesionales te responden.",
         "proposals": "propuesta(s)",
@@ -1414,7 +1413,7 @@
       },
       "actions": {
         "publish": {
-          "title": "Publicar lo que necesito",
+          "title": "Publicar proyecto",
           "body": "Cuenta qué necesitas y los profesionales te responden."
         },
         "search": {
@@ -3144,7 +3143,16 @@
     "editSaving": "Guardando…",
     "editDone": "Cambios guardados",
     "destinatarios": "{n, plural, one {# profesional de este servicio recibirá tu proyecto} other {# profesionales de este servicio recibirán tu proyecto}}",
-    "borradorListo": "Quedó guardado. Revísalo y toca Publicar."
+    "borradorListo": "Quedó guardado. Revísalo y toca Publicar.",
+    "cedulaLabel": "Tu cédula",
+    "cedulaAyuda": "Si la agregas, tu proyecto sale con «Cédula verificada» y los profesionales te responden con más confianza. El número no se muestra.",
+    "cedulaYaVerificada": "Cédula verificada",
+    "cedulaYaVerificadaAyuda": "Tu proyecto sale con «Cédula verificada». El número no se muestra.",
+    "errCedula": "Revisa el número de cédula o deja el campo vacío.",
+    "identidadVerificada": "Tu proyecto salió con «Cédula verificada».",
+    "identidadNoEncontrada": "No encontramos esa cédula en el padrón, así que tu proyecto se publicó sin «Cédula verificada».",
+    "identidadPadronCaido": "No pudimos consultar el padrón en este momento: tu proyecto se publicó sin «Cédula verificada». Puedes agregarla en tu próximo proyecto.",
+    "identidadEnRevision": "Vamos a revisar tu identificación; mientras tanto tu proyecto sale sin «Cédula verificada»."
   },
   "notifications": {
     "title": "Notificaciones",
@@ -3460,7 +3468,7 @@
     "publishStep1Body": "Tu proyecto sale en el tablero público y los profesionales de ese servicio te escriben por WhatsApp desde la publicación.",
     "publishStep2Title": "Acepta la mejor opción",
     "publishStep2Body": "Le escribes al que te convenga, se ponen de acuerdo y cierras el proyecto con \"Ya lo resolví\".",
-    "publishPathCta": "Publicar lo que necesito",
+    "publishPathCta": "Publicar proyecto",
     "clientsEyebrow": "Beneficios para clientes",
     "clientsBadge": "Clientes",
     "clientsTitle": "Menos vueltas, más claridad",
@@ -3556,7 +3564,7 @@
     "ctaTitle": "Pruébala y compártela",
     "ctaSubtitle": "Si necesitas ayuda, busca profesionales. También puedes explorar empleos y promociones o crear tu perfil para ofrecer servicios.",
     "ctaSearch": "Buscar profesionales",
-    "ctaPublish": "Publicar lo que necesito",
+    "ctaPublish": "Publicar proyecto",
     "ctaOffer": "Ofrecer mis servicios",
     "helpCta": "Ver preguntas frecuentes"
   },
@@ -4050,7 +4058,7 @@
     "seeAll": "Ver {count, plural, one {# profesional} other {los # profesionales}}",
     "publishTitle": "Recibe hasta 3 cotizaciones sin compromiso",
     "publishBody": "Cuenta qué necesitas una sola vez y los profesionales de {category} te responden con precio.",
-    "publishCta": "Publicar lo que necesito",
+    "publishCta": "Publicar proyecto",
     "howTitle": "Así funciona",
     "how1": "Elige un profesional verificado.",
     "how2": "Escríbele por WhatsApp o agenda una cita.",
@@ -4507,5 +4515,10 @@
     "tambien": "También bloquear a este usuario",
     "tambienTexto": "Dejarás de ver su perfil y sus publicaciones, y no podrán escribirse.",
     "ok": "Entendido"
+  },
+  "avisoSinVerificar": {
+    "empleo": "Tu empleo va a salir sin «Cédula verificada». Con la cédula verificada, quien busca trabajo confía más en la oferta.",
+    "promocion": "Tu promoción va a salir sin «Cédula verificada». Con la cédula verificada, los clientes confían más en la oferta.",
+    "accion": "Verificar mi cédula"
   }
 }

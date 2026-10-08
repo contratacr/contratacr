@@ -3,7 +3,6 @@
 import { useNativeApp } from "@/hooks/use-native-app";
 import { PantallaFija } from "@/components/util/pantalla-fija";
 import { Link } from "@/i18n/navigation";
-import { VerifiedSeal } from "@/components/ui/verified-seal";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Loader2, RefreshCw, SlidersHorizontal } from "lucide-react";
@@ -19,8 +18,6 @@ interface SearchResultsLayoutProps {
   drawerFilters?: React.ReactNode;
   /** Mobile-only "<N> profesionales en <área>" count shown in the sheet header. */
   countLabel?: string;
-  /** La clave del check azul («Cédula verificada»), a la derecha del conteo. */
-  leyendaVerificada?: string;
   /** La salida de los filtros, junto al conteo. */
   limpiar?: { href: string; label: string };
   mapData: MapProfessional[];
@@ -115,7 +112,7 @@ function snapIndex(value: number, points = mobileSheetSnapPoints()) {
  *  DESKTOP is unchanged (same `lg:` classes). The bottom-sheet wrapper is `lg:contents`, so on
  *  desktop it dissolves and the card column (`lg:order-2`) drops into the 3-column flex shell.
  */
-export function SearchResultsLayout({ children, filters, quickFilters, drawerFilters, countLabel, leyendaVerificada, limpiar, mapData, apiKey, locale, numbering, mapFocusTarget = null, resetKey, sinResultados = false, hojaAbiertaAlInicio = false }: SearchResultsLayoutProps) {
+export function SearchResultsLayout({ children, filters, quickFilters, drawerFilters, countLabel, limpiar, mapData, apiKey, locale, numbering, mapFocusTarget = null, resetKey, sinResultados = false, hojaAbiertaAlInicio = false }: SearchResultsLayoutProps) {
   const t = useTranslations("search");
   const [showFilters, setShowFilters] = useState(false); // full-filter drawer (mobile + lg-xl)
   const sheetRef = useRef<HTMLDivElement | null>(null);
@@ -650,19 +647,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
                 {quickFilters}
               </div>
             )}
-            {countLabel && (
-              <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-0.5 px-4 pb-2 pt-0.5 text-[13px]">
-                {/* El conteo nunca se recorta: si la clave del check no cabe al lado,
-                    baja sola a la línea de abajo, a la derecha. */}
-                <p className="min-w-0 font-semibold text-[#162543]">{countLabel}{limpiar && <> · <Link href={limpiar.href} className="text-[#007fae] hover:underline">{limpiar.label}</Link></>}</p>
-                {leyendaVerificada && (
-                  <span data-leyenda-verificada className="ml-auto flex shrink-0 items-center gap-1 self-center text-[12px] font-medium text-[#4b5b70]">
-                    <VerifiedSeal className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />
-                    {leyendaVerificada}
-                  </span>
-                )}
-              </div>
-            )}
+            {countLabel && <p className="px-4 pb-2 pt-0.5 text-[13px] font-semibold text-[#162543]">{countLabel}{limpiar && <> · <Link href={limpiar.href} className="text-[#007fae] hover:underline">{limpiar.label}</Link></>}</p>}
             <div data-sheet-drag-handle aria-hidden="true" className="h-1 bg-[#f6f8fb] shadow-[inset_0_1px_0_rgba(226,232,240,0.58)]" />
           </div>
 

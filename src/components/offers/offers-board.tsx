@@ -6,7 +6,7 @@ import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 import { PanelEmptyState } from "@/components/ui/content-loading";
 import { cn } from "@/lib/utils";
-import { VerifiedSeal } from "@/components/ui/verified-seal";
+import { CEDULA_COMPACTA, CedulaVerificada } from "@/components/ui/cedula-verificada";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
@@ -746,7 +746,7 @@ function OfferRow({
 }) {
   const locale = marketplaceLocale(useLocale());
   const copy = OFFERS_COPY[locale];
-  const tTarjeta = useTranslations("card");
+  const tPerfilFila = useTranslations("profile");
   const discount = offerDiscountPercent(offer);
   return (
     <article
@@ -775,9 +775,11 @@ function OfferRow({
                 </span>
               )}
             </div>
-            <p className="flex min-w-0 items-center gap-1 text-[13px] font-semibold leading-5 text-[#101d35] sm:text-sm">
-              <span className="min-w-0 truncate">{offer.professional_name}</span>
-              {offer.professional_verified && <VerifiedSeal label={tTarjeta("verifiedTitle")} className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />}
+            {/* «Cédula verificada» con palabras junto al nombre; si no cabe,
+                baja a la línea de abajo sin recortar el nombre (8-oct-2026). */}
+            <p className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[13px] font-semibold leading-5 text-[#101d35] sm:text-sm">
+              <span className="min-w-0 max-w-full truncate">{offer.professional_name}</span>
+              {offer.professional_verified && <CedulaVerificada texto={tPerfilFila("cedulaVerificada")} className={CEDULA_COMPACTA} />}
             </p>
             {/* En computadora, un solo azul por fila: el del título, que es lo
                 que se abre. El precio va en azul marino y fuerte —es dinero—, y
@@ -885,10 +887,7 @@ function OfferPreview({
                 </p>
               )}
               {offer.professional_verified && (
-                <span className="mt-0.5 flex items-center gap-1 text-[13px] font-medium text-[#4b5b70]" data-cedula-verificada>
-                  <VerifiedSeal className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />
-                  {tPerfil("cedulaVerificada")}
-                </span>
+                <CedulaVerificada texto={tPerfil("cedulaVerificada")} className="mt-0.5" />
               )}
             </div>
             {/* Compartir vive dentro del «···»: ver la nota de la ficha de un empleo. */}

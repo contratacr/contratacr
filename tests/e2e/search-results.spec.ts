@@ -75,7 +75,9 @@ test.describe("@seeded search results", () => {
     await expectNoHorizontalOverflow(page);
   });
 
-  test("mobile cards keep services above a single-line review and price row", async ({ page }) => {
+  // El orden de la tarjeta (8-oct-2026): nombre → servicios → reseñas y
+  // «Cédula verificada» → zona con el precio a la derecha («dónde y cuánto»).
+  test("mobile cards keep services above the review row and the price on the location row", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await gotoOK(page, "/profesionales");
 
@@ -99,6 +101,7 @@ test.describe("@seeded search results", () => {
       return {
         card: { left: cardBox.left, right: cardBox.right, top: cardBox.top },
         meta: rect('[data-testid="professional-card-mobile-meta-row"]'),
+        location: rect('[data-testid="professional-card-location-row"]'),
         serviceRow: rect('[data-testid="professional-card-service-summary"]'),
         service: rect('[data-testid="professional-card-mobile-service"]'),
         primary: rect('[data-testid="professional-card-mobile-price-primary"]'),
@@ -110,8 +113,13 @@ test.describe("@seeded search results", () => {
     expect(layout.service).not.toBeNull();
     expect(layout.primary).not.toBeNull();
     expect(layout.serviceRow!.top).toBeLessThan(layout.meta!.top);
+    expect(layout.location).not.toBeNull();
     expect(layout.service!.top).toBeLessThan(layout.primary!.top);
-    expect(Math.abs(layout.primary!.top - layout.meta!.top)).toBeLessThanOrEqual(2);
+    expect(layout.meta!.top).toBeLessThan(layout.location!.top);
+    // El precio va en la fila de la zona, centrado con ella.
+    const centroPrecio = (layout.primary!.top + layout.primary!.bottom) / 2;
+    expect(centroPrecio).toBeGreaterThanOrEqual(layout.location!.top);
+    expect(centroPrecio).toBeLessThanOrEqual(layout.location!.bottom);
     expect(layout.primary!.right).toBeLessThanOrEqual(layout.card!.right + 1);
   });
 
