@@ -70,7 +70,6 @@ type AssistantProfessionalResult = {
   requestHref: string;
   actionHref: string;
   actionLabel: string;
-  actionKind: "availability" | "message";
   /** The searched category. */
   categoryId: string | null;
 };
@@ -1385,9 +1384,6 @@ function actionHref(payload: AssistantPayload, originalMessage: string, locale: 
   if (payload.action === "reset_password") return `${prefijoDeIdioma(locale)}/olvide-contrasena`;
   if (payload.action === "open_dashboard") {
     const normalized = normalizeText(originalMessage);
-    if (includesAny(normalized, ["disponibilidad", "agenda", "horario", "availability", "schedule"])) {
-      return `${prefijoDeIdioma(locale)}/dashboard/profesional?tab=availability`;
-    }
     if (includesAny(normalized, ["oportunidad", "oportunidades", "propuesta", "propuestas", "opportunity", "opportunities", "proposal", "proposals"])) {
       return `${prefijoDeIdioma(locale)}/proyectos`;
     }
@@ -1718,11 +1714,6 @@ function normalizePayload(
       ctaLabel: locale === "en" ? "Suggest service" : "Sugerir servicio",
     };
   }
-  if (
-    includesAny(normalized, ["ocultar mi agenda", "oculto mi agenda", "mostrar mi agenda", "muestro mi agenda", "agenda privada", "mi disponibilidad", "mis horarios", "hide my schedule", "my availability"])
-  ) {
-    return { ...payload, action: "open_dashboard", ctaLabel: locale === "en" ? "Open availability" : "Ir a disponibilidad" };
-  }
   if (includesAny(normalized, ["editar mis servicios", "administrar mis servicios", "servicios que ofrezco", "agregar otro servicio", "agregar un servicio", "agrego otro servicio", "agrego un servicio", "anadir otro servicio", "anadir un servicio", "anado otro servicio", "anado un servicio", "edit my services", "manage my services", "add another service", "add a service"])) {
     return { ...payload, action: "open_dashboard", ctaLabel: locale === "en" ? "Open services" : "Ir a servicios" };
   }
@@ -2015,44 +2006,10 @@ function wantsVideoIntent(text: string) {
 }
 
 
-function todayIsoDate() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-async function assistantAvailabilityByProfessional(professionals: ProfessionalSearchResult[]) {
-  const ids = [...new Set(professionals.map((professional) => professional.id).filter(Boolean))];
-  const availability = new Map<string, boolean>();
-  if (ids.length === 0) return availability;
-
-  const potentiallyBookableIds = professionals
-    .filter((professional) => professional.availabilityPublic !== false && professional.contactPreference !== "solo_whatsapp")
-    .map((professional) => professional.id);
-  if (potentiallyBookableIds.length === 0) return availability;
-
-  try {
-    const admin = createAdminClient();
-    const { data, error } = await admin
-      .from("availability_slots")
-      .select("professional_id")
-      .in("professional_id", potentiallyBookableIds)
-      .gte("slot_date", todayIsoDate())
-      .limit(200);
-    if (error) throw error;
-    for (const row of data ?? []) {
-      if (typeof row.professional_id === "string") availability.set(row.professional_id, true);
-    }
-  } catch (error) {
-    console.warn("[ai-assistant] availability check fallback", error);
-  }
-
-  return availability;
-}
-
 function assistantProfessionalResult(
   professional: ProfessionalSearchResult,
   locale: Locale,
   serviceId?: string | null,
-  hasPublicAvailability = false,
   nativeApp = false,
 ): AssistantProfessionalResult {
   const service =
@@ -2063,10 +2020,6 @@ function assistantProfessionalResult(
     || [professional.cantonName, professional.provinceName].filter(Boolean).join(", ")
     || (professional.videoconsulta ? (locale === "en" ? "Video consultation" : "Videoconsulta") : "Costa Rica");
   const profileHref = `${prefijoDeIdioma(locale)}/profesionales/${professional.slug}`;
-  const actionKind: "availability" | "message" =
-    hasPublicAvailability && professional.availabilityPublic !== false && professional.contactPreference !== "solo_whatsapp"
-      ? "availability"
-      : "message";
   return {
     id: professional.id,
     name: professional.businessName?.trim() || professional.fullName,
@@ -2080,12 +2033,9 @@ function assistantProfessionalResult(
     profileHref,
     requestHref: profileHref,
     actionHref: profileHref,
-    actionLabel: actionKind === "availability"
-      ? locale === "en" ? "View availability" : "Ver disponibilidad"
-      : nativeApp
-        ? locale === "en" ? "Send message" : "Enviar mensaje"
-        : "WhatsApp",
-    actionKind,
+    actionLabel: nativeApp
+      ? locale === "en" ? "Send message" : "Enviar mensaje"
+      : "WhatsApp",
     categoryId: serviceId ?? professional.categoryId ?? null,
   };
 }
@@ -2301,11 +2251,8 @@ export async function POST(req: Request) {
       ? `See ${resultCount} ${resultCount === 1 ? "professional" : "professionals"}`
       : `Ver ${resultCount} ${resultCount === 1 ? "profesional" : "profesionales"}`;
     const shownProfessionals = hasResults ? matchedProfessionals.slice(0, 3) : [];
-    const availabilityByProfessional = hasResults
-      ? await assistantAvailabilityByProfessional(shownProfessionals)
-      : new Map<string, boolean>();
     const assistantProfessionals = shownProfessionals.map((professional) =>
-      assistantProfessionalResult(professional, locale, payload.serviceId, availabilityByProfessional.get(professional.id) === true, nativeApp)
+      assistantProfessionalResult(professional, locale, payload.serviceId, nativeApp)
     );
     const singleProfessionalHref = resultCount === 1 ? assistantProfessionals[0]?.profileHref ?? null : null;
     const servicePhrase = requestedServiceLabel || (locale === "en" ? "that service" : "ese servicio");

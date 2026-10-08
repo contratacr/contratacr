@@ -317,7 +317,7 @@ export function PushTokenManager() {
   }, [user]);
 
   // Momentos de alta intención: la pantalla que acaba de mandar el mensaje, la
-  // cita, la propuesta, la postulación o la cotización avisa, y aquí se decide
+  // propuesta, la postulación o la cotización avisa, y aquí se decide
   // si toca preguntar. Se espera un poco para que se vea primero el "enviado".
   useEffect(() => {
     if (loading || !user || !isNativeMobile()) return;
@@ -467,7 +467,7 @@ export function PushTokenManager() {
   // ahora mismo; las de atrás, lo demás que llega por ahí.
   const frente = { titulo: t(`card.${motivo}.title`), texto: t(`card.${motivo}.body`) };
   const detras = motivo === "mensaje" || motivo === "panel"
-    ? [{ titulo: t("card.cita.title"), texto: t("card.cita.body") }, { titulo: t("card.resena.title"), texto: t("card.resena.body") }]
+    ? [{ titulo: t("card.cotizacion.title"), texto: t("card.cotizacion.body") }, { titulo: t("card.resena.title"), texto: t("card.resena.body") }]
     : [{ titulo: t("card.mensaje.title"), texto: t("card.mensaje.body") }, { titulo: t("card.resena.title"), texto: t("card.resena.body") }];
   const tarjetas = [detras[1], detras[0], frente];
 

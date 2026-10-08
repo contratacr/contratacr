@@ -7,8 +7,9 @@ import { useRouter } from "@/i18n/navigation";
 // There is no longer a separate client panel — every account uses the ONE unified
 // "Mi panel" (with a mode switch). This route now just forwards any old client
 // link into the unified panel's "Usar servicios" mode, mapping the legacy tabs.
+// Las citas se borraron: un enlace viejo a «Mis citas» abre «Mis proyectos».
 const TAB_MAP: Record<string, string> = {
-  bookings: "sent_bookings",
+  bookings: "sent_projects",
   projects: "sent_projects",
   saved: "saved",
   notifications: "notifications",
@@ -22,11 +23,11 @@ export default function ClientDashboardRedirect() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    const legacy = searchParams.get("tab") ?? "bookings";
-    const tab = TAB_MAP[legacy] ?? "sent_bookings";
+    const legacy = searchParams.get("tab") ?? "projects";
+    const tab = TAB_MAP[legacy] ?? "sent_projects";
     const params = new URLSearchParams({ tab });
     // Ambiguous tabs (profile + shared) need the mode so we land in "Usar servicios".
-    if (!["sent_bookings", "sent_projects", "saved"].includes(tab)) params.set("mode", "use");
+    if (!["sent_projects", "saved"].includes(tab)) params.set("mode", "use");
     const ticket = searchParams.get("ticket");
     if (ticket) params.set("ticket", ticket);
     router.replace(`/dashboard/profesional?${params}`);

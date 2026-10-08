@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { useRouter } from "next/navigation";
 import { Loader2, MapPin, RefreshCw } from "lucide-react";
@@ -192,31 +192,11 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
   const [showArea, setShowArea] = useState(false);
   const [areaSearching, setAreaSearching] = useState(false);
   const suppressMoveRef = useRef(false);
-  const searchMapReadyRef = useRef(false);
 
   function setSearchAreaVisible(visible: boolean) {
     setShowArea(visible);
     if (!visible) setAreaSearching(false);
     window.dispatchEvent(new CustomEvent("ccr:search-area-visible", { detail: visible }));
-  }
-
-  function markSearchMapLoading() {
-    searchMapReadyRef.current = false;
-    (window as typeof window & { __ccrSearchMapReady?: boolean }).__ccrSearchMapReady = false;
-    (window as typeof window & { __ccrSearchMapLoading?: boolean }).__ccrSearchMapLoading = true;
-    window.dispatchEvent(new CustomEvent("ccr:search-map-loading"));
-  }
-
-  useLayoutEffect(() => {
-    markSearchMapLoading();
-  }, [professionals, numbering]);
-
-  function markSearchMapReady() {
-    if (searchMapReadyRef.current) return;
-    searchMapReadyRef.current = true;
-    (window as typeof window & { __ccrSearchMapReady?: boolean }).__ccrSearchMapReady = true;
-    (window as typeof window & { __ccrSearchMapLoading?: boolean }).__ccrSearchMapLoading = false;
-    window.dispatchEvent(new CustomEvent("ccr:search-map-ready"));
   }
 
   function setPinActive(proId: string | undefined, on: boolean) {
@@ -483,8 +463,6 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     }));
     mapInstanceRef.current = map;
     map.addListener("click", hidePopup); // tapping the map closes the popup + clears the pin highlight
-    map.addListener("idle", markSearchMapReady);
-    map.addListener("tilesloaded", markSearchMapReady);
     // Show "Buscar en esta área" after a user pan/zoom (ignored during programmatic fits).
     map.addListener("dragend", () => { if (!suppressMoveRef.current) setSearchAreaVisible(true); });
     map.addListener("zoom_changed", () => { if (!suppressMoveRef.current) setSearchAreaVisible(true); });

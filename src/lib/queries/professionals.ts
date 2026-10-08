@@ -266,7 +266,6 @@ export type ProfessionalDetail = ProfessionalCardData & {
   portfolioItems: PortfolioItem[];
   reviews: Review[];
   services: ProService[];
-  availabilityPublic: boolean;
   certifications: Certification[];
   socialLinks?: SocialLinks;
 };
@@ -395,7 +394,7 @@ async function searchProfessionalsUncached(
           .select(
             `id, profile_id, slug, hourly_rate, is_verified, is_featured, is_available,
              rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
-             category_id, professions, pricing, services, lat, lng, service_type, availability_public, contact_preference, videoconsulta,
+             category_id, professions, pricing, services, lat, lng, service_type, videoconsulta,
              business_name, workplaces, verification_status${modern ? ", languages, no_cr_id, insurance_networks, coverage_areas, coverage_provincias, coverage_country, allow_phone_call, certifications, call_phone, public_business_name_only" : ""},
              profiles(full_name, avatar_url${modern ? ", is_disabled" : ""}),
              provincias(id, name),
@@ -607,8 +606,6 @@ async function searchProfessionalsUncached(
         isVerified: row.is_verified ?? false,
         isFeatured: row.is_featured ?? false,
         isAvailable: row.is_available ?? true,
-        availabilityPublic: row.availability_public ?? true,
-        contactPreference: (row.contact_preference as ProfessionalCardData["contactPreference"]) ?? "ambas",
         businessName: repairVisibleText(row.business_name ?? undefined),
         publicBusinessNameOnly: !!row.business_name && row.public_business_name_only === true,
         workplaces: (row.workplaces as ProfessionalCardData["workplaces"]) ?? [],
@@ -979,7 +976,7 @@ async function getProfessionalBySlugUncached(
       // professional query as ambiguous and the UI falls back to "not found".
       const detailSelect = (withBusinessNameOnly: boolean) => `id, profile_id, slug, hourly_rate, is_verified, is_featured, is_available,
            rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
-           category_id, professions, pricing, services, availability_public, contact_preference, languages, business_name${withBusinessNameOnly ? ", public_business_name_only" : ""}, workplaces, verification_status, insurance_networks, lat, lng, service_type, videoconsulta,
+           category_id, professions, pricing, services, languages, business_name${withBusinessNameOnly ? ", public_business_name_only" : ""}, workplaces, verification_status, insurance_networks, lat, lng, service_type, videoconsulta,
            profiles(full_name, avatar_url),
            provincias(id, name),
            cantones(id, name),
@@ -1177,8 +1174,6 @@ async function getProfessionalBySlugUncached(
         coverage,
         reviews,
         services: visibleServices,
-        availabilityPublic: proRow.availability_public ?? true,
-        contactPreference: (proRow.contact_preference as ProfessionalCardData["contactPreference"]) ?? "ambas",
         languages: Array.isArray(proRow.languages) && proRow.languages.length > 0 ? proRow.languages as string[] : ["es"],
         businessName: repairVisibleText((proRow.business_name as string) ?? undefined),
         publicBusinessNameOnly: !!proRow.business_name && proRow.public_business_name_only === true,

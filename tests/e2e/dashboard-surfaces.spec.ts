@@ -167,11 +167,15 @@ test.describe("@seeded dashboard surfaces", () => {
     ]);
     expect(geometry.every(Boolean)).toBe(true);
     // The phone header shows the business name (or a short person name) on a
-    // single truncated line with the verification badge right after it, so an
-    // overlong name must never push the header to a second line.
+    // single truncated line, so an overlong name must never push the header to
+    // a second line. «Cédula verificada» va en su propia línea DEBAJO del
+    // nombre, igual que en la ficha pública (8-oct-2026).
     expect(geometry[0]!.height).toBeGreaterThan(14);
     expect(geometry[0]!.height).toBeLessThanOrEqual(24);
-    await expect(name.locator("xpath=following-sibling::*[1]").locator("svg").first()).toBeVisible();
+    const cedula = page.locator("[data-cedula-verificada]").filter({ visible: true }).first();
+    await expect(cedula).toBeVisible();
+    const cedulaBox = await cedula.boundingBox();
+    expect(cedulaBox!.y).toBeGreaterThanOrEqual(geometry[0]!.y + geometry[0]!.height - 2);
     // «Ver perfil» ya no va a la par de las cifras: en el teléfono es una fila
     // propia de dos botones debajo de ellas, a todo el ancho de la tarjeta.
     expect(geometry[2]!.y).toBeGreaterThanOrEqual(geometry[1]!.y + geometry[1]!.height - 2);

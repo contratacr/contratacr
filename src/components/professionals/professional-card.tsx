@@ -2,7 +2,7 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { Star } from "lucide-react";
-import { ProfessionalSchedule, type SearchedPlace, type ScheduleSlot } from "@/components/professionals/professional-schedule";
+import { ProfessionalSchedule, type SearchedPlace } from "@/components/professionals/professional-schedule";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
@@ -49,8 +49,6 @@ export type ProfessionalCardData = {
   isVerified: boolean;
   isFeatured: boolean;
   isAvailable: boolean;
-  availabilityPublic?: boolean;
-  contactPreference?: "solo_whatsapp" | "solo_citas" | "ambas";
   languages?: string[];
   businessName?: string;
   publicBusinessNameOnly?: boolean;
@@ -98,9 +96,6 @@ interface ProfessionalCardProps {
   professional: ProfessionalCardData;
   className?: string;
   highlightMetric?: "rating" | "successCases" | "experience" | "followers";
-  slots?: ScheduleSlot[];
-  /** False in search results when availability streams after profile data. */
-  slotsInitiallyLoaded?: boolean;
   /** Active category filter from the search query — narrows the badges shown. */
   activeCategory?: string;
   /** Viewer's auth id — when it matches this pro's owner, hide self-service actions. */
@@ -113,15 +108,13 @@ interface ProfessionalCardProps {
   preferredLocationId?: string;
   /** Hide other location tabs when the search matched a specific modality/location only. */
   restrictToPreferredLocation?: boolean;
-  /** Search page: align the schedule skeleton with the initial map/filter hydration. */
-  syncScheduleWithSearchLoading?: boolean;
   /** Search page return path, including filters/page, so profile "Volver" restores results. */
   searchReturnHref?: string;
   /** Cantón/provincia buscados: la cobertura de provincia o país se rotula con ese lugar. */
   searchedPlace?: SearchedPlace;
 }
 
-export function ProfessionalCard({ professional, className, searchedPlace, highlightMetric = "rating", slots = [], slotsInitiallyLoaded = true, activeCategory, viewerProfileId, rank, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, syncScheduleWithSearchLoading = false, searchReturnHref }: ProfessionalCardProps) {
+export function ProfessionalCard({ professional, className, searchedPlace, highlightMetric = "rating", activeCategory, viewerProfileId, rank, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, searchReturnHref }: ProfessionalCardProps) {
   const tCard = useTranslations("card");
   const tPerfil = useTranslations("profile");
   const tSchedule = useTranslations("schedule");
@@ -133,7 +126,6 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
     if (!id) return "";
     return getCategoryLabel(id, locale);
   };
-  const isPrivate = professional.availabilityPublic === false;
   // Brand hierarchy: company name leads (clients recognize the brand), personal
   // name becomes the muted subtitle. No company → personal name leads, no subtitle.
   const businessName = professional.businessName?.trim();
@@ -466,10 +458,6 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
         info={info}
         professional={professional}
         categoryName={categoryName}
-        availabilityPublic={!isPrivate}
-        contactPreference={professional.contactPreference ?? "ambas"}
-        slots={slots}
-        slotsInitiallyLoaded={slotsInitiallyLoaded}
         activeCategory={activeCategory}
         videoConsultApplies={videoAplicaBusqueda}
         isOwn={isOwn}
@@ -481,7 +469,6 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
         preferredLocationId={preferredLocationId ?? (forceContactOnly ? "videoconsulta" : undefined)}
         restrictToPreferredLocation={restrictToPreferredLocation}
         searchedPlace={searchedPlace}
-        syncWithSearchLoading={syncScheduleWithSearchLoading}
       />
 
       {/* Whole card → the professional's profile (stretched low-z overlay). The interactive

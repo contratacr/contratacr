@@ -1,20 +1,9 @@
-import { createHash } from "node:crypto";
 import { expect, test } from "playwright/test";
-import { CITAS_ACTIVAS } from "../../src/lib/citas";
 import { apiJson, expectNoHorizontalOverflow, gotoOK, loginAs, openLoginForm, resetAuth, isMobileProject } from "./helpers";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionAdminClient, type RegressionSeedState } from "./seed";
 import { getCategoryLabel } from "../../src/lib/data/categories";
 
 type IdResponse = { id?: string; success?: boolean; error?: string };
-type ListResponse<T> = { bookings?: T[]; projects?: T[]; error?: string };
-type BookingRow = { id: string; status: string; service_description?: string };
-type NotificationData = { booking_id?: string | null; project_id?: string | null };
-type PublicAvailabilityResponse = {
-  slots?: Array<{ date: string; time: string; locationId?: string | null }>;
-  allSlots?: Array<{ date: string; time: string; locationId?: string | null }>;
-  taken?: string[];
-  error?: string;
-};
 type CategorySuggestionRow = {
   id: string;
   label?: string | null;
@@ -24,19 +13,8 @@ type CategorySuggestionRow = {
   suggested_by?: string | null;
 };
 
-type RegressionSchedule = {
-  professionalDate: string;
-  professionalTime: string;
-  professionalSecondTime: string;
-  videoDate: string;
-  videoSharedTime: string;
-  videoSecondTime: string;
-  slotIds: string[];
-};
-
-// Cleanup and occupied calendar moments must be scoped to this execution. A
-// broad `E2E Regression%` delete or the canonical seed's two fixed slots lets a
-// focused local run interfere with CI. GitHub's run id remains stable across a
+// Cleanup must be scoped to this execution. A broad `E2E Regression%` delete
+// lets a focused local run interfere with CI. GitHub's run id remains stable across a
 // serial retry; local processes receive an independent high-entropy key.
 const regressionRunKey = process.env.GITHUB_RUN_ID
   ? `${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT ?? "1"}`
@@ -47,187 +25,22 @@ function regressionMarker(kind: string) {
   return `${regressionRowPrefix} ${kind} ${Date.now()}`;
 }
 
-function stableNumber(key: string, modulo: number) {
-  return Number.parseInt(createHash("sha256").update(key).digest("hex").slice(0, 8), 16) % modulo;
-}
-
-function stableUuid(key: string) {
-  const hex = createHash("sha256").update(key).digest("hex").slice(0, 32);
-  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-a${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
-}
-
-function futureDate(days: number) {
-  const date = new Date();
-  date.setUTCHours(12, 0, 0, 0);
-  date.setUTCDate(date.getUTCDate() + days);
-  return date.toISOString().slice(0, 10);
-}
-
-function minuteLabel(totalMinutes: number) {
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
-}
-
-async function allocateRegressionSchedule(seed: RegressionSeedState, scope: string): Promise<RegressionSchedule> {
-  const admin = regressionAdminClient();
-
-  for (let attempt = 0; attempt < 20; attempt += 1) {
-    const candidate = `${scope}-${attempt}`;
-    const professionalDate = futureDate(45 + stableNumber(`${candidate}:professional-date`, 270));
-    const videoDate = futureDate(45 + stableNumber(`${candidate}:video-date`, 270));
-    const professionalMinute = 8 * 60 + stableNumber(`${candidate}:professional-time`, 8 * 60);
-    const videoMinute = 8 * 60 + stableNumber(`${candidate}:video-time`, 8 * 60);
-    const professionalTime = minuteLabel(professionalMinute);
-    const professionalSecondTime = minuteLabel(professionalMinute + 60);
-    const videoSharedTime = minuteLabel(videoMinute);
-    const videoSecondTime = minuteLabel(videoMinute + 60);
-    const slotIds = Array.from({ length: 5 }, (_, index) => stableUuid(`${candidate}:slot:${index}`));
-    const { error } = await admin.from("availability_slots").upsert([
-      {
-        id: slotIds[0],
-        professional_id: seed.professionalId,
-        slot_date: professionalDate,
-        slot_time: professionalTime,
-        category_id: seed.categoryId,
-        location_id: seed.slotLocationId,
-      },
-      {
-        id: slotIds[1],
-        professional_id: seed.professionalId,
-        slot_date: professionalDate,
-        slot_time: professionalSecondTime,
-        category_id: seed.categoryId,
-        location_id: seed.slotLocationId,
-      },
-      {
-        id: slotIds[2],
-        professional_id: seed.videoProfessionalId,
-        slot_date: videoDate,
-        slot_time: videoSharedTime,
-        category_id: seed.videoCategoryId,
-        location_id: "videoconsulta",
-      },
-      {
-        id: slotIds[3],
-        professional_id: seed.videoProfessionalId,
-        slot_date: videoDate,
-        slot_time: videoSharedTime,
-        category_id: seed.videoCategoryId,
-        location_id: seed.videoPhysicalLocationId,
-      },
-      {
-        id: slotIds[4],
-        professional_id: seed.videoProfessionalId,
-        slot_date: videoDate,
-        slot_time: videoSecondTime,
-        category_id: seed.videoCategoryId,
-        location_id: "videoconsulta",
-      },
-    ], { onConflict: "id" });
-
-    if (!error) {
-      return {
-        professionalDate,
-        professionalTime,
-        professionalSecondTime,
-        videoDate,
-        videoSharedTime,
-        videoSecondTime,
-        slotIds,
-      };
-    }
-    if (error.code !== "23505") throw error;
-  }
-
-  throw new Error(`Could not allocate an isolated regression schedule for ${scope}`);
-}
-
-async function expectNotification(
-  userId: string,
-  type: string,
-  match: NotificationData,
-) {
-  const admin = regressionAdminClient();
-  await expect
-    .poll(
-      async () => {
-        const { data, error } = await admin
-          .from("notifications")
-          .select("type, data")
-          .eq("user_id", userId)
-          .eq("type", type)
-          .order("created_at", { ascending: false })
-          .limit(30);
-        if (error) throw error;
-        return (data ?? []).some((row) => {
-          const payload = (row.data ?? {}) as NotificationData;
-          return (
-            (!match.booking_id || payload.booking_id === match.booking_id) &&
-            (!match.project_id || payload.project_id === match.project_id)
-          );
-        });
-      },
-      { timeout: 5_000, message: `Expected notification ${type} for ${userId}` },
-    )
-    .toBe(true);
-}
-
 test.describe.configure({ mode: "serial" });
 
 test.describe("@seeded core regression", () => {
   test.skip(!canRunSeededRegression(), "Set E2E_FIXTURES_READY=1 with the test Supabase secrets to run seeded regression.");
 
   let seed: RegressionSeedState;
-  let schedule: RegressionSchedule | undefined;
 
   test.beforeAll(async ({}, workerInfo) => {
     const projectScope = workerInfo.project.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase();
     regressionRowPrefix = `E2E Regression ${regressionRunKey} ${projectScope}`;
     seed = await ensureRegressionSeed();
-    schedule = await allocateRegressionSchedule(seed, `${regressionRunKey}-${projectScope}`);
-  });
-
-  test.afterAll(async () => {
-    if (!schedule?.slotIds.length) return;
-    const admin = regressionAdminClient();
-    const { error: slotError } = await admin.from("availability_slots").delete().in("id", schedule.slotIds);
-    if (slotError) throw slotError;
-    const { error: auditError } = await admin
-      .from("user_action_audit")
-      .delete()
-      .eq("entity_table", "availability_slots")
-      .in("entity_id", schedule.slotIds);
-    if (auditError) throw auditError;
   });
 
   async function cleanupGeneratedRows() {
     const admin = regressionAdminClient();
     const actorIds = [seed.clientId, seed.professionalUserId];
-    const { data: bookings, error: bookingsLookupError } = await admin
-      .from("bookings")
-      .select("id")
-      .in("client_id", actorIds)
-      .ilike("service_description", `${regressionRowPrefix}%`);
-    if (bookingsLookupError) throw bookingsLookupError;
-    for (const booking of bookings ?? []) {
-      const { error } = await admin.from("notifications").delete().contains("data", { booking_id: booking.id });
-      if (error) throw error;
-      const { error: interactionError } = await admin.from("interaction_events").delete().contains("metadata", { booking_id: booking.id });
-      if (interactionError) throw interactionError;
-    }
-    if (bookings?.length) {
-      const bookingIds = bookings.map((booking) => booking.id);
-      const { error: deleteError } = await admin.from("bookings").delete().in("id", bookingIds);
-      if (deleteError) throw deleteError;
-      const { error: auditError } = await admin
-        .from("user_action_audit")
-        .delete()
-        .eq("entity_table", "bookings")
-        .in("entity_id", bookingIds);
-      if (auditError) throw auditError;
-    }
-
     const { data: projects, error: projectsLookupError } = await admin
       .from("projects")
       .select("id")
@@ -457,165 +270,9 @@ test.describe("@seeded core regression", () => {
     }
   });
 
-  test("client booking flow creates a request, blocks double booking, and supports completion", async ({ page }) => {
-    // Las citas están apagadas (src/lib/citas.ts). Vuelve cuando se prendan.
-    test.skip(!CITAS_ACTIVAS, "Citas apagadas");
-    const marker = regressionMarker("booking");
-
+  // Cancelar un proyecto no le avisa a un profesional que nunca respondió.
+  test("project cancellation does not notify professionals who never replied", async ({ page }) => {
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
-    const created = await apiJson<IdResponse>(page, "/api/bookings", {
-      method: "POST",
-      body: {
-        professionalId: seed.professionalId,
-        clientName: E2E_USERS.client.fullName,
-        clientEmail: E2E_USERS.client.email,
-        clientPhone: E2E_USERS.client.phone,
-        serviceDescription: marker,
-        scheduledDate: schedule!.professionalDate,
-        scheduledTime: schedule!.professionalTime,
-        categoryId: seed.categoryId,
-        slotLocationId: seed.slotLocationId,
-        slotLocationLabel: "Alajuela, Alajuela",
-      },
-    });
-    expect(created.status).toBe(200);
-    expect(created.body.id).toBeTruthy();
-    await expectNotification(seed.professionalUserId, "booking_received", { booking_id: created.body.id });
-
-    const duplicate = await apiJson<IdResponse>(page, "/api/bookings", {
-      method: "POST",
-      body: {
-        professionalId: seed.professionalId,
-        clientName: E2E_USERS.client.fullName,
-        clientEmail: E2E_USERS.client.email,
-        clientPhone: E2E_USERS.client.phone,
-        serviceDescription: `${marker} duplicate`,
-        scheduledDate: schedule!.professionalDate,
-        scheduledTime: schedule!.professionalTime,
-        categoryId: seed.categoryId,
-      },
-    });
-    expect(duplicate.status).toBe(409);
-
-    const clientList = await apiJson<ListResponse<BookingRow>>(page, "/api/bookings?role=client");
-    expect(clientList.status).toBe(200);
-    expect(clientList.body.bookings?.some((booking) => booking.id === created.body.id)).toBe(true);
-
-    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
-    const proList = await apiJson<ListResponse<BookingRow>>(page, "/api/bookings?role=professional");
-    expect(proList.status).toBe(200);
-    expect(proList.body.bookings?.some((booking) => booking.id === created.body.id)).toBe(true);
-
-    const workDone = await apiJson<IdResponse>(page, "/api/bookings", {
-      method: "PATCH",
-      body: { id: created.body.id, status: "awaiting_confirmation" },
-    });
-    expect(workDone.status).toBe(200);
-    await expectNotification(seed.clientId, "booking_update", { booking_id: created.body.id });
-
-    await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
-    const completed = await apiJson<IdResponse>(page, "/api/bookings", {
-      method: "PATCH",
-      body: { id: created.body.id, status: "completed" },
-    });
-    expect(completed.status).toBe(200);
-    await expectNotification(seed.professionalUserId, "booking_completed_by_client", { booking_id: created.body.id });
-  });
-
-  test("video consultation and in-person slots can share schedule but one booking blocks both", async ({ page }) => {
-    // Las citas están apagadas (src/lib/citas.ts). Vuelve cuando se prendan.
-    test.skip(!CITAS_ACTIVAS, "Citas apagadas");
-    const marker = regressionMarker("video shared availability");
-
-    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
-    const videoBooking = await apiJson<IdResponse>(page, "/api/bookings", {
-      method: "POST",
-      body: {
-        professionalId: seed.videoProfessionalId,
-        clientName: E2E_USERS.professional.fullName,
-        clientEmail: E2E_USERS.professional.email,
-        clientPhone: E2E_USERS.professional.phone,
-        serviceDescription: marker,
-        scheduledDate: schedule!.videoDate,
-        scheduledTime: schedule!.videoSharedTime,
-        categoryId: seed.videoCategoryId,
-        slotLocationId: "videoconsulta",
-        slotLocationLabel: "Videoconsulta",
-      },
-    });
-    expect(videoBooking.status).toBe(200);
-    expect(videoBooking.body.id).toBeTruthy();
-    await expectNotification(seed.videoProfessionalUserId, "booking_received", { booking_id: videoBooking.body.id });
-
-    const availability = await apiJson<PublicAvailabilityResponse>(
-      page,
-      `/api/public-availability?professionalId=${seed.videoProfessionalId}`,
-    );
-    expect(availability.status).toBe(200);
-    expect(
-      (availability.body.allSlots ?? []).filter(
-        (slot) => slot.date === schedule!.videoDate && slot.time === schedule!.videoSharedTime,
-      ).map((slot) => slot.locationId).sort(),
-    ).toEqual([seed.videoPhysicalLocationId, "videoconsulta"].sort());
-    expect(
-      (availability.body.slots ?? []).filter(
-        (slot) => slot.date === schedule!.videoDate && slot.time === schedule!.videoSharedTime,
-      ),
-    ).toHaveLength(0);
-    expect(
-      (availability.body.slots ?? []).some(
-        (slot) => slot.date === schedule!.videoDate && slot.time === schedule!.videoSecondTime && slot.locationId === "videoconsulta",
-      ),
-    ).toBe(true);
-
-    const physicalDuplicate = await apiJson<IdResponse>(page, "/api/bookings", {
-      method: "POST",
-      body: {
-        professionalId: seed.videoProfessionalId,
-        clientName: E2E_USERS.professional.fullName,
-        clientEmail: E2E_USERS.professional.email,
-        clientPhone: E2E_USERS.professional.phone,
-        serviceDescription: `${marker} duplicate physical`,
-        scheduledDate: schedule!.videoDate,
-        scheduledTime: schedule!.videoSharedTime,
-        categoryId: seed.videoCategoryId,
-        slotLocationId: seed.videoPhysicalLocationId,
-        slotLocationLabel: "Atenas, Alajuela",
-      },
-    });
-    expect(physicalDuplicate.status).toBe(409);
-  });
-
-  test("cancellations notify only the affected opposite side", async ({ page }) => {
-    // Las citas están apagadas (src/lib/citas.ts). Vuelve cuando se prendan.
-    test.skip(!CITAS_ACTIVAS, "Citas apagadas");
-    const bookingMarker = regressionMarker("cancel booking");
-
-    await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
-    const booking = await apiJson<IdResponse>(page, "/api/bookings", {
-      method: "POST",
-      body: {
-        professionalId: seed.professionalId,
-        clientName: E2E_USERS.client.fullName,
-        clientEmail: E2E_USERS.client.email,
-        clientPhone: E2E_USERS.client.phone,
-        serviceDescription: bookingMarker,
-        scheduledDate: schedule!.professionalDate,
-        scheduledTime: schedule!.professionalSecondTime,
-        categoryId: seed.categoryId,
-        slotLocationId: seed.slotLocationId,
-        slotLocationLabel: "Alajuela, Alajuela",
-      },
-    });
-    expect(booking.status).toBe(200);
-
-    const cancelledBooking = await apiJson<IdResponse>(page, "/api/bookings", {
-      method: "PATCH",
-      body: { id: booking.body.id, status: "cancelled", cancelReason: "E2E cancelacion" },
-    });
-    expect(cancelledBooking.status).toBe(200);
-    await expectNotification(seed.professionalUserId, "booking_cancelled_by_client", { booking_id: booking.body.id });
-
     const project = await apiJson<IdResponse>(page, "/api/projects", {
       method: "POST",
       body: {

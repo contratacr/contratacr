@@ -367,7 +367,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <style
           data-ccr-teclado=""
           dangerouslySetInnerHTML={{
-            __html: `@media (max-width:767px){html[data-teclado-formulario-largo] :is(.ccr-pie-ventana,.ccr-barra-accion):not(.ccr-booking-modal-panel *){display:none!important}}`,
+            __html: `@media (max-width:767px){html[data-teclado-formulario-largo] :is(.ccr-pie-ventana,.ccr-barra-accion){display:none!important}}`,
           }}
         />
         <style

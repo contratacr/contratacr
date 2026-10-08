@@ -56,7 +56,6 @@ type ResultCard = {
   requestHref: string;
   actionHref: string;
   actionLabel: string;
-  actionKind: "availability" | "message";
 };
 
 type MessageAction = { label: string; href: string; kind?: string | null };
@@ -272,7 +271,7 @@ function ProfessionalResult({ result, copy, onNavigate, nativeApp, lang }: {
       </button>
       <div className="grid grid-cols-2 border-t border-[#eef2f6]">
         <button type="button" onClick={() => onNavigate(result.profileHref)} className="h-10 text-xs font-bold text-[#526277] hover:bg-[#f7fafc]">{copy.viewProfile}</button>
-        {nativeApp && result.actionKind === "message" ? (
+        {nativeApp ? (
           <MessageLauncher
             professionalId={result.id}
             professionalName={result.name}

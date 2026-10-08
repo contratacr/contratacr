@@ -1011,32 +1011,6 @@ html[data-keyboard-open].ccr-native-app body.ccr-native-search-route .ccr-native
   display: none !important;
 }
 
-body.ccr-booking-modal-open .ccr-search-bottom-sheet,
-html body.ccr-booking-modal-open .ccr-search-bottom-sheet,
-html.ccr-booking-modal-open .ccr-search-bottom-sheet {
-  visibility: hidden !important;
-  pointer-events: none !important;
-}
-
-body.ccr-native-app.ccr-booking-modal-open .ccr-native-bottom-nav,
-html.ccr-native-app body.ccr-booking-modal-open .ccr-native-bottom-nav {
-  display: none !important;
-}
-
-body.ccr-booking-modal-open .ccr-app-header,
-html body.ccr-booking-modal-open .ccr-app-header {
-  display: none !important;
-}
-
-/* La página de reservar cita ocupa la pantalla completa con su propia cabecera
-   y su propio pie: las barras de la app estorbarían. */
-body.ccr-booking-route .ccr-app-header,
-html.ccr-booking-route .ccr-app-header,
-body.ccr-booking-route .ccr-native-bottom-nav,
-html.ccr-booking-route .ccr-native-bottom-nav {
-  display: none !important;
-}
-
 html.ccr-native-search-overlay-open .ccr-app-header,
 body.ccr-native-search-overlay-open .ccr-app-header {
   display: none !important;
@@ -1046,30 +1020,6 @@ body.ccr-search-filters-open .ccr-search-bottom-sheet,
 html body.ccr-search-filters-open .ccr-search-bottom-sheet {
   visibility: hidden !important;
   pointer-events: none !important;
-}
-
-@media (max-width: 1023px) {
-  html:not([data-keyboard-open]) body.ccr-booking-modal-open .ccr-booking-modal-panel,
-  html:not([data-keyboard-open]).ccr-native-app body.ccr-booking-modal-open .ccr-booking-modal-panel {
-    inset: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    top: 0 !important;
-    bottom: 0 !important;
-    width: 100vw !important;
-    height: auto !important;
-    max-width: none !important;
-    max-height: none !important;
-    border-radius: 0 !important;
-    transform: none !important;
-    bottom: calc(-1 * env(safe-area-inset-bottom)) !important;
-  }
-
-  /* Mientras la reserva está abierta, lo que asome por debajo es blanco, no el
-     gris de la página de atrás. */
-  body.ccr-booking-modal-open {
-    background: #fff !important;
-  }
 }
 
 @media (min-width: 1024px) {
@@ -1411,35 +1361,6 @@ html[data-self-action-modal-open="true"] [data-save-button] {
        keyboard included): a spread shadow dims what the backdrop no longer
        reaches. */
     box-shadow: 0 0 0 100lvh rgba(0, 0, 0, 0.5);
-  }
-
-  /* Con el teclado abierto queda una franja entre el pie del modal y la barra
-     del teclado (el alto que reporta el WebView no coincide al píxel con lo que
-     se ve). El pie la pinta de blanco mientras se escribe; sin teclado no se
-     dibuja nada, para que el pie conserve el alto de Publicar empleo. */
-  html[data-keyboard-open] .ccr-booking-modal-panel .ccr-pie-formulario {
-    position: relative;
-  }
-
-  html[data-keyboard-open] .ccr-booking-modal-panel .ccr-pie-formulario::after {
-    content: "";
-    position: absolute;
-    inset-inline: 0;
-    top: 100%;
-    height: 8rem;
-    background: #fff;
-    pointer-events: none;
-  }
-
-  /* El modal de reserva no lleva .app-modal-screen y su regla nativa fija
-     `inset: 0` con más peso: se le repite aquí el anclaje al área visible, para
-     que con el teclado abierto no se descuelgue y deje ver /buscar por debajo. */
-  html[data-keyboard-open] body.ccr-booking-modal-open .ccr-booking-modal-panel,
-  html[data-keyboard-open].ccr-native-app body.ccr-booking-modal-open .ccr-booking-modal-panel {
-    top: var(--app-visual-viewport-top) !important;
-    bottom: auto !important;
-    height: var(--app-visual-viewport-height) !important;
-    max-height: var(--app-visual-viewport-height) !important;
   }
 
   /* With the keyboard up the sheet may take the whole clamped wrapper, so the

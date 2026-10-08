@@ -220,8 +220,6 @@ export function SearchResultsInfinite({
           <SaveableCard pro={item.professional} isOwn={!!viewerProfileId && viewerProfileId === item.professional.profileId}>
             <ProfessionalCard
               professional={item.professional}
-              slots={[]}
-              slotsInitiallyLoaded={false}
               activeCategory={activeCategory}
               viewerProfileId={viewerProfileId}
               rank={initialCount + index + 1}
@@ -230,7 +228,6 @@ export function SearchResultsInfinite({
               preferredLocationId={item.preferVideo ? "videoconsulta" : undefined}
               restrictToPreferredLocation={item.preferVideo}
               searchedPlace={searchedPlace}
-              syncScheduleWithSearchLoading
               searchReturnHref={searchReturnHref}
             />
           </SaveableCard>

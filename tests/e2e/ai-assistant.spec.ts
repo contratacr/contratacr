@@ -27,7 +27,6 @@ type AssistantResponse = {
     profileHref: string;
     requestHref: string;
     actionLabel: string;
-    actionKind: "availability" | "message";
   }>;
 };
 
@@ -309,7 +308,6 @@ test.describe("@seeded ContrataCR AI", () => {
         search_provincias: ["al"],
         search_cantones: ["al-at"],
         is_available: true,
-        availability_public: true,
         is_banned: false,
         is_verified: true,
         is_featured: true,
@@ -338,9 +336,8 @@ test.describe("@seeded ContrataCR AI", () => {
     expect(response.body.serviceId).toBe("plomeria");
     const professional = response.body.professionals?.find((item) => item.id === aiProfessional!.professionalId);
     expect(professional, JSON.stringify(response.body.professionals)).toBeTruthy();
-    expect(professional?.actionKind).toBe("message");
     // The assistant is native-only here, so the contact CTA stays inside the app.
-    // What must never happen is promising availability the professional lacks.
+    // There are no appointments (removed 8-oct-2026): it must never offer them.
     expect(professional?.actionLabel).toBe("Enviar mensaje");
     expect(professional?.actionLabel).not.toBe("Ver disponibilidad");
 
@@ -380,7 +377,6 @@ test.describe("@seeded ContrataCR AI", () => {
       { prompt: "Quiero crear una cuenta de cliente", action: "register_client", href: "/registro/cliente" },
       { prompt: "Quiero iniciar sesion", action: "login", href: "/login" },
       { prompt: "Necesito ayuda con la app", action: "help", href: "/ayuda" },
-      { prompt: "Soy profesional, quiero cambiar mi disponibilidad", action: "open_dashboard", href: "/dashboard/profesional?tab=availability" },
       { prompt: "Soy profesional, quiero editar mis servicios", action: "open_dashboard", href: "/dashboard/profesional?tab=services" },
       { prompt: "Quiero sugerir el servicio de domador de leones", action: "suggest_service", href: "/servicios" },
     ];
@@ -527,7 +523,6 @@ test.describe("@seeded ContrataCR AI", () => {
     const search = await ask(page, "Necesito un plomero en Atenas, Alajuela", { platform: "native" });
     expect(search.status, JSON.stringify(search.body)).toBe(200);
     for (const professional of search.body.professionals ?? []) {
-      if (professional.actionKind !== "message") continue;
       expect(professional.actionLabel).toBe("Enviar mensaje");
       expect(professional.actionLabel).not.toMatch(/WhatsApp/i);
     }

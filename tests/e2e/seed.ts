@@ -59,13 +59,6 @@ export type RegressionSeedState = {
   videoProfessionalSlug: string;
   categoryId: string;
   videoCategoryId: string;
-  slotDate: string;
-  slotTime: string;
-  slotLocationId: string;
-  videoSlotDate: string;
-  videoSharedSlotTime: string;
-  videoSecondSlotTime: string;
-  videoPhysicalLocationId: string;
   publishedJobId: string;
   publishedJobTitle: string;
   secondaryJobId: string;
@@ -84,7 +77,6 @@ type RegressionProfessionalRow = {
   profile_id: string;
   slug: string | null;
   category_id: string | null;
-  workplaces: unknown;
 };
 
 const SEED_QUERY_TIMEOUT_MS = 12_000;
@@ -130,12 +122,6 @@ export function regressionAdminClient() {
   return adminClient();
 }
 
-function futureDate(daysAhead: number) {
-  const value = new Date();
-  value.setUTCDate(value.getUTCDate() + daysAhead);
-  return value.toISOString().slice(0, 10);
-}
-
 async function readRegressionSeedState(): Promise<RegressionSeedState | null> {
   if (!canRunSeededRegression()) return null;
   const admin = adminClient();
@@ -156,7 +142,7 @@ async function readRegressionSeedState(): Promise<RegressionSeedState | null> {
         .maybeSingle(),
       admin
         .from("professionals")
-        .select("id,profile_id,slug,category_id,workplaces")
+        .select("id,profile_id,slug,category_id")
         .eq("slug", E2E_USERS.professional.slug)
         .abortSignal(abortController.signal)
         .maybeSingle(),
@@ -177,7 +163,7 @@ async function readRegressionSeedState(): Promise<RegressionSeedState | null> {
     if (client?.id) {
       const videoResult = await admin
         .from("professionals")
-        .select("id,profile_id,slug,category_id,workplaces")
+        .select("id,profile_id,slug,category_id")
         .eq("profile_id", client.id)
         .abortSignal(abortController.signal)
         .maybeSingle();
@@ -203,19 +189,6 @@ async function readRegressionSeedState(): Promise<RegressionSeedState | null> {
     return null;
   }
 
-  const professionalWorkplaces = Array.isArray(professional.workplaces)
-    ? professional.workplaces as Array<{ id?: unknown }>
-    : [];
-  const professionalPhysicalLocation = professionalWorkplaces.find(
-    (workplace) => typeof workplace?.id === "string" && workplace.id.trim(),
-  )?.id;
-  const videoWorkplaces = Array.isArray(videoProfessional.workplaces)
-    ? videoProfessional.workplaces as Array<{ id?: unknown }>
-    : [];
-  const videoPhysicalLocation = videoWorkplaces.find(
-    (workplace) => typeof workplace?.id === "string" && workplace.id.trim(),
-  )?.id;
-
   return {
     clientId: client.id,
     professionalUserId: professional.profile_id,
@@ -226,13 +199,6 @@ async function readRegressionSeedState(): Promise<RegressionSeedState | null> {
     videoProfessionalSlug: videoProfessional.slug ?? E2E_USERS.videoProfessional.slug,
     categoryId: professional.category_id,
     videoCategoryId: videoProfessional.category_id,
-    slotDate: futureDate(3),
-    slotTime: "14:00",
-    slotLocationId: typeof professionalPhysicalLocation === "string" ? professionalPhysicalLocation : "regression-office-sg",
-    videoSlotDate: futureDate(2),
-    videoSharedSlotTime: "10:00",
-    videoSecondSlotTime: "11:00",
-    videoPhysicalLocationId: typeof videoPhysicalLocation === "string" ? videoPhysicalLocation : "regression-office",
     publishedJobId: REGRESSION_IDS.publishedJob,
     publishedJobTitle: seededJobTitles.get(REGRESSION_IDS.publishedJob)!,
     secondaryJobId: REGRESSION_IDS.secondaryJob,
@@ -261,46 +227,6 @@ export async function getRegressionSeedState(): Promise<RegressionSeedState | nu
   throw lastError instanceof Error ? lastError : new Error("Timed out while reading regression fixtures.");
 }
 
-/**
- * Los horarios que las pruebas reservan se consumen al reservarlos: después de
- * una corrida larga la ficha se quedaba sin «Ver disponibilidad» y la siguiente
- * corrida fallaba por falta de datos, no por un error del app. Antes de cada
- * sesión se reponen los cupos fijos que las pruebas esperan.
- */
-async function reponerHorarios(state: RegressionSeedState) {
-  const admin = adminClient();
-  // Varias horas el mismo día: una sola reserva por corrida no puede dejar la
-  // ficha sin disponibilidad para la corrida siguiente.
-  const horasDeRepuesto = ["13:00:00", "15:00:00", "16:00:00", "17:00:00", "18:00:00", "19:00:00"].map((hora, indice) => ({
-    id: `c2000000-0000-4000-8000-0000000000e${indice + 1}`,
-    professional_id: state.professionalId,
-    slot_date: state.slotDate,
-    slot_time: hora,
-    location_id: state.slotLocationId,
-    category_id: state.categoryId,
-  }));
-  const cupos = [
-    { id: "c2000000-0000-4000-8000-0000000000f1", professional_id: state.professionalId, slot_date: state.slotDate, slot_time: `${state.slotTime}:00`, location_id: state.slotLocationId, category_id: state.categoryId },
-    ...horasDeRepuesto,
-    { id: "c2000000-0000-4000-8000-0000000000f2", professional_id: state.videoProfessionalId, slot_date: state.videoSlotDate, slot_time: `${state.videoSharedSlotTime}:00`, location_id: "videoconsulta", category_id: state.videoCategoryId },
-    { id: "c2000000-0000-4000-8000-0000000000f3", professional_id: state.videoProfessionalId, slot_date: state.videoSlotDate, slot_time: `${state.videoSecondSlotTime}:00`, location_id: "videoconsulta", category_id: state.videoCategoryId },
-  ];
-  // La tabla tiene su propia llave única (profesional + fecha + hora + lugar),
-  // así que el cupo que ya está se salta y solo se repone el que falta.
-  for (const cupo of cupos) {
-    const { count } = await admin
-      .from("availability_slots")
-      .select("id", { count: "exact", head: true })
-      .eq("professional_id", cupo.professional_id)
-      .eq("slot_date", cupo.slot_date)
-      .eq("slot_time", cupo.slot_time);
-    if ((count ?? 0) > 0) continue;
-    await admin.from("availability_slots").insert(cupo);
-  }
-}
-
-let reponerHorariosPromise: Promise<void> | null = null;
-
 export async function ensureRegressionSeed(): Promise<RegressionSeedState> {
   if (process.env.E2E_FIXTURES_READY !== "1") {
     throw new Error("Run seed:test:full and set E2E_FIXTURES_READY=1 before seeded regression.");
@@ -318,7 +244,5 @@ export async function ensureRegressionSeed(): Promise<RegressionSeedState> {
   if (!state) {
     throw new Error("Faltan las cuentas de prueba (Estudio Delta y Redes Bahía). Corré seed:test:full.");
   }
-  reponerHorariosPromise ??= reponerHorarios(state).catch(() => undefined);
-  await reponerHorariosPromise;
   return state;
 }

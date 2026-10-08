@@ -13,7 +13,6 @@ import {
 const LEGACY_EVENTS = [
   "ccr:profile-updated",
   "ccr:identity-updated",
-  "ccr:availability-changed",
   "savedItemsChanged",
   "savedProsChanged",
   "professionalFollowsChanged",

@@ -6,7 +6,6 @@ import { localizedNotificationCopy, TRANSLATED_NOTIFICATION_TYPES } from "../../
 import { resolveAuthCallbackLocale } from "../../src/lib/auth/callback-locale";
 import { IMAGE_ACCEPT, IMAGE_DOC_ACCEPT, IMAGE_KINDS, sniffFileType, validateUpload } from "../../src/lib/upload-validation";
 import { apiJson, resetAuth } from "./helpers";
-import { CITAS_ACTIVAS } from "../../src/lib/citas";
 import { repairVisibleText } from "../../src/lib/text/repair-visible-text";
 
 const notificationTypes = [...TRANSLATED_NOTIFICATION_TYPES].sort();
@@ -77,7 +76,7 @@ test.describe("@contract product safety contracts", () => {
         expect(copy.message?.trim(), `Missing ${idioma} notification message for ${type}`).toBeTruthy();
       }
 
-      const esHref = notificationHref({ type, data: { booking_id: "booking-e2e", project_id: "project-e2e" } }, undefined, "es");
+      const esHref = notificationHref({ type, data: { project_id: "project-e2e" } }, undefined, "es");
       const enHref = notificationHref({ type }, undefined, "en");
       for (const [locale, href] of [["es", esHref], ["en", enHref]] as const) {
         expect(href, `${type} should stay inside the ${locale} app`).toMatch(new RegExp(`^/${locale}/`));
@@ -158,9 +157,9 @@ test.describe("@contract product safety contracts", () => {
     expect(guestAiHistory.status).toBe(200);
     expect(guestAiHistory.body.conversations).toEqual([]);
 
+    // Las citas se borraron (8-oct-2026): su API ya no existe.
     const malformedBooking = await apiJson(page, "/api/bookings", { method: "POST", body: {} });
-    // Con las citas apagadas (src/lib/citas.ts) la API responde 404 a todo.
-    expect(malformedBooking.status).toBe(CITAS_ACTIVAS ? 400 : 404);
+    expect(malformedBooking.status).toBe(404);
   });
 
   test("password reset keeps account discovery private and validates malformed requests", async ({ page }) => {
