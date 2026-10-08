@@ -140,6 +140,9 @@ export default function OnboardingPage() {
     // the professional branch reports its own event at the end of that flow.
     if (role === "client") {
       trackMetaEvent("CompleteRegistration", { content_name: "client_registration", status: "client" });
+      // Un respiro para que el aviso a Meta salga antes de cambiar de página;
+      // si el píxel aún no había cargado, la página siguiente lo manda.
+      await new Promise((resolve) => window.setTimeout(resolve, 400));
     }
 
     // "Ofrezco" → complete the professional profile to unlock offering. "Busco" →
