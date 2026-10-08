@@ -1,10 +1,8 @@
 import { expect, test } from "playwright/test";
-import { CITAS_ACTIVAS } from "../../src/lib/citas";
-import { apiJson, expectHealthyPage, expectVisibleText, gotoOK, loginAs, resetAuth } from "./helpers";
+import { apiJson, expectHealthyPage, gotoOK, loginAs, resetAuth } from "./helpers";
 import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccount } from "./disposable-account";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionAdminClient, type RegressionSeedState } from "./seed";
 
-type IdResponse = { id?: string; ok?: boolean; edited?: boolean; error?: string };
 
 const ONE_PIXEL_PNG = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9Z9Z8AAAAASUVORK5CYII=",
@@ -20,88 +18,6 @@ test.describe("@seeded extended lifecycle", () => {
 
   test.beforeEach(async () => {
     seed = await ensureRegressionSeed();
-  });
-
-  test("completed work supports one editable review tied to that exact request", async ({ page }) => {
-    // Las citas están apagadas (src/lib/citas.ts): la página y la API de
-    // reservar responden 404 a propósito. Vuelve a correr cuando se prendan.
-    test.skip(!CITAS_ACTIVAS, "Citas apagadas");
-    const admin = regressionAdminClient();
-    const marker = `E2E review ${Date.now()}`;
-    let bookingId = "";
-    let reviewId = "";
-
-    try {
-      await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
-      const created = await apiJson<IdResponse>(page, "/api/bookings", {
-        method: "POST",
-        body: {
-          professionalId: seed.professionalId,
-          clientName: E2E_USERS.client.fullName,
-          clientEmail: E2E_USERS.client.email,
-          clientPhone: E2E_USERS.client.phone,
-          serviceDescription: marker,
-          scheduledDate: seed.slotDate,
-          scheduledTime: "11:00",
-          categoryId: seed.categoryId,
-          slotLocationId: seed.slotLocationId,
-          slotLocationLabel: "Alajuela, Alajuela",
-        },
-      });
-      expect(created.status, JSON.stringify(created.body)).toBe(200);
-      bookingId = created.body.id ?? "";
-      expect(bookingId).toBeTruthy();
-
-      await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
-      expect((await apiJson(page, "/api/bookings", { method: "PATCH", body: { id: bookingId, status: "awaiting_confirmation" } })).status).toBe(200);
-
-      await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
-      expect((await apiJson(page, "/api/bookings", { method: "PATCH", body: { id: bookingId, status: "completed" } })).status).toBe(200);
-
-      const first = await apiJson<IdResponse>(page, "/api/reviews", {
-        method: "POST",
-        body: { professionalId: seed.professionalId, bookingId, rating: 4.5, comment: `${marker} initial` },
-      });
-      expect(first.status).toBe(200);
-      expect(first.body.edited).toBe(false);
-      const { data: createdReview, error: createdReviewError } = await admin.from("reviews")
-        .select("id")
-        .eq("booking_id", bookingId)
-        .single();
-      if (createdReviewError) throw createdReviewError;
-      reviewId = createdReview.id;
-
-      const edited = await apiJson<IdResponse>(page, "/api/reviews", {
-        method: "POST",
-        body: { professionalId: seed.professionalId, bookingId, rating: 5, comment: `${marker} edited` },
-      });
-      expect(edited.status).toBe(200);
-      expect(edited.body.edited).toBe(true);
-
-      const mine = await apiJson<{ review?: { rating?: number; comment?: string } }>(page, `/api/reviews?bookingId=${bookingId}`);
-      expect(mine.status).toBe(200);
-      expect(mine.body.review).toEqual(expect.objectContaining({ rating: 5, comment: `${marker} edited` }));
-
-      const { data: rows, error } = await admin.from("reviews").select("id, booking_id, rating, comment").eq("booking_id", bookingId);
-      if (error) throw error;
-      expect(rows).toHaveLength(1);
-      expect(rows?.[0]).toEqual(expect.objectContaining({ rating: 5, comment: `${marker} edited` }));
-    } finally {
-      if (bookingId) {
-        if (reviewId) {
-          const { error: reviewNotificationError } = await admin.from("notifications").delete()
-            .eq("type", "review_received")
-            .contains("data", { review_id: reviewId });
-          expect(reviewNotificationError, "review notification cleanup").toBeNull();
-        }
-        const { error: reviewError } = await admin.from("reviews").delete().eq("booking_id", bookingId);
-        expect(reviewError, "review lifecycle cleanup").toBeNull();
-        const { error: bookingNotificationError } = await admin.from("notifications").delete().contains("data", { booking_id: bookingId });
-        expect(bookingNotificationError, "review booking notification cleanup").toBeNull();
-        const { error: bookingError } = await admin.from("bookings").delete().eq("id", bookingId);
-        expect(bookingError, "review booking cleanup").toBeNull();
-      }
-    }
   });
 
   test("guest and signed-in support tickets persist their acknowledgement and conversation lifecycle", async ({ page }) => {
@@ -381,40 +297,6 @@ test.describe("@seeded extended lifecycle", () => {
         return items.some((item) => item.title === marker);
       }, { timeout: 20_000 }).toBe(true);
       await expectHealthyPage(page);
-    } finally {
-      await cleanupDisposableAccount(account);
-    }
-  });
-
-  test("availability privacy changes persist and can be published again", async ({ page }) => {
-    // La agenda es parte de las citas, apagadas (src/lib/citas.ts).
-    test.skip(!CITAS_ACTIVAS, "Citas apagadas");
-    const admin = regressionAdminClient();
-    let account: DisposableAccount | undefined;
-    try {
-      account = await createDisposableAccount({ prefix: "availability", professional: true });
-      await loginAs(page, account.email, account.password);
-      await gotoOK(page, "/dashboard/profesional?tab=availability&mode=offer");
-      const privacy = page.getByRole("switch", { name: /Hacer (?:privada|p.blica)/i }).filter({ visible: true });
-      await expect(privacy).toHaveCount(1);
-      await expect(privacy).toHaveAttribute("aria-checked", "false");
-      await privacy.click();
-      await expect(privacy).toHaveAttribute("aria-checked", "true");
-      await page.getByRole("button", { name: /Guardar cambios/i }).filter({ visible: true }).click();
-      await expectVisibleText(page.locator("body"), /Ocultar tu agenda/i);
-      const confirm = page.getByRole("button", { name: /S., ocultar agenda/i }).filter({ visible: true });
-      await expect(confirm).toHaveCount(1);
-      await confirm.click();
-      await expect.poll(async () => (await admin.from("professionals").select("availability_public").eq("id", account!.professionalId!).single()).data?.availability_public).toBe(false);
-
-      await gotoOK(page, "/dashboard/profesional?tab=availability&mode=offer");
-      const publish = page.getByRole("switch", { name: /Hacer (?:privada|p.blica)/i }).filter({ visible: true });
-      await expect(publish).toHaveCount(1);
-      await expect(publish).toHaveAttribute("aria-checked", "true");
-      await publish.click();
-      await expect(publish).toHaveAttribute("aria-checked", "false");
-      await page.getByRole("button", { name: /Guardar cambios/i }).filter({ visible: true }).click();
-      await expect.poll(async () => (await admin.from("professionals").select("availability_public").eq("id", account!.professionalId!).single()).data?.availability_public).toBe(true);
     } finally {
       await cleanupDisposableAccount(account);
     }

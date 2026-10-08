@@ -7,10 +7,9 @@ import { Info } from "lucide-react";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 
 // Per-action keys. The values are i18n keys (selfAction.messages.<key>), resolved
-// inside the modal — so every call site stays `setSelfMsg(SELF_MSG.request)` while
+// inside the modal — so every call site stays `setSelfMsg(SELF_MSG.call)` while
 // the copy is fully bilingual.
 export const SELF_MSG = {
-  request: "request",
   whatsapp: "whatsapp",
   call: "call",
   email: "email",
@@ -21,7 +20,7 @@ export const SELF_MSG = {
 export type SelfMsgKey = (typeof SELF_MSG)[keyof typeof SELF_MSG];
 
 // Shown when a professional triggers a CLIENT action on their OWN card/profile
-// (request service, WhatsApp, call). We deliberately REVEAL every normal button
+// (WhatsApp, call, save). We deliberately REVEAL every normal button
 // so the pro sees their profile exactly as clients do — then block the action
 // here with a friendly explanation instead of hiding the controls.
 // Compact informational dialogs stay centered on every viewport. Bottom sheets are

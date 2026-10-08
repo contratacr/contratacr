@@ -13,7 +13,7 @@ const ES_PRODUCCION = /^https:\/\/(www\.)?contratacr\.com$/.test(APP_URL.replace
  * Además del panel y los mensajes, estaban quedando fuera de la lista una
  * docena de pantallas que EXIGEN SESIÓN y que Google rastreaba igual: publicar
  * un empleo, publicar una promoción, «mis empleos», completar el perfil,
- * recuperar la contraseña, reservar… Todas terminan en la pantalla de ingreso,
+ * recuperar la contraseña… Todas terminan en la pantalla de ingreso,
  * así que lo único que hacían era gastar rastreo. Y el rastreo es justo lo que
  * escasea: mientras se gastaba en estas, las páginas por oficio —que sí traen
  * clientes— seguían sin visitarse.
@@ -37,14 +37,10 @@ const EN_LOS_DOS_IDIOMAS = [
   "/promociones/mis-promociones",
 ];
 
-/** La reserva cuelga de cada perfil, así que se nombra con comodín. */
-const CON_COMODIN = ["/profesionales/*/reservar", "/en/profesionales/*/reservar"];
-
 const CERRADAS = [
   "/api/",
   "/admin",
   ...EN_LOS_DOS_IDIOMAS.flatMap((ruta) => [ruta, `/en${ruta}`]),
-  ...CON_COMODIN,
 ];
 
 export default function robots(): MetadataRoute.Robots {

@@ -626,8 +626,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                         <SaveableCard pro={pro} isOwn={!!viewerProfileId && viewerProfileId === pro.profileId}>
                           <ProfessionalCard
                             professional={redactContactEnListado(cardData(pro))}
-                            slots={[]}
-                            slotsInitiallyLoaded={false}
                             activeCategory={activeCategoryId}
                             viewerProfileId={viewerProfileId}
                             rank={i + 1}
@@ -636,7 +634,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                             preferredLocationId={shouldPreferVideoLocation(pro) ? "videoconsulta" : undefined}
                             restrictToPreferredLocation={shouldPreferVideoLocation(pro)}
                             searchedPlace={searchedPlace}
-                            syncScheduleWithSearchLoading
                             searchReturnHref={searchReturnHref}
                           />
                         </SaveableCard>

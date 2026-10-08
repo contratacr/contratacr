@@ -16,7 +16,7 @@ import { Modal } from "@/components/ui/modal";
 import { CedulaVerificada } from "@/components/ui/cedula-verificada";
 import { InstagramIcon, FacebookIcon, TikTokIcon, LinkedInIcon } from "@/components/icons/social-icons";
 import { buildSocialUrl, buildWebsiteUrl } from "@/lib/social";
-import { Link, useRouter } from "@/i18n/navigation";
+import { Link } from "@/i18n/navigation";
 import { rutaAnterior } from "@/lib/volver-por-historial";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -36,16 +36,13 @@ import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 import { ReportProfileModal } from "@/components/professionals/report-profile-modal";
 import { createClient } from "@/lib/supabase/client";
 import { getDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
-import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
+import { ProfessionalSchedule } from "@/components/professionals/professional-schedule";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
-import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
-import { SelfActionModal, SELF_MSG } from "@/components/professionals/self-action-modal";
 import { useGuardarProfesional, type SavedPro } from "@/components/professionals/save-button";
 import { MenuFicha } from "@/components/ui/menu-ficha";
 import { CaraCompartir, useCompartir } from "@/components/ui/boton-compartir";
 import type { ProfessionalDetail } from "@/lib/queries/professionals";
 import { getProfessionalDisplayName } from "@/lib/display-name";
-import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { cldLarge, cldThumb } from "@/lib/cloudinary";
 import { formatOfferBeforePrice, formatOfferPrice, offerDiscountPercent, type ProfessionalOffer } from "@/lib/offers";
@@ -161,7 +158,6 @@ function initialProfileReturnHref() {
 // ─── Main page ────────────────────────────────────────────────────────────────
 type ProfilePageData = {
   pro: ProfessionalDetail;
-  slots: ScheduleSlot[];
   offers: ProfessionalOffer[];
   jobs: JobPost[];
 };
@@ -186,7 +182,6 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   const routeSlugParam = routeParams?.slug;
   const routeSlug = Array.isArray(routeSlugParam) ? routeSlugParam[0] : routeSlugParam;
   const [professional, setProfessional] = useState<ProfessionalDetail | null>(fichaInicial ?? null);
-  const [profileSlots, setProfileSlots] = useState<ScheduleSlot[]>([]);
   // NACEN CON LO QUE PINTÓ EL SERVIDOR. Arrancando en [] la fila de pestañas
   // salía con cinco y pasaba a siete al llegar la consulta del navegador:
   // «Promociones» y «Empleos» aparecían tarde y corrían de sitio a las demás.
@@ -298,15 +293,12 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   // Preview mode (?preview=1): a pro opened "Ver cómo me ven los clientes" from
   // their panel → show a clear "Volver a mi panel" bar so they never get stuck.
   const [previewMode] = useState(() => searchParamFromUrl("preview") === "1");
-  // The profession the client searched/filtered by (?categoria=) — passed to the
-  // booking modal so, for a multi-specialty pro, that service is pre-selected and we
-  // know up front whether it's a health service (DOB) without re-asking.
+  // The profession the client searched/filtered by (?categoria=): the contact
+  // buttons carry it as context.
   const [activeCategory] = useState<string | undefined>(() => searchParamFromUrl("categoria") ?? undefined);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [viewerId, setViewerId] = useState<string | null>(null);
-  const [viewerResuelto, setViewerResuelto] = useState(false);
-  // Quién visita se pregunta de una vez, sin esperar a la ficha ni a los
-  // horarios: de eso depende que las acciones de la ficha propia queden
+  // Quién visita se pregunta de una vez, sin esperar a la ficha: de eso depende que las acciones de la ficha propia queden
   // bloqueadas, y antes llegaba al final de una cadena de tres peticiones.
   useEffect(() => {
     let vivo = true;
@@ -314,7 +306,6 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
       if (!vivo) return;
       setViewerId(data.user?.id ?? null);
       setIsAuthenticated(!!data.user);
-      setViewerResuelto(true);
     });
     return () => { vivo = false; };
   }, []);
@@ -412,12 +403,6 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
       window.removeEventListener("ccr:section-header-ack", onAck);
     };
   }, []);
-  // Own-profile self-actions are blocked with a friendly modal (buttons stay visible).
-  const [selfMsg, setSelfMsg] = useState<string | null>(null);
-  // "Solicitar servicio" (per service card) → the SAME existing request flow as the
-  // contact card: bookable pros open the booking modal (registration-gated for guests);
-  // WhatsApp-only pros open WhatsApp. `bookingCat` carries the card's service as context.
-  const [bookingCat, setBookingCat] = useState<string | null>(null);
   // «¿NO TE RESPONDIÓ?» (4-oct-2026): tras abrir WhatsApp, al volver a la
   // ficha se ofrece publicar lo que necesita para que le escriban varios.
   // Una vez por visita; se cierra con la ✕.
@@ -435,8 +420,6 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
       window.removeEventListener("focus", alVolver);
     };
   }, []);
-  const router = useRouter();
-  const [bookingReg, setBookingReg] = useState(false);
   const [serviceDescriptionOpen, setServiceDescriptionOpen] = useState<{ title: string; description: string } | null>(null);
 
   // Recarga puntual del perfil (tras publicar una reseña, por ejemplo): pide
@@ -465,7 +448,6 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
       const warm = getDashboardCache<ProfilePageData>(cacheKey);
       if (warm) {
         setProfessional(warm.pro);
-        setProfileSlots(warm.slots);
         setPublicOffers(warm.offers);
         setPublicJobs(warm.jobs);
         setLoading(false);
@@ -480,7 +462,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
       if (!pro) { setProNotFound(true); setLoading(false); return; }
       const supabase = createClient();
       const today = new Date().toISOString().slice(0, 10);
-      const [offersResult, jobsResult, availability, authResult] = await Promise.all([
+      const [offersResult, jobsResult, authResult] = await Promise.all([
         supabase
           .from("professional_offers")
           .select("id, professional_id, service_category_id, title, description, offer_type, service_label, image_urls, price_now, price_before, currency, price_unit, location_label, valid_until, quantity_available, status, created_at")
@@ -495,14 +477,10 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
           .eq("status", "published")
           .order("created_at", { ascending: false })
           .limit(8),
-        fetch(`/api/public-availability?professionalId=${pro.id}`, { cache: "no-store" })
-          .then((r) => (r.ok ? r.json() : null))
-          .catch(() => null),
         supabase.auth.getUser(),
       ]);
       const fresh: ProfilePageData = {
         pro,
-        slots: Array.isArray(availability?.slots) ? availability.slots : [],
         offers: ((offersResult.data ?? []) as unknown as ProfessionalOffer[]).filter(
           (offer) => !offer.valid_until || offer.valid_until >= today,
         ),
@@ -512,13 +490,11 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
       };
       setDashboardCache(cacheKey, fresh);
       setProfessional(fresh.pro);
-      setProfileSlots(fresh.slots);
       setPublicOffers(fresh.offers);
       setPublicJobs(fresh.jobs);
       const { data: { user } } = authResult;
       setIsAuthenticated(!!user);
       setViewerId(user?.id ?? null);
-      setViewerResuelto(true);
       if (user?.id !== pro.profileId) {
         trackInteraction({ type: "profile_view", professionalId: pro.id, source: "profile", locale });
       }
@@ -689,46 +665,6 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   })();
   // A pro viewing their OWN public profile cannot request a service from themselves.
   const isOwn = !!viewerId && viewerId === professional.profileId;
-  // La ficha llega pintada del servidor: hasta que la sesión responde no se sabe
-  // si quien mira es el dueño.
-  const viewerPendiente = !viewerResuelto;
-
-  // "Ver disponibilidad" routing — keep service cards aligned with the contact card
-  // from the first paint. The live schedule panel confirms the exact slots, but if a
-  // profile has public availability enabled we should not briefly render the WhatsApp
-  // CTA while that confirmation is still loading.
-  const canBookService =
-    (professional.availabilityPublic ?? true) &&
-    (professional.contactPreference ?? "ambas") !== "solo_whatsapp";
-  function requestService(cat: string) {
-    if (!professional) return;
-    if (isOwn) { setSelfMsg(SELF_MSG.request); return; }
-    trackMetaEvent("InitiateCheckout", {
-      content_type: "professional_service",
-      source: "profile_service",
-    });
-    trackInteraction({
-      type: "service_request_started",
-      professionalId: professional.id,
-      source: "profile_service",
-      locale,
-      categoryId: cat,
-    });
-    setBookingCat(cat);
-    // La reserva es una página propia: se navega con el servicio elegido.
-    if (isAuthenticated) irAReservar(cat);
-    else setBookingReg(true);
-  }
-
-  function irAReservar(cat?: string | null) {
-    if (!professional) return;
-    const servicio = cat ?? bookingCat;
-    const params = new URLSearchParams();
-    if (servicio) params.set("servicio", servicio);
-    // Desde el perfil se vuelve al perfil, con el origen que este ya conocía.
-    params.set("desde", `/profesionales/${professional.slug}`);
-    router.push(`/profesionales/${professional.slug}/reservar?${params.toString()}`);
-  }
 
   // Compartir abre siempre la misma hoja: el enlace a la vista y WhatsApp,
   // Facebook y correo. Antes en computadora solo copiaba, sin decir a dónde iba.
@@ -856,11 +792,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
         professional={professional}
         activeCategory={activeCategory}
         categoryName={catLabel(professional.categoryId)}
-        availabilityPublic={professional.availabilityPublic ?? true}
-        contactPreference={professional.contactPreference ?? "ambas"}
-        slots={profileSlots}
         isOwn={isOwn}
-        viewerPendiente={viewerPendiente}
         placeFallback={placeFallback}
         placeAddress={placeAddress}
         businessName={professional.businessName ?? ""}
@@ -1582,15 +1514,6 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
         </div>
       </main>
 
-      {/* "Solicitar servicio" (service cards) — the existing booking flow, registration-gated
-          for guests. Carries the card's service as the booking context. */}
-      <ClientRegistrationModal
-        open={bookingReg}
-        onClose={() => setBookingReg(false)}
-        onSuccess={() => { setBookingReg(false); irAReservar(); }}
-        professionalName={professional.fullName}
-      />
-
       {serviceDescriptionOpen && (
         <Modal
           title={serviceDescriptionOpen.title}
@@ -1627,7 +1550,6 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
       )}
 
       {/* Room for the pinned action bar on phones, so the footer stays reachable. */}
-      <SelfActionModal open={!!selfMsg} onClose={() => setSelfMsg(null)} message={selfMsg ?? ""} />
       {avisoCompartir}
       {ofrecerProyecto && !isOwn && (
         <div className="fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+88px)] z-40 mx-auto flex max-w-md items-center gap-3 rounded-2xl border border-[#e5e7eb] bg-white p-3 shadow-lg lg:bottom-6">

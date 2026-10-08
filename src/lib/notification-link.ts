@@ -5,7 +5,6 @@ export type NotificationLinkInput = {
   type: string;
   data?: {
     link?: string;
-    booking_id?: string | null;
     project_id?: string | null;
     activity_id?: string | null;
     job_id?: string | null;
@@ -55,7 +54,8 @@ export function notificationContextLabel(type: string): string | null {
 
 function remapClientLink(link: string): string {
   return link
-    .replace("/dashboard/cliente?tab=bookings", "/dashboard/profesional?tab=sent_bookings")
+    // Las citas se borraron: un aviso viejo de «Mis citas» abre «Mis proyectos».
+    .replace("/dashboard/cliente?tab=bookings", "/dashboard/profesional?tab=sent_projects")
     .replace("/dashboard/cliente?tab=projects", "/dashboard/profesional?tab=sent_projects")
     .replace("/dashboard/cliente?tab=saved", "/dashboard/profesional?tab=saved")
     .replace("/dashboard/cliente?tab=notifications", "/dashboard/profesional?tab=notifications")
@@ -63,11 +63,10 @@ function remapClientLink(link: string): string {
 }
 
 function withTargetParams(link: string, data?: NotificationLinkInput["data"]): string {
-  if (!data?.booking_id && !data?.project_id) return link;
+  if (!data?.project_id) return link;
   const [base, hash = ""] = link.split("#");
   const [path, query = ""] = base.split("?");
   const params = new URLSearchParams(query);
-  if (data.booking_id) params.set("booking", data.booking_id);
   if (data.project_id) params.set("project", data.project_id);
   const qs = params.toString();
   const target = qs ? `${path}?${qs}` : path;

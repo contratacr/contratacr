@@ -66,7 +66,6 @@ function meaningfulRedirect(raw: string | null): string | null {
     || pathname === "/promociones/publicar"
     || pathname === "/publicar-proyecto"
     || pathname === "/cotizar"
-    || /^\/profesionales\/[^/]+\/reservar$/.test(pathname)
   ) return raw;
   const params = new URLSearchParams(query);
   if (pathname.startsWith("/profesionales/") && params.get("pendingReview") === "1") return raw;

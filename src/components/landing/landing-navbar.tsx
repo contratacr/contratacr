@@ -1088,7 +1088,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // reservar— y las pantallas de la app —mensajes, avisos— se quedan sin él.
   // Notificaciones sí lleva buscador: es una pantalla de la web como las demás,
   // y desde un aviso lo siguiente suele ser ir a buscar algo.
-  const rutaSinBuscador = drawerOnly || /\/(?:admin|onboarding|mensajes|completar-perfil|eliminar-cuenta|publicar-proyecto)(?:\/|$)|\/reservar(?:\/|$)/.test(pathname ?? "");
+  const rutaSinBuscador = drawerOnly || /\/(?:admin|onboarding|mensajes|completar-perfil|eliminar-cuenta|publicar-proyecto)(?:\/|$)/.test(pathname ?? "");
   const showDesktopCompactSearch = effectiveCompact && !effectiveMarketplaceDesktop && !rutaSinBuscador;
   // The global navbar is navigation-only. /buscar explicitly opts into its
   // contextual professional search; every other destination owns its search.

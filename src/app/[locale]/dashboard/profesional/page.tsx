@@ -14,9 +14,9 @@ import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 import { isSigningOut, signOutToHome } from "@/lib/auth/sign-out";
 import { useSearchParams } from "next/navigation";
 import {
-  User, Award, CalendarCheck, CalendarClock, CalendarDays, Wrench,
+  User, Award, Wrench,
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, CreditCard,
-  ArrowLeft, ArrowRight, ChevronDown, ChevronRight, Sparkles, AlertCircle, X, MessageSquareMore, Home, LogOut, Users, CheckCircle2, FileText, Search, Camera, Eye, Trash2, Loader2,
+  ArrowLeft, ArrowRight, ChevronDown, ChevronRight, Sparkles, AlertCircle, MessageSquareMore, Home, LogOut, Users, CheckCircle2, FileText, Search, Camera, Eye, Trash2, Loader2,
   BriefcaseBusiness, Star, ReceiptText, ExternalLink, Share2, BookOpen,
   } from "lucide-react";
 import { QuotesSection, cargarCotizaciones } from "@/components/quotes/quotes-section";
@@ -25,24 +25,19 @@ import { SectionHeadline } from "@/components/dashboard/section-headline";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { VerifiedSeal } from "@/components/ui/verified-seal";
 import { CedulaVerificada } from "@/components/ui/cedula-verificada";
 import { ShareKit } from "@/components/dashboard/pro/share-kit";
-import { getAllCategories, getCategoryLabel } from "@/lib/data/categories";
+import { getCategoryLabel } from "@/lib/data/categories";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ProfileEditor } from "@/components/dashboard/pro/profile-editor";
 import { ProfileCompletion, computeCompletion } from "@/components/dashboard/pro/profile-completion";
 import { PhotoGallery } from "@/components/dashboard/pro/photo-gallery";
-import { AvailabilityEditor } from "@/components/dashboard/pro/availability-editor";
-import { CITAS_ACTIVAS } from "@/lib/citas";
 import { ServicesEditor } from "@/components/dashboard/pro/services-editor";
 import { JobsPanel } from "@/components/dashboard/pro/jobs-panel";
 import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { OffersPanel } from "@/components/dashboard/pro/offers-panel";
 import { SaveStatusProvider } from "@/components/dashboard/save-status-context";
-import { BookingRequests } from "@/components/dashboard/pro/booking-requests";
 import { VerificationPanel } from "@/components/dashboard/pro/verification-panel";
 import { ClientActivity, fetchClientProjects } from "@/components/dashboard/client-activity";
 import { ClientConnections } from "@/components/dashboard/client-connections";
@@ -60,7 +55,6 @@ import { PAYMENTS_ENABLED } from "@/lib/payments/config";
 import { createClient } from "@/lib/supabase/client";
 import { getInitials } from "@/lib/utils";
 import { canOffer } from "@/lib/auth/capabilities";
-import { anyVideoConsultCategory } from "@/lib/data/categories";
 import { useMode, type Mode } from "@/hooks/use-mode";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
 import { notificationContext } from "@/lib/notification-link";
@@ -93,41 +87,32 @@ import { Modal } from "@/components/ui/modal";
 // (the offer capability, unlocked by completing the professional profile). There
 // is no separate client panel; everyone lives here.
 type Tab =
-  | "home" | "profile" | "services" | "photos" | "availability" | "bookings" | "quotes" | "verificacion"
+  | "home" | "profile" | "services" | "photos" | "quotes" | "verificacion"
   | "jobs" | "offers" | "publicaciones" | "completion"
   | "suscripcion"
-  | "sent_bookings" | "sent_projects" | "applications" | "saved" | "connections"
+  | "sent_projects" | "applications" | "saved" | "connections"
   | "chat" | "notifications" | "soporte" | "cuenta" | "guides";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProData = Record<string, any>;
 
-// Las tres pestañas de citas —agenda, citas recibidas y mis citas— ya no salen
-// en ningún menú, pero seguían abriéndose por ?tab= desde avisos y chats
-// viejos: una pantalla viva de una función apagada. Salen del conjunto mientras
-// CITAS_ACTIVAS sea falso, así el enlace viejo cae en el inicio del panel; el
-// día que se reactiven las citas vuelven solas.
-const TABS_DE_CITAS: Tab[] = ["availability", "bookings", "sent_bookings"];
-
-const ALL_TABS = new Set<Tab>(([
-  "home", "profile", "services", "photos", "availability", "bookings", "quotes", "verificacion",
-  "jobs", "offers", "publicaciones", "completion", "suscripcion", "sent_bookings", "sent_projects", "applications", "saved", "connections",
+// Las citas se borraron el 8-oct-2026 (cero en toda la historia). Un enlace
+// viejo con ?tab=availability, bookings o sent_bookings no está en este
+// conjunto y cae en el inicio del panel.
+const ALL_TABS = new Set<Tab>([
+  "home", "profile", "services", "photos", "quotes", "verificacion",
+  "jobs", "offers", "publicaciones", "completion", "suscripcion", "sent_projects", "applications", "saved", "connections",
   "chat", "notifications", "soporte", "cuenta", "guides",
-] as Tab[]).filter((tab) => CITAS_ACTIVAS || !TABS_DE_CITAS.includes(tab)));
+]);
 
 const TAB_ICONS: Record<Tab, React.ReactNode> = {
   home: <Home className="h-4 w-4" />,
   profile: <User className="h-4 w-4" />,
   services: <Wrench className="h-4 w-4" />,
   photos: <Award className="h-4 w-4" />,
-  availability: <CalendarDays className="h-4 w-4" />,
-  bookings: <CalendarCheck className="h-4 w-4" />,
   quotes: <ReceiptText className="h-4 w-4" />,
   verificacion: <ShieldCheck className="h-4 w-4" />,
   suscripcion: <CreditCard className="h-4 w-4" />,
-  // Citas lleva el mismo icono en los dos paneles: es la misma sección vista
-  // desde cada lado, y los paneles nunca se muestran a la vez.
-  sent_bookings: <CalendarCheck className="h-4 w-4" />,
   sent_projects: <ClipboardList className="h-4 w-4" />,
   applications: <BriefcaseBusiness className="h-4 w-4" />,
   saved: <Bookmark className="h-4 w-4" />,
@@ -147,8 +132,8 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
 // los filtros, no en la cabecera de la tarjeta: la cabecera solo existe de
 // 1024px para arriba y a media pantalla el subtítulo desaparecía.
 const TABS_WITH_SUBTITLE = new Set<Tab>([
-  "bookings", "availability", "verificacion", "suscripcion", "completion",
-  "sent_bookings", "applications", "saved", "connections", "notifications", "cuenta", "guides",
+  "verificacion", "suscripcion", "completion",
+  "applications", "saved", "connections", "notifications", "cuenta", "guides",
 ]);
 
 // Las que faltan —sent_projects, soporte, photos, offers, jobs, quotes y
@@ -158,7 +143,7 @@ const TABS_WITH_SUBTITLE = new Set<Tab>([
 // Mode membership. The first three render only in "offer" mode, the next three
 // only in "use" mode; "profile" + the shared tabs are valid in both, so the mode
 // for those is taken from the URL (?mode=) or defaults to the account's capability.
-const OFFER_ONLY = new Set<Tab>(["services", "photos", "availability", "bookings", "quotes", "verificacion", "suscripcion", "jobs", "offers", "completion"]);
+const OFFER_ONLY = new Set<Tab>(["services", "photos", "quotes", "verificacion", "suscripcion", "jobs", "offers", "completion"]);
 // Ya no hay dos paneles: «Mis proyectos» es del profesional tanto como del
 // cliente —publicar un proyecto es publicar, tenga o no ficha—, así que ninguna
 // sección fuerza el panel de cliente. Se conserva el conjunto vacío porque el
@@ -169,9 +154,8 @@ const USE_ONLY = new Set<Tab>([]);
 // Citas y Mi agenda salieron del menú. Medido en producción: 45 profesionales
 // publicaron agenda —9.820 horas futuras— y NUNCA hubo una sola cita. Peor: el
 // perfil con agenda convierte 2,6% de vista a contacto y el que no la tiene,
-// 9,5%. La agenda competía con el botón de contactar y se lo comía. El código
-// de reservas se queda intacto por si el tráfico algún día lo justifica; lo que
-// se retira es el espacio que ocupaba.
+// 9,5%. La agenda competía con el botón de contactar y se lo comía. El 8-oct-2026
+// se borró el código entero; si vuelve, está en el historial de git.
 //
 // Oportunidades también sale: los proyectos pasan a un tablero público
 // (/proyectos), como empleos y promociones, y el profesional contacta directo
@@ -222,14 +206,11 @@ function agruparPestanas(tabs: Tab[]): Tab[][] {
 }
 
 const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
-  bookings: { es: "Citas", en: "Appointments" },
   quotes: { es: "Cotizaciones", en: "Quotes" },
-  sent_bookings: { es: "Mis citas", en: "My appointments" },
   sent_projects: { es: "Mis proyectos", en: "My projects" },
   applications: { es: "Mis postulaciones", en: "My applications" },
   connections: { es: "Volver a contratar", en: "Hire again" },
   photos: { es: "Casos de éxito", en: "Success stories" },
-  availability: { es: "Mi agenda", en: "My calendar" },
   services: { es: "Servicios", en: "Services" },
   saved: { es: "Favoritos", en: "Favorites" },
   soporte: { es: "Soporte", en: "Support" },
@@ -299,8 +280,6 @@ function guideIcon(id: string) {
       return <OfferTagPercentIcon className="h-4 w-4" />;
     case "messages":
       return <MessageSquareMore className="h-4 w-4" />;
-    case "clientRequests":
-      return <CalendarCheck className="h-4 w-4" />;
     case "clientProjects":
       return <ClipboardList className="h-4 w-4" />;
     case "clientSaved":
@@ -314,12 +293,8 @@ function guideIcon(id: string) {
       return <Headset className="h-4 w-4" />;
     case "services":
       return <Wrench className="h-4 w-4" />;
-    case "availability":
-      return <CalendarDays className="h-4 w-4" />;
     case "successCases":
       return <Award className="h-4 w-4" />;
-    case "requests":
-      return <CalendarCheck className="h-4 w-4" />;
     case "opportunities":
       return <Handshake className="h-4 w-4" />;
     default:
@@ -473,151 +448,6 @@ function GuidesBody({
           {t("supportCta")}
           <ArrowRight className="h-4 w-4" />
         </button>
-      </div>
-    </div>
-  );
-}
-
-function GuidePreview({ id, t }: { id: string; t: ReturnType<typeof useTranslations<"proPanel.guides">> }) {
-  if (id === "services") {
-    return (
-      <div className="rounded-2xl border border-[#dbeafe] bg-white p-4 shadow-sm">
-        <div className="mb-3 flex items-center justify-between">
-          <h4 className="font-bold text-[#162543]">{t("preview.services.title")}</h4>
-          <span className="rounded-full bg-[#EBF5FB] px-2 py-1 text-xs font-bold text-[#0089bb]">{t("preview.services.badge")}</span>
-        </div>
-        <div className="space-y-3">
-          <div className="rounded-xl border border-[#e5e7eb] p-3">
-            <p className="font-bold text-[#162543]">Desarrollo web</p>
-            <p className="mt-1 text-xs text-[#6b7280]">{t("preview.services.desc")}</p>
-            <div className="mt-3 h-2 rounded-full bg-[#EBF5FB]" />
-          </div>
-          <div className="rounded-xl border border-[#e5e7eb] p-3">
-            <p className="font-bold text-[#162543]">Automatizaciones</p>
-            <p className="mt-1 text-xs text-[#6b7280]">{t("preview.services.detail")}</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (id === "availability") {
-    return (
-      <div className="rounded-2xl border border-[#dbeafe] bg-white p-4 shadow-sm">
-        <h4 className="font-bold text-[#162543]">{t("preview.availability.title")}</h4>
-        <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
-          {["Mañana", "31 jul", "1 ago"].map((day) => (
-            <div key={day}>
-              <p className="mb-2 font-bold text-[#6b7280]">{day}</p>
-              {["09:00", "14:00"].map((time) => (
-                <div key={time} className="mb-2 rounded-lg bg-[#EBF5FB] px-2 py-1.5 font-bold text-[#0089bb]">{time}</div>
-              ))}
-            </div>
-          ))}
-        </div>
-        <div className="mt-3 rounded-full bg-[#009FD9] py-2 text-center text-sm font-bold text-white">{t("preview.availability.cta")}</div>
-      </div>
-    );
-  }
-
-  if (id === "successCases") {
-    return (
-      <div className="rounded-2xl border border-[#dbeafe] bg-white p-4 shadow-sm">
-        <h4 className="font-bold text-[#162543]">{t("preview.cases.title")}</h4>
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          <div className="aspect-square rounded-xl bg-[#EBF5FB] p-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-mark.png" alt="" className="h-full w-full object-contain" />
-          </div>
-          <div className="aspect-square rounded-xl bg-[#eef2f6] p-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/ai-assistant-robot.webp" alt="" className="h-full w-full object-contain" />
-          </div>
-        </div>
-        <p className="mt-3 text-sm font-bold text-[#162543]">{t("preview.cases.caseTitle")}</p>
-        <p className="mt-1 text-xs leading-relaxed text-[#6b7280]">{t("preview.cases.body")}</p>
-      </div>
-    );
-  }
-
-  if (id === "jobsGuide" || id === "jobsPanel") {
-    return (
-      <div className="rounded-2xl border border-[#dbeafe] bg-white p-4 shadow-sm">
-        <div className="mb-3 flex items-center justify-between">
-          <h4 className="font-bold text-[#162543]">{t("preview.jobs.title")}</h4>
-          <span className="rounded-full bg-[#EBF5FB] px-2 py-1 text-xs font-bold text-[#0089bb]">{t("preview.jobs.badge")}</span>
-        </div>
-        <div className="space-y-3">
-          <div className="flex gap-3 rounded-xl border border-[#e5e7eb] p-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ccr-caja-icono-plana">
-              <BriefcaseBusiness className="h-5 w-5" />
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-bold text-[#162543]">{t("preview.jobs.role")}</p>
-              <p className="mt-0.5 text-xs font-semibold text-[#526277]">ContrataCR</p>
-              <p className="mt-1 text-xs text-[#6b7280]">{t("preview.jobs.meta")}</p>
-            </div>
-          </div>
-          <div className="rounded-xl bg-[#009FD9] px-3 py-2 text-center text-sm font-bold text-white">{t("preview.jobs.cta")}</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (id === "offersGuide" || id === "offersPanel") {
-    return (
-      <div className="rounded-2xl border border-[#dbeafe] bg-white p-4 shadow-sm">
-        <div className="mb-3 flex items-center justify-between">
-          <h4 className="font-bold text-[#162543]">{t("preview.offers.title")}</h4>
-          <span className="rounded-full bg-[#EBF5FB] px-2 py-1 text-xs font-bold text-[#0089bb]">{t("preview.offers.badge")}</span>
-        </div>
-        <div className="overflow-hidden rounded-xl border border-[#e5e7eb]">
-          <div className="flex h-24 items-center justify-center bg-[#f4f8fb] text-[#009FD9]">
-            <OfferTagPercentIcon className="h-8 w-8" />
-          </div>
-          <div className="p-3">
-            <p className="text-sm font-bold text-[#162543]">{t("preview.offers.offer")}</p>
-            <p className="mt-1 text-xs text-[#6b7280]">{t("preview.offers.meta")}</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (id === "requests" || id === "opportunities") {
-    return (
-      <div className="rounded-2xl border border-[#dbeafe] bg-white p-4 shadow-sm">
-        <h4 className="font-bold text-[#162543]">{id === "requests" ? t("preview.requests.title") : t("preview.opportunities.title")}</h4>
-        <div className="mt-4 space-y-3">
-          <div className="rounded-xl border border-[#e5e7eb] p-3">
-            <p className="text-sm font-bold text-[#162543]">{id === "requests" ? "Gerardo Solís" : t("preview.opportunities.project")}</p>
-            <p className="mt-1 text-xs text-[#6b7280]">{id === "requests" ? t("preview.requests.body") : t("preview.opportunities.body")}</p>
-          </div>
-          <div className="rounded-xl bg-[#009FD9] px-3 py-2 text-center text-sm font-bold text-white">{id === "requests" ? t("preview.requests.cta") : t("preview.opportunities.cta")}</div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="rounded-2xl border border-[#dbeafe] bg-white p-4 shadow-sm">
-      <div className="flex items-center gap-3">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo-mark.png" alt="" className="h-16 w-16 rounded-xl object-contain ring-1 ring-[#eef2f6]" />
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <p className="truncate text-lg font-bold text-[#162543]">ContrataCR</p>
-            <VerifiedSeal label={t("exampleProfile.verified")} className="h-[18px] w-[18px] shrink-0 text-[#009FD9]" />
-          </div>
-          <p className="text-sm text-[#526277]">Isaac Alberto Sanchez Monge</p>
-          <p className="mt-1 inline-flex rounded-full bg-[#f3f4f6] px-2 py-0.5 text-xs font-semibold text-[#6b7280]">{t("exampleProfile.service")}</p>
-        </div>
-      </div>
-      <p className="mt-4 text-xs leading-relaxed text-[#526277]">{t("preview.profile.body")}</p>
-      <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs text-[#526277]">
-        <span className="rounded-xl bg-[#EBF5FB] px-2 py-2 font-bold text-[#0089bb]">5.0<br /><span className="font-medium">{t("exampleProfile.reviews")}</span></span>
-        <span className="rounded-xl bg-[#EBF5FB] px-2 py-2 font-bold text-[#0089bb]">4<br /><span className="font-medium">{t("exampleProfile.cases")}</span></span>
-        <span className="rounded-xl bg-[#EBF5FB] px-2 py-2 font-bold text-[#0089bb]">1<br /><span className="font-medium">{t("exampleProfile.year")}</span></span>
       </div>
     </div>
   );
@@ -1860,7 +1690,7 @@ export default function DashboardPage() {
   const mobileSectionOpen = activeTab !== "home" || mobilePanelOpen;
   const singleSurfaceTab = activeTab === "profile";
   // Editores del panel: mismo lenguaje que "Publicar oferta" (gris + tarjeta).
-  const editorSurfaceTab = activeTab === "availability" || activeTab === "verificacion" || activeTab === "cuenta";
+  const editorSurfaceTab = activeTab === "verificacion" || activeTab === "cuenta";
   const profileCompletionPercent = proForCompletion ? computeCompletion(proForCompletion).percent : null;
   const showProfileCompletion =
     mode === "offer" &&
@@ -2530,7 +2360,7 @@ export default function DashboardPage() {
                       activeTab === "home" && "rounded-none border-0 bg-transparent shadow-none lg:hidden",
                       activeTab === "chat" && "overflow-hidden",
                       // En pantalla grande la columna se queda en 54rem: a 62rem las
-                      // tarjetas de una cita o un proyecto quedaban como cintas de
+                      // tarjetas de un proyecto quedaban como cintas de
                       // un metro con tres renglones de texto y un botón en cada punta.
                       activeTab !== "chat" && activeTab !== "home" && "lg:max-w-[54rem] lg:flex-1",
                       singleSurfaceTab && "!border-0 !bg-transparent !shadow-none",
@@ -2723,33 +2553,7 @@ export default function DashboardPage() {
                             onSaved={(intent) => handleSaved(intent ?? "section")}
                           />
                         )}
-                        {/* La tarjeta de Disponibilidad es solo para el teléfono, donde
-                            el cuerpo del panel es gris y la sección necesita su propio
-                            marco. De 1024px en adelante ese cuerpo YA es la tarjeta
-                            blanca del panel: repetirla dejaba una caja dentro de otra. */}
-                        {activeTab === "availability" && pro && (
-                          <div className="max-lg:rounded-2xl max-lg:border max-lg:border-[#e5e7eb] max-lg:bg-white max-lg:p-5 max-lg:shadow-sm">
-                          <AvailabilityEditor
-                            // El editor toma estos valores al montarse. El panel
-                            // pinta primero lo que tiene en caché y confirma con
-                            // el servidor un instante después: sin esta clave, un
-                            // valor ya corregido (la agenda que se acababa de
-                            // ocultar, por ejemplo) se quedaba mostrando el
-                            // anterior hasta recargar.
-                            key={`agenda:${pro.availability_public}:${pro.contact_preference}:${pro.videoconsulta}`}
-                            professionalId={pro.id}
-                            initialPublic={pro.availability_public ?? true}
-                            initialContactPreference={pro.contact_preference ?? "ambas"}
-                            workplaces={pro.workplaces ?? []}
-                            coverageCountry={!!pro.coverage_country}
-                            videoConsultationAllowed={anyVideoConsultCategory((pro.professions && pro.professions.length > 0) ? pro.professions : (pro.category_id ? [pro.category_id] : []))}
-                            initialVideoConsultation={!!pro.videoconsulta}
-                            onSaved={(intent) => handleSaved(intent ?? "section")}
-                          />
-                          </div>
-                        )}
                         {activeTab === "suscripcion" && PAYMENTS_ENABLED && <SubscriptionPanel />}
-                        {activeTab === "bookings" && <BookingRequests />}
                         {activeTab === "quotes" && (
                           <QuotesSection
                             proName={professionalDisplayName}
@@ -2759,7 +2563,6 @@ export default function DashboardPage() {
                           />
                         )}
                         {/* "Usar servicios", the seek capability. */}
-                        {activeTab === "sent_bookings" && <ClientActivity section="bookings" />}
                         {activeTab === "sent_projects" && <ClientActivity section="projects" />}
                         {/* «Mis postulaciones» se retiró con el formulario: se
                             aplica por WhatsApp y no hay nada que seguir aquí.

@@ -21,7 +21,7 @@ import { type ContactIntent } from "@/components/auth/client-registration-modal"
 
 type GateOptions = {
   professionalName: string;
-  intent: Exclude<ContactIntent, "booking">;
+  intent: ContactIntent;
   professionalId?: string;
   source?: string;
   categoryId?: string | null;

@@ -27,7 +27,7 @@ import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-// Identity-FIRST, like the logged-in/no-cédula booking flow: the cédula is asked first and
+// Identity-FIRST: the cédula is asked first and
 // the official name auto-fills from the padrón (or a "No tengo cédula" manual name), THEN
 // email + password — so a guest requesting a service never enters their identity twice.
 type RegisterStep = "identity" | "email" | "password" | "otp";
@@ -36,9 +36,8 @@ type ModalView = "register" | "login";
 const STEP_NUM: Record<RegisterStep, number> = {
   identity: 1, email: 2, password: 3, otp: 4,
 };
-const PENDING_BOOKING_IDENTITY_KEY = "ccr:pending-booking-identity";
 
-export type ContactIntent = "whatsapp" | "phone" | "email" | "message" | "booking";
+export type ContactIntent = "whatsapp" | "phone" | "email" | "message";
 
 export interface ClientRegistrationModalProps {
   open: boolean;
@@ -208,7 +207,7 @@ export function ClientRegistrationModal({
   onClose,
   onSuccess,
   professionalName,
-  intent = "booking",
+  intent = "message",
 }: ClientRegistrationModalProps) {
   const t = useTranslations("clientRegModal");
   const tRp = useTranslations("resetPassword");
@@ -261,7 +260,7 @@ export function ClientRegistrationModal({
   }
 
   // Resolved identity: a national/DIMEX cédula auto-fills `fullName` from the padrón; the
-  // "No tengo cédula" path types `manualName`. The cédula stays temporary until booking submit.
+  // "No tengo cédula" path types `manualName`. Only the name is saved to the account.
   const resolvedName = limitText((noCedula ? manualName : fullName).trim(), NAME_MAX_LENGTH);
   const cedulaClean = !noCedula ? cleanId(cedula) : "";
   const identityReady = noCedula
@@ -308,8 +307,6 @@ export function ClientRegistrationModal({
     const resolved = resolvedName;
     const supabase = createClient();
 
-    // The ID is captured first so the booking can continue prefilled, but it is not
-    // saved to the account until a real booking is created.
     const { data: signUpData, error: e } = await supabase.auth.signUp({
       email,
       password,
@@ -341,8 +338,7 @@ export function ClientRegistrationModal({
       return;
     }
 
-    // Save the client account shell only. The ID is kept in sessionStorage for the
-    // booking modal and persisted later by /api/bookings if the request is sent.
+    // Save the client account shell.
     if (signUpData?.user?.id) {
       try {
         const res = await fetch("/api/register/client", {
@@ -356,15 +352,6 @@ export function ClientRegistrationModal({
           setError(locale === "en" ? "That ID is already registered. Sign in." : "Esta identificacion ya esta registrada. Inicia sesion.");
           setView("login");
           return;
-        }
-        if (typeof window !== "undefined") {
-          window.sessionStorage.setItem(PENDING_BOOKING_IDENTITY_KEY, JSON.stringify({
-            userId: signUpData.user.id,
-            fullName: resolved,
-            cedula: cedulaClean || "",
-            noCedula,
-            createdAt: Date.now(),
-          }));
         }
       } catch {
         // Non-fatal — name will be saved when the session is established.
@@ -520,8 +507,7 @@ export function ClientRegistrationModal({
                   placeholder="••••••••"
                 />
                 {/* Forgot-password — every login surface has it. Links to the standalone
-                    reset page; does NOT touch the booking flow's login (which still closes
-                    + continues via onSuccess on success). */}
+                    reset page; this login still closes + continues via onSuccess on success. */}
                 <a
                   href={`${prefijoDeIdioma(locale)}/olvide-contrasena`}
                   className="self-start -mt-2.5 text-sm text-[#009FD9] hover:underline"
@@ -560,8 +546,7 @@ export function ClientRegistrationModal({
                 )}
 
                 {/* STEP: identity — cédula FIRST → official name auto-fills from the padrón
-                    (read-only), OR a "No tengo cédula" manual name. Mirrors the booking
-                    flow so the guest never enters their identity twice. */}
+                    (read-only), OR a "No tengo cédula" manual name. */}
                 {step === "identity" && (
                   <div className="flex flex-col gap-3">
                     {!noCedula ? (
@@ -581,8 +566,7 @@ export function ClientRegistrationModal({
                         autoFocus
                       />
                     )}
-                    {/* Brand-blue "No tengo cédula" escape (manual name, flagged unverified),
-                        same pattern as the booking flow. */}
+                    {/* Brand-blue "No tengo cédula" escape (manual name, flagged unverified). */}
                     <button
                       type="button"
                       onClick={() => { setNoCedula((v) => !v); setError(null); }}

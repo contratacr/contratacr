@@ -1,8 +1,6 @@
 import { expect, test } from "playwright/test";
-import { CITAS_ACTIVAS } from "../../src/lib/citas";
 import { apiJson, gotoOK, loginAs, resetAuth } from "./helpers";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionAdminClient, type RegressionSeedState } from "./seed";
-import { cleanupDisposableAccount, createDisposableAccount } from "./disposable-account";
 
 type ChatResponse = { conversationId?: string; error?: string };
 type ConversationListResponse = {
@@ -24,7 +22,6 @@ test.describe("@seeded contextual direct chat", () => {
   let seed: RegressionSeedState;
   const conversacionesDePrueba: string[] = [];
   const reportIds: string[] = [];
-  let bookingId = "";
   let projectId = "";
 
   // Desde a8c05f7a hay UNA conversación por pareja: un chat previo entre el
@@ -32,7 +29,7 @@ test.describe("@seeded contextual direct chat", () => {
   // de este archivo) se reutilizaría con su contexto y sus contadores, y la
   // prueba no vería el contexto que acaba de crear. Cada prueba contextual
   // parte de una pareja sin chat.
-  // Los chats que deja la siembra canónica (con sus citas y mensajes) se
+  // Los chats que deja la siembra canónica (con sus mensajes) se
   // fotografían antes de empezar y se devuelven al final tal cual: con un chat
   // por pareja, las pruebas los reutilizan o los quitan, y el verificador de
   // la siembra (y otras suites) los esperan ahí.
@@ -87,7 +84,6 @@ test.describe("@seeded contextual direct chat", () => {
       await admin.from("direct_messages").delete().in("conversation_id", conversationIds);
       const disposableReferences = [
         ...conversationIds,
-        bookingId,
         projectId,
       ].filter(Boolean);
       const { data: generatedNotifications, error: notificationLookupError } = await admin
@@ -110,7 +106,6 @@ test.describe("@seeded contextual direct chat", () => {
       }
       await admin.from("direct_conversations").delete().in("id", conversationIds);
     }
-    if (bookingId) await admin.from("bookings").delete().eq("id", bookingId);
     if (projectId) await admin.from("projects").delete().eq("id", projectId);
     if (reportIds.length) await admin.from("reports").delete().in("id", reportIds);
     // Se devuelve el chat sembrado tal como estaba (una conversación por pareja:
@@ -269,32 +264,6 @@ test.describe("@seeded contextual direct chat", () => {
     await expect(page.locator("[data-respuesta-en-curso]")).toHaveCount(0);
     const enviada = page.locator(`[id^="msg-"]`).filter({ hasText: `E2E desde la pantalla ${marca}` }).last();
     await expect(enviada.locator("[data-cita]")).toContainText(`E2E sin cita ${marca}`);
-  });
-
-  test("booking chat carries its context and rejects outsiders", async ({ page }) => {
-    // Las citas están apagadas (src/lib/citas.ts): no hay chat de cita que
-    // abrir. Vuelve a correr cuando se prendan.
-    test.skip(!CITAS_ACTIVAS, "Citas apagadas");
-    const admin = regressionAdminClient();
-    const { data: booking, error } = await admin.from("bookings").insert({ professional_id: seed.professionalId, client_id: seed.clientId, service_description: "E2E reparación contextual", status: "pending" }).select("id").single();
-    if (error) throw error; bookingId = booking.id;
-    await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
-    const created = await apiJson<ChatResponse>(page, "/api/direct-chat", { method: "POST", body: { bookingId, message: "E2E consulta de solicitud" } });
-    expect(created.status).toBe(200); conversacionesDePrueba.push(created.body.conversationId!);
-    await gotoOK(page, `/mensajes?conversation=${created.body.conversationId}`);
-    await expect(page.getByText("E2E reparación contextual").last()).toBeVisible();
-    // La cabecera del hilo ya no lleva el botón «Ver cita» (a8c05f7a): el
-    // contexto se lee en el propio hilo, con la descripción de la cita.
-
-    const outsider = await createDisposableAccount({ prefix: "direct-chat-outsider" });
-    try {
-      await resetAuth(page);
-      await loginAs(page, outsider.email, outsider.password);
-      const denied = await apiJson(page, `/api/direct-chat?id=${created.body.conversationId}`);
-      expect(denied.status).toBe(404);
-    } finally {
-      await cleanupDisposableAccount(outsider);
-    }
   });
 
   // Las PROPUESTAS se retiraron del app: `/api/direct-chat` ya no abre un chat

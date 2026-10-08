@@ -466,52 +466,6 @@ export function StatusFilterTabs({
   );
 }
 
-// Lo que puede tomar, lo que está en juego y lo que ya se cerró. Sin la tercera,
-// "Mis propuestas" mezclaba las vivas con trabajos terminados de hace meses.
-export const SOLICITUD_TABS: readonly FilterTab[] = [
-  { id: "en_curso" },
-  { id: "finalizadas" },
-  { id: "canceladas" },
-];
-/** Reservas recibidas: una reserva nace confirmada, así que no hay "nuevas"
- *  que esperen respuesta; el profesional ve las mismas dos etapas que el cliente. */
-export const SOLICITUD_TABS_PRO: readonly FilterTab[] = [
-  { id: "en_curso" },
-  { id: "finalizadas" },
-  { id: "canceladas" },
-];
-
-// A booking's appointment day has fully passed (compared to now, end-of-day).
-function isPastAppointment(scheduledDate?: string | null): boolean {
-  if (!scheduledDate) return false;
-  const [y, m, d] = scheduledDate.split("-").map(Number);
-  if (!y || !m || !d) return false;
-  return new Date(y, m - 1, d, 23, 59, 59, 999).getTime() < Date.now();
-}
-
-// ── SOLICITUDES (bookings) ──────────────────────────────────────────────────
-// Status (+ scheduled date) → the four buckets. A CONFIRMED/in-progress
-// appointment whose date already passed is treated as Finalizada.
-export function solicitudBucket(status: string, scheduledDate?: string | null): string {
-  // Cancelada no es terminada: mezclarlas ensuciaba el historial de trabajos
-  // con las citas que nunca ocurrieron.
-  if (status === "cancelled" || status === "rescheduled") return "canceladas";
-  if (status === "completed" || status === "awaiting_confirmation") return "finalizadas";
-  if (isPastAppointment(scheduledDate)) return "finalizadas";
-  // Del lado del cliente una cita recién enviada y una ya confirmada son lo
-  // mismo: las dos están vivas y él ya sabe cuáles mandó.
-  return "en_curso";
-}
-
-/** Mismas cubetas para el profesional: "pending" es un residuo de datos viejos y
- *  se lee como una reserva viva. */
-export function solicitudBucketPro(status: string, scheduledDate?: string | null): string {
-  return solicitudBucket(status, scheduledDate);
-}
-export function solicitudMatches(filter: string, status: string, scheduledDate?: string | null): boolean {
-  return solicitudBucket(status, scheduledDate) === filter;
-}
-
 // ── PROYECTOS (a CLIENT's published project) ────────────────────────────────
 // Sin etapas propias: un proyecto publicado se mira como un empleo o una
 // promoción —está a la vista o no—, ver `proyectoPublicacionBucket`.

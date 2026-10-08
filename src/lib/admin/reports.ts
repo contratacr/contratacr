@@ -223,7 +223,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
   sinceInteractions.setHours(0, 0, 0, 0);
   const baseQ = iniciar(Promise.all([
     admin.from("profiles").select("id, role, created_at"),
-    admin.from("professionals").select("id, profile_id, created_at, verification_status, category_id, provincia_id, professions, service_type, availability_public, services"),
+    admin.from("professionals").select("id, profile_id, created_at, verification_status, category_id, provincia_id, professions, service_type, services"),
   ]));
   const acqQ = iniciar(admin
     .from("profiles")

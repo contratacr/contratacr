@@ -11,8 +11,6 @@ const reviewed = new Map([
   ["src/hooks/use-auth.ts", { count: 12, reason: "authenticated user/avatar render cache, plus a session-scoped flag so an unasked sign-out is reported once" }],
   ["src/hooks/use-mode.ts", { count: 5, reason: "tab-scoped panel-mode preference and its storage-event subscription, cleared on sign-out so the next login lands on the account's own panel" }],
   ["src/components/auth/otp-verification.tsx", { count: 2, reason: "short-lived OTP auto-resend cooldown; auth state stays in Supabase" }],
-  ["src/components/auth/client-registration-modal.tsx", { count: 2, reason: "short-lived booking registration handoff" }],
-  ["src/components/booking/booking-modal.tsx", { count: 4, reason: "short-lived booking registration handoff" }],
   ["src/components/dashboard/direct-chat-inbox.tsx", { count: 6, reason: "unsent composer drafts kept per conversation as a device convenience; sent messages live in Supabase" }],
   ["src/components/dashboard/pro/profile-completion.tsx", { count: 5, reason: "dismissed, skipped and ignored checklist presentation state; completion truth remains in Supabase" }],
   ["src/components/landing/landing-navbar.tsx", { count: 5, reason: "coarse current-location search cache and a per-user cache of the account capability (does it offer services?) so the navbar paints without shifting; Supabase re-checks it on every load. El idioma NO usa almacenamiento del navegador: vive en la cookie NEXT_LOCALE, que el servidor necesita leer para redirigir" }],
