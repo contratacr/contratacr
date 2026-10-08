@@ -28,6 +28,7 @@ import {
 import { CategorySearch } from "@/components/ui/category-search";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { getCategoryLabel } from "@/lib/data/categories";
+import { SugerenciaDeServicio } from "@/components/ui/sugerencia-de-servicio";
 import { FutureDatePicker } from "@/components/ui/future-date-picker";
 import { FilaInterruptor } from "@/components/ui/fila-interruptor";
 import { PROVINCES, getCantonById, getCantonsByProvince, getProvinceById } from "@/lib/data/cr-geography";
@@ -203,8 +204,10 @@ function FieldError({ children }: { children?: string }) {
   return children ? <p data-campo-con-error="" role="alert" className="mt-1.5 text-xs font-medium text-red-600">{children}</p> : null;
 }
 
-function JobTitleInput({ defaultValue, error, locale, copy }: { defaultValue?: string; error?: string; locale: "es" | "en"; copy: JobPostCopy }) {
+function JobTitleInput({ defaultValue, error, locale, copy, alCambiar }: { defaultValue?: string; error?: string; locale: "es" | "en"; copy: JobPostCopy; alCambiar?: (valor: string) => void }) {
   const [value, setValue] = useState(defaultValue ?? "");
+  // El formulario lee el puesto para sugerir el servicio de la vacante.
+  useEffect(() => { alCambiar?.(value); }, [alCambiar, value]);
   const suggestion = useMemo(() => {
     if (locale === "en") return "";
     const query = value.trim().toLocaleLowerCase("es-CR");
@@ -334,6 +337,7 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
   // desarrolladores. Al editar no se muestra, porque editar no vuelve a avisar.
   const [destinatarios, setDestinatarios] = useState(0);
   const creando = !initialJob?.id;
+  const [puesto, setPuesto] = useState(initialJob?.title ?? "");
   useEffect(() => {
     if (!creando || !servicio) return;
     let vivo = true;
@@ -521,7 +525,7 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
               opción más larga y del tipo de letra del sistema— ensanchaba la
               columna y la página entera (397 px en una pantalla de 390). */}
           <div className="grid grid-cols-[minmax(0,1fr)] gap-5 sm:grid-cols-2">
-            <JobTitleInput defaultValue={initialJob?.title ?? ""} error={fieldErrors.title} locale={locale} copy={copy} />
+            <JobTitleInput defaultValue={initialJob?.title ?? ""} error={fieldErrors.title} locale={locale} copy={copy} alCambiar={setPuesto} />
             {/* EL SERVICIO, ELEGIDO DE LA LISTA. De aquí sale a qué
                 profesionales se les avisa de la vacante: deducirlo del título
                 mandaría «Mecánico Diésel» también a los mecánicos industriales. */}
@@ -535,6 +539,13 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
                   error={fieldErrors.service}
                 />
               </div>
+              <SugerenciaDeServicio
+                texto={puesto}
+                servicioActual={servicio}
+                locale={locale}
+                fuente="puesto"
+                onUsar={(id) => { setServicio(id); setDestinatarios(0); setFieldErrors((actuales) => ({ ...actuales, service: undefined })); setConCambios(true); }}
+              />
               {creando && servicio && destinatarios > 0 && (
                 <p className="mt-1 text-xs font-semibold text-[#0f7a4a]" data-destinatarios-vacante>{copy.avisaremos(destinatarios, getCategoryLabel(servicio, locale))}</p>
               )}
