@@ -15,6 +15,7 @@ import { getInitials } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { verificationLabel, verificationPillClasses, type VerificationStatus } from "@/lib/verification";
 import { supportTicketRef } from "@/lib/support-ticket";
+import { AdminEditarDatos } from "@/components/admin/admin-editar-datos";
 
 // One page per account, read top to bottom: who they are and how to reach them,
 // whether they are verified (and the actions), what they did as a client, what
@@ -341,6 +342,7 @@ export function AdminUserProfile({
                 </a>
               )}
             </div>
+            <AdminEditarDatos userId={userId} perfil={profile} pro={pro} alGuardar={refreshUser} />
           </div>
         </div>
       </div>
