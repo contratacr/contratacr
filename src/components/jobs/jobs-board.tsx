@@ -1,5 +1,6 @@
 "use client";
 
+import { formatPersonDisplayName } from "@/lib/display-name";
 import { conFiltroDeFecha } from "@/lib/marketplace/filtros-por-volumen";
 import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
@@ -595,11 +596,12 @@ function JobRow({ job, selected, onSelect }: { job: JobPost; selected: boolean; 
         <EmployerAvatar job={job} />
         <div className="min-w-0 flex-1">
           <h2 className="line-clamp-2 text-[15px] font-extrabold leading-tight text-[#005eaa] lg:text-base">{job.title}</h2>
-          {/* «Cédula verificada» con palabras junto al nombre, como en las
-              tarjetas de profesionales. Si no cabe al lado, baja sola a la
-              línea de abajo: nunca recorta el nombre (8-oct-2026). */}
-          <p className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-sm font-semibold text-[#101d35]">
-            <span className="min-w-0 max-w-full truncate">{job.employer_name || copy.professionalFallback}</span>
+          {/* Nombre y «Cédula verificada» en UNA línea (8-oct-2026): el nombre
+              de persona se resume (nombre y primer apellido) y, si aun así no
+              cabe, cede él con «…»; la cédula nunca baja de línea. En la ficha
+              van por separado y el nombre sale completo. */}
+          <p className="mt-0.5 flex min-w-0 items-center gap-2.5 text-sm font-semibold text-[#101d35]">
+            <span className="min-w-0 truncate" title={job.employer_name || undefined}>{formatPersonDisplayName(job.employer_name || copy.professionalFallback, "mobile")}</span>
             {job.employer_verified && <CedulaVerificada texto={tPerfil("cedulaVerificada")} className={CEDULA_COMPACTA} />}
           </p>
           {/* TELÉFONO: dónde y cuándo; modalidad y experiencia; salario. */}

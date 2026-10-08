@@ -339,10 +339,10 @@ function Tarjeta({ proyecto, en, elegida = false, onElegir }: { proyecto: Proyec
             {/* PRIMER NOMBRE Y PRIMER APELLIDO. «Pedro Alejandro Saborío
                 Matamoros» no cabe en la fila y salía cortado con puntos
                 suspensivos, que es un nombre a medias: no dice quién es. */}
-            {/* «Cédula verificada» junto a quien publica, como en Empleos y
-                Promociones; si no cabe, baja de línea (8-oct-2026). */}
-            <span className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
-              <span className="min-w-0 max-w-full truncate">{copy.publicado} {formatPersonDisplayName(proyecto.client_name, "mobile")}</span>
+            {/* Solo el nombre resumido y «Cédula verificada», en UNA línea, como
+                en Empleos y Promociones: sin «Publicado por» (8-oct-2026). */}
+            <span className="flex min-w-0 items-center gap-2.5">
+              <span className="min-w-0 truncate" title={proyecto.client_name || undefined}>{formatPersonDisplayName(proyecto.client_name, "mobile")}</span>
               {proyecto.client_verified && <CedulaVerificada texto={tPerfil("cedulaVerificada")} className={CEDULA_COMPACTA} />}
             </span>
             <span className="shrink-0">{cuandoSePublico(proyecto.created_at, en)}</span>

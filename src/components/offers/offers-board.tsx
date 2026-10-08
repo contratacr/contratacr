@@ -1,5 +1,6 @@
 "use client";
 
+import { formatPersonDisplayName } from "@/lib/display-name";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { conFiltroDeFecha } from "@/lib/marketplace/filtros-por-volumen";
 import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
@@ -775,10 +776,10 @@ function OfferRow({
                 </span>
               )}
             </div>
-            {/* «Cédula verificada» con palabras junto al nombre; si no cabe,
-                baja a la línea de abajo sin recortar el nombre (8-oct-2026). */}
-            <p className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[13px] font-semibold leading-5 text-[#101d35] sm:text-sm">
-              <span className="min-w-0 max-w-full truncate">{offer.professional_name}</span>
+            {/* Nombre y «Cédula verificada» en UNA línea, como en Empleos: el
+                nombre se resume y cede con «…» si no cabe (8-oct-2026). */}
+            <p className="flex min-w-0 items-center gap-2.5 text-[13px] font-semibold leading-5 text-[#101d35] sm:text-sm">
+              <span className="min-w-0 truncate" title={offer.professional_name || undefined}>{formatPersonDisplayName(offer.professional_name, "mobile")}</span>
               {offer.professional_verified && <CedulaVerificada texto={tPerfilFila("cedulaVerificada")} className={CEDULA_COMPACTA} />}
             </p>
             {/* En computadora, un solo azul por fila: el del título, que es lo
