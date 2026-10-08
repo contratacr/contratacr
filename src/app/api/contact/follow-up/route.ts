@@ -4,12 +4,12 @@ import { createClient } from "@/lib/supabase/server";
 import { contactCookieValue, hashContactToken, setContactCookie } from "@/lib/contact-followup";
 
 const DIA_MS = 24 * 60 * 60 * 1000;
-const FOLLOW_UP_DELAY_MS = 5 * DIA_MS;
-// Los frenos para que la pregunta no canse. Se pregunta a los 5 días y, si la
-// respuesta es «Aún no», UNA vez más a los 5 días; un segundo «Aún no» la
+const FOLLOW_UP_DELAY_MS = 3 * DIA_MS;
+// Los frenos para que la pregunta no canse. Se pregunta a los 3 días y, si la
+// respuesta es «Aún no», UNA vez más a los 3 días; un segundo «Aún no» la
 // cierra. Antes se reprogramaba sin límite: quien nunca contestaba «Sí» o «No»
-// la veía cada 5 días para siempre.
-const ULTIMA_PREGUNTA_MS = 10 * DIA_MS;
+// la veía cada pocos días para siempre. (Eran 5 y 10 días hasta el 8-oct-2026.)
+const ULTIMA_PREGUNTA_MS = 6 * DIA_MS;
 // Pasado un mes del contacto ya nadie se acuerda: la pregunta solo estorba.
 const CADUCA_MS = 30 * DIA_MS;
 // «Aún no» también quiere decir «ahora no me pregunten»: las demás pendientes
@@ -62,7 +62,7 @@ export async function PATCH(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
   const id = String(body.id ?? "");
   const action = String(body.action ?? "");
-  if (!id || !["hired", "not_now", "not_hired"].includes(action)) {
+  if (!id || !["hired", "not_now", "not_hired", "no_response"].includes(action)) {
     return NextResponse.json({ error: "Acción inválida." }, { status: 400 });
   }
 
@@ -106,9 +106,11 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ ok: true, closed: edad >= ULTIMA_PREGUNTA_MS });
   }
 
-  if (action === "not_hired") {
+  // «No me respondió» es el único dato de si el profesional contesta: la
+  // conversación es por WhatsApp y el app no la ve (8-oct-2026).
+  if (action === "not_hired" || action === "no_response") {
     const { error } = await db.from("whatsapp_contact_followups").update({
-      status: "dismissed",
+      status: action === "no_response" ? "no_response" : "dismissed",
       responded_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }).eq("id", id);

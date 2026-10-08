@@ -43,7 +43,8 @@ test("contact follow-up is readable and dismissible without blocking the page", 
   await expect(dialog).toContainText("Reparación de computadoras");
   await expect(dialog.getByRole("button", { name: "Sí, dejar una reseña" })).toBeVisible();
   await expect(dialog.getByRole("button", { name: "Aún no" })).toBeVisible();
-  await expect(dialog.getByRole("button", { name: "No", exact: true })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "No lo contraté" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "No me respondió" })).toBeVisible();
 
   const box = await dialog.boundingBox();
   const viewport = page.viewportSize();
@@ -83,12 +84,16 @@ test("contact follow-up shows pending confirmations one at a time", async ({ pag
   await expect(dialog).toContainText("1 de 2 confirmaciones pendientes", ESPERA);
   await expect(dialog).toContainText("Redes Bahía");
 
-  // Con una respuesta de verdad («No») se pasa a la siguiente: la persona está
-  // contestando y terminar la lista le toma un toque más.
-  await dialog.getByRole("button", { name: "No", exact: true }).click();
+  // Con una respuesta de verdad («No me respondió» o «No lo contraté») se pasa
+  // a la siguiente: la persona está contestando y terminar la lista le toma un
+  // toque más. «No me respondió» viaja aparte: es el dato de si el profesional
+  // contesta (8-oct-2026).
+  await dialog.getByRole("button", { name: "No me respondió" }).click();
   await expect(dialog).toContainText("Juan Electricidad", { timeout: 2000 });
   await expect(dialog).toContainText("Electricidad");
-  expect(actions).toEqual(["not_hired"]);
+  await dialog.getByRole("button", { name: "No lo contraté" }).click();
+  await expect(dialog).toBeHidden({ timeout: 3000 });
+  expect(actions).toEqual(["no_response", "not_hired"]);
 });
 
 test("«Aún no» deja de preguntar en esa visita aunque queden pendientes", async ({ page }) => {

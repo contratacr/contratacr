@@ -39,8 +39,36 @@ const PLANTILLAS = [
     body: "Hola,\n\nPor si no lo tenías presente: en ContrataCR hay electricistas, construcción, remodelación, abogados, mecánicos, contadores, desarrollo web y bastante más.\n\nTodos con identidad verificada contra el padrón, con reseñas, y les escribís por WhatsApp directo — sin formularios ni esperas.",
     ctaLabel: "Ver todos los servicios",
     ctaPath: "/servicios",
+    audiencia: "todas",
+  },
+  // PARA PROFESIONALES (8-oct-2026). De 313 activos, 299 no tenían ninguna
+  // reseña y 292 no mostraban precio de referencia. El botón lleva al panel,
+  // donde cada uno tiene su propio botón «Pedir por WhatsApp» con su enlace.
+  {
+    id: "resenas",
+    nombre: "Profesionales sin reseñas",
+    subject: "Una reseña cambia cuántos clientes te escriben",
+    body: "Los clientes que entran a ContrataCR escriben primero a los perfiles que tienen reseñas. Hoy el tuyo todavía no tiene ninguna.\n\nLo más rápido es pedírsela a 2 o 3 clientes con los que ya trabajaste. En tu panel está el botón «Pedir por WhatsApp» con el mensaje listo y el enlace a tu perfil: solo eliges a quién mandárselo.\n\nToma un minuto y la reseña queda en tu perfil.",
+    ctaLabel: "Pedir mis reseñas",
+    ctaPath: "/dashboard/profesional",
+    audiencia: "pros_sin_resenas",
+  },
+  {
+    id: "precio",
+    nombre: "Profesionales sin precio",
+    subject: "Los perfiles con precio de referencia reciben más mensajes",
+    body: "Cuando un cliente ve «desde ₡15.000» en un perfil, se anima más a escribir: ya sabe que está dentro de su presupuesto. Hoy tus servicios dicen «a convenir» o no muestran precio.\n\nNo tienes que fijar un precio exacto: pon el mínimo con el que normalmente arrancas. El precio final lo sigues acordando con cada cliente.\n\nSe cambia en tu panel, en Servicios, en menos de un minuto.",
+    ctaLabel: "Agregar mi precio",
+    ctaPath: "/dashboard/profesional",
+    audiencia: "pros_sin_precio",
   },
 ];
+
+const PUBLICO: Record<string, string> = {
+  todas: "Todas las cuentas",
+  pros_sin_resenas: "Profesionales sin reseñas",
+  pros_sin_precio: "Profesionales sin precio de referencia",
+};
 
 export function AdminCampaigns() {
   const { dialogNode, showMessage, confirm } = useAppDialog();
@@ -89,7 +117,7 @@ export function AdminCampaigns() {
 
   async function cargarEstado() {
     try {
-      const d = await (await fetch(`/api/admin/campanas?asunto=${encodeURIComponent(subject)}`)).json();
+      const d = await (await fetch(`/api/admin/campanas?asunto=${encodeURIComponent(subject)}&audiencia=${plantilla.audiencia}`)).json();
       setClientes(Number(d.clients ?? 0));
       setAdminEmail(String(d.adminEmail ?? ""));
       setTanda({
@@ -121,7 +149,7 @@ export function AdminCampaigns() {
     const id = requestAnimationFrame(() => { void cargarEstado(); });
     return () => cancelAnimationFrame(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subject]);
+  }, [subject, plantilla.audiencia]);
 
 
 
@@ -143,7 +171,7 @@ export function AdminCampaigns() {
     }
     setEnviando(mode);
     try {
-      const res = await fetch("/api/admin/campanas", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ subject, body, ctaLabel, ctaPath, mode, confirm: mode === "all" ? "ENVIAR" : undefined }) });
+      const res = await fetch("/api/admin/campanas", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ subject, body, ctaLabel, ctaPath, mode, audiencia: plantilla.audiencia, confirm: mode === "all" ? "ENVIAR" : undefined }) });
       const d = await res.json();
       if (!res.ok) { await showMessage({ title: "No se pudo enviar", description: d.error ?? "Intenta de nuevo.", tone: "danger" }); return; }
       if (mode === "test") await showMessage({ title: d.ok ? "Prueba enviada" : "La prueba no salió", description: d.ok ? `Revisa ${d.to}.` : String(d.detail ?? ""), tone: d.ok ? "success" : "danger" });
@@ -190,6 +218,7 @@ export function AdminCampaigns() {
               <button key={p.id} type="button" onClick={() => usarPlantilla(p.id)} className={`inline-flex h-9 items-center rounded-full border px-3.5 text-[13px] font-bold transition-colors ${plantilla.id === p.id ? "border-[#009FD9] bg-[#009FD9] text-white" : "border-[#d7e1ea] bg-white text-[#162543] hover:border-[#009FD9]"}`}>{p.nombre}</button>
             ))}
           </div>
+          <p className="text-[13px] text-[#4b5b70]" data-publico-campana>Se envía a: <strong className="text-[#162543]">{PUBLICO[plantilla.audiencia] ?? PUBLICO.todas}</strong>{clientes != null ? ` (${clientes} cuentas)` : ""}</p>
           <label className="block"><span className="mb-1 block text-xs font-bold uppercase tracking-wide text-[#68778d]">Asunto</span><input value={subject} onChange={(e) => setSubject(e.target.value)} maxLength={120} className={campo} /></label>
           <label className="block"><span className="mb-1 block text-xs font-bold uppercase tracking-wide text-[#68778d]">Texto (párrafos separados por una línea en blanco)</span><textarea value={body} onChange={(e) => setBody(e.target.value)} rows={9} maxLength={4000} className={`${campo} resize-y`} /></label>
           <div className="grid gap-3 sm:grid-cols-2">

@@ -4,7 +4,9 @@ import { createClient } from "@/lib/supabase/server";
 import { contactCookieValue, hashContactToken, setContactCookie } from "@/lib/contact-followup";
 import { limitTrimmedText } from "@/lib/text-limits";
 
-const FOLLOW_UP_DELAY_MS = 5 * 24 * 60 * 60 * 1000;
+// A los 3 días (eran 5): quien contrata decide en 1–3 días, y cuanto antes
+// vuelve a entrar más probable es que vea la pregunta (8-oct-2026).
+const FOLLOW_UP_DELAY_MS = 3 * 24 * 60 * 60 * 1000;
 const CONTACT_METHODS = new Set(["whatsapp", "phone", "email"]);
 
 async function currentUserId() {
