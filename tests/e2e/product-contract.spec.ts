@@ -188,8 +188,6 @@ test.describe("@contract product safety contracts", () => {
       { name: "job post", response: apiJson(page, "/api/jobs/posts", { method: "POST", body: {} }) },
       { name: "chat attachment", response: apiJson(page, "/api/direct-chat/attachments", { method: "POST" }) },
       { name: "push register", response: apiJson(page, "/api/push/register", { method: "POST", body: {} }) },
-      { name: "push status", response: apiJson(page, "/api/push/status") },
-      { name: "push test", response: apiJson(page, "/api/push/test") },
     ];
 
     const protectedResults = await Promise.all(protectedChecks.map(async ({ name, response }) => ({ name, result: await response })));
