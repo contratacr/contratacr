@@ -18,7 +18,7 @@ import { NotificationBell } from "@/components/notifications/notification-bell";
 import { useDirectMessageUnread } from "@/hooks/use-direct-message-unread";
 import { Link } from "@/i18n/navigation";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useNativeApp } from "@/hooks/use-native-app";
 import {
   MarketplaceFilterChip,
@@ -746,6 +746,7 @@ function OfferRow({
 }) {
   const locale = marketplaceLocale(useLocale());
   const copy = OFFERS_COPY[locale];
+  const tTarjeta = useTranslations("card");
   const discount = offerDiscountPercent(offer);
   return (
     <article
@@ -776,7 +777,7 @@ function OfferRow({
             </div>
             <p className="flex min-w-0 items-center gap-1 text-[13px] font-semibold leading-5 text-[#101d35] sm:text-sm">
               <span className="min-w-0 truncate">{offer.professional_name}</span>
-              {offer.professional_verified && <VerifiedSeal label={locale === "en" ? "ID verified by ContrataCR" : "Cédula verificada por ContrataCR"} className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />}
+              {offer.professional_verified && <VerifiedSeal label={tTarjeta("verifiedTitle")} className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />}
             </p>
             {/* En computadora, un solo azul por fila: el del título, que es lo
                 que se abre. El precio va en azul marino y fuerte —es dinero—, y
@@ -839,6 +840,7 @@ function OfferPreview({
 }) {
   const locale = marketplaceLocale(useLocale());
   const copy = OFFERS_COPY[locale];
+  const tPerfil = useTranslations("profile");
   const before = formatOfferBeforePrice(offer, locale);
   const discount = offerDiscountPercent(offer);
   const isOwner = offer.professional_id === currentProfessionalId;
@@ -885,7 +887,7 @@ function OfferPreview({
               {offer.professional_verified && (
                 <span className="mt-0.5 flex items-center gap-1 text-[13px] font-medium text-[#4b5b70]" data-cedula-verificada>
                   <VerifiedSeal className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />
-                  {locale === "en" ? "ID verified" : "Cédula verificada"}
+                  {tPerfil("cedulaVerificada")}
                 </span>
               )}
             </div>

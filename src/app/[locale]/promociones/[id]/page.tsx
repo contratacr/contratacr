@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { ArrowLeft, ChevronRight } from "lucide-react";
 import { VerifiedSeal } from "@/components/ui/verified-seal";
 import { Link } from "@/i18n/navigation";
@@ -118,6 +119,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
   const locale = marketplaceLocale(rawLocale);
   const copy = COPY[locale];
   const idioma: "en" | "es" = locale === "en" ? "en" : "es";
+  const tPerfil = await getTranslations({ locale: idioma, namespace: "profile" });
   const dateLocale = idioma === "en" ? "en-US" : "es-CR";
   const from = (await searchParams)?.from;
   const backHref = safeMarketplaceReturnHref(from, "/promociones");
@@ -303,7 +305,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
                 {offer.professional_verified && (
                   <span className="mt-0.5 flex items-center gap-1 text-[13px] font-medium text-[#4b5b70]" data-cedula-verificada>
                     <VerifiedSeal className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />
-                    {locale === "en" ? "ID verified" : "Cédula verificada"}
+                    {tPerfil("cedulaVerificada")}
                   </span>
                 )}
               </div>
