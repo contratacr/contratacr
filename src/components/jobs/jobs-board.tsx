@@ -4,6 +4,7 @@ import { conFiltroDeFecha } from "@/lib/marketplace/filtros-por-volumen";
 import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 import { PanelEmptyState } from "@/components/ui/content-loading";
+import { VerifiedSeal } from "@/components/ui/verified-seal";
 import { cn } from "@/lib/utils";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 
@@ -593,7 +594,10 @@ function JobRow({ job, selected, onSelect }: { job: JobPost; selected: boolean; 
         <EmployerAvatar job={job} />
         <div className="min-w-0 flex-1">
           <h2 className="line-clamp-2 text-[15px] font-extrabold leading-tight text-[#005eaa] lg:text-base">{job.title}</h2>
-          <p className="mt-0.5 truncate text-sm font-semibold text-[#101d35]">{job.employer_name || copy.professionalFallback}</p>
+          <p className="mt-0.5 flex min-w-0 items-center gap-1 text-sm font-semibold text-[#101d35]">
+            <span className="min-w-0 truncate">{job.employer_name || copy.professionalFallback}</span>
+            {job.employer_verified && <VerifiedSeal label={locale === "en" ? "ID verified by ContrataCR" : "Cédula verificada por ContrataCR"} className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />}
+          </p>
           {/* TELÉFONO: dónde y cuándo; modalidad y experiencia; salario. */}
           <JobMetaLine job={job} showApplicants={false} className="mt-0.5 truncate text-sm text-[#52627a] lg:hidden" />
           {/* SIN LOS AÑOS DE EXPERIENCIA. En la tarjeta de una lista el dato no
@@ -642,7 +646,14 @@ function JobPreview({ job, isOwner, userId, onEdit, mobile = false, hideActions 
         «···» arriba deja la fila de acciones limpia: solo lo que contacta. */}
     <div className="flex items-start gap-4"><EmployerAvatar job={job} size="large" /><div className="min-w-0 flex-1">
       <div className="flex min-w-0 items-center gap-2">
-        <p className="min-w-0 flex-1 truncate font-semibold text-[#52627a]">{job.employer_name}</p>
+        {/* «Cédula verificada» en la MISMA línea del empleador: así no se
+            separa del puesto, y si el nombre es largo se recorta el nombre, no
+            la verificación. Las ofertas de trabajo falsas son una estafa común
+            y quien busca empleo necesita ver que el empleador existe. */}
+        <p className="flex min-w-0 flex-1 items-center gap-2 font-semibold text-[#52627a]">
+          <span className="min-w-0 truncate">{job.employer_name}</span>
+          {job.employer_verified && <CedulaVerificada locale={locale} />}
+        </p>
         {/* COMPARTIR VIVE DENTRO DEL «···», no al lado. Probé sacarlo como
             botón visible y quedaba la MISMA acción dos veces a dos centímetros:
             el botón y la opción del menú. Un «Compartir» que abriera un segundo
@@ -795,6 +806,15 @@ function JobContactActions({ job, isOwner, userId, soloContacto = false, escrito
         <SaveItemButton itemType="job" itemId={job.id} snapshot={jobSaveSnapshot(job, locale)} userId={userId} loginRedirect={rutaEmpleo(job)} withLabel className={secundario} />
       </div>
     </div>
+  );
+}
+
+function CedulaVerificada({ locale }: { locale: string }) {
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1 text-[13px] font-medium text-[#4b5b70]" data-cedula-verificada>
+      <VerifiedSeal className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />
+      {locale === "en" ? "ID verified" : "Cédula verificada"}
+    </span>
   );
 }
 

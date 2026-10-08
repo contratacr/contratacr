@@ -6,6 +6,7 @@ import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 import { PanelEmptyState } from "@/components/ui/content-loading";
 import { cn } from "@/lib/utils";
+import { VerifiedSeal } from "@/components/ui/verified-seal";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
@@ -773,8 +774,9 @@ function OfferRow({
                 </span>
               )}
             </div>
-            <p className="truncate text-[13px] font-semibold leading-5 text-[#101d35] sm:text-sm">
-              {offer.professional_name}
+            <p className="flex min-w-0 items-center gap-1 text-[13px] font-semibold leading-5 text-[#101d35] sm:text-sm">
+              <span className="min-w-0 truncate">{offer.professional_name}</span>
+              {offer.professional_verified && <VerifiedSeal label={locale === "en" ? "ID verified by ContrataCR" : "Cédula verificada por ContrataCR"} className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />}
             </p>
             {/* En computadora, un solo azul por fila: el del título, que es lo
                 que se abre. El precio va en azul marino y fuerte —es dinero—, y
@@ -864,19 +866,27 @@ function OfferPreview({
               entrada al perfil: un botón "Ver perfil" aparte competía con el
               contacto y decía lo mismo. */}
           <div className="flex min-w-0 items-center gap-2">
-            <div className="min-w-0 flex-1">
+            {/* «Cédula verificada» en la misma línea del que publica, igual que
+                en la ficha de un empleo (8-oct-2026). */}
+            <div className="flex min-w-0 flex-1 items-center gap-2">
               {offer.professional_slug ? (
                 <Link
                   href={`/profesionales/${offer.professional_slug}?from=${encodeURIComponent(rutaPromocion(offer))}`}
-                  className="inline-flex max-w-full items-center gap-1 font-semibold text-[#005eaa] hover:underline"
+                  className="inline-flex min-w-0 max-w-full items-center gap-1 font-semibold text-[#005eaa] hover:underline"
                 >
                   <span className="min-w-0 truncate">{offer.professional_name}</span>
                   <ChevronRight className="h-4 w-4 shrink-0" />
                 </Link>
               ) : (
-                <p className="truncate font-semibold text-[#52627a]">
+                <p className="min-w-0 truncate font-semibold text-[#52627a]">
                   {offer.professional_name}
                 </p>
+              )}
+              {offer.professional_verified && (
+                <span className="inline-flex shrink-0 items-center gap-1 text-[13px] font-medium text-[#4b5b70]" data-cedula-verificada>
+                  <VerifiedSeal className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />
+                  {locale === "en" ? "ID verified" : "Cédula verificada"}
+                </span>
               )}
             </div>
             {/* Compartir vive dentro del «···»: ver la nota de la ficha de un empleo. */}

@@ -34,7 +34,7 @@ async function OffersPageContent(serviceOptions: Array<{ value: string; label: s
   // A la página NO baja ningún número ni correo, solo banderas (ver
   // contactFlagsFor). Antes las columnas de contacto se ocultaban al invitado,
   // y con eso el invitado se quedaba sin NINGÚN botón de contacto.
-  const professionalColumns = "slug,business_name,profiles(full_name)";
+  const professionalColumns = "slug,business_name,verification_status,profiles(full_name)";
   const [{ data, error: offersError }, { data: professional }] = await Promise.all([
     supabase
       .from("professional_offers")
@@ -56,7 +56,7 @@ async function OffersPageContent(serviceOptions: Array<{ value: string; label: s
   const offers = ((data ?? []) as Array<Record<string, unknown>>)
     .filter((row) => !bloqueados.has(String(row.professional_id ?? "")) && !bloqueadosPorMi.has(String(row.professional_id ?? "")))
     .map((row) => {
-    const professional = row.professionals as { slug?: string; business_name?: string; profiles?: { full_name?: string } | null } | null;
+    const professional = row.professionals as { slug?: string; business_name?: string; verification_status?: string | null; profiles?: { full_name?: string } | null } | null;
     return {
       ...row,
       title: repairVisibleText(String(row.title ?? "")),
@@ -66,6 +66,7 @@ async function OffersPageContent(serviceOptions: Array<{ value: string; label: s
       image_urls: Array.isArray(row.image_urls) ? row.image_urls : [],
       professional_name: repairVisibleText(professional?.business_name || professional?.profiles?.full_name || "Profesional en ContrataCR"),
       professional_slug: professional?.slug ?? null,
+      professional_verified: professional?.verification_status === "verified",
       // El WhatsApp propio de la promoción manda sobre el de la cuenta.
       professional_has_whatsapp: !!String(row.contact_whatsapp ?? "").trim() || !!banderas[String(row.professional_id ?? "")]?.hasWhatsapp,
       professional_allow_phone_call: !!banderas[String(row.professional_id ?? "")]?.allowPhoneCall,

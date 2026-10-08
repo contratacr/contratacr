@@ -114,6 +114,8 @@ export type JobPost = {
   employer_name?: string;
   employer_slug?: string | null;
   employer_avatar_url?: string | null;
+  /** La cédula del empleador está verificada en el padrón del TSE. */
+  employer_verified?: boolean;
   /** WhatsApp de ESTA vacante. Nulo = el de la cuenta profesional. */
   contact_whatsapp?: string | null;
   employer_has_whatsapp?: boolean;

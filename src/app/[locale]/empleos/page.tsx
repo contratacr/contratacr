@@ -21,7 +21,7 @@ export async function JobsPageContent({ initialSelectedJobId = null, returnTo = 
   const [jobsResult, professionalResult] = await Promise.all([
     supabase
       .from("job_posts")
-      .select("*, job_applications(count), professionals!job_posts_employer_id_fkey(slug,business_name,profiles(full_name,avatar_url))")
+      .select("*, job_applications(count), professionals!job_posts_employer_id_fkey(slug,business_name,verification_status,profiles(full_name,avatar_url))")
       .eq("status", "published")
       .order("created_at", { ascending: false })
       .limit(100),
@@ -40,7 +40,7 @@ export async function JobsPageContent({ initialSelectedJobId = null, returnTo = 
   const jobs = ((data ?? []) as Array<Record<string, unknown>>)
     .filter((row) => !bloqueados.has(String(row.employer_id ?? "")) && !bloqueadosPorMi.has(String(row.employer_id ?? "")))
     .map((row) => {
-    const employer = row.professionals as { slug?: string; business_name?: string; profiles?: { full_name?: string; avatar_url?: string | null } | null } | null;
+    const employer = row.professionals as { slug?: string; business_name?: string; verification_status?: string | null; profiles?: { full_name?: string; avatar_url?: string | null } | null } | null;
     const applicationCountRow = Array.isArray(row.job_applications) ? row.job_applications[0] as { count?: number | string } | undefined : undefined;
     const applicationCount = Number(applicationCountRow?.count ?? 0);
     return {
@@ -50,6 +50,9 @@ export async function JobsPageContent({ initialSelectedJobId = null, returnTo = 
       employer_name: repairVisibleText(employer?.business_name || employer?.profiles?.full_name || "Profesional en ContrataCR"),
       employer_slug: employer?.slug ?? null,
       employer_avatar_url: employer?.profiles?.avatar_url ?? null,
+      // Las ofertas de trabajo falsas son una estafa común: quien busca empleo
+      // necesita ver que el empleador existe (8-oct-2026).
+      employer_verified: employer?.verification_status === "verified",
       // Contactar al que publica el empleo sin pasar por el formulario: hoy la
       // gente escribe por WhatsApp, no espera una postulación dentro del app.
       // Viajan BANDERAS, nunca el número ni el correo: eso sale al tocar el

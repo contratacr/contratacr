@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { ArrowLeft, ChevronRight } from "lucide-react";
+import { VerifiedSeal } from "@/components/ui/verified-seal";
 import { Link } from "@/i18n/navigation";
 import { metadatosDePantalla } from "@/lib/seo/alternates";
 import { tramoFicha } from "@/lib/marketplace-url";
@@ -126,8 +127,8 @@ export default async function OfferDetailPage({ params, searchParams }: { params
   // columna para el invitado y tumbaría la consulta entera. Las banderas salen
   // de contactFlagsFor y el dato, de /api/contact/reveal al tocar el botón.
   const professionalColumns = user
-    ? "slug,business_name,profile_id,profiles(full_name)"
-    : "slug,business_name,profiles(full_name)";
+    ? "slug,business_name,verification_status,profile_id,profiles(full_name)"
+    : "slug,business_name,verification_status,profiles(full_name)";
   // El enlace corto trae el título y los 8 primeros del id; el largo, el id
   // entero. Los dos abren la misma oferta.
   const clave = claveDeTramo(id);
@@ -171,6 +172,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
   const professional = ofertaVisible.professionals as {
     slug?: string;
     business_name?: string;
+    verification_status?: string | null;
     profile_id?: string;
     profiles?: { full_name?: string } | null;
   } | null;
@@ -188,6 +190,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
     image_urls: Array.isArray(ofertaVisible.image_urls) ? ofertaVisible.image_urls : [],
     professional_name: repairVisibleText(professional?.business_name || professional?.profiles?.full_name || copy.professionalFallback),
     professional_slug: professional?.slug ?? null,
+    professional_verified: professional?.verification_status === "verified",
     // Solo banderas: el número y el correo se piden al tocar el botón.
     professional_has_whatsapp: !!banderas.hasWhatsapp,
     professional_allow_phone_call: !!banderas.allowPhoneCall,
@@ -293,7 +296,17 @@ export default async function OfferDetailPage({ params, searchParams }: { params
                 precio. Aquí el título iba primero y el negocio debajo, así que
                 dos fichas del mismo app se leían al revés. */}
             <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0 flex-1">{quienPublica}</div>
+              {/* «Cédula verificada» en la misma línea de quien publica, igual
+                  que en la ficha de un empleo (8-oct-2026). */}
+              <div className="flex min-w-0 flex-1 items-center gap-2">
+                {quienPublica}
+                {offer.professional_verified && (
+                  <span className="inline-flex shrink-0 items-center gap-1 text-[13px] font-medium text-[#4b5b70]" data-cedula-verificada>
+                    <VerifiedSeal className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />
+                    {locale === "en" ? "ID verified" : "Cédula verificada"}
+                  </span>
+                )}
+              </div>
               <MenuOferta
                 className="-mr-2 hidden shrink-0 lg:block"
                 ofertaId={offer.id}
