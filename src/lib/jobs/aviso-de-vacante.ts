@@ -20,6 +20,31 @@ import { hasDurablePushOutbox, sendNotificationPush } from "@/lib/push/notify";
  * Nunca se avisa al que publica, ni se avisa dos veces por el mismo empleo:
  * editar una vacante no vuelve a sonarle a nadie.
  */
+/**
+ * A quién le llegaría el aviso de una vacante de este servicio. Lo usan el aviso
+ * y el formulario, que muestra el número antes de publicar («Se le avisará a 18
+ * profesionales de Desarrollo web»): así un servicio mal elegido salta a la vista.
+ */
+export async function destinatariosDeVacante(
+  serviceCategoryId: string,
+  employerProfileId: string | null | undefined,
+): Promise<string[]> {
+  const db = createAdminClient();
+  const { data: pros } = await sinOcultos((excluirOcultos) => {
+    const q = db
+      .from("professionals")
+      .select("profile_id")
+      .or(`category_id.eq.${serviceCategoryId},professions.cs.{${serviceCategoryId}}`)
+      .eq("is_banned", false);
+    return excluirOcultos ? q.eq("oculto_del_buscador", false) : q;
+  });
+  return [...new Set(
+    (pros ?? [])
+      .map((pro) => pro.profile_id)
+      .filter((id): id is string => !!id && id !== employerProfileId),
+  )];
+}
+
 export async function avisarVacanteAProfesionales({
   jobId,
   serviceCategoryId,
@@ -43,20 +68,7 @@ export async function avisarVacanteAProfesionales({
     .limit(1);
   if ((yaAvisado ?? []).length > 0) return 0;
 
-  const { data: pros } = await sinOcultos((excluirOcultos) => {
-    const q = db
-      .from("professionals")
-      .select("profile_id")
-      .or(`category_id.eq.${serviceCategoryId},professions.cs.{${serviceCategoryId}}`)
-      .eq("is_banned", false);
-    return excluirOcultos ? q.eq("oculto_del_buscador", false) : q;
-  });
-
-  const destinatarios = [...new Set(
-    (pros ?? [])
-      .map((pro) => pro.profile_id)
-      .filter((id): id is string => !!id && id !== employerProfileId),
-  )];
+  const destinatarios = await destinatariosDeVacante(serviceCategoryId, employerProfileId);
   if (destinatarios.length === 0) return 0;
 
   const oficio = getCategoryLabel(serviceCategoryId);
