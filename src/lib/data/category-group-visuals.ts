@@ -31,7 +31,7 @@ export type CategoryGroupVisual = {
   Icon: LucideIcon;
 };
 
-export const CATEGORY_GROUP_VISUALS: Record<string, CategoryGroupVisual> = {
+const CATEGORY_GROUP_VISUALS: Record<string, CategoryGroupVisual> = {
   hogar: { iconKey: "armchair", from: "#1e3a8a", to: "#2563eb", Icon: Armchair },
   construccion_ingenieria: { iconKey: "hard-hat", from: "#854d0e", to: "#d97706", Icon: HardHat },
   jardin: { iconKey: "leaf", from: "#166534", to: "#16a34a", Icon: Leaf },
@@ -61,7 +61,7 @@ const ICON_KEY_VISUALS = Object.values(CATEGORY_GROUP_VISUALS).reduce<Record<str
   return acc;
 }, {});
 
-export const DEFAULT_CATEGORY_GROUP_VISUAL: CategoryGroupVisual = {
+const DEFAULT_CATEGORY_GROUP_VISUAL: CategoryGroupVisual = {
   iconKey: "tag",
   from: "#0f4c81",
   to: "#009FD9",

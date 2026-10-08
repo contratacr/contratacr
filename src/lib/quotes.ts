@@ -1,7 +1,7 @@
 /** Cotizaciones: tipos y cálculo compartidos entre la API y la interfaz. */
 export type QuoteItem = { description: string; quantity: number; unit_price: number };
 export type QuoteTaxMode = "incluido" | "mas_iva" | "exento";
-export type QuoteStatus = "sent" | "accepted" | "declined" | "withdrawn";
+type QuoteStatus = "sent" | "accepted" | "declined" | "withdrawn";
 
 export type Quote = {
   id: string;
@@ -75,9 +75,9 @@ export function whatsappDigits(phone: string | null | undefined): string {
   return d.length === 8 ? `506${d}` : d;
 }
 
-export const IVA_RATE = 0.13;
+const IVA_RATE = 0.13;
 export const QUOTE_MAX_ITEMS = 20;
-export const QUOTE_MAX_AMOUNT = 222_222_222;
+const QUOTE_MAX_AMOUNT = 222_222_222;
 
 export function quoteTotals(items: QuoteItem[], taxMode: QuoteTaxMode) {
   const subtotal = Math.round(items.reduce((acc, it) => acc + Math.max(0, it.quantity) * Math.max(0, it.unit_price), 0));

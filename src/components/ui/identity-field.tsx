@@ -15,7 +15,7 @@ import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 // a "¿No es tu información?" link. Not found → manual name + "pendiente de revisión".
 
 export type IdentityStatus = "idle" | "loading" | "found" | "notfound" | "unavailable";
-export type IdentityResult = { found: boolean; isAdult: boolean; dob: string | null };
+type IdentityResult = { found: boolean; isAdult: boolean; dob: string | null };
 
 interface Props {
   cedula: string;

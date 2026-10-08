@@ -17,7 +17,7 @@ export type PushProviderFailure = {
   invalidToken: boolean;
 };
 
-export function normalizeFirebaseErrorCode(code: unknown) {
+function normalizeFirebaseErrorCode(code: unknown) {
   if (typeof code !== "string" || !code.trim()) return "messaging/unknown-error";
   const normalized = code.trim().toLowerCase();
   return normalized.startsWith("messaging/") ? normalized : `messaging/${normalized}`;

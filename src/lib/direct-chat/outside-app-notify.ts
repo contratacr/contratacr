@@ -11,7 +11,7 @@ import { sendWhatsAppText } from "@/lib/notifications";
 type AdminDb = ReturnType<typeof createAdminClient>;
 
 /** Cuántos días sin abrir la app hacen que dejemos de confiar en el push. */
-export const DIAS_DE_APP_VIVA = 30;
+const DIAS_DE_APP_VIVA = 30;
 
 /**
  * Quién tiene la app DE VERDAD, no quién la tuvo alguna vez.

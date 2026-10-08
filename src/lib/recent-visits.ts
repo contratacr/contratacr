@@ -16,7 +16,7 @@ export type RecentVisit = {
 
 const MAX_VISITAS = 6;
 const clave = (surface: RecentVisitSurface) => `ccr-recent-visits:${surface}`;
-export const RECENT_VISITS_EVENT = "ccr:recent-visits";
+const RECENT_VISITS_EVENT = "ccr:recent-visits";
 
 export function readRecentVisits(surface: RecentVisitSurface): RecentVisit[] {
   if (typeof window === "undefined") return [];

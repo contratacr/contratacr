@@ -46,7 +46,7 @@ function primerNombre(nombre: string | null | undefined) {
   return /^[\p{L}][\p{L}'-]{1,30}$/u.test(n) ? n : "";
 }
 
-export function cuerpoDeAviso(aviso: AvisoPorCorreo, nombre: string, baja: string) {
+function cuerpoDeAviso(aviso: AvisoPorCorreo, nombre: string, baja: string) {
   const p = (html: string) => `<p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#162543">${html}</p>`;
   const saludo = nombre ? p(`Hola ${escapeHtml(nombre)},`) : "";
   return `${saludo}

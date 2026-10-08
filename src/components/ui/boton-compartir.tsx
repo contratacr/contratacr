@@ -12,7 +12,7 @@ import { compartirConHojaNativa } from "@/lib/compartir-nativo";
  * `navigator.share`: mirando solo eso, el botón decía «Copiar enlace» y abría
  * la hoja del sistema. La cara y la acción tienen que responder a lo mismo.
  */
-export function esRaton() {
+function esRaton() {
   return typeof window !== "undefined" && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 }
 

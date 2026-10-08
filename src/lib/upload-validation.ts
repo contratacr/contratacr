@@ -61,7 +61,7 @@ export function sniffFileType(buf: Uint8Array): FileKind | null {
 }
 
 /** El motivo, en clave: el front DECIDE con esto, no con el texto. */
-export type MotivoRechazo = "vacio" | "muy_grande" | "formato";
+type MotivoRechazo = "vacio" | "muy_grande" | "formato";
 
 export type ValidateResult =
   | { ok: true; kind: FileKind }

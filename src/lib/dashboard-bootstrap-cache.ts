@@ -17,7 +17,7 @@ export function dashboardBootstrapKey(userId: string) {
   return `dashboard:bootstrap:${userId}`;
 }
 
-export async function loadDashboardBootstrap(userId: string, force = false) {
+async function loadDashboardBootstrap(userId: string, force = false) {
   return loadDashboardCache<DashboardBootstrap>(
     dashboardBootstrapKey(userId),
     async () => {

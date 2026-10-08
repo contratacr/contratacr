@@ -209,7 +209,7 @@ const SENALES_DE_VACANTE: RegExp[] = [
 
 /** Dos señales, no una: «necesito» o «con experiencia» también aparecen en una
  *  promoción legítima. */
-export function pareceVacante(texto: string): boolean {
+function pareceVacante(texto: string): boolean {
   const limpio = (texto ?? "").trim();
   if (limpio.length < 12) return false;
   return SENALES_DE_VACANTE.filter((senal) => senal.test(limpio)).length >= 2;
@@ -274,7 +274,6 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/promoci
   const selectedServiceOption = useMemo(() => {
     return serviceOptions.find((option) => option.value === selectedServiceValue) ?? null;
   }, [selectedServiceValue, serviceOptions]);
-
 
   const previews = useMemo(() => files.map((file) => ({ file, url: URL.createObjectURL(file) })), [files]);
   useEffect(() => () => previews.forEach((preview) => URL.revokeObjectURL(preview.url)), [previews]);

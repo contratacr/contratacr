@@ -7,7 +7,7 @@ const UPLOAD_TIMEOUT_MS = 30_000;
 
 export type ImageUploadPreparationErrorCode = "too_large" | "unsupported";
 
-export class ImageUploadPreparationError extends Error {
+class ImageUploadPreparationError extends Error {
   code: ImageUploadPreparationErrorCode;
 
   constructor(code: ImageUploadPreparationErrorCode) {

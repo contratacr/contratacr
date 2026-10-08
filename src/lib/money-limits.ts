@@ -1,6 +1,6 @@
 export const MAX_MONEY_AMOUNT = 222_222_222;
 
-export function moneyDigits(value: unknown) {
+function moneyDigits(value: unknown) {
   return String(value ?? "").replace(/\D/g, "");
 }
 

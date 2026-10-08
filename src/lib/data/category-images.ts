@@ -17,7 +17,7 @@ import { CATEGORY_GROUPS } from "@/lib/data/categories";
 // propia en WebP (7-oct-2026). Las dos que Unsplash ya no tenía se quitaron.
 const U = (id: string) => `https://images.unsplash.com/photo-${id}?w=1100&auto=format&fit=crop&q=80`;
 
-export const CATEGORY_IMAGE: Record<string, string> = {
+const CATEGORY_IMAGE: Record<string, string> = {
   electromecanica: U("1649038780045-235e4b6e40b4"), // técnico trabajando un motor eléctrico (1-oct-2026)
   soldadura: U("1504328345606-18bbc8c9d7d1"),   // soldador con careta (1-oct-2026)
   aire_acondicionado: U("1759772238012-9d5ad59ae637"), // equipo split en la pared (1-oct-2026)
@@ -116,7 +116,7 @@ for (const g of CATEGORY_GROUPS) for (const it of g.items) ID_TO_GROUP.set(it.id
 // Punto de enfoque (CSS object-position) de las fotos cuyo sujeto queda fuera del
 // recorte vertical de las tarjetas (4/5). Sin entrada = centrado. Revisado el 1-oct-2026
 // en computadora (1440) y teléfono (iPhone 15 Pro).
-export const CATEGORY_IMAGE_POSITION: Record<string, string> = {
+const CATEGORY_IMAGE_POSITION: Record<string, string> = {
   // Revisado otra vez el 1-oct-2026: el centro va sobre el TRABAJO (manos + herramienta), no la cara.
   electricidad: "58% 50%",   // manos y tomacorriente al centro (antes solo la cara)
   fletes: "12% 50%",         // el camión quedaba partido en el borde izquierdo

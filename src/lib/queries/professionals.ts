@@ -38,7 +38,6 @@ const NEAR_ME_RADIUS_KM = 25;
 // minutos de retraso en ver un profesional nuevo no le cambian la vida a nadie.
 const SEARCH_CACHE_SECONDS = 300;
 
-
 type LocationQueryMatch =
   | { type: "province"; id: string }
   | { type: "canton"; id: string; provinceId: string };
@@ -244,7 +243,7 @@ function isExactWorkplacePin(workplace: ProfessionalWorkplace | undefined): work
 }
 
 // Photos attach to a SERVICE INSTANCE (serviceId); `profession` kept for legacy.
-export type PortfolioItem = {
+type PortfolioItem = {
   url?: string;
   serviceId?: string;
   profession?: string;
@@ -259,7 +258,7 @@ export type PortfolioItem = {
 
 // Optional website/social links. Social networks are stored as usernames; the
 // website is stored as a normalized URL. Additive to "casos de éxito" photos.
-export type SocialLinks = { instagram?: string; facebook?: string; tiktok?: string; linkedin?: string; website?: string };
+type SocialLinks = { instagram?: string; facebook?: string; tiktok?: string; linkedin?: string; website?: string };
 
 export type ProfessionalDetail = ProfessionalCardData & {
   portfolioUrls: string[];

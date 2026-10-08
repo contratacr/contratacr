@@ -8,12 +8,12 @@ import { neon } from "@neondatabase/serverless";
 // `getIdentityVerifier()`. INTERNAL USE ONLY — there is no public endpoint, no
 // third-party auth, no external rate limiting; the app calls it server-side.
 
-export interface IdentityCheckInput {
+interface IdentityCheckInput {
   cedula: string;   // clean digits
   fullName: string; // entered name to match
 }
 
-export interface IdentityCheckResult {
+interface IdentityCheckResult {
   /** Cédula exists in the source AND the name matches above threshold. */
   matched: boolean;
   /** Cédula exists in the source (regardless of name match). */
@@ -24,7 +24,7 @@ export interface IdentityCheckResult {
   provider: string;
 }
 
-export interface IdentityLookupResult {
+interface IdentityLookupResult {
   /** Cédula exists in the source. */
   found: boolean;
   /** Official full name from the source (properly cased), or null when not found. */
@@ -70,7 +70,7 @@ export interface IdentityVerifier {
 }
 
 /** Title-case a padrón name ("LUCILA PORRAS AGUERO" → "Lucila Porras Aguero"). */
-export function titleCaseName(s: string): string {
+function titleCaseName(s: string): string {
   return (s ?? "")
     .toLowerCase()
     .split(/\s+/)
@@ -219,7 +219,7 @@ async function lookupPadron(cedula: string): Promise<PadronLookupSource | null> 
 }
 
 // ── Self-hosted padrón provider ─────────────────────────────────────────────
-export class SelfHostedPadronVerifier implements IdentityVerifier {
+class SelfHostedPadronVerifier implements IdentityVerifier {
   readonly name = "self_hosted_padron";
 
   async lookup(cedula: string): Promise<IdentityLookupResult> {

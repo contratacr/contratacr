@@ -9,7 +9,7 @@ import { useSwitchLang } from "@/components/landing/landing-navbar";
 // entrar sea la misma experiencia en ambos.
 export type WelcomeRole = "client" | "professional";
 
-export const WELCOME_ROLE_IMAGES: Record<WelcomeRole, string> = {
+const WELCOME_ROLE_IMAGES: Record<WelcomeRole, string> = {
   client: "/mobile/contratacr-welcome-client-v1.webp",
   professional: "/mobile/contratacr-welcome-professional-v1.webp",
 };

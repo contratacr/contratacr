@@ -16,7 +16,7 @@ function toStableToken(value: string): string {
     .slice(0, 80);
 }
 
-export function stableWorkplaceId(workplace: WorkplaceLike, index = 0): string {
+function stableWorkplaceId(workplace: WorkplaceLike, index = 0): string {
   const existing = workplace.id?.trim();
   if (existing) return existing;
 

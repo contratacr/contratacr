@@ -78,7 +78,7 @@ async function sha256Hex(value: string) {
   return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-export function isGoogleIdentityConfigured() {
+function isGoogleIdentityConfigured() {
   return Boolean(GOOGLE_CLIENT_ID) && typeof window !== "undefined" && IDENTITY_ORIGINS.includes(window.location.origin);
 }
 

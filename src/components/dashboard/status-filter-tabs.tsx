@@ -38,7 +38,7 @@ export type FilterTab = { id: string };
  * distintas, y esconderlas revuelve tres listas en una. Los tipos se dibujan
  * siempre, con su conteo, que además dice qué hay sin tener que bajar.
  */
-export const UMBRAL_SIN_FILTROS = 5;
+const UMBRAL_SIN_FILTROS = 5;
 export function sinFiltros(total: number) {
   return total <= UMBRAL_SIN_FILTROS;
 }

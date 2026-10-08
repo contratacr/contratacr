@@ -14,7 +14,7 @@ import { getCategoryLabel } from "@/lib/data/categories";
  * pasó de /buscar a /profesionales (29-sep-2026) y Ofertas se llama
  * Promociones. Sin la consulta (?…) ni el ancla (#…).
  */
-export function paginaDeEntradaActual(ruta: string): string {
+function paginaDeEntradaActual(ruta: string): string {
   let limpia = ruta.split(/[?#]/)[0] || "/";
   limpia = limpia.replace(/^\/es(?=\/|$)/i, "") || "/";
   limpia = limpia.replace(/^(\/en)?\/buscar(?=\/|$)/i, "$1/profesionales");
@@ -23,10 +23,10 @@ export function paginaDeEntradaActual(ruta: string): string {
 }
 
 export type Count = { label: string; value: number };
-export type RegPoint = { date: string; pros: number; clients: number };
-export type ActPoint = { date: string; proyectos: number };
-export type InteractionPoint = { date: string; total: number };
-export type ProfessionalInteraction = {
+type RegPoint = { date: string; pros: number; clients: number };
+type ActPoint = { date: string; proyectos: number };
+type InteractionPoint = { date: string; total: number };
+type ProfessionalInteraction = {
   professionalId: string;
   slug: string;
   professionalName: string;
@@ -44,15 +44,15 @@ export type ProfessionalInteraction = {
 };
 
 export type WeekCompare = { now: number; prev: number };
-export type DemandRow = { id: string; label: string; demand: number; searches: number; projects: number; supply: number; gap: boolean };
-export type EmptySearch = { label: string; count: number };
-export type SearchQuality = {
+type DemandRow = { id: string; label: string; demand: number; searches: number; projects: number; supply: number; gap: boolean };
+type EmptySearch = { label: string; count: number };
+type SearchQuality = {
   total: number;
   empty: number;
   /** What people typed (or the place they filtered by) and found nobody. */
   topEmpty: EmptySearch[];
 };
-export type AdminInsights = {
+type AdminInsights = {
   week: { pros: WeekCompare; clients: WeekCompare; searches: WeekCompare; requests: WeekCompare; contacts: WeekCompare; quotes: WeekCompare; projectLeads: WeekCompare };
   funnel: { searches: number; profileViews: number; contactAttempts: number; contacts: number; requests: number; projectLeads: number };
   /** When contact_gate_shown started being recorded — before it, attempts are undercounted. */
@@ -63,8 +63,8 @@ export type AdminInsights = {
   tracking: { since: string | null; events14d: number };
 };
 
-export type AcquisitionRow = { key: string; label: string; pros: number; clients: number; pros30: number; clients30: number };
-export type AcquisitionCampaign = { label: string; source: string; pros: number; clients: number };
+type AcquisitionRow = { key: string; label: string; pros: number; clients: number; pros30: number; clients30: number };
+type AcquisitionCampaign = { label: string; source: string; pros: number; clients: number };
 export type AdminAcquisition = {
   // Registrations that carry an origin vs. those created before tracking existed.
   tracked: number;
@@ -132,7 +132,7 @@ function fuenteCanonica(source: string): string {
   const s = source.trim().toLowerCase();
   return SOURCE_ALIASES[s] ?? s;
 }
-export function acquisitionLabel(rawSource: string, medium: string | null): { key: string; label: string } {
+function acquisitionLabel(rawSource: string, medium: string | null): { key: string; label: string } {
   const source = fuenteCanonica(rawSource);
   const src = SOURCE_NAMES[source] ?? source;
   const paid = !!medium && PAID_MEDIUMS.has(medium);
@@ -145,7 +145,7 @@ export function acquisitionLabel(rawSource: string, medium: string | null): { ke
 
 // El sitio que los mandó, por su nombre: m./l./lm.facebook.com son Facebook,
 // la búsqueda de la app de Google en Android es Google.
-export function sitioDeOrigen(host: string): string {
+function sitioDeOrigen(host: string): string {
   const h = host.trim().toLowerCase().replace(/^www\./, "");
   if (/(^|\.)facebook\.com$|^fb\.(com|me)$/.test(h)) return "Facebook";
   if (/(^|\.)instagram\.com$/.test(h)) return "Instagram";
@@ -160,7 +160,7 @@ export function sitioDeOrigen(host: string): string {
 }
 
 // La primera página, por su nombre y no por su ruta.
-export function nombreDePagina(ruta: string): string {
+function nombreDePagina(ruta: string): string {
   const sinIdioma = ruta.replace(/^\/en(?=\/|$)/, "") || "/";
   const ingles = sinIdioma !== ruta ? " (inglés)" : "";
   const fijas: Record<string, string> = {

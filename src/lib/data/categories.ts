@@ -488,7 +488,7 @@ export const OTHER_CATEGORY: CategoryItem = {
    `useCustomCategories`). `searchCategories` + `getCategoryLabel` consult it so an
    approved custom category behaves like any built-in one. Stays empty on the
    server (no fetch) — there `getCategoryLabel` falls back to a clean slug label. */
-export const CUSTOM_GROUP_ID = "otras";
+const CUSTOM_GROUP_ID = "otras";
 let CUSTOM_CATEGORIES: (CategoryItem & { groupId: string; groupLabel: string; labelEn?: string })[] = [];
 let CATEGORY_CATALOG_OVERRIDES = new Map<string, { label?: string; labelEn?: string; groupId?: string; keywords?: string[]; isHidden?: boolean }>();
 let CATEGORY_FEATURE_OVERRIDES = new Map<string, { esSalud?: boolean; supportsVideoconsulta?: boolean; isHidden?: boolean }>();
@@ -1730,7 +1730,7 @@ export function getCategoryGroupLabel(groupId: string, locale?: string): string 
    where the age is central to the request). Pure WELLNESS/fitness services are NOT
    medical and must NEVER ask for a date of birth — e.g. `entrenamiento_personal`
    (personal trainer) and `masajes` (massage) were removed for that reason. ─── */
-export const HEALTH_CATEGORY_IDS = new Set<string>([
+const HEALTH_CATEGORY_IDS = new Set<string>([
   // Clinical / medical (patient + clinical age)
   "nutricion", "psicologia", "fisioterapia", "enfermeria",
   "psiquiatria", "odontologia", "ortodoncia", "pediatria", "optometria", "optica_lentes",
@@ -1757,7 +1757,7 @@ export function anyHealthCategory(ids?: (string | null | undefined)[]): boolean 
    Video consult categories. This is an explicit allow-list: some health services
    need in-person care, while some non-health services work very well remotely.
 */
-export const VIDEO_CONSULT_CATEGORY_IDS = new Set<string>([
+const VIDEO_CONSULT_CATEGORY_IDS = new Set<string>([
   "nutricion", "psicologia", "fisioterapia", "medicina_domicilio",
   "psiquiatria", "medico_especialista", "cardiologia", "terapia_lenguaje", "terapia_ocupacional",
   "contabilidad", "legal", "consultoria", "traduccion",

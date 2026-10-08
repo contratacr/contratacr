@@ -14,7 +14,7 @@ const CLAVE_POSICIONES = "ccr:posiciones";
 const CLAVE_ANTERIOR = "ccr:ruta-anterior";
 const CLAVE_ACTUAL = "ccr:ruta-actual";
 
-export function claveDeRuta(url: string = typeof window === "undefined" ? "" : window.location.pathname + window.location.search): string {
+function claveDeRuta(url: string = typeof window === "undefined" ? "" : window.location.pathname + window.location.search): string {
   try {
     const u = new URL(url, "https://x");
     return (u.pathname.replace(/\/$/, "") || "/") + u.search;

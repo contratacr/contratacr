@@ -60,7 +60,7 @@ const JOB_SEARCH_ALIASES: Record<string, string[]> = {
   ventas: ["vendedor", "vendedora", "ejecutivo de ventas", "asesor comercial", "comercial"],
 };
 
-export function normalizeJobSearch(value: string) {
+function normalizeJobSearch(value: string) {
   return value
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")

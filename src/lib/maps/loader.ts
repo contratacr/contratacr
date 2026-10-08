@@ -18,7 +18,7 @@ export function normalizeGoogleMapsMapId(value: string | null | undefined): stri
   return /^[a-f0-9]{16}$/i.test(candidate) ? candidate : undefined;
 }
 
-export const MAP_ID = normalizeGoogleMapsMapId(process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID);
+const MAP_ID = normalizeGoogleMapsMapId(process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID);
 
 export function withConfiguredMapId<T extends Record<string, unknown>>(
   options: T,

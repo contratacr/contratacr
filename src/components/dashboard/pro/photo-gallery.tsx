@@ -40,8 +40,8 @@ export type SuccessCase = {
 // Legacy item shape (photos-only) — read for back-compat so nothing is lost.
 type LegacyItem = { url?: string; serviceId?: string; profession?: string };
 
-export const MAX_CASES_PER_PROFESSION = 10;
-export const MAX_PHOTOS_PER_CASE = CASE_PHOTOS_PER_CASE;
+const MAX_CASES_PER_PROFESSION = 10;
+const MAX_PHOTOS_PER_CASE = CASE_PHOTOS_PER_CASE;
 
 interface PhotoGalleryProps {
   professionalId: string;
@@ -60,7 +60,7 @@ function genId() {
 
 // Read BOTH shapes: new cases (have `photos[]`) pass through; legacy photos (`{url}`) are grouped
 // by profession into untitled cases (≤3 photos each) so existing work is never lost.
-export function seedCases(items: (SuccessCase | LegacyItem)[] | undefined, urls: string[], services: ServiceLike[], primary?: string): SuccessCase[] {
+function seedCases(items: (SuccessCase | LegacyItem)[] | undefined, urls: string[], services: ServiceLike[], primary?: string): SuccessCase[] {
   const list = Array.isArray(items) && items.length > 0 ? items : urls.map((url) => ({ url }));
   const cases: SuccessCase[] = [];
   const legacyByProf = new Map<string, string[]>();

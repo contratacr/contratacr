@@ -39,7 +39,7 @@ export function semanaAnterior(ahora = new Date()) {
   return { semana: lunes.toISOString().slice(0, 10), desde, hasta };
 }
 
-export function firmaDeReporte(profesional: string, semana: string) {
+function firmaDeReporte(profesional: string, semana: string) {
   return firmaDeBaja(`reporte:${profesional}:${semana}`);
 }
 
@@ -68,7 +68,7 @@ function tienePrecio(servicios: unknown) {
     && (s as { priceType?: unknown }).priceType !== "a_convenir");
 }
 
-export function cuerpoDelResumen({ nombre, contactos, semana, profesional, slug, sinResenas, sinPrecio, baja }: {
+function cuerpoDelResumen({ nombre, contactos, semana, profesional, slug, sinResenas, sinPrecio, baja }: {
   nombre: string; contactos: number; semana: string; profesional: string; slug: string; sinResenas: boolean; sinPrecio: boolean; baja: string;
 }) {
   const p = (html: string) => `<p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#162543">${html}</p>`;

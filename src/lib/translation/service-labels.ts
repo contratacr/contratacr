@@ -210,7 +210,7 @@ async function translateTextWithServiceAccount(texts: string[], projectId: strin
   return translations.map((item: { translatedText?: unknown }) => cleanPlainTranslation(item?.translatedText));
 }
 
-export async function translateServiceLabel(label: string, target: TranslateTarget, source?: TranslateTarget): Promise<string> {
+async function translateServiceLabel(label: string, target: TranslateTarget, source?: TranslateTarget): Promise<string> {
   const cleanLabel = normalizeServiceDisplayName(label);
   const fallback = localFallback(cleanLabel, target);
   if (!cleanLabel) return fallback;

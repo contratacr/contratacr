@@ -7,10 +7,10 @@ import { getCategoryLabel } from "@/lib/data/categories";
 // Best-effort and resilient: any failure degrades to zeros so /admin never 500s.
 
 export type Kpi = { value: number; deltaPct: number | null; prior: number | null; spark: number[] };
-export type GrowthPoint = { date: string; pros: number; clients: number };
-export type SignupItem = { id: string; name: string; role: "professional" | "client"; meta: string; createdAt: string };
-export type PendingItem = { id: string; slug: string | null; name: string; category: string; createdAt: string };
-export type RankItem = { label: string; value: number };
+type GrowthPoint = { date: string; pros: number; clients: number };
+type SignupItem = { id: string; name: string; role: "professional" | "client"; meta: string; createdAt: string };
+type PendingItem = { id: string; slug: string | null; name: string; category: string; createdAt: string };
+type RankItem = { label: string; value: number };
 
 export type AdminOverview = {
   newPros: Kpi;

@@ -24,11 +24,11 @@
 import { esRutaDeBusqueda } from "@/lib/buscar-url";
 import { esServicioDelCatalogo } from "@/lib/data/categories";
 
-export const RUTA_DE_PANTALLA_COMPLETA = /(^|\/)(?:publicar-proyecto|cotizar|(?:empleos|promociones)\/publicar)(?:\/|$)/;
+const RUTA_DE_PANTALLA_COMPLETA = /(^|\/)(?:publicar-proyecto|cotizar|(?:empleos|promociones)\/publicar)(?:\/|$)/;
 
 // Un solo tramo después de la sección; `publicar`, `mis-empleos` y
 // `mis-promociones` son listas o flujos, no fichas, y se quedan con la barra.
-export const RUTA_DE_DETALLE = /^\/(?:(?:es|en)\/)?(?:profesionales\/[^/]+|proyectos\/[^/]+|promociones\/(?!publicar\/?$|mis-promociones\/?$)[^/]+|empleos\/(?!publicar\/?$|mis-empleos\/?$)[^/]+)\/?$/;
+const RUTA_DE_DETALLE = /^\/(?:(?:es|en)\/)?(?:profesionales\/[^/]+|proyectos\/[^/]+|promociones\/(?!publicar\/?$|mis-promociones\/?$)[^/]+|empleos\/(?!publicar\/?$|mis-empleos\/?$)[^/]+)\/?$/;
 
 export function sinBarraDeAbajo(pathname: string | null | undefined): boolean {
   const ruta = pathname ?? "";

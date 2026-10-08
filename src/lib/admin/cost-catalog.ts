@@ -6,7 +6,7 @@
 
 export type CostCategory = "infraestructura" | "datos" | "herramientas" | "movil" | "marketing" | "contenido";
 
-export type CostLimit = {
+type CostLimit = {
   /** What is included before the provider charges more, in plain words. */
   included: string;
   /** What happens past that point: a charge per unit, a required plan, a pause. */

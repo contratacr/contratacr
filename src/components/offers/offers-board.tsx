@@ -191,7 +191,6 @@ export function OffersBoard({
     });
   }, [canPost, currentUserId, nativeApp, offers.length, selectedId]);
 
-
   useEffect(() => {
     const timer = window.setTimeout(() => {
       const params = new URLSearchParams(window.location.search);
@@ -610,8 +609,7 @@ function OfferImage({
   );
 }
 
-
-export function OfferSaveButton({
+function OfferSaveButton({
   offer,
   userId,
   pastilla = false,

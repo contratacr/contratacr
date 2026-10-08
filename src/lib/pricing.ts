@@ -41,7 +41,7 @@ export function formatColones(amount: number): string {
   return `₡${agruparMiles(amount)}`;
 }
 
-export function formatColonesTaxIncluded(amount: number): string {
+function formatColonesTaxIncluded(amount: number): string {
   return `${formatColones(amount)} ${TAX_INCLUDED_SUFFIX}`;
 }
 
@@ -97,7 +97,7 @@ function formatAmountWithUnit(amount: number, suffix: string): string {
 }
 
 /** Human-readable single tier, e.g. "₡15,000 /hora I.V.A.I." or "Consultar precio". */
-export function formatPricingTier(tier: PricingTier, locale?: string): string {
+function formatPricingTier(tier: PricingTier, locale?: string): string {
   const copy = PRICING_COPY[pricingLocale(locale)][tier.type];
   if (tier.type === "a_convenir") return copy.fallback;
   const suffix = copy.suffix;

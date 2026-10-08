@@ -4,8 +4,8 @@ import { buildFcmMulticastPayload } from "@/lib/push/payload";
 import { classifyFirebaseFailure, isPushDeliveryEnabled, pushRetryAt } from "@/lib/push/retry";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export const MAX_FCM_MULTICAST_TOKENS = 500;
-export const MAX_PUSH_JOBS_PER_DRAIN = 100;
+const MAX_FCM_MULTICAST_TOKENS = 500;
+const MAX_PUSH_JOBS_PER_DRAIN = 100;
 const DEFAULT_PUSH_JOBS_PER_DRAIN = 25;
 // The route has a 60-second execution ceiling. Keep a generous lease around a
 // single just-in-time claim so a replacement worker cannot overlap a request

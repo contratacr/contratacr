@@ -24,7 +24,7 @@ const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
  * enlace— para una sola acción. Instagram y Facebook no reciben un PDF, y el
  * enlace de WhatsApp mandaba texto en vez del documento.
  */
-export function useCompartirCotizacion({ quote, proName, proSlug, activo = true }: { quote: Quote; proName: string; proSlug?: string | null; activo?: boolean }) {
+function useCompartirCotizacion({ quote, proName, proSlug, activo = true }: { quote: Quote; proName: string; proSlug?: string | null; activo?: boolean }) {
   const t = useTranslations("quotes");
   const locale = useLocale();
   const nativo = useNativeShare();

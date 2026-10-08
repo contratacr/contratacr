@@ -5,7 +5,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatWhatsApp(phone: string) {
+function formatWhatsApp(phone: string) {
   const clean = phone.replace(/\D/g, "");
   if (clean.startsWith("506")) return clean;
   // International numbers already carry their country code (CR national = 8 digits).

@@ -20,7 +20,7 @@ const BUSINESS_NAME_HINTS = new Set([
   "academia",
 ]);
 
-export function normalizeDisplayName(value?: string) {
+function normalizeDisplayName(value?: string) {
   return (value ?? "")
     .trim()
     .toLowerCase()
@@ -31,7 +31,7 @@ export function normalizeDisplayName(value?: string) {
     .trim();
 }
 
-export function looksLikeBusinessName(name?: string) {
+function looksLikeBusinessName(name?: string) {
   const normalized = normalizeDisplayName(name);
   if (!normalized) return false;
   const words = normalized.split(" ").filter(Boolean);

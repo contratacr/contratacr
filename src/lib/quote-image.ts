@@ -28,7 +28,7 @@ function datosCliente(quote: Quote): string[] {
 }
 
 /** Dónde quedó el enlace dentro del lienzo, para volverlo clicable en el PDF. */
-export type Dibujo = { canvas: HTMLCanvasElement; enlace: { x: number; y: number; w: number; h: number; url: string } };
+type Dibujo = { canvas: HTMLCanvasElement; enlace: { x: number; y: number; w: number; h: number; url: string } };
 
 function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   ctx.beginPath();
@@ -213,7 +213,6 @@ async function dibujar(quote: Quote, proName: string, textos: Textos, fechaVigen
 
   return { canvas, enlace: { x: M, y: enlaceY - 26, w: anchoEnlace, h: 32 * lineasEnlace.length + 8, url } };
 }
-
 
 /**
  * La cotización como PDF de una página. Es el formato que la gente espera de

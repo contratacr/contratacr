@@ -597,7 +597,7 @@ interface AccountMenuProps {
   onSignOut: () => void;
 }
 
-export function AccountMenu({
+function AccountMenu({
   isPro, displayName, professionalPanelHref, clientPanelHref, profileHref, savedHref, onSignOut,
 }: AccountMenuProps) {
   const t = useTranslations("header");
@@ -1434,7 +1434,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     },
     [nativeApp, router],
   );
-
 
   // Los oficios que se ofrecen cuando no hay nada escrito ni nada reciente.
   // Se filtran contra el catálogo vivo: un servicio que el administrador

@@ -12,8 +12,8 @@ import type { InteractionEventType } from "@/lib/analytics/interaction-events";
 // visitor is a hash of the analytics session cookie, and the platform comes
 // from the cookie the native shell sets.
 
-export const ANALYTICS_SESSION_COOKIE = "cc_analytics_sid";
-export const PLATFORM_COOKIE = "ccr_platform";
+const ANALYTICS_SESSION_COOKIE = "cc_analytics_sid";
+const PLATFORM_COOKIE = "ccr_platform";
 
 export type ServerInteraction = {
   type: InteractionEventType;

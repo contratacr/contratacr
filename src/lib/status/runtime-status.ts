@@ -1,4 +1,4 @@
-export type RuntimeStatusLevel = "info" | "warning" | "critical";
+type RuntimeStatusLevel = "info" | "warning" | "critical";
 
 export type OperationalStatusBanner = {
   id: string;

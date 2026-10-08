@@ -13,7 +13,7 @@ export type AuditUserActionInput = {
   metadata?: Record<string, unknown> | null;
 };
 
-export function requestIp(req: Request) {
+function requestIp(req: Request) {
   const forwarded = req.headers.get("x-forwarded-for");
   if (forwarded) return forwarded.split(",")[0]?.trim() || null;
   return req.headers.get("x-real-ip") || req.headers.get("cf-connecting-ip");
@@ -28,7 +28,7 @@ export function requestPath(req: Request) {
   }
 }
 
-export function auditRequestMetadata(req: Request) {
+function auditRequestMetadata(req: Request) {
   return {
     request_method: req.method,
     request_path: requestPath(req),
