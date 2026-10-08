@@ -30,6 +30,11 @@ test.describe("sugerencia de servicio al publicar", () => {
     await sugerencia.getByRole("button", { name: "Usar" }).click();
     await expect(sugerencia).toHaveCount(0);
     await expect(page.locator("[data-destinatarios-vacante]")).toContainText(/de Electricidad\./, { timeout: 15_000 });
+    // Elegir con «Usar» no abre el selector de servicios (en Safari del iPhone
+    // el toque pasaba al primer botón de la <label> que envolvía el campo).
+    const selector = page.getByPlaceholder(/Buscar servicio/);
+    await page.waitForTimeout(500);
+    await expect(selector).toBeHidden();
 
     // El caso del 6-oct: con un servicio ya elegido, si el puesto dice otra cosa,
     // se avisa y se ofrece cambiarlo (sin cambiarlo solo).
@@ -38,6 +43,47 @@ test.describe("sugerencia de servicio al publicar", () => {
     await expect(page.locator("[data-destinatarios-vacante]")).toContainText(/de Electricidad\./);
     await sugerencia.getByRole("button", { name: "Cambiar" }).click();
     await expect(page.locator("[data-destinatarios-vacante]")).toContainText(/de Plomería\./, { timeout: 15_000 });
+    await page.waitForTimeout(500);
+    await expect(selector).toBeHidden();
+
+    // Quitar el servicio con la X lo deja vacío, sin abrir el selector.
+    await page.getByRole("button", { name: "Quitar servicio" }).filter({ visible: true }).first().click();
+    await page.waitForTimeout(500);
+    await expect(selector).toBeHidden();
+    await expect(page.locator("[data-destinatarios-vacante]")).toHaveCount(0);
+  });
+
+  test("el autocompletado gris del puesto calza exacto con lo que se escribe", async ({ page }) => {
+    test.skip(!canRunSeededRegression(), "Needs the seeded regression environment.");
+    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+    await gotoOK(page, "/empleos/publicar");
+    await waitForInteractivePage(page);
+    const puesto = page.locator('input[name="title"]');
+    await puesto.fill("Asistente admi");
+    const capa = page.locator("[data-autocompletado-puesto]");
+    await expect(capa).toBeVisible();
+    // En el teléfono los campos suben a 16 px; la capa tiene que crecer igual y
+    // arrancar en el mismo punto, o la sugerencia pisa lo escrito.
+    const medidas = await page.evaluate(() => {
+      const campo = document.querySelector('input[name="title"]') as HTMLInputElement;
+      const capa = document.querySelector("[data-autocompletado-puesto]") as HTMLElement;
+      const espejo = capa.querySelector("span") as HTMLElement;
+      const c = getComputedStyle(campo);
+      const k = getComputedStyle(capa);
+      const lienzo = document.createElement("canvas").getContext("2d")!;
+      lienzo.font = `${c.fontWeight} ${c.fontSize} ${c.fontFamily}`;
+      return {
+        letraCampo: c.fontSize, letraCapa: k.fontSize, familiaIgual: c.fontFamily === k.fontFamily,
+        inicioCampo: campo.getBoundingClientRect().left + parseFloat(c.paddingLeft) + parseFloat(c.borderLeftWidth),
+        inicioCapa: espejo.getBoundingClientRect().left,
+        anchoEscrito: lienzo.measureText(campo.value).width,
+        anchoEspejo: espejo.getBoundingClientRect().width,
+      };
+    });
+    expect(medidas.letraCapa).toBe(medidas.letraCampo);
+    expect(medidas.familiaIgual).toBe(true);
+    expect(Math.abs(medidas.inicioCapa - medidas.inicioCampo)).toBeLessThan(1.5);
+    expect(Math.abs(medidas.anchoEspejo - medidas.anchoEscrito)).toBeLessThan(1.5);
   });
 
   test("la descripción del proyecto sugiere el servicio y con un toque queda elegido", async ({ page }) => {
@@ -52,5 +98,11 @@ test.describe("sugerencia de servicio al publicar", () => {
     await sugerencia.getByRole("button", { name: "Usar" }).click();
     await expect(sugerencia).toHaveCount(0);
     await expect(page.getByText(/profesional(?:es)? de este servicio recibir/)).toBeVisible({ timeout: 15_000 });
+    const selector = page.getByPlaceholder(/Buscar servicio/);
+    await page.waitForTimeout(500);
+    await expect(selector).toBeHidden();
+    await page.getByRole("button", { name: "Quitar servicio" }).filter({ visible: true }).first().click();
+    await page.waitForTimeout(500);
+    await expect(selector).toBeHidden();
   });
 });

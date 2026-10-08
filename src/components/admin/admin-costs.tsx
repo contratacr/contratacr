@@ -370,15 +370,17 @@ function Ledger({ entries, apply }: { entries: CostEntry[]; apply: (work: () => 
           <label className="block text-xs font-semibold text-[#374151] sm:col-span-2 lg:col-span-1">Descripción
             <input required value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="p. ej. Campaña Clientes - Registro, del 23 al 31 de agosto" className="mt-1 h-10 w-full rounded-lg border border-[#e5e7eb] px-3 text-sm" />
           </label>
-          <label className="block text-xs font-semibold text-[#374151]">Monto
+          {/* Dos controles: un <div>, no una <label> (en Safari el toque del monto
+              se reenviaba a la moneda). */}
+          <div className="block text-xs font-semibold text-[#374151]">Monto
             <div className="mt-1 flex gap-2">
               <select aria-label="Moneda" value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value as CostCurrency })} className="h-10 rounded-lg border border-[#e5e7eb] bg-white px-2 text-sm">
                 <option value="USD">$</option>
                 <option value="CRC">₡</option>
               </select>
-              <input required type="number" min="0" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="h-10 w-full rounded-lg border border-[#e5e7eb] px-3 text-sm" />
+              <input required aria-label="Monto" type="number" min="0" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="h-10 w-full rounded-lg border border-[#e5e7eb] px-3 text-sm" />
             </div>
-          </label>
+          </div>
           <div className="flex items-end">
             <button type="submit" disabled={busy} className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-full bg-[#009FD9] px-4 text-sm font-semibold text-white disabled:opacity-60">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} Guardar gasto</button>
           </div>

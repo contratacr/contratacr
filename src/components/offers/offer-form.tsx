@@ -591,9 +591,13 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/promoci
               <PhoneInput label={<RequiredLabel>{copy.whatsapp}</RequiredLabel>} value={whatsapp} onChange={setWhatsapp} error={fieldErrors.whatsapp} />
               <p className="mt-1.5 text-xs text-[#68778d]">{copy.whatsappHelp}</p>
             </div>
-            <label className="text-sm font-medium text-[#374151] sm:col-span-2">
-              <RequiredLabel>{copy.description}</RequiredLabel>
-              <textarea name="description" maxLength={3000} defaultValue={initialOffer?.description ?? ""} placeholder={copy.descriptionPlaceholder} className={TEXTAREA_CLASS} />
+            {/* El aviso con su botón va FUERA de la <label>: en Safari del iPhone un
+                toque dentro de una etiqueta se reenvía a su campo. */}
+            <div className="text-sm font-medium text-[#374151] sm:col-span-2">
+              <label className="block">
+                <RequiredLabel>{copy.description}</RequiredLabel>
+                <textarea name="description" maxLength={3000} defaultValue={initialOffer?.description ?? ""} placeholder={copy.descriptionPlaceholder} className={TEXTAREA_CLASS} />
+              </label>
               <FieldError>{fieldErrors.description}</FieldError>
               {pareceVacante(textoEscrito) && (
                 <div role="status" className="mt-2.5 flex flex-col gap-2 rounded-xl border border-[#fde68a] bg-[#fffbeb] px-3.5 py-3 text-[13px] font-normal leading-relaxed text-[#92400e]">
@@ -606,7 +610,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/promoci
                   </Link>
                 </div>
               )}
-            </label>
+            </div>
           </div>
 
           <section className="mt-6">

@@ -1468,7 +1468,11 @@ html[data-self-action-modal-open="true"] [data-save-button] {
 
   input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not(.text-lg):not(.text-xl):not(.text-2xl),
   textarea:not(.text-lg):not(.text-xl):not(.text-2xl),
-  select:not(.text-lg):not(.text-xl):not(.text-2xl) {
+  select:not(.text-lg):not(.text-xl):not(.text-2xl),
+  /* Lo que se dibuja ENCIMA de un campo calcando su texto (el autocompletado en
+     gris del puesto de un empleo) tiene que crecer igual que el campo, o la
+     sugerencia queda corrida y pisa lo que se escribe (7-oct-2026). */
+  .ccr-calca-campo {
     font-size: 16px;
   }
 }
