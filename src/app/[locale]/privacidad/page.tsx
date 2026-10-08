@@ -19,7 +19,7 @@ const ES_SECTIONS: LegalSection[] = [
       { k: "ul", items: [
         "Nombre, correo electrónico, teléfono y datos básicos compartidos por proveedores de inicio de sesión, como Google y Apple.",
         "Credenciales de acceso administradas de forma segura por nuestro proveedor de autenticación. ContrataCR no conserva su contraseña en texto legible.",
-        "Número de identificación cuando usted decide aportarlo o cuando sea necesario para una solicitud. Para la insignia Verificado conservamos el número de forma protegida y el resultado de la comprobación.",
+        "Número de identificación cuando usted decide aportarlo o cuando sea necesario para una solicitud. Para la insignia de cédula verificada consultamos ese número en el padrón electoral del Tribunal Supremo de Elecciones —una fuente pública— solo para confirmar que existe y tomar de ahí su nombre oficial. Conservamos el número de forma protegida y el resultado de la comprobación. No pedimos foto del documento, selfie ni datos biométricos.",
       ] },
       { k: "sub", text: "2.2 Actividad como Cliente" },
       { k: "ul", items: [
@@ -173,7 +173,7 @@ const EN_SECTIONS: LegalSection[] = [
   ] },
   { id: "data", h: "2. Data we process", body: [
     { k: "sub", text: "2.1 Account and identity" },
-    { k: "ul", items: ["Name, email, phone number, and basic data shared by sign-in providers such as Google and Apple.", "Credentials securely managed by our authentication provider. ContrataCR does not keep your password in readable text.", "Identification number when you choose to provide it or when needed for a request, plus the protected verification result."] },
+    { k: "ul", items: ["Name, email, phone number, and basic data shared by sign-in providers such as Google and Apple.", "Credentials securely managed by our authentication provider. ContrataCR does not keep your password in readable text.", "Identification number when you choose to provide it or when needed for a request. For the ID-verified badge we look that number up in the electoral roll of Costa Rica's Supreme Electoral Tribunal (TSE) — a public source — only to confirm it exists and take your official name from it. We keep the number protected along with the check result. We do not ask for a photo of the document, a selfie, or biometric data."] },
     { k: "sub", text: "2.2 Client and Professional activity" },
     { k: "ul", items: ["Requests, posts, quotes, reviews, favorites, and related activity.", "The phone number you give when posting a project, which is not published and is shared only with the Professional who replies.", "Professional profile data, services, location, work areas, success stories, availability, and contact details.", "Content you include in descriptions, notes, reports, and conversations."] },
     { k: "sub", text: "2.3 Messages, files, support, and AI" },
@@ -233,7 +233,7 @@ export default async function PrivacidadPage({ params }: { params: Promise<{ loc
   return (
     <LegalDocument
       title={en ? "Privacy Policy" : "Política de Privacidad"}
-      updated={en ? "September 30, 2026" : "30 de septiembre de 2026"}
+      updated={en ? "October 8, 2026" : "8 de octubre de 2026"}
       intro={en
         ? "This Policy explains what data ContrataCR processes across the website and mobile applications, why it is used, who may process it, and how you can exercise your rights."
         : "Esta Política explica qué datos trata ContrataCR en el sitio web y las aplicaciones móviles, para qué se utilizan, quiénes pueden procesarlos y cómo puede ejercer sus derechos."}

@@ -198,7 +198,7 @@
     "trust": {
       "cedula": {
         "title": "Cédula verificada",
-        "desc": "Verificamos la identidad de todos contra el Registro Civil de Costa Rica."
+        "desc": "Revisamos que la cédula de cada profesional exista en el padrón del TSE, y su nombre sale de ahí."
       },
       "reviews": {
         "title": "Reseñas reales",
@@ -758,7 +758,7 @@
     "noRespondioTexto": "Publica lo que necesitas y te escriben varios.",
     "noRespondioBoton": "Publicar",
     "cerrar": "Cerrar",
-    "cedulaVerificada": "Cédula verificada por ContrataCR"
+    "cedulaVerificada": "Cédula verificada"
   },
   "auth": {
     "login": {
@@ -1076,7 +1076,7 @@
       "addToCalendar": "Agregar a mi calendario"
     },
     "verified": "Verificado",
-    "verifiedTitle": "Identidad verificada",
+    "verifiedTitle": "Cédula verificada",
     "from": "Desde",
     "youLower": "tú",
     "correct": "Corregir",
@@ -3446,7 +3446,7 @@
     "clientStep0Title": "Escribe lo que necesitas",
     "clientStep0Body": "Puedes buscar por servicio, provincia, cantón o frases como “necesito limpiar mi casa”.",
     "clientStep1Title": "Compara perfiles",
-    "clientStep1Body": "Revisa identidad verificada, casos de éxito, reseñas, precios de referencia y zonas de trabajo.",
+    "clientStep1Body": "Revisa la cédula verificada, casos de éxito, reseñas, precios de referencia y zonas de trabajo.",
     "clientStep2Title": "Contacta al profesional",
     "clientStep2Body": "Le escribes por WhatsApp, lo llamas o le mandas un mensaje dentro de ContrataCR. Cada ficha muestra las vías que el profesional dejó abiertas.",
     "clientPathCta": "Ver profesionales",
@@ -3484,8 +3484,8 @@
     "proStep1Body": "Publica casos de éxito con fotos, completa tus lugares de trabajo y verifica tu identidad para generar más confianza.",
     "proStep2Title": "Responde proyectos y cotiza",
     "proStep2Body": "Ves los proyectos que publican los clientes, les escribes por WhatsApp, envías cotizaciones y publicas empleos o promociones desde tu panel.",
-    "proBenefit0Title": "Identidad verificada",
-    "proBenefit0Body": "El sello de verificación ayuda a que los clientes sepan que están hablando con una persona real y verificable.",
+    "proBenefit0Title": "Cédula verificada",
+    "proBenefit0Body": "El sello muestra que la cédula de tu perfil existe en el padrón del TSE y que tu nombre sale de ahí.",
     "proBenefit1Title": "Casos de éxito",
     "proBenefit1Body": "Muestra fotos de tus casos de éxito para que tu perfil no sea solo texto y el cliente entienda tu calidad.",
     "proBenefit2Title": "Zonas de trabajo",
@@ -4084,7 +4084,7 @@
     "download": "Descargar imagen",
     "preparing": "Preparando la tarjeta…",
     "cardFooter": "Escanea para ver mi perfil",
-    "cardTrust": "Identidad verificada",
+    "cardTrust": "Cédula verificada",
     "reviewsHint": "Mándaselo a los clientes con los que ya trabajaste. Las reseñas son lo primero que mira alguien antes de contratar.",
     "reviewsMessage": "Hola, ¿cómo estás? Ahora estoy en ContrataCR y me ayudaría mucho que me dejaras una reseña del trabajo que te hice. Es rápido, entras a este enlace y listo: {url} ¡Muchas gracias!",
     "sendWhatsApp": "Enviar por WhatsApp",
@@ -4200,7 +4200,7 @@
     "filterClosed": "Cerradas",
     "publicMetaTitle": "Cotización de {name}",
     "publicFrom": "Cotización de",
-    "publicIdentityVerified": "Identidad verificada",
+    "publicIdentityVerified": "Cédula verificada",
     "publicAccept": "Aceptar cotización",
     "publicDecline": "No me sirve",
     "publicAcceptedTitle": "¡Aceptada!",

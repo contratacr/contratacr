@@ -36,7 +36,7 @@ const PLANTILLAS = [
     id: "recordatorio",
     nombre: "Recordatorio de lo que hay",
     subject: "263 profesionales verificados, en un solo lugar",
-    body: "Hola,\n\nPor si no lo tenías presente: en ContrataCR hay electricistas, construcción, remodelación, abogados, mecánicos, contadores, desarrollo web y bastante más.\n\nTodos con identidad verificada contra el padrón, con reseñas, y les escribís por WhatsApp directo — sin formularios ni esperas.",
+    body: "Hola,\n\nPor si no lo tenías presente: en ContrataCR hay electricistas, construcción, remodelación, abogados, mecánicos, contadores, desarrollo web y bastante más.\n\nTodos con cédula verificada en el padrón del TSE, con reseñas, y les escribís por WhatsApp directo — sin formularios ni esperas.",
     ctaLabel: "Ver todos los servicios",
     ctaPath: "/servicios",
     audiencia: "todas",
