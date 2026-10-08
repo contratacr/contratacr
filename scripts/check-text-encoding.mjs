@@ -11,7 +11,6 @@ const INTENTIONAL_TEXT_FILES = new Set([
   path.normalize("scripts/repair-text-encoding.mjs"),
   path.normalize("tests/e2e/product-contract.spec.ts"),
 ]);
-const SEED_REPAIR_FILE = path.normalize("scripts/seed-mobile-demo.js");
 const MOJIBAKE = /(?:\u00c3[\u0080-\u017f]|\u00c2[\u0080-\u017f]|\u00e2[\u0080-\u017f]|\ufffd)/u;
 const BROKEN_SPANISH_WORD = /(?:\b(?:identificaci|informaci|ubicaci|verificaci|descripci|secci|opci|rese|contrase|canci|atenci|profesi|categor|plomer|jardiner|fotograf|tecnolog|mec|formaci|educaci|configuraci|conexi|instalaci|publicaci|conversaci|el)\?[A-Za-z\u00c0-\u017f]+|\b(?:a\?os?|casos de \?xito|b\?squeda|b\?sicos?|m\?s|est\?|c\?dula|pa\?s|d\?a|qu\?|c\?mo|cu\?ndo|qui\?n|despu\?s|tambi\?n)\b)/iu;
 const INVALID_CONTROL_CHARACTER = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/u;
@@ -250,8 +249,7 @@ for (const root of ROOTS) {
     const lines = source.split(/\r?\n/u);
     const allowsEncodingPatterns = INTENTIONAL_TEXT_FILES.has(normalizedFile);
     lines.forEach((line, index) => {
-      const isSeedRepairPattern = normalizedFile === SEED_REPAIR_FILE && line.includes(".replace(/");
-      const containsBrokenVisibleText = !allowsEncodingPatterns && !isSeedRepairPattern
+      const containsBrokenVisibleText = !allowsEncodingPatterns
         && (MOJIBAKE.test(line) || BROKEN_SPANISH_WORD.test(line));
       const containsVisibleUnicodeEscape = !allowsEncodingPatterns && VISIBLE_UNICODE_ESCAPE.test(line);
       if (containsBrokenVisibleText || INVALID_CONTROL_CHARACTER.test(line) || containsVisibleUnicodeEscape) {
