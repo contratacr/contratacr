@@ -4,6 +4,7 @@ import { conFiltroDeFecha } from "@/lib/marketplace/filtros-por-volumen";
 import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 import { PanelEmptyState } from "@/components/ui/content-loading";
+import { VerifiedSeal } from "@/components/ui/verified-seal";
 import { cn } from "@/lib/utils";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 
@@ -586,6 +587,7 @@ function jobSaveSnapshot(job: JobPost, locale: MarketplaceLocale) {
 function JobRow({ job, selected, onSelect }: { job: JobPost; selected: boolean; onSelect: () => void }) {
   const locale = marketplaceLocale(useLocale());
   const copy = JOBS_COPY[locale];
+  const tTarjeta = useTranslations("card");
   return <article className={`relative min-h-[7.25rem] overflow-hidden border-b lg:min-h-0 border-[#e5e7eb] bg-white px-3 py-3 transition sm:max-lg:last:border-b-0 hover:bg-[#f8fafc] sm:px-4 ${selected ? "lg:bg-[#eef9fd] lg:shadow-[inset_4px_0_0_#162543]" : ""}`}>
     <button type="button" onClick={onSelect} aria-label={`${copy.view} ${job.title}`} className="absolute inset-0 hidden lg:block" />
     <Link href={rutaEmpleo(job)} className="relative z-[1] block w-full text-left lg:pointer-events-none">
@@ -593,7 +595,10 @@ function JobRow({ job, selected, onSelect }: { job: JobPost; selected: boolean; 
         <EmployerAvatar job={job} />
         <div className="min-w-0 flex-1">
           <h2 className="line-clamp-2 text-[15px] font-extrabold leading-tight text-[#005eaa] lg:text-base">{job.title}</h2>
-          <p className="mt-0.5 truncate text-sm font-semibold text-[#101d35]">{job.employer_name || copy.professionalFallback}</p>
+          <p className="mt-0.5 flex min-w-0 items-center gap-1 text-sm font-semibold text-[#101d35]">
+            <span className="min-w-0 truncate">{job.employer_name || copy.professionalFallback}</span>
+            {job.employer_verified && <VerifiedSeal label={tTarjeta("verifiedTitle")} className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />}
+          </p>
           {/* TELÉFONO: dónde y cuándo; modalidad y experiencia; salario. */}
           <JobMetaLine job={job} showApplicants={false} className="mt-0.5 truncate text-sm text-[#52627a] lg:hidden" />
           {/* SIN LOS AÑOS DE EXPERIENCIA. En la tarjeta de una lista el dato no
@@ -642,7 +647,15 @@ function JobPreview({ job, isOwner, userId, onEdit, mobile = false, hideActions 
         «···» arriba deja la fila de acciones limpia: solo lo que contacta. */}
     <div className="flex items-start gap-4"><EmployerAvatar job={job} size="large" /><div className="min-w-0 flex-1">
       <div className="flex min-w-0 items-center gap-2">
-        <p className="min-w-0 flex-1 truncate font-semibold text-[#52627a]">{job.employer_name}</p>
+        {/* El nombre completo (hasta dos líneas: recortado con «…» un nombre
+            de negocio pierde información) y «Cédula verificada» en su propia
+            línea debajo, igual que en la ficha del profesional. Las ofertas de
+            trabajo falsas son una estafa común: quien busca empleo necesita ver
+            que el empleador existe (8-oct-2026). */}
+        <div className="min-w-0 flex-1">
+          <p className="line-clamp-2 font-semibold text-[#52627a] [overflow-wrap:anywhere]">{job.employer_name}</p>
+          {job.employer_verified && <CedulaVerificada />}
+        </div>
         {/* COMPARTIR VIVE DENTRO DEL «···», no al lado. Probé sacarlo como
             botón visible y quedaba la MISMA acción dos veces a dos centímetros:
             el botón y la opción del menú. Un «Compartir» que abriera un segundo
@@ -795,6 +808,16 @@ function JobContactActions({ job, isOwner, userId, soloContacto = false, escrito
         <SaveItemButton itemType="job" itemId={job.id} snapshot={jobSaveSnapshot(job, locale)} userId={userId} loginRedirect={rutaEmpleo(job)} withLabel className={secundario} />
       </div>
     </div>
+  );
+}
+
+function CedulaVerificada() {
+  const t = useTranslations("profile");
+  return (
+    <span className="mt-0.5 flex items-center gap-1 text-[13px] font-medium text-[#4b5b70]" data-cedula-verificada>
+      <VerifiedSeal className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />
+      {t("cedulaVerificada")}
+    </span>
   );
 }
 

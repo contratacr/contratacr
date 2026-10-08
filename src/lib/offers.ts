@@ -38,6 +38,8 @@ export type ProfessionalOffer = {
   professional_name?: string;
   professional_slug?: string | null;
   professional_avatar_url?: string | null;
+  /** La cédula del profesional está verificada en el padrón del TSE. */
+  professional_verified?: boolean;
   /** WhatsApp de ESTA promoción. Nulo = el de la cuenta profesional. */
   contact_whatsapp?: string | null;
   professional_has_whatsapp?: boolean;
