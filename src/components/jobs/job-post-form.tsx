@@ -228,7 +228,7 @@ function JobTitleInput({ defaultValue, error, locale, copy, alCambiar }: { defau
       <RequiredLabel>{copy.position}</RequiredLabel>
       <div className="relative mt-1.5">
         {completion && (
-          <div aria-hidden className="pointer-events-none absolute inset-0 flex h-11 items-center overflow-hidden rounded-xl border border-transparent px-3 text-sm text-[#a8b4c4]">
+          <div aria-hidden data-autocompletado-puesto className="ccr-calca-campo pointer-events-none absolute inset-0 flex h-11 items-center overflow-hidden rounded-xl border border-transparent px-3 text-sm text-[#a8b4c4]">
             <span className="invisible whitespace-pre">{value}</span>
             <span className="whitespace-pre">{completion}</span>
           </div>
@@ -529,7 +529,10 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
             {/* EL SERVICIO, ELEGIDO DE LA LISTA. De aquí sale a qué
                 profesionales se les avisa de la vacante: deducirlo del título
                 mandaría «Mecánico Diésel» también a los mecánicos industriales. */}
-            <label className="block" data-campo-con-error={fieldErrors.service ? "" : undefined}>
+            {/* Un <div> y no un <label>: en Safari del iPhone tocar cualquier botón
+                dentro de una etiqueta (la X, «Usar») se reenvía al primero, que
+                abre el selector de servicios. */}
+            <div className="block" data-campo-con-error={fieldErrors.service ? "" : undefined}>
               <span className="text-sm font-semibold"><RequiredLabel>{copy.service}</RequiredLabel></span>
               <div className="mt-1.5">
                 <CategorySearch
@@ -549,7 +552,7 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
               {creando && servicio && destinatarios > 0 && (
                 <p className="mt-1 text-xs font-semibold text-[#0f7a4a]" data-destinatarios-vacante>{copy.avisaremos(destinatarios, getCategoryLabel(servicio, locale))}</p>
               )}
-            </label>
+            </div>
             <SelectMenu label={<RequiredLabel>{copy.employmentType}</RequiredLabel>} value={employmentType} onChange={setEmploymentType} options={(Object.keys(EMPLOYMENT_TYPES) as EmploymentType[]).map((value) => ({ value, label: employmentTypeLabel(value, locale) }))} />
             <SelectMenu label={<RequiredLabel>{copy.workplaceType}</RequiredLabel>} value={workplaceType} onChange={setWorkplaceType} options={(Object.keys(WORKPLACE_TYPES) as WorkplaceType[]).map((value) => ({ value, label: workplaceTypeLabel(value, locale) }))} />
             {workplaceType !== "remote" && (
