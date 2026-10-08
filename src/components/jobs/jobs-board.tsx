@@ -646,14 +646,15 @@ function JobPreview({ job, isOwner, userId, onEdit, mobile = false, hideActions 
         «···» arriba deja la fila de acciones limpia: solo lo que contacta. */}
     <div className="flex items-start gap-4"><EmployerAvatar job={job} size="large" /><div className="min-w-0 flex-1">
       <div className="flex min-w-0 items-center gap-2">
-        {/* «Cédula verificada» en la MISMA línea del empleador: así no se
-            separa del puesto, y si el nombre es largo se recorta el nombre, no
-            la verificación. Las ofertas de trabajo falsas son una estafa común
-            y quien busca empleo necesita ver que el empleador existe. */}
-        <p className="flex min-w-0 flex-1 items-center gap-2 font-semibold text-[#52627a]">
-          <span className="min-w-0 truncate">{job.employer_name}</span>
+        {/* El nombre completo (hasta dos líneas: recortado con «…» un nombre
+            de negocio pierde información) y «Cédula verificada» en su propia
+            línea debajo, igual que en la ficha del profesional. Las ofertas de
+            trabajo falsas son una estafa común: quien busca empleo necesita ver
+            que el empleador existe (8-oct-2026). */}
+        <div className="min-w-0 flex-1">
+          <p className="line-clamp-2 font-semibold text-[#52627a] [overflow-wrap:anywhere]">{job.employer_name}</p>
           {job.employer_verified && <CedulaVerificada locale={locale} />}
-        </p>
+        </div>
         {/* COMPARTIR VIVE DENTRO DEL «···», no al lado. Probé sacarlo como
             botón visible y quedaba la MISMA acción dos veces a dos centímetros:
             el botón y la opción del menú. Un «Compartir» que abriera un segundo
@@ -811,7 +812,7 @@ function JobContactActions({ job, isOwner, userId, soloContacto = false, escrito
 
 function CedulaVerificada({ locale }: { locale: string }) {
   return (
-    <span className="inline-flex shrink-0 items-center gap-1 text-[13px] font-medium text-[#4b5b70]" data-cedula-verificada>
+    <span className="mt-0.5 flex items-center gap-1 text-[13px] font-medium text-[#4b5b70]" data-cedula-verificada>
       <VerifiedSeal className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />
       {locale === "en" ? "ID verified" : "Cédula verificada"}
     </span>
