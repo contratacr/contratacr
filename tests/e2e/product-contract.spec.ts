@@ -190,24 +190,11 @@ test.describe("@contract product safety contracts", () => {
       { name: "push register", response: apiJson(page, "/api/push/register", { method: "POST", body: {} }) },
       { name: "push status", response: apiJson(page, "/api/push/status") },
       { name: "push test", response: apiJson(page, "/api/push/test") },
-      { name: "payment receipt", response: apiJson(page, "/api/payments/receipt", { method: "POST" }) },
     ];
 
     const protectedResults = await Promise.all(protectedChecks.map(async ({ name, response }) => ({ name, result: await response })));
     for (const { name, result } of protectedResults) {
       expect([400, 401, 403], `Expected ${name} to stay closed to guests, got ${result.status}`).toContain(result.status);
     }
-
-    const subscription = await apiJson<{ enabled?: boolean; subscription?: unknown; payments?: unknown[] }>(page, "/api/payments/subscription");
-    expect(subscription.status).toBe(200);
-    expect(subscription.body).toEqual(expect.objectContaining({ enabled: false, subscription: null, payments: [] }));
-
-    const checkout = await apiJson(page, "/api/payments/subscription", { method: "POST" });
-    expect(checkout.status).toBe(404);
-    const manual = await apiJson(page, "/api/payments/subscription/manual", { method: "POST" });
-    expect(manual.status).toBe(404);
-    const webhook = await apiJson<{ ok?: boolean; ignored?: boolean }>(page, "/api/payments/webhook", { method: "POST" });
-    expect(webhook.status).toBe(200);
-    expect(webhook.body).toEqual(expect.objectContaining({ ok: true, ignored: true }));
   });
 });

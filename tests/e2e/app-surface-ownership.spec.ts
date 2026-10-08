@@ -60,7 +60,6 @@ const handlerRules: OwnershipRule[] = [
   { match: /^\/api\/internal\/resumen-semanal(?:\/|$)/, owner: "resumen-semanal.spec.ts" },
   { match: /^\/api\/trabajos\/reportar(?:\/|$)/, owner: "resumen-semanal.spec.ts" },
   { match: /^\/api\/block(?:\/|$)/, owner: "bloqueo-de-usuarios.spec.ts" },
-  { match: /^\/api\/payments(?:\/|$)/, owner: "product-contract.spec.ts" },
   { match: /^\/api\/webhooks(?:\/|$)/, owner: "product-contract.spec.ts" },
   { match: /^\/api\/email(?:\/|$)/, owner: "product-contract.spec.ts" },
   { match: /^\/api\/(?:search|categories)(?:\/|$)/, owner: "api-smoke.spec.ts" },

@@ -38,7 +38,6 @@ const handlerRules = [
   [/^\/api\/internal\/resumen-semanal(?:\/|$)/, "resumen-semanal.spec.ts"],
   [/^\/api\/trabajos\/reportar(?:\/|$)/, "resumen-semanal.spec.ts"],
   [/^\/api\/block(?:\/|$)/, "bloqueo-de-usuarios.spec.ts"],
-  [/^\/api\/payments(?:\/|$)/, "product-contract.spec.ts"],
   [/^\/api\/webhooks(?:\/|$)/, "product-contract.spec.ts"],
   [/^\/api\/email(?:\/|$)/, "product-contract.spec.ts"],
   [/^\/api\/(?:search|categories)(?:\/|$)/, "api-smoke.spec.ts"],
