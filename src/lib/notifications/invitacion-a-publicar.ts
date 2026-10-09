@@ -48,13 +48,22 @@ export async function invitarAPublicarProyecto(admin: Admin, profileIds: string[
   }
 }
 
-/** Las cuentas que todavía no la recibieron (para repartirla una vez a todas). */
+/** Las cuentas de CLIENTE que todavía no la recibieron (una vez a cada una).
+ *  Los profesionales quedan fuera: les llegaba «Publica lo que necesitas…» a
+ *  317 profesionales (9-oct-2026). */
 export async function invitarAPublicarATodas(admin: Admin, { simular = false } = {}) {
+  const pros = new Set<string>();
+  for (let desde = 0; ; desde += 1000) {
+    const { data } = await admin.from("professionals").select("profile_id").not("profile_id", "is", null).range(desde, desde + 999);
+    const filas = (data ?? []) as { profile_id: string }[];
+    for (const f of filas) pros.add(f.profile_id);
+    if (filas.length < 1000) break;
+  }
   const ids: string[] = [];
   for (let desde = 0; ; desde += 1000) {
     const { data } = await admin.from("profiles").select("id").range(desde, desde + 999);
     const filas = (data ?? []) as { id: string }[];
-    ids.push(...filas.map((f) => f.id));
+    ids.push(...filas.map((f) => f.id).filter((id) => !pros.has(id)));
     if (filas.length < 1000) break;
   }
   if (simular) return { cuentas: ids.length, enviadas: 0 };

@@ -1,6 +1,6 @@
 "use client";
 
-import { UserRoundCheck, Handshake, Headset, MessageSquareText, ReceiptText, ShieldCheck, Star, Briefcase } from "lucide-react";
+import { UserRoundCheck, UserRoundX, Handshake, Headset, MessageSquareText, ReceiptText, ShieldCheck, Star, Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Un icono por familia de aviso VIVA. Las de citas, propuestas, postulaciones,
@@ -34,6 +34,8 @@ export function NotificationSourceIcon({ type, className }: { type: string; clas
       return <UserRoundCheck className={className} />;
     case "support_reply":
       return <Headset className={className} />;
+    case "counterparty_account_deleted":
+      return <UserRoundX className={className} />;
     default:
       // eslint-disable-next-line @next/next/no-img-element -- isotipo fijo y pequeño
       return <img src="/logo-mark-transparent.png" alt="" className={cn(className, "scale-125 object-contain")} />;

@@ -11,7 +11,7 @@ import { anyVideoConsultCategory, getCategoryLabel } from "@/lib/data/categories
 import { auditUserAction } from "@/lib/audit/user-action";
 import { writeSourceColumns } from "@/lib/security/write-guard";
 import { attributionColumnsFromBody, withoutAttributionColumns } from "@/lib/analytics/attribution-server";
-import { avisarCompletarPerfil, invitarAPublicarProyecto } from "@/lib/notifications/invitacion-a-publicar";
+import { avisarCompletarPerfil } from "@/lib/notifications/invitacion-a-publicar";
 
 
 type SeedService = {
@@ -446,8 +446,8 @@ export async function POST(req: Request) {
 
     // La invitación a reseñar en Google ya NO sale al registrarse: se pide tras
     // la primera experiencia real (ver invitar-tras-experiencia.ts).
-    // Lo que sí sale al crear la cuenta: «¿Necesitas a alguien?» (publicar un proyecto).
-    await invitarAPublicarProyecto(supabase, [userId]);
+    // «¿Necesitas a alguien?» (publicar un proyecto) es para CLIENTES: a un
+    // profesional recién registrado no se le invita a contratar (9-oct-2026).
     await avisarCompletarPerfil(supabase, userId);
     await marcarComoProfesional(supabase, userId);
     return NextResponse.json({ ok: true, slug });
