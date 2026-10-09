@@ -26,15 +26,21 @@ export function AttributionCapture() {
   // quien terminaba REGISTRÁNDOSE: los `utm_*` se guardan en el perfil, así
   // que mandar 400 correos y que entren 40 personas sin crear cuenta se veía
   // igual que no mandar ninguno. Se registra una vez por campaña y visita.
+  // Lo mismo con los anuncios pagados (utm_medium=paid): Meta cuenta la visita,
+  // pero sin este evento no se sabía si esa persona buscaba, abría un perfil o
+  // escribía. Los demás eventos de la visita comparten la misma cookie
+  // (visitor_hash), así que con este primero se sigue su recorrido.
   useEffect(() => {
-    if (searchParams.get("utm_medium") !== "campana") return;
-    const campana = (searchParams.get("utm_campaign") ?? "").slice(0, 120) || "sin_nombre";
+    const medio = searchParams.get("utm_medium");
+    if (medio !== "campana" && medio !== "paid") return;
+    const campana = (searchParams.get("utm_campaign") ?? "").slice(0, 100) || "sin_nombre";
     const clave = `ccr:clic-campana:${campana}`;
     try {
       if (window.sessionStorage.getItem(clave)) return;
       window.sessionStorage.setItem(clave, "1");
     } catch { /* sin almacenamiento se registra igual, como mucho dos veces */ }
-    void trackInteraction({ type: "campaign_click", source: "api", metadata: { campana, ruta: pathname } });
+    const contenido = (searchParams.get("utm_content") ?? "").slice(0, 100) || null;
+    void trackInteraction({ type: "campaign_click", source: "api", metadata: { campana, medio, contenido, ruta: pathname } });
   }, [pathname, searchParams]);
 
   useEffect(() => {

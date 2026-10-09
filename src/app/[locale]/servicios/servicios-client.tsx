@@ -1,7 +1,6 @@
 "use client";
 
 import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { Carril } from "@/components/ui/carril";
 import { useDesvanecidoVertical } from "@/hooks/use-desvanecido-vertical";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
@@ -9,7 +8,7 @@ import { PanelEmptyState } from "@/components/ui/content-loading";
 import { cn } from "@/lib/utils";
 import { useLocale } from "next-intl";
 import { useTranslations } from "next-intl";
-import { ContrataCRMark, HeaderAccountLink, HeaderMessagesLink, LandingNavbar } from "@/components/landing/landing-navbar";
+import { ContrataCRMark, HeaderAccountLink, LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -203,13 +202,6 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
                 {/* El icono de Mensajes es de la barra de la APP: en la web se
                     llega desde el menú y desde el panel. */}
                 <div className="ml-auto flex shrink-0 items-center gap-0.5">
-                  {nativeApp && (
-                    <HeaderMessagesLink
-                      unreadCount={0}
-                      label={tp("messages")}
-                      href={`/login?redirect=${encodeURIComponent(`${prefijoDeIdioma(locale)}/mensajes`)}`}
-                    />
-                  )}
                   {nativeApp ? null : (
                     /* El acceso SOLO sin sesión. Esta cabecera es propia de la
                        pantalla —no la barra—, así que no se enteraba de la

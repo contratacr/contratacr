@@ -71,7 +71,10 @@ async function assertNativeChrome(page: Page, contract: LocaleContract) {
   await expect.poll(() => nav.locator(".ccr-barra-flotante-pastilla > a, .ccr-barra-flotante-pastilla > button")
     .evaluateAll((items) => items.map((item) => item.getAttribute("aria-label")))).toEqual(contract.navItems);
 
-  const messagesLink = page.locator(`header a[href$="/mensajes"][aria-label="${contract.messages}"]`).filter({ visible: true });
+  // Mensajes y su contador viven en el menú de abajo desde el 1-oct-2026; la
+  // cabecera ya no lo repite.
+  await expect(page.locator(`header a[href$="/mensajes"]`).filter({ visible: true })).toHaveCount(0);
+  const messagesLink = nav.locator(`a[href$="/mensajes"][aria-label="${contract.messages}"]`);
   await expect(messagesLink).toHaveCount(1);
   await expect(messagesLink.getByText("3", { exact: true })).toBeVisible();
 
@@ -402,10 +405,24 @@ test.describe("@mobile native shell contracts", () => {
 
     // En la app la fila no lleva el menú «Opciones» de la web (a8c05f7a): se
     // desliza y aparece el botón rojo de borrar pegado al borde derecho de la
-    // propia fila, que la fila recorta hasta que se desliza.
+    // propia fila. En reposo el botón no existe (3db6c74e): montado, sus
+    // bordes asomaban como líneas finas a la derecha de cada fila.
     await expect(page.getByRole("button", { name: "Opciones", exact: true })).toHaveCount(0);
     const deleteButtons = page.getByRole("button", { name: /^(Eliminar|Borrar|Delete)$/i });
-    await expect.poll(() => deleteButtons.count()).toBeGreaterThan(0);
+    const fila = page.locator("main li [role=button]").first();
+    await expect(fila).toBeVisible();
+    await expect(deleteButtons).toHaveCount(0);
+
+    // Deslizar con el dedo (el gesto ignora el mouse) menos de la mitad del
+    // ancho de la fila: se queda abierta mostrando el botón.
+    const caja = (await fila.boundingBox())!;
+    const cdp = await page.context().newCDPSession(page);
+    const y = caja.y + caja.height / 2;
+    const toque = (type: "touchStart" | "touchMove" | "touchEnd", x: number) => cdp.send("Input.dispatchTouchEvent", { type, touchPoints: type === "touchEnd" ? [] : [{ x, y }] });
+    await toque("touchStart", caja.x + caja.width - 30);
+    for (let paso = 1; paso <= 8; paso += 1) await toque("touchMove", caja.x + caja.width - 30 - paso * 10);
+    await toque("touchEnd", 0);
+    await expect(deleteButtons.first()).toBeVisible();
     const geometry = await deleteButtons.first().evaluate((element) => {
       const rect = element.getBoundingClientRect();
       const row = element.closest("li")!.getBoundingClientRect();

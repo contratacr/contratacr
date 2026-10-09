@@ -492,7 +492,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
       quote_created: "Cotizaciones enviadas",
       project_lead_whatsapp: "Escribieron a un proyecto",
       identity_verified: "Identidades verificadas",
-      campaign_click: "Clics desde un correo",
+      campaign_click: "Llegadas desde un correo o anuncio",
       project_published: "Proyectos creados",
       review_created: "Reseñas recibidas",
       search_performed: "Búsquedas",
