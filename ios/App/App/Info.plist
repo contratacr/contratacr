@@ -2,32 +2,29 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- The app UI is light-only; forcing Light keeps the native shell (launch
-	     window, status bar) from flashing the dark-mode black background before
-	     the web view paints. -->
-	<key>UIUserInterfaceStyle</key>
-	<string>Light</string>
-    <key>CAPACITOR_DEBUG</key>
+	<key>CAPACITOR_DEBUG</key>
 	<string>$(CAPACITOR_DEBUG)</string>
 	<key>CFBundleDevelopmentRegion</key>
-	<string>en</string>
+	<string>es</string>
 	<key>CFBundleDisplayName</key>
-        <string>ContrataCR</string>
+	<string>ContrataCR</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>es</string>
+		<string>en</string>
+	</array>
 	<key>CFBundleName</key>
 	<string>$(PRODUCT_NAME)</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$(MARKETING_VERSION)</string>
-	<key>CFBundleVersion</key>
-	<string>$(CURRENT_PROJECT_VERSION)</string>
-	<!-- Google sign-in returns to the app through the reversed iOS client id. -->
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -39,16 +36,18 @@
 			</array>
 		</dict>
 	</array>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>ContrataCR usa la cámara para tomar fotos de tu perfil, de tus trabajos o de lo que necesitas reparar.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>ContrataCR usa las fotos que eliges para tu perfil, tus trabajos y tus publicaciones.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>ContrataCR usa tu ubicación solo cuando buscas cerca de ti, para mostrarte profesionales cercanos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>ContrataCR usa las fotos que eliges para tu perfil, tus trabajos y tus publicaciones.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -70,6 +69,8 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>UIUserInterfaceStyle</key>
+	<string>Light</string>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 </dict>
