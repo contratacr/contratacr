@@ -48,7 +48,7 @@
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>ContrataCR usa las fotos que eliges para tu perfil, tus trabajos y tus publicaciones.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>ContrataCR usa tu ubicación solo cuando tocas «Cerca de mí», para mostrarte profesionales cercanos.</string>
+	<string>ContrataCR usa tu ubicación solo cuando buscas cerca de ti, para mostrarte profesionales cercanos.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
