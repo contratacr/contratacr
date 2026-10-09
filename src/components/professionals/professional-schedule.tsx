@@ -461,7 +461,10 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
       {/* MOBILE (<lg) = SINGLE column: [info + location] then the contact
           buttons. DESKTOP (lg+) = a COMPACT HORIZONTAL card: the LEFT column (info +
           location) and the RIGHT rail (buttons, 292px) separated by a VERTICAL divider. */}
-      <div className="flex flex-col gap-3 lg:grid lg:grid-cols-[minmax(0,1fr)_292px] lg:gap-5">
+      {/* El riel de botones mide 292 px desde 1280; entre 1024 y 1279 (iPad)
+          baja a 216: con 292 fijos la tarjeta de ~550 px dejaba ~110 px para
+          el nombre y salía «Electr…» (9-oct-2026). */}
+      <div className="flex flex-col gap-3 lg:grid lg:grid-cols-[minmax(0,1fr)_216px] lg:gap-4 xl:grid-cols-[minmax(0,1fr)_292px] xl:gap-5">
         <div className="flex min-w-0 flex-col gap-2.5">
           {info}
           {locationControl}

@@ -4,8 +4,7 @@ import { useNativeApp } from "@/hooks/use-native-app";
 import { PantallaFija } from "@/components/util/pantalla-fija";
 import { Link } from "@/i18n/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
-import { Loader2, RefreshCw, SlidersHorizontal } from "lucide-react";
+import { Loader2, RefreshCw } from "lucide-react";
 import { GoogleMapPanel, type MapFocusTarget, type MapProfessional } from "@/components/maps/google-map-panel";
 import { APP_RESUME_EVENT } from "@/lib/app-events";
 
@@ -113,7 +112,6 @@ function snapIndex(value: number, points = mobileSheetSnapPoints()) {
  *  desktop it dissolves and the card column (`lg:order-2`) drops into the 3-column flex shell.
  */
 export function SearchResultsLayout({ children, filters, quickFilters, drawerFilters, countLabel, limpiar, mapData, apiKey, locale, numbering, mapFocusTarget = null, resetKey, sinResultados = false, hojaAbiertaAlInicio = false }: SearchResultsLayoutProps) {
-  const t = useTranslations("search");
   const [showFilters, setShowFilters] = useState(false); // full-filter drawer (mobile + lg-xl)
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
@@ -506,16 +504,10 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
     <>
     <PantallaFija />
     <div className="ccr-search-results-layout flex h-[calc(100dvh-var(--ccr-native-header-height,64px))] flex-col overflow-hidden bg-[#fafafa] lg:block lg:h-auto lg:overflow-visible lg:bg-transparent">
-      {/* Controls bar — "Filtros" drawer button ONLY at lg–xl (xl+ uses the sidebar). */}
-      <div className="hidden lg:flex xl:hidden sticky top-16 z-30 mb-4 items-center gap-2">
-        <button
-          type="button"
-          onClick={() => setShowFilters(true)}
-          className="inline-flex items-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white px-4 py-1.5 text-sm font-medium text-[#374151] shadow-sm"
-        >
-          <SlidersHorizontal className="h-4 w-4" /> {t("filters.title")}
-        </button>
-      </div>
+      {/* Sin botón «Filtros» flotante entre 1024 y 1279 (iPad): era del panel
+          lateral que ya no existe y quedaba ENCIMA de la primera tarjeta. Los
+          filtros están en la fila de pastillas, igual que de 1280 en adelante
+          (9-oct-2026). */}
 
       {/* Full-filter drawer (opened from the lg–xl button OR the mobile header "Filtros").
           The white "Filtros" card sits on a thin gray frame (`p-2.5`) and rises UP near the
