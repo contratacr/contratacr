@@ -128,6 +128,9 @@ requireMatch("iOS encryption declaration", infoPlist, /<key>ITSAppUsesNonExemptE
 requireMatch("iOS push entitlement", entitlements, /<key>aps-environment<\/key>\s*<string>production<\/string>/);
 requireMatch("iOS bundle id", projectFile, /PRODUCT_BUNDLE_IDENTIFIER = com\.contratacr\.app;/);
 requireMatch("iOS registration callback", appDelegate, /didRegisterForRemoteNotificationsWithDeviceToken[\s\S]*capacitorDidRegisterForRemoteNotifications/);
+// El token FCM se pide de nuevo cada vez que la app se registra: si solo se
+// esperaba el aviso de Firebase, desde el segundo arranque no llegaba nunca.
+requireMatch("iOS FCM token re-sent on every register", appDelegate, /didRegisterForRemoteNotificationsWithDeviceToken[\s\S]*Messaging\.messaging\(\)\.token \{[\s\S]*capacitorDidRegisterForRemoteNotifications/);
 requireMatch("iOS registration error callback", appDelegate, /didFailToRegisterForRemoteNotificationsWithError[\s\S]*capacitorDidFailToRegisterForRemoteNotifications/);
 if (/path:\s*"[^"]*\\/.test(packageSwift)) {
   failures.push("SwiftPM dependency paths contain Windows backslashes");

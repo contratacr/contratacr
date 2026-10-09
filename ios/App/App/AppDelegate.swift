@@ -72,6 +72,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate, MessagingDelegate {
         //
         // Con esto Firebase lo canjea, y abajo devolvemos el token FCM.
         Messaging.messaging().apnsToken = deviceToken
+        // Y SE PIDE EL TOKEN FCM AQUÍ, CADA VEZ (9-oct-2026). Firebase avisa
+        // por `didReceiveRegistrationToken` al arrancar la app —antes de que el
+        // JavaScript esté escuchando— y después solo si el token cambia. Así,
+        // desde el segundo arranque el token nunca llegaba al servidor y
+        // ningún iPhone real quedó registrado. Esta llamada llega después de
+        // `PushNotifications.register()`, con el JavaScript ya escuchando.
+        Messaging.messaging().token { token, _ in
+            guard let token else { return }
+            NotificationCenter.default.post(name: .capacitorDidRegisterForRemoteNotifications, object: token)
+        }
     }
 
     // El plugin de Capacitor acepta el token como texto además de como `Data`
