@@ -4,6 +4,8 @@ import { Fragment, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ChevronRight, ListChecks } from "lucide-react";
 import { serviceSupportsProfessionalCredential } from "@/lib/professional-credentials";
+import { enlacePerfil } from "@/lib/profile-url";
+import { WhatsAppLogo } from "@/components/ui/whatsapp-logo";
 import { countCases } from "@/lib/services";
 
 type ProRecord = Record<string, unknown>;
@@ -72,11 +74,20 @@ export function computeCompletion(pro: ProRecord): {
   const services = activeServices(pro.services);
   const hasSelectedServices = services.length > 0;
   const hasServiceDescription = services.some((service) => hasText(service.description));
+  // Un «desde ₡» de verdad: «a convenir» ya no cuenta (9-oct-2026). Medido el
+  // 8-oct: 21 de 313 perfiles tenían un precio, porque la casilla «a convenir»
+  // daba el paso por hecho, y el panel pedía el precio en una tarjeta aparte
+  // mientras la lista decía que estaba listo.
   const hasServicePrice = services.some((service) =>
-    service.priceType === "a_convenir" ||
-    (typeof service.priceAmount === "number" && service.priceAmount > 0) ||
-    hasText(service.price)
+    service.priceType !== "a_convenir" && (
+      (typeof service.priceAmount === "number" && service.priceAmount > 0) ||
+      hasText(service.price)
+    )
   );
+  // La primera reseña es lo que más sube los mensajes (Thumbtack: ~70 %). No es
+  // un dato del perfil sino algo que se pide a los clientes; por eso su paso
+  // abre WhatsApp con el mensaje listo en vez de una sección del panel.
+  const hasReviews = Number(pro.review_count ?? 0) > 0;
   const hasServiceExperience = services.some((service) =>
     (typeof service.startedAt === "string" && /^\d{4}-\d{2}$/.test(service.startedAt)) ||
     (typeof service.years === "number" && service.years > 0) ||
@@ -107,6 +118,7 @@ export function computeCompletion(pro: ProRecord): {
     { key: "photo", done: hasProfilePhoto, tab: "profile" },
     { key: "whatsapp", done: hasText(pro.whatsapp), tab: "profile" },
     { key: "services", done: hasSelectedServices, tab: "services" },
+    { key: "reviews", done: hasReviews, tab: "reviews" },
     { key: "servicePrice", done: hasServicePrice, tab: "services" },
     { key: "serviceDescription", done: hasServiceDescription, tab: "services" },
     { key: "serviceExperience", done: hasServiceExperience, tab: "services" },
@@ -136,12 +148,15 @@ export function computeCompletion(pro: ProRecord): {
   return { percent, items, verified: pro.verification_status === "verified" };
 }
 
+const botonDelPaso = "mt-2.5 inline-flex h-9 items-center gap-1.5 rounded-full bg-[#009FD9] px-4 text-[13px] font-bold text-white transition hover:bg-[#0089bb]";
+
 // Which benefit line each step shows (existing i18n copies).
 const STEP_HINTS: Record<string, string> = {
   photo: "photoBenefit",
   whatsapp: "whatsappBenefit",
   services: "servicesBenefit",
   // Una ayuda propia por paso: las tres repetían «Agrega precio y experiencia».
+  reviews: "reviewsBenefit",
   servicePrice: "servicePriceBenefit",
   serviceDescription: "serviceDescriptionBenefit",
   serviceExperience: "serviceExperienceBenefit",
@@ -164,7 +179,18 @@ export function ProfileCompletion({
   onComplete?: () => void;
 }) {
   const t = useTranslations("proPanel.completion");
+  const tKit = useTranslations("shareKit");
   const { percent, items } = computeCompletion(pro);
+  const slug = typeof pro.slug === "string" ? pro.slug.trim() : "";
+  // El paso de reseñas no lleva a una sección: abre WhatsApp con el mensaje y
+  // el enlace a la pestaña de reseñas de la ficha.
+  const enlaceResenas = slug
+    ? `https://wa.me/?text=${encodeURIComponent(tKit("reviewsMessage", { url: `${enlacePerfil(slug)}?tab=resenas` }))}`
+    : null;
+  const irAlPaso = (item: CompletionItem) => {
+    if (item.key === "reviews" && enlaceResenas) window.open(enlaceResenas, "_blank", "noopener,noreferrer");
+    else onGo(item.tab, item.key);
+  };
   const proId = typeof pro.id === "string" ? pro.id : "profile";
   const storageKey = `contratacr_completion_dismissed_${proId}`;
   const ignoredStorageKey = `contratacr_completion_ignored_${proId}`;
@@ -187,7 +213,7 @@ export function ProfileCompletion({
   });
 
   const ignoredSet = new Set(ignored);
-  const missing = items.filter((item) => !item.done && !ignoredSet.has(item.key));
+  const missing = items.filter((item) => !item.done && !ignoredSet.has(item.key) && (item.key !== "reviews" || enlaceResenas));
   const optionalMissing = missing.filter((item) => item.optional);
   const profileComplete = missing.length === 0;
   const checklistHidden = dismissed || missing.length === 0;
@@ -213,8 +239,13 @@ export function ProfileCompletion({
   }
 
   if (variant === "header") {
-    // Franja integrada al pie de la tarjeta de identidad: barra fina + pasos.
+    // Franja integrada al pie de la tarjeta de identidad: barra fina + pasos y,
+    // debajo, SOLO el siguiente paso con su botón directo. Antes iban dos
+    // tarjetas fijas («Pide reseñas», «Agrega precio») fuera de la lista y
+    // el contador no las contaba (9-oct-2026).
+    const siguiente = missing[0];
     return (
+      <>
       <button
         type="button"
         onClick={openSteps}
@@ -230,6 +261,25 @@ export function ProfileCompletion({
           <ChevronRight className="h-4 w-4 shrink-0 text-[#8aa0b4]" />
         </span>
       </button>
+      {siguiente && (
+        <div className="mt-3 rounded-2xl border border-[#e5e7eb] bg-white p-4" data-siguiente-paso={siguiente.key}>
+          <p className="text-[11px] font-bold uppercase tracking-[0.06em] text-[#68778d]">{t("nextStep")}</p>
+          <p className="mt-1 text-[15px] font-bold text-[#162543]">{t(siguiente.key)}</p>
+          {STEP_HINTS[siguiente.key] && (
+            <p className="mt-0.5 text-[13px] leading-5 text-[#4b5b70]">{t(STEP_HINTS[siguiente.key])}</p>
+          )}
+          {siguiente.key === "reviews" && enlaceResenas ? (
+            <a href={enlaceResenas} target="_blank" rel="noopener noreferrer" className={botonDelPaso}>
+              <WhatsAppLogo className="h-4 w-4" /> {t("reviewsAction")}
+            </a>
+          ) : (
+            <button type="button" onClick={() => irAlPaso(siguiente)} className={botonDelPaso}>
+              {t("completeAction")}
+            </button>
+          )}
+        </div>
+      )}
+      </>
     );
   }
 
@@ -313,7 +363,7 @@ export function ProfileCompletion({
       <div className="w-full">
         <button
           type="button"
-          onClick={() => onGo(next.tab, next.key)}
+          onClick={() => irAlPaso(next)}
           className="group block w-full rounded-xl text-left transition-colors hover:bg-[#f8fbfd]"
         >
           <div className="flex items-center justify-between gap-4">
@@ -349,7 +399,7 @@ export function ProfileCompletion({
             >
               <button
                 type="button"
-                onClick={() => onGo(item.tab, item.key)}
+                onClick={() => irAlPaso(item)}
                 className="flex min-w-0 flex-1 items-center gap-3.5 rounded-xl px-0 py-2 text-left transition-colors hover:bg-[#f8fbfd]"
               >
                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#eef9fd] text-[#009FD9]">

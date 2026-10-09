@@ -1041,7 +1041,7 @@
       "insurers": "List your insurers",
       "insurersBenefit": "Patients filter by their insurance: showing up there brings more appointments.",
       "serviceDescription": "Describe a service",
-      "servicePrice": "Add a price or 'ask for price'",
+      "servicePrice": "Add a starting price",
       "serviceExperience": "Add when you started",
       "languages": "Add languages",
       "publicLinks": "Add public links",
@@ -1060,9 +1060,12 @@
       "groupOptional": "Stand out",
       "viewSteps": "View steps",
       "optionalGroup": "Optional",
-      "servicePriceBenefit": "A reference price makes more clients message you.",
+      "servicePriceBenefit": "Clients write more when they see a “from ₡” price. You still agree the final price with each client.",
       "serviceDescriptionBenefit": "Explain what each service includes.",
-      "serviceExperienceBenefit": "Years of experience build trust."
+      "serviceExperienceBenefit": "Years of experience build trust.",
+      "reviews": "Ask for your first reviews",
+      "reviewsBenefit": "Profiles with at least one review get many more messages. Send the link to 3 clients you have already worked with.",
+      "reviewsAction": "Ask on WhatsApp"
     },
     "offerGateTitle": "Start offering your services as a professional",
     "offerGateBody": "On ContrataCR, anyone who offers a service is a professional: a trade, caregiving, a class or a profession. Complete your profile once and start receiving clients.",

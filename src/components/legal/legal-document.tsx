@@ -163,10 +163,6 @@ export async function LegalDocument({ title, updated, intro, summary, sections, 
               {footer}
             </div>
 
-            <a href="#top" className="mx-auto text-sm font-semibold text-[#0089BB] hover:underline">
-              {en ? "Back to top" : "Volver arriba"}
-            </a>
-
             <p className="text-center text-sm italic text-[#68778d]">
               ContrataCR - {en ? "Offer and find services in Costa Rica." : "Ofrece y encuentra servicios en Costa Rica."}
             </p>
