@@ -78,7 +78,10 @@ test.describe("@contract product safety contracts", () => {
       const esHref = notificationHref({ type, data: { project_id: "project-e2e" } }, undefined, "es");
       const enHref = notificationHref({ type }, undefined, "en");
       for (const [locale, href] of [["es", esHref], ["en", enHref]] as const) {
-        expect(href, `${type} should stay inside the ${locale} app`).toMatch(new RegExp(`^/${locale}/`));
+        // El español va sin prefijo (desde el 28-sep); «/es/…» respondía 308 y
+        // cada toque en un aviso hacía un viaje de más.
+        if (locale === "en") expect(href, `${type} should stay inside the en app`).toMatch(/^\/en\//);
+        else expect(href, `${type} should open without the /es redirect`).toMatch(/^\/(?!es\/|en\/)/);
         expect(href, `${type} must not reopen the retired client dashboard`).not.toContain("/dashboard/cliente");
 
         const target = new URL(href, "https://test.contratacr.com");

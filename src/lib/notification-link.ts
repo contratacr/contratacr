@@ -72,7 +72,9 @@ function withLocale(link: string, locale: string): string {
   if (link.startsWith("/es/") || link.startsWith("/en/")) {
     return link.replace(/^\/(es|en)\//, safeLocale === "en" ? "/en/" : "/");
   }
-  if (link.startsWith("/")) return `/${safeLocale}${link}`;
+  // El español va SIN prefijo: «/es/…» respondía 308 y cada toque en una
+  // notificación hacía un viaje de más (9-oct-2026).
+  if (link.startsWith("/")) return safeLocale === "en" ? `/en${link}` : link;
   return link;
 }
 
@@ -93,7 +95,8 @@ export function notificationHref(n: NotificationLinkInput, _role?: string, local
   let href: string;
   switch (n.type) {
     case "new_job":
-      href = "/empleos";
+      // Abre ESA vacante, no la lista: el aviso dice «Abre el empleo».
+      href = n.data?.job_id ? `/empleos?job=${encodeURIComponent(String(n.data.job_id))}` : "/empleos";
       break;
 
     case "new_project":
