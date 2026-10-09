@@ -154,7 +154,7 @@
     },
     "trust": {
       "cedula": {
-        "title": "Cédula verificada",
+        "title": "Identificación verificada",
         "desc": "Revisamos que la cédula de cada profesional exista en el padrón del TSE, y su nombre sale de ahí."
       },
       "reviews": {
@@ -284,7 +284,7 @@
     "saveLabel": "Guardar",
     "savedLabel": "Guardado",
     "verified": "Verificado",
-    "verifiedTitle": "Cédula verificada por ContrataCR",
+    "verifiedTitle": "Identificación verificada por ContrataCR",
     "unverified": "Sin verificar",
     "unverifiedTitle": "Identidad sin verificar",
     "rate": "Tarifa",
@@ -526,7 +526,7 @@
     "searchProfessionals": "Buscar profesionales",
     "previewNote": "Estás viendo tu perfil como lo ven los clientes.",
     "backToPanel": "Volver a mi panel",
-    "identityVerified": "Cédula verificada",
+    "identityVerified": "Identificación verificada",
     "reviewCountLabel": "{count, plural, one {# reseña} other {# reseñas}}",
     "statYears": "años de exp.",
     "from": "Desde",
@@ -582,7 +582,8 @@
     "noRespondioTexto": "Publica lo que necesitas y te escriben varios.",
     "noRespondioBoton": "Publicar",
     "cerrar": "Cerrar",
-    "cedulaVerificada": "Cédula verificada"
+    "cedulaVerificada": "Identificación verificada",
+    "verificadoCorto": "Verificado"
   },
   "auth": {
     "login": {
@@ -898,7 +899,7 @@
     "back": "Volver",
     "backToPanel": "Volver al panel",
     "signOut": "Salir",
-    "identityVerified": "Cédula verificada",
+    "identityVerified": "Identificación verificada",
     "tabs": {
       "home": "Panel",
       "profile": "Mi perfil",
@@ -2079,13 +2080,12 @@
     "editSaving": "Guardando…",
     "destinatarios": "{n, plural, one {# profesional de este servicio recibirá tu proyecto} other {# profesionales de este servicio recibirán tu proyecto}}",
     "borradorListo": "Quedó guardado. Revísalo y toca Publicar.",
-    "cedulaAyuda": "Si la agregas, tu proyecto sale con «Cédula verificada» y los profesionales te responden con más confianza. El número no se muestra.",
-    "cedulaYaVerificada": "Cédula verificada",
-    "cedulaYaVerificadaAyuda": "Tu proyecto sale con «Cédula verificada». El número no se muestra.",
-    "identidadVerificada": "Tu proyecto salió con «Cédula verificada».",
-    "identidadNoEncontrada": "No encontramos esa cédula en el padrón, así que tu proyecto se publicó sin «Cédula verificada».",
-    "identidadPadronCaido": "No pudimos consultar el padrón en este momento: tu proyecto se publicó sin «Cédula verificada». Puedes agregarla en tu próximo proyecto.",
-    "identidadEnRevision": "Vamos a revisar tu identificación; mientras tanto tu proyecto sale sin «Cédula verificada»."
+    "cedulaYaVerificada": "Identificación verificada",
+    "cedulaYaVerificadaAyuda": "Tu proyecto sale con «Verificado». El número no se muestra.",
+    "identidadVerificada": "Tu proyecto salió con «Verificado».",
+    "identidadNoEncontrada": "No encontramos esa cédula en el padrón, así que tu proyecto se publicó sin «Verificado».",
+    "identidadPadronCaido": "No pudimos consultar el padrón en este momento: tu proyecto se publicó sin «Verificado». Puedes agregarla en tu próximo proyecto.",
+    "identidadEnRevision": "Vamos a revisar tu identificación; mientras tanto tu proyecto sale sin «Verificado»."
   },
   "notifications": {
     "title": "Notificaciones",
@@ -2349,7 +2349,7 @@
     "clientStep0Title": "Escribe lo que necesitas",
     "clientStep0Body": "Puedes buscar por servicio, provincia, cantón o frases como “necesito limpiar mi casa”.",
     "clientStep1Title": "Compara perfiles",
-    "clientStep1Body": "Revisa la cédula verificada, casos de éxito, reseñas, precios de referencia y zonas de trabajo.",
+    "clientStep1Body": "Revisa la identificación verificada, casos de éxito, reseñas, precios de referencia y zonas de trabajo.",
     "clientStep2Title": "Contacta al profesional",
     "clientStep2Body": "Le escribes por WhatsApp, lo llamas o le mandas un mensaje dentro de ContrataCR. Cada ficha muestra las vías que el profesional dejó abiertas.",
     "clientPathCta": "Ver profesionales",
@@ -2387,7 +2387,7 @@
     "proStep1Body": "Publica casos de éxito con fotos, completa tus lugares de trabajo y verifica tu identidad para generar más confianza.",
     "proStep2Title": "Responde proyectos y cotiza",
     "proStep2Body": "Ves los proyectos que publican los clientes, les escribes por WhatsApp, envías cotizaciones y publicas empleos o promociones desde tu panel.",
-    "proBenefit0Title": "Cédula verificada",
+    "proBenefit0Title": "Identificación verificada",
     "proBenefit0Body": "El sello muestra que la cédula de tu perfil existe en el padrón del TSE y que tu nombre sale de ahí.",
     "proBenefit1Title": "Casos de éxito",
     "proBenefit1Body": "Muestra fotos de tus casos de éxito para que tu perfil no sea solo texto y el cliente entienda tu calidad.",
@@ -2974,7 +2974,7 @@
     "noClientName": "Sin nombre",
     "publicMetaTitle": "Cotización de {name}",
     "publicFrom": "Cotización de",
-    "publicIdentityVerified": "Cédula verificada",
+    "publicIdentityVerified": "Identificación verificada",
     "publicExpiredTitle": "Esta cotización ya venció",
     "publicExpiredBody": "Escríbele a {name} para que te mande una nueva.",
     "publicWhatsApp": "WhatsApp",
@@ -3244,8 +3244,8 @@
     "ok": "Entendido"
   },
   "avisoSinVerificar": {
-    "empleo": "Tu empleo va a salir sin «Cédula verificada». Con la cédula verificada, quien busca trabajo confía más en la oferta.",
-    "promocion": "Tu promoción va a salir sin «Cédula verificada». Con la cédula verificada, los clientes confían más en la oferta.",
+    "empleo": "Tu empleo va a salir sin «Verificado». Con la identificación verificada, quien busca trabajo confía más en la oferta.",
+    "promocion": "Tu promoción va a salir sin «Verificado». Con la identificación verificada, los clientes confían más en la oferta.",
     "accion": "Verificar mi cédula"
   }
 }
