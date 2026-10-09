@@ -106,6 +106,8 @@ requireMatch(
 requireMatch("Android single-task launch mode", manifest, /android:launchMode="singleTask"/);
 requireMatch("iOS camera disclosure", infoPlist, /<key>NSCameraUsageDescription<\/key>/);
 requireMatch("iOS photo disclosure", infoPlist, /<key>NSPhotoLibraryUsageDescription<\/key>/);
+// «Cerca de mí» usa navigator.geolocation: sin esta clave el WKWebView no puede pedir la ubicación.
+requireMatch("iOS location disclosure", infoPlist, /<key>NSLocationWhenInUseUsageDescription<\/key>/);
 requireMatch("iOS encryption declaration", infoPlist, /<key>ITSAppUsesNonExemptEncryption<\/key>\s*<false\/>/);
 requireMatch("iOS push entitlement", entitlements, /<key>aps-environment<\/key>\s*<string>production<\/string>/);
 requireMatch("iOS bundle id", projectFile, /PRODUCT_BUNDLE_IDENTIFIER = com\.contratacr\.app;/);

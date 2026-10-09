@@ -44,9 +44,11 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSCameraUsageDescription</key>
-	<string>ContrataCR usa la camara para adjuntar imagenes en conversaciones.</string>
+	<string>ContrataCR usa la cámara para tomar fotos de tu perfil, de tus trabajos o de lo que necesitas reparar.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>ContrataCR usa tus fotos seleccionadas para adjuntarlas en conversaciones.</string>
+	<string>ContrataCR usa las fotos que eliges para tu perfil, tus trabajos y tus publicaciones.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>ContrataCR usa tu ubicación solo cuando tocas «Cerca de mí», para mostrarte profesionales cercanos.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

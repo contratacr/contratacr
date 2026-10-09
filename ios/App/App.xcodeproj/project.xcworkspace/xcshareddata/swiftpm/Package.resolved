@@ -1,5 +1,5 @@
 {
-  "originHash" : "2c4b36843a93403ffd5513c0f07a3010d424770de1bab1cce52e681fb58842b4",
+  "originHash" : "a8c2c3bbb98c6e1aef8b8d171efeb6cae8ffb4afde4fff17e683d0f1f0879a97",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -42,8 +42,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ionic-team/capacitor-swift-pm.git",
       "state" : {
-        "revision" : "9b9fb0af76b2b653f6e9b999f658adc132b9ab4c",
-        "version" : "8.4.2"
+        "revision" : "0b6882e9a3288342aacf36348e5a94e4f1dd7b13",
+        "version" : "8.5.2"
       }
     },
     {
