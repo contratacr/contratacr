@@ -493,14 +493,14 @@ function StaticNativeFirstRunPrepaint() {
             Contrata<span>CR</span>
           </span>
         </div>
-        <p>Elige como quieres comenzar</p>
+        <p>¿Cómo quieres empezar?</p>
         <div className="ccr-native-first-run-prepaint-actions">
           <span>Buscar servicios</span>
           <span>Ofrecer servicios</span>
         </div>
         <div className="ccr-native-first-run-prepaint-cta">Registrarme</div>
         <div className="ccr-native-first-run-prepaint-login">
-          Ya tienes una cuenta? <span>Inicia sesion</span>
+          ¿Ya tienes una cuenta? <span>Inicia sesión</span>
         </div>
       </div>
     </div>

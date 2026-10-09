@@ -52,9 +52,12 @@ export function WelcomeAccessScreen({
     return () => window.clearTimeout(timeout);
   }, [heroReady]);
 
+  // Cambiar de rol NO vuelve a poner el fondo transparente: las dos fotos ya
+  // están montadas y cruzan opacidad. Antes se reiniciaba heroReady y, durante
+  // el cruce, se veía por detrás la pantalla de espera del arranque con su
+  // propio logo y título (9-oct-2026).
   const elegirRol = (role: WelcomeRole) => {
     if (role === selectedRole) return;
-    setHeroReady(false);
     onSelectRole(role);
   };
 
