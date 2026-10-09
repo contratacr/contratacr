@@ -48,9 +48,9 @@ const PLANTILLAS = [
     id: "resenas",
     nombre: "Profesionales sin reseñas",
     subject: "Una reseña cambia cuántos clientes te escriben",
-    body: "Los clientes que entran a ContrataCR escriben primero a los perfiles que tienen reseñas. Hoy el tuyo todavía no tiene ninguna.\n\nLo más rápido es pedírsela a 2 o 3 clientes con los que ya trabajaste. En tu panel está el botón «Pedir por WhatsApp» con el mensaje listo y el enlace a tu perfil: solo eliges a quién mandárselo.\n\nToma un minuto y la reseña queda en tu perfil.",
+    body: "Los clientes que entran a ContrataCR escriben primero a los perfiles que tienen reseñas. Hoy el tuyo todavía no tiene ninguna.\n\nLo más rápido es pedírsela a 2 o 3 clientes con los que ya trabajaste. En tu panel, en los pasos de tu perfil, está «Pide tus primeras reseñas»: abre WhatsApp con el mensaje listo y el enlace a tu perfil, solo eliges a quién mandárselo.\n\nToma un minuto y la reseña queda en tu perfil.",
     ctaLabel: "Pedir mis reseñas",
-    ctaPath: "/dashboard/profesional",
+    ctaPath: "/dashboard/profesional?mode=offer&tab=completion",
     audiencia: "pros_sin_resenas",
   },
   {
@@ -59,7 +59,7 @@ const PLANTILLAS = [
     subject: "Los perfiles con precio de referencia reciben más mensajes",
     body: "Cuando un cliente ve «desde ₡15.000» en un perfil, se anima más a escribir: ya sabe que está dentro de su presupuesto. Hoy tus servicios dicen «a convenir» o no muestran precio.\n\nNo tienes que fijar un precio exacto: pon el mínimo con el que normalmente arrancas. El precio final lo sigues acordando con cada cliente.\n\nSe cambia en tu panel, en Servicios, en menos de un minuto.",
     ctaLabel: "Agregar mi precio",
-    ctaPath: "/dashboard/profesional",
+    ctaPath: "/dashboard/profesional?mode=offer&tab=completion",
     audiencia: "pros_sin_precio",
   },
 ];
