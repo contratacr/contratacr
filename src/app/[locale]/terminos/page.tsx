@@ -92,7 +92,7 @@ const ES_SECTIONS: LegalSection[] = [
       { k: "p", text: "ContrataCR puede aplicar controles automáticos, límites, bloqueo de archivos y revisión asociada a reportes o seguridad. No supervisamos de forma permanente todas las conversaciones." },
       { k: "p", text: "Un mensaje propio puede editarse o eliminarse para todos durante los 15 minutos siguientes a su envío; después solo puede ocultarse para usted. La conversación puede mostrar si un mensaje fue enviado, recibido o visto; los avisos de «Visto» son recíprocos y pueden desactivarse en Privacidad." },
       { k: "p", text: "Cuando el contacto ocurre fuera de la Plataforma —por WhatsApp, llamada u otro medio— esa comunicación queda fuera del control de ContrataCR." },
-      { k: "p", text: "Si activa notificaciones, podemos enviar avisos sobre mensajes, proyectos, cotizaciones, reseñas, seguridad y actividad de su cuenta. Puede desactivarlas desde el sistema operativo, aunque ciertos correos esenciales de cuenta o seguridad seguirán enviándose." },
+      { k: "p", text: "Si activa notificaciones, podemos enviar avisos sobre mensajes, proyectos y empleos de su servicio, reseñas, soporte, seguridad y actividad de su cuenta. Puede desactivarlas desde el sistema operativo, aunque ciertos correos esenciales de cuenta o seguridad seguirán enviándose." },
       { k: "p", text: "También podemos enviarle por correo novedades ocasionales sobre ContrataCR. Puede pedir la baja respondiendo a cualquiera de esos correos." },
     ],
   },
