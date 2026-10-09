@@ -9,9 +9,9 @@ import { cn } from "@/lib/utils";
 export const CEDULA_COMPACTA = "shrink-0 whitespace-nowrap text-[12px] font-semibold leading-none text-[#4b5b70]";
 
 /**
- * «✓ Identificación verificada» en fichas y panel, «✓ Verificado» en listas
- * (9-oct-2026; antes «Cédula verificada»: la verificación manual también
- * cubre DIMEX y pasaporte). La MISMA línea en todo el app (8-oct-2026): ficha,
+ * «✓ Verificado» en todo el app (9-oct-2026, Isaac; antes «Cédula verificada»,
+ * que además no era exacto: la verificación manual también cubre DIMEX y
+ * pasaporte). Términos y Privacidad explican que se comprueba la cédula. La MISMA línea en todo el app (8-oct-2026): ficha,
  * panel, tarjetas de /profesionales, empleos y promociones. Va en su propia
  * línea debajo del nombre y solo cuando la cédula está verificada; sin
  * verificar no se pinta nada. Antes cada pantalla tenía su versión (12,5 o

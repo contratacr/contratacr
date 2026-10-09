@@ -1,7 +1,8 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { MessageCircle, Star, Tag } from "lucide-react";
+import { Star, Tag } from "lucide-react";
+import { WhatsAppLogo } from "@/components/ui/whatsapp-logo";
 
 /**
  * DOS COSAS QUE MÁS HACEN QUE UN CLIENTE ESCRIBA (8-oct-2026).
@@ -63,7 +64,7 @@ export function ConsejosParaClientes({
                 : "Los perfiles con al menos una reseña reciben muchos más mensajes. Mándale esto a 3 clientes con los que ya trabajaste."}
             </p>
             <a href={`https://wa.me/?text=${encodeURIComponent(mensaje)}`} target="_blank" rel="noopener noreferrer" className={boton}>
-              <MessageCircle className="h-4 w-4" /> {en ? "Ask on WhatsApp" : "Pedir por WhatsApp"}
+              <WhatsAppLogo className="h-4 w-4" /> {en ? "Ask on WhatsApp" : "Pedir por WhatsApp"}
             </a>
           </div>
         </div>
