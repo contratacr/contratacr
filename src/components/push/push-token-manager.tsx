@@ -88,8 +88,6 @@ function askStateKey(userId: string) {
 function deniedExplainedKey(userId: string) {
   return `ccr:push-denied-explained:v1:${userId}`;
 }
-const LAUNCHES_KEY = "ccr:push-launches:v1";
-const LAUNCH_SESSION_KEY = "ccr:push-launch-counted:v1";
 const MAX_ASKS = 3;
 const DAYS_BETWEEN_ASKS = 7;
 
@@ -116,23 +114,6 @@ function canAskAgain(userId: string) {
 function markAsked(userId: string) {
   const { veces } = readAskState(userId);
   window.localStorage.setItem(askStateKey(userId), JSON.stringify({ veces: veces + 1, ultima: Date.now() }));
-}
-
-// Arranques de la app en esta instalación (uno por sesión del WebView). La
-// pregunta "sin motivo" espera al segundo arranque: en el primero la persona
-// acaba de entrar y todavía no tiene nada que esperar.
-function countLaunch() {
-  try {
-    if (window.sessionStorage.getItem(LAUNCH_SESSION_KEY) === "1") return;
-    window.sessionStorage.setItem(LAUNCH_SESSION_KEY, "1");
-    const n = Number(window.localStorage.getItem(LAUNCHES_KEY)) || 0;
-    window.localStorage.setItem(LAUNCHES_KEY, String(n + 1));
-  } catch {
-    // sin almacenamiento no hay conteo; se trata como primer arranque
-  }
-}
-function launches() {
-  return Number(window.localStorage.getItem(LAUNCHES_KEY)) || 0;
 }
 
 type Motivo = MotivoDeAviso | "panel";
@@ -316,8 +297,8 @@ export function PushTokenManager() {
     setPantalla({ motivo, modo });
   }, [user]);
 
-  // Momentos de alta intención: la pantalla que acaba de mandar el mensaje, la
-  // propuesta, la postulación o la cotización avisa, y aquí se decide
+  // Momento de alta intención: la pantalla que acaba de mandar el mensaje
+  // avisa, y aquí se decide
   // si toca preguntar. Se espera un poco para que se vea primero el "enviado".
   useEffect(() => {
     if (loading || !user || !isNativeMobile()) return;
@@ -357,16 +338,21 @@ export function PushTokenManager() {
     }
 
     if (!isNativeMobile()) return;
-    countLaunch();
     if (!canShowPermissionPrompt(pathname)) return;
 
     // EL TURNO SE PIDE ANTES DE PREGUNTAR NADA. Consultar el permiso es
     // asíncrono, y para cuando responde la tarjeta de «¿Contactaste a…?» ya
     // decidió salir: por eso al entrar por primera vez se asomaba medio segundo
     // y enseguida la tapaba esta hoja. Se reserva de una vez con lo que se sabe
-    // sin esperar —app nativa, en el panel, segundo arranque— y se suelta abajo
+    // sin esperar —app nativa, en el panel— y se suelta abajo
     // en cuanto se descubre que no hay nada que preguntar.
-    const puedePreguntar = isPanelPath(pathname) && launches() >= 2 && canAskAgain(user.id);
+    // Desde la PRIMERA vez en el panel, que es a donde se llega al crear la
+    // cuenta o al entrar (9-oct-2026, Isaac). Antes se esperaba al segundo
+    // arranque, y un profesional nuevo pasaba su primer día sin avisos de
+    // proyectos. Sigue siendo nuestra hoja primero: el aviso del sistema solo
+    // sale si la persona toca «Activar», así no se gasta la única pregunta
+    // que iOS deja hacer.
+    const puedePreguntar = isPanelPath(pathname) && canAskAgain(user.id);
     if (puedePreguntar) tomarElTurno();
 
     let cancelled = false;
@@ -384,8 +370,8 @@ export function PushTokenManager() {
         }
         window.localStorage.removeItem(grantedKey);
         if (permissions.receive === "denied") { soltarElTurno(); return; }
-        // Pregunta de respaldo, sin acción de por medio: en el panel, a partir
-        // del segundo arranque, y respetando los mismos límites de frecuencia.
+        // Pregunta de respaldo, sin acción de por medio: en el panel,
+        // respetando los mismos límites de frecuencia.
         if (!puedePreguntar) { soltarElTurno(); return; }
         promptTimerRef.current = setTimeout(() => {
           if (cancelled) return;
@@ -466,9 +452,9 @@ export function PushTokenManager() {
   // La tarjeta de adelante muestra el aviso que la persona está esperando
   // ahora mismo; las de atrás, lo demás que llega por ahí.
   const frente = { titulo: t(`card.${motivo}.title`), texto: t(`card.${motivo}.body`) };
-  const detras = motivo === "mensaje" || motivo === "panel"
-    ? [{ titulo: t("card.cotizacion.title"), texto: t("card.cotizacion.body") }, { titulo: t("card.resena.title"), texto: t("card.resena.body") }]
-    : [{ titulo: t("card.mensaje.title"), texto: t("card.mensaje.body") }, { titulo: t("card.resena.title"), texto: t("card.resena.body") }];
+  // Detrás, lo otro que de verdad llega por aviso: proyectos de su servicio y
+  // reseñas. Nada de cotizaciones ni propuestas: eso no avisa.
+  const detras = [{ titulo: t("card.proyecto.title"), texto: t("card.proyecto.body") }, { titulo: t("card.resena.title"), texto: t("card.resena.body") }];
   const tarjetas = [detras[1], detras[0], frente];
 
   return createPortal(
@@ -522,7 +508,7 @@ export function PushTokenManager() {
           <ul className="mx-auto mt-4 flex max-w-[21rem] flex-col gap-2">
             {[
               { Icono: MessageCircle, texto: t("reason.messages") },
-              { Icono: FileText, texto: t("reason.bookings") },
+              { Icono: FileText, texto: t("reason.projects") },
               { Icono: Star, texto: t("reason.reviews") },
             ].map(({ Icono, texto }) => (
               <li key={texto} className="flex items-center gap-2.5 text-[13.5px] font-medium text-[#334155]">

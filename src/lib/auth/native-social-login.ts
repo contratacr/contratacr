@@ -100,6 +100,20 @@ export async function nativeSocialSignIn(
   const nonce = randomNonce();
   const hashedNonce = await sha256Hex(nonce);
 
+  // GOOGLE REUSA EL TOKEN ANTERIOR. Si en este teléfono ya se entró con Google,
+  // el plugin de iOS «restaura» esa sesión y devuelve el token VIEJO, firmado
+  // con el nonce de aquella vez: Supabase lo rechaza con «Nonces mismatch»
+  // (Isaac, 9-oct-2026, al entrar, salir y volver a entrar). Cerrando antes la
+  // sesión del plugin, Google firma un token nuevo con este nonce. Apple pide
+  // siempre uno nuevo y no lo necesita.
+  if (provider === "google") {
+    try {
+      await SocialLogin.logout({ provider: "google" });
+    } catch {
+      // Sin sesión previa no hay nada que cerrar.
+    }
+  }
+
   let idToken: string | null | undefined;
   try {
     const response = provider === "apple"

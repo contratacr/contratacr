@@ -3050,34 +3050,19 @@
   "pushPrompt": {
     "now": "now",
     "title": {
-      "mensaje": "We'll tell you when they reply",
-      "propuesta": "We'll tell you if you're chosen",
-      "postulacion": "We'll tell you when they review your application",
-      "cotizacion": "We'll tell you when they answer your quote",
-      "panel": "Know the moment it happens"
+      "mensaje": "We’ll let you know when they reply",
+      "panel": "Know right away"
     },
-    "body": "Only what's yours: messages, projects, quotes and reviews. Nothing else.",
+    "body": "Only what matters to you: new messages, projects and jobs in your service, and reviews. No ads.",
     "reason": {
-      "messages": "Messages the moment they write",
-      "bookings": "New projects and quotes",
-      "reviews": "Reviews and account notices"
+      "messages": "Messages as soon as they write",
+      "projects": "New projects and jobs in your service",
+      "reviews": "Reviews and account updates"
     },
     "card": {
       "mensaje": {
         "title": "New message from Carolina",
         "body": "Can you come Thursday morning?"
-      },
-      "propuesta": {
-        "title": "You were chosen!",
-        "body": "María picked your proposal for her project"
-      },
-      "postulacion": {
-        "title": "Your application was reviewed",
-        "body": "The company wants to talk to you"
-      },
-      "cotizacion": {
-        "title": "Quote accepted",
-        "body": "Carlos accepted your quote"
       },
       "panel": {
         "title": "New message from Carolina",
@@ -3086,6 +3071,10 @@
       "resena": {
         "title": "New review ★★★★★",
         "body": "“On time and great work”"
+      },
+      "proyecto": {
+        "title": "New project: Electrical",
+        "body": "Andrea needs an electrician in Heredia"
       }
     },
     "activate": "Turn on notifications",
