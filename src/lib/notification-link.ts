@@ -113,6 +113,9 @@ export function notificationHref(n: NotificationLinkInput, _role?: string, local
       break;
 
     case "completa_perfil":
+    case "pide_resenas":
+    case "agrega_precio":
+      // La lista de pasos: ahí están «Pedir por WhatsApp» y el precio.
       href = "/dashboard/profesional?mode=offer&tab=completion";
       break;
 

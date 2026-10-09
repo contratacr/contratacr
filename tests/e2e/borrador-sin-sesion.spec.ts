@@ -418,7 +418,7 @@ test("registro de profesional: contraseña, provincia, tarifa, fijo, abre arriba
   await expect(page.getByText("Opcionales", { exact: true })).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText("opcional", { exact: true })).toHaveCount(0);
 
-  // 9. Los dos avisos de bienvenida EXISTEN en la base (el 4-oct la base los
+  // 9. El aviso de bienvenida EXISTE en la base (el 4-oct la base los
   //    rechazaba en silencio y en producción no llegó ninguno).
   const admin = regressionAdminClient();
   const { data: perfil } = await admin.from("profiles").select("id").eq("email", correo).maybeSingle();
@@ -427,7 +427,8 @@ test("registro de profesional: contraseña, provincia, tarifa, fijo, abre arriba
   await expect.poll(async () => {
     const { data } = await admin.from("notifications").select("type").eq("user_id", idPerfil!);
     return (data ?? []).map((f) => (f as { type: string }).type).sort().join(",");
-  }, { timeout: 15_000 }).toBe("completa_perfil,invita_proyecto");
+  // «¿Necesitas a alguien?» ya no le llega a un profesional (9-oct-2026).
+  }, { timeout: 15_000 }).toBe("completa_perfil");
 
   // 10. Notificaciones: el texto se lee COMPLETO y cada aviso lleva su raya.
   await gotoOK(page, "/notificaciones");

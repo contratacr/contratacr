@@ -24,6 +24,9 @@ export const TRANSLATED_NOTIFICATION_TYPES = new Set([
   // Los dos de bienvenida (5-oct-2026): mismo texto para todos, en su idioma.
   "invita_proyecto",
   "completa_perfil",
+  // Empujones al profesional (9-oct-2026).
+  "pide_resenas",
+  "agrega_precio",
 ]);
 
 type NotificationCopyInput = {
@@ -54,6 +57,8 @@ const TITLES: Record<string, Record<NotificationLocale, string>> = {
   counterparty_account_deleted: { es: "Una cuenta con la que coordinabas se cerró", en: "An account you were coordinating with was closed" },
   invita_proyecto: { es: "¿Necesitas a alguien?", en: "Need someone?" },
   completa_perfil: { es: "Completa tu perfil", en: "Complete your profile" },
+  pide_resenas: { es: "Pide tus primeras reseñas", en: "Ask for your first reviews" },
+  agrega_precio: { es: "Agrega un precio de referencia", en: "Add a starting price" },
 };
 
 function normalizeLegacyNotificationText(value: string): string {
@@ -140,6 +145,16 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
     return { title, message: en
       ? "Post what you need and professionals contact you on WhatsApp."
       : "Publica lo que necesitas y los profesionales te contactan por WhatsApp." };
+  }
+  if (notification.type === "pide_resenas") {
+    return { title, message: en
+      ? "Profiles with at least one review get many more messages. Ask 3 clients you have worked with: the message is ready."
+      : "Los perfiles con al menos una reseña reciben muchos más mensajes. Pídesela a 3 clientes con los que ya trabajaste: el mensaje ya está listo." };
+  }
+  if (notification.type === "agrega_precio") {
+    return { title, message: en
+      ? "Clients write more when they see a “from ₡” price. Put the minimum you usually start at; you still agree the final price."
+      : "El cliente se anima más a escribir cuando ve un «desde ₡». Pon el mínimo con el que arrancas; el final lo acuerdas con cada cliente." };
   }
   if (notification.type === "completa_perfil") {
     return { title, message: en

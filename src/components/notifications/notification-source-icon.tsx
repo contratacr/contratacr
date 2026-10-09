@@ -1,6 +1,6 @@
 "use client";
 
-import { UserRoundCheck, UserRoundX, Handshake, Headset, MessageSquareText, ReceiptText, ShieldCheck, Star, Briefcase } from "lucide-react";
+import { Tag, UserRoundCheck, UserRoundX, Handshake, Headset, MessageSquareText, ReceiptText, ShieldCheck, Star, Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Un icono por familia de aviso VIVA. Las de citas, propuestas, postulaciones,
@@ -17,6 +17,7 @@ export function NotificationSourceIcon({ type, className }: { type: string; clas
       return <Handshake className={className} />;
     case "review_received":
     case "resena_google":
+    case "pide_resenas":
       return <Star className={className} />;
     case "direct_message":
       return <MessageSquareText className={className} />;
@@ -32,6 +33,8 @@ export function NotificationSourceIcon({ type, className }: { type: string; clas
       return <ReceiptText className={className} />;
     case "completa_perfil":
       return <UserRoundCheck className={className} />;
+    case "agrega_precio":
+      return <Tag className={className} />;
     case "support_reply":
       return <Headset className={className} />;
     case "counterparty_account_deleted":
