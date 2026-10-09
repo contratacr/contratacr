@@ -1987,8 +1987,7 @@
     "createFree": "Create account",
     "terms": "By registering you accept our <terms>Terms of use</terms> and our <privacy>Privacy Policy</privacy>.",
     "haveAccount": "Already have an account?",
-    "signIn": "Sign in",
-    "phoneHelp": "Only the professional who answers you sees it. It is never shown publicly."
+    "signIn": "Sign in"
   },
   "proveedoresPage": {
     "metaTitle": "What is identity verification? — ContrataCR",

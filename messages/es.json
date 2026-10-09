@@ -1987,8 +1987,7 @@
     "createFree": "Crear cuenta",
     "terms": "Al registrarte aceptas nuestros <terms>Términos de uso</terms> y nuestra <privacy>Política de Privacidad</privacy>.",
     "haveAccount": "¿Ya tienes cuenta?",
-    "signIn": "Inicia sesión",
-    "phoneHelp": "Solo lo ve el profesional que te responda. No sale en ningún lado público."
+    "signIn": "Inicia sesión"
   },
   "proveedoresPage": {
     "metaTitle": "¿Qué es la verificación de identidad? — ContrataCR",

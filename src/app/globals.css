@@ -345,6 +345,14 @@ body.ccr-native-app.ccr-native-search-route button:not([aria-label]) {
   transform: none;
 }
 
+/* En la app la cabecera es SOLO logo y menú (regla de Isaac): si en algún
+   pintado temprano llega la cabecera de la web, sus atajos (campana, Ingresar)
+   no se ven. La clase ccr-native-app la pone el script del <head> antes de
+   pintar. */
+html.ccr-native-app .ccr-cabecera-acciones-web {
+  visibility: hidden;
+}
+
 .ccr-native-app .ccr-notification-bell-menu {
   position: fixed !important;
   /* La posición exacta la fija el propio componente desde el botón; esto es el

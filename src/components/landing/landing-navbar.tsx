@@ -2,7 +2,7 @@
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 
-import { useState, useEffect, useRef, useMemo, useCallback, useTransition, type ReactNode } from "react";
+import { useContext, useState, useEffect, useRef, useMemo, useCallback, useTransition, type ReactNode } from "react";
 import { soltarFoco } from "@/lib/soltar-foco";
 import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin, List, Map as MapIcon, ArrowLeft, Share2, ReceiptText,
@@ -26,6 +26,7 @@ import { prefetchDashboardBootstrap } from "@/lib/dashboard-bootstrap-cache";
 import { prefetchConversations } from "@/lib/direct-chat/conversations-cache";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { useNativeApp } from "@/hooks/use-native-app";
+import { NativeAppInicial } from "@/hooks/native-app-inicial";
 import { ALL_CATEGORIES, CATEGORY_GROUPS, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel, resolveCategoryIntent, getAllCategories, getAllCategoryGroups, getCategoryGroupId, esServicioDelCatalogo } from "@/lib/data/categories";
 import { getCategoryGroupIcon } from "@/lib/data/category-group-visuals";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
@@ -950,7 +951,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // nuevo nace ya en su versión de la app. Si no, en cada navegación el icono
   // de Mensajes faltaba uno o dos cuadros (el «parpadeo» del icono).
   const [hydrated, setHydrated] = useState(() => encabezadoYaHidratado);
-  const nativeHeaderShell = hydrated && nativeApp;
+  // Si el servidor YA sabe que es la app (cookie ccr_platform=native), la
+  // cabecera nace en su versión de la app desde el HTML: esperar a hidratar
+  // dejaba ver medio segundo la campana de la web al volver a la app y
+  // recargarse la pantalla (9-oct-2026). En la app la cabecera es SOLO logo y
+  // menú.
+  const nativeInicial = useContext(NativeAppInicial);
+  const nativeHeaderShell = nativeApp && (hydrated || nativeInicial);
   const { user, loading: authLoading, accountName, hasProfessionalProfile: fichaProDelServidor, avatarUrl: avatarUrlCuenta } = useAuth();
   // Search is a full-viewport map + results sheet. Do not merely hide the nav
   // with CSS: leaving it mounted keeps its layout class and safe-area reserve
@@ -2005,7 +2012,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <span className="h-10 w-10 shrink-0" aria-hidden />
                   )
                 ) : (
-                <div className="ml-auto flex shrink-0 items-center gap-0.5">
+                <div className="ccr-cabecera-acciones-web ml-auto flex shrink-0 items-center gap-0.5">
                   {/* EN UNA FICHA LA CABECERA ES DE LA FICHA: flecha, de dónde
                       se vuelve y el «···» de la publicación. La campana es de la
                       cuenta, no de lo que se está mirando, y ahí solo compite

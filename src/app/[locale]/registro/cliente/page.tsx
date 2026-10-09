@@ -379,7 +379,6 @@ export default function RegisterClientPage() {
                     cliente NO es público: solo llega al profesional que le
                     responde. El del profesional sí, y por eso su pantalla dice
                     lo contrario. */}
-                <p className="mt-1.5 text-xs text-[#68778d]">{t("phoneHelp")}</p>
               </div>
 
               {error && (

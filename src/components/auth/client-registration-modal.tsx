@@ -592,7 +592,6 @@ export function ClientRegistrationModal({
                         value={telefono}
                         onChange={setTelefono}
                       />
-                      <p className="mt-1.5 text-xs text-[#68778d]">{tRc("phoneHelp")}</p>
                     </div>
                   </div>
                 )}
