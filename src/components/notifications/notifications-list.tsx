@@ -16,6 +16,21 @@ import { localizedNotificationCopy } from "@/lib/localized-notification";
 import { useMode } from "@/hooks/use-mode";
 import { canOffer } from "@/lib/auth/capabilities";
 import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
+import { Modal } from "@/components/ui/modal";
+import { ENLACE_RESENA_GOOGLE } from "@/lib/notifications/resena-google-enlace";
+
+// LO CORTO SE ABRE EN UNA TARJETA, NO EN OTRA PANTALLA (9-oct-2026; regla de
+// modales: corto → tarjeta centrada). Son avisos que solo informan o piden un
+// toque: salir a otra pantalla para leer una línea era un viaje de más, y la
+// reseña de Google pasaba por una página con un solo botón.
+const AVISOS_EN_TARJETA = new Set([
+  "resena_google",
+  "verification_approved",
+  "verification_pending",
+  "suggestion_approved",
+  "suggestion_rejected",
+  "counterparty_account_deleted",
+]);
 import { getNotificationProjectCreatedAt, useNotificationProjectTimes } from "@/hooks/use-notification-project-times";
 import { PanelEmptyState, PanelListSkeleton } from "@/components/ui/content-loading";
 import { FilaDeslizable, iconoDeAccion } from "@/components/ui/fila-deslizable";
@@ -113,6 +128,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
   // pasado el punto, el botón cubre la fila y soltar la borra. Borrar sin
   // querer se arregla con «Deshacer» (ver borrarPorDeslizar).
   const [filaAbierta, setFilaAbierta] = useState<string | null>(null);
+  const [enTarjeta, setEnTarjeta] = useState<Notification | null>(null);
   const borradoPendiente = useRef<{ quitada: Notification; indice: number; temporizador: number } | null>(null);
   const [puedeDeshacer, setPuedeDeshacer] = useState(false);
   // Salir de la pantalla con un borrado pendiente lo confirma: quien deslizó
@@ -380,6 +396,10 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
       supabase.from("notifications").update({ read: true }).eq("id", n.id).then(() => {
         window.dispatchEvent(new CustomEvent("notificationsChanged"));
       });
+    }
+    if (AVISOS_EN_TARJETA.has(n.type)) {
+      setEnTarjeta(n);
+      return;
     }
     if (!href) return;
     router.push(conRegresoANotificaciones(href));
@@ -862,6 +882,45 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
           </>
         )}
       </div>
+      {enTarjeta && (() => {
+        const copia = localizedNotificationCopy(enTarjeta, locale);
+        const destino = notificationActionHref(enTarjeta, role, locale);
+        const esGoogle = enTarjeta.type === "resena_google";
+        const enIngles = locale === "en";
+        const boton = "inline-flex h-11 w-full items-center justify-center rounded-full text-[15px] font-bold transition-colors";
+        return (
+          <Modal
+            open
+            onClose={() => setEnTarjeta(null)}
+            title={copia.title || ""}
+            mobilePresentation="center"
+            size="sm"
+            footer={
+              <div className="grid w-full gap-2">
+                {esGoogle ? (
+                  <a href={ENLACE_RESENA_GOOGLE} target="_blank" rel="noopener noreferrer" onClick={() => setEnTarjeta(null)} className={cn(boton, "bg-[#009FD9] text-white hover:bg-[#0089bb]")}>
+                    {enIngles ? "Leave a Google review" : "Dejar reseña en Google"}
+                  </a>
+                ) : destino && enTarjeta.type !== "suggestion_rejected" ? (
+                  <button type="button" onClick={() => { setEnTarjeta(null); router.push(conRegresoANotificaciones(destino)); }} className={cn(boton, "bg-[#009FD9] text-white hover:bg-[#0089bb]")}>
+                    {enIngles ? "View" : "Ver"}
+                  </button>
+                ) : null}
+                <button type="button" onClick={() => setEnTarjeta(null)} className={cn(boton, "bg-[#f1f5f9] text-[#162543] hover:bg-[#e6edf4]")}>
+                  {enIngles ? "Got it" : "Entendido"}
+                </button>
+              </div>
+            }
+          >
+            <div className="flex flex-col items-center gap-3 text-center" data-aviso-en-tarjeta={enTarjeta.type}>
+              <span className="flex h-12 w-12 items-center justify-center rounded-full ccr-caja-icono-plana">
+                <NotificationSourceIcon type={enTarjeta.type} className="h-5 w-5" />
+              </span>
+              <p className="text-[15px] leading-6 text-[#4b5b70]">{copia.message}</p>
+            </div>
+          </Modal>
+        );
+      })()}
       {puedeDeshacer && createPortal(
         <div
           className="fixed inset-x-0 z-[1100] flex justify-center px-4"

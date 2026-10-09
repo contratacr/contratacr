@@ -4,6 +4,7 @@ import { Star } from "lucide-react";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { SectionHeaderTitle } from "@/components/mobile/section-header-title";
+import { ENLACE_RESENA_GOOGLE as ENLACE } from "@/lib/notifications/resena-google-enlace";
 
 /**
  * La invitación a dejar una reseña en Google.
@@ -13,7 +14,6 @@ import { SectionHeaderTitle } from "@/components/mobile/section-header-title";
  * persona ve de qué se trata antes de salir a Google, y el enlace vive en un
  * solo lugar el día que cambie.
  */
-const ENLACE = "https://g.page/r/CeZkdYZpL2enECE/review";
 
 export const metadata: Metadata = { robots: { index: false } };
 
