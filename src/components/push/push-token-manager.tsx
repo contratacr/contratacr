@@ -149,10 +149,6 @@ function canShowPermissionPrompt(pathname: string | null) {
   return true;
 }
 
-function isPanelPath(pathname: string | null) {
-  return normalizePathname(pathname).startsWith("/dashboard");
-}
-
 export function PushTokenManager() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -344,15 +340,16 @@ export function PushTokenManager() {
     // asíncrono, y para cuando responde la tarjeta de «¿Contactaste a…?» ya
     // decidió salir: por eso al entrar por primera vez se asomaba medio segundo
     // y enseguida la tapaba esta hoja. Se reserva de una vez con lo que se sabe
-    // sin esperar —app nativa, en el panel— y se suelta abajo
+    // sin esperar —app nativa, con cuenta— y se suelta abajo
     // en cuanto se descubre que no hay nada que preguntar.
-    // Desde la PRIMERA vez en el panel, que es a donde se llega al crear la
-    // cuenta o al entrar (9-oct-2026, Isaac). Antes se esperaba al segundo
-    // arranque, y un profesional nuevo pasaba su primer día sin avisos de
-    // proyectos. Sigue siendo nuestra hoja primero: el aviso del sistema solo
-    // sale si la persona toca «Activar», así no se gasta la única pregunta
-    // que iOS deja hacer.
-    const puedePreguntar = isPanelPath(pathname) && canAskAgain(user.id);
+    // En la PRIMERA pantalla de la app con la cuenta ya abierta, sea cual sea
+    // (9-oct-2026, Isaac): un cliente casi nunca entra al panel y esperar al
+    // segundo arranque dejaba al profesional nuevo su primer día sin avisos.
+    // Nunca a mitad del registro o del ingreso (canShowPermissionPrompt). El
+    // aviso se liga a la cuenta, por eso no se pide antes de tener sesión.
+    // Sigue siendo nuestra hoja primero: el del sistema solo sale si la
+    // persona toca «Activar», así no se gasta la única pregunta que iOS deja.
+    const puedePreguntar = canAskAgain(user.id);
     if (puedePreguntar) tomarElTurno();
 
     let cancelled = false;
@@ -370,8 +367,8 @@ export function PushTokenManager() {
         }
         window.localStorage.removeItem(grantedKey);
         if (permissions.receive === "denied") { soltarElTurno(); return; }
-        // Pregunta de respaldo, sin acción de por medio: en el panel,
-        // respetando los mismos límites de frecuencia.
+        // Pregunta de respaldo, sin acción de por medio, respetando los
+        // mismos límites de frecuencia.
         if (!puedePreguntar) { soltarElTurno(); return; }
         promptTimerRef.current = setTimeout(() => {
           if (cancelled) return;
