@@ -487,19 +487,14 @@ async function main() {
     COUNTERPART_PROFILE_ID,
     user.id,
   ]);
-  const existingNotifications = await must(
-    "test notification isolation",
-    admin.from("notifications").select("id,user_id").limit(5000),
+  // Un solo borrado por condición. Antes se leían los ids y se mandaban todos
+  // en la URL: con 5.191 avisos en test (los de empleos van a toda la
+  // categoría) PostgREST respondía «Bad Request», y la lectura además se
+  // quedaba en las primeras 1.000 filas.
+  await must(
+    "unapproved test notifications",
+    admin.from("notifications").delete().not("user_id", "in", `(${[...approvedNotificationUsers].join(",")})`),
   );
-  const unapprovedNotificationIds = existingNotifications
-    .filter((row) => !approvedNotificationUsers.has(row.user_id))
-    .map((row) => row.id);
-  if (unapprovedNotificationIds.length) {
-    await must(
-      "unapproved test notifications",
-      admin.from("notifications").delete().in("id", unapprovedNotificationIds),
-    );
-  }
 
   console.log(JSON.stringify({
     ready: true,
