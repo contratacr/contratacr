@@ -83,7 +83,10 @@ interface ServiceFormState {
   professionalCredentialIssuer: string;
 }
 const EMPTY_FORM: ServiceFormState = { description: "", priceUnit: "por_hora", priceAmount: "", aConsultar: false, startedAt: "", imageUrl: "", professionalCredentialLabel: "", professionalCredentialNumber: "", professionalCredentialIssuer: "" };
-const SERVICE_DESCRIPTION_MAX_LENGTH = 600;
+// 2000 (antes 600): un profesional pidió espacio para explicar bien su
+// servicio (9-oct-2026). En la ficha se recorta a dos líneas con «Ver
+// descripción completa», así que un texto largo no ensucia la tarjeta.
+const SERVICE_DESCRIPTION_MAX_LENGTH = 2000;
 const PROFESSIONAL_CREDENTIAL_MAX_LENGTH = 80;
 
 function trimCredential(value: string) {
@@ -770,6 +773,9 @@ export function ServicesEditor({
         <Modal
           onClose={cancelForm}
           mobilePresentation="fullscreen"
+          // Más ancha en computadora: a 512 px el formulario se sentía de
+          // teléfono y la descripción se escribía en una columna angosta.
+          size="lg"
           title={t("editInfo")}
           closeLabel={t("cancel")}
           footerNotice={formError ? (
@@ -832,7 +838,7 @@ export function ServicesEditor({
                 {t("descBrief")} <span className="text-[#68778d] font-normal">{t("optional")}</span>
               </label>
               <textarea
-                className="min-h-[150px] w-full resize-y rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                className="min-h-[150px] w-full resize-y rounded-xl lg:min-h-[220px] border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
                 placeholder={t("offerDescPlaceholder")}
                 value={form.description}
                 maxLength={SERVICE_DESCRIPTION_MAX_LENGTH}

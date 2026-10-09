@@ -1491,7 +1491,9 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
           open={!!serviceDescriptionOpen}
           onClose={() => setServiceDescriptionOpen(null)}
           closeLabel={t("close")}
-          size="md"
+          // Ancha como la de editar: con descripciones de hasta 2000
+          // caracteres, a 512 px quedaba una columna larga y angosta.
+          size="lg"
         >
           <p className="whitespace-pre-line text-[15px] leading-7 text-[#374151] [overflow-wrap:anywhere]">
             {serviceDescriptionOpen.description}
