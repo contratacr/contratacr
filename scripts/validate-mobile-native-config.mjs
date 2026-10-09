@@ -47,6 +47,7 @@ const [
   mobilePlaywright,
   mobileShellSpec,
   mobileWorkflow,
+  nativeSocialLogin,
 ] = await Promise.all([
   text("capacitor.config.ts"),
   text("android/app/src/main/AndroidManifest.xml"),
@@ -75,6 +76,7 @@ const [
   text("playwright.mobile.config.ts"),
   text("tests/e2e/mobile-native-shell.spec.ts"),
   text(".github/workflows/mobile-native-regression.yml"),
+  text("src/lib/auth/native-social-login.ts"),
 ]);
 
 requireMatch("Capacitor app id", capacitor, new RegExp(`appId:\\s*"${expected.appId.replaceAll(".", "\\.")}"`));
@@ -104,6 +106,20 @@ requireMatch(
   /uses-feature android:name="android\.hardware\.camera" android:required="false"/,
 );
 requireMatch("Android single-task launch mode", manifest, /android:launchMode="singleTask"/);
+// «Nonces mismatch» (9-oct-2026): el plugin de Google en iOS restaura la
+// sesión anterior y devuelve un token viejo. Antes de cada ingreso con Google
+// se cierra esa sesión para que firme el nonce nuevo.
+requireMatch(
+  "Google native sign-in clears the previous plugin session first",
+  nativeSocialLogin,
+  /SocialLogin\.logout\(\{ provider: "google" \}\)[\s\S]*SocialLogin\.login\(\{ provider: "google"/,
+);
+// Google rechazó la 1.0.8 (8-oct-2026) por la política de fotos: las fotos se
+// eligen con el selector del sistema (input de archivo), que no necesita leer
+// toda la galería. Ningún permiso de medios puede volver al manifiesto.
+if (/android\.permission\.(?:READ_MEDIA_(?:IMAGES|VIDEO|VISUAL_USER_SELECTED)|READ_EXTERNAL_STORAGE)/.test(manifest)) {
+  failures.push("Android asks to read the whole photo library; Google Play rejects it (use the system picker)");
+}
 requireMatch("iOS camera disclosure", infoPlist, /<key>NSCameraUsageDescription<\/key>/);
 requireMatch("iOS photo disclosure", infoPlist, /<key>NSPhotoLibraryUsageDescription<\/key>/);
 // «Cerca de mí» usa navigator.geolocation: sin esta clave el WKWebView no puede pedir la ubicación.
