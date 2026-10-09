@@ -213,9 +213,13 @@ export function PushTokenManager() {
       if (signingOutRef.current) return;
       registeredTokenRef.current = token.value;
 
-      // Capacitor exposes the APNs device token on iOS. The backend currently
-      // sends through FCM, so this value must never be mislabeled as FCM.
-      if (platform === "ios") return;
+      // EN iPHONE SE DESCARTABA TODO (hasta el 9-oct-2026). Desde la 1.0.8 el
+      // AppDelegate canjea el token de APNs por uno de FCM y entrega ESE; esta
+      // línea seguía tirando cualquier token de iOS, así que ningún iPhone se
+      // registró nunca: sin avisos y sin el botón «Mensaje» hacia quien tiene
+      // la app. Solo se descarta el token crudo de APNs (64 hexadecimales),
+      // que mandan las versiones viejas y Firebase no acepta.
+      if (platform === "ios" && /^[a-f0-9]{64}$/i.test(token.value)) return;
 
       registrationAbortRef.current?.abort();
       const controller = new AbortController();

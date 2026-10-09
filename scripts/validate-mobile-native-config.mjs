@@ -116,7 +116,11 @@ if (/path:\s*"[^"]*\\/.test(packageSwift)) {
 }
 requireMatch("Sign-out-safe push registration", pushTokenManager, /registrationAbortRef\.current\?\.abort\(\)[\s\S]*registrationTaskRef\.current\?\.catch/);
 requireMatch("Push registration retries", pushTokenManager, /TOKEN_POST_RETRY_DELAYS_MS = \[0, 750, 2_500\]/);
-requireMatch("iOS APNs upload guard", pushTokenManager, /if \(platform === "ios"\) return/);
+// Solo se descarta el token crudo de APNs; el de FCM que entrega el
+// AppDelegate SÍ se sube (antes se descartaba todo iOS y ningún iPhone se
+// registró nunca, 9-oct-2026).
+requireMatch("iOS raw APNs upload guard", pushTokenManager, /if \(platform === "ios" && \/\^\[a-f0-9\]\{64\}\$\/i\.test\(token\.value\)\) return/);
+if (/if \(platform === "ios"\) return/.test(pushTokenManager)) failures.push("iOS push tokens are dropped before upload: no iPhone can ever register");
 requireMatch("iOS APNs API rejection", pushRegisterRoute, /platform === "ios" && \/\^\[a-f0-9\]\{64\}\$\/i\.test\(token\)[\s\S]*iOS push no esta configurado/);
 requireMatch("FCM sender transport filter", pushSender, /\.eq\("transport", "fcm"\)/);
 requireMatch("Push text encoding repair", pushSender, /repairVisibleText\(value\)/);
