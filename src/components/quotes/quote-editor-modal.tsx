@@ -12,7 +12,6 @@ import { cleanId, isValidId } from "@/lib/cedula";
 import { Totales } from "@/components/quotes/quote-detail-modal";
 import { quoteTotals, QUOTE_MAX_ITEMS, type Quote, type QuoteItem, type QuoteTaxMode } from "@/lib/quotes";
 import { formatColones } from "@/lib/pricing";
-import { avisarMomentoDeNotificacion } from "@/lib/push-moment";
 import { borrarBorrador, guardarBorrador, rutaParaEntrar } from "@/lib/borrador-sin-sesion";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 
@@ -125,7 +124,6 @@ export function QuoteEditorModal({ open, onClose, projectId, defaultTitle, clien
       if (!res.ok) { setError(res.status === 503 ? t("errorUnavailable") : d.error ?? t("errorTitle")); return; }
       borrarBorrador("cotizacion");
       onSent(d.quote as Quote);
-      avisarMomentoDeNotificacion("cotizacion");
       setRows([nuevaFila()]); setNotes(""); setTitle(defaultTitle ?? ""); setClientName(""); setClientPhone(""); setClientEmail(""); setCedula("");
     } catch { setError(t("errorTitle")); } finally { setSending(false); }
   }

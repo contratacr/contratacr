@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRight, AlertCircle, CheckCircle2 } from "lucide-react";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -518,11 +518,10 @@ export default function LoginPage() {
               </div>
             </div>
             <Button type="submit" size="lg" loading={submitting} disabled={submitting} className="mt-2">
-              {submitting ? t("submitting") : (
-                <>
-                  {t("submit")} <ArrowRight className="h-4 w-4" />
-                </>
-              )}
+              {/* Solo «Ingresar», centrado y sin flecha, como el resto de los
+                  botones del app y las apps grandes: la flecha sugería «ir a
+                  otra pantalla» y no «entrar» (9-oct-2026). */}
+              {submitting ? t("submitting") : t("submit")}
             </Button>
           </form>
 

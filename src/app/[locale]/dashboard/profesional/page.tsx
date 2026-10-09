@@ -5,7 +5,6 @@ import { useAppDialog } from "@/hooks/use-app-dialog";
 import { prefijoDeIdioma, rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { irAlInicio } from "@/lib/ir-al-inicio";
 import { enlacePerfil } from "@/lib/profile-url";
-import { ConsejosParaClientes } from "@/components/dashboard/pro/consejos-para-clientes";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 
 import { useEffect, useState, useCallback, useMemo, useRef, useLayoutEffect } from "react";
@@ -2046,17 +2045,6 @@ export default function DashboardPage() {
                     variant="header"
                     onViewSteps={() => setTab("completion", true)}
                     onGo={(tab, field) => requestUnsavedAction(() => openCompletionTarget(tab, field))}
-                  />
-                </div>
-              )}
-              {mode === "offer" && pro && typeof pro.slug === "string" && pro.slug.trim() && (
-                <div style={{ gridColumn: "1 / -1" }} className="w-full">
-                  <ConsejosParaClientes
-                    resenas={Number(pro.review_count ?? 0)}
-                    servicios={pro.services}
-                    enlaceDeResenas={`${enlacePerfil(pro.slug.trim())}?tab=resenas`}
-                    locale={locale}
-                    alAgregarPrecio={() => requestUnsavedAction(() => openCompletionTarget("services", "servicePrice"))}
                   />
                 </div>
               )}

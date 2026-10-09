@@ -35,9 +35,12 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
     await expect.poll(() => menu.evaluate((e) => Math.round(e.getBoundingClientRect().x))).toBe(0);
     await expect(menu.getByRole("link", { name: /^Ingresar$/ })).toBeVisible();
     await expect(menu.getByRole("link", { name: /^Registrarme$/ })).toHaveAttribute("href", /\/registro/);
-    await expect(menu.getByRole("link", { name: /^Términos$/ })).toBeVisible();
+    // Lo legal vive dentro de «Ayuda y soporte», no suelto al pie del cajón.
+    await expect(menu.getByRole("link", { name: /^Términos de uso$/ })).toHaveCount(0);
     await menu.getByRole("button", { name: /Ayuda y soporte/ }).click();
     await expect(menu.getByRole("link", { name: /Preguntas frecuentes/ })).toBeVisible();
+    await expect(menu.getByRole("link", { name: /^Términos de uso$/ })).toHaveAttribute("href", /\/terminos$/);
+    await expect(menu.getByRole("link", { name: /^Política de privacidad$/ })).toHaveAttribute("href", /\/privacidad$/);
     await menu.getByRole("button", { name: /Cerrar men[uú]/ }).click();
     await expect(page.locator(".ccr-menu-completo.ccr-menu-abierto")).toHaveCount(0);
   });
