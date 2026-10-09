@@ -1,6 +1,6 @@
 "use client";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
-import { prefijoDeIdioma, rutaConIdioma } from "@/lib/prefijo-de-idioma";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 
 import { useState, useEffect, useRef, useMemo, useCallback, useTransition, type ReactNode } from "react";
 import { soltarFoco } from "@/lib/soltar-foco";
@@ -37,7 +37,6 @@ import { useContainedTouchScroll } from "@/hooks/use-contained-touch-scroll";
 import { createClient } from "@/lib/supabase/client";
 import { repairVisibleText } from "@/lib/text/repair-visible-text";
 import { OfferTagPercentIcon } from "@/components/icons/offer-tag-percent-icon";
-import { useDirectMessageUnread } from "@/hooks/use-direct-message-unread";
 import { CABECERA_TITULO } from "@/components/layout/cabecera";
 import { esRutaDeBusqueda, rutaDeBusqueda } from "@/lib/buscar-url";
 import { useParametrosDeBusqueda } from "@/hooks/use-parametros-de-busqueda";
@@ -744,11 +743,6 @@ function GemeloDelBuscador({ pathname }: { pathname: string | null }) {
   );
 }
 
-// 1-oct-2026: Mensajes vive en el MENÚ DE ABAJO (con su contador), nunca en la
-// cabecera. Las pantallas que todavía lo llaman no pintan nada.
-export function HeaderMessagesLink(_props: { unreadCount: number; label: string; href?: string }) {
-  return null;
-}
 
 function DrawerIcon({ children }: { children: ReactNode }) {
   return (
@@ -950,7 +944,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       if (cuadro !== null) cancelAnimationFrame(cuadro);
     };
   }, [nativeApp]);
-  const nativeMessageUnread = useDirectMessageUnread(nativeApp);
   // La espera de «hidratado» es para la PRIMERA carga, donde el servidor no
   // sabe si es la app y el primer pintado tiene que coincidir con el suyo.
   // Cada pantalla monta su propio encabezado: después de esa primera vez, uno
@@ -962,7 +955,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // Search is a full-viewport map + results sheet. Do not merely hide the nav
   // with CSS: leaving it mounted keeps its layout class and safe-area reserve
   // active, which shortens the sheet and the full-screen search overlay.
-  const accesoHref = (destino: string) => `/login?redirect=${encodeURIComponent(rutaConIdioma(locale, destino))}`;
   const enMensajes = /(^|\/)mensajes(?:\/|$)/.test(pathname ?? "");
   const nativeFullscreenRoute = /(^|\/)(?:publicar-proyecto|(?:empleos|promociones)\/publicar)(?:\/|$)/.test(pathname ?? "");
   // LA PRIMERA PINTURA YA SABE SI ESTA CUENTA OFRECE SERVICIOS.
@@ -2006,17 +1998,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 {nativeHeaderShell ? (
                   !nativeFullscreenRoute && !(sectionActive && !sectionRoot) ? (
                     <div className="flex h-10 shrink-0 items-center justify-end gap-1">
-                      {/* En entrar y registrarse no: quien está entrando aún no tiene
-                          mensajes, y el ícono solo invita a dejar el formulario. */}
-                      {!enMensajes && !/\/(login|registro)(\/|$)/.test(pathname ?? "") && (
-                        <HeaderMessagesLink
-                          unreadCount={user ? nativeMessageUnread : 0}
-                          label={locale === "en" ? "Messages" : "Mensajes"}
-                          href={user ? "/mensajes" : accesoHref("/mensajes")}
-                        />
-                      )}
-                      {/* Sin campana: en la app Notificaciones vive en el menú
-                          de abajo (30-sep-2026). Aquí solo Mensajes. */}
+                      {/* Sin Mensajes ni campana: en la app los dos viven en el
+                          menú de abajo (30-sep y 1-oct-2026). */}
                     </div>
                   ) : (
                     <span className="h-10 w-10 shrink-0" aria-hidden />
@@ -2468,9 +2451,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         </Link>
                       )}
 
-                      {nativeApp && nativeHeaderShell && (
-                        <HeaderMessagesLink unreadCount={nativeMessageUnread} label={locale === "en" ? "Messages" : "Mensajes"} />
-                      )}
                       <NotificationBell scope="all" />
                       <AccountMenu
                         isPro={isPro}

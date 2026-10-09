@@ -2,7 +2,6 @@
 
 import { formatPersonDisplayName } from "@/lib/display-name";
 import { conFiltroDeFecha } from "@/lib/marketplace/filtros-por-volumen";
-import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 import { PanelEmptyState } from "@/components/ui/content-loading";
 import { CEDULA_COMPACTA, CedulaVerificada } from "@/components/ui/cedula-verificada";
@@ -16,9 +15,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { ArrowLeft, BriefcaseBusiness, Building2, ChevronRight, Menu } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { recordRecentVisit } from "@/lib/recent-visits";
-import { ContrataCRMark, HeaderAccountLink, HeaderMessagesLink } from "@/components/landing/landing-navbar";
+import { ContrataCRMark, HeaderAccountLink } from "@/components/landing/landing-navbar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
-import { useDirectMessageUnread } from "@/hooks/use-direct-message-unread";
 import { MarketplaceClearFilters, MarketplaceFilterChip, MarketplaceNavbarPortal, MarketplaceSearch } from "@/components/marketplace/marketplace-controls";
 import { ScrollRail } from "@/components/ui/scroll-rail";
 import { Modal } from "@/components/ui/modal";
@@ -57,7 +55,6 @@ const JOBS_COPY = {
     view: "Ver", remoteCountry: "Todo Costa Rica", country: "Costa Rica", noApplicants: "Sin postulantes", applicant: "postulante", applicants: "postulantes",
     searchPlaceholder: "¿Qué empleo buscas?", published: "Fecha", anyDate: "Cualquier fecha", last24Hours: "Últimas 24 horas", lastWeek: "Última semana", lastMonth: "Último mes",
     workplace: "Modalidad", anyWorkplace: "Cualquier modalidad", experience: "Experiencia", anyExperience: "Cualquier experiencia", employmentType: "Tipo de empleo", anyEmploymentType: "Cualquier tipo",
-    messages: "Mensajes",
     notifications: "Notificaciones",
     myJobs: "Mis empleos", publishJob: "Publicar empleo", jobs: "Empleos", opportunities: "Oportunidades en Costa Rica", job: "Empleo", openMenu: "Abrir menú", salary: "Salario", publishedBy: "Publicado por", editJob: "Editar empleo", editShort: "Editar", manageJob: "Administrar empleo", manageShort: "Administrar", applicationSent: "Postulación enviada", apply: "Postularme",
     noResults: "No encontramos empleos", noJobs: "Todavía no hay empleos", emptyHelp: "Prueba otra búsqueda o cambia los filtros.", futureJobs: "Las nuevas oportunidades laborales aparecerán aquí.", viewAll: "Ver todos los empleos", publishFirst: "Publicar el primer empleo", publishSubtitle: "Describe la oportunidad con información clara y verificable.", editSubtitle: "Actualiza la información de esta publicación.", sendApplication: "Enviar postulación",
@@ -69,7 +66,6 @@ const JOBS_COPY = {
     view: "View", remoteCountry: "All Costa Rica", country: "Costa Rica", noApplicants: "No applicants", applicant: "applicant", applicants: "applicants",
     searchPlaceholder: "Search jobs", published: "Date posted", anyDate: "Any date", last24Hours: "Past 24 hours", lastWeek: "Past week", lastMonth: "Past month",
     workplace: "Workplace", anyWorkplace: "Any workplace", experience: "Experience", anyExperience: "Any experience", employmentType: "Job type", anyEmploymentType: "Any type",
-    messages: "Messages",
     notifications: "Notifications",
     myJobs: "My jobs", publishJob: "Post a job", jobs: "Jobs", opportunities: "Opportunities in Costa Rica", job: "Job", openMenu: "Open menu", salary: "Salary", publishedBy: "Posted by", editJob: "Edit job", editShort: "Edit", manageJob: "Manage job", manageShort: "Manage", applicationSent: "Application sent", apply: "Apply",
     noResults: "No jobs found", noJobs: "There are no jobs yet", emptyHelp: "Try another search or change the filters.", futureJobs: "New job opportunities will appear here.", viewAll: "View all jobs", publishFirst: "Post the first job", publishSubtitle: "Describe the opportunity with clear, verifiable information.", editSubtitle: "Update this job post.", sendApplication: "Submit application",
@@ -120,7 +116,6 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
   const { avisoNode, avisar } = useAvisoPerfilProfesional();
   const { cabeceraRef, conLinea } = useHairlineOnScroll();
   const locale = marketplaceLocale(useLocale());
-  const mensajesSinLeer = useDirectMessageUnread();
   const copy = JOBS_COPY[locale];
   const nativeApp = useNativeApp();
   const router = useRouter();
@@ -149,8 +144,6 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
   useEffect(() => { queueMicrotask(() => setAhora(Date.now())); }, []);
   const [selectedId, setSelectedId] = useState(() => searchParams.get("job") ?? searchParams.get("apply") ?? initialSelectedJobId ?? jobs[0]?.id ?? "");
 
-  // Sin sesión, los avisos llevan a la pantalla de acceso y de ahí a su destino.
-  const accesoHref = (destino: string) => `/login?redirect=${encodeURIComponent(rutaConIdioma(locale, destino))}`;
 
   useEffect(() => {
     if (!nativeApp) return;
@@ -374,13 +367,11 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
           <div className="ml-auto flex shrink-0 items-center gap-0.5">
             {currentUserId ? (
               <>
-                {nativeApp && <HeaderMessagesLink unreadCount={mensajesSinLeer} label={copy.messages} />}
                 {/* En la app Notificaciones vive en el menú de abajo. */}
                 {!nativeApp && <NotificationBell scope="all" />}
               </>
             ) : (
               <>
-                {nativeApp && <HeaderMessagesLink unreadCount={0} label={copy.messages} href={accesoHref("/mensajes")} />}
                 {/* En la web, sin sesión va la cuenta; la campana queda para quien ya entró. */}
                 {!nativeApp && <HeaderAccountLink />}
               </>

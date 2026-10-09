@@ -91,8 +91,8 @@ requireMatch(
   capacitor,
   /PushNotifications:\s*\{[\s\S]*presentationOptions:\s*\["badge",\s*"sound",\s*"banner",\s*"list"\]/,
 );
-requireMatch("Android Capacitor dependency", packageJson, /"@capacitor\/android":\s*"8\.4\.2"/);
-requireMatch("iOS Capacitor dependency", packageJson, /"@capacitor\/ios":\s*"8\.4\.2"/);
+requireMatch("Android Capacitor dependency", packageJson, /"@capacitor\/android":\s*"8\.5\.2"/);
+requireMatch("iOS Capacitor dependency", packageJson, /"@capacitor\/ios":\s*"8\.5\.2"/);
 requireMatch("Packaged mobile web entry", mobileWebIndex, /<!doctype html>[\s\S]*<meta charset="utf-8"/i);
 requireMatch("Android application id", androidGradle, /applicationId "com\.contratacr\.app"/);
 requireMatch("Android namespace", androidGradle, /namespace = "com\.contratacr\.app"/);
@@ -129,26 +129,28 @@ requireMatch("Bottom nav uses the shared no-bar rule", bottomNav, /sinBarraDeAba
 const detalleEnHelper = /RUTA_DE_DETALLE = \/(.+)\/;/.exec(rutasSinBarra)?.[1];
 if (!detalleEnHelper) failures.push("rutas-sin-barra.ts: RUTA_DE_DETALLE not found");
 else if (!layoutRaiz.includes(detalleEnHelper.replace(/\\/g, "\\\\"))) failures.push("layout.tsx boot script does not carry the same RUTA_DE_DETALLE as rutas-sin-barra.ts");
-// La barra es la MISMA para todos y FLOTA (30-sep-2026): buscar, asistente,
-// crear (+), notificaciones y el panel, en ese orden. Proyectos, Promociones,
+// La barra es la MISMA para todos y FLOTA (30-sep-2026): buscar, mensajes
+// (desde el 1-oct, en lugar del asistente, que pasó al menú), crear (+),
+// notificaciones y el panel, en ese orden. Proyectos, Promociones,
 // Empleos, Servicios y Cotizaciones viven en el menú lateral.
 requireMatch(
   "Native bottom navigation order",
   bottomNav,
-  /href="\/profesionales"[\s\S]*contratacr:open-ai[\s\S]*setHojaDeCrear\(true\)[\s\S]*"\/notificaciones"[\s\S]*href=\{nativePanelHref\}/,
+  /href="\/profesionales"[\s\S]*"\/mensajes"[\s\S]*setHojaDeCrear\(true\)[\s\S]*"\/notificaciones"[\s\S]*href=\{nativePanelHref\}/,
 );
 if (/tab=quotes/.test(bottomNav)) {
   failures.push("Native bottom navigation still links to quotes; they belong in the drawer");
 }
-requireMatch("Native messages unread badge", navbar, /HeaderMessagesLink unreadCount=\{nativeMessageUnread\}/);
-requireMatch("Native messages badge counter", navbar, /unreadCount > 0[\s\S]*unreadCount > 9 \? "9\+" : unreadCount/);
+// Mensajes vive en el menú de abajo con su contador, no en la cabecera (1-oct-2026).
+if (/HeaderMessagesLink/.test(navbar)) failures.push("Messages came back to the header; it belongs in the bottom navigation");
+requireMatch("Native messages badge counter", bottomNav, /mensajesPorLeer > 9 \? "9\+" : mensajesPorLeer/);
 // En la app el botón se adapta al profesional: chat si tiene la app, WhatsApp
 // si no (decidido el 29-sep-2026 para el lanzamiento).
 requireMatch("Native contact adapts to the professional", directChatLauncher, /useProfesionalConApp\(professionalId, nativeApp\)[\s\S]*if \(usaChat\)[\s\S]*<MessageLauncher/);
 requireMatch(
   "Native assistant message action",
   aiConcierge,
-  /nativeApp && result\.actionKind === "message"[\s\S]*<MessageLauncher[\s\S]*buttonLabel=\{lang === "en" \? "Message" : "Mensaje"\}/,
+  /nativeApp \? \([\s\S]*<MessageLauncher[\s\S]*buttonLabel=\{lang === "en" \? "Message" : "Mensaje"\}/,
 );
 // En la web el asistente ofrece «Enviar mensaje»: el contacto por WhatsApp se
 // abre desde la ficha, no desde una respuesta del asistente (28cd2273). Lo que
@@ -173,12 +175,12 @@ requireMatch(
   "Spanish native bottom navigation smoke",
   mobileShellSpec,
   // La pestaña se llama «Promociones»; /promociones es solo la ruta heredada.
-  /navItems:\s*\["Buscar profesionales",\s*"Asistente",\s*"Crear",\s*"Notificaciones",\s*"Mi panel"\]/,
+  /navItems:\s*\["Buscar profesionales",\s*"Mensajes",\s*"Crear",\s*"Notificaciones",\s*"Mi panel"\]/,
 );
 requireMatch(
   "English native bottom navigation smoke",
   mobileShellSpec,
-  /navItems:\s*\["Search professionals",\s*"Assistant",\s*"Create",\s*"Notifications",\s*"My dashboard"\]/,
+  /navItems:\s*\["Search professionals",\s*"Messages",\s*"Create",\s*"Notifications",\s*"My dashboard"\]/,
 );
 requireMatch("Native assistant opens direct chat smoke", mobileShellSpec, /\/api\/direct-chat[\s\S]*actionKind:\s*"message"[\s\S]*\/mensajes\\\\\?conversation=/);
 requireMatch("Mobile-only Playwright workflow", mobileWorkflow, /npm run test:e2e:mobile/);

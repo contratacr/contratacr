@@ -3,7 +3,6 @@
 import { formatPersonDisplayName } from "@/lib/display-name";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { conFiltroDeFecha } from "@/lib/marketplace/filtros-por-volumen";
-import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 import { PanelEmptyState } from "@/components/ui/content-loading";
 import { cn } from "@/lib/utils";
@@ -14,9 +13,8 @@ import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { cldLarge, cldThumb } from "@/lib/cloudinary";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CalendarDays, ChevronRight, MapPin, Menu, Store } from "lucide-react";
-import { ContrataCRMark, HeaderAccountLink, HeaderMessagesLink } from "@/components/landing/landing-navbar";
+import { ContrataCRMark, HeaderAccountLink } from "@/components/landing/landing-navbar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
-import { useDirectMessageUnread } from "@/hooks/use-direct-message-unread";
 import { Link } from "@/i18n/navigation";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
 import { useLocale, useTranslations } from "next-intl";
@@ -82,7 +80,6 @@ const OFFERS_COPY = {
     offers: "Promociones",
     promotions: "Promociones de profesionales",
     openMenu: "Abrir menú",
-    messages: "Mensajes",
     notifications: "Notificaciones",
     offer: "promoción",
     offerPlural: "promociones",
@@ -120,7 +117,6 @@ const OFFERS_COPY = {
     offers: "Promotions",
     promotions: "Promotions from professionals",
     openMenu: "Open menu",
-    messages: "Messages",
     notifications: "Notifications",
     offer: "promotion",
     offerPlural: "promotions",
@@ -154,7 +150,6 @@ export function OffersBoard({
   const { cabeceraRef, conLinea } = useHairlineOnScroll();
   const locale = marketplaceLocale(useLocale());
   const copy = OFFERS_COPY[locale];
-  const mensajesSinLeer = useDirectMessageUnread();
   const nativeApp = useNativeApp();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -177,8 +172,6 @@ export function OffersBoard({
   );
   const deferredQuery = useDeferredValue(query);
 
-  // Sin sesión, los avisos llevan a la pantalla de acceso y de ahí a su destino.
-  const accesoHref = (destino: string) => `/login?redirect=${encodeURIComponent(rutaConIdioma(locale, destino))}`;
 
   useEffect(() => {
     if (!nativeApp) return;
@@ -383,13 +376,11 @@ export function OffersBoard({
             <div className="ml-auto flex shrink-0 items-center gap-0.5">
               {currentUserId ? (
                 <>
-                  {nativeApp && <HeaderMessagesLink unreadCount={mensajesSinLeer} label={copy.messages} />}
                   {/* En la app Notificaciones vive en el menú de abajo. */}
                   {!nativeApp && <NotificationBell scope="all" />}
                 </>
               ) : (
                 <>
-                  {nativeApp && <HeaderMessagesLink unreadCount={0} label={copy.messages} href={accesoHref("/mensajes")} />}
                   {/* En la web, sin sesión va la cuenta; la campana queda para quien ya entró. */}
                 {!nativeApp && <HeaderAccountLink />}
                 </>
