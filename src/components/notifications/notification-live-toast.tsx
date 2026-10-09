@@ -399,15 +399,22 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
       ? locale === "en" ? "View details" : "Ver detalles"
       : locale === "en" ? "Got it" : "Entendido";
 
-  async function openToast() {
+  // PRIMERO SE VA, DESPUÉS SE MARCA LEÍDO (9-oct-2026). Antes «Ver detalles»
+  // esperaba la escritura en Supabase (y hasta 320 ms de precarga) antes de
+  // navegar: con datos móviles se sentía que el toque no hacía nada. Igual
+  // que la lista de notificaciones, el «leído» va en segundo plano.
+  function openToast() {
     if (!toast) return;
     setToast(null);
-    try {
-      if (user) await Promise.race([prefetchDashboardDataForNotification(user.id, latest.type), wait(320)]);
-      if (!grouped) await createClient().from("notifications").update({ read: true }).eq("id", latest.id);
-      window.dispatchEvent(new CustomEvent("notificationsChanged"));
-    } catch {}
     if (toastTargetHref) router.push(toastTargetHref);
+    if (user) void prefetchDashboardDataForNotification(user.id, latest.type).catch(() => {});
+    if (!grouped) {
+      void createClient().from("notifications").update({ read: true }).eq("id", latest.id).then(() => {
+        window.dispatchEvent(new CustomEvent("notificationsChanged"));
+      });
+    } else {
+      window.dispatchEvent(new CustomEvent("notificationsChanged"));
+    }
   }
 
   return (
