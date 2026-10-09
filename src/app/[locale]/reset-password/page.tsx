@@ -236,6 +236,7 @@ export default function ResetPasswordPage() {
               <Input
                 label={t("newPassword")}
                 type="password"
+                autoComplete="new-password"
                 placeholder="••••••••"
                 error={errors.password?.message}
                 disabled={initializing || submitting}
@@ -246,6 +247,7 @@ export default function ResetPasswordPage() {
             <Input
               label={t("confirmPassword")}
               type="password"
+              autoComplete="new-password"
               placeholder="••••••••"
               error={confirmPasswordError}
               disabled={initializing || submitting}

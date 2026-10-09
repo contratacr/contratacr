@@ -499,6 +499,7 @@ export function ClientRegistrationModal({
                 <Input
                   label={t("passwordLabel")}
                   type="password"
+                  autoComplete="current-password"
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
                   placeholder="••••••••"
@@ -603,6 +604,7 @@ export function ClientRegistrationModal({
                       <Input
                         label={t("passwordLabel")}
                         type="password"
+                        autoComplete="new-password"
                         placeholder="••••••••"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -612,6 +614,7 @@ export function ClientRegistrationModal({
                     <Input
                       label={t("confirmPassword")}
                       type="password"
+                      autoComplete="new-password"
                       placeholder="••••••••"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}

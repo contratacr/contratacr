@@ -608,7 +608,8 @@
       "continueGoogle": "Continue with Google",
       "emailChangedTitle": "Email updated",
       "emailChangedLogin": "The change was confirmed. Sign in with your new email.",
-      "back": "Back"
+      "back": "Back",
+      "passwordPlaceholder": "Your password"
     },
     "register": {
       "title": "Create account",
@@ -1055,7 +1056,6 @@
       "skipStep": "Skip",
       "ignoredCount": "{count, plural, one {# ignored} other {# ignored}}",
       "compactProgress": "{percent}% complete",
-      "nextStep": "Next step",
       "groupCore": "Essentials",
       "groupOptional": "Stand out",
       "viewSteps": "View steps",
@@ -1064,8 +1064,7 @@
       "serviceDescriptionBenefit": "Explain what each service includes.",
       "serviceExperienceBenefit": "Years of experience build trust.",
       "reviews": "Ask for your first reviews",
-      "reviewsBenefit": "Profiles with at least one review get many more messages. Send the link to 3 clients you have already worked with.",
-      "reviewsAction": "Ask on WhatsApp"
+      "reviewsBenefit": "Profiles with at least one review get many more messages. Send the link to 3 clients you have already worked with."
     },
     "offerGateTitle": "Start offering your services as a professional",
     "offerGateBody": "On ContrataCR, anyone who offers a service is a professional: a trade, caregiving, a class or a profession. Complete your profile once and start receiving clients.",

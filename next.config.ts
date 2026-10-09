@@ -49,7 +49,12 @@ const nextConfig: NextConfig = {
     ],
   },
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      // Guardar y rellenar contraseñas en la app de iPhone (webcredentials):
+      // Apple lee este archivo como JSON. En Cloudflare lo pone public/_headers.
+      { source: "/.well-known/apple-app-site-association", headers: [{ key: "Content-Type", value: "application/json" }] },
+    ];
   },
   // Short vanity links for social bios ("contratacr.com/ig" reads clean where a
   // utm-laden URL would not). Each redirect lands on the home page carrying the
