@@ -2,11 +2,16 @@ import { VerifiedSeal } from "@/components/ui/verified-seal";
 import { cn } from "@/lib/utils";
 
 /** En las listas y tarjetas va en 12 px, como el texto de su renglón, pero en
- *  un gris más oscuro que el resto: es lo que da confianza. */
-export const CEDULA_COMPACTA = "text-[12px] font-semibold leading-none text-[#4b5b70]";
+ *  un gris más oscuro que el resto: es lo que da confianza. Ahí dice solo
+ *  «Verificado» y NUNCA se parte ni se recorta (9-oct-2026): antes «Cédula
+ *  verificada» bajaba a dos líneas y le quitaba al nombre el doble de espacio.
+ *  Si no cabe todo, cede el nombre con «…»; el nombre completo está en la ficha. */
+export const CEDULA_COMPACTA = "shrink-0 whitespace-nowrap text-[12px] font-semibold leading-none text-[#4b5b70]";
 
 /**
- * «✓ Cédula verificada», la MISMA línea en todo el app (8-oct-2026): ficha,
+ * «✓ Identificación verificada» en fichas y panel, «✓ Verificado» en listas
+ * (9-oct-2026; antes «Cédula verificada»: la verificación manual también
+ * cubre DIMEX y pasaporte). La MISMA línea en todo el app (8-oct-2026): ficha,
  * panel, tarjetas de /profesionales, empleos y promociones. Va en su propia
  * línea debajo del nombre y solo cuando la cédula está verificada; sin
  * verificar no se pinta nada. Antes cada pantalla tenía su versión (12,5 o

@@ -939,14 +939,14 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                     <div className="min-w-0 lg:flex lg:items-center lg:justify-between lg:gap-4">
                       <h1 data-testid="professional-profile-name" className="min-w-0 text-[17px] font-bold leading-[1.15] text-[#162543] [overflow-wrap:anywhere] sm:text-2xl sm:leading-tight sm:[overflow-wrap:normal]">
                         {/* Sin sello junto al nombre en la ficha: lo dice la línea
-                            «Cédula verificada» de abajo, con el mismo ícono. En las
+                            «Identificación verificada» de abajo, con el mismo ícono. En las
                             listas (búsqueda, tarjetas, mapa) el sello sí sigue,
                             porque ahí no cabe el texto (8-oct-2026). */}
                         {displayName.primaryDesktop}
                       </h1>
                       <MenuFicha className="hidden shrink-0 lg:block" opciones={opcionesDeLaFicha} />
                     </div>
-                    {/* «Cédula verificada», justo debajo del nombre y solo si lo
+                    {/* «Identificación verificada», justo debajo del nombre y solo si lo
                         está: sin verificar no sale nada y el bloque sigue
                         centrado con la foto. Dice qué se revisó; el sello solo
                         no lo decía (8-oct-2026). */}

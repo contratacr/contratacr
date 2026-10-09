@@ -764,11 +764,11 @@ function OfferRow({
                 </span>
               )}
             </div>
-            {/* Nombre y «Cédula verificada» en UNA línea, como en Empleos: el
+            {/* Nombre y «Verificado» en UNA línea, como en Empleos: el
                 nombre se resume y cede con «…» si no cabe (8-oct-2026). */}
             <p className="flex min-w-0 items-center gap-2.5 text-[13px] font-semibold leading-5 text-[#101d35] sm:text-sm">
               <span className="min-w-0 truncate" title={offer.professional_name || undefined}>{formatPersonDisplayName(offer.professional_name, "mobile")}</span>
-              {offer.professional_verified && <CedulaVerificada texto={tPerfilFila("cedulaVerificada")} className={CEDULA_COMPACTA} />}
+              {offer.professional_verified && <CedulaVerificada texto={tPerfilFila("verificadoCorto")} className={CEDULA_COMPACTA} />}
             </p>
             {/* En computadora, un solo azul por fila: el del título, que es lo
                 que se abre. El precio va en azul marino y fuerte —es dinero—, y
@@ -859,7 +859,7 @@ function OfferPreview({
               entrada al perfil: un botón "Ver perfil" aparte competía con el
               contacto y decía lo mismo. */}
           <div className="flex min-w-0 items-center gap-2">
-            {/* El nombre completo y «Cédula verificada» en su propia línea
+            {/* El nombre completo y «Identificación verificada» en su propia línea
                 debajo, igual que en la ficha de un empleo (8-oct-2026). */}
             <div className="min-w-0 flex-1">
               {offer.professional_slug ? (

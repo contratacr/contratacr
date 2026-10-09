@@ -587,13 +587,13 @@ function JobRow({ job, selected, onSelect }: { job: JobPost; selected: boolean; 
         <EmployerAvatar job={job} />
         <div className="min-w-0 flex-1">
           <h2 className="line-clamp-2 text-[15px] font-extrabold leading-tight text-[#005eaa] lg:text-base">{job.title}</h2>
-          {/* Nombre y «Cédula verificada» en UNA línea (8-oct-2026): el nombre
+          {/* Nombre y «Verificado» en UNA línea (8-oct-2026): el nombre
               de persona se resume (nombre y primer apellido) y, si aun así no
               cabe, cede él con «…»; la cédula nunca baja de línea. En la ficha
               van por separado y el nombre sale completo. */}
           <p className="mt-0.5 flex min-w-0 items-center gap-2.5 text-sm font-semibold text-[#101d35]">
             <span className="min-w-0 truncate" title={job.employer_name || undefined}>{formatPersonDisplayName(job.employer_name || copy.professionalFallback, "mobile")}</span>
-            {job.employer_verified && <CedulaVerificada texto={tPerfil("cedulaVerificada")} className={CEDULA_COMPACTA} />}
+            {job.employer_verified && <CedulaVerificada texto={tPerfil("verificadoCorto")} className={CEDULA_COMPACTA} />}
           </p>
           {/* TELÉFONO: dónde y cuándo; modalidad y experiencia; salario. */}
           <JobMetaLine job={job} showApplicants={false} className="mt-0.5 truncate text-sm text-[#52627a] lg:hidden" />
@@ -644,7 +644,7 @@ function JobPreview({ job, isOwner, userId, onEdit, mobile = false, hideActions 
     <div className="flex items-start gap-4"><EmployerAvatar job={job} size="large" /><div className="min-w-0 flex-1">
       <div className="flex min-w-0 items-center gap-2">
         {/* El nombre completo (hasta dos líneas: recortado con «…» un nombre
-            de negocio pierde información) y «Cédula verificada» en su propia
+            de negocio pierde información) y «Identificación verificada» en su propia
             línea debajo, igual que en la ficha del profesional. Las ofertas de
             trabajo falsas son una estafa común: quien busca empleo necesita ver
             que el empleador existe (8-oct-2026). */}

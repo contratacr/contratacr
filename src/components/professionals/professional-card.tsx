@@ -393,7 +393,7 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
                   separator=","
                 />
               )}
-              {/* La fila de CONFIANZA: reseñas y «Cédula verificada», en ese
+              {/* La fila de CONFIANZA: reseñas y «Verificado», en ese
                   orden. Con reseñas, la cédula cierra la línea a la derecha,
                   encima del precio; sola, se queda a la izquierda: 274 de 313
                   profesionales tienen cédula y ninguna reseña, y a la derecha
@@ -405,7 +405,7 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
                   className="mt-1.5 flex min-w-0 items-center justify-between gap-3 lg:hidden"
                 >
                   {mobileMetric}
-                  {isVerified && <CedulaVerificada texto={tPerfil("cedulaVerificada")} className={CEDULA_COMPACTA} />}
+                  {isVerified && <CedulaVerificada texto={tPerfil("verificadoCorto")} className={CEDULA_COMPACTA} />}
                 </div>
               )}
             </div>
@@ -430,7 +430,7 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
           {(desktopMetric || isVerified) && (
           <div className="mt-1.5 hidden min-w-0 items-center gap-3 lg:flex">
               {desktopMetric}
-              {isVerified && <CedulaVerificada texto={tPerfil("cedulaVerificada")} className={CEDULA_COMPACTA} />}
+              {isVerified && <CedulaVerificada texto={tPerfil("verificadoCorto")} className={CEDULA_COMPACTA} />}
           </div>
           )}
         </div>

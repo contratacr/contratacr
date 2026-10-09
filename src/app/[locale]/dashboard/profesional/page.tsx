@@ -1990,7 +1990,7 @@ export default function DashboardPage() {
                     </button>
                   </div>
                 </div>
-                {/* «Cédula verificada» en su propia línea bajo el nombre, igual que en
+                {/* «Identificación verificada» en su propia línea bajo el nombre, igual que en
                     la ficha pública: el profesional ve lo mismo que ven sus
                     clientes. Si no está verificado no sale nada; el pendiente vive
                     en «Completa tu perfil». */}

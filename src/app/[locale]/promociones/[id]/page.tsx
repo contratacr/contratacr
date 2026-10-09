@@ -298,7 +298,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
                 precio. Aquí el título iba primero y el negocio debajo, así que
                 dos fichas del mismo app se leían al revés. */}
             <div className="flex items-start justify-between gap-3">
-              {/* El nombre completo y «Cédula verificada» en su propia línea
+              {/* El nombre completo y «Identificación verificada» en su propia línea
                   debajo, igual que en la ficha de un empleo (8-oct-2026). */}
               <div className="min-w-0 flex-1">
                 {quienPublica}

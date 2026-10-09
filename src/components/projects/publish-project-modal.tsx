@@ -439,7 +439,6 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
                     labelText={t("cedulaLabel")}
                     value={cedula}
                     onChange={setCedula}
-                    hint={t("cedulaAyuda")}
                     error={errorField === "cedula" ? (error ?? undefined) : undefined}
                   />
                 ))}

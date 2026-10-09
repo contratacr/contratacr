@@ -167,7 +167,7 @@ export async function POST(req: NextRequest) {
     let identityProvider: string | null = existingProfile?.client_identity_provider ?? null;
     let identityVerifiedAt: string | null = existingProfile?.client_identity_verified_at ?? null;
     // LA CÉDULA ES OPCIONAL AL PUBLICAR (8-oct-2026): sirve para que el
-    // proyecto salga con «Cédula verificada», nunca para frenarlo. Si el padrón
+    // proyecto salga con «Verificado», nunca para frenarlo. Si el padrón
     // no contesta o no la encuentra, el proyecto se publica igual, sin la
     // insignia y sin guardar un número que nadie confirmó; la respuesta dice
     // qué pasó para que el formulario lo explique.
