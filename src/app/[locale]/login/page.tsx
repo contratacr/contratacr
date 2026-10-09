@@ -499,6 +499,9 @@ export default function LoginPage() {
             <Input
               label={t("email")}
               type="email"
+              // Con estos dos el llavero de iPhone/Android ofrece rellenar y
+              // guardar la cuenta (en la app, además, con webcredentials).
+              autoComplete="username"
               placeholder="tu@email.com"
               error={errors.email?.message}
               {...register("email")}
@@ -507,7 +510,9 @@ export default function LoginPage() {
               <Input
                 label={t("password")}
                 type="password"
-                placeholder="••••••••"
+                autoComplete="current-password"
+                // Sin «••••••••»: parecía una contraseña ya escrita.
+                placeholder={t("passwordPlaceholder")}
                 error={errors.password?.message}
                 {...register("password")}
               />

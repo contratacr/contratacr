@@ -608,7 +608,8 @@
       "continueGoogle": "Continuar con Google",
       "emailChangedTitle": "Correo actualizado",
       "emailChangedLogin": "El cambio quedó confirmado. Inicia sesión con tu correo nuevo.",
-      "back": "Volver"
+      "back": "Volver",
+      "passwordPlaceholder": "Tu contraseña"
     },
     "register": {
       "title": "Crear cuenta",
@@ -1343,7 +1344,6 @@
       "skipStep": "Omitir",
       "ignoredCount": "{count, plural, one {# ignorado} other {# ignorados}}",
       "compactProgress": "{percent}% completado",
-      "nextStep": "Siguiente paso",
       "groupCore": "Esenciales",
       "groupOptional": "Para destacar",
       "viewSteps": "Ver pasos",
@@ -1352,8 +1352,7 @@
       "serviceDescriptionBenefit": "Explica qué incluye cada servicio.",
       "serviceExperienceBenefit": "Los años de experiencia dan confianza.",
       "reviews": "Pide tus primeras reseñas",
-      "reviewsBenefit": "Los perfiles con al menos una reseña reciben muchos más mensajes. Mándale el enlace a 3 clientes con los que ya trabajaste.",
-      "reviewsAction": "Pedir por WhatsApp"
+      "reviewsBenefit": "Los perfiles con al menos una reseña reciben muchos más mensajes. Mándale el enlace a 3 clientes con los que ya trabajaste."
     },
     "offerGateTitle": "Empieza a ofrecer tus servicios como profesional",
     "offerGateBody": "En ContrataCR, cualquiera que ofrece un servicio es un profesional: un trabajo técnico, un cuidado, una clase o una profesión. Completa tu perfil una vez y empieza a recibir clientes.",

@@ -1186,6 +1186,7 @@ export default function RegisterProfessionalPage() {
                 <Input
                   label={<>{t("password")} <span className="text-red-500">*</span></>}
                   type="password"
+                  autoComplete="new-password"
                   placeholder={t("passwordPlaceholder")}
                   error={form1.formState.errors.password?.message}
                   {...form1.register("password")}
@@ -1196,6 +1197,7 @@ export default function RegisterProfessionalPage() {
               <Input
                 label={<>{t("confirmPassword")} <span className="text-red-500">*</span></>}
                 type="password"
+                autoComplete="new-password"
                 placeholder={tRp("confirmPlaceholder")}
                 error={form1.formState.errors.confirmPassword?.message}
                 {...form1.register("confirmPassword")}

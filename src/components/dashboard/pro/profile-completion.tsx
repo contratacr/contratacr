@@ -5,7 +5,6 @@ import { useTranslations } from "next-intl";
 import { ChevronRight, ListChecks } from "lucide-react";
 import { serviceSupportsProfessionalCredential } from "@/lib/professional-credentials";
 import { enlacePerfil } from "@/lib/profile-url";
-import { WhatsAppLogo } from "@/components/ui/whatsapp-logo";
 import { countCases } from "@/lib/services";
 
 type ProRecord = Record<string, unknown>;
@@ -148,8 +147,6 @@ export function computeCompletion(pro: ProRecord): {
   return { percent, items, verified: pro.verification_status === "verified" };
 }
 
-const botonDelPaso = "mt-2.5 inline-flex h-9 items-center gap-1.5 rounded-full bg-[#009FD9] px-4 text-[13px] font-bold text-white transition hover:bg-[#0089bb]";
-
 // Which benefit line each step shows (existing i18n copies).
 const STEP_HINTS: Record<string, string> = {
   photo: "photoBenefit",
@@ -239,13 +236,10 @@ export function ProfileCompletion({
   }
 
   if (variant === "header") {
-    // Franja integrada al pie de la tarjeta de identidad: barra fina + pasos y,
-    // debajo, SOLO el siguiente paso con su botón directo. Antes iban dos
-    // tarjetas fijas («Pide reseñas», «Agrega precio») fuera de la lista y
-    // el contador no las contaba (9-oct-2026).
-    const siguiente = missing[0];
+    // Franja integrada al pie de la tarjeta de identidad: barra fina + pasos.
+    // Reseñas y precio viven SOLO dentro de la lista (9-oct-2026, Isaac): una
+    // tarjeta afuera repetía el primer paso; el empujón va por notificación.
     return (
-      <>
       <button
         type="button"
         onClick={openSteps}
@@ -261,25 +255,6 @@ export function ProfileCompletion({
           <ChevronRight className="h-4 w-4 shrink-0 text-[#8aa0b4]" />
         </span>
       </button>
-      {siguiente && (
-        <div className="mt-3 rounded-2xl border border-[#e5e7eb] bg-white p-4" data-siguiente-paso={siguiente.key}>
-          <p className="text-[11px] font-bold uppercase tracking-[0.06em] text-[#68778d]">{t("nextStep")}</p>
-          <p className="mt-1 text-[15px] font-bold text-[#162543]">{t(siguiente.key)}</p>
-          {STEP_HINTS[siguiente.key] && (
-            <p className="mt-0.5 text-[13px] leading-5 text-[#4b5b70]">{t(STEP_HINTS[siguiente.key])}</p>
-          )}
-          {siguiente.key === "reviews" && enlaceResenas ? (
-            <a href={enlaceResenas} target="_blank" rel="noopener noreferrer" className={botonDelPaso}>
-              <WhatsAppLogo className="h-4 w-4" /> {t("reviewsAction")}
-            </a>
-          ) : (
-            <button type="button" onClick={() => irAlPaso(siguiente)} className={botonDelPaso}>
-              {t("completeAction")}
-            </button>
-          )}
-        </div>
-      )}
-      </>
     );
   }
 

@@ -315,6 +315,7 @@ export default function RegisterClientPage() {
                     <div className="relative">
                       <input
                         type={showPassword ? "text" : "password"}
+                        autoComplete="new-password"
                         className={cn(inputClass, "pr-11")}
                         placeholder={t("passwordPlaceholder")}
                         value={password}
@@ -339,6 +340,7 @@ export default function RegisterClientPage() {
                     <div className="relative">
                       <input
                         type={showConfirm ? "text" : "password"}
+                        autoComplete="new-password"
                         className={cn(inputClass, "pr-11", confirmPassword && password !== confirmPassword && "border-red-400 focus:ring-red-400")}
                         placeholder={t("confirmPlaceholder")}
                         value={confirmPassword}
