@@ -212,7 +212,7 @@ export function SearchResultsInfinite({
         const keepAlive = index >= revealed - 10 || windowState.near.has(id);
         if (!keepAlive) {
           return (
-            <div key={id} ref={observeSlot} data-search-result="" data-result-id={id} className="ccr-search-card-slot" style={{ height: windowState.heights.get(id) ?? 320 }} aria-hidden />
+            <div key={id} ref={observeSlot} data-search-result="" data-result-id={id} className="ccr-search-card-slot" style={{ height: windowState.heights.get(id) ?? 217 }} aria-hidden />
           );
         }
         return (

@@ -1930,17 +1930,18 @@ body.ccr-search-sheet-page {
   padding-top: max(3rem, env(safe-area-inset-top));
 }
 
-/* Search cards below the fold skip layout and paint until they scroll near;
-   the placeholder height keeps the scrollbar honest. */
-.ccr-search-card-slot {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 320px;
-}
-/* En computadora la tarjeta mide ~154 px: con la estimación del teléfono (320)
-   lo que viene debajo —la tarjeta de publicar, la paginación— bajaba 166 px por
-   tarjeta al pintarse (salto medido: 0,06 con dos resultados). */
+/* EN EL TELÉFONO, SIN content-visibility (9-oct-2026). Reservaba 320 px por
+   tarjeta sin dibujar y la tarjeta real mide ~217: al llegar a cada una se
+   encogía 100 px de golpe. Bajando se sentía como un tirón y, subiendo, las de
+   arriba se encogían y la lista «se devolvía» (Safari en iPhone no compensa el
+   desplazamiento). El rendimiento lo cuida la ventana de search-results-
+   infinite, que ya cambia por marcadores con la altura medida las tarjetas
+   lejanas. En computadora sigue, con la altura real (~154 px). */
 @media (min-width: 1024px) {
-  .ccr-search-card-slot { contain-intrinsic-size: auto 154px; }
+  .ccr-search-card-slot {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 154px;
+  }
 }
 
 /* Con el menú de lugares abierto, la tarjeta suelta el aislamiento de pintado:
