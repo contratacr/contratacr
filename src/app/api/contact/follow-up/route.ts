@@ -1,3 +1,4 @@
+import { recordGrowthConversion } from "@/lib/analytics/growth-server";
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -129,8 +130,10 @@ export async function PATCH(request: NextRequest) {
       updated_at: new Date().toISOString(),
     }).eq("id", id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    const metaConversion = await recordGrowthConversion(request,"service_hire_confirmed",`followup:${id}`,userId);
     const response = NextResponse.json({
       ok: true,
+      metaConversion,
       review: {
         contactId: followUp.id,
         professionalId: followUp.professional_id,
@@ -149,8 +152,10 @@ export async function PATCH(request: NextRequest) {
     updated_at: new Date().toISOString(),
   }).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  const metaConversion = await recordGrowthConversion(request,"service_hire_confirmed",`followup:${id}`,userId);
   return NextResponse.json({
     ok: true,
+    metaConversion,
     review: {
       contactId: followUp.id,
       professionalId: followUp.professional_id,

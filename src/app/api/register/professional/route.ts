@@ -1,3 +1,4 @@
+import { recordProfessionalReady } from "@/lib/analytics/professional-growth";
 import { NextResponse } from "next/server";
 import { notifyVerificationOutreach } from "@/lib/verification-notify";
 import { enforceRateLimit } from "@/lib/rate-limit";
@@ -353,7 +354,8 @@ export async function POST(req: Request) {
       });
 
       await marcarComoProfesional(supabase, userId);
-      return NextResponse.json({ ok: true, slug: existingPro.slug });
+      const metaConversion = await recordProfessionalReady(req,userId);
+      return NextResponse.json({ ok: true, slug: existingPro.slug, metaConversion });
     }
 
     // ── 5. Build slug ─────────────────────────────────────────────────────────
@@ -450,7 +452,8 @@ export async function POST(req: Request) {
     // profesional recién registrado no se le invita a contratar (9-oct-2026).
     await avisarCompletarPerfil(supabase, userId);
     await marcarComoProfesional(supabase, userId);
-    return NextResponse.json({ ok: true, slug });
+    const metaConversion = await recordProfessionalReady(req,userId);
+    return NextResponse.json({ ok: true, slug, metaConversion });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Error interno del servidor";
     return NextResponse.json({ error: message }, { status: 500 });

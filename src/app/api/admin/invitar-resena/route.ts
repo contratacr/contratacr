@@ -2,33 +2,54 @@ import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { invitarAResenaDeGoogle } from "@/lib/notifications/invitacion-resena-google";
+import { cuentasConExperiencia } from "@/lib/notifications/invitar-tras-experiencia";
+import { hasRecentOnceReceipt, ONCE_NOTIFICATION_TYPES, onceReceipts } from "@/lib/notifications/once";
 
 export const dynamic = "force-dynamic";
 
-/**
- * Manda la invitación a dejar una reseña en Google a TODAS las cuentas que
- * todavía no la tienen. Se dispara desde el panel y se puede volver a
- * disparar sin miedo: el ayudante se salta a quien ya la recibió, así que
- * pulsarlo dos veces no manda nada dos veces —y sirve para alcanzar a quien
- * se registró después—.
- */
-export async function GET() {
-  const admin = await getApiAdmin();
-  if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+async function estado() {
   const db = createAdminClient();
-  const [{ count: cuentas }, { count: yaTienen }] = await Promise.all([
-    db.from("profiles").select("id", { count: "exact", head: true }).eq("is_disabled", false),
-    db.from("notifications").select("id", { count: "exact", head: true }).eq("type", "resena_google"),
+  const ids: string[] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await db.from("profiles").select("id").eq("is_disabled", false).order("id").range(from, from + 999);
+    if (error) throw error;
+    ids.push(...(data ?? []).map((row) => row.id));
+    if ((data ?? []).length < 1000) break;
+  }
+  const [recibos, experiencia] = await Promise.all([
+    onceReceipts(db, ids, [...ONCE_NOTIFICATION_TYPES]), cuentasConExperiencia(db),
   ]);
-  return NextResponse.json({ cuentas: cuentas ?? 0, yaTienen: yaTienen ?? 0 });
+  const activas = new Set(ids);
+  const google = recibos.filter((r) => r.type === "resena_google");
+  const bloqueadas = new Set(google.map((r) => r.user_id));
+  const pendientes = [...new Set(experiencia)].filter((id) => activas.has(id) && !bloqueadas.has(id) && !hasRecentOnceReceipt(recibos, id));
+  return {
+    db, pendientes,
+    resumen: {
+      cuentas: ids.length,
+      yaTienen: google.filter((r) => r.status === "sent").length,
+      historialSinConfirmar: google.filter((r) => r.status === "historical_unknown").length,
+      restantes: pendientes.length,
+    },
+  };
+}
+
+export async function GET() {
+  if (!await getApiAdmin()) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  try {
+    return NextResponse.json((await estado()).resumen);
+  } catch {
+    return NextResponse.json({ error: "No se pudo comprobar el historial de invitaciones. No se enviará nada sin verificarlo." }, { status: 503 });
+  }
 }
 
 export async function POST() {
-  const admin = await getApiAdmin();
-  if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
-  const db = createAdminClient();
-  const { data } = await db.from("profiles").select("id").eq("is_disabled", false).limit(10_000);
-  const ids = (data ?? []).map((fila) => String((fila as { id: string }).id));
-  const resultado = await invitarAResenaDeGoogle(db, ids);
-  return NextResponse.json({ ok: true, ...resultado, cuentas: ids.length });
+  if (!await getApiAdmin()) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  try {
+    const { db, pendientes } = await estado();
+    const resultado = await invitarAResenaDeGoogle(db, pendientes);
+    return NextResponse.json({ ok: true, ...resultado, ...(await estado()).resumen });
+  } catch {
+    return NextResponse.json({ error: "No se pudo completar el envío. Actualiza el estado antes de reintentar; las invitaciones guardadas no se repetirán." }, { status: 503 });
+  }
 }

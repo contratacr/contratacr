@@ -1,3 +1,4 @@
+import { hasRecentOnceReceipt, insertOnceNotifications, ONCE_NOTIFICATION_TYPES, onceReceipts } from "@/lib/notifications/once";
 import type { createAdminClient } from "@/lib/supabase/admin";
 
 type Admin = ReturnType<typeof createAdminClient>;
@@ -24,11 +25,13 @@ type Servicio = { active?: unknown; priceAmount?: unknown; priceType?: unknown; 
 /** Un «desde ₡» de verdad: «a convenir» no cuenta (misma regla que el panel). */
 export function tienePrecioReal(servicios: unknown): boolean {
   if (!Array.isArray(servicios)) return false;
-  return servicios.some((s: Servicio) =>
-    s && typeof s === "object" && s.active !== false && s.priceType !== "a_convenir" && (
-      (typeof s.priceAmount === "number" && s.priceAmount > 0) ||
-      (typeof s.price === "string" && s.price.trim().length > 0)
-    ));
+  return servicios.some((s: Servicio) => {
+    if (!s || typeof s !== "object" || s.active === false || s.priceType === "a_convenir") return false;
+    if (typeof s.priceAmount === "number" && Number.isFinite(s.priceAmount) && s.priceAmount > 0) return true;
+    // Legacy free-text prices count only if they contain a positive amount.
+    // "Consultar precio" and "A convenir" are not starting prices.
+    return typeof s.price === "string" && Number(s.price.replace(/[^0-9]/g, "")) > 0;
+  });
 }
 
 type Pro = { profile_id: string | null; created_at: string | null; review_count: number | null; services: unknown };
@@ -38,10 +41,11 @@ export async function empujarResenasYPrecio(admin: Admin, { simular = false, aho
   for (let desde = 0; ; desde += 1000) {
     const { data, error } = await admin
       .from("professionals")
-      .select("profile_id, created_at, review_count, services")
+      .select("profile_id, created_at, review_count, services, profiles!inner(is_disabled)")
       .not("profile_id", "is", null)
       .eq("is_banned", false)
-      .range(desde, desde + 999);
+      .eq("profiles.is_disabled", false)
+      .order("id").range(desde, desde + 999);
     if (error) throw error;
     const filas = (data ?? []) as Pro[];
     pros.push(...filas);
@@ -51,18 +55,13 @@ export async function empujarResenasYPrecio(admin: Admin, { simular = false, aho
   // Lo que cada cuenta ya recibió de estos dos avisos (y cuándo).
   const ids = pros.map((p) => p.profile_id as string);
   const recibido = new Map<string, { resenas?: number; precio?: number }>();
-  for (let i = 0; i < ids.length; i += 300) {
-    const { data } = await admin
-      .from("notifications")
-      .select("user_id, type, created_at")
-      .in("type", ["pide_resenas", "agrega_precio"])
-      .in("user_id", ids.slice(i, i + 300));
-    for (const f of (data ?? []) as { user_id: string; type: string; created_at: string }[]) {
-      const r = recibido.get(f.user_id) ?? {};
-      if (f.type === "pide_resenas") r.resenas = Date.parse(f.created_at);
-      else r.precio = Date.parse(f.created_at);
-      recibido.set(f.user_id, r);
-    }
+  const recibos = await onceReceipts(admin, ids, [...ONCE_NOTIFICATION_TYPES]);
+  for (const f of recibos.filter((r) => r.type === "pide_resenas" || r.type === "agrega_precio")) {
+    const r = recibido.get(f.user_id) ?? {};
+    const fecha = f.sent_at ? Date.parse(f.sent_at) : ahora;
+    if (f.type === "pide_resenas") r.resenas = fecha;
+    else r.precio = fecha;
+    recibido.set(f.user_id, r);
   }
 
   const resenas: string[] = [];
@@ -71,6 +70,7 @@ export async function empujarResenasYPrecio(admin: Admin, { simular = false, aho
     const id = pro.profile_id as string;
     const antiguedad = ahora - Date.parse(pro.created_at ?? new Date(ahora).toISOString());
     const ya = recibido.get(id) ?? {};
+    if (hasRecentOnceReceipt(recibos, id, ahora)) continue;
     const faltaResena = Number(pro.review_count ?? 0) <= 0;
     const faltaPrecio = !tienePrecioReal(pro.services);
     if (faltaResena && ya.resenas === undefined && antiguedad >= 3 * DIA) {
@@ -79,7 +79,8 @@ export async function empujarResenasYPrecio(admin: Admin, { simular = false, aho
     }
     if (faltaPrecio && ya.precio === undefined && antiguedad >= 7 * DIA) {
       // Si le tocó (o le toca) el de reseñas, el de precio espera 4 días.
-      if (faltaResena && (ya.resenas === undefined || ahora - ya.resenas < 4 * DIA)) continue;
+      if (ya.resenas !== undefined && ahora - ya.resenas < 4 * DIA) continue;
+      if (faltaResena && ya.resenas === undefined) continue;
       precio.push(id);
     }
   }
@@ -87,25 +88,17 @@ export async function empujarResenasYPrecio(admin: Admin, { simular = false, aho
   if (simular) return { resenas: resenas.length, precio: precio.length };
 
   const insertar = async (userIds: string[], type: "pide_resenas" | "agrega_precio") => {
-    let enviadas = 0;
-    for (let i = 0; i < userIds.length; i += 200) {
-      const tanda = userIds.slice(i, i + 200).map((userId) => ({
-        user_id: userId,
-        type,
-        title: type === "pide_resenas" ? "Pide tus primeras reseñas" : "Agrega un precio de referencia",
-        message: type === "pide_resenas"
-          ? "Los perfiles con al menos una reseña reciben muchos más mensajes. Pídesela a 3 clientes con los que ya trabajaste: el mensaje ya está listo."
-          : "El cliente se anima más a escribir cuando ve un «desde ₡». Pon el mínimo con el que arrancas; el final lo acuerdas con cada cliente.",
-        data: { link: "/dashboard/profesional?mode=offer&tab=completion" },
-        read: false,
-      }));
-      const { error } = await admin.from("notifications").insert(tanda);
-      // Un rechazo de la base no puede pasar callado (lección del 4-oct: el
-      // tipo no existía en la regla y no llegó ninguno).
-      if (error) console.error(`[${type}] insert`, error.code, error.message);
-      else enviadas += tanda.length;
-    }
-    return enviadas;
+    return insertOnceNotifications(admin, [...new Set(userIds)].map((userId) => ({
+      user_id: userId,
+      type,
+      title: type === "pide_resenas" ? "Pide tus primeras reseñas" : "Agrega un precio de referencia",
+      message: type === "pide_resenas"
+        ? "Pide una reseña a clientes con los que ya trabajaste. En tu panel tienes un mensaje listo para compartir por WhatsApp."
+        : "Agrega un precio de referencia para orientar al cliente. El precio final lo acuerdas según el trabajo.",
+      data: { link: "/dashboard/profesional?mode=offer&tab=completion" },
+      read: false,
+    })));
+
   };
 
   return { resenas: await insertar(resenas, "pide_resenas"), precio: await insertar(precio, "agrega_precio") };

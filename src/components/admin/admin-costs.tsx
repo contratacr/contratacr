@@ -130,12 +130,12 @@ export function AdminCosts() {
 function Summary({ data }: { data: Payload }) {
   const { summary, services } = data;
   const recurring = services.filter((s) => !s.variable && (s.monthlyUsd > 0 || s.annualUsd > 0 || (s.monthlyCrc ?? 0) > 0));
-  const maxMonth = Math.max(1, ...summary.byMonth.map((m) => m.usd + m.crc / 500));
+  const maxMonth = Math.max(1, ...summary.byMonth.map((m) => m.usd));
   return (
     <>
       <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Tile label="Cada mes" value={both(summary.monthlyRecurringUsd, summary.monthlyRecurringCrc)} hint={summary.annualRecurringUsd > 0 ? `+ ${usd(summary.annualRecurringUsd)} al año en renovaciones` : undefined} accent />
-        <Tile label="Gastado desde el inicio" value={both(summary.lifetimeUsd, summary.lifetimeCrc)} hint="suscripciones desde su fecha de inicio + movimientos" />
+        <Tile label="Presupuesto mensual vigente" value={both(summary.monthlyRecurringUsd, summary.monthlyRecurringCrc)} hint={summary.annualRecurringUsd > 0 ? `+ ${usd(summary.annualRecurringUsd)} al año en renovaciones` : undefined} accent />
+        <Tile label="Total de pagos registrados" value={both(summary.lifetimeUsd, summary.lifetimeCrc)} hint="Solo pagos anotados; no incluye meses sin registrar" />
         <Tile label="Publicidad" value={both(summary.adsUsd, summary.adsCrc)} hint="Meta y otras campañas registradas" />
         <Tile label="Contenido en redes" value={both(summary.contentUsd, summary.contentCrc)} hint="publicaciones, destacadas y videos" />
       </div>
@@ -143,8 +143,8 @@ function Summary({ data }: { data: Payload }) {
       <section className="mb-4 rounded-2xl border border-[#e5e7eb] bg-white p-4">
         <h2 className="mb-3 text-sm font-bold text-[#0f172a]">Últimos doce meses</h2>
         <div className="flex h-40 items-end gap-1.5 sm:gap-2">
-          {summary.byMonth.map((m) => {
-            const value = m.usd + m.crc / 500;
+          {summary.byMonth.slice(-12).map((m) => {
+            const value = m.usd;
             const height = Math.max(value > 0 ? 6 : 2, Math.round((value / maxMonth) * 100));
             return (
               <div key={m.month} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1" title={`${monthLabel(m.month)}: ${both(m.usd, m.crc)}`}>
@@ -155,12 +155,27 @@ function Summary({ data }: { data: Payload }) {
             );
           })}
         </div>
-        <p className="mt-2 text-[11px] text-[#94a3b8]">Cada barra suma las suscripciones activas ese mes más los movimientos registrados. Los colones se muestran junto a los dólares, no se convierten.</p>
+        <p className="mt-2 text-[11px] text-[#94a3b8]">Las barras representan pagos en USD. Los pagos en colones y el acumulado de ambas monedas están en la tabla; no se convierten.</p>
+      </section>
+
+      <section className="mb-4 overflow-x-auto rounded-2xl border border-[#e5e7eb] bg-white p-4">
+        <h2 className="mb-2 text-sm font-bold text-[#0f172a]">Gasto mensual y acumulado</h2>
+        <p className="mb-3 text-xs text-[#64748b]">Anotá cada suscripción pagada en Movimientos. Cambiar el presupuesto no modifica pagos anteriores. Un mes sin movimientos no confirma que no hubo gastos.</p>
+        <table className="w-full text-left text-sm">
+          <thead><tr><th className="py-2">Mes</th><th className="py-2">Pagos del mes</th><th className="py-2">Acumulado</th></tr></thead>
+          <tbody>{summary.byMonth.map((month) => (
+            <tr key={month.month} className="border-t border-[#eef2f6]">
+              <td className="py-2 pr-3">{monthLabel(month.month)}</td>
+              <td className="py-2 pr-3 tabular-nums">{month.usd || month.crc ? both(month.usd, month.crc) : "Sin pagos registrados"}</td>
+              <td className="py-2 tabular-nums">{both(month.cumulativeUsd, month.cumulativeCrc)}</td>
+            </tr>
+          ))}</tbody>
+        </table>
       </section>
 
       <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-2">
         <section className="rounded-2xl border border-[#e5e7eb] bg-white p-4">
-          <h2 className="mb-3 text-sm font-bold text-[#0f172a]">La factura de cada mes</h2>
+          <h2 className="mb-3 text-sm font-bold text-[#0f172a]">Presupuesto de suscripciones vigente</h2>
           <ul className="divide-y divide-[#eef2f6]">
             {recurring.map((s) => (
               <li key={s.id} className="flex items-center justify-between gap-3 py-2 text-sm">
@@ -268,7 +283,7 @@ function ServiceCard({ service, apply }: { service: CostServiceView; apply: (wor
       ) : (
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-[#64748b]">
           <div className="space-y-0.5">
-            <p>{service.variable ? "Se registra por pieza en Movimientos" : service.lifetimeUsd > 0 || service.lifetimeCrc > 0 ? `${both(service.lifetimeUsd, service.lifetimeCrc)} acumulados en suscripción` : "Sin costo acumulado"}{service.ledgerUsd > 0 || service.ledgerCrc > 0 ? ` · ${both(service.ledgerUsd, service.ledgerCrc)} en movimientos` : ""}</p>
+            <p>{service.variable ? "Pagos registrados en Movimientos" : service.lifetimeUsd > 0 || service.lifetimeCrc > 0 ? `${both(service.lifetimeUsd, service.lifetimeCrc)} acumulados en suscripción` : "Historial en Movimientos"}{service.ledgerUsd > 0 || service.ledgerCrc > 0 ? ` · ${both(service.ledgerUsd, service.ledgerCrc)} en movimientos` : ""}</p>
             <p>{service.usageNote ? <>Uso: <span className="font-semibold text-[#0f172a]">{service.usageNote}</span>{service.usageUpdatedAt ? ` (${dateLabel(service.usageUpdatedAt.slice(0, 10))})` : ""}</> : "Uso de este mes: sin anotar"}</p>
           </div>
           <div className="flex items-center gap-2">

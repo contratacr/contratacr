@@ -1,5 +1,7 @@
 "use client";
 
+import { trackMetaConversion } from "@/lib/analytics/meta-pixel";
+
 import { irAlInicio, noInsistirArriba } from "@/lib/ir-al-inicio";
 import { pareceFijoDeCostaRica } from "@/lib/telefono-movil";
 import { AvisoDeError } from "@/components/ui/etiqueta-campo";
@@ -837,6 +839,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
       }
       if (seq === saveSeq.current) {
         if (collapseOnSave) setOpenSections(new Set());
+      void fetch("/api/analytics/professional-ready", { method: "POST" }).then(async response => {
+        if (response.ok) trackMetaConversion((await response.json()).metaConversion);
+      }).catch(() => {});
         onSaved?.();
       }
       return true;

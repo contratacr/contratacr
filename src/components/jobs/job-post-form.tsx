@@ -1,5 +1,7 @@
 "use client";
 
+import { trackMetaConversion } from "@/lib/analytics/meta-pixel";
+
 import { flushSync } from "react-dom";
 
 import { rutaEmpleo } from "@/lib/marketplace-url";
@@ -478,6 +480,7 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
         (delServidor as Error & { delServidor?: boolean }).delServidor = typeof data?.error === "string";
         throw delServidor;
       }
+      trackMetaConversion(data.metaConversion);
       invalidateAppData("jobs");
       if (!editing) borrarBorrador("empleo");
       if (presentation === "modal") {

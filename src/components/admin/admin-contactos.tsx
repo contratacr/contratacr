@@ -58,7 +58,7 @@ export function AdminContactos() {
   return (
     <div className="space-y-4">
       <header>
-        <h1 className="text-xl font-extrabold text-[#0f172a]">Contactos</h1>
+        <h1 className="text-xl font-extrabold text-[#0f172a]">Contactos a profesionales</h1>
         <p className="mt-1 text-sm text-[#64748b]">
           Cuánta gente está contactando profesionales, y a quiénes. Un mismo visitante cuenta una vez por profesional.
         </p>

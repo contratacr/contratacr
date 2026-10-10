@@ -1,5 +1,7 @@
 "use client";
 
+import { trackMetaConversion } from "@/lib/analytics/meta-pixel";
+
 import { PantallaDeExito } from "@/components/ui/pantalla-de-exito";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { useSearchParams } from "next/navigation";
@@ -115,12 +117,12 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
     setDestinatarios(0);
     if (!form.categoryId) return;
     let vivo = true;
-    fetch(`/api/projects?role=destinatarios&category=${encodeURIComponent(form.categoryId)}`)
+    fetch(`/api/projects?role=destinatarios&category=${encodeURIComponent(form.categoryId)}&province=${encodeURIComponent(form.provinciaId || "")}&canton=${encodeURIComponent(form.cantonId || "")}`)
       .then((r) => (r.ok ? r.json() : { total: 0 }))
       .then((d) => { if (vivo) setDestinatarios(Number(d?.total) || 0); })
       .catch(() => {});
     return () => { vivo = false; };
-  }, [form.categoryId]);
+  }, [form.categoryId, form.provinciaId, form.cantonId]);
 
   useEffect(() => {
     if (!user) return;
@@ -280,6 +282,7 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
         padron_caido: t("identidadPadronCaido"),
         en_revision: t("identidadEnRevision"),
       };
+      trackMetaConversion(data.metaConversion);
       setAvisoDeIdentidad(typeof data.identidad === "string" ? avisos[data.identidad] ?? null : null);
       setPublished({
         notifiedCount: typeof data.notifiedCount === "number" ? data.notifiedCount : 0,

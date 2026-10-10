@@ -148,18 +148,18 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
   }
   if (notification.type === "pide_resenas") {
     return { title, message: en
-      ? "Profiles with at least one review get many more messages. Ask 3 clients you have worked with: the message is ready."
-      : "Los perfiles con al menos una reseña reciben muchos más mensajes. Pídesela a 3 clientes con los que ya trabajaste: el mensaje ya está listo." };
+      ? "Ask clients you have worked with for a review. Your dashboard has a message ready to share on WhatsApp."
+      : "Pide una reseña a clientes con los que ya trabajaste. En tu panel tienes un mensaje listo para compartir por WhatsApp." };
   }
   if (notification.type === "agrega_precio") {
     return { title, message: en
-      ? "Clients write more when they see a “from ₡” price. Put the minimum you usually start at; you still agree the final price."
-      : "El cliente se anima más a escribir cuando ve un «desde ₡». Pon el mínimo con el que arrancas; el final lo acuerdas con cada cliente." };
+      ? "Add a starting price to guide clients. Agree the final price according to the job."
+      : "Agrega un precio de referencia para orientar al cliente. El precio final lo acuerdas según el trabajo." };
   }
   if (notification.type === "completa_perfil") {
     return { title, message: en
-      ? "Profiles with a photo, description and prices get more clients. It takes a few minutes."
-      : "Los perfiles con foto, descripción y precios reciben más clientes. Te toma unos minutos." };
+      ? "Add your photo, description and services so clients can learn what you offer."
+      : "Agrega tu foto, descripción y servicios para que los clientes conozcan lo que ofreces." };
   }
 
   if (notification.type === "review_received") {

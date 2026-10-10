@@ -1,0 +1,36 @@
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+const { PGlite } = await import(process.env.PGLITE_MODULE_PATH || "@electric-sql/pglite");
+const db = new PGlite();let checks=0;
+try {
+ await db.exec("create role anon;create role authenticated;create role service_role;");
+ await db.exec(`create table profiles(id uuid primary key,is_disabled boolean default false);
+ create table professionals(id uuid primary key,profile_id uuid,services jsonb,whatsapp text,provincia_id text,coverage_country boolean,coverage_provincias text[],coverage_areas jsonb,is_banned boolean,oculto_del_buscador boolean,verification_status text);
+ create table professional_offers(id uuid primary key,professional_id uuid,offer_type text,status text);
+ create table job_posts(id uuid primary key,employer_id uuid,status text);
+ insert into profiles(id) values ('00000000-0000-4000-8000-000000000001');
+ insert into professionals(id,profile_id,services,whatsapp,provincia_id) values ('00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000001','[{"name":"Electricidad","active":true}]','88888888','sj');
+ insert into professional_offers values ('00000000-0000-4000-8000-000000000003','00000000-0000-4000-8000-000000000002','service_offer','published');
+ insert into professional_offers values ('00000000-0000-4000-8000-000000000004','00000000-0000-4000-8000-000000000002','service_offer','draft');
+ insert into job_posts values ('00000000-0000-4000-8000-000000000005','00000000-0000-4000-8000-000000000002','paused');
+ `);
+ const migration=await readFile(new URL("../supabase/migrations/237_medicion_de_crecimiento_meta.sql",import.meta.url),"utf8");
+ await db.exec(migration);await db.exec(migration);checks++;
+ const historical=await db.query("select action,status,payload from growth_conversion_events where is_baseline=true");
+ assert.equal(historical.rows.length,3);assert.ok(historical.rows.every(row=>row.status==='suppressed' && row.payload===null));checks++;
+ const insert=(id,status="pending")=>db.query("insert into growth_conversion_events(event_id,action,audience,actor_hash,status,payload) values ($1,'service_contact','client','visitor',$2,$3)",[id,status,JSON.stringify({event_id:id,event_name:"Contact"})]);
+ await insert("once");await assert.rejects(()=>insert("once"));checks++;
+ await insert("suppressed","suppressed");
+ const first=await db.query("select * from claim_growth_conversions(25)");assert.equal(first.rows.length,1);assert.equal(first.rows[0].event_id,"once");assert.equal(first.rows[0].attempts,1);checks++;
+ assert.equal((await db.query("select * from claim_growth_conversions(25)")).rows.length,0);checks++;
+ await db.exec("update growth_conversion_events set locked_at=now()-interval '6 minutes' where event_id='once'");
+ const reclaimed=await db.query("select * from claim_growth_conversions(25)");assert.equal(reclaimed.rows[0].event_id,"once");assert.equal(reclaimed.rows[0].attempts,2);checks++;
+ await db.exec("update growth_conversion_events set status='pending',next_attempt_at=now()+interval '1 hour',locked_at=null where event_id='once'");
+ assert.equal((await db.query("select * from claim_growth_conversions(25)")).rows.length,0);checks++;
+ await db.exec("update growth_conversion_events set status='sent',sent_at=now()-interval '2 days' where event_id='once'");
+ await db.query("select * from claim_growth_conversions(25)");assert.equal((await db.query("select payload from growth_conversion_events where event_id='once'")).rows[0].payload,null);checks++;
+ await insert("expired");await db.exec("update growth_conversion_events set created_at=now()-interval '7 days' where event_id='expired'");
+ await db.query("select * from claim_growth_conversions(25)");assert.equal((await db.query("select status,payload from growth_conversion_events where event_id='expired'")).rows[0].status,"expired");checks++;
+ await db.exec("set role authenticated");await assert.rejects(()=>db.query("select * from growth_conversion_events"));await assert.rejects(()=>db.query("select * from claim_growth_conversions(5)"));checks+=2;
+ console.log(`${checks} isolated SQL checks passed; no accounts, ads or Meta events touched.`);
+} finally { await db.close(); }

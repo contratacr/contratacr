@@ -80,6 +80,7 @@ jobs:
           NEXT_PUBLIC_GOOGLE_IOS_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_GOOGLE_IOS_CLIENT_ID }}
           NEXT_PUBLIC_GOOGLE_IDENTITY_ORIGINS: ${{ secrets.NEXT_PUBLIC_GOOGLE_IDENTITY_ORIGINS }}
           NEXT_PUBLIC_FACEBOOK_APP_ID: ${{ secrets.NEXT_PUBLIC_FACEBOOK_APP_ID }}
+          NEXT_PUBLIC_META_PIXEL_ID: ${{ secrets.NEXT_PUBLIC_META_PIXEL_ID }}
         run: |
           node - <<'NODE'
           const required = ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY", "NEXT_PUBLIC_APP_URL"];
@@ -111,6 +112,7 @@ jobs:
           NEXT_PUBLIC_GOOGLE_IOS_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_GOOGLE_IOS_CLIENT_ID }}
           NEXT_PUBLIC_GOOGLE_IDENTITY_ORIGINS: ${{ secrets.NEXT_PUBLIC_GOOGLE_IDENTITY_ORIGINS }}
           NEXT_PUBLIC_FACEBOOK_APP_ID: ${{ secrets.NEXT_PUBLIC_FACEBOOK_APP_ID }}
+          NEXT_PUBLIC_META_PIXEL_ID: ${{ secrets.NEXT_PUBLIC_META_PIXEL_ID }}
         run: npm run cloudflare:build
 
       - name: Validate Worker bundle and report size
@@ -135,6 +137,7 @@ jobs:
           NEXT_PUBLIC_GOOGLE_IOS_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_GOOGLE_IOS_CLIENT_ID }}
           NEXT_PUBLIC_GOOGLE_IDENTITY_ORIGINS: ${{ secrets.NEXT_PUBLIC_GOOGLE_IDENTITY_ORIGINS }}
           NEXT_PUBLIC_FACEBOOK_APP_ID: ${{ secrets.NEXT_PUBLIC_FACEBOOK_APP_ID }}
+          NEXT_PUBLIC_META_PIXEL_ID: ${{ secrets.NEXT_PUBLIC_META_PIXEL_ID }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           PADRON_DATABASE_URL: ${{ secrets.PADRON_DATABASE_URL }}
@@ -173,6 +176,10 @@ jobs:
           WHATSAPP_CLOUD_TOKEN: ${{ secrets.WHATSAPP_CLOUD_TOKEN }}
           WHATSAPP_PHONE_NUMBER_ID: ${{ secrets.WHATSAPP_PHONE_NUMBER_ID }}
           PUSH_WORKER_SECRET: ${{ secrets.PUSH_WORKER_SECRET }}
+          META_CAPI_ENABLED: ${{ secrets.META_CAPI_ENABLED }}
+          META_CAPI_ACCESS_TOKEN: ${{ secrets.META_CAPI_ACCESS_TOKEN }}
+          META_GRAPH_API_VERSION: ${{ secrets.META_GRAPH_API_VERSION }}
+          META_CAPI_TEST_EVENT_CODE: ${{ secrets.META_CAPI_TEST_EVENT_CODE }}
         run: |
           node - <<'NODE'
           const fs = require("node:fs");
@@ -186,6 +193,7 @@ jobs:
             "NEXT_PUBLIC_GOOGLE_IOS_CLIENT_ID",
             "NEXT_PUBLIC_GOOGLE_IDENTITY_ORIGINS",
             "NEXT_PUBLIC_FACEBOOK_APP_ID",
+            "NEXT_PUBLIC_META_PIXEL_ID",
             "SUPABASE_URL",
             "SUPABASE_SERVICE_ROLE_KEY",
             "PADRON_DATABASE_URL",
@@ -207,7 +215,11 @@ jobs:
             "BREVO_API_KEY",
             "WHATSAPP_CLOUD_TOKEN",
             "WHATSAPP_PHONE_NUMBER_ID",
-            "PUSH_WORKER_SECRET"
+            "PUSH_WORKER_SECRET",
+            "META_CAPI_ENABLED",
+            "META_CAPI_ACCESS_TOKEN",
+            "META_GRAPH_API_VERSION",
+            "META_CAPI_TEST_EVENT_CODE"
           ];
           const secrets = {};
           for (const name of names) {

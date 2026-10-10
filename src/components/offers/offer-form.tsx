@@ -1,5 +1,7 @@
 "use client";
 
+import { trackMetaConversion } from "@/lib/analytics/meta-pixel";
+
 import { flushSync } from "react-dom";
 
 import { rutaPromocion } from "@/lib/marketplace-url";
@@ -439,6 +441,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/promoci
         (delServidor as Error & { delServidor?: boolean }).delServidor = typeof data?.error === "string";
         throw delServidor;
       }
+      trackMetaConversion(data.metaConversion);
       invalidateAppData("offers");
       if (!editing) borrarBorrador("promocion");
       if (presentation === "modal") {

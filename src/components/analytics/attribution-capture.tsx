@@ -20,7 +20,22 @@ export function AttributionCapture() {
 
   useEffect(() => {
     captureAttribution();
+    try {
+      const enabled = window.localStorage.getItem("contratacr:analytics-consent") !== "declined";
+      document.cookie = `ccr_meta_consent=${enabled ? "enabled" : "declined"}; Path=/; SameSite=Lax; Max-Age=2592000${location.protocol === "https:" ? "; Secure" : ""}`;
+    } catch { document.cookie = "ccr_meta_consent=declined; Path=/; SameSite=Lax"; }
   }, [pathname, searchParams]);
+
+  useEffect(() => {
+    const sync = () => {
+      try {
+        const enabled = window.localStorage.getItem("contratacr:analytics-consent") !== "declined";
+        document.cookie = `ccr_meta_consent=${enabled ? "enabled" : "declined"}; Path=/; SameSite=Lax; Max-Age=2592000${location.protocol === "https:" ? "; Secure" : ""}`;
+      } catch { document.cookie = "ccr_meta_consent=declined; Path=/; SameSite=Lax"; }
+    };
+    window.addEventListener("storage",sync);
+    return () => window.removeEventListener("storage",sync);
+  },[]);
 
   // EL CLIC QUE LLEGA DE UN CORREO DE CAMPAÑA. Hasta ahora solo se sabía de
   // quien terminaba REGISTRÁNDOSE: los `utm_*` se guardan en el perfil, así

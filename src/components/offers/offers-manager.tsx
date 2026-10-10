@@ -1,4 +1,6 @@
 "use client";
+
+import { trackMetaConversion } from "@/lib/analytics/meta-pixel";
 import { rutaPromocion } from "@/lib/marketplace-url";
 import { CardActionsMenu } from "@/components/dashboard/card-actions-menu";
 
@@ -136,6 +138,8 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
     await aviso.correr(async () => {
       const response = await fetch("/api/offers", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, status }) });
       if (response.ok) {
+        const data = await response.json().catch(() => ({}));
+        trackMetaConversion(data.metaConversion);
         pendingStatus.current[id] = status;
         setOffers((current) => current.map((offer) => offer.id === id ? { ...offer, status } : offer));
         invalidateAppData("offers");

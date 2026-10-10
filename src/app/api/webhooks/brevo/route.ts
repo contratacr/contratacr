@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { COLUMNA_POR_EVENTO } from "@/lib/email/campana";
+import { campaignFromEvent, COLUMNA_POR_EVENTO } from "@/lib/email/campana";
 
 /**
  * LO QUE BREVO CUENTA DE VUELTA SOBRE UN CORREO DE CAMPAÑA.
@@ -57,8 +57,7 @@ export async function POST(request: Request) {
 
   // La etiqueta puede llegar como lista (`tags`) o suelta (`tag`), según el
   // tipo de aviso; Brevo no es consistente entre unos y otros.
-  const etiquetas = Array.isArray(aviso.tags) ? aviso.tags.map(String) : aviso.tag ? [String(aviso.tag)] : [];
-  const campana = etiquetas[0];
+  const campana = campaignFromEvent(aviso);
   if (!columna || !email || !campana) return NextResponse.json({ ok: true, ignorado: true });
 
   // La hora la manda Brevo; si no viene, vale la de ahora. Nunca se inventa una
@@ -69,7 +68,7 @@ export async function POST(request: Request) {
   const db = createAdminClient();
   const { error } = await db
     .from("admin_campaign_sends")
-    .update({ [columna]: momento })
+    .update({ [columna]: momento, status: "sent" })
     .eq("campana", campana)
     .eq("email", email)
     .is(columna, null);

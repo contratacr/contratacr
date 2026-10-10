@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { campanaDesdeAsunto, COLUMNA_POR_EVENTO } from "@/lib/email/campana";
+import { campaignFromEvent, COLUMNA_POR_EVENTO } from "@/lib/email/campana";
 
 /**
  * RESCATE DE LAS CAMPAÑAS QUE YA SALIERON SIN MEDIR.
@@ -20,15 +20,14 @@ import { campanaDesdeAsunto, COLUMNA_POR_EVENTO } from "@/lib/email/campana";
  * Se puede correr más de una vez sin daño: cada anotación solo entra si la
  * columna estaba vacía, así que repetirlo no mueve ninguna hora ya guardada.
  *
- * Los 30 días de Brevo son el límite duro: lo que salió antes ya no se puede
- * recuperar por ningún lado.
+ * Se consultan 30 días por defecto; Brevo permite ampliar la consulta hasta 90.
  */
 
 const BREVO_EVENTOS = "https://api.brevo.com/v3/smtp/statistics/events";
 const POR_PAGINA = 1000;
 const MAX_PAGINAS = 30; // 30 000 eventos: de sobra para cualquier campaña de este tamaño.
 
-type EventoBrevo = { email?: string; subject?: string; event?: string; date?: string };
+type EventoBrevo = { email?: string; subject?: string; tag?: string; tags?: unknown; event?: string; date?: string };
 
 export async function POST(request: Request) {
   const admin = await getApiAdmin();
@@ -38,7 +37,7 @@ export async function POST(request: Request) {
   if (!key) return NextResponse.json({ error: "Brevo no está configurado" }, { status: 400 });
 
   // Por defecto los últimos 30 días, que es todo lo que Brevo guarda.
-  const dias = Math.min(30, Math.max(1, Number(new URL(request.url).searchParams.get("dias") ?? 30)));
+  const dias = Math.min(90, Math.max(1, Number(new URL(request.url).searchParams.get("dias") ?? 30)));
 
   const db = createAdminClient();
   // Solo se rescata lo que está en el registro de envíos: si un correo no
@@ -68,8 +67,9 @@ export async function POST(request: Request) {
       revisados += 1;
       const columna = COLUMNA_POR_EVENTO[String(ev.event ?? "")];
       const email = String(ev.email ?? "").toLowerCase().trim();
-      if (!columna || !email || !ev.subject) continue;
-      const campana = campanaDesdeAsunto(ev.subject);
+      if (!columna || !email) continue;
+      const campana = campaignFromEvent(ev);
+      if (!campana) continue;
       if (!conocidas.has(`${campana}|${email}`)) continue;
 
       const fecha = new Date(String(ev.date));
@@ -88,7 +88,7 @@ export async function POST(request: Request) {
   for (const { campana, email, columna, momento } of anotar.values()) {
     const { error, count } = await db
       .from("admin_campaign_sends")
-      .update({ [columna]: momento }, { count: "exact" })
+      .update({ [columna]: momento, status: "sent" }, { count: "exact" })
       .eq("campana", campana)
       .eq("email", email)
       .is(columna, null);

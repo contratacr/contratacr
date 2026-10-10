@@ -1,99 +1,49 @@
 import { NextResponse } from "next/server";
-import { campanaDesdeAsunto } from "@/lib/email/campana";
+import { CAMPAIGN_BATCH_SIZE, SERVICES_CAMPAIGN, eligibleCampaignRecipients, isRetiredCampaign, type CampaignHistory } from "@/lib/email/campaign-policy";
+import { deliverCampaignOnce } from "@/lib/email/campaign-delivery";
 import { enlaceDeBaja } from "@/lib/email/baja";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { brandedEmailDocument, sendBrevoEmail } from "@/lib/email/send";
 
-/**
- * Correos de temporada a los clientes registrados ("antes de las lluvias: canoas,
- * techos, electricidad"). Reactiva a quien ya se registró; es el canal más
- * barato que hay. Solo admin; el envío masivo exige confirmación explícita.
- */
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com";
 const MAX_BODY = 4000;
+const POR_TANDA = CAMPAIGN_BATCH_SIZE;
 
-/**
- * CUÁNTOS SALEN POR DÍA.
- *
- * El plan de Brevo son 300 correos diarios, y esos MISMOS 300 los usan las
- * respuestas de soporte, la recuperación de contraseña y los avisos de
- * verificación. Una campaña que se lleve los 300 deja al app sin correo
- * transaccional el resto del día, que es mucho peor que tardar dos días en
- * mandarla. Con 200 queda un colchón de 100 para lo que sí es urgente.
- */
-// 250 por tanda: con la reserva de masivos en 50 caben en el tope diario de
-// Brevo (300 − 50), y con eso las 404 cuentas se terminan en dos tandas en vez
-// de tres. Si el app gastó correos ese día, la cuota corta sola y lo que no
-// salió queda pendiente para la siguiente.
-// CUÁNTOS SALEN POR TANDA.
-//
-// Estaba en 250 para terminar las 404 cuentas pendientes en dos envíos, y eso
-// ya se hizo. Para lo que viene el objetivo es otro: la investigación de
-// entrega es unánime en que «los picos repentinos de volumen son una causa
-// principal de caer en No deseado», y este dominio pasó de unos pocos correos
-// diarios a 200 de golpe. La tasa de apertura quedó en 13%.
-//
-// 60 es un punto de partida prudente para un dominio con poca historia. Sube
-// conforme las aperturas aguanten; si bajan, no subas.
-const POR_TANDA = 60;
-
-/** Entre una tanda y la siguiente: el tope del proveedor es por día natural. */
-
-/**
- * Quien manda la campaña también la recibe como la recibe la gente. La prueba
- * `[PRUEBA]` llega al correo con el que se entra al admin; este es el personal
- * de Isaac, para verla en el teléfono como cualquier otro destinatario.
- */
-const DESTINATARIO_EXTRA = "isaacsanchezmonge@gmail.com";
-
-/**
- * A QUIÉN VA (8-oct-2026). Antes toda campaña iba a todas las cuentas. Las de
- * profesionales necesitan su propio público: «pide tus primeras reseñas» solo a
- * quien no tiene ninguna (eran 299 de 313) y «pon un precio de referencia» solo
- * a quien no muestra ninguno (292 de 313).
- */
-type Audiencia = "todas" | "pros_sin_resenas" | "pros_sin_precio";
-const AUDIENCIAS: Audiencia[] = ["todas", "pros_sin_resenas", "pros_sin_precio"];
-
-function audienciaDe(valor: unknown): Audiencia {
-  return AUDIENCIAS.includes(valor as Audiencia) ? (valor as Audiencia) : "todas";
+type Admin = ReturnType<typeof createAdminClient>;
+async function readAll<T>(query: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: unknown }>) {
+  const rows: T[] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await query(from, from + 999);
+    if (error) throw error;
+    rows.push(...(data ?? []));
+    if ((data ?? []).length < 1000) return rows;
+  }
 }
 
-function tienePrecio(servicios: unknown) {
-  return Array.isArray(servicios) && servicios.some((s) =>
-    s && typeof s === "object" && (s as { active?: unknown }).active !== false
-    && typeof (s as { priceAmount?: unknown }).priceAmount === "number" && (s as { priceAmount: number }).priceAmount > 0
-    && (s as { priceType?: unknown }).priceType !== "a_convenir");
-}
-
-async function listClients(audiencia: Audiencia = "todas") {
-  const db = createAdminClient();
-  let soloEstas: Set<string> | null = null;
-  if (audiencia !== "todas") {
-    const { data: pros } = await db
-      .from("professionals")
-      .select("profile_id, review_count, services")
-      .eq("is_banned", false)
-      .limit(5000);
-    soloEstas = new Set((pros ?? [])
-      .filter((p) => audiencia === "pros_sin_resenas" ? Number(p.review_count ?? 0) <= 0 : !tienePrecio(p.services))
-      .map((p) => p.profile_id as string)
-      .filter(Boolean));
-  }
-  const { data } = await db
-    .from("profiles")
-    .select("id, email, full_name")
-    .eq("is_disabled", false)
-    .not("email", "is", null)
-    .limit(5000);
-  const cuentas = (data ?? []).filter((p) =>
-    typeof p.email === "string" && p.email.includes("@") && !p.email.endsWith("@contratacr.test")
-    && (!soloEstas || soloEstas.has(p.id)));
-  if (!cuentas.some((p) => p.email?.toLowerCase() === DESTINATARIO_EXTRA)) {
-    cuentas.unshift({ id: "extra", email: DESTINATARIO_EXTRA, full_name: null } as (typeof cuentas)[number]);
-  }
-  return cuentas;
+async function campaignState(db: Admin) {
+  const [accounts, history, bajas] = await Promise.all([
+    readAll((from, to) => db.from("profiles").select("id, email, full_name")
+      .eq("is_disabled", false).not("email", "is", null).order("id").range(from, to)),
+    readAll((from, to) => db.from("admin_campaign_sends")
+      .select("email, campana, status, enviado_en, abierto_en, click_en, rebote_en")
+      .order("id").range(from, to)),
+    readAll((from, to) => db.from("email_bajas").select("correo").order("correo").range(from, to)),
+  ]);
+  const clients = accounts.filter((p): p is typeof p & { email: string } => typeof p.email === "string");
+  const typedHistory = history as CampaignHistory[];
+  const own = typedHistory.filter((r) => SERVICES_CAMPAIGN.historyKeys.includes(r.campana));
+  const sent = own.filter((r) => r.status === "sent");
+  const latest = own.map((r) => r.enviado_en).sort().at(-1) ?? null;
+  return {
+    clients, pendientes: eligibleCampaignRecipients(clients, typedHistory, bajas.map((r) => r.correo)),
+    enviados: new Set(sent.map((r) => r.email)).size,
+    sinConfirmar: own.filter((r) => r.status !== "sent").length,
+    ultimoEnvio: latest,
+    abiertos: sent.filter((r) => r.abierto_en).length,
+    clics: sent.filter((r) => r.click_en).length,
+    rebotes: sent.filter((r) => r.rebote_en).length,
+  };
 }
 
 function escapeHtml(s: string) {
@@ -139,35 +89,9 @@ function bodyToHtml(body: string, ctaLabel: string, ctaHref: string, bajaHref: s
   // Invitar a responder no es cortesía: cuando alguien contesta, su buzón
   // aprende que este remitente es legítimo. Una respuesta limpia más
   // reputación que cien entregas.
-  const responder = `<p style="margin:14px 0 0;font-size:14px;line-height:1.6;color:#52627a">¿Alguna duda? Responde a este correo y te contestamos.</p>`;
+  const responder = `<p style="margin:14px 0 0;font-size:14px;line-height:1.6;color:#52627a">¿Necesitas ayuda? <a href="${escapeHtml(APP_URL)}/soporte" style="color:#009FD9">Abre un caso en Soporte</a>.</p>`;
   const pie = `<p style="margin:18px 0 0;font-size:12px;line-height:1.5;color:#68778d">Recibes este correo porque tienes una cuenta en ContrataCR. <a href="${escapeHtml(bajaHref)}" style="color:#68778d;text-decoration:underline">No quiero recibir novedades</a>.</p>`;
   return parrafos + cta + responder + firma + pie;
-}
-
-/** A quién ya le salió esta campaña, y cuándo fue la última vez. */
-async function estadoDeCampana(campana: string) {
-  const db = createAdminClient();
-  const { data, error } = await db
-    .from("admin_campaign_sends")
-    .select("email, enviado_en, abierto_en, click_en, rebote_en")
-    .eq("campana", campana)
-    .order("enviado_en", { ascending: false })
-    .limit(5000);
-  // Sin la tabla (migración 211 todavía sin correr) la campaña sigue saliendo,
-  // solo que sin memoria: es mejor que bloquear el envío.
-  if (error) return { correos: new Set<string>(), enviados: 0, ultimoEnvio: null as string | null, abiertos: 0, clics: 0, rebotes: 0 };
-  const filas = (data ?? []) as Record<string, unknown>[];
-  return {
-    correos: new Set(filas.map((f) => String(f.email).toLowerCase())),
-    enviados: filas.length,
-    ultimoEnvio: (filas[0]?.enviado_en as string) ?? null,
-    // Lo que contesta «¿sirvió?»: cuántos lo abrieron y cuántos tocaron el
-    // botón. Lo anota el webhook de Brevo; antes de conectarlo quedan en cero,
-    // que es honesto —no se sabe— y no cero resultados.
-    abiertos: filas.filter((f) => f.abierto_en).length,
-    clics: filas.filter((f) => f.click_en).length,
-    rebotes: filas.filter((f) => f.rebote_en).length,
-  };
 }
 
 function horasQueFaltan(ultimoEnvio: string | null) {
@@ -188,100 +112,83 @@ function horasQueFaltan(ultimoEnvio: string | null) {
 export async function GET(request: Request) {
   const admin = await getApiAdmin();
   if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
-  const clients = await listClients(audienciaDe(new URL(request.url).searchParams.get("audiencia")));
-  // Cuánto queda de ESTA campaña: el panel necesita decir «quedan N» y cuándo
-  // se puede mandar la próxima tanda, no solo cuántas cuentas hay.
-  const campana = campanaDesdeAsunto(new URL(request.url).searchParams.get("asunto") ?? "");
-  const { enviados, ultimoEnvio, abiertos, clics, rebotes } = await estadoDeCampana(campana);
-  return NextResponse.json({
-    clients: clients.length,
-    adminEmail: admin.email,
-    porTanda: POR_TANDA,
-    campana,
-    enviados,
-    abiertos,
-    clics,
-    rebotes,
-    // El panel necesita distinguir «nadie abrió» de «todavía no medimos».
-    midiendo: Boolean(process.env.BREVO_WEBHOOK_SECRET),
-    restantes: Math.max(0, clients.length - enviados),
-    horasParaLaProxima: horasQueFaltan(ultimoEnvio),
-  });
+  const params = new URL(request.url).searchParams;
+  if (isRetiredCampaign(params.get("campaignId") ?? undefined, params.get("audiencia") ?? undefined)) {
+    return NextResponse.json({ error: "Esta campaña de correo se retiró; el recordatorio se gestiona dentro de la app." }, { status: 410 });
+  }
+  try {
+    const state = await campaignState(createAdminClient());
+    return NextResponse.json({
+      clients: state.clients.length, adminEmail: admin.email, porTanda: POR_TANDA,
+      campana: SERVICES_CAMPAIGN.key, enviados: state.enviados, sinConfirmar: state.sinConfirmar,
+      abiertos: state.abiertos, clics: state.clics, rebotes: state.rebotes,
+      midiendo: Boolean(process.env.BREVO_WEBHOOK_SECRET), restantes: state.pendientes.length,
+      horasParaLaProxima: horasQueFaltan(state.ultimoEnvio),
+    });
+  } catch {
+    return NextResponse.json({ error: "No se pudo verificar el historial o las bajas. El envío permanece bloqueado." }, { status: 503 });
+  }
 }
 
 export async function POST(request: Request) {
   const admin = await getApiAdmin();
   if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
-  const payload = await request.json().catch(() => ({})) as { subject?: string; body?: string; ctaLabel?: string; ctaPath?: string; mode?: "test" | "all"; confirm?: string; audiencia?: string };
+  const payload = await request.json().catch(() => ({})) as {
+    subject?: string; body?: string; ctaLabel?: string; ctaPath?: string;
+    mode?: "test" | "all"; confirm?: string; audiencia?: string; campaignId?: string;
+  };
+  if (isRetiredCampaign(payload.campaignId, payload.audiencia)) {
+    return NextResponse.json({ error: "Esta campaña de correo se retiró; el recordatorio se gestiona dentro de la app." }, { status: 410 });
+  }
   const subject = String(payload.subject ?? "").trim().slice(0, 120);
   const body = String(payload.body ?? "").trim().slice(0, MAX_BODY);
   if (!subject || !body) return NextResponse.json({ error: "Falta el asunto o el texto." }, { status: 400 });
   const ctaLabel = String(payload.ctaLabel ?? "").trim().slice(0, 60);
   const ctaPath = String(payload.ctaPath ?? "").trim();
-  // El enlace viaja MARCADO: sin utm no hay forma de saber si el correo produjo
-  // algo, y una campaña que no se puede medir se repite a ciegas. La marca es la
-  // misma que ya entiende la atribución del app.
-  const campana = campanaDesdeAsunto(subject);
-  const conMarca = (ruta: string) => {
-    const separador = ruta.includes("?") ? "&" : "?";
-    return `${APP_URL}${ruta}${separador}utm_source=correo&utm_medium=campana&utm_campaign=${encodeURIComponent(campana)}`;
-  };
-  const ctaHref = ctaPath && ctaPath.startsWith("/") ? conMarca(ctaPath) : "";
-  const htmlPara = (correo: string, nombre?: string | null) => brandedEmailDocument({ title: subject, bodyHtml: bodyToHtml(body, ctaLabel, ctaHref, enlaceDeBaja(APP_URL, correo), primerNombre(nombre)), origin: APP_URL });
+  if (ctaPath && (!ctaPath.startsWith("/") || ctaPath.startsWith("//") || ctaPath.includes("\\"))) {
+    return NextResponse.json({ error: "El enlace debe ser una ruta interna." }, { status: 400 });
+  }
+  const campana = SERVICES_CAMPAIGN.key;
+  let cta: URL | null = null;
+  try {
+    cta = ctaPath ? new URL(ctaPath, APP_URL) : null;
+    if (cta && cta.origin !== new URL(APP_URL).origin) throw new Error("External campaign destination");
+  } catch {
+    return NextResponse.json({ error: "El enlace debe ser una ruta interna válida." }, { status: 400 });
+  }
+  if (cta) {
+    cta.searchParams.set("utm_source", "correo");
+    cta.searchParams.set("utm_medium", "campana");
+    cta.searchParams.set("utm_campaign", campana);
+  }
+  const htmlPara = (correo: string, nombre?: string | null) => brandedEmailDocument({
+    title: subject, bodyHtml: bodyToHtml(body, ctaLabel, cta?.toString() ?? "", enlaceDeBaja(APP_URL, correo), primerNombre(nombre)), origin: APP_URL,
+  });
   const replyTo = { email: "soporte@contratacr.com", name: "ContrataCR" };
-
   if (payload.mode !== "all") {
     const result = await sendBrevoEmail({ to: admin.email, subject: `[PRUEBA] ${subject}`, html: htmlPara(admin.email, "Isaac"), replyTo, nivel: "masivo" });
     return NextResponse.json({ mode: "test", to: admin.email, ...result });
   }
-
-  // Envío real: exige escribir ENVIAR para evitar un clic accidental.
   if (payload.confirm !== "ENVIAR") return NextResponse.json({ error: "Confirmación requerida." }, { status: 400 });
-  const clients = await listClients(audienciaDe(payload.audiencia));
-  const db = createAdminClient();
-  const { correos: yaEnviados, ultimoEnvio } = await estadoDeCampana(campana);
-
-  // EL CANDADO. El tope del proveedor es por día: mandar la segunda tanda antes
-  // de que pase el día la corta a la mitad igual que la primera.
-  const faltan = horasQueFaltan(ultimoEnvio);
-  if (faltan > 0) {
-    return NextResponse.json({
-      error: `Ya salió una tanda de esta campaña hoy. El cupo diario de Brevo se renueva en ${faltan} h.`,
-      horasParaLaProxima: faltan,
-    }, { status: 429 });
+  try {
+    const db = createAdminClient();
+    const state = await campaignState(db);
+    const faltan = horasQueFaltan(state.ultimoEnvio);
+    if (faltan > 0) return NextResponse.json({ error: `Ya salió una tanda hoy. El cupo se renueva en ${faltan} h.`, horasParaLaProxima: faltan }, { status: 429 });
+    let sent = 0, failed = 0, skipped = 0;
+    for (const client of state.pendientes.slice(0, POR_TANDA)) {
+      const result = await deliverCampaignOnce(db, campana, client.email, () => sendBrevoEmail({
+        to: client.email, subject, html: htmlPara(client.email, client.full_name), replyTo, nivel: "masivo", campana,
+      }));
+      if (result === "sent") sent += 1;
+      else if (result === "uncertain") failed += 1;
+      else skipped += 1;
+      await new Promise((resolve) => setTimeout(resolve, 120));
+    }
+    const updated = await campaignState(db);
+    return NextResponse.json({ mode: "all", total: state.clients.length, sent, failed, skipped,
+      restantes: updated.pendientes.length, sinConfirmar: updated.sinConfirmar, completa: updated.pendientes.length === 0 });
+  } catch {
+    return NextResponse.json({ error: "No se pudo completar la tanda. Actualiza el estado: los envíos reservados quedan bloqueados para evitar repetirlos." }, { status: 503 });
   }
-
-  // Quien pidió la baja no vuelve a recibir novedades. Se consulta aquí y no
-  // al enviar: si la lista falla, es mejor no mandar la tanda que escribirle a
-  // alguien que pidió que no le escribamos.
-  const { data: bajas, error: errorBajas } = await db.from("email_bajas").select("correo").limit(20000);
-  if (errorBajas) return NextResponse.json({ error: `No se pudo leer las bajas: ${errorBajas.message}` }, { status: 500 });
-  const dadosDeBaja = new Set((bajas ?? []).map((b) => String(b.correo).toLowerCase()));
-
-  const pendientes = clients.filter((client) => {
-    const correo = String(client.email).toLowerCase();
-    return !yaEnviados.has(correo) && !dadosDeBaja.has(correo);
-  });
-  const tanda = pendientes.slice(0, POR_TANDA);
-  if (tanda.length === 0) {
-    return NextResponse.json({ mode: "all", total: clients.length, sent: 0, failed: 0, skipped: 0, restantes: 0, completa: true });
-  }
-
-  let sent = 0, failed = 0, skipped = 0;
-  for (const client of tanda) {
-    // La etiqueta va en el envío para que el aviso de Brevo (apertura, clic,
-    // rebote) se pueda anotar en la fila correcta: llega con el correo de la
-    // persona, pero sin la etiqueta no dice de qué campaña habla.
-    const result = await sendBrevoEmail({ to: client.email, subject, html: htmlPara(String(client.email), client.full_name), replyTo, nivel: "masivo", campana });
-    if (result.ok) {
-      sent += 1;
-      // Se anota SOLO lo que salió: lo que falló vuelve a intentarse mañana.
-      await db.from("admin_campaign_sends").insert({ campana, email: String(client.email).toLowerCase() });
-    } else if (result.status === "skipped") skipped += 1; else failed += 1;
-    // Un respiro entre envíos para no golpear el límite de Brevo.
-    await new Promise((r) => setTimeout(r, 120));
-  }
-  const restantes = Math.max(0, pendientes.length - sent);
-  console.info(`[campanas] "${subject}" → enviados ${sent}, fallidos ${failed}, omitidos ${skipped}; quedan ${restantes} de ${clients.length}`);
-  return NextResponse.json({ mode: "all", total: clients.length, sent, failed, skipped, restantes, completa: restantes === 0 });
 }

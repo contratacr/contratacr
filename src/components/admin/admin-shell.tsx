@@ -51,7 +51,7 @@ const GRUPOS_ADMIN: { label: string; ids: AdminTab[] }[] = [
   { label: "Por atender", ids: ["verificacion", "soporte", "reportes", "cuentas"] },
   { label: "Publicaciones", ids: ["publicaciones", "empleos", "promociones", "resenas"] },
   { label: "Personas", ids: ["usuarios", "contactos"] },
-  { label: "Catálogo", ids: ["categorias", "aseguradoras", "cobertura"] },
+  { label: "Catálogo", ids: ["categorias", "cobertura"] },
   { label: "Negocio", ids: ["campanas", "costos"] },
 ];
 
@@ -126,9 +126,8 @@ export function AdminShell({
     { id: "promociones", label: "Promociones", icon: BadgePercent, href: "/admin/promociones", badge: 0 },
     { id: "cobertura", label: "Cobertura", icon: MapPinned, href: "/admin/cobertura", badge: 0 },
     { id: "costos", label: "Costos", icon: Wallet, href: "/admin/costos", badge: 0 },
-    { id: "contactos", label: "Contactos", icon: MessageCircle, href: "/admin/contactos", badge: 0 },
+    { id: "contactos", label: "Contactos a profesionales", icon: MessageCircle, href: "/admin/contactos", badge: 0 },
     { id: "reportes", label: "Reportes", icon: Flag, href: "/admin/reportes", badge: counts.reportes ?? 0 },
-    { id: "aseguradoras", label: "Aseguradoras", icon: Shield, href: "/admin/aseguradoras", badge: 0 },
     { id: "categorias", label: "Servicios", icon: Tag, href: "/admin/servicios", badge: counts.categorias ?? 0 },
     { id: "soporte", label: "Soporte", icon: Headset, href: "/admin/soporte", badge: counts.soporte ?? 0 },
     { id: "cuentas", label: "Cuentas", icon: Shield, href: "/admin/cuentas", badge: counts.cuentas ?? 0 },

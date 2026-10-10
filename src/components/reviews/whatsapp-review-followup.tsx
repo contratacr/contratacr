@@ -1,5 +1,7 @@
 "use client";
 
+import { trackMetaConversion } from "@/lib/analytics/meta-pixel";
+
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { esRutaDeBusqueda } from "@/lib/buscar-url";
 import { esServicioDelCatalogo } from "@/lib/data/categories";
@@ -63,6 +65,7 @@ export function WhatsAppReviewFollowUp() {
       return null;
     }
     if (!response.ok) throw new Error(payload.error || "Follow-up failed");
+    trackMetaConversion(payload.metaConversion);
     return payload as { review?: ReviewTarget };
   }, [locale]);
 

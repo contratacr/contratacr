@@ -1,3 +1,4 @@
+import { insertOnceNotifications, onceReceipts } from "@/lib/notifications/once";
 import type { createAdminClient } from "@/lib/supabase/admin";
 
 type Admin = ReturnType<typeof createAdminClient>;
@@ -7,7 +8,7 @@ type Admin = ReturnType<typeof createAdminClient>;
  * Se manda a toda cuenta nueva al crearse y, una vez, a las que ya existían
  * (el recorrido diario de resena-google la reparte). Una línea y el enlace al
  * formulario; la aclaración «es para pedir, no para ofrecer» sobraba (6-oct).
- * Una sola vez por cuenta: antes de insertar se comprueba que no la tenga.
+ * Una sola vez por cuenta, mediante un recibo permanente en la base.
  */
 const TITULO = { es: "¿Necesitas a alguien?", en: "Need someone?" };
 const CUERPO = {
@@ -19,28 +20,13 @@ export async function invitarAPublicarProyecto(admin: Admin, profileIds: string[
   const destinatarios = [...new Set(profileIds.filter(Boolean))];
   if (destinatarios.length === 0) return { enviadas: 0, yaTenian: 0 };
   try {
-    const yaTienen = new Set<string>();
-    for (let i = 0; i < destinatarios.length; i += 300) {
-      const { data } = await admin.from("notifications").select("user_id").eq("type", "invita_proyecto").in("user_id", destinatarios.slice(i, i + 300));
-      (data ?? []).forEach((f) => yaTienen.add(String((f as { user_id: string }).user_id)));
-    }
+    const recibos = await onceReceipts(admin, destinatarios, ["invita_proyecto"]);
+    const yaTienen = new Set(recibos.map((r) => r.user_id));
     const nuevos = destinatarios.filter((id) => !yaTienen.has(id));
-    let enviadas = 0;
-    for (let i = 0; i < nuevos.length; i += 200) {
-      const tanda = nuevos.slice(i, i + 200).map((userId) => ({
-        user_id: userId,
-        type: "invita_proyecto",
-        title: TITULO[idioma],
-        message: CUERPO[idioma],
-        data: { link: "/publicar-proyecto" },
-        read: false,
-      }));
-      const { error } = await admin.from("notifications").insert(tanda);
-      // Un rechazo de la base no puede pasar callado: el 4-oct el tipo no
-      // existía en la regla de la base y no llegó ninguno, sin una sola señal.
-      if (error) console.error("[invita_proyecto] insert", error.code, error.message);
-      else enviadas += tanda.length;
-    }
+    const enviadas = await insertOnceNotifications(admin, nuevos.map((userId) => ({
+      user_id: userId, type: "invita_proyecto", title: TITULO[idioma], message: CUERPO[idioma],
+      data: { link: "/publicar-proyecto" }, read: false,
+    })));
     return { enviadas, yaTenian: yaTienen.size };
   } catch {
     // Un aviso nunca puede tumbar el registro ni nada de lo que lo llame.
@@ -54,14 +40,16 @@ export async function invitarAPublicarProyecto(admin: Admin, profileIds: string[
 export async function invitarAPublicarATodas(admin: Admin, { simular = false } = {}) {
   const pros = new Set<string>();
   for (let desde = 0; ; desde += 1000) {
-    const { data } = await admin.from("professionals").select("profile_id").not("profile_id", "is", null).range(desde, desde + 999);
+    const { data, error } = await admin.from("professionals").select("profile_id").not("profile_id", "is", null).order("id").range(desde, desde + 999);
+    if (error) throw error;
     const filas = (data ?? []) as { profile_id: string }[];
     for (const f of filas) pros.add(f.profile_id);
     if (filas.length < 1000) break;
   }
   const ids: string[] = [];
   for (let desde = 0; ; desde += 1000) {
-    const { data } = await admin.from("profiles").select("id").range(desde, desde + 999);
+    const { data, error } = await admin.from("profiles").select("id").eq("is_disabled", false).order("id").range(desde, desde + 999);
+    if (error) throw error;
     const filas = (data ?? []) as { id: string }[];
     ids.push(...filas.map((f) => f.id).filter((id) => !pros.has(id)));
     if (filas.length < 1000) break;
@@ -77,19 +65,18 @@ export async function invitarAPublicarATodas(admin: Admin, { simular = false } =
  */
 export async function avisarCompletarPerfil(admin: Admin, profileId: string, idioma: "es" | "en" = "es") {
   try {
-    const { data } = await admin.from("notifications").select("id").eq("type", "completa_perfil").eq("user_id", profileId).limit(1);
-    if ((data ?? []).length > 0) return;
-    const { error } = await admin.from("notifications").insert({
+    const recibos = await onceReceipts(admin, [profileId], ["completa_perfil"]);
+    if (recibos.length > 0) return;
+    await insertOnceNotifications(admin, [{
       user_id: profileId,
       type: "completa_perfil",
       title: idioma === "en" ? "Complete your profile" : "Completa tu perfil",
       message: idioma === "en"
-        ? "Profiles with a photo, description and prices get more clients. It takes a few minutes."
-        : "Los perfiles con foto, descripción y precios reciben más clientes. Te toma unos minutos.",
+        ? "Add your photo, description and services so clients can learn what you offer."
+        : "Agrega tu foto, descripción y servicios para que los clientes conozcan lo que ofreces.",
       data: { link: "/dashboard/profesional?mode=offer&tab=completion" },
       read: false,
-    });
-    if (error) console.error("[completa_perfil] insert", error.code, error.message);
+    }]);
   } catch {
     // Nunca tumba el registro.
   }

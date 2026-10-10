@@ -1,11 +1,7 @@
-// First-touch marketing attribution, kept in the browser until the person
-// registers. A visitor who lands from an ad carries utm_* parameters (or a
-// platform click id) only on that first URL; by the time they sign up — often
-// days later, from the home page — that information is gone unless we keep it.
-//
-// "First touch" wins: the stored record is never overwritten by a later visit,
-// because the question the owner asks is "what brought this person here",
-// not "what page were they on when they finally signed up".
+// Preserve the first available marketing touch separately from the most recent
+// explicit campaign. Existing callers keep reading the recent record; actions
+// also carry the original touch, so returning users can be attributed without
+// rewriting their account's acquisition source. Both expire after thirty days.
 
 export type Attribution = {
   source: string;
@@ -18,6 +14,7 @@ export type Attribution = {
 };
 
 const STORAGE_KEY = "contratacr:attribution";
+const FIRST_KEY = "contratacr:attribution-first";
 const TTL_MS = 30 * 86400000;
 
 function clean(value: string | null | undefined, max = 80): string | null {
@@ -60,7 +57,8 @@ export function readAttribution(): Attribution | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Attribution;
     if (!parsed?.source || !parsed.capturedAt) return null;
-    if (Date.now() - new Date(parsed.capturedAt).getTime() > TTL_MS) {
+    const age = Date.now() - new Date(parsed.capturedAt).getTime();
+    if (!Number.isFinite(age) || age < -60000 || age > TTL_MS) {
       window.localStorage.removeItem(STORAGE_KEY);
       return null;
     }
@@ -80,7 +78,8 @@ export function captureAttribution(): Attribution | null {
     const utmSource = clean(params.get("utm_source"));
     const hasClickId = !!(params.get("ttclid") || params.get("gclid"));
     const existing = readAttribution();
-    if (existing && !utmSource && !hasClickId) return existing;
+    if (existing && !window.localStorage.getItem(FIRST_KEY)) window.localStorage.setItem(FIRST_KEY,JSON.stringify(existing));
+    if (existing && !utmSource && !hasClickId) { mirrorActionAttribution(existing); return existing; }
 
     const referrerHost = hostOf(document.referrer);
     const derived = deriveSource(params, referrerHost);
@@ -94,8 +93,23 @@ export function captureAttribution(): Attribution | null {
       capturedAt: new Date().toISOString(),
     };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(record));
+    mirrorActionAttribution(record);
     return record;
   } catch {
     return null;
   }
+}
+
+function mirrorActionAttribution(recent: Attribution) {
+  try {
+    const raw = window.localStorage.getItem(FIRST_KEY);
+    let first = raw ? JSON.parse(raw) as Attribution : null;
+    if (!first || !Number.isFinite(Date.parse(first.capturedAt)) || Date.now()-Date.parse(first.capturedAt)>TTL_MS) {
+      first = recent;
+      window.localStorage.setItem(FIRST_KEY,JSON.stringify(first));
+    }
+    const snapshot = { source: recent.source,medium: recent.medium,campaign: recent.campaign,content: recent.content,
+      capturedAt: recent.capturedAt,firstSource: first.source,firstCampaign: first.campaign };
+    document.cookie = `ccr_action_attribution=${encodeURIComponent(JSON.stringify(snapshot))}; Path=/; SameSite=Lax; Max-Age=2592000${location.protocol === "https:" ? "; Secure" : ""}`;
+  } catch { /* no storage: no attribution */ }
 }

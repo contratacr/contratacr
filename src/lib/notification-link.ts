@@ -5,6 +5,7 @@ export type NotificationLinkInput = {
   type: string;
   data?: {
     link?: string;
+    suggestion_decision?: string | null;
     project_id?: string | null;
     activity_id?: string | null;
     job_id?: string | null;
@@ -86,7 +87,13 @@ function withReviewTarget(link: string): string {
   return `${path}?${params.toString()}#${hash || "resenas"}`;
 }
 
+export const APPROVED_SUGGESTION_LINK = "/dashboard/profesional?mode=offer&tab=services&focus=services";
+
 export function notificationHref(n: NotificationLinkInput, _role?: string, locale = "es"): string {
+  // Also repair stored approvals that still point to the notifications panel.
+  if (n.type === "suggestion_approved" || (n.type === "support_reply" && n.data?.suggestion_decision === "approved")) {
+    return withLocale(APPROVED_SUGGESTION_LINK, locale);
+  }
   if (n.data?.link && n.data.link.startsWith("/")) {
     const link = n.type === "review_received" ? withReviewTarget(n.data.link) : n.data.link;
     return withLocale(withTargetParams(remapClientLink(link), n.data), locale);

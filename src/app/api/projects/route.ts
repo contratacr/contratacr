@@ -1,3 +1,5 @@
+import { projectRecipients } from "@/lib/projects/project-recipients-server";
+import { recordGrowthConversion } from "@/lib/analytics/growth-server";
 import { NextRequest, NextResponse, after } from "next/server";
 import { mensajeDeError } from "@/lib/api-errors";
 import { createClient } from "@/lib/supabase/server";
@@ -336,20 +338,14 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    const metaConversion = await recordGrowthConversion(req,"project_published",projectId,uid);
     let notifiedCount = 0;
     // Notify every professional whose profession matches the project category.
     // "Otro" is a FREEFORM catch-all: its custom text is not reliably comparable, so it
     // must never drive matching. An "Otro" project therefore notifies no one.
     if (categoryId && categoryId !== OTHER_CATEGORY.id) {
       try {
-        const { data: pros } = await admin
-          .from("professionals")
-          .select("profile_id")
-          .or("category_id.eq." + categoryId + ",professions.cs.{" + categoryId + "}");
-
-        const recipients = [...new Set(
-          (pros ?? []).map((p) => p.profile_id).filter((id): id is string => !!id && id !== uid)
-        )];
+        const recipients = await projectRecipients(categoryId,uid,provinciaId,cantonId);
 
         notifiedCount = recipients.length;
         if (recipients.length > 0) {
@@ -403,7 +399,7 @@ export async function POST(req: NextRequest) {
     }
 
     await invitarAResenaAhora(uid);
-    return NextResponse.json({ id: projectId, notifiedCount, success: true, clientIdentityStatus, identidad });
+    return NextResponse.json({ id: projectId, notifiedCount, success: true, clientIdentityStatus, identidad, metaConversion });
   } catch (err) {
     console.error("[POST /api/projects] Unexpected error:", err);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
@@ -422,12 +418,11 @@ export async function GET(req: NextRequest) {
   // elegir el servicio). La MISMA regla que el POST de arriba.
   if (role === "destinatarios") {
     if (!categoryId || categoryId === OTHER_CATEGORY.id || !/^[a-z0-9_-]{1,60}$/.test(categoryId)) return NextResponse.json({ total: 0 });
-    const { count } = await createAdminClient()
-      .from("professionals")
-      .select("profile_id", { count: "exact", head: true })
-      .or("category_id.eq." + categoryId + ",professions.cs.{" + categoryId + "}")
-      .neq("profile_id", user?.id ?? "00000000-0000-0000-0000-000000000000");
-    return NextResponse.json({ total: count ?? 0 });
+    try {
+      const recipients = await projectRecipients(categoryId,user?.id,searchParams.get("province"),searchParams.get("canton"));
+      return NextResponse.json({ total: recipients.length });
+    } catch { return NextResponse.json({ error: "No se pudo comprobar a quién corresponde el aviso." },{ status: 503 }); }
+
   }
 
   if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
