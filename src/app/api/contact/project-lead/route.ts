@@ -1,3 +1,4 @@
+import { recordGrowthConversion } from "@/lib/analytics/growth-server";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { recordServerInteraction } from "@/lib/analytics/server-interactions";
@@ -111,9 +112,11 @@ export async function POST(req: Request) {
     source: "project",
     metadata: { project_id: projectId },
   });
+  const metaConversion = await recordGrowthConversion(req,"professional_project_contact",`${pro.id}:${projectId}`,user.id);
   return NextResponse.json(
     {
       href: `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`,
+      metaConversion,
       // El mismo número, para llamar, SOLO si quien publicó lo autorizó. No se
       // puede saber si un número está en WhatsApp —Meta no lo expone—, así que
       // cuando no lo está el proyecto queda sin contacto; esto lo resuelve, pero

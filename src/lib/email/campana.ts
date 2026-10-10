@@ -1,10 +1,5 @@
-/**
- * El nombre corto de una campaña, derivado de su asunto.
- *
- * Vivía suelto dentro de la ruta de campañas, pero ahora lo necesitan tres
- * lugares: el envío (para no repetirle a nadie), el aviso de Brevo y el
- * rescate de lo que ya salió. Tiene que ser EXACTAMENTE la misma cuenta en los
- * tres, porque es la llave con la que se encuentran las filas.
+/** Legacy campaign identity for historical or untagged provider events.
+ * New sends use the stable key in campaign-policy, independent of the subject.
  */
 export function campanaDesdeAsunto(asunto: string) {
   return asunto
@@ -35,3 +30,16 @@ export const COLUMNA_POR_EVENTO: Record<string, "entregado_en" | "abierto_en" | 
   spam: "rebote_en",
   blocked: "rebote_en",
 };
+
+/** Brevo sends tags as arrays, plain strings, or JSON-encoded arrays. */
+export function campaignFromEvent(event: { tags?: unknown; tag?: unknown; subject?: unknown }) {
+  for (const raw of [event.tags, event.tag]) {
+    let tags: unknown = raw;
+    if (typeof raw === "string" && raw.trim().startsWith("[")) {
+      try { tags = JSON.parse(raw); } catch { tags = null; }
+    }
+    const tag = Array.isArray(tags) ? tags.find((value) => typeof value === "string" && value.trim()) : tags;
+    if (typeof tag === "string" && tag.trim()) return tag.trim();
+  }
+  return typeof event.subject === "string" && event.subject.trim() ? campanaDesdeAsunto(event.subject) : null;
+}

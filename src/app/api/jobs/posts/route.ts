@@ -1,3 +1,4 @@
+import { recordGrowthConversion } from "@/lib/analytics/growth-server";
 import { NextRequest, NextResponse } from "next/server";
 import { rutasDeCache } from "@/lib/prefijo-de-idioma";
 import { mensajeDeError } from "@/lib/api-errors";
@@ -134,8 +135,9 @@ export async function POST(req: NextRequest) {
         console.error("[POST /api/jobs/posts] aviso a profesionales", avisoError);
       }
     }
+    const metaConversion = payload.status === "published" ? await recordGrowthConversion(req,"employer_job_published",data.id,user.id) : null;
     await invitarAResenaAhora(user.id);
-    return NextResponse.json({ id: data.id });
+    return NextResponse.json({ id: data.id, metaConversion });
   } catch (error) {
     console.error("[POST /api/jobs/posts] unexpected failure", error);
     return NextResponse.json({ error: mensajeDeError(req, { es: "No pudimos publicar el empleo. Inténtalo nuevamente.", en: "We could not publish the job. Try again." }) }, { status: 500 });
@@ -157,7 +159,8 @@ export async function PATCH(req: NextRequest) {
     const { error } = await supabase.from("job_posts").update({ status }).eq("id", id).eq("employer_id", job.employer_id);
     if (error) throw error;
     revalidateJobViews(id);
-    return NextResponse.json({ ok: true });
+    const metaConversion = status === "published" ? await recordGrowthConversion(req,"employer_job_published",id,user.id) : null;
+    return NextResponse.json({ ok: true, metaConversion });
   } catch (error) {
     console.error("[PATCH /api/jobs/posts] status update failed", error);
     return NextResponse.json({ error: "No pudimos actualizar el empleo." }, { status: 500 });
@@ -196,7 +199,8 @@ export async function DELETE(req: NextRequest) {
       afterData: { deleted: true },
     });
     revalidateJobViews(id);
-    return NextResponse.json({ ok: true });
+    const metaConversion = status === "published" ? await recordGrowthConversion(req,"employer_job_published",id,user.id) : null;
+    return NextResponse.json({ ok: true, metaConversion });
   } catch (error) {
     console.error("[DELETE job_posts] failed", error);
     return NextResponse.json({ error: mensajeDeError(req, { es: "No pudimos eliminar este empleo. Inténtalo nuevamente.", en: "We could not delete this job. Try again." }) }, { status: 500 });

@@ -1,6 +1,7 @@
 import { expect, test } from "playwright/test";
+import { notificationPushUrl } from "../../src/lib/push/payload";
 import esMessages from "../../messages/es.json";
-import { notificationContext, notificationHref } from "../../src/lib/notification-link";
+import { APPROVED_SUGGESTION_LINK, notificationActionHref, notificationContext, notificationHref } from "../../src/lib/notification-link";
 import { localizedNotificationCopy, TRANSLATED_NOTIFICATION_TYPES } from "../../src/lib/localized-notification";
 import { resolveAuthCallbackLocale } from "../../src/lib/auth/callback-locale";
 import { IMAGE_ACCEPT, IMAGE_DOC_ACCEPT, IMAGE_KINDS, sniffFileType, validateUpload } from "../../src/lib/upload-validation";
@@ -91,6 +92,26 @@ test.describe("@contract product safety contracts", () => {
       }
       expect(["professional", "client", "support", null]).toContain(notificationContext(type));
     }
+  });
+
+  test("approved suggestions open the add-service picker in both languages and push", () => {
+    for (const notification of [
+      { type: "suggestion_approved" },
+      { type: "suggestion_approved", data: { link: "/dashboard/profesional?tab=notifications" } },
+      { type: "support_reply", data: { suggestion_decision: "approved", link: "/dashboard/profesional?tab=notifications" } },
+    ]) {
+      for (const locale of ["es", "en"]) {
+        const href = notificationActionHref(notification, undefined, locale);
+        expect(href).toBe(`${locale === "en" ? "/en" : ""}${APPROVED_SUGGESTION_LINK}`);
+        const target = new URL(href!, "https://contratacr.com");
+        expect(target.searchParams.get("mode")).toBe("offer");
+        expect(target.searchParams.get("tab")).toBe("services");
+        expect(target.searchParams.get("focus")).toBe("services");
+      }
+    }
+    expect(notificationPushUrl({ link: APPROVED_SUGGESTION_LINK })).toBe(APPROVED_SUGGESTION_LINK);
+    expect(notificationActionHref({ type: "suggestion_rejected" })).toBeNull();
+    expect(notificationHref({ type: "support_reply" })).toBe("/dashboard/profesional?tab=soporte");
   });
 
   test("known legacy replacement characters are repaired at display boundaries", () => {

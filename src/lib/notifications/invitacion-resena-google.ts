@@ -1,3 +1,4 @@
+import { insertOnceNotifications, onceReceipts } from "@/lib/notifications/once";
 import type { createAdminClient } from "@/lib/supabase/admin";
 
 /**
@@ -8,7 +9,7 @@ import type { createAdminClient } from "@/lib/supabase/admin";
  * profesional —acaba de hacernos un favor, pedirle otro ahí es evasivo—.
  * Un aviso en la campanita no cuesta nada y espera a que la persona entre.
  *
- * Una sola vez por cuenta: antes de insertar se comprueba que no exista ya.
+ * Una sola vez por cuenta: el recibo permanente y el disparador de la base evitan repeticiones.
  */
 type Admin = ReturnType<typeof createAdminClient>;
 
@@ -20,40 +21,20 @@ const CUERPO = {
 
 export async function invitarAResenaDeGoogle(admin: Admin, profileIds: string[], idioma: "es" | "en" = "es") {
   const destinatarios = [...new Set(profileIds.filter(Boolean))];
-  if (destinatarios.length === 0) return { enviadas: 0, yaTenian: 0 };
-  try {
-    const { data: previas } = await admin
-      .from("notifications")
-      .select("user_id")
-      .eq("type", "resena_google")
-      .in("user_id", destinatarios);
-    const yaTienen = new Set((previas ?? []).map((f) => String((f as { user_id: string }).user_id)));
-    const nuevos = destinatarios.filter((id) => !yaTienen.has(id));
-    if (nuevos.length === 0) return { enviadas: 0, yaTenian: yaTienen.size };
-    // En tandas: una sola sentencia con miles de filas se cae por tamaño.
-    let enviadas = 0;
-    for (let i = 0; i < nuevos.length; i += 200) {
-      const tanda = nuevos.slice(i, i + 200).map((userId) => ({
-        user_id: userId,
-        type: "resena_google",
-        title: TITULO[idioma],
-        message: CUERPO[idioma],
-        data: { link: "/resena-google" },
-        read: false,
-      }));
-      const { error } = await admin.from("notifications").insert(tanda);
-      if (!error) { enviadas += tanda.length; continue; }
-      // Una de la tanda ya la tenía (llegó por otro lado entre la revisión y
-      // ahora: lo impide el índice único 230). Se insertan una a una para que
-      // el resto no se quede sin la suya.
-      for (const fila of tanda) {
-        const { error: unoError } = await admin.from("notifications").insert(fila);
-        if (!unoError) enviadas += 1;
-      }
-    }
-    return { enviadas, yaTenian: yaTienen.size };
-  } catch {
-    // Un aviso nunca puede tumbar el registro ni nada de lo que lo llame.
-    return { enviadas: 0, yaTenian: 0 };
-  }
+  const recibos = await onceReceipts(admin, destinatarios, ["resena_google"]);
+  const bloqueados = new Set(recibos.map((r) => r.user_id));
+  const nuevos = destinatarios.filter((id) => !bloqueados.has(id));
+  const enviadas = await insertOnceNotifications(admin, nuevos.map((userId) => ({
+    user_id: userId,
+    type: "resena_google",
+    title: TITULO[idioma],
+    message: CUERPO[idioma],
+    data: { link: "/resena-google" },
+    read: false,
+  })));
+  return {
+    enviadas,
+    yaTenian: recibos.filter((r) => r.status === "sent").length,
+    historialSinConfirmar: recibos.filter((r) => r.status === "historical_unknown").length,
+  };
 }

@@ -1,5 +1,7 @@
 "use client";
 
+import { trackMetaConversion } from "@/lib/analytics/meta-pixel";
+
 import { rutaProyecto } from "@/lib/marketplace-url";
 import { conFiltroDeFecha } from "@/lib/marketplace/filtros-por-volumen";
 import { formatPersonDisplayName } from "@/lib/display-name";
@@ -172,7 +174,7 @@ function BotonEscribir({ proyecto, className = "" }: { proyecto: ProyectoPublico
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ projectId: proyecto.id }),
       });
-      const payload = (await res.json().catch(() => ({}))) as { href?: string; tel?: string; code?: string };
+      const payload = (await res.json().catch(() => ({}))) as { href?: string; tel?: string; code?: string; metaConversion?: import("@/lib/analytics/growth-contract").MetaConversion | null };
       // El servidor dice POR QUÉ, no solo que no. Antes cualquier fallo caía en
       // «este cliente no dejó un WhatsApp» —hasta cuando el proyecto sí tenía
       // teléfono y lo que pasaba era otra cosa—, así que el aviso mentía y el
@@ -188,6 +190,7 @@ function BotonEscribir({ proyecto, className = "" }: { proyecto: ProyectoPublico
         : !res.ok || !payload.href ? copy.fallo
         : null;
       if (aviso) { await showMessage({ title: copy.escribir, description: aviso }); return; }
+      trackMetaConversion(payload.metaConversion);
       if (canal === "llamada" && payload.tel) { window.location.href = payload.tel; return; }
       window.open(payload.href, "_blank", "noopener,noreferrer");
     } finally {

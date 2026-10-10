@@ -3,94 +3,39 @@
 import { useEffect, useState } from "react";
 import { Megaphone, Send, Loader2, Star, History } from "lucide-react";
 import { useAppDialog } from "@/hooks/use-app-dialog";
+import { AdminMetaGrowth } from "./admin-meta-growth";
+import { SERVICES_CAMPAIGN } from "@/lib/email/campaign-policy";
 
-/**
- * UNA sola plantilla, la de la temporada que corre, y con el camino MÁS CORTO.
- *
- * Antes el botón decía «Publicar lo que necesito» y llevaba al formulario de
- * proyecto: exige sesión, cuatro campos y un WhatsApp. Es el camino de más
- * fricción del app, y a un correo se llega de paso, con poca paciencia. Buscar
- * no pide nada: se abre la lista de electricistas verificados de la zona y cada
- * tarjeta ya trae su botón de WhatsApp. Del correo a la conversación, dos toques.
- *
- * Y se aterriza en ELECTRICIDAD porque es donde hay oferta de verdad (45
- * profesionales, contra 8 en techos y 6 en impermeabilización): mandar a un
- * oficio vacío es peor que no mandar el correo. Publicar queda mencionado para
- * quien prefiera que lo busquen a él.
- */
-// La plantilla anterior («¿Necesitas un electricista?», colgada de que
-// empezaban las lluvias) se retiró por dos motivos que se discutieron con
-// Isaac y que valen para cualquier campaña futura:
-//
-//  · El motivo era INVENTADO. Aquí llueve medio año y nadie piensa «está
-//    lloviendo, voy a buscar un electricista»; cuando se va la luz es del ICE.
-//  · El asunto era una pregunta de sí o no, y quien contesta «no» —casi
-//    todos— borra el correo sin abrirlo.
-//
-// Esta dice algo CIERTO que el destinatario no sabe: que esto no es un solo
-// oficio. Mucha gente se registró por una cosa puntual y no tiene idea de la
-// amplitud. Las cifras salen de producción (288 profesionales, 263
-// verificados contra el padrón) y hay que revisarlas antes de mandar.
-const PLANTILLAS = [
-  {
-    id: "recordatorio",
-    nombre: "Recordatorio de lo que hay",
-    subject: "263 profesionales verificados, en un solo lugar",
-    body: "Hola,\n\nPor si no lo tenías presente: en ContrataCR hay electricistas, construcción, remodelación, abogados, mecánicos, contadores, desarrollo web y bastante más.\n\nTodos con cédula verificada en el padrón del TSE, con reseñas, y les escribís por WhatsApp directo — sin formularios ni esperas.",
-    ctaLabel: "Ver todos los servicios",
-    ctaPath: "/servicios",
-    audiencia: "todas",
-  },
-  // PARA PROFESIONALES (8-oct-2026). De 313 activos, 299 no tenían ninguna
-  // reseña y 292 no mostraban precio de referencia. El botón lleva al panel,
-  // donde cada uno tiene su propio botón «Pedir por WhatsApp» con su enlace.
-  {
-    id: "resenas",
-    nombre: "Profesionales sin reseñas",
-    subject: "Una reseña cambia cuántos clientes te escriben",
-    body: "Los clientes que entran a ContrataCR escriben primero a los perfiles que tienen reseñas. Hoy el tuyo todavía no tiene ninguna.\n\nLo más rápido es pedírsela a 2 o 3 clientes con los que ya trabajaste. En tu panel, en los pasos de tu perfil, está «Pide tus primeras reseñas»: abre WhatsApp con el mensaje listo y el enlace a tu perfil, solo eliges a quién mandárselo.\n\nToma un minuto y la reseña queda en tu perfil.",
-    ctaLabel: "Pedir mis reseñas",
-    ctaPath: "/dashboard/profesional?mode=offer&tab=completion",
-    audiencia: "pros_sin_resenas",
-  },
-  {
-    id: "precio",
-    nombre: "Profesionales sin precio",
-    subject: "Los perfiles con precio de referencia reciben más mensajes",
-    body: "Cuando un cliente ve «desde ₡15.000» en un perfil, se anima más a escribir: ya sabe que está dentro de su presupuesto. Hoy tus servicios dicen «a convenir» o no muestran precio.\n\nNo tienes que fijar un precio exacto: pon el mínimo con el que normalmente arrancas. El precio final lo sigues acordando con cada cliente.\n\nSe cambia en tu panel, en Servicios, en menos de un minuto.",
-    ctaLabel: "Agregar mi precio",
-    ctaPath: "/dashboard/profesional?mode=offer&tab=completion",
-    audiencia: "pros_sin_precio",
-  },
-];
-
-const PUBLICO: Record<string, string> = {
-  todas: "Todas las cuentas",
-  pros_sin_resenas: "Profesionales sin reseñas",
-  pros_sin_precio: "Profesionales sin precio de referencia",
-};
+const PLANTILLAS = [SERVICES_CAMPAIGN];
+const PUBLICO: Record<string, string> = { todas: "Cuentas con correo habilitado para novedades" };
 
 export function AdminCampaigns() {
   const { dialogNode, showMessage, confirm } = useAppDialog();
   const [clientes, setClientes] = useState<number | null>(null);
   // Cuántos faltan de ESTA campaña y cuándo se puede mandar la próxima tanda.
-  const [tanda, setTanda] = useState({ porTanda: 200, enviados: 0, restantes: 0, horasParaLaProxima: 0, abiertos: 0, clics: 0, rebotes: 0, midiendo: false });
+  const [tanda, setTanda] = useState({ porTanda: 200, enviados: 0, restantes: 0, horasParaLaProxima: 0, abiertos: 0, clics: 0, rebotes: 0, midiendo: false, sinConfirmar: 0 });
   const [adminEmail, setAdminEmail] = useState("");
   // Cuánto correo queda HOY. Los 300 diarios del plan gratuito los comparten
   // esta campaña con los correos que el app necesita mandar (crear cuenta,
   // recuperar contraseña, soporte). Este número es el que dice si vale la pena
   // pagar el plan o esperar a mañana.
   const [cuota, setCuota] = useState<{ enviados: number; tope: number; restantes: number; margenMasivo: number } | null>(null);
-  const [resena, setResena] = useState<{ cuentas: number; yaTenian: number } | null>(null);
+  const [resena, setResena] = useState<{ cuentas: number; yaTienen: number; restantes: number; historialSinConfirmar: number } | null>(null);
+  const [resenaError, setResenaError] = useState("");
+  const [campaignError, setCampaignError] = useState("");
   const [invitando, setInvitando] = useState(false);
   const [rescatando, setRescatando] = useState(false);
   const [rescate, setRescate] = useState<string | null>(null);
 
   useEffect(() => {
     void fetch("/api/admin/invitar-resena")
-      .then((r) => r.json())
-      .then((d) => setResena({ cuentas: Number(d.cuentas ?? 0), yaTenian: Number(d.yaTienen ?? 0) }))
-      .catch(() => setResena(null));
+      .then(async (r) => {
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error || "No se pudo comprobar el historial.");
+        return d;
+      })
+      .then((d) => setResena(d))
+      .catch((error: Error) => setResenaError(error.message));
   }, []);
 
   async function invitarResenas() {
@@ -100,10 +45,13 @@ export function AdminCampaigns() {
       const d = await r.json();
       await showMessage({
         title: r.ok ? "Aviso enviado" : "No se pudo enviar",
-        description: r.ok ? `Le llegó a ${d.enviadas} cuenta(s). ${d.yaTenian} ya lo tenían.` : String(d.error ?? ""),
+        description: r.ok ? `Se crearon ${d.enviadas} invitaciones nuevas. Quedan ${d.restantes} cuentas elegibles.` : String(d.error ?? ""),
         tone: r.ok ? "success" : "danger",
       });
-      setResena({ cuentas: Number(d.cuentas ?? 0), yaTenian: Number(d.yaTenian ?? 0) + Number(d.enviadas ?? 0) });
+      if (r.ok) { setResena(d); setResenaError(""); }
+      else setResenaError(d.error || "No se pudo comprobar el historial.");
+    } catch {
+      setResenaError("No se pudo confirmar el resultado. Actualiza el estado antes de reintentar.");
     } finally {
       setInvitando(false);
     }
@@ -117,7 +65,10 @@ export function AdminCampaigns() {
 
   async function cargarEstado() {
     try {
-      const d = await (await fetch(`/api/admin/campanas?asunto=${encodeURIComponent(subject)}&audiencia=${plantilla.audiencia}`)).json();
+      const response = await fetch(`/api/admin/campanas?campaignId=${plantilla.id}&audiencia=${plantilla.audiencia}`);
+      const d = await response.json();
+      if (!response.ok) throw new Error(d.error || "No se pudo comprobar el historial.");
+      setCampaignError("");
       setClientes(Number(d.clients ?? 0));
       setAdminEmail(String(d.adminEmail ?? ""));
       setTanda({
@@ -129,8 +80,9 @@ export function AdminCampaigns() {
         clics: Number(d.clics ?? 0),
         rebotes: Number(d.rebotes ?? 0),
         midiendo: Boolean(d.midiendo),
+        sinConfirmar: Number(d.sinConfirmar ?? 0),
       });
-    } catch { setClientes(0); }
+    } catch (error) { setClientes(0); setCampaignError(error instanceof Error ? error.message : "No se pudo comprobar el historial."); }
     try {
       const c = await (await fetch("/api/admin/correo")).json();
       if (typeof c?.enviados === "number") {
@@ -149,7 +101,7 @@ export function AdminCampaigns() {
     const id = requestAnimationFrame(() => { void cargarEstado(); });
     return () => cancelAnimationFrame(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subject, plantilla.audiencia]);
+  }, [plantilla.id, plantilla.audiencia]);
 
 
 
@@ -162,7 +114,7 @@ export function AdminCampaigns() {
     if (mode === "all") {
       const { confirmed, value } = await confirm({
         title: `¿Enviar a ${Math.min(tanda.porTanda, tanda.restantes)} cuentas?`,
-        description: `Sale ahora a las primeras ${tanda.porTanda} que faltan (quedan ${tanda.restantes} de ${clientes ?? 0}). El resto se manda mañana: el proveedor solo deja 300 correos por día y esos mismos los usa el soporte del app. No se puede deshacer.`,
+        description: `Sale ahora a las primeras ${tanda.porTanda} que faltan (quedan ${tanda.restantes} de ${clientes ?? 0}). Solo se incluyen cuentas pendientes, sin baja ni rebote, y sin otro correo de campaña en los últimos 14 días. El resto queda pendiente para otra tanda. No se puede deshacer.`,
         confirmLabel: "Enviar ahora",
         tone: "danger",
         input: { label: "Escribe ENVIAR para confirmar", placeholder: "ENVIAR" },
@@ -171,18 +123,21 @@ export function AdminCampaigns() {
     }
     setEnviando(mode);
     try {
-      const res = await fetch("/api/admin/campanas", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ subject, body, ctaLabel, ctaPath, mode, audiencia: plantilla.audiencia, confirm: mode === "all" ? "ENVIAR" : undefined }) });
+      const res = await fetch("/api/admin/campanas", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ subject, body, ctaLabel, ctaPath, mode, audiencia: plantilla.audiencia, campaignId: plantilla.id, confirm: mode === "all" ? "ENVIAR" : undefined }) });
       const d = await res.json();
       if (!res.ok) { await showMessage({ title: "No se pudo enviar", description: d.error ?? "Intenta de nuevo.", tone: "danger" }); return; }
       if (mode === "test") await showMessage({ title: d.ok ? "Prueba enviada" : "La prueba no salió", description: d.ok ? `Revisa ${d.to}.` : String(d.detail ?? ""), tone: d.ok ? "success" : "danger" });
       else {
         await showMessage({
-          title: d.completa ? "Campaña completa" : "Tanda enviada",
-          description: `Enviados ${d.sent} · fallidos ${d.failed} · omitidos ${d.skipped}. ${d.completa ? "No queda nadie por recibirla." : `Quedan ${d.restantes}: la próxima tanda se puede mandar en 24 horas.`}`,
+          title: d.sinConfirmar > 0 ? "Tanda pendiente de confirmación" : d.completa ? "Campaña completa" : "Tanda enviada",
+          description: `Enviados ${d.sent} · sin confirmar ${d.failed} · omitidos ${d.skipped}. ${d.completa ? "No quedan destinatarios elegibles pendientes." : `Quedan ${d.restantes} destinatarios elegibles pendientes.`}`,
           tone: "success",
         });
         await cargarEstado();
       }
+    } catch {
+      await showMessage({ title: "No se pudo confirmar el resultado", description: "Actualiza el estado antes de reintentar. Los destinatarios reservados no se volverán a enviar automáticamente.", tone: "danger" });
+      await cargarEstado();
     } finally {
       setEnviando(null);
     }
@@ -192,11 +147,14 @@ export function AdminCampaigns() {
 
   return (
     <div className="space-y-6">
+      <AdminMetaGrowth />
       <div>
         <h1 className="flex items-center gap-2 text-2xl font-extrabold text-[#162543]"><Megaphone className="h-6 w-6 text-[#009FD9]" />Campañas por correo</h1>
-        <p className="mt-1 text-sm text-[#68778d]">Avisos de temporada a todas las cuentas registradas, clientes y profesionales: un profesional también contrata. {clientes === null ? "Contando…" : `${clientes} cuentas con correo.`}</p>
+        <p className="mt-1 text-sm text-[#68778d]">Un correo de servicios por cuenta. Los recordatorios de perfil, reseñas y precio se mantienen dentro de la app. {clientes === null ? "Contando…" : `${clientes} cuentas con correo.`}</p>
       </div>
 
+      {campaignError && <p role="alert" className="text-sm text-red-700">{campaignError}</p>}
+      {tanda.sinConfirmar > 0 && <p className="text-sm text-amber-800">{tanda.sinConfirmar} envíos pendientes de confirmación. No se reenvían automáticamente.</p>}
       {cuota && (
         <div className={`rounded-2xl border p-4 ${cuota.margenMasivo > 0 ? "border-[#d7e1ea] bg-white" : "border-amber-200 bg-amber-50"}`}>
           <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#8a94a6]">Correo de hoy</p>
@@ -205,7 +163,7 @@ export function AdminCampaigns() {
           </p>
           <p className="mt-1 text-[13px] leading-snug text-[#68778d]">
             {cuota.margenMasivo > 0
-              ? `Los ${cuota.tope} del día se comparten con los correos que el app necesita mandar. Una campaña deja de salir cuando quedan 100 libres, para que nadie se quede sin su código de cuenta ni sin respuesta de soporte.`
+              ? `Los ${cuota.tope} del día se comparten con los correos que el app necesita mandar. Una campaña deja de salir cuando quedan ${cuota.restantes - cuota.margenMasivo} libres, para reservar cupo a los avisos de cuenta y soporte.`
               : `Hoy ya no salen campañas: quedan ${cuota.restantes} correos y están reservados para crear cuentas, recuperar contraseñas y soporte. Vuelve mañana o sube de plan.`}
           </p>
         </div>
@@ -230,7 +188,7 @@ export function AdminCampaigns() {
               {enviando === "test" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}Enviarme una prueba{adminEmail ? ` (${adminEmail})` : ""}
             </button>
             <button type="button" disabled={!!enviando || !clientes || tanda.restantes === 0 || tanda.horasParaLaProxima > 0} onClick={() => void enviar("all")} className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#009FD9] px-5 text-sm font-bold text-white transition hover:bg-[#0089bb] disabled:opacity-60">
-              {enviando === "all" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Megaphone className="h-4 w-4" />}{tanda.horasParaLaProxima > 0 ? `Disponible en ${tanda.horasParaLaProxima} h` : tanda.restantes === 0 ? "Ya la recibieron todos" : `Enviar a ${Math.min(tanda.porTanda, tanda.restantes)} (quedan ${tanda.restantes})`}
+              {enviando === "all" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Megaphone className="h-4 w-4" />}{tanda.horasParaLaProxima > 0 ? `Disponible en ${tanda.horasParaLaProxima} h` : tanda.restantes === 0 ? "Sin destinatarios pendientes" : `Enviar a ${Math.min(tanda.porTanda, tanda.restantes)} (quedan ${tanda.restantes})`}
             </button>
           </div>
 
@@ -318,26 +276,27 @@ export function AdminCampaigns() {
         <div className="mt-3 rounded-2xl border border-[#d7e1ea] bg-white p-4">
           <p className="text-[15px] font-bold text-[#162543]">
             {resena
-              ? resena.yaTenian >= resena.cuentas
-                ? `Ya lo tienen las ${resena.cuentas} cuentas`
-                : `Le falta a ${resena.cuentas - resena.yaTenian} de ${resena.cuentas} cuentas`
-              : "Cargando…"}
+              ? `${resena.restantes} cuentas elegibles pendientes de ${resena.cuentas} cuentas activas`
+              : resenaError ? "No se pudo comprobar el historial" : "Cargando…"}
           </p>
           <p className="mt-1 text-[13px] leading-snug text-[#68778d]">
-            Quien ya lo recibió no lo vuelve a recibir, así que se puede pulsar cuantas veces haga falta: sirve para alcanzar a quien se registró después. A las cuentas nuevas les llega solo.
+            Solo se invita a quien ya usó la app y no tiene un envío registrado. Borrar el aviso no permite recibirlo otra vez. Las cuentas nuevas reciben la invitación después de una interacción real, no al registrarse. Los recordatorios se separan por al menos 24 horas.
           </p>
+          {resenaError && <p role="alert" className="mt-2 text-sm text-red-700">{resenaError}</p>}
+          {!!resena?.historialSinConfirmar && <p className="mt-2 text-sm text-amber-800">{resena.historialSinConfirmar} cuentas anteriores tienen historial sin confirmar. Se excluyen para evitar repetir una invitación que pudieron haber borrado.</p>}
+
           <button
             type="button"
-            disabled={invitando || (!!resena && resena.yaTenian >= resena.cuentas)}
+            disabled={invitando || !resena || !!resenaError || resena.restantes === 0}
             onClick={() => void invitarResenas()}
             className="mt-3 inline-flex h-10 items-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white hover:bg-[#0089bb] disabled:opacity-60"
           >
             {invitando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Star className="h-4 w-4" />}
             {invitando
               ? "Enviando…"
-              : resena && resena.yaTenian >= resena.cuentas
-                ? "Ya lo tienen todas"
-                : `Pedir reseña a ${resena ? resena.cuentas - resena.yaTenian : ""} cuenta(s)`}
+              : resena?.restantes === 0
+                ? "Sin invitaciones pendientes"
+                : `Pedir reseña a ${resena?.restantes ?? ""} cuenta(s)`}
           </button>
         </div>
       </div>

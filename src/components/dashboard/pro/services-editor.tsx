@@ -1,5 +1,7 @@
 "use client";
 
+import { trackMetaConversion } from "@/lib/analytics/meta-pixel";
+
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { confirmarSalidaSinGuardar } from "@/lib/confirmar-salida";
 import { soltarFoco } from "@/lib/soltar-foco";
@@ -315,6 +317,9 @@ export function ServicesEditor({
         .eq("id", professionalId);
       if (error) throw error;
 
+      void fetch("/api/analytics/professional-ready", { method: "POST" }).then(async response => {
+        if (response.ok) trackMetaConversion((await response.json()).metaConversion);
+      }).catch(() => {});
       setSaved(true);
       setDirty(false);
       setTimeout(() => setSaved(false), 3000);

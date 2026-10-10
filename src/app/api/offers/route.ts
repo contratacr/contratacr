@@ -1,3 +1,4 @@
+import { recordGrowthConversion } from "@/lib/analytics/growth-server";
 import { NextRequest, NextResponse } from "next/server";
 import { rutasDeCache } from "@/lib/prefijo-de-idioma";
 import { mensajeDeError } from "@/lib/api-errors";
@@ -100,8 +101,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: mensajeDeError(req, { es: "No pudimos guardar la oferta. Inténtalo nuevamente.", en: "We could not save the promotion. Try again." }) }, { status: 500 });
     }
     revalidateOfferViews(data.id);
+    const metaConversion = payload.status === "published" && payload.offer_type === "service_offer" ? await recordGrowthConversion(req,"service_offer_published",data.id,user.id) : null;
     await invitarAResenaAhora(user.id);
-    return NextResponse.json({ id: data.id });
+    return NextResponse.json({ id: data.id, metaConversion });
   } catch (error) {
     console.error("[POST /api/offers] unexpected failure", error);
     return NextResponse.json({ error: mensajeDeError(req, { es: "No pudimos publicar la oferta. Inténtalo nuevamente.", en: "We could not publish the promotion. Try again." }) }, { status: 500 });
@@ -117,7 +119,7 @@ export async function PATCH(req: NextRequest) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    const { data: offer } = await supabase.from("professional_offers").select("professional_id, valid_until, professionals!inner(profile_id)").eq("id", id).maybeSingle();
+    const { data: offer } = await supabase.from("professional_offers").select("professional_id, offer_type, valid_until, professionals!inner(profile_id)").eq("id", id).maybeSingle();
     const owner = offer?.professionals as unknown as { profile_id?: string } | null;
     if (!offer || owner?.profile_id !== user.id) return NextResponse.json({ error: "No tienes permiso para modificar esta oferta." }, { status: 403 });
     // Volver a publicar una promoción con la vigencia ya pasada la dejaba
@@ -131,7 +133,8 @@ export async function PATCH(req: NextRequest) {
     const { error } = await supabase.from("professional_offers").update(cambios).eq("id", id).eq("professional_id", offer.professional_id);
     if (error) throw error;
     revalidateOfferViews(id);
-    return NextResponse.json({ ok: true });
+    const metaConversion = status === "published" && offer.offer_type === "service_offer" ? await recordGrowthConversion(req,"service_offer_published",id,user.id) : null;
+    return NextResponse.json({ ok: true, metaConversion });
   } catch (error) {
     console.error("[PATCH /api/offers] status update failed", error);
     return NextResponse.json({ error: "No pudimos actualizar la oferta." }, { status: 500 });

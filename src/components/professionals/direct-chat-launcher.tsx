@@ -8,7 +8,7 @@ import { useLocale } from "next-intl";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
-import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
+import { trackMetaConversion } from "@/lib/analytics/meta-pixel";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { useProfesionalConApp } from "@/hooks/use-profesional-con-app";
 import { MessageLauncher } from "@/components/professionals/message-launcher";
@@ -127,7 +127,7 @@ export function DirectChatLauncher({
         // El contacto es la conversión que importa y Meta no la veía: solo
         // llegaba el botón de llamar. Escribirle a quien publicó un empleo es
         // alguien buscando trabajo, no un cliente, así que ese no cuenta.
-        if (!jobId) trackMetaEvent("Contact", { content_type: "professional_service", method: "whatsapp", source: analyticsSource });
+        trackMetaConversion(payload.metaConversion);
       }
       window.open(String(payload.href), "_blank", "noopener,noreferrer");
       // La ficha escucha esto para ofrecer, al volver, publicar lo que necesita.

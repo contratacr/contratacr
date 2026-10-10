@@ -1,3 +1,5 @@
+import { recordServiceContact } from "@/lib/analytics/growth-server";
+import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -19,7 +21,7 @@ export async function GET(req: Request) {
   const db = createAdminClient();
   const { data, error } = await db
     .from("professionals")
-    .select("id, whatsapp, call_phone, contact_email, allow_phone_call, is_banned")
+    .select("id, profile_id, whatsapp, call_phone, contact_email, allow_phone_call, is_banned")
     .eq("id", professionalId)
     .maybeSingle();
   // A banned profile is out of search AND out of reach: no contact reveal.
@@ -31,5 +33,9 @@ export async function GET(req: Request) {
   const digits = ((row.call_phone || row.whatsapp) ?? "").replace(/\D/g, "");
   const tel = row.allow_phone_call && digits ? `tel:+${digits.length === 8 ? `506${digits}` : digits}` : null;
   const email = (row.contact_email ?? "").trim() || null;
-  return NextResponse.json({ tel, email }, { headers: { "Cache-Control": "no-store" } });
+  const method = new URL(req.url).searchParams.get("method");
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  const available = method === "phone" ? Boolean(tel) : method === "email" ? Boolean(email) : false;
+  const metaConversion = available && user?.id !== data.profile_id ? await recordServiceContact(req,professionalId,user?.id) : null;
+  return NextResponse.json({ tel, email, metaConversion }, { headers: { "Cache-Control": "no-store" } });
 }

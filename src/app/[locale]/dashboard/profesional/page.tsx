@@ -888,18 +888,23 @@ export default function DashboardPage() {
     applyPendingSavedPro();
   }, [authLoading, user]);
 
-  // Deep-link focus: `?tab=profile&focus=location` opens the editor at that field.
+  // Deep links open the appropriate editor after its authenticated data is ready.
   useEffect(() => {
     const focus = searchParams.get("focus");
-    if (!focus) return;
+    if (!focus || authLoading || loading || !user) return;
+    if (requestedTab === "services" && !isProvider) return;
     queueMicrotask(() => {
-      setProfileFocus({ field: focus, key: nextFocusKey() });
+      if (requestedTab === "services") {
+        setServiceFocus({ field: focus, key: nextFocusKey() });
+      } else {
+        setProfileFocus({ field: focus, key: nextFocusKey() });
+      }
       const params = new URLSearchParams(searchParams.toString());
       params.delete("focus");
       const qs = params.toString();
       router.replace(`/dashboard/profesional${qs ? `?${qs}` : ""}`, { scroll: false });
     });
-  }, [searchParams, router, nextFocusKey]);
+  }, [searchParams, router, nextFocusKey, authLoading, loading, user, requestedTab, isProvider]);
 
   const cacheDashboardBootstrap = useCallback((next: Partial<DashboardBootstrap>) => {
     if (!user) return;

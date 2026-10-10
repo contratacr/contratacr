@@ -40,7 +40,7 @@ import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { writeStoredMode } from "@/hooks/use-mode";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
-import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
+import { trackMetaEvent, trackMetaConversion } from "@/lib/analytics/meta-pixel";
 import { readAttribution } from "@/lib/analytics/attribution";
 import { FilaInterruptor } from "@/components/ui/fila-interruptor";
 import { BARRA_ACCION_FIJA, useBarraAccionFija } from "@/components/ui/acciones-al-pie";
@@ -955,7 +955,8 @@ export default function RegisterProfessionalPage() {
         fallo.codigo = typeof proCode === "string" ? proCode : undefined;
         throw fallo;
       }
-      await proRes.json().catch(() => ({}));
+      const proReceipt = await proRes.json().catch(() => ({}));
+      trackMetaConversion(proReceipt.metaConversion);
 
       // Persist the professional role in auth metadata too, so navigating away
       // and back never reverts to the role-selection screen (and a converted

@@ -1,3 +1,4 @@
+import { APPROVED_SUGGESTION_LINK } from "@/lib/notification-link";
 import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -589,7 +590,7 @@ function notificationData(
   reviewReason?: string | null
 ) {
   return {
-    link: "/dashboard/profesional?tab=notifications",
+    link: decision === "approved" ? APPROVED_SUGGESTION_LINK : "/dashboard/profesional?tab=notifications",
     suggestion_decision: decision,
     service_name: serviceName,
     ...(reviewReason ? { review_reason: reviewReason } : {}),

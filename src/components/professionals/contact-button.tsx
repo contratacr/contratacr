@@ -4,7 +4,7 @@ import { useAppDialog } from "@/hooks/use-app-dialog";
 import { useState } from "react";
 import { Loader2, Mail, Phone } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
+import { trackMetaConversion } from "@/lib/analytics/meta-pixel";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { useContactGate } from "@/components/professionals/contact-gate";
 import { cn } from "@/lib/utils";
@@ -65,15 +65,15 @@ export function ContactButton({
   async function go() {
     setLoading(true);
     try {
-      const res = await fetch(`/api/contact/reveal?professionalId=${encodeURIComponent(professionalId)}`);
-      const data = (await res.json().catch(() => ({}))) as { tel?: string | null; email?: string | null };
+      const res = await fetch(`/api/contact/reveal?professionalId=${encodeURIComponent(professionalId)}&method=${method}`);
+      const data = (await res.json().catch(() => ({}))) as { tel?: string | null; email?: string | null; metaConversion?: import("@/lib/analytics/growth-contract").MetaConversion | null };
       const href = method === "phone"
         ? data.tel ?? null
         : data.email
           ? `mailto:${data.email}?subject=${encodeURIComponent("Consulta desde ContrataCR")}&body=${encodeURIComponent(`Hola ${professionalName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaria coordinar un servicio.`)}`
           : null;
       if (!res.ok || !href) { await showMessage({ title: professionalName, description: t("noContact") }); return; }
-      trackMetaEvent("Contact", { content_type: "professional_service", method, source });
+      trackMetaConversion(data.metaConversion);
       trackInteraction({
         type: method === "phone" ? "phone_click" : "email_click",
         professionalId,

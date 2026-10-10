@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { recordedCostHistory } from "@/lib/admin/cost-history";
 import { COST_SERVICES, findCostService, type CostService } from "@/lib/admin/cost-catalog";
 
 // /api/admin/costs — what ContrataCR costs.
@@ -12,8 +13,8 @@ import { COST_SERVICES, findCostService, type CostService } from "@/lib/admin/co
 //  DELETE ?id=  remove a ledger entry.
 //  PATCH  update a service: real amounts, start date, usage note, notes.
 //
-// Lifetime spend of a recurring service = its monthly amount × the months
-// since it started (+ annual amount × the years), plus every ledger entry.
+// Current subscription rates are budgets. Historical spending comes only
+// from dated ledger entries, so editing a rate never rewrites past spending.
 
 export type CostEntryKind = "recurrente" | "unico" | "publicidad" | "contenido";
 export type CostCurrency = "USD" | "CRC";
@@ -57,7 +58,7 @@ export type CostSummary = {
   contentCrc: number;
   contentUsd: number;
   byCategory: Array<{ category: string; usd: number; crc: number }>;
-  byMonth: Array<{ month: string; usd: number; crc: number }>;
+  byMonth: Array<{ month: string; usd: number; crc: number; cumulativeUsd: number; cumulativeCrc: number }>;
 };
 
 type ServiceRow = {
@@ -96,34 +97,6 @@ function round(value: number) {
   return Math.round(value * 100) / 100;
 }
 
-/** Whole months from `since` to today, counting the starting month. */
-function monthsSince(since: string | null, today: Date) {
-  if (!since) return 0;
-  const start = new Date(`${since}T00:00:00Z`);
-  if (Number.isNaN(start.getTime()) || start > today) return 0;
-  return (today.getUTCFullYear() - start.getUTCFullYear()) * 12 + (today.getUTCMonth() - start.getUTCMonth()) + 1;
-}
-
-function yearsSince(since: string | null, today: Date) {
-  if (!since) return 0;
-  const start = new Date(`${since}T00:00:00Z`);
-  if (Number.isNaN(start.getTime()) || start > today) return 0;
-  return Math.floor(monthsSince(since, today) / 12) + 1;
-}
-
-function monthKey(date: string) {
-  return date.slice(0, 7);
-}
-
-function lastMonths(count: number, today: Date) {
-  const months: string[] = [];
-  for (let i = count - 1; i >= 0; i -= 1) {
-    const d = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() - i, 1));
-    months.push(`${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`);
-  }
-  return months;
-}
-
 function isoDate(value: unknown) {
   return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
 }
@@ -132,11 +105,25 @@ function text(value: unknown, max: number) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
 }
 
+async function recordedEntries(db: ReturnType<typeof createAdminClient>) {
+  const data: EntryRow[] = [];
+  const cutoff = new Date().toLocaleDateString("en-CA", { timeZone: "America/Costa_Rica" });
+  for (let offset = 0; ; offset += 1000) {
+    const result = await db.from("admin_cost_entries")
+      .select("id, kind, service_id, vendor, description, amount, currency, spent_on, quantity, notes, created_at")
+      .lte("spent_on", cutoff).order("spent_on", { ascending: false }).order("id", { ascending: false })
+      .range(offset, offset + 999);
+    if (result.error) return { data: null, error: result.error };
+    data.push(...(result.data as EntryRow[]));
+    if (result.data.length < 1000) return { data, error: null };
+  }
+}
+
 async function payload() {
   const db = createAdminClient();
   const [servicesResult, entriesResult] = await Promise.all([
     db.from("admin_cost_services").select("service_id, monthly_usd, annual_usd, since, usage_note, usage_updated_at, notes"),
-    db.from("admin_cost_entries").select("id, kind, service_id, vendor, description, amount, currency, spent_on, quantity, notes, created_at").order("spent_on", { ascending: false }).order("created_at", { ascending: false }),
+    recordedEntries(db),
   ]);
   if (servicesResult.error) throw servicesResult.error;
   if (entriesResult.error) throw entriesResult.error;
@@ -171,8 +158,8 @@ async function payload() {
       usageNote: row?.usage_note ?? null,
       usageUpdatedAt: row?.usage_updated_at ?? null,
       notes: row?.notes ?? null,
-      lifetimeUsd: service.variable ? 0 : round(monthlyUsd * monthsSince(since, today) + annualUsd * yearsSince(since, today)),
-      lifetimeCrc: service.variable ? 0 : round((service.monthlyCrc ?? 0) * monthsSince(since, today)),
+      lifetimeUsd: 0,
+      lifetimeCrc: 0,
       ledgerUsd: round(own.filter((e) => e.currency === "USD").reduce((sum, e) => sum + e.amount, 0)),
       ledgerCrc: round(own.filter((e) => e.currency === "CRC").reduce((sum, e) => sum + e.amount, 0)),
     };
@@ -196,26 +183,7 @@ async function payload() {
     add(category, entry.currency === "USD" ? entry.amount : 0, entry.currency === "CRC" ? entry.amount : 0);
   }
 
-  // By month (last twelve): recurring services active that month plus ledger.
-  const months = lastMonths(12, today);
-  const byMonth = months.map((month) => {
-    let usd = 0;
-    let crc = 0;
-    for (const service of services) {
-      if (service.variable || !service.since) continue;
-      if (monthKey(service.since) <= month) {
-        usd += service.monthlyUsd;
-        crc += service.monthlyCrc ?? 0;
-      }
-      if (service.annualUsd > 0 && monthKey(service.since).slice(5) === month.slice(5) && monthKey(service.since) <= month) usd += service.annualUsd;
-    }
-    for (const entry of entries) {
-      if (monthKey(entry.spentOn) !== month) continue;
-      if (entry.currency === "USD") usd += entry.amount;
-      else crc += entry.amount;
-    }
-    return { month, usd: round(usd), crc: round(crc) };
-  });
+  const byMonth = recordedCostHistory(entries, today);
 
   const summary: CostSummary = {
     monthlyRecurringUsd: round(services.filter((s) => !s.variable).reduce((s, x) => s + x.monthlyUsd, 0)),

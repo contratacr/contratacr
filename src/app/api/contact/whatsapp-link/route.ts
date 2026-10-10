@@ -1,3 +1,5 @@
+import { recordServiceContact } from "@/lib/analytics/growth-server";
+import { qualifiesServiceContact } from "@/lib/analytics/growth-contract";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { enforceRateLimit } from "@/lib/rate-limit";
@@ -103,6 +105,8 @@ export async function POST(req: NextRequest) {
   let esNegocio = false;
   let targetProfessionalId: string | null = null;
   let isProfessionalContactingClient = false;
+  let selfContact = false;
+  let productContact = false;
 
   if (proposalId) {
     const { data: proposal, error } = await db
@@ -138,6 +142,7 @@ export async function POST(req: NextRequest) {
 
     const professionalRow = professional as ProfessionalContact;
     targetProfessionalId = professionalRow.id;
+    selfContact = userId === professionalRow.profile_id;
     phone = professionalRow.whatsapp ?? null;
     ({ nombre: recipientName, esNegocio } = profileName(professionalRow));
   }
@@ -163,6 +168,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: locale === "en" ? "No WhatsApp number is available." : "No hay un numero de WhatsApp disponible." }, { status: 404 });
   }
 
+  if (body.offerId) {
+    const { data: offer } = await db.from("professional_offers").select("offer_type,professional_id").eq("id",String(body.offerId)).maybeSingle();
+    productContact = !offer || offer.offer_type !== "service_offer" || offer.professional_id !== targetProfessionalId;
+  }
   const message = initialMessage || defaultMessage(locale, recipientName, contextTitle, esNegocio, intent);
   const token = contactCookieValue(req);
   let contactId: string | null = null;
@@ -170,7 +179,7 @@ export async function POST(req: NextRequest) {
   // Escribirle a quien publicó un EMPLEO es postularse, no contratar: a esa
   // persona no se le pregunta después si «contrató» al empleador. Eran 277 de
   // 372 seguimientos (8-oct-2026).
-  if (targetProfessionalId && !isProfessionalContactingClient && !body.jobId) {
+  if (targetProfessionalId && qualifiesServiceContact({ jobId: body.jobId,intent,self: selfContact,contactingClient: isProfessionalContactingClient,product: productContact })) {
     const tokenHash = hashContactToken(token);
     const recentSince = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     let recentQuery = db
@@ -223,7 +232,9 @@ export async function POST(req: NextRequest) {
   }
 
   await invitarAResenaAhora(userId);
-  const response = NextResponse.json({ href: getWhatsAppLink(phone, message), contactId });
+  const metaConversion = targetProfessionalId && qualifiesServiceContact({ jobId: body.jobId,intent,self: selfContact,contactingClient: isProfessionalContactingClient,product: productContact })
+    ? await recordServiceContact(req,targetProfessionalId,userId) : null;
+  const response = NextResponse.json({ href: getWhatsAppLink(phone, message), contactId, metaConversion });
   setContactCookie(response, token);
   return response;
 }

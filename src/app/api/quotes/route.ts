@@ -1,3 +1,4 @@
+import { recordGrowthConversion } from "@/lib/analytics/growth-server";
 import { NextRequest, NextResponse } from "next/server";
 import { mensajeDeError } from "@/lib/api-errors";
 import { createClient } from "@/lib/supabase/server";
@@ -242,6 +243,12 @@ export async function PATCH(req: NextRequest) {
   const { data: updated, error: upErr } = await me.admin.from("quotes").update(patch).eq("id", id).select(SELECT).single();
   if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 });
   await auditUserAction(me.admin, req, { actorUserId: me.user.id, actorRole: action === "withdraw" ? "professional" : "client", action: `quote.${action}`, entityTable: "quotes", entityId: id, entityOwnerUserId: q.client_id, afterData: patch });
+  if (action === "accept" && q.project_id) {
+    const { data: winner } = await me.admin.from("professionals").select("profile_id").eq("id",q.professional_id).maybeSingle();
+    // The client accepted. Do not send their browser identity as a professional acquisition.
+    // The winner's separate consent/context is unavailable, so keep this result first-party only.
+    if (winner?.profile_id) await recordGrowthConversion(req,"professional_project_accepted",`project:${q.project_id}`,winner.profile_id,{ metaAllowed: false });
+  }
   // Sin aviso al profesional: aceptar o rechazar dentro del app solo existia
   // para las cotizaciones atadas a una cita o a un proyecto, que ya no se
   // pueden crear. Lo que se cotiza hoy se manda por WhatsApp y se responde alli.

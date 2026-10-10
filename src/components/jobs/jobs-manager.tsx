@@ -1,5 +1,7 @@
 "use client";
 
+import { trackMetaConversion } from "@/lib/analytics/meta-pixel";
+
 import { rutaEmpleo } from "@/lib/marketplace-url";
 import { CardActionsMenu } from "@/components/dashboard/card-actions-menu";
 import { AutoSaveHint, useAvisoDeGuardado } from "@/components/dashboard/auto-save-hint";
@@ -131,6 +133,8 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
     await aviso.correr(async () => {
       const response = await fetch("/api/jobs/posts", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, status }) });
       if (response.ok) {
+        const data = await response.json().catch(() => ({}));
+        trackMetaConversion(data.metaConversion);
         pendingStatus.current[id] = status;
         setJobs((current) => current.map((job) => job.id === id ? { ...job, status } : job));
         invalidateAppData("jobs");

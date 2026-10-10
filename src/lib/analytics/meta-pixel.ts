@@ -1,9 +1,11 @@
+import type { MetaConversion } from "./growth-contract";
+import { isNativeAppRuntime } from "@/hooks/use-native-app";
 import { esNavegadorAutomatizado } from "@/lib/analytics/trafico-automatizado";
 type MetaPixelCommand = "init" | "track" | "trackCustom";
 
 type MetaPixelFunction = {
   (command: "init", pixelId: string): void;
-  (command: "track" | "trackCustom", eventName: string, params?: Record<string, unknown>): void;
+  (command: "track" | "trackCustom", eventName: string, params?: Record<string, unknown>, options?: { eventID: string }): void;
   callMethod?: (...args: unknown[]) => void;
   queue?: unknown[];
   loaded?: boolean;
@@ -29,7 +31,7 @@ declare global {
 const PENDIENTES_KEY = "contratacr:meta-pendientes";
 const VIGENCIA_PENDIENTE_MS = 30 * 60 * 1000;
 
-type Pendiente = { c: "track" | "trackCustom"; n: string; p?: Record<string, unknown>; t: number };
+type Pendiente = { c: "track" | "trackCustom"; n: string; p?: Record<string, unknown>; id?: string; t: number };
 
 function scriptDeMetaListo(): boolean {
   // El cargador define `fbq` al instante, como una cola; `callMethod` solo
@@ -63,20 +65,22 @@ export function hayEventosMetaPendientes(): boolean {
 
 /** Manda lo que quedó en espera. Lo llama el componente del píxel cuando el script ya cargó. */
 export function enviarEventosMetaPendientes() {
-  if (typeof window === "undefined" || !scriptDeMetaListo()) return;
+  if (typeof window === "undefined") return;
+  if (!allowedMetaBrowser()) { try { window.sessionStorage.removeItem(PENDIENTES_KEY); } catch { /* no storage */ } return; }
+  if (!scriptDeMetaListo()) return;
   const lista = leerPendientes();
   try { window.sessionStorage.removeItem(PENDIENTES_KEY); } catch { /* ignore */ }
-  for (const x of lista) window.fbq!(x.c, x.n, x.p);
+  for (const x of lista) window.fbq!(x.c, x.n, x.p, x.id ? { eventID: x.id } : undefined);
 }
 
-function enviar(command: "track" | "trackCustom", eventName: string, params?: Record<string, unknown>) {
-  if (typeof window === "undefined") return;
-  if (esNavegadorAutomatizado()) return;
+function enviar(command: "track" | "trackCustom", eventName: string, params?: Record<string, unknown>, eventId?: string) {
+  if (typeof window === "undefined" || !allowedMetaBrowser()) return;
+  if (esNavegadorAutomatizado() || !allowedMetaBrowser()) return;
   if (scriptDeMetaListo()) {
-    window.fbq!(command, eventName, params);
+    window.fbq!(command, eventName, params, eventId ? { eventID: eventId } : undefined);
     return;
   }
-  guardarPendiente({ c: command, n: eventName, p: params, t: Date.now() });
+  guardarPendiente({ c: command, n: eventName, p: params, id: eventId, t: Date.now() });
 }
 
 export function trackMetaEvent(eventName: string, params?: Record<string, unknown>) {
@@ -87,8 +91,23 @@ export function trackMetaPageView() {
   // La visita va directo a la cola del cargador (ya existe cuando esto corre):
   // guardada para la página siguiente quedaría con la dirección equivocada.
   if (typeof window === "undefined" || typeof window.fbq !== "function") return;
-  if (esNavegadorAutomatizado()) return;
+  if (esNavegadorAutomatizado() || !allowedMetaBrowser()) return;
   window.fbq("track", "PageView");
 }
 
 export type { MetaPixelCommand };
+
+function allowedMetaBrowser(): boolean {
+  if (typeof window === "undefined" || esNavegadorAutomatizado() || isNativeAppRuntime() || !["contratacr.com","www.contratacr.com"].includes(window.location.hostname)) return false;
+  try { return window.localStorage.getItem("contratacr:analytics-consent") !== "declined"; } catch { return false; }
+}
+export function trackMetaConversion(conversion: MetaConversion | null | undefined) {
+  if (!conversion || !allowedMetaBrowser()) return;
+  try {
+    const key = `ccr:meta-delivered:${conversion.eventId}`;
+    if (window.sessionStorage.getItem(key)) return;
+    window.sessionStorage.setItem(key,"1");
+  } catch { /* server receipt remains authoritative */ }
+  const command = ["Contact","Lead"].includes(conversion.eventName) ? "track" : "trackCustom";
+  enviar(command,conversion.eventName,conversion.params,conversion.eventId);
+}
