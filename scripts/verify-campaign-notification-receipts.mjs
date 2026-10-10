@@ -26,7 +26,7 @@ try {
   await db.query("insert into notifications (user_id,type,title,created_at) values ($1,'resena_google','Old invitation',now()-interval '2 days')", [id(1)]);
   await db.exec(await readFile(new URL("../supabase/migrations/230_resena_google_una_vez.sql", import.meta.url), "utf8"));
   const migration = await readFile(new URL("../supabase/migrations/236_avisos_una_vez_y_campanas_seguras.sql", import.meta.url), "utf8");
-  await db.exec(`begin; ${migration} commit;`);
+  await db.exec(migration);
   const initial = await db.query("select status from notification_once_receipts order by user_id");
   assert.deepEqual(initial.rows.map((r) => r.status), ["sent", "historical_unknown"]);
   let checks = 1;

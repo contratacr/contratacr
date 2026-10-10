@@ -1,3 +1,4 @@
+begin;
 -- Permanent receipts survive dismissal and notification retention cleanup.
 -- A receipt and its notification are committed in the same transaction.
 lock table public.notifications in share row exclusive mode;
@@ -57,3 +58,5 @@ execute function public.capture_once_notification_receipt();
 alter table public.admin_campaign_sends
   add column status text not null default 'sent' check (status in ('sending', 'sent', 'uncertain'));
 notify pgrst, 'reload schema';
+
+commit;
