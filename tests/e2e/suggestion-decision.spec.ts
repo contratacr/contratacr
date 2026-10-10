@@ -1,13 +1,18 @@
 import { expect, test } from "playwright/test";
 import { notificationActionHref } from "../../src/lib/notification-link";
 import { expectHealthyPage, gotoOK, loginAs } from "./helpers";
-import { E2E_USERS } from "./seed";
+import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccount } from "./disposable-account";
+
+const hasTestDatabase = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").includes("oqheayqqprpciqdvdaqo") && !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+let account: DisposableAccount;
+test.beforeAll(async () => { if (hasTestDatabase) account = await createDisposableAccount({ prefix: "suggestion-decision", professional: true }); });
+test.afterAll(async () => { if (account) await cleanupDisposableAccount(account); });
 
 for (const locale of ["es", "en"] as const) {
   test(`approved suggestion opens service selection without adding a service (${locale})`, async ({ page }) => {
     test.slow();
-    test.skip(!E2E_USERS.professional.password, "Requires the regression account credentials.");
-    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+    test.skip(!hasTestDatabase, "Requires the isolated regression database.");
+    await loginAs(page, account.email, account.password);
     const serviceWrites: string[] = [];
     page.on("request", (request) => {
       if (request.method() !== "PATCH" || !request.url().includes("/rest/v1/professionals")) return;
