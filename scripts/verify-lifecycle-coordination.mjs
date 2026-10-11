@@ -8,6 +8,7 @@ const email = `coordination-${randomUUID()}@contratacr.test`;
 const changed = `changed-${randomUUID()}@contratacr.test`;
 const day = new Date().toISOString().slice(0,10);
 let id, quota;
+let quotaTouched=false;
 async function checked(promise) { const r=await promise; if(r.error) throw r.error; return r.data; }
 try {
   const user = await checked(db.auth.admin.createUser({email,password:randomUUID()+randomUUID(),email_confirm:true}));
@@ -26,11 +27,12 @@ try {
   assert.equal(await claim('coordination-c',changed),true,'New campaign can follow after fourteen days');
   await checked(db.from('admin_campaign_sends').delete().eq('profile_id',id));
   quota=await checked(db.from('email_cuota_diaria').select('*').eq('dia',day).eq('nivel','masivo').maybeSingle());
+  quotaTouched=true;
   await checked(db.from('email_cuota_diaria').upsert({dia:day,nivel:'masivo',enviados:250},{onConflict:'dia,nivel'}));
   assert.equal(await claim('coordination-quota',changed),false,'Fifty sends stay reserved');
   console.log('Lifecycle SQL: concurrency, permanent receipts, email changes, cooldown and quota passed');
 } finally {
-  if(quota) await checked(db.from('email_cuota_diaria').upsert(quota,{onConflict:'dia,nivel'}));
-  else await checked(db.from('email_cuota_diaria').delete().eq('dia',day).eq('nivel','masivo'));
+  if(quotaTouched && quota) await checked(db.from('email_cuota_diaria').upsert(quota,{onConflict:'dia,nivel'}));
+  else if(quotaTouched) await checked(db.from('email_cuota_diaria').delete().eq('dia',day).eq('nivel','masivo'));
   if(id) { await checked(db.from('admin_campaign_sends').delete().eq('profile_id',id)); await checked(db.auth.admin.deleteUser(id)); }
 }

@@ -1,0 +1,91 @@
+name: Lifecycle email coordination tests
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  local-database-contract:
+    name: Local schema and fast contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: 2.109.0
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Start the minimal local Supabase stack
+        run: >-
+          supabase start
+          --exclude realtime,imgproxy,postgres-meta,studio,mailpit,edge-runtime,logflare,vector,supavisor
+
+      - name: Rebuild every migration from an empty database
+        run: supabase db reset --local --no-seed
+
+      - name: Seed and verify the synthetic local regression foundation
+        env:
+          LOCAL_REGRESSION_PASSWORD: LocalRegression!2026
+        run: |
+          set -euo pipefail
+          supabase status -o env > /tmp/contratacr-local-supabase.env
+          set -a
+          source /tmp/contratacr-local-supabase.env
+          set +a
+          export NEXT_PUBLIC_SUPABASE_URL="$API_URL"
+          export NEXT_PUBLIC_SUPABASE_ANON_KEY="$ANON_KEY"
+          export SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
+          export LOCAL_REGRESSION_SEED=1
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY"
+            printf '%s=%s\n' "SUPABASE_SERVICE_ROLE_KEY" "$SERVICE_ROLE_KEY"
+            echo "SUPABASE_DB_URL=$DB_URL"
+            echo "LOCAL_REGRESSION_SEED=1"
+            echo "E2E_FIXTURES_READY=1"
+            echo "E2E_LEGACY_SEED=0"
+            echo "E2E_ALLOW_NON_TEST_SUPABASE=1"
+            echo "E2E_TEST_PASSWORD=$LOCAL_REGRESSION_PASSWORD"
+            echo "REGRESSION_TEST_PASSWORD=$LOCAL_REGRESSION_PASSWORD"
+            # La cuenta de solo cliente (seed-cuenta-cliente.js); la contraseña
+            # es la misma que ya usan las pruebas que entran con ella.
+            echo "CLIENTE_TEST_PASSWORD=ClientePruebas2026!"
+            echo "PLAYWRIGHT_LOCAL_PRODUCTION=1"
+            echo "PLAYWRIGHT_PORT=3000"
+            echo "NEXT_PUBLIC_APP_URL=http://127.0.0.1:3000"
+            echo "CI_REQUEST_LOG=1"
+          } >> "$GITHUB_ENV"
+          psql "$DB_URL" \
+            --set=local_seed_guard=contratacr-local-only \
+            --file=scripts/ci/grant-local-regression-service-role.sql
+          psql "$DB_URL" \
+            --set=local_seed_guard=contratacr-local-only \
+            --set=regression_password="$LOCAL_REGRESSION_PASSWORD" \
+            --file=scripts/ci/seed-local-regression-auth.sql
+          npm run seed:local:regression
+          npm run verify:local:regression
+          npm run seed:local:relations
+          npm run verify:local:relations
+          # En este mismo paso GITHUB_ENV todavía no rige: la contraseña va directa.
+          CLIENTE_TEST_PASSWORD='ClientePruebas2026!' node scripts/seed-cuenta-cliente.js
+
+      - name: Verify campaign concurrency and quota without sending mail
+        run: node scripts/verify-lifecycle-coordination.mjs
