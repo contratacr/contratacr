@@ -48,7 +48,7 @@ export async function runLifecycleEmails(db: Admin, simulate = true) {
       const [a,p,h,b,j] = await Promise.all([
         db.from("profiles").select(ACCOUNT_FIELDS).eq("id",account.id).single(),
         db.from("professionals").select(PRO_FIELDS).eq("profile_id",account.id).maybeSingle(),
-        db.from("admin_campaign_sends").select("email,campana,status,enviado_en,rebote_en").ilike("email",account.email!).neq("campana",campaign.key),
+        db.from("admin_campaign_sends").select("profile_id,email,campana,status,enviado_en,rebote_en").eq("profile_id",account.id).neq("campana",campaign.key),
         db.from("email_bajas").select("correo").ilike("correo",account.email!),
         db.from("projects").select("client_id").eq("client_id",account.id).limit(1),
       ]);
