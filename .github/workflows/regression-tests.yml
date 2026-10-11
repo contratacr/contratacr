@@ -109,6 +109,9 @@ jobs:
       - name: Verify account deletion isolation locally
         run: npm run test:account-deletion
 
+      - name: Verify lifecycle email coordination without sending mail
+        run: node scripts/verify-lifecycle-coordination.mjs
+
       - name: Verify durable push isolation locally
         run: npm run test:push-isolation
 
