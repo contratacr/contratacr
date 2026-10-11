@@ -13,7 +13,7 @@ async function checked(promise) { const r=await promise; if(r.error) throw r.err
 try {
   const user = await checked(db.auth.admin.createUser({email,password:randomUUID()+randomUUID(),email_confirm:true}));
   id=user.user.id;
-  await checked(db.from('profiles').upsert({id,email,role:'client',is_disabled:false}));
+  await checked(db.from('profiles').upsert({id,email,full_name:'Lifecycle SQL Test',role:'client',is_disabled:false}));
   const claim=(campaign,address=email) => checked(db.rpc('claim_outreach_email',{p_campaign:campaign,p_email:address}));
   const results=await Promise.all([claim('coordination-a'),claim('coordination-b')]);
   assert.equal(results.filter(Boolean).length,1,'Different campaigns must serialize');
