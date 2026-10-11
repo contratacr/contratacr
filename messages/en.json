@@ -2616,7 +2616,7 @@
     "viewTickets": "View my tickets",
     "goPanel": "Go to my dashboard",
     "successGuestDesc": "We'll reply by email to <b>{email}</b>.",
-    "guestFollow": "Sign in or create an account with this email to follow your tickets.",
+    "guestFollow": "The reply email will explain how to continue your case.",
     "backHome": "Back to home",
     "backToPanel": "Back to my dashboard",
     "guestSignInOrRegister": "Sign in or create account",
@@ -3237,5 +3237,23 @@
     "empleo": "Your job will be posted without «Verified». With a verified ID, job seekers trust the offer more.",
     "promocion": "Your promotion will be posted without «Verified». With a verified ID, clients trust the offer more.",
     "accion": "Verify my ID"
+  },
+  "guestSupport": {
+    "retry": "Try again",
+    "title": "Your support case",
+    "intro": "Continue your account access enquiry without signing in.",
+    "loading": "Loading conversation…",
+    "invalid": "This link has expired or is no longer available. If you linked the case to an account, sign in with the same email. If you still cannot sign in, open another case for help.",
+    "failed": "We could not complete your request. Please try again.",
+    "conversation": "Support conversation",
+    "you": "You",
+    "team": "Support team",
+    "reply": "Your reply",
+    "sending": "Sending…",
+    "send": "Send reply",
+    "sent": "Reply sent. We will email you when support replies.",
+    "private": "This link is private and only grants access to this case. Do not share it.",
+    "login": "Sign in or create an account with the same email to view this case in my dashboard",
+    "newCase": "Open a support case"
   }
 }

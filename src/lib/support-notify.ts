@@ -1,7 +1,8 @@
 // Branded support-ticket email notifications (Brevo). Best-effort: failures are
 // logged and never break the request. Clickable links only — no raw URLs.
 import { EMAIL_LOGO_DARK_MODE_STYLES, emailLogoMarkup, sendBrevoEmail } from "@/lib/email/send";
-const SITE = "https://contratacr.com";
+import { guestAccessLink } from "@/lib/support/guest-access";
+const SITE = process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com";
 type SupportLocale = "es" | "en";
 
 function escapeHtml(s: string): string {
@@ -62,15 +63,9 @@ export async function notifyUserTicketCreated(opts: {
   await sendEmail(opts.toEmail, subject, html);
 }
 
-/** Admin replied → email the user so they receive it (with a link to continue).
- *  The follow-up path DIFFERS by whether the recipient has an account:
- *   • ACCOUNT holder → continue in their panel ("Ver conversación").
- *   • GUEST (no account) → has NO panel, so "responder desde tu panel" is
- *     contradictory. Instead invite them to sign in / create an account with THIS
- *     email — `claimGuestTickets()` then attaches this ticket to the account so it
- *     appears in their panel and they can keep replying. We do NOT suggest replying
- *     to this email: inbound email is not wired into the ticket thread. */
-export async function notifyUserOfReply(opts: {
+/** Guests with account-access cases may continue via a scoped private link.
+ * Other guests sign in with the same email and land on this exact ticket. */
+export function supportReplyEmail(opts: {
   toEmail: string;
   toName?: string | null;
   subject: string;
@@ -80,19 +75,26 @@ export async function notifyUserOfReply(opts: {
   panel?: "cliente" | "profesional";
   /** Ticket id → the email deep-links to this exact open conversation. */
   ticketId?: string;
-}): Promise<void> {
+  topic?: string | null;
+}): string {
   const firstName = (opts.toName ?? "").split(" ")[0] || "";
   const panel = opts.panel === "profesional" ? "profesional" : "cliente";
   // Account holders → deep-link straight to THIS ticket open in their panel. The
   // target is carried through login + Google OAuth (login → ?redirect=… → callback
   // ?next=…), so even a logged-out click lands on the open conversation.
   const ticketPath = `/dashboard/${panel}?tab=soporte${opts.ticketId ? `&ticket=${opts.ticketId}` : ""}`;
-  const followHtml = opts.hasAccount
+  const privateLink = !opts.hasAccount && opts.topic === "subject1" && opts.ticketId
+    ? guestAccessLink(SITE, opts.ticketId, opts.toEmail) : null;
+  const followHtml = privateLink
+    ? `<p style="margin:14px 0 0;color:#6b7280;font-size:13px;">Puedes continuar este caso de acceso sin crear una cuenta mediante el enlace privado. Es válido por 14 días; no lo compartas. Responde desde el caso: las respuestas a este correo no se agregan a la conversación.</p>`
+    : opts.hasAccount
     ? `<p style="margin:14px 0 0 0;color:#6b7280;font-size:13px;">Puedes responder desde tu panel para continuar la conversación.</p>`
     : `<p style="margin:14px 0 0 0;color:#6b7280;font-size:13px;">Para ver la conversación completa y seguir respondiendo, crea una cuenta o inicia sesión con este correo (${escapeHtml(opts.toEmail)}). Encontrarás este caso en tu panel.</p>`;
-  const cta = opts.hasAccount
+  const cta = privateLink
+    ? { href: privateLink, label: "Continuar mi caso" }
+    : opts.hasAccount
     ? { href: `${SITE}${ticketPath}`, label: "Ver conversación" }
-    : { href: `${SITE}/login`, label: "Crear cuenta o iniciar sesión" };
+    : { href: `${SITE}/login?redirect=${encodeURIComponent(ticketPath)}`, label: "Crear cuenta o iniciar sesión" };
   const html = shell(
     "Tienes una respuesta de soporte",
     `<p style="margin:0 0 12px 0;">${firstName ? `Hola ${escapeHtml(firstName)}, ` : ""}respondimos a tu consulta <strong>“${escapeHtml(opts.subject)}”</strong>:</p>
@@ -100,5 +102,9 @@ export async function notifyUserOfReply(opts: {
      ${followHtml}`,
     cta,
   );
-  await sendEmail(opts.toEmail, `Re: ${opts.subject} — ContrataCR`, html);
+  return html;
+}
+
+export async function notifyUserOfReply(opts: Parameters<typeof supportReplyEmail>[0]): Promise<void> {
+  await sendEmail(opts.toEmail, `Re: ${opts.subject} — ContrataCR`, supportReplyEmail(opts));
 }

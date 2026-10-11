@@ -2616,7 +2616,7 @@
     "viewTickets": "Ver mis casos",
     "goPanel": "Ir a mi panel",
     "successGuestDesc": "Te responderemos por correo a <b>{email}</b>.",
-    "guestFollow": "Inicia sesión o crea una cuenta con este correo para seguir tus casos.",
+    "guestFollow": "En el correo de respuesta te indicaremos cómo continuar tu caso.",
     "backHome": "Volver al inicio",
     "backToPanel": "Volver a mi panel",
     "guestSignInOrRegister": "Iniciar sesión o crear cuenta",
@@ -3237,5 +3237,23 @@
     "empleo": "Tu empleo va a salir sin «Verificado». Con la identificación verificada, quien busca trabajo confía más en la oferta.",
     "promocion": "Tu promoción va a salir sin «Verificado». Con la identificación verificada, los clientes confían más en la oferta.",
     "accion": "Verificar mi cédula"
+  },
+  "guestSupport": {
+    "retry": "Intentar de nuevo",
+    "title": "Tu caso de soporte",
+    "intro": "Continúa tu consulta sobre el acceso a tu cuenta, sin iniciar sesión.",
+    "loading": "Cargando conversación…",
+    "invalid": "Este enlace venció o ya no está disponible. Si vinculaste el caso a una cuenta, inicia sesión con el mismo correo. Si aún no puedes entrar, abre otro caso para recibir ayuda.",
+    "failed": "No pudimos completar la solicitud. Intenta de nuevo.",
+    "conversation": "Conversación de soporte",
+    "you": "Tú",
+    "team": "Equipo de soporte",
+    "reply": "Tu respuesta",
+    "sending": "Enviando…",
+    "send": "Enviar respuesta",
+    "sent": "Respuesta enviada. Te avisaremos por correo cuando soporte responda.",
+    "private": "Este enlace es privado y sirve únicamente para este caso. No lo compartas.",
+    "login": "Entrar o crear cuenta con el mismo correo para ver el caso en mi panel",
+    "newCase": "Abrir un caso de soporte"
   }
 }
