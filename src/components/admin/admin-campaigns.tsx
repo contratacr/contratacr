@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import { Megaphone, Send, Loader2, Star, History } from "lucide-react";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { AdminMetaGrowth } from "./admin-meta-growth";
-import { SERVICES_CAMPAIGN } from "@/lib/email/campaign-policy";
+import { REVIEW_CAMPAIGN } from "@/lib/email/campaign-policy";
 
-const PLANTILLAS = [SERVICES_CAMPAIGN];
-const PUBLICO: Record<string, string> = { todas: "Cuentas con correo habilitado para novedades" };
+const PLANTILLAS = [REVIEW_CAMPAIGN];
+const PUBLICO: Record<string, string> = { pros_sin_resenas: "Profesionales activos con perfil de al menos 14 días y sin reseñas, con correo habilitado" };
 
 export function AdminCampaigns() {
   const { dialogNode, showMessage, confirm } = useAppDialog();
@@ -150,7 +150,7 @@ export function AdminCampaigns() {
       <AdminMetaGrowth />
       <div>
         <h1 className="flex items-center gap-2 text-2xl font-extrabold text-[#162543]"><Megaphone className="h-6 w-6 text-[#009FD9]" />Campañas por correo</h1>
-        <p className="mt-1 text-sm text-[#68778d]">Un correo de servicios por cuenta. Los recordatorios de perfil, reseñas y precio se mantienen dentro de la app. {clientes === null ? "Contando…" : `${clientes} cuentas con correo.`}</p>
+        <p className="mt-1 text-sm text-[#68778d]">Una invitación por profesional para pedir reseñas de trabajos reales. El historial de campañas anteriores se conserva. {clientes === null ? "Contando…" : `${clientes} perfiles sin reseñas con correo.`}</p>
       </div>
 
       {campaignError && <p role="alert" className="text-sm text-red-700">{campaignError}</p>}

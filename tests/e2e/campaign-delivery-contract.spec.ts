@@ -2,7 +2,7 @@ import { expect, test } from "playwright/test";
 import type { createAdminClient } from "../../src/lib/supabase/admin";
 import { deliverCampaignOnce } from "../../src/lib/email/campaign-delivery";
 import { campaignFromEvent, campanaDesdeAsunto } from "../../src/lib/email/campana";
-import { eligibleCampaignRecipients, isRetiredCampaign, SERVICES_CAMPAIGN, type CampaignHistory } from "../../src/lib/email/campaign-policy";
+import { eligibleCampaignRecipients, isRetiredCampaign, REVIEW_CAMPAIGN, SERVICES_CAMPAIGN, type CampaignHistory } from "../../src/lib/email/campaign-policy";
 import { invitarAResenaDeGoogle } from "../../src/lib/notifications/invitacion-resena-google";
 import { cuentasConExperiencia } from "../../src/lib/notifications/invitar-tras-experiencia";
 import { empujarResenasYPrecio, tienePrecioReal } from "../../src/lib/notifications/empujones-del-perfil";
@@ -100,11 +100,12 @@ test.describe("campaign delivery and permanent notification contracts", () => {
     expect(eligibleCampaignRecipients([{ email: "other@example.com" }], [row("other@example.com", "other-campaign")], [], now)).toHaveLength(1);
   });
 
-  test("review and price email campaigns are retired on the server", () => {
-    expect(isRetiredCampaign("resenas", "pros_sin_resenas")).toBe(true);
+  test("only the reviewed first-review email campaign is available", () => {
+    expect(isRetiredCampaign("resenas", "pros_sin_resenas")).toBe(false);
     expect(isRetiredCampaign("precio", "pros_sin_precio")).toBe(true);
-    expect(isRetiredCampaign("recordatorio", "todas")).toBe(false);
+    expect(isRetiredCampaign("recordatorio", "todas")).toBe(true);
     expect(isRetiredCampaign(undefined, "pros_sin_precio")).toBe(true);
+    expect(eligibleCampaignRecipients([{ email: "pro@example.com" }], [{ email: "pro@example.com", campana: REVIEW_CAMPAIGN.key, enviado_en: "2026-09-01T00:00:00Z", status: "sent" }], [], Date.parse("2026-10-11T00:00:00Z"), REVIEW_CAMPAIGN.historyKeys)).toHaveLength(0);
   });
 
   test("Brevo event tags preserve identity after a subject edit", () => {
