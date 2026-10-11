@@ -18,9 +18,9 @@ export const REVIEW_CAMPAIGN = {
   key: "primeras-resenas-profesionales-2026",
   historyKeys: ["primeras-resenas-profesionales-2026"],
   nombre: "Pedir primeras reseñas",
-  subject: "Pide una reseña a tus clientes desde ContrataCR",
-  body: "Si ya realizaste trabajos para clientes, puedes invitarlos a contar cómo fue su experiencia. Una reseña en tu perfil ayuda a otras personas a conocer tu trabajo.\n\nEn tu panel, abre Compartir y elige «Pedir una reseña». Encontrarás un mensaje listo para enviar por WhatsApp a clientes con los que realmente trabajaste. Tú decides a quién enviarlo.",
-  ctaLabel: "Preparar mi solicitud de reseña",
+  subject: "Destaca tu perfil con tu primera reseña",
+  body: "Si tu perfil todavía no tiene reseñas, a un cliente que no te conoce puede costarle elegirte.\n\nLas reseñas ayudan a generar confianza y cuentan al ordenar las búsquedas por «Mejor calificados».\n\nNo necesitas esperar un cliente de ContrataCR: puedes pedir una reseña a personas para las que ya trabajaste.\n\nEntra a Compartir → Pedir una reseña en tu panel y envíales el mensaje preparado por WhatsApp.",
+  ctaLabel: "Pedir mi primera reseña",
   ctaPath: "/dashboard/profesional?mode=offer&share=reviews",
   audiencia: "pros_sin_resenas",
 };
@@ -29,6 +29,7 @@ export const CAMPAIGN_EMAIL_COOLDOWN_DAYS = 14;
 export const CAMPAIGN_BATCH_SIZE = 250;
 
 export type CampaignHistory = {
+  profile_id?: string | null;
   email: string; campana: string; enviado_en: string;
   status: "sending" | "sent" | "uncertain";
   abierto_en?: string | null; click_en?: string | null; rebote_en?: string | null;

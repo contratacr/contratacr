@@ -5,6 +5,7 @@ import { enlaceDeBaja } from "@/lib/email/baja";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { brandedEmailDocument, sendBrevoEmail } from "@/lib/email/send";
+import { LIFECYCLE_CAMPAIGNS } from "@/lib/email/lifecycle-policy";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com";
 const MAX_BODY = 4000;
@@ -35,7 +36,7 @@ async function campaignState(db: Admin) {
   const now = Date.now();
   const clients = professionals.flatMap((pro) => {
     const profile = pro.profiles as unknown as { email: string | null; full_name: string | null };
-    return profile?.email && pro.created_at && now - Date.parse(pro.created_at) >= 14 * 86_400_000
+    return profile?.email && pro.created_at && now - Date.parse(pro.created_at) >= 7 * 86_400_000
       ? [{ email: profile.email, full_name: profile.full_name }] : [];
   });
   const typedHistory = history as CampaignHistory[];
@@ -101,21 +102,6 @@ function bodyToHtml(body: string, ctaLabel: string, ctaHref: string, bajaHref: s
   return parrafos + cta + responder + firma + pie;
 }
 
-function horasQueFaltan(ultimoEnvio: string | null) {
-  if (!ultimoEnvio) return 0;
-  // SE LIBERA CUANDO BREVO REINICIA, no 24 horas exactas después del envío.
-  // El tope que hay que respetar es el diario del proveedor, y ese se reinicia
-  // a medianoche UTC: contar 24 h desde el minuto del último envío dejaba la
-  // campaña bloqueada horas después de que ya hubiera cupo nuevo. Si la tanda
-  // anterior salió en un día UTC anterior, no falta nada.
-  const salida = new Date(ultimoEnvio);
-  const hoy = new Date();
-  if (salida.toISOString().slice(0, 10) < hoy.toISOString().slice(0, 10)) return 0;
-  const proximoReinicio = Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth(), hoy.getUTCDate() + 1);
-  return Math.max(0, Math.ceil((proximoReinicio - hoy.getTime()) / 3_600_000));
-}
-
-
 export async function GET(request: Request) {
   const admin = await getApiAdmin();
   if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
@@ -130,7 +116,8 @@ export async function GET(request: Request) {
       campana: REVIEW_CAMPAIGN.key, enviados: state.enviados, sinConfirmar: state.sinConfirmar,
       abiertos: state.abiertos, clics: state.clics, rebotes: state.rebotes,
       midiendo: Boolean(process.env.BREVO_WEBHOOK_SECRET), restantes: state.pendientes.length,
-      horasParaLaProxima: horasQueFaltan(state.ultimoEnvio),
+      horasParaLaProxima: 0,
+      automation: LIFECYCLE_CAMPAIGNS.map(({key,subject,days,audience,enabled}) => ({key,subject,days,audience,enabled})),
     });
   } catch {
     return NextResponse.json({ error: "No se pudo verificar el historial o las bajas. El envío permanece bloqueado." }, { status: 503 });
@@ -180,8 +167,6 @@ export async function POST(request: Request) {
   try {
     const db = createAdminClient();
     const state = await campaignState(db);
-    const faltan = horasQueFaltan(state.ultimoEnvio);
-    if (faltan > 0) return NextResponse.json({ error: `Ya salió una tanda hoy. El cupo se renueva en ${faltan} h.`, horasParaLaProxima: faltan }, { status: 429 });
     let sent = 0, failed = 0, skipped = 0;
     for (const client of state.pendientes.slice(0, POR_TANDA)) {
       const result = await deliverCampaignOnce(db, campana, client.email, async () => {
@@ -195,13 +180,13 @@ export async function POST(request: Request) {
           db.from("admin_campaign_sends").select("rebote_en").ilike("email", client.email).not("rebote_en", "is", null).limit(1),
         ]);
         if (currentError || bajaError || reboteError) throw currentError ?? bajaError ?? reboteError;
-        if (baja?.length || rebotes?.length || !current?.some((pro) => pro.created_at && Date.now() - Date.parse(pro.created_at) >= 14 * 86_400_000)) {
+        if (baja?.length || rebotes?.length || !current?.some((pro) => pro.created_at && Date.now() - Date.parse(pro.created_at) >= 7 * 86_400_000)) {
           return { ok: false, status: "skipped" as const, detail: "La cuenta ya no es elegible." };
         }
         return sendBrevoEmail({
           to: client.email, subject, html: htmlPara(client.email, client.full_name), replyTo, nivel: "masivo", campana,
         });
-      });
+      }, { coordinated: true });
       if (result === "sent") sent += 1;
       else if (result === "uncertain") failed += 1;
       else skipped += 1;

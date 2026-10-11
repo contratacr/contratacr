@@ -6,12 +6,15 @@ type Admin = ReturnType<typeof createAdminClient>;
 
 export async function deliverCampaignOnce(
   admin: Admin, campaign: string, recipient: string, send: () => Promise<EmailResult>,
+  { coordinated = false }: { coordinated?: boolean } = {},
 ): Promise<"sent" | "skipped" | "uncertain" | "already_reserved"> {
   const email = normalizeCampaignEmail(recipient);
-  const { error: reserveError } = await admin.from("admin_campaign_sends")
-    .insert({ campana: campaign, email, status: "sending" });
+  const { data: claimed, error: reserveError } = coordinated
+    ? await admin.rpc("claim_outreach_email", { p_campaign: campaign, p_email: email })
+    : { ...(await admin.from("admin_campaign_sends").insert({ campana: campaign, email, status: "sending" })), data: true };
   if (reserveError?.code === "23505") return "already_reserved";
   if (reserveError) throw reserveError; // Never contact the provider without a receipt.
+  if (!claimed) return "already_reserved";
   let result: EmailResult;
   try { result = await send(); }
   catch { result = { ok: false, status: "failed", detail: "Uncertain provider result" }; }
