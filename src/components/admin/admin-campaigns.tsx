@@ -7,7 +7,7 @@ import { AdminMetaGrowth } from "./admin-meta-growth";
 import { REVIEW_CAMPAIGN } from "@/lib/email/campaign-policy";
 
 const PLANTILLAS = [REVIEW_CAMPAIGN];
-const PUBLICO: Record<string, string> = { pros_sin_resenas: "Profesionales activos con perfil de al menos 14 días y sin reseñas, con correo habilitado" };
+const PUBLICO: Record<string, string> = { pros_sin_resenas: "Profesionales activos con perfil de al menos 7 días y sin reseñas, con correo habilitado" };
 
 export function AdminCampaigns() {
   const { dialogNode, showMessage, confirm } = useAppDialog();
@@ -15,6 +15,7 @@ export function AdminCampaigns() {
   // Cuántos faltan de ESTA campaña y cuándo se puede mandar la próxima tanda.
   const [tanda, setTanda] = useState({ porTanda: 200, enviados: 0, restantes: 0, horasParaLaProxima: 0, abiertos: 0, clics: 0, rebotes: 0, midiendo: false, sinConfirmar: 0 });
   const [adminEmail, setAdminEmail] = useState("");
+  const [automation, setAutomation] = useState<{key:string;subject:string;days:number;audience:string;enabled:boolean}[]>([]);
   // Cuánto correo queda HOY. Los 300 diarios del plan gratuito los comparten
   // esta campaña con los correos que el app necesita mandar (crear cuenta,
   // recuperar contraseña, soporte). Este número es el que dice si vale la pena
@@ -71,6 +72,7 @@ export function AdminCampaigns() {
       setCampaignError("");
       setClientes(Number(d.clients ?? 0));
       setAdminEmail(String(d.adminEmail ?? ""));
+      setAutomation(d.automation ?? []);
       setTanda({
         porTanda: Number(d.porTanda ?? 200),
         enviados: Number(d.enviados ?? 0),
@@ -153,6 +155,13 @@ export function AdminCampaigns() {
         <p className="mt-1 text-sm text-[#68778d]">Una invitación por profesional para pedir reseñas de trabajos reales. El historial de campañas anteriores se conserva. {clientes === null ? "Contando…" : `${clientes} perfiles sin reseñas con correo.`}</p>
       </div>
 
+      {automation.length > 0 && <section className="rounded-2xl border border-[#d7e1ea] bg-white p-4">
+        <h2 className="font-bold text-[#162543]">Correos automáticos</h2>
+        <p className="mt-1 text-sm text-[#68778d]">Revisión diaria a las 9:00 a. m. Cada mensaje se envía una vez por cuenta, con al menos 14 días entre campañas y 24 horas respecto a los avisos del panel. Los envíos pendientes continúan cuando hay cupo.</p>
+        <ul className="mt-3 space-y-2 text-sm">{automation.map((c) => <li key={c.key}>
+          <strong>{c.subject}</strong> · {c.audience === "professional" ? "Profesionales" : "Clientes"} · desde el día {c.days} · {c.enabled ? "Activo" : "Pendiente de aprobar el texto"}
+        </li>)}</ul>
+      </section>}
       {campaignError && <p role="alert" className="text-sm text-red-700">{campaignError}</p>}
       {tanda.sinConfirmar > 0 && <p className="text-sm text-amber-800">{tanda.sinConfirmar} envíos pendientes de confirmación. No se reenvían automáticamente.</p>}
       {cuota && (
