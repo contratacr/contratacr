@@ -31,7 +31,7 @@ export async function cerrarCasosSinRespuesta(dias = DIAS_DE_SILENCIO): Promise<
 
   const { data, error } = await db
     .from("support_tickets")
-    .select("id, subject, email, name, user_id, last_reply_at")
+    .select("id, subject, email, name, user_id, topic, last_reply_at")
     .in("status", ["open", "in_progress"])
     .eq("last_reply_role", "admin")
     .lt("last_reply_at", corte)
@@ -78,7 +78,7 @@ export async function cerrarCasosSinRespuesta(dias = DIAS_DE_SILENCIO): Promise<
       if (caso.email) {
         await notifyUserOfReply({
           toEmail: caso.email, toName: caso.name, subject: caso.subject,
-          body: cuerpo, hasAccount: !!caso.user_id, panel, ticketId: caso.id,
+          body: cuerpo, hasAccount: !!caso.user_id, panel, ticketId: caso.id, topic: caso.topic,
         });
       }
       if (caso.user_id) {
