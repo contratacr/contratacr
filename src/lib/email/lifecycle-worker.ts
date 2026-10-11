@@ -1,5 +1,5 @@
 import type { createAdminClient } from "@/lib/supabase/admin";
-import { lifecycleCandidate, type LifecycleAccount, type LifecycleProfessional } from "./lifecycle-policy";
+import { LIFECYCLE_CAMPAIGNS, lifecycleCandidate, type LifecycleAccount, type LifecycleProfessional } from "./lifecycle-policy";
 import type { CampaignHistory } from "./campaign-policy";
 import { deliverCampaignOnce } from "./campaign-delivery";
 import { brandedEmailDocument, sendBrevoEmail } from "./send";
@@ -39,8 +39,12 @@ export async function runLifecycleEmails(db: Admin, simulate = true) {
     counts[campaign.key] = (counts[campaign.key] ?? 0) + 1;
     return [{ account, campaign }];
   });
+  // Finish missing professional steps before consuming the quota on general tips.
+  candidates.sort((a,b) => LIFECYCLE_CAMPAIGNS.findIndex((c) => c.key === a.campaign.key)
+    - LIFECYCLE_CAMPAIGNS.findIndex((c) => c.key === b.campaign.key));
   if (simulate) return { simulate:true, eligible:counts, sent:0 };
   let sent = 0, uncertain = 0, skipped = 0;
+  const delivered: Record<string,number> = {};
   for (const {account,campaign} of candidates.slice(0,250)) {
     if (!(await resumenDeCuota()).puedeEnviar.masivo) break;
     const result = await deliverCampaignOnce(db,campaign.key,account.email!,async () => {
@@ -68,7 +72,8 @@ export async function runLifecycleEmails(db: Admin, simulate = true) {
       return sendBrevoEmail({to:account.email!,subject:campaign.subject,nivel:"masivo",campana:campaign.key,
         html:brandedEmailDocument({title:campaign.subject,bodyHtml,origin})});
     },{coordinated:true});
-    if (result === "sent") sent++; else if (result === "uncertain") uncertain++; else skipped++;
+    if (result === "sent") { sent++; delivered[campaign.key]=(delivered[campaign.key] ?? 0)+1; }
+    else if (result === "uncertain") uncertain++; else skipped++;
   }
-  return {simulate:false,eligible:counts,sent,uncertain,skipped};
+  return {simulate:false,eligible:counts,sent,delivered,uncertain,skipped};
 }

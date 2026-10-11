@@ -159,7 +159,7 @@ export function AdminCampaigns() {
         <h2 className="font-bold text-[#162543]">Correos automáticos</h2>
         <p className="mt-1 text-sm text-[#68778d]">Revisión diaria a las 9:00 a. m. Cada mensaje se envía una vez por cuenta, con al menos 14 días entre campañas y 24 horas respecto a los avisos del panel. Los envíos pendientes continúan cuando hay cupo.</p>
         <ul className="mt-3 space-y-2 text-sm">{automation.map((c) => <li key={c.key}>
-          <strong>{c.subject}</strong> · {c.audience === "professional" ? "Profesionales" : "Clientes"} · desde el día {c.days} · {c.enabled ? "Activo" : "Pendiente de aprobar el texto"}
+          <strong>{c.subject}</strong> · {c.audience === "professional" ? "Profesionales" : "Clientes y profesionales"} · desde el día {c.days} · {c.enabled ? "Activo" : "Pendiente de aprobar el texto"}
         </li>)}</ul>
       </section>}
       {campaignError && <p role="alert" className="text-sm text-red-700">{campaignError}</p>}
