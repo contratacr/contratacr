@@ -83,7 +83,7 @@ function bodyToHtml(body: string, ctaLabel: string, ctaHref: string, bajaHref: s
         <p style="margin:8px 0 0;font-size:13px;color:#68778d">
           <a href="${escapeHtml(APP_URL)}" style="color:#009FD9;text-decoration:none">contratacr.com</a>
           &nbsp;·&nbsp;
-          <a href="mailto:soporte@contratacr.com" style="color:#009FD9;text-decoration:none">soporte@contratacr.com</a>
+          <a href="${escapeHtml(APP_URL)}/soporte" style="color:#009FD9;text-decoration:none">Soporte en ContrataCR</a>
         </p>
       </td></tr>
     </table>`;

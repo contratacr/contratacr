@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import { MailX, MailCheck } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { FooterSoloWeb } from "@/components/landing/footer-solo-web";
-import { PanelEmptyState } from "@/components/ui/content-loading";
+import { UnsubscribeResult } from "@/components/email/unsubscribe-result";
 
 /**
  * «Listo, no te mandamos más novedades».
@@ -23,19 +22,17 @@ export default async function BajaCorreosPage({
   searchParams: Promise<{ ok?: string }>;
 }) {
   const t = await getTranslations("bajaCorreos");
-  const listo = (await searchParams).ok !== "0";
+  const listo = (await searchParams).ok === "1";
 
   return (
     <div className="flex min-h-screen flex-col bg-[#f5f8fb]">
       <LandingNavbar />
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pb-12 pt-24 sm:px-6">
         <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
-          <PanelEmptyState
-            plano
-            icon={listo ? MailCheck : MailX}
+          <UnsubscribeResult
+            success={listo}
             title={listo ? t("listoTitulo") : t("falloTitulo")}
             description={listo ? t("listoCuerpo") : t("falloCuerpo")}
-            className="px-5 py-14"
             action={(
               <Link href="/" className="inline-flex h-11 items-center justify-center rounded-full bg-[#009FD9] px-6 text-[14px] font-bold text-white transition-colors hover:bg-[#0089bb]">
                 {t("volver")}
