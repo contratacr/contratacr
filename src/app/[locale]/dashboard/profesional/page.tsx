@@ -891,8 +891,12 @@ export default function DashboardPage() {
   // Suppress the login-redirect while signing out (from the navbar menu) straight
   // to main, no /login flash. Logout lives only in the navbar profile menu now.
   useEffect(() => {
-    if (!authLoading && !user && !isSigningOut()) router.push("/login");
-  }, [user, authLoading, router]);
+    if (!authLoading && !user && !isSigningOut()) {
+      const query = searchParams.toString();
+      const destination = `/dashboard/profesional${query ? `?${query}` : ""}`;
+      router.push(`/login?redirect=${encodeURIComponent(destination)}`);
+    }
+  }, [user, authLoading, router, searchParams]);
 
   useEffect(() => {
     if (authLoading || !user) return;

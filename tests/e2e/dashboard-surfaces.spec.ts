@@ -1,5 +1,5 @@
 import { expect, test } from "playwright/test";
-import { expectHealthyPage, expectNoHorizontalOverflow, expectPageShell, expectVisibleText, gotoOK, isMobileProject, loginAs } from "./helpers";
+import { expectHealthyPage, expectNoHorizontalOverflow, expectPageShell, expectVisibleText, gotoOK, isMobileProject, loginAs, resetAuth } from "./helpers";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, type RegressionSeedState } from "./seed";
 
 const professionalTabs = [
@@ -307,6 +307,13 @@ test.describe("@seeded dashboard surfaces", () => {
     await expect(dialog.getByRole("link", { name: /WhatsApp/i })).toBeVisible();
     await expect(dialog.getByRole("button", { name: /Copiar mensaje|Copy message/i })).toBeVisible();
     await expect(page).not.toHaveURL(/share=reviews/);
+  });
+
+  test("review email link survives sign-in", async ({ page }) => {
+    await resetAuth(page);
+    await gotoOK(page, "/dashboard/profesional?mode=offer&share=reviews");
+    await expect.poll(() => new URL(page.url()).searchParams.get("redirect"))
+      .toBe("/dashboard/profesional?mode=offer&share=reviews");
   });
 
   test("navbar hides professional registration for providers", async ({ page }, testInfo) => {

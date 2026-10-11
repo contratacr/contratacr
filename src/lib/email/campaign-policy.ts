@@ -19,7 +19,7 @@ export const REVIEW_CAMPAIGN = {
   historyKeys: ["primeras-resenas-profesionales-2026"],
   nombre: "Pedir primeras reseñas",
   subject: "Pide una reseña a tus clientes desde ContrataCR",
-  body: "Si ya realizaste trabajos para clientes, puedes invitarlos a contar cómo fue su experiencia. Una reseña en tu perfil ayuda a otras personas a conocer tu trabajo.\n\nEn tu panel, abre Compartir y elige «Pedir reseñas». Encontrarás un mensaje listo para enviar por WhatsApp a clientes con los que realmente trabajaste. Tú decides a quién enviarlo.",
+  body: "Si ya realizaste trabajos para clientes, puedes invitarlos a contar cómo fue su experiencia. Una reseña en tu perfil ayuda a otras personas a conocer tu trabajo.\n\nEn tu panel, abre Compartir y elige «Pedir una reseña». Encontrarás un mensaje listo para enviar por WhatsApp a clientes con los que realmente trabajaste. Tú decides a quién enviarlo.",
   ctaLabel: "Preparar mi solicitud de reseña",
   ctaPath: "/dashboard/profesional?mode=offer&share=reviews",
   audiencia: "pros_sin_resenas",
