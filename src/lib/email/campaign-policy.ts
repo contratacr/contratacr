@@ -13,6 +13,17 @@ export const SERVICES_CAMPAIGN = {
   ctaPath: "/servicios",
   audiencia: "todas",
 };
+export const REVIEW_CAMPAIGN = {
+  id: "resenas",
+  key: "primeras-resenas-profesionales-2026",
+  historyKeys: ["primeras-resenas-profesionales-2026"],
+  nombre: "Pedir primeras reseñas",
+  subject: "Pide una reseña a tus clientes desde ContrataCR",
+  body: "Si ya realizaste trabajos para clientes, puedes invitarlos a contar cómo fue su experiencia. Una reseña en tu perfil ayuda a otras personas a conocer tu trabajo.\n\nEn tu panel, abre Compartir y elige «Pedir reseñas». Encontrarás un mensaje listo para enviar por WhatsApp a clientes con los que realmente trabajaste. Tú decides a quién enviarlo.",
+  ctaLabel: "Preparar mi solicitud de reseña",
+  ctaPath: "/dashboard/profesional?mode=offer&share=reviews",
+  audiencia: "pros_sin_resenas",
+};
 export const CAMPAIGN_EMAIL_COOLDOWN_DAYS = 14;
 export const CAMPAIGN_BATCH_SIZE = 60;
 
@@ -24,11 +35,11 @@ export type CampaignHistory = {
 export function normalizeCampaignEmail(email: string) { return email.trim().toLowerCase(); }
 
 export function eligibleCampaignRecipients<T extends { email: string }>(
-  accounts: T[], history: CampaignHistory[], unsubscribed: string[], now = Date.now(),
+  accounts: T[], history: CampaignHistory[], unsubscribed: string[], now = Date.now(), ownKeys: string[] = SERVICES_CAMPAIGN.historyKeys,
 ) {
   const blocked = new Set(unsubscribed.map(normalizeCampaignEmail));
   for (const row of history) {
-    if (SERVICES_CAMPAIGN.historyKeys.includes(row.campana) || row.rebote_en || row.status !== "sent"
+    if (ownKeys.includes(row.campana) || row.rebote_en || row.status !== "sent"
       || now - Date.parse(row.enviado_en) < CAMPAIGN_EMAIL_COOLDOWN_DAYS * 86_400_000) {
       blocked.add(normalizeCampaignEmail(row.email));
     }
@@ -43,6 +54,6 @@ export function eligibleCampaignRecipients<T extends { email: string }>(
 }
 
 export function isRetiredCampaign(campaignId: unknown, audience: unknown) {
-  return (campaignId !== undefined && campaignId !== SERVICES_CAMPAIGN.id)
-    || (audience !== undefined && audience !== "todas");
+  return (campaignId !== undefined && campaignId !== REVIEW_CAMPAIGN.id)
+    || (audience !== undefined && audience !== REVIEW_CAMPAIGN.audiencia);
 }

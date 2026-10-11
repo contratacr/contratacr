@@ -636,6 +636,8 @@ export default function DashboardPage() {
   // otro `tab`, así que al volver el componente no se remonta y la ventana
   // reaparecía. Atado al tab, se cierra sola al cambiar de sección.
   const [shareKitTab, setShareKitTab] = useState<string | null>(null);
+  const [shareKitInitialView, setShareKitInitialView] = useState<"menu" | "reviews">("menu");
+  const reviewShareLinkHandled = useRef(false);
   const [headerPhotoPreviewOpen, setHeaderPhotoPreviewOpen] = useState(false);
   const [headerPhotoUploading, setHeaderPhotoUploading] = useState(false);
   const proFetchSequenceRef = useRef(0);
@@ -684,6 +686,15 @@ export default function DashboardPage() {
   // para el profesional, Mis proyectos para el cliente.
   const defaultTab: Tab = "sent_projects";
   const activeTab: Tab = allowedRequestedTab ?? (preferMobileMenuDefault ? "home" : defaultTab);
+  useEffect(() => {
+    if (reviewShareLinkHandled.current || searchParams.get("share") !== "reviews" || !pro?.slug || mode !== "offer") return;
+    reviewShareLinkHandled.current = true;
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("share");
+    setShareKitInitialView("reviews");
+    queueMicrotask(() => setShareKitTab(activeTab));
+    router.replace(`/dashboard/profesional?${params.toString()}`, { scroll: false });
+  }, [activeTab, mode, pro?.slug, router, searchParams]);
 
   // When a deep link forces a mode, adopt it globally so the navbar switch + bell follow.
   useEffect(() => {
@@ -1929,8 +1940,10 @@ export default function DashboardPage() {
                 />
                 {publicProfileHref && (
                   <ShareKit
+                    key={shareKitInitialView}
                     open={shareKitTab === activeTab}
                     onClose={() => setShareKitTab(null)}
+                    initialView={shareKitInitialView}
                     profileUrl={enlacePerfil(pro?.slug ?? "")}
                     name={displayName}
                     services={((pro?.professions && pro.professions.length > 0) ? pro.professions : (pro?.category_id ? [pro.category_id] : [])).map((id: string) => getCategoryLabel(id, locale)).filter(Boolean)}

@@ -299,6 +299,16 @@ test.describe("@seeded dashboard surfaces", () => {
     await expectHealthyPage(page);
   });
 
+  test("review email link opens the professional's ready-to-share review message", async ({ page }) => {
+    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+    await gotoOK(page, "/dashboard/profesional?mode=offer&share=reviews");
+    const dialog = page.getByRole("dialog").filter({ visible: true }).first();
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole("link", { name: /WhatsApp/i })).toBeVisible();
+    await expect(dialog.getByRole("button", { name: /Copiar mensaje|Copy message/i })).toBeVisible();
+    await expect(page).not.toHaveURL(/share=reviews/);
+  });
+
   test("navbar hides professional registration for providers", async ({ page }, testInfo) => {
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
     await gotoOK(page, "/");

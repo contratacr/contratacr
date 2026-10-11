@@ -18,6 +18,7 @@ import { compartirConHojaNativa } from "@/lib/compartir-nativo";
 type Props = {
   open: boolean;
   onClose: () => void;
+  initialView?: "menu" | "reviews";
   profileUrl: string;
   name: string;
   services?: string[];
@@ -65,10 +66,10 @@ function fitText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number, 
   return size;
 }
 
-export function ShareKit({ open, onClose, profileUrl, name, services = [], avatarUrl, isVerified, ratingAvg = 0, reviewCount = 0 }: Props) {
+export function ShareKit({ open, onClose, initialView = "menu", profileUrl, name, services = [], avatarUrl, isVerified, ratingAvg = 0, reviewCount = 0 }: Props) {
   const t = useTranslations("shareKit");
   const tShare = useTranslations("shareProfile");
-  const [view, setView] = useState<View>("menu");
+  const [view, setView] = useState<View>(initialView);
   const [copied, setCopied] = useState<"message" | null>(null);
   const [cardBlob, setCardBlob] = useState<Blob | null>(null);
   const [cardPreview, setCardPreview] = useState<string | null>(null);

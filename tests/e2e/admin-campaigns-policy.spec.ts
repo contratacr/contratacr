@@ -20,18 +20,18 @@ test.describe("admin campaign policy", () => {
   });
 
   test("retired email campaigns are rejected by the API before any sending", async ({ page }) => {
-    for (const audience of ["pros_sin_resenas", "pros_sin_precio"]) {
+    for (const audience of ["todas", "pros_sin_precio"]) {
       const get = await page.request.get(`/api/admin/campanas?audiencia=${audience}`);
       expect(get.status()).toBe(410);
       const post = await page.request.post("/api/admin/campanas", { data: {
-        audiencia: audience, campaignId: audience === "pros_sin_precio" ? "precio" : "resenas",
+        audiencia: audience, campaignId: audience === "pros_sin_precio" ? "precio" : "recordatorio",
         mode: "all", confirm: "ENVIAR", subject: "Retired", body: "Retired",
       } });
       expect(post.status()).toBe(410);
     }
   });
 
-  test("the panel shows permanent-history exclusions and only the retained email template", async ({ page }) => {
+  test("the panel shows permanent-history exclusions and only the first-review email template", async ({ page }) => {
     await page.route("**/api/admin/campanas?**", (route) => route.fulfill({ json: {
       clients: 442, adminEmail: account.email, porTanda: 60, enviados: 404, restantes: 12,
       horasParaLaProxima: 0, abiertos: 43, clics: 5, rebotes: 4, midiendo: true, sinConfirmar: 1,
@@ -39,14 +39,15 @@ test.describe("admin campaign policy", () => {
     await page.route("**/api/admin/correo", (route) => route.fulfill({ json: { enviados: 10, tope: 300, restantes: 290, margenPorNivel: { masivo: 240 } } }));
     await page.route("**/api/admin/invitar-resena", (route) => route.fulfill({ json: { cuentas: 442, yaTienen: 429, restantes: 0, historialSinConfirmar: 13 } }));
     await gotoOK(page, "/admin/campanas");
-    await expect(page.getByRole("button", { name: "Servicios disponibles en ContrataCR", exact: true })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Profesionales sin reseñas", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Pedir primeras reseñas", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Servicios disponibles en ContrataCR", exact: true })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Profesionales sin precio", exact: true })).toHaveCount(0);
     await expect(page.getByText("13 cuentas anteriores tienen historial sin confirmar.", { exact: false })).toBeVisible();
     await expect(page.getByRole("button", { name: "Sin invitaciones pendientes", exact: true })).toBeDisabled();
     await expect(page.getByRole("button", { name: "Enviar a 12 (quedan 12)", exact: true })).toBeEnabled();
     await expect(page.getByText(/1 envíos pendientes de confirmación/)).toBeVisible();
     await expect(page.locator("body")).not.toContainText("263 profesionales");
+    await expect(page.getByRole("textbox", { name: "Ruta del botón" })).toHaveValue("/dashboard/profesional?mode=offer&share=reviews");
     await expect(page.locator("body")).not.toContainText("quedan 100 libres");
   });
 

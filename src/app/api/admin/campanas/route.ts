@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { CAMPAIGN_BATCH_SIZE, SERVICES_CAMPAIGN, eligibleCampaignRecipients, isRetiredCampaign, type CampaignHistory } from "@/lib/email/campaign-policy";
+import { CAMPAIGN_BATCH_SIZE, REVIEW_CAMPAIGN, eligibleCampaignRecipients, isRetiredCampaign, type CampaignHistory } from "@/lib/email/campaign-policy";
 import { deliverCampaignOnce } from "@/lib/email/campaign-delivery";
 import { enlaceDeBaja } from "@/lib/email/baja";
 import { getApiAdmin } from "@/lib/auth/admin";
@@ -22,21 +22,28 @@ async function readAll<T>(query: (from: number, to: number) => PromiseLike<{ dat
 }
 
 async function campaignState(db: Admin) {
-  const [accounts, history, bajas] = await Promise.all([
-    readAll((from, to) => db.from("profiles").select("id, email, full_name")
-      .eq("is_disabled", false).not("email", "is", null).order("id").range(from, to)),
+  const [professionals, history, bajas] = await Promise.all([
+    readAll((from, to) => db.from("professionals")
+      .select("profile_id,slug,review_count,created_at,profiles!inner(email,full_name,is_disabled)")
+      .eq("review_count", 0).eq("is_banned", false).eq("oculto_del_buscador", false)
+      .eq("profiles.is_disabled", false).not("slug", "is", null).order("profile_id").range(from, to)),
     readAll((from, to) => db.from("admin_campaign_sends")
       .select("email, campana, status, enviado_en, abierto_en, click_en, rebote_en")
       .order("id").range(from, to)),
     readAll((from, to) => db.from("email_bajas").select("correo").order("correo").range(from, to)),
   ]);
-  const clients = accounts.filter((p): p is typeof p & { email: string } => typeof p.email === "string");
+  const now = Date.now();
+  const clients = professionals.flatMap((pro) => {
+    const profile = pro.profiles as unknown as { email: string | null; full_name: string | null };
+    return profile?.email && pro.created_at && now - Date.parse(pro.created_at) >= 14 * 86_400_000
+      ? [{ email: profile.email, full_name: profile.full_name }] : [];
+  });
   const typedHistory = history as CampaignHistory[];
-  const own = typedHistory.filter((r) => SERVICES_CAMPAIGN.historyKeys.includes(r.campana));
+  const own = typedHistory.filter((r) => REVIEW_CAMPAIGN.historyKeys.includes(r.campana));
   const sent = own.filter((r) => r.status === "sent");
   const latest = own.map((r) => r.enviado_en).sort().at(-1) ?? null;
   return {
-    clients, pendientes: eligibleCampaignRecipients(clients, typedHistory, bajas.map((r) => r.correo)),
+    clients, pendientes: eligibleCampaignRecipients(clients, typedHistory, bajas.map((r) => r.correo), now, REVIEW_CAMPAIGN.historyKeys),
     enviados: new Set(sent.map((r) => r.email)).size,
     sinConfirmar: own.filter((r) => r.status !== "sent").length,
     ultimoEnvio: latest,
@@ -120,7 +127,7 @@ export async function GET(request: Request) {
     const state = await campaignState(createAdminClient());
     return NextResponse.json({
       clients: state.clients.length, adminEmail: admin.email, porTanda: POR_TANDA,
-      campana: SERVICES_CAMPAIGN.key, enviados: state.enviados, sinConfirmar: state.sinConfirmar,
+      campana: REVIEW_CAMPAIGN.key, enviados: state.enviados, sinConfirmar: state.sinConfirmar,
       abiertos: state.abiertos, clics: state.clics, rebotes: state.rebotes,
       midiendo: Boolean(process.env.BREVO_WEBHOOK_SECRET), restantes: state.pendientes.length,
       horasParaLaProxima: horasQueFaltan(state.ultimoEnvio),
@@ -148,7 +155,7 @@ export async function POST(request: Request) {
   if (ctaPath && (!ctaPath.startsWith("/") || ctaPath.startsWith("//") || ctaPath.includes("\\"))) {
     return NextResponse.json({ error: "El enlace debe ser una ruta interna." }, { status: 400 });
   }
-  const campana = SERVICES_CAMPAIGN.key;
+  const campana = REVIEW_CAMPAIGN.key;
   let cta: URL | null = null;
   try {
     cta = ctaPath ? new URL(ctaPath, APP_URL) : null;
@@ -177,9 +184,24 @@ export async function POST(request: Request) {
     if (faltan > 0) return NextResponse.json({ error: `Ya salió una tanda hoy. El cupo se renueva en ${faltan} h.`, horasParaLaProxima: faltan }, { status: 429 });
     let sent = 0, failed = 0, skipped = 0;
     for (const client of state.pendientes.slice(0, POR_TANDA)) {
-      const result = await deliverCampaignOnce(db, campana, client.email, () => sendBrevoEmail({
-        to: client.email, subject, html: htmlPara(client.email, client.full_name), replyTo, nivel: "masivo", campana,
-      }));
+      const result = await deliverCampaignOnce(db, campana, client.email, async () => {
+        // Una reseña, baja o inhabilitación puede ocurrir después del recuento inicial.
+        const [{ data: current, error: currentError }, { data: baja, error: bajaError }, { data: rebotes, error: reboteError }] = await Promise.all([
+          db.from("professionals").select("id,created_at,profiles!inner(email)")
+          .eq("review_count", 0).eq("is_banned", false).eq("oculto_del_buscador", false)
+          .eq("profiles.is_disabled", false).eq("profiles.email", client.email)
+          .not("slug", "is", null).limit(1),
+          db.from("email_bajas").select("correo").ilike("correo", client.email).limit(1),
+          db.from("admin_campaign_sends").select("rebote_en").ilike("email", client.email).not("rebote_en", "is", null).limit(1),
+        ]);
+        if (currentError || bajaError || reboteError) throw currentError ?? bajaError ?? reboteError;
+        if (baja?.length || rebotes?.length || !current?.some((pro) => pro.created_at && Date.now() - Date.parse(pro.created_at) >= 14 * 86_400_000)) {
+          return { ok: false, status: "skipped" as const, detail: "La cuenta ya no es elegible." };
+        }
+        return sendBrevoEmail({
+          to: client.email, subject, html: htmlPara(client.email, client.full_name), replyTo, nivel: "masivo", campana,
+        });
+      });
       if (result === "sent") sent += 1;
       else if (result === "uncertain") failed += 1;
       else skipped += 1;
