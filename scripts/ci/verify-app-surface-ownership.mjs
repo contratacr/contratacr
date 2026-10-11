@@ -37,6 +37,7 @@ const handlerRules = [
   [/^\/api\/internal\/resena-google(?:\/|$)/, "resena-google.spec.ts"],
   [/^\/api\/internal\/resumen-semanal(?:\/|$)/, "resumen-semanal.spec.ts"],
   [/^\/api\/internal\/meta(?:\/|$)/, "meta-growth-runtime.spec.ts"],
+  [/^\/api\/internal\/campaigns(?:\/|$)/, "lifecycle-email-policy.spec.ts"],
   [/^\/api\/trabajos\/reportar(?:\/|$)/, "resumen-semanal.spec.ts"],
   [/^\/api\/block(?:\/|$)/, "bloqueo-de-usuarios.spec.ts"],
   [/^\/api\/webhooks(?:\/|$)/, "product-contract.spec.ts"],

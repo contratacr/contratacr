@@ -1,6 +1,7 @@
 import { expect, test } from "playwright/test";
 import { lifecycleCandidate, type LifecycleAccount, type LifecycleProfessional } from "../../src/lib/email/lifecycle-policy";
 import { REVIEW_CAMPAIGN, SERVICES_CAMPAIGN, type CampaignHistory } from "../../src/lib/email/campaign-policy";
+import { POST } from "../../src/app/api/internal/campaigns/route";
 const now = Date.UTC(2026,9,11,15);
 const days = (n:number) => new Date(now-n*86400000).toISOString();
 const account:LifecycleAccount = {id:"account",email:"pro@example.com",full_name:"Pro",created_at:days(30),is_disabled:false,role:"client",is_provider:false};
@@ -43,4 +44,8 @@ test("email changes preserve account receipts and cooldown",() => {
 });
 test("unapproved copy remains inactive",() => {
   expect(lifecycleCandidate(account,undefined,[],[],false,now)).toBeNull();
+});
+test("the worker rejects unauthenticated requests before accessing recipients",async () => {
+  const result=await POST(new Request("https://contratacr.com/api/internal/campaigns",{method:"POST"}));
+  expect([401,503]).toContain(result.status);
 });
