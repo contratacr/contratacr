@@ -3,15 +3,15 @@ import { tienePrecioReal } from "@/lib/notifications/empujones-del-perfil";
 
 export const LIFECYCLE_CAMPAIGNS = [
   { ...REVIEW_CAMPAIGN, days: 7, audience: "professional", enabled: true },
-  { key: "precio-desde-profesionales-2026", days: 21, audience: "professional", enabled: false,
+  { key: "precio-desde-profesionales-2026", days: 21, audience: "professional", enabled: true,
     subject: "Ayuda a tus clientes a conocer tu precio desde",
     body: "Un cliente puede dudar en contactarte si no tiene ninguna referencia de cuánto cuesta tu servicio.\n\nAgrega un precio «desde» para orientarlo antes de conversar. No es una cotización definitiva: el precio final depende del trabajo y lo acuerdas con el cliente.\n\nEn tu panel, edita tus servicios y añade el precio inicial de los que puedas ofrecer con una referencia real.",
     ctaLabel: "Agregar precio desde", ctaPath: "/dashboard/profesional?mode=offer&tab=completion" },
-  { key: "buscar-profesionales-clientes-2026", days: 3, audience: "client", enabled: false,
+  { key: "buscar-profesionales-clientes-2026", days: 3, audience: "all", enabled: true,
     subject: "Encuentra un profesional para lo que necesitas",
     body: "¿Tienes un trabajo pendiente en tu casa o negocio?\n\nEn ContrataCR puedes buscar profesionales por servicio y ubicación, revisar sus perfiles y contactar directamente a quien te interese.",
     ctaLabel: "Buscar profesionales", ctaPath: "/buscar" },
-  { key: "crear-proyecto-clientes-2026", days: 17, audience: "client", enabled: false,
+  { key: "crear-proyecto-clientes-2026", days: 17, audience: "all", enabled: true,
     subject: "Cuenta qué necesitas y encuentra quién lo haga",
     body: "Si prefieres explicar tu trabajo en un solo lugar, publica un proyecto en ContrataCR: indica qué necesitas y dónde.\n\nLos profesionales interesados podrán contactarte para conversar sobre el trabajo. Tú decides a quién contratar.",
     ctaLabel: "Crear un proyecto", ctaPath: "/publicar-proyecto" },
@@ -28,13 +28,17 @@ export function lifecycleCandidate(account: LifecycleAccount, pro: LifecycleProf
   const own = history.filter((r) => r.profile_id === account.id || normalizeCampaignEmail(r.email) === email);
   if (own.some((r) => r.rebote_en || r.status !== "sent" || now - Date.parse(r.enviado_en) < 14 * DAY)) return null;
   const professional = Boolean(pro) || account.is_provider === true || account.role === "professional";
-  if (professional && (!pro || pro.is_banned !== false || pro.oculto_del_buscador !== false || !pro.slug)) return null;
   const registered = Date.parse(account.created_at ?? "");
-  const age = now - Math.max(registered, pro ? Date.parse(pro.created_at ?? "") : registered);
-  if (!Number.isFinite(age) || age < 0) return null;
+  if (!Number.isFinite(registered) || now < registered) return null;
+  const usablePro = professional && pro && pro.is_banned === false && pro.oculto_del_buscador === false && Boolean(pro.slug);
+  const pendingReview = usablePro && Number(pro.review_count ?? 0) <= 0 && !own.some((r) => r.campana === REVIEW_CAMPAIGN.key);
+  const pendingPrice = usablePro && !tienePrecioReal(pro.services) && !own.some((r) => r.campana === "precio-desde-profesionales-2026");
   for (const campaign of LIFECYCLE_CAMPAIGNS) {
-    if ((!campaign.enabled && !includeUnapproved) || campaign.audience !== (professional ? "professional" : "client")
+    const age = now - (campaign.audience === "professional" && pro ? Math.max(registered,Date.parse(pro.created_at ?? "")) : registered);
+    if ((!campaign.enabled && !includeUnapproved) || !Number.isFinite(age)
+      || (campaign.audience === "professional" && !usablePro)
       || age < campaign.days * DAY || own.some((r) => r.campana === campaign.key)) continue;
+    if (campaign.audience === "all" && (pendingReview || pendingPrice)) continue;
     if (campaign.key === REVIEW_CAMPAIGN.key && Number(pro?.review_count ?? 0) > 0) continue;
     if (campaign.key === "precio-desde-profesionales-2026" && tienePrecioReal(pro?.services)) continue;
     if (campaign.key === "crear-proyecto-clientes-2026" && hasProject) continue;
