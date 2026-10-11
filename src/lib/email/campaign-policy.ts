@@ -25,7 +25,8 @@ export const REVIEW_CAMPAIGN = {
   audiencia: "pros_sin_resenas",
 };
 export const CAMPAIGN_EMAIL_COOLDOWN_DAYS = 14;
-export const CAMPAIGN_BATCH_SIZE = 60;
+// The shared daily quota stops bulk sends with 50 of Brevo's 300 sends free.
+export const CAMPAIGN_BATCH_SIZE = 250;
 
 export type CampaignHistory = {
   email: string; campana: string; enviado_en: string;
