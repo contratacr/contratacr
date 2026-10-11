@@ -36,6 +36,7 @@ const handlerRules = [
   [/^\/api\/internal\/verificacion(?:\/|$)/, "verificacion-repesca.spec.ts"],
   [/^\/api\/internal\/resena-google(?:\/|$)/, "resena-google.spec.ts"],
   [/^\/api\/internal\/resumen-semanal(?:\/|$)/, "resumen-semanal.spec.ts"],
+  [/^\/api\/internal\/meta(?:\/|$)/, "meta-growth-runtime.spec.ts"],
   [/^\/api\/trabajos\/reportar(?:\/|$)/, "resumen-semanal.spec.ts"],
   [/^\/api\/block(?:\/|$)/, "bloqueo-de-usuarios.spec.ts"],
   [/^\/api\/webhooks(?:\/|$)/, "product-contract.spec.ts"],
@@ -46,6 +47,7 @@ const handlerRules = [
   [/^\/api\/(?:register|cedula|cedula-available|add-cedula|verify-identity)(?:\/|$)/, "product-contract.spec.ts"],
   [/^\/api\/(?:appeals|report|client\/connections)(?:\/|$)/, "interaction-surfaces.spec.ts"],
   [/^\/api\/(?:check-availability|professionals|buscar)(?:\/|$)/, "search-results.spec.ts"],
+  [/^\/api\/analytics\/professional-ready$/, "meta-growth-runtime.spec.ts"],
   [/^\/api\/(?:analytics|attribution|translate|client-error)(?:\/|$)/, "product-contract.spec.ts"],
   [/^\/api\/health$/, "health.spec.ts"],
 ];
