@@ -6,6 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { ContrataCRLogo } from "./landing-navbar";
 import { SmartRegisterLink } from "@/components/layout/smart-register-link";
 import { SupportLink } from "@/components/support/support-link";
+import { AppStoreLinks } from "./app-download";
 import { useAuth } from "@/hooks/use-auth";
 
 function InstagramIcon() {
@@ -108,6 +109,7 @@ export function LandingFooter() {
             <p className="text-sm text-white/50 leading-relaxed mb-6 max-w-[260px]">
               {t("tagline")}
             </p>
+            <div className="mb-6"><AppStoreLinks /></div>
             {/* Social */}
             <div className="flex items-center gap-2">
               {SOCIAL_LINKS.map(({ label, href, Icon }) => (

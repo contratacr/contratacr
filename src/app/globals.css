@@ -496,6 +496,8 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
    no se sienta un salto. */
   body.ccr-native-bottom-nav-hidden {
     --ccr-native-bottom-nav-total: 0px;
+    /* Al ocultarse el menú, conservar solo el área segura del dispositivo. */
+    --ccr-barra-flotante: env(safe-area-inset-bottom, 0px);
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) main {
@@ -530,8 +532,8 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
 
   body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .ccr-cascaron-tablero main.ccr-tablero-fijo .ccr-tablero-marco > section,
   body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .ccr-cascaron-tablero main.ccr-tablero-fijo > .ccr-tablero-ficha {
-    padding-bottom: calc(var(--ccr-barra-flotante, 0px) + 1rem);
-    scroll-padding-bottom: calc(var(--ccr-barra-flotante, 0px) + 1rem);
+    padding-bottom: calc(var(--ccr-barra-flotante, 0px) + 10px);
+    scroll-padding-bottom: calc(var(--ccr-barra-flotante, 0px) + 10px);
   }
 
   /* Dentro del main anclado, el pie PEGAJOSO del formulario NO debe volver a
@@ -836,7 +838,9 @@ html.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-nav-montada) body::af
   overflow: hidden;
   isolation: isolate;
   background: #fff !important;
-  padding-bottom: env(safe-area-inset-bottom);
+  /* La zona desplazable ya reserva el área segura y el menú. Reservarla
+     también aquí duplicaba la franja vacía en iPhone. */
+  padding-bottom: 0;
 }
 
 body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-search-bottom-sheet,
@@ -973,13 +977,15 @@ html[data-keyboard-visible] body.ccr-native-app.ccr-native-bottom-nav-visible.cc
 /* Con la barra de pestañas visible, el último control del panel no puede quedar
    debajo de ella. */
 body.ccr-native-app.ccr-native-bottom-nav-visible.ccr-native-search-route .ccr-search-results-list {
+  /* La reserva pertenece al desplazador, no a una lista estirada al 100%. */
+  min-height: 0;
   padding-bottom: 0 !important;
   scroll-padding-bottom: 0;
 }
 
 body.ccr-native-app.ccr-native-bottom-nav-visible.ccr-native-search-route .ccr-search-sheet-scroll {
-  padding-bottom: calc(var(--ccr-barra-flotante, 0px) + var(--ccr-native-content-end-gap) + var(--ccr-cola-fuera, 0px)) !important;
-  scroll-padding-bottom: calc(var(--ccr-barra-flotante, 0px) + var(--ccr-native-content-end-gap) + var(--ccr-cola-fuera, 0px));
+  padding-bottom: calc(var(--ccr-barra-flotante, 0px) + 10px + var(--ccr-cola-fuera, 0px)) !important;
+  scroll-padding-bottom: calc(var(--ccr-barra-flotante, 0px) + 10px + var(--ccr-cola-fuera, 0px));
 }
 
 html[data-keyboard-visible] body.ccr-native-app.ccr-native-search-route .ccr-search-results-list {
@@ -2381,3 +2387,13 @@ html.ccr-menu-sin-cierre .ccr-menu-completo, html.ccr-menu-sin-cierre .ccr-menu-
 .ccr-rodillo-gira { animation: ccr-rodillo-gira 0.7s cubic-bezier(0.65, 0, 0.35, 1) both; }
 @keyframes ccr-rodillo-gira { from { transform: translateY(0); } to { transform: translateY(-1.5em); } }
 @media (prefers-reduced-motion: reduce) { .ccr-rodillo-gira { animation: none; transform: translateY(-1.5em); } }
+
+/* La separación final es fondo continuo; la sombra pertenece al menú flotante. */
+@media (max-width: 1023px) {
+  body.ccr-native-app .ccr-search-card-slot article { box-shadow: none; }
+  body.ccr-native-app .ccr-cascaron-tablero .ccr-panel-tablero:not(.ccr-ficha-pagina) { box-shadow: none; }
+}
+
+/* The spacer and fixed notice share one height, including the home indicator. */
+.ccr-download-banner-wrap { height: calc(76px + env(safe-area-inset-bottom)); }
+.ccr-download-banner { position: fixed; inset: auto 0 0; z-index: 70; display: flex; align-items: center; gap: 8px; height: calc(76px + env(safe-area-inset-bottom)); padding: 10px 16px calc(10px + env(safe-area-inset-bottom)) 4px; box-sizing: border-box; border-top: 1px solid #e5e7eb; background: #fff; }

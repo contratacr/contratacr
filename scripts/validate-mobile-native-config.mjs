@@ -140,7 +140,7 @@ else if (!layoutRaiz.includes(detalleEnHelper.replace(/\\/g, "\\\\"))) failures.
 requireMatch(
   "Native bottom navigation order",
   bottomNav,
-  /href="\/profesionales"[\s\S]*"\/mensajes"[\s\S]*setHojaDeCrear\(true\)[\s\S]*"\/notificaciones"[\s\S]*href=\{nativePanelHref\}/,
+  /href="\/profesionales"[\s\S]*"\/mensajes"[\s\S]*aria-label=\{tNav\("create"\)\}[\s\S]*"\/notificaciones"[\s\S]*href=\{nativePanelHref\}/,
 );
 if (/tab=quotes/.test(bottomNav)) {
   failures.push("Native bottom navigation still links to quotes; they belong in the drawer");
