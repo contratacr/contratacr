@@ -1,7 +1,7 @@
 import { getAdminUser } from "@/lib/auth/admin";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { AdminAnalytics } from "@/components/admin/admin-analytics";
-import { AdminLogin } from "@/components/admin/admin-login";
+import { AdminAccess } from "@/components/admin/admin-access";
 import { getAdminReports } from "@/lib/admin/reports";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 // interactions and support. Admin-only.
 export default async function AdminAnaliticaPage() {
   const admin = await getAdminUser();
-  if (!admin) return <AdminLogin />;
+  if (!admin) return <AdminAccess />;
   const data = await getAdminReports("es");
   return (
     <AdminShell adminName={admin.fullName} active="analitica">
