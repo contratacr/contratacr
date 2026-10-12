@@ -1,5 +1,6 @@
 "use client";
 
+import { SignInMethods } from "@/components/account/sign-in-methods";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { useEffect, useState } from "react";
 import { CheckCircle2, Clock, Mail, Lock, ShieldCheck, Eye, EyeOff, Info, ExternalLink } from "lucide-react";
@@ -16,6 +17,7 @@ import { UsuariosBloqueados } from "@/components/moderation/usuarios-bloqueados"
    Shown to OAuth users instead of fields that wouldn't work here. */
 const PROVIDER_LINKS: Record<string, { account: string; security: string }> = {
   Google: { account: "https://myaccount.google.com/email", security: "https://myaccount.google.com/security" },
+  Apple: { account: "https://account.apple.com/", security: "https://account.apple.com/" },
   Facebook: { account: "https://accounts.facebook.com/", security: "https://www.facebook.com/settings?tab=security" },
 };
 
@@ -134,11 +136,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
   const [resetBusy, setResetBusy] = useState(false);
   const [resetSent, setResetSent] = useState(false);
 
-  // Detect OAuth (Google/Facebook) accounts — no password, provider-managed email.
-  // One email = one method: an account that HAS an email/password identity is a
-  // MANUAL account, so we show the email/password controls even if a stray social
-  // identity is also present (we block mixing at sign-in, but if a legacy account
-      // ended up with both, the password is what works — keep the UI truthful).
+  // Provider-managed email applies only until a local password is connected.
   const oauthProvider = user?.app_metadata?.provider as string | undefined;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const hasPasswordIdentity = (user?.identities ?? []).some((id: any) => id.provider === "email");
@@ -148,7 +146,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
       oauthProvider === "facebook" ||
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (user?.identities ?? []).some((id: any) => id.provider && id.provider !== "email"));
-  const providerLabel = oauthProvider === "facebook" ? "Facebook" : "Google";
+  const providerLabel = oauthProvider === "apple" ? "Apple" : oauthProvider === "facebook" ? "Facebook" : "Google";
   const providerLinks = PROVIDER_LINKS[providerLabel];
 
   // The actual send (used by the initial submit AND the resend). The confirmation
@@ -339,6 +337,8 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
           </div>
         )}
       </div>
+
+      <SignInMethods />
 
       {/* Password */}
       <div className="border-t border-[#eef2f6] pt-4 first:border-t-0 first:pt-0">

@@ -1,3 +1,4 @@
+import { LAST_SIGN_IN_COOKIE, signInMethod } from "@/lib/auth/last-sign-in";
 import { NextRequest, NextResponse } from "next/server";
 import { rutaInternaSegura } from "@/lib/navigation/ruta-interna";
 import { createServerClient } from "@supabase/ssr";
@@ -69,7 +70,7 @@ async function serverSupabase() {
   );
 }
 
-type SignedInContext = { origin: string; callbackLocale: string; safeNext: string | null; next: string | null; flow: string | null };
+type SignedInContext = { origin: string; callbackLocale: string; safeNext: string | null; next: string | null; flow: string | null; provider?: string | null };
 
 // Everything that happens once Supabase has a user: shared by the PKCE code
 // exchange (web OAuth, password reset) and the native app's id-token sign-in.
@@ -78,27 +79,16 @@ async function finishSignedIn(
   supabase: SupabaseClient,
   ctx: SignedInContext,
 ): Promise<NextResponse> {
-  // ── One email = ONE login method (BLOCK mixing) ─────────────────────────
-  // A Google/Facebook sign-in (flow=oauth, set by /login's OAuth buttons) must
-  // NOT attach to / take over an account that already has an email+password
-  // identity. Supabase GoTrue auto-links the OAuth identity to a same-email
-  // account during the code exchange; left unchecked, that flips a manual
-  // account to "Google", routes the user to onboarding, and can break password
-  // login. So: if the just-authenticated user ALSO has an "email" (password)
-  // identity, we REFUSE the OAuth session and send them to manual login with a
-  // clear message — their password account stays intact. A brand-new Google
-  // user (no password identity) passes through normally to onboarding.
-  if (ctx.flow === "oauth" || ctx.flow === "native") {
-    const hasPassword = (user.identities ?? []).some((i) => i.provider === "email");
-    if (hasPassword) {
-      await supabase.auth.signOut();
-      return NextResponse.redirect(`${ctx.origin}/${ctx.callbackLocale}/login?autherror=use_password`);
-    }
-  }
-
   if (await reactivateAccount(user.id) === "deletion-pending") {
     await supabase.auth.signOut();
     return NextResponse.redirect(`${ctx.origin}/${ctx.callbackLocale}/login?autherror=account_deletion_pending`);
+  }
+
+  const method = signInMethod(ctx.provider) ?? signInMethod(user.app_metadata?.provider) ?? "email";
+  function authenticatedRedirect(url: string) {
+    const response = NextResponse.redirect(url);
+    if (ctx.flow !== "link") response.cookies.set(LAST_SIGN_IN_COOKIE, method, { path: "/", maxAge: 7776000, sameSite: "lax", secure: ctx.origin.startsWith("https:") });
+    return response;
   }
 
   // Guest→account linking: attach prior GUEST tickets with this (now
@@ -117,7 +107,7 @@ async function finishSignedIn(
   // open-redirect. The "projects" alias is NOT a path — it falls through to the
   // role-aware resolution below.
   if (ctx.safeNext) {
-    return NextResponse.redirect(`${ctx.origin}${withPostLoginActivity(ctx.safeNext)}`);
+    return authenticatedRedirect(`${ctx.origin}${withPostLoginActivity(ctx.safeNext)}`);
   }
 
   // ── Onboarding decision ──
@@ -140,7 +130,7 @@ async function finishSignedIn(
     // Genuinely new OAuth user, no role chosen yet → onboarding. A short-lived
     // cookie tells that page so (a query string can be dropped on the way), and it
     // skips its own "is this an existing account?" round trip.
-    const toOnboarding = NextResponse.redirect(`${ctx.origin}/${ctx.callbackLocale}/onboarding`);
+    const toOnboarding = authenticatedRedirect(`${ctx.origin}/${ctx.callbackLocale}/onboarding`);
     toOnboarding.cookies.set("ccr_onboarding_new", "1", { path: "/", maxAge: 120, sameSite: "lax" });
     return toOnboarding;
   }
@@ -162,7 +152,7 @@ async function finishSignedIn(
   // the moment they book/request a service (see the booking flow). So we no
   // longer force clients to a profile-completion screen here. Professionals
   // provide their cédula during professional registration.
-  return NextResponse.redirect(`${ctx.origin}${withPostLoginActivity(destPath)}`);
+  return authenticatedRedirect(`${ctx.origin}${withPostLoginActivity(destPath)}`);
 }
 
 export async function GET(request: NextRequest) {
@@ -180,7 +170,7 @@ export async function GET(request: NextRequest) {
     const supabase = await serverSupabase();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.redirect(`${origin}/${callbackLocale}/login?autherror=native`);
-    return finishSignedIn(user, supabase, { origin, callbackLocale, safeNext, next, flow: "native" });
+    return finishSignedIn(user, supabase, { origin, callbackLocale, safeNext, next, flow: "native", provider: searchParams.get("provider") });
   }
 
   if (code || tokenHash) {
@@ -246,7 +236,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (!error && data.user) {
-      return finishSignedIn(data.user, supabase, { origin, callbackLocale, safeNext, next, flow: searchParams.get("flow") });
+      return finishSignedIn(data.user, supabase, { origin, callbackLocale, safeNext, next, flow: searchParams.get("flow"), provider: searchParams.get("provider") });
     }
   }
 

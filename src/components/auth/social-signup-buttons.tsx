@@ -1,5 +1,6 @@
 "use client";
 
+import { rememberSignIn } from "@/lib/auth/last-sign-in";
 import { useState, useSyncExternalStore } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { createClient, hasSupabaseBrowserConfig } from "@/lib/supabase/client";
@@ -10,12 +11,11 @@ import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 // "Continuar con Google/Apple" for the REGISTRATION forms: the same providers
 // as /login, but the round trip returns HERE (next = the current page) so the
 // person continues the same form with their identity already connected.
-// Apple exists only inside the app; the website keeps its web-only login.
+// Apple uses the same provider on the website and in the native app.
 export function SocialSignupButtons({ nextPath }: { nextPath?: string }) {
   const locale = useLocale();
   const t = useTranslations("auth.login");
-  // "unknown" until hydration, so a browser never sees the app's Apple button
-  // flash and the app never sees the web-only layout.
+  // Google switches between its browser button and the native sheet after hydration.
   const runtime = useSyncExternalStore(
     () => () => {},
     () => (isNativeAppRuntime() ? "native" : "browser"),
@@ -27,27 +27,17 @@ export function SocialSignupButtons({ nextPath }: { nextPath?: string }) {
   // until the connected form takes over — never a flash of this screen again.
   const [covering, setCovering] = useState(false);
 
-  // Signed in on this very page: enforce the same one-email-one-method rule the
-  // callback applies, then simply STAY — the form switches to its
-  // connected-account steps as the session propagates. No redirect hop.
-  async function settleSignedInHere(supabase: ReturnType<typeof createClient>) {
-    const { data } = await supabase.auth.getUser();
-    const hasPassword = (data.user?.identities ?? []).some((identity) => identity.provider === "email");
-    if (hasPassword) {
-      await supabase.auth.signOut();
-      setCovering(false);
-      setError(t("blockedUsePassword"));
-      setLoading(null);
-      return;
-    }
+  // Stay on the registration form after authentication; existing identities
+  // remain valid when another verified sign-in method is connected.
+  async function settleSignedInHere() {
     // This block unmounts (taking the cover with it) as soon as the page
     // rerenders in its connected state; the timeout is only a safety net.
     window.setTimeout(() => setCovering(false), 8000);
   }
 
-  function callbackUrl() {
+  function callbackUrl(provider: "google" | "apple") {
     const next = nextPath ?? window.location.pathname + window.location.search;
-    return `${window.location.origin}/auth/callback?flow=oauth&locale=${locale}&next=${encodeURIComponent(next)}`;
+    return `${window.location.origin}/auth/callback?flow=oauth&provider=${provider}&locale=${locale}&next=${encodeURIComponent(next)}`;
   }
 
   async function start(provider: "google" | "apple") {
@@ -67,8 +57,9 @@ export function SocialSignupButtons({ nextPath }: { nextPath?: string }) {
       try {
         const outcome = await nativeSocialSignIn(provider, supabase);
         if (outcome === "signed-in") {
+          rememberSignIn(provider);
           setCovering(true);
-          await settleSignedInHere(supabase);
+          await settleSignedInHere();
           return;
         }
         if (outcome === "cancelled") {
@@ -84,7 +75,7 @@ export function SocialSignupButtons({ nextPath }: { nextPath?: string }) {
     }
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: callbackUrl() },
+      options: { redirectTo: callbackUrl(provider) },
     });
     if (oauthError) {
       setError(oauthError.message);
@@ -94,7 +85,7 @@ export function SocialSignupButtons({ nextPath }: { nextPath?: string }) {
 
   // Google Identity on the page (like /login): the consent window says
   // "continuar a contratacr.com", never the Supabase URL. The token exchange
-  // happens here; the callback then runs the same one-method checks and
+  // happens here; the callback then resolves the authenticated account and
   // returns to this form.
   async function onGoogleCredential(idToken: string, gisNonce: string) {
     // Google's window just closed: cover the form immediately, not after the
@@ -110,7 +101,8 @@ export function SocialSignupButtons({ nextPath }: { nextPath?: string }) {
       setLoading(null);
       return;
     }
-    await settleSignedInHere(supabase);
+    rememberSignIn("google");
+    await settleSignedInHere();
   }
 
   return (
@@ -121,8 +113,7 @@ export function SocialSignupButtons({ nextPath }: { nextPath?: string }) {
           <div className="h-16 bg-white shadow-[0_1px_0_#e5e7eb]" />
         </div>
       )}
-      {runtime === "native" && (
-        <button
+      <button
           type="button"
           onClick={() => start("apple")}
           disabled={loading !== null}
@@ -131,7 +122,6 @@ export function SocialSignupButtons({ nextPath }: { nextPath?: string }) {
           <svg aria-hidden="true" className="h-5 w-5 fill-current" viewBox="0 0 24 24"><path d="M17.05 12.54c-.03-3.01 2.46-4.48 2.57-4.55a5.5 5.5 0 0 0-4.33-2.34c-1.82-.19-3.58 1.09-4.5 1.09-.94 0-2.36-1.07-3.9-1.04A5.73 5.73 0 0 0 2.08 8.6c-2.09 3.62-.53 8.95 1.47 11.88 1 1.43 2.17 3.03 3.71 2.97 1.51-.06 2.08-.95 3.91-.95 1.81 0 2.35.95 3.92.91 1.62-.02 2.64-1.44 3.6-2.88a11.78 11.78 0 0 0 1.65-3.36 5.2 5.2 0 0 1-3.29-4.63ZM14.1 3.72A5.28 5.28 0 0 0 15.3 0a5.35 5.35 0 0 0-3.46 1.77 5.02 5.02 0 0 0-1.23 3.58 4.4 4.4 0 0 0 3.49-1.63Z" /></svg>
           {loading === "apple" ? t("redirecting") : locale === "en" ? "Continue with Apple" : "Continuar con Apple"}
         </button>
-      )}
       {(() => {
         const googleFallback = (
           <button
