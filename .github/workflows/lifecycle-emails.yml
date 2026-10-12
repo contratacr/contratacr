@@ -3,7 +3,7 @@ name: Correos automáticos de ContrataCR
 # Daily at 09:00 Costa Rica. Pending recipients resume within the shared quota.
 on:
   schedule:
-    # 10:00 a.m. en Costa Rica: a esa hora los correos llega con la gente despierta.
+    # 09:00 a.m. de Costa Rica: los pendientes se retoman dentro del cupo diario.
     - cron: "0 15 * * *"
   workflow_dispatch:
     inputs:

@@ -1,7 +1,7 @@
 import { computeCompletion } from "@/lib/professional-completion";
 
 export const PROFILE_REMINDER = {
-  key: "completar-perfil-profesional-2026", days: 2, audience: "professional-intent", enabled: false,
+  key: "completar-perfil-profesional-2026", days: 2, audience: "professional-intent", enabled: true,
   subject: "Completa tu perfil profesional en ContrataCR",
   body: "Tu perfil profesional todavía está pendiente de completar.\n\nAgrega la información que falta para que quienes buscan tus servicios puedan conocer tu trabajo y decidir si quieren contactarte.\n\nRetoma el proceso desde tu cuenta de ContrataCR.",
   ctaLabel: "Completar mi perfil", ctaPath: "/continuar-perfil",

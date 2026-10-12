@@ -92,7 +92,7 @@ jobs:
       - name: Install browser for desktop and mobile tests
         run: npx playwright install --with-deps chromium
 
-      - name: Test profile email button and campaign eligibility
+      - name: Build application against the synthetic database
         run: npm run build
 
       - name: Exercise profile continuation on desktop and mobile
