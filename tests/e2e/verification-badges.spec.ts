@@ -86,6 +86,20 @@ test("registration explains the badge and opens the shared explanation", async (
   await expectNoHorizontalOverflow(page);
 });
 
+test("dashboard name keeps only an interactive identity check", async ({ page }) => {
+  test.skip(!canRunSeededRegression(), "Requires isolated regression accounts.");
+  await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+  await gotoOK(page, "/dashboard/profesional");
+  const name = page.locator("h1").filter({ visible: true }).first();
+  const check = name.locator("..").locator("[data-verification-badge]");
+  await expect(check).toBeVisible();
+  expect(await check.textContent()).toBe("");
+  await expect(name.locator("..").locator("[data-cedula-verificada]")).toHaveCount(0);
+  await check.click();
+  await expect(page.getByRole("dialog")).toContainText("no garantiza la calidad del trabajo");
+  await expectNoHorizontalOverflow(page);
+});
+
 test("the panel explains where verified identity is displayed", async ({ page }) => {
   test.skip(!canRunSeededRegression(), "Requires isolated regression accounts.");
   await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
