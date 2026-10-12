@@ -1,5 +1,5 @@
 import { test, expect, type Page, type BrowserContext } from "playwright/test";
-import { gotoOK, loginAs, expectNoHorizontalOverflow } from "./helpers";
+import { gotoOK, loginAs, expectNoHorizontalOverflow, waitForInteractivePage } from "./helpers";
 import { canRunSeededRegression, E2E_USERS } from "./seed";
 
 let authCookies: Awaited<ReturnType<BrowserContext["cookies"]>> = [];
@@ -34,7 +34,11 @@ for (const target of ["/publicar-proyecto", "/promociones/publicar", "/empleos/p
     test.skip(!canRunSeededRegression(), "Requires isolated regression accounts.");
     await context.addCookies(authCookies);
     await enableNative(page, context);
+    // Other regression runs leave contact follow-ups on this shared actor.
+    // Keep this navigation check independent from those separate dialogs.
+    await page.route("**/api/contact/follow-up", (route) => route.fulfill({ json: { followUp: null, pendingCount: 0 } }));
     await gotoOK(page, target.startsWith("/dashboard") ? "/dashboard/profesional?tab=cuenta" : "/profesionales");
+    await waitForInteractivePage(page);
     await page.locator("nav.ccr-native-bottom-nav").getByRole("button", { name: "Crear", exact: true }).click();
     const sheet = page.getByTestId("native-create-sheet");
     const link = sheet.locator(`a[href="${target}"]`);
