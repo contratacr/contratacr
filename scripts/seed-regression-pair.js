@@ -660,6 +660,17 @@ async function main() {
     },
   ], { onConflict: "id" }));
 
+  // Las pruebas de chat pueden recrear este par con un UUID nuevo. El índice
+  // por cliente/profesional impide insertar después el UUID canónico. Restablecer
+  // solo los dos pares de actores sintéticos ya validados permite repetir el seed.
+  for (const [conversationId, clientId, professionalId] of [
+    [ids.conversations[0], c.profile.id, s.professional.id],
+    [ids.conversations[1], s.profile.id, c.professional.id],
+  ]) {
+    await must("obsolete synthetic pair conversations", supabase.from("direct_conversations")
+      .delete().eq("client_id", clientId).eq("professional_id", professionalId).neq("id", conversationId));
+  }
+
   await must("conversations", supabase.from("direct_conversations").upsert([
     {
       id: ids.conversations[0], client_id: c.profile.id, professional_id: s.professional.id,
