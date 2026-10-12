@@ -609,7 +609,12 @@
       "emailChangedTitle": "Correo actualizado",
       "emailChangedLogin": "El cambio quedó confirmado. Inicia sesión con tu correo nuevo.",
       "back": "Volver",
-      "passwordPlaceholder": "Tu contraseña"
+      "passwordPlaceholder": "Tu contraseña",
+      "oauthExpired": "Este intento de acceso venció. Pulsa Google o Apple de nuevo para iniciar un intento nuevo.",
+      "oauthFailed": "No pudimos completar el acceso. Intenta de nuevo.",
+      "lastUsed": "Usaste la última vez: {method}",
+      "emailMethod": "Correo",
+      "continueApple": "Continuar con Apple"
     },
     "register": {
       "title": "Crear cuenta",

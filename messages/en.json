@@ -609,7 +609,12 @@
       "emailChangedTitle": "Email updated",
       "emailChangedLogin": "The change was confirmed. Sign in with your new email.",
       "back": "Back",
-      "passwordPlaceholder": "Your password"
+      "passwordPlaceholder": "Your password",
+      "oauthExpired": "This sign-in attempt expired. Choose Google or Apple again to start a new attempt.",
+      "oauthFailed": "We couldn't complete sign-in. Please try again.",
+      "lastUsed": "Last used: {method}",
+      "emailMethod": "Email",
+      "continueApple": "Continue with Apple"
     },
     "register": {
       "title": "Create account",
