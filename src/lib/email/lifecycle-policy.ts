@@ -1,4 +1,4 @@
-import { REVIEW_CAMPAIGN, SERVICES_CAMPAIGN, type CampaignHistory, normalizeCampaignEmail } from "./campaign-policy";
+import { REVIEW_CAMPAIGN, SERVICES_CAMPAIGN, type CampaignHistory, normalizeCampaignEmail, isInternalCampaignRecipient } from "./campaign-policy";
 import { tienePrecioReal } from "@/lib/notifications/empujones-del-perfil";
 
 export const LIFECYCLE_CAMPAIGNS = [
@@ -23,7 +23,7 @@ const DAY = 86_400_000;
 export function lifecycleCandidate(account: LifecycleAccount, pro: LifecycleProfessional | undefined,
   history: CampaignHistory[], unsubscribed: string[], hasProject: boolean, now = Date.now(), includeUnapproved = false) {
   const email = normalizeCampaignEmail(account.email ?? "");
-  if (account.is_disabled !== false || account.role === "admin" || !email.includes("@") || email.endsWith("@contratacr.test")
+  if (account.is_disabled !== false || isInternalCampaignRecipient(email,account.role) || !email.includes("@") || email.endsWith("@contratacr.test")
     || unsubscribed.some((s) => normalizeCampaignEmail(s) === email)) return null;
   const own = history.filter((r) => r.profile_id === account.id || normalizeCampaignEmail(r.email) === email);
   if (own.some((r) => r.rebote_en || r.status !== "sent" || now - Date.parse(r.enviado_en) < 14 * DAY)) return null;

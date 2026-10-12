@@ -42,6 +42,15 @@ function deliveryDatabase(options: { reserveFailure?: boolean; confirmFailure?: 
 const sent = { ok: true, status: "sent" as const, detail: null };
 
 test.describe("campaign delivery and permanent notification contracts", () => {
+  test("the preview mailbox never receives a real campaign or acquires a receipt", async () => {
+    const { db, rows } = deliveryDatabase();
+    let calls = 0;
+    expect(await deliverCampaignOnce(db, REVIEW_CAMPAIGN.key, " IsaacSanchezMonge@gmail.com ", async () => {
+      calls++; return { ok: true, status: "sent", detail: null };
+    })).toBe("skipped");
+    expect(calls).toBe(0);
+    expect(rows.size).toBe(0);
+  });
   test("simultaneous clicks reserve one recipient before sending", async () => {
     const { db, rows } = deliveryDatabase();
     let calls = 0;
