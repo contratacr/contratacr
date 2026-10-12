@@ -9,6 +9,7 @@ import { Link } from "@/i18n/navigation";
 import { detectIdType } from "@/lib/cedula";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
 import { createClient } from "@/lib/supabase/client";
+import type { DashboardProfileData } from "@/lib/dashboard-bootstrap-cache";
 import { useAuth } from "@/hooks/use-auth";
 import { cn, getInitials } from "@/lib/utils";
 import { PhoneInput, hasPhoneNumber, isPhoneComplete } from "@/components/ui/phone-input";
@@ -85,8 +86,10 @@ function ProfileSection({
 // by the unified panel's "Usar servicios" mode. The "Ofrecer servicios" invitation
 // lives in the panel sidebar, so it is not repeated here.
 export function BasicProfileSection({
+  initialProfile = null,
   extraSections = [],
 }: {
+  initialProfile?: DashboardProfileData | null;
   extraSections?: ExtraProfileSection[];
 }) {
   const { user } = useAuth();
@@ -97,8 +100,8 @@ export function BasicProfileSection({
   // A client-only account (offering not unlocked) gets the "Ofrecer mis servicios"
   // invitation at the END of this section — that's how they start offering.
 
-  const [profileData, setProfileData] = useState<{ full_name: string; phone?: string; avatar_url?: string; cedula?: string | null; client_identity_status?: "verified" | "pending" | "unverified" | null } | null>(null);
-  const [profileForm, setProfileForm] = useState({ full_name: "", phone: "" });
+  const [profileData, setProfileData] = useState<{ full_name: string; phone?: string; avatar_url?: string; cedula?: string | null; client_identity_status?: "verified" | "pending" | "unverified" | null } | null>(() => initialProfile ? { ...initialProfile, full_name: initialProfile.full_name ?? "" } : null);
+  const [profileForm, setProfileForm] = useState({ full_name: initialProfile?.full_name ?? "", phone: initialProfile?.phone ?? "" });
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
   const [tocado, setProfileDirty] = useState(false);
@@ -108,7 +111,7 @@ export function BasicProfileSection({
   const saveProfileSeq = useRef(0);
   const mountedRef = useRef(true);
   const [photoUploading, setPhotoUploading] = useState(false);
-  const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
+  const [profileAvatar, setProfileAvatar] = useState<string | null>(initialProfile?.avatar_url ?? null);
   const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
   // Lo que manda es el estado final, no el trajín: escribir algo y volver a
   // dejarlo como estaba no deja nada por guardar, así que ni se enciende el

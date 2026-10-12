@@ -237,6 +237,7 @@ export function ProfileCompletion({
             >
               <button
                 type="button"
+                data-completion-step={item.key}
                 onClick={() => irAlPaso(item)}
                 className="flex min-w-0 flex-1 items-center gap-3.5 rounded-xl px-0 py-2 text-left transition-colors hover:bg-[#f8fbfd]"
               >

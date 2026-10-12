@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials, cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { isNativeAppRuntime, useNativeApp } from "@/hooks/use-native-app";
+import { useDashboardCacheSnapshot } from "@/hooks/use-cached-resource";
 import { getDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
 import { useContainedTouchScroll } from "@/hooks/use-contained-touch-scroll";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
@@ -255,7 +256,16 @@ export function DirectChatInbox({ alCambiarSubvista }: {
   const nativeApp = useNativeApp();
   const userId = user?.id ?? null;
   const initialPendingDraft = useMemo(() => buildPendingDraft(searchParams, user?.id, isEn), [isEn, searchParams, user?.id]);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [showArchived, setShowArchived] = useState(searchParams.get("chatStatus") === "archived");
+  const inboxCacheKey = userId ? `chat:conversations:${userId}:${showArchived ? "archived" : "open"}` : null;
+  const cachedConversations = useDashboardCacheSnapshot<Conversation[]>(inboxCacheKey);
+  const [conversationState, setConversations] = useState<Conversation[]>([]);
+  const [pendingList, setLoading] = useState(true);
+  const conversations = pendingList && cachedConversations !== null ? cachedConversations : conversationState;
+  const loading = pendingList && cachedConversations === null;
+  useEffect(() => {
+    if (inboxCacheKey && !pendingList) setDashboardCache(inboxCacheKey, conversationState);
+  }, [inboxCacheKey, pendingList, conversationState]);
   // Espejo de la lista para consultarla sin volver a disparar la carga del hilo
   // cada vez que la lista cambia.
   const conversationsRef = useRef<Conversation[]>([]);
@@ -266,7 +276,6 @@ export function DirectChatInbox({ alCambiarSubvista }: {
   const [messages, setMessages] = useState<DirectMessage[]>([]);
   const [draft, setDraft] = useState(initialPendingDraft.payload?.draftMessage ?? "");
   const [query, setQuery] = useState("");
-  const [showArchived, setShowArchived] = useState(searchParams.get("chatStatus") === "archived");
   const [archivedCount, setArchivedCount] = useState(0);
   // Los bloqueados son una bandeja aparte y no un filtro de la principal: son
   // conversaciones que ya no reciben nada, y mezclarlas con las vivas obligaría
@@ -278,7 +287,6 @@ export function DirectChatInbox({ alCambiarSubvista }: {
   // falta aparte de la lista porque una bloqueada NO está en la lista —se
   // esconde a propósito— y aun así se puede abrir desde la ficha o por enlace.
   const [hiloAbierto, setHiloAbierto] = useState<Conversation | null>(null);
-  const [loading, setLoading] = useState(true);
   const bandejasRef = useRef<{ open: Conversation[] | null; archived: Conversation[] | null }>({ open: null, archived: null });
   // La bandeja que se ve AHORA. Una respuesta que llega tarde de la otra solo
   // alimenta su memoria: sin esto, ir y volver rápido pintaba en Chats la
@@ -588,7 +596,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
     // Cada bandeja guarda su última lista en memoria: pasar de Chats a
     // Archivados pinta lo que ya se tenía y refresca detrás, sin esqueleto.
     const enMemoria = bandejasRef.current[showArchived ? "archived" : "open"];
-    const warm = quiet ? null : enMemoria ?? (!showArchived ? (readCachedConversations() as Conversation[] | null) : null);
+    const warm = quiet ? null : enMemoria ?? (inboxCacheKey ? getDashboardCache<Conversation[]>(inboxCacheKey) : null) ?? (!showArchived ? (readCachedConversations() as Conversation[] | null) : null);
     if (warm) {
       setConversations(warm);
       setLoading(false);
@@ -655,7 +663,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
     } catch (err) {
       setError(err instanceof Error ? err.message : isEn ? "Could not load messages." : "No se pudieron cargar los mensajes.");
     } finally { if (!quiet) setLoading(false); }
-  }, [isEn, pendingDraft, pendingDraftPayload, showArchived, user?.id]);
+  }, [inboxCacheKey, isEn, pendingDraft, pendingDraftPayload, showArchived, user?.id]);
 
   // Al recargar el hilo, cada mensaje volvía como un objeto nuevo aunque fuera
   // el mismo: React rehacía todas las burbujas y las imágenes se volvían a

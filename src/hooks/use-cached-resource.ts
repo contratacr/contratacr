@@ -28,6 +28,15 @@ const REFRESH_EVENTS = ["notificationsChanged", "focus"] as const;
 const noop = () => {};
 const serverSnapshot = () => null;
 
+/** Read cached data before paint, with a deterministic server snapshot. */
+export function useDashboardCacheSnapshot<T>(key: string | null) {
+  const subscribe = useCallback(
+    (onChange: () => void) => (key ? subscribeDashboardCache(key, onChange) : noop), [key],
+  );
+  const snapshot = useCallback(() => key ? getDashboardCache<T>(key) : null, [key]);
+  return useSyncExternalStore(subscribe, snapshot, serverSnapshot);
+}
+
 export function useCachedResource<T>(key: string | null, loader: () => Promise<T>, fallback: T, options: Options = {}) {
   const { refreshOn = false } = options;
   // The loader is usually an inline closure; it is read through a ref so a new
@@ -39,13 +48,7 @@ export function useCachedResource<T>(key: string | null, loader: () => Promise<T
     fallbackRef.current = fallback;
   });
 
-  // The cache is the store; React re-renders whenever this key is written.
-  const subscribe = useCallback(
-    (onChange: () => void) => (key ? subscribeDashboardCache(key, onChange) : noop),
-    [key],
-  );
-  const getSnapshot = useCallback(() => (key ? getDashboardCache<T>(key) : null), [key]);
-  const current = useSyncExternalStore(subscribe, getSnapshot, serverSnapshot);
+  const current = useDashboardCacheSnapshot<T>(key);
   const data = current ?? fallback;
   const loading = Boolean(key) && current === null;
 

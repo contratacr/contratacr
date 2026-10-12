@@ -21,7 +21,8 @@ import { AdjuntosDelMensaje, CompositorDeSoporte } from "@/components/support/co
 import { conservarEnlaces, type AdjuntoDeSoporte } from "@/lib/support/adjuntos";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { PanelEmptyState, PanelFilterEmpty, PanelListSkeleton } from "@/components/ui/content-loading";
-import { getDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
+import { useDashboardCacheSnapshot } from "@/hooks/use-cached-resource";
+import { getDashboardCache, setDashboardCache, olvidarDashboardCache } from "@/lib/dashboard-prefetch-cache";
 
 type Ticket = {
   id: string;
@@ -157,17 +158,11 @@ export function SupportTickets({
   const dia = (d: string) => new Date(d).toLocaleDateString(dateLocale, { day: "numeric", month: "long" });
   const hora = (d: string) => new Date(d).toLocaleTimeString(dateLocale, { hour: "2-digit", minute: "2-digit" });
   const fmt = (d: string) => new Date(d).toLocaleString(dateLocale, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-  const [items, setItems] = useState<Ticket[]>([]);
-  const [loading, setLoading] = useState(true);
-  // Caché de sesión de la lista: al volver a Soporte se pinta lo último visto y
-  // la consulta se repite por detrás. El esqueleto solo sale la primera vez.
   const claveCache = user ? `support:tickets:${user.id}` : null;
-  useEffect(() => {
-    if (!claveCache) return;
-    const cacheados = getDashboardCache<Ticket[]>(claveCache);
-    // queueMicrotask: la regla de lint no permite setState síncrono en un efecto.
-    if (cacheados) queueMicrotask(() => { setItems(cacheados); setLoading(false); });
-  }, [claveCache]);
+  const cachedItems = useDashboardCacheSnapshot<Ticket[]>(claveCache);
+  const [pending, setLoading] = useState(true);
+  const items = useMemo(() => cachedItems ?? [], [cachedItems]);
+  const loading = pending && cachedItems === null;
   const [loadError, setLoadError] = useState(false);
   const [filter, setFilter] = useState<string>("open");
   // Ticket ids with an UNREAD admin reply (from the notifications table) → drives
@@ -270,6 +265,7 @@ export function SupportTickets({
     // SIN él —para el primero, una lista vacía—, así que mientras llegaba la
     // nueva se pintaba «Todavía no tienes tiquetes» y un instante después el
     // tiquete recién creado. Eso es el parpadeo.
+    if (esperandoNuevo && claveCache) olvidarDashboardCache(claveCache);
     if (esperandoNuevo || !claveCache || !getDashboardCache<Ticket[]>(claveCache)) setLoading(true);
     setLoadError(false);
     fetchWithSessionRetry("/api/support")
@@ -279,11 +275,9 @@ export function SupportTickets({
         return data;
       })
       .then(({ tickets }) => {
-        setItems(tickets ?? []);
         if (claveCache) setDashboardCache(claveCache, tickets ?? []);
       })
       .catch(() => {
-        setItems([]);
         setLoadError(true);
       })
       .finally(() => setLoading(false));
