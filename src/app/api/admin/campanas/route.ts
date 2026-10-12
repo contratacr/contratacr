@@ -27,7 +27,7 @@ async function campaignState(db: Admin) {
     readAll((from, to) => db.from("professionals")
       .select("profile_id,slug,review_count,created_at,profiles!inner(email,full_name,is_disabled)")
       .eq("review_count", 0).eq("is_banned", false).eq("oculto_del_buscador", false)
-      .eq("profiles.is_disabled", false).not("slug", "is", null).order("profile_id").range(from, to)),
+      .eq("profiles.is_disabled", false).neq("profiles.role", "admin").not("slug", "is", null).order("profile_id").range(from, to)),
     readAll((from, to) => db.from("admin_campaign_sends")
       .select("email, campana, status, enviado_en, abierto_en, click_en, rebote_en")
       .order("id").range(from, to)),
@@ -174,7 +174,7 @@ export async function POST(request: Request) {
         const [{ data: current, error: currentError }, { data: baja, error: bajaError }, { data: rebotes, error: reboteError }] = await Promise.all([
           db.from("professionals").select("id,created_at,profiles!inner(email)")
           .eq("review_count", 0).eq("is_banned", false).eq("oculto_del_buscador", false)
-          .eq("profiles.is_disabled", false).eq("profiles.email", client.email)
+          .eq("profiles.is_disabled", false).neq("profiles.role", "admin").eq("profiles.email", client.email)
           .not("slug", "is", null).limit(1),
           db.from("email_bajas").select("correo").ilike("correo", client.email).limit(1),
           db.from("admin_campaign_sends").select("rebote_en").ilike("email", client.email).not("rebote_en", "is", null).limit(1),

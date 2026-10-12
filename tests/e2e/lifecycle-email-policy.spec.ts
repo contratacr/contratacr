@@ -50,3 +50,7 @@ test("the worker rejects unauthenticated requests before accessing recipients",a
   const result=await POST(new Request("https://contratacr.com/api/internal/campaigns",{method:"POST"}));
   expect([401,503]).toContain(result.status);
 });
+test("the preview mailbox is excluded even if its account loses the admin role",() => {
+  expect(lifecycleCandidate({...account,email:" IsaacSanchezMonge@gmail.com "},pro,[],[],false,now)).toBeNull();
+  expect(lifecycleCandidate({...account,role:"admin"},pro,[],[],false,now)).toBeNull();
+});

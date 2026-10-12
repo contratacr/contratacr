@@ -35,6 +35,9 @@ export type CampaignHistory = {
   abierto_en?: string | null; click_en?: string | null; rebote_en?: string | null;
 };
 export function normalizeCampaignEmail(email: string) { return email.trim().toLowerCase(); }
+export function isInternalCampaignRecipient(email: string, role?: string | null) {
+  return role === "admin" || normalizeCampaignEmail(email) === "isaacsanchezmonge@gmail.com";
+}
 
 export function eligibleCampaignRecipients<T extends { email: string }>(
   accounts: T[], history: CampaignHistory[], unsubscribed: string[], now = Date.now(), ownKeys: string[] = SERVICES_CAMPAIGN.historyKeys,
@@ -49,7 +52,7 @@ export function eligibleCampaignRecipients<T extends { email: string }>(
   const seen = new Set<string>();
   return accounts.filter((account) => {
     const email = normalizeCampaignEmail(account.email);
-    if (blocked.has(email) || seen.has(email) || !email.includes("@") || email.endsWith("@contratacr.test")) return false;
+    if (isInternalCampaignRecipient(email) || blocked.has(email) || seen.has(email) || !email.includes("@") || email.endsWith("@contratacr.test")) return false;
     seen.add(email);
     return true;
   });

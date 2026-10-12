@@ -1,6 +1,6 @@
 import type { createAdminClient } from "@/lib/supabase/admin";
 import type { EmailResult } from "@/lib/email/send";
-import { normalizeCampaignEmail } from "@/lib/email/campaign-policy";
+import { isInternalCampaignRecipient, normalizeCampaignEmail } from "@/lib/email/campaign-policy";
 
 type Admin = ReturnType<typeof createAdminClient>;
 
@@ -9,6 +9,7 @@ export async function deliverCampaignOnce(
   { coordinated = false }: { coordinated?: boolean } = {},
 ): Promise<"sent" | "skipped" | "uncertain" | "already_reserved"> {
   const email = normalizeCampaignEmail(recipient);
+  if (isInternalCampaignRecipient(email)) return "skipped";
   const { data: claimed, error: reserveError } = coordinated
     ? await admin.rpc("claim_outreach_email", { p_campaign: campaign, p_email: email })
     : { ...(await admin.from("admin_campaign_sends").insert({ campana: campaign, email, status: "sending" })), data: true };
