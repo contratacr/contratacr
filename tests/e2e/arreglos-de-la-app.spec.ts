@@ -25,7 +25,7 @@ test.describe("check de identidad en las listas", () => {
       const malas = await page.evaluate(() => {
         // El nombre más largo posible: cede él, nunca la insignia.
         for (const el of document.querySelectorAll("[data-verification-badge]")) {
-          const nombre = el.parentElement?.querySelector(".truncate");
+          const nombre = el.parentElement?.parentElement?.querySelector(".truncate");
           if (nombre) nombre.textContent = "Constructora y Remodelaciones Hermanos Rodríguez Villalobos Sociedad Anónima";
         }
         const fallos: string[] = [];
