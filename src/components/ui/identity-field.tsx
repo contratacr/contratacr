@@ -123,7 +123,7 @@ export function IdentityField({
 
   return (
     <div className="flex flex-col gap-3">
-      <VerificationBadgeEducation context="registration" />
+      <VerificationBadgeEducation />
       <CedulaInput
         required
         value={cedula}

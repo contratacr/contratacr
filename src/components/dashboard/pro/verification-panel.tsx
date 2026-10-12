@@ -315,7 +315,7 @@ export function VerificationPanel({
   if (noCrId && status !== "verified") {
     return (
       <div className="space-y-5">
-        <VerificationBadgeEducation context="panel" />
+        <VerificationBadgeEducation />
         <VerificationSummary
           title={
             status === "rejected"
@@ -395,7 +395,7 @@ export function VerificationPanel({
 
   return (
     <div className="space-y-4">
-      <VerificationBadgeEducation context="panel" />
+      <VerificationBadgeEducation />
       {status !== "verified" && (
         <VerificationSummary
           title={

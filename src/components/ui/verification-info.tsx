@@ -16,22 +16,22 @@ export function VerificationExplanation({ open, onClose }: { open: boolean; onCl
 
 const subscribeReady = () => () => {};
 
-export function VerificationInfo() {
+export function VerificationInfo({ educational = false }: { educational?: boolean } = {}) {
   const ready = useSyncExternalStore(subscribeReady, () => true, () => false);
   const t = useTranslations("verificationBadge");
   const [open, setOpen] = useState(false);
   return <span className="contents" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
-    <button type="button" disabled={!ready} data-verification-badge aria-label={t("action")} aria-haspopup="dialog" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen(true); }} className="relative z-10 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[#009FD9] pointer-events-auto hover:bg-[#eaf7fc] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]">
+    <button type="button" disabled={!ready} data-verification-badge aria-label={t(educational ? "educationAction" : "action")} aria-haspopup="dialog" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen(true); }} className="relative z-10 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[#009FD9] pointer-events-auto hover:bg-[#eaf7fc] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]">
       <VerifiedSeal className="h-4 w-4" />
     </button>
     <VerificationExplanation open={open} onClose={() => setOpen(false)} />
   </span>;
 }
 
-export function VerificationBadgeEducation({ context }: { context: "registration" | "panel" }) {
+export function VerificationBadgeEducation() {
   const t = useTranslations("verificationBadge");
-  return <p data-verification-education className="flex items-start gap-2 text-xs leading-5 text-[#68778d]">
-    <VerifiedSeal className="mt-0.5 h-4 w-4 shrink-0 text-[#009FD9]" />
-    <span>{t(context === "registration" ? "registrationHelp" : "panelHelp")}</span>
-  </p>;
+  return <div data-verification-education className="flex items-start gap-2 text-xs leading-5 text-[#68778d]">
+    <VerificationInfo educational />
+    <p>{t("help")}</p>
+  </div>;
 }

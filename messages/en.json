@@ -3274,11 +3274,11 @@
   "verificationBadge": {
     "title": "Identity verified",
     "action": "Identity verified: see what was checked",
-    "description": "ContrataCR checked this account’s identification using official records or document review.",
+    "description": "The check indicates that ContrataCR checked the account’s identification using official records or document review.",
     "scope": "The badge does not guarantee work quality or certify professional qualifications. Also review the profile, reviews, and service details.",
     "close": "Close",
     "understood": "Got it",
-    "registrationHelp": "The check next to a name identifies accounts whose identity we have verified. It appears after verification is approved; signing up does not automatically grant it.",
-    "panelHelp": "Once your identity is verified, the check will appear next to your name on cards. People can tap it to see what we checked."
+    "help": "Once your identity is verified, the check will appear next to your name on cards.",
+    "educationAction": "What the identity check means"
   }
 }

@@ -46,9 +46,13 @@ test("the professional profile keeps the written verification label", async ({ p
   await expect(page.locator("[data-cedula-verificada]").filter({ visible: true }).first()).toContainText("Verificado");
 });
 
-test("registration explains that the check requires approved verification", async ({ page }) => {
+test("registration explains the badge and opens the shared explanation", async ({ page }) => {
   await gotoOK(page, "/registro/profesional");
-  await expect(page.locator("[data-verification-education]")).toContainText("registrarte no lo otorga automáticamente");
+  const help = page.locator("[data-verification-education]");
+  await expect(help).toHaveText("Cuando tu identidad esté verificada, el check aparecerá junto a tu nombre en las tarjetas.");
+  await help.getByRole("button", { name: "Qué significa el check de identidad", exact: true }).click();
+  await expect(page.getByRole("dialog")).toContainText("El check indica que ContrataCR comprobó");
+  await expect(page.getByRole("dialog")).toContainText("no garantiza la calidad del trabajo");
   await expectNoHorizontalOverflow(page);
 });
 
@@ -56,7 +60,10 @@ test("the panel explains where verified identity is displayed", async ({ page })
   test.skip(!canRunSeededRegression(), "Requires isolated regression accounts.");
   await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
   await gotoOK(page, "/dashboard/profesional?tab=verificacion");
-  await expect(page.locator("[data-verification-education]").filter({ visible: true }).first()).toContainText("el check aparecerá junto a tu nombre");
+  const help = page.locator("[data-verification-education]").filter({ visible: true }).first();
+  await expect(help).toHaveText("Cuando tu identidad esté verificada, el check aparecerá junto a tu nombre en las tarjetas.");
+  await help.getByRole("button", { name: "Qué significa el check de identidad", exact: true }).click();
+  await expect(page.getByRole("dialog")).toContainText("El check indica que ContrataCR comprobó");
 });
 
 test("the badge explanation is translated into English", async ({ page }) => {
