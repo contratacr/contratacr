@@ -9,7 +9,7 @@ import { Link } from "@/i18n/navigation";
 import { SupportLink } from "@/components/support/support-link";
 import { cleanId, detectIdType, isValidId } from "@/lib/cedula";
 import { caseRef, type VerificationStatus } from "@/lib/verification";
-import { VerificationBadgeEducation } from "@/components/ui/verification-info";
+import { VerificationBadgeEducation, VerificationInfo } from "@/components/ui/verification-info";
 import { VerifiedSeal } from "@/components/ui/verified-seal";
 
 interface Props {
@@ -315,7 +315,7 @@ export function VerificationPanel({
   if (noCrId && status !== "verified") {
     return (
       <div className="space-y-5">
-        <VerificationBadgeEducation />
+        <VerificationBadgeEducation panel />
         <VerificationSummary
           title={
             status === "rejected"
@@ -394,8 +394,8 @@ export function VerificationPanel({
   }
 
   return (
-    <div className="space-y-4">
-      <VerificationBadgeEducation />
+    <div className="space-y-6">
+      <VerificationBadgeEducation panel verified={status === "verified"} />
       {status !== "verified" && (
         <VerificationSummary
           title={
@@ -573,7 +573,7 @@ function CurrentIdentificationPanel({
     // editor de perfil, y una tarjeta blanca con borde dentro de otra tarjeta
     // blanca solo agrega ruido. Se separa con una línea fina, igual que las
     // demás secciones del editor.
-    <section className="border-t border-[#eef2f6] pt-4 first:border-t-0 first:pt-0">
+    <section data-current-identification className="border-t border-[#eef2f6] pt-6 first:border-t-0 first:pt-0">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
           {/* Sin ícono (4-oct-2026): un escudo con visto junto a «no hay
@@ -585,12 +585,12 @@ function CurrentIdentificationPanel({
                 "No hay una identifi…". Y el distintivo solo acompaña a un
                 número real —"Verificado" junto a "no hay identificación" se
                 contradecía. */}
-            <div className="mt-1 flex min-w-0 flex-wrap items-center gap-2">
+            <div className="mt-2 inline-flex max-w-full items-center gap-1">
               {value ? (
                 <>
                   <p className="min-w-0 truncate font-mono text-base font-extrabold tracking-wide text-[#162543]">{value}</p>
                   {statusLabel && (
-                    <VerifiedSeal label={statusLabel} className="h-[18px] w-[18px] shrink-0 text-[#009FD9]" />
+                    <VerificationInfo />
                   )}
                 </>
               ) : (

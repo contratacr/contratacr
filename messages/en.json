@@ -3279,6 +3279,7 @@
     "close": "Close",
     "understood": "Got it",
     "help": "Once your identity is verified, the check will appear next to your name on cards.",
+    "verifiedHelp": "Your identity is verified. The check appears next to your name on cards.",
     "educationAction": "What the identity check means"
   }
 }

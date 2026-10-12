@@ -28,10 +28,13 @@ export function VerificationInfo({ educational = false }: { educational?: boolea
   </span>;
 }
 
-export function VerificationBadgeEducation() {
+export function VerificationBadgeEducation({ panel = false, verified = false }: { panel?: boolean; verified?: boolean } = {}) {
   const t = useTranslations("verificationBadge");
-  return <div data-verification-education className="flex items-start gap-2 text-xs leading-5 text-[#68778d]">
+  return <div data-verification-education className={`flex items-start gap-2 text-xs leading-5 text-[#68778d] ${panel ? "pb-2" : ""}`}>
     <VerificationInfo educational />
-    <p>{t("help")}</p>
+    <div className="min-w-0">
+      {panel && <p className="mb-1 text-sm font-semibold text-[#374151]">{t("educationAction")}</p>}
+      <p>{t(verified ? "verifiedHelp" : "help")}</p>
+    </div>
   </div>;
 }
