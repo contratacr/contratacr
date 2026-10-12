@@ -2,9 +2,11 @@
 
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Briefcase, BriefcaseBusiness, ClipboardList, ImagePlus, ReceiptText } from "lucide-react";
+import { Briefcase, BriefcaseBusiness, ClipboardList, ImagePlus, ReceiptText, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { Link, usePathname } from "@/i18n/navigation";
+import { useSearchParams } from "next/navigation";
+import { useLinkStatus } from "next/link";
 import { OfferTagPercentIcon } from "@/components/icons/offer-tag-percent-icon";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
@@ -17,6 +19,8 @@ import { lockBodyScroll } from "@/lib/body-scroll-lock";
  */
 export function HojaDeCrear({ abierta, onCerrar, esProfesional }: { abierta: boolean; onCerrar: () => void; esProfesional: boolean; avatarUrl?: string | null }) {
   const t = useTranslations("bottomNav");
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const arrastre = useRef<{ y: number } | null>(null);
   const hojaRef = useRef<HTMLDivElement | null>(null);
 
@@ -44,12 +48,12 @@ export function HojaDeCrear({ abierta, onCerrar, esProfesional }: { abierta: boo
       ]
     : [
         { href: "/publicar-proyecto", titulo: t("tileProjectPost"), linea: t("createProjectAsk"), mosaico: "ccr-mosaico-cliente", Icono: ClipboardList },
-        { href: "/cotizar", titulo: t("tileQuote"), linea: t("tileQuoteSub"), mosaico: "ccr-mosaico-pro", Icono: ReceiptText },
+        { href: "/cotizar", titulo: t("tileQuote"), linea: t("tileQuoteSub"), mosaico: "ccr-mosaico-pro", Icono: ReceiptText, Loader2 },
         { href: "/registro/profesional", titulo: t("tileOffer"), linea: t("tileOfferSub"), mosaico: "ccr-mosaico-pro", Icono: BriefcaseBusiness },
       ];
 
   return createPortal(
-    <div className="app-modal-screen app-sheet-compact-screen fixed inset-0 z-[240] flex items-end justify-center" role="dialog" aria-modal="true" aria-label={t("createTitle")}>
+    <div data-testid="native-create-sheet" className="app-modal-screen app-sheet-compact-screen fixed inset-0 z-[240] flex items-end justify-center" role="dialog" aria-modal="true" aria-label={t("createTitle")}>
       <div className="absolute inset-0 bg-[#071426]/40 backdrop-blur-[2px]" onClick={onCerrar} />
       <div
         ref={hojaRef}
@@ -78,11 +82,17 @@ export function HojaDeCrear({ abierta, onCerrar, esProfesional }: { abierta: boo
             <Link
               key={href}
               href={href}
-              onClick={onCerrar}
+              onNavigate={() => {
+                // Cerrar solo si ya estamos en ese destino; en los demás casos
+                // la barra cierra la hoja cuando llega la ruta nueva.
+                const destino = new URL(href, window.location.origin);
+                if (pathname === destino.pathname && searchParams.toString() === destino.searchParams.toString()) onCerrar();
+              }}
               className={`ccr-tarjeta-rol ${opciones.length === 3 && n === 0 ? "col-span-2" : ""} min-w-0 transition-transform active:scale-[0.98]`}
             >
-              <span className={`ccr-tarjeta-rol-mosaico ${mosaico}`} style={{ aspectRatio: "auto", height: 96 }} aria-hidden>
-                <Icono className={icono} strokeWidth={1.4} />
+              <span className={`ccr-tarjeta-rol-mosaico relative ${mosaico}`} style={{ aspectRatio: "auto", height: 96 }}>
+                <Icono aria-hidden className={icono} strokeWidth={1.4} />
+                <CreateNavigationPending />
               </span>
               <span className="mt-3 block truncate whitespace-nowrap text-center text-[15px] font-bold leading-tight text-[#162543]">{titulo}</span>
               {linea && <span className="mt-1 block truncate whitespace-nowrap text-center text-[13px] font-semibold leading-snug text-[#009FD9]">{linea}</span>}
@@ -93,4 +103,10 @@ export function HojaDeCrear({ abierta, onCerrar, esProfesional }: { abierta: boo
     </div>,
     document.body,
   );
+}
+
+function CreateNavigationPending() {
+  const { pending } = useLinkStatus();
+  const t = useTranslations("loading");
+  return pending ? <span role="status" aria-label={t("generic")} className="absolute bottom-2 right-2 rounded-full bg-white/90 p-1.5 text-[#009FD9]"><Loader2 aria-hidden className="h-4 w-4 animate-spin" /></span> : null;
 }
