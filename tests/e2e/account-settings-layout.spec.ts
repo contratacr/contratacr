@@ -67,12 +67,32 @@ for (const professional of [false, true]) {
         await page.locator("#sec-privacidad > button").click();
         const privacy = page.locator("[data-account-privacy]");
         await expect(privacy.getByRole("heading", { name: "Usuarios bloqueados" })).toBeVisible();
+        const closePrivacy = async () => {
+          if ((page.viewportSize()?.width ?? 0) < 640) {
+            await page.getByRole("button", { name: /^Volver/ }).filter({ visible: true }).first().click();
+          } else {
+            await page.locator("#sec-privacidad > button").click();
+          }
+        };
         const unblock = privacy.getByRole("button", { name: "Desbloquear", exact: true });
         await expect(unblock).toBeVisible();
+        await closePrivacy();
+        await page.route("**/api/block", async (route) => {
+          if (route.request().method() === "GET") await new Promise((resolve) => setTimeout(resolve, 500));
+          await route.continue();
+        });
+        await page.locator("#sec-privacidad > button").click();
+        await expect(unblock).toBeVisible();
+        await expect(privacy.getByText("No has bloqueado a nadie.", { exact: true })).toHaveCount(0);
+        await expect(privacy.locator("[data-blocked-users] [aria-busy]")).toHaveCount(0);
         if (native) await expect(privacy.getByRole("switch")).toBeVisible();
         else await expect(privacy.getByRole("switch")).toHaveCount(0);
         await unblock.click();
         await expect(unblock).toHaveCount(0);
+        await closePrivacy();
+        await page.locator("#sec-privacidad > button").click();
+        await expect(privacy.getByText("No has bloqueado a nadie.", { exact: true })).toBeVisible();
+        await expect(privacy.locator("[data-blocked-users] [aria-busy]")).toHaveCount(0);
         const remaining = await page.request.get("/api/block");
         expect(remaining.ok()).toBe(true);
         expect((await remaining.json()).blocked).toEqual([]);

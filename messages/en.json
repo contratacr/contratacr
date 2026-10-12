@@ -3243,6 +3243,8 @@
     "pantallaTexto": "You will not see their profile or posts. You can unblock them from Account and security.",
     "cuentaTitulo": "Blocked users",
     "cuentaTexto": "You do not see their profile or posts, and they cannot message you.",
+    "cuentaError": "We could not load or update your blocked users.",
+    "cuentaReintentar": "Retry",
     "cuentaVacio": "You have not blocked anyone.",
     "desbloquear": "Unblock",
     "tambien": "Also block this user",

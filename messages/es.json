@@ -3243,6 +3243,8 @@
     "pantallaTexto": "No verás su perfil ni sus publicaciones. Puedes desbloquearlo desde Cuenta y seguridad.",
     "cuentaTitulo": "Usuarios bloqueados",
     "cuentaTexto": "No ves su perfil ni sus publicaciones, y no pueden escribirte.",
+    "cuentaError": "No pudimos cargar o actualizar tus usuarios bloqueados.",
+    "cuentaReintentar": "Reintentar",
     "cuentaVacio": "No has bloqueado a nadie.",
     "desbloquear": "Desbloquear",
     "tambien": "También bloquear a este usuario",
