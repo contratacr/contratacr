@@ -165,9 +165,9 @@ export default function LoginPage() {
     const timer = window.setTimeout(() => {
       const params = new URLSearchParams(window.location.search);
       if (params.get("autherror") === "oauth_expired") {
-        setError(locale === "en" ? "This sign-in attempt expired. Choose Google or Apple again to start a new attempt." : "Este intento de acceso venció. Pulsa Google o Apple de nuevo para iniciar un intento nuevo.");
+        setError(t("oauthExpired"));
       } else if (params.get("autherror") === "oauth_failed") {
-        setError(locale === "en" ? "We couldn't complete sign-in. Please try again." : "No pudimos completar el acceso. Intenta de nuevo.");
+        setError(t("oauthFailed"));
       }
       if (params.get("autherror") === "account_deletion_pending") {
         setError(t("accountDeletionPending"));
@@ -541,7 +541,7 @@ export default function LoginPage() {
           </div>
 
           <div className="flex flex-col gap-3">
-            {lastMethod && <p className="text-center text-xs text-[#68778d]">{locale === "en" ? "Last used: " : "Usaste la última vez: "}{lastMethod === "email" ? (locale === "en" ? "Email" : "Correo") : lastMethod === "apple" ? "Apple" : "Google"}</p>}
+            {lastMethod && <p className="text-center text-xs text-[#68778d]">{t("lastUsed", { method: lastMethod === "email" ? t("emailMethod") : lastMethod === "apple" ? "Apple" : "Google" })}</p>}
             {/* The same Apple identity is available in browsers and the native app. */}
             <button
               type="button"
@@ -550,7 +550,7 @@ export default function LoginPage() {
               className={`w-full flex items-center justify-center gap-3 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${socialHint === "apple" ? "border-[#009FD9] bg-black text-white ring-2 ring-[#009FD9]/30" : "border-black bg-black text-white hover:bg-[#202020]"}`}
             >
               <svg aria-hidden="true" className="h-5 w-5 fill-current" viewBox="0 0 24 24"><path d="M17.05 12.54c-.03-3.01 2.46-4.48 2.57-4.55a5.5 5.5 0 0 0-4.33-2.34c-1.82-.19-3.58 1.09-4.5 1.09-.94 0-2.36-1.07-3.9-1.04A5.73 5.73 0 0 0 2.08 8.6c-2.09 3.62-.53 8.95 1.47 11.88 1 1.43 2.17 3.03 3.71 2.97 1.51-.06 2.08-.95 3.91-.95 1.81 0 2.35.95 3.92.91 1.62-.02 2.64-1.44 3.6-2.88a11.78 11.78 0 0 0 1.65-3.36 5.2 5.2 0 0 1-3.29-4.63ZM14.1 3.72A5.28 5.28 0 0 0 15.3 0a5.35 5.35 0 0 0-3.46 1.77 5.02 5.02 0 0 0-1.23 3.58 4.4 4.4 0 0 0 3.49-1.63Z" /></svg>
-              {appleLoading ? t("redirecting") : locale === "en" ? "Continue with Apple" : "Continuar con Apple"}
+              {appleLoading ? t("redirecting") : t("continueApple")}
             </button>
             {/* Google */}
             {browserRuntime ? (
