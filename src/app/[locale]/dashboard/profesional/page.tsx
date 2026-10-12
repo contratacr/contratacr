@@ -1966,13 +1966,13 @@ export default function DashboardPage() {
                 />
               </div>
               <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5 text-left sm:block sm:w-auto sm:flex-none sm:self-center sm:py-0">
-                <div className="flex min-w-0 max-w-full items-center gap-1.5 sm:hidden">
+                <div className="flex min-w-0 max-w-full items-center gap-0 sm:hidden">
                   <h1 data-testid="dashboard-identity-name" className="min-w-0 truncate text-[18px] font-bold leading-[1.15] text-[#162543]" title={displayName}>
                     {mobileHeaderName || displayName}
                   </h1>
                   {identityBadge()}
                 </div>
-                <div className="hidden min-w-0 max-w-full flex-nowrap items-center gap-2 sm:flex">
+                <div className="hidden min-w-0 max-w-full flex-nowrap items-center gap-0 sm:flex">
                   <h1 className="min-w-0 shrink truncate whitespace-nowrap text-2xl font-bold leading-tight text-[#162543]" title={displayName}>
                     {compactHeaderName}
                   </h1>

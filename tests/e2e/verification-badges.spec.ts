@@ -94,6 +94,13 @@ test("dashboard name keeps only an interactive identity check", async ({ page })
   const check = name.locator("..").locator("[data-verification-badge]");
   await expect(check).toBeVisible();
   expect(await check.textContent()).toBe("");
+  const gap = await check.evaluate((el) => {
+    const icon = el.querySelector("svg")!.getBoundingClientRect();
+    const name = el.closest("div")!.querySelector("h1")!.getBoundingClientRect();
+    return icon.left - name.right;
+  });
+  expect(gap).toBeGreaterThanOrEqual(0);
+  expect(gap).toBeLessThanOrEqual(5);
   await expect(name.locator("..").locator("[data-cedula-verificada]")).toHaveCount(0);
   await check.click();
   await expect(page.getByRole("dialog")).toContainText("no garantiza la calidad del trabajo");
