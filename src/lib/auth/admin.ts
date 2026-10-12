@@ -1,3 +1,6 @@
+import { cache } from "react";
+import { getLocale } from "next-intl/server";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -10,15 +13,15 @@ export type AdminUser = {
 };
 
 /**
- * Returns the current admin user (role === 'admin') or null.
+ * Separates anonymous sessions from authenticated accounts without admin access.
  * Reads the session from cookies, then confirms the role from the profiles
  * table using the service-role client (so an RLS gap can never grant access).
  */
-export async function getAdminUser(): Promise<AdminUser | null> {
+export const getAdminAccess = cache(async (): Promise<{ authenticated: boolean; admin: AdminUser | null }> => {
   const supabase = await createClient();
   // Never throw on a stale/invalid session — treat it as logged-out.
   const user = await safeGetUser(supabase);
-  if (!user) return null;
+  if (!user) return { authenticated: false, admin: null };
 
   const admin = createAdminClient();
   const { data: profile } = await admin
@@ -27,22 +30,30 @@ export async function getAdminUser(): Promise<AdminUser | null> {
     .eq("id", user.id)
     .maybeSingle();
 
-  if (!profile || profile.role !== "admin") return null;
+  if (!profile || profile.role !== "admin") return { authenticated: true, admin: null };
 
   return {
-    id: user.id,
-    email: profile.email ?? user.email ?? "",
-    fullName: profile.full_name ?? "Administrador",
+    authenticated: true,
+    admin: {
+      id: user.id,
+      email: profile.email ?? user.email ?? "",
+      fullName: profile.full_name ?? "Administrador",
+    },
   };
+});
+
+export async function getAdminUser(): Promise<AdminUser | null> {
+  return (await getAdminAccess()).admin;
 }
 
 /**
- * Server-component guard. Redirects non-admins to the admin login page.
+ * Server-component guard. Redirects to the entry page, which distinguishes
+ * anonymous visitors from authenticated accounts without administrator access.
  * Use at the top of every /admin server component / layout.
  */
 export async function requireAdmin(): Promise<AdminUser> {
   const adminUser = await getAdminUser();
-  if (!adminUser) redirect("/admin");
+  if (!adminUser) redirect(`${prefijoDeIdioma(await getLocale())}/admin`);
   return adminUser;
 }
 

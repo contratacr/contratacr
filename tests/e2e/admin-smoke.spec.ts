@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "playwright/test";
-import { expectHealthyPage, expectVisibleText, gotoOK, resetAuth, waitForInteractivePage } from "./helpers";
+import { expectHealthyPage, expectVisibleText, gotoOK, loginAs, resetAuth, waitForInteractivePage } from "./helpers";
 import { canRunSeededRegression, ensureRegressionSeed, regressionAdminClient, type RegressionSeedState } from "./seed";
 import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccount } from "./disposable-account";
 
@@ -82,6 +82,44 @@ test.describe("@admin surfaces", () => {
     const marketplace = await request.patch("/api/admin/marketplace", { data: { kind: "offers", id: "00000000-0000-4000-8000-000000000000", status: "paused" } });
     expect([401, 403]).toContain(marketplace.status());
   });
+
+  for (const role of ["client", "professional"] as const) {
+    test(`admin access denied to a signed-in ${role} without ending their session`, async ({ page }) => {
+      test.setTimeout(180_000);
+      let account: DisposableAccount | undefined;
+      try {
+        account = await createDisposableAccount({ prefix: `admin-denied-${role}` });
+        const database = regressionAdminClient();
+        // Claiming admin in editable auth metadata must never grant admin access.
+        const { error: metadataError } = await database.auth.admin.updateUserById(account.id, {
+          user_metadata: { role: "admin", onboarding_completed: true },
+        });
+        if (metadataError) throw metadataError;
+        const { error: roleError } = await database.from("profiles").update({ role }).eq("id", account.id);
+        if (roleError) throw roleError;
+        await loginAs(page, account.email, account.password);
+
+        for (const route of [...adminRoutes, { path: "/admin/campanas" }, { path: "/admin/contactos" },
+          { path: `/admin/usuarios/${account.id}` }, { path: `/admin/proveedores/${account.id}` }]) {
+          await gotoOK(page, route.path);
+          await expect(page.getByRole("heading", { name: "Acceso restringido" })).toBeVisible();
+          await expect(page.getByText("No tienes permisos para acceder a esta sección.", { exact: false })).toBeVisible();
+          await expect(page.getByPlaceholder(/Correo de administrador/i)).toHaveCount(0);
+        }
+        for (const path of ["/api/admin/users", "/api/admin/projects", "/api/admin/pending-counts"]) {
+          expect((await page.request.get(path)).status()).toBe(403);
+        }
+        await page.getByRole("link", { name: "Volver al inicio" }).click();
+        await expect(page).toHaveURL(/\/$/);
+        expect((await page.context().cookies()).some((cookie) => cookie.name.startsWith("sb-") && cookie.name.includes("-auth-token"))).toBe(true);
+        await gotoOK(page, "/en/admin/usuarios");
+        await expect(page.getByRole("heading", { name: "Access restricted" })).toBeVisible();
+        await expect(page.getByRole("link", { name: "Back to home" })).toBeVisible();
+      } finally {
+        await cleanupDisposableAccount(account);
+      }
+    });
+  }
 
   test("admin panel sections render with an isolated disposable administrator", async ({ page }) => {
     let account: DisposableAccount | undefined;

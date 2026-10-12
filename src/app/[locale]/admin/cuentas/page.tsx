@@ -1,13 +1,13 @@
 import { getAdminUser } from "@/lib/auth/admin";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { AdminAccounts } from "@/components/admin/admin-accounts";
-import { AdminLogin } from "@/components/admin/admin-login";
+import { AdminAccess } from "@/components/admin/admin-access";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminAccountsPage() {
   const admin = await getAdminUser();
-  if (!admin) return <AdminLogin />;
+  if (!admin) return <AdminAccess />;
   return (
     <AdminShell adminName={admin.fullName} active="cuentas">
       <AdminAccounts />
