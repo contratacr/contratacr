@@ -10,7 +10,6 @@ import { supportsVideoConsultCategory, getCategoryLabel } from "@/lib/data/categ
 import { primaryPricingLabel, splitPricingLabel, type PricingTier } from "@/lib/pricing";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { ResponsiveServiceSummary } from "@/components/professionals/responsive-service-summary";
-import { CEDULA_COMPACTA, CedulaVerificada } from "@/components/ui/cedula-verificada";
 
 import { ResponsiveVerifiedName } from "@/components/professionals/responsive-verified-name";
 
@@ -116,7 +115,6 @@ interface ProfessionalCardProps {
 
 export function ProfessionalCard({ professional, className, searchedPlace, highlightMetric = "rating", activeCategory, viewerProfileId, rank, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, searchReturnHref }: ProfessionalCardProps) {
   const tCard = useTranslations("card");
-  const tPerfil = useTranslations("profile");
   const tSchedule = useTranslations("schedule");
   const locale = useLocale();
   // Safe category label: if a translation key is missing, next-intl returns the
@@ -329,7 +327,7 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
   // ── LEFT-column professional info (slotted into ProfessionalSchedule, which owns the
   // desktop two-column layout). Each block is a direct child of the schedule's left
   // column `flex flex-col gap-2`, so vertical spacing comes from that gap — no per-section
-  // margins. Order: photo + name/Verificado/personal name + price → tags → rating →
+  // margins. Order: photo + name/check/personal name + price → tags → rating →
   // location. The location TABS + selected address come AFTER this (in ProfessionalSchedule).
   const info = (
     <>
@@ -366,15 +364,16 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
                   the ellipsis only appears when the name really does not fit, with the
                   verified seal right after it. */}
               <div className="flex min-w-0 flex-1 items-start gap-2 pr-8 lg:items-baseline lg:pr-0">
-                <Link href={profileHref} className="relative z-10 block min-w-0 flex-1">
+                <div className="relative z-10 block min-w-0 flex-1">
                   <h3 title={businessName ? businessName : professional.fullName} className="min-w-0 font-bold text-[#111827] text-[15px] leading-[1.1] hover:text-[#009FD9] transition-colors">
                     <ResponsiveVerifiedName
                       name={displayName.primaryDesktop}
-                      verified={false}
+                      href={profileHref}
+                      verified={isVerified}
                       verifiedLabel={tCard("verifiedTitle")}
                     />
                   </h3>
-                </Link>
+                </div>
                 {desktopPrice}
               </div>
               {(displayProfessions.length > 0 || professional.isFeatured) && (
@@ -393,19 +392,13 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
                   separator=","
                 />
               )}
-              {/* La fila de CONFIANZA: reseñas y «Verificado», en ese
-                  orden. Con reseñas, la cédula cierra la línea a la derecha,
-                  encima del precio; sola, se queda a la izquierda: 274 de 313
-                  profesionales tienen cédula y ninguna reseña, y a la derecha
-                  quedaba flotando. Sin «·»: la estrella y el sello ya separan.
-                  El precio bajó a la fila de la zona (8-oct-2026). */}
-              {(mobileMetric || isVerified) && (
+              {/* Reseñas o experiencia; el check ya acompaña al nombre. */}
+              {mobileMetric && (
                 <div
                   data-testid="professional-card-mobile-meta-row"
                   className="mt-1.5 flex min-w-0 items-center justify-between gap-3 lg:hidden"
                 >
                   {mobileMetric}
-                  {isVerified && <CedulaVerificada texto={tPerfil("verificadoCorto")} className={CEDULA_COMPACTA} />}
                 </div>
               )}
             </div>
@@ -427,10 +420,9 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
             </div>
             </>
           )}
-          {(desktopMetric || isVerified) && (
+          {desktopMetric && (
           <div className="mt-1.5 hidden min-w-0 items-center gap-3 lg:flex">
               {desktopMetric}
-              {isVerified && <CedulaVerificada texto={tPerfil("verificadoCorto")} className={CEDULA_COMPACTA} />}
           </div>
           )}
         </div>

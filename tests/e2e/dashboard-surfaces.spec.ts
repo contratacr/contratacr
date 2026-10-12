@@ -368,7 +368,7 @@ test.describe("@seeded dashboard surfaces", () => {
     }
 
     await gotoOK(page, "/dashboard/profesional?tab=connections&mode=use");
-    await expect(page.locator('svg[aria-label="Verificado"]').filter({ visible: true }).first()).toBeVisible();
+    await expect(page.locator("[data-verification-badge]").filter({ visible: true }).first()).toBeVisible();
   });
 
   test("every populated dashboard filter works without clipping at 320, 390 and desktop widths", async ({ page }) => {

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { IdCard, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { CedulaInput } from "@/components/ui/cedula-input";
+import { VerificationBadgeEducation } from "@/components/ui/verification-info";
 import { IdentityInfoBlock } from "@/components/ui/identity-info-block";
 import { cleanId, isValidId } from "@/lib/cedula";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
@@ -122,6 +123,7 @@ export function IdentityField({
 
   return (
     <div className="flex flex-col gap-3">
+      <VerificationBadgeEducation context="registration" />
       <CedulaInput
         required
         value={cedula}

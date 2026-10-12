@@ -24,7 +24,8 @@ import { PanelEmptyState } from "@/components/ui/content-loading";
 import { WhatsAppLogo } from "@/components/ui/whatsapp-logo";
 import { marketplaceLocale } from "@/lib/marketplace-copy";
 import { type ProyectoPublico } from "@/lib/proyectos";
-import { CEDULA_COMPACTA, CedulaVerificada } from "@/components/ui/cedula-verificada";
+import { CedulaVerificada } from "@/components/ui/cedula-verificada";
+import { VerificationInfo } from "@/components/ui/verification-info";
 import { MenuProyecto } from "@/components/projects/menu-proyecto";
 import { PublishProjectModal } from "@/components/projects/publish-project-modal";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
@@ -307,10 +308,8 @@ function retrato(proyecto: ProyectoPublico) {
 // primera impresión. Se decide adentro, con el proyecto leído.
 function Tarjeta({ proyecto, en, elegida = false, onElegir }: { proyecto: ProyectoPublico; en: boolean; elegida?: boolean; onElegir?: () => void }) {
   const copy = COPY[en ? "en" : "es"];
-  const tPerfil = useTranslations("profile");
   return (
-    <Link
-      href={rutaProyecto(proyecto)}
+    <article
       // En computadora la ficha se abre AL LADO, como en Empleos y
       // Promociones: la tarjeta la elige sin salir de la lista. En el teléfono
       // no hay lado, así que sigue abriendo su pantalla.
@@ -321,7 +320,7 @@ function Tarjeta({ proyecto, en, elegida = false, onElegir }: { proyecto: Proyec
       }}
       aria-current={elegida ? "true" : undefined}
       className={cn(
-        "block border-b border-[#e5e7eb] bg-white px-4 py-3.5 transition sm:max-lg:last:border-b-0 hover:bg-[#f8fafc] sm:px-5",
+        "relative block border-b border-[#e5e7eb] bg-white px-4 py-3.5 transition sm:max-lg:last:border-b-0 hover:bg-[#f8fafc] sm:px-5",
         elegida && "lg:bg-[#eef9fd] lg:shadow-[inset_4px_0_0_#162543]",
       )}
     >
@@ -331,7 +330,7 @@ function Tarjeta({ proyecto, en, elegida = false, onElegir }: { proyecto: Proyec
       <div className="flex min-w-0 items-start gap-3">
         <FotoDeQuienPublica proyecto={proyecto} />
         <div className="min-w-0 flex-1">
-          <h2 className="line-clamp-2 text-base font-extrabold leading-snug text-[#005eaa]">{proyecto.title}</h2>
+          <h2 className="line-clamp-2 text-base font-extrabold leading-snug text-[#005eaa]"><Link href={rutaProyecto(proyecto)} className="after:absolute after:inset-0">{proyecto.title}</Link></h2>
           <p className="mt-0.5 truncate text-sm font-semibold text-[#101d35]">
             {proyecto.category_name ?? copy.titulo}
           </p>
@@ -344,15 +343,15 @@ function Tarjeta({ proyecto, en, elegida = false, onElegir }: { proyecto: Proyec
                 suspensivos, que es un nombre a medias: no dice quién es. */}
             {/* Solo el nombre resumido y «Verificado», en UNA línea, como
                 en Empleos y Promociones: sin «Publicado por» (8-oct-2026). */}
-            <span className="flex min-w-0 items-center gap-2.5">
+            <span className="flex min-w-0 items-center gap-0.5">
               <span className="min-w-0 truncate" title={proyecto.client_name || undefined}>{formatPersonDisplayName(proyecto.client_name, "mobile")}</span>
-              {proyecto.client_verified && <CedulaVerificada texto={tPerfil("verificadoCorto")} className={CEDULA_COMPACTA} />}
+              {proyecto.client_verified && <VerificationInfo />}
             </span>
             <span className="shrink-0">{cuandoSePublico(proyecto.created_at, en)}</span>
           </div>
         </div>
       </div>
-    </Link>
+    </article>
   );
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
-import { VerifiedSeal } from "@/components/ui/verified-seal";
+import { VerificationInfo } from "@/components/ui/verification-info";
+import { Link } from "@/i18n/navigation";
 
 /**
  * Nombre en UNA sola línea con el sello de verificado pegado al final.
@@ -18,21 +19,17 @@ import { VerifiedSeal } from "@/components/ui/verified-seal";
 export function ResponsiveVerifiedName({
   name,
   verified,
-  verifiedLabel,
+  href,
 }: {
   name: string;
   verified: boolean;
   verifiedLabel: string;
+  href?: string;
 }) {
   return (
     <span className="flex w-full min-w-0 items-center">
-      <span className="min-w-0 truncate">{name}</span>
-      {verified && (
-        <VerifiedSeal
-          label={verifiedLabel}
-          className="ml-1 h-3.5 w-3.5 shrink-0 text-[#009FD9]"
-        />
-      )}
+      {href ? <Link href={href} className="min-w-0 truncate hover:text-[#009FD9]">{name}</Link> : <span className="min-w-0 truncate">{name}</span>}
+      {verified && <VerificationInfo />}
     </span>
   );
 }

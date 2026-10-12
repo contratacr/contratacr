@@ -1,24 +1,11 @@
 import { VerifiedSeal } from "@/components/ui/verified-seal";
 import { cn } from "@/lib/utils";
 
-/** En las listas y tarjetas va en 12 px, como el texto de su renglón, pero en
- *  un gris más oscuro que el resto: es lo que da confianza. Ahí dice solo
- *  «Verificado» y NUNCA se parte ni se recorta (9-oct-2026): antes «Cédula
- *  verificada» bajaba a dos líneas y le quitaba al nombre el doble de espacio.
- *  Si no cabe todo, cede el nombre con «…»; el nombre completo está en la ficha. */
+/** Variante con texto para el perfil y los detalles de identidad. Las tarjetas
+ * usan VerificationInfo: solo el check con su explicación al tocarlo. */
 export const CEDULA_COMPACTA = "shrink-0 whitespace-nowrap text-[12px] font-semibold leading-none text-[#4b5b70]";
 
-/**
- * «✓ Verificado» en todo el app (9-oct-2026, Isaac; antes «Cédula verificada»,
- * que además no era exacto: la verificación manual también cubre DIMEX y
- * pasaporte). Términos y Privacidad explican que se comprueba la cédula. La MISMA línea en todo el app (8-oct-2026): ficha,
- * panel, tarjetas de /profesionales, empleos y promociones. Va en su propia
- * línea debajo del nombre y solo cuando la cédula está verificada; sin
- * verificar no se pinta nada. Antes cada pantalla tenía su versión (12,5 o
- * 13 px, normal o medio, 4 o 6 px de separación) y se notaba al pasar de una
- * a otra. El texto lo trae quien la usa porque sirve en componentes de
- * servidor y de cliente.
- */
+/** Etiqueta escrita, conservada en las fichas y el panel de la cuenta. */
 export function CedulaVerificada({ texto, className }: { texto: string; className?: string }) {
   return (
     <span

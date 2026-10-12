@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Printer } from "lucide-react";
-import { VerifiedSeal } from "@/components/ui/verified-seal";
+import { VerificationInfo } from "@/components/ui/verification-info";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatColones } from "@/lib/pricing";
 import { getInitials } from "@/lib/utils";
@@ -65,7 +65,7 @@ export function PublicQuote({ locale, data }: { locale: string; data: PublicQuot
             <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#68778d]">{t("publicFrom")}</p>
             <p className="mt-0.5 flex items-center gap-1.5 text-[19px] font-extrabold leading-tight text-[#162543]">
               <span className="min-w-0 truncate">{pro.name}</span>
-              {pro.verified && <VerifiedSeal className="h-4 w-4 shrink-0 text-[#009FD9]" label={t("publicIdentityVerified")} />}
+              {pro.verified && <VerificationInfo />}
             </p>
             {oficio && <p className="mt-0.5 text-[13px] text-[#52627a]">{oficio}</p>}
           </div>

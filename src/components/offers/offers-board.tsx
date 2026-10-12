@@ -6,7 +6,8 @@ import { conFiltroDeFecha } from "@/lib/marketplace/filtros-por-volumen";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 import { PanelEmptyState } from "@/components/ui/content-loading";
 import { cn } from "@/lib/utils";
-import { CEDULA_COMPACTA, CedulaVerificada } from "@/components/ui/cedula-verificada";
+import { CedulaVerificada } from "@/components/ui/cedula-verificada";
+import { VerificationInfo } from "@/components/ui/verification-info";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
@@ -735,7 +736,6 @@ function OfferRow({
 }) {
   const locale = marketplaceLocale(useLocale());
   const copy = OFFERS_COPY[locale];
-  const tPerfilFila = useTranslations("profile");
   const discount = offerDiscountPercent(offer);
   return (
     <article
@@ -747,8 +747,7 @@ function OfferRow({
         aria-label={copy.view(offer.title)}
         className="absolute inset-0 hidden lg:block"
       />
-      <Link
-        href={rutaPromocion(offer)}
+      <div
         className="relative z-[1] block lg:pointer-events-none"
       >
         <div className="flex gap-2.5 sm:gap-3">
@@ -756,7 +755,7 @@ function OfferRow({
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 items-center gap-2">
               <h2 className="min-w-0 flex-1 line-clamp-2 text-[14px] font-extrabold leading-5 text-[#005eaa] sm:text-[15px] lg:text-base">
-                {offer.title}
+                <Link href={rutaPromocion(offer)} className="after:absolute after:inset-0 lg:pointer-events-none">{offer.title}</Link>
               </h2>
               {discount && (
                 <span className="shrink-0 rounded-full bg-[#009fd9] px-2 py-0.5 text-[10px] font-extrabold leading-4 text-white shadow-sm">
@@ -766,9 +765,9 @@ function OfferRow({
             </div>
             {/* Nombre y «Verificado» en UNA línea, como en Empleos: el
                 nombre se resume y cede con «…» si no cabe (8-oct-2026). */}
-            <p className="flex min-w-0 items-center gap-2.5 text-[13px] font-semibold leading-5 text-[#101d35] sm:text-sm">
+            <p className="flex min-w-0 items-center gap-0.5 text-[13px] font-semibold leading-5 text-[#101d35] sm:text-sm">
               <span className="min-w-0 truncate" title={offer.professional_name || undefined}>{formatPersonDisplayName(offer.professional_name, "mobile")}</span>
-              {offer.professional_verified && <CedulaVerificada texto={tPerfilFila("verificadoCorto")} className={CEDULA_COMPACTA} />}
+              {offer.professional_verified && <VerificationInfo />}
             </p>
             {/* En computadora, un solo azul por fila: el del título, que es lo
                 que se abre. El precio va en azul marino y fuerte —es dinero—, y
@@ -810,7 +809,7 @@ function OfferRow({
             )}
           </div>
         </div>
-      </Link>
+      </div>
     </article>
   );
 }
