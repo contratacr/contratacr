@@ -1,31 +1,66 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Ban } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/hooks/use-auth";
 import { getInitials } from "@/lib/utils";
 
 type Bloqueado = { id: string; name: string; avatarUrl: string | null; slug: string | null };
 
+// Session-only cache, scoped by account. Never reuse another account's list.
+const blockedCache = new Map<string, Bloqueado[]>();
+
 /** La lista de «Usuarios bloqueados» en Privacidad, con su «Desbloquear». */
 export function UsuariosBloqueados() {
   const t = useTranslations("bloqueo");
-  const [lista, setLista] = useState<Bloqueado[] | null>(null);
+  const { user } = useAuth();
+  const userId = user?.id;
+  const [result, setResult] = useState<{ userId: string; lista: Bloqueado[] } | null>(() => {
+    const cached = userId ? blockedCache.get(userId) : undefined;
+    return userId && cached ? { userId, lista: cached } : null;
+  });
+  const lista = userId ? (result?.userId === userId ? result.lista : blockedCache.get(userId) ?? null) : null;
   const [quitando, setQuitando] = useState<string | null>(null);
-  const cargar = () => fetch("/api/block").then((r) => (r.ok ? r.json() : { blocked: [] })).then((d) => setLista(d.blocked ?? [])).catch(() => setLista([]));
+  const [error, setError] = useState(false);
+  const requestId = useRef(0);
+  const cargar = useCallback(async () => {
+    if (!userId) return;
+    const request = ++requestId.current;
+    try {
+      const response = await fetch("/api/block");
+      if (!response.ok) throw new Error("Blocked users unavailable");
+      const data = await response.json();
+      if (!Array.isArray(data.blocked)) throw new Error("Invalid blocked users response");
+      if (request !== requestId.current) return;
+      setError(false);
+      blockedCache.set(userId, data.blocked);
+      setResult({ userId, lista: data.blocked });
+    } catch {
+      if (request === requestId.current) setError(true);
+    }
+  }, [userId]);
+  const invalidateRequests = useCallback(() => { ++requestId.current; }, []);
   useEffect(() => {
-    void cargar();
+    let active = true;
+    void Promise.resolve().then(() => { if (active) void cargar(); });
     const alBloquear = () => void cargar();
     window.addEventListener("ccr:usuario-bloqueado", alBloquear);
-    return () => window.removeEventListener("ccr:usuario-bloqueado", alBloquear);
-  }, []);
+    return () => { active = false; invalidateRequests(); window.removeEventListener("ccr:usuario-bloqueado", alBloquear); };
+  }, [cargar, invalidateRequests]);
   async function desbloquear(id: string) {
     setQuitando(id);
     try {
-      await fetch(`/api/block?profileId=${encodeURIComponent(id)}`, { method: "DELETE" });
-      setLista((l) => (l ?? []).filter((b) => b.id !== id));
-    } finally { setQuitando(null); }
+      const response = await fetch(`/api/block?profileId=${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (!response.ok) { setError(true); return; }
+      ++requestId.current;
+      if (userId) {
+        const next = (lista ?? []).filter((b) => b.id !== id);
+        blockedCache.set(userId, next);
+        setResult({ userId, lista: next });
+      }
+    } catch { setError(true); } finally { setQuitando(null); }
   }
   return (
     <div data-blocked-users className="border-t border-[#eef2f6] pt-6 first:border-t-0 first:pt-0">
@@ -34,7 +69,8 @@ export function UsuariosBloqueados() {
         <h3 className="text-sm font-semibold text-[#374151]">{t("cuentaTitulo")}</h3>
       </div>
       <p className="mb-3 text-xs leading-relaxed text-[#6b7280]">{t("cuentaTexto")}</p>
-      {lista === null ? null : lista.length === 0 ? (
+      {error && <p role="alert" className="mb-3 text-sm text-red-700">{t("cuentaError")} <button type="button" onClick={() => void cargar()} className="font-semibold underline">{t("cuentaReintentar")}</button></p>}
+      {lista === null ? (!error && <div aria-busy="true" className="h-12 animate-pulse rounded-xl bg-slate-100" />) : lista.length === 0 ? (
         <p className="text-sm text-[#68778d]">{t("cuentaVacio")}</p>
       ) : (
         <ul className="flex flex-col gap-2">

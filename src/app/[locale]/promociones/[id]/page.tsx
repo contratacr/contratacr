@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { ArrowLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { VerificationInfo } from "@/components/ui/verification-info";
 import { Link } from "@/i18n/navigation";
 import { metadatosDePantalla } from "@/lib/seo/alternates";
@@ -207,7 +207,6 @@ export default async function OfferDetailPage({ params, searchParams }: { params
   const quienPublica = offer.professional_slug ? (
     <Link href={`/profesionales/${offer.professional_slug}?from=${encodeURIComponent(rutaPromocion(offer))}`} className="inline-flex min-w-0 max-w-full items-center gap-1 font-semibold text-[#005eaa] hover:underline">
       <span className="line-clamp-2 min-w-0 [overflow-wrap:anywhere]">{offer.professional_name}</span>
-      <ChevronRight className="h-4 w-4 shrink-0" />
     </Link>
   ) : (
     <p className="line-clamp-2 min-w-0 font-semibold text-[#52627a] [overflow-wrap:anywhere]">{offer.professional_name}</p>

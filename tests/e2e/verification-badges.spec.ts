@@ -48,6 +48,7 @@ for (const path of ["/promociones", "/empleos", "/proyectos"]) {
     const check = owner.locator("[data-verification-badge]");
     await expect(check).toBeVisible();
     expect(await check.textContent()).toBe("");
+    await expect(owner.locator(".lucide-chevron-right")).toHaveCount(0);
     await expect(owner.locator("[data-cedula-verificada]")).toHaveCount(0);
     expect(await check.evaluate((el) => el.closest("a"))).toBeNull();
     const before = page.url();
@@ -66,7 +67,7 @@ for (const path of ["/promociones", "/empleos", "/proyectos"]) {
   });
 }
 
-test("the professional profile keeps the written verification label", async ({ page }) => {
+test("the professional profile keeps only the interactive check beside its name", async ({ page }) => {
   await gotoOK(page, "/profesionales");
   const check = page.locator("[data-verification-badge]").filter({ visible: true }).first();
   await expect(check).toBeVisible();
@@ -74,7 +75,11 @@ test("the professional profile keeps the written verification label", async ({ p
   const href = await card.locator("h3 a").first().getAttribute("href");
   expect(href).toBeTruthy();
   await gotoOK(page, href!);
-  await expect(page.locator("[data-cedula-verificada]").filter({ visible: true }).first()).toContainText("Verificado");
+  const owner = page.locator("[data-verification-owner]").filter({ visible: true }).first();
+  await expect(owner.locator("[data-verification-badge]")).toBeVisible();
+  await expect(page.locator("[data-cedula-verificada]")).toHaveCount(0);
+  await owner.locator("[data-verification-badge]").click();
+  await expect(page.getByRole("dialog")).toContainText("no garantiza la calidad del trabajo");
 });
 
 test("registration explains the badge and opens the shared explanation", async ({ page }) => {
@@ -107,17 +112,6 @@ test("dashboard name keeps only an interactive identity check", async ({ page })
   await check.click();
   await expect(page.getByRole("dialog")).toContainText("no garantiza la calidad del trabajo");
   await expectNoHorizontalOverflow(page);
-});
-
-test("the panel explains where verified identity is displayed", async ({ page }) => {
-  test.skip(!canRunSeededRegression(), "Requires isolated regression accounts.");
-  await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
-  await gotoOK(page, "/dashboard/profesional?tab=verificacion");
-  const help = page.locator("[data-verification-education]").filter({ visible: true }).first();
-  await expect(help).toContainText("Qué significa el check de identidad");
-  await expect(help).toContainText(/Cuando tu identidad esté verificada|Tu identidad está verificada/);
-  await help.getByRole("button", { name: "Qué significa el check de identidad", exact: true }).click();
-  await expect(page.getByRole("dialog")).toContainText("El check indica que ContrataCR comprobó");
 });
 
 test("the badge explanation is translated into English", async ({ page }) => {
@@ -156,7 +150,7 @@ test("native phone shell keeps the explanation above its navigation", async ({ p
 });
 
 
-test("verification separates the explanatory check from the verified identification", async ({ page }) => {
+test("verification shows only the identification check and its explanation", async ({ page }) => {
   test.skip(!(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").includes("oqheayqqprpciqdvdaqo") || !process.env.SUPABASE_SERVICE_ROLE_KEY,
     "Requires the isolated test database.");
   let account: DisposableAccount | undefined;
@@ -171,11 +165,11 @@ test("verification separates the explanatory check from the verified identificat
     await gotoOK(page, "/dashboard/profesional?tab=verificacion");
     const education = page.locator("[data-verification-education]").filter({ visible: true }).first();
     const identity = page.locator("[data-current-identification]").filter({ visible: true }).first();
-    await expect(education).toContainText("Tu identidad está verificada.");
+    await expect(education).toHaveCount(0);
     await expect(identity).toContainText("700000001");
-    await expect(education.locator("[data-verification-badge]")).toHaveCount(1);
+
     await expect(identity.locator("[data-verification-badge]")).toHaveCount(1);
-    for (const block of [education, identity]) {
+    for (const block of [identity]) {
       await block.locator("[data-verification-badge]").click();
       await expect(page.getByRole("dialog")).toContainText("registros oficiales o revisión de documentos");
       await page.getByRole("dialog").getByRole("button", { name: "Entendido", exact: true }).click();
@@ -189,7 +183,7 @@ test("verification separates the explanatory check from the verified identificat
     if (unverified.error) throw unverified.error;
     await gotoOK(page, "/dashboard/profesional?tab=verificacion");
     await expect(identity.locator("[data-verification-badge]")).toHaveCount(0);
-    await expect(education).toContainText("Cuando tu identidad esté verificada");
+    await expect(education).toHaveCount(0);
   } finally {
     await cleanupDisposableAccount(account);
   }

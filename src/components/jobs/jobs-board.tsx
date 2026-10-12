@@ -12,7 +12,7 @@ import { useEffect, useMemo, useState } from "react";
 import { cldThumb } from "@/lib/cloudinary";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { ArrowLeft, BriefcaseBusiness, Building2, ChevronRight, Menu } from "lucide-react";
+import { ArrowLeft, BriefcaseBusiness, Building2, Menu } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { recordRecentVisit } from "@/lib/recent-visits";
 import { ContrataCRMark, HeaderAccountLink } from "@/components/landing/landing-navbar";
@@ -644,15 +644,13 @@ function JobPreview({ job, isOwner, userId, onEdit, mobile = false, hideActions 
       <div className="flex min-w-0 items-center gap-2">
         {/* El check identifica a quien publica y abre la explicación compartida. */}
         <div data-verification-owner className="flex min-w-0 flex-1 items-center gap-1">
-          {/* Con perfil público, el nombre es la entrada al perfil —azul y con
-              «›», igual que en Promociones—; sin perfil, gris. */}
+          {/* El nombre enlaza al perfil público; el check queda fuera del enlace. */}
           {job.employer_slug ? (
             <Link
               href={`/profesionales/${job.employer_slug}?from=${encodeURIComponent(rutaEmpleo(job))}`}
               className="inline-flex min-w-0 max-w-full items-center gap-1 font-semibold text-[#005eaa] hover:underline"
             >
               <span className="line-clamp-2 min-w-0 [overflow-wrap:anywhere]">{job.employer_name}</span>
-              <ChevronRight className="h-4 w-4 shrink-0" />
             </Link>
           ) : (
             <p className="line-clamp-2 font-semibold text-[#52627a] [overflow-wrap:anywhere]">{job.employer_name}</p>

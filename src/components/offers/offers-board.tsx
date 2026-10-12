@@ -12,7 +12,7 @@ import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { cldLarge, cldThumb } from "@/lib/cloudinary";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CalendarDays, ChevronRight, MapPin, Menu, Store } from "lucide-react";
+import { CalendarDays, MapPin, Menu, Store } from "lucide-react";
 import { ContrataCRMark, HeaderAccountLink } from "@/components/landing/landing-navbar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { Link } from "@/i18n/navigation";
@@ -864,7 +864,6 @@ function OfferPreview({
                   className="inline-flex min-w-0 max-w-full items-center gap-1 font-semibold text-[#005eaa] hover:underline"
                 >
                   <span className="line-clamp-2 min-w-0 [overflow-wrap:anywhere]">{offer.professional_name}</span>
-                  <ChevronRight className="h-4 w-4 shrink-0" />
                 </Link>
               ) : (
                 <p className="line-clamp-2 min-w-0 font-semibold text-[#52627a] [overflow-wrap:anywhere]">

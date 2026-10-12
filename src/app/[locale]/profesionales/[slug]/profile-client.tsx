@@ -13,7 +13,7 @@ import {
   X, Ban,
 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
-import { CedulaVerificada } from "@/components/ui/cedula-verificada";
+import { VerificationInfo } from "@/components/ui/verification-info";
 import { InstagramIcon, FacebookIcon, TikTokIcon, LinkedInIcon } from "@/components/icons/social-icons";
 import { buildSocialUrl, buildWebsiteUrl } from "@/lib/social";
 import { Link } from "@/i18n/navigation";
@@ -937,22 +937,14 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                     {/* En computadora el «···» va en el MISMO renglón del nombre
                         (a la altura del nombre y el sello), al final de la fila. */}
                     <div className="min-w-0 lg:flex lg:items-center lg:justify-between lg:gap-4">
-                      <h1 data-testid="professional-profile-name" className="min-w-0 text-[17px] font-bold leading-[1.15] text-[#162543] [overflow-wrap:anywhere] sm:text-2xl sm:leading-tight sm:[overflow-wrap:normal]">
-                        {/* Sin sello junto al nombre en la ficha: lo dice la línea
-                            «Identificación verificada» de abajo, con el mismo ícono. En las
-                            listas (búsqueda, tarjetas, mapa) el sello sí sigue,
-                            porque ahí no cabe el texto (8-oct-2026). */}
-                        {displayName.primaryDesktop}
-                      </h1>
+                      <div data-verification-owner className="flex min-w-0 items-center gap-1">
+                        <h1 data-testid="professional-profile-name" className="min-w-0 text-[17px] font-bold leading-[1.15] text-[#162543] [overflow-wrap:anywhere] sm:text-2xl sm:leading-tight sm:[overflow-wrap:normal]">
+                          {displayName.primaryDesktop}
+                        </h1>
+                        {professional.verificationStatus === "verified" && <VerificationInfo />}
+                      </div>
                       <MenuFicha className="hidden shrink-0 lg:block" opciones={opcionesDeLaFicha} />
                     </div>
-                    {/* «Identificación verificada», justo debajo del nombre y solo si lo
-                        está: sin verificar no sale nada y el bloque sigue
-                        centrado con la foto. Dice qué se revisó; el sello solo
-                        no lo decía (8-oct-2026). */}
-                    {professional.verificationStatus === "verified" && (
-                      <CedulaVerificada texto={t("cedulaVerificada")} className="mt-1 sm:mt-1.5" />
-                    )}
                     {/* La ubicación NO va aquí: las zonas de trabajo están en la
                         tarjeta de contacto, completas, y el cantón del perfil
                         repetía una de ellas a medias. */}
