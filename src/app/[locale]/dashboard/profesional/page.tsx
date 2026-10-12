@@ -2260,14 +2260,14 @@ export default function DashboardPage() {
                                   />
                                 ),
                               },
-                              // Privacidad: solo en la app, que es donde existe el chat.
-                              ...(nativeApp ? [{
+                              // Blocked accounts are managed here on both web and native.
+                              {
                                 id: "privacidad",
                                 title: t("tabs.privacidad"),
                                 desc: t("profileSections.privacyDesc"),
                                 footer: null,
                                 children: <AccountPrivacySection />,
-                              }] : []),
+                              },
                               {
                                 id: "cuenta",
                                 title: t("tabs.cuenta"),
@@ -2286,14 +2286,14 @@ export default function DashboardPage() {
                         {activeTab === "profile" && mode === "use" && (
                           <BasicProfileSection
                             extraSections={[
-                              // Privacidad: solo en la app, que es donde existe el chat.
-                              ...(nativeApp ? [{
+                              // Blocked accounts are managed here on both web and native.
+                              {
                                 id: "privacidad",
                                 title: t("tabs.privacidad"),
                                 desc: t("profileSections.privacyDesc"),
                                 footer: null,
                                 children: <AccountPrivacySection />,
-                              }] : []),
+                              },
                               {
                                 id: "cuenta",
                                 title: t("tabs.cuenta"),

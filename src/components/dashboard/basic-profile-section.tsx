@@ -70,7 +70,7 @@ function ProfileSection({
       </button>
       {open && (
         <div className="px-4 pb-6 pt-5 sm:px-5 sm:pt-6" onFocusCapture={() => onActivate?.(id)} onPointerDownCapture={() => onActivate?.(id)}>
-          <div className="flex flex-col gap-5">
+          <div data-profile-section-body className="flex flex-col gap-6">
             {children}
           </div>
           {footer}

@@ -87,18 +87,18 @@ export function SignInMethods() {
   }
 
   return (
-    <section className="border-t border-[#eef2f6] pt-4">
+    <section data-sign-in-methods className="border-t border-[#eef2f6] pt-6">
       <h3 className="text-sm font-semibold text-[#374151]">{english ? "Sign-in methods" : "Métodos de acceso"}</h3>
-      <p className="mt-1 text-sm text-[#6b7280]">{english ? "Connect another method to access this same account. Confirm it with the provider, even if it uses a different email." : "Conecta otro método para entrar a esta misma cuenta. Confírmalo con el proveedor, aunque use otro correo."}</p>
+      <p className="mt-2 text-sm leading-6 text-[#6b7280]">{english ? "Connect another method to access this same account. Confirm it with the provider, even if it uses a different email." : "Conecta otro método para entrar a esta misma cuenta. Confírmalo con el proveedor, aunque use otro correo."}</p>
       {connectingApple && <p role="status" className="mt-3 rounded-xl bg-[#eff9fd] p-3 text-sm text-[#374151]">{ta("accountHelp")}</p>}
-      <ul className="mt-3 space-y-3">
+      <ul className="mt-4 divide-y divide-[#eef2f6]">
         {(["email", "google", "apple"] as const).map((provider) => {
           const connected = identities.some((identity) => identity.provider === provider);
           const label = provider === "email" ? (english ? "Email" : "Correo") : provider === "google" ? "Google" : "Apple";
           const connectButton = <button type="button" disabled={busy !== null} onClick={() => { if (provider !== "email") void connect(provider); }} className="min-h-11 font-semibold text-[#009FD9] disabled:opacity-60">{busy === provider ? (english ? "Connecting…" : "Conectando…") : (english ? "Connect" : "Conectar")}</button>;
-          return <li key={provider} className="flex items-center justify-between gap-3 text-sm">
+          return <li key={provider} className="flex min-h-14 items-center justify-between gap-3 text-sm">
             <span>{label}</span>
-            {connected ? <span className="text-emerald-700">{english ? "Connected" : "Conectado"}</span> : provider === "email" ? <button type="button" disabled={busy !== null} onClick={addPassword} className="font-semibold text-[#009FD9] disabled:opacity-60">{english ? "Add password" : "Agregar contraseña"}</button> : provider === "google" && !native ? (
+            {connected ? <span className="text-emerald-700">{english ? "Connected" : "Conectado"}</span> : provider === "email" ? <button type="button" disabled={busy !== null} onClick={addPassword} className="min-h-11 font-semibold text-[#009FD9] disabled:opacity-60">{english ? "Add password" : "Agregar contraseña"}</button> : provider === "google" && !native ? (
               <div className="w-[200px] max-w-[calc(100%_-_4rem)] shrink-0">
                 <GoogleSignInButton locale={locale} disabled={busy !== null}
                   fallback={<div className="flex h-11 justify-end">{connectButton}</div>}

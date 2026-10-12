@@ -11,7 +11,6 @@ import { useResendCooldown } from "@/hooks/use-resend-cooldown";
 import { Button } from "@/components/ui/button";
 import { SpamNotice } from "@/components/ui/spam-notice";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
-import { UsuariosBloqueados } from "@/components/moderation/usuarios-bloqueados";
 
 /* Where each provider lets the user manage their account/email + sign-in security.
    Shown to OAuth users instead of fields that wouldn't work here. */
@@ -74,9 +73,9 @@ function OAuthGuide({
  * confirmation + friendly feedback).
  */
 const inputClass =
-  "w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
-const securitySummaryClass = "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3";
-const securityActionClass = "whitespace-nowrap text-sm font-semibold text-[#009FD9] hover:underline";
+  "w-full h-11 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
+const securitySummaryClass = "grid min-h-11 grid-cols-[minmax(0,1fr)_auto] items-center gap-3";
+const securityActionClass = "inline-flex min-h-11 items-center whitespace-nowrap text-sm font-semibold text-[#009FD9] hover:underline";
 
 export function AccountSecuritySection({ showHeading = true }: { showHeading?: boolean }) {
   const { user } = useAuth();
@@ -233,7 +232,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
   }
 
   return (
-    <div className="space-y-4">
+    <div data-account-security className="space-y-6">
       {showHeading && (
         <div className="flex items-center gap-2">
           <ShieldCheck className="h-5 w-5 text-[#009FD9]" />
@@ -246,8 +245,8 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
           dentro de otra igual solo suma marcos. Los recuadros con color sí se
           quedan: ahí el color es el mensaje. */}
       {/* Email */}
-      <div className="border-t border-[#eef2f6] pt-4 first:border-t-0 first:pt-0">
-        <div className="flex items-center gap-2 mb-2">
+      <div className="border-t border-[#eef2f6] pt-6 first:border-t-0 first:pt-0">
+        <div className="flex items-center gap-2 mb-3">
           <Mail className="h-4 w-4 text-[#6b7280]" />
           <h3 className="text-sm font-semibold text-[#374151]">{t("email")}</h3>
         </div>
@@ -330,7 +329,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
           </div>
         ) : (
           <div className={securitySummaryClass}>
-            <span className="min-w-0 truncate text-sm font-medium text-[#162543]" title={user?.email ?? undefined}>{user?.email}</span>
+            <span className="min-w-0 text-sm font-medium text-[#162543] [overflow-wrap:anywhere]" title={user?.email ?? undefined}>{user?.email}</span>
             <button onClick={() => setEmailMode(true)} className={securityActionClass}>
               {t("changeEmail")}
             </button>
@@ -341,8 +340,8 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
       <SignInMethods />
 
       {/* Password */}
-      <div className="border-t border-[#eef2f6] pt-4 first:border-t-0 first:pt-0">
-        <div className="flex items-center gap-2 mb-2">
+      <div className="border-t border-[#eef2f6] pt-6 first:border-t-0 first:pt-0">
+        <div className="flex items-center gap-2 mb-3">
           <Lock className="h-4 w-4 text-[#6b7280]" />
           <h3 className="text-sm font-semibold text-[#374151]">{t("password")}</h3>
         </div>
@@ -435,7 +434,6 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
         )}
       </div>
 
-      <UsuariosBloqueados />
     </div>
   );
 }
