@@ -5,7 +5,7 @@ import { trackMetaConversion } from "@/lib/analytics/meta-pixel";
 import { irAlInicio, noInsistirArriba } from "@/lib/ir-al-inicio";
 import { pareceFijoDeCostaRica } from "@/lib/telefono-movil";
 import { AvisoDeError } from "@/components/ui/etiqueta-campo";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
@@ -206,8 +206,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
   const initialAvatarUrl = typeof initialProfile?.avatar_url === "string" ? initialProfile.avatar_url : null;
   // Which collapsible sections are open. Empty = all collapsed (default), so a
   // pro lands on a tidy, scannable list and opens what they want.
-  const [openSections, setOpenSections] = useState<Set<string>>(new Set());
-  const didMountResetEffect = useRef(false);
+  const [openSections, setOpenSections] = useState<Set<string>>(() => new Set(focusField && FIELD_SECTION[focusField] ? [FIELD_SECTION[focusField]] : []));
   const isMobileProfileLayout = () =>
     typeof window !== "undefined" && window.matchMedia("(max-width: 639px)").matches;
   const applySectionToggle = (id: string) =>
@@ -247,45 +246,33 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
 
   // A "Completa tu perfil" item was clicked -> open its section, then either
   // align the section top or scroll to the exact missing field.
-  useEffect(() => {
+  const [appliedFocus, setAppliedFocus] = useState({ field: focusField, key: focusKey });
+  if (appliedFocus.field !== focusField || appliedFocus.key !== focusKey) {
+    setAppliedFocus({ field: focusField, key: focusKey });
+    const sec = focusField ? FIELD_SECTION[focusField] : null;
+    if (sec) setOpenSections((prev) => isMobileProfileLayout() ? new Set([sec]) : new Set(prev).add(sec));
+  }
+
+  useLayoutEffect(() => {
     if (!focusField) return;
     const sec = FIELD_SECTION[focusField];
-    const openTmr = sec ? setTimeout(() => setOpenSections((prev) => {
-      if (isMobileProfileLayout()) return new Set([sec]);
-      return new Set(prev).add(sec);
-    }), 0) : null;
-    const tmr = setTimeout(() => {
-      // Aquí NO se quiere estrenar arriba: se quiere llegar al campo que falta.
-      if (!SECTION_TOP_COMPLETION_FIELDS.has(focusField)) noInsistirArriba();
-      const section = sec ? document.getElementById(`sec-${sec}`) : null;
-      const shouldOpenAtSectionTop = SECTION_TOP_COMPLETION_FIELDS.has(focusField);
-      const el = shouldOpenAtSectionTop ? null : document.querySelector(`[data-field="${focusField}"]`);
-      const isMobile = isMobileProfileLayout();
-      if (shouldOpenAtSectionTop && isMobile) {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      } else if (el) {
-        (isMobile ? section ?? el : el).scrollIntoView({ behavior: "smooth", block: "start" });
-        el.classList.add("field-flash");
-        setTimeout(() => el.classList.remove("field-flash"), 1600);
-      } else {
-        section?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    }, 160);
-    return () => {
-      if (openTmr) clearTimeout(openTmr);
-      clearTimeout(tmr);
-    };
-  }, [focusField, focusKey]);
-
-  useEffect(() => {
-    if (!didMountResetEffect.current) {
-      didMountResetEffect.current = true;
+    if (!sec || !openSections.has(sec)) return;
+    if (isMobileProfileLayout()) {
+      irAlInicio();
       return;
     }
-    if (resetKey == null) return;
-    const tmr = window.setTimeout(() => setOpenSections(new Set()), 0);
-    return () => window.clearTimeout(tmr);
-  }, [resetKey]);
+    noInsistirArriba();
+    const el = SECTION_TOP_COMPLETION_FIELDS.has(focusField)
+      ? document.getElementById(`sec-${sec}`)
+      : document.querySelector(`[data-field="${focusField}"]`);
+    el?.scrollIntoView({ behavior: "instant", block: "start" });
+  }, [focusField, focusKey, openSections]);
+
+  const [appliedResetKey, setAppliedResetKey] = useState(resetKey);
+  if (appliedResetKey !== resetKey) {
+    setAppliedResetKey(resetKey);
+    setOpenSections(new Set());
+  }
   const rich = { strong: (c: React.ReactNode) => <strong>{c}</strong> };
   const photoInputRef = useRef<HTMLInputElement>(null);
   const avatarObjectUrlRef = useRef<string | null>(null);

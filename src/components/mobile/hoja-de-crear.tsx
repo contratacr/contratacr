@@ -81,7 +81,8 @@ export function HojaDeCrear({ abierta, onCerrar, esProfesional }: { abierta: boo
           {opciones.map(({ href, titulo, linea, mosaico, Icono }, n) => (
             <Link
               key={href}
-              href={href}
+              href={href === "/publicar-proyecto" ? `${href}?returnTo=${encodeURIComponent(pathname + (searchParams.size ? `?${searchParams}` : ""))}` : href}
+              prefetch={href === "/publicar-proyecto" ? true : false}
               onNavigate={() => {
                 // Cerrar solo si ya estamos en ese destino; en los demás casos
                 // la barra cierra la hoja cuando llega la ruta nueva.

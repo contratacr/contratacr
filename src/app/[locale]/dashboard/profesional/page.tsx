@@ -601,8 +601,6 @@ export default function DashboardPage() {
   const chatUnread = useDirectMessageUnread(!!user);
   const [profileFocus, setProfileFocus] = useState<{ field: string; key: number } | null>(null);
   const [serviceFocus, setServiceFocus] = useState<{ field: string; key: number } | null>(null);
-  const [pendingProfileFocusField, setPendingProfileFocusField] = useState<string | null>(null);
-  const [pendingServiceFocusField, setPendingServiceFocusField] = useState<string | null>(null);
   const [completionFlowField, setCompletionFlowField] = useState<string | null>(() => {
     if (typeof window === "undefined") return null;
     return window.sessionStorage.getItem("contratacr:profile-completion-field");
@@ -782,30 +780,6 @@ export default function DashboardPage() {
     if (previous === null || previous === activeTab) return;
     irAlInicio();
   }, [activeTab]);
-
-  useEffect(() => {
-    if (!pendingProfileFocusField || activeTab !== "profile") return;
-    const field = pendingProfileFocusField;
-    const frame = requestAnimationFrame(() => {
-      setPendingProfileFocusField(null);
-      requestAnimationFrame(() => {
-        setProfileFocus({ field, key: nextFocusKey() });
-      });
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [activeTab, nextFocusKey, pendingProfileFocusField]);
-
-  useEffect(() => {
-    if (!pendingServiceFocusField || activeTab !== "services") return;
-    const field = pendingServiceFocusField;
-    const frame = requestAnimationFrame(() => {
-      setPendingServiceFocusField(null);
-      requestAnimationFrame(() => {
-        setServiceFocus({ field, key: nextFocusKey() });
-      });
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [activeTab, nextFocusKey, pendingServiceFocusField]);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 1023px)");
@@ -1246,8 +1220,6 @@ export default function DashboardPage() {
       // lo haya pedido.
       setServiceFocus(null);
       setProfileFocus(null);
-      setPendingServiceFocusField(null);
-      setPendingProfileFocusField(null);
       if (tab !== activeTab) rememberSectionReturnTarget();
     }
     if (tab === "verificacion") {
@@ -1302,13 +1274,13 @@ export default function DashboardPage() {
     if (tab === "profile") {
       if (isProvider && mode !== "offer") setMode("offer");
       setMobilePanelOpen(false);
-      if (field) setPendingProfileFocusField(field);
+      if (field) setProfileFocus({ field, key: nextFocusKey() });
       window.history.pushState(null, "", `${window.location.pathname}?tab=profile&mode=offer`);
       scrollDashboardToPageTop();
       return;
     }
     if (field && tab === "services") {
-      setPendingServiceFocusField(field);
+      setServiceFocus({ field, key: nextFocusKey() });
     }
     setTab(tab as Tab, true);
     if (field && tab === "services") {
@@ -1327,8 +1299,6 @@ export default function DashboardPage() {
     setMobileProfileSectionTitle(null);
     setProfileFocus(null);
     setServiceFocus(null);
-    setPendingProfileFocusField(null);
-    setPendingServiceFocusField(null);
     if (clearFlow) clearCompletionFlow();
     setMode("offer");
     if (typeof window !== "undefined") {

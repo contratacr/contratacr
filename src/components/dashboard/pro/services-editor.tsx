@@ -2,7 +2,7 @@
 
 import { trackMetaConversion } from "@/lib/analytics/meta-pixel";
 
-import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { confirmarSalidaSinGuardar } from "@/lib/confirmar-salida";
 import { soltarFoco } from "@/lib/soltar-foco";
 import { useLocale, useTranslations } from "next-intl";
@@ -480,7 +480,7 @@ export function ServicesEditor({
     return professions.find((prof) => !serviceInfo(prof)) ?? professions[0] ?? null;
   }
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (focusField === "services" && focusKey) {
       setPickerMode("add");
       setPickerQuery("");
