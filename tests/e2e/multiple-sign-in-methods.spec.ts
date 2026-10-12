@@ -58,3 +58,22 @@ test("expired OAuth returns to login with an actionable message", async ({ page 
   await expect(page.getByText(/Este intento de acceso venció/)).toBeVisible();
   await expect(page.getByRole("button", { name: "Continuar con Apple", exact: true })).toBeEnabled();
 });
+
+test("native identity linking rejects an invalid provider token without changing accounts", async () => {
+  test.skip(!(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").includes("oqheayqqprpciqdvdaqo") || !process.env.SUPABASE_SERVICE_ROLE_KEY,
+    "Requires the isolated test database.");
+  let account: DisposableAccount | undefined;
+  try {
+    account = await createDisposableAccount({ prefix: "native-link-rejection" });
+    const client = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { auth: { persistSession: false } });
+    const signedIn = await client.auth.signInWithPassword({ email: account.email, password: account.password });
+    expect(signedIn.error).toBeNull();
+    const result = await client.auth.linkIdentity({ provider: "google", token: "invalid-provider-token", nonce: "invalid-nonce" });
+    expect(result.error).not.toBeNull();
+    expect(result.error?.code).not.toBe("manual_linking_disabled");
+    expect((await client.auth.getUser()).data.user?.id).toBe(account.id);
+    await client.auth.signOut();
+  } finally {
+    await cleanupDisposableAccount(account);
+  }
+});
