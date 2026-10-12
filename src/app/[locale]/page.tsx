@@ -119,9 +119,9 @@ export default async function HomePage({
         </FadeInUp>
 
         {/* Zones: find professionals by province using real coverage. */}
-        <FadeInUp delay={40} className="ccr-fin-de-portada">
+        <div className="ccr-fin-de-portada">
           <FindByZone coverage={coverage} />
-        </FadeInUp>
+        </div>
         {/* Lo que ya cabe en la primera pantalla se marca visible antes del
             primer cuadro: el aparecer solo es para lo que llega al desplazar. */}
         <script
