@@ -166,16 +166,18 @@ test.describe("@seeded dashboard surfaces", () => {
       profileLink.boundingBox(),
     ]);
     expect(geometry.every(Boolean)).toBe(true);
-    // The phone header shows the business name (or a short person name) on a
-    // single truncated line, so an overlong name must never push the header to
-    // a second line. «Cédula verificada» va en su propia línea DEBAJO del
-    // nombre, igual que en la ficha pública (8-oct-2026).
+    // A long account name stays on one line and the interactive check stays beside it.
     expect(geometry[0]!.height).toBeGreaterThan(14);
     expect(geometry[0]!.height).toBeLessThanOrEqual(24);
-    const cedula = page.locator("[data-cedula-verificada]").filter({ visible: true }).first();
-    await expect(cedula).toBeVisible();
-    const cedulaBox = await cedula.boundingBox();
-    expect(cedulaBox!.y).toBeGreaterThanOrEqual(geometry[0]!.y + geometry[0]!.height - 2);
+    const check = name.locator("..").locator("[data-verification-badge]");
+    await expect(check).toBeVisible();
+    expect(await check.textContent()).toBe("");
+    const checkBox = await check.boundingBox();
+    expect(checkBox!.x).toBeGreaterThanOrEqual(geometry[0]!.x + geometry[0]!.width - 1);
+    expect(checkBox!.y).toBeLessThan(geometry[0]!.y + geometry[0]!.height);
+    await check.click();
+    await expect(page.getByRole("dialog")).toContainText("El check indica que ContrataCR comprobó");
+    await page.getByRole("dialog").getByRole("button", { name: "Entendido", exact: true }).click();
     // «Ver perfil» ya no va a la par de las cifras: en el teléfono es una fila
     // propia de dos botones debajo de ellas, a todo el ancho de la tarjeta.
     expect(geometry[2]!.y).toBeGreaterThanOrEqual(geometry[1]!.y + geometry[1]!.height - 2);

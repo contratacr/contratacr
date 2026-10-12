@@ -23,7 +23,7 @@ import { SectionHeadline } from "@/components/dashboard/section-headline";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { CedulaVerificada } from "@/components/ui/cedula-verificada";
+import { VerificationInfo } from "@/components/ui/verification-info";
 import { ShareKit } from "@/components/dashboard/pro/share-kit";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -1639,7 +1639,7 @@ export default function DashboardPage() {
     ? `/profesionales/${pro.slug.trim()}`
     : null;
   // Client (use mode) identity: verified via cédula (saved at solicitud/booking or before).
-  // Drives the "Verificado" badge below the name, the SAME badge the pro side uses.
+  // Drives the identity check beside the account name.
   const clientVerified =
     profile?.client_identity_status === "verified" &&
     !!profile?.cedula &&
@@ -1823,7 +1823,7 @@ export default function DashboardPage() {
   function identityBadge() {
     if (clientVerified || pro?.verification_status === "verified") {
       return (
-        <CedulaVerificada texto={t("identityVerified")} className="sm:mt-1" />
+        <VerificationInfo />
       );
     }
     // The header badge is a positive trust signal only. Pending, rejected and
@@ -1970,11 +1970,13 @@ export default function DashboardPage() {
                   <h1 data-testid="dashboard-identity-name" className="min-w-0 truncate text-[18px] font-bold leading-[1.15] text-[#162543]" title={displayName}>
                     {mobileHeaderName || displayName}
                   </h1>
+                  {identityBadge()}
                 </div>
                 <div className="hidden min-w-0 max-w-full flex-nowrap items-center gap-2 sm:flex">
                   <h1 className="min-w-0 shrink truncate whitespace-nowrap text-2xl font-bold leading-tight text-[#162543]" title={displayName}>
                     {compactHeaderName}
                   </h1>
+                  {identityBadge()}
                   {/* Ver perfil, Compartir y Guías cierran el renglón del nombre,
                       los tres iguales: texto gris que se pinta de celeste al
                       pasar, sin ícono y sin caja. Antes Guías era texto y los
@@ -2011,11 +2013,6 @@ export default function DashboardPage() {
                     </button>
                   </div>
                 </div>
-                {/* «Identificación verificada» en su propia línea bajo el nombre, igual que en
-                    la ficha pública: el profesional ve lo mismo que ven sus
-                    clientes. Si no está verificado no sale nada; el pendiente vive
-                    en «Completa tu perfil». */}
-                {identityBadge()}
                 <div data-testid="dashboard-identity-actions" className="mt-1 flex items-start justify-start gap-3 sm:mt-1 sm:min-h-[22px]">
                   {/* Las reseñas, que es la prueba social que mira un cliente. Los
                       seguidores se retiraron de la app: guardar ya cubre "lo quiero
