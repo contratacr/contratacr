@@ -14,7 +14,6 @@ import { AlertCircle, ArrowLeft, X } from "lucide-react";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
 import { CedulaInput } from "@/components/ui/cedula-input";
-import { CedulaVerificada } from "@/components/ui/cedula-verificada";
 import { isValidId } from "@/lib/cedula";
 import { createClient } from "@/lib/supabase/client";
 import { getCategoryLabel } from "@/lib/data/categories";
@@ -431,12 +430,7 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
                     Sin sesión no se pide —se entra al tocar «Publicar» y al
                     volver ya aparece—, para no guardar una cédula en el
                     borrador del teléfono. */}
-                {!editar && user && (cedulaDeLaCuenta ? (
-                  <div data-cedula-de-la-cuenta>
-                    <CedulaVerificada texto={t("cedulaYaVerificada")} />
-                    <p className="mt-1 text-[13px] leading-snug text-[#68778d]">{t("cedulaYaVerificadaAyuda")}</p>
-                  </div>
-                ) : (
+                {!editar && user && !cedulaDeLaCuenta && (
                   <CedulaInput
                     id="cedula-del-proyecto"
                     labelText={t("cedulaLabel")}
@@ -444,7 +438,7 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
                     onChange={setCedula}
                     error={errorField === "cedula" ? (error ?? undefined) : undefined}
                   />
-                ))}
+                )}
               </div>
             </div>
           )}
