@@ -39,7 +39,12 @@ export function NativeBottomNav() {
   const navRef = useRef<HTMLElement>(null);
   const [pendingHref, setPendingHref] = useState<string | null>(null);
   const [asistenteAbierto, setAsistenteAbierto] = useState(false);
-  const [hojaDeCrear, setHojaDeCrear] = useState(false);
+  const createDestination = `${pathname}?${searchParams.toString()}`;
+  const [createFrom, setCreateFrom] = useState<string | null>(null);
+  const hojaDeCrear = createFrom === createDestination;
+  // Cierra en el mismo render que recibe el destino, sin descubrir la pantalla
+  // anterior mientras navega ni volver a abrir la hoja al regresar atrás.
+  if (createFrom !== null && createFrom !== createDestination) setCreateFrom(null);
   const [buscadorAbierto, setBuscadorAbierto] = useState(false);
   // La opción tocada se enciende EN EL ACTO; la dirección llega después.
   // Esperarla hacía parecer que el toque no había hecho nada.
@@ -351,7 +356,7 @@ export function NativeBottomNav() {
           </span>
         </Link>
 
-        <button type="button" aria-label={tNav("create")} aria-haspopup="dialog" onClick={() => { window.dispatchEvent(new Event("ccr:close-native-search")); setHojaDeCrear(true); }} className="relative z-10 grid h-full min-w-0 flex-1 basis-0 place-items-center ccr-toque-barra">
+        <button type="button" aria-label={tNav("create")} aria-haspopup="dialog" onClick={() => { window.dispatchEvent(new Event("ccr:close-native-search")); setCreateFrom(createDestination); }} className="relative z-10 grid h-full min-w-0 flex-1 basis-0 place-items-center ccr-toque-barra">
           {/* Del MISMO tamaño que los demás íconos (24 px), solo en celeste
               (4-oct-2026, decisión de Isaac). */}
           <span className="grid h-[30px] w-[30px] place-items-center rounded-full bg-[#009FD9] text-white">
@@ -400,7 +405,7 @@ export function NativeBottomNav() {
         )}
       </div>
     </nav>
-    <HojaDeCrear abierta={hojaDeCrear} onCerrar={() => setHojaDeCrear(false)} esProfesional={isPro} avatarUrl={avatarUrl} />
+    <HojaDeCrear abierta={hojaDeCrear} onCerrar={() => setCreateFrom(null)} esProfesional={isPro} avatarUrl={avatarUrl} />
     </>
   );
 }
