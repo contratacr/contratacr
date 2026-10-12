@@ -4,8 +4,8 @@ import { REVIEW_CAMPAIGN, SERVICES_CAMPAIGN, type CampaignHistory } from "../../
 import { POST } from "../../src/app/api/internal/campaigns/route";
 const now = Date.UTC(2026,9,11,15);
 const days = (n:number) => new Date(now-n*86400000).toISOString();
-const account:LifecycleAccount = {id:"account",email:"pro@example.com",full_name:"Pro",created_at:days(30),is_disabled:false,role:"client",is_provider:false};
-const pro:LifecycleProfessional = {profile_id:"account",created_at:days(30),review_count:0,services:[],is_banned:false,oculto_del_buscador:false,slug:"pro"};
+const account:LifecycleAccount = {id:"account",email:"pro@example.com",full_name:"Pro",created_at:days(30),is_disabled:false,role:"client",is_provider:false,avatar_url:"https://example.com/avatar.jpg"};
+const pro:LifecycleProfessional = {profile_id:"account",created_at:days(30),review_count:0,services:[{active:true,description:"Servicio",priceType:"a_convenir"}],is_banned:false,oculto_del_buscador:false,slug:"pro",bio:"Mi trabajo",whatsapp:"+50670001234",coverage_country:true};
 const receipt = (campana:string,age=15,status:CampaignHistory["status"]="sent"):CampaignHistory => ({email:account.email!,campana,enviado_en:days(age),status});
 function candidate(p:LifecycleProfessional|undefined=pro,history:CampaignHistory[]=[],a=account,hasProject=false) {
   return lifecycleCandidate(a,p,history,[],hasProject,now,true)?.key;
@@ -16,7 +16,7 @@ test("reviews wait seven days after the newer account/profile creation",() => {
 });
 test("professionals also receive general campaigns after completing their pending steps",() => {
   expect(candidate({...pro,review_count:2,services:[{priceAmount:1000}]})).toBe("buscar-profesionales-clientes-2026");
-  expect(lifecycleCandidate({...account,is_provider:true},undefined,[],[],false,now,true)?.key).toBe("buscar-profesionales-clientes-2026");
+  expect(lifecycleCandidate({...account,is_provider:true},undefined,[],[],false,now,true)?.key).toBe("completar-perfil-profesional-2026");
 });
 test("price follows reviews, waits fourteen days, and requires a missing real price",() => {
   expect(candidate(pro,[receipt(REVIEW_CAMPAIGN.key,13)])).toBeUndefined();

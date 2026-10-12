@@ -7,8 +7,21 @@ import { enlaceDeBaja } from "./baja";
 import { escaparHtml } from "./escape";
 import { resumenDeCuota } from "./cuota";
 type Admin = ReturnType<typeof createAdminClient>;
-const ACCOUNT_FIELDS = "id,email,full_name,created_at,is_disabled,role,is_provider";
-const PRO_FIELDS = "profile_id,created_at,review_count,services,is_banned,oculto_del_buscador,slug";
+const ACCOUNT_FIELDS = "id,email,full_name,created_at,is_disabled,role,is_provider,avatar_url";
+const PRO_FIELDS = "profile_id,created_at,review_count,services,is_banned,oculto_del_buscador,slug,bio,whatsapp,workplaces,coverage_areas,coverage_provincias,coverage_country,provincia_id,canton_id";
+function signupSignals(user: {user_metadata?: Record<string,unknown>;email_confirmed_at?: string} | null) {
+  return {professionalIntent:user?.user_metadata?.intended_role === "professional" || user?.user_metadata?.professional_signup_started === true,
+    emailConfirmed:Boolean(user?.email_confirmed_at)};
+}
+async function signupSignalsByAccount(db: Admin) {
+  const signals = new Map<string,ReturnType<typeof signupSignals>>();
+  for (let page=1; ; page++) {
+    const {data,error}=await db.auth.admin.listUsers({page,perPage:1000});
+    if (error) throw error;
+    for (const user of data.users) signals.set(user.id,signupSignals(user));
+    if (data.users.length < 1000) return signals;
+  }
+}
 async function all<T>(query: (start: number, end: number) => PromiseLike<{ data: T[] | null; error: unknown }>) {
   const rows: T[] = [];
   for (let start = 0; ; start += 1000) {
@@ -22,19 +35,20 @@ export async function runLifecycleEmails(db: Admin, simulate = true) {
   const origin = process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com";
   if (!simulate && !["contratacr.com","www.contratacr.com"].includes(new URL(origin).hostname))
     throw new Error("Automatic email delivery is production-only");
-  const [accounts, professionals, history, bajas, projects] = await Promise.all([
+  const [accounts, professionals, history, bajas, projects, signup] = await Promise.all([
     all<LifecycleAccount>((a,b) => db.from("profiles").select(ACCOUNT_FIELDS).eq("is_disabled",false).order("created_at").order("id").range(a,b)),
     all<LifecycleProfessional>((a,b) => db.from("professionals").select(PRO_FIELDS).order("id").range(a,b)),
     all<CampaignHistory>((a,b) => db.from("admin_campaign_sends").select("profile_id,email,campana,status,enviado_en,rebote_en").order("id").range(a,b)),
     all<{correo:string}>((a,b) => db.from("email_bajas").select("correo").order("correo").range(a,b)),
     all<{client_id:string}>((a,b) => db.from("projects").select("client_id").order("id").range(a,b)),
+    signupSignalsByAccount(db),
   ]);
   const proByAccount = new Map(professionals.map((p) => [p.profile_id,p]));
   const projectOwners = new Set(projects.map((p) => p.client_id));
   const blocked = bajas.map((b) => b.correo);
   const counts: Record<string,number> = {};
   const candidates = accounts.flatMap((account) => {
-    const campaign = lifecycleCandidate(account,proByAccount.get(account.id),history,blocked,projectOwners.has(account.id));
+    const campaign = lifecycleCandidate({...account,...signup.get(account.id)},proByAccount.get(account.id),history,blocked,projectOwners.has(account.id));
     if (!campaign) return [];
     counts[campaign.key] = (counts[campaign.key] ?? 0) + 1;
     return [{ account, campaign }];
@@ -49,15 +63,17 @@ export async function runLifecycleEmails(db: Admin, simulate = true) {
     if (!(await resumenDeCuota()).puedeEnviar.masivo) break;
     const result = await deliverCampaignOnce(db,campaign.key,account.email!,async () => {
       // Recheck role, completed steps, opt-out and history immediately before delivery.
-      const [a,p,h,b,j] = await Promise.all([
+      const [a,p,h,b,j,auth] = await Promise.all([
         db.from("profiles").select(ACCOUNT_FIELDS).eq("id",account.id).single(),
         db.from("professionals").select(PRO_FIELDS).eq("profile_id",account.id).maybeSingle(),
         db.from("admin_campaign_sends").select("profile_id,email,campana,status,enviado_en,rebote_en").eq("profile_id",account.id).neq("campana",campaign.key),
         db.from("email_bajas").select("correo").ilike("correo",account.email!),
         db.from("projects").select("client_id").eq("client_id",account.id).limit(1),
+        db.auth.admin.getUserById(account.id),
       ]);
-      if (!a.data || [a,p,h,b,j].some((r) => r.error)) throw new Error("Cannot verify lifecycle recipient");
-      const current = lifecycleCandidate(a.data as LifecycleAccount,p.data as LifecycleProfessional | undefined,
+      if (!a.data || [a,p,h,b,j,auth].some((r) => r.error))
+        return {ok:false,status:"skipped" as const,detail:"Cannot verify recipient before delivery"};
+      const current = lifecycleCandidate({...a.data,...signupSignals(auth.data.user)} as LifecycleAccount,p.data as LifecycleProfessional | undefined,
         h.data as CampaignHistory[],(b.data ?? []).map((r) => r.correo),Boolean(j.data?.length));
       if (!current || current.key !== campaign.key || a.data.email?.toLowerCase() !== account.email?.toLowerCase())
         return {ok:false,status:"skipped" as const,detail:"No longer eligible"};
