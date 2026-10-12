@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
 import { ArrowLeft, ChevronRight } from "lucide-react";
-import { CedulaVerificada } from "@/components/ui/cedula-verificada";
+import { VerificationInfo } from "@/components/ui/verification-info";
 import { Link } from "@/i18n/navigation";
 import { metadatosDePantalla } from "@/lib/seo/alternates";
 import { tramoFicha } from "@/lib/marketplace-url";
@@ -119,7 +118,6 @@ export default async function OfferDetailPage({ params, searchParams }: { params
   const locale = marketplaceLocale(rawLocale);
   const copy = COPY[locale];
   const idioma: "en" | "es" = locale === "en" ? "en" : "es";
-  const tPerfil = await getTranslations({ locale: idioma, namespace: "profile" });
   const dateLocale = idioma === "en" ? "en-US" : "es-CR";
   const from = (await searchParams)?.from;
   const backHref = safeMarketplaceReturnHref(from, "/promociones");
@@ -298,12 +296,11 @@ export default async function OfferDetailPage({ params, searchParams }: { params
                 precio. Aquí el título iba primero y el negocio debajo, así que
                 dos fichas del mismo app se leían al revés. */}
             <div className="flex items-start justify-between gap-3">
-              {/* El nombre completo y «Identificación verificada» en su propia línea
-                  debajo, igual que en la ficha de un empleo (8-oct-2026). */}
-              <div className="min-w-0 flex-1">
+              {/* El check identifica a quien publica y abre su explicación. */}
+              <div data-verification-owner className="flex min-w-0 flex-1 items-center gap-1">
                 {quienPublica}
                 {offer.professional_verified && (
-                  <CedulaVerificada texto={tPerfil("cedulaVerificada")} className="mt-0.5" />
+                  <VerificationInfo />
                 )}
               </div>
               <MenuOferta

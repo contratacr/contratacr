@@ -4,7 +4,6 @@ import { formatPersonDisplayName } from "@/lib/display-name";
 import { conFiltroDeFecha } from "@/lib/marketplace/filtros-por-volumen";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 import { PanelEmptyState } from "@/components/ui/content-loading";
-import { CedulaVerificada } from "@/components/ui/cedula-verificada";
 import { VerificationInfo } from "@/components/ui/verification-info";
 import { cn } from "@/lib/utils";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
@@ -643,12 +642,8 @@ function JobPreview({ job, isOwner, userId, onEdit, mobile = false, hideActions 
         «···» arriba deja la fila de acciones limpia: solo lo que contacta. */}
     <div className="flex items-start gap-4"><EmployerAvatar job={job} size="large" /><div className="min-w-0 flex-1">
       <div className="flex min-w-0 items-center gap-2">
-        {/* El nombre completo (hasta dos líneas: recortado con «…» un nombre
-            de negocio pierde información) y «Identificación verificada» en su propia
-            línea debajo, igual que en la ficha del profesional. Las ofertas de
-            trabajo falsas son una estafa común: quien busca empleo necesita ver
-            que el empleador existe (8-oct-2026). */}
-        <div className="min-w-0 flex-1">
+        {/* El check identifica a quien publica y abre la explicación compartida. */}
+        <div data-verification-owner className="flex min-w-0 flex-1 items-center gap-1">
           {/* Con perfil público, el nombre es la entrada al perfil —azul y con
               «›», igual que en Promociones—; sin perfil, gris. */}
           {job.employer_slug ? (
@@ -662,7 +657,7 @@ function JobPreview({ job, isOwner, userId, onEdit, mobile = false, hideActions 
           ) : (
             <p className="line-clamp-2 font-semibold text-[#52627a] [overflow-wrap:anywhere]">{job.employer_name}</p>
           )}
-          {job.employer_verified && <CedulaDelEmpleador />}
+          {job.employer_verified && <VerificationInfo />}
         </div>
         {/* COMPARTIR VIVE DENTRO DEL «···», no al lado. Probé sacarlo como
             botón visible y quedaba la MISMA acción dos veces a dos centímetros:
@@ -817,11 +812,6 @@ function JobContactActions({ job, isOwner, userId, soloContacto = false, escrito
       </div>
     </div>
   );
-}
-
-function CedulaDelEmpleador() {
-  const t = useTranslations("profile");
-  return <CedulaVerificada texto={t("cedulaVerificada")} className="mt-0.5" />;
 }
 
 function EmployerAvatar({ job, size = "default" }: { job: JobPost; size?: "default" | "large" }) {

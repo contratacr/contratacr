@@ -6,7 +6,6 @@ import { conFiltroDeFecha } from "@/lib/marketplace/filtros-por-volumen";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 import { PanelEmptyState } from "@/components/ui/content-loading";
 import { cn } from "@/lib/utils";
-import { CedulaVerificada } from "@/components/ui/cedula-verificada";
 import { VerificationInfo } from "@/components/ui/verification-info";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 
@@ -18,7 +17,7 @@ import { ContrataCRMark, HeaderAccountLink } from "@/components/landing/landing-
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { Link } from "@/i18n/navigation";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
-import { useLocale, useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 import { useNativeApp } from "@/hooks/use-native-app";
 import {
   MarketplaceFilterChip,
@@ -830,7 +829,6 @@ function OfferPreview({
 }) {
   const locale = marketplaceLocale(useLocale());
   const copy = OFFERS_COPY[locale];
-  const tPerfil = useTranslations("profile");
   const before = formatOfferBeforePrice(offer, locale);
   const discount = offerDiscountPercent(offer);
   const isOwner = offer.professional_id === currentProfessionalId;
@@ -858,9 +856,8 @@ function OfferPreview({
               entrada al perfil: un botón "Ver perfil" aparte competía con el
               contacto y decía lo mismo. */}
           <div className="flex min-w-0 items-center gap-2">
-            {/* El nombre completo y «Identificación verificada» en su propia línea
-                debajo, igual que en la ficha de un empleo (8-oct-2026). */}
-            <div className="min-w-0 flex-1">
+            {/* El check verifica a quien publica, no la promoción. */}
+            <div data-verification-owner className="flex min-w-0 flex-1 items-center gap-1">
               {offer.professional_slug ? (
                 <Link
                   href={`/profesionales/${offer.professional_slug}?from=${encodeURIComponent(rutaPromocion(offer))}`}
@@ -875,7 +872,7 @@ function OfferPreview({
                 </p>
               )}
               {offer.professional_verified && (
-                <CedulaVerificada texto={tPerfil("cedulaVerificada")} className="mt-0.5" />
+                <VerificationInfo />
               )}
             </div>
             {/* Compartir vive dentro del «···»: ver la nota de la ficha de un empleo. */}

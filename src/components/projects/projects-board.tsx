@@ -8,7 +8,7 @@ import { formatPersonDisplayName } from "@/lib/display-name";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useLocale, useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 import { ArrowLeft, ClipboardList, Loader2, Menu, Phone, X } from "lucide-react";
 import { createPortal } from "react-dom";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -24,7 +24,6 @@ import { PanelEmptyState } from "@/components/ui/content-loading";
 import { WhatsAppLogo } from "@/components/ui/whatsapp-logo";
 import { marketplaceLocale } from "@/lib/marketplace-copy";
 import { type ProyectoPublico } from "@/lib/proyectos";
-import { CedulaVerificada } from "@/components/ui/cedula-verificada";
 import { VerificationInfo } from "@/components/ui/verification-info";
 import { MenuProyecto } from "@/components/projects/menu-proyecto";
 import { PublishProjectModal } from "@/components/projects/publish-project-modal";
@@ -372,7 +371,6 @@ export function ProjectsBoard({
 }) {
   const locale = marketplaceLocale(useLocale());
   const en = locale === "en";
-  const tPerfilFicha = useTranslations("profile");
   const copy = COPY[locale];
   const nativeApp = useNativeApp();
   // Se puede llegar con la búsqueda puesta en la dirección, como en Empleos y
@@ -757,13 +755,12 @@ export function ProjectsBoard({
                                 crecía y el nombre se recortaba primero: «Mateo
                                 Herrera Solís» salía como «Mateo…» teniendo medio
                                 renglón de sobra. */}
-                            {/* El nombre y, en su propia línea debajo, «Cédula
-                                verificada», igual que en la ficha de un empleo. */}
-                            <div className="min-w-0 flex-1">
+                            {/* El check verifica a quien publica, no el proyecto. */}
+                            <div data-verification-owner className="flex min-w-0 flex-1 items-center gap-1">
                               <p className="line-clamp-2 min-w-0 font-semibold text-[#52627a] [overflow-wrap:anywhere]">
                                 {ficha.client_name}
                               </p>
-                              {ficha.client_verified && <CedulaVerificada texto={tPerfilFicha("cedulaVerificada")} className="mt-0.5" />}
+                              {ficha.client_verified && <VerificationInfo />}
                             </div>
                             {/* SIN MARCA «Tu proyecto» EN LA FICHA. La tarjeta
                                 de acciones ya lo dice más fuerte que una
