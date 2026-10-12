@@ -1,5 +1,6 @@
 "use client";
 
+import { readLastSignIn, rememberSignIn } from "@/lib/auth/last-sign-in";
 import { useTranslations, useLocale } from "next-intl";
 import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { Link } from "@/i18n/navigation";
@@ -7,7 +8,7 @@ import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Input } from "@/components/ui/input";
@@ -15,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { createClient, hasSupabaseBrowserConfig } from "@/lib/supabase/client";
 import { FooterSoloWeb } from "@/components/landing/footer-solo-web";
 import { detectSocialOnly, providerLabel } from "@/lib/auth-method";
-import { isNativeAppRuntime, useNativeApp } from "@/hooks/use-native-app";
+import { isNativeAppRuntime } from "@/hooks/use-native-app";
 import { nativeSocialSignIn } from "@/lib/auth/native-social-login";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { OtpVerification } from "@/components/auth/otp-verification";
@@ -159,23 +160,24 @@ export default function LoginPage() {
     formState: { errors },
   } = useForm<FormData>({ resolver: zodResolver(schema) });
 
-  // A blocked OAuth attempt — a social provider on an email that already has a
-  // password account — bounces back here with ?autherror=use_password (set by
-  // /auth/callback). Surface the reason so the user signs in with their password.
+  // Show safe, actionable OAuth errors without exposing provider details.
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("autherror") === "use_password") {
-      // This mirrors a callback query param after mount; it should not affect SSR.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setError(t("blockedUsePassword"));
-    }
-    if (params.get("autherror") === "account_deletion_pending") {
-      setError(t("accountDeletionPending"));
-    }
-    if (params.get("emailChanged") === "1") {
-      setSuccessNotice(t("emailChangedLogin"));
-    }
-  }, [t]);
+    const timer = window.setTimeout(() => {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("autherror") === "oauth_expired") {
+        setError(locale === "en" ? "This sign-in attempt expired. Choose Google or Apple again to start a new attempt." : "Este intento de acceso venció. Pulsa Google o Apple de nuevo para iniciar un intento nuevo.");
+      } else if (params.get("autherror") === "oauth_failed") {
+        setError(locale === "en" ? "We couldn't complete sign-in. Please try again." : "No pudimos completar el acceso. Intenta de nuevo.");
+      }
+      if (params.get("autherror") === "account_deletion_pending") {
+        setError(t("accountDeletionPending"));
+      }
+      if (params.get("emailChanged") === "1") {
+        setSuccessNotice(t("emailChangedLogin"));
+      }
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [t, locale]);
 
   async function finishPasswordLogin(supabase: ReturnType<typeof createClient>, signedInUser?: User | null) {
     const redirect = meaningfulRedirect(new URLSearchParams(window.location.search).get("redirect"));
@@ -267,6 +269,7 @@ export default function LoginPage() {
       setError(t("loginError"));
       return;
     }
+    rememberSignIn("email");
     await finishPasswordLogin(supabase, authData.user);
     // Keep the button busy during the hard navigation so a second login cannot
     // start while the destination request is being resolved.
@@ -277,15 +280,14 @@ export default function LoginPage() {
   // deep-link, preserved by the proxy) → pass it as an ENCODED `next` so the callback
   // URL stays well-formed (the unencoded query was what broke the OAuth code exchange
   // = auth=error); or the "projects" alias, which the callback role-resolves.
-  function oauthCallbackUrl() {
+  function oauthCallbackUrl(provider: "google" | "apple" = "google") {
     // Same gate as manual login: carry only a MEANINGFUL target through OAuth (a
     // /dashboard deep-link or "projects"); a generic/public redirect → no `next`, so
     // the callback role-resolves to the right panel instead of bouncing to the page
-    // the user came from (e.g. home). `flow=oauth` lets /auth/callback enforce "one
-    // email = one method". The `next` stays URL-ENCODED (an unencoded query
+    // the user came from (e.g. home). The `next` stays URL-ENCODED (an unencoded query
     // previously broke the code exchange = auth=error).
     const next = meaningfulRedirect(new URLSearchParams(window.location.search).get("redirect")) ?? "";
-    return window.location.origin + `/auth/callback?flow=oauth&locale=${locale}` + (next ? `&next=${encodeURIComponent(next)}` : "");
+    return window.location.origin + `/auth/callback?flow=oauth&provider=${provider}&locale=${locale}` + (next ? `&next=${encodeURIComponent(next)}` : "");
   }
 
   const [appleLoading, setAppleLoading] = useState(false);
@@ -314,7 +316,7 @@ export default function LoginPage() {
           // Same-origin path, never the absolute callback URL: the server origin
           // can differ from the one the WebView loaded (0.0.0.0 vs localhost),
           // and an absolute URL would push the user out of the app mid-login.
-          const callback = oauthCallbackUrl().replace("flow=oauth", "flow=native");
+          const callback = oauthCallbackUrl(provider).replace("flow=oauth", "flow=native");
           window.location.assign(callback.slice(callback.indexOf("/auth/callback")));
           return;
         }
@@ -335,7 +337,7 @@ export default function LoginPage() {
     }
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: oauthCallbackUrl() },
+      options: { redirectTo: oauthCallbackUrl(provider) },
     });
     if (oauthError) {
       const message = oauthError.message.toLowerCase();
@@ -417,20 +419,19 @@ export default function LoginPage() {
       setGoogleLoading(false);
       return;
     }
+    rememberSignIn("google");
     const callback = oauthCallbackUrl().replace("flow=oauth", "flow=native");
     window.location.assign(callback.slice(callback.indexOf("/auth/callback")));
   }
 
-  // The native app keeps its own Google sheet; the page-level button is for browsers.
-  // Unknown until hydration: nothing native is server-rendered, so a browser
-  // never sees the app's buttons flash, and the app never sees the web ones.
-  const [runtime, setRuntime] = useState<"unknown" | "native" | "browser">("unknown");
-  useEffect(() => { setRuntime(isNativeAppRuntime() ? "native" : "browser"); }, []);
+  // Google keeps its native sheet in the app and its browser button on the web.
+  const runtime = useSyncExternalStore(
+    () => () => {},
+    () => (isNativeAppRuntime() ? "native" : "browser"),
+    () => "unknown" as const,
+  );
   const browserRuntime = runtime === "browser";
-  // La app ya se sabe en el servidor (cookie): Apple viaja pintado en el HTML
-  // y no empuja a Google 56 px al hidratar.
-  const appNativa = useNativeApp();
-  const nativeRuntime = runtime === "native" || (runtime === "unknown" && appNativa);
+  const lastMethod = useSyncExternalStore(() => () => {}, readLastSignIn, () => null);
   async function handleApple() { await handleSocial("apple"); }
 
   if (otpEmail) {
@@ -540,8 +541,8 @@ export default function LoginPage() {
           </div>
 
           <div className="flex flex-col gap-3">
-            {/* Apple sign-in exists only inside the app; the website keeps its web-only login. */}
-            {nativeRuntime && (
+            {lastMethod && <p className="text-center text-xs text-[#68778d]">{locale === "en" ? "Last used: " : "Usaste la última vez: "}{lastMethod === "email" ? (locale === "en" ? "Email" : "Correo") : lastMethod === "apple" ? "Apple" : "Google"}</p>}
+            {/* The same Apple identity is available in browsers and the native app. */}
             <button
               type="button"
               onClick={handleApple}
@@ -551,7 +552,6 @@ export default function LoginPage() {
               <svg aria-hidden="true" className="h-5 w-5 fill-current" viewBox="0 0 24 24"><path d="M17.05 12.54c-.03-3.01 2.46-4.48 2.57-4.55a5.5 5.5 0 0 0-4.33-2.34c-1.82-.19-3.58 1.09-4.5 1.09-.94 0-2.36-1.07-3.9-1.04A5.73 5.73 0 0 0 2.08 8.6c-2.09 3.62-.53 8.95 1.47 11.88 1 1.43 2.17 3.03 3.71 2.97 1.51-.06 2.08-.95 3.91-.95 1.81 0 2.35.95 3.92.91 1.62-.02 2.64-1.44 3.6-2.88a11.78 11.78 0 0 0 1.65-3.36 5.2 5.2 0 0 1-3.29-4.63ZM14.1 3.72A5.28 5.28 0 0 0 15.3 0a5.35 5.35 0 0 0-3.46 1.77 5.02 5.02 0 0 0-1.23 3.58 4.4 4.4 0 0 0 3.49-1.63Z" /></svg>
               {appleLoading ? t("redirecting") : locale === "en" ? "Continue with Apple" : "Continuar con Apple"}
             </button>
-            )}
             {/* Google */}
             {browserRuntime ? (
               <GoogleSignInButton
