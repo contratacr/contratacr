@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { SectionHeaderTitle } from "@/components/mobile/section-header-title";
 import { LandingFooter } from "@/components/landing/landing-footer";
-import { InstallAppGuide } from "@/components/landing/install-app-card";
+import { AppDownloadSection } from "@/components/landing/app-download";
 import { Link } from "@/i18n/navigation";
 import {
   FileText,
@@ -125,7 +125,7 @@ export default function AyudaPage() {
           </div>
         </section>
 
-        {showInstallGuide && <InstallAppGuide />}
+        {showInstallGuide && <AppDownloadSection />}
 
         <section className="border-t border-[#e5e7eb] px-4 py-12">
           <div className="mx-auto flex max-w-4xl flex-col items-start justify-between gap-5 sm:flex-row sm:items-center">

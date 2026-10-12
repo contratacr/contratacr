@@ -1,3 +1,4 @@
+import { MobileAppDownloadBanner } from "@/components/landing/app-download";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getMessages } from "next-intl/server";
@@ -200,6 +201,7 @@ export default async function LocaleLayout({
         <PushTokenManager />
         {children}
         <NativeBottomNav />
+        <MobileAppDownloadBanner />
         <WhatsAppReviewFollowUp />
         <AiConcierge />
         <FreezeMonitor />

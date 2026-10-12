@@ -1,3 +1,4 @@
+import { AppDownloadSection } from "@/components/landing/app-download";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { prefijoDeIdioma, rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { LandingHero } from "@/components/landing/landing-hero";
@@ -132,6 +133,7 @@ export default async function HomePage({
 
       </main>
 
+      <AppDownloadSection />
       <LandingFooter />
     </div>
   );
