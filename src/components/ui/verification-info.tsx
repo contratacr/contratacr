@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import { Modal } from "@/components/ui/modal";
 import { VerifiedSeal } from "@/components/ui/verified-seal";
@@ -14,11 +14,14 @@ export function VerificationExplanation({ open, onClose }: { open: boolean; onCl
   </Modal>;
 }
 
+const subscribeReady = () => () => {};
+
 export function VerificationInfo() {
+  const ready = useSyncExternalStore(subscribeReady, () => true, () => false);
   const t = useTranslations("verificationBadge");
   const [open, setOpen] = useState(false);
   return <span className="contents" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
-    <button type="button" data-verification-badge aria-label={t("action")} aria-haspopup="dialog" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen(true); }} className="relative z-10 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[#009FD9] pointer-events-auto hover:bg-[#eaf7fc] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]">
+    <button type="button" disabled={!ready} data-verification-badge aria-label={t("action")} aria-haspopup="dialog" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen(true); }} className="relative z-10 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[#009FD9] pointer-events-auto hover:bg-[#eaf7fc] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]">
       <VerifiedSeal className="h-4 w-4" />
     </button>
     <VerificationExplanation open={open} onClose={() => setOpen(false)} />
