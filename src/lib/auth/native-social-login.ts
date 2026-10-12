@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isNativeAppRuntime } from "@/hooks/use-native-app";
+import { reportClientError } from "@/lib/report-client-error";
 
 // Native Sign in with Apple / Google for the Capacitor app. The web OAuth
 // redirect leaves the app for the system browser, which App Review rejects
@@ -20,6 +21,23 @@ const APPLE_SERVICES_ID = process.env.NEXT_PUBLIC_APPLE_SERVICES_ID;
 const APPLE_REDIRECT_URL = process.env.NEXT_PUBLIC_APPLE_REDIRECT_URL;
 
 let initialization: Promise<boolean> | null = null;
+let initializationFailure = "unknown";
+
+// Only fixed diagnostic categories leave the device, never provider tokens or
+// arbitrary error text. This explains a fallback that otherwise exists only in
+// the phone's console.
+function failureCategory(error: unknown) {
+  const message = String((error as { message?: string })?.message ?? error).toLowerCase();
+  if (/url scheme|urlscheme/.test(message)) return "url-scheme";
+  if (/disabled|not available|not implemented|unimplemented/.test(message)) return "plugin-unavailable";
+  if (/client.?id|configuration|not initialized/.test(message)) return "provider-configuration";
+  if (/network|fetch|chunk|load.*module/.test(message)) return "network-or-bundle";
+  return "unknown";
+}
+
+function reportFallback(provider: NativeSocialProvider, operation: string, stage: string, reason = "unknown") {
+  reportClientError("window", { message: `native-social-fallback:${operation}:${provider}:${stage}:${reason}` });
+}
 
 async function loadPlugin() {
   const [{ SocialLogin }, { Capacitor }] = await Promise.all([
@@ -47,6 +65,7 @@ function ensureInitialized() {
       return true;
     })().catch((error) => {
       console.warn("[native-auth] plugin initialization failed:", error);
+      initializationFailure = failureCategory(error);
       initialization = null;
       return false;
     });
@@ -87,11 +106,18 @@ async function nativeSocialOperation(
   let platform: string;
   try {
     ({ platform } = await loadPlugin());
-  } catch {
+  } catch (error) {
+    reportFallback(provider, operation, "load-plugin", failureCategory(error));
     return "unavailable";
   }
-  if (platform === "web" || !isConfigured(provider, platform)) return "unavailable";
-  if (!(await ensureInitialized())) return "unavailable";
+  if (platform === "web" || !isConfigured(provider, platform)) {
+    reportFallback(provider, operation, "configuration", platform === "web" ? "native-bridge-missing" : `${platform}-client-missing`);
+    return "unavailable";
+  }
+  if (!(await ensureInitialized())) {
+    reportFallback(provider, operation, "initialize", initializationFailure);
+    return "unavailable";
+  }
 
   // Linking must always preserve the authenticated account. Never substitute a
   // regular sign-in, which could switch accounts or create another profile.
@@ -135,9 +161,13 @@ async function nativeSocialOperation(
     // A misconfigured provider (missing SHA-1, wrong client id) must not strand
     // the user: the web flow still works, it is just the worse experience.
     console.warn(`[native-auth] ${provider} sheet failed, using web flow:`, error);
+    reportFallback(provider, operation, "provider-sheet", failureCategory(error));
     return "unavailable";
   }
-  if (!idToken) return "unavailable";
+  if (!idToken) {
+    reportFallback(provider, operation, "provider-sheet", "missing-id-token");
+    return "unavailable";
+  }
 
   if (operation === "link") {
     // The provider sheet may remain open while the app session changes.

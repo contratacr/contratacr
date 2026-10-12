@@ -5,9 +5,12 @@ import { useLocale, useTranslations } from "next-intl";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 import { nativeSocialLink } from "@/lib/auth/native-social-login";
+import { useNativeApp } from "@/hooks/use-native-app";
+import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 
 export function SignInMethods() {
   const { user } = useAuth();
+  const native = useNativeApp();
   const locale = useLocale();
   const ta = useTranslations("auth.appleAccount");
   const connectingApple = useSyncExternalStore(() => () => {}, () => new URLSearchParams(window.location.search).get("connect") === "apple", () => false);
@@ -49,6 +52,27 @@ export function SignInMethods() {
     }
   }
 
+  async function connectGoogleCredential(token: string, nonce: string) {
+    setBusy("google");
+    setMessage(null);
+    try {
+      const supabase = createClient();
+      const current = await supabase.auth.getUser();
+      if (current.error || !current.data.user || current.data.user.id !== user?.id) {
+        throw new Error("The account changed before connecting Google.");
+      }
+      // Google's browser button returns the same kind of verified token as the
+      // native sheet. Link it to the signed-in account; never sign into another.
+      const { error } = await supabase.auth.linkIdentity({ provider: "google", token, nonce });
+      if (error) throw error;
+      window.dispatchEvent(new Event("ccr:profile-updated"));
+    } catch {
+      setMessage(english ? "We couldn't connect this method. Your existing sign-in methods still work." : "No pudimos conectar este método. Tus accesos actuales siguen funcionando.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function addPassword() {
     if (!user?.email) return;
     setBusy("email");
@@ -71,10 +95,19 @@ export function SignInMethods() {
         {(["email", "google", "apple"] as const).map((provider) => {
           const connected = identities.some((identity) => identity.provider === provider);
           const label = provider === "email" ? (english ? "Email" : "Correo") : provider === "google" ? "Google" : "Apple";
+          const connectButton = <button type="button" disabled={busy !== null} onClick={() => { if (provider !== "email") void connect(provider); }} className="min-h-11 font-semibold text-[#009FD9] disabled:opacity-60">{busy === provider ? (english ? "Connecting…" : "Conectando…") : (english ? "Connect" : "Conectar")}</button>;
           return <li key={provider} className="flex items-center justify-between gap-3 text-sm">
             <span>{label}</span>
-            {connected ? <span className="text-emerald-700">{english ? "Connected" : "Conectado"}</span> : provider === "email" ? <button type="button" disabled={busy !== null} onClick={addPassword} className="font-semibold text-[#009FD9] disabled:opacity-60">{english ? "Add password" : "Agregar contraseña"}</button> : <button type="button" disabled={busy !== null} onClick={() => connect(provider)} className="font-semibold text-[#009FD9] disabled:opacity-60">{busy === provider ? (english ? "Connecting…" : "Conectando…") : (english ? "Connect" : "Conectar")}</button>}
+            {connected ? <span className="text-emerald-700">{english ? "Connected" : "Conectado"}</span> : provider === "email" ? <button type="button" disabled={busy !== null} onClick={addPassword} className="font-semibold text-[#009FD9] disabled:opacity-60">{english ? "Add password" : "Agregar contraseña"}</button> : provider === "google" && !native ? (
+              <div className="w-[200px] max-w-[calc(100%_-_4rem)] shrink-0">
+                <GoogleSignInButton locale={locale} disabled={busy !== null}
+                  fallback={<div className="flex h-11 justify-end">{connectButton}</div>}
+                  onCredential={connectGoogleCredential}
+                />
+              </div>
+            ) : connectButton}
           </li>;
+
         })}
       </ul>
       {message && <p role="alert" className="mt-3 text-sm text-red-700">{message}</p>}
