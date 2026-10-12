@@ -1,5 +1,6 @@
 "use client";
 
+import { AppleAccountNotice } from "@/components/auth/apple-account-notice";
 import { rememberSignIn } from "@/lib/auth/last-sign-in";
 import { useState, useSyncExternalStore } from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -14,6 +15,7 @@ import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 // Apple uses the same provider on the website and in the native app.
 export function SocialSignupButtons({ nextPath }: { nextPath?: string }) {
   const locale = useLocale();
+  const [appleNotice, setAppleNotice] = useState(false);
   const t = useTranslations("auth.login");
   // Google switches between its browser button and the native sheet after hydration.
   const runtime = useSyncExternalStore(
@@ -107,6 +109,7 @@ export function SocialSignupButtons({ nextPath }: { nextPath?: string }) {
 
   return (
     <div className="flex flex-col gap-3">
+      <AppleAccountNotice open={appleNotice} onClose={() => setAppleNotice(false)} onContinue={() => { void start("apple"); }} />
       {covering && (
         <div className="fixed inset-0 z-[300] bg-[#f4f7fa]" aria-busy="true">
           {/* Velo neutro: la marca no se usa como pantalla de carga. */}
@@ -115,7 +118,7 @@ export function SocialSignupButtons({ nextPath }: { nextPath?: string }) {
       )}
       <button
           type="button"
-          onClick={() => start("apple")}
+          onClick={() => setAppleNotice(true)}
           disabled={loading !== null}
           className="flex w-full items-center justify-center gap-3 rounded-xl border border-[#111827] bg-[#111827] px-4 py-2.5 text-sm font-semibold text-white transition-colors disabled:opacity-60"
         >

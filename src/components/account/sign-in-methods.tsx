@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { useLocale } from "next-intl";
+import { useState, useSyncExternalStore } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 
 export function SignInMethods() {
   const { user } = useAuth();
   const locale = useLocale();
+  const ta = useTranslations("auth.appleAccount");
+  const connectingApple = useSyncExternalStore(() => () => {}, () => new URLSearchParams(window.location.search).get("connect") === "apple", () => false);
   const english = locale === "en";
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -49,6 +51,7 @@ export function SignInMethods() {
     <section className="border-t border-[#eef2f6] pt-4">
       <h3 className="text-sm font-semibold text-[#374151]">{english ? "Sign-in methods" : "Métodos de acceso"}</h3>
       <p className="mt-1 text-sm text-[#6b7280]">{english ? "Connect another method to access this same account. Confirm it with the provider, even if it uses a different email." : "Conecta otro método para entrar a esta misma cuenta. Confírmalo con el proveedor, aunque use otro correo."}</p>
+      {connectingApple && <p role="status" className="mt-3 rounded-xl bg-[#eff9fd] p-3 text-sm text-[#374151]">{ta("accountHelp")}</p>}
       <ul className="mt-3 space-y-3">
         {(["email", "google", "apple"] as const).map((provider) => {
           const connected = identities.some((identity) => identity.provider === provider);
