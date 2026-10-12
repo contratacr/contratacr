@@ -23,6 +23,7 @@ test.describe("authenticated account can keep password and social access", () =>
   test.afterEach(async () => { await cleanupDisposableAccount(account); });
 
   test("authenticated users can initiate linking Google to their existing account", async () => {
+    test.skip(process.env.LOCAL_REGRESSION_SEED === "1", "Google consent requires the configured external test project; the local Supabase stack has no Google provider.");
     const client = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { auth: { persistSession: false } });
     const signedIn = await client.auth.signInWithPassword({ email: account!.email, password: account!.password });
     expect(signedIn.error).toBeNull();
