@@ -77,3 +77,24 @@ test("native identity linking rejects an invalid provider token without changing
     await cleanupDisposableAccount(account);
   }
 });
+
+
+test("Google connection remains visible in account settings without horizontal overflow", async ({ page }) => {
+  test.skip(!(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").includes("oqheayqqprpciqdvdaqo") || !process.env.SUPABASE_SERVICE_ROLE_KEY,
+    "Requires the isolated test database.");
+  let account: DisposableAccount | undefined;
+  try {
+    account = await createDisposableAccount({ prefix: "google-link-layout" });
+    await loginAs(page, account.email, account.password);
+    await gotoOK(page, "/dashboard/profesional?tab=cuenta");
+    const methods = page.locator("section").filter({ has: page.getByRole("heading", { name: "Métodos de acceso", exact: true }) });
+    await expect(methods).toBeVisible();
+    const google = methods.locator("li").filter({ has: page.getByText("Google", { exact: true }) });
+    await expect(google.getByRole("button", { name: "Conectar", exact: true })).toBeVisible();
+    await expect(google.getByTestId("google-identity-button")).toHaveCount(1);
+    const dimensions = await page.evaluate(() => ({ width: innerWidth, scroll: document.documentElement.scrollWidth }));
+    expect(dimensions.scroll).toBeLessThanOrEqual(dimensions.width + 4);
+  } finally {
+    await cleanupDisposableAccount(account);
+  }
+});

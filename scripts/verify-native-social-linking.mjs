@@ -11,7 +11,7 @@ const compiled = ts.transpileModule(source, {
 }).outputText;
 
 function setup({ native = true, providerError, linkError, accounts = ["existing", "existing"] } = {}) {
-  const calls = { login: [], link: [], signIn: [] };
+  const calls = { login: [], link: [], signIn: [], diagnostics: [] };
   const plugin = {
     initialize: async () => {},
     logout: async () => {},
@@ -26,6 +26,7 @@ function setup({ native = true, providerError, linkError, accounts = ["existing"
     exports, crypto: webcrypto, Uint8Array, TextEncoder, console,
     process: { env: { NEXT_PUBLIC_GOOGLE_CLIENT_ID: "web-client", NEXT_PUBLIC_GOOGLE_IOS_CLIENT_ID: "ios-client" } },
     require: (name) => {
+      if (name === "@/lib/report-client-error") return { reportClientError: (_origin, error) => calls.diagnostics.push(error.message) };
       if (name === "@/hooks/use-native-app") return { isNativeAppRuntime: () => native };
       if (name === "@capgo/capacitor-social-login") return { SocialLogin: plugin };
       if (name === "@capacitor/core") return { Capacitor: { getPlatform: () => "ios" } };
@@ -90,4 +91,13 @@ test("the website leaves linking to its existing web OAuth flow", async () => {
   const { api, supabase, calls } = setup({ native: false });
   assert.equal(await api.nativeSocialLink("google", supabase), "unavailable");
   assert.equal(calls.login.length + calls.link.length + calls.signIn.length, 0);
+});
+
+
+test("native fallback reports a fixed reason without leaking provider data", async () => {
+  const { api, supabase, calls } = setup({ providerError: new Error("Missing URL scheme private-token-example user@example.com") });
+  assert.equal(await api.nativeSocialLink("google", supabase), "unavailable");
+  assert.equal(calls.diagnostics.length, 1);
+  assert.equal(calls.diagnostics[0], "native-social-fallback:link:google:provider-sheet:url-scheme");
+  assert.equal(calls.link.length + calls.signIn.length, 0);
 });
