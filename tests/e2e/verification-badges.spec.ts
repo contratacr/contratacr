@@ -35,6 +35,36 @@ for (const path of ["/profesionales", "/promociones", "/empleos", "/proyectos"])
   });
 }
 
+for (const path of ["/promociones", "/empleos", "/proyectos"]) {
+  test(`${path}: publication detail keeps the owner's check beside the name`, async ({ page }) => {
+    await gotoOK(page, path);
+    const cardCheck = page.locator("article [data-verification-badge]").filter({ visible: true }).first();
+    await expect(cardCheck).toBeVisible();
+    const href = await cardCheck.locator("xpath=ancestor::article[1]").locator("h3 a, h2 a").first().getAttribute("href");
+    expect(href).toBeTruthy();
+    await gotoOK(page, href!);
+    const owner = page.locator("[data-verification-owner]").filter({ visible: true }).first();
+    const check = owner.locator("[data-verification-badge]");
+    await expect(check).toBeVisible();
+    expect(await check.textContent()).toBe("");
+    await expect(owner.locator("[data-cedula-verificada]")).toHaveCount(0);
+    expect(await check.evaluate((el) => el.closest("a"))).toBeNull();
+    const before = page.url();
+    await check.click();
+    await expect(page.getByRole("dialog")).toContainText("El check indica que ContrataCR comprobó");
+    expect(page.url()).toBe(before);
+    await expectNoHorizontalOverflow(page);
+    await page.getByRole("dialog").getByRole("button", { name: "Entendido", exact: true }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    const aligned = await owner.evaluate((el) => {
+      const badge = el.querySelector("[data-verification-badge]")!.getBoundingClientRect();
+      const name = el.querySelector("a, p")!.getBoundingClientRect();
+      return badge.left >= name.right - 1 && badge.top < name.bottom && badge.bottom > name.top;
+    });
+    expect(aligned).toBe(true);
+  });
+}
+
 test("the professional profile keeps the written verification label", async ({ page }) => {
   await gotoOK(page, "/profesionales");
   const check = page.locator("[data-verification-badge]").filter({ visible: true }).first();
