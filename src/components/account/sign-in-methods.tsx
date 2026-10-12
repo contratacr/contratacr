@@ -4,6 +4,7 @@ import { useState, useSyncExternalStore } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
+import { nativeSocialLink } from "@/lib/auth/native-social-login";
 
 export function SignInMethods() {
   const { user } = useAuth();
@@ -25,10 +26,24 @@ export function SignInMethods() {
       setBusy(null);
       return;
     }
-    const next = `${english ? "/en" : ""}/dashboard/profesional?tab=cuenta`;
-    const redirectTo = `${window.location.origin}/auth/callback?flow=link&locale=${locale}&next=${encodeURIComponent(next)}`;
-    const { error } = await supabase.auth.linkIdentity({ provider, options: { redirectTo } });
-    if (error) {
+    try {
+      const outcome = await nativeSocialLink(provider, supabase);
+      if (outcome === "linked") {
+        window.dispatchEvent(new Event("ccr:profile-updated"));
+        setBusy(null);
+        return;
+      }
+      if (outcome === "cancelled") {
+        setBusy(null);
+        return;
+      }
+      // The browser retains its authenticated OAuth linking flow. It must never
+      // fall back to sign-in, even when the native provider is unavailable.
+      const next = `${english ? "/en" : ""}/dashboard/profesional?tab=cuenta`;
+      const redirectTo = `${window.location.origin}/auth/callback?flow=link&locale=${locale}&next=${encodeURIComponent(next)}`;
+      const { error } = await supabase.auth.linkIdentity({ provider, options: { redirectTo } });
+      if (error) throw error;
+    } catch {
       setMessage(english ? "We couldn't connect this method. Your existing sign-in methods still work." : "No pudimos conectar este método. Tus accesos actuales siguen funcionando.");
       setBusy(null);
     }

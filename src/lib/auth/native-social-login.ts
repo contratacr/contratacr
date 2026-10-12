@@ -77,10 +77,11 @@ function isCancellation(error: unknown) {
   return /cancel|dismiss|user closed|12501|1001/.test(text);
 }
 
-export async function nativeSocialSignIn(
+async function nativeSocialOperation(
   provider: NativeSocialProvider,
   supabase: SupabaseClient,
-): Promise<NativeSocialOutcome> {
+  operation: "sign-in" | "link",
+): Promise<"completed" | "cancelled" | "unavailable"> {
   if (!isNativeAppRuntime()) return "unavailable";
 
   let platform: string;
@@ -91,6 +92,15 @@ export async function nativeSocialSignIn(
   }
   if (platform === "web" || !isConfigured(provider, platform)) return "unavailable";
   if (!(await ensureInitialized())) return "unavailable";
+
+  // Linking must always preserve the authenticated account. Never substitute a
+  // regular sign-in, which could switch accounts or create another profile.
+  let accountId: string | undefined;
+  if (operation === "link") {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) throw error ?? new Error("Sign in before linking an identity.");
+    accountId = data.user.id;
+  }
 
   const { SocialLogin } = await loadPlugin();
   // The provider receives the hashed nonce and signs it into the id token;
@@ -129,7 +139,33 @@ export async function nativeSocialSignIn(
   }
   if (!idToken) return "unavailable";
 
-  const { error } = await supabase.auth.signInWithIdToken({ provider, token: idToken, nonce });
-  if (error) throw error;
-  return "signed-in";
+  if (operation === "link") {
+    // The provider sheet may remain open while the app session changes.
+    const current = await supabase.auth.getUser();
+    if (current.error || current.data.user?.id !== accountId) {
+      throw current.error ?? new Error("The account changed while connecting the provider.");
+    }
+    const { error } = await supabase.auth.linkIdentity({ provider, token: idToken, nonce });
+    if (error) throw error;
+  } else {
+    const { error } = await supabase.auth.signInWithIdToken({ provider, token: idToken, nonce });
+    if (error) throw error;
+  }
+  return "completed";
+}
+
+export async function nativeSocialSignIn(
+  provider: NativeSocialProvider,
+  supabase: SupabaseClient,
+): Promise<NativeSocialOutcome> {
+  const outcome = await nativeSocialOperation(provider, supabase, "sign-in");
+  return outcome === "completed" ? "signed-in" : outcome;
+}
+
+export async function nativeSocialLink(
+  provider: NativeSocialProvider,
+  supabase: SupabaseClient,
+): Promise<"linked" | "cancelled" | "unavailable"> {
+  const outcome = await nativeSocialOperation(provider, supabase, "link");
+  return outcome === "completed" ? "linked" : outcome;
 }
