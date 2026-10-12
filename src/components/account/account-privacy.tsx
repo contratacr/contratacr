@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { FilaInterruptor } from "@/components/ui/fila-interruptor";
+import { UsuariosBloqueados } from "@/components/moderation/usuarios-bloqueados";
+import { useNativeApp } from "@/hooks/use-native-app";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 
 /**
- * PRIVACIDAD: por ahora, las confirmaciones de lectura del chat (recíprocas,
- * como WhatsApp). Va en su propia sección y solo en la app, que es donde existe
- * el chat.
+ * Privacy groups blocked accounts on web and native. Read receipts remain
+ * native-only, where chat is available.
  *
  * Se lee con get_my_profile(): la tabla de perfiles solo deja leer columna por
  * columna lo público, y pedir esta columna directo respondía «permission
@@ -18,18 +19,19 @@ import { createClient } from "@/lib/supabase/client";
 export function AccountPrivacySection() {
   const t = useTranslations("accountPrivacy");
   const { user } = useAuth();
+  const native = useNativeApp();
   const [confirma, setConfirma] = useState<boolean | null>(null);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !native) return;
     let vivo = true;
     void createClient().rpc("get_my_profile").then(({ data }) => {
       if (vivo && data) setConfirma((data as { confirmaciones_de_lectura?: boolean }).confirmaciones_de_lectura !== false);
     });
     return () => { vivo = false; };
-  }, [user]);
+  }, [user, native]);
 
   async function cambiar(siguiente: boolean) {
     if (!user) return;
@@ -41,17 +43,25 @@ export function AccountPrivacySection() {
     setGuardando(false);
   }
 
-  if (confirma === null) return null;
   return (
-    <div>
-      <FilaInterruptor
-        titulo={t("readReceipts")}
-        ayuda={t("readReceiptsHelp")}
-        checked={confirma}
-        disabled={guardando}
-        onChange={(valor) => { void cambiar(valor); }}
-      />
-      {error && <p role="alert" className="mt-2 text-sm font-semibold text-[#b91c1c]">{t("readReceiptsError")}</p>}
+    <div data-account-privacy className="space-y-6">
+      {native && (
+        <div>
+          {confirma === null ? (
+            <div aria-busy="true" className="h-20 animate-pulse rounded-xl bg-slate-100" />
+          ) : (
+            <FilaInterruptor
+              titulo={t("readReceipts")}
+              ayuda={t("readReceiptsHelp")}
+              checked={confirma}
+              disabled={guardando}
+              onChange={(valor) => { void cambiar(valor); }}
+            />
+          )}
+          {error && <p role="alert" className="mt-2 text-sm font-semibold text-[#b91c1c]">{t("readReceiptsError")}</p>}
+        </div>
+      )}
+      <UsuariosBloqueados />
     </div>
   );
 }

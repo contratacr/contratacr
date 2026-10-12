@@ -1025,7 +1025,7 @@
     "profileSections": {
       "verificationDesc": "Identity and verification status.",
       "accountDesc": "Email, password and account security.",
-      "privacyDesc": "Who sees when you read your messages."
+      "privacyDesc": "Blocked users and message privacy."
     },
     "completion": {
       "completeTitle": "Your profile is complete!",
@@ -1763,6 +1763,7 @@
     "errWrongPassword": "Your current password is incorrect."
   },
   "closeAccount": {
+    "heading": "Account management",
     "reasonRequired": "Tell us the reason.",
     "processError": "Couldn't process it.",
     "connError": "Connection error. Try again.",

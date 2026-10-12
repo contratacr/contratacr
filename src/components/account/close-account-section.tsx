@@ -108,7 +108,7 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
         <p className="text-sm font-semibold text-[#162543]">{t("disabledTitle")}</p>
         <p className="mt-0.5 text-xs leading-relaxed text-[#4b6270]">{t("disabledBody")}</p>
         {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
-        <button onClick={reactivate} disabled={busy} className="mt-3 rounded-lg bg-[#009FD9] text-white text-sm font-semibold px-4 py-2 hover:bg-[#0089bb] disabled:opacity-60">
+        <button onClick={reactivate} disabled={busy} className="mt-3 rounded-lg bg-[#009FD9] text-white min-h-11 text-sm font-semibold px-4 py-2 hover:bg-[#0089bb] disabled:opacity-60">
           {busy ? t("reactivating") : t("reactivate")}
         </button>
       </div>
@@ -116,64 +116,67 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
   }
 
   return (
-    <div className="space-y-3">
-      <div className="border-t border-[#eef2f6] pt-4">
-        <div className="flex items-start gap-3">
-          <EyeOff className="mt-0.5 h-4 w-4 shrink-0 text-[#6b7280]" />
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-[#162543]">{t("disableTitle")}</p>
-            <p className="mt-0.5 text-xs leading-relaxed text-[#6b7280]">{t("disableBody")}</p>
-          {!open ? (
-            <button onClick={() => setOpen(true)} className="mt-3 rounded-full border border-[#d7e1ea] px-4 py-2 text-sm font-semibold text-[#374151] hover:bg-[#f8fafc]">
-              {t("disableCta")}
-            </button>
-          ) : (
-            <div className="mt-3 flex flex-col gap-2">
-              <label className="text-sm font-medium text-[#374151]">{t("reason")} <span className="text-red-500">*</span></label>
-              <textarea
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                rows={2}
-                placeholder={t("reasonPlaceholder")}
-                className="w-full rounded-lg border border-[#e5e7eb] p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30"
-              />
-              {error && <p className="text-xs text-red-600">{error}</p>}
-              <div className="flex gap-2">
-                <button onClick={disableAccount} disabled={busy} className="rounded-lg bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0089bb] disabled:opacity-60">
-                  {busy ? t("disabling") : t("confirmDisable")}
-                </button>
-                <button onClick={() => { setOpen(false); setError(null); }} className="rounded-lg text-sm text-[#6b7280] px-3 py-2 hover:text-[#374151]">{t("cancel")}</button>
-              </div>
-            </div>
-          )}
-          </div>
-        </div>
-      </div>
-
-      <div className="border-t border-[#eef2f6] pt-4">
-        <div className="flex items-start gap-3">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[#b91c1c]" />
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-[#b91c1c]">{t("deleteTitle")}</p>
-            <p className="mt-0.5 text-xs leading-relaxed text-[#6b7280]">{t("deleteBody")}</p>
-            {!deleteOpen ? (
-              <button onClick={() => setDeleteOpen(true)} className="mt-3 rounded-full border border-[#b91c1c] text-[#b91c1c] text-sm font-semibold px-4 py-2 hover:bg-red-50">
-                {t("deleteCta")}
+    <section data-account-management className="border-t border-[#eef2f6] pt-6">
+      <h3 className="text-sm font-semibold text-[#374151]">{t("heading")}</h3>
+      <div className="mt-4 space-y-6">
+        <div>
+          <div className="flex items-start gap-3">
+            <EyeOff className="mt-0.5 h-4 w-4 shrink-0 text-[#6b7280]" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-[#162543]">{t("disableTitle")}</p>
+              <p className="mt-0.5 text-xs leading-relaxed text-[#6b7280]">{t("disableBody")}</p>
+            {!open ? (
+              <button onClick={() => setOpen(true)} className="mt-3 min-h-11 rounded-full border border-[#d7e1ea] px-4 py-2 text-sm font-semibold text-[#374151] hover:bg-[#f8fafc]">
+                {t("disableCta")}
               </button>
             ) : (
-              <div className="mt-3 space-y-2">
-                {deleteError && <p className="text-xs text-red-600">{deleteError}</p>}
-                <div className="flex flex-wrap gap-2">
-                  <button onClick={deleteAccount} disabled={deleteBusy} className="rounded-lg bg-[#b91c1c] text-white text-sm font-semibold px-4 py-2 hover:bg-[#991b1b] disabled:opacity-60">
-                    {deleteBusy ? t("deleting") : t("confirmDelete")}
+              <div className="mt-3 flex flex-col gap-2">
+                <label className="text-sm font-medium text-[#374151]">{t("reason")} <span className="text-red-500">*</span></label>
+                <textarea
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  rows={2}
+                  placeholder={t("reasonPlaceholder")}
+                  className="w-full rounded-lg border border-[#e5e7eb] p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30"
+                />
+                {error && <p className="text-xs text-red-600">{error}</p>}
+                <div className="flex gap-2">
+                  <button onClick={disableAccount} disabled={busy} className="rounded-lg bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0089bb] disabled:opacity-60">
+                    {busy ? t("disabling") : t("confirmDisable")}
                   </button>
-                  <button onClick={() => { setDeleteOpen(false); setDeleteError(null); }} className="rounded-lg text-sm text-[#6b7280] px-3 py-2 hover:text-[#374151]">{t("cancel")}</button>
+                  <button onClick={() => { setOpen(false); setError(null); }} className="rounded-lg min-h-11 text-sm text-[#6b7280] px-3 py-2 hover:text-[#374151]">{t("cancel")}</button>
                 </div>
               </div>
             )}
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-[#eef2f6] pt-6">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[#b91c1c]" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-[#b91c1c]">{t("deleteTitle")}</p>
+              <p className="mt-0.5 text-xs leading-relaxed text-[#6b7280]">{t("deleteBody")}</p>
+              {!deleteOpen ? (
+                <button onClick={() => setDeleteOpen(true)} className="mt-3 min-h-11 rounded-full border border-[#b91c1c] text-[#b91c1c] min-h-11 text-sm font-semibold px-4 py-2 hover:bg-red-50">
+                  {t("deleteCta")}
+                </button>
+              ) : (
+                <div className="mt-3 space-y-2">
+                  {deleteError && <p className="text-xs text-red-600">{deleteError}</p>}
+                  <div className="flex flex-wrap gap-2">
+                    <button onClick={deleteAccount} disabled={deleteBusy} className="rounded-lg bg-[#b91c1c] text-white min-h-11 text-sm font-semibold px-4 py-2 hover:bg-[#991b1b] disabled:opacity-60">
+                      {deleteBusy ? t("deleting") : t("confirmDelete")}
+                    </button>
+                    <button onClick={() => { setDeleteOpen(false); setDeleteError(null); }} className="rounded-lg min-h-11 text-sm text-[#6b7280] px-3 py-2 hover:text-[#374151]">{t("cancel")}</button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

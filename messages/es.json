@@ -1313,7 +1313,7 @@
     "profileSections": {
       "verificationDesc": "Identidad y estado de verificación.",
       "accountDesc": "Correo, contraseña y seguridad de la cuenta.",
-      "privacyDesc": "Quién ve cuándo lees tus mensajes."
+      "privacyDesc": "Usuarios bloqueados y privacidad de tus mensajes."
     },
     "completion": {
       "completeTitle": "¡Tu perfil está completo!",
@@ -1763,6 +1763,7 @@
     "errWrongPassword": "Tu contraseña actual no es correcta."
   },
   "closeAccount": {
+    "heading": "Gestión de cuenta",
     "reasonRequired": "Cuéntanos el motivo.",
     "processError": "No se pudo procesar.",
     "connError": "Error de conexión. Intenta de nuevo.",
