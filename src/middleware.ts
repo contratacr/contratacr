@@ -18,6 +18,7 @@ const PROTECTED_PREFIXES = ["/dashboard"];
 // Paths that are always public (never redirected to onboarding)
 const PUBLIC_PREFIXES = [
   "/onboarding",
+  "/continuar-perfil",
   "/login",
   "/registro",
   "/olvide-contrasena",

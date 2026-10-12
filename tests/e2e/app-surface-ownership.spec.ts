@@ -30,6 +30,7 @@ function appRoute(file: string, terminal: "page.tsx" | "route.ts") {
 // corre en cada push). La prueba de más abajo compara las dos y falla si se
 // separan: antes se editaba una sola y la otra se enteraba semanas después.
 const pageRules: OwnershipRule[] = [
+  {match:/^\/\[locale\]\/continuar-perfil$/,owner:"profile-reminder.spec.ts"},
   { match: /^\/\[locale\]\/admin(?:\/|$)/, owner: "admin-smoke.spec.ts" },
   { match: /^\/\[locale\]\/dashboard(?:\/|$)/, owner: "dashboard-surfaces.spec.ts" },
   { match: /^\/\[locale\]\/(?:empleos|promociones)\/(?:publicar|\[id\]\/editar|mis-empleos|mis-promociones)$/, owner: "marketplace-editors.spec.ts" },

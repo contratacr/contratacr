@@ -6,6 +6,7 @@ const appRoot = resolve(root, "src/app");
 const e2eRoot = resolve(root, "tests/e2e");
 
 const pageRules = [
+  [/^\/\[locale\]\/continuar-perfil$/, "profile-reminder.spec.ts"],
   [/^\/\[locale\]\/admin(?:\/|$)/, "admin-smoke.spec.ts"],
   [/^\/\[locale\]\/dashboard(?:\/|$)/, "dashboard-surfaces.spec.ts"],
   // The editors (publish, edit, owner managers) are exercised through their real screens.
