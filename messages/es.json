@@ -3279,6 +3279,7 @@
     "close": "Cerrar",
     "understood": "Entendido",
     "help": "Cuando tu identidad esté verificada, el check aparecerá junto a tu nombre en las tarjetas.",
+    "verifiedHelp": "Tu identidad está verificada. El check aparece junto a tu nombre en las tarjetas.",
     "educationAction": "Qué significa el check de identidad"
   }
 }
