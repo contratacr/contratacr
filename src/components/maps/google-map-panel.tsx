@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
+import { VerificationExplanation } from "@/components/ui/verification-info";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { useRouter } from "next/navigation";
 import { Loader2, MapPin, RefreshCw } from "lucide-react";
@@ -85,7 +87,7 @@ const MAP_CSS =
   + ".ccr-pop-name-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}" +
   // Verification seal — the SAME Instagram-style solid badge as <VerifiedSeal />
   // (see src/components/ui/verified-seal.tsx), inlined because this card is raw HTML.
-  ".ccr-ver{display:inline-flex;flex:none;width:14px;height:14px;color:#009FD9;}" +
+  ".ccr-ver{display:inline-flex;flex:none;width:24px;height:24px;color:#009FD9;border:0;background:transparent;align-items:center;justify-content:center;cursor:pointer;}" +
   ".ccr-ver svg{display:block;width:14px;height:14px;}" +
   ".ccr-pop-prof{display:flex;align-items:center;gap:4px;color:#6b7280;font-size:12px;margin-top:2px;line-height:1.3;}" +
   ".ccr-pop-more{display:inline-flex;align-items:center;font-size:10px;font-weight:800;color:#526277;line-height:1;}" +
@@ -188,6 +190,8 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
   // "Buscar en esta área": show the button only after a USER move (suppress while we
   // programmatically fit the map to the results).
   const router = useRouter();
+  const [verificationOpen, setVerificationOpen] = useState(false);
+  const tv = useTranslations("verificationBadge");
   const [showArea, setShowArea] = useState(false);
   const [areaSearching, setAreaSearching] = useState(false);
   const suppressMoveRef = useRef(false);
@@ -309,9 +313,9 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     const extraProfessions = Math.max(0, professionLabels.length - 1);
     const displayName = getProfessionalDisplayName(pro.fullName, pro.businessName);
     const primaryName = displayName.primaryDesktop;
-    const verifiedLabel = locale === "en" ? "Verified by ContrataCR" : "Verificado por ContrataCR";
+    const verifiedLabel = esc(tv("action"));
     const verifiedMarkup = pro.verified
-      ? `<span class="ccr-ver" role="img" aria-label="${verifiedLabel}" title="${verifiedLabel}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z" fill="currentColor"/><path d="m9 12 2 2 4-4" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`
+      ? `<button type="button" class="ccr-ver" aria-haspopup="dialog" aria-label="${verifiedLabel}" title="${verifiedLabel}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z" fill="currentColor"/><path d="m9 12 2 2 4-4" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`
       : "";
     const ratingMetric = pro.popupMetricLabel?.match(/^★\s*([0-9.]+)\s*\((.+)\)$/);
     const metricMarkup = ratingMetric
@@ -324,20 +328,21 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     const wrap = document.createElement("div");
     wrap.className = "ccr-popwrap";
     wrap.innerHTML =
-      `<a class="ccr-pop" href="${href}">` +
+      `<div class="ccr-pop">` +
         `<button class="ccr-pop-x" aria-label="Cerrar">×</button>` +
         `<div class="ccr-pop-top">` +
           `<div class="ccr-av">${avatarMarkup}</div>` +
           `<div style="min-width:0;">` +
-            `<div class="ccr-pop-name"><span class="ccr-pop-name-text">${esc(primaryName)}</span>${verifiedMarkup}</div>` +
+            `<div class="ccr-pop-name"><a href="${href}" class="ccr-pop-name-text" style="color:inherit;text-decoration:none">${esc(primaryName)}</a>${verifiedMarkup}</div>` +
             (primaryProfession ? `<div class="ccr-pop-prof"><span>${esc(primaryProfession)}</span>${extraProfessions > 0 ? `<span class="ccr-pop-more">+${extraProfessions}</span>` : ""}</div>` : "") +
             metricMarkup +
             (pro.priceLabel ? `<div class="${priceClass}">${esc(pro.priceLabel)}</div>` : "") +
           `</div>` +
         `</div>` +
-      `</a>`;
+      `</div>`;
     wrap.querySelector(".ccr-pop-x")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); hidePopup(); });
-    wrap.querySelector("a.ccr-pop")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); hidePopup(); router.push(href); });
+    wrap.querySelector(".ccr-pop")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); hidePopup(); router.push(href); });
+    wrap.querySelector(".ccr-ver")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); setVerificationOpen(true); });
     popupRef.current = createGoogleMarker(g, { map, position: pos, content: wrap, zIndex: 100000 });
     popupContentElRef.current = wrap; // measured by the proximity-hide on mousemove
     if (canHoverRef.current) neutralizePopup(popupRef.current, wrap); // desktop hover anti-flicker only; touch maps must keep native gestures
@@ -633,6 +638,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
 
   return (
     <>
+      <VerificationExplanation open={verificationOpen} onClose={() => setVerificationOpen(false)} />
       <style dangerouslySetInnerHTML={{ __html: MAP_CSS }} />
       {/* Wrapper is the positioning context; the map fills it and the floating
           "Buscar en esta área" button overlays on top (top-center, like Airbnb/Uber).

@@ -9,6 +9,7 @@ import { Link } from "@/i18n/navigation";
 import { SupportLink } from "@/components/support/support-link";
 import { cleanId, detectIdType, isValidId } from "@/lib/cedula";
 import { caseRef, type VerificationStatus } from "@/lib/verification";
+import { VerificationBadgeEducation } from "@/components/ui/verification-info";
 import { VerifiedSeal } from "@/components/ui/verified-seal";
 
 interface Props {
@@ -314,6 +315,7 @@ export function VerificationPanel({
   if (noCrId && status !== "verified") {
     return (
       <div className="space-y-5">
+        <VerificationBadgeEducation context="panel" />
         <VerificationSummary
           title={
             status === "rejected"
@@ -393,6 +395,7 @@ export function VerificationPanel({
 
   return (
     <div className="space-y-4">
+      <VerificationBadgeEducation context="panel" />
       {status !== "verified" && (
         <VerificationSummary
           title={

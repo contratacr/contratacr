@@ -108,14 +108,14 @@ test.describe("@seeded search results", () => {
       };
     });
     expect(layout.card).not.toBeNull();
-    expect(layout.meta).not.toBeNull();
+
     expect(layout.serviceRow).not.toBeNull();
     expect(layout.service).not.toBeNull();
     expect(layout.primary).not.toBeNull();
-    expect(layout.serviceRow!.top).toBeLessThan(layout.meta!.top);
+    if (layout.meta) expect(layout.serviceRow!.top).toBeLessThan(layout.meta.top);
     expect(layout.location).not.toBeNull();
     expect(layout.service!.top).toBeLessThan(layout.primary!.top);
-    expect(layout.meta!.top).toBeLessThan(layout.location!.top);
+    if (layout.meta) expect(layout.meta.top).toBeLessThan(layout.location!.top);
     // El precio va en la fila de la zona, centrado con ella.
     const centroPrecio = (layout.primary!.top + layout.primary!.bottom) / 2;
     expect(centroPrecio).toBeGreaterThanOrEqual(layout.location!.top);

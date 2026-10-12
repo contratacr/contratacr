@@ -3270,5 +3270,15 @@
     "private": "Este enlace es privado y sirve únicamente para este caso. No lo compartas.",
     "login": "Entrar o crear cuenta con el mismo correo para ver el caso en mi panel",
     "newCase": "Abrir un caso de soporte"
+  },
+  "verificationBadge": {
+    "title": "Identidad verificada",
+    "action": "Identidad verificada: ver qué se comprobó",
+    "description": "ContrataCR comprobó la identificación de esta cuenta mediante registros oficiales o revisión de documentos.",
+    "scope": "El distintivo no garantiza la calidad del trabajo ni acredita certificaciones profesionales. Revisa también el perfil, las reseñas y los detalles del servicio.",
+    "close": "Cerrar",
+    "understood": "Entendido",
+    "registrationHelp": "El check junto al nombre identifica las cuentas cuya identidad ya verificamos. Se muestra cuando la verificación se aprueba; registrarte no lo otorga automáticamente.",
+    "panelHelp": "Cuando tu identidad esté verificada, el check aparecerá junto a tu nombre en las tarjetas. Al tocarlo, las personas podrán ver qué comprobamos."
   }
 }

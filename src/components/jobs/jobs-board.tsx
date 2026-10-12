@@ -4,7 +4,8 @@ import { formatPersonDisplayName } from "@/lib/display-name";
 import { conFiltroDeFecha } from "@/lib/marketplace/filtros-por-volumen";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 import { PanelEmptyState } from "@/components/ui/content-loading";
-import { CEDULA_COMPACTA, CedulaVerificada } from "@/components/ui/cedula-verificada";
+import { CedulaVerificada } from "@/components/ui/cedula-verificada";
+import { VerificationInfo } from "@/components/ui/verification-info";
 import { cn } from "@/lib/utils";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 
@@ -579,21 +580,20 @@ function jobSaveSnapshot(job: JobPost, locale: MarketplaceLocale) {
 function JobRow({ job, selected, onSelect }: { job: JobPost; selected: boolean; onSelect: () => void }) {
   const locale = marketplaceLocale(useLocale());
   const copy = JOBS_COPY[locale];
-  const tPerfil = useTranslations("profile");
   return <article className={`relative min-h-[7.25rem] overflow-hidden border-b lg:min-h-0 border-[#e5e7eb] bg-white px-3 py-3 transition sm:max-lg:last:border-b-0 hover:bg-[#f8fafc] sm:px-4 ${selected ? "lg:bg-[#eef9fd] lg:shadow-[inset_4px_0_0_#162543]" : ""}`}>
     <button type="button" onClick={onSelect} aria-label={`${copy.view} ${job.title}`} className="absolute inset-0 hidden lg:block" />
-    <Link href={rutaEmpleo(job)} className="relative z-[1] block w-full text-left lg:pointer-events-none">
+    <div className="relative z-[1] block w-full text-left lg:pointer-events-none">
       <div className="flex min-w-0 items-start gap-2.5 sm:gap-3">
         <EmployerAvatar job={job} />
         <div className="min-w-0 flex-1">
-          <h2 className="line-clamp-2 text-[15px] font-extrabold leading-tight text-[#005eaa] lg:text-base">{job.title}</h2>
+          <h2 className="line-clamp-2 text-[15px] font-extrabold leading-tight text-[#005eaa] lg:text-base"><Link href={rutaEmpleo(job)} className="after:absolute after:inset-0 lg:pointer-events-none">{job.title}</Link></h2>
           {/* Nombre y «Verificado» en UNA línea (8-oct-2026): el nombre
               de persona se resume (nombre y primer apellido) y, si aun así no
               cabe, cede él con «…»; la cédula nunca baja de línea. En la ficha
               van por separado y el nombre sale completo. */}
-          <p className="mt-0.5 flex min-w-0 items-center gap-2.5 text-sm font-semibold text-[#101d35]">
+          <p className="mt-0.5 flex min-w-0 items-center gap-0.5 text-sm font-semibold text-[#101d35]">
             <span className="min-w-0 truncate" title={job.employer_name || undefined}>{formatPersonDisplayName(job.employer_name || copy.professionalFallback, "mobile")}</span>
-            {job.employer_verified && <CedulaVerificada texto={tPerfil("verificadoCorto")} className={CEDULA_COMPACTA} />}
+            {job.employer_verified && <VerificationInfo />}
           </p>
           {/* TELÉFONO: dónde y cuándo; modalidad y experiencia; salario. */}
           <JobMetaLine job={job} showApplicants={false} className="mt-0.5 truncate text-sm text-[#52627a] lg:hidden" />
@@ -619,7 +619,7 @@ function JobRow({ job, selected, onSelect }: { job: JobPost; selected: boolean; 
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   </article>;
 }
 
