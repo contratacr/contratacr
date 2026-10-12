@@ -891,7 +891,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
     : activeMobileSectionId === "lang" ? (isHealthPro ? t("secLangInsurers") : t("secLang"))
     : extraSections.find((section) => section.id === activeMobileSectionId)?.title ?? null;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     window.dispatchEvent(new CustomEvent("ccr:profile-mobile-section-title", { detail: mobileSectionFocused ? activeMobileSectionTitle : null }));
   }, [activeMobileSectionTitle, mobileSectionFocused]);
 

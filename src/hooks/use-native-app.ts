@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useEffect, useSyncExternalStore } from "react";
+import { useContext, useLayoutEffect, useSyncExternalStore } from "react";
 import { NativeAppInicial } from "./native-app-inicial";
 import { Capacitor } from "@capacitor/core";
 
@@ -18,7 +18,7 @@ export function isNativeAppRuntime(): boolean {
 // in the app, the native chrome (app header + bottom nav) must not float above
 // it. This marks the layer; the shell CSS hides the chrome for it.
 export function useNativeFullscreenLayer(active: boolean) {
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!active || !isNativeAppRuntime()) return;
     if (!window.matchMedia("(max-width: 639px)").matches) return;
     const roots = [document.documentElement, document.body];

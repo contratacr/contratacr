@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { createPortal } from "react-dom";
 import { useTranslations, useLocale } from "next-intl";
@@ -35,7 +35,7 @@ import { getNotificationProjectCreatedAt, useNotificationProjectTimes } from "@/
 import { PanelEmptyState, PanelListSkeleton } from "@/components/ui/content-loading";
 import { FilaDeslizable, iconoDeAccion } from "@/components/ui/fila-deslizable";
 import { AppTooltip } from "@/components/ui/app-tooltip";
-import { cacheNotifications, readCachedNotifications, uniqueNotifications } from "@/lib/notifications-cache";
+import { cacheNotifications, readCachedNotifications, subscribeNotificationsCache, uniqueNotifications } from "@/lib/notifications-cache";
 
 type Notification = {
   id: string;
@@ -84,18 +84,20 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
   // Per-mode (Airbnb full switch): the panel tab shows ONLY the active mode's
   // notifications, matching the navbar bell.
   const { mode } = useMode(canOffer(user));
-  // Keep the server render and the first browser render deterministic. Reading
-  // the browser notification cache during render made the server show 0 unread while hydration
-  // immediately showed the cached count, which triggered a full React re-render.
-  // The mounted effect below restores the cache without a hydration mismatch.
+  const cachedNotifications = useSyncExternalStore(
+    subscribeNotificationsCache,
+    useCallback(() => readCachedNotifications(user?.id), [user?.id]),
+    () => null,
+  );
   const [notificationState, setNotificationState] = useState<{
     userId: string | undefined;
     items: Notification[];
   }>({ userId: undefined, items: [] });
   const items = notificationState.userId === user?.id
     ? notificationState.items
-    : [];
-  const [busy, setBusy] = useState(true);
+    : (cachedNotifications as Notification[] | null) ?? [];
+  const [pending, setBusy] = useState(true);
+  const busy = pending && cachedNotifications === null;
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [globalMenuOpen, setGlobalMenuOpen] = useState(false);
   // De a 15, con «Ver notificaciones anteriores» al pie, como Facebook: con

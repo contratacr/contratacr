@@ -129,7 +129,10 @@ export async function loadDashboardCache<T>(
 
   const promise: Promise<T> = loader()
     .then((data) => {
-      setDashboardCache(key, data);
+      // A newer refresh, local edit, or sign-out may have replaced this request.
+      // Never let an older response overwrite the current account state.
+      const current = cache.get(key) as CacheEntry<T> | undefined;
+      if (current?.promise === promise) setDashboardCache(key, data);
       return data;
     })
     .catch((error) => {

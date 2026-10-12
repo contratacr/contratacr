@@ -19,7 +19,8 @@ import { applyPendingSavedPro, getSavedPros, syncSavedPros, unsaveProRemote, typ
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { ResponsiveVerifiedName } from "@/components/professionals/responsive-verified-name";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
-import { getDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
+import { useDashboardCacheSnapshot } from "@/hooks/use-cached-resource";
+import { setDashboardCache } from "@/lib/dashboard-prefetch-cache";
 
 // Al abrir algo desde Favoritos, el destino lleva de dónde salió: así el botón
 // "Volver" de la oferta, el empleo o el perfil regresa a Favoritos y no al
@@ -182,10 +183,16 @@ function SavedGenericCard({ item, onRemove }: { item: SavedItem; onRemove: (item
 export function SavedProfessionalsTab() {
   const t = useTranslations("savedPros");
   const { user, loading: authLoading } = useAuth();
-  const [savedPros, setSavedPros] = useState<SavedPro[]>([]);
-  const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
+  const prosKey = user ? `saved:professionals:${user.id}` : null;
+  const itemsKey = user ? `saved:items:${user.id}` : null;
+  const cachedPros = useDashboardCacheSnapshot<SavedPro[]>(prosKey);
+  const cachedItems = useDashboardCacheSnapshot<SavedItem[]>(itemsKey);
+  const [prosState, setSavedPros] = useState<SavedPro[]>([]);
+  const [itemsState, setSavedItems] = useState<SavedItem[]>([]);
   const [filter, setFilter] = useState<SavedFilter>("professionals");
   const [mounted, setMounted] = useState(false);
+  const savedPros = !mounted && cachedPros !== null ? cachedPros : prosState;
+  const savedItems = !mounted && cachedItems !== null ? cachedItems : itemsState;
 
   const refreshPros = useCallback(() => {
     setSavedPros(user ? getSavedPros(user.id) : []);
@@ -208,9 +215,6 @@ export function SavedProfessionalsTab() {
   }, [user]);
 
   useEffect(() => {
-    // Lo cacheado se pinta antes de esperar a la red.
-    const cacheados = user ? getDashboardCache<SavedItem[]>(`saved:items:${user.id}`) : null;
-    if (cacheados) queueMicrotask(() => setSavedItems(cacheados));
     // Los profesionales guardados viven en el navegador: se leen de una vez, sin
     // esperar la sincronización con el servidor. Antes se leían DESPUÉS de ella,
     // así que la pestaña —que abre en Profesionales— alcanzaba a pintar «no
@@ -222,6 +226,7 @@ export function SavedProfessionalsTab() {
         await syncSavedPros(user.id, true);
         await refreshItems();
       }
+      if (user) setDashboardCache(`saved:professionals:${user.id}`, getSavedPros(user.id));
       setMounted(true);
       refreshPros();
     });
@@ -281,7 +286,8 @@ export function SavedProfessionalsTab() {
   // daba por cargada y enseñaba el vacío de Profesionales durante medio
   // segundo. Un vacío es una respuesta —«no hay nada»—, y mientras se carga
   // todavía no se sabe.
-  if (authLoading || (!mounted && selectedCount === 0)) return <PanelListSkeleton rows={3} withTabs />;
+  const selectedCached = filter === "professionals" ? cachedPros !== null : cachedItems !== null;
+  if (authLoading || (!mounted && !selectedCached && selectedCount === 0)) return <PanelListSkeleton rows={3} withTabs />;
 
   const tabs = availableFilters.map((id) => ({ id }));
   const tabLabels: Record<string, string> = {

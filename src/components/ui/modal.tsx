@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useLayoutEffect, useRef, useSyncExternalStore, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { ArrowLeft, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -91,6 +91,8 @@ interface ModalProps {
  * veía. Con 12 y -6 se extiende unos 9 px, que es lo que se nota sin pesar.
  */
 
+const subscribeMounted = () => () => {};
+
 export function Modal({
   open = true,
   onClose,
@@ -111,9 +113,8 @@ export function Modal({
   cabeceraCentrada = false,
 }: ModalProps) {
   // El <body> no existe al renderizar en el servidor.
-  const [montado, setMontado] = useState(false);
-  useEffect(() => { setMontado(true); }, []);
-  useEffect(() => {
+  const montado = useSyncExternalStore(subscribeMounted, () => true, () => false);
+  useLayoutEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", onKey);

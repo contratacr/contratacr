@@ -3,6 +3,7 @@ import { loadDashboardCache } from "@/lib/dashboard-prefetch-cache";
 
 export type DashboardProfileData = {
   full_name?: string;
+  phone?: string;
   avatar_url?: string;
   cedula?: string | null;
   client_identity_status?: "verified" | "pending" | "unverified" | null;

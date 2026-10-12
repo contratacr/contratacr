@@ -10,6 +10,15 @@ export type CachedNotification = {
 
 const NOTIFICATIONS_CACHE_PREFIX = "ccr:notifications:";
 
+const memory = new Map<string, { raw: string; items: CachedNotification[] }>();
+const CACHE_EVENT = "ccr:notifications-cache-changed";
+
+export function subscribeNotificationsCache(listener: () => void) {
+  window.addEventListener(CACHE_EVENT, listener);
+  window.addEventListener("storage", listener);
+  return () => { window.removeEventListener(CACHE_EVENT, listener); window.removeEventListener("storage", listener); };
+}
+
 export function uniqueNotifications<T extends { id: string }>(items: T[]): T[] {
   const seen = new Set<string>();
   return items.filter((item) => {
@@ -23,7 +32,12 @@ export function readCachedNotifications(userId: string | undefined): CachedNotif
   if (!userId || typeof window === "undefined") return null;
   try {
     const raw = window.localStorage.getItem(`${NOTIFICATIONS_CACHE_PREFIX}${userId}`);
-    return raw === null ? null : uniqueNotifications(JSON.parse(raw) as CachedNotification[]);
+    if (raw === null) { memory.delete(userId); return null; }
+    const existing = memory.get(userId);
+    if (existing?.raw === raw) return existing.items;
+    const items = uniqueNotifications(JSON.parse(raw) as CachedNotification[]);
+    memory.set(userId, { raw, items });
+    return items;
   } catch {
     return null;
   }
@@ -32,7 +46,11 @@ export function readCachedNotifications(userId: string | undefined): CachedNotif
 export function cacheNotifications(userId: string | undefined, items: CachedNotification[]) {
   if (!userId || typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(`${NOTIFICATIONS_CACHE_PREFIX}${userId}`, JSON.stringify(items.slice(0, 100)));
+    const saved = items.slice(0, 100);
+    const raw = JSON.stringify(saved);
+    memory.set(userId, { raw, items: saved });
+    window.localStorage.setItem(`${NOTIFICATIONS_CACHE_PREFIX}${userId}`, raw);
+    window.dispatchEvent(new Event(CACHE_EVENT));
   } catch {
     // Storage is an optimization; notifications still load from Supabase.
   }

@@ -8,6 +8,7 @@ import { enlacePerfil } from "@/lib/profile-url";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 
 import { useEffect, useState, useCallback, useMemo, useRef, useLayoutEffect } from "react";
+import { flushSync } from "react-dom";
 import { useLocale, useTranslations } from "next-intl";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 import { isSigningOut, signOutToHome } from "@/lib/auth/sign-out";
@@ -1256,7 +1257,7 @@ export default function DashboardPage() {
       return;
     }
     if (isProvider && mode !== "offer") setMode("offer");
-    setProfileFocus({ field: "verification", key: nextFocusKey() });
+    flushSync(() => setProfileFocus({ field: "verification", key: nextFocusKey() }));
     window.history.pushState(null, "", `${window.location.pathname}?tab=profile&mode=offer`);
     scrollDashboardToPageTop();
   }
@@ -1274,13 +1275,13 @@ export default function DashboardPage() {
     if (tab === "profile") {
       if (isProvider && mode !== "offer") setMode("offer");
       setMobilePanelOpen(false);
-      if (field) setProfileFocus({ field, key: nextFocusKey() });
+      if (field) flushSync(() => setProfileFocus({ field, key: nextFocusKey() }));
       window.history.pushState(null, "", `${window.location.pathname}?tab=profile&mode=offer`);
       scrollDashboardToPageTop();
       return;
     }
     if (field && tab === "services") {
-      setServiceFocus({ field, key: nextFocusKey() });
+      flushSync(() => setServiceFocus({ field, key: nextFocusKey() }));
     }
     setTab(tab as Tab, true);
     if (field && tab === "services") {
@@ -2164,7 +2165,7 @@ export default function DashboardPage() {
                           </div>
                         </div>
                       </CardHeader>}
-                      <CardContent className={mobileSectionOpen ? cn(
+                      <CardContent data-dashboard-current={activeTab} className={mobileSectionOpen ? cn(
                         "dashboard-section-content ccr-editor-surface min-h-[calc(100svh-var(--ccr-native-header-height,124px)-var(--ccr-responsive-footer-reserve,72px)-64px)] bg-[#f4f7fa] px-4 pb-6 pt-4 sm:px-5 lg:min-h-0 lg:bg-white lg:px-6 lg:pb-6 lg:pt-5",
                         editorSurfaceTab && "px-4 py-5",
                         singleSurfaceTab && "px-4 py-5 lg:!bg-transparent lg:px-0 lg:pb-0 lg:pt-0"
@@ -2285,6 +2286,7 @@ export default function DashboardPage() {
                         )}
                         {activeTab === "profile" && mode === "use" && (
                           <BasicProfileSection
+                            initialProfile={profile}
                             extraSections={[
                               // Blocked accounts are managed here on both web and native.
                               {

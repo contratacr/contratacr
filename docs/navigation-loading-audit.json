@@ -1,0 +1,603 @@
+{
+  "date": "2026-10-12",
+  "scope": "Inventario completo de rutas localizadas y secciones del panel. Revisión del código de cargas/cachés. No equivale a probar todas las acciones administrativas o todos los formularios.",
+  "rules": [
+    "Abrir el contenedor y controles de inmediato.",
+    "Mostrar datos ya conocidos, incluyendo una lista vacía, antes de pintar.",
+    "Actualizar en segundo plano sin sustituir contenido por skeleton.",
+    "Mostrar skeleton dentro de la sección cuando no haya datos cargados.",
+    "No restaurar respuestas antiguas sobre una edición ni después de cerrar sesión.",
+    "Caché de datos de cuenta separada por usuario."
+  ],
+  "sections": [
+    {
+      "id": "home",
+      "name": "Panel",
+      "review": "Menú y datos de la cuenta ya cargados en el bootstrap."
+    },
+    {
+      "id": "profile",
+      "name": "Mi perfil",
+      "review": "Campos iniciales del bootstrap; subapartados con destino preparado antes de navegar."
+    },
+    {
+      "id": "services",
+      "name": "Servicios",
+      "review": "Datos iniciales del profesional; foco y formulario preparados antes del primer frame."
+    },
+    {
+      "id": "photos",
+      "name": "Casos de éxito",
+      "review": "Casos iniciales del profesional; la carga solo corresponde a subir archivos o guardar."
+    },
+    {
+      "id": "quotes",
+      "name": "Cotizaciones",
+      "review": "useCachedResource por usuario; listas conocidas, incluidas vacías, permanecen durante actualización."
+    },
+    {
+      "id": "verificacion",
+      "name": "Verificación (enlace anterior)",
+      "review": "Enlace antiguo abre Mi perfil → Verificación. Check basado en datos ya cargados."
+    },
+    {
+      "id": "jobs",
+      "name": "Empleos publicados",
+      "review": "useCachedResource por profesional."
+    },
+    {
+      "id": "offers",
+      "name": "Promociones publicadas",
+      "review": "useCachedResource por profesional."
+    },
+    {
+      "id": "publicaciones",
+      "name": "Mis publicaciones",
+      "review": "Sublistas de proyectos, empleos y promociones cargadas juntas, mantenidas al cambiar filtro."
+    },
+    {
+      "id": "completion",
+      "name": "Completa tu perfil",
+      "review": "Calculado con datos del profesional. Destino y foco se preparan antes de navegar."
+    },
+    {
+      "id": "sent_projects",
+      "name": "Mis proyectos",
+      "review": "useCachedResource por usuario; actualización silenciosa al volver."
+    },
+    {
+      "id": "applications",
+      "name": "Mis postulaciones (retirada)",
+      "review": "Sección retirada; conserva aviso para enlaces antiguos."
+    },
+    {
+      "id": "saved",
+      "name": "Favoritos",
+      "review": "Snapshot de Favoritos; lista vacía conocida no vuelve a skeleton."
+    },
+    {
+      "id": "connections",
+      "name": "Conexiones",
+      "review": "useCachedResource por usuario."
+    },
+    {
+      "id": "chat",
+      "name": "Mensajes (enlace anterior)",
+      "review": "Enlace antiguo redirige a /mensajes; snapshot por cuenta y bandeja; carga legítima al abrir un hilo nuevo."
+    },
+    {
+      "id": "notifications",
+      "name": "Notificaciones",
+      "review": "Snapshot estable de la caché de notificaciones antes de pintar; actualización del servidor por detrás."
+    },
+    {
+      "id": "soporte",
+      "name": "Soporte",
+      "review": "Snapshot por usuario; lista conocida permanece. Un hilo no cargado sí puede esperar sus mensajes."
+    },
+    {
+      "id": "cuenta",
+      "name": "Cuenta y seguridad",
+      "review": "Identidad de la sesión; no necesita consultar de nuevo para dibujar los controles."
+    },
+    {
+      "id": "guides",
+      "name": "Guías",
+      "review": "Contenido local: no necesita skeleton de datos."
+    }
+  ],
+  "profileSections": [
+    {
+      "id": "basic",
+      "source": "src/components/dashboard/pro/profile-editor.tsx",
+      "policy": "Datos del profesional ya cargados; abrir sin skeleton.",
+      "name": "Datos básicos"
+    },
+    {
+      "id": "certs",
+      "source": "src/components/dashboard/pro/profile-editor.tsx",
+      "policy": "Datos del profesional ya cargados; abrir sin skeleton.",
+      "name": "Formación y certificaciones"
+    },
+    {
+      "id": "location",
+      "source": "src/components/dashboard/pro/profile-editor.tsx",
+      "policy": "Datos del profesional ya cargados; abrir sin skeleton.",
+      "name": "Zonas de trabajo"
+    },
+    {
+      "id": "contact",
+      "source": "src/components/dashboard/pro/profile-editor.tsx",
+      "policy": "Datos del profesional ya cargados; abrir sin skeleton.",
+      "name": "Contacto"
+    },
+    {
+      "id": "social",
+      "source": "src/components/dashboard/pro/profile-editor.tsx",
+      "policy": "Datos del profesional ya cargados; abrir sin skeleton.",
+      "name": "Enlaces públicos"
+    },
+    {
+      "id": "lang",
+      "source": "src/components/dashboard/pro/profile-editor.tsx",
+      "policy": "Datos del profesional ya cargados; abrir sin skeleton.",
+      "name": "Idiomas y seguros"
+    },
+    {
+      "id": "verificacion",
+      "source": "src/components/dashboard/pro/profile-editor.tsx",
+      "policy": "Datos del profesional ya cargados; abrir sin skeleton.",
+      "name": "Verificación"
+    },
+    {
+      "id": "cuenta",
+      "source": "src/components/dashboard/pro/profile-editor.tsx",
+      "policy": "Datos del profesional ya cargados; abrir sin skeleton.",
+      "name": "Cuenta y seguridad"
+    },
+    {
+      "id": "privacidad",
+      "source": "src/components/account/account-privacy.tsx",
+      "policy": "Preferencias y bloqueados separados, cacheados por cuenta; actualizar en segundo plano. Skeleton solo en primera carga sin datos.",
+      "name": "Privacidad"
+    }
+  ],
+  "routes": [
+    {
+      "route": "/admin/actividad",
+      "source": "src/app/[locale]/admin/actividad/page.tsx",
+      "group": "admin",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/admin/analitica",
+      "source": "src/app/[locale]/admin/analitica/page.tsx",
+      "group": "admin",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/admin/aseguradoras",
+      "source": "src/app/[locale]/admin/aseguradoras/page.tsx",
+      "group": "admin",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/admin/campanas",
+      "source": "src/app/[locale]/admin/campanas/page.tsx",
+      "group": "admin",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/admin/categorias",
+      "source": "src/app/[locale]/admin/categorias/page.tsx",
+      "group": "admin",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/admin/cobertura",
+      "source": "src/app/[locale]/admin/cobertura/page.tsx",
+      "group": "admin",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/admin/contactos",
+      "source": "src/app/[locale]/admin/contactos/page.tsx",
+      "group": "admin",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/admin/costos",
+      "source": "src/app/[locale]/admin/costos/page.tsx",
+      "group": "admin",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/admin/cuentas",
+      "source": "src/app/[locale]/admin/cuentas/page.tsx",
+      "group": "admin",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/admin/empleos",
+      "source": "src/app/[locale]/admin/empleos/page.tsx",
+      "group": "admin",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/admin/login",
+      "source": "src/app/[locale]/admin/login/page.tsx",
+      "group": "admin",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/admin",
+      "source": "src/app/[locale]/admin/page.tsx",
+      "group": "admin",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/admin/promociones",
+      "source": "src/app/[locale]/admin/promociones/page.tsx",
+      "group": "admin",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/admin/proveedores/[id]",
+      "source": "src/app/[locale]/admin/proveedores/[id]/page.tsx",
+      "group": "admin",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/admin/publicaciones",
+      "source": "src/app/[locale]/admin/publicaciones/page.tsx",
+      "group": "admin",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/admin/reportes",
+      "source": "src/app/[locale]/admin/reportes/page.tsx",
+      "group": "admin",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/admin/resenas",
+      "source": "src/app/[locale]/admin/resenas/page.tsx",
+      "group": "admin",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/admin/servicios",
+      "source": "src/app/[locale]/admin/servicios/page.tsx",
+      "group": "admin",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/admin/soporte",
+      "source": "src/app/[locale]/admin/soporte/page.tsx",
+      "group": "admin",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/admin/usuarios/[id]",
+      "source": "src/app/[locale]/admin/usuarios/[id]/page.tsx",
+      "group": "admin",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/admin/usuarios",
+      "source": "src/app/[locale]/admin/usuarios/page.tsx",
+      "group": "admin",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/admin/verificacion",
+      "source": "src/app/[locale]/admin/verificacion/page.tsx",
+      "group": "admin",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/ayuda",
+      "source": "src/app/[locale]/ayuda/page.tsx",
+      "group": "información pública",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/baja-correos",
+      "source": "src/app/[locale]/baja-correos/page.tsx",
+      "group": "información pública",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/buscar",
+      "source": "src/app/[locale]/buscar/page.tsx",
+      "group": "consulta o formulario",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/categorias",
+      "source": "src/app/[locale]/categorias/page.tsx",
+      "group": "información pública",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/como-funciona",
+      "source": "src/app/[locale]/como-funciona/page.tsx",
+      "group": "información pública",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/completar-perfil",
+      "source": "src/app/[locale]/completar-perfil/page.tsx",
+      "group": "autenticación",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/contacto",
+      "source": "src/app/[locale]/contacto/page.tsx",
+      "group": "información pública",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/continuar-perfil",
+      "source": "src/app/[locale]/continuar-perfil/page.tsx",
+      "group": "autenticación",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/cotizacion/[code]",
+      "source": "src/app/[locale]/cotizacion/[code]/page.tsx",
+      "group": "consulta o formulario",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/cotizar",
+      "source": "src/app/[locale]/cotizar/page.tsx",
+      "group": "consulta o formulario",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/dashboard/cliente",
+      "source": "src/app/[locale]/dashboard/cliente/page.tsx",
+      "group": "panel",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/dashboard/profesional",
+      "source": "src/app/[locale]/dashboard/profesional/page.tsx",
+      "group": "panel",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/eliminar-cuenta",
+      "source": "src/app/[locale]/eliminar-cuenta/page.tsx",
+      "group": "información pública",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/empleos/[id]/editar",
+      "source": "src/app/[locale]/empleos/[id]/editar/page.tsx",
+      "group": "consulta o formulario",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/empleos/[id]",
+      "source": "src/app/[locale]/empleos/[id]/page.tsx",
+      "group": "consulta o formulario",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/empleos/mis-empleos",
+      "source": "src/app/[locale]/empleos/mis-empleos/page.tsx",
+      "group": "consulta o formulario",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/empleos",
+      "source": "src/app/[locale]/empleos/page.tsx",
+      "group": "consulta o formulario",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/empleos/publicar",
+      "source": "src/app/[locale]/empleos/publicar/page.tsx",
+      "group": "consulta o formulario",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/login",
+      "source": "src/app/[locale]/login/page.tsx",
+      "group": "autenticación",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/mantenimiento",
+      "source": "src/app/[locale]/mantenimiento/page.tsx",
+      "group": "información pública",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/mejorar-mi-perfil",
+      "source": "src/app/[locale]/mejorar-mi-perfil/page.tsx",
+      "group": "información pública",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/mensajes",
+      "source": "src/app/[locale]/mensajes/page.tsx",
+      "group": "consulta o formulario",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/notificaciones",
+      "source": "src/app/[locale]/notificaciones/page.tsx",
+      "group": "consulta o formulario",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/olvide-contrasena",
+      "source": "src/app/[locale]/olvide-contrasena/page.tsx",
+      "group": "autenticación",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/onboarding",
+      "source": "src/app/[locale]/onboarding/page.tsx",
+      "group": "autenticación",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/",
+      "source": "src/app/[locale]/page.tsx",
+      "group": "información pública",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/privacidad",
+      "source": "src/app/[locale]/privacidad/page.tsx",
+      "group": "información pública",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/profesionales/[slug]",
+      "source": "src/app/[locale]/profesionales/[slug]/page.tsx",
+      "group": "consulta o formulario",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/profesionales",
+      "source": "src/app/[locale]/profesionales/page.tsx",
+      "group": "consulta o formulario",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/promociones/[id]/editar",
+      "source": "src/app/[locale]/promociones/[id]/editar/page.tsx",
+      "group": "consulta o formulario",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/promociones/[id]",
+      "source": "src/app/[locale]/promociones/[id]/page.tsx",
+      "group": "consulta o formulario",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/promociones/mis-promociones",
+      "source": "src/app/[locale]/promociones/mis-promociones/page.tsx",
+      "group": "consulta o formulario",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/promociones",
+      "source": "src/app/[locale]/promociones/page.tsx",
+      "group": "consulta o formulario",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/promociones/publicar",
+      "source": "src/app/[locale]/promociones/publicar/page.tsx",
+      "group": "consulta o formulario",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/proyectos/[id]",
+      "source": "src/app/[locale]/proyectos/[id]/page.tsx",
+      "group": "consulta o formulario",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/proyectos",
+      "source": "src/app/[locale]/proyectos/page.tsx",
+      "group": "consulta o formulario",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/publicar-proyecto",
+      "source": "src/app/[locale]/publicar-proyecto/page.tsx",
+      "group": "consulta o formulario",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/registro/cliente",
+      "source": "src/app/[locale]/registro/cliente/page.tsx",
+      "group": "autenticación",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/registro",
+      "source": "src/app/[locale]/registro/page.tsx",
+      "group": "autenticación",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/registro/profesional",
+      "source": "src/app/[locale]/registro/profesional/page.tsx",
+      "group": "autenticación",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/resena-google",
+      "source": "src/app/[locale]/resena-google/page.tsx",
+      "group": "información pública",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/reset-password",
+      "source": "src/app/[locale]/reset-password/page.tsx",
+      "group": "autenticación",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/servicio-no-disponible",
+      "source": "src/app/[locale]/servicio-no-disponible/page.tsx",
+      "group": "información pública",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/servicios",
+      "source": "src/app/[locale]/servicios/page.tsx",
+      "group": "información pública",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/soporte/caso/[id]",
+      "source": "src/app/[locale]/soporte/caso/[id]/page.tsx",
+      "group": "consulta o formulario",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/soporte",
+      "source": "src/app/[locale]/soporte/page.tsx",
+      "group": "consulta o formulario",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/terminos",
+      "source": "src/app/[locale]/terminos/page.tsx",
+      "group": "información pública",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    },
+    {
+      "route": "/verificacion-de-identidad",
+      "source": "src/app/[locale]/verificacion-de-identidad/page.tsx",
+      "group": "información pública",
+      "scope": "Inventario de código; prueba focal solo en destinos descritos en runtimeTests."
+    }
+  ],
+  "runtimeTests": [
+    "Privacidad: 50 entradas Chromium móvil, 5 Safari y escritorio, con consultas retrasadas y registro por frame.",
+    "7 atajos de completar perfil: descripción, ubicación, enlaces, verificación, precio, descripción del servicio y experiencia.",
+    "Listas del panel: Soporte, Notificaciones, Favoritos, Conexiones, Mis proyectos, Empleos, Promociones y Cotizaciones.",
+    "Mensajes: reabrir por navegación nativa con consultas retrasadas.",
+    "Carreras: respuesta antigua tras editar; respuesta posterior al cierre de sesión."
+  ],
+  "references": [
+    "https://react.dev/reference/react/useSyncExternalStore",
+    "https://nextjs.org/docs/app/getting-started/linking-and-navigating"
+  ],
+  "limitations": [
+    "Una primera visita, datos nuevos, una sesión que necesita renovarse o una respuesta invalidada requieren cargar datos.",
+    "No se garantiza latencia cero para una ruta nunca preparada, una conexión lenta o recursos todavía no descargados.",
+    "Los datos se revalidan: quitar skeleton no significa congelar el contenido."
+  ]
+}
