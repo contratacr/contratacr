@@ -1,10 +1,10 @@
 import { mkdirSync } from "node:fs";
 import { test, expect } from "playwright/test";
 import { createDisposableAccount, cleanupDisposableAccount, type DisposableAccount } from "./disposable-account";
-import { regressionAdminClient } from "./seed";
+import { canRunSeededRegression, regressionAdminClient } from "./seed";
 import { gotoOK, loginAs, expectNoHorizontalOverflow } from "./helpers";
 
-const testDatabase = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").includes("oqheayqqprpciqdvdaqo") && !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+const testDatabase = canRunSeededRegression();
 
 for (const professional of [false, true]) {
   for (const native of [false, true]) {

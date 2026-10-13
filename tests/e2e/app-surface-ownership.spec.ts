@@ -58,6 +58,7 @@ const handlerRules: OwnershipRule[] = [
   { match: /^\/api\/internal\/soporte(?:\/|$)/, owner: "soporte-cierre-automatico.spec.ts" },
   { match: /^\/api\/internal\/verificacion(?:\/|$)/, owner: "verificacion-repesca.spec.ts" },
   { match: /^\/api\/internal\/resena-google(?:\/|$)/, owner: "resena-google.spec.ts" },
+  { match: /^\/api\/internal\/meta(?:\/|$)/, owner: "meta-growth-runtime.spec.ts" },
   { match: /^\/api\/internal\/campaigns(?:\/|$)/, owner: "lifecycle-email-policy.spec.ts" },
   { match: /^\/api\/internal\/resumen-semanal(?:\/|$)/, owner: "resumen-semanal.spec.ts" },
   { match: /^\/api\/trabajos\/reportar(?:\/|$)/, owner: "resumen-semanal.spec.ts" },
@@ -70,6 +71,7 @@ const handlerRules: OwnershipRule[] = [
   { match: /^\/api\/(?:register|cedula|cedula-available|add-cedula|verify-identity)(?:\/|$)/, owner: "product-contract.spec.ts" },
   { match: /^\/api\/(?:appeals|report|client\/connections)(?:\/|$)/, owner: "interaction-surfaces.spec.ts" },
   { match: /^\/api\/(?:check-availability|professionals|buscar)(?:\/|$)/, owner: "search-results.spec.ts" },
+  { match: /^\/api\/analytics\/professional-ready$/, owner: "meta-growth-runtime.spec.ts" },
   { match: /^\/api\/(?:analytics|attribution|translate|client-error)(?:\/|$)/, owner: "product-contract.spec.ts" },
   { match: /^\/api\/health$/, owner: "health.spec.ts" },
 ];

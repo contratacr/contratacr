@@ -300,6 +300,8 @@ async function sembrarActoresDePrueba() {
       role: "professional",
       is_provider: true,
       onboarding_completed: true,
+      // These synthetic accounts are verified in both client and provider views.
+      client_identity_status: "verified",
       is_disabled: false,
       updated_at: iso(),
     }).eq("id", actor.profileId));

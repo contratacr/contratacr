@@ -139,6 +139,24 @@ jobs:
       - name: Build the production application locally
         run: npm run build
 
+      - name: Install Chromium for public push smoke
+        if: github.event_name == 'push'
+        run: npx playwright install --with-deps chromium
+
+      - name: Run public routes and recent UI smoke on every push
+        if: github.event_name == 'push'
+        run: >-
+          npx playwright test
+          public-smoke app-download mobile-menu-surface verification-badges
+
+      - name: Require clean push smoke results
+        if: github.event_name == 'push'
+        run: npm run test:e2e:verify-results
+
+      - name: Verify fixtures after public push smoke
+        if: github.event_name == 'push' && always()
+        run: npm run verify:local:relations
+
       - name: Si el código no cambió desde la última certificación, no se repite
         if: github.event_name == 'schedule'
         id: novedad
@@ -232,7 +250,7 @@ jobs:
         run: npm run verify:local:relations
 
       - name: Upload Playwright report
-        if: github.event_name != 'push' && steps.novedad.outputs.repetir != 'false' && always()
+        if: always() && (github.event_name == 'push' || steps.novedad.outputs.repetir != 'false')
         uses: actions/upload-artifact@v5
         with:
           name: playwright-report

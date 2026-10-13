@@ -38,10 +38,10 @@ export function WhatsAppReviewFollowUp() {
   // encima de la franja de contactar de la ficha (justo sobre el botón que la
   // persona iba a tocar), en medio del registro y en los flujos de publicar.
   // Pedir una reseña es una conversación aparte: va en la portada, en Buscar,
-  // en el panel o en la lista de Mensajes, donde no compite con nada.
+  // o en el panel. Mensajes queda libre para leer y responder conversaciones.
   const pathname = usePathname();
   const ruta = (pathname ?? "/").replace(/^\/(?:es|en)(?=\/|$)/u, "") || "/";
-  const pantallaTranquila = /^\/(?:mensajes|dashboard(?:\/[^/]+)?)?\/?$/u.test(ruta) || esRutaDeBusqueda(ruta, esServicioDelCatalogo);
+  const pantallaTranquila = /^\/(?:dashboard(?:\/[^/]+)?)?\/?$/u.test(ruta) || esRutaDeBusqueda(ruta, esServicioDelCatalogo);
   const [followUp, setFollowUp] = useState<FollowUp | null>(null);
   const [pendingCount, setPendingCount] = useState(0);
   const [reviewTarget, setReviewTarget] = useState<ReviewTarget | null>(null);

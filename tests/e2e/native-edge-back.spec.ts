@@ -1,6 +1,7 @@
 import { test, expect, type Page } from 'playwright/test';
 import { createDisposableAccount, cleanupDisposableAccount, type DisposableAccount } from './disposable-account';
 import { loginAs } from './helpers';
+import { canRunSeededRegression } from './seed';
 
 async function swipe(page: Page, x = 8, y = 250, endX = 180, endY = 255, selector = 'main', cancel = false) {
   await page.locator(selector).first().evaluate((target, args) => {
@@ -59,7 +60,7 @@ test('native edge back respects direction, scrolling, controls, overlays and roo
 });
 
 test('native account and privacy swipe returns to Mi perfil without skipping the panel', async ({ page, baseURL }) => {
-  test.skip(!(process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').includes('oqheayqqprpciqdvdaqo'));
+  test.skip(!canRunSeededRegression(), 'Requires an isolated regression database.');
   test.setTimeout(120_000);
   let account: DisposableAccount | undefined;
   try {

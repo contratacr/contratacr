@@ -565,7 +565,7 @@ test.describe("@seeded dashboard surfaces", () => {
 
     await gotoOK(page, "/en/dashboard/profesional?tab=connections&mode=use");
     await expect(page.getByPlaceholder(/Search by professional or service/i)).toBeVisible();
-    await expect(page.locator('svg[aria-label="Verified"]:visible').first()).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Identity verified: see what was checked', exact: true }).filter({ visible: true }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: /View profile/i }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: /Ver perfil/i })).toHaveCount(0);
 
