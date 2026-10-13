@@ -673,6 +673,13 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
     void compartirEnlace(url, professional.businessName?.trim() || proDisplayName(professional.fullName));
   }
   const displayName = getProfessionalDisplayName(professional.fullName, professional.businessName);
+  const nameBreak = displayName.primaryDesktop.lastIndexOf(" ");
+  const nameTail = displayName.primaryDesktop.slice(nameBreak + 1);
+  // Keep the seal with the final word, rather than beside the full-width
+  // rectangle occupied by a wrapped heading. Very long single words retain
+  // normal wrapping so they cannot overflow a narrow screen.
+  const keepNameTail = nameTail.length <= 24;
+  const nameStart = keepNameTail ? displayName.primaryDesktop.slice(0, nameBreak + 1) : displayName.primaryDesktop;
   const visitaProfesional = {
     id: professional.slug ?? slug,
     titulo: displayName.primaryMobile,
@@ -937,11 +944,14 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                     {/* En computadora el «···» va en el MISMO renglón del nombre
                         (a la altura del nombre y el sello), al final de la fila. */}
                     <div className="min-w-0 lg:flex lg:items-center lg:justify-between lg:gap-4">
-                      <div data-verification-owner className="flex min-w-0 items-center gap-1">
+                      <div data-verification-owner className="min-w-0">
                         <h1 data-testid="professional-profile-name" className="min-w-0 text-[17px] font-bold leading-[1.15] text-[#162543] [overflow-wrap:anywhere] sm:text-2xl sm:leading-tight sm:[overflow-wrap:normal]">
-                          {displayName.primaryDesktop}
+                          <span data-profile-name-start>{nameStart}</span>
+                          <span data-profile-name-tail className={keepNameTail ? "whitespace-nowrap" : undefined}>
+                            <span data-profile-name-last-word>{keepNameTail ? nameTail : null}</span>
+                            {professional.verificationStatus === "verified" && <span className="ml-1 inline-block align-middle"><VerificationInfo /></span>}
+                          </span>
                         </h1>
-                        {professional.verificationStatus === "verified" && <VerificationInfo />}
                       </div>
                       <MenuFicha className="hidden shrink-0 lg:block" opciones={opcionesDeLaFicha} />
                     </div>
