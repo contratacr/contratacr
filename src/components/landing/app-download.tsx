@@ -58,9 +58,9 @@ export function AppStoreFooterLinks() {
   const en = useLocale() === "en";
   if (native) return null;
   return <div className="ccr-solo-web flex items-center gap-5 text-sm" data-testid="app-store-footer-links">
-    <span className="text-white">{en ? "Mobile app" : "App móvil"}</span>
-    <a href={APP_STORES.ios} aria-label={en ? "Download ContrataCR for iOS" : "Descargar ContrataCR para iOS"} className="inline-flex h-11 w-11 items-center justify-center text-white transition-colors hover:text-[#88dcf5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"><Image src="/stores/apple-icon.svg" width={21} height={24} alt="" className="h-6 w-auto" /></a>
-    <a href={APP_STORES.android} aria-label={en ? "Download ContrataCR for Android" : "Descargar ContrataCR para Android"} className="inline-flex h-11 w-11 items-center justify-center text-white transition-colors hover:text-[#88dcf5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"><Image src="/stores/android-icon.svg" width={23} height={24} alt="" className="h-6 w-auto" /></a>
+    <span className="text-[#162543]">{en ? "Mobile app" : "App móvil"}</span>
+    <a href={APP_STORES.ios} aria-label={en ? "Download ContrataCR for iOS" : "Descargar ContrataCR para iOS"} className="inline-flex h-11 w-11 items-center justify-center text-[#162543] transition-colors hover:text-[#0083b0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]"><Image src="/stores/apple-icon-navy.svg" width={21} height={24} alt="" className="h-6 w-auto" /></a>
+    <a href={APP_STORES.android} aria-label={en ? "Download ContrataCR for Android" : "Descargar ContrataCR para Android"} className="inline-flex h-11 w-11 items-center justify-center text-[#162543] transition-colors hover:text-[#0083b0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]"><Image src="/stores/android-icon-navy.svg" width={23} height={24} alt="" className="h-6 w-auto" /></a>
   </div>;
 }
 
