@@ -867,7 +867,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const servicesMenuRef = useRef<HTMLDivElement>(null);
   const exploreMenuRef = useRef<HTMLDivElement>(null);
   const resourcesMenuRef = useRef<HTMLDivElement>(null);
-  const drawerTouchX = useRef<number | null>(null);
+  const drawerTouchStart = useRef<{ x: number; y: number } | null>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const t = useTranslations("header");
   const tNav = useTranslations("bottomNav");
@@ -1409,7 +1410,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const [altoSobreCabecera, setAltoSobreCabecera] = useState(0);
   const openMobileMenu = useCallback(() => {
     const fila = document.querySelector<HTMLElement>("header .lg\\:hidden.flex.h-16");
-    if (fila) setAltoSobreCabecera(Math.max(0, Math.round(fila.getBoundingClientRect().top)));
+    if (fila) {
+      const downloadNotice = document.querySelector<HTMLElement>(".ccr-download-banner-wrap");
+      const noticeHeight = downloadNotice?.getBoundingClientRect().height ?? 0;
+      setAltoSobreCabecera(Math.max(0, Math.round(fila.getBoundingClientRect().top - noticeHeight)));
+    }
     setMobileHelpOpen(false);
     setMobileOpen(true);
   }, []);
@@ -1466,9 +1471,25 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // Escape cierra el menú (teclado de computadora o de iPad).
   useEffect(() => {
     if (!mobileOpen) return;
-    const alTeclado = (event: KeyboardEvent) => { if (event.key === "Escape") setMobileOpen(false); };
+    const menu = mobileMenuRef.current;
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    menu?.querySelector<HTMLButtonElement>("[data-menu-close]")?.focus({ preventScroll: true });
+    const alTeclado = (event: KeyboardEvent) => {
+      const focusOwner = document.activeElement?.closest('[role="dialog"]');
+      if (focusOwner && focusOwner !== menu) return;
+      if (event.key === "Escape") { setMobileOpen(false); return; }
+      if (event.key !== "Tab" || !menu) return;
+      const controls = [...menu.querySelectorAll<HTMLElement>('a[href], button:not(:disabled), [tabindex="0"]')].filter(element => element.getClientRects().length > 0);
+      const first = controls[0], last = controls.at(-1);
+      if (event.shiftKey && (document.activeElement === first || !menu.contains(document.activeElement))) { event.preventDefault(); last?.focus({ preventScroll: true }); }
+      else if (!event.shiftKey && (document.activeElement === last || !menu.contains(document.activeElement))) { event.preventDefault(); first?.focus({ preventScroll: true }); }
+    };
     window.addEventListener("keydown", alTeclado);
-    return () => window.removeEventListener("keydown", alTeclado);
+    return () => {
+      window.removeEventListener("keydown", alTeclado);
+      // A destination such as Search can already own focus; do not steal it.
+      if (menu?.contains(document.activeElement) && previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
+    };
   }, [mobileOpen]);
 
   async function handleSignOut() {
@@ -2883,42 +2904,35 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
         {/* Mobile menu - slide-in RIGHT drawer + transparent outside click layer (OUTSIDE <header>: the
             header's backdrop-filter would otherwise become the containing block
             for these `fixed` elements, breaking full-viewport positioning). */}
-          {/* CERRADO, NO EXISTE (`hidden`), en vez de quedarse con opacidad cero.
-              Safari 26 en el iPhone tiñe su barra de abajo con el color del
-              elemento `fixed` más alto que ocupa el borde inferior, y un
-              elemento oculto con `opacity-0` LO SIGUE MUESTREANDO. Este fondo
-              es `fixed inset-0`, transparente, y con el z-index más alto de
-              toda la pantalla (10050): Safari lo elegía, no encontraba color,
-              y caía a lo que se pintaba detrás —los botones verdes de
-              WhatsApp en /buscar—. Por eso la barra salía verde. Como es
-              transparente incluso abierto (solo atrapa el clic de cierre), la
-              transición de opacidad nunca se veía: `hidden` no quita nada. */}
+          {/* Hidden while closed so Safari does not sample an invisible fixed
+              backdrop when choosing the browser toolbar color. */}
           <div
             className={cn(
-              "lg:hidden fixed inset-0 z-[10050] bg-transparent",
+              "lg:hidden fixed inset-0 z-[10050] bg-black/15",
               mobileOpen ? "block" : "hidden"
             )}
             onClick={cerrarCajon}
             aria-hidden="true"
           />
           <div
+            ref={mobileMenuRef}
             role="dialog"
             aria-modal="true"
             aria-label={t("menu")}
-            onTouchStart={(e) => { drawerTouchX.current = e.touches[0].clientX; }}
+            onTouchStart={(e) => { drawerTouchStart.current = e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null; }}
+            onTouchCancel={() => { drawerTouchStart.current = null; }}
             onTouchEnd={(e) => {
-              if (drawerTouchX.current == null) return;
-              // Entra por la derecha: deslizar a la DERECHA lo cierra.
-              if (e.changedTouches[0].clientX - drawerTouchX.current > 55) setMobileOpen(false);
-              drawerTouchX.current = null;
+              const start = drawerTouchStart.current;
+              drawerTouchStart.current = null;
+              if (!start || e.touches.length || !e.changedTouches[0]) return;
+              const dx = e.changedTouches[0].clientX - start.x;
+              const dy = Math.abs(e.changedTouches[0].clientY - start.y);
+              if (dx > 55 && dx > dy * 1.5) setMobileOpen(false);
             }}
             className={cn(
-              // COMO ANGI (1-oct-2026): el menú ocupa TODA la pantalla y su fila
-              // de arriba cae justo donde está la cabecera —logo a la izquierda,
-              // X donde estaba el botón—. Entra despacio: se funde y baja un poco.
-              // Sin fondo propio ni margen de abajo: el cuerpo, que es el que entra
-              // deslizándose, lleva el blanco y el margen del iPhone.
-              "ccr-menu-completo lg:hidden fixed inset-0 z-[10060] flex flex-col !pb-0",
+              // One full-screen surface: header and options enter together.
+              // Once open, only the options scroll; the close control stays put.
+              "ccr-menu-completo lg:hidden fixed inset-0 z-[10060] flex flex-col bg-white !pb-0",
               mobileOpen ? "ccr-menu-abierto visible pointer-events-auto" : "invisible pointer-events-none"
             )}
           >
@@ -2928,12 +2942,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 <Link href="/" aria-label="ContrataCR" onClick={(e) => { cerrarCajon(); irAlInicio(e); }} className="shrink-0">
                   <ContrataCRLogo />
                 </Link>
-                <button type="button" onClick={cerrarCajon} aria-label={t("closeMenu")} className="grid h-10 w-10 place-items-center rounded-xl text-[#162543] transition-colors hover:bg-gray-50">
+                <button type="button" data-menu-close onClick={cerrarCajon} aria-label={t("closeMenu")} className="grid h-10 w-10 place-items-center rounded-xl text-[#162543] transition-colors hover:bg-gray-50">
                   <X className="h-6 w-6" strokeWidth={2.2} />
                 </button>
               </div>
             </div>
-            <div className="ccr-mobile-drawer-scroll ccr-menu-cuerpo flex flex-1 flex-col overflow-y-auto bg-white px-6 pb-7 pt-3">
+            <div className="ccr-mobile-drawer-scroll ccr-menu-cuerpo flex min-h-0 flex-1 flex-col overflow-y-auto bg-white px-6 pb-7 pt-3">
               <nav className="flex flex-col">
                 {user ? (
                   <>

@@ -2332,25 +2332,16 @@ html.ccr-js .fade-in-up:not(.visible) #servicios-de-la-seccion > a { opacity: 0;
   [data-titular-portada] { font-size: 2.6rem !important; line-height: 1.1 !important; }
 }
 
-/* EL MENÚ A PANTALLA COMPLETA (como Angi). Entra deslizando desde la derecha y
-   las filas llegan CON el panel: escalonadas, las últimas tardaban en salir. */
-/* Entra DESDE LA DERECHA, como una pantalla de iOS: desliza y frena suave. */
-/* Sin fundido: el panel entero desliza. MISMA curva y duración al abrir y al
-   cerrar (0,42 s, la de las hojas de iOS): antes abría con salida rápida y cerraba
-   acelerando, y el cierre se sentía más lento que la apertura. */
-/* Solo el CUERPO del menú entra deslizándose: la fila de arriba (logo + X)
-   aparece quieta donde ya está la cabecera, así el logo no se duplica ni se
-   corre mientras el menú entra. */
-.ccr-menu-completo { transition: visibility 0s linear 0.42s; }
-.ccr-menu-completo.ccr-menu-abierto { transition: visibility 0s; }
-.ccr-menu-completo .ccr-menu-cuerpo { transform: translate3d(100%, 0, 0); transition: transform 0.42s cubic-bezier(0.32, 0.72, 0, 1); will-change: transform; backface-visibility: hidden; }
-.ccr-menu-completo.ccr-menu-abierto .ccr-menu-cuerpo { transform: translate3d(0, 0, 0); }
-/* AL CERRAR, la fila de arriba del menú (logo + X) se va EN EL ACTO: quedaba
-   0,42 s encima mientras salía el cuerpo y tapaba la cabecera real —en
-   Notificaciones se leía «ContrataCR» un momento antes de volver el título—. */
-.ccr-menu-completo:not(.ccr-menu-abierto) .ccr-menu-fila-superior { visibility: hidden; }
-/* Al ir a una sección desde el menú, el menú se quita sin animación. */
-html.ccr-menu-sin-cierre .ccr-menu-completo, html.ccr-menu-sin-cierre .ccr-menu-completo .ccr-menu-cuerpo { transition: none !important; }
+/* El menú entra como una sola superficie: logo, cierre y opciones juntos. */
+.ccr-menu-completo {
+  transform: translate3d(100%, 0, 0);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s linear 0.3s;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+.ccr-menu-completo.ccr-menu-abierto { transform: translate3d(0, 0, 0); transition-delay: 0s; }
+.ccr-menu-completo .ccr-menu-cuerpo { overscroll-behavior-y: contain; }
+html.ccr-menu-sin-cierre .ccr-menu-completo { transition: none !important; }
 /* Sin íconos, como Angi; la flecha «›» va al final de cada fila. */
 .ccr-menu-completo .ccr-menu-fila > span:first-child:has(> svg) { display: none; }
 .ccr-menu-completo .ccr-menu-fila:not([aria-expanded])::after {
