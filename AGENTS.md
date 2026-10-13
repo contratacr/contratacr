@@ -40,3 +40,7 @@ Before pushing:
 - Confirm `mobile` is based directly on `test` and that its diff contains only mobile-specific files or behavior.
 - Confirm `supabase/migrations` matches the target branch and do not create migrations on top of stale numbering.
 - Never push `local/pro-suite-no-push`.
+
+## Mobile release history
+
+Isaac requires a saved release history for every future App Store and Google Play release. Before submitting an update, record its public version, native build number, platform, source commit, actual release date/status, validation and the exact localized store notes in `docs/mobile-release-history.md`. Keep notes concise and user-facing; only describe changes included in that release. Distinguish shared web deployments from native store releases. Never invent missing historical dates, builds or notes, or renumber an already published version for appearance.

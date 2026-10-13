@@ -98,3 +98,7 @@ Detailed restore steps are in `docs/backups.md`.
 - **Regression Tests**: automatic on `test` and manually dispatchable from `test`; it runs the full suite against `next start` inside GitHub Actions while using only the isolated test data environment.
 - **Security checks**: automatic on `main`, `test`, pull requests, and manual runs. It runs secret smoke checks, Supabase template validation, automation-script lint, build, and `npm audit --audit-level=high`.
 - **Dependabot**: weekly npm PRs and monthly GitHub Actions PRs.
+
+## Mobile store release notes
+
+Before every App Store or Google Play submission, update `docs/mobile-release-history.md` with the release version/build, commit, validation and exact localized notes. Confirm the actual date/status after publication. Shared web deployments do not create a new native store version.
