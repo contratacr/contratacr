@@ -1,4 +1,5 @@
 "use client";
+import { syncAnalyticsPlatform } from "@/lib/analytics/platform-client";
 
 import { useEffect, useLayoutEffect, useState } from "react";
 import { usePathname } from "next/navigation";
@@ -161,7 +162,7 @@ export function MobileAppBridge() {
     document.documentElement.classList.add("ccr-native-app");
     document.body.classList.add("ccr-native-app");
     // Server-side analytics read this to tell app traffic from web traffic.
-    document.cookie = "ccr_platform=native; path=/; max-age=31536000; SameSite=Lax";
+    syncAnalyticsPlatform();
 
     const firstRunPending = window.localStorage.getItem(NATIVE_ONBOARDING_COMPLETED_KEY) !== "1";
 

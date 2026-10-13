@@ -1,0 +1,46 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+const { PGlite } = await import(process.env.PGLITE_MODULE_PATH || '@electric-sql/pglite');
+const db = new PGlite();
+const id='00000000-0000-4000-8000-000000000001', old='00000000-0000-4000-8000-000000000002';
+const session='00000000-0000-4000-8000-000000000003', screen='00000000-0000-4000-8000-000000000004';
+let checks=0;
+try {
+ await db.exec(`create role anon; create role authenticated; create role service_role;
+ create table profiles(id uuid primary key,created_at timestamptz default now(),full_name text);
+ create table interaction_events(event_type text,metadata jsonb,created_at timestamptz default now());
+ create table growth_conversion_events(action text,attribution jsonb,is_baseline boolean default false,created_at timestamptz default now());
+ insert into profiles(id,created_at) values('${old}',now()-interval '1 month');`);
+ const migration=await readFile(new URL('../supabase/migrations/239_uso_web_android_ios.sql',import.meta.url),'utf8');
+ await db.exec(migration);await db.exec(migration);checks++;
+ await db.query('insert into profiles(id) values($1)',[id]);
+ const write=(user=null,runtime='android',s=session,v=screen,first=true)=>db.query('select record_app_usage($1,$2,$3,$4,$5,$6,$7,$8)',['guest',user,s,v,runtime,'/profesionales','',first]);
+ await write();await write();
+ assert.equal((await db.query('select count(*) n from app_usage_events')).rows[0].n,3);checks++;
+ await write(id);await write(id);
+ assert.equal((await db.query('select count(*) n from app_usage_events')).rows[0].n,4);checks++;
+ assert.equal((await db.query('select count(*) n from app_usage_events where viewer_user_id is null')).rows[0].n,0);checks++;
+ await db.query('select record_registration_platform($1,$2)',[id,'ios']);
+ assert.equal((await db.query('select runtime from app_registration_sources where user_id=$1',[id])).rows[0].runtime,'android');checks++;
+ await db.query('select record_registration_platform($1,$2)',[old,'ios']);
+ assert.equal((await db.query('select count(*) n from app_registration_sources where user_id=$1',[old])).rows[0].n,0);checks++;
+ const second='00000000-0000-4000-8000-000000000005';
+ await write(id,'ios',second,second,true);
+ await db.exec(`insert into interaction_events(event_type,metadata) values ('search_performed','{"runtime":"android"}'),('profile_view','{}'),('phone_click','{"platform":"native"}');
+ insert into growth_conversion_events(action,attribution) values ('project_published','{"runtime":"ios"}');`);
+ const report=(await db.query('select get_admin_runtime_analytics(7) data')).rows[0].data;
+ const android=report.rows.find(r=>r.runtime==='android'),ios=report.rows.find(r=>r.runtime==='ios');
+ assert.equal(android.sessions,1);assert.equal(android.visitors,1);assert.equal(android.users,1);assert.equal(android.accesses,1);assert.equal(android.screens,1);assert.equal(android.registrations,1);assert.equal(android.first_uses,1);checks+=7;
+ assert.equal(android.recent_accounts[0].id,id);assert.equal(android.recent_accounts[0].sessions,1);checks+=2;
+ assert.equal(ios.users,1);assert.equal(ios.registrations,0);assert.equal(ios.actions.conversion_project_published,1);checks+=3;
+ assert.equal(android.actions.search_performed,1);assert.equal(report.rows.find(r=>r.runtime==='unknown').actions.profile_view,1);assert.equal(report.rows.find(r=>r.runtime==='native_unknown').actions.phone_click,1);checks+=3;
+ await db.exec("update app_usage_events set created_at=now()-interval '8 days'");
+ assert.equal((await db.query('select get_admin_runtime_analytics(7) data')).rows[0].data.rows.find(r=>r.runtime==='android').sessions,0);checks++;
+ await db.exec('set role authenticated');
+ for (const q of ['select * from app_usage_events','select * from app_registration_sources','select get_admin_runtime_analytics(7)',`select record_registration_platform('${id}','web')`]) { await assert.rejects(()=>db.query(q));checks++; }
+ await db.exec('reset role');
+ await assert.rejects(()=>write(null,'fake'));checks++;
+ await db.query('delete from profiles where id=$1',[id]);
+ assert.equal((await db.query('select count(*) n from app_registration_sources')).rows[0].n,0);checks++;
+ console.log(`${checks} runtime analytics checks passed: deduplication, guest/sign-in, original registration, platforms, history, periods, RLS and deletion.`);
+} finally { await db.close(); }

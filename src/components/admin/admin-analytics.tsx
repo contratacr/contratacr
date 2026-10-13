@@ -55,16 +55,6 @@ function Kpi({ label, data, help }: { label: string; data: WeekCompare; help?: s
   );
 }
 
-function Stat({ label, value, sub }: { label: string; value: number; sub?: string }) {
-  return (
-    <div className="rounded-xl border border-[#e5e7eb] p-3">
-      <p className="text-xs text-[#64748b]">{label}</p>
-      <p className="mt-1 text-2xl font-bold tabular-nums text-[#0f172a]">{fmt(value)}</p>
-      {sub && <p className="text-[11px] text-[#94a3b8]">{sub}</p>}
-    </div>
-  );
-}
-
 function Funnel({ steps }: { steps: { label: string; value: number; help: string }[] }) {
   const max = Math.max(1, ...steps.map((s) => s.value));
   return (
@@ -195,11 +185,28 @@ function Acquisition({ data }: { data: AdminAcquisition }) {
   );
 }
 
+function runtimeActionLabel(action: string) {
+  const labels: Record<string, string> = {
+    profile_view: "Vistas de perfiles", search_performed: "Búsquedas", whatsapp_click: "Clics a WhatsApp",
+    phone_click: "Llamadas", email_click: "Contactos por correo", internal_message_sent: "Mensajes enviados",
+    quote_created: "Cotizaciones enviadas", project_published: "Proyectos publicados",
+    project_lead_whatsapp: "Contactos a proyectos por WhatsApp", review_created: "Reseñas",
+    favorite_add: "Favoritos guardados", favorite_remove: "Favoritos retirados", profile_share: "Perfiles compartidos",
+    job_view: "Vistas de empleos", job_application_sent: "Postulaciones", offer_view: "Vistas de promociones",
+    assistant_question: "Preguntas al asistente", identity_verified: "Identidades verificadas",
+    campaign_click: "Llegadas desde campañas", contact_gate_shown: "Intentos de contacto",
+    external_link_click: "Enlaces externos", service_contact: "Contactos únicos a servicios",
+    professional_profile_published: "Perfiles profesionales publicados", professional_project_contact: "Contactos únicos a proyectos",
+    service_offer_published: "Promociones publicadas", employer_job_published: "Empleos publicados",
+    page_freeze: "Bloqueos de pantalla", availability_view: "Disponibilidad consultada",
+  };
+  if (action.startsWith("conversion_")) return `${labels[action.slice(11)] ?? action.slice(11).replaceAll("_", " ")} · únicos`;
+  return labels[action] ?? action.replaceAll("_", " ");
+}
+
 export function AdminAnalytics({ data }: { data: AdminReports }) {
   const { users, pros, support, insights } = data;
   const week = insights.week;
-  const platformTotal = insights.platform.web + insights.platform.native;
-  const nativeShare = pct(insights.platform.native, platformTotal);
   const gateSince = insights.gateSince ? new Date(insights.gateSince).toLocaleDateString("es-CR", { day: "numeric", month: "short" }) : null;
   const pendingTickets = support.byStatus.filter((s) => s.label !== "Resuelto").reduce((sum, s) => sum + s.value, 0);
 
@@ -304,11 +311,26 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
       </div>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-        <Section icon={Smartphone} title="Desde dónde entran" sub="Últimos 7 días">
-          <div className="grid grid-cols-2 gap-3">
-            <Stat label="Sitio web" value={insights.platform.web} sub={platformTotal > 0 ? `${100 - (nativeShare ?? 0)}%` : undefined} />
-            <Stat label="App móvil" value={insights.platform.native} sub={platformTotal > 0 ? `${nativeShare ?? 0}%` : undefined} />
-          </div>
+        <Section icon={Smartphone} title="Uso de web y apps" sub="Últimos 7 días" className="lg:col-span-3">
+          {!data.runtimeUsage ? <p className="text-sm text-[#64748b]">La medición de uso no está disponible. Intenta de nuevo más tarde.</p> : <>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {data.runtimeUsage.rows.filter(row => ["web", "android", "ios"].includes(row.runtime) || row.sessions > 0 || Object.keys(row.actions).length > 0).map(row => (
+                <div key={row.runtime} className="rounded-xl border border-[#e5e7eb] p-4" data-testid={`analytics-runtime-${row.runtime}`}>
+                  <h3 className="mb-3 text-sm font-bold">{{ web: "Web", android: "Android", ios: "iPhone", native_unknown: "App móvil sin sistema identificado", unknown: "Sin plataforma identificada" }[row.runtime] ?? row.runtime}</h3>
+                  <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
+                    {[["Visitantes", row.visitors], ["Usuarios con cuenta", row.users], ["Sesiones", row.sessions], ["Accesos con cuenta", row.accesses], ["Pantallas vistas", row.screens], ["Registros nuevos", row.registrations], ...(row.runtime !== "web" && row.runtime !== "unknown" ? [["Primeros usos detectados", row.first_uses]] : [])].map(([label, value]) => <div key={label}><dt className="text-[#64748b]">{label}</dt><dd className="mt-1 text-xl font-bold tabular-nums">{fmt(Number(value))}</dd></div>)}
+                  </dl>
+                  <details className="mt-4 border-t border-[#e5e7eb] pt-3">
+                    <summary className="min-h-11 cursor-pointer py-2 text-xs font-semibold text-[#009dca]">Ver acciones y pantallas</summary>
+                    <ul className="space-y-2 text-xs">{Object.entries(row.actions).map(([action, count]) => <li key={action} className="flex justify-between gap-3"><span>{runtimeActionLabel(action)}</span><strong>{fmt(count)}</strong></li>)}</ul>
+                    {row.recent_accounts.length > 0 && <><p className="mb-2 mt-4 font-semibold text-xs">Cuentas con actividad reciente</p><ul className="space-y-2 text-xs">{row.recent_accounts.map(account => <li key={account.id} className="flex justify-between gap-3"><Link href={`/admin/usuarios/${account.id}`} className="min-w-0 break-words font-semibold text-[#009dca]">{account.full_name || "Usuario"}</Link><span className="shrink-0 text-[#64748b]">{new Date(account.last_seen).toLocaleDateString("es-CR", { timeZone: "America/Costa_Rica" })} · {fmt(account.sessions)} ses.</span></li>)}</ul></>}
+                    {row.top_screens.length > 0 && <><p className="mb-2 mt-4 font-semibold text-xs">Pantallas más visitadas</p><ul className="space-y-2 text-xs">{row.top_screens.map(screen => <li key={`${screen.path}:${screen.tab}`} className="flex justify-between gap-3"><span className="min-w-0 break-all">{screen.path}{screen.tab ? ` · ${screen.tab}` : ""}</span><strong>{fmt(screen.views)}</strong></li>)}</ul></>}
+                  </details>
+                </div>
+              ))}
+            </div>
+            <p className="mt-4 text-xs leading-relaxed text-[#64748b]">Las sesiones terminan tras 30 minutos sin actividad. Visitantes cuenta dispositivos/navegadores; usuarios con cuenta cuenta personas identificadas en cada plataforma. Una persona puede usar varias plataformas. Primer uso detectado no equivale a descarga: las descargas se consultan en las tiendas. La medición nueva empieza {data.runtimeUsage.since ? new Date(data.runtimeUsage.since).toLocaleDateString("es-CR", { timeZone: "America/Costa_Rica" }) : "al activar el seguimiento"}; el histórico sin plataforma se conserva por separado.</p>
+          </>}
         </Section>
 
         <Section icon={UserCheck} title="Profesionales" sub={`${fmt(pros.total)} registrados · ${fmt(pros.withServices)} con servicios publicados`}>

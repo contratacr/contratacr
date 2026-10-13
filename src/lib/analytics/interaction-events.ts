@@ -1,3 +1,4 @@
+import { syncAnalyticsPlatform } from "./platform-client";
 import { esNavegadorAutomatizado } from "@/lib/analytics/trafico-automatizado";
 export const INTERACTION_EVENT_TYPES = [
   "profile_view",
@@ -50,6 +51,7 @@ export function trackInteraction(event: InteractionEvent) {
   if (typeof window === "undefined") return;
   // Las pruebas automáticas no cuentan (ver trafico-automatizado.ts).
   if (esNavegadorAutomatizado()) return;
+  syncAnalyticsPlatform();
   const body = JSON.stringify(event);
   void fetch("/api/analytics/interaction", {
     method: "POST",

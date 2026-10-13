@@ -1,3 +1,4 @@
+import { analyticsPlatform } from "./platform";
 import "server-only";
 import { createHash, randomUUID } from "node:crypto";
 import { cookies, headers } from "next/headers";
@@ -13,7 +14,6 @@ import type { InteractionEventType } from "@/lib/analytics/interaction-events";
 // from the cookie the native shell sets.
 
 const ANALYTICS_SESSION_COOKIE = "cc_analytics_sid";
-const PLATFORM_COOKIE = "ccr_platform";
 
 export type ServerInteraction = {
   type: InteractionEventType;
@@ -37,13 +37,13 @@ export async function recordServerInteraction(event: ServerInteraction): Promise
     const jar = await cookies();
     if (esPeticionAutomatizada(jar.get(COOKIE_SIN_ANALITICA)?.value, (await headers()).get("user-agent"))) return;
     const sessionId = jar.get(ANALYTICS_SESSION_COOKIE)?.value || randomUUID();
-    const platform = jar.get(PLATFORM_COOKIE)?.value === "native" ? "native" : "web";
-    const metadata: Record<string, string | number | boolean | null> = { platform };
+    const metadata: Record<string, string | number | boolean | null> = {};
     for (const [key, value] of Object.entries(event.metadata ?? {}).slice(0, 10)) {
       const safeKey = key.replace(/[^a-zA-Z0-9_]/g, "").slice(0, 40);
       const safeValue = clean(value);
       if (safeKey && safeValue !== null && safeValue !== undefined) metadata[safeKey] = safeValue;
     }
+    Object.assign(metadata, analyticsPlatform(name => jar.get(name)?.value));
     const db = createAdminClient();
     const { error } = await db.from("interaction_events").insert({
       event_type: event.type,
