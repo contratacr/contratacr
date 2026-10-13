@@ -57,6 +57,14 @@ const DEMO_PROJECT = "Instalar cámaras de seguridad en una casa";
 async function contactar(p) {
   const wa = p.locator("a, button").filter({ hasText: /^\s*WhatsApp\s*$/ }).filter({ visible: true }).last();
   await wa.waitFor();
+  // In the anonymous project walkthrough, point out the contact action.
+  // Do not invoke it: the sign-in prompt is outside this short demonstration.
+  if (new URL(p.url()).pathname.startsWith("/proyectos/")) {
+    await wa.scrollIntoViewIfNeeded();
+    await marcarToque(p, wa);
+    await p.waitForTimeout(750);
+    return;
+  }
   await p.evaluate(() => {
     window.__guideContact = null;
     window.open = (url) => { window.__guideContact = String(url); return null; };
@@ -67,16 +75,6 @@ async function contactar(p) {
     await wa.evaluate(el => el.addEventListener("click", e => { e.preventDefault(); window.__guideContact = el.href; }, { once: true }));
   }
   await tocar(p, wa);
-  // Anonymous project visitors must sign in to obtain the client's contact.
-  // Show the actual prompt instead of presenting an authenticated walkthrough.
-  if (new URL(p.url()).pathname.startsWith("/proyectos/")) {
-    const dialog = p.getByRole("dialog").filter({ has: p.getByRole("heading", { name: "Contacta a este cliente" }) });
-    await dialog.waitFor();
-    await p.waitForTimeout(1500);
-    await evidencia(p, "proyectos-contacto-sin-sesion");
-    await tocar(p, dialog.getByRole("button", { name: "Cerrar", exact: true }));
-    return;
-  }
   await p.waitForFunction(() => /^https:\/\/(wa\.me|api\.whatsapp\.com)\//.test(window.__guideContact || ""), null, { timeout: 15000 });
   console.log("WhatsApp destination verified (no message sent)");
   await p.waitForTimeout(1100);
