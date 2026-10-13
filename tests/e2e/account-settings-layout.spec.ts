@@ -14,7 +14,7 @@ for (const professional of [false, true]) {
       let account: DisposableAccount | undefined;
       let blocked: DisposableAccount | undefined;
       try {
-        if (test.info().project.name === "chromium-mobile") await page.setViewportSize({ width: 320, height: 740 });
+        if (native || test.info().project.name === "chromium-mobile") await page.setViewportSize({ width: 320, height: 740 });
         if (native) {
           await context.addCookies([{ name: "ccr_platform", value: "native", url: test.info().project.use.baseURL as string }]);
           await page.addInitScript(() => {
@@ -58,10 +58,13 @@ for (const professional of [false, true]) {
 
         const lastAccountAction = page.locator("[data-account-management] button").last();
         await lastAccountAction.scrollIntoViewIfNeeded();
-        expect(await lastAccountAction.evaluate((el) => {
+        await expect.poll(async () => {
+          await lastAccountAction.scrollIntoViewIfNeeded();
+          return lastAccountAction.evaluate((el) => {
           const box = el.getBoundingClientRect();
           return el.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2));
-        })).toBe(true);
+          });
+        }).toBe(true);
 
         await gotoOK(page, "/dashboard/profesional?tab=profile");
         await page.locator("#sec-privacidad > button").click();

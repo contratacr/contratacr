@@ -64,6 +64,7 @@ test('native account and privacy swipe returns to Mi perfil without skipping the
   test.setTimeout(120_000);
   let account: DisposableAccount | undefined;
   try {
+    await page.setViewportSize({ width: 390, height: 844 });
     await native(page, baseURL!);
     account = await createDisposableAccount({ prefix: 'edge-back' });
     await loginAs(page, account.email, account.password);

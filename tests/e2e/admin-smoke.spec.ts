@@ -201,6 +201,7 @@ test.describe("@admin surfaces", () => {
       await expect(row.getByText("Pausada", { exact: true })).toBeVisible();
       await expect.poll(async () => (await admin.from("professional_offers").select("status").eq("id", offerId).single()).data?.status).toBe("paused");
       await row.getByRole("button", { name: /^Publicar$/ }).click();
+      await expect.poll(async () => (await admin.from("professional_offers").select("status").eq("id", offerId).single()).data?.status).toBe("published");
       await pestana("Publicadas");
       await expect(row.getByText("Publicada", { exact: true })).toBeVisible();
       await row.getByRole("button", { name: /^Marcar vencida$/ }).click();
@@ -279,7 +280,7 @@ test.describe("@admin surfaces", () => {
       await expectVisibleText(page.locator("body"), /De dónde vienen los registros/);
       await expectVisibleText(page.locator("body"), /Del interés a la contratación/);
       await expectVisibleText(page.locator("body"), /Qué buscan vs\. qué ofrecemos/);
-      await expectVisibleText(page.locator("body"), /Desde dónde entran/);
+      await expectVisibleText(page.locator("body"), /Uso de web y apps/);
       await expectHealthyPage(page);
 
       // Resumen: what needs attention today, new accounts and recent activity, in words.

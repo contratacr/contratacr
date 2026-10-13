@@ -20,7 +20,8 @@ async function medirCabecera(page: import("playwright/test").Page): Promise<Cabe
   await page.waitForTimeout(800);
   return page.evaluate(() => {
     const visible = (n: Element | null) => !!n && n.getBoundingClientRect().height > 0;
-    const arriba = (n: Element) => n.getBoundingClientRect().y < 72;
+    const headerTop = Array.from(document.querySelectorAll("header, .ccr-marketplace-sticky")).find(visible)?.getBoundingClientRect().top ?? 0;
+    const arriba = (n: Element) => n.getBoundingClientRect().y >= headerTop - 1 && n.getBoundingClientRect().y < headerTop + 72;
     const marca = Array.from(document.querySelectorAll<HTMLImageElement>('img[alt="ContrataCR"]'))
       // El cajón del menú (fuera de pantalla, a la derecha) también lleva marca.
       .find((n) => visible(n) && !n.closest(".ccr-app-footer") && arriba(n) && n.getBoundingClientRect().x < window.innerWidth / 2) ?? null;

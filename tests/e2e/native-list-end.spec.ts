@@ -1,6 +1,6 @@
 import { test, expect } from 'playwright/test';
 
-for (const route of ['/buscar', '/buscar?categoria=nutricion', '/promociones', '/empleos', '/proyectos']) {
+for (const route of ['/buscar', '/buscar?categoria=redes_internet', '/promociones', '/empleos', '/proyectos']) {
   test(`último resultado accesible sobre el menú: ${route}`, async ({ page, context, baseURL }) => {
     test.skip((page.viewportSize()?.width ?? 1280) >= 1024, 'El menú inferior pertenece al diseño móvil.');
     await context.addCookies([{ name: 'ccr_platform', value: 'native', url: baseURL! }]);
