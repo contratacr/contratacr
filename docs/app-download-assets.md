@@ -87,3 +87,12 @@ En web móvil el encuadre usa `object-cover/object-right` para mostrar el teléf
 App Store y Google Play comparten una altura visible de 40 px en teléfonos y 48 px desde 640 px. El área pulsable conserva al menos 48 px de alto. El PNG español de Google tiene límites visibles (0, 29, 646, 221); el inglés (41, 41, 605, 209). Se normaliza ese margen transparente mediante un contenedor CSS, sin deformar el diseño ni editar los archivos oficiales. El ancho conserva las proporciones propias de cada tienda.
 
 Validado en español e inglés, en Chrome y WebKit, a 320, 390, 768 y 1440 px: botones alineados, sin salto de fila ni desbordamiento. Pasaron además nueve casos existentes de ocultación en app nativa, enlace compartido y enlaces del footer.
+
+
+## QR directo a las tiendas (13 de octubre de 2026)
+
+El QR nuevo contiene `https://contratacr.com/descargar`, no el ancla de la sección web. La ruta GET pública elige App Store para iPhone/iPad, Google Play para Android y la sección web para navegadores sin plataforma móvil detectable. La decisión se toma en el servidor y no depende de iniciar sesión ni de JavaScript. Responde con 307, `Cache-Control: private, no-store` y `Vary: User-Agent, Sec-CH-UA-Platform` para no reutilizar la tienda de otro dispositivo. Middleware deja pasar esta ruta antes de las reescrituras de idioma y perfiles.
+
+El SVG se reproduce con `scripts/landing/generar-qr-descarga.mjs`, corrección H, 41 módulos con margen de cuatro. Se muestra a 144 × 144 px. El logo ocupa ocho módulos; una ventana SVG usa los límites visibles del PNG original (38, 40, 177, 174), eliminando solamente el espacio transparente del encuadre. La marca visible central pasa de unos 9 px a unos 28 px. La máscara blanca mide diez módulos y los módulos oscuros usan formas rellenas.
+
+Lectura verificada con ZXing sobre capturas de Chrome y WebKit a 144, 168 y 256 px. A 112 px pasó Chrome, pero no WebKit; por eso no se usa ese tamaño en la sección. Pasaron los doce casos de navegación, QR/tiendas, caché, enlace compartido y ocultación en la app nativa. El enlace `/#descargar-app` que Isaac ya compartió conserva la sección web; los QR de capturas antiguas conservan ese destino anterior.

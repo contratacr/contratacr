@@ -2,15 +2,13 @@
 
 import { mobileDownloadPlatform, DOWNLOAD_DISMISS_COOKIE } from "@/lib/mobile-download-platform";
 import Image from "next/image";
+import { APP_STORES } from "@/lib/app-stores";
+export { APP_STORES } from "@/lib/app-stores";
 import { useLocale } from "next-intl";
 import { useEffect, useLayoutEffect, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import { useNativeApp } from "@/hooks/use-native-app";
 
-export const APP_STORES = {
-  ios: "https://apps.apple.com/cr/app/contratacr/id6794559661",
-  android: "https://play.google.com/store/apps/details?id=com.contratacr.app",
-};
 const subscribeClient = () => () => {};
 const DISMISSED_KEY = "ccr:app-download-dismissed-until:v1";
 
@@ -48,7 +46,7 @@ export function AppDownloadSection() {
         <p className="mx-auto mb-4 mt-4 max-w-md text-base leading-relaxed text-white/80 sm:text-lg xl:mx-0 xl:mb-6 xl:mt-5">{en ? "Find professionals, post projects or offer your services from your phone." : "Encuentra profesionales, publica proyectos u ofrece tus servicios desde tu celular."}</p>
         <AppStoreLinks />
         <div className="mt-7 hidden items-center gap-4 xl:flex">
-          <Image src="/stores/download-app-qr.svg" width={112} height={112} alt={en ? "Scan to download ContrataCR" : "Escanea para descargar ContrataCR"} className="shrink-0 rounded-lg bg-white" />
+          <Image src="/stores/download-app-qr.svg?v=20261013-store-redirect" width={144} height={144} alt={en ? "Scan to download ContrataCR" : "Escanea para descargar ContrataCR"} className="shrink-0 rounded-lg bg-white" />
           <div className="max-w-[240px]"><p className="text-sm font-semibold">{en ? "Scan with your phone" : "Escanea con tu celular"}</p><p className="mt-2 text-sm leading-relaxed text-white/65">{en ? "Sign in with your existing account." : "Ingresa con tu cuenta de siempre."}</p></div>
         </div>
       </div>
