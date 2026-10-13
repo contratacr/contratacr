@@ -19,7 +19,7 @@ export function AppStoreLinks() {
   // Google supplies different transparent margins in each localized PNG.
   // Normalize its visible artwork, rather than giving the whole file 70 px.
   const play = en ? { x: 41, y: 41, width: 564, height: 168 } : { x: 0, y: 29, width: 646, height: 192 };
-  return <div className="ccr-solo-web flex flex-wrap items-center justify-center gap-3 xl:justify-start" data-testid="app-store-links">
+  return <div className="ccr-solo-web flex flex-wrap items-center justify-center gap-3 sm:justify-start" data-testid="app-store-links">
     {(["ios", "android"] as const).map(platform => <a key={platform} href={APP_STORES[platform]} className="inline-flex min-h-12 shrink-0 items-center rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#009fd9]" aria-label={`${en ? "Download on" : "Descargar en"} ${platform === "ios" ? "App Store" : "Google Play"}`}>
       {platform === "ios" ? <Image src={`/stores/app-store-${en ? "en" : "es"}.svg`} width={120} height={40} alt="App Store" data-store-badge="ios" className="h-10 w-auto sm:h-12" /> :
         <span data-store-badge="android" className="relative block h-10 w-[134.6px] overflow-hidden sm:h-12 sm:w-[161.5px]">
@@ -33,21 +33,20 @@ export function AppDownloadSection() {
   const native = useNativeApp();
   const en = useLocale() === "en";
   if (native) return null;
-  return <section id="descargar-app" data-testid="app-download-section" className="ccr-solo-web ccr-download-section relative overflow-hidden bg-[#092532]">
-    <div className="relative overflow-hidden xl:static">
-      <Image src="/stores/app-carpentry-original-20261013.png" width={2172} height={724} unoptimized alt={en ? "ContrataCR on a phone in a carpentry workshop" : "ContrataCR en un teléfono dentro de un taller de carpintería"} data-testid="app-download-artwork" className="block h-[clamp(200px,56vw,280px)] w-full object-cover object-right sm:h-auto xl:absolute xl:inset-0 xl:h-full" />
-      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-[#092532] to-transparent xl:hidden" />
-    </div>
-    <div aria-hidden="true" className="pointer-events-none absolute inset-0 hidden bg-[linear-gradient(90deg,rgba(9,37,50,0.82)_0%,rgba(9,37,50,0.76)_34%,rgba(9,37,50,0.55)_47%,transparent_62%)] xl:block" />
-    <div className="relative mx-auto px-5 pb-8 pt-5 sm:px-8 sm:py-8 xl:grid xl:min-h-[max(540px,33.333vw)] xl:max-w-7xl xl:grid-cols-[1.1fr_1fr] xl:items-center xl:gap-12 xl:py-12 xl:px-14">
-      <div className="mx-auto max-w-xl text-center text-white xl:mx-0 xl:text-left">
-        <p className="mb-3 xl:mb-4 text-xs sm:text-sm font-semibold tracking-[0.16em] text-[#88dcf5]">{en ? "AVAILABLE FOR iOS AND ANDROID" : "DISPONIBLE PARA iOS Y ANDROID"}</p>
-        <h2 className="text-[clamp(1.75rem,3.6vw,3.5rem)] font-extrabold leading-[1.08] tracking-tight">{en ? "Download the ContrataCR app" : "Descarga la app de ContrataCR"}</h2>
-        <p className="mx-auto mb-4 mt-4 max-w-md text-base leading-relaxed text-white/80 sm:text-lg xl:mx-0 xl:mb-6 xl:mt-5">{en ? "Find professionals, post projects or offer your services from your phone." : "Encuentra profesionales, publica proyectos u ofrece tus servicios desde tu celular."}</p>
+  return <section id="descargar-app" data-testid="app-download-section" className="ccr-solo-web ccr-download-section relative isolate flex w-full min-w-0 min-h-[max(620px,177.69vw)] items-end overflow-hidden bg-[#38261c] sm:aspect-[1672/941] sm:min-h-[460px] sm:items-center lg:min-h-[640px]">
+    <picture className="absolute inset-0 -z-10">
+      <source media="(max-width: 639px)" srcSet="/stores/app-workshop-mobile-20261013.png" width={941} height={1672} />
+      <Image src="/stores/app-workshop-desktop-20261013.png" width={1672} height={941} unoptimized alt={en ? "ContrataCR on a phone in a carpentry workshop" : "ContrataCR en un teléfono dentro de un taller de carpintería"} data-testid="app-download-artwork" className="h-full w-full object-cover object-top sm:object-center" />
+    </picture>
+    <div className="relative mx-auto w-full max-w-7xl px-5 pb-7 pt-8 sm:px-8 sm:py-9 lg:px-14 lg:py-12">
+      <div className="mx-auto max-w-md text-center text-white [text-shadow:0_2px_14px_rgba(0,0,0,0.6)] sm:mx-0 sm:max-w-[49%] sm:text-left">
+        <p className="mb-3 hidden text-[11px] font-semibold tracking-[0.14em] text-white/90 sm:block lg:mb-4 lg:text-sm">{en ? "AVAILABLE FOR iOS AND ANDROID" : "DISPONIBLE PARA iOS Y ANDROID"}</p>
+        <h2 className="text-[28px] font-extrabold leading-[1.08] tracking-tight md:text-4xl lg:text-[clamp(2.5rem,3.6vw,3.5rem)]">{en ? "Download the ContrataCR app" : "Descarga la app de ContrataCR"}</h2>
+        <p className="mx-auto mb-4 mt-3 max-w-md text-sm leading-relaxed text-white/90 sm:mx-0 sm:mt-4 sm:text-base lg:mb-6 lg:mt-5 lg:text-lg">{en ? "Find professionals, post projects or offer your services from your phone." : "Encuentra profesionales, publica proyectos u ofrece tus servicios desde tu celular."}</p>
         <AppStoreLinks />
-        <div className="mt-7 hidden items-center gap-4 xl:flex">
+        <div className="mt-7 hidden items-center gap-4 lg:flex">
           <Image src="/stores/download-app-qr.svg?v=20261013-store-redirect" width={144} height={144} alt={en ? "Scan to download ContrataCR" : "Escanea para descargar ContrataCR"} className="shrink-0 rounded-lg bg-white" />
-          <div className="max-w-[240px]"><p className="text-sm font-semibold">{en ? "Scan with your phone" : "Escanea con tu celular"}</p><p className="mt-2 text-sm leading-relaxed text-white/65">{en ? "Sign in with your existing account." : "Ingresa con tu cuenta de siempre."}</p></div>
+          <div className="max-w-[240px]"><p className="text-sm font-semibold">{en ? "Scan with your phone" : "Escanea con tu celular"}</p><p className="mt-2 text-sm leading-relaxed text-white/90">{en ? "Sign in with your existing account." : "Ingresa con tu cuenta de siempre."}</p></div>
         </div>
       </div>
     </div>

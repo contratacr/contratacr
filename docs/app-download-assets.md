@@ -115,3 +115,14 @@ Portada, menú, tableros y detalles se recorren sin sesión en las cuatro escena
 El grabador comprueba que el campo Servicio queda como máximo a 32 px del borde superior (incluido el margen interior del campo) y que el menú público no ofrece «Ir a mi panel». Guarda capturas del buscador, menú sin sesión, tablero desde arriba, detalle inicial/final, aviso de contacto y formulario. La cabecera de proyectos se revisa completa en esos encuadres.
 
 El regreso del detalle usa ahora la flecha real de la app. La recarga completa anterior podía reservar otra cabecera por encima del tablero; las capturas de regreso confirman que el logo y el buscador permanecen en el borde superior. Se verificó la decodificación completa de los cuatro MP4 y seis pruebas de la guía en Chrome móvil, WebKit móvil y escritorio. Las pruebas reconocen los dos motores existentes: video HTML silenciado/en línea en Chrome e imagen MP4 animada decodificada en Safari; antes exigían erróneamente un elemento video también en Safari.
+
+## Dos fotografías y contenido superpuesto (13 de octubre de 2026)
+
+Isaac eligió las dos descargas de las 13:14. Se conservan byte por byte, sin conversión ni recompresión:
+
+- Escritorio: `public/stores/app-workshop-desktop-20261013.png`, 1672 × 941. SHA-256 `7b23dcef008bfa6f1e8eabd2e91cbb081ebe1a7c350db1d98a24f5e64027f976`.
+- Móvil: `public/stores/app-workshop-mobile-20261013.png`, 941 × 1672. SHA-256 `dd48a1bdbe449dbce4e33ce898e134047f1b8d95d896be39839835e6f1dc43a5`.
+
+Un `picture` selecciona la fotografía vertical hasta 639 px y la horizontal desde 640 px. El título y la descripción son HTML real sobre la imagen: debajo del teléfono en móvil y a la izquierda desde tablet. No se añaden capas azules ni degradados; una sombra neutra del texto mejora su lectura. Los botones mantienen sus proporciones normalizadas. El QR sigue visible desde 1024 px con el destino `/descargar`, y el enlace compartido `/#descargar-app` se conserva. La sección sigue oculta dentro de la app nativa.
+
+El ancho explícito y `min-width:0` evitan que WebKit amplíe la sección al combinar la proporción de la foto con la altura mínima. Se comprueban los límites del viewport y los botones también a 320, 768 y 1440 px, leyendo los rectángulos en un mismo cuadro para no confundir la alineación del ancla con un desbordamiento. Capturas visuales en español/inglés y Chrome/WebKit conservadas fuera del repositorio en `evidencia-pruebas-moviles/descarga-imagenes-20261013`.

@@ -60,7 +60,7 @@ test('shared download anchor always remains useful, including after dismissing t
  } else {
   const section=page.getByTestId('app-download-section');await expect(section).toBeVisible();
   await expect(section.getByRole('heading',{name:'Descarga la app de ContrataCR'})).toBeVisible();
-  await expect(section.getByTestId('app-download-artwork')).toHaveAttribute('src','/stores/app-carpentry-original-20261013.png');
+  await expect(section.getByTestId('app-download-artwork')).toHaveAttribute('src','/stores/app-workshop-desktop-20261013.png');
   await expect(section).toBeInViewport();
   await expect(page.getByTestId('app-store-footer-links')).toBeVisible();
   if (process.env.DOWNLOAD_DESIGN_EVIDENCE) {
@@ -130,5 +130,28 @@ test('QR download opens the correct store without caching another device choice'
   const response=await request.get('/descargar',{headers:{'user-agent':scan.ua},maxRedirects:0});
   expect(response.status()).toBe(307);expect(response.headers().location).toBe(scan.expected);
   expect(response.headers()['cache-control']).toContain('no-store');expect(response.headers().vary).toContain('User-Agent');
+ }
+});
+
+test('responsive download artwork and store actions fit the viewport, including Safari tablet sizing', async ({page}) => {
+ await page.goto('/#descargar-app');
+ const section=page.getByTestId('app-download-section');
+ for(const width of [320,768,1440]) {
+  await page.setViewportSize({width,height:1000});
+  await section.scrollIntoViewIfNeeded();
+  await expect.poll(()=>section.evaluate(el=>{
+   const image=el.querySelector('picture img') as HTMLImageElement;
+   return image.complete&&image.naturalWidth>0;
+  })).toBe(true);
+  await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  // Read all rectangles in one frame; the shared anchor can still align the
+  // page while images/fonts settle after a viewport change.
+  await expect.poll(()=>section.evaluate(el=>{
+   const bounds=el.getBoundingClientRect();
+   return bounds.width<=innerWidth&&[...el.querySelectorAll('[data-testid="app-store-links"] a')].every(link=>{
+    const box=link.getBoundingClientRect();
+    return box.left>=bounds.left&&box.right<=bounds.right&&box.bottom<=bounds.bottom;
+   });
+  })).toBe(true);
  }
 });
