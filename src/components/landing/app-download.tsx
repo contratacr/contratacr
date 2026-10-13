@@ -57,9 +57,9 @@ export function AppStoreFooterLinks() {
   const en = useLocale() === "en";
   if (native) return null;
   return <div className="ccr-solo-web hidden items-center gap-5 text-sm lg:flex" data-testid="app-store-footer-links">
-    <span className="text-white/45">{en ? "Mobile app" : "App móvil"}</span>
-    <a href={APP_STORES.ios} aria-label={en ? "Download ContrataCR for iOS" : "Descargar ContrataCR para iOS"} className="inline-flex h-11 w-11 items-center justify-center text-white/90 transition-colors hover:text-[#88dcf5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"><Image src="/stores/apple-icon.svg" width={28} height={32} alt="" /></a>
-    <a href={APP_STORES.android} aria-label={en ? "Download ContrataCR for Android" : "Descargar ContrataCR para Android"} className="inline-flex h-11 w-11 items-center justify-center text-white/90 transition-colors hover:text-[#88dcf5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"><Image src="/stores/android-icon.svg" width={30} height={32} alt="" /></a>
+    <span className="text-white">{en ? "Mobile app" : "App móvil"}</span>
+    <a href={APP_STORES.ios} aria-label={en ? "Download ContrataCR for iOS" : "Descargar ContrataCR para iOS"} className="inline-flex h-11 w-11 items-center justify-center text-white transition-colors hover:text-[#88dcf5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"><Image src="/stores/apple-icon.svg" width={28} height={32} alt="" /></a>
+    <a href={APP_STORES.android} aria-label={en ? "Download ContrataCR for Android" : "Descargar ContrataCR para Android"} className="inline-flex h-11 w-11 items-center justify-center text-white transition-colors hover:text-[#88dcf5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"><Image src="/stores/android-icon.svg" width={30} height={32} alt="" /></a>
   </div>;
 }
 
