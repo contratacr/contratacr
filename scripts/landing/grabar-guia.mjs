@@ -26,7 +26,7 @@ async function bajar(p, px, msPedido) {
   const pasos = Math.round((ms / 1000) * FPS);
   await p.evaluate(() => {
     const candidatos = [document.scrollingElement, ...document.querySelectorAll("main, main *, [class*=scroll]")]
-      .filter((el) => el && el.scrollHeight - el.clientHeight > 200 && getComputedStyle(el).overflowY !== "hidden");
+      .filter((el) => el && el.scrollHeight - el.clientHeight > 1 && (el === document.scrollingElement || ["auto", "scroll"].includes(getComputedStyle(el).overflowY)));
     window.__rollo = candidatos.sort((a, b) => b.clientHeight - a.clientHeight)[0] || document.scrollingElement;
     window.__inicio = window.__rollo.scrollTop;
     window.__rollo.style.scrollBehavior = "auto";
@@ -110,34 +110,66 @@ async function tocar(p, loc) { await loc.scrollIntoViewIfNeeded(); await p.waitF
 // Text entry uses the same visible tap marker as the navigation.
 async function escribir(p, loc, texto) { await tocar(p, loc); await p.waitForTimeout(250); await p.keyboard.type(texto, { delay: 55 }); }
 
-// Historical publish walkthrough, followed by opening a complete item and contact.
+// Each segment begins at the top, including nested native-app scrollers.
+async function arriba(p) {
+  await p.evaluate(async () => {
+    for (const el of [document.scrollingElement, ...document.querySelectorAll("main, main *, [class*=scroll]")]) {
+      if (el) { el.scrollTop = 0; }
+    }
+    window.scrollTo(0, 0);
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  });
+  await p.waitForTimeout(300);
+}
+async function mostrarDetalleCompleto(p) {
+  const remaining = await p.evaluate(() => {
+    const candidates = [document.scrollingElement, ...document.querySelectorAll("main, main *, [class*=scroll]")]
+      .filter(el => el && el.scrollHeight - el.clientHeight > 1 && (el === document.scrollingElement || ["auto", "scroll"].includes(getComputedStyle(el).overflowY)));
+    const scroller = candidates.sort((a,b) => b.clientHeight - a.clientHeight)[0] || document.scrollingElement;
+    return Math.max(0, scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop);
+  });
+  if (remaining > 1) await bajar(p, remaining, 1800);
+  await p.waitForTimeout(1400);
+}
+async function evidencia(p, name) {
+  if (!process.env.GUIDE_EVIDENCE_DIR) return;
+  fs.mkdirSync(process.env.GUIDE_EVIDENCE_DIR, { recursive: true });
+  await p.screenshot({ path: path.join(process.env.GUIDE_EVIDENCE_DIR, name + ".png") });
+}
+
+// Home → board → publication/detail/contact → board → blank publishing form.
 async function porElMenu(p, grabar, pausar, texto, destino, boton, formulario) {
   const origin = destino === "/proyectos" ? LOCAL : INICIO;
+  const scene = destino.slice(1);
   await p.context().addCookies(testCookies);
   await p.goto(origin + "/", { waitUntil: "load" });
-  await sinAvisoDeDesarrollo(p); await asentada(p);
+  await sinAvisoDeDesarrollo(p); await asentada(p); await arriba(p);
   grabar(); await p.waitForTimeout(700);
   await tocar(p, p.getByRole("button", { name: "Abrir menú", exact: true }).first());
   await p.waitForTimeout(900);
   await tocar(p, p.locator(".ccr-menu-abierto").getByRole("link", { name: texto, exact: true }));
-  pausar(); await p.waitForURL(new RegExp(`${destino}$`)); await asentada(p);
-  grabar(); await bajar(p, 180, 1500); await p.waitForTimeout(500);
-  const publicar = p.getByRole("link", { name: boton }).or(p.getByRole("button", { name: boton })).filter({ visible: true }).first();
-  await publicar.scrollIntoViewIfNeeded(); await p.waitForTimeout(300);
-  await marcarToque(p, publicar); await p.waitForTimeout(250); pausar();
-  await p.goto(LOCAL + formulario, { waitUntil: "load" }); await sinAvisoDeDesarrollo(p); await asentada(p);
-  if (/\/login/.test(p.url())) throw new Error(`Test form requires authentication: ${formulario}`);
-  await p.locator("main h1, main h2, .app-fullscreen-modal h1, .app-fullscreen-modal h2").filter({ visible: true }).first().waitFor();
-  grabar(); await p.waitForTimeout(900); await bajar(p, 260, 2000); await p.waitForTimeout(900);
-  // No form is submitted. Return to the board to show the reader's contact flow.
-  pausar(); await p.goto(origin + destino); await asentada(p);
+  pausar(); await p.waitForURL(new RegExp(`${destino}$`)); await asentada(p); await arriba(p);
   grabar(); await p.waitForTimeout(700);
   const items = p.locator(`h2 a[href^="${destino}/"]`);
   const item = (destino === "/proyectos" ? items.filter({ hasText: DEMO_PROJECT }).and(p.locator(`a[href*="${demoProjectId.slice(0, 8)}"]`)) : items).first();
   await tocar(p, item);
-  pausar(); await p.waitForURL(new RegExp(`${destino}/.+`)); await asentada(p);
-  grabar(); await p.waitForTimeout(1500); await bajar(p, 260, 1800); await p.waitForTimeout(1200);
+  pausar(); await p.waitForURL(new RegExp(`${destino}/.+`)); await asentada(p); await arriba(p);
+  await evidencia(p, `${scene}-detalle-inicio`);
+  console.log(scene, "detail first, at top");
+  grabar(); await p.waitForTimeout(1600); await mostrarDetalleCompleto(p);
+  await evidencia(p, `${scene}-detalle-final`);
   await contactar(p);
+  pausar(); await p.goto(origin + destino); await asentada(p); await arriba(p);
+  grabar(); await p.waitForTimeout(700);
+  const publicar = p.getByRole("link", { name: boton }).or(p.getByRole("button", { name: boton })).filter({ visible: true }).first();
+  await publicar.scrollIntoViewIfNeeded(); await p.waitForTimeout(300);
+  await marcarToque(p, publicar); await p.waitForTimeout(250); pausar();
+  await p.goto(LOCAL + formulario, { waitUntil: "load" }); await sinAvisoDeDesarrollo(p); await asentada(p); await arriba(p);
+  if (/\/login/.test(p.url())) throw new Error(`Test form requires authentication: ${formulario}`);
+  await p.locator("main h1, main h2, .app-fullscreen-modal h1, .app-fullscreen-modal h2").filter({ visible: true }).first().waitFor();
+  await evidencia(p, `${scene}-formulario-inicio`);
+  console.log(scene, "form follows detail, at top");
+  grabar(); await p.waitForTimeout(1400); await bajar(p, 260, 2000); await p.waitForTimeout(1200);
 }
 
 const escenas = {

@@ -96,3 +96,12 @@ El QR nuevo contiene `https://contratacr.com/descargar`, no el ancla de la secci
 El SVG se reproduce con `scripts/landing/generar-qr-descarga.mjs`, corrección H, 41 módulos con margen de cuatro. Se muestra a 144 × 144 px. El logo ocupa ocho módulos; una ventana SVG usa los límites visibles del PNG original (38, 40, 177, 174), eliminando solamente el espacio transparente del encuadre. La marca visible central pasa de unos 9 px a unos 28 px. La máscara blanca mide diez módulos y los módulos oscuros usan formas rellenas.
 
 Lectura verificada con ZXing sobre capturas de Chrome y WebKit a 144, 168 y 256 px. A 112 px pasó Chrome, pero no WebKit; por eso no se usa ese tamaño en la sección. Pasaron los doce casos de navegación, QR/tiendas, caché, enlace compartido y ocultación en la app nativa. El enlace `/#descargar-app` que Isaac ya compartió conserva la sección web; los QR de capturas antiguas conservan ese destino anterior.
+
+
+## Publicación antes del formulario (13 de octubre de 2026)
+
+Los videos de proyectos, promociones y empleos usan ahora `20261013-detail-before-form`: portada → menú → tablero → abrir publicación → mostrar su detalle y contacto → volver al tablero → Publicar → formulario vacío. Conservan el logo y las fuentes reales, los toques visibles y el contacto sin enviar mensajes. El video de profesionales conserva su grabación anterior.
+
+Cada detalle y formulario comienza con los contenedores de desplazamiento en cero. El detalle se recorre hasta su final real, sin un desplazamiento fijo que deje contenido fuera. El grabador también reconoce contenedores con desplazamientos cortos: antes ignoraba los que tenían menos de 200 px de recorrido. El proyecto de ejemplo y el formulario se revisaron visualmente desde su encabezado, sin empezar a media pantalla. No se envía ningún formulario. El proyecto de test se elimina al concluir.
+
+Se guardaron capturas de inicio/final del detalle e inicio del formulario para las tres escenas, y se verificó la decodificación completa de los videos nuevos.
