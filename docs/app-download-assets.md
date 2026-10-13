@@ -78,3 +78,12 @@ Sustituye los recursos `original-flow` por `20261013-detail-contact`:
 El grabador requiere el archivo privado de producción para esas consultas de solo lectura (`GUIDE_PRODUCTION_READ_ENV`, por defecto `.env.local`), además del archivo privado del test indicado anteriormente. No se guardan credenciales en el video ni en el repositorio.
 
 Validación: decodificación completa de los cuatro H.264 a 588 × 1278 y 30 fps, reproducción y cambio de pasos en Chrome/WebKit móvil y escritorio, y comprobación de que no quedaron proyectos `guide-demo-test` en la base de test. Las capturas de detalle muestran el check junto al nombre y la cabecera real de cada sección. No se probó una conversación dentro de WhatsApp.
+
+
+## Descarga responsive y proporciones de tiendas (13 de octubre de 2026)
+
+En web móvil el encuadre usa `object-cover/object-right` para mostrar el teléfono a mayor tamaño, con un degradado hacia el fondo de la sección. El texto y los botones quedan centrados y se reducen los márgenes. Es un cambio de presentación CSS: el PNG original de 2172 × 724 permanece intacto y sin recompresión.
+
+App Store y Google Play comparten una altura visible de 40 px en teléfonos y 48 px desde 640 px. El área pulsable conserva al menos 48 px de alto. El PNG español de Google tiene límites visibles (0, 29, 646, 221); el inglés (41, 41, 605, 209). Se normaliza ese margen transparente mediante un contenedor CSS, sin deformar el diseño ni editar los archivos oficiales. El ancho conserva las proporciones propias de cada tienda.
+
+Validado en español e inglés, en Chrome y WebKit, a 320, 390, 768 y 1440 px: botones alineados, sin salto de fila ni desbordamiento. Pasaron además nueve casos existentes de ocultación en app nativa, enlace compartido y enlaces del footer.
