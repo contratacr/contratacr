@@ -2120,6 +2120,7 @@ export default function DashboardPage() {
                     ref={(node) => {
                       sectionBackRef.current = node ? () => node.click() : null;
                     }}
+                    data-native-back="dashboard-section"
                     aria-label={t("backToPanel")}
                     className={cn(CABECERA_BOTON, "justify-self-start")}
                   >

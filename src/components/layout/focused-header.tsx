@@ -58,6 +58,7 @@ export function FocusedHeader({ title, backHref, onBack, backLabel = "Volver", s
         <button
           type="button"
           onClick={onBack}
+          data-native-back="focused-step"
           aria-label={backLabel}
           className={cn(CABECERA_BOTON, "justify-self-start")}
         >
@@ -66,6 +67,7 @@ export function FocusedHeader({ title, backHref, onBack, backLabel = "Volver", s
       ) : backHref ? (
         <Link
           href={backHref}
+          data-native-back="focused-route"
           aria-label={backLabel}
           className={cn(CABECERA_BOTON, "justify-self-start")}
         >
