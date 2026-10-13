@@ -284,7 +284,7 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
           <div
             className="relative"
             style={{
-              background: "linear-gradient(135deg,#f1f3f6 0%,#c6cbd2 18%,#777c85 50%,#c6cbd2 82%,#f1f3f6 100%)",
+              background: "#009FD9",
               borderRadius: 54,
               padding: 3,
               // Sombra corta: se desvanece antes de que empiece la sección siguiente (si
@@ -292,7 +292,7 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
               boxShadow: "0 26px 48px -22px rgba(15,23,42,0.42), 0 12px 24px -16px rgba(15,23,42,0.30), inset 0 0 0 0.5px rgba(255,255,255,0.45)",
             }}
           >
-            <div className="relative" style={{ background: "#04060a", borderRadius: 51, padding: 8 }}>
+            <div className="relative" style={{ background: "#141418", borderRadius: 51, padding: 8 }}>
               <div className="relative overflow-hidden bg-white" style={{ borderRadius: 44, aspectRatio: "588 / 1280" }}>
                 {comoImagen && srcImagen && (
                   // eslint-disable-next-line @next/next/no-img-element -- .mp4 animado (ver comoImagen)
