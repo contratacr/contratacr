@@ -261,7 +261,13 @@ test.describe("esqueletos", () => {
         await page.goto(ruta, { waitUntil: "load" });
         await page.waitForTimeout(700);
         const m = await medida(page);
-        if (m.cuadros > 0) conEsqueleto.push(`${ruta} (${nombre}): ${m.cuadros} de ${m.total} cuadros`);
+        if (ruta === "/publicar-proyecto") {
+          // This request-dependent route has its own loading boundary while the
+          // server resolves the return destination. Its form mounts in a portal;
+          // a first loading frame is valid, but it must be gone when ready.
+          await expect(page.locator("textarea").filter({ visible: true }).first()).toBeVisible();
+          await expect(page.locator(".animate-pulse, [data-skeleton]").filter({ visible: true })).toHaveCount(0);
+        } else if (m.cuadros > 0) conEsqueleto.push(`${ruta} (${nombre}): ${m.cuadros} de ${m.total} cuadros`);
       }
     }
     expect(conEsqueleto, conEsqueleto.join("\n")).toEqual([]);

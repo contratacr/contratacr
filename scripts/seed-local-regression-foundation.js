@@ -78,6 +78,8 @@ async function main() {
       avatar_url: "http://127.0.0.1:3000/web-app-manifest-192x192.png",
       is_provider: true,
       onboarding_completed: true,
+      // These synthetic accounts are verified in both client and provider views.
+      client_identity_status: "verified",
       is_disabled: false,
       updated_at: new Date().toISOString(),
     }, { onConflict: "id" }));

@@ -432,7 +432,7 @@ test("registro de profesional: contraseña, provincia, tarifa, fijo, abre arriba
 
   // 10. Notificaciones: el texto se lee COMPLETO y cada aviso lleva su raya.
   await gotoOK(page, "/notificaciones");
-  const largo = page.getByText(/Publica lo que necesitas y los profesionales te contactan por WhatsApp\./);
+  const largo = page.getByText("Agrega tu foto, descripción y servicios para que los clientes conozcan lo que ofreces.");
   await expect(largo).toBeVisible({ timeout: 30_000 });
   const medidas = await largo.evaluate((el) => {
     const fila = el.closest('[role="button"]') as HTMLElement;
@@ -441,5 +441,5 @@ test("registro de profesional: contraseña, provincia, tarifa, fijo, abre arriba
   expect(medidas.cortado, "el aviso no se corta").toBe(false);
   expect(medidas.raya).toBe("1px");
   expect(medidas.derecha, "sin hueco grande a la derecha en el teléfono").toBeLessThanOrEqual(48);
-  await expect(page.getByText(/Los perfiles con foto, descripción y precios reciben más clientes/)).toBeVisible();
+  await expect(page.getByText(/Publica lo que necesitas y los profesionales te contactan por WhatsApp/)).toHaveCount(0);
 });

@@ -31,7 +31,8 @@ export function AppDownloadSection() {
   const en = useLocale() === "en";
   if (native) return null;
   return <section id="descargar-app" data-testid="app-download-section" className="ccr-solo-web ccr-download-section relative hidden overflow-hidden bg-[#092532] lg:block">
-    <div aria-hidden className="absolute inset-0 bg-[radial-gradient(ellipse_at_78%_50%,#14617a_0%,#0c3545_38%,#092532_72%)]" />
+    <Image src="/stores/app-home-background-20261013.webp" fill sizes="100vw" alt="" aria-hidden="true" className="object-cover object-center" />
+    <div aria-hidden className="absolute inset-0 bg-[linear-gradient(90deg,#092532_0%,rgba(9,37,50,0.96)_30%,rgba(9,37,50,0.85)_45%,rgba(9,37,50,0.2)_65%,rgba(9,37,50,0.04)_100%)]" />
     <div className="relative mx-auto grid min-h-[620px] max-w-7xl grid-cols-[1.1fr_1fr] items-center gap-12 px-10 py-16 xl:px-14">
       <div className="max-w-xl text-white">
         <p className="mb-5 text-sm font-semibold tracking-[0.16em] text-[#88dcf5]">{en ? "AVAILABLE FOR iOS AND ANDROID" : "DISPONIBLE PARA iOS Y ANDROID"}</p>

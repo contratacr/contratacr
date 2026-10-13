@@ -3,7 +3,7 @@ import { test, expect } from 'playwright/test';
 
 test('web: tiendas correctas, reserva, teclado y cierre persistente', async ({page}) => {
   if(test.info().project.name==='android-download')await page.setViewportSize({width:320,height:780});
-  test.skip((page.viewportSize()?.width ?? 1280) >= 1024);
+  test.skip((page.viewportSize()?.width ?? 1280) >= 1024, "The download notice only appears on mobile web.");
   await page.goto('/');
   await expect(page.getByTestId('app-download-section')).toBeHidden();
   const banner=page.getByTestId('mobile-app-download');
@@ -71,7 +71,7 @@ test('shared download anchor always remains useful, including after dismissing t
 });
 
 test('mobile download notice and header are correctly positioned before JavaScript hydration',async({page,browser,baseURL})=>{
- test.skip((page.viewportSize()?.width ?? 1280)>=1024);
+ test.skip((page.viewportSize()?.width ?? 1280)>=1024, "The download notice only appears on mobile web.");
  const ua=await page.evaluate(()=>navigator.userAgent);
  const context=await browser.newContext({javaScriptEnabled:false,userAgent:ua,viewport:{width:390,height:844}});
  try {
@@ -85,7 +85,7 @@ test('mobile download notice and header are correctly positioned before JavaScri
 
 
 test('download link also works in a narrow desktop browser with no mobile OS detected',async({page})=>{
- test.skip(test.info().project.name!=='chromium-desktop' && test.info().project.name!=='desktop-download');
+ test.skip(test.info().project.name!=='chromium-desktop' && test.info().project.name!=='desktop-download', 'Requires a desktop user agent without a mobile OS.');
  await page.setViewportSize({width:800,height:900});await page.goto('/#descargar-app');
  const banner=page.getByTestId('mobile-app-download');await expect(banner).toBeVisible();
  await expect(banner.locator('a')).toHaveCount(2);
@@ -94,7 +94,7 @@ test('download link also works in a narrow desktop browser with no mobile OS det
 });
 
 test('notice is centered, remains above the header on public pages and respects account/form routes',async({page})=>{
- test.skip((page.viewportSize()?.width ?? 1280)>=1024);
+ test.skip((page.viewportSize()?.width ?? 1280)>=1024, "The download notice only appears on mobile web.");
  for(const route of ['/proyectos','/empleos','/promociones','/profesionales','/ayuda']) {
   await page.goto(route);
   const notice=page.getByTestId('mobile-app-download');
@@ -111,7 +111,7 @@ test('notice is centered, remains above the header on public pages and respects 
 });
 
 test('desktop footer uses Apple and Android symbols with accessible store links',async({page})=>{
- test.skip((page.viewportSize()?.width ?? 1280)<1024);
+ test.skip((page.viewportSize()?.width ?? 1280)<1024, "The footer store icons only appear on desktop web.");
  await page.goto('/');const links=page.getByTestId('app-store-footer-links');
  await expect(links.locator('a')).toHaveCount(2);await expect(links.locator('img')).toHaveCount(2);
  await expect(links.getByRole('link',{name:'Descargar ContrataCR para iOS'})).toHaveAttribute('href',/apps.apple.com/);

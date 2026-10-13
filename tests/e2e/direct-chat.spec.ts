@@ -249,11 +249,22 @@ test.describe("@seeded contextual direct chat", () => {
     const hilo = await apiJson<ThreadResponse>(page, `/api/direct-chat?id=${conversationId}`);
     expect(hilo.body.messages?.find((m) => m.body === `E2E respuesta ${marca}`)?.reply_to_id).toBe(originalId);
 
+    // A pending service follow-up must not cover messages or their reply menu.
+    await page.route("**/api/contact/follow-up", async (route) => {
+      await route.fulfill({ json: { followUp: {
+        id: "00000000-0000-4000-8000-000000000134",
+        professional_id: seed.professionalId, professional_name: "Redes Bahía",
+        status: "contacted", contact_method: "whatsapp",
+      }, pendingCount: 1 } });
+    });
     // En pantalla: la burbuja muestra la cita…
     await gotoOK(page, `/mensajes?conversation=${conversationId}`);
     const burbuja = page.locator(`[id^="msg-"]`).filter({ hasText: `E2E respuesta ${marca}` }).last();
     await expect(burbuja.locator("[data-cita]")).toContainText(`E2E original ${marca}`);
 
+    // The follow-up normally appears after four seconds on eligible pages.
+    await page.waitForTimeout(4500);
+    await expect(page.locator(".ccr-seguimiento-servicio")).toHaveCount(0);
     // …y se responde desde el menú del mensaje.
     const objetivo = page.locator(`[id^="msg-"]`).filter({ hasText: `E2E sin cita ${marca}` }).last();
     await objetivo.locator("p").first().click({ button: "right" });

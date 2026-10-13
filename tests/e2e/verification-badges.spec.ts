@@ -85,7 +85,7 @@ test("the professional profile keeps only the interactive check beside its name"
 test("registration explains the badge and opens the shared explanation", async ({ page }) => {
   await gotoOK(page, "/registro/profesional");
   const help = page.locator("[data-verification-education]");
-  await expect(help).toContainText("Qué significa el check de identidad");
+  await expect(help.getByRole("button", { name: "Qué significa el check de identidad", exact: true })).toBeVisible();
   await expect(help).toContainText(/Cuando tu identidad esté verificada|Tu identidad está verificada/);
   await help.getByRole("button", { name: "Qué significa el check de identidad", exact: true }).click();
   await expect(page.getByRole("dialog")).toContainText("El check indica que ContrataCR comprobó");
