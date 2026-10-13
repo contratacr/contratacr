@@ -12,11 +12,13 @@ export function AdminFilterTabs({
   value,
   onChange,
   counts,
+  disabled = false,
 }: {
   tabs: readonly AdminFilterTab[];
   value: string;
   onChange: (id: string) => void;
   counts?: Record<string, number>;
+  disabled?: boolean;
 }) {
   return (
     <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-[#eef2f6]">
@@ -27,6 +29,7 @@ export function AdminFilterTabs({
           <button
             key={tab.id}
             type="button"
+            disabled={disabled}
             onClick={() => onChange(tab.id)}
             className={cn(
               "group -mb-px inline-flex max-w-full items-center gap-1.5 whitespace-normal border-b-2 pb-2.5 pt-1 text-left text-[13px] font-semibold [overflow-wrap:anywhere] transition-colors sm:text-[14px]",

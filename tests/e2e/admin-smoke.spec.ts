@@ -201,9 +201,9 @@ test.describe("@admin surfaces", () => {
       await expect(row.getByText("Pausada", { exact: true })).toBeVisible();
       await expect.poll(async () => (await admin.from("professional_offers").select("status").eq("id", offerId).single()).data?.status).toBe("paused");
       await row.getByRole("button", { name: /^Publicar$/ }).click();
-      await expect.poll(async () => (await admin.from("professional_offers").select("status").eq("id", offerId).single()).data?.status).toBe("published");
       await pestana("Publicadas");
       await expect(row.getByText("Publicada", { exact: true })).toBeVisible();
+      await expect.poll(async () => (await admin.from("professional_offers").select("status").eq("id", offerId).single()).data?.status).toBe("published");
       await row.getByRole("button", { name: /^Marcar vencida$/ }).click();
       await pestana("Vencidas");
       await expect(row.getByText("Vencida", { exact: true })).toBeVisible();

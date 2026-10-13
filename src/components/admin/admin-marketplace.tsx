@@ -289,6 +289,7 @@ export function AdminMarketplace({ kind }: { kind: "jobs" | "offers" }) {
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#68778d]" />
           <input
+            disabled={busy !== null}
             value={q}
             onChange={(event) => setQ(event.target.value)}
             placeholder="Título, servicio, ubicación, creador o correo"
@@ -297,7 +298,7 @@ export function AdminMarketplace({ kind }: { kind: "jobs" | "offers" }) {
         </div>
       </div>
 
-      <AdminFilterTabs tabs={filters} value={filter} onChange={(next) => { setFilter(next); setPage(1); }} counts={filterCounts} />
+      <AdminFilterTabs disabled={busy !== null} tabs={filters} value={filter} onChange={(next) => { setFilter(next); setPage(1); }} counts={filterCounts} />
 
       {notice && <p className="mb-3 rounded-xl border border-[#fecaca] bg-[#fef2f2] px-3 py-2 text-sm text-[#b91c1c]">{notice}</p>}
 
@@ -385,11 +386,11 @@ export function AdminMarketplace({ kind }: { kind: "jobs" | "offers" }) {
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-[#6b7280]">
           <span>Mostrando {showingFrom}-{showingTo} de {pagination.total.toLocaleString("es-CR")}</span>
           <div className="flex items-center gap-2">
-            <button type="button" disabled={pagination.page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))} className="inline-flex h-9 items-center gap-1 rounded-lg border border-[#e5e7eb] bg-white px-3 font-semibold disabled:opacity-50">
+            <button type="button" disabled={busy !== null || pagination.page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))} className="inline-flex h-9 items-center gap-1 rounded-lg border border-[#e5e7eb] bg-white px-3 font-semibold disabled:opacity-50">
               <ChevronLeft className="h-4 w-4" /> Anterior
             </button>
             <span className="text-xs">Página {pagination.page} de {pagination.pages}</span>
-            <button type="button" disabled={pagination.page >= pagination.pages} onClick={() => setPage((p) => p + 1)} className="inline-flex h-9 items-center gap-1 rounded-lg border border-[#e5e7eb] bg-white px-3 font-semibold disabled:opacity-50">
+            <button type="button" disabled={busy !== null || pagination.page >= pagination.pages} onClick={() => setPage((p) => p + 1)} className="inline-flex h-9 items-center gap-1 rounded-lg border border-[#e5e7eb] bg-white px-3 font-semibold disabled:opacity-50">
               Siguiente <ChevronRight className="h-4 w-4" />
             </button>
           </div>

@@ -1,5 +1,5 @@
 import { expect, test } from "playwright/test";
-import { loginAs } from "./helpers";
+import { loginAs, waitForInteractivePage } from "./helpers";
 import { ensureRegressionSeed } from "./seed";
 
 // El primer bloque de cada pantalla empieza a la MISMA distancia del navbar:
@@ -49,7 +49,8 @@ test("el contenido arranca a la misma distancia del navbar", async ({ page }, te
     // «load» y no «networkidle»: Notificaciones consulta en segundo plano y en
     // el CI la red nunca llegaba a quedarse quieta (30 s y fuera).
     await page.goto(ruta, { waitUntil: "load" });
-    await page.waitForTimeout(1200);
+    await waitForInteractivePage(page);
+    await expect.poll(async () => Math.abs(await medir(page, telefono) - esperado), { timeout: 12_000 }).toBeLessThanOrEqual(2);
     medidas[ruta] = await medir(page, telefono);
   }
   const fuera = Object.entries(medidas).filter(([, aire]) => Math.abs(aire - esperado) > 2);

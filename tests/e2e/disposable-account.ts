@@ -128,7 +128,7 @@ export async function createDisposableAccount(options: {
     return { id, email, password, professionalId, businessName };
   } catch (error) {
     const { error: deleteProfileError } = await admin.from("profiles").delete().eq("id", id);
-    const { error: deleteAuditError } = await admin.from("user_action_audit").delete().eq("entity_id", id);
+    const { error: deleteAuditError } = await admin.from("user_action_audit").delete().eq("entity_table", "profiles").eq("entity_id", id);
     const { error: deleteAuthError } = await admin.auth.admin.deleteUser(id);
     if (deleteProfileError || deleteAuditError || deleteAuthError) {
       throw new AggregateError(
@@ -175,12 +175,13 @@ export async function cleanupDisposableAccount(account: DisposableAccount | unde
   const { error: relatedAuditError } = await admin
     .from("user_action_audit")
     .delete()
-    .or(`actor_user_id.eq.${account.id},entity_owner_user_id.eq.${account.id},entity_id.eq.${account.id}`);
+    .or(`actor_user_id.eq.${account.id},entity_owner_user_id.eq.${account.id},and(entity_table.eq.profiles,entity_id.eq.${account.id})`);
   if (relatedAuditError) failures.push(relatedAuditError);
   if (account.professionalId) {
     const { error: professionalAuditError } = await admin
       .from("user_action_audit")
       .delete()
+      .eq("entity_table", "professionals")
       .eq("entity_id", account.professionalId);
     if (professionalAuditError) failures.push(professionalAuditError);
   }
