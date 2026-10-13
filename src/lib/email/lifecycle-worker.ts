@@ -93,10 +93,11 @@ export async function runLifecycleEmails(db: Admin, simulate = true) {
       const href = new URL(campaign.ctaPath,origin);
       href.searchParams.set("utm_source","correo"); href.searchParams.set("utm_medium","campana"); href.searchParams.set("utm_campaign",campaign.key);
       const name = (account.full_name ?? "").trim().split(/\s+/)[0];
-      const greeting = /^[\p{L}][\p{L}'-]{1,}$/u.test(name) ? `<p>Hola ${escaparHtml(name)},</p>` : "";
+      const greeting = /^[\p{L}][\p{L}'-]{1,}$/u.test(name) ? `<p>Hola ${escaparHtml(name)},</p>` : campaign.key === MOBILE_APP_CAMPAIGN.key ? "<p>Hola,</p>" : "";
+      const signature = campaign.key === MOBILE_APP_CAMPAIGN.key ? MOBILE_APP_CAMPAIGN.signature : "Equipo ContrataCR";
       const bodyHtml = greeting + campaign.body.split(/\n\n/).map((s) => `<p style="font-size:15px;line-height:1.6">${escaparHtml(s)}</p>`).join("")
         + `<p><a href="${escaparHtml(href)}" style="display:inline-block;background:#009FD9;color:white;padding:12px 22px;border-radius:24px;text-decoration:none">${escaparHtml(campaign.ctaLabel)}</a></p>`
-        + `<p>Equipo ContrataCR</p><p><a href="${origin}/soporte">Soporte en ContrataCR</a></p>`
+        + `<p>${escaparHtml(signature)}</p><p><a href="${origin}/soporte">Soporte en ContrataCR</a></p>`
         + `<p style="font-size:12px">Recibes este correo porque tienes una cuenta en ContrataCR. <a href="${escaparHtml(enlaceDeBaja(origin,account.email!))}">No quiero recibir novedades</a>.</p>`;
       return sendBrevoEmail({to:account.email!,subject:campaign.subject,nivel:"masivo",campana:campaign.key,
         html:brandedEmailDocument({title:campaign.subject,bodyHtml,origin})});
