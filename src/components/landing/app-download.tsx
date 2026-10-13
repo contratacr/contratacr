@@ -121,7 +121,9 @@ export function MobileAppDownloadBanner({ initialPlatform = null, initialDismiss
     document.addEventListener("focusin", update); document.addEventListener("focusout", update); update();
     return () => { observer.disconnect(); document.removeEventListener("focusin", update); document.removeEventListener("focusout", update); };
   }, [eligible, native]);
-  const visible = !native && eligible && (!storedDismissal || downloadRequested) && !dismissed && !blocked;
+  // A compact desktop window uses the mobile layout, but is not a mobile
+  // device. Require a detected platform before rendering or reserving space.
+  const visible = platform !== null && !native && eligible && (!storedDismissal || downloadRequested) && !dismissed && !blocked;
   useLayoutEffect(() => {
     const root = document.documentElement;
     if (visible) root.setAttribute("data-web-download-banner", "");

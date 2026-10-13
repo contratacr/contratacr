@@ -85,13 +85,27 @@ test('mobile download notice and header are correctly positioned before JavaScri
 });
 
 
-test('download link also works in a narrow desktop browser with no mobile OS detected',async({page})=>{
+test('narrow desktop windows have no mobile notice or navbar gap, while download links remain available',async({page,browser,baseURL})=>{
  test.skip(test.info().project.name!=='chromium-desktop' && test.info().project.name!=='desktop-download', 'Requires a desktop user agent without a mobile OS.');
- await page.setViewportSize({width:800,height:900});await page.goto('/#descargar-app');
- const banner=page.getByTestId('mobile-app-download');await expect(banner).toBeVisible();
- await expect(banner.locator('a')).toHaveCount(2);
- expect(await banner.locator('a').first().getAttribute('href')).toContain('apps.apple.com');
- expect(await banner.locator('a').last().getAttribute('href')).toContain('play.google.com');
+ for(const width of [390,800,1000]) {
+  await page.setViewportSize({width,height:900});await page.goto('/');
+  await expect(page.getByTestId('mobile-app-download')).toHaveCount(0);
+  await expect.poll(()=>page.getByTestId('landing-navbar').evaluate(el=>el.getBoundingClientRect().top)).toBe(0);
+  expect(await page.locator('html').getAttribute('data-web-download-banner')).toBeNull();
+ }
+ await page.goto('/#descargar-app');
+ const links=page.getByTestId('app-download-section').getByTestId('app-store-links').locator('a');
+ await expect(links).toHaveCount(2);
+ await expect(links.first()).toHaveAttribute('href',/apps\.apple\.com/);
+ await expect(links.last()).toHaveAttribute('href',/play\.google\.com/);
+ // The server-rendered page must not briefly show the desktop notice either.
+ const ua=await page.evaluate(()=>navigator.userAgent);
+ const cold=await browser.newContext({javaScriptEnabled:false,userAgent:ua,viewport:{width:800,height:900}});
+ try {
+  const p=await cold.newPage();await p.goto(`${baseURL}/`);
+  await expect(p.getByTestId('mobile-app-download')).toHaveCount(0);
+  expect((await p.getByTestId('landing-navbar').boundingBox())?.y).toBe(0);
+ } finally {await cold.close();}
 });
 
 test('notice is centered, remains above the header on public pages and respects account/form routes',async({page})=>{
