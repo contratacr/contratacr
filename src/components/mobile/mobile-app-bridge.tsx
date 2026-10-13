@@ -92,7 +92,7 @@ function mountNativeFirstRunPrepaint() {
     <div class="ccr-native-first-run-prepaint-shade"></div>
     <div class="ccr-native-first-run-prepaint-content">
       <div class="ccr-native-first-run-prepaint-logo">
-        <img src="/logo-mark-dark.png" alt="" />
+        <span class="ccr-native-first-run-prepaint-marca"></span>
         <span>Contrata<span>CR</span></span>
       </div>
       <p>¿Cómo quieres empezar?</p>

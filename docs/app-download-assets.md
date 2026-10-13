@@ -144,3 +144,11 @@ Use Isaac's two Downloads from 14:51, copied byte-for-byte, not the generated al
 - `app-workshop-mobile-compact-20261013.png`: 1122×1402, approximately 4:5.
 
 Keep `unoptimized`, HTML copy/store links, and the shared download anchor. Reduce section height to match the artwork: 480 px at desktop width 1440, about 488 px at phone width 390. Smaller layouts retain enough room for readable copy and store buttons. Six existing responsive/shared-anchor cases passed across Chromium mobile, WebKit mobile, and desktop. Inspected screenshots at 390, 768, and 1440 px.
+
+## Primary brand on light surfaces — 13 October 2026
+
+Footer now uses white with navy copy and the primary navbar logo. Social links remain left and mobile-store links right on desktop, stacking on small screens; store SVGs have separate navy variants. The native welcome screen and its prepaint use the primary logo on a white action panel beneath the existing role photograph. Client/professional selection and login/registration destinations are unchanged. The shared web deployment updates iOS and Android presentation.
+
+Logo audit: light-on-dark mark remains in the dark admin shell, quote-image renderer, share-kit renderer, and dark-mode email artwork. It is no longer used by the footer or welcome/prepaint. Keep these contrast variants for their dark backgrounds.
+
+Validation: existing first-installation navigation test passed in Chromium and WebKit; footer links passed all three browser projects; focused ESLint passed. At 390×844 welcome content fits without scrolling; at 320×568 the extra 19 px remain reachable, with no horizontal overflow and the final login action reachable in both browsers.

@@ -95,7 +95,7 @@ export function LandingFooter() {
     // ya marca el final—; si entre la lista y el pie hay espacio en blanco, la
     // línea se ve y cierra la lista. Así la regla es una sola para todas las
     // listas y no depende de medir nada.
-    <footer className="ccr-app-footer relative -mt-px bg-[#111827] text-white">
+    <footer className="ccr-app-footer relative -mt-px bg-white text-[#162543]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-14 pb-8">
 
         {/* Main grid */}
@@ -104,9 +104,9 @@ export function LandingFooter() {
           {/* Brand column — spans 2 cols on lg */}
           <div className="lg:col-span-2">
             <Link href="/" aria-label="ContrataCR" className="inline-flex mb-4">
-              <ContrataCRLogo tone="dark" />
+              <ContrataCRLogo />
             </Link>
-            <p className="text-sm text-white leading-relaxed mb-6 max-w-[260px]">
+            <p className="text-sm text-[#162543] leading-relaxed mb-6 max-w-[260px]">
               {t("tagline")}
             </p>
 
@@ -115,13 +115,13 @@ export function LandingFooter() {
           {/* Link columns */}
           {COLUMNS.map((col) => (
             <div key={col.headingKey}>
-              <h3 className="text-xs font-bold uppercase tracking-widest text-white mb-4">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-[#162543] mb-4">
                 {t(col.headingKey)}
               </h3>
               <ul className="space-y-3">
                 {col.headingKey === "support.title" && user && (
                   <li>
-                    <Link href={panelHref} className="text-sm text-white hover:text-[#88dcf5] transition-colors">
+                    <Link href={panelHref} className="text-sm text-[#162543] hover:text-[#0083b0] transition-colors">
                       {t("support.panel")}
                     </Link>
                   </li>
@@ -129,17 +129,17 @@ export function LandingFooter() {
                 {col.links.map(({ key, href }) => (
                   <li key={key}>
                     {href === "/registro/profesional" ? (
-                      <SmartRegisterLink className="text-sm text-white hover:text-[#88dcf5] transition-colors">
+                      <SmartRegisterLink className="text-sm text-[#162543] hover:text-[#0083b0] transition-colors">
                         {t(key)}
                       </SmartRegisterLink>
                     ) : href === "/soporte" ? (
-                      <SupportLink className="text-sm text-left text-white hover:text-[#88dcf5] transition-colors">
+                      <SupportLink className="text-sm text-left text-[#162543] hover:text-[#0083b0] transition-colors">
                         {t(key)}
                       </SupportLink>
                     ) : (
                       <Link
                         href={href}
-                        className="text-sm text-white hover:text-[#88dcf5] transition-colors"
+                        className="text-sm text-[#162543] hover:text-[#0083b0] transition-colors"
                       >
                         {t(key)}
                       </Link>
@@ -152,11 +152,11 @@ export function LandingFooter() {
         </div>
 
         {/* Social and downloads have their own row, separate from navigation. */}
-        <div data-testid="footer-community-row" className="flex flex-col gap-5 border-b border-white/10 py-5 sm:flex-row sm:items-center sm:justify-between">
+        <div data-testid="footer-community-row" className="flex flex-col gap-5 border-b border-[#162543]/10 py-5 sm:flex-row sm:items-center sm:justify-between">
           <nav aria-label={t("followUs")} data-testid="footer-social-links" className="flex flex-wrap items-center gap-3">
-            <span className="mr-1 text-sm text-white">{t("followUs")}</span>
+            <span className="mr-1 text-sm text-[#162543]">{t("followUs")}</span>
             {SOCIAL_LINKS.map(({ label, href, Icon }) => (
-              <a key={label} href={href} aria-label={label} target="_blank" rel="noopener noreferrer" className="inline-flex h-11 w-11 items-center justify-center text-white transition-colors hover:text-[#88dcf5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+              <a key={label} href={href} aria-label={label} target="_blank" rel="noopener noreferrer" className="inline-flex h-11 w-11 items-center justify-center text-[#162543] transition-colors hover:text-[#0083b0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]">
                 <Icon />
               </a>
             ))}
@@ -166,12 +166,12 @@ export function LandingFooter() {
 
         {/* Bottom bar */}
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-white">
+          <p className="text-xs text-[#162543]">
             {t("rights", { year: new Date().getFullYear() })}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
-            <Link href="/terminos" className="text-xs text-white hover:text-[#88dcf5] transition-colors">{t("terms")}</Link>
-            <Link href="/privacidad" className="text-xs text-white hover:text-[#88dcf5] transition-colors">{t("privacy")}</Link>
+            <Link href="/terminos" className="text-xs text-[#162543] hover:text-[#0083b0] transition-colors">{t("terms")}</Link>
+            <Link href="/privacidad" className="text-xs text-[#162543] hover:text-[#0083b0] transition-colors">{t("privacy")}</Link>
           </div>
         </div>
       </div>
