@@ -30,15 +30,15 @@ export function AppDownloadSection() {
   const en = useLocale() === "en";
   if (native) return null;
   return <section id="descargar-app" data-testid="app-download-section" className="ccr-solo-web ccr-download-section relative overflow-hidden bg-[#092532]">
-    <Image src="/stores/app-carpentry-original-20261013.png" width={2172} height={724} unoptimized alt={en ? "ContrataCR on a phone in a carpentry workshop" : "ContrataCR en un teléfono dentro de un taller de carpintería"} data-testid="app-download-artwork" className="block h-auto w-full lg:absolute lg:inset-0 lg:h-full lg:object-cover lg:object-right" />
-    <div aria-hidden="true" className="pointer-events-none absolute inset-0 hidden bg-[linear-gradient(90deg,rgba(9,37,50,0.82)_0%,rgba(9,37,50,0.76)_34%,rgba(9,37,50,0.55)_47%,transparent_62%)] lg:block" />
-    <div className="relative mx-auto px-6 py-8 sm:px-8 lg:grid lg:min-h-[620px] lg:max-w-7xl lg:grid-cols-[1.1fr_1fr] lg:items-center lg:gap-12 lg:px-10 lg:py-16 xl:px-14">
+    <Image src="/stores/app-carpentry-original-20261013.png" width={2172} height={724} unoptimized alt={en ? "ContrataCR on a phone in a carpentry workshop" : "ContrataCR en un teléfono dentro de un taller de carpintería"} data-testid="app-download-artwork" className="block h-auto w-full xl:absolute xl:inset-0 xl:h-full xl:object-cover xl:object-right" />
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 hidden bg-[linear-gradient(90deg,rgba(9,37,50,0.82)_0%,rgba(9,37,50,0.76)_34%,rgba(9,37,50,0.55)_47%,transparent_62%)] xl:block" />
+    <div className="relative mx-auto px-6 py-8 sm:px-8 xl:grid xl:min-h-[max(540px,33.333vw)] xl:max-w-7xl xl:grid-cols-[1.1fr_1fr] xl:items-center xl:gap-12 xl:py-12 xl:px-14">
       <div className="max-w-xl text-white">
-        <p className="mb-5 text-sm font-semibold tracking-[0.16em] text-[#88dcf5]">{en ? "AVAILABLE FOR iOS AND ANDROID" : "DISPONIBLE PARA iOS Y ANDROID"}</p>
+        <p className="mb-5 xl:mb-4 text-sm font-semibold tracking-[0.16em] text-[#88dcf5]">{en ? "AVAILABLE FOR iOS AND ANDROID" : "DISPONIBLE PARA iOS Y ANDROID"}</p>
         <h2 className="text-[clamp(1.75rem,3.6vw,3.5rem)] font-extrabold leading-[1.08] tracking-tight">{en ? "Download the ContrataCR app" : "Descarga la app de ContrataCR"}</h2>
-        <p className="mb-7 mt-6 max-w-md text-lg leading-relaxed text-white/80">{en ? "Find professionals, post projects or offer your services from your phone." : "Encuentra profesionales, publica proyectos u ofrece tus servicios desde tu celular."}</p>
+        <p className="mb-7 mt-6 xl:mb-6 xl:mt-5 max-w-md text-lg leading-relaxed text-white/80">{en ? "Find professionals, post projects or offer your services from your phone." : "Encuentra profesionales, publica proyectos u ofrece tus servicios desde tu celular."}</p>
         <AppStoreLinks />
-        <div className="mt-7 hidden items-center gap-4 lg:flex">
+        <div className="mt-7 hidden items-center gap-4 xl:flex">
           <Image src="/stores/download-app-qr.svg" width={112} height={112} alt={en ? "Scan to download ContrataCR" : "Escanea para descargar ContrataCR"} className="shrink-0 rounded-lg bg-white" />
           <div className="max-w-[240px]"><p className="text-sm font-semibold">{en ? "Scan with your phone" : "Escanea con tu celular"}</p><p className="mt-2 text-sm leading-relaxed text-white/65">{en ? "Sign in with your existing account." : "Ingresa con tu cuenta de siempre."}</p></div>
         </div>

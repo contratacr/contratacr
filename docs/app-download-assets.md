@@ -61,3 +61,5 @@ Se recuperan los pasos del guion de `82e4d766`, regrabados con la interfaz actua
 Las pantallas públicas son de producción, con analítica excluida y solicitudes de escritura bloqueadas. Los formularios se muestran en el servidor local del test actual con el actor sintético de regresión; no se llenan ni se envían y no se ejecuta limpieza de datos. Se conservan el desplazamiento suave a 30 fps, los toques visibles y los fundidos de la grabación anterior. Los nuevos recursos usan `?v=20261013-original-flow`.
 
 Para repetir los formularios desde main, establecer `GUIDE_TEST_ENV_FILE` en el archivo privado `.env.test` del checkout test y `GUIDE_FORM_BASE` en su servidor loopback. El guion verifica el proyecto de test antes de iniciar la sesión.
+
+El encuadre de escritorio usa una altura mínima de 540 px, que crece con la proporción 3:1 del original en pantallas amplias. Reduce la ampliación y el recorte lateral frente a los 620 px anteriores. Por debajo del diseño de escritorio amplio se mantiene la imagen completa sobre el texto, evitando que el teléfono quede detrás del contenido. El PNG permanece idéntico.
