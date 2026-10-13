@@ -156,3 +156,11 @@ Validation: existing first-installation navigation test passed in Chromium and W
 ### Welcome design withdrawn
 
 Isaac rejected the white-panel welcome preview. Restored the complete welcome component, prepaint bridge and styles from 5e029c77; retained the approved light footer and navy store icons. Show a future welcome redesign for approval before publishing it.
+
+## Approved registration-style welcome and stable wordmark — 13 October 2026
+
+After reviewing the card preview, Isaac approved the responsive-registration layout with the shared hamburger menu. Browsing from the menu completes the first-run welcome without requiring an account; choosing a registration card or login retains the retryable access journey. The prepaint uses the same light branding. No native permissions or store build changes.
+
+Production investigation confirmed why the previous welcome remained: main was still 835eed63 (the rollback), with the replacement only in the working copies. A cold Chromium navigation also rendered the brand using Arial, then Inter ExtraBold on the next page because the global Inter font uses `font-display: optional`. The shared wordmark now uses outlined SVG paths from the existing Inter 800 asset, preserving its 19 px type size, tracking and brand colors independently of font loading. Both contrast variants and the first-run prepaint use these assets; the other typography remains unchanged.
+
+Validation: first-installation login/registration and guest-menu persistence in Chromium/WebKit mobile; public navbar/drawer wordmark checks with WOFF2 requests blocked across home, registration, login, projects, promotions and jobs. No production account or data changes during the audit.

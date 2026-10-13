@@ -221,14 +221,8 @@ test.describe("@mobile native shell contracts", () => {
     const onboarding = page.getByTestId("native-first-run-onboarding");
     await expect(onboarding).toBeVisible();
     await expect(onboarding.getByRole("heading", { name: "¿Cómo quieres empezar?" })).toBeVisible();
-    const clientRole = onboarding.getByRole("button", { name: /Buscar servicios/i });
-    const professionalRole = onboarding.getByRole("button", { name: /Ofrecer servicios/i });
-    await expect(clientRole).toHaveAttribute("aria-pressed", "true");
-    await expect(professionalRole).toHaveAttribute("aria-pressed", "false");
-    await professionalRole.click();
-    await expect(professionalRole).toHaveAttribute("aria-pressed", "true");
-    await clientRole.click();
-    await onboarding.getByRole("button", { name: "Registrarme" }).click();
+    await expect(onboarding.locator('img[src="/logo-mark-transparent.png"]').filter({ visible: true })).toBeVisible();
+    await onboarding.getByRole("button", { name: /Busco servicios/i }).click();
     await expect(onboarding).toBeHidden();
     await expect(page).toHaveURL(/\/registro\/cliente/);
     await expect(page.getByRole("heading", { name: "Crear cuenta de cliente", exact: true })).toBeVisible();
@@ -241,8 +235,7 @@ test.describe("@mobile native shell contracts", () => {
     await expect(onboarding).toBeVisible();
     await expect(onboarding.getByRole("heading", { name: "¿Cómo quieres empezar?" })).toBeVisible();
 
-    await onboarding.getByRole("button", { name: /Ofrecer servicios/i }).click();
-    await onboarding.getByRole("button", { name: "Registrarme" }).click();
+    await onboarding.getByRole("button", { name: /Ofrezco servicios/i }).click();
     await expect(page).toHaveURL(/\/registro\/profesional/);
     await expect(page.getByRole("heading", { name: "Crea tu cuenta profesional", exact: true })).toBeVisible();
     await page.goBack({ waitUntil: "domcontentloaded" });
@@ -271,6 +264,30 @@ test.describe("@mobile native shell contracts", () => {
     await expect(page).toHaveURL(/\/terminos/);
     await expect(page.getByRole("heading", { name: /Términos y Condiciones/i })).toBeVisible();
     await expect(onboarding).toBeHidden();
+  });
+
+  test("welcome menu allows guest exploration and stays dismissed after reload", async ({ page }) => {
+    await resetAuth(page);
+    await page.evaluate(() => {
+      sessionStorage.setItem("ccr:e2e-show-first-run-onboarding", "1");
+      localStorage.removeItem("ccr:native-first-run-onboarding:v12");
+    });
+    await gotoOK(page, "/");
+    const welcome = page.getByTestId("native-first-run-onboarding");
+    await expect(welcome).toBeVisible();
+    await welcome.getByRole("button", { name: /abrir men[uú]|open menu/i }).click();
+    await welcome.getByRole("button", { name: /cerrar men[uú]|close menu/i }).click();
+    await expect(welcome).toBeVisible();
+    await expect.poll(() => page.evaluate(() => localStorage.getItem("ccr:native-first-run-onboarding:v12"))).toBeNull();
+    await welcome.getByRole("button", { name: /abrir men[uú]|open menu/i }).click();
+    await welcome.getByRole("link", { name: "Promociones", exact: true }).click();
+    await expect(page).toHaveURL(/\/promociones/);
+    await expect(welcome).toBeHidden();
+    await expect.poll(() => page.evaluate(() => localStorage.getItem("ccr:native-first-run-onboarding:v12"))).toBe("1");
+    await page.reload();
+    await expect(welcome).toBeHidden();
+    await gotoOK(page, "/");
+    await expect(welcome).toBeHidden();
   });
 
   test("native marketplace tabs survive localized document navigations", async ({ page }) => {
