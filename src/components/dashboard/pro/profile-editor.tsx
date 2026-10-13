@@ -1,5 +1,6 @@
 "use client";
 
+import { PROFILE_FIELD_GROUPS, PROFILE_SECTION_FOOTER } from "@/components/dashboard/profile-section-layout";
 import { trackMetaConversion } from "@/lib/analytics/meta-pixel";
 
 import { irAlInicio, noInsistirArriba } from "@/lib/ir-al-inicio";
@@ -124,7 +125,7 @@ function Section({ id, title, desc, open, mobileFocused, onToggle, onActivate, c
       </button>
       {open && (
         <div className="px-4 pb-6 pt-5 sm:px-5 sm:pt-6" onFocusCapture={() => onActivate?.(id)} onPointerDownCapture={() => onActivate?.(id)}>
-          <div data-profile-section-body className="flex flex-col gap-6">
+          <div data-profile-section-body className={PROFILE_FIELD_GROUPS}>
             {children}
           </div>
           {footer}
@@ -853,7 +854,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
     const sectionActive = dirty && hayCambiosReales && activeDirtySection === sectionId;
     const sectionInvalid = sectionValidationError(sectionId) !== null;
     return (
-      <div className="ccr-grupo-botones mt-5 flex flex-col gap-2 pt-1 sm:flex-row sm:justify-end">
+      <div className={PROFILE_SECTION_FOOTER}>
         <button
           type="button"
           onClick={cancelChanges}
@@ -933,7 +934,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
       </div>
       {/* ── Datos básicos ─────────────────────────────────────────────── */}
       <Section footer={makeSectionFooter("basic")} id="basic" title={t("secBasic")} desc={t("secBasicDesc")} open={openSections.has("basic")} mobileFocused={mobileSectionFocused} onToggle={toggleSection} onActivate={setActiveDirtySection}>
-        <div data-field="photo" className="flex items-center gap-3 border-b border-[#eef2f6] pb-5 sm:gap-4">
+        <div data-field="photo" className="flex items-center gap-3 sm:gap-4">
           <ImagePreviewDialog
             src={avatarPreview}
             alt={t("photoAlt")}
@@ -954,12 +955,12 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
 
           <div className="min-w-0 flex-1">
             <p className="hidden text-sm font-semibold text-[#162543] sm:block">{t("photoAlt")}</p>
-            <div className="grid grid-cols-2 items-center gap-2 sm:mt-2 sm:flex sm:flex-wrap">
+            <div className="flex flex-wrap items-center gap-2 sm:mt-2">
               <button
                 type="button"
                 onClick={() => photoInputRef.current?.click()}
                 disabled={photoUploading}
-                className="inline-flex h-9 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-[#d7e1ea] bg-white px-2 text-xs font-semibold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] disabled:cursor-not-allowed disabled:opacity-50 sm:gap-2 sm:px-3 sm:text-sm"
+                className="inline-flex min-h-11 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-[#d7e1ea] bg-white px-2 text-xs font-semibold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] disabled:cursor-not-allowed disabled:opacity-50 sm:gap-2 sm:px-3 sm:text-sm"
               >
                 <Camera className="h-4 w-4 text-[#008fc3]" />
                 {avatarPreview
@@ -971,7 +972,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
                   type="button"
                   onClick={handlePhotoRemove}
                   disabled={photoUploading}
-                  className="inline-flex h-9 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-red-200 bg-white px-2 text-xs font-semibold text-red-600 transition-colors hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 sm:gap-2 sm:px-3 sm:text-sm"
+                  className="inline-flex min-h-11 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-red-200 bg-white px-2 text-xs font-semibold text-red-600 transition-colors hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 sm:gap-2 sm:px-3 sm:text-sm"
                 >
                   <X className="h-4 w-4" />
                   {locale === "en" ? "Remove photo" : "Quitar foto"}
@@ -1065,9 +1066,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
         {(professions.length > 0 ? professions : [""]).map((prof) => {
           const certsForProf = certifications.filter((c) => (c.profession || professions[0] || "") === prof);
           const draftHere = !!certDraft && (certDraft.profession ?? "") === (prof || "");
-          const inputCls = "h-10 w-full rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
+          const inputCls = "h-11 w-full rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
           return (
-            <div key={prof || "general"} className="flex flex-col gap-2.5 border-t border-[#eef2f6] pt-3 first:border-t-0 first:pt-0">
+            <div key={prof || "general"} className="flex flex-col gap-4 border-t border-[#e1e8f0] pt-5 first:border-t-0 first:pt-0">
               {professions.length > 1 && prof && (
                 <p className="text-xs font-bold uppercase tracking-wide text-[#0089bb]">{getCategoryLabel(prof, locale)}</p>
               )}
@@ -1086,16 +1087,16 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
               ))}
               {/* Add form (all fields required) OR the add-another action */}
               {draftHere ? (
-                <div className="rounded-xl bg-[#f9fafb] p-3 flex flex-col gap-2">
+                <div className="rounded-xl border border-[#dce5ee] bg-[#f8fafc] p-4 flex flex-col gap-4">
                   <input type="text" value={certDraft!.name} maxLength={SHORT_TEXT_MAX_LENGTH} onChange={(e) => updateCertDraft("name", limitText(e.target.value, SHORT_TEXT_MAX_LENGTH))} placeholder={t("certNamePlaceholder")} className={inputCls} autoFocus />
-                  <div className="grid grid-cols-1 sm:grid-cols-[1fr,7rem] gap-2">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_7rem]">
                     <input type="text" value={certDraft!.institution} maxLength={SHORT_TEXT_MAX_LENGTH} onChange={(e) => updateCertDraft("institution", limitText(e.target.value, SHORT_TEXT_MAX_LENGTH))} placeholder={t("certInstitution")} className={inputCls} />
                     <input type="text" inputMode="numeric" maxLength={4} value={certDraft!.year} onChange={(e) => updateCertDraft("year", e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder={t("certYear")} className={inputCls} />
                   </div>
                   {certError && <p className="text-xs text-red-600">{certError}</p>}
                   <div className="flex gap-2 pt-0.5">
-                    <Button type="button" size="sm" onClick={saveCert}>{t("certSave")}</Button>
-                    <Button type="button" size="sm" variant="ghost" onClick={cancelCertDraft}>{t("cancel")}</Button>
+                    <Button type="button" size="sm" className="min-h-11" onClick={saveCert}>{t("certSave")}</Button>
+                    <Button type="button" size="sm" variant="ghost" className="min-h-11" onClick={cancelCertDraft}>{t("cancel")}</Button>
                   </div>
                 </div>
               ) : (
@@ -1159,29 +1160,31 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
         {/* Progressive disclosure: turning on "Permitir contacto por llamada"
             reveals the optional separate call line. Empty → the WhatsApp number
             is used for calls too (so the toggle alone is self-explanatory). */}
-        <ProfileCheckRow
-          title={t("allowCallLabel")}
-          checked={allowPhoneCall}
-          onToggle={() => {
-            setAllowPhoneCall((v) => !v);
-            touch("contact");
-          }}
-          ariaLabel={t("allowCallLabel")}
-        />
+        <div className="space-y-5">
+          <ProfileCheckRow
+            title={t("allowCallLabel")}
+            checked={allowPhoneCall}
+            onToggle={() => {
+              setAllowPhoneCall((v) => !v);
+              touch("contact");
+            }}
+            ariaLabel={t("allowCallLabel")}
+          />
 
-        {allowPhoneCall && (
-          <div>
-            <PhoneInput
-              label={<>{t("callNumber")} <span className="text-[#68778d] font-normal">{t("optional")}</span></>}
-              value={callPhone}
-              error={dirty && activeDirtySection === "contact" && !callPhoneIsValid
-                ? (locale === "en" ? "Enter a complete call number." : "Ingresa un número para llamadas completo.")
-                : undefined}
-              onChange={(digits) => { setCallPhone(digits); touch("contact"); }}
-              
-            />
-          </div>
-        )}
+          {allowPhoneCall && (
+            <div>
+              <PhoneInput
+                label={<>{t("callNumber")} <span className="text-[#68778d] font-normal">{t("optional")}</span></>}
+                value={callPhone}
+                error={dirty && activeDirtySection === "contact" && !callPhoneIsValid
+                  ? (locale === "en" ? "Enter a complete call number." : "Ingresa un número para llamadas completo.")
+                  : undefined}
+                onChange={(digits) => { setCallPhone(digits); touch("contact"); }}
+
+              />
+            </div>
+          )}
+        </div>
 
         {/* El correo de contacto salió del perfil. Medido en producción entre el
             19 de julio y el 15 de septiembre: 92 de 288 profesionales lo tenían
@@ -1196,7 +1199,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
 
       {/* ── Redes sociales — USERNAME only; we build the link (additive to casos). ── */}
       <Section footer={makeSectionFooter("social")} id="social" title={t("secSocial")} desc={t("secSocialDesc")} open={openSections.has("social")} mobileFocused={mobileSectionFocused} onToggle={toggleSection} onActivate={setActiveDirtySection}>
-        <div className="flex flex-col gap-3">
+        <div className={PROFILE_FIELD_GROUPS}>
           <div className="w-full sm:max-w-[40rem]">
             <label className="text-sm font-medium text-[#374151] mb-1.5 flex items-center gap-1.5">
               <Globe className="h-4 w-4 text-[#6b7280]" strokeWidth={2.5} /> {t("website")} <span className="text-[#68778d] font-normal">{t("optional")}</span>
