@@ -14,7 +14,7 @@ import { ensureRegressionSeed } from "./seed";
 // (el «···» de los avisos) es lo primero que se ve y cuenta; en computadora
 // el título manda y lo angosto no se mira.
 const medir = (page: import("playwright/test").Page, conIconos = false) => page.evaluate((conIconos) => {
-  const header = [...document.querySelectorAll("header")].find((h) => { const r = h.getBoundingClientRect(); return r.top <= 1 && r.height > 30 && r.width > 300; });
+  const header = [...document.querySelectorAll("header")].find((h) => { const r = h.getBoundingClientRect(); return r.top >= -1 && r.top <= 80 && r.height > 30 && r.width > 300; });
   const bajo = header ? header.getBoundingClientRect().bottom : 0;
   const main = document.querySelector("main") ?? document.body;
   let arriba = Infinity;

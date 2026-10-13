@@ -172,9 +172,9 @@ test.describe("@smoke public routes", () => {
 
   test("home near-me search uses proximity params", async ({ page }) => {
     await page.context().setGeolocation({ latitude: 9.9281, longitude: -84.0907 });
+    await page.context().grantPermissions(["geolocation"], { origin: new URL(String(test.info().project.use.baseURL)).origin });
     await gotoOK(page, "/");
     await waitForInteractivePage(page);
-    await page.context().grantPermissions(["geolocation"], { origin: new URL(page.url()).origin });
 
     const location = page
       .getByPlaceholder(/Ubicaci[oó]n|Location/i)
@@ -384,6 +384,7 @@ test.describe("@smoke public routes", () => {
   test("el panel de servicio ofrece oficios aunque no haya búsquedas recientes", async ({ page }, testInfo) => {
     test.skip(!testInfo.project.name.includes("mobile"), "El panel a pantalla completa es del teléfono.");
     await gotoOK(page, "/profesionales?regression=1");
+    await waitForInteractivePage(page);
     await page.getByRole("button", { name: "¿Qué servicio estás buscando?" }).click();
     await expect(page.getByRole("combobox", { name: "Servicio" })).toBeVisible();
     const panel = page.locator("#native-location-suggestions");

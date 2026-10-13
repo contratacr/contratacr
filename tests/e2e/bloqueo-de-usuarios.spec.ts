@@ -6,7 +6,7 @@ import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccou
 // BLOQUEAR A UN USUARIO (6-oct-2026, regla 1.2 de Apple): desde la ficha, el
 // contenido de esa persona desaparece al instante (ficha, búsqueda, tableros),
 // la conversación queda bloqueada, el equipo recibe el reporte y se puede
-// desbloquear desde Cuenta y seguridad.
+// desbloquear desde Privacidad.
 test.skip(!canRunSeededRegression(), "Necesita la base de regresión.");
 test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
 
@@ -55,8 +55,9 @@ test("bloquear desde la ficha: desaparece, avisa al equipo y se puede desbloquea
     const { data: bloqueo } = await admin.from("user_blocks").select("blocked_id").eq("blocker_id", cuenta.id);
     expect((bloqueo ?? []).map((b) => (b as { blocked_id: string }).blocked_id)).toContain(proPerfil);
 
-    // 5. Desbloquear desde Cuenta y seguridad.
-    await gotoOK(page, "/dashboard/profesional?tab=cuenta");
+    // 5. Desbloquear desde Privacidad.
+    await gotoOK(page, "/dashboard/profesional?tab=profile");
+    await page.locator("#sec-privacidad > button").click();
     const fila = page.locator("li", { hasText: E2E_USERS.professional.fullName }).first();
     await expect(fila).toBeVisible({ timeout: 30_000 });
     if (process.env.CAPTURAS) { await fila.scrollIntoViewIfNeeded(); await page.screenshot({ path: "test-results/bloqueo-3-cuenta.png" }); }

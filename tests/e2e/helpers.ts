@@ -219,6 +219,8 @@ export async function expectVisibleText(scope: Locator, matcher: string | RegExp
 }
 
 export async function waitForInteractivePage(page: Page) {
+  const navbar = page.getByTestId("landing-navbar").first();
+  if (await navbar.count()) await expect(navbar).toHaveAttribute("data-hydrated", "true");
   await page.waitForLoadState("load", { timeout: 10_000 }).catch(() => undefined);
   await page.waitForLoadState("networkidle", { timeout: 5_000 }).catch(() => undefined);
   await page.evaluate(

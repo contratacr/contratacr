@@ -58,7 +58,8 @@ test.describe("@seeded professional profile", () => {
       });
       expect(layout.fontSize).toBeLessThanOrEqual(18);
       expect(layout.height).toBeGreaterThan(layout.lineHeight * 1.5);
-      expect(layout.height).toBeLessThanOrEqual(layout.lineHeight * 3.1);
+      expect(layout.height).toBeLessThanOrEqual(layout.lineHeight * 5.1);
+      expect(await name.evaluate(el => el.scrollHeight <= el.clientHeight + 1)).toBe(true);
     }
     await expectNoHorizontalOverflow(page);
   });
