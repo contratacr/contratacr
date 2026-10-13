@@ -64,6 +64,32 @@ test.describe("@seeded professional profile", () => {
     await expectNoHorizontalOverflow(page);
   });
 
+  test("verification stays beside the last word of wrapped profile names", async ({ page }) => {
+    test.skip(!canRunSeededRegression(), "Needs the isolated verified regression professional.");
+    const state = await ensureRegressionSeed();
+    await gotoOK(page, `/profesionales/${state.professionalSlug}`);
+    const name = page.getByTestId("professional-profile-name");
+    const seal = name.locator("[data-verification-badge]");
+    await expect(seal).toBeVisible();
+    for (const label of ["JVR TECHNICAL SOLUTIONS", "Constructora de Costa Rica servicios especializados", "Redes Bahía"]) {
+      await name.evaluate((heading, label) => {
+        const split = label.lastIndexOf(" ");
+        heading.querySelector("[data-profile-name-start]")!.textContent = label.slice(0, split + 1);
+        heading.querySelector("[data-profile-name-last-word]")!.textContent = label.slice(split + 1);
+      }, label);
+      const last = await name.locator("[data-profile-name-last-word]").boundingBox();
+      const badge = await seal.boundingBox();
+      expect(last).not.toBeNull();
+      expect(badge).not.toBeNull();
+      expect(badge!.x - (last!.x + last!.width)).toBeGreaterThanOrEqual(0);
+      expect(badge!.x - (last!.x + last!.width)).toBeLessThanOrEqual(6);
+      expect(Math.abs(badge!.y + badge!.height / 2 - (last!.y + last!.height / 2))).toBeLessThanOrEqual(6);
+      await expectNoHorizontalOverflow(page);
+    }
+    await seal.click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+  });
+
   test("reviews never freeze navigation back to results or home", async ({ page }) => {
     const href = await firstProfessionalHref(page);
     expect(href, "The verified production mirror must expose at least one professional").toBeTruthy();
