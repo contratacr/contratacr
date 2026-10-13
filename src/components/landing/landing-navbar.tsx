@@ -73,10 +73,9 @@ export function ContrataCRLogo({ className, tone = "light" }: { className?: stri
   return (
     <div className={cn("flex items-center gap-0.5 select-none", className)}>
       <ContrataCRMark tone={tone} />
-      <span className="text-[19px] font-extrabold tracking-tight leading-none">
-        <span className={dark ? "text-white" : "text-[#1a2744]"}>Contrata</span>
-        <span className={dark ? "text-[#38bdf8]" : "text-[#009FD9]"}>CR</span>
-      </span>
+      {/* Outlined Inter 800: identical before/after fonts load, including cold starts. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={`/brand/wordmark-${dark ? "dark" : "light"}.svg`} alt="" aria-hidden="true" width={105} height={24} className="h-6 w-[105px] shrink-0" />
     </div>
   );
 }
@@ -818,7 +817,7 @@ function guardarCapacidad(capacidad: CapacidadGuardada) {
 // `hydrated` en LandingNavbar).
 let encabezadoYaHidratado = false;
 
-export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobileSearch = false, marketplaceDesktop = false, drawerOnly = false }: { mobileInline?: React.ReactNode; forceCompactSearch?: boolean; mobileSearch?: boolean; marketplaceDesktop?: boolean; drawerOnly?: boolean } = {}) {
+export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobileSearch = false, marketplaceDesktop = false, drawerOnly = false, onWelcomeNavigate }: { onWelcomeNavigate?: (href: string) => void; mobileInline?: React.ReactNode; forceCompactSearch?: boolean; mobileSearch?: boolean; marketplaceDesktop?: boolean; drawerOnly?: boolean } = {}) {
   const [compact, setCompact] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -959,7 +958,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // recargarse la pantalla (9-oct-2026). En la app la cabecera es SOLO logo y
   // menú.
   const nativeInicial = useContext(NativeAppInicial);
-  const nativeHeaderShell = nativeApp && (hydrated || nativeInicial);
+  const nativeHeaderShell = !onWelcomeNavigate && nativeApp && (hydrated || nativeInicial);
   const { user, loading: authLoading, accountName, hasProfessionalProfile: fichaProDelServidor, avatarUrl: avatarUrlCuenta } = useAuth();
   // Search is a full-viewport map + results sheet. Do not merely hide the nav
   // with CSS: leaving it mounted keeps its layout class and safe-area reserve
@@ -1345,7 +1344,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // /buscar. No toca --ccr-native-header-height a propósito: si el hueco
   // reservado creciera a mitad del scroll, la página daría un salto de 60 px.
   const buscadorHomeMovil = buscadorHomeMovilBase && !sectionActive;
-  const segundaLineaBuscador = showMobileNavbarSearch || buscadorHomeMovil;
+  const segundaLineaBuscador = !onWelcomeNavigate && (showMobileNavbarSearch || buscadorHomeMovil);
   const [sectionRoot, setSectionRoot] = useState(false);
   const [sectionShare, setSectionShare] = useState(false);
   const [sectionMenu, setSectionMenu] = useState(false);
@@ -1947,7 +1946,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   }
 
   return (
-    <>
+    <div className="contents" onClickCapture={onWelcomeNavigate ? (event) => {
+      const anchor = (event.target as HTMLElement).closest("a[href]");
+      const href = anchor?.getAttribute("href");
+      if (!href || !href.startsWith("/") || href.startsWith("//")) return;
+      event.preventDefault();
+      event.stopPropagation();
+      onWelcomeNavigate(href);
+    } : undefined}>
       {headerHeightStyle && <style id="ccr-header-height-style" dangerouslySetInnerHTML={{ __html: headerHeightStyle }} />}
       <>
         <header
@@ -3023,7 +3029,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 {(
                   <button
                     type="button"
-                    onClick={() => { cerrarCajon(); openNativeSearch(); }}
+                    onClick={() => { if (onWelcomeNavigate) { onWelcomeNavigate("/profesionales"); return; } cerrarCajon(); openNativeSearch(); }}
                     className={mobileDrawerItemClass}
                   >
                     <DrawerIcon><Search /></DrawerIcon>
@@ -3194,6 +3200,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
             </div>
           </div>
       </>
-    </>
+    </div>
   );
 }

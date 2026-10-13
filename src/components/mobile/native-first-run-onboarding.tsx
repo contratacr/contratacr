@@ -59,8 +59,8 @@ export function NativeFirstRunOnboarding() {
   // in the root layout covers the native splash while this effect-owned state
   // is resolved after hydration.
   const [visible, setVisible] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<Role>("client");
   const [heroReady, setHeroReady] = useState(false);
+  const [exploreDestination, setExploreDestination] = useState<string | null>(null);
   const english = pathname?.startsWith("/en") ?? false;
 
   useEffect(() => {
@@ -70,6 +70,15 @@ export function NativeFirstRunOnboarding() {
     // volver a levantarla al caer en una ruta de acceso hacía que "Inicia
     // sesión" parpadeara y dejara a la persona en la misma portada.
     const syncFirstRunState = () => {
+      if (exploreDestination) {
+        if (routeWithoutLocale(pathname) !== exploreDestination) return;
+        setExploreDestination(null);
+        window.localStorage.setItem(NATIVE_ONBOARDING_COMPLETED_KEY, "1");
+        window.localStorage.removeItem(NATIVE_ONBOARDING_PENDING_PATH_KEY);
+        window.sessionStorage.removeItem(NATIVE_ONBOARDING_AUTH_SESSION_KEY);
+        window.sessionStorage.removeItem(NATIVE_ONBOARDING_EN_CAMINO_KEY);
+        window.dispatchEvent(new Event(NATIVE_ONBOARDING_COMPLETED_EVENT));
+      }
       const completed = window.localStorage.getItem(NATIVE_ONBOARDING_COMPLETED_KEY) === "1";
       if (completed || user) {
         if (user && !completed) {
@@ -147,7 +156,7 @@ export function NativeFirstRunOnboarding() {
       window.removeEventListener("focus", syncFirstRunState);
       document.removeEventListener("visibilitychange", syncFirstRunState);
     };
-  }, [authLoading, nativeApp, pathname, router, user]);
+  }, [authLoading, exploreDestination, nativeApp, pathname, router, user]);
 
   useEffect(() => {
     if (!visible) return;
@@ -193,12 +202,18 @@ export function NativeFirstRunOnboarding() {
     router.push(destination);
   }, [router]);
 
-  const continueWithRole = useCallback(() => {
-    const destination = destinationFor(selectedRole);
+  const continueWithRole = useCallback((role: Role) => {
+    const destination = destinationFor(role);
     continuePendingJourney(destination);
-  }, [continuePendingJourney, destinationFor, selectedRole]);
+  }, [continuePendingJourney, destinationFor]);
 
   const goToLogin = useCallback(() => continuePendingJourney("/login"), [continuePendingJourney]);
+
+  const navigateFromWelcome = useCallback((href: string) => {
+    const destination = routeWithoutLocale(href.split(/[?#]/)[0]);
+    setExploreDestination(destination);
+    router.push(href);
+  }, [router]);
 
   if (!visible || !nativeApp) return null;
 
@@ -208,10 +223,9 @@ export function NativeFirstRunOnboarding() {
       testId="native-first-run-onboarding"
       titleId="native-onboarding-title"
       english={english}
-      selectedRole={selectedRole}
-      onSelectRole={setSelectedRole}
       onCreateAccount={continueWithRole}
       onLogin={goToLogin}
+      onNavigate={navigateFromWelcome}
       onHeroReady={marcarHeroListo}
     />,
     document.body,

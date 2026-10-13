@@ -1,3 +1,4 @@
+import { WelcomeChoiceContent } from "@/components/mobile/welcome-choice-content";
 import { NativeAppInicialProvider } from "@/hooks/native-app-inicial";
 import type { ReactNode } from "react";
 import type { Viewport } from "next";
@@ -476,34 +477,13 @@ body:has(.ccr-error-screen) .ccr-navbar-spacer{display:none}
 }
 
 function StaticNativeFirstRunPrepaint() {
-  return (
-    <div id="ccr-native-first-run-prepaint" aria-hidden="true">
-      <div className="ccr-native-first-run-prepaint-bg" />
-      <div className="ccr-native-first-run-prepaint-shade" />
-      <div className="ccr-native-first-run-prepaint-content">
-        <div className="ccr-native-first-run-prepaint-logo">
-          {/* Como fondo y no como <img>: este bloque solo se ve en la app al
-              primer arranque, pero su HTML viaja en TODAS las páginas web, y era
-              la primera imagen del documento. Una red social que no encuentra
-              imagen de enlace agarra esa: el símbolo de R blanca, que sobre el
-              blanco de la tarjeta no se ve. Como fondo, además, la web ni lo
-              descarga (el bloque está en display:none). */}
-          <span className="ccr-native-first-run-prepaint-marca" aria-hidden="true" />
-          <span>
-            Contrata<span>CR</span>
-          </span>
-        </div>
-        <p>¿Cómo quieres empezar?</p>
-        <div className="ccr-native-first-run-prepaint-actions">
-          <span>Buscar servicios</span>
-          <span>Ofrecer servicios</span>
-        </div>
-        <div className="ccr-native-first-run-prepaint-cta">Registrarme</div>
-        <div className="ccr-native-first-run-prepaint-login">
-          ¿Ya tienes una cuenta? <span>Inicia sesión</span>
-        </div>
+  return <div id="ccr-native-first-run-prepaint" aria-hidden="true" inert>
+    <div className="flex min-h-dvh flex-col">
+      <div className="flex h-16 shrink-0 items-center justify-between border-b border-[#e5e7eb] bg-white px-4">
+        <div className="ccr-native-first-run-prepaint-logo"><span className="ccr-native-first-run-prepaint-marca"/><span className="ccr-native-first-run-prepaint-wordmark"/></div>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
       </div>
+      <div className="ccr-welcome-choice-main"><WelcomeChoiceContent/></div>
     </div>
-  );
+  </div>;
 }
-

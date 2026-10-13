@@ -87,23 +87,7 @@ function mountNativeFirstRunPrepaint() {
   const prepaint = document.createElement("div");
   prepaint.id = "ccr-native-first-run-prepaint";
   prepaint.setAttribute("aria-hidden", "true");
-  prepaint.innerHTML = `
-    <div class="ccr-native-first-run-prepaint-bg"></div>
-    <div class="ccr-native-first-run-prepaint-shade"></div>
-    <div class="ccr-native-first-run-prepaint-content">
-      <div class="ccr-native-first-run-prepaint-logo">
-        <img src="/logo-mark-dark.png" alt="" />
-        <span>Contrata<span>CR</span></span>
-      </div>
-      <p>¿Cómo quieres empezar?</p>
-      <div class="ccr-native-first-run-prepaint-actions">
-        <span>Buscar servicios</span>
-        <span>Ofrecer servicios</span>
-      </div>
-      <div class="ccr-native-first-run-prepaint-cta">Registrarme</div>
-      <div class="ccr-native-first-run-prepaint-login">¿Ya tienes una cuenta? <span>Inicia sesión</span></div>
-    </div>
-  `;
+  prepaint.innerHTML = `<div class="ccr-native-first-run-prepaint-logo"><span class="ccr-native-first-run-prepaint-marca"></span><span class="ccr-native-first-run-prepaint-wordmark"></span></div>`;
   document.body.appendChild(prepaint);
 }
 
