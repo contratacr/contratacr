@@ -2,6 +2,7 @@
 
 import { mobileDownloadPlatform, DOWNLOAD_DISMISS_COOKIE } from "@/lib/mobile-download-platform";
 import Image from "next/image";
+import { AppPhonePreview } from "./app-phone-preview";
 import { useLocale } from "next-intl";
 import { useEffect, useLayoutEffect, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
@@ -32,21 +33,18 @@ export function AppDownloadSection() {
   return <section id="descargar-app" data-testid="app-download-section" className="ccr-solo-web ccr-download-section relative hidden overflow-hidden bg-[#092532] lg:block">
     <div aria-hidden="true" className="absolute -right-[5%] -top-[8%] aspect-[3/2] w-[78%] min-w-[1000px] max-w-[1200px]">
       <Image src="/stores/app-phone-table.webp" fill sizes="78vw" alt="" className="object-cover" />
-      <div className="absolute left-[54.33%] top-[19.38%] h-[60.38%] w-[17.5%] origin-top-left rotate-[20deg] overflow-hidden rounded-[18px] bg-white">
-        <Image src="/guia/profesionales.jpg" fill sizes="18vw" alt="" className="object-fill" />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/10" />
-      </div>
+      <AppPhonePreview />
     </div>
     <div aria-hidden className="absolute inset-0 bg-[linear-gradient(90deg,#092532_0%,#092532_32%,rgba(9,37,50,0.96)_43%,rgba(9,37,50,0.2)_64%,transparent_82%)]" />
-    <div className="relative mx-auto grid min-h-[560px] max-w-7xl grid-cols-[1.1fr_1fr] items-center gap-12 px-10 py-16 xl:px-14">
+    <div className="relative mx-auto grid min-h-[620px] max-w-7xl grid-cols-[1.1fr_1fr] items-center gap-12 px-10 py-16 xl:px-14">
       <div className="max-w-xl text-white">
-        <p className="mb-5 text-sm font-semibold tracking-[0.16em] text-[#88dcf5]">CONTRATACR · iOS & ANDROID</p>
-        <h2 className="text-[clamp(2.5rem,3.6vw,3.5rem)] font-extrabold leading-[1.08] tracking-tight">{en ? "Your next solution, right in your pocket." : "Tu próxima solución, en tu bolsillo."}</h2>
-        <p className="mb-7 mt-6 max-w-md text-lg leading-relaxed text-white/80">{en ? "Find professionals, post projects and manage your profile and messages wherever you are." : "Encuentra profesionales, publica proyectos y gestiona tu perfil y tus mensajes desde donde estés."}</p>
+        <p className="mb-5 text-sm font-semibold tracking-[0.16em] text-[#88dcf5]">{en ? "AVAILABLE FOR iOS AND ANDROID" : "DISPONIBLE PARA iOS Y ANDROID"}</p>
+        <h2 className="text-[clamp(2.5rem,3.6vw,3.5rem)] font-extrabold leading-[1.08] tracking-tight">{en ? "Download the ContrataCR app" : "Descarga la app de ContrataCR"}</h2>
+        <p className="mb-7 mt-6 max-w-md text-lg leading-relaxed text-white/80">{en ? "Find professionals, post projects or offer your services from your phone." : "Encuentra profesionales, publica proyectos u ofrece tus servicios desde tu celular."}</p>
         <AppStoreLinks />
         <div className="mt-7 flex items-center gap-4">
           <Image src="/stores/download-app-qr.svg" width={112} height={112} alt={en ? "Scan to download ContrataCR" : "Escanea para descargar ContrataCR"} className="shrink-0 rounded-lg bg-white" />
-          <div className="max-w-[240px]"><p className="text-sm font-semibold">{en ? "Scan with your phone" : "Escanea con tu celular"}</p><p className="mt-2 text-sm leading-relaxed text-white/65">{en ? "Already have an account? Sign in with the same one." : "¿Ya tienes cuenta? Ingresa con la misma."}</p></div>
+          <div className="max-w-[240px]"><p className="text-sm font-semibold">{en ? "Scan with your phone" : "Escanea con tu celular"}</p><p className="mt-2 text-sm leading-relaxed text-white/65">{en ? "Sign in with your existing account." : "Ingresa con tu cuenta de siempre."}</p></div>
         </div>
       </div>
 

@@ -58,6 +58,8 @@ test('shared download anchor always remains useful, including after dismissing t
   }
  } else {
   const section=page.getByTestId('app-download-section');await expect(section).toBeVisible();
+  await expect(section.getByRole('heading',{name:'Descarga la app de ContrataCR'})).toBeVisible();
+  await expect(section.getByTestId('app-phone-screen').locator('image')).toHaveAttribute('href','/guia/profesionales.jpg');
   await expect(section).toBeInViewport();
   await expect(page.getByTestId('app-store-footer-links')).toBeVisible();
   if (process.env.DOWNLOAD_DESIGN_EVIDENCE) {
