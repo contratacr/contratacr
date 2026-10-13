@@ -1,5 +1,7 @@
-import { UsageCapture } from "@/components/analytics/usage-capture";
+import { headers, cookies } from "next/headers";
+import { mobileDownloadPlatform, DOWNLOAD_DISMISS_COOKIE } from "@/lib/mobile-download-platform";
 import { MobileAppDownloadBanner } from "@/components/landing/app-download";
+import { UsageCapture } from "@/components/analytics/usage-capture";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getMessages } from "next-intl/server";
@@ -179,6 +181,8 @@ export default async function LocaleLayout({
     }
   }
 
+  const initialDownloadPlatform = mobileDownloadPlatform((await headers()).get("user-agent") ?? "");
+  const initialDownloadDismissed = Number((await cookies()).get(DOWNLOAD_DISMISS_COOKIE)?.value ?? 0) > Date.now();
   return (
     <AppIntlProvider messages={messages} locale={locale}>
       <GlobalActionLoading />
@@ -201,9 +205,9 @@ export default async function LocaleLayout({
           <UsageCapture />
         </Suspense>
         <PushTokenManager />
+        <MobileAppDownloadBanner initialPlatform={initialDownloadPlatform} initialDismissed={initialDownloadDismissed} />
         {children}
         <NativeBottomNav />
-        <MobileAppDownloadBanner />
         <WhatsAppReviewFollowUp />
         <AiConcierge />
         <FreezeMonitor />

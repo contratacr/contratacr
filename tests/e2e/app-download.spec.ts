@@ -1,16 +1,22 @@
+import { mkdirSync } from "node:fs";
 import { test, expect } from 'playwright/test';
 
 test('web: tiendas correctas, reserva, teclado y cierre persistente', async ({page}) => {
+  if(test.info().project.name==='android-download')await page.setViewportSize({width:320,height:780});
   test.skip((page.viewportSize()?.width ?? 1280) >= 1024);
   await page.goto('/');
-  await expect(page.getByTestId('app-download-section')).toBeVisible();
+  await expect(page.getByTestId('app-download-section')).toBeHidden();
   const banner=page.getByTestId('mobile-app-download');
   await expect(banner).toBeVisible();
   const href=await banner.locator('a').getAttribute('href');
   const android=await page.evaluate(()=>/Android/.test(navigator.userAgent));
   expect(href).toContain(android?'play.google.com/store/apps/details?id=com.contratacr.app':'apps.apple.com/cr/app/contratacr/id6794559661');
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   const sizes=await banner.evaluate(el=>({spacer:el.getBoundingClientRect().height,notice:el.querySelector('aside')!.getBoundingClientRect().height}));
   expect(sizes.spacer).toEqual(sizes.notice);
+  const notice=await banner.boundingBox(), header=await page.getByTestId('landing-navbar').boundingBox();
+  expect(notice!.y).toBe(0);expect(header!.y).toBe(notice!.height);
+  await expect(page.getByTestId('app-store-footer-links')).toBeHidden();
   await page.evaluate(()=>document.documentElement.setAttribute('data-keyboard-open',''));
   await expect(banner).toHaveCount(0);
   await page.evaluate(()=>document.documentElement.removeAttribute('data-keyboard-open'));
@@ -34,4 +40,43 @@ test('native: no download section, links or banner; form: no banner', async ({pa
 test('web forms never display download banner',async({page})=>{
  await page.goto('/publicar-proyecto');
  await expect(page.getByTestId('mobile-app-download')).toHaveCount(0);
+});
+
+
+test('shared download anchor always remains useful, including after dismissing the mobile notice',async({page})=>{
+ await page.goto('/#descargar-app');
+ if ((page.viewportSize()?.width ?? 1280) < 1024) {
+  const banner=page.getByTestId('mobile-app-download');
+  await expect(banner).toBeVisible();
+  await banner.getByRole('button').click();await expect(banner).toHaveCount(0);
+  await page.reload();await expect(banner).toBeVisible();
+  expect(await page.evaluate(()=>scrollY)).toBe(0);
+  if (process.env.DOWNLOAD_DESIGN_EVIDENCE) {
+   mkdirSync(process.env.DOWNLOAD_DESIGN_EVIDENCE,{recursive:true});
+   const os=await page.evaluate(()=>/Android/.test(navigator.userAgent)?'android':'ios');
+   await page.screenshot({path:`${process.env.DOWNLOAD_DESIGN_EVIDENCE}/${os}.png`});
+  }
+ } else {
+  const section=page.getByTestId('app-download-section');await expect(section).toBeVisible();
+  await expect(section).toBeInViewport();
+  await expect(page.getByTestId('app-store-footer-links')).toBeVisible();
+  if (process.env.DOWNLOAD_DESIGN_EVIDENCE) {
+   mkdirSync(process.env.DOWNLOAD_DESIGN_EVIDENCE,{recursive:true});
+   await section.screenshot({path:`${process.env.DOWNLOAD_DESIGN_EVIDENCE}/desktop.png`});
+   await page.locator('footer').first().screenshot({path:`${process.env.DOWNLOAD_DESIGN_EVIDENCE}/footer.png`});
+  }
+ }
+});
+
+test('mobile download notice and header are correctly positioned before JavaScript hydration',async({page,browser,baseURL})=>{
+ test.skip((page.viewportSize()?.width ?? 1280)>=1024);
+ const ua=await page.evaluate(()=>navigator.userAgent);
+ const context=await browser.newContext({javaScriptEnabled:false,userAgent:ua,viewport:{width:390,height:844}});
+ try {
+  await context.addCookies([{name:'ccr_sin_analitica',value:'1',url:baseURL!}]);
+  const cold=await context.newPage();await cold.goto(`${baseURL}/`);
+  const notice=await cold.getByTestId('mobile-app-download').boundingBox();
+  const header=await cold.getByTestId('landing-navbar').boundingBox();
+  expect(notice?.y).toBe(0);expect(header?.y).toBe(76);
+ }finally{await context.close();}
 });
