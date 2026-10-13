@@ -204,15 +204,15 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
           const Icono = ICONOS[p.clave];
           const elegido = i === activo;
           return (
-            <li key={p.clave}>
+            <li key={p.clave} className={cn(
+              "relative flex items-center gap-3 overflow-hidden rounded-2xl border transition-colors duration-300",
+              elegido ? "border-transparent bg-[#eef7fc]" : "border-transparent bg-transparent hover:bg-[#f6f9fc]",
+            )}>
               <button
                 type="button"
                 onClick={() => elegir(i)}
                 aria-pressed={elegido}
-                className={cn(
-                  "group relative flex w-full items-start gap-4 overflow-hidden rounded-2xl border p-5 text-left transition-all duration-300",
-                  elegido ? "border-transparent bg-[#eef7fc]" : "border-transparent bg-transparent hover:bg-[#f6f9fc]",
-                )}
+                className="group flex min-w-0 flex-1 items-center gap-4 py-5 pl-5 text-left"
               >
                 <span className={cn("grid h-12 w-12 shrink-0 place-items-center rounded-2xl transition-all", elegido ? "text-white" : "ccr-caja-icono")} style={elegido ? CAJA_ACTIVA : undefined}>
                   <Icono className="h-[22px] w-[22px]" strokeWidth={1.8} />
@@ -220,18 +220,15 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
                 <span className="min-w-0 flex-1 self-center">
                   <span className="block text-[17px] font-extrabold leading-snug text-[#1a2744]">{p.titulo}</span>
                 </span>
-                {/* La barra de tiempo: cuánto falta para el siguiente paso. */}
-                {elegido && (
-                  <span aria-hidden className="absolute inset-x-5 bottom-0 h-[3px] overflow-hidden rounded-full bg-[#e3f2fa]">
-                    <span key={activo} className="ccr-guia-progreso block h-full w-full origin-left rounded-full bg-[#009FD9]" style={{ animationDuration: `${duracion}s`, animationPlayState: corriendo && duracion ? "running" : "paused" }} />
-                  </span>
-                )}
               </button>
-              {/* En computadora, el enlace de la opción elegida, debajo de ella. */}
+              <Link href={p.href} className="mr-5 inline-flex shrink-0 items-center gap-1.5 py-3 text-[14px] font-bold text-[#009FD9] hover:underline">
+                {p.cta}<ArrowRight className="h-4 w-4" />
+              </Link>
+              {/* The action stays beside its title; the timer does not move rows. */}
               {elegido && (
-                <Link href={p.href} className="ml-[5.25rem] mt-2 inline-flex items-center gap-1.5 text-[15px] font-bold text-[#009FD9] hover:underline">
-                  {p.cta}<ArrowRight className="h-4 w-4" />
-                </Link>
+                <span aria-hidden className="absolute inset-x-5 bottom-0 h-[3px] overflow-hidden rounded-full bg-[#e3f2fa]">
+                  <span key={activo} className="ccr-guia-progreso block h-full w-full origin-left rounded-full bg-[#009FD9]" style={{ animationDuration: `${duracion}s`, animationPlayState: corriendo && duracion ? "running" : "paused" }} />
+                </span>
               )}
             </li>
           );
