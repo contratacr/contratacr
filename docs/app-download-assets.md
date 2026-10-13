@@ -130,3 +130,9 @@ El ancho explícito y `min-width:0` evitan que WebKit amplíe la sección al com
 ## Aviso superior exclusivo de web móvil (13 de octubre de 2026)
 
 El aviso requiere una plataforma móvil detectada (iOS/Android), además de las condiciones existentes de ancho, sesión nativa, página y cierre. Una ventana estrecha de PC/Mac ya no muestra los dos botones de tiendas encima del navbar ni reserva sus 76 px. La sección de descarga y los enlaces del footer permanecen disponibles. Se verifica con y sin JavaScript en escritorio, a 390/800/1000 px, y se conservan las pruebas de iPhone/Android, rutas públicas, teclado y cierre persistente.
+
+## Proyecto sin ventana de acceso en la guía (13 de octubre de 2026)
+
+El clip de proyectos usa `20261013-project-contact-highlight`: señala WhatsApp con el marcador de toque sin ejecutar el contacto ni mostrar la ventana que pide ingresar. Después regresa con la flecha al tablero y muestra el formulario. La navegación pública sigue sin sesión y el demo solo existe en test durante la grabación; se elimina al terminar. La protección real para contactar al cliente no se modifica.
+
+Auditoría de publicación: `/publicar-proyecto` permite abrir el formulario sin sesión; al enviar conserva el borrador y solicita acceso. La API exige una cuenta autenticada, pero no un perfil profesional: mantiene el rol cliente y permite también que un profesional publique como cliente. Las páginas de empleos/promociones solicitan crear el perfil profesional si falta; sus API comprueban además que la ficha pertenezca al usuario. Se añade una prueba con un cliente desechable sin ficha profesional, eliminándolo al terminar; no se envía ningún proyecto ni notificación de contacto.
