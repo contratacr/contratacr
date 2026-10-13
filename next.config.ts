@@ -54,6 +54,12 @@ const nextConfig: NextConfig = {
       // Guardar y rellenar contraseñas en la app de iPhone (webcredentials):
       // Apple lee este archivo como JSON. En Cloudflare lo pone public/_headers.
       { source: "/.well-known/apple-app-site-association", headers: [{ key: "Content-Type", value: "application/json" }] },
+      // Match the Workers asset policy during local/Next deployments. These
+      // are public presentation images, not account or professional data.
+      ...["/hero/:path*", "/featured-brands/:path*"].map(source => ({
+        source,
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
+      })),
     ];
   },
   // Short vanity links for social bios ("contratacr.com/ig" reads clean where a

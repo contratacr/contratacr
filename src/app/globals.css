@@ -2327,6 +2327,18 @@ html.ccr-js .fade-in-up:not(.visible) #servicios-de-la-seccion > a { opacity: 0;
   .ccr-hero-entra, #servicios-de-la-seccion > a { animation: none !important; opacity: 1 !important; }
 }
 
+/* Inicio in the app is a persistent surface, not a marketing entrance.
+   Cached content was still hidden for 500–840ms by the reveal/cascade on each
+   mount. Paint existing sections directly, including before hydration and
+   when returning to Inicio. Data revalidation and image loading stay intact. */
+html.ccr-native-app.ccr-js .ccr-portada .fade-in-up > section > div > *,
+html.ccr-native-app.ccr-js .ccr-portada #servicios-de-la-seccion > a {
+  opacity: 1;
+  transform: none;
+  animation: none;
+  transition: none;
+}
+
 /* El titular de la portada en computadora: dos líneas grandes, como Angi. */
 @media (min-width: 1024px) {
   [data-titular-portada] { font-size: 2.6rem !important; line-height: 1.1 !important; }
