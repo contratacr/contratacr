@@ -63,3 +63,18 @@ Las pantallas públicas son de producción, con analítica excluida y solicitude
 Para repetir los formularios desde main, establecer `GUIDE_TEST_ENV_FILE` en el archivo privado `.env.test` del checkout test y `GUIDE_FORM_BASE` en su servidor loopback. El guion verifica el proyecto de test antes de iniciar la sesión.
 
 El encuadre de escritorio usa una altura mínima de 540 px, que crece con la proporción 3:1 del original en pantallas amplias. Reduce la ampliación y el recorte lateral frente a los 620 px anteriores. Por debajo del diseño de escritorio amplio se mantiene la imagen completa sobre el texto, evitando que el teléfono quede detrás del contenido. El PNG permanece idéntico.
+
+
+## Guía con detalles y contacto (13 de octubre de 2026)
+
+Sustituye los recursos `original-flow` por `20261013-detail-contact`:
+
+- El grabador carga todas las fuentes reales de la app y cambia `font-display:optional` a `block` solamente en las hojas de estilo interceptadas durante la captura. Así una navegación en frío no conserva la tipografía de sistema. El logo sigue siendo el componente real, sin superponer otro dibujo.
+- Profesionales conserva búsqueda, SG Solutions, servicios, reseñas, casos de éxito y formación, y termina tocando WhatsApp.
+- Proyectos, promociones y empleos conservan el recorrido por Publicar y su formulario vacío; después vuelven al tablero, abren una publicación, muestran sus datos y terminan tocando WhatsApp.
+- El proyecto «Instalar cámaras de seguridad en una casa» se crea con un UUID exclusivo en el test actual. Usa un cliente sintético, un contacto sintético y un texto de ejemplo; se elimina por UUID y marcador de ambiente al terminar. No se modifica la siembra canónica. Promociones y empleos muestran publicaciones públicas reales.
+- El contacto apunta al cliente en proyectos, al empleador en empleos y al profesional en promociones/perfiles. Se intercepta la salida externa para no mostrar conversaciones ni enviar mensajes. En test se comprueba la respuesta real del botón de proyectos. En producción el endpoint de WhatsApp se simula con el número real obtenido mediante una consulta de solo lectura; así la grabación no genera seguimientos de reseñas ni contactos en producción. Esto valida el destino y la interfaz de la demostración, no una conversación dentro de WhatsApp.
+
+El grabador requiere el archivo privado de producción para esas consultas de solo lectura (`GUIDE_PRODUCTION_READ_ENV`, por defecto `.env.local`), además del archivo privado del test indicado anteriormente. No se guardan credenciales en el video ni en el repositorio.
+
+Validación: decodificación completa de los cuatro H.264 a 588 × 1278 y 30 fps, reproducción y cambio de pasos en Chrome/WebKit móvil y escritorio, y comprobación de que no quedaron proyectos `guide-demo-test` en la base de test. Las capturas de detalle muestran el check junto al nombre y la cabecera real de cada sección. No se probó una conversación dentro de WhatsApp.

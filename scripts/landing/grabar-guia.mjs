@@ -1,7 +1,9 @@
-// Videos de la guía de la portada (public/guia/*.mp4 + póster .jpg), grabados
-// navegando PRODUCCIÓN como lo ve la app. Solo mira: no publica ni escribe nada.
+// Videos de la guía de la portada (public/guia/*.mp4 + póster .jpg).
+// Producción solo lectura; proyecto demo y formularios en el test aislado.
 //   node scripts/landing/grabar-guia.mjs https://contratacr.com <ruta-a-ffmpeg>
 import { chromium } from "playwright";
+import { randomUUID } from "node:crypto";
+import { createClient } from "@supabase/supabase-js";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
@@ -40,13 +42,35 @@ async function bajar(p, px, msPedido) {
   globalThis.__terminarMano?.();
 }
 
-// All public scenes start on the current production home. Only blank publishing
-// forms use an authenticated synthetic actor on the isolated local test server.
-// Loading is cut out, retaining the historical flow and crossfades.
+// Professionals/offers/jobs use production read-only. Projects and blank
+// publishing forms use isolated test. Cuts remove loading, not walkthrough steps.
 const LOCAL = process.env.GUIDE_FORM_BASE || "http://localhost:3000";
 if (!["localhost", "127.0.0.1"].includes(new URL(LOCAL).hostname)) throw new Error("Guide forms require an isolated loopback test server.");
 const INICIO = base;
 let testCookies = [];
+let productionReadOnly = null;
+let demoAdmin = null;
+let demoProjectId = null;
+const DEMO_PROJECT = "Instalar cámaras de seguridad en una casa";
+
+// Verify the real handoff, but keep WhatsApp/chats out of the public video.
+async function contactar(p) {
+  const wa = p.locator("a, button").filter({ hasText: /^\s*WhatsApp\s*$/ }).filter({ visible: true }).last();
+  await wa.waitFor();
+  await p.evaluate(() => {
+    window.__guideContact = null;
+    window.open = (url) => { window.__guideContact = String(url); return null; };
+  });
+  const href = await wa.getAttribute("href");
+  if (href) {
+    if (!/^https:\/\/(wa\.me|api\.whatsapp\.com)\//.test(href)) throw new Error("Unexpected WhatsApp destination");
+    await wa.evaluate(el => el.addEventListener("click", e => { e.preventDefault(); window.__guideContact = el.href; }, { once: true }));
+  }
+  await tocar(p, wa);
+  await p.waitForFunction(() => /^https:\/\/(wa\.me|api\.whatsapp\.com)\//.test(window.__guideContact || ""), null, { timeout: 15000 });
+  console.log("WhatsApp destination verified (no message sent)");
+  await p.waitForTimeout(1100);
+}
 
 // En el video no se dibuja la barra de estado: los formularios a pantalla
 // completa reservaban su alto (62 px) y su título quedaba más abajo que el de
@@ -64,7 +88,7 @@ async function asentada(p) {
     if ([...document.querySelectorAll("[class*=animate-pulse],[class*=skeleton]")].some((el) => enVista(el) && getComputedStyle(el).animationName !== "none")) return false;
     return true;
   }, null, { timeout: 15000, polling: 100 }).catch(() => console.log("asentada: se agotó la espera en", p.url()));
-  await p.evaluate(() => document.fonts.ready.then(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))));
+  await p.evaluate(() => Promise.all([...document.fonts].map(font => font.load())).then(() => document.fonts.ready).then(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))));
   await p.waitForTimeout(400);
 }
 // Cada toque se VE: un círculo gris que aparece donde cae el dedo, como en las
@@ -83,30 +107,37 @@ async function marcarToque(p, loc) {
   await p.waitForTimeout(330);
 }
 async function tocar(p, loc) { await loc.scrollIntoViewIfNeeded(); await p.waitForTimeout(300); await marcarToque(p, loc); await loc.tap(); }
-// Solo se marca el toque: no se abre nada (WhatsApp, Publicar).
+// Text entry uses the same visible tap marker as the navigation.
 async function escribir(p, loc, texto) { await tocar(p, loc); await p.waitForTimeout(250); await p.keyboard.type(texto, { delay: 55 }); }
 
-// Home → menu → public board → Publish → blank form in isolated test.
+// Historical publish walkthrough, followed by opening a complete item and contact.
 async function porElMenu(p, grabar, pausar, texto, destino, boton, formulario) {
-  await p.goto(INICIO + "/", { waitUntil: "load" });
+  const origin = destino === "/proyectos" ? LOCAL : INICIO;
+  await p.context().addCookies(testCookies);
+  await p.goto(origin + "/", { waitUntil: "load" });
   await sinAvisoDeDesarrollo(p); await asentada(p);
   grabar(); await p.waitForTimeout(700);
   await tocar(p, p.getByRole("button", { name: "Abrir menú", exact: true }).first());
   await p.waitForTimeout(900);
   await tocar(p, p.locator(".ccr-menu-abierto").getByRole("link", { name: texto, exact: true }));
   pausar(); await p.waitForURL(new RegExp(`${destino}$`)); await asentada(p);
-  grabar(); await bajar(p, 300, 2000); await p.waitForTimeout(200);
+  grabar(); await bajar(p, 180, 1500); await p.waitForTimeout(500);
   const publicar = p.getByRole("link", { name: boton }).or(p.getByRole("button", { name: boton })).filter({ visible: true }).first();
   await publicar.scrollIntoViewIfNeeded(); await p.waitForTimeout(300);
-  // Same original sequence: indicate Publish on the public board, then show
-  // the blank form in isolated test. Never submit or fill it.
   await marcarToque(p, publicar); await p.waitForTimeout(250); pausar();
-  await p.context().addCookies(testCookies);
   await p.goto(LOCAL + formulario, { waitUntil: "load" }); await sinAvisoDeDesarrollo(p); await asentada(p);
   if (/\/login/.test(p.url())) throw new Error(`Test form requires authentication: ${formulario}`);
-  const heading = p.locator("main h1, main h2, .app-fullscreen-modal h1, .app-fullscreen-modal h2").filter({ visible: true }).first();
-  await heading.waitFor();
+  await p.locator("main h1, main h2, .app-fullscreen-modal h1, .app-fullscreen-modal h2").filter({ visible: true }).first().waitFor();
   grabar(); await p.waitForTimeout(900); await bajar(p, 260, 2000); await p.waitForTimeout(900);
+  // No form is submitted. Return to the board to show the reader's contact flow.
+  pausar(); await p.goto(origin + destino); await asentada(p);
+  grabar(); await p.waitForTimeout(700);
+  const items = p.locator(`h2 a[href^="${destino}/"]`);
+  const item = (destino === "/proyectos" ? items.filter({ hasText: DEMO_PROJECT }).and(p.locator(`a[href*="${demoProjectId.slice(0, 8)}"]`)) : items).first();
+  await tocar(p, item);
+  pausar(); await p.waitForURL(new RegExp(`${destino}/.+`)); await asentada(p);
+  grabar(); await p.waitForTimeout(1500); await bajar(p, 260, 1800); await p.waitForTimeout(1200);
+  await contactar(p);
 }
 
 const escenas = {
@@ -133,9 +164,7 @@ const escenas = {
       await tab.waitFor(); await tocar(p, tab); await p.waitForTimeout(1300);
       await bajar(p, 180, 1400); await p.waitForTimeout(500);
     }
-    const wa = p.locator("a, button").filter({ hasText: /^\s*WhatsApp\s*$/ }).filter({ visible: true }).last();
-    await wa.waitFor(); await marcarToque(p, wa); await p.waitForTimeout(120);
-    await marcarToque(p, wa); await p.waitForTimeout(1200);
+    await contactar(p);
   },
   proyectos: (p, g, s) => porElMenu(p, g, s, "Proyectos", "/proyectos", /Publicar proyecto/i, "/publicar-proyecto"),
   promociones: (p, g, s) => porElMenu(p, g, s, "Promociones", "/promociones", /Publicar promoción/i, "/promociones/publicar"),
@@ -144,15 +173,20 @@ const escenas = {
 
 // Se graba con fotos seguidas a resolución real (2x), cada una con su hora,
 // y ffmpeg las arma respetando esos tiempos.
+function readEnv(file) {
+  return Object.fromEntries(fs.readFileSync(file, "utf8").split(/\r?\n/).flatMap(line => {
+    const match = line.match(/^([^#=]+)=(.*)$/);
+    return match ? [[match[1].trim(), match[2].trim().replace(/^["']|["']$/g, "")]] : [];
+  }));
+}
+const prodEnv = readEnv(process.env.GUIDE_PRODUCTION_READ_ENV || new URL("../../.env.local", import.meta.url));
+if (!prodEnv.NEXT_PUBLIC_SUPABASE_URL?.includes("kskueodxaksxvjrysouw.supabase.co")) throw new Error("Unexpected production read project");
+productionReadOnly = createClient(prodEnv.NEXT_PUBLIC_SUPABASE_URL, prodEnv.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
 const b = await chromium.launch();
 try {
 // Authenticate only the synthetic test actor, outside the recorded scenes.
 if (process.argv[4] !== "profesionales") {
-  const env = {};
-  for (const line of fs.readFileSync(process.env.GUIDE_TEST_ENV_FILE || new URL("../../.env.test", import.meta.url), "utf8").split(/\r?\n/)) {
-    const match = line.match(/^([^#=]+)=(.*)$/);
-    if (match) env[match[1].trim()] = match[2].trim().replace(/^["']|["']$/g, "");
-  }
+  const env = readEnv(process.env.GUIDE_TEST_ENV_FILE || new URL("../../.env.test", import.meta.url));
   if (!env.NEXT_PUBLIC_SUPABASE_URL?.includes("oqheayqqprpciqdvdaqo.supabase.co")) throw new Error("Guide authentication requires the current isolated test project.");
   const authContext = await b.newContext();
   await authContext.addCookies([{ name: "ccr_sin_analitica", value: "1", url: LOCAL }]);
@@ -165,6 +199,25 @@ if (process.argv[4] !== "profesionales") {
   await authPage.locator("main").getByRole("button", { name: /Ingresar/i }).click();
   await authPage.waitForURL(/\/dashboard\/profesional/, { timeout: 30000 });
   testCookies = (await authContext.cookies()).filter(cookie => cookie.name !== "ccr_platform"); await authContext.close();
+  // A separate realistic demonstration project, never a production write or
+  // a change to canonical regression fixtures. Remove only this UUID afterward.
+  if (!process.argv[4] || process.argv[4] === "proyectos") {
+  demoAdmin = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+  const { data: source, error } = await demoAdmin.from("projects").select("*").eq("id", "b4000000-0000-4000-8000-000000000001").single();
+  if (error || !source) throw new Error("Missing isolated test project fixture");
+  demoProjectId = randomUUID();
+  const { error: insertError } = await demoAdmin.from("projects").insert({
+    id: demoProjectId, client_id: source.client_id, category_id: "camaras_seguridad",
+    title: DEMO_PROJECT,
+    description: "Necesito instalar cuatro cámaras de seguridad en una casa de dos plantas: entrada, cochera, patio y acceso lateral. Busco asesoría para elegir el equipo, instalación del cableado y configuración para ver las cámaras desde el celular. Me gustaría coordinar una visita para revisar los puntos y recibir una cotización.",
+    provincia_id: source.provincia_id, canton_id: source.canton_id,
+    budget_min: 150000, budget_max: 300000, timeline: "En las próximas dos semanas", status: "open",
+    client_name_snapshot: source.client_name_snapshot, client_email_snapshot: source.client_email_snapshot,
+    client_phone_snapshot: source.client_phone_snapshot, allow_direct_contact: true,
+    created_app_environment: "guide-demo-test", created_source_host: "localhost", created_supabase_project_ref: "oqheayqqprpciqdvdaqo",
+  });
+  if (insertError) throw new Error(`Could not create isolated demo: ${insertError.message}`);
+  }
 }
 for (const [clave, escena] of Object.entries(escenas)) {
   if (process.argv[4] && process.argv[4] !== clave) continue;
@@ -173,10 +226,31 @@ for (const [clave, escena] of Object.entries(escenas)) {
     userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
   });
   await ctx.addCookies([base, LOCAL].flatMap(url => [{ name: "ccr_platform", value: "native", url }, { name: "ccr_sin_analitica", value: "1", url }]));
+  // The app uses font-display:optional. Cold recording pages could therefore
+  // retain a system fallback even after fonts.ready. Load the actual app fonts
+  // before shooting; do not substitute a different font or draw a fake logo.
+  await ctx.route("**/*.css*", async route => {
+    const response = await route.fetch();
+    await route.fulfill({ response, body: (await response.text()).replace(/font-display:\s*optional/g, "font-display:block") });
+  });
   await ctx.route("**/*", async route => {
     const request = route.request();
-    if (new URL(request.url()).origin === base && !["GET", "HEAD", "OPTIONS"].includes(request.method())) return route.abort();
-    await route.continue();
+    if (new URL(request.url()).origin === base && !["GET", "HEAD", "OPTIONS"].includes(request.method())) {
+      // Read-only production demonstration: the real contact API also writes
+      // review follow-ups. Validate the destination against the actual public
+      // professional's stored phone without creating any production contacts.
+      if (new URL(request.url()).pathname === "/api/contact/whatsapp-link") {
+        const body = request.postDataJSON();
+        const { data, error } = await productionReadOnly.from("professionals").select("whatsapp,business_name,is_banned").eq("id", body.professionalId).single();
+        if (error || !data?.whatsapp || data.is_banned) throw new Error("No valid professional contact for the demonstration");
+        const digits = data.whatsapp.replace(/\D/g, "");
+        const phone = digits.length === 8 ? `506${digits}` : digits;
+        const text = body.initialMessage || `Hola ${data.business_name || body.professionalName}, vi tu servicio en ContrataCR y me gustaría coordinar. ¿Me puedes dar más información?`;
+        return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ href: `https://wa.me/${phone}?text=${encodeURIComponent(text)}` }) });
+      }
+      return route.abort();
+    }
+    await route.fallback();
   });
   await ctx.addInitScript(() => { try { localStorage.setItem("ccr:native-first-run-onboarding:v12", "1"); } catch {} });
   // Sin el aviso de desarrollo de Next en las grabaciones.
@@ -185,7 +259,7 @@ for (const [clave, escena] of Object.entries(escenas)) {
     st.textContent = "nextjs-portal{display:none!important}";
     document.documentElement.appendChild(st);
   });
-  // Los botones de contacto se VEN (la pantalla queda como es), pero el video nunca los toca.
+  // WhatsApp is tapped, its destination asserted, and its external handoff intercepted. No messages are sent.
   const p = await ctx.newPage();
 
   const cdp = await ctx.newCDPSession(p);
@@ -270,5 +344,10 @@ for (const [clave, escena] of Object.entries(escenas)) {
 }
 } finally {
   await b.close();
+  if (demoAdmin && demoProjectId) {
+    const { error } = await demoAdmin.from("projects").delete().eq("id", demoProjectId).eq("created_app_environment", "guide-demo-test");
+    if (error) console.error("Demo cleanup failed:", error.message);
+    else console.log("Isolated demo project removed");
+  }
   fs.rmSync(tmp, { recursive: true, force: true });
 }
