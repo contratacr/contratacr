@@ -1,3 +1,4 @@
+import { requestAnalyticsPlatform } from "./platform";
 import "server-only";
 import { createHash } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -49,7 +50,7 @@ export async function recordGrowthConversion(req: Request, action: GrowthAction,
     } : null;
     const { error } = await createAdminClient().from("growth_conversion_events").insert({
       event_id: eventId, action, audience: contract.audience, actor_hash: context.actorHash,
-      attribution: context.attribution, payload, status: directDelivery ? "pending" : allowDelivery ? "browser_only" : "suppressed",
+      attribution: { ...context.attribution, ...requestAnalyticsPlatform(req) }, payload, status: directDelivery ? "pending" : allowDelivery ? "browser_only" : "suppressed",
     });
     if (error) {
       if (error.code !== "23505") console.warn("[growth] receipt unavailable",error.code);

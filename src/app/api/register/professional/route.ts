@@ -1,3 +1,4 @@
+import { recordRegistrationPlatform } from "@/lib/analytics/registration-platform";
 import { recordProfessionalReady } from "@/lib/analytics/professional-growth";
 import { NextResponse } from "next/server";
 import { notifyVerificationOutreach } from "@/lib/verification-notify";
@@ -354,6 +355,7 @@ export async function POST(req: Request) {
       });
 
       await marcarComoProfesional(supabase, userId);
+      await recordRegistrationPlatform(req, userId);
       const metaConversion = await recordProfessionalReady(req,userId);
       return NextResponse.json({ ok: true, slug: existingPro.slug, metaConversion });
     }
@@ -452,6 +454,7 @@ export async function POST(req: Request) {
     // profesional recién registrado no se le invita a contratar (9-oct-2026).
     await avisarCompletarPerfil(supabase, userId);
     await marcarComoProfesional(supabase, userId);
+    await recordRegistrationPlatform(req, userId);
     const metaConversion = await recordProfessionalReady(req,userId);
     return NextResponse.json({ ok: true, slug, metaConversion });
   } catch (err: unknown) {

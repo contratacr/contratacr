@@ -1,3 +1,4 @@
+import { UsageCapture } from "@/components/analytics/usage-capture";
 import { MobileAppDownloadBanner } from "@/components/landing/app-download";
 import type { Metadata } from "next";
 import { Suspense } from "react";
@@ -197,6 +198,7 @@ export default async function LocaleLayout({
         <Suspense fallback={null}>
           <MetaPixel pixelId={META_PIXEL_ID} />
           <AttributionCapture />
+          <UsageCapture />
         </Suspense>
         <PushTokenManager />
         {children}

@@ -22,6 +22,13 @@ function paginaDeEntradaActual(ruta: string): string {
   return limpia.length > 1 ? limpia.replace(/\/$/, "") : limpia;
 }
 
+export type RuntimeAnalyticsRow = {
+  runtime: string; sessions: number; visitors: number; users: number;
+  accesses: number; screens: number; first_uses: number; registrations: number;
+  recent_accounts: { id: string; full_name: string | null; last_seen: string; sessions: number }[];
+  actions: Record<string, number>; top_screens: { path: string; tab: string | null; views: number }[];
+};
+export type RuntimeAnalytics = { since: string | null; days: number; rows: RuntimeAnalyticsRow[] };
 export type Count = { label: string; value: number };
 type RegPoint = { date: string; pros: number; clients: number };
 type ActPoint = { date: string; proyectos: number };
@@ -82,6 +89,7 @@ export type AdminAcquisition = {
 };
 export type AdminReports = {
   insights: AdminInsights;
+  runtimeUsage: RuntimeAnalytics | null;
   acquisition: AdminAcquisition;
   users: { total: number; clients: number; pros: number; verifiedPros: number; activeClients: number; reg30: RegPoint[] };
   pros: { total: number; verified: number; pending: number; unverified: number; rejected: number; byCategory: Count[]; byProvince: Count[]; traveling: number; fixed: number; withServices: number; withoutServices: number };
@@ -185,6 +193,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
   const days30 = lastNDays(30, now);
 
   const empty: AdminReports = {
+    runtimeUsage: null,
     insights: {
       week: { pros: { now: 0, prev: 0 }, clients: { now: 0, prev: 0 }, searches: { now: 0, prev: 0 }, requests: { now: 0, prev: 0 }, contacts: { now: 0, prev: 0 }, quotes: { now: 0, prev: 0 }, projectLeads: { now: 0, prev: 0 } },
       funnel: { searches: 0, profileViews: 0, contactAttempts: 0, contacts: 0, requests: 0, projectLeads: 0 },
@@ -235,7 +244,13 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     admin.from("interaction_events").select("event_type, category_id").gte("created_at", since30).in("event_type", ["search_performed", "profile_view"]),
     admin.from("interaction_events").select("created_at").order("created_at", { ascending: true }).limit(1),
   ]));
+  const runtimeQ = iniciar(admin.rpc("get_admin_runtime_analytics", { p_days: 7 }));
   const interactionsQ = iniciar(admin.rpc("get_admin_interaction_analytics", { p_since: sinceInteractions.toISOString() }));
+
+  try {
+    const { data, error } = await runtimeQ;
+    if (!error && data && Array.isArray(data.rows)) empty.runtimeUsage = data as RuntimeAnalytics;
+  } catch (error) { console.error("[reports] runtime usage", error); }
 
   // ── Users + professionals + clients ──
   try {

@@ -1,3 +1,4 @@
+import { requestAnalyticsPlatform } from "@/lib/analytics/platform";
 import { peticionAutomatizada } from "@/lib/analytics/trafico-automatizado";
 import { createHash, randomUUID } from "node:crypto";
 import { enforceRateLimit } from "@/lib/rate-limit";
@@ -77,7 +78,7 @@ export async function POST(req: NextRequest) {
     source,
     locale,
     category_id: categoryId,
-    metadata: cleanMetadata(body.metadata),
+    metadata: { ...cleanMetadata(body.metadata), ...requestAnalyticsPlatform(req) },
   });
 
   if (error) {

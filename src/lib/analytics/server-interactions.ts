@@ -1,3 +1,4 @@
+import { requestAnalyticsPlatform } from "./platform";
 import { peticionAutomatizada } from "@/lib/analytics/trafico-automatizado";
 import { createHash, randomUUID } from "node:crypto";
 import type { NextRequest } from "next/server";
@@ -35,7 +36,7 @@ export async function recordServerInteraction(admin: AdminClient, req: NextReque
       source: input.source ?? "api",
       locale: input.locale ?? "es",
       category_id: input.categoryId ?? null,
-      metadata: input.metadata ?? {},
+      metadata: { ...input.metadata, ...requestAnalyticsPlatform(req) },
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

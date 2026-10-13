@@ -1,3 +1,4 @@
+import { recordRegistrationPlatform } from "@/lib/analytics/registration-platform";
 import { NextResponse } from "next/server";
 import { mensajeDeError } from "@/lib/api-errors";
 import { enforceRateLimit } from "@/lib/rate-limit";
@@ -130,6 +131,7 @@ export async function POST(req: Request) {
     // la primera experiencia real (ver invitar-tras-experiencia.ts).
     // Lo que sí sale al crear la cuenta: «¿Necesitas a alguien?» (publicar un proyecto).
     await invitarAPublicarProyecto(supabase, [userId]);
+    await recordRegistrationPlatform(req, userId);
     return NextResponse.json({ ok: true });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Error interno del servidor";
