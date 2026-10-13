@@ -33,19 +33,19 @@ export function AppDownloadSection() {
   const native = useNativeApp();
   const en = useLocale() === "en";
   if (native) return null;
-  return <section id="descargar-app" data-testid="app-download-section" className="ccr-solo-web ccr-download-section relative isolate flex w-full min-w-0 min-h-[max(620px,177.69vw)] items-end overflow-hidden bg-[#38261c] sm:aspect-[1672/941] sm:min-h-[460px] sm:items-center lg:min-h-[640px]">
+  return <section id="descargar-app" data-testid="app-download-section" className="ccr-solo-web ccr-download-section relative isolate flex w-full min-w-0 min-h-[max(480px,125vw)] items-end overflow-hidden bg-[#38261c] sm:aspect-[3/1] sm:min-h-[360px] sm:items-center lg:min-h-[460px]">
     <picture className="absolute inset-0 -z-10">
-      <source media="(max-width: 639px)" srcSet="/stores/app-workshop-mobile-20261013.png" width={941} height={1672} />
-      <Image src="/stores/app-workshop-desktop-20261013.png" width={1672} height={941} unoptimized alt={en ? "ContrataCR on a phone in a carpentry workshop" : "ContrataCR en un teléfono dentro de un taller de carpintería"} data-testid="app-download-artwork" className="h-full w-full object-cover object-top sm:object-center" />
+      <source media="(max-width: 639px)" srcSet="/stores/app-workshop-mobile-compact-20261013.png" width={1122} height={1402} />
+      <Image src="/stores/app-workshop-desktop-compact-20261013.png" width={2172} height={724} unoptimized alt={en ? "ContrataCR on a phone in a carpentry workshop" : "ContrataCR en un teléfono dentro de un taller de carpintería"} data-testid="app-download-artwork" className="h-full w-full object-cover object-top sm:object-right" />
     </picture>
-    <div className="relative mx-auto w-full max-w-7xl px-5 pb-7 pt-8 sm:px-8 sm:py-9 lg:px-14 lg:py-12">
+    <div className="relative mx-auto w-full max-w-7xl px-5 pb-5 pt-8 sm:px-8 sm:py-6 lg:px-14 lg:py-7">
       <div className="mx-auto max-w-md text-center text-white [text-shadow:0_2px_14px_rgba(0,0,0,0.6)] sm:mx-0 sm:max-w-[49%] sm:text-left">
         <p className="mb-3 hidden text-[11px] font-semibold tracking-[0.14em] text-white/90 sm:block lg:mb-4 lg:text-sm">{en ? "AVAILABLE FOR iOS AND ANDROID" : "DISPONIBLE PARA iOS Y ANDROID"}</p>
-        <h2 className="text-[28px] font-extrabold leading-[1.08] tracking-tight md:text-4xl lg:text-[clamp(2.5rem,3.6vw,3.5rem)]">{en ? "Download the ContrataCR app" : "Descarga la app de ContrataCR"}</h2>
-        <p className="mx-auto mb-4 mt-3 max-w-md text-sm leading-relaxed text-white/90 sm:mx-0 sm:mt-4 sm:text-base lg:mb-6 lg:mt-5 lg:text-lg">{en ? "Find professionals, post projects or offer your services from your phone." : "Encuentra profesionales, publica proyectos u ofrece tus servicios desde tu celular."}</p>
+        <h2 className="text-[25px] font-extrabold leading-[1.08] tracking-tight md:text-4xl lg:text-[clamp(2rem,2.8vw,2.75rem)]">{en ? "Download the ContrataCR app" : "Descarga la app de ContrataCR"}</h2>
+        <p className="mx-auto mb-4 mt-3 max-w-md text-sm leading-relaxed text-white/90 sm:mx-0 sm:mt-4 sm:text-base lg:mb-4 lg:mt-3 lg:text-base">{en ? "Find professionals, post projects or offer your services from your phone." : "Encuentra profesionales, publica proyectos u ofrece tus servicios desde tu celular."}</p>
         <AppStoreLinks />
-        <div className="mt-7 hidden items-center gap-4 lg:flex">
-          <Image src="/stores/download-app-qr.svg?v=20261013-store-redirect" width={144} height={144} alt={en ? "Scan to download ContrataCR" : "Escanea para descargar ContrataCR"} className="shrink-0 rounded-lg bg-white" />
+        <div className="mt-4 hidden items-center gap-4 lg:flex">
+          <Image src="/stores/download-app-qr.svg?v=20261013-store-redirect" width={104} height={104} alt={en ? "Scan to download ContrataCR" : "Escanea para descargar ContrataCR"} className="shrink-0 rounded-lg bg-white" />
           <div className="max-w-[240px]"><p className="text-sm font-semibold">{en ? "Scan with your phone" : "Escanea con tu celular"}</p><p className="mt-2 text-sm leading-relaxed text-white/90">{en ? "Sign in with your existing account." : "Ingresa con tu cuenta de siempre."}</p></div>
         </div>
       </div>

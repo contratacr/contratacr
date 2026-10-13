@@ -136,3 +136,11 @@ El aviso requiere una plataforma móvil detectada (iOS/Android), además de las 
 El clip de proyectos usa `20261013-project-contact-highlight`: señala WhatsApp con el marcador de toque sin ejecutar el contacto ni mostrar la ventana que pide ingresar. Después regresa con la flecha al tablero y muestra el formulario. La navegación pública sigue sin sesión y el demo solo existe en test durante la grabación; se elimina al terminar. La protección real para contactar al cliente no se modifica.
 
 Auditoría de publicación: `/publicar-proyecto` permite abrir el formulario sin sesión; al enviar conserva el borrador y solicita acceso. La API exige una cuenta autenticada, pero no un perfil profesional: mantiene el rol cliente y permite también que un profesional publique como cliente. Las páginas de empleos/promociones solicitan crear el perfil profesional si falta; sus API comprueban además que la ficha pertenezca al usuario. Se añade una prueba con un cliente desechable sin ficha profesional, eliminándolo al terminar; no se envía ningún proyecto ni notificación de contacto.
+
+## Compact original artwork — 13 October 2026
+
+Use Isaac's two Downloads from 14:51, copied byte-for-byte, not the generated alternatives:
+- `app-workshop-desktop-compact-20261013.png`: 2172×724, 3:1.
+- `app-workshop-mobile-compact-20261013.png`: 1122×1402, approximately 4:5.
+
+Keep `unoptimized`, HTML copy/store links, and the shared download anchor. Reduce section height to match the artwork: 480 px at desktop width 1440, about 488 px at phone width 390. Smaller layouts retain enough room for readable copy and store buttons. Six existing responsive/shared-anchor cases passed across Chromium mobile, WebKit mobile, and desktop. Inspected screenshots at 390, 768, and 1440 px.
