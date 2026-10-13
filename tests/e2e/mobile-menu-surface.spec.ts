@@ -2,6 +2,7 @@ import { test, expect } from 'playwright/test';
 
 for (const native of [false, true]) {
   test(`menu header travels with options and closes without displacing the page (${native ? 'native' : 'web'})`,async({page,context,baseURL})=>{
+    test.skip((page.viewportSize()?.width ?? 1280) >= 1024, 'The mobile drawer is not rendered on desktop.');
     if(native){await context.addCookies([{name:'ccr_platform',value:'native',url:baseURL!}]);await page.addInitScript(()=>{localStorage.setItem('ccr:native-first-run-onboarding:v12','1');const bridge={isNativePlatform:()=>true};Object.defineProperty(window,'Capacitor',{configurable:true,get:()=>bridge,set:value=>{Object.assign(bridge,value);bridge.isNativePlatform=()=>true;}});});}
     await page.goto('/');
     const banner=page.getByTestId('mobile-app-download');
