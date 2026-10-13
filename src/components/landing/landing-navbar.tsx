@@ -71,7 +71,7 @@ export function ContrataCRMark({ className, tone = "light" }: { className?: stri
 export function ContrataCRLogo({ className, tone = "light" }: { className?: string; tone?: "light" | "dark" }) {
   const dark = tone === "dark";
   return (
-    <div className={cn("flex items-center gap-0.5 select-none", className)}>
+    <div className={cn("flex items-center gap-0 select-none", className)}>
       <ContrataCRMark tone={tone} />
       {/* Outlined Inter 800: identical before/after fonts load, including cold starts. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}

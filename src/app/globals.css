@@ -195,7 +195,7 @@ html.ccr-native-app.ccr-native-first-run-pending [data-testid="native-first-run-
 
 #ccr-native-first-run-prepaint { position: fixed; inset: 0; z-index: 219; display: none; overflow: auto; color: #162543; background: #fafafa; }
 html.ccr-native-app.ccr-native-first-run-pending #ccr-native-first-run-prepaint { display: block !important; visibility: visible !important; }
-.ccr-native-first-run-prepaint-logo { display: flex; align-items: center; gap: 2px; }
+.ccr-native-first-run-prepaint-logo { display: flex; align-items: center; gap: 0; }
 .ccr-native-first-run-prepaint-marca { display: block; width: 32px; height: 32px; background: url("/logo-mark-transparent.png") center / contain no-repeat; }
 .ccr-native-first-run-prepaint-wordmark { display: block; width: 105px; height: 24px; background: url("/brand/wordmark-light.svg") center/contain no-repeat; }
 .ccr-welcome-choice-main { display: flex; flex: 1; flex-direction: column; align-items: center; padding: 24px 16px; }
