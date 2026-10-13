@@ -2271,6 +2271,18 @@ body.ccr-native-app:has(.ccr-native-search-panel) .ccr-native-bottom-nav {
   }
 }
 
+/* Account tasks use the available viewport. Auto margins center short content,
+   then collapse to zero for long forms or a reduced keyboard viewport, so the
+   first field and final action stay reachable with one document scroll. */
+@media (max-width: 1023px) {
+  .ccr-account-page > .ccr-centrado-seguro {
+    padding-block: clamp(16px, 3dvh, 24px) !important;
+  }
+  .ccr-account-page > .ccr-centrado-seguro > * {
+    margin-block: auto;
+  }
+}
+
 /* Donde hay una franja de acciones fija abajo, el pie del sitio sobra en el
    teléfono: quedaba detrás del botón, y es una lista de salidas justo debajo de
    lo único que la pantalla pide hacer. En computadora no hay franja fija, así

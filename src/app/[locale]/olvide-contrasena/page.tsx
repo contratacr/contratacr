@@ -11,7 +11,7 @@ import { ArrowRight, AlertCircle, MailCheck, RefreshCw } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { LandingFooter } from "@/components/landing/landing-footer";
+import { FooterSoloWeb } from "@/components/landing/footer-solo-web";
 import { SpamNotice } from "@/components/ui/spam-notice";
 import { useResendCooldown } from "@/hooks/use-resend-cooldown";
 import { irAlInicio } from "@/lib/ir-al-inicio";
@@ -73,7 +73,7 @@ export default function OlvideContrasenaPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#fafafa]">
+    <div className="ccr-account-page min-h-dvh flex flex-col bg-[#fafafa]">
       <Navbar mobileSearch={false} />
       <main className="flex-1 ccr-centrado-seguro py-12 px-4">
         <div className="w-full max-w-md">
@@ -151,7 +151,7 @@ export default function OlvideContrasenaPage() {
           </div>
         </div>
       </main>
-      <LandingFooter />
+      <FooterSoloWeb soloEscritorio />
     </div>
   );
 }
