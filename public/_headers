@@ -1,2 +1,10 @@
 /.well-known/apple-app-site-association
   Content-Type: application/json
+
+# Public home artwork can be reused immediately on the next app session.
+# Files are not immutable: future replacements revalidate after one day.
+/hero/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/featured-brands/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
