@@ -21,7 +21,7 @@ import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
 import { PriceInput } from "@/components/ui/price-input";
 import { EtiquetaOpcional } from "@/components/ui/etiqueta-campo";
 import { IdentityField } from "@/components/ui/identity-field";
-import { LandingFooter } from "@/components/landing/landing-footer";
+import { FooterSoloWeb } from "@/components/landing/footer-solo-web";
 import { createClient } from "@/lib/supabase/client";
 import { SocialSignupButtons } from "@/components/auth/social-signup-buttons";
 import { cn } from "@/lib/utils";
@@ -1019,7 +1019,7 @@ export default function RegisterProfessionalPage() {
   // ── OTP screen ──────────────────────────────────────────────────────────────
   if (otpEmail) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#fafafa]">
+      <div className="ccr-account-page min-h-dvh flex flex-col bg-[#fafafa]">
         {currentUser ? <CabeceraDeTramite title={t("headerTitle")} backHref="/dashboard/profesional" onBack={step > 0 ? () => setStep(step - 1) : undefined} backLabel={step > 0 ? t("back") : undefined} /> : <Navbar mobileSearch={false} />}
         <main className="flex-1 ccr-centrado-seguro py-12 px-4">
           <div className="w-full max-w-sm">
@@ -1028,7 +1028,7 @@ export default function RegisterProfessionalPage() {
             </div>
           </div>
         </main>
-        <LandingFooter />
+        <FooterSoloWeb soloEscritorio />
       </div>
     );
   }
@@ -1036,7 +1036,7 @@ export default function RegisterProfessionalPage() {
   // ── Auth loading ─────────────────────────────────────────────────────────────
   if (step === -1) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-dvh flex items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
       </div>
     );
@@ -1045,7 +1045,7 @@ export default function RegisterProfessionalPage() {
   // ── Post-create redirect — clean loader, never flash the form/step back ──────
   if (redirecting) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-3">
+      <div className="min-h-dvh flex flex-col items-center justify-center gap-3">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
         <p className="text-sm text-[#6b7280]">{t("creatingAccount")}</p>
       </div>
@@ -1080,7 +1080,7 @@ export default function RegisterProfessionalPage() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#fafafa]">
+    <div className="ccr-account-page min-h-dvh flex flex-col bg-[#fafafa]">
       {currentUser ? <CabeceraDeTramite title={t("headerTitle")} backHref="/dashboard/profesional" onBack={step > 0 ? () => setStep(step - 1) : undefined} backLabel={step > 0 ? t("back") : undefined} /> : <Navbar mobileSearch={false} />}
       {/* Con sesión la tarjeta se pega arriba, debajo del título: `ccr-centrado-seguro`
           la centra a lo alto de la pantalla y en un paso corto eso dejaba un
@@ -1503,7 +1503,7 @@ export default function RegisterProfessionalPage() {
           </div>
         </div>
       </main>
-      {!currentUser && <LandingFooter />}
+      {!currentUser && <FooterSoloWeb soloEscritorio />}
     </div>
   );
 }

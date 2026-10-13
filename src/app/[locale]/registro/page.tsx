@@ -20,14 +20,14 @@ export default function RegisterPage() {
 
   if (checking) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f4f7fa]">
+      <div className="min-h-dvh flex items-center justify-center bg-[#f4f7fa]">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#fafafa]">
+    <div className="ccr-account-page min-h-dvh flex flex-col bg-[#fafafa]">
       {/* Misma envoltura que ingresar: navbar y pie en todo tamaño. La salida
           es el propio menú, no un botón de volver. */}
       <Navbar mobileSearch={false} />
