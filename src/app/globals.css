@@ -198,89 +198,121 @@ html.ccr-native-app.ccr-native-first-run-pending [data-testid="native-first-run-
   inset: 0;
   z-index: 219;
   display: none;
-  overflow: auto;
-  background: #fff;
-  color: #162543;
+  overflow: hidden;
+  color: #fff;
 }
+
 html.ccr-native-app.ccr-native-first-run-pending #ccr-native-first-run-prepaint {
   display: block !important;
   visibility: visible !important;
 }
-.ccr-welcome-photo, .ccr-native-first-run-prepaint-bg {
-  height: calc(max(150px, 42dvh) + 28px);
-}
+
 .ccr-native-first-run-prepaint-bg {
   position: absolute;
-  inset: 0 0 auto;
-  background: url("/mobile/contratacr-welcome-client-v1.webp") center 20% / cover no-repeat;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(5, 18, 31, 0.02) 0%, rgba(5, 18, 31, 0.12) 34%, rgba(8, 28, 52, 0.72) 60%, #081c34 78%, #081c34 100%),
+    url("/mobile/contratacr-welcome-client-v1.webp") center / cover no-repeat;
+  transform: scale(1.01);
 }
-.ccr-welcome-content, .ccr-native-first-run-prepaint-content {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  margin-top: max(150px, 42dvh);
-  min-height: calc(100dvh - max(150px, 42dvh));
-  padding: 28px 24px max(24px, env(safe-area-inset-bottom));
-  border-radius: 28px 28px 0 0;
-  background: #fff;
+
+.ccr-native-first-run-prepaint-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(2, 13, 23, 0.14), transparent 48%, rgba(2, 13, 23, 0.08));
+}
+
+.ccr-native-first-run-prepaint-content {
+  position: absolute;
+  right: 1.5rem;
+  bottom: max(2rem, calc(env(safe-area-inset-bottom) + 1.5rem));
+  left: 1.5rem;
   text-align: center;
 }
-.ccr-welcome-content { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-.ccr-native-first-run-prepaint-content { max-width: 512px; margin-inline: auto; }
-.ccr-native-first-run-prepaint-logo { display: inline-flex; align-self: center; align-items: center; gap: 2px; }
+
+.ccr-native-first-run-prepaint-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.28));
+}
+
 .ccr-native-first-run-prepaint-marca {
   display: block;
-  width: 32px;
-  height: 32px;
-  background: url("/logo-mark-transparent.png") center / contain no-repeat;
+  width: 2.25rem;
+  height: 2.25rem;
+  background: url("/logo-mark-dark.png") center / contain no-repeat;
 }
-.ccr-native-first-run-prepaint-logo > span:not(.ccr-native-first-run-prepaint-marca) {
-  font-size: 19px;
-  font-weight: 800;
-  letter-spacing: -0.025em;
+
+.ccr-native-first-run-prepaint-logo > span {
+  margin-left: -0.125rem;
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: -0.055em;
 }
-.ccr-native-first-run-prepaint-logo > span > span { color: #009fd9; }
+
+.ccr-native-first-run-prepaint-logo > span > span {
+  color: #38bdf8;
+}
+
 .ccr-native-first-run-prepaint-content p {
-  margin-top: 16px;
-  font-size: clamp(1.5rem, 6.3vw, 1.875rem);
+  margin-top: 0.85rem;
+  font-size: clamp(1.55rem, 6.5vw, 2rem);
   font-weight: 800;
-  line-height: 1.25;
+  line-height: 1.1;
   letter-spacing: -0.035em;
 }
+
 .ccr-native-first-run-prepaint-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 20px;
-  padding: 6px;
-  border-radius: 16px;
-  background: #f0f5f8;
+  margin-top: 1.35rem;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 999px;
+  background: rgba(4, 17, 29, 0.36);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.26);
 }
+
 .ccr-native-first-run-prepaint-actions span {
   display: grid;
-  min-height: 56px;
+  min-height: 3rem;
   place-items: center;
-  padding: 0 8px;
-  border-radius: 12px;
-  color: #52627a;
-  font-size: 14px;
-  font-weight: 700;
+  padding: 0 0.85rem;
+  color: #fff;
+  font-size: 0.98rem;
+  font-weight: 800;
 }
-.ccr-native-first-run-prepaint-actions span:first-child { background: #fff; color: #162543; box-shadow: 0 0 0 2px #009fd9; }
+
+.ccr-native-first-run-prepaint-actions span:first-child {
+  background: #fff;
+  color: #10223d;
+}
+
 .ccr-native-first-run-prepaint-cta {
   display: grid;
-  min-height: 56px;
-  margin-top: 16px;
+  min-height: 3.25rem;
+  margin-top: 1rem;
   place-items: center;
   border-radius: 999px;
   background: #08a7df;
   color: #fff;
-  font-size: 15px;
-  font-weight: 800;
+  font-weight: 900;
+  box-shadow: 0 14px 32px rgba(0, 159, 217, 0.3);
 }
-.ccr-native-first-run-prepaint-login { margin-top: 8px; min-height: 44px; display: flex; gap: 4px; align-items: center; justify-content: center; color: #64748b; font-size: 14px; font-weight: 600; }
-.ccr-native-first-run-prepaint-login span { color: #162543; text-decoration: underline; text-underline-offset: 0.2em; }
+
+.ccr-native-first-run-prepaint-login {
+  margin-top: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.ccr-native-first-run-prepaint-login span {
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
 
 .ccr-native-app button,
 .ccr-native-app a {

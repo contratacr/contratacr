@@ -152,3 +152,7 @@ Footer now uses white with navy copy and the primary navbar logo. Social links r
 Logo audit: light-on-dark mark remains in the dark admin shell, quote-image renderer, share-kit renderer, and dark-mode email artwork. It is no longer used by the footer or welcome/prepaint. Keep these contrast variants for their dark backgrounds.
 
 Validation: existing first-installation navigation test passed in Chromium and WebKit; footer links passed all three browser projects; focused ESLint passed. At 390×844 welcome content fits without scrolling; at 320×568 the extra 19 px remain reachable, with no horizontal overflow and the final login action reachable in both browsers.
+
+### Welcome design withdrawn
+
+Isaac rejected the white-panel welcome preview. Restored the complete welcome component, prepaint bridge and styles from 5e029c77; retained the approved light footer and navy store icons. Show a future welcome redesign for approval before publishing it.
