@@ -117,3 +117,18 @@ test('web footer uses Apple and Android symbols with accessible store links',asy
  await expect(links.getByRole('link',{name:'Descargar ContrataCR para iOS'})).toHaveAttribute('href',/apps.apple.com/);
  await expect(links.getByRole('link',{name:'Descargar ContrataCR para Android'})).toHaveAttribute('href',/play.google.com/);
 });
+
+test('QR download opens the correct store without caching another device choice', async ({request}) => {
+ const scans = [
+  {ua:'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) Mobile/15E148', expected:'https://apps.apple.com/cr/app/contratacr/id6794559661'},
+  {ua:'Mozilla/5.0 (Linux; Android 15; Pixel 9) Chrome/130.0 Mobile Safari/537.36', expected:'https://play.google.com/store/apps/details?id=com.contratacr.app'},
+  {ua:'Mozilla/5.0 (iPad; CPU OS 18_0 like Mac OS X) Mobile/15E148', expected:'https://apps.apple.com/cr/app/contratacr/id6794559661'},
+  {ua:'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) Version/18.0 Mobile/15E148 Safari/604.1', expected:'https://apps.apple.com/cr/app/contratacr/id6794559661'},
+  {ua:'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/130.0 Safari/537.36', expected:'/#descargar-app'},
+ ];
+ for(const scan of scans) {
+  const response=await request.get('/descargar',{headers:{'user-agent':scan.ua},maxRedirects:0});
+  expect(response.status()).toBe(307);expect(response.headers().location).toBe(scan.expected);
+  expect(response.headers()['cache-control']).toContain('no-store');expect(response.headers().vary).toContain('User-Agent');
+ }
+});
