@@ -67,15 +67,23 @@ async function contactar(p) {
     await wa.evaluate(el => el.addEventListener("click", e => { e.preventDefault(); window.__guideContact = el.href; }, { once: true }));
   }
   await tocar(p, wa);
+  // Anonymous project visitors must sign in to obtain the client's contact.
+  // Show the actual prompt instead of presenting an authenticated walkthrough.
+  if (new URL(p.url()).pathname.startsWith("/proyectos/")) {
+    const dialog = p.getByRole("dialog").filter({ has: p.getByRole("heading", { name: "Contacta a este cliente" }) });
+    await dialog.waitFor();
+    await p.waitForTimeout(1500);
+    await evidencia(p, "proyectos-contacto-sin-sesion");
+    await tocar(p, dialog.getByRole("button", { name: "Cerrar", exact: true }));
+    return;
+  }
   await p.waitForFunction(() => /^https:\/\/(wa\.me|api\.whatsapp\.com)\//.test(window.__guideContact || ""), null, { timeout: 15000 });
   console.log("WhatsApp destination verified (no message sent)");
   await p.waitForTimeout(1100);
 }
 
-// En el video no se dibuja la barra de estado: los formularios a pantalla
-// completa reservaban su alto (62 px) y su título quedaba más abajo que el de
-// las demás pantallas. En el teléfono real ese hueco sí lo ocupa la barra.
-async function sinAvisoDeDesarrollo(p) { await p.addStyleTag({ content: "nextjs-portal,[data-nextjs-toast],[data-next-badge-root]{display:none!important}.app-fullscreen-modal.app-fullscreen-modal{padding-top:0!important}" }).catch(() => {}); }
+// Capture only the app content, without a simulated OS status-bar reserve.
+async function sinAvisoDeDesarrollo(p) { await p.addStyleTag({ content: "nextjs-portal,[data-nextjs-toast],[data-next-badge-root]{display:none!important}" }).catch(() => {}); }
 // La grabación solo se reanuda con la página QUIETA: fuentes cargadas, todas
 // las imágenes visibles pintadas, sin esqueletos y la cabecera con su logo.
 // Los primeros cuadros tras un goto mostraban la página a medio cargar.
@@ -141,14 +149,16 @@ async function evidencia(p, name) {
 async function porElMenu(p, grabar, pausar, texto, destino, boton, formulario) {
   const origin = destino === "/proyectos" ? LOCAL : INICIO;
   const scene = destino.slice(1);
-  await p.context().addCookies(testCookies);
   await p.goto(origin + "/", { waitUntil: "load" });
   await sinAvisoDeDesarrollo(p); await asentada(p); await arriba(p);
   grabar(); await p.waitForTimeout(700);
   await tocar(p, p.getByRole("button", { name: "Abrir menú", exact: true }).first());
   await p.waitForTimeout(900);
+  if (await p.getByText("Ir a mi panel", { exact: true }).filter({ visible: true }).count()) throw new Error("Public guide must browse without a session");
+  await evidencia(p, `${scene}-menu-sin-sesion`);
   await tocar(p, p.locator(".ccr-menu-abierto").getByRole("link", { name: texto, exact: true }));
   pausar(); await p.waitForURL(new RegExp(`${destino}$`)); await asentada(p); await arriba(p);
+  await evidencia(p, `${scene}-tablero-inicio`);
   grabar(); await p.waitForTimeout(700);
   const items = p.locator(`h2 a[href^="${destino}/"]`);
   const item = (destino === "/proyectos" ? items.filter({ hasText: DEMO_PROJECT }).and(p.locator(`a[href*="${demoProjectId.slice(0, 8)}"]`)) : items).first();
@@ -159,11 +169,19 @@ async function porElMenu(p, grabar, pausar, texto, destino, boton, formulario) {
   grabar(); await p.waitForTimeout(1600); await mostrarDetalleCompleto(p);
   await evidencia(p, `${scene}-detalle-final`);
   await contactar(p);
-  pausar(); await p.goto(origin + destino); await asentada(p); await arriba(p);
+  pausar();
+  // Return using the real in-app arrow, preserving the board's navigation
+  // shell. A hard reload here briefly reserved a second navbar above it.
+  await tocar(p, p.locator(`a[href="${destino}"]`).filter({ visible: true }).first());
+  await p.waitForURL(new RegExp(`${destino}$`)); await asentada(p); await arriba(p);
+  await evidencia(p, `${scene}-tablero-regreso`);
   grabar(); await p.waitForTimeout(700);
   const publicar = p.getByRole("link", { name: boton }).or(p.getByRole("button", { name: boton })).filter({ visible: true }).first();
   await publicar.scrollIntoViewIfNeeded(); await p.waitForTimeout(300);
   await marcarToque(p, publicar); await p.waitForTimeout(250); pausar();
+  // Only the blank, isolated form needs the synthetic test actor. Public
+  // home/menu/board/detail scenes above must stay anonymous on every surface.
+  await p.context().addCookies(testCookies);
   await p.goto(LOCAL + formulario, { waitUntil: "load" }); await sinAvisoDeDesarrollo(p); await asentada(p); await arriba(p);
   if (/\/login/.test(p.url())) throw new Error(`Test form requires authentication: ${formulario}`);
   await p.locator("main h1, main h2, .app-fullscreen-modal h1, .app-fullscreen-modal h2").filter({ visible: true }).first().waitFor();
@@ -179,6 +197,9 @@ const escenas = {
     await tocar(p, p.getByLabel(/Qué necesitas/i).filter({ visible: true }).first());
     const panel = p.locator(".ccr-native-search-panel");
     await panel.getByLabel("Servicio", { exact: true }).waitFor();
+    const top = await panel.getByLabel("Servicio", { exact: true }).evaluate(el => el.getBoundingClientRect().top);
+    if (top > 32) throw new Error(`Search capture has an extra status-bar reserve: ${top}px`);
+    await evidencia(p, "profesionales-buscador-inicio");
     await escribir(p, panel.getByLabel("Servicio", { exact: true }), "Cámaras");
     await p.waitForTimeout(700);
     await tocar(p, panel.getByRole("option").filter({ hasText: "Cámaras de seguridad" }).first());
@@ -295,10 +316,10 @@ for (const [clave, escena] of Object.entries(escenas)) {
   const p = await ctx.newPage();
 
   const cdp = await ctx.newCDPSession(p);
-  // EL MARGEN DE SEGURIDAD DEL iPHONE (iPhone 17: 62 arriba, 34 abajo). Sin él,
-  // env(safe-area-inset-*) vale 0 y el menú de abajo y los botones fijos quedan
-  // pegados al borde, donde las esquinas redondeadas del teléfono los tapan.
-  await cdp.send("Emulation.setSafeAreaInsetsOverride", { insets: { top: 62, bottom: 34, left: 0, right: 0 } });
+  // The video omits the OS status bar. Reserve only the bottom home indicator;
+  // 62px at the top created a false blank band above search and inconsistent
+  // headers. No CSS offset is applied to the real app fields or navbar.
+  await cdp.send("Emulation.setSafeAreaInsetsOverride", { insets: { top: 0, bottom: 34, left: 0, right: 0 } });
   const cuadros = []; const cortes = []; let grabando = false; let corrimiento = 0; let tramo = 0;
   // Fotos seguidas a resolución real (2x). El «screencast» de Chromium sin
   // ventana entrega cuadros a 1x (402 px): mezclados con las fotos 2x del

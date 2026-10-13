@@ -105,3 +105,13 @@ Los videos de proyectos, promociones y empleos usan ahora `20261013-detail-befor
 Cada detalle y formulario comienza con los contenedores de desplazamiento en cero. El detalle se recorre hasta su final real, sin un desplazamiento fijo que deje contenido fuera. El grabador también reconoce contenedores con desplazamientos cortos: antes ignoraba los que tenían menos de 200 px de recorrido. El proyecto de ejemplo y el formulario se revisaron visualmente desde su encabezado, sin empezar a media pantalla. No se envía ningún formulario. El proyecto de test se elimina al concluir.
 
 Se guardaron capturas de inicio/final del detalle e inicio del formulario para las tres escenas, y se verificó la decodificación completa de los videos nuevos.
+
+## Encuadre y navegación pública sin sesión (13 de octubre de 2026)
+
+Los cuatro clips se regraban con `20261013-anonymous-framing`. El video omite la barra de estado del sistema; ahora la emulación reserva 0 px arriba y 34 px para el indicador inferior. Antes se reservaban 62 px arriba sin dibujar la barra de estado, dejando los campos de servicio y ubicación artificialmente bajos. Se elimina también el ajuste CSS exclusivo de formularios: todas las pantallas comparten el mismo encuadre y conservan sus estilos reales.
+
+Portada, menú, tableros y detalles se recorren sin sesión en las cuatro escenas. Proyectos ya no muestra el perfil del actor sintético en el menú. Al tocar su WhatsApp aparece el aviso real que pide ingresar con una cuenta profesional; se muestra y se cierra. Solo después, durante el corte al formulario vacío local, se añaden las cookies del actor de test. Ningún formulario se envía y no se contacta a terceros. El proyecto de demostración continúa siendo exclusivo del test aislado y se elimina al terminar.
+
+El grabador comprueba que el campo Servicio queda como máximo a 32 px del borde superior (incluido el margen interior del campo) y que el menú público no ofrece «Ir a mi panel». Guarda capturas del buscador, menú sin sesión, tablero desde arriba, detalle inicial/final, aviso de contacto y formulario. La cabecera de proyectos se revisa completa en esos encuadres.
+
+El regreso del detalle usa ahora la flecha real de la app. La recarga completa anterior podía reservar otra cabecera por encima del tablero; las capturas de regreso confirman que el logo y el buscador permanecen en el borde superior. Se verificó la decodificación completa de los cuatro MP4 y seis pruebas de la guía en Chrome móvil, WebKit móvil y escritorio. Las pruebas reconocen los dos motores existentes: video HTML silenciado/en línea en Chrome e imagen MP4 animada decodificada en Safari; antes exigían erróneamente un elemento video también en Safari.
