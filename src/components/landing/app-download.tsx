@@ -103,19 +103,19 @@ export function MobileAppDownloadBanner({ initialPlatform = null, initialDismiss
     document.addEventListener("focusin", update); document.addEventListener("focusout", update); update();
     return () => { observer.disconnect(); document.removeEventListener("focusin", update); document.removeEventListener("focusout", update); };
   }, [eligible, native]);
-  const visible = !native && eligible && Boolean(platform) && (!storedDismissal || downloadRequested) && !dismissed && !blocked;
+  const visible = !native && eligible && (!storedDismissal || downloadRequested) && !dismissed && !blocked;
   useLayoutEffect(() => {
     const root = document.documentElement;
     if (visible) root.setAttribute("data-web-download-banner", "");
     else root.removeAttribute("data-web-download-banner");
     return () => root.removeAttribute("data-web-download-banner");
   }, [visible]);
-  if (!visible || !platform) return null;
+  if (!visible) return null;
   return <div className="ccr-solo-web ccr-download-banner-wrap lg:hidden" data-testid="mobile-app-download">
     <aside className="ccr-download-banner" aria-label={en ? "Download ContrataCR" : "Descargar ContrataCR"}>
       <Image src="/web-app-manifest-flat-logo-v3-192x192.png" width={48} height={48} alt="" className="h-12 w-12 shrink-0 rounded-xl" />
-      <div className="min-w-0 flex-1"><p className="text-[13px] font-bold leading-tight text-[#162543] sm:text-sm">ContrataCR <span className="font-normal">{en ? "for" : "para"} {platform === "ios" ? "iOS" : "Android"}</span></p><p className="mt-1 text-xs text-[#526178]">{en ? "Take it with you" : "Llévala contigo"}</p></div>
-      <a href={APP_STORES[platform]} className="inline-flex min-h-11 shrink-0 items-center rounded-lg bg-[#009fd9] px-3 text-sm font-bold text-white">{en ? "Download" : "Descargar"}</a>
+      <div className="min-w-0 flex-1"><p className="text-[13px] font-bold leading-tight text-[#162543] sm:text-sm">ContrataCR {platform && <span className="font-normal">{en ? "for" : "para"} {platform === "ios" ? "iOS" : "Android"}</span>}</p><p className="mt-1 text-xs text-[#526178]">{en ? "Take it with you" : "Llévala contigo"}</p></div>
+      {platform ? <a href={APP_STORES[platform]} className="inline-flex min-h-11 shrink-0 items-center rounded-lg bg-[#009fd9] px-3 text-sm font-bold text-white">{en ? "Download" : "Descargar"}</a> : <div className="flex shrink-0 gap-1">{(["ios", "android"] as const).map(os => <a key={os} href={APP_STORES[os]} className="inline-flex min-h-11 items-center rounded-lg bg-[#009fd9] px-2 text-xs font-bold text-white">{os === "ios" ? "iOS" : "Android"}</a>)}</div>}
       <button type="button" aria-label={en ? "Dismiss download notice" : "Cerrar aviso de descarga"} className="flex h-11 w-11 shrink-0 items-center justify-center text-2xl text-[#8492a5]" onClick={() => { setDismissed(true); const until = String(Date.now() + 30 * 86400000); document.cookie = `${DOWNLOAD_DISMISS_COOKIE}=${until}; Path=/; Max-Age=2592000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`; try { localStorage.setItem(DISMISSED_KEY, until); } catch {} }}>×</button>
     </aside>
   </div>;

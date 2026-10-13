@@ -80,3 +80,13 @@ test('mobile download notice and header are correctly positioned before JavaScri
   expect(notice?.y).toBe(0);expect(header?.y).toBe(76);
  }finally{await context.close();}
 });
+
+
+test('download link also works in a narrow desktop browser with no mobile OS detected',async({page})=>{
+ test.skip(test.info().project.name!=='chromium-desktop' && test.info().project.name!=='desktop-download');
+ await page.setViewportSize({width:800,height:900});await page.goto('/#descargar-app');
+ const banner=page.getByTestId('mobile-app-download');await expect(banner).toBeVisible();
+ await expect(banner.locator('a')).toHaveCount(2);
+ expect(await banner.locator('a').first().getAttribute('href')).toContain('apps.apple.com');
+ expect(await banner.locator('a').last().getAttribute('href')).toContain('play.google.com');
+});
