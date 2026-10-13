@@ -2395,7 +2395,7 @@ html.ccr-menu-sin-cierre .ccr-menu-completo, html.ccr-menu-sin-cierre .ccr-menu-
 }
 
 /* One top notice on mobile web; its spacer preserves the header/content gap. */
-.ccr-download-banner-wrap { height: 76px; }
+.ccr-download-banner-wrap { height: 76px; flex-shrink: 0; }
 .ccr-download-banner { position: fixed; inset: 0 0 auto; z-index: 60; display: flex; align-items: center; gap: 10px; height: 76px; padding: 10px 12px; box-sizing: border-box; border-bottom: 1px solid #e5e7eb; background: #fff; }
 .ccr-download-section { scroll-margin-top: 64px; }
 @media (max-width: 1023px) {
@@ -2403,4 +2403,16 @@ html.ccr-menu-sin-cierre .ccr-menu-completo, html.ccr-menu-sin-cierre .ccr-menu-
 }
 @media (min-width: 1024px) {
   .ccr-download-banner-wrap { display: none; }
+}
+
+/* Public fixed-height boards reserve the notice instead of extending below the viewport. */
+@media (max-width: 1023px) {
+  html:not(.ccr-native-app):is([data-web-download-banner], :has(.ccr-download-banner-wrap)) :is(.ccr-cascaron-tablero, .ccr-buscar-pagina) {
+    height: calc(100dvh - 76px - var(--ccr-alto-barra, 0px)) !important;
+    min-height: 0 !important;
+    flex-shrink: 0;
+  }
+  html:not(.ccr-native-app):is([data-web-download-banner], :has(.ccr-download-banner-wrap)) .ccr-search-results-layout {
+    height: calc(100dvh - 76px) !important;
+  }
 }

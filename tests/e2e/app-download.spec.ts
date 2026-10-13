@@ -90,3 +90,28 @@ test('download link also works in a narrow desktop browser with no mobile OS det
  expect(await banner.locator('a').first().getAttribute('href')).toContain('apps.apple.com');
  expect(await banner.locator('a').last().getAttribute('href')).toContain('play.google.com');
 });
+
+test('notice is centered, remains above the header on public pages and respects account/form routes',async({page})=>{
+ test.skip((page.viewportSize()?.width ?? 1280)>=1024);
+ for(const route of ['/proyectos','/empleos','/promociones','/profesionales','/ayuda']) {
+  await page.goto(route);
+  const notice=page.getByTestId('mobile-app-download');
+  await expect(notice).toBeVisible();
+  await expect(notice).not.toContainText('Llévala contigo');
+  expect(await notice.locator('p').evaluate(el=>getComputedStyle(el.parentElement!).textAlign)).toBe('center');
+  await page.evaluate(()=>window.scrollTo(0,400));
+  await expect.poll(async()=>Math.round((await notice.locator('aside').boundingBox())?.y ?? -999)).toBe(0);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ }
+ for(const route of ['/login','/registro','/reset-password','/olvide-contrasena','/empleos/publicar','/publicar-proyecto']) {
+  await page.goto(route);await expect(page.getByTestId('mobile-app-download')).toHaveCount(0);
+ }
+});
+
+test('desktop footer uses Apple and Android symbols with accessible store links',async({page})=>{
+ test.skip((page.viewportSize()?.width ?? 1280)<1024);
+ await page.goto('/');const links=page.getByTestId('app-store-footer-links');
+ await expect(links.locator('a')).toHaveCount(2);await expect(links.locator('img')).toHaveCount(2);
+ await expect(links.getByRole('link',{name:'Descargar ContrataCR para iOS'})).toHaveAttribute('href',/apps.apple.com/);
+ await expect(links.getByRole('link',{name:'Descargar ContrataCR para Android'})).toHaveAttribute('href',/play.google.com/);
+});
