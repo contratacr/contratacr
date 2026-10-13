@@ -28,7 +28,7 @@ const reviewed = new Map([
   ["src/lib/dashboard-prefetch-cache.ts", { count: 10, reason: "five-minute backend response cache, session-scoped and cleared on sign-out (entera o de una sola clave, al crear algo); Supabase remains authoritative" }],
   ["src/app/layout.tsx", { count: 8, reason: "pre-hydration read of the native first-run flag to pre-paint the onboarding screen; presentation only" }],
   ["src/components/mobile/mobile-app-bridge.tsx", { count: 3, reason: "native first-run flag and hardware-back root marker; presentation only" }],
-  ["src/components/mobile/native-first-run-onboarding.tsx", { count: 12, reason: "native first-run completed flag, pending-route, post-auth and en-camino handoff markers, plus the access-screen open flag that survives a locale switch; no account-owned records" }],
+  ["src/components/mobile/native-first-run-onboarding.tsx", { count: 16, reason: "native first-run presentation flag and temporary navigation handoff markers; guest-menu completion writes the same completed flag and clears three existing markers (four additional accesses), without storing identity or account-owned records" }],
   ["src/lib/analytics/attribution.ts", { count: 7, reason: "recent and first marketing touches (utm/referrer) expire after thirty days; account acquisition persists in Supabase, while a short-lived cookie attributes actions" }],
   ["src/components/analytics/attribution-capture.tsx", { count: 6, reason: "consent preference and session markers for campaign clicks and first-touch claim; attribution and interactions persist server-side" }],
   ["src/lib/account-cache.ts", { count: 1, reason: "account-scoped removal of reviewed browser caches during disable/deletion" }],
