@@ -112,14 +112,16 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
     await gotoOK(page, "/");
     // Los videos se piden al acercarse a la guía (7-oct-2026): se baja hasta el
     // teléfono, y se repite si la página creció por arriba mientras cargaba.
-    const activo = page.locator("video.ccr-guia-video.opacity-100").first();
+    const activo = page.locator("video.ccr-guia-video.opacity-100, img.ccr-guia-video").first();
     await expect(async () => {
       await page.locator("img[data-guia-poster]").first().scrollIntoViewIfNeeded();
       await expect(activo).toBeVisible({ timeout: 2_000 });
     }).toPass({ timeout: 20_000 });
-    // Lo que Safari exige para reproducir solo: silenciado y en línea. (El Chromium
-    // de Playwright no trae el códec H.264, así que no se mide la reproducción.)
-    expect(await activo.evaluate((v: HTMLVideoElement) => v.muted && v.hasAttribute("muted") && v.hasAttribute("playsinline"))).toBe(true);
+    // Safari uses a silent animated MP4 image; other browsers use inline video.
+    // Require the image to decode, rather than incorrectly expecting <video>.
+    await expect.poll(() => activo.evaluate((media) => media instanceof HTMLImageElement
+      ? media.complete && media.naturalWidth > 0 && media.src.startsWith("blob:")
+      : media instanceof HTMLVideoElement && media.muted && media.hasAttribute("muted") && media.hasAttribute("playsinline"))).toBe(true);
   });
 
   test("el video activo de la guía nunca queda invisible y la imagen fija va encima", async ({ page }) => {
@@ -128,7 +130,7 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
     await gotoOK(page, "/");
     // Los videos se piden al acercarse a la guía (7-oct-2026): se baja hasta el
     // teléfono, y se repite si la página creció por arriba mientras cargaba.
-    const activo = page.locator("video.ccr-guia-video.opacity-100").first();
+    const activo = page.locator("video.ccr-guia-video.opacity-100, img.ccr-guia-video").first();
     await expect(async () => {
       await page.locator("img[data-guia-poster]").first().scrollIntoViewIfNeeded();
       await expect(activo).toBeVisible({ timeout: 2_000 });
@@ -137,7 +139,7 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
     // Una imagen fija por paso (precargadas); se mira la del paso activo.
     const poster = page.locator("img[data-guia-poster]").first();
     const orden = await poster.evaluate((img) => {
-      const v = img.parentElement!.querySelector("video.ccr-guia-video.opacity-100")!;
+      const v = img.parentElement!.querySelector("video.ccr-guia-video.opacity-100, img.ccr-guia-video")!;
       return {
         despues: Boolean(v.compareDocumentPosition(img) & Node.DOCUMENT_POSITION_FOLLOWING),
         zImg: Number(getComputedStyle(img).zIndex) || 0,
