@@ -839,6 +839,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const [searchActiveIdx, setSearchActiveIdx] = useState(-1);
   const [searchFocused, setSearchFocused] = useState(false);
   const [nativeSearchOpen, setNativeSearchOpen] = useState(false);
+  const nativeSearchNavigating = useRef(false);
   // La barra de abajo marca «Buscar» mientras el buscador está abierto: el
   // buscador va encima de cualquier pantalla y la dirección no cambia, así que
   // sin este aviso la barra no sabía que se estaba buscando.
@@ -1618,7 +1619,16 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       has_location: params.has("provincia") || params.has("canton") || params.has("lat") || params.has("lng"),
       source: "navbar",
     });
-    router.push(rutaDeBusqueda(params));
+    const destination = rutaDeBusqueda(params);
+    const target = new URL(destination, window.location.origin);
+    const currentQuery = new URLSearchParams(window.location.search);
+    target.searchParams.sort(); currentQuery.sort();
+    // No URL change means the route-change effect cannot dismiss the sheet.
+    if (nativeSearchOpen && target.pathname === pathname && target.searchParams.toString() === currentQuery.toString()) {
+      closeNativeSearch();
+      return;
+    }
+    router.push(destination);
   }
 
   function handleCompactSearch(e: React.FormEvent) {
@@ -1627,6 +1637,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   }
 
   function openNativeSearch() {
+    nativeSearchNavigating.current = false;
     // iOS solo levanta el teclado si el foco ocurre DENTRO del mismo toque. El
     // campo real todavía no existe al pulsar (el panel se monta después), así
     // que el foco salta primero a este campo puente —invisible y de un píxel— y
@@ -1643,6 +1654,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   }
 
   function closeNativeSearch() {
+    nativeSearchNavigating.current = false;
     soltarFoco();
     setNativeSearchOpen(false);
     setSearchFocused(false);
@@ -1655,6 +1667,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // puesta, tapando lo viejo, y se cierra sola cuando la dirección cambia. Lo
   // único que sí pasa de inmediato es soltar el teclado.
   function irSinParpadeo() {
+    nativeSearchNavigating.current = true;
     soltarFoco();
     setNavLocOpen(false);
   }
@@ -1704,7 +1717,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
           return;
         }
         if (nativeSearchOpen && hasSearchService) {
-          closeNativeSearch();
+          irSinParpadeo();
           window.setTimeout(() => runCompactSearch({ coords: currentCoords, locationLabel: label }), 0);
           return;
         }
@@ -1726,7 +1739,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     // que lo atendió; si no, navega a la búsqueda.
     const open = (event: Event) => {
       const pedido = (event as CustomEvent<{ atendido?: boolean; campo?: "servicio" | "ubicacion" } | null>).detail;
+      // Marketplace pages also mount a desktop navbar inside a hidden wrapper.
+      // It must not create an invisible search sheet or retain its scroll lock.
+      if (!puenteTecladoRef.current?.getClientRects().length || pedido?.atendido) return;
       if (pedido) pedido.atendido = true;
+      event.stopImmediatePropagation();
       openNativeSearch();
       // Desde el campo «Ubicación» de la portada: el cursor va a la ubicación.
       if (pedido?.campo === "ubicacion") {
@@ -1762,6 +1779,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   useEffect(() => {
     if (!nativeSearchOpen) return;
     const enfocar = () => {
+      if (nativeSearchNavigating.current) return;
       const activo = document.activeElement;
       const servicio = nativeSearchInputRef.current;
       const yaEligioOtro = activo instanceof HTMLInputElement && activo !== servicio && activo !== puenteTecladoRef.current;
@@ -1842,14 +1860,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     // vacío se pasa a él, aunque queden coordenadas de una búsqueda anterior.
     const ubicacionEscrita = navLocation.trim().length > 0 || !!navLocationSel;
     if (ubicacionEscrita) {
-      closeNativeSearch();
+      irSinParpadeo();
       window.setTimeout(() => runCompactSearch({ categoria: id, servicio: picked ? repairVisibleText(picked.label) : undefined }), 0);
       return;
     }
-    window.setTimeout(() => {
-      nativeLocationInputRef.current?.focus();
-      setNavLocOpen(navLocation.trim().length >= 2);
-    }, 50);
+    // Keep the keyboard in this tap: an async focus closed/reopened it on iOS.
+    nativeLocationInputRef.current?.focus({ preventScroll: true });
+    setNavLocOpen(navLocation.trim().length >= 2);
   }
 
   function selectNavLocation(s: LocationSuggestion) {
@@ -1861,7 +1878,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     // Antes esto exigía `nativeSearchOpen`, o sea que solo buscaba en la hoja
     // del teléfono; en escritorio rellenaba el campo y no pasaba nada más.
     if (hasSearchService) {
-      if (nativeSearchOpen) closeNativeSearch();
+      if (nativeSearchOpen) irSinParpadeo();
       window.setTimeout(() => runCompactSearch({ location: s }), 0);
     }
   }
@@ -2549,6 +2566,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
         />
         {nativeSearchOpen && (
           <div
+            onMouseDown={(event) => {
+              // Suggestion buttons must not steal focus before their click.
+              if (event.target instanceof Element && event.target.closest("button")) event.preventDefault();
+            }}
             className="ccr-native-search-panel fixed left-0 right-0 top-0 z-[220] overflow-hidden bg-white px-4 pb-0 pt-[calc(env(safe-area-inset-top)+1rem)] lg:hidden"
           >
             <form
@@ -2880,7 +2901,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           window.setTimeout(() => runCompactSearch({ location: suggestion }), 0);
                           return;
                         }
-                        nativeSearchInputRef.current?.focus();
+                        nativeSearchInputRef.current?.focus({ preventScroll: true });
                         setSearchFocused(true);
                       }}
                       className="flex w-full items-center gap-3 rounded-xl px-2 py-2.5 text-left text-[16px] font-bold text-[#1A2744] active:bg-[#f4f7fa]"

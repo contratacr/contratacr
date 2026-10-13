@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { useContainedTouchScroll } from "@/hooks/use-contained-touch-scroll";
@@ -227,13 +227,17 @@ export function MarketplaceSearch({
     if (!open) return;
     setRecents(readRecentSearches(recentStorageKey));
     if (visitSurface) setVisitas(readRecentVisits(visitSurface));
-    const timer = window.setTimeout(() => fullInputRef.current?.focus(), 60);
     document.body.style.overflow = "hidden";
     return () => {
-      window.clearTimeout(timer);
       document.body.style.overflow = "";
     };
   }, [open, recentStorageKey]);
+
+  // Mount and focus within the opening gesture. A timeout plus blurring the
+  // header field briefly dismissed the mobile keyboard before it reopened.
+  useLayoutEffect(() => {
+    if (open) fullInputRef.current?.focus({ preventScroll: true });
+  }, [open]);
 
   function writeRecents(next: string[]) {
     const cleaned = next.map(normalizeRecent).filter(Boolean).slice(0, MAX_MARKETPLACE_RECENTS);
@@ -259,7 +263,6 @@ export function MarketplaceSearch({
     if (window.innerWidth < 1024) {
       setMobileField("primary");
       setOpen(true);
-      inputRef.current?.blur();
     }
   }
 
@@ -282,7 +285,7 @@ export function MarketplaceSearch({
     // are answered does the sheet close (the results are already filtering).
     if (secondary && !secondary.value.trim()) {
       setMobileField("secondary");
-      window.setTimeout(() => fullSecondaryInputRef.current?.focus(), 60);
+      fullSecondaryInputRef.current?.focus({ preventScroll: true });
       return;
     }
     closeMobileSearch();
@@ -302,7 +305,7 @@ export function MarketplaceSearch({
       saveRecent();
       setMobileField("secondary");
       setDesktopField("secondary");
-      window.setTimeout(() => (fullSecondaryInputRef.current ?? desktopSecondaryInputRef.current)?.focus(), 60);
+      (fullSecondaryInputRef.current ?? desktopSecondaryInputRef.current)?.focus({ preventScroll: true });
       return;
     }
     closeMobileSearch();
@@ -313,7 +316,7 @@ export function MarketplaceSearch({
     if (secondary?.value.trim() && faltaPrincipal) {
       setMobileField("primary");
       setDesktopField("primary");
-      window.setTimeout(() => inputRef.current?.focus(), 60);
+      (open ? fullInputRef.current : inputRef.current)?.focus({ preventScroll: true });
       return;
     }
     closeMobileSearch();
@@ -339,7 +342,12 @@ export function MarketplaceSearch({
   function chooseSecondarySuggestion(suggestion: string) {
     secondary?.onChange(suggestion);
     setDesktopField(null);
-    // Second field answered: the search is done — close the mobile sheet.
+    if (open && !value.trim()) {
+      setMobileField("primary");
+      fullInputRef.current?.focus({ preventScroll: true });
+      return;
+    }
+    // Both fields answered: live-filtered results can be shown immediately.
     if (open) closeMobileSearch();
   }
 
@@ -418,7 +426,9 @@ export function MarketplaceSearch({
         )}
       </div>
       {open && (
-        <div className="ccr-hoja-buscador fixed inset-0 z-[1300] flex flex-col bg-white text-[#162543] lg:hidden">
+        <div onMouseDown={(event) => {
+          if (event.target instanceof Element && event.target.closest("button")) event.preventDefault();
+        }} className="ccr-hoja-buscador fixed inset-0 z-[1300] flex flex-col bg-white text-[#162543] lg:hidden">
           <div className="shrink-0 space-y-3 px-4 py-4">
             <div className="flex h-13 min-w-0 items-center rounded-[10px] border border-[#e5e7eb] bg-white px-3">
               <button type="button" onClick={closeMobileSearch} aria-label={copy.back} className="grid h-10 w-10 shrink-0 place-items-center text-[#1A2744]">
