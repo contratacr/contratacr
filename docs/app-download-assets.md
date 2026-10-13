@@ -40,3 +40,11 @@ Generado con la herramienta integrada ImageGen, sin usar fotografías de persona
 Prompt final:
 
 > Use case: photorealistic-natural. Asset type: wide background photograph for the ContrataCR mobile app download section, approximately 2:1 landscape. Create a warm, approachable, naturally lit Costa Rican home workspace: pale warm plaster wall, a light oak tabletop along the bottom, a modest green plant near the far right edge, a window on the far right with a softly out-of-focus lush tropical garden. Quiet everyday home, professional editorial photography, realistic wood texture, soft morning sunlight, welcoming and calm, no luxury showroom styling. Composition: the left 55 percent is a clean low-detail warm wall with subtle shadows for an eventual dark navy text overlay. The center of the right half is uncluttered negative space for a tall front-facing phone mockup that will be added in website code; keep background behind it simple and softly focused. Do not draw a phone, screen, text, icons, logos, badges, people, or additional UI. Color palette warm cream, honey oak, soft leaf green with subtle cool teal shadows. Photorealistic, high quality, restrained natural detail, wide horizontal banner framing.
+
+## Imagen elegida por Isaac (13 de octubre de 2026)
+
+La composición actual usa la descarga «ContrataCR en el taller de carpintería.png», creada por Isaac con ChatGPT web. Sustituye el fondo acogedor y el teléfono CSS en la sección de descarga. El PNG original se conserva byte por byte en `public/stores/app-carpentry-original-20261013.png`: 2172 × 724 píxeles, 1 904 435 bytes. Se sirve con `unoptimized`, sin conversión ni recompresión. En escritorio acompaña el texto como fondo; en web móvil se muestra completa, sin recorte, encima del texto y los enlaces. El footer muestra los iconos de Apple y Android en ambos tamaños; los avisos de descarga siguen ocultos en la app nativa.
+
+SHA-256 original y publicado: `822760b76569dce4a254125b8e176a40948a9a708005e7bc4f8247969dc716fd`.
+
+El enlace compartido `/#descargar-app` ahora lleva a la sección tanto en PC como en móvil y reserva el espacio del header y del aviso superior.

@@ -2,7 +2,6 @@
 
 import { mobileDownloadPlatform, DOWNLOAD_DISMISS_COOKIE } from "@/lib/mobile-download-platform";
 import Image from "next/image";
-import { AppPhonePreview } from "./app-phone-preview";
 import { useLocale } from "next-intl";
 import { useEffect, useLayoutEffect, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
@@ -30,22 +29,19 @@ export function AppDownloadSection() {
   const native = useNativeApp();
   const en = useLocale() === "en";
   if (native) return null;
-  return <section id="descargar-app" data-testid="app-download-section" className="ccr-solo-web ccr-download-section relative hidden overflow-hidden bg-[#092532] lg:block">
-    <Image src="/stores/app-home-background-20261013.webp" fill sizes="100vw" alt="" aria-hidden="true" className="object-cover object-center" />
-    <div aria-hidden className="absolute inset-0 bg-[linear-gradient(90deg,#092532_0%,rgba(9,37,50,0.96)_30%,rgba(9,37,50,0.85)_45%,rgba(9,37,50,0.2)_65%,rgba(9,37,50,0.04)_100%)]" />
-    <div className="relative mx-auto grid min-h-[620px] max-w-7xl grid-cols-[1.1fr_1fr] items-center gap-12 px-10 py-16 xl:px-14">
+  return <section id="descargar-app" data-testid="app-download-section" className="ccr-solo-web ccr-download-section relative overflow-hidden bg-[#092532]">
+    <Image src="/stores/app-carpentry-original-20261013.png" width={2172} height={724} unoptimized alt={en ? "ContrataCR on a phone in a carpentry workshop" : "ContrataCR en un teléfono dentro de un taller de carpintería"} data-testid="app-download-artwork" className="block h-auto w-full lg:absolute lg:inset-0 lg:h-full lg:object-cover lg:object-right" />
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 hidden bg-[linear-gradient(90deg,rgba(9,37,50,0.82)_0%,rgba(9,37,50,0.76)_34%,rgba(9,37,50,0.55)_47%,transparent_62%)] lg:block" />
+    <div className="relative mx-auto px-6 py-8 sm:px-8 lg:grid lg:min-h-[620px] lg:max-w-7xl lg:grid-cols-[1.1fr_1fr] lg:items-center lg:gap-12 lg:px-10 lg:py-16 xl:px-14">
       <div className="max-w-xl text-white">
         <p className="mb-5 text-sm font-semibold tracking-[0.16em] text-[#88dcf5]">{en ? "AVAILABLE FOR iOS AND ANDROID" : "DISPONIBLE PARA iOS Y ANDROID"}</p>
-        <h2 className="text-[clamp(2.5rem,3.6vw,3.5rem)] font-extrabold leading-[1.08] tracking-tight">{en ? "Download the ContrataCR app" : "Descarga la app de ContrataCR"}</h2>
+        <h2 className="text-[clamp(1.75rem,3.6vw,3.5rem)] font-extrabold leading-[1.08] tracking-tight">{en ? "Download the ContrataCR app" : "Descarga la app de ContrataCR"}</h2>
         <p className="mb-7 mt-6 max-w-md text-lg leading-relaxed text-white/80">{en ? "Find professionals, post projects or offer your services from your phone." : "Encuentra profesionales, publica proyectos u ofrece tus servicios desde tu celular."}</p>
         <AppStoreLinks />
-        <div className="mt-7 flex items-center gap-4">
+        <div className="mt-7 hidden items-center gap-4 lg:flex">
           <Image src="/stores/download-app-qr.svg" width={112} height={112} alt={en ? "Scan to download ContrataCR" : "Escanea para descargar ContrataCR"} className="shrink-0 rounded-lg bg-white" />
           <div className="max-w-[240px]"><p className="text-sm font-semibold">{en ? "Scan with your phone" : "Escanea con tu celular"}</p><p className="mt-2 text-sm leading-relaxed text-white/65">{en ? "Sign in with your existing account." : "Ingresa con tu cuenta de siempre."}</p></div>
         </div>
-      </div>
-      <div aria-hidden="true" className="flex items-center justify-center py-2" data-testid="app-phone-stage">
-        <AppPhonePreview />
       </div>
     </div>
   </section>;
@@ -55,7 +51,7 @@ export function AppStoreFooterLinks() {
   const native = useNativeApp();
   const en = useLocale() === "en";
   if (native) return null;
-  return <div className="ccr-solo-web hidden items-center gap-5 text-sm lg:flex" data-testid="app-store-footer-links">
+  return <div className="ccr-solo-web flex items-center gap-5 text-sm" data-testid="app-store-footer-links">
     <span className="text-white">{en ? "Mobile app" : "App móvil"}</span>
     <a href={APP_STORES.ios} aria-label={en ? "Download ContrataCR for iOS" : "Descargar ContrataCR para iOS"} className="inline-flex h-11 w-11 items-center justify-center text-white transition-colors hover:text-[#88dcf5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"><Image src="/stores/apple-icon.svg" width={21} height={24} alt="" className="h-6 w-auto" /></a>
     <a href={APP_STORES.android} aria-label={en ? "Download ContrataCR for Android" : "Descargar ContrataCR para Android"} className="inline-flex h-11 w-11 items-center justify-center text-white transition-colors hover:text-[#88dcf5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"><Image src="/stores/android-icon.svg" width={23} height={24} alt="" className="h-6 w-auto" /></a>
@@ -76,16 +72,36 @@ export function MobileAppDownloadBanner({ initialPlatform = null, initialDismiss
   const [blocked, setBlocked] = useState(false);
   const [downloadRequested, setDownloadRequested] = useState(false);
   useEffect(() => {
+    let cancelled = false;
+    let alignAllowed = true;
+    const stopAligning = () => { alignAllowed = false; };
+    const alignDownload = () => {
+      if (cancelled || !alignAllowed || native || location.hash !== "#descargar-app" || !window.matchMedia("(max-width: 1023px)").matches) return;
+      const section = document.getElementById("descargar-app");
+      if (!section) return;
+      const headerBottom = Math.max(0, ...Array.from(document.querySelectorAll("header")).map(el => el.getBoundingClientRect()).filter(rect => rect.height > 0).map(rect => rect.bottom));
+      section.scrollIntoView({ block: "start", behavior: "instant" });
+      window.scrollBy({ top: section.getBoundingClientRect().top - headerBottom - 12, behavior: "instant" });
+    };
     const sync = () => {
       const requested = location.hash === "#descargar-app";
       setDownloadRequested(requested);
       if (requested && window.matchMedia("(max-width: 1023px)").matches && !native) {
+        alignAllowed = true;
         setDismissed(false);
-        window.scrollTo({ top: 0, behavior: "instant" });
+        requestAnimationFrame(alignDownload);
       }
     };
+    const headerObserver = new ResizeObserver(() => requestAnimationFrame(alignDownload));
+    document.querySelectorAll("header").forEach(header => headerObserver.observe(header));
+    const intentEvents = ["wheel", "touchstart", "pointerdown", "keydown"] as const;
+    intentEvents.forEach(event => window.addEventListener(event, stopAligning, { passive: true }));
     sync(); window.addEventListener("hashchange", sync);
-    return () => window.removeEventListener("hashchange", sync);
+    // Fonts and streamed home content can change the anchor position on a
+    // cold visit. Align once more after loading, using the real header height.
+    const loaded = document.readyState === "complete" ? Promise.resolve() : new Promise<void>(resolve => window.addEventListener("load", () => resolve(), { once: true }));
+    void Promise.all([document.fonts.ready, loaded]).then(() => requestAnimationFrame(alignDownload));
+    return () => { cancelled = true; headerObserver.disconnect(); intentEvents.forEach(event => window.removeEventListener(event, stopAligning)); window.removeEventListener("hashchange", sync); };
   }, [native]);
   // Public browsing pages share the notice; private tasks keep their space.
   const path = pathname.replace(/^\/(es|en)(?=\/|$)/, "") || "/";

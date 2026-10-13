@@ -5,7 +5,7 @@ test('web: tiendas correctas, reserva, teclado y cierre persistente', async ({pa
   if(test.info().project.name==='android-download')await page.setViewportSize({width:320,height:780});
   test.skip((page.viewportSize()?.width ?? 1280) >= 1024, "The download notice only appears on mobile web.");
   await page.goto('/');
-  await expect(page.getByTestId('app-download-section')).toBeHidden();
+  await expect(page.getByTestId('app-download-section')).toBeVisible();
   const banner=page.getByTestId('mobile-app-download');
   await expect(banner).toBeVisible();
   const href=await banner.locator('a').getAttribute('href');
@@ -16,7 +16,7 @@ test('web: tiendas correctas, reserva, teclado y cierre persistente', async ({pa
   expect(sizes.spacer).toEqual(sizes.notice);
   const notice=await banner.boundingBox(), header=await page.getByTestId('landing-navbar').boundingBox();
   expect(notice!.y).toBe(0);expect(header!.y).toBe(notice!.height);
-  await expect(page.getByTestId('app-store-footer-links')).toBeHidden();
+  await expect(page.getByTestId('app-store-footer-links')).toBeVisible();
   await page.evaluate(()=>document.documentElement.setAttribute('data-keyboard-open',''));
   await expect(banner).toHaveCount(0);
   await page.evaluate(()=>document.documentElement.removeAttribute('data-keyboard-open'));
@@ -50,7 +50,8 @@ test('shared download anchor always remains useful, including after dismissing t
   await expect(banner).toBeVisible();
   await banner.getByRole('button').click();await expect(banner).toHaveCount(0);
   await page.reload();await expect(banner).toBeVisible();
-  expect(await page.evaluate(()=>scrollY)).toBe(0);
+  await expect(page.getByTestId('app-download-section')).toBeInViewport();
+  await expect.poll(async()=>page.evaluate(()=>{const section=document.querySelector('#descargar-app')!.getBoundingClientRect();const header=document.querySelector('[data-testid=landing-navbar]')!.getBoundingClientRect();return section.top>=header.bottom-1;})).toBe(true);
   if (process.env.DOWNLOAD_DESIGN_EVIDENCE) {
    mkdirSync(process.env.DOWNLOAD_DESIGN_EVIDENCE,{recursive:true});
    const os=await page.evaluate(()=>/Android/.test(navigator.userAgent)?'android':'ios');
@@ -59,7 +60,7 @@ test('shared download anchor always remains useful, including after dismissing t
  } else {
   const section=page.getByTestId('app-download-section');await expect(section).toBeVisible();
   await expect(section.getByRole('heading',{name:'Descarga la app de ContrataCR'})).toBeVisible();
-  await expect(section.getByTestId('app-phone-screen').locator('img')).toHaveAttribute('src',/app-home-20261013/);
+  await expect(section.getByTestId('app-download-artwork')).toHaveAttribute('src','/stores/app-carpentry-original-20261013.png');
   await expect(section).toBeInViewport();
   await expect(page.getByTestId('app-store-footer-links')).toBeVisible();
   if (process.env.DOWNLOAD_DESIGN_EVIDENCE) {
@@ -110,8 +111,7 @@ test('notice is centered, remains above the header on public pages and respects 
  }
 });
 
-test('desktop footer uses Apple and Android symbols with accessible store links',async({page})=>{
- test.skip((page.viewportSize()?.width ?? 1280)<1024, "The footer store icons only appear on desktop web.");
+test('web footer uses Apple and Android symbols with accessible store links',async({page})=>{
  await page.goto('/');const links=page.getByTestId('app-store-footer-links');
  await expect(links.locator('a')).toHaveCount(2);await expect(links.locator('img')).toHaveCount(2);
  await expect(links.getByRole('link',{name:'Descargar ContrataCR para iOS'})).toHaveAttribute('href',/apps.apple.com/);

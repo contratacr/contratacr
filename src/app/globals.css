@@ -2391,6 +2391,8 @@ html.ccr-menu-sin-cierre .ccr-menu-completo { transition: none !important; }
 .ccr-download-section { scroll-margin-top: 64px; }
 @media (max-width: 1023px) {
   html:not(.ccr-native-app):is([data-web-download-banner], :has(.ccr-download-banner-wrap)) .ccr-app-header { top: 76px; }
+  .ccr-download-section { scroll-margin-top: 144px; }
+  html:not(.ccr-native-app):is([data-web-download-banner], :has(.ccr-download-banner-wrap)) .ccr-download-section { scroll-margin-top: 220px; }
 }
 @media (min-width: 1024px) {
   .ccr-download-banner-wrap { display: none; }
