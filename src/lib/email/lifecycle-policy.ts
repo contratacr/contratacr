@@ -1,3 +1,4 @@
+import { MOBILE_APP_CAMPAIGN } from "./mobile-app-campaign";
 import { REVIEW_CAMPAIGN, SERVICES_CAMPAIGN, type CampaignHistory, normalizeCampaignEmail, isInternalCampaignRecipient } from "./campaign-policy";
 import { tienePrecioReal } from "@/lib/notifications/empujones-del-perfil";
 import { PROFILE_REMINDER, professionalProfileIncomplete } from "./profile-reminder";
@@ -5,6 +6,7 @@ import { PROFILE_REMINDER, professionalProfileIncomplete } from "./profile-remin
 export const LIFECYCLE_CAMPAIGNS = [
   PROFILE_REMINDER,
   { ...REVIEW_CAMPAIGN, days: 7, audience: "professional", enabled: true },
+  MOBILE_APP_CAMPAIGN,
   { key: "precio-desde-profesionales-2026", days: 21, audience: "professional", enabled: true,
     subject: "Ayuda a tus clientes a conocer tu precio desde",
     body: "Un cliente puede dudar en contactarte si no tiene ninguna referencia de cuánto cuesta tu servicio.\n\nAgrega un precio «desde» para orientarlo antes de conversar. No es una cotización definitiva: el precio final depende del trabajo y lo acuerdas con el cliente.\n\nEn tu panel, edita tus servicios y añade el precio inicial de los que puedas ofrecer con una referencia real.",
@@ -19,7 +21,7 @@ export const LIFECYCLE_CAMPAIGNS = [
     ctaLabel: "Crear un proyecto", ctaPath: "/publicar-proyecto" },
 ] as const;
 
-export type LifecycleAccount = { id: string; email: string | null; full_name: string | null; created_at: string | null; is_disabled: boolean | null; role: string | null; is_provider: boolean | null; professionalIntent?: boolean; emailConfirmed?: boolean; avatar_url?: string | null };
+export type LifecycleAccount = { id: string; email: string | null; full_name: string | null; created_at: string | null; is_disabled: boolean | null; role: string | null; is_provider: boolean | null; hasUsedMobileApp?: boolean; professionalIntent?: boolean; emailConfirmed?: boolean; avatar_url?: string | null };
 export type LifecycleProfessional = { profile_id: string | null; created_at: string | null; review_count: number | null; services: unknown; is_banned: boolean | null; oculto_del_buscador: boolean | null; slug: string | null; [key: string]: unknown };
 const DAY = 86_400_000;
 export function lifecycleCandidate(account: LifecycleAccount, pro: LifecycleProfessional | undefined,
@@ -44,7 +46,10 @@ export function lifecycleCandidate(account: LifecycleAccount, pro: LifecycleProf
       || age < campaign.days * DAY || own.some((r) => r.campana === campaign.key)) continue;
     if (campaign.key === PROFILE_REMINDER.key && (!incomplete || account.emailConfirmed === false)) continue;
     if (campaign.key !== PROFILE_REMINDER.key && pendingCompletion) continue;
-    if (campaign.audience === "all" && (pendingReview || pendingPrice)) continue;
+    // Unknown evidence fails closed for this invitation. Other campaigns keep
+    // working if mobile measurement is temporarily unavailable.
+    if (campaign.key === MOBILE_APP_CAMPAIGN.key && (account.hasUsedMobileApp !== false || account.emailConfirmed !== true)) continue;
+    if (campaign.audience === "all" && (pendingReview || (pendingPrice && campaign.key !== MOBILE_APP_CAMPAIGN.key))) continue;
     if (campaign.key === REVIEW_CAMPAIGN.key && Number(pro?.review_count ?? 0) > 0) continue;
     if (campaign.key === "precio-desde-profesionales-2026" && tienePrecioReal(pro?.services)) continue;
     if (campaign.key === "crear-proyecto-clientes-2026" && hasProject) continue;
