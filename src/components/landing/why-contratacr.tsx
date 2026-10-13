@@ -15,8 +15,8 @@ export async function WhyContratacr() {
     texto: t(`guia.${clave}.texto`),
     cta: t(`guia.${clave}.cta`),
     href: { profesionales: "/profesionales", proyectos: "/publicar-proyecto", empleos: "/empleos", promociones: "/promociones" }[clave],
-    video: `/guia/${clave}.mp4`,
-    poster: `/guia/${clave}.jpg`,
+    video: `/guia/${clave}.mp4?v=20261013-check`,
+    poster: `/guia/${clave}.jpg?v=20261013-check`,
     alt: t(`guia.${clave}.alt`),
   }));
 
