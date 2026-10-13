@@ -13,3 +13,5 @@ El botón lleva a `https://contratacr.com/#descargar-app` con los parámetros de
 Los avisos enviados manualmente por WhatsApp no se detectan ni se marcan como correo enviado. No se han importado exclusiones de WhatsApp porque no se proporcionó el listado de quienes ya recibieron ese aviso.
 
 Validación: pruebas de elegibilidad, historial, revalidación antes de Brevo y conservación del ancla, además de SQL local para evidencia histórica, permisos, cuota y exclusión atómica. Las pruebas no envían correos reales.
+
+El 13 de octubre de 2026 se actualiza el mensaje con el texto personal de Isaac: saludo por nombre, anuncio de Android/iPhone, comunidad de más de 300 profesionales, misma cuenta y descarga gratuita. Firma «Isaac · ContrataCR». Se confirmó en producción que había 320 profesionales no bloqueados. Se mantiene `descargar-app-2026`, por lo que editar el texto nunca reinicia el historial. Antes del ajuste no constaban envíos de esta campaña; la última ejecución era una simulación.
