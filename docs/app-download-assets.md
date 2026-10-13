@@ -48,3 +48,16 @@ La composición actual usa la descarga «ContrataCR en el taller de carpintería
 SHA-256 original y publicado: `822760b76569dce4a254125b8e176a40948a9a708005e7bc4f8247969dc716fd`.
 
 El enlace compartido `/#descargar-app` ahora lleva a la sección tanto en PC como en móvil y reserva el espacio del header y del aviso superior.
+
+## Recorridos de la guía recuperados (13 de octubre de 2026)
+
+Se recuperan los pasos del guion de `82e4d766`, regrabados con la interfaz actual. La actualización anterior mostraba tarjetas, el modal del check y un detalle; sustituyó por error los recorridos completos.
+
+- Profesionales: portada → buscar cámaras de seguridad → Alajuela → resultados → SG Solutions → servicios → reseñas → casos de éxito → formación → señalar WhatsApp sin abrirlo.
+- Proyectos: portada → menú → Proyectos → tablero → señalar Publicar proyecto → formulario vacío y desplazamiento.
+- Promociones: portada → menú → Promociones → tablero → señalar Publicar promoción → formulario vacío y desplazamiento.
+- Empleos: portada → menú → Empleos → tablero → señalar Publicar empleo → formulario vacío y desplazamiento.
+
+Las pantallas públicas son de producción, con analítica excluida y solicitudes de escritura bloqueadas. Los formularios se muestran en el servidor local del test actual con el actor sintético de regresión; no se llenan ni se envían y no se ejecuta limpieza de datos. Se conservan el desplazamiento suave a 30 fps, los toques visibles y los fundidos de la grabación anterior. Los nuevos recursos usan `?v=20261013-original-flow`.
+
+Para repetir los formularios desde main, establecer `GUIDE_TEST_ENV_FILE` en el archivo privado `.env.test` del checkout test y `GUIDE_FORM_BASE` en su servidor loopback. El guion verifica el proyecto de test antes de iniciar la sesión.
