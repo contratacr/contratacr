@@ -147,7 +147,7 @@ jobs:
         if: github.event_name == 'push'
         run: >-
           npx playwright test
-          public-smoke app-download mobile-menu-surface verification-badges
+          public-smoke app-download mobile-menu-surface verification-badges navbar-brand-consistency
 
       - name: Require clean push smoke results
         if: github.event_name == 'push'
@@ -189,7 +189,7 @@ jobs:
           PLAYWRIGHT_WEBKIT: "1"
         run: >-
           npx playwright test --project=webkit-mobile
-          public-smoke search-results professional-profile services recent-visual-regression
+          public-smoke search-results professional-profile services recent-visual-regression navbar-brand-consistency
 
       - name: Install Playwright browser for a manual release regression
         if: github.event_name != 'push' && steps.novedad.outputs.repetir != 'false'

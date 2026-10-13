@@ -55,6 +55,9 @@ jobs:
       - name: Prevent browser-only account data
         run: node scripts/audit-browser-storage.mjs
 
+      - name: Verify stable logo assets
+        run: node scripts/ci/verify-brand-wordmark.mjs
+
       - name: Security smoke
         run: npm run security:smoke
 
