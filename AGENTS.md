@@ -44,3 +44,9 @@ Before pushing:
 ## Mobile release history
 
 Isaac requires a saved release history for every future App Store and Google Play release. Before submitting an update, record its public version, native build number, platform, source commit, actual release date/status, validation and the exact localized store notes in `docs/mobile-release-history.md`. Keep notes concise and user-facing; only describe changes included in that release. Distinguish shared web deployments from native store releases. Never invent missing historical dates, builds or notes, or renumber an already published version for appearance.
+
+## Logo stability (required brand contract)
+
+Reuse `ContrataCRLogo` / `ContrataCRMark` from `src/components/landing/landing-navbar.tsx` for navbar, drawer, footer and account headers. Never recreate the brand name using HTML text, a different font, SVG `<text>`, or per-page typography. The approved wordmarks are `public/brand/wordmark-light.svg` and `wordmark-dark.svg`: outlined paths, independent of web-font loading. Only choose the contrast variant appropriate to the background; do not alter lettering, proportions or spacing without Isaac explicitly requesting a brand change. First-run prepaint must reference the same asset as the hydrated logo.
+
+For changes touching shared headers, branding or font loading, run `node scripts/ci/verify-brand-wordmark.mjs` and `tests/e2e/navbar-brand-consistency.spec.ts` in desktop Chromium, mobile Chromium and mobile WebKit. Keep this regression in push smoke and Safari runs; do not remove or weaken it to accommodate a font-dependent logo. The cold-load test intentionally blocks WOFF2 requests.
