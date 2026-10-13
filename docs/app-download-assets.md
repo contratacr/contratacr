@@ -1,12 +1,12 @@
 # Recursos de la sección de descarga
 
-## Foto del teléfono
+## Foto anterior (ya no se muestra)
 
 - Autor: Valentin Ilas.
 - Fuente: https://www.pexels.com/photo/smartphone-on-wooden-table-33039024/
 - Licencia revisada: https://www.pexels.com/license/ (permite uso gratuito, modificaciones y banners de producto).
 - Archivo local optimizado: `public/stores/app-phone-table.webp`.
-- La pantalla de ContrataCR se proyecta con una malla SVG dentro de las cuatro esquinas del cristal, con recorte redondeado y reflejo sutil; la captura es `public/guia/profesionales.jpg`. No se implica respaldo del fotógrafo ni del fabricante del teléfono.
+- Se conserva el recurso y su atribución, pero fue sustituido por un mockup frontal para evitar desalineación y distorsión al ampliar.
 
 ## QR
 
@@ -25,4 +25,4 @@ Referencias en español: https://www.habitissimo.es/landing/app-movil-pro y http
 
 Texto: «Descarga la app de ContrataCR». Descripción: «Encuentra profesionales, publica proyectos u ofrece tus servicios desde tu celular». Ayuda: «Ingresa con tu cuenta de siempre».
 
-`AppPhonePreview` usa la foto de 1200 × 800 y las esquinas del cristal (645,150), (848,226), (689,679), (469,609). La proyección se divide en triángulos SVG con un pequeño solapamiento para evitar costuras. Se evita `foreignObject` con `matrix3d` porque Safari desplazaba la captura fuera del marco. La captura original y el QR conservan sus destinos.
+`AppPhonePreview` muestra la captura real `public/guia/profesionales.jpg` completa y sin deformación dentro de un marco frontal hecho con CSS. La imagen mantiene su relación de aspecto, sin mallas ni perspectiva. El dispositivo está centrado en la segunda columna del mismo contenedor que el texto; el fondo radial usa los colores de ContrataCR. No se presenta como fotografía de un dispositivo real.
