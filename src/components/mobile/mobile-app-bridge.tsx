@@ -1,11 +1,12 @@
 "use client";
+import { installNativeEdgeBackGesture, visibleNativeBackControl } from "@/lib/mobile/edge-back-gesture";
 import { syncAnalyticsPlatform } from "@/lib/analytics/platform-client";
 
 import { useEffect, useLayoutEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { esRutaDeBusqueda } from "@/lib/buscar-url";
 import { esServicioDelCatalogo } from "@/lib/data/categories";
-import { isNativeAppRuntime } from "@/hooks/use-native-app";
+import { isNativeAppRuntime, useNativeApp } from "@/hooks/use-native-app";
 import { NATIVE_ONBOARDING_COMPLETED_KEY } from "@/lib/mobile-onboarding";
 
 // The first history entry of a WebView session is tagged so the hardware back
@@ -108,6 +109,12 @@ function mountNativeFirstRunPrepaint() {
 
 export function MobileAppBridge() {
   const pathname = usePathname();
+  const nativeApp = useNativeApp();
+
+  useEffect(() => {
+    if (!nativeApp) return;
+    return installNativeEdgeBackGesture((control) => control.click());
+  }, [nativeApp]);
 
   useEffect(() => {
     if (!isNativeAppRuntime()) return;
@@ -363,6 +370,8 @@ export function MobileAppBridge() {
 
         const handle = await App.addListener("backButton", () => {
           if (dismissTopMostNativeOverlay()) return;
+          const sectionBack = visibleNativeBackControl();
+          if (sectionBack) { sectionBack.click(); return; }
 
           const state = window.history.state as Record<string, unknown> | null;
           if (state?.[NATIVE_BACK_ROOT_STATE_KEY] || window.history.length <= 1) {

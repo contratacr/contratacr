@@ -103,6 +103,7 @@ export function WelcomeAccessScreen({
           type="button"
           onClick={onClose}
           aria-label={english ? "Back" : "Volver"}
+          data-native-back="welcome-access"
           data-testid="native-onboarding-close"
           className="absolute left-4 top-[max(18px,env(safe-area-inset-top))] z-10 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/18 text-white ring-1 ring-white/25 backdrop-blur-sm transition active:scale-95 motion-reduce:transform-none"
         >
