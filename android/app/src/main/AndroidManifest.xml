@@ -18,6 +18,40 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="contratacr.com" />
+                <data android:pathPrefix="/dashboard" />
+                <data android:pathPrefix="/continuar-perfil" />
+                <data android:pathPrefix="/buscar" />
+                <data android:pathPrefix="/servicios" />
+                <data android:pathPrefix="/profesionales" />
+                <data android:pathPrefix="/proyectos" />
+                <data android:pathPrefix="/empleos" />
+                <data android:pathPrefix="/promociones" />
+                <data android:pathPrefix="/publicar-proyecto" />
+                <data android:pathPrefix="/api/trabajos/reportar" />
+                <data android:pathPrefix="/es/dashboard" />
+                <data android:pathPrefix="/es/continuar-perfil" />
+                <data android:pathPrefix="/es/buscar" />
+                <data android:pathPrefix="/es/servicios" />
+                <data android:pathPrefix="/es/profesionales" />
+                <data android:pathPrefix="/es/proyectos" />
+                <data android:pathPrefix="/es/empleos" />
+                <data android:pathPrefix="/es/promociones" />
+                <data android:pathPrefix="/es/publicar-proyecto" />
+                <data android:pathPrefix="/en/dashboard" />
+                <data android:pathPrefix="/en/continuar-perfil" />
+                <data android:pathPrefix="/en/buscar" />
+                <data android:pathPrefix="/en/servicios" />
+                <data android:pathPrefix="/en/profesionales" />
+                <data android:pathPrefix="/en/proyectos" />
+                <data android:pathPrefix="/en/empleos" />
+                <data android:pathPrefix="/en/promociones" />
+                <data android:pathPrefix="/en/publicar-proyecto" />
+            </intent-filter>
         </activity>
 
         <provider
