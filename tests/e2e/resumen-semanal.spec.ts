@@ -1,5 +1,5 @@
 import { expect, test } from "playwright/test";
-import { enlaceDeReporte, semanaAnterior } from "../../src/lib/notifications/resumen-semanal";
+import { enlaceDeReporte, semanaAnterior, enviarResumenSemanal } from "../../src/lib/notifications/resumen-semanal";
 import { canRunSeededRegression, regressionAdminClient } from "./seed";
 import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccount } from "./disposable-account";
 
@@ -12,6 +12,11 @@ import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccou
 //    el botón «Confirmar».
 
 test.describe("resumen semanal a profesionales", () => {
+  test("paused summary cannot query recipients or send, including manual calls", async () => {
+    const db = new Proxy({}, { get() { throw new Error("Paused delivery must not access the database"); } });
+    const result = await enviarResumenSemanal(db as Parameters<typeof enviarResumenSemanal>[0]);
+    expect(result).toMatchObject({ paused: true, enviados: 0 });
+  });
   test("la puerta interna exige el secreto de las tareas", async ({ request }) => {
     const sinSecreto = await request.post("/api/internal/resumen-semanal");
     expect([401, 503]).toContain(sinSecreto.status());

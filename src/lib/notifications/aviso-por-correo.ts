@@ -64,16 +64,18 @@ export async function avisarPorCorreo(aviso: AvisoPorCorreo): Promise<number> {
     const ids = [...new Set(aviso.destinatarios)].filter(Boolean);
     if (!ids.length) return 0;
     const db = createAdminClient();
-    const { data: perfiles } = await db.from("profiles").select("id, email, full_name, is_disabled").in("id", ids);
+    const { data: perfiles, error: perfilesError } = await db.from("profiles").select("id, email, full_name, is_disabled").in("id", ids);
     // Un profesional bloqueado por el admin no recibe trabajo por correo.
-    const { data: bloqueados } = await db.from("professionals").select("profile_id").in("profile_id", ids).eq("is_banned", true);
+    const { data: bloqueados, error: bloqueadosError } = await db.from("professionals").select("profile_id").in("profile_id", ids).eq("is_banned", true);
+    if (perfilesError || bloqueadosError) throw perfilesError || bloqueadosError;
     const sinTrabajo = new Set((bloqueados ?? []).map((b) => b.profile_id));
     const candidatos = (perfiles ?? [])
       .filter((p) => !sinTrabajo.has(p.id) && !p.is_disabled && p.email && p.email.includes("@") && !NO_ENTREGABLE.test(p.email.trim()))
       .map((p) => ({ correo: normalizarCorreo(p.email!), nombre: primerNombre(p.full_name) }));
     if (!candidatos.length) return 0;
 
-    const { data: bajas } = await db.from("email_bajas").select("correo").in("correo", candidatos.map((c) => c.correo));
+    const { data: bajas, error: bajasError } = await db.from("email_bajas").select("correo").in("correo", candidatos.map((c) => c.correo));
+    if (bajasError) throw bajasError;
     const fuera = new Set((bajas ?? []).map((b) => normalizarCorreo(b.correo)));
     const lista = candidatos.filter((c) => !fuera.has(c.correo));
 
