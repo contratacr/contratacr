@@ -8,6 +8,7 @@ import fs from "node:fs";
 // source of truth. The exact occurrence count makes additions fail CI even inside
 // a previously reviewed file.
 const reviewed = new Map([
+  ["src/components/mobile/campaign-app-links.tsx", { count: 2, reason: "session-scoped boolean preventing repeated cold-launch navigation; no signed URLs, tokens, identity or account-owned records are stored" }],
   ["src/components/analytics/usage-capture.tsx", { count: 4, reason: "anonymous session ID/time and successful first-use delivery marker; all account access, registration and usage metrics are stored server-side" }],
   ["src/hooks/use-auth.ts", { count: 12, reason: "authenticated user/avatar render cache, plus a session-scoped flag so an unasked sign-out is reported once" }],
   ["src/hooks/use-mode.ts", { count: 5, reason: "tab-scoped panel-mode preference and its storage-event subscription, cleared on sign-out so the next login lands on the account's own panel" }],

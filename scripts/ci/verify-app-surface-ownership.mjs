@@ -24,6 +24,7 @@ const pageRules = [
 ];
 
 const handlerRules = [
+  [/^\/descargar$/, "app-download.spec.ts"],
   [/^\/auth\/callback$/, "product-contract.spec.ts"],
   [/^\/api\/admin(?:\/|$)/, "admin-smoke.spec.ts"],
   [/^\/api\/ai-assistant(?:\/|$)/, "ai-assistant.spec.ts"],
