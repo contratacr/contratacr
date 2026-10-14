@@ -2827,6 +2827,8 @@
     "unarchive": "Unarchive",
     "delete": "Delete",
     "confirmDelete": "Sure?",
+    "downloadUpdateRequired": "Update ContrataCR to save files from chat.",
+    "downloadFailed": "Could not download the file. Try again.",
     "loadingConversations": "Loading conversations",
     "loadingMessages": "Loading messages",
     "archived": "Archived",

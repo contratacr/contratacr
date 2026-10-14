@@ -456,8 +456,8 @@ export function DirectChatInbox({ alCambiarSubvista }: {
     catch (error) {
       if (error instanceof Error && /cancel/i.test(error.message)) return;
       setAttachmentError(error instanceof Error && error.message === "native-update-required"
-        ? (isEn ? "Update ContrataCR to save files from chat." : "Actualiza ContrataCR para guardar archivos del chat.")
-        : (isEn ? "Could not download the file. Try again." : "No se pudo descargar el archivo. Inténtalo de nuevo."));
+        ? tChat("downloadUpdateRequired")
+        : tChat("downloadFailed"));
       setImagePreview(null);
     } finally { setDownloadingFile(false); }
   }
