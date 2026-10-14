@@ -35,6 +35,17 @@ test.describe("resumen semanal a profesionales", () => {
     expect(semanaAnterior(new Date("2026-10-12T05:00:00Z")).semana).toBe("2026-09-28");
   });
 
+  test("old signed links explain the week and quantity without recording a response", async ({ page }) => {
+    const link = new URL(enlaceDeReporte("00000000-0000-4000-8000-000000000001", "2026-10-05", 2));
+    await page.goto(link.pathname + link.search);
+    await expect(page.getByRole("heading", { name: "¿Cuántos trabajos conseguiste a través de ContrataCR?" })).toBeVisible();
+    await expect(page.getByText("Tu respuesta: 2 trabajos. Todavía no se ha guardado.")).toBeVisible();
+    await expect(page.getByText(/2026-10-05/)).toBeVisible();
+    await page.emulateMedia({ colorScheme: "dark" });
+    await expect(page.locator(".ccr-light-logo")).toBeVisible();
+    await expect(page.locator(".ccr-dark-logo")).toBeHidden();
+  });
+
   test("un enlace con firma inválida no anota nada", async ({ request }) => {
     const r = await request.get("/api/trabajos/reportar?p=00000000-0000-4000-8000-000000000001&s=2026-10-06&n=2&f=falsa");
     expect(r.status()).toBe(400);
@@ -55,12 +66,12 @@ test.describe("resumen semanal a profesionales", () => {
 
       const enlace = new URL(enlaceDeReporte(pro.professionalId!, semana, 2));
       await page.goto(`${enlace.pathname}${enlace.search}`);
-      await expect(page.getByRole("heading", { name: "¿Con cuántas cerraste trabajo?" })).toBeVisible();
-      await expect(page.getByText("Vas a anotar: 2.")).toBeVisible();
+      await expect(page.getByRole("heading", { name: "¿Cuántos trabajos conseguiste a través de ContrataCR?" })).toBeVisible();
+      await expect(page.getByText("Tu respuesta: 2 trabajos. Todavía no se ha guardado.")).toBeVisible();
       const { data: antes } = await db.from("trabajos_reportados").select("cerrados").eq("professional_id", pro.professionalId!).eq("semana", semana).single();
       expect(antes?.cerrados).toBeNull();
 
-      await page.getByRole("button", { name: "Confirmar" }).click();
+      await page.getByRole("button", { name: "Confirmar respuesta" }).click();
       await expect(page.getByRole("heading", { name: "¡Gracias!" })).toBeVisible();
       const { data: despues } = await db.from("trabajos_reportados").select("cerrados, respondido_en").eq("professional_id", pro.professionalId!).eq("semana", semana).single();
       expect(despues?.cerrados).toBe(2);

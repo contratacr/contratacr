@@ -1,5 +1,102 @@
 {
   "webcredentials": {
-    "apps": ["LPB3Q4LJ5Z.com.contratacr.app"]
+    "apps": [
+      "LPB3Q4LJ5Z.com.contratacr.app"
+    ]
+  },
+  "applinks": {
+    "details": [
+      {
+        "appIDs": [
+          "LPB3Q4LJ5Z.com.contratacr.app"
+        ],
+        "components": [
+          {
+            "/": "/dashboard/*"
+          },
+          {
+            "/": "/continuar-perfil"
+          },
+          {
+            "/": "/buscar*"
+          },
+          {
+            "/": "/servicios*"
+          },
+          {
+            "/": "/profesionales/*"
+          },
+          {
+            "/": "/proyectos*"
+          },
+          {
+            "/": "/empleos*"
+          },
+          {
+            "/": "/promociones*"
+          },
+          {
+            "/": "/publicar-proyecto"
+          },
+          {
+            "/": "/api/trabajos/reportar"
+          },
+          {
+            "/": "/es/dashboard/*"
+          },
+          {
+            "/": "/es/continuar-perfil"
+          },
+          {
+            "/": "/es/buscar*"
+          },
+          {
+            "/": "/es/servicios*"
+          },
+          {
+            "/": "/es/profesionales/*"
+          },
+          {
+            "/": "/es/proyectos*"
+          },
+          {
+            "/": "/es/empleos*"
+          },
+          {
+            "/": "/es/promociones*"
+          },
+          {
+            "/": "/es/publicar-proyecto"
+          },
+          {
+            "/": "/en/dashboard/*"
+          },
+          {
+            "/": "/en/continuar-perfil"
+          },
+          {
+            "/": "/en/buscar*"
+          },
+          {
+            "/": "/en/servicios*"
+          },
+          {
+            "/": "/en/profesionales/*"
+          },
+          {
+            "/": "/en/proyectos*"
+          },
+          {
+            "/": "/en/empleos*"
+          },
+          {
+            "/": "/en/promociones*"
+          },
+          {
+            "/": "/en/publicar-proyecto"
+          }
+        ]
+      }
+    ]
   }
 }
