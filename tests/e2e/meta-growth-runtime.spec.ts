@@ -15,7 +15,7 @@ function load<T>(file: string, mocks: Record<string,unknown>, globals: Record<st
 }
 const request=(cookie="cc_analytics_sid=visitor; ccr_meta_consent=enabled",host="contratacr.com",ua="Mozilla/5.0")=>new Request(`https://${host}/api/projects`,{headers:{cookie,"user-agent":ua}});
 test("server consent, native, bots, test domains and attribution use real runtime guards",()=>{
- const lib=load<typeof import("../../src/lib/analytics/growth-server")>("src/lib/analytics/growth-server.ts",{"server-only":{},"./platform":platform,"./growth-contract":contract,"./trafico-automatizado":{esPeticionAutomatizada:(cookie:string,ua:string)=>cookie==="1"||ua.includes("Headless")},"@/lib/supabase/admin":{createAdminClient:()=>{throw new Error("unexpected DB");}}});
+ const lib=load<typeof import("../../src/lib/analytics/growth-server")>("src/lib/analytics/growth-server.ts",{"@/lib/analytics/admin-activity":{analyticsActor:async (id:string)=>({id,excluded:false})},"server-only":{},"./platform":platform,"./growth-contract":contract,"./trafico-automatizado":{esPeticionAutomatizada:(cookie:string,ua:string)=>cookie==="1"||ua.includes("Headless")},"@/lib/supabase/admin":{createAdminClient:()=>{throw new Error("unexpected DB");}}});
  expect(lib.growthContext(request()).allowed).toBe(true);
  for(const req of [request("cc_analytics_sid=x"),request("cc_analytics_sid=x; ccr_meta_consent=declined"),request("cc_analytics_sid=x; ccr_meta_consent=enabled; ccr_platform=native"),request(undefined,"test.contratacr.com"),request(undefined,"localhost"),request(undefined,undefined,"HeadlessChrome")])expect(lib.growthContext(req).allowed).toBe(false);
  const attribution=encodeURIComponent(JSON.stringify({source:"meta",campaign:"clientes",content:"one",capturedAt:new Date().toISOString(),privateText:"secret"}));
@@ -26,7 +26,7 @@ test("only first receipt emits browser conversion and CAPI payload shares its st
  type StoredRow={ event_id:string; status:string; payload: { event_id:string; custom_data:Record<string,unknown> } | null };
  const rows:StoredRow[]=[];const seen=new Set<string>();
  const db={from:()=>({insert:async(row:StoredRow)=>{if(seen.has(row.event_id))return{error:{code:"23505"}};seen.add(row.event_id);rows.push(row);return{error:null};}})};
- const lib=load<typeof import("../../src/lib/analytics/growth-server")>("src/lib/analytics/growth-server.ts",{"server-only":{},"./platform":platform,"./growth-contract":contract,"./trafico-automatizado":{esPeticionAutomatizada:()=>false},"@/lib/supabase/admin":{createAdminClient:()=>db}});
+ const lib=load<typeof import("../../src/lib/analytics/growth-server")>("src/lib/analytics/growth-server.ts",{"@/lib/analytics/admin-activity":{analyticsActor:async (id:string)=>({id,excluded:false})},"server-only":{},"./platform":platform,"./growth-contract":contract,"./trafico-automatizado":{esPeticionAutomatizada:()=>false},"@/lib/supabase/admin":{createAdminClient:()=>db}});
  const first=await lib.recordServiceContact(request(),"professional");
  if (!first) throw new Error("expected successful conversion receipt");
  expect(first.eventName).toBe("Contact");expect(rows[0].payload?.event_id).toBe(first.eventId);expect(rows[0].payload?.custom_data).toEqual({action:"service_contact",audience:"client"});
@@ -52,9 +52,22 @@ test("existing Pixel/CAPI connection works without a second direct sender or sto
  type Row={ event_id:string;status:string;payload:unknown };
  const rows:Row[]=[];
  const db={from:()=>({insert:async(row:Row)=>{rows.push(row);return{error:null};}})};
- const lib=load<typeof import("../../src/lib/analytics/growth-server")>("src/lib/analytics/growth-server.ts",{"server-only":{},"./platform":platform,"./growth-contract":contract,"./trafico-automatizado":{esPeticionAutomatizada:()=>false},"@/lib/supabase/admin":{createAdminClient:()=>db}},{process:{env:{}}});
+ const lib=load<typeof import("../../src/lib/analytics/growth-server")>("src/lib/analytics/growth-server.ts",{"@/lib/analytics/admin-activity":{analyticsActor:async (id:string)=>({id,excluded:false})},"server-only":{},"./platform":platform,"./growth-contract":contract,"./trafico-automatizado":{esPeticionAutomatizada:()=>false},"@/lib/supabase/admin":{createAdminClient:()=>db}},{process:{env:{}}});
  const lead=await lib.recordGrowthConversion(request(),"project_published","project","client");
  expect(lead?.eventName).toBe("Lead");expect(rows[0]).toMatchObject({status:"browser_only",payload:null});expect(rows[0].event_id).toBe(lead?.eventId);
  const winner=await lib.recordGrowthConversion(request(),"professional_project_accepted","project","professional",{metaAllowed:false});
  expect(winner).toBeNull();expect(rows[1]).toMatchObject({status:"suppressed",payload:null});
+});
+
+test("administrator actions never create conversion receipts or Meta delivery", async () => {
+ let dbCalls = 0;
+ const lib = load<typeof import("../../src/lib/analytics/growth-server")>("src/lib/analytics/growth-server.ts", {
+  "@/lib/analytics/admin-activity": { analyticsActor: async () => ({ id: "admin-account", excluded: true }) },
+  "server-only": {}, "./platform": platform, "./growth-contract": contract,
+  "./trafico-automatizado": { esPeticionAutomatizada: () => false },
+  "@/lib/supabase/admin": { createAdminClient: () => { dbCalls++; throw new Error("admin conversion must not be written"); } },
+ });
+ expect(await lib.recordGrowthConversion(request(), "project_published", "project", "admin-account")).toBeNull();
+ expect(await lib.recordServiceContact(request(), "professional", "admin-account")).toBeNull();
+ expect(dbCalls).toBe(0);
 });

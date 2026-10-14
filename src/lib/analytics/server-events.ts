@@ -1,3 +1,4 @@
+import { analyticsActor } from "@/lib/analytics/admin-activity";
 import { analyticsPlatform } from "./platform";
 import "server-only";
 import { createHash, randomUUID } from "node:crypto";
@@ -36,6 +37,8 @@ export async function recordServerInteraction(event: ServerInteraction): Promise
   try {
     const jar = await cookies();
     if (esPeticionAutomatizada(jar.get(COOKIE_SIN_ANALITICA)?.value, (await headers()).get("user-agent"))) return;
+    const actor = await analyticsActor(event.viewerUserId);
+    if (actor.excluded) return;
     const sessionId = jar.get(ANALYTICS_SESSION_COOKIE)?.value || randomUUID();
     const metadata: Record<string, string | number | boolean | null> = {};
     for (const [key, value] of Object.entries(event.metadata ?? {}).slice(0, 10)) {
@@ -48,7 +51,7 @@ export async function recordServerInteraction(event: ServerInteraction): Promise
     const { error } = await db.from("interaction_events").insert({
       event_type: event.type,
       professional_id: event.professionalId ?? null,
-      viewer_user_id: event.viewerUserId ?? null,
+      viewer_user_id: actor.id,
       visitor_hash: createHash("sha256").update(sessionId).digest("hex"),
       source: event.source,
       locale: event.locale === "en" ? "en" : "es",
