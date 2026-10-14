@@ -10,7 +10,7 @@ import { detectIdType } from "@/lib/cedula";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
 import { createClient } from "@/lib/supabase/client";
 import type { DashboardProfileData } from "@/lib/dashboard-bootstrap-cache";
-import { PROFILE_FIELD_GROUPS, PROFILE_SECTION_FOOTER } from "@/components/dashboard/profile-section-layout";
+import { PANEL_SECTION_SURFACE, PROFILE_FIELD_GROUPS, PROFILE_SECTION_FOOTER } from "@/components/dashboard/profile-section-layout";
 import { useAuth } from "@/hooks/use-auth";
 import { cn, getInitials } from "@/lib/utils";
 import { PhoneInput, hasPhoneNumber, isPhoneComplete } from "@/components/ui/phone-input";
@@ -376,7 +376,7 @@ export function BasicProfileSection({
           profesional sí puede prescindir del marco en su LISTA del teléfono,
           porque allí cada fila es una tarjeta con su propio borde; acá las filas
           son planas, así que el marco es lo único que las contiene.) */}
-      <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-[0_10px_28px_-24px_rgba(15,23,42,0.65)]">
+      <div className={PANEL_SECTION_SURFACE}>
       <div className={cn(
         "divide-y divide-[#eef2f6]",
         mobileSectionFocused && "max-sm:divide-y-0",

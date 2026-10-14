@@ -46,7 +46,7 @@ export function vibrarSuave() {
     .catch(() => {});
 }
 
-export function FilaDeslizable({ className, resaltada = false, abierta, ancho, onEstado, acciones, accionesIzquierda, anchoIzquierda = 0, onCompletarDerecha, onCompletarIzquierda, onPulsacionLarga, onContextMenu, children }: {
+export function FilaDeslizable({ className, resaltada = false, abierta, ancho, onEstado, acciones, accionesIzquierda, anchoIzquierda = 0, onCompletarDerecha, onCompletarIzquierda, onPulsacionLarga, onContextMenu, children, separador }: {
   abierta: boolean;
   ancho: number;
   onEstado: (abierta: boolean) => void;
@@ -65,6 +65,7 @@ export function FilaDeslizable({ className, resaltada = false, abierta, ancho, o
   resaltada?: boolean;
   className?: string;
   children: ReactNode;
+  separador?: ReactNode | ((offset: number, completing: boolean) => ReactNode);
 }) {
   // Medio segundo con el dedo quieto abre la hoja de acciones. Si el dedo se
   // mueve —porque empezó a deslizar o a desplazar la lista— se cancela: el
@@ -199,7 +200,7 @@ export function FilaDeslizable({ className, resaltada = false, abierta, ancho, o
   return (
     // select-none + sin callout: dejar el dedo quieto abría el menú de iOS
     // (Copiar / Buscar / Traducir) encima de la hoja de acciones.
-    <div ref={filaRef} className={cn("relative select-none overflow-hidden bg-white [-webkit-touch-callout:none]", className)}>
+    <div ref={filaRef} data-swipe-active={dx !== 0 ? "true" : undefined} className={cn("relative select-none overflow-hidden bg-white [-webkit-touch-callout:none]", className)}>
       {/* El fondo de la acción crece con el dedo y llega hasta el borde: al
           deslizar hasta el final no queda un pedazo vacío detrás de la fila,
           y el icono viaja con él en vez de quedarse clavado en su casilla. */}
@@ -240,6 +241,7 @@ export function FilaDeslizable({ className, resaltada = false, abierta, ancho, o
         {children}
         {resaltada && <span aria-hidden className="pointer-events-none absolute inset-0 bg-[#009FD9]/10" />}
       </div>
+      {typeof separador === "function" ? separador(dx, pasaElPunto(dx)) : separador}
     </div>
   );
 }

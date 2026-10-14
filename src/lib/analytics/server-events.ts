@@ -18,7 +18,7 @@ const ANALYTICS_SESSION_COOKIE = "cc_analytics_sid";
 
 export type ServerInteraction = {
   type: InteractionEventType;
-  source: "search" | "jobs" | "offers" | "assistant" | "api";
+  source: "search" | "jobs" | "offers" | "project" | "assistant" | "api";
   locale?: string | null;
   professionalId?: string | null;
   categoryId?: string | null;

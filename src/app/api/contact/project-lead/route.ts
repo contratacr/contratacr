@@ -25,7 +25,7 @@ export async function POST(req: Request) {
   const limited = enforceRateLimit(req, "contacto-proyecto", 15, 3_600_000);
   if (limited) return limited;
 
-  const { projectId } = (await req.json().catch(() => ({}))) as { projectId?: string };
+  const { projectId, channel } = (await req.json().catch(() => ({}))) as { projectId?: string; channel?: string };
   if (!projectId || !/^[0-9a-f-]{36}$/i.test(projectId)) {
     return NextResponse.json({ error: "Proyecto inválido." }, { status: 400 });
   }
@@ -74,6 +74,9 @@ export async function POST(req: Request) {
   if (!fila || fila.status !== "open" || !admitido) {
     return NextResponse.json({ error: "Este proyecto ya no recibe mensajes.", code: "no_publicado" }, { status: 404 });
   }
+  if (channel === "llamada" && fila.allow_phone_contact !== true) {
+    return NextResponse.json({ error: "Este proyecto no permite llamadas." }, { status: 403 });
+  }
   // Nadie se escribe a sí mismo: un profesional también puede publicar proyectos.
   if (fila.client_id === user.id) {
     return NextResponse.json({ error: "Este proyecto es tuyo." }, { status: 409 });
@@ -106,11 +109,11 @@ export async function POST(req: Request) {
   // profesionales llegan a escribirle al cliente: el tablero podía estar
   // vacío de respuestas y el panel se veía igual.
   await recordServerInteraction(db, req as NextRequest, {
-    type: "project_lead_whatsapp",
+    type: channel === "llamada" ? "project_lead_phone" : "project_lead_whatsapp",
     professionalId: (perfilPro as { id?: string }).id ?? null,
     viewerUserId: user.id,
     source: "project",
-    metadata: { project_id: projectId },
+    metadata: { project_id: projectId, channel: channel === "llamada" ? "phone" : "whatsapp" },
   });
   const metaConversion = await recordGrowthConversion(req,"professional_project_contact",`${pro.id}:${projectId}`,user.id);
   return NextResponse.json(

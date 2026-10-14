@@ -349,7 +349,7 @@ export function StatusFilterTabs({
       {useSegmentedLayout && compacto && <FlechasDeCarril carril={carrilRef} />}
       <div
         ref={useSegmentedLayout && compacto ? carrilRef : undefined}
-        className={cn(useSegmentedLayout && compacto && "max-sm:overflow-x-auto max-sm:scrollbar-none")}
+        className={cn(useSegmentedLayout && compacto && "-m-1 p-1 max-sm:overflow-x-auto max-sm:scrollbar-none")}
         style={useSegmentedLayout && compacto ? { maskImage: mascaraCarril, WebkitMaskImage: mascaraCarril } : undefined}
         data-ccr-degradado={useSegmentedLayout && compacto && mascaraCarril ? "" : undefined}
       >

@@ -5,6 +5,7 @@ import { safeGetUser } from "@/lib/supabase/get-user";
 import { idsDeMisProyectos } from "@/lib/queries/proyectos-publicos";
 import { createClient, hasSupabaseServerConfig } from "@/lib/supabase/server";
 import { metadatosDePantalla } from "@/lib/seo/alternates";
+import { recordServerInteraction } from "@/lib/analytics/server-events";
 import { claveDeTramo, idCoincide, tramoFicha } from "@/lib/marketplace-url";
 import type { Metadata } from "next";
 
@@ -70,5 +71,8 @@ export default async function ProyectoDetallePage({ params, searchParams }: { pa
   // hay un enlace directo—: antes eso daba «página no encontrada».
   const [{ proyectos, detalle }, mios] = await Promise.all([resolverProyecto(id, user?.id), idsDeMisProyectos(supabase, user?.id)]);
   if (!detalle) notFound();
+  if (!mios.includes(detalle.id)) {
+    void recordServerInteraction({ type: "project_view", source: "project", viewerUserId: user?.id ?? null, metadata: { projectId: detalle.id } });
+  }
   return <ProjectsBoard proyectos={proyectos} currentUserId={user?.id ?? null} detalle={detalle} misProyectos={mios} volverA={from} />;
 }

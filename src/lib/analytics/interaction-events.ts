@@ -19,6 +19,8 @@ export const INTERACTION_EVENT_TYPES = [
   "quote_created",
   "internal_message_sent",
   "project_lead_whatsapp",
+  "project_lead_phone",
+  "project_view",
   "identity_verified",
   "campaign_click",
   "service_request_started",
