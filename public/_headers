@@ -8,3 +8,6 @@
 
 /featured-brands/*
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/.well-known/assetlinks.json
+  Content-Type: application/json

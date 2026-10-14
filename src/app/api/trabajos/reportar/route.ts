@@ -18,7 +18,8 @@ const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com").re
 function leer(params: URLSearchParams) {
   const p = params.get("p") ?? "";
   const s = params.get("s") ?? "";
-  const n = Number(params.get("n"));
+  const rawN = params.get("n");
+  const n = rawN !== null && /^[0-3]$/.test(rawN) ? Number(rawN) : NaN;
   const f = params.get("f") ?? "";
   const ok = /^[0-9a-f-]{36}$/i.test(p) && /^\d{4}-\d{2}-\d{2}$/.test(s)
     && (RESPUESTAS as readonly number[]).includes(n) && reporteValido(p, s, f);
@@ -29,6 +30,7 @@ function pagina(titulo: string, cuerpo: string, status = 200) {
   const html = brandedEmailDocument({
     title: titulo,
     origin: APP_URL,
+    browserPage: true,
     bodyHtml: `<h1 style="margin:0 0 12px;font-size:21px;line-height:1.3;color:#162543">${escaparHtml(titulo)}</h1>${cuerpo}`,
   }).replace("<head>", '<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">');
   return new NextResponse(html, { status, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" } });
@@ -42,10 +44,13 @@ export async function GET(request: Request) {
   if (!ok) return pagina("Este enlace no es válido", texto("Puede que haya cambiado. Si quieres contarnos, escríbenos a soporte@contratacr.com."), 400);
   const accion = `/api/trabajos/reportar?${new URLSearchParams({ p, s, n: String(n), f }).toString()}`;
   return pagina(
-    "¿Con cuántas cerraste trabajo?",
-    `${texto(`Vas a anotar: <strong>${etiqueta(n)}</strong>.`)}
+    "¿Cuántos trabajos conseguiste a través de ContrataCR?",
+    `${texto(`Semana del <strong>${escaparHtml(s)}</strong> (lunes a domingo).`)}
+     ${texto("Nos referimos a trabajos que acordaste realizar con clientes que te encontraron en ContrataCR. No cuentes mensajes ni consultas que no terminaron en un trabajo.")}
+     ${texto(`Tu respuesta: <strong>${etiqueta(n)} ${n === 1 ? "trabajo" : "trabajos"}</strong>. Todavía no se ha guardado.`)}
+     ${texto("Si esta no es tu respuesta, vuelve al correo y elige otra opción. Confirmar es opcional; tu respuesta no se publica en tu perfil.")}
      <form method="post" action="${escaparHtml(accion)}" style="margin:18px 0 0">
-       <button type="submit" style="display:inline-block;padding:13px 26px;border:0;border-radius:999px;background:#009FD9;color:#fff;font-size:15px;font-weight:700;cursor:pointer">Confirmar</button>
+       <button type="submit" style="display:inline-block;padding:13px 26px;border:0;border-radius:999px;background:#009FD9;color:#fff;font-size:15px;font-weight:700;cursor:pointer">Confirmar respuesta</button>
      </form>`,
   );
 }
@@ -62,7 +67,7 @@ export async function POST(request: Request) {
   }
   return pagina(
     "¡Gracias!",
-    `${texto(`Anotamos <strong>${etiqueta(n)}</strong>. Nos ayuda a saber qué está funcionando para traerte más clientes.`)}
+    `${texto(`Guardamos tu respuesta: <strong>${etiqueta(n)} ${n === 1 ? "trabajo" : "trabajos"}</strong>. Gracias por ayudarnos a evaluar ContrataCR.`)}
      <p style="margin:18px 0 0"><a href="${APP_URL}/dashboard/profesional" style="display:inline-block;padding:12px 22px;border-radius:999px;background:#009FD9;color:#fff;text-decoration:none;font-weight:700;font-size:15px">Ir a mi panel</a></p>`,
   );
 }

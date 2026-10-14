@@ -1,0 +1,10 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.contratacr.app",
+      "sha256_cert_fingerprints": ["78:31:54:89:CB:C1:3B:C8:CF:D2:3F:DC:3E:8A:00:09:91:C0:E7:31:62:DE:79:3D:28:40:2B:6F:89:17:C7:AB"]
+    }
+  }
+]

@@ -45,7 +45,7 @@ export function emailLogoMarkup(origin = "https://contratacr.com") {
  * white card — the exact structure of the password-reset email — so no sender
  * hand-rolls its own header again. `bodyHtml` renders inside the card.
  */
-export function brandedEmailDocument({ title, bodyHtml, origin = "https://contratacr.com" }: { title: string; bodyHtml: string; origin?: string }) {
+export function brandedEmailDocument({ title, bodyHtml, origin = "https://contratacr.com", browserPage = false }: { title: string; bodyHtml: string; origin?: string; browserPage?: boolean }) {
   return `<!doctype html>
     <html lang="es">
     <head>
@@ -53,7 +53,7 @@ export function brandedEmailDocument({ title, bodyHtml, origin = "https://contra
       <meta name="color-scheme" content="light dark">
       <meta name="supported-color-schemes" content="light dark">
       <title>${title}</title>
-      <style>${EMAIL_LOGO_DARK_MODE_STYLES}</style>
+      <style>${browserPage ? ":root{color-scheme:light} .ccr-dark-logo{display:none!important} .ccr-light-logo{display:block!important}" : EMAIL_LOGO_DARK_MODE_STYLES}</style>
     </head>
     <body style="margin:0;padding:0;background:#f4f7fa;color:#162543;font-family:Arial,Helvetica,sans-serif">
       <div style="padding:28px 14px">
