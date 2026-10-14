@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { downloadChatAttachment } from "@/lib/chat-download";
 import { Archive, ArchiveRestore, ArrowLeft, Ban, Check, ChevronRight, Copy, Download, FileText, Flag, Loader2, MessageSquareMore, MessageSquareText, MoreHorizontal, Paperclip, Pencil, Reply, Search, SendHorizontal, Trash2, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
@@ -150,6 +151,11 @@ function isImageAttachment(attachment: Pick<DirectAttachment, "type" | "name">) 
   return attachment.type.startsWith("image/") || /\.(jpe?g|png|webp|avif|gif|heic|heif)$/i.test(attachment.name);
 }
 
+  function sincronizarUrl(consulta: string) {
+    if (typeof window === "undefined") return;
+    const destino = window.location.pathname + (consulta ? "?" + consulta : "");
+    window.history.replaceState(window.history.state, "", destino);
+  }
 function buildPendingDraft(searchParams: URLSearchParams, userId: string | undefined, isEn: boolean): { conversation: Conversation | null; payload: PendingDraft | null } {
   if (searchParams.get("draftChat") !== "1") return { conversation: null, payload: null };
 
@@ -436,6 +442,26 @@ export function DirectChatInbox({ alCambiarSubvista }: {
   const [preparingAttachments, setPreparingAttachments] = useState(false);
   const [error, setError] = useState("");
   const [attachmentError, setAttachmentError] = useState("");
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setCurrentTime(Date.now()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const [downloadingFile, setDownloadingFile] = useState(false);
+  async function downloadAttachment(attachment: DirectAttachment) {
+    if (downloadingFile) return;
+    setDownloadingFile(true);
+    setAttachmentError("");
+    try { await downloadChatAttachment(attachment); }
+    catch (error) {
+      if (error instanceof Error && /cancel/i.test(error.message)) return;
+      setAttachmentError(error instanceof Error && error.message === "native-update-required"
+        ? (isEn ? "Update ContrataCR to save files from chat." : "Actualiza ContrataCR para guardar archivos del chat.")
+        : (isEn ? "Could not download the file. Try again." : "No se pudo descargar el archivo. Inténtalo de nuevo."));
+      setImagePreview(null);
+    } finally { setDownloadingFile(false); }
+  }
+
   const [selectedAttachments, setSelectedAttachments] = useState<SelectedAttachment[]>([]);
   const [imagePreview, setImagePreview] = useState<DirectAttachment | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
@@ -487,7 +513,6 @@ export function DirectChatInbox({ alCambiarSubvista }: {
 
   // La flecha de la barra llama siempre a la versión actual de «volver».
   const volverDeSubvista = useRef<() => void>(() => {});
-  volverDeSubvista.current = () => { if (vistaBloqueados) setVistaBloqueados(false); else updateArchiveView(false); };
   const subvistaEnLaBarra = nativeApp && (showArchived || vistaBloqueados) && !mobileThread
     ? (vistaBloqueados ? tChat("blocked") : tChat("archived"))
     : null;
@@ -626,9 +651,10 @@ export function DirectChatInbox({ alCambiarSubvista }: {
       if (existingDraftConversation) {
         setPendingDraft(null);
         setPendingDraftPayload(null);
-        setDraft("");
+        const texto = pendingDraftPayload?.draftMessage || "";
+        setDraft((current) => current || texto);
         setActiveId(existingDraftConversation.id);
-        sincronizarUrl(`conversation=${existingDraftConversation.id}`);
+        sincronizarUrl(`conversation=${existingDraftConversation.id}${texto ? `&draftMessage=${encodeURIComponent(texto)}` : ""}`);
       } else {
         // En computadora la conversación se ve al lado de la lista y se abre la
         // primera. En el teléfono NO: ahí solo se ve la lista, y abrirla por
@@ -952,12 +978,10 @@ export function DirectChatInbox({ alCambiarSubvista }: {
   // y solo falta reflejarla en la dirección. Pasar por el router dispara el
   // respaldo de ruta —la marca a pantalla completa— encima de una pantalla que
   // no se fue a ningún lado. Next admite mover la URL a mano y se entera igual.
-  function sincronizarUrl(consulta: string) {
-    if (typeof window === "undefined") return;
-    const destino = window.location.pathname + (consulta ? "?" + consulta : "");
-    window.history.replaceState(window.history.state, "", destino);
-  }
 
+  useLayoutEffect(() => {
+    volverDeSubvista.current = () => { if (vistaBloqueados) setVistaBloqueados(false); else updateArchiveView(false); };
+  });
   function selectConversation(id: string) {
     backHrefRef.current = "";
     if (editando) cancelarEdicion();
@@ -1094,7 +1118,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
     e.preventDefault();
     if (editando) { void guardarEdicion(); return; }
     if (!activeId || sending || (!draft.trim() && !selectedAttachments.length)) return;
-    const body = draft.trim(); const optimisticId = `pending-${Date.now()}`;
+    const body = draft.trim(); const optimisticId = `pending-${crypto.randomUUID()}`;
     const citado = respondiendoA;
     const optimisticAttachments = selectedAttachments.map((attachment) => ({
       name: attachment.file.name,
@@ -1338,7 +1362,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
     </div>
   );
 
-  if (loading) return (
+  if (loading && !pendingDraft) return (
     <div className="ccr-delayed-loading min-h-[calc(100dvh-153px)] bg-white sm:min-h-[520px]" aria-busy="true" role="status">
       <span className="sr-only">{tChat("loadingConversations")}</span>
       <div className="border-b border-[#e5e7eb] p-3"><Skeleton className="h-10 w-full rounded-full" /></div>
@@ -1401,7 +1425,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
     if (!conversacionAbierta || !user?.id || activePerson?.role !== "professional" || otherHasApp || !conversacionAbierta.professional_whatsapp) return null;
     const last = messages[messages.length - 1];
     if (!last || last.sender_id !== user.id) return null;
-    if (Date.now() - new Date(last.created_at).getTime() < 24 * 60 * 60 * 1000) return null;
+    if (currentTime - new Date(last.created_at).getTime() < 24 * 60 * 60 * 1000) return null;
     const digits = conversacionAbierta.professional_whatsapp.replace(/\D/g, "");
     const number = digits.length === 8 ? `506${digits}` : digits;
     const text = isEn
@@ -1524,7 +1548,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
                   <>
                     {/* En Archivados también «Más», no «Eliminar»: borrar es irreversible y
                         vive solo dentro de la hoja, con su doble confirmación. */}
-                    <button type="button" tabIndex={completando ? -1 : 0} onClick={() => { setFilaAbierta(null); setHojaDeFila(item.id); }} className={cn("flex shrink-0 flex-col items-center justify-center gap-1 overflow-hidden whitespace-nowrap bg-[#162543] text-white transition-[width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]", completando ? "w-0" : "w-[88px]")}>
+                    <button type="button" tabIndex={completando ? -1 : 0} onClick={() => { setFilaAbierta(null); setHojaDeFila(item.id); }} className={cn("flex shrink-0 flex-col items-center justify-center gap-1 overflow-hidden whitespace-nowrap border border-[#d7e1ea] bg-white text-[#162543] transition-[width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]", completando ? "w-0" : "w-[88px]")}>
                       <MoreHorizontal className="h-5 w-5" />
                       <span className="text-[11px] font-extrabold">{isEn ? "More" : "Más"}</span>
                     </button>
@@ -1539,7 +1563,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
                   <>
                     {/* «Más» a la par de «Archivar», como WhatsApp: abre la misma
                         hoja de abajo que la pulsación larga. */}
-                    <button type="button" tabIndex={completando ? -1 : 0} onClick={() => { setFilaAbierta(null); setHojaDeFila(item.id); }} className={cn("flex shrink-0 flex-col items-center justify-center gap-1 overflow-hidden whitespace-nowrap bg-[#162543] text-white transition-[width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]", completando ? "w-0" : "w-[88px]")}>
+                    <button type="button" tabIndex={completando ? -1 : 0} onClick={() => { setFilaAbierta(null); setHojaDeFila(item.id); }} className={cn("flex shrink-0 flex-col items-center justify-center gap-1 overflow-hidden whitespace-nowrap border border-[#d7e1ea] bg-white text-[#162543] transition-[width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]", completando ? "w-0" : "w-[88px]")}>
                       <MoreHorizontal className="h-5 w-5" />
                       <span className="text-[11px] font-extrabold">{isEn ? "More" : "Más"}</span>
                     </button>
@@ -1725,9 +1749,8 @@ export function DirectChatInbox({ alCambiarSubvista }: {
                         ) : (
                           <a
                             key={`${message.id}-${attachment.path ?? attachment.name}-${index}`}
-                            href={href}
-                            target="_blank"
-                            rel="noreferrer"
+                            href={href ? "#" : undefined}
+                            onClick={(event) => { event.preventDefault(); if (href) void downloadAttachment(attachment); }}
                             className={cn(
                               "group flex items-center gap-3 overflow-hidden rounded-xl border px-3 py-2.5 text-left transition",
                               mosaico ? "col-span-2" : "min-w-[220px]",
@@ -1806,7 +1829,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
             )}
           </div>
         ) : (
-          <form onSubmit={submit} className="ccr-direct-chat-composer shrink-0 border-t border-[#e5e7eb] bg-white p-3 pb-[calc(.75rem+env(safe-area-inset-bottom))] sm:p-4">
+          <form onSubmit={(event) => { void submit(event); }} className="ccr-direct-chat-composer shrink-0 border-t border-[#e5e7eb] bg-white p-3 pb-[calc(.75rem+env(safe-area-inset-bottom))] sm:p-4">
             {!!selectedAttachments.length && (
               <div className="ccr-carril mb-2 flex gap-2 overflow-x-auto pb-1">
                 {selectedAttachments.map((attachment) => (
@@ -1897,10 +1920,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
               </button>
             )}
             <textarea
-              ref={(el) => {
-                textareaRef.current = el;
-                resizeMessageTextarea(el);
-              }}
+              ref={textareaRef}
               rows={1}
               value={draft}
               onChange={(e) => {
@@ -1960,15 +1980,15 @@ export function DirectChatInbox({ alCambiarSubvista }: {
               <span className="text-xs text-white/65">{attachmentLabel(imagePreview.size)}</span>
             </div>
             {imagePreview.path && (
-              <a
-                href={imagePreview.url}
-                target="_blank"
-                rel="noreferrer"
+              <button
+                type="button"
+                disabled={downloadingFile}
+                onClick={() => void downloadAttachment(imagePreview)}
                 className="grid h-11 w-11 place-items-center rounded-full transition hover:bg-white/10"
                 aria-label={isEn ? "Download image" : "Descargar imagen"}
               >
-                <Download className="h-5 w-5" />
-              </a>
+                {downloadingFile ? <Loader2 className="h-5 w-5 animate-spin" /> : <Download className="h-5 w-5" />}
+              </button>
             )}
           </div>
           <button

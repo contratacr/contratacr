@@ -17,7 +17,7 @@ export function AppleAccountNotice({ open, onClose, onContinue }: {
       <div className="mt-5 flex flex-col gap-3">
         <Link onClick={onClose} href={`/login?redirect=${encodeURIComponent(APPLE_LINK_DESTINATION)}`} className="rounded-xl bg-[#009FD9] px-4 py-3 text-center text-sm font-semibold text-white">{t("existing")}</Link>
         <p className="text-xs text-[#68778d]">{t("continueHelp")}</p>
-        <button type="button" onClick={() => { onClose(); onContinue(); }} className="rounded-xl bg-[#111827] px-4 py-3 text-sm font-semibold text-white">{t("continue")}</button>
+        <button type="button" onClick={() => { onClose(); onContinue(); }} className="rounded-xl bg-[#009FD9] px-4 py-3 text-sm font-semibold text-white">{t("continue")}</button>
       </div>
     </Modal>
   );

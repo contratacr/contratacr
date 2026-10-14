@@ -7,7 +7,7 @@
 // sección nueva nunca termine cayendo en «perfil no encontrado».
 export const RUTAS_DEL_SITIO = new Set([
   // idiomas y carpetas de src/app
-  "es", "en", "api", "auth", "descargar",
+  "es", "en", "api", "auth", "descargar", "abrir-app",
   // secciones de src/app/[locale]
   "admin", "atraer-clientes", "ayuda", "buscar", "categorias", "como-funciona",
   "completar-perfil", "continuar-perfil", "contacto", "cotizacion", "dashboard", "eliminar-cuenta", "empleos",

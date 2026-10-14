@@ -477,10 +477,8 @@ export async function POST(req: Request) {
 
   if (!conversation || !participant(conversation, user.id)) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   if (conversation.status === "blocked") return NextResponse.json({ error: mensajeDeError(req, { es: "Esta conversación está bloqueada.", en: "This conversation is blocked." }) }, { status: 403 });
-  if (openConversation && !conversationCreated) {
-    return NextResponse.json({ ok: true, conversationId: conversation.id, created: false });
-  }
-  if (openConversation && !message && !initialMessage) {
+  // Opening the composer is not permission to deliver a suggested greeting.
+  if (openConversation) {
     return NextResponse.json({ ok: true, conversationId: conversation.id, created: conversationCreated });
   }
   const messageToSend = message || initialMessage || (hasRawAttachments ? "Archivo adjunto" : "");

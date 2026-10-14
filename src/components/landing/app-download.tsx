@@ -89,12 +89,12 @@ export function MobileAppDownloadBanner({ initialPlatform = null, initialDismiss
       section.scrollIntoView({ block: "start", behavior: "instant" });
       window.scrollBy({ top: section.getBoundingClientRect().top - headerBottom - 12, behavior: "instant" });
     };
-    const sync = () => {
+    const sync = (event?: Event) => {
       const requested = location.hash === "#descargar-app";
       setDownloadRequested(requested);
       if (requested && window.matchMedia("(max-width: 1023px)").matches && !native) {
         alignAllowed = true;
-        setDismissed(false);
+        if (event?.type === "hashchange") setDismissed(false);
         requestAnimationFrame(alignDownload);
       }
     };

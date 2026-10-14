@@ -3,7 +3,7 @@
   "name": "ContrataCR",
   "short_name": "ContrataCR",
   "description": "Ofrece y encuentra servicios en Costa Rica.",
-  "start_url": "/",
+  "start_url": "/abrir-app",
   "scope": "/",
   "icons": [
     {
@@ -22,8 +22,15 @@
   "theme_color": "#ffffff",
   "background_color": "#ffffff",
   "display": "standalone",
-  "display_override": ["standalone", "browser"],
+  "display_override": [
+    "standalone",
+    "browser"
+  ],
   "orientation": "portrait-primary",
-  "categories": ["business", "productivity", "utilities"],
+  "categories": [
+    "business",
+    "productivity",
+    "utilities"
+  ],
   "lang": "es-CR"
 }

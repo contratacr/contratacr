@@ -59,6 +59,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: "#ffffff",
+  colorScheme: "light",
   interactiveWidget: "resizes-content",
   viewportFit: "cover",
 };
@@ -96,11 +97,14 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     <html
       lang={idioma}
+      style={{ backgroundColor: "#ffffff", colorScheme: "light" }}
       className={`${inter.variable} h-full antialiased${clasesNativas}`}
       data-scroll-behavior="smooth"
       suppressHydrationWarning
     >
       <head>
+        {/* Safari launch-image support still uses this Apple-specific capability tag. */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
         {/* LA FRANJA DE ACCIONES, escrita aquí y no en la hoja de estilos.
             Se rompió una y otra vez por lo mismo: su relleno dependía de clases
             de Tailwind recién agregadas, y en desarrollo esas clases NO llegan
@@ -416,7 +420,7 @@ body:has(.ccr-error-screen) .ccr-navbar-spacer{display:none}
       </head>
       {/* El script de abajo agrega clases al body antes de hidratar (por ruta,
           p. ej. en /buscar); React no las corrige, solo avisaría en consola. */}
-      <body className={`min-h-full flex flex-col bg-white${clasesNativas}`} suppressHydrationWarning>
+      <body className={`min-h-full flex flex-col bg-white${clasesNativas}`} style={{ backgroundColor: "#ffffff" }} suppressHydrationWarning>
         {/* EL CATÁLOGO DE SERVICIOS VIAJA CON LA PÁGINA.
             Los nombres de los servicios viven en la base (se renombran y se
             agregan desde el panel de administración). El servidor pinta con
