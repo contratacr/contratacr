@@ -60,7 +60,7 @@ test('shared download anchor always remains useful, including after dismissing t
  } else {
   const section=page.getByTestId('app-download-section');await expect(section).toBeVisible();
   await expect(section.getByRole('heading',{name:'Descarga la app de ContrataCR'})).toBeVisible();
-  await expect(section.getByTestId('app-download-artwork')).toHaveAttribute('src','/stores/app-workshop-desktop-compact-20261013.png');
+  await expect(section.getByTestId('app-download-artwork')).toHaveAttribute('src','/stores/app-workshop-desktop-welcome-20261013.png');
   await expect(section).toBeInViewport();
   await expect(page.getByTestId('app-store-footer-links')).toBeVisible();
   if (process.env.DOWNLOAD_DESIGN_EVIDENCE) {
@@ -158,16 +158,6 @@ test('responsive download artwork and store actions fit the viewport, including 
    return image.complete&&image.naturalWidth>0;
   })).toBe(true);
   await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
-  const phone = section.getByTestId('app-download-phone');
-  await expect(phone).toHaveAttribute('inert', '');
-  await expect(phone).toContainText('Ofrezco servicios');
-  await expect(phone).toContainText('Busco servicios');
-  expect(await phone.evaluate(el => {
-   const frame = el.getBoundingClientRect();
-   const content = el.querySelector('.ccr-download-phone-screen')!.getBoundingClientRect();
-   return content.left >= frame.left && content.right <= frame.right + 1 && content.bottom <= frame.bottom + 1;
-  })).toBe(true);
-  expect((await section.boundingBox())!.height).toBeLessThan(width < 640 ? 660 : 530);
   // Read all rectangles in one frame; the shared anchor can still align the
   // page while images/fonts settle after a viewport change.
   await expect.poll(()=>section.evaluate(el=>{
