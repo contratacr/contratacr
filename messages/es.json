@@ -2436,7 +2436,7 @@
     "trust0Title": "Verificación de identidad",
     "trust0Body": "El check indica que la identidad fue verificada. No garantiza la calidad del servicio.",
     "trust1Title": "Reseñas de clientes",
-    "trust1Body": "Lee las experiencias de otros clientes y revisa fotos de trabajos anteriores.",
+    "trust1Body": "Lee las experiencias de otros clientes y revisa sus casos de éxito.",
     "trust2Title": "WhatsApp para coordinar",
     "trust2Body": "ContrataCR organiza la búsqueda, los proyectos y las cotizaciones; la coordinación final se hace por mensaje, WhatsApp o llamada.",
     "trust3Title": "Teléfono y correo opcionales",
@@ -2563,7 +2563,7 @@
     "faq14Q": "¿Cómo elimino mi cuenta?",
     "faq14A": "En Mi perfil, abre Cuenta y seguridad y busca la opción para eliminar tu cuenta. Antes de confirmar verás qué información se elimina y qué se conserva.",
     "faq15Q": "¿Qué reviso antes de contratar?",
-    "faq15A": "Compara reseñas y fotos de trabajos similares. Acuerda por escrito el precio, los plazos y las condiciones con el profesional. ContrataCR facilita el contacto; no garantiza el resultado del trabajo."
+    "faq15A": "Compara reseñas y casos de éxito similares. Acuerda por escrito el precio, los plazos y las condiciones con el profesional. ContrataCR facilita el contacto; no garantiza el resultado del trabajo."
   },
   "atraerClientes": {
     "eyebrow": "Para profesionales",
@@ -2579,7 +2579,7 @@
     "tip1Body": "Abre Verificación de identidad y sigue los pasos. El check confirma tu identidad, no la calidad del servicio.",
     "tip1Highlight": "Puedes pedir ayuda a soporte si la necesitas.",
     "tip2Title": "Publica casos de éxito con fotos",
-    "tip2Body": "Agrega fotos de trabajos que hayas realizado y una explicación breve de cada uno.",
+    "tip2Body": "Agrega casos de éxito con fotos y una explicación breve de cada uno.",
     "tip2Highlight": "Comparte únicamente fotos que tengas permiso de usar.",
     "tip3Title": "Responde rápido por WhatsApp",
     "tip3Body": "Las respuestas rápidas generan confianza. Si un cliente te contacta por WhatsApp y tardas demasiado, probablemente buscará otra opción. Mantén tus datos actualizados y responde apenas puedas.",
