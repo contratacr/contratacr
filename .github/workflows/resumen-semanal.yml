@@ -1,13 +1,8 @@
 name: Resumen semanal a profesionales
 
-# Los lunes, a cada profesional que recibió contactos la semana anterior:
-# «Esta semana te escribieron N personas por ContrataCR. ¿Con cuántas cerraste
-# trabajo?». Una vez por semana por profesional. Ver resumen-semanal.ts.
-
+# Retirado a solicitud de Isaac. Solo se conserva la revisión manual;
+# el servidor también bloquea los envíos con WEEKLY_SUMMARY_ENABLED=false.
 on:
-  schedule:
-    # Lunes 8:00 a.m. en Costa Rica: empieza la semana con el resumen de la anterior.
-    - cron: "0 14 * * 1"
   workflow_dispatch:
     inputs:
       target:

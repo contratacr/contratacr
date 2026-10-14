@@ -16,8 +16,8 @@ export const LIFECYCLE_CAMPAIGNS = [
     body: "¿Tienes un trabajo pendiente en tu casa o negocio?\n\nEn ContrataCR puedes buscar profesionales por servicio y ubicación, revisar sus perfiles y contactar directamente a quien te interese.",
     ctaLabel: "Buscar profesionales", ctaPath: "/buscar" },
   { key: "crear-proyecto-clientes-2026", days: 17, audience: "all", enabled: true,
-    subject: "Cuenta qué necesitas y encuentra quién lo haga",
-    body: "Si prefieres explicar tu trabajo en un solo lugar, publica un proyecto en ContrataCR: indica qué necesitas y dónde.\n\nLos profesionales interesados podrán contactarte para conversar sobre el trabajo. Tú decides a quién contratar.",
+    subject: "¿Necesitas ayuda con un trabajo? Publica un proyecto",
+    body: "¿Necesitas pintar tu casa, reparar una fuga o hacer otro trabajo?\n\nPublica lo que necesitas en ContrataCR: cuenta qué hay que hacer y en qué zona. Los profesionales interesados podrán contactarte.\n\nTú conversas con ellos y eliges a quién contratar. No necesitas una cuenta profesional para publicar.",
     ctaLabel: "Crear un proyecto", ctaPath: "/publicar-proyecto" },
 ] as const;
 
