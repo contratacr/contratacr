@@ -33,7 +33,7 @@ export function AppDownloadSection() {
   const native = useNativeApp();
   const en = useLocale() === "en";
   if (native) return null;
-  return <section id="descargar-app" data-testid="app-download-section" className="ccr-solo-web ccr-download-section relative isolate flex w-full min-w-0 min-h-[max(480px,125vw)] items-end overflow-hidden bg-[#38261c] sm:aspect-[3/1] sm:min-h-[360px] sm:items-center lg:min-h-[460px]">
+  return <section id="descargar-app" data-testid="app-download-section" className="ccr-solo-web ccr-download-section relative isolate flex w-full min-w-0 min-h-[max(520px,140vw)] items-end overflow-hidden bg-[#38261c] sm:aspect-[3/1] sm:min-h-[360px] sm:items-center lg:min-h-[460px]">
     <picture className="absolute inset-0 -z-10">
       <source media="(max-width: 639px)" srcSet="/stores/app-workshop-mobile-welcome-20261013.png" width={1122} height={1402} />
       <Image src="/stores/app-workshop-desktop-welcome-20261013.png" width={2172} height={724} unoptimized alt={en ? "ContrataCR on a phone in a carpentry workshop" : "ContrataCR en un teléfono dentro de un taller de carpintería"} data-testid="app-download-artwork" className="h-full w-full object-cover object-top sm:object-right" />
@@ -42,7 +42,7 @@ export function AppDownloadSection() {
       <div className="mx-auto max-w-md text-center text-white [text-shadow:0_2px_14px_rgba(0,0,0,0.6)] sm:mx-0 sm:max-w-[49%] sm:text-left">
         <p className="mb-3 hidden text-[11px] font-semibold tracking-[0.14em] text-white/90 sm:block lg:mb-4 lg:text-sm">{en ? "AVAILABLE FOR iOS AND ANDROID" : "DISPONIBLE PARA iOS Y ANDROID"}</p>
         <h2 className="text-[25px] font-extrabold leading-[1.08] tracking-tight md:text-4xl lg:text-[clamp(2rem,2.8vw,2.75rem)]">{en ? "Download the ContrataCR app" : "Descarga la app de ContrataCR"}</h2>
-        <p className="mx-auto mb-4 mt-3 max-w-md text-sm leading-relaxed text-white/90 sm:mx-0 sm:mt-4 sm:text-base lg:mb-4 lg:mt-3 lg:text-base">{en ? "Find professionals, post projects or offer your services from your phone." : "Encuentra profesionales, publica proyectos u ofrece tus servicios desde tu celular."}</p>
+        <p className="mx-auto mb-4 mt-3 max-w-md text-sm leading-relaxed text-white/90 sm:mx-0 sm:mt-4 sm:text-base lg:mb-4 lg:mt-3 lg:text-base">{en ? "Find professionals and promote your services." : "Busca profesionales y da a conocer tus servicios."}</p>
         <AppStoreLinks />
         <div className="mt-4 hidden items-center gap-4 lg:flex">
           <Image src="/stores/download-app-qr.svg?v=20261013-store-redirect" width={104} height={104} alt={en ? "Scan to download ContrataCR" : "Escanea para descargar ContrataCR"} className="shrink-0 rounded-lg bg-white" />
