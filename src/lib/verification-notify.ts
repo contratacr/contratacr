@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { brandedEmailDocument, sendBrevoEmail } from "@/lib/email/send";
+import { shouldEmailVerificationDecision, canReceiveVerificationOutreach } from "@/lib/verification/email-policy";
 import { sendNotificationPush } from "@/lib/push/notify";
 
 const PRO_LINK = "/dashboard/profesional?tab=profile&mode=offer&focus=verification";
@@ -59,13 +60,13 @@ export async function notifyVerificationDecision({
       type = "verification_approved";
       title = "¡Tu identidad fue verificada!";
       message =
-        "Confirmamos que tu cédula es real y coincide con los registros oficiales. La insignia \"Verificado\" ya aparece en tu perfil y en los resultados de búsqueda.";
+        "Verificamos tu identidad. El check azul ya aparece junto a tu nombre.";
       html = emailShell(
         firstName,
         "¡Tu identidad fue verificada!",
         "#16a34a",
-        `Confirmamos que tu cédula es real y el nombre coincide con los registros oficiales. La insignia <strong>Verificado</strong> ya aparece en tu perfil y en los resultados de búsqueda.
-         <br/><br/><span style="color:#6b7280;font-size:13px;">ContrataCR es una plataforma intermediaria: verificamos tu identidad, no la calidad ni el resultado de los trabajos.</span>`,
+        `Verificamos tu identidad. El <strong>check azul</strong> ya aparece junto a tu nombre.
+         <br/><br/><span style="color:#6b7280;font-size:13px;">El check confirma tu identidad. No certifica la calidad de tus servicios.</span>`,
         "Ver mi verificación"
       );
     } else if (kind === "pending") {
@@ -92,8 +93,8 @@ export async function notifyVerificationDecision({
         "#dc2626",
         `Revisamos tu verificación de identidad y por ahora no fue aprobada.
          <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:14px;margin:16px 0;font-size:14px;color:#991b1b;"><strong>Motivo:</strong> ${escapeHtml(safeReason)}</div>
-         Puedes <strong>apelar</strong> desde tu panel: corrige lo indicado y vuelve a enviar tu caso. Tu cuenta sigue activa y puedes seguir recibiendo clientes.`,
-        "Apelar o corregir"
+         Tu cuenta sigue activa. Entra a <strong>Mi perfil → Verificación</strong> para corregir los datos o pedir ayuda a soporte.`,
+        "Revisar mi verificación"
       );
     } else {
       type = "verification_reverted";
@@ -104,9 +105,9 @@ export async function notifyVerificationDecision({
         firstName,
         "Tu verificación fue actualizada",
         "#b45309",
-        `Tras una nueva revisión, se quitó la insignia <strong>Verificado</strong> de tu perfil.
+        `Quitamos el <strong>check azul</strong> de tu perfil después de revisar tu verificación.
          <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:14px;margin:16px 0;font-size:14px;color:#92400e;"><strong>Motivo:</strong> ${escapeHtml(safeReason)}</div>
-         Entra a tu panel para ver el detalle y los próximos pasos.`,
+         Tu cuenta sigue activa. Entra a <strong>Mi perfil → Verificación</strong> para ver el motivo y pedir ayuda a soporte.`,
         "Ver mi verificación"
       );
     }
@@ -131,9 +132,9 @@ export async function notifyVerificationDecision({
       data: notification.data,
     });
 
-    // 2. Email (Resend) — skipped for "in_app" (e.g. at registration, where the
-    // in-app notification is enough and a second email would be redundant).
-    if (channel === "both") {
+    // Pending stays in the app. Registration does not email the result.
+    // Later approval, rejection or removal merits an email.
+    if (shouldEmailVerificationDecision(kind, channel)) {
       await sendEmail(email, `${title} — ContrataCR`, html);
     }
   } catch (err) {
@@ -142,7 +143,7 @@ export async function notifyVerificationDecision({
 }
 
 /**
- * Notify every admin (in-app) + support inbox (email) that a provider appealed.
+ * Notify admins in the app when a provider requests a review.
  */
 export async function notifyAppealReceived(
   professionalId: string,
@@ -178,18 +179,7 @@ export async function notifyAppealReceived(
       })));
     }
 
-    // Sin correo al equipo: la apelación deja al profesional en «under_appeal»
-    // y el contador de Verificación del panel la muestra en cuanto llega.
-    if (process.env.CORREO_DE_APELACIONES_AL_EQUIPO !== "1") return;
-    const html = emailShell(
-      "equipo",
-      "Nueva apelación de verificación",
-      "#b45309",
-      `<strong>${escapeHtml(providerName)}</strong> apeló la revisión de su perfil.
-       <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:14px;margin:16px 0;font-size:14px;color:#374151;">${escapeHtml(appealMessage)}</div>`,
-      "Revisar el caso"
-    );
-    await sendEmail("soporte@contratacr.com", "Nueva apelación de verificación — ContrataCR", html);
+    // La cola de Verificación y el aviso del panel son suficientes; no duplicar por correo.
   } catch (err) {
     console.error("[notifyAppealReceived] failed:", err);
   }
@@ -283,10 +273,10 @@ export async function notifyVerificationOutreach(professionalId: string): Promis
     const admin = createAdminClient();
     const { data: pro } = await admin
       .from("professionals")
-      .select("profile_id, whatsapp, category_id, profiles(full_name, email, cedula)")
+      .select("profile_id, verification_status, is_verified, whatsapp, category_id, profiles(full_name, email, cedula)")
       .eq("id", professionalId)
       .maybeSingle();
-    if (!pro?.profile_id) return;
+    if (!pro?.profile_id || !canReceiveVerificationOutreach(pro)) return;
     const toca = await avisoQueTocaDeVerificacion(admin, pro.profile_id as string);
     if (!toca) return;
 
@@ -328,7 +318,7 @@ export async function notifyVerificationOutreach(professionalId: string): Promis
         firstName,
         toca === "recordatorio" ? "Todavía puedes verificar tu perfil" : "Verificación de tu perfil",
         "#009FD9",
-        `${toca === "recordatorio" ? "Te escribimos hace un mes y tu perfil sigue sin verificar. " : ""}` +
+        `${toca === "recordatorio" ? "Hace al menos un mes te enviamos los pasos para verificarte. " : ""}` +
           `Tu perfil todavía no está verificado. El check azul sale junto a tu nombre, y los perfiles verificados aparecen primero cuando alguien busca tu servicio.<br/><br/>` +
           `Es gratis y solo necesitamos <strong>dos fotos</strong>. Con el celular está bien:<br/><br/>` +
           `1. ${fotos[0]}<br/>2. ${fotos[1]}<br/><br/>` +

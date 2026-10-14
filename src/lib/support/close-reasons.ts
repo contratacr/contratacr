@@ -10,16 +10,8 @@ export const SUPPORT_CLOSE_REASONS = [
     id: "solved",
     label: { es: "Resuelto", en: "Solved" },
     message: {
-      es: "Damos este caso por resuelto. Si el problema vuelve a aparecer, responde a este mismo mensaje y lo retomamos con todo el historial a la vista.",
+      es: "Tu consulta quedó resuelta y cerramos el caso. Si todavía necesitas ayuda, abre la conversación desde el botón y responde allí.",
       en: "We're marking this case as solved. If the problem comes back, reply to this message and we'll pick it up with the full history at hand.",
-    },
-  },
-  {
-    id: "answered",
-    label: { es: "Consulta respondida", en: "Question answered" },
-    message: {
-      es: "Cerramos el caso porque la consulta quedó respondida. Si algo no quedó claro, responde a este mensaje y seguimos por acá.",
-      en: "We're closing this case since the question was answered. If anything is unclear, reply to this message and we'll continue here.",
     },
   },
   {
@@ -49,7 +41,9 @@ export const SUPPORT_CLOSE_REASONS = [
 ] as const;
 
 export function supportCloseReason(id: string) {
-  return SUPPORT_CLOSE_REASONS.find((reason) => reason.id === id) ?? null;
+  // Preserve old records and callers without offering two equivalent choices.
+  const canonicalId = id === "answered" ? "solved" : id;
+  return SUPPORT_CLOSE_REASONS.find((reason) => reason.id === canonicalId) ?? null;
 }
 
 // El mensaje que se publica: el motivo y, si el admin escribió algo propio, su
