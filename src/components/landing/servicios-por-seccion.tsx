@@ -35,9 +35,8 @@ export function ServiciosPorSeccion({ secciones, verTodos, masSecciones = "" }: 
     const io = new IntersectionObserver((e) => { if (e.some((x) => x.isIntersecting)) { setCerca(true); io.disconnect(); } }, { rootMargin: "0px" });
     io.observe(el);
     return () => io.disconnect();
-  }, [cerca]);
+  }, [cerca, secciones.length]);
   const seccion = secciones[activa] ?? secciones[0];
-  if (!seccion) return null;
 
   // Flecha «›» a la derecha cuando las pestañas no caben (como Thumbtack).
   const [hayMas, setHayMas] = useState(false);
@@ -49,7 +48,9 @@ export function ServiciosPorSeccion({ secciones, verTodos, masSecciones = "" }: 
     f.addEventListener("scroll", medir, { passive: true });
     window.addEventListener("resize", medir);
     return () => { f.removeEventListener("scroll", medir); window.removeEventListener("resize", medir); };
-  }, []);
+  }, [secciones.length]);
+
+  if (!seccion) return null;
 
   const elegir = (indice: number, boton: HTMLButtonElement) => {
     setActiva(indice);
