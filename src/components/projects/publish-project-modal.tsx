@@ -339,7 +339,7 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
               {avisoDeIdentidad && <p data-aviso-identidad className="max-w-[22rem] text-sm leading-relaxed text-[#4b5b70]">{avisoDeIdentidad}</p>}
             </PantallaDeExito>
           ) : (
-            <div ref={cuerpo} className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain bg-[#f4f7fa] px-4 py-5 sm:max-h-[calc(90vh-145px)] sm:flex-none">
+            <div ref={cuerpo} className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain bg-white px-4 py-5 sm:max-h-[calc(90vh-145px)] sm:flex-none">
               <div className="flex flex-col gap-6 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
                 <div ref={categoryFieldRef}>
                   <label className={fieldLabel}>{t("category")}{obligatorio}</label>

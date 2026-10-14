@@ -194,7 +194,7 @@ export default function RegisterClientPage() {
   // account" flash before being redirected to their panel.
   if (checking) {
     return (
-      <div className="min-h-dvh flex items-center justify-center bg-[#fafafa]">
+      <div className="min-h-dvh flex items-center justify-center bg-white">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
       </div>
     );
@@ -202,7 +202,7 @@ export default function RegisterClientPage() {
 
   if (otpEmail) {
     return (
-      <div className="ccr-account-page min-h-dvh flex flex-col bg-[#fafafa]">
+      <div className="ccr-account-page min-h-dvh flex flex-col bg-white">
         {user ? <CabeceraDeTramite title={t("title")} /> : <Navbar mobileSearch={false} />}
         <main className="flex-1 ccr-centrado-seguro px-4 py-12">
           <div className="w-full max-w-sm">
@@ -217,7 +217,7 @@ export default function RegisterClientPage() {
 
   if (success) {
     return (
-      <div className="ccr-account-page min-h-dvh flex flex-col bg-[#fafafa]">
+      <div className="ccr-account-page min-h-dvh flex flex-col bg-white">
         {user ? <CabeceraDeTramite title={t("title")} /> : <Navbar mobileSearch={false} />}
         <main className="flex-1 ccr-centrado-seguro px-4 py-12">
           <div className="w-full max-w-md text-center">
@@ -242,7 +242,7 @@ export default function RegisterClientPage() {
     "w-full h-11 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
 
   return (
-    <div className="ccr-account-page min-h-dvh flex flex-col bg-[#fafafa]">
+    <div className="ccr-account-page min-h-dvh flex flex-col bg-white">
       {user ? <CabeceraDeTramite title={t("title")} /> : <Navbar mobileSearch={false} />}
       <main className="flex-1 ccr-centrado-seguro px-4 py-12">
         <div className="w-full max-w-md">

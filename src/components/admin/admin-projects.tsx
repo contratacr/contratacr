@@ -310,7 +310,7 @@ export function AdminProjects() {
                             {project.archived_by_client && <span>Archivada por cliente</span>}
                           </div>
                           {project.for_someone_else && (
-                            <p className="mt-2 rounded-lg bg-[#f9fafb] px-3 py-2 text-xs text-[#6b7280]">
+                            <p className="mt-2 rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-xs text-[#6b7280]">
                               Para otra persona: {project.beneficiary_name || "sin nombre"}
                             </p>
                           )}
@@ -318,7 +318,7 @@ export function AdminProjects() {
                       </div>
                     </div>
 
-                    <div className="grid gap-3 rounded-xl border border-[#eef2f6] bg-[#fbfdff] p-3 text-sm sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                    <div className="grid gap-3 rounded-xl border border-[#eef2f6] bg-white p-3 text-sm sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                       <div className="min-w-0">
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Cliente</p>
                         <p className="mt-0.5 truncate"><PersonLink id={project.client.id} name={project.client.name} /></p>

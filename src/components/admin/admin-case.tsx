@@ -229,11 +229,11 @@ export function AdminCase({ providerId }: { providerId: string }) {
                 <p className="text-sm text-[#b45309]">La cédula no se encontró en el padrón cargado.</p>
               ) : (
                 <div className="grid sm:grid-cols-2 gap-2.5 text-sm">
-                  <div className="rounded-lg border border-[#eef2f6] bg-[#f9fafb] px-3 py-2">
+                  <div className="rounded-lg border border-[#eef2f6] bg-white px-3 py-2">
                     <p className="text-[11px] uppercase tracking-wide text-[#68778d]">Nombre ingresado</p>
                     <p className="text-[#374151] font-medium mt-0.5">{profile?.full_name}</p>
                   </div>
-                  <div className="rounded-lg border border-[#eef2f6] bg-[#f9fafb] px-3 py-2">
+                  <div className="rounded-lg border border-[#eef2f6] bg-white px-3 py-2">
                     <p className="text-[11px] uppercase tracking-wide text-[#68778d]">Nombre en el padrón</p>
                     <p className="text-[#374151] font-medium mt-0.5">{padron.name || "—"}</p>
                   </div>
@@ -458,7 +458,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
 
 function Field({ label, value }: { label: string; value?: string | null }) {
   return (
-    <div className="rounded-lg border border-[#eef2f6] bg-[#f9fafb] px-3 py-2">
+    <div className="rounded-lg border border-[#eef2f6] bg-white px-3 py-2">
       <dt className="text-[11px] uppercase tracking-wide text-[#68778d]">{label}</dt>
       <dd className="text-[#374151] break-words text-sm mt-0.5">{value || "—"}</dd>
     </div>

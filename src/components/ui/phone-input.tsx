@@ -135,7 +135,7 @@ export function PhoneInput({ value, onChange, label, error, required, optional, 
           error ? "border-red-400" : "border-[#e5e7eb]"
         )}
       >
-        <div className="relative flex items-center gap-1.5 bg-[#f3f4f6] px-2.5 border-r border-[#e5e7eb] shrink-0">
+        <div className="relative flex items-center gap-1.5 bg-white px-2.5 border-r border-[#e5e7eb] shrink-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={`https://flagcdn.com/24x18/${country.iso}.png`}

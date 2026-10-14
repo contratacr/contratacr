@@ -451,7 +451,7 @@ export function SupportTickets({
     return (
       <>
         <div className="ccr-support-new-ticket flex min-h-0 flex-1 flex-col bg-white">
-          <div className="min-h-0 flex-1 overflow-y-auto bg-[#f4f7fa] py-5">
+          <div className="min-h-0 flex-1 overflow-y-auto bg-white py-5">
             <SupportForm onSuccess={handleNewTicketSubmitted} />
           </div>
         </div>
@@ -518,7 +518,7 @@ export function SupportTickets({
             {/* El primer mensaje ARRIBA, como en un chat: Isaac lo pidio dos
                 veces y la segunda con razon. Apoyar el bloque sobre el campo
                 dejaba el hueco encima y se leia como una lista al reves. */}
-            <div ref={messagesRef} className="ccr-support-thread-messages flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain bg-[#f3f7fa] px-4 py-5 sm:px-6">
+            <div ref={messagesRef} className="ccr-support-thread-messages flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain bg-white px-4 py-5 sm:px-6">
               {/* Lo único que espera son los mensajes, y esperan con forma de
                   mensaje: dos globos grises, uno de cada lado. */}
               {threadLoading && messages.length === 0 && (

@@ -62,7 +62,7 @@ function KpiCard({ icon: Icon, label, value, suffix, kpi, color, deltaSuffix, in
 }
 
 function EmptyMini({ label, className = "" }: { label: string; className?: string }) {
-  return <div className={`flex items-center justify-center rounded-xl bg-[#f8fafc] text-sm text-[#94a3b8] ${className}`}>{label}</div>;
+  return <div className={`flex items-center justify-center rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#94a3b8] ${className}`}>{label}</div>;
 }
 
 function Initials({ name, role }: { name: string; role: "professional" | "client" }) {

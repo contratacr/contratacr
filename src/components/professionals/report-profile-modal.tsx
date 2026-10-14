@@ -153,7 +153,7 @@ export function ReportProfileModal({ professionalName, professionalSlug, context
           </div>
         ) : (
           <div className="px-6 py-5 flex flex-col gap-4">
-            <div className="flex items-start gap-2 rounded-xl bg-[#f4f7fa] border border-[#e5e7eb] px-3.5 py-3">
+            <div className="flex items-start gap-2 rounded-xl bg-white border border-[#e5e7eb] px-3.5 py-3">
               <ShieldAlert className="h-4 w-4 text-[#009FD9] shrink-0 mt-0.5" />
               <p className="text-xs text-[#6b7280]">
                 {t("confidential")}

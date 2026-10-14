@@ -518,9 +518,9 @@ export function ProjectsBoard({
     // desplaza sobre gris, como la de un empleo o una promoción; sin ella es un
     // tablero de alto fijo con la lista y la ficha lado a lado.
     <main className={cn(
-      "min-h-[calc(100vh-72px)] bg-white text-[#162543] sm:bg-[#fafafa]",
+      "min-h-[calc(100vh-72px)] bg-white text-[#162543] sm:bg-white",
       detalle
-        ? "lg:bg-[#f4f7fa]"
+        ? "lg:bg-white"
         // El tablero no desplaza la página: se desplaza la lista, como en
         // Empleos y Promociones (regla data-ccr-tablero-fijo en layout.tsx).
         : "ccr-tablero-fijo lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:bg-white",

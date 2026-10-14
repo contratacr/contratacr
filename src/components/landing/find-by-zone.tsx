@@ -166,7 +166,7 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
                 </div>
               </>
             ) : (
-              <div className="rounded-2xl bg-[#f9fafb] border border-[#e5e7eb] p-5 mb-6">
+              <div className="rounded-2xl bg-white border border-[#e5e7eb] p-5 mb-6">
                 <p className="text-sm font-semibold text-[#374151]">{t("emptyTitle", { province: province.name })}</p>
                 <p className="text-[13px] text-[#6b7280] mt-1">
                   {t("emptyDesc")}

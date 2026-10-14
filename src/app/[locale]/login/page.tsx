@@ -440,7 +440,7 @@ export default function LoginPage() {
 
   if (otpEmail) {
     return (
-      <div className="ccr-account-page min-h-dvh flex flex-col bg-[#fafafa]">
+      <div className="ccr-account-page min-h-dvh flex flex-col bg-white">
         <Navbar mobileSearch={false} />
         <main className="flex-1 ccr-centrado-seguro py-12 px-4">
           <div className="w-full max-w-sm">
@@ -465,7 +465,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="ccr-account-page min-h-dvh flex flex-col bg-[#fafafa]">
+    <div className="ccr-account-page min-h-dvh flex flex-col bg-white">
       {/* Visual only: the press that opens Google's window must still reach its
           iframe underneath, so the cover never intercepts pointer events. */}
       {leaving && <div className="contents pointer-events-none"><PageRouteLoading /></div>}

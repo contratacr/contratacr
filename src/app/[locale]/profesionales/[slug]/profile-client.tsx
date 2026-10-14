@@ -575,7 +575,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
 
   if (bloqueado && professional) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
+      <div className="min-h-screen flex flex-col bg-white">
         <Navbar />
         <main className="flex-1 bg-white">
           <section className="mx-auto flex min-h-[calc(100dvh-64px)] max-w-3xl flex-col items-center justify-center px-6 py-14 text-center sm:px-8 sm:py-20">
@@ -593,7 +593,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
 
   if (proNotFound || !professional) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
+      <div className="min-h-screen flex flex-col bg-white">
         <Navbar />
         <main className="flex-1 bg-white">
           <section className="mx-auto flex min-h-[calc(100dvh-64px)] max-w-3xl flex-col items-center justify-center px-6 py-14 text-center sm:px-8 sm:py-20">
@@ -834,7 +834,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   const montada = (id: string) => id === tabEfectiva || pestanasVisitadas.has(id);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
+    <div className="min-h-screen flex flex-col bg-white">
       <Navbar />
 
       {/* El respiro final es solo eso: el alto de la barra de abajo ya lo

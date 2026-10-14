@@ -57,7 +57,7 @@ export function HojaDeCrear({ abierta, onCerrar, esProfesional }: { abierta: boo
       <div className="absolute inset-0 bg-[#071426]/40 backdrop-blur-[2px]" onClick={onCerrar} />
       <div
         ref={hojaRef}
-        className="app-bottom-sheet app-sheet-compact relative z-10 w-full max-w-md rounded-t-[26px] bg-[#f4f7fa] px-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-18px_48px_-24px_rgba(15,23,42,0.55)]"
+        className="app-bottom-sheet app-sheet-compact relative z-10 w-full max-w-md rounded-t-[26px] bg-white px-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-18px_48px_-24px_rgba(15,23,42,0.55)]"
         // Arrastrar la hoja hacia abajo la cierra, como en Facebook.
         onPointerDown={(event) => { if (event.pointerType !== "mouse") arrastre.current = { y: event.clientY }; }}
         onPointerMove={(event) => {

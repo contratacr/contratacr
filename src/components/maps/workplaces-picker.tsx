@@ -325,7 +325,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
               interruptor. Listado aquí parecía cumplir el lugar obligatorio y el
               formulario igual pedía uno («Falta tu lugar de trabajo»). */}
           {value.filter((wp) => wp.level !== "country").map((wp) => (
-            <div key={wp.id} className="flex items-center gap-3 rounded-xl bg-[#f8fafc] px-3 py-2.5">
+            <div key={wp.id} className="flex items-center gap-3 rounded-xl border border-[#e5e7eb] bg-white px-3 py-2.5">
               <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white text-[#009FD9] shadow-sm ring-1 ring-[#e5eef6]">
                 <MapPin className="h-4.5 w-4.5" />
               </span>

@@ -157,7 +157,7 @@ function AdminDialog({
             </div>
           )}
         </div>
-        <div className="flex flex-col-reverse gap-2 border-t border-[#eef2f6] bg-[#f8fafc] p-4 sm:flex-row sm:justify-end">
+        <div className="flex flex-col-reverse gap-2 border-t border-[#eef2f6] bg-white p-4 sm:flex-row sm:justify-end">
           {dialog.cancelLabel && (
             <button type="button" onClick={onClose} disabled={busy} className="inline-flex h-10 items-center justify-center rounded-lg border border-[#d7e1ea] bg-white px-4 text-sm font-semibold text-[#374151] transition hover:bg-[#f9fafb] disabled:opacity-50">
               {dialog.cancelLabel}
@@ -917,7 +917,7 @@ export function AdminCategories() {
 
       {view === "suggestions" && (
         <section className="space-y-4">
-          <div className="rounded-2xl border border-[#d8eef8] bg-[#f8fbfe] p-4">
+          <div className="rounded-2xl border border-[#d8eef8] bg-white p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm font-bold text-[#162543]">Revisión asistida</p>
               <span className="rounded-full bg-white px-3 py-1 text-xs font-extrabold text-[#0077a3] shadow-sm">
@@ -1141,7 +1141,7 @@ export function AdminCategories() {
                       type="button"
                       onClick={() => setOpenGroups((current) => ({ ...current, [section.id]: !open }))}
                       aria-expanded={open}
-                      className="flex w-full items-center justify-between gap-3 bg-[#f8fafc] px-4 py-3 text-left hover:bg-[#f1f5f9]"
+                      className="flex w-full items-center justify-between gap-3 bg-white px-4 py-3 text-left hover:bg-[#f1f5f9]"
                     >
                       <span className="min-w-0">
                         <span className="block truncate text-sm font-bold text-[#162543]">{section.label}</span>

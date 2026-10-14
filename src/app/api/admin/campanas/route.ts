@@ -80,7 +80,7 @@ function bodyToHtml(body: string, ctaLabel: string, ctaHref: string, bajaHref: s
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:26px 0 0;border-top:1px solid #eef1f5;width:100%">
       <tr><td style="padding-top:18px;font-family:Arial,Helvetica,sans-serif">
         <p style="margin:0;font-size:14px;font-weight:bold;color:#162543">Equipo ContrataCR</p>
-        <p style="margin:2px 0 0;font-size:13px;color:#68778d">El mercado de servicios hecho para Costa Rica</p>
+        <p style="margin:2px 0 0;font-size:13px;color:#68778d">La plataforma de servicios hecha para Costa Rica</p>
         <p style="margin:8px 0 0;font-size:13px;color:#68778d">
           <a href="${escapeHtml(APP_URL)}" style="color:#009FD9;text-decoration:none">contratacr.com</a>
           &nbsp;·&nbsp;

@@ -390,7 +390,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
   return (
     <div className="flex max-h-[calc(100vh-7rem)] min-h-0 flex-col overflow-hidden">
       {/* Search - inline; typing filters the list below IN PLACE (no portal/overlay). */}
-      <div className="mb-4 flex h-11 shrink-0 items-center rounded-xl border border-gray-200 bg-gray-50/70 px-3.5 transition-all focus-within:bg-white focus-within:ring-2 focus-within:ring-[#009FD9]/20">
+      <div className="mb-4 flex h-11 shrink-0 items-center rounded-xl border border-gray-200 bg-white px-3.5 transition-all focus-within:bg-white focus-within:ring-2 focus-within:ring-[#009FD9]/20">
         <Search className="h-4 w-4 shrink-0 text-gray-400" />
         <input
           data-testid="services-mega-menu-search"
@@ -413,7 +413,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
       {filtering ? (
         matches.length > 0 ? (
           <div className="grid min-h-0 flex-1 grid-cols-[15rem_minmax(0,1fr)] overflow-hidden rounded-2xl border border-[#eef2f6] bg-white shadow-[0_18px_45px_-36px_rgba(15,23,42,0.45)]">
-            <div className="min-w-0 overflow-y-auto overscroll-contain border-r border-[#eef2f6] bg-[#f8fafc] p-2">
+            <div className="min-w-0 overflow-y-auto overscroll-contain border-r border-[#eef2f6] bg-white p-2">
               {groupedMatches.map(({ group, items }) => {
                 const Icon = getCategoryGroupIcon(group.id, group.iconKey);
                 const selected = selectedSearchGroupId === group.id;
@@ -498,7 +498,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
         )
       ) : (
         <div className="grid min-h-0 flex-1 grid-cols-[16.5rem_minmax(0,1fr)] overflow-hidden rounded-2xl border border-[#eef2f6] bg-white shadow-[0_18px_45px_-36px_rgba(15,23,42,0.45)]">
-          <div className="min-w-0 overflow-y-auto overscroll-contain border-r border-[#eef2f6] bg-[#f8fafc] p-2">
+          <div className="min-w-0 overflow-y-auto overscroll-contain border-r border-[#eef2f6] bg-white p-2">
             {menuGroups.map((group) => {
               const Icon = getCategoryGroupIcon(group.id, group.iconKey);
               const selected = selectedGroup?.id === group.id;
@@ -558,7 +558,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
                     ))}
                   </div>
                 ) : (
-                  <p className="rounded-xl bg-[#f8fafc] px-3 py-4 text-sm font-medium text-[#8a94a6]">
+                  <p className="rounded-xl border border-[#e5e7eb] bg-white px-3 py-4 text-sm font-medium text-[#8a94a6]">
                     {locale === "en" ? "This section does not have published services yet." : "Esta sección todavía no tiene servicios publicados."}
                   </p>
                 )}
@@ -2981,7 +2981,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     {/* LA CUENTA, ARRIBA DEL MENÚ (como Facebook o Angi): foto, nombre
                         —el comercial si lo tiene— y «Ir a mi panel». En la app también,
                         aunque el panel esté en la barra de abajo: aquí se ve QUIÉN es. */}
-                    <Link href={primaryPanelHref} prefetch={false} onClick={cerrarCajon} className="-mx-3 mb-2 flex items-center gap-3 rounded-2xl bg-[#f4f7fa] p-3 transition-colors hover:bg-[#eaf2f8]">
+                    <Link href={primaryPanelHref} prefetch={false} onClick={cerrarCajon} className="-mx-3 mb-2 flex items-center gap-3 rounded-2xl border border-[#e5e7eb] bg-white p-3 transition-colors hover:bg-[#eaf2f8]">
                       {avatarUrlCuenta
                         // eslint-disable-next-line @next/next/no-img-element -- avatar pequeño de tamaño fijo
                         ? <img src={avatarUrlCuenta} alt="" className="h-12 w-12 shrink-0 rounded-full object-cover ring-1 ring-[#e2e8f0]" />
@@ -3177,7 +3177,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     switchLang(alternateLocale);
                     setMobileOpen(false);
                   }}
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#f1f5f9] px-3.5 text-[13px] font-bold text-[#52627a] transition-colors hover:bg-[#e6edf4] hover:text-[#162543]"
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-white px-3.5 text-[13px] font-bold text-[#52627a] transition-colors hover:bg-[#e6edf4] hover:text-[#162543]"
                 >
                   <Globe2 className="h-4 w-4 shrink-0" />
                   <span className="min-w-0 truncate">{alternateLanguageLabel}</span>
@@ -3190,7 +3190,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       cerrarCajon();
                       void handleSignOut();
                     }}
-                    className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#f1f5f9] px-3.5 text-[13px] font-bold text-[#52627a] transition-colors hover:bg-[#fdeaea] hover:text-[#b4232a]"
+                    className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-white px-3.5 text-[13px] font-bold text-[#52627a] transition-colors hover:bg-[#fdeaea] hover:text-[#b4232a]"
                   >
                     <LogOut className="h-4 w-4 shrink-0" />
                     <span className="min-w-0 truncate">{locale === "en" ? "Sign out" : "Salir"}</span>

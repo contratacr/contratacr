@@ -268,7 +268,7 @@ export function ShareKit({ open, onClose, initialView = "menu", profileUrl, name
       {view === "reviews" && (
         <div className="flex flex-col gap-3">
           <p className="text-left text-[14px] leading-6 text-[#52627a]">{t("reviewsHint")}</p>
-          <p className="rounded-2xl bg-[#f4f7fa] px-4 py-3 text-left text-[14px] leading-6 text-[#162543] [overflow-wrap:anywhere]">{reviewsMessage}</p>
+          <p className="rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3 text-left text-[14px] leading-6 text-[#162543] [overflow-wrap:anywhere]">{reviewsMessage}</p>
           <a href={waHref} target="_blank" rel="noopener noreferrer" className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[#009FD9] px-5 text-[14px] font-bold text-white transition-colors hover:bg-[#0089bb]">{t("sendWhatsApp")}</a>
           <Button type="button" variant="secondary" className="w-full" onClick={() => void copy(reviewsMessage, "message")}>
             {copied === "message" ? <><Check className="h-4 w-4" />{t("messageCopied")}</> : t("copyMessage")}

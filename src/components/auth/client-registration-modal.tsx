@@ -449,7 +449,7 @@ export function ClientRegistrationModal({
 
           {/* Professional context */}
           {professionalName && (
-            <div className="px-6 py-3 bg-[#f9fafb] border-b border-[#eef2f6] shrink-0">
+            <div className="px-6 py-3 bg-white border-b border-[#eef2f6] shrink-0">
               <p className="text-xs text-[#68778d]">
                 {intent === "whatsapp" ? t("toContactWhatsapp") : intent === "phone" ? t("toCall") : intent === "email" ? t("toEmail") : intent === "message" ? t("toMessage") : t("toContact")}
               </p>

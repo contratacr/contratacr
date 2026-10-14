@@ -105,7 +105,7 @@ export default function SoportePage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
+    <div className="min-h-screen flex flex-col bg-white">
       <LandingNavbar />
       <SectionHeaderTitle title={tSeccion("support")} fallbackHref="/" />
       <div className="ccr-navbar-spacer h-16" aria-hidden />

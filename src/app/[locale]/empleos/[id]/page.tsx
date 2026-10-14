@@ -139,7 +139,7 @@ export default async function JobDetailRedirect({ params, searchParams }: Props)
   const nombre = empleador?.business_name || empleador?.profiles?.full_name || null;
 
   return (
-    <main className="min-h-[calc(100vh-72px)] bg-white text-[#162543] sm:bg-[#f4f7fa]">
+    <main className="min-h-[calc(100vh-72px)] bg-white text-[#162543] sm:bg-white">
       {/* Las mismas medidas que la ficha de un empleo vivo: 6xl, la columna de
           760 centrada. La lápida no es otra pantalla, es la misma sin acciones. */}
       <div className="mx-auto w-full max-w-6xl px-4 pb-10 pt-6 sm:px-6 sm:pt-8">
@@ -163,11 +163,11 @@ export default async function JobDetailRedirect({ params, searchParams }: Props)
             {cerrado.location_label && <p className="mt-1 text-sm text-[#68778d]">{cerrado.location_label}</p>}
             {/* En computadora el aviso vive en la tarjeta de la derecha, donde
                 iría el salario: repetido en las dos se leía como un error. */}
-            <p className="mt-5 rounded-lg bg-[#f4f7fa] p-4 text-sm font-bold lg:hidden">{t("unavailable")}</p>
+            <p className="mt-5 rounded-lg border border-[#e5e7eb] bg-white p-4 text-sm font-bold lg:hidden">{t("unavailable")}</p>
           </article>
           <aside className="hidden h-fit w-80 shrink-0 rounded-lg border border-[#e5e7eb] bg-white p-5 lg:block">
             <p className="text-xs font-bold uppercase tracking-wide text-[#7a899d]">{t("heading")}</p>
-            <p className="mt-3 rounded-lg bg-[#f4f7fa] p-4 text-sm font-bold">{t("unavailable")}</p>
+            <p className="mt-3 rounded-lg border border-[#e5e7eb] bg-white p-4 text-sm font-bold">{t("unavailable")}</p>
           </aside>
         </div>
       </div>

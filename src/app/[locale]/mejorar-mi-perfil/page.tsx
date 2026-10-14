@@ -46,7 +46,7 @@ export default function AtraerClientesPage() {
           </div>
         </section>
 
-        <section className="bg-[#f4f7fa] px-4 py-12 sm:py-16">
+        <section className="bg-white px-4 py-12 sm:py-16">
           <div className="mx-auto max-w-4xl">
             <div className="mb-7 max-w-2xl">
               <h2 className="text-2xl font-extrabold text-[#162543]">{t("profileChecklistTitle")}</h2>
@@ -55,7 +55,7 @@ export default function AtraerClientesPage() {
             <div className="divide-y divide-[#e5e7eb] rounded-lg border border-[#e5e7eb] bg-white px-5 sm:px-7">
               {PROFILE_ACTIONS.map(({ index, icon: Icon }) => (
                 <article key={index} className="grid gap-3 py-6 sm:grid-cols-[2.5rem_minmax(0,1fr)]">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl ccr-caja-icono"><Icon className="h-5 w-5" /></div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl ccr-caja-icono"><Icon className={`h-5 w-5${Icon === VerifiedSeal ? " text-[#009FD9]" : ""}`} /></div>
                   <div>
                     <h3 className="text-sm font-bold text-[#162543]">{t(`tip${index}Title`)}</h3>
                     <p className="mt-1 text-sm leading-6 text-[#6b7280]">{t(`tip${index}Body`)}</p>
@@ -92,7 +92,7 @@ export default function AtraerClientesPage() {
           </div>
         </section>
 
-        <section className="bg-[#f4f7fa] px-4 py-12 sm:py-16">
+        <section className="bg-white px-4 py-12 sm:py-16">
           <div className="mx-auto max-w-4xl">
             <div className="mb-7">
               <h2 className="text-2xl font-extrabold text-[#162543]">{t("dosDontsTitle")}</h2>
@@ -111,7 +111,7 @@ export default function AtraerClientesPage() {
           </div>
         </section>
 
-        <section className="border-t border-[#e5e7eb] bg-[#f7fbfd] px-4 py-12">
+        <section className="border-t border-[#e5e7eb] bg-white px-4 py-12">
           <div className="mx-auto flex max-w-4xl flex-col items-start justify-between gap-5 sm:flex-row sm:items-center">
             <div><h2 className="text-xl font-extrabold text-[#162543]">{t("ctaTitle")}</h2><p className="mt-2 text-sm text-[#6b7280]">{t("ctaSubtitle")}</p></div>
             <Link href="/registro/profesional" className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white hover:bg-[#0089bb]">{t("ctaRegister")}<ArrowRight className="h-4 w-4" /></Link>

@@ -102,7 +102,7 @@ export function AdminReviews() {
             </p>
           </div>
           <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-5">
-            <div className="rounded-xl bg-[#f1f5f9] px-4 py-3">
+            <div className="rounded-xl border border-[#e5e7eb] bg-white px-4 py-3">
               <p className="text-xl font-bold text-[#0f172a]">{counts.total}</p>
               <p className="text-xs font-semibold text-[#64748b]">Total</p>
             </div>
@@ -195,12 +195,12 @@ export function AdminReviews() {
                 </div>
 
                 <div className="mt-4 grid gap-3 text-sm md:grid-cols-2">
-                  <div className="rounded-xl bg-[#f8fafc] p-3">
+                  <div className="rounded-xl border border-[#e5e7eb] bg-white p-3">
                     <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#94a3b8]">Cliente</p>
                     <p className="mt-1 font-semibold text-[#0f172a]">{review.client.name}</p>
                     {review.client.email && <p className="text-xs text-[#64748b]">{review.client.email}</p>}
                   </div>
-                  <div className="rounded-xl bg-[#f8fafc] p-3">
+                  <div className="rounded-xl border border-[#e5e7eb] bg-white p-3">
                     <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#94a3b8]">Profesional</p>
                     {review.professional.slug ? (
                       <Link

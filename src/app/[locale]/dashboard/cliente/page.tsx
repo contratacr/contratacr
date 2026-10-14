@@ -34,7 +34,7 @@ export default function ClientDashboardRedirect() {
   }, [router, searchParams]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#fafafa]">
+    <div className="min-h-screen flex items-center justify-center bg-white">
       <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
     </div>
   );

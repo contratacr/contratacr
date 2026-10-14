@@ -282,7 +282,7 @@ function ServiceCatalogModal({
                 key={cat.id}
                 type="button"
                 onClick={() => select(cat.id)}
-                className="group flex items-center justify-between gap-2 rounded-xl border border-[#e5e7eb] bg-white px-3.5 py-2.5 text-left text-sm font-medium text-[#374151] transition-all hover:border-[#009FD9] hover:bg-[#f8fbfe] hover:text-[#0089bb]"
+                className="group flex items-center justify-between gap-2 rounded-xl border border-[#e5e7eb] bg-white px-3.5 py-2.5 text-left text-sm font-medium text-[#374151] transition-all hover:border-[#009FD9] hover:bg-white hover:text-[#0089bb]"
               >
                 <span className="min-w-0 [overflow-wrap:anywhere]">{getCategoryLabel(cat.id, locale)}</span>
                 <Plus className="h-4 w-4 shrink-0 text-[#009FD9]" />
@@ -298,7 +298,7 @@ function ServiceCatalogModal({
             backLabel={t("pickerBack")}
             countLabel={(count) => t("pickerOptionsCount", { count })}
             optionAction={<Plus className="h-4 w-4 shrink-0 text-[#009FD9]" />}
-            optionClassName="rounded-xl border border-[#e5e7eb] bg-white hover:border-[#009FD9] hover:bg-[#f8fbfe]"
+            optionClassName="rounded-xl border border-[#e5e7eb] bg-white hover:border-[#009FD9] hover:bg-white"
           />
         )}
 
@@ -344,7 +344,7 @@ function ServicePickerTrigger({
       onClick={onClick}
       aria-invalid={!!error}
       className={cn(
-        "group flex h-11 w-full items-center justify-between gap-3 rounded-xl border bg-white px-3.5 text-left text-sm transition-all hover:border-[#009FD9] hover:bg-[#f8fbfe]",
+        "group flex h-11 w-full items-center justify-between gap-3 rounded-xl border bg-white px-3.5 text-left text-sm transition-all hover:border-[#009FD9] hover:bg-white",
         error ? "border-red-400" : "border-[#e5e7eb]"
       )}
     >
@@ -1019,7 +1019,7 @@ export default function RegisterProfessionalPage() {
   // ── OTP screen ──────────────────────────────────────────────────────────────
   if (otpEmail) {
     return (
-      <div className="ccr-account-page min-h-dvh flex flex-col bg-[#fafafa]">
+      <div className="ccr-account-page min-h-dvh flex flex-col bg-white">
         {currentUser ? <CabeceraDeTramite title={t("headerTitle")} backHref="/dashboard/profesional" onBack={step > 0 ? () => setStep(step - 1) : undefined} backLabel={step > 0 ? t("back") : undefined} /> : <Navbar mobileSearch={false} />}
         <main className="flex-1 ccr-centrado-seguro py-12 px-4">
           <div className="w-full max-w-sm">
@@ -1080,7 +1080,7 @@ export default function RegisterProfessionalPage() {
   );
 
   return (
-    <div className="ccr-account-page min-h-dvh flex flex-col bg-[#fafafa]">
+    <div className="ccr-account-page min-h-dvh flex flex-col bg-white">
       {currentUser ? <CabeceraDeTramite title={t("headerTitle")} backHref="/dashboard/profesional" onBack={step > 0 ? () => setStep(step - 1) : undefined} backLabel={step > 0 ? t("back") : undefined} /> : <Navbar mobileSearch={false} />}
       {/* Con sesión la tarjeta se pega arriba, debajo del título: `ccr-centrado-seguro`
           la centra a lo alto de la pantalla y en un paso corto eso dejaba un
@@ -1125,7 +1125,7 @@ export default function RegisterProfessionalPage() {
 
           {/* ── OAuth identity confirmation (identity step only) ───────────── */}
           {currentUser && step === 0 && (
-            <div className="mb-4 overflow-hidden rounded-2xl border border-[#d8eef8] bg-[#f8fbfe]">
+            <div className="mb-4 overflow-hidden rounded-2xl border border-[#d8eef8] bg-white">
               <div className="px-4 py-3">
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-semibold text-[#6b7280]">
@@ -1224,7 +1224,7 @@ export default function RegisterProfessionalPage() {
                   <Loader2 className="h-5 w-5 animate-spin text-[#009FD9]" />
                 </div>
               ) : accountCedula ? (
-                <div className="rounded-2xl border border-[#d8eef8] bg-[#f8fbfe] px-4 py-3">
+                <div className="rounded-2xl border border-[#d8eef8] bg-white px-4 py-3">
                   <p className="text-xs font-semibold text-[#6b7280]">{t("identityAlreadyRegistered")}</p>
                   <p className="mt-1 break-words text-sm font-bold text-[#162543]">
                     {t("usesAccountId", { name: oauthFullName || t("yourAccount") })}

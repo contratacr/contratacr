@@ -149,7 +149,7 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
   }
 
   return (
-    <div className={embedded ? "text-[#162543]" : "min-h-[calc(100vh-72px)] bg-[#f4f7fa] px-4 py-6 text-[#162543] sm:px-6 sm:py-10"}>
+    <div className={embedded ? "text-[#162543]" : "min-h-[calc(100vh-72px)] bg-white px-4 py-6 text-[#162543] sm:px-6 sm:py-10"}>
       <div className={embedded ? "w-full" : "mx-auto max-w-4xl"}>
         <div className="mb-5 flex flex-col gap-4">
           <div className="min-w-0">
@@ -286,12 +286,12 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
         </div>
       </div>
       {publishOpen && professionalId && (
-        <Modal onClose={() => setPublishOpen(false)} title={copy.publishTitle} size="lg" bodyClassName="bg-[#f4f7fa] px-0 py-0">
+        <Modal onClose={() => setPublishOpen(false)} title={copy.publishTitle} size="lg" bodyClassName="bg-white px-0 py-0">
           <OfferForm onCancel={() => setPublishOpen(false)} professionalId={professionalId} serviceOptions={serviceOptions} presentation="modal" backHref={backHref} onSaved={(id, title) => { setPublishOpen(false); onRefresh?.(); router.push(`${rutaPromocion({ id, title })}?from=panel`); }} />
         </Modal>
       )}
       {editingOffer && professionalId && (
-        <Modal onClose={() => setEditingOffer(null)} title={copy.editTitle} size="lg" bodyClassName="bg-[#f4f7fa] px-0 py-0">
+        <Modal onClose={() => setEditingOffer(null)} title={copy.editTitle} size="lg" bodyClassName="bg-white px-0 py-0">
           <OfferForm onCancel={() => setEditingOffer(null)} key={editingOffer.id} professionalId={professionalId} serviceOptions={serviceOptions} initialOffer={editingOffer} presentation="modal" backHref={backHref} onSaved={() => { setEditingOffer(null); onRefresh?.(); router.refresh(); }} />
         </Modal>
       )}

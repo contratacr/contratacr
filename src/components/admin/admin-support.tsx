@@ -238,7 +238,7 @@ export function AdminSupport() {
             {/* Cerrar con motivo: el texto elegido se publica en el hilo firmado
                 por soporte, y sale por correo y campana como cualquier respuesta. */}
             {cerrando && (
-              <div className="border-b border-[#e5e7eb] bg-[#f8fafc] p-5">
+              <div className="border-b border-[#e5e7eb] bg-white p-5">
                 <p className="text-sm font-semibold text-[#0f172a]">¿Por qué se cierra este caso?</p>
                 <p className="mt-1 text-xs text-[#6b7280]">La persona recibe este mensaje en su hilo. Responder ahí reabre el mismo caso.</p>
                 <div className="mt-3 space-y-2">
@@ -272,7 +272,7 @@ export function AdminSupport() {
             )}
 
             {/* Thread */}
-            <div className="p-5 flex flex-col gap-3 max-h-[460px] overflow-y-auto bg-[#f9fafb]">
+            <div className="p-5 flex flex-col gap-3 max-h-[460px] overflow-y-auto bg-white">
               {messages.map((m) => (
                 <div key={m.id} className={`flex ${m.sender_role === "admin" ? "justify-end" : "justify-start"}`}>
                   <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${m.sender_role === "admin" ? "bg-[#0f172a] text-white" : "bg-white border border-[#e5e7eb] text-[#374151]"}`}>

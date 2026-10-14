@@ -83,7 +83,7 @@ export async function LegalDocument({ title, updated, intro, summary, sections, 
       <main id="top" className="flex-1 pt-20 lg:pt-24 pb-20 px-4">
         <div className="mx-auto max-w-3xl">
           {en && (
-            <div className="rounded-xl border border-[#e5e7eb] bg-[#f9fafb] px-4 py-3 text-sm text-[#6b7280]">
+            <div className="rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#6b7280]">
               This English translation is provided for convenience. If there is any difference, the Spanish version prevails.
             </div>
           )}
@@ -97,7 +97,7 @@ export async function LegalDocument({ title, updated, intro, summary, sections, 
           {/* Intro */}
           <p className="mt-6 text-[#374151] leading-relaxed">{renderInline(intro, "intro")}</p>
 
-          <section aria-labelledby="legal-summary" className="mt-8 rounded-xl border border-[#cfe6f1] bg-[#f4faff] p-5">
+          <section aria-labelledby="legal-summary" className="mt-8 rounded-xl border border-[#cfe6f1] bg-white p-5">
             <h2 id="legal-summary" className="text-base font-bold text-[#162543]">{en ? "Key points" : "Lo más importante"}</h2>
             <ul className="mt-3 space-y-2 text-sm leading-6 text-[#374151]">
               {summary.map((item, index) => (
@@ -109,7 +109,7 @@ export async function LegalDocument({ title, updated, intro, summary, sections, 
             </ul>
           </section>
 
-          <details className="group mt-6 rounded-xl border border-[#e5e7eb] bg-[#f9fafb] open:pb-1 sm:hidden">
+          <details className="group mt-6 rounded-xl border border-[#e5e7eb] bg-white open:pb-1 sm:hidden">
             <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between px-4 text-sm font-bold text-[#162543]">
               {en ? "View contents" : "Ver contenido"}
               <span aria-hidden="true" className="text-lg font-normal text-[#708095] transition-transform group-open:rotate-45">+</span>
@@ -123,7 +123,7 @@ export async function LegalDocument({ title, updated, intro, summary, sections, 
             </ol>
           </details>
 
-          <nav aria-label={en ? "Contents" : "Contenido"} className="mt-6 hidden rounded-xl border border-[#e5e7eb] bg-[#f9fafb] p-5 sm:block">
+          <nav aria-label={en ? "Contents" : "Contenido"} className="mt-6 hidden rounded-xl border border-[#e5e7eb] bg-white p-5 sm:block">
             <p className="mb-3 text-xs font-bold uppercase tracking-widest text-[#68778d]">{en ? "Contents" : "Contenido"}</p>
             <ol className="list-none columns-1 sm:columns-2 gap-x-6">
               {sections.map((s) => (
@@ -159,7 +159,7 @@ export async function LegalDocument({ title, updated, intro, summary, sections, 
               </section>
             ))}
 
-            <div className="rounded-2xl border border-[#e5e7eb] bg-[#f9fafb] p-5 text-sm text-[#6b7280]">
+            <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5 text-sm text-[#6b7280]">
               {footer}
             </div>
 

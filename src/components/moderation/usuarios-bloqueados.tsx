@@ -75,7 +75,7 @@ export function UsuariosBloqueados() {
       ) : (
         <ul className="flex flex-col gap-2">
           {lista.map((b) => (
-            <li key={b.id} className="flex items-center gap-3 rounded-xl bg-[#f8fafc] px-3 py-2.5">
+            <li key={b.id} className="flex items-center gap-3 rounded-xl border border-[#e5e7eb] bg-white px-3 py-2.5">
               <Avatar className="h-9 w-9 shrink-0"><AvatarImage src={b.avatarUrl ?? undefined} /><AvatarFallback>{getInitials(b.name)}</AvatarFallback></Avatar>
               <span className="min-w-0 flex-1 break-words text-sm font-medium leading-snug text-[#162543]">{b.name}</span>
               <button type="button" onClick={() => void desbloquear(b.id)} disabled={quitando === b.id} className="shrink-0 rounded-full border border-[#d7e1ea] px-3 py-1.5 text-xs font-bold text-[#52627a] transition-colors hover:bg-white disabled:opacity-60">{t("desbloquear")}</button>

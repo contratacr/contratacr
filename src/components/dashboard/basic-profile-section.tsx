@@ -54,7 +54,7 @@ function ProfileSection({
         // subrayado oscuro que aparece y se borra solo al abrir la sección.
         // Con el color fijo no hay nada que animar: solo cambia el ancho, y el
         // ancho no entra en `transition-colors`.
-        className={cn("w-full items-center justify-between gap-3 border-[#eef2f6] px-4 py-4 text-left transition-colors sm:flex sm:px-5", open ? "hidden bg-[#f8fafc] sm:flex sm:border-b" : "flex hover:bg-[#fafafa]")}
+        className={cn("w-full items-center justify-between gap-3 border-[#eef2f6] px-4 py-4 text-left transition-colors sm:flex sm:px-5", open ? "hidden bg-white sm:flex sm:border-b" : "flex hover:bg-[#fafafa]")}
         aria-expanded={open}
       >
         {open && (

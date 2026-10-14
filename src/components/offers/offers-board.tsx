@@ -352,7 +352,7 @@ export function OffersBoard({
   );
 
   return (
-    <main className="ccr-tablero-fijo min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-0 text-[#162543] sm:bg-[#fafafa] sm:pb-16 lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:bg-white lg:pb-0">
+    <main className="ccr-tablero-fijo min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-0 text-[#162543] sm:bg-white sm:pb-16 lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:bg-white lg:pb-0">
       {avisoNode}
       <section ref={cabeceraRef} className={cn("ccr-cabecera-pegada ccr-marketplace-sticky sticky top-0 z-20 border-b bg-white transition-colors duration-200 lg:hidden", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
         <div className="px-0">
@@ -512,7 +512,7 @@ export function OffersBoard({
           title={copy.publishOffer}
          
           size="lg"
-          bodyClassName="bg-[#f4f7fa] px-0 py-0"
+          bodyClassName="bg-white px-0 py-0"
         >
           <OfferForm
             onCancel={() => setPublishOpen(false)}
@@ -534,7 +534,7 @@ export function OffersBoard({
           title={copy.editOffer}
          
           size="lg"
-          bodyClassName="bg-[#f4f7fa] px-0 py-0"
+          bodyClassName="bg-white px-0 py-0"
         >
           <OfferForm
             onCancel={() => setEditingOffer(null)}
@@ -564,7 +564,7 @@ function OfferImage({
   const extraCount = Math.max(0, offer.image_urls.length - 1);
   return (
     <div
-      className={`${large ? "aspect-[16/8] w-full rounded-lg bg-[#f3f7fa]" : "h-11 w-11 shrink-0 sm:h-12 sm:w-12"} relative overflow-hidden`}
+      className={`${large ? "aspect-[16/8] w-full rounded-lg bg-white" : "h-11 w-11 shrink-0 sm:h-12 sm:w-12"} relative overflow-hidden`}
     >
       {offer.image_urls[0] ? (
         <ProgressiveImage

@@ -17,7 +17,7 @@ export function MarketplaceSectionLayoutShell({ children }: { children: React.Re
   const esTablero = /^\/(?:es|en)?\/?(?:empleos|promociones|proyectos)\/?$/u.test(pathname);
 
   return (
-    <div className={esTablero ? "ccr-cascaron ccr-cascaron-tablero flex min-h-screen flex-col bg-[#f4f7fa]" : "ccr-cascaron flex min-h-screen flex-col bg-[#f4f7fa]"}>
+    <div className={esTablero ? "ccr-cascaron ccr-cascaron-tablero flex min-h-screen flex-col bg-white" : "ccr-cascaron flex min-h-screen flex-col bg-white"}>
       {esTablero && <PantallaFija />}
       <div className="hidden lg:block">
         <LandingNavbar

@@ -515,7 +515,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   })();
 
   return (
-    <div className="ccr-buscar-pagina min-h-screen flex flex-col bg-[#fafafa]">
+    <div className="ccr-buscar-pagina min-h-screen flex flex-col bg-white">
       {/* Mobile keeps the header to logo + search + menu; filters float over the map. */}
       <LandingNavbar forceCompactSearch mobileSearch />
       {/* En teléfono no hay espaciador: el mapa va debajo de la barra desde el
@@ -529,7 +529,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           part of one continuous page. A brand accent bar sits to the left of the title.
           HIDDEN on mobile (Yelp layout) so the map gets full prominence - the in-sheet
           count carries the result total there. */}
-      <div className="hidden lg:block bg-[#fafafa]">
+      <div className="hidden lg:block bg-white">
         <div className="mx-auto max-w-[1920px] px-4 pb-2.5 pt-3 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2.5">
             <span className="h-5 w-1.5 shrink-0 rounded-full bg-[#009FD9]" aria-hidden />
@@ -560,7 +560,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
       {/* Main content - 3-column shell (filters / results / map). On mobile the padding is
           zeroed so the Yelp map + bottom sheet go edge-to-edge; desktop keeps its gutters. */}
-      <main className="flex-1 bg-[#fafafa]">
+      <main className="flex-1 bg-white">
         <div className="mx-auto max-w-[1920px] px-0 py-0 lg:px-8 lg:pb-0 lg:pt-0">
           <SearchResultsLayout
             mapData={mapData}
@@ -602,7 +602,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       wider results column (`lg:max-w-none`), which hugs the card width while
                       the map takes the rest (see search-results-layout). Content-driven
                       height - one card per row, each grows to its content. */}
-                  <div className="ccr-search-results-list -mx-4 flex min-h-full w-[calc(100%+2rem)] min-w-0 max-w-none flex-col gap-1.5 overflow-x-clip bg-[#eef2f6] lg:mx-0 lg:min-h-0 lg:w-full lg:gap-3 lg:bg-transparent lg:overflow-visible">
+                  <div className="ccr-search-results-list -mx-4 flex min-h-full w-[calc(100%+2rem)] min-w-0 max-w-none flex-col gap-1.5 overflow-x-clip bg-white lg:mx-0 lg:min-h-0 lg:w-full lg:gap-3 lg:bg-transparent lg:overflow-visible">
                     {results.map((pro, i) => (
                       // data-pro-id + scroll-mt let the map highlight/scroll to this
                       // card on pin hover; the number badge matches the map pin.

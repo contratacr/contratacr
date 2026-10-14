@@ -44,7 +44,7 @@ export function PanelSkeleton({ seccion = false }: { seccion?: boolean } = {}) {
     return (
       <>
       <div className="hidden lg:block"><PanelSkeleton /></div>
-      <div className="min-h-screen bg-[#f4f7fa] lg:hidden" aria-busy="true" role="status">
+      <div className="min-h-screen bg-white lg:hidden" aria-busy="true" role="status">
         <BarraSuperior />
         <div className="mx-auto w-full max-w-xl space-y-3 px-4 pt-6 lg:max-w-4xl lg:px-8 lg:pt-8">
           {[0, 1, 2, 3].map((fila) => (
@@ -62,7 +62,7 @@ export function PanelSkeleton({ seccion = false }: { seccion?: boolean } = {}) {
     );
   }
   return (
-    <div className="min-h-screen bg-[#f4f7fa]" aria-busy="true" role="status">
+    <div className="min-h-screen bg-white" aria-busy="true" role="status">
       <BarraSuperior />
       {/* Hasta 1023px: la forma del teléfono (una columna). De 1024px en
           adelante: la forma REAL del panel de escritorio —tarjeta de cabecera
@@ -126,7 +126,7 @@ export function PanelSkeleton({ seccion = false }: { seccion?: boolean } = {}) {
 // carga; dentro de la app la marca es solo del arranque en frío.
 export function LienzoNeutro() {
   return (
-    <div className="min-h-screen bg-[#f4f7fa]" aria-hidden>
+    <div className="min-h-screen bg-white" aria-hidden>
       <div className="h-16 bg-white shadow-[0_1px_0_#e5e7eb]" />
     </div>
   );
@@ -137,7 +137,7 @@ export function LienzoNeutro() {
 // ya no existe— en vez de un lienzo vacío.
 export function PerfilSkeleton() {
   return (
-    <div className="min-h-screen bg-[#f4f7fa]" aria-busy="true" role="status">
+    <div className="min-h-screen bg-white" aria-busy="true" role="status">
       {/* La barra de verdad, no una franja vacía: al llegar la ficha la
           cabecera ya está en su sitio y no «aparece» encima del esqueleto. */}
       <Navbar />

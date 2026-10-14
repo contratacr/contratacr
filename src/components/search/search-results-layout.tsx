@@ -503,7 +503,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
   return (
     <>
     <PantallaFija />
-    <div className="ccr-search-results-layout flex h-[calc(100dvh-var(--ccr-native-header-height,64px))] flex-col overflow-hidden bg-[#fafafa] lg:block lg:h-auto lg:overflow-visible lg:bg-transparent">
+    <div className="ccr-search-results-layout flex h-[calc(100dvh-var(--ccr-native-header-height,64px))] flex-col overflow-hidden bg-white lg:block lg:h-auto lg:overflow-visible lg:bg-transparent">
       {/* Sin botón «Filtros» flotante entre 1024 y 1279 (iPad): era del panel
           lateral que ya no existe y quedaba ENCIMA de la primera tarjeta. Los
           filtros están en la fila de pastillas, igual que de 1280 en adelante
@@ -517,7 +517,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
       {showFilters && (
         <div className="xl:hidden fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowFilters(false)} />
-          <div className="absolute inset-y-0 left-0 w-[88%] max-w-xs overflow-y-auto bg-[#f4f7fa] p-2.5 shadow-xl">
+          <div className="absolute inset-y-0 left-0 w-[88%] max-w-xs overflow-y-auto bg-white p-2.5 shadow-xl">
             {drawerFilters ?? filters}
           </div>
         </div>
@@ -527,7 +527,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
 
       {/* ONE flex container: mobile = the map fills the remaining height (the sheet floats
           over it); desktop = the 3-column shell (filters · cards · map) via `lg:order-*`. */}
-      <div className="relative flex min-h-0 flex-1 flex-col gap-0 bg-[#fafafa] lg:flex-row lg:gap-5 lg:bg-transparent">
+      <div className="relative flex min-h-0 flex-1 flex-col gap-0 bg-white lg:flex-row lg:gap-5 lg:bg-transparent">
         {/* SIN PANEL LATERAL DE FILTROS. Se llevaba 256 px fijos de 1280 en
             adelante y, encima, repetía el buscador que ya está en la barra de
             arriba: dos campos que hacen lo mismo a 250 px de distancia. Son

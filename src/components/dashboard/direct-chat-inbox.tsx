@@ -1448,7 +1448,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
         <div ref={listaRef} data-lista-cabe={listaCabe ? "true" : "false"} className="ccr-direct-chat-list min-h-0 flex-1 overflow-y-auto">
           {vistaBloqueados ? (
             <div>
-              <p className="border-b border-[#eef2f6] bg-[#f7fafc] px-4 py-3 text-xs leading-5 text-[#64748b]">{tChat("blockedHint")}</p>
+              <p className="border-b border-[#eef2f6] bg-white px-4 py-3 text-xs leading-5 text-[#64748b]">{tChat("blockedHint")}</p>
               {bloqueadas.length === 0 ? (
                 <p className="px-4 py-8 text-center text-sm text-[#8492a5]">{tChat("blockedEmpty")}</p>
               ) : bloqueadas.map((item) => {
@@ -1598,7 +1598,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
             proyecto o propuesta se va anclando aquí. Se muestra el más reciente
             y, si hay más, se despliegan hasta cuatro como en los fijados de
             WhatsApp. */}
-        <div ref={scrollRef} className="ccr-direct-chat-thread-scroll min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain bg-[#f3f7fa] px-4 py-5 sm:px-6">
+        <div ref={scrollRef} className="ccr-direct-chat-thread-scroll min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain bg-white px-4 py-5 sm:px-6">
           {threadLoading ? (
             <div className="ccr-delayed-loading space-y-3 py-2" aria-busy="true" role="status">
               <span className="sr-only">{tChat("loadingMessages")}</span>
@@ -1661,7 +1661,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
                   nativeApp ? "select-none [-webkit-touch-callout:none]" : "select-text",
                   menuMensaje?.id === message.id && "ring-2 ring-[#009FD9]/35",
                   message.deleted_at
-                    ? cn("max-w-[86%] border border-dashed border-[#d6e1ea] bg-[#f7fafc] text-[#6b7a90] shadow-none sm:max-w-[78%]", mine ? "rounded-br-md" : "rounded-bl-md")
+                    ? cn("max-w-[86%] border border-dashed border-[#d6e1ea] bg-white text-[#6b7a90] shadow-none sm:max-w-[78%]", mine ? "rounded-br-md" : "rounded-bl-md")
                     : mine
                     ? "max-w-[86%] rounded-br-md bg-[#009FD9] font-medium text-white sm:max-w-[78%]"
                     : "max-w-[calc(86%_-_2.25rem)] rounded-bl-md border border-[#e5e7eb] bg-white text-[#25364d] sm:max-w-[72%]",

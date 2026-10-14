@@ -11,7 +11,7 @@ import { isSigningOut } from "@/lib/auth/sign-out";
 export function PageRouteLoading() {
   if (isSigningOut()) return null;
   return (
-    <div className="ccr-page-route-loading fixed inset-0 z-[200] bg-[#f4f7fa]" aria-busy="true" role="status">
+    <div className="ccr-page-route-loading fixed inset-0 z-[200] bg-white" aria-busy="true" role="status">
       <div className="h-16 bg-white shadow-[0_1px_0_#e5e7eb]" />
       <span className="sr-only">Cargando…</span>
     </div>

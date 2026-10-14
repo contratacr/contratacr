@@ -43,7 +43,7 @@ export default async function DeleteAccountPage({
     : `/soporte?${supportQuery}`;
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f4f7fa]">
+    <div className="flex min-h-screen flex-col bg-white">
       <LandingNavbar />
       <main className="flex-1 px-4 pb-16 pt-28 sm:pt-32">
         <div className="mx-auto max-w-2xl">
