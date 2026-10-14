@@ -115,7 +115,7 @@ const JOB_POST_COPY = {
     publishing: "Publicando...",
     saveChanges: "Guardar cambios",
     cancel: "Cancelar",
-    whatsapp: "WhatsApp", whatsappHelp: "Es por donde te van a escribir los postulantes. Viene el de tu cuenta; puedes cambiarlo para esta vacante.", whatsappRequired: "Escribe un número de WhatsApp válido.",
+    whatsapp: "WhatsApp", whatsappRequired: "Escribe un número de WhatsApp válido.",
   },
   en: {
     optional: "optional",
@@ -182,7 +182,7 @@ const JOB_POST_COPY = {
     publishing: "Publishing...",
     saveChanges: "Save changes",
     cancel: "Cancel",
-    whatsapp: "WhatsApp", whatsappHelp: "This is where applicants will write to you. Your account number is filled in; you can change it for this opening.", whatsappRequired: "Write a valid WhatsApp number.",
+    whatsapp: "WhatsApp", whatsappRequired: "Write a valid WhatsApp number.",
   },
 } as const;
 
@@ -587,7 +587,6 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
                 onChange={setWhatsapp}
                 error={fieldErrors.whatsapp}
               />
-              <p className="mt-1.5 text-xs text-[#68778d]">{copy.whatsappHelp}</p>
             </div>
             <label className="text-sm font-medium text-[#374151] sm:col-span-2"><RequiredLabel>{copy.description}</RequiredLabel><textarea name="description" maxLength={5000} defaultValue={initialJob?.description ?? ""} placeholder={copy.descriptionPlaceholder} className={TEXTAREA_CLASS} /><FieldError>{fieldErrors.description}</FieldError></label>
           </div>

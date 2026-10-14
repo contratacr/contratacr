@@ -120,7 +120,7 @@ const OFFER_FORM_COPY = {
     numericError: "Uno de los precios o cantidades es demasiado alto. Revisa los valores ingresados.",
     saveError: "No pudimos guardar la promoción. Revisa la información e inténtalo nuevamente.",
     publishError: "No pudimos publicar la promoción.",
-    whatsapp: "WhatsApp", whatsappHelp: "Es por donde te van a escribir. Viene el de tu cuenta; puedes cambiarlo para esta promoción.",
+    whatsapp: "WhatsApp",
   },
   en: {
     back: "Back",
@@ -185,7 +185,7 @@ const OFFER_FORM_COPY = {
     numericError: "One of the prices or quantities is too high. Review the values entered.",
     saveError: "We could not save the promotion. Review the information and try again.",
     publishError: "We could not publish the promotion.",
-    whatsapp: "WhatsApp", whatsappHelp: "This is where people will write to you. Your account number is filled in; you can change it for this promotion.",
+    whatsapp: "WhatsApp",
   },
 } as const;
 
@@ -592,7 +592,6 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/promoci
             </div>
             <div className="sm:col-span-2">
               <PhoneInput label={<RequiredLabel>{copy.whatsapp}</RequiredLabel>} value={whatsapp} onChange={setWhatsapp} error={fieldErrors.whatsapp} />
-              <p className="mt-1.5 text-xs text-[#68778d]">{copy.whatsappHelp}</p>
             </div>
             {/* El aviso con su botón va FUERA de la <label>: en Safari del iPhone un
                 toque dentro de una etiqueta se reenvía a su campo. */}
