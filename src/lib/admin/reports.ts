@@ -217,6 +217,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
   let supplyByCategory = new Map<string, number>();
   // Solo proyectos: el KPI y el embudo ya no mezclan citas retiradas.
   let projectCreated: string[] = [];
+  let adminProfileIds = new Set<string>();
   let projectRowsForDemand: Array<{ created_at: string; category_id: string | null }> = [];
 
   // Todas las consultas son independientes entre sí: se lanzan juntas aquí
@@ -236,7 +237,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
   ]));
   const acqQ = iniciar(admin
     .from("profiles")
-    .select("id, role, created_at, acquisition_source, acquisition_medium, acquisition_campaign, acquisition_captured_at, acquisition_landing_path, acquisition_referrer_host"));
+    .select("id, role, created_at, acquisition_source, acquisition_medium, acquisition_campaign, acquisition_captured_at, acquisition_landing_path, acquisition_referrer_host").neq("role", "admin"));
   const projectsQ = iniciar(admin.from("projects").select("id, status, created_at, category_id, client_id"));
   const ticketsQ = iniciar(admin.from("support_tickets").select("status, created_at"));
   const insightsQ = iniciar(Promise.all([
@@ -255,8 +256,9 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
   // ── Users + professionals + clients ──
   try {
     const [{ data: profiles }, { data: pros }] = await baseQ;
-    const allProfiles = profiles ?? [];
-    const proRows = pros ?? [];
+    const allProfiles = (profiles ?? []).filter((profile) => profile.role !== "admin");
+    adminProfileIds = new Set((profiles ?? []).filter((profile) => profile.role === "admin").map((profile) => profile.id));
+    const proRows = (pros ?? []).filter((professional) => !adminProfileIds.has(professional.profile_id));
     const professionalProfileIds = new Set(proRows.map((professional) => professional.profile_id).filter(Boolean));
     const clients = allProfiles.filter((profile) => profile.role === "client" && !professionalProfileIds.has(profile.id));
 
@@ -363,7 +365,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
   // con al menos una cita», o sea cero; ahora es quien publicó un proyecto.
   try {
     const { data: projects } = await projectsQ;
-    const pRows = projects ?? [];
+    const pRows = (projects ?? []).filter((project) => !adminProfileIds.has(project.client_id));
 
     empty.users.activeClients = new Set(pRows.map((p) => p.client_id).filter(Boolean)).size;
     projectCreated = pRows.map((p) => p.created_at as string);

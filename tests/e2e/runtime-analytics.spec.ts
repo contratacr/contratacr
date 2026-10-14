@@ -92,3 +92,31 @@ for (const runtime of ["web", "android", "ios"] as const) {
     expect(requests.length).toBe(count);
   });
 }
+
+test("analytics resolves the authenticated actor and excludes admins or unknown roles", async () => {
+  const source = ts.transpileModule(readFileSync("src/lib/analytics/admin-activity.ts", "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
+  type Actor = { id: string | null; excluded: boolean };
+  const box = { exports: {} as { analyticsActor: (id?: string | null) => Promise<Actor> } };
+  let sessionUser: { id: string } | null = { id: "admin-account" };
+  let failed = false;
+  let reads = 0;
+  const profiles = { select: () => profiles, eq: (_field: string, id: string) => ({ maybeSingle: async () => {
+    reads++;
+    return { data: failed ? null : { role: id === "admin-account" ? "admin" : "client" }, error: failed ? { message: "unavailable" } : null };
+  } }) };
+  const mocks: Record<string, unknown> = {
+    "@/lib/supabase/admin": { createAdminClient: () => ({ from: () => profiles }) },
+    "@/lib/supabase/server": { createClient: async () => ({}) },
+    "@/lib/supabase/get-user": { safeGetUser: async () => sessionUser },
+  };
+  runInNewContext(source, { module: box, exports: box.exports, require: (name: string) => mocks[name] });
+  expect(await box.exports.analyticsActor()).toEqual({ id: "admin-account", excluded: true });
+  expect(await box.exports.analyticsActor("client-account")).toEqual({ id: "client-account", excluded: false });
+  const previousReads = reads;
+  sessionUser = null;
+  expect(await box.exports.analyticsActor()).toEqual({ id: null, excluded: false });
+  expect(await box.exports.analyticsActor(null)).toEqual({ id: null, excluded: false });
+  expect(reads).toBe(previousReads);
+  failed = true;
+  expect(await box.exports.analyticsActor("client-account")).toEqual({ id: "client-account", excluded: true });
+});

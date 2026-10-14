@@ -1,3 +1,4 @@
+import { analyticsActor } from "@/lib/analytics/admin-activity";
 import { requestAnalyticsPlatform } from "./platform";
 import "server-only";
 import { createHash } from "node:crypto";
@@ -37,7 +38,9 @@ export function growthContext(req: Request, actorId?: string | null) {
 /** Only invoke after a successful, authorized business action. Database conflicts are the deduplication boundary. */
 export async function recordGrowthConversion(req: Request, action: GrowthAction, businessKey: string, actorId?: string | null, options: { metaAllowed?: boolean } = {}): Promise<MetaConversion | null> {
   try {
-    const context = growthContext(req,actorId);
+    const actor = await analyticsActor(actorId ?? undefined);
+    if (actor.excluded) return null;
+    const context = growthContext(req,actor.id);
     if (context.automated || !context.actorHash || !businessKey) return null;
     const contract = GROWTH_ACTIONS[action];
     const eventId = hash(`${action}:${businessKey}`);

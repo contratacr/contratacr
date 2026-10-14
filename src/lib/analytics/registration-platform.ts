@@ -1,3 +1,4 @@
+import { analyticsActor } from "@/lib/analytics/admin-activity";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requestAnalyticsPlatform } from "./platform";
 import { esPeticionAutomatizada } from "./trafico-automatizado";
@@ -6,6 +7,7 @@ import { esPeticionAutomatizada } from "./trafico-automatizado";
 export async function recordRegistrationPlatform(req: Request, userId: string) {
   if (esPeticionAutomatizada(req.headers.get("cookie")?.includes("ccr_sin_analitica=1") ? "1" : null, req.headers.get("user-agent"))) return;
   try {
+    if ((await analyticsActor(userId)).excluded) return;
     await createAdminClient().rpc("record_registration_platform", { p_user_id: userId, p_runtime: requestAnalyticsPlatform(req).runtime });
   } catch { /* Optional analytics never block registration. */ }
 }

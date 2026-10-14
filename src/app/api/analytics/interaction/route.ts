@@ -1,3 +1,4 @@
+import { analyticsActor } from "@/lib/analytics/admin-activity";
 import { requestAnalyticsPlatform } from "@/lib/analytics/platform";
 import { peticionAutomatizada } from "@/lib/analytics/trafico-automatizado";
 import { createHash, randomUUID } from "node:crypto";
@@ -62,6 +63,7 @@ export async function POST(req: NextRequest) {
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  if ((await analyticsActor(user?.id ?? null)).excluded) return new NextResponse(null, { status: 204 });
   const db = createAdminClient();
 
   if (professionalId) {

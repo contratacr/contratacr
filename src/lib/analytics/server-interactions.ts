@@ -1,3 +1,4 @@
+import { analyticsActor } from "@/lib/analytics/admin-activity";
 import { requestAnalyticsPlatform } from "./platform";
 import { peticionAutomatizada } from "@/lib/analytics/trafico-automatizado";
 import { createHash, randomUUID } from "node:crypto";
@@ -26,12 +27,14 @@ function hashStable(value: string) {
 export async function recordServerInteraction(admin: AdminClient, req: NextRequest, input: ServerInteractionInput) {
   if (peticionAutomatizada(req)) return;
   try {
+    const actor = await analyticsActor(input.viewerUserId);
+    if (actor.excluded) return;
     const sessionId = req.cookies.get(SESSION_COOKIE)?.value;
     const visitorKey = sessionId || input.viewerUserId || randomUUID();
     await admin.from("interaction_events").insert({
       event_type: input.type,
       professional_id: input.professionalId ?? null,
-      viewer_user_id: input.viewerUserId ?? null,
+      viewer_user_id: actor.id,
       visitor_hash: hashStable(visitorKey),
       source: input.source ?? "api",
       locale: input.locale ?? "es",

@@ -52,7 +52,7 @@ export function UsageCapture() {
         try {
           let response = await send();
           if (!response.ok && response.status >= 500) response = await send();
-          if (response.ok && firstUse) { try { localStorage.setItem(FIRST_USE_KEY, "1"); } catch { /* optional */ } }
+          if (response.ok && firstUse && response.headers?.get("x-analytics-excluded") !== "1") { try { localStorage.setItem(FIRST_USE_KEY, "1"); } catch { /* optional */ } }
           if (!response.ok && last.current.screen === screen) last.current.actor = "retry";
         } catch { if (last.current.screen === screen) last.current.actor = "retry"; }
       });

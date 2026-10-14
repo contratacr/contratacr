@@ -1,3 +1,4 @@
+import { analyticsActor } from "@/lib/analytics/admin-activity";
 import { createHash, randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -22,6 +23,12 @@ export async function POST(req: NextRequest) {
   const sid = req.cookies.get("cc_analytics_sid")?.value || randomUUID();
   const visitor = createHash("sha256").update(sid).digest("hex");
   const { data: { user } } = await (await createClient()).auth.getUser();
+  const actor = await analyticsActor(user?.id ?? null);
+  if (actor.excluded) {
+    // The database independently verifies the role before archiving a guest session.
+    await createAdminClient().rpc("exclude_admin_analytics", { p_user: actor.id, p_session: input.data.session, p_visitor: visitor });
+    return new NextResponse(null, { status: 204, headers: { "x-analytics-excluded": "1" } });
+  }
   const runtime = requestAnalyticsPlatform(req).runtime;
   const { error } = await createAdminClient().rpc("record_app_usage", {
     p_visitor: visitor, p_user_id: user?.id ?? null, p_session: input.data.session,
