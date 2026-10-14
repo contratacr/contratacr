@@ -537,6 +537,14 @@ test.describe("@mobile native shell contracts", () => {
       await expect(dialog.getByText(/WhatsApp/i)).toHaveCount(0);
       await messageButton.click();
 
+      // Abrir «Mensaje» solo prepara el texto. La conversación se crea cuando
+      // la persona toca Enviar, para que pueda revisarlo o editarlo antes.
+      await expect(page).toHaveURL(/\/mensajes\?draftChat=1(?:&.*)?$/);
+      const composer = page.locator(".ccr-direct-chat-composer");
+      await expect(composer).toBeVisible();
+      await expect(composer.locator("textarea")).not.toBeEmpty();
+      expect(directChatRequests).toBe(0);
+      await composer.getByRole("button", { name: contract.locale === "en" ? "Send" : "Enviar", exact: true }).click();
       await expect.poll(() => directChatRequests).toBe(1);
       // El enlace lleva además el camino de vuelta (`back=`) al panel desde donde se abrió.
       await expect(page).toHaveURL(new RegExp(`${contract.locale === "es" ? "" : "/en"}/mensajes\\?conversation=${conversationId}(?:&.*)?$`));
