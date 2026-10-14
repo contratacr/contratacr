@@ -2,9 +2,6 @@
 
 import { mobileDownloadPlatform, DOWNLOAD_DISMISS_COOKIE } from "@/lib/mobile-download-platform";
 import Image from "next/image";
-import { Menu } from "lucide-react";
-import { ContrataCRLogo } from "./landing-navbar";
-import { WelcomeChoiceContent } from "@/components/mobile/welcome-choice-content";
 import { APP_STORES } from "@/lib/app-stores";
 export { APP_STORES } from "@/lib/app-stores";
 import { useLocale } from "next-intl";
@@ -36,13 +33,13 @@ export function AppDownloadSection() {
   const native = useNativeApp();
   const en = useLocale() === "en";
   if (native) return null;
-  return <section id="descargar-app" data-testid="app-download-section" className="ccr-solo-web ccr-download-section relative isolate w-full min-w-0 overflow-hidden bg-[#29281e]">
-    <picture className="pointer-events-none absolute inset-0 -z-10 opacity-65">
-      <Image src="/stores/app-workshop-desktop-compact-20261013.png" width={2172} height={724} unoptimized alt="" data-testid="app-download-artwork" className="h-full max-w-none object-cover object-left" style={{ width: "175%" }} />
+  return <section id="descargar-app" data-testid="app-download-section" className="ccr-solo-web ccr-download-section relative isolate flex w-full min-w-0 min-h-[max(480px,125vw)] items-end overflow-hidden bg-[#38261c] sm:aspect-[3/1] sm:min-h-[360px] sm:items-center lg:min-h-[460px]">
+    <picture className="absolute inset-0 -z-10">
+      <source media="(max-width: 639px)" srcSet="/stores/app-workshop-mobile-welcome-20261013.png" width={1122} height={1402} />
+      <Image src="/stores/app-workshop-desktop-welcome-20261013.png" width={2172} height={724} unoptimized alt={en ? "ContrataCR on a phone in a carpentry workshop" : "ContrataCR en un teléfono dentro de un taller de carpintería"} data-testid="app-download-artwork" className="h-full w-full object-cover object-top sm:object-right" />
     </picture>
-    <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-r from-black/60 to-black/10" aria-hidden="true" />
-    <div className="relative mx-auto grid w-full max-w-7xl items-center gap-6 px-5 py-7 sm:grid-cols-2 sm:gap-8 sm:px-8 sm:py-8 lg:px-14">
-      <div className="order-2 mx-auto max-w-md text-center text-white sm:order-1 sm:mx-0 sm:text-left">
+    <div className="relative mx-auto w-full max-w-7xl px-5 pb-5 pt-8 sm:px-8 sm:py-6 lg:px-14 lg:py-7">
+      <div className="mx-auto max-w-md text-center text-white [text-shadow:0_2px_14px_rgba(0,0,0,0.6)] sm:mx-0 sm:max-w-[49%] sm:text-left">
         <p className="mb-3 hidden text-[11px] font-semibold tracking-[0.14em] text-white/90 sm:block lg:mb-4 lg:text-sm">{en ? "AVAILABLE FOR iOS AND ANDROID" : "DISPONIBLE PARA iOS Y ANDROID"}</p>
         <h2 className="text-[25px] font-extrabold leading-[1.08] tracking-tight md:text-4xl lg:text-[clamp(2rem,2.8vw,2.75rem)]">{en ? "Download the ContrataCR app" : "Descarga la app de ContrataCR"}</h2>
         <p className="mx-auto mb-4 mt-3 max-w-md text-sm leading-relaxed text-white/90 sm:mx-0 sm:mt-4 sm:text-base lg:mb-4 lg:mt-3 lg:text-base">{en ? "Find professionals, post projects or offer your services from your phone." : "Encuentra profesionales, publica proyectos u ofrece tus servicios desde tu celular."}</p>
@@ -50,14 +47,6 @@ export function AppDownloadSection() {
         <div className="mt-4 hidden items-center gap-4 lg:flex">
           <Image src="/stores/download-app-qr.svg?v=20261013-store-redirect" width={104} height={104} alt={en ? "Scan to download ContrataCR" : "Escanea para descargar ContrataCR"} className="shrink-0 rounded-lg bg-white" />
           <div className="max-w-[240px]"><p className="text-sm font-semibold">{en ? "Scan with your phone" : "Escanea con tu celular"}</p><p className="mt-2 text-sm leading-relaxed text-white/90">{en ? "Sign in with your existing account." : "Ingresa con tu cuenta de siempre."}</p></div>
-        </div>
-      </div>
-      <div className="order-1 flex justify-center sm:order-2">
-        <div className="ccr-download-phone" data-testid="app-download-phone" aria-hidden="true" inert>
-          <div className="ccr-download-phone-screen">
-            <div className="flex h-16 shrink-0 items-center justify-between border-b border-[#e5e7eb] bg-white px-4"><ContrataCRLogo/><Menu className="h-6 w-6 text-[#162543]"/></div>
-            <div className="flex flex-1 items-center px-4 py-6"><WelcomeChoiceContent english={en} compactPreview/></div>
-          </div>
         </div>
       </div>
     </div>

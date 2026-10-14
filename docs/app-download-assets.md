@@ -165,8 +165,6 @@ Production investigation confirmed why the previous welcome remained: main was s
 
 Validation: first-installation login/registration and guest-menu persistence in Chromium/WebKit mobile; public navbar/drawer wordmark checks with WOFF2 requests blocked across home, registration, login, projects, promotions and jobs. No production account or data changes during the audit.
 
-## Live welcome screen in the download mockup — 13 October 2026
+## Screen-only correction — 13 October 2026
 
-The promotional phone now renders `WelcomeChoiceContent` with the shared fixed logo and mobile sizing, inside an inert CSS frame. It therefore shows the current registration-style welcome rather than the old screen baked into the workshop photograph. The original image remains byte-for-byte unchanged and supplies only the left-hand background crop; its embedded phone stays outside the visible frame. No extra blue background layer. The mockup is decorative and inaccessible to keyboard navigation; the actual store links and QR remain the actions.
-
-The shared `#descargar-app` anchor and `/descargar` QR destination are preserved. The promotion remains absent inside native apps. Measured section heights: 572 px at 390 px wide, 458 px at 768, 488 px at 1440. The preview is HTML/SVG, so lettering stays sharp when enlarged. Responsive checks include containment, height, both role cards, the inert preview, store actions and shared-anchor behavior.
+Restored the original workshop composition and responsive layout. The replacement assets `app-workshop-desktop-welcome-20261013.png` and `app-workshop-mobile-welcome-20261013.png` were edited with the built-in image tool using the original Downloads images and an actual welcome-screen capture. Prompt: preserve the workshop, framing and phone position; replace only its screen with the supplied current welcome UI, fitted to the existing perspective. Original source images remain unchanged. Removed the separate CSS phone and enlarged background crop.
