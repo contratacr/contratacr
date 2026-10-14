@@ -167,7 +167,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
   if (!ofertaVisible) notFound();
   const offerOwnerProfileId = (ofertaVisible.professionals as { profile_id?: string | null } | null)?.profile_id ?? null;
   if (!user || offerOwnerProfileId !== user.id) {
-    void recordServerInteraction({ type: "offer_view", source: "offers", locale, professionalId: ofertaVisible.professional_id ?? null, categoryId: ofertaVisible.service_category_id ?? null, viewerUserId: user?.id ?? null, metadata: { offerId: id } });
+    void recordServerInteraction({ type: "offer_view", source: "offers", locale, professionalId: ofertaVisible.professional_id ?? null, categoryId: ofertaVisible.service_category_id ?? null, viewerUserId: user?.id ?? null, metadata: { offerId: ofertaVisible.id } });
   }
   const professional = ofertaVisible.professionals as {
     slug?: string;

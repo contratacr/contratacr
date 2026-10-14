@@ -123,6 +123,7 @@ export function DirectChatLauncher({
           professionalId,
           source: analyticsSource,
           locale,
+          metadata: jobId ? { jobId } : offerId ? { offerId } : undefined,
         });
         // El contacto es la conversión que importa y Meta no la veía: solo
         // llegaba el botón de llamar. Escribirle a quien publicó un empleo es

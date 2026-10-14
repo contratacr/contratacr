@@ -2937,8 +2937,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
               backdrop when choosing the browser toolbar color. */}
           <div
             className={cn(
-              "lg:hidden fixed inset-0 z-[10050] bg-black/15",
-              mobileOpen ? "block" : "hidden"
+              "ccr-menu-fondo lg:hidden fixed inset-0 z-[10050] bg-black/15",
+              mobileOpen ? "ccr-menu-fondo-abierto" : "pointer-events-none"
             )}
             onClick={cerrarCajon}
             aria-hidden="true"

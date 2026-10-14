@@ -16,8 +16,9 @@ import { useSearchParams } from "next/navigation";
 import {
   User, Award, Wrench,
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, ArrowLeft, ArrowRight, ChevronDown, ChevronRight, Sparkles, AlertCircle, MessageSquareMore, Home, LogOut, Users, CheckCircle2, FileText, Search, Camera, Eye, Trash2, Loader2,
-  BriefcaseBusiness, Star, ReceiptText, ExternalLink, Share2, BookOpen,
+  BriefcaseBusiness, Star, ReceiptText, ExternalLink, Share2, BookOpen, ChartNoAxesColumn,
   } from "lucide-react";
+import { StatisticsPanel } from "@/components/dashboard/statistics/statistics-panel";
 import { QuotesSection, cargarCotizaciones } from "@/components/quotes/quotes-section";
 import { SectionBoundary } from "@/components/dashboard/section-boundary";
 import { SectionHeadline } from "@/components/dashboard/section-headline";
@@ -87,7 +88,7 @@ type Tab =
   | "home" | "profile" | "services" | "photos" | "quotes" | "verificacion"
   | "jobs" | "offers" | "publicaciones" | "completion"
   | "sent_projects" | "applications" | "saved" | "connections"
-  | "chat" | "notifications" | "soporte" | "cuenta" | "guides";
+  | "chat" | "notifications" | "soporte" | "cuenta" | "guides" | "statistics";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProData = Record<string, any>;
@@ -98,10 +99,11 @@ type ProData = Record<string, any>;
 const ALL_TABS = new Set<Tab>([
   "home", "profile", "services", "photos", "quotes", "verificacion",
   "jobs", "offers", "publicaciones", "completion", "sent_projects", "applications", "saved", "connections",
-  "chat", "notifications", "soporte", "cuenta", "guides",
+  "chat", "notifications", "soporte", "cuenta", "guides", "statistics",
 ]);
 
 const TAB_ICONS: Record<Tab, React.ReactNode> = {
+  statistics: <ChartNoAxesColumn className="h-4 w-4" />,
   home: <Home className="h-4 w-4" />,
   profile: <User className="h-4 w-4" />,
   services: <Wrench className="h-4 w-4" />,
@@ -160,9 +162,9 @@ const USE_ONLY = new Set<Tab>([]);
 // «Servicios» vive dentro de «Mi perfil», que es donde se ven; empleos y
 // promociones comparten «Mis publicaciones», que es lo mismo: algo que publico.
 const OFFER_TABS: Tab[] = ([
-  "sent_projects", "jobs", "offers", "quotes", "photos", "services", "profile", "saved", "soporte", "guides",
+  "sent_projects", "jobs", "offers", "quotes", "photos", "services", "statistics", "profile", "saved", "soporte", "guides",
 ] as Tab[]).filter((tab) => EMPLEOS_VISIBLE || tab !== "jobs");
-const USE_TABS: Tab[] = ["sent_projects", "saved", "profile", "soporte", "guides"] as Tab[];
+const USE_TABS: Tab[] = ["sent_projects", "statistics", "saved", "profile", "soporte", "guides"] as Tab[];
 // «Mis publicaciones» reúne TODO lo que uno saca a un tablero público: el
 // proyecto que pide un trabajo, el empleo que ofrece uno y la promoción. Son el
 // mismo acto —publicar— y antes vivían en dos paneles distintos, con un
@@ -186,7 +188,7 @@ const PANEL_GROUPS: { grupo: "work" | "business" | "saved" | "account"; tabs: Ta
   // empleos y promociones en una sola puerta, y una puerta con un interruptor
   // adentro hay que descubrirla. En el menú se leen de una.
   { grupo: "business", tabs: ["sent_projects", "jobs", "offers", "quotes"] },
-  { grupo: "work", tabs: ["photos", "services", "profile", "completion"] },
+  { grupo: "work", tabs: ["photos", "services", "statistics", "profile", "completion"] },
   { grupo: "saved", tabs: ["saved"] },
   { grupo: "account", tabs: ["soporte", "guides"] },
 ];
@@ -200,6 +202,7 @@ function agruparPestanas(tabs: Tab[]): Tab[][] {
 }
 
 const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
+  statistics: { es: "Estadísticas", en: "Statistics" },
   quotes: { es: "Cotizaciones", en: "Quotes" },
   sent_projects: { es: "Mis proyectos", en: "My projects" },
   applications: { es: "Mis postulaciones", en: "My applications" },
@@ -2203,6 +2206,7 @@ export default function DashboardPage() {
                         {TABS_WITH_SUBTITLE.has(activeTab) && (
                           <SectionHeadline subtitulo={t(`subtitles.${activeTab}`)} className="mb-4" />
                         )}
+                        {activeTab === "statistics" && <StatisticsPanel professional={!!pro} callsEnabled={!!pro?.allow_phone_call && !!(pro?.call_phone || pro?.whatsapp)} />}
                         {activeTab === "home" && (
                           <>
                             <div className="lg:hidden">

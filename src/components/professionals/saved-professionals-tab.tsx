@@ -315,10 +315,7 @@ export function SavedProfessionalsTab() {
         value={filter}
         onChange={(id) => setFilter(id as SavedFilter)}
         labelFor={(id) => tabLabels[id] ?? id}
-        // El MISMO control que las etapas de Mis proyectos: un filtro se ve
-        // igual en todo el panel. Eran dos dibujos para la misma interacción
-        // —elegir una vista de la lista, con su conteo— solo porque aquí se
-        // filtra por tipo y allá por etapa; quien lo usa no ve esa diferencia.
+        variant="chips"
         limpiable={false}
       />
 

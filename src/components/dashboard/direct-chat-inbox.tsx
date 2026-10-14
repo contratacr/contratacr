@@ -1527,6 +1527,16 @@ export function DirectChatInbox({ alCambiarSubvista }: {
               <FilaDeslizable
                 key={item.id}
                 className="ccr-fila-chat"
+                separador={(offset, completing) => {
+                  // Blue actions own their surface. The list rules meet their
+                  // visible edge, including while the finger is moving.
+                  const actionWidth = offset < 0 ? Math.min(-offset, completing ? -offset : 88) : 0;
+                  const ruleStyle = { right: Math.max(16, actionWidth), left: offset > 0 ? Math.max(72, offset) : 72 };
+                  return <>
+                    {offset !== 0 && <span aria-hidden className="pointer-events-none absolute top-0 h-px bg-[#e9eef3]" style={ruleStyle} />}
+                    <span aria-hidden className="ccr-separador-chat pointer-events-none absolute bottom-0 h-px bg-[#e9eef3]" style={ruleStyle} />
+                  </>;
+                }}
                 onContextMenu={(event) => { event.preventDefault(); setHojaDeFila(item.id); }}
                 abierta={filaAbierta === item.id}
                 ancho={showArchived ? 176 : 176}
@@ -1548,7 +1558,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
                   <>
                     {/* En Archivados también «Más», no «Eliminar»: borrar es irreversible y
                         vive solo dentro de la hoja, con su doble confirmación. */}
-                    <button type="button" tabIndex={completando ? -1 : 0} onClick={() => { setFilaAbierta(null); setHojaDeFila(item.id); }} className={cn("flex shrink-0 flex-col items-center justify-center gap-1 overflow-hidden whitespace-nowrap border border-[#d7e1ea] bg-white text-[#162543] transition-[width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]", completando ? "w-0" : "w-[88px]")}>
+                    <button type="button" tabIndex={completando ? -1 : 0} onClick={() => { setFilaAbierta(null); setHojaDeFila(item.id); }} className={cn("flex shrink-0 flex-col items-center justify-center gap-1 overflow-hidden whitespace-nowrap bg-white text-[#162543] transition-[width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]", completando ? "w-0" : "w-[88px] shadow-[inset_1px_0_0_#e9eef3]")}>
                       <MoreHorizontal className="h-5 w-5" />
                       <span className="text-[11px] font-extrabold">{isEn ? "More" : "Más"}</span>
                     </button>
@@ -1563,7 +1573,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
                   <>
                     {/* «Más» a la par de «Archivar», como WhatsApp: abre la misma
                         hoja de abajo que la pulsación larga. */}
-                    <button type="button" tabIndex={completando ? -1 : 0} onClick={() => { setFilaAbierta(null); setHojaDeFila(item.id); }} className={cn("flex shrink-0 flex-col items-center justify-center gap-1 overflow-hidden whitespace-nowrap border border-[#d7e1ea] bg-white text-[#162543] transition-[width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]", completando ? "w-0" : "w-[88px]")}>
+                    <button type="button" tabIndex={completando ? -1 : 0} onClick={() => { setFilaAbierta(null); setHojaDeFila(item.id); }} className={cn("flex shrink-0 flex-col items-center justify-center gap-1 overflow-hidden whitespace-nowrap bg-white text-[#162543] transition-[width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]", completando ? "w-0" : "w-[88px] shadow-[inset_1px_0_0_#e9eef3]")}>
                       <MoreHorizontal className="h-5 w-5" />
                       <span className="text-[11px] font-extrabold">{isEn ? "More" : "Más"}</span>
                     </button>
@@ -1577,7 +1587,6 @@ export function DirectChatInbox({ alCambiarSubvista }: {
                 )}
               >
                 {fila}
-                <SeparadorDeChat />
               </FilaDeslizable>
             ); })}
           {!vistaBloqueados && showArchived && !displayedConversations.length ? (

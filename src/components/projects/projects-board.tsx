@@ -172,7 +172,7 @@ function BotonEscribir({ proyecto, className = "" }: { proyecto: ProyectoPublico
       const res = await fetch("/api/contact/project-lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectId: proyecto.id }),
+        body: JSON.stringify({ projectId: proyecto.id, channel: canal }),
       });
       const payload = (await res.json().catch(() => ({}))) as { href?: string; tel?: string; code?: string; metaConversion?: import("@/lib/analytics/growth-contract").MetaConversion | null };
       // El servidor dice POR QUÉ, no solo que no. Antes cualquier fallo caía en
