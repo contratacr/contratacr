@@ -90,12 +90,8 @@ export function LandingFooter() {
   // existe —el panel lo acepta y lo ignora—, así que el enlace es el mismo.
   const panelHref = "/dashboard/profesional";
   return (
-    // Un píxel hacia arriba y por encima de lo anterior: si la última fila de
-    // una lista llega justo hasta el pie, su línea de abajo queda tapada —el pie
-    // ya marca el final—; si entre la lista y el pie hay espacio en blanco, la
-    // línea se ve y cierra la lista. Así la regla es una sola para todas las
-    // listas y no depende de medir nada.
-    <footer className="ccr-app-footer relative -mt-px bg-white text-[#162543]">
+    // La misma separación sutil que la fila de derechos, en todas las páginas.
+    <footer className="ccr-app-footer relative border-t border-[#162543]/10 bg-white text-[#162543]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-14 pb-8">
 
         {/* Main grid */}
