@@ -91,8 +91,9 @@ export function LandingFooter() {
   const panelHref = "/dashboard/profesional";
   return (
     // La misma separación sutil que la fila de derechos, en todas las páginas.
-    <footer className="ccr-app-footer relative border-t border-[#162543]/10 bg-white text-[#162543]">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-14 pb-8">
+    <footer className="ccr-app-footer relative bg-white text-[#162543]">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-8">
+        <div aria-hidden="true" className="border-t border-[#162543]/10 pt-14" />
 
         {/* Main grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-10 pb-10">
