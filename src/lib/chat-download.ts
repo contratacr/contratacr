@@ -25,8 +25,9 @@ export async function downloadChatAttachment(attachment: { url?: string | null; 
     try {
       await Share.share({ files: [saved.uri] });
     } finally {
-      // The native share sheet has finished using the temporary file.
-      await Filesystem.deleteFile({ path, directory: Directory.Cache }).catch(() => {});
+      // Android resolves when a recipient is chosen; that app can read the
+      // FileProvider URI afterwards. Keep the cached file briefly for it.
+      setTimeout(() => { void Filesystem.deleteFile({ path, directory: Directory.Cache }).catch(() => {}); }, 300_000);
     }
     return;
   }
