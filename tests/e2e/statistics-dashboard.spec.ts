@@ -1,5 +1,5 @@
 import { test, expect } from "playwright/test";
-import { loginAs } from "./helpers";
+import { apiJson, loginAs, resetAuth } from "./helpers";
 import { E2E_USERS } from "./seed";
 
 const profile = { views: 128, whatsapp: 12, calls: 4 };
@@ -46,4 +46,19 @@ test("filters only categories with publications and changes period", async ({ pa
   await panel.getByRole("button", { name: "Promociones", exact: true }).click();
   await expect(panel.getByText("Mantenimiento de aire acondicionado")).toBeVisible();
   await expect(panel.getByText("Remodelación de cocina")).not.toBeVisible();
+});
+
+test("activity endpoint requires an account and returns only owned publication groups", async ({ page }) => {
+  await page.goto("/");
+  expect((await apiJson(page, "/api/dashboard/activity?days=30")).status).toBe(401);
+  await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+  expect((await apiJson(page, "/api/dashboard/activity?days=1")).status).toBe(400);
+  const result = await apiJson<Record<string, unknown>>(page, "/api/dashboard/activity?days=30");
+  expect(result.status).toBe(200);
+  expect(result.body).toHaveProperty("profile");
+  expect(Array.isArray(result.body.projects)).toBe(true);
+  expect(Array.isArray(result.body.jobs)).toBe(true);
+  expect(Array.isArray(result.body.offers)).toBe(true);
+  await resetAuth(page);
+  expect((await apiJson(page, "/api/dashboard/activity?days=30")).status).toBe(401);
 });
