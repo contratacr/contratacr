@@ -770,15 +770,15 @@
     "followUs": "Follow us",
     "tagline": "The services platform built for Costa Rica. Find professionals and promote your services.",
     "clients": {
-      "title": "Find and hire",
-      "search": "Find services",
-      "categories": "Services",
-      "howItWorks": "How to use",
+      "title": "Find services",
+      "search": "Find professionals",
+      "categories": "Service categories",
+      "howItWorks": "How ContrataCR works",
       "publish": "Post a project",
       "offers": "Promotions"
     },
     "pros": {
-      "title": "Get work",
+      "title": "Offer services",
       "register": "Offer my services",
       "attract": "Improve my profile",
       "verification": "Identity verification",

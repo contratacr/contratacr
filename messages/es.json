@@ -770,15 +770,15 @@
     "followUs": "Síguenos",
     "tagline": "La plataforma de servicios hecha para Costa Rica. Busca profesionales y da a conocer tus servicios.",
     "clients": {
-      "title": "Buscar y contratar",
-      "search": "Buscar servicios",
-      "categories": "Servicios",
-      "howItWorks": "Cómo usar",
+      "title": "Buscar servicios",
+      "search": "Buscar profesionales",
+      "categories": "Categorías de servicios",
+      "howItWorks": "Cómo funciona ContrataCR",
       "publish": "Publicar proyecto",
       "offers": "Promociones"
     },
     "pros": {
-      "title": "Conseguir trabajo",
+      "title": "Ofrecer servicios",
       "register": "Ofrecer mis servicios",
       "attract": "Mejorar mi perfil",
       "verification": "Verificación de identidad",

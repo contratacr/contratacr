@@ -52,7 +52,6 @@ const COLUMNS = [
       { key: "clients.search",     href: "/profesionales" },
       { key: "clients.categories", href: "/servicios" },
       { key: "clients.offers",     href: "/promociones" },
-      { key: "clients.howItWorks", href: "/como-funciona" },
       { key: "clients.publish",    href: "/publicar-proyecto" },
     ],
   },
@@ -67,7 +66,6 @@ const COLUMNS = [
       // respeta y el pie lo enlazaba igual.
       ...(EMPLEOS_VISIBLE ? [{ key: "pros.jobs", href: "/empleos" }] : []),
       { key: "pros.attract",      href: "/mejorar-mi-perfil" },
-      { key: "pros.verification", href: "/verificacion-de-identidad" },
     ],
   },
   {
@@ -77,6 +75,8 @@ const COLUMNS = [
     // lives on Términos/Privacidad, not here).
     headingKey: "support.title",
     links: [
+      { key: "clients.howItWorks", href: "/como-funciona" },
+      { key: "pros.verification", href: "/verificacion-de-identidad" },
       { key: "support.help",    href: "/ayuda" },
       { key: "support.contact", href: "/soporte" },
     ],
@@ -93,17 +93,17 @@ export function LandingFooter() {
     // La misma separación sutil que la fila de derechos, en todas las páginas.
     <footer className="ccr-app-footer relative bg-white text-[#162543]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-8">
-        <div aria-hidden="true" className="border-t border-[#162543]/10 pt-14" />
+        <div aria-hidden="true" className="border-t border-[#162543]/10 pt-10 sm:pt-12" />
 
         {/* Main grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-10 pb-10">
+        <div className="grid grid-cols-1 gap-8 pb-6 sm:grid-cols-3 sm:gap-x-8 sm:gap-y-10 lg:grid-cols-[1.4fr_1fr_1fr_1fr] lg:gap-10 lg:pb-8">
 
-          {/* Brand column — spans 2 cols on lg */}
-          <div className="lg:col-span-2">
+          {/* Brand introduction */}
+          <div className="sm:col-span-3 lg:col-span-1">
             <Link href="/" aria-label="ContrataCR" className="inline-flex mb-4">
               <ContrataCRLogo />
             </Link>
-            <p className="text-sm text-[#162543] leading-relaxed mb-6 max-w-[260px]">
+            <p className="text-sm text-[#162543] leading-relaxed max-w-sm lg:max-w-[280px]">
               {t("tagline")}
             </p>
 
@@ -111,14 +111,14 @@ export function LandingFooter() {
 
           {/* Link columns */}
           {COLUMNS.map((col) => (
-            <div key={col.headingKey}>
-              <h3 className="text-xs font-bold uppercase tracking-widest text-[#162543] mb-4">
+            <nav key={col.headingKey} aria-label={t(col.headingKey)}>
+              <h3 className="text-sm font-bold text-[#162543] mb-3">
                 {t(col.headingKey)}
               </h3>
-              <ul className="space-y-3">
+              <ul className="grid grid-cols-2 gap-x-5 gap-y-1 sm:grid-cols-1">
                 {col.headingKey === "support.title" && user && (
                   <li>
-                    <Link href={panelHref} className="text-sm text-[#162543] hover:text-[#0083b0] transition-colors">
+                    <Link href={panelHref} className="inline-flex py-2 text-sm leading-5 text-[#162543] hover:text-[#0083b0] transition-colors">
                       {t("support.panel")}
                     </Link>
                   </li>
@@ -126,17 +126,17 @@ export function LandingFooter() {
                 {col.links.map(({ key, href }) => (
                   <li key={key}>
                     {href === "/registro/profesional" ? (
-                      <SmartRegisterLink className="text-sm text-[#162543] hover:text-[#0083b0] transition-colors">
+                      <SmartRegisterLink className="inline-flex py-2 text-sm leading-5 text-[#162543] hover:text-[#0083b0] transition-colors">
                         {t(key)}
                       </SmartRegisterLink>
                     ) : href === "/soporte" ? (
-                      <SupportLink className="text-sm text-left text-[#162543] hover:text-[#0083b0] transition-colors">
+                      <SupportLink className="inline-flex py-2 text-sm leading-5 text-left text-[#162543] hover:text-[#0083b0] transition-colors">
                         {t(key)}
                       </SupportLink>
                     ) : (
                       <Link
                         href={href}
-                        className="text-sm text-[#162543] hover:text-[#0083b0] transition-colors"
+                        className="inline-flex py-2 text-sm leading-5 text-[#162543] hover:text-[#0083b0] transition-colors"
                       >
                         {t(key)}
                       </Link>
@@ -144,7 +144,7 @@ export function LandingFooter() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </nav>
           ))}
         </div>
 
