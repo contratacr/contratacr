@@ -9,7 +9,7 @@ import { NotificationsList } from "@/components/notifications/notifications-list
 export default function NotificationsPage() {
   const tSeccion = useTranslations("sectionTitles");
   return (
-    <div className="flex min-h-screen flex-col bg-white lg:bg-[#f5f8fb]">
+    <div className="flex min-h-screen flex-col bg-white lg:bg-white">
       <LandingNavbar />
       <SectionHeaderTitle title={tSeccion("notifications")} fallbackHref="/" raiz tambienEnLaWeb />
       <main className="ccr-notifications-page-main flex w-full flex-1 flex-col px-0 pb-0 pt-16 lg:px-8 lg:pb-16 lg:pt-20">

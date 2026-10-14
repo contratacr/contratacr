@@ -14,7 +14,7 @@ export function MensajesEnLaApp() {
   const [subvista, setSubvista] = useState<{ titulo: string; volver: () => void } | null>(null);
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f5f8fb]">
+    <div className="flex min-h-screen flex-col bg-white">
       <LandingNavbar />
       <SectionHeaderTitle title={subvista?.titulo ?? tSeccion("messages")} fallbackHref="/" raiz={!subvista} alVolver={subvista?.volver} />
       <main data-messages-page-main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-0 pb-0 pt-16 sm:px-6 sm:pb-12 sm:pt-24 lg:px-8">

@@ -91,7 +91,7 @@ export function SignInMethods() {
       <h3 className="text-sm font-semibold text-[#374151]">{english ? "Sign-in methods" : "Métodos de acceso"}</h3>
       <p className="mt-2 text-sm leading-6 text-[#6b7280]">{english ? "Connect another method to access this same account. Confirm it with the provider, even if it uses a different email." : "Conecta otro método para entrar a esta misma cuenta. Confírmalo con el proveedor, aunque use otro correo."}</p>
       {connectingApple && <p role="status" className="mt-3 rounded-xl bg-[#eff9fd] p-3 text-sm text-[#374151]">{ta("accountHelp")}</p>}
-      <ul className="mt-4 overflow-hidden rounded-xl border border-[#dce5ee] bg-[#f8fafc] divide-y divide-[#dce5ee]">
+      <ul className="mt-4 overflow-hidden rounded-xl border border-[#dce5ee] bg-white divide-y divide-[#dce5ee]">
         {(["email", "google", "apple"] as const).map((provider) => {
           const connected = identities.some((identity) => identity.provider === provider);
           const label = provider === "email" ? (english ? "Email" : "Correo") : provider === "google" ? "Google" : "Apple";

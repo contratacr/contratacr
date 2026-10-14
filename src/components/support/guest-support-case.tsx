@@ -63,7 +63,7 @@ export function GuestSupportCase({ id }: { id: string }) {
     finally { setSending(false); }
   }
 
-  return <main className="min-h-screen bg-[#f4f7fa] px-4 py-8 text-[#162543]">
+  return <main className="min-h-screen bg-white px-4 py-8 text-[#162543]">
     <div className="mx-auto max-w-xl rounded-2xl border border-[#e5e7eb] bg-white p-5 sm:p-8">
       <Link href="/" className="text-sm font-bold text-[#009FD9]">ContrataCR</Link>
       <h1 className="mt-4 text-xl font-bold">{t("title")}</h1>
@@ -74,7 +74,7 @@ export function GuestSupportCase({ id }: { id: string }) {
       {thread && error !== "invalid" && <>
         <h2 className="mt-5 break-words font-semibold">{thread.ticket.subject}</h2>
         <div className="mt-4 space-y-3" aria-label={t("conversation")}>
-          {thread.messages.map(message => <article key={message.id} className={`rounded-xl p-4 ${message.sender_role === "user" ? "bg-[#eaf7fc]" : "bg-[#f4f7fa]"}`}>
+          {thread.messages.map(message => <article key={message.id} className={`rounded-xl p-4 ${message.sender_role === "user" ? "bg-[#eaf7fc]" : "border border-[#e5e7eb] bg-white"}`}>
             <p className="mb-1 text-xs font-semibold">{t(message.sender_role === "user" ? "you" : "team")}</p>
             <p className="whitespace-pre-wrap break-words text-sm">{message.body}</p>
             <AdjuntosDelMensaje adjuntos={message.attachments} propio={message.sender_role === "user"} />

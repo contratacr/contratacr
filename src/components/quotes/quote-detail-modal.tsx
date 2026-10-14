@@ -24,7 +24,7 @@ export function Totales({ quote }: { quote: Pick<Quote, "subtotal" | "tax_amount
   const m = desgloseQuote(quote);
   const nota = quote.tax_mode === "incluido" ? t("totalWithTax") : quote.tax_mode === "mas_iva" ? t("totalPlusTax") : t("totalNoTax");
   return (
-    <div className="rounded-2xl bg-[#f4f7fa] px-4 py-3.5 text-[14px]">
+    <div className="rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3.5 text-[14px]">
       <div className="flex justify-between text-[#52627a]"><span>{t("subtotal")}</span><span>{formatColones(m.base)}</span></div>
       {quote.tax_mode !== "exento" && <div className="mt-1 flex justify-between text-[#52627a]"><span>{t("tax")}</span><span>{formatColones(m.iva)}</span></div>}
       <div className="mt-2.5 flex items-baseline justify-between border-t border-[#e5e7eb] pt-2.5 text-[17px] font-extrabold text-[#162543]">

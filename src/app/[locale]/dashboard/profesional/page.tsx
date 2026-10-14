@@ -1810,24 +1810,24 @@ export default function DashboardPage() {
     // pie —o entre el contenido y la barra de abajo, en la app—. Ahora no hay
     // costura: el color es uno solo hasta el final de la pantalla.
     <div className={cn(
-      "ccr-dashboard-shell min-h-screen flex flex-col bg-[#f4f7fa] lg:bg-[#fafafa]",
+      "ccr-dashboard-shell min-h-screen flex flex-col bg-white lg:bg-white",
       // El mismo color que la sección en CADA ancho: si la sección es blanca en
       // el teléfono y el fondo gris, donde la sección termina aparecía la
       // costura. (En la app manda el CSS, que pinta los dos de #f4f7fa.)
-      mobileSectionOpen && "bg-[#f4f7fa] lg:bg-[#fafafa]",
-      mobileFullScreenTab && "bg-[#f4f7fa] lg:bg-[#fafafa]",
+      mobileSectionOpen && "bg-white lg:bg-white",
+      mobileFullScreenTab && "bg-white lg:bg-white",
     )}>
       <Navbar mobileSearch={false} />
       {formularioPublicar}
       <main className={cn(
-        "ccr-dashboard-main flex-1 min-h-[calc(100svh-88px)] bg-[#f4f7fa] lg:bg-[#fafafa]",
+        "ccr-dashboard-main flex-1 min-h-[calc(100svh-88px)] bg-white lg:bg-white",
         // Con una sección abierta, el lienzo es el GRIS de la sección en todo
         // ancho menor de 1024px. Antes en teléfono era blanco (de cuando las
         // secciones llenaban la pantalla en blanco): ahora las secciones van en
         // tarjetas sobre gris, la sección termina antes que la pantalla y ese
         // blanco quedaba como un bloque suelto entre el gris y el pie.
-        mobileSectionOpen && "bg-[#f4f7fa] lg:bg-[#fafafa]",
-        mobileFullScreenTab && "bg-[#f4f7fa] lg:bg-[#fafafa]",
+        mobileSectionOpen && "bg-white lg:bg-white",
+        mobileFullScreenTab && "bg-white lg:bg-white",
       )}>
         <div className={cn(
           "dashboard-panel-content mx-auto max-w-7xl px-4 pb-6 pt-6 sm:px-6 lg:px-8 lg:pb-8 lg:pt-8",
@@ -2167,12 +2167,12 @@ export default function DashboardPage() {
                         </div>
                       </CardHeader>}
                       <CardContent data-dashboard-current={activeTab} className={mobileSectionOpen ? cn(
-                        "dashboard-section-content ccr-editor-surface min-h-[calc(100svh-var(--ccr-native-header-height,124px)-var(--ccr-responsive-footer-reserve,72px)-64px)] bg-[#f4f7fa] px-4 pb-6 pt-4 sm:px-5 lg:min-h-0 lg:bg-white lg:px-6 lg:pb-6 lg:pt-5",
+                        "dashboard-section-content ccr-editor-surface min-h-[calc(100svh-var(--ccr-native-header-height,124px)-var(--ccr-responsive-footer-reserve,72px)-64px)] bg-white px-4 pb-6 pt-4 sm:px-5 lg:min-h-0 lg:bg-white lg:px-6 lg:pb-6 lg:pt-5",
                         editorSurfaceTab && "px-4 py-5",
                         singleSurfaceTab && "px-4 py-5 lg:!bg-transparent lg:px-0 lg:pb-0 lg:pt-0"
                       ) : cn(
                         "px-4 pt-0 pb-4 sm:px-6 sm:pt-1 sm:pb-6",
-                        activeTab === "home" && "ccr-dashboard-mobile-home bg-[#f4f7fa] px-0 sm:px-0",
+                        activeTab === "home" && "ccr-dashboard-mobile-home bg-white px-0 sm:px-0",
                         singleSurfaceTab && "!bg-transparent px-0 pt-0 pb-0 sm:px-0 sm:pt-0 sm:pb-0",
                       )}>
                         {/* Cada sección dentro de su propio límite: si una revienta,

@@ -23,7 +23,7 @@ export default async function IdentityVerificationPage() {
     { icon: RefreshCw, title: t("step3Title"), body: t("step3Body") },
   ];
   return (
-    <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
+    <div className="min-h-screen flex flex-col bg-white">
       <Navbar />
       <main className="flex-1">
         {/* Hero */}

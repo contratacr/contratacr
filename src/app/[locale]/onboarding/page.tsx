@@ -170,7 +170,7 @@ export default function OnboardingPage() {
     null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
+    <div className="min-h-screen flex flex-col bg-white">
       <CabeceraDeTramite />
 
       <main className="flex-1 ccr-centrado-seguro px-4 py-12">

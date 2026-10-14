@@ -315,7 +315,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
   const detailBackHref = safeMarketplaceReturnHref(returnTo, "/empleos");
   const detailBackLabel = tSalida(marketplaceReturnLabelKey(detailBackHref, "/empleos", !returnTo));
 
-  return <main className="ccr-tablero-fijo min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-0 text-[#162543] sm:bg-[#fafafa] sm:pb-16 lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:bg-white lg:pb-0">
+  return <main className="ccr-tablero-fijo min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-0 text-[#162543] sm:bg-white sm:pb-16 lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:bg-white lg:pb-0">
     {avisoNode}
     {showingMobileDetail && selected && (
       <section className="ccr-tablero-ficha lg:hidden">
@@ -529,7 +529,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
       </div>
     </div>}
     {publishOpen && currentProfessionalId && (
-      <Modal onClose={() => setPublishOpen(false)} title={copy.publishJob} size="lg" bodyClassName="bg-[#f4f7fa] px-0 py-0">
+      <Modal onClose={() => setPublishOpen(false)} title={copy.publishJob} size="lg" bodyClassName="bg-white px-0 py-0">
         <JobPostForm
           onCancel={() => setPublishOpen(false)}
           professionalId={currentProfessionalId}
@@ -545,7 +545,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
       </Modal>
     )}
     {editingJob && currentProfessionalId && (
-      <Modal onClose={() => setEditingJob(null)} title={copy.editJob} size="lg" bodyClassName="bg-[#f4f7fa] px-0 py-0">
+      <Modal onClose={() => setEditingJob(null)} title={copy.editJob} size="lg" bodyClassName="bg-white px-0 py-0">
         <JobPostForm
           onCancel={() => setEditingJob(null)}
           professionalId={currentProfessionalId}

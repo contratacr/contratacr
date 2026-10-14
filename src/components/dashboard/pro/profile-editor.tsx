@@ -97,7 +97,7 @@ function Section({ id, title, desc, open, mobileFocused, onToggle, onActivate, c
           // gris, y se veía un subrayado oscuro que aparece y se borra solo.
           // Medido: nacía en rgb(17,24,39) y tardaba 136 ms en apagarse.
           "w-full items-center justify-between gap-3 border-[#eef2f6] px-4 py-4 text-left transition-colors sm:flex sm:px-5",
-          open ? "hidden bg-[#f8fafc] sm:flex sm:border-b" : "flex hover:bg-[#fafafa]",
+          open ? "hidden bg-white sm:flex sm:border-b" : "flex hover:bg-[#fafafa]",
           // En el teléfono cada sección se abre a pantalla completa, o sea que ES
           // navegación: se ve igual que una fila del menú del panel (tarjeta con
           // borde, 60 px, flecha) en vez de una fila de acordeón con lápiz.
@@ -1074,7 +1074,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
               )}
               {/* Saved certs — read-only */}
               {certsForProf.map((c) => (
-                <div key={c.id} className="flex items-center gap-2 rounded-xl bg-[#f9fafb] px-3 py-2">
+                <div key={c.id} className="flex items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white px-3 py-2">
                   <Award className="h-4 w-4 text-[#009FD9] shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-[#162543] truncate">{c.name}</p>
@@ -1087,7 +1087,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
               ))}
               {/* Add form (all fields required) OR the add-another action */}
               {draftHere ? (
-                <div className="rounded-xl border border-[#dce5ee] bg-[#f8fafc] p-4 flex flex-col gap-4">
+                <div className="rounded-xl border border-[#dce5ee] bg-white p-4 flex flex-col gap-4">
                   <input type="text" value={certDraft!.name} maxLength={SHORT_TEXT_MAX_LENGTH} onChange={(e) => updateCertDraft("name", limitText(e.target.value, SHORT_TEXT_MAX_LENGTH))} placeholder={t("certNamePlaceholder")} className={inputCls} autoFocus />
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_7rem]">
                     <input type="text" value={certDraft!.institution} maxLength={SHORT_TEXT_MAX_LENGTH} onChange={(e) => updateCertDraft("institution", limitText(e.target.value, SHORT_TEXT_MAX_LENGTH))} placeholder={t("certInstitution")} className={inputCls} />

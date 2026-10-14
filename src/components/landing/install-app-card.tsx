@@ -294,7 +294,7 @@ export function InstallAppGuide({ compact = false }: { compact?: boolean }) {
   const [platform, setPlatform] = useState<InstallPlatform>("ios");
 
   return (
-    <section id="agregar-a-inicio" className={compact ? "py-10" : "bg-[#f8fbfd] px-4 py-16"}>
+    <section id="agregar-a-inicio" className={compact ? "py-10" : "bg-white px-4 py-16"}>
       <div className="mx-auto max-w-6xl">
         <div className="mx-auto mb-10 max-w-2xl text-center">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#009FD9]">{t("eyebrow")}</p>

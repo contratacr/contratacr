@@ -73,7 +73,7 @@ export default function OlvideContrasenaPage() {
   }
 
   return (
-    <div className="ccr-account-page min-h-dvh flex flex-col bg-[#fafafa]">
+    <div className="ccr-account-page min-h-dvh flex flex-col bg-white">
       <Navbar mobileSearch={false} />
       <main className="flex-1 ccr-centrado-seguro py-12 px-4">
         <div className="w-full max-w-md">
@@ -100,7 +100,7 @@ export default function OlvideContrasenaPage() {
               <h1 className="mt-4 text-2xl font-bold text-[#162543]">{t("sentTitle")}</h1>
               <p className="mx-auto mt-2 max-w-[320px] text-sm leading-6 text-[#4b5563]">{t("sentBody")}</p>
               {sentEmail && (
-                <p className="mx-auto mt-4 max-w-full truncate rounded-full bg-[#f4f7fa] px-4 py-2 text-sm font-semibold text-[#1a2744]">
+                <p className="mx-auto mt-4 max-w-full truncate rounded-full border border-[#e5e7eb] bg-white px-4 py-2 text-sm font-semibold text-[#1a2744]">
                   {sentEmail}
                 </p>
               )}

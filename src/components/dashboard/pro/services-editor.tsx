@@ -690,7 +690,7 @@ export function ServicesEditor({
                   style={recienPrincipal === prof ? { boxShadow: "0 0 0 2px #009FD9", transition: "box-shadow 300ms" } : undefined}
                   className={cn(
                     "flex min-w-0 max-w-full flex-col overflow-hidden rounded-2xl border bg-white p-4 shadow-sm transition-shadow sm:p-5",
-                    isActive ? "border-[#e5e7eb] hover:shadow-md" : "border-[#e5e7eb] bg-[#fafbfc]"
+                    isActive ? "border-[#e5e7eb] hover:shadow-md" : "border-[#e5e7eb] bg-white"
                   )}
                 >
                   {/* Header: focal name + price on the left, active toggle pinned far right. */}
@@ -818,7 +818,7 @@ export function ServicesEditor({
             </>
           }
           footerClassName="block sm:flex sm:justify-end sm:gap-3"
-          bodyClassName="bg-[#f4f7fa] px-4 py-5"
+          bodyClassName="bg-white px-4 py-5"
         >
           <div className="flex flex-col gap-4 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
             <div ref={categoryFieldRef}>
@@ -1022,13 +1022,13 @@ export function ServicesEditor({
             ? () => setActivePickerGroupId(null)
             : pickerMode === "change" ? closePicker : undefined}
           mobilePresentation="fullscreen"
-          bodyClassName="flex flex-col overflow-hidden bg-[#f4f7fa] px-0 py-0"
+          bodyClassName="flex flex-col overflow-hidden bg-white px-0 py-0"
         >
           <div data-testid="services-add-picker" className="flex min-h-0 flex-1 flex-col">
             {/* El buscador esta pegado arriba y la lista pasa por debajo: sin
                 sombra, las filas se cortaban contra el como si no hubiera nada
                 mas. La mide el mismo enganche que usa el resto del app. */}
-            <div className={cn("sticky top-0 z-10 shrink-0 bg-[#f4f7fa] px-4 pb-3 pt-4 transition-shadow sm:px-5")}>
+            <div className={cn("sticky top-0 z-10 shrink-0 bg-white px-4 pb-3 pt-4 transition-shadow sm:px-5")}>
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#68778d]" />
                 <input
@@ -1040,7 +1040,7 @@ export function ServicesEditor({
               </div>
             </div>
             <div ref={catalogoRef} data-testid="services-add-picker-scroll" className={cn(
-              "min-h-0 flex-1 overflow-y-auto overscroll-contain bg-[#f4f7fa] px-4 pb-5 sm:px-5",
+              "min-h-0 flex-1 overflow-y-auto overscroll-contain bg-white px-4 pb-5 sm:px-5",
               pickerList.length === 0 && pickerQuery.trim() ? "pt-0" : "pt-1"
             )}>
               {/* Sin resultados no se deja el lienzo en blanco: se dice que no

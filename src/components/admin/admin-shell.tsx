@@ -171,7 +171,7 @@ export function AdminShell({
   );
 
   return (
-    <div className="min-h-screen bg-[#f4f7fa] lg:flex">
+    <div className="min-h-screen bg-white lg:flex">
       {/* ── Desktop sidebar ── */}
       <aside className="hidden lg:flex lg:w-60 lg:flex-col lg:fixed lg:inset-y-0 bg-[#0f172a] text-white">
         <div className="shrink-0 px-5 py-4">

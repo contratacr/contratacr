@@ -104,7 +104,7 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
 
   if (disabled) {
     return (
-      <div className="rounded-2xl border border-[#bfdbfe] bg-[#f8fbfe] p-4">
+      <div className="rounded-2xl border border-[#bfdbfe] bg-white p-4">
         <p className="text-sm font-semibold text-[#162543]">{t("disabledTitle")}</p>
         <p className="mt-0.5 text-xs leading-relaxed text-[#4b6270]">{t("disabledBody")}</p>
         {error && <p className="mt-2 text-xs text-red-600">{error}</p>}

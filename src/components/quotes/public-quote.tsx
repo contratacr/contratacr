@@ -94,7 +94,7 @@ export function PublicQuote({ locale, data }: { locale: string; data: PublicQuot
         {/* La conversación sigue por WhatsApp: es como el profesional y el
             cliente ya se hablan. */}
         {wa && !vencida && (
-          <div className="print:hidden border-t border-[#eef2f6] bg-[#fafcfd] px-6 py-5">
+          <div className="print:hidden border-t border-[#eef2f6] bg-white px-6 py-5">
             <a href={wa} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 w-full items-center justify-center rounded-full bg-[#009FD9] px-5 text-[15px] font-bold text-white transition-colors hover:bg-[#0089bb]">{t("publicWhatsApp")}</a>
           </div>
         )}
@@ -114,7 +114,7 @@ export function PublicQuote({ locale, data }: { locale: string; data: PublicQuot
 
 function Marco({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-[#f4f7fa] print:bg-white">
+    <div className="min-h-screen bg-white print:bg-white">
       <header className="print:hidden border-b border-[#e5e7eb] bg-white">
         <div className="mx-auto flex h-16 max-w-2xl items-center px-5">
           {/* eslint-disable-next-line @next/next/no-img-element -- logotipo estático, sin optimizador */}

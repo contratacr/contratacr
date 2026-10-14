@@ -215,7 +215,7 @@ export function AdminCampaigns() {
                     { etiqueta: "Tocaron el botón", valor: tanda.clics, de: tanda.enviados },
                     { etiqueta: "No llegaron", valor: tanda.rebotes, de: tanda.enviados },
                   ].map((m) => (
-                    <div key={m.etiqueta} className="rounded-xl bg-[#f4f7fa] px-4 py-3">
+                    <div key={m.etiqueta} className="rounded-xl border border-[#e5e7eb] bg-white px-4 py-3">
                       <dt className="text-[12px] font-bold uppercase tracking-wide text-[#68778d]">{m.etiqueta}</dt>
                       <dd className="mt-1 text-[19px] font-extrabold text-[#162543]">{m.valor}</dd>
                       {m.de ? <dd className="text-[12px] font-semibold text-[#007fae]">{Math.round((m.valor / m.de) * 100)}% de {m.de}</dd> : null}
@@ -257,7 +257,7 @@ export function AdminCampaigns() {
           )}
         </div>
 
-        <div className="rounded-2xl border border-[#e5e7eb] bg-[#f4f7fa] p-5">
+        <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5">
           <p className="mb-3 text-xs font-bold uppercase tracking-wide text-[#68778d]">Vista previa</p>
           <div className="rounded-xl border border-[#e5e7eb] bg-white p-4">
             <p className="text-[15px] font-extrabold text-[#162543]">{subject || "—"}</p>

@@ -342,7 +342,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
                       {c.photos.slice(0, MAX_PHOTOS_PER_CASE).map((url) => (
                       <div
                         key={`${c.id}-${url}`}
-                        className="relative h-14 w-14 overflow-hidden rounded-xl border-2 border-white bg-[#f3f4f6] shadow-sm sm:h-16 sm:w-16"
+                        className="relative h-14 w-14 overflow-hidden rounded-xl border-2 border-white bg-white shadow-sm sm:h-16 sm:w-16"
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={cldThumb(url, 220)} alt={c.title ?? ""} className="h-full w-full object-cover" />
@@ -416,7 +416,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
             </>
           }
           footerClassName="block sm:flex sm:justify-end sm:gap-3"
-          bodyClassName="bg-[#f4f7fa] px-4 py-5"
+          bodyClassName="bg-white px-4 py-5"
         >
           {/* Mismo lienzo que Publicar empleo: fondo gris y los campos dentro
               de una tarjeta blanca. Sueltos sobre blanco, este formulario se

@@ -462,7 +462,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/promoci
   }
 
   return (
-    <main className={presentation === "modal" ? "bg-[#f4f7fa] text-[#162543]" : "min-h-[calc(100vh-72px)] bg-[#f4f7fa] text-[#162543] lg:px-6 lg:py-8"}>
+    <main className={presentation === "modal" ? "bg-white text-[#162543]" : "min-h-[calc(100vh-72px)] bg-white text-[#162543] lg:px-6 lg:py-8"}>
       <header ref={cabeceraRef} className={presentation === "modal" ? "hidden" : cn("ccr-cabecera-pegada sticky top-0 z-20 border-b bg-white transition-colors duration-200 lg:hidden", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
         <div className={CABECERA_FILA_CENTRADA}>
           <Link href={backHref} aria-label={copy.back} className={cn("absolute left-4 top-1/2 -translate-y-1/2", CABECERA_BOTON)}><ArrowLeft className={cn(CABECERA_GLIFO, "stroke-[2.4]")} /></Link>
@@ -555,7 +555,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/promoci
                         }}
                         placeholder={copy.servicePlaceholder}
                         autoComplete="off"
-                        className="h-10 w-full rounded-lg bg-[#f5f8fa] pl-10 pr-3 text-sm font-medium text-[#162543] outline-none placeholder:text-[#68778d] focus:bg-white focus:ring-1 focus:ring-[#009fd9]"
+                        className="h-10 w-full rounded-lg border border-[#e5e7eb] bg-white pl-10 pr-3 text-sm font-medium text-[#162543] outline-none placeholder:text-[#68778d] focus:bg-white focus:ring-1 focus:ring-[#009fd9]"
                       />
                     </div>
                     )}

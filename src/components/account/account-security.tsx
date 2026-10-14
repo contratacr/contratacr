@@ -260,7 +260,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
           </div>
         )}
         {emailPending && (
-          <div className="mb-3 flex items-start gap-3 rounded-2xl border border-[#b8e4f5] bg-[#f8fbfe] px-4 py-3">
+          <div className="mb-3 flex items-start gap-3 rounded-2xl border border-[#b8e4f5] bg-white px-4 py-3">
             <BrandIconBadge icon={Clock} size={32} className="mt-0.5" />
             <div className="min-w-0">
               <p className="text-sm font-semibold text-[#162543]">{t("emailPendingTitle")}</p>
@@ -288,7 +288,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
             />
           </div>
         ) : emailSent ? (
-          <div className="rounded-2xl border border-[#b8e4f5] bg-[#f8fbfe] px-4 py-3">
+          <div className="rounded-2xl border border-[#b8e4f5] bg-white px-4 py-3">
             <div className="flex items-start gap-3">
               <Mail className="mt-0.5 h-4 w-4 shrink-0 text-[#009FD9]" />
               <div className="min-w-0">

@@ -51,7 +51,7 @@ export default function AyudaPage() {
     if (window.location.hash !== "#agregar-a-inicio") return;
     const timer = window.setTimeout(() => {
       setShowInstallGuide(true);
-      requestAnimationFrame(() => document.getElementById("agregar-a-inicio")?.scrollIntoView({ block: "start" }));
+      requestAnimationFrame(() => document.getElementById("descargar-app")?.scrollIntoView({ block: "start" }));
     }, 0);
     return () => window.clearTimeout(timer);
   }, []);
@@ -63,7 +63,7 @@ export default function AyudaPage() {
 
   function openInstallGuide() {
     setShowInstallGuide(true);
-    requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById("agregar-a-inicio")?.scrollIntoView({ behavior: "smooth", block: "start" })));
+    requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById("descargar-app")?.scrollIntoView({ behavior: "smooth", block: "start" })));
   }
 
   return (
@@ -87,7 +87,7 @@ export default function AyudaPage() {
           </div>
         </section>
 
-        <section className="bg-[#f4f7fa] px-4 py-10 sm:py-14">
+        <section className="bg-white px-4 py-10 sm:py-14">
           <div className="mx-auto grid max-w-4xl gap-8 lg:grid-cols-[17rem_minmax(0,1fr)]">
             <aside>
               <h2 className="text-sm font-extrabold text-[#162543]">{t("topicsTitle")}</h2>
@@ -114,7 +114,7 @@ export default function AyudaPage() {
                     <ChevronDown className={`h-5 w-5 shrink-0 text-[#68778d] transition-transform ${openFaq === index ? "rotate-180 text-[#009fd9]" : ""}`} />
                   </button>
                   {openFaq === index && (
-                    <p className="pb-5 text-sm leading-6 text-[#6b7280]">
+                    <p id={`faq-answer-${index}`} className="pb-5 text-sm leading-6 text-[#6b7280]">
                       {t(`faq${index}A`)}
                       {index === 8 && <>{" "}<button type="button" onClick={openInstallGuide} className="font-bold text-[#0089bb] hover:underline">{t("faq8Link")}</button></>}
                     </p>

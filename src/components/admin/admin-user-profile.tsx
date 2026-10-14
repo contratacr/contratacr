@@ -350,7 +350,7 @@ export function AdminUserProfile({
       {/* ── 2. Verification status and actions ── */}
       <Section icon={ShieldCheck} title="Verificación de identidad">
         <div className="p-4">
-          <div className="rounded-xl border border-[#e5e7eb] bg-[#f9fafb] p-4">
+          <div className="rounded-xl border border-[#e5e7eb] bg-white p-4">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
@@ -495,7 +495,7 @@ export function AdminUserProfile({
           <Section icon={MousePointerClick} title="Alcance del perfil" sub="Qué hace la gente cuando lo encuentra">
             <div className="p-4">
               {!analytics || analytics.total === 0 ? (
-                <div className="rounded-xl bg-[#f8fafc] px-4 py-6 text-center text-sm text-[#94a3b8]">Aún no hay interacciones registradas para este profesional.</div>
+                <div className="rounded-xl border border-[#e5e7eb] bg-white px-4 py-6 text-center text-sm text-[#94a3b8]">Aún no hay interacciones registradas para este profesional.</div>
               ) : (
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-3 md:grid-cols-4">

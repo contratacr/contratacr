@@ -202,7 +202,7 @@ export function QuoteEditorModal({ open, onClose, projectId, defaultTitle, clien
                 const precio = Number(String(r.unit_price).replace(/[^\d]/g, "")) || 0;
                 const totalLinea = Math.round(cantidad * precio);
                 return (
-                  <div key={r.id} className="rounded-2xl border border-[#e5e7eb] bg-[#fafcfd] p-3">
+                  <div key={r.id} className="rounded-2xl border border-[#e5e7eb] bg-white p-3">
                     <div className="mb-2 flex items-center justify-between gap-2">
                       <span className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#9aa8ba]">{t("itemNumber", { n: indice + 1 })}</span>
                       <button

@@ -518,7 +518,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
               setItemMenuOpenId(null);
               setGlobalMenuOpen((open) => !open);
             }}
-            className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#f8fafc] text-[#162543] ring-1 ring-[#c9d8e4] transition-colors hover:bg-[#eef6fb]"
+            className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white text-[#162543] ring-1 ring-[#c9d8e4] transition-colors hover:bg-[#eef6fb]"
           >
             <MoreHorizontal className="h-4 w-4" strokeWidth={3} />
           </button>
@@ -620,7 +620,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
         // página —igual que en Empleos o Buscar—, en vez de como una franja
         // blanca vacía que parecía lista cortada.
         "ccr-notifications-scroll min-h-0 flex-1 overflow-hidden",
-        nativeApp && scope === "all" ? "bg-[#f5f8fb]" : "bg-white",
+        nativeApp && scope === "all" ? "bg-white" : "bg-white",
         // En la app la lista va de borde a borde contra la barra de abajo; en la
         // web es una tarjeta como la de cualquier otra sección.
         // La tarjeta solo en computadora: en el teléfono (app o web) la lista va

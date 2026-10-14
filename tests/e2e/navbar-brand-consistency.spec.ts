@@ -1,11 +1,12 @@
 import { test, expect } from "playwright/test";
-import { gotoOK } from "./helpers";
+import { gotoOK, waitForInteractivePage } from "./helpers";
 
 test("navbar logo stays identical without web fonts across public routes", async ({ page }) => {
   // Reproduce a cold/slow font request: the logo must not fall back to Arial.
   await page.route(/\.woff2(?:\?.*)?$/, route => route.abort());
   for (const path of ["/", "/registro", "/login", "/proyectos", "/promociones", "/empleos"]) {
     await gotoOK(page, path);
+    await waitForInteractivePage(page);
     // Marketplace mobile headers intentionally show only the mark + section
     // title. The full brand lives in their shared navigation drawer.
     const marketplace = (page.viewportSize()?.width ?? 1440) < 1024 && ["/proyectos", "/promociones", "/empleos"].includes(path);

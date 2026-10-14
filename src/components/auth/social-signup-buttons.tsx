@@ -111,7 +111,7 @@ export function SocialSignupButtons({ nextPath }: { nextPath?: string }) {
     <div className="flex flex-col gap-3">
       <AppleAccountNotice open={appleNotice} onClose={() => setAppleNotice(false)} onContinue={() => { void start("apple"); }} />
       {covering && (
-        <div className="fixed inset-0 z-[300] bg-[#f4f7fa]" aria-busy="true">
+        <div className="fixed inset-0 z-[300] bg-white" aria-busy="true">
           {/* Velo neutro: la marca no se usa como pantalla de carga. */}
           <div className="h-16 bg-white shadow-[0_1px_0_#e5e7eb]" />
         </div>

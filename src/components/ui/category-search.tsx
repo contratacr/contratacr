@@ -230,7 +230,7 @@ export function CategorySearch({
                 placeholder={t("searchPlaceholder")}
                 enterKeyHint="search"
                 className={cn(
-                  "w-full pl-9 pr-3 text-[#162543] placeholder:text-[#68778d] bg-[#f9fafb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20",
+                  "w-full pl-9 pr-3 text-[#162543] placeholder:text-[#68778d] border border-[#e5e7eb] bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20",
                   pantallaChica ? "h-11 text-base" : "py-2 text-sm",
                 )}
               />

@@ -219,7 +219,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
   }
 
   return (
-    <main className="min-h-[calc(100vh-72px)] bg-white text-[#162543] lg:bg-[#f4f7fa]">
+    <main className="min-h-[calc(100vh-72px)] bg-white text-[#162543] lg:bg-white">
       <OfferDetailNavbarSearch title={offer.title} />
       <RecordRecentVisit
         surface="ofertas"
@@ -337,7 +337,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
                 <OfferOwnerActions offer={offer} professionalId={offer.professional_id} serviceOptions={serviceOptions} fromPanel={vieneDelPanel(from)} />
               </AccionesAlPie>
             ) : unavailable ? (
-              <p className="mt-5 rounded-lg bg-[#f4f7fa] p-4 text-sm font-bold lg:hidden">{copy.unavailable}</p>
+              <p className="mt-5 rounded-lg border border-[#e5e7eb] bg-white p-4 text-sm font-bold lg:hidden">{copy.unavailable}</p>
             ) : (
               <AccionesAlPie className="mt-5 lg:hidden">
                 <OfferContactActions offer={offer} userId={user?.id ?? null} isOwner={false} soloContacto />
@@ -375,7 +375,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
           {isOwner ? (
             <OfferOwnerActions offer={offer} professionalId={offer.professional_id} serviceOptions={serviceOptions} fromPanel={vieneDelPanel(from)} />
           ) : (
-            unavailable ? <p className="rounded-lg bg-[#f4f7fa] p-4 text-sm font-bold">{copy.unavailable}</p> : <div className="space-y-3">
+            unavailable ? <p className="rounded-lg border border-[#e5e7eb] bg-white p-4 text-sm font-bold">{copy.unavailable}</p> : <div className="space-y-3">
               <OfferContactActions offer={offer} userId={user?.id ?? null} isOwner={false} />
             </div>
           )}

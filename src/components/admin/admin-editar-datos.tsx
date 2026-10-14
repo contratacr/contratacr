@@ -186,7 +186,7 @@ export function AdminEditarDatos({
       {error && <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-xs font-medium text-red-700" role="alert">{error}</p>}
 
       {abierto && (
-        <div className="rounded-xl border border-[#e5e7eb] bg-[#f9fafb] p-4" data-editar-datos>
+        <div className="rounded-xl border border-[#e5e7eb] bg-white p-4" data-editar-datos>
           <div className="grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2">
             <Input label="Nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} />
             {pro && <Input label="Nombre comercial" value={negocio} onChange={(e) => setNegocio(e.target.value)} />}

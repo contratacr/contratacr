@@ -32,7 +32,7 @@
   --color-accent-800: #9e3700;
   --color-accent-900: #7f2e04;
 
-  --color-background: #fafafa;
+  --color-background: #ffffff;
   --color-surface: #ffffff;
   /* LAS TRES LÍNEAS DEL APP. Había 34 grises distintos haciendo de línea, casi
      todos a uno o dos tonos entre sí: se veía desprolijo y nadie sabía cuál
@@ -100,12 +100,12 @@ body.ccr-native-app [data-messages-page-shell] {
 
 
 .ccr-native-app {
-  background: #f4f7fa;
+  background: #ffffff;
 }
 
 .ccr-native-app body {
   min-height: 100svh;
-  background: #f4f7fa;
+  background: #ffffff;
   overscroll-behavior-y: contain;
 }
 
@@ -144,7 +144,7 @@ body.ccr-native-app .ccr-app-header {
 
 .ccr-native-app .ccr-page-route-loading {
   z-index: 100000;
-  background: #f4f7fa !important;
+  background: #ffffff !important;
   /* SIN PRISA POR TAPAR LA PANTALLA. Esto ponía `animation-delay: 0ms` para que
      la app mostrara su carga «como cualquier pantalla nativa», y con eso
      anulaba el respiro de 250 ms que la web sí tiene. El resultado era lo
@@ -181,7 +181,7 @@ html.ccr-native-app.ccr-native-first-run-pending,
 html.ccr-native-app.ccr-native-first-run-pending body {
   /* The Android system splash remains visible until the real onboarding is
      painted.  Never reveal an intermediate dark/blank document behind it. */
-  background: #f4f7fa !important;
+  background: #ffffff !important;
 }
 
 html.ccr-native-app.ccr-native-first-run-pending body > *:not([data-testid="native-first-run-onboarding"]):not(#ccr-native-first-run-prepaint) {
@@ -193,7 +193,7 @@ html.ccr-native-app.ccr-native-first-run-pending [data-testid="native-first-run-
   z-index: 220;
 }
 
-#ccr-native-first-run-prepaint { position: fixed; inset: 0; z-index: 219; display: none; overflow: auto; color: #162543; background: #fafafa; }
+#ccr-native-first-run-prepaint { position: fixed; inset: 0; z-index: 219; display: none; overflow: auto; color: #162543; background: #ffffff; }
 html.ccr-native-app.ccr-native-first-run-pending #ccr-native-first-run-prepaint { display: block !important; visibility: visible !important; }
 .ccr-native-first-run-prepaint-logo { display: flex; align-items: center; gap: 0; }
 .ccr-native-first-run-prepaint-marca { display: block; width: 32px; height: 32px; background: url("/logo-mark-transparent.png") center / contain no-repeat; }
@@ -497,7 +497,7 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .dashboard-section-content.ccr-editor-surface {
-    background: #f4f7fa !important;
+    background: #ffffff !important;
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .dashboard-section-content {
@@ -513,7 +513,7 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-dashboard-main {
     /* El lienzo se pinta en el contenedor de fondo, no estirando cada sección:
        forzar el alto rompía el chat de soporte, que va a pantalla completa. */
-    background: #f4f7fa !important;
+    background: #ffffff !important;
   }
 
   /* …y el contenedor que envuelve el panel lleva ese MISMO color: la sección
@@ -521,13 +521,13 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
      soporte) y debajo sigue el lienzo, no una franja blanca entre el contenido
      y la barra de abajo. */
   body.ccr-native-app .ccr-dashboard-shell {
-    background: #f4f7fa;
+    background: #ffffff;
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-dashboard-mobile-home {
     padding-bottom: 0 !important;
     margin-bottom: 0 !important;
-    background: #f4f7fa !important;
+    background: #ffffff !important;
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-dashboard-mobile-home > :last-child {
@@ -644,7 +644,7 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
     height: 2.25rem;
     width: 2.25rem;
     border-color: #d6e4ed;
-    background: #f7fbfd;
+    background: #ffffff;
     color: #526277;
     box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
   }
@@ -890,7 +890,7 @@ html[data-keyboard-visible] body.ccr-native-app.ccr-native-search-route .ccr-sea
 }
 
 .ccr-native-app .ccr-search-results-list {
-  background: #eef2f6 !important;
+  background: #ffffff !important;
   /* El espacio del final lo pone la zona desplazable, que es blanca: este
      relleno pintaba una franja gris bajo el último profesional. */
   padding-bottom: 0 !important;
@@ -931,7 +931,7 @@ html body.ccr-search-filters-open .ccr-search-bottom-sheet {
   }
 
   .ccr-native-app .ccr-search-sheet-scroll {
-    background: #f4f7fa;
+    background: #ffffff;
     padding-bottom: var(--ccr-cola-fuera, 0px) !important;
     scroll-padding-bottom: var(--ccr-cola-fuera, 0px);
   }

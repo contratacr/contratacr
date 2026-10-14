@@ -29,7 +29,7 @@ export function IdentityInfoBlock({
   const age = dob ? computeAge(dob) : null;
 
   return (
-    <div className="rounded-2xl border border-[#bae6fd] bg-[#f8fbff] px-4 py-3 shadow-sm">
+    <div className="rounded-2xl border border-[#bae6fd] bg-white px-4 py-3 shadow-sm">
       <div className="flex items-start gap-3">
         <VerifiedSeal className="mt-0.5 h-5 w-5 shrink-0 text-[#009FD9]" />
 

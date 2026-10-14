@@ -447,7 +447,7 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
                             // publicó antes del tablero público: solo lo veían
                             // los profesionales de su oficio. Quedaba «activo»
                             // para siempre sin que nadie pudiera verlo.
-                            <div className="mt-4 rounded-xl bg-[#f4f7fa] p-3.5 text-left">
+                            <div className="mt-4 rounded-xl border border-[#e5e7eb] bg-white p-3.5 text-left">
                               <p className="text-[13px] font-semibold text-[#162543]">{t("fueraDelTablero")}</p>
                               <p className="mt-0.5 text-[12px] leading-snug text-[#68778d]">{t("fueraDelTableroAyuda")}</p>
                               <button

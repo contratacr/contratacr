@@ -256,7 +256,7 @@ function ServiceCard({ service, apply }: { service: CostServiceView; apply: (wor
         </div>
       </div>
       <p className="mt-2 text-sm text-[#374151]">{service.role}</p>
-      <dl className="mt-3 space-y-2 rounded-xl bg-[#f8fafc] p-3 text-sm">
+      <dl className="mt-3 space-y-2 rounded-xl border border-[#e5e7eb] bg-white p-3 text-sm">
         <div><dt className="text-xs font-semibold text-[#64748b]">Incluido</dt><dd className="text-[#0f172a]">{service.limit.included}</dd></div>
         <div><dt className="text-xs font-semibold text-[#64748b]">Si se pasa</dt><dd className="text-[#0f172a]">{service.limit.beyond}</dd></div>
       </dl>

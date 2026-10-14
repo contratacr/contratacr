@@ -74,7 +74,7 @@ export function AdminAccounts() {
                 <span className="shrink-0 text-xs text-[#68778d]">{account.disabled_at ? new Date(account.disabled_at).toLocaleDateString("es-CR") : ""}</span>
               </div>
               {account.disabled_reason && (
-                <p className="mt-1.5 rounded-lg bg-[#f9fafb] px-2.5 py-1.5 text-xs text-[#374151]">Motivo: {account.disabled_reason}</p>
+                <p className="mt-1.5 rounded-lg border border-[#e5e7eb] bg-white px-2.5 py-1.5 text-xs text-[#374151]">Motivo: {account.disabled_reason}</p>
               )}
               {account.deletion && (
                 <div className="mt-2 rounded-lg border border-[#fed7aa] bg-[#fff7ed] px-3 py-2 text-xs text-[#9a3412]">

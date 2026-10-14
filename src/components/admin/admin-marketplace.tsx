@@ -316,7 +316,7 @@ export function AdminMarketplace({ kind }: { kind: "jobs" | "offers" }) {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={cldThumb(item.image, 112)} alt="" loading="lazy" decoding="async" className="h-14 w-14 shrink-0 rounded-lg object-cover" />
                   ) : (
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-[#f1f5f9] text-[#64748b]"><Icon className="h-5 w-5" /></div>
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-[#e5e7eb] bg-white text-[#64748b]"><Icon className="h-5 w-5" /></div>
                   )}
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
@@ -345,7 +345,7 @@ export function AdminMarketplace({ kind }: { kind: "jobs" | "offers" }) {
                     </p>
                   </div>
                 </div>
-                <div className="min-w-0 rounded-xl bg-[#f8fafc] p-3">
+                <div className="min-w-0 rounded-xl border border-[#e5e7eb] bg-white p-3">
                   <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#94a3b8]">{isJobs ? "Publicado por" : "Publicada por"}</p>
                   <CreatorCard creator={item.creator} />
                 </div>

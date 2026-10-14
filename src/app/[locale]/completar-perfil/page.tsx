@@ -160,7 +160,7 @@ export default function CompleteProfilePage() {
     "w-full h-11 rounded-xl border border-[#e5e7eb] bg-white pl-10 pr-4 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
+    <div className="min-h-screen flex flex-col bg-white">
       <CabeceraDeTramite title={t("title")} />
 
       <main className="flex-1 ccr-centrado-seguro px-4 py-12">

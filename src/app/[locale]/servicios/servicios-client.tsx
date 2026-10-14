@@ -170,7 +170,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
         <LandingNavbar mobileSearch={false} drawerOnly />
       </div>
 
-      <main className="flex-1 bg-white lg:bg-[#fafafa]">
+      <main className="flex-1 bg-white lg:bg-white">
         <section data-services-mobile="" className="mx-auto w-full bg-white pb-[calc(2rem+env(safe-area-inset-bottom))] [.ccr-native-app_&]:pb-3 lg:hidden">
           <header ref={cabeceraRef} className={cn("ccr-cabecera-pegada sticky top-0 z-20 border-b bg-white transition-colors duration-200", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
             {mobileGroup ? (
@@ -427,7 +427,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
                       y las últimas se cortaban SIN forma de llegar a ellas. Ahora
                       la lista se desplaza y el velo del borde deja ver la fila
                       cortada, que es lo que dice «hay más». */}
-                  <aside ref={listaDeGruposRef} style={{ maskImage: mascaraDeGrupos, WebkitMaskImage: mascaraDeGrupos }} className="min-w-0 overflow-hidden border-b border-[#eef2f6] bg-[#f8fafc] p-2 lg:overflow-y-auto lg:border-b-0 lg:border-r">
+                  <aside ref={listaDeGruposRef} style={{ maskImage: mascaraDeGrupos, WebkitMaskImage: mascaraDeGrupos }} className="min-w-0 overflow-hidden border-b border-[#eef2f6] bg-white p-2 lg:overflow-y-auto lg:border-b-0 lg:border-r">
                     <Carril className="flex w-full min-w-0 gap-2 overflow-x-auto pb-1 lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
                       {groups.map((group) => {
                         const Icon = group.Icon;

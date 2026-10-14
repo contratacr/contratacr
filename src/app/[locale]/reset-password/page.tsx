@@ -195,7 +195,7 @@ export default function ResetPasswordPage() {
 
   if (done) {
     return (
-      <div className="ccr-account-page min-h-dvh flex flex-col bg-[#fafafa]">
+      <div className="ccr-account-page min-h-dvh flex flex-col bg-white">
         <Navbar mobileSearch={false} />
         <main className="flex-1 ccr-centrado-seguro py-12 px-4">
           <div className="w-full max-w-md rounded-3xl border border-[#e5e7eb] bg-white p-8 text-center shadow-sm">
@@ -212,7 +212,7 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="ccr-account-page min-h-dvh flex flex-col bg-[#fafafa]">
+    <div className="ccr-account-page min-h-dvh flex flex-col bg-white">
       <Navbar mobileSearch={false} />
       <main className="flex-1 ccr-centrado-seguro py-12 px-4">
         <div className="w-full max-w-md rounded-3xl border border-[#e5e7eb] bg-white p-8 shadow-sm">

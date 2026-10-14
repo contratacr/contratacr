@@ -584,7 +584,7 @@ export function MarketplaceSearch({
                       recién vista arriba, decir «tus búsquedas recientes
                       aparecerán aquí» contradecía lo que se estaba viendo. */}
                   {recents.length === 0 && visitas.length === 0 && (
-                    <div className="rounded-2xl bg-[#f7fafc] px-4 py-5 text-sm font-semibold text-[#6b778a]">
+                    <div className="rounded-2xl border border-[#e5e7eb] bg-white px-4 py-5 text-sm font-semibold text-[#6b778a]">
                       {copy.emptyRecents}
                     </div>
                   )}

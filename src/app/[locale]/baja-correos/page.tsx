@@ -25,7 +25,7 @@ export default async function BajaCorreosPage({
   const listo = (await searchParams).ok === "1";
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f5f8fb]">
+    <div className="flex min-h-screen flex-col bg-white">
       <LandingNavbar />
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pb-12 pt-24 sm:px-6">
         <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">

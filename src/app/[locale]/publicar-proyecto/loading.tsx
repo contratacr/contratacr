@@ -8,7 +8,7 @@ export default function LoadingProject() {
   const t = useTranslations("publicarProyecto");
   const router = useRouter();
   return (
-    <section aria-busy="true" className="fixed inset-0 z-[100] flex flex-col bg-[#f4f7fa] sm:inset-auto sm:relative sm:min-h-[60vh]">
+    <section aria-busy="true" className="fixed inset-0 z-[100] flex flex-col bg-white sm:inset-auto sm:relative sm:min-h-[60vh]">
       <header className="relative border-b bg-white px-14 py-4 text-center">
         <button type="button" aria-label={t("dismiss")} onClick={() => router.back()} className="absolute left-4 top-2 flex h-10 w-10 items-center justify-center"><ArrowLeft className="h-5 w-5" /></button>
         <h2 className="text-lg font-bold text-[#162543]">{t("title")}</h2>
