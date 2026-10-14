@@ -46,6 +46,8 @@
 	<string>ContrataCR usa la cámara para tomar fotos de tu perfil, de tus trabajos o de lo que necesitas reparar.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>ContrataCR usa tu ubicación solo cuando buscas cerca de ti, para mostrarte profesionales cercanos.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Permite guardar las imágenes del chat en tus fotos.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>ContrataCR usa las fotos que eliges para tu perfil, tus trabajos y tus publicaciones.</string>
 	<key>UILaunchStoryboardName</key>

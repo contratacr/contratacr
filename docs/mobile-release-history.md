@@ -29,3 +29,15 @@ Fuente: https://developer.apple.com/help/app-store-connect/reference/app-informa
 - Novedades EN (texto enviado, si corresponde):
 
 No anunciar cambios que todavía no se hayan incluido y probado. No cambiar la numeración publicada para que empiece en 1.0.0. Mantener números ascendentes y separar el número de versión del número de compilación.
+
+## Preparación de descarga de archivos — 14 de octubre de 2026
+
+Estado: código preparado y validado; **no enviado ni publicado en las tiendas**. Versión pública y compilación del próximo envío: pendientes de asignar. No confundir con el despliegue web compartido.
+
+- Incluye Filesystem y Share para guardar/compartir los adjuntos del chat sin abrir la URL de Supabase.
+- iOS: compilación Debug de simulador correcta y XCUITest abrió la hoja nativa con vista previa de la imagen y «Save Image». Se añadió el motivo de acceso a fechas de archivos C617.1 y el texto para guardar imágenes en Fotos.
+- Android: compilación Debug correcta y prueba ADB/UI Automator abrió «Sharing image» con la vista previa. La prueba descubrió un cierre por el runtime Kotlin 1.8.22; al alinearlo con 2.2.20 se comprobó nuevamente la apertura de la hoja sin cierre.
+- La app de QA usó un identificador distinto; no reemplazó las apps instaladas del usuario. El ensayo del archivo usó un logo público, sin mensajes privados.
+- Antes de enviar: asignar versión y build, construir binarios de distribución, registrar su commit, validar firma/enlaces/notificaciones y copiar las notas exactas enviadas a las tiendas.
+
+Notas propuestas ES (todavía no enviadas): «Ahora puedes guardar y compartir archivos del chat desde la app. También mejoramos la estabilidad.»
