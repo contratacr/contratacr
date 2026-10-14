@@ -71,6 +71,18 @@ test('shared download anchor always remains useful, including after dismissing t
  }
 });
 
+test('shared download link does not pause at the how-it-works section on a cold visit',async({page})=>{
+ await page.goto('/#descargar-app',{waitUntil:'domcontentloaded'});
+ await expect.poll(()=>page.evaluate(()=>getComputedStyle(document.documentElement).scrollBehavior)).toBe('auto');
+ await page.waitForTimeout(300);
+ const position=await page.evaluate(()=>{
+  const section=document.getElementById('descargar-app')!.getBoundingClientRect();
+  return {top:section.top,bottom:section.bottom,height:innerHeight};
+ });
+ expect(position.top).toBeLessThan(position.height);
+ expect(position.bottom).toBeGreaterThan(0);
+});
+
 test('mobile download notice and header are correctly positioned before JavaScript hydration',async({page,browser,baseURL})=>{
  test.skip((page.viewportSize()?.width ?? 1280)>=1024, "The download notice only appears on mobile web.");
  const ua=await page.evaluate(()=>navigator.userAgent);
