@@ -1079,6 +1079,12 @@ html {
   --app-keyboard-inset-bottom: 0px;
 }
 
+/* A shared download link must land directly on the stores, without scrolling
+   past "Así funciona" while the landing page is loading. */
+html:has(#descargar-app:target) {
+  scroll-behavior: auto;
+}
+
 body {
   /* BLANCO, como la barra de arriba. Safari en iPhone tiñe la zona del reloj (y
      la de su barra de abajo) con el color del body: con el gris #fafafa que
