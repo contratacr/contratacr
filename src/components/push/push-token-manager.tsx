@@ -538,7 +538,7 @@ export function PushTokenManager() {
             <button
               type="button"
               onClick={dismissPrompt}
-              className="inline-flex h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-[#162543] text-[16px] font-bold text-white transition active:scale-[0.98]"
+              className="inline-flex h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-[#009FD9] text-[16px] font-bold text-white transition active:scale-[0.98]"
             >
               <CheckCircle2 className="h-5 w-5" />
               {t("understood")}

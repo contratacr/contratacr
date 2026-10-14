@@ -1473,7 +1473,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     if (!mobileOpen) return;
     const menu = mobileMenuRef.current;
     const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    menu?.querySelector<HTMLButtonElement>("[data-menu-close]")?.focus({ preventScroll: true });
+    // Focus the dialog itself so touch opening does not draw a ring around X.
+    // Keyboard navigation still gives each control its visible focus indicator.
+    menu?.focus({ preventScroll: true });
     const alTeclado = (event: KeyboardEvent) => {
       const focusOwner = document.activeElement?.closest('[role="dialog"]');
       if (focusOwner && focusOwner !== menu) return;
@@ -1481,7 +1483,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       if (event.key !== "Tab" || !menu) return;
       const controls = [...menu.querySelectorAll<HTMLElement>('a[href], button:not(:disabled), [tabindex="0"]')].filter(element => element.getClientRects().length > 0);
       const first = controls[0], last = controls.at(-1);
-      if (event.shiftKey && (document.activeElement === first || !menu.contains(document.activeElement))) { event.preventDefault(); last?.focus({ preventScroll: true }); }
+      if (event.shiftKey && (document.activeElement === menu || document.activeElement === first || !menu.contains(document.activeElement))) { event.preventDefault(); last?.focus({ preventScroll: true }); }
       else if (!event.shiftKey && (document.activeElement === last || !menu.contains(document.activeElement))) { event.preventDefault(); first?.focus({ preventScroll: true }); }
     };
     window.addEventListener("keydown", alTeclado);
@@ -2943,6 +2945,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
           />
           <div
             ref={mobileMenuRef}
+            tabIndex={-1}
+            style={{ outline: "none" }}
             role="dialog"
             aria-modal="true"
             aria-label={t("menu")}
@@ -2969,7 +2973,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 <Link href="/" aria-label="ContrataCR" onClick={(e) => { cerrarCajon(); irAlInicio(e); }} className="shrink-0">
                   <ContrataCRLogo />
                 </Link>
-                <button type="button" data-menu-close onClick={cerrarCajon} aria-label={t("closeMenu")} className="grid h-10 w-10 place-items-center rounded-xl text-[#162543] transition-colors hover:bg-gray-50">
+                <button type="button" data-menu-close onClick={cerrarCajon} aria-label={t("closeMenu")} className="grid h-11 w-11 place-items-center bg-transparent text-[#162543] transition-colors hover:text-[#009FD9]">
                   <X className="h-6 w-6" strokeWidth={2.2} />
                 </button>
               </div>
@@ -2978,23 +2982,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
               <nav className="flex flex-col">
                 {user ? (
                   <>
-                    {/* LA CUENTA, ARRIBA DEL MENÚ (como Facebook o Angi): foto, nombre
-                        —el comercial si lo tiene— y «Ir a mi panel». En la app también,
-                        aunque el panel esté en la barra de abajo: aquí se ve QUIÉN es. */}
-                    <Link href={primaryPanelHref} prefetch={false} onClick={cerrarCajon} className="-mx-3 mb-2 flex items-center gap-3 rounded-2xl border border-[#e5e7eb] bg-white p-3 transition-colors hover:bg-[#eaf2f8]">
+                    <Link href={primaryPanelHref} prefetch={false} onClick={cerrarCajon} className={mobileDrawerItemClass} data-menu-account aria-label={`${t("myPanel")}: ${formatPersonDisplayName(accountDisplayName, "mobile") || t("myPanel")}`}>
                       {avatarUrlCuenta
-                        // eslint-disable-next-line @next/next/no-img-element -- avatar pequeño de tamaño fijo
-                        ? <img src={avatarUrlCuenta} alt="" className="h-12 w-12 shrink-0 rounded-full object-cover ring-1 ring-[#e2e8f0]" />
-                        : <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white ring-1 ring-[#e2e8f0]"><UserRound className="h-6 w-6 text-[#526277]" /></span>}
-                      <span className="min-w-0 flex-1">
-                        {/* Primer nombre y primer apellido («Isaac Sánchez»): con los cuatro no
-                            cabía en una línea. Un nombre comercial va entero
-                            (formatPersonDisplayName lo reconoce) y, si es muy
-                            largo, se recorta al final. */}
-                        <span className="block truncate text-[17px] font-bold text-[#162543]">{formatPersonDisplayName(accountDisplayName, "mobile") || t("myPanel")}</span>
-                        <span className="mt-0.5 block text-[14px] font-semibold text-[#009FD9]">{t("goToPanel")}</span>
-                      </span>
-                      <ChevronRight className="h-5 w-5 shrink-0 text-[#9aa7b6]" />
+                        // eslint-disable-next-line @next/next/no-img-element -- account thumbnail aligned with a menu row
+                        ? <img src={avatarUrlCuenta} alt="" className="h-6 w-6 shrink-0 rounded-full object-cover" />
+                        : <UserRound className="h-6 w-6 shrink-0" aria-hidden />}
+                      <span className="min-w-0 flex-1 truncate">{formatPersonDisplayName(accountDisplayName, "mobile") || t("myPanel")}</span>
                     </Link>
                     {mostrarOfrecerServicios && (
                       <Link

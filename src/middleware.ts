@@ -92,7 +92,7 @@ export async function middleware(request: NextRequest) {
 
   // The QR endpoint has no locale or profile slug: let its route handler
   // choose the store before any session/onboarding or vanity routing.
-  if (pathname === "/descargar") return conCabecerasDeSeguridad(NextResponse.next());
+  if (pathname === "/descargar" || pathname === "/abrir-app") return conCabecerasDeSeguridad(NextResponse.next());
 
   if (pathname.startsWith("/api/")) {
     if (isUnsafeLocalProductionWrite(request)) return unsafeLocalProductionWriteResponse();

@@ -1533,7 +1533,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
           </div>
           <Link
             href={`/publicar-proyecto${professional.professions?.[0] ? `?categoria=${encodeURIComponent(professional.professions[0])}` : ""}`}
-            className="shrink-0 rounded-xl bg-[#162543] px-3 py-2 text-xs font-bold text-white"
+            className="shrink-0 rounded-xl bg-[#009FD9] px-3 py-2 text-xs font-bold text-white"
           >
             {t("noRespondioBoton")}
           </Link>

@@ -71,7 +71,7 @@ export function MessageLauncher(props: MessageLauncherProps) {
   const t = useTranslations("mensajeInvitado");
   const router = useRouter();
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const loading = false;
   // Sin cuenta, primero se escribe y después se pide identificarse: mandarla a
   // la pantalla de ingresar antes de escribir la sacaba del perfil y casi nadie
   // volvía. Aquí no se sale de la página en ningún momento.
@@ -99,26 +99,9 @@ export function MessageLauncher(props: MessageLauncherProps) {
   })();
 
   async function abrirHilo(texto: string) {
-    setLoading(true);
-    try {
-      const response = await fetch("/api/direct-chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          professionalId, projectId, contextTitle,
-          initialMessage: texto, openConversation: true,
-        }),
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (response.ok && payload.conversationId) {
-        const origin = (window.location.pathname + window.location.search).replace(/^\/(?:es|en)(?=\/|$)/u, "") || "/";
-        router.push(`/mensajes?conversation=${encodeURIComponent(String(payload.conversationId))}&back=${encodeURIComponent(origin)}${texto ? `&draftMessage=${encodeURIComponent(texto)}` : ""}`);
-        return;
-      }
-      router.push(buildDraftHref({ ...props, initialMessage: texto }));
-    } finally {
-      setLoading(false);
-    }
+    // Enter the composer directly. Opening a contact never sends a message;
+    // the conversation is created/reused only when the user presses Send.
+    router.push(buildDraftHref({ ...props, initialMessage: texto }));
   }
 
   async function openMessage() {

@@ -1,3 +1,4 @@
+import { PWA_STARTUP_IMAGES } from "@/lib/pwa-startup";
 import { headers, cookies } from "next/headers";
 import { mobileDownloadPlatform, DOWNLOAD_DISMISS_COOKIE } from "@/lib/mobile-download-platform";
 import { MobileAppDownloadBanner } from "@/components/landing/app-download";
@@ -68,6 +69,7 @@ function buildMetadata(locale: string): Metadata {
       capable: true,
       title: "ContrataCR",
       statusBarStyle: "default",
+      startupImage: ["/pwa/startup/402x874@3-portrait.png", ...PWA_STARTUP_IMAGES],
     },
     icons: {
       icon: [

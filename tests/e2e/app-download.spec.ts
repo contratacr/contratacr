@@ -1,4 +1,6 @@
 import { mkdirSync } from "node:fs";
+import { PWA_STARTUP_DEVICES } from "../../src/lib/pwa-startup";
+import sharp from "sharp";
 import { test, expect } from 'playwright/test';
 
 test('web: tiendas correctas, reserva, teclado y cierre persistente', async ({page}) => {
@@ -180,4 +182,55 @@ test('responsive download artwork and store actions fit the viewport, including 
    });
   })).toBe(true);
  }
+});
+
+test('home-screen launch uses a white surface even in dark mode before external CSS', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await page.addInitScript(() => Object.defineProperty(navigator, 'standalone', { configurable: true, value: true }));
+  await page.route(/\.css(?:\?|$)/, route => route.abort());
+  await page.goto('/');
+  await expect(page.locator('meta[name="color-scheme"]')).toHaveAttribute('content', 'light');
+  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+  await expect(page.locator('html')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+  await expect(page.locator('html')).not.toHaveClass(/ccr-native-app/);
+  const images = page.locator('link[rel="apple-touch-startup-image"]');
+  await expect(images).toHaveCount(45);
+  await expect(page.locator('link[rel="apple-touch-startup-image"][media]').first()).toHaveAttribute('media', /device-width.*device-height.*pixel-ratio.*portrait/);
+});
+
+test('iOS launch images have the exact declared device dimensions and a white corner', async () => {
+  for (const [width, height, scale] of PWA_STARTUP_DEVICES) {
+    for (const orientation of ['portrait', 'landscape']) {
+      const path = `public/pwa/startup/${width}x${height}@${scale}-${orientation}.png`;
+      const metadata = await sharp(path).metadata();
+      expect(metadata.width).toBe((orientation === 'portrait' ? width : height) * scale);
+      expect(metadata.height).toBe((orientation === 'portrait' ? height : width) * scale);
+      const { data } = await sharp(path).extract({ left: 0, top: 0, width: 1, height: 1 }).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+      expect([...data]).toEqual([255, 255, 255]);
+    }
+  }
+});
+
+test('home-screen launch shell is public, white and independent of the session', async ({ page, request, baseURL }) => {
+ const manifest = await request.get('/site.webmanifest');
+ expect((await manifest.json()).start_url).toBe('/abrir-app');
+ const shell = await request.get('/abrir-app');
+ expect(shell.status()).toBe(200);
+ expect(shell.headers()['content-type']).toContain('text/html; charset=utf-8');
+ expect(shell.headers()['set-cookie']).toBeUndefined();
+ const html = await shell.text();
+ expect(html).not.toContain('__NEXT_DATA__');
+ expect(html).not.toContain('supabase');
+ const isolated = await page.context().browser()!.newContext({javaScriptEnabled:false,colorScheme:'dark'});
+ const launch = await isolated.newPage();
+ await launch.goto(`${baseURL}/abrir-app`);
+ // noscript redirects as well; check the shell with its refresh disabled.
+ await launch.route('**/abrir-app', async route => route.fulfill({contentType:'text/html',body:html.replace(/<noscript>[\s\S]*?<\/noscript>/,'')}));
+ await launch.goto(`${baseURL}/abrir-app`);
+ expect(await launch.evaluate(()=>getComputedStyle(document.body).backgroundColor)).toBe('rgb(255, 255, 255)');
+ await expect(launch.getByRole('link',{name:'Abrir ContrataCR'})).toBeVisible();
+ await isolated.close();
+ await page.goto('/abrir-app');
+ await expect(page).toHaveURL(/\/(?:en\/)?$/);
+ await expect(page.getByTestId('landing-navbar')).toBeVisible();
 });

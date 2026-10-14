@@ -316,7 +316,19 @@ test.describe("@seeded contextual direct chat", () => {
     const thread = await apiJson<ThreadResponse>(page, `/api/direct-chat?id=${created.body.conversationId}`);
     expect(thread.body.conversation?.context?.type).toBe("project");
     expect(thread.body.conversation?.context?.title).toBe("E2E proyecto con chat");
-    expect(thread.body.messages?.map((message) => message.body)).toEqual(["E2E mensaje sobre el proyecto"]);
+    expect(thread.body.messages).toEqual([]);
+    // Reopening an existing contact keeps the suggested text in the composer.
+    const draftParams = new URLSearchParams({ draftChat: "1", professionalId: seed.professionalId, professionalName: "Profesional de prueba", projectId, contextTitle: "E2E proyecto con chat", draftMessage: "E2E mensaje sobre el proyecto" });
+    await gotoOK(page, `/mensajes?${draftParams}`);
+    await expect(page.getByPlaceholder(/Escribe un mensaje|Write a message/)).toHaveValue("E2E mensaje sobre el proyecto");
+    await expect(page).toHaveURL(new RegExp(`conversation=${created.body.conversationId}`));
+    const unsent = await apiJson<ThreadResponse>(page, `/api/direct-chat?id=${created.body.conversationId}`);
+    expect(unsent.body.messages).toEqual([]);
+    // Only the explicit Send action delivers the draft.
+    const sent = await apiJson<ChatResponse>(page, "/api/direct-chat", {
+      method: "POST", body: { conversationId: created.body.conversationId, message: "E2E mensaje sobre el proyecto" },
+    });
+    expect(sent.status, JSON.stringify(sent.body)).toBe(200);
 
     await resetAuth(page);
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
@@ -402,4 +414,41 @@ test.describe("@seeded contextual direct chat", () => {
       .eq("body", "E2E no debe guardarse");
     expect(count).toBe(0);
   });
+});
+
+test('chat download saves bytes without opening the storage URL', async ({ page }) => {
+ const { build } = await import('esbuild');
+ const built = await build({entryPoints:['src/lib/chat-download.ts'],bundle:true,write:false,platform:'browser',format:'iife',globalName:'ChatDownload',tsconfig:'tsconfig.json'});
+ await page.route('**/chat-download-harness', route => route.fulfill({contentType:'text/html',body:'<!doctype html><title>Chat download test</title>'}));
+ await page.goto('/chat-download-harness');
+ await page.addScriptTag({content:built.outputFiles[0].text});
+ await page.route('**/chat-download-test.png', route => route.fulfill({contentType:'image/png',body:Buffer.from('89504e470d0a1a0a','hex')}));
+ await page.evaluate(()=>{Object.defineProperty(navigator,'share',{configurable:true,value:undefined})});
+ const [download] = await Promise.all([
+  page.waitForEvent('download'),
+  page.evaluate(async()=>{
+   const api=(window as unknown as {ChatDownload:{downloadChatAttachment:(a:unknown)=>Promise<void>}}).ChatDownload;
+   await api.downloadChatAttachment({url:'/chat-download-test.png',name:'foto.png',type:'image/png'});
+  }),
+ ]);
+ expect(download.suggestedFilename()).toBe('foto.png');
+ expect(page.url()).toContain('/chat-download-harness');
+ expect(page.context().pages()).toHaveLength(1);
+});
+
+test('canceling the mobile file sheet never downloads or opens another page',async({page})=>{
+ const { build } = await import('esbuild');
+ const built=await build({entryPoints:['src/lib/chat-download.ts'],bundle:true,write:false,platform:'browser',format:'iife',globalName:'ChatDownload',tsconfig:'tsconfig.json'});
+ await page.route('**/chat-download-harness', route => route.fulfill({contentType:'text/html',body:'<!doctype html><title>Chat download test</title>'}));
+ await page.goto('/chat-download-harness');
+ await page.addScriptTag({content:built.outputFiles[0].text});
+ await page.route('**/chat-download-test.png',route=>route.fulfill({contentType:'image/png',body:Buffer.from('89504e470d0a1a0a','hex')}));
+ let downloads=0;page.on('download',()=>downloads++);
+ await page.evaluate(async()=>{
+  window.matchMedia=(()=>({matches:true})) as unknown as typeof window.matchMedia;
+  Object.defineProperty(navigator,'canShare',{configurable:true,value:()=>true});
+  Object.defineProperty(navigator,'share',{configurable:true,value:async()=>{throw new DOMException('Canceled','AbortError')}});
+  await (window as unknown as {ChatDownload:{downloadChatAttachment:(a:unknown)=>Promise<void>}}).ChatDownload.downloadChatAttachment({url:'/chat-download-test.png',name:'foto.png',type:'image/png'});
+ });
+ expect(downloads).toBe(0);expect(page.context().pages()).toHaveLength(1);
 });
