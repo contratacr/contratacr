@@ -21,33 +21,62 @@ export const dynamic = "force-dynamic";
 // etiquetaban como «correo» e inflaban la tasa de contacto. El correo tiene
 // ahora su propio tipo.
 const CONTACTO = ["whatsapp_click", "phone_click", "email_click"];
+const TAMANO_PAGINA = 1000;
+type Db = ReturnType<typeof createAdminClient>;
+
+async function cargarContactos(db: Db, desde: string | null) {
+  const filas: Array<{ professional_id: string; visitor_hash: string; created_at: string; category_id: string | null; event_type: string; viewer_user_id: string | null }> = [];
+  for (let inicio = 0; ; inicio += TAMANO_PAGINA) {
+    let consulta = db.from("interaction_events")
+      .select("professional_id, visitor_hash, created_at, category_id, event_type, viewer_user_id")
+      .in("event_type", CONTACTO)
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
+      .range(inicio, inicio + TAMANO_PAGINA - 1);
+    if (desde) consulta = consulta.gte("created_at", desde);
+    const { data, error } = await consulta;
+    if (error) throw error;
+    filas.push(...(data ?? []));
+    if (!data || data.length < TAMANO_PAGINA) return filas;
+  }
+}
+
+async function cargarVistas(db: Db, desde: string | null) {
+  const filas: Array<{ professional_id: string; visitor_hash: string }> = [];
+  for (let inicio = 0; ; inicio += TAMANO_PAGINA) {
+    let consulta = db.from("interaction_events")
+      .select("professional_id, visitor_hash")
+      .eq("event_type", "profile_view")
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
+      .range(inicio, inicio + TAMANO_PAGINA - 1);
+    if (desde) consulta = consulta.gte("created_at", desde);
+    const { data, error } = await consulta;
+    if (error) throw error;
+    filas.push(...(data ?? []));
+    if (!data || data.length < TAMANO_PAGINA) return filas;
+  }
+}
 
 export async function GET(request: Request) {
   const admin = await getApiAdmin();
   if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
-  const dias = Math.min(Math.max(Number(new URL(request.url).searchParams.get("dias") ?? 30) || 30, 1), 365);
-  const desde = new Date(Date.now() - dias * 86_400_000).toISOString();
+  const periodo = new URL(request.url).searchParams.get("dias") ?? "30";
+  const dias = periodo === "all" ? "all" : Math.min(Math.max(Number(periodo) || 30, 1), 365);
+  const desde = dias === "all" ? null : new Date(Date.now() - dias * 86_400_000).toISOString();
   const db = createAdminClient();
 
-  const [{ data: contactos }, { data: vistas }] = await Promise.all([
-    db.from("interaction_events")
-      .select("professional_id, visitor_hash, created_at, category_id, event_type, viewer_user_id")
-      .in("event_type", CONTACTO)
-      .gte("created_at", desde)
-      .limit(5000),
-    db.from("interaction_events")
-      .select("professional_id, visitor_hash")
-      .eq("event_type", "profile_view")
-      .gte("created_at", desde)
-      .limit(20000),
+  const [contactos, vistas] = await Promise.all([
+    cargarContactos(db, desde),
+    cargarVistas(db, desde),
   ]);
 
   // Una ráfaga del mismo visitante no son diez clientes: se cuenta una vez por
   // visitante y profesional. Sin esto, once toques en un minuto se leían como
   // once contactos, que fue justo lo que confundió la primera medición.
   const unicos = new Map<string, { professional_id: string; created_at: string; category_id: string | null; canal: string; conCuenta: boolean }>();
-  for (const fila of (contactos ?? []) as Array<{ professional_id: string; visitor_hash: string; created_at: string; category_id: string | null; event_type: string; viewer_user_id: string | null }>) {
+  for (const fila of contactos) {
     const clave = `${fila.visitor_hash}|${fila.professional_id}`;
     if (!unicos.has(clave)) {
       unicos.set(clave, {
@@ -61,7 +90,7 @@ export async function GET(request: Request) {
   }
 
   const vistasPorPro = new Map<string, Set<string>>();
-  for (const v of (vistas ?? []) as Array<{ professional_id: string; visitor_hash: string }>) {
+  for (const v of vistas) {
     if (!v.professional_id) continue;
     const set = vistasPorPro.get(v.professional_id) ?? new Set<string>();
     set.add(v.visitor_hash);
