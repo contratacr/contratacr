@@ -2,6 +2,8 @@
 
 import { mobileDownloadPlatform, DOWNLOAD_DISMISS_COOKIE } from "@/lib/mobile-download-platform";
 import Image from "next/image";
+import { ContrataCRLogo } from "@/components/brand/brand-logo";
+import { X } from "lucide-react";
 import { APP_STORES } from "@/lib/app-stores";
 export { APP_STORES } from "@/lib/app-stores";
 import { useLocale } from "next-intl";
@@ -130,13 +132,20 @@ export function MobileAppDownloadBanner({ initialPlatform = null, initialDismiss
     else root.removeAttribute("data-web-download-banner");
     return () => root.removeAttribute("data-web-download-banner");
   }, [visible]);
-  if (!visible) return null;
+  if (!visible || !platform) return null;
   return <div className="ccr-solo-web ccr-download-banner-wrap lg:hidden" data-testid="mobile-app-download">
     <aside className="ccr-download-banner" aria-label={en ? "Download ContrataCR" : "Descargar ContrataCR"}>
-      <Image src="/web-app-manifest-flat-logo-v3-192x192.png" width={48} height={48} alt="" className="h-12 w-12 shrink-0 rounded-xl" />
-      <div className="min-w-0 flex-1 text-center"><p className="text-[13px] font-bold leading-tight text-[#162543] sm:text-sm">ContrataCR {platform && <span className="font-normal">{en ? "for" : "para"} {platform === "ios" ? "iOS" : "Android"}</span>}</p></div>
-      {platform ? <a href={APP_STORES[platform]} className="inline-flex min-h-11 shrink-0 items-center rounded-lg bg-[#009fd9] px-3 text-sm font-bold text-white">{en ? "Download" : "Descargar"}</a> : <div className="flex shrink-0 gap-1">{(["ios", "android"] as const).map(os => <a key={os} href={APP_STORES[os]} className="inline-flex min-h-11 items-center rounded-lg bg-[#009fd9] px-2 text-xs font-bold text-white">{os === "ios" ? "iOS" : "Android"}</a>)}</div>}
-      <button type="button" aria-label={en ? "Dismiss download notice" : "Cerrar aviso de descarga"} className="flex h-11 w-11 shrink-0 items-center justify-center text-2xl text-[#8492a5]" onClick={() => { setDismissed(true); const until = String(Date.now() + 30 * 86400000); document.cookie = `${DOWNLOAD_DISMISS_COOKIE}=${until}; Path=/; Max-Age=2592000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`; try { localStorage.setItem(DISMISSED_KEY, until); } catch {} }}>×</button>
+      <button type="button" aria-label={en ? "Dismiss download notice" : "Cerrar aviso de descarga"} className="flex h-11 w-8 shrink-0 items-center justify-center text-[#64748b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]" onClick={() => { setDismissed(true); const until = String(Date.now() + 30 * 86400000); document.cookie = `${DOWNLOAD_DISMISS_COOKIE}=${until}; Path=/; Max-Age=2592000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`; try { localStorage.setItem(DISMISSED_KEY, until); } catch {} }}><X aria-hidden="true" className="h-[18px] w-[18px]" /></button>
+      <div className="flex min-w-0 flex-1 items-center gap-1 whitespace-nowrap">
+        <ContrataCRLogo className="shrink-0 max-[389px]:[&>img:first-child]:h-7 max-[389px]:[&>img:first-child]:w-7 max-[389px]:[&>img:last-child]:h-[21px] max-[389px]:[&>img:last-child]:w-[92px]" />
+        <span className="text-[10px] leading-5 text-[#162543] min-[390px]:text-[11px]">
+          <span className="min-[390px]:hidden">· </span><span className="hidden min-[390px]:inline">{en ? "for" : "para"}{" "}</span>
+          {platform === "ios" ? "iOS" : "Android"}
+        </span>
+      </div>
+      <a href={APP_STORES[platform]} aria-label={en ? `Download ContrataCR on ${platform === "ios" ? "App Store" : "Google Play"}` : `Descargar ContrataCR en ${platform === "ios" ? "App Store" : "Google Play"}`} className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full bg-[#009fd9] px-2.5 text-xs font-semibold text-white min-[390px]:px-3 min-[390px]:text-[13px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]">
+        {en ? "Download" : "Descargar"}
+      </a>
     </aside>
   </div>;
 }

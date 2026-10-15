@@ -1,3 +1,4 @@
+import { isNativeAnalyticsRuntime } from "@/lib/analytics/platform";
 import { analyticsActor } from "@/lib/analytics/admin-activity";
 import { createHash, randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
     p_visitor: visitor, p_user_id: user?.id ?? null, p_session: input.data.session,
     p_screen: input.data.screen, p_runtime: runtime,
     p_path: input.data.path, p_tab: input.data.tab ?? null,
-    p_first_use: runtime !== "web" && input.data.firstUse === true,
+    p_first_use: isNativeAnalyticsRuntime(runtime) && input.data.firstUse === true,
   });
   if (error) return NextResponse.json({ error: "Could not record usage" }, { status: 503 });
   const response = new NextResponse(null, { status: 204 });

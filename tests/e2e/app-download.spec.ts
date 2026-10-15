@@ -14,10 +14,10 @@ test('web: tiendas correctas, reserva, teclado y cierre persistente', async ({pa
   const android=await page.evaluate(()=>/Android/.test(navigator.userAgent));
   expect(href).toContain(android?'play.google.com/store/apps/details?id=com.contratacr.app':'apps.apple.com/cr/app/contratacr/id6794559661');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  const sizes=await banner.evaluate(el=>({spacer:el.getBoundingClientRect().height,notice:el.querySelector('aside')!.getBoundingClientRect().height}));
-  expect(sizes.spacer).toEqual(sizes.notice);
-  const notice=await banner.boundingBox(), header=await page.getByTestId('landing-navbar').boundingBox();
-  expect(notice!.y).toBe(0);expect(header!.y).toBe(notice!.height);
+  const notice=await banner.locator('aside').boundingBox(), header=await page.getByTestId('landing-navbar').boundingBox();
+  expect(notice!.y + notice!.height).toBeCloseTo(await page.evaluate(()=>(window.visualViewport?.height ?? innerHeight) + (window.visualViewport?.offsetTop ?? 0)), 0);
+  expect(header!.y).toBe(0);
+  expect(await page.evaluate(()=>parseFloat(getComputedStyle(document.body).paddingBottom))).toBeGreaterThanOrEqual(notice!.height);
   await expect(page.getByTestId('app-store-footer-links')).toBeVisible();
   await page.evaluate(()=>document.documentElement.setAttribute('data-keyboard-open',''));
   await expect(banner).toHaveCount(0);
@@ -94,7 +94,10 @@ test('mobile download notice and header are correctly positioned before JavaScri
   const cold=await context.newPage();await cold.goto(`${baseURL}/`);
   const notice=await cold.getByTestId('mobile-app-download').boundingBox();
   const header=await cold.getByTestId('landing-navbar').boundingBox();
-  expect(notice?.y).toBe(0);expect(header?.y).toBe(76);
+  expect(notice).not.toBeNull();
+  expect(notice!.y + notice!.height).toBeCloseTo(844, 0);
+  expect(notice!.height).toBeGreaterThanOrEqual(80);
+  expect(header?.y).toBe(0);
  }finally{await context.close();}
 });
 

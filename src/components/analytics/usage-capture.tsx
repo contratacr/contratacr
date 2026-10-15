@@ -1,4 +1,5 @@
 "use client";
+import { isNativeAnalyticsRuntime } from "@/lib/analytics/platform";
 import { useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
@@ -35,7 +36,7 @@ export function UsageCapture() {
     const track = () => {
       if (document.visibilityState === "hidden") return;
       const runtime = syncAnalyticsPlatform();
-      const isApp = runtime !== "web";
+      const isApp = isNativeAnalyticsRuntime(runtime);
       const id = session(Date.now());
       const safeTab = /^[a-z_-]{1,40}$/.test(tab) ? tab : "";
       // Never send OAuth codes, recovery tokens, email addresses or query text.

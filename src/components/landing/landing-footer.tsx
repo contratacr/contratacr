@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 import { Link } from "@/i18n/navigation";
@@ -86,6 +88,7 @@ const COLUMNS = [
 export function LandingFooter() {
   const t = useTranslations("footer");
   const { user } = useAuth();
+  const [openGroup, setOpenGroup] = useState<string | null>(null);
     // Un solo panel para todos: `?mode=use` era del modo cliente, que ya no
   // existe —el panel lo acepta y lo ignora—, así que el enlace es el mismo.
   const panelHref = "/dashboard/profesional";
@@ -93,17 +96,17 @@ export function LandingFooter() {
     // La misma separación sutil que la fila de derechos, en todas las páginas.
     <footer className="ccr-app-footer relative bg-white text-[#162543]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-8">
-        <div aria-hidden="true" className="border-t border-[#162543]/10 pt-10 sm:pt-12" />
+        <div aria-hidden="true" className="border-t border-[#162543]/10 pt-3 md:pt-10 lg:pt-12" />
 
         {/* Main grid */}
-        <div className="grid grid-cols-1 gap-8 pb-6 sm:grid-cols-3 sm:gap-x-8 sm:gap-y-10 lg:grid-cols-[1.4fr_1fr_1fr_1fr] lg:gap-10 lg:pb-8">
+        <div className="grid grid-cols-1 gap-0 pb-0 md:grid-cols-3 md:gap-x-8 md:gap-y-8 md:pb-7 lg:grid-cols-[1.4fr_1fr_1fr_1fr] lg:gap-10 lg:pb-8">
 
           {/* Brand introduction */}
-          <div className="sm:col-span-3 lg:col-span-1">
+          <div className="order-last pt-8 md:order-first md:col-span-3 md:pt-0 lg:col-span-1">
             <Link href="/" aria-label="ContrataCR" className="inline-flex mb-4">
               <ContrataCRLogo />
             </Link>
-            <p className="text-sm text-[#162543] leading-relaxed max-w-sm lg:max-w-[280px]">
+            <p className="text-sm text-[#64748b] leading-6 max-w-sm lg:max-w-[280px]">
               {t("tagline")}
             </p>
 
@@ -111,11 +114,21 @@ export function LandingFooter() {
 
           {/* Link columns */}
           {COLUMNS.map((col) => (
-            <nav key={col.headingKey} aria-label={t(col.headingKey)}>
-              <h3 className="text-sm font-bold text-[#162543] mb-3">
-                {t(col.headingKey)}
+            <nav key={col.headingKey} aria-label={t(col.headingKey)} className="border-b border-[#162543]/10 md:border-0">
+              <h3 className="text-[15px] font-semibold text-[#162543] md:mb-3 md:text-sm md:font-bold">
+                <span className="hidden md:inline">{t(col.headingKey)}</span>
+                <button
+                  type="button"
+                  aria-expanded={openGroup === col.headingKey}
+                  aria-controls={`footer-${col.headingKey.replaceAll(".", "-")}`}
+                  onClick={() => setOpenGroup(openGroup === col.headingKey ? null : col.headingKey)}
+                  className="flex min-h-16 w-full items-center justify-between gap-4 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9] md:hidden"
+                >
+                  {t(col.headingKey)}
+                  <ChevronDown aria-hidden="true" className={`h-[18px] w-[18px] shrink-0 text-[#64748b] transition-transform duration-200 motion-reduce:transition-none ${openGroup === col.headingKey ? "rotate-180" : ""}`} />
+                </button>
               </h3>
-              <ul className="grid grid-cols-2 gap-x-5 gap-y-1 sm:grid-cols-1">
+              <ul id={`footer-${col.headingKey.replaceAll(".", "-")}`} className={`${openGroup === col.headingKey ? "grid" : "hidden"} grid-cols-1 gap-y-1 pb-5 md:grid md:pb-0`}>
                 {col.headingKey === "support.title" && user && (
                   <li>
                     <Link href={panelHref} className="inline-flex py-2 text-sm leading-5 text-[#162543] hover:text-[#0083b0] transition-colors">
@@ -149,24 +162,24 @@ export function LandingFooter() {
         </div>
 
         {/* Social and downloads have their own row, separate from navigation. */}
-        <div data-testid="footer-community-row" className="flex flex-col gap-5 border-b border-[#162543]/10 py-5 sm:flex-row sm:items-center sm:justify-between">
-          <nav aria-label={t("followUs")} data-testid="footer-social-links" className="flex flex-wrap items-center gap-3">
-            <span className="mr-1 text-sm text-[#162543]">{t("followUs")}</span>
+        <div data-testid="footer-community-row" className="grid grid-cols-2 gap-x-6 gap-y-6 border-b border-[#162543]/10 pb-7 pt-6 md:flex md:items-center md:justify-between md:py-5">
+          <nav aria-label={t("followUs")} data-testid="footer-social-links" className="flex flex-wrap items-center gap-x-2 gap-y-2 md:gap-3">
+            <span className="w-full text-xs font-medium text-[#64748b] md:mr-1 md:w-auto md:text-sm">{t("followUs")}</span>
             {SOCIAL_LINKS.map(({ label, href, Icon }) => (
               <a key={label} href={href} aria-label={label} target="_blank" rel="noopener noreferrer" className="inline-flex h-11 w-11 items-center justify-center text-[#162543] transition-colors hover:text-[#0083b0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]">
                 <Icon />
               </a>
             ))}
           </nav>
-          <AppStoreFooterLinks />
+          <div className="[&>div]:flex-wrap [&>div]:gap-x-2 [&>div]:gap-y-2 [&>div>span]:w-full [&>div>span]:text-xs [&>div>span]:font-medium [&>div>span]:text-[#64748b] md:[&>div]:gap-5 md:[&>div>span]:w-auto md:[&>div>span]:text-sm"><AppStoreFooterLinks /></div>
         </div>
 
         {/* Bottom bar */}
-        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-[#162543]">
+        <div className="flex flex-col items-start justify-between gap-4 pt-6 md:flex-row md:items-center">
+          <p className="text-xs leading-5 text-[#64748b]">
             {t("rights", { year: new Date().getFullYear() })}
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
             <Link href="/terminos" className="text-xs text-[#162543] hover:text-[#0083b0] transition-colors">{t("terms")}</Link>
             <Link href="/privacidad" className="text-xs text-[#162543] hover:text-[#0083b0] transition-colors">{t("privacy")}</Link>
           </div>
