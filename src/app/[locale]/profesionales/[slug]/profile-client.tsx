@@ -210,7 +210,15 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   // blanco para aparecer 100 ms después: eso era el parpadeo al cambiar de
   // pestaña.
   const [pestanasVisitadas, setPestanasVisitadas] = useState<Set<string>>(() => new Set());
-  const setActiveTab = setChosenTab;
+  const setActiveTab = (next: Tab) => {
+    if (next === activeTab) return;
+    if (activeTab === "resenas") {
+      const detail = { proceed: () => setChosenTab(next), handled: false };
+      window.dispatchEvent(new CustomEvent("ccr:confirm-unsaved-action", { detail }));
+      if (detail.handled) return;
+    }
+    setChosenTab(next);
+  };
   const previousActiveTabRef = useRef<Tab | null>(null);
   // En computadora las pestañas se arrastran con el mouse (ver el hook).
   const carrilPestanasRef = useRef<HTMLDivElement | null>(null);
@@ -528,7 +536,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
     };
     let secondFrame: number | null = null;
     const activateReviews = window.setTimeout(() => {
-      setActiveTab("resenas");
+      setChosenTab("resenas");
       secondFrame = window.requestAnimationFrame(scrollToReviews);
     }, 0);
     const firstFrame = window.requestAnimationFrame(scrollToReviews);
