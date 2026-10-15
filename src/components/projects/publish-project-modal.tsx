@@ -321,6 +321,7 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
           <button
             type="button"
             onClick={onClose}
+            data-native-back="publish-project"
             aria-label={t("dismiss")}
             className="absolute left-4 top-1/2 flex h-10 w-10 -translate-y-1/2 shrink-0 items-center justify-center rounded-xl text-[#162543] transition-colors hover:bg-[#eef5f9] sm:static sm:h-8 sm:w-8 sm:translate-y-0 sm:rounded-lg"
           >

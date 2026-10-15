@@ -139,6 +139,7 @@ export function Modal({
     <button
       type="button"
       onClick={onBack ?? onClose}
+      data-native-back="modal"
       aria-label={backLabel ?? closeLabel}
       className={cn(
         "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#68778d] transition-colors hover:bg-[#f3f4f6] hover:text-[#374151]",
