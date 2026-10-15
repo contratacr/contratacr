@@ -125,16 +125,20 @@ test('narrow desktop windows have no mobile notice or navbar gap, while download
  } finally {await cold.close();}
 });
 
-test('notice is centered, remains above the header on public pages and respects account/form routes',async({page})=>{
+test('notice stays at the bottom on public pages and respects account/form routes',async({page})=>{
  test.skip((page.viewportSize()?.width ?? 1280)>=1024, "The download notice only appears on mobile web.");
  for(const route of ['/proyectos','/empleos','/promociones','/profesionales','/ayuda']) {
   await page.goto(route);
   const notice=page.getByTestId('mobile-app-download');
   await expect(notice).toBeVisible();
   await expect(notice).not.toContainText('Llévala contigo');
-  expect(await notice.locator('p').evaluate(el=>getComputedStyle(el.parentElement!).textAlign)).toBe('center');
+  await expect(notice.locator('a')).toHaveText('Descargar');
   await page.evaluate(()=>window.scrollTo(0,400));
-  await expect.poll(async()=>Math.round((await notice.locator('aside').boundingBox())?.y ?? -999)).toBe(0);
+  await expect.poll(async()=>{
+   const box=await notice.locator('aside').boundingBox();
+   const bottom=await page.evaluate(()=>(window.visualViewport?.height ?? innerHeight)+(window.visualViewport?.offsetTop ?? 0));
+   return Math.abs((box ? box.y+box.height : -999)-bottom);
+  }).toBeLessThan(1);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  }
  for(const route of ['/login','/registro','/reset-password','/olvide-contrasena','/empleos/publicar','/publicar-proyecto']) {
