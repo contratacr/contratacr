@@ -42,7 +42,7 @@ export async function notifyVerificationDecision({
 
     const { data: pro } = await admin
       .from("professionals")
-      .select("profile_id, profiles(full_name, email)")
+      .select("profile_id, verification_updated_at, profiles(full_name, email)")
       .eq("id", professionalId)
       .maybeSingle();
     if (!pro) return;
@@ -136,7 +136,7 @@ export async function notifyVerificationDecision({
     // Pending stays in the app. Registration does not email the result.
     // Later approval, rejection or removal merits an email.
     if (shouldEmailVerificationDecision(kind, channel)) {
-      await sendEmail(email, `${title} — ContrataCR`, html);
+      await sendEmail(email, `${title} — ContrataCR`, html, pro.verification_updated_at ? `verification-decision:${pro.profile_id}:${kind}:${pro.verification_updated_at}` : undefined);
     }
   } catch (err) {
     console.error("[notifyVerificationDecision] failed:", err);
@@ -188,8 +188,8 @@ export async function notifyAppealReceived(
 
 // ---------------------------------------------------------------------------
 
-async function sendEmail(to: string | undefined, subject: string, html: string): Promise<void> {
-  await sendBrevoEmail({ to, subject, html });
+async function sendEmail(to: string | undefined, subject: string, html: string, eventKey?: string): Promise<void> {
+  await sendBrevoEmail({ to, subject, html, eventKey });
 }
 
 function escapeHtml(s: string): string {

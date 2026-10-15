@@ -95,7 +95,7 @@ export async function avisarPorCorreo(aviso: AvisoPorCorreo): Promise<number> {
           campana: aviso.campana,
         });
       }));
-      enviados += resultados.filter((r) => r.ok).length;
+      enviados += resultados.filter((r) => r.ok && r.detail !== "already_accepted").length;
       // Sin cupo para este nivel: el resto del día tampoco va a salir.
       if (resultados.some((r) => r.status === "skipped" && /cupo/i.test(r.detail ?? ""))) break;
     }
