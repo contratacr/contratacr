@@ -30,7 +30,9 @@ export function imagenSocial(locale: string) {
  *  búsqueda vive en /buscar pero se ve en /profesionales). */
 export function imagenDeSeccion(locale: string, seccion: string) {
   const idioma = ["es", "en"].includes(locale) ? locale : "es";
-  const url = `/${idioma}${seccion}/opengraph-image`;
+  // A fresh URL makes social crawlers fetch the corrected centered thumbnail.
+  const version = seccion === "/profesionales" ? "?v=logo-principal-20261014" : "";
+  const url = `/${idioma}${seccion}/opengraph-image${version}`;
   return {
     openGraph: { images: [{ url, width: 1200, height: 630, alt: "ContrataCR" }] },
     twitter: { card: "summary_large_image" as const, images: [url] },
