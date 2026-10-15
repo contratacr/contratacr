@@ -26,16 +26,16 @@ type Profesional = {
   conCuenta: number;
 };
 
-type Respuesta = { dias: number; total: number; totalVistas: number; tasa: number; profesionales: Profesional[] };
+type Respuesta = { dias: number | "all"; total: number; totalVistas: number; tasa: number; profesionales: Profesional[] };
 
-const PERIODOS = [7, 30, 90, 365];
+const PERIODOS = [7, 30, "all"] as const;
 
 function fecha(valor: string) {
   return new Date(valor).toLocaleDateString("es-CR", { day: "numeric", month: "short" });
 }
 
 export function AdminContactos() {
-  const [dias, setDias] = useState(30);
+  const [dias, setDias] = useState<number | "all">(30);
   const [datos, setDatos] = useState<Respuesta | null>(null);
   const [cargando, setCargando] = useState(true);
 
@@ -74,7 +74,7 @@ export function AdminContactos() {
               periodo === dias ? "bg-[#0f172a] text-white" : "bg-[#eef2f6] text-[#475569] hover:bg-[#e2e8f0]"
             }`}
           >
-            {periodo === 365 ? "1 año" : `${periodo} días`}
+            {periodo === "all" ? "Desde el inicio" : `${periodo} días`}
           </button>
         ))}
       </div>
