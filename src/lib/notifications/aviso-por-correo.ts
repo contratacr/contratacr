@@ -29,6 +29,7 @@ const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com").re
 export type AvisoPorCorreo = {
   /** Cuentas (profiles.id) a las que se les avisa. */
   destinatarios: string[];
+  eventId: string;
   asunto: string;
   /** Primera línea del correo, en negrita. */
   titular: string;
@@ -86,6 +87,7 @@ export async function avisarPorCorreo(aviso: AvisoPorCorreo): Promise<number> {
         const baja = enlaceDeBaja(APP_URL, correo);
         return sendBrevoEmail({
           to: correo,
+          purpose: "activity", eventKey: `${aviso.campana}:${aviso.eventId}:${correo}`,
           subject: aviso.asunto,
           html: brandedEmailDocument({ title: aviso.asunto, bodyHtml: cuerpoDeAviso(aviso, nombre, baja), origin: APP_URL }),
           nivel: "normal",

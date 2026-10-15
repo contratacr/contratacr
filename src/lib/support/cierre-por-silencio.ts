@@ -78,7 +78,7 @@ export async function cerrarCasosSinRespuesta(dias = DIAS_DE_SILENCIO): Promise<
       if (caso.email) {
         await notifyUserOfReply({
           toEmail: caso.email, toName: caso.name, subject: caso.subject,
-          body: cuerpo, hasAccount: !!caso.user_id, panel, ticketId: caso.id, topic: caso.topic,
+          body: cuerpo, eventKey: `support-auto-close:${caso.id}:${caso.last_reply_at}`, hasAccount: !!caso.user_id, panel, ticketId: caso.id, topic: caso.topic,
         });
       }
       if (caso.user_id) {

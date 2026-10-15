@@ -112,7 +112,7 @@ export async function PATCH(req: Request) {
       if (prof?.role === "professional") panel = "profesional";
     }
     if (ticket.email) {
-      await notifyUserOfReply({ toEmail: ticket.email, toName: ticket.name, subject: ticket.subject, body: cuerpoCierre, hasAccount: !!ticket.user_id, panel, ticketId: id, topic: ticket.topic });
+      await notifyUserOfReply({ toEmail: ticket.email, toName: ticket.name, subject: ticket.subject, body: cuerpoCierre, eventKey: `support-close:${id}:${now}`, hasAccount: !!ticket.user_id, panel, ticketId: id, topic: ticket.topic });
     }
     if (ticket.user_id) {
       const notification = {
@@ -146,10 +146,10 @@ export async function POST(req: Request) {
   if (!ticket) return NextResponse.json({ error: "Ticket no encontrado" }, { status: 404 });
 
   const now = new Date().toISOString();
-  const { error: msgErr } = await db.from("support_ticket_messages").insert({
+  const { data: replyMessage, error: msgErr } = await db.from("support_ticket_messages").insert({
     ticket_id: id, sender_role: "admin", sender_id: admin.id, sender_name: admin.fullName, body: safeBody,
     ...(adjuntos.length ? { attachments: adjuntos } : {}),
-  });
+  }).select("id").single();
   if (msgErr) return NextResponse.json({ error: msgErr.message }, { status: 500 });
 
   // An admin reply always (re)opens the ticket into "in_progress" — picking up a
@@ -174,7 +174,7 @@ export async function POST(req: Request) {
   if (ticket.email) {
     // `user_id` set → the requester has an account → deep-link to the exact ticket in
     // their panel; null → a guest (no panel) → "create account / sign in" path instead.
-    await notifyUserOfReply({ toEmail: ticket.email, toName: ticket.name, subject: ticket.subject, body: safeBody || "Te enviamos un archivo adjunto.", hasAccount: !!ticket.user_id, panel, ticketId: id, topic: ticket.topic });
+    await notifyUserOfReply({ toEmail: ticket.email, toName: ticket.name, subject: ticket.subject, body: safeBody || "Te enviamos un archivo adjunto.", eventKey: `support-reply:${replyMessage!.id}`, hasAccount: !!ticket.user_id, panel, ticketId: id, topic: ticket.topic });
   }
   if (ticket.user_id) {
     const notification = {

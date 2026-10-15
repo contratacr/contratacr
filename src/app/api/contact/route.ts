@@ -112,7 +112,7 @@ async function sendInboxEmail(
   fileAttachments: { filename: string; content: Buffer; contentType: string }[]
 ): Promise<boolean> {
   const r = await sendBrevoEmail({
-    to: SUPPORT_TO,
+    to: SUPPORT_TO, purpose: "support",
     replyTo: correoValido(email) || undefined, // so a human reply from the inbox goes to the requester
     subject: `[Soporte] ${subject}`,
     html: buildHtml(name, email, subject, message, fileAttachments.map((f) => f.filename)),

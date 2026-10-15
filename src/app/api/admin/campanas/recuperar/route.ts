@@ -88,7 +88,7 @@ export async function POST(request: Request) {
   for (const { campana, email, columna, momento } of anotar.values()) {
     const { error, count } = await db
       .from("admin_campaign_sends")
-      .update({ [columna]: momento, status: "sent" }, { count: "exact" })
+      .update({ [columna]: momento, ...(columna !== "rebote_en" ? { status: "sent" } : {}) }, { count: "exact" })
       .eq("campana", campana)
       .eq("email", email)
       .is(columna, null);

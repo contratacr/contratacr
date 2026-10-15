@@ -7,7 +7,7 @@ type Admin = ReturnType<typeof createAdminClient>;
 export async function deliverCampaignOnce(
   admin: Admin, campaign: string, recipient: string, send: () => Promise<EmailResult>,
   { coordinated = false }: { coordinated?: boolean } = {},
-): Promise<"sent" | "skipped" | "uncertain" | "already_reserved"> {
+): Promise<"sent" | "skipped" | "uncertain" | "already_reserved" | "queued"> {
   const email = normalizeCampaignEmail(recipient);
   if (isInternalCampaignRecipient(email)) return "skipped";
   const { data: claimed, error: reserveError } = coordinated
@@ -19,6 +19,7 @@ export async function deliverCampaignOnce(
   let result: EmailResult;
   try { result = await send(); }
   catch { result = { ok: false, status: "failed", detail: "Uncertain provider result" }; }
+  if (result.status === "queued") return "queued";
   if (result.status === "skipped") {
     // A local skip (missing configuration/quota/recipient) never contacts Brevo.
     const { error } = await admin.from("admin_campaign_sends").delete()

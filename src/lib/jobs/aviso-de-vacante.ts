@@ -84,7 +84,7 @@ export async function avisarVacanteAProfesionales({
   await db.from("notifications").insert(filas);
   // Y por correo, cuando la respuesta ya salió (ver lib/notifications/aviso-por-correo.ts).
   after(() => avisarPorCorreo({
-    destinatarios,
+    destinatarios, eventId: jobId,
     asunto: `Nueva vacante de ${oficio}: ${title}`,
     titular: `Publicaron una vacante de ${oficio}: «${title}».`,
     parrafos: ["Si te interesa, ábrela y escríbele por WhatsApp a quien la publicó."],

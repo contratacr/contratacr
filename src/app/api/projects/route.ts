@@ -372,7 +372,7 @@ export async function POST(req: NextRequest) {
           // profesional tiene push (ver lib/notifications/aviso-por-correo.ts).
           const zona = [...new Set([getCantonById(cantonId ?? "")?.name, getProvinceById(provinciaId ?? "")?.name].filter(Boolean))].join(", ");
           after(() => avisarPorCorreo({
-            destinatarios: recipients,
+            destinatarios: recipients, eventId: projectId,
             asunto: `Nuevo proyecto de ${label}${zona ? ` en ${zona}` : ""}`,
             titular: `Un cliente publicó un proyecto de ${label}${zona ? ` en ${zona}` : ""}: «${finalTitle}».`,
             parrafos: [

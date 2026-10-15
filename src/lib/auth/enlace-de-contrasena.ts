@@ -72,7 +72,7 @@ export async function enviarEnlaceDeContrasena({
   // En la base local del CI no hay proveedor de correo: el envío vuelve
   // «skipped» y el enlace igual se generó. Solo ahí cuenta como enviado.
   const sinCorreoEnElCi = process.env.LOCAL_REGRESSION_SEED === "1" && sent.status === "skipped";
-  if (!sent.ok && !sinCorreoEnElCi) {
+  if (!sent.ok && sent.status !== "queued" && !sinCorreoEnElCi) {
     return "sin_envio";
   }
 

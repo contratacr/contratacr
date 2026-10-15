@@ -1,6 +1,7 @@
+import { cleanId, detectIdType } from "@/lib/cedula";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { brandedEmailDocument, sendBrevoEmail } from "@/lib/email/send";
-import { shouldEmailVerificationDecision, canReceiveVerificationOutreach } from "@/lib/verification/email-policy";
+import { brandedEmailDocument, sendBrevoEmail, type EmailResult } from "@/lib/email/send";
+import { shouldEmailVerificationDecision } from "@/lib/verification/email-policy";
 import { sendNotificationPush } from "@/lib/push/notify";
 
 const PRO_LINK = "/dashboard/profesional?tab=profile&mode=offer&focus=verification";
@@ -221,148 +222,63 @@ function emailShell(
   });
 }
 
-// ── First contact when a professional lands in manual review ─────────────────
-// The in-app notification doubles as the marker for the initial notice and
-// one possible reminder after 30 days. WhatsApp is handled manually.
-// Asks only for what the account does not hold yet — never for the name,
-// cédula or phone already on file. WhatsApp is deliberately NOT sent from here:
-// business-initiated messages would need a Meta template, and replies to the
-// API number land in an inbox nobody reads. The owner writes those by hand from
-// the admin queue, where the message comes pre-written and the contact is logged.
-/**
- * CUÁNTAS VECES SE LE INSISTE A ALGUIEN, Y CADA CUÁNTO.
- *
- * Como mucho DOS avisos en toda la vida de la cuenta: el primero cuando el
- * perfil queda en revisión, y un único recordatorio 30 días después. No hay un
- * tercero a propósito: quien ignoró dos mensajes no manda las fotos al quinto,
- * y seguir escribiéndole a alguien que no contesta es lo que hace que el
- * dominio entero termine en No deseado —el problema que acabamos de arreglar
- * en las campañas—. Una insignia no es una urgencia.
- */
-const MAX_AVISOS_DE_VERIFICACION = 2;
-const DIAS_ENTRE_AVISOS = 30;
-/** Cuántos avisos salen por cada pulsada del botón del panel. */
-const POR_TANDA_DE_VERIFICACION = 25;
-
-/** Qué aviso toca ahora para esta persona, o `null` si ya no toca ninguno. */
-async function avisoQueTocaDeVerificacion(
-  admin: ReturnType<typeof createAdminClient>,
-  profileId: string | null,
-): Promise<"primero" | "recordatorio" | null> {
-  if (!profileId) return null;
-  const { data, error } = await admin
-    .from("notifications")
-    .select("created_at")
-    .eq("user_id", profileId)
-    .eq("type", "verification_outreach")
-    .order("created_at", { ascending: false })
-    .limit(MAX_AVISOS_DE_VERIFICACION);
-  // Si la consulta falla no se avisa: repetirle a quien ya recibió el mensaje
-  // es peor que dejarlo para el próximo intento.
-  if (error) return null;
-  const avisos = data ?? [];
-  if (avisos.length === 0) return "primero";
-  if (avisos.length >= MAX_AVISOS_DE_VERIFICACION) return null;
-  const ultimo = new Date(avisos[0].created_at as string).getTime();
-  if (Number.isNaN(ultimo)) return null;
-  return Date.now() - ultimo >= DIAS_ENTRE_AVISOS * 86_400_000 ? "recordatorio" : null;
-}
-
-export async function notifyVerificationOutreach(professionalId: string): Promise<void> {
-  try {
-    const admin = createAdminClient();
-    const { data: pro } = await admin
-      .from("professionals")
-      .select("profile_id, verification_status, is_verified, whatsapp, category_id, profiles(full_name, email, cedula)")
-      .eq("id", professionalId)
-      .maybeSingle();
-    if (!pro?.profile_id || !canReceiveVerificationOutreach(pro)) return;
-    const toca = await avisoQueTocaDeVerificacion(admin, pro.profile_id as string);
-    if (!toca) return;
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const profile = pro.profiles as any;
-    const firstName = (profile?.full_name ?? "profesional").split(" ")[0];
-    const hasId = !!profile?.cedula;
-    // DOS FOTOS, NI UNA MÁS. Antes se pedía además «algo que respalde tu
-    // oficio»: título, carné, patente o certificado. Eso deja afuera a un
-    // pintor, una señora que hace limpieza o un albañil —la gente que llena
-    // este app— y además contradice lo que la insignia dice ser (Términos,
-    // sección 5: «confirma de manera limitada una coincidencia de identidad.
-    // No certifica experiencia, licencias, permisos, calidad»).
-    //
-    // Una foto de un trabajo sí la puede tomar cualquiera que trabaje.
-    const fotos = [
-      `Tu cara junto a tu ${hasId ? "cédula" : "cédula, DIMEX o pasaporte"}, donde se vea tu rostro y se lean los datos.`,
-      "Una foto de un trabajo tuyo.",
-    ];
-    // El mismo titulo que pinta la campana, para que el push y la campana no
-    // digan cosas distintas del mismo aviso.
-    const title = toca === "recordatorio" ? "Falta poco para verificar tu perfil" : "Tu perfil todavía no está verificado";
-    // CORTO A PROPÓSITO. El mensaje anterior medía 373 caracteres y el push se
-    // recorta a 112: a la gente le llegaba «…necesitamos: 1) una foto tuya
-    // sos…» y ahí terminaba. Lo esencial va primero y el detalle vive en el
-    // correo, que sí tiene espacio.
-    //
-    // Y SOLO POR CORREO: el WhatsApp que se ofrecía era el número de la API,
-    // cuyo buzón no lee nadie. Las respuestas al correo sí llegan a soporte.
-    const message = `Hola ${firstName}, te escribimos al correo con lo que necesitamos para verificarte.`;
-    // `link`, no `href`: `notificationHref` solo mira `link`, asi que este
-    // aviso no llevaba a la pantalla de verificacion sino a la lista de avisos.
-    const notification = { user_id: pro.profile_id, type: "verification_outreach", title, message, data: { link: PRO_LINK } };
-    await admin.from("notifications").insert(notification);
-    await sendNotificationPush({ userId: pro.profile_id, title, message, data: notification.data });
-
-    if (profile?.email) {
-      const html = emailShell(
-        firstName,
-        toca === "recordatorio" ? "Todavía puedes verificar tu perfil" : "Verificación de tu perfil",
-        "#009FD9",
-        `${toca === "recordatorio" ? "Hace al menos un mes te enviamos los pasos para verificarte. " : ""}` +
-          `Tu perfil todavía no está verificado. Al verificar tu identidad, el check azul aparecerá junto a tu nombre para que los clientes puedan reconocerlo.<br/><br/>` +
-          `Es gratis y solo necesitamos <strong>dos fotos</strong>. Con el celular está bien:<br/><br/>` +
-          `1. ${fotos[0]}<br/>2. ${fotos[1]}<br/><br/>` +
-          `<strong>Responde a este correo con las dos fotos.</strong> Las revisamos y te avisamos en la app cuando quede lista. Si alguna no se ve bien, te decimos cuál repetir.<br/><br/>` +
-          `Tu cédula solo la usamos para confirmar que eres tú. No sale en tu perfil.`,
-        null
-      );
-      await sendBrevoEmail({
-        to: profile.email,
-        subject: toca === "recordatorio"
-          ? "Tu perfil sigue sin verificar"
-          : "Falta poco para verificar tu perfil en ContrataCR",
-        html,
-        replyTo: "soporte@contratacr.com",
-      });
-    }
-  } catch (error) {
-    console.warn("[verification] outreach not sent", error instanceof Error ? error.message : error);
-  }
-}
-
-// Admin button "Avisar por app y correo": send eligible initial notices or the
-// single 30-day reminder to pending profiles, up to 25 per press. Replies land
-// in the support mailbox the owner actually reads.
-export async function outreachPendingProfessionals(): Promise<{ pending: number; notified: number; alreadyNotified: number; reminded: number; restantes: number }> {
+// Initial notice and one 30-day reminder share a durable receipt with the
+// scheduled worker and admin button. Unknown pre-rollout history stays held.
+export async function notifyVerificationOutreach(professionalId: string): Promise<EmailResult & { sequence?: number }> {
   const admin = createAdminClient();
-  const { data: pending } = await admin.from("professionals").select("id, profile_id").in("verification_status", ["pending", "under_appeal"]);
-  let notified = 0, alreadyNotified = 0, reminded = 0;
-  for (const pro of pending ?? []) {
-    // Tope por pulsada. El límite real no es la reputación del correo: este
-    // mensaje pide que la persona CONTESTE con dos fotos, y esas respuestas
-    // las revisa alguien a mano. Mandar 200 de golpe es prometer 200
-    // revisiones el mismo día. Se pulsa otra vez mañana.
-    if (notified + reminded >= POR_TANDA_DE_VERIFICACION) break;
-    // La misma regla que aplica el envío, para que el panel no prometa un
-    // número distinto del que sale.
-    const toca = await avisoQueTocaDeVerificacion(admin, (pro.profile_id as string | null) ?? null);
-    if (!toca) { alreadyNotified += 1; continue; }
-    await notifyVerificationOutreach(pro.id);
-    if (toca === "recordatorio") reminded += 1; else notified += 1;
-    // Un respiro entre envíos, igual que las campañas. Una ráfaga desde un
-    // dominio que manda poco es de las cosas que más castigan los buzones.
-    await new Promise((r) => setTimeout(r, 200));
+  const { data: candidate, error: candidateError } = await admin.rpc("verification_email_candidate", { p_professional: professionalId });
+  if (candidateError || !candidate?.sequence) return { ok: false, status: "skipped", detail: candidateError ? "history_unavailable" : candidate?.reason ?? "ineligible" };
+  const { data: pro, error } = await admin.from("professionals")
+    .select("profile_id, profiles(full_name, email, cedula)").eq("id", professionalId).maybeSingle();
+  const profile = pro?.profiles as unknown as { full_name?: string; email?: string; cedula?: string } | null;
+  if (error || !pro?.profile_id || !profile?.email) return { ok: false, status: "skipped", detail: "ineligible" };
+  const firstName = (profile.full_name ?? "profesional").split(" ")[0];
+  const legal = detectIdType(cleanId(profile.cedula ?? "")) === "juridica";
+  const reminder = candidate.sequence === 2;
+  const instructions = legal
+    ? "Para revisar el perfil de la empresa, necesitamos confirmar quién la representa:<br/><br/>" +
+      "1. Una personería jurídica vigente o una autorización que podamos validar.<br/>" +
+      "2. Una foto de la persona autorizada junto a su documento de identidad, con los datos legibles."
+    : "Para confirmar tu identidad, responde con una foto tuya junto a tu cédula, DIMEX o pasaporte, donde se vea tu rostro y se lean los datos.";
+  const result = await sendBrevoEmail({
+    to: profile.email, subject: reminder ? "Tu perfil sigue sin verificar" : "Falta poco para verificar tu perfil en ContrataCR",
+    html: emailShell(firstName, reminder ? "Todavía puedes verificar tu perfil" : "Verificación de tu perfil", "#009FD9",
+      `${reminder ? "Hace al menos un mes te enviamos los pasos para verificarte. " : ""}` +
+      "Tu perfil todavía no está verificado. El check azul confirma la identidad; no certifica la calidad de los servicios.<br/><br/>" +
+      instructions + "<br/><br/><strong>Responde a este correo con los documentos.</strong> Los revisamos y te avisamos en la app. Los documentos no se publican en tu perfil.", null),
+    replyTo: "soporte@contratacr.com", nivel: "masivo", purpose: "verification",
+    eventKey: `verification:${pro.profile_id}:${candidate.sequence}`, professionalId,
+    verificationSequence: candidate.sequence,
+  });
+  return { ...result, sequence: candidate.sequence };
+}
+
+export async function outreachPendingProfessionals({ simulate = false, limit = 25 } = {}) {
+  const admin = createAdminClient();
+  const pending: { id: string }[] = [];
+  for (let from=0; ; from+=1000) {
+    const { data, error } = await admin.from("professionals").select("id")
+      .in("verification_status", ["pending", "under_appeal"]).order("id").range(from,from+999);
+    if (error) throw error;
+    pending.push(...(data ?? []));
+    if ((data ?? []).length < 1000) break;
   }
-  const restantes = Math.max(0, (pending ?? []).length - notified - reminded - alreadyNotified);
-  return { pending: (pending ?? []).length, notified, alreadyNotified, reminded, restantes };
+  const result = { pending: pending.length, notified: 0, reminded: 0, queued: 0, historicalHeld: 0, alreadyNotified: 0, failed: 0, eligible: 0, restantes: 0 };
+  let processed=0;
+  for (const pro of pending) {
+    const { data, error } = await admin.rpc("verification_email_candidate", { p_professional: pro.id });
+    if (error) throw error;
+    if (data?.reason === "historical_hold") { result.historicalHeld++; continue; }
+    if (!data?.sequence) { result.alreadyNotified++; continue; }
+    result.eligible++;
+    if (simulate) continue;
+    if (processed>=limit) { result.restantes++; continue; }
+    processed++;
+    const sent = await notifyVerificationOutreach(pro.id);
+    if (sent.detail === "already_accepted") result.alreadyNotified++;
+    else if (sent.ok) { if (sent.sequence===2) result.reminded++; else result.notified++; }
+    else if (sent.status === "queued") result.queued++;
+    else result.failed++;
+  }
+  return result;
 }

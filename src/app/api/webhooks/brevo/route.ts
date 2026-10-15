@@ -52,7 +52,20 @@ export async function POST(request: Request) {
     const { error } = await createAdminClient()
       .from("email_bajas")
       .upsert({ correo: email, motivo }, { onConflict: "correo", ignoreDuplicates: true });
-    if (error) console.error("[brevo-webhook] no se pudo anotar la baja:", error.message);
+    if (error) return NextResponse.json({ ok: false, error: "unsubscribe_unavailable" }, { status: 503 });
+  }
+
+  const rawTags = aviso.tags ?? aviso.tag;
+  let tags: unknown = rawTags;
+  if (typeof tags === "string" && tags.startsWith("[")) { try { tags = JSON.parse(tags); } catch { tags = []; } }
+  const receiptTag = (Array.isArray(tags) ? tags : [tags]).find((tag) => typeof tag === "string" && /^ccr-mail-[a-f0-9-]{36}$/i.test(tag));
+  if (typeof receiptTag === "string" && email) {
+    const { error } = await createAdminClient().rpc("record_email_delivery_event", {
+      p_id: receiptTag.slice(9), p_recipient: email, p_event: evento,
+      p_provider: typeof aviso["message-id"] === "string" ? aviso["message-id"] : null,
+    });
+    // Return a retriable response: receipt updates are idempotent.
+    if (error) return NextResponse.json({ ok: false, error: "receipt_unavailable" }, { status: 503 });
   }
 
   // La etiqueta puede llegar como lista (`tags`) o suelta (`tag`), según el
@@ -68,13 +81,12 @@ export async function POST(request: Request) {
   const db = createAdminClient();
   const { error } = await db
     .from("admin_campaign_sends")
-    .update({ [columna]: momento, status: "sent" })
+    .update({ [columna]: momento, ...(columna !== "rebote_en" ? { status: "sent" } : {}) })
     .eq("campana", campana)
     .eq("email", email)
     .is(columna, null);
 
-  // Un fallo aquí no se le devuelve a Brevo como error: reintentaría el mismo
-  // aviso en bucle. Queda en el registro y el correo simplemente no se cuenta.
-  if (error) console.error("[brevo-webhook] no se pudo anotar:", error.message);
+  // A temporary storage failure asks Brevo to retry; receipt updates are idempotent.
+  if (error) return NextResponse.json({ ok: false, error: "campaign_receipt_unavailable" }, { status: 503 });
   return NextResponse.json({ ok: true });
 }

@@ -586,7 +586,7 @@ export async function POST(req: Request) {
         await notifyRecipientOutsideApp({
           db,
           origin: process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin,
-          conversationId: conversation.id,
+          conversationId: conversation.id, messageId: msg.id,
           recipientId,
           recipientIsProfessional,
           senderName,

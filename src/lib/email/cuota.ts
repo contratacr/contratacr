@@ -16,8 +16,8 @@ export type NivelDeCorreo = "critico" | "normal" | "masivo";
 /**
  * Cuántos correos tienen que quedar libres para que este nivel siga enviando.
  *
- *  · `critico` NUNCA se corta: crear cuenta, recuperar contraseña, verificación
- *    y soporte. Si estos no salen, alguien se queda sin entrar.
+ *  · `critico` tiene prioridad para cuenta y soporte. Si se alcanza el límite
+ *    del proveedor, la cola conserva la solicitud hasta que haya cupo.
  *  · `normal` se corta con 40 libres: los avisos del app. Molesta perderlos,
  *    pero nadie se queda afuera.
  *  · `masivo` se corta con 50 libres: campañas. Son lo primero que cede. La
@@ -52,6 +52,7 @@ export type ResumenDeCuota = {
   enviados: number;
   porNivel: Record<NivelDeCorreo, number>;
   restantes: number;
+  reservados: number;
   /** Cuántos quedan ANTES de que cada nivel deje de enviar. */
   margenPorNivel: Record<NivelDeCorreo, number>;
   /** El nivel más alto que todavía puede enviar. */
@@ -61,18 +62,24 @@ export type ResumenDeCuota = {
 export async function resumenDeCuota(): Promise<ResumenDeCuota> {
   const dia = diaDelProveedor();
   const admin = createAdminClient();
-  const { data } = await admin
+  const { data, error } = await admin
     .from("email_cuota_diaria")
     .select("nivel, enviados")
     .eq("dia", dia);
 
+  if (error) throw error;
+  const { count: held, error: reservationError } = await admin.from("email_deliveries")
+    .select("id", { count: "exact", head: true }).in("status", ["sending", "uncertain"])
+    .eq("reserved_day", dia).is("accepted_at", null);
+  if (reservationError) throw reservationError;
+  const reservados = held ?? 0;
   const porNivel: Record<NivelDeCorreo, number> = { critico: 0, normal: 0, masivo: 0 };
   for (const fila of data ?? []) {
     const nivel = fila.nivel as NivelDeCorreo;
     if (nivel in porNivel) porNivel[nivel] = Number(fila.enviados ?? 0);
   }
   const enviados = porNivel.critico + porNivel.normal + porNivel.masivo;
-  const restantes = Math.max(0, TOPE_DIARIO - enviados);
+  const restantes = Math.max(0, TOPE_DIARIO - enviados - reservados);
 
   const margenPorNivel = {
     critico: restantes,
@@ -86,9 +93,10 @@ export async function resumenDeCuota(): Promise<ResumenDeCuota> {
     enviados,
     porNivel,
     restantes,
+    reservados,
     margenPorNivel,
     puedeEnviar: {
-      critico: true,
+      critico: restantes > 0,
       normal: margenPorNivel.normal > 0,
       masivo: margenPorNivel.masivo > 0,
     },
@@ -96,19 +104,16 @@ export async function resumenDeCuota(): Promise<ResumenDeCuota> {
 }
 
 /**
- * ¿Sale este correo? Un `critico` sale SIEMPRE, incluso pasado el tope: si el
- * proveedor lo rechaza, al menos el app lo intentó y queda en el registro; que
- * alguien no pueda entrar a su cuenta es peor que un envío fallido.
+ * Read-only estimate for callers. The database claim makes the final atomic
+ * reservation; unknown results retain a slot until the provider confirms them.
  */
 export async function hayCupoPara(nivel: NivelDeCorreo): Promise<boolean> {
-  if (nivel === "critico") return true;
   try {
     const resumen = await resumenDeCuota();
     return resumen.puedeEnviar[nivel];
   } catch {
-    // Si no se puede leer el contador, no se bloquea nada: un contador caído no
-    // puede dejar al app sin mandar correo.
-    return true;
+    // The persistent queue retains the request until its quota can be checked.
+    return false;
   }
 }
 

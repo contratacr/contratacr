@@ -167,7 +167,7 @@ export async function POST(request: Request) {
   try {
     const db = createAdminClient();
     const state = await campaignState(db);
-    let sent = 0, failed = 0, skipped = 0;
+    let sent = 0, failed = 0, skipped = 0, queued = 0;
     for (const client of state.pendientes.slice(0, POR_TANDA)) {
       const result = await deliverCampaignOnce(db, campana, client.email, async () => {
         // Una reseña, baja o inhabilitación puede ocurrir después del recuento inicial.
@@ -184,17 +184,18 @@ export async function POST(request: Request) {
           return { ok: false, status: "skipped" as const, detail: "La cuenta ya no es elegible." };
         }
         return sendBrevoEmail({
-          to: client.email, subject, html: htmlPara(client.email, client.full_name), replyTo, nivel: "masivo", campana,
+          to: client.email, eventKey: `campaign:${campana}:${client.email.trim().toLowerCase()}`, subject, html: htmlPara(client.email, client.full_name), replyTo, nivel: "masivo", campana,
         });
       }, { coordinated: true });
       if (result === "sent") sent += 1;
+      else if (result === "queued") queued += 1;
       else if (result === "uncertain") failed += 1;
       else skipped += 1;
       await new Promise((resolve) => setTimeout(resolve, 120));
     }
     const updated = await campaignState(db);
-    return NextResponse.json({ mode: "all", total: state.clients.length, sent, failed, skipped,
-      restantes: updated.pendientes.length, sinConfirmar: updated.sinConfirmar, completa: updated.pendientes.length === 0 });
+    return NextResponse.json({ mode: "all", total: state.clients.length, sent, failed, skipped, queued,
+      restantes: updated.pendientes.length, sinConfirmar: updated.sinConfirmar, completa: updated.pendientes.length === 0 && updated.sinConfirmar === 0 });
   } catch {
     return NextResponse.json({ error: "No se pudo completar la tanda. Actualiza el estado: los envíos reservados quedan bloqueados para evitar repetirlos." }, { status: 503 });
   }
