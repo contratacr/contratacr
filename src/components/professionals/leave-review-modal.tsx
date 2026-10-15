@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { EtiquetaObligatoria } from "@/components/ui/etiqueta-campo";
+import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 import { useTranslations } from "next-intl";
 import { AlertCircle, Star, X } from "lucide-react";
 import { SuccessIcon } from "@/components/ui/success-icon";
@@ -85,6 +86,8 @@ export function LeaveReviewModal({
   const [rating, setRating] = useState(initialReview?.rating ?? recordada?.rating ?? 0);
   const [hovered, setHovered] = useState(0);
   const [comment, setComment] = useState(initialReview?.comment ?? recordada?.comment ?? "");
+  const [savedReview, setSavedReview] = useState({ rating: initialReview?.rating ?? recordada?.rating ?? 0, comment: initialReview?.comment ?? recordada?.comment ?? "" });
+  const touched = useRef(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -123,8 +126,11 @@ export function LeaveReviewModal({
     const guardada = reseñasPropias.has(query) ? undefined : leerReseñaPropia(query);
     void (async () => {
       if (guardada) {
-        setRating(guardada.rating);
-        setComment(guardada.comment);
+        setSavedReview(guardada);
+        if (!touched.current) {
+          setRating(guardada.rating);
+          setComment(guardada.comment);
+        }
         setIsEditing(true);
       }
       try {
@@ -134,8 +140,11 @@ export function LeaveReviewModal({
         const propia: ReseñaPropia = data.review ? { rating: data.review.rating ?? 0, comment: data.review.comment ?? "" } : null;
         guardarReseñaPropia(query, propia);
         if (active && propia) {
-          setRating(propia.rating);
-          setComment(propia.comment);
+          setSavedReview(propia);
+          if (!touched.current) {
+            setRating(propia.rating);
+            setComment(propia.comment);
+          }
           setIsEditing(true);
         }
       } catch {
@@ -185,6 +194,7 @@ export function LeaveReviewModal({
         return;
       }
 
+      touched.current = true;
       setRating(draftRating);
       setComment(draftComment.slice(0, 300));
       setLoading(true);
@@ -218,14 +228,29 @@ export function LeaveReviewModal({
     return () => { cancelled = true; };
   }, [contactId, embedded, isAuthenticated, onClose, onSuccess, pendingReviewKey, professionalId, projectId, t]);
 
+  const requestClose = useCallback(() => {
+    const detail = { proceed: onClose, handled: false };
+    window.dispatchEvent(new CustomEvent("ccr:confirm-unsaved-action", { detail }));
+    if (!detail.handled) onClose();
+  }, [onClose]);
+
   useEffect(() => {
     if (embedded) return;
     const handleKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") requestClose();
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [embedded, onClose]);
+  }, [embedded, requestClose]);
+
+  const dirty = !success && (rating !== savedReview.rating || comment !== savedReview.comment || nombre !== "");
+  const discardDraft = () => {
+    touched.current = false;
+    setRating(savedReview.rating);
+    setComment(savedReview.comment);
+    setNombre("");
+    setError(null);
+  };
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -285,6 +310,7 @@ export function LeaveReviewModal({
         // If storage is blocked, the login redirect still preserves the destination.
       }
       const redirect = encodeURIComponent(loginRedirectPath ?? window.location.pathname + window.location.search + window.location.hash);
+      window.__ccrUnsavedNavigationBypass = true;
       window.location.assign(`${currentLocalePrefix()}/login?redirect=${redirect}`);
       return;
     }
@@ -303,6 +329,7 @@ export function LeaveReviewModal({
       }
       // Lo recién guardado es la reseña propia de ahora en adelante.
       guardarReseñaPropia(query, { rating, comment: comment.trim() });
+      setSavedReview({ rating, comment: comment.trim() });
       setSuccess(true);
       window.setTimeout(() => {
         onSuccess?.();
@@ -351,8 +378,8 @@ export function LeaveReviewModal({
                       <Star className={`fill-yellow-400 text-yellow-400 ${embedded ? "h-7 w-7" : "h-9 w-9 sm:h-10 sm:w-10"}`} />
                     </span>
                   )}
-                  <button type="button" aria-label={t("halfStarAria", { value: star - 0.5 })} onMouseEnter={() => setHovered(star - 0.5)} onClick={() => setRating(star - 0.5)} className="absolute inset-y-0 left-0 z-10 w-1/2 cursor-pointer focus:outline-none" />
-                  <button type="button" aria-label={t("starAria", { value: star })} onMouseEnter={() => setHovered(star)} onClick={() => setRating(star)} className="absolute inset-y-0 right-0 z-10 w-1/2 cursor-pointer focus:outline-none" />
+                  <button type="button" aria-label={t("halfStarAria", { value: star - 0.5 })} onMouseEnter={() => setHovered(star - 0.5)} onClick={() => { touched.current = true; setRating(star - 0.5); }} className="absolute inset-y-0 left-0 z-10 w-1/2 cursor-pointer focus:outline-none" />
+                  <button type="button" aria-label={t("starAria", { value: star })} onMouseEnter={() => setHovered(star)} onClick={() => { touched.current = true; setRating(star); }} className="absolute inset-y-0 right-0 z-10 w-1/2 cursor-pointer focus:outline-none" />
                 </div>
               );
             })}
@@ -367,7 +394,7 @@ export function LeaveReviewModal({
         </div>
         <textarea
           value={comment}
-          onChange={(event) => setComment(event.target.value)}
+          onChange={(event) => { touched.current = true; setComment(event.target.value); }}
           aria-required
           maxLength={300}
           rows={embedded ? 3 : 4}
@@ -383,7 +410,7 @@ export function LeaveReviewModal({
           <input
             type="text"
             value={nombre}
-            onChange={(event) => setNombre(event.target.value)}
+            onChange={(event) => { touched.current = true; setNombre(event.target.value); }}
             aria-required
             maxLength={80}
             autoComplete="name"
@@ -407,7 +434,7 @@ export function LeaveReviewModal({
           </span>
         ) : isEditing ? t("submitUpdate") : t("submitNew")}
       </button>}
-      {!embedded && <button type="button" onClick={onClose} className="text-sm font-medium text-[#6b7280] transition hover:text-[#162543]">{t("skip")}</button>}
+      {!embedded && <button type="button" onClick={requestClose} className="text-sm font-medium text-[#6b7280] transition hover:text-[#162543]">{t("skip")}</button>}
     </form>
   );
 
@@ -419,7 +446,7 @@ export function LeaveReviewModal({
             <h2 className="text-lg font-bold text-[#162543]">{isEditing ? t("titleEdit") : t("titleNew")}</h2>
             <p className="mt-0.5 text-sm text-[#6b7280]">{professionalName}</p>
           </div>
-          <button type="button" onClick={onClose} className="rounded-full p-1.5 text-[#68778d] transition hover:bg-[#f3f4f6] hover:text-[#374151]">
+          <button type="button" onClick={requestClose} className="rounded-full p-1.5 text-[#68778d] transition hover:bg-[#f3f4f6] hover:text-[#374151]">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -428,6 +455,7 @@ export function LeaveReviewModal({
     </div>
   );
 
-  if (embedded) return panel;
-  return <div className="app-modal-screen fixed inset-0 z-[200] flex items-end justify-center bg-black/50 sm:items-center sm:px-4">{panel}</div>;
+  const guard = <UnsavedChangesGuard dirty={dirty} onDiscard={discardDraft} elevated={!embedded} />;
+  if (embedded) return <>{panel}{guard}</>;
+  return <><div className="app-modal-screen fixed inset-0 z-[200] flex items-end justify-center bg-black/50 sm:items-center sm:px-4">{panel}</div>{guard}</>;
 }

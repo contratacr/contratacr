@@ -59,6 +59,30 @@ test("contact follow-up is readable and dismissible without blocking the page", 
   expect(action).toBe("not_now");
 });
 
+test("a review with only stars asks before closing the follow-up form", async ({ page }) => {
+  await page.route("**/api/contact/follow-up", async (route) => {
+    if (route.request().method() === "GET") {
+      await route.fulfill({ json: { followUp, pendingCount: 1, authenticated: false } });
+      return;
+    }
+    await route.fulfill({ json: { review: { contactId: followUp.id, professionalId: followUp.professional_id, professionalName: followUp.professional_name, needsName: true } } });
+  });
+
+  await marcarContactoPrevio(page, test.info());
+  await page.goto("/");
+  await page.getByRole("button", { name: "Sí, dejar una reseña" }).click(ESPERA);
+  await expect(page.getByRole("heading", { name: "Dejar una reseña" })).toBeVisible();
+  await page.getByRole("button", { name: "5 estrellas", exact: true }).click();
+  await page.getByRole("button", { name: "Omitir por ahora" }).click();
+  const warning = page.getByRole("dialog").filter({ hasText: "Tienes cambios sin guardar" });
+  await expect(warning).toBeVisible();
+  await warning.getByRole("button", { name: "Seguir editando" }).click();
+  await expect(page.getByRole("heading", { name: "Dejar una reseña" })).toBeVisible();
+  await page.getByRole("button", { name: "Omitir por ahora" }).click();
+  await warning.getByRole("button", { name: "Salir sin guardar" }).click();
+  await expect(page.getByRole("heading", { name: "Dejar una reseña" })).toBeHidden();
+});
+
 test("contact follow-up shows pending confirmations one at a time", async ({ page }) => {
   const queue = [
     { ...followUp, id: "00000000-0000-4000-8000-000000000201", professional_name: "Redes Bahía" },
