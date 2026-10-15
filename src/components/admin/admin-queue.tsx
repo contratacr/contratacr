@@ -168,7 +168,7 @@ export function AdminQueue() {
           type="button"
           onClick={() => void contactPending()}
           disabled={outreachBusy}
-          title="Envía a cada pendiente, una sola vez, el aviso en la app y por correo con lo que necesitamos para verificarlo. El WhatsApp se escribe a mano desde cada fila."
+          title="Envía el primer aviso a quienes aún no lo recibieron y un único recordatorio después de 30 días. Máximo 25 personas por pulsada. El WhatsApp se escribe a mano desde cada fila."
           className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#e5e7eb] bg-white px-3 text-xs font-semibold text-[#374151] hover:bg-[#f9fafb] disabled:opacity-60"
         >
           {outreachBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />} Avisar por app y correo
