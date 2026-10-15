@@ -23,12 +23,26 @@ const DEFAULT_SENDER = { name: "ContrataCR", email: "soporte@contratacr.com" };
 
 export const EMAIL_LOGO_DARK_MODE_STYLES = `
   :root { color-scheme: light dark; supported-color-schemes: light dark; }
-  .ccr-light-logo { display:block !important; }
+  .ccr-dark-logo { display:none !important; mso-hide:all; max-height:0; overflow:hidden; }
+  @media (prefers-color-scheme: dark) {
+  .ccr-email-card { background:#1f2937 !important; border-color:#374151 !important; color:#f3f4f6 !important; }
+  .ccr-email-card h1, .ccr-email-card h2, .ccr-email-card p, .ccr-email-card p strong { color:#f3f4f6 !important; }
+    .ccr-light-logo { display:none !important; }
+    .ccr-dark-logo { display:block !important; max-height:none !important; overflow:visible !important; }
+  }
+
+[data-ogsc] .ccr-email-card { background:#1f2937 !important; border-color:#374151 !important; color:#f3f4f6 !important; }
+[data-ogsc] .ccr-email-card h1, [data-ogsc] .ccr-email-card h2, [data-ogsc] .ccr-email-card p, [data-ogsc] .ccr-email-card p strong { color:#f3f4f6 !important; }
+  [data-ogsc] .ccr-light-logo { display:none !important; }
+  [data-ogsc] .ccr-dark-logo { display:block !important; max-height:none !important; overflow:visible !important; }
 `;
 
 export function emailLogoMarkup(origin = "https://contratacr.com") {
   const site = origin.replace(/\/$/, "");
-  return `<img class="ccr-light-logo" src="${site}/brand/email-logo-primary.png" width="167" height="39" alt="ContrataCR" style="display:block;border:0;outline:none;text-decoration:none;width:167px;height:auto;margin:0 auto;background:#ffffff;border-radius:4px;">`;
+  return `
+    <img class="ccr-light-logo" src="${site}/brand/email-logo-light.png?v=2" width="167" height="39" alt="ContrataCR" style="display:block;border:0;outline:none;text-decoration:none;width:167px;height:auto;margin:0 auto;">
+    <img class="ccr-dark-logo" src="${site}/brand/email-logo-dark.png?v=2" width="167" height="39" alt="ContrataCR" style="display:none;border:0;outline:none;text-decoration:none;width:167px;height:auto;margin:0 auto;max-height:0;overflow:hidden;mso-hide:all;">
+  `;
 }
 
 /**
@@ -48,7 +62,7 @@ export function brandedEmailDocument({ title, bodyHtml, origin = "https://contra
     </head>
     <body style="margin:0;padding:0;background:#f4f7fa;color:#162543;font-family:Arial,Helvetica,sans-serif">
       <div style="padding:28px 14px">
-        <div style="max-width:532px;margin:0 auto;padding:30px 34px;background:#fff;border:1px solid #e6edf3;border-radius:18px">
+        <div class="ccr-email-card" style="max-width:532px;margin:0 auto;padding:30px 34px;background:#fff;border:1px solid #e6edf3;border-radius:18px">
           <div style="margin:0 auto 24px">${emailLogoMarkup(origin)}</div>
           ${bodyHtml}
         </div>

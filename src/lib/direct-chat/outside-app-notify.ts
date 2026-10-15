@@ -53,7 +53,7 @@ function emailHtml({ origin, senderName, preview, threadUrl }: { origin: string;
   <head><meta name="color-scheme" content="light dark"><meta name="supported-color-schemes" content="light dark"><style>${EMAIL_LOGO_DARK_MODE_STYLES}</style></head>
   <body style="margin:0;padding:0;background-color:#f4f7fa;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f4f7fa;"><tr><td align="center" style="padding:32px 16px;">
-    <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:100%;background-color:#ffffff;border-radius:16px;border:1px solid #eef1f5;">
+    <table class="ccr-email-card" role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:100%;background-color:#ffffff;border-radius:16px;border:1px solid #eef1f5;">
       <tr><td align="center" style="padding:30px 32px 6px 32px;">${emailLogoMarkup(origin)}</td></tr>
       <tr><td style="padding:6px 32px 0 32px;font-family:Arial,Helvetica,sans-serif;">
         <h1 style="font-size:19px;font-weight:bold;margin:14px 0 10px 0;color:#162543;">${escapeHtml(senderName)} te escribió en ContrataCR</h1>
