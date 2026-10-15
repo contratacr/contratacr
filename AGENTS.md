@@ -41,6 +41,12 @@ Before pushing:
 - Confirm `supabase/migrations` matches the target branch and do not create migrations on top of stale numbering.
 - Never push `local/pro-suite-no-push`.
 
+## Service suggestion review
+
+For every service suggestion, inspect the live catalogue (including hidden entries), approved/rejected suggestion history and existing search vocabulary before recommending approval, rejection, naming or grouping. Prefer the shortest clear service name; put trades, synonyms, regional terms, qualified specialties and English equivalents in `src/lib/data/service-search-aliases.ts` rather than lengthening the visible name. For rejected duplicates, map useful wording to the existing service. Do not map ambiguous requests, customer types, work arrangements or multi-service descriptions to a single service. Review search results and neighbouring services to avoid collisions. Preserve service IDs and existing professional associations. Adding aliases must not publish pending services or send decision notifications. Keep this review process for future suggestions as well as the current history.
+
+Validate changes with `node scripts/verify-service-search-aliases.mjs`, plus targeted live search checks after deployment. Historical approvals without an active catalogue entry and test suggestions are not permission to recreate services. Ambiguous historical rejections (for example "Audio", "Pymes", "Certificaciones", "Freelance") require context, not an automatic synonym.
+
 ## Mobile release history
 
 Isaac requires a saved release history for every future App Store and Google Play release. Before submitting an update, record its public version, native build number, platform, source commit, actual release date/status, validation and the exact localized store notes in `docs/mobile-release-history.md`. Keep notes concise and user-facing; only describe changes included in that release. Distinguish shared web deployments from native store releases. Never invent missing historical dates, builds or notes, or renumber an already published version for appearance.

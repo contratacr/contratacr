@@ -1,4 +1,5 @@
 import { hasBrokenVisibleText, repairVisibleText } from "@/lib/text/repair-visible-text";
+import { SERVICE_SEARCH_ALIASES } from "@/lib/data/service-search-aliases";
 
 export type CategoryItem = {
   id: string;
@@ -70,7 +71,7 @@ const BASE_CATEGORY_GROUPS: CategoryGroup[] = [
       { id: "reparacion_electrodomesticos", label: "Reparación de electrodomésticos", keywords: ["electrodomesticos", "refrigeradora", "refri", "lavadora", "secadora", "microondas", "cocina electrica", "lavaplatos", "reparacion de linea blanca"] },
       { id: "cortinas_y_persianas", label: "Cortinas y persianas", keywords: ["cortinas", "persianas", "blackout", "roller", "cortinas enrollables", "persianas verticales", "cortineros", "toldos", "cortinas a la medida"] },
       { id: "reparacion_de_plantas_electricas", label: "Reparación de plantas eléctricas", keywords: ["planta electrica", "plantas electricas", "generador", "generadores", "mantenimiento de generadores", "planta de emergencia", "grupo electrogeno", "transferencia automatica"] },
-      { id: "electromecanica", label: "Electromecánica", keywords: ["electromecanico", "servicios electromecanicos", "mantenimiento electromecanico", "motores electricos", "bobinado", "tableros electricos", "trifasico", "centro de control de motores", "electricidad industrial", "electricista industrial"] },
+      { id: "electromecanica", label: "Electromecánica", keywords: ["electromecanico", "servicios electromecanicos", "mantenimiento electromecanico", "motores electricos", "bobinado", "tableros electricos", "trifasico", "centro de control de motores"] },
       { id: "ingenieria_civil", label: "Ingeniería civil", keywords: ["ingeniero", "estructuras", "planos", "calculo estructural", "obra civil"] },
       { id: "ingenieria_electrica", label: "Ingeniería eléctrica", keywords: ["ingeniero electrico", "planos electricos", "diseno electrico", "cargas electricas", "sistema electrico", "planta electrica", "media tension", "alta tension", "subestacion", "acometida electrica", "banco de capacitores"] },
       { id: "ingenieria_mecanica", label: "Ingeniería mecánica", keywords: ["ingeniero mecanico", "sistemas mecanicos", "ventilacion", "equipos mecanicos", "mantenimiento industrial"] },
@@ -667,7 +668,7 @@ export function getAllCategories(): (CategoryItem & { groupId: string; groupLabe
         groupLabel: getCategoryGroupLabel(groupId),
       };
     });
-  return CUSTOM_CATEGORIES.length
+  const catalog = CUSTOM_CATEGORIES.length
     ? [...fixed, ...CUSTOM_CATEGORIES.map((category) => ({
         ...category,
         label: repairVisibleText(category.label),
@@ -675,6 +676,10 @@ export function getAllCategories(): (CategoryItem & { groupId: string; groupLabe
         groupLabel: repairVisibleText(category.groupLabel),
       }))]
     : fixed;
+  return catalog.map((category) => ({
+    ...category,
+    keywords: [...new Set([...category.keywords, ...(SERVICE_SEARCH_ALIASES[category.id] ?? [])])],
+  }));
 }
 
 /* ─── Normalize text for accent-insensitive comparison ─── */
