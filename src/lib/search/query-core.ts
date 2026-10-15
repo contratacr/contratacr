@@ -1,6 +1,7 @@
 import { searchProfessionals, type ProService } from "@/lib/queries/professionals";
 import { getAllCategories, isHealthCategory, supportsVideoConsultCategory } from "@/lib/data/categories";
 import { haversineKm, PROVINCES } from "@/lib/data/cr-geography";
+import { compareByRating } from "@/lib/search/ranking";
 
 // Everything /buscar needs to turn a URL into an ordered list of professionals,
 // in one place so the page and the "load more" endpoint can never drift apart:
@@ -87,7 +88,9 @@ function parseSearchParams(params: SearchPageParams) {
   const parsedNearLng = params.lng ? Number(params.lng) : undefined;
   const nearLat = typeof parsedNearLat === "number" && Number.isFinite(parsedNearLat) ? parsedNearLat : undefined;
   const nearLng = typeof parsedNearLng === "number" && Number.isFinite(parsedNearLng) ? parsedNearLng : undefined;
-  const sortBy = nearLat !== undefined && nearLng !== undefined && requestedSortBy === "cercania" ? "rating" : requestedSortBy;
+  const sortBy = requestedSortBy === "cercania" && (nearLat === undefined || nearLng === undefined)
+    ? "rating"
+    : requestedSortBy;
   const parsedMapBounds = params.n && params.s && params.e && params.w
     ? { north: Number(params.n), south: Number(params.s), east: Number(params.e), west: Number(params.w) }
     : undefined;
@@ -130,8 +133,7 @@ export function experienceMonths(professional: SearchResult) {
 
 function sortResults(results: SearchResult[], sortBy: string) {
   const ratingTieBreak = (a: SearchResult, b: SearchResult) =>
-    (b.ratingAvg ?? 0) - (a.ratingAvg ?? 0) ||
-    (b.reviewCount ?? 0) - (a.reviewCount ?? 0) ||
+    compareByRating(a, b) ||
     experienceMonths(b) - experienceMonths(a);
   if (sortBy === "successCases") return [...results].sort((a, b) => (b.portfolioCount ?? 0) - (a.portfolioCount ?? 0) || ratingTieBreak(a, b));
   if (sortBy === "experience") return [...results].sort((a, b) => experienceMonths(b) - experienceMonths(a) || ratingTieBreak(a, b));
@@ -144,9 +146,8 @@ function sortResults(results: SearchResult[], sortBy: string) {
  * 3 = marcó ese cantón (o vive ahí, o tiene un local ahí), 2 = cubre toda la
  * provincia, 1 = cubre todo el país, 0 = llega por otra vía (videoconsulta).
  *
- * Sin esto, quien marcó "todo Costa Rica" se mezclaba con el de Atenas y podía
- * salir de primero solo por tener mejor nota: el que sí trabaja en el cantón
- * que buscaste es más útil aunque tenga una estrella menos.
+ * Desempata perfiles con la misma evidencia de calidad para que quien trabaja
+ * en el cantón aparezca antes que quien cubre una zona más amplia.
  */
 function localityTier(pro: SearchResult, filters: SearchFiltersResolved) {
   const provincia = filters.selectedProvinceId ? PROVINCES.find((p) => p.id === filters.selectedProvinceId) : undefined;
@@ -184,37 +185,27 @@ function localityTier(pro: SearchResult, filters: SearchFiltersResolved) {
  * fondo por no ser de Atenas, y arriba quedaban diez sin una sola reseña. Si
  * la persona pide los mejor calificados, el mejor calificado va primero.
  *
- * La zona sigue contando, pero donde corresponde: cuando dos van igual de bien
- * en el criterio elegido, primero el que trabaja EN la zona, después el que
- * cubre la provincia y de último el que viaja a todo el país. Y si también
- * empatan ahí, se conserva el orden con el que venían.
+ * La zona sigue contando, pero después del criterio elegido y la verificación:
+ * quien trabaja EN la zona desempata frente a quien cubre la provincia o viaja
+ * a todo el país. Sin reseñas, un perfil verificado gana el empate aunque el
+ * otro marque una cobertura más puntual.
  */
-function ordenFinal(results: SearchResult[], filters: SearchFiltersResolved) {
-  // Con coordenadas exactas manda la distancia real, que es mejor señal que el
-  // nombre del cantón.
-  if (typeof filters.nearLat === "number" && typeof filters.nearLng === "number") return results;
-  if (!filters.selectedCantonId && !filters.selectedProvinceId) return results;
+export function ordenFinal(results: SearchResult[], filters: SearchFiltersResolved) {
+  // «Cerca de mí» conserva el orden por distancia. Las coordenadas por sí
+  // solas no cambian «Mejor calificados» a un orden distinto del visible.
+  if (filters.sortBy === "cercania" && typeof filters.nearLat === "number" &&
+      typeof filters.nearLng === "number") return results;
   const tier = new Map<SearchResult, number>();
   for (const pro of results) tier.set(pro, localityTier(pro, filters));
   const venia = new Map<SearchResult, number>();
   results.forEach((pro, i) => venia.set(pro, i));
 
-  // Las señales del criterio elegido, de más a menos importante. Menor = antes.
-  // Los tres criterios que ofrece la pantalla: «Mejor calificados» (el de
-  // entrada), «Cerca de mí» —que sale antes, por coordenadas— y «Experiencia».
-  const claves: ((p: SearchResult) => number)[] =
-    filters.sortBy === "experience"
-      ? [(p) => -experienceMonths(p)]
-      // Primero quien TIENE reseñas, luego la nota, luego cuántas: sin
-      // reseñas no hay nota que comparar y todos empatarían en cero.
-      : [(p) => ((p.reviewCount ?? 0) > 0 ? 0 : 1), (p) => -(p.ratingAvg ?? 0), (p) => -(p.reviewCount ?? 0)];
-
   return [...results].sort((a, b) => {
-    for (const clave of claves) {
-      const d = clave(a) - clave(b);
-      if (d) return d;
-    }
-    return (tier.get(b) ?? 0) - (tier.get(a) ?? 0) || (venia.get(a) ?? 0) - (venia.get(b) ?? 0);
+    const criterion = filters.sortBy === "experience"
+      ? experienceMonths(b) - experienceMonths(a) || compareByRating(a, b)
+      : compareByRating(a, b);
+    return criterion || (tier.get(b) ?? 0) - (tier.get(a) ?? 0) ||
+      Number(!!b.isFeatured) - Number(!!a.isFeatured) || (venia.get(a) ?? 0) - (venia.get(b) ?? 0);
   });
 }
 

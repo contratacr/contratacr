@@ -9,6 +9,7 @@ import { getProvinceById, PROVINCES, haversineKm } from "@/lib/data/cr-geography
 import { languageSearchValues } from "@/lib/data/languages";
 import { withPromiseTimeout } from "@/lib/promise-timeout";
 import { repairVisibleText } from "@/lib/text/repair-visible-text";
+import { compareByRating } from "@/lib/search/ranking";
 
 // Build the real travel-coverage summary for "me desplazo" pros (item 16):
 // whole country, specific provinces, and/or specific cantones (display names).
@@ -402,9 +403,9 @@ async function searchProfessionalsUncached(
 
         if (modern) query = query.eq("is_banned", false).eq("oculto_del_buscador", false);
         // Unverified professionals (no_cr_id / pending / under appeal) ARE listed -
-        // shown with an explicit "Identidad sin verificar" label and ranked BELOW
-        // verified ones (see the verified-first pass below). Only rejected profiles
-        // are never visible.
+        // shown with an explicit "Identidad sin verificar" label. Verification
+        // breaks rating ties; it does not erase real reviews. Only rejected
+        // profiles are never visible.
         if (modern) query = query.neq("verification_status", "rejected");
         const includeVideoNationwide =
           !inPersonOnly &&
@@ -530,11 +531,6 @@ async function searchProfessionalsUncached(
           }
         }
 
-        // Verified professionals surface first (built-in trust incentive), then
-        // featured, then the chosen sort. Finalized authoritatively in JS below.
-        query = query.order("is_verified", { ascending: false });
-        query = query.order("is_featured", { ascending: false });
-
         switch (filters.sortBy) {
           case "reviews":
             query = query.order("review_count", { ascending: false });
@@ -555,6 +551,7 @@ async function searchProfessionalsUncached(
             query = query
               .order("rating_avg", { ascending: false })
               .order("review_count", { ascending: false })
+              .order("is_verified", { ascending: false })
               .order("created_at", { ascending: false });
         }
         // Public visibility checks happen below after PostgREST returns the rows.
@@ -656,16 +653,7 @@ async function searchProfessionalsUncached(
       }
 
       if (!filters.sortBy || filters.sortBy === "rating") {
-        mapped.sort((a, b) => {
-          const aHasReviews = a.reviewCount > 0;
-          const bHasReviews = b.reviewCount > 0;
-          if (aHasReviews && !bHasReviews) return -1;
-          if (!aHasReviews && bHasReviews) return 1;
-          if (aHasReviews && bHasReviews) {
-            return (b.ratingAvg - a.ratingAvg) || (b.reviewCount - a.reviewCount);
-          }
-          return 0;
-        });
+        mapped.sort((a, b) => compareByRating(a, b) || Number(b.isFeatured) - Number(a.isFeatured));
       }
 
       if (filters.sortBy === "priceAsc" || filters.sortBy === "priceDesc") {
@@ -674,10 +662,10 @@ async function searchProfessionalsUncached(
           const pb = primaryPriceAmount(b);
           const aHasPrice = pa != null;
           const bHasPrice = pb != null;
-          if (aHasPrice && bHasPrice) return filters.sortBy === "priceDesc" ? pb - pa : pa - pb;
+          if (aHasPrice && bHasPrice) return (filters.sortBy === "priceDesc" ? pb - pa : pa - pb) || compareByRating(a, b);
           if (aHasPrice) return -1;
           if (bHasPrice) return 1;
-          return 0;
+          return compareByRating(a, b);
         });
       }
 
@@ -731,25 +719,19 @@ async function searchProfessionalsUncached(
             return includeVideoNationwideForNear && (p.videoconsulta || !!p.coverage?.country);
           });
         }
-        mapped.sort((a, b) => {
+        // Coordinates also serve the map. Distance leads only when the user
+        // explicitly chooses «Cerca de mí», never «Mejor calificados».
+        if (filters.sortBy === "cercania") mapped.sort((a, b) => {
           const da = distOfExactPin(a);
           const db = distOfExactPin(b);
           const aNear = da <= NEAR_ME_RADIUS_KM;
           const bNear = db <= NEAR_ME_RADIUS_KM;
-          if (aNear && bNear) return da - db;
+          if (aNear && bNear) return da - db || compareByRating(a, b);
           if (aNear) return -1;
           if (bNear) return 1;
-          return 0;
+          return compareByRating(a, b);
         });
       }
-
-      // Verified-first ranking (default trust incentive): verified above unverified,
-      // featured above non-featured - applied as a STABLE pass so the chosen sort
-      // (rating/price/proximity/...) is preserved within each rank group. Unverified
-      // pros still appear, just lower.
-      const rank = (p: ProfessionalCardData) =>
-        (p.verificationStatus === "verified" ? 2 : 0) + (p.isFeatured ? 1 : 0);
-      mapped.sort((a, b) => rank(b) - rank(a));
 
       // "Buscar en esta área" - keep only pros whose exact pin/workplace falls
       // within the map's visible viewport. A broad canton/province coverage zone

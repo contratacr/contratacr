@@ -37,7 +37,6 @@ const ANY_PRICE = "__any_price__";
 const ANY_LANGUAGE = "__any_language__";
 const GMAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 const SORT_OPTIONS = ["rating", "cercania", "experience"] as const;
-const BASE_SORT_OPTIONS = ["rating", "experience"] as const;
 const PRICE_AVAILABILITY_OPTIONS = ["quote"] as const;
 const PRICE_UNIT_OPTIONS = ["por_hora", "por_consulta", "por_proyecto"] as const;
 const PRICE_CHOICES = [ANY_PRICE, "quote", ...PRICE_UNIT_OPTIONS] as const;
@@ -591,7 +590,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   const [geoLoading, setGeoLoading] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
   const geoActive = !!params.get("lat") && !!params.get("lng");
-  const selectableSortOptions = geoActive ? BASE_SORT_OPTIONS : SORT_OPTIONS;
+  const selectableSortOptions = SORT_OPTIONS;
 
   // Official list = static INSURERS + admin-approved additions from the DB.
   // The filter never offers a "Ninguna / Todas / sin seguros" entry - those are a
@@ -822,8 +821,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     [query, category, province, canton, sortBy, modalities, insurers, languages, priceFilter, priceUnits, params, router, pathname, variant]
   );
 
-  // Request geolocation on demand. Coordinates define the search area while
-  // results keep the default quality ordering.
+  // Request geolocation on demand; the visible sort label matches the order.
   function requestMyLocation() {
     if (geoActive) {
       // Toggle OFF - drop the proximity sort + coords, keep other filters.
@@ -847,12 +845,12 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         setCanton("");
         setLocationQuery(t("filters.nearMeActive"));
         setGeoLoading(false);
-        setSortBy("rating");
+        setSortBy("cercania");
         // Dos decimales (~1 km), no cinco (~1 m): la dirección viaja en el
         // enlace, y compartir «electricistas cerca de mí» mandaba la ubicación
         // exacta de la casa. Para ordenar por cercanía en un radio de 25 km,
         // un kilómetro de margen no cambia nada.
-        applyFilters({ sortBy: "rating", provincia: "", canton: "", ubicacion: "", lat: String(latitude.toFixed(2)), lng: String(longitude.toFixed(2)) });
+        applyFilters({ sortBy: "cercania", provincia: "", canton: "", ubicacion: "", lat: String(latitude.toFixed(2)), lng: String(longitude.toFixed(2)) });
       },
       () => {
         setGeoLoading(false);
