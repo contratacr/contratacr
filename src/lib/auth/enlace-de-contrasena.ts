@@ -8,7 +8,7 @@ export function requestOrigin(req: Request) {
   return `${proto}://${requestHost(req)}`;
 }
 
-export type ResultadoEnlace = "ok" | "sin_enlace" | "sin_envio";
+export type ResultadoEnlace = "ok" | "en_cola" | "sin_enlace" | "sin_envio";
 
 /**
  * Manda el correo «Restablece tu contraseña». Lo usan «olvidé mi contraseña» y
@@ -72,7 +72,8 @@ export async function enviarEnlaceDeContrasena({
   // En la base local del CI no hay proveedor de correo: el envío vuelve
   // «skipped» y el enlace igual se generó. Solo ahí cuenta como enviado.
   const sinCorreoEnElCi = process.env.LOCAL_REGRESSION_SEED === "1" && sent.status === "skipped";
-  if (!sent.ok && sent.status !== "queued" && !sinCorreoEnElCi) {
+  if (sent.status === "queued") return "en_cola";
+  if (!sent.ok && !sinCorreoEnElCi) {
     return "sin_envio";
   }
 

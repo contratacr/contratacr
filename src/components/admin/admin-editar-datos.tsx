@@ -158,7 +158,7 @@ export function AdminEditarDatos({
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok || json.error) throw new Error(json.error ?? "No se pudo mandar el enlace.");
-      setAviso(`Enlace enviado a ${json.correo}.`);
+      setAviso(json.queued ? `Solicitud de enlace en cola para ${json.correo}.` : `Correo aceptado para ${json.correo}.`);
       await cargarHistorial();
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo mandar el enlace.");
@@ -218,7 +218,7 @@ export function AdminEditarDatos({
               <li key={h.id} className="border-t border-[#f1f5f9] pt-2.5 first:border-t-0 first:pt-0">
                 <p className="text-[#68778d]">{fecha(h.fecha)} · {h.quien}</p>
                 {h.accion === "admin_password_reset_link" ? (
-                  <p className="mt-0.5">Envió el enlace para cambiar la contraseña a {String(h.despues.enlace_enviado_a ?? "su correo")}.</p>
+                  <p className="mt-0.5">{h.despues.estado_correo === "en_cola" ? "Registró en cola el enlace para cambiar la contraseña" : h.despues.estado_correo === "aceptado" ? "El proveedor aceptó el correo para cambiar la contraseña" : "Registró el envío del enlace para cambiar la contraseña"} a {String(h.despues.enlace_solicitado_a ?? h.despues.enlace_enviado_a ?? "su correo")}.</p>
                 ) : (
                   Object.keys(h.despues).map((campo) => (
                     <p key={campo} className="mt-0.5 break-words">

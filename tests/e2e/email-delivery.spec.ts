@@ -69,3 +69,16 @@ test("duplicate event keys and test addresses never become new sends",async()=>{
   expect((await h.api.deliverRecordedEmail({...input,recipient:"mirror@contratacr.test"})).status).toBe("skipped");
   expect(h.requests.length).toBe(before);
 });
+
+test("password reset queued for later is never recorded as already sent",async()=>{
+  const box={exports:{} as {enviarEnlaceDeContrasena:(input:unknown)=>Promise<string>}};
+  const mocks:Record<string,unknown>={
+    "@/lib/supabase/admin":{createAdminClient:()=>({auth:{admin:{generateLink:async()=>({data:{properties:{hashed_token:"synthetic-token"}},error:null})}}})},
+    "@/lib/email/send":{EMAIL_LOGO_DARK_MODE_STYLES:"",emailLogoMarkup:()=>"",sendBrevoEmail:async()=>({ok:false,status:"queued"})},
+    "@/lib/security/write-guard":{requestHost:()=>"contratacr.test"},
+  };
+  runInNewContext(ts.transpileModule(readFileSync("src/lib/auth/enlace-de-contrasena.ts","utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,{
+    module:box,exports:box.exports,require:(name:string)=>mocks[name],process:{env:{}},URL,
+  });
+  expect(await box.exports.enviarEnlaceDeContrasena({email:"person@example.com",origin:"https://contratacr.test",resetPath:"/reset-password"})).toBe("en_cola");
+});

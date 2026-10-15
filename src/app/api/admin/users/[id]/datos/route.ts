@@ -242,7 +242,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   // El mismo correo de «olvidé mi contraseña»: le llega a la persona y abre la
   // pantalla donde ella elige la contraseña nueva, desde cualquier dispositivo.
   const resultado = await enviarEnlaceDeContrasena({ email: perfil.email, origin: requestOrigin(req), resetPath: "/reset-password" });
-  if (resultado !== "ok") {
+  if (resultado !== "ok" && resultado !== "en_cola") {
     console.error("[admin/user-datos] enlace de contraseña:", resultado);
     return NextResponse.json({ error: "No se pudo mandar el enlace. Intenta de nuevo en un momento." }, { status: 502 });
   }
@@ -255,7 +255,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     entityId: id,
     entityOwnerUserId: id,
     source: "admin",
-    afterData: { enlace_enviado_a: perfil.email },
+    afterData: { enlace_solicitado_a: perfil.email, estado_correo: resultado === "en_cola" ? "en_cola" : "aceptado" },
   });
-  return NextResponse.json({ ok: true, correo: perfil.email });
+  return NextResponse.json({ ok: true, correo: perfil.email, queued: resultado === "en_cola" });
 }
