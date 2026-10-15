@@ -1,4 +1,5 @@
 "use client";
+import { ContrataCRLogo, ContrataCRMark } from "@/components/brand/brand-logo";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 
@@ -54,31 +55,7 @@ import { formatPersonDisplayName } from "@/lib/display-name";
  * dejando el mismo aire arriba y abajo, y el que ya usaba la barra del teléfono,
  * que es donde se ve casi siempre.
  */
-export function ContrataCRMark({ className, tone = "light" }: { className?: string; tone?: "light" | "dark" }) {
-  const src = tone === "dark" ? "/logo-mark-dark.png" : "/logo-mark-transparent.png";
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={src}
-      alt="ContrataCR"
-      width={32}
-      height={32}
-      className={cn("h-8 w-8 select-none", className)}
-    />
-  );
-}
-/* --- El logotipo (marca + palabra). Sin tamaños: uno solo, 32 + 19. --- */
-export function ContrataCRLogo({ className, tone = "light" }: { className?: string; tone?: "light" | "dark" }) {
-  const dark = tone === "dark";
-  return (
-    <div className={cn("flex items-center gap-0 select-none", className)}>
-      <ContrataCRMark tone={tone} />
-      {/* Outlined Inter 800: identical before/after fonts load, including cold starts. */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={`/brand/wordmark-${dark ? "dark" : "light"}.svg`} alt="" aria-hidden="true" width={105} height={24} className="h-6 w-[105px] shrink-0" />
-    </div>
-  );
-}
+export { ContrataCRLogo, ContrataCRMark } from "@/components/brand/brand-logo";
 
 export function useSwitchLang() {
   const router = useRouter();

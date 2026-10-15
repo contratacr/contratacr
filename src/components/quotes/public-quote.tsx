@@ -1,4 +1,5 @@
 "use client";
+import { ContrataCRLogo } from "@/components/brand/brand-logo";
 
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -117,8 +118,7 @@ function Marco({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-white print:bg-white">
       <header className="print:hidden border-b border-[#e5e7eb] bg-white">
         <div className="mx-auto flex h-16 max-w-2xl items-center px-5">
-          {/* eslint-disable-next-line @next/next/no-img-element -- logotipo estático, sin optimizador */}
-          <Link href="/" aria-label="ContrataCR"><img src="/logo-wordmark-transparent.png" alt="ContrataCR" className="h-8 w-auto" /></Link>
+          <Link href="/" aria-label="ContrataCR"><ContrataCRLogo /></Link>
         </div>
       </header>
       <main className="mx-auto max-w-2xl px-4 py-6 sm:px-6 sm:py-10">{children}</main>

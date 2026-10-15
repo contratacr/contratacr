@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { LOGO_PALABRA, LOGO_SIMBOLO } from "@/lib/og-logos";
+import { LOGO_PALABRA } from "@/lib/og-logos";
 
 export const alt = "ContrataCR";
 export const size = {
@@ -14,7 +14,6 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
   const { locale } = await params;
   const isEn = locale === "en";
   const wordmarkSrc = LOGO_PALABRA;
-  const markSrc = LOGO_SIMBOLO;
   const subtitle = isEn
     ? { lead: "Offer", middle: " and find services in ", place: "Costa Rica." }
     : { lead: "Ofrece", middle: " y encuentra servicios en ", place: "Costa Rica." };
@@ -55,46 +54,7 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
             padding: "46px 64px 54px",
           }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={markSrc}
-            width="168"
-            height="168"
-            alt="ContrataCR"
-            style={{
-              display: "block",
-              width: 168,
-              height: 168,
-              objectFit: "contain",
-              marginBottom: 18,
-            }}
-          />
-
-          <div
-            style={{
-              display: "flex",
-              width: 610,
-              height: 122,
-              overflow: "hidden",
-              alignItems: "center",
-              justifyContent: "flex-start",
-            }}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={wordmarkSrc}
-              width="810"
-              height="169"
-              alt="ContrataCR"
-              style={{
-                display: "block",
-                width: 772,
-                height: 152,
-                objectFit: "contain",
-                marginLeft: -190,
-              }}
-            />
-          </div>
+          <img src={wordmarkSrc} width={610} height={143} alt="ContrataCR" style={{ display: "block", width: 610, height: 143, objectFit: "contain", marginBottom: 18 }} />
 
           <div
             style={{

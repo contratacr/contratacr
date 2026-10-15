@@ -23,21 +23,12 @@ const DEFAULT_SENDER = { name: "ContrataCR", email: "soporte@contratacr.com" };
 
 export const EMAIL_LOGO_DARK_MODE_STYLES = `
   :root { color-scheme: light dark; supported-color-schemes: light dark; }
-  .ccr-dark-logo { display:none !important; mso-hide:all; max-height:0; overflow:hidden; }
-  @media (prefers-color-scheme: dark) {
-    .ccr-light-logo { display:none !important; }
-    .ccr-dark-logo { display:block !important; max-height:none !important; overflow:visible !important; }
-  }
-  [data-ogsc] .ccr-light-logo { display:none !important; }
-  [data-ogsc] .ccr-dark-logo { display:block !important; max-height:none !important; overflow:visible !important; }
+  .ccr-light-logo { display:block !important; }
 `;
 
 export function emailLogoMarkup(origin = "https://contratacr.com") {
   const site = origin.replace(/\/$/, "");
-  return `
-    <img class="ccr-light-logo" src="${site}/brand/email-logo-light.png" width="167" height="36" alt="ContrataCR" style="display:block;border:0;outline:none;text-decoration:none;width:167px;height:auto;margin:0 auto;">
-    <img class="ccr-dark-logo" src="${site}/brand/email-logo-dark.png" width="167" height="36" alt="ContrataCR" style="display:none;border:0;outline:none;text-decoration:none;width:167px;height:auto;margin:0 auto;max-height:0;overflow:hidden;mso-hide:all;">
-  `;
+  return `<img class="ccr-light-logo" src="${site}/brand/email-logo-primary.png" width="167" height="39" alt="ContrataCR" style="display:block;border:0;outline:none;text-decoration:none;width:167px;height:auto;margin:0 auto;background:#ffffff;border-radius:4px;">`;
 }
 
 /**

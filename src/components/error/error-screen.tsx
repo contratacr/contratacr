@@ -1,3 +1,4 @@
+import { ContrataCRLogo } from "@/components/brand/brand-logo";
 import type { ReactNode } from "react";
 
 /* On-brand error/empty screen used by the app's error boundaries + 404. Kept
@@ -9,25 +10,6 @@ export const errorPrimaryBtn =
   "inline-flex items-center justify-center gap-2 rounded-xl bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold text-sm px-5 py-3 transition-all active:scale-[0.98] w-full sm:w-auto";
 export const errorSecondaryBtn =
   "inline-flex items-center justify-center gap-2 rounded-xl border border-[#e5e7eb] bg-white text-[#374151] font-bold text-sm px-5 py-3 hover:border-[#009FD9] transition-colors w-full sm:w-auto";
-
-function BrandLogo() {
-  return (
-    <span className="flex items-center gap-0.5 select-none">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/logo-mark-transparent.png"
-        alt="ContrataCR"
-        width={28}
-        height={28}
-        className="h-7 w-7"
-      />
-      <span className="text-[17px] font-extrabold tracking-tight leading-none">
-        <span className="text-[#1a2744]">Contrata</span>
-        <span className="text-[#009FD9]">CR</span>
-      </span>
-    </span>
-  );
-}
 
 export function ErrorScreen({
   code,
@@ -46,7 +28,7 @@ export function ErrorScreen({
     <main className="ccr-error-screen min-h-screen flex flex-col items-center justify-center bg-white px-4 py-12 text-center">
       {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
       <a href="/" aria-label="ContrataCR" className="mb-8 sm:mb-10">
-        <BrandLogo />
+        <ContrataCRLogo />
       </a>
 
       {icon && (
