@@ -1,6 +1,6 @@
 /**
  * La imagen con la que se ve un enlace de ContrataCR al compartirlo (WhatsApp,
- * LinkedIn, Facebook, X): la tarjeta de 1200×630 con el logo de los dos azules
+ * LinkedIn, Facebook, X): la tarjeta de 1200×630 con el símbolo de los dos azules
  * sobre blanco, la misma de la portada.
  *
  * Hace falta ponerla A MANO en cada página que defina su propio `openGraph` o
@@ -14,7 +14,7 @@
  *  (el español no lleva prefijo en las direcciones, pero el archivo sí). */
 export function rutaImagenSocial(locale: string) {
   const IDIOMAS = ["es", "en"];
-  return `/${IDIOMAS.includes(locale) ? locale : IDIOMAS[0]}/opengraph-image`;
+  return `/${IDIOMAS.includes(locale) ? locale : IDIOMAS[0]}/opengraph-image?v=simbolo-20261015`;
 }
 
 export function imagenSocial(locale: string) {
@@ -31,7 +31,7 @@ export function imagenSocial(locale: string) {
 export function imagenDeSeccion(locale: string, seccion: string) {
   const idioma = ["es", "en"].includes(locale) ? locale : "es";
   // A fresh URL makes social crawlers fetch the corrected centered thumbnail.
-  const version = seccion === "/profesionales" ? "?v=logo-principal-20261014" : "";
+  const version = seccion === "/profesionales" ? "?v=simbolo-20261015" : "";
   const url = `/${idioma}${seccion}/opengraph-image${version}`;
   return {
     openGraph: { images: [{ url, width: 1200, height: 630, alt: "ContrataCR" }] },

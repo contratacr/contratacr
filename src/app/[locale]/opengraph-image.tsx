@@ -1,94 +1,17 @@
 import { ImageResponse } from "next/og";
-import { LOGO_PALABRA } from "@/lib/og-logos";
+import { LOGO_SIMBOLO } from "@/lib/og-logos";
 
-export const alt = "ContrataCR";
-export const size = {
-  width: 1200,
-  height: 630,
-};
-
+export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
+export const alt = "ContrataCR";
+export const revalidate = 86400;
 
-
-export default async function Image({ params }: { params: Promise<{ locale: string }> }) {
-  const { locale } = await params;
-  const isEn = locale === "en";
-  const wordmarkSrc = LOGO_PALABRA;
-  const subtitle = isEn
-    ? { lead: "Offer", middle: " and find services in ", place: "Costa Rica." }
-    : { lead: "Ofrece", middle: " y encuentra servicios en ", place: "Costa Rica." };
-
+export default function Image() {
+  // Keep the symbol inside the central square for compact social previews.
   return new ImageResponse(
-    (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          position: "relative",
-          overflow: "hidden",
-          background: "#ffffff",
-          color: "#162543",
-          fontFamily: "Inter, Arial, sans-serif",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "linear-gradient(180deg, #ffffff 0%, #ffffff 66%, #f3f9fd 100%)",
-          }}
-        />
-
-        <div
-          style={{
-            position: "relative",
-            display: "flex",
-            width: "100%",
-            height: "100%",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "46px 64px 54px",
-          }}
-        >
-          <img src={wordmarkSrc} width={610} height={143} alt="ContrataCR" style={{ display: "block", width: 610, height: 143, objectFit: "contain", marginBottom: 18 }} />
-
-          <div
-            style={{
-              display: "flex",
-              width: 70,
-              height: 5,
-              borderRadius: 999,
-              background: "#009FD9",
-              marginTop: 12,
-              marginBottom: 24,
-            }}
-          />
-
-          <div
-            style={{
-              display: "flex",
-              maxWidth: 1040,
-              textAlign: "center",
-              alignItems: "center",
-              justifyContent: "center",
-              flexWrap: "wrap",
-              color: "#162543",
-              fontSize: 46,
-              lineHeight: 1.16,
-              fontWeight: 800,
-            }}
-          >
-            <span style={{ color: "#009FD9", fontWeight: 900 }}>{subtitle.lead}</span>
-            <span>{subtitle.middle}</span>
-            <span style={{ color: "#009FD9", fontWeight: 900 }}>{subtitle.place}</span>
-          </div>
-        </div>
-      </div>
-    ),
-    { ...size }
+    <div style={{ display: "flex", width: "100%", height: "100%", alignItems: "center", justifyContent: "center", background: "#ffffff" }}>
+      <img src={LOGO_SIMBOLO} width={480} height={480} alt="ContrataCR" style={{ display: "block", width: 480, height: 480, objectFit: "contain" }} />
+    </div>,
+    size,
   );
 }
