@@ -591,7 +591,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   title={t("noResults.title")}
                   description={t("proyectoTarjeta.texto")}
                   cta={t("noResults.publishCta")}
-                  pie={t("proyectoTarjeta.pie")}
                   href={`/publicar-proyecto?${new URLSearchParams(Object.entries({ categoria: selectedCategory, provincia: selectedProvinceId, canton: selectedCantonId }).filter((e): e is [string, string] => !!e[1])).toString()}`}
                 />
               ) : (

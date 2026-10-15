@@ -15,7 +15,7 @@ import { PanelEmptyState } from "@/components/ui/content-loading";
 // SIN «LIMPIAR FILTROS» AQUÍ. La fila de pastillas de arriba ya lo tiene
 // siempre a la vista, y repetido abajo eran dos botones para lo mismo en la
 // misma pantalla: el vacío ofrece UNA salida, publicar lo que se necesita.
-export function SearchEmptyState({ title, description, cta, href, pie }: { title: string; description: string; cta: string; href: string; pie?: string }) {
+export function SearchEmptyState({ title, description, cta, href }: { title: string; description: string; cta: string; href: string }) {
   return (
     // EN COMPUTADORA LLENA LA COLUMNA. El mapa de al lado mide
     // `calc(100vh-104px)`; la tarjeta del vacío medía 20rem y debajo quedaba
@@ -35,14 +35,13 @@ export function SearchEmptyState({ title, description, cta, href, pie }: { title
           // único así. Dice «Publicar proyecto», como en todo el sitio
           // (cabecera, pie, paneles, cómo funciona): desde el 8-oct-2026 el
           // llamado usa la palabra de la sección para que se vuelva conocida.
-          <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-center sm:gap-3">
+          <div className="flex justify-center">
             <Link
               href={href}
               className="inline-flex h-11 items-center justify-center rounded-full bg-[#009FD9] px-6 text-sm font-bold text-white whitespace-nowrap transition-colors hover:bg-[#0089bb]"
             >
               {cta}
             </Link>
-            {pie && <p className="text-[12px] font-semibold text-[#7a8797] sm:hidden">{pie}</p>}
           </div>
         )}
       />

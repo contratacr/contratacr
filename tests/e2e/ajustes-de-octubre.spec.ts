@@ -34,7 +34,7 @@ test.describe("invitación a publicar un proyecto", () => {
     await gotoOK(page, "/profesionales?q=zzqqxxyy-no-existe-123");
     const publicar = page.locator('a[href*="/publicar-proyecto"]').filter({ visible: true }).first();
     await expect(publicar).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByText("Gratis · Tu número no se publica").first()).toBeVisible();
+    await expect(page.getByText("Gratis · Tu número no se publica")).toHaveCount(0);
     await expect(page.getByText(/Publica tu proyecto y los profesionales te escriben por WhatsApp/).first()).toBeVisible();
   });
 
