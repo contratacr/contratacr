@@ -184,7 +184,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const parsedNearLng = params.lng ? Number(params.lng) : undefined;
   const nearLat = typeof parsedNearLat === "number" && Number.isFinite(parsedNearLat) ? parsedNearLat : undefined;
   const nearLng = typeof parsedNearLng === "number" && Number.isFinite(parsedNearLng) ? parsedNearLng : undefined;
-  const sortBy = nearLat !== undefined && nearLng !== undefined && requestedSortBy === "cercania"
+  const sortBy = requestedSortBy === "cercania" && (nearLat === undefined || nearLng === undefined)
     ? "rating"
     : requestedSortBy;
 
