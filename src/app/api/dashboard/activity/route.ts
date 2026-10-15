@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function GET(req: NextRequest) {
   const days = Number(req.nextUrl.searchParams.get("days") ?? 30);
-  if (![7, 30, 90].includes(days)) return NextResponse.json({ error: "Invalid period." }, { status: 400 });
+  if (![0, 7, 30, 90].includes(days)) return NextResponse.json({ error: "Invalid period." }, { status: 400 });
 
   const supabase = await createClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
