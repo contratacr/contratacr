@@ -1,13 +1,13 @@
 import { test, expect } from "playwright/test";
-import { analyticsPlatform, requestAnalyticsPlatform } from "../../src/lib/analytics/platform";
+import { analyticsPlatform, requestAnalyticsPlatform, webDeviceCategory, isNativeAnalyticsRuntime } from "../../src/lib/analytics/platform";
 import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import ts from "typescript";
 import { webcrypto } from "node:crypto";
 
-for (const runtime of ["web", "android", "ios", "native_unknown"] as const) {
+for (const runtime of ["web", "web_desktop", "web_mobile", "android", "ios", "native_unknown"] as const) {
   test(`all action writers identify ${runtime} using the same platform contract`, () => {
-    const cookies = { ccr_platform: runtime === "web" ? "web" : "native", ccr_native_os: runtime };
+    const cookies = { ccr_platform: runtime.startsWith("web") ? "web" : "native", ccr_native_os: runtime, ccr_web_device: runtime.replace("web_", "") };
     expect(analyticsPlatform(name => cookies[name as keyof typeof cookies]).runtime).toBe(runtime);
     expect(requestAnalyticsPlatform(new Request("https://contratacr.com/api/projects", { headers: { cookie: Object.entries(cookies).map(([k,v]) => `${k}=${v}`).join("; ") } })).runtime).toBe(runtime);
   });
@@ -25,6 +25,7 @@ test("warm navigation, sign-in, resume and StrictMode do not duplicate usage; ex
   const source = ts.transpileModule(readFileSync("src/components/analytics/usage-capture.tsx","utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
   const moduleBox = { exports: {} as { UsageCapture: () => null } };
   const mocks: Record<string, unknown> = {
+    "@/lib/analytics/platform": { isNativeAnalyticsRuntime },
     react: { useEffect: (fn: () => void) => effects.push(fn), useRef: () => ref },
     "next/navigation": { usePathname: () => path, useSearchParams: () => new URLSearchParams({ tab, code: "private-code", email: "private@example.com" }) },
     "@/hooks/use-auth": { useAuth: () => ({ user }) },
@@ -84,6 +85,11 @@ for (const runtime of ["web", "android", "ios"] as const) {
     await expect.poll(() => requests.length).toBeGreaterThan(0);
     const latest = requests.at(-1)!;
     expect(latest.cookie).toContain(`ccr_platform=${runtime === "web" ? "web" : "native"}`);
+    if (runtime === "web") {
+      const device = await page.evaluate(() => ({ ua: navigator.userAgent, touch: navigator.maxTouchPoints }));
+      expect(latest.cookie).toContain(`ccr_web_device=${webDeviceCategory(device.ua, device.touch)}`);
+      expect((latest.body as { firstUse?: boolean }).firstUse).toBe(false);
+    }
     if (runtime !== "web") expect(latest.cookie).toContain(`ccr_native_os=${runtime}`);
     expect(latest.body.path).toBe("/como-funciona");
     const count = requests.length;
@@ -119,4 +125,23 @@ test("analytics resolves the authenticated actor and excludes admins or unknown 
   expect(reads).toBe(previousReads);
   failed = true;
   expect(await box.exports.analyticsActor("client-account")).toEqual({ id: "client-account", excluded: true });
+});
+
+for (const [name, ua, touch, expected] of [
+  ["Windows computer", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", 0, "desktop"],
+  ["Mac", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)", 0, "desktop"],
+  ["iPad desktop UA", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)", 5, "mobile"],
+  ["iPhone browser and home-screen web app", "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)", 5, "mobile"],
+  ["Android phone", "Mozilla/5.0 (Linux; Android 15) Mobile", 5, "mobile"],
+  ["Android tablet", "Mozilla/5.0 (Linux; Android 15)", 5, "mobile"],
+  ["unknown", "", 0, "unknown"],
+] as const) {
+  test(`device classification: ${name}`, () => {
+    expect(webDeviceCategory(ua, touch)).toBe(expected);
+  });
+}
+test("only native runtimes can produce first app uses", () => {
+  for (const runtime of ["web", "web_mobile", "web_desktop", "unknown"]) expect(isNativeAnalyticsRuntime(runtime)).toBe(false);
+  for (const runtime of ["ios", "android", "native_unknown"]) expect(isNativeAnalyticsRuntime(runtime)).toBe(true);
+  expect(analyticsPlatform(() => null).runtime).toBe("web");
 });

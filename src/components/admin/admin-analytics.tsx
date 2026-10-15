@@ -314,12 +314,12 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <Section icon={Smartphone} title="Uso de web y apps" sub="Últimos 7 días" className="lg:col-span-3">
           {!data.runtimeUsage ? <p className="text-sm text-[#64748b]">La medición de uso no está disponible. Intenta de nuevo más tarde.</p> : <>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {data.runtimeUsage.rows.filter(row => ["web", "android", "ios"].includes(row.runtime) || row.sessions > 0 || Object.keys(row.actions).length > 0).map(row => (
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {data.runtimeUsage.rows.filter(row => ["web_desktop", "web_mobile", "android", "ios"].includes(row.runtime) || row.sessions > 0 || row.visitors > 0 || row.registrations > 0 || Object.keys(row.actions).length > 0).map(row => (
                 <div key={row.runtime} className="rounded-xl border border-[#e5e7eb] p-4" data-testid={`analytics-runtime-${row.runtime}`}>
-                  <h3 className="mb-3 text-sm font-bold">{{ web: "Web", android: "Android", ios: "iPhone", native_unknown: "App móvil sin sistema identificado", unknown: "Sin plataforma identificada" }[row.runtime] ?? row.runtime}</h3>
+                  <h3 className="mb-3 text-sm font-bold">{{ web_desktop: "Web en computadora", web_mobile: "Web móvil", web: "Web sin dispositivo identificado", android: "App Android", ios: "App iOS", native_unknown: "App móvil sin sistema identificado", unknown: "Sin plataforma identificada" }[row.runtime] ?? row.runtime}</h3>
                   <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
-                    {[["Visitantes", row.visitors], ["Usuarios con cuenta", row.users], ["Sesiones", row.sessions], ["Accesos con cuenta", row.accesses], ["Pantallas vistas", row.screens], ["Registros nuevos", row.registrations], ...(row.runtime !== "web" && row.runtime !== "unknown" ? [["Primeros usos detectados", row.first_uses]] : [])].map(([label, value]) => <div key={label}><dt className="text-[#64748b]">{label}</dt><dd className="mt-1 text-xl font-bold tabular-nums">{fmt(Number(value))}</dd></div>)}
+                    {[["Visitantes", row.visitors], ["Usuarios con cuenta", row.users], ["Sesiones", row.sessions], ["Accesos con cuenta", row.accesses], ["Pantallas vistas", row.screens], ["Registros nuevos", row.registrations], ...(["android", "ios", "native_unknown"].includes(row.runtime) ? [["Primeros usos detectados", row.first_uses]] : [])].map(([label, value]) => <div key={label}><dt className="text-[#64748b]">{label}</dt><dd className="mt-1 text-xl font-bold tabular-nums">{fmt(Number(value))}</dd></div>)}
                   </dl>
                   <details className="mt-4 border-t border-[#e5e7eb] pt-3">
                     <summary className="min-h-11 cursor-pointer py-2 text-xs font-semibold text-[#009dca]">Ver acciones y pantallas</summary>
@@ -330,7 +330,7 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
                 </div>
               ))}
             </div>
-            <p className="mt-4 text-xs leading-relaxed text-[#64748b]">Las sesiones terminan tras 30 minutos sin actividad. Visitantes cuenta dispositivos/navegadores; usuarios con cuenta cuenta personas identificadas en cada plataforma. Una persona puede usar varias plataformas. Primer uso detectado no equivale a descarga: las descargas se consultan en las tiendas. La medición nueva empieza {data.runtimeUsage.since ? new Date(data.runtimeUsage.since).toLocaleDateString("es-CR", { timeZone: "America/Costa_Rica" }) : "al activar el seguimiento"}; el histórico sin plataforma se conserva por separado.</p>
+            <p className="mt-4 text-xs leading-relaxed text-[#64748b]">Web móvil incluye celulares y tabletas. Los accesos agregados a inicio desde el navegador cuentan como web, según el dispositivo. App Android y App iOS corresponden a las aplicaciones nativas; App iOS incluye iPhone y iPad. Las sesiones terminan tras 30 minutos sin actividad. Visitantes cuenta dispositivos/navegadores; usuarios con cuenta cuenta personas identificadas en cada plataforma. Una persona puede usar varias plataformas. Primer uso detectado no equivale a descarga: las descargas se consultan en las tiendas. La medición nueva empieza {data.runtimeUsage.since ? new Date(data.runtimeUsage.since).toLocaleDateString("es-CR", { timeZone: "America/Costa_Rica" }) : "al activar el seguimiento"}; el histórico sin plataforma o dispositivo se conserva por separado.</p>
           </>}
         </Section>
 

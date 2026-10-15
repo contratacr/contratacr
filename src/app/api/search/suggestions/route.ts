@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { unstable_cache } from "next/cache";
+import { ensureServerCategoryCatalog } from "@/lib/data/server-category-catalog";
 import {
   searchCategories,
   getCategoryLabel,
@@ -45,7 +46,11 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // 1. Matching service categories from the fixed taxonomy (keyword synonyms), localized.
+  // Load the operational catalogue before resolving synonyms. A cold API
+  // process otherwise knows only fixed services, unlike the browser registry.
+  await ensureServerCategoryCatalog();
+
+  // 1. Matching service categories and their reviewed synonyms, localized.
   const inferredCat = resolveCategoryIntent(q, locale);
   const dbCategoryLabels = new Map<string, { label: string; labelEn?: string }>();
   if (supabase) {

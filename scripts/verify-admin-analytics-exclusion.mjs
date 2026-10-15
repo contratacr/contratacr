@@ -18,13 +18,23 @@ try {
  const migration=await readFile(new URL('../supabase/migrations/241_excluir_actividad_admin.sql',import.meta.url),'utf8');
  await db.exec(migration);await db.exec(migration);
  assert.equal((await db.query('select count(*)::int n from excluded_admin_analytics')).rows[0].n,2);
- for (const runtime of ['web','android','ios']) {
+ const segmentation=await readFile(new URL('../supabase/migrations/244_uso_web_por_dispositivo.sql',import.meta.url),'utf8');
+ await db.exec(segmentation);await db.exec(segmentation);
+ let expectedEvents=0;
+ for (const runtime of ['web','web_desktop','web_mobile','android','ios']) {
   const write=id=>db.query('select record_app_usage($1,$2,$3,$4,$5,$6,$7,true)',['guest',id,session,screen,runtime,'/buscar','']);
   await write(null);await write(admin);await write(admin);
   assert.equal((await db.query('select count(*)::int n from app_usage_events where runtime=$1',[runtime])).rows[0].n,0);
   await write(client);
-  assert.equal((await db.query('select count(*)::int n from app_usage_events where viewer_user_id=$1',[client])).rows[0].n,runtime==='web'?3:runtime==='android'?7:11);
+  expectedEvents += runtime.startsWith('web') ? 3 : 4;
+  assert.equal((await db.query('select count(*)::int n from app_usage_events where viewer_user_id=$1',[client])).rows[0].n,expectedEvents);
   // Independent guest session is removed, client history is retained.
+ }
+ const report=(await db.query('select get_admin_runtime_analytics(7) data')).rows[0].data;
+ for(const runtime of ['web','web_desktop','web_mobile','android','ios']) {
+  const row=report.rows.find(r=>r.runtime===runtime);
+  assert.equal(row.sessions,1); assert.equal(row.users,1);
+  assert.equal(row.first_uses,runtime.startsWith('web')?0:1);
  }
  await db.query('insert into interaction_events(viewer_user_id,event_type) values($1,$2)',[admin,'whatsapp_click']);
  await db.query('insert into growth_conversion_events(actor_hash,action) values($1,$2)',[hash(admin),'service_contact']);
