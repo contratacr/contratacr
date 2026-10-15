@@ -120,6 +120,7 @@ parpadeos, saltos · **Manual** = se revisa a mano antes de publicar.
 | --- | --- | --- |
 | Una conversación por contexto, ambos participantes, no leídos, entrega en vivo | UI + API + BD | Automática |
 | Archivar, restaurar, leído/no leído, deslizar filas | UI + BD | Automática |
+| Respuestas atrasadas al volver de Archivados: no desaparecen filas con borrador, no aparecen errores obsoletos ni se envía el borrador | UI con respuestas controladas (`mensajes-sin-parpadeo`) | Automática: Chromium móvil y WebKit móvil; incluida en push y regresión nativa |
 | Editar y anular (15 min), eliminar para mí, Enviado/Recibido/Visto | API + BD | Automática (API); gestos largos: Manual |
 | Adjuntos (fotos y PDF) | API + BD | Automática |
 | Bloqueo: el hilo se cierra para los dos, los de afuera no entran | API | Automática |

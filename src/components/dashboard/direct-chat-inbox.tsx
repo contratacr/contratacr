@@ -294,10 +294,11 @@ export function DirectChatInbox({ alCambiarSubvista }: {
   // esconde a propósito— y aun así se puede abrir desde la ficha o por enlace.
   const [hiloAbierto, setHiloAbierto] = useState<Conversation | null>(null);
   const bandejasRef = useRef<{ open: Conversation[] | null; archived: Conversation[] | null }>({ open: null, archived: null });
-  // La bandeja que se ve AHORA. Una respuesta que llega tarde de la otra solo
-  // alimenta su memoria: sin esto, ir y volver rápido pintaba en Chats la
-  // lista de Archivados.
+  // La bandeja que se ve AHORA: una respuesta de la otra no puede cambiarla.
   const bandejaVisibleRef = useRef(showArchived);
+  // Solo la última carga puede actualizar la lista o su caché. Volver a la
+  // misma bandeja no vuelve válida una respuesta de una visita anterior.
+  const listRequestRef = useRef(0);
   // Chats que se acaban de mover de bandeja (archivar / desarchivar). Hasta que
   // el servidor lo confirme —y un par de segundos más, por las lecturas que ya
   // venían en camino—, ninguna recarga los devuelve a la bandeja de donde
@@ -617,6 +618,8 @@ export function DirectChatInbox({ alCambiarSubvista }: {
   }, []);
 
   const loadConversations = useCallback(async (quiet = false) => {
+    const request = ++listRequestRef.current;
+    const isCurrent = () => request === listRequestRef.current && bandejaVisibleRef.current === showArchived;
     // Paint the warmed list at once; the network refresh below replaces it.
     // Cada bandeja guarda su última lista en memoria: pasar de Chats a
     // Archivados pinta lo que ya se tenía y refresca detrás, sin esqueleto.
@@ -632,6 +635,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
     try {
       const res = await fetchWithSessionRetry(`/api/direct-chat${showArchived ? "?status=archived" : ""}`, { cache: "no-store" });
       const json = await res.json();
+      if (!isCurrent()) return;
       if (!res.ok) throw new Error(json.error || "Error");
       const bandejaPedida = showArchived ? "archived" : "open";
       const rows = ((json.conversations ?? []) as Conversation[]).filter((fila) => {
@@ -672,23 +676,25 @@ export function DirectChatInbox({ alCambiarSubvista }: {
         fetch("/api/direct-chat?status=archived", { cache: "no-store" })
           .then((archivedRes) => archivedRes.ok ? archivedRes.json() : { conversations: [] })
           .then((archivedJson) => {
+            if (!isCurrent()) return;
             const archivadas = Array.isArray(archivedJson.conversations) ? archivedJson.conversations as Conversation[] : [];
             // Ya vino la lista entera: queda lista para cuando se abra la bandeja.
             bandejasRef.current.archived = archivadas;
             setArchivedCount(archivadas.length);
           })
-          .catch(() => setArchivedCount(0));
+          .catch(() => { if (isCurrent()) setArchivedCount(0); });
         // Los bloqueados se piden en el mismo momento y por la misma razón: la
         // entrada solo existe si hay algo adentro, así que hace falta saberlo
         // antes de pintar la lista. Quien nunca bloqueó no ve una puerta vacía.
         fetch("/api/direct-chat?status=blocked", { cache: "no-store" })
           .then((res) => res.ok ? res.json() : { conversations: [] })
-          .then((json) => setBloqueadas(Array.isArray(json.conversations) ? json.conversations as Conversation[] : []))
-          .catch(() => setBloqueadas([]));
+          .then((json) => { if (isCurrent()) setBloqueadas(Array.isArray(json.conversations) ? json.conversations as Conversation[] : []); })
+          .catch(() => { if (isCurrent()) setBloqueadas([]); });
       }
     } catch (err) {
+      if (!isCurrent()) return;
       setError(err instanceof Error ? err.message : isEn ? "Could not load messages." : "No se pudieron cargar los mensajes.");
-    } finally { if (!quiet) setLoading(false); }
+    } finally { if (isCurrent()) setLoading(false); }
   }, [inboxCacheKey, isEn, pendingDraft, pendingDraftPayload, showArchived, user?.id]);
 
   // Al recargar el hilo, cada mensaje volvía como un objeto nuevo aunque fuera
@@ -779,10 +785,14 @@ export function DirectChatInbox({ alCambiarSubvista }: {
       })();
       return () => { cancelado = true; };
     }
+    let cancelled = false;
+    const requests = listRequestRef;
     queueMicrotask(() => {
+      if (cancelled) return;
       setSesionSinConfirmar(false);
       void loadConversations();
     });
+    return () => { cancelled = true; ++requests.current; };
   }, [authLoading, user, router, loadConversations]);
   useEffect(() => {
     if (authLoading || !user || !activeId) return;
@@ -950,6 +960,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
     // esto React pintaba un cuadro intermedio —la bandeja nueva con la lista
     // vieja, que no tiene nada de esa bandeja— y durante medio segundo se leía
     // «No hay conversaciones archivadas» antes de que llegara la respuesta.
+    ++listRequestRef.current;
     bandejaVisibleRef.current = nextArchived;
     if (nextArchived !== showArchived) {
       const guardada = bandejasRef.current[nextArchived ? "archived" : "open"];

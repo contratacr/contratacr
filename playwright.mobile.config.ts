@@ -10,6 +10,7 @@ export default defineConfig({
   testIgnore: [],
   testMatch: [
     "**/direct-chat.spec.ts",
+    "**/mensajes-sin-parpadeo.spec.ts",
     "**/mobile-native-shell.spec.ts",
     "**/marketplace-editors.spec.ts",
   ],
