@@ -110,7 +110,8 @@ test.describe("inglés", () => {
     await expect(page.getByText(/Confirmar contraseña|Repite tu contraseña/)).toHaveCount(0);
 
     await gotoOK(page, "/en/profesionales?q=zzqqxxyy-no-existe-123");
-    await expect(page.getByText(/Free · Your number is never published|professionals will contact you on WhatsApp/).first()).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText("Free · Your number is never published")).toHaveCount(0);
+    await expect(page.getByText(/professionals will contact you on WhatsApp/).first()).toBeVisible({ timeout: 30_000 });
   });
 });
 

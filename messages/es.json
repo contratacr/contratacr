@@ -285,8 +285,7 @@
     "proyectoTarjeta": {
       "titulo": "¿No te decides?",
       "texto": "Publica tu proyecto y los profesionales te escriben por WhatsApp.",
-      "boton": "Publicar proyecto",
-      "pie": "Gratis · Tu número no se publica"
+      "boton": "Publicar proyecto"
     },
     "metaTitleGeneral": "Profesionales verificados en Costa Rica",
     "metaDescGeneral": "Busca por servicio y lugar y contacta por WhatsApp."

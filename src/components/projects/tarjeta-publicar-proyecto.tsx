@@ -4,8 +4,8 @@ import { cn } from "@/lib/utils";
 
 /**
  * LA INVITACIÓN A PUBLICAR UN PROYECTO, al final de los resultados (4-oct-2026).
- * Lleva el servicio y el lugar ya puestos en el formulario. Sin la línea
- * «Gratis · Tu número no se publica»: una tarjeta de la lista no lleva pie.
+ * Lleva el servicio y el lugar ya puestos en el formulario. Una tarjeta de la
+ * lista no lleva pie debajo del botón.
  *
  * Tiene la MISMA forma que la tarjeta de un profesional (8-oct-2026): el ícono
  * donde va la foto, el título donde va el nombre y el botón a todo el ancho
