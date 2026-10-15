@@ -175,8 +175,8 @@ export function AdminShell({
       {/* ── Desktop sidebar ── */}
       <aside className="hidden lg:flex lg:w-60 lg:flex-col lg:fixed lg:inset-y-0 bg-[#0f172a] text-white">
         <div className="shrink-0 px-5 py-4">
-          <Link href="/admin" className="inline-flex items-center rounded-lg bg-white px-3 py-2">
-            <ContrataCRLogo />
+          <Link href="/admin" className="flex items-center gap-2">
+            <ContrataCRLogo tone="dark" />
           </Link>
           <Link
             href="/"
@@ -208,8 +208,8 @@ export function AdminShell({
       {/* ── Mobile top bar (horizontal scroll) ── */}
       <header className="lg:hidden bg-[#0f172a] text-white">
         <div className="px-4 py-3 flex items-center justify-between">
-          <Link href="/admin" className="inline-flex items-center rounded-lg bg-white px-3 py-2">
-            <ContrataCRLogo />
+          <Link href="/admin" className="flex items-center gap-2">
+            <ContrataCRLogo tone="dark" />
           </Link>
           <Link href="/" className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-white/10 px-3 text-xs font-semibold text-white/85 transition-colors hover:bg-white/20 hover:text-white">
             <ArrowLeft className="h-4 w-4" /> Volver a ContrataCR

@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
-export function ContrataCRMark({ className }: { className?: string }) {
-  const src = "/logo-mark-transparent.png";
+export function ContrataCRMark({ className, tone = "light" }: { className?: string; tone?: "light" | "dark" }) {
+  const src = tone === "dark" ? "/logo-mark-dark.png" : "/logo-mark-transparent.png";
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
@@ -14,13 +14,13 @@ export function ContrataCRMark({ className }: { className?: string }) {
   );
 }
 /* --- El logotipo (marca + palabra). Sin tamaños: uno solo, 32 + 19. --- */
-export function ContrataCRLogo({ className }: { className?: string }) {
+export function ContrataCRLogo({ className, tone = "light" }: { className?: string; tone?: "light" | "dark" }) {
   return (
     <div className={cn("flex items-center gap-0 select-none", className)}>
-      <ContrataCRMark />
+      <ContrataCRMark tone={tone} />
       {/* Outlined Inter 800: identical before/after fonts load, including cold starts. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/brand/wordmark-light.svg" alt="" aria-hidden="true" width={105} height={24} className="h-6 w-[105px] shrink-0" />
+      <img src={tone === "dark" ? "/brand/wordmark-dark.svg" : "/brand/wordmark-light.svg"} alt="" aria-hidden="true" width={105} height={24} className="h-6 w-[105px] shrink-0" />
     </div>
   );
 }
