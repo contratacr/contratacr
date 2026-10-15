@@ -22,7 +22,7 @@ const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
 export function Totales({ quote }: { quote: Pick<Quote, "subtotal" | "tax_amount" | "total" | "tax_mode"> }) {
   const t = useTranslations("quotes");
   const m = desgloseQuote(quote);
-  const nota = quote.tax_mode === "incluido" ? t("totalWithTax") : quote.tax_mode === "mas_iva" ? t("totalPlusTax") : t("totalNoTax");
+  const nota = quote.tax_mode === "exento" ? t("totalNoTax") : "";
   return (
     <div className="rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3.5 text-[14px]">
       <div className="flex justify-between text-[#52627a]"><span>{t("subtotal")}</span><span>{formatColones(m.base)}</span></div>
@@ -30,7 +30,7 @@ export function Totales({ quote }: { quote: Pick<Quote, "subtotal" | "tax_amount
       <div className="mt-2.5 flex items-baseline justify-between border-t border-[#e5e7eb] pt-2.5 text-[17px] font-extrabold text-[#162543]">
         <span>{t("total")}</span><span>{formatColones(m.total)}</span>
       </div>
-      <p className="mt-0.5 text-right text-[12px] font-semibold text-[#68778d]">{nota}</p>
+      {nota && <p className="mt-0.5 text-right text-[12px] font-semibold text-[#68778d]">{nota}</p>}
     </div>
   );
 }
@@ -73,7 +73,7 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
       titulo: quote.quote_number ? t("imageTitleNumbered", { number: numeroCotizacion(quote) }) : t("imageTitle"),
       cliente: t("clientLabel"), vigente: fecha ? t("imageValidUntil", { date: fecha }) : "",
       subtotal: t("subtotal"), iva: t("tax"), total: t("total"),
-      totalNota: quote.tax_mode === "incluido" ? t("totalWithTax") : quote.tax_mode === "mas_iva" ? t("totalPlusTax") : t("totalNoTax"),
+      totalNota: quote.tax_mode === "exento" ? t("totalNoTax") : "",
       pie: t("imageFooter"), deQuien: t("publicFrom"), nota: t("noteLabel"),
     }, fecha).then((b) => { if (vivo) setPdfCliente(b); });
     return () => { vivo = false; };

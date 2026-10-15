@@ -38,7 +38,7 @@ function useCompartirCotizacion({ quote, proName, proSlug, activo = true }: { qu
       titulo: quote.quote_number ? t("imageTitleNumbered", { number: numeroCotizacion(quote) }) : t("imageTitle"),
       cliente: t("clientLabel"), vigente: fecha ? t("imageValidUntil", { date: fecha }) : "",
       subtotal: t("subtotal"), iva: t("tax"), total: t("total"),
-      totalNota: quote.tax_mode === "incluido" ? t("totalWithTax") : quote.tax_mode === "mas_iva" ? t("totalPlusTax") : t("totalNoTax"),
+      totalNota: quote.tax_mode === "exento" ? t("totalNoTax") : "",
       pie: t("imageFooter"), deQuien: t("publicFrom"), nota: t("noteLabel"),
     }, fecha, proSlug ? enlacePerfil(proSlug) : "").then((b) => { if (vivo) setPdf(b); });
     return () => { vivo = false; };

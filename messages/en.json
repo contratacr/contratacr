@@ -3068,8 +3068,6 @@
     "share": "Share",
     "emptyFilter": "No quotes in this filter.",
     "imageTitleNumbered": "QUOTE No. {number}",
-    "totalWithTax": "VAT included",
-    "totalPlusTax": "VAT included in the total",
     "totalNoTax": "No VAT",
     "noteLabel": "Note",
     "attachedProject": "It's in a project: the client sees it there and can download it.",
