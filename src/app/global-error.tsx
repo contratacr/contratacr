@@ -40,12 +40,11 @@ export default function GlobalError({
       <body style={{ margin: 0, fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", background: "#ffffff" }}>
         <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 16px", textAlign: "center", boxSizing: "border-box" }}>
           {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-          <a href="/" aria-label="ContrataCR" style={{ display: "inline-flex", alignItems: "center", gap: 2, marginBottom: 36, textDecoration: "none" }}>
+          <a href="/" aria-label="ContrataCR" style={{ display: "inline-flex", alignItems: "center", gap: 0, marginBottom: 36, textDecoration: "none" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-mark-transparent.png" alt="ContrataCR" width={28} height={28} style={{ height: 28, width: 28 }} />
-            <span style={{ fontSize: 17, fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1 }}>
-              <span style={{ color: "#1a2744" }}>Contrata</span><span style={{ color: "#009FD9" }}>CR</span>
-            </span>
+            <img src="/logo-mark-transparent.png" alt="" width={32} height={32} />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/wordmark-light.svg" alt="ContrataCR" width={105} height={24} />
           </a>
 
           <h1 style={{ fontSize: 26, fontWeight: 800, color: "#1a2744", margin: 0, lineHeight: 1.2 }}>

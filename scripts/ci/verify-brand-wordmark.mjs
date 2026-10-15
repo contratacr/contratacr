@@ -14,3 +14,19 @@ const variants = ["light", "dark"].map((tone) => {
 });
 assert.deepEqual(variants[0], variants[1], "Contrast variants must have identical lettering and proportions");
 console.log("Brand wordmark contract passed: identical outlines, no font dependency.");
+
+// Every active logo surface uses the principal; reversed assets are legacy only.
+for (const file of [
+  'src/components/brand/brand-logo.tsx', 'src/components/admin/admin-shell.tsx',
+  'src/components/error/error-screen.tsx', 'src/app/global-error.tsx',
+  'src/components/quotes/public-quote.tsx', 'src/components/dashboard/pro/share-kit.tsx',
+  'src/lib/email/send.ts',
+]) {
+  const source = readFileSync(new URL(`../../${file}`, import.meta.url), 'utf8');
+  assert.doesNotMatch(source, /logo-mark-dark\.png|wordmark-dark\.svg|email-logo-dark\.png|tone="dark"/, `${file}: secondary logo reintroduced`);
+}
+console.log('Active logo surfaces use the principal artwork.');
+const primaryEmail = readFileSync(new URL('../../public/brand/email-logo-primary.png', import.meta.url));
+for (const legacy of ['light', 'dark']) {
+  assert.deepEqual(readFileSync(new URL(`../../public/brand/email-logo-${legacy}.png`, import.meta.url)), primaryEmail, 'Older email URLs must also show the principal logo.');
+}

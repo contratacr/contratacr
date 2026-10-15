@@ -200,8 +200,9 @@ export function ShareKit({ open, onClose, initialView = "menu", profileUrl, name
 
   const miniTarjeta = (
     <span className="grid h-[68px] w-[54px] shrink-0 grid-rows-[18px_1fr] overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_6px_14px_-8px_rgba(22,37,67,0.55)]">
-      <span className="flex items-center justify-center bg-[#162543]">
-        <span className="text-[7px] font-extrabold tracking-tight text-white">Contrata<span className="text-[#4fc3f7]">CR</span></span>
+      <span className="flex items-center justify-center bg-white">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/brand/logo-primary.png" alt="" className="h-auto w-11" />
       </span>
       <span className="grid place-items-center"><QrCode className="h-7 w-7 text-[#162543]" strokeWidth={1.6} /></span>
     </span>
