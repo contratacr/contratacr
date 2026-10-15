@@ -222,8 +222,8 @@ function emailShell(
 }
 
 // ── First contact when a professional lands in manual review ─────────────────
-// Sent once per account (the in-app notification doubles as the marker):
-// in-app + email always, WhatsApp only when an approved Meta template name is
+// The in-app notification doubles as the marker for the initial notice and
+// one possible reminder after 30 days. WhatsApp is handled manually.
 // Asks only for what the account does not hold yet — never for the name,
 // cédula or phone already on file. WhatsApp is deliberately NOT sent from here:
 // business-initiated messages would need a Meta template, and replies to the
@@ -319,7 +319,7 @@ export async function notifyVerificationOutreach(professionalId: string): Promis
         toca === "recordatorio" ? "Todavía puedes verificar tu perfil" : "Verificación de tu perfil",
         "#009FD9",
         `${toca === "recordatorio" ? "Hace al menos un mes te enviamos los pasos para verificarte. " : ""}` +
-          `Tu perfil todavía no está verificado. El check azul sale junto a tu nombre, y los perfiles verificados aparecen primero cuando alguien busca tu servicio.<br/><br/>` +
+          `Tu perfil todavía no está verificado. Al verificar tu identidad, el check azul aparecerá junto a tu nombre para que los clientes puedan reconocerlo.<br/><br/>` +
           `Es gratis y solo necesitamos <strong>dos fotos</strong>. Con el celular está bien:<br/><br/>` +
           `1. ${fotos[0]}<br/>2. ${fotos[1]}<br/><br/>` +
           `<strong>Responde a este correo con las dos fotos.</strong> Las revisamos y te avisamos en la app cuando quede lista. Si alguna no se ve bien, te decimos cuál repetir.<br/><br/>` +
@@ -340,9 +340,9 @@ export async function notifyVerificationOutreach(professionalId: string): Promis
   }
 }
 
-// Admin button "Avisar por app y correo": every professional still waiting gets the
-// first-contact notice in the app and by email, at most once each. Free, and the
-// answer lands in the support mailbox the owner actually reads.
+// Admin button "Avisar por app y correo": send eligible initial notices or the
+// single 30-day reminder to pending profiles, up to 25 per press. Replies land
+// in the support mailbox the owner actually reads.
 export async function outreachPendingProfessionals(): Promise<{ pending: number; notified: number; alreadyNotified: number; reminded: number; restantes: number }> {
   const admin = createAdminClient();
   const { data: pending } = await admin.from("professionals").select("id, profile_id").in("verification_status", ["pending", "under_appeal"]);
