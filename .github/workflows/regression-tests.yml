@@ -112,6 +112,11 @@ jobs:
       - name: Verify lifecycle email coordination without sending mail
         run: node scripts/verify-lifecycle-coordination.mjs
 
+      - name: Verify durable email and verification history in isolated Postgres
+        run: |
+          npm install --prefix "$RUNNER_TEMP/ccr-email-contract" --no-save --ignore-scripts @electric-sql/pglite@0.5.9
+          PGLITE_MODULE_PATH="$RUNNER_TEMP/ccr-email-contract/node_modules/@electric-sql/pglite/dist/index.js" node scripts/verify-email-delivery.mjs
+
       - name: Verify durable push isolation locally
         run: npm run test:push-isolation
 

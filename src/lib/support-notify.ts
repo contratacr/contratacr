@@ -9,8 +9,8 @@ function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-async function sendEmail(to: string, subject: string, html: string, replyTo?: string): Promise<void> {
-  await sendBrevoEmail({ to, subject, html, replyTo });
+async function sendEmail(to: string, subject: string, html: string, replyTo?: string, eventKey?: string): Promise<void> {
+  await sendBrevoEmail({ to, subject, html, replyTo, purpose: "support", eventKey });
 }
 
 /** Branded shell with an optional CTA button (clickable link, never a raw URL). */
@@ -60,7 +60,7 @@ export async function notifyUserTicketCreated(opts: {
     headline,
     `<p style="margin:0;">${escapeHtml(message)}</p>${refHtml}`,
   );
-  await sendEmail(opts.toEmail, subject, html);
+  await sendEmail(opts.toEmail, subject, html, undefined, opts.ticketRef ? `support-created:${opts.ticketRef}` : undefined);
 }
 
 /** Guests with account-access cases may continue via a scoped private link.
@@ -76,6 +76,7 @@ export function supportReplyEmail(opts: {
   /** Ticket id → the email deep-links to this exact open conversation. */
   ticketId?: string;
   topic?: string | null;
+  eventKey?: string;
 }): string {
   const firstName = (opts.toName ?? "").split(" ")[0] || "";
   const panel = opts.panel === "profesional" ? "profesional" : "cliente";
@@ -106,5 +107,5 @@ export function supportReplyEmail(opts: {
 }
 
 export async function notifyUserOfReply(opts: Parameters<typeof supportReplyEmail>[0]): Promise<void> {
-  await sendEmail(opts.toEmail, `Re: ${opts.subject} — ContrataCR`, supportReplyEmail(opts));
+  await sendEmail(opts.toEmail, `Re: ${opts.subject} — ContrataCR`, supportReplyEmail(opts), undefined, opts.eventKey);
 }

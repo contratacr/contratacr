@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
     });
 
     const r = await sendBrevoEmail({
-      to: SUPPORT_TO,
+      to: SUPPORT_TO, purpose: "support",
       replyTo: correoValido(reporterEmail) || undefined,
       subject: `${isImpersonation ? "[PRIORIDAD ALTA] " : ""}[Reporte SIN GUARDAR] Perfil de ${escaparHtml(professionalName ?? professionalSlug)}`,
       html,

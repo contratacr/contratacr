@@ -1,4 +1,5 @@
-import { hayCupoPara, registrarEnvio, type NivelDeCorreo } from "@/lib/email/cuota";
+import type { NivelDeCorreo } from "@/lib/email/cuota";
+import { deliverRecordedEmail, type EmailPurpose } from "./outbox";
 import { enlaceDeBaja } from "@/lib/email/baja";
 // Single send path for ALL of the app's CODE-SENT email — Brevo transactional API.
 // Every email the app sends from its own code (verification status, support inbox +
@@ -14,7 +15,6 @@ import { enlaceDeBaja } from "@/lib/email/baja";
 //    Supabase dashboard — NOT by this helper. Never route those through here.
 //  • The app's own code-sent emails (below) → Brevo, via this helper.
 
-const BREVO_ENDPOINT = "https://api.brevo.com/v3/smtp/email";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com";
 
 // Default From on the verified domain. Brevo wants name + email separately (not the
@@ -71,7 +71,7 @@ export function brandedEmailDocument({ title, bodyHtml, origin = "https://contra
     </html>`;
 }
 
-export type DeliveryStatus = "sent" | "failed" | "skipped";
+export type DeliveryStatus = "sent" | "failed" | "skipped" | "queued" | "uncertain";
 export type EmailResult = { ok: boolean; status: DeliveryStatus; detail: string | null };
 
 // Brevo attachment: base64 `content` + a `name`.
@@ -79,6 +79,11 @@ export type EmailAttachment = { name: string; content: string };
 
 export async function sendBrevoEmail(opts: {
   to: string | undefined | null;
+  /** Stable event identity: retries and overlapping workers reuse this receipt. */
+  eventKey?: string;
+  purpose?: EmailPurpose;
+  professionalId?: string;
+  verificationSequence?: number;
   subject: string;
   html: string;
   /**
@@ -115,10 +120,6 @@ export async function sendBrevoEmail(opts: {
   if (!opts.to) return { ok: false, status: "skipped", detail: "No recipient email" };
 
   const nivel = opts.nivel ?? "critico";
-  if (!(await hayCupoPara(nivel))) {
-    return { ok: false, status: "skipped", detail: `Sin cupo diario para correo de nivel ${nivel}` };
-  }
-
   const replyTo =
     typeof opts.replyTo === "string" ? { email: opts.replyTo } : opts.replyTo;
 
@@ -153,21 +154,10 @@ export async function sendBrevoEmail(opts: {
       : {}),
   };
 
-  try {
-    const res = await fetch(BREVO_ENDPOINT, {
-      method: "POST",
-      headers: { "api-key": key, "Content-Type": "application/json", accept: "application/json" },
-      body: JSON.stringify(body),
-    });
-    if (!res.ok) {
-      const txt = await res.text().catch(() => "");
-      console.error("[brevo] send failed:", res.status, txt);
-      return { ok: false, status: "failed", detail: `HTTP ${res.status} ${txt}` };
-    }
-    await registrarEnvio(nivel);
-    return { ok: true, status: "sent", detail: null };
-  } catch (err) {
-    console.error("[brevo] send error:", err);
-    return { ok: false, status: "failed", detail: String(err) };
-  }
+  return deliverRecordedEmail({
+    recipient: opts.to, subject: opts.subject, payload: body,
+    purpose: opts.purpose ?? (nivel === "masivo" ? "campaign" : nivel === "normal" ? "activity" : "security"),
+    level: nivel, eventKey: opts.eventKey, campaign: opts.campana,
+    professionalId: opts.professionalId, verificationSequence: opts.verificationSequence,
+  });
 }

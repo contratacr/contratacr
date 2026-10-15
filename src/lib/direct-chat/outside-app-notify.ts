@@ -75,6 +75,7 @@ export async function notifyRecipientOutsideApp({
   db,
   origin,
   conversationId,
+  messageId,
   recipientId,
   recipientIsProfessional,
   senderName,
@@ -83,6 +84,7 @@ export async function notifyRecipientOutsideApp({
   db: AdminDb;
   origin: string;
   conversationId: string;
+  messageId: string;
   recipientId: string;
   recipientIsProfessional: boolean;
   senderName: string;
@@ -102,7 +104,7 @@ export async function notifyRecipientOutsideApp({
   if (email) {
     // Aviso, no puerta de entrada: cede antes que los correos de cuenta.
     tasks.push(sendBrevoEmail({
-      nivel: "normal",
+      nivel: "normal", purpose: "activity", eventKey: `chat:${conversationId}:${messageId}:${recipientId}`,
       to: email,
       subject: `${senderName} te escribió en ContrataCR`,
       html: emailHtml({ origin, senderName, preview, threadUrl }),

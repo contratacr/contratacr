@@ -1,3 +1,5 @@
+import { outreachPendingProfessionals } from "@/lib/verification-notify";
+import { drainEmailDeliveries } from "@/lib/email/outbox";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAuthorizedPushWorkerRequest } from "@/lib/push/worker-auth";
@@ -10,7 +12,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ok:false,error:"cron_not_configured"},{status:503});
   if (!isAuthorizedPushWorkerRequest(request)) return NextResponse.json({ok:false},{status:401});
   try {
-    return NextResponse.json({ok:true,...await runLifecycleEmails(createAdminClient(),new URL(request.url).searchParams.get("simular") === "1")});
+    const simulate = new URL(request.url).searchParams.get("simular") === "1";
+    const verification = await outreachPendingProfessionals({ simulate });
+    const campaigns = await runLifecycleEmails(createAdminClient(), simulate);
+    const queue = simulate ? null : await drainEmailDeliveries();
+    return NextResponse.json({ ok: true, ...campaigns, verification, queue });
   } catch {
     return NextResponse.json({ok:false,error:"campaign_verification_failed"},{status:503});
   }

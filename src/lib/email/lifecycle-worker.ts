@@ -67,7 +67,7 @@ export async function runLifecycleEmails(db: Admin, simulate = true) {
   candidates.sort((a,b) => LIFECYCLE_CAMPAIGNS.findIndex((c) => c.key === a.campaign.key)
     - LIFECYCLE_CAMPAIGNS.findIndex((c) => c.key === b.campaign.key));
   if (simulate) return { simulate:true, eligible:counts, sent:0, mobileUsageVerified:mobileUsers !== undefined };
-  let sent = 0, uncertain = 0, skipped = 0;
+  let sent = 0, uncertain = 0, skipped = 0, queued = 0;
   const delivered: Record<string,number> = {};
   for (const {account,campaign} of candidates.slice(0,250)) {
     if (!(await resumenDeCuota()).puedeEnviar.masivo) break;
@@ -99,11 +99,11 @@ export async function runLifecycleEmails(db: Admin, simulate = true) {
         + `<p><a href="${escaparHtml(href)}" style="display:inline-block;background:#009FD9;color:white;padding:12px 22px;border-radius:24px;text-decoration:none">${escaparHtml(campaign.ctaLabel)}</a></p>`
         + `<p>${escaparHtml(signature)}</p><p><a href="${origin}/soporte">Soporte en ContrataCR</a></p>`
         + `<p style="font-size:12px">Recibes este correo porque tienes una cuenta en ContrataCR. <a href="${escaparHtml(enlaceDeBaja(origin,account.email!))}">No quiero recibir novedades</a>.</p>`;
-      return sendBrevoEmail({to:account.email!,subject:campaign.subject,nivel:"masivo",campana:campaign.key,
+      return sendBrevoEmail({to:account.email!,eventKey:`campaign:${campaign.key}:${account.email!.trim().toLowerCase()}`,subject:campaign.subject,nivel:"masivo",campana:campaign.key,
         html:brandedEmailDocument({title:campaign.subject,bodyHtml,origin})});
     },{coordinated:true});
     if (result === "sent") { sent++; delivered[campaign.key]=(delivered[campaign.key] ?? 0)+1; }
-    else if (result === "uncertain") uncertain++; else skipped++;
+    else if (result === "queued") queued++; else if (result === "uncertain") uncertain++; else skipped++;
   }
-  return {simulate:false,eligible:counts,sent,delivered,uncertain,skipped};
+  return {simulate:false,eligible:counts,sent,delivered,uncertain,skipped,queued};
 }

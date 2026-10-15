@@ -64,16 +64,17 @@ function contactedAgo(iso?: string | null): string | null {
   return `Contactado hace ${months} ${months === 1 ? "mes" : "meses"}`;
 }
 
-// The verification message asks for what the account does not already hold:
-// a selfie with the ID, proof of the trade and a recent job. Never the data
-// already on file (name, cédula, phone).
+// Identity evidence only: never ask for trade qualifications for this badge.
 function verificationWhatsAppHref(row: Row) {
   const digits = String(row.whatsapp ?? "").replace(/\D/g, "");
   const phone = digits.length === 8 ? `506${digits}` : digits;
   const firstName = (row.profiles?.full_name ?? "").trim().split(/\s+/)[0] || "";
   const service = row.category_id ? getCategoryLabel(row.category_id) : "tu servicio";
   const idLabel = row.identity_type_label && row.identity_type !== "manual" ? ` (${row.identity_type_label})` : "";
-  const text = `Hola${firstName ? ` ${firstName}` : ""}, te escribimos de ContrataCR para verificar tu perfil de ${service}. Para marcarte como verificado necesitamos: 1) una foto tuya sosteniendo tu identificación${idLabel} junto a tu rostro, 2) una foto o documento que respalde tu oficio (título, carné, patente o certificado) y 3) una foto de un trabajo reciente. Con eso activamos tu insignia de verificado. ¡Gracias!`;
+  const documents = row.identity_type === "juridica"
+    ? "la personería jurídica vigente o una autorización que podamos validar, y una foto de la persona autorizada junto a su documento de identidad"
+    : `una foto tuya sosteniendo tu identificación${idLabel} junto a tu rostro, con los datos legibles`;
+  const text = `Hola${firstName ? ` ${firstName}` : ""}, te escribimos de ContrataCR para revisar la identidad del perfil de ${service}. Necesitamos ${documents}. Puedes responder al correo de soporte@contratacr.com. Los documentos no se publican. ¡Gracias!`;
   return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
 }
 
@@ -94,7 +95,7 @@ export function AdminQueue() {
       const res = await fetch("/api/admin/providers/outreach", { method: "POST" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "No se pudo contactar.");
-      setOutreachResult(`${data.pending} pendientes · ${data.notified} avisados por primera vez · ${data.reminded ?? 0} recordatorios (pasaron 30 días) · ${data.alreadyNotified} sin avisar (ya recibieron los dos mensajes o aún no cumplen 30 días)${data.restantes ? ` · quedan ${data.restantes} para la próxima vez` : ""}. El WhatsApp se envía a mano desde el botón verde de cada fila.`);
+      setOutreachResult(`${data.pending} pendientes · ${data.notified} primeros avisos aceptados · ${data.reminded ?? 0} recordatorios aceptados · ${data.queued ?? 0} en cola · ${data.historicalHeld ?? 0} retenidos por historial anterior sin confirmar · ${data.failed ?? 0} envíos detenidos. Los pendientes se procesan automáticamente; el botón usa el mismo registro y no reinicia los avisos.`);
     } catch (error) {
       setOutreachResult(error instanceof Error ? error.message : "No se pudo contactar.");
     } finally {
@@ -168,7 +169,7 @@ export function AdminQueue() {
           type="button"
           onClick={() => void contactPending()}
           disabled={outreachBusy}
-          title="Envía el primer aviso a quienes aún no lo recibieron y un único recordatorio después de 30 días. Máximo 25 personas por pulsada. El WhatsApp se escribe a mano desde cada fila."
+          title="Procesa los mismos avisos automáticos: primer correo y un recordatorio a los 30 días. Respeta el historial, la cola y los intervalos entre correos. Máximo 25 por pulsada."
           className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#e5e7eb] bg-white px-3 text-xs font-semibold text-[#374151] hover:bg-[#f9fafb] disabled:opacity-60"
         >
           {outreachBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />} Avisar por app y correo
@@ -184,6 +185,7 @@ export function AdminQueue() {
         </div>
         </div>
       </div>
+      <p className="mb-4 text-sm leading-relaxed text-[#64748b]">Los avisos de verificación se procesan automáticamente. El historial anterior sin confirmar queda retenido para evitar repetir correos.</p>
       {outreachResult && <p className="mb-4 rounded-xl border border-[#bbf7d0] bg-[#f0fdf4] px-3 py-2 text-sm text-[#166534]">{outreachResult}</p>}
 
       <AdminFilterTabs tabs={FILTERS.map((f) => ({ id: f.value, label: f.label }))} value={status} onChange={setStatus} counts={filterCounts} />
