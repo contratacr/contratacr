@@ -178,6 +178,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
                 <button
                   type="button"
                   onClick={() => setMobileGroupKey(null)}
+                  data-native-back="service-group"
                   className={cn("absolute left-4 top-1/2 -translate-y-1/2", CABECERA_BOTON)}
                   aria-label={locale === "en" ? "Back to categories" : "Volver a categorías"}
                 >

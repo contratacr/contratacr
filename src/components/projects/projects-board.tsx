@@ -542,6 +542,7 @@ export function ProjectsBoard({
               // Desde el panel, la flecha devuelve a la lista exacta de donde
               // se vino (pestaña y etapa); sin origen, al tablero.
               href={safeMarketplaceReturnHref(volverA, "/proyectos")}
+              data-native-back="project-detail"
               aria-label={copy.volver}
               className={cn("absolute left-4", CABECERA_BOTON)}
             >

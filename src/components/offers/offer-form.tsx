@@ -465,7 +465,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/promoci
     <main className={presentation === "modal" ? "bg-white text-[#162543]" : "min-h-[calc(100vh-72px)] bg-white text-[#162543] lg:px-6 lg:py-8"}>
       <header ref={cabeceraRef} className={presentation === "modal" ? "hidden" : cn("ccr-cabecera-pegada sticky top-0 z-20 border-b bg-white transition-colors duration-200 lg:hidden", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
         <div className={CABECERA_FILA_CENTRADA}>
-          <Link href={backHref} aria-label={copy.back} className={cn("absolute left-4 top-1/2 -translate-y-1/2", CABECERA_BOTON)}><ArrowLeft className={cn(CABECERA_GLIFO, "stroke-[2.4]")} /></Link>
+          <Link href={backHref} data-native-back="offer-form" aria-label={copy.back} className={cn("absolute left-4 top-1/2 -translate-y-1/2", CABECERA_BOTON)}><ArrowLeft className={cn(CABECERA_GLIFO, "stroke-[2.4]")} /></Link>
           <h1 className={cn(CABECERA_TITULO, "text-center")}>{editing ? copy.editTitle : copy.publishTitle}</h1>
         </div>
       </header>

@@ -258,6 +258,7 @@ function ServiceCatalogModal({
     <Modal
       open={open}
       onClose={closePicker}
+      onBack={activeGroupId ? () => setActiveGroupId(null) : undefined}
       title={title}
       closeLabel={t("cancel")}
       mobilePresentation="fullscreen"

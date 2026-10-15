@@ -322,6 +322,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
         <header className={cn(CABECERA_FILA_CENTRADA, "ccr-cabecera-pegada ccr-marketplace-sticky sticky top-0 z-20 border-b bg-white transition-colors duration-200", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
           <Link
             href={detailBackHref}
+            data-native-back="job-detail"
             aria-label={detailBackLabel}
             className={cn("absolute left-4", CABECERA_BOTON)}
           >

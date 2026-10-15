@@ -237,7 +237,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
           pantalla del app sin esa separación. */}
       <header className="ccr-cabecera-pegada sticky top-0 z-30 border-b border-[#e5e7eb] bg-white lg:hidden">
         <div className={CABECERA_FILA_CENTRADA}>
-          <Link href={backHref} aria-label={copy.back} className={cn("absolute left-4 top-1/2 -translate-y-1/2", CABECERA_BOTON)}>
+          <Link href={backHref} data-native-back="offer-detail" aria-label={copy.back} className={cn("absolute left-4 top-1/2 -translate-y-1/2", CABECERA_BOTON)}>
             <ArrowLeft className={cn(CABECERA_GLIFO, "stroke-[2.4]")} />
           </Link>
           <h1 className={cn(CABECERA_TITULO, "text-center")}>{copy.title}</h1>

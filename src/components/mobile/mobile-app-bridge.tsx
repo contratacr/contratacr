@@ -96,8 +96,19 @@ export function MobileAppBridge() {
   const nativeApp = useNativeApp();
 
   useEffect(() => {
-    if (!nativeApp) return;
-    return installNativeEdgeBackGesture((control) => control.click());
+    // The same nested screens also exist in the responsive browser. The helper
+    // only acts when a visible in-app back control exists; root pages stay put.
+    const media = window.matchMedia("(max-width: 1023px)");
+    let removeGesture: (() => void) | undefined;
+    const sync = () => {
+      removeGesture?.();
+      removeGesture = nativeApp || media.matches
+        ? installNativeEdgeBackGesture((control) => control.click())
+        : undefined;
+    };
+    sync();
+    media.addEventListener("change", sync);
+    return () => { media.removeEventListener("change", sync); removeGesture?.(); };
   }, [nativeApp]);
 
   useEffect(() => {

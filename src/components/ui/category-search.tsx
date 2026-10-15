@@ -186,6 +186,7 @@ export function CategorySearch({
       {open && typeof document !== "undefined" && (pantallaChica || pos) && createPortal(
         <div
           ref={panelRef}
+          data-testid="category-picker-sheet"
           style={pantallaChica || !pos ? undefined : {
             position: "absolute",
             left: pos.left,
@@ -208,7 +209,11 @@ export function CategorySearch({
             <div className="grid h-14 shrink-0 grid-cols-[52px_minmax(0,1fr)_52px] items-center border-b border-[#e5e7eb] px-1">
               <button
                 type="button"
-                onClick={() => { setOpen(false); setQuery(""); setActiveGroupId(null); }}
+                onClick={() => {
+                  if (activeGroupId && !query) setActiveGroupId(null);
+                  else { setOpen(false); setQuery(""); setActiveGroupId(null); }
+                }}
+                data-native-back="category-picker"
                 aria-label={t("back")}
                 className="grid h-11 w-11 place-items-center rounded-full text-[#162543] transition-colors hover:bg-[#f3f4f6]"
               >
@@ -246,7 +251,7 @@ export function CategorySearch({
           </div>
 
           {/* Results */}
-          <div className={cn("overflow-y-auto flex-1", pantallaChica && "pb-[max(env(safe-area-inset-bottom),1rem)]")}>
+          <div data-testid="category-picker-options" className={cn("overflow-y-auto flex-1", pantallaChica && "pb-[max(env(safe-area-inset-bottom),1rem)]")}>
             {query && results.length === 0 ? (
               <div className="px-3 py-4 text-center">
                 <p className="text-sm text-[#374151] font-medium mb-1">{t("noResults")}</p>
