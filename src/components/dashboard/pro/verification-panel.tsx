@@ -636,7 +636,7 @@ function VerificationSummary({
 }) {
   const Icon =
     tone === "verified"
-      ? ShieldCheck
+      ? VerifiedSeal
       : tone === "review"
         ? Clock3
         : tone === "rejected"
@@ -645,7 +645,7 @@ function VerificationSummary({
   // El estado es lo único que merece un recuadro en esta pantalla, y el color
   // lo dice antes que el texto. Todo lo demás son bloques planos.
   const paleta = {
-    verified: { caja: "border-[#bbf7d0] bg-[#f0fdf4]", icono: "bg-[#dcfce7] text-[#166534]", texto: "text-[#14532d]" },
+    verified: { caja: "border-[#bbf7d0] bg-[#f0fdf4]", icono: "bg-[#e8f8ff] text-[#009FD9]", texto: "text-[#14532d]" },
     review: { caja: "border-[#bfe8f6] bg-[#f1fbfe]", icono: "bg-[#dbf2fb] text-[#0f6380]", texto: "text-[#0f4d64]" },
     rejected: { caja: "border-[#fecaca] bg-[#fef2f2]", icono: "bg-[#fee2e2] text-[#b91c1c]", texto: "text-[#7f1d1d]" },
     pending: { caja: "border-[#fde68a] bg-[#fffbeb]", icono: "bg-[#fef3c7] text-[#b45309]", texto: "text-[#78350f]" },

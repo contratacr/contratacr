@@ -1,3 +1,4 @@
+import { VERIFIED_SEAL_DATA_URL } from "../../src/lib/verified-seal";
 import { test, expect } from "playwright/test";
 import { gotoOK, waitForInteractivePage, expectNoHorizontalOverflow, loginAs } from "./helpers";
 import { createDisposableAccount, cleanupDisposableAccount, type DisposableAccount } from "./disposable-account";
@@ -10,6 +11,15 @@ for (const path of ["/profesionales", "/promociones", "/empleos", "/proyectos"])
     const check = page.locator("[data-verification-badge]").filter({ visible: true }).first();
     await expect(check).toBeVisible();
     expect(await check.textContent()).toBe("");
+    // The exported QR uses this SVG too: outline, check and stroke must match
+    // the visible profile badge, not a separately drawn approximation.
+    const sameSeal = await check.locator("svg").evaluate((svg, dataUrl) => {
+      const exported = new DOMParser().parseFromString(decodeURIComponent(dataUrl.split(",")[1]), "image/svg+xml");
+      const paths = (root: ParentNode) => Array.from(root.querySelectorAll("path"), (path) =>
+        ["d", "stroke", "stroke-width", "stroke-linecap", "stroke-linejoin"].map((key) => path.getAttribute(key)));
+      return JSON.stringify(paths(svg)) === JSON.stringify(paths(exported));
+    }, VERIFIED_SEAL_DATA_URL);
+    expect(sameSeal, "QR exports and profile badges must share the same seal").toBe(true);
     expect(await check.evaluate((el) => el.closest("a"))).toBeNull();
     const before = page.url();
     await check.click();
