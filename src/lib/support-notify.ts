@@ -19,7 +19,7 @@ function shell(headline: string, bodyHtml: string, cta?: { href: string; label: 
   <head><meta name="color-scheme" content="light dark"><meta name="supported-color-schemes" content="light dark"><style>${EMAIL_LOGO_DARK_MODE_STYLES}</style></head>
   <body style="margin:0;padding:0;background-color:#f4f7fa;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f4f7fa;"><tr><td align="center" style="padding:32px 16px;">
-    <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:100%;background-color:#ffffff;border-radius:16px;border:1px solid #eef1f5;">
+    <table class="ccr-email-card" role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:100%;background-color:#ffffff;border-radius:16px;border:1px solid #eef1f5;">
       <tr><td align="center" style="padding:30px 32px 6px 32px;">
         ${emailLogoMarkup(SITE)}
       </td></tr>

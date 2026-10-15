@@ -19,7 +19,6 @@ console.log("Brand wordmark contract passed: identical outlines, no font depende
 for (const file of [
   'src/components/error/error-screen.tsx', 'src/app/global-error.tsx',
   'src/components/quotes/public-quote.tsx', 'src/components/dashboard/pro/share-kit.tsx',
-  'src/lib/email/send.ts',
 ]) {
   const source = readFileSync(new URL(`../../${file}`, import.meta.url), 'utf8');
   assert.doesNotMatch(source, /logo-mark-dark\.png|wordmark-dark\.svg|email-logo-dark\.png|tone="dark"/, `${file}: secondary logo reintroduced`);
@@ -27,7 +26,8 @@ for (const file of [
 const admin = readFileSync(new URL('../../src/components/admin/admin-shell.tsx', import.meta.url), 'utf8');
 assert.equal((admin.match(/<ContrataCRLogo tone="dark" \/>/g) ?? []).length, 2, 'Both admin headers retain the approved dark variant');
 console.log('Public logos use principal artwork; admin headers use the dark variant.');
-const primaryEmail = readFileSync(new URL('../../public/brand/email-logo-primary.png', import.meta.url));
-for (const legacy of ['light', 'dark']) {
-  assert.deepEqual(readFileSync(new URL(`../../public/brand/email-logo-${legacy}.png`, import.meta.url)), primaryEmail, 'Older email URLs must also show the principal logo.');
-}
+const emailSource = readFileSync(new URL('../../src/lib/email/send.ts', import.meta.url), 'utf8');
+assert.match(emailSource, /prefers-color-scheme: dark/);
+assert.match(emailSource, /email-logo-light\.png/);
+assert.match(emailSource, /email-logo-dark\.png/);
+assert.notDeepEqual(readFileSync(new URL('../../public/brand/email-logo-light.png', import.meta.url)), readFileSync(new URL('../../public/brand/email-logo-dark.png', import.meta.url)), 'Email contrast variants must differ');

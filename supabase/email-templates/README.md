@@ -47,8 +47,8 @@ Production should be applied through GitHub Actions with environment approval:
 - **Change Email uses the `token_hash` flow:** the button points to `{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=email_change`, and `/auth/callback` finishes the change with `verifyOtp({ type: "email_change", token_hash })`.
 - **Reset Password uses the `token_hash` flow:** this lets a user request the email on one device and open it on another. The callback verifies the one-time token server-side and then opens `/es/reset-password` with the recovery session.
 - **Confirm signup must use `{{ .Token }}`**, not `{{ .ConfirmationURL }}`. The app verifies signup with `supabase.auth.verifyOtp({ type: "signup" })` and asks the user for the 6-digit code.
-- Design: the principal logo in navy/cyan is backed by opaque white pixels so it remains legible in light and dark email clients.
-- Public logo: `https://contratacr.com/brand/email-logo-primary.png`.
+- Design: transparent principal logo on light backgrounds; transparent white/cyan logo on dark backgrounds, selected with `prefers-color-scheme` and Outlook `data-ogsc`. No white backing.
+- Email logos: `/brand/email-logo-light.png?v=2` and `/brand/email-logo-dark.png?v=2`.
 - Regenerate raster assets with `node scripts/generate-primary-brand.mjs`; do not recreate the lettering.
 - Layout uses tables and inline fallback CSS.
 - Spanish neutral. Do not alter `{{ .Variable }}` tokens because they generate real links and codes.
