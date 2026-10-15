@@ -84,7 +84,8 @@ async function dibujar(quote: Quote, proName: string, textos: Textos, fechaVigen
   const altoQuien = 60 + 44 + Math.max(0, datosCliente(quote).length * 32 - 10) + 30;
   const altoTitulo = (lineasTitulo.length ? lineasTitulo.length * 44 + 12 : 0) + (fechaVigencia ? 40 : 0) + (lineasTitulo.length || fechaVigencia ? 30 : 0);
   const altoRenglones = filas.reduce((acc, f) => acc + f.alto, 0) + 20;
-  const altoTotales = (quote.tax_mode !== "exento" ? 190 : 130) + 40;
+  const altoNotaTotal = textos.totalNota ? 34 : 0;
+  const altoTotales = (quote.tax_mode !== "exento" ? 156 : 96) + altoNotaTotal + 40;
   const altoNotas = lineasNotas.length ? lineasNotas.length * 36 + 70 : 0;
   const altoPie = 200;
   // El pie se ancla al fondo, así que un alto mínimo (la hoja carta del PDF)
@@ -166,7 +167,7 @@ async function dibujar(quote: Quote, proName: string, textos: Textos, fechaVigen
   // subtotal es la base; antes salía igual al total y parecía un error.
   const montos = desgloseQuote(quote);
   const conIva = quote.tax_mode !== "exento";
-  const altoCuadro = conIva ? 190 : 130;
+  const altoCuadro = (conIva ? 156 : 96) + altoNotaTotal;
   ctx.fillStyle = "#f4f7fa"; roundRect(ctx, M - 24, y, ancho + 48, altoCuadro, 24); ctx.fill();
   const fila = (etq: string, val: string, yy: number, fuerte = false) => {
     ctx.font = `${fuerte ? 800 : 500} ${fuerte ? 36 : 28}px ${FUENTE}`; ctx.fillStyle = fuerte ? "#162543" : "#52627a";
@@ -175,9 +176,11 @@ async function dibujar(quote: Quote, proName: string, textos: Textos, fechaVigen
   };
   fila(textos.subtotal, formatColones(montos.base), y + 48);
   if (conIva) fila(textos.iva, formatColones(montos.iva), y + 88);
-  fila(textos.total, formatColones(montos.total), y + altoCuadro - 58, true);
-  ctx.textAlign = "right"; ctx.font = `600 24px ${FUENTE}`; ctx.fillStyle = "#68778d";
-  ctx.fillText(textos.totalNota, W - M, y + altoCuadro - 24); ctx.textAlign = "left";
+  fila(textos.total, formatColones(montos.total), y + altoCuadro - 24 - altoNotaTotal, true);
+  if (textos.totalNota) {
+    ctx.textAlign = "right"; ctx.font = `600 24px ${FUENTE}`; ctx.fillStyle = "#68778d";
+    ctx.fillText(textos.totalNota, W - M, y + altoCuadro - 24); ctx.textAlign = "left";
+  }
   y += altoCuadro + 40;
 
   if (lineasNotas.length) {
