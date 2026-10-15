@@ -1,5 +1,7 @@
 "use client";
 
+import { VERIFIED_SEAL_SVG } from "@/lib/verified-seal";
+
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { VerificationExplanation } from "@/components/ui/verification-info";
@@ -315,7 +317,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     const primaryName = displayName.primaryDesktop;
     const verifiedLabel = esc(tv("action"));
     const verifiedMarkup = pro.verified
-      ? `<button type="button" class="ccr-ver" aria-haspopup="dialog" aria-label="${verifiedLabel}" title="${verifiedLabel}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z" fill="currentColor"/><path d="m9 12 2 2 4-4" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`
+      ? `<button type="button" class="ccr-ver" aria-haspopup="dialog" aria-label="${verifiedLabel}" title="${verifiedLabel}">${VERIFIED_SEAL_SVG}</button>`
       : "";
     const ratingMetric = pro.popupMetricLabel?.match(/^★\s*([0-9.]+)\s*\((.+)\)$/);
     const metricMarkup = ratingMetric

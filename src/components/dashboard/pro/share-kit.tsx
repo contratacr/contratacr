@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import QRCode from "qrcode";
+import { VERIFIED_SEAL_DATA_URL } from "@/lib/verified-seal";
 import { drawCanvasBrand } from "@/lib/canvas-brand";
 import { QrCode, Star, ChevronRight, ArrowLeft, Check } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
@@ -31,9 +32,6 @@ type Props = {
 
 type View = "menu" | "card" | "reviews";
 
-const SELLO_SVG = "data:image/svg+xml;utf8," + encodeURIComponent(
-  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#009FD9" d="M12 1.8l2.3 1.7 2.8-.4 1.1 2.6 2.6 1.1-.4 2.8 1.7 2.3-1.7 2.3.4 2.8-2.6 1.1-1.1 2.6-2.8-.4L12 22.2l-2.3-1.7-2.8.4-1.1-2.6-2.6-1.1.4-2.8L1.8 12l1.7-2.3-.4-2.8 2.6-1.1 1.1-2.6 2.8.4z"/><path fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M7.5 12.2l3 3 6-6.4"/></svg>',
-);
 const CARD_W = 1080;
 const CARD_H = 1350;
 
@@ -111,7 +109,7 @@ export function ShareKit({ open, onClose, initialView = "menu", profileUrl, name
       // Nombre, verificado, oficio, calificación
       let y = fotoCy + R + 34;
       ctx.textAlign = "center"; ctx.textBaseline = "alphabetic"; ctx.fillStyle = "#162543";
-      const sello = isVerified ? await loadImage(SELLO_SVG) : null;
+      const sello = isVerified ? await loadImage(VERIFIED_SEAL_DATA_URL) : null;
       const selloW = sello ? 52 : 0;
       const size = fitText(ctx, name, CARD_W - 200 - selloW, 58);
       y += size;
