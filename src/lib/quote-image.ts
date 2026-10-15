@@ -1,12 +1,13 @@
 "use client";
 
+import { drawCanvasBrand } from "@/lib/canvas-brand";
 import { formatColones } from "@/lib/pricing";
 import { desgloseQuote, type Quote } from "@/lib/quotes";
 import { nombreQueCabe } from "@/lib/nombres";
 
 /**
- * La cotización como imagen (1080 px de ancho, alto según los renglones): banda
- * marino con la marca, quién cotiza y a quién, los renglones, el total, las
+ * La cotización como imagen (1080 px de ancho, alto según los renglones): encabezado
+ * blanco con la marca, quién cotiza y a quién, los renglones, el total, las
  * notas y el enlace con su QR. Es lo que se manda por WhatsApp: se ve dentro
  * del chat sin abrir nada.
  */
@@ -34,13 +35,6 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.beginPath();
   ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
   ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
-}
-
-function loadImage(src: string): Promise<HTMLImageElement | null> {
-  return new Promise((resolve) => {
-    const img = new Image(); img.crossOrigin = "anonymous";
-    img.onload = () => resolve(img); img.onerror = () => resolve(null); img.src = src;
-  });
 }
 
 function partirLineas(ctx: CanvasRenderingContext2D, texto: string, maxW: number): string[] {
@@ -86,7 +80,7 @@ async function dibujar(quote: Quote, proName: string, textos: Textos, fechaVigen
   const lineasNotas = quote.notes ? partirLineas(medidor, quote.notes, ancho) : [];
 
   // Alturas de cada bloque, de arriba abajo.
-  const altoBanda = 200;
+  const altoBanda = 144;
   const altoQuien = 60 + 44 + Math.max(0, datosCliente(quote).length * 32 - 10) + 30;
   const altoTitulo = (lineasTitulo.length ? lineasTitulo.length * 44 + 12 : 0) + (fechaVigencia ? 40 : 0) + (lineasTitulo.length || fechaVigencia ? 30 : 0);
   const altoRenglones = filas.reduce((acc, f) => acc + f.alto, 0) + 20;
@@ -101,17 +95,12 @@ async function dibujar(quote: Quote, proName: string, textos: Textos, fechaVigen
   const ctx = canvas.getContext("2d"); if (!ctx) return null;
   ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, W, H);
 
-  // Banda marino con la marca y el rótulo.
-  ctx.fillStyle = "#162543"; ctx.fillRect(0, 0, W, altoBanda);
-  const marca = await loadImage("/logo-mark-dark.png");
-  if (marca) ctx.drawImage(marca, M, 56, 88, 88);
-  ctx.textBaseline = "middle"; ctx.textAlign = "left";
-  ctx.font = `800 52px ${FUENTE}`;
-  const x0 = M + (marca ? 108 : 0);
-  ctx.fillStyle = "#ffffff"; ctx.fillText("Contrata", x0, 100);
-  ctx.fillStyle = "#009FD9"; ctx.fillText("CR", x0 + ctx.measureText("Contrata").width, 100);
-  ctx.textAlign = "right"; ctx.font = `800 30px ${FUENTE}`; ctx.fillStyle = "#9fc9e8";
-  ctx.fillText(textos.titulo, W - M, 100);
+  await drawCanvasBrand(ctx, M, 72, 330);
+  ctx.textBaseline = "middle"; ctx.textAlign = "right";
+  ctx.font = `700 26px ${FUENTE}`; ctx.fillStyle = "#52627a";
+  ctx.fillText(textos.titulo, W - M, 72);
+  ctx.strokeStyle = "#e5eaf0"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(M, altoBanda); ctx.lineTo(W - M, altoBanda); ctx.stroke();
   ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
 
   // Quién cotiza a la izquierda y el cliente a la derecha, como en cualquier
@@ -178,17 +167,17 @@ async function dibujar(quote: Quote, proName: string, textos: Textos, fechaVigen
   const montos = desgloseQuote(quote);
   const conIva = quote.tax_mode !== "exento";
   const altoCuadro = conIva ? 190 : 130;
-  ctx.fillStyle = "#f4f7fa"; roundRect(ctx, M, y, ancho, altoCuadro, 24); ctx.fill();
+  ctx.fillStyle = "#f4f7fa"; roundRect(ctx, M - 24, y, ancho + 48, altoCuadro, 24); ctx.fill();
   const fila = (etq: string, val: string, yy: number, fuerte = false) => {
     ctx.font = `${fuerte ? 800 : 500} ${fuerte ? 36 : 28}px ${FUENTE}`; ctx.fillStyle = fuerte ? "#162543" : "#52627a";
-    ctx.textAlign = "left"; ctx.fillText(etq, M + 32, yy);
-    ctx.textAlign = "right"; ctx.fillText(val, W - M - 32, yy); ctx.textAlign = "left";
+    ctx.textAlign = "left"; ctx.fillText(etq, M, yy);
+    ctx.textAlign = "right"; ctx.fillText(val, W - M, yy); ctx.textAlign = "left";
   };
   fila(textos.subtotal, formatColones(montos.base), y + 48);
   if (conIva) fila(textos.iva, formatColones(montos.iva), y + 88);
   fila(textos.total, formatColones(montos.total), y + altoCuadro - 58, true);
   ctx.textAlign = "right"; ctx.font = `600 24px ${FUENTE}`; ctx.fillStyle = "#68778d";
-  ctx.fillText(textos.totalNota, W - M - 32, y + altoCuadro - 24); ctx.textAlign = "left";
+  ctx.fillText(textos.totalNota, W - M, y + altoCuadro - 24); ctx.textAlign = "left";
   y += altoCuadro + 40;
 
   if (lineasNotas.length) {

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import QRCode from "qrcode";
+import { drawCanvasBrand } from "@/lib/canvas-brand";
 import { QrCode, Star, ChevronRight, ArrowLeft, Check } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
@@ -89,22 +90,9 @@ export function ShareKit({ open, onClose, initialView = "menu", profileUrl, name
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
       ctx.fillStyle = "#f4f7fa"; ctx.fillRect(0, 0, CARD_W, CARD_H);
-      // Tarjeta blanca con banda marino arriba: el nombre de la marca en blanco
-      // y "CR" en turquesa, como el logotipo.
       ctx.fillStyle = "#ffffff"; roundRect(ctx, 60, 60, CARD_W - 120, CARD_H - 120, 48); ctx.fill();
       const bandaH = 180; const bandaY2 = 60 + bandaH; const bandaCy = 60 + bandaH / 2;
-      ctx.save(); roundRect(ctx, 60, 60, CARD_W - 120, bandaH, 48); ctx.clip();
-      ctx.fillStyle = "#162543"; ctx.fillRect(60, 60, CARD_W - 120, bandaH); ctx.restore();
-      ctx.font = "800 64px Inter, -apple-system, \"Segoe UI\", Roboto, sans-serif"; ctx.textBaseline = "middle"; ctx.textAlign = "left";
-      const marca = await loadImage("/logo-mark-dark.png");
-      // La marca a la altura del logotipo: más chica se veía como un adorno.
-      const marcaW = marca ? 100 : 0;
-      const wContrata = ctx.measureText("Contrata").width; const wCR = ctx.measureText("CR").width;
-      const x0 = (CARD_W - wContrata - wCR - (marca ? marcaW + 20 : 0)) / 2;
-      if (marca) ctx.drawImage(marca, x0, bandaCy - marcaW / 2, marcaW, marcaW);
-      const xTexto = x0 + (marca ? marcaW + 20 : 0);
-      ctx.fillStyle = "#ffffff"; ctx.fillText("Contrata", xTexto, bandaCy);
-      ctx.fillStyle = "#009FD9"; ctx.fillText("CR", xTexto + wContrata, bandaCy);
+      await drawCanvasBrand(ctx, (CARD_W - 480) / 2, bandaCy, 480);
       // La foto va completa debajo de la banda: pisándola se veía como un choque.
       const cx = CARD_W / 2; const R = 112; const fotoCy = bandaY2 + 36 + R + 14;
       ctx.save(); ctx.beginPath(); ctx.arc(cx, fotoCy, R + 14, 0, Math.PI * 2); ctx.fillStyle = "#ffffff"; ctx.fill();
