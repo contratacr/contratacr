@@ -1,7 +1,9 @@
 /**
  * DÓNDE NO VA LA BARRA DE ABAJO EN LA APP.
  *
- * Dos familias de pantallas viven sin ella:
+ * El panel administrativo y dos familias de pantallas viven sin ella:
+ *
+ * El panel admin tiene su propia navegación en todas sus secciones.
  *
  * 1. Los flujos de PANTALLA COMPLETA (publicar proyecto, empleo, promoción):
  *    sin cabecera del app ni barra, porque el formulario necesita el alto
@@ -24,6 +26,8 @@
 import { esRutaDeBusqueda } from "@/lib/buscar-url";
 import { esServicioDelCatalogo } from "@/lib/data/categories";
 
+const RUTA_DE_ADMIN = /^\/(?:(?:es|en)\/)?admin(?:\/|$)/;
+
 const RUTA_DE_PANTALLA_COMPLETA = /(^|\/)(?:publicar-proyecto|cotizar|(?:empleos|promociones)\/publicar)(?:\/|$)/;
 
 // Un solo tramo después de la sección; `publicar`, `mis-empleos` y
@@ -34,5 +38,5 @@ export function sinBarraDeAbajo(pathname: string | null | undefined): boolean {
   const ruta = pathname ?? "";
   // /profesionales/techos tiene la forma de una ficha pero es la búsqueda de
   // ese servicio: esa sí lleva la barra.
-  return RUTA_DE_PANTALLA_COMPLETA.test(ruta) || (RUTA_DE_DETALLE.test(ruta) && !esRutaDeBusqueda(ruta, esServicioDelCatalogo));
+  return RUTA_DE_ADMIN.test(ruta) || RUTA_DE_PANTALLA_COMPLETA.test(ruta) || (RUTA_DE_DETALLE.test(ruta) && !esRutaDeBusqueda(ruta, esServicioDelCatalogo));
 }

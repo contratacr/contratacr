@@ -12,6 +12,7 @@ export default defineConfig({
     "**/direct-chat.spec.ts",
     "**/mensajes-sin-parpadeo.spec.ts",
     "**/mobile-native-shell.spec.ts",
+    "**/admin-bottom-nav.spec.ts",
     "**/marketplace-editors.spec.ts",
   ],
   fullyParallel: false,
