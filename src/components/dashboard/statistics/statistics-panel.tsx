@@ -20,7 +20,7 @@ const PUBLICATION_SECTIONS = ["projects", "jobs", "offers"] as const;
 
 export function StatisticsPanel({ professional, callsEnabled }: { professional: boolean; callsEnabled: boolean }) {
   const t = useTranslations("panelStatistics");
-  const [period, setPeriod] = useState<7 | 30 | 90>(30);
+  const [period, setPeriod] = useState<0 | 7 | 30 | 90>(30);
   const [section, setSection] = useState<Section>(professional ? "profile" : "projects");
   const [activity, setActivity] = useState<AccountActivity | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,8 +49,9 @@ export function StatisticsPanel({ professional, callsEnabled }: { professional: 
     <div className="flex items-center justify-between gap-3 px-4 pb-2 pt-4 sm:px-5 lg:px-0">
       <h2 className="text-[15px] font-bold">{t(sections.length > 1 ? "overview" : professional ? "profile" : activeSection ?? "overview")}</h2>
       <div className="relative shrink-0">
-        <select aria-label={t("period")} value={period} onChange={event => { setLoading(true); setError(false); setPeriod(Number(event.target.value) as 7 | 30 | 90); }} className="min-h-10 appearance-none rounded-lg border-0 bg-white py-2 pl-3 pr-8 text-[12px] font-semibold hover:bg-[#f7fafc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]">
+        <select aria-label={t("period")} value={period} onChange={event => { setLoading(true); setError(false); setPeriod(Number(event.target.value) as 0 | 7 | 30 | 90); }} className="min-h-10 appearance-none rounded-lg border-0 bg-white py-2 pl-3 pr-8 text-[12px] font-semibold hover:bg-[#f7fafc] focus:outline-none focus-visible:bg-[#eaf8fd]">
           {([7, 30, 90] as const).map(days => <option key={days} value={days}>{t("days", { days })}</option>)}
+          <option value={0}>{t("sinceStart")}</option>
         </select><ChevronDown aria-hidden className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-[#68778d]" />
       </div>
     </div>
@@ -85,6 +86,6 @@ export function StatisticsPanel({ professional, callsEnabled }: { professional: 
         <div className="flex items-center gap-1.5 text-[11px] text-[#526277] sm:justify-end sm:text-[13px]"><WhatsAppLogo className="h-4 w-4 text-[#009FD9]" aria-hidden /><strong className="text-[#162543]">{row.whatsapp}</strong><span className="sm:hidden">{t("clickShort")}</span></div>
       </div>)}
     </section>}
-    {activity && activeSection && <p className="px-4 pb-4 pt-1 text-[11px] leading-[18px] text-[#68778d] sm:px-5 lg:px-0">{t(callsEnabled ? "note" : "noteWithoutCalls")}</p>}
+    {activity && activeSection && <p className="px-4 pb-4 pt-1 text-[11px] leading-[18px] text-[#68778d] sm:px-5 lg:px-0">{t(activeSection === "profile" ? callsEnabled ? "profileNote" : "profileNoteWithoutCalls" : callsEnabled ? "note" : "noteWithoutCalls")}</p>}
   </div>;
 }
