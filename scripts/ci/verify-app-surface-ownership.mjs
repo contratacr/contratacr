@@ -31,6 +31,7 @@ const handlerRules = [
   [/^\/api\/ai-assistant(?:\/|$)/, "ai-assistant.spec.ts"],
   [/^\/api\/account(?:\/|$)/, "account-lifecycle.spec.ts"],
   [/^\/api\/auth(?:\/|$)/, "auth-support.spec.ts"],
+  [/^\/api\/verification\/documents$/, "product-contract.spec.ts"],
   [/^\/api\/dashboard\/activity$/, "statistics-dashboard.spec.ts"],
   [/^\/api\/(?:projects|reviews|support|quotes)(?:\/|$)/, "seeded-regression.spec.ts"],
   [/^\/api\/(?:jobs|offers)(?:\/|$)/, "marketplace-lifecycle.spec.ts"],

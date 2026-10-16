@@ -207,6 +207,8 @@ test.describe("@contract product safety contracts", () => {
       { name: "generic upload", response: apiJson(page, "/api/upload", { method: "POST" }) },
       { name: "photo upload", response: apiJson(page, "/api/upload/photo", { method: "POST" }) },
       { name: "owned media deletion", response: apiJson(page, "/api/upload/media", { method: "DELETE", body: { url: "https://assets.contratacr.com/not-owned.png" } }) },
+      { name: "private verification documents", response: apiJson(page, "/api/verification/documents") },
+      { name: "private verification upload", response: apiJson(page, "/api/verification/documents", { method: "POST" }) },
       { name: "identity verification", response: apiJson(page, "/api/verify-identity", { method: "POST" }) },
       { name: "client connections", response: apiJson(page, "/api/client/connections") },
       { name: "job post", response: apiJson(page, "/api/jobs/posts", { method: "POST", body: {} }) },
