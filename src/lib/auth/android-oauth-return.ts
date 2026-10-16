@@ -1,4 +1,4 @@
-// The published Android manifest already verifies /dashboard app links.
+// The current Android source verifies /dashboard links; Play builds <= 14 do not.
 // Only a one-use PKCE code travels here; session tokens stay in the WebView.
 export const ANDROID_OAUTH_RETURN_ORIGIN = "https://contratacr.com";
 export const ANDROID_OAUTH_RETURN_PATH = "/dashboard/native-auth-return";

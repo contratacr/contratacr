@@ -629,6 +629,7 @@
       "passwordRequired": "Ingresa tu contraseña",
       "loginError": "Correo o contraseña incorrectos.",
       "socialOnly": "Esta cuenta usa {provider}. Inicia sesión con {provider}.",
+      "nativeAppleUpdateRequired": "El acceso con Apple no está disponible en esta versión de la app. Puedes usarlo desde contratacr.com en tu navegador.",
       "nativeSocialError": "No pudimos iniciar sesión con {provider} en la app. Intenta de nuevo o usa tu correo.",
       "facebookUnavailable": "Facebook no está disponible para iniciar sesión. Usa ¿Olvidaste tu contraseña? para crear una contraseña o contáctanos.",
       "blockedUsePassword": "Esta cuenta usa correo y contraseña. Inicia sesión con tu contraseña.",

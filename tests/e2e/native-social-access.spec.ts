@@ -81,3 +81,27 @@ test("Android Apple callback rejects an incomplete handoff", async ({ request })
   const response = await request.get("/auth/callback?flow=android-apple&code=fixture&native_state=invalid", { maxRedirects: 0 });
   expect(response.status()).toBe(400);
 });
+
+test("Play build 14 explains the Apple update requirement without leaving the app", async ({ page }) => {
+  let browserOAuth = 0;
+  await page.route("**/auth/v1/authorize**", async route => { browserOAuth++; await route.abort(); });
+  await page.addInitScript(() => {
+    localStorage.setItem("ccr:native-first-run-onboarding:v12", "1");
+    Object.assign(window, { androidBridge: {}, Capacitor: {
+      PluginHeaders: [
+        { name: "SocialLogin", methods: [{ name: "openSecureWindow", rtype: "promise" }] },
+        { name: "App", methods: [{ name: "getInfo", rtype: "promise" }] },
+      ],
+      nativePromise: async (plugin: string, method: string) => {
+        if (plugin === "App" && method === "getInfo") return { build: "14", version: "1.0.10" };
+        throw new Error("The obsolete build must not open a provider");
+      },
+    } });
+  });
+  await gotoOK(page, "/login");
+  await page.getByRole("button", { name: "Continuar con Apple", exact: true }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Continuar con Apple", exact: true }).click();
+  await expect(page.getByText("El acceso con Apple no está disponible en esta versión de la app. Puedes usarlo desde contratacr.com en tu navegador.")).toBeVisible();
+  await expect(page).toHaveURL(/\/login$/);
+  expect(browserOAuth).toBe(0);
+});

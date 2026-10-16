@@ -15,7 +15,7 @@ vm.runInNewContext(ts.transpileModule(readFileSync(new URL("../src/lib/auth/andr
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
 }).outputText, { exports: returnExports, URL, URLSearchParams, Response });
 
-function setup({ native = true, platform = "ios", providerError, providerErrors, linkError, returnState = true, accounts = ["existing", "existing"] } = {}) {
+function setup({ build = "15", native = true, platform = "ios", providerError, providerErrors, linkError, returnState = true, accounts = ["existing", "existing"] } = {}) {
   const calls = { login: [], logout: [], link: [], signIn: [], oauth: [], exchange: [], diagnostics: [] };
   const plugin = {
     openSecureWindow: async ({ redirectUri }) => {
@@ -42,6 +42,7 @@ function setup({ native = true, platform = "ios", providerError, providerErrors,
       if (name === "@/lib/report-client-error") return { reportClientError: (_origin, error) => calls.diagnostics.push(error.message) };
       if (name === "@/hooks/use-native-app") return { isNativeAppRuntime: () => native };
       if (name === "@capgo/capacitor-social-login") return { SocialLogin: plugin };
+      if (name === "@capacitor/app") return { App: { getInfo: async () => ({ build }) } };
       if (name === "@capacitor/core") return { Capacitor: { getPlatform: () => platform } };
       throw new Error(`Unexpected import: ${name}`);
     },
@@ -191,4 +192,15 @@ test("Android browser callback only renders a fixed app handoff, without creatin
   assert.match(html, /package=com.contratacr.app;end/);
   assert.doesNotMatch(html, /evil.example|must-not-leak/);
   assert.equal(returnExports.androidOAuthReturnResponse(new URLSearchParams({ code: "once", native_state: "bad" })).status, 400);
+});
+
+test("published Android build without app links cannot start the Apple browser flow", async () => {
+  const { api, supabase, calls } = setup({ platform: "android", build: "14" });
+  await assert.rejects(api.nativeSocialSignIn("apple", supabase), /native-apple-update-required/);
+  assert.equal(calls.oauth.length + calls.exchange.length, 0);
+});
+test("published Android Google stays available without app links", async () => {
+  const { api, supabase, calls } = setup({ platform: "android", build: "14" });
+  assert.equal(await api.nativeSocialSignIn("google", supabase), "signed-in");
+  assert.equal(calls.signIn.length, 1);
 });

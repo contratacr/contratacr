@@ -629,6 +629,7 @@
       "passwordRequired": "Enter your password",
       "loginError": "Incorrect email or password.",
       "socialOnly": "This account uses {provider}. Sign in with {provider}.",
+      "nativeAppleUpdateRequired": "Apple sign-in is unavailable in this app version. You can use it at contratacr.com in your browser.",
       "nativeSocialError": "We couldn't sign in with {provider} in the app. Try again or use your email.",
       "facebookUnavailable": "Facebook sign-in is not available. Use Forgot your password? to create a password or contact us.",
       "blockedUsePassword": "This account uses email and password. Sign in with your password.",
