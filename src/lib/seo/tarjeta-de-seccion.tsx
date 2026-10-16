@@ -12,5 +12,5 @@ export { OG_TAMANO, OG_TIPO };
  */
 export async function tarjetaDeSeccion(locale: string, clave: "seccionEmpleos" | "seccionPromociones" | "seccionProyectos" | "seccionProfesionales" | "seccionPublicar" | "seccionCotizar") {
   const t = await getTranslations({ locale, namespace: "tarjetaSocial" });
-  return tarjetaDeFicha({ etiqueta: t(`${clave}.etiqueta`), titulo: t(`${clave}.titulo`), detalle: t(`${clave}.detalle`), pie: t("pie") });
+  return tarjetaDeFicha({ etiqueta: t(`${clave}.etiqueta`), titulo: t(`${clave}.titulo`), detalle: t(`${clave}.detalle`), pie: t(`${clave}.pie`) });
 }

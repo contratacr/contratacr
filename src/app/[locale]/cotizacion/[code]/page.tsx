@@ -40,7 +40,7 @@ async function cargar(tramo: string, locale: string): Promise<PublicQuoteData | 
   const perfil = (pro?.profiles ?? null) as { full_name?: string | null; avatar_url?: string | null } | null;
   const nombre = pro?.business_name?.trim() || proDisplayName(perfil?.full_name ?? "");
   return {
-    quote: q as Quote,
+    quote: { ...q, professional_name: nombre, professional_full_name: pro?.business_name?.trim() || perfil?.full_name || nombre } as Quote,
     pro: {
       name: nombre,
       avatarUrl: perfil?.avatar_url ?? null,

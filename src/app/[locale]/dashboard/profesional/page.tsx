@@ -1923,7 +1923,7 @@ export default function DashboardPage() {
                     onClose={() => setShareKitTab(null)}
                     initialView={shareKitInitialView}
                     profileUrl={enlacePerfil(pro?.slug ?? "")}
-                    name={displayName}
+                    name={getProfessionalDisplayName(personalDisplayName, businessName).primaryDesktop}
                     services={((pro?.professions && pro.professions.length > 0) ? pro.professions : (pro?.category_id ? [pro.category_id] : [])).map((id: string) => getCategoryLabel(id, locale)).filter(Boolean)}
                     avatarUrl={headerAvatar}
                     isVerified={pro?.verification_status === "verified"}
@@ -2252,6 +2252,7 @@ export default function DashboardPage() {
                             extraSections={[
                               {
                                 id: "verificacion",
+                                footer: null,
                                 title: t("tabs.verificacion"),
                                 desc: t("profileSections.verificationDesc"),
                                 children: (

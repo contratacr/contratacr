@@ -10,6 +10,7 @@ import { getCategoryLabel } from "@/lib/data/categories";
 import {
   verificationLabel, verificationPillClasses, caseRef, type VerificationStatus,
 } from "@/lib/verification";
+import type { AdjuntoDeSoporte } from "@/lib/support/adjuntos";
 import { formatId } from "@/lib/cedula";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 
@@ -110,6 +111,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
   const profile = pro.profiles as Any;
   const status = pro.verification_status as VerificationStatus;
   const log = (data!.log as Any[]) ?? [];
+  const documents = (data!.documents ?? []) as { attachments: AdjuntoDeSoporte[]; created_at: string }[];
   const appeals = (data!.appeals as Any[]) ?? [];
   const idAssist = data!.idAssist as Any;
   const padron = data!.padron as Any;
@@ -225,6 +227,8 @@ export function AdminCase({ providerId }: { providerId: string }) {
                   <p className="font-semibold">Revisión manual requerida</p>
                   <p className="mt-1">{padron.reason}</p>
                 </div>
+              ) : padron.unavailable ? (
+                <p className="text-sm text-[#b45309]">El padrón no respondió. Se reintentará la consulta; esto no significa que la cédula sea inválida.</p>
               ) : !padron.found ? (
                 <p className="text-sm text-[#b45309]">La cédula no se encontró en el padrón cargado.</p>
               ) : (
@@ -246,6 +250,16 @@ export function AdminCase({ providerId }: { providerId: string }) {
               )}
             </div>
           )}
+
+          {documents.some(message => message.attachments.length > 0) && <section className="rounded-xl border border-[#e5e7eb] bg-white p-5">
+            <h2 className="mb-3 text-sm font-semibold text-[#162543]">Documentos recibidos</h2>
+            <div className="space-y-3">{documents.map((message, index) => <div key={index} className="space-y-2">
+              <p className="text-xs text-[#68778d]">{new Date(message.created_at).toLocaleDateString("es-CR")}</p>
+              {message.attachments.map(attachment => attachment.url ? <a key={attachment.path} href={attachment.url} target="_blank" rel="noopener noreferrer" className="flex min-h-11 items-center justify-between gap-3 rounded-lg bg-[#f5f8fb] px-3 py-2 text-sm font-semibold text-[#0089bb]">
+                <span className="min-w-0 break-all">{attachment.name}</span><ExternalLink className="h-4 w-4 shrink-0" />
+              </a> : <p key={attachment.path} className="text-sm text-red-700">No se pudo abrir {attachment.name}. Recarga para intentarlo de nuevo.</p>)}
+            </div>)}</div>
+          </section>}
 
           {/* Appeals */}
           {appeals.length > 0 && (

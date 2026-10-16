@@ -2332,14 +2332,18 @@ html.ccr-menu-sin-cierre .ccr-menu-completo, html.ccr-menu-sin-cierre .ccr-menu-
   .ccr-download-banner-wrap { display: none; }
 }
 
-/* Fixed-height listings also leave their last row accessible above the notice. */
+/* Keep listings full height under the fixed notice. Only their scroll tail
+   reserves space, so the final result can still be brought above the banner. */
 @media (max-width: 1023px) {
   html:not(.ccr-native-app):is([data-web-download-banner], :has(.ccr-download-banner-wrap)) :is(.ccr-cascaron-tablero, .ccr-buscar-pagina) {
-    height: calc(100dvh - 80px - env(safe-area-inset-bottom, 0px) - var(--ccr-alto-barra, 0px)) !important;
-    min-height: 0 !important;
     flex-shrink: 0;
   }
-  html:not(.ccr-native-app):is([data-web-download-banner], :has(.ccr-download-banner-wrap)) .ccr-search-results-layout {
-    height: calc(100dvh - 80px - env(safe-area-inset-bottom, 0px)) !important;
+  html:not(.ccr-native-app):is([data-web-download-banner], :has(.ccr-download-banner-wrap)) :is(
+    .ccr-tablero-marco > section,
+    .ccr-tablero-fijo > .ccr-tablero-ficha,
+    .ccr-search-sheet-scroll
+  ) {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    scroll-padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
   }
 }

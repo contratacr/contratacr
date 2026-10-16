@@ -279,16 +279,16 @@
       "por_consulta": "Per consultation",
       "por_proyecto": "Per project"
     },
-    "metaTitle": "{category} in {place} · verified professionals | ContrataCR",
-    "metaDesc": "Compare {category} professionals in {place}: ID-verified, with reviews, prices and direct contact.",
+    "metaTitle": "{category} in {place} · professionals | ContrataCR",
+    "metaDesc": "Find {category} professionals in {place}. Compare profiles, read reviews and contact on WhatsApp.",
     "wholeProvince": "Whole province",
     "proyectoTarjeta": {
       "titulo": "Can't decide?",
       "texto": "Post your project and professionals will message you on WhatsApp.",
       "boton": "Post a project"
     },
-    "metaTitleGeneral": "Verified professionals in Costa Rica",
-    "metaDescGeneral": "Search by service and place and contact on WhatsApp."
+    "metaTitleGeneral": "Find professionals in Costa Rica",
+    "metaDescGeneral": "Search by service and location and contact directly on WhatsApp."
   },
   "hero": {
     "categoryPlaceholder": "What service do you need?",
@@ -2943,8 +2943,8 @@
     "viewProfile": "View profile",
     "publishTitle": "Get up to 3 quotes, no strings attached",
     "publishCta": "Post a project",
-    "metaTitle": "{category} in {place} · verified professionals | ContrataCR",
-    "metaDesc": "Find {count} {category} professionals in {place}, ID-verified, with reviews and direct WhatsApp contact.",
+    "metaTitle": "{category} in {place} · professionals | ContrataCR",
+    "metaDesc": "Find {count} {category} professionals in {place}. View their profiles and contact directly on WhatsApp.",
     "reviews": "{count, plural, one {# review} other {# reviews}}",
     "noReviews": "No reviews yet",
     "verified": "Verified"
@@ -3239,35 +3239,45 @@
     "promocion": "Promotion",
     "empleo": "Job",
     "proyectoSinTitulo": "A client is looking for a professional",
+    "empleoNoDisponible": "Job opening unavailable",
+    "promocionNoDisponible": "Promotion unavailable",
+    "proyectoNoDisponible": "Project unavailable",
+    "detalleNoDisponible": "Explore other posts on ContrataCR.",
     "seccionEmpleos": {
       "etiqueta": "Jobs",
       "titulo": "Job openings in Costa Rica",
-      "detalle": "Open the posting and message whoever published it on WhatsApp."
+      "detalle": "Browse job openings and contact the person who posted them on WhatsApp.",
+      "pie": "Explore job opportunities in Costa Rica."
     },
     "seccionPromociones": {
       "etiqueta": "Promotions",
       "titulo": "Deals from professionals",
-      "detalle": "Special prices from verified professionals."
+      "detalle": "Discover service offers and contact the professional on WhatsApp.",
+      "pie": "Find service offers in Costa Rica."
     },
     "seccionProyectos": {
       "etiqueta": "Projects",
-      "titulo": "Work people need done",
-      "detalle": "If it is your trade, message the requester on WhatsApp."
+      "titulo": "Projects in Costa Rica",
+      "detalle": "Find projects and contact the person requesting the service on WhatsApp.",
+      "pie": "Connect with people who need your services."
     },
     "seccionProfesionales": {
       "etiqueta": "Professionals",
-      "titulo": "Verified professionals in Costa Rica",
-      "detalle": "Search by service and place and contact on WhatsApp."
+      "titulo": "Find professionals in Costa Rica",
+      "detalle": "Search by service and location and contact directly on WhatsApp.",
+      "pie": "Offer and find services in Costa Rica."
     },
     "seccionPublicar": {
       "etiqueta": "Post a project",
       "titulo": "Post what you need",
-      "detalle": "Free. Professionals contact you on WhatsApp."
+      "detalle": "Post the service you need so professionals can contact you on WhatsApp.",
+      "pie": "Find professionals for your project."
     },
     "seccionCotizar": {
       "etiqueta": "Quotes",
       "titulo": "Make a quote in minutes",
-      "detalle": "Free, ready to send on WhatsApp."
+      "detalle": "Create your quote and share it by link, PDF or WhatsApp.",
+      "pie": "Present your services with a clear quote."
     }
   },
   "accountPrivacy": {

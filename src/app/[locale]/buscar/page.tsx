@@ -128,7 +128,10 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
     const tg = await getTranslations("search");
     // La tarjeta propia de la sección: esta página se sirve por una
     // reescritura (/profesionales → /buscar) y Next no le enchufa el archivo.
-    const general = { title: tg("metaTitleGeneral"), description: tg("metaDescGeneral"), ...imagenDeSeccion(locale, "/profesionales") };
+    const title = tg("metaTitleGeneral");
+    const description = tg("metaDescGeneral");
+    const social = imagenDeSeccion(locale, "/profesionales");
+    const general = { title, description, openGraph: { title, description, ...social.openGraph }, twitter: { title, description, ...social.twitter } };
     return indexable ? general : { ...general, robots: { index: false, follow: true } };
   }
   const t = await getTranslations("search");
