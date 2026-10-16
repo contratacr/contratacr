@@ -7,17 +7,26 @@ const baseUse = typeof baseConfig.use === "object" ? baseConfig.use : {};
 // the canonical web regression continues to ignore direct-chat.spec.ts.
 export default defineConfig({
   ...baseConfig,
-  testIgnore: [],
+  testIgnore: ["**/.tmp-*.spec.ts"],
   testMatch: [
     "**/direct-chat.spec.ts",
     "**/mensajes-sin-parpadeo.spec.ts",
     "**/mobile-native-shell.spec.ts",
     "**/admin-bottom-nav.spec.ts",
+    "**/native-social-access.spec.ts",
+    "**/apple-existing-account.spec.ts",
+    "**/native-edge-back.spec.ts",
+    "**/native-home-paint.spec.ts",
+    "**/app-download.spec.ts",
     "**/marketplace-editors.spec.ts",
   ],
   fullyParallel: false,
   workers: 1,
   projects: [
+    ...(process.env.PLAYWRIGHT_WEBKIT === "1" ? [{
+      name: "mobile-native-webkit",
+      use: { ...baseUse, ...devices["iPhone 14"], viewport: { width: 390, height: 844 } },
+    }] : []),
     {
       name: "mobile-native",
       use: {

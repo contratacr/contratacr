@@ -9,7 +9,7 @@ for (const platform of ["android", "ios"] as const) {
   test(`${platform}: native Google failure stays in the app and can be retried`, async ({ page, context }) => {
     let browserOAuth = 0;
     await page.route("**/auth/v1/authorize**", async route => { browserOAuth++; await route.abort(); });
-    await context.addCookies([{ name: "ccr_last_sign_in", value: "email", url: String(test.info().project.use.baseURL || "http://localhost:3000") }]);
+    await context.addCookies([{ name: "ccr_platform", value: "native", url: String(test.info().project.use.baseURL || "http://localhost:3000") }, { name: "ccr_last_sign_in", value: "email", url: String(test.info().project.use.baseURL || "http://localhost:3000") }]);
     await page.addInitScript(({ platform }) => {
       localStorage.setItem("ccr:native-first-run-onboarding:v12", "1");
       const runtime = {

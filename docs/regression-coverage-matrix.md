@@ -217,3 +217,39 @@ En el simulador con la app apuntando a localhost, y en test.contratacr.com:
 5. Soporte: abrir un caso con una foto.
 6. Cambiar a inglés en dos pantallas cualesquiera.
 7. Dejar la app en segundo plano cinco minutos y retomarla.
+
+
+## Auditoría de problemas recientes — 16 de octubre de 2026
+
+La cobertura enumerada aquí identifica pruebas existentes; no equivale a una
+certificación de que la última ejecución haya pasado.
+
+| Problema | Regresión permanente |
+| --- | --- |
+| Google nativo vuelve a login o abre navegador tras un error | `native-social-access`, `verify-native-social-linking.mjs`: error, reintento, cancelación y conservación del flujo nativo |
+| Apple exige un aviso universal antes de autenticar | `apple-existing-account`: acceso directo en login y ambos registros, ES/EN y conservación de la cuenta existente |
+| Apple Android no regresa al build publicado | `native-social-access`: build 14 bloqueado antes de OAuth, callback fijo y estado validado; retorno real pendiente en nuevo binario |
+| Pantalla antigua / parpadeo al abrir Android | `native-home-paint`, `mobile-native-shell`: arranque frío y caché; complementar con instalación real de Google Play |
+| Teléfono omitido tras acceso social | `native-social-access`: onboarding de cliente sin completar pide teléfono |
+| Mensajes desaparecen al volver de Archivados | `mensajes-sin-parpadeo`: respuestas tardías y borradores |
+| Gesto atrás en selectores y secciones | `native-edge-back`, `create-sheet-navigation` |
+| Banner de descarga al final del contenido | `app-download`: listas, teclado, cierre, inicio agregado y distinción de app nativa |
+| Menú inferior en administración | `admin-bottom-nav` |
+| Footer responsive | `public-smoke`: abrir/cerrar grupos y comprobar enlaces ES/EN; `app-download`: enlaces de tiendas |
+| Estadísticas y categorías vacías | `statistics-dashboard`, `runtime-analytics` |
+| Verificados detrás de perfiles sin reseñas | `search-ranking`, `search-results` |
+| Salida de reseñas sin guardar | `cambios-sin-guardar`, `professional-profile` |
+| Documentos y recordatorios de verificación | `verification-documents`, `verification-email-policy`, `email-delivery`, `lifecycle-email-policy` |
+| Logos, insignias, tarjetas y cotizaciones | `navbar-brand-consistency`, `verification-badges`, `email-brand-contrast`, `cotizaciones`, `professional-profile` |
+| Vincular métodos de acceso sin duplicar cuentas | `multiple-sign-in-methods`, `apple-existing-account`, contratos de linking |
+
+La ejecución manual de Regression Tests incluye ahora WebKit además de Chromium.
+La suite móvil incorpora los casos de acceso social, bienvenida, gesto atrás y
+banner de descarga. Los archivos locales `.tmp-*.spec.ts` de vistas previas se
+excluyen de la certificación.
+
+Android sí está publicado: Google Play 1.0.10/build 14 fue probado el 16 de
+ octubre. Google completó el acceso; «otra cuenta» abrió su formulario. Apple
+necesita un nuevo binario con el enlace de retorno. Las menciones anteriores a
+Android «todavía no publicado» son históricas. Probar Safari/WebKit no sustituye
+probar Apple/Google reales ni notificaciones en un dispositivo.
