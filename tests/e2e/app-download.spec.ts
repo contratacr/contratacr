@@ -62,7 +62,7 @@ test('shared download anchor always remains useful, including after dismissing t
  } else {
   const section=page.getByTestId('app-download-section');await expect(section).toBeVisible();
   await expect(section.getByRole('heading',{name:'Descarga la app de ContrataCR'})).toBeVisible();
-  await expect(section.getByTestId('app-download-artwork')).toHaveAttribute('src','/stores/app-workshop-desktop-welcome-20261013.png');
+  await expect(section.getByTestId('app-download-artwork')).toHaveAttribute('src','/stores/app-workshop-desktop-welcome-20261013.webp');
   await expect(section).toBeInViewport();
   await expect(page.getByTestId('app-store-footer-links')).toBeVisible();
   if (process.env.DOWNLOAD_DESIGN_EVIDENCE) {
@@ -296,11 +296,18 @@ for (const locale of ["es", "en"] as const) {
    if (browserName === "webkit" && store === "ios") {
     // WebKit delegates apps.apple.com to the OS before network interception.
     // Assert an uncancelled activation here; actual store opening is manual.
+    let activated = false;
+    await page.exposeFunction("recordStoreActivation", (allowed: boolean) => { activated = allowed; });
     await link.evaluate(element => element.addEventListener("click", event => {
-     setTimeout(() => { element.setAttribute("data-test-activation", event.defaultPrevented ? "cancelled" : "allowed"); }, 0);
+     queueMicrotask(() => {
+      void (window as unknown as { recordStoreActivation: (allowed: boolean) => Promise<void> }).recordStoreActivation(!event.defaultPrevented);
+     });
     }, { once: true }));
     await link.click();
-    await expect(link).toHaveAttribute("data-test-activation", "allowed");
+    // Linux WebKit follows the mocked URL; macOS can hand it to the OS.
+    // Keep the activation evidence outside the document that may unload.
+    await expect.poll(() => activated || page.url() === target).toBe(true);
+    if (page.url() === target) await expect(page).toHaveTitle("Store destination verified");
    } else {
     await link.click();
     await expect(page).toHaveURL(target);

@@ -17,7 +17,7 @@ const BUDGETS = {
   routeTotalKb: 800,      // everything transferred on any route
   fcpMs: 1500,            // first contentful paint on the throttled phone
 };
-const ROUTES = ["/", "/profesionales", "/categorias", "/login", "/empleos"];
+const ROUTES = process.env.PERF_ROUTES ? JSON.parse(process.env.PERF_ROUTES) : ["/", "/profesionales", "/categorias", "/login", "/empleos"];
 
 const browser = await chromium.launch();
 const results = [];
@@ -29,7 +29,7 @@ try {
   // perfil es el que termina en su sufijo aleatorio.
   const slug = await scout.evaluate(() => [...document.querySelectorAll('a[href*="/profesionales/"]')].map((a) => a.getAttribute("href")).find((h) => /\/profesionales\/[^/?#]+-[a-z0-9]{8}(?:[?#]|$)/.test(h ?? "")) ?? null);
   await scout.close();
-  if (slug) ROUTES.push(slug.replace(/^https?:\/\/[^/]+/, ""));
+  if (slug && !process.env.PERF_ROUTES) ROUTES.push(slug.replace(/^https?:\/\/[^/]+/, ""));
 
   for (const route of ROUTES) {
     const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 3, locale: "es-CR" });
@@ -40,9 +40,16 @@ try {
     await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });
     const bytes = { js: 0, total: 0 };
     const types = new Map();
-    cdp.on("Network.responseReceived", (e) => types.set(e.requestId, e.type));
+    const urls = new Map();
+    const resources = [];
+    cdp.on("Network.responseReceived", (e) => {
+      types.set(e.requestId, e.type);
+      const url = new URL(e.response.url);
+      urls.set(e.requestId, `${url.origin}${url.pathname}${url.pathname === "/_next/image" ? ` [${url.searchParams.get("url")?.split("?")[0] ?? "image"}]` : ""}`);
+    });
     cdp.on("Network.loadingFinished", (e) => {
       bytes.total += e.encodedDataLength;
+      resources.push({ url: urls.get(e.requestId), type: types.get(e.requestId), kb: Math.round(e.encodedDataLength / 1024) });
       if (types.get(e.requestId) === "Script") bytes.js += e.encodedDataLength;
     });
     const started = Date.now();
@@ -53,6 +60,7 @@ try {
       return { fcp: fcp ? Math.round(fcp.startTime) : null };
     });
     results.push({ route, jsKb: Math.round(bytes.js / 1024), totalKb: Math.round(bytes.total / 1024), fcpMs: paint.fcp, wallMs: Date.now() - started });
+    if (process.env.PERF_DIAGNOSTICS === "1") console.log(JSON.stringify({ route, largestResources: resources.sort((a, b) => b.kb - a.kb).slice(0, 15) }, null, 2));
     await context.close();
   }
 } finally {

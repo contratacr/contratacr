@@ -165,7 +165,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
     const cleanLocation = locationFilter.trim();
     if (cleanLocation) params.set("location", cleanLocation);
     else params.delete("location");
-    const nextUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`;
+    const nextUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}${window.location.hash}`;
     reemplazarDireccionSiCambia(nextUrl);
   }, [locationFilter, query]);
 
@@ -209,7 +209,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
     setEmployment("all");
     const params = new URLSearchParams(window.location.search);
     params.delete("location");
-    const nextUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`;
+    const nextUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}${window.location.hash}`;
     window.history.replaceState(null, "", nextUrl);
   }
 

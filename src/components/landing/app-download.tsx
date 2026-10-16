@@ -37,8 +37,8 @@ export function AppDownloadSection() {
   if (native) return null;
   return <section id="descargar-app" data-testid="app-download-section" className="ccr-solo-web ccr-download-section relative isolate flex w-full min-w-0 min-h-[max(520px,140vw)] items-end overflow-hidden bg-[#38261c] sm:aspect-[3/1] sm:min-h-[360px] sm:items-center lg:min-h-[460px]">
     <picture className="absolute inset-0 -z-10">
-      <source media="(max-width: 639px)" srcSet="/stores/app-workshop-mobile-welcome-20261013.png" width={1122} height={1402} />
-      <Image src="/stores/app-workshop-desktop-welcome-20261013.png" width={2172} height={724} unoptimized alt={en ? "ContrataCR on a phone in a carpentry workshop" : "ContrataCR en un teléfono dentro de un taller de carpintería"} data-testid="app-download-artwork" className="h-full w-full object-cover object-top sm:object-right" />
+      <source media="(max-width: 639px)" srcSet="/stores/app-workshop-mobile-welcome-20261013.webp" width={1122} height={1402} />
+      <Image src="/stores/app-workshop-desktop-welcome-20261013.webp" width={2172} height={724} unoptimized alt={en ? "ContrataCR on a phone in a carpentry workshop" : "ContrataCR en un teléfono dentro de un taller de carpintería"} data-testid="app-download-artwork" className="h-full w-full object-cover object-top sm:object-right" />
     </picture>
     <div className="relative mx-auto w-full max-w-7xl px-5 pb-5 pt-8 sm:px-8 sm:py-6 lg:px-14 lg:py-7">
       <div className="mx-auto max-w-md text-center text-white [text-shadow:0_2px_14px_rgba(0,0,0,0.6)] sm:mx-0 sm:max-w-[49%] sm:text-left">
