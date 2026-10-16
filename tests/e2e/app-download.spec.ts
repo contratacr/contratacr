@@ -278,3 +278,34 @@ test('home-screen web app can show the store notice without being treated as nat
  await expect(page.locator('html')).not.toHaveClass(/ccr-native-app/);
  await expect(page.getByTestId('mobile-app-download')).toBeVisible();
 });
+
+
+for (const locale of ["es", "en"] as const) {
+ for (const store of ["ios", "android"] as const) {
+  test(`download section ${locale}: ${store} button activates its exact store link`, async ({ page, context, browserName }) => {
+   const target = store === "ios" ? "https://apps.apple.com/cr/app/contratacr/id6794559661" : "https://play.google.com/store/apps/details?id=com.contratacr.app";
+   // Intercept only the destination: exercise the real link without opening a
+   // store account or installing an app during automated regression.
+   await context.route(target, route => route.fulfill({ contentType: "text/html", body: "<title>Store destination verified</title>" }));
+   await page.goto(locale === "en" ? "/en#descargar-app" : "/#descargar-app");
+   const section = page.getByTestId("app-download-section");
+   const name = `${locale === "en" ? "Download on" : "Descargar en"} ${store === "ios" ? "App Store" : "Google Play"}`;
+   const link = section.getByRole("link", { name, exact: true });
+   await link.scrollIntoViewIfNeeded();
+   await expect(link).toHaveAttribute("href", target);
+   if (browserName === "webkit" && store === "ios") {
+    // WebKit delegates apps.apple.com to the OS before network interception.
+    // Assert an uncancelled activation here; actual store opening is manual.
+    await link.evaluate(element => element.addEventListener("click", event => {
+     setTimeout(() => { element.setAttribute("data-test-activation", event.defaultPrevented ? "cancelled" : "allowed"); }, 0);
+    }, { once: true }));
+    await link.click();
+    await expect(link).toHaveAttribute("data-test-activation", "allowed");
+   } else {
+    await link.click();
+    await expect(page).toHaveURL(target);
+    await expect(page).toHaveTitle("Store destination verified");
+   }
+  });
+ }
+}

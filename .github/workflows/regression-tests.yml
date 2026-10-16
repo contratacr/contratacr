@@ -131,6 +131,8 @@ jobs:
 
       - name: Verify every application surface has a regression owner
         run: npm run test:surface-ownership
+      - name: Verify complete source testing inventory
+        run: node scripts/testing-inventory.mjs --check
 
       - name: Typecheck application and regression contracts
         run: npx tsc --noEmit
