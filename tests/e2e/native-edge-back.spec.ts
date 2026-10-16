@@ -33,10 +33,12 @@ for (const environment of ['responsive web', 'native app'] as const) {
     await expect(page).toHaveURL(/\/publicar-proyecto/);
 
     await page.getByRole('button', { name: /Ej\.: plomería, electricista, pintura/ }).first().click();
-    await sheet.getByRole('button', { name: /Agro.*10 opciones/i }).click();
+    const category = sheet.getByTestId('category-picker-options').getByRole('button').first();
+    const categoryLabel = (await category.innerText()).replace(/\s+/g, ' ').trim();
+    await category.click();
     await expect(sheet.getByTestId('category-picker-options').getByRole('button', { name: 'Volver a servicios' })).toBeVisible();
     await swipe(page, 8, 360, 180, 365, '[data-testid="category-picker-options"]');
-    await expect(sheet.getByRole('button', { name: /Agro.*10 opciones/i })).toBeVisible();
+    await expect(sheet.getByRole('button', { name: categoryLabel, exact: true })).toBeVisible();
     await swipe(page, 8, 360, 180, 365, '[data-testid="category-picker-options"] button');
     await expect(sheet).toHaveCount(0);
   });

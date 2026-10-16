@@ -18,7 +18,7 @@ import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
 import { LanguagesInput } from "@/components/ui/languages-input";
 import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
-import { prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
+import { PROFILE_IMAGE_OPTIONS, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 import { createClient } from "@/lib/supabase/client";
 import { detectIdType } from "@/lib/cedula";
 import { Camera, X, Plus, ChevronDown, ChevronLeft, ChevronRight, Lock, Award, Globe, Pencil } from "lucide-react";
@@ -574,7 +574,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
     if (pendingAvatarFile) {
       setPhotoUploading(true);
       try {
-        const preparedFile = await prepareImageForUpload(pendingAvatarFile, { maxDimension: 1200 });
+        const preparedFile = await prepareImageForUpload(pendingAvatarFile, PROFILE_IMAGE_OPTIONS);
         const fd = new FormData();
         fd.append("file", preparedFile);
         fd.append("type", "avatar");

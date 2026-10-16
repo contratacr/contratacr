@@ -14,7 +14,7 @@ import { isSigningOut } from "@/lib/auth/sign-out";
 import { CabeceraDeTramite } from "@/components/layout/focused-header";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
-import { getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
+import { PROFILE_IMAGE_OPTIONS, getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 import { deleteOwnedMediaUrl } from "@/lib/client-media-cleanup";
 
 // Mandatory profile completion for OAuth (Facebook/Google) users who never
@@ -88,7 +88,7 @@ export default function CompleteProfilePage() {
     setAvatarUrl(previewUrl);
     setPhotoUploading(true);
     try {
-      const preparedFile = await prepareImageForUpload(file, { maxDimension: 1200 });
+      const preparedFile = await prepareImageForUpload(file, PROFILE_IMAGE_OPTIONS);
       const fd = new FormData();
       fd.append("file", preparedFile);
       fd.append("type", "avatar");

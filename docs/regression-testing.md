@@ -205,3 +205,11 @@ The exhaustive web run [38960494952](https://github.com/contratacr/contratacr/ac
 - Deployed test performance measurement failed existing budgets: home ~6.7 MB and professional search ~4.5 MB transferred under the scripted mobile throttle. Kept all thresholds unchanged. Added optional PERF_ROUTES and PERF_DIAGNOSTICS resource reporting to diagnose failures.
 - The download artwork was the largest home resource (~1.8 MB on mobile). Added same-dimension WebP assets: mobile 155,910 bytes instead of 1,800,230; desktop 181,778 instead of 2,039,384. Deployed performance must be measured again after deployment; this alone does not resolve the total/JS budgets.
 - Native Android compilation/emulator checks and iOS compilation/simulator launch passed in run 38960498676. WebView failures are tracked separately; no store release was submitted.
+
+### Photo budget and partial exhaustive results (2026-10-16)
+
+The first exhaustive shard reported **368 passed and 20 failed**. The run is still in progress; it is not certified. Failures include stale assertions (last-used login hint, welcome copy, fixed category counts, route ownership and hidden prepaint heading) and unresolved Linux WebKit navigation errors. Do not treat those navigation errors as product fixes or suppress them with blanket retries.
+
+The corrected ownership/login/support/category-back contracts passed 27 targeted local cases across the three browser projects. Support now associates its message label with its textarea. Photo preparation has a shared 800 px / 150 KiB budget in all five avatar upload entry points; a noisy camera-sized input and an unchanged small image passed in all three browser projects. Existing lint findings in edited screens are unchanged; the new helper/test add none.
+
+`scripts/optimize-profile-photos.mjs` is dry-run by default and requires explicit `PHOTO_ENV_FILE` and `PHOTO_REPORT`. Test-data simulation found 46 existing R2 profile photos, 58,874,964 bytes before and 2,429,422 bytes after. **No existing photo has been replaced.** Apply requires the existing R2 credentials. It retains originals, records derivative ownership, verifies public bytes and conditionally updates only an unchanged avatar URL. The report records before/after URLs for recovery; keep it outside Git. The local Cloudflare session currently cannot access this storage account.

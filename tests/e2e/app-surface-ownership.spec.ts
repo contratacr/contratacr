@@ -46,11 +46,15 @@ const pageRules: OwnershipRule[] = [
 ];
 
 const handlerRules: OwnershipRule[] = [
+  { match: /^\/descargar$/, owner: "app-download.spec.ts" },
+  { match: /^\/abrir-app$/, owner: "app-download.spec.ts" },
   { match: /^\/auth\/callback$/, owner: "product-contract.spec.ts" },
   { match: /^\/api\/admin(?:\/|$)/, owner: "admin-smoke.spec.ts" },
   { match: /^\/api\/ai-assistant(?:\/|$)/, owner: "ai-assistant.spec.ts" },
   { match: /^\/api\/account(?:\/|$)/, owner: "account-lifecycle.spec.ts" },
   { match: /^\/api\/auth(?:\/|$)/, owner: "auth-support.spec.ts" },
+  { match: /^\/api\/verification\/documents$/, owner: "product-contract.spec.ts" },
+  { match: /^\/api\/dashboard\/activity$/, owner: "statistics-dashboard.spec.ts" },
   { match: /^\/api\/(?:projects|reviews|support|quotes)(?:\/|$)/, owner: "seeded-regression.spec.ts" },
   { match: /^\/api\/(?:jobs|offers)(?:\/|$)/, owner: "marketplace-lifecycle.spec.ts" },
   { match: /^\/api\/direct-chat(?:\/|$)/, owner: "direct-chat.spec.ts", parked: true },
@@ -58,9 +62,10 @@ const handlerRules: OwnershipRule[] = [
   { match: /^\/api\/internal\/soporte(?:\/|$)/, owner: "soporte-cierre-automatico.spec.ts" },
   { match: /^\/api\/internal\/verificacion(?:\/|$)/, owner: "verificacion-repesca.spec.ts" },
   { match: /^\/api\/internal\/resena-google(?:\/|$)/, owner: "resena-google.spec.ts" },
-  { match: /^\/api\/internal\/meta(?:\/|$)/, owner: "meta-growth-runtime.spec.ts" },
-  { match: /^\/api\/internal\/campaigns(?:\/|$)/, owner: "lifecycle-email-policy.spec.ts" },
   { match: /^\/api\/internal\/resumen-semanal(?:\/|$)/, owner: "resumen-semanal.spec.ts" },
+  { match: /^\/api\/internal\/meta(?:\/|$)/, owner: "meta-growth-runtime.spec.ts" },
+  { match: /^\/api\/internal\/email(?:\/|$)/, owner: "email-delivery.spec.ts" },
+  { match: /^\/api\/internal\/campaigns(?:\/|$)/, owner: "lifecycle-email-policy.spec.ts" },
   { match: /^\/api\/trabajos\/reportar(?:\/|$)/, owner: "resumen-semanal.spec.ts" },
   { match: /^\/api\/block(?:\/|$)/, owner: "bloqueo-de-usuarios.spec.ts" },
   { match: /^\/api\/webhooks(?:\/|$)/, owner: "product-contract.spec.ts" },
@@ -98,15 +103,15 @@ test.describe("application surface ownership", () => {
     expect(parked).toEqual(["/api/direct-chat", "/api/direct-chat/attachments", "/api/direct-chat/mensaje"]);
   });
 
-  test("the default web suite only excludes the parked chat and the app-only shell", () => {
+  test("the default web suite only excludes temporary drafts, parked chat and the app-only shell", () => {
     const config = resolve(process.cwd(), "playwright.config.ts");
     expect(existsSync(config)).toBe(true);
     const source = readFileSync(config, "utf8");
-    // Dos exclusiones y no más: el chat aparcado y el armazón nativo, que no es
+    // Solo borradores temporales, el chat aparcado y el armazón nativo, que no es
     // web —vive en `playwright.mobile.config.ts` y ahí sí se corre—. Cualquier
     // otra suite que alguien saque de la corrida web tiene que doler aquí.
-    expect(source).toMatch(/testIgnore:\s*\["\*\*\/direct-chat\.spec\.ts", "\*\*\/mobile-native-shell\.spec\.ts"\]/);
-    expect(source.match(/\.spec\.ts/g)).toHaveLength(2);
+    expect(source).toMatch(/testIgnore:\s*\["\*\*\/\.tmp-\*\.spec\.ts", "\*\*\/direct-chat\.spec\.ts", "\*\*\/mobile-native-shell\.spec\.ts"\]/);
+    expect(source.match(/\.spec\.ts/g)).toHaveLength(3);
     const mobileConfig = readFileSync(resolve(process.cwd(), "playwright.mobile.config.ts"), "utf8");
     for (const suite of ["direct-chat.spec.ts", "mobile-native-shell.spec.ts"]) {
       expect(mobileConfig, `${suite} must still run somewhere`).toContain(suite);

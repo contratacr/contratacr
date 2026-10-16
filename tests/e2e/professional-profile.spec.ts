@@ -17,7 +17,7 @@ test.describe("@seeded professional profile", () => {
     await gotoOK(page, href!);
     // Desde el 4-oct-2026 la barra muestra la dirección corta (contratacr.com/nombre).
     await expect(page).toHaveURL(/\/profesionales\/|\/[a-z0-9-]+$/);
-    await expect(page.locator("h1").first()).toBeVisible();
+    await expect(page.getByTestId("professional-profile-name")).toBeVisible();
     await expect(page.locator("main").getByText(/Servicios|Sobre mi|Rese|Casos de/i).first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });

@@ -47,18 +47,16 @@ test.describe("check de identidad en las listas", () => {
 test.describe("bienvenida de la app", () => {
   test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
 
-  test("la pantalla de espera dice lo mismo que la real y no asoma al cambiar de rol", async ({ page }) => {
+  test("la pantalla de espera coincide y se oculta al abrir el registro profesional", async ({ page }) => {
     await gotoOK(page, "/?nativePreview=1&resetNativeOnboarding=1");
     const titulo = page.getByRole("heading", { name: "¿Cómo quieres empezar?" });
     await expect(titulo).toBeVisible({ timeout: 30_000 });
-    const espera = page.locator("#ccr-native-first-run-prepaint p").first();
+    const espera = page.locator("#ccr-native-first-run-prepaint h1").first();
     await expect(espera, "la pantalla de espera del arranque usa el mismo título").toHaveText("¿Cómo quieres empezar?");
 
-    await page.getByRole("button", { name: "Ofrecer servicios" }).tap();
-    // A mitad del cruce de fotos el fondo sigue tapando lo de atrás.
-    await page.waitForTimeout(200);
-    const fondo = await page.locator("[data-native-onboarding-ready]").first().evaluate((e) => getComputedStyle(e).backgroundColor);
-    expect(fondo, "el fondo de la bienvenida no se vuelve transparente al cambiar de rol").not.toMatch(/rgba\(0, 0, 0, 0\)|transparent/);
+    await page.getByRole("button", { name: /Ofrezco servicios/ }).tap();
+    await expect(page).toHaveURL(/\/registro\/profesional/);
+    await expect(page.locator("[data-native-onboarding-ready]")).toBeHidden();
   });
 });
 

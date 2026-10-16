@@ -5,6 +5,10 @@ import { IMAGE_KINDS, sniffFileType } from "@/lib/upload-validation";
 const SAFE_UPLOAD_BYTES = 3.8 * 1024 * 1024;
 const UPLOAD_TIMEOUT_MS = 30_000;
 
+// Avatars are reused in search, chat and shared profile cards. Keep the
+// uploaded source bounded too: R2 serves originals without resizing.
+export const PROFILE_IMAGE_OPTIONS = { maxDimension: 800, targetBytes: 150 * 1024 } as const;
+
 export type ImageUploadPreparationErrorCode = "too_large" | "unsupported";
 
 class ImageUploadPreparationError extends Error {
@@ -151,6 +155,8 @@ export async function prepareImageForUpload(file: File, options: PrepareImageOpt
       { dimension: Math.min(maxDimension, 1400), quality: 0.76 },
       { dimension: Math.min(maxDimension, 1200), quality: 0.74 },
       { dimension: Math.min(maxDimension, 1000), quality: 0.72 },
+      { dimension: Math.min(maxDimension, 600), quality: 0.72 },
+      { dimension: Math.min(maxDimension, 400), quality: 0.70 },
     ];
 
     for (const attempt of attempts) {

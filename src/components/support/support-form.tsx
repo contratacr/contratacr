@@ -272,10 +272,11 @@ export function SupportForm({ onSuccess, onCancel }: { onSuccess?: (email: strin
       </div>
 
       <div>
-        <label className="text-sm font-medium text-[#374151] block mb-1.5">
+        <label htmlFor="support-message" className="text-sm font-medium text-[#374151] block mb-1.5">
           {t("messageLabel")} <span className="text-red-500">*</span>
         </label>
         <textarea
+          id="support-message"
           className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#162543] placeholder:text-[#68778d] min-h-[130px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
           placeholder={t("messagePlaceholder")}
           maxLength={LONG_TEXT_MAX_LENGTH}
