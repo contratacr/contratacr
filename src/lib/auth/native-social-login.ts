@@ -1,16 +1,13 @@
+import { ANDROID_OAUTH_RETURN_ORIGIN, ANDROID_OAUTH_RETURN_PATH, readAndroidOAuthReturn } from "@/lib/auth/android-oauth-return";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isNativeAppRuntime } from "@/hooks/use-native-app";
 import { reportClientError } from "@/lib/report-client-error";
 
-// Native Sign in with Apple / Google for the Capacitor app. The web OAuth
-// redirect leaves the app for the system browser, which App Review rejects
-// (Guideline 4); here the platform sheet returns an id token and Supabase
-// accepts it directly, so the user never leaves ContrataCR.
-//
-// Provider configuration lives outside the code: the Google web client id is
-// the one Supabase already trusts, iOS also needs its own client id, and Apple
-// on Android needs a Services ID plus redirect URL. Native failures stay in the
-// app: browser OAuth cannot transfer its session back into this WebView.
+// Google and iOS Apple exchange native ID tokens directly with Supabase.
+// Android Apple uses the existing web provider in a secure browser sheet;
+// its PKCE code returns to this WebView through the published app link.
+// Provider failures never silently fall back to a separate browser session.
+// Google uses the web client trusted by Supabase plus its platform clients.
 
 export type NativeSocialProvider = "apple" | "google";
 export type NativeSocialOutcome = "signed-in" | "cancelled" | "unavailable";
@@ -111,6 +108,42 @@ function isCancellation(error: unknown) {
   return /cancel|dismiss|user closed|12501|1001/.test(text);
 }
 
+// Apple on Android uses the Apple provider already configured in Supabase.
+// Its browser sheet hands a PKCE code back through an OS-verified app link;
+// the original WebView alone has the verifier needed to establish its session.
+async function androidAppleOperation(supabase: SupabaseClient, operation: "sign-in" | "link") {
+  if (window.location.origin !== ANDROID_OAUTH_RETURN_ORIGIN) throw new Error("Android OAuth requires the production app origin");
+  const account = operation === "link" ? await supabase.auth.getUser() : null;
+  if (account && (account.error || !account.data.user)) throw new Error("Sign in before linking an identity.");
+  const state = randomNonce();
+  const redirectTo = `${ANDROID_OAUTH_RETURN_ORIGIN}/auth/callback?flow=android-apple&native_state=${state}&locale=${window.location.pathname.startsWith("/en") ? "en" : "es"}`;
+  const options = { redirectTo, skipBrowserRedirect: true };
+  const started = operation === "link"
+    ? await supabase.auth.linkIdentity({ provider: "apple", options })
+    : await supabase.auth.signInWithOAuth({ provider: "apple", options });
+  if (started.error || !started.data?.url) throw started.error ?? new Error("Missing OAuth URL");
+  const { SocialLogin } = await loadPlugin();
+  let response;
+  try {
+    response = await SocialLogin.openSecureWindow({ authEndpoint: started.data.url, redirectUri: `${ANDROID_OAUTH_RETURN_ORIGIN}${ANDROID_OAUTH_RETURN_PATH}` });
+  } catch (error) {
+    if (isCancellation(error)) return "cancelled" as const;
+    throw error;
+  }
+  const code = readAndroidOAuthReturn(response.redirectedUri, state);
+  if (account) {
+    const current = await supabase.auth.getUser();
+    if (current.error || current.data.user?.id !== account.data.user?.id) throw new Error("The account changed while connecting Apple.");
+  }
+  const exchanged = await supabase.auth.exchangeCodeForSession(code);
+  if (exchanged.error || !exchanged.data.session) throw exchanged.error ?? new Error("Missing native session");
+  if (account && exchanged.data.user?.id !== account.data.user?.id) {
+    await supabase.auth.signOut();
+    throw new Error("The linked account did not match.");
+  }
+  return "completed" as const;
+}
+
 async function nativeSocialOperation(
   provider: NativeSocialProvider,
   supabase: SupabaseClient,
@@ -123,6 +156,13 @@ async function nativeSocialOperation(
     ({ platform } = await loadPlugin());
   } catch (error) {
     return failNative(provider, operation, "load-plugin", failureCategory(error));
+  }
+  if (platform === "android" && provider === "apple") {
+    try { return await androidAppleOperation(supabase, operation); }
+    catch (error) {
+      if (isCancellation(error)) return "cancelled";
+      return failNative(provider, operation, "android-pkce", failureCategory(error));
+    }
   }
   if (platform === "web" || !isConfigured(provider, platform)) {
     return failNative(provider, operation, "configuration", platform === "web" ? "native-bridge-missing" : `${platform}-client-missing`);

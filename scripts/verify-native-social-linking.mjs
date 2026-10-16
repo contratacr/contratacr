@@ -10,9 +10,19 @@ const compiled = ts.transpileModule(source, {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
 }).outputText;
 
-function setup({ native = true, platform = "ios", providerError, providerErrors, linkError, accounts = ["existing", "existing"] } = {}) {
-  const calls = { login: [], logout: [], link: [], signIn: [], diagnostics: [] };
+const returnExports = {};
+vm.runInNewContext(ts.transpileModule(readFileSync(new URL("../src/lib/auth/android-oauth-return.ts", import.meta.url), "utf8"), {
+  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+}).outputText, { exports: returnExports, URL, URLSearchParams, Response });
+
+function setup({ native = true, platform = "ios", providerError, providerErrors, linkError, returnState = true, accounts = ["existing", "existing"] } = {}) {
+  const calls = { login: [], logout: [], link: [], signIn: [], oauth: [], exchange: [], diagnostics: [] };
   const plugin = {
+    openSecureWindow: async ({ redirectUri }) => {
+      const request = calls.oauth[0] ?? calls.link[0];
+      const state = new URL(request.options.redirectTo).searchParams.get("native_state");
+      return { redirectedUri: `${redirectUri}?native_state=${returnState ? state : "wrong"}&code=one-use-code` };
+    },
     initialize: async () => {},
     logout: async (options) => { calls.logout.push(options); },
     login: async (options) => {
@@ -24,9 +34,11 @@ function setup({ native = true, platform = "ios", providerError, providerErrors,
   };
   const exports = {};
   vm.runInNewContext(compiled, {
-    exports, crypto: webcrypto, Uint8Array, TextEncoder, console,
+    exports, crypto: webcrypto, Uint8Array, TextEncoder, console, URL,
+    window: { location: { origin: "https://contratacr.com", pathname: "/login" } },
     process: { env: { NEXT_PUBLIC_GOOGLE_CLIENT_ID: "web-client", NEXT_PUBLIC_GOOGLE_IOS_CLIENT_ID: "ios-client" } },
     require: (name) => {
+      if (name === "@/lib/auth/android-oauth-return") return returnExports;
       if (name === "@/lib/report-client-error") return { reportClientError: (_origin, error) => calls.diagnostics.push(error.message) };
       if (name === "@/hooks/use-native-app") return { isNativeAppRuntime: () => native };
       if (name === "@capgo/capacitor-social-login") return { SocialLogin: plugin };
@@ -37,7 +49,10 @@ function setup({ native = true, platform = "ios", providerError, providerErrors,
   let userIndex = 0;
   const supabase = { auth: {
     getUser: async () => ({ data: { user: accounts[userIndex++] ? { id: accounts[userIndex - 1] } : null }, error: null }),
-    linkIdentity: async (credentials) => { calls.link.push(credentials); return { error: linkError }; },
+    linkIdentity: async (credentials) => { calls.link.push(credentials); return { data: { url: "https://example.supabase.co/auth/v1/authorize" }, error: linkError }; },
+    signInWithOAuth: async (options) => { calls.oauth.push(options); return { data: { url: "https://example.supabase.co/auth/v1/authorize" }, error: null }; },
+    exchangeCodeForSession: async (code) => { calls.exchange.push(code); return { data: { session: {}, user: { id: accounts[0] } }, error: null }; },
+    signOut: async () => {},
     signInWithIdToken: async (credentials) => { calls.signIn.push(credentials); return { error: null }; },
   } };
   return { api: exports, calls, supabase };
@@ -136,4 +151,44 @@ test("Android reauthentication retry remains bounded", async () => {
   await assert.rejects(api.nativeSocialSignIn("google", supabase), /native-social-unavailable/);
   assert.equal(calls.login.length, 2);
   assert.equal(calls.signIn.length, 0);
+});
+
+for (const operation of ["sign-in", "link"]) {
+  test(`Android Apple ${operation} exchanges PKCE in the original app without native Apple secrets`, async () => {
+    const { api, supabase, calls } = setup({ platform: "android" });
+    assert.equal(await (operation === "link" ? api.nativeSocialLink("apple", supabase) : api.nativeSocialSignIn("apple", supabase)), operation === "link" ? "linked" : "signed-in");
+    assert.deepEqual(calls.exchange, ["one-use-code"]);
+    assert.equal(calls.login.length + calls.signIn.length, 0);
+    const request = operation === "link" ? calls.link[0] : calls.oauth[0];
+    assert.equal(request.options.skipBrowserRedirect, true);
+    assert.equal(new URL(request.options.redirectTo).searchParams.get("flow"), "android-apple");
+  });
+}
+test("Android Apple rejects a return from another attempt before exchanging a code", async () => {
+  const { api, supabase, calls } = setup({ platform: "android", returnState: false });
+  await assert.rejects(api.nativeSocialSignIn("apple", supabase), /native-social-unavailable/);
+  assert.equal(calls.exchange.length, 0);
+});
+test("Android Apple linking cannot change the existing account", async () => {
+  const { api, supabase, calls } = setup({ platform: "android", accounts: ["existing", "other"] });
+  await assert.rejects(api.nativeSocialLink("apple", supabase), /native-social-unavailable/);
+  assert.equal(calls.exchange.length, 0);
+});
+test("Android return only accepts the exact app link and attempt state", () => {
+  const state = "a".repeat(64);
+  const base = `https://contratacr.com/dashboard/native-auth-return?native_state=${state}&code=once`;
+  assert.equal(returnExports.readAndroidOAuthReturn(base, state), "once");
+  for (const invalid of [base.replace("contratacr.com", "evil.example"), base.replace("native-auth-return", "native-auth-return/other"), `${base}#access_token=secret`, base.replace("https:", "http:")]) {
+    assert.throws(() => returnExports.readAndroidOAuthReturn(invalid, state));
+  }
+});
+test("Android browser callback only renders a fixed app handoff, without creating a session", async () => {
+  const response = returnExports.androidOAuthReturnResponse(new URLSearchParams({ native_state: "a".repeat(64), code: "one-use-code", next: "https://evil.example", access_token: "must-not-leak" }));
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("referrer-policy"), "no-referrer");
+  assert.match(response.headers.get("cache-control"), /no-store/);
+  const html = await response.text();
+  assert.match(html, /package=com.contratacr.app;end/);
+  assert.doesNotMatch(html, /evil.example|must-not-leak/);
+  assert.equal(returnExports.androidOAuthReturnResponse(new URLSearchParams({ code: "once", native_state: "bad" })).status, 400);
 });

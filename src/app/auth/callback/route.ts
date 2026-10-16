@@ -1,3 +1,4 @@
+import { androidOAuthReturnResponse } from "@/lib/auth/android-oauth-return";
 import { LAST_SIGN_IN_COOKIE, signInMethod } from "@/lib/auth/last-sign-in";
 import { NextRequest, NextResponse } from "next/server";
 import { rutaInternaSegura } from "@/lib/navigation/ruta-interna";
@@ -157,6 +158,7 @@ async function finishSignedIn(
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
+  if (searchParams.get("flow") === "android-apple") return androidOAuthReturnResponse(searchParams);
   const code = searchParams.get("code");
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type");

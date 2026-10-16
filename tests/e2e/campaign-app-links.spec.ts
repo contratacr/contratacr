@@ -6,7 +6,7 @@ test("campaign links preserve section, query and fragment without accepting exte
   expect(campaignAppPath("https://contratacr.com/dashboard/profesional?tab=completion#precio")).toBe("/dashboard/profesional?tab=completion#precio");
   expect(campaignAppPath("https://contratacr.com/en/empleos/123")).toBe("/en/empleos/123");
   expect(campaignAppPath("https://contratacr.com/api/trabajos/reportar?p=abc&s=2026-10-05&n=1&f=signed")).toContain("&f=signed");
-  for (const url of ["https://evil.example/dashboard", "https://contratacr.com.evil.example/dashboard", "https://evil@contratacr.com/dashboard", "http://contratacr.com/dashboard", "https://contratacr.com/api/email/baja", "https://contratacr.com/auth/callback", "https://contratacr.com/admin", "javascript:alert(1)"]) expect(campaignAppPath(url)).toBeNull();
+  for (const url of ["https://contratacr.com/dashboard/native-auth-return?code=once", "https://contratacr.com/en/dashboard/native-auth-return?code=once", "https://evil.example/dashboard", "https://contratacr.com.evil.example/dashboard", "https://evil@contratacr.com/dashboard", "http://contratacr.com/dashboard", "https://contratacr.com/api/email/baja", "https://contratacr.com/auth/callback", "https://contratacr.com/admin", "javascript:alert(1)"]) expect(campaignAppPath(url)).toBeNull();
 });
 for (const colorScheme of ["light", "dark"] as const) test(`browser confirmation keeps the navy logo on a white card in ${colorScheme} mode`, async ({ page }) => {
   await page.emulateMedia({ colorScheme });
