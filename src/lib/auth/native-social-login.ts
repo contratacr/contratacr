@@ -9,8 +9,8 @@ import { reportClientError } from "@/lib/report-client-error";
 //
 // Provider configuration lives outside the code: the Google web client id is
 // the one Supabase already trusts, iOS also needs its own client id, and Apple
-// on Android needs a Services ID plus redirect URL. Whatever is missing simply
-// falls back to the existing web flow, so a half-configured build still signs in.
+// on Android needs a Services ID plus redirect URL. Native failures stay in the
+// app: browser OAuth cannot transfer its session back into this WebView.
 
 export type NativeSocialProvider = "apple" | "google";
 export type NativeSocialOutcome = "signed-in" | "cancelled" | "unavailable";
@@ -29,6 +29,8 @@ let initializationFailure = "unknown";
 function failureCategory(error: unknown) {
   const message = String((error as { message?: string })?.message ?? error).toLowerCase();
   if (/url scheme|urlscheme/.test(message)) return "url-scheme";
+  if (/no credential|no credentials/.test(message)) return "no-credentials";
+  if (/developer console|sha.?1|oauth.*config/.test(message)) return "provider-configuration";
   if (/disabled|not available|not implemented|unimplemented/.test(message)) return "plugin-unavailable";
   if (/client.?id|configuration|not initialized/.test(message)) return "provider-configuration";
   if (/network|fetch|chunk|load.*module/.test(message)) return "network-or-bundle";
@@ -37,6 +39,19 @@ function failureCategory(error: unknown) {
 
 function reportFallback(provider: NativeSocialProvider, operation: string, stage: string, reason = "unknown") {
   reportClientError("window", { message: `native-social-fallback:${operation}:${provider}:${stage}:${reason}` });
+}
+
+export function nativeSocialErrorMessage(provider: NativeSocialProvider, locale = "es") {
+  const label = provider === "google" ? "Google" : "Apple";
+  return locale === "en"
+    ? `We couldn't sign in with ${label} in the app. Try again or use your email.`
+    : `No pudimos iniciar sesión con ${label} en la app. Intenta de nuevo o usa tu correo.`;
+}
+
+function failNative(provider: NativeSocialProvider, operation: string, stage: string, reason: string): never {
+  initialization = null; // A recreated Android activity may have lost its provider registry.
+  reportFallback(provider, operation, stage, reason);
+  throw new Error("native-social-unavailable");
 }
 
 async function loadPlugin() {
@@ -107,16 +122,13 @@ async function nativeSocialOperation(
   try {
     ({ platform } = await loadPlugin());
   } catch (error) {
-    reportFallback(provider, operation, "load-plugin", failureCategory(error));
-    return "unavailable";
+    return failNative(provider, operation, "load-plugin", failureCategory(error));
   }
   if (platform === "web" || !isConfigured(provider, platform)) {
-    reportFallback(provider, operation, "configuration", platform === "web" ? "native-bridge-missing" : `${platform}-client-missing`);
-    return "unavailable";
+    return failNative(provider, operation, "configuration", platform === "web" ? "native-bridge-missing" : `${platform}-client-missing`);
   }
   if (!(await ensureInitialized())) {
-    reportFallback(provider, operation, "initialize", initializationFailure);
-    return "unavailable";
+    return failNative(provider, operation, "initialize", initializationFailure);
   }
 
   // Linking must always preserve the authenticated account. Never substitute a
@@ -142,7 +154,7 @@ async function nativeSocialOperation(
   // (Isaac, 9-oct-2026, al entrar, salir y volver a entrar). Cerrando antes la
   // sesión del plugin, Google firma un token nuevo con este nonce. Apple pide
   // siempre uno nuevo y no lo necesita.
-  if (provider === "google") {
+  if (provider === "google" && platform === "ios") {
     try {
       await SocialLogin.logout({ provider: "google" });
     } catch {
@@ -150,23 +162,31 @@ async function nativeSocialOperation(
     }
   }
 
+  const openProvider = () => provider === "apple"
+    ? SocialLogin.login({ provider: "apple", options: { scopes: ["email", "name"], nonce: hashedNonce } })
+    : SocialLogin.login({ provider: "google", options: { nonce: hashedNonce, ...(platform === "android" ? { style: "standard" as const } : {}) } });
   let idToken: string | null | undefined;
   try {
-    const response = provider === "apple"
-      ? await SocialLogin.login({ provider: "apple", options: { scopes: ["email", "name"], nonce: hashedNonce } })
-      : await SocialLogin.login({ provider: "google", options: { nonce: hashedNonce } });
+    let response;
+    try {
+      response = await openProvider();
+    } catch (error) {
+      // Older Android binaries can return this when the chooser adds or
+      // reauthenticates an account. Recover once inside Credential Manager;
+      // never retry a cancellation or a Google Cloud configuration failure.
+      const message = String((error as { message?: string })?.message ?? error);
+      if (provider !== "google" || platform !== "android" || !/account.?reauth.?failed/i.test(message)) throw error;
+      await SocialLogin.logout({ provider: "google" });
+      response = await openProvider();
+    }
     idToken = (response.result as { idToken?: string | null }).idToken;
   } catch (error) {
     if (isCancellation(error)) return "cancelled";
-    // A misconfigured provider (missing SHA-1, wrong client id) must not strand
-    // the user: the web flow still works, it is just the worse experience.
-    console.warn(`[native-auth] ${provider} sheet failed, using web flow:`, error);
-    reportFallback(provider, operation, "provider-sheet", failureCategory(error));
-    return "unavailable";
+    // Never escape into browser OAuth: its cookies belong to another session.
+    return failNative(provider, operation, "provider-sheet", failureCategory(error));
   }
   if (!idToken) {
-    reportFallback(provider, operation, "provider-sheet", "missing-id-token");
-    return "unavailable";
+    return failNative(provider, operation, "provider-sheet", "missing-id-token");
   }
 
   if (operation === "link") {

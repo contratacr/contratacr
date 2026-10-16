@@ -97,7 +97,12 @@ export function useRedirectIfRegistered(): { checking: boolean } {
       // Logged in but no complete account yet → leave them on the page to finish.
       setChecking(false);
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      // Auth can refresh the user while the profile RPC is pending. The next
+      // effect must run again; otherwise the cancelled check leaves a blank form.
+      ran.current = false;
+    };
   }, [user, authLoading, locale]);
 
   return { checking };

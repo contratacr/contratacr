@@ -10,7 +10,6 @@ import { createClient } from "@/lib/supabase/client";
 import { isSigningOut } from "@/lib/auth/sign-out";
 import { CabeceraDeTramite } from "@/components/layout/focused-header";
 import { LienzoNeutro } from "@/components/ui/section-skeletons";
-import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 
 export default function OnboardingPage() {
   const { user, avatarUrl, loading: authLoading } = useAuth();
@@ -107,7 +106,7 @@ export default function OnboardingPage() {
     const nextMetadata =
       role === "professional"
         ? { role: "client", intended_role: "professional", onboarding_completed: false }
-        : { role, onboarding_completed: true };
+        : { role, onboarding_completed: false };
     try {
       await supabase.auth.updateUser({ data: nextMetadata });
     } catch (err) {
@@ -128,7 +127,7 @@ export default function OnboardingPage() {
             (user.user_metadata?.picture as string) ??
             null,
           role: role === "professional" ? "client" : role,
-          onboarding_completed: role !== "professional",
+          onboarding_completed: false,
         },
         { onConflict: "id" }
       );
@@ -136,18 +135,9 @@ export default function OnboardingPage() {
       console.error("[onboarding] profile upsert failed:", err);
     }
 
-    // A social sign-in that picks "Busco" IS a completed client registration;
-    // the professional branch reports its own event at the end of that flow.
-    if (role === "client") {
-      trackMetaEvent("CompleteRegistration", { content_name: "client_registration", status: "client" });
-      // Un respiro para que el aviso a Meta salga antes de cambiar de página;
-      // si el píxel aún no había cargado, la página siguiente lo manda.
-      await new Promise((resolve) => window.setTimeout(resolve, 400));
-    }
-
-    // "Ofrezco" → complete the professional profile to unlock offering. "Busco" →
-    // straight into the unified panel (it opens in "Usar servicios" mode).
-    window.location.assign(role === "professional" ? `${prefijoDeIdioma(locale)}/registro/profesional` : `${prefijoDeIdioma(locale)}/dashboard/profesional`);
+    // Google and Apple verify identity, not a contact number. Both roles finish
+    // the existing registration form before the account is marked complete.
+    window.location.assign(role === "professional" ? `${prefijoDeIdioma(locale)}/registro/profesional` : `${prefijoDeIdioma(locale)}/registro/cliente`);
   }
 
   // Loader until we KNOW this is a new user (existing users are redirected above) —
