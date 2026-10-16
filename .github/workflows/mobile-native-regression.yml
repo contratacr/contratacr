@@ -58,12 +58,13 @@ jobs:
     name: Native webview shell and direct chat
     needs: contracts
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 90
     environment: test
     concurrency:
       group: contratacr-test-environment
       cancel-in-progress: false
     env:
+      PLAYWRIGHT_WEBKIT: "1"
       PLAYWRIGHT_LOCAL_PRODUCTION: "1"
       E2E_FIXTURES_READY: "1"
       E2E_TEST_PASSWORD: ${{ secrets.REGRESSION_TEST_PASSWORD }}
@@ -99,7 +100,7 @@ jobs:
         run: npm run build
       - name: Prepare isolated canonical test fixtures
         run: npm run seed:test:full
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install --with-deps chromium webkit
       - name: Run native-only shell and direct-chat regression
         run: npm run test:e2e:mobile
       - name: Verify canonical fixtures after mobile regression

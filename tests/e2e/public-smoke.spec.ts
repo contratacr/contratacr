@@ -298,7 +298,19 @@ test.describe("@smoke public routes", () => {
 
       const internalRoutes = ["servicios", "como-funciona", "ayuda", "soporte", "privacidad", "terminos"];
       for (const route of internalRoutes) {
-        await expect(footer.locator(`a[href="${prefijo}/${route}"]`).first(), `Missing ${prefijo}/${route} in footer`).toBeVisible();
+        const link = footer.locator(`a[href="${prefijo}/${route}"]`).first();
+        const group = footer.locator("nav").filter({ has: page.locator(`a[href="${prefijo}/${route}"]`) });
+        const toggle = group.locator("button[aria-controls]");
+        if (await toggle.isVisible()) {
+          if (await toggle.getAttribute("aria-expanded") === "false") await toggle.click();
+          await expect(toggle).toHaveAttribute("aria-expanded", "true");
+          await expect(link, `Missing ${prefijo}/${route} in expanded footer`).toBeVisible();
+          await toggle.click();
+          await expect(toggle).toHaveAttribute("aria-expanded", "false");
+          await expect(link).toBeHidden();
+        } else {
+          await expect(link, `Missing ${prefijo}/${route} in desktop footer`).toBeVisible();
+        }
       }
 
       const external = footer.locator('a[target="_blank"]');
