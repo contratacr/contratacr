@@ -18,7 +18,7 @@ import { createClient, hasSupabaseBrowserConfig } from "@/lib/supabase/client";
 import { FooterSoloWeb } from "@/components/landing/footer-solo-web";
 import { detectSocialOnly, providerLabel } from "@/lib/auth-method";
 import { isNativeAppRuntime } from "@/hooks/use-native-app";
-import { nativeSocialSignIn, nativeSocialErrorMessage } from "@/lib/auth/native-social-login";
+import { nativeSocialSignIn } from "@/lib/auth/native-social-login";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { OtpVerification } from "@/components/auth/otp-verification";
 import { PageRouteLoading } from "@/components/ui/route-loading";
@@ -336,7 +336,7 @@ export default function LoginPage() {
         throw new Error("native-social-unavailable");
       } catch {
         setLeaving(false);
-        setError(nativeSocialErrorMessage(provider, locale));
+        setError(t("nativeSocialError", { provider: provider === "google" ? "Google" : "Apple" }));
         if (provider === "google") setGoogleLoading(false);
         else setAppleLoading(false);
         return;

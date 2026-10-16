@@ -49,3 +49,13 @@ La APK oficial instalada directamente en el antiguo emulador mostró una protecc
 En el emulador anterior también se encontró una captura GPU obsoleta: mostraba la bienvenida antigua incluso con el launcher activo. Reiniciar sin snapshot y con SwiftShader corrigió la representación del emulador. Esto no demuestra la causa en el dispositivo que reportó Isaac.
 
 Validación local de la corrección: 22 contratos de autenticación y 28 pruebas Playwright en Chromium/WebKit móviles pasaron. La comprobación de tipos pasó. Ninguna versión se publicó en las tiendas.
+
+## Prueba manual con instalación de Google Play
+
+El 16 de octubre se instaló directamente desde Play Store: `versionCode=14`, `versionName=1.0.10`, instalador `com.android.vending`. La app abrió la bienvenida blanca actual; no mostró la portada antigua. Google abrió su selector nativo, autenticó la cuenta de prueba configurada y regresó a la app con su identidad visible en onboarding. No se completó ni cambió su rol.
+
+En un intento posterior, «Add another account» avanzó hasta el formulario oficial de Google para correo/teléfono. Se canceló y regresó al login de ContrataCR sin iniciar otra sesión. Esto confirma el avance del formulario, pero no un acceso completo con una segunda cuenta.
+
+Apple abrió el flujo de navegador seguro; la primera configuración de Chrome y las credenciales de Apple quedaron pendientes de intervención de Isaac. No se declara validado el retorno real de Apple todavía.
+
+El CI detectó un texto bilingüe del error nativo fuera del catálogo. Se movió a `auth.login.nativeSocialError` en ambos idiomas y sus dos consumidores usan `useTranslations`; no se amplió el presupuesto del control.

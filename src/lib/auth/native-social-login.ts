@@ -38,13 +38,6 @@ function reportFallback(provider: NativeSocialProvider, operation: string, stage
   reportClientError("window", { message: `native-social-fallback:${operation}:${provider}:${stage}:${reason}` });
 }
 
-export function nativeSocialErrorMessage(provider: NativeSocialProvider, locale = "es") {
-  const label = provider === "google" ? "Google" : "Apple";
-  return locale === "en"
-    ? `We couldn't sign in with ${label} in the app. Try again or use your email.`
-    : `No pudimos iniciar sesión con ${label} en la app. Intenta de nuevo o usa tu correo.`;
-}
-
 function failNative(provider: NativeSocialProvider, operation: string, stage: string, reason: string): never {
   initialization = null; // A recreated Android activity may have lost its provider registry.
   reportFallback(provider, operation, stage, reason);
