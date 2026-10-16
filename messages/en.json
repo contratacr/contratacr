@@ -656,12 +656,6 @@
       "signIn": "Sign in"
     },
     "appleAccount": {
-      "title": "Keep one ContrataCR account",
-      "description": "Already have an account with email or Google? Sign in with that method first, then connect Apple in Sign-in methods. Hiding your email with Apple can otherwise create a separate account.",
-      "existing": "I already have an account",
-      "continueHelp": "Continue if this is your first ContrataCR account or you already connected Apple to your account.",
-      "continue": "Continue with Apple",
-      "close": "Close",
       "loginHelp": "Sign in with the email or Google account you already use. We will take you to Sign-in methods to connect Apple and keep your profile.",
       "accountHelp": "Connect Apple below to keep this profile, even when hiding your email. Confirm using your Apple account."
     }

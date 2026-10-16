@@ -1,6 +1,5 @@
 "use client";
 
-import { AppleAccountNotice, APPLE_LINK_DESTINATION } from "@/components/auth/apple-account-notice";
 import { rememberSignIn } from "@/lib/auth/last-sign-in";
 import { useTranslations, useLocale } from "next-intl";
 import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
@@ -132,8 +131,7 @@ export default function LoginPage() {
   const locale = useLocale();
   const searchParams = useSearchParams();
   const ta = useTranslations("auth.appleAccount");
-  const connectingApple = searchParams.get("redirect") === APPLE_LINK_DESTINATION;
-  const [appleNotice, setAppleNotice] = useState(false);
+  const connectingApple = searchParams.get("redirect") === "/dashboard/profesional?tab=cuenta&connect=apple";
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
@@ -475,7 +473,6 @@ export default function LoginPage() {
           iframe underneath, so the cover never intercepts pointer events. */}
       {leaving && <div className="contents pointer-events-none"><PageRouteLoading /></div>}
 
-      <AppleAccountNotice open={appleNotice} onClose={() => setAppleNotice(false)} onContinue={handleApple} />
       <Navbar mobileSearch={false} />
       <main className="flex-1 ccr-centrado-seguro py-12 px-4">
         <div className="w-full max-w-md">
@@ -554,7 +551,7 @@ export default function LoginPage() {
             {connectingApple && <p role="status" className="rounded-xl bg-[#eff9fd] p-3 text-sm text-[#374151]">{ta("loginHelp")}</p>}
             {!connectingApple && <button
               type="button"
-              onClick={() => setAppleNotice(true)}
+              onClick={() => { void handleApple(); }}
               disabled={runtime === "unknown" || appleLoading || googleLoading}
               className={`w-full flex items-center justify-center gap-3 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${socialHint === "apple" ? "border-[#009FD9] bg-black text-white ring-2 ring-[#009FD9]/30" : "border-black bg-black text-white hover:bg-[#202020]"}`}
             >

@@ -656,12 +656,6 @@
       "signIn": "Inicia sesión"
     },
     "appleAccount": {
-      "title": "Conserva una sola cuenta en ContrataCR",
-      "description": "¿Ya tienes cuenta con correo o Google? Ingresa con ese método y luego conecta Apple en Métodos de acceso. Si ocultas tu correo con Apple, podrías crear otra cuenta.",
-      "existing": "Ya tengo cuenta",
-      "continueHelp": "Continúa si es tu primera cuenta en ContrataCR o si ya conectaste Apple a tu cuenta.",
-      "continue": "Continuar con Apple",
-      "close": "Cerrar",
       "loginHelp": "Ingresa con el correo o Google que ya usas. Te llevaremos a Métodos de acceso para conectar Apple y conservar tu perfil.",
       "accountHelp": "Conecta Apple aquí para conservar este perfil, aunque ocultes tu correo. Confirma el acceso con tu cuenta de Apple."
     }

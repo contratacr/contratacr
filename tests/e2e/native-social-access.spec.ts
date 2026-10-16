@@ -100,7 +100,6 @@ test("Play build 14 explains the Apple update requirement without leaving the ap
   });
   await gotoOK(page, "/login");
   await page.getByRole("button", { name: "Continuar con Apple", exact: true }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "Continuar con Apple", exact: true }).click();
   await expect(page.getByText("El acceso con Apple no está disponible en esta versión de la app. Puedes usarlo desde contratacr.com en tu navegador.")).toBeVisible();
   await expect(page).toHaveURL(/\/login$/);
   expect(browserOAuth).toBe(0);
