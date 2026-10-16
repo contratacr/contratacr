@@ -6,7 +6,7 @@ import { useState, useSyncExternalStore } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { createClient, hasSupabaseBrowserConfig } from "@/lib/supabase/client";
 import { isNativeAppRuntime } from "@/hooks/use-native-app";
-import { nativeSocialSignIn, nativeSocialErrorMessage } from "@/lib/auth/native-social-login";
+import { nativeSocialSignIn } from "@/lib/auth/native-social-login";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 
 // "Continuar con Google/Apple" for the REGISTRATION forms: the same providers
@@ -71,7 +71,7 @@ export function SocialSignupButtons({ nextPath }: { nextPath?: string }) {
         // A native provider must never continue into browser OAuth.
         throw new Error("native-social-unavailable");
       } catch {
-        setError(nativeSocialErrorMessage(provider, locale));
+        setError(t("nativeSocialError", { provider: provider === "google" ? "Google" : "Apple" }));
         setLoading(null);
         return;
       }
