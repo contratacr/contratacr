@@ -17,7 +17,7 @@ import { PhoneInput, hasPhoneNumber, isPhoneComplete } from "@/components/ui/pho
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
-import { getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
+import { PROFILE_IMAGE_OPTIONS, getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 
 type ExtraProfileSection = {
@@ -218,7 +218,7 @@ export function BasicProfileSection({
     if (pendingAvatarFile) {
       setPhotoUploading(true);
       try {
-        const preparedFile = await prepareImageForUpload(pendingAvatarFile, { maxDimension: 1200 });
+        const preparedFile = await prepareImageForUpload(pendingAvatarFile, PROFILE_IMAGE_OPTIONS);
         const fd = new FormData();
         fd.append("file", preparedFile);
         fd.append("type", "avatar");

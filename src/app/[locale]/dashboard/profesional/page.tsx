@@ -71,7 +71,7 @@ import {
   type DashboardBootstrap,
   type DashboardProfileData,
 } from "@/lib/dashboard-bootstrap-cache";
-import { prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
+import { PROFILE_IMAGE_OPTIONS, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 import { deleteOwnedMediaUrl } from "@/lib/client-media-cleanup";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { formatPersonDisplayName, getProfessionalDisplayName } from "@/lib/display-name";
@@ -1439,7 +1439,7 @@ export default function DashboardPage() {
     setHeaderPhotoUploading(true);
     setHeaderPhotoMenuOpen(false);
     try {
-      const preparedFile = await prepareImageForUpload(file, { maxDimension: 1200 });
+      const preparedFile = await prepareImageForUpload(file, PROFILE_IMAGE_OPTIONS);
       const fd = new FormData();
       fd.append("file", preparedFile);
       fd.append("type", "avatar");

@@ -39,7 +39,7 @@ import { detectSocialOnly, providerLabel } from "@/lib/auth-method";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { writeStoredMode } from "@/hooks/use-mode";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
-import { getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
+import { PROFILE_IMAGE_OPTIONS, getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 import { trackMetaEvent, trackMetaConversion } from "@/lib/analytics/meta-pixel";
 import { readAttribution } from "@/lib/analytics/attribution";
 import { FilaInterruptor } from "@/components/ui/fila-interruptor";
@@ -848,7 +848,7 @@ export default function RegisterProfessionalPage() {
       if (photoFile) {
         try {
           setUploadingPhoto(true);
-          const preparedFile = await prepareImageForUpload(photoFile, { maxDimension: 1200 });
+          const preparedFile = await prepareImageForUpload(photoFile, PROFILE_IMAGE_OPTIONS);
           const fd = new FormData();
           fd.append("file", preparedFile);
           fd.append("type", "avatar");
