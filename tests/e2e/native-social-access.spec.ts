@@ -63,3 +63,21 @@ test("new social clients complete their phone before onboarding finishes", async
     expect(result.data.user?.user_metadata.onboarding_completed).toBe(false);
   } finally { await cleanupDisposableAccount(account); }
 });
+
+test("Android Apple callback hands PKCE back to the fixed app without a browser session", async ({ request }) => {
+  const response = await request.get(`/auth/callback?flow=android-apple&native_state=${"a".repeat(64)}&code=regression-only-code&next=https://evil.example`, { maxRedirects: 0 });
+  expect(response.status()).toBe(200);
+  expect(response.headers()["cache-control"]).toContain("no-store");
+  expect(response.headers()["referrer-policy"]).toBe("no-referrer");
+  expect(response.headers()["content-security-policy"]).toContain("default-src 'none'");
+  const html = await response.text();
+  expect(html).toContain("intent://contratacr.com/dashboard/native-auth-return?");
+  expect(html).toContain("package=com.contratacr.app;end");
+  expect(html).not.toContain("evil.example");
+  expect(response.headers()["set-cookie"] ?? "").not.toMatch(/sb-[^;]*auth-token/);
+});
+
+test("Android Apple callback rejects an incomplete handoff", async ({ request }) => {
+  const response = await request.get("/auth/callback?flow=android-apple&code=fixture&native_state=invalid", { maxRedirects: 0 });
+  expect(response.status()).toBe(400);
+});
