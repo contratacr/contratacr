@@ -195,7 +195,7 @@ export function OffersBoard({
       const cleanLocation = locationFilter.trim();
       if (cleanLocation) params.set("location", cleanLocation);
       else params.delete("location");
-      const nextUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`;
+      const nextUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}${window.location.hash}`;
       reemplazarDireccionSiCambia(nextUrl);
     }, 300);
 
@@ -251,7 +251,7 @@ export function OffersBoard({
     setPublished("all");
     const params = new URLSearchParams(window.location.search);
     params.delete("location");
-    const nextUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`;
+    const nextUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}${window.location.hash}`;
     window.history.replaceState(null, "", nextUrl);
   }
 

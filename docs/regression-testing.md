@@ -195,3 +195,13 @@ The seeded regression pair is the same pair you see as **ContrataCR** (client si
 Both use the password stored as `E2E_TEST_PASSWORD` — in `.env.test` locally and as a GitHub Actions secret. The value is never committed. `npm run seed:test:full` recreates the pair and its coverage data; `npm run seed:test:verify` checks it. These accounts cannot be deleted through the app (the deletion RPC refuses regression identities).
 
 **Manual test sessions.** Testing by hand with any account other than these two breaks the fixture check the suites rely on. Run `npm run seed:test:verify` **before** a manual session (so you start from a known state) and **again after it** (so whatever the session changed is caught and repaired with `npm run seed:test:full` before the next regression run, not by the run itself).
+
+## Follow-up — 2026-10-16
+
+The exhaustive web run [38960494952](https://github.com/contratacr/contratacr/actions/runs/38960494952) was still running when these follow-up fixes were prepared. This is not a full release certification.
+
+- Added ES/EN round-trip checks for Services, Jobs and Promotions, including query, fragment, cookie persistence and reload: 9 local cases passed across desktop Chromium, mobile Chromium and mobile WebKit. Fixed Jobs/Promotions filter synchronization dropping URL fragments.
+- Fixed the App Store link assertion to preserve click evidence outside a document that Linux WebKit may navigate away from; macOS WebKit may delegate the same link to the OS. Twelve targeted local cases passed. This does not certify an actual store installation.
+- Deployed test performance measurement failed existing budgets: home ~6.7 MB and professional search ~4.5 MB transferred under the scripted mobile throttle. Kept all thresholds unchanged. Added optional PERF_ROUTES and PERF_DIAGNOSTICS resource reporting to diagnose failures.
+- The download artwork was the largest home resource (~1.8 MB on mobile). Added same-dimension WebP assets: mobile 155,910 bytes instead of 1,800,230; desktop 181,778 instead of 2,039,384. Deployed performance must be measured again after deployment; this alone does not resolve the total/JS budgets.
+- Native Android compilation/emulator checks and iOS compilation/simulator launch passed in run 38960498676. WebView failures are tracked separately; no store release was submitted.

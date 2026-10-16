@@ -32,7 +32,7 @@ const domains = [
  ['Subida y medios', /upload|media|image|photo/, ['extended-lifecycle','sin-parpadeo-imagenes']],
  ['Mapas y ubicaciones', /maps|workplaces/, ['maps-configuration','search-results']],
  ['Contacto y conexiones', /contact|connections/, ['contact-gate','whatsapp-review-followup','seeded-regression']],
- ['Idiomas', /intl|document-locale|translate/, ['public-smoke','product-contract','pantallas-en-todos-los-anchos']],
+ ['Idiomas', /intl|document-locale|translate/, ['language-switch-context','public-smoke','product-contract','pantallas-en-todos-los-anchos']],
  ['Guardar, cambios y menús', /save|unsaved|card-actions|expand-toggle/, ['aviso-de-guardado','cambios-sin-guardar','acciones-de-tarjeta']],
  ['Panel y publicaciones', /dashboard|marketplace|use-mode/, ['dashboard-surfaces','marketplace-editors','statistics-dashboard']],
  ['Gestos, scroll y reanudación', /scroll|arrastre|deslizar|desplazar|desvanecido|toque|pantalla|viewport|resume/, ['native-edge-back','reanudar-la-app','sin-saltos-de-diseno','sombras-al-desplazar']],

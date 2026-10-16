@@ -8,7 +8,7 @@
     "handlers": 93,
     "components": 233,
     "hooks": 25,
-    "specs": 109
+    "specs": 110
   },
   "dashboardTabs": [
     "home",
@@ -5970,6 +5970,7 @@
       "controls": [],
       "testIds": [],
       "relatedSpecs": [
+        "tests/e2e/language-switch-context.spec.ts",
         "tests/e2e/public-smoke.spec.ts",
         "tests/e2e/product-contract.spec.ts",
         "tests/e2e/pantallas-en-todos-los-anchos.spec.ts"
@@ -8955,6 +8956,7 @@
       "controls": [],
       "testIds": [],
       "relatedSpecs": [
+        "tests/e2e/language-switch-context.spec.ts",
         "tests/e2e/public-smoke.spec.ts",
         "tests/e2e/product-contract.spec.ts",
         "tests/e2e/pantallas-en-todos-los-anchos.spec.ts"
@@ -20239,6 +20241,7 @@
       "controls": [],
       "testIds": [],
       "relatedSpecs": [
+        "tests/e2e/language-switch-context.spec.ts",
         "tests/e2e/public-smoke.spec.ts",
         "tests/e2e/product-contract.spec.ts",
         "tests/e2e/pantallas-en-todos-los-anchos.spec.ts"
@@ -22367,6 +22370,15 @@
         {
           "line": 107,
           "title": "\"empty favorites keep the type filters in English\""
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/language-switch-context.spec.ts",
+      "cases": [
+        {
+          "line": 5,
+          "title": "`ES/EN switch preserves route, query and anchor on ${pathname}`"
         }
       ]
     },
