@@ -416,7 +416,7 @@ test.describe("@mobile native shell contracts", () => {
     expect(overlayGeometry!.bottom).toBeGreaterThanOrEqual(overlayGeometry!.viewportHeight - 1);
   });
 
-  test("notification rows in the app delete by swipe instead of an item menu", async ({ page }) => {
+  test("notification rows in the app delete by swipe instead of an item menu", async ({ page, browserName }) => {
     await gotoOK(page, "/notificaciones");
     await expect(page.getByRole("heading", { name: "Notificaciones", exact: true })).toBeVisible();
 
@@ -433,12 +433,23 @@ test.describe("@mobile native shell contracts", () => {
     // Deslizar con el dedo (el gesto ignora el mouse) menos de la mitad del
     // ancho de la fila: se queda abierta mostrando el botón.
     const caja = (await fila.boundingBox())!;
-    const cdp = await page.context().newCDPSession(page);
     const y = caja.y + caja.height / 2;
-    const toque = (type: "touchStart" | "touchMove" | "touchEnd", x: number) => cdp.send("Input.dispatchTouchEvent", { type, touchPoints: type === "touchEnd" ? [] : [{ x, y }] });
-    await toque("touchStart", caja.x + caja.width - 30);
-    for (let paso = 1; paso <= 8; paso += 1) await toque("touchMove", caja.x + caja.width - 30 - paso * 10);
-    await toque("touchEnd", 0);
+    if (browserName === "chromium") {
+      const cdp = await page.context().newCDPSession(page);
+      const toque = (type: "touchStart" | "touchMove" | "touchEnd", x: number) => cdp.send("Input.dispatchTouchEvent", { type, touchPoints: type === "touchEnd" ? [] : [{ x, y }] });
+      await toque("touchStart", caja.x + caja.width - 30);
+      for (let paso = 1; paso <= 8; paso += 1) await toque("touchMove", caja.x + caja.width - 30 - paso * 10);
+      await toque("touchEnd", 0);
+      await cdp.detach();
+    } else {
+      // WebKit has no CDP touch injector. Exercise the same pointer handlers;
+      // physical iOS gesture delivery remains a device-level manual check.
+      const point = { pointerId: 1, pointerType: "touch", isPrimary: true, clientY: y, bubbles: true };
+      const x = caja.x + caja.width - 30;
+      await fila.dispatchEvent("pointerdown", { ...point, clientX: x, buttons: 1 });
+      for (let paso = 1; paso <= 8; paso += 1) await fila.dispatchEvent("pointermove", { ...point, clientX: x - paso * 10, buttons: 1 });
+      await fila.dispatchEvent("pointerup", { ...point, clientX: x - 80, buttons: 0 });
+    }
     await expect(deleteButtons.first()).toBeVisible();
     const geometry = await deleteButtons.first().evaluate((element) => {
       const rect = element.getBoundingClientRect();
