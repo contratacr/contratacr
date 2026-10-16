@@ -1,16 +1,21 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { VerificationDocuments, verificationActionButtonClass } from "./verification-documents";
 import { useTranslations } from "next-intl";
-import { Clock3, Headset, Info, Loader2, RotateCcw, Send, ShieldCheck, XCircle } from "lucide-react";
+import { Loader2, ShieldCheck } from "lucide-react";
 import { CedulaInput } from "@/components/ui/cedula-input";
 import { IdentityInfoBlock } from "@/components/ui/identity-info-block";
-import { Link } from "@/i18n/navigation";
-import { SupportLink } from "@/components/support/support-link";
 import { cleanId, detectIdType, isValidId } from "@/lib/cedula";
-import { caseRef, type VerificationStatus } from "@/lib/verification";
+import { type VerificationStatus } from "@/lib/verification";
 import { VerificationInfo } from "@/components/ui/verification-info";
-import { VerifiedSeal } from "@/components/ui/verified-seal";
+
+function subscribePreview() { return () => {}; }
+function readPreviewKind(): "person" | "company" | null {
+  if (!/^(localhost|127\.0\.0\.1)$/.test(window.location.hostname)) return null;
+  const kind = new URLSearchParams(window.location.search).get("verificationPreview");
+  return kind === "person" || kind === "company" ? kind : null;
+}
 
 interface Props {
   professionalId: string;
@@ -29,20 +34,16 @@ type CedulaCheck =
   | { status: "review"; cedula: string; message: string; taken: boolean };
 
 export function VerificationPanel({
-  professionalId,
   status,
   reason,
   currentCedula = null,
   currentFullName = null,
-  noCrId = false,
   onSaved,
 }: Props) {
+  const previewKind = useSyncExternalStore(subscribePreview, readPreviewKind, () => null);
   const t = useTranslations("verificationPanel");
   const ti = useTranslations("identity");
-  const rich = { strong: (c: React.ReactNode) => <strong>{c}</strong> };
   const cedulaReqId = useRef(0);
-  const [appeal, setAppeal] = useState("");
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [verifiedName, setVerifiedName] = useState<string | null>(null);
@@ -56,7 +57,6 @@ export function VerificationPanel({
   const [cedulaSaving, setCedulaSaving] = useState(false);
   const [cedulaError, setCedulaError] = useState<string | null>(null);
 
-  const ref = caseRef(professionalId);
   const cleanCurrentCedula = cleanId(currentCedula ?? "");
   const hasCurrentCedula = !!cleanCurrentCedula;
   const currentIdType = detectIdType(cleanCurrentCedula);
@@ -70,52 +70,6 @@ export function VerificationPanel({
           : currentIdType === "nite"
             ? t("idTypeNite")
             : null;
-  const wasMovedToReview = status === "pending" && !!reason;
-  const summaryTone =
-    status === "verified"
-      ? "verified"
-      : status === "under_appeal"
-        ? "review"
-        : status === "rejected"
-          ? "rejected"
-          : "pending";
-
-  // Re-run automatic verification against the padrón (also used by the appeal).
-  async function runCheck(appealMode: boolean) {
-    setError(null);
-    setNote(null);
-    setVerifiedName(null);
-    setVerifiedCedula(null);
-    setCedulaCheck(null);
-    if (appealMode && appeal.trim().length < 10) {
-      setError(t("appealMinError"));
-      return;
-    }
-    setBusy(true);
-    try {
-      const res = await fetch(
-        appealMode ? "/api/appeals" : "/api/verify-identity",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: appealMode
-            ? JSON.stringify({ message: appeal.trim() })
-            : undefined,
-        },
-      );
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "Error");
-      if (json.outcome === "verified") setNote(t("noteVerified"));
-      else if (json.outcome === "ticket") setNote(t("noteTicket"));
-      else setNote(t("noteReview"));
-      onSaved?.();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : t("processError"));
-    } finally {
-      setBusy(false);
-    }
-  }
-
   useEffect(() => {
     const reqId = ++cedulaReqId.current;
     const cedula = cleanId(newCedula);
@@ -311,143 +265,24 @@ export function VerificationPanel({
     );
   }
 
-  // ── No-CR-identification flow (manual review; no padrón check) ──────────────
-  if (noCrId && status !== "verified") {
-    return (
-      <div className="space-y-5">
-        <VerificationSummary
-          title={
-            status === "rejected"
-              ? t("rejectedTitle")
-              : status === "under_appeal"
-                ? t("underAppealTitle")
-                : wasMovedToReview
-                  ? t("pendingTitle")
-                  : t("unverifiedTitle")
-          }
-          tone={summaryTone}
-        >
-          {status === "rejected" ? (
-            <>
-              {reason ? (
-                <span className="block">{t("reason", { reason })}</span>
-              ) : (
-                t("noReason")
-              )}
-              <span className="block mt-1">{t("rejectedNoCrBody")}</span>
-            </>
-          ) : status === "under_appeal" ? (
-            t("underAppealNoCrBody")
-          ) : (
-            t.rich("noCrUnverifiedBody", rich)
-          )}
-        </VerificationSummary>
+  if (previewKind) return <VerificationDocuments legal={previewKind === "company"} preview />;
 
-        {note && (
-          <VerificationResultNotice
-            note={note}
-            title={t("resultTitle")}
-            verifiedName={verifiedName}
-            verifiedCedula={verifiedCedula}
-          />
-        )}
-        {error && <Notice tone="error">{error}</Notice>}
-
-        {/* In-app support follow-up to track the case. */}
-        <SupportLink
-          className="inline-flex items-center gap-2 rounded-full border border-[#e5e7eb] bg-white px-5 py-2.5 text-sm font-bold text-[#162543] transition-colors hover:border-[#009FD9]/40 hover:bg-[#f1fbfe] hover:text-[#0089bb]"
-        >
-          <Headset className="h-4 w-4 shrink-0" /> {t("supportFollowUp", { ref })}
-        </SupportLink>
-
-        {/* Appeal → straight to support (no padrón re-run for no-ID cases) */}
-        {status !== "under_appeal" && (
-          <ActionPanel
-            title={t("manualReviewTitle")}
-            body={t("manualReviewBody")}
-          >
-            <textarea
-              value={appeal}
-              onChange={(e) => setAppeal(e.target.value)}
-              rows={3}
-              placeholder={t("manualReviewPlaceholder")}
-              className="w-full rounded-xl border border-[#e5e7eb] p-3 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-            />
-            <button
-              onClick={() => runCheck(true)}
-              disabled={busy}
-              className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 disabled:opacity-60"
-            >
-              <Send className="h-4 w-4" />{" "}
-              {busy ? t("sending") : t("sendToReview")}
-            </button>
-          </ActionPanel>
-        )}
-
-        {/* Add-cédula-later — runs the normal padrón verification automatically */}
-        <ActionPanel title={t("hasCedulaTitle")} body={t("hasCedulaBody")}>
-          {renderCedulaVerifier()}
-        </ActionPanel>
-      </div>
-    );
-  }
+  // Manual review needs identity evidence, never photographs of completed work.
+  if (status !== "verified") return (
+    <div className="space-y-5">
+      {status === "rejected" && <p className="text-sm font-semibold text-red-700">{t("rejectedTitle")}</p>}
+      {reason && <p className="text-sm text-[#52627a]">{reason}</p>}
+      <CurrentIdentificationPanel title={t("currentIdTitle")} emptyLabel={t("currentIdEmpty")}
+        value={hasCurrentCedula ? cleanCurrentCedula : null} typeLabel={currentIdTypeLabel}
+        fullName={hasCurrentCedula ? currentFullName : null} changeLabel={t("changeId")} addLabel={t("addId")}
+        changeOpen={changeCedulaOpen} onChangeClick={() => setChangeCedulaOpen(open => !open)} />
+      {changeCedulaOpen && <ActionPanel title={t("changeIdTitle")} body={t("changeIdBody")}>{renderCedulaVerifier()}</ActionPanel>}
+      <VerificationDocuments key={cleanCurrentCedula || "no-id"} legal={currentIdType === "juridica"} />
+    </div>
+  );
 
   return (
     <div className="space-y-6">
-      {status !== "verified" && (
-        <VerificationSummary
-          title={
-            status === "under_appeal"
-              ? t("underAppealTitle")
-              : status === "rejected"
-                ? t("rejectedTitle")
-                : wasMovedToReview
-                  ? t("pendingTitle")
-                  : t("unverifiedTitle")
-          }
-          tone={summaryTone}
-        >
-          {status === "pending" && (
-            <>
-              {reason && <span className="block">{t("reason", { reason })}</span>}
-              <span className={reason ? "mt-1 block" : undefined}>{t.rich("pendingBody", rich)}</span>
-              {/* QUÉ HACER, no solo en qué estado está. El aviso que trae a
-                  esta pantalla dice «te escribimos al correo con lo que
-                  necesitamos», y aquí la persona llegaba a un texto que solo
-                  decía que verificarse «es opcional»: nunca se enteraba de qué
-                  mandar. Son las mismas dos fotos que pide el correo. */}
-              <span className="mt-3 block font-bold text-[#162543]">{t("pendingComoTitulo")}</span>
-              <span className="mt-1 block">{t.rich("pendingComoBody", rich)}</span>
-              <span className="mt-2 block">1. {t("pendingFoto1")}</span>
-              <span className="block">2. {t("pendingFoto2")}</span>
-              <span className="mt-2 block">{t("pendingComoPie")}</span>
-              <a
-                href="mailto:soporte@contratacr.com?subject=Verificaci%C3%B3n%20de%20mi%20perfil"
-                className="mt-3 inline-flex h-10 items-center justify-center rounded-full bg-[#009FD9] px-5 text-[13px] font-bold text-white transition-colors hover:bg-[#0089bb]"
-              >
-                {t("pendingEscribir")}
-              </a>
-              {/* Y SIN SALIR DEL APP: un caso de soporte, donde también se adjuntan las
-                  fotos y queda el seguimiento. El correo abre otra app (o ninguna). */}
-              <SupportLink className="ml-2 mt-3 inline-flex h-10 items-center justify-center gap-2 rounded-full border border-[#d6dde5] bg-white px-5 text-[13px] font-bold text-[#162543] transition-colors hover:bg-[#f8fafc]">
-                <Headset className="h-4 w-4 shrink-0" /> {t("supportApp")}
-              </SupportLink>
-            </>
-          )}
-          {status === "under_appeal" && t("underAppealBody")}
-          {status === "rejected" && (
-            <>
-              {reason ? (
-                <span className="block">{t("reason", { reason })}</span>
-              ) : (
-                t("noReason")
-              )}
-              <span className="block mt-1">{t("rejectedBody")}</span>
-            </>
-          )}
-        </VerificationSummary>
-      )}
-
       <CurrentIdentificationPanel
         title={t("currentIdTitle")}
         emptyLabel={t("currentIdEmpty")}
@@ -478,66 +313,7 @@ export function VerificationPanel({
         </ActionPanel>
       )}
 
-      {/* Pending no longer shows a separate "Verificar mi identidad ahora" (re-run the
-          cédula on file) button — it was redundant with the "Verifica tu identidad con tu
-          cédula" card below (sprint 332), which is the SINGLE coherent action: enter/confirm
-          your cédula → it's stored + checked against the padrón → verified instantly (or
-          left in review for DIMEX/NITE). That one card covers a pro correcting a cédula that
-          didn't auto-verify, a sin-cédula/revoked pro adding one, and a re-check. */}
 
-      {/* Rejected → appeal (re-runs automatically; if it still fails → support ticket) */}
-      {status === "rejected" && (
-        <ActionPanel title={t("appealTitle")} body={t("appealBody")}>
-          <textarea
-            value={appeal}
-            onChange={(e) => setAppeal(e.target.value)}
-            rows={4}
-            placeholder={t("appealPlaceholder")}
-            className="w-full rounded-xl border border-[#e5e7eb] p-3 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-          />
-          <div className="flex flex-wrap gap-2 mt-3">
-            <button
-              onClick={() => runCheck(true)}
-              disabled={busy}
-              className="inline-flex items-center gap-2 rounded-full bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 disabled:opacity-60"
-            >
-              <RotateCcw className="h-4 w-4" />{" "}
-              {busy ? t("sending") : t("appealReverify")}
-            </button>
-            <SupportLink
-              className="inline-flex items-center gap-2 rounded-full border border-[#e5e7eb] bg-white px-5 py-2.5 text-sm font-bold text-[#162543] transition-colors hover:border-[#009FD9]/40 hover:bg-[#f1fbfe] hover:text-[#0089bb]"
-            >
-              <Headset className="h-4 w-4 shrink-0" /> {t("supportApp")}
-            </SupportLink>
-          </div>
-        </ActionPanel>
-      )}
-
-      {status === "under_appeal" && (
-        <SupportLink
-          className="inline-flex items-center gap-2 rounded-full border border-[#e5e7eb] bg-white px-5 py-2.5 text-sm font-bold text-[#162543] transition-colors hover:border-[#009FD9]/40 hover:bg-[#f1fbfe] hover:text-[#0089bb]"
-        >
-          <Headset className="h-4 w-4 shrink-0" /> {t("supportAppCase", { ref })}
-        </SupportLink>
-      )}
-
-      {/* Enter (or replace) a cédula to verify — for ANY non-verified pro: a REVOKED
-          account re-entering its cédula, a "sin cédula" account adding one later, or a
-          pending/rejected pro correcting it. Calls /api/add-cedula → stores it + runs the
-          padrón check: a valid NATIONAL cédula verifies instantly and overwrites the name
-          from the padrón (profiles + Auth, in run-verification); DIMEX/NITE or not-found
-          stays unverified; an invalid format errors out (no change). */}
-      {status !== "verified" && (
-        <ActionPanel title={t("enterCedulaTitle")} body={t("enterCedulaBody")}>
-          <Link
-            href="/verificacion-de-identidad"
-            className="mt-2 mb-4 inline-flex text-sm font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb] hover:underline"
-          >
-            {t.rich("howItWorks", { link: (c) => <>{c}</> })}
-          </Link>
-          {renderCedulaVerifier()}
-        </ActionPanel>
-      )}
     </div>
   );
 }
@@ -610,7 +386,7 @@ function CurrentIdentificationPanel({
           type="button"
           onClick={onChangeClick}
           aria-expanded={changeOpen}
-          className={`inline-flex h-10 w-full items-center justify-center rounded-full border px-4 text-sm font-bold transition-colors sm:w-auto ${
+          className={`${verificationActionButtonClass} ${
             changeOpen
               ? "border-[#009FD9] bg-[#f1fbfe] text-[#0089bb]"
               : "border-[#e5e7eb] bg-white text-[#162543] hover:border-[#009FD9]/50 hover:bg-[#f1fbfe] hover:text-[#0089bb]"
@@ -618,57 +394,6 @@ function CurrentIdentificationPanel({
         >
           {value ? changeLabel : addLabel}
         </button>
-      </div>
-    </section>
-  );
-}
-
-function VerificationSummary({
-  title,
-  tone,
-  badge,
-  children,
-}: {
-  title: string;
-  tone: "verified" | "pending" | "review" | "rejected";
-  badge?: string;
-  children: React.ReactNode;
-}) {
-  const Icon =
-    tone === "verified"
-      ? VerifiedSeal
-      : tone === "review"
-        ? Clock3
-        : tone === "rejected"
-          ? XCircle
-          : Info;
-  // El estado es lo único que merece un recuadro en esta pantalla, y el color
-  // lo dice antes que el texto. Todo lo demás son bloques planos.
-  const paleta = {
-    verified: { caja: "border-[#bbf7d0] bg-[#f0fdf4]", icono: "bg-[#e8f8ff] text-[#009FD9]", texto: "text-[#14532d]" },
-    review: { caja: "border-[#bfe8f6] bg-[#f1fbfe]", icono: "bg-[#dbf2fb] text-[#0f6380]", texto: "text-[#0f4d64]" },
-    rejected: { caja: "border-[#fecaca] bg-[#fef2f2]", icono: "bg-[#fee2e2] text-[#b91c1c]", texto: "text-[#7f1d1d]" },
-    pending: { caja: "border-[#fde68a] bg-[#fffbeb]", icono: "bg-[#fef3c7] text-[#b45309]", texto: "text-[#78350f]" },
-  }[tone];
-  return (
-    <section className={`rounded-2xl border p-4 sm:p-5 ${paleta.caja}`}>
-      <div className="flex items-start gap-3">
-        <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${paleta.icono}`}>
-          <Icon className="h-[18px] w-[18px]" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className={`text-[15px] font-bold leading-snug sm:text-base ${paleta.texto}`}>
-              {title}
-            </h3>
-            {badge && (
-              <VerifiedSeal label={badge} className="h-[18px] w-[18px] shrink-0 text-[#009FD9]" />
-            )}
-          </div>
-          <div className={`mt-1.5 text-sm leading-relaxed [overflow-wrap:anywhere] ${paleta.texto} opacity-90`}>
-            {children}
-          </div>
-        </div>
       </div>
     </section>
   );

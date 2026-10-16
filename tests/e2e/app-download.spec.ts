@@ -241,3 +241,40 @@ test('home-screen launch shell is public, white and independent of the session',
  await expect(page).toHaveURL(/\/(?:en\/)?$/);
  await expect(page.getByTestId('landing-navbar')).toBeVisible();
 });
+
+test('mobile listings stay behind the download notice and keep their last result reachable', async ({page}) => {
+ test.skip((page.viewportSize()?.width ?? 1280)>=1024);
+ for (const route of ['/empleos','/proyectos','/promociones']) {
+  await page.goto(route);
+  const banner=page.getByTestId('mobile-app-download');
+  await expect(banner).toBeVisible();
+  const shell=page.locator('.ccr-cascaron-tablero');
+  const before=await shell.boundingBox();
+  const list=page.locator('.ccr-tablero-marco > section').first();
+  await expect(list).toBeVisible();
+  const notice=await banner.boundingBox(), box=await list.boundingBox();
+  expect(box!.y+box!.height).toBeGreaterThan(notice!.y+20);
+  expect(await list.evaluate(el=>parseFloat(getComputedStyle(el).paddingBottom))).toBeGreaterThanOrEqual(notice!.height);
+  await list.evaluate(el=>{el.scrollTop=el.scrollHeight;});
+  const last=list.locator('article').last();
+  if(await last.count()) expect((await last.boundingBox())!.y+(await last.boundingBox())!.height).toBeLessThanOrEqual(notice!.y+1);
+  // Hiding the notice must not resize the listing or shift the page.
+  await banner.getByRole('button').click();
+  await expect(banner).toHaveCount(0);
+  expect((await shell.boundingBox())!.height).toBeCloseTo(before!.height,0);
+  await page.context().clearCookies();
+  await page.evaluate(()=>localStorage.removeItem('ccr:app-download-dismissed-until:v1'));
+ }
+});
+
+test('home-screen web app can show the store notice without being treated as native', async ({page}) => {
+ test.skip((page.viewportSize()?.width ?? 1280)>=1024);
+ await page.addInitScript(()=>{
+  Object.defineProperty(navigator,'standalone',{configurable:true,value:true});
+  const original=window.matchMedia.bind(window);
+  window.matchMedia=query=>{const result=original(query);if(query==='(display-mode: standalone)')Object.defineProperty(result,'matches',{value:true});return result;};
+ });
+ await page.goto('/empleos');
+ await expect(page.locator('html')).not.toHaveClass(/ccr-native-app/);
+ await expect(page.getByTestId('mobile-app-download')).toBeVisible();
+});

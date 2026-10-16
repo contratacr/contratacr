@@ -25,10 +25,10 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
   const fila = await cargar(id);
   const dinero = (n?: number | null) => (n ? `${fila?.currency === "USD" ? "$" : "₡"}${Math.round(n).toLocaleString("es-CR").replace(/\s/g, ".")}` : null);
   return tarjetaDeFicha({
-    pie: t("pie"),
+    pie: t("seccionPromociones.pie"),
     etiqueta: t("promocion"),
-    titulo: fila?.title ?? "ContrataCR",
-    detalle: [fila?.service_label, fila?.location_label].filter(Boolean).join(" · "),
+    titulo: fila?.title ?? t("promocionNoDisponible"),
+    detalle: fila ? [fila.service_label, fila.location_label].filter(Boolean).join(" · ") : t("detalleNoDisponible"),
     imagen: fotoParaTarjeta(fila?.image_urls?.[0]),
     precio: dinero(fila?.price_now),
     precioAntes: fila?.price_before && fila.price_before > (fila.price_now ?? 0) ? dinero(fila.price_before) : null,

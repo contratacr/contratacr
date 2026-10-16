@@ -279,16 +279,16 @@
       "por_consulta": "Por consulta",
       "por_proyecto": "Por proyecto"
     },
-    "metaTitle": "{category} en {place} · profesionales verificados | ContrataCR",
-    "metaDesc": "Compara profesionales de {category} en {place}: verificados con cédula, con reseñas, precios y contacto directo.",
+    "metaTitle": "{category} en {place} · profesionales | ContrataCR",
+    "metaDesc": "Encuentra profesionales de {category} en {place}. Compara perfiles, consulta reseñas y contacta por WhatsApp.",
     "wholeProvince": "Toda la provincia",
     "proyectoTarjeta": {
       "titulo": "¿No te decides?",
       "texto": "Publica tu proyecto y los profesionales te escriben por WhatsApp.",
       "boton": "Publicar proyecto"
     },
-    "metaTitleGeneral": "Profesionales verificados en Costa Rica",
-    "metaDescGeneral": "Busca por servicio y lugar y contacta por WhatsApp."
+    "metaTitleGeneral": "Encuentra profesionales en Costa Rica",
+    "metaDescGeneral": "Busca por servicio y ubicación y contacta directamente por WhatsApp."
   },
   "hero": {
     "categoryPlaceholder": "¿Qué servicio necesitas?",
@@ -2943,8 +2943,8 @@
     "viewProfile": "Ver perfil",
     "publishTitle": "Recibe hasta 3 cotizaciones sin compromiso",
     "publishCta": "Publicar proyecto",
-    "metaTitle": "{category} en {place} · profesionales verificados | ContrataCR",
-    "metaDesc": "Encuentra {count} profesionales de {category} en {place} verificados con cédula, con reseñas y contacto directo por WhatsApp.",
+    "metaTitle": "{category} en {place} · profesionales | ContrataCR",
+    "metaDesc": "Encuentra {count} profesionales de {category} en {place}. Consulta sus perfiles y contacta directamente por WhatsApp.",
     "reviews": "{count, plural, one {# reseña} other {# reseñas}}",
     "noReviews": "Sin reseñas aún",
     "verified": "Verificado"
@@ -3239,35 +3239,45 @@
     "promocion": "Promoción",
     "empleo": "Empleo",
     "proyectoSinTitulo": "Un cliente busca profesional",
+    "empleoNoDisponible": "Vacante no disponible",
+    "promocionNoDisponible": "Promoción no disponible",
+    "proyectoNoDisponible": "Proyecto no disponible",
+    "detalleNoDisponible": "Explora otras publicaciones en ContrataCR.",
     "seccionEmpleos": {
       "etiqueta": "Empleos",
       "titulo": "Vacantes en Costa Rica",
-      "detalle": "Abre la vacante y escríbele por WhatsApp a quien la publicó."
+      "detalle": "Explora las vacantes y contacta por WhatsApp a quien las publica.",
+      "pie": "Explora oportunidades de empleo en Costa Rica."
     },
     "seccionPromociones": {
       "etiqueta": "Promociones",
       "titulo": "Promociones de profesionales",
-      "detalle": "Precios especiales de profesionales verificados."
+      "detalle": "Descubre ofertas de servicios y contacta al profesional por WhatsApp.",
+      "pie": "Encuentra ofertas de servicios en Costa Rica."
     },
     "seccionProyectos": {
       "etiqueta": "Proyectos",
-      "titulo": "Trabajos que la gente necesita",
-      "detalle": "Si es lo tuyo, escríbele por WhatsApp a quien lo pide."
+      "titulo": "Proyectos en Costa Rica",
+      "detalle": "Encuentra proyectos y contacta por WhatsApp a quien solicita el servicio.",
+      "pie": "Conecta con personas que necesitan tus servicios."
     },
     "seccionProfesionales": {
       "etiqueta": "Profesionales",
-      "titulo": "Profesionales verificados en Costa Rica",
-      "detalle": "Busca por servicio y lugar y contacta por WhatsApp."
+      "titulo": "Encuentra profesionales en Costa Rica",
+      "detalle": "Busca por servicio y ubicación y contacta directamente por WhatsApp.",
+      "pie": "Ofrece y encuentra servicios en Costa Rica."
     },
     "seccionPublicar": {
       "etiqueta": "Crear proyecto",
       "titulo": "Publica lo que necesitas",
-      "detalle": "Gratis. Los profesionales te contactan por WhatsApp."
+      "detalle": "Publica el servicio que necesitas para que los profesionales te contacten por WhatsApp.",
+      "pie": "Encuentra profesionales para tu proyecto."
     },
     "seccionCotizar": {
       "etiqueta": "Cotizaciones",
       "titulo": "Haz una cotización en minutos",
-      "detalle": "Gratis, lista para mandar por WhatsApp."
+      "detalle": "Crea tu cotización y compártela por enlace, PDF o WhatsApp.",
+      "pie": "Presenta tus servicios con una cotización clara."
     }
   },
   "accountPrivacy": {

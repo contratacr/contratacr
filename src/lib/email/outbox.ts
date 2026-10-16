@@ -1,3 +1,4 @@
+import { hasVerificationDocuments } from "@/lib/verification/documents";
 import { queuedCampaignEligible, queuedActivityEligible } from "./revalidate-campaign";
 import { createHash } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -7,7 +8,7 @@ import type { NivelDeCorreo } from "./cuota";
 export type EmailPurpose = "security" | "support" | "activity" | "campaign" | "verification";
 type Envelope = {
   id: string; status: string; attempts: number; purpose: EmailPurpose; recipient: string; subject: string;
-  event_key: string; payload: Record<string, unknown> | null; attempt_token: string; campaign: string | null;
+  user_id: string | null; event_key: string; payload: Record<string, unknown> | null; attempt_token: string; campaign: string | null;
 };
 type RecordedEmail = {
   recipient: string; subject: string; payload: Record<string, unknown>; purpose: EmailPurpose;
@@ -65,6 +66,13 @@ export async function processEmailDelivery(id: string): Promise<EmailResult> {
       if (eligible !== true) {
         await finish(eligible === false ? "cancelled" : "retry", null, eligible === false ? "Campaign no longer eligible" : "Eligibility unavailable");
         return eligible === false ? { ok: false, status: "skipped", detail: "La cuenta ya no es elegible" } : queued;
+      }
+    }
+    if (mail.purpose === "verification") {
+      const documents = mail.user_id ? await hasVerificationDocuments(mail.user_id) : null;
+      if (documents !== false) {
+        await finish(documents ? "cancelled" : "retry", null, documents ? "Documents received" : "Review unavailable");
+        return documents ? { ok: false, status: "skipped", detail: "Documentos recibidos; recordatorio detenido" } : queued;
       }
     }
     if (mail.purpose === "activity") {

@@ -1,3 +1,4 @@
+import { getProfessionalDisplayName } from "@/lib/display-name";
 import { recordGrowthConversion } from "@/lib/analytics/growth-server";
 import { NextRequest, NextResponse } from "next/server";
 import { mensajeDeError } from "@/lib/api-errors";
@@ -39,8 +40,9 @@ async function whoAmI() {
   const admin = createAdminClient();
   const { data: pro } = await admin.from("professionals").select("id, business_name, profiles(full_name)").eq("profile_id", user.id).maybeSingle();
   const proName = (pro?.profiles as { full_name?: string | null } | null)?.full_name ?? null;
-  const proDisplayName = (pro?.business_name as string | null)?.trim() || proName;
-  return { user, admin, proId: pro?.id ?? null, proName, proDisplayName };
+  const proFullName = (pro?.business_name as string | null)?.trim() || proName;
+  const proDisplayName = getProfessionalDisplayName(proName ?? "", pro?.business_name ?? undefined).primaryDesktop;
+  return { user, admin, proId: pro?.id ?? null, proName, proDisplayName, proFullName };
 }
 
 export async function GET(req: NextRequest) {
@@ -69,6 +71,7 @@ export async function GET(req: NextRequest) {
       .filter((id): id is string => !!id && id !== me.proId),
   )];
   const nombres = new Map<string, string | null>();
+  const completos = new Map<string, string | null>();
   if (ajenos.length) {
     const { data: otros } = await me.admin
       .from("professionals")
@@ -76,11 +79,13 @@ export async function GET(req: NextRequest) {
       .in("id", ajenos);
     for (const pro of (otros ?? []) as Array<Record<string, unknown>>) {
       const perfil = pro.profiles as { full_name?: string | null } | null;
-      nombres.set(pro.id as string, (pro.business_name as string | null)?.trim() || perfil?.full_name || null);
+      completos.set(pro.id as string, (pro.business_name as string | null)?.trim() || perfil?.full_name || null);
+      nombres.set(pro.id as string, getProfessionalDisplayName(perfil?.full_name ?? "", pro.business_name as string | undefined).primaryDesktop);
     }
   }
   const quotes = filas.map((row) => ({
     ...row,
+    professional_full_name: row.professional_id === me.proId ? me.proFullName : completos.get(row.professional_id as string) ?? null,
     professional_name: row.professional_id === me.proId
       ? me.proDisplayName
       : nombres.get(row.professional_id as string) ?? null,
@@ -177,7 +182,7 @@ export async function POST(req: NextRequest) {
   // suelta se comparte como PDF o enlace, por fuera del app.
 
   await invitarAResenaAhora(me.user.id);
-  return NextResponse.json({ quote: data });
+  return NextResponse.json({ quote: { ...data, professional_name: me.proDisplayName, professional_full_name: me.proFullName } });
 }
 
 export async function PATCH(req: NextRequest) {

@@ -1,3 +1,4 @@
+import { firmarAdjuntos } from "@/lib/support/adjuntos";
 import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -102,5 +103,15 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     }
   }
 
-  return NextResponse.json({ provider: pro, log: log ?? [], appeals: appeals ?? [], idAssist, padron });
+  const { data: cases, error: caseError } = await db.from("support_tickets").select("id")
+    .eq("professional_id", id).eq("topic", "verification_documents").order("created_at", { ascending: false }).limit(10);
+  if (caseError) return NextResponse.json({ error: "No se pudieron cargar los documentos." }, { status: 503 });
+  let documents: { attachments: import("@/lib/support/adjuntos").AdjuntoDeSoporte[]; created_at: string }[] = [];
+  if (cases?.length) {
+    const { data: rows, error: documentsError } = await db.from("support_ticket_messages").select("attachments, created_at")
+      .in("ticket_id", cases.map(c => c.id)).eq("sender_role", "user").order("created_at", { ascending: false });
+    if (documentsError) return NextResponse.json({ error: "No se pudieron cargar los documentos." }, { status: 503 });
+    documents = await firmarAdjuntos(db, rows ?? []);
+  }
+  return NextResponse.json({ documents, provider: pro, log: log ?? [], appeals: appeals ?? [], idAssist, padron });
 }

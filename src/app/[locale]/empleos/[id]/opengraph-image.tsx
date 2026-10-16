@@ -24,10 +24,10 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
   const t = await getTranslations({ locale, namespace: "tarjetaSocial" });
   const fila = await cargar(id);
   return tarjetaDeFicha({
-    pie: t("pie"),
+    pie: t("seccionEmpleos.pie"),
     etiqueta: t("empleo"),
-    titulo: fila?.title ?? "ContrataCR",
-    detalle: fila?.location_label ?? "",
+    titulo: fila?.title ?? t("empleoNoDisponible"),
+    detalle: fila ? (fila.location_label ?? "") : t("detalleNoDisponible"),
     precio: salario(fila),
   });
 }

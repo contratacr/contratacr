@@ -17,9 +17,9 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
   const categoria = proyecto?.category_id ? getCategoryLabel(proyecto.category_id, locale) : "";
   const lugar = nombreDeLugar(proyecto?.canton_id ? getCantonById(proyecto.canton_id) : undefined, proyecto?.provincia_id ? getProvinceById(proyecto.provincia_id) : undefined);
   return tarjetaDeFicha({
-    pie: t("pie"),
+    pie: t("seccionProyectos.pie"),
     etiqueta: t("proyecto"),
-    titulo: proyecto?.title ?? t("proyectoSinTitulo"),
-    detalle: [categoria, lugar].filter(Boolean).join(" · "),
+    titulo: proyecto ? (proyecto.title ?? t("proyectoSinTitulo")) : t("proyectoNoDisponible"),
+    detalle: proyecto ? [categoria, lugar].filter(Boolean).join(" · ") : t("detalleNoDisponible"),
   });
 }

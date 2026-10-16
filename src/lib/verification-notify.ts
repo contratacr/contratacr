@@ -1,10 +1,11 @@
+import { hasVerificationDocuments } from "@/lib/verification/documents";
 import { cleanId, detectIdType } from "@/lib/cedula";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { brandedEmailDocument, sendBrevoEmail, type EmailResult } from "@/lib/email/send";
 import { shouldEmailVerificationDecision } from "@/lib/verification/email-policy";
 import { sendNotificationPush } from "@/lib/push/notify";
 
-const PRO_LINK = "/dashboard/profesional?tab=profile&mode=offer&focus=verification";
+const PRO_LINK = "/dashboard/profesional?tab=verificacion";
 
 type DecisionKind = "verified" | "pending" | "rejected" | "reverted";
 
@@ -66,8 +67,7 @@ export async function notifyVerificationDecision({
         firstName,
         "¡Tu identidad fue verificada!",
         "#16a34a",
-        `Verificamos tu identidad. El <strong>check azul</strong> ya aparece junto a tu nombre.
-         <br/><br/><span style="color:#6b7280;font-size:13px;">El check confirma tu identidad. No certifica la calidad de tus servicios.</span>`,
+        `Verificamos tu identidad. El <strong>check azul</strong> ya aparece junto a tu nombre.`,
         "Ver mi verificación"
       );
     } else if (kind === "pending") {
@@ -232,6 +232,8 @@ export async function notifyVerificationOutreach(professionalId: string): Promis
     .select("profile_id, profiles(full_name, email, cedula)").eq("id", professionalId).maybeSingle();
   const profile = pro?.profiles as unknown as { full_name?: string; email?: string; cedula?: string } | null;
   if (error || !pro?.profile_id || !profile?.email) return { ok: false, status: "skipped", detail: "ineligible" };
+  const documents = await hasVerificationDocuments(pro.profile_id);
+  if (documents !== false) return { ok: false, status: "skipped", detail: documents ? "documents_received" : "review_unavailable" };
   const firstName = (profile.full_name ?? "profesional").split(" ")[0];
   const legal = detectIdType(cleanId(profile.cedula ?? "")) === "juridica";
   const reminder = candidate.sequence === 2;
@@ -239,13 +241,13 @@ export async function notifyVerificationOutreach(professionalId: string): Promis
     ? "Para revisar el perfil de la empresa, necesitamos confirmar quién la representa:<br/><br/>" +
       "1. Una personería jurídica vigente o una autorización que podamos validar.<br/>" +
       "2. Una foto de la persona autorizada junto a su documento de identidad, con los datos legibles."
-    : "Para confirmar tu identidad, responde con una foto tuya junto a tu cédula, DIMEX o pasaporte, donde se vea tu rostro y se lean los datos.";
+    : "Para confirmar tu identidad, adjunta una foto tuya junto a tu cédula, DIMEX o pasaporte, donde se vea tu rostro y se lean los datos.";
   const result = await sendBrevoEmail({
     to: profile.email, subject: reminder ? "Tu perfil sigue sin verificar" : "Falta poco para verificar tu perfil en ContrataCR",
     html: emailShell(firstName, reminder ? "Todavía puedes verificar tu perfil" : "Verificación de tu perfil", "#009FD9",
       `${reminder ? "Hace al menos un mes te enviamos los pasos para verificarte. " : ""}` +
-      "Tu perfil todavía no está verificado. El check azul confirma la identidad; no certifica la calidad de los servicios.<br/><br/>" +
-      instructions + "<br/><br/><strong>Responde a este correo con los documentos.</strong> Los revisamos y te avisamos en la app. Los documentos no se publican en tu perfil.", null),
+      "Tu perfil todavía no está verificado.<br/><br/>" +
+      instructions + "<br/><br/>Adjunta los documentos desde tu panel. Los revisamos y te avisamos en la app.", "Completar verificación"),
     replyTo: "soporte@contratacr.com", nivel: "masivo", purpose: "verification",
     eventKey: `verification:${pro.profile_id}:${candidate.sequence}`, professionalId,
     verificationSequence: candidate.sequence,
@@ -266,6 +268,11 @@ export async function outreachPendingProfessionals({ simulate = false, limit = 2
   const result = { pending: pending.length, notified: 0, reminded: 0, queued: 0, historicalHeld: 0, alreadyNotified: 0, failed: 0, eligible: 0, restantes: 0 };
   let processed=0;
   for (const pro of pending) {
+    const { data: owner, error: ownerError } = await admin.from("professionals").select("profile_id").eq("id", pro.id).single();
+    if (ownerError) throw ownerError;
+    const documents = await hasVerificationDocuments(owner.profile_id);
+    if (documents === null) throw new Error("Verification review unavailable");
+    if (documents) { result.alreadyNotified++; continue; }
     const { data, error } = await admin.rpc("verification_email_candidate", { p_professional: pro.id });
     if (error) throw error;
     if (data?.reason === "historical_hold") { result.historicalHeld++; continue; }

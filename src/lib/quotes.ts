@@ -32,6 +32,7 @@ export type Quote = {
   deleted_at?: string | null;
   created_at: string;
   professional_name?: string | null;
+  professional_full_name?: string | null;
 };
 
 /** De "sg-solutions-0003-k7m2xq9a" saca "k7m2xq9a": el código es lo último. */

@@ -74,7 +74,7 @@ function verificationWhatsAppHref(row: Row) {
   const documents = row.identity_type === "juridica"
     ? "la personería jurídica vigente o una autorización que podamos validar, y una foto de la persona autorizada junto a su documento de identidad"
     : `una foto tuya sosteniendo tu identificación${idLabel} junto a tu rostro, con los datos legibles`;
-  const text = `Hola${firstName ? ` ${firstName}` : ""}, te escribimos de ContrataCR para revisar la identidad del perfil de ${service}. Necesitamos ${documents}. Puedes responder al correo de soporte@contratacr.com. Los documentos no se publican. ¡Gracias!`;
+  const text = `Hola${firstName ? ` ${firstName}` : ""}, te escribimos de ContrataCR para revisar la identidad del perfil de ${service}. Necesitamos ${documents}. Puedes adjuntar los documentos en https://contratacr.com/dashboard/profesional?tab=verificacion. ¡Gracias!`;
   return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
 }
 

@@ -23,31 +23,41 @@ const DEFAULT_SENDER = { name: "ContrataCR", email: "soporte@contratacr.com" };
 
 export const EMAIL_LOGO_DARK_MODE_STYLES = `
   :root { color-scheme: light dark; supported-color-schemes: light dark; }
-  .ccr-dark-logo { display:none !important; mso-hide:all; max-height:0; overflow:hidden; }
+  body, .email-bg, .ccr-email-background { background:#ffffff; }
+  .ccr-email-card { border:0 !important; border-radius:0 !important; box-shadow:none !important; }
+  .ccr-dark-logo, .dark-logo { display:none !important; mso-hide:all; max-height:0; overflow:hidden; }
+  @media (max-width:600px) { .ccr-email-content { padding:32px 24px !important; } }
   @media (prefers-color-scheme: dark) {
-  .ccr-email-card { background:#1f2937 !important; border-color:#374151 !important; color:#f3f4f6 !important; }
-  .ccr-email-card h1, .ccr-email-card h2, .ccr-email-card p, .ccr-email-card p strong { color:#f3f4f6 !important; }
-    .ccr-light-logo { display:none !important; }
-    .ccr-dark-logo { display:block !important; max-height:none !important; overflow:visible !important; }
+    body, .email-bg, .ccr-email-background, .ccr-email-card { background:#111827 !important; color:#f3f4f6 !important; }
+    .ccr-email-card h1, .ccr-email-card h2, .ccr-email-card p strong { color:#f3f4f6 !important; }
+    .ccr-email-card p, .ccr-email-body { color:#cbd5e1 !important; }
+    .ccr-email-card .ccr-email-muted { color:#9ca9bb !important; }
+    .ccr-email-code { background:#173449 !important; color:#67d5f4 !important; }
+    .ccr-email-code div { color:#67d5f4 !important; }
+    .ccr-light-logo, .light-logo { display:none !important; }
+    .ccr-dark-logo, .dark-logo { display:block !important; max-height:none !important; overflow:visible !important; }
   }
-
-[data-ogsc] .ccr-email-card { background:#1f2937 !important; border-color:#374151 !important; color:#f3f4f6 !important; }
-[data-ogsc] .ccr-email-card h1, [data-ogsc] .ccr-email-card h2, [data-ogsc] .ccr-email-card p, [data-ogsc] .ccr-email-card p strong { color:#f3f4f6 !important; }
-  [data-ogsc] .ccr-light-logo { display:none !important; }
-  [data-ogsc] .ccr-dark-logo { display:block !important; max-height:none !important; overflow:visible !important; }
+  [data-ogsc], [data-ogsc] .email-bg, [data-ogsc] .ccr-email-background, [data-ogsc] .ccr-email-card { background:#111827 !important; color:#f3f4f6 !important; }
+  [data-ogsc] .ccr-email-card h1, [data-ogsc] .ccr-email-card h2, [data-ogsc] .ccr-email-card p strong { color:#f3f4f6 !important; }
+  [data-ogsc] .ccr-email-card p, [data-ogsc] .ccr-email-body { color:#cbd5e1 !important; }
+  [data-ogsc] .ccr-email-card .ccr-email-muted { color:#9ca9bb !important; }
+  [data-ogsc] .ccr-email-code { background:#173449 !important; color:#67d5f4 !important; }
+  [data-ogsc] .ccr-email-code div { color:#67d5f4 !important; }
+  [data-ogsc] .ccr-light-logo, [data-ogsc] .light-logo { display:none !important; }
+  [data-ogsc] .ccr-dark-logo, [data-ogsc] .dark-logo { display:block !important; max-height:none !important; overflow:visible !important; }
 `;
 
 export function emailLogoMarkup(origin = "https://contratacr.com") {
   const site = origin.replace(/\/$/, "");
   return `
-    <img class="ccr-light-logo" src="${site}/brand/email-logo-light.png?v=2" width="167" height="39" alt="ContrataCR" style="display:block;border:0;outline:none;text-decoration:none;width:167px;height:auto;margin:0 auto;">
-    <img class="ccr-dark-logo" src="${site}/brand/email-logo-dark.png?v=2" width="167" height="39" alt="ContrataCR" style="display:none;border:0;outline:none;text-decoration:none;width:167px;height:auto;margin:0 auto;max-height:0;overflow:hidden;mso-hide:all;">
+    <img class="ccr-light-logo" src="${site}/brand/email-logo-light.png?v=2" width="167" height="39" alt="ContrataCR" style="display:block;border:0;outline:none;text-decoration:none;width:167px;height:auto;margin:0;">
+    <img class="ccr-dark-logo" src="${site}/brand/email-logo-dark.png?v=2" width="167" height="39" alt="ContrataCR" style="display:none;border:0;outline:none;text-decoration:none;width:167px;height:auto;margin:0;max-height:0;overflow:hidden;mso-hide:all;">
   `;
 }
 
 /**
- * One branded shell for EVERY ContrataCR email: light/dark logo centered on a
- * white card — the exact structure of the password-reset email — so no sender
+ * One branded shell for EVERY ContrataCR email: light/dark logo aligned with the text in a
+ * responsive, borderless content area — so no sender
  * hand-rolls its own header again. `bodyHtml` renders inside the card.
  */
 export function brandedEmailDocument({ title, bodyHtml, origin = "https://contratacr.com", browserPage = false }: { title: string; bodyHtml: string; origin?: string; browserPage?: boolean }) {
@@ -55,15 +65,16 @@ export function brandedEmailDocument({ title, bodyHtml, origin = "https://contra
     <html lang="es">
     <head>
       <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
       <meta name="color-scheme" content="light dark">
       <meta name="supported-color-schemes" content="light dark">
       <title>${title}</title>
       <style>${browserPage ? ":root{color-scheme:light} .ccr-dark-logo{display:none!important} .ccr-light-logo{display:block!important}" : EMAIL_LOGO_DARK_MODE_STYLES}</style>
     </head>
-    <body style="margin:0;padding:0;background:#f4f7fa;color:#162543;font-family:Arial,Helvetica,sans-serif">
-      <div style="padding:28px 14px">
-        <div class="ccr-email-card" style="max-width:532px;margin:0 auto;padding:30px 34px;background:#fff;border:1px solid #e6edf3;border-radius:18px">
-          <div style="margin:0 auto 24px">${emailLogoMarkup(origin)}</div>
+    <body style="margin:0;padding:0;background:#ffffff;color:#162543;font-family:Arial,Helvetica,sans-serif">
+      <div class="ccr-email-background" style="padding:0">
+        <div class="ccr-email-card ccr-email-content" style="box-sizing:border-box;width:100%;max-width:600px;margin:0 auto;padding:44px 28px 36px;background:#fff">
+          <div style="margin:0 0 36px">${emailLogoMarkup(origin)}</div>
           ${bodyHtml}
         </div>
       </div>

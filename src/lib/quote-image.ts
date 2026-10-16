@@ -81,7 +81,15 @@ async function dibujar(quote: Quote, proName: string, textos: Textos, fechaVigen
 
   // Alturas de cada bloque, de arriba abajo.
   const altoBanda = 144;
-  const altoQuien = 60 + 44 + Math.max(0, datosCliente(quote).length * 32 - 10) + 30;
+  const anchoNombreEmisor = quote.client_name ? ancho / 2 - 24 : ancho;
+  const nombreVisible = quote.professional_name || proName;
+  medidor.font = `800 38px ${FUENTE}`;
+  const lineasEmisor = partirLineas(medidor, nombreVisible, anchoNombreEmisor);
+  medidor.font = `400 22px ${FUENTE}`;
+  const nombreCompleto = quote.professional_full_name;
+  const lineasIdentidad = nombreCompleto && nombreCompleto !== nombreVisible ? partirLineas(medidor, nombreCompleto, anchoNombreEmisor) : [];
+  const altoEmisor = Math.max(1, lineasEmisor.length) * 44 + lineasIdentidad.length * 28;
+  const altoQuien = 60 + Math.max(altoEmisor, 44 + Math.max(0, datosCliente(quote).length * 32 - 10)) + 30;
   const altoTitulo = (lineasTitulo.length ? lineasTitulo.length * 44 + 12 : 0) + (fechaVigencia ? 40 : 0) + (lineasTitulo.length || fechaVigencia ? 30 : 0);
   const altoRenglones = filas.reduce((acc, f) => acc + f.alto, 0) + 20;
   const altoNotaTotal = textos.totalNota ? 34 : 0;
@@ -121,7 +129,9 @@ async function dibujar(quote: Quote, proName: string, textos: Textos, fechaVigen
     while (recorte.length > 1 && ctx.measureText(`${recorte}…`).width > anchoNombre) recorte = recorte.slice(0, -1);
     return `${recorte.trimEnd()}…`;
   };
-  ctx.font = `800 38px ${FUENTE}`; ctx.fillStyle = "#162543"; ctx.fillText(ajustar(proName), M, y + 44);
+  ctx.font = `800 38px ${FUENTE}`; ctx.fillStyle = "#162543"; lineasEmisor.forEach((linea, i) => ctx.fillText(linea, M, y + 44 + i * 44));
+  ctx.font = `400 22px ${FUENTE}`; ctx.fillStyle = "#68778d";
+  lineasIdentidad.forEach((linea, i) => ctx.fillText(linea, M, y + altoEmisor - lineasIdentidad.length * 28 + 28 + i * 28));
   if (quote.client_name) {
     ctx.textAlign = "right";
     ctx.font = `700 22px ${FUENTE}`; ctx.fillStyle = "#68778d"; ctx.fillText(textos.cliente.toUpperCase(), W - M, y);
@@ -130,7 +140,7 @@ async function dibujar(quote: Quote, proName: string, textos: Textos, fechaVigen
     datos.forEach((linea, i) => ctx.fillText(linea, W - M, y + 78 + i * 32));
     ctx.textAlign = "left";
   }
-  y += 44 + Math.max(0, datos.length * 32 - 10) + 30;
+  y += Math.max(altoEmisor, 44 + Math.max(0, datos.length * 32 - 10)) + 30;
 
   // Título y vigencia, en su propio bloque.
   if (lineasTitulo.length) {

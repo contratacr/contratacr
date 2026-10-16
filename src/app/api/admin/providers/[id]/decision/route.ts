@@ -147,7 +147,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     .from("support_tickets")
     .update({ status: "resolved", resolved_at: now })
     .eq("professional_id", id)
-    .eq("status", "open");
+    .in("status", ["open", "in_progress"]);
 
   if (fromStatus === "under_appeal") {
     await db
