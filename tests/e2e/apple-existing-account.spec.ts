@@ -6,49 +6,22 @@ import { createDisposableAccount, cleanupDisposableAccount } from "./disposable-
 
 const destination = "/dashboard/profesional?tab=cuenta&connect=apple";
 
-for (const path of ["/login", "/registro/cliente", "/registro/profesional"]) {
-  test(`Apple offers the existing account before OAuth on ${path}`, async ({ page }) => {
+for (const path of ["/login", "/registro/cliente", "/registro/profesional", "/en/login"]) {
+  test(`Apple starts directly without an account notice on ${path}`, async ({ page }) => {
     let authorizations = 0;
-    await page.route("**/auth/v1/authorize**", async (route) => { authorizations++; await route.abort(); });
+    await page.route("**/auth/v1/authorize**", async route => {
+      expect(new URL(route.request().url()).searchParams.get("provider")).toBe("apple");
+      authorizations++;
+      await route.fulfill({ status: 200, contentType: "text/html", body: "Apple authorization started" });
+    });
     await resetAuth(page);
     await gotoOK(page, path);
-    await page.getByRole("button", { name: "Continuar con Apple", exact: true }).click();
-    const dialog = page.getByRole("dialog");
-    await expect(dialog).toContainText("podrías crear otra cuenta");
     await expectNoHorizontalOverflow(page);
-    expect(authorizations).toBe(0);
-    await dialog.getByRole("link", { name: "Ya tengo cuenta", exact: true }).click();
-    await expect(page).toHaveURL(new RegExp(`login\\?redirect=${encodeURIComponent(destination)}`));
-    await expect(page.getByText(/Ingresa con el correo o Google que ya usas/)).toBeVisible();
-    await expect(page.getByRole("button", { name: "Continuar con Apple", exact: true })).toHaveCount(0);
-    expect(authorizations).toBe(0);
+    await page.getByRole("button", { name: path.startsWith("/en") ? "Continue with Apple" : "Continuar con Apple", exact: true }).click();
+    await expect.poll(() => authorizations).toBe(1);
+    await expect(page.getByRole("dialog")).toHaveCount(0);
   });
 }
-
-test("a new Apple user can explicitly continue after the notice", async ({ page }) => {
-  let authorizations = 0;
-  await page.route("**/auth/v1/authorize**", async (route) => {
-    expect(new URL(route.request().url()).searchParams.get("provider")).toBe("apple");
-    authorizations++;
-    await route.fulfill({ status: 200, contentType: "text/html", body: "Apple authorization started" });
-  });
-  await resetAuth(page);
-  await gotoOK(page, "/login");
-  await page.getByRole("button", { name: "Continuar con Apple", exact: true }).click();
-  expect(authorizations).toBe(0);
-  await page.getByRole("dialog").getByRole("button", { name: "Continuar con Apple", exact: true }).click();
-  await expect.poll(() => authorizations).toBe(1);
-});
-
-test("the existing account choice remains English", async ({ page }) => {
-  await resetAuth(page);
-  await gotoOK(page, "/en/login");
-  await page.getByRole("button", { name: "Continue with Apple", exact: true }).click();
-  await expect(page.getByRole("dialog")).toContainText("Keep one ContrataCR account");
-  await page.getByRole("link", { name: "I already have an account", exact: true }).click();
-  await expect(page).toHaveURL(/\/en\/login\?redirect=/);
-  await expect(page.getByText(/Sign in with the email or Google account you already use/)).toBeVisible();
-});
 
 test("existing email login keeps its profile and opens Apple linking", async ({ page }) => {
   test.skip(!canRunSeededRegression(), "Requires isolated regression data.");
