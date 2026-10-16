@@ -70,8 +70,10 @@ export function SocialSignupButtons({ nextPath }: { nextPath?: string }) {
         }
         // A native provider must never continue into browser OAuth.
         throw new Error("native-social-unavailable");
-      } catch {
-        setError(t("nativeSocialError", { provider: provider === "google" ? "Google" : "Apple" }));
+      } catch (error) {
+        setError((error as Error)?.message === "native-apple-update-required"
+          ? t("nativeAppleUpdateRequired")
+          : t("nativeSocialError", { provider: provider === "google" ? "Google" : "Apple" }));
         setLoading(null);
         return;
       }

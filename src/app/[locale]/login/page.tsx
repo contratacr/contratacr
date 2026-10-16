@@ -334,9 +334,11 @@ export default function LoginPage() {
         }
         // A native provider must never continue into browser OAuth.
         throw new Error("native-social-unavailable");
-      } catch {
+      } catch (error) {
         setLeaving(false);
-        setError(t("nativeSocialError", { provider: provider === "google" ? "Google" : "Apple" }));
+        setError((error as Error)?.message === "native-apple-update-required"
+          ? t("nativeAppleUpdateRequired")
+          : t("nativeSocialError", { provider: provider === "google" ? "Google" : "Apple" }));
         if (provider === "google") setGoogleLoading(false);
         else setAppleLoading(false);
         return;

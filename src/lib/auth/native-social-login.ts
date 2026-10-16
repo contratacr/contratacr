@@ -5,7 +5,7 @@ import { reportClientError } from "@/lib/report-client-error";
 
 // Google and iOS Apple exchange native ID tokens directly with Supabase.
 // Android Apple uses the existing web provider in a secure browser sheet;
-// its PKCE code returns to this WebView through the published app link.
+// its PKCE code returns through the app link in newer Android builds.
 // Provider failures never silently fall back to a separate browser session.
 // Google uses the web client trusted by Supabase plus its platform clients.
 
@@ -105,6 +105,11 @@ function isCancellation(error: unknown) {
 // Its browser sheet hands a PKCE code back through an OS-verified app link;
 // the original WebView alone has the verifier needed to establish its session.
 async function androidAppleOperation(supabase: SupabaseClient, operation: "sign-in" | "link") {
+  // Play build 14 has no VIEW/BROWSABLE filter (verified in the signed APK).
+  // Its native manifest cannot be repaired by deploying JavaScript.
+  const { App } = await import("@capacitor/app");
+  const { build } = await App.getInfo();
+  if (!/^\d+$/.test(build) || Number(build) <= 14) throw new Error("native-apple-update-required");
   if (window.location.origin !== ANDROID_OAUTH_RETURN_ORIGIN) throw new Error("Android OAuth requires the production app origin");
   const account = operation === "link" ? await supabase.auth.getUser() : null;
   if (account && (account.error || !account.data.user)) throw new Error("Sign in before linking an identity.");
@@ -153,6 +158,10 @@ async function nativeSocialOperation(
   if (platform === "android" && provider === "apple") {
     try { return await androidAppleOperation(supabase, operation); }
     catch (error) {
+      if ((error as Error)?.message === "native-apple-update-required") {
+        reportFallback(provider, operation, "android-capability", "native-update-required");
+        throw error;
+      }
       if (isCancellation(error)) return "cancelled";
       return failNative(provider, operation, "android-pkce", failureCategory(error));
     }

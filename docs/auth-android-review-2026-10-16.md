@@ -40,7 +40,7 @@ Se detectó además que la regresión de CI estaba detenida antes de los navegad
 
 ## Corrección de retorno Apple Android y emulador Play
 
-Apple Android reutiliza el proveedor Apple web existente de Supabase mediante `openSecureWindow`, ya presente en el APK publicado. La WebView conserva el verificador PKCE; el callback devuelve únicamente el código de un uso a `/dashboard/native-auth-return`, ruta cubierta por los app links publicados. Se valida origen, ruta y estado por intento antes de intercambiar el código en la WebView. La vinculación comprueba que siga siendo la misma cuenta. El navegador no crea una sesión y el manejador genérico de campañas no consume este retorno. No se añaden secretos Apple al cliente ni se requiere una nueva versión nativa.
+Apple Android reutiliza el proveedor Apple web existente de Supabase mediante `openSecureWindow`, ya presente en el APK publicado. La WebView conserva el verificador PKCE; el callback devuelve únicamente el código de un uso a `/dashboard/native-auth-return`, ruta cubierta por los app links publicados. Se valida origen, ruta y estado por intento antes de intercambiar el código en la WebView. La vinculación comprueba que siga siendo la misma cuenta. El navegador no crea una sesión y el manejador genérico de campañas no consume este retorno. No se añaden secretos Apple al cliente. La prueba posterior confirmó que el build 14 necesita una actualización nativa para recibir el retorno.
 
 La respuesta de retorno tiene destino y paquete fijos, sin parámetros de redirección arbitraria, caché, referer ni recursos externos. Las cabeceras globales de Next respetan estas restricciones para este flujo.
 
@@ -59,3 +59,9 @@ En un intento posterior, «Add another account» avanzó hasta el formulario ofi
 Apple abrió el flujo de navegador seguro; la primera configuración de Chrome y las credenciales de Apple quedaron pendientes de intervención de Isaac. No se declara validado el retorno real de Apple todavía.
 
 El CI detectó un texto bilingüe del error nativo fuera del catálogo. Se movió a `auth.login.nativeSocialError` en ambos idiomas y sus dos consumidores usan `useTranslations`; no se amplió el presupuesto del control.
+
+## Hallazgo decisivo del retorno real de Apple
+
+Isaac completó la autenticación Apple. El callback recibió el retorno y mostró «Volver a ContrataCR», pero su botón abrió Play Store en lugar de la app. Se inspeccionó entonces el manifiesto del APK oficial descargado y la tabla de resolución del paquete instalado desde la tienda: `MainActivity` solo contiene MAIN/LAUNCHER, sin VIEW/BROWSABLE ni enlaces HTTPS. El filtro de `/dashboard` está en el código actual de `mobile`, pero no en el build 14. La coincidencia del certificado con assetlinks.json por sí sola no registra un enlace ausente en el manifiesto.
+
+Se corrige la conclusión anterior: Apple NO quedó funcionando de extremo a extremo en Google Play. No es reparable solo con JavaScript en esa instalación. El flujo PKCE queda preparado para builds posteriores con el manifiesto actual. Los builds Android <=14 (o sin número válido) se detienen antes de abrir Apple, con una explicación traducida y sin enviar al usuario a Play Store. Google permanece disponible y probado en el build 14. Esta condición se añade a contratos y pruebas móviles. No se incrementa versión/build ni se publica en ninguna tienda.
