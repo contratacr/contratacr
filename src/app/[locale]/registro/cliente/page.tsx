@@ -177,10 +177,8 @@ export default function RegisterClientPage() {
       // account is considered complete. OAuth users are already verified.
       if (!user) {
         setOtpEmail(email);
-      } else if (/[?&]borrador=1/.test(searchParams.get("redirect") ?? "")) {
-        router.push(panelHref);
       } else {
-        setSuccess(true);
+        await completeSuccess();
       }
     } catch {
       setError(t("errUnexpected"));
@@ -371,6 +369,7 @@ export default function RegisterClientPage() {
 
               <div>
                 <PhoneInput
+                  id="client-registration-phone"
                   label={t("phone")}
                   required
                   value={phone}

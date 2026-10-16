@@ -1,7 +1,7 @@
 "use client";
 
 import { AppleAccountNotice, APPLE_LINK_DESTINATION } from "@/components/auth/apple-account-notice";
-import { readLastSignIn, rememberSignIn } from "@/lib/auth/last-sign-in";
+import { rememberSignIn } from "@/lib/auth/last-sign-in";
 import { useTranslations, useLocale } from "next-intl";
 import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { Link } from "@/i18n/navigation";
@@ -18,7 +18,7 @@ import { createClient, hasSupabaseBrowserConfig } from "@/lib/supabase/client";
 import { FooterSoloWeb } from "@/components/landing/footer-solo-web";
 import { detectSocialOnly, providerLabel } from "@/lib/auth-method";
 import { isNativeAppRuntime } from "@/hooks/use-native-app";
-import { nativeSocialSignIn } from "@/lib/auth/native-social-login";
+import { nativeSocialSignIn, nativeSocialErrorMessage } from "@/lib/auth/native-social-login";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { OtpVerification } from "@/components/auth/otp-verification";
 import { PageRouteLoading } from "@/components/ui/route-loading";
@@ -320,6 +320,8 @@ export default function LoginPage() {
           // Same-origin path, never the absolute callback URL: the server origin
           // can differ from the one the WebView loaded (0.0.0.0 vs localhost),
           // and an absolute URL would push the user out of the app mid-login.
+          rememberSignIn(provider);
+          await waitForAuthCookie();
           const callback = oauthCallbackUrl(provider).replace("flow=oauth", "flow=native");
           window.location.assign(callback.slice(callback.indexOf("/auth/callback")));
           return;
@@ -330,10 +332,11 @@ export default function LoginPage() {
           else setAppleLoading(false);
           return;
         }
-        // "unavailable": provider not configured for this platform → web flow.
-      } catch (nativeError) {
+        // A native provider must never continue into browser OAuth.
+        throw new Error("native-social-unavailable");
+      } catch {
         setLeaving(false);
-        setError(nativeError instanceof Error ? nativeError.message : String(nativeError));
+        setError(nativeSocialErrorMessage(provider, locale));
         if (provider === "google") setGoogleLoading(false);
         else setAppleLoading(false);
         return;
@@ -424,6 +427,7 @@ export default function LoginPage() {
       return;
     }
     rememberSignIn("google");
+    await waitForAuthCookie();
     const callback = oauthCallbackUrl().replace("flow=oauth", "flow=native");
     window.location.assign(callback.slice(callback.indexOf("/auth/callback")));
   }
@@ -435,7 +439,6 @@ export default function LoginPage() {
     () => "unknown" as const,
   );
   const browserRuntime = runtime === "browser";
-  const lastMethod = useSyncExternalStore(() => () => {}, readLastSignIn, () => null);
   async function handleApple() { await handleSocial("apple"); }
 
   if (otpEmail) {
@@ -547,7 +550,6 @@ export default function LoginPage() {
 
           <div className="flex flex-col gap-3">
             {connectingApple && <p role="status" className="rounded-xl bg-[#eff9fd] p-3 text-sm text-[#374151]">{ta("loginHelp")}</p>}
-            {lastMethod && <p className="text-center text-xs text-[#68778d]">{t("lastUsed", { method: lastMethod === "email" ? t("emailMethod") : lastMethod === "apple" ? "Apple" : "Google" })}</p>}
             {!connectingApple && <button
               type="button"
               onClick={() => setAppleNotice(true)}

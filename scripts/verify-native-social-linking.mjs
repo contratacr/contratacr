@@ -10,14 +10,15 @@ const compiled = ts.transpileModule(source, {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
 }).outputText;
 
-function setup({ native = true, providerError, linkError, accounts = ["existing", "existing"] } = {}) {
-  const calls = { login: [], link: [], signIn: [], diagnostics: [] };
+function setup({ native = true, platform = "ios", providerError, providerErrors, linkError, accounts = ["existing", "existing"] } = {}) {
+  const calls = { login: [], logout: [], link: [], signIn: [], diagnostics: [] };
   const plugin = {
     initialize: async () => {},
-    logout: async () => {},
+    logout: async (options) => { calls.logout.push(options); },
     login: async (options) => {
       calls.login.push(options);
-      if (providerError) throw providerError;
+      const failure = providerErrors?.[calls.login.length - 1] ?? providerError;
+      if (failure) throw failure;
       return { result: { idToken: "provider-signed-token" } };
     },
   };
@@ -29,7 +30,7 @@ function setup({ native = true, providerError, linkError, accounts = ["existing"
       if (name === "@/lib/report-client-error") return { reportClientError: (_origin, error) => calls.diagnostics.push(error.message) };
       if (name === "@/hooks/use-native-app") return { isNativeAppRuntime: () => native };
       if (name === "@capgo/capacitor-social-login") return { SocialLogin: plugin };
-      if (name === "@capacitor/core") return { Capacitor: { getPlatform: () => "ios" } };
+      if (name === "@capacitor/core") return { Capacitor: { getPlatform: () => platform } };
       throw new Error(`Unexpected import: ${name}`);
     },
   });
@@ -96,8 +97,43 @@ test("the website leaves linking to its existing web OAuth flow", async () => {
 
 test("native fallback reports a fixed reason without leaking provider data", async () => {
   const { api, supabase, calls } = setup({ providerError: new Error("Missing URL scheme private-token-example user@example.com") });
-  assert.equal(await api.nativeSocialLink("google", supabase), "unavailable");
+  await assert.rejects(api.nativeSocialLink("google", supabase), /native-social-unavailable/);
   assert.equal(calls.diagnostics.length, 1);
   assert.equal(calls.diagnostics[0], "native-social-fallback:link:google:provider-sheet:url-scheme");
   assert.equal(calls.link.length + calls.signIn.length, 0);
+});
+
+for (const platform of ["ios", "android"]) {
+  test(`${platform} Google obtains a fresh nonce and Android keeps the account chooser`, async () => {
+    const { api, supabase, calls } = setup({ platform });
+    await api.nativeSocialSignIn("google", supabase);
+    await api.nativeSocialSignIn("google", supabase);
+    assert.notEqual(calls.login[0].options.nonce, calls.login[1].options.nonce);
+    assert.equal(calls.logout.length, platform === "ios" ? 2 : 0);
+    if (platform === "android") assert.equal(calls.login[0].options.style, "standard");
+  });
+  test(`${platform} provider failure never requests browser OAuth or signs into another account`, async () => {
+    const { api, supabase, calls } = setup({ platform, providerError: new Error("No credentials available") });
+    await assert.rejects(api.nativeSocialSignIn("google", supabase), /native-social-unavailable/);
+    assert.equal(calls.signIn.length + calls.link.length, 0);
+    assert.match(calls.diagnostics[0], /no-credentials$/);
+  });
+}
+test("missing native bridge is an error, never permission to leave the app", async () => {
+  const { api, supabase } = setup({ platform: "web" });
+  await assert.rejects(api.nativeSocialSignIn("google", supabase), /native-social-unavailable/);
+});
+
+test("Android account reauthentication recovers once in the native chooser", async () => {
+  const { api, supabase, calls } = setup({ platform: "android", providerErrors: [new Error("AccountReauthFailed"), null] });
+  assert.equal(await api.nativeSocialSignIn("google", supabase), "signed-in");
+  assert.equal(calls.login.length, 2);
+  assert.equal(calls.logout.length, 1);
+  assert.equal(calls.signIn.length, 1);
+});
+test("Android reauthentication retry remains bounded", async () => {
+  const { api, supabase, calls } = setup({ platform: "android", providerError: new Error("AccountReauthFailed") });
+  await assert.rejects(api.nativeSocialSignIn("google", supabase), /native-social-unavailable/);
+  assert.equal(calls.login.length, 2);
+  assert.equal(calls.signIn.length, 0);
 });

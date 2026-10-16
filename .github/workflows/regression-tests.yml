@@ -106,6 +106,9 @@ jobs:
           # En este mismo paso GITHUB_ENV todavía no rige: la contraseña va directa.
           CLIENTE_TEST_PASSWORD='ClientePruebas2026!' node scripts/seed-cuenta-cliente.js
 
+      - name: Verify native Google and Apple session isolation
+        run: npm run test:native-social-linking
+
       - name: Verify account deletion isolation locally
         run: npm run test:account-deletion
 
