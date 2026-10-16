@@ -243,7 +243,7 @@ test('home-screen launch shell is public, white and independent of the session',
 });
 
 test('mobile listings stay behind the download notice and keep their last result reachable', async ({page}) => {
- test.skip((page.viewportSize()?.width ?? 1280)>=1024);
+ test.skip((page.viewportSize()?.width ?? 1280)>=1024, 'The download notice only appears on mobile web.');
  for (const route of ['/empleos','/proyectos','/promociones']) {
   await page.goto(route);
   const banner=page.getByTestId('mobile-app-download');
@@ -268,7 +268,7 @@ test('mobile listings stay behind the download notice and keep their last result
 });
 
 test('home-screen web app can show the store notice without being treated as native', async ({page}) => {
- test.skip((page.viewportSize()?.width ?? 1280)>=1024);
+ test.skip((page.viewportSize()?.width ?? 1280)>=1024, 'The download notice only appears on mobile web.');
  await page.addInitScript(()=>{
   Object.defineProperty(navigator,'standalone',{configurable:true,value:true});
   const original=window.matchMedia.bind(window);
