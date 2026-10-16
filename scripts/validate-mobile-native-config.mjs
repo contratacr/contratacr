@@ -170,9 +170,9 @@ requireMatch(
 requireMatch(
   "Web regression keeps mobile messaging parked",
   defaultPlaywright,
-  /testIgnore:\s*\["\*\*\/direct-chat\.spec\.ts",\s*"\*\*\/mobile-native-shell\.spec\.ts"\]/,
+  /testIgnore:\s*\["\*\*\/\.tmp-\*\.spec\.ts",\s*"\*\*\/direct-chat\.spec\.ts",\s*"\*\*\/mobile-native-shell\.spec\.ts"\]/,
 );
-requireMatch("Mobile regression enables ignored tests", mobilePlaywright, /testIgnore:\s*\[\]/);
+requireMatch("Mobile regression enables ignored tests", mobilePlaywright, /testIgnore:\s*\["\*\*\/\.tmp-\*\.spec\.ts"\]/);
 requireMatch("Mobile regression includes direct chat", mobilePlaywright, /"\*\*\/direct-chat\.spec\.ts"/);
 requireMatch("Mobile regression includes native shell smoke", mobilePlaywright, /"\*\*\/mobile-native-shell\.spec\.ts"/);
 requireMatch(
