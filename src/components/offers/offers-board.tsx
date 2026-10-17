@@ -1,5 +1,7 @@
 "use client";
 
+import { ProfilePhotoPreview } from "@/components/ui/profile-photo-preview";
+
 import { formatPersonDisplayName } from "@/lib/display-name";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { conFiltroDeFecha } from "@/lib/marketplace/filtros-por-volumen";
@@ -10,7 +12,7 @@ import { VerificationInfo } from "@/components/ui/verification-info";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
-import { cldLarge, cldThumb } from "@/lib/cloudinary";
+import { cldLarge } from "@/lib/cloudinary";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CalendarDays, MapPin, Menu, Store } from "lucide-react";
 import { ContrataCRMark, HeaderAccountLink } from "@/components/landing/landing-navbar";
@@ -579,13 +581,7 @@ function OfferImage({
         // tienen foto, y dice mucho más que dos letras del título. La foto del
         // profesional NO se agrega cuando la promoción sí trae su imagen: ahí
         // manda el arte, que es lo que se compra con los ojos.
-        <ProgressiveImage
-          src={cldThumb(offer.professional_avatar_url, 160)}
-          alt={offer.professional_name ?? ""}
-          fit="cover"
-          wrapperClassName="block h-full max-h-full w-full max-w-full rounded-lg"
-          className="rounded-lg"
-        />
+        <ProfilePhotoPreview src={offer.professional_avatar_url} name={offer.professional_name ?? ""} className="h-full w-full" square />
       ) : (
         <span className="grid h-full place-items-center rounded-lg bg-[#f3f7fa] text-xs font-extrabold text-[#009fd9]">
           {offer.title.slice(0, 2).toUpperCase()}
@@ -858,6 +854,7 @@ function OfferPreview({
           <div className="flex min-w-0 items-center gap-2">
             {/* El check verifica a quien publica, no la promoción. */}
             <div data-verification-owner className="flex min-w-0 flex-1 items-center gap-1">
+              {offer.professional_avatar_url && <ProfilePhotoPreview src={offer.professional_avatar_url} name={offer.professional_name ?? ""} className="mr-2 h-11 w-11" />}
               {offer.professional_slug ? (
                 <Link
                   href={`/profesionales/${offer.professional_slug}?from=${encodeURIComponent(rutaPromocion(offer))}`}

@@ -1,5 +1,7 @@
 "use client";
 
+import { ProfilePhotoPreview } from "@/components/ui/profile-photo-preview";
+
 import { trackMetaConversion } from "@/lib/analytics/meta-pixel";
 
 import { rutaProyecto } from "@/lib/marketplace-url";
@@ -27,8 +29,6 @@ import { type ProyectoPublico } from "@/lib/proyectos";
 import { VerificationInfo } from "@/components/ui/verification-info";
 import { MenuProyecto } from "@/components/projects/menu-proyecto";
 import { PublishProjectModal } from "@/components/projects/publish-project-modal";
-import { ProgressiveImage } from "@/components/ui/progressive-image";
-import { cldThumb } from "@/lib/cloudinary";
 import { AccionesAlPie } from "@/components/ui/acciones-al-pie";
 import { SaveItemButton } from "@/components/saved/save-item-button";
 import { CABECERA_BOTON, CABECERA_FILA, CABECERA_FILA_CENTRADA, CABECERA_GLIFO, CABECERA_TITULO } from "@/components/layout/cabecera";
@@ -260,13 +260,7 @@ function FotoDeQuienPublica({ proyecto, grande = false }: { proyecto: ProyectoPu
   const medida = grande ? "h-14 w-14" : "h-11 w-11 sm:h-12 sm:w-12";
   if (proyecto.client_avatar_url) {
     return (
-      <ProgressiveImage
-        src={cldThumb(proyecto.client_avatar_url, 96)}
-        alt={proyecto.client_name}
-        fit="cover"
-        wrapperClassName={cn(medida, "shrink-0 rounded-full")}
-        className="rounded-full"
-      />
+      <ProfilePhotoPreview src={proyecto.client_avatar_url} name={proyecto.client_name} className={medida} />
     );
   }
   const letras = iniciales(proyecto.client_name);

@@ -1,15 +1,15 @@
 "use client";
 
+import { ProfilePhotoPreview } from "@/components/ui/profile-photo-preview";
+
 import { formatPersonDisplayName } from "@/lib/display-name";
 import { conFiltroDeFecha } from "@/lib/marketplace/filtros-por-volumen";
-import { ProgressiveImage } from "@/components/ui/progressive-image";
 import { PanelEmptyState } from "@/components/ui/content-loading";
 import { VerificationInfo } from "@/components/ui/verification-info";
 import { cn } from "@/lib/utils";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 
 import { useEffect, useMemo, useState } from "react";
-import { cldThumb } from "@/lib/cloudinary";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { ArrowLeft, BriefcaseBusiness, Building2, Menu } from "lucide-react";
@@ -816,6 +816,6 @@ function JobContactActions({ job, isOwner, userId, soloContacto = false, escrito
 function EmployerAvatar({ job, size = "default" }: { job: JobPost; size?: "default" | "large" }) {
   const locale = marketplaceLocale(useLocale());
   const dimensions = size === "large" ? "h-14 w-14" : "h-11 w-11 sm:h-12 sm:w-12";
-  if (job.employer_avatar_url) return <ProgressiveImage src={cldThumb(job.employer_avatar_url, 96)} alt={`${JOBS_COPY[locale].professionalPhoto}: ${job.employer_name || JOBS_COPY[locale].professionalFallback}`} fit="cover" wrapperClassName={`${dimensions} shrink-0 rounded-full`} className="rounded-full" />;
+  if (job.employer_avatar_url) return <ProfilePhotoPreview src={job.employer_avatar_url} name={job.employer_name || JOBS_COPY[locale].professionalFallback} className={dimensions} />;
   return <span className={`grid ${dimensions} shrink-0 place-items-center rounded-full bg-[#eaf7fc] text-[#009fd9]`}><Building2 className={size === "large" ? "h-6 w-6" : "h-5 w-5"} /></span>;
 }
