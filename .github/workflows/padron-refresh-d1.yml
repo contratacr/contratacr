@@ -1,6 +1,9 @@
 name: Cloudflare D1 padron refresh
 
 on:
+  schedule:
+    # Día 15, 03:17 de Costa Rica (UTC-6): permite recibir el cierre del mes anterior.
+    - cron: "17 9 15 * *"
   workflow_dispatch:
     inputs:
       target:
@@ -25,12 +28,12 @@ jobs:
     name: Refresh shared Cloudflare D1 padrón
     runs-on: ubuntu-latest
     timeout-minutes: 120
-    environment: ${{ inputs.target }}
+    environment: ${{ github.event_name == 'schedule' && 'production' || inputs.target }}
     permissions:
       contents: read
     env:
-      TARGET: ${{ inputs.target }}
-      DRY_RUN: ${{ inputs.dry_run }}
+      TARGET: ${{ github.event_name == 'schedule' && 'production' || inputs.target }}
+      DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || format('{0}', inputs.dry_run) }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
@@ -87,7 +90,7 @@ jobs:
       - name: Download and unzip padron
         run: |
           set -euo pipefail
-          curl -L --retry 3 --retry-delay 5 -o padron.zip "https://www.tse.go.cr/zip/padron/padron_completo.zip"
+          curl --fail --location --retry 3 --retry-delay 5 --connect-timeout 30 --max-time 600 -o padron.zip "https://www.tse.go.cr/zip/padron/padron_completo.zip"
           unzip -o padron.zip -d padron
           PADRON_FILE="$(find padron -maxdepth 2 -iname 'padron_completo.txt' -print -quit)"
           if [ -z "$PADRON_FILE" ]; then
@@ -127,7 +130,7 @@ jobs:
           npx wrangler d1 execute "$PADRON_D1_DATABASE_NAME" --remote --command "select 1 as ok;"
 
       - name: Validate D1 small import
-        if: ${{ inputs.dry_run == true }}
+        if: ${{ env.DRY_RUN == 'true' }}
         run: |
           set -euo pipefail
           npx wrangler d1 execute "$PADRON_D1_DATABASE_NAME" --remote --command "drop table if exists padron_dry_run; create table padron_dry_run (cedula text primary key, nombre text, papellido text, sapellido text); drop table if exists padron_next; create table padron_next (cedula text primary key, nombre text, papellido text, sapellido text);"
@@ -143,19 +146,19 @@ jobs:
           npx wrangler d1 execute "$PADRON_D1_DATABASE_NAME" --remote --command "drop table if exists padron_dry_run; drop table if exists padron_next;"
 
       - name: Stop after dry run
-        if: ${{ inputs.dry_run == true }}
+        if: ${{ env.DRY_RUN == 'true' }}
         run: |
           set -euo pipefail
           echo "Dry run completed: padrón download, parsing, SQL chunking, and D1 access are valid."
 
       - name: Ensure D1 staging schema
-        if: ${{ inputs.dry_run == false }}
+        if: ${{ env.DRY_RUN == 'false' }}
         run: |
           set -euo pipefail
           npx wrangler d1 execute "$PADRON_D1_DATABASE_NAME" --remote --command "create table if not exists padron (cedula text primary key, nombre text, papellido text, sapellido text); drop table if exists padron_next; create table padron_next (cedula text primary key, nombre text, papellido text, sapellido text);"
 
       - name: Load D1 staging
-        if: ${{ inputs.dry_run == false }}
+        if: ${{ env.DRY_RUN == 'false' }}
         run: |
           set -euo pipefail
           for file in padron-d1-sql/*.sql; do
@@ -164,7 +167,7 @@ jobs:
           done
 
       - name: Promote D1 staging
-        if: ${{ inputs.dry_run == false }}
+        if: ${{ env.DRY_RUN == 'false' }}
         run: |
           set -euo pipefail
           count="$(npx wrangler d1 execute "$PADRON_D1_DATABASE_NAME" --remote --json --command "select count(*) as count from padron_next;" | node -e "let s='';process.stdin.on('data',d=>s+=d);process.stdin.on('end',()=>{const j=JSON.parse(s);console.log(j[0]?.results?.[0]?.count ?? 0)})")"
@@ -175,7 +178,7 @@ jobs:
           npx wrangler d1 execute "$PADRON_D1_DATABASE_NAME" --remote --command "drop table if exists padron_old; alter table padron rename to padron_old; alter table padron_next rename to padron; drop table if exists padron_old;"
 
       - name: Verify D1 padron lookup
-        if: ${{ inputs.dry_run == false }}
+        if: ${{ env.DRY_RUN == 'false' }}
         run: |
           set -euo pipefail
           npx wrangler d1 execute "$PADRON_D1_DATABASE_NAME" --remote --command "select cedula, nombre, papellido, sapellido from padron where cedula = '$PADRON_SAMPLE_CEDULA';"

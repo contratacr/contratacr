@@ -72,7 +72,7 @@ Recommended verification flow:
 4. Run the real promotion from `main` with `target=production`, `dry_run=false`.
 5. Verify `/api/cedula` reports `source=cloudflare_d1_padron` for the known sample.
 
-The refresh is manual unless its workflow schedule is explicitly enabled. Production runs are blocked unless the workflow is run from `main`.
+The shared D1 refresh runs automatically on the 15th of each month at 09:17 UTC (03:17 Costa Rica), from `main` using the production environment. Manual validation and refresh remain available. Scheduled runs promote only after the staging row-count guard passes; a failed load leaves the live table unchanged. Production runs are blocked unless the workflow is run from `main`.
 
 Do not use the legacy Supabase padrón load/check scripts as the production refresh path.
 
