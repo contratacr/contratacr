@@ -64,8 +64,8 @@ test.describe("@seeded cotizaciones", () => {
       const fila = page.getByText(marca, { exact: true }).filter({ visible: true }).first();
       await expect(fila).toBeVisible({ timeout: 20_000 });
 
-      // 3. El PDF que se le manda al cliente (en computadora se descarga).
-      if (!isMobileProject(test.info())) {
+      // 3. Download must produce a real PDF in desktop AND mobile browsers.
+      {
         await waitForInteractivePage(page);
         await fila.click();
         const descargar = page.getByRole("button", { name: /Descargar PDF/i }).filter({ visible: true }).first();

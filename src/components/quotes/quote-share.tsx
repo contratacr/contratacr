@@ -8,7 +8,8 @@ import { useNativeShare } from "@/hooks/use-native-share";
 import { nombreArchivoCotizacion, numeroCotizacion, type Quote } from "@/lib/quotes";
 import { enlacePerfil } from "@/lib/profile-url";
 import { renderQuotePdf } from "@/lib/quote-image";
-import { compartirConHojaNativa } from "@/lib/compartir-nativo";
+import { saveFile } from "@/lib/file-download";
+import { useNativeApp } from "@/hooks/use-native-app";
 
 const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
 
@@ -27,8 +28,16 @@ const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
 function useCompartirCotizacion({ quote, proName, proSlug, activo = true }: { quote: Quote; proName: string; proSlug?: string | null; activo?: boolean }) {
   const t = useTranslations("quotes");
   const locale = useLocale();
-  const nativo = useNativeShare();
-  const [pdf, setPdf] = useState<Blob | null>(null);
+  const hojaWeb = useNativeShare();
+  const app = useNativeApp();
+  const nativo = app || hojaWeb;
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const generationKey = JSON.stringify([quote, proName, proSlug, locale]);
+  const [prepared, setPrepared] = useState<{ key: string; blob: Blob | null; failed: boolean } | null>(null);
+  const current = prepared?.key === generationKey ? prepared : null;
+  const pdf = current?.blob ?? null;
   const fecha = quote.valid_until ? new Date(`${quote.valid_until}T12:00:00`).toLocaleDateString(DATE_LOCALE[locale] ?? "es-CR", { day: "numeric", month: "long" }) : null;
 
   useEffect(() => {
@@ -40,34 +49,31 @@ function useCompartirCotizacion({ quote, proName, proSlug, activo = true }: { qu
       subtotal: t("subtotal"), iva: t("tax"), total: t("total"),
       totalNota: quote.tax_mode === "exento" ? t("totalNoTax") : "",
       pie: t("imageFooter"), deQuien: t("publicFrom"), nota: t("noteLabel"),
-    }, fecha, proSlug ? enlacePerfil(proSlug) : "").then((b) => { if (vivo) setPdf(b); });
+    }, fecha, proSlug ? enlacePerfil(proSlug) : "").then((blob) => { if (vivo) setPrepared({ key: generationKey, blob, failed: !blob }); }).catch(() => { if (vivo) setPrepared({ key: generationKey, blob: null, failed: true }); });
     return () => { vivo = false; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activo, quote.id, quote.status, quote.project_id]);
+  }, [activo, quote, proName, proSlug, fecha, t, generationKey]);
 
-  function descargar() {
-    if (!pdf) return;
-    const a = document.createElement("a"); a.href = URL.createObjectURL(pdf); a.download = `${nombreArchivoCotizacion(quote, proName)}.pdf`; a.click();
-    window.setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-  }
-
-  async function compartir() {
-    if (!pdf) return;
-    if (!nativo) { descargar(); return; }
-    const file = new File([pdf], `${nombreArchivoCotizacion(quote, proName)}.pdf`, { type: "application/pdf" });
-    // SOLO el archivo: al mandar archivo + texto juntos, iOS a veces suelta el
-    // PDF y comparte el mensaje convertido en un .txt. Cerrar la hoja sin
-    // elegir nada no descarga nada: fue una decisión, no una falla.
-    if (await compartirConHojaNativa({ files: [file] }) !== "no-disponible") return;
-    descargar();
+  async function guardar(compartir = false) {
+    if (!pdf || saving) return;
+    setSaving(true);
+    setSaved(false);
+    setError(null);
+    try {
+      const result = await saveFile(pdf, `${nombreArchivoCotizacion(quote, proName)}.pdf`, compartir);
+      setSaved(result === "saved");
+    } catch (failure) {
+      if (failure instanceof Error && /cancel|dismiss/i.test(failure.message)) return;
+      setError(failure instanceof Error && failure.message === "native-update-required" ? t("pdfUpdateRequired") : t("pdfError"));
+    } finally { setSaving(false); }
   }
 
   return {
-    preparando: activo && pdf === null,
+    preparando: activo && current === null,
+    error: current?.failed ? t("pdfError") : error, saving, saved, listo: pdf !== null,
     /** Hay hoja del sistema (teléfono). En computadora no existe. */
     nativo,
-    compartir: () => void compartir(),
-    descargar,
+    compartir: () => void guardar(true),
+    descargar: () => void guardar(),
   };
 }
 
@@ -87,18 +93,20 @@ function useCompartirCotizacion({ quote, proName, proSlug, activo = true }: { qu
  */
 export function BotonCompartirCotizacion({ quote, proName, proSlug, className }: { quote: Quote; proName: string; proSlug?: string | null; className?: string }) {
   const t = useTranslations("quotes");
-  const { preparando, nativo, compartir, descargar } = useCompartirCotizacion({ quote, proName, proSlug });
+  const { preparando, nativo, compartir, descargar, error, saving, saved, listo } = useCompartirCotizacion({ quote, proName, proSlug });
   return (
     <>
+      {saved && <p role="status" className="text-sm text-[#166534]">{t("pdfSaved")}</p>}
+      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
       {/* En el teléfono el pie se apila al revés, así que «Descargar» escrito
           antes queda DEBAJO de «Compartir»: primero la acción principal. */}
       {nativo && (
-        <Button type="button" variant="outline" className={className} disabled={preparando} onClick={descargar}>
+        <Button type="button" variant="outline" className={className} disabled={preparando || saving || !listo} onClick={descargar}>
           {preparando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
           {t("downloadPdf")}
         </Button>
       )}
-      <Button type="button" className={className} disabled={preparando} onClick={nativo ? compartir : descargar}>
+      <Button type="button" className={className} disabled={preparando || saving || !listo} onClick={nativo ? compartir : descargar}>
         {preparando ? <Loader2 className="h-4 w-4 animate-spin" /> : nativo ? <Share2 className="h-4 w-4" /> : <Download className="h-4 w-4" />}
         {nativo ? t("share") : t("downloadPdf")}
       </Button>
