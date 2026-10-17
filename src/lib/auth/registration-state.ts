@@ -11,3 +11,9 @@ export function pendingRegistrationPath(metadata: Record<string, unknown> = {}):
   if (metadata.role === "client") return "/registro/cliente";
   return "/onboarding";
 }
+
+export function registrationIntentMatches(metadata: Record<string, unknown>, role: "client" | "professional"): boolean {
+  const intended = role === "professional" ? "professional" : null;
+  const currentIntent = metadata.intended_role === "professional" ? "professional" : null;
+  return metadata.role === "client" && currentIntent === intended && metadata.onboarding_completed === false;
+}
