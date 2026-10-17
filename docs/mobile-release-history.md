@@ -71,3 +71,12 @@ Isaac autorizó promover ambas versiones a las tiendas. La autorización anterio
 ### Comprobación Apple Android tras intervención del titular
 
 Apple completó autenticación, pero la pantalla final observada fue onboarding dentro del Custom Tab de Chrome. Al cerrarlo, la app seguía en login: **no se considera un acceso nativo correcto**. Se abrió un intento nuevo desde el botón nativo y se pidió completar Apple dejando abierta la pantalla final. El log de ese intento confirma provider Apple con desafío PKCE, callback `/auth/callback`, flow=android-apple y native_state (no se guardaron ni imprimieron tokens, códigos ni verificadores). La lista de Supabase ya permite el callback y `https://contratacr.com/**`; no se cambió configuración de autenticación. El callback de producción devuelve la página de retorno nativo y no-store con un código sintético. Pendiente observar callback real y sesión en WebView; Android permanece sin enviar a revisión.
+
+
+### Cierre de acceso Apple Android y ajustes compartidos — 17 de octubre de 2026
+
+- Acceso real Apple en el candidato Android 1.0.11 / 15 completado: el titular terminó la autenticación, se pulsó «Volver a ContrataCR» y la WebView nativa mostró la selección de rol con la sesión iniciada. No se seleccionó rol ni se alteró el perfil de prueba. Esta observación resuelve el pendiente anterior del Custom Tab.
+- Rondas previas finales: Regression Tests 39006959945, Mobile Native Regression 39006966502 y Cloudflare Compatibility 39006966491, todas correctas.
+- Fuente compartida 8d0ec177439d7818400ada1f37f2f40c1ffa7a0e: logo principal en el retorno, saludo neutro cuando Apple no proporciona nombre, nombres públicos unificados y archivo de cotización con el nombre público. Cambios web; los binarios siguen correspondiendo a b77609dc4815a44755211c5300eac4c3ef976c45.
+- Comprobaciones focales: 24 contratos de autenticación, 6 de presentación ES/EN, 3 de marca y 9 de descarga de PDF correctas; presentación y PDF en Chromium escritorio/móvil y WebKit móvil. TypeScript y contratos nativos correctos. Contrato de nombres/saludos añadido a CI.
+- Envío a revisión: todavía pendiente de confirmar en ambas tiendas; estos resultados no representan publicación ni aprobación. Notas localizadas conservadas sin cambios.
