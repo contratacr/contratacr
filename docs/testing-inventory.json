@@ -8,7 +8,7 @@
     "handlers": 93,
     "components": 234,
     "hooks": 25,
-    "specs": 114
+    "specs": 115
   },
   "dashboardTabs": [
     "home",
@@ -17436,7 +17436,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 96,
+          "line": 104,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{descargar}",
@@ -17444,7 +17444,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 101,
+          "line": 109,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{nativo ? compartir : descargar}",
@@ -17452,7 +17452,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 121,
+          "line": 129,
           "tag": "QuoteDetach",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -17460,7 +17460,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 138,
+          "line": 146,
           "tag": "button",
           "label": "{t(\"detach\")}",
           "handler": "{() => void quitar()}",
@@ -22356,6 +22356,15 @@
         {
           "line": 258,
           "title": "\"success case creation accepts an uploaded image, saves the case, and restores the seed\""
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/file-download.spec.ts",
+      "cases": [
+        {
+          "line": 6,
+          "title": "`generated PDF uses ${platform} file saving instead of blob navigation`"
         }
       ]
     },
