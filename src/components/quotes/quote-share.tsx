@@ -96,8 +96,8 @@ export function BotonCompartirCotizacion({ quote, proName, proSlug, className }:
   const { preparando, nativo, compartir, descargar, error, saving, saved, listo } = useCompartirCotizacion({ quote, proName, proSlug });
   return (
     <>
-      {saved && <p role="status" className="text-sm text-[#166534]">{t("pdfSaved")}</p>}
-      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+      {saved && <p role="status" className="basis-full text-sm text-[#166534]">{t("pdfSaved")}</p>}
+      {error && <p role="alert" className="basis-full text-sm text-red-600">{error}</p>}
       {/* En el teléfono el pie se apila al revés, así que «Descargar» escrito
           antes queda DEBAJO de «Compartir»: primero la acción principal. */}
       {nativo && (
@@ -112,6 +112,19 @@ export function BotonCompartirCotizacion({ quote, proName, proSlug, className }:
       </Button>
     </>
   );
+}
+
+/** Received quotes use exactly the same generation and native saving path. */
+export function BotonDescargarCotizacion({ quote, proName, className }: { quote: Quote; proName: string; className?: string }) {
+  const t = useTranslations("quotes");
+  const { preparando, descargar, error, saving, saved, listo } = useCompartirCotizacion({ quote, proName });
+  return <>
+    {saved && <p role="status" className="basis-full text-sm text-[#166534]">{t("pdfSaved")}</p>}
+    {error && <p role="alert" className="basis-full text-sm text-red-600">{error}</p>}
+    <Button type="button" className={className} disabled={preparando || saving || !listo} onClick={descargar}>
+      {preparando || saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}{t("downloadClient")}
+    </Button>
+  </>;
 }
 
 /**

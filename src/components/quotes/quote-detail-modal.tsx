@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Download, Loader2, Trash2, Undo2 } from "lucide-react";
+import { Trash2, Undo2 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { formatColones } from "@/lib/pricing";
-import { desgloseQuote, isQuoteExpired, nombreArchivoCotizacion, numeroCotizacion, type Quote } from "@/lib/quotes";
-import { renderQuotePdf } from "@/lib/quote-image";
+import { desgloseQuote, isQuoteExpired, numeroCotizacion, type Quote } from "@/lib/quotes";
 import { MenuFicha } from "@/components/ui/menu-ficha";
-import { BotonCompartirCotizacion, QuoteShare } from "@/components/quotes/quote-share";
+import { BotonCompartirCotizacion, BotonDescargarCotizacion, QuoteShare } from "@/components/quotes/quote-share";
 
 const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
 
@@ -42,7 +41,6 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
   const locale = useLocale();
   const { dialogNode, confirm, showMessage } = useAppDialog();
   const [busy, setBusy] = useState(false);
-  const [pdfCliente, setPdfCliente] = useState<Blob | null>(null);
   const expirada = isQuoteExpired(quote);
   // La cotización es un documento: no hay nada que "esperar". Solo se avisa
   // cuando ya no sirve (vencida) o cuando el profesional la retiró.
@@ -63,30 +61,6 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
       onChanged(action === "delete" ? { ...quote, deleted_at: new Date().toISOString() } : (d.quote as Quote));
       onClose();
     } finally { setBusy(false); }
-  }
-
-  // El cliente también se lleva el documento: ver arriba, descargar aquí.
-  useEffect(() => {
-    if (role !== "client") return;
-    let vivo = true;
-    void renderQuotePdf(quote, quote.professional_name ?? "", {
-      titulo: quote.quote_number ? t("imageTitleNumbered", { number: numeroCotizacion(quote) }) : t("imageTitle"),
-      cliente: t("clientLabel"), vigente: fecha ? t("imageValidUntil", { date: fecha }) : "",
-      subtotal: t("subtotal"), iva: t("tax"), total: t("total"),
-      totalNota: quote.tax_mode === "exento" ? t("totalNoTax") : "",
-      pie: t("imageFooter"), deQuien: t("publicFrom"), nota: t("noteLabel"),
-    }, fecha).then((b) => { if (vivo) setPdfCliente(b); });
-    return () => { vivo = false; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [quote.id, role]);
-
-  function descargarCliente() {
-    if (!pdfCliente) return;
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(pdfCliente);
-    a.download = `${nombreArchivoCotizacion(quote, quote.professional_name ?? "")}.pdf`;
-    a.click();
-    window.setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   }
 
   const puedeRetirar = role === "pro" && quote.status === "sent" && !!quote.project_id;
@@ -127,11 +101,9 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
         footer={role === "pro" && abierta ? (
           <BotonCompartirCotizacion quote={quote} proName={proName ?? quote.professional_name ?? ""} proSlug={proSlug} className="min-w-0 flex-1 sm:w-auto sm:flex-none" />
         ) : role === "client" ? (
-          <button type="button" disabled={!pdfCliente} onClick={descargarCliente} className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009fd9] px-5 text-[14px] font-bold text-white transition-colors hover:bg-[#008fc3] disabled:opacity-60 sm:w-auto">
-            {pdfCliente ? <Download className="h-4 w-4" /> : <Loader2 className="h-4 w-4 animate-spin" />}{t("downloadClient")}
-          </button>
+          <BotonDescargarCotizacion quote={quote} proName={quote.professional_name ?? ""} className="w-full sm:w-auto" />
         ) : undefined}
-        footerClassName="flex-row items-center gap-2 sm:justify-end">
+        footerClassName="flex-row flex-wrap items-center gap-2 sm:justify-end">
         <div className="flex flex-col gap-4">
           {/* Para el profesional, primero cómo mandarla: es a lo que viene. */}
           {!recienCreada && (
