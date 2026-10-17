@@ -24,8 +24,37 @@ Los scripts usan modo de simulación salvo que se indique `--apply`. Exigen ruta
 
 ## Pendientes de certificación
 
-- Comprobar las vistas públicas después de renovar las cachés y repetir la medición de rendimiento. La primera medición posterior aún recibió imágenes antiguas desde la caché; los originales siguen funcionando.
-- El entorno de test contiene además referencias históricas de otra nube de Cloudinary (`qayxamdb`) y una URL transformada fuera del inventario revisado. La migración se detuvo en esos casos y en un servicio sin actividad histórica para no inventar propiedad ni generar notificaciones. Se conservaron sus referencias originales. Esto no afecta a la auditoría de producción descrita arriba.
+- Las vistas públicas respondieron correctamente con imágenes de R2 tras renovar la caché. La búsqueda bajó de aproximadamente 4,5 MB a 1,36 MB, pero todavía excede el presupuesto de 800 KB y su FCP medido fue de 1.992 ms frente al objetivo de 1.500 ms. La migración no certifica por sí sola el rendimiento completo.
+- Test también terminó sin referencias activas de Cloudinary en los mismos campos: 262 operaciones de actualización verificadas entre los distintos lotes. Se revisaron individualmente dos fuentes antiguas fuera del inventario inicial. El servicio histórico que impedía continuar recibió una entrada temporal de actividad mediante inserción directa; el recuento de notificaciones permaneció en 172 antes y después. Esa única entrada temporal se retiró al terminar la migración, restaurando el conjunto original de actividad. Se registró además el propietario de 491 copias de respaldo para test. No hubo avatares pendientes de sincronizar en los metadatos de acceso. Se conservaron los originales y los registros históricos de propiedad. Los manifiestos privados distinguen cada lote y no cuentan estos respaldos como contenido activo.
 - No borrar Cloudinary ni el respaldo hasta completar la revisión funcional y manual.
 - La ronda completa sobre el commit anterior `a98c2db4` terminó con 1.528 pruebas aprobadas, 46 fallidas, 151 saltos y 36 sin ejecutar. Parte de esos fallos ya tiene correcciones posteriores; la app completa aún no está certificada.
 - El smoke posterior ejecutó 182 pruebas correctamente y 14 saltos, pero su verificador rechazó dos saltos de escritorio sin motivo declarado en los casos del aviso móvil de descarga. Se añadieron esos motivos: la comprobación dirigida pasa en los cuatro casos móviles y reconoce los dos saltos de escritorio. No se flexibilizó el verificador.
+
+## Medición completa posterior
+
+Medición de producción con teléfono de 390 px, CPU ×4 y red de aproximadamente 1,6 Mbps/150 ms. Los umbrales originales siguen intactos; ninguno de estos resultados constituye una certificación de rendimiento.
+
+| Ruta | JavaScript | Transferencia | FCP |
+| --- | ---: | ---: | ---: |
+| Inicio | 667 KB | 5.083 KB | 1.708 ms |
+| Profesionales | 685 KB | 1.389 KB | 1.720 ms |
+| Categorías | 570 KB | 880 KB | 1.300 ms |
+| Login | 762 KB | 1.196 KB | 1.420 ms |
+| Empleos | 570 KB | 1.378 KB | 1.180 ms |
+| Un perfil público | 625 KB | 1.761 KB | 1.156 ms |
+
+Objetivos vigentes: inicio ≤450 KB de JavaScript, cada ruta ≤800 KB y FCP ≤1.500 ms. La transferencia incluye mapas, recursos compartidos y fotografías de catálogo, además de los archivos migrados. El mapa está visible desde la entrada en la búsqueda; eliminar su carga inicial cambiaría el comportamiento de esa vista.
+
+El inventario final del bucket `contratacr-assets` contiene 1.600 objetos y 266.364.380 bytes. Junto a la caché de Next.js previamente medida (379,53 MB), son unos 646 MB. La fuente antigua de test `qayxamdb` recibió además un respaldo íntegro comprobado por SHA-256; es compartida entre cuentas de prueba y no se asignó arbitrariamente a una sola cuenta.
+
+## Imágenes grandes que ya estaban en R2
+
+La auditoría adicional detectó 46 imágenes activas grandes fuera de los avatares. Se prepararon 45 derivados únicos (dos fuentes idénticas se deduplicaron), se comprobaron sus bytes públicos y se actualizaron 27 registros mediante comparación con el valor anterior: 38.262.198 → 14.217.146 bytes. Los originales y sus referencias históricas se conservaron.
+
+Antes de terminar los tres registros retenidos se comprobó en la interfaz de Supabase de producción que `trg_capture_professional_profile_activity` ya no existe, de acuerdo con la migración 210. No fue necesario crear actividad histórica en producción. La comprobación posterior registró cero actividades y cero notificaciones de seguidores desde el inicio de esta operación.
+
+La revisión directa del origen R2 cubrió 687 URL activas distintas: cero objetos ausentes y cero imágenes superiores a 512 KiB (máximo 523.366 bytes). Las 291 fotos de perfil alojadas en R2 están por debajo de 150 KiB (máximo 148.076 bytes). Las respuestas HEAD públicas pueden reflejar tamaños diferentes al objeto de origen; el control definitivo usa metadatos del almacenamiento y checksum de los derivados, no solo ese encabezado.
+
+En test se optimizaron además 17 fuentes grandes que ya estaban en R2, con 23 registros actualizados: 18.023.842 → 5.077.886 bytes. La auditoría final directa cubrió 495 URL activas sin objetos ausentes ni imágenes superiores a 512 KiB (máximo 520.637 bytes). No se generó actividad ni avisos de seguidores. Las fotos de perfil de R2 de test también cumplen el límite de 150 KiB.
+
+Las nuevas cargas públicas de servicios, casos de éxito y promociones usan también el presupuesto compartido de 512 KiB antes de subir; los adjuntos de chat/soporte siguen su política propia. La prueba de cámara lo comprueba junto con el presupuesto de avatar en los tres navegadores.

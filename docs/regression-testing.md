@@ -19,13 +19,14 @@
 
 Every regression run first starts a disposable Supabase stack inside GitHub
 Actions and rebuilds the database from `supabase/migrations`. It includes
-Postgres, Auth, PostgREST and Storage, but omits Studio, analytics and other
-services that the schema contract does not need. This gate uses no hosted
+Postgres, Auth, PostgREST, Storage and Realtime, but omits Studio, analytics
+and other services that the application does not need. Realtime must stay
+available because signed-in headers and conversations open subscriptions. This gate uses no hosted
 Supabase credentials and cannot modify test or production.
 
-For now, the exhaustive browser suite still uses the isolated hosted test data.
-The next migration phase replaces that dependency with synthetic local fixtures;
-until parity is proven, the hosted verifier remains the source of truth.
+The exhaustive browser suite uses synthetic local fixtures inside each runner.
+The native WebView suite does the same. A bounded manual check can still use
+the hosted test mirror, but the exhaustive workflows do not mutate that project.
 
 This suite is designed to use the **test data environment** while the application
 itself runs as an optimized production build inside GitHub Actions. Production should
@@ -216,7 +217,7 @@ The corrected ownership/login/support/category-back contracts passed 27 targeted
 
 ## 16-oct-2026 — cierre de fallos y segunda ronda completa
 
-La corrida exhaustiva `38960494952`, sobre `a98c2db4`, terminó con 1.528 casos aprobados, 46 fallidos, 151 saltos declarados y 36 casos sin ejecutar. No constituye una certificación. El smoke posterior de `c7882efc` terminó correctamente: los saltos de escritorio del aviso móvil ya declaran su motivo.
+La corrida exhaustiva `38960494952`, sobre `a98c2db4`, terminó con 1.528 casos aprobados, 46 fallidos, 151 saltos y 36 casos sin ejecutar. El verificador final de motivos de salto no se ejecutó tras el fallo, por lo que no se certifican todos esos motivos. No constituye una certificación. El smoke posterior de `c7882efc` terminó correctamente: los saltos de escritorio del aviso móvil ya declaran su motivo.
 
 Correcciones posteriores:
 
@@ -230,4 +231,30 @@ Validación dirigida: idioma/guías/video en los tres navegadores; registro de c
 
 La regresión web exhaustiva ahora distribuye sus cuatro grupos entre runners independientes, cada uno con Supabase y Next propios, sin cancelar los demás cuando uno falla. El smoke de cada push sigue usando un solo grupo. Los reportes JSON y HTML se conservan por grupo. La regresión WebView deja de modificar el Supabase alojado de test y utiliza una base local sintética con Realtime. Android e iOS continúan bajo ejecución manual y no publican versiones.
 
-Pendiente: recibir y revisar los resultados completos de esta segunda ronda antes de certificar todo el inventario. Los originales de la migración de imágenes siguen conservados; los históricos de otra nube de Cloudinary presentes en test aún requieren revisión separada.
+Pendiente: recibir y revisar los resultados completos de esta segunda ronda antes de certificar todo el inventario. Los originales de la migración de imágenes siguen conservados. La revisión separada de test terminó: cero referencias activas de Cloudinary y 491 propietarios de respaldos registrados; véase `media-migration-2026-10-16.md`.
+
+### Cierre adicional de fotos y comprobaciones móviles
+
+La ejecución móvil `38985601599` terminó correctamente: contratos/build, 130 casos WebView aprobados y dos saltos de escritorio declarados, cuatro pruebas nativas en el emulador Android, y compilación/instalación/arranque en simulador iOS. No equivale a publicar ni certificar una instalación nueva desde las tiendas.
+
+La preparación de fotos públicas de servicios, casos de éxito y promociones ahora comparte un presupuesto de 512 KiB. Los avatares conservan 800 px/150 KiB. Los adjuntos de chat y soporte conservan su presupuesto separado. La prueba de cámara con ruido verifica ambas políticas, dimensiones y proporción; tres navegadores aprobados.
+
+El grupo 4 de `38985601637` terminó con 415 aprobadas, dos fallidas y 29 saltos declarados; las trazas muestran un segmento oculto de streaming `S:*` junto al perfil visible. Los selectores del nombre ahora exigen una única coincidencia visible y la prueba de pestañas mide únicamente las pintadas, manteniendo la exigencia de la fila completa y estable. Otra medición del check ahora captura nombre y sello en un mismo cuadro, para no cruzar una revalidación de datos entre dos lecturas. Los 12 casos dirigidos de perfil aprobaron en el build desplegado de test con Chromium móvil, WebKit móvil y escritorio. Las ejecuciones intermedias de desarrollo registraron recargas de WebKit y no se cuentan como aprobadas.
+
+El grupo 3 de esa misma ronda terminó con 402 aprobadas y 44 saltos declarados; su verificador confirma cero fallos, reintentos que oculten fallos o saltos sin motivo. El resultado de los otros grupos se consolida abajo.
+
+Typecheck y lint del helper de imágenes y los casos modificados pasan. Los tres errores de lint de hooks que ya existían en el editor de servicios, y sus avisos anteriores, se conservan como deuda previa; las líneas de esa lógica no cambiaron en esta corrección.
+
+El grupo 2 de `38985601637` terminó con 390 aprobadas, un fallo, 53 saltos declarados y dos casos sin ejecutar a consecuencia del bloque serial. El fallo de acceso en Linux WebKit contiene `Network process crashed`; la traza también muestra conexiones a Realtime rechazadas porque ese workflow excluía el servicio. Se restaura Realtime en el stack web, igual que en el móvil que aprobó. Esto corrige una diferencia del entorno; la relación causal y el resultado completo deben comprobarse en la siguiente ejecución, sin reintentos generales que oculten fallos.
+
+### Resultado consolidado de la segunda ronda y nuevas correcciones
+
+`38985601637` terminó con **1.611 aprobadas, siete fallidas, 151 saltos declarados y 16 sin ejecutar** de 1.785 casos descubiertos. El análisis de los cuatro JSON confirma cero casos que necesitaran reintento para pasar. Los 16 sin ejecutar siguen rechazando la certificación: no se convierten en saltos declarados.
+
+El grupo 1 aporta 404 aprobadas, cuatro fallidas, 25 saltos y 14 sin ejecutar. Dos trazas de acceso contienen caída del proceso de red WebKit; la de teléfono/onboarding queda con la navegación del panel pendiente. La siguiente ronda debe verificar esos accesos con Realtime disponible. El caso de animación del menú ya no asume una posición exacta 40 ms después de hacer clic: pausa la transición real al 25 %, exige desplazamiento y opacidad completa, y la reanuda hasta su estado final. Pasó en ambos navegadores móviles y declara el salto de escritorio.
+
+La exploración adicional con las listas largas del espejo de test reprodujo un menú de tarjeta fuera de la pantalla. `CardActionsMenu` ahora usa un portal, se posiciona antes de pintar y limita sus bordes al viewport visual; recalcula en scroll, resize y cambios de tamaño. Conserva la preferencia arriba/abajo, cierra con pointerdown exterior o Escape y devuelve el foco al botón. El nuevo caso aislado prueba bordes opuestos, tarjetas recortadas con transform, poco alto, scroll y ejecución de la última acción en tres navegadores. El selector del editor de promociones/empleos sigue el menú abierto del portal, evitando controles de la cabecera.
+
+La matriz de pruebas incorpora `card-actions-menu.spec.ts` (112 specs en total). La prueba de cierre exterior pulsa un punto visible del margen; llevar el enorme `main` a su primer píxel podía luchar con la restauración del scroll y bloquear la propia prueba.
+
+La siguiente ronda completa debe ejecutarse sobre el lote cerrado, sin publicar en App Store ni Google Play. Los objetivos manuales de rendimiento de las rutas públicas continúan pendientes; sus umbrales no se relajaron.

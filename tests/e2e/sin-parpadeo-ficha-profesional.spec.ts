@@ -14,11 +14,15 @@ test("@seeded la fila de pestañas no cambia después de cargar", async ({ page,
   expect(delServidor.length, "el servidor tiene que pintar todas las pestañas").toBeGreaterThan(5);
 
   await page.goto(FICHA);
+  await expect(page.getByRole("tab", { name: "Servicios", exact: true })).toBeVisible();
   const tira: string[] = [];
   for (let i = 0; i < 20; i++) {
-    tira.push(await page.evaluate(() => [...document.querySelectorAll("[role=tab]")].map((t) => (t as HTMLElement).innerText.trim()).join(",")));
+    tira.push(await page.evaluate(() => [...document.querySelectorAll<HTMLElement>("[role=tab]")].filter((t) => t.getClientRects().length > 0 && getComputedStyle(t).visibility !== "hidden").map((t) => t.innerText.trim()).join(",")));
     await page.waitForTimeout(90);
   }
+  // Next streaming can retain a hidden S:* segment beside the live tree.
+  // Only painted tabs count, but every sample must still contain the full row.
+  expect(tira.every((sample) => sample.split(",").length === delServidor.length), `pestañas incompletas: ${tira.join(" → ")}`).toBe(true);
   const distintos = [...new Set(tira)];
   expect(distintos, `la fila cambió: ${distintos.join(" → ")}`).toHaveLength(1);
 });

@@ -25,7 +25,7 @@ import { useAppDialog } from "@/hooks/use-app-dialog";
 import { parseMoneyAmount } from "@/lib/money-limits";
 import { AppTooltip } from "@/components/ui/app-tooltip";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
-import { getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
+import { PUBLIC_IMAGE_OPTIONS, getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 import { professionalCredentialSuggestion, serviceSupportsProfessionalCredential } from "@/lib/professional-credentials";
 import { SectionHeadline } from "@/components/dashboard/section-headline";
 import { AutoSaveHint } from "@/components/dashboard/auto-save-hint";
@@ -515,7 +515,7 @@ export function ServicesEditor({
     setImageUploading(true);
     setFormError(null);
     try {
-      const preparedFile = await prepareImageForUpload(file, { maxDimension: 1400 });
+      const preparedFile = await prepareImageForUpload(file, { ...PUBLIC_IMAGE_OPTIONS, maxDimension: 1400 });
       const fd = new FormData();
       fd.append("file", preparedFile);
       fd.append("type", "portfolio");

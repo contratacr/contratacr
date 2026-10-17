@@ -25,6 +25,7 @@ import { crTodayISO } from "@/lib/time-cr";
 import { MAX_MONEY_AMOUNT, MAX_OFFER_QUANTITY, formatNumberForMessage, isWholeNumberInRange, parseOptionalWholeNumber } from "@/lib/forms/numeric-validation";
 import { marketplaceLocale, offerPriceUnitLabel, offerTypeLabel } from "@/lib/marketplace-copy";
 import {
+  PUBLIC_IMAGE_OPTIONS,
   getImageUploadPreparationErrorCode,
   prepareImageForUpload,
   uploadPhotoFormDataWithRetry,
@@ -306,7 +307,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/promoci
       try {
         // Mobile camera photos commonly exceed the request-body limit. Resize and
         // normalize them before the request, matching the profile/gallery flow.
-        const preparedFile = await prepareImageForUpload(file, { maxDimension: 1600 });
+        const preparedFile = await prepareImageForUpload(file, PUBLIC_IMAGE_OPTIONS);
         const body = new FormData();
         body.append("file", preparedFile);
         body.append("type", "portfolio");

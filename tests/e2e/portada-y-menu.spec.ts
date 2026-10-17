@@ -5,6 +5,26 @@ import { gotoOK, isMobileProject, loginAs, waitForInteractivePage } from "./help
 // completa, marcas que abren su perfil, Mensajes en la barra de abajo de la app
 // y la flecha del perfil que no existe. Todo sin sesión y sin crear datos.
 
+async function pauseNextMenuSlide(page: Page) {
+  await page.locator(".ccr-menu-completo").evaluate((element) => {
+    const onTransition = (event: Event) => {
+      if ((event as TransitionEvent).propertyName !== "transform") return;
+      element.removeEventListener("transitionrun", onTransition);
+      const animation = element.getAnimations().find((item) => (item as CSSTransition).transitionProperty === "transform");
+      if (!animation) return;
+      animation.pause();
+      animation.currentTime = Number(animation.effect!.getComputedTiming().duration) / 4;
+    };
+    element.addEventListener("transitionrun", onTransition);
+  });
+}
+
+async function waitForPausedMenuSlide(page: Page) {
+  await expect.poll(() => page.locator(".ccr-menu-completo").evaluate((element) =>
+    element.getAnimations().some((animation) => animation.playState === "paused"),
+  )).toBe(true);
+}
+
 function comoApp(page: Page) {
   return page.addInitScript(() => {
     window.localStorage.setItem("ccr:native-first-run-onboarding:v12", "1");
@@ -186,18 +206,25 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
     await waitForInteractivePage(page);
     // Desliza el CUERPO del menú; la fila del logo y la X queda quieta sobre la cabecera.
     const menu = page.locator(".ccr-menu-completo .ccr-menu-cuerpo");
+    // Sample a real transition at a fixed fraction, rather than guessing how
+    // many frames a loaded CI runner paints during a 40 ms wall-clock wait.
+    await pauseNextMenuSlide(page);
     await page.getByRole("button", { name: /Abrir men[uú]/i }).filter({ visible: true }).first().click();
-    await page.waitForTimeout(40);
+    await waitForPausedMenuSlide(page);
     const enCamino = await menu.evaluate((e) => ({ x: e.getBoundingClientRect().x, o: getComputedStyle(e).opacity }));
     expect(enCamino.x, "el menú debe entrar deslizando, no aparecer de golpe").toBeGreaterThan(20);
     expect(enCamino.o, "el menú no se funde").toBe("1");
     await expect(page.locator(".ccr-menu-completo")).toHaveClass(/ccr-menu-abierto/);
+    await page.locator(".ccr-menu-completo").evaluate((element) => element.getAnimations().forEach((animation) => animation.play()));
     await expect.poll(() => menu.evaluate((e) => Math.round(e.getBoundingClientRect().x))).toBe(0);
+    await pauseNextMenuSlide(page);
     await page.getByRole("button", { name: /Cerrar men[uú]/ }).click();
-    await page.waitForTimeout(120);
+    await waitForPausedMenuSlide(page);
     const saliendo = await menu.evaluate((e) => ({ x: e.getBoundingClientRect().x, o: getComputedStyle(e).opacity }));
     expect(saliendo.o, "al cerrar no debe volverse transparente").toBe("1");
     expect(saliendo.x, "al cerrar debe deslizar hacia la derecha").toBeGreaterThan(5);
+    await page.locator(".ccr-menu-completo").evaluate((element) => element.getAnimations().forEach((animation) => animation.play()));
+    await expect(page.locator(".ccr-menu-completo")).not.toHaveClass(/ccr-menu-abierto/);
   });
 
 

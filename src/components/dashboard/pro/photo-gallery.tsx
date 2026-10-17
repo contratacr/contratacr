@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { ScrollRail } from "@/components/ui/scroll-rail";
 import { cldThumb } from "@/lib/cloudinary";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
-import { getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
+import { PUBLIC_IMAGE_OPTIONS, getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { CASE_PHOTOS_PER_CASE, casoProfession, type ServiceLike } from "@/lib/services";
 import { useAppDialog } from "@/hooks/use-app-dialog";
@@ -183,7 +183,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
       const urls: string[] = [];
       for (const file of toUpload) {
         try {
-          const preparedFile = await prepareImageForUpload(file, { maxDimension: 1600 });
+          const preparedFile = await prepareImageForUpload(file, PUBLIC_IMAGE_OPTIONS);
           const fd = new FormData(); fd.append("file", preparedFile); fd.append("type", "portfolio");
           const upload = await uploadPhotoFormDataWithRetry(fd);
           if (upload.ok && upload.data.url) urls.push(upload.data.url);
