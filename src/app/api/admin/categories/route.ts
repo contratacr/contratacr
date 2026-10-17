@@ -1,3 +1,4 @@
+import { refreshApprovedCatalog } from "@/lib/data/approved-catalog-cache";
 import { APPROVED_SUGGESTION_LINK } from "@/lib/notification-link";
 import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
@@ -265,6 +266,7 @@ export async function PATCH(req: Request) {
     });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     await syncProfessionalServiceNames(db, id, cleanLabel);
+    await refreshApprovedCatalog();
     return NextResponse.json({ ok: true });
   }
 
@@ -304,6 +306,7 @@ export async function PATCH(req: Request) {
     const approvedUpdateError = await updateSuggestionRow(db, id, update);
     if (approvedUpdateError) return NextResponse.json({ error: approvedUpdateError.message }, { status: 500 });
     await notifySuggestionDecision(db, suggestionRow!, "approved", finalName);
+    await refreshApprovedCatalog();
     return NextResponse.json({ ok: true });
   }
 
@@ -314,11 +317,13 @@ export async function PATCH(req: Request) {
     const rejectedUpdateError = await updateSuggestionRow(db, id, update);
     if (rejectedUpdateError) return NextResponse.json({ error: rejectedUpdateError.message }, { status: 500 });
     await notifySuggestionDecision(db, suggestionRow!, "rejected", finalName, normalizedReviewReason);
+    await refreshApprovedCatalog();
     return NextResponse.json({ ok: true });
   }
 
   const updateError = await updateSuggestionRow(db, id, update);
   if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
+  await refreshApprovedCatalog();
   return NextResponse.json({ ok: true });
 }
 
@@ -366,6 +371,7 @@ export async function POST(req: Request) {
   }, { onConflict: "id", ignoreDuplicates: false });
   if (suggestionError) return NextResponse.json({ error: suggestionError.message }, { status: 500 });
 
+  await refreshApprovedCatalog();
   return NextResponse.json({ ok: true, category: { id, label: cleanLabel } });
 }
 
@@ -392,6 +398,7 @@ async function createCategoryGroup(body: Record<string, unknown>) {
     updated_at: new Date().toISOString(),
   }, { onConflict: "id", ignoreDuplicates: false });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  await refreshApprovedCatalog();
   return NextResponse.json({ ok: true, group: { id, label, labelEn, iconKey: "tag", sortOrder: nextSort } });
 }
 
@@ -417,6 +424,7 @@ async function updateCategoryGroup(body: Record<string, unknown>) {
     updated_at: new Date().toISOString(),
   }, { onConflict: "id", ignoreDuplicates: false });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  await refreshApprovedCatalog();
   return NextResponse.json({ ok: true });
 }
 
@@ -430,6 +438,7 @@ export async function DELETE(req: Request) {
     const db = createAdminClient();
     const { error } = await db.from("category_groups").update({ is_hidden: true, updated_at: new Date().toISOString() }).eq("id", groupId);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    await refreshApprovedCatalog();
     return NextResponse.json({ ok: true });
   }
 
@@ -462,12 +471,14 @@ export async function DELETE(req: Request) {
       supports_videoconsulta: supportsVideoConsultCategory(id),
     });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    await refreshApprovedCatalog();
     return NextResponse.json({ ok: true });
   }
 
   await db.from("category_suggestions").delete().eq("id", id);
   const { error } = await db.from("categories").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  await refreshApprovedCatalog();
   return NextResponse.json({ ok: true });
 }
 

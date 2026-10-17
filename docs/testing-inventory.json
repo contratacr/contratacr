@@ -8,7 +8,7 @@
     "handlers": 93,
     "components": 234,
     "hooks": 25,
-    "specs": 113
+    "specs": 114
   },
   "dashboardTabs": [
     "home",
@@ -22007,6 +22007,19 @@
         {
           "line": 4,
           "title": "'card menus stay usable at viewport edges, in clipped cards and after scrolling'"
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/catalog-cache-invalidation.spec.ts",
+      "cases": [
+        {
+          "line": 6,
+          "title": "\"@seeded las ediciones del catálogo invalidan la caché pública y su ETag\""
+        },
+        {
+          "line": 7,
+          "title": "!canRunSeededRegression()"
         }
       ]
     },

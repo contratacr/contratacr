@@ -890,9 +890,8 @@ async function getProfessionalBySlugEnVivo(slug: string): Promise<ProfessionalDe
   // la caché de la ficha: si esperara al recálculo, el perfil suspendido seguiría
   // visible hasta media hora después de suspenderlo.
   //
-  // La suspensión y el correo de contacto se piden A LA VEZ (3-oct-2026): uno
-  // tras otro sumaban dos viajes a la base y el perfil enseñaba su esqueleto
-  // casi un segundo en cada recarga.
+  // El correo se consulta solo con sesión; nunca se prueba una columna
+  // protegida en cada visita anónima para después ignorar el error.
   const suspendido = (async () => {
     try {
       const { createPublicClient } = await import("@/lib/supabase/server");
@@ -915,6 +914,10 @@ async function getProfessionalBySlugEnVivo(slug: string): Promise<ProfessionalDe
     try {
       const { createClient } = await import("@/lib/supabase/server");
       const supabase = await createClient();
+      // This only skips impossible anonymous reads; RLS still authorizes
+      // the query with the real token. No identity is trusted from getSession.
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) return null;
       const { data } = await supabase
         .from("professionals")
         .select("contact_email")
@@ -1021,11 +1024,21 @@ async function getProfessionalBySlugUncached(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const proRow = pro as any;
 
-      // Tagged casos-de-éxito + phone-call opt-in + coverage. Best-effort: separate
-      // queries so a missing column (pre-migration 033/034) never breaks the profile.
+      // These are public columns. One read on a cold profile instead of five
+      // single-column round trips; keep the old-schema fallback only on error.
+      const extras = await supabase.from("professionals")
+        .select("portfolio_items, allow_phone_call, coverage_areas, coverage_provincias, coverage_country, certifications, call_phone, social_links")
+        .eq("id", proRow.id).maybeSingle();
+      async function profileExtras(columns: string) {
+        if (!extras.error) return { data: extras.data };
+        return supabase.from("professionals").select(columns).eq("id", proRow.id).maybeSingle();
+      }
+
+      // Tagged casos-de-éxito + phone-call opt-in + coverage. Best-effort:
+      // the grouped read falls back on old schemas without breaking the profile.
       let portfolioItems: PortfolioItem[] = [];
       try {
-        const { data: pi } = await supabase.from("professionals").select("portfolio_items").eq("id", proRow.id).maybeSingle();
+        const { data: pi } = await profileExtras("portfolio_items");
         if (pi && Array.isArray((pi as { portfolio_items?: PortfolioItem[] }).portfolio_items)) {
           portfolioItems = (pi as { portfolio_items: PortfolioItem[] }).portfolio_items;
         }
@@ -1035,38 +1048,27 @@ async function getProfessionalBySlugUncached(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let certifications: any[] = [];
       try {
-        const { data: extra } = await supabase
-          .from("professionals")
-          .select("allow_phone_call, coverage_areas, coverage_provincias, coverage_country")
-          .eq("id", proRow.id)
-          .maybeSingle();
+        const { data: extra } = await profileExtras("allow_phone_call, coverage_areas, coverage_provincias, coverage_country");
         if (extra) {
           allowPhoneCall = !!(extra as { allow_phone_call?: boolean }).allow_phone_call;
           coverage = buildCoverage(extra);
         }
       } catch { /* columns not migrated yet */ }
       try {
-        const { data: certRow } = await supabase.from("professionals").select("certifications").eq("id", proRow.id).maybeSingle();
+        const { data: certRow } = await profileExtras("certifications");
         if (certRow && Array.isArray((certRow as { certifications?: unknown[] }).certifications)) {
           certifications = (certRow as { certifications: unknown[] }).certifications;
         }
       } catch { /* column not migrated yet */ }
       let callPhone: string | undefined;
       try {
-        const { data: cpRow } = await supabase.from("professionals").select("call_phone").eq("id", proRow.id).maybeSingle();
+        const { data: cpRow } = await profileExtras("call_phone");
         callPhone = (cpRow as { call_phone?: string } | null)?.call_phone ?? undefined;
-      } catch { /* column not migrated yet */ }
-      // Optional public contact email (the pro opts in to show it). Best-effort so
-      // an unmigrated DB doesn't 500 the whole profile.
-      let contactEmail: string | undefined;
-      try {
-        const { data: ceRow } = await supabase.from("professionals").select("contact_email").eq("id", proRow.id).maybeSingle();
-        contactEmail = (ceRow as { contact_email?: string } | null)?.contact_email ?? undefined;
       } catch { /* column not migrated yet */ }
       // Optional social links (URLs only). Best-effort so an unmigrated DB doesn't 500.
       let socialLinks: SocialLinks | undefined;
       try {
-        const { data: slRow } = await supabase.from("professionals").select("social_links").eq("id", proRow.id).maybeSingle();
+        const { data: slRow } = await profileExtras("social_links");
         const raw = (slRow as { social_links?: SocialLinks } | null)?.social_links;
         if (raw && typeof raw === "object") socialLinks = raw;
       } catch { /* column not migrated yet */ }
@@ -1164,7 +1166,6 @@ async function getProfessionalBySlugUncached(
         certifications: certifications as Certification[],
         profileId: proRow.profile_id ?? undefined,
         callPhone,
-        contactEmail,
         socialLinks,
       });
       /* eslint-enable @typescript-eslint/no-explicit-any */
