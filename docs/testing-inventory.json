@@ -21637,6 +21637,10 @@
         {
           "line": 145,
           "title": "\"manual decisions beyond the first thousand history rows still protect their accounts\""
+        },
+        {
+          "line": 154,
+          "title": "`explicit pending maintenance respects manual decisions, simulate=${simulate}`"
         }
       ]
     },

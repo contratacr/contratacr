@@ -38,6 +38,9 @@ on:
           - medir-padron
           # Verifica de verdad. Concede insignias y fija el nombre oficial.
           - verificar
+          # Revisión explícita tras un cambio de criterio: respeta decisiones humanas.
+          - simular-pendientes
+          - verificar-pendientes
 
 concurrency:
   group: verificacion-repesca-${{ github.event_name == 'schedule' && 'production' || inputs.target }}
@@ -55,7 +58,7 @@ jobs:
     env:
       TARGET: ${{ github.event_name == 'schedule' && 'production' || inputs.target }}
       # La tarea diaria SÍ verifica; a mano se simula salvo que se pida lo contrario.
-      SIMULAR: ${{ github.event_name == 'schedule' && '' || (inputs.modo == 'simular' && '?simular=1' || (inputs.modo == 'medir-padron' && '?padron=1' || '')) }}
+      SIMULAR: ${{ github.event_name == 'schedule' && '' || (inputs.modo == 'simular-pendientes' && '?simular=1&revisar-pendientes=1' || (inputs.modo == 'verificar-pendientes' && '?revisar-pendientes=1' || (inputs.modo == 'simular' && '?simular=1' || (inputs.modo == 'medir-padron' && '?padron=1' || '')))) }}
       APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
       CRON_SECRET: ${{ secrets.CRON_SECRET }}
     steps:
