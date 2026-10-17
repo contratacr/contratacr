@@ -4,7 +4,7 @@ import { test, expect } from "playwright/test";
 import { cleanupDisposableAccount, createDisposableAccount } from "./disposable-account";
 import { canRunSeededRegression, regressionAdminClient } from "./seed";
 import { loginAs } from "./helpers";
-import { registrationComplete, pendingRegistrationPath } from "../../src/lib/auth/registration-state";
+import { registrationComplete, pendingRegistrationPath, registrationIntentMatches } from "../../src/lib/auth/registration-state";
 
 test("explicit pending registration wins over a stale completed profile", () => {
   const old = { app_metadata: {}, aud: "authenticated", created_at: "2026-10-17T09:00:00Z", id: "same-account", updated_at: "2026-10-17T10:00:00Z", user_metadata: { onboarding_completed: true } } as User;
@@ -13,6 +13,9 @@ test("explicit pending registration wins over a stale completed profile", () => 
   expect(freshestAuthUser(fresh, old)).toBe(fresh);
   expect(freshestAuthUser(null, fresh)).toBeNull();
   expect(freshestAuthUser({ ...old, id: "different-account" }, fresh)?.id).toBe("different-account");
+  expect(registrationIntentMatches({ role: "client", onboarding_completed: false }, "client")).toBe(true);
+  expect(registrationIntentMatches({ role: "client", onboarding_completed: false, intended_role: null }, "client")).toBe(true);
+  expect(registrationIntentMatches({ role: "client", onboarding_completed: false, intended_role: "professional" }, "client")).toBe(false);
   expect(registrationComplete({ onboarding_completed: false }, true)).toBe(false);
   expect(registrationComplete({}, true)).toBe(true);
   expect(registrationComplete({ onboarding_completed: true }, false)).toBe(true);

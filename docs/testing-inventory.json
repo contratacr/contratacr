@@ -24216,19 +24216,19 @@
           "title": "\"explicit pending registration wins over a stale completed profile\""
         },
         {
-          "line": 26,
+          "line": 29,
           "title": "`${locale} ${role}: incomplete social identity cannot bypass registration with Back, reload or a panel link`"
         },
         {
-          "line": 27,
+          "line": 30,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 81,
+          "line": 84,
           "title": "\"anonymous registration cannot overwrite a confirmed account by its public ID\""
         },
         {
-          "line": 82,
+          "line": 85,
           "title": "!canRunSeededRegression()"
         }
       ]

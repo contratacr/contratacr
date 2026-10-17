@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { registrationComplete } from "@/lib/auth/registration-state";
+import { registrationComplete, registrationIntentMatches } from "@/lib/auth/registration-state";
 import { createClient } from "@/lib/supabase/client";
 
 // Remember the form reached through Google/Apple even if the user leaves before
@@ -12,7 +12,7 @@ export function useRegistrationIntent(role: "client" | "professional") {
   useEffect(() => {
     if (loading || !user || user.user_metadata?.onboarding_completed === true) return;
     const intended = role === "professional" ? "professional" : null;
-    if (user.user_metadata?.role === "client" && user.user_metadata?.intended_role === intended && user.user_metadata?.onboarding_completed === false) return;
+    if (registrationIntentMatches(user.user_metadata, role)) return;
     let cancelled = false;
     void (async () => {
       const supabase = createClient();
