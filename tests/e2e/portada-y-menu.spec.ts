@@ -132,7 +132,7 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
     await gotoOK(page, "/");
     // Los videos se piden al acercarse a la guía (7-oct-2026): se baja hasta el
     // teléfono, y se repite si la página creció por arriba mientras cargaba.
-    const activo = page.locator("video.ccr-guia-video.opacity-100, img.ccr-guia-video").first();
+    const activo = page.locator("video.ccr-guia-video:not([aria-hidden=\"true\"]), img.ccr-guia-video").first();
     await expect(async () => {
       await page.locator("img[data-guia-poster]").first().scrollIntoViewIfNeeded();
       await expect(activo).toBeVisible({ timeout: 2_000 });
@@ -150,7 +150,7 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
     await gotoOK(page, "/");
     // Los videos se piden al acercarse a la guía (7-oct-2026): se baja hasta el
     // teléfono, y se repite si la página creció por arriba mientras cargaba.
-    const activo = page.locator("video.ccr-guia-video.opacity-100, img.ccr-guia-video").first();
+    const activo = page.locator("video.ccr-guia-video:not([aria-hidden=\"true\"]), img.ccr-guia-video").first();
     await expect(async () => {
       await page.locator("img[data-guia-poster]").first().scrollIntoViewIfNeeded();
       await expect(activo).toBeVisible({ timeout: 2_000 });
@@ -159,7 +159,7 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
     // Una imagen fija por paso (precargadas); se mira la del paso activo.
     const poster = page.locator("img[data-guia-poster]").first();
     const orden = await poster.evaluate((img) => {
-      const v = img.parentElement!.querySelector("video.ccr-guia-video.opacity-100, img.ccr-guia-video")!;
+      const v = img.parentElement!.querySelector("video.ccr-guia-video:not([aria-hidden=\"true\"]), img.ccr-guia-video")!;
       return {
         despues: Boolean(v.compareDocumentPosition(img) & Node.DOCUMENT_POSITION_FOLLOWING),
         zImg: Number(getComputedStyle(img).zIndex) || 0,
