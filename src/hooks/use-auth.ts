@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, createElement, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { freshestAuthUser } from "@/lib/auth/fresh-user";
 import type { User } from "@supabase/supabase-js";
 import { createClient, hasSupabaseBrowserConfig } from "@/lib/supabase/client";
 import { APP_RESUME_EVENT } from "@/lib/app-events";
@@ -215,13 +216,15 @@ function useAuthState(
   }
 
   useEffect(() => {
-    const lastAppliedRef = { current: null as User | null };
+    const lastAppliedRef = { current: usuarioConocidoRef.current };
     if (!hasSupabaseBrowserConfig()) {
-      setUser(null);
-      cacheUser(null);
-      setAvatarUrl(null);
-      setAvatarReady(true);
-      setLoading(false);
+      queueMicrotask(() => {
+        setUser(null);
+        cacheUser(null);
+        setAvatarUrl(null);
+        setAvatarReady(true);
+        setLoading(false);
+      });
       return;
     }
 
@@ -253,7 +256,7 @@ function useAuthState(
         if (!mounted) return;
         sessionSettled = true;
         window.clearTimeout(sessionTimeout);
-        const u = data.session?.user ?? null;
+        const u = freshestAuthUser(data.session?.user ?? null, usuarioConocidoRef.current);
         // El caso que NO deja evento: la app abre y ya no hay sesión. Sin esto no
         // queda rastro de nada, porque nunca hubo un "cierre" que anotar. Se mira
         // si el navegador todavía guarda a quién tenía y si la cookie sobrevivió:
@@ -285,7 +288,7 @@ function useAuthState(
             if (!mounted) return;
             void supabase.auth.getSession().then(({ data }) => {
               if (!mounted) return;
-              const u = data.session?.user ?? null;
+              const u = freshestAuthUser(data.session?.user ?? null, usuarioConocidoRef.current);
               lastAppliedRef.current = u;
               setUser(u);
               cacheUser(u);
@@ -305,7 +308,7 @@ function useAuthState(
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((evento, session) => {
-      const u = session?.user ?? null;
+      const u = freshestAuthUser(session?.user ?? null, usuarioConocidoRef.current);
       if (!u && usuarioConocidoRef.current) anotarCierreNoPedido(evento, true);
       usuarioConocidoRef.current = u;
       // La renovación del token al volver de segundo plano trae un objeto
@@ -353,7 +356,7 @@ function useAuthState(
       try {
         const { data } = await withTimeout(supabase.auth.getSession(), RESUME_AUTH_TIMEOUT_MS);
         if (!mounted) return;
-        const siguiente = data.session?.user ?? null;
+        const siguiente = freshestAuthUser(data.session?.user ?? null, usuarioConocidoRef.current);
         // Mismo usuario y sin cambios → no se toca el estado: un objeto nuevo
         // con el mismo contenido re-renderizaba media app en cada vuelta de foco.
         if (siguiente && lastAppliedRef.current &&
