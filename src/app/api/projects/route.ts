@@ -1,5 +1,6 @@
 import { projectRecipients } from "@/lib/projects/project-recipients-server";
 import { recordGrowthConversion } from "@/lib/analytics/growth-server";
+import { verifiedProfileName } from "@/lib/verification/profile-name";
 import { NextRequest, NextResponse, after } from "next/server";
 import { mensajeDeError } from "@/lib/api-errors";
 import { createClient } from "@/lib/supabase/server";
@@ -197,6 +198,10 @@ export async function POST(req: NextRequest) {
         clientIdentityStatus = "pending";
         identityVerifiedAt = null;
       }
+    }
+
+    if (officialName) {
+      officialName = await verifiedProfileName(admin, uid, existingProfile?.full_name ?? "", cedula, officialName);
     }
 
     // Ensure the profiles row exists before inserting (client_id FK requires it).

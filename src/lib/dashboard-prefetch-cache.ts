@@ -98,6 +98,20 @@ export function olvidarDashboardCache(key: string) {
   listeners.get(key)?.forEach((listener) => listener(null));
 }
 
+/** Discard affected directories after an admin edits an account. */
+export function olvidarDashboardCachePrefix(prefix: string) {
+  const keys = new Set([...cache.keys(), ...listeners.keys()].filter((key) => key.startsWith(prefix)));
+  if (canUseSessionStorage()) {
+    try {
+      for (let i = 0; i < window.sessionStorage.length; i++) {
+        const stored = window.sessionStorage.key(i);
+        if (stored?.startsWith(`${STORAGE_PREFIX}${prefix}`)) keys.add(stored.slice(STORAGE_PREFIX.length));
+      }
+    } catch { /* Memory invalidation still works without storage. */ }
+  }
+  keys.forEach(olvidarDashboardCache);
+}
+
 /** Forget every cached entry (memory and session storage). Run on sign-out so
  *  the next account in this tab never paints the previous one's data. */
 export function clearDashboardCache() {

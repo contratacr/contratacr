@@ -1,3 +1,4 @@
+import { verifiedProfileName } from "@/lib/verification/profile-name";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getIdentityVerifier } from "@/lib/verification/identity-verifier";
 import { notifyVerificationDecision, notifyAppealReceived, notifyVerificationOutreach } from "@/lib/verification-notify";
@@ -11,7 +12,7 @@ export type RunOutcome = "verified" | "pending" | "ticket" | "skipped";
  * the OFFICIAL name from it.
  *  - found  → write the official name onto the profile + grant "Identidad
  *             verificada" automatically (method=automatic). The displayed name
- *             always comes from the padrón, never free text.
+ *             comes from the padrón unless an admin explicitly corrected it.
  *  - not found → "pendiente de revisión" (never auto-reject). NO permissive
  *             fallback — a cédula absent from the padrón is NEVER auto-verified.
  * Data minimization: we store only this professional's OWN official name + the
@@ -116,13 +117,14 @@ export async function runIdentityVerification(
   const fromStatus = pro.verification_status as string;
 
   if (result.found) {
-    // Source of truth for the name is the padrón. Overwrite the profile name with
-    // the official one so a typed mismatch ("Isaac Monge") can never stand. We store the
-    // FULL official name (first + middle given names + both surnames — the padrón's
-    // nombre/papellido/sapellido via titleCaseName); abbreviation to drop the middle name
-    // happens ONLY at display (proDisplayName), never in storage.
-    if (result.fullName && result.fullName !== fullName) {
-      await admin.from("profiles").update({ full_name: result.fullName }).eq("id", pro.profile_id);
+    // Keep a human correction when the same identity is rechecked.
+    const resolvedName = result.fullName
+      ? await verifiedProfileName(admin, pro.profile_id, fullName, cedula, result.fullName)
+      : fullName;
+    if (resolvedName && resolvedName !== fullName) {
+      const { data: updated, error } = await admin.from("profiles").update({ full_name: resolvedName })
+        .eq("id", pro.profile_id).eq("full_name", fullName).select("id").maybeSingle();
+      if (error || !updated) return "skipped"; // A concurrent edit wins; retry verification later.
       // Keep Auth's display name (user_metadata.full_name) in sync with the official
       // profile name — the navbar/menu read user_metadata, so without this they'd show the
       // stale registration name. MERGE (spread existing metadata) so role/avatar_url/etc.
@@ -130,7 +132,7 @@ export async function runIdentityVerification(
       try {
         const { data: authUser } = await admin.auth.admin.getUserById(pro.profile_id);
         await admin.auth.admin.updateUserById(pro.profile_id, {
-          user_metadata: { ...(authUser?.user?.user_metadata ?? {}), full_name: result.fullName },
+          user_metadata: { ...(authUser?.user?.user_metadata ?? {}), full_name: resolvedName },
         });
       } catch { /* ignore — header just keeps the old display name until next sync */ }
     }

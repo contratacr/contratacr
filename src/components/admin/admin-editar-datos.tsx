@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { History, KeyRound, Loader2, Pencil } from "lucide-react";
+import { olvidarDashboardCachePrefix } from "@/lib/dashboard-prefetch-cache";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 
@@ -122,6 +123,7 @@ export function AdminEditarDatos({
 
     setGuardando(true);
     setError(null);
+    setAviso(null);
     try {
       const res = await fetch(`/api/admin/users/${userId}/datos`, {
         method: "PATCH",
@@ -134,9 +136,10 @@ export function AdminEditarDatos({
         json.empleos ? `${json.empleos} empleo${json.empleos === 1 ? "" : "s"}` : "",
         json.promociones ? `${json.promociones} promoci${json.promociones === 1 ? "ón" : "ones"}` : "",
       ].filter(Boolean).join(" y ");
+      olvidarDashboardCachePrefix("admin:users:");
+      await Promise.all([alGuardar(), cargarHistorial()]);
       setAviso(`Datos guardados.${extra ? ` El WhatsApp nuevo también quedó en ${extra}.` : ""}`);
       setAbierto(false);
-      await Promise.all([alGuardar(), cargarHistorial()]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudieron guardar los datos.");
     } finally {
@@ -187,13 +190,13 @@ export function AdminEditarDatos({
 
       {abierto && (
         <div className="rounded-xl border border-[#e5e7eb] bg-white p-4" data-editar-datos>
-          <div className="grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2">
+          <fieldset disabled={guardando} className="grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2">
             <Input label="Nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} />
             {pro && <Input label="Nombre comercial" value={negocio} onChange={(e) => setNegocio(e.target.value)} />}
             <PhoneInput id="admin-datos-whatsapp" label={pro ? "WhatsApp" : "Teléfono / WhatsApp"} value={whatsapp} onChange={setWhatsapp} />
             {pro && <PhoneInput id="admin-datos-llamadas" label="Teléfono para llamadas" optional value={llamadas} onChange={setLlamadas} />}
             <Input label="Correo" type="email" value={correo} onChange={(e) => setCorreo(e.target.value)} />
-          </div>
+          </fieldset>
           <p className="mt-3 text-xs text-[#68778d]">
             Si cambias el WhatsApp, también se cambia en sus empleos y promociones que tenían el número anterior, y en el teléfono de llamadas si era el mismo número. Con el correo nuevo la persona entra igual que antes, con su misma contraseña.
           </p>

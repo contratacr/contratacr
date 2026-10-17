@@ -1,3 +1,4 @@
+import { professionalRevision } from "@/lib/cache/professional-revision";
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { cldThumb } from "@/lib/cloudinary";
@@ -333,9 +334,10 @@ export async function searchProfessionals(
   // pueden guardar: dos personas mirando la misma zona comparten el resultado
   // durante cinco minutos. Solo `fresh` —el asistente rescatando una ficha
   // recién publicada— se salta el guardado.
-  const results = options.fresh
+  const revision = options.fresh ? null : await professionalRevision();
+  const results = options.fresh || revision === null
     ? await searchProfessionalsUncached(normalized)
-    : await searchProfessionalsCached(normalized);
+    : await searchProfessionalsCached(normalized, revision!);
 
   const shouldRecoverNationwideVideoRead =
     results.length === 0
@@ -359,16 +361,16 @@ export async function searchProfessionals(
     nearLng: undefined,
     bounds: undefined,
   };
-  const nationwide = options.fresh
+  const nationwide = options.fresh || revision === null
     ? await searchProfessionalsUncached(sinUbicacion)
-    : await searchProfessionalsCached(sinUbicacion);
+    : await searchProfessionalsCached(sinUbicacion, revision!);
   return nationwide.filter((professional) => professional.videoconsulta || professional.coverage?.country);
 }
 
 const searchProfessionalsCached = unstable_cache(
-  async (filters: SearchFilters) => searchProfessionalsUncached(filters),
+  async (filters: SearchFilters, revision: string) => { void revision; return searchProfessionalsUncached(filters); },
   ["public-professional-search-v5"],
-  { revalidate: SEARCH_CACHE_SECONDS },
+  { revalidate: SEARCH_CACHE_SECONDS, tags: ["public-professionals"] },
 );
 
 async function searchProfessionalsUncached(
@@ -881,7 +883,7 @@ const PERFIL_CACHE_SECONDS = 300;
 export const getProfessionalBySlug = cache(getProfessionalBySlugEnVivo);
 
 async function getProfessionalBySlugEnVivo(slug: string): Promise<ProfessionalDetail | null> {
-  const pro = await getProfessionalBySlugCached(slug);
+  const pro = await cachedProfessional(slug);
   if (!pro) return null;
 
   // Una suspensión lo saca de la búsqueda, del mapa y del sitemap, pero la ficha
@@ -1180,11 +1182,16 @@ async function getProfessionalBySlugUncached(
 
 /** La ficha en caché, sin las comprobaciones en vivo: solo para saber su id
  *  y adelantar otras consultas en paralelo (ver la página del perfil). */
-export const fichaEnCache = cache((slug: string) => getProfessionalBySlugCached(slug));
+export const fichaEnCache = cache((slug: string) => cachedProfessional(slug));
 
 const getProfessionalBySlugCached = unstable_cache(
-  (slug: string) => getProfessionalBySlugUncached(slug),
+  (slug: string, revision: string) => { void revision; return getProfessionalBySlugUncached(slug); },
   ["public-professional-detail-v1"],
-  { revalidate: PERFIL_CACHE_SECONDS },
+  { revalidate: PERFIL_CACHE_SECONDS, tags: ["public-professionals"] },
 );
 
+
+async function cachedProfessional(slug: string) {
+  const revision = await professionalRevision();
+  return revision === null ? getProfessionalBySlugUncached(slug) : getProfessionalBySlugCached(slug, revision);
+}

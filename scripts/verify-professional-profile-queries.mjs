@@ -9,6 +9,7 @@ const source = ts.transpileModule(readFileSync(new URL('../src/lib/queries/profe
 }).outputText;
 function setup({ signedIn = false, oldSchema = false, banned = false } = {}) {
   const queries = [];
+  let revision = "test";
   const metadata = { portfolio_items: [{ url: 'https://assets.example/work.jpg' }], allow_phone_call: true, coverage_country: true, certifications: [{ name: 'Certification' }], call_phone: '88888888', social_links: { instagram: 'https://instagram.com/example' } };
   const row = { id: 'pro', slug: 'example', profile_id: 'owner', profiles: { full_name: 'Example' }, professions: ['plomeria'], reviews: [], services: [], portfolio_urls: [] };
   function from(table) {
@@ -38,6 +39,7 @@ function setup({ signedIn = false, oldSchema = false, banned = false } = {}) {
     exports, console, setTimeout, clearTimeout,
     process: { env: { NEXT_PUBLIC_SUPABASE_URL: 'https://test.supabase.co', NEXT_PUBLIC_SUPABASE_ANON_KEY: 'test' } },
     require(name) {
+      if (name === '@/lib/cache/professional-revision') return { professionalRevision: async () => revision };
       if (name === 'react') return { cache: fn => fn };
       if (name === 'next/cache') return { unstable_cache: fn => async (...args) => {
         const key = JSON.stringify(args); if (!cached.has(key)) cached.set(key, await fn(...args)); return cached.get(key);
@@ -54,7 +56,7 @@ function setup({ signedIn = false, oldSchema = false, banned = false } = {}) {
       throw new Error(name);
     },
   });
-  return { api: exports, queries, metadata };
+  return { api: exports, queries, metadata, row, revise: () => { revision = "updated"; } };
 }
 test('a cold anonymous profile uses five reads, preserves metadata and never probes protected email', async () => {
   const s = setup(); const result = await s.api.getProfessionalBySlug('example');
@@ -81,4 +83,13 @@ test('the grouped metadata query retains the previous compatibility fallback', a
   const s = setup({ oldSchema: true }); const result = await s.api.getProfessionalBySlug('example');
   assert.equal(result.callPhone, '88888888'); assert.equal(result.portfolioItems.length, 1);
   assert.equal(result.certifications.length, 1); assert.equal(result.coverage.country, true);
+});
+
+test('an admin revision makes the previously cached profile unreachable', async () => {
+  const s = setup();
+  assert.equal((await s.api.getProfessionalBySlug('example')).fullName, 'Example');
+  s.row.profiles.full_name = 'Corrected name';
+  assert.equal((await s.api.getProfessionalBySlug('example')).fullName, 'Example');
+  s.revise();
+  assert.equal((await s.api.getProfessionalBySlug('example')).fullName, 'Corrected name');
 });
