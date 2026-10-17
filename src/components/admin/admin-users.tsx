@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Loader2, Search, ShieldOff, Users } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { AdminFilterTabs } from "@/components/admin/admin-filter-tabs";
+import { AdminPadronLookup } from "@/components/admin/admin-padron-lookup";
 import { formatId } from "@/lib/cedula";
 import { getInitials } from "@/lib/utils";
 import { verificationLabel, verificationPillClasses, type VerificationStatus } from "@/lib/verification";
@@ -164,6 +165,8 @@ export function AdminUsers() {
           </span>
         )}
       </div>
+
+      <AdminPadronLookup />
 
       <div className="mb-4 rounded-xl border border-[#e5e7eb] bg-white p-4">
         <label className="text-xs font-semibold text-[#6b7280]" htmlFor="admin-users-search">
