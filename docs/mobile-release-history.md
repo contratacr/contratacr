@@ -103,3 +103,10 @@ Cierre del control previo al envío: Regression Tests 39008894531 correcto (182 
 - Google: edición `12909794691350314744` validada nuevamente y confirmada con ERROR_IF_IN_REVIEW, sin changesNotSentForReview. Commit aceptado. Play Console confirmó «Cambios en revisión», Producción 1.0.11, «Iniciar lanzamiento completo» y publicación gestionada desactivada. A las 00:25 mostraba comprobaciones rápidas automáticas previas (hasta 14 minutos indicados por Google); al completarse se envía a revisión automáticamente. No se confunde el commit ni ese plazo con aprobación o disponibilidad pública.
 - Fuente web final compartida: `7db6661546c949904705f3d946e577a89c333a96`; mismo código de aplicación comprobado en 8d0ec177, más actualización del inventario. Fuente de binarios y notas exactas conservadas como arriba.
 - Pendiente externo: comprobaciones/revisión de las tiendas y aprobación. No queda un botón manual de publicación configurado, ni una acción pendiente del titular observada durante este envío.
+
+
+### Publicación Android confirmada — 17 de octubre de 2026
+
+Google Play Console mostró «Se ha publicado la actualización de la aplicación» y «Última publicación el 17 de octubre de 2026». Android Publisher API confirmó producción 1.0.11 / versionCode 15 en completed con las notas es-419 exactas registradas arriba. No se inventa una hora de publicación: la consola consultada confirma la fecha. Puede tardar en propagarse a cada dispositivo.
+
+En la misma consulta, App Store Connect conservaba iOS 1.0.11 / build 16 WAITING_FOR_REVIEW y AFTER_APPROVAL. Las notas es-MX guardadas coinciden exactamente con las de Android. Pendiente únicamente aprobación/publicación de Apple en el flujo de envío actual.
