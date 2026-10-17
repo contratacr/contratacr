@@ -52,7 +52,7 @@ export async function POST(req: Request) {
     // Correct MIME from the DETECTED kind (never the uploaded file.type).
     const dataUri = `data:${MIME_FOR[check.kind]};base64,${buffer.toString("base64")}`;
 
-    // "avatar" → square face crop (profile photo). "portfolio" (default) →
+    // "avatar" → square image (profile photo), framed by the client. "portfolio" (default) →
     // store ONE optimized original (max 1600px, auto format/quality); thumbnails
     // and gallery sizes are derived via URL transforms, never stored copies.
     const kind = (formData.get("type") as string | null) ?? "portfolio";
@@ -90,7 +90,7 @@ export async function POST(req: Request) {
     const result = await cloudinary.uploader.upload(dataUri, {
       folder: isAvatar ? "contratacr/profiles" : "contratacr/portfolio",
       transformation: isAvatar
-        ? [{ width: 400, height: 400, crop: "fill", gravity: "face", quality: "auto", fetch_format: "auto" }]
+        ? [{ width: 400, height: 400, crop: "fit", quality: "auto", fetch_format: "auto" }]
         : [{ width: 1600, height: 1600, crop: "limit", quality: "auto", fetch_format: "auto" }],
     });
 

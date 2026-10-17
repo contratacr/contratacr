@@ -1,5 +1,7 @@
 "use client";
 
+import { AvatarFileInput } from "@/components/ui/avatar-file-input";
+
 import { rutaInternaSegura } from "@/lib/navigation/ruta-interna";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { prefijoDeIdioma, rutaConIdioma } from "@/lib/prefijo-de-idioma";
@@ -73,7 +75,6 @@ import {
 } from "@/lib/dashboard-bootstrap-cache";
 import { PROFILE_IMAGE_OPTIONS, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 import { deleteOwnedMediaUrl } from "@/lib/client-media-cleanup";
-import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { formatPersonDisplayName, getProfessionalDisplayName } from "@/lib/display-name";
 import { OfferTagPercentIcon } from "@/components/icons/offer-tag-percent-icon";
 import { CABECERA_BOTON, CABECERA_GLIFO, COLUMNAS_CABECERA } from "@/components/layout/cabecera";
@@ -1907,17 +1908,7 @@ export default function DashboardPage() {
                     )}
                   </div>
                 )}
-                <input
-                  ref={headerPhotoInputRef}
-                  type="file"
-                  accept={IMAGE_ACCEPT}
-                  className="hidden"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0];
-                    event.currentTarget.value = "";
-                    if (file) void handleHeaderPhotoUpload(file);
-                  }}
-                />
+                <AvatarFileInput ref={headerPhotoInputRef} className="hidden" onFile={handleHeaderPhotoUpload} />
                 {publicProfileHref && (
                   <ShareKit
                     key={shareKitInitialView}
