@@ -334,3 +334,5 @@ El registro profesional ahora conserva `tab=completion` al publicar. El guard de
 - `direct-chat.spec.ts`: conservar descarga y cancelación sin descarga inesperada al reutilizar el helper de archivos.
 - Prueba nativa manual con datos sintéticos y helper real: iOS 26.5, hoja Save to Files y archivo guardado de 4.533.029 bytes; Android API 36, archivo en `/sdcard/Documents/ContrataCR/<id>/Cotizacion-QA-0001.pdf`, 6.043.136 bytes. Cabecera `%PDF-` comprobada en ambos. Se usó una app QA separada, sin cuentas de producción. Android no depende de randomUUID, ausente en el origen HTTP local de QA.
 - Builds antiguos sin Filesystem/Share conservan el fallback web si existe; si no, muestran el aviso de actualización. Los candidatos 1.0.11 ya incluyen los plugins; este cambio es del código web compartido.
+
+La vista del cliente (`QuoteDetailModal` con role=client) usa `BotonDescargarCotizacion` y comparte generación, mensajes de error y guardado con el profesional. `file-download.spec.ts` monta el botón real con next-intl y descarga un PDF en los tres navegadores; no deja un segundo enlace blob fuera de la corrección.

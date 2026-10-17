@@ -17241,15 +17241,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 130,
-          "tag": "button",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "{descargarCliente}",
-          "destination": "",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 169,
+          "line": 141,
           "tag": "QuoteShare",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -17431,6 +17423,7 @@
       "route": null,
       "exports": [
         "BotonCompartirCotizacion",
+        "BotonDescargarCotizacion",
         "QuoteShare"
       ],
       "methods": [],
@@ -17452,7 +17445,15 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 129,
+          "line": 124,
+          "tag": "Button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{descargar}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 142,
           "tag": "QuoteDetach",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -17460,7 +17461,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 146,
+          "line": 159,
           "tag": "button",
           "label": "{t(\"detach\")}",
           "handler": "{() => void quitar()}",
@@ -22365,6 +22366,10 @@
         {
           "line": 6,
           "title": "`generated PDF uses ${platform} file saving instead of blob navigation`"
+        },
+        {
+          "line": 61,
+          "title": "\"received quote download button produces a PDF too\""
         }
       ]
     },

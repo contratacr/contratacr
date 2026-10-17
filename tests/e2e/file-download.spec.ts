@@ -57,3 +57,24 @@ for (const platform of ["android", "ios"] as const) {
     expect(downloads).toBe(0);
   });
 }
+
+test("received quote download button produces a PDF too", async ({ page }) => {
+  const bundled = await build({
+    stdin: { contents: `import React from 'react'; import {createRoot} from 'react-dom/client'; import {NextIntlClientProvider} from 'next-intl'; import messages from './messages/es.json'; import {BotonDescargarCotizacion} from './src/components/quotes/quote-share';
+      const quote={id:'qa-client-pdf',quote_number:1,public_code:'qa-client',professional_name:'Profesional QA',client_name:'Cliente QA',items:[{description:'Servicio de prueba',quantity:1,unit_price:1000}],tax_mode:'exento',subtotal:1000,tax_amount:0,total:1000,status:'sent'};
+      createRoot(document.getElementById('root')).render(<NextIntlClientProvider locale="es" timeZone="America/Costa_Rica" messages={messages}><BotonDescargarCotizacion quote={quote} proName="Profesional QA" /></NextIntlClientProvider>);`,
+      resolveDir: process.cwd(), loader: "tsx" },
+    jsx: "automatic", bundle: true, write: false, platform: "browser", format: "iife", tsconfig: "tsconfig.json",
+  });
+  await page.route("**/quote-client-download-harness", (route) => route.fulfill({ contentType: "text/html", body: '<!doctype html><div id="root"></div>' }));
+  await page.goto("/quote-client-download-harness");
+  await page.addScriptTag({ content: bundled.outputFiles[0].text });
+  const button = page.getByRole("button", { name: /Descargar/ });
+  await expect(button).toBeEnabled({ timeout: 20_000 });
+  const [download] = await Promise.all([page.waitForEvent("download"), button.click()]);
+  expect(download.suggestedFilename()).toMatch(/^Cotizacion-Profesional-QA-0001\.pdf$/);
+  const path = await download.path();
+  const { readFileSync } = await import("node:fs");
+  expect(readFileSync(path).subarray(0, 5).toString()).toBe("%PDF-");
+  expect(page.context().pages()).toHaveLength(1);
+});
