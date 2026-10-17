@@ -1,3 +1,4 @@
+import { ProfilePhotoPreview } from "@/components/ui/profile-photo-preview";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { VerificationInfo } from "@/components/ui/verification-info";
@@ -127,8 +128,8 @@ export default async function OfferDetailPage({ params, searchParams }: { params
   // columna para el invitado y tumbaría la consulta entera. Las banderas salen
   // de contactFlagsFor y el dato, de /api/contact/reveal al tocar el botón.
   const professionalColumns = user
-    ? "slug,business_name,verification_status,profile_id,profiles(full_name)"
-    : "slug,business_name,verification_status,profiles(full_name)";
+    ? "slug,business_name,verification_status,profile_id,profiles(full_name,avatar_url)"
+    : "slug,business_name,verification_status,profiles(full_name,avatar_url)";
   // El enlace corto trae el título y los 8 primeros del id; el largo, el id
   // entero. Los dos abren la misma oferta.
   const clave = claveDeTramo(id);
@@ -174,7 +175,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
     business_name?: string;
     verification_status?: string | null;
     profile_id?: string;
-    profiles?: { full_name?: string } | null;
+    profiles?: { full_name?: string; avatar_url?: string | null } | null;
   } | null;
   const idProfesional = String((ofertaVisible as { professional_id?: string }).professional_id ?? "");
   // La ficha de una cuenta bloqueada no se abre: su dueño tampoco sale en la
@@ -190,6 +191,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
     image_urls: Array.isArray(ofertaVisible.image_urls) ? ofertaVisible.image_urls : [],
     professional_name: repairVisibleText(professional?.business_name || professional?.profiles?.full_name || copy.professionalFallback),
     professional_slug: professional?.slug ?? null,
+    professional_avatar_url: professional?.profiles?.avatar_url ?? null,
     professional_verified: professional?.verification_status === "verified",
     // Solo banderas: el número y el correo se piden al tocar el botón.
     professional_has_whatsapp: !!banderas.hasWhatsapp,
@@ -297,6 +299,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
             <div className="flex items-start justify-between gap-3">
               {/* El check identifica a quien publica y abre su explicación. */}
               <div data-verification-owner className="flex min-w-0 flex-1 items-center gap-1">
+                {offer.professional_avatar_url && <ProfilePhotoPreview src={offer.professional_avatar_url} name={offer.professional_name ?? ""} className="mr-2 h-11 w-11" />}
                 {quienPublica}
                 {offer.professional_verified && (
                   <VerificationInfo />
