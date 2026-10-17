@@ -81,10 +81,10 @@ for (const [result, kind] of [
   [{ found: true, fullName: "Nombre Prueba", idType: "cedula" }, "match"],
   [{ found: true, fullName: "Nombre Prueba", idType: "dimex" }, "match"],
   [{ found: true, fullName: "Nombre Prueba", idType: "nite" }, "match"],
-  [{ found: true, fullName: "Empresa", idType: "juridica" }, "company"],
+  [{ found: true, fullName: "Empresa", idType: "juridica" }, "match"],
   [{ found: false }, "not_found"], [{ found: false, unavailable: true }, "unavailable"],
-  [{ found: true, fullName: "Otra Persona Distinta", idType: "cedula" }, "name_mismatch"],
-] as const) test(`read-only classification ${kind} ${result.found ? result.idType : "missing"}`, async () => {
+  [{ found: true, fullName: "Otra Persona Distinta", idType: "cedula" }, "match"],
+] as const) test(`read-only classification ${kind} ${result.found ? result.idType + " " + result.fullName : "missing"}`, async () => {
   const s = setup(fixture(), { result }); const review = await s.service.inspectPendingIdentity(candidate);
   expect(review.kind).toBe(kind); expect(review.canVerify).toBe(kind === "match"); expect(s.writes).toEqual([]); expect(s.runs).toEqual([]);
 });
@@ -136,9 +136,9 @@ test("review endpoint limits each read-only batch and never trusts client-suppli
   for (const body of [{ ids: [] }, { ids: Array(4).fill(owner) }, { ids: ["not-a-uuid"] }]) expect((await call(body)).status).toBe(400);
   expect((await call({ ids: [owner], cedula: "victim-id", canVerify: true })).status).toBe(200); expect(inspected).toEqual([candidate]);
 });
-test("a single matching first name or an email address is insufficient for automatic approval", async () => {
+test("a found record uses the official name even when the saved name was partial or an email", async () => {
   for (const name of ["Nombre", "nombre.prueba@example.test"]) {
-    const s = setup(); expect((await s.service.inspectPendingIdentity({ ...candidate, name })).kind).toBe("name_mismatch");
+    const s = setup(); expect((await s.service.inspectPendingIdentity({ ...candidate, name })).kind).toBe("match");
     expect(s.writes).toEqual([]); expect(s.runs).toEqual([]);
   }
 });

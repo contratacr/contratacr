@@ -9,16 +9,14 @@ import { olvidarDashboardCachePrefix } from "@/lib/dashboard-prefetch-cache";
 import { ADMIN_REFRESH_EVENT, ADMIN_COUNTS_REFRESH_EVENT } from "@/hooks/use-admin-auto-refresh";
 
 const labels: Record<IdentityReview["kind"], string> = {
-  match: "Datos coincidentes", company: "Revisar representación", not_found: "No encontrada en Hacienda",
-  unavailable: "Consulta no disponible", manual: "Revisión manual", name_mismatch: "Revisar diferencia de nombre",
+  match: "Datos coincidentes", not_found: "No encontrada en Hacienda",
+  unavailable: "Consulta no disponible", manual: "Revisión manual",
 };
 const explanations: Record<IdentityReview["kind"], string> = {
-  match: "Coinciden número, tipo y nombre. Puedes verificar el cotejo de datos.",
-  company: "Hacienda encontró la empresa. Falta comprobar quién la representa.",
+  match: "Hacienda encontró el número, tipo y nombre oficial. Puedes verificar el cotejo de datos.",
   not_found: "No significa que sea inválida. La cuenta puede apelar y adjuntar documentos.",
   unavailable: "No hubo una respuesta válida. Reintenta más tarde; no se rechazó la identificación.",
   manual: "Revisar los documentos o la decisión previa antes de aprobar.",
-  name_mismatch: "El nombre de la cuenta no coincide lo suficiente. Revisa el caso; no se modificó el nombre.",
 };
 export function AdminIdentifications() {
   const [rows, setRows] = useState<PendingIdentity[]>([]);
@@ -83,7 +81,7 @@ export function AdminIdentifications() {
     if (filter === "with-id" && !row.cedula) return false;
     if (filter === "no-id" && row.cedula) return false;
     if (filter === "match" && !review?.canVerify) return false;
-    if (filter === "manual" && !(row.manualReason || review?.kind === "company" || review?.kind === "name_mismatch")) return false;
+    if (filter === "manual" && !(row.manualReason || review?.kind === "manual")) return false;
     if (filter === "not_found" && review?.kind !== "not_found") return false;
     return `${row.name} ${row.cedula ?? ""} ${review?.officialName ?? ""}`.toLowerCase().includes(q.trim().toLowerCase());
   });
@@ -91,7 +89,7 @@ export function AdminIdentifications() {
     <div><h1 className="flex items-center gap-2 text-2xl font-bold text-[#162543]"><IdCard className="h-6 w-6 text-[#009FD9]" />Identificaciones</h1><p className="mt-2 text-sm leading-6 text-[#68778d]">Consulta nacionales, jurídicas, DIMEX y NITE con Hacienda, aunque no tengan cuenta en ContrataCR. El resultado muestra solo nombre y tipo; no información tributaria.</p></div>
     <AdminPadronLookup standalone />
     <section id="pendientes" className="space-y-4">
-      <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-xl font-bold text-[#162543]">Pendientes de verificación</h2><p className="mt-1 text-sm leading-6 text-[#68778d]">Consultar no aprueba cuentas. Las apelaciones, decisiones previas, empresas y diferencias de nombre conservan la revisión manual.</p></div><button onClick={load} disabled={busy || loading} className="inline-flex min-h-11 items-center gap-2 rounded-xl border px-4 text-sm font-semibold disabled:opacity-50"><RefreshCw className="h-4 w-4" />Actualizar</button></div>
+      <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-xl font-bold text-[#162543]">Pendientes de verificación</h2><p className="mt-1 text-sm leading-6 text-[#68778d]">Consultar no aprueba cuentas. Las apelaciones y decisiones administrativas previas conservan la revisión manual.</p></div><button onClick={load} disabled={busy || loading} className="inline-flex min-h-11 items-center gap-2 rounded-xl border px-4 text-sm font-semibold disabled:opacity-50"><RefreshCw className="h-4 w-4" />Actualizar</button></div>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">{[
         ["Pendientes", rows.length], ["Con identificación", rows.filter(row => row.cedula).length], ["Sin identificación", rows.filter(row => !row.cedula).length], ["Coincidencias para verificar", eligible.length],
       ].map(([label, value]) => <div key={label} className="rounded-xl border border-[#e5e7eb] bg-white p-4"><p className="text-xs text-[#68778d]">{label}</p><p className="mt-1 text-2xl font-bold text-[#162543]">{loading ? "—" : value}</p></div>)}</div>

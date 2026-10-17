@@ -273,6 +273,7 @@ export function VerificationPanel({
     <div className="space-y-5">
       {status === "rejected" && <p className="text-sm font-semibold text-red-700">{t("rejectedTitle")}</p>}
       {reason && <p className="text-sm text-[#52627a]">{reason}</p>}
+      {!hasCurrentCedula && <p className="text-sm text-[#52627a]">{t("currentIdEmpty")} {t("changeIdBody")}</p>}
       <CurrentIdentificationPanel title={t("currentIdTitle")} emptyLabel={t("currentIdEmpty")}
         value={hasCurrentCedula ? cleanCurrentCedula : null} typeLabel={currentIdTypeLabel}
         fullName={hasCurrentCedula ? currentFullName : null} changeLabel={t("changeId")} addLabel={t("addId")}

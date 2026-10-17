@@ -1,6 +1,6 @@
 import type { createAdminClient } from "@/lib/supabase/admin";
 import { detectIdType, isValidId, type IdType } from "@/lib/cedula";
-import { getIdentityVerifier, nameSimilarity, normalizeName, NAME_MATCH_THRESHOLD } from "./identity-verifier";
+import { getIdentityVerifier } from "./identity-verifier";
 import { verifiedProfileName } from "./profile-name";
 import { runIdentityVerification } from "./run-verification";
 import { invalidateProfessionalCache } from "@/lib/cache/professional-revision";
@@ -12,7 +12,7 @@ export type PendingIdentity = {
   type: IdType | null; status: string; manualReason: string | null;
 };
 export type IdentityReview = PendingIdentity & {
-  kind: "match" | "company" | "not_found" | "unavailable" | "manual" | "name_mismatch";
+  kind: "match" | "not_found" | "unavailable" | "manual";
   officialName: string | null; canVerify: boolean; checkedAt: string;
 };
 const HUMAN_ACTIONS = ["verified", "authorized", "rejected", "reverted_pending", "under_appeal"];
@@ -95,8 +95,6 @@ export async function inspectPendingIdentity(row: PendingIdentity): Promise<Iden
   if (!result.found || !result.fullName) return { ...base, kind: "not_found" };
   const checked = { ...base, type: result.idType ?? row.type, officialName: result.fullName };
   if (row.manualReason) return { ...checked, kind: "manual" };
-  if (result.idType === "juridica") return { ...checked, kind: "company" };
-  if (!row.name || row.name.includes("@") || normalizeName(row.name).split(" ").filter(Boolean).length < 2 || nameSimilarity(row.name, result.fullName) < NAME_MATCH_THRESHOLD) return { ...checked, kind: "name_mismatch" };
   return { ...checked, kind: "match", canVerify: true };
 }
 

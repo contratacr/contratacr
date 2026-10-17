@@ -178,7 +178,7 @@ jobs:
         if: github.event_name == 'push'
         run: >-
           npx playwright test
-          admin-identifications hacienda-verification-runtime verification-documents current-profile-names-runtime admin-profile-edit-runtime admin-padron-runtime public-smoke app-download mobile-menu-surface verification-badges navbar-brand-consistency mensajes-sin-parpadeo landing-media-budget android-auth-return-presentation avatar-framing shared-link-language
+          ai-assistant assistant-navigation admin-identifications hacienda-verification-runtime verification-documents current-profile-names-runtime admin-profile-edit-runtime admin-padron-runtime public-smoke app-download mobile-menu-surface verification-badges navbar-brand-consistency mensajes-sin-parpadeo landing-media-budget android-auth-return-presentation avatar-framing shared-link-language
 
       - name: Require clean push smoke results
         if: github.event_name == 'push'

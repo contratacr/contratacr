@@ -193,16 +193,11 @@ export async function POST(req: NextRequest) {
         cedulaGuardada = sameVerifiedDocument ? cedula : null;
         identidad = "padron_caido"; // Backwards-compatible response key: temporary source outage.
       } else if (result.found && result.fullName) {
-        clientIdentityStatus = "pending"; identityVerifiedAt = null;
-        identityProvider = result.idType === "juridica" ? "hacienda_api_juridica" : result.provider;
-        if (result.idType === "juridica") {
-          identidad = "en_revision";
-        } else {
-          clientIdentityStatus = "verified";
-          officialName = result.fullName;
-          identityVerifiedAt = new Date().toISOString();
-          identidad = "verificada";
-        }
+        clientIdentityStatus = "verified";
+        identityProvider = result.provider;
+        officialName = result.fullName;
+        identityVerifiedAt = new Date().toISOString();
+        identidad = "verificada";
       } else {
         cedulaGuardada = sameVerifiedDocument ? cedula : null;
         identidad = "no_encontrada";

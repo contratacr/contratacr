@@ -50,7 +50,7 @@ export async function GET(
       isAdult: result.isAdult,
       source: result.provider,
       idType: result.idType,
-      review: result.idType === "juridica",
+      review: false,
     }, { headers: { "Cache-Control": "no-store" } });
   }
 

@@ -43,7 +43,7 @@ PROFESSIONAL PANEL
 - Services can have a public description, price and experience information. Prices are CRC and displayed as I.V.A.I. where applicable.
 - Work areas can be exact map pins, cantons, whole provinces or nationwide video coverage for compatible services.
 - Success cases show real completed work and images uploaded by the professional. Do not call them social posts or an unlimited gallery.
-- Verification uses the saved identity and may require manual review when the identification is not found in the Costa Rican registry.
+- Verification checks the number, ID type and official name returned by Hacienda for national, corporate, DIMEX and NITE IDs. A found record does not prove who operates the account or legal company representation. Missing records or IDs can request manual review; profile activity is separate from verification.
 
 PANEL (one panel for everyone; there is no separate client panel)
 - Main sections: My projects (Mis proyectos), Jobs (Empleos), Promotions (Promociones), Quotes (Cotizaciones), Messages (Mensajes), Saved (Guardados), Profile, Support and Guides.
