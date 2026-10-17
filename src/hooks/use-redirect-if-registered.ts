@@ -1,5 +1,7 @@
 "use client";
 
+import { registrationComplete } from "@/lib/auth/registration-state";
+
 import { useEffect, useRef, useState } from "react";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { useLocale } from "next-intl";
@@ -60,7 +62,7 @@ export function useRedirectIfRegistered(): { checking: boolean } {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const p = prof as any;
           if (p) {
-            if (p.onboarding_completed) complete = true;
+            complete = registrationComplete(user.user_metadata, p.onboarding_completed);
             if (!role && (p.role === "professional" || p.role === "client")) role = p.role;
           }
         } catch { /* treat as incomplete → let them finish */ }

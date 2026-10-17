@@ -47,7 +47,7 @@ test("new social clients complete their phone before onboarding finishes", async
   const account = await createDisposableAccount({ prefix: "social-contact" });
   try {
     const admin = regressionAdminClient();
-    const changed = await admin.auth.admin.updateUserById(account.id, { user_metadata: { onboarding_completed: false } });
+    const changed = await admin.auth.admin.updateUserById(account.id, { user_metadata: { onboarding_completed: false, role: null, intended_role: null } });
     expect(changed.error).toBeNull();
     const profile = await admin.from("profiles").update({ onboarding_completed: false }).eq("id", account.id);
     expect(profile.error).toBeNull();

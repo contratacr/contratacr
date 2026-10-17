@@ -1,3 +1,4 @@
+import { pendingRegistrationPath } from "@/lib/auth/registration-state";
 import { createServerClient } from "@supabase/ssr";
 import { categorySlug, idDesdeDireccion } from "@/lib/data/category-slug";
 import { ALL_CATEGORIES } from "@/lib/data/categories";
@@ -476,7 +477,7 @@ export async function middleware(request: NextRequest) {
   // Logged in but hasn't chosen a role yet → onboarding (protected routes only).
   if (needsAuthGate) {
     const onboardingDone = user.user_metadata?.onboarding_completed === true;
-    if (!onboardingDone) return redirectKeepingCookies(rutaConIdioma(locale, "/onboarding"), request, response);
+    if (!onboardingDone) return redirectKeepingCookies(rutaConIdioma(locale, pendingRegistrationPath(user.user_metadata)), request, response);
 
     // Antes, una cuenta que había EMPEZADO el registro profesional sin
     // terminarlo no podía entrar al panel: cada visita la devolvía al

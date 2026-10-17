@@ -1,5 +1,7 @@
 "use client";
 
+import { pendingRegistrationPath, registrationComplete } from "@/lib/auth/registration-state";
+
 import { providerDisplayName } from "@/lib/auth/provider-display-name";
 import { useState, useEffect, useRef } from "react";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
@@ -42,7 +44,7 @@ export default function OnboardingPage() {
     // sent the person here with ?new=1: no need for another round trip before the
     // cards — the loading mark would only linger for nothing.
     const declaredNew = /(?:^|;\s*)ccr_onboarding_new=1(?:;|$)/.test(document.cookie) || new URLSearchParams(window.location.search).get("new") === "1";
-    if (declaredNew && user.user_metadata?.onboarding_completed !== true) {
+    if (declaredNew && user.user_metadata?.onboarding_completed !== true && pendingRegistrationPath(user.user_metadata) === "/onboarding") {
       document.cookie = "ccr_onboarding_new=; Max-Age=0; path=/";
       queueMicrotask(() => setCheckingExisting(false));
       return;
@@ -59,7 +61,7 @@ export default function OnboardingPage() {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const p = prof as any;
           if (p) {
-            if (p.onboarding_completed) done = true;
+            done = registrationComplete(user.user_metadata, p.onboarding_completed);
             if (!role && (p.role === "professional" || p.role === "client")) role = p.role;
           }
         } catch { /* ignore — treat as a new user */ }
@@ -88,6 +90,11 @@ export default function OnboardingPage() {
           } catch { /* best-effort */ }
         }
         window.location.assign(`${prefijoDeIdioma(locale)}/dashboard/${role === "professional" ? "profesional" : "cliente"}`);
+        return;
+      }
+      const pendingPath = pendingRegistrationPath(user.user_metadata);
+      if (pendingPath !== "/onboarding") {
+        window.location.replace(`${prefijoDeIdioma(locale)}${pendingPath}`);
         return;
       }
       setCheckingExisting(false); // genuinely new → show the role cards

@@ -188,7 +188,7 @@ jobs:
         if: github.event_name == 'push'
         run: >-
           npx playwright test
-          ai-assistant admin-identifications hacienda-verification-runtime verification-documents current-profile-names-runtime admin-profile-edit-runtime admin-padron-runtime public-smoke app-download mobile-menu-surface verification-badges navbar-brand-consistency mensajes-sin-parpadeo landing-media-budget android-auth-return-presentation avatar-framing shared-link-language
+          registration-navigation native-social-access auth-screens auth-support despues-del-registro borrador-sin-sesion ai-assistant admin-identifications hacienda-verification-runtime verification-documents current-profile-names-runtime admin-profile-edit-runtime admin-padron-runtime public-smoke app-download mobile-menu-surface verification-badges navbar-brand-consistency mensajes-sin-parpadeo landing-media-budget android-auth-return-presentation avatar-framing shared-link-language
 
       - name: Require clean push smoke results
         if: github.event_name == 'push'
@@ -205,7 +205,7 @@ jobs:
           PLAYWRIGHT_OUTPUT_DIR: test-results/assistant-webkit
           PLAYWRIGHT_JSON_REPORT: test-results/results-assistant-webkit.json
           PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/assistant-webkit
-        run: npx playwright test --project=webkit-mobile assistant-navigation verification-badges navbar-brand-consistency
+        run: npx playwright test --project=webkit-mobile registration-navigation native-social-access auth-screens despues-del-registro assistant-navigation verification-badges navbar-brand-consistency
 
       - name: Require clean Safari assistant results
         if: github.event_name == 'push'
