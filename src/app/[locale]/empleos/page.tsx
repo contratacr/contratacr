@@ -1,3 +1,4 @@
+import { getProfessionalDisplayName } from "@/lib/display-name";
 import { JobsBoard } from "@/components/jobs/jobs-board";
 import { recordServerInteraction } from "@/lib/analytics/server-events";
 import { type JobPost } from "@/lib/jobs";
@@ -45,7 +46,7 @@ export async function JobsPageContent({ initialSelectedJobId = null, returnTo = 
       ...row,
       title: repairVisibleText(String(row.title ?? "")),
       description: repairVisibleText(String(row.description ?? "")),
-      employer_name: repairVisibleText(employer?.business_name || employer?.profiles?.full_name || "Profesional en ContrataCR"),
+      employer_name: repairVisibleText(getProfessionalDisplayName(employer?.profiles?.full_name || "", employer?.business_name).primaryDesktop || "Profesional en ContrataCR"),
       employer_slug: employer?.slug ?? null,
       employer_avatar_url: employer?.profiles?.avatar_url ?? null,
       // Las ofertas de trabajo falsas son una estafa común: quien busca empleo

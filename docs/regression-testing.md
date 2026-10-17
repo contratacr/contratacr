@@ -336,3 +336,12 @@ El registro profesional ahora conserva `tab=completion` al publicar. El guard de
 - Builds antiguos sin Filesystem/Share conservan el fallback web si existe; si no, muestran el aviso de actualización. Los candidatos 1.0.11 ya incluyen los plugins; este cambio es del código web compartido.
 
 La vista del cliente (`QuoteDetailModal` con role=client) usa `BotonDescargarCotizacion` y comparte generación, mensajes de error y guardado con el profesional. `file-download.spec.ts` monta el botón real con next-intl y descarga un PDF en los tres navegadores; no deja un segundo enlace blob fuera de la corrección.
+
+
+### 2026-10-17: Apple Android y nombres públicos
+
+- Apple completó manualmente el acceso en el candidato Android 1.0.11 (15): el botón «Volver a ContrataCR» cerró la ventana de navegador y la app mostró la selección de rol con sesión iniciada. No se eligió un rol ni se modificó el perfil de prueba.
+- Regresión de retorno: logo principal raster generado del mismo arte del navbar, ES/EN, enlace fijo, CSP y exclusión de tokens/URL de terceros.
+- Saludo OAuth sin nombre: no derivar nombres del correo ni guardar el alias privado como nombre; avatar neutro y saludo genérico. Pruebas en `scripts/verify-public-display-names.mjs`, incorporadas al contrato rápido de CI.
+- Nombres públicos: criterio compartido en perfiles, reseñas, chat, empleos, promociones y exportaciones. Conservar nombres comerciales y estructuras ambiguas; los datos de identidad y el padrón no se sobrescriben. Cotizaciones descargadas usan `professional_name` de la API; el documento no repite el nombre legal del emisor debajo del público.
+- Rondas previas confirmadas: Regression Tests 39006959945, Mobile Native Regression 39006966502 y Cloudflare Compatibility 39006966491 finalizaron con éxito antes de estos ajustes.

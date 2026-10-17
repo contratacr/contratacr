@@ -1,9 +1,10 @@
 "use client";
 
+import { providerDisplayName } from "@/lib/auth/provider-display-name";
 import { useState, useEffect, useRef } from "react";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { useLocale, useTranslations } from "next-intl";
-import { UserRoundSearch, BriefcaseBusiness, ArrowRight } from "lucide-react";
+import { UserRoundSearch, BriefcaseBusiness, ArrowRight, UserRound } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
@@ -36,14 +37,14 @@ export default function OnboardingPage() {
   useEffect(() => {
     if (authLoading) return;
     if (!user) { if (!isSigningOut()) router.push("/login"); return; }
-    if (completing.current) { setCheckingExisting(false); return; }
+    if (completing.current) return;
     // /auth/callback already established that this is a brand-new account when it
     // sent the person here with ?new=1: no need for another round trip before the
     // cards — the loading mark would only linger for nothing.
     const declaredNew = /(?:^|;\s*)ccr_onboarding_new=1(?:;|$)/.test(document.cookie) || new URLSearchParams(window.location.search).get("new") === "1";
     if (declaredNew && user.user_metadata?.onboarding_completed !== true) {
       document.cookie = "ccr_onboarding_new=; Max-Age=0; path=/";
-      setCheckingExisting(false);
+      queueMicrotask(() => setCheckingExisting(false));
       return;
     }
     let cancelled = false;
@@ -118,10 +119,7 @@ export default function OnboardingPage() {
           id: user.id,
           email: user.email ?? "",
           full_name:
-            (user.user_metadata?.full_name as string) ??
-            (user.user_metadata?.name as string) ??
-            user.email?.split("@")[0] ??
-            "",
+            providerDisplayName(user.user_metadata, user.email),
           avatar_url:
             (user.user_metadata?.avatar_url as string) ??
             (user.user_metadata?.picture as string) ??
@@ -146,12 +144,7 @@ export default function OnboardingPage() {
   // Google reads as one continuous wait rather than logo → spinner → cards.
   if (authLoading || !user || checkingExisting) return <LienzoNeutro />;
 
-  const displayName = (
-    (user.user_metadata?.full_name as string) ??
-    (user.user_metadata?.name as string) ??
-    user.email?.split("@")[0] ??
-    ""
-  );
+  const displayName = providerDisplayName(user.user_metadata, user.email);
 
   const photoUrl =
     avatarUrl ??
@@ -176,13 +169,13 @@ export default function OnboardingPage() {
               />
             ) : (
               <div className="h-20 w-20 rounded-full bg-[#009FD9] flex items-center justify-center text-white text-2xl font-bold shadow-md mb-4">
-                {displayName.charAt(0).toUpperCase() || "?"}
+                {displayName ? displayName.charAt(0).toUpperCase() : <UserRound className="h-9 w-9" aria-hidden="true" />}
               </div>
             )}
 
-            {displayName && (
+            {(
               <p className="text-sm text-[#009FD9] font-semibold mb-1 uppercase tracking-wide">
-                {t("greeting", { name: displayName.split(" ")[0] })}
+                {displayName ? t("greeting", { name: displayName.split(" ")[0] }) : t("greetingGeneric")}
               </p>
             )}
             <p className="text-xs text-gray-400">{user.email}</p>

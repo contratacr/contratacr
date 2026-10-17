@@ -1,3 +1,4 @@
+import { getProfessionalDisplayName } from "@/lib/display-name";
 import { ProfilePhotoPreview } from "@/components/ui/profile-photo-preview";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -189,7 +190,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
     service_label: ofertaVisible.service_label ? repairVisibleText(ofertaVisible.service_label) : null,
     location_label: ofertaVisible.location_label ? repairVisibleText(ofertaVisible.location_label) : null,
     image_urls: Array.isArray(ofertaVisible.image_urls) ? ofertaVisible.image_urls : [],
-    professional_name: repairVisibleText(professional?.business_name || professional?.profiles?.full_name || copy.professionalFallback),
+    professional_name: repairVisibleText(getProfessionalDisplayName(professional?.profiles?.full_name || "", professional?.business_name).primaryDesktop || copy.professionalFallback),
     professional_slug: professional?.slug ?? null,
     professional_avatar_url: professional?.profiles?.avatar_url ?? null,
     professional_verified: professional?.verification_status === "verified",

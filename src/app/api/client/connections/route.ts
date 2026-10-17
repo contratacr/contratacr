@@ -1,3 +1,4 @@
+import { getProfessionalDisplayName } from "@/lib/display-name";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -107,7 +108,7 @@ export async function GET() {
     const connection: Connection = existing ?? {
       professionalId: row.professionalId,
       slug: pro.slug ? String(pro.slug) : null,
-      name: repairVisibleText(String(pro.business_name || profile?.full_name || "Profesional")),
+      name: repairVisibleText(String(getProfessionalDisplayName(profile?.full_name || "", pro.business_name as string | undefined).primaryDesktop || "Profesional")),
       avatarUrl: profile?.avatar_url ?? null,
       isVerified: pro.verification_status === "verified",
       categoryId,

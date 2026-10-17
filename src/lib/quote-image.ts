@@ -86,8 +86,7 @@ async function dibujar(quote: Quote, proName: string, textos: Textos, fechaVigen
   medidor.font = `800 38px ${FUENTE}`;
   const lineasEmisor = partirLineas(medidor, nombreVisible, anchoNombreEmisor);
   medidor.font = `400 22px ${FUENTE}`;
-  const nombreCompleto = quote.professional_full_name;
-  const lineasIdentidad = nombreCompleto && nombreCompleto !== nombreVisible ? partirLineas(medidor, nombreCompleto, anchoNombreEmisor) : [];
+  const lineasIdentidad: string[] = [];
   const altoEmisor = Math.max(1, lineasEmisor.length) * 44 + lineasIdentidad.length * 28;
   const altoQuien = 60 + Math.max(altoEmisor, 44 + Math.max(0, datosCliente(quote).length * 32 - 10)) + 30;
   const altoTitulo = (lineasTitulo.length ? lineasTitulo.length * 44 + 12 : 0) + (fechaVigencia ? 40 : 0) + (lineasTitulo.length || fechaVigencia ? 30 : 0);

@@ -1,3 +1,4 @@
+import { getProfessionalDisplayName } from "@/lib/display-name";
 import { notFound } from "next/navigation";
 import { claveDeTramo, rangoDePrefijo } from "@/lib/marketplace-url";
 import { getTranslations } from "next-intl/server";
@@ -115,7 +116,7 @@ export default async function JobDetailRedirect({ params, searchParams }: Props)
       description: vacante.description || vacante.title,
       datePosted: vacante.created_at,
       employmentType: tipoEmpleo[String(vacante.employment_type ?? "")] ?? undefined,
-      hiringOrganization: { "@type": "Organization", name: empleadorDeVacante?.business_name || empleadorDeVacante?.profiles?.full_name || "ContrataCR" },
+      hiringOrganization: { "@type": "Organization", name: getProfessionalDisplayName(empleadorDeVacante?.profiles?.full_name || "", empleadorDeVacante?.business_name || undefined).primaryDesktop || "ContrataCR" },
       jobLocation: { "@type": "Place", address: { "@type": "PostalAddress", addressLocality: vacante.location_label || "Costa Rica", addressCountry: "CR" } },
     } : null;
     return (
@@ -136,7 +137,7 @@ export default async function JobDetailRedirect({ params, searchParams }: Props)
   const volverHref = safeMarketplaceReturnHref(from, "/empleos");
   const volverTexto = from ? tSalida(marketplaceReturnLabelKey(volverHref, "/empleos")) : t("backAll");
   const empleador = (cerrado.professionals as { business_name?: string | null; profiles?: { full_name?: string | null } | null } | null);
-  const nombre = empleador?.business_name || empleador?.profiles?.full_name || null;
+  const nombre = getProfessionalDisplayName(empleador?.profiles?.full_name || "", empleador?.business_name || undefined).primaryDesktop || null;
 
   return (
     <main className="min-h-[calc(100vh-72px)] bg-white text-[#162543] sm:bg-white">

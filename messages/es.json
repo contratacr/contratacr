@@ -1932,6 +1932,7 @@
     "clientRole": "Cliente"
   },
   "onboarding": {
+    "greetingGeneric": "Hola",
     "greeting": "Hola, {name}",
     "title": "¿Cómo quieres empezar?",
     "subtitle": "Puedes cambiarlo después."
