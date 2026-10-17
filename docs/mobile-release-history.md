@@ -59,3 +59,11 @@ Estado: **compilados localmente, no subidos ni enviados a revisión**. Validaci�
 Novedades propuestas ES (no enviadas): «Ahora puedes guardar y compartir archivos del chat desde la app. También mejoramos el acceso y la estabilidad.»
 
 Novedades propuestas EN (no enviadas): «You can now save and share chat files from the app. We also improved sign-in and stability.»
+
+### Autorización de envío y preparación en tiendas — 16 de octubre de 2026
+
+Isaac autorizó promover ambas versiones a las tiendas. La autorización anterior de no subir versiones queda reemplazada. El envío final a revisión sigue condicionado a cerrar las pruebas pendientes; no se ha declarado aprobación ni publicación.
+
+- App Store Connect: creada versión 1.0.11 (`6b0f42aa-07c6-4d0b-8ad7-e2b98f584a19`) en PREPARE_FOR_SUBMISSION, con publicación AFTER_APPROVAL. Conserva las 6 capturas de iPhone y las 6 de iPad, datos de revisión y cuenta demo existentes. Novedades es-MX guardadas: «Ahora puedes guardar y compartir archivos del chat desde la app. También mejoramos el acceso y la estabilidad.» Altool validó y subió el IPA sin errores (delivery `9d7688e9-1693-403c-9988-ed8433f5f70f`); procesamiento del build 16 pendiente.
+- Google Play: AAB 15 cargado y huella SHA-256 comprobada con el manifiesto local. Release 1.0.11 preparado y validado en estado draft; el release publicado sigue siendo 14 / 1.0.10. La API rechazó `changesNotSentForReview=true` porque enviaría los cambios automáticamente a revisión. Se conserva la edición sin confirmar hasta cerrar las pruebas; no se reintentó sin esa protección. Novedades es-419: mismo texto ES anterior.
+- Pendientes: resultado de carga/procesamiento Apple, ronda completa 39004077272 y acceso Apple real en Android. El emulador sigue en el formulario vacío; se pidió completar allí cuenta y seguridad. No confundir sesión de App Store Connect con inicio de sesión del usuario dentro del emulador.
