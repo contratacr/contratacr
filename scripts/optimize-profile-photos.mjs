@@ -5,6 +5,7 @@
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import sharp from 'sharp';
+import { cardCompatibleImage } from './lib/card-compatible-image.mjs';
 import { createClient } from '@supabase/supabase-js';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
@@ -32,19 +33,15 @@ for (let start = 0; ; start += 500) {
     if (input.length <= 150 * 1024) continue;
     const metadata = await sharp(input, { limitInputPixels: 40_000_000 }).metadata();
     if ((metadata.pages ?? 1) > 1) continue; // Do not flatten animations.
-    let output;
-    for (const width of [800, 600, 400]) {
-      output = await sharp(input, { limitInputPixels: 40_000_000 }).rotate().resize({ width, height: width, fit: 'inside', withoutEnlargement: true }).webp({ quality: 82, effort: 6 }).toBuffer();
-      if (output.length <= 150 * 1024) break;
-    }
-    if (output.length > 150 * 1024 || output.length >= input.length) continue;
+    const { body: output, format, contentType } = await cardCompatibleImage(input, { maxDimension: 800, targetBytes: 150 * 1024 });
+    if (output.length >= input.length) continue;
     const hash = crypto.createHash('sha256').update(input).digest('hex').slice(0, 24);
-    const key = `contratacr/profiles/${profile.id}/optimized-v1/${hash}.webp`;
+    const key = `contratacr/profiles/${profile.id}/optimized-v1/${hash}.${format}`;
     const next = `${base}/${key}`;
     const entry = { userId: profile.id, before: profile.avatar_url, after: next, originalBytes: input.length, optimizedBytes: output.length, status: 'planned' };
     report.photos.push(entry); save();
     if (apply) {
-      await storage.send(new PutObjectCommand({ Bucket: process.env.R2_BUCKET, Key: key, Body: output, ContentType: 'image/webp', CacheControl: 'public, max-age=31536000, immutable' }));
+      await storage.send(new PutObjectCommand({ Bucket: process.env.R2_BUCKET, Key: key, Body: output, ContentType: contentType, CacheControl: 'public, max-age=31536000, immutable' }));
       const { error: ownershipError } = await db.from('user_media_assets').upsert({ user_id: profile.id, provider: 'r2', public_id: key, resource_type: 'image', secure_url: next }, { onConflict: 'provider,public_id' });
       if (ownershipError) throw ownershipError;
       const check = await fetch(next, { redirect: 'error', signal: AbortSignal.timeout(30000) });

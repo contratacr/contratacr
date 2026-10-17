@@ -39,3 +39,27 @@ test('camera images respect avatar and public-gallery budgets while small images
   expect(result.publicDimensions[0] / result.publicDimensions[1]).toBeCloseTo(4 / 3, 2);
   expect(result.unchanged).toBe(true);
 });
+
+test('migration photos remain transparent when needed and render in Open Graph cards', async () => {
+  const sharp = (await import('sharp')).default;
+  const { cardCompatibleImage } = await import('../../scripts/lib/card-compatible-image.mjs');
+  const { ImageResponse } = await import('next/og.js');
+  const { createElement } = await import('react');
+  const source = await sharp({ create: { width: 1600, height: 1200, channels: 3, background: { r: 25, g: 95, b: 185 } } }).webp().toBuffer();
+  const converted = await cardCompatibleImage(source, { maxDimension: 800, targetBytes: 150 * 1024 });
+  expect(converted.contentType).toBe('image/jpeg');
+  expect(converted.body.length).toBeLessThanOrEqual(150 * 1024);
+  const dimensions = await sharp(converted.body).metadata();
+  expect([dimensions.width, dimensions.height]).toEqual([800, 600]);
+  const card = new ImageResponse(createElement('div', { style: { display: 'flex', width: 80, height: 80 } },
+    createElement('img', { src: `data:${converted.contentType};base64,${converted.body.toString('base64')}`, width: 80, height: 80 })), { width: 80, height: 80 });
+  const pixels = await sharp(Buffer.from(await card.arrayBuffer())).stats();
+  expect(pixels.channels[2].mean).toBeGreaterThan(150);
+  expect(pixels.channels[0].mean).toBeLessThan(60);
+
+  const transparent = await sharp({ create: { width: 900, height: 600, channels: 4, background: { r: 25, g: 95, b: 185, alpha: 0.4 } } }).webp().toBuffer();
+  const logo = await cardCompatibleImage(transparent, { maxDimension: 800, targetBytes: 150 * 1024 });
+  expect(logo.contentType).toBe('image/png');
+  expect((await sharp(logo.body).metadata()).hasAlpha).toBe(true);
+  expect(logo.body.length).toBeLessThanOrEqual(150 * 1024);
+});

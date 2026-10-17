@@ -7,6 +7,7 @@ import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 import sharp from 'sharp';
+import { cardCompatibleImage } from './lib/card-compatible-image.mjs';
 import { createClient } from '@supabase/supabase-js';
 import { S3Client, PutObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 
@@ -61,14 +62,8 @@ async function migrateUrl(source, userId, avatar) {
   if (format !== 'svg') {
     const metadata = await sharp(input, { limitInputPixels: 40_000_000 }).metadata();
     if ((metadata.pages ?? 1) === 1) {
-      const widths = avatar ? [800, 600, 400] : [1600, 1200, 800];
-      const budget = (avatar ? 150 : 512) * 1024;
-      for (const width of widths) {
-        const candidate = await sharp(input, { limitInputPixels: 40_000_000 }).rotate().resize({ width, height: width, fit: 'inside', withoutEnlargement: true }).webp({ quality: 82, effort: 6 }).toBuffer();
-        if (candidate.length < body.length || Math.max(metadata.width, metadata.height) > widths[0]) { body = candidate; format = 'webp'; }
-        if (body.length <= budget) break;
-      }
-      if (avatar && body.length > budget) throw new Error('Avatar exceeds optimized budget.');
+      const compatible = await cardCompatibleImage(input, { maxDimension: avatar ? 800 : 1600, targetBytes: (avatar ? 150 : 512) * 1024 });
+      body = compatible.body; format = compatible.format;
     }
   }
   const hash = digest(body);
