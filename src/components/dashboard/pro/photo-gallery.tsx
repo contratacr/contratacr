@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { confirmarSalidaSinGuardar } from "@/lib/confirmar-salida";
 import { useLocale, useTranslations } from "next-intl";
-import { AlertCircle, CalendarDays, Check, ImageUp, Images, Loader2, Pencil, Plus, Trash2, X } from "lucide-react";
+import { AlertCircle, CalendarDays, ImageUp, Images, Loader2, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
@@ -12,8 +12,6 @@ import { Modal } from "@/components/ui/modal";
 import { PanelEmptyState } from "@/components/ui/content-loading";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
-import { cn } from "@/lib/utils";
-import { ScrollRail } from "@/components/ui/scroll-rail";
 import { cldThumb } from "@/lib/cloudinary";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { PUBLIC_IMAGE_OPTIONS, getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
@@ -308,14 +306,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
           // "des-selecciona" (eso saltaba al primer servicio sin pedirlo).
           onChange={(id) => { if (id) setActiveProf(id); }}
           labelFor={label}
-          // LA MISMA ELECCIÓN, EL MISMO CONTROL. Elegir a qué servicio pertenece
-          // un caso se hacía con pastillas de contorno dentro del formulario y
-          // con una barra segmentada gris en la sección: dos dibujos para lo
-          // mismo, a dos palmos de distancia. Las pastillas ganan porque esto no
-          // es una etapa de una misma lista —eso sí es una barra segmentada—
-          // sino un servicio entre varios. Y de paso traen la regla buena para
-          // computadora: se envuelven en más líneas en vez de esconderse a la
-          // derecha (ver `.ccr-carril-chips` en layout.tsx).
+          // El servicio se elige aquí; cada caso se crea y edita dentro de él.
           variant="chips"
           limpiable={false}
         />
@@ -425,45 +416,10 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
             {/* El botón vive DENTRO de la tarjeta, pegado a su borde inferior y
                 fijo al desplazar: idéntico a Publicar empleo. Una barra aparte
                 al fondo lo hacía parecer de otra pantalla. */}
-            {/* El desplegable escondía la respuesta detrás de un toque. Como
-                pastillas se ve de una a cuál portafolio va el caso y se cambia
-                sin abrir nada: el mismo lenguaje que el filtro de esta sección. */}
-            {professions.length > 1 && (
+            {draft.profession && (
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("caseProfession")} <span className="text-red-500">*</span></label>
-                {/* EN EL TELÉFONO, CARRIL; EN COMPUTADORA, SE ENVUELVE.
-                    Con el dedo, la fila se arrastra y el servicio siguiente
-                    asoma cortado: esa es la señal, y no gasta alto. Con el
-                    ratón no hay gesto de arrastre, así que un desbordamiento
-                    horizontal esconde opciones detrás de una interacción que
-                    nadie espera en computadora: ahí la fila pasa a más líneas.
-                    Las dos cosas las decide `.ccr-carril-chips` en el
-                    documento, con la misma condición que el resto de los
-                    carriles del app (pantalla ancha Y ratón). */}
-                {(
-                  <ScrollRail className="ccr-carril-chips flex gap-2 pb-0.5">
-                    {professions.map((p) => {
-                      const elegido = draft.profession === p;
-                      return (
-                        <button
-                          key={p}
-                          type="button"
-                          aria-pressed={elegido}
-                          onClick={() => setDraft((d) => (d ? { ...d, profession: p } : d))}
-                          className={cn(
-                            "inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-semibold transition-colors",
-                            elegido
-                              ? "border-[#009FD9] bg-[#009FD9] text-white"
-                              : "border-[#e5e7eb] bg-white text-[#526277] hover:border-[#c3d2de]",
-                          )}
-                        >
-                          {elegido && <Check className="h-3.5 w-3.5 shrink-0" />}
-                          <span className="max-w-[13rem] truncate">{label(p)}</span>
-                        </button>
-                      );
-                    })}
-                  </ScrollRail>
-                )}
+                <p className="mb-1.5 text-sm font-medium text-[#374151]">{t("caseProfession")}</p>
+                <p className="text-sm font-semibold text-[#162543]">{label(draft.profession)}</p>
               </div>
             )}
 
