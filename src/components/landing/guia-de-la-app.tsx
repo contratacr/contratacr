@@ -334,7 +334,7 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
                     opacidad 1 debajo: WebKit no deja arrancar un video que no «se ve». */}
                 {pasos.map((p, i) => (
                   // eslint-disable-next-line @next/next/no-img-element -- imagen fija del tamaño justo
-                  <img key={p.clave} src={p.poster} alt="" aria-hidden data-guia-poster className={cn("pointer-events-none absolute inset-0 z-10 h-full w-full object-cover object-top transition-opacity duration-200 ease-out", i === activo && pintando !== activo ? "opacity-100" : "opacity-0")} />
+                  <img key={p.clave} src={cerca || i === activo ? p.poster : undefined} loading="lazy" alt="" aria-hidden data-guia-poster className={cn("pointer-events-none absolute inset-0 z-10 h-full w-full object-cover object-top transition-opacity duration-200 ease-out", i === activo && pintando !== activo ? "opacity-100" : "opacity-0")} />
                 ))}
                 <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 z-20 h-16 bg-gradient-to-b from-white/14 to-transparent" />
               </div>

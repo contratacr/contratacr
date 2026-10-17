@@ -56,7 +56,7 @@ const nextConfig: NextConfig = {
       // from its route handler (it does not apply this Next header table).
       { source: "/auth/callback", has: [{ type: "query", key: "flow", value: "android-apple" }], headers: [
         { key: "Referrer-Policy", value: "no-referrer" },
-        { key: "Content-Security-Policy", value: "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'" },
+        { key: "Content-Security-Policy", value: "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'" },
       ] },
       // Guardar y rellenar contraseñas en la app de iPhone (webcredentials):
       // Apple lee este archivo como JSON. En Cloudflare lo pone public/_headers.

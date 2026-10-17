@@ -30,3 +30,19 @@ Fuentes adicionales:
 - https://opennext.js.org/cloudflare/caching
 
 Validación: contratos de caché (7), consultas de perfil (5), R2 local real y vocabulario (6) aprobados. Pruebas de navegador: catálogo (15), contacto (6), invalidación admin/API/SSR/ETag (3) aprobadas. TypeScript, lint dirigido y build OpenNext para Cloudflare aprobados. No se midió todavía el ahorro en GB posteriores al despliegue.
+
+
+## Medición posterior — 17 de octubre de 2026, 07:16 Costa Rica
+
+Lectura directa del panel Usage de la misma organización/proyecto y ciclo 18-sep–18-oct. El acumulado figura en 3.557 GB frente a 3.525 GB de la lectura anterior: el acumulado no baja, aumentó aproximadamente 32 MB (redondeo del panel). La tabla diaria, leída mediante los tooltips del gráfico «Log Ingestion per day», muestra:
+
+| Fecha del gráfico | Ingestión |
+| --- | ---: |
+| 14 oct | 73.770 MB |
+| 15 oct | 101.263 MB |
+| 16 oct | 86.705 MB |
+| 17 oct | 63.074 MB, día incompleto |
+
+El día 16 está un 14.38 % por debajo del 15, pero no demuestra el ahorro de la corrección: el despliegue ocurrió tarde, cambió el tráfico y todavía no hay varios días completos posteriores comparables. No se compara el día 17 incompleto como si fuera una jornada completa, ni se afirma haber quedado bajo 1 GB mensual. La fecha de cada fila es la etiqueta del panel; no se presupone su zona horaria.
+
+El panel conserva la marca Upcoming y no muestra una restricción actual; Log Query suma 18.922 GB/100 GB, egress 0.163/5 GB, base 0.116/0.5 GB, 113 usuarios activos y 1.388 mensajes Realtime. Se leyó la serie de uso sin ejecutar otro barrido masivo de logs ni modificar configuración de Postgres, errores, auditoría o permisos. Se volvieron a ejecutar los 7 contratos de caché del catálogo y los 5 de consultas de perfil, todos correctos. La caída de consultas por flujo probada anteriormente sigue comprobada; su traducción a GB mensuales aún no está medida.

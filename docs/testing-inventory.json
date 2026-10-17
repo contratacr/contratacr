@@ -8,7 +8,7 @@
     "handlers": 93,
     "components": 234,
     "hooks": 25,
-    "specs": 116
+    "specs": 117
   },
   "dashboardTabs": [
     "home",
@@ -12294,7 +12294,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 64,
+          "line": 74,
           "tag": "a",
           "label": "{en ? \"Download ContrataCR for iOS\" : \"Descargar ContrataCR para iOS\"}",
           "handler": "",
@@ -12302,7 +12302,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 65,
+          "line": 75,
           "tag": "a",
           "label": "{en ? \"Download ContrataCR for Android\" : \"Descargar ContrataCR para Android\"}",
           "handler": "",
@@ -12310,7 +12310,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 138,
+          "line": 148,
           "tag": "button",
           "label": "{en ? \"Dismiss download notice\" : \"Cerrar aviso de descarga\"}",
           "handler": "{() => { setDismissed(true); const until = String(Date.now() + 30 * 86400000); document.cookie = `${DOWNLOAD_DISMISS_COOKIE}=${until}; Path=/; Max-Age=2592000; SameSite=Lax${location.protocol === \"https:\" ? \"; Secure\" : \"\"}`; try { localStorage.setItem(DISMISSED_KEY, until); } catch {} }}",
@@ -12318,7 +12318,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 146,
+          "line": 156,
           "tag": "a",
           "label": "{en ? `Download ContrataCR on ${platform === \"ios\" ? \"App Store\" : \"Google Play\"}` : `Descargar ContrataCR en ${platform === \"ios\" ? \"App Store\" : \"Google Play\"}`}",
           "handler": "",
@@ -12339,6 +12339,7 @@
       ],
       "directReferences": [
         "tests/e2e/app-download.spec.ts",
+        "tests/e2e/landing-media-budget.spec.ts",
         "tests/e2e/mobile-menu-surface.spec.ts"
       ],
       "evidence": "Referencia estática detectada; verificar assertions",
@@ -12694,7 +12695,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 231,
+          "line": 246,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => onPick(s)}",
@@ -12702,7 +12703,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 291,
+          "line": 306,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{onNearMe}",
@@ -12710,7 +12711,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 304,
+          "line": 319,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => onPick(s)}",
@@ -12718,7 +12719,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 331,
+          "line": 346,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => onPickAddress(a)}",
@@ -12726,7 +12727,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 799,
+          "line": 814,
           "tag": "form",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{handleSearch}",
@@ -12734,7 +12735,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 820,
+          "line": 835,
           "tag": "input",
           "label": "{t(\"searchPlaceholderShort\")}",
           "handler": "{(e) => { recienElegidoRef.current = false; setService(e.target.value); setServiceSel(null); }}",
@@ -12742,7 +12743,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 853,
+          "line": 868,
           "tag": "input",
           "label": "{t(\"location\")}",
           "handler": "{(e) => handleLocationChange(e.target.value)}",
@@ -12750,7 +12751,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 872,
+          "line": 887,
           "tag": "button",
           "label": "{t(\"search\")}",
           "handler": "",
@@ -12758,7 +12759,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 886,
+          "line": 901,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -13530,7 +13531,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 74,
+          "line": 65,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(event) => elegir(indice, event.currentTarget)}",
@@ -13538,7 +13539,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 97,
+          "line": 91,
           "tag": "button",
           "label": "{masSecciones}",
           "handler": "{() => fila.current?.scrollBy({ left: fila.current.clientWidth * 0.7, behavior: \"smooth\" })}",
@@ -13546,7 +13547,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 128,
+          "line": 118,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setTocado(servicio.id)}",
@@ -13554,7 +13555,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 148,
+          "line": 138,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -21451,6 +21452,10 @@
         {
           "line": 5,
           "title": "`Apple Android return uses the principal logo and fixed app link (${locale})`"
+        },
+        {
+          "line": 18,
+          "title": "\"actual callback response allows its principal logo through Next headers\""
         }
       ]
     },
@@ -22455,6 +22460,23 @@
         {
           "line": 107,
           "title": "\"empty favorites keep the type filters in English\""
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/landing-media-budget.spec.ts",
+      "cases": [
+        {
+          "line": 4,
+          "title": "\"home keeps hidden service photos unloaded and retains visited tabs\""
+        },
+        {
+          "line": 27,
+          "title": "\"download artwork waits near the viewport without changing reserved height\""
+        },
+        {
+          "line": 41,
+          "title": "\"hero keeps its current photo while the next slide is downloading\""
         }
       ]
     },
