@@ -95,7 +95,7 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
   const serviceIds = pro?.professions?.length ? pro.professions : pro?.categoryId ? [pro.categoryId] : [];
   const serviceNames = (pro?.services ?? [])
     .filter((service) => service.active !== false && service.name?.trim())
-    .map((service) => service.name!.trim());
+    .map((service) => service.category ? getCategoryLabel(service.category, locale) : service.name!.trim());
   const categoryNames = serviceIds.map((id) => getCategoryLabel(id, locale)).filter(Boolean);
   const services = Array.from(
     new Map((serviceNames.length > 0 ? serviceNames : categoryNames).map((name) => [name.toLocaleLowerCase(locale), name])).values()

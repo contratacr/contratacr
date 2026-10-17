@@ -160,32 +160,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(destino, 308);
   }
 
-  // Idioma del dispositivo, SOLO para quien nunca ha elegido uno a mano.
-  // Costa Rica es el mercado, así que el español es el punto de partida: solo
-  // se abre en inglés cuando el navegador dice preferir inglés POR ENCIMA del
-  // español. Un `Accept-Language: es-CR,en;q=0.8` sigue siendo español. En
-  // cuanto alguien toca el selector, su elección manda y esto no vuelve a
-  // opinar (cookie `ccr_locale_elegido`).
-  const idiomaPreferido = (): "es" | "en" => {
-    if (request.cookies.get("ccr_locale_elegido")?.value === "1") {
-      return request.cookies.get("NEXT_LOCALE")?.value === "en" ? "en" : "es";
-    }
-    const guardado = request.cookies.get("NEXT_LOCALE")?.value;
-    if (guardado === "en" || guardado === "es") return guardado;
-    const cabecera = request.headers.get("accept-language") ?? "";
-    let mejorEs = 0;
-    let mejorEn = 0;
-    for (const parte of cabecera.split(",")) {
-      const [etiqueta, ...resto] = parte.trim().split(";");
-      const q = Number.parseFloat(resto.find((r) => r.trim().startsWith("q="))?.split("=")[1] ?? "1");
-      const peso = Number.isFinite(q) ? q : 1;
-      const base = etiqueta.trim().toLowerCase().split("-")[0];
-      if (base === "es") mejorEs = Math.max(mejorEs, peso);
-      if (base === "en") mejorEn = Math.max(mejorEn, peso);
-    }
-    return mejorEn > mejorEs ? "en" : "es";
-  };
-
+  // Un enlace compartido sin prefijo siempre es español: ni el idioma del
+  // rastreador ni las cookies deben cambiar su tarjeta o su caché. El inglés
+  // sigue disponible en las rutas explícitas /en/….
   const VANITY: Record<string, string> = {
     "/ig": "/?utm_source=instagram&utm_medium=organic&utm_campaign=bio",
     "/tt": "/?utm_source=tiktok&utm_medium=organic&utm_campaign=bio",
@@ -205,7 +182,7 @@ export async function middleware(request: NextRequest) {
   const FICHAS: Record<string, string> = { o: "promociones", e: "empleos", c: "cotizacion", p: "proyectos" };
   const fichaCorta = /^\/([oecp])\/([a-z0-9][a-z0-9-]{3,80})$/i.exec(pathname);
   if (fichaCorta) {
-    const locale = idiomaPreferido();
+    const locale = "es";
     const destino = new URL(`/${locale}/${FICHAS[fichaCorta[1].toLowerCase()]}/${fichaCorta[2].toLowerCase()}`, request.url);
     destino.search = request.nextUrl.search;
     return reescribirConIdioma(request, destino);
@@ -216,7 +193,7 @@ export async function middleware(request: NextRequest) {
   // sección del sitio (RUTAS_DEL_SITIO, verificada en CI).
   const perfilCorto = /^\/@?([a-z0-9][a-z0-9-]{2,80})$/.exec(pathname.toLowerCase());
   if (perfilCorto && !RUTAS_DEL_SITIO.has(perfilCorto[1])) {
-    const locale = idiomaPreferido();
+    const locale = "es";
     // SE REESCRIBE, NO SE REDIRIGE (4-oct-2026): la ficha se sirve en la misma
     // dirección corta, así lo que se copia de la barra es contratacr.com/nombre,
     // igual que «Copiar enlace».
@@ -394,8 +371,8 @@ export async function middleware(request: NextRequest) {
   const response = conCabecerasDeSeguridad(handleI18n(request));
   // La cookie recuerda el idioma que se está LEYENDO, no solo el que se eligió
   // con el botón. Sin esto, quien llega en inglés por un enlace y luego abre
-  // una dirección sin prefijo (el perfil corto, /o/, /e/, /c/) volvía al
-  // español de golpe. Solo se escribe cuando cambia, para no ponerle
+  // una dirección explícita en inglés perdía su preferencia al navegar.
+  // Los enlaces públicos cortos conservan el español independientemente de ella. Solo se escribe cuando cambia, para no ponerle
   // Set-Cookie a cada respuesta y romper la caché de las páginas públicas.
   //
   // ES COOKIE DE SESIÓN, sin fecha de vencimiento: el inglés dura lo que dura
