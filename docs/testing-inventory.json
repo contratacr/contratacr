@@ -22467,15 +22467,15 @@
       "file": "tests/e2e/landing-media-budget.spec.ts",
       "cases": [
         {
-          "line": 4,
-          "title": "\"home keeps hidden service photos unloaded and retains visited tabs\""
+          "line": 5,
+          "title": "\"service tabs keep hidden photos unloaded and retain visited groups\""
         },
         {
-          "line": 27,
+          "line": 42,
           "title": "\"download artwork waits near the viewport without changing reserved height\""
         },
         {
-          "line": 41,
+          "line": 56,
           "title": "\"hero keeps its current photo while the next slide is downloading\""
         }
       ]
