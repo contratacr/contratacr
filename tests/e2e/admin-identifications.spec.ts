@@ -26,8 +26,8 @@ test("administrator can consult all ID types and review a missing-document case 
     await expect(page.getByText("Consultar identificación", { exact: true })).toBeVisible();
     await expect(page.getByText(/Admite identificación nacional, jurídica, DIMEX y NITE/)).toBeVisible();
     await page.getByRole("textbox", { name: "Número de identificación", exact: true }).fill("123");
-    await page.getByRole("button", { name: "Consultar", exact: true }).first().click();
-    await expect(page.getByRole("alert")).toContainText("identificación válida");
+    await page.locator("#admin-padron-form").getByRole("button", { name: "Consultar", exact: true }).click();
+    await expect(page.locator("#admin-padron-form").getByRole("alert")).toContainText("identificación válida");
     await page.getByRole("textbox", { name: "Buscar pendiente" }).fill(name);
     const row = page.getByTestId("identity-review-row").filter({ hasText: name });
     await expect(row).toHaveCount(1); await expect(row).toContainText("Sin identificación registrada");
