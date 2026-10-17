@@ -120,20 +120,31 @@ for (const type of ["cedula", "dimex", "nite"]) test(`record found for ${type} v
   expect(v.rows.professionals[0].is_verified).toBe(true); expect(v.rows.profiles[0].client_identity_status).toBe("verified");
   expect(v.rows.projects[0].client_identity_status).toBe("verified"); expect(v.notifications).toHaveLength(1);
 });
-test("company record remains pending representation review; missing personal ID remains eligible to appeal", async () => {
-  for (const result of [found("juridica"), { ...found(), found: false, fullName: null }]) {
-    const v = verification(result); expect(await v.run()).toBe("pending"); expect(v.rows.professionals[0].is_verified).toBe(false);
-    expect(v.rows.professionals[0].verification_reason).toMatch(/revisión manual/); expect(v.rows.profiles[0].full_name).toBe("Nombre oficial");
+test("all found ID types accept the official record; missing records remain eligible to appeal", async () => {
+  for (const type of ["cedula", "juridica", "dimex", "nite"]) {
+    const v = verification(found(type)); expect(await v.run()).toBe("verified");
+    expect(v.rows.professionals[0].is_verified).toBe(true);
+    expect(v.rows.professionals[0].verification_reason).toBeNull();
   }
+  const v = verification({ ...found(), found: false, fullName: null });
+  expect(await v.run()).toBe("pending"); expect(v.rows.professionals[0].verification_reason).toMatch(/revisión manual/);
 });
 test("temporary outage preserves account state and sends no rejection or outreach", async () => {
   const v = verification({ ...found(), unavailable: true }); expect(await v.run()).toBe("skipped");
   expect(v.writes.map(w => w.table)).toEqual(["provider_verification_log"]); expect(v.notifications).toEqual([]); expect(v.rows.professionals[0].verification_status).toBe("pending");
 });
 test("human approval and appeals are never taken over by automatic checks", async () => {
-  for (const status of ["verified", "under_appeal"]) {
+  for (const status of ["verified", "under_appeal", "rejected"]) {
     const v = verification(found(), status); expect(await v.run()).toBe(status === "verified" ? "verified" : "ticket");
     expect(v.lookups()).toBe(0); expect(v.writes).toEqual([]); expect(v.notifications).toEqual([]);
+  }
+});
+test("a prior human decision or open document case prevents automatic approval of a found record", async () => {
+  for (const type of ["history", "documents"]) {
+    const v = verification(found("juridica"));
+    if (type === "history") v.rows.provider_verification_log = [{ professional_id: "pro", action: "reverted_pending" }];
+    else v.rows.support_tickets = [{ user_id: "owner", topic: "verification_documents", status: "open" }];
+    expect(await v.run()).toBe("ticket"); expect(v.lookups()).toBe(0); expect(v.writes).toEqual([]);
   }
 });
 test("manual appeals reuse one case/message per identity and preserve admin handling", async () => {

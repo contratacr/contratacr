@@ -53,7 +53,7 @@ export function AdminPadronLookup({ standalone = false }: { standalone?: boolean
       </div>
       {error && <p role="alert" className="mt-3 text-sm text-[#b45309]">{error}</p>}
       {result && <div role="status" className="mt-3 rounded-lg bg-[#f8fafc] p-3 text-sm text-[#162543]">
-        {result.found ? <><p className="text-xs text-[#68778d]">Nombre en Hacienda · {formatId(result.cedula)}</p><p className="mt-1 font-semibold">{result.fullName}</p>{result.idType && <p className="mt-2 text-xs text-[#526277]">{idTypeLabel(result.idType)}{result.idType === "juridica" ? " · La representación de la empresa requiere revisión manual." : " · Cotejo de datos; no demuestra quién utiliza la cuenta."}</p>}</> : <p>Hacienda no encontró esta identificación. Esto no confirma que sea inválida; la cuenta puede solicitar revisión manual.</p>}
+        {result.found ? <><p className="text-xs text-[#68778d]">Nombre en Hacienda · {formatId(result.cedula)}</p><p className="mt-1 font-semibold">{result.fullName}</p>{result.idType && <p className="mt-2 text-xs text-[#526277]">{idTypeLabel(result.idType)}{" · Cotejo de datos; no demuestra quién utiliza la cuenta ni representación legal."}</p>}</> : <p>Hacienda no encontró esta identificación. Esto no confirma que sea inválida; la cuenta puede solicitar revisión manual.</p>}
       </div>}
     </form>}
   </section>;

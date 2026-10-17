@@ -1648,7 +1648,7 @@
     "hasCedulaTitle": "Already have a Costa Rican ID?",
     "hasCedulaBody": "Add it to check its data with Hacienda. If it is not found, you can request manual review.",
     "enterCedulaTitle": "Verify your identity with your ID",
-    "enterCedulaBody": "Enter your ID and confirm the details. We check national, corporate, DIMEX and NITE IDs; companies also need representation review.",
+    "enterCedulaBody": "Enter your ID and confirm the details. We check national, corporate, DIMEX and NITE IDs; all use the same data-matching criteria.",
     "verifying": "Verifying…",
     "addCedula": "Add",
     "savingCedula": "Adding…",
@@ -2043,7 +2043,7 @@
     "step1Title": "Real ID",
     "step1Body": "We look up national, corporate, DIMEX and NITE identification numbers through Hacienda’s public API.",
     "step2Title": "Your official name",
-    "step2Body": "We check the number, type and name found. Companies also need representation review. A lookup does not prove who is using the account.",
+    "step2Body": "We check the number, type and name found. A lookup does not prove who is using the account or legal company representation.",
     "step3Title": "Always up to date",
     "step3Body": "If Hacienda cannot find your ID, you can appeal for manual review from your panel. Temporary outages are retried and are not rejections.",
     "disclaimerTitle": "Important notice",
@@ -3193,6 +3193,7 @@
     "allJobs": "See all jobs",
     "backToProjects": "Back to projects",
     "allProjects": "See all projects",
+    "backToAssistant": "Back to assistant",
     "backToNotifications": "Back to notifications"
   },
   "tableroBuscador": {
@@ -3343,7 +3344,7 @@
   "verificationBadge": {
     "title": "Identity verified",
     "action": "Identity verified: see what was checked",
-    "description": "The check indicates that the number, type and name were checked with Hacienda or documents were manually reviewed. An automatic lookup does not prove who uses the account and does not perform biometric recognition.",
+    "description": "The check indicates that the number, type and name were checked with Hacienda or documents were manually reviewed. An automatic lookup does not prove who uses the account, perform biometric recognition or confirm legal representation.",
     "scope": "The badge does not guarantee work quality or certify professional qualifications. Also review the profile, reviews, and service details.",
     "close": "Close",
     "understood": "Got it",

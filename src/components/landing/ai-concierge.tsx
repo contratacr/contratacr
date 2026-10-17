@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, Suspense, type FormEvent } from "react";
 import { prefijoDeIdioma, rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import {
   Menu,
@@ -9,7 +9,6 @@ import {
   BadgeCheck,
   BriefcaseBusiness,
   CheckCheck,
-  CheckCircle2,
   ChevronRight,
   ClipboardList,
   HelpCircle,
@@ -30,15 +29,18 @@ import { CABECERA_BOTON, CABECERA_GLIFO, CABECERA_TITULO } from "@/components/la
 import Image from "next/image";
 import { useLocale } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
-import { useRouter as useRouterDeNext } from "next/navigation";
+import { useRouter as useRouterDeNext, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { canOffer } from "@/lib/auth/capabilities";
 import { useContainedTouchScroll } from "@/hooks/use-contained-touch-scroll";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { cn, getInitials } from "@/lib/utils";
+import { VerificationInfo } from "@/components/ui/verification-info";
 import { MessageLauncher } from "@/components/professionals/message-launcher";
 import { AppTooltip } from "@/components/ui/app-tooltip";
+
+const subscribeHydration = () => () => {};
 
 type ResultCard = {
   id: string;
@@ -242,20 +244,14 @@ function ProfessionalResult({ result, copy, onNavigate, nativeApp, lang }: {
 }) {
   return (
     <article className="overflow-hidden rounded-xl border border-[#dce8ef] bg-white shadow-[0_4px_16px_-12px_rgba(15,35,60,0.35)]">
-      <button type="button" onClick={() => onNavigate(result.profileHref)} className="flex w-full gap-3 p-3 text-left">
+      <div className="flex w-full gap-3 p-3 text-left">
         <div className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full bg-[#edf7fb] text-xs font-extrabold text-[#009FD9]">
           {result.avatarUrl ? <Image src={result.avatarUrl} alt="" width={44} height={44} className="h-full w-full object-cover" /> : getInitials(result.name)}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-start gap-1.5">
-            <p className="min-w-0 flex-1 text-sm font-extrabold leading-snug text-[#162543]">{result.name}</p>
-            {result.verified && (
-              <CheckCircle2
-                aria-label={copy.verified}
-                className="mt-0.5 h-4 w-4 shrink-0 text-[#009FD9]"
-                strokeWidth={2.8}
-              />
-            )}
+            <button type="button" onClick={() => onNavigate(result.profileHref)} className="min-w-0 text-left text-sm font-extrabold leading-snug text-[#162543]">{result.name}</button>
+            {result.verified && <VerificationInfo />}
           </div>
           <p className="mt-0.5 text-xs font-semibold text-[#53657a]">{result.service}</p>
           <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-[#708095]">
@@ -266,11 +262,12 @@ function ProfessionalResult({ result, copy, onNavigate, nativeApp, lang }: {
           </div>
           {result.price && <p className="mt-1.5 text-xs font-extrabold text-[#009FD9]">{result.price}</p>}
         </div>
-      </button>
+      </div>
       <div className="grid grid-cols-2 border-t border-[#eef2f6]">
         <button type="button" onClick={() => onNavigate(result.profileHref)} className="h-10 text-xs font-bold text-[#526277] hover:bg-[#f7fafc]">{copy.viewProfile}</button>
         {nativeApp ? (
           <MessageLauncher
+            onNavigate={onNavigate}
             professionalId={result.id}
             professionalName={result.name}
             contextTitle={result.service}
@@ -285,13 +282,19 @@ function ProfessionalResult({ result, copy, onNavigate, nativeApp, lang }: {
   );
 }
 
-export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; onBack?: () => void } = {}) {
+export function AiConcierge(props: { embedded?: boolean; onBack?: () => void } = {}) {
+  return <Suspense fallback={null}><AiConciergeContent {...props} /></Suspense>;
+}
+
+function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; onBack?: () => void } = {}) {
   const locale = useLocale();
   const router = useRouter();
   // Los destinos del asistente ya traen su prefijo de idioma: van por el router
   // de Next tal cual (el de next-intl lo agregaría otra vez).
   const routerDeNext = useRouterDeNext();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const routeKey = `${pathname}?${searchParams.toString()}`;
   const { user, loading: authLoading } = useAuth();
   const esProfesional = canOffer(user);
   const nativeApp = useNativeApp();
@@ -303,17 +306,13 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
   const [conversationId, setConversationId] = useState("");
   const [suggestingIndex, setSuggestingIndex] = useState<number | null>(null);
   const [compactViewport, setCompactViewport] = useState(false);
-  const [hidratado, setHidratado] = useState(false);
+  const hidratado = useSyncExternalStore(subscribeHydration, () => true, () => false);
   const [draft, setDraft] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const sessionHydratedRef = useRef(false);
-  const previousPathnameRef = useRef(pathname);
+  const previousPathnameRef = useRef(routeKey);
   useContainedTouchScroll(scrollRef, open || embedded);
-
-  useEffect(() => {
-    setHidratado(true);
-  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -339,7 +338,6 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
       let origen: string | null = null;
       try { origen = window.sessionStorage.getItem(VOLVER_AL_ASISTENTE); } catch { /* sin almacenamiento */ }
       if (!origen || origen !== `${window.location.pathname}${window.location.search}`) return;
-      try { window.sessionStorage.removeItem(VOLVER_AL_ASISTENTE); } catch { /* sin almacenamiento */ }
       setOpen(true);
     };
     window.addEventListener("contratacr:open-ai", openAssistant);
@@ -398,14 +396,21 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
   }, [conversationId, embedded, lang, messages, open]);
 
   useEffect(() => {
-    if (previousPathnameRef.current !== pathname) {
-      previousPathnameRef.current = pathname;
+    if (previousPathnameRef.current !== routeKey) {
+      previousPathnameRef.current = routeKey;
       const frame = requestAnimationFrame(() => {
-        if (!embedded) setOpen(false);
+        if (!embedded) {
+          let restore = false;
+          try {
+            restore = window.sessionStorage.getItem(VOLVER_AL_ASISTENTE) === `${window.location.pathname}${window.location.search}`;
+            if (restore) window.sessionStorage.removeItem(VOLVER_AL_ASISTENTE);
+          } catch { /* History still works without storage. */ }
+          setOpen(restore);
+        }
       });
       return () => cancelAnimationFrame(frame);
     }
-  }, [embedded, pathname]);
+  }, [embedded, routeKey]);
 
   useEffect(() => {
     if (!open || embedded) return;
@@ -533,7 +538,14 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
   function navigate(href: string) {
     const protectedDestination = href.includes("/publicar-proyecto") || href.includes("/dashboard/");
     if (!user && protectedDestination) storePendingIntent(href);
-    const destination = localizedDestination(href, lang);
+    let destination = localizedDestination(href, lang);
+    if (destination.startsWith("/") && !destination.startsWith("//")) {
+      const target = new URL(destination, window.location.origin);
+      const origin = `${window.location.pathname}${window.location.search}`;
+      if (/\/profesionales\/[^/]+$/.test(target.pathname)) target.searchParams.set("from", origin);
+      if (/\/mensajes$/.test(target.pathname)) target.searchParams.set("back", origin.replace(/^\/(?:es|en)(?=\/|[?#]|$)/, "") || "/");
+      destination = target.pathname + target.search + target.hash;
+    }
     try {
       window.sessionStorage.setItem(`${SESSION_KEY_PREFIX}${lang}`, JSON.stringify({
         id: conversationId,

@@ -24,6 +24,8 @@ type MessageLauncherProps = {
   buttonLabel?: string;
   initialMessage?: string;
   onSelfAction?: () => void;
+  /** Optional owner of navigation, e.g. an assistant overlay that must close first. */
+  onNavigate?: (href: string) => void;
   tone?: "primary" | "contrast" | "outline";
   /**
    * Qué hacer si el profesional no tiene la app. El chat vive solo en la app:
@@ -41,7 +43,7 @@ function buildDraftHref({
 }: MessageLauncherProps) {
   const params = new URLSearchParams({ draftChat: "1" });
   if (typeof window !== "undefined") {
-    const origin = (window.location.pathname + window.location.search).replace(/^\/(?:es|en)(?=\/|$)/u, "") || "/";
+    const origin = (window.location.pathname + window.location.search).replace(/^\/(?:es|en)(?=\/|[?#]|$)/u, "") || "/";
     params.set("back", origin);
   }
   if (professionalId) params.set("professionalId", professionalId);
@@ -101,7 +103,9 @@ export function MessageLauncher(props: MessageLauncherProps) {
   async function abrirHilo(texto: string) {
     // Enter the composer directly. Opening a contact never sends a message;
     // the conversation is created/reused only when the user presses Send.
-    router.push(buildDraftHref({ ...props, initialMessage: texto }));
+    const href = buildDraftHref({ ...props, initialMessage: texto });
+    if (props.onNavigate) props.onNavigate(href);
+    else router.push(href);
   }
 
   async function openMessage() {

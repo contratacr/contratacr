@@ -8,7 +8,7 @@
     "handlers": 96,
     "components": 238,
     "hooks": 25,
-    "specs": 125
+    "specs": 126
   },
   "dashboardTabs": [
     "home",
@@ -2253,7 +2253,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 590,
+          "line": 596,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -2261,7 +2261,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 615,
+          "line": 621,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -2269,7 +2269,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 622,
+          "line": 628,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -2277,7 +2277,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 797,
+          "line": 803,
           "tag": "a",
           "label": "{k === \"website\" ? t(\"linksWebsite\") : k}",
           "handler": "{() => trackInteraction({\n                type: \"external_link_click\",\n                professionalId: professional.id,\n                source: \"profile_social\",\n                locale,\n                metadata: { channel: k },\n              })}",
@@ -2285,7 +2285,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 854,
+          "line": 860,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -2293,7 +2293,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 873,
+          "line": 879,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -2301,7 +2301,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 979,
+          "line": 985,
           "tag": "button",
           "label": "{`${professional.ratingAvg.toFixed(1)} · ${t(\"reviewCountLabel\", { count: professional.reviewCount })}`}",
           "handler": "{() => setActiveTab(\"resenas\")}",
@@ -2309,7 +2309,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1044,
+          "line": 1050,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setActiveTab(tab.id)}",
@@ -2317,7 +2317,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1148,
+          "line": 1154,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => hasFullDescription && setServiceDescriptionOpen({ title, description })}",
@@ -2325,7 +2325,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1223,
+          "line": 1229,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -2333,7 +2333,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1270,
+          "line": 1276,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -2341,7 +2341,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1537,
+          "line": 1543,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -2349,7 +2349,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1543,
+          "line": 1549,
           "tag": "button",
           "label": "{t(\"cerrar\")}",
           "handler": "{() => setOfrecerProyecto(false)}",
@@ -7933,7 +7933,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 94,
+          "line": 92,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{load}",
@@ -7941,7 +7941,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 98,
+          "line": 96,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => inspect(rows.filter(row => !reviews[row.accountId] || reviews[row.accountId].kind === \"unavailable\").length ? rows.filter(row => !reviews[row.accountId] || reviews[row.accountId].kind === \"unavailable\") : rows)}",
@@ -7949,7 +7949,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 98,
+          "line": 96,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => verify(eligible)}",
@@ -7957,7 +7957,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 100,
+          "line": 98,
           "tag": "input",
           "label": "\"Buscar pendiente\"",
           "handler": "{event => setQ(event.target.value)}",
@@ -7965,7 +7965,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 100,
+          "line": 98,
           "tag": "select",
           "label": "\"Filtrar pendientes\"",
           "handler": "{event => setFilter(event.target.value)}",
@@ -7973,7 +7973,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 107,
+          "line": 105,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => inspect([row])}",
@@ -7981,7 +7981,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 107,
+          "line": 105,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => verify([row])}",
@@ -7989,7 +7989,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 107,
+          "line": 105,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -11319,7 +11319,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 276,
+          "line": 277,
           "tag": "CurrentIdentificationPanel",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -11327,7 +11327,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 287,
+          "line": 288,
           "tag": "CurrentIdentificationPanel",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -11335,7 +11335,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 386,
+          "line": 387,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{onChangeClick}",
@@ -12400,7 +12400,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 245,
+          "line": 253,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => onNavigate(result.profileHref)}",
@@ -12408,7 +12408,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 271,
+          "line": 267,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => onNavigate(result.profileHref)}",
@@ -12416,7 +12416,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 281,
+          "line": 278,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => onNavigate(result.actionHref)}",
@@ -12424,7 +12424,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 579,
+          "line": 591,
           "tag": "button",
           "label": "{copy.closedLabel}",
           "handler": "{() => setOpen(true)}",
@@ -12432,7 +12432,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 633,
+          "line": 645,
           "tag": "button",
           "label": "{lang === \"en\" ? \"Open menu\" : \"Abrir menú\"}",
           "handler": "{() => window.dispatchEvent(new Event(\"ccr:open-mobile-menu\"))}",
@@ -12440,7 +12440,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 641,
+          "line": 653,
           "tag": "Link",
           "label": "\"ContrataCR\"",
           "handler": "{(event) => {\n                  // El logo SIEMPRE deja al usuario en la portada: cierra esta\n                  // ventana y, si la ruta de abajo no era la portada, navega.\n                  // Sin esto, abierto desde la portada era un no-viaje mudo.\n                  event.preventDefault();\n                  setOpen(false);\n                  const enPortada = /^\\/(?:es|en)?\\/?$/.test(window.location.pathname);\n                  if (!enPortada) router.push(\"/\");\n                }}",
@@ -12448,7 +12448,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 661,
+          "line": 673,
           "tag": "button",
           "label": "{lang === \"en\" ? \"Back\" : \"Atrás\"}",
           "handler": "{onBack}",
@@ -12456,7 +12456,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 675,
+          "line": 687,
           "tag": "button",
           "label": "{copy.reset}",
           "handler": "{resetConversation}",
@@ -12464,7 +12464,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 688,
+          "line": 700,
           "tag": "button",
           "label": "{copy.minimize}",
           "handler": "{() => setOpen(false)}",
@@ -12472,7 +12472,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 716,
+          "line": 728,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => navigate(message.action!.href)}",
@@ -12480,7 +12480,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 722,
+          "line": 734,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => void suggestService(index, message.suggestedService!)}",
@@ -12488,7 +12488,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 753,
+          "line": 765,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => void ask(topic.prompt)}",
@@ -12496,7 +12496,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 788,
+          "line": 800,
           "tag": "form",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{submitDraft}",
@@ -12504,7 +12504,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 789,
+          "line": 801,
           "tag": "input",
           "label": "{lang === \"en\" ? \"Ask anything...\" : \"Escribe una pregunta...\"}",
           "handler": "{(event) => setDraft(event.target.value.slice(0, 240))}",
@@ -12512,7 +12512,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 795,
+          "line": 807,
           "tag": "button",
           "label": "{copy.send}",
           "handler": "",
@@ -16264,7 +16264,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 137,
+          "line": 141,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setRegistrando(true)}",
@@ -16272,7 +16272,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 151,
+          "line": 155,
           "tag": "textarea",
           "label": "{t(\"marcador\")}",
           "handler": "{(e) => setBorrador(e.target.value.slice(0, 1000))}",
@@ -16280,7 +16280,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 180,
+          "line": 184,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => void openMessage()}",
@@ -21604,7 +21604,7 @@
         },
         {
           "line": 87,
-          "title": "`read-only classification ${kind} ${result.found ? result.idType : \"missing\"}`"
+          "title": "`read-only classification ${kind} ${result.found ? result.idType + \" \" + result.fullName : \"missing\"}`"
         },
         {
           "line": 91,
@@ -21632,7 +21632,7 @@
         },
         {
           "line": 139,
-          "title": "\"a single matching first name or an email address is insufficient for automatic approval\""
+          "title": "\"a found record uses the official name even when the saved name was partial or an email\""
         },
         {
           "line": 145,
@@ -22146,6 +22146,27 @@
         {
           "line": 64,
           "title": "\"con la cookie de la app el servidor manda la cabecera sin acciones de la web\""
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/assistant-navigation.spec.ts",
+      "cases": [
+        {
+          "line": 5,
+          "title": "`native assistant ${locale} keeps badges beside names and restores the chat after profile/search navigation`"
+        },
+        {
+          "line": 6,
+          "title": "!canRunSeededRegression()"
+        },
+        {
+          "line": 57,
+          "title": "\"signed-in assistant Message enters the draft section and back restores the conversation\""
+        },
+        {
+          "line": 58,
+          "title": "!canRunSeededRegression()"
         }
       ]
     },
@@ -22988,38 +23009,42 @@
         },
         {
           "line": 123,
-          "title": "\"company record remains pending representation review; missing personal ID remains eligible to appeal\""
+          "title": "\"all found ID types accept the official record; missing records remain eligible to appeal\""
         },
         {
-          "line": 129,
+          "line": 132,
           "title": "\"temporary outage preserves account state and sends no rejection or outreach\""
         },
         {
-          "line": 133,
+          "line": 136,
           "title": "\"human approval and appeals are never taken over by automatic checks\""
         },
         {
-          "line": 139,
+          "line": 142,
+          "title": "\"a prior human decision or open document case prevents automatic approval of a found record\""
+        },
+        {
+          "line": 150,
           "title": "\"manual appeals reuse one case/message per identity and preserve admin handling\""
         },
         {
-          "line": 156,
+          "line": 167,
           "title": "\"appeal route authenticates, ignores caller-supplied professional IDs and blocks profile mismatches\""
         },
         {
-          "line": 171,
+          "line": 182,
           "title": "\"changing an approved ID clears its old approval before saving the new document\""
         },
         {
-          "line": 185,
+          "line": 196,
           "title": "\"publishing a project cannot synchronize an automatic approval over a manual appeal\""
         },
         {
-          "line": 191,
+          "line": 202,
           "title": "\"retrying an existing document submission enters manual review without duplicate uploads\""
         },
         {
-          "line": 210,
+          "line": 221,
           "title": "\"an admin review cannot verify a document changed after its inspection\""
         }
       ]

@@ -1648,7 +1648,7 @@
     "hasCedulaTitle": "¿Ya tienes identificación costarricense?",
     "hasCedulaBody": "Agrégala para cotejar sus datos con Hacienda. Si no se encuentra, puedes solicitar revisión manual.",
     "enterCedulaTitle": "Verifica tu identidad con tu identificación",
-    "enterCedulaBody": "Ingresa tu identificación y confirma los datos. Consultamos nacionales, jurídicas, DIMEX y NITE; las empresas requieren revisión de representación.",
+    "enterCedulaBody": "Ingresa tu identificación y confirma los datos. Consultamos nacionales, jurídicas, DIMEX y NITE con el mismo criterio de cotejo de datos.",
     "verifying": "Verificando…",
     "addCedula": "Agregar",
     "savingCedula": "Agregando…",
@@ -2043,7 +2043,7 @@
     "step1Title": "Cédula real",
     "step1Body": "Consultamos el número de identificación nacional, jurídica, DIMEX o NITE en la API pública de Hacienda.",
     "step2Title": "Tu nombre oficial",
-    "step2Body": "Cotejamos el número, tipo y nombre encontrados. Las empresas también requieren revisión de representación. La consulta no prueba quién utiliza la cuenta.",
+    "step2Body": "Cotejamos el número, tipo y nombre encontrados. La consulta no prueba quién utiliza la cuenta ni la representación legal de una empresa.",
     "step3Title": "Datos siempre al día",
     "step3Body": "Si Hacienda no encuentra tu identificación, puedes apelar para revisión manual desde tu panel. Un fallo temporal se reintenta y no se considera un rechazo.",
     "disclaimerTitle": "Aviso importante",
@@ -3193,6 +3193,7 @@
     "allJobs": "Ver todos los empleos",
     "backToProjects": "Volver a proyectos",
     "allProjects": "Ver todos los proyectos",
+    "backToAssistant": "Volver al asistente",
     "backToNotifications": "Volver a notificaciones"
   },
   "tableroBuscador": {
@@ -3343,7 +3344,7 @@
   "verificationBadge": {
     "title": "Identidad verificada",
     "action": "Identidad verificada: ver qué se comprobó",
-    "description": "El check indica un cotejo del número, tipo y nombre con Hacienda o una revisión manual de documentos. La consulta automática no demuestra quién usa la cuenta ni realiza reconocimiento biométrico.",
+    "description": "El check indica un cotejo del número, tipo y nombre con Hacienda o una revisión manual de documentos. La consulta automática no demuestra quién usa la cuenta, no realiza reconocimiento biométrico ni comprueba representación legal.",
     "scope": "El distintivo no garantiza la calidad del trabajo ni acredita certificaciones profesionales. Revisa también el perfil, las reseñas y los detalles del servicio.",
     "close": "Cerrar",
     "understood": "Entendido",

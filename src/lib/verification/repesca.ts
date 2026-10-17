@@ -66,7 +66,7 @@ export async function repescarVerificacionesSinRespuesta(opts: { simular?: boole
       const pro = (pendientes ?? []).find((p) => p.id === id);
       const salida = await verificador.lookup(String((pro?.profiles as unknown as { cedula?: string } | null)?.cedula ?? ""));
       if (salida.unavailable) padronSigueCaido += 1;
-      else if (salida.found && salida.idType !== "juridica") verificados += 1;
+      else if (salida.found && !!salida.fullName) verificados += 1;
       else siguenPendientes += 1;
     }
     return { simulado: true, revisados, verificados, siguenPendientes, padronSigueCaido };

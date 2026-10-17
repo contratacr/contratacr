@@ -20,10 +20,18 @@ export async function runIdentityVerification(
   if (readError || !pro) return "skipped";
   // Never take over a human review or replace an existing/manual approval.
   if (pro.verification_status === "verified" || pro.is_verified) return "verified";
-  if (pro.verification_status === "under_appeal") return "ticket";
+  if (pro.verification_status === "under_appeal" || pro.verification_status === "rejected") return "ticket";
   const profile = pro.profiles as unknown as { full_name: string | null; cedula: string | null };
   const cedula = cleanId(profile?.cedula ?? "");
   if (!cedula || (opts.expectedCedula && cedula !== opts.expectedCedula)) return "skipped";
+  const [history, cases] = await Promise.all([
+    admin.from("provider_verification_log").select("id").eq("professional_id", pro.id)
+      .in("action", ["verified", "authorized", "rejected", "reverted_pending", "under_appeal"]).limit(1),
+    admin.from("support_tickets").select("id").eq("user_id", pro.profile_id)
+      .in("topic", ["verification_documents", "verification_appeal"]).in("status", ["open", "in_progress"]).limit(1),
+  ]);
+  if (history.error || cases.error) return "skipped";
+  if (history.data?.length || cases.data?.length) return "ticket";
   const fullName = profile.full_name ?? "";
   const result = await getIdentityVerifier().lookup(cedula);
   if (result.unavailable) {
@@ -34,14 +42,11 @@ export async function runIdentityVerification(
     });
     return "skipped"; // No rejection, review email or change to a human decision.
   }
-  const company = result.idType === "juridica";
-  const verified = result.found && !!result.fullName && !company;
+  const verified = result.found && !!result.fullName;
   const now = new Date().toISOString();
   const target = verified ? "verified" : "pending";
-  const provider = company ? "hacienda_api_juridica" : result.provider;
-  const reason = company
-    ? "Hacienda confirmó la razón social. Falta comprobar la representación de la empresa. Puedes solicitar revisión manual."
-    : "No encontramos esta identificación en Hacienda. Puedes apelar para revisión manual; esto no significa que sea inválida.";
+  const provider = result.provider;
+  const reason = "No encontramos esta identificación en Hacienda. Puedes apelar para revisión manual; esto no significa que sea inválida.";
   if (verified && result.fullName) {
     const name = await verifiedProfileName(admin, pro.profile_id, fullName, cedula, result.fullName);
     if (name !== fullName) {
