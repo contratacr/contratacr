@@ -34,7 +34,8 @@ enabled = false
 sql_paths = []
 
 [realtime]
-enabled = false
+# Browser regression covers incoming chat messages over a real subscription.
+enabled = true
 
 [studio]
 enabled = false

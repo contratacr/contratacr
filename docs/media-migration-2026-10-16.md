@@ -58,3 +58,11 @@ La revisión directa del origen R2 cubrió 687 URL activas distintas: cero objet
 En test se optimizaron además 17 fuentes grandes que ya estaban en R2, con 23 registros actualizados: 18.023.842 → 5.077.886 bytes. La auditoría final directa cubrió 495 URL activas sin objetos ausentes ni imágenes superiores a 512 KiB (máximo 520.637 bytes). No se generó actividad ni avisos de seguidores. Las fotos de perfil de R2 de test también cumplen el límite de 150 KiB.
 
 Las nuevas cargas públicas de servicios, casos de éxito y promociones usan también el presupuesto compartido de 512 KiB antes de subir; los adjuntos de chat/soporte siguen su política propia. La prueba de cámara lo comprueba junto con el presupuesto de avatar en los tres navegadores.
+
+## Compatibilidad de las fotos con tarjetas compartidas
+
+La revisión adicional detectó que el renderizador de Open Graph acepta JPEG/PNG, pero no los WebP generados por la primera optimización. Se normalizaron únicamente avatares y fotos de promociones que usan esas tarjetas, conservando transparencia con PNG y usando JPEG para las fotos opacas. Los originales y las versiones anteriores permanecen en R2. Las utilidades de migración comparten ahora esa misma conversión y los límites de 150 KiB/800 px para avatar y 512 KiB/1.600 px para fotos públicas.
+
+Producción: 246 archivos y 243 filas comprobados; 42 metadatos de avatar de acceso sincronizados. Test: 230 archivos y 231 filas comprobados; sin metadatos de acceso pendientes. La prueba dirigida verifica conversión, transparencia, presupuesto y el render real mediante ImageResponse en los tres navegadores. La tarjeta pública de SG Solutions respondió 200 PNG y muestra su fotografía tras la conversión.
+
+La auditoría posterior mantiene cero referencias activas de Cloudinary en ambos ambientes. El almacenamiento de medios ocupa 276,74 MB y conserva 1.849 objetos, incluidos respaldos y versiones anteriores; no representa solo las fotos activas. No se borró contenido de Cloudinary ni originales de R2.

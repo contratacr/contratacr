@@ -23125,6 +23125,10 @@
         {
           "line": 4,
           "title": "'camera images respect avatar and public-gallery budgets while small images stay intact'"
+        },
+        {
+          "line": 43,
+          "title": "'migration photos remain transparent when needed and render in Open Graph cards'"
         }
       ]
     },

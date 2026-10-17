@@ -258,3 +258,9 @@ La exploración adicional con las listas largas del espejo de test reprodujo un 
 La matriz de pruebas incorpora `card-actions-menu.spec.ts` (112 specs en total). La prueba de cierre exterior pulsa un punto visible del margen; llevar el enorme `main` a su primer píxel podía luchar con la restauración del scroll y bloquear la propia prueba.
 
 La siguiente ronda completa debe ejecutarse sobre el lote cerrado, sin publicar en App Store ni Google Play. Los objetivos manuales de rendimiento de las rutas públicas continúan pendientes; sus umbrales no se relajaron.
+
+### Disponibilidad real de Realtime en el entorno aislado
+
+La ronda móvil `38989299854` terminó con 124 aprobadas, dos fallos de recepción en vivo, dos saltos declarados y cuatro casos sin ejecutar. Las trazas muestran rechazo del handshake WebSocket (503): además de quitar Realtime de `--exclude`, era necesario habilitarlo en `supabase/config.toml`. Se habilita y ambos workflows comprueban una suscripción real a `direct_messages` antes de comenzar los navegadores. Un entorno sin Realtime falla en ese paso, sin consumir una ronda completa ni ocultar el fallo con reintentos. La comprobación no escribe mensajes ni accede a producción.
+
+Las fotos migradas usadas en Open Graph se conservan como JPEG/PNG compatibles. La regresión de presupuesto incorpora el render de una fotografía y transparencia; seis casos dirigidos aprobados entre Chromium móvil, WebKit móvil y escritorio. No se publicaron versiones móviles.
