@@ -65,7 +65,8 @@ export function QuoteEditorModal({ open, onClose, projectId, defaultTitle, clien
   const [notes, setNotes] = useState(inicial?.notes ?? "");
   const [validDays, setValidDays] = useState(inicial?.validDays ?? 15);
   // La vigencia se dice como fecha, que es lo que el cliente va a leer.
-  const validaHasta = new Date(Date.now() + validDays * 86_400_000).toLocaleDateString(DATE_LOCALE[locale] ?? "es-CR", { day: "numeric", month: "short" });
+  const [openedAt] = useState(() => Date.now());
+  const validaHasta = new Date(openedAt + validDays * 86_400_000).toLocaleDateString(DATE_LOCALE[locale] ?? "es-CR", { day: "numeric", month: "short" });
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -167,6 +168,7 @@ export function QuoteEditorModal({ open, onClose, projectId, defaultTitle, clien
             <p className={tituloBloque}><User className="h-3.5 w-3.5" />{t("forWhomLabel")}</p>
             <div className="flex flex-col gap-3 sm:grid sm:grid-cols-2 sm:gap-x-4">
               <div className="sm:col-span-2">
+                <p className="mb-2 text-xs leading-5 text-[#52627a]">{t("clientCedulaLookupNotice")}</p>
                 <CedulaInput value={cedula} onChange={setCedula} labelText={t("clientCedulaLabel")} />
                 {buscandoCedula && <p className="mt-1.5 inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#0089bb]"><Loader2 className="h-3.5 w-3.5 animate-spin" />{t("clientCedulaSearching")}</p>}
                 {cedulaSinRegistro && <p className="mt-1.5 text-[12px] text-[#68778d]">{t("clientCedulaNotFound")}</p>}

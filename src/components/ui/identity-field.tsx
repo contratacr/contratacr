@@ -10,7 +10,7 @@ import { IdentityInfoBlock } from "@/components/ui/identity-info-block";
 import { cleanId, isValidId } from "@/lib/cedula";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 
-// Identity field: cédula → padrón lookup → confirm the OFFICIAL info (no typing
+// Identity field: cédula → Hacienda lookup → confirm the OFFICIAL info (no typing
 // your own name for verification). Found → official name auto-filled + confirmed
 // (identity will auto-verify); shows name + cédula (+ DOB/age when available) with
 // a "¿No es tu información?" link. Not found → manual name + "pendiente de revisión".
@@ -25,7 +25,7 @@ interface Props {
   onFullNameChange: (fullName: string) => void;
   onStatusChange?: (status: IdentityStatus) => void;
   onResult?: (r: IdentityResult) => void;
-  /** Fired when the user clicks "¿No es tu información?" — the padrón match must be
+  /** Fired when the user clicks "¿No es tu información?" — the Hacienda match must be
    *  DISCARDED and the case routed to manual admin review (never auto-verified). */
   onMismatch?: () => void;
   cedulaError?: string;
@@ -51,7 +51,7 @@ export function IdentityField({
   const [dob, setDob] = useState<string | null>(null);
   const [manualOverride, setManualOverride] = useState(false);
   const reqId = useRef(0);
-  // The last name we AUTO-FILLED from the padrón. When the cédula changes we use it to
+  // The last name we AUTO-FILLED from the Hacienda. When the cédula changes we use it to
   // clear the stale auto-filled name (so a different/longer ID never keeps the prior
   // person's name); a name the user typed manually is never touched.
   const lastAutoName = useRef("");
@@ -61,7 +61,7 @@ export function IdentityField({
     onStatusChange?.(s);
   }
 
-  // Debounced padrón lookup whenever a valid cédula is present.
+  // Debounced Hacienda lookup whenever a valid cédula is present.
   useEffect(() => {
     const clean = cleanId(cedula);
     const myReq = ++reqId.current;
@@ -119,11 +119,12 @@ export function IdentityField({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cedula]);
 
-  const showManualName = status === "notfound" || status === "idle" || manualOverride;
+  const showManualName = status === "notfound" || status === "unavailable" || status === "idle" || manualOverride;
 
   return (
     <div className="flex flex-col gap-3">
       <VerificationBadgeEducation />
+      <p className="text-xs leading-5 text-[#52627a]">{t("lookupNotice")}</p>
       <CedulaInput
         required
         value={cedula}
@@ -138,8 +139,8 @@ export function IdentityField({
         </div>
       )}
 
-      {/* Found in the padrón → confirm the official info */}
-      {/* Found in the padrón → confirm the official info. The "¿No es tu información?"
+      {/* Found in the Hacienda → confirm the official info */}
+      {/* Found in the Hacienda → confirm the official info. The "¿No es tu información?"
           mismatch override was removed: the cédula auto-fills the official identity and
           there is no "this isn't me" option (use your own cédula, or "No tengo cédula"). */}
       {status === "found" && !manualOverride && (
@@ -151,7 +152,7 @@ export function IdentityField({
         />
       )}
 
-      {/* Not in the padrón → manual name + pending notice */}
+      {/* Not in the Hacienda → manual name + pending notice */}
       {status === "unavailable" && (
         <div role="status" aria-live="polite" className="rounded-2xl border border-[#bae6fd] bg-[#f0f9ff] px-4 py-3 text-sm shadow-sm">
           <div className="flex items-start gap-3">

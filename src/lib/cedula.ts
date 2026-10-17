@@ -4,10 +4,8 @@
 // or spaces (e.g. "101230456") because TSE/Hacienda/SINPE expect the seamless
 // form. Hyphens are display-only.
 //
-// We do NOT compute a local check digit. Real validation for personal national
-// IDs is a live lookup against the TSE/Registro Civil padron. Legal entity IDs
-// are accepted as valid format but must be reviewed separately because they do
-// not represent a physical person in the TSE padron.
+// Format checks are local only. Hacienda supplies the authoritative type/name;
+// company representation and records not found require manual review.
 
 export type IdType = "cedula" | "juridica" | "dimex" | "nite";
 
@@ -19,15 +17,15 @@ export function cleanId(value: string): string {
 /**
  * Detect the document type from the clean digits.
  *  - Cedula nacional: 9 digits, first digit 1-9.
- *  - Cedula juridica: 10 digits starting with 3 (e.g. 3-101-XXXXXX).
- *  - NITE: 10 digits that are not detected as cedula juridica.
+ *  - Cedula juridica: 10 digits starting with 2, 3 or 4 (e.g. 3-101-XXXXXX).
+ *  - NITE: 10 digits that are not detected as cedula juridica (Hacienda returns the authoritative type).
  *  - DIMEX: 11 or 12 digits.
  * Returns null while the value is still too short / ambiguous.
  */
 export function detectIdType(value: string): IdType | null {
   const d = cleanId(value);
   if (d.length === 9 && /^[1-9]/.test(d)) return "cedula";
-  if (d.length === 10 && d.startsWith("3")) return "juridica";
+  if (d.length === 10 && /^[234]/.test(d)) return "juridica";
   if (d.length === 10) return "nite";
   if (d.length === 11 || d.length === 12) return "dimex";
   return null;
@@ -61,6 +59,6 @@ export function formatId(value: string): string {
 
 /** Format/length validation only. */
 export function isValidId(value: string): boolean {
-  return detectIdType(value) !== null;
+  return /^[\d\s-]+$/.test(value) && value.replace(/[\s-]/g, "").length <= 12 && detectIdType(value) !== null;
 }
 

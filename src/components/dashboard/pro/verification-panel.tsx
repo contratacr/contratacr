@@ -210,6 +210,7 @@ export function VerificationPanel({
 
     return (
       <>
+        <p className="mb-3 text-xs leading-5 text-[#52627a]">{ti("lookupNotice")}</p>
         <div className="grid gap-3">
           <CedulaInput
             required
@@ -277,7 +278,7 @@ export function VerificationPanel({
         fullName={hasCurrentCedula ? currentFullName : null} changeLabel={t("changeId")} addLabel={t("addId")}
         changeOpen={changeCedulaOpen} onChangeClick={() => setChangeCedulaOpen(open => !open)} />
       {changeCedulaOpen && <ActionPanel title={t("changeIdTitle")} body={t("changeIdBody")}>{renderCedulaVerifier()}</ActionPanel>}
-      <VerificationDocuments key={cleanCurrentCedula || "no-id"} legal={currentIdType === "juridica"} />
+      <VerificationDocuments key={cleanCurrentCedula || "no-id"} legal={currentIdType === "juridica"} onVerified={onSaved} />
     </div>
   );
 

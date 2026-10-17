@@ -1,3 +1,4 @@
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { NextResponse } from "next/server";
 import { mensajeDeError } from "@/lib/api-errors";
 import { createClient as createServerClient } from "@/lib/supabase/server";
@@ -6,7 +7,7 @@ import { runIdentityVerification } from "@/lib/verification/run-verification";
 
 // POST /api/verify-identity
 // Runs automatic identity verification for the calling professional against the
-// padrón. Called right after registration and from the verification panel. Only
+// Hacienda. Called right after registration and from the verification panel. Only
 // runs for the authenticated user's own professional record (internal use).
 export async function POST(req: Request) {
   const session = await createServerClient();
@@ -15,6 +16,8 @@ export async function POST(req: Request) {
   } = await session.auth.getUser();
   if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
+  const limited = enforceRateLimit(req, "verify-identity", 6, 60_000);
+  if (limited) return limited;
   const admin = createAdminClient();
   const { data: pro } = await admin
     .from("professionals")
@@ -28,6 +31,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, outcome: "verified" });
   }
 
-  const outcome = await runIdentityVerification(pro.id);
+  const outcome = await runIdentityVerification(pro.id, { notifyChannel: "in_app" });
   return NextResponse.json({ ok: true, outcome });
 }

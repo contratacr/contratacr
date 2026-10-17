@@ -1,15 +1,43 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { SupportLink } from "@/components/support/support-link";
 import { Check, X } from "lucide-react";
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 
 export const verificationActionButtonClass = "inline-flex h-10 w-full items-center justify-center rounded-full border px-4 text-sm font-bold transition-colors sm:w-56";
 
-export function VerificationDocuments({ legal, preview = false }: { legal: boolean; preview?: boolean }) {
+export function VerificationDocuments({ legal, preview = false, onVerified }: { legal: boolean; preview?: boolean; onVerified?: () => void }) {
   const en = useLocale() === "en";
+  const t = useTranslations("manualVerification");
+  const [isLegal, setIsLegal] = useState(legal);
+  const [requested, setRequested] = useState(false);
+  const [message, setMessage] = useState("");
+  const [retryNote, setRetryNote] = useState("");
+  async function retry() {
+    if (preview) return;
+    setBusy(true); setError(""); setRetryNote("");
+    try {
+      const response = await fetch("/api/verify-identity", { method: "POST" });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+      if (data.outcome === "verified") { onVerified?.(); return; }
+      setRetryNote(t(data.outcome === "skipped" ? "unavailable" : "pending"));
+    } catch (cause) { setError(cause instanceof Error ? cause.message : t("error")); }
+    finally { setBusy(false); }
+  }
+  async function appeal() {
+    if (preview) return;
+    setBusy(true); setError("");
+    try {
+      const response = await fetch("/api/appeals", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+      setRequested(true); setMessage("");
+    } catch (cause) { setError(cause instanceof Error ? cause.message : t("error")); }
+    finally { setBusy(false); }
+  }
   const [files, setFiles] = useState<Record<string, File>>({});
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
@@ -21,7 +49,7 @@ export function VerificationDocuments({ legal, preview = false }: { legal: boole
     fetch("/api/verification/documents").then(async response => {
       if (!response.ok) throw new Error();
       const data = await response.json();
-      if (active) { setSubmitted(data.submitted); setLoaded(true); }
+      if (active) { setSubmitted(data.submitted); setRequested(!!data.reviewRequested); if (typeof data.legal === "boolean") setIsLegal(data.legal); setLoaded(true); }
     }).catch(() => { if (active) setError(en ? "Could not load your review. Reload to try again." : "No se pudo cargar tu revisión. Recarga para intentarlo de nuevo."); });
     return () => { active = false; };
   }, [preview, en]);
@@ -40,13 +68,24 @@ export function VerificationDocuments({ legal, preview = false }: { legal: boole
   }
   const refs = useRef<Record<string, HTMLInputElement | null>>({});
   const documents = [
-    { id: "identity", title: legal ? (en ? "Authorized person" : "Persona autorizada") : (en ? "Photo with your ID" : "Foto con tu identificación"), description: en ? "Hold your ID next to your face, with the details clearly visible." : "Tu rostro junto a la identificación, con los datos legibles." },
-    ...(legal ? [{ id: "company", title: en ? "Legal representation" : "Personería o autorización", description: en ? "A current document confirming your authorization to represent the company." : "Documento vigente que confirme la representación de la empresa." }] : []),
+    { id: "identity", title: isLegal ? (en ? "Authorized person" : "Persona autorizada") : (en ? "Photo with your ID" : "Foto con tu identificación"), description: en ? "Hold your ID next to your face, with the details clearly visible." : "Tu rostro junto a la identificación, con los datos legibles." },
+    ...(isLegal ? [{ id: "company", title: en ? "Legal representation" : "Personería o autorización", description: en ? "A current document confirming your authorization to represent the company." : "Documento vigente que confirme la representación de la empresa." }] : []),
   ];
   const ready = documents.every(doc => files[doc.id]);
   return <div data-testid="verification-documents" className="space-y-5">
     <UnsavedChangesGuard dirty={Object.keys(files).length > 0 && !submitted} />
     <section className="bg-white">
+      {!submitted && <div className="mb-5 space-y-3">
+        <p className="text-sm leading-6 text-[#52627a]">{t("body")}</p>
+        {!requested && <button type="button" onClick={retry} disabled={busy || !loaded || preview} className={`${verificationActionButtonClass} border-[#d7e1ea] text-[#162543] disabled:opacity-45`}>{t("retry")}</button>}
+        {retryNote && <p role="status" className="text-sm text-[#52627a]">{retryNote}</p>}
+        {requested ? <p role="status" className="text-sm font-semibold text-[#087ca3]">{t("requested")}</p> : <>
+          <label className="block text-sm font-semibold text-[#162543]" htmlFor="verification-appeal-message">{t("reason")}</label>
+          <textarea id="verification-appeal-message" value={message} onChange={event => setMessage(event.target.value)} maxLength={2000} disabled={busy || !loaded} rows={3} className="w-full rounded-xl border border-[#d7e1ea] p-3 text-sm text-[#162543]" />
+          <button type="button" onClick={appeal} disabled={busy || !loaded || preview} className={`${verificationActionButtonClass} border-[#009FD9] text-[#087ca3] disabled:opacity-45`}>{busy ? t("sending") : t("request")}</button>
+        </>}
+        {requested && <SupportLink className="text-sm font-semibold text-[#009FD9]">{t("viewCase")}</SupportLink>}
+      </div>}
       {submitted && <p role="status" className="mb-4 flex items-center gap-2 text-sm font-semibold text-[#087ca3]"><Check className="h-4 w-4" aria-hidden="true" />{en ? "Documents under review" : "Documentos en revisión"}</p>}
       {submitted && <SupportLink className="text-sm font-semibold text-[#009FD9]">{en ? "View my case" : "Ver mi caso"}</SupportLink>}
       <div className="pb-1">

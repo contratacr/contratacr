@@ -74,13 +74,13 @@ export async function notifyVerificationDecision({
       type = "verification_pending";
       title = "Tu verificación está en revisión";
       message =
-        "No pudimos confirmar automáticamente tu identidad (cédula no encontrada o el nombre no coincide). Tu caso quedó en revisión; tu cuenta sigue activa.";
+        "No se completó la verificación automática de los datos o falta revisar la representación de tu empresa. Puedes solicitar revisión manual desde tu panel; tu cuenta sigue activa.";
       html = emailShell(
         firstName,
         "Tu verificación está en revisión",
         "#b45309",
-        `No pudimos confirmar automáticamente tu identidad contra los registros oficiales (la cédula no se encontró o el nombre no coincidió lo suficiente).
-         Tu caso quedó <strong>pendiente de revisión</strong>. Revisa que tu nombre coincida con tu cédula y, si hace falta, apela desde tu panel. Tu cuenta sigue activa mientras tanto.`,
+        `No se completó el cotejo automático de tus datos con Hacienda o falta revisar la representación de tu empresa.
+         Puedes <strong>solicitar revisión manual</strong> y adjuntar los documentos desde tu panel. Tu cuenta sigue activa mientras tanto.`,
         "Ver mi verificación"
       );
     } else if (kind === "rejected") {

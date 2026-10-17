@@ -15,7 +15,7 @@ export async function syncProfessionalVerificationFromAccount(
     .eq("profile_id", profileId)
     .maybeSingle();
 
-  if (!pro) return;
+  if (!pro || pro.verification_status === "under_appeal") return;
 
   const now = new Date().toISOString();
 
@@ -32,7 +32,7 @@ export async function syncProfessionalVerificationFromAccount(
         verification_updated_at: now,
         is_verified: true,
       })
-      .eq("id", pro.id);
+      .eq("id", pro.id).eq("verification_status", pro.verification_status);
     return;
   }
 
@@ -48,6 +48,6 @@ export async function syncProfessionalVerificationFromAccount(
         verification_updated_at: now,
         is_verified: false,
       })
-      .eq("id", pro.id);
+      .eq("id", pro.id).eq("verification_status", pro.verification_status);
   }
 }

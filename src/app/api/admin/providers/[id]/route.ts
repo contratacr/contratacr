@@ -45,8 +45,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
   // Automatic ID-format assist (format/length only — human review still required
   // for the badge). The live name-match lookup uses the shared identity verifier
-  // so deployed environments read the padrón from Cloudflare D1 first. Neon is
-  // optional; the retired Supabase padrón is never queried.
+  // so all environments consult the same free Hacienda API.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const cedula = cleanId((pro.profiles as any)?.cedula ?? "");
   const detectedIdType = cedula ? detectIdType(cedula) : null;
@@ -59,7 +58,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       }
     : { value: "", valid: false, type: null, typeLabel: null };
 
-  // Live padrón comparison for the manual reviewer (entered vs official name).
+  // Live Hacienda comparison for the manual reviewer (entered vs official name).
   // Read-only/transient — not stored on the profile (data minimization).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const enteredName: string = (pro.profiles as any)?.full_name ?? "";
@@ -73,17 +72,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     reason?: string;
     source?: string;
   } | null = null;
-  if (cedula && detectedIdType === "juridica") {
-    padron = {
-      found: false,
-      name: "",
-      score: 0,
-      matched: false,
-      skipped: true,
-      reason: "La cédula jurídica no devuelve nombre desde el padrón TSE. Revísala manualmente con la documentación o datos de la empresa.",
-    };
-  } else if (cedula) {
+  if (cedula) {
     const lookup = await getIdentityVerifier().lookup(cedula);
+    if (lookup.idType) { idAssist.type = lookup.idType; idAssist.typeLabel = idTypeLabel(lookup.idType); }
     if (lookup.unavailable) {
       padron = {
         found: false,
@@ -91,7 +82,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
         score: 0,
         matched: false,
         unavailable: true,
-        reason: "No pudimos consultar el padrón en este momento. Intenta nuevamente o revisa la documentación manualmente.",
+        reason: "No pudimos consultar Hacienda en este momento. Intenta nuevamente o revisa la documentación manualmente.",
         source: lookup.provider,
       };
     } else if (lookup.found && lookup.fullName) {
@@ -104,7 +95,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   }
 
   const { data: cases, error: caseError } = await db.from("support_tickets").select("id")
-    .eq("professional_id", id).eq("topic", "verification_documents").order("created_at", { ascending: false }).limit(10);
+    .eq("professional_id", id).in("topic", ["verification_documents", "verification_appeal"]).order("created_at", { ascending: false }).limit(10);
   if (caseError) return NextResponse.json({ error: "No se pudieron cargar los documentos." }, { status: 503 });
   let documents: { attachments: import("@/lib/support/adjuntos").AdjuntoDeSoporte[]; created_at: string }[] = [];
   if (cases?.length) {
@@ -113,5 +104,5 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     if (documentsError) return NextResponse.json({ error: "No se pudieron cargar los documentos." }, { status: 503 });
     documents = await firmarAdjuntos(db, rows ?? []);
   }
-  return NextResponse.json({ documents, provider: pro, log: log ?? [], appeals: appeals ?? [], idAssist, padron });
+  return NextResponse.json({ documents, provider: pro, log: log ?? [], appeals: appeals ?? [], idAssist, padron }, { headers: { "Cache-Control": "no-store" } });
 }

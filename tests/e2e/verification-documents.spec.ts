@@ -50,6 +50,18 @@ for (const kind of ["company", "person"] as const) test(`private verification do
     }
     await page.screenshot({path: capturePath(`${kind}-live-${test.info().project.name}.png`), fullPage: true});
     await panel.locator("..").screenshot({path: capturePath(`${kind}-detail-${test.info().project.name}.png`)});
+    await panel.getByLabel("Motivo (opcional, hasta 2000 caracteres)").fill("Mi identificación no se encontró; solicito revisión manual.");
+    const [appealResponse] = await Promise.all([
+      page.waitForResponse(response => response.url().endsWith("/api/appeals") && response.request().method() === "POST"),
+      panel.getByRole("button", { name: "Solicitar revisión manual", exact: true }).click(),
+    ]);
+    expect(appealResponse.status()).toBe(200);
+    ticketId = (await appealResponse.json()).ticketId;
+    expect((await (await api.post("/api/appeals", { headers: apiHeaders, data: { message: "Retry" } })).json()).ticketId).toBe(ticketId);
+    expect((await (await api.get("/api/verification/documents")).json()).reviewRequested).toBe(true);
+    const { data: appealed } = await db.from("professionals").select("verification_status").eq("id", pro.id).single();
+    expect(appealed?.verification_status).toBe("under_appeal");
+    expect((await (await api.post("/api/verify-identity", { headers: apiHeaders })).json()).outcome).toBe("ticket");
     const invalid = await api.post("/api/verification/documents", { headers: apiHeaders, multipart: { identity: { name: "false.png", mimeType: "image/png", buffer: Buffer.from("not an image") }, company: "missing" } });
     expect(invalid.status()).toBe(400);
     const image = { name: "regression-fixture.png", mimeType: "image/png", buffer: readFileSync("public/brand/logo-primary.png") };
@@ -71,7 +83,7 @@ for (const kind of ["company", "person"] as const) test(`private verification do
     expect((await retry.json()).ticketId).toBe(ticketId);
     await db.from("professionals").update({ verification_updated_at: new Date().toISOString() }).eq("id", pro.id);
     expect((await (await api.get("/api/verification/documents")).json()).submitted).toBe(true);
-    const { data: messages, error: messageError } = await db.from("support_ticket_messages").select("attachments").eq("ticket_id", ticketId!);
+    const { data: messages, error: messageError } = await db.from("support_ticket_messages").select("attachments").eq("ticket_id", ticketId!).eq("id", ticketId!);
     expect(messageError).toBeNull(); expect(messages).toHaveLength(1);
     expect(messages![0].attachments).toHaveLength(kind === "company" ? 2 : 1);
     expect(messages![0].attachments[0].name).toContain("Identificación");

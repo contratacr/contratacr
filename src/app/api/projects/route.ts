@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCategoryLabel, isHealthCategory, OTHER_CATEGORY } from "@/lib/data/categories";
 import { getProvinceById, getCantonById } from "@/lib/data/cr-geography";
-import { cleanId, detectIdType, isValidId } from "@/lib/cedula";
+import { cleanId, isValidId } from "@/lib/cedula";
 import { getIdentityVerifier } from "@/lib/verification/identity-verifier";
 import { syncProfessionalVerificationFromAccount } from "@/lib/verification/account-identity";
 import { parseMoneyAmount } from "@/lib/money-limits";
@@ -170,33 +170,39 @@ export async function POST(req: NextRequest) {
     let identityProvider: string | null = existingProfile?.client_identity_provider ?? null;
     let identityVerifiedAt: string | null = existingProfile?.client_identity_verified_at ?? null;
     // LA CÉDULA ES OPCIONAL AL PUBLICAR (8-oct-2026): sirve para que el
-    // proyecto salga con «Verificado», nunca para frenarlo. Si el padrón
+    // proyecto salga con «Verificado», nunca para frenarlo. Si Hacienda
     // no contesta o no la encuentra, el proyecto se publica igual, sin la
     // insignia y sin guardar un número que nadie confirmó; la respuesta dice
     // qué pasó para que el formulario lo explique.
     let cedulaGuardada: string | null = cedula || null;
     let identidad: "verificada" | "no_encontrada" | "padron_caido" | "en_revision" | null = null;
-    if (cedula) {
-      const idType = detectIdType(cedula);
-      if (idType === "cedula") {
-        const result = await getIdentityVerifier().lookup(cedula);
-        if (result.unavailable) {
-          cedulaGuardada = null;
-          identidad = "padron_caido";
-        } else if (result.found) {
-          identityProvider = result.provider;
+    const { data: currentProfessional, error: professionalReadError } = cedula
+      ? await admin.from("professionals").select("verification_status").eq("profile_id", uid).maybeSingle()
+      : { data: null, error: null };
+    if (cedula && (professionalReadError || currentProfessional?.verification_status === "under_appeal")) {
+      // Publishing a project must never bypass a human review or change its document.
+      cedulaGuardada = null;
+      identidad = "en_revision";
+    } else if (cedula) {
+      const result = await getIdentityVerifier().lookup(cedula);
+      const sameVerifiedDocument = existingProfile?.cedula === cedula && clientIdentityStatus === "verified";
+      if (!sameVerifiedDocument) { clientIdentityStatus = "pending"; identityVerifiedAt = null; identityProvider = null; }
+      if (result.unavailable) {
+        cedulaGuardada = sameVerifiedDocument ? cedula : null;
+        identidad = "padron_caido"; // Backwards-compatible response key: temporary source outage.
+      } else if (result.found && result.fullName) {
+        identityProvider = result.idType === "juridica" ? "hacienda_api_juridica" : result.provider;
+        if (result.idType === "juridica") {
+          identidad = "en_revision";
+        } else {
           clientIdentityStatus = "verified";
-          officialName = result.fullName ?? null;
+          officialName = result.fullName;
           identityVerifiedAt = new Date().toISOString();
           identidad = "verificada";
-        } else {
-          cedulaGuardada = null;
-          identidad = "no_encontrada";
         }
       } else {
-        identidad = "en_revision";
-        clientIdentityStatus = "pending";
-        identityVerifiedAt = null;
+        cedulaGuardada = sameVerifiedDocument ? cedula : null;
+        identidad = "no_encontrada";
       }
     }
 
@@ -205,7 +211,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Ensure the profiles row exists before inserting (client_id FK requires it).
-    // Client identity verification uses the same padron-backed verifier as the
+    // Client identity verification uses the same Hacienda-backed verifier as the
     // professional flow, but stores a client-specific status on profiles and a
     // project snapshot so Oportunidades can show it without exposing the ID.
     await admin.from("profiles").upsert({

@@ -16,7 +16,7 @@ async function context() {
   if (!user) return null;
   const db = createAdminClient();
   const { data: pro, error } = await db.from("professionals")
-    .select("id, verification_status, is_verified, verification_updated_at, profiles(cedula, full_name, email)")
+    .select("id, verification_status, is_verified, verification_updated_at, verification_provider, profiles(cedula, full_name, email)")
     .eq("profile_id", user.id).maybeSingle();
   if (error) throw error;
   if (!pro) return null;
@@ -26,7 +26,7 @@ async function context() {
     .eq("professional_id", pro.id).in("action", ["verified", "rejected", "reverted_pending"])
     .order("created_at", { ascending: false }).limit(1).maybeSingle();
   if (decisionError) throw decisionError;
-  return { db, user, pro, profile, cedula, ticketId: documentCaseId(user.id, cedula, decision?.id ?? null) };
+  return { db, user, pro, profile, cedula, legal: pro.verification_provider === "hacienda_api_juridica" || detectIdType(cedula) === "juridica", ticketId: documentCaseId(user.id, cedula, decision?.id ?? null) };
 }
 const unavailable = () => NextResponse.json({ error: "No se pudo guardar. Intenta nuevamente." }, { status: 503 });
 
@@ -36,7 +36,10 @@ export async function GET() {
     if (!ctx) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     const { data, error } = await ctx.db.from("support_ticket_messages").select("id").eq("id", ctx.ticketId).maybeSingle();
     if (error) return unavailable();
-    return NextResponse.json({ submitted: !!data, ticketId: data ? ctx.ticketId : null });
+    const { data: ticket, error: ticketError } = await ctx.db.from("support_tickets").select("id, topic, status").eq("id", ctx.ticketId).maybeSingle();
+    if (ticketError) return unavailable();
+    return NextResponse.json({ submitted: !!data, ticketId: ticket ? ctx.ticketId : null, legal: ctx.legal,
+      reviewRequested: ticket?.topic === "verification_appeal" && ticket.status !== "resolved" }, { headers: { "Cache-Control": "no-store" } });
   } catch { return unavailable(); }
 }
 
@@ -47,13 +50,13 @@ export async function POST(req: Request) {
   try {
     const ctx = await context();
     if (!ctx) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    const { db, user, pro, profile, cedula, ticketId } = ctx;
+    const { db, user, pro, profile, ticketId } = ctx;
     if (pro.is_verified || pro.verification_status === "verified") return NextResponse.json({ error: "Tu identidad ya está verificada." }, { status: 409 });
     const { data: saved, error: readError } = await db.from("support_ticket_messages").select("id").eq("id", ticketId).maybeSingle();
     if (readError) return unavailable();
     if (saved) return NextResponse.json({ ok: true, ticketId });
     const form = await req.formData();
-    const required = detectIdType(cedula) === "juridica" ? ["identity", "company"] : ["identity"];
+    const required = ctx.legal ? ["identity", "company"] : ["identity"];
     const checked: { key: string; file: File; bytes: Buffer; mime: string }[] = [];
     for (const key of required) {
       const file = form.get(key);
