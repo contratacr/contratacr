@@ -1,5 +1,7 @@
 "use client";
 
+import { AvatarFileInput } from "@/components/ui/avatar-file-input";
+
 import { pareceFijoDeCostaRica } from "@/lib/telefono-movil";
 
 import { useState, useEffect, useRef, useMemo } from "react";
@@ -38,7 +40,6 @@ import { useAvailabilityCheck } from "@/hooks/use-availability-check";
 import { detectSocialOnly, providerLabel } from "@/lib/auth-method";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { writeStoredMode } from "@/hooks/use-mode";
-import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { PROFILE_IMAGE_OPTIONS, getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 import { trackMetaEvent, trackMetaConversion } from "@/lib/analytics/meta-pixel";
 import { readAttribution } from "@/lib/analytics/attribution";
@@ -171,17 +172,7 @@ function PhotoPicker({
         </Button>
       )}
 
-      <input
-        ref={ref}
-        type="file"
-        accept={IMAGE_ACCEPT}
-        className="hidden"
-        onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (f) onFile(f);
-          e.currentTarget.value = "";
-        }}
-      />
+      <AvatarFileInput ref={ref} className="hidden" onFile={onFile} />
     </div>
   );
 }

@@ -1,5 +1,7 @@
 "use client";
 
+import { AvatarFileInput } from "@/components/ui/avatar-file-input";
+
 import { PROFILE_FIELD_GROUPS, PROFILE_SECTION_FOOTER } from "@/components/dashboard/profile-section-layout";
 import { trackMetaConversion } from "@/lib/analytics/meta-pixel";
 
@@ -17,7 +19,6 @@ import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
 import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
 import { LanguagesInput } from "@/components/ui/languages-input";
 import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
-import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { PROFILE_IMAGE_OPTIONS, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 import { createClient } from "@/lib/supabase/client";
 import { detectIdType } from "@/lib/cedula";
@@ -981,17 +982,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
             </div>
           </div>
 
-          <input
-            ref={photoInputRef}
-            type="file"
-            accept={IMAGE_ACCEPT}
-            className="hidden"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (file) handlePhotoSelect(file);
-              event.currentTarget.value = "";
-            }}
-          />
+          <AvatarFileInput ref={photoInputRef} className="hidden" onFile={handlePhotoSelect} />
         </div>
         {/* Official name — locked when verified / national cédula. The "Verificado" badge
             lives ONCE in the panel HEADER (next to the name+avatar); here the Lock icon +

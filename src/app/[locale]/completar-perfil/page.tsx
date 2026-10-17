@@ -1,5 +1,7 @@
 "use client";
 
+import { AvatarFileInput } from "@/components/ui/avatar-file-input";
+
 import { useEffect, useRef, useState } from "react";
 import { AvisoDeError } from "@/components/ui/etiqueta-campo";
 import { useTranslations } from "next-intl";
@@ -13,7 +15,6 @@ import { createClient } from "@/lib/supabase/client";
 import { isSigningOut } from "@/lib/auth/sign-out";
 import { CabeceraDeTramite } from "@/components/layout/focused-header";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
-import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { PROFILE_IMAGE_OPTIONS, getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 import { deleteOwnedMediaUrl } from "@/lib/client-media-cleanup";
 
@@ -202,13 +203,7 @@ export default function CompleteProfilePage() {
                 <p className="text-sm font-medium text-[#374151]">{t("photoLabel")} <span className="text-[#68778d] font-normal">{t("optional")}</span></p>
                 <p className="text-xs text-[#68778d]">{t("photoHelp")}</p>
               </div>
-              <input
-                ref={photoInputRef}
-                type="file"
-                accept={IMAGE_ACCEPT}
-                className="hidden"
-                onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePhotoSelect(f); e.target.value = ""; }}
-              />
+              <AvatarFileInput ref={photoInputRef} className="hidden" onFile={handlePhotoSelect} />
             </div>
 
             <div>

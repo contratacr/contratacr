@@ -1,5 +1,7 @@
 "use client";
 
+import { AvatarFileInput } from "@/components/ui/avatar-file-input";
+
 import { irAlInicio } from "@/lib/ir-al-inicio";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -279,17 +281,14 @@ export function BasicProfileSection({
     touchProfile("basic");
   }
 
-  function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+  function handlePhotoUpload(file: File) {
     if (!file || !user) return;
-    const input = e.currentTarget;
     if (profileAvatarObjectUrlRef.current) URL.revokeObjectURL(profileAvatarObjectUrlRef.current);
     const previewUrl = URL.createObjectURL(file);
     profileAvatarObjectUrlRef.current = previewUrl;
     setProfileAvatar(previewUrl);
     setPendingAvatarFile(file);
     touchProfile("basic");
-    input.value = "";
   }
 
   const displayName =
@@ -440,13 +439,7 @@ export function BasicProfileSection({
               )}
             </div>
           </div>
-          <input
-            ref={photoInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-            className="hidden"
-            onChange={handlePhotoUpload}
-          />
+          <AvatarFileInput ref={photoInputRef} className="hidden" onFile={handlePhotoUpload} />
         </div>
         <div>
           <label className="text-sm font-medium text-[#374151] mb-1.5 flex items-center gap-1.5">
