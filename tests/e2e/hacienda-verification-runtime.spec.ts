@@ -22,7 +22,9 @@ function provider(replies: (Response | Error)[]) {
   const mod = load("src/lib/verification/identity-verifier.ts", {
     "@/lib/cedula": cedula,
     "./hacienda-cache": { readHaciendaCache: async (id: string) => cache.get(id), writeHaciendaCache: async (id: string, result: RuntimeValue) => cache.set(id, result) },
-  }, { Date: class extends Date { static now() { return now; } }, fetch: async (url: string) => {
+  }, { Date: class extends Date { static now() { return now; } }, fetch: async (url: string, options: RequestInit) => {
+    // Workers supports manual/follow; redirect:error fails before any network I/O.
+    expect(options.redirect).toBe("manual");
     calls.push(url); const response = replies.shift(); if (response instanceof Error) throw response; if (!response) throw new Error("unexpected request"); return response;
   } });
   return { verifier: new mod.HaciendaIdentityVerifier(), calls, cache, advance: (ms: number) => { now += ms; } };

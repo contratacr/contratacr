@@ -25,3 +25,5 @@ Hacienda consulta registros tributarios y no garantiza cobertura de toda persona
 Las pruebas de ejecución aisladas cubren los cuatro tipos, DIMEX de 11 y 12 dígitos, datos malformados, 404/429/5xx/timeout, caché, minimización, permisos, deduplicación, preservación de decisiones humanas y cambio de identificación. La prueba con Supabase local y navegador cubre apelación, reintento, documentos privados y vista administrativa en ambos formatos de cuenta; está incluida en el smoke de `test` y nunca utiliza producción para datos sintéticos.
 
 Consulta real de solo lectura del ejemplo oficial `2100042005`: HTTP 200, tipo 02, ESTADO-MINISTERIO DE HACIENDA. Los demás tipos se prueban con respuestas controladas, sin consultar identificaciones privadas de terceros como datos de prueba.
+
+Compatibilidad de Cloudflare comprobada con una vista previa remota: `redirect: "manual"` obtiene HTTP 200 del ejemplo oficial. Workers rechaza `redirect: "error"` antes de conectarse; la regresión comprueba que esa opción no se reintroduzca. Las respuestas 3xx no se siguen y se tratan como indisponibilidad.

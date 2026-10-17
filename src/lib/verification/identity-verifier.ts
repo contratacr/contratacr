@@ -77,7 +77,7 @@ export class HaciendaIdentityVerifier implements IdentityVerifier {
     if (++this.calls > 5) return { ...base, unavailable: true };
     try {
       const response = await fetch(`https://api.hacienda.go.cr/fe/ae?identificacion=${id}`, {
-        headers: { Accept: "application/json" }, cache: "no-store", redirect: "error", signal: AbortSignal.timeout(8000),
+        headers: { Accept: "application/json" }, cache: "no-store", redirect: "manual", signal: AbortSignal.timeout(8000),
       });
       if (response.status === 429) {
         const seconds = Number(response.headers.get("retry-after"));
