@@ -1079,7 +1079,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1690,
+          "line": 1692,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => {\n          requestUnsavedAction(() => openPanelDestination(tab));\n        }}",
@@ -1087,7 +1087,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1753,
+          "line": 1755,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -1095,7 +1095,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1773,
+          "line": 1775,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => {\n          if (tab === \"home\") {\n            setMobilePanelOpen(true);\n            scrollDashboardToPageTop();\n            return;\n          }\n          if (tab === \"guides\") { setGuiasAbiertas(true); return; }\n          requestUnsavedAction(() => openPanelDestination(tab));\n        }}",
@@ -1103,7 +1103,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1861,
+          "line": 1863,
           "tag": "button",
           "label": "{locale === \"en\" ? \"Profile photo options\" : \"Opciones de foto de perfil\"}",
           "handler": "{() => setHeaderPhotoMenuOpen((open) => !open)}",
@@ -1111,7 +1111,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1883,
+          "line": 1885,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { setHeaderPhotoMenuOpen(false); setHeaderPhotoPreviewOpen(true); }}",
@@ -1119,7 +1119,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1888,
+          "line": 1890,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { setHeaderPhotoMenuOpen(false); headerPhotoInputRef.current?.click(); }}",
@@ -1127,7 +1127,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1897,
+          "line": 1899,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => void handleHeaderPhotoRemove()}",
@@ -1135,7 +1135,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1908,
+          "line": 1910,
           "tag": "input",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(event) => {\n                    const file = event.target.files?.[0];\n                    event.currentTarget.value = \"\";\n                    if (file) void handleHeaderPhotoUpload(file);\n                  }}",
@@ -1143,7 +1143,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1962,
+          "line": 1964,
           "tag": "Link",
           "label": "{locale === \"en\" ? \"View public profile\" : \"Ver perfil público\"}",
           "handler": "{openInNewTabOnDesktop}",
@@ -1151,7 +1151,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1974,
+          "line": 1976,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setShareKitTab(activeTab)}",
@@ -1159,7 +1159,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1979,
+          "line": 1981,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setGuiasAbiertas(true)}",
@@ -1167,7 +1167,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2000,
+          "line": 2002,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{openInNewTabOnDesktop}",
@@ -1175,7 +1175,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2014,
+          "line": 2016,
           "tag": "Link",
           "label": "{locale === \"en\" ? \"View public profile\" : \"Ver perfil público\"}",
           "handler": "{openInNewTabOnDesktop}",
@@ -1183,7 +1183,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2023,
+          "line": 2025,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setShareKitTab(activeTab)}",
@@ -1191,7 +1191,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2064,
+          "line": 2066,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => fetchPro()}",
@@ -1199,7 +1199,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2076,
+          "line": 2078,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => router.push(\"/registro/profesional\")}",
@@ -1207,7 +1207,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2090,
+          "line": 2092,
           "tag": "button",
           "label": "{t(\"backToPanel\")}",
           "handler": "{() => {\n                      requestUnsavedAction(() => {\n                        const chatReturn = chatReturnRef.current;\n                        if (chatReturn) {\n                          chatReturnRef.current = null;\n                          router.push(chatReturn);\n                          return;\n                        }\n                        if (hasActiveCompletionFlow()) {\n                          if (activeTab === \"profile\" && mobileProfileSectionTitle) {\n                            window.dispatchEvent(new Event(\"ccr:profile-mobile-close-section\"));\n                          }\n                          goToCompletionChecklist();\n                          return;\n                        }\n                        if (activeTab === \"profile\" && mobileProfileSectionTitle) {\n                          window.dispatchEvent(new Event(\"ccr:profile-mobile-close-section\"));\n                          return;\n                        }\n                        if (activeTab === \"soporte\" && supportThreadTitle) {\n                          window.dispatchEvent(new Event(\"ccr:support-close-thread\"));\n                          return;\n                        }\n                        const volverA = externalReturnTo ?? returnToRef.current;\n                        if (volverA && (activeTab === \"offers\" || activeTab === \"jobs\" || activeTab === \"sent_projects\" || volverA.startsWith(\"/mensajes\") || volverA === \"/notificaciones\")) {\n                          router.push(volverA);\n                          return;\n                        }\n                        setTab(\"home\");\n                      });\n                    }}",
@@ -1215,7 +1215,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2196,
+          "line": 2198,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => router.push(`${prefijoDeIdioma(locale)}/dashboard/profesional?tab=soporte`)}",
@@ -1223,7 +1223,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2224,
+          "line": 2226,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => signOutToHome(locale)}",
@@ -1231,7 +1231,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2395,
+          "line": 2397,
           "tag": "StatusFilterTabs",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(id) => setPublicacionTipo(id as Publicacion)}",
@@ -22157,6 +22157,14 @@
         {
           "line": 580,
           "title": "\"cambiar de sección desde el menú abre arriba sin salto visible\""
+        },
+        {
+          "line": 610,
+          "title": "\"@seeded verification deep link cannot replace the next panel section\""
+        },
+        {
+          "line": 611,
+          "title": "!canRunSeededRegression()"
         }
       ]
     },
