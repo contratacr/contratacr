@@ -213,7 +213,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
               </div>
             )}
             <p className="text-[11px] text-[#68778d] mt-3">
-              La validación de formato y la confirmación de identidad contra el padrón (TSE) son automáticas. Revisa la comparación con el padrón más abajo. Las fotos de trabajo NO son criterio de verificación.
+              Hacienda permite cotejar número, tipo y nombre. No prueba quién usa la cuenta ni la representación de una empresa. Revisa los documentos de identidad y autorización; las fotos de trabajos no son criterio de verificación.
             </p>
           </div>
 
@@ -221,16 +221,16 @@ export function AdminCase({ providerId }: { providerId: string }) {
               are NOT a verification criterion and are intentionally not shown. */}
           {padron && (
             <div className="bg-white rounded-xl border border-[#e5e7eb] p-5">
-              <h2 className="font-semibold text-[#162543] text-sm mb-3">Comparación con el padrón (TSE)</h2>
+              <h2 className="font-semibold text-[#162543] text-sm mb-3">Comparación con Hacienda</h2>
               {padron.skipped ? (
                 <div className="rounded-lg border border-[#bfdbfe] bg-[#eff6ff] px-3 py-2 text-sm text-[#1e3a8a]">
                   <p className="font-semibold">Revisión manual requerida</p>
                   <p className="mt-1">{padron.reason}</p>
                 </div>
               ) : padron.unavailable ? (
-                <p className="text-sm text-[#b45309]">El padrón no respondió. Se reintentará la consulta; esto no significa que la cédula sea inválida.</p>
+                <p className="text-sm text-[#b45309]">Hacienda no respondió. Se reintentará la consulta; esto no significa que la cédula sea inválida.</p>
               ) : !padron.found ? (
-                <p className="text-sm text-[#b45309]">La cédula no se encontró en el padrón cargado.</p>
+                <p className="text-sm text-[#b45309]">Hacienda no encontró esta identificación. Esto no demuestra que sea inválida.</p>
               ) : (
                 <div className="grid sm:grid-cols-2 gap-2.5 text-sm">
                   <div className="rounded-lg border border-[#eef2f6] bg-white px-3 py-2">
@@ -238,7 +238,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
                     <p className="text-[#374151] font-medium mt-0.5">{profile?.full_name}</p>
                   </div>
                   <div className="rounded-lg border border-[#eef2f6] bg-white px-3 py-2">
-                    <p className="text-[11px] uppercase tracking-wide text-[#68778d]">Nombre en el padrón</p>
+                    <p className="text-[11px] uppercase tracking-wide text-[#68778d]">Nombre en Hacienda</p>
                     <p className="text-[#374151] font-medium mt-0.5">{padron.name || "—"}</p>
                   </div>
                   <div className="sm:col-span-2">

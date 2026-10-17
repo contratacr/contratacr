@@ -17,14 +17,13 @@ async function manejar(request: Request) {
   }
   try {
     const parametros = new URL(request.url).searchParams;
-    // `?padron=1` mide el padrón mismo: cuántas filas cargaron y si la consulta
-    // responde. Un padrón cargado a medias devuelve «no encontrado» para
-    // cédulas perfectamente válidas, que es indistinguible de un rechazo real.
-    if (parametros.get("padron") === "1") {
-      const { medirPadron } = await import("@/lib/verification/medir-padron");
-      return NextResponse.json({ ok: true, ...(await medirPadron()) });
+    // Legacy query alias retained, but runtime health no longer touches the padrón.
+    if (parametros.get("fuente") === "1" || parametros.get("padron") === "1") {
+      const { getIdentityVerifier } = await import("@/lib/verification/identity-verifier");
+      const result = await getIdentityVerifier().lookup("2100042005", { fresh: true });
+      return NextResponse.json({ ok: !result.unavailable, provider: "hacienda_api", available: !!result.found });
     }
-    // `?simular=1` pregunta al padrón y devuelve el conteo SIN escribir nada.
+    // Simulation performs lookups only; it never changes accounts.
     const simular = parametros.get("simular") === "1";
     const resumen = await repescarVerificacionesSinRespuesta({ simular });
     return NextResponse.json({ ok: true, ...resumen });

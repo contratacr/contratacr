@@ -10,10 +10,11 @@ export function documentCaseId(userId: string, cedula: string, reviewCycle: stri
 /** null means unavailable: reminder dispatch must fail closed. */
 export async function hasVerificationDocuments(userId: string): Promise<boolean | null> {
   const db = createAdminClient();
-  const { data: tickets, error } = await db.from("support_tickets").select("id")
-    .eq("user_id", userId).eq("topic", "verification_documents").in("status", ["open", "in_progress"]);
+  const { data: tickets, error } = await db.from("support_tickets").select("id, topic")
+    .eq("user_id", userId).in("topic", ["verification_documents", "verification_appeal"]).in("status", ["open", "in_progress"]);
   if (error) return null;
   if (!tickets?.length) return false;
+  if (tickets.some(ticket => ticket.topic === "verification_appeal")) return true;
   const { data: messages, error: messageError } = await db.from("support_ticket_messages").select("attachments")
     .in("ticket_id", tickets.map(t => t.id)).eq("sender_role", "user");
   if (messageError) return null;

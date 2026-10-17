@@ -196,7 +196,7 @@ export function AdminSupport() {
                   <p className="font-semibold text-[#162543]">{ticket.subject}</p>
                 </div>
                 <p className="text-xs text-[#68778d]">
-                  {ticket.name || "Sin nombre"} · {ticket.email}{ticket.topic ? ` · ${ticket.topic}` : ""}
+                  {ticket.name || "Sin nombre"} · {ticket.email}{ticket.topic ? ` · ${{ verification_appeal: "Apelación de verificación", verification_documents: "Documentos de verificación" }[ticket.topic] ?? ticket.topic}` : ""}
                   <span className={`ml-1.5 inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${ticket.user_id ? "bg-[#dbeafe] text-[#1d4ed8]" : "bg-gray-100 text-gray-500"}`}>
                     {ticket.user_id ? "Registrado" : "Invitado"}
                   </span>

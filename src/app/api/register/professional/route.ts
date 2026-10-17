@@ -410,7 +410,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: friendly }, { status: 500 });
     }
 
-    // Accounts without a Costa Rican ID skip the automatic padrón check and go
+    // Accounts without a Costa Rican ID skip the automatic Hacienda check and go
     // straight to manual review: tell them right away what we need to verify them.
     if (noCrId) {
       try {
@@ -420,7 +420,7 @@ export async function POST(req: Request) {
         console.error("[register/professional] verification outreach:", e);
       }
     }
-    // Fire automatic identity verification against the padrón (best-effort).
+    // Fire automatic identity verification against the Hacienda (best-effort).
     // First-ever run for this brand-new pro: in-app notification only (no email),
     // and `isInitial` so the result still shows once even if status is unchanged.
     try {

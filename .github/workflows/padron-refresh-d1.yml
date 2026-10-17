@@ -1,9 +1,6 @@
 name: Cloudflare D1 padron refresh
 
 on:
-  schedule:
-    # Día 15, 03:17 de Costa Rica (UTC-6): permite recibir el cierre del mes anterior.
-    - cron: "17 9 15 * *"
   workflow_dispatch:
     inputs:
       target:
