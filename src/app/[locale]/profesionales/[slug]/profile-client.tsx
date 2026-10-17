@@ -534,17 +534,12 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
     const scrollToReviews = () => {
       document.getElementById("resenas")?.scrollIntoView({ block: "start" });
     };
-    let secondFrame: number | null = null;
-    const activateReviews = window.setTimeout(() => {
-      setChosenTab("resenas");
-      secondFrame = window.requestAnimationFrame(scrollToReviews);
-    }, 0);
+    // activeTab already reads ?tab=resenas. A background profile refresh must
+    // not reset a section the visitor selected while that request was loading.
     const firstFrame = window.requestAnimationFrame(scrollToReviews);
     const fallback = window.setTimeout(scrollToReviews, 250);
     return () => {
-      window.clearTimeout(activateReviews);
       window.cancelAnimationFrame(firstFrame);
-      if (secondFrame !== null) window.cancelAnimationFrame(secondFrame);
       window.clearTimeout(fallback);
     };
   }, [professional]);

@@ -165,6 +165,32 @@ test.describe("@seeded professional profile", () => {
     }
   });
 
+  test("a late profile refresh preserves the section chosen after opening reviews", async ({ page }) => {
+    test.skip(!seed, "Requires protected regression actors.");
+    let releaseRefresh!: () => void;
+    const heldRefresh = new Promise<void>((resolve) => { releaseRefresh = resolve; });
+    await page.route("**/api/professionals/*", async (route) => {
+      const response = await route.fetch();
+      const profile = await response.json();
+      await heldRefresh;
+      await route.fulfill({ response, json: { ...profile, businessName: "Perfil actualizado regresión" } });
+    });
+    try {
+      await gotoOK(page, `/profesionales/${seed!.professionalSlug}?tab=resenas#resenas`);
+      const services = page.getByRole("tab", { name: "Servicios", exact: true });
+      await expect(page.getByRole("tab", { name: "Reseñas", exact: true })).toHaveAttribute("aria-selected", "true");
+      await services.click();
+      await expect(services).toHaveAttribute("aria-selected", "true");
+      releaseRefresh();
+      // Wait for the held data to commit, rather than sleeping or merely
+      // checking the tab before the asynchronous profile refresh arrives.
+      await expect(page.getByTestId("professional-profile-name").filter({ visible: true })).toContainText("Perfil actualizado regresión");
+      await expect(services).toHaveAttribute("aria-selected", "true");
+    } finally {
+      releaseRefresh();
+    }
+  });
+
   test("reviews are the second profile section and do not label review provenance", async ({ page }) => {
     const href = await firstProfessionalHref(page);
     expect(href).toBeTruthy();
