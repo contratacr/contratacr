@@ -249,7 +249,7 @@ function ProfessionalResult({ result, copy, onNavigate, nativeApp, lang }: {
           {result.avatarUrl ? <Image src={result.avatarUrl} alt="" width={44} height={44} className="h-full w-full object-cover" /> : getInitials(result.name)}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="flex items-start gap-1.5">
+          <div className="flex items-center gap-1.5">
             <button type="button" onClick={() => onNavigate(result.profileHref)} className="min-w-0 text-left text-sm font-extrabold leading-snug text-[#162543]">{result.name}</button>
             {result.verified && <VerificationInfo />}
           </div>
