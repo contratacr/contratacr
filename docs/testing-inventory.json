@@ -24399,39 +24399,39 @@
           "title": "`${path}: check explains identity without opening the card`"
         },
         {
-          "line": 50,
+          "line": 51,
           "title": "`${path}: publication detail keeps the owner's check beside the name`"
         },
         {
-          "line": 80,
+          "line": 81,
           "title": "\"the professional profile keeps only the interactive check beside its name\""
         },
         {
-          "line": 95,
+          "line": 96,
           "title": "\"registration explains the badge and opens the shared explanation\""
         },
         {
-          "line": 106,
+          "line": 107,
           "title": "\"dashboard name keeps only an interactive identity check\""
         },
         {
-          "line": 107,
+          "line": 108,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 142,
+          "line": 143,
           "title": "\"the badge explanation is translated into English\""
         },
         {
-          "line": 150,
+          "line": 151,
           "title": "\"native phone shell keeps the explanation above its navigation\""
         },
         {
-          "line": 178,
+          "line": 179,
           "title": "\"verification shows only the identification check and its explanation\""
         },
         {
-          "line": 179,
+          "line": 180,
           "title": "!(process.env.NEXT_PUBLIC_SUPABASE_URL ?? \"\").includes(\"oqheayqqprpciqdvdaqo\") || !process.env.SUPABASE_SERVICE_ROLE_KEY"
         }
       ]

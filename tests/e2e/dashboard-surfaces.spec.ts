@@ -176,7 +176,7 @@ test.describe("@seeded dashboard surfaces", () => {
     expect(checkBox!.x).toBeGreaterThanOrEqual(geometry[0]!.x + geometry[0]!.width - 1);
     expect(checkBox!.y).toBeLessThan(geometry[0]!.y + geometry[0]!.height);
     await check.click();
-    await expect(page.getByRole("dialog")).toContainText("El check indica que ContrataCR comprobó");
+    await expect(page.getByRole("dialog")).toContainText("El check indica un cotejo");
     await page.getByRole("dialog").getByRole("button", { name: "Entendido", exact: true }).click();
     // «Ver perfil» ya no va a la par de las cifras: en el teléfono es una fila
     // propia de dos botones debajo de ellas, a todo el ancho de la tarjeta.
