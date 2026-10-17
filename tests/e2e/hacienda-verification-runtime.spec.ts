@@ -188,3 +188,21 @@ test("publishing a project cannot synchronize an automatic approval over a manua
   await mod.syncProfessionalVerificationFromAccount(state.db, "owner", "verified", "hacienda_api");
   expect(state.writes).toEqual([]); expect(state.rows.professionals[0].verification_status).toBe("under_appeal");
 });
+test("retrying an existing document submission enters manual review without duplicate uploads", async () => {
+  const state = database({ professionals: [{ id: "pro", profile_id: "owner", verification_status: "pending", is_verified: false, profiles: { cedula: "101053316", full_name: "Owner", email: "owner@example.test" } }] });
+  const documents = load("src/lib/verification/documents.ts", { "@/lib/supabase/admin": { createAdminClient: () => state.db } });
+  const ticketId = documents.documentCaseId("owner", "101053316", null);
+  state.rows.support_ticket_messages = [{ id: ticketId, ticket_id: ticketId }];
+  const mod = load("src/app/api/verification/documents/route.ts", {
+    "@/lib/supabase/server": { createClient: async () => ({ auth: { getUser: async () => ({ data: { user: { id: "owner" } } }) } }) },
+    "@/lib/supabase/admin": { createAdminClient: () => state.db }, "@/lib/rate-limit": { enforceRateLimit: () => null },
+    "@/lib/cedula": cedula, "@/lib/upload-validation": {}, "@/lib/support/adjuntos": {}, "@/lib/verification/documents": documents,
+  });
+  const response = await mod.POST(new Request("https://contratacr.test/api/verification/documents", { method: "POST" }));
+  expect(response.status).toBe(200); expect((await response.json()).ticketId).toBe(ticketId);
+  expect(state.rows.professionals[0].verification_status).toBe("under_appeal");
+  expect(state.rows.support_ticket_messages).toHaveLength(1); expect(state.writes).toHaveLength(1);
+  state.rows.professionals[0].verification_status = "verified";
+  expect((await mod.POST(new Request("https://contratacr.test/api/verification/documents", { method: "POST" }))).status).toBe(409);
+  expect(state.writes).toHaveLength(1);
+});

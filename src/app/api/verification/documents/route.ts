@@ -54,7 +54,12 @@ export async function POST(req: Request) {
     if (pro.is_verified || pro.verification_status === "verified") return NextResponse.json({ error: "Tu identidad ya está verificada." }, { status: 409 });
     const { data: saved, error: readError } = await db.from("support_ticket_messages").select("id").eq("id", ticketId).maybeSingle();
     if (readError) return unavailable();
-    if (saved) return NextResponse.json({ ok: true, ticketId });
+    async function enterReview() {
+      const { error } = await db.from("professionals").update({ verification_status: "under_appeal", verification_updated_at: new Date().toISOString() })
+        .eq("id", pro.id).neq("verification_status", "verified");
+      if (error) throw error;
+    }
+    if (saved) { await enterReview(); return NextResponse.json({ ok: true, ticketId }); }
     const form = await req.formData();
     const required = ctx.legal ? ["identity", "company"] : ["identity"];
     const checked: { key: string; file: File; bytes: Buffer; mime: string }[] = [];
@@ -87,6 +92,7 @@ export async function POST(req: Request) {
       body: "Documentos para revisión de identidad.", attachments,
     }, { onConflict: "id", ignoreDuplicates: true });
     if (messageError) return unavailable();
+    await enterReview();
     return NextResponse.json({ ok: true, ticketId });
   } catch { return unavailable(); }
 }
