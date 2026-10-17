@@ -89,11 +89,7 @@ function safeProfileReturnHref(value: string | null): string {
   return allowed ? href.replace(/^\/(?:es|en)(?=\/|[?#]|$)/u, "") || "/" : "/profesionales";
 }
 
-function profileReturnLabel(href: string, locale: string, assistantLabel: string) {
-  try {
-    const origin = sessionStorage.getItem("ccr:volver-al-asistente");
-    if (origin && safeProfileReturnHref(origin) === href) return assistantLabel;
-  } catch { /* Default route label when storage is unavailable. */ }
+function profileReturnLabel(href: string, locale: string) {
   const path = href.split(/[?#]/u)[0]?.replace(/^\/(?:es|en)(?=\/|[?#]|$)/u, "") || "/";
   const params = new URLSearchParams(href.includes("?") ? href.split("?")[1]?.split("#")[0] : "");
   if (path.startsWith("/promociones")) return locale === "en" ? "Back to promotions" : "Volver a promociones";
@@ -271,13 +267,22 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   // `?from=` viene en la dirección y el servidor SÍ la conoce: con eso el primer
   // pintado ya trae el destino correcto (las tarjetas de /buscar y del panel lo
   // mandan). El referrer, que solo existe en el navegador, apenas afina después.
+  const [assistantReturn, setAssistantReturn] = useState(false);
   const [profileReturnHref, setProfileReturnHref] = useState(() => {
     const explicit = searchParams.get("from");
     return explicit ? safeProfileReturnHref(explicit) : "/profesionales";
   });
   useEffect(() => {
     const destination = initialProfileReturnHref();
-    const frame = requestAnimationFrame(() => setProfileReturnHref(destination));
+    let fromAssistant = false;
+    try {
+      const origin = sessionStorage.getItem("ccr:volver-al-asistente");
+      fromAssistant = !!origin && safeProfileReturnHref(origin) === destination;
+    } catch { /* Regular route label without storage. */ }
+    const frame = requestAnimationFrame(() => {
+      setProfileReturnHref(destination);
+      setAssistantReturn(fromAssistant);
+    });
     return () => cancelAnimationFrame(frame);
   }, []);
   // LA BARRA DE DIRECCIONES CON EL ENLACE BONITO (4-oct-2026): ya calculado el
@@ -352,7 +357,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   // El nombre no se pierde: es el h1 de la tarjeta, y está a un dedo de
   // distancia hacia arriba.
   // Notificaciones usa el rótulo compartido de las fichas (en messages/*.json).
-  const rotuloDeRegreso = profileReturnHref === "/notificaciones" ? tVolver("backToNotifications") : profileReturnLabel(profileReturnHref, locale, tVolver("backToAssistant"));
+  const rotuloDeRegreso = assistantReturn ? tVolver("backToAssistant") : profileReturnHref === "/notificaciones" ? tVolver("backToNotifications") : profileReturnLabel(profileReturnHref, locale);
   const tituloBarra = rotuloDeRegreso;
   // El «...» (guardar, compartir, reportar) solo tiene sentido con una ficha que mostrar.
   const hayFicha = !loading && !proNotFound && !!professional;

@@ -15,6 +15,8 @@ for (const locale of ["es", "en"] as const) test(`native assistant ${locale} kee
       set: value => { if (value && typeof value === "object") Object.assign(nativeRuntime, value); nativeRuntime.isNativePlatform = () => true; },
     });
   });
+  const pageErrors: string[] = [];
+  page.on("pageerror", error => pageErrors.push(error.message));
   const prefix = locale === "en" ? "/en" : "";
   const slug = E2E_USERS.professional.slug;
   const profileHref = `${prefix}/profesionales/${slug}`;
@@ -52,6 +54,7 @@ for (const locale of ["es", "en"] as const) test(`native assistant ${locale} kee
   await page.goBack();
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole("button", { name: "Ver 18 profesionales", exact: true })).toBeVisible();
+  expect(pageErrors.filter(message => /hydration|hydrating|server rendered/i.test(message))).toEqual([]);
 });
 
 test("signed-in assistant Message enters the draft section and back restores the conversation", async ({ page, baseURL }) => {
