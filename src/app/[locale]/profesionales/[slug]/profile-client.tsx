@@ -1,5 +1,7 @@
 "use client";
 
+import { sinPrefijoDeIdioma } from "@/lib/prefijo-de-idioma";
+
 import { esRutaDeBusqueda } from "@/lib/buscar-url";
 import { rutaEmpleo, rutaPromocion } from "@/lib/marketplace-url";
 import { FichaVacio } from "@/components/professionals/ficha-vacio";
@@ -86,7 +88,7 @@ function safeProfileReturnHref(value: string | null): string {
     || path === "/notificaciones";
   // The i18n <Link> re-adds the locale: hand back a bare path even when the
   // sender included one, so the return never becomes /es/es/... .
-  return allowed ? href.replace(/^\/(?:es|en)(?=\/|[?#]|$)/u, "") || "/" : "/profesionales";
+  return allowed ? sinPrefijoDeIdioma(href) : "/profesionales";
 }
 
 function profileReturnLabel(href: string, locale: string) {

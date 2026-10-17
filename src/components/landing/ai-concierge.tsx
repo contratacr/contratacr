@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore, Suspense, type FormEvent } from "react";
-import { prefijoDeIdioma, rutaConIdioma } from "@/lib/prefijo-de-idioma";
+import { prefijoDeIdioma, rutaConIdioma, sinPrefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import {
   Menu,
   ArrowLeft,
@@ -543,7 +543,7 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
       const target = new URL(destination, window.location.origin);
       const origin = `${window.location.pathname}${window.location.search}`;
       if (/\/profesionales\/[^/]+$/.test(target.pathname)) target.searchParams.set("from", origin);
-      if (/\/mensajes$/.test(target.pathname)) target.searchParams.set("back", origin.replace(/^\/(?:es|en)(?=\/|[?#]|$)/, "") || "/");
+      if (/\/mensajes$/.test(target.pathname)) target.searchParams.set("back", sinPrefijoDeIdioma(origin));
       destination = target.pathname + target.search + target.hash;
     }
     try {

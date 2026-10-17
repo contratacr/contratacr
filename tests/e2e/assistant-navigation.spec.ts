@@ -1,5 +1,6 @@
 import { test, expect } from "playwright/test";
 import { E2E_USERS, canRunSeededRegression, ensureRegressionSeed } from "./seed";
+import { sinPrefijoDeIdioma } from "../../src/lib/prefijo-de-idioma";
 import { loginAs } from "./helpers";
 
 for (const locale of ["es", "en"] as const) test(`native assistant ${locale} keeps badges beside names and restores the chat after profile/search navigation`, async ({ page, baseURL }) => {
@@ -43,7 +44,7 @@ for (const locale of ["es", "en"] as const) test(`native assistant ${locale} kee
   await page.screenshot({ path: test.info().outputPath(`assistant-${locale}-verified-name.png`) });
   await dialog.getByRole("button", { name: locale === "es" ? "Ver perfil" : "View profile", exact: true }).click();
   await expect(dialog).toHaveCount(0);
-  await expect(page.locator("h1").first()).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 }).filter({ visible: true }).first()).toBeVisible();
   await expect(page.locator("[data-ccr-section-title]").filter({ visible: true })).toContainText(locale === "es" ? "Volver al asistente" : "Back to assistant");
   await page.locator("[data-ccr-section-back]").filter({ visible: true }).click();
   await expect(dialog).toBeVisible();
@@ -87,4 +88,10 @@ test("signed-in assistant Message enters the draft section and back restores the
   await page.goBack();
   await expect(dialog).toBeVisible();
   await expect(dialog.getByText("Resultado para tu búsqueda")).toBeVisible();
+});
+
+test("assistant return routes preserve root queries and hash in both languages", () => {
+  for (const path of ["/?tab=perfil", "/en?tab=perfil", "/en/?tab=perfil", "/es?tab=perfil"]) expect(sinPrefijoDeIdioma(path)).toBe("/?tab=perfil");
+  expect(sinPrefijoDeIdioma("/en#asistente")).toBe("/#asistente");
+  expect(sinPrefijoDeIdioma("/en/mensajes?draftChat=1")).toBe("/mensajes?draftChat=1");
 });

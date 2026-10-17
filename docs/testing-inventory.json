@@ -2253,7 +2253,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 601,
+          "line": 603,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -2261,7 +2261,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 626,
+          "line": 628,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -2269,7 +2269,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 633,
+          "line": 635,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -2277,7 +2277,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 808,
+          "line": 810,
           "tag": "a",
           "label": "{k === \"website\" ? t(\"linksWebsite\") : k}",
           "handler": "{() => trackInteraction({\n                type: \"external_link_click\",\n                professionalId: professional.id,\n                source: \"profile_social\",\n                locale,\n                metadata: { channel: k },\n              })}",
@@ -2285,7 +2285,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 865,
+          "line": 867,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -2293,7 +2293,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 884,
+          "line": 886,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -2301,7 +2301,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 990,
+          "line": 992,
           "tag": "button",
           "label": "{`${professional.ratingAvg.toFixed(1)} · ${t(\"reviewCountLabel\", { count: professional.reviewCount })}`}",
           "handler": "{() => setActiveTab(\"resenas\")}",
@@ -2309,7 +2309,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1055,
+          "line": 1057,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setActiveTab(tab.id)}",
@@ -2317,7 +2317,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1159,
+          "line": 1161,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => hasFullDescription && setServiceDescriptionOpen({ title, description })}",
@@ -2325,7 +2325,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1234,
+          "line": 1236,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -2333,7 +2333,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1281,
+          "line": 1283,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -2341,7 +2341,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1548,
+          "line": 1550,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -2349,7 +2349,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1554,
+          "line": 1556,
           "tag": "button",
           "label": "{t(\"cerrar\")}",
           "handler": "{() => setOfrecerProyecto(false)}",
@@ -16264,7 +16264,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 141,
+          "line": 142,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setRegistrando(true)}",
@@ -16272,7 +16272,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 155,
+          "line": 156,
           "tag": "textarea",
           "label": "{t(\"marcador\")}",
           "handler": "{(e) => setBorrador(e.target.value.slice(0, 1000))}",
@@ -16280,7 +16280,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 184,
+          "line": 185,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => void openMessage()}",
@@ -21828,55 +21828,55 @@
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 326,
+          "line": 342,
           "title": "\"does not promise availability when a matched professional has no public slots\""
         },
         {
-          "line": 345,
+          "line": 361,
           "title": "\"answers product questions with stable, actionable destinations\""
         },
         {
-          "line": 370,
+          "line": 386,
           "title": "\"covers every assistant navigation intent and validation boundary\""
         },
         {
-          "line": 422,
+          "line": 438,
           "title": "\"product manual contains every current business area the AI must explain\""
         },
         {
-          "line": 443,
+          "line": 459,
           "title": "\"resolves every canonical service in the complete catalog\""
         },
         {
-          "line": 467,
+          "line": 483,
           "title": "\"answers high-risk product questions without turning them into service searches\""
         },
         {
-          "line": 493,
+          "line": 509,
           "title": "\"keeps the contact flow inside the app in Spanish and English\""
         },
         {
-          "line": 510,
+          "line": 526,
           "title": "\"uses internal messaging copy and actions for the native app\""
         },
         {
-          "line": 527,
+          "line": 543,
           "title": "\"searches real professionals through a trustworthy filtered-results link\""
         },
         {
-          "line": 546,
+          "line": 562,
           "title": "\"keeps search intent, service and location across natural follow-ups\""
         },
         {
-          "line": 599,
+          "line": 615,
           "title": "\"uses deterministic safety guidance and does not expose internal instructions\""
         },
         {
-          "line": 611,
+          "line": 627,
           "title": "\"keeps the retired assistant UI out of public navigation\""
         },
         {
-          "line": 632,
+          "line": 648,
           "title": "\"responds in English with localized navigation\""
         }
       ]
@@ -22157,20 +22157,24 @@
       "file": "tests/e2e/assistant-navigation.spec.ts",
       "cases": [
         {
-          "line": 5,
+          "line": 6,
           "title": "`native assistant ${locale} keeps badges beside names and restores the chat after profile/search navigation`"
         },
         {
-          "line": 6,
+          "line": 7,
           "title": "!canRunSeededRegression()"
-        },
-        {
-          "line": 60,
-          "title": "\"signed-in assistant Message enters the draft section and back restores the conversation\""
         },
         {
           "line": 61,
+          "title": "\"signed-in assistant Message enters the draft section and back restores the conversation\""
+        },
+        {
+          "line": 62,
           "title": "!canRunSeededRegression()"
+        },
+        {
+          "line": 93,
+          "title": "\"assistant return routes preserve root queries and hash in both languages\""
         }
       ]
     },

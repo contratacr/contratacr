@@ -1,5 +1,6 @@
 "use client";
 
+import { sinPrefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { useState } from "react";
 import { Loader2, MessageSquareText } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
@@ -43,7 +44,7 @@ function buildDraftHref({
 }: MessageLauncherProps) {
   const params = new URLSearchParams({ draftChat: "1" });
   if (typeof window !== "undefined") {
-    const origin = (window.location.pathname + window.location.search).replace(/^\/(?:es|en)(?=\/|[?#]|$)/u, "") || "/";
+    const origin = sinPrefijoDeIdioma(window.location.pathname + window.location.search);
     params.set("back", origin);
   }
   if (professionalId) params.set("professionalId", professionalId);
