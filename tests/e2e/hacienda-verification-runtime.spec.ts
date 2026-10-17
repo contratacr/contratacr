@@ -4,9 +4,13 @@ import { createRequire } from "node:module";
 import { runInNewContext } from "node:vm";
 import ts from "typescript";
 
+// Transpiled VM exports and the stateful database double have runtime-selected shapes.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type RuntimeValue = any;
+
 const requireNode = createRequire(`${process.cwd()}/tests/e2e/hacienda-verification-runtime.spec.ts`);
 function load(file: string, mocks: Record<string, unknown> = {}, globals: Record<string, unknown> = {}) {
-  const box = { exports: {} as Record<string, any> };
+  const box = { exports: {} as Record<string, RuntimeValue> };
   const code = ts.transpileModule(readFileSync(file, "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
   runInNewContext(code, { module: box, exports: box.exports, require: (name: string) => mocks[name] ?? requireNode(name), Response, Request, AbortSignal, Date, Buffer, console, ...globals });
   return box.exports;
@@ -14,10 +18,10 @@ function load(file: string, mocks: Record<string, unknown> = {}, globals: Record
 const cedula = load("src/lib/cedula.ts");
 const found = (idType = "cedula") => ({ found: true, fullName: "Nombre oficial", idType, provider: "hacienda_api", dob: null, isAdult: false });
 function provider(replies: (Response | Error)[]) {
-  const calls: string[] = []; const cache = new Map<string, any>(); let now = 100000;
+  const calls: string[] = []; const cache = new Map<string, RuntimeValue>(); let now = 100000;
   const mod = load("src/lib/verification/identity-verifier.ts", {
     "@/lib/cedula": cedula,
-    "./hacienda-cache": { readHaciendaCache: async (id: string) => cache.get(id), writeHaciendaCache: async (id: string, result: any) => cache.set(id, result) },
+    "./hacienda-cache": { readHaciendaCache: async (id: string) => cache.get(id), writeHaciendaCache: async (id: string, result: RuntimeValue) => cache.set(id, result) },
   }, { Date: class extends Date { static now() { return now; } }, fetch: async (url: string) => {
     calls.push(url); const response = replies.shift(); if (response instanceof Error) throw response; if (!response) throw new Error("unexpected request"); return response;
   } });
@@ -60,7 +64,7 @@ test("429 pauses lookups without turning an outage into a negative decision", as
 test("shared cache TTL is ten minutes for matches and one minute for missing records; failures are not cached", async () => {
   let now = 100000; const objects = new Map<string, string>();
   const cache = load("src/lib/verification/hacienda-cache.ts", {
-    "@/lib/promise-timeout": { withPromiseTimeout: async (value: any) => value },
+    "@/lib/promise-timeout": { withPromiseTimeout: async (value: RuntimeValue) => value },
     "@opennextjs/cloudflare": { getCloudflareContext: async () => ({ env: { NEXT_INC_CACHE_R2_BUCKET: {
       get: async (key: string) => objects.has(key) ? { json: async () => JSON.parse(objects.get(key)!) } : null,
       put: async (key: string, value: string) => { objects.set(key, value); },
@@ -75,16 +79,16 @@ test("shared cache TTL is ten minutes for matches and one minute for missing rec
 });
 
 // Stateful database double: conditions and ignoreDuplicates apply to real rows.
-function database(initial: Record<string, any[]> = {}) {
-  const rows: Record<string, any[]> = structuredClone(initial); const writes: { table: string; op: string; value: any }[] = [];
+function database(initial: Record<string, RuntimeValue[]> = {}) {
+  const rows: Record<string, RuntimeValue[]> = structuredClone(initial); const writes: { table: string; op: string; value: RuntimeValue }[] = [];
   const db = { from(table: string) {
-    let op = "read", value: any, options: any; const filters: ((row: any) => boolean)[] = []; let single = false;
-    const q: any = {
-      select() { return q; }, eq(k: string, v: any) { filters.push(r => r[k] === v); return q; }, neq(k: string, v: any) { filters.push(r => r[k] !== v); return q; },
-      in(k: string, values: any[]) { filters.push(r => values.includes(r[k])); return q; }, order() { return q; }, limit() { return q; },
-      maybeSingle() { single = true; return q; }, update(v: any) { op = "update"; value = v; return q; },
-      insert(v: any) { op = "insert"; value = v; return q; }, upsert(v: any, opts: any) { op = "upsert"; value = v; options = opts; return q; },
-      then(resolve: any) {
+    let op = "read", value: RuntimeValue, options: RuntimeValue; const filters: ((row: RuntimeValue) => boolean)[] = []; let single = false;
+    const q: RuntimeValue = {
+      select() { return q; }, eq(k: string, v: RuntimeValue) { filters.push(r => r[k] === v); return q; }, neq(k: string, v: RuntimeValue) { filters.push(r => r[k] !== v); return q; },
+      in(k: string, values: RuntimeValue[]) { filters.push(r => values.includes(r[k])); return q; }, order() { return q; }, limit() { return q; },
+      maybeSingle() { single = true; return q; }, update(v: RuntimeValue) { op = "update"; value = v; return q; },
+      insert(v: RuntimeValue) { op = "insert"; value = v; return q; }, upsert(v: RuntimeValue, opts: RuntimeValue) { op = "upsert"; value = v; options = opts; return q; },
+      then(resolve: RuntimeValue) {
         rows[table] ??= []; let selected = rows[table].filter(r => filters.every(f => f(r)));
         if (op !== "read") {
           writes.push({ table, op, value });
@@ -97,15 +101,15 @@ function database(initial: Record<string, any[]> = {}) {
   }, auth: { admin: { getUserById: async () => ({ data: { user: { user_metadata: {} } } }), updateUserById: async () => ({ error: null }) } } };
   return { db, rows, writes };
 }
-function verification(result: any, status = "pending", name = "Nombre oficial") {
+function verification(result: RuntimeValue, status = "pending", name = "Nombre oficial") {
   const state = database({ professionals: [{ id: "pro", profile_id: "owner", verification_status: status, is_verified: status === "verified", profiles: { full_name: name, cedula: "101053316" } }], profiles: [{ id: "owner", cedula: "101053316", full_name: name }], projects: [{ client_id: "owner", status: "open" }] });
-  let lookups = 0; const notifications: any[] = [];
+  let lookups = 0; const notifications: RuntimeValue[] = [];
   const mod = load("src/lib/verification/run-verification.ts", {
     "@/lib/cache/professional-revision": { invalidateProfessionalCache: async () => {} },
     "@/lib/supabase/admin": { createAdminClient: () => state.db }, "@/lib/cedula": cedula,
     "@/lib/verification/identity-verifier": { getIdentityVerifier: () => ({ lookup: async () => { lookups++; return result; } }) },
     "@/lib/verification/profile-name": { verifiedProfileName: async () => name },
-    "@/lib/verification-notify": { notifyVerificationDecision: async (v: any) => notifications.push(v), notifyVerificationOutreach: async () => notifications.push("outreach") },
+    "@/lib/verification-notify": { notifyVerificationDecision: async (v: RuntimeValue) => notifications.push(v), notifyVerificationOutreach: async () => notifications.push("outreach") },
   });
   return { ...state, run: () => mod.runIdentityVerification("pro", { isInitial: true, notifyChannel: "in_app" }), notifications, lookups: () => lookups };
 }
@@ -155,10 +159,10 @@ test("appeal route authenticates, ignores caller-supplied professional IDs and b
       "@/lib/supabase/server": { createClient: async () => ({ auth: { getUser: async () => ({ data: { user: scenario === "anonymous" ? null : { id: "owner" } } }) } }) },
       "@/lib/supabase/admin": { createAdminClient: () => state.db },
       "@/lib/rate-limit": { enforceRateLimit: () => scenario === "limited" ? new Response("", { status: 429 }) : null },
-      "@/lib/verification/manual-review": { requestManualVerification: async (_db: any, owner: any, pro: string) => { sent++; ownerSeen = owner.id + ":" + pro; return "case"; } },
+      "@/lib/verification/manual-review": { requestManualVerification: async (_db: RuntimeValue, owner: RuntimeValue, pro: string) => { sent++; ownerSeen = owner.id + ":" + pro; return "case"; } },
     });
     const response = await mod.POST(new Request("https://contratacr.test/api/appeals", { method: "POST", body: JSON.stringify({ professionalId: "victim", message: scenario === "long" ? "x".repeat(2001) : "Review" }) }));
-    expect(response.status).toBe(({ anonymous: 401, mismatch: 503, ok: 200, limited: 429, long: 400 } as any)[scenario]);
+    expect(response.status).toBe(({ anonymous: 401, mismatch: 503, ok: 200, limited: 429, long: 400 } as RuntimeValue)[scenario]);
     expect(sent).toBe(scenario === "ok" ? 1 : 0); if (sent) expect(ownerSeen).toBe("owner:own-pro");
   }
 });
