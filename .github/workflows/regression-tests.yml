@@ -123,7 +123,9 @@ jobs:
           node scripts/verify-professional-profile-queries.mjs
 
       - name: Verify native Google and Apple session isolation
-        run: npm run test:native-social-linking
+        run: |
+          npm run test:native-social-linking
+          node scripts/verify-public-display-names.mjs
 
       - name: Verify account deletion isolation locally
         run: npm run test:account-deletion

@@ -4,14 +4,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { formasDeNombre } from "@/lib/nombres";
 import { cn } from "@/lib/utils";
 
-/**
- * Un nombre de persona en una sola línea que se acorta con criterio antes de
- * cortarse: entero → sin el segundo nombre → sin el segundo apellido. Solo si
- * ni la forma más corta cabe, se corta con puntos (`truncate`).
- *
- * Se mide el texto de verdad, con la letra que tenga puesta: cada forma se
- * prueba en el mismo nodo antes de pintar, así no parpadea.
- */
+/** Public name with visual ellipsis when it exceeds the available space. */
 export function NombreQueCabe({ nombre, className }: { nombre: string; className?: string }) {
   const ref = useRef<HTMLSpanElement | null>(null);
   const [indice, setIndice] = useState(0);

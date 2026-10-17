@@ -59,7 +59,7 @@ function useCompartirCotizacion({ quote, proName, proSlug, activo = true }: { qu
     setSaved(false);
     setError(null);
     try {
-      const result = await saveFile(pdf, `${nombreArchivoCotizacion(quote, proName)}.pdf`, compartir);
+      const result = await saveFile(pdf, `${nombreArchivoCotizacion(quote, quote.professional_name || proName)}.pdf`, compartir);
       setSaved(result === "saved");
     } catch (failure) {
       if (failure instanceof Error && /cancel|dismiss/i.test(failure.message)) return;

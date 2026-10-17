@@ -1,3 +1,4 @@
+import { getProfessionalDisplayName } from "@/lib/display-name";
 import { OffersBoard } from "@/components/offers/offers-board";
 import { type ProfessionalOffer } from "@/lib/offers";
 import { safeGetUser } from "@/lib/supabase/get-user";
@@ -64,7 +65,7 @@ async function OffersPageContent(serviceOptions: Array<{ value: string; label: s
       service_label: row.service_label ? repairVisibleText(String(row.service_label)) : null,
       location_label: row.location_label ? repairVisibleText(String(row.location_label)) : null,
       image_urls: Array.isArray(row.image_urls) ? row.image_urls : [],
-      professional_name: repairVisibleText(professional?.business_name || professional?.profiles?.full_name || "Profesional en ContrataCR"),
+      professional_name: repairVisibleText(getProfessionalDisplayName(professional?.profiles?.full_name || "", professional?.business_name).primaryDesktop || "Profesional en ContrataCR"),
       professional_slug: professional?.slug ?? null,
       professional_avatar_url: professional?.profiles?.avatar_url ?? null,
       professional_verified: professional?.verification_status === "verified",

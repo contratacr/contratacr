@@ -190,6 +190,8 @@ test("Android browser callback only renders a fixed app handoff, without creatin
   assert.match(response.headers.get("cache-control"), /no-store/);
   const html = await response.text();
   assert.match(html, /package=com.contratacr.app;end/);
+  assert.match(html, /src="\/brand\/logo-primary.png"/);
+  assert.match(response.headers.get("content-security-policy"), /img-src 'self'/);
   assert.doesNotMatch(html, /evil.example|must-not-leak/);
   assert.equal(returnExports.androidOAuthReturnResponse(new URLSearchParams({ code: "once", native_state: "bad" })).status, 400);
 });

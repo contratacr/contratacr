@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { formatPersonDisplayName, getProfessionalDisplayName } from "@/lib/display-name";
 import { downloadChatAttachment } from "@/lib/chat-download";
 import { Archive, ArchiveRestore, ArrowLeft, Ban, Check, ChevronRight, Copy, Download, FileText, Flag, Loader2, MessageSquareMore, MessageSquareText, MoreHorizontal, Paperclip, Pencil, Reply, Search, SendHorizontal, Trash2, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
@@ -557,13 +558,13 @@ export function DirectChatInbox({ alCambiarSubvista }: {
   const personFor = useCallback((item: Conversation) => user?.id === item.client_id
     ? {
       role: "professional" as const,
-      name: item.professionals?.business_name || item.professionals?.profiles?.full_name || (isEn ? "Professional" : "Profesional"),
+      name: getProfessionalDisplayName(item.professionals?.profiles?.full_name || "", item.professionals?.business_name || undefined).primaryDesktop || (isEn ? "Professional" : "Profesional"),
       avatar: item.professionals?.profiles?.avatar_url,
       profileHref: item.professionals?.slug ? `/profesionales/${item.professionals.slug}` : null,
     }
     : {
       role: "client" as const,
-      name: item.client_profile?.full_name || (isEn ? "Client" : "Cliente"),
+      name: formatPersonDisplayName(item.client_profile?.full_name || "") || (isEn ? "Client" : "Cliente"),
       avatar: item.client_profile?.avatar_url,
       profileHref: null,
     }, [isEn, user?.id]);
@@ -813,7 +814,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
     queueMicrotask(() => setStoredDrafts(readStoredDrafts(userId)));
   }, [userId]);
   const pendingDraftName = pendingDraft
-    ? pendingDraft.professionals?.profiles?.full_name || pendingDraft.client_profile?.full_name || ""
+    ? getProfessionalDisplayName(pendingDraft.professionals?.profiles?.full_name || pendingDraft.client_profile?.full_name || "", pendingDraft.professionals?.business_name || undefined).primaryDesktop
     : "";
   useEffect(() => {
     if (!userId || !activeId) return;
