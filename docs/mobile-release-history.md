@@ -41,3 +41,21 @@ Estado: código preparado y validado; **no enviado ni publicado en las tiendas**
 - Antes de enviar: asignar versión y build, construir binarios de distribución, registrar su commit, validar firma/enlaces/notificaciones y copiar las notas exactas enviadas a las tiendas.
 
 Notas propuestas ES (todavía no enviadas): «Ahora puedes guardar y compartir archivos del chat desde la app. También mejoramos la estabilidad.»
+
+## Candidatos 1.0.11 — 16 de octubre de 2026
+
+Estado: **compilados localmente, no subidos ni enviados a revisión**. Validación en curso; no autorizados todavía para envío.
+
+- Android: versión 1.0.11, versionCode 15; AAB y APK release firmados con la clave de carga existente. Google Play conserva 1.0.10 / 14 en producción, confirmado por Android Publisher API.
+- iOS: versión 1.0.11, build 16; archive e IPA exportados localmente. IPA con firma verificada, push production, Sign in with Apple y associated domains; get-task-allow=false. App Store conserva 1.0.10; último build existente 15, confirmado por App Store Connect API.
+- Commit de fuente de ambos binarios: `b77609dc4815a44755211c5300eac4c3ef976c45`.
+- Artefactos locales: `mobile-builds/1.0.11/`; SHA-256 y tamaños registrados en `candidate-manifest.json` (no versionar binarios ni credenciales).
+- Correctos: mobile:sync, mobile:validate, Android lintRelease/testReleaseUnitTest/bundleRelease/assembleRelease, iOS archive/export y compilación e instalación de simulador.
+- Android API 36 con Google Play: candidato QA muestra bienvenida actual; Apple abre su formulario oficial. Pendiente completar autenticación y observar retorno con sesión iniciada. QA usa firma debug y no equivale a un binario firmado por Google Play.
+- Ronda completa web en curso: https://github.com/contratacr/contratacr/actions/runs/39001658068.
+- Ronda completa móvil en curso: https://github.com/contratacr/contratacr/actions/runs/39001660173; contratos, Android nativo y compilación/arranque de iOS correctos al preparar este registro. La ronda usa ae310a88, mismo código nativo previo al incremento de versión.
+- Pendiente antes de declarar listos: cerrar rondas, resolver cualquier fallo y completar retorno real de Apple en Android. Las pruebas automáticas de aislamiento no reemplazan esta prueba con proveedor real.
+
+Novedades propuestas ES (no enviadas): «Ahora puedes guardar y compartir archivos del chat desde la app. También mejoramos el acceso y la estabilidad.»
+
+Novedades propuestas EN (no enviadas): «You can now save and share chat files from the app. We also improved sign-in and stability.»
