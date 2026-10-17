@@ -22,7 +22,8 @@ export function rutaConIdioma(locale: string | null | undefined, ruta: string): 
 
 /** Quita el prefijo de idioma, venga o no: "/en/profesionales" y "/es/profesionales" → "/profesionales". */
 export function sinPrefijoDeIdioma(ruta: string): string {
-  return ruta.replace(/^\/(?:es|en)(?=\/|$)/, "") || "/";
+  const bare = ruta.replace(/^\/(?:es|en)(?=\/|[?#]|$)/, "");
+  return bare.startsWith("?") || bare.startsWith("#") ? `/${bare}` : bare || "/";
 }
 
 /** Idioma que se lee en una ruta: solo "/en" y "/en/..." son inglés. */

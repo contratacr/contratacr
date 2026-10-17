@@ -1669,6 +1669,7 @@
     "supportApp": "Contactar soporte",
     "supportAppCase": "Contactar soporte (Caso #{ref})",
     "currentIdTitle": "Identificación actual",
+    "missingIdNextStep": "Agregá tu identificación para consultar Hacienda. Si no tenés una, podés solicitar revisión manual y explicar tu caso.",
     "currentIdEmpty": "No hay una identificación registrada.",
     "idTypeCedula": "Cédula nacional",
     "idTypeJuridica": "Cédula jurídica",

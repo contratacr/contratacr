@@ -1669,6 +1669,7 @@
     "supportApp": "Contact support",
     "supportAppCase": "Contact support (Case #{ref})",
     "currentIdTitle": "Current ID",
+    "missingIdNextStep": "Add your ID to check Hacienda. If you do not have one, you can request manual review and explain your situation.",
     "currentIdEmpty": "No ID is currently registered.",
     "idTypeCedula": "National ID",
     "idTypeJuridica": "Legal entity ID",

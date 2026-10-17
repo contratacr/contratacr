@@ -1,5 +1,5 @@
 import { expect, test } from "playwright/test";
-import { apiJson, expectHealthyPage, expectNoHorizontalOverflow, gotoOK, isMobileProject, resetAuth } from "./helpers";
+import { apiJson, expectHealthyPage, expectNoHorizontalOverflow, gotoOK, isMobileProject, resetAuth, loginAs } from "./helpers";
 import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccount } from "./disposable-account";
 import { canRunSeededRegression, ensureRegressionSeed, regressionAdminClient } from "./seed";
 import { CONTRATACR_PRODUCT_KNOWLEDGE } from "../../src/lib/ai/product-knowledge";
@@ -260,7 +260,7 @@ test.describe("@seeded ContrataCR AI", () => {
   test.skip(!canRunSeededRegression(), "Requires the isolated test Supabase seed.");
   let aiProfessional: DisposableAccount | undefined;
 
-  test.beforeAll(async () => {
+  test.beforeAll(async ({ browser, baseURL }) => {
     await ensureRegressionSeed();
     try {
       aiProfessional = await createDisposableAccount({
@@ -312,6 +312,22 @@ test.describe("@seeded ContrataCR AI", () => {
         review_count: 100_000,
       }).eq("id", aiProfessional.professionalId);
       if (updateError) throw updateError;
+      // These fixtures write directly to Postgres. Refresh through the real
+      // admin save path so the next browser project cannot reuse cached IDs
+      // from a disposable professional already deleted by the prior project.
+      const cacheAdmin = await createDisposableAccount({ prefix: "ai-cache-admin", admin: true });
+      const context = await browser.newContext({ baseURL });
+      try {
+        const cachePage = await context.newPage();
+        await loginAs(cachePage, cacheAdmin.email, cacheAdmin.password);
+        const refreshed = await cachePage.request.patch(`/api/admin/users/${aiProfessional.id}/datos`, {
+          data: { business_name: aiProfessional.businessName },
+        });
+        expect(refreshed.status(), await refreshed.text()).toBe(200);
+      } finally {
+        await context.close();
+        await cleanupDisposableAccount(cacheAdmin);
+      }
     } catch (error) {
       await cleanupDisposableAccount(aiProfessional);
       aiProfessional = undefined;
