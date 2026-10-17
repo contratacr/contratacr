@@ -1,3 +1,4 @@
+import { withCurrentSupportNames } from "@/lib/support/current-names";
 import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -26,7 +27,8 @@ export async function GET(req: Request) {
       .select("*")
       .eq("ticket_id", id)
       .order("created_at", { ascending: true });
-    return NextResponse.json({ ticket, messages: await firmarAdjuntos(db, messages ?? []) });
+    const current = await withCurrentSupportNames(db, ticket ? [ticket] : [], messages ?? []);
+    return NextResponse.json({ ticket: current.tickets[0] ?? null, messages: await firmarAdjuntos(db, current.messages) }, { headers: { "Cache-Control": "no-store" } });
   }
 
   const status = url.searchParams.get("status") ?? "open";
@@ -44,12 +46,13 @@ export async function GET(req: Request) {
     .from("support_tickets").select("id", { count: "exact", head: true }).eq("status", "in_progress").eq("last_reply_role", "user");
   const needsAttention = (pending ?? 0) + (awaitingReply ?? 0);
 
+  const current = await withCurrentSupportNames(db, data ?? []);
   return NextResponse.json({
-    tickets: data ?? [],
+    tickets: current.tickets,
     openCount: needsAttention,
     needsAttention,
     counts: { open: pending ?? 0, in_progress: inProgress ?? 0, awaiting: awaitingReply ?? 0 },
-  });
+  }, { headers: { "Cache-Control": "no-store" } });
 }
 
 // PATCH /api/admin/support — change ticket status (with audit). Admin-only.

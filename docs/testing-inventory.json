@@ -8,7 +8,7 @@
     "handlers": 94,
     "components": 237,
     "hooks": 25,
-    "specs": 121
+    "specs": 122
   },
   "dashboardTabs": [
     "home",
@@ -4503,8 +4503,10 @@
         "tests/e2e/admin-editar-datos.spec.ts",
         "tests/e2e/admin-campaigns-policy.spec.ts"
       ],
-      "directReferences": [],
-      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "directReferences": [
+        "tests/e2e/current-profile-names-runtime.spec.ts"
+      ],
+      "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "API + integración BD + autorización/propiedad + idempotencia; smoke solo lectura",
       "coverage": "Alcance detallado pendiente de revisión; no certificado",
       "priority": "P0"
@@ -5929,8 +5931,10 @@
         "tests/e2e/support-guest-access.spec.ts",
         "tests/e2e/soporte-cierre-automatico.spec.ts"
       ],
-      "directReferences": [],
-      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "directReferences": [
+        "tests/e2e/current-profile-names-runtime.spec.ts"
+      ],
+      "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "API + integración BD + autorización/propiedad + idempotencia; smoke solo lectura",
       "coverage": "Alcance detallado pendiente de revisión; no certificado",
       "priority": "P1"
@@ -22366,6 +22370,31 @@
         {
           "line": 144,
           "title": "\"Project form keeps search prefills and safely closes on desktop\""
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/current-profile-names-runtime.spec.ts",
+      "cases": [
+        {
+          "line": 53,
+          "title": "\"admin support lists and detail use the corrected account name on every request\""
+        },
+        {
+          "line": 68,
+          "title": "\"the account's own support panel resolves the same current labels\""
+        },
+        {
+          "line": 75,
+          "title": "\"guest and deleted account snapshots remain available without matching accounts by email\""
+        },
+        {
+          "line": 82,
+          "title": "\"identity lookup is deduplicated and batched, and profile failures cannot silently return old labels\""
+        },
+        {
+          "line": 90,
+          "title": "\"support routes enforce account and admin permissions before resolving identities\""
         }
       ]
     },

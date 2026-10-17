@@ -208,7 +208,7 @@ export async function GET(req: Request) {
       contactos: contactosPorProyecto.get(row.id as string) ?? 0,
       client: {
         id: row.client_id,
-        name: row.client_name_snapshot ?? row.profiles?.full_name ?? "Cliente",
+        name: row.profiles?.full_name || row.client_name_snapshot || "Cliente",
         email: row.client_email_snapshot ?? row.profiles?.email ?? null,
         cedula: row.profiles?.cedula ?? null,
         avatar_url: row.profiles?.avatar_url ?? null,

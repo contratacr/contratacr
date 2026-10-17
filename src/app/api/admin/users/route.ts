@@ -1,3 +1,4 @@
+import { getCurrentProfileNames } from "@/lib/profiles/current-names";
 import { NextResponse } from "next/server";
 import { processAccountDeletion } from "@/lib/account-deletion/process";
 import { getApiAdmin } from "@/lib/auth/admin";
@@ -282,8 +283,9 @@ export async function GET(req: Request) {
     const [jobsRes, offersRes, receivedReviewsRes] = await Promise.all([
       professional ? db.from("job_posts").select("id, title, status, created_at").eq("employer_id", professional.id).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
       professional ? db.from("professional_offers").select("id, title, status, price_now, currency, created_at").eq("professional_id", professional.id).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
-      professional ? db.from("reviews").select("id, rating, comment, moderation_status, created_at, client_name_snapshot").eq("professional_id", professional.id).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
+      professional ? db.from("reviews").select("id, client_id, rating, comment, moderation_status, created_at, client_name_snapshot").eq("professional_id", professional.id).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
     ]);
+    const reviewNames = await getCurrentProfileNames(db, (receivedReviewsRes.data ?? []).map((review) => review.client_id));
     return NextResponse.json({
       profile,
       professional: professional ?? null,
@@ -293,7 +295,7 @@ export async function GET(req: Request) {
       quotes: quotes ?? [],
       jobs: jobsRes.data ?? [],
       offers: offersRes.data ?? [],
-      receivedReviews: receivedReviewsRes.data ?? [],
+      receivedReviews: (receivedReviewsRes.data ?? []).map((review) => ({ ...review, client_name_snapshot: reviewNames.get(review.client_id ?? "") || review.client_name_snapshot })),
       verificationLog,
       appeals,
       reports,

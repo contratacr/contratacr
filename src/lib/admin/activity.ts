@@ -1,3 +1,4 @@
+import { withCurrentSupportNames } from "@/lib/support/current-names";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCategoryLabel } from "@/lib/data/categories";
 
@@ -16,9 +17,10 @@ export async function getAdminActivity(limit = 40, locale = "es"): Promise<Activ
       admin.from("profiles").select("id, created_at, full_name").eq("role", "client").order("created_at", { ascending: false }).limit(N),
       admin.from("quotes").select("id, created_at, title, client_name").order("created_at", { ascending: false }).limit(N),
       admin.from("projects").select("id, created_at, title, category_id").order("created_at", { ascending: false }).limit(N),
-      admin.from("support_tickets").select("id, created_at, subject, name").order("created_at", { ascending: false }).limit(N),
+      admin.from("support_tickets").select("id, user_id, created_at, subject, name").order("created_at", { ascending: false }).limit(N),
     ]);
 
+    const currentTickets = await withCurrentSupportNames(admin, tickets.data ?? []);
     const events: ActivityEvent[] = [];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     for (const p of (pros.data ?? []) as any[]) events.push({ id: `pro-${p.id}`, kind: "pro", title: p.profiles?.full_name || "Profesional", sub: `Nuevo profesional${p.category_id ? ` · ${getCategoryLabel(p.category_id, locale)}` : ""}`, createdAt: p.created_at });
@@ -29,7 +31,7 @@ export async function getAdminActivity(limit = 40, locale = "es"): Promise<Activ
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     for (const pr of (projects.data ?? []) as any[]) events.push({ id: `proy-${pr.id}`, kind: "proyecto", title: pr.title || "Proyecto", sub: `Proyecto publicado${pr.category_id ? ` · ${getCategoryLabel(pr.category_id, locale)}` : ""}`, createdAt: pr.created_at });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    for (const t of (tickets.data ?? []) as any[]) events.push({ id: `tic-${t.id}`, kind: "ticket", title: t.name || "Soporte", sub: `Ticket: ${(t.subject || "consulta").slice(0, 60)}`, createdAt: t.created_at });
+    for (const t of currentTickets.tickets as any[]) events.push({ id: `tic-${t.id}`, kind: "ticket", title: t.name || "Soporte", sub: `Ticket: ${(t.subject || "consulta").slice(0, 60)}`, createdAt: t.created_at });
 
     return events
       .filter((e) => e.createdAt)
