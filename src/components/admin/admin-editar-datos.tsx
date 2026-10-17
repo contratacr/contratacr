@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { History, KeyRound, Loader2, Pencil } from "lucide-react";
-import { olvidarDashboardCachePrefix } from "@/lib/dashboard-prefetch-cache";
+import { olvidarDashboardCache, olvidarDashboardCachePrefix } from "@/lib/dashboard-prefetch-cache";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 
@@ -16,6 +16,7 @@ type Datos = {
   phone: string | null;
 };
 type DatosPro = {
+  slug?: string | null;
   business_name: string | null;
   whatsapp: string | null;
   call_phone: string | null;
@@ -137,6 +138,7 @@ export function AdminEditarDatos({
         json.promociones ? `${json.promociones} promoci${json.promociones === 1 ? "ón" : "ones"}` : "",
       ].filter(Boolean).join(" y ");
       olvidarDashboardCachePrefix("admin:users:");
+      if (pro?.slug) olvidarDashboardCache(`profile:${pro.slug}`);
       await Promise.all([alGuardar(), cargarHistorial()]);
       setAviso(`Datos guardados.${extra ? ` El WhatsApp nuevo también quedó en ${extra}.` : ""}`);
       setAbierto(false);
