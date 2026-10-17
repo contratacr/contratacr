@@ -190,7 +190,7 @@ export function AdminUserProfile({
   useEffect(() => {
     let alive = true;
     queueMicrotask(() => { if (alive) setLoading(true); });
-    fetch(`/api/admin/users?id=${userId}`)
+    fetch(`/api/admin/users?id=${userId}`, { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => { if (!alive) return; if (d.error) setError(d.error); else { setError(null); setData(d); } })
       .catch(() => alive && setError("No se pudo cargar el usuario."))
@@ -199,7 +199,7 @@ export function AdminUserProfile({
   }, [userId]);
 
   async function refreshUser() {
-    const res = await fetch(`/api/admin/users?id=${userId}`);
+    const res = await fetch(`/api/admin/users?id=${userId}`, { cache: "no-store" });
     const json = await res.json();
     if (!res.ok || json.error) throw new Error(json.error ?? "No se pudo cargar el usuario.");
     setData(json);
@@ -342,7 +342,7 @@ export function AdminUserProfile({
                 </a>
               )}
             </div>
-            <AdminEditarDatos userId={userId} perfil={profile} pro={pro} alGuardar={refreshUser} />
+            <AdminEditarDatos userId={profile.id} perfil={profile} pro={pro} alGuardar={refreshUser} />
           </div>
         </div>
       </div>

@@ -1,3 +1,4 @@
+import { invalidateProfessionalCache } from "@/lib/cache/professional-revision";
 import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -92,12 +93,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   };
 
   const db = createAdminClient();
-  const { data: perfil } = await db.from("profiles").select("id, full_name, email, phone").eq("id", id).maybeSingle();
+  const { data: perfil } = await db.from("profiles").select("id, full_name, email, phone, cedula").eq("id", id).maybeSingle();
   if (!perfil) return NextResponse.json({ error: "Usuario no encontrado." }, { status: 404 });
-  const { data: pros } = await db
+  const { data: pros, error: prosError } = await db
     .from("professionals")
     .select("id, business_name, whatsapp, call_phone")
     .eq("profile_id", id);
+  if (prosError) return NextResponse.json({ error: "No se pudo cargar el perfil profesional." }, { status: 503 });
   const pro = pros?.[0] ?? null;
 
   // Solo cuenta lo que de verdad cambia: un formulario reenviado sin tocar nada
@@ -150,16 +152,36 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     }
   }
 
-  if (!Object.keys(despues).length) return NextResponse.json({ ok: true, sinCambios: true });
+  // Check Auth before writing: a retry must also repair an incomplete name sync.
+  let metadatos: Record<string, unknown> = {};
+  let appMetadatos: Record<string, unknown> = {};
+  if (pedidos.full_name !== undefined) {
+    const { data, error } = await db.auth.admin.getUserById(id);
+    if (error || !data.user) return NextResponse.json({ error: "No se pudo cargar la cuenta para guardar el nombre." }, { status: 503 });
+    metadatos = data.user.user_metadata ?? {};
+    appMetadatos = data.user.app_metadata ?? {};
+    if (metadatos.full_name !== pedidos.full_name && !("nombre" in despues)) {
+      antes.nombre = perfil.full_name;
+      despues.nombre = pedidos.full_name;
+    }
+  }
+
+  if (!Object.keys(despues).length) {
+    await invalidateProfessionalCache();
+    return NextResponse.json({ ok: true, sinCambios: true });
+  }
 
   // El correo va primero: es lo único que puede rechazar Auth, y si falla no
   // conviene dejar el resto a medias.
-  if (correoNuevo) {
-    const { error } = await db.auth.admin.updateUserById(id, { email: correoNuevo, email_confirm: true });
+  if (correoNuevo || "nombre" in despues) {
+    const { error } = await db.auth.admin.updateUserById(id, {
+      ...(correoNuevo ? { email: correoNuevo, email_confirm: true } : {}),
+      ...("nombre" in despues ? { user_metadata: { ...metadatos, full_name: pedidos.full_name }, app_metadata: { ...appMetadatos, admin_profile_name: { name: pedidos.full_name, cedula: perfil.cedula } } } : {}),
+    });
     if (error) {
-      console.error("[admin/user-datos] correo:", error.message);
+      console.error("[admin/user-datos] cuenta:", error.message);
       const ocupado = /already|registered|exists/i.test(error.message);
-      return NextResponse.json({ error: ocupado ? "Ese correo ya lo usa otra cuenta." : "No se pudo cambiar el correo." }, { status: ocupado ? 409 : 500 });
+      return NextResponse.json({ error: ocupado ? "Ese correo ya lo usa otra cuenta." : "No se pudieron guardar los datos de la cuenta." }, { status: ocupado ? 409 : 500 });
     }
   }
 
@@ -168,17 +190,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (waNuevo !== undefined) perfilNuevo.phone = waNuevo || null;
   if (correoNuevo) perfilNuevo.email = correoNuevo;
   if (Object.keys(perfilNuevo).length) {
-    const { error } = await db.from("profiles").update(perfilNuevo).eq("id", id);
+    const { error } = await db.from("profiles").update(perfilNuevo).eq("id", id).select("id").single();
     if (error) {
       console.error("[admin/user-datos] perfil:", error.message);
       return NextResponse.json({ error: "No se pudieron guardar los datos." }, { status: 500 });
     }
-  }
-  if ("nombre" in despues) {
-    // El nombre también vive en los metadatos de Auth (lo leen el onboarding y los correos).
-    const { data: authUser } = await db.auth.admin.getUserById(id);
-    const metadatos = authUser?.user?.user_metadata ?? {};
-    await db.auth.admin.updateUserById(id, { user_metadata: { ...metadatos, full_name: pedidos.full_name } });
   }
 
   let empleos = 0;
@@ -190,24 +206,25 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if (llamadasNuevo !== undefined) filaPro.call_phone = llamadasNuevo || null;
     // Si las llamadas iban al mismo número viejo, siguen al nuevo.
     else if (waNuevo && whatsappDigits(p.call_phone) === waViejo) filaPro.call_phone = waNuevo;
-    if (Object.keys(filaPro).length) {
-      const { error } = await db.from("professionals").update(filaPro).eq("id", p.id);
-      if (error) {
-        console.error("[admin/user-datos] profesional:", error.message);
-        return NextResponse.json({ error: "No se pudo guardar el perfil profesional." }, { status: 500 });
-      }
-    }
     if (waNuevo && waViejo) {
       // Solo las publicaciones que tenían el número viejo: una con otro número
       // a propósito (la de un encargado, por ejemplo) se respeta.
       for (const [tabla, dueno] of [["job_posts", "employer_id"], ["professional_offers", "professional_id"]] as const) {
-        const { data: filas } = await db.from(tabla).select("id, contact_whatsapp").eq(dueno, p.id);
+        const { data: filas, error: readError } = await db.from(tabla).select("id, contact_whatsapp").eq(dueno, p.id);
+        if (readError) return NextResponse.json({ error: "No se pudieron consultar los contactos de sus publicaciones. Intenta guardar nuevamente." }, { status: 503 });
         const ids = (filas ?? []).filter((f) => whatsappDigits(f.contact_whatsapp) === waViejo).map((f) => f.id);
         if (!ids.length) continue;
         const { error } = await db.from(tabla).update({ contact_whatsapp: waNuevo }).in("id", ids);
-        if (error) console.error(`[admin/user-datos] ${tabla}:`, error.message);
-        else if (tabla === "job_posts") empleos += ids.length;
+        if (error) return NextResponse.json({ error: "No se pudo actualizar el WhatsApp de sus publicaciones. Intenta guardar nuevamente." }, { status: 503 });
+        if (tabla === "job_posts") empleos += ids.length;
         else promociones += ids.length;
+      }
+    }
+    if (Object.keys(filaPro).length) {
+      const { error } = await db.from("professionals").update(filaPro).eq("id", p.id).select("id").single();
+      if (error) {
+        console.error("[admin/user-datos] profesional:", error.message);
+        return NextResponse.json({ error: "No se pudo guardar el perfil profesional." }, { status: 500 });
       }
     }
   }
@@ -222,8 +239,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     source: "admin",
     beforeData: antes,
     afterData: despues,
-    metadata: { empleos_actualizados: empleos, promociones_actualizadas: promociones },
+    metadata: { empleos_actualizados: empleos, promociones_actualizadas: promociones, ...("nombre" in despues ? { name_cedula: perfil.cedula } : {}) },
   });
+
+  await invalidateProfessionalCache();
 
   return NextResponse.json({ ok: true, cambios: Object.keys(despues), empleos, promociones });
 }
