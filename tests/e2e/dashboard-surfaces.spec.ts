@@ -606,3 +606,22 @@ test.describe("@seeded dashboard surfaces", () => {
     expect(await page.evaluate(() => window.scrollY)).toBeLessThanOrEqual(4);
   });
 });
+
+test("@seeded verification deep link cannot replace the next panel section", async ({ page }) => {
+  test.skip(!canRunSeededRegression(), "Requires isolated regression accounts.");
+  await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+  const normalizationRequests: string[] = [];
+  page.on("request", request => {
+    const url = new URL(request.url());
+    if (url.pathname.endsWith("/dashboard/profesional") && url.searchParams.get("tab") === "profile" && request.headers().rsc === "1" && request.headers()["next-router-prefetch"] !== "1") {
+      normalizationRequests.push(url.pathname);
+    }
+  });
+  await gotoOK(page, "/en/dashboard/profesional?tab=verificacion");
+  await expect.poll(() => new URL(page.url()).searchParams.get("tab")).toBe("profile");
+  await expect(page.locator("[data-current-identification]").filter({ visible: true }).first()).toBeVisible();
+  await gotoOK(page, "/en/dashboard/profesional?tab=notifications");
+  await expectVisibleText(page.locator("body"), "Notifications");
+  expect(new URL(page.url()).searchParams.get("tab")).toBe("notifications");
+  expect(normalizationRequests, "Canonicalizing a panel tab must not start a competing server navigation").toEqual([]);
+});

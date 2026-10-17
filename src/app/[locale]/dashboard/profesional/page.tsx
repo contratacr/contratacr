@@ -822,20 +822,20 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (!legacyVerificationTab) return;
+    if (!legacyVerificationTab || authLoading || loading || !user) return;
     const params = new URLSearchParams(searchParams.toString());
     if (!isProvider) {
       params.set("tab", "sent_projects");
       params.set("mode", "use");
       params.delete("focus");
-      router.replace(`/dashboard/profesional?${params.toString()}`, { scroll: false });
+      window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
       return;
     }
     params.set("tab", "profile");
     params.set("mode", "offer");
     params.set("focus", "verification");
-    router.replace(`/dashboard/profesional?${params.toString()}`, { scroll: false });
-  }, [isProvider, legacyVerificationTab, searchParams, router]);
+    window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
+  }, [authLoading, isProvider, legacyVerificationTab, loading, searchParams, user]);
 
   useEffect(() => {
     if (requestedTab !== "chat") return;
@@ -886,7 +886,9 @@ export default function DashboardPage() {
     const focus = searchParams.get("focus");
     if (!focus || authLoading || loading || !user) return;
     if (requestedTab === "services" && !isProvider) return;
+    const sourceUrl = window.location.href;
     queueMicrotask(() => {
+      if (window.location.href !== sourceUrl) return;
       if (requestedTab === "services") {
         setServiceFocus({ field: focus, key: nextFocusKey() });
       } else {
@@ -895,9 +897,9 @@ export default function DashboardPage() {
       const params = new URLSearchParams(searchParams.toString());
       params.delete("focus");
       const qs = params.toString();
-      router.replace(`/dashboard/profesional${qs ? `?${qs}` : ""}`, { scroll: false });
+      window.history.replaceState(null, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`);
     });
-  }, [searchParams, router, nextFocusKey, authLoading, loading, user, requestedTab, isProvider]);
+  }, [searchParams, nextFocusKey, authLoading, loading, user, requestedTab, isProvider]);
 
   const cacheDashboardBootstrap = useCallback((next: Partial<DashboardBootstrap>) => {
     if (!user) return;
