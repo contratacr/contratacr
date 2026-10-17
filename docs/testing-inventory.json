@@ -12400,7 +12400,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 253,
+          "line": 257,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => onNavigate(result.profileHref)}",
@@ -12408,7 +12408,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 267,
+          "line": 271,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => onNavigate(result.profileHref)}",
@@ -12416,7 +12416,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 278,
+          "line": 282,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => onNavigate(result.actionHref)}",
@@ -12424,7 +12424,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 591,
+          "line": 589,
           "tag": "button",
           "label": "{copy.closedLabel}",
           "handler": "{() => setOpen(true)}",
@@ -12432,7 +12432,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 645,
+          "line": 643,
           "tag": "button",
           "label": "{lang === \"en\" ? \"Open menu\" : \"Abrir menú\"}",
           "handler": "{() => window.dispatchEvent(new Event(\"ccr:open-mobile-menu\"))}",
@@ -12440,15 +12440,15 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 653,
+          "line": 651,
           "tag": "Link",
           "label": "\"ContrataCR\"",
-          "handler": "{(event) => {\n                  // El logo SIEMPRE deja al usuario en la portada: cierra esta\n                  // ventana y, si la ruta de abajo no era la portada, navega.\n                  // Sin esto, abierto desde la portada era un no-viaje mudo.\n                  event.preventDefault();\n                  setOpen(false);\n                  const enPortada = /^\\/(?:es|en)?\\/?$/.test(window.location.pathname);\n                  if (!enPortada) router.push(\"/\");\n                }}",
+          "handler": "{(event) => {\n                  // El logo SIEMPRE deja al usuario en la portada: cierra esta\n                  // ventana y, si la ruta de abajo no era la portada, navega.\n                  // Sin esto, abierto desde la portada era un no-viaje mudo.\n                  event.preventDefault();\n                  dismissAssistant();\n                  const enPortada = /^\\/(?:es|en)?\\/?$/.test(window.location.pathname);\n                  if (!enPortada) router.push(\"/\");\n                }}",
           "destination": "\"/\"",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 673,
+          "line": 671,
           "tag": "button",
           "label": "{lang === \"en\" ? \"Back\" : \"Atrás\"}",
           "handler": "{onBack}",
@@ -12456,7 +12456,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 687,
+          "line": 685,
           "tag": "button",
           "label": "{copy.reset}",
           "handler": "{resetConversation}",
@@ -12464,15 +12464,15 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 700,
+          "line": 698,
           "tag": "button",
           "label": "{copy.minimize}",
-          "handler": "{() => setOpen(false)}",
+          "handler": "{dismissAssistant}",
           "destination": "",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 728,
+          "line": 726,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => navigate(message.action!.href)}",
@@ -12480,7 +12480,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 734,
+          "line": 732,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => void suggestService(index, message.suggestedService!)}",
@@ -12488,7 +12488,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 765,
+          "line": 763,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => void ask(topic.prompt)}",
@@ -12496,7 +12496,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 800,
+          "line": 798,
           "tag": "form",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{submitDraft}",
@@ -12504,7 +12504,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 801,
+          "line": 799,
           "tag": "input",
           "label": "{lang === \"en\" ? \"Ask anything...\" : \"Escribe una pregunta...\"}",
           "handler": "{(event) => setDraft(event.target.value.slice(0, 240))}",
@@ -12512,7 +12512,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 807,
+          "line": 805,
           "tag": "button",
           "label": "{copy.send}",
           "handler": "",
@@ -22165,15 +22165,15 @@
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 62,
+          "line": 68,
           "title": "\"signed-in assistant Message enters the draft section and back restores the conversation\""
         },
         {
-          "line": 63,
+          "line": 69,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 94,
+          "line": 100,
           "title": "\"assistant return routes preserve root queries and hash in both languages\""
         }
       ]

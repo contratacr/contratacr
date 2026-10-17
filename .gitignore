@@ -55,3 +55,7 @@ next-env.d.ts
 
 # Caché local de wrangler (Cloudflare) en el worktree móvil
 .wrangler/
+
+# Focused assistant CI artifacts (kept separate from the broader smoke output).
+/test-results-assistant-first
+/playwright-report-assistant-first
