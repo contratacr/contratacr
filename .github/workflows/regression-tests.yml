@@ -138,6 +138,9 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/ccr-email-contract" --no-save --ignore-scripts @electric-sql/pglite@0.5.9
           PGLITE_MODULE_PATH="$RUNNER_TEMP/ccr-email-contract/node_modules/@electric-sql/pglite/dist/index.js" node scripts/verify-email-delivery.mjs
 
+      - name: Verify own views and contacts never inflate marketplace statistics
+        run: PGLITE_MODULE_PATH="$RUNNER_TEMP/ccr-email-contract/node_modules/@electric-sql/pglite/dist/index.js" node scripts/verify-self-interaction-exclusion.mjs
+
       - name: Verify durable push isolation locally
         run: npm run test:push-isolation
 
