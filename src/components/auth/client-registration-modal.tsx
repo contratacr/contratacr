@@ -311,7 +311,7 @@ export function ClientRegistrationModal({
         data: {
           full_name: resolved,
           role: "client",
-          onboarding_completed: true,
+          onboarding_completed: false,
         },
       },
     });
@@ -350,8 +350,15 @@ export function ClientRegistrationModal({
           setView("login");
           return;
         }
+        if (!res.ok) {
+          setError(json.error ?? tRc("errUnexpected"));
+          setSubmitting(false);
+          return;
+        }
       } catch {
-        // Non-fatal — name will be saved when the session is established.
+        setError(tRc("errUnexpected"));
+        setSubmitting(false);
+        return;
       }
     }
 

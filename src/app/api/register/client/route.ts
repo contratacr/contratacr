@@ -22,6 +22,9 @@ export async function POST(req: Request) {
     // columns anyway — never write them here.
     const { fullName, phone, cedula, userId: bodyUserId } = body;
     const attribution = attributionColumnsFromBody(body.attribution);
+    if (typeof fullName !== "string" || !fullName.trim() || typeof phone !== "string" || !/^\d{8,15}$/.test(phone.replace(/\D/g, ""))) {
+      return NextResponse.json({ error: mensajeDeError(req, { es: "Completa tu nombre y WhatsApp para continuar.", en: "Enter your name and WhatsApp number to continue." }) }, { status: 400 });
+    }
 
     const sessionClient = await createServerClient();
     const { data: { user: sessionUser } } = await sessionClient.auth.getUser();
@@ -107,6 +110,11 @@ export async function POST(req: Request) {
       }
       return NextResponse.json({ error: "No pudimos crear tu cuenta. Intenta de nuevo en unos minutos." }, { status: 500 });
     }
+
+    const { error: completionError } = await supabase.auth.admin.updateUserById(userId, {
+      user_metadata: { ...(sessionUser?.user_metadata ?? {}), role: "client", onboarding_completed: true, intended_role: null },
+    });
+    if (completionError) return NextResponse.json({ error: "No pudimos completar tu cuenta. Intenta de nuevo." }, { status: 500 });
 
     await auditUserAction(supabase, req, {
       actorUserId: userId,

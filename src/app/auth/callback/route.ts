@@ -1,3 +1,4 @@
+import { pendingRegistrationPath, registrationComplete } from "@/lib/auth/registration-state";
 import { androidOAuthReturnResponse } from "@/lib/auth/android-oauth-return";
 import { LAST_SIGN_IN_COOKIE, signInMethod } from "@/lib/auth/last-sign-in";
 import { NextRequest, NextResponse } from "next/server";
@@ -124,14 +125,14 @@ async function finishSignedIn(
     const { data: prof } = await supabase.rpc("get_my_profile");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const p = prof as any;
-    if (p?.onboarding_completed) onboardingDone = true;
+    onboardingDone = registrationComplete(user.user_metadata, p?.onboarding_completed);
   }
 
   if (!onboardingDone) {
     // Genuinely new OAuth user, no role chosen yet → onboarding. A short-lived
     // cookie tells that page so (a query string can be dropped on the way), and it
     // skips its own "is this an existing account?" round trip.
-    const toOnboarding = authenticatedRedirect(`${ctx.origin}/${ctx.callbackLocale}/onboarding`);
+    const toOnboarding = authenticatedRedirect(`${ctx.origin}/${ctx.callbackLocale}${pendingRegistrationPath(user.user_metadata)}`);
     toOnboarding.cookies.set("ccr_onboarding_new", "1", { path: "/", maxAge: 120, sameSite: "lax" });
     return toOnboarding;
   }

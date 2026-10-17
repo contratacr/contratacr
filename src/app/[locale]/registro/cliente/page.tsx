@@ -1,5 +1,7 @@
 "use client";
 
+import { useRegistrationIntent } from "@/hooks/use-registration-intent";
+
 import { rutaInternaSegura } from "@/lib/navigation/ruta-interna";
 
 import { Link } from "@/i18n/navigation";
@@ -31,6 +33,7 @@ import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { irAlInicio } from "@/lib/ir-al-inicio";
 
 export default function RegisterClientPage() {
+  useRegistrationIntent("client");
   const router = useRouter();
   const t = useTranslations("registerClient");
   const searchParams = useSearchParams();
@@ -59,7 +62,7 @@ export default function RegisterClientPage() {
   const panelHref = rutaInternaSegura(searchParams.get("redirect")) ?? "/dashboard/profesional?mode=use";
 
   async function completeSuccess() {
-    await createClient().auth.getUser();
+    await createClient().auth.refreshSession();
     // Same conversion the modal reports, so the "Registro de cliente" custom
     // conversion counts accounts created from this page too.
     trackMetaEvent("CompleteRegistration", { content_name: "client_registration", status: "client" });
@@ -79,9 +82,11 @@ export default function RegisterClientPage() {
     if (user) {
       const name = (user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || "";
       const photo = (user.user_metadata?.avatar_url as string) || (user.user_metadata?.picture as string) || null;
-      setFullName(limitText(name, NAME_MAX_LENGTH));
-      setEmail(user.email ?? "");
-      setOauthPhoto(photo);
+      queueMicrotask(() => {
+        setFullName(limitText(name, NAME_MAX_LENGTH));
+        setEmail(user.email ?? "");
+        setOauthPhoto(photo);
+      });
     }
   }, [user, authLoading]);
 
@@ -126,9 +131,8 @@ export default function RegisterClientPage() {
           email,
           password,
           options: {
-            // onboarding_completed lets middleware send them straight to their
-            // panel after verifying — never back to the role-selection screen.
-            data: { role: "client", full_name: cleanName, onboarding_completed: true },
+            // The API marks completion only after the required contact data saves.
+            data: { role: "client", full_name: cleanName, onboarding_completed: false },
           },
         });
 

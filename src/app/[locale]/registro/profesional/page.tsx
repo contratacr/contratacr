@@ -1,5 +1,7 @@
 "use client";
 
+import { useRegistrationIntent } from "@/hooks/use-registration-intent";
+
 import { AvatarFileInput } from "@/components/ui/avatar-file-input";
 
 import { pareceFijoDeCostaRica } from "@/lib/telefono-movil";
@@ -416,6 +418,7 @@ function BarraDeAcciones({ activa, children }: { activa: boolean; children: Reac
 }
 
 export default function RegisterProfessionalPage() {
+  useRegistrationIntent("professional");
   const t = useTranslations("registration.pro");
   const tRp = useTranslations("resetPassword");
   const locale = useLocale();
@@ -722,7 +725,7 @@ export default function RegisterProfessionalPage() {
             professional_signup_started: true,
             professional_no_cr_id: noCrId,
             professional_identity_mismatch: identityMismatch,
-            onboarding_completed: true,
+            onboarding_completed: false,
           },
         },
       });
