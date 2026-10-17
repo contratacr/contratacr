@@ -43,7 +43,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: mensajeDeError(req, { es: "Usuario inválido.", en: "Invalid user." }) }, { status: 401 });
       }
       const { data: adminLookup, error: adminError } = await supabase.auth.admin.getUserById(bodyUserId);
-      if (adminError || !adminLookup.user) {
+      if (adminError || !adminLookup.user || adminLookup.user.email_confirmed_at) {
         return NextResponse.json({ error: mensajeDeError(req, { es: "No se encontró el usuario.", en: "User not found." }) }, { status: 401 });
       }
       userId = adminLookup.user.id;

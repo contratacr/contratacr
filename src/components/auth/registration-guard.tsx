@@ -30,9 +30,10 @@ export function RegistrationGuard({ children }: { children: ReactNode }) {
     };
   }, [loading, pending, destination, pathname, router]);
   useEffect(() => {
+    let active = true;
     const reconcile = () => {
       void createClient().auth.getUser().then(({ data }) => {
-        if (data.user && !registrationComplete(data.user.user_metadata)) {
+        if (active && data.user && !registrationComplete(data.user.user_metadata)) {
           window.location.replace(`${prefijoDeIdioma(locale)}${pendingRegistrationPath(data.user.user_metadata)}`);
         }
       }).catch(() => { /* Network failure must not discard a valid session. */ });
@@ -41,6 +42,7 @@ export function RegistrationGuard({ children }: { children: ReactNode }) {
     window.addEventListener("pageshow", restored);
     window.addEventListener("popstate", reconcile);
     return () => {
+      active = false;
       window.removeEventListener("pageshow", restored);
       window.removeEventListener("popstate", reconcile);
     };
