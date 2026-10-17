@@ -566,6 +566,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
    without sharing state. */
 interface AccountMenuProps {
   isPro: boolean;
+  isAdmin: boolean;
   displayName: string;
   professionalPanelHref: string;
   clientPanelHref: string;
@@ -575,7 +576,7 @@ interface AccountMenuProps {
 }
 
 function AccountMenu({
-  isPro, displayName, professionalPanelHref, clientPanelHref, profileHref, savedHref, onSignOut,
+  isPro, isAdmin, displayName, professionalPanelHref, clientPanelHref, profileHref, savedHref, onSignOut,
 }: AccountMenuProps) {
   const t = useTranslations("header");
   const locale = useLocale();
@@ -615,13 +616,19 @@ function AccountMenu({
           </div>
 
           <div className="pt-1">
+            {isAdmin && (
+              <Link href="/admin" onClick={() => setOpen(false)} className={menuItemClass}>
+                <Shield className="h-4 w-4 text-[#009FD9]" />
+                {t("adminPanel")}
+              </Link>
+            )}
             <Link
               href={isPro ? professionalPanelHref : clientPanelHref}
               onClick={() => setOpen(false)}
               className={menuItemClass}
             >
               <UserRound className="h-4 w-4 text-[#009FD9]" />
-              {t("myPanel")}
+              {t(isAdmin && isPro ? "professionalPanel" : "myPanel")}
             </Link>
             {/* Ni «Mis proyectos» ni «Publicar proyecto» viven aquí: las
                 dos cosas se hacen en el tablero de /proyectos, que ya está en el
@@ -2494,6 +2501,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       <NotificationBell scope="all" />
                       <AccountMenu
                         isPro={isPro}
+                        isAdmin={isAdminUser}
                         displayName={accountDisplayName}
                         professionalPanelHref={professionalPanelHref}
                         clientPanelHref={clientPanelHref}
