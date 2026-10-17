@@ -73,19 +73,33 @@ function FotoDeFondo() {
   // de las demás en el DOM), por un instante se veía el fondo: un «refresco».
   const [anterior, setAnterior] = useState<number | null>(null);
   // Las otras fotos se piden después de la primera, no compiten con ella.
-  const [cargarResto, setCargarResto] = useState(false);
+  const [preparadas, setPreparadas] = useState<ReadonlySet<number>>(() => new Set([0, PRIMERA_PC]));
+  const listas = useRef(new Set([0, PRIMERA_PC]));
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const empezar = window.setTimeout(() => setCargarResto(true), 1500);
     // En computadora solo rotan las fotos con el profesional a la DERECHA (las
     // otras lo dejaban detrás del recuadro del buscador).
     const enPc = window.matchMedia("(min-width: 1024px)").matches;
     // En computadora queda UNA foto fija, como Angi: la única con el profesional a la derecha.
     const validas = HERO_FOTOS.map((f, i) => ((enPc ? f.soloTelefono : f.soloPc) ? -1 : i)).filter((i) => i >= 0);
-    setActual(validas[0]);
-    const id = window.setInterval(() => setActual((i) => { setAnterior(i); const k = validas.indexOf(i); return validas[(k + 1) % validas.length]; }), CADA_FOTO_MS);
-    return () => { window.clearTimeout(empezar); window.clearInterval(id); };
+    queueMicrotask(() => setActual(validas[0]));
+    const id = window.setInterval(() => setActual((i) => {
+      const siguiente = validas[(validas.indexOf(i) + 1) % validas.length];
+      if (!listas.current.has(siguiente)) return i;
+      setAnterior(i);
+      return siguiente;
+    }), CADA_FOTO_MS);
+    return () => window.clearInterval(id);
   }, []);
+  // Warm only the next slide. Keep the current photo until its successor loaded.
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const enPc = window.matchMedia("(min-width: 1024px)").matches;
+    const validas = HERO_FOTOS.map((foto, i) => ((enPc ? foto.soloTelefono : foto.soloPc) ? -1 : i)).filter(i => i >= 0);
+    const siguiente = validas[(validas.indexOf(actual) + 1) % validas.length];
+    const timer = window.setTimeout(() => setPreparadas(prev => prev.has(siguiente) ? prev : new Set([...prev, siguiente])), 1500);
+    return () => window.clearTimeout(timer);
+  }, [actual]);
   const anchos = [800, 1200, 1600, 2200, 2800, 3600, 4200];
   // LA PRIMERA FOTO VIVE EN EL PROPIO SITIO (6-oct-2026), ya recortada y en
   // AVIF: 100 KB en un teléfono, por la MISMA conexión que la página. Pedida a
@@ -95,7 +109,7 @@ function FotoDeFondo() {
   preload("/hero/liniero-1400.avif", { as: "image", type: "image/avif", fetchPriority: "high", imageSrcSet: juegoLocal("avif"), imageSizes: TAMANOS_PRIMERA });
   return (
     <div aria-hidden className="absolute inset-0 isolate z-0 overflow-hidden bg-[#8a7a68]" style={{ backgroundImage: `url("${HERO_MINIATURA}")`, backgroundSize: "cover", backgroundPosition: HERO_FOTOS[0].foco }}>
-      {HERO_FOTOS.map((foto, i) => (i === 0 || i === PRIMERA_PC || cargarResto) && envolver(i, foto.id,
+      {HERO_FOTOS.map((foto, i) => (preparadas.has(i)) && envolver(i, foto.id,
         // eslint-disable-next-line @next/next/no-img-element -- ya viene del tamaño justo
         <img
           key={foto.id}
@@ -105,6 +119,7 @@ function FotoDeFondo() {
           sizes={i === 0 ? TAMANOS_PRIMERA : "(max-width: 639px) 150vw, 100vw"}
           alt=""
           fetchPriority={i === 0 || i === PRIMERA_PC ? "high" : "low"}
+          onLoad={(event) => { void event.currentTarget.decode().then(() => listas.current.add(i)).catch(() => {}); }}
           decoding="async"
           className={cn(
             foto.soloTelefono && "lg:hidden", foto.soloPc && "hidden lg:block",

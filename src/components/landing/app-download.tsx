@@ -7,7 +7,7 @@ import { X } from "lucide-react";
 import { APP_STORES } from "@/lib/app-stores";
 export { APP_STORES } from "@/lib/app-stores";
 import { useLocale } from "next-intl";
-import { useEffect, useLayoutEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import { useNativeApp } from "@/hooks/use-native-app";
 
@@ -34,12 +34,22 @@ export function AppStoreLinks() {
 export function AppDownloadSection() {
   const native = useNativeApp();
   const en = useLocale() === "en";
+  const section = useRef<HTMLElement | null>(null);
+  const [near, setNear] = useState(false);
+  useEffect(() => {
+    if (native || near || !section.current) return;
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) { setNear(true); observer.disconnect(); }
+    }, { rootMargin: "500px 0px" });
+    observer.observe(section.current);
+    return () => observer.disconnect();
+  }, [native, near]);
   if (native) return null;
-  return <section id="descargar-app" data-testid="app-download-section" className="ccr-solo-web ccr-download-section relative isolate flex w-full min-w-0 min-h-[max(520px,140vw)] items-end overflow-hidden bg-[#38261c] sm:aspect-[3/1] sm:min-h-[360px] sm:items-center lg:min-h-[460px]">
-    <picture className="absolute inset-0 -z-10">
+  return <section ref={section} id="descargar-app" data-testid="app-download-section" className="ccr-solo-web ccr-download-section relative isolate flex w-full min-w-0 min-h-[max(520px,140vw)] items-end overflow-hidden bg-[#38261c] sm:aspect-[3/1] sm:min-h-[360px] sm:items-center lg:min-h-[460px]">
+    {near && <picture className="absolute inset-0 -z-10">
       <source media="(max-width: 639px)" srcSet="/stores/app-workshop-mobile-welcome-20261013.webp" width={1122} height={1402} />
       <Image src="/stores/app-workshop-desktop-welcome-20261013.webp" width={2172} height={724} unoptimized alt={en ? "ContrataCR on a phone in a carpentry workshop" : "ContrataCR en un teléfono dentro de un taller de carpintería"} data-testid="app-download-artwork" className="h-full w-full object-cover object-top sm:object-right" />
-    </picture>
+    </picture>}
     <div className="relative mx-auto w-full max-w-7xl px-5 pb-5 pt-8 sm:px-8 sm:py-6 lg:px-14 lg:py-7">
       <div className="mx-auto max-w-md text-center text-white [text-shadow:0_2px_14px_rgba(0,0,0,0.6)] sm:mx-0 sm:max-w-[49%] sm:text-left">
         <p className="mb-3 hidden text-[11px] font-semibold tracking-[0.14em] text-white/90 sm:block lg:mb-4 lg:text-sm">{en ? "AVAILABLE FOR iOS AND ANDROID" : "DISPONIBLE PARA iOS Y ANDROID"}</p>

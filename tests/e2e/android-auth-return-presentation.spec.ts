@@ -14,3 +14,10 @@ for (const locale of ["es", "en"]) {
     await expect(page.getByRole("heading")).toHaveText(locale === "es" ? "Volver a ContrataCR" : "Return to ContrataCR");
   });
 }
+
+test("actual callback response allows its principal logo through Next headers", async ({ page }) => {
+  await page.goto(`/auth/callback?flow=android-apple&native_state=${"a".repeat(64)}&code=synthetic-test-code`);
+  const logo = page.getByRole("img", { name: "ContrataCR" });
+  await expect(logo).toBeVisible();
+  await expect.poll(() => logo.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
+});

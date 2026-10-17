@@ -6,7 +6,7 @@ import { CATEGORY_GROUPS } from "@/lib/data/categories";
 // the group icon (see <ServiceImage>), so EVERY category always has a fitting visual.
 //
 // EASY TO EXTEND / REPLACE: just add or change a line —
-//   nutricion: "https://images.unsplash.com/photo-XXXX?w=800&auto=format&fit=crop&q=80",
+//   nutricion: "https://images.unsplash.com/photo-XXXX?w=800&auto=format&fit=crop&q=70",
 // (the owner reviews + swaps any that don't match, or uploads better ones later).
 //
 // "v" = verified (reused from the live landing carousel/explore-tabs, known-good).
@@ -15,7 +15,7 @@ import { CATEGORY_GROUPS } from "@/lib/data/categories";
 // Se piden a Unsplash al tamaño justo (srcSet de 800 y 1100 px) y en el formato
 // que el teléfono mejor lee (AVIF en el iPhone): pesan menos que una copia
 // propia en WebP (7-oct-2026). Las dos que Unsplash ya no tenía se quitaron.
-const U = (id: string) => `https://images.unsplash.com/photo-${id}?w=1100&auto=format&fit=crop&q=80`;
+const U = (id: string) => `https://images.unsplash.com/photo-${id}?w=1100&auto=format&fit=crop&q=70`;
 
 const CATEGORY_IMAGE: Record<string, string> = {
   electromecanica: U("1649038780045-235e4b6e40b4"), // técnico trabajando un motor eléctrico (1-oct-2026)
@@ -147,11 +147,11 @@ export function categoryImageUrl(id: string): string | undefined {
   return CATEGORY_IMAGE[id];
 }
 
-/** Los dos tamaños de la foto, para `srcSet`. */
+/** Responsive candidates avoid sending the 1100px original to small cards. */
 export function categoryImageSrcSet(id: string): string | undefined {
   const url = CATEGORY_IMAGE[id];
   if (!url?.startsWith("https://images.unsplash.com/")) return undefined;
-  return `${url.replace("w=1100", "w=800")} 800w, ${url} 1100w`;
+  return [320, 480, 640, 800, 1100].map(width => `${url.replace("w=1100", `w=${width}`)} ${width}w`).join(", ");
 }
 export function categoryGroupId(id: string): string {
   return ID_TO_GROUP.get(id) ?? "";

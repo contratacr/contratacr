@@ -175,8 +175,8 @@ test('responsive download artwork and store actions fit the viewport, including 
   await page.setViewportSize({width,height:1000});
   await section.scrollIntoViewIfNeeded();
   await expect.poll(()=>section.evaluate(el=>{
-   const image=el.querySelector('picture img') as HTMLImageElement;
-   return image.complete&&image.naturalWidth>0;
+   const image=el.querySelector('picture img') as HTMLImageElement | null;
+   return !!image?.complete&&image.naturalWidth>0;
   })).toBe(true);
   await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   // Read all rectangles in one frame; the shared anchor can still align the
