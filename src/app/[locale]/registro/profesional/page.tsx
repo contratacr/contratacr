@@ -623,7 +623,9 @@ export default function RegisterProfessionalPage() {
   // converting to professional has NO `professionals` row yet, so they stay and
   // continue the flow (this is the "Ofrecer mis servicios" path).
   useEffect(() => {
-    if (authLoading || !currentUser) return;
+    // Publishing updates auth metadata before its final redirect. Do not let
+    // the existing-professional guard race that redirect and drop completion.
+    if (authLoading || !currentUser || submitting || redirecting) return;
     let cancelled = false;
     (async () => {
       const supabase = createClient();
@@ -643,7 +645,7 @@ export default function RegisterProfessionalPage() {
       }
     })();
     return () => { cancelled = true; };
-  }, [authLoading, currentUser, router]);
+  }, [authLoading, currentUser, router, submitting, redirecting]);
 
   // Quien llegó aquí para publicar algo (o para reservar) vuelve a eso al
   // terminar; sin destino guardado, al panel profesional de siempre.

@@ -324,3 +324,5 @@ Validación de esta entrega: 7 contratos de caché, 5 contratos de consultas de 
 ## Perfil: conservar sección ante recarga tardía (16 octubre 2026)
 
 `professional-profile.spec.ts` retiene la respuesta de `/api/professionals/:slug`, abre el enlace de reseñas, cambia a Servicios y libera después los datos. Espera un nombre comercial sintético actualizado para comprobar que la respuesta ya se pintó y exige que Servicios siga seleccionada. Protege contra el efecto que reactivaba Reseñas al refrescar el objeto del profesional. La prueba existente mantiene la cobertura de estrellas sin texto, Atrás, Seguir editando y Salir sin guardar antes de cambiar de sección. Validación focal en Chromium desktop/móvil y WebKit móvil.
+
+El registro profesional ahora conserva `tab=completion` al publicar. El guard de cuentas ya profesionales se suspende durante el envío y la redirección final, y cancela su consulta anterior, para no competir con la navegación posterior a actualizar los metadatos de autenticación. `borrador-sin-sesion.spec.ts` exige llegar directamente a Completa tu perfil; se retiró la apertura manual que ocultaba la pérdida del destino.
