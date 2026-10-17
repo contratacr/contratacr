@@ -38,6 +38,7 @@ for (const locale of ["es", "en"] as const) test(`native assistant ${locale} kee
   const name = await dialog.getByRole("button", { name: "Profesional de prueba", exact: true }).boundingBox();
   const mark = await badge.boundingBox();
   expect(mark!.x - (name!.x + name!.width)).toBeLessThan(12);
+  expect(Math.abs(mark!.y + mark!.height / 2 - name!.y - name!.height / 2)).toBeLessThan(4);
   await badge.click();
   await expect(page.getByRole("dialog").filter({ hasText: /biométrico|biometric/ })).toBeVisible();
   await page.getByRole("button", { name: locale === "es" ? "Entendido" : "Got it", exact: true }).click();
