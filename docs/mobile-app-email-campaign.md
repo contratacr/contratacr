@@ -18,3 +18,5 @@ El 13 de octubre de 2026 se actualiza el mensaje con el texto personal de Isaac:
 
 
 El 17 de octubre de 2026 se reemplaza la cifra fija de profesionales por un mensaje de crecimiento sin prometer clientes: seguimos trabajando para dar a conocer ContrataCR y atraer a personas que necesiten servicios; las oportunidades pueden tomar tiempo. Incluye instalación y notificaciones para proyectos/empleos, misma cuenta y uso desde el celular. La referencia a ofrecer servicios es condicional porque la audiencia también incluye clientes. Conserva clave, historial y cadencia; no se inicia un envío manual ni se reescriben mensajes ya encolados.
+
+Revisión adicional del 17 de octubre: la misma invitación adopta un texto común para clientes y profesionales, con búsqueda de profesionales, publicación de necesidades y consulta de proyectos/empleos. Las notificaciones se describen como avisos de la cuenta, sin afirmar que todos reciben alertas de oportunidades. Solo cambia el cuerpo de `descargar-app-2026`; no se agregan campañas ni se modifican audiencia, clave, historial o frecuencia.
