@@ -7,16 +7,20 @@ const now=Date.UTC(2026,9,12,15), date=(n:number)=>new Date(now-n*86400000).toIS
 const account:LifecycleAccount={id:'person',email:'person@example.com',full_name:'Person',created_at:date(30),role:'client',is_provider:false,is_disabled:false,emailConfirmed:true,hasUsedMobileApp:false,avatar_url:'https://example.com/avatar.jpg'};
 const sent=(key:string,days=15):CampaignHistory=>({profile_id:account.id,email:account.email!,campana:key,status:'sent',enviado_en:date(days)});
 const pick=(a=account,h:CampaignHistory[]=[])=>lifecycleCandidate(a,undefined,h,[],true,now)?.key;
-test('invitation requires verified no-use evidence, confirmed email and seven days',()=>{
- expect(pick()).toBe(MOBILE_APP_CAMPAIGN.key);
- for(const a of [{...account,hasUsedMobileApp:true},{...account,hasUsedMobileApp:undefined},{...account,emailConfirmed:false},{...account,created_at:date(6)}])expect(pick(a)).not.toBe(MOBILE_APP_CAMPAIGN.key);
- expect(pick({...account,created_at:date(7)})).toBe(MOBILE_APP_CAMPAIGN.key);
+test('retired invitation cannot be selected for either audience, including unapproved previews',()=>{
+ expect(MOBILE_APP_CAMPAIGN.retired).toBe(true);
+ expect(policy.LIFECYCLE_CAMPAIGNS.some(c=>c.key === MOBILE_APP_CAMPAIGN.key)).toBe(false);
+ for(const age of [7,30,365]) for(const hasUsedMobileApp of [true,false,undefined]) {
+  const a={...account,created_at:date(age),hasUsedMobileApp};
+  expect(pick(a)).not.toBe(MOBILE_APP_CAMPAIGN.key);
+  expect(lifecycleCandidate(a,undefined,[],[],false,now,true)?.key).not.toBe(MOBILE_APP_CAMPAIGN.key);
+ }
 });
 test('same announcement stays once across text and email changes and the fourteen-day gap is shared',()=>{
  expect(pick(account,[sent(MOBILE_APP_CAMPAIGN.key)])).not.toBe(MOBILE_APP_CAMPAIGN.key);
  expect(pick({...account,email:'new@example.com'},[sent(MOBILE_APP_CAMPAIGN.key)])).not.toBe(MOBILE_APP_CAMPAIGN.key);
  expect(pick(account,[sent('another',13)])).toBeUndefined();
- expect(pick(account,[sent('another',14)])).toBe(MOBILE_APP_CAMPAIGN.key);
+ expect(pick(account,[sent('another',14)])).not.toBe(MOBILE_APP_CAMPAIGN.key);
  expect(pick(account,[{...sent('another',30),status:'uncertain'}])).toBeUndefined();
 });
 test('opt-out, disabled/admin accounts and a rejected delivery cannot be invited',()=>{
@@ -25,12 +29,12 @@ test('opt-out, disabled/admin accounts and a rejected delivery cannot be invited
  expect(pick({...account,role:'admin'})).toBeUndefined();
  expect(pick(account,[{...sent('another',30),rebote_en:date(29)}])).toBeUndefined();
 });
-test('profile completion and reviews remain first, then app precedes missing price',()=>{
+test('profile completion and reviews remain first, then price without the retired app step',()=>{
  const pending={...account,is_provider:true,professionalIntent:true};
  expect(pick(pending)).toBe(PROFILE_REMINDER.key);
  const pro={profile_id:account.id,created_at:date(30),review_count:0,services:[{active:true,description:'Servicio',priceType:'a_convenir'}],is_banned:false,oculto_del_buscador:false,slug:'pro',bio:'Trabajo',whatsapp:'+50670001234',coverage_country:true};
  expect(lifecycleCandidate(account,pro,[],[],false,now)?.key).toBe(REVIEW_CAMPAIGN.key);
- expect(lifecycleCandidate(account,pro,[sent(REVIEW_CAMPAIGN.key)],[],false,now)?.key).toBe(MOBILE_APP_CAMPAIGN.key);
+ expect(lifecycleCandidate(account,pro,[sent(REVIEW_CAMPAIGN.key)],[],false,now)?.key).toBe('precio-desde-profesionales-2026');
  expect(lifecycleCandidate(account,pro,[sent(REVIEW_CAMPAIGN.key),sent(MOBILE_APP_CAMPAIGN.key,14)],[],false,now)?.key).toBe('precio-desde-profesionales-2026');
 });
 test('download button keeps the website download section after campaign attribution is appended',()=>{
@@ -71,12 +75,18 @@ function workerHarness(usedBeforeSend: boolean, lookupFails=false) {
  runInNewContext(source,{module:box,exports:box.exports,require:(name:string)=>mocks[name],URL,Date,Promise,process:{env:{NEXT_PUBLIC_APP_URL:'https://contratacr.com'}}});
  return {run:(simulate=false)=>box.exports.runLifecycleEmails(db,simulate),calls:()=>providerCalls};
 }
-test('recipient who begins using mobile while waiting is rechecked before calling Brevo',async()=>{
- const h=workerHarness(true),result=await h.run();
- expect(result.eligible[MOBILE_APP_CAMPAIGN.key]).toBe(1);expect(result.sent).toBe(0);expect(result.skipped).toBe(1);expect(h.calls()).toBe(0);
+test('worker never offers the retired invitation while remaining campaigns continue',async()=>{
+ for(const used of [true,false]) {
+  const h=workerHarness(used),result=await h.run();
+  expect(result.eligible[MOBILE_APP_CAMPAIGN.key]).toBeUndefined();
+  expect(result.sent).toBe(1); expect(h.calls()).toBe(1);
+ }
 });
-test('worker can send an eligible announcement and measurement failure blocks only the announcement',async()=>{
- const h=workerHarness(false),result=await h.run();expect(result.sent).toBe(1);expect(h.calls()).toBe(1);
- const broken=workerHarness(false,true),preview=await broken.run(true);
- expect(preview.mobileUsageVerified).toBe(false);expect(preview.eligible[MOBILE_APP_CAMPAIGN.key]).toBeUndefined();expect(broken.calls()).toBe(0);
+test('queued retired envelopes are cancelled without reading accounts or contacting a provider',async()=>{
+ const source=ts.transpileModule(readFileSync('src/lib/email/revalidate-campaign.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
+ const box={exports:{} as {queuedCampaignEligible:(email:string,key:string)=>Promise<boolean|null>}};
+ let reads=0;
+ runInNewContext(source,{module:box,exports:box.exports,require:(name:string)=>name === './mobile-app-campaign' ? {MOBILE_APP_CAMPAIGN} : name === '@/lib/supabase/admin' ? {createAdminClient:()=>{reads++;throw new Error('Unexpected account read');}} : {}});
+ expect(await box.exports.queuedCampaignEligible(account.email!,MOBILE_APP_CAMPAIGN.key)).toBe(false);
+ expect(reads).toBe(0);
 });

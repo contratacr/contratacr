@@ -3,7 +3,8 @@ import { REVIEW_CAMPAIGN, SERVICES_CAMPAIGN, type CampaignHistory, normalizeCamp
 import { tienePrecioReal } from "@/lib/notifications/empujones-del-perfil";
 import { PROFILE_REMINDER, professionalProfileIncomplete } from "./profile-reminder";
 
-export const LIFECYCLE_CAMPAIGNS = [
+// Retired campaigns never appear in admin, simulation or delivery, even with includeUnapproved.
+export const LIFECYCLE_CAMPAIGNS = ([
   PROFILE_REMINDER,
   { ...REVIEW_CAMPAIGN, days: 7, audience: "professional", enabled: true },
   MOBILE_APP_CAMPAIGN,
@@ -19,7 +20,7 @@ export const LIFECYCLE_CAMPAIGNS = [
     subject: "¿Necesitas ayuda con un trabajo? Publica un proyecto",
     body: "¿Necesitas pintar tu casa, reparar una fuga o hacer otro trabajo?\n\nPublica lo que necesitas en ContrataCR: cuenta qué hay que hacer y en qué zona. Los profesionales interesados podrán contactarte.\n\nTú conversas con ellos y eliges a quién contratar. No necesitas una cuenta profesional para publicar.",
     ctaLabel: "Crear un proyecto", ctaPath: "/publicar-proyecto" },
-] as const;
+] as const).filter(campaign => !("retired" in campaign && campaign.retired));
 
 export type LifecycleAccount = { id: string; email: string | null; full_name: string | null; created_at: string | null; is_disabled: boolean | null; role: string | null; is_provider: boolean | null; hasUsedMobileApp?: boolean; professionalIntent?: boolean; emailConfirmed?: boolean; avatar_url?: string | null };
 export type LifecycleProfessional = { profile_id: string | null; created_at: string | null; review_count: number | null; services: unknown; is_banned: boolean | null; oculto_del_buscador: boolean | null; slug: string | null; [key: string]: unknown };

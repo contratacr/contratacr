@@ -23294,31 +23294,31 @@
       "cases": [
         {
           "line": 10,
-          "title": "'invitation requires verified no-use evidence, confirmed email and seven days'"
+          "title": "'retired invitation cannot be selected for either audience, including unapproved previews'"
         },
         {
-          "line": 15,
+          "line": 19,
           "title": "'same announcement stays once across text and email changes and the fourteen-day gap is shared'"
         },
         {
-          "line": 22,
+          "line": 26,
           "title": "'opt-out, disabled/admin accounts and a rejected delivery cannot be invited'"
         },
         {
-          "line": 28,
-          "title": "'profile completion and reviews remain first, then app precedes missing price'"
+          "line": 32,
+          "title": "'profile completion and reviews remain first, then price without the retired app step'"
         },
         {
-          "line": 36,
+          "line": 40,
           "title": "'download button keeps the website download section after campaign attribution is appended'"
         },
         {
-          "line": 74,
-          "title": "'recipient who begins using mobile while waiting is rechecked before calling Brevo'"
+          "line": 78,
+          "title": "'worker never offers the retired invitation while remaining campaigns continue'"
         },
         {
-          "line": 78,
-          "title": "'worker can send an eligible announcement and measurement failure blocks only the announcement'"
+          "line": 85,
+          "title": "'queued retired envelopes are cancelled without reading accounts or contacting a provider'"
         }
       ]
     },

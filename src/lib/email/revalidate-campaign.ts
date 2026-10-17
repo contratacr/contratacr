@@ -1,3 +1,4 @@
+import { MOBILE_APP_CAMPAIGN } from "./mobile-app-campaign";
 import type { CampaignHistory } from "./campaign-policy";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { lifecycleCandidate, type LifecycleAccount, type LifecycleProfessional } from "./lifecycle-policy";
@@ -5,6 +6,7 @@ import { lifecycleCandidate, type LifecycleAccount, type LifecycleProfessional }
 /** Deferred emails are evaluated again immediately before dispatch. Completing
  * a profile, adding a review, installing the app or opting out cancels stale copy. */
 export async function queuedCampaignEligible(email: string, campaign: string): Promise<boolean | null> {
+  if (campaign === MOBILE_APP_CAMPAIGN.key) return false; // Retired, including old queued envelopes.
   const db = createAdminClient();
   const account = await db.from("profiles").select("id,email,full_name,created_at,is_disabled,role,is_provider,avatar_url").ilike("email", email).maybeSingle();
   if (account.error) return null;
