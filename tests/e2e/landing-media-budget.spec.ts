@@ -1,11 +1,26 @@
+import { build } from "esbuild";
 import { test, expect } from "playwright/test";
 import { blockThirdParty, gotoOK, waitForInteractivePage } from "./helpers";
 
-test("home keeps hidden service photos unloaded and retains visited tabs", async ({ page }) => {
+test("service tabs keep hidden photos unloaded and retain visited groups", async ({ page }) => {
   await blockThirdParty(page);
   await page.route('https://images.unsplash.com/**', route => route.fulfill({ contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><rect width="16" height="16" fill="navy"/></svg>' }));
-  await gotoOK(page, "/");
-  await waitForInteractivePage(page);
+  // Exercise two real groups regardless of the professional supply in the
+  // isolated database. No production/test accounts need to be changed.
+  const bundled = await build({
+    stdin: { contents: `import React from 'react'; import {createRoot} from 'react-dom/client'; import {ServiciosPorSeccion} from './src/components/landing/servicios-por-seccion';
+      const groups=[['hogar',['electricidad','plomeria','pintura','reparacion_electrodomesticos']],['tecnologia',['desarrollo_web','soporte_tecnico','redes_internet','reparacion_computadoras']]].map(([id,ids])=>({id,label:id,servicios:ids.map(id=>({id,label:id,href:'/profesionales/'+id}))}));
+      createRoot(document.getElementById('root')).render(<div className="ccr-home-services-section"><ServiciosPorSeccion secciones={groups}/></div>);`, resolveDir: process.cwd(), loader: "tsx" },
+    jsx: "automatic", bundle: true, write: false, platform: "browser", format: "iife", tsconfig: "tsconfig.json",
+    define: { "process.env.NODE_ENV": '"production"' },
+    plugins: [{ name: "navigation-boundary", setup(builder) {
+      builder.onResolve({ filter: /^@\/i18n\/navigation$/ }, () => ({ path: "navigation", namespace: "test-navigation" }));
+      builder.onLoad({ filter: /.*/, namespace: "test-navigation" }, () => ({ contents: `import React from 'react'; export const Link=({href,children,...props})=>React.createElement('a',{...props,href},children);`, resolveDir: process.cwd() }));
+    } }],
+  });
+  await page.route('**/landing-tabs-harness', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><div id="root"></div>' }));
+  await page.goto('/landing-tabs-harness');
+  await page.addScriptTag({ content: bundled.outputFiles[0].text });
   const section = page.locator(".ccr-home-services-section");
   const tabs = section.getByRole("tab");
   await expect(tabs.first()).toHaveAttribute("aria-selected", "true");

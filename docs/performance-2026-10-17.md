@@ -45,4 +45,27 @@ Véase `supabase-log-usage-2026-10-16.md`. El panel muestra 86.705 MB el día 16
 
 ## Después del despliegue
 
-Pendiente medir el despliegue real con el mismo perfil y registrar los resultados. La reducción de fotografías no certifica por sí sola los presupuestos de JavaScript, FCP o transferencia de todas las rutas.
+Cloudflare producción confirmó deploy correcto (run 39036997244) sobre `945b1439b8fd9cbbf2c054a0051a4b06ec9bbff3`; test y mobile también desplegaron correctamente. Verificación de DOM público: 4 fotos de servicios, calidad 70, arte de descarga ausente al entrar y dos capas de portada preparadas, frente a 32 fotos de servicios anteriores.
+
+Mismo perfil de red/CPU y mismas rutas, incluida la misma ficha pública:
+
+| Ruta | JavaScript KB | Total KB | FCP ms |
+| --- | ---: | ---: | ---: |
+| Inicio | 542 | 1474 | 1524 |
+| Profesionales | 586 | 1389 | 1608 |
+| Categorías | 572 | 882 | 1216 |
+| Login | 768 | 1202 | 992 |
+| Empleos | 572 | 1392 | 1356 |
+| Misma ficha pública | 627 | 1795 | 1192 |
+
+La portada bajó de 5088 a 1474 KB (−71.03 % de transferencia en esta medición); el contador de JavaScript es lo transferido durante el período observado, no una certificación de reducción equivalente del bundle. Cambian los tiempos de scripts diferidos/precargas, datos públicos y terceros. La foto de la ficha y el login no recibieron una optimización de peso equivalente y sus totales no mejoraron en esta muestra. No atribuir toda variación de FCP al cambio.
+
+Los límites originales siguen sin cumplirse en varias rutas: inicio aún supera 450 KB JS, todos los totales muestreados superan 800 KB y los FCP de inicio y búsqueda aún superan 1500 ms en esta pasada. Es una mejora medida del cuello de botella de fotos ocultas, no una certificación completa de rendimiento. No se degradó el mapa ni la navegación inmediata para conseguir una cifra menor.
+
+
+Repetición fría posterior: inicio 592 KB JS, 1527 KB totales y FCP 1752 ms. La transferencia se mantiene alrededor de 1.5 MB frente a 5.1 MB antes (aproximadamente 70 % menos en ambas muestras), pero el FCP y el JavaScript varían; no se certifica su presupuesto.
+
+El contrato de dos pestañas monta el componente real con dos grupos sintéticos en un harness de navegador, sin depender de que el catálogo aislado tenga dos grupos con cuatro profesionales/servicios. Esto conserva la prueba de descarga diferida, foco, selección y conservación de nodos sin ampliar servicios de cuentas de prueba ni añadir saltos por falta de oferta. El bloque de descarga y el carrusel se siguen comprobando en la página real.
+
+
+Verificación posterior en producción: los nueve casos de carga de medios pasaron en Chromium escritorio/móvil y WebKit móvil. El contrato de pestañas usa el componente real con dos grupos sintéticos; los casos de arte y carrusel visitan la portada desplegada. No se modificaron perfiles, servicios ni publicaciones para preparar oferta suficiente en el catálogo.
