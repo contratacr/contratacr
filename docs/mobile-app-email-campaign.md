@@ -15,3 +15,6 @@ Los avisos enviados manualmente por WhatsApp no se detectan ni se marcan como co
 Validación: pruebas de elegibilidad, historial, revalidación antes de Brevo y conservación del ancla, además de SQL local para evidencia histórica, permisos, cuota y exclusión atómica. Las pruebas no envían correos reales.
 
 El 13 de octubre de 2026 se actualiza el mensaje con el texto personal de Isaac: saludo por nombre, anuncio de Android/iPhone, comunidad de más de 300 profesionales, misma cuenta y descarga gratuita. Firma «Isaac · ContrataCR». Se confirmó en producción que había 320 profesionales no bloqueados. Se mantiene `descargar-app-2026`, por lo que editar el texto nunca reinicia el historial. Antes del ajuste no constaban envíos de esta campaña; la última ejecución era una simulación.
+
+
+El 17 de octubre de 2026 se reemplaza la cifra fija de profesionales por un mensaje de crecimiento sin prometer clientes: seguimos trabajando para dar a conocer ContrataCR y atraer a personas que necesiten servicios; las oportunidades pueden tomar tiempo. Incluye instalación y notificaciones para proyectos/empleos, misma cuenta y uso desde el celular. La referencia a ofrecer servicios es condicional porque la audiencia también incluye clientes. Conserva clave, historial y cadencia; no se inicia un envío manual ni se reescriben mensajes ya encolados.
