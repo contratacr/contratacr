@@ -72,6 +72,8 @@
     "searchServiceAria": "Search for a service",
     "offerServices": "Offer my services",
     "myPanel": "My dashboard",
+    "adminPanel": "Admin panel",
+    "professionalPanel": "Professional dashboard",
     "login": "Log in",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
