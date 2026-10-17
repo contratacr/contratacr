@@ -175,7 +175,7 @@ jobs:
         if: github.event_name == 'push'
         run: >-
           npx playwright test
-          public-smoke app-download mobile-menu-surface verification-badges navbar-brand-consistency mensajes-sin-parpadeo landing-media-budget android-auth-return-presentation avatar-framing
+          public-smoke app-download mobile-menu-surface verification-badges navbar-brand-consistency mensajes-sin-parpadeo landing-media-budget android-auth-return-presentation avatar-framing shared-link-language
 
       - name: Require clean push smoke results
         if: github.event_name == 'push'

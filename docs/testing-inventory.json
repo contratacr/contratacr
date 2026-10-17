@@ -8,7 +8,7 @@
     "handlers": 93,
     "components": 235,
     "hooks": 25,
-    "specs": 118
+    "specs": 119
   },
   "dashboardTabs": [
     "home",
@@ -23799,6 +23799,19 @@
         {
           "line": 91,
           "title": "\"selected service groups do not create a large empty gap before the service list\""
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/shared-link-language.spec.ts",
+      "cases": [
+        {
+          "line": 19,
+          "title": "`shared ${path} stays Spanish with English browser and saved locale`"
+        },
+        {
+          "line": 28,
+          "title": "'explicit English profile keeps English metadata routing'"
         }
       ]
     },

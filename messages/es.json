@@ -395,7 +395,7 @@
     "title": "Este es tu perfil",
     "ok": "Entendido",
     "messages": {
-      "whatsapp": "No puedes contactarte a ti mismo. Así es como los clientes te escriben por WhatsApp para coordinar.",
+      "whatsapp": "No puedes contactarte a ti mismo. Desde aquí, los clientes pueden escribirte para coordinar.",
       "call": "No puedes llamarte a ti mismo. Así es como los clientes te contactan por teléfono.",
       "email": "No puedes escribirte a ti mismo. Así es como los clientes te contactan por correo.",
       "proposal": "No puedes responder tu propio proyecto.",

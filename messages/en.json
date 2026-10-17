@@ -395,7 +395,7 @@
     "title": "This is your profile",
     "ok": "Got it",
     "messages": {
-      "whatsapp": "You can't send a message to yourself. This is how clients message you to coordinate.",
+      "whatsapp": "You can't contact yourself. Clients can message you here to coordinate.",
       "call": "You can't call yourself. This is how clients reach you by phone.",
       "email": "You can't email yourself. This is how clients reach you by email.",
       "proposal": "You can't reply to your own project.",
