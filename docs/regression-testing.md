@@ -294,3 +294,11 @@ Se actualiza únicamente la dependencia de desarrollo Playwright a 1.64.1 y su l
 El smoke público posterior a las correcciones de navegación sobre producción terminó otra vez con 178 aprobadas y dos saltos declarados en los tres navegadores, español e inglés. La nueva medición de login fue 761 KB de JavaScript, 1.125 KB totales y FCP 1.092 ms; la transferencia continúa por encima del presupuesto y la variación de terceros impide atribuir una mejora de peso al ajuste del prefetch.
 
 La actualización además aprobó los 18 casos dirigidos de panel/idioma, chat en vivo, marca, foto de Open Graph y acceso con latencia entre Chromium móvil, WebKit móvil y escritorio. No hubo fallos ni reintentos. La ronda exhaustiva siguiente debe usar este lockfile y el WebKit corregido; las ejecuciones canceladas con el motor anterior no se cuentan como aprobadas.
+
+### Cierre de la ejecución con Playwright 1.64.1
+
+La ejecución móvil `38995245131` sobre mobile `88400947` aprobó contratos/build, 130 casos WebView y dos saltos declarados de la prueba exclusiva de escritorio. La suscripción de Realtime y la comprobación posterior de fixtures pasan. No se ejecutaron nuevos builds nativos de tiendas: las diferencias nativas siguen siendo las 19 aprobadas y no cambiaron en este lote.
+
+La ejecución exhaustiva [`38995258100`](https://github.com/contratacr/contratacr/actions/runs/38995258100) sobre `a9658d40` terminó correctamente. Los cuatro JSON suman **1.794 casos descubiertos: 1.643 aprobados, 151 saltos declarados, cero fallos, cero casos con reintentos y cero casos sin ejecutar**. El grupo 1 aporta 425 aprobados/25 saltos; el 2, 395/54; el 3, 406/43; el 4, 417/29. Los cuatro verificadores estrictos y las comprobaciones posteriores de fixtures aprobaron. Los saltos conservan su motivo (pantalla, funciones desactivadas o casos que requieren los datos alojados de test) y no se cuentan como aprobados.
+
+Esto cierra la ronda funcional del lote; los presupuestos generales de rendimiento siguen pendientes según las mediciones anteriores. Las pruebas dirigidas contra el entorno alojado y el smoke de producción se registran por separado. Los originales de Cloudinary/R2 se conservan, los documentos de verificación permanecen privados en Supabase y no se publicaron versiones en App Store o Google Play.
