@@ -21,6 +21,13 @@ for (const native of [false, true]) {
     const top=(await header.boundingBox())!.y;
     await body.evaluate(el=>{el.scrollTop=el.scrollHeight});
     expect((await header.boundingBox())!.y).toBe(top);
+    const socials=menu.getByTestId('mobile-menu-social-links');
+    await expect(socials).toHaveAccessibleName('Síguenos');
+    for(const [name,href] of [['Facebook','https://www.facebook.com/share/18tY9mAhub/?mibextid=wwXIfr'],['Instagram','https://www.instagram.com/contratacr/'],['TikTok','https://www.tiktok.com/@contratacr']]){
+      const link=socials.getByRole('link',{name,exact:true});
+      await expect(link).toBeVisible();await expect(link).toHaveAttribute('href',href);await expect(link).toHaveAttribute('target','_blank');await expect(link).toHaveAttribute('rel','noopener noreferrer');
+      const box=(await link.boundingBox())!;expect(box.width).toBeGreaterThanOrEqual(44);expect(box.height).toBeGreaterThanOrEqual(44);
+    }
     await page.keyboard.press('Tab');
     expect(await menu.evaluate(el=>el.contains(document.activeElement))).toBe(true);
     await menu.getByRole('button',{name:'Cerrar menú'}).click();

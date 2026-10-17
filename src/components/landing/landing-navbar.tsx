@@ -1,5 +1,6 @@
 "use client";
 import { ContrataCRLogo, ContrataCRMark } from "@/components/brand/brand-logo";
+import { SocialLinks } from "./social-links";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 
@@ -1464,9 +1465,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       if (event.key === "Escape") { setMobileOpen(false); return; }
       if (event.key !== "Tab" || !menu) return;
       const controls = [...menu.querySelectorAll<HTMLElement>('a[href], button:not(:disabled), [tabindex="0"]')].filter(element => element.getClientRects().length > 0);
-      const first = controls[0], last = controls.at(-1);
-      if (event.shiftKey && (document.activeElement === menu || document.activeElement === first || !menu.contains(document.activeElement))) { event.preventDefault(); last?.focus({ preventScroll: true }); }
-      else if (!event.shiftKey && (document.activeElement === last || !menu.contains(document.activeElement))) { event.preventDefault(); first?.focus({ preventScroll: true }); }
+      // Safari can omit links from its default Tab sequence. Move explicitly
+      // so the social links and every menu option stay inside this dialog.
+      event.preventDefault();
+      const index = controls.indexOf(document.activeElement as HTMLElement);
+      const next = index < 0 ? (event.shiftKey ? controls.length - 1 : 0)
+        : (index + (event.shiftKey ? -1 : 1) + controls.length) % controls.length;
+      controls[next]?.focus({ preventScroll: true });
     };
     window.addEventListener("keydown", alTeclado);
     return () => {
@@ -3172,6 +3177,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   </button>
                 )}
               </div>
+              <SocialLinks testId="mobile-menu-social-links" className="mt-5 flex shrink-0 flex-wrap items-center gap-2 border-t border-[#162543]/10 px-1 pt-4" />
             </div>
           </div>
       </>
