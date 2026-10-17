@@ -41,6 +41,10 @@ for (const locale of ["es", "en"] as const) {
         await expect(page).toHaveURL(new RegExp(`${formPath}$`), { timeout: 30_000 });
         await page.goto(`${prefix}/dashboard/profesional?tab=cuenta`);
         await expect(page).toHaveURL(new RegExp(`${formPath}$`));
+        await page.goto(`/auth/callback?flow=native&locale=${locale}`);
+        await expect(page).toHaveURL(new RegExp(`${formPath}$`));
+        await page.goto(`/auth/callback?flow=native&locale=${locale}&next=${encodeURIComponent(`${prefix}/dashboard/profesional`)}`);
+        await expect(page).toHaveURL(new RegExp(`${formPath}$`));
         await page.goto(`${prefix}/onboarding`);
         await expect(page).toHaveURL(new RegExp(`${formPath}$`));
         const state = await admin.auth.admin.getUserById(account.id);
@@ -48,6 +52,9 @@ for (const locale of ["es", "en"] as const) {
         const profile = await admin.from("profiles").select("phone").eq("id", account.id).single();
         expect(profile.data?.phone).toBeFalsy();
         if (role === "client") {
+          const invalid = await page.request.post("/api/register/client", { data: { fullName: "Cliente de prueba", phone: "" } });
+          expect(invalid.status()).toBe(400);
+          expect((await admin.auth.admin.getUserById(account.id)).data.user?.user_metadata.onboarding_completed).toBe(false);
           await page.locator('input[type="tel"]').fill("88887777");
           await page.getByRole("checkbox").check({ force: true });
           await page.getByRole("button", { name: /Guardar y continuar|Save and continue/, exact: true }).click();
@@ -61,3 +68,15 @@ for (const locale of ["es", "en"] as const) {
     });
   }
 }
+
+
+test("anonymous registration cannot overwrite a confirmed account by its public ID", async ({ request }) => {
+  test.skip(!canRunSeededRegression(), "Requires isolated regression data.");
+  const account = await createDisposableAccount({ prefix: "registration-owner" });
+  try {
+    const response = await request.post("/api/register/client", { data: { userId: account.id, fullName: "Nombre ajeno", phone: "50688887777" } });
+    expect(response.status()).toBe(401);
+    const result = await regressionAdminClient().auth.admin.getUserById(account.id);
+    expect(result.data.user?.user_metadata.full_name).not.toBe("Nombre ajeno");
+  } finally { await cleanupDisposableAccount(account); }
+});
