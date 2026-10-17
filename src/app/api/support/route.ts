@@ -1,3 +1,4 @@
+import { withCurrentSupportNames } from "@/lib/support/current-names";
 import { NextResponse } from "next/server";
 import type { User } from "@supabase/supabase-js";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -59,7 +60,8 @@ export async function GET(req: Request) {
       .select("*")
       .eq("ticket_id", id)
       .order("created_at", { ascending: true });
-    return NextResponse.json({ ticket, messages: await firmarAdjuntos(db, messages ?? []) });
+    const current = await withCurrentSupportNames(db, ticket ? [ticket] : [], messages ?? []);
+    return NextResponse.json({ ticket: current.tickets[0] ?? null, messages: await firmarAdjuntos(db, current.messages) }, { headers: { "Cache-Control": "no-store" } });
   }
 
   const selectUserTickets = () => db
@@ -71,7 +73,8 @@ export async function GET(req: Request) {
 
   const { data: existingTickets } = await selectUserTickets();
   if ((existingTickets?.length ?? 0) > 0) {
-    return NextResponse.json({ tickets: existingTickets ?? [] });
+    const current = await withCurrentSupportNames(db, existingTickets ?? []);
+    return NextResponse.json({ tickets: current.tickets }, { headers: { "Cache-Control": "no-store" } });
   }
 
   await claimGuestTickets(db, user);
@@ -82,7 +85,8 @@ export async function GET(req: Request) {
   await syncUserTicketEmail(db, user, contact.email);
 
   const { data } = await selectUserTickets();
-  return NextResponse.json({ tickets: data ?? [] });
+  const current = await withCurrentSupportNames(db, data ?? []);
+  return NextResponse.json({ tickets: current.tickets }, { headers: { "Cache-Control": "no-store" } });
 }
 
 // POST /api/support — the user replies in one of THEIR ticket threads.
