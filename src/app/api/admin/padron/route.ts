@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     if (!result.found || !result.fullName) {
       return NextResponse.json({ found: false, cedula }, { status: 404, headers });
     }
-    return NextResponse.json({ found: true, cedula, fullName: result.fullName }, { headers });
+    return NextResponse.json({ found: true, cedula, fullName: result.fullName, idType: result.idType }, { headers });
   } catch {
     return NextResponse.json({ error: "No pudimos consultar Hacienda en este momento. Intentá nuevamente más tarde." }, { status: 503, headers });
   }

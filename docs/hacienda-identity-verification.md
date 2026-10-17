@@ -27,3 +27,9 @@ Las pruebas de ejecución aisladas cubren los cuatro tipos, DIMEX de 11 y 12 dí
 Consulta real de solo lectura del ejemplo oficial `2100042005`: HTTP 200, tipo 02, ESTADO-MINISTERIO DE HACIENDA. Los demás tipos se prueban con respuestas controladas, sin consultar identificaciones privadas de terceros como datos de prueba.
 
 Compatibilidad de Cloudflare comprobada con una vista previa remota: `redirect: "manual"` obtiene HTTP 200 del ejemplo oficial. Workers rechaza `redirect: "error"` antes de conectarse; la regresión comprueba que esa opción no se reintroduzca. Las respuestas 3xx no se siguen y se tratan como indisponibilidad.
+
+## Herramientas administrativas
+
+`/admin/identificaciones` reúne la consulta individual de los cuatro tipos y la revisión por lotes de todas las cuentas pendientes (profesionales y clientes, sin el recorte de las primeras 200 cuentas). Consultar no modifica perfiles ni envía avisos. La vista distingue coincidencias, empresas, diferencias de nombre, registros no encontrados, fallos temporales y casos manuales.
+
+La acción separada de verificar vuelve a consultar la elegibilidad en el servidor: solo acepta documentos que continúan guardados en esa cuenta y nombres coincidentes con al menos dos palabras. Protege apelaciones, documentos abiertos, decisiones humanas anteriores, cuentas bloqueadas o deshabilitadas y aprobaciones existentes. Las consultas de antecedentes también se paginan para no omitir revisiones antiguas. Las empresas y los nombres distintos siguen requiriendo revisión manual. Se conserva la prioridad de los nombres corregidos por el administrador. No hay correos masivos; las decisiones profesionales usan el aviso dentro de la aplicación.

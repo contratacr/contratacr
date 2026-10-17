@@ -6,6 +6,7 @@ import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccou
 const adminRoutes = [
   { path: "/admin", marker: /Resumen|Panel de administracion|Panel de administraci.n/i },
   { path: "/admin/verificacion", marker: /Verificacion|Verificaci.n/i },
+  { path: "/admin/identificaciones", marker: /Identificaciones/i },
   { path: "/admin/usuarios", marker: /Usuarios/i },
   { path: "/admin/reportes", marker: /Reportes/i },
   { path: "/admin/aseguradoras", marker: /Aseguradoras/i },
@@ -53,6 +54,7 @@ test.describe("@admin surfaces", () => {
 
   test("admin APIs reject unauthenticated access", async ({ request }) => {
     const routes = [
+      "/api/admin/identificaciones",
       "/api/admin/projects",
       "/api/admin/users",
       "/api/admin/providers",

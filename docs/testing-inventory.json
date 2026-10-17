@@ -2,13 +2,13 @@
   "scope": "Todos los archivos TypeScript de src/app, src/components y src/hooks, controles JSX declarados, pestañas del panel y specs permanentes. No enumera cada elemento dinámico renderizado ni componentes dentro de dependencias.",
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
-    "files": 461,
-    "controls": 1271,
-    "pages": 70,
-    "handlers": 94,
-    "components": 237,
+    "files": 465,
+    "controls": 1281,
+    "pages": 71,
+    "handlers": 96,
+    "components": 238,
     "hooks": 25,
-    "specs": 123
+    "specs": 125
   },
   "dashboardTabs": [
     "home",
@@ -247,6 +247,29 @@
       "route": "/[locale]/admin/empleos",
       "exports": [
         "AdminEmpleosPage"
+      ],
+      "methods": [],
+      "controls": [],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/admin-smoke.spec.ts",
+        "tests/e2e/admin-bottom-nav.spec.ts",
+        "tests/e2e/admin-editar-datos.spec.ts",
+        "tests/e2e/admin-campaigns-policy.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P0"
+    },
+    {
+      "file": "src/app/[locale]/admin/identificaciones/page.tsx",
+      "kind": "Página",
+      "group": "Administración",
+      "route": "/[locale]/admin/identificaciones",
+      "exports": [
+        "AdminIdentificationsPage"
       ],
       "methods": [],
       "controls": [],
@@ -4084,6 +4107,62 @@
       "priority": "P0"
     },
     {
+      "file": "src/app/api/admin/identificaciones/route.ts",
+      "kind": "API / handler",
+      "group": "Administración",
+      "route": "/api/admin/identificaciones",
+      "exports": [
+        "GET",
+        "POST"
+      ],
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "controls": [],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/admin-smoke.spec.ts",
+        "tests/e2e/admin-bottom-nav.spec.ts",
+        "tests/e2e/admin-editar-datos.spec.ts",
+        "tests/e2e/admin-campaigns-policy.spec.ts"
+      ],
+      "directReferences": [
+        "tests/e2e/admin-identifications-runtime.spec.ts"
+      ],
+      "evidence": "Referencia estática detectada; verificar assertions",
+      "strategy": "API + integración BD + autorización/propiedad + idempotencia; smoke solo lectura",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P0"
+    },
+    {
+      "file": "src/app/api/admin/identificaciones/verificar/route.ts",
+      "kind": "API / handler",
+      "group": "Verificación",
+      "route": "/api/admin/identificaciones/verificar",
+      "exports": [
+        "POST"
+      ],
+      "methods": [
+        "POST"
+      ],
+      "controls": [],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/verification-documents.spec.ts",
+        "tests/e2e/verification-email-policy.spec.ts",
+        "tests/e2e/verificacion-repesca.spec.ts",
+        "tests/e2e/verification-badges.spec.ts"
+      ],
+      "directReferences": [
+        "tests/e2e/admin-identifications-runtime.spec.ts"
+      ],
+      "evidence": "Referencia estática detectada; verificar assertions",
+      "strategy": "API + integración BD + autorización/propiedad + idempotencia; smoke solo lectura",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P0"
+    },
+    {
       "file": "src/app/api/admin/insurers/route.ts",
       "kind": "API / handler",
       "group": "Administración",
@@ -7844,6 +7923,98 @@
       "priority": "P0"
     },
     {
+      "file": "src/components/admin/admin-identifications.tsx",
+      "kind": "Componente",
+      "group": "Administración",
+      "route": null,
+      "exports": [
+        "AdminIdentifications"
+      ],
+      "methods": [],
+      "controls": [
+        {
+          "line": 94,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{load}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 98,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{() => inspect(rows.filter(row => !reviews[row.accountId] || reviews[row.accountId].kind === \"unavailable\").length ? rows.filter(row => !reviews[row.accountId] || reviews[row.accountId].kind === \"unavailable\") : rows)}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 98,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{() => verify(eligible)}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 100,
+          "tag": "input",
+          "label": "\"Buscar pendiente\"",
+          "handler": "{event => setQ(event.target.value)}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 100,
+          "tag": "select",
+          "label": "\"Filtrar pendientes\"",
+          "handler": "{event => setFilter(event.target.value)}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 107,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{() => inspect([row])}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 107,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{() => verify([row])}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 107,
+          "tag": "Link",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "",
+          "destination": "{`/admin/usuarios/${row.accountId}?from=verificacion`}",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        }
+      ],
+      "testIds": [
+        "identity-review-row"
+      ],
+      "relatedSpecs": [
+        "tests/e2e/admin-smoke.spec.ts",
+        "tests/e2e/admin-bottom-nav.spec.ts",
+        "tests/e2e/admin-editar-datos.spec.ts",
+        "tests/e2e/admin-campaigns-policy.spec.ts"
+      ],
+      "directReferences": [
+        "tests/e2e/admin-identifications.spec.ts"
+      ],
+      "evidence": "Referencia estática detectada; verificar assertions",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P0"
+    },
+    {
       "file": "src/components/admin/admin-insurers.tsx",
       "kind": "Componente",
       "group": "Administración",
@@ -8142,7 +8313,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 42,
+          "line": 43,
           "tag": "form",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{consult}",
@@ -8150,7 +8321,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 46,
+          "line": 47,
           "tag": "input",
           "label": "\"1-2345-6789\"",
           "handler": "{event => { setCedula(event.target.value); setResult(null); setError(\"\"); }}",
@@ -8158,7 +8329,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 49,
+          "line": 50,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -8270,7 +8441,15 @@
       "methods": [],
       "controls": [
         {
-          "line": 168,
+          "line": 167,
+          "tag": "Link",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "",
+          "destination": "\"/admin/identificaciones#pendientes\"",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 169,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => void contactPending()}",
@@ -8278,7 +8457,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 179,
+          "line": 180,
           "tag": "input",
           "label": "\"Buscar por nombre, correo o cédula\"",
           "handler": "{(e) => setQ(e.target.value)}",
@@ -8286,7 +8465,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 191,
+          "line": 192,
           "tag": "AdminFilterTabs",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{setStatus}",
@@ -8294,7 +8473,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 213,
+          "line": 214,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -8302,7 +8481,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 252,
+          "line": 253,
           "tag": "a",
           "label": "\"Escribir por WhatsApp para verificar\"",
           "handler": "{() => void markContacted(r.id)}",
@@ -8310,7 +8489,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 269,
+          "line": 270,
           "tag": "Link",
           "label": "\"Abrir\"",
           "handler": "",
@@ -8510,7 +8689,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 146,
+          "line": 149,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -8518,7 +8697,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 178,
+          "line": 181,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -8526,7 +8705,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 181,
+          "line": 184,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -8534,7 +8713,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 211,
+          "line": 214,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -8542,7 +8721,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 214,
+          "line": 217,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -8886,7 +9065,15 @@
       "methods": [],
       "controls": [
         {
-          "line": 178,
+          "line": 168,
+          "tag": "Link",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "",
+          "destination": "\"/admin/identificaciones\"",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 177,
           "tag": "input",
           "label": "\"Nombre, nombre comercial, correo, teléfono o identificación\"",
           "handler": "{(event) => setQ(event.target.value)}",
@@ -8894,7 +9081,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 186,
+          "line": 185,
           "tag": "select",
           "label": "\"Estado de verificación\"",
           "handler": "{(event) => { setVerification(event.target.value); setFilter(\"professional\"); setPage(1); }}",
@@ -8902,7 +9089,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 204,
+          "line": 203,
           "tag": "AdminFilterTabs",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{changeFilter}",
@@ -8910,7 +9097,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 220,
+          "line": 219,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -8918,7 +9105,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 273,
+          "line": 272,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setPage((current) => Math.max(1, current - 1))}",
@@ -8926,7 +9113,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 285,
+          "line": 284,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setPage((current) => Math.min(pagination.pages, current + 1))}",
@@ -21405,6 +21592,68 @@
       ]
     },
     {
+      "file": "tests/e2e/admin-identifications-runtime.spec.ts",
+      "cases": [
+        {
+          "line": 56,
+          "title": "\"pending review pages through all records and excludes approved professionals from client duplicates\""
+        },
+        {
+          "line": 66,
+          "title": "`manual protection: ${reason} cannot be automatically approved`"
+        },
+        {
+          "line": 87,
+          "title": "`read-only classification ${kind} ${result.found ? result.idType : \"missing\"}`"
+        },
+        {
+          "line": 91,
+          "title": "\"explicit professional approval rechecks eligibility, scopes the saved document and sends no decision email\""
+        },
+        {
+          "line": 98,
+          "title": "\"a client-only match updates the account and open projects, preserving unrelated Auth metadata\""
+        },
+        {
+          "line": 105,
+          "title": "\"client verification keeps admin name corrections and stops if Auth synchronization fails\""
+        },
+        {
+          "line": 112,
+          "title": "\"history and document lookup failures fail closed before any automatic approval\""
+        },
+        {
+          "line": 118,
+          "title": "\"admin review endpoints enforce admin access before reading or mutating identities\""
+        },
+        {
+          "line": 127,
+          "title": "\"review endpoint limits each read-only batch and never trusts client-supplied identity details\""
+        },
+        {
+          "line": 139,
+          "title": "\"a single matching first name or an email address is insufficient for automatic approval\""
+        },
+        {
+          "line": 145,
+          "title": "\"manual decisions beyond the first thousand history rows still protect their accounts\""
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/admin-identifications.spec.ts",
+      "cases": [
+        {
+          "line": 6,
+          "title": "\"identification tools reject anonymous requests without returning pending records\""
+        },
+        {
+          "line": 13,
+          "title": "\"administrator can consult all ID types and review a missing-document case without approving it\""
+        }
+      ]
+    },
+    {
       "file": "tests/e2e/admin-padron-runtime.spec.ts",
       "cases": [
         {
@@ -21482,47 +21731,47 @@
       "file": "tests/e2e/admin-smoke.spec.ts",
       "cases": [
         {
-          "line": 45,
+          "line": 46,
           "title": "\"admin entry shows the restricted login when signed out\""
         },
         {
-          "line": 54,
+          "line": 55,
           "title": "\"admin APIs reject unauthenticated access\""
         },
         {
-          "line": 87,
+          "line": 89,
           "title": "`admin access denied to a signed-in ${role} without ending their session`"
         },
         {
-          "line": 124,
+          "line": 126,
           "title": "\"admin panel sections render with an isolated disposable administrator\""
         },
         {
-          "line": 152,
+          "line": 154,
           "title": "\"admin sections act on real data: marketplace moderation, coverage, services, reviews and growth\""
         },
         {
-          "line": 153,
+          "line": 155,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 310,
+          "line": 312,
           "title": "\"admin deletes support cases, reports and whole accounts, and a renamed service shows everywhere\""
         },
         {
-          "line": 311,
+          "line": 313,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 388,
+          "line": 390,
           "title": "\"the verification queue records who was already written to by WhatsApp\""
         },
         {
-          "line": 389,
+          "line": 391,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 398,
+          "line": 400,
           "title": "!target"
         }
       ]
@@ -22768,6 +23017,10 @@
         {
           "line": 191,
           "title": "\"retrying an existing document submission enters manual review without duplicate uploads\""
+        },
+        {
+          "line": 210,
+          "title": "\"an admin review cannot verify a document changed after its inspection\""
         }
       ]
     },

@@ -113,7 +113,7 @@ function verification(result: RuntimeValue, status = "pending", name = "Nombre o
     "@/lib/verification/profile-name": { verifiedProfileName: async () => name },
     "@/lib/verification-notify": { notifyVerificationDecision: async (v: RuntimeValue) => notifications.push(v), notifyVerificationOutreach: async () => notifications.push("outreach") },
   });
-  return { ...state, run: () => mod.runIdentityVerification("pro", { isInitial: true, notifyChannel: "in_app" }), notifications, lookups: () => lookups };
+  return { ...state, run: (options = {}) => mod.runIdentityVerification("pro", { isInitial: true, notifyChannel: "in_app", ...options }), notifications, lookups: () => lookups };
 }
 for (const type of ["cedula", "dimex", "nite"]) test(`record found for ${type} verifies account and open projects`, async () => {
   const v = verification(found(type)); expect(await v.run()).toBe("verified");
@@ -205,4 +205,10 @@ test("retrying an existing document submission enters manual review without dupl
   state.rows.professionals[0].verification_status = "verified";
   expect((await mod.POST(new Request("https://contratacr.test/api/verification/documents", { method: "POST" }))).status).toBe(409);
   expect(state.writes).toHaveLength(1);
+});
+
+test("an admin review cannot verify a document changed after its inspection", async () => {
+  const v = verification(found());
+  expect(await v.run({ expectedCedula: "999999999" })).toBe("skipped");
+  expect(v.lookups()).toBe(0); expect(v.writes).toEqual([]);
 });
