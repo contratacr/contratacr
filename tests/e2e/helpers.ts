@@ -316,11 +316,13 @@ export async function resetAuth(page: Page) {
   const platform = (await page.context().cookies()).find((cookie) => cookie.name === "ccr_platform");
   await page.context().clearCookies();
   if (platform) await page.context().addCookies([{ name: platform.name, value: platform.value, domain: platform.domain, path: platform.path }]);
-  await page.goto("/", { waitUntil: "domcontentloaded" }).catch(() => undefined);
+  // Same-origin text gives access to storage without mounting the whole home,
+  // starting its carousel/media or reviving cached auth during fixture reset.
+  await page.goto("/robots.txt", { waitUntil: "domcontentloaded" });
   await page.evaluate(() => {
     localStorage.clear();
     sessionStorage.clear();
-  }).catch(() => undefined);
+  });
 }
 
 export async function apiJson<T = unknown>(

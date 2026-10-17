@@ -105,7 +105,22 @@ test("registration explains the badge and opens the shared explanation", async (
 
 test("dashboard name keeps only an interactive identity check", async ({ page }) => {
   test.skip(!canRunSeededRegression(), "Requires isolated regression accounts.");
+  // A slower account-reactivation check leaves a real handoff window after
+  // SIGNED_IN. Keep its actual response; only add normal mobile latency.
+  await page.route("**/api/account/disable", async route => {
+    if (route.request().postDataJSON()?.action === "reactivate") {
+      await new Promise(resolve => setTimeout(resolve, 350));
+    }
+    await route.continue();
+  });
+  const speculativePanels: string[] = [];
+  page.on("request", request => {
+    if (/\/login(?:[?#]|$)/.test(page.url()) && request.headers()["next-router-prefetch"] === "1" && new URL(request.url()).pathname.includes("/dashboard/")) {
+      speculativePanels.push(new URL(request.url()).pathname);
+    }
+  });
   await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+  expect(speculativePanels, "Login must hand off its session without speculative panel navigation").toEqual([]);
   await gotoOK(page, "/dashboard/profesional");
   const name = page.locator("h1").filter({ visible: true }).first();
   const check = name.locator("..").locator("[data-verification-badge]");
