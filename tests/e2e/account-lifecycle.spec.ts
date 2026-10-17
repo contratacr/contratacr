@@ -93,9 +93,16 @@ test.describe("@account disposable account lifecycle", () => {
 
       await page.getByRole("button", { name: /^Disable account$/i }).filter({ visible: true }).click();
       await page.getByPlaceholder(/I no longer need the service/i).fill("Disposable regression cycle");
+      const exitPaths: string[] = [];
+      const recordExit = (frame: import("playwright/test").Frame) => {
+        if (frame === page.mainFrame()) exitPaths.push(new URL(frame.url()).pathname);
+      };
+      page.on("framenavigated", recordExit);
       await page.getByRole("button", { name: /^Confirm disable$/i }).filter({ visible: true }).click();
       await page.waitForURL(/\/en(?:\?|$)/, { timeout: 20_000, waitUntil: "domcontentloaded" });
       await expect(page).toHaveURL(/\/en(?:\?|$)/);
+      page.off("framenavigated", recordExit);
+      expect(exitPaths.some(path => /\/login$/.test(path)), "Disable exits directly to home without a login detour").toBe(false);
 
       await expect.poll(async () => {
         const { data } = await regressionAdminClient().from("profiles").select("is_disabled").eq("id", account!.id).single();

@@ -6517,7 +6517,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 111,
+          "line": 106,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{reactivate}",
@@ -6525,7 +6525,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 129,
+          "line": 124,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setOpen(true)}",
@@ -6533,7 +6533,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 135,
+          "line": 130,
           "tag": "textarea",
           "label": "{t(\"reasonPlaceholder\")}",
           "handler": "{(e) => setReason(e.target.value)}",
@@ -6541,7 +6541,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 144,
+          "line": 139,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{disableAccount}",
@@ -6549,7 +6549,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 147,
+          "line": 142,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { setOpen(false); setError(null); }}",
@@ -6557,7 +6557,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 162,
+          "line": 157,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setDeleteOpen(true)}",
@@ -6565,7 +6565,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 169,
+          "line": 164,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{deleteAccount}",
@@ -6573,7 +6573,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 172,
+          "line": 167,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { setDeleteOpen(false); setDeleteError(null); }}",
@@ -21098,7 +21098,7 @@
           "title": "\"disable, sign-out and automatic reactivation preserve the English locale\""
         },
         {
-          "line": 118,
+          "line": 125,
           "title": "\"permanent deletion removes only the populated target and returns to the English home\""
         }
       ]
@@ -22159,19 +22159,19 @@
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 121,
+          "line": 124,
           "title": "`${ambiente}: cliente recién creado: «Ir a mi panel» abre su panel con la sesión puesta`"
         },
         {
-          "line": 128,
+          "line": 131,
           "title": "`${ambiente}: con otra cuenta abierta antes (entrar, salir, crear cliente), «Ir a mi panel» abre su panel`"
         },
         {
-          "line": 152,
+          "line": 155,
           "title": "`${ambiente}: cliente recién creado: «Buscar profesionales» abre la búsqueda con la sesión puesta`"
         },
         {
-          "line": 164,
+          "line": 167,
           "title": "`${ambiente}: profesional recién creado: al publicar el perfil llega a su panel con la sesión puesta`"
         }
       ]
@@ -23354,15 +23354,15 @@
           "title": "\"professional registration is turquoise text for client-only accounts and hidden for providers\""
         },
         {
-          "line": 149,
+          "line": 151,
           "title": "\"every three-dot panel menu is vertical, visible and closes by Escape/outside click\""
         },
         {
-          "line": 170,
+          "line": 172,
           "title": "\"paired actions keep equal geometry and compact dialogs stay centered\""
         },
         {
-          "line": 232,
+          "line": 234,
           "title": "\"brand loading mark uses the breathing animation without remount flicker\""
         }
       ]

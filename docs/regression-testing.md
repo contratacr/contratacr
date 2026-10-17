@@ -213,3 +213,21 @@ The first exhaustive shard reported **368 passed and 20 failed**. The run is sti
 The corrected ownership/login/support/category-back contracts passed 27 targeted local cases across the three browser projects. Support now associates its message label with its textarea. Photo preparation has a shared 800 px / 150 KiB budget in all five avatar upload entry points; a noisy camera-sized input and an unchanged small image passed in all three browser projects. Existing lint findings in edited screens are unchanged; the new helper/test add none.
 
 `scripts/optimize-profile-photos.mjs` is dry-run by default and requires explicit `PHOTO_ENV_FILE` and `PHOTO_REPORT`. Test-data simulation found 46 existing R2 profile photos, 58,874,964 bytes before and 2,429,422 bytes after. **No existing photo has been replaced.** Apply requires the existing R2 credentials. It retains originals, records derivative ownership, verifies public bytes and conditionally updates only an unchanged avatar URL. The report records before/after URLs for recovery; keep it outside Git. The local Cloudflare session currently cannot access this storage account.
+
+## 16-oct-2026 — cierre de fallos y segunda ronda completa
+
+La corrida exhaustiva `38960494952`, sobre `a98c2db4`, terminó con 1.528 casos aprobados, 46 fallidos, 151 saltos declarados y 36 casos sin ejecutar. No constituye una certificación. El smoke posterior de `c7882efc` terminó correctamente: los saltos de escritorio del aviso móvil ya declaran su motivo.
+
+Correcciones posteriores:
+
+- Desactivar y eliminar cuentas usan `signOutToHome`, que marca el cierre antes de invalidar la sesión. Conserva el idioma y el resultado de eliminación. La prueba de desactivación también exige que no exista una navegación intermedia a login.
+- El acceso de las pruebas espera el contenido visible del panel, además de su URL y cookie, para no iniciar otra navegación mientras el panel termina de montar.
+- Las pruebas de registro pulsan la casilla visible de términos y comprueban su estado; ya no ignoran un fallo al marcar el input oculto.
+- Los casos de traducción inglesa, tarjeta de cuenta, correo de recuperación y página inexistente usan las etiquetas vigentes y excluyen el prepaint oculto.
+- El caso que recorre dos cuentas y cuatro accesos declara su duración como prueba lenta; sus comprobaciones individuales conservan sus plazos.
+
+Validación dirigida: idioma/guías/video en los tres navegadores; registro de cliente web y nativo; desactivación en móvil y escritorio; menú de cuenta en WebKit; edición de datos del admin y enlaces inexistentes en escritorio. Typecheck, lint de archivos modificados, YAML de CI e inventario de superficies también comprobados. Las rondas locales intermedias registraron bloqueos/504 del proyecto test compartido; no se contabilizan como aprobadas.
+
+La regresión web exhaustiva ahora distribuye sus cuatro grupos entre runners independientes, cada uno con Supabase y Next propios, sin cancelar los demás cuando uno falla. El smoke de cada push sigue usando un solo grupo. Los reportes JSON y HTML se conservan por grupo. La regresión WebView deja de modificar el Supabase alojado de test y utiliza una base local sintética con Realtime. Android e iOS continúan bajo ejecución manual y no publican versiones.
+
+Pendiente: recibir y revisar los resultados completos de esta segunda ronda antes de certificar todo el inventario. Los originales de la migración de imágenes siguen conservados; los históricos de otra nube de Cloudinary presentes en test aún requieren revisión separada.

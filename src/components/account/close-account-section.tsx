@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { useLocale, useTranslations } from "next-intl";
 import { AlertTriangle, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { clearAccountLocalCache } from "@/lib/account-cache";
-import { prepareForAccountSignOut } from "@/lib/auth/sign-out";
+import { signOutToHome } from "@/lib/auth/sign-out";
 
 // Soft-disable requires a reason and is recoverable. A later sign-in normally
 // reactivates the account automatically; the manual action below is a fallback
@@ -45,9 +44,7 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
       if (!res.ok) { setError(json.error ?? t("processError")); return; }
       // Sign out after hiding the account. The next successful login reactivates it.
       if (accountId) clearAccountLocalCache(accountId);
-      await prepareForAccountSignOut();
-      await supabase.auth.signOut();
-      window.location.assign(`${prefijoDeIdioma(locale) || "/"}`);
+      await signOutToHome(locale);
     } catch {
       setError(t("connError"));
     } finally {
@@ -91,10 +88,8 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
         return;
       }
       if (accountId) clearAccountLocalCache(accountId);
-      await prepareForAccountSignOut();
-      await supabase.auth.signOut();
       const status = result?.status === "completed" ? "completed" : "pending";
-      window.location.assign(`${prefijoDeIdioma(locale) || "/"}?accountDeletion=${status}`);
+      await signOutToHome(locale, { accountDeletion: status });
     } catch {
       setDeleteError(t("connError"));
     } finally {

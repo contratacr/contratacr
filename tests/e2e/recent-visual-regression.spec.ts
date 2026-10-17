@@ -87,6 +87,8 @@ test.describe("@visual recent bug contracts", () => {
   });
 
   test("professional registration is turquoise text for client-only accounts and hidden for providers", async ({ page }) => {
+    // Two disposable accounts and four real logins across desktop and phone.
+    test.slow();
     let clientOnly: DisposableAccount | undefined;
     let provider: DisposableAccount | undefined;
     try {
@@ -128,8 +130,8 @@ test.describe("@visual recent bug contracts", () => {
         }
         await expect(providerNavigation.getByRole("link", { name: /^Ofrecer mis servicios$/i })).toHaveCount(0);
         if (width < 600) {
-          // La tarjeta de la cuenta, arriba del menú: nombre e «Ir a mi panel».
-          await expect(providerNavigation.getByRole("link", { name: /Ir a mi panel/i }).first()).toBeVisible();
+          // La tarjeta de la cuenta anuncia «Mi panel: <nombre>».
+          await expect(providerNavigation.getByRole("link", { name: /^Mi panel:/i })).toBeVisible();
         } else {
           const accountMenu = providerNavigation
             .getByRole("button", { name: provider.businessName, exact: true })

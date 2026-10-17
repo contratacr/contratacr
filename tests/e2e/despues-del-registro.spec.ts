@@ -76,7 +76,10 @@ async function escribirCodigo(page: Page, codigo: string) {
 
 async function aceptarTerminos(page: Page) {
   const casilla = page.locator("main").getByRole("checkbox").first();
-  if (await casilla.count()) await casilla.check({ force: true }).catch(() => {});
+  if (await casilla.count()) {
+    await casilla.locator('..').locator('span[aria-hidden="true"]').click();
+    await expect(casilla).toBeChecked();
+  }
 }
 
 /** Crea una cuenta de cliente desde /registro/cliente y deja la pantalla de «cuenta creada». */

@@ -298,6 +298,10 @@ export async function loginAs(page: Page, email: string, password: string) {
       await page.waitForURL(/(?:\/en)?\/dashboard\/profesional/, { timeout: 30_000, waitUntil: "domcontentloaded" });
       await expectAuthCookie(page);
       await page.locator("body").waitFor({ state: "visible", timeout: 5_000 });
+      // The URL commits before the dashboard resolves Auth/bootstrap and its
+      // initial route effects. Starting another navigation at that point races
+      // those effects, which WebKit reports as an internal navigation error.
+      await expect(page.getByRole("main").getByRole("heading", { level: 1 }).filter({ visible: true }).first()).toBeVisible({ timeout: 30_000 });
       return;
     } catch (error) {
       lastError = error;
