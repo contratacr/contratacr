@@ -125,8 +125,8 @@ test.describe("@admin editar datos de un usuario", () => {
     if (correoReal || process.env.LOCAL_REGRESSION_SEED === "1") {
       page.once("dialog", (dialogo) => void dialogo.accept());
       await page.getByRole("button", { name: /Enviar enlace para cambiar contrase/ }).click();
-      await expect(page.getByRole("status")).toContainText(`Enlace enviado a ${correoNuevo}`, { timeout: 20_000 });
-      await expect(historial).toContainText("Envió el enlace para cambiar la contraseña");
+      await expect(page.getByRole("status")).toContainText(`Correo aceptado para ${correoNuevo}`, { timeout: 20_000 });
+      await expect(historial).toContainText("El proveedor aceptó el correo para cambiar la contraseña");
     }
 
     // Sin sesión de admin, la API no deja cambiar nada.

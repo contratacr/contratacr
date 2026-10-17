@@ -10,7 +10,7 @@ test("@seeded una dirección que no existe no enseña otra publicación", async 
   test.skip(isMobileProject(test.info()), "Basta comprobarlo una vez.");
   for (const ruta of [`/empleos/${FANTASMA}`, `/promociones/${FANTASMA}`, `/proyectos/${FANTASMA}`]) {
     await page.goto(ruta);
-    await expect(page.locator("h1, h2").first(), `${ruta} no debe enseñar otra ficha`).toHaveText(/no encontrada|not found/i);
+    await expect(page.locator(".ccr-error-screen").getByRole("heading", { name: /no encontrada|not found/i }), `${ruta} no debe enseñar otra ficha`).toBeVisible();
   }
 });
 

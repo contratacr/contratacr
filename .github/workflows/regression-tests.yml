@@ -25,6 +25,13 @@ permissions:
 jobs:
   local-database-contract:
     name: Local schema and fast contracts
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        # Each exhaustive shard gets its own database and server. Push smoke
+        # remains a single job; no shared fixtures are mutated concurrently.
+        shard: ${{ fromJSON(github.event_name == 'push' && '[1]' || '[1,2,3,4]') }}
     runs-on: ubuntu-latest
     timeout-minutes: 240
     permissions:
@@ -194,7 +201,7 @@ jobs:
         run: npx playwright install --with-deps webkit
 
       - name: Run the public surfaces in Safari
-        if: steps.dia.outputs.lunes == 'true'
+        if: steps.dia.outputs.lunes == 'true' && matrix.shard == 1
         env:
           PLAYWRIGHT_WEBKIT: "1"
         run: >-
@@ -212,29 +219,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # A single 400-case browser/server process can accumulate enough state
-          # to make localhost stop answering late in the release suite. Keep the
-          # database and runner isolated, but restart Next.js and Chromium between
-          # four sequential shards so this remains one exhaustive certification.
-          # Los cuatro tramos corren siempre, aunque uno falle: si el primero se
-          # detuviera, los fallos de los otros tres solo aparecerían corrida a
-          # corrida (así pasó el 30-sep: tres días viendo solo el tramo 1).
-          fallidos=""
-          for shard in 1 2 3 4; do
-            export PLAYWRIGHT_JSON_REPORT="test-results/results-${shard}.json"
-            export PLAYWRIGHT_OUTPUT_DIR="test-results/shard-${shard}"
-            export PLAYWRIGHT_HTML_OUTPUT_DIR="playwright-report/shard-${shard}"
-            # La caché de datos de Next (unstable_cache) vive en disco y sobrevive
-            # al reinicio del servidor entre tramos; al vencer sirve lo viejo y
-            # recalcula después, así que un tramo veía profesionales desechables
-            # del tramo anterior. Cada tramo arranca con la caché limpia.
-            rm -rf .next/cache/fetch-cache
-            npx playwright test --shard="${shard}/4" || fallidos="${fallidos} ${shard}"
-          done
-          if [ -n "$fallidos" ]; then
-            echo "::error::Tramos con fallos:${fallidos}"
-            exit 1
-          fi
+          export PLAYWRIGHT_JSON_REPORT="test-results/results-${{ matrix.shard }}.json"
+          export PLAYWRIGHT_OUTPUT_DIR="test-results/shard-${{ matrix.shard }}"
+          export PLAYWRIGHT_HTML_OUTPUT_DIR="playwright-report/shard-${{ matrix.shard }}"
+          npx playwright test --shard="${{ matrix.shard }}/4"
 
       - name: Dump the local Supabase container logs after a failed regression
         if: github.event_name != 'push' && steps.novedad.outputs.repetir != 'false' && failure()
@@ -253,9 +241,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for shard in 1 2 3 4; do
-            PLAYWRIGHT_JSON_REPORT="test-results/results-${shard}.json" npm run test:e2e:verify-results
-          done
+          PLAYWRIGHT_JSON_REPORT="test-results/results-${{ matrix.shard }}.json" npm run test:e2e:verify-results
 
       - name: Verify synthetic fixtures after the release regression
         if: github.event_name != 'push' && steps.novedad.outputs.repetir != 'false' && always()
@@ -265,8 +251,10 @@ jobs:
         if: always() && (github.event_name == 'push' || steps.novedad.outputs.repetir != 'false')
         uses: actions/upload-artifact@v5
         with:
-          name: playwright-report
-          path: playwright-report/
+          name: playwright-report-${{ matrix.shard }}
+          path: |
+            playwright-report/
+            test-results/results*.json
           if-no-files-found: ignore
 
       - name: Stop local Supabase

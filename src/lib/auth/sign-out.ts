@@ -46,7 +46,7 @@ export async function prepareForAccountSignOut() {
 
 /** Sign out and go straight to the locale home. Uses `replace` (logout isn't kept in
  *  history) and `scope: "local"` (clears the client session immediately — snappy). */
-export async function signOutToHome(locale: string) {
+export async function signOutToHome(locale: string, options?: { accountDeletion?: "completed" | "pending" }) {
   _signingOut = true;
   clearStoredMode();
   await prepareForAccountSignOut();
@@ -55,5 +55,6 @@ export async function signOutToHome(locale: string) {
   } catch {
     /* even if the network call fails, the local session is cleared — go home anyway */
   }
-  window.location.replace(`/${locale || "es"}`);
+  const query = options?.accountDeletion ? `?accountDeletion=${options.accountDeletion}` : "";
+  window.location.replace(`/${locale || "es"}${query}`);
 }
