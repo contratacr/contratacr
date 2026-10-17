@@ -33,6 +33,7 @@ export function useRedirectIfRegistered(): { checking: boolean } {
   const arrivalChecked = useRef(false);
   const arrivedLoggedIn = useRef(false);
   const ran = useRef(false);
+  const ownsRegistration = useRef(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -45,7 +46,7 @@ export function useRedirectIfRegistered(): { checking: boolean } {
 
     // Logged out on arrival → the page owns the flow (new signup). Never redirect,
     // even if an in-page signup later establishes a session.
-    if (!arrivedLoggedIn.current || !user) { setChecking(false); return; }
+    if (!arrivedLoggedIn.current || !user || ownsRegistration.current) { setChecking(false); return; }
     if (ran.current) return;
     ran.current = true;
 
@@ -96,7 +97,9 @@ export function useRedirectIfRegistered(): { checking: boolean } {
         return;
       }
 
-      // Logged in but no complete account yet → leave them on the page to finish.
+      // The connected form owns its completion/success navigation from now on.
+      // A token refresh after Save must not race it back to the dashboard.
+      ownsRegistration.current = true;
       setChecking(false);
     })();
     return () => {

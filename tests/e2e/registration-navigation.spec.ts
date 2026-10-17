@@ -70,8 +70,11 @@ for (const locale of ["es", "en"] as const) {
           await page.getByRole("checkbox").check({ force: true });
           await page.getByRole("button", { name: /Guardar y continuar|Save and continue/, exact: true }).click();
           await expect.poll(async () => (await admin.auth.admin.getUserById(account.id)).data.user?.user_metadata.onboarding_completed).toBe(true);
-          await page.goto(`${prefix}/dashboard/profesional`);
+          const enterPanel = page.getByRole("button", { name: locale === "en" ? "Go to my dashboard" : "Ir a mi panel", exact: true });
+          await expect(enterPanel).toBeVisible();
+          await enterPanel.click();
           await expect(page).toHaveURL(/\/dashboard\/profesional/);
+          await expect(page.getByRole("main").getByRole("heading", { level: 1 }).filter({ visible: true }).first()).toBeVisible();
           await page.reload();
           await expect(page).toHaveURL(/\/dashboard\/profesional/);
         }
