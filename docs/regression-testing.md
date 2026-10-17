@@ -308,3 +308,15 @@ Esto cierra la ronda funcional del lote; los presupuestos generales de rendimien
 `marketplace-profile-photo.spec.ts` cubre empleos, proyectos y la ficha de una promoción: apertura del visor de la foto de perfil, conservación de la URL, cierre, recuperación del foco y reapertura por teclado. El componente compartido aísla el clic de los enlaces extendidos y la selección de tarjetas. Promociones consulta ahora el avatar público del profesional y lo muestra junto al nombre en su ficha; el arte de la promoción conserva su propia galería.
 
 Validación focal: 9 pruebas aprobadas (Chromium escritorio, Chromium móvil y WebKit móvil), TypeScript sin errores. Lint de los archivos nuevos y promociones/empleos aprobado; projects-board conserva un aviso previo de static-components por su selector de iconos.
+
+
+### Reducción de consultas y logs de Supabase (2026-10-16)
+
+- `node scripts/verify-approved-catalog-cache.mjs`: reutilización entre Workers, caducidad, publicación de admin, carreras con cargas anteriores, fallo de base/R2 y modo Node.
+- `node scripts/verify-catalog-r2-runtime.mjs`: ejecuta la implementación del catálogo con R2 local real (Miniflare), sin red ni credenciales. Verifica lecturas sin volver a la base, publicación, vencimiento y condiciones ETag de R2.
+- `node scripts/verify-professional-profile-queries.mjs`: límites de 5 lecturas en frío y 1 en caliente; ningún correo privado se consulta como invitado; sesión autorizada conserva correo, suspensión sigue vigente y metadatos mantienen fallback.
+- `catalog-cache-invalidation.spec.ts`: cuenta admin y servicio temporales en la base aislada; edición, ETag/304, cambio inmediato de API/SSR, ocultación y limpieza. Ejecutar en Chromium escritorio, Chromium móvil y WebKit móvil. No usar producción para este caso.
+
+Estas verificaciones quedan en el workflow de regresión. Las métricas de ahorro se refieren a consultas de esos flujos, no al volumen mensual completo de logs.
+
+Validación de esta entrega: 7 contratos de caché, 5 contratos de consultas de perfil, verificación de R2 con Miniflare y 6 contratos de vocabulario aprobados; 15 pruebas de catálogo de servicios, 6 pruebas de contacto y 3 de invalidación de admin aprobadas entre Chromium escritorio/móvil y WebKit móvil. TypeScript, lint de los archivos cambiados y compilación OpenNext para Cloudflare aprobados. La primera invocación con E2E_FIXTURES_READY=0 no era válida para los casos sembrados; se ejecutaron después con fixtures. El fallo inicial de SSR del catálogo en bundles separados de desarrollo se corrigió con invalidación compartida de la caché Node; no se relajó la comprobación de actualización inmediata.

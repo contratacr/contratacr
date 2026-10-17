@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { buildApprovedCatalog } from "@/lib/data/approved-catalog";
+import { getApprovedCatalog } from "@/lib/data/approved-catalog-cache";
 
 // GET /api/categories/approved — public custom services + catalog overrides.
 // The operational catalog is the `categories` table. Approved suggestions are
 // kept as a compatibility source for older rows that have not been mirrored yet.
 export async function GET(request: Request) {
-  const catalog = await buildApprovedCatalog();
+  const catalog = await getApprovedCatalog();
   const body = JSON.stringify(catalog);
   const etag = `W/"${await digest(body)}"`;
   // Admin catalog edits should appear immediately on public service surfaces:

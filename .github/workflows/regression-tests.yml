@@ -116,6 +116,12 @@ jobs:
       - name: Verify local Realtime before browser regression
         run: node scripts/ci/verify-local-realtime.mjs
 
+      - name: Verify catalogue cache races and profile query budgets
+        run: |
+          node scripts/verify-approved-catalog-cache.mjs
+          node scripts/verify-catalog-r2-runtime.mjs
+          node scripts/verify-professional-profile-queries.mjs
+
       - name: Verify native Google and Apple session isolation
         run: npm run test:native-social-linking
 

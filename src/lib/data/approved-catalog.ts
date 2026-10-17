@@ -15,11 +15,12 @@ export type ApprovedCatalog = {
 
 export async function buildApprovedCatalog(): Promise<ApprovedCatalog> {
   const db = createAdminClient();
-  const { data: suggestions } = await db
+  const { data: suggestions, error: suggestionsError } = await db
     .from("category_suggestions")
     .select("id, label, suggested_name")
     .eq("status", "approved")
     .order("label", { ascending: true });
+  if (suggestionsError) throw new Error(`Could not load approved suggestions: ${suggestionsError.message}`);
   let flags: Array<{ id: string; name?: string | null; name_en?: string | null; group_id?: string | null; is_hidden?: boolean | null; es_salud?: boolean | null; supports_videoconsulta?: boolean | null }> | null = null;
   const withEnglish = await db
     .from("categories")
@@ -29,8 +30,10 @@ export async function buildApprovedCatalog(): Promise<ApprovedCatalog> {
     const withoutEnglish = await db
       .from("categories")
       .select("id, name, es_salud, supports_videoconsulta");
+    if (withoutEnglish.error) throw new Error(`Could not load catalogue: ${withoutEnglish.error.message}`);
     flags = withoutEnglish.data;
   }
+  else if (withEnglish.error) throw new Error(`Could not load catalogue: ${withEnglish.error.message}`);
   const flagMap = new Map((flags ?? []).map((c) => [c.id, c]));
   const fixedById = new Map(ALL_CATEGORIES.map((category) => [category.id, category]));
   const fixedIds = new Set(fixedById.keys());
@@ -96,7 +99,8 @@ export async function buildApprovedCatalog(): Promise<ApprovedCatalog> {
     .select("id, label, label_en, icon_key, sort_order, is_hidden")
     .eq("is_hidden", false)
     .order("sort_order", { ascending: true });
-  if (!groupsRes.error) dbGroups = groupsRes.data ?? [];
+  if (groupsRes.error) throw new Error(`Could not load catalogue groups: ${groupsRes.error.message}`);
+  dbGroups = groupsRes.data ?? [];
   const dbGroupIds = new Set(dbGroups.map((group) => group.id));
   const fallbackGroups = CATEGORY_GROUPS
     .filter((group) => !dbGroupIds.has(group.id))
