@@ -24224,11 +24224,11 @@
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 84,
+          "line": 87,
           "title": "\"anonymous registration cannot overwrite a confirmed account by its public ID\""
         },
         {
-          "line": 85,
+          "line": 88,
           "title": "!canRunSeededRegression()"
         }
       ]
