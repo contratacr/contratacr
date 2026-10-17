@@ -21418,30 +21418,30 @@
         },
         {
           "line": 116,
-          "title": "\"una reseña muestra nombre corto en una línea y la fecha junto a las estrellas\""
+          "title": "\"una reseña muestra el nombre público en una línea y la fecha junto a las estrellas\""
         },
         {
-          "line": 138,
+          "line": 139,
           "title": "\"el panel precarga Mis proyectos y Cotizaciones: entrar no muestra esqueleto\""
         },
         {
-          "line": 150,
+          "line": 151,
           "title": "\"el menú del admin agrupa las secciones y muestra Contactos\""
         },
         {
-          "line": 173,
+          "line": 174,
           "title": "\"cuenta por la IP real de Cloudflare: cambiar x-forwarded-for no lo salta\""
         },
         {
-          "line": 174,
+          "line": 175,
           "title": "!esLocal()"
         },
         {
-          "line": 194,
+          "line": 195,
           "title": "\"la primera foto sale del propio sitio y se pide con la página\""
         },
         {
-          "line": 206,
+          "line": 207,
           "title": "\"la cinta de marcas nunca deja un hueco: lo que se ve no salta al reiniciar\""
         }
       ]

@@ -65,7 +65,13 @@ Los límites originales siguen sin cumplirse en varias rutas: inicio aún supera
 
 Repetición fría posterior: inicio 592 KB JS, 1527 KB totales y FCP 1752 ms. La transferencia se mantiene alrededor de 1.5 MB frente a 5.1 MB antes (aproximadamente 70 % menos en ambas muestras), pero el FCP y el JavaScript varían; no se certifica su presupuesto.
 
-El contrato de dos pestañas monta el componente real con dos grupos sintéticos en un harness de navegador, sin depender de que el catálogo aislado tenga dos grupos con cuatro profesionales/servicios. Esto conserva la prueba de descarga diferida, foco, selección y conservación de nodos sin ampliar servicios de cuentas de prueba ni añadir saltos por falta de oferta. El bloque de descarga y el carrusel se siguen comprobando en la página real.
+El contrato de dos pestañas monta el componente real con dos grupos sintéticos en un harness de navegador, sin depender de que el catálogo aislado tenga dos grupos con cuatro servicios con oferta. Esto conserva la prueba de descarga diferida, foco, selección y conservación de nodos sin ampliar servicios de cuentas de prueba ni añadir saltos por falta de oferta. El bloque de descarga y el carrusel se siguen comprobando en la página real.
 
 
 Verificación posterior en producción: los nueve casos de carga de medios pasaron en Chromium escritorio/móvil y WebKit móvil. El contrato de pestañas usa el componente real con dos grupos sintéticos; los casos de arte y carrusel visitan la portada desplegada. No se modificaron perfiles, servicios ni publicaciones para preparar oferta suficiente en el catálogo.
+
+
+La ronda nocturna 39034127306 terminó con el mismo fallo en dos navegadores: el contrato de reseñas esperaba el nombre antiguo de dos palabras, aunque la regla aprobada conserva ambos apellidos. Se actualizaron únicamente las expectativas de nombres públicos/ambiguos/comerciales; la comprobación de nombre en una línea y fecha junto a estrellas permanece intacta. El caso actualizado pasó en Chromium escritorio/móvil y WebKit móvil contra test alojado, con lectura de reseñas existentes y sin cambiar datos de cuentas.
+
+
+Arranque nativo simulado y reutilización de imágenes en producción: 7 casos correctos y 2 omisiones declaradas de escritorio para el diseño exclusivo de teléfono. Se verificaron entrada fría y cacheada en español/inglés, opacidad y geometría estables y política de caché de arte sin cachear la página/sesión. No reemplaza una instalación nativa de tienda, que no cambió en este lote.

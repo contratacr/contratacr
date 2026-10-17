@@ -113,11 +113,12 @@ test.describe("la flecha vuelve a la pantalla de origen", () => {
 test.describe("reseñas, panel y administración", () => {
   test.skip(!canRunSeededRegression(), "Necesita la base de regresión.");
 
-  test("una reseña muestra nombre corto en una línea y la fecha junto a las estrellas", async ({ page }) => {
+  test("una reseña muestra el nombre público en una línea y la fecha junto a las estrellas", async ({ page }) => {
     // La regla del nombre, con los casos que importan.
-    expect(nombreCorto("Isaac Alberto Sanchez Monge")).toBe("Isaac Sanchez");
-    expect(nombreCorto("Ana María Pérez Solano Jiménez")).toBe("Ana Solano");
-    expect(nombreCorto("Carlos Rojas Mora")).toBe("Carlos Rojas");
+    expect(nombreCorto("Isaac Alberto Sanchez Monge")).toBe("Isaac Sanchez Monge");
+    expect(nombreCorto("Ana María Pérez Solano Jiménez")).toBe("Ana María Pérez Solano Jiménez");
+    expect(nombreCorto("Carlos Rojas Mora")).toBe("Carlos Rojas Mora");
+    expect(nombreCorto("Servicios Electricos del Valle")).toBe("Servicios Electricos del Valle");
     expect(nombreCorto("Andrea Vargas")).toBe("Andrea Vargas");
     expect(nombreCorto("  Cliente ")).toBe("Cliente");
     // Y en la ficha, con las reseñas sembradas: nombre en una línea y la fecha
