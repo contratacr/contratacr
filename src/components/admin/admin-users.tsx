@@ -165,8 +165,6 @@ export function AdminUsers() {
         )}
       </div>
 
-      <Link href="/admin/identificaciones" className="mb-4 inline-flex min-h-11 items-center text-sm font-semibold text-[#0089bb]">Consultar identificaciones en Hacienda →</Link>
-
       <div className="mb-4 rounded-xl border border-[#e5e7eb] bg-white p-4">
         <label className="text-xs font-semibold text-[#6b7280]" htmlFor="admin-users-search">
           Buscar usuario

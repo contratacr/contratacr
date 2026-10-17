@@ -86,7 +86,7 @@ export function AdminIdentifications() {
     return `${row.name} ${row.cedula ?? ""} ${review?.officialName ?? ""}`.toLowerCase().includes(q.trim().toLowerCase());
   });
   return <div className="space-y-6">
-    <div><h1 className="flex items-center gap-2 text-2xl font-bold text-[#162543]"><IdCard className="h-6 w-6 text-[#009FD9]" />Identificaciones</h1><p className="mt-2 text-sm leading-6 text-[#68778d]">Consulta nacionales, jurídicas, DIMEX y NITE con Hacienda, aunque no tengan cuenta en ContrataCR. El resultado muestra solo nombre y tipo; no información tributaria.</p></div>
+    <div><h1 className="flex items-center gap-2 text-2xl font-bold text-[#162543]"><IdCard className="h-6 w-6 text-[#009FD9]" />Consultar identificación</h1><p className="mt-2 text-sm leading-6 text-[#68778d]">Consulta nacionales, jurídicas, DIMEX y NITE con Hacienda, aunque no tengan cuenta en ContrataCR. El resultado muestra solo nombre y tipo; no información tributaria.</p></div>
     <AdminPadronLookup standalone />
     <section id="pendientes" className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-xl font-bold text-[#162543]">Pendientes de verificación</h2><p className="mt-1 text-sm leading-6 text-[#68778d]">Consultar no aprueba cuentas. Las apelaciones y decisiones administrativas previas conservan la revisión manual.</p></div><button onClick={load} disabled={busy || loading} className="inline-flex min-h-11 items-center gap-2 rounded-xl border px-4 text-sm font-semibold disabled:opacity-50"><RefreshCw className="h-4 w-4" />Actualizar</button></div>
