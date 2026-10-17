@@ -3,7 +3,7 @@
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
     "files": 465,
-    "controls": 1281,
+    "controls": 1280,
     "pages": 71,
     "handlers": 96,
     "components": 238,
@@ -9065,15 +9065,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 168,
-          "tag": "Link",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "",
-          "destination": "\"/admin/identificaciones\"",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 177,
+          "line": 175,
           "tag": "input",
           "label": "\"Nombre, nombre comercial, correo, teléfono o identificación\"",
           "handler": "{(event) => setQ(event.target.value)}",
@@ -9081,7 +9073,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 185,
+          "line": 183,
           "tag": "select",
           "label": "\"Estado de verificación\"",
           "handler": "{(event) => { setVerification(event.target.value); setFilter(\"professional\"); setPage(1); }}",
@@ -9089,7 +9081,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 203,
+          "line": 201,
           "tag": "AdminFilterTabs",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{changeFilter}",
@@ -9097,7 +9089,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 219,
+          "line": 217,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -9105,7 +9097,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 272,
+          "line": 270,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setPage((current) => Math.max(1, current - 1))}",
@@ -9113,7 +9105,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 284,
+          "line": 282,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setPage((current) => Math.min(pagination.pages, current + 1))}",

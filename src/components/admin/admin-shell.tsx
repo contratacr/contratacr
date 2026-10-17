@@ -121,7 +121,7 @@ export function AdminShell({
   const items: { id: AdminTab; label: string; icon: typeof ShieldCheck; href: string; badge: number }[] = [
     { id: "resumen", label: "Resumen", icon: LayoutGrid, href: "/admin", badge: 0 },
     { id: "verificacion", label: "Verificación", icon: ShieldCheck, href: "/admin/verificacion", badge: counts.verificacion ?? 0 },
-    { id: "identificaciones", label: "Identificaciones", icon: IdCard, href: "/admin/identificaciones", badge: 0 },
+    { id: "identificaciones", label: "Consultar identificación", icon: IdCard, href: "/admin/identificaciones", badge: 0 },
     { id: "usuarios", label: "Usuarios", icon: Users, href: "/admin/usuarios", badge: 0 },
     { id: "publicaciones", label: "Proyectos", icon: ClipboardList, href: "/admin/publicaciones", badge: 0 },
     { id: "resenas", label: "Reseñas", icon: Star, href: "/admin/resenas", badge: 0 },
