@@ -1,5 +1,6 @@
 import { useEffect, type DependencyList } from "react";
 
+export const ADMIN_COUNTS_REFRESH_EVENT = "contratacr:admin-counts-refresh";
 export const ADMIN_REFRESH_EVENT = "contratacr:admin-refresh";
 
 export function useAdminAutoRefresh(onRefresh: () => void, deps: DependencyList = []) {

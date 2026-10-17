@@ -10,7 +10,7 @@ export type RunOutcome = "verified" | "pending" | "ticket" | "skipped";
 /** Hacienda checks record data, never age, biometrics, tax compliance or company representation. */
 export async function runIdentityVerification(
   professionalId: string,
-  opts: { notifyChannel?: "both" | "in_app"; isInitial?: boolean } = {},
+  opts: { notifyChannel?: "both" | "in_app"; isInitial?: boolean; expectedCedula?: string } = {},
 ): Promise<RunOutcome> {
   const channel = opts.notifyChannel ?? "both";
   const admin = createAdminClient();
@@ -23,7 +23,7 @@ export async function runIdentityVerification(
   if (pro.verification_status === "under_appeal") return "ticket";
   const profile = pro.profiles as unknown as { full_name: string | null; cedula: string | null };
   const cedula = cleanId(profile?.cedula ?? "");
-  if (!cedula) return "skipped";
+  if (!cedula || (opts.expectedCedula && cedula !== opts.expectedCedula)) return "skipped";
   const fullName = profile.full_name ?? "";
   const result = await getIdentityVerifier().lookup(cedula);
   if (result.unavailable) {

@@ -2,12 +2,12 @@
 
 import { useState, type FormEvent } from "react";
 import { ChevronDown, Loader2, Search } from "lucide-react";
-import { formatId } from "@/lib/cedula";
+import { formatId, idTypeLabel, type IdType } from "@/lib/cedula";
 
-type Result = { found: boolean; cedula: string; fullName?: string };
+type Result = { found: boolean; cedula: string; fullName?: string; idType?: IdType };
 
-export function AdminPadronLookup() {
-  const [open, setOpen] = useState(false);
+export function AdminPadronLookup({ standalone = false }: { standalone?: boolean }) {
+  const [open, setOpen] = useState(standalone);
   const [cedula, setCedula] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
@@ -32,14 +32,15 @@ export function AdminPadronLookup() {
   }
 
   return <section className="mb-4 rounded-xl border border-[#e5e7eb] bg-white">
-    <button type="button" aria-expanded={open} aria-controls="admin-padron-form" disabled={loading}
+    {!standalone && <button type="button" aria-expanded={open} aria-controls="admin-padron-form" disabled={loading}
       onClick={() => { setOpen(!open); setCedula(""); setResult(null); setError(""); }}
       className="flex min-h-12 w-full items-center gap-2 px-4 py-3 text-left text-sm font-semibold text-[#162543] disabled:opacity-60">
       <Search className="h-4 w-4 shrink-0 text-[#009FD9]" />
       Consultar identificación en Hacienda
       <ChevronDown className={`ml-auto h-4 w-4 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
-    </button>
-    {open && <form id="admin-padron-form" onSubmit={consult} aria-busy={loading} className="border-t border-[#eef2f6] p-4">
+    </button>}
+    {standalone && <h2 className="px-5 pt-5 text-lg font-bold text-[#162543]">Consultar identificación</h2>}
+    {open && <form id="admin-padron-form" onSubmit={consult} aria-busy={loading} className={`${standalone ? "" : "border-t border-[#eef2f6]"} p-5`}>
       <p className="mb-3 text-xs leading-5 text-[#68778d]">Consultá el nombre o razón social en Hacienda. Admite identificación nacional, jurídica, DIMEX y NITE. No muestra información tributaria.</p>
       <label htmlFor="admin-padron-cedula" className="text-xs font-semibold text-[#526277]">Número de identificación</label>
       <div className="mt-2 flex flex-col gap-2 sm:flex-row">
@@ -52,7 +53,7 @@ export function AdminPadronLookup() {
       </div>
       {error && <p role="alert" className="mt-3 text-sm text-[#b45309]">{error}</p>}
       {result && <div role="status" className="mt-3 rounded-lg bg-[#f8fafc] p-3 text-sm text-[#162543]">
-        {result.found ? <><p className="text-xs text-[#68778d]">Nombre en Hacienda · {formatId(result.cedula)}</p><p className="mt-1 font-semibold">{result.fullName}</p></> : <p>Hacienda no encontró esta identificación. Esto no confirma que sea inválida; la cuenta puede solicitar revisión manual.</p>}
+        {result.found ? <><p className="text-xs text-[#68778d]">Nombre en Hacienda · {formatId(result.cedula)}</p><p className="mt-1 font-semibold">{result.fullName}</p>{result.idType && <p className="mt-2 text-xs text-[#526277]">{idTypeLabel(result.idType)}{result.idType === "juridica" ? " · La representación de la empresa requiere revisión manual." : " · Cotejo de datos; no demuestra quién utiliza la cuenta."}</p>}</> : <p>Hacienda no encontró esta identificación. Esto no confirma que sea inválida; la cuenta puede solicitar revisión manual.</p>}
       </div>}
     </form>}
   </section>;

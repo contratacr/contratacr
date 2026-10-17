@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { MessageCircle, ShieldCheck, Flag, Shield, Tag, Headset, Users, LayoutGrid, BarChart3, ClipboardList, ArrowLeft, Star, Briefcase, BadgePercent, MapPinned, Wallet, Megaphone } from "lucide-react";
+import { IdCard, MessageCircle, ShieldCheck, Flag, Shield, Tag, Headset, Users, LayoutGrid, BarChart3, ClipboardList, ArrowLeft, Star, Briefcase, BadgePercent, MapPinned, Wallet, Megaphone } from "lucide-react";
 import { useLinkStatus } from "next/link";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { ContrataCRLogo } from "@/components/landing/landing-navbar";
-import { ADMIN_REFRESH_EVENT } from "@/hooks/use-admin-auto-refresh";
+import { ADMIN_REFRESH_EVENT, ADMIN_COUNTS_REFRESH_EVENT } from "@/hooks/use-admin-auto-refresh";
 
 export type AdminTab =
-  | "resumen" | "verificacion" | "usuarios" | "publicaciones" | "reportes" | "aseguradoras"
+  | "resumen" | "identificaciones" | "verificacion" | "usuarios" | "publicaciones" | "reportes" | "aseguradoras"
   | "categorias" | "cuentas" | "soporte" | "analitica" | "actividad" | "resenas" | "empleos" | "promociones" | "cobertura" | "costos" | "campanas" | "contactos";
 
 // Cada página del panel monta su propio AdminShell, así que el componente se
@@ -50,7 +50,7 @@ const GRUPOS_ADMIN: { label: string; ids: AdminTab[] }[] = [
   { label: "Principal", ids: ["resumen", "analitica"] },
   { label: "Por atender", ids: ["verificacion", "soporte", "reportes", "cuentas"] },
   { label: "Publicaciones", ids: ["publicaciones", "empleos", "promociones", "resenas"] },
-  { label: "Personas", ids: ["usuarios", "contactos"] },
+  { label: "Personas", ids: ["usuarios", "identificaciones", "contactos"] },
   { label: "Catálogo", ids: ["categorias", "cobertura"] },
   { label: "Negocio", ids: ["campanas", "costos"] },
 ];
@@ -96,11 +96,13 @@ export function AdminShell({
     const cadaMinuto = window.setInterval(fetchCounts, 60_000);
     const onFocus = () => fetchCounts();
     window.addEventListener("focus", onFocus);
+    window.addEventListener(ADMIN_COUNTS_REFRESH_EVENT, onFocus);
     document.addEventListener("visibilitychange", onFocus);
     return () => {
       alive = false;
       window.clearInterval(cadaMinuto);
       window.removeEventListener("focus", onFocus);
+      window.removeEventListener(ADMIN_COUNTS_REFRESH_EVENT, onFocus);
       document.removeEventListener("visibilitychange", onFocus);
     };
   }, []);
@@ -119,6 +121,7 @@ export function AdminShell({
   const items: { id: AdminTab; label: string; icon: typeof ShieldCheck; href: string; badge: number }[] = [
     { id: "resumen", label: "Resumen", icon: LayoutGrid, href: "/admin", badge: 0 },
     { id: "verificacion", label: "Verificación", icon: ShieldCheck, href: "/admin/verificacion", badge: counts.verificacion ?? 0 },
+    { id: "identificaciones", label: "Identificaciones", icon: IdCard, href: "/admin/identificaciones", badge: 0 },
     { id: "usuarios", label: "Usuarios", icon: Users, href: "/admin/usuarios", badge: 0 },
     { id: "publicaciones", label: "Proyectos", icon: ClipboardList, href: "/admin/publicaciones", badge: 0 },
     { id: "resenas", label: "Reseñas", icon: Star, href: "/admin/resenas", badge: 0 },

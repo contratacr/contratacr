@@ -164,6 +164,7 @@ export function AdminQueue() {
     <div>
       <div className="flex items-center justify-between flex-wrap gap-3 mb-5">
         <h1 className="text-xl font-bold text-[#162543]">Verificación de identidad</h1>
+        <Link href="/admin/identificaciones#pendientes" className="inline-flex min-h-11 items-center text-sm font-semibold text-[#087ca3]">Revisar pendientes con Hacienda →</Link>
         <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
