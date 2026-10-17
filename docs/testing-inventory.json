@@ -22712,55 +22712,55 @@
       "file": "tests/e2e/hacienda-verification-runtime.spec.ts",
       "cases": [
         {
-          "line": 29,
+          "line": 33,
           "title": "`Hacienda queries ${type} ${id.length} digits and keeps only minimum data`"
         },
         {
-          "line": 38,
+          "line": 42,
           "title": "\"invalid and oversized IDs never leave the app; official types override local heuristics\""
         },
         {
-          "line": 46,
+          "line": 50,
           "title": "\"404 is missing and cached; server errors, malformed responses and timeouts are unavailable and uncached\""
         },
         {
-          "line": 54,
+          "line": 58,
           "title": "\"429 pauses lookups without turning an outage into a negative decision\""
         },
         {
-          "line": 60,
+          "line": 64,
           "title": "\"shared cache TTL is ten minutes for matches and one minute for missing records; failures are not cached\""
         },
         {
-          "line": 112,
+          "line": 116,
           "title": "`record found for ${type} verifies account and open projects`"
         },
         {
-          "line": 117,
+          "line": 121,
           "title": "\"company record remains pending representation review; missing personal ID remains eligible to appeal\""
         },
         {
-          "line": 123,
+          "line": 127,
           "title": "\"temporary outage preserves account state and sends no rejection or outreach\""
         },
         {
-          "line": 127,
+          "line": 131,
           "title": "\"human approval and appeals are never taken over by automatic checks\""
         },
         {
-          "line": 133,
+          "line": 137,
           "title": "\"manual appeals reuse one case/message per identity and preserve admin handling\""
         },
         {
-          "line": 150,
+          "line": 154,
           "title": "\"appeal route authenticates, ignores caller-supplied professional IDs and blocks profile mismatches\""
         },
         {
-          "line": 165,
+          "line": 169,
           "title": "\"changing an approved ID clears its old approval before saving the new document\""
         },
         {
-          "line": 179,
+          "line": 183,
           "title": "\"publishing a project cannot synchronize an automatic approval over a manual appeal\""
         }
       ]
