@@ -6084,8 +6084,10 @@
         "tests/e2e/verificacion-repesca.spec.ts",
         "tests/e2e/verification-badges.spec.ts"
       ],
-      "directReferences": [],
-      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "directReferences": [
+        "tests/e2e/hacienda-verification-runtime.spec.ts"
+      ],
+      "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "API + integración BD + autorización/propiedad + idempotencia; smoke solo lectura",
       "coverage": "Alcance detallado pendiente de revisión; no certificado",
       "priority": "P0"
@@ -22762,6 +22764,10 @@
         {
           "line": 185,
           "title": "\"publishing a project cannot synchronize an automatic approval over a manual appeal\""
+        },
+        {
+          "line": 191,
+          "title": "\"retrying an existing document submission enters manual review without duplicate uploads\""
         }
       ]
     },

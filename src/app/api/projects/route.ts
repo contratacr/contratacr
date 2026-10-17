@@ -183,14 +183,17 @@ export async function POST(req: NextRequest) {
       // Publishing a project must never bypass a human review or change its document.
       cedulaGuardada = null;
       identidad = "en_revision";
+    } else if (cedula && existingProfile?.cedula === cedula && clientIdentityStatus === "verified") {
+      // A saved approval needs no new lookup, including manually approved companies.
+      identidad = "verificada";
     } else if (cedula) {
       const result = await getIdentityVerifier().lookup(cedula);
       const sameVerifiedDocument = existingProfile?.cedula === cedula && clientIdentityStatus === "verified";
-      if (!sameVerifiedDocument) { clientIdentityStatus = "pending"; identityVerifiedAt = null; identityProvider = null; }
       if (result.unavailable) {
         cedulaGuardada = sameVerifiedDocument ? cedula : null;
         identidad = "padron_caido"; // Backwards-compatible response key: temporary source outage.
       } else if (result.found && result.fullName) {
+        clientIdentityStatus = "pending"; identityVerifiedAt = null;
         identityProvider = result.idType === "juridica" ? "hacienda_api_juridica" : result.provider;
         if (result.idType === "juridica") {
           identidad = "en_revision";
