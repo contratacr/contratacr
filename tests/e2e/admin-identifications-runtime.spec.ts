@@ -29,7 +29,7 @@ function setup(initial = fixture(), options: { result?: Value; failTable?: strin
     const filters: ((row: Value) => boolean)[] = [];
     const query: Value = {
       select() { return query; }, in(key: string, values: Value[]) { filters.push(row => values.includes(row[key])); return query; }, eq(key: string, val: Value) { filters.push(row => row[key] === val); return query; },
-      neq(key: string, val: Value) { filters.push(row => row[key] !== val); return query; }, order() { return query; }, range(start: number, end: number) { range = [start, end]; return query; },
+      neq(key: string, val: Value) { filters.push(row => row[key] !== val); return query; }, order() { return query; }, limit(count: number) { range = [0, count - 1]; return query; }, range(start: number, end: number) { range = [start, end]; return query; },
       update(data: Value) { operation = "update"; value = data; return query; }, maybeSingle() { single = true; return query; },
       then(resolve: Value) {
         calls.push(table);
@@ -148,5 +148,19 @@ test("manual decisions beyond the first thousand history rows still protect thei
   initial.provider_verification_log = [...Array.from({ length: 1000 }, () => ({ professional_id: proId, action: "rejected" })), { professional_id: "later-pro", action: "reverted_pending" }];
   const s = setup(initial); const rows = await s.service.pendingIdentities(s.db);
   expect(rows.find((row: Value) => row.accountId === "later-owner").manualReason).toContain("decisión administrativa");
+  expect(s.writes).toEqual([]);
+});
+
+for (const simulate of [true, false]) test(`explicit pending maintenance respects manual decisions, simulate=${simulate}`, async () => {
+  const s = setup(); let runs = 0; let sourceCalls = 0;
+  const mod = load("src/lib/verification/repesca.ts", {
+    "@/lib/supabase/admin": { createAdminClient: () => s.db },
+    "@/lib/verification/admin-review": { pendingIdentities: async () => [candidate, { ...candidate, professionalId: "protected-pro", manualReason: "Human decision" }] },
+    "@/lib/verification/run-verification": { runIdentityVerification: async (_id: string, opts: Value) => { expect(opts).toEqual({ notifyChannel: "in_app", expectedCedula: candidate.cedula }); runs++; return "verified"; } },
+    "@/lib/verification/identity-verifier": { getIdentityVerifier: () => ({ lookup: async () => { sourceCalls++; return { found: true, fullName: "Empresa oficial", idType: "juridica" }; } }) },
+  });
+  const result = await mod.repescarVerificacionesSinRespuesta({ simular: simulate, revisarPendientes: true });
+  expect(result.revisados).toBe(1); expect(result.verificados).toBe(1);
+  expect(runs).toBe(simulate ? 0 : 1); expect(sourceCalls).toBe(simulate ? 1 : 0);
   expect(s.writes).toEqual([]);
 });

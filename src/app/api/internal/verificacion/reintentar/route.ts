@@ -25,7 +25,7 @@ async function manejar(request: Request) {
     }
     // Simulation performs lookups only; it never changes accounts.
     const simular = parametros.get("simular") === "1";
-    const resumen = await repescarVerificacionesSinRespuesta({ simular });
+    const resumen = await repescarVerificacionesSinRespuesta({ simular, revisarPendientes: parametros.get("revisar-pendientes") === "1" });
     return NextResponse.json({ ok: true, ...resumen });
   } catch {
     return NextResponse.json({ ok: false, error: "verification_retry_failed" }, { status: 500 });

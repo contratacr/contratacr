@@ -184,6 +184,25 @@ jobs:
         if: github.event_name == 'push'
         run: npm run test:e2e:verify-results
 
+      - name: Install Safari engine for assistant navigation
+        if: github.event_name == 'push'
+        run: npx playwright install --with-deps webkit
+
+      - name: Verify assistant navigation and badges in Safari
+        if: github.event_name == 'push'
+        env:
+          PLAYWRIGHT_WEBKIT: "1"
+          PLAYWRIGHT_OUTPUT_DIR: test-results/assistant-webkit
+          PLAYWRIGHT_JSON_REPORT: test-results/results-assistant-webkit.json
+          PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/assistant-webkit
+        run: npx playwright test --project=webkit-mobile assistant-navigation verification-badges navbar-brand-consistency
+
+      - name: Require clean Safari assistant results
+        if: github.event_name == 'push'
+        env:
+          PLAYWRIGHT_JSON_REPORT: test-results/results-assistant-webkit.json
+        run: npm run test:e2e:verify-results
+
       - name: Verify fixtures after public push smoke
         if: github.event_name == 'push' && always()
         run: npm run verify:local:relations
@@ -269,6 +288,7 @@ jobs:
           path: |
             playwright-report/
             test-results/results*.json
+            test-results/**/assistant-*-verified-name.png
           if-no-files-found: ignore
 
       - name: Stop local Supabase

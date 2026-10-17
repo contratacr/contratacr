@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { pendingIdentities } from "@/lib/verification/admin-review";
 import { runIdentityVerification } from "@/lib/verification/run-verification";
 
 /**
@@ -16,7 +17,7 @@ import { runIdentityVerification } from "@/lib/verification/run-verification";
 const DECISIONES_REALES = ["auto_verified", "verified", "reverted_pending", "auto_pending", "authorized", "rejected", "under_appeal", "appeal_failed", "legal_entity_pending"];
 const POR_TANDA = 50;
 
-export async function repescarVerificacionesSinRespuesta(opts: { simular?: boolean } = {}): Promise<{
+export async function repescarVerificacionesSinRespuesta(opts: { simular?: boolean; revisarPendientes?: boolean } = {}): Promise<{
   simulado: boolean;
   revisados: number;
   verificados: number;
@@ -32,7 +33,16 @@ export async function repescarVerificacionesSinRespuesta(opts: { simular?: boole
     .limit(500);
 
   const candidatos: string[] = [];
-  for (const pro of pendientes ?? []) {
+  const reviewedDocuments = new Map<string, string>();
+  if (opts.revisarPendientes) {
+    // Explicit maintenance only: revisit old automatic misses after a policy/source change.
+    // The regular daily retry continues to exclude any previous decision.
+    const eligible = (await pendingIdentities(admin)).filter(row => row.professionalId && row.cedula && !row.manualReason).slice(0, POR_TANDA);
+    for (const row of eligible) {
+      candidatos.push(row.professionalId!);
+      reviewedDocuments.set(row.professionalId!, row.cedula!);
+    }
+  } else for (const pro of pendientes ?? []) {
     if (!(pro.profiles as unknown as { cedula?: string } | null)?.cedula) continue;
     const { data: historial, error: historyError } = await admin
       .from("provider_verification_log")
@@ -64,7 +74,7 @@ export async function repescarVerificacionesSinRespuesta(opts: { simular?: boole
       if (revisados) await new Promise(resolve => setTimeout(resolve, 250));
       revisados++;
       const pro = (pendientes ?? []).find((p) => p.id === id);
-      const salida = await verificador.lookup(String((pro?.profiles as unknown as { cedula?: string } | null)?.cedula ?? ""));
+      const salida = await verificador.lookup(reviewedDocuments.get(id) ?? String((pro?.profiles as unknown as { cedula?: string } | null)?.cedula ?? ""));
       if (salida.unavailable) padronSigueCaido += 1;
       else if (salida.found && !!salida.fullName) verificados += 1;
       else siguenPendientes += 1;
@@ -78,7 +88,7 @@ export async function repescarVerificacionesSinRespuesta(opts: { simular?: boole
     revisados++;
     // Sin `isInitial`: si el resultado no cambia nada, no se le vuelve a avisar
     // a alguien que ya recibió su aviso el día del registro.
-    const salida = await runIdentityVerification(id, { notifyChannel: "in_app" });
+    const salida = await runIdentityVerification(id, { notifyChannel: "in_app", ...(reviewedDocuments.has(id) ? { expectedCedula: reviewedDocuments.get(id) } : {}) });
     if (salida === "verified") verificados += 1;
     else if (salida === "skipped") padronSigueCaido += 1;
     else siguenPendientes += 1;
