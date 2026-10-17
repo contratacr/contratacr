@@ -1220,10 +1220,15 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     };
   }, [user]);
 
+  // Auth owns its navigation. A SIGNED_IN event must not start speculative
+  // panel requests while the login form is handing off the same session.
+  const authRoute = /^\/(?:login|registro|olvide-contrasena|reset-password|onboarding|continuar-perfil|auth)(?:\/|$)/.test(pathname);
+
   // Warm the two most common destinations after the current page settles. This
   // keeps the initial render light while making the first panel/search transition
   // use Next's prefetched route payload instead of waiting after the click.
   useEffect(() => {
+    if (authRoute) return;
     const timeout = window.setTimeout(() => {
       // En la app la pestaña Profesionales abre el buscador, no la página: no
       // se precarga la búsqueda en cada pantalla. En la web sí se entra a ella.
@@ -1234,15 +1239,15 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       }
     }, nativeApp ? 0 : 120);
     return () => window.clearTimeout(timeout);
-  }, [nativeApp, pathname, primaryPanelHref, router, user]);
+  }, [authRoute, nativeApp, pathname, primaryPanelHref, router, user]);
 
   useEffect(() => {
-    if (!nativeApp || !user) return;
+    if (authRoute || !nativeApp || !user) return;
     router.prefetch("/mensajes");
     router.prefetch(primaryPanelHref);
     prefetchDashboardBootstrap(user.id);
     void prefetchConversations();
-  }, [nativeApp, primaryPanelHref, router, user]);
+  }, [authRoute, nativeApp, primaryPanelHref, router, user]);
 
   const visibleResourceLinks = useMemo(() => RESOURCES_LINKS, []);
   // El cajón no marca dónde estás: ya lo sabes, y en turquesa se leía como
