@@ -181,7 +181,9 @@ jobs:
           PLAYWRIGHT_JSON_REPORT: test-results-assistant-first/results.json
           PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report-assistant-first
         run: |
-          npx playwright test registration-navigation native-social-access auth-screens despues-del-registro assistant-navigation
+          npx playwright test registration-navigation
+          npm run test:e2e:verify-results
+          npx playwright test native-social-access auth-screens despues-del-registro assistant-navigation
           npm run test:e2e:verify-results
 
       - name: Run public routes and recent UI smoke on every push
