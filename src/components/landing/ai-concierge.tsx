@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore, Suspense, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, Suspense, type FormEvent } from "react";
 import { prefijoDeIdioma, rutaConIdioma, sinPrefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import {
   Menu,
@@ -121,6 +121,10 @@ function storePendingIntent(href: string) {
 
 /** Dirección desde la que un botón del asistente llevó a otra pantalla. */
 const VOLVER_AL_ASISTENTE = "ccr:volver-al-asistente";
+function isAssistantReturn() {
+  try { return window.sessionStorage.getItem(VOLVER_AL_ASISTENTE) === `${window.location.pathname}${window.location.search}`; }
+  catch { return false; }
+}
 
 const COPY = {
   es: {
@@ -313,6 +317,10 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
   const sessionHydratedRef = useRef(false);
   const previousPathnameRef = useRef(routeKey);
   useContainedTouchScroll(scrollRef, open || embedded);
+  const dismissAssistant = useCallback(() => {
+    try { window.sessionStorage.removeItem(VOLVER_AL_ASISTENTE); } catch { /* Storage is optional. */ }
+    setOpen(false);
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -330,7 +338,7 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
   useEffect(() => {
     if (embedded) return;
     const openAssistant = () => setOpen(true);
-    const closeAssistant = () => setOpen(false);
+    const closeAssistant = dismissAssistant;
     // VOLVER AL CHAT: si un botón del asistente llevó a otra pantalla, la
     // flecha atrás regresa a la dirección desde donde se tocó y ahí el
     // asistente se vuelve a abrir, con la conversación como estaba.
@@ -348,16 +356,7 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
       window.removeEventListener("contratacr:close-ai", closeAssistant);
       window.removeEventListener("popstate", alVolver);
     };
-  }, [embedded]);
-
-  // The assistant is an overlay, not a route: closing it never changes the
-  // pathname, so the bottom-nav highlight can only clear via this signal.
-  const wasOpenRef = useRef(false);
-  useEffect(() => {
-    if (embedded) return;
-    if (wasOpenRef.current && !open) window.dispatchEvent(new Event("contratacr:close-ai"));
-    wasOpenRef.current = open;
-  }, [embedded, open]);
+  }, [dismissAssistant, embedded]);
 
   // La barra de abajo marca "Asistente" leyendo este anuncio, no adivinando:
   // cubre también cuando la ventana se restaura sola desde la sesión.
@@ -372,7 +371,7 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
       if (stored) {
         setConversationId(stored.id || crypto.randomUUID());
         setMessages(stored.messages);
-        setOpen(embedded ? true : stored.open);
+        setOpen(embedded || stored.open || isAssistantReturn());
       } else {
         setConversationId(crypto.randomUUID());
       }
@@ -403,7 +402,6 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
           let restore = false;
           try {
             restore = window.sessionStorage.getItem(VOLVER_AL_ASISTENTE) === `${window.location.pathname}${window.location.search}`;
-            if (restore) window.sessionStorage.removeItem(VOLVER_AL_ASISTENTE);
           } catch { /* History still works without storage. */ }
           setOpen(restore);
         }
@@ -415,11 +413,11 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
   useEffect(() => {
     if (!open || embedded) return;
     const minimizeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") dismissAssistant();
     };
     window.addEventListener("keydown", minimizeOnEscape);
     return () => window.removeEventListener("keydown", minimizeOnEscape);
-  }, [embedded, open]);
+  }, [dismissAssistant, embedded, open]);
 
   useEffect(() => {
     if (!open) return;
@@ -618,7 +616,7 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
       aria-modal={embedded ? undefined : "true"}
       aria-label={copy.title}
       onMouseDown={(event) => {
-        if (!embedded && event.target === event.currentTarget) setOpen(false);
+        if (!embedded && event.target === event.currentTarget) dismissAssistant();
       }}
       className={cn(
         embedded
@@ -659,7 +657,7 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
                   // ventana y, si la ruta de abajo no era la portada, navega.
                   // Sin esto, abierto desde la portada era un no-viaje mudo.
                   event.preventDefault();
-                  setOpen(false);
+                  dismissAssistant();
                   const enPortada = /^\/(?:es|en)?\/?$/.test(window.location.pathname);
                   if (!enPortada) router.push("/");
                 }}
@@ -697,7 +695,7 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
             </button>
             {!embedded && !nativeAssistantShell && (
               <AppTooltip label={copy.minimize}>
-                <button type="button" onClick={() => setOpen(false)} className="grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11" aria-label={copy.minimize}><Minus className="h-5 w-5 sm:h-6 sm:w-6" /></button>
+                <button type="button" onClick={dismissAssistant} className="grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11" aria-label={copy.minimize}><Minus className="h-5 w-5 sm:h-6 sm:w-6" /></button>
               </AppTooltip>
             )}
           </div>

@@ -174,11 +174,21 @@ jobs:
         if: github.event_name == 'push'
         run: npx playwright install --with-deps chromium
 
+      - name: Verify assistant navigation before broader smoke
+        if: github.event_name == 'push'
+        env:
+          PLAYWRIGHT_OUTPUT_DIR: test-results-assistant-first
+          PLAYWRIGHT_JSON_REPORT: test-results-assistant-first/results.json
+          PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report-assistant-first
+        run: |
+          npx playwright test assistant-navigation
+          npm run test:e2e:verify-results
+
       - name: Run public routes and recent UI smoke on every push
         if: github.event_name == 'push'
         run: >-
           npx playwright test
-          ai-assistant assistant-navigation admin-identifications hacienda-verification-runtime verification-documents current-profile-names-runtime admin-profile-edit-runtime admin-padron-runtime public-smoke app-download mobile-menu-surface verification-badges navbar-brand-consistency mensajes-sin-parpadeo landing-media-budget android-auth-return-presentation avatar-framing shared-link-language
+          ai-assistant admin-identifications hacienda-verification-runtime verification-documents current-profile-names-runtime admin-profile-edit-runtime admin-padron-runtime public-smoke app-download mobile-menu-surface verification-badges navbar-brand-consistency mensajes-sin-parpadeo landing-media-budget android-auth-return-presentation avatar-framing shared-link-language
 
       - name: Require clean push smoke results
         if: github.event_name == 'push'
@@ -287,6 +297,8 @@ jobs:
           name: playwright-report-${{ matrix.shard }}
           path: |
             playwright-report/
+            playwright-report-assistant-first/
+            test-results-assistant-first/
             test-results/results*.json
             test-results/**/assistant-*-verified-name.png
           if-no-files-found: ignore
