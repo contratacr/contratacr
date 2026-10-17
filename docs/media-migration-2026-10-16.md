@@ -68,3 +68,9 @@ Producción: 246 archivos y 243 filas comprobados; 42 metadatos de avatar de acc
 La auditoría posterior mantiene cero referencias activas de Cloudinary en ambos ambientes. El almacenamiento de medios ocupa 276,74 MB y conserva 1.849 objetos, incluidos respaldos y versiones anteriores; no representa solo las fotos activas. No se borró contenido de Cloudinary ni originales de R2.
 
 Comprobación de origen posterior: 693 URL activas de R2 en producción y 501 en test, sin objetos ausentes ni imágenes por encima de 512 KiB. Los 291 avatares de producción y 250 de test están por debajo de 150 KiB y son JPEG/PNG. Desde el inicio del lote de fotos antiguas de R2, producción conserva cero entradas nuevas de actividad y cero avisos de actividad a seguidores. Las pruebas dirigidas de chat limpiaron sus datos y la auditoría posterior de test sigue sin referencias activas de Cloudinary.
+
+## Auditoría de cierre después de nuevas cargas
+
+La lectura posterior de producción cuenta 694 URL activas de R2 y test conserva 501; todas existen y ninguna imagen supera 512 KiB. Los 292 avatares de R2 de producción y 250 de test cumplen 150 KiB y usan JPEG/PNG compatibles con Open Graph. Ambos ambientes siguen sin referencias activas de Cloudinary en los campos auditados. El bucket de medios contiene ahora 1.852 objetos y 277.838.833 bytes (277,84 MB), incluidos respaldos y archivos que aún no se usan; las cifras cambian con las cargas de usuarios.
+
+Los documentos de identidad/verificación y adjuntos privados de soporte usan el bucket privado `support-attachments` de Supabase y enlaces firmados. No se trasladan al bucket público de fotos: en producción no hay adjuntos privados registrados en esos mensajes y test conserva dos. Las fotos de actores de notificaciones se resuelven desde `profiles.avatar_url`, ya incluido en la migración, sin otra copia activa de Cloudinary.
