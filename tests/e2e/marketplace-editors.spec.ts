@@ -71,10 +71,10 @@ async function openItemActions(page: Page, card: ReturnType<Page["locator"]>) {
   await mas.click();
 }
 
-// The row menu renders inside the card, so scope the action there: the page
-// header also carries a "Publicar" control that must never be the match.
+// The opened row menu is portaled to avoid clipping by scrolling cards.
+// Scope to its menu role so a page-header "Publicar" can never be the match.
 async function chooseItemAction(card: ReturnType<Page["locator"]>, label: RegExp) {
-  await card.getByRole("menuitem", { name: label }).or(card.getByRole("button", { name: label })).first().click();
+  await card.page().getByRole("menu").filter({ visible: true }).getByRole("menuitem", { name: label }).click();
 }
 
 const LOCAL_STACK = process.env.LOCAL_REGRESSION_SEED === "1";

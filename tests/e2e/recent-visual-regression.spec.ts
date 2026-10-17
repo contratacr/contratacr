@@ -52,7 +52,9 @@ async function expectVerticalMenuInsideViewport(page: Page, trigger: Locator) {
   await expect(menu).toBeHidden();
   await trigger.click();
   await expect(menu).toBeVisible();
-  await page.locator("main").click({ position: { x: 4, y: 4 } });
+  // Click a visible gutter point. Scrolling a very tall main to its first
+  // pixel can fight the panel's own scroll restoration on long lists.
+  await page.mouse.click(4, Math.floor((page.viewportSize()?.height ?? 844) / 2));
   await expect(menu).toBeHidden();
 }
 

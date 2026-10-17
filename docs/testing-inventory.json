@@ -8,7 +8,7 @@
     "handlers": 93,
     "components": 233,
     "hooks": 25,
-    "specs": 111
+    "specs": 112
   },
   "dashboardTabs": [
     "home",
@@ -9466,7 +9466,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 53,
+          "line": 97,
           "tag": "button",
           "label": "{label}",
           "handler": "{() => setOpen((o) => !o)}",
@@ -9474,7 +9474,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 82,
+          "line": 127,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { setOpen(false); a.onClick(); }}",
@@ -15033,7 +15033,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 468,
+          "line": 469,
           "tag": "Link",
           "label": "{copy.back}",
           "handler": "",
@@ -15041,7 +15041,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 474,
+          "line": 475,
           "tag": "Link",
           "label": "{copy.backToOffers}",
           "handler": "",
@@ -15049,7 +15049,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 478,
+          "line": 479,
           "tag": "form",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{submit}",
@@ -15057,7 +15057,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 498,
+          "line": 499,
           "tag": "input",
           "label": "\"title\"",
           "handler": "",
@@ -15065,7 +15065,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 507,
+          "line": 508,
           "tag": "SelectMenu",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{setOfferType}",
@@ -15073,7 +15073,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 511,
+          "line": 512,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { setServiceInput(\"\"); setServiceSuggestionsOpen((open) => !open); }}",
@@ -15081,7 +15081,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 525,
+          "line": 526,
           "tag": "input",
           "label": "\"service_label\"",
           "handler": "",
@@ -15089,7 +15089,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 531,
+          "line": 532,
           "tag": "input",
           "label": "{copy.servicePlaceholder}",
           "handler": "{(event) => setServiceInput(event.target.value)}",
@@ -15097,7 +15097,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 566,
+          "line": 567,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => {\n                              const option = serviceOptions.find((item) => item.label === label);\n                              if (!option) return;\n                              setSelectedServiceValue(option.value);\n                              setServiceInput(\"\");\n                              setServiceSuggestionsOpen(false);\n                              setFieldErrors((current) => ({ ...current, service: undefined }));\n                            }}",
@@ -15105,7 +15105,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 594,
+          "line": 595,
           "tag": "PhoneInput",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{setWhatsapp}",
@@ -15113,7 +15113,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 601,
+          "line": 602,
           "tag": "textarea",
           "label": "\"description\"",
           "handler": "",
@@ -15121,7 +15121,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 607,
+          "line": 608,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -15129,7 +15129,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 625,
+          "line": 626,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setExistingImageUrls((current) => current.filter((item) => item !== url))}",
@@ -15137,7 +15137,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 631,
+          "line": 632,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setFiles((current) => current.filter((item) => item !== file))}",
@@ -15145,7 +15145,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 634,
+          "line": 635,
           "tag": "input",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(event) => { addFiles(event.target.files); event.currentTarget.value = \"\"; }}",
@@ -15153,7 +15153,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 641,
+          "line": 642,
           "tag": "FilaInterruptor",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(valor) => { setSinPrecio(valor); setFieldErrors((current) => ({ ...current, price: undefined, priceBefore: undefined })); }}",
@@ -15161,7 +15161,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 650,
+          "line": 651,
           "tag": "input",
           "label": "\"price_now\"",
           "handler": "",
@@ -15169,7 +15169,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 651,
+          "line": 652,
           "tag": "input",
           "label": "\"price_before\"",
           "handler": "",
@@ -15177,7 +15177,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 658,
+          "line": 659,
           "tag": "SelectMenu",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{setCurrency}",
@@ -15185,7 +15185,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 659,
+          "line": 660,
           "tag": "SelectMenu",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{setPriceUnit}",
@@ -15193,7 +15193,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 660,
+          "line": 661,
           "tag": "input",
           "label": "\"quantity_available\"",
           "handler": "",
@@ -15201,7 +15201,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 665,
+          "line": 666,
           "tag": "FutureDatePicker",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{setValidUntil}",
@@ -15209,7 +15209,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 670,
+          "line": 671,
           "tag": "input",
           "label": "\"location_label_fallback\"",
           "handler": "",
@@ -15217,7 +15217,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 672,
+          "line": 673,
           "tag": "SelectMenu",
           "label": "{copy.province}",
           "handler": "{(value) => { setLocationProvince(value); setLocationCanton(\"\"); }}",
@@ -15225,7 +15225,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 678,
+          "line": 679,
           "tag": "SelectMenu",
           "label": "{locationProvince === \"all_cr\" ? copy.allCostaRica : copy.wholeProvince}",
           "handler": "{setLocationCanton}",
@@ -15233,7 +15233,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 710,
+          "line": 711,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{onCancel}",
@@ -15241,7 +15241,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 715,
+          "line": 716,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -21970,6 +21970,15 @@
       ]
     },
     {
+      "file": "tests/e2e/card-actions-menu.spec.ts",
+      "cases": [
+        {
+          "line": 4,
+          "title": "'card menus stay usable at viewport edges, in clipped cards and after scrolling'"
+        }
+      ]
+    },
+    {
       "file": "tests/e2e/contact-gate.spec.ts",
       "cases": [
         {
@@ -22898,107 +22907,107 @@
       "file": "tests/e2e/portada-y-menu.spec.ts",
       "cases": [
         {
-          "line": 17,
+          "line": 37,
           "title": "\"sin sesión, la cabecera del teléfono solo lleva el logo y el menú\""
         },
         {
-          "line": 18,
+          "line": 38,
           "title": "!isMobileProject(test.info())"
         },
         {
-          "line": 25,
+          "line": 45,
           "title": "\"el menú se abre a pantalla completa y se cierra con la X\""
         },
         {
-          "line": 26,
+          "line": 46,
           "title": "!isMobileProject(test.info())"
         },
         {
-          "line": 48,
+          "line": 68,
           "title": "\"cada marca de la cinta enlaza al perfil de su negocio\""
         },
         {
-          "line": 55,
+          "line": 75,
           "title": "\"perfil que no existe: la flecha vuelve y no hay «···»\""
         },
         {
-          "line": 56,
+          "line": 76,
           "title": "!isMobileProject(test.info())"
         },
         {
-          "line": 66,
+          "line": 86,
           "title": "\"en la app, volver con la flecha no parpadea (cabecera, carga y barra de abajo)\""
         },
         {
-          "line": 67,
+          "line": 87,
           "title": "!isMobileProject(test.info())"
         },
         {
-          "line": 100,
+          "line": 120,
           "title": "\"en la app, Mensajes está en la barra de abajo y sin sesión pide entrar\""
         },
         {
-          "line": 101,
+          "line": 121,
           "title": "!isMobileProject(test.info())"
         },
         {
-          "line": 111,
+          "line": 131,
           "title": "\"los videos de la guía están silenciados y corren solos\""
         },
         {
-          "line": 127,
+          "line": 147,
           "title": "\"el video activo de la guía nunca queda invisible y la imagen fija va encima\""
         },
         {
-          "line": 152,
+          "line": 172,
           "title": "\"las secciones de abajo de la portada se ven al bajar\""
         },
         {
-          "line": 159,
+          "line": 179,
           "title": "\"la foto del inicio empieza bajo la cabecera y no cambia de tamaño al abrir\""
         },
         {
-          "line": 160,
+          "line": 180,
           "title": "!isMobileProject(test.info())"
         },
         {
-          "line": 183,
+          "line": 203,
           "title": "\"el menú se abre y se cierra deslizando, siempre opaco\""
         },
         {
-          "line": 184,
+          "line": 204,
           "title": "!isMobileProject(test.info())"
         },
         {
-          "line": 204,
+          "line": 231,
           "title": "\"con el teclado abierto, la hoja de búsqueda llega justo hasta el teclado\""
         },
         {
-          "line": 205,
+          "line": 232,
           "title": "!isMobileProject(test.info())"
         },
         {
-          "line": 228,
+          "line": 255,
           "title": "\"los logos de la cinta están cargados desde el principio (ninguno en blanco)\""
         },
         {
-          "line": 236,
+          "line": 263,
           "title": "\"al tocar un enlace del menú no se ve el inicio entre medio: el menú se queda hasta que llega la sección\""
         },
         {
-          "line": 237,
+          "line": 264,
           "title": "!isMobileProject(test.info())"
         },
         {
-          "line": 261,
+          "line": 288,
           "title": "\"en la app, tocar Notificaciones nada más llegar a Proyectos la abre (2-oct-2026)\""
         },
         {
-          "line": 265,
+          "line": 292,
           "title": "!isMobileProject(test.info())"
         },
         {
-          "line": 266,
+          "line": 293,
           "title": "!process.env.E2E_TEST_PASSWORD"
         }
       ]
@@ -23081,31 +23090,31 @@
           "title": "\"long professional names remain readable on responsive profile headers\""
         },
         {
-          "line": 67,
+          "line": 68,
           "title": "\"verification stays beside the last word of wrapped profile names\""
         },
         {
-          "line": 68,
+          "line": 69,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 93,
+          "line": 100,
           "title": "\"reviews never freeze navigation back to results or home\""
         },
         {
-          "line": 129,
+          "line": 136,
           "title": "\"profile reviews use a compact inline form instead of an isolated modal\""
         },
         {
-          "line": 130,
+          "line": 137,
           "title": "!seed"
         },
         {
-          "line": 161,
+          "line": 168,
           "title": "\"reviews are the second profile section and do not label review provenance\""
         },
         {
-          "line": 184,
+          "line": 191,
           "title": "\"no puedo guardarme a mí mismo aunque pulse apenas abre\""
         }
       ]
@@ -23115,7 +23124,7 @@
       "cases": [
         {
           "line": 4,
-          "title": "'profile camera image is bounded before upload and a small image stays intact'"
+          "title": "'camera images respect avatar and public-gallery budgets while small images stay intact'"
         }
       ]
     },
@@ -23342,27 +23351,27 @@
       "file": "tests/e2e/recent-visual-regression.spec.ts",
       "cases": [
         {
-          "line": 60,
+          "line": 62,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 67,
+          "line": 69,
           "title": "\"web test keeps the production navbar, WhatsApp flow and footer at both viewports\""
         },
         {
-          "line": 89,
+          "line": 91,
           "title": "\"professional registration is turquoise text for client-only accounts and hidden for providers\""
         },
         {
-          "line": 151,
+          "line": 153,
           "title": "\"every three-dot panel menu is vertical, visible and closes by Escape/outside click\""
         },
         {
-          "line": 172,
+          "line": 174,
           "title": "\"paired actions keep equal geometry and compact dialogs stay centered\""
         },
         {
-          "line": 234,
+          "line": 236,
           "title": "\"brand loading mark uses the breathing animation without remount flicker\""
         }
       ]
@@ -23640,7 +23649,7 @@
           "title": "\"@seeded la fila de pestañas no cambia después de cargar\""
         },
         {
-          "line": 26,
+          "line": 30,
           "title": "\"@seeded la foto de perfil no se esconde para volver a aparecer\""
         }
       ]

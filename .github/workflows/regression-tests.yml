@@ -62,7 +62,7 @@ jobs:
       - name: Start the minimal local Supabase stack
         run: >-
           supabase start
-          --exclude realtime,imgproxy,postgres-meta,studio,mailpit,edge-runtime,logflare,vector,supavisor
+          --exclude imgproxy,postgres-meta,studio,mailpit,edge-runtime,logflare,vector,supavisor
 
       - name: Rebuild every migration from an empty database
         run: supabase db reset --local --no-seed

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -8,9 +9,8 @@ import { cn } from "@/lib/utils";
  * Shared vertical-ellipsis overflow menu for the panel list cards (sprint 441).
  * Keeps cards clean: ONE primary action stays visible next to this; the SECONDARY
  * actions live here. Used identically by the professional and client Solicitudes sections and
- * Mis proyectos. Opens UPWARD (the footer sits at the card bottom) so it stays in
- * view, and the cards no longer use `overflow-hidden` (rounded button corners fix the
- * hover-clip instead) so this dropdown is never clipped.
+ * Mis proyectos. Prefers opening upward and flips/clamps to the visual viewport.
+ * The body portal prevents scrolling cards and transformed parents from clipping it.
  */
 export type CardAction = {
   label: string;
@@ -28,19 +28,63 @@ export type CardAction = {
 export function CardActionsMenu({ actions, label, placement = "up", triggerClassName, menuClassName, itemClassName }: { actions: CardAction[]; label: string; placement?: "up" | "down"; triggerClassName?: string; menuClassName?: string; itemClassName?: string }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    const position = () => {
+      const trigger = triggerRef.current;
+      const menu = menuRef.current;
+      if (!trigger || !menu) return;
+      const viewport = window.visualViewport;
+      const pad = 10;
+      const viewLeft = (viewport?.offsetLeft ?? 0) + pad;
+      const viewTop = (viewport?.offsetTop ?? 0) + pad;
+      const viewWidth = (viewport?.width ?? window.innerWidth) - pad * 2;
+      const viewHeight = (viewport?.height ?? window.innerHeight) - pad * 2;
+      menu.style.minWidth = `${Math.min(190, Math.max(1, viewWidth))}px`;
+      menu.style.maxWidth = `${Math.max(1, viewWidth)}px`;
+      menu.style.maxHeight = `${Math.max(1, viewHeight)}px`;
+      const anchor = trigger.getBoundingClientRect();
+      const box = menu.getBoundingClientRect();
+      const below = viewTop + viewHeight - anchor.bottom - 6;
+      const above = anchor.top - viewTop - 6;
+      const up = placement === "up" ? above >= box.height || above > below : below < box.height && above > below;
+      const desiredTop = up ? anchor.top - box.height - 6 : anchor.bottom + 6;
+      menu.style.top = `${Math.max(viewTop, Math.min(desiredTop, viewTop + viewHeight - box.height))}px`;
+      menu.style.left = `${Math.max(viewLeft, Math.min(anchor.right - box.width, viewLeft + viewWidth - box.width))}px`;
+    };
+    position();
+    const observer = new ResizeObserver(position);
+    if (menuRef.current) observer.observe(menuRef.current);
+    if (triggerRef.current) observer.observe(triggerRef.current);
+    window.addEventListener("scroll", position, true);
+    window.addEventListener("resize", position);
+    window.visualViewport?.addEventListener("resize", position);
+    window.visualViewport?.addEventListener("scroll", position);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", position, true);
+      window.removeEventListener("resize", position);
+      window.visualViewport?.removeEventListener("resize", position);
+      window.visualViewport?.removeEventListener("scroll", position);
+    };
+  }, [open, placement, actions]);
 
   useEffect(() => {
     if (!open) return;
-    function onDown(e: MouseEvent) {
-      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    function onDown(e: PointerEvent) {
+      const target = e.target as Node;
+      if (!ref.current?.contains(target) && !menuRef.current?.contains(target)) setOpen(false);
     }
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") { setOpen(false); triggerRef.current?.focus(); }
     }
-    document.addEventListener("mousedown", onDown);
+    document.addEventListener("pointerdown", onDown);
     document.addEventListener("keydown", onKey);
     return () => {
-      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("pointerdown", onDown);
       document.removeEventListener("keydown", onKey);
     };
   }, [open]);
@@ -51,6 +95,7 @@ export function CardActionsMenu({ actions, label, placement = "up", triggerClass
     <div ref={ref} className="relative shrink-0">
       {/* Los tres puntos horizontales, iguales en toda la app. */}
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
@@ -63,8 +108,9 @@ export function CardActionsMenu({ actions, label, placement = "up", triggerClass
       >
         <MoreHorizontal className="h-5 w-5" />
       </button>
-      {open && (
+      {open && typeof document !== "undefined" && createPortal(
         <div
+          ref={menuRef}
           role="menu"
           className={cn(
             // UNA SOLA MEDIDA PARA TODOS LOS «···» DEL PANEL. Empleos y
@@ -73,8 +119,7 @@ export function CardActionsMenu({ actions, label, placement = "up", triggerClass
             // este, mas palido. El dibujo que gana es el de Empleos —negrita y
             // color, que es lo que hace legible un menu de cuatro palabras— y
             // ahora vive aqui, no copiado en cada seccion.
-            "absolute right-0 z-50 max-h-[calc(100dvh-2rem)] min-w-[190px] overflow-y-auto rounded-xl border border-[#e5e7eb] bg-white p-1.5 shadow-[0_18px_45px_-22px_rgba(15,23,42,0.55)]",
-            placement === "down" ? "top-[calc(100%+6px)]" : "bottom-[calc(100%+6px)]",
+            "fixed z-[1200] max-h-[calc(100dvh-2rem)] min-w-[190px] overflow-y-auto rounded-xl border border-[#e5e7eb] bg-white p-1.5 shadow-[0_18px_45px_-22px_rgba(15,23,42,0.55)]",
             menuClassName,
           )}
         >
@@ -98,7 +143,8 @@ export function CardActionsMenu({ actions, label, placement = "up", triggerClass
               {a.label}
             </button>
           ))}
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

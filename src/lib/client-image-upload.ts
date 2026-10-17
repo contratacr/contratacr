@@ -8,6 +8,8 @@ const UPLOAD_TIMEOUT_MS = 30_000;
 // Avatars are reused in search, chat and shared profile cards. Keep the
 // uploaded source bounded too: R2 serves originals without resizing.
 export const PROFILE_IMAGE_OPTIONS = { maxDimension: 800, targetBytes: 150 * 1024 } as const;
+// Public galleries and cards also serve the original directly from R2.
+export const PUBLIC_IMAGE_OPTIONS = { maxDimension: 1600, targetBytes: 512 * 1024 } as const;
 
 export type ImageUploadPreparationErrorCode = "too_large" | "unsupported";
 
@@ -127,7 +129,7 @@ export async function prepareImageForUpload(file: File, options: PrepareImageOpt
     throw new ImageUploadPreparationError("unsupported");
   }
   // Sin tamaño máximo pedido, lo único que importa es el peso. Con tamaño
-  // máximo (las fotos de perfil piden 1200 px) también hay que mirar las
+  // máximo (las fotos de perfil piden 800 px) también hay que mirar las
   // dimensiones: antes una foto de celular de 3,4 MB y 4000 px pasaba sin
   // tocar porque pesaba menos del límite, y luego agotaba la memoria del
   // servidor al dibujar la imagen para compartir el perfil (6-oct-2026).

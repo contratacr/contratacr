@@ -17,7 +17,7 @@ test.describe("@seeded professional profile", () => {
     await gotoOK(page, href!);
     // Desde el 4-oct-2026 la barra muestra la dirección corta (contratacr.com/nombre).
     await expect(page).toHaveURL(/\/profesionales\/|\/[a-z0-9-]+$/);
-    await expect(page.getByTestId("professional-profile-name")).toBeVisible();
+    await expect(page.getByTestId("professional-profile-name").filter({ visible: true })).toBeVisible();
     await expect(page.locator("main").getByText(/Servicios|Sobre mi|Rese|Casos de/i).first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
@@ -41,7 +41,8 @@ test.describe("@seeded professional profile", () => {
     const href = await firstProfessionalHref(page);
     expect(href).toBeTruthy();
     await gotoOK(page, href!);
-    const name = page.getByTestId("professional-profile-name");
+    const name = page.getByTestId("professional-profile-name").filter({ visible: true });
+    await expect(name).toHaveCount(1);
     await expect(name).toBeVisible();
 
     if ((page.viewportSize()?.width ?? 1280) < 640) {
@@ -68,19 +69,25 @@ test.describe("@seeded professional profile", () => {
     test.skip(!canRunSeededRegression(), "Needs the isolated verified regression professional.");
     const state = await ensureRegressionSeed();
     await gotoOK(page, `/profesionales/${state.professionalSlug}`);
-    const name = page.getByTestId("professional-profile-name");
+    const name = page.getByTestId("professional-profile-name").filter({ visible: true });
     const seal = name.locator("[data-verification-badge]");
     await expect(seal).toBeVisible();
     for (const label of ["JVR TECHNICAL SOLUTIONS", "Constructora de Costa Rica servicios especializados", "Redes Bahía"]) {
-      await name.evaluate((heading, label) => {
+      // Measure one rendered frame: background profile revalidation can restore
+      // the real name between two independent boundingBox calls.
+      const { last, badge } = await name.evaluate((heading, label) => {
         const split = label.lastIndexOf(" ");
         heading.querySelector("[data-profile-name-start]")!.textContent = label.slice(0, split + 1);
-        heading.querySelector("[data-profile-name-last-word]")!.textContent = label.slice(split + 1);
+        const lastWord = heading.querySelector("[data-profile-name-last-word]")!;
+        lastWord.textContent = label.slice(split + 1);
+        const rect = (element: Element) => {
+          const box = element.getBoundingClientRect();
+          return { x: box.x, y: box.y, width: box.width, height: box.height };
+        };
+        return { last: rect(lastWord), badge: rect(heading.querySelector("[data-verification-badge]")!) };
       }, label);
-      const last = await name.locator("[data-profile-name-last-word]").boundingBox();
-      const badge = await seal.boundingBox();
-      expect(last).not.toBeNull();
-      expect(badge).not.toBeNull();
+      expect(last.width).toBeGreaterThan(0);
+      expect(badge.width).toBeGreaterThan(0);
       expect(badge!.x - (last!.x + last!.width)).toBeGreaterThanOrEqual(0);
       expect(badge!.x - (last!.x + last!.width)).toBeLessThanOrEqual(6);
       expect(Math.abs(badge!.y + badge!.height / 2 - (last!.y + last!.height / 2))).toBeLessThanOrEqual(6);
