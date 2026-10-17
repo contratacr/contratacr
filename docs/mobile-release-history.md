@@ -80,3 +80,26 @@ Apple completó autenticación, pero la pantalla final observada fue onboarding 
 - Fuente compartida 8d0ec177439d7818400ada1f37f2f40c1ffa7a0e: logo principal en el retorno, saludo neutro cuando Apple no proporciona nombre, nombres públicos unificados y archivo de cotización con el nombre público. Cambios web; los binarios siguen correspondiendo a b77609dc4815a44755211c5300eac4c3ef976c45.
 - Comprobaciones focales: 24 contratos de autenticación, 6 de presentación ES/EN, 3 de marca y 9 de descarga de PDF correctas; presentación y PDF en Chromium escritorio/móvil y WebKit móvil. TypeScript y contratos nativos correctos. Contrato de nombres/saludos añadido a CI.
 - Envío a revisión: todavía pendiente de confirmar en ambas tiendas; estos resultados no representan publicación ni aprobación. Notas localizadas conservadas sin cambios.
+
+
+### Envío autorizado 1.0.11 — 17 de octubre de 2026
+
+Preparación final guardada antes de confirmar revisión. Isaac solicitó «Listo pública las apps».
+
+- Android: 1.0.11 / versionCode 15, AAB SHA-256 `c1e1365caf111e8c742e6245541710c58301289fc20a9ee9f0d8fc8c9134901e`; archivo firmado ya validado por Google. Edición de producción `12909794691350314744`, release completed preparado y validado sin confirmar todavía. No confundir ese estado interno de edición con publicación visible.
+- iOS: 1.0.11 / build 16, IPA SHA-256 `f64ecfc52cb5c3f6dd810e58068646abfe47b142b89b0079ef7da67d59c6d307`; build procesado VALID, 12 capturas COMPLETE. Submission `e42a843f-a291-4a85-8452-74f6212f377c` creado READY_FOR_REVIEW con la versión correcta, pendiente de submit. Publicación automática AFTER_APPROVAL.
+- Fuente del binario en ambas plataformas: `b77609dc4815a44755211c5300eac4c3ef976c45`. Fuente web compartida `8d0ec177439d7818400ada1f37f2f40c1ffa7a0e`; mobile `ad9631723372da99a2d531042f46a67841c3e2b1`.
+- Seguridad y Cloudflare correctos. Esperando Regression Tests 39008680704 y Mobile Native Regression 39008679014 para confirmar los envíos; la ronda anterior y comprobaciones focales ya pasaron.
+- Notas exactas es-MX (Apple) y es-419 (Google): «Ahora puedes guardar y compartir archivos del chat desde la app. También mejoramos el acceso y la estabilidad.» No se añadió localización EN al envío.
+- Fecha de publicación efectiva: pendiente de aprobación de cada tienda; no registrar como publicada antes de confirmarla.
+
+
+Cierre del control previo al envío: Regression Tests 39008894531 correcto (182 passed, 14 omisiones previstas) y Mobile Native Regression 39008679014 correcto (130 passed, 2 omisiones previstas). Los jobs nativos de emulador/compilación no se repitieron en este push porque el código nativo no cambió; la ronda nativa completa anterior permanece registrada. Inventario actualizado en fuente compartida `7db6661546c949904705f3d946e577a89c333a96`. Sin fallos pendientes en estas ejecuciones.
+
+
+### Confirmación de envíos — 17 de octubre de 2026, 00:25 Costa Rica
+
+- Apple: `PATCH /v1/reviewSubmissions/e42a843f-a291-4a85-8452-74f6212f377c` con submitted=true aceptado. Submission y versión 1.0.11 confirmados WAITING_FOR_REVIEW; build 16 y releaseType AFTER_APPROVAL. Todavía no publicada.
+- Google: edición `12909794691350314744` validada nuevamente y confirmada con ERROR_IF_IN_REVIEW, sin changesNotSentForReview. Commit aceptado. Play Console confirmó «Cambios en revisión», Producción 1.0.11, «Iniciar lanzamiento completo» y publicación gestionada desactivada. A las 00:25 mostraba comprobaciones rápidas automáticas previas (hasta 14 minutos indicados por Google); al completarse se envía a revisión automáticamente. No se confunde el commit ni ese plazo con aprobación o disponibilidad pública.
+- Fuente web final compartida: `7db6661546c949904705f3d946e577a89c333a96`; mismo código de aplicación comprobado en 8d0ec177, más actualización del inventario. Fuente de binarios y notas exactas conservadas como arriba.
+- Pendiente externo: comprobaciones/revisión de las tiendas y aprobación. No queda un botón manual de publicación configurado, ni una acción pendiente del titular observada durante este envío.
