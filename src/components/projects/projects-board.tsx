@@ -338,7 +338,7 @@ function Tarjeta({ proyecto, en, elegida = false, onElegir }: { proyecto: Proyec
                 en Empleos y Promociones: sin «Publicado por» (8-oct-2026). */}
             <span className="flex min-w-0 items-center gap-0.5">
               <span className="min-w-0 truncate" title={proyecto.client_name || undefined}>{formatPersonDisplayName(proyecto.client_name, "mobile")}</span>
-              {proyecto.client_verified && <VerificationInfo />}
+              {proyecto.client_verified && <VerificationInfo audience="client" />}
             </span>
             <span className="shrink-0">{cuandoSePublico(proyecto.created_at, en)}</span>
           </div>
@@ -755,7 +755,7 @@ export function ProjectsBoard({
                               <p className="line-clamp-2 min-w-0 font-semibold text-[#52627a] [overflow-wrap:anywhere]">
                                 {ficha.client_name}
                               </p>
-                              {ficha.client_verified && <VerificationInfo />}
+                              {ficha.client_verified && <VerificationInfo audience="client" />}
                             </div>
                             {/* SIN MARCA «Tu proyecto» EN LA FICHA. La tarjeta
                                 de acciones ya lo dice más fuerte que una

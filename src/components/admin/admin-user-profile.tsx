@@ -37,7 +37,6 @@ type Professional = {
 };
 type Ticket = { id: string; subject: string; status: string; topic?: string | null; case_number?: number | null; created_at: string; last_reply_role?: string | null };
 type Project = { id: string; title: string; status: string; category_id: string | null; created_at: string };
-type Quote = { id: string; title: string | null; status: string | null; total: number | null; created_at: string };
 type Job = { id: string; title: string; status: string; created_at: string; applications: number };
 type Offer = { id: string; title: string; status: string; price_now: number | null; currency: string | null; created_at: string };
 type Review = { id: string; rating: number; comment: string | null; moderation_status: string | null; created_at: string; client_name_snapshot: string | null };
@@ -64,7 +63,6 @@ type Data = {
   professionalSignupIncomplete?: boolean;
   tickets: Ticket[];
   projects: Project[];
-  quotes: Quote[];
   jobs?: Job[];
   offers?: Offer[];
   receivedReviews?: Review[];
@@ -255,7 +253,7 @@ export function AdminUserProfile({
     );
   }
 
-  const { profile, professional: pro, professionalSignupIncomplete, tickets, projects, quotes, verificationLog, appeals, reports, analytics } = data;
+  const { profile, professional: pro, professionalSignupIncomplete, tickets, projects, verificationLog, appeals, reports, analytics } = data;
   const jobs = data.jobs ?? [];
   const offers = data.offers ?? [];
   const receivedReviews = data.receivedReviews ?? [];
@@ -436,20 +434,13 @@ export function AdminUserProfile({
 
       {/* ── 3. As a client ── */}
       <Section icon={FolderOpen} title="Como cliente" sub="Lo que pidió o publicó">
-        <div className="grid grid-cols-2 gap-3 p-4 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 p-4">
           <Tile label="Proyectos publicados" value={projects.length} />
-          <Tile label="Cotizaciones recibidas" value={quotes.length} />
           <Tile label="Abiertos · completados" value={`${clientActive} · ${clientCompleted}`} />
         </div>
-        <div className="grid gap-0 border-t border-[#eef2f6] lg:grid-cols-2 lg:divide-x lg:divide-[#eef2f6]">
-          <div>
-            <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Proyectos publicados</p>
-            {projects.length === 0 ? <Empty text="Sin proyectos." /> : <ul className="divide-y divide-[#eef2f6]">{projects.slice(0, 8).map((p) => <Row key={p.id} title={p.title} meta={`${p.category_id ? `${getCategoryLabel(p.category_id)} · ` : ""}${fmt(p.created_at)}`} status={p.status} />)}</ul>}
-          </div>
-          <div>
-            <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Cotizaciones recibidas</p>
-            {quotes.length === 0 ? <Empty text="Sin cotizaciones." /> : <ul className="divide-y divide-[#eef2f6]">{quotes.slice(0, 8).map((q) => <Row key={q.id} title={q.title ?? "Cotización"} meta={`${money(q.total, "CRC")} · ${fmt(q.created_at)}`} status={q.status ?? undefined} />)}</ul>}
-          </div>
+        <div className="border-t border-[#eef2f6]">
+          <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Proyectos publicados</p>
+          {projects.length === 0 ? <Empty text="Sin proyectos." /> : <ul className="divide-y divide-[#eef2f6]">{projects.slice(0, 8).map((p) => <Row key={p.id} title={p.title} meta={`${p.category_id ? `${getCategoryLabel(p.category_id)} · ` : ""}${fmt(p.created_at)}`} status={p.status} />)}</ul>}
         </div>
       </Section>
 

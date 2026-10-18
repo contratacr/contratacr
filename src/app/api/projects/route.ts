@@ -1,3 +1,4 @@
+import { projectIdentity } from "@/lib/projects/project-identity";
 import { projectRecipients } from "@/lib/projects/project-recipients-server";
 import { recordGrowthConversion } from "@/lib/analytics/growth-server";
 import { verifiedProfileName } from "@/lib/verification/profile-name";
@@ -87,7 +88,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { title, description, categoryId, provinciaId, cantonId, budgetMin, budgetMax, timeline, phone } = body;
-    const cedula = cleanId(typeof body.cedula === "string" ? body.cedula : "");
+    let cedula = cleanId(typeof body.cedula === "string" ? body.cedula : "");
     const requestedFullName = typeof body.fullName === "string" ? body.fullName.trim() : "";
     const cleanTitle = typeof title === "string" ? title.trim().slice(0, PROJECT_TITLE_MAX_LENGTH) : "";
     const cleanDescription = typeof description === "string" ? description.trim().slice(0, PROJECT_DESCRIPTION_MAX_LENGTH) : "";
@@ -145,6 +146,12 @@ export async function POST(req: NextRequest) {
       .select("full_name, email, phone, role, cedula, client_identity_status, client_identity_verified_at, client_identity_provider")
       .eq("id", uid)
       .maybeSingle();
+
+    const requiredIdentity = projectIdentity(cedula, existingProfile);
+    if (!requiredIdentity) {
+      return NextResponse.json({ error: mensajeDeError(req, { es: "Ingresá tu número de identificación para publicar el proyecto.", en: "Enter your identification number to publish the project." }) }, { status: 400 });
+    }
+    cedula = requiredIdentity;
 
     // Sin WhatsApp el proyecto nace muerto: nadie tiene por dónde responder. Si
     // la cuenta no tiene número, el formulario lo pide y aquí se guarda.

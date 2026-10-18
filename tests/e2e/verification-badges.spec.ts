@@ -27,7 +27,7 @@ for (const path of ["/profesionales", "/promociones", "/empleos", "/proyectos"])
     await expect(dialog.getByText("Identidad verificada", { exact: true })).toBeVisible();
     await expect(dialog).toContainText("Verificamos los datos de identificación de esta cuenta.");
     await expect(dialog).not.toContainText(/Hacienda|biométric|revisión manual/);
-    await expect(dialog).toContainText("no garantiza la calidad del trabajo");
+    await expect(dialog).toContainText(path === "/proyectos" ? "No garantiza pagos ni contrataciones" : "no garantiza la calidad del trabajo");
     expect(page.url()).toBe(before);
     await expectNoHorizontalOverflow(page);
     await dialog.getByRole("button", { name: "Entendido", exact: true }).click();

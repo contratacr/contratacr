@@ -27,7 +27,7 @@ async function context() {
     .eq("professional_id", pro.id).in("action", ["verified", "rejected", "reverted_pending"])
     .order("created_at", { ascending: false }).limit(1).maybeSingle();
   if (decisionError) throw decisionError;
-  return { db, user, pro, profile, cedula, legal: pro.verification_provider === "hacienda_api_juridica" || detectIdType(cedula) === "juridica", ticketId: documentCaseId(user.id, cedula, decision?.id ?? null) };
+  return { db, user, pro, profile, cedula, hasAdminDecision: !!decision, legal: pro.verification_provider === "hacienda_api_juridica" || detectIdType(cedula) === "juridica", ticketId: documentCaseId(user.id, cedula, decision?.id ?? null) };
 }
 const unavailable = () => NextResponse.json({ error: "No se pudo guardar. Intenta nuevamente." }, { status: 503 });
 
@@ -39,8 +39,15 @@ export async function GET() {
     if (error) return unavailable();
     const { data: ticket, error: ticketError } = await ctx.db.from("support_tickets").select("id, topic, status").eq("id", ctx.ticketId).maybeSingle();
     if (ticketError) return unavailable();
-    return NextResponse.json({ verified: ctx.pro.is_verified || ctx.pro.verification_status === "verified", canReview: canRequestIdentityReview(ctx.pro, ctx.cedula), canVerify: isValidId(ctx.cedula) && ctx.pro.verification_status === "pending" && !ctx.pro.is_verified, submitted: !!data, ticketId: ticket ? ctx.ticketId : null, legal: ctx.legal,
-      reviewRequested: ticket?.topic === "verification_appeal" && ticket.status !== "resolved" }, { headers: { "Cache-Control": "no-store" } });
+    const verified = ctx.pro.is_verified || ctx.pro.verification_status === "verified";
+    const canReview = canRequestIdentityReview(ctx.pro, ctx.cedula);
+    const requiresSupport = ctx.hasAdminDecision && ctx.pro.verification_status === "pending" && !verified && !canReview;
+    return NextResponse.json({
+      verified, canReview, requiresSupport,
+      canVerify: isValidId(ctx.cedula) && ctx.pro.verification_status === "pending" && !verified && !ctx.hasAdminDecision,
+      submitted: !!data, ticketId: ticket ? ctx.ticketId : null, legal: ctx.legal,
+      reviewRequested: ticket?.topic === "verification_appeal" && ticket.status !== "resolved",
+    }, { headers: { "Cache-Control": "no-store" } });
   } catch { return unavailable(); }
 }
 

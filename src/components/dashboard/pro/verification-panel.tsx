@@ -178,7 +178,7 @@ export function VerificationPanel({
           detail: { fullName: nextName || null, cedula: nextCedula || null, verified: true },
         }));
       } else {
-        setNote(t("cedulaSaved"));
+        setNote(t(json.outcome === "ticket" ? "cedulaManualPending" : json.outcome === "skipped" ? "cedulaCheckPending" : "cedulaSaved"));
         window.dispatchEvent(new CustomEvent("ccr:identity-updated", {
           detail: { fullName: null, cedula, verified: false },
         }));
@@ -228,7 +228,9 @@ export function VerificationPanel({
 
         {currentCheck?.status === "confirmed" && (
           <div className="mt-3">
+            <p className="mb-2 text-xs leading-5 text-[#52627a]">{t("cedulaFound")}</p>
             <IdentityInfoBlock
+              verified={false}
               fullName={currentCheck.fullName}
               cedula={currentCheck.cedula}
               dob={currentCheck.dob}

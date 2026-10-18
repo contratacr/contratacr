@@ -98,7 +98,8 @@ function database(initial: Record<string, RuntimeValue[]> = {}) {
           if (op === "update") selected.forEach(r => Object.assign(r, value));
           else { const existing = rows[table].find(r => r.id && r.id === value.id); if (!existing) rows[table].push({ ...value }); else if (!options?.ignoreDuplicates) Object.assign(existing, value); selected = [existing ?? rows[table].at(-1)]; }
         }
-        return Promise.resolve({ data: single ? selected[0] ?? null : selected, error: null }).then(resolve);
+        // PostgREST returns a response snapshot, not references to mutable rows.
+        return Promise.resolve({ data: structuredClone(single ? selected[0] ?? null : selected), error: null }).then(resolve);
       },
     }; return q;
   }, auth: { admin: { getUserById: async () => ({ data: { user: { user_metadata: {} } } }), updateUserById: async () => ({ error: null }) } } };
@@ -236,3 +237,27 @@ test("manual review requires an actual negative result for the current identific
   }
   expect(eligibility.canRequestIdentityReview({ ...missing, verification_reason: "No encontramos esta identificación en Hacienda. Puedes apelar para revisión manual; esto no significa que sea inválida." }, "101053316")).toBe(true);
 });
+
+for (const target of ["users", "providers"] as const) {
+  test(`explicit ${target} admin approval after a reversal persists account and professional verification`, async () => {
+    const state = database({
+      profiles: [{ id: "owner", cedula: "199999999", client_identity_status: "pending" }],
+      professionals: [{ id: "pro", profile_id: "owner", verification_status: "pending", is_verified: false }],
+      projects: [{ id: "open-project", client_id: "owner", status: "open", client_identity_status: "pending" }],
+      provider_verification_log: [{ id: "previous", professional_id: "pro", action: "reverted_pending" }],
+    });
+    const path = target === "users" ? "src/app/api/admin/users/[id]/identity/route.ts" : "src/app/api/admin/providers/[id]/decision/route.ts";
+    const route = load(path, {
+      "@/lib/auth/admin": { getApiAdmin: async () => ({ id: "operator", fullName: "Regression administrator" }) },
+      "@/lib/supabase/admin": { createAdminClient: () => state.db },
+      "@/lib/verification-notify": { notifyVerificationDecision: async () => {} },
+    });
+    const response = await route.POST(new Request("https://contratacr.test/api/admin/identity", { method: "POST", body: JSON.stringify({ action: "verify" }) }), { params: Promise.resolve({ id: target === "users" ? "owner" : "pro" }) });
+    expect(response.status).toBe(200);
+    expect(state.rows.professionals[0]).toMatchObject({ verification_status: "verified", is_verified: true });
+    expect(state.rows.profiles[0]).toMatchObject({ cedula: "199999999", client_identity_status: "verified" });
+    expect(state.rows.projects[0].client_identity_status).toBe("verified");
+    const log = state.writes.find(write => write.table === "provider_verification_log" && write.op === "insert")?.value;
+    expect(Array.isArray(log) ? log : [log]).toContainEqual(expect.objectContaining({ action: "verified", from_status: "pending", to_status: "verified" }));
+  });
+}

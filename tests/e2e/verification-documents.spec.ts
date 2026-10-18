@@ -10,7 +10,8 @@ function capturePath(filename: string) {
 }
 
 // Isolated disposable identities: parallel regression never changes another test's role.
-for (const kind of ["company", "person"] as const) test(`private verification documents ${kind} validate files and deduplicate retries`, async ({ page, request }) => {
+for (const kind of ["company", "person"] as const) test(`private verification documents ${kind} validate files and deduplicate retries`, async ({ page: initialPage, request }) => {
+  let page = initialPage;
   test.setTimeout(120_000);
   const apiHeaders = { "x-forwarded-for": `2001:db8::${Math.floor(Math.random() * 65535).toString(16)}` };
   const blockedHeaders = { "x-forwarded-for": `10.99.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}` };
@@ -67,6 +68,61 @@ for (const kind of ["company", "person"] as const) test(`private verification do
     await db.from("professionals").update({ verification_status: "pending", is_verified: false, verification_reason: null }).eq("id", pro.id);
     expect((await api.post("/api/appeals", { headers: blockedHeaders, data: {} })).status()).toBe(409);
     expect((await api.post("/api/verification/documents", { headers: blockedHeaders })).status()).toBe(409);
+    const holdId = crypto.randomUUID();
+    await db.from("provider_verification_log").insert({ id: holdId, professional_id: pro.id, action: "reverted_pending", from_status: "verified", to_status: "pending", reason: "Disposable regression hold" }).throwOnError();
+    const heldState = await (await api.get("/api/verification/documents")).json();
+    expect(heldState.requiresSupport).toBe(true);
+    expect(heldState.canVerify).toBe(false);
+    expect(heldState.canReview).toBe(false);
+    let automaticAttempts = 0;
+    const countVerification = (request: import("playwright/test").Request) => { if (request.url().includes("/api/verify-identity")) automaticAttempts++; };
+    page.on("request", countVerification);
+    await page.goto("/dashboard/profesional?tab=verificacion");
+    const heldPanel = page.getByTestId("verification-documents");
+    await expect(heldPanel).toContainText("pendiente de revisión por el equipo");
+    await expect(heldPanel.getByRole("link", { name: "Contactar a soporte" })).toHaveAttribute("href", /tab=soporte/);
+    await expect(heldPanel.getByRole("button", { name: "Reintentar verificación" })).toHaveCount(0);
+    await expect(heldPanel.getByRole("button", { name: "Solicitar revisión manual" })).toHaveCount(0);
+    expect(automaticAttempts).toBe(0);
+    page.off("request", countVerification);
+    await page.screenshot({ path: capturePath(`${kind}-admin-hold-${test.info().project.name}.png`), fullPage: true });
+    // Finding a number is only a preview, never an approval of this account.
+    const lookupUrl = `**/api/cedula/${originalId}`;
+    await page.route(lookupUrl, route => route.fulfill({ json: { found: true, fullName: "María Elena Prueba Ejemplo", dob: null } }));
+    await page.getByRole("button", { name: "Cambiar identificación", exact: true }).click();
+    await page.locator("#identificacion").fill(originalId);
+    const lookupNote = page.getByText("Identificación encontrada. Guardala para completar el proceso.", { exact: true });
+    await expect(lookupNote).toBeVisible();
+    await expect(lookupNote.locator("..").locator("[data-verification-badge]")).toHaveCount(0);
+    const [saveIdentity] = await Promise.all([
+      page.waitForResponse(response => response.url().endsWith("/api/add-cedula") && response.request().method() === "POST"),
+      page.getByRole("button", { name: "Agregar", exact: true }).click(),
+    ]);
+    expect(saveIdentity.status()).toBe(200);
+    expect((await saveIdentity.json()).outcome).toBe("ticket");
+    // Reopen in a fresh tab to prove persisted server state, independently of
+    // the original editor's asynchronous save/return navigation.
+    const reopenedPage = await page.context().newPage();
+    await page.close();
+    page = reopenedPage;
+    await page.goto("/dashboard/profesional?tab=verificacion");
+    await expect(page.getByTestId("verification-documents")).toContainText("pendiente de revisión por el equipo");
+    await expect(page.locator("[data-current-identification] [data-verification-badge]")).toHaveCount(0);
+    await page.unroute(lookupUrl);
+    await page.waitForLoadState("networkidle");
+    await page.goto("/promociones/publicar");
+    await expect(page.locator("[data-aviso-sin-verificar]")).toBeVisible();
+    await db.from("professionals").update({ verification_status: "verified", is_verified: true }).eq("id", pro.id).throwOnError();
+    const [verifiedResponse] = await Promise.all([
+      page.waitForResponse(response => { const url = new URL(response.url()); return url.pathname.endsWith("/professionals") && url.searchParams.get("select") === "verification_status"; }),
+      page.goto("/promociones/publicar"),
+    ]);
+    const verifiedPayload = await verifiedResponse.json();
+    expect((Array.isArray(verifiedPayload) ? verifiedPayload[0] : verifiedPayload).verification_status).toBe("verified");
+    await expect(page.locator("[data-aviso-sin-verificar]")).toHaveCount(0);
+    await page.screenshot({ path: capturePath(`${kind}-verified-promotion-${test.info().project.name}.png`), fullPage: true });
+    await db.from("professionals").update({ verification_status: "pending", is_verified: false }).eq("id", pro.id).throwOnError();
+    await db.from("provider_verification_log").delete().eq("id", holdId).throwOnError();
     await db.from("professionals").update({ verification_reason: "Identificación no encontrada." }).eq("id", pro.id);
     await page.goto("/dashboard/profesional?tab=verificacion");
     const panel = page.getByTestId("verification-documents");
