@@ -25,8 +25,8 @@ for (const path of ["/profesionales", "/promociones", "/empleos", "/proyectos"])
     await check.click();
     const dialog = page.getByRole("dialog");
     await expect(dialog.getByText("Identidad verificada", { exact: true })).toBeVisible();
-    await expect(dialog).toContainText("número, tipo y nombre con Hacienda o una revisión manual de documentos");
-    await expect(dialog).toContainText("no demuestra quién usa la cuenta");
+    await expect(dialog).toContainText("Verificamos los datos de identificación de esta cuenta.");
+    await expect(dialog).not.toContainText(/Hacienda|biométric|revisión manual/);
     await expect(dialog).toContainText("no garantiza la calidad del trabajo");
     expect(page.url()).toBe(before);
     await expectNoHorizontalOverflow(page);
@@ -64,7 +64,7 @@ for (const path of ["/promociones", "/empleos", "/proyectos"]) {
     expect(await check.evaluate((el) => el.closest("a"))).toBeNull();
     const before = page.url();
     await check.click();
-    await expect(page.getByRole("dialog")).toContainText("El check indica un cotejo");
+    await expect(page.getByRole("dialog")).toContainText("Verificamos los datos de identificación");
     expect(page.url()).toBe(before);
     await expectNoHorizontalOverflow(page);
     await page.getByRole("dialog").getByRole("button", { name: "Entendido", exact: true }).click();
@@ -99,7 +99,7 @@ test("registration explains the badge and opens the shared explanation", async (
   await expect(help.getByRole("button", { name: "Qué significa el check de identidad", exact: true })).toBeVisible();
   await expect(help).toContainText(/Cuando tu identidad esté verificada|Tu identidad está verificada/);
   await help.getByRole("button", { name: "Qué significa el check de identidad", exact: true }).click();
-  await expect(page.getByRole("dialog")).toContainText("El check indica un cotejo");
+  await expect(page.getByRole("dialog")).toContainText("Verificamos los datos de identificación");
   await expect(page.getByRole("dialog")).toContainText("no garantiza la calidad del trabajo");
   await expectNoHorizontalOverflow(page);
 });
@@ -166,7 +166,7 @@ test("native phone shell keeps the explanation above its navigation", async ({ p
   await gotoOK(page, "/profesionales");
   await waitForInteractivePage(page);
   await page.locator("[data-verification-badge]").filter({ visible: true }).first().click();
-  await expect(page.getByRole("dialog")).toContainText("Hacienda");
+  await expect(page.getByRole("dialog")).not.toContainText(/Hacienda|revisión manual/);
   await expect(page.locator("html")).toHaveClass(/ccr-native-app/);
   const close = page.getByRole("dialog").getByRole("button", { name: "Entendido", exact: true });
   expect(await close.evaluate((el) => { const r = el.getBoundingClientRect(); return el.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)); })).toBe(true);
@@ -197,7 +197,7 @@ test("verification shows only the identification check and its explanation", asy
     await expect(identity.locator("[data-verification-badge]")).toHaveCount(1);
     for (const block of [identity]) {
       await block.locator("[data-verification-badge]").click();
-      await expect(page.getByRole("dialog")).toContainText("número, tipo y nombre con Hacienda o una revisión manual de documentos");
+      await expect(page.getByRole("dialog")).toContainText("Verificamos los datos de identificación de esta cuenta.");
       await page.getByRole("dialog").getByRole("button", { name: "Entendido", exact: true }).click();
     }
     const number = await identity.locator("p").filter({ hasText: /^700000001$/ }).boundingBox();

@@ -13,6 +13,13 @@ export function VerificationDocuments({ legal, preview = false, onVerified }: { 
   const t = useTranslations("manualVerification");
   const [isLegal, setIsLegal] = useState(legal);
   const [requested, setRequested] = useState(false);
+  const [canReview, setCanReview] = useState(preview);
+  const [verified, setVerified] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const notified = useRef(false);
+  useEffect(() => {
+    if (verified && !notified.current) { notified.current = true; onVerified?.(); }
+  }, [verified, onVerified]);
   const [message, setMessage] = useState("");
   const [retryNote, setRetryNote] = useState("");
   async function retry() {
@@ -22,7 +29,8 @@ export function VerificationDocuments({ legal, preview = false, onVerified }: { 
       const response = await fetch("/api/verify-identity", { method: "POST" });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
-      if (data.outcome === "verified") { onVerified?.(); return; }
+      if (data.outcome === "verified") { setVerified(true); return; }
+      if (data.outcome === "pending") setCanReview(true);
       setRetryNote(t(data.outcome === "skipped" ? "unavailable" : "pending"));
     } catch (cause) { setError(cause instanceof Error ? cause.message : t("error")); }
     finally { setBusy(false); }
@@ -34,7 +42,7 @@ export function VerificationDocuments({ legal, preview = false, onVerified }: { 
       const response = await fetch("/api/appeals", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
-      setRequested(true); setMessage("");
+      setRequested(true); setReviewOpen(false); setMessage("");
     } catch (cause) { setError(cause instanceof Error ? cause.message : t("error")); }
     finally { setBusy(false); }
   }
@@ -49,20 +57,35 @@ export function VerificationDocuments({ legal, preview = false, onVerified }: { 
     fetch("/api/verification/documents").then(async response => {
       if (!response.ok) throw new Error();
       const data = await response.json();
-      if (active) { setSubmitted(data.submitted); setRequested(!!data.reviewRequested); if (typeof data.legal === "boolean") setIsLegal(data.legal); setLoaded(true); }
+      if (!active) return;
+      setSubmitted(data.submitted); setRequested(!!data.reviewRequested); setVerified(!!data.verified); setCanReview(!!data.canReview);
+      if (typeof data.legal === "boolean") setIsLegal(data.legal);
+      // Resolve old pending records on entry. Outages remain pending and never
+      // expose document requests as if the ID had actually been missing.
+      if (!data.verified && data.canVerify && !data.canReview && !data.reviewRequested && !data.submitted) {
+        const result = await fetch("/api/verify-identity", { method: "POST" });
+        if (!result.ok) throw new Error();
+        const state = await result.json();
+        if (!active) return;
+        setVerified(state.outcome === "verified"); setCanReview(state.outcome === "pending");
+        if (state.outcome === "skipped") setRetryNote(t("unavailable"));
+      }
+      setLoaded(true);
     }).catch(() => { if (active) setError(en ? "Could not load your review. Reload to try again." : "No se pudo cargar tu revisión. Recarga para intentarlo de nuevo."); });
     return () => { active = false; };
-  }, [preview, en]);
+  }, [preview, en, t]);
   async function submit() {
+    if (!Object.keys(files).length) { await appeal(); return; }
     if (preview) { setError(en ? "Preview only: no documents are sent." : "Vista previa: no se envían documentos."); return; }
     setBusy(true); setError("");
     try {
       const body = new FormData();
+      body.set("message", message);
       for (const [key, file] of Object.entries(files)) body.set(key, file);
       const response = await fetch("/api/verification/documents", { method: "POST", body });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
-      setSubmitted(true); setFiles({});
+      setSubmitted(true); setReviewOpen(false); setFiles({});
     } catch (error) { setError(error instanceof Error ? error.message : (en ? "Please try again." : "Intenta nuevamente.")); }
     finally { setBusy(false); }
   }
@@ -71,23 +94,29 @@ export function VerificationDocuments({ legal, preview = false, onVerified }: { 
     { id: "identity", title: isLegal ? (en ? "Authorized person" : "Persona autorizada") : (en ? "Photo with your ID" : "Foto con tu identificación"), description: en ? "Hold your ID next to your face, with the details clearly visible." : "Tu rostro junto a la identificación, con los datos legibles." },
     ...(isLegal ? [{ id: "company", title: en ? "Legal representation" : "Personería o autorización", description: en ? "A current document confirming your authorization to represent the company." : "Documento vigente que confirme la representación de la empresa." }] : []),
   ];
-  const ready = documents.every(doc => files[doc.id]);
+  const ready = !Object.keys(files).length || documents.every(doc => files[doc.id]);
   return <div data-testid="verification-documents" className="space-y-5">
-    <UnsavedChangesGuard dirty={Object.keys(files).length > 0 && !submitted} />
+    <UnsavedChangesGuard dirty={(Object.keys(files).length > 0 || message.trim().length > 0) && !submitted} />
     <section className="bg-white">
-      {!submitted && <div className="mb-5 space-y-3">
-        <p className="text-sm leading-6 text-[#52627a]">{t("body")}</p>
-        {!requested && <button type="button" onClick={retry} disabled={busy || !loaded || preview} className={`${verificationActionButtonClass} border-[#d7e1ea] text-[#162543] disabled:opacity-45`}>{t("retry")}</button>}
-        {retryNote && <p role="status" className="text-sm text-[#52627a]">{retryNote}</p>}
-        {requested ? <p role="status" className="text-sm font-semibold text-[#087ca3]">{t("requested")}</p> : <>
-          <label className="block text-sm font-semibold text-[#162543]" htmlFor="verification-appeal-message">{t("reason")}</label>
-          <textarea id="verification-appeal-message" value={message} onChange={event => setMessage(event.target.value)} maxLength={2000} disabled={busy || !loaded} rows={3} className="w-full rounded-xl border border-[#d7e1ea] p-3 text-sm text-[#162543]" />
-          <button type="button" onClick={appeal} disabled={busy || !loaded || preview} className={`${verificationActionButtonClass} border-[#009FD9] text-[#087ca3] disabled:opacity-45`}>{busy ? t("sending") : t("request")}</button>
-        </>}
-        {requested && <SupportLink className="text-sm font-semibold text-[#009FD9]">{t("viewCase")}</SupportLink>}
+      {!loaded && !error && <p role="status" className="text-sm text-[#52627a]">{t("checking")}</p>}
+      {loaded && verified && <p role="status" className="flex items-center gap-2 text-sm font-bold text-[#087ca3]"><Check className="h-4 w-4" />{t("verified")}</p>}
+      {loaded && !verified && (submitted || requested) && <div className="space-y-3">
+        <p role="status" className="text-sm font-semibold text-[#087ca3]">{t("requested")}</p>
+        <SupportLink className="text-sm font-semibold text-[#009FD9]">{t("viewCase")}</SupportLink>
+        {!submitted && canReview && !reviewOpen && <button type="button" onClick={() => setReviewOpen(true)} className={`${verificationActionButtonClass} border-[#d7e1ea] text-[#162543]`}>{t("addDocuments")}</button>}
       </div>}
-      {submitted && <p role="status" className="mb-4 flex items-center gap-2 text-sm font-semibold text-[#087ca3]"><Check className="h-4 w-4" aria-hidden="true" />{en ? "Documents under review" : "Documentos en revisión"}</p>}
-      {submitted && <SupportLink className="text-sm font-semibold text-[#009FD9]">{en ? "View my case" : "Ver mi caso"}</SupportLink>}
+      {loaded && !verified && !submitted && !requested && <div className="space-y-3">
+        <p className="text-sm leading-6 text-[#52627a]">{t(canReview ? "body" : "pendingCheck")}</p>
+        {canReview && <div className="flex flex-col gap-3 sm:flex-row">
+          <button type="button" onClick={retry} disabled={busy || preview} className={`${verificationActionButtonClass} border-[#d7e1ea] text-[#162543] disabled:opacity-45`}>{busy ? t("checking") : t("retry")}</button>
+          {!reviewOpen && <button type="button" onClick={() => setReviewOpen(true)} className={`${verificationActionButtonClass} border-[#009FD9] text-[#087ca3]`}>{t("request")}</button>}
+        </div>}
+      </div>}
+      {!verified && retryNote && <p role="status" className="mt-3 text-sm text-[#52627a]">{retryNote}</p>}
+      {loaded && canReview && !verified && reviewOpen && !submitted && <div className="mt-4 space-y-3">
+        <p className="text-sm text-[#52627a]">{t("private")}</p>
+        <label className="block text-sm font-semibold text-[#162543]" htmlFor="verification-appeal-message">{t("reason")}</label>
+        <textarea id="verification-appeal-message" value={message} onChange={event => setMessage(event.target.value)} maxLength={2000} disabled={busy} rows={2} className="w-full rounded-xl border border-[#d7e1ea] p-3 text-sm text-[#162543]" />
       <div className="pb-1">
         <div className="space-y-3" aria-busy={busy || !loaded}>
           {!submitted && documents.map(doc => <div key={doc.id} className="py-4">
@@ -99,9 +128,11 @@ export function VerificationDocuments({ legal, preview = false, onVerified }: { 
             <input className="sr-only" aria-label={doc.title} ref={el => { refs.current[doc.id] = el; }} disabled={busy} type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/heic,image/heif,application/pdf" onChange={event => { const file = event.target.files?.[0]; event.target.value = ""; if (!file) return; if (file.size > 4 * 1024 * 1024) { setError(en ? "Each file must be 4 MB or smaller." : "Cada archivo debe pesar 4 MB o menos."); return; } setError(""); setFiles(prev => ({ ...prev, [doc.id]: file })); }} />
           </div>)}
         </div>
-        {error && <p role="alert" className="mt-2 text-sm text-red-700">{error}</p>}
         {!submitted && <button type="button" disabled={!ready || busy || !loaded} onClick={submit} className={`mt-5 ${verificationActionButtonClass} border-transparent bg-[#009FD9] text-white hover:bg-[#0089bb] disabled:opacity-45`}>{busy ? (en ? "Sending…" : "Enviando…") : (en ? "Send for review" : "Enviar a revisión")}</button>}
       </div>
+      <button type="button" disabled={busy} onClick={() => { setReviewOpen(false); setFiles({}); setMessage(""); }} className="text-sm font-semibold text-[#52627a]">{t("cancel")}</button>
+      </div>}
+      {error && <p role="alert" className="mt-2 text-sm text-red-700">{error}</p>}
     </section>
   </div>;
 }

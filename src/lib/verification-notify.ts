@@ -74,12 +74,12 @@ export async function notifyVerificationDecision({
       type = "verification_pending";
       title = "Tu verificación está en revisión";
       message =
-        "No se completó la consulta automática de los datos con Hacienda. Puedes solicitar revisión manual desde tu panel; tu cuenta sigue activa.";
+        "No pudimos verificar tu identificación. Puedes solicitar revisión manual desde tu panel; tu cuenta sigue activa.";
       html = emailShell(
         firstName,
         "Tu verificación está en revisión",
         "#b45309",
-        `No se completó la consulta automática de tus datos con Hacienda.
+        `No pudimos verificar tu identificación.
          Puedes <strong>solicitar revisión manual</strong> y adjuntar los documentos desde tu panel. Tu cuenta sigue activa mientras tanto.`,
         "Ver mi verificación"
       );

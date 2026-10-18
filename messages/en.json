@@ -186,7 +186,7 @@
     "trust": {
       "cedula": {
         "title": "Verified ID",
-        "desc": "We check identification data through Hacienda or manual document review."
+        "desc": "The badge indicates that we checked the account’s identification details."
       },
       "reviews": {
         "title": "Genuine reviews",
@@ -455,21 +455,21 @@
     "idLabel": "ID number",
     "idIncomplete": "That number doesn't look valid. Please check that it's complete.",
     "optional": "(optional)",
-    "confirmed": "Record found in Hacienda",
+    "confirmed": "Details confirmed",
     "cedulaLabel": "ID",
     "officialNameNotice": "When you continue, your account will use this official name.",
     "dobLabel": "Date of birth",
     "notYourInfo": "Not your information?",
-    "searching": "Checking Hacienda…",
+    "searching": "Checking identification…",
     "mismatchTitle": "Manual review",
     "mismatchNotice": "You indicated the information found is not yours. Enter your full name and we'll keep your identity <b>pending review</b> while we confirm it manually.",
     "notFoundTitle": "Manual review",
-    "notFoundNotice": "Hacienda did not find this ID. Enter your full name; you can then request manual review from Verification. This does not mean your ID is invalid.",
-    "unavailableTitle": "Hacienda unavailable",
-    "unavailableNotice": "We could not reach Hacienda. You can enter your name and continue; we will retry without rejecting your ID.",
+    "notFoundNotice": "We could not find this ID. You can request a manual review.",
+    "unavailableTitle": "Verification unavailable",
+    "unavailableNotice": "Verification is temporarily unavailable. You can continue and try later.",
     "fullName": "Full name",
     "namePlaceholder": "John Doe Smith",
-    "lookupNotice": "Entering your ID requests a check of its number, type and name through Hacienda’s public API to verify your account details."
+    "lookupNotice": "We use your ID to verify your account details."
   },
   "contactGate": {
     "call": "Call",
@@ -505,7 +505,7 @@
     "titlePassword": "Create your password",
     "titleOtp": "Verification code",
     "subEmail": "Enter the email you'll use for your account.",
-    "subIdentity": "Enter your ID to look up the name in Hacienda. If you have no ID, enter your name manually.",
+    "subIdentity": "Enter your ID to fill in your name.",
     "subPassword": "Choose a secure password for your account.",
     "subOtp": "Enter the 6-digit code sent to your email.",
     "noCedula": "I don't have an ID",
@@ -1646,7 +1646,7 @@
     "sending": "Sending…",
     "sendToReview": "Send for review",
     "hasCedulaTitle": "Already have a Costa Rican ID?",
-    "hasCedulaBody": "Add it to check its data with Hacienda. If it is not found, you can request manual review.",
+    "hasCedulaBody": "Add your ID to verify your account.",
     "enterCedulaTitle": "Verify your identity with your ID",
     "enterCedulaBody": "Enter your ID and confirm the details. We check national, corporate, DIMEX and NITE IDs; all use the same data-matching criteria.",
     "verifying": "Verifying…",
@@ -1654,13 +1654,13 @@
     "savingCedula": "Adding…",
     "cedulaSame": "This is already your verified ID. Enter a different one to change it.",
     "cedulaTaken": "This ID is already registered on ContrataCR.",
-    "cedulaReviewReady": "We couldn't confirm it automatically. You can add it and it will go to review.",
+    "cedulaReviewReady": "We could not find this ID. You can save it and request manual review.",
     "checkCedulaFirst": "Verify the ID before adding it.",
     "verifiedTitle": "Verification status",
     "verifiedChip": "Verified",
     "pendingBody": "You are not verified yet, so you appear without the <strong>Verified</strong> status and lower in results.",
     "underAppealBody": "You requested manual review. An administrator will review your case and we will notify you here.",
-    "rejectedBody": "Your account is still active. Fix what's indicated and appeal for a new review.",
+    "rejectedBody": "Read the response to your request before continuing.",
     "howItWorks": "<link>What is identity verification?</link>",
     "appealTitle": "Appeal this decision",
     "appealBody": "Ask an administrator to review your ID and any documents you attach.",
@@ -1669,7 +1669,7 @@
     "supportApp": "Contact support",
     "supportAppCase": "Contact support (Case #{ref})",
     "currentIdTitle": "Current ID",
-    "missingIdNextStep": "Add your ID to check Hacienda. If you do not have one, you can request manual review and explain your situation.",
+    "missingIdNextStep": "Add your ID to verify your account.",
     "currentIdEmpty": "No ID is currently registered.",
     "idTypeCedula": "National ID",
     "idTypeJuridica": "Legal entity ID",
@@ -2042,11 +2042,11 @@
     "intro": "It's a confirmation that the <strong>provider's ID is real</strong> and that their <strong>name matches official records</strong>. It's automatic and earned: it gives more visibility to clients seeking extra trust, without blocking anyone.",
     "howWorks": "How does it work?",
     "step1Title": "Real ID",
-    "step1Body": "We look up national, corporate, DIMEX and NITE identification numbers through Hacienda’s public API.",
+    "step1Body": "Enter your national, corporate, DIMEX or NITE identification.",
     "step2Title": "Your official name",
     "step2Body": "We check the number, type and name found. A lookup does not prove who is using the account or legal company representation.",
     "step3Title": "Always up to date",
-    "step3Body": "If Hacienda cannot find your ID, you can appeal for manual review from your panel. Temporary outages are retried and are not rejections.",
+    "step3Body": "If we cannot find your ID, you can request manual review.",
     "disclaimerTitle": "Important notice",
     "disclaimer": "ContrataCR is an <strong>intermediary platform</strong> that connects clients with service providers; it is not the service provider. The <strong>“Verified”</strong> badge only confirms the ID is real and the name matches official records. <strong>It does not guarantee or ensure the quality, outcome or completion of any work</strong>, and does not by itself prove that the person who registered is physically that person. Hiring happens directly between the client and the provider. To choose well, every profile lets you compare <strong>reviews, success stories, training, languages and years of experience</strong>.",
     "ctaVerified": "See professionals"
@@ -2130,8 +2130,8 @@
     "cedulaYaVerificada": "Verified",
     "cedulaYaVerificadaAyuda": "Your project shows «Verified». The number is never shown.",
     "identidadVerificada": "Your project was posted with «Verified».",
-    "identidadNoEncontrada": "Hacienda did not find that ID. Your project was posted; you can contact support for manual review.",
-    "identidadPadronCaido": "Hacienda did not respond. Your project was posted and you can retry verification later.",
+    "identidadNoEncontrada": "We could not find this ID. You can request a manual review.",
+    "identidadPadronCaido": "Verification is temporarily unavailable. You can continue and try later.",
     "identidadEnRevision": "We'll review your ID; meanwhile your project shows without «Verified»."
   },
   "notifications": {
@@ -2435,7 +2435,7 @@
     "proStep2Title": "Answer projects and send quotes",
     "proStep2Body": "Browse projects and contact customers when you can do the work.",
     "proBenefit0Title": "ID verified",
-    "proBenefit0Body": "The badge indicates a data check with Hacienda or manual document review. It does not certify service quality.",
+    "proBenefit0Body": "The badge indicates that we checked the account’s identification details.",
     "proBenefit1Title": "Success stories",
     "proBenefit1Body": "Showcase photos of your success stories so your profile isn't just text and the client understands your quality.",
     "proBenefit2Title": "Work areas",
@@ -3061,7 +3061,7 @@
     "imageFooter": "Professional's profile on ContrataCR:",
     "clientCedulaLabel": "ID number",
     "clientCedulaSearching": "Looking up the name…",
-    "clientCedulaNotFound": "Hacienda did not find this ID.",
+    "clientCedulaNotFound": "We could not find this ID. You can request a manual review.",
     "taxIncludedShort": "VAT included",
     "taxAddShort": "Add 13%",
     "taxExemptShort": "No VAT",
@@ -3100,7 +3100,7 @@
     "notesHeading": "Note",
     "errorNeedsPrices": "Some lines have no price. Add their amount or remove them: a quote for ₡0 helps nobody.",
     "validUntilShort": "until {date}",
-    "clientCedulaLookupNotice": "The ID is checked with Hacienda to fill in the client’s name. Enter only data you are authorized to use."
+    "clientCedulaLookupNotice": "Enter only details you are authorized to use."
   },
   "menuFicha": {
     "more": "More options",
@@ -3345,7 +3345,7 @@
   "verificationBadge": {
     "title": "Identity verified",
     "action": "Identity verified: see what was checked",
-    "description": "The check indicates that the number, type and name were checked with Hacienda or documents were manually reviewed. An automatic lookup does not prove who uses the account, perform biometric recognition or confirm legal representation.",
+    "description": "We checked this account’s identification details.",
     "scope": "The badge does not guarantee work quality or certify professional qualifications. Also review the profile, reviews, and service details.",
     "close": "Close",
     "understood": "Got it",
@@ -3354,15 +3354,21 @@
     "educationAction": "What the identity check means"
   },
   "manualVerification": {
-    "body": "If your ID was not found or you need to appeal, request manual review. You can attach documents here; they are not published.",
-    "reason": "Reason (optional, up to 2000 characters)",
+    "body": "We could not find your ID.",
+    "reason": "Comment (optional)",
     "request": "Request manual review",
-    "requested": "Your request is under manual review. You can add documents below.",
+    "requested": "Your request is under review.",
     "sending": "Sending…",
     "viewCase": "View my case",
     "error": "Could not request review. Please try again.",
-    "retry": "Retry Hacienda lookup",
-    "unavailable": "Hacienda did not respond. You can retry later; this is not a rejection.",
-    "pending": "Automatic verification was not possible. You can request manual review."
+    "retry": "Retry verification",
+    "unavailable": "We could not check your ID right now. We will try again later.",
+    "pending": "We could not find your ID. You can request manual review.",
+    "private": "You can add a comment or attach a photo. Documents are private.",
+    "checking": "Checking…",
+    "verified": "Identity verified",
+    "pendingCheck": "Verification pending.",
+    "addDocuments": "Attach documents",
+    "cancel": "Cancel"
   }
 }

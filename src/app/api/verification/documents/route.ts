@@ -1,9 +1,10 @@
+import { canRequestIdentityReview } from "@/lib/verification/review-eligibility";
 import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { enforceRateLimit } from "@/lib/rate-limit";
-import { cleanId, detectIdType } from "@/lib/cedula";
+import { cleanId, detectIdType, isValidId } from "@/lib/cedula";
 import { DOC_KINDS, IMAGE_KINDS, MIME_FOR, validateUpload } from "@/lib/upload-validation";
 import { BUCKET_SOPORTE, type AdjuntoDeSoporte } from "@/lib/support/adjuntos";
 import { documentCaseId } from "@/lib/verification/documents";
@@ -16,7 +17,7 @@ async function context() {
   if (!user) return null;
   const db = createAdminClient();
   const { data: pro, error } = await db.from("professionals")
-    .select("id, verification_status, is_verified, verification_updated_at, verification_provider, profiles(cedula, full_name, email)")
+    .select("id, verification_status, is_verified, verification_updated_at, verification_provider, verification_reason, profiles(cedula, full_name, email)")
     .eq("profile_id", user.id).maybeSingle();
   if (error) throw error;
   if (!pro) return null;
@@ -38,7 +39,7 @@ export async function GET() {
     if (error) return unavailable();
     const { data: ticket, error: ticketError } = await ctx.db.from("support_tickets").select("id, topic, status").eq("id", ctx.ticketId).maybeSingle();
     if (ticketError) return unavailable();
-    return NextResponse.json({ submitted: !!data, ticketId: ticket ? ctx.ticketId : null, legal: ctx.legal,
+    return NextResponse.json({ verified: ctx.pro.is_verified || ctx.pro.verification_status === "verified", canReview: canRequestIdentityReview(ctx.pro, ctx.cedula), canVerify: isValidId(ctx.cedula) && ctx.pro.verification_status === "pending" && !ctx.pro.is_verified, submitted: !!data, ticketId: ticket ? ctx.ticketId : null, legal: ctx.legal,
       reviewRequested: ticket?.topic === "verification_appeal" && ticket.status !== "resolved" }, { headers: { "Cache-Control": "no-store" } });
   } catch { return unavailable(); }
 }
@@ -52,6 +53,7 @@ export async function POST(req: Request) {
     if (!ctx) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     const { db, user, pro, profile, ticketId } = ctx;
     if (pro.is_verified || pro.verification_status === "verified") return NextResponse.json({ error: "Tu identidad ya está verificada." }, { status: 409 });
+    if (!canRequestIdentityReview(pro, ctx.cedula)) return NextResponse.json({ error: "La revisión manual está disponible para identificaciones no encontradas." }, { status: 409 });
     const { data: saved, error: readError } = await db.from("support_ticket_messages").select("id").eq("id", ticketId).maybeSingle();
     if (readError) return unavailable();
     async function enterReview() {
@@ -61,6 +63,8 @@ export async function POST(req: Request) {
     }
     if (saved) { await enterReview(); return NextResponse.json({ ok: true, ticketId }); }
     const form = await req.formData();
+    const message = String(form.get("message") ?? "").trim();
+    if (message.length > 2000) return NextResponse.json({ error: "El motivo debe tener 2000 caracteres o menos." }, { status: 400 });
     const required = ctx.legal ? ["identity", "company"] : ["identity"];
     const checked: { key: string; file: File; bytes: Buffer; mime: string }[] = [];
     for (const key of required) {
@@ -76,7 +80,7 @@ export async function POST(req: Request) {
     const { error: ticketError } = await db.from("support_tickets").upsert({
       id: ticketId, user_id: user.id, professional_id: pro.id, topic: "verification_documents",
       name: profile.full_name, email: profile.email ?? user.email, subject: "Documentos de verificación",
-      message: "Revisión de identidad solicitada desde el panel.", status: "open", last_reply_role: "user", last_reply_at: new Date().toISOString(),
+      message: message || "Revisión de identidad solicitada desde el panel.", status: "open", last_reply_role: "user", last_reply_at: new Date().toISOString(),
     }, { onConflict: "id", ignoreDuplicates: true });
     if (ticketError) return unavailable();
     const attachments: AdjuntoDeSoporte[] = [];
@@ -89,7 +93,7 @@ export async function POST(req: Request) {
     }
     const { error: messageError } = await db.from("support_ticket_messages").upsert({
       id: ticketId, ticket_id: ticketId, sender_id: user.id, sender_role: "user", sender_name: profile.full_name,
-      body: "Documentos para revisión de identidad.", attachments,
+      body: message || "Documentos para revisión de identidad.", attachments,
     }, { onConflict: "id", ignoreDuplicates: true });
     if (messageError) return unavailable();
     await enterReview();

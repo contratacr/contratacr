@@ -36,7 +36,7 @@ export async function GET(
       {
         found: false,
         unavailable: true,
-        error: "No pudimos consultar Hacienda en este momento. Intenta nuevamente más tarde.",
+        error: "No pudimos verificar la identificación en este momento. Intenta nuevamente más tarde.",
       },
       { status: 503, headers: { "Cache-Control": "no-store" } }
     );
@@ -57,7 +57,7 @@ export async function GET(
   // Not in the Hacienda (DIMEX/NITE/foreigners, newly issued, stale roll) → manual
   // entry + pendiente de revisión downstream. Never invent a name.
   return NextResponse.json(
-    { found: false, error: "No encontramos esta identificación en Hacienda. Puedes solicitar revisión manual desde Verificación." },
+    { found: false, error: "No encontramos esta identificación. Puedes solicitar revisión manual desde Verificación." },
     { status: 404, headers: { "Cache-Control": "no-store" } }
   );
 }
