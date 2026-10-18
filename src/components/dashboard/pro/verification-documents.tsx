@@ -15,6 +15,7 @@ export function VerificationDocuments({ legal, preview = false, onVerified }: { 
   const [requested, setRequested] = useState(false);
   const [canReview, setCanReview] = useState(preview);
   const [verified, setVerified] = useState(false);
+  const [requiresSupport, setRequiresSupport] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const notified = useRef(false);
   useEffect(() => {
@@ -31,6 +32,7 @@ export function VerificationDocuments({ legal, preview = false, onVerified }: { 
       if (!response.ok) throw new Error(data.error);
       if (data.outcome === "verified") { setVerified(true); return; }
       if (data.outcome === "pending") setCanReview(true);
+      if (data.outcome === "ticket") { setRequiresSupport(true); return; }
       setRetryNote(t(data.outcome === "skipped" ? "unavailable" : "pending"));
     } catch (cause) { setError(cause instanceof Error ? cause.message : t("error")); }
     finally { setBusy(false); }
@@ -58,6 +60,7 @@ export function VerificationDocuments({ legal, preview = false, onVerified }: { 
       if (!response.ok) throw new Error();
       const data = await response.json();
       if (!active) return;
+      setRequiresSupport(!!data.requiresSupport);
       setSubmitted(data.submitted); setRequested(!!data.reviewRequested); setVerified(!!data.verified); setCanReview(!!data.canReview);
       if (typeof data.legal === "boolean") setIsLegal(data.legal);
       // Resolve old pending records on entry. Outages remain pending and never
@@ -68,6 +71,7 @@ export function VerificationDocuments({ legal, preview = false, onVerified }: { 
         const state = await result.json();
         if (!active) return;
         setVerified(state.outcome === "verified"); setCanReview(state.outcome === "pending");
+        if (state.outcome === "ticket") setRequiresSupport(true);
         if (state.outcome === "skipped") setRetryNote(t("unavailable"));
       }
       setLoaded(true);
@@ -105,7 +109,11 @@ export function VerificationDocuments({ legal, preview = false, onVerified }: { 
         <SupportLink className="text-sm font-semibold text-[#009FD9]">{t("viewCase")}</SupportLink>
         {!submitted && canReview && !reviewOpen && <button type="button" onClick={() => setReviewOpen(true)} className={`${verificationActionButtonClass} border-[#d7e1ea] text-[#162543]`}>{t("addDocuments")}</button>}
       </div>}
-      {loaded && !verified && !submitted && !requested && <div className="space-y-3">
+      {loaded && !verified && !submitted && !requested && requiresSupport && <div className="space-y-3">
+        <p role="status" className="text-sm leading-6 text-[#52627a]">{t("adminReviewPending")}</p>
+        <SupportLink className="inline-flex text-sm font-semibold text-[#009FD9]">{t("contactSupport")}</SupportLink>
+      </div>}
+      {loaded && !verified && !submitted && !requested && !requiresSupport && <div className="space-y-3">
         <p className="text-sm leading-6 text-[#52627a]">{t(canReview ? "body" : "pendingCheck")}</p>
         {canReview && <div className="flex flex-col gap-3 sm:flex-row">
           <button type="button" onClick={retry} disabled={busy || preview} className={`${verificationActionButtonClass} border-[#d7e1ea] text-[#162543] disabled:opacity-45`}>{busy ? t("checking") : t("retry")}</button>

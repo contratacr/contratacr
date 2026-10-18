@@ -54,8 +54,8 @@ function pareceAnuncioDeServicio(texto: string): boolean {
 
 // Publicar una solicitud: el cliente elige el servicio, cuenta qué hay que hacer y
 // publica. La zona se recuerda de la última vez. Sin título (lo arma el servidor),
-// sin presupuesto, sin plazo, sin cédula ni teléfono: el cliente es quien escribe
-// después por WhatsApp al profesional que le responda.
+// sin presupuesto ni plazo. La identificación es obligatoria y el WhatsApp
+// permite que los profesionales respondan.
 /**
  * El MISMO formulario sirve para publicar y para corregir. Empleos y
  * promociones se editan siempre y un proyecto no se editaba nunca: un dato mal
@@ -91,8 +91,7 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
     cantonId: base?.cantonId || searchParams.get("canton") || "",
   });
   const [telefono, setTelefono] = useState("");
-  // LA CÉDULA, OPCIONAL (8-oct-2026): con ella el proyecto sale con «Cédula
-  // verificada». Si la cuenta ya la tiene verificada no se pide: se muestra.
+  // Identificación obligatoria: reutilizar la de la cuenta si ya está verificada.
   const [cedula, setCedula] = useState("");
   const [cedulaDeLaCuenta, setCedulaDeLaCuenta] = useState(false);
   const [avisoDeIdentidad, setAvisoDeIdentidad] = useState<string | null>(null);
@@ -132,7 +131,7 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
         if (!vivo) return;
         const perfil = data as { phone?: string | null; cedula?: string | null; client_identity_status?: string | null } | null;
         const guardado = String(perfil?.phone ?? "").trim();
-        if (perfil?.client_identity_status === "verified" && perfil.cedula) setCedulaDeLaCuenta(true);
+        if (perfil?.client_identity_status === "verified" && isValidId(perfil.cedula ?? "")) setCedulaDeLaCuenta(true);
         queueMicrotask(() => {
           if (!vivo) return;
           // El número escrito en el borrador manda sobre el de la cuenta.
@@ -220,7 +219,7 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
       setError(t("errPhoneFijo"));
       return;
     }
-    if (!editar && cedula && !cedulaDeLaCuenta && !isValidId(cedula)) {
+    if (!editar && user && !cedulaDeLaCuenta && !isValidId(cedula)) {
       setErrorField("cedula");
       setError(t("errCedula"));
       return;
@@ -427,13 +426,14 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
                   />
                 </div>}
 
-                {/* Al final y opcional: primero lo que hace falta para publicar.
+                {/* Identificación obligatoria para publicar; se reutiliza la ya verificada.
                     Sin sesión no se pide —se entra al tocar «Publicar» y al
                     volver ya aparece—, para no guardar una cédula en el
                     borrador del teléfono. */}
                 {!editar && user && !cedulaDeLaCuenta && (
                   <CedulaInput
                     id="cedula-del-proyecto"
+                    required
                     labelText={t("cedulaLabel")}
                     value={cedula}
                     onChange={setCedula}

@@ -22,14 +22,14 @@ const DIA = 86_400_000;
 
 type Servicio = { active?: unknown; priceAmount?: unknown; priceType?: unknown; price?: unknown };
 
-/** Un «desde ₡» de verdad: «a convenir» no cuenta (misma regla que el panel). */
+/** Una tarifa de referencia real: «a convenir» no cuenta (misma regla que el panel). */
 export function tienePrecioReal(servicios: unknown): boolean {
   if (!Array.isArray(servicios)) return false;
   return servicios.some((s: Servicio) => {
     if (!s || typeof s !== "object" || s.active === false || s.priceType === "a_convenir") return false;
     if (typeof s.priceAmount === "number" && Number.isFinite(s.priceAmount) && s.priceAmount > 0) return true;
     // Legacy free-text prices count only if they contain a positive amount.
-    // "Consultar precio" and "A convenir" are not starting prices.
+    // "Consultar precio" and "A convenir" are not reference prices.
     return typeof s.price === "string" && Number(s.price.replace(/[^0-9]/g, "")) > 0;
   });
 }

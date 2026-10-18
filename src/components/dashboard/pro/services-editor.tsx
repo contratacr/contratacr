@@ -938,6 +938,7 @@ export function ServicesEditor({
                   options={PRICE_UNITS.map((priceType) => ({ value: priceType.value, label: priceType.suffix || priceType.label }))}
                 />
               </div>
+              <p className="mt-2 text-xs leading-5 text-[#68778d]">{t("priceRefHelp")}</p>
               <FilaInterruptor
                 className="mt-3"
                 testId="servicio-consultar-precio"

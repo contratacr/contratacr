@@ -215,14 +215,6 @@ export async function GET(req: Request) {
       .eq("client_id", profileId)
       .order("created_at", { ascending: false });
 
-    // Las citas salieron del producto: esta consulta siempre devolvía vacío.
-    // Lo que el cliente sí recibe hoy son cotizaciones.
-    const { data: quotes } = await db
-      .from("quotes")
-      .select("id, title, status, total, created_at")
-      .eq("client_id", profileId)
-      .order("created_at", { ascending: false });
-
     // Pro-specific history (verification decisions, appeals, reports against them)
     let verificationLog: unknown[] = [];
     let appeals: unknown[] = [];
@@ -292,7 +284,6 @@ export async function GET(req: Request) {
       professionalSignupIncomplete,
       tickets: tickets ?? [],
       projects: projects ?? [],
-      quotes: quotes ?? [],
       jobs: jobsRes.data ?? [],
       offers: offersRes.data ?? [],
       receivedReviews: (receivedReviewsRes.data ?? []).map((review) => ({ ...review, client_name_snapshot: reviewNames.get(review.client_id ?? "") || review.client_name_snapshot })),

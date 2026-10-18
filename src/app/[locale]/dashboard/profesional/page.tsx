@@ -45,7 +45,7 @@ import { ClientActivity, fetchClientProjects } from "@/components/dashboard/clie
 import { ClientConnections } from "@/components/dashboard/client-connections";
 import { applyPendingSavedPro } from "@/components/professionals/save-button";
 import { BasicProfileSection } from "@/components/dashboard/basic-profile-section";
-import { detectIdType } from "@/lib/cedula";
+import { isValidId } from "@/lib/cedula";
 import { NotificationsList } from "@/components/notifications/notifications-list";
 import { AccountSecuritySection } from "@/components/account/account-security";
 import { AccountPrivacySection } from "@/components/account/account-privacy";
@@ -1620,7 +1620,7 @@ export default function DashboardPage() {
   const clientVerified =
     profile?.client_identity_status === "verified" &&
     !!profile?.cedula &&
-    detectIdType(String(profile.cedula)) === "cedula";
+    isValidId(String(profile.cedula));
 
   // Offer mode without a pro row: a genuine seeker sees the activation gate only
   // after the professional lookup finished; until then the panel shell stays visible.
@@ -1800,7 +1800,7 @@ export default function DashboardPage() {
   function identityBadge() {
     if (clientVerified || pro?.verification_status === "verified") {
       return (
-        <VerificationInfo />
+        <VerificationInfo audience={mode === "use" ? "client" : "professional"} />
       );
     }
     // The header badge is a positive trust signal only. Pending, rejected and
