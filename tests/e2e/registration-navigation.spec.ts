@@ -79,7 +79,9 @@ for (const locale of ["es", "en"] as const) {
           expect(invalid.status()).toBe(400);
           expect(registrationComplete((await admin.auth.admin.getUserById(account.id)).data.user?.user_metadata, profile.data?.onboarding_completed)).toBe(false);
           await page.locator('input[type="tel"]').fill("88887777");
-          await page.getByRole("checkbox").check({ force: true });
+          const terms = page.getByRole("checkbox");
+          await terms.locator("..").locator('span[aria-hidden="true"]').click();
+          await expect(terms).toBeChecked();
           const saved = page.waitForResponse(response => response.url().endsWith("/api/register/client") && response.request().method() === "POST");
           await page.getByRole("button", { name: /Guardar y continuar|Save and continue/, exact: true }).click();
           expect((await saved).status()).toBe(200);
