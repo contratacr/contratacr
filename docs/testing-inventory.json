@@ -2,11 +2,11 @@
   "scope": "Todos los archivos TypeScript de src/app, src/components y src/hooks, controles JSX declarados, pestañas del panel y specs permanentes. No enumera cada elemento dinámico renderizado ni componentes dentro de dependencias.",
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
-    "files": 469,
+    "files": 470,
     "controls": 1280,
     "pages": 71,
     "handlers": 97,
-    "components": 239,
+    "components": 240,
     "hooks": 26,
     "specs": 127
   },
@@ -9567,6 +9567,30 @@
       "route": null,
       "exports": [
         "RegistrationGuard"
+      ],
+      "methods": [],
+      "controls": [],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/auth-screens.spec.ts",
+        "tests/e2e/auth-support.spec.ts",
+        "tests/e2e/native-social-access.spec.ts",
+        "tests/e2e/apple-existing-account.spec.ts",
+        "tests/e2e/multiple-sign-in-methods.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P0"
+    },
+    {
+      "file": "src/components/auth/registration-recovery.tsx",
+      "kind": "Componente",
+      "group": "Autenticación y registro",
+      "route": null,
+      "exports": [
+        "RegistrationRecovery"
       ],
       "methods": [],
       "controls": [],
