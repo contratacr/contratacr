@@ -1,6 +1,7 @@
 import { WelcomeChoiceContent } from "@/components/mobile/welcome-choice-content";
 import { NativeAppInicialProvider } from "@/hooks/native-app-inicial";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
+import { RegistrationRecovery } from "@/components/auth/registration-recovery";
 import type { Viewport } from "next";
 import { cookies, headers } from "next/headers";
 import localFont from "next/font/local";
@@ -474,6 +475,7 @@ body:has(.ccr-error-screen) .ccr-navbar-spacer{display:none}
             pinta su propio esqueleto donde de verdad carga algo. Los lienzos
             vacíos se leían como «entró a una página en blanco y luego
             cargó» (30-sep-2026). */}
+        <Suspense fallback={null}><RegistrationRecovery /></Suspense>
         <NativeAppInicialProvider value={esApp}>{children}</NativeAppInicialProvider>
       </body>
     </html>
