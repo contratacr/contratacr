@@ -22,7 +22,7 @@ test("administrator can consult all ID types and review a missing-document case 
     if (error) throw error;
     await loginAs(page, admin.email, admin.password);
     await page.goto("/admin/identificaciones");
-    await expect(page.getByRole("heading", { name: "Consultar identificación", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Consultar identificación", exact: true, level: 1 })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Consultar identificación", exact: true, level: 2 })).toBeVisible();
     await expect(page.getByText(/Admite identificación nacional, jurídica, DIMEX y NITE/)).toBeVisible();
     await page.getByRole("textbox", { name: "Número de identificación", exact: true }).fill("123");

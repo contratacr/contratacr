@@ -183,18 +183,8 @@ jobs:
         run: |
           npx playwright test registration-navigation
           npm run test:e2e:verify-results
-          npx playwright test native-social-access auth-screens despues-del-registro assistant-navigation
+          npx playwright test native-social-access auth-screens despues-del-registro assistant-navigation admin-identifications
           npm run test:e2e:verify-results
-
-      - name: Run public routes and recent UI smoke on every push
-        if: github.event_name == 'push'
-        run: >-
-          npx playwright test
-          auth-support borrador-sin-sesion ai-assistant admin-identifications hacienda-verification-runtime verification-documents current-profile-names-runtime admin-profile-edit-runtime admin-padron-runtime public-smoke app-download mobile-menu-surface verification-badges navbar-brand-consistency mensajes-sin-parpadeo landing-media-budget android-auth-return-presentation avatar-framing shared-link-language
-
-      - name: Require clean push smoke results
-        if: github.event_name == 'push'
-        run: npm run test:e2e:verify-results
 
       - name: Install Safari engine for assistant navigation
         if: github.event_name == 'push'
@@ -204,15 +194,25 @@ jobs:
         if: github.event_name == 'push'
         env:
           PLAYWRIGHT_WEBKIT: "1"
-          PLAYWRIGHT_OUTPUT_DIR: test-results/assistant-webkit
-          PLAYWRIGHT_JSON_REPORT: test-results/results-assistant-webkit.json
-          PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/assistant-webkit
+          PLAYWRIGHT_OUTPUT_DIR: test-results-safari-first
+          PLAYWRIGHT_JSON_REPORT: test-results-safari-first/results.json
+          PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report-safari-first
         run: npx playwright test --project=webkit-mobile registration-navigation native-social-access auth-screens despues-del-registro assistant-navigation verification-badges navbar-brand-consistency
 
       - name: Require clean Safari assistant results
         if: github.event_name == 'push'
         env:
-          PLAYWRIGHT_JSON_REPORT: test-results/results-assistant-webkit.json
+          PLAYWRIGHT_JSON_REPORT: test-results-safari-first/results.json
+        run: npm run test:e2e:verify-results
+
+      - name: Run public routes and recent UI smoke on every push
+        if: github.event_name == 'push'
+        run: >-
+          npx playwright test
+          auth-support borrador-sin-sesion ai-assistant admin-identifications hacienda-verification-runtime verification-documents current-profile-names-runtime admin-profile-edit-runtime admin-padron-runtime public-smoke app-download mobile-menu-surface verification-badges navbar-brand-consistency mensajes-sin-parpadeo landing-media-budget android-auth-return-presentation avatar-framing shared-link-language
+
+      - name: Require clean push smoke results
+        if: github.event_name == 'push'
         run: npm run test:e2e:verify-results
 
       - name: Verify fixtures after public push smoke
@@ -301,6 +301,8 @@ jobs:
             playwright-report/
             playwright-report-assistant-first/
             test-results-assistant-first/
+            playwright-report-safari-first/
+            test-results-safari-first/
             test-results/results*.json
             test-results/**/assistant-*-verified-name.png
           if-no-files-found: ignore
