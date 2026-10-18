@@ -62,3 +62,6 @@ next-env.d.ts
 
 /test-results-safari-first
 /playwright-report-safari-first
+
+/test-results-registration-safari-first
+/playwright-report-registration-safari-first

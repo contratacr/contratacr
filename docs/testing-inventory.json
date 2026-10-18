@@ -2,10 +2,10 @@
   "scope": "Todos los archivos TypeScript de src/app, src/components y src/hooks, controles JSX declarados, pestañas del panel y specs permanentes. No enumera cada elemento dinámico renderizado ni componentes dentro de dependencias.",
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
-    "files": 468,
+    "files": 469,
     "controls": 1280,
     "pages": 71,
-    "handlers": 96,
+    "handlers": 97,
     "components": 239,
     "hooks": 26,
     "specs": 127
@@ -4903,6 +4903,32 @@
       ],
       "methods": [
         "POST"
+      ],
+      "controls": [],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/auth-screens.spec.ts",
+        "tests/e2e/auth-support.spec.ts",
+        "tests/e2e/native-social-access.spec.ts",
+        "tests/e2e/apple-existing-account.spec.ts",
+        "tests/e2e/multiple-sign-in-methods.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "API + integración BD + autorización/propiedad + idempotencia; smoke solo lectura",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P0"
+    },
+    {
+      "file": "src/app/api/auth/registration-state/route.ts",
+      "kind": "API / handler",
+      "group": "Autenticación y registro",
+      "route": "/api/auth/registration-state",
+      "exports": [
+        "GET"
+      ],
+      "methods": [
+        "GET"
       ],
       "controls": [],
       "testIds": [],
@@ -24224,11 +24250,11 @@
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 97,
+          "line": 105,
           "title": "\"anonymous registration cannot overwrite a confirmed account by its public ID\""
         },
         {
-          "line": 98,
+          "line": 106,
           "title": "!canRunSeededRegression()"
         }
       ]

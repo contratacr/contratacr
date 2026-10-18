@@ -51,9 +51,12 @@ for (const locale of ["es", "en"] as const) {
         await expect(page.getByRole("button", { name: /Guardar y continuar|Save and continue|Continuar|Continue/, exact: true }).first()).toBeVisible();
         await page.reload();
         await expect(page).toHaveURL(new RegExp(`${formPath}$`));
+        const pendingState = await page.request.get("/api/auth/registration-state");
+        expect(pendingState.status()).toBe(200);
+        expect((await pendingState.json()).complete).toBe(false);
         // A real browser Back can restore the old completed panel from history.
-        await page.goBack();
-        await page.goBack();
+        await page.goBack({ waitUntil: "commit" });
+        await page.goBack({ waitUntil: "commit" });
         await expect(page).toHaveURL(new RegExp(`${formPath}$`), { timeout: 30_000 });
         await page.goto(`${prefix}/dashboard/profesional?tab=cuenta`);
         await expect(page).toHaveURL(new RegExp(`${formPath}$`));
@@ -67,6 +70,10 @@ for (const locale of ["es", "en"] as const) {
         const profile = await admin.from("profiles").select("phone,onboarding_completed").eq("id", account.id).single();
         expect(registrationComplete(state.data.user?.user_metadata, profile.data?.onboarding_completed)).toBe(false);
         expect(profile.data?.phone).toBeFalsy();
+        const serverState = await page.request.get("/api/auth/registration-state");
+        expect(serverState.status()).toBe(200);
+        expect(serverState.headers()["cache-control"]).toContain("no-store");
+        expect((await serverState.json()).complete).toBe(false);
         if (role === "client") {
           const invalid = await page.request.post("/api/register/client", { data: { fullName: "Cliente de prueba", phone: "" } });
           expect(invalid.status()).toBe(400);
@@ -81,6 +88,7 @@ for (const locale of ["es", "en"] as const) {
           const completedProfile = await admin.from("profiles").select("onboarding_completed,phone").eq("id", account.id).single();
           expect(registrationComplete((await admin.auth.admin.getUserById(account.id)).data.user?.user_metadata, completedProfile.data?.onboarding_completed)).toBe(true);
           expect(completedProfile.data?.phone).toBeTruthy();
+          expect((await (await page.request.get("/api/auth/registration-state")).json()).complete).toBe(true);
           await enterPanel.click();
           await expect(page).toHaveURL(/\/dashboard\/profesional/);
           await expect(page.getByRole("main").getByRole("heading", { level: 1 }).filter({ visible: true }).first()).toBeVisible();
@@ -98,6 +106,9 @@ test("anonymous registration cannot overwrite a confirmed account by its public 
   test.skip(!canRunSeededRegression(), "Requires isolated regression data.");
   const account = await createDisposableAccount({ prefix: "registration-owner" });
   try {
+    const state = await request.get("/api/auth/registration-state");
+    expect(state.status()).toBe(401);
+    expect(state.headers()["cache-control"]).toContain("no-store");
     const response = await request.post("/api/register/client", { data: { userId: account.id, fullName: "Nombre ajeno", phone: "50688887777" } });
     expect(response.status()).toBe(401);
     const result = await regressionAdminClient().auth.admin.getUserById(account.id);

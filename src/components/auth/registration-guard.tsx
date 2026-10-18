@@ -3,7 +3,7 @@
 import { useEffect, type ReactNode } from "react";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
-import { createClient } from "@/lib/supabase/client";
+import { rutaInternaSegura } from "@/lib/navigation/ruta-interna";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { useAuth } from "@/hooks/use-auth";
 import { pendingRegistrationPath, registrationComplete } from "@/lib/auth/registration-state";
@@ -31,30 +31,47 @@ export function RegistrationGuard({ children }: { children: ReactNode }) {
   }, [loading, pending, destination, pathname, router]);
   useEffect(() => {
     let active = true;
+    let requestVersion = 0;
+    let requestController: AbortController | null = null;
     const reconcile = () => {
+      if (!active) return;
+      requestController?.abort();
+      const version = ++requestVersion;
       void (async () => {
-        const supabase = createClient();
-        const { data } = await supabase.auth.getUser();
-        if (!data.user || !active) return;
-        let complete = registrationComplete(data.user.user_metadata);
-        if (complete) {
-          const { data: profile, error } = await supabase.rpc("get_my_profile");
-          if (!error) complete = registrationComplete(data.user.user_metadata, profile?.onboarding_completed);
-        }
-        if (active && !complete) {
-          window.location.replace(`${prefijoDeIdioma(locale)}${pendingRegistrationPath(data.user.user_metadata)}`);
-        }
+        const controller = new AbortController();
+        requestController = controller;
+        const timeout = window.setTimeout(() => controller.abort(), 12_000);
+        try {
+          // First-party, uncached server truth also avoids a restored browser
+          // SDK/session snapshot or a suspended auth lock on Safari.
+          const response = await fetch("/api/auth/registration-state", { cache: "no-store", signal: controller.signal });
+          if (!response.ok || !active || version !== requestVersion) return;
+          const state = await response.json() as { complete?: boolean; destination?: string };
+          const next = rutaInternaSegura(state.destination);
+          if (active && version === requestVersion && state.complete === false && next) {
+            window.location.replace(`${prefijoDeIdioma(locale)}${next}`);
+          }
+        } finally { window.clearTimeout(timeout); }
       })().catch(() => { /* Network failure must not discard a valid session. */ });
     };
-    const restored = (event: PageTransitionEvent) => { if (event.persisted) reconcile(); };
+    const restored = () => reconcile();
+    const visible = () => { if (document.visibilityState === "visible") reconcile(); };
+    // Safari may restore cached HTML before React installs pageshow/popstate
+    // listeners. Validate on mount/reactivation as well as on those events.
+    reconcile();
     window.addEventListener("pageshow", restored);
     window.addEventListener("popstate", reconcile);
+    window.addEventListener("focus", reconcile);
+    document.addEventListener("visibilitychange", visible);
     return () => {
       active = false;
+      requestController?.abort();
       window.removeEventListener("pageshow", restored);
       window.removeEventListener("popstate", reconcile);
+      window.removeEventListener("focus", reconcile);
+      document.removeEventListener("visibilitychange", visible);
     };
-  }, [locale]);
+  }, [locale, pathname, user?.id, user?.updated_at]);
   if (loading || pending) return <LienzoNeutro />;
   return children;
 }
