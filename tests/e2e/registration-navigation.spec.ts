@@ -3,7 +3,7 @@ import { freshestAuthUser } from "../../src/lib/auth/fresh-user";
 import { test, expect } from "playwright/test";
 import { cleanupDisposableAccount, createDisposableAccount } from "./disposable-account";
 import { canRunSeededRegression, regressionAdminClient } from "./seed";
-import { loginAs } from "./helpers";
+import { gotoOK, loginAs } from "./helpers";
 import { registrationComplete, pendingRegistrationPath, registrationIntentMatches } from "../../src/lib/auth/registration-state";
 
 test("explicit pending registration wins over a stale completed profile", () => {
@@ -58,13 +58,13 @@ for (const locale of ["es", "en"] as const) {
         await page.goBack({ waitUntil: "commit" });
         await page.goBack({ waitUntil: "commit" });
         await expect(page).toHaveURL(new RegExp(`${formPath}$`), { timeout: 30_000 });
-        await page.goto(`${prefix}/dashboard/profesional?tab=cuenta`, { waitUntil: "commit" });
+        await gotoOK(page, `${prefix}/dashboard/profesional?tab=cuenta`);
         await expect(page).toHaveURL(new RegExp(`${formPath}$`));
-        await page.goto(`/auth/callback?flow=native&locale=${locale}`, { waitUntil: "commit" });
+        await gotoOK(page, `/auth/callback?flow=native&locale=${locale}`);
         await expect(page).toHaveURL(new RegExp(`${formPath}$`));
-        await page.goto(`/auth/callback?flow=native&locale=${locale}&next=${encodeURIComponent(`${prefix}/dashboard/profesional`)}`, { waitUntil: "commit" });
+        await gotoOK(page, `/auth/callback?flow=native&locale=${locale}&next=${encodeURIComponent(`${prefix}/dashboard/profesional`)}`);
         await expect(page).toHaveURL(new RegExp(`${formPath}$`));
-        await page.goto(`${prefix}/onboarding`);
+        await gotoOK(page, `${prefix}/onboarding`);
         await expect(page).toHaveURL(new RegExp(`${formPath}$`));
         const state = await admin.auth.admin.getUserById(account.id);
         const profile = await admin.from("profiles").select("phone,onboarding_completed").eq("id", account.id).single();
