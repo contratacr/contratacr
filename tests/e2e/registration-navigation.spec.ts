@@ -69,7 +69,7 @@ for (const locale of ["es", "en"] as const) {
         expect(pendingState.status()).toBe(200);
         expect((await pendingState.json()).complete).toBe(false);
         // A real browser Back can restore the old completed panel from history.
-        await page.goBack({ waitUntil: "commit" });
+        await page.goBack({ waitUntil: "load" });
         await page.goBack({ waitUntil: "commit" });
         await expect(page).toHaveURL(new RegExp(`${formPath}$`), { timeout: 30_000 });
         await visitWhilePending(page, `${prefix}/dashboard/profesional?tab=cuenta`, formPath);
