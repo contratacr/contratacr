@@ -1,5 +1,8 @@
 "use client";
 
+import { sinPrefijoDeIdioma } from "@/lib/prefijo-de-idioma";
+import { rutaInternaSegura } from "@/lib/navigation/ruta-interna";
+
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { formatPersonDisplayName, getProfessionalDisplayName } from "@/lib/display-name";
@@ -152,9 +155,13 @@ function isImageAttachment(attachment: Pick<DirectAttachment, "type" | "name">) 
   return attachment.type.startsWith("image/") || /\.(jpe?g|png|webp|avif|gif|heic|heif)$/i.test(attachment.name);
 }
 
-  function sincronizarUrl(consulta: string) {
+  function sincronizarUrl(consulta: string, conservarRegreso = true) {
     if (typeof window === "undefined") return;
-    const destino = window.location.pathname + (consulta ? "?" + consulta : "");
+    const params = new URLSearchParams(consulta);
+    const back = rutaInternaSegura(new URLSearchParams(window.location.search).get("back"));
+    if (conservarRegreso && back && !params.has("back")) params.set("back", back);
+    if (!conservarRegreso) params.delete("back");
+    const destino = window.location.pathname + (params.size ? "?" + params.toString() : "");
     window.history.replaceState(window.history.state, "", destino);
   }
 function buildPendingDraft(searchParams: URLSearchParams, userId: string | undefined, isEn: boolean): { conversation: Conversation | null; payload: PendingDraft | null } {
@@ -478,9 +485,8 @@ export function DirectChatInbox({ alCambiarSubvista }: {
   const draftConversationRef = useRef<string | null>(null);
   const urlDraftRef = useRef(searchParams.get("draftMessage") || "");
   const backHrefRef = useRef((() => {
-    const raw = searchParams.get("back") || "";
-    if (!raw.startsWith("/") || raw.startsWith("//") || raw.includes("\\")) return "";
-    return raw.replace(/^\/(?:es|en)(?=\/|$)/u, "") || "/";
+    const raw = rutaInternaSegura(searchParams.get("back"));
+    return raw ? sinPrefijoDeIdioma(raw) : "";
   })());
   useContainedTouchScroll(scrollRef, mobileThread);
 
@@ -999,7 +1005,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
     if (editando) cancelarEdicion();
     setActiveId(id); setMobileThread(true); setError("");
     if (id === DRAFT_CONVERSATION_ID) return;
-    sincronizarUrl(`${showArchived ? "chatStatus=archived&" : ""}conversation=${id}`);
+    sincronizarUrl(`${showArchived ? "chatStatus=archived&" : ""}conversation=${id}`, false);
   }
 
   function openActiveProfile() {
