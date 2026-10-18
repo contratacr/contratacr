@@ -170,9 +170,20 @@ jobs:
       - name: Build the production application locally
         run: npm run build
 
-      - name: Install Chromium for public push smoke
+      - name: Install browser engines for registration and push smoke
         if: github.event_name == 'push'
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: Verify Safari registration before broader browser checks
+        if: github.event_name == 'push'
+        env:
+          PLAYWRIGHT_WEBKIT: "1"
+          PLAYWRIGHT_OUTPUT_DIR: test-results-registration-safari-first
+          PLAYWRIGHT_JSON_REPORT: test-results-registration-safari-first/results.json
+          PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report-registration-safari-first
+        run: |
+          npx playwright test --project=webkit-mobile registration-navigation
+          npm run test:e2e:verify-results
 
       - name: Verify registration and assistant navigation before broader smoke
         if: github.event_name == 'push'
@@ -186,10 +197,6 @@ jobs:
           npx playwright test native-social-access auth-screens despues-del-registro assistant-navigation admin-identifications
           npm run test:e2e:verify-results
 
-      - name: Install Safari engine for assistant navigation
-        if: github.event_name == 'push'
-        run: npx playwright install --with-deps webkit
-
       - name: Verify assistant navigation and badges in Safari
         if: github.event_name == 'push'
         env:
@@ -197,7 +204,7 @@ jobs:
           PLAYWRIGHT_OUTPUT_DIR: test-results-safari-first
           PLAYWRIGHT_JSON_REPORT: test-results-safari-first/results.json
           PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report-safari-first
-        run: npx playwright test --project=webkit-mobile registration-navigation native-social-access auth-screens despues-del-registro assistant-navigation verification-badges navbar-brand-consistency
+        run: npx playwright test --project=webkit-mobile native-social-access auth-screens despues-del-registro assistant-navigation verification-badges navbar-brand-consistency
 
       - name: Require clean Safari assistant results
         if: github.event_name == 'push'
@@ -303,6 +310,8 @@ jobs:
             test-results-assistant-first/
             playwright-report-safari-first/
             test-results-safari-first/
+            playwright-report-registration-safari-first/
+            test-results-registration-safari-first/
             test-results/results*.json
             test-results/**/assistant-*-verified-name.png
           if-no-files-found: ignore
