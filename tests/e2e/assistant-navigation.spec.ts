@@ -41,7 +41,9 @@ for (const locale of ["es", "en"] as const) test(`native assistant ${locale} kee
   expect(mark!.x - (name!.x + name!.width)).toBeLessThan(12);
   expect(Math.abs(mark!.y + mark!.height / 2 - name!.y - name!.height / 2)).toBeLessThan(4);
   await badge.click();
-  await expect(page.getByRole("dialog").filter({ hasText: /biométrico|biometric/ })).toBeVisible();
+  const verification = page.getByRole("dialog", { name: locale === "es" ? "Identidad verificada" : "Identity verified", exact: true });
+  await expect(verification).toContainText(locale === "es" ? "Verificamos los datos de identificación de esta cuenta." : "We checked this account’s identification details.");
+  await expect(verification).not.toContainText(/Hacienda|biométric|biometric|revisión manual|manual review/);
   await page.getByRole("button", { name: locale === "es" ? "Entendido" : "Got it", exact: true }).click();
   await page.screenshot({ path: test.info().outputPath(`assistant-${locale}-verified-name.png`) });
   await dialog.getByRole("button", { name: locale === "es" ? "Ver perfil" : "View profile", exact: true }).click();
