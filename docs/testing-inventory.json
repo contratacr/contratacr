@@ -24262,23 +24262,23 @@
       "file": "tests/e2e/registration-navigation.spec.ts",
       "cases": [
         {
-          "line": 9,
+          "line": 23,
           "title": "\"explicit pending registration wins over a stale completed profile\""
         },
         {
-          "line": 31,
+          "line": 45,
           "title": "`${pendingSource} pending, ${locale} ${role}: incomplete social identity cannot bypass registration with Back, reload or a panel link`"
         },
         {
-          "line": 32,
+          "line": 46,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 107,
+          "line": 121,
           "title": "\"anonymous registration cannot overwrite a confirmed account by its public ID\""
         },
         {
-          "line": 108,
+          "line": 122,
           "title": "!canRunSeededRegression()"
         }
       ]
