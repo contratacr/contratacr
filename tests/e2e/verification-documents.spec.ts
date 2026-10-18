@@ -12,7 +12,8 @@ function capturePath(filename: string) {
 // Isolated disposable identities: parallel regression never changes another test's role.
 for (const kind of ["company", "person"] as const) test(`private verification documents ${kind} validate files and deduplicate retries`, async ({ page, request }) => {
   test.setTimeout(120_000);
-  const apiHeaders = { "cf-connecting-ip": `2001:db8::${Math.floor(Math.random() * 65535).toString(16)}` };
+  const apiHeaders = { "x-forwarded-for": `2001:db8::${Math.floor(Math.random() * 65535).toString(16)}` };
+  const blockedHeaders = { "x-forwarded-for": `10.99.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}` };
   const db = regressionAdminClient();
   expect((await request.get("/api/verification/documents")).status()).toBe(401);
   const { data: template, error: templateError } = await db.from("professionals").select("category_id").eq("slug", E2E_USERS.professional.slug).single();
@@ -30,14 +31,35 @@ for (const kind of ["company", "person"] as const) test(`private verification do
       cedula: kind === "company" ? "3101999999" : "199999999" });
     if (profileError) throw profileError;
     const { error: proError } = await db.from("professionals").insert({ ...pro, category_id: template.category_id, slug: `verification-${pro.id}`, business_name: "Cuenta de prueba",
-      whatsapp: "+50670000009", bio: "Cuenta temporal de regresión.", verification_status: "pending", is_verified: false, verification_updated_at: reviewTime });
+      whatsapp: "+50670000009", bio: "Cuenta temporal de regresión.", verification_status: "pending", is_verified: false, verification_provider: "hacienda_api", verification_reason: "Identificación no encontrada.", verification_updated_at: reviewTime });
     if (proError) throw proError;
     await loginAs(page, email, password);
     await page.waitForLoadState("networkidle");
     const api = page.request;
     expect((await api.get("/api/verification/documents")).status()).toBe(200);
+    const originalId = kind === "company" ? "3101999999" : "199999999";
+    await db.from("profiles").update({ cedula: null }).eq("id", pro.profile_id);
+    expect((await api.post("/api/appeals", { headers: blockedHeaders, data: {} })).status()).toBe(409);
+    expect((await api.post("/api/verification/documents", { headers: blockedHeaders })).status()).toBe(409);
+    await page.goto("/dashboard/profesional?tab=verificacion");
+    await expect(page.getByRole("button", { name: "Agregar identificación", exact: true })).toBeVisible();
+    await expect(page.getByTestId("verification-documents")).toHaveCount(0);
+    await db.from("profiles").update({ cedula: originalId }).eq("id", pro.profile_id);
+    await db.from("professionals").update({ verification_status: "verified", is_verified: true }).eq("id", pro.id);
+    expect((await api.post("/api/verification/documents", { headers: blockedHeaders })).status()).toBe(409);
+    await page.goto("/dashboard/profesional?tab=verificacion");
+    await expect(page.getByText("Verificado", { exact: true }).first()).toBeVisible();
+    await expect(page.getByTestId("verification-documents")).toHaveCount(0);
+    await expect(page.getByRole("main")).not.toContainText(/Hacienda/);
+    await db.from("professionals").update({ verification_status: "pending", is_verified: false, verification_reason: null }).eq("id", pro.id);
+    expect((await api.post("/api/appeals", { headers: blockedHeaders, data: {} })).status()).toBe(409);
+    expect((await api.post("/api/verification/documents", { headers: blockedHeaders })).status()).toBe(409);
+    await db.from("professionals").update({ verification_reason: "Identificación no encontrada." }).eq("id", pro.id);
     await page.goto("/dashboard/profesional?tab=verificacion");
     const panel = page.getByTestId("verification-documents");
+    await expect(panel.getByRole("button", { name: "Subir foto", exact: true })).toHaveCount(0);
+    await expect(panel).not.toContainText(/Hacienda|API|padrón/);
+    await panel.getByRole("button", { name: "Solicitar revisión manual", exact: true }).click();
     await expect(panel.getByText(kind === "company" ? "Personería o autorización" : "Foto con tu identificación", {exact: true})).toBeVisible();
     await panel.getByRole("button", {name: "Enviar a revisión"}).waitFor();
     await expect(panel.getByText("1", {exact: true})).toHaveCount(0);
@@ -50,10 +72,10 @@ for (const kind of ["company", "person"] as const) test(`private verification do
     }
     await page.screenshot({path: capturePath(`${kind}-live-${test.info().project.name}.png`), fullPage: true});
     await panel.locator("..").screenshot({path: capturePath(`${kind}-detail-${test.info().project.name}.png`)});
-    await panel.getByLabel("Motivo (opcional, hasta 2000 caracteres)").fill("Mi identificación no se encontró; solicito revisión manual.");
+    await panel.getByLabel("Comentario (opcional)").fill("Mi identificación no se encontró; solicito revisión manual.");
     const [appealResponse] = await Promise.all([
       page.waitForResponse(response => response.url().endsWith("/api/appeals") && response.request().method() === "POST"),
-      panel.getByRole("button", { name: "Solicitar revisión manual", exact: true }).click(),
+      panel.getByRole("button", { name: "Enviar a revisión", exact: true }).click(),
     ]);
     expect(appealResponse.status()).toBe(200);
     ticketId = (await appealResponse.json()).ticketId;
@@ -69,6 +91,7 @@ for (const kind of ["company", "person"] as const) test(`private verification do
       const missing = await api.post("/api/verification/documents", { headers: apiHeaders, multipart: { identity: image } });
       expect(missing.status()).toBe(400);
     }
+    await panel.getByRole("button", { name: "Adjuntar documentos", exact: true }).click();
     await panel.locator('input[type="file"]').nth(0).setInputFiles(image);
     if (kind === "company") await panel.locator('input[type="file"]').nth(1).setInputFiles(image);
     const [first] = await Promise.all([
@@ -98,7 +121,7 @@ for (const kind of ["company", "person"] as const) test(`private verification do
     const publicUrl = db.storage.from("support-attachments").getPublicUrl(attachment.path).data.publicUrl;
     expect((await request.get(publicUrl)).ok()).toBe(false);
     await page.goto("/dashboard/profesional?tab=verificacion");
-    await expect(page.getByText("Documentos en revisión", {exact: true})).toBeVisible();
+    await expect(page.getByText("Tu solicitud está en revisión.", {exact: true})).toBeVisible();
     await page.screenshot({path: capturePath(`${kind}-submitted-live-${test.info().project.name}.png`), fullPage: true});
     const {error: roleError} = await db.from("profiles").update({role: "admin"}).eq("id", pro.profile_id);
     if (roleError) throw roleError;

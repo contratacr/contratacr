@@ -272,19 +272,20 @@ export function VerificationPanel({
   if (status !== "verified") return (
     <div className="space-y-5">
       {status === "rejected" && <p className="text-sm font-semibold text-red-700">{t("rejectedTitle")}</p>}
-      {reason && <p className="text-sm text-[#52627a]">{reason}</p>}
+      {status === "rejected" && reason && <p className="text-sm text-[#52627a]">{t("rejectedBody")}</p>}
       {!hasCurrentCedula && <p className="text-sm text-[#52627a]">{t("missingIdNextStep")}</p>}
       <CurrentIdentificationPanel title={t("currentIdTitle")} emptyLabel={t("currentIdEmpty")}
         value={hasCurrentCedula ? cleanCurrentCedula : null} typeLabel={currentIdTypeLabel}
         fullName={hasCurrentCedula ? currentFullName : null} changeLabel={t("changeId")} addLabel={t("addId")}
         changeOpen={changeCedulaOpen} onChangeClick={() => setChangeCedulaOpen(open => !open)} />
       {changeCedulaOpen && <ActionPanel title={t("changeIdTitle")} body={t("changeIdBody")}>{renderCedulaVerifier()}</ActionPanel>}
-      <VerificationDocuments key={cleanCurrentCedula || "no-id"} legal={currentIdType === "juridica"} onVerified={onSaved} />
+      {hasCurrentCedula && <VerificationDocuments key={cleanCurrentCedula} legal={currentIdType === "juridica"} onVerified={onSaved} />}
     </div>
   );
 
   return (
     <div className="space-y-6">
+      <p className="flex items-center gap-2 text-sm font-bold text-[#087ca3]"><ShieldCheck className="h-5 w-5" aria-hidden="true" />{t("verifiedChip")}</p>
       <CurrentIdentificationPanel
         title={t("currentIdTitle")}
         emptyLabel={t("currentIdEmpty")}

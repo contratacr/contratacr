@@ -186,7 +186,7 @@
     "trust": {
       "cedula": {
         "title": "Identificación verificada",
-        "desc": "Cotejamos los datos de identificación con Hacienda o mediante revisión manual de documentos."
+        "desc": "El distintivo indica que verificamos los datos de identificación de la cuenta."
       },
       "reviews": {
         "title": "Reseñas reales",
@@ -455,21 +455,21 @@
     "idLabel": "Número de identificación",
     "idIncomplete": "Ese número no parece válido. Revisa que esté completo.",
     "optional": "(opcional)",
-    "confirmed": "Datos encontrados en Hacienda",
+    "confirmed": "Datos confirmados",
     "cedulaLabel": "Identificación",
     "officialNameNotice": "Al continuar, tu cuenta usará este nombre oficial.",
     "dobLabel": "Nacimiento",
     "notYourInfo": "¿No es tu información?",
-    "searching": "Consultando Hacienda…",
+    "searching": "Verificando identificación…",
     "mismatchTitle": "Revisión manual",
     "mismatchNotice": "Indicaste que la información encontrada no es tuya. Escribe tu nombre completo y dejaremos tu identidad <b>pendiente de revisión</b> para confirmarla manualmente.",
     "notFoundTitle": "Revisión manual",
-    "notFoundNotice": "Hacienda no encontró esta identificación. Escribe tu nombre completo; después puedes solicitar revisión manual desde Verificación. Esto no significa que tu identificación sea inválida.",
-    "unavailableTitle": "Hacienda no disponible",
-    "unavailableNotice": "No pudimos consultar Hacienda. Puedes escribir tu nombre y continuar; reintentaremos la consulta sin rechazar tu identificación.",
+    "notFoundNotice": "No encontramos esta identificación. Puedes solicitar una revisión manual.",
+    "unavailableTitle": "Verificación no disponible",
+    "unavailableNotice": "La verificación no está disponible en este momento. Puedes continuar e intentarlo más tarde.",
     "fullName": "Nombre completo",
     "namePlaceholder": "Juan Pérez González",
-    "lookupNotice": "Al ingresar tu identificación, solicitas cotejar el número, tipo y nombre con la API pública de Hacienda para verificar los datos de tu cuenta."
+    "lookupNotice": "Usaremos tu identificación para verificar los datos de tu cuenta."
   },
   "contactGate": {
     "call": "Llamar",
@@ -505,7 +505,7 @@
     "titlePassword": "Crea tu contraseña",
     "titleOtp": "Código de verificación",
     "subEmail": "Ingresa el correo que usarás para tu cuenta.",
-    "subIdentity": "Ingresa tu identificación para consultar el nombre en Hacienda. Si no tienes identificación, escríbelo a mano.",
+    "subIdentity": "Ingresa tu identificación para completar tu nombre.",
     "subPassword": "Elige una contraseña segura para tu cuenta.",
     "subOtp": "Ingresa el código de 6 dígitos enviado a tu correo.",
     "noCedula": "No tengo identificación",
@@ -1646,7 +1646,7 @@
     "sending": "Enviando…",
     "sendToReview": "Enviar a revisión",
     "hasCedulaTitle": "¿Ya tienes identificación costarricense?",
-    "hasCedulaBody": "Agrégala para cotejar sus datos con Hacienda. Si no se encuentra, puedes solicitar revisión manual.",
+    "hasCedulaBody": "Agrega tu identificación para verificar tu cuenta.",
     "enterCedulaTitle": "Verifica tu identidad con tu identificación",
     "enterCedulaBody": "Ingresa tu identificación y confirma los datos. Consultamos nacionales, jurídicas, DIMEX y NITE con el mismo criterio de cotejo de datos.",
     "verifying": "Verificando…",
@@ -1654,13 +1654,13 @@
     "savingCedula": "Agregando…",
     "cedulaSame": "Esta ya es tu identificación verificada. Ingresa una distinta para cambiarla.",
     "cedulaTaken": "Esta identificación ya está registrada en ContrataCR.",
-    "cedulaReviewReady": "No pudimos confirmarla automáticamente. Puedes agregarla y quedará en revisión.",
+    "cedulaReviewReady": "No encontramos esta identificación. Puedes guardarla y solicitar revisión manual.",
     "checkCedulaFirst": "Primero verifica la identificación antes de agregarla.",
     "verifiedTitle": "Estado de verificación",
     "verifiedChip": "Verificado",
     "pendingBody": "Aún no estás verificado, así que apareces sin el estado <strong>Verificado</strong> y más abajo en los resultados.",
     "underAppealBody": "Solicitaste revisión manual. Un administrador revisará tu caso y te avisaremos aquí.",
-    "rejectedBody": "Tu cuenta sigue activa. Corrige lo indicado y apela para una nueva revisión.",
+    "rejectedBody": "Revisa la respuesta de tu solicitud antes de continuar.",
     "howItWorks": "<link>¿Qué es la verificación de identidad?</link>",
     "appealTitle": "Apelar esta decisión",
     "appealBody": "Solicita que un administrador revise tu identificación y los documentos que adjuntes.",
@@ -1669,7 +1669,7 @@
     "supportApp": "Contactar soporte",
     "supportAppCase": "Contactar soporte (Caso #{ref})",
     "currentIdTitle": "Identificación actual",
-    "missingIdNextStep": "Agregá tu identificación para consultar Hacienda. Si no tenés una, podés solicitar revisión manual y explicar tu caso.",
+    "missingIdNextStep": "Agrega tu identificación para verificar tu cuenta.",
     "currentIdEmpty": "No hay una identificación registrada.",
     "idTypeCedula": "Cédula nacional",
     "idTypeJuridica": "Cédula jurídica",
@@ -2042,11 +2042,11 @@
     "intro": "Es un respaldo que confirma que la <strong>cédula del proveedor es real</strong> y que su <strong>nombre coincide con los registros oficiales</strong>. Es automática y se gana: da más visibilidad ante los clientes que buscan mayor confianza, sin bloquear a nadie.",
     "howWorks": "¿Cómo funciona?",
     "step1Title": "Cédula real",
-    "step1Body": "Consultamos el número de identificación nacional, jurídica, DIMEX o NITE en la API pública de Hacienda.",
+    "step1Body": "Ingresa tu identificación nacional, jurídica, DIMEX o NITE.",
     "step2Title": "Tu nombre oficial",
     "step2Body": "Cotejamos el número, tipo y nombre encontrados. La consulta no prueba quién utiliza la cuenta ni la representación legal de una empresa.",
     "step3Title": "Datos siempre al día",
-    "step3Body": "Si Hacienda no encuentra tu identificación, puedes apelar para revisión manual desde tu panel. Un fallo temporal se reintenta y no se considera un rechazo.",
+    "step3Body": "Si no encontramos tu identificación, puedes solicitar revisión manual.",
     "disclaimerTitle": "Aviso importante",
     "disclaimer": "ContrataCR es una <strong>plataforma intermediaria</strong> que conecta a clientes con proveedores de servicios; no es la proveedora del servicio. La insignia <strong>“Verificado”</strong> confirma únicamente que la cédula es real y el nombre coincide con los registros oficiales. <strong>No garantiza ni asegura la calidad, el resultado ni la finalización de ningún trabajo</strong>, y no prueba por sí sola que quien se registró sea físicamente esa persona. La contratación ocurre directamente entre el cliente y el proveedor. Para elegir bien, en cada perfil puedes comparar <strong>reseñas, casos de éxito, formación, idiomas y años de experiencia</strong>.",
     "ctaVerified": "Ver profesionales"
@@ -2130,8 +2130,8 @@
     "cedulaYaVerificada": "Verificado",
     "cedulaYaVerificadaAyuda": "Tu proyecto sale con «Verificado». El número no se muestra.",
     "identidadVerificada": "Tu proyecto salió con «Verificado».",
-    "identidadNoEncontrada": "Hacienda no encontró esa identificación. Tu proyecto se publicó; puedes contactar a soporte para revisión manual.",
-    "identidadPadronCaido": "Hacienda no respondió. Tu proyecto se publicó y puedes reintentar la verificación más tarde.",
+    "identidadNoEncontrada": "No encontramos esta identificación. Puedes solicitar una revisión manual.",
+    "identidadPadronCaido": "La verificación no está disponible en este momento. Puedes continuar e intentarlo más tarde.",
     "identidadEnRevision": "Vamos a revisar tu identificación; mientras tanto tu proyecto sale sin «Verificado»."
   },
   "notifications": {
@@ -2435,7 +2435,7 @@
     "proStep2Title": "Responde proyectos y cotiza",
     "proStep2Body": "Consulta proyectos y contacta a los clientes cuando puedas realizar el trabajo.",
     "proBenefit0Title": "Identificación verificada",
-    "proBenefit0Body": "El sello indica un cotejo de datos con Hacienda o una revisión manual de documentos. No certifica la calidad del servicio.",
+    "proBenefit0Body": "El distintivo indica que verificamos los datos de identificación de la cuenta.",
     "proBenefit1Title": "Casos de éxito",
     "proBenefit1Body": "Muestra fotos de tus casos de éxito para que tu perfil no sea solo texto y el cliente entienda tu calidad.",
     "proBenefit2Title": "Zonas de trabajo",
@@ -3061,7 +3061,7 @@
     "imageFooter": "Perfil del profesional en ContrataCR:",
     "clientCedulaLabel": "Cédula",
     "clientCedulaSearching": "Buscando el nombre…",
-    "clientCedulaNotFound": "Hacienda no encontró esta identificación.",
+    "clientCedulaNotFound": "No encontramos esta identificación. Puedes solicitar una revisión manual.",
     "taxIncludedShort": "IVA incluido",
     "taxAddShort": "Sumar 13%",
     "taxExemptShort": "Sin IVA",
@@ -3100,7 +3100,7 @@
     "notesHeading": "Nota",
     "errorNeedsPrices": "Hay líneas sin precio. Ponles su monto o quítalas: una cotización en ₡0 no le sirve a nadie.",
     "validUntilShort": "hasta el {date}",
-    "clientCedulaLookupNotice": "La identificación se consulta en Hacienda para completar el nombre del cliente. Ingresa datos que estés autorizado a usar."
+    "clientCedulaLookupNotice": "Ingresa únicamente datos que estés autorizado a usar."
   },
   "menuFicha": {
     "more": "Más opciones",
@@ -3345,7 +3345,7 @@
   "verificationBadge": {
     "title": "Identidad verificada",
     "action": "Identidad verificada: ver qué se comprobó",
-    "description": "El check indica un cotejo del número, tipo y nombre con Hacienda o una revisión manual de documentos. La consulta automática no demuestra quién usa la cuenta, no realiza reconocimiento biométrico ni comprueba representación legal.",
+    "description": "Verificamos los datos de identificación de esta cuenta.",
     "scope": "El distintivo no garantiza la calidad del trabajo ni acredita certificaciones profesionales. Revisa también el perfil, las reseñas y los detalles del servicio.",
     "close": "Cerrar",
     "understood": "Entendido",
@@ -3354,15 +3354,21 @@
     "educationAction": "Qué significa el check de identidad"
   },
   "manualVerification": {
-    "body": "Si tu identificación no se encontró o necesitas apelar, solicita revisión manual. Puedes adjuntar los documentos aquí; no se publican.",
-    "reason": "Motivo (opcional, hasta 2000 caracteres)",
+    "body": "No encontramos tu identificación.",
+    "reason": "Comentario (opcional)",
     "request": "Solicitar revisión manual",
-    "requested": "Tu solicitud está en revisión manual. Puedes agregar los documentos abajo.",
+    "requested": "Tu solicitud está en revisión.",
     "sending": "Enviando…",
     "viewCase": "Ver mi caso",
     "error": "No se pudo solicitar la revisión. Intenta nuevamente.",
-    "retry": "Reintentar consulta de Hacienda",
-    "unavailable": "Hacienda no respondió. Puedes reintentar más tarde; esto no es un rechazo.",
-    "pending": "No se pudo verificar automáticamente. Puedes solicitar revisión manual."
+    "retry": "Reintentar verificación",
+    "unavailable": "No pudimos verificar tu identificación en este momento. Lo intentaremos de nuevo más tarde.",
+    "pending": "No encontramos tu identificación. Puedes solicitar revisión manual.",
+    "private": "Puedes agregar un comentario o adjuntar una foto. Los documentos son privados.",
+    "checking": "Verificando…",
+    "verified": "Identidad verificada",
+    "pendingCheck": "Verificación pendiente.",
+    "addDocuments": "Adjuntar documentos",
+    "cancel": "Cancelar"
   }
 }

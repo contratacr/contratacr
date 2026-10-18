@@ -3,7 +3,7 @@
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
     "files": 470,
-    "controls": 1280,
+    "controls": 1282,
     "pages": 71,
     "handlers": 97,
     "components": 240,
@@ -11307,7 +11307,15 @@
       "methods": [],
       "controls": [
         {
-          "line": 80,
+          "line": 106,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{() => setReviewOpen(true)}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 111,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{retry}",
@@ -11315,7 +11323,15 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 84,
+          "line": 112,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{() => setReviewOpen(true)}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 119,
           "tag": "textarea",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{event => setMessage(event.target.value)}",
@@ -11323,15 +11339,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 85,
-          "tag": "button",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "{appeal}",
-          "destination": "",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 97,
+          "line": 126,
           "tag": "button",
           "label": "{en ? `Remove ${doc.title}` : `Quitar ${doc.title}`}",
           "handler": "{() => setFiles(prev => { const next = { ...prev }; delete next[doc.id]; return next; })}",
@@ -11339,7 +11347,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 98,
+          "line": 127,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => refs.current[doc.id]?.click()}",
@@ -11347,7 +11355,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 99,
+          "line": 128,
           "tag": "input",
           "label": "{doc.title}",
           "handler": "{event => { const file = event.target.files?.[0]; event.target.value = \"\"; if (!file) return; if (file.size > 4 * 1024 * 1024) { setError(en ? \"Each file must be 4 MB or smaller.\" : \"Cada archivo debe pesar 4 MB o menos.\"); return; } setError(\"\"); setFiles(prev => ({ ...prev, [doc.id]: file })); }}",
@@ -11355,10 +11363,18 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 103,
+          "line": 131,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{submit}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 133,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{() => { setReviewOpen(false); setFiles({}); setMessage(\"\"); }}",
           "destination": "",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         }
@@ -11415,7 +11431,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 288,
+          "line": 289,
           "tag": "CurrentIdentificationPanel",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -11423,7 +11439,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 387,
+          "line": 388,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{onChangeClick}",
@@ -23098,68 +23114,72 @@
       "file": "tests/e2e/hacienda-verification-runtime.spec.ts",
       "cases": [
         {
-          "line": 35,
+          "line": 36,
           "title": "`Hacienda queries ${type} ${id.length} digits and keeps only minimum data`"
         },
         {
-          "line": 44,
+          "line": 45,
           "title": "\"invalid and oversized IDs never leave the app; official types override local heuristics\""
         },
         {
-          "line": 52,
+          "line": 53,
           "title": "\"404 is missing and cached; server errors, malformed responses and timeouts are unavailable and uncached\""
         },
         {
-          "line": 60,
+          "line": 61,
           "title": "\"429 pauses lookups without turning an outage into a negative decision\""
         },
         {
-          "line": 66,
+          "line": 67,
           "title": "\"shared cache TTL is ten minutes for matches and one minute for missing records; failures are not cached\""
         },
         {
-          "line": 118,
+          "line": 119,
           "title": "`record found for ${type} verifies account and open projects`"
         },
         {
-          "line": 123,
+          "line": 124,
           "title": "\"all found ID types accept the official record; missing records remain eligible to appeal\""
         },
         {
-          "line": 132,
+          "line": 134,
           "title": "\"temporary outage preserves account state and sends no rejection or outreach\""
         },
         {
-          "line": 136,
+          "line": 138,
           "title": "\"human approval and appeals are never taken over by automatic checks\""
         },
         {
-          "line": 142,
+          "line": 144,
           "title": "\"a prior human decision or open document case prevents automatic approval of a found record\""
         },
         {
-          "line": 150,
+          "line": 152,
           "title": "\"manual appeals reuse one case/message per identity and preserve admin handling\""
         },
         {
-          "line": 167,
+          "line": 169,
           "title": "\"appeal route authenticates, ignores caller-supplied professional IDs and blocks profile mismatches\""
         },
         {
-          "line": 182,
+          "line": 184,
           "title": "\"changing an approved ID clears its old approval before saving the new document\""
         },
         {
-          "line": 196,
+          "line": 198,
           "title": "\"publishing a project cannot synchronize an automatic approval over a manual appeal\""
         },
         {
-          "line": 202,
+          "line": 204,
           "title": "\"retrying an existing document submission enters manual review without duplicate uploads\""
         },
         {
-          "line": 221,
+          "line": 223,
           "title": "\"an admin review cannot verify a document changed after its inspection\""
+        },
+        {
+          "line": 229,
+          "title": "\"manual review requires an actual negative result for the current identification\""
         }
       ]
     },

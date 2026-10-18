@@ -182,7 +182,7 @@ jobs:
           PLAYWRIGHT_JSON_REPORT: test-results-registration-safari-first/results.json
           PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report-registration-safari-first
         run: |
-          npx playwright test --project=webkit-mobile registration-navigation --max-failures=1
+          npx playwright test --project=webkit-mobile registration-navigation verification-documents --max-failures=1
           npm run test:e2e:verify-results
 
       - name: Verify registration and assistant navigation before broader smoke
@@ -192,7 +192,7 @@ jobs:
           PLAYWRIGHT_JSON_REPORT: test-results-assistant-first/results.json
           PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report-assistant-first
         run: |
-          npx playwright test registration-navigation
+          npx playwright test registration-navigation verification-documents hacienda-verification-runtime
           npm run test:e2e:verify-results
           npx playwright test native-social-access auth-screens despues-del-registro assistant-navigation admin-identifications
           npm run test:e2e:verify-results

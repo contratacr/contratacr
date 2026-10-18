@@ -3,6 +3,7 @@ import { verifiedProfileName } from "@/lib/verification/profile-name";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getIdentityVerifier } from "@/lib/verification/identity-verifier";
 import { notifyVerificationDecision, notifyVerificationOutreach } from "@/lib/verification-notify";
+import { ID_NOT_FOUND_REASON } from "@/lib/verification/review-eligibility";
 import { cleanId } from "@/lib/cedula";
 
 export type RunOutcome = "verified" | "pending" | "ticket" | "skipped";
@@ -46,7 +47,7 @@ export async function runIdentityVerification(
   const now = new Date().toISOString();
   const target = verified ? "verified" : "pending";
   const provider = result.provider;
-  const reason = "No encontramos esta identificación en Hacienda. Puedes apelar para revisión manual; esto no significa que sea inválida.";
+  const reason = ID_NOT_FOUND_REASON;
   if (verified && result.fullName) {
     const name = await verifiedProfileName(admin, pro.profile_id, fullName, cedula, result.fullName);
     if (name !== fullName) {

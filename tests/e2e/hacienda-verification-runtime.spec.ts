@@ -12,10 +12,11 @@ const requireNode = createRequire(`${process.cwd()}/tests/e2e/hacienda-verificat
 function load(file: string, mocks: Record<string, unknown> = {}, globals: Record<string, unknown> = {}) {
   const box = { exports: {} as Record<string, RuntimeValue> };
   const code = ts.transpileModule(readFileSync(file, "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
-  runInNewContext(code, { module: box, exports: box.exports, require: (name: string) => mocks[name] ?? requireNode(name), Response, Request, AbortSignal, Date, Buffer, console, ...globals });
+  runInNewContext(code, { module: box, exports: box.exports, require: (name: string) => mocks[name] ?? (name === "@/lib/verification/review-eligibility" ? eligibility : requireNode(name)), Response, Request, AbortSignal, Date, Buffer, console, ...globals });
   return box.exports;
 }
 const cedula = load("src/lib/cedula.ts");
+const eligibility = load("src/lib/verification/review-eligibility.ts", { "@/lib/cedula": cedula });
 const found = (idType = "cedula") => ({ found: true, fullName: "Nombre oficial", idType, provider: "hacienda_api", dob: null, isAdult: false });
 function provider(replies: (Response | Error)[]) {
   const calls: string[] = []; const cache = new Map<string, RuntimeValue>(); let now = 100000;
@@ -127,7 +128,8 @@ test("all found ID types accept the official record; missing records remain elig
     expect(v.rows.professionals[0].verification_reason).toBeNull();
   }
   const v = verification({ ...found(), found: false, fullName: null });
-  expect(await v.run()).toBe("pending"); expect(v.rows.professionals[0].verification_reason).toMatch(/revisión manual/);
+  expect(await v.run()).toBe("pending"); expect(v.rows.professionals[0].verification_reason).toBe(eligibility.ID_NOT_FOUND_REASON);
+  expect(eligibility.canRequestIdentityReview(v.rows.professionals[0], "101053316")).toBe(true);
 });
 test("temporary outage preserves account state and sends no rejection or outreach", async () => {
   const v = verification({ ...found(), unavailable: true }); expect(await v.run()).toBe("skipped");
@@ -167,7 +169,7 @@ test("manual appeals reuse one case/message per identity and preserve admin hand
 test("appeal route authenticates, ignores caller-supplied professional IDs and blocks profile mismatches", async () => {
   for (const scenario of ["anonymous", "mismatch", "ok", "limited", "long"]) {
     let sent = 0; let ownerSeen = "";
-    const state = database({ professionals: [{ id: "own-pro", profile_id: "owner", verification_status: "pending", profiles: { id: scenario === "mismatch" ? "other" : "owner", cedula: "101053316" } }] });
+    const state = database({ professionals: [{ id: "own-pro", profile_id: "owner", verification_status: "pending", verification_provider: "hacienda_api", verification_reason: eligibility.ID_NOT_FOUND_REASON, profiles: { id: scenario === "mismatch" ? "other" : "owner", cedula: "101053316" } }] });
     const mod = load("src/app/api/appeals/route.ts", {
       "@/lib/supabase/server": { createClient: async () => ({ auth: { getUser: async () => ({ data: { user: scenario === "anonymous" ? null : { id: "owner" } } }) } }) },
       "@/lib/supabase/admin": { createAdminClient: () => state.db },
@@ -200,7 +202,7 @@ test("publishing a project cannot synchronize an automatic approval over a manua
   expect(state.writes).toEqual([]); expect(state.rows.professionals[0].verification_status).toBe("under_appeal");
 });
 test("retrying an existing document submission enters manual review without duplicate uploads", async () => {
-  const state = database({ professionals: [{ id: "pro", profile_id: "owner", verification_status: "pending", is_verified: false, profiles: { cedula: "101053316", full_name: "Owner", email: "owner@example.test" } }] });
+  const state = database({ professionals: [{ id: "pro", profile_id: "owner", verification_status: "pending", is_verified: false, verification_provider: "hacienda_api", verification_reason: eligibility.ID_NOT_FOUND_REASON, profiles: { cedula: "101053316", full_name: "Owner", email: "owner@example.test" } }] });
   const documents = load("src/lib/verification/documents.ts", { "@/lib/supabase/admin": { createAdminClient: () => state.db } });
   const ticketId = documents.documentCaseId("owner", "101053316", null);
   state.rows.support_ticket_messages = [{ id: ticketId, ticket_id: ticketId }];
@@ -222,4 +224,15 @@ test("an admin review cannot verify a document changed after its inspection", as
   const v = verification(found());
   expect(await v.run({ expectedCedula: "999999999" })).toBe("skipped");
   expect(v.lookups()).toBe(0); expect(v.writes).toEqual([]);
+});
+
+test("manual review requires an actual negative result for the current identification", () => {
+  const missing = { verification_status: "pending", verification_provider: "hacienda_api", verification_reason: eligibility.ID_NOT_FOUND_REASON };
+  expect(eligibility.canRequestIdentityReview(missing, "101053316")).toBe(true);
+  expect(eligibility.canRequestIdentityReview({ ...missing, verification_status: "under_appeal" }, "101053316")).toBe(true);
+  for (const id of [null, "", "invalid"]) expect(eligibility.canRequestIdentityReview(missing, id)).toBe(false);
+  for (const patch of [{ verification_status: "verified" }, { is_verified: true }, { verification_provider: null }, { verification_reason: null }, { verification_reason: "Servicio no disponible" }]) {
+    expect(eligibility.canRequestIdentityReview({ ...missing, ...patch }, "101053316")).toBe(false);
+  }
+  expect(eligibility.canRequestIdentityReview({ ...missing, verification_reason: "No encontramos esta identificación en Hacienda. Puedes apelar para revisión manual; esto no significa que sea inválida." }, "101053316")).toBe(true);
 });
