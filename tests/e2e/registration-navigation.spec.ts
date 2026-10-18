@@ -1,10 +1,24 @@
 import type { User } from "@supabase/supabase-js";
 import { freshestAuthUser } from "../../src/lib/auth/fresh-user";
-import { test, expect } from "playwright/test";
+import { test, expect, type Page } from "playwright/test";
 import { cleanupDisposableAccount, createDisposableAccount } from "./disposable-account";
 import { canRunSeededRegression, regressionAdminClient } from "./seed";
-import { gotoOK, loginAs } from "./helpers";
+import { loginAs } from "./helpers";
 import { registrationComplete, pendingRegistrationPath, registrationIntentMatches } from "../../src/lib/auth/registration-state";
+
+// A guard's full redirect is the expected result of these forbidden visits.
+// WebKit can report that redirect as an interrupted goto even before commit.
+// Accept only interruption to this exact registration URL, then independently
+// require both that URL and the form. Do not retry the forbidden navigation.
+async function visitWhilePending(page: Page, path: string, formPath: string) {
+  const destination = new URL(formPath, page.url()).href;
+  try { await page.goto(path, { waitUntil: "commit" }); }
+  catch (error) {
+    if (!(error instanceof Error) || !error.message.includes(`is interrupted by another navigation to "${destination}"`)) throw error;
+  }
+  await expect(page).toHaveURL(new RegExp(`${formPath}$`));
+  await expect(page.getByRole("button", { name: /Guardar y continuar|Save and continue|Continuar|Continue/, exact: true }).first()).toBeVisible();
+}
 
 test("explicit pending registration wins over a stale completed profile", () => {
   const old = { app_metadata: {}, aud: "authenticated", created_at: "2026-10-17T09:00:00Z", id: "same-account", updated_at: "2026-10-17T10:00:00Z", user_metadata: { onboarding_completed: true } } as User;
@@ -58,13 +72,13 @@ for (const locale of ["es", "en"] as const) {
         await page.goBack({ waitUntil: "commit" });
         await page.goBack({ waitUntil: "commit" });
         await expect(page).toHaveURL(new RegExp(`${formPath}$`), { timeout: 30_000 });
-        await gotoOK(page, `${prefix}/dashboard/profesional?tab=cuenta`);
+        await visitWhilePending(page, `${prefix}/dashboard/profesional?tab=cuenta`, formPath);
         await expect(page).toHaveURL(new RegExp(`${formPath}$`));
-        await gotoOK(page, `/auth/callback?flow=native&locale=${locale}`);
+        await visitWhilePending(page, `/auth/callback?flow=native&locale=${locale}`, formPath);
         await expect(page).toHaveURL(new RegExp(`${formPath}$`));
-        await gotoOK(page, `/auth/callback?flow=native&locale=${locale}&next=${encodeURIComponent(`${prefix}/dashboard/profesional`)}`);
+        await visitWhilePending(page, `/auth/callback?flow=native&locale=${locale}&next=${encodeURIComponent(`${prefix}/dashboard/profesional`)}`, formPath);
         await expect(page).toHaveURL(new RegExp(`${formPath}$`));
-        await gotoOK(page, `${prefix}/onboarding`);
+        await visitWhilePending(page, `${prefix}/onboarding`, formPath);
         await expect(page).toHaveURL(new RegExp(`${formPath}$`));
         const state = await admin.auth.admin.getUserById(account.id);
         const profile = await admin.from("profiles").select("phone,onboarding_completed").eq("id", account.id).single();
