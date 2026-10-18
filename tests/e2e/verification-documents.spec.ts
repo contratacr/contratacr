@@ -48,7 +48,7 @@ for (const kind of ["company", "person"] as const) test(`private verification do
     await db.from("professionals").update({ verification_status: "verified", is_verified: true }).eq("id", pro.id);
     expect((await api.post("/api/verification/documents", { headers: blockedHeaders })).status()).toBe(409);
     await page.goto("/dashboard/profesional?tab=verificacion");
-    await expect(page.getByText("Verificado", { exact: true }).first()).toBeVisible();
+    await expect(page.locator("[data-current-identification]")).toBeVisible();
     await expect(page.getByTestId("verification-documents")).toHaveCount(0);
     const verifiedName = page.locator("[data-current-identification] [data-nombre-identificacion]");
     const badge = verifiedName.locator("[data-verification-badge]");
