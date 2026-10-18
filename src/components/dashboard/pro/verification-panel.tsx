@@ -284,8 +284,7 @@ export function VerificationPanel({
   );
 
   return (
-    <div className="space-y-6">
-      <p className="text-sm font-bold text-[#087ca3]">{t("verifiedChip")}</p>
+    <div className="space-y-4">
       <CurrentIdentificationPanel
         title={t("currentIdTitle")}
         emptyLabel={t("currentIdEmpty")}

@@ -11431,7 +11431,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 289,
+          "line": 288,
           "tag": "CurrentIdentificationPanel",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -11439,7 +11439,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 385,
+          "line": 384,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{onChangeClick}",
