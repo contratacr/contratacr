@@ -8,7 +8,7 @@ import { CedulaInput } from "@/components/ui/cedula-input";
 import { IdentityInfoBlock } from "@/components/ui/identity-info-block";
 import { cleanId, detectIdType, isValidId } from "@/lib/cedula";
 import { type VerificationStatus } from "@/lib/verification";
-import { VerificationInfo } from "@/components/ui/verification-info";
+import { ResponsiveVerifiedName } from "@/components/professionals/responsive-verified-name";
 
 function subscribePreview() { return () => {}; }
 function readPreviewKind(): "person" | "company" | null {
@@ -285,7 +285,7 @@ export function VerificationPanel({
 
   return (
     <div className="space-y-6">
-      <p className="flex items-center gap-2 text-sm font-bold text-[#087ca3]"><ShieldCheck className="h-5 w-5" aria-hidden="true" />{t("verifiedChip")}</p>
+      <p className="text-sm font-bold text-[#087ca3]">{t("verifiedChip")}</p>
       <CurrentIdentificationPanel
         title={t("currentIdTitle")}
         emptyLabel={t("currentIdEmpty")}
@@ -366,9 +366,6 @@ function CurrentIdentificationPanel({
               {value ? (
                 <>
                   <p className="min-w-0 truncate font-mono text-base font-extrabold tracking-wide text-[#162543]">{value}</p>
-                  {statusLabel && (
-                    <VerificationInfo />
-                  )}
                 </>
               ) : (
                 <p className="min-w-0 text-sm font-semibold leading-snug text-[#64748b]">{emptyLabel}</p>
@@ -376,7 +373,7 @@ function CurrentIdentificationPanel({
             </div>
             {/* De quién es: el número solo no le dice a nadie si es el suyo. */}
             {value && fullName ? (
-              <p data-nombre-identificacion className="mt-0.5 text-sm font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{fullName}</p>
+              <p data-nombre-identificacion className="mt-0.5 text-sm font-bold leading-snug text-[#162543]"><ResponsiveVerifiedName name={fullName} verified={!!statusLabel} verifiedLabel={statusLabel ?? ""} /></p>
             ) : null}
             {value && typeLabel ? (
               <p className="mt-0.5 text-xs font-semibold text-[#64748b]">{typeLabel}</p>

@@ -11439,7 +11439,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 388,
+          "line": 385,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{onChangeClick}",
@@ -19895,7 +19895,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 64,
+          "line": 62,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{onReset}",

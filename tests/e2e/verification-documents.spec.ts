@@ -50,6 +50,19 @@ for (const kind of ["company", "person"] as const) test(`private verification do
     await page.goto("/dashboard/profesional?tab=verificacion");
     await expect(page.getByText("Verificado", { exact: true }).first()).toBeVisible();
     await expect(page.getByTestId("verification-documents")).toHaveCount(0);
+    const verifiedName = page.locator("[data-current-identification] [data-nombre-identificacion]");
+    const badge = verifiedName.locator("[data-verification-badge]");
+    await expect(badge).toBeVisible();
+    await expect(page.locator("[data-current-identification] [data-verification-badge]")).toHaveCount(1);
+    const alignment = await verifiedName.evaluate(element => {
+      const text = element.querySelector("span.truncate")!.getBoundingClientRect();
+      const mark = element.querySelector("[data-verification-badge] svg")!.getBoundingClientRect();
+      return { gap: mark.left - text.right, center: Math.abs(mark.top + mark.height / 2 - text.top - text.height / 2) };
+    });
+    expect(alignment.gap).toBeGreaterThanOrEqual(0);
+    expect(alignment.gap).toBeLessThanOrEqual(5);
+    expect(alignment.center).toBeLessThanOrEqual(2);
+    await page.screenshot({ path: capturePath(`${kind}-verified-name-${test.info().project.name}.png`), fullPage: true });
     await expect(page.getByRole("main")).not.toContainText(/Hacienda/);
     await db.from("professionals").update({ verification_status: "pending", is_verified: false, verification_reason: null }).eq("id", pro.id);
     expect((await api.post("/api/appeals", { headers: blockedHeaders, data: {} })).status()).toBe(409);
