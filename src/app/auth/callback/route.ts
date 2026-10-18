@@ -121,7 +121,7 @@ async function finishSignedIn(
   // whose metadata predates the flag, fall back to the SECURITY DEFINER RPC
   // (`get_my_profile`) which returns the full row regardless of column grants.
   let onboardingDone = user.user_metadata?.onboarding_completed === true;
-  if (!onboardingDone) {
+  {
     const { data: prof } = await supabase.rpc("get_my_profile");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const p = prof as any;

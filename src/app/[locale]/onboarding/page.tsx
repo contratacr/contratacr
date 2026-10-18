@@ -55,7 +55,7 @@ export default function OnboardingPage() {
       let role = user.user_metadata?.role as string | undefined;
       let hasProfessionalProfile = false;
       const supabase = createClient();
-      if (!done) {
+      {
         try {
           const { data: prof } = await supabase.rpc("get_my_profile");
           // eslint-disable-next-line @typescript-eslint/no-explicit-any

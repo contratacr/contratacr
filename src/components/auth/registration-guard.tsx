@@ -32,11 +32,19 @@ export function RegistrationGuard({ children }: { children: ReactNode }) {
   useEffect(() => {
     let active = true;
     const reconcile = () => {
-      void createClient().auth.getUser().then(({ data }) => {
-        if (active && data.user && !registrationComplete(data.user.user_metadata)) {
+      void (async () => {
+        const supabase = createClient();
+        const { data } = await supabase.auth.getUser();
+        if (!data.user || !active) return;
+        let complete = registrationComplete(data.user.user_metadata);
+        if (complete) {
+          const { data: profile, error } = await supabase.rpc("get_my_profile");
+          if (!error) complete = registrationComplete(data.user.user_metadata, profile?.onboarding_completed);
+        }
+        if (active && !complete) {
           window.location.replace(`${prefijoDeIdioma(locale)}${pendingRegistrationPath(data.user.user_metadata)}`);
         }
-      }).catch(() => { /* Network failure must not discard a valid session. */ });
+      })().catch(() => { /* Network failure must not discard a valid session. */ });
     };
     const restored = (event: PageTransitionEvent) => { if (event.persisted) reconcile(); };
     window.addEventListener("pageshow", restored);

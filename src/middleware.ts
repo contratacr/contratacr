@@ -1,4 +1,4 @@
-import { pendingRegistrationPath } from "@/lib/auth/registration-state";
+import { pendingRegistrationPath, registrationComplete } from "@/lib/auth/registration-state";
 import { createServerClient } from "@supabase/ssr";
 import { categorySlug, idDesdeDireccion } from "@/lib/data/category-slug";
 import { ALL_CATEGORIES } from "@/lib/data/categories";
@@ -474,9 +474,15 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // Logged in but hasn't chosen a role yet → onboarding (protected routes only).
+  // A connected identity still needs a completed registration in both sources.
   if (needsAuthGate) {
-    const onboardingDone = user.user_metadata?.onboarding_completed === true;
+    let onboardingDone = registrationComplete(user.user_metadata);
+    if (onboardingDone) {
+      try {
+        const { data: profile, error } = await withPromiseTimeout(supabase.rpc("get_my_profile"), 6_000, "registration-profile-timeout");
+        if (!error) onboardingDone = registrationComplete(user.user_metadata, profile?.onboarding_completed);
+      } catch { /* Preserve a valid session during a temporary database outage. */ }
+    }
     if (!onboardingDone) return redirectKeepingCookies(rutaConIdioma(locale, pendingRegistrationPath(user.user_metadata)), request, response);
 
     // Antes, una cuenta que había EMPEZADO el registro profesional sin

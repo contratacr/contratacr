@@ -13,8 +13,8 @@ import { createClient } from "@/lib/supabase/client";
 // must never be pushed through account creation again — bounce them to their
 // role-aware panel instead.
 //
-//  • Detection mirrors `/onboarding`: canonical signal = `user_metadata.onboarding_completed`;
-//    fallback = the SECURITY DEFINER RPC `get_my_profile` (covers accounts whose
+//  • Detection mirrors `/onboarding`: pending in session OR profile wins.
+//    The SECURITY DEFINER RPC `get_my_profile` also covers accounts whose
 //    metadata predates the flag — those columns aren't directly selectable, see
 //    migration 047). We also read `role` for the destination panel.
 //  • We only act on users who ARRIVED already logged in. A visitor who is logged
@@ -57,7 +57,7 @@ export function useRedirectIfRegistered(): { checking: boolean } {
       let hasProfessionalProfile = false;
       const supabase = createClient();
 
-      if (!complete || !role) {
+      {
         try {
           const { data: prof } = await supabase.rpc("get_my_profile");
           // eslint-disable-next-line @typescript-eslint/no-explicit-any

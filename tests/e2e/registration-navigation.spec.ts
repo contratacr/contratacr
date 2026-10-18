@@ -18,16 +18,19 @@ test("explicit pending registration wins over a stale completed profile", () => 
   expect(registrationIntentMatches({ role: "client", onboarding_completed: false, intended_role: "professional" }, "client")).toBe(false);
   expect(registrationComplete({ onboarding_completed: false }, true)).toBe(false);
   expect(registrationComplete({}, true)).toBe(true);
-  expect(registrationComplete({ onboarding_completed: true }, false)).toBe(true);
+  expect(registrationComplete({ onboarding_completed: true }, false)).toBe(false);
+  expect(registrationComplete({ onboarding_completed: true }, true)).toBe(true);
   expect(pendingRegistrationPath({ role: "client" })).toBe("/registro/cliente");
   expect(pendingRegistrationPath({ role: "client", intended_role: "professional" })).toBe("/registro/profesional");
   expect(pendingRegistrationPath({})).toBe("/onboarding");
 });
 
+for (const [pendingSource, metadataComplete, profileComplete] of [["session", false, true], ["profile", true, false]] as const) {
 for (const locale of ["es", "en"] as const) {
   for (const role of ["client", "professional"] as const) {
-    test(`${locale} ${role}: incomplete social identity cannot bypass registration with Back, reload or a panel link`, async ({ page }) => {
+    test(`${pendingSource} pending, ${locale} ${role}: incomplete social identity cannot bypass registration with Back, reload or a panel link`, async ({ page }) => {
       test.skip(!canRunSeededRegression(), "Requires isolated regression data.");
+      await page.setExtraHTTPHeaders({ "x-forwarded-for": `10.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}` });
       const account = await createDisposableAccount({ prefix: `registration-back-${role}` });
       const admin = regressionAdminClient();
       const prefix = locale === "en" ? "/en" : "";
@@ -36,11 +39,13 @@ for (const locale of ["es", "en"] as const) {
         await loginAs(page, account.email, account.password);
         await page.goto(`${prefix}/como-funciona`);
         // Reproduce a connected Google/Apple identity with no completed signup.
-        // Keep the old profile flag true to exercise the disagreeing-source bug.
+        // Exercise both disagreement directions, including legacy OAuth accounts.
         const { error } = await admin.auth.admin.updateUserById(account.id, {
-          user_metadata: { onboarding_completed: false, role: "client", intended_role: role === "professional" ? "professional" : null },
+          user_metadata: { onboarding_completed: metadataComplete, role: "client", intended_role: role === "professional" ? "professional" : null },
         });
         expect(error).toBeNull();
+        const savedProfile = await admin.from("profiles").update({ onboarding_completed: profileComplete, phone: null }).eq("id", account.id);
+        expect(savedProfile.error).toBeNull();
         await page.goto(formPath);
         await expect(page).toHaveURL(new RegExp(`${formPath}$`));
         await expect(page.getByRole("button", { name: /Guardar y continuar|Save and continue|Continuar|Continue/, exact: true }).first()).toBeVisible();
@@ -59,19 +64,23 @@ for (const locale of ["es", "en"] as const) {
         await page.goto(`${prefix}/onboarding`);
         await expect(page).toHaveURL(new RegExp(`${formPath}$`));
         const state = await admin.auth.admin.getUserById(account.id);
-        expect(state.data.user?.user_metadata.onboarding_completed).toBe(false);
-        const profile = await admin.from("profiles").select("phone").eq("id", account.id).single();
+        const profile = await admin.from("profiles").select("phone,onboarding_completed").eq("id", account.id).single();
+        expect(registrationComplete(state.data.user?.user_metadata, profile.data?.onboarding_completed)).toBe(false);
         expect(profile.data?.phone).toBeFalsy();
         if (role === "client") {
           const invalid = await page.request.post("/api/register/client", { data: { fullName: "Cliente de prueba", phone: "" } });
           expect(invalid.status()).toBe(400);
-          expect((await admin.auth.admin.getUserById(account.id)).data.user?.user_metadata.onboarding_completed).toBe(false);
+          expect(registrationComplete((await admin.auth.admin.getUserById(account.id)).data.user?.user_metadata, profile.data?.onboarding_completed)).toBe(false);
           await page.locator('input[type="tel"]').fill("88887777");
           await page.getByRole("checkbox").check({ force: true });
+          const saved = page.waitForResponse(response => response.url().endsWith("/api/register/client") && response.request().method() === "POST");
           await page.getByRole("button", { name: /Guardar y continuar|Save and continue/, exact: true }).click();
-          await expect.poll(async () => (await admin.auth.admin.getUserById(account.id)).data.user?.user_metadata.onboarding_completed).toBe(true);
+          expect((await saved).status()).toBe(200);
           const enterPanel = page.getByRole("button", { name: locale === "en" ? "Go to my dashboard" : "Ir a mi panel", exact: true });
           await expect(enterPanel).toBeVisible();
+          const completedProfile = await admin.from("profiles").select("onboarding_completed,phone").eq("id", account.id).single();
+          expect(registrationComplete((await admin.auth.admin.getUserById(account.id)).data.user?.user_metadata, completedProfile.data?.onboarding_completed)).toBe(true);
+          expect(completedProfile.data?.phone).toBeTruthy();
           await enterPanel.click();
           await expect(page).toHaveURL(/\/dashboard\/profesional/);
           await expect(page.getByRole("main").getByRole("heading", { level: 1 }).filter({ visible: true }).first()).toBeVisible();
@@ -81,6 +90,7 @@ for (const locale of ["es", "en"] as const) {
       } finally { await cleanupDisposableAccount(account); }
     });
   }
+}
 }
 
 
