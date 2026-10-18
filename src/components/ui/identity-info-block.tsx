@@ -1,6 +1,6 @@
 "use client";
 
-import { VerifiedSeal } from "@/components/ui/verified-seal";
+import { ResponsiveVerifiedName } from "@/components/professionals/responsive-verified-name";
 import { useTranslations } from "next-intl";
 import { formatId } from "@/lib/cedula";
 import { computeAge, formatAge } from "@/lib/age";
@@ -31,11 +31,9 @@ export function IdentityInfoBlock({
   return (
     <div className="rounded-2xl border border-[#bae6fd] bg-white px-4 py-3 shadow-sm">
       <div className="flex items-start gap-3">
-        <VerifiedSeal className="mt-0.5 h-5 w-5 shrink-0 text-[#009FD9]" />
-
         <div className="min-w-0 flex-1">
           {verified && <p className="text-xs font-semibold text-[#64748b]">{t("confirmed")}</p>}
-          <p className="mt-0.5 text-base font-semibold leading-snug text-[#0f172a]">{fullName}</p>
+          <p data-nombre-identificacion className="mt-0.5 text-base font-semibold leading-snug text-[#0f172a]"><ResponsiveVerifiedName name={fullName} verified={verified} verifiedLabel={t("confirmed")} /></p>
 
           <dl className="mt-3 grid gap-2 text-sm">
             {cedula && (
