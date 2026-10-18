@@ -58,11 +58,11 @@ for (const locale of ["es", "en"] as const) {
         await page.goBack({ waitUntil: "commit" });
         await page.goBack({ waitUntil: "commit" });
         await expect(page).toHaveURL(new RegExp(`${formPath}$`), { timeout: 30_000 });
-        await page.goto(`${prefix}/dashboard/profesional?tab=cuenta`);
+        await page.goto(`${prefix}/dashboard/profesional?tab=cuenta`, { waitUntil: "commit" });
         await expect(page).toHaveURL(new RegExp(`${formPath}$`));
-        await page.goto(`/auth/callback?flow=native&locale=${locale}`);
+        await page.goto(`/auth/callback?flow=native&locale=${locale}`, { waitUntil: "commit" });
         await expect(page).toHaveURL(new RegExp(`${formPath}$`));
-        await page.goto(`/auth/callback?flow=native&locale=${locale}&next=${encodeURIComponent(`${prefix}/dashboard/profesional`)}`);
+        await page.goto(`/auth/callback?flow=native&locale=${locale}&next=${encodeURIComponent(`${prefix}/dashboard/profesional`)}`, { waitUntil: "commit" });
         await expect(page).toHaveURL(new RegExp(`${formPath}$`));
         await page.goto(`${prefix}/onboarding`);
         await expect(page).toHaveURL(new RegExp(`${formPath}$`));
