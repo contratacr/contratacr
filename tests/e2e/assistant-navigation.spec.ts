@@ -1,5 +1,6 @@
+import { createDisposableAccount, cleanupDisposableAccount } from "./disposable-account";
 import { test, expect } from "playwright/test";
-import { E2E_USERS, canRunSeededRegression, ensureRegressionSeed } from "./seed";
+import { E2E_USERS, canRunSeededRegression, ensureRegressionSeed, regressionAdminClient } from "./seed";
 import { sinPrefijoDeIdioma } from "../../src/lib/prefijo-de-idioma";
 import { loginAs } from "./helpers";
 
@@ -65,7 +66,7 @@ for (const locale of ["es", "en"] as const) test(`native assistant ${locale} kee
   await expect(dialog).toHaveCount(0);
 });
 
-test("signed-in assistant Message enters the draft section and back restores the conversation", async ({ page, baseURL }) => {
+for (const existing of [false, true]) test(`signed-in assistant Message opens ${existing ? "an existing conversation" : "a new draft"} and back restores the assistant`, async ({ page, baseURL }) => {
   test.skip(!canRunSeededRegression(), "Requires the isolated local regression account");
   test.setTimeout(120000);
   await page.setViewportSize({ width: 390, height: 844 });
@@ -79,22 +80,35 @@ test("signed-in assistant Message enters the draft section and back restores the
     });
   });
   const seed = await ensureRegressionSeed();
-  await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
-  await page.route("**/api/ai-assistant", route => route.fulfill({ json: { answer: "Resultado para tu búsqueda", professionals: [{ id: seed.professionalId, name: "Profesional de prueba", avatarUrl: null, service: "Electricidad", location: "Atenas", verified: true, rating: null, reviewCount: 0, price: null, profileHref: "/profesionales/prueba", actionHref: "/profesionales/prueba", requestHref: "/profesionales/prueba", actionLabel: "WhatsApp" }] } }));
-  await page.goto("/?assistantNavigationTest=message");
-  await page.getByRole("button", { name: /Abrir men[uú]/i }).filter({ visible: true }).first().click();
-  await page.getByRole("dialog", { name: /Men[uú]/i }).getByRole("button", { name: "Asistente", exact: true }).click();
-  const dialog = page.getByRole("dialog", { name: "Asistente ContrataCR" });
-  await dialog.getByRole("textbox").fill("Busco electricista");
-  await dialog.getByRole("button", { name: "Enviar mensaje", exact: true }).click();
-  await dialog.getByRole("button", { name: "Mensaje", exact: true }).click();
-  await expect(page).toHaveURL(/\/mensajes\?.*draftChat=1/);
-  await expect(dialog).toHaveCount(0);
-  await expect(page.locator(".ccr-direct-chat-composer")).toBeVisible();
-  expect(new URL(page.url()).searchParams.get("back")).toBe("/?assistantNavigationTest=message");
-  await page.goBack();
-  await expect(dialog).toBeVisible();
-  await expect(dialog.getByText("Resultado para tu búsqueda")).toBeVisible();
+  const client = await createDisposableAccount({ prefix: "assistant-chat-return" });
+  try {
+    let conversationId: string | undefined;
+    if (existing) {
+      const { data, error } = await regressionAdminClient().from("direct_conversations").insert({
+        client_id: client.id, professional_id: seed.professionalId, professional_profile_id: seed.professionalUserId,
+        last_message: "Conversación de prueba", last_message_at: new Date().toISOString(),
+      }).select("id").single();
+      expect(error).toBeNull();
+      conversationId = data?.id;
+    }
+    await loginAs(page, client.email, client.password);
+    await page.route("**/api/ai-assistant", route => route.fulfill({ json: { answer: "Resultado para tu búsqueda", professionals: [{ id: seed.professionalId, name: "Profesional de prueba", avatarUrl: null, service: "Electricidad", location: "Atenas", verified: true, rating: null, reviewCount: 0, price: null, profileHref: "/profesionales/prueba", actionHref: "/profesionales/prueba", requestHref: "/profesionales/prueba", actionLabel: "WhatsApp" }] } }));
+    await page.goto("/?assistantNavigationTest=message");
+    await page.getByRole("button", { name: /Abrir men[uú]/i }).filter({ visible: true }).first().click();
+    await page.getByRole("dialog", { name: /Men[uú]/i }).getByRole("button", { name: "Asistente", exact: true }).click();
+    const dialog = page.getByRole("dialog", { name: "Asistente ContrataCR" });
+    await dialog.getByRole("textbox").fill("Busco electricista");
+    await dialog.getByRole("button", { name: "Enviar mensaje", exact: true }).click();
+    await dialog.getByRole("button", { name: "Mensaje", exact: true }).click();
+    if (existing) await expect(page).toHaveURL(new RegExp(`/mensajes\\?.*conversation=${conversationId}`));
+    else await expect(page).toHaveURL(/\/mensajes\?.*draftChat=1/);
+    await expect(dialog).toHaveCount(0);
+    await expect(page.locator(".ccr-direct-chat-composer")).toBeVisible();
+    expect(new URL(page.url()).searchParams.get("back")).toBe("/?assistantNavigationTest=message");
+    await page.goBack();
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByText("Resultado para tu búsqueda")).toBeVisible();
+  } finally { await cleanupDisposableAccount(client); }
 });
 
 test("assistant return routes preserve root queries and hash in both languages", () => {
