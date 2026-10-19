@@ -51,7 +51,13 @@ test('professional search stays over old results while navigation is pending, in
  await page.route('**/*',async route=>{if(route.request().headers().rsc==='1')await gate;await route.continue();});
  const initial=page.url();await panel.getByRole('option').filter({hasText:'Cámaras de seguridad'}).first().tap();
  await expect(panel).toBeVisible();expect(page.url()).toBe(initial);
+ await page.evaluate(()=>{
+  const state=window as unknown as {__searchPaints:{fixed:boolean;overlay:boolean}[]};state.__searchPaints=[];
+  const sample=()=>{if(location.pathname.includes('/camaras-seguridad/alajuela'))state.__searchPaints.push({fixed:document.body.style.position==='fixed',overlay:document.documentElement.classList.contains('ccr-native-search-overlay-open')});if(state.__searchPaints.length<20)requestAnimationFrame(sample);};requestAnimationFrame(sample);
+ });
  release();await page.waitForURL(/\/camaras-seguridad\/alajuela/);await expect(panel).toHaveCount(0);
+ await expect.poll(()=>page.evaluate(()=>(window as unknown as {__searchPaints:unknown[]}).__searchPaints.length)).toBeGreaterThanOrEqual(20);
+ expect(await page.evaluate(()=>(window as unknown as {__searchPaints:{fixed:boolean;overlay:boolean}[]}).__searchPaints.some(frame=>frame.fixed||frame.overlay))).toBe(false);
  await page.unrouteAll({behavior:'wait'});
  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('ccr:open-native-search')));await expect(panel).toBeVisible();
  await panel.getByLabel('Servicio',{exact:true}).fill('Cámaras');await panel.getByRole('option').filter({hasText:'Cámaras de seguridad'}).first().tap();

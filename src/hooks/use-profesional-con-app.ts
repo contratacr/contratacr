@@ -8,10 +8,8 @@ import { useAuth } from "@/hooks/use-auth";
 // preguntas del mismo instante se juntan en UNA petición, y la respuesta queda
 // en memoria (y en la sesión) para las pantallas siguientes.
 //
-// Mientras no se sepa, la respuesta es «no»: el botón nace WhatsApp —lo que es
-// para casi todos al lanzar— y solo cambia si se confirma que el profesional
-// tiene la app. Un esqueleto mientras cargaba la sesión hacía WhatsApp →
-// esqueleto → WhatsApp en cada tarjeta.
+// Un resultado desconocido no equivale a WhatsApp: se conserva como null
+// hasta resolverlo para no mostrar un canal que cambia al llegar la respuesta.
 
 const CLAVE = "ccr:profesional-con-app:v1";
 const conocidos = new Map<string, boolean>();
@@ -61,29 +59,35 @@ async function preguntar() {
   oyentes.forEach((avisar) => avisar());
 }
 
-/** `true` solo cuando se confirmó que tiene la app; sin sesión no se pregunta. */
+/** null pendiente, true chat confirmado, false WhatsApp; sin sesión no se consulta. */
 export function useProfesionalConApp(professionalId: string | undefined, activo: boolean) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const consultar = Boolean(activo && user && professionalId);
 
   useEffect(() => {
     if (!consultar || !professionalId) return;
     leerSesion();
-    if (conocidos.has(professionalId) || pedidos.has(professionalId)) return;
+    if (conocidos.has(professionalId)) {
+      oyentes.forEach((avisar) => avisar());
+      return;
+    }
+    if (pedidos.has(professionalId)) return;
     pedidos.add(professionalId);
     pendientes.add(professionalId);
     if (temporizador === null) temporizador = window.setTimeout(() => { void preguntar(); }, 30);
   }, [consultar, professionalId]);
 
-  // El servidor no sabe nada de esto: al hidratar se pinta lo mismo que él
-  // («no») y la memoria de la sesión entra en el pintado siguiente.
+  // Servidor e hidratación comparten el estado pendiente; la memoria local
+  // resuelve antes del siguiente pintado sin cambiar un canal por otro.
   return useSyncExternalStore(
     suscribir,
     () => {
-      if (!consultar || !professionalId) return false;
+      if (!activo || !professionalId) return false;
+      if (loading) return null;
+      if (!user) return false;
       leerSesion();
-      return conocidos.get(professionalId) === true;
+      return conocidos.get(professionalId) ?? null;
     },
-    () => false,
+    () => activo && professionalId ? null : false,
   );
 }

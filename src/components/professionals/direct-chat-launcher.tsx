@@ -72,12 +72,18 @@ export function DirectChatLauncher({
   // solo se enteraba por un aviso y tenía que volver a la app a contestar. El
   // chat crece solo a medida que los profesionales instalan la app.
   //
-  // El botón dice a dónde va antes de tocarlo —uno que dice «Mensaje» y abre
-  // WhatsApp engaña—: nace WhatsApp y pasa a «Mensaje» cuando se confirma que
-  // el profesional tiene la app. Sin profesional (la otra punta de una
-  // conversación ya existente) sigue siendo el chat.
   const conApp = useProfesionalConApp(professionalId, nativeApp);
-  const usaChat = nativeApp && (!professionalId || conApp);
+  if (nativeApp && professionalId && conApp === null) {
+    return (
+      <button type="button" disabled aria-busy="true" data-contact-pending
+        className={cn(buttonVariants({ variant: "outline", size: "md" }), "gap-1.5", className || "w-full rounded-full py-2.5 text-[13px] font-semibold")}
+      >
+        <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+        {isEn ? "Contact" : "Contactar"}
+      </button>
+    );
+  }
+  const usaChat = nativeApp && (!professionalId || conApp === true);
   if (usaChat) {
     const safeLabel = buttonLabel && !/whatsapp/i.test(buttonLabel) ? buttonLabel : undefined;
     return (
