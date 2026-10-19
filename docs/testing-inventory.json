@@ -2,13 +2,13 @@
   "scope": "Todos los archivos TypeScript de src/app, src/components y src/hooks, controles JSX declarados, pestañas del panel y specs permanentes. No enumera cada elemento dinámico renderizado ni componentes dentro de dependencias.",
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
-    "files": 475,
-    "controls": 1286,
+    "files": 478,
+    "controls": 1293,
     "pages": 71,
-    "handlers": 98,
-    "components": 244,
+    "handlers": 99,
+    "components": 246,
     "hooks": 26,
-    "specs": 134
+    "specs": 138
   },
   "dashboardTabs": [
     "home",
@@ -302,7 +302,8 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -754,7 +755,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -777,7 +782,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -914,7 +923,8 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -1283,7 +1293,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [
         "tests/e2e/dashboard-surfaces.spec.ts",
@@ -1635,7 +1649,8 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -1654,7 +1669,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 506,
+          "line": 516,
           "tag": "form",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{handleSubmit(onSubmit)}",
@@ -1662,7 +1677,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 528,
+          "line": 538,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -1670,7 +1685,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 533,
+          "line": 545,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -1678,18 +1693,10 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 552,
+          "line": 567,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { void handleApple(); }}",
-          "destination": "",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 571,
-          "tag": "button",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "{handleGoogle}",
           "destination": "",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
@@ -1702,7 +1709,15 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 609,
+          "line": 605,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{handleGoogle}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 627,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -1710,7 +1725,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 611,
+          "line": 629,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -1718,7 +1733,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 617,
+          "line": 635,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -1732,7 +1747,8 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -1866,7 +1882,9 @@
       "relatedSpecs": [
         "tests/e2e/direct-chat.spec.ts",
         "tests/e2e/mensajes-sin-parpadeo.spec.ts",
-        "tests/e2e/mobile-native-shell.spec.ts"
+        "tests/e2e/mobile-native-shell.spec.ts",
+        "tests/e2e/web-chat-parity.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -1897,7 +1915,9 @@
       "relatedSpecs": [
         "tests/e2e/direct-chat.spec.ts",
         "tests/e2e/mensajes-sin-parpadeo.spec.ts",
-        "tests/e2e/mobile-native-shell.spec.ts"
+        "tests/e2e/mobile-native-shell.spec.ts",
+        "tests/e2e/web-chat-parity.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -1919,7 +1939,9 @@
       "relatedSpecs": [
         "tests/e2e/direct-chat.spec.ts",
         "tests/e2e/mensajes-sin-parpadeo.spec.ts",
-        "tests/e2e/mobile-native-shell.spec.ts"
+        "tests/e2e/mobile-native-shell.spec.ts",
+        "tests/e2e/web-chat-parity.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -2038,7 +2060,8 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -2079,7 +2102,8 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -2187,7 +2211,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -2210,7 +2238,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -2233,7 +2265,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -2256,7 +2292,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -2407,7 +2447,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -2428,7 +2472,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -2940,7 +2988,8 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -2965,7 +3014,8 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -3014,7 +3064,8 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -3295,7 +3346,8 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -3374,7 +3426,8 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -4870,7 +4923,7 @@
     {
       "file": "src/app/api/auth/admin-mfa/route.ts",
       "kind": "API / handler",
-      "group": "Autenticación y registro",
+      "group": "Seguridad y doble factor",
       "route": "/api/auth/admin-mfa",
       "exports": [
         "GET"
@@ -4881,11 +4934,9 @@
       "controls": [],
       "testIds": [],
       "relatedSpecs": [
-        "tests/e2e/auth-screens.spec.ts",
-        "tests/e2e/auth-support.spec.ts",
-        "tests/e2e/native-social-access.spec.ts",
-        "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/account-mfa.spec.ts",
+        "tests/e2e/admin-mfa.spec.ts",
+        "tests/e2e/admin-mfa-guard.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -4911,7 +4962,8 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -4937,7 +4989,8 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -4963,7 +5016,32 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "API + integración BD + autorización/propiedad + idempotencia; smoke solo lectura",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P0"
+    },
+    {
+      "file": "src/app/api/auth/session-mfa/route.ts",
+      "kind": "API / handler",
+      "group": "Seguridad y doble factor",
+      "route": "/api/auth/session-mfa",
+      "exports": [
+        "GET"
+      ],
+      "methods": [
+        "GET"
+      ],
+      "controls": [],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/account-mfa.spec.ts",
+        "tests/e2e/admin-mfa.spec.ts",
+        "tests/e2e/admin-mfa-guard.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -5016,7 +5094,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -5041,7 +5123,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -5066,7 +5152,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -5142,7 +5232,8 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -5385,7 +5476,9 @@
       "relatedSpecs": [
         "tests/e2e/direct-chat.spec.ts",
         "tests/e2e/mensajes-sin-parpadeo.spec.ts",
-        "tests/e2e/mobile-native-shell.spec.ts"
+        "tests/e2e/mobile-native-shell.spec.ts",
+        "tests/e2e/web-chat-parity.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -5411,7 +5504,9 @@
       "relatedSpecs": [
         "tests/e2e/direct-chat.spec.ts",
         "tests/e2e/mensajes-sin-parpadeo.spec.ts",
-        "tests/e2e/mobile-native-shell.spec.ts"
+        "tests/e2e/mobile-native-shell.spec.ts",
+        "tests/e2e/web-chat-parity.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -5441,7 +5536,9 @@
       "relatedSpecs": [
         "tests/e2e/direct-chat.spec.ts",
         "tests/e2e/mensajes-sin-parpadeo.spec.ts",
-        "tests/e2e/mobile-native-shell.spec.ts"
+        "tests/e2e/mobile-native-shell.spec.ts",
+        "tests/e2e/web-chat-parity.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -5800,7 +5897,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -5858,7 +5959,8 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -5910,7 +6012,8 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -5936,7 +6039,8 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -6010,7 +6114,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -6313,7 +6421,8 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -6541,7 +6650,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 52,
+          "line": 53,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -6549,7 +6658,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 304,
+          "line": 305,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => emailResend.resend(async () => { await performEmailChange(); })}",
@@ -6557,7 +6666,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 316,
+          "line": 317,
           "tag": "input",
           "label": "{t(\"newEmailPlaceholder\")}",
           "handler": "{(e) => setNewEmail(e.target.value)}",
@@ -6565,7 +6674,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 325,
+          "line": 326,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{sendEmailChange}",
@@ -6573,7 +6682,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 326,
+          "line": 327,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { setEmailMode(false); setNewEmail(\"\"); setEmailError(null); }}",
@@ -6581,7 +6690,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 333,
+          "line": 334,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setEmailMode(true)}",
@@ -6589,7 +6698,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 361,
+          "line": 363,
           "tag": "input",
           "label": "{t(\"currentPassword\")}",
           "handler": "{(e) => setCurrentPw(e.target.value)}",
@@ -6597,7 +6706,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 370,
+          "line": 372,
           "tag": "input",
           "label": "{t(\"newPassword\")}",
           "handler": "{(e) => setNewPw(e.target.value)}",
@@ -6605,7 +6714,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 379,
+          "line": 381,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setShowPw((s) => !s)}",
@@ -6613,7 +6722,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 384,
+          "line": 386,
           "tag": "input",
           "label": "{t(\"repeatPassword\")}",
           "handler": "{(e) => setConfirmPw(e.target.value)}",
@@ -6621,7 +6730,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 394,
+          "line": 396,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{savePassword}",
@@ -6629,7 +6738,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 395,
+          "line": 397,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { setPwMode(false); setCurrentPw(\"\"); setNewPw(\"\"); setConfirmPw(\"\"); setPwError(null); }}",
@@ -6637,7 +6746,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 406,
+          "line": 408,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => pwResend.resend(performReset)}",
@@ -6645,7 +6754,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 422,
+          "line": 424,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{sendReset}",
@@ -6653,7 +6762,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 430,
+          "line": 432,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setPwMode(true)}",
@@ -6795,6 +6904,45 @@
         "tests/e2e/professional-profile.spec.ts",
         "tests/e2e/account-settings-layout.spec.ts",
         "tests/e2e/account-scroll-layout.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P0"
+    },
+    {
+      "file": "src/components/account/two-factor-security.tsx",
+      "kind": "Componente",
+      "group": "Seguridad y doble factor",
+      "route": null,
+      "exports": [
+        "TwoFactorSecurity"
+      ],
+      "methods": [],
+      "controls": [
+        {
+          "line": 28,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{() => void refresh().catch(() => setError(true))}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 29,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{() => setMode(state.enrolled ? \"disable\" : \"enable\")}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        }
+      ],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/account-mfa.spec.ts",
+        "tests/e2e/admin-mfa.spec.ts",
+        "tests/e2e/admin-mfa-guard.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -8185,7 +8333,8 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -8315,7 +8464,7 @@
     {
       "file": "src/components/admin/admin-mfa-entry.tsx",
       "kind": "Componente",
-      "group": "Administración",
+      "group": "Seguridad y doble factor",
       "route": null,
       "exports": [
         "AdminMfaEntry"
@@ -8324,10 +8473,9 @@
       "controls": [],
       "testIds": [],
       "relatedSpecs": [
-        "tests/e2e/admin-smoke.spec.ts",
-        "tests/e2e/admin-bottom-nav.spec.ts",
-        "tests/e2e/admin-editar-datos.spec.ts",
-        "tests/e2e/admin-campaigns-policy.spec.ts"
+        "tests/e2e/account-mfa.spec.ts",
+        "tests/e2e/admin-mfa.spec.ts",
+        "tests/e2e/admin-mfa-guard.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -8338,7 +8486,7 @@
     {
       "file": "src/components/admin/admin-mfa-session.tsx",
       "kind": "Componente",
-      "group": "Administración",
+      "group": "Seguridad y doble factor",
       "route": null,
       "exports": [
         "AdminMfaSession"
@@ -8347,10 +8495,9 @@
       "controls": [],
       "testIds": [],
       "relatedSpecs": [
-        "tests/e2e/admin-smoke.spec.ts",
-        "tests/e2e/admin-bottom-nav.spec.ts",
-        "tests/e2e/admin-editar-datos.spec.ts",
-        "tests/e2e/admin-campaigns-policy.spec.ts"
+        "tests/e2e/account-mfa.spec.ts",
+        "tests/e2e/admin-mfa.spec.ts",
+        "tests/e2e/admin-mfa-guard.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -8361,7 +8508,7 @@
     {
       "file": "src/components/admin/admin-mfa.tsx",
       "kind": "Componente",
-      "group": "Administración",
+      "group": "Seguridad y doble factor",
       "route": null,
       "exports": [
         "AdminMfa"
@@ -8369,7 +8516,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 67,
+          "line": 68,
           "tag": "form",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{verify}",
@@ -8377,7 +8524,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 69,
+          "line": 70,
           "tag": "input",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{event => setCode(event.target.value.replace(/\\D/g, \"\").slice(0, 6))}",
@@ -8385,7 +8532,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 71,
+          "line": 72,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -8393,7 +8540,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 72,
+          "line": 73,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => void startSetup()}",
@@ -8401,7 +8548,15 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 73,
+          "line": 74,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{onCancel}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 74,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{async () => { await createClient().auth.signOut({ scope: \"local\" }); window.location.assign(en ? \"/en/login\" : \"/login\"); }}",
@@ -8411,10 +8566,9 @@
       ],
       "testIds": [],
       "relatedSpecs": [
-        "tests/e2e/admin-smoke.spec.ts",
-        "tests/e2e/admin-bottom-nav.spec.ts",
-        "tests/e2e/admin-editar-datos.spec.ts",
-        "tests/e2e/admin-campaigns-policy.spec.ts"
+        "tests/e2e/account-mfa.spec.ts",
+        "tests/e2e/admin-mfa.spec.ts",
+        "tests/e2e/admin-mfa-guard.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -9442,7 +9596,8 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -9611,7 +9766,8 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -9646,7 +9802,8 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [
         "tests/e2e/multiple-sign-in-methods.spec.ts"
@@ -9712,7 +9869,8 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -9736,7 +9894,39 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P0"
+    },
+    {
+      "file": "src/components/auth/session-mfa-gate.tsx",
+      "kind": "Componente",
+      "group": "Seguridad y doble factor",
+      "route": null,
+      "exports": [
+        "SessionMfaGate"
+      ],
+      "methods": [],
+      "controls": [
+        {
+          "line": 41,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{() => { void check().catch(() => setError(true)); }}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        }
+      ],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/account-mfa.spec.ts",
+        "tests/e2e/admin-mfa.spec.ts",
+        "tests/e2e/admin-mfa-guard.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -9777,7 +9967,8 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -10614,7 +10805,9 @@
       "relatedSpecs": [
         "tests/e2e/direct-chat.spec.ts",
         "tests/e2e/mensajes-sin-parpadeo.spec.ts",
-        "tests/e2e/mobile-native-shell.spec.ts"
+        "tests/e2e/mobile-native-shell.spec.ts",
+        "tests/e2e/web-chat-parity.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -13201,7 +13394,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 814,
+          "line": 794,
           "tag": "form",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{handleSearch}",
@@ -13209,7 +13402,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 835,
+          "line": 815,
           "tag": "input",
           "label": "{t(\"searchPlaceholderShort\")}",
           "handler": "{(e) => { recienElegidoRef.current = false; setService(e.target.value); setServiceSel(null); }}",
@@ -13217,7 +13410,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 868,
+          "line": 848,
           "tag": "input",
           "label": "{t(\"location\")}",
           "handler": "{(e) => handleLocationChange(e.target.value)}",
@@ -13225,7 +13418,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 887,
+          "line": 867,
           "tag": "button",
           "label": "{t(\"search\")}",
           "handler": "",
@@ -13233,7 +13426,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 901,
+          "line": 881,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -13374,7 +13567,7 @@
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setOpen(false)}",
-          "destination": "{savedHref}",
+          "destination": "\"/mensajes\"",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
@@ -13382,11 +13575,19 @@
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setOpen(false)}",
+          "destination": "{savedHref}",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 653,
+          "tag": "Link",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{() => setOpen(false)}",
           "destination": "{profileHref}",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 659,
+          "line": 663,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{onSignOut}",
@@ -13394,7 +13595,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1948,
+          "line": 1910,
           "tag": "div",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -13402,7 +13603,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2003,
+          "line": 1965,
           "tag": "Link",
           "label": "\"ContrataCR\"",
           "handler": "{irAlInicio}",
@@ -13410,7 +13611,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2013,
+          "line": 1975,
           "tag": "button",
           "label": "{t(\"back\")}",
           "handler": "{() => window.dispatchEvent(new Event(\"ccr:section-back\"))}",
@@ -13418,7 +13619,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2031,
+          "line": 1993,
           "tag": "Link",
           "label": "\"ContrataCR\"",
           "handler": "{irAlInicio}",
@@ -13426,7 +13627,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2073,
+          "line": 2035,
           "tag": "button",
           "label": "{t(\"openMenu\")}",
           "handler": "{openMobileMenu}",
@@ -13434,7 +13635,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2083,
+          "line": 2045,
           "tag": "button",
           "label": "{locale === \"en\" ? \"Options\" : \"Opciones\"}",
           "handler": "{() => window.dispatchEvent(new Event(\"ccr:section-menu\"))}",
@@ -13442,7 +13643,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2097,
+          "line": 2059,
           "tag": "button",
           "label": "{locale === \"en\" ? \"Share\" : \"Compartir\"}",
           "handler": "{() => window.dispatchEvent(new Event(\"ccr:section-share\"))}",
@@ -13450,7 +13651,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2115,
+          "line": 2077,
           "tag": "button",
           "label": "{locale === \"en\" ? \"What service are you looking for?\" : \"¿Qué servicio estás buscando?\"}",
           "handler": "{openNativeSearch}",
@@ -13458,7 +13659,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2134,
+          "line": 2096,
           "tag": "button",
           "label": "{searchListDominant\n                          ? (locale === \"en\" ? \"Show map\" : \"Mostrar mapa\")\n                          : (locale === \"en\" ? \"Show results\" : \"Mostrar resultados\")}",
           "handler": "{(event) => {\n                          event.stopPropagation();\n                          window.dispatchEvent(new CustomEvent(\"ccr:set-search-view\", { detail: { view: searchListDominant ? \"map\" : \"list\" } }));\n                        }}",
@@ -13466,7 +13667,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2153,
+          "line": 2115,
           "tag": "Link",
           "label": "\"ContrataCR\"",
           "handler": "{irAlInicio}",
@@ -13474,7 +13675,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2179,
+          "line": 2141,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setOpenMenu(openMenu === \"categorias\" ? null : \"categorias\")}",
@@ -13482,7 +13683,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2206,
+          "line": 2168,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setOpenMenu(openMenu === \"explorar\" ? null : \"explorar\")}",
@@ -13490,7 +13691,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2225,
+          "line": 2187,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setOpenMenu(null)}",
@@ -13498,7 +13699,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2230,
+          "line": 2192,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setOpenMenu(null)}",
@@ -13506,7 +13707,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2235,
+          "line": 2197,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setOpenMenu(null)}",
@@ -13514,7 +13715,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2241,
+          "line": 2203,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setOpenMenu(null)}",
@@ -13522,7 +13723,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2278,
+          "line": 2240,
           "tag": "form",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{handleCompactSearch}",
@@ -13530,7 +13731,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2282,
+          "line": 2244,
           "tag": "button",
           "label": "{t(\"search\")}",
           "handler": "",
@@ -13538,7 +13739,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2290,
+          "line": 2252,
           "tag": "input",
           "label": "{locale === \"en\" ? \"Service\" : \"Servicio\"}",
           "handler": "{(e) => { setSearchQuery(repairVisibleText(e.target.value)); setSearchCategoryId(null); setSearchActiveIdx(-1); }}",
@@ -13546,7 +13747,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2310,
+          "line": 2272,
           "tag": "input",
           "label": "{locale === \"en\" ? \"Location\" : \"Ubicación\"}",
           "handler": "{(e) => {\n                                  const value = repairVisibleText(e.target.value);\n                                  setNavLocation(value);\n                                  setNavLocationSel(null);\n                                  setNavCurrentCoords(null);\n                                  setNavLocOpen(value.trim().length >= 2);\n                                  setNavLocActive(-1);\n                                }}",
@@ -13554,7 +13755,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2345,
+          "line": 2307,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -13562,7 +13763,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2354,
+          "line": 2316,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -13570,7 +13771,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2376,
+          "line": 2338,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -13578,7 +13779,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2388,
+          "line": 2350,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -13586,7 +13787,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2427,
+          "line": 2389,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setOpenMenu(openMenu === \"recursos\" ? null : \"recursos\")}",
@@ -13594,7 +13795,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2457,
+          "line": 2419,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setOpenMenu(null)}",
@@ -13602,7 +13803,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2491,
+          "line": 2453,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -13610,7 +13811,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2520,
+          "line": 2482,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -13618,7 +13819,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2535,
+          "line": 2497,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -13626,7 +13827,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2549,
+          "line": 2511,
           "tag": "button",
           "label": "{t(\"openMenu\")}",
           "handler": "{openMobileMenu}",
@@ -13634,7 +13835,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2566,
+          "line": 2528,
           "tag": "input",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -13642,7 +13843,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2581,
+          "line": 2543,
           "tag": "form",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(event) => {\n                event.preventDefault();\n                irSinParpadeo();\n                runCompactSearch();\n              }}",
@@ -13650,7 +13851,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2596,
+          "line": 2558,
           "tag": "button",
           "label": "{t(\"back\")}",
           "handler": "{closeNativeSearch}",
@@ -13658,7 +13859,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2604,
+          "line": 2566,
           "tag": "input",
           "label": "{locale === \"en\" ? \"Service\" : \"Servicio\"}",
           "handler": "{(event) => {\n                      setSearchQuery(repairVisibleText(event.target.value));\n                      setSearchCategoryId(null);\n                      setSearchActiveIdx(-1);\n                      setSearchFocused(true);\n                    }}",
@@ -13666,7 +13867,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2630,
+          "line": 2592,
           "tag": "button",
           "label": "{locale === \"en\" ? \"Clear service\" : \"Limpiar servicio\"}",
           "handler": "{() => {\n                        setSearchQuery(\"\");\n                        setSearchCategoryId(null);\n                        setSearchActiveIdx(-1);\n                        setSearchFocused(true);\n                        nativeSearchInputRef.current?.focus();\n                      }}",
@@ -13674,7 +13875,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2648,
+          "line": 2610,
           "tag": "input",
           "label": "{locale === \"en\" ? \"Location\" : \"Ubicación\"}",
           "handler": "{(event) => {\n                      const value = repairVisibleText(event.target.value);\n                      setNavLocation(value);\n                      setNavLocationSel(null);\n                      setNavCurrentCoords(null);\n                      setNavLocActive(-1);\n                      setNavLocOpen(value.trim().length >= 2);\n                      setSearchFocused(false);\n                    }}",
@@ -13682,7 +13883,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2675,
+          "line": 2637,
           "tag": "button",
           "label": "{locale === \"en\" ? \"Clear location\" : \"Limpiar ubicación\"}",
           "handler": "{() => {\n                        setNavLocation(\"\");\n                        setNavLocationSel(null);\n                        setNavCurrentCoords(null);\n                        nativeLocationInputRef.current?.focus();\n                      }}",
@@ -13690,7 +13891,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2699,
+          "line": 2661,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => selectNativeCompactSuggestion(suggestion.id)}",
@@ -13698,7 +13899,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2746,
+          "line": 2708,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => {\n                            olvidarBusquedasRecientes();\n                            clearRecentVisits(\"profesionales\");\n                            setBusquedasRecientes([]);\n                            setVisitasRecientes([]);\n                          }}",
@@ -13706,15 +13907,15 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2773,
+          "line": 2735,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "{() => {\n                                setSearchQuery(reciente.busqueda!.termino);\n                                setSearchCategoryId(null);\n                                window.setTimeout(() => runCompactSearch(), 0);\n                              }}",
+          "handler": "{() => {\n                                setSearchQuery(reciente.busqueda!.termino);\n                                setSearchCategoryId(null);\n                                setSearchFocused(false);\n                                if (!navLocation.trim()) nativeLocationInputRef.current?.focus({ preventScroll: true });\n                                else soltarFoco();\n                              }}",
           "destination": "",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2793,
+          "line": 2757,
           "tag": "button",
           "label": "{locale === \"en\" ? `Remove ${reciente.busqueda.termino}` : `Quitar ${reciente.busqueda.termino}`}",
           "handler": "{() => {\n                                const termino = reciente.busqueda!.termino;\n                                olvidarBusquedaReciente(termino);\n                                setBusquedasRecientes((previas) => previas.filter((item) => item.termino !== termino));\n                              }}",
@@ -13722,7 +13923,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2808,
+          "line": 2772,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{irSinParpadeo}",
@@ -13730,7 +13931,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2828,
+          "line": 2792,
           "tag": "button",
           "label": "{locale === \"en\" ? `Remove ${reciente.visita!.titulo}` : `Quitar ${reciente.visita!.titulo}`}",
           "handler": "{() => {\n                                const id = reciente.visita!.id;\n                                removeRecentVisit(\"profesionales\", id);\n                                setVisitasRecientes((previas) => previas.filter((item) => item.id !== id));\n                              }}",
@@ -13738,7 +13939,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2860,
+          "line": 2824,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => selectNativeCompactSuggestion(id)}",
@@ -13746,7 +13947,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2882,
+          "line": 2846,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{searchCurrentLocation}",
@@ -13754,15 +13955,23 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2894,
+          "line": 2858,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "{() => {\n                        setNavLocation(repairVisibleText(suggestion.label));\n                        setNavLocationSel(suggestion);\n                        setNavCurrentCoords(null);\n                        setNavLocOpen(false);\n                        setNavLocActive(-1);\n                        if (hasSearchService) {\n                          irSinParpadeo();\n                          window.setTimeout(() => runCompactSearch({ location: suggestion }), 0);\n                          return;\n                        }\n                        nativeSearchInputRef.current?.focus({ preventScroll: true });\n                        setSearchFocused(true);\n                      }}",
+          "handler": "{() => {\n                        selectNavLocation(suggestion);\n                      }}",
           "destination": "",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2936,
+          "line": 2881,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 2895,
           "tag": "div",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{cerrarCajon}",
@@ -13770,7 +13979,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2944,
+          "line": 2903,
           "tag": "div",
           "label": "{t(\"menu\")}",
           "handler": "",
@@ -13778,7 +13987,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2971,
+          "line": 2930,
           "tag": "Link",
           "label": "\"ContrataCR\"",
           "handler": "{(e) => { cerrarCajon(); irAlInicio(e); }}",
@@ -13786,7 +13995,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2974,
+          "line": 2933,
           "tag": "button",
           "label": "{t(\"closeMenu\")}",
           "handler": "{cerrarCajon}",
@@ -13794,7 +14003,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2983,
+          "line": 2942,
           "tag": "Link",
           "label": "{`${t(\"myPanel\")}: ${accountDisplayName || t(\"myPanel\")}`}",
           "handler": "{cerrarCajon}",
@@ -13802,7 +14011,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2991,
+          "line": 2950,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{cerrarCajon}",
@@ -13810,7 +14019,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 3021,
+          "line": 2980,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { if (onWelcomeNavigate) { onWelcomeNavigate(\"/profesionales\"); return; } cerrarCajon(); openNativeSearch(); }}",
@@ -13818,7 +14027,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 3034,
+          "line": 2993,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(event) => { cerrarCajon(event); navigateNativeMarketplace(event, \"/proyectos\"); }}",
@@ -13826,7 +14035,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 3040,
+          "line": 2999,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(event) => { cerrarCajon(event); navigateNativeMarketplace(event, \"/promociones\"); }}",
@@ -13834,7 +14043,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 3046,
+          "line": 3005,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(event) => { cerrarCajon(event); navigateNativeMarketplace(event, \"/empleos\"); }}",
@@ -13842,7 +14051,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 3051,
+          "line": 3010,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{cerrarCajon}",
@@ -13850,7 +14059,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 3058,
+          "line": 3017,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { cerrarCajon(); window.dispatchEvent(new Event(\"contratacr:open-ai\")); }}",
@@ -13858,7 +14067,15 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 3070,
+          "line": 3026,
+          "tag": "Link",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{cerrarCajon}",
+          "destination": "\"/mensajes\"",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 3035,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{cerrarCajon}",
@@ -13866,7 +14083,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 3079,
+          "line": 3044,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{cerrarCajon}",
@@ -13874,7 +14091,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 3086,
+          "line": 3051,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setMobileHelpOpen((open) => !open)}",
@@ -13882,7 +14099,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 3108,
+          "line": 3073,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{cerrarCajon}",
@@ -13890,7 +14107,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 3118,
+          "line": 3083,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{cerrarCajon}",
@@ -13898,7 +14115,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 3121,
+          "line": 3086,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{cerrarCajon}",
@@ -13906,7 +14123,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 3138,
+          "line": 3103,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{cerrarCajon}",
@@ -13914,7 +14131,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 3141,
+          "line": 3106,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{cerrarCajon}",
@@ -13922,7 +14139,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 3163,
+          "line": 3115,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(e) => {\n                    e.stopPropagation();\n                    switchLang(alternateLocale);\n                    setMobileOpen(false);\n                  }}",
@@ -13930,7 +14147,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 3177,
+          "line": 3129,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => {\n                      setMobileHelpOpen(false);\n                      cerrarCajon();\n                      void handleSignOut();\n                    }}",
@@ -14227,7 +14444,8 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -14934,7 +15152,8 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -15508,7 +15727,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -16265,7 +16488,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -16305,7 +16532,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -16328,7 +16559,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -16347,7 +16582,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 78,
+          "line": 74,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -16355,7 +16590,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 161,
+          "line": 157,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{onClick}",
@@ -16367,7 +16602,9 @@
       "relatedSpecs": [
         "tests/e2e/direct-chat.spec.ts",
         "tests/e2e/mensajes-sin-parpadeo.spec.ts",
-        "tests/e2e/mobile-native-shell.spec.ts"
+        "tests/e2e/mobile-native-shell.spec.ts",
+        "tests/e2e/web-chat-parity.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -16390,7 +16627,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -16478,7 +16719,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -16526,7 +16771,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -16602,7 +16851,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [
         "tests/e2e/search-results.spec.ts"
@@ -16646,7 +16899,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [
         "tests/e2e/search-results.spec.ts"
@@ -16821,7 +17078,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -16853,7 +17114,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -16876,7 +17141,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -16937,7 +17206,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -17033,7 +17306,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -17073,7 +17350,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -17096,7 +17377,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -18194,7 +18479,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -18226,7 +18515,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -18508,7 +18801,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [
         "tests/e2e/search-results.spec.ts"
@@ -18542,7 +18839,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -18598,7 +18899,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -19560,7 +19865,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -19644,7 +19953,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [
         "tests/e2e/interaction-surfaces.spec.ts",
@@ -19703,7 +20016,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -19872,7 +20189,9 @@
       "relatedSpecs": [
         "tests/e2e/direct-chat.spec.ts",
         "tests/e2e/mensajes-sin-parpadeo.spec.ts",
-        "tests/e2e/mobile-native-shell.spec.ts"
+        "tests/e2e/mobile-native-shell.spec.ts",
+        "tests/e2e/web-chat-parity.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -21214,7 +21533,8 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [
         "tests/e2e/runtime-analytics.spec.ts"
@@ -21240,7 +21560,8 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -21444,7 +21765,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -21588,7 +21913,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -21611,7 +21940,11 @@
         "tests/e2e/search-results.spec.ts",
         "tests/e2e/search-ranking.spec.ts",
         "tests/e2e/services.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -21635,7 +21968,8 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -21677,7 +22011,8 @@
         "tests/e2e/auth-support.spec.ts",
         "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/apple-existing-account.spec.ts",
-        "tests/e2e/multiple-sign-in-methods.spec.ts"
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -21788,6 +22123,15 @@
         {
           "line": 125,
           "title": "\"permanent deletion removes only the populated target and returns to the English home\""
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/account-mfa.spec.ts",
+      "cases": [
+        {
+          "line": 8,
+          "title": "\"optional account MFA protects a new login, API and direct RPC until its second factor\""
         }
       ]
     },
@@ -21943,7 +22287,11 @@
         },
         {
           "line": 24,
-          "title": "\"server admin guard accepts only a live administrator with verified recent MFA\""
+          "title": "\"server admin guard accepts only a live administrator with verified session MFA\""
+        },
+        {
+          "line": 26,
+          "title": "\"opening the panel again does not expire the session second factor after 15 minutes\""
         }
       ]
     },
@@ -21952,10 +22300,10 @@
       "cases": [
         {
           "line": 8,
-          "title": "\"admin MFA requires signed AAL2 and a recent TOTP, not refresh/password/email\""
+          "title": "\"admin MFA requires signed AAL2 and a session TOTP, not refresh/password/email\""
         },
         {
-          "line": 17,
+          "line": 18,
           "title": "\"administrator panel and API require real MFA enrollment, including a new login\""
         }
       ]
@@ -22664,19 +23012,19 @@
       "file": "tests/e2e/buscar-servicio-y-lugar.spec.ts",
       "cases": [
         {
-          "line": 32,
+          "line": 36,
           "title": "\"elegir el servicio conserva la ubicación que ya estaba\""
         },
         {
-          "line": 33,
+          "line": 37,
           "title": "!isMobileProject(testInfo)"
         },
         {
-          "line": 40,
+          "line": 44,
           "title": "\"con el servicio escrito a medias se elige el de la lista, no otro\""
         },
         {
-          "line": 41,
+          "line": 45,
           "title": "!isMobileProject(testInfo)"
         }
       ]
@@ -22922,7 +23270,11 @@
       "cases": [
         {
           "line": 7,
-          "title": "`native contact resolves once to ${hasApp ? \"message\" : \"WhatsApp\"} without a provisional channel`"
+          "title": "`${native ? \"native\" : \"web\"} contact resolves once to ${hasApp ? \"message\" : \"WhatsApp\"} without a provisional channel`"
+        },
+        {
+          "line": 56,
+          "title": "\"contact retries a transient availability failure without keeping WhatsApp for the session\""
         }
       ]
     },
@@ -23509,6 +23861,15 @@
       ]
     },
     {
+      "file": "tests/e2e/last-used-sign-in.spec.ts",
+      "cases": [
+        {
+          "line": 4,
+          "title": "`last used stays local and identifies exactly one method (${native ? \"native\" : \"web\"})`"
+        }
+      ]
+    },
+    {
       "file": "tests/e2e/lifecycle-email-policy.spec.ts",
       "cases": [
         {
@@ -23791,19 +24152,19 @@
           "title": "(page.viewportSize()?.width??1280)>=1024"
         },
         {
-          "line": 67,
+          "line": 70,
           "title": "'hidden desktop navbar never opens a second professional search sheet'"
         },
         {
-          "line": 68,
+          "line": 71,
           "title": "(page.viewportSize()?.width??1280)>=1024"
         },
         {
-          "line": 79,
+          "line": 82,
           "title": "'Enter in location keeps marketplace search open and focuses its actual service field'"
         },
         {
-          "line": 80,
+          "line": 83,
           "title": "(page.viewportSize()?.width??1280)>=1024"
         }
       ]
@@ -24688,28 +25049,53 @@
           "title": "\"location search suggests Costa Rica provinces and cantons\""
         },
         {
-          "line": 291,
+          "line": 292,
           "title": "\"filters expose the current search controls and retired controls stay gone\""
         },
         {
-          "line": 318,
+          "line": 319,
           "title": "\"completed searches keep the selected service and location in the mobile search header\""
         },
         {
-          "line": 330,
+          "line": 331,
           "title": "\"nationwide video consultations survive a different physical location filter\""
         },
         {
-          "line": 331,
+          "line": 332,
           "title": "!canRunSeededRegression()"
-        },
-        {
-          "line": 352,
-          "title": "\"whole-province coverage survives canton and resolved-address searches\""
         },
         {
           "line": 353,
+          "title": "\"whole-province coverage survives canton and resolved-address searches\""
+        },
+        {
+          "line": 354,
           "title": "!canRunSeededRegression()"
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/search-suggestion-confirmation.spec.ts",
+      "cases": [
+        {
+          "line": 5,
+          "title": "`suggestions fill fields without navigating (${locationFirst ? \"location\" : \"service\"} first)`"
+        },
+        {
+          "line": 33,
+          "title": "\"a recent service fills the sheet without submitting the previous render\""
+        },
+        {
+          "line": 34,
+          "title": "(page.viewportSize()?.width ?? 1280) >= 1024"
+        },
+        {
+          "line": 48,
+          "title": "\"desktop home suggestions also wait for the search button\""
+        },
+        {
+          "line": 49,
+          "title": "(page.viewportSize()?.width ?? 1280) < 1024"
         }
       ]
     },
@@ -25158,6 +25544,23 @@
         {
           "line": 5,
           "title": "\"identity save keeps the new ID visible while parent refresh is delayed: \" + outcome"
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/web-chat-parity.spec.ts",
+      "cases": [
+        {
+          "line": 5,
+          "title": "\"web shows the shared inbox and enforces message moderation without a native cookie\""
+        },
+        {
+          "line": 20,
+          "title": "\"mobile drawer groups social links above plain white account controls\""
+        },
+        {
+          "line": 41,
+          "title": "\"web and native resume the same conversation for the same account\""
         }
       ]
     },
