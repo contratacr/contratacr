@@ -1,9 +1,10 @@
 "use client";
 
+import { CardActionsMenu } from "@/components/dashboard/card-actions-menu";
 import { sinPrefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { rutaInternaSegura } from "@/lib/navigation/ruta-interna";
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { formatPersonDisplayName, getProfessionalDisplayName } from "@/lib/display-name";
 import { downloadChatAttachment } from "@/lib/chat-download";
@@ -20,7 +21,6 @@ import { getDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-c
 import { useContainedTouchScroll } from "@/hooks/use-contained-touch-scroll";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { createClient } from "@/lib/supabase/client";
-import { AppTooltip } from "@/components/ui/app-tooltip";
 import { PanelEmptyState, Skeleton } from "@/components/ui/content-loading";
 import { IMAGE_DOC_ACCEPT } from "@/lib/upload-validation";
 import { FilaDeslizable, iconoDeAccion, vibrarSuave } from "@/components/ui/fila-deslizable";
@@ -73,16 +73,6 @@ function timeLabel(value?: string | null, locale = "es") {
   const today = new Date();
   if (date.toDateString() === today.toDateString()) return new Intl.DateTimeFormat(locale, { hour: "numeric", minute: "2-digit" }).format(date);
   return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" }).format(date);
-}
-
-function ChatActionButton({ label, children, onClick, className }: { label: string; children: ReactNode; onClick: () => void; className?: string }) {
-  return (
-    <AppTooltip label={label}>
-      <button type="button" onClick={onClick} aria-label={label} className={className}>
-        {children}
-      </button>
-    </AppTooltip>
-  );
 }
 
 function resizeMessageTextarea(textarea: HTMLTextAreaElement | null) {
@@ -1275,18 +1265,6 @@ export function DirectChatInbox({ alCambiarSubvista }: {
     if (activeId === id) setActiveId(conversacionAlLado(remaining[0]?.id));
   }
 
-  async function toggleArchiveActive() {
-    if (!activeId) return;
-    const res = await fetchWithSessionRetry("/api/direct-chat", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ conversationId: activeId, status: showArchived ? "open" : "archived" }) });
-    if (!res.ok) { const json = await res.json().catch(() => ({})); setError(json.error || (isEn ? "Could not update the conversation." : "No se pudo actualizar la conversación.")); return; }
-    const remaining = conversations.filter((item) => item.id !== activeId);
-    const nextId = conversacionAlLado(remaining[0]?.id);
-    setConversations(remaining);
-    bandejasRef.current = { open: null, archived: null };
-    setArchivedCount((count) => showArchived ? Math.max(0, count - 1) : count + 1);
-    updateArchiveView(showArchived, nextId);
-  }
-
   if (sesionSinConfirmar && !user) return (
     <PanelEmptyState
       plano
@@ -1422,7 +1400,6 @@ export function DirectChatInbox({ alCambiarSubvista }: {
     return (user?.id === item.client_id ? item.client_unread_count : item.professional_unread_count) ?? 0;
   }).length;
 
-  const archiveLabel = showArchived ? (isEn ? "Unarchive" : "Desarchivar") : (isEn ? "Archive" : "Archivar");
   const activePersonName = activePerson?.name || "";
   // Cómo se nombra un mensaje citado: quién lo escribió y una línea de lo que
   // decía (o «Foto», «Archivo», «Mensaje eliminado»).
@@ -1541,10 +1518,24 @@ export function DirectChatInbox({ alCambiarSubvista }: {
               <span className="min-w-0 flex-1"><span className="flex items-center gap-2"><strong className="min-w-0 flex-1 truncate text-sm text-[#162543]">{person.name}</strong><time className="shrink-0 text-[11px] text-[#8492a5]">{timeLabel(item.last_message_at, locale)}</time></span><span className="mt-1 flex items-center gap-2"><span className={cn("min-w-0 flex-1 truncate text-xs", storedDrafts[item.id] ? "italic text-[#8a94a6]" : "text-[#6b7a90]")}>{storedDrafts[item.id] ? `${tChat("draft")}: ${storedDrafts[item.id]}` : item.last_message || tChat("started")}</span>{!!unread && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white">{unread}</span>}</span></span>
             </button>);
             if (item.id === DRAFT_CONVERSATION_ID) return <div key={item.id} className="ccr-fila-chat relative">{fila}<SeparadorDeChat /></div>;
+            const desktopActions = [
+              { label: !!unread ? (isEn ? "Mark as read" : "Marcar como leído") : (isEn ? "Mark as unread" : "Marcar como no leído"), icon: <MessageSquareText className="h-4 w-4 text-[#009FD9]" />, onClick: () => { void marcarLeida(item.id, !!unread); } },
+              { label: showArchived ? tChat("unarchive") : tChat("archive"), icon: showArchived ? <ArchiveRestore className="h-4 w-4 text-[#009FD9]" /> : <Archive className="h-4 w-4 text-[#009FD9]" />, onClick: () => { void archivarFila(item.id, !showArchived); } },
+              ...(!showArchived ? [{ label: tChat("reportAndBlock"), icon: <Flag className="h-4 w-4" />, destructive: true, onClick: () => { setActiveId(item.id); setReportOpen(true); } }] : []),
+              { label: tChat("delete"), icon: <Trash2 className="h-4 w-4" />, destructive: true, onClick: () => { if (window.confirm(tChat("confirmDelete"))) void eliminarFila(item.id); } },
+            ];
             return (
+              <div key={item.id}>
+                <div className="ccr-desktop-conversation-row relative hidden lg:block [&>button]:pr-14" onContextMenu={(event) => { event.preventDefault(); event.currentTarget.querySelector<HTMLButtonElement>('[aria-haspopup="menu"]')?.click(); }}>
+                  {fila}
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <CardActionsMenu label={`${isEn ? "More" : "Más"}: ${person.name}`} placement="down" actions={desktopActions} triggerClassName="h-8 w-8 border-transparent hover:border-transparent hover:bg-[#e5f1f8]" menuClassName="min-w-[245px]" />
+                  </div>
+                  <SeparadorDeChat />
+                </div>
               <FilaDeslizable
                 key={item.id}
-                className="ccr-fila-chat"
+                className="ccr-fila-chat lg:hidden"
                 separador={(offset, completing) => {
                   // Blue actions own their surface. The list rules meet their
                   // visible edge, including while the finger is moving.
@@ -1606,6 +1597,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
               >
                 {fila}
               </FilaDeslizable>
+              </div>
             ); })}
           {!vistaBloqueados && showArchived && !displayedConversations.length ? (
             <PanelEmptyState plano icon={Archive} title={tChat("archivedEmptyTitle")} description={tChat("archivedEmptyHint")} />
@@ -1635,15 +1627,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
             )}
 
           </div>
-          {/* La cabecera solo dice con quién estás hablando. Archivar, reportar
-              y eliminar viven en la FILA de la lista —deslizándola o dejándola
-              pulsada—, como en WhatsApp: son acciones sobre la conversación,
-              no sobre lo que estás leyendo, y arriba invitaban a tocarlas por
-              accidente con el pulgar. En computadora, donde no hay gesto, la
-              fila las ofrece con el botón derecho. */}
-          {!nativeApp && (
-            <ChatActionButton label={archiveLabel} onClick={() => void toggleArchiveActive()} className="grid h-9 w-9 place-items-center rounded-lg border border-[#d6e4ed] bg-[#f7fbfd] text-[#526277] shadow-sm transition hover:border-[#9fd8ec] hover:bg-[#eef9fd] hover:text-[#009FD9]">{showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}</ChatActionButton>
-          )}
+
         </header>
         {/* Orígenes del hilo: la conversación es de la persona y cada solicitud,
             proyecto o propuesta se va anclando aquí. Se muestra el más reciente

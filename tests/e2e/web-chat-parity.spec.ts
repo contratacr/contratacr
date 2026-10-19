@@ -63,6 +63,35 @@ test("web and native resume the same conversation for the same account", async (
     expect(data.messages).toHaveLength(2);
     await gotoOK(page, `/mensajes?conversation=${conversationId}`);
     await expect(page.getByRole("paragraph").filter({ hasText: /^Este seguimiento llega desde la misma cuenta\.$/ })).toBeVisible();
+    if (test.info().project.name === "chromium-desktop") {
+      const header = page.locator(".ccr-direct-chat-thread-header");
+      await expect(header.getByRole("button", { name: /^(Archivar|Desarchivar)$/ })).toHaveCount(0);
+      const row = page.locator(".ccr-desktop-conversation-row").filter({ has: page.getByRole("button", { name: /Más:/ }) }).first();
+      const trigger = row.getByRole("button", { name: /Más:/ });
+      await trigger.click();
+      const menu = page.getByRole("menu");
+      await expect(menu).toBeVisible();
+      await expect(menu.getByRole("menuitem", { name: "Archivar", exact: true })).toBeVisible();
+      const box = await menu.boundingBox();
+      const anchor = await trigger.boundingBox();
+      expect(Math.abs(box!.y - anchor!.y)).toBeLessThan(100);
+      await page.screenshot({ path: test.info().outputPath("mensajes-pc-menu.png") });
+      await page.keyboard.press("Escape");
+      await expect(menu).toHaveCount(0);
+      await expect(trigger).toBeFocused();
+      await page.screenshot({ path: test.info().outputPath("mensajes-pc-limpio.png") });
+      await trigger.click();
+      await header.click();
+      await expect(menu).toHaveCount(0);
+      await trigger.click();
+      page.once("dialog", dialog => { void dialog.dismiss(); });
+      await menu.getByRole("menuitem", { name: "Eliminar", exact: true }).click();
+      await expect(row).toBeVisible();
+      await trigger.click();
+      await menu.getByRole("menuitem", { name: "Archivar", exact: true }).click();
+      await expect(row).toHaveCount(0);
+    }
+
   } finally {
     if (client) await cleanupDisposableAccount(client);
     if (professional) await cleanupDisposableAccount(professional);
