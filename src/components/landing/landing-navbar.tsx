@@ -4,7 +4,7 @@ import { SocialLinks } from "./social-links";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 
-import { useContext, useState, useEffect, useRef, useMemo, useCallback, useTransition, type ReactNode } from "react";
+import { useContext, useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback, useTransition, type ReactNode } from "react";
 import { soltarFoco } from "@/lib/soltar-foco";
 import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin, List, Map as MapIcon, ArrowLeft, Share2, ReceiptText,
@@ -35,7 +35,7 @@ import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { oficiosDeArranque } from "@/lib/data/oficios-de-arranque";
 
 import { allLocationSuggestions, searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
-import { lockBodyScroll } from "@/lib/body-scroll-lock";
+import { lockBodyScroll, olvidarDesplazamientoGuardado } from "@/lib/body-scroll-lock";
 import { useContainedTouchScroll } from "@/hooks/use-contained-touch-scroll";
 import { createClient } from "@/lib/supabase/client";
 import { repairVisibleText } from "@/lib/text/repair-visible-text";
@@ -1669,9 +1669,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   }
 
   const ultimaRuta = useRef("");
-  useEffect(() => {
+  useLayoutEffect(() => {
     const ahora = `${pathname}?${currentSearchParams.toString()}`;
     if (ultimaRuta.current && ultimaRuta.current !== ahora && nativeSearchOpen) {
+      olvidarDesplazamientoGuardado();
       soltarFoco();
       setNativeSearchOpen(false);
       setSearchFocused(false);
@@ -1794,7 +1795,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // Solo la lista del buscador se desplaza, y solo si tiene de qué (ver la hoja de los tableros).
   const listaBuscadorRef = useRef<HTMLDivElement | null>(null);
   useContainedTouchScroll(listaBuscadorRef, nativeSearchOpen);
-  useEffect(() => {
+  // Release the fixed body and reveal the results in the same paint.
+  useLayoutEffect(() => {
     if (!nativeSearchOpen) return;
     const roots = [document.documentElement, document.body];
     roots.forEach((root) => root.classList.add("ccr-native-search-overlay-open"));
