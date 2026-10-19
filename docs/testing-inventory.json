@@ -8,7 +8,7 @@
     "handlers": 97,
     "components": 240,
     "hooks": 26,
-    "specs": 128
+    "specs": 129
   },
   "dashboardTabs": [
     "home",
@@ -11377,7 +11377,8 @@
         "tests/e2e/verification-badges.spec.ts"
       ],
       "directReferences": [
-        "tests/e2e/verification-documents.spec.ts"
+        "tests/e2e/verification-documents.spec.ts",
+        "tests/e2e/verification-save-transition.spec.ts"
       ],
       "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
@@ -11395,7 +11396,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 215,
+          "line": 228,
           "tag": "CedulaInput",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{handleCedulaInput}",
@@ -11403,7 +11404,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 256,
+          "line": 269,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{addCedula}",
@@ -11411,7 +11412,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 279,
+          "line": 292,
           "tag": "CurrentIdentificationPanel",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -11419,7 +11420,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 290,
+          "line": 303,
           "tag": "CurrentIdentificationPanel",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -11427,7 +11428,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 386,
+          "line": 399,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{onChangeClick}",
@@ -24926,6 +24927,15 @@
         {
           "line": 24,
           "title": "\"the old general services campaign stays retired\""
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/verification-save-transition.spec.ts",
+      "cases": [
+        {
+          "line": 5,
+          "title": "\"identity save keeps the new ID visible while parent refresh is delayed: \" + outcome"
         }
       ]
     },

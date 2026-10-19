@@ -34,7 +34,7 @@ type CedulaCheck =
   | { status: "review"; cedula: string; message: string; taken: boolean };
 
 export function VerificationPanel({
-  status,
+  status: storedStatus,
   reason,
   currentCedula = null,
   currentFullName = null,
@@ -57,7 +57,18 @@ export function VerificationPanel({
   const [cedulaSaving, setCedulaSaving] = useState(false);
   const [cedulaError, setCedulaError] = useState<string | null>(null);
 
-  const cleanCurrentCedula = cleanId(currentCedula ?? "");
+  // Keep the acknowledged save on screen while the two dashboard reads settle.
+  // Otherwise the editor closes onto the previous ID/status for one render.
+  const [savedIdentity, setSavedIdentity] = useState<{ cedula: string; fullName: string | null; verified: boolean } | null>(null);
+  const status = savedIdentity ? (savedIdentity.verified ? "verified" : storedStatus === "verified" ? "pending" : storedStatus) : storedStatus;
+  const displayedFullName = savedIdentity?.fullName ?? currentFullName;
+  const cleanCurrentCedula = savedIdentity?.cedula ?? cleanId(currentCedula ?? "");
+  useEffect(() => {
+    if (!savedIdentity || cleanId(currentCedula ?? "") !== savedIdentity.cedula ||
+      (storedStatus === "verified") !== savedIdentity.verified ||
+      (savedIdentity.fullName && currentFullName !== savedIdentity.fullName)) return;
+    queueMicrotask(() => setSavedIdentity(current => current === savedIdentity ? null : current));
+  }, [savedIdentity, currentCedula, currentFullName, storedStatus]);
   const hasCurrentCedula = !!cleanCurrentCedula;
   const currentIdType = detectIdType(cleanCurrentCedula);
   const currentIdTypeLabel =
@@ -171,6 +182,7 @@ export function VerificationPanel({
         const fallbackName = cedulaCheck.status === "confirmed" ? cedulaCheck.fullName : "";
         const nextName = typeof json.fullName === "string" ? json.fullName.trim() : fallbackName;
         const nextCedula = typeof json.cedula === "string" ? json.cedula.trim() : cedula;
+        setSavedIdentity({ cedula: nextCedula || cedula, fullName: nextName || null, verified: true });
         setVerifiedName(nextName || null);
         setVerifiedCedula(nextCedula || null);
         setNote(t("cedulaVerified"));
@@ -178,6 +190,7 @@ export function VerificationPanel({
           detail: { fullName: nextName || null, cedula: nextCedula || null, verified: true },
         }));
       } else {
+        setSavedIdentity({ cedula, fullName: null, verified: false });
         setNote(t(json.outcome === "ticket" ? "cedulaManualPending" : json.outcome === "skipped" ? "cedulaCheckPending" : "cedulaSaved"));
         window.dispatchEvent(new CustomEvent("ccr:identity-updated", {
           detail: { fullName: null, cedula, verified: false },
@@ -278,7 +291,7 @@ export function VerificationPanel({
       {!hasCurrentCedula && <p className="text-sm text-[#52627a]">{t("missingIdNextStep")}</p>}
       <CurrentIdentificationPanel title={t("currentIdTitle")} emptyLabel={t("currentIdEmpty")}
         value={hasCurrentCedula ? cleanCurrentCedula : null} typeLabel={currentIdTypeLabel}
-        fullName={hasCurrentCedula ? currentFullName : null} changeLabel={t("changeId")} addLabel={t("addId")}
+        fullName={hasCurrentCedula ? displayedFullName : null} changeLabel={t("changeId")} addLabel={t("addId")}
         changeOpen={changeCedulaOpen} onChangeClick={() => setChangeCedulaOpen(open => !open)} />
       {changeCedulaOpen && <ActionPanel title={t("changeIdTitle")} body={t("changeIdBody")}>{renderCedulaVerifier()}</ActionPanel>}
       {hasCurrentCedula && <VerificationDocuments key={cleanCurrentCedula} legal={currentIdType === "juridica"} onVerified={onSaved} />}
@@ -292,7 +305,7 @@ export function VerificationPanel({
         emptyLabel={t("currentIdEmpty")}
         value={hasCurrentCedula ? cleanCurrentCedula : null}
         typeLabel={currentIdTypeLabel}
-        fullName={hasCurrentCedula ? currentFullName : null}
+        fullName={hasCurrentCedula ? displayedFullName : null}
         statusLabel={status === "verified" ? t("verifiedChip") : undefined}
         changeLabel={t("changeId")}
         addLabel={t("addId")}
