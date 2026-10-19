@@ -1,3 +1,4 @@
+import { hasRecentAdminMfa } from "./admin-mfa-policy";
 import { cache } from "react";
 import { getLocale } from "next-intl/server";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
@@ -17,23 +18,33 @@ export type AdminUser = {
  * Reads the session from cookies, then confirms the role from the profiles
  * table using the service-role client (so an RLS gap can never grant access).
  */
-export const getAdminAccess = cache(async (): Promise<{ authenticated: boolean; admin: AdminUser | null }> => {
+export const getAdminAccess = cache(async (): Promise<{ authenticated: boolean; admin: AdminUser | null; mfaRequired: boolean; enrolled: boolean }> => {
   const supabase = await createClient();
   // Never throw on a stale/invalid session — treat it as logged-out.
   const user = await safeGetUser(supabase);
-  if (!user) return { authenticated: false, admin: null };
+  if (!user) return { authenticated: false, admin: null, mfaRequired: false, enrolled: false };
 
   const admin = createAdminClient();
   const { data: profile } = await admin
     .from("profiles")
-    .select("role, full_name, email")
+    .select("role, full_name, email, is_disabled")
     .eq("id", user.id)
     .maybeSingle();
 
-  if (!profile || profile.role !== "admin") return { authenticated: true, admin: null };
+  if (!profile || profile.role !== "admin" || profile.is_disabled) return { authenticated: true, admin: null, mfaRequired: false, enrolled: false };
+
+  const enrolled = Boolean(user.factors?.some(factor => factor.factor_type === "totp" && factor.status === "verified"));
+  // getAuthenticatorAssuranceLevel alone decodes local session storage. Verify
+  // the JWT signature/expiry as well as the live user before granting access.
+  const { data, error } = await supabase.auth.getClaims();
+  if (error || data?.claims.sub !== user.id || !enrolled || !hasRecentAdminMfa(data.claims)) {
+    return { authenticated: true, admin: null, mfaRequired: true, enrolled };
+  }
 
   return {
     authenticated: true,
+    mfaRequired: false,
+    enrolled: true,
     admin: {
       id: user.id,
       email: profile.email ?? user.email ?? "",

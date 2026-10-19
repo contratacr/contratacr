@@ -1,3 +1,4 @@
+import { completeAdminMfa } from "./admin-mfa-helper";
 import { expect, type Locator, type Page, type TestInfo } from "playwright/test";
 
 const runtimeIssues = new WeakMap<Page, string[]>();
@@ -278,7 +279,7 @@ export async function openLoginForm(page: Page) {
   await page.locator("main form").first().waitFor({ state: "visible", timeout: 10_000 });
 }
 
-export async function loginAs(page: Page, email: string, password: string) {
+export async function loginAs(page: Page, email: string, password: string, options: { adminMfa?: boolean } = {}) {
   let lastError: unknown;
   for (let attempt = 0; attempt < 2; attempt += 1) {
     await resetAuth(page);
@@ -302,6 +303,15 @@ export async function loginAs(page: Page, email: string, password: string) {
       // initial route effects. Starting another navigation at that point races
       // those effects, which WebKit reports as an internal navigation error.
       await expect(page.getByRole("main").getByRole("heading", { level: 1 }).filter({ visible: true }).first()).toBeVisible({ timeout: 30_000 });
+      if (options.adminMfa !== false) {
+        const state = await (await page.request.get("/api/auth/admin-mfa")).json();
+        if (state.isAdmin && state.required) {
+          const destination = new URL(page.url()).pathname + new URL(page.url()).search;
+          await gotoOK(page, "/admin");
+          await completeAdminMfa(page, email);
+          await gotoOK(page, destination);
+        }
+      }
       return;
     } catch (error) {
       lastError = error;

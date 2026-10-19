@@ -1,3 +1,4 @@
+import { completeAdminMfa } from "./admin-mfa-helper";
 import { expect, test } from "playwright/test";
 import { gotoOK, resetAuth, waitForInteractivePage } from "./helpers";
 import { canRunSeededRegression, regressionAdminClient } from "./seed";
@@ -19,6 +20,7 @@ test("@seeded las ediciones del catálogo invalidan la caché pública y su ETag
     await page.getByPlaceholder(/Contrase.a|Contrasena/i).fill(account.password);
     await page.getByRole("button", { name: /Ingresar/i }).click();
     await expect(page.getByPlaceholder(/Correo de administrador/i)).toBeHidden({ timeout: 20_000 });
+  await completeAdminMfa(page, account.email);
 
     const update = async (name: string, isHidden = false) => {
       const response = await page.request.patch("/api/admin/categories", { data: { id, label: name, labelEn: "Cache test service", groupId: "tecnologia", isHidden } });

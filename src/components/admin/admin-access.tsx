@@ -1,3 +1,4 @@
+import { AdminMfaEntry } from "./admin-mfa-entry";
 import { getLocale } from "next-intl/server";
 import { ShieldAlert } from "lucide-react";
 import { getAdminAccess } from "@/lib/auth/admin";
@@ -8,6 +9,7 @@ import { AdminLogin } from "./admin-login";
 export async function AdminAccess() {
   const access = await getAdminAccess();
   if (!access.authenticated) return <AdminLogin />;
+  if (access.mfaRequired) return <AdminMfaEntry enrolled={access.enrolled} />;
   const en = (await getLocale()) === "en";
 
   return (

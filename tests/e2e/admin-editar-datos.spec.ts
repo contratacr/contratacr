@@ -1,3 +1,4 @@
+import { completeAdminMfa } from "./admin-mfa-helper";
 import { createClient } from "@supabase/supabase-js";
 import { expect, request as peticiones, test, type Page } from "playwright/test";
 import { gotoOK, resetAuth, waitForInteractivePage } from "./helpers";
@@ -22,6 +23,7 @@ async function entrarComoAdmin(page: Page, cuenta: DisposableAccount) {
   await page.getByPlaceholder(/Contrase.a|Contrasena/i).fill(cuenta.password);
   await page.getByRole("button", { name: /Ingresar/i }).click();
   await expect(page.getByPlaceholder(/Correo de administrador/i)).toBeHidden({ timeout: 20_000 });
+  await completeAdminMfa(page, cuenta.email);
 }
 
 test.describe("@admin editar datos de un usuario", () => {

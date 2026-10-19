@@ -2,13 +2,13 @@
   "scope": "Todos los archivos TypeScript de src/app, src/components y src/hooks, controles JSX declarados, pestañas del panel y specs permanentes. No enumera cada elemento dinámico renderizado ni componentes dentro de dependencias.",
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
-    "files": 471,
-    "controls": 1281,
+    "files": 475,
+    "controls": 1286,
     "pages": 71,
-    "handlers": 97,
-    "components": 241,
+    "handlers": 98,
+    "components": 244,
     "hooks": 26,
-    "specs": 132
+    "specs": 134
   },
   "dashboardTabs": [
     "home",
@@ -4868,6 +4868,32 @@
       "priority": "P1"
     },
     {
+      "file": "src/app/api/auth/admin-mfa/route.ts",
+      "kind": "API / handler",
+      "group": "Autenticación y registro",
+      "route": "/api/auth/admin-mfa",
+      "exports": [
+        "GET"
+      ],
+      "methods": [
+        "GET"
+      ],
+      "controls": [],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/auth-screens.spec.ts",
+        "tests/e2e/auth-support.spec.ts",
+        "tests/e2e/native-social-access.spec.ts",
+        "tests/e2e/apple-existing-account.spec.ts",
+        "tests/e2e/multiple-sign-in-methods.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "API + integración BD + autorización/propiedad + idempotencia; smoke solo lectura",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P0"
+    },
+    {
       "file": "src/app/api/auth/method/route.ts",
       "kind": "API / handler",
       "group": "Autenticación y registro",
@@ -6787,7 +6813,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 25,
+          "line": 27,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -8287,6 +8313,116 @@
       "priority": "P0"
     },
     {
+      "file": "src/components/admin/admin-mfa-entry.tsx",
+      "kind": "Componente",
+      "group": "Administración",
+      "route": null,
+      "exports": [
+        "AdminMfaEntry"
+      ],
+      "methods": [],
+      "controls": [],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/admin-smoke.spec.ts",
+        "tests/e2e/admin-bottom-nav.spec.ts",
+        "tests/e2e/admin-editar-datos.spec.ts",
+        "tests/e2e/admin-campaigns-policy.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P0"
+    },
+    {
+      "file": "src/components/admin/admin-mfa-session.tsx",
+      "kind": "Componente",
+      "group": "Administración",
+      "route": null,
+      "exports": [
+        "AdminMfaSession"
+      ],
+      "methods": [],
+      "controls": [],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/admin-smoke.spec.ts",
+        "tests/e2e/admin-bottom-nav.spec.ts",
+        "tests/e2e/admin-editar-datos.spec.ts",
+        "tests/e2e/admin-campaigns-policy.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P0"
+    },
+    {
+      "file": "src/components/admin/admin-mfa.tsx",
+      "kind": "Componente",
+      "group": "Administración",
+      "route": null,
+      "exports": [
+        "AdminMfa"
+      ],
+      "methods": [],
+      "controls": [
+        {
+          "line": 67,
+          "tag": "form",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{verify}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 69,
+          "tag": "input",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{event => setCode(event.target.value.replace(/\\D/g, \"\").slice(0, 6))}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 71,
+          "tag": "Button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 72,
+          "tag": "Button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{() => void startSetup()}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 73,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{async () => { await createClient().auth.signOut({ scope: \"local\" }); window.location.assign(en ? \"/en/login\" : \"/login\"); }}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        }
+      ],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/admin-smoke.spec.ts",
+        "tests/e2e/admin-bottom-nav.spec.ts",
+        "tests/e2e/admin-editar-datos.spec.ts",
+        "tests/e2e/admin-campaigns-policy.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P0"
+    },
+    {
       "file": "src/components/admin/admin-overview.tsx",
       "kind": "Componente",
       "group": "Administración",
@@ -8737,7 +8873,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 149,
+          "line": 154,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -8745,7 +8881,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 181,
+          "line": 186,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -8753,7 +8889,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 184,
+          "line": 189,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -8761,7 +8897,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 214,
+          "line": 219,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -8769,7 +8905,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 217,
+          "line": 222,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -21698,19 +21834,19 @@
       "file": "tests/e2e/admin-campaigns-policy.spec.ts",
       "cases": [
         {
-          "line": 8,
+          "line": 9,
           "title": "!hasTestDatabase"
         },
         {
-          "line": 22,
+          "line": 24,
           "title": "\"retired email campaigns are rejected by the API before any sending\""
         },
         {
-          "line": 34,
+          "line": 36,
           "title": "\"the panel shows permanent-history exclusions and only the first-review email template\""
         },
         {
-          "line": 54,
+          "line": 56,
           "title": "\"unknown invitation history disables sending instead of displaying zero pending\""
         }
       ]
@@ -21719,15 +21855,15 @@
       "file": "tests/e2e/admin-editar-datos.spec.ts",
       "cases": [
         {
-          "line": 28,
+          "line": 30,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 41,
+          "line": 43,
           "title": "\"cambia nombre, WhatsApp y correo, y lo deja en el historial\""
         },
         {
-          "line": 42,
+          "line": 44,
           "title": "testInfo.project.name !== \"chromium-desktop\""
         }
       ]
@@ -21795,6 +21931,32 @@
         {
           "line": 13,
           "title": "\"administrator can consult all ID types and review a missing-document case without approving it\""
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/admin-mfa-guard.spec.ts",
+      "cases": [
+        {
+          "line": 22,
+          "title": "`server admin guard rejects ${name}`"
+        },
+        {
+          "line": 24,
+          "title": "\"server admin guard accepts only a live administrator with verified recent MFA\""
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/admin-mfa.spec.ts",
+      "cases": [
+        {
+          "line": 8,
+          "title": "\"admin MFA requires signed AAL2 and a recent TOTP, not refresh/password/email\""
+        },
+        {
+          "line": 17,
+          "title": "\"administrator panel and API require real MFA enrollment, including a new login\""
         }
       ]
     },
@@ -21876,47 +22038,47 @@
       "file": "tests/e2e/admin-smoke.spec.ts",
       "cases": [
         {
-          "line": 46,
+          "line": 48,
           "title": "\"admin entry shows the restricted login when signed out\""
         },
         {
-          "line": 55,
+          "line": 57,
           "title": "\"admin APIs reject unauthenticated access\""
         },
         {
-          "line": 89,
+          "line": 91,
           "title": "`admin access denied to a signed-in ${role} without ending their session`"
         },
         {
-          "line": 126,
+          "line": 128,
           "title": "\"admin panel sections render with an isolated disposable administrator\""
         },
         {
-          "line": 154,
+          "line": 157,
           "title": "\"admin sections act on real data: marketplace moderation, coverage, services, reviews and growth\""
         },
         {
-          "line": 155,
+          "line": 158,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 312,
+          "line": 315,
           "title": "\"admin deletes support cases, reports and whole accounts, and a renamed service shows everywhere\""
         },
         {
-          "line": 313,
+          "line": 316,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 390,
+          "line": 393,
           "title": "\"the verification queue records who was already written to by WhatsApp\""
         },
         {
-          "line": 391,
+          "line": 394,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 400,
+          "line": 403,
           "title": "!target"
         }
       ]
@@ -22733,11 +22895,11 @@
       "file": "tests/e2e/catalog-cache-invalidation.spec.ts",
       "cases": [
         {
-          "line": 6,
+          "line": 7,
           "title": "\"@seeded las ediciones del catálogo invalidan la caché pública y su ETag\""
         },
         {
-          "line": 7,
+          "line": 8,
           "title": "!canRunSeededRegression()"
         }
       ]
