@@ -127,9 +127,10 @@ for (const kind of ["company", "person", "dimex"] as const) test(`private verifi
     await db.from("professionals").update({ verification_reason: "Identificación no encontrada." }).eq("id", pro.id);
     await page.goto("/dashboard/profesional?tab=verificacion");
     const panel = page.getByTestId("verification-documents");
-    await expect(panel.getByRole("button", { name: "Subir foto", exact: true })).toHaveCount(0);
+    await expect(panel.getByRole("button", { name: "Subir foto", exact: true })).toBeVisible();
+    await expect(panel.getByRole("textbox")).toHaveCount(0);
+    await expect(panel.getByRole("button", { name: "Enviar a revisión", exact: true })).toBeDisabled();
     await expect(panel).not.toContainText(/Hacienda|API|padrón/);
-    await panel.getByRole("button", { name: "Solicitar revisión manual", exact: true }).click();
     await expect(panel.getByText(kind === "company" ? "Personería o autorización" : "Foto con tu identificación", {exact: true})).toBeVisible();
     await panel.getByRole("button", {name: "Enviar a revisión"}).waitFor();
     await expect(panel.getByText("1", {exact: true})).toHaveCount(0);
@@ -142,11 +143,8 @@ for (const kind of ["company", "person", "dimex"] as const) test(`private verifi
     }
     await page.screenshot({path: capturePath(`${kind}-live-${test.info().project.name}.png`), fullPage: true});
     await panel.locator("..").screenshot({path: capturePath(`${kind}-detail-${test.info().project.name}.png`)});
-    await panel.getByLabel("Comentario (opcional)").fill("Mi identificación no se encontró; solicito revisión manual.");
-    const [appealResponse] = await Promise.all([
-      page.waitForResponse(response => response.url().endsWith("/api/appeals") && response.request().method() === "POST"),
-      panel.getByRole("button", { name: "Enviar a revisión", exact: true }).click(),
-    ]);
+    // Legacy comment-only appeals remain supported by the API, outside this photo-only UI.
+    const appealResponse = await api.post("/api/appeals", { headers: apiHeaders, data: { message: "Solicito revisión manual." } });
     expect(appealResponse.status()).toBe(200);
     ticketId = (await appealResponse.json()).ticketId;
     expect((await (await api.post("/api/appeals", { headers: apiHeaders, data: { message: "Retry" } })).json()).ticketId).toBe(ticketId);
@@ -161,9 +159,11 @@ for (const kind of ["company", "person", "dimex"] as const) test(`private verifi
       const missing = await api.post("/api/verification/documents", { headers: apiHeaders, multipart: { identity: image } });
       expect(missing.status()).toBe(400);
     }
+    await page.goto("/dashboard/profesional?tab=verificacion");
     await panel.getByRole("button", { name: "Adjuntar documentos", exact: true }).click();
     await panel.locator('input[type="file"]').nth(0).setInputFiles(image);
     if (kind === "company") await panel.locator('input[type="file"]').nth(1).setInputFiles(image);
+    await expect(panel.getByRole("button", {name: "Enviar a revisión"})).toBeEnabled();
     const [first] = await Promise.all([
       page.waitForResponse(response => response.url().endsWith("/api/verification/documents") && response.request().method() === "POST"),
       panel.getByRole("button", {name: "Enviar a revisión"}).click(),
