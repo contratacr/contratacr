@@ -7,14 +7,15 @@ import ts from 'typescript';
 const walk = dir => fs.readdirSync(dir,{withFileTypes:true}).flatMap(e => e.isDirectory()?walk(`${dir}/${e.name}`):[`${dir}/${e.name}`]).sort();
 const specs = walk('tests/e2e').filter(f=>f.endsWith('.spec.ts')&&!path.basename(f).startsWith('.tmp-'));
 const domains = [
+ ['Seguridad y doble factor', /session-mfa|two-factor-security|admin-mfa/, ['account-mfa','admin-mfa','admin-mfa-guard']],
  ['Verificación', /verifica|verification|cedula|identity/, ['verification-documents','verification-email-policy','verificacion-repesca','verification-badges']],
- ['Autenticación y registro', /auth|login|registro|register|onboarding|password|contrasena|completar-perfil|resend|availability-check|check-availability/, ['auth-screens','auth-support','native-social-access','apple-existing-account','multiple-sign-in-methods']],
+ ['Autenticación y registro', /auth|login|registro|register|onboarding|password|contrasena|completar-perfil|resend|availability-check|check-availability/, ['auth-screens','auth-support','native-social-access','apple-existing-account','multiple-sign-in-methods','last-used-sign-in']],
  ['Administración', /admin/, ['admin-smoke','admin-bottom-nav','admin-editar-datos','admin-campaigns-policy']],
- ['Mensajes y adjuntos', /chat|mensajes|fila-deslizable/, ['direct-chat','mensajes-sin-parpadeo','mobile-native-shell']],
+ ['Mensajes y adjuntos', /chat|mensajes|fila-deslizable/, ['direct-chat','mensajes-sin-parpadeo','mobile-native-shell','web-chat-parity','contact-channel-stability']],
  ['Notificaciones y push', /notifica|push/, ['notifications-guides-regression','push-outbox-contract','mobile-native-shell']],
  ['Estadísticas', /statistic|analytic|attribution|meta-pixel/, ['statistics-dashboard','runtime-analytics','meta-growth-runtime']],
  ['Cuenta y privacidad', /account|cuenta|perfil|profile/, ['account-lifecycle','professional-profile','account-settings-layout','account-scroll-layout']],
- ['Búsqueda y profesionales', /search|profession|profesional|buscar|busqueda|category|categor/, ['search-results','search-ranking','services','native-edge-back']],
+ ['Búsqueda y profesionales', /search|profession|profesional|buscar|busqueda|category|categor/, ['search-results','search-ranking','services','native-edge-back','search-suggestion-confirmation','buscar-servicio-y-lugar','mobile-search-focus','contact-channel-stability']],
  ['Empleos', /jobs|empleo/, ['marketplace-lifecycle','marketplace-editors','tableros-filtros']],
  ['Promociones', /offers|promocion/, ['marketplace-lifecycle','marketplace-editors','tableros-filtros']],
  ['Proyectos', /project|proyecto|publication/, ['projects-board','seeded-regression','publication-access']],
