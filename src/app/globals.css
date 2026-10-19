@@ -2347,3 +2347,22 @@ html.ccr-menu-sin-cierre .ccr-menu-completo, html.ccr-menu-sin-cierre .ccr-menu-
     scroll-padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
   }
 }
+
+/* Authentication owns the viewport: no reserved navbar or bottom-tab band. */
+body:has([data-authentication-screen]) {
+  background: #fff;
+}
+main.ccr-authentication-screen,
+body.ccr-native-app main.ccr-authentication-screen[data-authentication-screen] {
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  display: flex;
+  justify-content: center;
+  height: var(--app-visual-viewport-height, 100dvh);
+  min-height: 0;
+  overflow-y: auto;
+  background: #fff;
+  padding: max(1.5rem, env(safe-area-inset-top)) max(1.5rem, env(safe-area-inset-right)) max(1.5rem, env(safe-area-inset-bottom)) max(1.5rem, env(safe-area-inset-left));
+  scroll-padding-bottom: 1.5rem;
+}

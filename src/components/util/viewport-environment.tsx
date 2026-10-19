@@ -28,7 +28,7 @@ export function ViewportEnvironment() {
       // Arriba hay una cabecera fija de 64 px en casi todas las pantallas y en
       // las ventanas a pantalla completa: un campo «visible» debajo de ella no
       // se ve. Se deja además sitio para el rótulo del campo, que va encima.
-      const visibleTop = (vv?.offsetTop ?? 0) + 64 + 36;
+      const visibleTop = (vv?.offsetTop ?? 0) + (active.closest("[data-authentication-screen]") ? 16 : 64 + 36);
       const visibleBottom = (vv?.offsetTop ?? 0) + (vv?.height ?? window.innerHeight) - 24;
       // UN HILO NO SE CENTRA. El chat y el caso de soporte se ajustan solos al
       // área visible (su panel mide lo que el teclado deja), así que el campo

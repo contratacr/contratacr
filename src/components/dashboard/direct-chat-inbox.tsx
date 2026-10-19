@@ -1977,7 +1977,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
           </form>
         )}
       </section>
-      {nativeApp && reportOpen && typeof document !== "undefined" && createPortal(
+      {reportOpen && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[1000] grid place-items-center bg-[#0f172a]/55 p-4" role="dialog" aria-modal="true" aria-labelledby="chat-report-title">
           <div className="w-full max-w-md rounded-3xl bg-white p-5 shadow-2xl sm:p-6">
             <div className="flex items-start justify-between gap-3">

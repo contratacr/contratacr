@@ -26,7 +26,11 @@ async function elegirServicio(page: Page, texto: string) {
   await campo.fill(texto);
   const opcion = page.getByRole("option").filter({ visible: true }).first();
   await expect(opcion).toBeVisible();
+  const before = page.url();
   await opcion.click();
+  await expect(page.locator(".ccr-native-search-panel")).toBeVisible();
+  expect(page.url()).toBe(before);
+  await page.getByRole("button", { name: "Buscar profesionales", exact: true }).filter({ visible: true }).click();
 }
 
 test("elegir el servicio conserva la ubicación que ya estaba", async ({ page }, testInfo) => {

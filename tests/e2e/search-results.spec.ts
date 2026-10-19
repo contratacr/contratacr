@@ -268,6 +268,7 @@ test.describe("@seeded search results", () => {
       const plumbing = page.getByRole("option", { name: /Plomer[ií]a|Plumbing/i }).filter({ visible: true }).first();
       await expect(plumbing).toBeVisible();
       await plumbing.click();
+      await page.getByRole("button", { name: "Buscar profesionales", exact: true }).filter({ visible: true }).click();
     } else {
       const location = page.getByRole("combobox", { name: /Ubicaci[oó]n|Location/i }).filter({ visible: true }).first();
       await expect(location).toBeVisible();

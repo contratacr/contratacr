@@ -642,6 +642,10 @@ function AccountMenu({
                 {t("quotes")}
               </Link>
             )}
+            <Link href="/mensajes" onClick={() => setOpen(false)} className={menuItemClass}>
+              <Mail className="h-4 w-4 text-[#009FD9]" />
+              {locale === "en" ? "Messages" : "Mensajes"}
+            </Link>
             <Link href={savedHref} onClick={() => setOpen(false)} className={menuItemClass}>
               <Bookmark className="h-4 w-4 text-[#009FD9]" />
               {t("favorites")}
@@ -1709,16 +1713,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
         setNavLocationSel(null);
         setNavCurrentCoords(currentCoords);
         setNavLocOpen(false);
-        if (!nativeSearchOpen) {
-          window.setTimeout(() => runCompactSearch({ coords: currentCoords, locationLabel: label }), 0);
-          return;
-        }
-        if (nativeSearchOpen && hasSearchService) {
-          irSinParpadeo();
-          window.setTimeout(() => runCompactSearch({ coords: currentCoords, locationLabel: label }), 0);
-          return;
-        }
-        nativeSearchInputRef.current?.focus();
+        if (!hasSearchService) {
+          (nativeSearchOpen ? nativeSearchInputRef.current : compactSvcRef.current?.querySelector("input"))?.focus();
+          setSearchFocused(true);
+        } else if (nativeSearchOpen) soltarFoco();
       },
       () => {
         const fallback = resolveLocation("Costa Rica");
@@ -1807,64 +1805,30 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     };
   }, [nativeSearchOpen]);
 
-  // ELEGIR EL SEGUNDO CAMPO BUSCA. Antes rellenaba y se quedaba ahí: quien ya
-  // tenía la ubicación puesta y elegía el servicio de la lista se quedaba
-  // mirando la pantalla sin que pasara nada, esperando que adivinara que
-  // faltaba tocar la lupa. La hoja del teléfono sí buscaba
-  // (`selectNativeCompactSuggestion`), así que el mismo gesto hacía dos cosas
-  // distintas según el tamaño de la pantalla.
-  //
-  // Va en el manejador de selección y NO en un efecto sobre los dos campos:
-  // los dos son texto libre, y un efecto dispararía la navegación mientras la
-  // persona escribe.
+  // Suggestions only fill their field. Buscar / Enter submits explicitly,
+  // after React has committed both the selected service ID and location.
   function selectCompactSuggestion(id: string) {
     const picked = compactSuggestions.find((c) => c.id === id);
-    if (picked) {
-      setSearchQuery(repairVisibleText(picked.label));
-      setSearchCategoryId(id);
-    }
+    setSearchQuery(repairVisibleText(picked?.label ?? getCategoryLabel(id, locale)));
+    setSearchCategoryId(id);
     setSearchActiveIdx(-1);
     setSearchFocused(false);
-    // La regla es sobre lo que la persona VE escrito, no sobre coordenadas
-    // que quedaron de una búsqueda anterior.
-    const ubicacionEscrita = navLocation.trim().length > 0 || !!navLocationSel;
-    if (ubicacionEscrita) {
-      // El override es imprescindible: el `setSearchCategoryId` de arriba
-      // todavía no se ve desde aquí en este render.
-      window.setTimeout(() => runCompactSearch({ categoria: id, servicio: picked ? repairVisibleText(picked.label) : undefined }), 0);
-      return;
-    }
-    // Sin ubicación, el foco salta al campo que falta.
-    window.setTimeout(() => {
+    if (!navLocation.trim()) window.setTimeout(() => {
       navLocationInputRef.current?.focus();
-      setNavLocOpen(navLocation.trim().length >= 2);
-    }, 50);
+      setNavLocOpen(false);
+    }, 0);
   }
 
   function selectNativeCompactSuggestion(id: string) {
-    // «Los más buscados» se tocan con el campo VACÍO: ahí las sugerencias de lo
-    // escrito no tienen nada y el servicio no llegaba al campo. El nombre sale
-    // del catálogo cuando no está entre las sugerencias.
-    const sugerido = compactSuggestions.find((c) => c.id === id);
-    const nombre = sugerido?.label ?? getCategoryLabel(id, locale);
-    const picked = nombre ? { id, label: nombre } : undefined;
-    if (picked) {
-      setSearchQuery(repairVisibleText(picked.label));
-      setSearchCategoryId(id);
-    }
+    const picked = compactSuggestions.find((c) => c.id === id);
+    setSearchQuery(repairVisibleText(picked?.label ?? getCategoryLabel(id, locale)));
+    setSearchCategoryId(id);
     setSearchActiveIdx(-1);
     setSearchFocused(false);
-    // La regla es sobre lo que la persona ve: si el campo de ubicación está
-    // vacío se pasa a él, aunque queden coordenadas de una búsqueda anterior.
-    const ubicacionEscrita = navLocation.trim().length > 0 || !!navLocationSel;
-    if (ubicacionEscrita) {
-      irSinParpadeo();
-      window.setTimeout(() => runCompactSearch({ categoria: id, servicio: picked ? repairVisibleText(picked.label) : undefined }), 0);
-      return;
-    }
-    // Keep the keyboard in this tap: an async focus closed/reopened it on iOS.
-    nativeLocationInputRef.current?.focus({ preventScroll: true });
-    setNavLocOpen(navLocation.trim().length >= 2);
+    if (!navLocation.trim()) {
+      nativeLocationInputRef.current?.focus({ preventScroll: true });
+      setNavLocOpen(false);
+    } else soltarFoco();
   }
 
   function selectNavLocation(s: LocationSuggestion) {
@@ -1873,12 +1837,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     setNavCurrentCoords(null);
     setNavLocOpen(false);
     setNavLocActive(-1);
-    // Antes esto exigía `nativeSearchOpen`, o sea que solo buscaba en la hoja
-    // del teléfono; en escritorio rellenaba el campo y no pasaba nada más.
-    if (hasSearchService) {
-      if (nativeSearchOpen) irSinParpadeo();
-      window.setTimeout(() => runCompactSearch({ location: s }), 0);
-    }
+    if (!hasSearchService) {
+      (nativeSearchOpen ? nativeSearchInputRef.current : compactSvcRef.current?.querySelector("input"))?.focus({ preventScroll: true });
+      setSearchFocused(true);
+    } else if (nativeSearchOpen) soltarFoco();
   }
 
   function handleCompactSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -2775,7 +2737,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                               onClick={() => {
                                 setSearchQuery(reciente.busqueda!.termino);
                                 setSearchCategoryId(null);
-                                window.setTimeout(() => runCompactSearch(), 0);
+                                setSearchFocused(false);
+                                if (!navLocation.trim()) nativeLocationInputRef.current?.focus({ preventScroll: true });
+                                else soltarFoco();
                               }}
                               className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-2 py-2.5 text-left"
                             >
@@ -2897,18 +2861,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       role="option"
                       aria-selected={suggestion.id === navLocationSel?.id}
                       onClick={() => {
-                        setNavLocation(repairVisibleText(suggestion.label));
-                        setNavLocationSel(suggestion);
-                        setNavCurrentCoords(null);
-                        setNavLocOpen(false);
-                        setNavLocActive(-1);
-                        if (hasSearchService) {
-                          irSinParpadeo();
-                          window.setTimeout(() => runCompactSearch({ location: suggestion }), 0);
-                          return;
-                        }
-                        nativeSearchInputRef.current?.focus({ preventScroll: true });
-                        setSearchFocused(true);
+                        selectNavLocation(suggestion);
                       }}
                       className="flex w-full items-center gap-3 rounded-xl px-2 py-2.5 text-left text-[16px] font-bold text-[#1A2744] active:bg-[#f4f7fa]"
                     >
@@ -2923,6 +2876,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   ))}
                 </div>
                 )}
+              </div>
+              <div className="shrink-0 bg-white pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
+                <button type="submit" className="flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-5 text-sm font-semibold text-white hover:bg-[#0089bb]">
+                  <Search className="h-4 w-4" aria-hidden />
+                  {t("searchProfessionals")}
+                </button>
               </div>
             </form>
           </div>
@@ -3063,6 +3022,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <span className={mobileDrawerTextClass}>{t("assistant")}</span>
                   </button>
                 )}
+                {user && (
+                  <Link href="/mensajes" onClick={cerrarCajon} className={claseCajon("/mensajes")}>
+                    <DrawerIcon><Mail /></DrawerIcon>
+                    <span className={mobileDrawerTextClass}>{locale === "en" ? "Messages" : "Mensajes"}</span>
+                  </Link>
+                )}
                 {/* PRIMERO LO QUE SE HACE, DESPUÉS LO QUE AYUDA. Cotizaciones
                     es trabajo del profesional y va arriba del Asistente, que es
                     una ayuda que se abre encima y se cierra. */}
@@ -3144,22 +3109,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 </div>
               )}
 
-              {/* El pie no son opciones: son ajustes. El idioma es un conmutador
-                  de dos estados —se ve cuál está puesto—, no un renglón más que
-                  parece llevar a otra pantalla. */}
-              <div className={cn(
-                "mt-5 grid shrink-0 gap-2 px-1",
-                // Los dos ajustes son del mismo tipo y se ven iguales: dos
-                // pastillas del mismo alto, repartidas a la mitad. Solo el
-                // idioma —sin sesión— se queda a la izquierda, en la misma
-                // línea de arranque que todo lo de arriba; centrado, una
-                // pastilla sola parecía puesta por accidente.
-                user ? "grid-cols-2" : "grid-cols-1 justify-items-start",
-              )}>
-                {/* El idioma se nombra COMPLETO —«English», «Español»—: «ES | EN»
-                    es jerga de programador y mucha gente no sabe qué significa.
-                    Dice el idioma al que se cambia, que es lo que pasa al
-                    tocarlo. La forma de pastilla lo separa de los destinos. */}
+              <div data-mobile-menu-footer className="mt-5 shrink-0 border-t border-[#162543]/10 bg-white px-1 pt-3">
+                <SocialLinks compact testId="mobile-menu-social-links" className="flex items-center gap-1 bg-white" />
+                <div className="mt-1 flex items-center justify-between gap-3 bg-white">
                 <button
                   type="button"
                   onPointerDown={(e) => { e.stopPropagation(); switchLang.precargar(); }}
@@ -3168,7 +3120,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     switchLang(alternateLocale);
                     setMobileOpen(false);
                   }}
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-white px-3.5 text-[13px] font-bold text-[#52627a] transition-colors hover:bg-[#e6edf4] hover:text-[#162543]"
+                  className="inline-flex min-h-11 items-center gap-2 bg-white text-[13px] font-semibold text-[#52627a] transition-colors hover:text-[#162543]"
                 >
                   <Globe2 className="h-4 w-4 shrink-0" />
                   <span className="min-w-0 truncate">{alternateLanguageLabel}</span>
@@ -3181,14 +3133,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       cerrarCajon();
                       void handleSignOut();
                     }}
-                    className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-white px-3.5 text-[13px] font-bold text-[#52627a] transition-colors hover:bg-[#fdeaea] hover:text-[#b4232a]"
+                    className="inline-flex min-h-11 items-center gap-2 bg-white text-[13px] font-semibold text-[#52627a] transition-colors hover:text-[#b4232a]"
                   >
                     <LogOut className="h-4 w-4 shrink-0" />
-                    <span className="min-w-0 truncate">{locale === "en" ? "Sign out" : "Salir"}</span>
+                    <span className="min-w-0 truncate">{locale === "en" ? "Sign out" : "Cerrar sesión"}</span>
                   </button>
                 )}
               </div>
-              <SocialLinks testId="mobile-menu-social-links" className="mt-5 flex shrink-0 flex-wrap items-center gap-2 border-t border-[#162543]/10 px-1 pt-4" />
+              </div>
             </div>
           </div>
       </>

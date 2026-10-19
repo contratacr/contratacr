@@ -3,6 +3,10 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+# Official Supabase mirror; shared ECR runner IPs exceeded the anonymous pull limit.
+env:
+  SUPABASE_INTERNAL_IMAGE_REGISTRY: ghcr.io
+
 jobs:
   local-database-contract:
     name: Local schema and fast contracts

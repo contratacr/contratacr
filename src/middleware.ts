@@ -1,3 +1,4 @@
+import { enforceApiMfa } from "@/lib/auth/api-mfa";
 import { pendingRegistrationPath, registrationComplete } from "@/lib/auth/registration-state";
 import { createServerClient } from "@supabase/ssr";
 import { categorySlug, idDesdeDireccion } from "@/lib/data/category-slug";
@@ -97,7 +98,8 @@ export async function middleware(request: NextRequest) {
 
   if (pathname.startsWith("/api/")) {
     if (isUnsafeLocalProductionWrite(request)) return unsafeLocalProductionWriteResponse();
-    return conCabecerasDeSeguridad(NextResponse.next());
+    const mfaResponse = await enforceApiMfa(request);
+    return conCabecerasDeSeguridad(mfaResponse ?? NextResponse.next());
   }
 
   // www.contratacr.com NO SE REDIRIGE (probado y deshecho el 1-oct-2026).

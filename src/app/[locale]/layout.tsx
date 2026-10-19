@@ -1,3 +1,5 @@
+import { getSessionMfa } from "@/lib/auth/session-mfa";
+import { SessionMfaGate } from "@/components/auth/session-mfa-gate";
 import { PWA_STARTUP_IMAGES } from "@/lib/pwa-startup";
 import { headers, cookies } from "next/headers";
 import { mobileDownloadPlatform, DOWNLOAD_DISMISS_COOKIE } from "@/lib/mobile-download-platform";
@@ -126,6 +128,7 @@ export default async function LocaleLayout({
   const operationalStatus = getOperationalStatusBanner(locale);
   const supabase = hasSupabaseServerConfig() ? await createClient() : null;
   const initialUser = supabase ? await safeGetUser(supabase) : null;
+  const initialMfa = initialUser ? await getSessionMfa() : { userId: null, authenticated: false, isAdmin: false, enrolled: false, required: false };
   let initialAvatarUrl: string | null | undefined;
   // El nombre que va en la barra: si es profesional, el de su negocio. Se pide
   // aquí, junto a la foto, para que la barra se pinte UNA vez con el nombre
@@ -138,7 +141,7 @@ export default async function LocaleLayout({
   // quien sí tiene ficha, y tendría que quitarlo después.
   let initialHasProfessionalProfile: boolean | null = null;
   const initialSavedKeys: string[] = [];
-  if (supabase && initialUser) {
+  if (supabase && initialUser && !initialMfa.required) {
     try {
       const [{ data }, { data: unreadNotifications }, { data: professionalRow }, { data: guardados }, { data: prosGuardados }] = await withPromiseTimeout(Promise.all([
         supabase
@@ -193,28 +196,30 @@ export default async function LocaleLayout({
       <RouteScrollReset />
       <AuthProvider initialUser={initialUser} initialAvatarUrl={initialAvatarUrl} initialAccountName={initialAccountName} initialNotificationUnread={initialNotificationUnread} initialHasProfessionalProfile={initialHasProfessionalProfile} initialSavedKeys={initialSavedKeys}>
         <DocumentLocale locale={locale} />
-        <EmojiBlocker />
         <ViewportEnvironment />
-        <SombrasAlDesplazar />
-        <AppResumeRecovery />
         <MobileAppBridge />
-        <CampaignAppLinks />
         <NativeFirstRunOnboarding />
-        <CustomCategoriesLoader />
-        <NotificationLiveToast scope="all" />
-        <OperationalStatusBanner locale={locale} status={operationalStatus} />
-        <Suspense fallback={null}>
-          <MetaPixel pixelId={META_PIXEL_ID} />
-          <AttributionCapture />
-          <UsageCapture />
-        </Suspense>
-        <PushTokenManager />
-        <MobileAppDownloadBanner initialPlatform={initialDownloadPlatform} initialDismissed={initialDownloadDismissed} />
-        {children}
-        <NativeBottomNav />
-        <WhatsAppReviewFollowUp />
-        <AiConcierge />
-        <FreezeMonitor />
+        <SessionMfaGate initialState={initialMfa}>
+          <EmojiBlocker />
+          <SombrasAlDesplazar />
+          <AppResumeRecovery />
+          <CampaignAppLinks />
+          <CustomCategoriesLoader />
+          <NotificationLiveToast scope="all" />
+          <OperationalStatusBanner locale={locale} status={operationalStatus} />
+          <Suspense fallback={null}>
+            <MetaPixel pixelId={META_PIXEL_ID} />
+            <AttributionCapture />
+            <UsageCapture />
+          </Suspense>
+          <PushTokenManager />
+          <MobileAppDownloadBanner initialPlatform={initialDownloadPlatform} initialDismissed={initialDownloadDismissed} />
+          {initialMfa.required ? null : children}
+          <NativeBottomNav />
+          <WhatsAppReviewFollowUp />
+          <AiConcierge />
+          <FreezeMonitor />
+        </SessionMfaGate>
       </AuthProvider>
     </AppIntlProvider>
   );

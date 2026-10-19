@@ -1,4 +1,4 @@
-import { hasRecentAdminMfa } from "./admin-mfa-policy";
+import { hasAdminSessionMfa } from "./admin-mfa-policy";
 import { cache } from "react";
 import { getLocale } from "next-intl/server";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
@@ -37,7 +37,7 @@ export const getAdminAccess = cache(async (): Promise<{ authenticated: boolean; 
   // getAuthenticatorAssuranceLevel alone decodes local session storage. Verify
   // the JWT signature/expiry as well as the live user before granting access.
   const { data, error } = await supabase.auth.getClaims();
-  if (error || data?.claims.sub !== user.id || !enrolled || !hasRecentAdminMfa(data.claims)) {
+  if (error || data?.claims.sub !== user.id || !enrolled || !hasAdminSessionMfa(data.claims)) {
     return { authenticated: true, admin: null, mfaRequired: true, enrolled };
   }
 

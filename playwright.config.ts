@@ -63,7 +63,8 @@ export default defineConfig({
   // Local focal runs may redirect artifacts to a disposable directory without
   // changing CI's canonical report paths.
   outputDir: process.env.PLAYWRIGHT_OUTPUT_DIR ?? "test-results",
-  // Direct messages remain parked while WhatsApp is the production contact flow.
+  // Exhaustive native chat/gesture suites use playwright.mobile.config.ts.
+  // Shared web/native inbox contracts run here in web-chat-parity.spec.ts.
   testIgnore: ["**/.tmp-*.spec.ts", "**/direct-chat.spec.ts", "**/mobile-native-shell.spec.ts"],
   globalSetup: "./tests/e2e/global-setup.ts",
   timeout: 60_000,

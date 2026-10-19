@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { ContrataCRLogo } from "@/components/brand/brand-logo";
 import { Button } from "@/components/ui/button";
 
-export function AdminMfa({ enrolled, onVerified }: { enrolled: boolean; onVerified: () => Promise<void> }) {
+export function AdminMfa({ enrolled, onVerified, administrator = true, embedded = false, onCancel }: { enrolled: boolean; onVerified: () => Promise<void>; administrator?: boolean; embedded?: boolean; onCancel?: () => void }) {
   const en = useLocale() === "en";
   const [setup, setSetup] = useState<{ id: string; qr: string; secret: string } | null>(null);
   const [code, setCode] = useState("");
@@ -19,11 +19,11 @@ export function AdminMfa({ enrolled, onVerified }: { enrolled: boolean; onVerifi
       const { data: factors, error: listError } = await auth.mfa.listFactors();
       if (listError) throw listError;
       // An interrupted setup never deletes an active authenticator.
-      for (const factor of factors.all.filter(f => f.factor_type === "totp" && f.status === "unverified" && f.friendly_name === "ContrataCR Admin")) {
+      for (const factor of factors.all.filter(f => f.factor_type === "totp" && f.status === "unverified" && ["ContrataCR", "ContrataCR Admin"].includes(f.friendly_name ?? ""))) {
         const { error } = await auth.mfa.unenroll({ factorId: factor.id });
         if (error) throw error;
       }
-      const { data, error } = await auth.mfa.enroll({ factorType: "totp", friendlyName: "ContrataCR Admin", issuer: "ContrataCR" });
+      const { data, error } = await auth.mfa.enroll({ factorType: "totp", friendlyName: "ContrataCR", issuer: "ContrataCR" });
       if (error) throw error;
       const qr = data.totp.qr_code.startsWith("data:image/") ? data.totp.qr_code : `data:image/svg+xml;charset=utf-8,${encodeURIComponent(data.totp.qr_code)}`;
       setSetup({ id: data.id, qr, secret: data.totp.secret });
@@ -47,14 +47,15 @@ export function AdminMfa({ enrolled, onVerified }: { enrolled: boolean; onVerifi
     } catch { setCode(""); setError(en ? "The code could not be verified. Enter the current code from your authenticator." : "No se pudo verificar el código. Ingrese el código actual de su autenticador."); }
     finally { setBusy(false); }
   }
+  const Container = embedded ? "section" : "main";
   return (
-    <main data-admin-mfa className="flex min-h-dvh items-center justify-center bg-[#f5f8fa] px-5 py-10">
-      <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
-        <div className="mb-7 flex justify-center"><ContrataCRLogo /></div>
+    <Container data-admin-mfa data-authentication-screen={embedded ? undefined : "true"} className={embedded ? "bg-white" : "ccr-authentication-screen"}>
+      <div className={embedded ? "w-full bg-white" : "my-auto w-full max-w-sm shrink-0 bg-white py-8"}>
+        {!embedded && <div className="mb-7 flex justify-center"><ContrataCRLogo /></div>}
         <h1 className="text-xl font-bold text-[#162543]">{en ? "Two-factor authentication" : "Verificación en dos pasos"}</h1>
         <p className="mt-3 text-sm leading-relaxed text-slate-600">{enrolled
           ? (en ? "Enter the 6-digit code from your authenticator to continue." : "Ingrese el código de 6 dígitos de su autenticador para continuar.")
-          : (en ? "Protect your administrator account with an authenticator app." : "Proteja su cuenta administradora con una app autenticadora.")}</p>
+          : (en ? (administrator ? "Protect your administrator account with an authenticator app." : "Protect your account with an authenticator app.") : (administrator ? "Proteja su cuenta administradora con una app autenticadora." : "Proteja su cuenta con una app autenticadora."))}</p>
         {setup && <div className="mt-5">
           <p className="text-sm text-slate-600">{en ? "Scan this QR code with your authenticator." : "Escanee este QR con su autenticador."}</p>
           {/* Private enrollment material stays in component memory, never in logs or analytics. */}
@@ -70,8 +71,8 @@ export function AdminMfa({ enrolled, onVerified }: { enrolled: boolean; onVerifi
           </label>
           <Button type="submit" loading={busy} disabled={busy || code.length !== 6} className="w-full">{en ? "Continue" : "Continuar"}</Button>
         </form> : <Button onClick={() => void startSetup()} loading={busy} disabled={busy} className="mt-5 w-full">{en ? "Set up authenticator" : "Configurar autenticador"}</Button>}
-        <button type="button" disabled={busy} className="mt-5 w-full text-sm text-slate-500" onClick={async () => { await createClient().auth.signOut({ scope: "local" }); window.location.assign(en ? "/en/login" : "/login"); }}>{en ? "Sign out" : "Cerrar sesión"}</button>
+        {onCancel ? <button type="button" disabled={busy} className="mt-5 min-h-11 text-sm text-slate-500" onClick={onCancel}>{en ? "Cancel" : "Cancelar"}</button> : <button type="button" disabled={busy} className="mt-5 w-full text-sm text-slate-500" onClick={async () => { await createClient().auth.signOut({ scope: "local" }); window.location.assign(en ? "/en/login" : "/login"); }}>{en ? "Sign out" : "Cerrar sesión"}</button>}
       </div>
-    </main>
+    </Container>
   );
 }
