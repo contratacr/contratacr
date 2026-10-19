@@ -43,7 +43,7 @@ import { OfferTagPercentIcon } from "@/components/icons/offer-tag-percent-icon";
 import { CABECERA_TITULO } from "@/components/layout/cabecera";
 import { esRutaDeBusqueda, rutaDeBusqueda } from "@/lib/buscar-url";
 import { useParametrosDeBusqueda } from "@/hooks/use-parametros-de-busqueda";
-import { formatPersonDisplayName } from "@/lib/display-name";
+import { getProfessionalDisplayName } from "@/lib/display-name";
 
 /* --- La marca (el cuadrito «CR») ---
  *
@@ -612,7 +612,7 @@ function AccountMenu({
       {open && (
         <div className="absolute right-0 top-full mt-2 max-h-[min(720px,calc(100vh-92px))] w-72 overflow-y-auto bg-white border border-gray-100 rounded-2xl shadow-[0_22px_55px_-18px_rgba(15,23,42,0.45)] z-50 py-1.5">
           <div className="mb-1 border-b border-gray-100 px-3 py-2.5">
-            <p className="truncate text-sm font-bold text-[#162543]">{displayName || t("myPanel")}</p>
+            <p className="break-words text-sm font-bold text-[#162543]">{displayName || t("myPanel")}</p>
           </div>
 
           <div className="pt-1">
@@ -1172,9 +1172,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // hacía pintar el nombre de la persona y cambiarlo medio segundo después. Ahora
   // el servidor lo entrega con la página (`accountName`) y la barra se pinta una
   // sola vez; lo que llega después solo corrige si de verdad cambió.
-  const accountDisplayName =
-    (hasResolvedAccountCapability ? capacidadVigente?.businessName ?? "" : (accountName ?? "")) ||
-    String(user?.user_metadata?.full_name || user?.user_metadata?.name || "").trim();
+  const accountBusinessName = hasResolvedAccountCapability ? capacidadVigente?.businessName ?? "" : (accountName ?? "");
+  const accountDisplayName = getProfessionalDisplayName(
+    String(user?.user_metadata?.full_name || user?.user_metadata?.name || "").trim(), accountBusinessName,
+  ).primaryDesktop;
   useEffect(() => {
     let cancelled = false;
     if (!user) {
@@ -2977,12 +2978,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
               <nav className="flex flex-col">
                 {user ? (
                   <>
-                    <Link href={primaryPanelHref} prefetch={false} onClick={cerrarCajon} className={mobileDrawerItemClass} data-menu-account aria-label={`${t("myPanel")}: ${formatPersonDisplayName(accountDisplayName, "mobile") || t("myPanel")}`}>
+                    <Link href={primaryPanelHref} prefetch={false} onClick={cerrarCajon} className={mobileDrawerItemClass} data-menu-account aria-label={`${t("myPanel")}: ${accountDisplayName || t("myPanel")}`}>
                       {avatarUrlCuenta
                         // eslint-disable-next-line @next/next/no-img-element -- account thumbnail aligned with a menu row
                         ? <img src={avatarUrlCuenta} alt="" className="h-6 w-6 shrink-0 rounded-full object-cover" />
                         : <UserRound className="h-6 w-6 shrink-0" aria-hidden />}
-                      <span className="min-w-0 flex-1 truncate">{formatPersonDisplayName(accountDisplayName, "mobile") || t("myPanel")}</span>
+                      <span className="min-w-0 flex-1 break-words">{accountDisplayName || t("myPanel")}</span>
                     </Link>
                     {mostrarOfrecerServicios && (
                       <Link

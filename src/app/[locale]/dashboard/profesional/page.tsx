@@ -1,4 +1,5 @@
 "use client";
+import { ProfileIdentityName, profileIdentityAvatarClass } from "@/components/professionals/profile-identity-name";
 
 import { AvatarFileInput } from "@/components/ui/avatar-file-input";
 
@@ -298,12 +299,6 @@ function guideIcon(id: string) {
     default:
       return <User className="h-4 w-4" />;
   }
-}
-
-function compactDisplayName(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (name.length <= 29 || parts.length < 4) return name;
-  return [parts[0], ...parts.slice(-2)].join(" ");
 }
 
 // Guías es una PANTALLA del panel, no un modal: llegar por navegación (o por el
@@ -1071,6 +1066,30 @@ export default function DashboardPage() {
   }, [user, refreshKey, fetchProfile]);
 
   useEffect(() => {
+    const onIdentityUpdated = (event: Event) => {
+      const detail = (event as CustomEvent<{ fullName?: unknown; cedula?: unknown }>).detail;
+      const name = typeof detail?.fullName === "string" ? detail.fullName.trim() : "";
+      const cedula = typeof detail?.cedula === "string" ? detail.cedula : null;
+      if (!name && !cedula) return;
+      const patch = { ...(name ? { full_name: name } : {}), ...(cedula ? { cedula } : {}) };
+      setProfile(current => current ? { ...current, ...patch } : current);
+      const patchProfessional = (current: ProData | null) => {
+        if (!current) return current;
+        const owner = Array.isArray(current.profiles) ? current.profiles[0] : current.profiles;
+        return { ...current, profiles: { ...(owner ?? {}), ...patch } };
+      };
+      setPro(patchProfessional);
+      const cached = user ? getDashboardCache<DashboardBootstrap>(dashboardBootstrapKey(user.id)) : null;
+      if (cached) cacheDashboardBootstrap({
+        profile: cached.profile ? { ...cached.profile, ...patch } : cached.profile,
+        pro: patchProfessional(cached.pro as ProData | null),
+      });
+    };
+    window.addEventListener("ccr:identity-updated", onIdentityUpdated);
+    return () => window.removeEventListener("ccr:identity-updated", onIdentityUpdated);
+  }, [cacheDashboardBootstrap, setProfile, setPro, user]);
+
+  useEffect(() => {
     if (!user) return;
     let stopped = false;
     const refreshVerificationState = () => {
@@ -1585,9 +1604,8 @@ export default function DashboardPage() {
     "";
   const professionalDisplayName = businessName || personalDisplayName;
   const displayName = mode === "offer" ? professionalDisplayName : personalDisplayName;
-  const compactHeaderName = compactDisplayName(displayName);
-  // Phones get one line: business name for the offer mode, first name and first
-  // surname for people. The verified check then always sits right after it.
+  const compactHeaderName = mode === "offer" ? getProfessionalDisplayName(personalDisplayName, businessName).primaryDesktop : formatPersonDisplayName(personalDisplayName);
+  // The panel and public profile share naming, wrapping and avatar dimensions.
   const mobileHeaderName = mode === "offer"
     ? getProfessionalDisplayName(personalDisplayName, businessName).primaryMobile
     : formatPersonDisplayName(personalDisplayName, "mobile");
@@ -1853,25 +1871,26 @@ export default function DashboardPage() {
             activeTab !== "chat" && activeTab !== "home" && "lg:ml-0 lg:mr-auto lg:max-w-[71.5rem]",
             mobileSectionOpen ? "hidden lg:block" : "block",
           )}>
-            <div className="rounded-2xl border border-[#e5e7eb] bg-white px-5 py-5 shadow-sm sm:px-6 sm:py-5">
+            <div className="rounded-2xl border border-[#e5e7eb] bg-white px-4 py-5 shadow-sm sm:px-6 sm:py-5">
             {/* Las columnas van en `style` y no en una clase nueva de Tailwind: en
                 desarrollo la clase recién escrita llega a la pantalla antes que
                 su CSS, y una rejilla sin columnas reparte tres iguales —el
                 nombre quedaba en el centro de la tarjeta—. En el teléfono el
                 contenedor es flex y esta plantilla no aplica. */}
-            <div style={{ gridTemplateColumns: "auto minmax(0, 1fr)" }} className="flex min-w-0 flex-row flex-wrap items-center gap-x-4 gap-y-3 text-left sm:grid sm:items-center sm:gap-5">
-              <div ref={headerPhotoMenuRef} className="relative h-[84px] w-[84px] shrink-0 sm:h-20 sm:w-20 sm:self-center">
+            <div style={{ gridTemplateColumns: "auto minmax(0, 1fr)" }} className="flex min-w-0 flex-row flex-wrap items-center gap-x-2 gap-y-3 text-left min-[360px]:gap-x-3 sm:grid sm:items-center sm:gap-5">
+              <div ref={headerPhotoMenuRef} className={`relative shrink-0 sm:self-center ${profileIdentityAvatarClass}`}>
                 <button
                   type="button"
                   onClick={() => setHeaderPhotoMenuOpen((open) => !open)}
                   disabled={headerPhotoUploading}
-                  className="relative block h-[84px] w-[84px] rounded-full outline-none transition focus-visible:ring-2 focus-visible:ring-[#009FD9] focus-visible:ring-offset-2 disabled:opacity-70 sm:h-20 sm:w-20"
+                  className={`relative block rounded-full outline-none transition focus-visible:ring-2 focus-visible:ring-[#009FD9] focus-visible:ring-offset-2 disabled:opacity-70 ${profileIdentityAvatarClass}`}
+                  data-profile-identity-avatar
                   aria-label={locale === "en" ? "Profile photo options" : "Opciones de foto de perfil"}
                 >
-                  <Avatar className="h-[84px] w-[84px] bg-transparent sm:h-20 sm:w-20">
+                  <Avatar className={`bg-transparent ${profileIdentityAvatarClass}`}>
                     <AvatarImage src={headerAvatar ?? undefined} />
                     <AvatarFallback className="bg-[#EBF5FB] text-lg font-bold text-[#009FD9]">
-                      {getInitials(displayName || "?")}
+                      {getInitials(compactHeaderName || displayName || "?")}
                     </AvatarFallback>
                   </Avatar>
                   {mode === "offer" && (
@@ -1934,16 +1953,10 @@ export default function DashboardPage() {
               </div>
               <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5 text-left sm:block sm:w-auto sm:flex-none sm:self-center sm:py-0">
                 <div className="flex min-w-0 max-w-full items-center gap-0 sm:hidden">
-                  <h1 data-testid="dashboard-identity-name" className="min-w-0 truncate text-[18px] font-bold leading-[1.15] text-[#162543]" title={displayName}>
-                    {mobileHeaderName || displayName}
-                  </h1>
-                  {identityBadge()}
+                  <ProfileIdentityName name={mobileHeaderName || displayName} title={displayName} testId="dashboard-identity-name" badge={identityBadge()} />
                 </div>
                 <div className="hidden min-w-0 max-w-full flex-nowrap items-center gap-0 sm:flex">
-                  <h1 className="min-w-0 shrink truncate whitespace-nowrap text-2xl font-bold leading-tight text-[#162543]" title={displayName}>
-                    {compactHeaderName}
-                  </h1>
-                  {identityBadge()}
+                  <ProfileIdentityName name={compactHeaderName} title={displayName} className="flex-1" badge={identityBadge()} />
                   {/* Ver perfil, Compartir y Guías cierran el renglón del nombre,
                       los tres iguales: texto gris que se pinta de celeste al
                       pasar, sin ícono y sin caja. Antes Guías era texto y los
@@ -1980,7 +1993,7 @@ export default function DashboardPage() {
                     </button>
                   </div>
                 </div>
-                <div data-testid="dashboard-identity-actions" className="mt-1 flex items-start justify-start gap-3 sm:mt-1 sm:min-h-[22px]">
+                <div data-testid="dashboard-identity-actions" className={cn("flex items-start justify-start gap-3 sm:mt-3 sm:min-h-[22px]", !(mode === "offer" && (pro?.review_count ?? 0) > 0 && publicProfileHref) && "hidden")}>
                   {/* Las reseñas, que es la prueba social que mira un cliente. Los
                       seguidores se retiraron de la app: guardar ya cubre "lo quiero
                       a mano" y dos conceptos para lo mismo confundían. */}

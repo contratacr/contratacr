@@ -339,6 +339,7 @@ function useAuthState(
     // header name/avatar update IMMEDIATELY even if the metadata change came from a
     // different Supabase client instance that didn't fire our onAuthStateChange.
     const applyUser = (u: User | null) => {
+      usuarioConocidoRef.current = u;
       lastAppliedRef.current = u;
       setUser(u);
       cacheUser(u);
@@ -380,8 +381,19 @@ function useAuthState(
       } catch { /* keep the last known profile while the network recovers */ }
     };
 
+    const onIdentityUpdated = (event: Event) => {
+      const fullName = (event as CustomEvent<{ fullName?: unknown }>).detail?.fullName;
+      const current = usuarioConocidoRef.current;
+      if (current && typeof fullName === "string" && fullName.trim()) {
+        // The API has committed this name already. Paint it now, rather than
+        // waiting for the old JWT metadata or the navbar's next profile fetch.
+        applyUser({ ...current, user_metadata: { ...current.user_metadata, full_name: fullName.trim() } });
+      }
+      void refreshUser();
+    };
     const onProfileUpdated = () => void refreshUser();
     window.addEventListener("ccr:profile-updated", onProfileUpdated);
+    window.addEventListener("ccr:identity-updated", onIdentityUpdated);
     window.addEventListener(APP_RESUME_EVENT, reconcileSession);
 
     return () => {
@@ -389,6 +401,7 @@ function useAuthState(
       window.clearTimeout(sessionTimeout);
       subscription.unsubscribe();
       window.removeEventListener("ccr:profile-updated", onProfileUpdated);
+      window.removeEventListener("ccr:identity-updated", onIdentityUpdated);
       window.removeEventListener(APP_RESUME_EVENT, reconcileSession);
     };
   }, []);
