@@ -1,5 +1,6 @@
 "use client";
 
+import { AdminMfaSession } from "./admin-mfa-session";
 import { useEffect, useRef, useState } from "react";
 import { IdCard, MessageCircle, ShieldCheck, Flag, Shield, Tag, Headset, Users, LayoutGrid, BarChart3, ClipboardList, ArrowLeft, Star, Briefcase, BadgePercent, MapPinned, Wallet, Megaphone } from "lucide-react";
 import { useLinkStatus } from "next/link";
@@ -55,7 +56,11 @@ const GRUPOS_ADMIN: { label: string; ids: AdminTab[] }[] = [
   { label: "Negocio", ids: ["campanas", "costos"] },
 ];
 
-export function AdminShell({
+export function AdminShell(props: React.ComponentProps<typeof AdminShellContent>) {
+  return <AdminMfaSession><AdminShellContent {...props} /></AdminMfaSession>;
+}
+
+function AdminShellContent({
   adminName,
   active = "resumen",
   children,

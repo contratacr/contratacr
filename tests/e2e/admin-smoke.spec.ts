@@ -1,3 +1,4 @@
+import { completeAdminMfa } from "./admin-mfa-helper";
 import { expect, test, type Page } from "playwright/test";
 import { expectHealthyPage, expectVisibleText, gotoOK, loginAs, resetAuth, waitForInteractivePage } from "./helpers";
 import { canRunSeededRegression, ensureRegressionSeed, regressionAdminClient, type RegressionSeedState } from "./seed";
@@ -6,7 +7,7 @@ import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccou
 const adminRoutes = [
   { path: "/admin", marker: /Resumen|Panel de administracion|Panel de administraci.n/i },
   { path: "/admin/verificacion", marker: /Verificacion|Verificaci.n/i },
-  { path: "/admin/identificaciones", marker: /Identificaciones/i },
+  { path: "/admin/identificaciones", marker: /Consultar identificaci.n|Identificaciones/i },
   { path: "/admin/usuarios", marker: /Usuarios/i },
   { path: "/admin/reportes", marker: /Reportes/i },
   { path: "/admin/aseguradoras", marker: /Aseguradoras/i },
@@ -34,6 +35,7 @@ async function loginAdmin(page: Page, account: DisposableAccount) {
   await page.getByPlaceholder(/Contrase.a|Contrasena/i).fill(account.password);
   await page.getByRole("button", { name: /Ingresar/i }).click();
   await expect(page.getByPlaceholder(/Correo de administrador/i)).toBeHidden({ timeout: 20_000 });
+  await completeAdminMfa(page, account.email);
 }
 
 test.describe("@admin surfaces", () => {
@@ -124,6 +126,7 @@ test.describe("@admin surfaces", () => {
   }
 
   test("admin panel sections render with an isolated disposable administrator", async ({ page }) => {
+    test.setTimeout(180_000);
     let account: DisposableAccount | undefined;
     try {
       account = await createDisposableAccount({ prefix: "admin-cycle", admin: true });

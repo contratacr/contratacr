@@ -1,3 +1,4 @@
+import { completeAdminMfa } from "./admin-mfa-helper";
 import { expect, test } from "playwright/test";
 import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccount } from "./disposable-account";
 import { gotoOK, resetAuth, waitForInteractivePage } from "./helpers";
@@ -17,6 +18,7 @@ test.describe("admin campaign policy", () => {
     await page.getByPlaceholder(/Contrase.a/i).fill(account.password);
     await page.getByRole("button", { name: "Ingresar", exact: true }).click();
     await expect(page.getByPlaceholder(/Correo de administrador/i)).toBeHidden({ timeout: 20_000 });
+  await completeAdminMfa(page, account.email);
   });
 
   test("retired email campaigns are rejected by the API before any sending", async ({ page }) => {
