@@ -34,3 +34,9 @@ No se crean migraciones, no se cambian identificaciones de usuarios en producci�
 La revisión manual muestra directamente los archivos necesarios, sin comentario opcional, explicación repetida, reintento automático ni paso de apertura adicional. DIMEX y personas físicas adjuntan una foto con su identificación; las jurídicas conservan también el documento de representación. La instrucción queda junto al archivo y los botones mantienen el mismo tamaño. El envío se habilita solo cuando están todos los archivos exigidos; los casos anteriores pueden completar sus documentos sin crear solicitudes duplicadas. La API de apelaciones existente permanece disponible para clientes anteriores.
 
 Validación adicional: compilación Cloudflare, TypeScript, ESLint, textos e idiomas. La regresión de documentos comprueba ausencia del comentario, archivos obligatorios, envío, permisos privados y reintentos.
+
+## Transición al guardar identificación
+
+El guardado de identificación usaba la devolución de una sección completa del perfil: en móvil cerraba la sección y restablecía su foco. Ahora refresca los datos en segundo plano y conserva la pantalla abierta. La identificación y el estado confirmados por el POST se mantienen visibles hasta que llegan los datos actualizados del perfil, sin mostrar otra vez el número ni la insignia anteriores. Al sincronizarse, el estado vuelve a depender de las lecturas normales, incluidas decisiones administrativas posteriores.
+
+Se añaden seis regresiones de transición (verificado/pendiente en Chromium escritorio, Chromium móvil y WebKit móvil), con actualización del padre retrasada y muestreo de 12 fotogramas. También comprueban que una revocación posterior siga reflejándose. El flujo completo de documentos DIMEX pasó en Chromium y WebKit móviles sin recargar ni reabrir después del guardado. TypeScript, ESLint y compilación Next correctos. La prueba espera la URL canónica del panel antes de navegar a la siguiente sección.

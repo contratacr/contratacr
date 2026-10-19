@@ -101,15 +101,13 @@ for (const kind of ["company", "person", "dimex"] as const) test(`private verifi
     ]);
     expect(saveIdentity.status()).toBe(200);
     expect((await saveIdentity.json()).outcome).toBe("ticket");
-    // Reopen in a fresh tab to prove persisted server state, independently of
-    // the original editor's asynchronous save/return navigation.
-    const reopenedPage = await page.context().newPage();
-    await page.close();
-    page = reopenedPage;
-    await page.goto("/dashboard/profesional?tab=verificacion");
+    // Saving must keep the same verification screen open; no tab reload/reopen.
+    await expect(page.getByRole("button", { name: "Cambiar identificación", exact: true })).toBeVisible();
     await expect(page.getByTestId("verification-documents")).toContainText("Pendiente de revisión");
     await expect(page.locator("[data-current-identification] [data-verification-badge]")).toHaveCount(0);
     await page.unroute(lookupUrl);
+    // Wait for the dashboard URL normalization before testing another route.
+    await expect(page).toHaveURL(/tab=profile/);
     await page.waitForLoadState("networkidle");
     await page.goto("/promociones/publicar");
     await expect(page.locator("[data-aviso-sin-verificar]")).toBeVisible();

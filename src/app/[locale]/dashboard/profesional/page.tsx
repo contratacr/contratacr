@@ -2256,7 +2256,7 @@ export default function DashboardPage() {
                                     currentCedula={currentCedula}
                                     currentFullName={profile?.full_name || proProfile?.full_name || null}
                                     noCrId={pro.no_cr_id ?? false}
-                                    onSaved={() => handleSaved("section")}
+                                    onSaved={() => handleSaved("internal")}
                                   />
                                 ),
                               },
