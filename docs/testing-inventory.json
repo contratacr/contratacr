@@ -2,11 +2,11 @@
   "scope": "Todos los archivos TypeScript de src/app, src/components y src/hooks, controles JSX declarados, pestañas del panel y specs permanentes. No enumera cada elemento dinámico renderizado ni componentes dentro de dependencias.",
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
-    "files": 478,
-    "controls": 1291,
+    "files": 479,
+    "controls": 1287,
     "pages": 71,
     "handlers": 99,
-    "components": 246,
+    "components": 247,
     "hooks": 26,
     "specs": 138
   },
@@ -2540,15 +2540,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 211,
-          "tag": "Link",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "",
-          "destination": "{`/profesionales/${offer.professional_slug}?from=${encodeURIComponent(rutaPromocion(offer))}`}",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 243,
+          "line": 240,
           "tag": "Link",
           "label": "{copy.back}",
           "handler": "",
@@ -2556,7 +2548,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 378,
+          "line": 372,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -7923,14 +7915,6 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 263,
-          "tag": "Link",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "",
-          "destination": "{`/admin/proveedores/${pro.id}`}",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
           "line": 276,
           "tag": "a",
           "label": "\"Ver perfil público\"",
@@ -9363,7 +9347,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 82,
+          "line": 83,
           "tag": "input",
           "label": "{placeholder}",
           "handler": "{(e) => setQ(e.target.value)}",
@@ -9371,7 +9355,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 100,
+          "line": 101,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -12442,7 +12426,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 223,
+          "line": 225,
           "tag": "MarketplaceSearch",
           "label": "{copy.searchPlaceholder}",
           "handler": "{setQuery}",
@@ -12450,7 +12434,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 263,
+          "line": 265,
           "tag": "MarketplaceFilterChip",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{setWorkplace}",
@@ -12458,7 +12442,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 264,
+          "line": 266,
           "tag": "MarketplaceFilterChip",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{setEmployment}",
@@ -12466,7 +12450,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 265,
+          "line": 267,
           "tag": "MarketplaceFilterChip",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{setExperience}",
@@ -12474,7 +12458,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 267,
+          "line": 269,
           "tag": "MarketplaceFilterChip",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{setPublished}",
@@ -12482,7 +12466,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 274,
+          "line": 276,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -12490,7 +12474,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 280,
+          "line": 282,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setPublishOpen(true)}",
@@ -12498,7 +12482,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 283,
+          "line": 285,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -12506,7 +12490,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 291,
+          "line": 293,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => void avisar(\"empleo\", \"/empleos/publicar\")}",
@@ -12514,7 +12498,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 295,
+          "line": 297,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -12522,7 +12506,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 323,
+          "line": 325,
           "tag": "Link",
           "label": "{detailBackLabel}",
           "handler": "",
@@ -12530,7 +12514,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 357,
+          "line": 359,
           "tag": "button",
           "label": "{copy.openMenu}",
           "handler": "{() => window.dispatchEvent(new Event(\"ccr:open-mobile-menu\"))}",
@@ -12538,7 +12522,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 360,
+          "line": 362,
           "tag": "Link",
           "label": "\"ContrataCR\"",
           "handler": "",
@@ -12546,7 +12530,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 462,
+          "line": 464,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setEditingJob(selected)}",
@@ -12554,7 +12538,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 463,
+          "line": 465,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -12562,7 +12546,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 512,
+          "line": 514,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{clearSearchAndFilters}",
@@ -12570,7 +12554,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 517,
+          "line": 519,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setPublishOpen(true)}",
@@ -12578,7 +12562,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 520,
+          "line": 522,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -12586,7 +12570,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 584,
+          "line": 586,
           "tag": "button",
           "label": "{`${copy.view} ${job.title}`}",
           "handler": "{onSelect}",
@@ -12594,7 +12578,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 589,
+          "line": 591,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -12602,15 +12586,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 650,
-          "tag": "Link",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "",
-          "destination": "{`/profesionales/${job.employer_slug}?from=${encodeURIComponent(rutaEmpleo(job))}`}",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 694,
+          "line": 679,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{onEdit}",
@@ -12618,7 +12594,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 695,
+          "line": 680,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -12626,7 +12602,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 706,
+          "line": 691,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{onEdit}",
@@ -12634,7 +12610,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 707,
+          "line": 692,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -12801,14 +12777,6 @@
       ],
       "methods": [],
       "controls": [
-        {
-          "line": 257,
-          "tag": "button",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "{() => onNavigate(result.profileHref)}",
-          "destination": "",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
         {
           "line": 271,
           "tag": "button",
@@ -16098,7 +16066,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 274,
+          "line": 276,
           "tag": "MarketplaceSearch",
           "label": "{copy.searchPlaceholder}",
           "handler": "{setQuery}",
@@ -16106,7 +16074,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 304,
+          "line": 306,
           "tag": "MarketplaceFilterChip",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{setPublished}",
@@ -16114,7 +16082,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 316,
+          "line": 318,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -16122,7 +16090,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 325,
+          "line": 327,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setPublishOpen(true)}",
@@ -16130,7 +16098,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 332,
+          "line": 334,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -16138,7 +16106,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 342,
+          "line": 344,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => void avisar(\"promocion\", \"/promociones/publicar\")}",
@@ -16146,7 +16114,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 346,
+          "line": 348,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -16154,7 +16122,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 362,
+          "line": 364,
           "tag": "button",
           "label": "{copy.openMenu}",
           "handler": "{() =>\n                window.dispatchEvent(new Event(\"ccr:open-mobile-menu\"))\n              }",
@@ -16162,7 +16130,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 372,
+          "line": 374,
           "tag": "Link",
           "label": "\"ContrataCR\"",
           "handler": "",
@@ -16170,7 +16138,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 472,
+          "line": 474,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{clearSearchAndFilters}",
@@ -16178,7 +16146,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 481,
+          "line": 483,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setPublishOpen(true)}",
@@ -16186,7 +16154,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 488,
+          "line": 490,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -16194,7 +16162,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 739,
+          "line": 741,
           "tag": "button",
           "label": "{copy.view(offer.title)}",
           "handler": "{onSelect}",
@@ -16202,7 +16170,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 753,
+          "line": 755,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -16210,15 +16178,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 859,
-          "tag": "Link",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "",
-          "destination": "{`/profesionales/${offer.professional_slug}?from=${encodeURIComponent(rutaPromocion(offer))}`}",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 895,
+          "line": 878,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => onFiltrarServicio?.(offer.service_label ?? \"\")}",
@@ -16226,7 +16186,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 915,
+          "line": 898,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{onEdit}",
@@ -16234,7 +16194,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 922,
+          "line": 905,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -17083,16 +17043,7 @@
         "ResponsiveVerifiedName"
       ],
       "methods": [],
-      "controls": [
-        {
-          "line": 34,
-          "tag": "Link",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "",
-          "destination": "{href}",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        }
-      ],
+      "controls": [],
       "testIds": [],
       "relatedSpecs": [
         "tests/e2e/search-results.spec.ts",
@@ -17438,7 +17389,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 151,
+          "line": 153,
           "tag": "div",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setPideCuenta(false)}",
@@ -17446,7 +17397,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 152,
+          "line": 154,
           "tag": "div",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(e) => e.stopPropagation()}",
@@ -17454,7 +17405,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 153,
+          "line": 155,
           "tag": "button",
           "label": "{copy.cerrar}",
           "handler": "{() => setPideCuenta(false)}",
@@ -17462,7 +17413,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 160,
+          "line": 162,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => irA(\"/login\")}",
@@ -17470,7 +17421,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 162,
+          "line": 164,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => irA(\"/registro/profesional\")}",
@@ -17478,7 +17429,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 207,
+          "line": 209,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(e) => { e.preventDefault(); e.stopPropagation(); void abrir(); }}",
@@ -17486,7 +17437,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 230,
+          "line": 232,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(e) => { e.preventDefault(); e.stopPropagation(); void abrir(\"llamada\"); }}",
@@ -17494,7 +17445,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 305,
+          "line": 307,
           "tag": "article",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(e) => {\n        if (!onElegir || !window.matchMedia(\"(min-width: 1024px)\").matches) return;\n        e.preventDefault();\n        onElegir();\n      }}",
@@ -17502,7 +17453,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 326,
+          "line": 328,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -17510,7 +17461,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 439,
+          "line": 433,
           "tag": "MarketplaceFilterChip",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{setPublicado}",
@@ -17518,7 +17469,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 454,
+          "line": 448,
           "tag": "MarketplaceSearch",
           "label": "{copy.buscar}",
           "handler": "{setQuery}",
@@ -17526,7 +17477,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 485,
+          "line": 479,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -17534,7 +17485,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 492,
+          "line": 486,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -17542,7 +17493,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 535,
+          "line": 529,
           "tag": "Link",
           "label": "{copy.volver}",
           "handler": "",
@@ -17550,7 +17501,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 560,
+          "line": 554,
           "tag": "button",
           "label": "{copy.abrirMenu}",
           "handler": "{() => window.dispatchEvent(new Event(\"ccr:open-mobile-menu\"))}",
@@ -17558,7 +17509,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 568,
+          "line": 562,
           "tag": "Link",
           "label": "\"ContrataCR\"",
           "handler": "",
@@ -17566,7 +17517,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 695,
+          "line": 689,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { setQuery(\"\"); setLugar(\"\"); setPublicado(\"all\"); }}",
@@ -17574,7 +17525,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 775,
+          "line": 766,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setQuery(ficha.category_name ?? \"\")}",
@@ -17582,7 +17533,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 789,
+          "line": 780,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -17590,7 +17541,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 843,
+          "line": 834,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -17598,7 +17549,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 877,
+          "line": 868,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setEditando(ficha)}",
@@ -17606,7 +17557,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 884,
+          "line": 875,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -20413,6 +20364,46 @@
       "relatedSpecs": [
         "tests/e2e/professional-profile.spec.ts",
         "tests/e2e/whatsapp-review-followup.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P1"
+    },
+    {
+      "file": "src/components/ui/inline-identity-name.tsx",
+      "kind": "Componente",
+      "group": "Verificación",
+      "route": null,
+      "exports": [
+        "InlineIdentityName"
+      ],
+      "methods": [],
+      "controls": [
+        {
+          "line": 18,
+          "tag": "Link",
+          "label": "{secondary ? undefined : clean}",
+          "handler": "",
+          "destination": "{href}",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 19,
+          "tag": "button",
+          "label": "{secondary ? undefined : clean}",
+          "handler": "{onNameClick}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        }
+      ],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/verification-documents.spec.ts",
+        "tests/e2e/verification-email-policy.spec.ts",
+        "tests/e2e/verificacion-repesca.spec.ts",
+        "tests/e2e/verification-badges.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -25451,44 +25442,44 @@
           "title": "`${path}: check explains identity without opening the card`"
         },
         {
-          "line": 51,
+          "line": 70,
           "title": "`${path}: publication detail keeps the owner's check beside the name`"
         },
         {
-          "line": 81,
+          "line": 126,
           "title": "\"the professional profile keeps only the interactive check beside its name\""
         },
         {
-          "line": 96,
+          "line": 141,
           "title": "\"registration explains the badge and opens the shared explanation\""
         },
         {
-          "line": 107,
+          "line": 152,
           "title": "\"dashboard name keeps only an interactive identity check\""
         },
         {
-          "line": 108,
+          "line": 153,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 143,
+          "line": 188,
           "title": "\"the badge explanation is translated into English\""
         },
         {
-          "line": 151,
+          "line": 196,
           "title": "\"native phone shell keeps the explanation above its navigation\""
         },
         {
-          "line": 179,
+          "line": 224,
           "title": "\"verification shows only the identification check and its explanation\""
         },
         {
-          "line": 180,
+          "line": 225,
           "title": "!(process.env.NEXT_PUBLIC_SUPABASE_URL ?? \"\").includes(\"oqheayqqprpciqdvdaqo\") || !process.env.SUPABASE_SERVICE_ROLE_KEY"
         },
         {
-          "line": 218,
-          "title": "\"official identification keeps the complete name readable without changing public card truncation\""
+          "line": 263,
+          "title": "\"official identification and public cards preserve full names and bind the badge to the final word\""
         }
       ]
     },

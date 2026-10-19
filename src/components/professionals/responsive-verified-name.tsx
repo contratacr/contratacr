@@ -1,26 +1,13 @@
 "use client";
 
 import { VerificationInfo } from "@/components/ui/verification-info";
-import { Link } from "@/i18n/navigation";
+import { InlineIdentityName } from "@/components/ui/inline-identity-name";
 
-/**
- * Nombre en UNA sola línea con el sello de verificado pegado al final.
- *
- * Regla de las tarjetas: el nombre ocupa todo el ancho que le deja la fila
- * (hasta el ícono de guardar), y solo cuando de verdad no cabe se corta con
- * «…»; el sello nunca se pierde ni salta de línea porque no encoge. Antes se
- * medía el texto en un canvas y el enlace era `inline-block`: el ancho
- * disponible se calculaba sobre el propio texto ya recortado y los nombres
- * largos quedaban cortados con espacio de sobra a la derecha.
- *
- * El contenedor que lo envuelve debe ser de bloque o `flex-1 min-w-0` para
- * que el ancho sea el de la fila y no el del texto.
- */
+/** Names wrap without truncation; the seal follows the final word. */
 export function ResponsiveVerifiedName({
   name,
   verified,
   href,
-  wrap = false,
 }: {
   name: string;
   verified: boolean;
@@ -29,10 +16,5 @@ export function ResponsiveVerifiedName({
   /** Official identification names must remain fully readable. */
   wrap?: boolean;
 }) {
-  return (
-    <span className="flex w-full min-w-0 items-center">
-      {href ? <Link href={href} className={wrap ? "min-w-0 break-words whitespace-normal hover:text-[#009FD9]" : "min-w-0 truncate hover:text-[#009FD9]"}>{name}</Link> : <span className={wrap ? "min-w-0 break-words whitespace-normal" : "min-w-0 truncate"}>{name}</span>}
-      {verified && <VerificationInfo />}
-    </span>
-  );
+  return <InlineIdentityName name={name} href={href} badge={verified ? <VerificationInfo /> : null} />;
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { InlineIdentityName } from "@/components/ui/inline-identity-name";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, Suspense, type FormEvent } from "react";
 import { prefijoDeIdioma, rutaConIdioma, sinPrefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import {
@@ -253,9 +254,8 @@ function ProfessionalResult({ result, copy, onNavigate, nativeApp, lang }: {
           {result.avatarUrl ? <Image src={result.avatarUrl} alt="" width={44} height={44} className="h-full w-full object-cover" /> : getInitials(result.name)}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
-            <button type="button" onClick={() => onNavigate(result.profileHref)} className="min-w-0 text-left text-sm font-extrabold leading-snug text-[#162543]">{result.name}</button>
-            {result.verified && <VerificationInfo />}
+          <div className="text-sm font-extrabold leading-snug text-[#162543]">
+            <InlineIdentityName name={result.name} onNameClick={() => onNavigate(result.profileHref)} badge={result.verified ? <VerificationInfo /> : null} />
           </div>
           <p className="mt-0.5 text-xs font-semibold text-[#53657a]">{result.service}</p>
           <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-[#708095]">

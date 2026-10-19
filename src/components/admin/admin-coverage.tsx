@@ -1,9 +1,9 @@
 "use client";
 
+import { InlineIdentityName } from "@/components/ui/inline-identity-name";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { cldThumb } from "@/lib/cloudinary";
 import { ChevronDown, ExternalLink, Loader2, MapPinned, Search, SlidersHorizontal, Tag, X } from "lucide-react";
-import { Link } from "@/i18n/navigation";
 import { AdminFilterTabs } from "@/components/admin/admin-filter-tabs";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { getInitials } from "@/lib/utils";
@@ -259,8 +259,8 @@ export function AdminCoverage() {
                           ) : getInitials(pro.name)}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold text-[#162543]">
-                            <Link href={`/admin/proveedores/${pro.id}`} className="hover:text-[#009FD9]">{pro.name}</Link>
+                          <p className="text-sm font-semibold text-[#162543]">
+                            <InlineIdentityName name={pro.name} href={`/admin/proveedores/${pro.id}`} badge={pro.verified ? <VerifiedSeal label="Verificado" className="h-4 w-4 text-[#009FD9]" /> : null} />
                             {pro.personName && pro.personName !== pro.name && <span className="ml-1 text-xs font-normal text-[#6b7280]">· {pro.personName}</span>}
                           </p>
                           <p className="truncate text-xs text-[#6b7280]">
@@ -268,7 +268,7 @@ export function AdminCoverage() {
                           </p>
                         </div>
                         <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
-                          {pro.verified && <VerifiedSeal label="Verificado" className="h-4 w-4 shrink-0 text-[#009FD9]" />}
+
                           {(provinceFilter || cantonFilter) && (
                             <span className={cn("rounded-md px-2 py-0.5 text-[11px] font-semibold", pro.basedHere ? "bg-[#e0f2fe] text-[#0369a1]" : "bg-[#f1f5f9] text-[#64748b]")}>{pro.basedHere ? "Con sede aquí" : pro.nationwide ? "Todo el país" : "Atiende aquí"}</span>
                           )}

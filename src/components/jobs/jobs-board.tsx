@@ -1,5 +1,7 @@
 "use client";
 
+import { InlineIdentityName } from "@/components/ui/inline-identity-name";
+
 import { ProfilePhotoPreview } from "@/components/ui/profile-photo-preview";
 
 import { formatPersonDisplayName } from "@/lib/display-name";
@@ -587,14 +589,7 @@ function JobRow({ job, selected, onSelect }: { job: JobPost; selected: boolean; 
         <EmployerAvatar job={job} />
         <div className="min-w-0 flex-1">
           <h2 className="line-clamp-2 text-[15px] font-extrabold leading-tight text-[#005eaa] lg:text-base"><Link href={rutaEmpleo(job)} className="after:absolute after:inset-0 lg:pointer-events-none">{job.title}</Link></h2>
-          {/* Nombre y «Verificado» en UNA línea (8-oct-2026): el nombre
-              de persona se resume (nombre y primer apellido) y, si aun así no
-              cabe, cede él con «…»; la cédula nunca baja de línea. En la ficha
-              van por separado y el nombre sale completo. */}
-          <p className="mt-0.5 flex min-w-0 items-center gap-0.5 text-sm font-semibold text-[#101d35]">
-            <span className="min-w-0 truncate" title={job.employer_name || undefined}>{formatPersonDisplayName(job.employer_name || copy.professionalFallback, "mobile")}</span>
-            {job.employer_verified && <VerificationInfo />}
-          </p>
+          <InlineIdentityName className="mt-0.5 text-sm font-semibold text-[#101d35]" name={formatPersonDisplayName(job.employer_name || "", "mobile")} badge={job.employer_verified ? <VerificationInfo /> : null} />
           {/* TELÉFONO: dónde y cuándo; modalidad y experiencia; salario. */}
           <JobMetaLine job={job} showApplicants={false} className="mt-0.5 truncate text-sm text-[#52627a] lg:hidden" />
           {/* SIN LOS AÑOS DE EXPERIENCIA. En la tarjeta de una lista el dato no
@@ -646,17 +641,7 @@ function JobPreview({ job, isOwner, userId, onEdit, mobile = false, hideActions 
         {/* El check identifica a quien publica y abre la explicación compartida. */}
         <div data-verification-owner className="flex min-w-0 flex-1 items-center gap-1">
           {/* El nombre enlaza al perfil público; el check queda fuera del enlace. */}
-          {job.employer_slug ? (
-            <Link
-              href={`/profesionales/${job.employer_slug}?from=${encodeURIComponent(rutaEmpleo(job))}`}
-              className="inline-flex min-w-0 max-w-full items-center gap-1 font-semibold text-[#005eaa] hover:underline"
-            >
-              <span className="line-clamp-2 min-w-0 [overflow-wrap:anywhere]">{job.employer_name}</span>
-            </Link>
-          ) : (
-            <p className="line-clamp-2 font-semibold text-[#52627a] [overflow-wrap:anywhere]">{job.employer_name}</p>
-          )}
-          {job.employer_verified && <VerificationInfo />}
+          <InlineIdentityName className={job.employer_slug ? "font-semibold text-[#005eaa]" : "font-semibold text-[#52627a]"} name={job.employer_name || ""} href={job.employer_slug ? `/profesionales/${job.employer_slug}?from=${encodeURIComponent(rutaEmpleo(job))}` : undefined} badge={job.employer_verified ? <VerificationInfo /> : null} />
         </div>
         {/* COMPARTIR VIVE DENTRO DEL «···», no al lado. Probé sacarlo como
             botón visible y quedaba la MISMA acción dos veces a dos centímetros:

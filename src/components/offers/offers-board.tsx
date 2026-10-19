@@ -1,5 +1,7 @@
 "use client";
 
+import { InlineIdentityName } from "@/components/ui/inline-identity-name";
+
 import { ProfilePhotoPreview } from "@/components/ui/profile-photo-preview";
 
 import { formatPersonDisplayName } from "@/lib/display-name";
@@ -758,12 +760,7 @@ function OfferRow({
                 </span>
               )}
             </div>
-            {/* Nombre y «Verificado» en UNA línea, como en Empleos: el
-                nombre se resume y cede con «…» si no cabe (8-oct-2026). */}
-            <p className="flex min-w-0 items-center gap-0.5 text-[13px] font-semibold leading-5 text-[#101d35] sm:text-sm">
-              <span className="min-w-0 truncate" title={offer.professional_name || undefined}>{formatPersonDisplayName(offer.professional_name, "mobile")}</span>
-              {offer.professional_verified && <VerificationInfo />}
-            </p>
+            <InlineIdentityName className="text-[13px] font-semibold leading-5 text-[#101d35] sm:text-sm" name={formatPersonDisplayName(offer.professional_name || "", "mobile")} badge={offer.professional_verified ? <VerificationInfo /> : null} />
             {/* En computadora, un solo azul por fila: el del título, que es lo
                 que se abre. El precio va en azul marino y fuerte —es dinero—, y
                 tipo, servicio y lugar comparten un renglón gris. */}
@@ -855,21 +852,7 @@ function OfferPreview({
             {/* El check verifica a quien publica, no la promoción. */}
             <div data-verification-owner className="flex min-w-0 flex-1 items-center gap-1">
               {offer.professional_avatar_url && <ProfilePhotoPreview src={offer.professional_avatar_url} name={offer.professional_name ?? ""} className="mr-2 h-11 w-11" />}
-              {offer.professional_slug ? (
-                <Link
-                  href={`/profesionales/${offer.professional_slug}?from=${encodeURIComponent(rutaPromocion(offer))}`}
-                  className="inline-flex min-w-0 max-w-full items-center gap-1 font-semibold text-[#005eaa] hover:underline"
-                >
-                  <span className="line-clamp-2 min-w-0 [overflow-wrap:anywhere]">{offer.professional_name}</span>
-                </Link>
-              ) : (
-                <p className="line-clamp-2 min-w-0 font-semibold text-[#52627a] [overflow-wrap:anywhere]">
-                  {offer.professional_name}
-                </p>
-              )}
-              {offer.professional_verified && (
-                <VerificationInfo />
-              )}
+              <InlineIdentityName className={offer.professional_slug ? "font-semibold text-[#005eaa]" : "font-semibold text-[#52627a]"} name={offer.professional_name || ""} href={offer.professional_slug ? `/profesionales/${offer.professional_slug}?from=${encodeURIComponent(rutaPromocion(offer))}` : undefined} badge={offer.professional_verified ? <VerificationInfo /> : null} />
             </div>
             {/* Compartir vive dentro del «···»: ver la nota de la ficha de un empleo. */}
             <MenuOferta

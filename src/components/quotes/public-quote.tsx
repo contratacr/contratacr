@@ -1,4 +1,5 @@
 "use client";
+import { InlineIdentityName } from "@/components/ui/inline-identity-name";
 import { ContrataCRLogo } from "@/components/brand/brand-logo";
 
 import { useTranslations } from "next-intl";
@@ -64,10 +65,9 @@ export function PublicQuote({ locale, data }: { locale: string; data: PublicQuot
           </Avatar>
           <div className="min-w-0 flex-1">
             <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#68778d]">{t("publicFrom")}</p>
-            <p className="mt-0.5 flex items-center gap-1.5 text-[19px] font-extrabold leading-tight text-[#162543]">
-              <span className="min-w-0 truncate">{pro.name}</span>
-              {pro.verified && <VerificationInfo />}
-            </p>
+            <div className="mt-0.5 text-[19px] font-extrabold leading-tight text-[#162543]">
+              <InlineIdentityName name={pro.name} badge={pro.verified ? <VerificationInfo /> : null} />
+            </div>
             {oficio && <p className="mt-0.5 text-[13px] text-[#52627a]">{oficio}</p>}
           </div>
         </div>
