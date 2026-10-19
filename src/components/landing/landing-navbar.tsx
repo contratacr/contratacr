@@ -3109,7 +3109,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 </div>
               )}
 
-              <div data-mobile-menu-footer className="mt-5 shrink-0 border-t border-[#162543]/10 bg-white px-1 pt-3">
+              <div data-mobile-menu-footer className="mt-5 shrink-0 bg-white px-1 pt-3">
                 <SocialLinks compact testId="mobile-menu-social-links" className="flex items-center gap-1 bg-white" />
                 <div className="mt-1 flex items-center justify-between gap-3 bg-white">
                 <button
