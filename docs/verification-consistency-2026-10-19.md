@@ -28,3 +28,9 @@ Contratos de consultas/caché: seis de perfil y siete de catálogo correctos. Se
 Las pruebas visuales usan cuentas temporales aisladas en el proyecto de pruebas, nunca cuentas reales de producción. Cubren documentos nacionales, DIMEX y jurídicos en Chromium escritorio, Chromium móvil y WebKit móvil. Pasaron 12 escenarios de integración de documentos/insignia, tres comprobaciones del nombre completo en pantalla y una repetición final del flujo DIMEX en Chromium móvil con la compilación actual. No sustituyen una ejecución nativa en dispositivos físicos.
 
 No se crean migraciones, no se cambian identificaciones de usuarios en producción ni se envían recordatorios. El cambio es web compartida; no requiere publicar otro binario en tiendas.
+
+## Simplificación del formulario
+
+La revisión manual muestra directamente los archivos necesarios, sin comentario opcional, explicación repetida, reintento automático ni paso de apertura adicional. DIMEX y personas físicas adjuntan una foto con su identificación; las jurídicas conservan también el documento de representación. La instrucción queda junto al archivo y los botones mantienen el mismo tamaño. El envío se habilita solo cuando están todos los archivos exigidos; los casos anteriores pueden completar sus documentos sin crear solicitudes duplicadas. La API de apelaciones existente permanece disponible para clientes anteriores.
+
+Validación adicional: compilación Cloudflare, TypeScript, ESLint, textos e idiomas. La regresión de documentos comprueba ausencia del comentario, archivos obligatorios, envío, permisos privados y reintentos.

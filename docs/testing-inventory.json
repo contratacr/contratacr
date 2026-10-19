@@ -3,7 +3,7 @@
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
     "files": 470,
-    "controls": 1282,
+    "controls": 1280,
     "pages": 71,
     "handlers": 97,
     "components": 240,
@@ -11311,7 +11311,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 110,
+          "line": 97,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setReviewOpen(true)}",
@@ -11319,7 +11319,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 118,
+          "line": 104,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{retry}",
@@ -11327,23 +11327,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 119,
-          "tag": "button",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "{() => setReviewOpen(true)}",
-          "destination": "",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 126,
-          "tag": "textarea",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "{event => setMessage(event.target.value)}",
-          "destination": "",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 133,
+          "line": 115,
           "tag": "button",
           "label": "{en ? `Remove ${doc.title}` : `Quitar ${doc.title}`}",
           "handler": "{() => setFiles(prev => { const next = { ...prev }; delete next[doc.id]; return next; })}",
@@ -11351,7 +11335,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 134,
+          "line": 116,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => refs.current[doc.id]?.click()}",
@@ -11359,7 +11343,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 135,
+          "line": 117,
           "tag": "input",
           "label": "{doc.title}",
           "handler": "{event => { const file = event.target.files?.[0]; event.target.value = \"\"; if (!file) return; if (file.size > 4 * 1024 * 1024) { setError(en ? \"Each file must be 4 MB or smaller.\" : \"Cada archivo debe pesar 4 MB o menos.\"); return; } setError(\"\"); setFiles(prev => ({ ...prev, [doc.id]: file })); }}",
@@ -11367,7 +11351,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 138,
+          "line": 120,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{submit}",
@@ -11375,10 +11359,10 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 140,
+          "line": 122,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "{() => { setReviewOpen(false); setFiles({}); setMessage(\"\"); }}",
+          "handler": "{() => { setReviewOpen(false); setFiles({}); }}",
           "destination": "",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         }
