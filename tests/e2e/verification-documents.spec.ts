@@ -11,7 +11,7 @@ function capturePath(filename: string) {
 
 // Isolated disposable identities: parallel regression never changes another test's role.
 for (const kind of ["company", "person", "dimex"] as const) test(`private verification documents ${kind} validate files and deduplicate retries`, async ({ page: initialPage, request }) => {
-  let page = initialPage;
+  const page = initialPage;
   test.setTimeout(120_000);
   const apiHeaders = { "x-forwarded-for": `2001:db8::${Math.floor(Math.random() * 65535).toString(16)}` };
   const blockedHeaders = { "x-forwarded-for": `10.99.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}` };
