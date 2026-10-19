@@ -22,8 +22,8 @@ test("panel and public profile share readable identity sizes and immediately ado
   test.setTimeout(120_000);
   let account: DisposableAccount | undefined;
   let releaseAuth: (() => void) | undefined;
-  const oldName = "Sebastián Alejandro Fernández Rodríguez";
-  const newName = "Alejandra Patricia Fernández Rodríguez";
+  const oldName = "SEBASTIÁN ALEJANDRO FERNÁNDEZ RODRÍGUEZ";
+  const newName = "ALEJANDRA PATRICIA FERNÁNDEZ RODRÍGUEZ";
   try {
     account = await createDisposableAccount({ prefix: "identity-layout", professional: true });
     const db = regressionAdminClient();
@@ -101,6 +101,9 @@ test("panel and public profile share readable identity sizes and immediately ado
       await expectNoHorizontalOverflow(page);
       await page.setViewportSize(original);
     }
+    const { data: canonical, error: canonicalError } = await db.from("profiles").select("full_name").eq("id", account.id).single();
+    if (canonicalError) throw canonicalError;
+    expect(canonical.full_name).toBe(newName);
     await publicName.locator("xpath=ancestor::div[contains(@class,'rounded-2xl')][1]").screenshot({ path: test.info().outputPath("public-identity-card.png") });
     await page.screenshot({ path: test.info().outputPath("public-identity.png"), fullPage: true });
   } finally {

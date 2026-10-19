@@ -40,6 +40,18 @@ function looksLikeBusinessName(name?: string) {
   return /[&+]/.test(name ?? "");
 }
 
+const LOWERCASE_NAME_PARTICLES = new Set(["de", "del", "la", "las", "los", "y", "e", "van", "von", "da", "dos", "di"]);
+
+/** Presentation only: official all-uppercase names stay unchanged in storage.
+ * Keep deliberate mixed casing and explicit business names as written.
+ */
+function personNameCase(name: string) {
+  if (!/\p{L}/u.test(name) || name !== name.toLocaleUpperCase("es")) return name;
+  return name.toLocaleLowerCase("es").replace(/\p{L}[\p{L}\p{M}]*/gu, (word, offset: number) =>
+    offset > 0 && LOWERCASE_NAME_PARTICLES.has(word) ? word : word[0].toLocaleUpperCase("es") + word.slice(1),
+  );
+}
+
 // Preserve ambiguous structures (particles, compound given names and longer names).
 // Identity/verification always retains the original full_name.
 export function formatPersonDisplayName(name?: string, _mode: "desktop" | "mobile" = "desktop") {
@@ -51,8 +63,8 @@ export function formatPersonDisplayName(name?: string, _mode: "desktop" | "mobil
   const particles = new Set(["de", "del", "la", "las", "los", "van", "von", "da", "dos", "di"]);
   const compoundGivenNames = new Set(["maria jose", "jose maria", "juan pablo", "juan carlos", "luis miguel", "ana maria"]);
   if (parts.length !== 4 || normalized.some(part => particles.has(part)) || compoundGivenNames.has(normalized.slice(0, 2).join(" "))
-    || parts.some(part => !/^[\p{L}'’.-]+$/u.test(part))) return clean;
-  return [parts[0], parts[2], parts[3]].join(" ");
+    || parts.some(part => !/^[\p{L}'’.-]+$/u.test(part))) return personNameCase(clean);
+  return personNameCase([parts[0], parts[2], parts[3]].join(" "));
 }
 
 export function getProfessionalDisplayName(fullName: string, businessName?: string) {
