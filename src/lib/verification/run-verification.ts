@@ -1,3 +1,4 @@
+import { identityReviewBoundary } from "./review-scope";
 import { invalidateProfessionalCache } from "@/lib/cache/professional-revision";
 import { verifiedProfileName } from "@/lib/verification/profile-name";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -25,12 +26,18 @@ export async function runIdentityVerification(
   const profile = pro.profiles as unknown as { full_name: string | null; cedula: string | null };
   const cedula = cleanId(profile?.cedula ?? "");
   if (!cedula || (opts.expectedCedula && cedula !== opts.expectedCedula)) return "skipped";
-  const [history, cases] = await Promise.all([
-    admin.from("provider_verification_log").select("id").eq("professional_id", pro.id)
-      .in("action", ["verified", "authorized", "rejected", "reverted_pending", "under_appeal"]).limit(1),
-    admin.from("support_tickets").select("id").eq("user_id", pro.profile_id)
-      .in("topic", ["verification_documents", "verification_appeal"]).in("status", ["open", "in_progress"]).limit(1),
-  ]);
+  let changedAt: string | null;
+  try { changedAt = await identityReviewBoundary(admin, pro.id, pro.profile_id, cedula); }
+  catch { return "skipped"; }
+  let historyQuery = admin.from("provider_verification_log").select("id").eq("professional_id", pro.id)
+    .in("action", ["verified", "authorized", "rejected", "reverted_pending", "under_appeal"]);
+  let casesQuery = admin.from("support_tickets").select("id").eq("user_id", pro.profile_id)
+    .in("topic", ["verification_documents", "verification_appeal"]).in("status", ["open", "in_progress"]);
+  if (changedAt) {
+    historyQuery = historyQuery.gte("created_at", changedAt);
+    casesQuery = casesQuery.gte("created_at", changedAt);
+  }
+  const [history, cases] = await Promise.all([historyQuery.limit(1), casesQuery.limit(1)]);
   if (history.error || cases.error) return "skipped";
   if (history.data?.length || cases.data?.length) return "ticket";
   const fullName = profile.full_name ?? "";

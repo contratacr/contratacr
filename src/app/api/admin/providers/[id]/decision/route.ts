@@ -1,3 +1,5 @@
+import { syncOfficialProfileName } from "@/lib/verification/profile-name";
+import { invalidateProfessionalCache } from "@/lib/cache/professional-revision";
 import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -51,6 +53,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           ? "reverted"
           : "pending";
   const decisionReason = action === "reject" || (action === "revert_pending" && fromStatus === "verified") ? reason : null;
+  if (action === "verify") await syncOfficialProfileName(db, pro.profile_id);
+
   const now = new Date().toISOString();
 
   const { error: updErr } = await db
@@ -158,6 +162,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   }
 
   await notifyVerificationDecision({ professionalId: id, kind: notifyKind, reason: decisionReason });
+
+  await invalidateProfessionalCache();
 
   return NextResponse.json({ ok: true, status: toStatus });
 }

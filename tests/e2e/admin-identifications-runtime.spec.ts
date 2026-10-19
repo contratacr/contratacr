@@ -21,7 +21,7 @@ function fixture(extra: Record<string, Value[]> = {}) {
   const profile = { id: owner, full_name: "Nombre Prueba", cedula: "101053316", client_identity_status: "pending" };
   return { profiles: [profile], professionals: [{ id: proId, profile_id: owner, verification_status: "pending", is_verified: false, is_banned: false, profiles: profile }], ...extra };
 }
-function setup(initial = fixture(), options: { result?: Value; failTable?: string; preserveName?: boolean; authFail?: boolean } = {}) {
+function setup(initial = fixture(), options: { result?: Value; failTable?: string; authFail?: boolean } = {}) {
   const rows: Record<string, Value[]> = structuredClone(initial); const writes: Value[] = []; const calls: string[] = []; const runs: Value[] = []; const authWrites: Value[] = [];
   let lookups = 0;
   const db = { from(table: string) {
@@ -45,7 +45,7 @@ function setup(initial = fixture(), options: { result?: Value; failTable?: strin
   const service = load("src/lib/verification/admin-review.ts", {
     "@/lib/cedula": cedula,
     "./identity-verifier": { ...identity, getIdentityVerifier: () => ({ lookup: async () => { lookups++; return result; } }) },
-    "./profile-name": { verifiedProfileName: async (_db: Value, _id: string, current: string, _cedula: string, official: string) => options.preserveName ? current : official },
+    "./profile-name": load("src/lib/verification/profile-name.ts"),
     "./run-verification": { runIdentityVerification: async (id: string, opts: Value) => { runs.push({ id, opts }); rows.professionals.find(row => row.id === id)!.verification_status = "verified"; return "verified"; } },
     "@/lib/cache/professional-revision": { invalidateProfessionalCache: async () => {} },
   });
@@ -102,10 +102,10 @@ test("a client-only match updates the account and open projects, preserving unre
   expect(s.rows.projects[0].client_identity_status).toBe("verified"); expect(s.rows.projects[1].client_identity_status).toBeUndefined();
   expect(s.authWrites[0].user_metadata).toEqual({ keep: "original", full_name: "NOMBRE PRUEBA" });
 });
-test("client verification keeps admin name corrections and stops if Auth synchronization fails", async () => {
-  const kept = setup(fixture({ professionals: [] }), { preserveName: true });
+test("client verification adopts the complete official name and stops if Auth synchronization fails", async () => {
+  const kept = setup(fixture({ professionals: [] }));
   expect((await kept.service.verifyPendingIdentity(kept.db, owner, "101053316")).outcome).toBe("verified");
-  expect(kept.rows.profiles[0].full_name).toBe("Nombre Prueba"); expect(kept.authWrites).toEqual([]);
+  expect(kept.rows.profiles[0].full_name).toBe("NOMBRE PRUEBA"); expect(kept.authWrites[0].user_metadata.full_name).toBe("NOMBRE PRUEBA");
   const failed = setup(fixture({ professionals: [] }), { authFail: true });
   expect(await failed.service.verifyPendingIdentity(failed.db, owner, "101053316").then(() => null, (error: unknown) => String(error))).toContain("Auth unavailable"); expect(failed.writes).toEqual([]);
 });

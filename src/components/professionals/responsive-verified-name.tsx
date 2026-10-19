@@ -20,15 +20,18 @@ export function ResponsiveVerifiedName({
   name,
   verified,
   href,
+  wrap = false,
 }: {
   name: string;
   verified: boolean;
   verifiedLabel: string;
   href?: string;
+  /** Official identification names must remain fully readable. */
+  wrap?: boolean;
 }) {
   return (
     <span className="flex w-full min-w-0 items-center">
-      {href ? <Link href={href} className="min-w-0 truncate hover:text-[#009FD9]">{name}</Link> : <span className="min-w-0 truncate">{name}</span>}
+      {href ? <Link href={href} className={wrap ? "min-w-0 break-words whitespace-normal hover:text-[#009FD9]" : "min-w-0 truncate hover:text-[#009FD9]"}>{name}</Link> : <span className={wrap ? "min-w-0 break-words whitespace-normal" : "min-w-0 truncate"}>{name}</span>}
       {verified && <VerificationInfo />}
     </span>
   );

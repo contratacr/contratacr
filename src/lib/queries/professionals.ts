@@ -369,7 +369,7 @@ export async function searchProfessionals(
 
 const searchProfessionalsCached = unstable_cache(
   async (filters: SearchFilters, revision: string) => { void revision; return searchProfessionalsUncached(filters); },
-  ["public-professional-search-v5"],
+  ["public-professional-search-v6"],
   { revalidate: SEARCH_CACHE_SECONDS, tags: ["public-professionals"] },
 );
 
@@ -1186,7 +1186,7 @@ export const fichaEnCache = cache((slug: string) => cachedProfessional(slug));
 
 const getProfessionalBySlugCached = unstable_cache(
   (slug: string, revision: string) => { void revision; return getProfessionalBySlugUncached(slug); },
-  ["public-professional-detail-v1"],
+  ["public-professional-detail-v2"],
   { revalidate: PERFIL_CACHE_SECONDS, tags: ["public-professionals"] },
 );
 

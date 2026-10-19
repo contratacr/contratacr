@@ -12,9 +12,10 @@ const requireNode = createRequire(`${process.cwd()}/tests/e2e/hacienda-verificat
 function load(file: string, mocks: Record<string, unknown> = {}, globals: Record<string, unknown> = {}) {
   const box = { exports: {} as Record<string, RuntimeValue> };
   const code = ts.transpileModule(readFileSync(file, "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
-  runInNewContext(code, { module: box, exports: box.exports, require: (name: string) => mocks[name] ?? (name === "@/lib/verification/review-eligibility" ? eligibility : requireNode(name)), Response, Request, AbortSignal, Date, Buffer, console, ...globals });
+  runInNewContext(code, { module: box, exports: box.exports, require: (name: string) => mocks[name] ?? (name === "@/lib/verification/profile-name" ? { syncOfficialProfileName: async () => {} } : name === "./review-scope" || name === "@/lib/verification/review-scope" ? reviewScope : name === "@/lib/cache/professional-revision" ? { invalidateProfessionalCache: async () => {} } : name === "@/lib/verification/review-eligibility" ? eligibility : requireNode(name)), Response, Request, AbortSignal, Date, Buffer, console, ...globals });
   return box.exports;
 }
+const reviewScope = load("src/lib/verification/review-scope.ts");
 const cedula = load("src/lib/cedula.ts");
 const eligibility = load("src/lib/verification/review-eligibility.ts", { "@/lib/cedula": cedula });
 const found = (idType = "cedula") => ({ found: true, fullName: "Nombre oficial", idType, provider: "hacienda_api", dob: null, isAdult: false });
@@ -88,7 +89,7 @@ function database(initial: Record<string, RuntimeValue[]> = {}) {
     let op = "read", value: RuntimeValue, options: RuntimeValue; const filters: ((row: RuntimeValue) => boolean)[] = []; let single = false;
     const q: RuntimeValue = {
       select() { return q; }, eq(k: string, v: RuntimeValue) { filters.push(r => r[k] === v); return q; }, neq(k: string, v: RuntimeValue) { filters.push(r => r[k] !== v); return q; },
-      in(k: string, values: RuntimeValue[]) { filters.push(r => values.includes(r[k])); return q; }, order() { return q; }, limit() { return q; },
+      in(k: string, values: RuntimeValue[]) { filters.push(r => values.includes(r[k])); return q; }, gte(k: string, v: RuntimeValue) { filters.push(r => r[k] >= v); return q; }, order() { return q; }, limit() { return q; },
       maybeSingle() { single = true; return q; }, update(v: RuntimeValue) { op = "update"; value = v; return q; },
       insert(v: RuntimeValue) { op = "insert"; value = v; return q; }, upsert(v: RuntimeValue, opts: RuntimeValue) { op = "upsert"; value = v; options = opts; return q; },
       then(resolve: RuntimeValue) {
@@ -112,7 +113,7 @@ function verification(result: RuntimeValue, status = "pending", name = "Nombre o
     "@/lib/cache/professional-revision": { invalidateProfessionalCache: async () => {} },
     "@/lib/supabase/admin": { createAdminClient: () => state.db }, "@/lib/cedula": cedula,
     "@/lib/verification/identity-verifier": { getIdentityVerifier: () => ({ lookup: async () => { lookups++; return result; } }) },
-    "@/lib/verification/profile-name": { verifiedProfileName: async () => name },
+    "@/lib/verification/profile-name": { verifiedProfileName: async (_db: unknown, _id: string, _current: string, _cedula: string, official: string) => official },
     "@/lib/verification-notify": { notifyVerificationDecision: async (v: RuntimeValue) => notifications.push(v), notifyVerificationOutreach: async () => notifications.push("outreach") },
   });
   return { ...state, run: (options = {}) => mod.runIdentityVerification("pro", { isInitial: true, notifyChannel: "in_app", ...options }), notifications, lookups: () => lookups };
@@ -193,7 +194,7 @@ test("changing an approved ID clears its old approval before saving the new docu
   const response = await mod.POST(new Request("https://contratacr.test/api/add-cedula", { method: "POST", body: JSON.stringify({ cedula: "9999999999" }) }));
   expect(response.status).toBe(200); expect((await response.json()).outcome).toBe("skipped");
   expect(state.writes[0]).toMatchObject({ table: "professionals", value: { verification_status: "pending", is_verified: false } });
-  expect(state.writes[1]).toMatchObject({ table: "profiles", value: { cedula: "9999999999", client_identity_status: "pending" } });
+  expect(state.writes.find(w => w.table === "profiles")).toMatchObject({ table: "profiles", value: { cedula: "9999999999", client_identity_status: "pending" } });
   expect(state.rows.professionals[0].is_verified).toBe(false); expect(state.rows.profiles[0].client_identity_status).toBe("pending");
 });
 test("publishing a project cannot synchronize an automatic approval over a manual appeal", async () => {
@@ -261,3 +262,51 @@ for (const target of ["users", "providers"] as const) {
     expect(Array.isArray(log) ? log : [log]).toContainEqual(expect.objectContaining({ action: "verified", from_status: "pending", to_status: "verified" }));
   });
 }
+
+test("a new saved document ignores only reviews predating that document change", async () => {
+  for (const currentReview of [false, true]) {
+    const v = verification(found("dimex"), "pending", "Nombre corto");
+    const marker = reviewScope.identityReviewScope("owner", "101053316");
+    v.rows.provider_verification_log = [
+      { professional_id: "pro", action: "reverted_pending", created_at: "2026-10-01T00:00:00Z" },
+      { professional_id: "pro", action: "identity_document_changed", reason: marker, created_at: "2026-10-19T00:00:00Z" },
+      ...(currentReview ? [{professional_id:"pro",action:"rejected",created_at:"2026-10-19T01:00:00Z"}] : []),
+    ];
+    v.rows.support_tickets = [{ user_id:"owner",topic:"verification_documents",status:"open",created_at:"2026-10-01T00:00:00Z" }];
+    expect(await v.run()).toBe(currentReview ? "ticket" : "verified");
+    if (!currentReview) expect(v.rows.profiles[0].full_name).toBe("Nombre oficial");
+    else expect(v.lookups()).toBe(0);
+  }
+});
+
+for (const kind of ["providers", "users"]) test(`admin ${kind} approval invalidates public profile caches`, async () => {
+  const state = database({professionals:[{id:"pro",profile_id:"owner",verification_status:"pending",is_verified:false}],profiles:[{id:"owner",cedula:"101053316",client_identity_status:"pending"}],projects:[]});
+  let invalidated=0;
+  const mod = load(`src/app/api/admin/${kind}/[id]/${kind === "providers" ? "decision" : "identity"}/route.ts`, {
+    "@/lib/auth/admin":{getApiAdmin:async()=>({id:"admin",fullName:"Admin"})},
+    "@/lib/supabase/admin":{createAdminClient:()=>state.db},
+    "@/lib/verification-notify":{notifyVerificationDecision:async()=>{}},
+    "@/lib/cache/professional-revision":{invalidateProfessionalCache:async()=>{invalidated++;}},
+  });
+  const response=await mod.POST(new Request("https://contratacr.test/api/admin/decision",{method:"POST",body:JSON.stringify({action:"verify"})}),{params:Promise.resolve({id:kind === "providers" ? "pro" : "owner"})});
+  expect(response.status).toBe(200);expect(invalidated).toBe(1);
+  expect(state.rows.professionals[0]).toMatchObject({is_verified:true,verification_status:"verified"});
+});
+
+test("account identity sync repairs a missing professional badge and invalidates the public cache", async () => {
+  const state=database({professionals:[{id:"pro",profile_id:"owner",verification_status:"verified",is_verified:false}]});
+  let invalidated=0;
+  const mod=load("src/lib/verification/account-identity.ts",{"@/lib/cache/professional-revision":{invalidateProfessionalCache:async()=>{invalidated++;}}});
+  await mod.syncProfessionalVerificationFromAccount(state.db,"owner","verified","hacienda_api");
+  expect(state.rows.professionals[0].is_verified).toBe(true);expect(invalidated).toBe(1);
+});
+
+for (const available of [true, false]) test(`manual approval official-name synchronization handles API ${available ? "match" : "outage"}`, async () => {
+  const state=database({profiles:[{id:"owner",cedula:"101053316",full_name:"Nombre corto"}]});
+  let metadata: RuntimeValue=null;
+  (state.db.auth.admin as RuntimeValue).updateUserById=async (_id:string,patch:RuntimeValue)=>{metadata=patch.user_metadata;return{error:null};};
+  const mod=load("src/lib/verification/profile-name.ts",{"./identity-verifier":{getIdentityVerifier:()=>({lookup:async()=>available ? {...found(),fullName:"NOMBRE COMPLETO OFICIAL"} : {...found(),found:false,unavailable:true}})}});
+  await mod.syncOfficialProfileName(state.db,"owner");
+  expect(state.rows.profiles[0].full_name).toBe(available ? "NOMBRE COMPLETO OFICIAL" : "Nombre corto");
+  expect(metadata).toEqual(available ? {full_name:"NOMBRE COMPLETO OFICIAL"} : null);
+});

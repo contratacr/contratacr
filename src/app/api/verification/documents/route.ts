@@ -1,3 +1,4 @@
+import { identityReviewBoundary } from "@/lib/verification/review-scope";
 import { canRequestIdentityReview } from "@/lib/verification/review-eligibility";
 import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
@@ -23,9 +24,12 @@ async function context() {
   if (!pro) return null;
   const profile = pro.profiles as unknown as { cedula: string | null; full_name: string | null; email: string | null };
   const cedula = cleanId(profile?.cedula ?? "");
-  const { data: decision, error: decisionError } = await db.from("provider_verification_log").select("id")
+  const changedAt = await identityReviewBoundary(db, pro.id, user.id, cedula);
+  let decisionQuery = db.from("provider_verification_log").select("id")
     .eq("professional_id", pro.id).in("action", ["verified", "rejected", "reverted_pending"])
-    .order("created_at", { ascending: false }).limit(1).maybeSingle();
+    .order("created_at", { ascending: false }).limit(1);
+  if (changedAt) decisionQuery = decisionQuery.gte("created_at", changedAt);
+  const { data: decision, error: decisionError } = await decisionQuery.maybeSingle();
   if (decisionError) throw decisionError;
   return { db, user, pro, profile, cedula, hasAdminDecision: !!decision, legal: pro.verification_provider === "hacienda_api_juridica" || detectIdType(cedula) === "juridica", ticketId: documentCaseId(user.id, cedula, decision?.id ?? null) };
 }

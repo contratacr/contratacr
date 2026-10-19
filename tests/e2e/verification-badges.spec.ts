@@ -214,3 +214,18 @@ test("verification shows only the identification check and its explanation", asy
     await cleanupDisposableAccount(account);
   }
 });
+
+test("official identification keeps the complete name readable without changing public card truncation", async ({ page }) => {
+  const { build } = await import("esbuild");
+  const bundled = await build({ stdin: { contents: `import React from 'react';import{createRoot}from'react-dom/client';import{IdentityInfoBlock}from'./src/components/ui/identity-info-block';import{ResponsiveVerifiedName}from'./src/components/professionals/responsive-verified-name';const name='MARÍA DE LOS ÁNGELES ALEJANDRA FERNÁNDEZ RODRÍGUEZ';createRoot(document.getElementById('root')).render(<div style={{width:200}}><IdentityInfoBlock fullName={name} verified={false}/><div data-public-name><ResponsiveVerifiedName name={name} verified={false} verifiedLabel=""/></div></div>);`,loader:'tsx',resolveDir:process.cwd()},jsx:'automatic',bundle:true,write:false,platform:'browser',format:'iife',tsconfig:'tsconfig.json',define:{'process.env.NODE_ENV':'"production"'},plugins:[{name:'presentation-boundaries',setup(b){
+    b.onResolve({filter:/^(next-intl|@\/i18n\/navigation|@\/components\/ui\/verification-info)$/},a=>({path:a.path,namespace:'presentation'}));
+    b.onLoad({filter:/.*/,namespace:'presentation'},a=>({contents:a.path==='next-intl'?`export const useTranslations=()=>key=>key;`:a.path==='@/i18n/navigation'?`export const Link=()=>null;`:`export const VerificationInfo=()=>null;`}));
+  }}]});
+  await page.route('**/official-name-harness',r=>r.fulfill({contentType:'text/html',body:'<!doctype html><meta name="viewport" content="width=device-width"><style>.flex{display:flex}.w-full{width:100%}.min-w-0{min-width:0}.flex-1{flex:1}.truncate{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.whitespace-normal{white-space:normal}.break-words{overflow-wrap:break-word}</style><div id="root"></div>'}));
+  await page.goto('/official-name-harness');await page.addScriptTag({content:bundled.outputFiles[0].text});
+  const official=page.locator('[data-nombre-identificacion] .whitespace-normal');
+  await expect(official).toHaveText('MARÍA DE LOS ÁNGELES ALEJANDRA FERNÁNDEZ RODRÍGUEZ');
+  expect(await official.evaluate(e=>e.scrollWidth<=e.clientWidth)).toBe(true);
+  const publicName=page.locator('[data-public-name] .truncate');await expect(publicName).toHaveCSS('white-space','nowrap');
+  expect((await official.boundingBox())!.height).toBeGreaterThan((await publicName.boundingBox())!.height);
+});
