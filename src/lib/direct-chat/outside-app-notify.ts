@@ -2,11 +2,11 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { EMAIL_LOGO_DARK_MODE_STYLES, emailLogoMarkup, sendBrevoEmail } from "@/lib/email/send";
 import { sendWhatsAppText } from "@/lib/notifications";
 
-// Direct messages live inside the app. Push only reaches people who installed
+// Direct messages are shared by web and native. Push reaches people who installed
 // it, so anyone without a FRESH device token gets the notice by email — and
 // professionals also by WhatsApp, the channel they already use with ContrataCR.
 // Nothing here carries the message body to WhatsApp: it is a pointer back into
-// the conversation, which keeps moderation, history and blocking in the app.
+// the shared conversation, including its moderation, history and blocking.
 
 type AdminDb = ReturnType<typeof createAdminClient>;
 
@@ -58,9 +58,9 @@ function emailHtml({ origin, senderName, preview, threadUrl }: { origin: string;
       <tr><td style="padding:6px 28px 0 28px;font-family:Arial,Helvetica,sans-serif;">
         <h1 style="font-size:19px;font-weight:bold;margin:14px 0 10px 0;color:#162543;">${escapeHtml(senderName)} te escribió en ContrataCR</h1>
         <div class="ccr-email-body" style="font-size:14px;line-height:1.6;color:#374151;">
-          <p style="margin:0 0 12px;">Tienes un mensaje nuevo esperando en la app.</p>
+          <p style="margin:0 0 12px;">Tienes un mensaje nuevo en ContrataCR.</p>
           <blockquote style="margin:0 0 12px;padding:12px 16px;border-left:3px solid #009FD9;background:#f8fcff;color:#173052;border-radius:8px;">${escapeHtml(preview)}</blockquote>
-          <p style="margin:0;">Los mensajes se leen y se responden desde la app ContrataCR.</p>
+          <p style="margin:0;">Puedes leerlo y responder desde la web o la app ContrataCR.</p>
         </div>
       </td></tr>
       <tr><td align="center" style="padding:22px 28px 4px 28px;"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" bgcolor="#008ce0" style="border-radius:10px;"><a href="${threadUrl}" target="_blank" style="display:inline-block;padding:13px 30px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:10px;">Abrir la conversación</a></td></tr></table></td></tr>
@@ -114,7 +114,7 @@ export async function notifyRecipientOutsideApp({
   if (whatsapp) {
     tasks.push(sendWhatsAppText(
       whatsapp,
-      `Hola, ${senderName} te escribió en ContrataCR. Responde desde la app: ${threadUrl}`,
+      `Hola, ${senderName} te escribió en ContrataCR. Lee el mensaje y responde aquí: ${threadUrl}`,
     ));
   }
   const results = await Promise.allSettled(tasks);

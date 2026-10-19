@@ -387,6 +387,7 @@
     "videoconsulta": "Videoconsulta",
     "callShort": "Llamar",
     "call": "Contactar por llamada",
+    "contactPending": "Contactar",
     "whatsappLong": "Contactar por WhatsApp",
     "countryCoverage": "Todo Costa Rica",
     "moreZones": "+{count, plural, one {# zona más} other {# zonas más}}",

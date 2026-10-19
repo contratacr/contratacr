@@ -7,12 +7,8 @@ import { recordServerInteraction } from "@/lib/analytics/server-interactions";
 import { limitTrimmedText } from "@/lib/text-limits";
 import { validateDirectMessage } from "@/lib/moderation/messages";
 
-// Messages written inside the app are moderated and, when the other person
-// has no app, announced by email; the website keeps the behaviour it always
-// had. The native shell marks its requests with the ccr_platform cookie.
-function isNativeRequest(req: Request) {
-  return /(?:^|;\s*)ccr_platform=native(?:;|$)/.test(req.headers.get("cookie") ?? "");
-}
+// Web and native share moderation, conversations and recipient-based alerts.
+
 import { sendNotificationPush } from "@/lib/push/notify";
 import { notifyRecipientOutsideApp, usersWithFreshPush } from "@/lib/direct-chat/outside-app-notify";
 import { drainPushOutbox } from "@/lib/push/worker";
@@ -301,10 +297,10 @@ export async function GET(req: Request) {
   }
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   // RECIBIDO (✓✓): la app de esta persona acaba de cargar sus conversaciones,
-  // así que lo que le escribieron ya le llegó. Solo en la app —la web no
-  // muestra el chat— y solo donde tiene algo sin leer. Va después de responder:
+  // así que lo que le escribieron ya le llegó, tanto en web como en la app.
+  // Solo donde tiene algo sin leer. Va después de responder:
   // la lista no espera por esto.
-  if (isNativeRequest(req)) {
+  {
     const conPendientes = ((data ?? []) as ConversationRow[])
       .filter((c) => Number(c.client_id === user.id ? c.client_unread_count : c.professional_unread_count) > 0)
       .map((c) => c.id);
@@ -328,8 +324,7 @@ export async function POST(req: Request) {
   const projectId = String(body.projectId ?? "");
   const contextTitle = limitTrimmedText(body.contextTitle, 160);
   const message = limitTrimmedText(body.message, 2000);
-  const nativeRequest = isNativeRequest(req);
-  if (nativeRequest) {
+  {
     const moderation = validateDirectMessage(message, idiomaDeLaPeticion(req));
     if (!moderation.ok) return NextResponse.json({ error: moderation.error }, { status: 422 });
   }

@@ -22,6 +22,10 @@ concurrency:
 permissions:
   contents: read
 
+# Official Supabase mirror; shared ECR runner IPs exceeded the anonymous pull limit.
+env:
+  SUPABASE_INTERNAL_IMAGE_REGISTRY: ghcr.io
+
 jobs:
   local-database-contract:
     name: Local schema and fast contracts
@@ -204,7 +208,7 @@ jobs:
           PLAYWRIGHT_OUTPUT_DIR: test-results-safari-first
           PLAYWRIGHT_JSON_REPORT: test-results-safari-first/results.json
           PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report-safari-first
-        run: npx playwright test --project=webkit-mobile native-social-access auth-screens despues-del-registro assistant-navigation verification-badges navbar-brand-consistency admin-mfa
+        run: npx playwright test --project=webkit-mobile native-social-access auth-screens despues-del-registro assistant-navigation verification-badges navbar-brand-consistency admin-mfa account-mfa web-chat-parity contact-channel-stability last-used-sign-in search-suggestion-confirmation buscar-servicio-y-lugar
 
       - name: Require clean Safari assistant results
         if: github.event_name == 'push'
@@ -216,7 +220,7 @@ jobs:
         if: github.event_name == 'push'
         run: >-
           npx playwright test
-          auth-support borrador-sin-sesion ai-assistant admin-identifications hacienda-verification-runtime verification-documents current-profile-names-runtime admin-mfa admin-profile-edit-runtime admin-padron-runtime public-smoke app-download mobile-menu-surface verification-badges navbar-brand-consistency mensajes-sin-parpadeo landing-media-budget android-auth-return-presentation avatar-framing shared-link-language
+          auth-support borrador-sin-sesion ai-assistant admin-identifications hacienda-verification-runtime verification-documents current-profile-names-runtime admin-mfa account-mfa web-chat-parity contact-channel-stability last-used-sign-in search-suggestion-confirmation buscar-servicio-y-lugar admin-profile-edit-runtime admin-padron-runtime public-smoke app-download mobile-menu-surface verification-badges navbar-brand-consistency mensajes-sin-parpadeo landing-media-budget android-auth-return-presentation avatar-framing shared-link-language
 
       - name: Require clean push smoke results
         if: github.event_name == 'push'

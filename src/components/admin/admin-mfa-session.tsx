@@ -5,7 +5,7 @@ import { useRouter } from "@/i18n/navigation";
 import { AdminMfa } from "./admin-mfa";
 
 // Mounted only inside a server-authorized admin panel. This is a UX guard;
-// admin APIs independently verify the live user and fresh signed MFA claims.
+// admin APIs independently verify the live user and verified session MFA claims.
 export function AdminMfaSession({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [challenge, setChallenge] = useState<{ enrolled: boolean } | null>(null);

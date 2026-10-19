@@ -1,5 +1,6 @@
 "use client";
 
+import { TwoFactorSecurity } from "@/components/account/two-factor-security";
 import { SignInMethods } from "@/components/account/sign-in-methods";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { useEffect, useState } from "react";
@@ -338,6 +339,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
       </div>
 
       <SignInMethods />
+      <TwoFactorSecurity />
 
       {/* Password */}
       <div className="border-t border-[#eef2f6] pt-6 first:border-t-0 first:pt-0">

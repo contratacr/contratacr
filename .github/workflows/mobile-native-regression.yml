@@ -24,6 +24,10 @@ concurrency:
   group: mobile-native-regression-${{ github.event.inputs.mobile_ref || github.ref }}
   cancel-in-progress: true
 
+# Official Supabase mirror; shared ECR runner IPs exceeded the anonymous pull limit.
+env:
+  SUPABASE_INTERNAL_IMAGE_REGISTRY: ghcr.io
+
 jobs:
   contracts:
     name: Mobile contracts and local build

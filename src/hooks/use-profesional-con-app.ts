@@ -3,90 +3,81 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { useAuth } from "@/hooks/use-auth";
 
-// ¿El profesional tiene la app? Decide si el botón de contacto en la app es
-// «Mensaje» (el chat) o «WhatsApp». Una búsqueda pinta muchas tarjetas: las
-// preguntas del mismo instante se juntan en UNA petición, y la respuesta queda
-// en memoria (y en la sesión) para las pantallas siguientes.
-//
-// Un resultado desconocido no equivale a WhatsApp: se conserva como null
-// hasta resolverlo para no mostrar un canal que cambia al llegar la respuesta.
-
-const CLAVE = "ccr:profesional-con-app:v1";
-const conocidos = new Map<string, boolean>();
+// Viewer-scoped, short-lived reachability. Never persist network failures as
+// WhatsApp for the entire session; a newly registered app must become reachable.
+type Availability = { value: boolean; expiresAt: number };
+const conocidos = new Map<string, Availability>();
 let pendientes = new Set<string>();
-// Ya pedidos alguna vez (en cola o en camino): no se vuelven a pedir.
 const pedidos = new Set<string>();
 let temporizador: number | null = null;
 const oyentes = new Set<() => void>();
-
-function leerSesion() {
-  if (conocidos.size || typeof window === "undefined") return;
-  try {
-    const guardado = JSON.parse(window.sessionStorage.getItem(CLAVE) ?? "{}") as Record<string, boolean>;
-    for (const [id, valor] of Object.entries(guardado)) conocidos.set(id, valor);
-  } catch { /* sin almacenamiento: se pregunta al servidor */ }
-}
-
-function guardarSesion() {
-  try { window.sessionStorage.setItem(CLAVE, JSON.stringify(Object.fromEntries(conocidos))); } catch { /* nada */ }
-}
-
-function resolver(id: string, valor: boolean) {
-  conocidos.set(id, valor);
-}
 
 function suscribir(avisar: () => void) {
   oyentes.add(avisar);
   return () => { oyentes.delete(avisar); };
 }
-
+function encolar(id: string) {
+  if (pedidos.has(id) || (conocidos.get(id)?.expiresAt ?? 0) > Date.now()) return;
+  pedidos.add(id);
+  pendientes.add(id);
+  if (temporizador === null) temporizador = window.setTimeout(() => { void preguntar(); }, 30);
+}
 async function preguntar() {
   temporizador = null;
   const ids = [...pendientes];
   pendientes = new Set();
   for (let i = 0; i < ids.length; i += 60) {
     const lote = ids.slice(i, i + 60);
+    const professionalIds = lote.map(key => key.slice(key.indexOf(":") + 1));
     try {
-      const res = await fetch(`/api/direct-chat?conApp=${lote.join(",")}`, { cache: "no-store" });
-      const json = res.ok ? await res.json() as { conApp?: Record<string, boolean> } : {};
-      // Ante la duda, WhatsApp: siempre llega a alguien.
-      for (const id of lote) resolver(id, Boolean(json.conApp?.[id]));
+      const res = await fetch(`/api/direct-chat?conApp=${professionalIds.join(",")}`, { cache: "no-store", signal: AbortSignal.timeout(8_000) });
+      if (!res.ok) throw new Error("availability-unavailable");
+      const json = await res.json() as { conApp?: Record<string, boolean> };
+      for (const id of lote) {
+        const value = json.conApp?.[id.slice(id.indexOf(":") + 1)];
+        if (typeof value !== "boolean") throw new Error("availability-missing");
+        conocidos.set(id, { value, expiresAt: Date.now() + (value ? 60_000 : 15_000) });
+      }
     } catch {
-      for (const id of lote) resolver(id, false);
+      for (const id of lote) {
+        // Preserve a confirmed channel through a transient failure. Unknown
+        // recipients can still use WhatsApp, with an automatic retry in 5s.
+        conocidos.set(id, { value: conocidos.get(id)?.value ?? false, expiresAt: Date.now() + 5_000 });
+      }
+    } finally {
+      lote.forEach(id => pedidos.delete(id));
     }
   }
-  guardarSesion();
-  oyentes.forEach((avisar) => avisar());
+  oyentes.forEach(avisar => avisar());
 }
 
-/** null pendiente, true chat confirmado, false WhatsApp; sin sesión no se consulta. */
+/** null pending, true shared chat, false WhatsApp; no anonymous lookup. */
 export function useProfesionalConApp(professionalId: string | undefined, activo: boolean) {
   const { user, loading } = useAuth();
   const consultar = Boolean(activo && user && professionalId);
-
+  const cacheId = user && professionalId ? `${user.id}:${professionalId}` : "";
   useEffect(() => {
-    if (!consultar || !professionalId) return;
-    leerSesion();
-    if (conocidos.has(professionalId)) {
-      oyentes.forEach((avisar) => avisar());
-      return;
-    }
-    if (pedidos.has(professionalId)) return;
-    pedidos.add(professionalId);
-    pendientes.add(professionalId);
-    if (temporizador === null) temporizador = window.setTimeout(() => { void preguntar(); }, 30);
-  }, [consultar, professionalId]);
-
-  // Servidor e hidratación comparten el estado pendiente; la memoria local
-  // resuelve antes del siguiente pintado sin cambiar un canal por otro.
+    if (!consultar || !cacheId) return;
+    const refresh = () => { if (document.visibilityState !== "hidden") encolar(cacheId); };
+    refresh();
+    const timer = window.setInterval(refresh, 5_000);
+    window.addEventListener("focus", refresh);
+    window.addEventListener("online", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", refresh);
+      window.removeEventListener("online", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [consultar, cacheId]);
   return useSyncExternalStore(
     suscribir,
     () => {
       if (!activo || !professionalId) return false;
       if (loading) return null;
       if (!user) return false;
-      leerSesion();
-      return conocidos.get(professionalId) ?? null;
+      return conocidos.get(cacheId)?.value ?? null;
     },
     () => activo && professionalId ? null : false,
   );

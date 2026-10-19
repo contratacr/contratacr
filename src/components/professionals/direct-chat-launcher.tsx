@@ -4,7 +4,7 @@ import { useAppDialog } from "@/hooks/use-app-dialog";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { WhatsAppLogo } from "@/components/ui/whatsapp-logo";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
@@ -53,6 +53,7 @@ export function DirectChatLauncher({
   contextKind,
 }: DirectChatLauncherProps) {
   const locale = useLocale();
+  const t = useTranslations("schedule");
   const isEn = locale === "en";
   const nativeApp = useNativeApp();
   const [loading, setLoading] = useState(false);
@@ -66,24 +67,19 @@ export function DirectChatLauncher({
   // El aviso del app, no el del navegador (ver BotonEscribir en Proyectos).
   const { dialogNode, showMessage } = useAppDialog();
 
-  // EN LA APP EL BOTÓN SE ADAPTA AL PROFESIONAL. Si tiene la app, «Mensaje»
-  // abre el chat; si no, es WhatsApp, igual que en la web. Al lanzar casi ningún
-  // profesional la tiene: con el chat fijo, el cliente escribía a alguien que
-  // solo se enteraba por un aviso y tenía que volver a la app a contestar. El
-  // chat crece solo a medida que los profesionales instalan la app.
-  //
-  const conApp = useProfesionalConApp(professionalId, nativeApp);
-  if (nativeApp && professionalId && conApp === null) {
+  // Web y app usan la misma conversación cuando el destinatario recibe mensajes.
+  const conApp = useProfesionalConApp(professionalId, true);
+  if (professionalId && conApp === null) {
     return (
       <button type="button" disabled aria-busy="true" data-contact-pending
         className={cn(buttonVariants({ variant: "outline", size: "md" }), "gap-1.5", className || "w-full rounded-full py-2.5 text-[13px] font-semibold")}
       >
         <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-        {isEn ? "Contact" : "Contactar"}
+        {t("contactPending")}
       </button>
     );
   }
-  const usaChat = nativeApp && (!professionalId || conApp === true);
+  const usaChat = conApp === true || (nativeApp && !professionalId);
   if (usaChat) {
     const safeLabel = buttonLabel && !/whatsapp/i.test(buttonLabel) ? buttonLabel : undefined;
     return (

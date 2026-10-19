@@ -1,6 +1,6 @@
 "use client";
 
-import { rememberSignIn } from "@/lib/auth/last-sign-in";
+import { rememberSignIn, readLastSignIn } from "@/lib/auth/last-sign-in";
 import { useTranslations, useLocale } from "next-intl";
 import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { Link } from "@/i18n/navigation";
@@ -439,6 +439,16 @@ export default function LoginPage() {
     () => "unknown" as const,
   );
   const browserRuntime = runtime === "browser";
+  // Read only this device's successful-login cookie after hydration.
+  const lastSignIn = useSyncExternalStore(
+    () => () => {},
+    readLastSignIn,
+    () => null,
+  );
+  function lastUsed(method: "email" | "google" | "apple") {
+    if (lastSignIn !== method) return null;
+    return <span data-last-used={method} className="pointer-events-none absolute -top-2 -right-2 z-10 rounded-full bg-[#edf8fb] px-2 py-0.5 text-[10px] font-medium leading-3 text-[#087b9b]">{locale === "en" ? "Last used" : "Último usado"}</span>;
+  }
   async function handleApple() { await handleSocial("apple"); }
 
   if (otpEmail) {
@@ -530,12 +540,15 @@ export default function LoginPage() {
                 </Link>
               </div>
             </div>
-            <Button type="submit" size="lg" loading={submitting} disabled={submitting} className="mt-2">
+            <div className="relative mt-2 rounded-xl">
+            {lastUsed("email")}
+            <Button type="submit" size="lg" loading={submitting} disabled={submitting} className="w-full">
               {/* Solo «Ingresar», centrado y sin flecha, como el resto de los
                   botones del app y las apps grandes: la flecha sugería «ir a
                   otra pantalla» y no «entrar» (9-oct-2026). */}
               {submitting ? t("submitting") : t("submit")}
             </Button>
+            </div>
           </form>
 
           <div className="relative my-6">
@@ -549,7 +562,9 @@ export default function LoginPage() {
 
           <div className="flex flex-col gap-3">
             {connectingApple && <p role="status" className="rounded-xl bg-[#eff9fd] p-3 text-sm text-[#374151]">{ta("loginHelp")}</p>}
-            {!connectingApple && <button
+            {!connectingApple && <div className="relative rounded-xl">
+            {lastUsed("apple")}
+            <button
               type="button"
               onClick={() => { void handleApple(); }}
               disabled={runtime === "unknown" || appleLoading || googleLoading}
@@ -557,8 +572,10 @@ export default function LoginPage() {
             >
               <svg aria-hidden="true" className="h-5 w-5 fill-current" viewBox="0 0 24 24"><path d="M17.05 12.54c-.03-3.01 2.46-4.48 2.57-4.55a5.5 5.5 0 0 0-4.33-2.34c-1.82-.19-3.58 1.09-4.5 1.09-.94 0-2.36-1.07-3.9-1.04A5.73 5.73 0 0 0 2.08 8.6c-2.09 3.62-.53 8.95 1.47 11.88 1 1.43 2.17 3.03 3.71 2.97 1.51-.06 2.08-.95 3.91-.95 1.81 0 2.35.95 3.92.91 1.62-.02 2.64-1.44 3.6-2.88a11.78 11.78 0 0 0 1.65-3.36 5.2 5.2 0 0 1-3.29-4.63ZM14.1 3.72A5.28 5.28 0 0 0 15.3 0a5.35 5.35 0 0 0-3.46 1.77 5.02 5.02 0 0 0-1.23 3.58 4.4 4.4 0 0 0 3.49-1.63Z" /></svg>
               {appleLoading ? t("redirecting") : t("continueApple")}
-            </button>}
+            </button></div>}
             {/* Google */}
+            <div className="relative rounded-xl">
+            {lastUsed("google")}
             {browserRuntime ? (
               <GoogleSignInButton
                 locale={locale}
@@ -600,6 +617,7 @@ export default function LoginPage() {
                   {googleLoading ? t("redirecting") : t("continueGoogle")}
                 </button>
             )}
+            </div>
           </div>
 
           {/* Social sign-in can create an account, so the terms must be visible before

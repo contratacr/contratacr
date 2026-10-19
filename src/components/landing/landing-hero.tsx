@@ -524,7 +524,7 @@ export function LandingHero() {
 
   // Selecting a service suggestion FILLS the field — it does NOT search. The
   // search runs only on Buscar/Enter (see runSearch).
-  function selectSuggestion(s: SearchSuggestion, correrBusqueda = false) {
+  function selectSuggestion(s: SearchSuggestion) {
     recienElegidoRef.current = true;
     setService(s.label);
     setServiceSel(s);
@@ -534,10 +534,10 @@ export function LandingHero() {
       setTimeout(() => enfocarVisible(ubicacionInputRef, ubicacionMobileRef), 0);
       return;
     }
-    if (correrBusqueda) runSearch(s);
+
   }
 
-  function selectLocation(s: LocationSuggestion, correrBusqueda = false) {
+  function selectLocation(s: LocationSuggestion) {
     setLocation(s.label);
     setLocationSel(s);
     pickedAddrRef.current = null;
@@ -549,7 +549,7 @@ export function LandingHero() {
       setTimeout(() => enfocarVisible(servicioInputRef, servicioMobileRef), 0);
       return;
     }
-    if (correrBusqueda) runSearch(undefined, { kind: "taxonomy", sug: s });
+
   }
 
   // Picking a Google address → resolve its province/cantón (from admin areas) + lat/lng, so the
@@ -669,8 +669,8 @@ export function LandingHero() {
       } else if (e.key === "Enter") {
         e.preventDefault();
         // Se completa con la sugerencia marcada (o la mejor) y se salta al otro
-        // campo; la búsqueda solo corre si ya están los dos.
-        selectSuggestion(suggestions[activeIdx >= 0 ? activeIdx : 0], true);
+        // campo. Elegir una sugerencia no envía la búsqueda.
+        selectSuggestion(suggestions[activeIdx >= 0 ? activeIdx : 0]);
         return;
       } else if (e.key === "Escape") {
         setOpenSug(false);
@@ -701,29 +701,9 @@ export function LandingHero() {
         setLocActive((i) => Math.max(i - 1, 0));
         return;
       } else if (e.key === "Enter") {
-        // Auto-complete the HIGHLIGHTED or FIRST/best suggestion AND run the search in
-        // one press. Taxonomy (province/cantón) resolves synchronously; if only Google
-        // ADDRESS results exist, resolve the first one first (its ref is set before the
-        // promise resolves), then search. Either way location is filled + applied.
         e.preventDefault();
-        const faltaServicio = !service.trim();
-        if (locSug.length > 0) {
-          const chosen = locSug[locActive >= 0 ? locActive : 0];
-          setLocation(chosen.label);
-          setLocationSel(chosen);
-          pickedAddrRef.current = null;
-          setOpenLoc(false);
-          if (faltaServicio) { setTimeout(() => enfocarVisible(servicioInputRef, servicioMobileRef), 0); return; }
-          runSearch(undefined, { kind: "taxonomy", sug: chosen });
-        } else {
-          setOpenLoc(false);
-          await selectAddress(addrSug[0]);
-          if (faltaServicio) { setTimeout(() => enfocarVisible(servicioInputRef, servicioMobileRef), 0); return; }
-          const p = pickedAddrRef.current;
-          runSearch(undefined, p && (p.provinceId || p.lat != null)
-            ? { kind: "address", provinceId: p.provinceId, cantonId: p.cantonId, lat: p.lat, lng: p.lng }
-            : undefined);
-        }
+        if (locSug.length > 0) selectLocation(locSug[locActive >= 0 ? locActive : 0]);
+        else await selectAddress(addrSug[0]);
         return;
       } else if (e.key === "Escape") {
         setOpenLoc(false);
@@ -816,7 +796,7 @@ export function LandingHero() {
           className="w-full"
         >
           {/* UNA píldora con los dos campos, como Angi, en todos los tamaños.
-              Sin botón: elegir una sugerencia busca, y Enter también. */}
+              Elegir una sugerencia completa el campo; Buscar o Enter confirma. */}
           <div className="relative">
             {/* Caja blanca de esquinas suaves: la misma forma que usa el
                 buscador del navbar, para que al bajar se sienta que es el
@@ -856,7 +836,7 @@ export function LandingHero() {
                 {/* «Busca» fijo y el servicio que rueda (ver RodilloDeEjemplos): encima
                     del campo vacío y sin tocar nada, el toque llega al campo. */}
                 {!service && <RodilloDeEjemplos quieto={!!service} className="pointer-events-none absolute inset-y-0 left-8 right-2 text-[16px] text-[#6b7686] sm:left-0 sm:text-lg" />}
-                <SuggestionsDropdown anchorRef={pildoraRef} open={openSug} suggestions={suggestions} activeIdx={activeIdx} onPick={(s) => selectSuggestion(s, true)} />
+                <SuggestionsDropdown anchorRef={pildoraRef} open={openSug} suggestions={suggestions} activeIdx={activeIdx} onPick={(s) => selectSuggestion(s)} />
               </div>
               {/* Divider + location autocomplete */}
               {/* EN EL TELÉFONO, UNA SOLA LÍNEA (3-oct-2026): tocarla abre el
@@ -880,10 +860,10 @@ export function LandingHero() {
                   aria-expanded={openLoc}
                   aria-autocomplete="list"
                 />
-                <LocationDropdown anchorRef={pildoraRef} open={openLoc && location.trim().length >= 2} suggestions={locSug} addresses={addrSug} activeIdx={locActive} onPick={(s) => selectLocation(s, true)} onPickAddress={selectAddress} onNearMe={requestNearMe} nearMeLabel={t("nearMe")} geoLoading={geoLoading} />
+                <LocationDropdown anchorRef={pildoraRef} open={openLoc && location.trim().length >= 2} suggestions={locSug} addresses={addrSug} activeIdx={locActive} onPick={(s) => selectLocation(s)} onPickAddress={selectAddress} onNearMe={requestNearMe} nearMeLabel={t("nearMe")} geoLoading={geoLoading} />
               </div>
               {/* En computadora, la lupa que busca (como Angi). En el teléfono no:
-                  elegir una sugerencia o Enter ya buscan. */}
+                  el panel completo incluye su botón Buscar. */}
               <button
                 type="submit"
                 aria-label={t("search")}
