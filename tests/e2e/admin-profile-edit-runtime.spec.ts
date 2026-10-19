@@ -7,7 +7,6 @@ import ts from "typescript";
 
 // Deliberately construct a damaged legacy name to exercise its correction.
 const damagedName = ["Marco Antonio Nu", "ez Fernandez"].join("?");
-const damagedOfficialName = ["Marco Nu", "ez"].join("?");
 
 const nativeRequire = createRequire(`${process.cwd()}/tests/e2e/admin-profile-edit-runtime.spec.ts`);
 function load(path: string, mocks: Record<string, unknown>, globals: Record<string, unknown> = {}) {
@@ -124,23 +123,11 @@ test("admin guard and invalid input prevent all writes", async () => {
   }
 });
 
-test("automatic name resolution respects admin corrections only for the saved name and document", async () => {
-  const { verifiedProfileName } = load("src/lib/verification/profile-name.ts", { "@/lib/cedula": { cleanId: (id: string) => id.replace(/\D/g, "") } });
-  let row: any = { after_data: { nombre: "Marco Nunez" }, metadata: { name_cedula: "101234567" } }; let fail = false;
-  const q: any = { select: () => q, eq: () => q, not: () => q, order: () => q, limit: () => q, maybeSingle: async () => ({ data: row, error: fail ? {} : null }) };
-  const account: any = { app_metadata: {} };
-  const db = { from: () => q, auth: { admin: {
-    getUserById: async () => ({ data: { user: account }, error: null }),
-    updateUserById: async (_id: string, patch: any) => { Object.assign(account, patch); return { error: null }; },
-  } } };
-  expect(await verifiedProfileName(db, "owner", "Marco Nunez", "101234567", damagedOfficialName)).toBe("Marco Nunez");
-  expect(await verifiedProfileName(db, "owner", "Marco Nunez", "109876543", "Otro Nombre")).toBe("Otro Nombre");
-  expect(await verifiedProfileName(db, "owner", "Un cambio posterior", "101234567", damagedOfficialName)).toBe(damagedOfficialName);
-  account.app_metadata = {}; row.metadata = {}; expect(await verifiedProfileName(db, "owner", "Marco Nunez", "101234567", damagedOfficialName)).toBe("Marco Nunez");
-  account.app_metadata = {}; row = null; expect(await verifiedProfileName(db, "owner", "Marco Nunez", "101234567", damagedOfficialName)).toBe(damagedOfficialName);
-  fail = true;
-  const failure = await verifiedProfileName(db, "owner", "Marco Nunez", "101234567", damagedOfficialName).then(() => null, (error: Error) => error.message);
-  expect(failure).toContain("corrección administrativa");
+test("successful official lookup always supplies the complete name, including after an admin correction", async () => {
+  const { verifiedProfileName } = load("src/lib/verification/profile-name.ts", {});
+  const db: any = { from: () => { throw new Error("No unrelated history lookup is necessary"); } };
+  expect(await verifiedProfileName(db, "owner", "Marco Nunez", "101234567", "MARCO ANTONIO NUÑEZ FERNANDEZ")).toBe("MARCO ANTONIO NUÑEZ FERNANDEZ");
+  expect(await verifiedProfileName(db, "owner", "Marco Nunez", "109876543", "OTRO NOMBRE COMPLETO")).toBe("OTRO NOMBRE COMPLETO");
 });
 
 

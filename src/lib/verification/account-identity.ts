@@ -1,3 +1,4 @@
+import { invalidateProfessionalCache } from "@/lib/cache/professional-revision";
 import type { createAdminClient } from "@/lib/supabase/admin";
 
 type AdminClient = ReturnType<typeof createAdminClient>;
@@ -11,7 +12,7 @@ export async function syncProfessionalVerificationFromAccount(
 ) {
   const { data: pro } = await admin
     .from("professionals")
-    .select("id, verification_status")
+    .select("id, verification_status, is_verified")
     .eq("profile_id", profileId)
     .maybeSingle();
 
@@ -20,8 +21,8 @@ export async function syncProfessionalVerificationFromAccount(
   const now = new Date().toISOString();
 
   if (status === "verified") {
-    if (pro.verification_status === "verified") return;
-    await admin
+    if (pro.verification_status === "verified" && pro.is_verified) return;
+    const { error } = await admin
       .from("professionals")
       .update({
         verification_status: "verified",
@@ -33,11 +34,13 @@ export async function syncProfessionalVerificationFromAccount(
         is_verified: true,
       })
       .eq("id", pro.id).eq("verification_status", pro.verification_status);
+    if (error) throw error;
+    await invalidateProfessionalCache();
     return;
   }
 
   if (pro.verification_status === "verified") {
-    await admin
+    const { error } = await admin
       .from("professionals")
       .update({
         verification_status: status === "pending" ? "pending" : "rejected",
@@ -49,5 +52,7 @@ export async function syncProfessionalVerificationFromAccount(
         is_verified: false,
       })
       .eq("id", pro.id).eq("verification_status", pro.verification_status);
+    if (error) throw error;
+    await invalidateProfessionalCache();
   }
 }

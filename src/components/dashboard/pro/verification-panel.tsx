@@ -374,7 +374,7 @@ function CurrentIdentificationPanel({
             </div>
             {/* De quién es: el número solo no le dice a nadie si es el suyo. */}
             {value && fullName ? (
-              <p data-nombre-identificacion className="mt-0.5 text-sm font-bold leading-snug text-[#162543]"><ResponsiveVerifiedName name={fullName} verified={!!statusLabel} verifiedLabel={statusLabel ?? ""} /></p>
+              <p data-nombre-identificacion className="mt-0.5 text-sm font-bold leading-snug text-[#162543]"><ResponsiveVerifiedName wrap name={fullName} verified={!!statusLabel} verifiedLabel={statusLabel ?? ""} /></p>
             ) : null}
             {value && typeLabel ? (
               <p className="mt-0.5 text-xs font-semibold text-[#64748b]">{typeLabel}</p>

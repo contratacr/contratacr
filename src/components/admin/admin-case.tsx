@@ -456,7 +456,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
                     <p className="text-[#6b7280]">
                       {l.admin_name ?? "Sistema"} · {new Date(l.created_at).toLocaleString("es-CR")}
                     </p>
-                    {l.reason && <p className="text-[#374151] mt-0.5 italic">&quot;{l.reason}&quot;</p>}
+                    {l.reason && l.action !== "identity_document_changed" && <p className="text-[#374151] mt-0.5 italic">&quot;{l.reason}&quot;</p>}
                   </li>
                 ))}
               </ol>
@@ -484,6 +484,7 @@ function auditLabel(action: string): string {
     case "verified": return "Verificado (manual)";
     case "auto_verified": return "Verificado (automático)";
     case "auto_pending": return "Pendiente (automático)";
+    case "identity_document_changed": return "Cambio de identificación";
     case "rejected": return "Rechazado";
     case "reverted_pending": return "Devuelto a pendiente";
     case "appeal_received": return "Apelación recibida";

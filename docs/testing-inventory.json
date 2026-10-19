@@ -11319,7 +11319,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 119,
+          "line": 118,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{retry}",
@@ -11327,7 +11327,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 120,
+          "line": 119,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setReviewOpen(true)}",
@@ -11335,7 +11335,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 127,
+          "line": 126,
           "tag": "textarea",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{event => setMessage(event.target.value)}",
@@ -11343,7 +11343,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 134,
+          "line": 133,
           "tag": "button",
           "label": "{en ? `Remove ${doc.title}` : `Quitar ${doc.title}`}",
           "handler": "{() => setFiles(prev => { const next = { ...prev }; delete next[doc.id]; return next; })}",
@@ -11351,7 +11351,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 135,
+          "line": 134,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => refs.current[doc.id]?.click()}",
@@ -11359,7 +11359,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 136,
+          "line": 135,
           "tag": "input",
           "label": "{doc.title}",
           "handler": "{event => { const file = event.target.files?.[0]; event.target.value = \"\"; if (!file) return; if (file.size > 4 * 1024 * 1024) { setError(en ? \"Each file must be 4 MB or smaller.\" : \"Cada archivo debe pesar 4 MB o menos.\"); return; } setError(\"\"); setFiles(prev => ({ ...prev, [doc.id]: file })); }}",
@@ -11367,7 +11367,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 139,
+          "line": 138,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{submit}",
@@ -11375,7 +11375,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 141,
+          "line": 140,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { setReviewOpen(false); setFiles({}); setMessage(\"\"); }}",
@@ -16690,7 +16690,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 31,
+          "line": 34,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -21743,7 +21743,7 @@
         },
         {
           "line": 105,
-          "title": "\"client verification keeps admin name corrections and stops if Auth synchronization fails\""
+          "title": "\"client verification adopts the complete official name and stops if Auth synchronization fails\""
         },
         {
           "line": 112,
@@ -21817,43 +21817,43 @@
       "file": "tests/e2e/admin-profile-edit-runtime.spec.ts",
       "cases": [
         {
-          "line": 72,
+          "line": 71,
           "title": "\"admin edits persist every supported field, preserve Auth metadata and propagate only matching contacts\""
         },
         {
-          "line": 87,
+          "line": 86,
           "title": "\"only changed fields are written and calls following the old WhatsApp follow its replacement\""
         },
         {
-          "line": 93,
+          "line": 92,
           "title": "\"Auth failure cannot report success or write profile data, and a later retry persists\""
         },
         {
-          "line": 99,
+          "line": 98,
           "title": "\"retry repairs stale Auth metadata even when the profile name already matches\""
         },
         {
-          "line": 104,
+          "line": 103,
           "title": "\"failed or missing database updates are never acknowledged as saved\""
         },
         {
-          "line": 110,
+          "line": 109,
           "title": "\"a failed publication contact update stays retryable and is never reported as saved\""
         },
         {
-          "line": 120,
+          "line": 119,
           "title": "\"admin guard and invalid input prevent all writes\""
         },
         {
-          "line": 127,
-          "title": "\"automatic name resolution respects admin corrections only for the saved name and document\""
+          "line": 126,
+          "title": "\"successful official lookup always supplies the complete name, including after an admin correction\""
         },
         {
-          "line": 147,
+          "line": 134,
           "title": "\"editing clears every cached admin directory variant, including storage, without clearing other data\""
         },
         {
-          "line": 164,
+          "line": 151,
           "title": "\"Cloudflare edits publish a fresh shared revision and cache failures bypass stale entries\""
         }
       ]
@@ -23132,76 +23132,92 @@
       "file": "tests/e2e/hacienda-verification-runtime.spec.ts",
       "cases": [
         {
-          "line": 36,
+          "line": 37,
           "title": "`Hacienda queries ${type} ${id.length} digits and keeps only minimum data`"
         },
         {
-          "line": 45,
+          "line": 46,
           "title": "\"invalid and oversized IDs never leave the app; official types override local heuristics\""
         },
         {
-          "line": 53,
+          "line": 54,
           "title": "\"404 is missing and cached; server errors, malformed responses and timeouts are unavailable and uncached\""
         },
         {
-          "line": 61,
+          "line": 62,
           "title": "\"429 pauses lookups without turning an outage into a negative decision\""
         },
         {
-          "line": 67,
+          "line": 68,
           "title": "\"shared cache TTL is ten minutes for matches and one minute for missing records; failures are not cached\""
         },
         {
-          "line": 120,
+          "line": 121,
           "title": "`record found for ${type} verifies account and open projects`"
         },
         {
-          "line": 125,
+          "line": 126,
           "title": "\"all found ID types accept the official record; missing records remain eligible to appeal\""
         },
         {
-          "line": 135,
+          "line": 136,
           "title": "\"temporary outage preserves account state and sends no rejection or outreach\""
         },
         {
-          "line": 139,
+          "line": 140,
           "title": "\"human approval and appeals are never taken over by automatic checks\""
         },
         {
-          "line": 145,
+          "line": 146,
           "title": "\"a prior human decision or open document case prevents automatic approval of a found record\""
         },
         {
-          "line": 153,
+          "line": 154,
           "title": "\"manual appeals reuse one case/message per identity and preserve admin handling\""
         },
         {
-          "line": 170,
+          "line": 171,
           "title": "\"appeal route authenticates, ignores caller-supplied professional IDs and blocks profile mismatches\""
         },
         {
-          "line": 185,
+          "line": 186,
           "title": "\"changing an approved ID clears its old approval before saving the new document\""
         },
         {
-          "line": 199,
+          "line": 200,
           "title": "\"publishing a project cannot synchronize an automatic approval over a manual appeal\""
         },
         {
-          "line": 205,
+          "line": 206,
           "title": "\"retrying an existing document submission enters manual review without duplicate uploads\""
         },
         {
-          "line": 224,
+          "line": 225,
           "title": "\"an admin review cannot verify a document changed after its inspection\""
         },
         {
-          "line": 230,
+          "line": 231,
           "title": "\"manual review requires an actual negative result for the current identification\""
         },
         {
-          "line": 242,
+          "line": 243,
           "title": "`explicit ${target} admin approval after a reversal persists account and professional verification`"
+        },
+        {
+          "line": 266,
+          "title": "\"a new saved document ignores only reviews predating that document change\""
+        },
+        {
+          "line": 282,
+          "title": "`admin ${kind} approval invalidates public profile caches`"
+        },
+        {
+          "line": 296,
+          "title": "\"account identity sync repairs a missing professional badge and invalidates the public cache\""
+        },
+        {
+          "line": 304,
+          "title": "`manual approval official-name synchronization handles API ${available ? \"match\" : \"outage\"}`"
         }
       ]
     },
@@ -24892,6 +24908,10 @@
         {
           "line": 180,
           "title": "!(process.env.NEXT_PUBLIC_SUPABASE_URL ?? \"\").includes(\"oqheayqqprpciqdvdaqo\") || !process.env.SUPABASE_SERVICE_ROLE_KEY"
+        },
+        {
+          "line": 218,
+          "title": "\"official identification keeps the complete name readable without changing public card truncation\""
         }
       ]
     },

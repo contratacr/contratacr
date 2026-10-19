@@ -33,7 +33,7 @@ export function IdentityInfoBlock({
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
           {verified && <p className="text-xs font-semibold text-[#64748b]">{t("confirmed")}</p>}
-          <p data-nombre-identificacion className="mt-0.5 text-base font-semibold leading-snug text-[#0f172a]"><ResponsiveVerifiedName name={fullName} verified={verified} verifiedLabel={t("confirmed")} /></p>
+          <p data-nombre-identificacion className="mt-0.5 text-base font-semibold leading-snug text-[#0f172a]"><ResponsiveVerifiedName wrap name={fullName} verified={verified} verifiedLabel={t("confirmed")} /></p>
 
           <dl className="mt-3 grid gap-2 text-sm">
             {cedula && (

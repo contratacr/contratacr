@@ -1,3 +1,5 @@
+import { identityReviewScope } from "@/lib/verification/review-scope";
+import { invalidateProfessionalCache } from "@/lib/cache/professional-revision";
 import { NextResponse } from "next/server";
 import { mensajeDeError } from "@/lib/api-errors";
 import { enforceRateLimit } from "@/lib/rate-limit";
@@ -62,12 +64,21 @@ export async function POST(req: Request) {
       verification_provider: null, verification_reason: null, verification_updated_at: new Date().toISOString() } : {}),
   }).eq("id", pro.id);
   if (resetError) return NextResponse.json({ error: "No se pudo guardar. Intenta nuevamente." }, { status: 503 });
+  if (changed) {
+    const { error: scopeError } = await db.from("provider_verification_log").insert({
+      professional_id: pro.id, admin_id: null, admin_name: "Cambio de identificación",
+      action: "identity_document_changed", from_status: pro.verification_status, to_status: "pending",
+      reason: identityReviewScope(user.id, cedula),
+    });
+    if (scopeError) return NextResponse.json({ error: "No se pudo guardar. Intenta nuevamente." }, { status: 503 });
+    await invalidateProfessionalCache();
+  }
   const { error: saveError } = await db.from("profiles").update({ cedula,
     ...(changed ? { client_identity_status: "pending", client_identity_verified_at: null, client_identity_provider: null } : {}),
   }).eq("id", user.id);
   if (saveError) return NextResponse.json({ error: "No se pudo guardar. Intenta nuevamente." }, { status: 503 });
 
-  const outcome = await runIdentityVerification(pro.id);
+  const outcome = await runIdentityVerification(pro.id, { expectedCedula: cedula });
 
   const { data: updatedProfile } = await db
     .from("profiles")

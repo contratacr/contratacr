@@ -110,8 +110,7 @@ export function VerificationDocuments({ legal, preview = false, onVerified }: { 
         {!submitted && canReview && !reviewOpen && <button type="button" onClick={() => setReviewOpen(true)} className={`${verificationActionButtonClass} border-[#d7e1ea] text-[#162543]`}>{t("addDocuments")}</button>}
       </div>}
       {loaded && !verified && !submitted && !requested && requiresSupport && <div className="space-y-3">
-        <p role="status" className="text-sm leading-6 text-[#52627a]">{t("adminReviewPending")}</p>
-        <SupportLink className="inline-flex text-sm font-semibold text-[#009FD9]">{t("contactSupport")}</SupportLink>
+        <p role="status" className="text-sm text-[#52627a]">{en ? "Pending review" : "Pendiente de revisión"}</p>
       </div>}
       {loaded && !verified && !submitted && !requested && !requiresSupport && <div className="space-y-3">
         <p className="text-sm leading-6 text-[#52627a]">{t(canReview ? "body" : "pendingCheck")}</p>

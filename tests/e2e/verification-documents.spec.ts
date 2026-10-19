@@ -10,7 +10,7 @@ function capturePath(filename: string) {
 }
 
 // Isolated disposable identities: parallel regression never changes another test's role.
-for (const kind of ["company", "person"] as const) test(`private verification documents ${kind} validate files and deduplicate retries`, async ({ page: initialPage, request }) => {
+for (const kind of ["company", "person", "dimex"] as const) test(`private verification documents ${kind} validate files and deduplicate retries`, async ({ page: initialPage, request }) => {
   let page = initialPage;
   test.setTimeout(120_000);
   const apiHeaders = { "x-forwarded-for": `2001:db8::${Math.floor(Math.random() * 65535).toString(16)}` };
@@ -29,7 +29,7 @@ for (const kind of ["company", "person"] as const) test(`private verification do
   let ticketId: string | undefined;
   try {
     const { error: profileError } = await db.from("profiles").upsert({ id: pro.profile_id, email, full_name: "María Elena Prueba Ejemplo", role: "professional", is_provider: true, onboarding_completed: true,
-      cedula: kind === "company" ? "3101999999" : "199999999" });
+      cedula: kind === "company" ? "3101999999" : kind === "dimex" ? "12345678901" : "199999999" });
     if (profileError) throw profileError;
     const { error: proError } = await db.from("professionals").insert({ ...pro, category_id: template.category_id, slug: `verification-${pro.id}`, business_name: "Cuenta de prueba",
       whatsapp: "+50670000009", bio: "Cuenta temporal de regresión.", verification_status: "pending", is_verified: false, verification_provider: "hacienda_api", verification_reason: "Identificación no encontrada.", verification_updated_at: reviewTime });
@@ -38,7 +38,7 @@ for (const kind of ["company", "person"] as const) test(`private verification do
     await page.waitForLoadState("networkidle");
     const api = page.request;
     expect((await api.get("/api/verification/documents")).status()).toBe(200);
-    const originalId = kind === "company" ? "3101999999" : "199999999";
+    const originalId = kind === "company" ? "3101999999" : kind === "dimex" ? "12345678901" : "199999999";
     await db.from("profiles").update({ cedula: null }).eq("id", pro.profile_id);
     expect((await api.post("/api/appeals", { headers: blockedHeaders, data: {} })).status()).toBe(409);
     expect((await api.post("/api/verification/documents", { headers: blockedHeaders })).status()).toBe(409);
@@ -56,13 +56,14 @@ for (const kind of ["company", "person"] as const) test(`private verification do
     await expect(badge).toBeVisible();
     await expect(page.locator("[data-current-identification] [data-verification-badge]")).toHaveCount(1);
     const alignment = await verifiedName.evaluate(element => {
-      const text = element.querySelector("span.truncate")!.getBoundingClientRect();
+      const text = element.querySelector("span.whitespace-normal")!.getBoundingClientRect();
       const mark = element.querySelector("[data-verification-badge] svg")!.getBoundingClientRect();
       return { gap: mark.left - text.right, center: Math.abs(mark.top + mark.height / 2 - text.top - text.height / 2) };
     });
     expect(alignment.gap).toBeGreaterThanOrEqual(0);
     expect(alignment.gap).toBeLessThanOrEqual(5);
     expect(alignment.center).toBeLessThanOrEqual(2);
+    await expect(page.locator("[data-current-identification] [data-nombre-identificacion] .whitespace-normal")).toHaveCSS("white-space", "normal");
     await page.screenshot({ path: capturePath(`${kind}-verified-name-${test.info().project.name}.png`), fullPage: true });
     await expect(page.getByRole("main")).not.toContainText(/Hacienda/);
     await db.from("professionals").update({ verification_status: "pending", is_verified: false, verification_reason: null }).eq("id", pro.id);
@@ -79,8 +80,8 @@ for (const kind of ["company", "person"] as const) test(`private verification do
     page.on("request", countVerification);
     await page.goto("/dashboard/profesional?tab=verificacion");
     const heldPanel = page.getByTestId("verification-documents");
-    await expect(heldPanel).toContainText("pendiente de revisión por el equipo");
-    await expect(heldPanel.getByRole("link", { name: "Contactar a soporte" })).toHaveAttribute("href", /tab=soporte/);
+    await expect(heldPanel).toContainText("Pendiente de revisión");
+    await expect(heldPanel.getByRole("link", { name: "Contactar a soporte" })).toHaveCount(0);
     await expect(heldPanel.getByRole("button", { name: "Reintentar verificación" })).toHaveCount(0);
     await expect(heldPanel.getByRole("button", { name: "Solicitar revisión manual" })).toHaveCount(0);
     expect(automaticAttempts).toBe(0);
@@ -106,7 +107,7 @@ for (const kind of ["company", "person"] as const) test(`private verification do
     await page.close();
     page = reopenedPage;
     await page.goto("/dashboard/profesional?tab=verificacion");
-    await expect(page.getByTestId("verification-documents")).toContainText("pendiente de revisión por el equipo");
+    await expect(page.getByTestId("verification-documents")).toContainText("Pendiente de revisión");
     await expect(page.locator("[data-current-identification] [data-verification-badge]")).toHaveCount(0);
     await page.unroute(lookupUrl);
     await page.waitForLoadState("networkidle");

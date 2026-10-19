@@ -1,3 +1,5 @@
+import { syncOfficialProfileName } from "@/lib/verification/profile-name";
+import { invalidateProfessionalCache } from "@/lib/cache/professional-revision";
 import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -51,6 +53,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (removingVerifiedIdentity && !reason) {
     return NextResponse.json({ error: "Debes indicar el motivo para quitar la verificación." }, { status: 400 });
   }
+
+  if (action === "verify") await syncOfficialProfileName(db, id);
 
   const now = new Date().toISOString();
   const accountIdentityStatus = action === "verify" ? "verified" : action === "reject" ? "unverified" : "pending";
@@ -155,6 +159,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     console.error("[admin/user-identity] projects identity sync error:", projectsErr);
     return NextResponse.json({ error: "Se actualizó la cuenta, pero no se pudieron sincronizar sus solicitudes abiertas." }, { status: 500 });
   }
+
+  await invalidateProfessionalCache();
 
   return NextResponse.json({ ok: true, status: accountIdentityStatus });
 }
