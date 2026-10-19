@@ -8,7 +8,7 @@
     "handlers": 97,
     "components": 241,
     "hooks": 26,
-    "specs": 130
+    "specs": 131
   },
   "dashboardTabs": [
     "home",
@@ -23021,6 +23021,19 @@
         {
           "line": 439,
           "title": "'canceling the mobile file sheet never downloads or opens another page'"
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/display-name-case.spec.ts",
+      "cases": [
+        {
+          "line": 15,
+          "title": "\"personal name presentation: \" + official"
+        },
+        {
+          "line": 20,
+          "title": "\"commercial name retains its spelling: \" + business"
         }
       ]
     },
