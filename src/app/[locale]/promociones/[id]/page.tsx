@@ -1,3 +1,4 @@
+import { InlineIdentityName } from "@/components/ui/inline-identity-name";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { ProfilePhotoPreview } from "@/components/ui/profile-photo-preview";
 import { notFound } from "next/navigation";
@@ -207,13 +208,9 @@ export default async function OfferDetailPage({ params, searchParams }: { params
     ...(offer.valid_until ? [[copy.rowValid, new Intl.DateTimeFormat(dateLocale, { day: "numeric", month: "long", year: "numeric" }).format(new Date(`${offer.valid_until}T12:00:00`))] as [string, string]] : []),
     ...(offer.quantity_available != null ? [[copy.rowAvailable, `${offer.quantity_available}`] as [string, string]] : []),
   ] as Array<[string, string]>).filter(([, valor]) => Boolean(valor));
-  const quienPublica = offer.professional_slug ? (
-    <Link href={`/profesionales/${offer.professional_slug}?from=${encodeURIComponent(rutaPromocion(offer))}`} className="inline-flex min-w-0 max-w-full items-center gap-1 font-semibold text-[#005eaa] hover:underline">
-      <span className="line-clamp-2 min-w-0 [overflow-wrap:anywhere]">{offer.professional_name}</span>
-    </Link>
-  ) : (
-    <p className="line-clamp-2 min-w-0 font-semibold text-[#52627a] [overflow-wrap:anywhere]">{offer.professional_name}</p>
-  );
+  const quienPublica = <InlineIdentityName className={offer.professional_slug ? "font-semibold text-[#005eaa]" : "font-semibold text-[#52627a]"} name={offer.professional_name || ""}
+    href={offer.professional_slug ? `/profesionales/${offer.professional_slug}?from=${encodeURIComponent(rutaPromocion(offer))}` : undefined}
+    badge={offer.professional_verified ? <VerificationInfo /> : null} />;
   const discount = offerDiscountPercent(offer);
   const unavailable = offer.status !== "published" || isOfferExpired(offer, crTodayISO());
   const serviceOptions = getAllCategories().map((category) => ({ value: category.id, label: getCategoryLabel(category.id, locale) }));
@@ -302,9 +299,6 @@ export default async function OfferDetailPage({ params, searchParams }: { params
               <div data-verification-owner className="flex min-w-0 flex-1 items-center gap-1">
                 {offer.professional_avatar_url && <ProfilePhotoPreview src={offer.professional_avatar_url} name={offer.professional_name ?? ""} className="mr-2 h-11 w-11" />}
                 {quienPublica}
-                {offer.professional_verified && (
-                  <VerificationInfo />
-                )}
               </div>
               <MenuOferta
                 className="-mr-2 hidden shrink-0 lg:block"

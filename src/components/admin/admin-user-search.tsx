@@ -1,5 +1,6 @@
 "use client";
 
+import { InlineIdentityName } from "@/components/ui/inline-identity-name";
 import { useEffect, useRef, useState } from "react";
 import { Search, Loader2, Ban, ShieldOff } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
@@ -111,7 +112,7 @@ export function AdminUserSearch({
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-[#162543] truncate">{u.full_name ?? "Sin nombre"}</p>
+                  <p className="text-sm font-medium text-[#162543]"><InlineIdentityName name={u.full_name ?? "Sin nombre"} badge={u.isPro && u.verification_status === "verified" ? <VerifiedSeal label="Verificado" className="h-4 w-4 text-[#009FD9]" /> : null} /></p>
                   <p className="text-xs text-[#6b7280] truncate">
                     {u.cedula ? `${u.cedula} · ` : ""}{u.email}
                   </p>
@@ -120,7 +121,7 @@ export function AdminUserSearch({
                   <span className={`text-[10px] uppercase tracking-wide ${u.professionalSignupIncomplete ? "text-[#c2410c]" : "text-gray-400"}`}>
                     {u.isPro ? "Pro" : u.professionalSignupIncomplete ? "Pro incompleto" : "Cliente"}
                   </span>
-                  {u.isPro && u.verification_status === "verified" && <VerifiedSeal label="Verificado" className="h-4 w-4 shrink-0 text-[#009FD9]" />}
+
                   {u.is_banned && <Ban className="h-4 w-4 text-red-500" />}
                   {u.is_disabled && <ShieldOff className="h-4 w-4 text-amber-500" />}
                 </div>

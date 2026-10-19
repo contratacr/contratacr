@@ -1,5 +1,7 @@
 "use client";
 
+import { InlineIdentityName } from "@/components/ui/inline-identity-name";
+
 import { ProfilePhotoPreview } from "@/components/ui/profile-photo-preview";
 
 import { trackMetaConversion } from "@/lib/analytics/meta-pixel";
@@ -331,15 +333,7 @@ function Tarjeta({ proyecto, en, elegida = false, onElegir }: { proyecto: Proyec
             {proyecto.location_label || copy.todoElPais}
           </p>
           <div className="mt-1 flex items-baseline justify-between gap-3 text-xs text-[#8794a7]">
-            {/* PRIMER NOMBRE Y PRIMER APELLIDO. «Pedro Alejandro Saborío
-                Matamoros» no cabe en la fila y salía cortado con puntos
-                suspensivos, que es un nombre a medias: no dice quién es. */}
-            {/* Solo el nombre resumido y «Verificado», en UNA línea, como
-                en Empleos y Promociones: sin «Publicado por» (8-oct-2026). */}
-            <span className="flex min-w-0 items-center gap-0.5">
-              <span className="min-w-0 truncate" title={proyecto.client_name || undefined}>{formatPersonDisplayName(proyecto.client_name, "mobile")}</span>
-              {proyecto.client_verified && <VerificationInfo audience="client" />}
-            </span>
+            <InlineIdentityName className="text-xs text-[#8794a7]" name={formatPersonDisplayName(proyecto.client_name || "", "mobile")} badge={proyecto.client_verified ? <VerificationInfo audience="client" /> : null} />
             <span className="shrink-0">{cuandoSePublico(proyecto.created_at, en)}</span>
           </div>
         </div>
@@ -752,10 +746,7 @@ export function ProjectsBoard({
                                 renglón de sobra. */}
                             {/* El check verifica a quien publica, no el proyecto. */}
                             <div data-verification-owner className="flex min-w-0 flex-1 items-center gap-1">
-                              <p className="line-clamp-2 min-w-0 font-semibold text-[#52627a] [overflow-wrap:anywhere]">
-                                {ficha.client_name}
-                              </p>
-                              {ficha.client_verified && <VerificationInfo audience="client" />}
+                              <InlineIdentityName className="font-semibold text-[#52627a]" name={ficha.client_name || ""} badge={ficha.client_verified ? <VerificationInfo audience="client" /> : null} />
                             </div>
                             {/* SIN MARCA «Tu proyecto» EN LA FICHA. La tarjeta
                                 de acciones ya lo dice más fuerte que una

@@ -22,6 +22,25 @@ for (const path of ["/profesionales", "/promociones", "/empleos", "/proyectos"])
     expect(sameSeal, "QR exports and profile badges must share the same seal").toBe(true);
     expect(await check.evaluate((el) => el.closest("a"))).toBeNull();
     const before = page.url();
+    const identity = check.locator("xpath=ancestor::*[@data-inline-identity-name][1]");
+    if (await identity.count()) {
+      const alignment = await identity.evaluate(el => {
+        const text = el.querySelector("[data-identity-name-text]")!;
+        const walker = document.createTreeWalker(text, NodeFilter.SHOW_TEXT);
+        let node: Node | null, last: Node | null = null;
+        while ((node = walker.nextNode())) if (node.textContent?.trim()) last = node;
+        const value = last!.textContent!.trimEnd();
+        const range = document.createRange();
+        range.setStart(last!, value.lastIndexOf(" ") + 1);
+        range.setEnd(last!, value.length);
+        const word = Array.from(range.getClientRects()).at(-1)!;
+        const badge = el.querySelector("[data-verification-badge]")!.getBoundingClientRect();
+        return { gap: badge.left - word.right, sameLine: badge.top < word.bottom && badge.bottom > word.top };
+      });
+      expect(alignment.gap).toBeGreaterThanOrEqual(-1);
+      expect(alignment.gap).toBeLessThan(14);
+      expect(alignment.sameLine).toBe(true);
+    }
     await check.click();
     const dialog = page.getByRole("dialog");
     await expect(dialog.getByText("Identidad verificada", { exact: true })).toBeVisible();
@@ -69,12 +88,38 @@ for (const path of ["/promociones", "/empleos", "/proyectos"]) {
     await expectNoHorizontalOverflow(page);
     await page.getByRole("dialog").getByRole("button", { name: "Entendido", exact: true }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
-    const aligned = await owner.evaluate((el) => {
-      const badge = el.querySelector("[data-verification-badge]")!.getBoundingClientRect();
-      const name = el.querySelector("a, p")!.getBoundingClientRect();
-      return badge.left >= name.right - 1 && badge.top < name.bottom && badge.bottom > name.top;
-    });
-    expect(aligned).toBe(true);
+    await page.screenshot({ path: test.info().outputPath(`verified-owner-${path.slice(1)}.png`) });
+    // Compare against the final rendered word, not the text element's box:
+    // a flex-centred seal beside a two-line name used to pass this test.
+    for (const width of [150, 220, 320]) {
+      const geometry = await owner.evaluate((el, width) => {
+        const identity = el.querySelector<HTMLElement>("[data-inline-identity-name]")!;
+        identity.style.display = "block";
+        identity.style.width = `${width}px`;
+        identity.style.maxWidth = "100%";
+        const text = identity.querySelector("[data-identity-name-text]")!;
+        const walker = document.createTreeWalker(text, NodeFilter.SHOW_TEXT);
+        let node: Node | null, last: Node | null = null;
+        while ((node = walker.nextNode())) if (node.textContent?.trim()) last = node;
+        const value = last!.textContent!;
+        const range = document.createRange();
+        range.setStart(last!, value.trimEnd().lastIndexOf(" ") + 1);
+        range.setEnd(last!, value.trimEnd().length);
+        const word = Array.from(range.getClientRects()).at(-1)!;
+        const badge = identity.querySelector("[data-verification-badge]")!.getBoundingClientRect();
+        const rect = identity.getBoundingClientRect();
+        return { gap: badge.left - word.right, overlap: badge.top < word.bottom && badge.bottom > word.top,
+          overflow: identity.scrollWidth > identity.clientWidth + 1, badgeInside: badge.right <= rect.right + 1,
+          text: text.textContent, clipped: getComputedStyle(text).textOverflow === "ellipsis" };
+      }, width);
+      expect(geometry.gap).toBeGreaterThanOrEqual(-1);
+      expect(geometry.gap).toBeLessThan(14);
+      expect(geometry.overlap).toBe(true);
+      expect(geometry.overflow).toBe(false);
+      expect(geometry.badgeInside).toBe(true);
+      expect(geometry.clipped).toBe(false);
+      expect(geometry.text?.trim()).toBeTruthy();
+    }
   });
 }
 
@@ -215,17 +260,32 @@ test("verification shows only the identification check and its explanation", asy
   }
 });
 
-test("official identification keeps the complete name readable without changing public card truncation", async ({ page }) => {
+test("official identification and public cards preserve full names and bind the badge to the final word", async ({ page }) => {
   const { build } = await import("esbuild");
-  const bundled = await build({ stdin: { contents: `import React from 'react';import{createRoot}from'react-dom/client';import{IdentityInfoBlock}from'./src/components/ui/identity-info-block';import{ResponsiveVerifiedName}from'./src/components/professionals/responsive-verified-name';const name='MARÍA DE LOS ÁNGELES ALEJANDRA FERNÁNDEZ RODRÍGUEZ';createRoot(document.getElementById('root')).render(<div style={{width:200}}><IdentityInfoBlock fullName={name} verified={false}/><div data-public-name><ResponsiveVerifiedName name={name} verified={false} verifiedLabel=""/></div></div>);`,loader:'tsx',resolveDir:process.cwd()},jsx:'automatic',bundle:true,write:false,platform:'browser',format:'iife',tsconfig:'tsconfig.json',define:{'process.env.NODE_ENV':'"production"'},plugins:[{name:'presentation-boundaries',setup(b){
+  const bundled = await build({ stdin: { contents: `import React from 'react';import{createRoot}from'react-dom/client';import{IdentityInfoBlock}from'./src/components/ui/identity-info-block';import{ResponsiveVerifiedName}from'./src/components/professionals/responsive-verified-name';const name='MARÍA DE LOS ÁNGELES ALEJANDRA FERNÁNDEZ RODRÍGUEZ';createRoot(document.getElementById('root')).render(<div style={{width:200}}><IdentityInfoBlock fullName={name} verified={false}/><div data-public-name><ResponsiveVerifiedName name={name} verified={true} verifiedLabel=""/></div></div>);`,loader:'tsx',resolveDir:process.cwd()},jsx:'automatic',bundle:true,write:false,platform:'browser',format:'iife',tsconfig:'tsconfig.json',define:{'process.env.NODE_ENV':'"production"'},plugins:[{name:'presentation-boundaries',setup(b){
     b.onResolve({filter:/^(next-intl|@\/i18n\/navigation|@\/components\/ui\/verification-info)$/},a=>({path:a.path,namespace:'presentation'}));
-    b.onLoad({filter:/.*/,namespace:'presentation'},a=>({contents:a.path==='next-intl'?`export const useTranslations=()=>key=>key;`:a.path==='@/i18n/navigation'?`export const Link=()=>null;`:`export const VerificationInfo=()=>null;`}));
+    b.onLoad({filter:/.*/,namespace:'presentation'},a=>({resolveDir:process.cwd(),contents:a.path==='next-intl'?`export const useTranslations=()=>key=>key;`:a.path==='@/i18n/navigation'?`export const Link=()=>null;`:`import React from "react";export const VerificationInfo=()=>React.createElement("button",{"data-verification-badge":"",style:{width:24,height:24,padding:0,display:"inline-flex"}});`}));
   }}]});
-  await page.route('**/official-name-harness',r=>r.fulfill({contentType:'text/html',body:'<!doctype html><meta name="viewport" content="width=device-width"><style>.flex{display:flex}.w-full{width:100%}.min-w-0{min-width:0}.flex-1{flex:1}.truncate{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.whitespace-normal{white-space:normal}.break-words{overflow-wrap:break-word}</style><div id="root"></div>'}));
+  await page.route('**/official-name-harness',r=>r.fulfill({contentType:'text/html',body:'<!doctype html><meta name="viewport" content="width=device-width"><style>.flex{display:flex}.w-full{width:100%}.min-w-0{min-width:0}.flex-1{flex:1}.truncate{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.whitespace-normal{white-space:normal}.break-words{overflow-wrap:break-word}.whitespace-nowrap{white-space:nowrap}.inline-block{display:inline-block}.align-middle{vertical-align:middle}.ml-1{margin-left:4px}.leading-none{line-height:1}[data-inline-identity-name]{overflow-wrap:anywhere}[data-identity-name-tail]{overflow-wrap:normal}</style><div id="root"></div>'}));
   await page.goto('/official-name-harness');await page.addScriptTag({content:bundled.outputFiles[0].text});
   const official=page.locator('[data-nombre-identificacion] .whitespace-normal');
   await expect(official).toHaveText('MARÍA DE LOS ÁNGELES ALEJANDRA FERNÁNDEZ RODRÍGUEZ');
   expect(await official.evaluate(e=>e.scrollWidth<=e.clientWidth)).toBe(true);
-  const publicName=page.locator('[data-public-name] .truncate');await expect(publicName).toHaveCSS('white-space','nowrap');
-  expect((await official.boundingBox())!.height).toBeGreaterThan((await publicName.boundingBox())!.height);
+  const publicName=page.locator('[data-public-name] [data-inline-identity-name]');
+  await expect(publicName.locator('[data-identity-name-text]')).toHaveText('MARÍA DE LOS ÁNGELES ALEJANDRA FERNÁNDEZ RODRÍGUEZ');
+  for (const width of [150, 200, 320]) {
+    const aligned = await publicName.evaluate((e, width) => {
+      (e.parentElement as HTMLElement).style.width = `${width}px`;
+      const tail = e.querySelector('[data-profile-name-last-word]')!;
+      const range = document.createRange(); range.selectNodeContents(tail);
+      const word = Array.from(range.getClientRects()).at(-1)!;
+      const badge = e.querySelector('[data-verification-badge]')!.getBoundingClientRect();
+      return {gap: badge.left - word.right, overlap: badge.top < word.bottom && badge.bottom > word.top,
+        overflow: e.parentElement!.scrollWidth > e.parentElement!.clientWidth};
+    }, width);
+    expect(aligned.gap).toBeGreaterThanOrEqual(0);
+    expect(aligned.gap).toBeLessThan(10);
+    expect(aligned.overlap).toBe(true);
+    expect(aligned.overflow).toBe(false);
+  }
 });
