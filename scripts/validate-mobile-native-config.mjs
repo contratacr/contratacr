@@ -171,7 +171,7 @@ if (/HeaderMessagesLink/.test(navbar)) failures.push("Messages came back to the 
 requireMatch("Native messages badge counter", bottomNav, /mensajesPorLeer > 9 \? "9\+" : mensajesPorLeer/);
 // En la app el botón se adapta al profesional: chat si tiene la app, WhatsApp
 // si no (decidido el 29-sep-2026 para el lanzamiento).
-requireMatch("Native contact adapts to the professional", directChatLauncher, /useProfesionalConApp\(professionalId, nativeApp\)[\s\S]*if \(usaChat\)[\s\S]*<MessageLauncher/);
+requireMatch("Shared web/native contact adapts to the professional", directChatLauncher, /useProfesionalConApp\(professionalId, true\)[\s\S]*const usaChat = conApp === true \|\| \(nativeApp && !professionalId\);[\s\S]*if \(usaChat\)[\s\S]*<MessageLauncher/);
 requireMatch(
   "Native assistant message action",
   aiConcierge,
