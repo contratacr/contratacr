@@ -1,4 +1,5 @@
 "use client";
+import { ProfileIdentityName, profileIdentityAvatarClass } from "@/components/professionals/profile-identity-name";
 
 import { sinPrefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 
@@ -689,13 +690,6 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
     void compartirEnlace(url, professional.businessName?.trim() || proDisplayName(professional.fullName));
   }
   const displayName = getProfessionalDisplayName(professional.fullName, professional.businessName);
-  const nameBreak = displayName.primaryDesktop.lastIndexOf(" ");
-  const nameTail = displayName.primaryDesktop.slice(nameBreak + 1);
-  // Keep the seal with the final word, rather than beside the full-width
-  // rectangle occupied by a wrapped heading. Very long single words retain
-  // normal wrapping so they cannot overflow a narrow screen.
-  const keepNameTail = nameTail.length <= 24;
-  const nameStart = keepNameTail ? displayName.primaryDesktop.slice(0, nameBreak + 1) : displayName.primaryDesktop;
   const visitaProfesional = {
     id: professional.slug ?? slug,
     titulo: displayName.primaryMobile,
@@ -916,7 +910,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                     mismo y empujaba los botones de contacto fuera de la
                     pantalla. En computadora sigue siendo la rejilla de
                     foto | nombre y cifras | acciones. */}
-                <div className="flex min-w-0 items-center gap-3 text-left sm:contents sm:gap-0">
+                <div className="flex min-w-0 items-center gap-2 text-left min-[360px]:gap-3 sm:contents sm:gap-0">
                   <ImagePreviewDialog
                     src={professional.avatarUrl}
                     alt={professional.fullName}
@@ -935,7 +929,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                         lo que Isaac reportó como «iniciales que no tienen nada
                         que ver». Una <img> normal viaja en el HTML y las
                         iniciales quedan DETRÁS: se ven solo si no hay foto. */}
-                    <span className="relative grid h-[72px] w-[72px] shrink-0 place-items-center overflow-hidden rounded-full bg-[#EBF5FB] sm:h-[88px] sm:w-[88px]">
+                    <span data-profile-identity-avatar className={`relative grid shrink-0 place-items-center overflow-hidden rounded-full bg-[#EBF5FB] ${profileIdentityAvatarClass}`}>
                       {/* Las iniciales SOLO si no hay foto: detrás de un logo con
                           fondo transparente se veían por debajo del dibujo. */}
                       {!professional.avatarUrl && (
@@ -961,13 +955,8 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                         (a la altura del nombre y el sello), al final de la fila. */}
                     <div className="min-w-0 lg:flex lg:items-center lg:justify-between lg:gap-4">
                       <div data-verification-owner className="min-w-0">
-                        <h1 data-testid="professional-profile-name" className="min-w-0 text-[17px] font-bold leading-[1.15] text-[#162543] [overflow-wrap:anywhere] sm:text-2xl sm:leading-tight sm:[overflow-wrap:normal]">
-                          <span data-profile-name-start>{nameStart}</span>
-                          <span data-profile-name-tail className={keepNameTail ? "whitespace-nowrap" : undefined}>
-                            <span data-profile-name-last-word>{keepNameTail ? nameTail : null}</span>
-                            {professional.verificationStatus === "verified" && <span className="ml-1 inline-block align-middle"><VerificationInfo /></span>}
-                          </span>
-                        </h1>
+                        <ProfileIdentityName testId="professional-profile-name" name={displayName.primaryDesktop}
+                          badge={professional.verificationStatus === "verified" ? <VerificationInfo /> : null} />
                       </div>
                       <MenuFicha className="hidden shrink-0 lg:block" opciones={opcionesDeLaFicha} />
                     </div>

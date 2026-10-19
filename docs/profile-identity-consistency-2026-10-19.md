@@ -1,0 +1,15 @@
+# Identidad del panel, perfil público y menú — 19 de octubre de 2026
+
+El panel usaba foto de 84 px en móvil / 80 px en escritorio, frente a 72 / 88 px en el perfil público. Su nombre móvil tenía 18 px y truncado en una línea, frente a 17 px con ajuste en el perfil. Además, el panel aplicaba un segundo algoritmo de abreviación en escritorio y sus iniciales se calculaban con el nombre completo, distinto del que se mostraba.
+
+Se comparte ProfileIdentityName y el contrato de tamaño del avatar: 72 px móvil / 88 px escritorio y nombre de 17 / 24 px. Se conserva el primer nombre y ambos apellidos según el formateador existente; los nombres ambiguos/compuestos se respetan y un nombre comercial explícito se conserva completo. Se permite ajustar líneas sin elipsis ni recortar los apellidos; la insignia acompaña la última palabra. Se iguala el espacio disponible junto a la foto, incluido el ancho de 320 px. Las reseñas quedan debajo y el renglón vacío se oculta cuando no existen.
+
+El AuthProvider escuchaba ccr:profile-updated pero no ccr:identity-updated. El API podía guardar el nombre oficial y el panel consultarlo, mientras el menú seguía mostrando metadata antigua de la sesión. Ahora el evento del guardado aplica su nombre confirmado inmediatamente al contexto de cuenta, caché local y datos visibles del panel; luego se reconcilia con Auth en segundo plano. No se modifica la identidad ni los permisos de la sesión desde ese evento. Las lecturas públicas siguen usando el nombre canónico de profiles y la invalidación de caché del guardado ya existente.
+
+El menú también usa el mismo formateador, preservando nombres comerciales explícitos. El nombre legal completo recibido de Hacienda permanece almacenado y visible en identificación.
+
+Referencias: [W3C: ajuste del contenido al ancho disponible](https://www.w3.org/WAI/WCAG21/Understanding/reflow), [Supabase: eventos de autenticación](https://supabase.com/docs/reference/javascript/auth-onauthstatechange).
+
+La regresión usa cuentas desechables en la base de pruebas. Compara tamaños de nombre/foto entre panel y perfil, muestra ambos apellidos sin desbordamientos, incluye reseñas e insignia y comprueba 320 px. Retiene la consulta de Auth durante el evento para comprobar que el panel y el menú muestran el nombre confirmado antes de recibir esa consulta. Se conserva la regresión del logo sin fuentes web. No se cambian datos reales ni se publica un binario en tiendas.
+
+Validación final: tres escenarios de panel/perfil sincronizados y tres de marca sin fuentes web correctos en Chromium escritorio, Chromium móvil y WebKit móvil. Los escenarios de identidad incluyen el caso de dos líneas a 320 px con insignia y reseñas. TypeScript, ESLint, UTF-8, idiomas y propiedad de superficies correctos. El antiguo contrato de una sola línea del conjunto sembrado se actualiza al comportamiento solicitado; ese conjunto completo no se ejecutó en esta ronda.

@@ -148,7 +148,7 @@ test.describe("@seeded dashboard surfaces", () => {
     }
   });
 
-  test("responsive identity keeps a single-line name with its badge and aligns profile access with network counts", async ({ page }) => {
+  test("responsive identity wraps long names with the badge and keeps reviews below", async ({ page }) => {
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
     await gotoOK(page, "/dashboard/profesional");
     if ((page.viewportSize()?.width ?? 1280) >= 640) return;
@@ -157,7 +157,7 @@ test.describe("@seeded dashboard surfaces", () => {
     const actions = page.getByTestId("dashboard-identity-actions");
     const profileLink = page.getByTestId("dashboard-mobile-view-profile");
     await name.evaluate((element) => {
-      element.textContent = "Constructora de Costa Rica instalación de proyectos especializados";
+      element.querySelector("[data-profile-name-start]")!.textContent = "Constructora de Costa Rica instalación de proyectos especializados ";
     });
     await expect(profileLink).toBeVisible();
     const geometry = await Promise.all([
@@ -165,22 +165,26 @@ test.describe("@seeded dashboard surfaces", () => {
       actions.boundingBox(),
       profileLink.boundingBox(),
     ]);
-    expect(geometry.every(Boolean)).toBe(true);
-    // A long account name stays on one line and the interactive check stays beside it.
+    expect(geometry[0]).not.toBeNull();
+    expect(geometry[2]).not.toBeNull();
+    // Long names remain readable; the badge follows the last word and reviews stay below.
     expect(geometry[0]!.height).toBeGreaterThan(14);
-    expect(geometry[0]!.height).toBeLessThanOrEqual(24);
+    expect(geometry[0]!.height).toBeGreaterThan(24);
+    if (geometry[1]) expect(geometry[1].y).toBeGreaterThanOrEqual(geometry[0]!.y + geometry[0]!.height);
     const check = name.locator("..").locator("[data-verification-badge]");
     await expect(check).toBeVisible();
     expect(await check.textContent()).toBe("");
     const checkBox = await check.boundingBox();
-    expect(checkBox!.x).toBeGreaterThanOrEqual(geometry[0]!.x + geometry[0]!.width - 1);
+    expect(checkBox!.x).toBeGreaterThanOrEqual(geometry[0]!.x);
+    expect(checkBox!.x + checkBox!.width).toBeLessThanOrEqual(geometry[0]!.x + geometry[0]!.width + 1);
     expect(checkBox!.y).toBeLessThan(geometry[0]!.y + geometry[0]!.height);
     await check.click();
     await expect(page.getByRole("dialog")).toContainText("Verificamos los datos de identificación");
     await page.getByRole("dialog").getByRole("button", { name: "Entendido", exact: true }).click();
     // «Ver perfil» ya no va a la par de las cifras: en el teléfono es una fila
     // propia de dos botones debajo de ellas, a todo el ancho de la tarjeta.
-    expect(geometry[2]!.y).toBeGreaterThanOrEqual(geometry[1]!.y + geometry[1]!.height - 2);
+    const lastIdentityRow = geometry[1] ?? geometry[0]!;
+    expect(geometry[2]!.y).toBeGreaterThanOrEqual(lastIdentityRow.y + lastIdentityRow.height - 2);
     expect(geometry[2]!.width).toBeGreaterThan(120);
     await expectNoHorizontalOverflow(page);
   });
