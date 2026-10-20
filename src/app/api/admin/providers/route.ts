@@ -1,3 +1,4 @@
+import { readAllAdminRows } from "@/lib/admin/read-all-rows";
 import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -14,7 +15,7 @@ export async function GET(req: Request) {
   const status = url.searchParams.get("status") ?? "pending";
 
   const db = createAdminClient();
-  const { data: professionals, error } = await db
+  const { data: professionals, error } = await readAllAdminRows((from, to) => db
     .from("professionals")
     .select(
       `id, slug, verification_status, verification_reason, verification_updated_at,
@@ -23,7 +24,8 @@ export async function GET(req: Request) {
     )
     .order("verification_updated_at", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false })
-    .limit(200);
+    .order("id", { ascending: true })
+    .range(from, to));
   if (error) {
     console.error("[admin/providers] list error:", error);
     return NextResponse.json({ error: "No se pudo cargar la cola." }, { status: 500 });
@@ -33,13 +35,14 @@ export async function GET(req: Request) {
   // exists. A saved ID with client_identity_status="unverified" can happen when
   // someone starts a request flow and does not finish it; that is not actionable
   // for admin verification and should not pollute "Todos".
-  const { data: profiles, error: profilesError } = await db
+  const { data: profiles, error: profilesError } = await readAllAdminRows((from, to) => db
     .from("profiles")
     .select("id, full_name, email, cedula, avatar_url, client_identity_status, client_identity_verified_at, created_at")
     .in("client_identity_status", ["pending", "verified"])
     .order("client_identity_verified_at", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false })
-    .limit(300);
+    .order("id", { ascending: true })
+    .range(from, to));
   if (profilesError) {
     console.error("[admin/providers] profiles list error:", profilesError);
     return NextResponse.json({ error: "No se pudo cargar la cola." }, { status: 500 });
@@ -138,5 +141,5 @@ export async function GET(req: Request) {
       !row.last_contacted_at
   ).length;
 
-  return NextResponse.json({ providers: filtered.slice(0, 200), counts, identityCounts, uncontacted });
+  return NextResponse.json({ providers: filtered, counts, identityCounts, uncontacted });
 }

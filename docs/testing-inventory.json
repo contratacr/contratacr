@@ -8,7 +8,7 @@
     "handlers": 104,
     "components": 253,
     "hooks": 26,
-    "specs": 148
+    "specs": 149
   },
   "dashboardTabs": [
     "home",
@@ -22782,16 +22782,41 @@
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 399,
-          "title": "\"the verification queue records who was already written to by WhatsApp\""
+          "line": 396,
+          "title": "\"verification badge matches every account shown in the pending queue\""
         },
         {
-          "line": 400,
+          "line": 397,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 409,
+          "line": 420,
+          "title": "\"the verification queue records who was already written to by WhatsApp\""
+        },
+        {
+          "line": 421,
+          "title": "!canRunSeededRegression()"
+        },
+        {
+          "line": 430,
           "title": "!target"
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/admin-verification-pagination.spec.ts",
+      "cases": [
+        {
+          "line": 5,
+          "title": "\"verification reads include older pending accounts beyond the first database page\""
+        },
+        {
+          "line": 15,
+          "title": "\"verification returns an empty queue when no accounts match\""
+        },
+        {
+          "line": 19,
+          "title": "\"a later database failure must not masquerade as a smaller verification queue\""
         }
       ]
     },
