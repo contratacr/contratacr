@@ -70,3 +70,23 @@ test("administrator actions never create conversion receipts or Meta delivery", 
  expect(await lib.recordServiceContact(request(), "professional", "admin-account")).toBeNull();
  expect(dbCalls).toBe(0);
 });
+
+test("landing measurement sends only event and opaque ID, expires and respects refusal/native guards",async()=>{
+ const storage=new Map<string,string>();const requests:Record<string,unknown>[]=[];let declined=false;let native=false;let serial=0;
+ const cookies=new Map<string,string>();
+ const document={get cookie(){return [...cookies].map(([k,v])=>`${k}=${v}`).join('; ');},set cookie(value:string){const pair=value.split(';')[0];const index=pair.indexOf('=');cookies.set(pair.slice(0,index),pair.slice(index+1));}};
+ const window={location:{hostname:'contratacr.com',search:'?email=private@example.com'},crypto:{getRandomValues:(a:Uint32Array)=>{a[0]=123;return a;},randomUUID:()=>`00000000-0000-4000-8000-${String(++serial).padStart(12,'0')}`},sessionStorage:{getItem:(k:string)=>storage.get(k)??null,setItem:(k:string,v:string)=>storage.set(k,v),removeItem:(k:string)=>storage.delete(k)}};
+ const lib=load<typeof import('../../src/lib/analytics/meta-pixel')>('src/lib/analytics/meta-pixel.ts',{
+ '@/lib/privacy/optional-consent':{advertisingMeasurementEnabled:()=>!declined,syncAdvertisingCookie:()=>{}},
+ '@/hooks/use-native-app':{isNativeAppRuntime:()=>native},
+ '@/lib/analytics/trafico-automatizado':{esNavegadorAutomatizado:()=>false},
+ },{window,document,URLSearchParams,Uint32Array,fetch:async(_url:string,init:RequestInit)=>{requests.push(JSON.parse(String(init.body)));return {ok:true};}});
+ lib.trackMetaPageView();await Promise.resolve();await Promise.resolve();
+ expect(requests).toEqual([{event:'PageView',id:'00000000-0000-4000-8000-000000000001'}]);
+ lib.trackMetaPageView();expect(requests).toHaveLength(1);
+ storage.set('ccr:meta-minimal:PageView:at',String(Date.now()-31*60*1000));
+ lib.trackMetaPageView();await Promise.resolve();await Promise.resolve();expect(requests).toHaveLength(2);
+ declined=true;lib.trackMetaEvent('CompleteRegistration');expect(requests).toHaveLength(2);
+ declined=false;native=true;lib.trackMetaEvent('CompleteRegistration');expect(requests).toHaveLength(2);
+ expect(JSON.stringify(requests)).not.toContain('private');
+});

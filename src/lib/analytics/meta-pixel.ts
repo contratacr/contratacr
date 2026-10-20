@@ -20,7 +20,15 @@ function prepareIds() {
   if (click && /^[a-zA-Z0-9_-]{1,500}$/.test(click)) {
     // Preserve the original click timestamp across rerenders on this landing URL.
     const current = document.cookie.split(";").map(v=>v.trim()).find(v=>v.startsWith("_fbc="))?.slice(5);
-    if (!current?.endsWith(`.${click}`)) document.cookie = `_fbc=fb.1.${Date.now()}.${click}${suffix}`;
+    if (!current?.endsWith(`.${click}`)) {
+      document.cookie = `_fbc=fb.1.${Date.now()}.${click}${suffix}`;
+      // A new campaign click in the same tab is a new landing visit.
+      try {
+        window.sessionStorage.removeItem("ccr:meta-minimal:PageView");
+        window.sessionStorage.removeItem("ccr:meta-minimal:PageView:sent");
+        window.sessionStorage.removeItem("ccr:meta-minimal:PageView:at");
+      } catch { /* storage unavailable */ }
+    }
   }
 }
 function send(event: "PageView" | "CompleteRegistration") {
@@ -29,6 +37,12 @@ function send(event: "PageView" | "CompleteRegistration") {
   const key = `ccr:meta-minimal:${event}`;
   let id: string;
   try {
+    const at = Number(window.sessionStorage.getItem(`${key}:at`));
+    if (!at || Date.now() - at > 30 * 60 * 1000) {
+      window.sessionStorage.removeItem(key);
+      window.sessionStorage.removeItem(`${key}:sent`);
+      window.sessionStorage.setItem(`${key}:at`, String(Date.now()));
+    }
     if (window.sessionStorage.getItem(`${key}:sent`)) return;
     id = window.sessionStorage.getItem(key) || window.crypto.randomUUID();
     window.sessionStorage.setItem(key, id);
