@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { ShieldCheck, AlertCircle, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { ContrataCRLogo } from "@/components/landing/landing-navbar";
@@ -22,6 +24,8 @@ async function waitForAuthCookie(maxMs = 2000): Promise<void> {
 // Inline admin login (rendered at /admin when the visitor isn't an admin).
 // Signs in, confirms role=admin, and only then reloads into the panel.
 export function AdminLogin() {
+  const router = useRouter();
+  const recovery = useTranslations("sessionRecovery");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -40,16 +44,29 @@ export function AdminLogin() {
       return;
     }
 
-    const { data: profile } = await supabase.from("profiles").select("role").eq("id", data.user.id).maybeSingle();
-    if (profile?.role !== "admin") {
+    // Direct profile reads are intentionally blocked at AAL1 for admins.
+    // This server endpoint checks the live role without granting panel access.
+    await waitForAuthCookie();
+    let access: { authenticated?: boolean; isAdmin?: boolean };
+    try {
+      const response = await fetch("/api/auth/admin-mfa", { cache: "no-store" });
+      if (!response.ok) throw new Error("Security unavailable");
+      access = await response.json();
+      if (!access.authenticated) throw new Error("Session unavailable");
+    } catch {
+      setLoading(false);
+      setError(recovery("description"));
+      return;
+    }
+    if (!access.isAdmin) {
       await supabase.auth.signOut();
       setLoading(false);
       setError("Esta cuenta no tiene acceso de administrador.");
       return;
     }
 
-    await waitForAuthCookie();
-    window.location.assign("/admin");
+    // Preserve the session MFA challenge while the server resolves /admin.
+    router.refresh();
   }
 
   const inputClass =

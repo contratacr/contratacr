@@ -153,6 +153,13 @@ async function publicar(page: Page, tipo: Tipo, marca: string) {
   // La promoción lleva foto: sin servidor de imágenes no hay cómo publicarla.
   // Lo que esta prueba cuida —que vuelva llena, con su foto— ya se comprobó.
   if (tipo === "promocion" && (process.env.LOCAL_REGRESSION_SEED === "1" || !(await puedeSubirFotos(page)))) return;
+  if (tipo === "proyecto") {
+    const identification = page.locator("#cedula-del-proyecto");
+    // Identification is requested after login, never stored in the guest draft.
+    // All zeros are synthetic: exercise the non-confirmed lookup path without
+    // assigning any real person's document to a disposable account.
+    if (await identification.isVisible()) await identification.fill("000000000000");
+  }
   const api = { proyecto: "/api/projects", empleo: "/api/jobs/posts", promocion: "/api/offers", cotizacion: "/api/quotes" }[tipo];
   const respuesta = page.waitForResponse((r) => new URL(r.url()).pathname === api && r.request().method() === "POST", { timeout: 60_000 });
   const boton = { proyecto: /^Publicar$/, empleo: /^Publicar empleo$/, promocion: /^Publicar promoción$/, cotizacion: /^Crear cotización$/ }[tipo];

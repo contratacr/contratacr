@@ -74,12 +74,12 @@ test("panel and public profile share readable identity sizes and immediately ado
       const original = page.viewportSize()!;
       await page.setViewportSize({ width: 600, height: original.height });
       await expect(panelName).toHaveText("Alejandra Fernández Rodríguez");
-      expect(await textLineCount(panelName)).toBe(1);
+      await expect.poll(() => textLineCount(panelName)).toBe(1);
       await page.setViewportSize({ width: 320, height: original.height });
       await expect(panelName).toHaveText("Alejandra Fernández Rodríguez");
       expect(await panelName.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
       const narrowName = await panelName.boundingBox();
-      expect(await textLineCount(panelName)).toBe(2);
+      await expect.poll(() => textLineCount(panelName)).toBe(2);
       expect((await reviews.boundingBox())!.y).toBeGreaterThanOrEqual(narrowName!.y + narrowName!.height);
       await expectNoHorizontalOverflow(page);
       await page.setViewportSize(original);
@@ -99,10 +99,10 @@ test("panel and public profile share readable identity sizes and immediately ado
       const original = page.viewportSize()!;
       await page.setViewportSize({ width: 600, height: original.height });
       await expect(publicName).toHaveText("Alejandra Fernández Rodríguez");
-      expect(await textLineCount(publicName)).toBe(1);
+      await expect.poll(() => textLineCount(publicName)).toBe(1);
       await page.setViewportSize({ width: 320, height: original.height });
       await expect(publicName).toHaveText("Alejandra Fernández Rodríguez");
-      expect(await textLineCount(publicName)).toBe(2);
+      await expect.poll(() => textLineCount(publicName)).toBe(2);
       expect(await publicName.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
       await expectNoHorizontalOverflow(page);
       await page.setViewportSize(original);
