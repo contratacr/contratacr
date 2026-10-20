@@ -15,8 +15,9 @@ test('a client can open project publishing but cannot publish jobs or offers wit
  expect(professional).toBeNull();
  await gotoOK(page,'/publicar-proyecto');await waitForInteractivePage(page);
  await expect(page.locator('#publish-project-title')).toBeVisible();
+ await expect(page.getByRole('link',{name:'¿Quiere ofrecer sus servicios? Agréguelos a su perfil.'})).toHaveAttribute('href','/continuar-perfil');
  await expect(page.locator('textarea').first()).toBeVisible();
- await expect(page.getByRole('button',{name:/^Publicar$/}).last()).toBeVisible();
+ await expect(page.getByRole('button',{name:/^Publicar proyecto$/}).last()).toBeVisible();
  expect(new URL(page.url()).pathname).toBe('/publicar-proyecto');
  const projects=await apiJson(page,'/api/projects?role=client');
  expect(projects.status).toBe(200);
@@ -30,6 +31,8 @@ test('a client can open project publishing but cannot publish jobs or offers wit
  for(const path of ['/empleos/publicar','/promociones/publicar']) {
   await page.goto(path);
   await page.waitForURL(/\/registro\/profesional/);
+  await expect(page.getByRole("heading",{name:/Ofrecer mis servicios|Create.*professional|Offer my services/i})).toBeVisible();
+  await waitForInteractivePage(page);
  }
  // No project/form is submitted: this audit causes no contact notifications.
  } finally {await cleanupDisposableAccount(account);}
