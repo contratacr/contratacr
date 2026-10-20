@@ -24930,55 +24930,55 @@
           "title": "\"el video activo de la guía nunca queda invisible y la imagen fija va encima\""
         },
         {
-          "line": 172,
+          "line": 174,
           "title": "\"las secciones de abajo de la portada se ven al bajar\""
         },
         {
-          "line": 179,
+          "line": 181,
           "title": "\"la foto del inicio empieza bajo la cabecera y no cambia de tamaño al abrir\""
         },
         {
-          "line": 180,
+          "line": 182,
           "title": "!isMobileProject(test.info())"
         },
         {
-          "line": 203,
+          "line": 205,
           "title": "\"el menú se abre y se cierra deslizando, siempre opaco\""
         },
         {
-          "line": 204,
+          "line": 206,
           "title": "!isMobileProject(test.info())"
         },
         {
-          "line": 231,
+          "line": 233,
           "title": "\"con el teclado abierto, la hoja de búsqueda llega justo hasta el teclado\""
         },
         {
-          "line": 232,
+          "line": 234,
           "title": "!isMobileProject(test.info())"
         },
         {
-          "line": 255,
+          "line": 257,
           "title": "\"los logos de la cinta están cargados desde el principio (ninguno en blanco)\""
         },
         {
-          "line": 263,
+          "line": 265,
           "title": "\"al tocar un enlace del menú no se ve el inicio entre medio: el menú se queda hasta que llega la sección\""
         },
         {
-          "line": 264,
+          "line": 266,
           "title": "!isMobileProject(test.info())"
         },
         {
-          "line": 288,
+          "line": 290,
           "title": "\"en la app, tocar Notificaciones nada más llegar a Proyectos la abre (2-oct-2026)\""
         },
         {
-          "line": 292,
+          "line": 294,
           "title": "!isMobileProject(test.info())"
         },
         {
-          "line": 293,
+          "line": 295,
           "title": "!process.env.E2E_TEST_PASSWORD"
         }
       ]
