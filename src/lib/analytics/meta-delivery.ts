@@ -1,5 +1,8 @@
-export type MetaDeliveryResult = "sent" | "retry";
+import { OPTIONAL_CONSENT_VERSION } from "@/lib/privacy/optional-consent";
+export type MetaDeliveryResult = "sent" | "retry" | "suppressed";
 export async function sendMetaConversion(payload: Record<string, unknown>, config: { pixelId: string; token: string; version: string; testCode?: string }, transport: typeof fetch = fetch): Promise<MetaDeliveryResult> {
+  const custom = payload.custom_data as Record<string, unknown> | undefined;
+  if (custom?.consent_version !== OPTIONAL_CONSENT_VERSION) return "suppressed";
   try {
     const response = await transport(`https://graph.facebook.com/${config.version}/${config.pixelId}/events`, {
       method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${config.token}` },

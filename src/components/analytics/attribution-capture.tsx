@@ -6,6 +6,8 @@ import { captureAttribution, readAttribution } from "@/lib/analytics/attribution
 import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { useAuth } from "@/hooks/use-auth";
 
+import { subscribeOptionalConsent, syncAdvertisingCookie } from "@/lib/privacy/optional-consent";
+
 const CLAIMED_KEY = "contratacr:attribution-claimed";
 
 // Records the first-touch attribution (utm_*, click ids, referrer) as soon as
@@ -20,22 +22,10 @@ export function AttributionCapture() {
 
   useEffect(() => {
     captureAttribution();
-    try {
-      const enabled = window.localStorage.getItem("contratacr:analytics-consent") !== "declined";
-      document.cookie = `ccr_meta_consent=${enabled ? "enabled" : "declined"}; Path=/; SameSite=Lax; Max-Age=2592000${location.protocol === "https:" ? "; Secure" : ""}`;
-    } catch { document.cookie = "ccr_meta_consent=declined; Path=/; SameSite=Lax"; }
+    syncAdvertisingCookie();
   }, [pathname, searchParams]);
 
-  useEffect(() => {
-    const sync = () => {
-      try {
-        const enabled = window.localStorage.getItem("contratacr:analytics-consent") !== "declined";
-        document.cookie = `ccr_meta_consent=${enabled ? "enabled" : "declined"}; Path=/; SameSite=Lax; Max-Age=2592000${location.protocol === "https:" ? "; Secure" : ""}`;
-      } catch { document.cookie = "ccr_meta_consent=declined; Path=/; SameSite=Lax"; }
-    };
-    window.addEventListener("storage",sync);
-    return () => window.removeEventListener("storage",sync);
-  },[]);
+  useEffect(() => subscribeOptionalConsent(syncAdvertisingCookie), []);
 
   // EL CLIC QUE LLEGA DE UN CORREO DE CAMPAÑA. Hasta ahora solo se sabía de
   // quien terminaba REGISTRÁNDOSE: los `utm_*` se guardan en el perfil, así

@@ -1,3 +1,4 @@
+import { OPTIONAL_CONSENT_VERSION } from "@/lib/privacy/optional-consent";
 import { analyticsActor } from "@/lib/analytics/admin-activity";
 import { requestAnalyticsPlatform } from "./platform";
 import "server-only";
@@ -17,7 +18,7 @@ export function growthContext(req: Request, actorId?: string | null) {
   const automated = esPeticionAutomatizada(requestCookie(req,"ccr_sin_analitica"),ua);
   const native = requestCookie(req,"ccr_platform") === "native";
   const allowed = !automated && !native && ["contratacr.com","www.contratacr.com"].includes(host)
-    && requestCookie(req,"ccr_meta_consent") === "enabled";
+    && requestCookie(req,"ccr_ads_consent_v1") === "accepted";
   const actor = actorId || requestCookie(req,"cc_analytics_sid") || requestCookie(req,"ccr_whatsapp_contact");
   let attribution: Record<string,string> = {};
   try {
@@ -49,7 +50,7 @@ export async function recordGrowthConversion(req: Request, action: GrowthAction,
     const directDelivery = allowDelivery && process.env.META_CAPI_ENABLED === "true";
     const payload = directDelivery ? {
       event_name: contract.event, event_id: eventId, event_time: Math.floor(Date.now()/1000), action_source: "website",
-      event_source_url: `https://contratacr.com${contract.path}`, user_data: context.userData, custom_data: conversion.params,
+      event_source_url: `https://contratacr.com${contract.path}`, user_data: context.userData, custom_data: { ...conversion.params, consent_version: OPTIONAL_CONSENT_VERSION },
     } : null;
     const { error } = await createAdminClient().from("growth_conversion_events").insert({
       event_id: eventId, action, audience: contract.audience, actor_hash: context.actorHash,

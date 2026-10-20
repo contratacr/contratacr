@@ -5,18 +5,18 @@ import { createHash } from "node:crypto";
 import ts from "typescript";
 import { POST } from "../../src/app/api/internal/email/drain/route";
 
-function harness({ status = 201, code = "", networkFailure = false, receiptFailure = false, claimed = true } = {}) {
+function harness({ status = 201, code = "", networkFailure = false, receiptFailure = false, claimed = true, purpose = "activity", marketingConsent = true as boolean | null } = {}) {
   const calls: { name: string; args: Record<string, unknown> }[] = [];
   const requests: { body: Record<string, unknown>; options: { headers: Record<string, string> } }[] = [];
   const db = { rpc: async (name: string, args: Record<string, unknown>) => {
     calls.push({name,args});
     if (name === "enqueue_email_delivery") return {data:"00000000-0000-4000-8000-000000000001",error:null};
-    if (name === "claim_email_delivery") return {data:claimed ? {id:"00000000-0000-4000-8000-000000000001",attempt_token:"lease",attempts:1,purpose:"activity",payload:{subject:"Hello",tags:["aviso-proyecto"]}} : null,error:null};
+    if (name === "claim_email_delivery") return {data:claimed ? {id:"00000000-0000-4000-8000-000000000001",attempt_token:"lease",attempts:1,purpose,recipient:"person@example.com",payload:{subject:"Hello",tags:["aviso-proyecto"]}} : null,error:null};
     return receiptFailure ? {data:null,error:{message:"DB unavailable"}} : {data:true,error:null};
   }, from: () => ({select: () => ({eq: () => ({single:async()=>({data:{status:"accepted"},error:null})})})}) };
   type Result = {ok:boolean;status:string;detail:string|null};
   const box = {exports:{} as {deliverRecordedEmail:(input:unknown)=>Promise<Result>;processEmailDelivery:(id:string)=>Promise<Result>;providerOutcome:(status:number,code?:string)=>string}};
-  const mocks:Record<string,unknown>={"node:crypto":{createHash},"@/lib/supabase/admin":{createAdminClient:()=>db},"./revalidate-campaign":{queuedCampaignEligible:async()=>true,queuedActivityEligible:async()=>true}};
+  const mocks:Record<string,unknown>={"@/lib/privacy/marketing-consent":{hasMarketingConsent:async()=>marketingConsent},"node:crypto":{createHash},"@/lib/supabase/admin":{createAdminClient:()=>db},"./revalidate-campaign":{queuedCampaignEligible:async()=>true,queuedActivityEligible:async()=>true}};
   runInNewContext(ts.transpileModule(readFileSync("src/lib/email/outbox.ts","utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,{
     module:box,exports:box.exports,require:(name:string)=>mocks[name],process:{env:{BREVO_API_KEY:"synthetic-key"}},AbortSignal,
     fetch:async (_url:string,options:{body:string;headers:Record<string,string>})=>{
@@ -81,4 +81,11 @@ test("password reset queued for later is never recorded as already sent",async()
     module:box,exports:box.exports,require:(name:string)=>mocks[name],process:{env:{}},URL,
   });
   expect(await box.exports.enviarEnlaceDeContrasena({email:"person@example.com",origin:"https://contratacr.test",resetPath:"/reset-password"})).toBe("en_cola");
+});
+
+for (const consent of [false, null, true]) test(`campaign delivery requires an affirmative permission (${consent})`, async () => {
+  const h = harness({ purpose: "campaign", marketingConsent: consent });
+  const result = await h.api.processEmailDelivery("receipt");
+  expect(h.requests).toHaveLength(consent === true ? 1 : 0);
+  expect(result.status).toBe(consent === true ? "sent" : consent === false ? "skipped" : "queued");
 });

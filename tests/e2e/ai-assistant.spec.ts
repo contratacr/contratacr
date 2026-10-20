@@ -33,7 +33,7 @@ type AssistantResponse = {
 const ask = (page: Parameters<typeof apiJson>[0], message: string, options: Record<string, unknown> = {}) =>
   apiJson<AssistantResponse>(page, "/api/ai-assistant", {
     method: "POST",
-    body: { message, locale: "es", pagePath: "/", platform: "native", ...options },
+    body: { aiConsent: {accepted:true,version:"2026-10-19"}, message, locale: "es", pagePath: "/", platform: "native", ...options },
   });
 
 test.describe.configure({ mode: "serial" });
@@ -45,6 +45,7 @@ function assistantTestClientIp(value: string) {
 }
 
 test.beforeEach(async ({ page }, testInfo) => {
+  await page.addInitScript(() => localStorage.setItem("contratacr:consent:ai:v1", JSON.stringify({version:"2026-10-19",choice:"accepted",at:new Date().toISOString()})));
   await page.setExtraHTTPHeaders({
     "x-forwarded-for": assistantTestClientIp(`${testInfo.project.name}:${testInfo.title}`),
   });
@@ -428,7 +429,7 @@ test.describe("@seeded ContrataCR AI", () => {
 
     const empty = await apiJson<AssistantResponse>(page, "/api/ai-assistant", {
       method: "POST",
-      body: { message: "   ", locale: "es", pagePath: "/", platform: "native" },
+      body: { message: "   ", aiConsent: { version: "2026-10-19", accepted: true }, locale: "es", pagePath: "/", platform: "native" },
     });
     expect(empty.status).toBe(200);
     expect(empty.body.action).toBe("answer");
@@ -649,7 +650,7 @@ test.describe("@seeded ContrataCR AI", () => {
     await gotoOK(page, "/en");
     const response = await apiJson<AssistantResponse>(page, "/api/ai-assistant", {
       method: "POST",
-      body: { message: "I forgot my password", locale: "en", pagePath: "/en", platform: "native" },
+      body: { aiConsent: {accepted:true,version:"2026-10-19"}, message: "I forgot my password", locale: "en", pagePath: "/en", platform: "native" },
     });
     expect(response.status).toBe(200);
     expect(response.body.action).toBe("reset_password");

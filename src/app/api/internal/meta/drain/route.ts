@@ -18,10 +18,16 @@ export async function POST(req: Request) {
   const testCode = metaTestEventCode(process.env.META_CAPI_TEST_EVENT_CODE);
   let sent = 0;
   for (const row of data ?? []) {
+    // A withdrawal can cancel a claimed envelope before it reaches Meta.
+    const current = await db.from("growth_conversion_events").select("status").eq("event_id", row.event_id).maybeSingle();
+    if (current.error) return NextResponse.json({ error: "queue_unavailable" }, { status: 503 });
+    if (current.data?.status !== "sending") continue;
     const outcome = await sendMetaConversion(row.payload,{ pixelId,token,version,testCode });
     const delivered = outcome === "sent";
+    const suppressed = outcome === "suppressed";
     const { error: updateError } = await db.from("growth_conversion_events").update(delivered
       ? { status: "sent",delivery_mode: testCode ? "test" : "production",sent_at: new Date().toISOString(),locked_at: null }
+      : suppressed ? { status: "suppressed",payload: null,locked_at: null }
       : { status: "pending",next_attempt_at: new Date(Date.now()+Math.min(3600000,60000*2**Math.min(row.attempts,6))).toISOString(),locked_at: null })
       .eq("event_id",row.event_id).eq("status","sending").eq("attempts",row.attempts);
     if (updateError) return NextResponse.json({ error: "receipt_update_failed" },{ status: 503 });

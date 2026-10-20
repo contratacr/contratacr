@@ -1,5 +1,7 @@
 "use client";
 
+import { signupLegalAcceptance } from "@/lib/privacy/legal-version";
+
 import { useRegistrationIntent } from "@/hooks/use-registration-intent";
 
 import { AvatarFileInput } from "@/components/ui/avatar-file-input";
@@ -679,6 +681,7 @@ export default function RegisterProfessionalPage() {
   // }
 
   async function onStep1(data: Step1Data) {
+    if (!terminosAceptados) { setError(locale === "en" ? "Please accept the terms and privacy policy." : "Acepte los términos y la política de privacidad."); return; }
     if (emailCheck.taken) {
       // If the existing account is social-only, guide to that provider specifically.
       const provider = await detectSocialOnly(data.email);
@@ -718,6 +721,7 @@ export default function RegisterProfessionalPage() {
         password: data.password,
         options: {
           data: {
+            legal_acceptance: signupLegalAcceptance(locale),
             full_name: fullName,
             cedula: skipCedula ? null : data.cedula.replace(/\D/g, ""),
             role: "client",
@@ -1203,7 +1207,7 @@ export default function RegisterProfessionalPage() {
 
               {/* La aceptación va antes del botón, no debajo: es lo que Apple
                   pide mostrar antes de registrarse (regla 1.2). */}
-              <CasillaDeTerminos aceptado={terminosAceptados} onCambio={setTerminosAceptados} />
+              <CasillaDeTerminos reuseRecordedAcceptance aceptado={terminosAceptados} onCambio={setTerminosAceptados} />
               <BarraDeAcciones activa={!!currentUser}>
                 <Button type="submit" size="lg" className="flex-1" loading={submitting} disabled={submitting || !terminosAceptados}>
                   {t("continue")}

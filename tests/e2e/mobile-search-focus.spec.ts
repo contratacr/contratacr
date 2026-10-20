@@ -79,11 +79,12 @@ test('hidden desktop navbar never opens a second professional search sheet',asyn
  }
 });
 
-test('Enter in location keeps marketplace search open and focuses its actual service field',async({page})=>{
+test('Enter in location submits marketplace search without a service',async({page})=>{
  test.skip((page.viewportSize()?.width??1280)>=1024,'Mobile search sheet');
  for(const path of ['/proyectos','/empleos','/promociones']) {
   const panel=await openSearch(page,path);const location=panel.locator('input').nth(1);
   await location.fill('Alajuela');await location.press('Enter');
-  await expect(panel).toBeVisible();await expect(panel.locator('input').first()).toBeFocused();
+  await expect(panel).toHaveCount(0);
+  await expect(page).toHaveURL(/location=Alajuela/);
  }
 });

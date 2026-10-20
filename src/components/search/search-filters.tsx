@@ -872,19 +872,16 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     debounceRef.current = setTimeout(() => applyFilters({ q: value, categoria: "", aseguradora: "", modalidad: "" }), 400);
   }
 
-  // Misma regla en los cuatro buscadores: el Intro completa lo que falta y
-  // solo busca cuando ya no queda campo vacío.
-  const pistaServicio: "next" | "search" = query.trim() && !locationQuery.trim() ? "next" : "search";
-  const pistaUbicacion: "next" | "search" = locationQuery.trim() && !query.trim() && !category ? "next" : "search";
+  const pistaServicio = "search";
+  const pistaUbicacion = "search";
 
   function handleQueryKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.nativeEvent.isComposing) return;
     if (e.key === "Enter") {
+      e.preventDefault();
       if (debounceRef.current) clearTimeout(debounceRef.current);
-      setCategory("");
-      setModalities([]);
-      setInsurers([]);
-      applyFilters({ q: query, categoria: "", aseguradora: "", modalidad: "" });
-      if (!locationQuery.trim()) window.setTimeout(() => locationInputRef.current?.focus(), 80);
+      setSearchOpen(false);
+      applyFilters({ q: category ? "" : query, categoria: category, aseguradora: serializeMultiParam(insurers), modalidad: serializeMultiParam(modalities) });
     }
   }
 
@@ -1012,6 +1009,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   const locationInputRef = useRef<HTMLInputElement>(null);
   const serviceInputRef = useRef<HTMLInputElement>(null);
   function handleLocationKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.nativeEvent.isComposing) return;
     if (e.key === "ArrowDown" && locationSug.length > 0) {
       e.preventDefault();
       setLocationOpen(true);
@@ -1034,9 +1032,9 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         clearLocation();
         return;
       }
-      const selected = locationSug[locationActiveIndex >= 0 ? locationActiveIndex : 0] ?? resolveLocation(trimmed);
+      const selected = resolveLocation(trimmed);
       if (selected) pickLocationOption(selected);
-      if (!query.trim() && !category) window.setTimeout(() => serviceInputRef.current?.focus(), 80);
+      setLocationOpen(false);
     }
   }
 
@@ -1255,14 +1253,6 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                   if (searchOpen && searchSug.length > 0) {
                     if (e.key === "ArrowDown") { e.preventDefault(); setSearchActive((i) => Math.min(i + 1, searchSug.length - 1)); return; }
                     if (e.key === "ArrowUp") { e.preventDefault(); setSearchActive((i) => Math.max(i - 1, 0)); return; }
-                    // Enter resolves the partial term to the highlighted OR the FIRST (best)
-                    // match and searches THAT (e.g. "electrici" -> "electricista").
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      pickCategory(searchSug[searchActive >= 0 ? searchActive : 0].id);
-                      if (!locationQuery.trim()) window.setTimeout(() => locationInputRef.current?.focus(), 80);
-                      return;
-                    }
                     if (e.key === "Escape") { setSearchOpen(false); return; }
                   }
                   handleQueryKeyDown(e);

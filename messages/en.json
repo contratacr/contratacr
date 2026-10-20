@@ -2082,7 +2082,7 @@
     "errCedula": "Enter a valid identification number.",
     "errPhone": "Write a valid WhatsApp number.",
     "phoneLabel": "WhatsApp",
-    "phoneHelp": "It is not shown on your post: only professionals who contact you with their account get it.",
+    "phoneHelp": "Your project will be public. Your phone is not shown in the post; registered professionals can access it through the contact options.",
     "errPhoneFijo": "That looks like a landline. Enter a mobile number with WhatsApp so professionals can reach you.",
     "errPublish": "Couldn't post it. Try again.",
     "errUnexpected": "Unexpected error. Try again.",

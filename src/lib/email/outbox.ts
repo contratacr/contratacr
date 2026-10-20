@@ -1,3 +1,4 @@
+import { hasMarketingConsent } from "@/lib/privacy/marketing-consent";
 import { hasVerificationDocuments } from "@/lib/verification/documents";
 import { queuedCampaignEligible, queuedActivityEligible } from "./revalidate-campaign";
 import { createHash } from "node:crypto";
@@ -61,6 +62,13 @@ export async function processEmailDelivery(id: string): Promise<EmailResult> {
     if (result.error || result.data !== true) throw new Error("Delivery receipt not confirmed");
   };
   try {
+    if (mail.purpose === "campaign") {
+      const consent = await hasMarketingConsent(mail.recipient);
+      if (consent !== true) {
+        await finish(consent === false ? "cancelled" : "retry", null, consent === false ? "No affirmative marketing permission" : "Consent ledger unavailable");
+        return consent === false ? { ok: false, status: "skipped", detail: "Sin autorización promocional" } : queued;
+      }
+    }
     if (mail.purpose === "campaign" && mail.campaign) {
       const eligible = await queuedCampaignEligible(mail.recipient, mail.campaign);
       if (eligible !== true) {

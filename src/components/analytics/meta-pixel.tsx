@@ -7,11 +7,13 @@ import { enviarEventosMetaPendientes, hayEventosMetaPendientes, trackMetaPageVie
 import { readAttribution } from "@/lib/analytics/attribution";
 import { isNativeAppRuntime } from "@/hooks/use-native-app";
 
+import { readOptionalConsent, subscribeOptionalConsent, syncAdvertisingCookie } from "@/lib/privacy/optional-consent";
+
 interface MetaPixelProps {
   pixelId?: string;
 }
 
-const CONSENT_KEY = "contratacr:analytics-consent";
+
 type MeasurementState = "loading" | "enabled" | "declined";
 type Carga = "lazyOnload" | "afterInteractive";
 
@@ -52,10 +54,22 @@ export function MetaPixel({ pixelId }: MetaPixelProps) {
         return;
       }
       if (vieneDeUnAnuncio() || hayEventosMetaPendientes()) setCarga("afterInteractive");
-      const stored = window.localStorage.getItem(CONSENT_KEY);
-      setMeasurement(stored === "declined" ? "declined" : "enabled");
+      syncAdvertisingCookie();
+      const permitted = readOptionalConsent("advertising") === "accepted";
+      window.fbq?.("consent", permitted ? "grant" : "revoke");
+      setMeasurement(permitted ? "enabled" : "declined");
     });
     return () => cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
+    const sync = () => {
+      syncAdvertisingCookie();
+      const allowed = !isNativeAppRuntime() && HOSTS_DE_PRODUCCION.has(window.location.hostname) && readOptionalConsent("advertising") === "accepted";
+      window.fbq?.("consent", allowed ? "grant" : "revoke");
+      setMeasurement(allowed ? "enabled" : "declined");
+    };
+    return subscribeOptionalConsent(sync);
   }, []);
 
   // Lo que pasó antes de que el script de Meta bajara (una búsqueda, el registro
