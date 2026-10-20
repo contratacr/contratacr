@@ -34,7 +34,7 @@ export function growthContext(req: Request, actorId?: string | null) {
     if (/^fb\.\d+\.\d+\.[a-zA-Z0-9_-]+$/.test(value)) userData[name.slice(1)] = value;
   }
   // Account identity remains internal; never forward even its hash to Meta.
-  return { automated, allowed, actorHash: actor ? hash(actor) : null, attribution, userData };
+  return { automated, allowed, native, nativeAllowed: native && !automated && ["contratacr.com","www.contratacr.com"].includes(host) && ["accepted","limited"].includes(requestCookie(req,"ccr_ads_consent_v1")), actorHash: actor ? hash(actor) : null, attribution, userData };
 }
 /** Only invoke after a successful, authorized business action. Database conflicts are the deduplication boundary. */
 export async function recordGrowthConversion(req: Request, action: GrowthAction, businessKey: string, actorId?: string | null, options: { metaAllowed?: boolean } = {}): Promise<MetaConversion | null> {
@@ -46,6 +46,7 @@ export async function recordGrowthConversion(req: Request, action: GrowthAction,
     const contract = GROWTH_ACTIONS[action];
     const eventId = hash(`${action}:${businessKey}`);
     const conversion: MetaConversion = { eventName: contract.event, eventId, params: { action, audience: contract.audience } };
+    const nativeDelivery = context.nativeAllowed && options.metaAllowed !== false;
     const allowDelivery = context.allowed && options.metaAllowed !== false;
     const directDelivery = allowDelivery && process.env.META_CAPI_ENABLED === "true";
     const payload = directDelivery ? minimalMetaPayload({
@@ -54,13 +55,13 @@ export async function recordGrowthConversion(req: Request, action: GrowthAction,
     }) : null;
     const { error } = await createAdminClient().from("growth_conversion_events").insert({
       event_id: eventId, action, audience: contract.audience, actor_hash: context.actorHash,
-      attribution: { ...context.attribution, ...requestAnalyticsPlatform(req) }, payload, status: payload ? "pending" : "suppressed",
+      attribution: { ...context.attribution, ...requestAnalyticsPlatform(req) }, payload, status: payload ? "pending" : nativeDelivery ? "browser_only" : "suppressed",
     });
     if (error) {
       if (error.code !== "23505") console.warn("[growth] receipt unavailable",error.code);
       return null;
     }
-    return payload ? conversion : null;
+    return payload || nativeDelivery ? conversion : null;
   } catch { console.warn("[growth] receipt failed"); return null; }
 }
 export async function recordServiceContact(req: Request, professionalId: string, actorId?: string | null) {

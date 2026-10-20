@@ -253,3 +253,9 @@ Android sí está publicado: Google Play 1.0.10/build 14 fue probado el 16 de
 necesita un nuevo binario con el enlace de retorno. Las menciones anteriores a
 Android «todavía no publicado» son históricas. Probar Safari/WebKit no sustituye
 probar Apple/Google reales ni notificaciones en un dispositivo.
+
+## Medición web, Android e iOS (2026-10-20)
+
+- Recorridos agrupados: privacidad de campos/DOM, UUID y deduplicación; API exige mismo origen, tamaño y límites, excluye bots/admins; RLS, borrado de cuenta, retención y paginación con fechas iguales. Pruebas: `journey-privacy`, `journey-browser`, `admin-journey` y `scripts/verify-journey-privacy.mjs`.
+- Meta: Search sin texto ni ubicación, recibos de negocio auténticos, no duplicar CAPI desde el cliente, rechazo guardado y sin ventanas. Pruebas: `meta-minimal`, `meta-growth-runtime`, `meta-growth-contract`, `privacy-consent-runtime`, `legal-privacy`.
+- Candidatos nativos: ausencia de permisos publicitarios y captura automática, SDK iniciado tras control de rol, plugin ausente en versiones antiguas, desactivación, catálogo cerrado, iOS con esquema pendiente sin hitos de negocio. Requiere compilación Android/iOS y pruebas de puente; una futura instalación atribuida/postback real sigue siendo requisito separado (véase `measurement-2026-10-20.md`).

@@ -1,3 +1,4 @@
+import { AdminActivityJourney } from "./admin-activity-journey";
 import { ArrowDownRight, ArrowUpRight, Headset, MapPinned, Megaphone, Minus, Search, Smartphone, UserCheck, Users } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import type { AdminAcquisition, AdminReports, Count, WeekCompare } from "@/lib/admin/reports";
@@ -220,6 +221,7 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
         </p>
       </div>
 
+      <AdminActivityJourney />
       <Section icon={Users} title="Esta semana" sub="vs. los 7 días anteriores">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
           <Kpi label="Profesionales nuevos" data={week.pros} />

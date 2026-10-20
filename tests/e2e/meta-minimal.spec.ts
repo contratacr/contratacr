@@ -20,9 +20,16 @@ test("delivery sanitizes queued envelopes again instead of trusting their conten
  expect(sent.data).toEqual([minimalMetaPayload(event)]);
 });
 test("unknown events, missing matching IDs and pre-minimization queues cannot be delivered",()=>{
- for(const change of [{event_name:"Search"},{event_name:"PrivateMessage"},{custom_data:{consent_version:"2026-10-19"}},{user_data:{external_id:["account"]}},{event_id:"private@example.com"}]) expect(minimalMetaPayload({...event,...change})).toBeNull();
+ for(const change of [{event_name:"PrivateMessage"},{custom_data:{consent_version:"2026-10-19"}},{user_data:{external_id:["account"]}},{event_id:"private@example.com"}]) expect(minimalMetaPayload({...event,...change})).toBeNull();
 });
 test("only constant owned paths survive; query and fragments never do",()=>{
  expect(minimalMetaPayload({...event,event_source_url:"https://contratacr.com/proyectos?q=private#secret"})?.event_source_url).toBe("https://contratacr.com/proyectos");
  expect(minimalMetaPayload({...event,event_source_url:"https://evil.example/proyectos"})?.event_source_url).toBe("https://contratacr.com/");
+});
+
+test("Search is a conversion signal without search terms or location",()=>{
+ const payload = minimalMetaPayload({...event,event_name:"Search"})!;
+ expect(payload.event_name).toBe("Search");
+ expect(payload.custom_data).toEqual({measurement_version:META_MEASUREMENT_VERSION});
+ expect(JSON.stringify(payload)).not.toMatch(/search_string|private search|cedula|message/);
 });

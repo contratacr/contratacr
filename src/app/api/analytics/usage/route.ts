@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     p_first_use: isNativeAnalyticsRuntime(runtime) && input.data.firstUse === true,
   });
   if (error) return NextResponse.json({ error: "Could not record usage" }, { status: 503 });
-  const response = new NextResponse(null, { status: 204 });
+  const response = new NextResponse(null, { status: 204, headers: { "x-meta-skan-schema": process.env.META_IOS_SKAN_SCHEMA_READY === "true" ? "ready" : "pending" } });
   if (!req.cookies.has("cc_analytics_sid")) response.cookies.set("cc_analytics_sid", sid, {
     httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 31536000,
   });

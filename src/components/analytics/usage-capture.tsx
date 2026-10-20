@@ -1,4 +1,7 @@
 "use client";
+import { configureNativeMeasurement, setNativeMeasurementActor } from "@/lib/analytics/native-measurement";
+
+import { JourneyCapture } from "./journey-capture";
 import { isNativeAnalyticsRuntime } from "@/lib/analytics/platform";
 import { useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -33,6 +36,7 @@ export function UsageCapture() {
   const last = useRef({ route: "", session: "", actor: "", screen: "", runtime: "" });
   useEffect(() => {
     if (esNavegadorAutomatizado()) return;
+    setNativeMeasurementActor(user?.id ?? "");
     const track = () => {
       if (document.visibilityState === "hidden") return;
       const runtime = syncAnalyticsPlatform();
@@ -53,6 +57,7 @@ export function UsageCapture() {
         try {
           let response = await send();
           if (!response.ok && response.status >= 500) response = await send();
+          if (response.ok && isApp && last.current.actor === actor) await configureNativeMeasurement(response.headers?.get("x-analytics-excluded") === "1", response.headers?.get("x-meta-skan-schema") === "ready");
           if (response.ok && firstUse && response.headers?.get("x-analytics-excluded") !== "1") { try { localStorage.setItem(FIRST_USE_KEY, "1"); } catch { /* optional */ } }
           if (!response.ok && last.current.screen === screen) last.current.actor = "retry";
         } catch { if (last.current.screen === screen) last.current.actor = "retry"; }
@@ -76,5 +81,5 @@ export function UsageCapture() {
       document.removeEventListener("keydown", touch);
     };
   }, [pathname, tab, user?.id, native]);
-  return null;
+  return <JourneyCapture />;
 }

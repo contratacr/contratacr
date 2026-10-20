@@ -39,6 +39,7 @@ test("only the first successful business receipt queues a minimal CAPI payload",
 test("browser business receipts cannot create a duplicate or leak free-text parameters",()=>{
  const calls:unknown[]=[];
  const lib=load<typeof import("../../src/lib/analytics/meta-pixel")>("src/lib/analytics/meta-pixel.ts",{
+ "./native-measurement":{trackNativeMeasurement:()=>{},trackNativeConversion:()=>{}},
  "@/lib/privacy/optional-consent":{advertisingMeasurementEnabled:()=>true,syncAdvertisingCookie:()=>{}},
  "@/hooks/use-native-app":{isNativeAppRuntime:()=>false},
  "@/lib/analytics/trafico-automatizado":{esNavegadorAutomatizado:()=>false}
@@ -77,6 +78,7 @@ test("landing measurement sends only event and opaque ID, expires and respects r
  const document={get cookie(){return [...cookies].map(([k,v])=>`${k}=${v}`).join('; ');},set cookie(value:string){const pair=value.split(';')[0];const index=pair.indexOf('=');cookies.set(pair.slice(0,index),pair.slice(index+1));}};
  const window={location:{hostname:'contratacr.com',search:'?email=private@example.com'},crypto:{getRandomValues:(a:Uint32Array)=>{a[0]=123;return a;},randomUUID:()=>`00000000-0000-4000-8000-${String(++serial).padStart(12,'0')}`},sessionStorage:{getItem:(k:string)=>storage.get(k)??null,setItem:(k:string,v:string)=>storage.set(k,v),removeItem:(k:string)=>storage.delete(k)}};
  const lib=load<typeof import('../../src/lib/analytics/meta-pixel')>('src/lib/analytics/meta-pixel.ts',{
+ './native-measurement':{trackNativeMeasurement:()=>{},trackNativeConversion:()=>{}},
  '@/lib/privacy/optional-consent':{advertisingMeasurementEnabled:()=>!declined,syncAdvertisingCookie:()=>{}},
  '@/hooks/use-native-app':{isNativeAppRuntime:()=>native},
  '@/lib/analytics/trafico-automatizado':{esNavegadorAutomatizado:()=>false},
