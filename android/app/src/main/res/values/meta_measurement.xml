@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Public SDK client token; never put a Conversions API server token here. -->
+<resources>
+    <string name="facebook_app_id" translatable="false">1127581883774241</string>
+    <string name="facebook_client_token" translatable="false">6a649de5275b2b0316e89ed999df4327</string>
+</resources>

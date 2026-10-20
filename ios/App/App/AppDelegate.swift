@@ -111,3 +111,49 @@ class AppDelegate: UIResponder, UIApplicationDelegate, MessagingDelegate {
     }
 
 }
+
+// The app calls Apple's privacy-preserving attribution API; no Meta iOS SDK,
+// IDFA/IDFV, account identifier, text, location or direct individual event upload.
+import StoreKit
+@objc(MeasurementBridgeViewController)
+class MeasurementBridgeViewController: CAPBridgeViewController {
+    override func capacitorDidLoad() {
+        bridge?.registerPluginInstance(ContrataCRMeasurementPlugin())
+    }
+}
+@objc(ContrataCRMeasurementPlugin)
+class ContrataCRMeasurementPlugin: CAPPlugin, CAPBridgedPlugin {
+    let identifier = "ContrataCRMeasurementPlugin"
+    let jsName = "ContrataCRMeasurement"
+    let pluginMethods: [CAPPluginMethod] = [CAPPluginMethod(name: "configure", returnType: CAPPluginReturnPromise), CAPPluginMethod(name: "track", returnType: CAPPluginReturnPromise)]
+    private var enabled = false
+    private var schemaReady = false
+    // Highest milestone reached, monotonic; the same schema must be configured
+    // in Events Manager before a store release. No claim of individual counts.
+    private let milestones = ["PageView":0,"Search":1,"CompleteRegistration":2,"Contact":3,"ProfessionalProjectContact":3,"Lead":4,"ServiceOfferPublished":4,"EmployerJobPublished":4,"ProfessionalProfilePublished":4,"ServiceHireConfirmed":5,"ProfessionalProjectAccepted":5]
+    @objc func configure(_ call: CAPPluginCall) {
+        enabled = call.getBool("enabled") ?? false
+        schemaReady = call.getBool("schemaReady") ?? false
+        call.resolve(["available": true])
+    }
+    @objc func track(_ call: CAPPluginCall) {
+        guard enabled, let name = call.getString("event"), let value = milestones[name] else { call.reject("DISABLED_OR_INVALID_EVENT"); return }
+        DispatchQueue.main.async {
+            let previous = UserDefaults.standard.integer(forKey: "ccr_skan_milestone_v1")
+            let next = self.schemaReady ? max(previous,value) : 0
+            let finish: (Error?) -> Void = { error in
+                if error != nil { call.reject("ATTRIBUTION_UPDATE_FAILED"); return }
+                UserDefaults.standard.set(next, forKey: "ccr_skan_milestone_v1")
+                call.resolve(["queued": true])
+            }
+            if #available(iOS 16.1, *) {
+                SKAdNetwork.updatePostbackConversionValue(next, coarseValue: next >= 4 ? .high : next >= 2 ? .medium : .low, completionHandler: finish)
+            } else if #available(iOS 15.4, *) {
+                SKAdNetwork.updatePostbackConversionValue(next, completionHandler: finish)
+            } else {
+                SKAdNetwork.updateConversionValue(next)
+                finish(nil)
+            }
+        }
+    }
+}

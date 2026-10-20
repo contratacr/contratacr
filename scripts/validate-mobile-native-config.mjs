@@ -231,6 +231,23 @@ if (process.argv.includes("--remote")) {
   }
 }
 
+// Advertising privacy is a release contract, independent of SDK defaults.
+const measurementManifest = await text("android/app/src/main/AndroidManifest.xml");
+for (const flag of ["AutoInitEnabled","AutoLogAppEventsEnabled","AutoLogMetaDataEnabled","AutoLogProductImprovementEnabled","AdvertiserIDCollectionEnabled"]) {
+  requireMatch(`Meta ${flag} disabled`, measurementManifest, new RegExp(`android:name="com\\.facebook\\.sdk\\.${flag}" android:value="false"`));
+}
+for (const permission of ["com.google.android.gms.permission.AD_ID","android.permission.ACCESS_ADSERVICES_AD_ID","android.permission.ACCESS_ADSERVICES_ATTRIBUTION","android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE","android.permission.ACCESS_ADSERVICES_TOPICS"]) {
+  if (!measurementManifest.includes(`android:name="${permission}" tools:node="remove"`)) failures.push(`Advertising permission must be removed: ${permission}`);
+}
+requireMatch("No Meta startup provider",measurementManifest,/FacebookInitProvider[^>]+tools:node="remove"/);
+const nativeMeasurement = await text("android/app/src/main/java/com/contratacr/app/ContrataCRMeasurementPlugin.java");
+requireMatch("Native Meta event gate",nativeMeasurement,/!enabled \|\| logger == null \|\| !EVENTS.containsKey/);
+requireMatch("No SDK account identity",nativeMeasurement,/clearUserID\(\); AppEventsLogger.clearUserData\(\)/);
+const appleMeasurement = await text("ios/App/App/AppDelegate.swift");
+requireMatch("Apple aggregated attribution",appleMeasurement,/SKAdNetwork.updatePostbackConversionValue/);
+requireMatch("Apple schema activation gate",appleMeasurement,/self.schemaReady \? max\(previous,value\) : 0/);
+requireMatch("Manual native plugin registration",await text("ios/App/App/Base.lproj/Main.storyboard"),/MeasurementBridgeViewController/);
+
 if (failures.length) {
   console.error("Mobile native contract validation failed:");
   for (const failure of failures) console.error(`- ${failure}`);
