@@ -35,7 +35,6 @@ import { AppIntlProvider } from "@/components/app-intl-provider";
 import { SombrasAlDesplazar } from "@/components/util/sombras-al-desplazar";
 import { GlobalActionLoading } from "@/components/global-action-loading";
 import { OptionalChoiceRecorder } from "@/components/privacy/optional-choice-recorder";
-import { AdvertisingPreferences } from "@/components/privacy/advertising-preferences";
 import { GlobalDataRefresh } from "@/components/util/global-data-refresh";
 import { RouteScrollReset } from "@/components/util/route-scroll-reset";
 import { withPromiseTimeout } from "@/lib/promise-timeout";
@@ -218,7 +217,6 @@ export default async function LocaleLayout({
           <PushTokenManager />
           <MobileAppDownloadBanner initialPlatform={initialDownloadPlatform} initialDismissed={initialDownloadDismissed} />
           {initialMfa.required ? null : children}
-          <AdvertisingPreferences notice />
           <NativeBottomNav />
           <WhatsAppReviewFollowUp />
           <AiConcierge />

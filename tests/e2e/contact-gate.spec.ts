@@ -52,8 +52,7 @@ test.describe("@seeded contact gate", () => {
     // Un solo rótulo en todo el app.
     const whatsapp = page.getByRole("button", { name: /^WhatsApp$/i }).filter({ visible: true }).first();
     await expect(whatsapp).toBeVisible({ timeout: 15_000 });
-    const advertising = page.locator("[data-advertising-preferences]");
-    if (await advertising.isVisible()) await advertising.getByRole("button", { name: "Rechazar", exact: true }).click();
+    await expect(page.locator("[data-advertising-preferences]")).toHaveCount(0);
     const urlAntes = page.url();
     await whatsapp.click();
     await page.waitForTimeout(1500);
