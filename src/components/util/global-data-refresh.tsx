@@ -24,6 +24,7 @@ export function GlobalDataRefresh() {
   const timerRef = useRef<number | null>(null);
   const lastSeenRef = useRef(0);
   const lastPathRef = useRef(pathname);
+  const lastNavigationMutationRef = useRef(0);
 
   useEffect(() => {
     // Lo persistido ANTES de esta carga ya está servido fresco por el servidor:
@@ -31,7 +32,9 @@ export function GlobalDataRefresh() {
     // cualquier sello viejo ya guardado refrescaba la ruta entera en la
     // primera vuelta de visibilidad — el "refresh" fantasma al volver del
     // segundo plano.
-    lastSeenRef.current = Math.max(lastSeenRef.current, readLastAppDataInvalidation()?.at ?? 0);
+    const initialMutation = readLastAppDataInvalidation()?.at ?? 0;
+    lastSeenRef.current = Math.max(lastSeenRef.current, initialMutation);
+    lastNavigationMutationRef.current = Math.max(lastNavigationMutationRef.current, initialMutation);
     const refresh = (invalidation?: AppDataInvalidation | null) => {
       // Sin constancia de una mutación pendiente no hay nada que refrescar.
       if (!invalidation?.at || invalidation.at <= lastSeenRef.current) return;
@@ -67,11 +70,11 @@ export function GlobalDataRefresh() {
     const invalidation = readLastAppDataInvalidation();
     // A mutation followed immediately by navigation may land on a prefetched RSC
     // payload. Refresh the new route once, silently, without changing scroll/state.
-    // UNA vez por mutación: refresh() ya purga el caché del router entero, así
-    // que las navegaciones siguientes piden fresco solas — repetirlo hacía que
-    // cada cambio de sección durante un minuto se sintiera como un refresh.
-    if (invalidation && Date.now() - invalidation.at < 60_000 && invalidation.at > lastSeenRef.current) {
-      lastSeenRef.current = invalidation.at;
+    // The event refresh may have run on the publishing screen already. It must
+    // not consume the refresh owed to the destination of the next navigation.
+    if (invalidation && invalidation.at > lastNavigationMutationRef.current) {
+      lastNavigationMutationRef.current = invalidation.at;
+      if (timerRef.current) window.clearTimeout(timerRef.current);
       router.refresh();
     }
   }, [pathname, router]);

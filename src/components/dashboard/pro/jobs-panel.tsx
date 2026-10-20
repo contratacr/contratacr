@@ -17,6 +17,7 @@ export function JobsPanel({ professionalId, onCount }: { professionalId: string;
     `dashboard:jobs:${professionalId}`,
     () => cargarEmpleos(professionalId),
     SIN_EMPLEOS,
+    { invalidationDomain: "jobs" },
   );
   // El conteo sube al cambiador de «Mis publicaciones»: ahí dice cuántos hay
   // sin tener que entrar a cada vista.

@@ -584,9 +584,9 @@ export function LandingHero() {
     | { kind: "taxonomy"; sug: LocationSuggestion }
     | { kind: "address"; provinceId?: string; cantonId?: string; lat?: number; lng?: number }
     | { kind: "nearMe"; lat: number; lng: number };
-  function runSearch(serviceOverride?: SearchSuggestion, locationOverride?: LocOverride) {
-    if (!(serviceOverride?.label || service.trim())) { enfocarVisible(servicioInputRef, servicioMobileRef); return; }
-    if (!location.trim() && !locationOverride) { enfocarVisible(ubicacionInputRef, ubicacionMobileRef); return; }
+  function runSearch(serviceOverride?: SearchSuggestion, locationOverride?: LocOverride, allowPartial = false) {
+    if (!allowPartial && !(serviceOverride?.label || service.trim())) { enfocarVisible(servicioInputRef, servicioMobileRef); return; }
+    if (!allowPartial && !location.trim() && !locationOverride) { enfocarVisible(ubicacionInputRef, ubicacionMobileRef); return; }
     const params = new URLSearchParams();
     // `serviceOverride` (from Enter) resolves a partial term to the best service
     // suggestion. Otherwise we infer the service from the typed text or send q.
@@ -654,6 +654,12 @@ export function LandingHero() {
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.nativeEvent.isComposing) return;
+    if (e.key === "Enter" && !service.trim() && location.trim()) {
+      e.preventDefault();
+      runSearch(undefined, undefined, true);
+      return;
+    }
     if (openSug && suggestions.length > 0) {
       if (e.key === "ArrowDown") {
         e.preventDefault();
@@ -687,6 +693,12 @@ export function LandingHero() {
   }
 
   async function handleLocKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.nativeEvent.isComposing) return;
+    if (e.key === "Enter" && !location.trim() && service.trim()) {
+      e.preventDefault();
+      runSearch(undefined, undefined, true);
+      return;
+    }
     const hasSug = locSug.length > 0 || addrSug.length > 0;
     if (openLoc && hasSug) {
       if (e.key === "ArrowDown") {
@@ -707,8 +719,7 @@ export function LandingHero() {
         return;
       }
     }
-    // Enter submits only when both fields are filled; otherwise focus moves
-    // to the missing field in runSearch.
+    // An empty focused field can be explicitly skipped with Enter.
     if (e.key === "Enter") {
       e.preventDefault();
       runSearch();
