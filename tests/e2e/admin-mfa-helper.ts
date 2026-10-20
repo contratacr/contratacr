@@ -25,7 +25,7 @@ export async function completeAdminMfa(page: Page, email: string, administrator 
   // loginAs can already have completed this exact account's challenge. Never
   // infer permission from a missing screen: require live server AAL2 access.
   if (administrator) {
-    const response = await page.request.get("/api/auth/admin-mfa");
+    const response = await page.request.get("/api/auth/admin-mfa", { maxRetries: 2 });
     expect(response.ok()).toBe(true);
     const stateOfSession = await response.json();
     expect(stateOfSession).toMatchObject({ authenticated: true, isAdmin: true });
