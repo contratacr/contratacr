@@ -1,3 +1,4 @@
+import { trackNativeMeasurement, trackNativeConversion } from "./native-measurement";
 import { advertisingMeasurementEnabled, syncAdvertisingCookie } from "@/lib/privacy/optional-consent";
 import type { MetaConversion } from "./growth-contract";
 import { isNativeAppRuntime } from "@/hooks/use-native-app";
@@ -31,7 +32,8 @@ function prepareIds() {
     }
   }
 }
-function send(event: "PageView" | "CompleteRegistration") {
+function send(event: "PageView" | "Search" | "CompleteRegistration") {
+  if (typeof window !== "undefined" && isNativeAppRuntime()) { trackNativeMeasurement(event); return; }
   if (!allowed()) return;
   prepareIds();
   const key = `ccr:meta-minimal:${event}`;
@@ -57,12 +59,12 @@ function send(event: "PageView" | "CompleteRegistration") {
 export function trackMetaEvent(eventName: string, _params?: Record<string, unknown>) {
   void _params;
   // Search text and service/location details stay exclusively in internal analytics.
-  if (eventName === "CompleteRegistration") send("CompleteRegistration");
+  if (eventName === "CompleteRegistration" || eventName === "Search") send(eventName);
 }
 export function trackMetaPageView() { send("PageView"); }
-// Successful business conversions are already queued on the authorized server
-// action, with the same deduplication receipt. Never send them a second time here.
-export function trackMetaConversion(_conversion: MetaConversion | null | undefined) { void _conversion; }
+// Web receipts are delivered by the server. Native receipts go only to the
+// allowlisted bridge; they are never resent as website events.
+export function trackMetaConversion(_conversion: MetaConversion | null | undefined) { trackNativeConversion(_conversion); }
 export function enviarEventosMetaPendientes() {
   try { window.sessionStorage.removeItem("contratacr:meta-pendientes"); } catch { /* obsolete raw envelopes */ }
 }

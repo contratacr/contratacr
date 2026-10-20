@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { useLocale } from "next-intl";
+import { Capacitor } from "@capacitor/core";
 import { Link } from "@/i18n/navigation";
-import { isNativeAppRuntime } from "@/hooks/use-native-app";
 import { advertisingMeasurementEnabled, saveOptionalConsent, subscribeOptionalConsent, type OptionalChoice } from "@/lib/privacy/optional-consent";
 
 const snapshot = (): OptionalChoice => advertisingMeasurementEnabled() ? "accepted" : "declined";
@@ -14,7 +14,7 @@ export function AdvertisingPreferences() {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState(false);
   useEffect(() => {
-    const frame = requestAnimationFrame(() => setReady(!isNativeAppRuntime()));
+    const frame = requestAnimationFrame(() => setReady(!Capacitor.isNativePlatform() || Capacitor.isPluginAvailable("ContrataCRMeasurement")));
     return () => cancelAnimationFrame(frame);
   }, []);
   if (!ready) return null;

@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     const raw = await req.text();
     if (raw.length > 300) return reply({ error: "INVALID_EVENT" }, 400);
     const body = JSON.parse(raw);
-    if (!["PageView", "CompleteRegistration"].includes(body.event) || !/^[a-f0-9-]{36}$/.test(body.id ?? "")) return reply({ error: "INVALID_EVENT" }, 400);
+    if (!["PageView", "Search", "CompleteRegistration"].includes(body.event) || !/^[a-f0-9-]{36}$/.test(body.id ?? "")) return reply({ error: "INVALID_EVENT" }, 400);
     if (body.event === "CompleteRegistration" && !actor.id) return reply({ skipped: true });
     const result = await sendMetaConversion({
       event_name: body.event, event_id: body.id, event_time: Math.floor(Date.now()/1000),

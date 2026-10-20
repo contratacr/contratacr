@@ -1,5 +1,5 @@
 import { AdvertisingPreferences } from "@/components/privacy/advertising-preferences";
-import { LEGAL_DATE } from "@/lib/privacy/legal-version";
+const PRIVACY_DATE = { es: "20 de octubre de 2026", en: "October 20, 2026" };
 import { Link } from "@/i18n/navigation";
 import { LegalDocument, type LegalSection } from "@/components/legal/legal-document";
 import { imagenSocial } from "@/lib/seo/imagen-social";
@@ -117,7 +117,7 @@ const ES_SECTIONS: LegalSection[] = [
           "Enviar correos y notificaciones relacionados con su cuenta o actividad.",
           "Enviar campañas y novedades promocionales cuando exista la autorización aplicable. Puede solicitar la baja mediante el enlace del correo o respondiendo; esto no cancela los mensajes necesarios para acceso, seguridad o atención de su cuenta.",
           "Operar el asistente de IA y conservar su historial cuando corresponda.",
-          "Medir el uso, mejorar el producto y evaluar campañas de adquisición.",
+          "Medir el uso, mejorar el producto y evaluar campañas de adquisición. El panel interno registra pantallas, búsquedas y sus filtros, navegación, intentos de envío y errores de formularios, y acciones relevantes de cuentas y visitantes sin sesión. Los recorridos detallados nuevos se conservan hasta 90 días; no grabamos pulsaciones, campos privados, contraseñas ni el contenido de conversaciones para analítica.",
           "Prevenir fraude, abuso, suplantación y fallos de seguridad.",
           "Cumplir obligaciones legales y atender requerimientos de autoridades competentes."
         ]
@@ -195,11 +195,11 @@ const ES_SECTIONS: LegalSection[] = [
       },
       {
         "k": "p",
-        "text": "En web utilizamos medición limitada con Meta para evaluar visitas y conversiones de nuestras campañas. El servidor envía únicamente el tipo de evento, fecha, un identificador del evento, identificadores publicitarios del navegador o del clic y datos técnicos del navegador. No envía nombres, correo, teléfono, cédula, identificadores de cuenta, ubicación precisa, búsquedas escritas, conversaciones, documentos ni URLs con datos del usuario. Estos identificadores publicitarios no son datos anónimos. No cargamos Meta Pixel ni activamos esta integración dentro de la app nativa."
+        "text": "En web utilizamos medición limitada con Meta para evaluar visitas y conversiones de nuestras campañas. El servidor envía únicamente el tipo de evento, fecha, un identificador del evento, identificadores publicitarios del navegador o del clic y datos técnicos del navegador. No envía nombres, correo, teléfono, cédula, identificadores de cuenta, ubicación precisa, búsquedas escritas, conversaciones, documentos ni URLs con datos del usuario. Estos identificadores publicitarios no son datos anónimos. No cargamos Meta Pixel. Las versiones móviles compatibles usan eventos explícitos del SDK de Meta en Android, sin identificador publicitario de Android ni captura automática de campos o pantallas; el SDK procesa un identificador seudónimo de instalación y datos técnicos del dispositivo. En iOS usamos la atribución agregada de Apple, sin enviar eventos individuales a Meta ni solicitar el identificador publicitario. Las versiones anteriores pueden no disponer de estas funciones."
       },
       {
         "k": "p",
-        "text": "La medición limitada está activada en web salvo que exista un rechazo guardado. Puede desactivarla o reactivarla en **Preferencias de publicidad** de esta página o desde Privacidad de su cuenta, sin bloquear el servicio. No mostramos una ventana automática ni interpretamos esta configuración como una aceptación expresa. Desactivarla detiene envíos futuros y cancela conversiones pendientes asociadas; no borra automáticamente datos ya recibidos por Meta."
+        "text": "La medición limitada está activada en web y en las versiones móviles compatibles salvo que exista un rechazo guardado. Puede desactivarla o reactivarla en **Preferencias de publicidad** de esta página o desde Privacidad de su cuenta, sin bloquear el servicio. No mostramos una ventana automática ni interpretamos esta configuración como una aceptación expresa. Desactivarla detiene envíos futuros y cancela conversiones pendientes asociadas; no borra automáticamente datos ya recibidos por Meta."
       },
       {
         "k": "p",
@@ -410,7 +410,7 @@ const EN_SECTIONS: LegalSection[] = [
           "Send necessary account and activity communications. Promotional campaigns require the applicable authorization and can be stopped through the included link or by replying; necessary access, security and account support messages remain separate.",
           "Publish professional profiles and connect Clients with Professionals.",
           "Operate search, requests, quotes, messages, files, reviews, support, AI, and notifications.",
-          "Personalize results, measure product use, improve the service, and assess acquisition campaigns.",
+          "Personalize results, measure product use, improve the service, and assess acquisition campaigns. Internal analytics includes screens, searches and filters, navigation, form attempts and errors, and relevant account and guest actions. New detailed journeys are retained for up to 90 days; analytics does not record keystrokes, private fields, passwords or conversation content.",
           "Prevent fraud, abuse, impersonation, and security incidents.",
           "Comply with legal obligations and lawful authority requests."
         ]
@@ -471,11 +471,11 @@ const EN_SECTIONS: LegalSection[] = [
       },
       {
         "k": "p",
-        "text": "On the web, limited Meta measurement assesses campaign visits and conversions. The server sends only event type, date, event ID, browser or click advertising identifiers and technical browser data. It does not send names, email, phone, government IDs, account identifiers, precise location, typed searches, conversations, documents or URLs containing user data. Advertising identifiers are not anonymous data. We do not load Meta Pixel or enable this integration inside the native app."
+        "text": "On the web, limited Meta measurement assesses campaign visits and conversions. The server sends only event type, date, event ID, browser or click advertising identifiers and technical browser data. It does not send names, email, phone, government IDs, account identifiers, precise location, typed searches, conversations, documents or URLs containing user data. Advertising identifiers are not anonymous data. We do not load Meta Pixel. Compatible mobile versions use explicit Meta SDK events on Android, without the Android advertising ID or automatic field or screen capture; the SDK processes a pseudonymous installation identifier and technical device data. iOS uses Apple’s aggregated attribution without sending individual events to Meta or requesting the advertising identifier. Older versions may not support these features."
       },
       {
         "k": "p",
-        "text": "Limited measurement is enabled on the web unless a saved rejection exists. Disable or enable it under **Advertising preferences** on this page or in account Privacy without losing access. We show no automatic prompt and do not treat this setting as express acceptance. Disabling stops future delivery and cancels associated pending conversions; it does not automatically erase data already received by Meta."
+        "text": "Limited measurement is enabled on the web and compatible mobile versions unless a saved rejection exists. Disable or enable it under **Advertising preferences** on this page or in account Privacy without losing access. We show no automatic prompt and do not treat this setting as express acceptance. Disabling stops future delivery and cancels associated pending conversions; it does not automatically erase data already received by Meta."
       },
       {
         "k": "p",
@@ -595,7 +595,7 @@ export default async function PrivacidadPage({ params }: { params: Promise<{ loc
   return (
     <LegalDocument
       title={en ? "Privacy Policy" : "Política de Privacidad"}
-      updated={en ? LEGAL_DATE.en : LEGAL_DATE.es}
+      updated={en ? PRIVACY_DATE.en : PRIVACY_DATE.es}
       intro={en
         ? "This Policy explains what data ContrataCR processes across the website and mobile applications, why it is used, who may process it, and how you can exercise your rights."
         : "Esta Política explica qué datos trata ContrataCR en el sitio web y las aplicaciones móviles, para qué se utilizan, quiénes pueden procesarlos y cómo puede ejercer sus derechos."}

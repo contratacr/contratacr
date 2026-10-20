@@ -1,0 +1,40 @@
+# Medición de ContrataCR · 20 de octubre de 2026
+
+## Alcance implementado
+
+- Panel admin con recorridos de cuentas y visitantes: pantallas, búsquedas internas existentes, navegación, botones con vocabulario cerrado, filtros, inicio/intento de envío/abandono/validación de formularios, avance de lectura y errores sin mensajes ni trazas. Filtros por ambiente, periodo y cuenta/visitante; paginación estable. Acceso solo con rol admin vigente y MFA.
+- Eventos de recorrido agrupados (hasta 20 por petición, 5 segundos, cola limitada); UUID para deduplicar reintentos. Almacenamiento privado con RLS, sin acceso de clientes, retención de 90 días mediante cron cuando pg_cron está instalado y eliminación en cascada de los recorridos de cuentas borradas. La BD también excluye administradores.
+- La búsqueda escrita, zona elegida y resultados siguen siendo analítica interna. Meta recibe Search sin términos ni ubicación; PageView y registro mantienen deduplicación por sesión. Los ocho eventos de negocio se originan en acciones autorizadas y recibos únicos del servidor.
+- El panel distingue conversiones de negocio aceptadas por CAPI, pendientes, suprimidas, expiradas y entregas al cliente/app sin confirmación. No presenta ese último grupo como recibido por Meta ni como instalación atribuida.
+- Sin nuevas ventanas, pasos de aceptación ni pantallas de cookies. Preferencias en Privacidad; los rechazos guardados se respetan. El estado inicial limitado no se convierte en un recibo de consentimiento expreso.
+
+## Nativo preparado, sin publicación en tiendas
+
+Android: plugin Capacitor propio y facebook-core 19.0.0. Inicio del SDK después del control de rol/configuración; sin eventos automáticos, metadatos de pantallas, mejoras de producto, identificación de cuenta o datos de contacto. Se eliminan los permisos AD_ID y AdServices. Solo eventos del catálogo; recibos locales limitados. Instalación por App Events API con identificador seudónimo de instalación y, cuando tiene el formato reconocido, únicamente el token cifrado de atribución de Meta obtenido de Google Play Install Referrer. No se reenvía el texto arbitrario del referrer. Se usan datos técnicos del SDK: no es una integración anónima. Un evento encolado no acredita recepción ni atribución publicitaria.
+
+El token cliente del SDK es configuración pública normal de la aplicación; nunca es el token privado de Conversions API. Los candidatos no incrementan versión ni build y no se han enviado a tiendas.
+
+iOS: StoreKit SKAdNetwork, sin SDK de Meta, IDFA, IDFV, identificadores de cuenta ni eventos individuales enviados a Meta. La API de uso informa si el esquema está habilitado; solo `META_IOS_SKAN_SCHEMA_READY=true` permite hitos. Mientras esté pendiente, solo se usa el valor base 0. Las apps instaladas actualmente no adquieren este plugin con un despliegue web.
+
+### Pendientes reales antes de afirmar atribución nativa completa
+
+Events Manager permite crear la configuración personalizada, pero deshabilita Add Event y Next porque **no hay eventos de app procesándose**. No se inventaron conversiones de producción para desbloquearlo. El app de Meta está Unpublished; revisar su elegibilidad antes de iniciar campañas nativas.
+
+Cuando Meta permita configurarlos, el esquema fino del candidato es máximo hito alcanzado: 0 apertura, 1 búsqueda, 2 registro, 3 contacto, 4 publicación de proyecto/oferta/empleo/perfil, 5 contratación o propuesta aceptada. Valores coarse: low=0–1, medium=2–3, high=4–5. Debe reproducirse exactamente en Meta antes de activar la variable. Si Meta exige otro esquema, actualizar la asignación y repetir pruebas; no activar una correspondencia distinta. Son hitos acumulados, no cantidades por persona ni conteos exactos de eventos.
+
+Es necesario verificar posteriormente una instalación atribuida desde anuncio y la recepción de postbacks de Apple con el candidato distribuido mediante un canal permitido. Compilar, llamar la API local o abrir la app sin un anuncio no demuestra atribución. Los informes de Apple tienen retrasos y umbrales de privacidad. No se ha usado CAPI web para sortear restricciones de iOS.
+
+## Validación
+
+- `journey-privacy.spec.ts`: contrato sin contenido privado; controles nativos; rechazo guardado; compatibilidad con apps antiguas sin plugin.
+- `journey-browser.spec.ts`: captura agrupada real en navegador sin correo ni contraseña escritos.
+- `admin-journey.spec.ts`: invitados y cuentas ordinarias reciben 403; admin con MFA ve cuentas/visitantes; filtros y no-store.
+- `meta-minimal.spec.ts`, `meta-growth-runtime.spec.ts`, `meta-growth-contract.spec.ts`, `privacy-consent-runtime.spec.ts`, `legal-privacy.spec.ts`: filtros de salida, deduplicación, recibos auténticos, preferencias, idiomas y ausencia de ventanas automáticas.
+- `scripts/verify-journey-privacy.mjs`: SQL aislado, permisos y cascada, paginación con fechas iguales, exclusión de administradores, datos internos de búsquedas y totales de entrega. `scripts/verify-meta-growth-receipts.mjs`: once verificaciones SQL anteriores.
+- TypeScript, ESLint focalizado, build Next, build Android Debug e iOS Simulator. Android real del emulador: plugin disponible, configurar desactivado y rechazar envío; sin evento Meta para esa prueba. Contrato nativo valida flags y permisos antes de una futura publicación.
+
+## Revisión jurídica pendiente
+
+No hay certificación legal al 100 %. La ausencia de una obligación específica de mostrar un banner no elimina las reglas sobre datos personales. Los identificadores de navegador, clic e instalación son seudónimos; no debe presentarse su envío como anónimo. Debe validar el abogado la base de tratamiento y transferencia, especialmente la medición activada sin una elección expresa previa y el tráfico no registrado. La aceptación general de términos no demuestra por sí sola autorización específica para todos los fines.
+
+Fuentes primarias: [Ley 8968, artículos 5 y 14 (INAMU)](https://formatos.inamu.go.cr/SIDOC/DOCS/ley_8968.pdf), [privacidad y uso de datos de Apple](https://developer.apple.com/app-store/user-privacy-and-data-use/), [SKAdNetwork](https://developer.apple.com/documentation/storekit/skadnetwork), [configuración de una app anunciada](https://developer.apple.com/documentation/storekit/configuring-an-advertised-app), [código oficial del SDK Android de Meta](https://github.com/facebook/facebook-android-sdk).
