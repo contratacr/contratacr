@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
 import { Check } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -26,13 +28,30 @@ export function CasillaDeTerminos({
   aceptado,
   onCambio,
   className,
+  reuseRecordedAcceptance = false,
 }: {
   aceptado: boolean;
   onCambio: (valor: boolean) => void;
   className?: string;
+  reuseRecordedAcceptance?: boolean;
 }) {
   const t = useTranslations("terminosCasilla");
   const locale = useLocale();
+  const { user } = useAuth();
+  const [confirmedUserId, setConfirmedUserId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!reuseRecordedAcceptance || !user?.id) return;
+    const controller = new AbortController();
+    fetch("/api/privacy/choices", { cache: "no-store", signal: controller.signal })
+      .then(async response => response.ok ? response.json() : null)
+      .then(data => { if (!controller.signal.aborted && data?.requiresAcceptance === false) setConfirmedUserId(user.id); })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [reuseRecordedAcceptance, user?.id]);
+  const alreadyRecorded = reuseRecordedAcceptance && !!user?.id && confirmedUserId === user.id;
+  useEffect(() => { if (alreadyRecorded && !aceptado) onCambio(true); }, [alreadyRecorded, aceptado, onCambio]);
+  if (alreadyRecorded) return null;
+
 
   return (
     // Sin tarjeta ni borde: una casilla no es una sección. Encerrarla en un

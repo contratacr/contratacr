@@ -584,9 +584,7 @@ export function LandingHero() {
     | { kind: "taxonomy"; sug: LocationSuggestion }
     | { kind: "address"; provinceId?: string; cantonId?: string; lat?: number; lng?: number }
     | { kind: "nearMe"; lat: number; lng: number };
-  function runSearch(serviceOverride?: SearchSuggestion, locationOverride?: LocOverride, allowPartial = false) {
-    if (!allowPartial && !(serviceOverride?.label || service.trim())) { enfocarVisible(servicioInputRef, servicioMobileRef); return; }
-    if (!allowPartial && !location.trim() && !locationOverride) { enfocarVisible(ubicacionInputRef, ubicacionMobileRef); return; }
+  function runSearch(serviceOverride?: SearchSuggestion, locationOverride?: LocOverride) {
     const params = new URLSearchParams();
     // `serviceOverride` (from Enter) resolves a partial term to the best service
     // suggestion. Otherwise we infer the service from the typed text or send q.
@@ -655,74 +653,21 @@ export function LandingHero() {
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.nativeEvent.isComposing) return;
-    if (e.key === "Enter" && !service.trim() && location.trim()) {
-      e.preventDefault();
-      runSearch(undefined, undefined, true);
-      return;
-    }
+    if (e.key === "Enter") { e.preventDefault(); runSearch(); return; }
     if (openSug && suggestions.length > 0) {
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        setActiveIdx((i) => Math.min(i + 1, suggestions.length - 1));
-        return;
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setActiveIdx((i) => Math.max(i - 1, 0));
-        return;
-      } else if (e.key === "Enter") {
-        e.preventDefault();
-        // Se completa con la sugerencia marcada (o la mejor) y se salta al otro
-        // campo. Elegir una sugerencia no envía la búsqueda.
-        selectSuggestion(suggestions[activeIdx >= 0 ? activeIdx : 0]);
-        return;
-      } else if (e.key === "Escape") {
-        setOpenSug(false);
-        return;
-      }
-    }
-    // Sin sugerencias: con la ubicación vacía se salta a ella; si ya está, se busca.
-    if (e.key === "Enter") {
-      e.preventDefault();
-      if (service.trim() && !location.trim()) {
-        setOpenSug(false);
-        enfocarVisible(ubicacionInputRef, ubicacionMobileRef);
-        return;
-      }
-      runSearch();
+      if (e.key === "ArrowDown") { e.preventDefault(); setActiveIdx(i => Math.min(i + 1, suggestions.length - 1)); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); setActiveIdx(i => Math.max(i - 1, 0)); }
+      else if (e.key === "Escape") setOpenSug(false);
     }
   }
 
-  async function handleLocKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+  function handleLocKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.nativeEvent.isComposing) return;
-    if (e.key === "Enter" && !location.trim() && service.trim()) {
-      e.preventDefault();
-      runSearch(undefined, undefined, true);
-      return;
-    }
-    const hasSug = locSug.length > 0 || addrSug.length > 0;
-    if (openLoc && hasSug) {
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        setLocActive((i) => Math.min(i + 1, locSug.length - 1));
-        return;
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setLocActive((i) => Math.max(i - 1, 0));
-        return;
-      } else if (e.key === "Enter") {
-        e.preventDefault();
-        if (locSug.length > 0) selectLocation(locSug[locActive >= 0 ? locActive : 0]);
-        else await selectAddress(addrSug[0]);
-        return;
-      } else if (e.key === "Escape") {
-        setOpenLoc(false);
-        return;
-      }
-    }
-    // An empty focused field can be explicitly skipped with Enter.
-    if (e.key === "Enter") {
-      e.preventDefault();
-      runSearch();
+    if (e.key === "Enter") { e.preventDefault(); runSearch(); return; }
+    if (openLoc && (locSug.length > 0 || addrSug.length > 0)) {
+      if (e.key === "ArrowDown") { e.preventDefault(); setLocActive(i => Math.min(i + 1, locSug.length - 1)); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); setLocActive(i => Math.max(i - 1, 0)); }
+      else if (e.key === "Escape") setOpenLoc(false);
     }
   }
 
@@ -825,7 +770,7 @@ export function LandingHero() {
                   value={service}
                   onChange={(e) => { recienElegidoRef.current = false; setService(e.target.value); setServiceSel(null); }}
                   ref={servicioInputRef}
-                  enterKeyHint={service.trim() && !location.trim() ? "next" : "search"}
+                  enterKeyHint="search"
                   onKeyDown={handleKeyDown}
                   onFocus={() => { if (abrirBuscadorCompleto("servicio")) return; setFoco("svc"); if (suggestions.length > 0) setOpenSug(true); }}
                   onBlur={() => { setFoco((f) => (f === "svc" ? null : f)); setTimeout(() => setOpenSug(false), 120); }}
@@ -858,7 +803,7 @@ export function LandingHero() {
                   value={location}
                   onChange={(e) => handleLocationChange(e.target.value)}
                   ref={ubicacionInputRef}
-                  enterKeyHint={location.trim() && !service.trim() ? "next" : "search"}
+                  enterKeyHint="search"
                   onKeyDown={handleLocKeyDown}
                   onFocus={() => { if (abrirBuscadorCompleto("ubicacion")) return; setFoco("loc"); ensureMaps(); setOpenLoc(location.trim().length >= 2); }}
                   onBlur={() => { setFoco((f) => (f === "loc" ? null : f)); setTimeout(() => setOpenLoc(false), 120); }}

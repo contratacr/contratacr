@@ -279,7 +279,7 @@ export async function openLoginForm(page: Page) {
   await page.locator("main form").first().waitFor({ state: "visible", timeout: 10_000 });
 }
 
-export async function loginAs(page: Page, email: string, password: string, options: { adminMfa?: boolean } = {}) {
+export async function loginAs(page: Page, email: string, password: string, options: { adminMfa?: boolean; legalAcceptance?: boolean } = {}) {
   let lastError: unknown;
   for (let attempt = 0; attempt < 2; attempt += 1) {
     await resetAuth(page);
@@ -310,6 +310,18 @@ export async function loginAs(page: Page, email: string, password: string, optio
           await gotoOK(page, "/admin");
           await completeAdminMfa(page, email);
           await gotoOK(page, destination);
+        }
+      }
+      // Explicitly accept only for synthetic regression accounts. Real users'
+      // legal choices are never filled by this helper.
+      if (options.legalAcceptance !== false && options.adminMfa !== false && email.endsWith("@contratacr.test")) {
+        const response = await page.request.get("/api/privacy/choices");
+        if (response.ok() && (await response.json()).requiresAcceptance) {
+          const gate = page.locator("[data-legal-acceptance]");
+          const checkbox = gate.getByRole("checkbox");
+          await checkbox.focus(); await checkbox.press("Space");
+          await gate.getByRole("button", { name: /Aceptar y continuar|Accept and continue/ }).click();
+          await expect(gate).toHaveCount(0);
         }
       }
       return;

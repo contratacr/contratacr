@@ -291,34 +291,18 @@ export function MarketplaceSearch({
     closeMobileSearch();
   }
 
-  // El Intro del teclado salta al campo que falta y solo busca cuando no
-  // queda nada por completar; el teclado lo anuncia con "Siguiente"/"Buscar".
-  const faltaSecundario = !!secondary && !secondary.value.trim();
-  const faltaPrincipal = !value.trim();
-  const pistaPrincipal = value.trim() && faltaSecundario ? "next" : "search";
-  const pistaSecundaria = secondary?.value.trim() && faltaPrincipal ? "next" : "search";
+  // Enter always shows the results for the current fields, including empty ones.
+  const pistaPrincipal = "search";
+  const pistaSecundaria = "search";
 
   function introDesdePrincipal() {
-    if (value.trim() && faltaSecundario) {
-      // Saltar al campo que falta no borra la intención: lo escrito ya está
-      // filtrando resultados, se guarda desde ya.
-      saveRecent();
-      setMobileField("secondary");
-      setDesktopField("secondary");
-      (fullSecondaryInputRef.current ?? desktopSecondaryInputRef.current)?.focus({ preventScroll: true });
-      return;
-    }
+    setDesktopField(null);
     closeMobileSearch();
     submitSearch();
   }
 
   function introDesdeSecundario() {
-    if (secondary?.value.trim() && faltaPrincipal) {
-      setMobileField("primary");
-      setDesktopField("primary");
-      (open ? fullInputRef.current : inputRef.current)?.focus({ preventScroll: true });
-      return;
-    }
+    setDesktopField(null);
     closeMobileSearch();
     submitSearch();
   }
@@ -365,7 +349,7 @@ export function MarketplaceSearch({
             placeholder={desktopPlaceholder}
             enterKeyHint={pistaPrincipal}
             onKeyDown={(event) => {
-              if (event.key === "Enter") { event.preventDefault(); introDesdePrincipal(); }
+              if (!event.nativeEvent.isComposing && event.key === "Enter") { event.preventDefault(); introDesdePrincipal(); }
             }}
             className="h-11 w-full min-w-0 bg-transparent pr-9 text-[15px] font-semibold text-[#162543] outline-none placeholder:text-[#8f9aaa] lg:text-base lg:font-normal lg:text-gray-700 lg:placeholder:text-gray-400"
           />
@@ -440,7 +424,7 @@ export function MarketplaceSearch({
                 onChange={(event) => { onChange(event.target.value); setMobileField("primary"); }}
                 onFocus={() => setMobileField("primary")}
                 onKeyDown={(event) => {
-                  if (event.key === "Enter") { event.preventDefault(); introDesdePrincipal(); }
+                  if (!event.nativeEvent.isComposing && event.key === "Enter") { event.preventDefault(); introDesdePrincipal(); }
                 }}
                 placeholder={placeholder}
                 enterKeyHint={pistaPrincipal}
@@ -461,7 +445,7 @@ export function MarketplaceSearch({
                   value={secondary.value}
                   onChange={(event) => { secondary.onChange(event.target.value); setMobileField("secondary"); }}
                   onFocus={() => setMobileField("secondary")}
-                  onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); introDesdeSecundario(); } }}
+                  onKeyDown={(event) => { if (!event.nativeEvent.isComposing && event.key === "Enter") { event.preventDefault(); introDesdeSecundario(); } }}
                   enterKeyHint={pistaSecundaria}
                   placeholder={secondary.placeholder}
                   aria-label={secondary.ariaLabel ?? secondary.placeholder}

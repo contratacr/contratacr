@@ -1,5 +1,7 @@
 "use client";
 
+import { signupLegalAcceptance } from "@/lib/privacy/legal-version";
+
 import { useRegistrationIntent } from "@/hooks/use-registration-intent";
 
 import { rutaInternaSegura } from "@/lib/navigation/ruta-interna";
@@ -8,7 +10,7 @@ import { Link } from "@/i18n/navigation";
 
 import { FooterSoloWeb } from "@/components/landing/footer-solo-web";
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
@@ -35,6 +37,7 @@ import { irAlInicio } from "@/lib/ir-al-inicio";
 export default function RegisterClientPage() {
   useRegistrationIntent("client");
   const router = useRouter();
+  const locale = useLocale();
   const t = useTranslations("registerClient");
   const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
@@ -101,6 +104,7 @@ export default function RegisterClientPage() {
     e.preventDefault();
     setError(null);
     setPhoneError(null);
+    if (!terminosAceptados) { setError(locale === "en" ? "Please accept the terms and privacy policy." : "Acepte los términos y la política de privacidad."); return; }
 
     const cleanName = limitText(fullName.trim(), NAME_MAX_LENGTH);
     if (!cleanName) { setError(t("errName")); return; }
@@ -132,7 +136,7 @@ export default function RegisterClientPage() {
           password,
           options: {
             // The API marks completion only after the required contact data saves.
-            data: { role: "client", full_name: cleanName, onboarding_completed: false },
+            data: { role: "client", full_name: cleanName, onboarding_completed: false, legal_acceptance: signupLegalAcceptance(locale) },
           },
         });
 
@@ -394,7 +398,7 @@ export default function RegisterClientPage() {
 
               {/* Antes del botón: el acuerdo se marca antes de crear la cuenta
                   (Apple, regla 1.2). */}
-              <CasillaDeTerminos aceptado={terminosAceptados} onCambio={setTerminosAceptados} />
+              <CasillaDeTerminos reuseRecordedAcceptance aceptado={terminosAceptados} onCambio={setTerminosAceptados} />
 
               <Button type="submit" size="lg" className="w-full mt-1" loading={submitting} disabled={submitting || !terminosAceptados}>
                 {submitting ? t("creating") : user ? t("saveContinue") : t("createFree")}

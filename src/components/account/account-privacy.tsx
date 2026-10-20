@@ -1,5 +1,8 @@
 "use client";
 
+import { MarketingPreferences } from "@/components/privacy/marketing-preferences";
+import { AiPreferences } from "@/components/privacy/ai-preferences";
+import { AdvertisingPreferences } from "@/components/privacy/advertising-preferences";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { FilaInterruptor } from "@/components/ui/fila-interruptor";
@@ -61,6 +64,9 @@ export function AccountPrivacySection() {
           {error && <p role="alert" className="mt-2 text-sm font-semibold text-[#b91c1c]">{t("readReceiptsError")}</p>}
         </div>
       )}
+      <AdvertisingPreferences />
+      <AiPreferences />
+      <MarketingPreferences />
       <UsuariosBloqueados />
     </div>
   );

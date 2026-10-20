@@ -118,3 +118,9 @@ test("assistant return routes preserve root queries and hash in both languages",
   expect(sinPrefijoDeIdioma("/en#asistente")).toBe("/#asistente");
   expect(sinPrefijoDeIdioma("/en/mensajes?draftChat=1")).toBe("/mensajes?draftChat=1");
 });
+
+// These navigation contracts start after an explicit AI permission; the
+// default-denied and first-use flows are covered in legal-privacy.spec.ts.
+test.beforeEach(async ({page}) => {
+  await page.addInitScript(() => localStorage.setItem("contratacr:consent:ai:v1", JSON.stringify({version:"2026-10-19",choice:"accepted",at:new Date().toISOString()})));
+});

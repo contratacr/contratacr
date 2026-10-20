@@ -70,22 +70,15 @@ test("desktop home suggestions also wait for the search button", async ({ page }
 });
 
 for (const field of ["Servicio", "Ubicación"]) {
-  test(`incomplete ${field} search moves focus to the missing field`, async ({ page }) => {
+  test(`Enter submits ${field} immediately with suggestions open`, async ({ page }) => {
     await gotoOK(page, "/profesionales");
     await waitForInteractivePage(page);
     if ((page.viewportSize()?.width ?? 1280) < 1024) await page.evaluate(() => window.dispatchEvent(new CustomEvent("ccr:open-native-search")));
     const service = page.getByRole("combobox", { name: "Servicio", exact: true }).filter({ visible: true }).first();
     const location = page.getByRole("combobox", { name: "Ubicación", exact: true }).filter({ visible: true }).first();
     const input = field === "Servicio" ? service : location;
-    const missing = field === "Servicio" ? location : service;
-    const before = page.url();
     await input.fill(field === "Servicio" ? "Desarrollo web" : "Alajuela");
-    await input.press("Escape");
     await input.press("Enter");
-    await expect(missing).toBeFocused();
-    expect(page.url()).toBe(before);
-    // A second Enter in the empty field explicitly skips that filter.
-    await missing.press("Enter");
     if (field === "Servicio") {
       await expect(page).toHaveURL(/\/profesionales\/desarrollo-web(?:[/?#]|$)/);
     } else {
@@ -119,5 +112,20 @@ for (const field of ["Servicio", "Ubicación"]) {
     await empty.press("Enter");
     if (field === "Servicio") await expect(page).toHaveURL(/\/profesionales\/desarrollo-web(?:[/?#]|$)/);
     else await expect(page).toHaveURL(/(?:provincia=al|\/alajuela)/);
+  });
+}
+
+for (const field of ["Servicio", "Ubicación"]) {
+  test(`Enter with both fields empty submits all professionals from ${field}`, async ({ page }) => {
+    await gotoOK(page, "/profesionales?provincia=al");
+    await waitForInteractivePage(page);
+    const mobile = (page.viewportSize()?.width ?? 1280) < 1024;
+    if (mobile) await page.evaluate(() => window.dispatchEvent(new CustomEvent("ccr:open-native-search")));
+    const service = page.getByRole("combobox", { name: "Servicio", exact: true }).filter({ visible: true }).first();
+    const location = page.getByRole("combobox", { name: "Ubicación", exact: true }).filter({ visible: true }).first();
+    await service.fill(""); await location.fill("");
+    await (field === "Servicio" ? service : location).press("Enter");
+    await expect(page).toHaveURL(/\/profesionales\/?$/);
+    if (mobile) await expect(page.locator(".ccr-native-search-panel")).toHaveCount(0);
   });
 }

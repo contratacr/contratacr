@@ -1571,20 +1571,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
        *  partir del texto escrito —y podía adivinar otro—. */
       categoria?: string | null;
       servicio?: string;
-      allowPartial?: boolean;
     } = {},
   ) {
     const svc = repairVisibleText(overrides.servicio ?? searchQuery).trim();
-    if (!svc && !overrides.allowPartial) {
-      (nativeSearchOpen ? nativeSearchInputRef.current : compactSvcRef.current?.querySelector("input"))?.focus({ preventScroll: true });
-      setSearchFocused(true);
-      return;
-    }
-    if (!overrides.allowPartial && !navLocation.trim() && !overrides.location && !overrides.coords) {
-      (nativeSearchOpen ? nativeLocationInputRef.current : navLocationInputRef.current)?.focus({ preventScroll: true });
-      setSearchFocused(false);
-      return;
-    }
     if (nativeSearchOpen) irSinParpadeo();
     const params = new URLSearchParams();
     const categoriaElegida = "categoria" in overrides ? overrides.categoria : searchCategoryId;
@@ -1863,74 +1852,21 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
 
   function handleCompactSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.nativeEvent.isComposing) return;
-    if (e.key === "Enter" && !searchQuery.trim() && navLocation.trim()) {
-      e.preventDefault();
-      runCompactSearch({ allowPartial: true });
-      return;
-    }
+    if (e.key === "Enter") { e.preventDefault(); runCompactSearch(); return; }
     if (searchFocused && compactSuggestions.length > 0) {
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        setSearchActiveIdx((i) => Math.min(i + 1, compactSuggestions.length - 1));
-        return;
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setSearchActiveIdx((i) => Math.max(i - 1, 0));
-        return;
-      } else if (e.key === "Enter" && searchActiveIdx >= 0) {
-        e.preventDefault();
-        if (nativeSearchOpen) selectNativeCompactSuggestion(compactSuggestions[searchActiveIdx].id);
-        else selectCompactSuggestion(compactSuggestions[searchActiveIdx].id);
-        return;
-      } else if (e.key === "Escape") {
-        setSearchFocused(false);
-        return;
-      }
-    }
-    if (e.key === "Enter") {
-      e.preventDefault();
-      // Falta la ubicación: se salta a ella en vez de buscar a medias (antes
-      // esto solo ocurría dentro de la app).
-      if (searchQuery.trim() && !navLocation.trim()) {
-        // El salto a la ubicación no pierde lo buscado: queda en recientes ya.
-        guardarBusquedaReciente(searchQuery.trim());
-        setBusquedasRecientes(leerBusquedasRecientesConFecha());
-        (nativeSearchOpen ? nativeLocationInputRef.current : navLocationInputRef.current)?.focus();
-        setNavLocOpen(false);
-        return;
-      }
-      runCompactSearch();
+      if (e.key === "ArrowDown") { e.preventDefault(); setSearchActiveIdx(i => Math.min(i + 1, compactSuggestions.length - 1)); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); setSearchActiveIdx(i => Math.max(i - 1, 0)); }
+      else if (e.key === "Escape") setSearchFocused(false);
     }
   }
 
   function handleNavLocKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.nativeEvent.isComposing) return;
-    if (e.key === "Enter" && !navLocation.trim() && searchQuery.trim()) {
-      e.preventDefault();
-      runCompactSearch({ allowPartial: true });
-      return;
-    }
+    if (e.key === "Enter") { e.preventDefault(); runCompactSearch(); return; }
     if (navLocOpen && navLocSug.length > 0) {
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        setNavLocActive((i) => Math.min(i + 1, navLocSug.length - 1));
-        return;
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setNavLocActive((i) => Math.max(i - 1, 0));
-        return;
-      } else if (e.key === "Enter" && navLocActive >= 0) {
-        e.preventDefault();
-        selectNavLocation(navLocSug[navLocActive]);
-        return;
-      } else if (e.key === "Escape") {
-        setNavLocOpen(false);
-        return;
-      }
-    }
-    if (e.key === "Enter") {
-      e.preventDefault();
-      runCompactSearch();
+      if (e.key === "ArrowDown") { e.preventDefault(); setNavLocActive(i => Math.min(i + 1, navLocSug.length - 1)); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); setNavLocActive(i => Math.max(i - 1, 0)); }
+      else if (e.key === "Escape") setNavLocOpen(false);
     }
   }
 
@@ -2281,7 +2217,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => { setSearchQuery(repairVisibleText(e.target.value)); setSearchCategoryId(null); setSearchActiveIdx(-1); }}
-                                enterKeyHint={searchQuery.trim() && !navLocation.trim() ? "next" : "search"}
+                                enterKeyHint="search"
                                 onKeyDown={handleCompactSearchKeyDown}
                                 onFocus={() => { if (searchBlurTimer.current) clearTimeout(searchBlurTimer.current); setSearchFocused(true); }}
                                 onBlur={() => { searchBlurTimer.current = setTimeout(() => setSearchFocused(false), 150); }}
@@ -2300,7 +2236,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                               <input
                                 type="text"
                                 ref={navLocationInputRef}
-                                enterKeyHint={navLocation.trim() && !searchQuery.trim() ? "next" : "search"}
+                                enterKeyHint="search"
                                 value={navLocation}
                                 onChange={(e) => {
                                   const value = repairVisibleText(e.target.value);
@@ -2592,7 +2528,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   </button>
                   <input
                     ref={nativeSearchInputRef}
-                    enterKeyHint={navLocation.trim() ? "search" : "next"}
+                    enterKeyHint="search"
                     type="text"
                     value={searchQuery}
                     onChange={(event) => {
@@ -2637,7 +2573,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   <MapPin className="ml-2 h-6 w-6 shrink-0 text-[#1A2744]" />
                   <input
                     ref={nativeLocationInputRef}
-                    enterKeyHint={searchQuery.trim() ? "search" : "next"}
+                    enterKeyHint="search"
                     type="text"
                     value={navLocation}
                     onChange={(event) => {

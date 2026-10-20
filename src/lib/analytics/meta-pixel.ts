@@ -1,3 +1,4 @@
+import { readOptionalConsent } from "@/lib/privacy/optional-consent";
 import type { MetaConversion } from "./growth-contract";
 import { isNativeAppRuntime } from "@/hooks/use-native-app";
 import { esNavegadorAutomatizado } from "@/lib/analytics/trafico-automatizado";
@@ -5,6 +6,7 @@ type MetaPixelCommand = "init" | "track" | "trackCustom";
 
 type MetaPixelFunction = {
   (command: "init", pixelId: string): void;
+  (command: "consent", action: "grant" | "revoke"): void;
   (command: "track" | "trackCustom", eventName: string, params?: Record<string, unknown>, options?: { eventID: string }): void;
   callMethod?: (...args: unknown[]) => void;
   queue?: unknown[];
@@ -99,7 +101,7 @@ export type { MetaPixelCommand };
 
 function allowedMetaBrowser(): boolean {
   if (typeof window === "undefined" || esNavegadorAutomatizado() || isNativeAppRuntime() || !["contratacr.com","www.contratacr.com"].includes(window.location.hostname)) return false;
-  try { return window.localStorage.getItem("contratacr:analytics-consent") !== "declined"; } catch { return false; }
+  try { return readOptionalConsent("advertising") === "accepted"; } catch { return false; }
 }
 export function trackMetaConversion(conversion: MetaConversion | null | undefined) {
   if (!conversion || !allowedMetaBrowser()) return;
