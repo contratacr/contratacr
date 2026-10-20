@@ -88,8 +88,8 @@ for (const professional of [false, true]) {
         await expect(unblock).toBeVisible();
         await expect(privacy.getByText("No has bloqueado a nadie.", { exact: true })).toHaveCount(0);
         await expect(privacy.locator("[data-blocked-users] [aria-busy]")).toHaveCount(0);
-        if (native) await expect(privacy.getByRole("switch")).toBeVisible();
-        else await expect(privacy.getByRole("switch")).toHaveCount(0);
+        if (native) await expect(privacy.getByRole("switch", { name: /^Confirmaciones de lectura/ })).toBeVisible();
+        else await expect(privacy.getByRole("switch", { name: /^Confirmaciones de lectura/ })).toHaveCount(0);
         await unblock.click();
         await expect(unblock).toHaveCount(0);
         await closePrivacy();

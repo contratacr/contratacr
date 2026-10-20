@@ -173,8 +173,8 @@ test("dashboard name keeps only an interactive identity check", async ({ page })
   await expect(check).toBeVisible();
   expect(await check.textContent()).toBe("");
   const gap = await check.evaluate((el) => {
-    const icon = el.querySelector("svg")!.getBoundingClientRect();
-    const name = el.closest("div")!.querySelector("h1")!.getBoundingClientRect();
+    const icon = el.getBoundingClientRect();
+    const name = el.closest("[data-inline-identity-name]")!.querySelector("[data-profile-name-last-word]")!.getBoundingClientRect();
     return icon.left - name.right;
   });
   expect(gap).toBeGreaterThanOrEqual(0);
@@ -245,10 +245,12 @@ test("verification shows only the identification check and its explanation", asy
       await expect(page.getByRole("dialog")).toContainText("Verificamos los datos de identificación de esta cuenta.");
       await page.getByRole("dialog").getByRole("button", { name: "Entendido", exact: true }).click();
     }
-    const number = await identity.locator("p").filter({ hasText: /^700000001$/ }).boundingBox();
+    const finalWord = await identity.locator("[data-profile-name-last-word]").boundingBox();
     const check = await identity.locator("[data-verification-badge]").boundingBox();
-    expect(number).not.toBeNull(); expect(check).not.toBeNull();
-    expect(check!.x - (number!.x + number!.width)).toBeLessThanOrEqual(8);
+    expect(finalWord).not.toBeNull(); expect(check).not.toBeNull();
+    const gap = check!.x - (finalWord!.x + finalWord!.width);
+    expect(gap).toBeGreaterThanOrEqual(0);
+    expect(gap).toBeLessThanOrEqual(5);
     await expectNoHorizontalOverflow(page);
     const unverified = await db.from("professionals").update({ is_verified: false, verification_status: "pending" }).eq("id", account.professionalId!);
     if (unverified.error) throw unverified.error;

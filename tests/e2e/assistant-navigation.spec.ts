@@ -36,8 +36,9 @@ for (const locale of ["es", "en"] as const) test(`native assistant ${locale} kee
   await dialog.getByRole("button", { name: locale === "es" ? "Enviar mensaje" : "Send message", exact: true }).click();
   const badge = dialog.locator("[data-verification-badge]");
   await expect(badge).toBeVisible();
-  const name = await dialog.getByRole("button", { name: "Profesional de prueba", exact: true }).boundingBox();
+  const name = await dialog.locator("[data-profile-name-last-word]").boundingBox();
   const mark = await badge.boundingBox();
+  expect(mark!.x - (name!.x + name!.width)).toBeGreaterThanOrEqual(0);
   expect(mark!.x - (name!.x + name!.width)).toBeLessThan(12);
   expect(Math.abs(mark!.y + mark!.height / 2 - name!.y - name!.height / 2)).toBeLessThan(4);
   await badge.click();

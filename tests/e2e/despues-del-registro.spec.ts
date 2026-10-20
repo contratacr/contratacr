@@ -144,7 +144,7 @@ for (const ambiente of ["web", "app"] as const) {
     await ingresar.click();
     await page.waitForURL(/\/dashboard\//, { timeout: 30_000 });
     await page.getByRole("button", { name: /Abrir men[uú]/i }).filter({ visible: true }).first().click();
-    await page.locator(".ccr-menu-completo.ccr-menu-abierto").getByRole("button", { name: /^Salir$/ }).click();
+    await page.locator(".ccr-menu-completo.ccr-menu-abierto").getByRole("button", { name: /^(Salir|Cerrar sesión)$/ }).click();
     await expect(page.getByRole("button", { name: /Abrir men[uú]/i }).filter({ visible: true }).first()).toBeVisible({ timeout: 30_000 });
     await page.waitForTimeout(1_500);
     await crearCliente(page);

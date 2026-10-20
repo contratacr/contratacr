@@ -35,7 +35,11 @@ test(`@seeded mensajes: respuesta atrasada (${obsoleteResult}) conserva lista y 
     await route.fulfill({ json: { conversations: [newer, older] } });
   });
   await page.goto("/mensajes");
-  await expect(page.locator(".ccr-direct-chat-list").getByText("Profesional nuevo", { exact: true })).toBeVisible();
+  // Desktop and touch layouts share the row content, but only one is visible.
+  // Target the touch row rather than matching its hidden desktop counterpart.
+  const row = page.locator(".ccr-direct-chat-list .ccr-fila-chat").filter({ hasText: "Profesional nuevo" });
+  await expect(row).toHaveCount(1);
+  await expect(row.getByText("Profesional nuevo", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: /^Archivados/ }).click();
   await expect(page.getByText(/No hay conversaciones archivadas/)).toBeVisible();
   delayNext = true;
@@ -44,7 +48,6 @@ test(`@seeded mensajes: respuesta atrasada (${obsoleteResult}) conserva lista y 
   await page.getByRole("button", { name: /^Archivados/ }).click();
   await expect(page.getByText(/No hay conversaciones archivadas/)).toBeVisible();
   await page.getByRole("button", { name: /Volver|Atrás/ }).filter({ visible: true }).first().click();
-  const row = page.locator(".ccr-fila-chat").filter({ hasText: "Profesional nuevo" });
   await expect(row).toBeVisible();
   await expect(row).toContainText("Borrador: Hola, te escribo por fisioterapia.");
   // Watch every DOM update, not just the final screenshot: a removed/reinserted
@@ -53,7 +56,7 @@ test(`@seeded mensajes: respuesta atrasada (${obsoleteResult}) conserva lista y 
     const list = document.querySelector(".ccr-direct-chat-list")!;
     const state = { missing: false };
     Object.assign(window, { chatStability: state });
-    new MutationObserver(() => { if (!list.textContent?.includes("Profesional nuevo")) state.missing = true; })
+    new MutationObserver(() => { if (![...list.querySelectorAll(".ccr-fila-chat")].some(row => row.textContent?.includes("Profesional nuevo") && row.getBoundingClientRect().height > 0)) state.missing = true; })
       .observe(list, { childList: true, subtree: true, characterData: true });
   });
   await delayed!.fulfill(obsoleteResult === "success"

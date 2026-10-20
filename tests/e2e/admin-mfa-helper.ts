@@ -19,9 +19,22 @@ export function totp(secret: string, time = Date.now()) {
   const offset = digest[digest.length - 1] & 15;
   return String((digest.readUInt32BE(offset) & 0x7fffffff) % 1_000_000).padStart(6, "0");
 }
-export async function completeAdminMfa(page: Page, email: string) {
+export async function completeAdminMfa(page: Page, email: string, administrator = true) {
   regressionAdminClient(); // Reuse the production-denial guard, including isolated local CI.
   if (!email.endsWith("@contratacr.test")) throw new Error("MFA test setup is restricted to disposable TEST accounts");
+  // loginAs can already have completed this exact account's challenge. Never
+  // infer permission from a missing screen: require live server AAL2 access.
+  if (administrator) {
+    const response = await page.request.get("/api/auth/admin-mfa");
+    expect(response.ok()).toBe(true);
+    const stateOfSession = await response.json();
+    expect(stateOfSession).toMatchObject({ authenticated: true, isAdmin: true });
+    if (!stateOfSession.required) {
+      expect(stateOfSession.enrolled).toBe(true);
+      expect((await page.request.get("/api/admin/pending-counts")).status()).toBe(200);
+      return;
+    }
+  }
   const gate = page.locator("[data-admin-mfa]");
   await expect(gate).toBeVisible();
   let state = enrolled.get(email);

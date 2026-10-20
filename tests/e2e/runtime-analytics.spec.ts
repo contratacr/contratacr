@@ -22,10 +22,13 @@ test("warm navigation, sign-in, resume and StrictMode do not duplicate usage; ex
   let path = "/dashboard/profesional", tab = "privacidad", user: { id: string } | null = null;
   let now = Date.now();
   const DateShim = class extends Date { static now() { return now; } };
-  const source = ts.transpileModule(readFileSync("src/components/analytics/usage-capture.tsx","utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
+  const source = ts.transpileModule(readFileSync("src/components/analytics/usage-capture.tsx","utf8"), { fileName: "usage-capture.tsx", compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX } }).outputText;
   const moduleBox = { exports: {} as { UsageCapture: () => null } };
   const mocks: Record<string, unknown> = {
     "@/lib/analytics/platform": { isNativeAnalyticsRuntime },
+    "react/jsx-runtime": { jsx: () => null },
+    "./journey-capture": { JourneyCapture: () => null },
+    "@/lib/analytics/native-measurement": { setNativeMeasurementActor: () => {}, configureNativeMeasurement: async () => {} },
     react: { useEffect: (fn: () => void) => effects.push(fn), useRef: () => ref },
     "next/navigation": { usePathname: () => path, useSearchParams: () => new URLSearchParams({ tab, code: "private-code", email: "private@example.com" }) },
     "@/hooks/use-auth": { useAuth: () => ({ user }) },
@@ -100,7 +103,7 @@ for (const runtime of ["web", "android", "ios"] as const) {
 }
 
 test("analytics resolves the authenticated actor and excludes admins or unknown roles", async () => {
-  const source = ts.transpileModule(readFileSync("src/lib/analytics/admin-activity.ts", "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
+  const source = ts.transpileModule(readFileSync("src/lib/analytics/admin-activity.ts", "utf8"), { fileName: "usage-capture.tsx", compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX } }).outputText;
   type Actor = { id: string | null; excluded: boolean };
   const box = { exports: {} as { analyticsActor: (id?: string | null) => Promise<Actor> } };
   let sessionUser: { id: string } | null = { id: "admin-account" };
