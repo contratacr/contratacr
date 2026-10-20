@@ -1573,8 +1573,19 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       servicio?: string;
     } = {},
   ) {
-    const params = new URLSearchParams();
     const svc = repairVisibleText(overrides.servicio ?? searchQuery).trim();
+    if (!svc) {
+      (nativeSearchOpen ? nativeSearchInputRef.current : compactSvcRef.current?.querySelector("input"))?.focus({ preventScroll: true });
+      setSearchFocused(true);
+      return;
+    }
+    if (!navLocation.trim() && !overrides.location && !overrides.coords) {
+      (nativeSearchOpen ? nativeLocationInputRef.current : navLocationInputRef.current)?.focus({ preventScroll: true });
+      setSearchFocused(false);
+      return;
+    }
+    if (nativeSearchOpen) irSinParpadeo();
+    const params = new URLSearchParams();
     const categoriaElegida = "categoria" in overrides ? overrides.categoria : searchCategoryId;
     const picked = compactSuggestions.find((c) => c.id === categoriaElegida);
     if (categoriaElegida && (!picked || normalizeText(repairVisibleText(picked.label)) === normalizeText(svc))) {
@@ -1716,7 +1727,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
         if (!hasSearchService) {
           (nativeSearchOpen ? nativeSearchInputRef.current : compactSvcRef.current?.querySelector("input"))?.focus();
           setSearchFocused(true);
-        } else if (nativeSearchOpen) soltarFoco();
+        } else {
+          (nativeSearchOpen ? nativeLocationInputRef.current : navLocationInputRef.current)?.focus({ preventScroll: true });
+          setNavLocOpen(false);
+        }
       },
       () => {
         const fallback = resolveLocation("Costa Rica");
@@ -1813,7 +1827,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     setSearchCategoryId(id);
     setSearchActiveIdx(-1);
     setSearchFocused(false);
-    if (!navLocation.trim()) window.setTimeout(() => {
+    window.setTimeout(() => {
       navLocationInputRef.current?.focus();
       setNavLocOpen(false);
     }, 0);
@@ -1828,7 +1842,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     if (!navLocation.trim()) {
       nativeLocationInputRef.current?.focus({ preventScroll: true });
       setNavLocOpen(false);
-    } else soltarFoco();
+    } else nativeLocationInputRef.current?.focus({ preventScroll: true });
   }
 
   function selectNavLocation(s: LocationSuggestion) {
@@ -1840,7 +1854,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     if (!hasSearchService) {
       (nativeSearchOpen ? nativeSearchInputRef.current : compactSvcRef.current?.querySelector("input"))?.focus({ preventScroll: true });
       setSearchFocused(true);
-    } else if (nativeSearchOpen) soltarFoco();
+    } else {
+      (nativeSearchOpen ? nativeLocationInputRef.current : navLocationInputRef.current)?.focus({ preventScroll: true });
+      setNavLocOpen(false);
+    }
   }
 
   function handleCompactSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -1875,7 +1892,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
         setNavLocOpen(false);
         return;
       }
-      if (nativeSearchOpen) irSinParpadeo();
       runCompactSearch();
     }
   }
@@ -1901,7 +1917,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     }
     if (e.key === "Enter") {
       e.preventDefault();
-      if (nativeSearchOpen) irSinParpadeo();
       runCompactSearch();
     }
   }
@@ -2543,10 +2558,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
             <form
               onSubmit={(event) => {
                 event.preventDefault();
-                irSinParpadeo();
                 runCompactSearch();
               }}
-              className="mx-auto flex h-full max-w-[560px] flex-col"
+              className="mx-auto flex h-full max-w-[560px] flex-col pb-[max(1rem,env(safe-area-inset-bottom))]"
             >
               <div className="space-y-3">
                 {/* LOS DOS CAMPOS DE UNA BÚSQUEDA SE DIBUJAN IGUAL. Este llevaba
@@ -2565,6 +2579,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   </button>
                   <input
                     ref={nativeSearchInputRef}
+                    enterKeyHint={navLocation.trim() ? "search" : "next"}
                     type="text"
                     value={searchQuery}
                     onChange={(event) => {
@@ -2609,6 +2624,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   <MapPin className="ml-2 h-6 w-6 shrink-0 text-[#1A2744]" />
                   <input
                     ref={nativeLocationInputRef}
+                    enterKeyHint={searchQuery.trim() ? "search" : "next"}
                     type="text"
                     value={navLocation}
                     onChange={(event) => {
@@ -2738,8 +2754,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                                 setSearchQuery(reciente.busqueda!.termino);
                                 setSearchCategoryId(null);
                                 setSearchFocused(false);
-                                if (!navLocation.trim()) nativeLocationInputRef.current?.focus({ preventScroll: true });
-                                else soltarFoco();
+                                nativeLocationInputRef.current?.focus({ preventScroll: true });
+                                setNavLocOpen(false);
                               }}
                               className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-2 py-2.5 text-left"
                             >
@@ -2877,12 +2893,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 </div>
                 )}
               </div>
-              <div className="shrink-0 bg-white pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
-                <button type="submit" className="flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-5 text-sm font-semibold text-white hover:bg-[#0089bb]">
-                  <Search className="h-4 w-4" aria-hidden />
-                  {t("searchProfessionals")}
-                </button>
-              </div>
+
             </form>
           </div>
         )}

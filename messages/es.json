@@ -3378,5 +3378,12 @@
     "pendingCheck": "Verificación pendiente.",
     "addDocuments": "Adjuntar documentos",
     "cancel": "Cancelar"
+  },
+  "sessionRecovery": {
+    "connectionTitle": "No pudimos conectar",
+    "title": "No pudimos verificar la sesión",
+    "description": "Revise su conexión e inténtelo de nuevo. Su sesión se conserva.",
+    "retry": "Reintentar",
+    "checking": "Conectando…"
   }
 }

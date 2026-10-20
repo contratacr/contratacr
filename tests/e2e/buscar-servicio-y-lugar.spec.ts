@@ -30,7 +30,7 @@ async function elegirServicio(page: Page, texto: string) {
   await opcion.click();
   await expect(page.locator(".ccr-native-search-panel")).toBeVisible();
   expect(page.url()).toBe(before);
-  await page.getByRole("button", { name: "Buscar profesionales", exact: true }).filter({ visible: true }).click();
+  await page.getByRole("combobox", { name: "Ubicación", exact: true }).filter({ visible: true }).press("Enter");
 }
 
 test("elegir el servicio conserva la ubicación que ya estaba", async ({ page }, testInfo) => {

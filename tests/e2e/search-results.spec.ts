@@ -216,7 +216,10 @@ test.describe("@seeded search results", () => {
     await search.click();
     await page.keyboard.type("plomeria");
     await page.keyboard.press("Enter");
-    await page.keyboard.press("Enter");
+    const location = page.getByRole("combobox", { name: /Ubicaci[oó]n|Location/i }).filter({ visible: true }).first();
+    await location.fill("Alajuela");
+    await page.getByRole("option").filter({ hasText: /^Alajuela/ }).filter({ visible: true }).first().click();
+    await location.press("Enter");
     await expect(page).toHaveURL(/\/profesionales/);
     await expect(
       page.locator("article").first().or(page.getByText(/No encontramos resultados/i).first()),
@@ -268,7 +271,7 @@ test.describe("@seeded search results", () => {
       const plumbing = page.getByRole("option", { name: /Plomer[ií]a|Plumbing/i }).filter({ visible: true }).first();
       await expect(plumbing).toBeVisible();
       await plumbing.click();
-      await page.getByRole("button", { name: "Buscar profesionales", exact: true }).filter({ visible: true }).click();
+      await location.press("Enter");
     } else {
       const location = page.getByRole("combobox", { name: /Ubicaci[oó]n|Location/i }).filter({ visible: true }).first();
       await expect(location).toBeVisible();
@@ -280,6 +283,9 @@ test.describe("@seeded search results", () => {
         await opcion.click();
         await expect(location).toHaveValue(/Liberia/i, { timeout: 2_000 });
       }).toPass({ timeout: 25_000 });
+      const service = page.getByRole("combobox", { name: /^Servicio$|^Service$/i }).filter({ visible: true }).first();
+      await service.fill("plomeria");
+      await page.getByRole("option", { name: /Plomer[ií]a|Plumbing/i }).filter({ visible: true }).first().click();
       await page.getByRole("button", { name: /^Buscar$|^Search$/i }).filter({ visible: true }).first().click();
     }
 
