@@ -199,7 +199,7 @@ const ES_SECTIONS: LegalSection[] = [
       },
       {
         "k": "p",
-        "text": "La medición limitada está activada en web y en las versiones móviles compatibles salvo que exista un rechazo guardado. Puede desactivarla o reactivarla en **Preferencias de publicidad** de esta página o desde Privacidad de su cuenta, sin bloquear el servicio. No mostramos una ventana automática ni interpretamos esta configuración como una aceptación expresa. Desactivarla detiene envíos futuros y cancela conversiones pendientes asociadas; no borra automáticamente datos ya recibidos por Meta."
+        "text": "La medición limitada está activada en web y en las versiones móviles compatibles salvo que exista un rechazo guardado. Puede desactivarla o reactivarla en **Preferencias de publicidad** de esta página o desde Privacidad de su cuenta, sin bloquear el servicio. No mostramos una ventana automática ni interpretamos esta configuración como una aceptación expresa. Desactivarla detiene envíos futuros y cancela conversiones pendientes asociadas en nuestro servidor; no borra automáticamente datos ya recibidos por Meta."
       },
       {
         "k": "p",
@@ -475,7 +475,7 @@ const EN_SECTIONS: LegalSection[] = [
       },
       {
         "k": "p",
-        "text": "Limited measurement is enabled on the web and compatible mobile versions unless a saved rejection exists. Disable or enable it under **Advertising preferences** on this page or in account Privacy without losing access. We show no automatic prompt and do not treat this setting as express acceptance. Disabling stops future delivery and cancels associated pending conversions; it does not automatically erase data already received by Meta."
+        "text": "Limited measurement is enabled on the web and compatible mobile versions unless a saved rejection exists. Disable or enable it under **Advertising preferences** on this page or in account Privacy without losing access. We show no automatic prompt and do not treat this setting as express acceptance. Disabling stops future delivery and cancels associated pending conversions on our server; it does not automatically erase data already received by Meta."
       },
       {
         "k": "p",
