@@ -2,7 +2,7 @@ import { resolve } from "node:path";
 import { readFileSync } from "node:fs";
 import { hasVerificationDocuments } from "../../src/lib/verification/documents";
 import { test, expect } from "playwright/test";
-import { loginAs } from "./helpers";
+import { loginAs, gotoOK } from "./helpers";
 import { completeAdminMfa } from "./admin-mfa-helper";
 import { E2E_USERS, regressionAdminClient } from "./seed";
 
@@ -108,10 +108,11 @@ for (const kind of ["company", "person", "dimex"] as const) test(`private verifi
     await expect(page.getByTestId("verification-documents")).toContainText("Pendiente de revisión");
     await expect(page.locator("[data-current-identification] [data-verification-badge]")).toHaveCount(0);
     await page.unroute(lookupUrl);
-    // Wait for the dashboard URL normalization before testing another route.
+    // Finish the local URL normalization, then use the shared navigation
+    // helper: WebKit can interrupt a hard goto with the last History API update.
     await expect(page).toHaveURL(/tab=profile/);
     await page.waitForLoadState("networkidle");
-    await page.goto("/promociones/publicar");
+    await gotoOK(page, "/promociones/publicar");
     await expect(page.locator("[data-aviso-sin-verificar]")).toBeVisible();
     await db.from("professionals").update({ verification_status: "verified", is_verified: true }).eq("id", pro.id).throwOnError();
     const [verifiedResponse] = await Promise.all([
