@@ -304,7 +304,7 @@ export async function loginAs(page: Page, email: string, password: string, optio
       // those effects, which WebKit reports as an internal navigation error.
       await expect(page.getByRole("main").getByRole("heading", { level: 1 }).filter({ visible: true }).first()).toBeVisible({ timeout: 30_000 });
       if (options.adminMfa !== false) {
-        const state = await (await page.request.get("/api/auth/admin-mfa")).json();
+        const state = await (await page.request.get("/api/auth/admin-mfa", { maxRetries: 2 })).json();
         if (state.isAdmin && state.required) {
           const destination = new URL(page.url()).pathname + new URL(page.url()).search;
           await gotoOK(page, "/admin");
