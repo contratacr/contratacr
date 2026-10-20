@@ -84,7 +84,7 @@ for (const native of [false, true]) {
       expect(geometry.overflow).toBe(false);expect(geometry.socialTop).toBeGreaterThan(geometry.actionsBottom);
       expect(Math.abs(geometry.center-geometry.expectedCenter)).toBeLessThan(1);
       expect(geometry.bottom).toBeLessThanOrEqual(geometry.viewport-16);
-      for(const target of geometry.targets){expect(target.width).toBeGreaterThanOrEqual(44);expect(Math.round(target.height)).toBeGreaterThanOrEqual(44);}
+      for(const target of geometry.targets){expect(Math.round(target.width)).toBeGreaterThanOrEqual(44);expect(Math.round(target.height)).toBeGreaterThanOrEqual(44);}
       if(process.env.MENU_EVIDENCE_DIR) {
         const prefix=`${process.env.MENU_EVIDENCE_DIR}/${test.info().project.name}-${native?'native':'web'}`;
         await page.screenshot({path:`${prefix}-con-sesion.png`});

@@ -3,19 +3,20 @@ import { gotoOK, waitForInteractivePage, loginAs } from "./helpers";
 import { canRunSeededRegression, E2E_USERS, regressionAdminClient } from "./seed";
 import { createDisposableAccount, cleanupDisposableAccount, type DisposableAccount } from "./disposable-account";
 
-// The loopback CI database starts with only two professionals. Exercise real
-// server pagination with disposable discoverable rows instead of assuming that
-// a hosted catalogue happens to contain three full pages.
+// Exercise real server pagination with isolated discoverable rows, rather than
+// depending on the catalogue size or a previously cached global search.
 const paginationFixtures: DisposableAccount[] = [];
+let paginationPath = "/buscar";
 test.beforeAll(async () => {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-  if (!canRunSeededRegression() || !["127.0.0.1", "localhost"].includes(new URL(url).hostname)) return;
+  if (!canRunSeededRegression()) return;
   test.setTimeout(180_000);
+  const namespace = `ZqxPagination${crypto.randomUUID().replace(/[^a-z]/gi, "")}`;
+  paginationPath = `/buscar?q=${namespace}`;
   for (let batch = 0; batch < 15; batch++) {
     await Promise.all(Array.from({ length: 4 }, async () => {
       const account = await createDisposableAccount({ prefix: "pagination", professional: true, publicDiscoverable: true });
       paginationFixtures.push(account);
-      await regressionAdminClient().from("professionals").update({ oculto_del_buscador: false }).eq("id", account.professionalId!).throwOnError();
+      await regressionAdminClient().from("professionals").update({ oculto_del_buscador: false, business_name: `${namespace} ${account.id}` }).eq("id", account.professionalId!).throwOnError();
     }));
   }
 });
@@ -40,7 +41,7 @@ for (const slow of [false, true]) {
       await route.fulfill({ response });
     });
     try {
-      await gotoOK(page, "/buscar");
+      await gotoOK(page, paginationPath);
       await waitForInteractivePage(page);
       const list = page.locator(".ccr-search-sheet-scroll").first();
       await expect(list.locator("[data-pro-id]")).toHaveCount(20);
@@ -109,7 +110,7 @@ test("a shared second page continues after its twenty cards", async ({ page }) =
     offsets.push(Number(new URL(route.request().url()).searchParams.get("offset")));
     await route.continue();
   });
-  await gotoOK(page, "/buscar?page=2");
+  await gotoOK(page, `${paginationPath}${paginationPath.includes("?") ? "&" : "?"}page=2`);
   await waitForInteractivePage(page);
   const list = page.locator(".ccr-search-sheet-scroll").first();
   await expect(list.locator("[data-pro-id]")).toHaveCount(20);
@@ -124,7 +125,7 @@ test("an exhausted batch stops loading even when the displayed total is stale", 
     requests++;
     await route.fulfill({ json: { professionals: [], total: 20 } });
   });
-  await gotoOK(page, "/buscar");
+  await gotoOK(page, paginationPath);
   await waitForInteractivePage(page);
   const list = page.locator(".ccr-search-sheet-scroll").first();
   await expect(list.locator("[data-search-load-more]")).toHaveCount(1);

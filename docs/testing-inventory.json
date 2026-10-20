@@ -8478,7 +8478,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 77,
+          "line": 94,
           "tag": "form",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{handleSubmit}",
@@ -8486,7 +8486,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 80,
+          "line": 97,
           "tag": "input",
           "label": "\"Correo de administrador\"",
           "handler": "{(e) => setEmail(e.target.value)}",
@@ -8494,7 +8494,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 84,
+          "line": 101,
           "tag": "input",
           "label": "\"Contraseña\"",
           "handler": "{(e) => setPassword(e.target.value)}",
@@ -8502,7 +8502,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 86,
+          "line": 103,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -23355,19 +23355,19 @@
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 300,
+          "line": 307,
           "title": "`${tipo}: sin sesión → entrar con una cuenta existente → vuelve lleno y se publica`"
         },
         {
-          "line": 310,
+          "line": 317,
           "title": "`${tipo}: sin sesión → crear cuenta de cliente → vuelve lleno y se publica`"
         },
         {
-          "line": 335,
+          "line": 342,
           "title": "`${tipo}: sin sesión → crear cuenta de profesional → vuelve lleno y se publica`"
         },
         {
-          "line": 349,
+          "line": 356,
           "title": "\"registro de profesional: contraseña, provincia, tarifa, fijo, abre arriba y avisos de bienvenida\""
         }
       ]
@@ -25523,23 +25523,23 @@
       "file": "tests/e2e/search-progressive-loading.spec.ts",
       "cases": [
         {
-          "line": 28,
+          "line": 29,
           "title": "`search loads twenty near the actual list end; ${slow ? \"slow\" : \"fast\"} feedback`"
         },
         {
-          "line": 79,
+          "line": 80,
           "title": "`first search card has its ${hasApp === \"blocked\" ? \"blocked chat\" : hasApp ? \"chat\" : \"WhatsApp\"} channel before browser lookup`"
         },
         {
-          "line": 80,
+          "line": 81,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 106,
+          "line": 107,
           "title": "\"a shared second page continues after its twenty cards\""
         },
         {
-          "line": 121,
+          "line": 122,
           "title": "\"an exhausted batch stops loading even when the displayed total is stale\""
         }
       ]
