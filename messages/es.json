@@ -2084,7 +2084,6 @@
     "errCedula": "Ingresá un número de identificación válido.",
     "errPhone": "Escribe un número de WhatsApp válido.",
     "phoneLabel": "WhatsApp",
-    "phoneHelp": "El proyecto será público. El teléfono no aparece en la publicación; los profesionales registrados pueden consultarlo desde las opciones de contacto.",
     "errPhoneFijo": "Ese número parece de teléfono fijo. Escribe un celular con WhatsApp para que te puedan escribir.",
     "errPublish": "No se pudo publicar. Intenta de nuevo.",
     "errUnexpected": "Error inesperado. Intenta de nuevo.",

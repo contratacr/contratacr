@@ -427,7 +427,6 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
                     error={errorField === "phone" ? (error ?? undefined) : undefined}
                     required
                   />
-                  <p className="mt-2 text-xs leading-5 text-[#68778d]">{t("phoneHelp")}</p>
                 </div>}
 
                 {/* Identificación obligatoria para publicar; se reutiliza la ya verificada.
