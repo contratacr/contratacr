@@ -1,3 +1,4 @@
+import { readAllAdminRows } from "@/lib/admin/read-all-rows";
 import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -8,16 +9,17 @@ export async function GET() {
   if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
   const db = createAdminClient();
-  const [{ data: profiles }, { data: deletions }] = await Promise.all([
-    db.from("profiles")
+  const [{ data: profiles, error: profilesError }, { data: deletions, error: deletionsError }] = await Promise.all([
+    readAllAdminRows((from, to) => db.from("profiles")
       .select("id, full_name, email, role, disabled_reason, disabled_at")
       .eq("is_disabled", true)
-      .order("disabled_at", { ascending: false }),
-    db.from("account_deletion_requests")
+      .order("disabled_at", { ascending: false }).order("id").range(from, to)),
+    readAllAdminRows((from, to) => db.from("account_deletion_requests")
       .select("id,user_id,status,attempts,requested_at,updated_at,last_error")
       .in("status", ["pending", "processing", "failed"])
-      .order("requested_at", { ascending: false }),
+      .order("requested_at", { ascending: false }).order("id").range(from, to)),
   ]);
+  if (profilesError || deletionsError) return NextResponse.json({ error: "No se pudo cargar la lista completa." }, { status: 500 });
   const deletionByUser = new Map((deletions ?? []).map((item) => [item.user_id, item]));
   const accounts = (profiles ?? []).map((profile) => ({ ...profile, deletion: deletionByUser.get(profile.id) ?? null }));
   return NextResponse.json({ accounts });

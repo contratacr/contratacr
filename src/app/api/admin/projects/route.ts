@@ -1,3 +1,4 @@
+import { readAllAdminRows, readAdminRowsByIds } from "@/lib/admin/read-all-rows";
 import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { auditUserAction } from "@/lib/audit/user-action";
@@ -95,7 +96,7 @@ export async function GET(req: Request) {
 
   const rows: ProjectRow[] = [];
   const batchSize = 1000;
-  for (let from = 0; from < 10000; from += batchSize) {
+  for (let from = 0; ; from += batchSize) {
     const { data, error } = await db
       .from("projects")
       .select(`
@@ -107,7 +108,7 @@ export async function GET(req: Request) {
         for_someone_else, beneficiary_name, beneficiary_dob,
         profiles:client_id(full_name, email, cedula, avatar_url)
       `)
-      .order("created_at", { ascending: false })
+      .order("created_at", { ascending: false }).order("id")
       .range(from, from + batchSize - 1);
 
     if (error) {
@@ -122,10 +123,10 @@ export async function GET(req: Request) {
   const acceptedIds = [...new Set(rows.map((row) => row.accepted_professional_id).filter((id): id is string => !!id))];
   const professionalMap = new Map<string, ProfessionalRow>();
   if (acceptedIds.length > 0) {
-    const { data, error } = await db
+    const { data, error } = await readAdminRowsByIds(acceptedIds, (batch, from, to) => db
       .from("professionals")
       .select("id, profile_id, slug, business_name, profiles(full_name, email, avatar_url)")
-      .in("id", acceptedIds);
+      .in("id", batch).order("id").range(from, to));
     if (!error) {
       for (const pro of (data ?? []) as unknown as ProfessionalRow[]) professionalMap.set(pro.id, pro);
     }
@@ -170,11 +171,13 @@ export async function GET(req: Request) {
   {
     const idsPagina = filtered.slice(start, start + pageSize).map((row) => row.id as string);
     if (idsPagina.length) {
-      const { data: contactos } = await db
+      const { data: contactos, error: contactError } = await readAllAdminRows((from, to) => db
         .from("interaction_events")
         .select("metadata")
         .eq("event_type", "project_lead_whatsapp")
-        .limit(5000);
+        .in("metadata->>project_id", idsPagina)
+        .order("id").range(from, to));
+      if (contactError) return NextResponse.json({ error: "No se pudo contar los contactos." }, { status: 500 });
       for (const fila of contactos ?? []) {
         const pid = (fila.metadata as { project_id?: string } | null)?.project_id;
         if (pid && idsPagina.includes(pid)) contactosPorProyecto.set(pid, (contactosPorProyecto.get(pid) ?? 0) + 1);

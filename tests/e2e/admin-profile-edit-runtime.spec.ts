@@ -57,6 +57,7 @@ function fixture(options: { authorized?: boolean; authFail?: boolean; writeFail?
     } },
   };
   const route = load("src/app/api/admin/users/[id]/datos/route.ts", {
+    "@/lib/admin/read-all-rows": load("src/lib/admin/read-all-rows.ts", {}),
     "@/lib/auth/admin": { getApiAdmin: async () => options.authorized === false ? null : { id: "admin" } },
     "@/lib/supabase/admin": { createAdminClient: () => db },
     "@/lib/audit/user-action": { auditUserAction: async (_db: unknown, _req: unknown, entry: unknown) => { audits.push(entry); } },

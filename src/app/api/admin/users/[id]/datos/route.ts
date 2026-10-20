@@ -1,3 +1,4 @@
+import { readAllAdminRows } from "@/lib/admin/read-all-rows";
 import { invalidateProfessionalCache } from "@/lib/cache/professional-revision";
 import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
@@ -47,13 +48,13 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const { id } = await params;
   const db = createAdminClient();
 
-  const { data: filas, error } = await db
+  const { data: filas, error } = await readAllAdminRows((from, to) => db
     .from("user_action_audit")
     .select("id, created_at, action, actor_user_id, before_data, after_data, metadata")
     .eq("entity_owner_user_id", id)
     .in("action", [ACCION_DATOS, ACCION_CONTRASENA])
     .order("created_at", { ascending: false })
-    .limit(50);
+    .order("id").range(from, to));
   if (error) {
     console.error("[admin/user-datos] historial:", error.message);
     return NextResponse.json({ error: "No se pudo cargar el historial." }, { status: 500 });

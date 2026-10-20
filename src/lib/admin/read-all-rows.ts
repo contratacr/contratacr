@@ -17,3 +17,19 @@ export async function readAllAdminRows<T>(
     if (page.length < pageSize) return { data: rows, error: null };
   }
 }
+
+// Keep IN filters below URL limits as well as paging their result sets.
+export async function readAdminRowsByIds<T>(
+  ids: string[],
+  readPage: (ids: string[], from: number, to: number) => PromiseLike<PageResult<T>>,
+): Promise<PageResult<T>> {
+  const unique = [...new Set(ids)];
+  const rows: T[] = [];
+  for (let i = 0; i < unique.length; i += 100) {
+    const batch = unique.slice(i, i + 100);
+    const result = await readAllAdminRows((from, to) => readPage(batch, from, to));
+    if (result.error) return result;
+    rows.push(...(result.data ?? []));
+  }
+  return { data: rows, error: null };
+}

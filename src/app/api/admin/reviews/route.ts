@@ -1,3 +1,4 @@
+import { readAllAdminRows, readAdminRowsByIds } from "@/lib/admin/read-all-rows";
 import { NextResponse } from "next/server";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { getApiAdmin } from "@/lib/auth/admin";
@@ -33,20 +34,20 @@ export async function GET(req: Request) {
   const pageSize = Math.min(100, Math.max(10, Number(url.searchParams.get("pageSize") ?? "50") || 50));
 
   const db = createAdminClient();
-  const full = await db
+  const full = await readAllAdminRows((from, to) => db
     .from("reviews")
     .select("id, professional_id, client_id, rating, comment, job_title, project_id, whatsapp_contact_id, created_at, edited_at, client_name_snapshot, client_email_snapshot, moderation_status, moderation_reason, moderated_at")
     .order("created_at", { ascending: false })
-    .limit(500);
+    .order("id").range(from, to));
 
   let rows = (full.data ?? []) as ReviewRow[];
   let error = full.error;
   if (error && /job_title|project_id|whatsapp_contact_id|client_.*snapshot|edited_at|column|schema cache|PGRST204/i.test(error.message)) {
-    const fallback = await db
+    const fallback = await readAllAdminRows((from, to) => db
       .from("reviews")
       .select("id, professional_id, client_id, rating, comment, created_at")
       .order("created_at", { ascending: false })
-      .limit(500);
+      .order("id").range(from, to));
     rows = (fallback.data ?? []) as ReviewRow[];
     error = fallback.error;
   }
@@ -61,10 +62,10 @@ export async function GET(req: Request) {
 
   const [professionalsRes, clientsRes] = await Promise.all([
     professionalIds.length
-      ? db.from("professionals").select("id, business_name, slug, category_id, profiles(full_name)").in("id", professionalIds)
+      ? readAdminRowsByIds(professionalIds, (batch, from, to) => db.from("professionals").select("id, business_name, slug, category_id, profiles(full_name)").in("id", batch).order("id").range(from, to))
       : Promise.resolve({ data: [] }),
     clientIds.length
-      ? db.from("profiles").select("id, full_name, email, avatar_url").in("id", clientIds)
+      ? readAdminRowsByIds(clientIds, (batch, from, to) => db.from("profiles").select("id, full_name, email, avatar_url").in("id", batch).order("id").range(from, to))
       : Promise.resolve({ data: [] }),
   ]);
 

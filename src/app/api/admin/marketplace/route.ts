@@ -1,3 +1,4 @@
+import { readAllAdminRows, readAdminRowsByIds } from "@/lib/admin/read-all-rows";
 import { rutaEmpleo, rutaPromocion } from "@/lib/marketplace-url";
 import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
@@ -105,14 +106,14 @@ export async function GET(request: Request) {
   const db = createAdminClient();
 
   const listRes = kind === "jobs"
-    ? await db
+    ? await readAllAdminRows((from, to) => db
       .from("job_posts")
       .select("id, employer_id, title, status, employment_type, workplace_type, provincia_id, canton_id, location_label, salary_min, salary_max, salary_period, currency, show_salary, openings, application_deadline, service_category_id, created_at, updated_at, job_applications(count)")
-      .order("created_at", { ascending: false })
-    : await db
+      .order("created_at", { ascending: false }).order("id").range(from, to))
+    : await readAllAdminRows((from, to) => db
       .from("professional_offers")
       .select("id, professional_id, title, status, offer_type, service_label, service_category_id, image_urls, price_now, price_before, currency, price_unit, location_label, valid_until, quantity_available, created_at, updated_at")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false }).order("id").range(from, to));
 
   if (listRes.error) {
     console.error(`[admin/marketplace] ${kind}`, listRes.error.message);
@@ -122,7 +123,7 @@ export async function GET(request: Request) {
   const rows = (listRes.data ?? []) as unknown as Array<JobRow | OfferRow>;
   const creatorIds = [...new Set(rows.map((row) => ("employer_id" in row ? row.employer_id : row.professional_id)).filter(Boolean))] as string[];
   const creatorsRes = creatorIds.length
-    ? await db.from("professionals").select("id, profile_id, slug, business_name, verification_status, profiles(full_name, email, avatar_url)").in("id", creatorIds)
+    ? await readAdminRowsByIds(creatorIds, (batch, from, to) => db.from("professionals").select("id, profile_id, slug, business_name, verification_status, profiles(full_name, email, avatar_url)").in("id", batch).order("id").range(from, to))
     : { data: [] as CreatorRow[] };
   const creators = new Map(((creatorsRes.data ?? []) as unknown as CreatorRow[]).map((row) => [row.id, row]));
 

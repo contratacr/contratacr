@@ -1,3 +1,4 @@
+import { readAdminRowsByIds } from "@/lib/admin/read-all-rows";
 import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -109,7 +110,7 @@ export async function GET(request: Request) {
 
   const ids = [...porPro.keys()];
   const { data: pros } = ids.length
-    ? await db.from("professionals").select("id, slug, business_name, profiles(full_name)").in("id", ids)
+    ? await readAdminRowsByIds(ids, (batch, from, to) => db.from("professionals").select("id, slug, business_name, profiles(full_name)").in("id", batch).order("id").range(from, to))
     : { data: [] };
   const nombre = new Map((pros ?? []).map((p) => {
     const fila = p as { id: string; slug: string; business_name: string | null; profiles?: { full_name?: string } | Array<{ full_name?: string }> | null };

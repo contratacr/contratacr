@@ -23,7 +23,7 @@ function setup(options: { authorized?: boolean; profileError?: boolean } = {}) {
   const db = { from(table: string) {
     const filters: ((row: any) => boolean)[] = []; let single = false;
     const q: any = {
-      select: () => q, order: () => q,
+      select: () => q, order: () => q, range: () => q,
       eq: (key: string, value: unknown) => { filters.push(row => row[key] === value); return q; },
       neq: () => q, is: () => q, ilike: () => q,
       update: () => { writes.push(table); return q; },
@@ -38,6 +38,7 @@ function setup(options: { authorized?: boolean; profileError?: boolean } = {}) {
   const names = load("src/lib/profiles/current-names.ts", {});
   const support = load("src/lib/support/current-names.ts", { "@/lib/profiles/current-names": names });
   const mocks = {
+    "@/lib/admin/read-all-rows": load("src/lib/admin/read-all-rows.ts", {}),
     "@/lib/support/current-names": support,
     "@/lib/auth/admin": { getApiAdmin: async () => options.authorized === false ? null : { id: "admin" } },
     "@/lib/supabase/admin": { createAdminClient: () => db },

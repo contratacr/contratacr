@@ -1,3 +1,4 @@
+import { readAllAdminRows, readAdminRowsByIds } from "@/lib/admin/read-all-rows";
 import { firmarAdjuntos } from "@/lib/support/adjuntos";
 import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
@@ -31,17 +32,17 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: "Proveedor no encontrado." }, { status: 404 });
   }
 
-  const { data: log } = await db
+  const { data: log } = await readAllAdminRows((from, to) => db
     .from("provider_verification_log")
     .select("*")
     .eq("professional_id", id)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false }).order("id").range(from, to));
 
-  const { data: appeals } = await db
+  const { data: appeals } = await readAllAdminRows((from, to) => db
     .from("provider_appeals")
     .select("*")
     .eq("professional_id", id)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false }).order("id").range(from, to));
 
   // Automatic ID-format assist (format/length only — human review still required
   // for the badge). The live name-match lookup uses the shared identity verifier
@@ -94,13 +95,13 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     }
   }
 
-  const { data: cases, error: caseError } = await db.from("support_tickets").select("id")
-    .eq("professional_id", id).in("topic", ["verification_documents", "verification_appeal"]).order("created_at", { ascending: false }).limit(10);
+  const { data: cases, error: caseError } = await readAllAdminRows((from, to) => db.from("support_tickets").select("id")
+    .eq("professional_id", id).in("topic", ["verification_documents", "verification_appeal"]).order("created_at", { ascending: false }).order("id").range(from, to));
   if (caseError) return NextResponse.json({ error: "No se pudieron cargar los documentos." }, { status: 503 });
   let documents: { attachments: import("@/lib/support/adjuntos").AdjuntoDeSoporte[]; created_at: string }[] = [];
   if (cases?.length) {
-    const { data: rows, error: documentsError } = await db.from("support_ticket_messages").select("attachments, created_at")
-      .in("ticket_id", cases.map(c => c.id)).eq("sender_role", "user").order("created_at", { ascending: false });
+    const { data: rows, error: documentsError } = await readAdminRowsByIds(cases.map(c => c.id), (batch, from, to) => db.from("support_ticket_messages").select("attachments, created_at")
+      .in("ticket_id", batch).eq("sender_role", "user").order("created_at", { ascending: false }).order("id").range(from, to));
     if (documentsError) return NextResponse.json({ error: "No se pudieron cargar los documentos." }, { status: 503 });
     documents = await firmarAdjuntos(db, rows ?? []);
   }

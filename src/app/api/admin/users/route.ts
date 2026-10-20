@@ -1,3 +1,4 @@
+import { readAllAdminRows } from "@/lib/admin/read-all-rows";
 import { getCurrentProfileNames } from "@/lib/profiles/current-names";
 import { NextResponse } from "next/server";
 import { processAccountDeletion } from "@/lib/account-deletion/process";
@@ -36,7 +37,7 @@ export async function GET(req: Request) {
 
   async function getIncompleteProfessionalSignupIds() {
     const ids = new Set<string>();
-    for (let page = 1; page <= 20; page += 1) {
+    for (let page = 1; ; page += 1) {
       const { data, error } = await db.auth.admin.listUsers({ page, perPage: 1000 });
       if (error) {
         console.error("[admin/users] auth list error:", error);
@@ -72,11 +73,11 @@ export async function GET(req: Request) {
 
     const allProfiles: ListedProfile[] = [];
     const batchSize = 1000;
-    for (let from = 0; from < 10000; from += batchSize) {
+    for (let from = 0; ; from += batchSize) {
       const { data, error } = await db
         .from("profiles")
         .select("id, full_name, email, cedula, phone, role, avatar_url, is_disabled, client_identity_status, created_at, professionals(id, verification_status, is_banned, business_name)")
-        .order("created_at", { ascending: false })
+        .order("created_at", { ascending: false }).order("id")
         .range(from, from + batchSize - 1);
       if (error) {
         console.error("[admin/users] list error:", error);
@@ -203,17 +204,17 @@ export async function GET(req: Request) {
     // Seguir profesionales se retiró: aquí vivían 4 consultas a
     // `professional_follows` que siempre devolvían vacío.
 
-    const { data: tickets } = await db
+    const { data: tickets } = await readAllAdminRows((from, to) => db
       .from("support_tickets")
       .select("*")
       .eq("user_id", profileId)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false }).order("id").range(from, to));
 
-    const { data: projects } = await db
+    const { data: projects } = await readAllAdminRows((from, to) => db
       .from("projects")
       .select("id, title, status, category_id, created_at")
       .eq("client_id", profileId)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false }).order("id").range(from, to));
 
     // Pro-specific history (verification decisions, appeals, reports against them)
     let verificationLog: unknown[] = [];
@@ -222,10 +223,10 @@ export async function GET(req: Request) {
     let analytics: Record<string, unknown> | null = null;
     if (professional) {
       const [log, ap, rep, interactionResult] = await Promise.all([
-        db.from("provider_verification_log").select("*").eq("professional_id", professional.id).order("created_at", { ascending: false }),
-        db.from("provider_appeals").select("*").eq("professional_id", professional.id).order("created_at", { ascending: false }),
-        db.from("reports").select("id, reason, status, reporter_email, created_at").eq("professional_id", professional.id).order("created_at", { ascending: false }),
-        db.from("interaction_events").select("event_type, visitor_hash, source, created_at").eq("professional_id", professional.id).order("created_at", { ascending: false }).limit(10000),
+        readAllAdminRows((from, to) => db.from("provider_verification_log").select("*").eq("professional_id", professional.id).order("created_at", { ascending: false }).order("id").range(from, to)),
+        readAllAdminRows((from, to) => db.from("provider_appeals").select("*").eq("professional_id", professional.id).order("created_at", { ascending: false }).order("id").range(from, to)),
+        readAllAdminRows((from, to) => db.from("reports").select("id, reason, status, reporter_email, created_at").eq("professional_id", professional.id).order("created_at", { ascending: false }).order("id").range(from, to)),
+        readAllAdminRows((from, to) => db.from("interaction_events").select("event_type, visitor_hash, source, created_at").eq("professional_id", professional.id).order("created_at", { ascending: false }).order("id").range(from, to)),
       ]);
       verificationLog = log.data ?? [];
       appeals = ap.data ?? [];
@@ -273,9 +274,9 @@ export async function GET(req: Request) {
     // Postulaciones, citas recibidas y propuestas salieron: ninguna se produce
     // hoy, y eran tres consultas más por cada ficha que se abre.
     const [jobsRes, offersRes, receivedReviewsRes] = await Promise.all([
-      professional ? db.from("job_posts").select("id, title, status, created_at").eq("employer_id", professional.id).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
-      professional ? db.from("professional_offers").select("id, title, status, price_now, currency, created_at").eq("professional_id", professional.id).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
-      professional ? db.from("reviews").select("id, client_id, rating, comment, moderation_status, created_at, client_name_snapshot").eq("professional_id", professional.id).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
+      professional ? readAllAdminRows((from, to) => db.from("job_posts").select("id, title, status, created_at").eq("employer_id", professional.id).order("created_at", { ascending: false }).order("id").range(from, to)) : Promise.resolve({ data: [] }),
+      professional ? readAllAdminRows((from, to) => db.from("professional_offers").select("id, title, status, price_now, currency, created_at").eq("professional_id", professional.id).order("created_at", { ascending: false }).order("id").range(from, to)) : Promise.resolve({ data: [] }),
+      professional ? readAllAdminRows((from, to) => db.from("reviews").select("id, client_id, rating, comment, moderation_status, created_at, client_name_snapshot").eq("professional_id", professional.id).order("created_at", { ascending: false }).order("id").range(from, to)) : Promise.resolve({ data: [] }),
     ]);
     const reviewNames = await getCurrentProfileNames(db, (receivedReviewsRes.data ?? []).map((review) => review.client_id));
     return NextResponse.json({
