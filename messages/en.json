@@ -2134,7 +2134,6 @@
     "borradorListo": "It was saved. Review it and tap Publish.",
     "cedulaYaVerificada": "Verified",
     "cedulaYaVerificadaAyuda": "Your project shows «Verified». The number is never shown.",
-    "identidadVerificada": "Your project was posted with «Verified».",
     "identidadNoEncontrada": "We could not find this ID. You can request a manual review.",
     "identidadPadronCaido": "Verification is temporarily unavailable. You can continue and try later.",
     "identidadEnRevision": "We'll review your ID; meanwhile your project shows without «Verified»."

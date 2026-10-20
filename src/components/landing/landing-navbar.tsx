@@ -1571,15 +1571,16 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
        *  partir del texto escrito —y podía adivinar otro—. */
       categoria?: string | null;
       servicio?: string;
+      allowPartial?: boolean;
     } = {},
   ) {
     const svc = repairVisibleText(overrides.servicio ?? searchQuery).trim();
-    if (!svc) {
+    if (!svc && !overrides.allowPartial) {
       (nativeSearchOpen ? nativeSearchInputRef.current : compactSvcRef.current?.querySelector("input"))?.focus({ preventScroll: true });
       setSearchFocused(true);
       return;
     }
-    if (!navLocation.trim() && !overrides.location && !overrides.coords) {
+    if (!overrides.allowPartial && !navLocation.trim() && !overrides.location && !overrides.coords) {
       (nativeSearchOpen ? nativeLocationInputRef.current : navLocationInputRef.current)?.focus({ preventScroll: true });
       setSearchFocused(false);
       return;
@@ -1588,7 +1589,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     const params = new URLSearchParams();
     const categoriaElegida = "categoria" in overrides ? overrides.categoria : searchCategoryId;
     const picked = compactSuggestions.find((c) => c.id === categoriaElegida);
-    if (categoriaElegida && (!picked || normalizeText(repairVisibleText(picked.label)) === normalizeText(svc))) {
+    if (svc && categoriaElegida && (!picked || normalizeText(repairVisibleText(picked.label)) === normalizeText(svc))) {
       params.set("categoria", categoriaElegida);
     } else if (svc) {
       const inferred = resolveCategoryIntent(svc, locale);
@@ -1861,6 +1862,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   }
 
   function handleCompactSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.nativeEvent.isComposing) return;
+    if (e.key === "Enter" && !searchQuery.trim() && navLocation.trim()) {
+      e.preventDefault();
+      runCompactSearch({ allowPartial: true });
+      return;
+    }
     if (searchFocused && compactSuggestions.length > 0) {
       if (e.key === "ArrowDown") {
         e.preventDefault();
@@ -1897,6 +1904,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   }
 
   function handleNavLocKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.nativeEvent.isComposing) return;
+    if (e.key === "Enter" && !navLocation.trim() && searchQuery.trim()) {
+      e.preventDefault();
+      runCompactSearch({ allowPartial: true });
+      return;
+    }
     if (navLocOpen && navLocSug.length > 0) {
       if (e.key === "ArrowDown") {
         e.preventDefault();

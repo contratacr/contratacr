@@ -1,5 +1,6 @@
 "use client";
 
+import { APP_DATA_INVALIDATED_EVENT, APP_DATA_INVALIDATED_KEY, readLastAppDataInvalidation, type AppDataDomain, type AppDataInvalidation } from "@/lib/app-data-invalidation";
 import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 import {
   getDashboardCache,
@@ -22,6 +23,7 @@ import {
 // components on the same key share one entry: an edit in one shows in the other.
 type Options = {
   refreshOn?: boolean;
+  invalidationDomain?: AppDataDomain;
 };
 
 const REFRESH_EVENTS = ["notificationsChanged", "focus"] as const;
@@ -38,7 +40,7 @@ export function useDashboardCacheSnapshot<T>(key: string | null) {
 }
 
 export function useCachedResource<T>(key: string | null, loader: () => Promise<T>, fallback: T, options: Options = {}) {
-  const { refreshOn = false } = options;
+  const { refreshOn = false, invalidationDomain } = options;
   // The loader is usually an inline closure; it is read through a ref so a new
   // identity per render never re-triggers the fetch.
   const loaderRef = useRef(loader);
@@ -85,6 +87,25 @@ export function useCachedResource<T>(key: string | null, loader: () => Promise<T
   useEffect(() => {
     if (key) void refresh();
   }, [key, refresh]);
+
+  // router.refresh only updates server props; mounted client lists have their
+  // own cache and must refetch after a successful publication as well.
+  useEffect(() => {
+    if (!key || !invalidationDomain) return;
+    const invalidate = (detail: AppDataInvalidation | null) => {
+      if (detail && (detail.domain === invalidationDomain || detail.domain === "all")) void refresh();
+    };
+    const onMutation = (event: Event) => invalidate((event as CustomEvent<AppDataInvalidation>).detail);
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === APP_DATA_INVALIDATED_KEY) invalidate(readLastAppDataInvalidation());
+    };
+    window.addEventListener(APP_DATA_INVALIDATED_EVENT, onMutation);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener(APP_DATA_INVALIDATED_EVENT, onMutation);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, [key, invalidationDomain, refresh]);
 
   useEffect(() => {
     if (!refreshOn || !key) return;

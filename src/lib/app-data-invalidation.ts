@@ -3,7 +3,7 @@
 export const APP_DATA_INVALIDATED_EVENT = "contratacr:data-invalidated";
 export const APP_DATA_INVALIDATED_KEY = "contratacr:last-data-invalidation";
 
-export type AppDataDomain = "offers" | "jobs" | "profile" | "availability" | "saved" | "notifications" | "all";
+export type AppDataDomain = "projects" | "offers" | "jobs" | "profile" | "availability" | "saved" | "notifications" | "all";
 export type AppDataInvalidation = { domain: AppDataDomain; at: number };
 
 export function invalidateAppData(domain: AppDataDomain = "all") {

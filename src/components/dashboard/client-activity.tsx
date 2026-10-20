@@ -97,6 +97,7 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
     user && section === "projects" ? `dashboard:client-projects:${user.id}` : null,
     fetchClientProjects,
     NO_PROJECTS,
+    { invalidationDomain: "projects" },
   );
   const { data: projects, setData: setProjects } = projectsResource;
   // El conteo sube al cambiador de «Mis publicaciones»: tiene que estar arriba

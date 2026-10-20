@@ -21,6 +21,7 @@ export function OffersPanel({ professionalId, onCount }: { professionalId: strin
     `dashboard:offers:${professionalId}`,
     () => cargarOfertas(professionalId),
     SIN_OFERTAS,
+    { invalidationDomain: "offers" },
   );
   const serviceOptions = useMemo(() => getAllCategories().map((category) => ({ value: category.id, label: getCategoryLabel(category.id, locale) })), [locale]);
   // El conteo sube al cambiador de «Mis publicaciones».

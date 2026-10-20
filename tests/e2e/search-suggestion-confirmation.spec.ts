@@ -84,6 +84,13 @@ for (const field of ["Servicio", "Ubicación"]) {
     await input.press("Enter");
     await expect(missing).toBeFocused();
     expect(page.url()).toBe(before);
+    // A second Enter in the empty field explicitly skips that filter.
+    await missing.press("Enter");
+    if (field === "Servicio") {
+      await expect(page).toHaveURL(/\/profesionales\/desarrollo-web(?:[/?#]|$)/);
+    } else {
+      await expect(page).toHaveURL(/(?:provincia=al|\/alajuela)/);
+    }
   });
 }
 
@@ -98,3 +105,19 @@ test("a recent professional opens directly without requiring search fields", asy
   await page.locator(".ccr-native-search-panel").getByRole("link", { name: "Profesional reciente" }).click();
   await expect(page).toHaveURL(new RegExp(href!.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
 });
+
+for (const field of ["Servicio", "Ubicación"]) {
+  test(`home: Enter in the empty field searches with ${field} alone`, async ({ page }) => {
+    test.skip((page.viewportSize()?.width ?? 1280) < 1024, "Mobile home uses the shared navbar sheet");
+    await gotoOK(page, "/");
+    await waitForInteractivePage(page);
+    const fields = page.locator(".ccr-hero-foto").getByRole("combobox");
+    const filled = fields.nth(field === "Servicio" ? 0 : 1);
+    const empty = fields.nth(field === "Servicio" ? 1 : 0);
+    await filled.fill(field === "Servicio" ? "Desarrollo web" : "Alajuela");
+    await empty.focus();
+    await empty.press("Enter");
+    if (field === "Servicio") await expect(page).toHaveURL(/\/profesionales\/desarrollo-web(?:[/?#]|$)/);
+    else await expect(page).toHaveURL(/(?:provincia=al|\/alajuela)/);
+  });
+}

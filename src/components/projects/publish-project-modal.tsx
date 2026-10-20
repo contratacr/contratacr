@@ -1,5 +1,7 @@
 "use client";
 
+import { invalidateAppData } from "@/lib/app-data-invalidation";
+
 import { trackMetaConversion } from "@/lib/analytics/meta-pixel";
 
 import { PantallaDeExito } from "@/components/ui/pantalla-de-exito";
@@ -248,6 +250,7 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
         });
         const datos = await res.json().catch(() => ({}));
         if (!res.ok) { setError(datos.error ?? t("errPublish")); return; }
+        invalidateAppData("projects");
         onSuccess?.();
         onClose();
         return;
@@ -269,13 +272,13 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
         setError(data.error ?? t("errPublish"));
         return;
       }
+      invalidateAppData("projects");
       borrarBorrador("proyecto");
       try {
         window.localStorage.setItem(LAST_ZONE_KEY, JSON.stringify({ provinciaId: form.provinciaId, cantonId: form.cantonId }));
       } catch { /* sin almacenamiento */ }
       onSuccess?.();
       const avisos: Record<string, string> = {
-        verificada: t("identidadVerificada"),
         no_encontrada: t("identidadNoEncontrada"),
         padron_caido: t("identidadPadronCaido"),
         en_revision: t("identidadEnRevision"),
