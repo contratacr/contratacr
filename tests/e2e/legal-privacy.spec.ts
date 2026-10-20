@@ -17,17 +17,17 @@ for (const locale of ["es","en"]) test(`legal documents: ${locale} identifies th
  await expect(page.locator("main")).toContainText("PRODHAB");
 });
 
-test("advertising starts off; rejecting and later changing the choice works without blocking legal pages",async({page,context})=>{
+test("limited advertising can be disabled and enabled without blocking legal pages",async({page,context})=>{
  await gotoOK(page,"/privacidad");await waitForInteractivePage(page);
  const controls=page.locator('[data-advertising-preferences]');
  await expect(controls).toHaveCount(1);
- await expect(controls).toBeVisible();await controls.getByRole("button",{name:"Rechazar",exact:true}).click();
+ await expect(controls).toBeVisible();await controls.getByRole("button",{name:"Desactivar",exact:true}).click();
  await expect(controls).toContainText("desactivada");
  expect((await context.cookies()).find(cookie=>cookie.name==="ccr_ads_consent_v1")?.value).toBe("declined");
- await controls.getByRole("button",{name:"Aceptar",exact:true}).click();
+ await controls.getByRole("button",{name:"Activar",exact:true}).click();
  await expect(controls).toContainText("activada");
  expect((await context.cookies()).find(cookie=>cookie.name==="ccr_ads_consent_v1")?.value).toBe("accepted");
- await controls.getByRole("button",{name:"Rechazar",exact:true}).click();
+ await controls.getByRole("button",{name:"Desactivar",exact:true}).click();
  await page.reload();await expect(page.locator('[data-advertising-preferences]')).toHaveCount(1);
 });
 
