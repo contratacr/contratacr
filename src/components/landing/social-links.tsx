@@ -32,10 +32,10 @@ const SOCIAL_LINKS = [
 ];
 
 // One set of destinations and artwork for the website and the mobile drawer.
-export function SocialLinks({ className, testId = "footer-social-links", compact = false }: { className?: string; testId?: string; compact?: boolean }) {
+export function SocialLinks({ className, testId = "footer-social-links", compact = false, showLabel = true }: { className?: string; testId?: string; compact?: boolean; showLabel?: boolean }) {
   const t = useTranslations("footer");
   return (<nav aria-label={t("followUs")} data-testid={testId} className={className ?? "flex flex-wrap items-center gap-x-2 gap-y-2 md:gap-3"}>
-            <span className={compact ? "mr-auto text-[13px] font-medium text-[#64748b]" : "w-full text-xs font-medium text-[#64748b] md:mr-1 md:w-auto md:text-sm"}>{t("followUs")}</span>
+            {showLabel && <span className={compact ? "mr-auto text-[13px] font-medium text-[#64748b]" : "w-full text-xs font-medium text-[#64748b] md:mr-1 md:w-auto md:text-sm"}>{t("followUs")}</span>}
             {SOCIAL_LINKS.map(({ label, href, Icon }) => (
               <a key={label} href={href} aria-label={label} target="_blank" rel="noopener noreferrer" className="inline-flex h-11 w-11 items-center justify-center text-[#162543] transition-colors hover:text-[#0083b0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]">
                 <Icon />
