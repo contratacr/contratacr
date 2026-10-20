@@ -14,8 +14,10 @@ for (const native of [false, true]) {
     await button.click();
     const menu=page.getByRole('dialog',{name:'Menú',exact:true});await expect(menu).toBeVisible();
     const header=menu.locator('.ccr-menu-fila-superior'),body=menu.locator('.ccr-menu-cuerpo');
-    const samples=await menu.evaluate(el=>new Promise<{header:number;body:number}[]>(resolve=>{const result:{header:number;body:number}[]=[];let frames=0;const sample=()=>{result.push({header:el.querySelector('.ccr-menu-fila-superior')!.getBoundingClientRect().x,body:el.querySelector('.ccr-menu-cuerpo')!.getBoundingClientRect().x});if(++frames<12)requestAnimationFrame(sample);else resolve(result)};requestAnimationFrame(sample)}));
-    for(const sample of samples)expect(Math.abs(sample.header-sample.body)).toBeLessThan(1);
+    // WebKit can advance the compositor between consecutive geometry reads.
+    // Bracket the body read with header reads without weakening the shared-motion check.
+    const samples=await menu.evaluate(el=>new Promise<{before:number;after:number;body:number}[]>(resolve=>{const result:{before:number;after:number;body:number}[]=[];let frames=0;const sample=()=>{const header=el.querySelector('.ccr-menu-fila-superior')!,body=el.querySelector('.ccr-menu-cuerpo')!;const before=header.getBoundingClientRect().x;const bodyX=body.getBoundingClientRect().x;const after=header.getBoundingClientRect().x;result.push({before,after,body:bodyX});if(++frames<12)requestAnimationFrame(sample);else resolve(result)};requestAnimationFrame(sample)}));
+    for(const sample of samples){expect(sample.body).toBeGreaterThanOrEqual(Math.min(sample.before,sample.after)-1);expect(sample.body).toBeLessThanOrEqual(Math.max(sample.before,sample.after)+1);}
     await expect.poll(async()=>Math.round((await menu.boundingBox())!.x)).toBe(0);
     // The download notice must not leave a 76px empty band in the menu.
     expect(await header.evaluate(el=>parseFloat(getComputedStyle(el).paddingTop))).toBeLessThan(20);
@@ -26,6 +28,20 @@ for (const native of [false, true]) {
     expect((await header.boundingBox())!.y).toBe(top);
     const socials=menu.getByTestId('mobile-menu-social-links');
     await expect(socials).toHaveAccessibleName('Síguenos');
+    const footer=menu.locator('[data-mobile-menu-footer]');
+    const language=footer.getByRole('button',{name:'English',exact:true});
+    const languageBox=(await language.boundingBox())!,socialBox=(await socials.boundingBox())!;
+    expect(Math.abs(languageBox.y+languageBox.height/2-socialBox.y-socialBox.height/2)).toBeLessThan(1);
+    expect(languageBox.x+languageBox.width).toBeLessThanOrEqual(socialBox.x);
+    expect(await footer.evaluate(el=>el.scrollWidth>el.clientWidth)).toBe(false);
+    const originalViewport=page.viewportSize()!;
+    await page.setViewportSize({width:320,height:originalViewport.height});
+    await expect.poll(()=>footer.evaluate(el=>{
+      const language=el.querySelector('button')!.getBoundingClientRect();
+      const social=el.querySelector('nav')!.getBoundingClientRect();
+      return el.scrollWidth<=el.clientWidth && language.right<=social.left && Math.abs(language.top+language.height/2-social.top-social.height/2)<1;
+    })).toBe(true);
+    await page.setViewportSize(originalViewport);
     for(const [name,href] of [['Facebook','https://www.facebook.com/share/18tY9mAhub/?mibextid=wwXIfr'],['Instagram','https://www.instagram.com/contratacr/'],['TikTok','https://www.tiktok.com/@contratacr']]){
       const link=socials.getByRole('link',{name,exact:true});
       await expect(link).toBeVisible();await expect(link).toHaveAttribute('href',href);await expect(link).toHaveAttribute('target','_blank');await expect(link).toHaveAttribute('rel','noopener noreferrer');
@@ -42,7 +58,7 @@ for (const native of [false, true]) {
     await expect(page.locator('.ccr-native-search-panel')).toBeVisible();
     await expect(page.locator('.ccr-native-search-panel input').first()).toBeFocused();
     await page.locator('.ccr-native-search-panel').getByRole('button',{name:'Volver',exact:true}).click();
-    if(process.env.MENU_EVIDENCE_DIR){await button.click();await expect.poll(async()=>Math.round((await menu.boundingBox())!.x)).toBe(0);await page.screenshot({path:`${process.env.MENU_EVIDENCE_DIR}/${test.info().project.name}-${native?'native':'web'}.png`});}
+    if(process.env.MENU_EVIDENCE_DIR){await button.click();await expect.poll(async()=>Math.round((await menu.boundingBox())!.x)).toBe(0);await page.screenshot({path:`${process.env.MENU_EVIDENCE_DIR}/${test.info().project.name}-${native?'native':'web'}.png`});await footer.screenshot({path:`${process.env.MENU_EVIDENCE_DIR}/${test.info().project.name}-${native?'native':'web'}-footer.png`});}
   });
 }
 

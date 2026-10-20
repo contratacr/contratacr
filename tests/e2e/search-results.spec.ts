@@ -332,6 +332,30 @@ test.describe("@seeded search results", () => {
     await expect(summary).not.toContainText(/Qué servicio estás buscando/i);
   });
 
+  test("mobile search uses spare width for the full province before shortening location", async ({ page }, testInfo) => {
+    test.skip(!isMobileProject(testInfo), "Compact search header is mobile only.");
+    await gotoOK(page, "/profesionales?q=Soldadura&ubicacion=Santa%20B%C3%A1rbara%2C%20Heredia");
+    await waitForInteractivePage(page);
+    const summary = page.getByTestId("search-context-summary");
+    await expect(summary).toBeVisible();
+    for (const width of [390, 440, 320, 390]) {
+      await page.setViewportSize({ width, height: 844 });
+      await expect.poll(() => summary.evaluate(el => {
+        const service = el.children[0] as HTMLElement;
+        const place = el.children[1] as HTMLElement;
+        const measure = el.children[2] as HTMLElement;
+        const fits = measure.scrollWidth <= el.clientWidth;
+        return el.getAttribute("data-lugar") === (fits ? "completo" : "corto") &&
+          (!fits || (place.textContent === "Santa Bárbara, Heredia" && place.scrollWidth <= place.clientWidth + 1 && service.scrollWidth <= service.clientWidth + 1));
+      })).toBe(true);
+      if (width === 390) {
+        await expect(summary).toHaveAttribute("data-lugar", "completo");
+        await expect(summary.locator(":scope > span").nth(1)).toHaveText("Santa Bárbara, Heredia");
+      }
+    }
+    if (process.env.MENU_EVIDENCE_DIR) await page.screenshot({ path: `${process.env.MENU_EVIDENCE_DIR}/${testInfo.project.name}-search-width.png` });
+  });
+
   test("nationwide video consultations survive a different physical location filter", async ({ page }) => {
     test.skip(!canRunSeededRegression(), "Seeded video professional is required for video/location regression.");
     const seed = await ensureRegressionSeed();

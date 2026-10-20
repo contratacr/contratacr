@@ -3067,8 +3067,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 </div>
               )}
 
-              <div data-mobile-menu-footer className="mt-2 shrink-0 bg-white pb-2">
-                <div data-mobile-menu-account-actions className={cn("flex min-h-12 items-center gap-4 bg-white", user ? "justify-between" : "justify-center")}>
+              <div data-mobile-menu-footer className={cn("mt-2 shrink-0 bg-white pb-2", !user && "flex items-center justify-between gap-2")}>
+                <div data-mobile-menu-account-actions className={cn("flex min-h-12 items-center gap-4 bg-white", user ? "justify-between" : "shrink-0")}>
                 <button
                   type="button"
                   onPointerDown={(e) => { e.stopPropagation(); switchLang.precargar(); }}
@@ -3097,7 +3097,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   </button>
                 )}
                 </div>
-                <SocialLinks compact showLabel={false} testId="mobile-menu-social-links" className="mt-3 flex items-center justify-center gap-3 bg-white" />
+                <SocialLinks compact showLabel={false} testId="mobile-menu-social-links" className={cn("flex items-center gap-3 bg-white", user ? "mt-3 justify-center" : "shrink-0 justify-end")} />
               </div>
             </div>
           </div>
