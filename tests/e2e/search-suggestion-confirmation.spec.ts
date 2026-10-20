@@ -2,7 +2,7 @@ import { test, expect } from "playwright/test";
 import { gotoOK, waitForInteractivePage } from "./helpers";
 
 for (const locationFirst of [false, true]) {
-  test(`suggestions fill fields without navigating (${locationFirst ? "location" : "service"} first)`, async ({ page }) => {
+  test(`second suggestion submits immediately (${locationFirst ? "location" : "service"} first)`, async ({ page }) => {
     await gotoOK(page, "/profesionales");
     await waitForInteractivePage(page);
     const mobile = (page.viewportSize()?.width ?? 1280) < 1024;
@@ -13,44 +13,39 @@ for (const locationFirst of [false, true]) {
     const selectService = async () => {
       await service.fill("Desarrollo web");
       await page.getByRole("option").filter({ hasText: /^Desarrollo web/ }).filter({ visible: true }).first().click();
-      await expect(service).toHaveValue("Desarrollo web");
-      await expect(location).toBeFocused();
-      expect(page.url()).toBe(before);
     };
     const selectLocation = async () => {
       await location.fill("Alajuela");
       await page.getByRole("option").filter({ hasText: /^Alajuela/ }).filter({ visible: true }).first().click();
-      await expect(location).toHaveValue(/Alajuela/);
-      await expect((await service.inputValue()) ? location : service).toBeFocused();
-      expect(page.url()).toBe(before);
     };
-    if (locationFirst) { await selectLocation(); await selectService(); }
-    else { await selectService(); await selectLocation(); }
-    await expect(page.getByRole("combobox", { name: "Servicio", exact: true }).filter({ visible: true }).first()).toHaveValue("Desarrollo web");
-    if (mobile) {
-      await expect(page.locator(".ccr-native-search-panel").getByRole("button", { name: "Buscar profesionales", exact: true })).toHaveCount(0);
-      await location.press("Enter");
-    } else await page.getByRole("button", { name: "Buscar", exact: true }).filter({ visible: true }).first().click();
+    if (locationFirst) {
+      await selectLocation();
+      await expect(service).toBeFocused();
+      expect(page.url()).toBe(before);
+      await selectService();
+    } else {
+      await selectService();
+      await expect(location).toBeFocused();
+      expect(page.url()).toBe(before);
+      await selectLocation();
+    }
     await expect(page).toHaveURL(/\/profesionales\/desarrollo-web\/alajuela/);
+    if (mobile) await expect(page.locator(".ccr-native-search-panel")).toHaveCount(0);
   });
 }
 
-test("a recent service fills the sheet without submitting the previous render", async ({ page }) => {
+test("a recent service submits immediately with an existing location", async ({ page }) => {
   test.skip((page.viewportSize()?.width ?? 1280) >= 1024, "Recent services live in the mobile sheet");
   await page.addInitScript(() => localStorage.setItem("ccr-search-recents", JSON.stringify([{ termino: "Desarrollo web", at: Date.now() }])));
   await gotoOK(page, "/profesionales?provincia=al");
   await waitForInteractivePage(page);
   await page.evaluate(() => window.dispatchEvent(new CustomEvent("ccr:open-native-search")));
   const panel = page.locator(".ccr-native-search-panel");
-  const before = page.url();
   await panel.getByRole("button", { name: "Desarrollo web", exact: true }).click();
-  await expect(panel.getByRole("combobox", { name: "Servicio", exact: true })).toHaveValue("Desarrollo web");
-  expect(page.url()).toBe(before);
-  await panel.getByRole("combobox", { name: "Ubicación", exact: true }).press("Enter");
   await expect(page).toHaveURL(/\/profesionales\/desarrollo-web\/alajuela/);
 });
 
-test("desktop home suggestions also wait for the search button", async ({ page }) => {
+test("desktop home submits when a suggestion completes both fields", async ({ page }) => {
   test.skip((page.viewportSize()?.width ?? 1280) < 1024, "Desktop home fields; mobile uses the sheet");
   await gotoOK(page, "/");
   await waitForInteractivePage(page);
@@ -63,9 +58,7 @@ test("desktop home suggestions also wait for the search button", async ({ page }
   expect(page.url()).toBe(before);
   await service.fill("Desarrollo web");
   await page.getByRole("option").filter({ hasText: /^Desarrollo web/ }).filter({ visible: true }).first().click();
-  await expect(service).toHaveValue("Desarrollo web");
-  expect(page.url()).toBe(before);
-  await hero.getByRole("button", { name: "Buscar", exact: true }).click();
+
   await expect(page).toHaveURL(/\/profesionales\/desarrollo-web\/alajuela/);
 });
 
@@ -129,3 +122,47 @@ for (const field of ["Servicio", "Ubicación"]) {
     if (mobile) await expect(page.locator(".ccr-native-search-panel")).toHaveCount(0);
   });
 }
+
+
+test("a recent service alone focuses location; the second selection submits", async ({ page }) => {
+  test.skip((page.viewportSize()?.width ?? 1280) >= 1024, "Mobile recents");
+  await page.addInitScript(() => localStorage.setItem("ccr-search-recents", JSON.stringify([{ termino: "Desarrollo web", at: Date.now() }])));
+  await gotoOK(page, "/profesionales");await waitForInteractivePage(page);
+  const before = page.url();
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent("ccr:open-native-search")));
+  const panel = page.locator(".ccr-native-search-panel");
+  await panel.getByRole("button", { name: "Desarrollo web", exact: true }).click();
+  const location = panel.getByRole("combobox", { name: "Ubicación", exact: true });
+  await expect(location).toBeFocused();expect(page.url()).toBe(before);
+  await location.fill("Alajuela");
+  await panel.getByRole("option").filter({ hasText: /^Alajuela/ }).first().click();
+  await expect(page).toHaveURL(/\/profesionales\/desarrollo-web\/alajuela/);
+});
+
+for (const changeService of [true, false]) test(`replacing the ${changeService ? "service" : "location"} submits the fresh selection`, async ({ page }) => {
+  await gotoOK(page, changeService ? "/profesionales?categoria=redes_internet&provincia=al" : "/profesionales/desarrollo-web/alajuela");
+  await waitForInteractivePage(page);
+  if ((page.viewportSize()?.width ?? 1280) < 1024) await page.evaluate(() => window.dispatchEvent(new CustomEvent("ccr:open-native-search")));
+  const field = page.getByRole("combobox", { name: changeService ? "Servicio" : "Ubicación", exact: true }).filter({ visible: true }).first();
+  await field.fill(changeService ? "Desarrollo web" : "Heredia");
+  await page.getByRole("option").filter({ hasText: changeService ? /^Desarrollo web/ : /^Heredia/ }).filter({ visible: true }).first().click();
+  await expect(page).toHaveURL(changeService ? /\/profesionales\/desarrollo-web\/alajuela/ : /\/profesionales\/desarrollo-web\/heredia/);
+});
+
+test("near me completes the search and a later place selection replaces its coordinates", async ({ page }) => {
+  test.skip((page.viewportSize()?.width ?? 1280) >= 1024, "Mobile location sheet");
+  await page.addInitScript(() => Object.defineProperty(navigator, "geolocation", { configurable: true, value: { getCurrentPosition: (ok: (position: unknown) => void) => ok({coords:{latitude:9.99,longitude:-84.2}}) } }));
+  await gotoOK(page, "/profesionales/desarrollo-web/alajuela");await waitForInteractivePage(page);
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent("ccr:open-native-search")));
+  let panel = page.locator(".ccr-native-search-panel");
+  await panel.getByRole("combobox", { name: "Ubicación", exact: true }).fill("");
+  await panel.getByRole("button", { name: /Buscar cerca de mí/ }).click();
+  await expect.poll(() => new URL(page.url()).searchParams.get("lat")).toBe("9.99000");
+  await waitForInteractivePage(page);
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent("ccr:open-native-search")));
+  panel = page.locator(".ccr-native-search-panel");
+  await panel.getByRole("combobox", { name: "Ubicación", exact: true }).fill("Heredia");
+  await panel.getByRole("option").filter({ hasText: /^Heredia/ }).first().click();
+  await expect(page).toHaveURL(/\/profesionales\/desarrollo-web\/heredia/);
+  expect(new URL(page.url()).searchParams.has("lat")).toBe(false);
+});

@@ -266,11 +266,11 @@ export function MarketplaceSearch({
     }
   }
 
-  function closeMobileSearch() {
+  function closeMobileSearch(recentValue = value) {
     // Los resultados filtran EN VIVO: si la hoja se cierra con algo escrito,
     // esa búsqueda ya ocurrió y merece quedar en recientes. Antes solo se
     // guardaba al pulsar Intro con ambos campos llenos — casi nunca.
-    if (value.trim()) saveRecent();
+    if (recentValue.trim()) saveRecent(recentValue);
     soltarFoco();
     setOpen(false);
     inputRef.current?.blur();
@@ -288,7 +288,7 @@ export function MarketplaceSearch({
       fullSecondaryInputRef.current?.focus({ preventScroll: true });
       return;
     }
-    closeMobileSearch();
+    closeMobileSearch(normalized);
   }
 
   // Enter always shows the results for the current fields, including empty ones.
@@ -326,9 +326,9 @@ export function MarketplaceSearch({
   function chooseSecondarySuggestion(suggestion: string) {
     secondary?.onChange(suggestion);
     setDesktopField(null);
-    if (open && !value.trim()) {
-      setMobileField("primary");
-      fullInputRef.current?.focus({ preventScroll: true });
+    if (!value.trim()) {
+      if (open) { setMobileField("primary"); fullInputRef.current?.focus({ preventScroll: true }); }
+      else { setDesktopField("primary"); inputRef.current?.focus({ preventScroll: true }); }
       return;
     }
     // Both fields answered: live-filtered results can be shown immediately.
@@ -415,7 +415,7 @@ export function MarketplaceSearch({
         }} className="ccr-hoja-buscador fixed inset-0 z-[1300] flex flex-col bg-white text-[#162543] lg:hidden">
           <div className="shrink-0 space-y-3 px-4 py-4">
             <div className="flex h-13 min-w-0 items-center rounded-[10px] border border-[#e5e7eb] bg-white px-3">
-              <button type="button" onClick={closeMobileSearch} aria-label={copy.back} className="grid h-10 w-10 shrink-0 place-items-center text-[#1A2744]">
+              <button type="button" onClick={() => closeMobileSearch()} aria-label={copy.back} className="grid h-10 w-10 shrink-0 place-items-center text-[#1A2744]">
                 <ChevronRight className="h-6 w-6 rotate-180" />
               </button>
               <input
@@ -527,7 +527,7 @@ export function MarketplaceSearch({
                         <Link
                           key={visita.id}
                           href={visita.href}
-                          onClick={closeMobileSearch}
+                          onClick={() => closeMobileSearch()}
                           className="flex min-h-14 w-full items-center gap-4 rounded-xl px-1 text-left transition hover:bg-[#f4f8fb]"
                         >
                           <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-[#eef5f9] text-[13px] font-extrabold text-[#0d5c86]">
