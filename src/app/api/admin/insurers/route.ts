@@ -1,3 +1,4 @@
+import { readAllAdminRows } from "@/lib/admin/read-all-rows";
 import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -13,7 +14,8 @@ export async function GET(req: Request) {
 
   let q = db.from("insurers").select("*").order("created_at", { ascending: false });
   if (status === "pending" || status === "approved" || status === "rejected") q = q.eq("status", status);
-  const { data: insurers } = await q;
+  const { data: insurers, error } = await readAllAdminRows((from, to) => q.order("id").range(from, to));
+  if (error) return NextResponse.json({ error: "No se pudo cargar la lista completa." }, { status: 500 });
 
   const { count: pendingCount } = await db
     .from("insurers")

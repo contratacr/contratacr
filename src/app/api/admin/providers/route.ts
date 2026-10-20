@@ -74,12 +74,13 @@ export async function GET(req: Request) {
 
   // When the owner writes a pending professional by WhatsApp from this queue the
   // contact is logged, so the list can say who is still waiting for a first message.
-  const { data: contactLog } = await db
+  const { data: contactLog, error: contactError } = await readAllAdminRows((from, to) => db
     .from("provider_verification_log")
     .select("professional_id, created_at")
     .eq("action", "whatsapp_manual")
     .order("created_at", { ascending: false })
-    .limit(1000);
+    .order("id").range(from, to));
+  if (contactError) return NextResponse.json({ error: "No se pudo cargar el historial de contacto." }, { status: 500 });
   const lastContact = new Map<string, string>();
   for (const entry of contactLog ?? []) {
     const key = entry.professional_id as string | null;

@@ -1,3 +1,4 @@
+import { readAllAdminRows } from "@/lib/admin/read-all-rows";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getProvinceById } from "@/lib/data/cr-geography";
 import { getCategoryLabel } from "@/lib/data/categories";
@@ -60,7 +61,7 @@ type ProRow = {
   category_id: string | null; provincia_id: string | null;
   professions: string[] | null; profiles: { full_name?: string } | null;
 };
-type ClientRow = { id: string; created_at: string; full_name: string | null };
+type ClientRow = { id: string; created_at: string; full_name: string | null; role: string; client_identity_status: string | null };
 type ContactoRow = { created_at: string };
 
 export async function getAdminOverview(locale = "es"): Promise<AdminOverview> {
@@ -71,19 +72,21 @@ export async function getAdminOverview(locale = "es"): Promise<AdminOverview> {
     const last30 = now - 30 * DAY, prev30 = now - 60 * DAY;
 
     const [prosRes, clientsRes, contactosRes] = await Promise.all([
-      admin.from("professionals").select("id, profile_id, slug, created_at, verification_status, category_id, provincia_id, professions, profiles(full_name)").order("created_at", { ascending: false }),
-      admin.from("profiles").select("id, created_at, full_name").eq("role", "client").order("created_at", { ascending: false }),
+      readAllAdminRows((from, to) => admin.from("professionals").select("id, profile_id, slug, created_at, verification_status, category_id, provincia_id, professions, profiles(full_name)").order("created_at", { ascending: false }).order("id").range(from, to)),
+      readAllAdminRows((from, to) => admin.from("profiles").select("id, created_at, full_name, role, client_identity_status").order("created_at", { ascending: false }).order("id").range(from, to)),
       // CONTACTOS, NO CITAS. Este KPI contaba `bookings`, y con las citas
       // retiradas quedó en 0 fijo —con delta y gráfica incluidos— en el cuadro
       // más visible del panel. Lo que de verdad mide que el app sirvió es el
       // momento en que alguien decide escribirle a un profesional, y hoy eso
       // pasa por WhatsApp o por teléfono.
-      admin.from("interaction_events").select("created_at").in("event_type", ["whatsapp_click", "phone_click", "email_click"]).order("created_at", { ascending: false }),
+      readAllAdminRows((from, to) => admin.from("interaction_events").select("created_at").in("event_type", ["whatsapp_click", "phone_click", "email_click"]).gte("created_at", new Date(prev30).toISOString()).order("created_at", { ascending: false }).order("id").range(from, to)),
     ]);
 
+    if (prosRes.error || clientsRes.error || contactosRes.error) throw new Error("Incomplete overview data");
     const pros = (prosRes.data ?? []) as unknown as ProRow[];
     const professionalProfileIds = new Set(pros.map((professional) => professional.profile_id));
-    const clients = ((clientsRes.data ?? []) as unknown as ClientRow[]).filter((client) => !professionalProfileIds.has(client.id));
+    const profileRows = (clientsRes.data ?? []) as unknown as ClientRow[];
+    const clients = profileRows.filter((client) => client.role === "client" && !professionalProfileIds.has(client.id));
     const contactos = (contactosRes.data ?? []) as unknown as ContactoRow[];
 
     const proTimes = pros.map((p) => new Date(p.created_at).getTime()).filter((n) => !isNaN(n));
@@ -150,12 +153,17 @@ export async function getAdminOverview(locale = "es"): Promise<AdminOverview> {
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 6);
 
-    // Verificación pendiente — not verified / not rejected
-    const pendingPros = pros.filter((p) => p.verification_status && p.verification_status !== "verified" && p.verification_status !== "rejected");
-    const pending: PendingItem[] = pendingPros.slice(0, 3).map((p) => ({
-      id: p.id, slug: p.slug, name: p.profiles?.full_name || "Profesional",
-      category: p.category_id ? getCategoryLabel(p.category_id, locale) : "", createdAt: p.created_at,
-    }));
+    // Same actionable states and account deduplication as the verification queue.
+    const pendingPros = pros.filter((p) => p.verification_status === "pending" || p.verification_status === "under_appeal");
+    const pendingClients = profileRows.filter((p) => p.client_identity_status === "pending" && !professionalProfileIds.has(p.id));
+    const pendingAccounts: PendingItem[] = [
+      ...pendingPros.map((p) => ({
+        id: p.id, slug: p.slug, name: p.profiles?.full_name || "Profesional",
+        category: p.category_id ? getCategoryLabel(p.category_id, locale) : "", createdAt: p.created_at,
+      })),
+      ...pendingClients.map((p) => ({ id: p.id, slug: null, name: p.full_name || "Cliente", category: locale === "en" ? "Client" : "Cliente", createdAt: p.created_at })),
+    ];
+    const pending = pendingAccounts.sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 3);
 
     // Rankings (real data): categories by # of professionals, provinces by # of professionals
     const catCounts = new Map<string, number>();
@@ -177,7 +185,7 @@ export async function getAdminOverview(locale = "es"): Promise<AdminOverview> {
 
     return {
       newPros, newClients, servicios, verificationRate,
-      growth, recentSignups, pending, pendingCount: pendingPros.length, topCategories, byProvince,
+      growth, recentSignups, pending, pendingCount: pendingAccounts.length, topCategories, byProvince,
     };
   } catch (err) {
     console.error("[getAdminOverview]", err);

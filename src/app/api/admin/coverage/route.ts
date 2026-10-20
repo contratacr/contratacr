@@ -1,3 +1,4 @@
+import { readAllAdminRows } from "@/lib/admin/read-all-rows";
 import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -46,15 +47,15 @@ export async function GET(request: Request) {
 
   const db = createAdminClient();
   const [prosRes, categoriesRes, groupsRes] = await Promise.all([
-    db
+    readAllAdminRows((from, to) => db
       .from("professionals")
-      .select("id, slug, business_name, profile_id, profiles(full_name, avatar_url), category_id, professions, provincia_id, canton_id, search_provincias, search_cantones, coverage_country, verification_status, is_banned"),
-    db.from("categories").select("id, name, name_en, group_id, is_hidden"),
-    db.from("category_groups").select("id, label, sort_order, is_hidden"),
+      .select("id, slug, business_name, profile_id, profiles(full_name, avatar_url), category_id, professions, provincia_id, canton_id, search_provincias, search_cantones, coverage_country, verification_status, is_banned").order("id").range(from, to)),
+    readAllAdminRows((from, to) => db.from("categories").select("id, name, name_en, group_id, is_hidden").order("id").range(from, to)),
+    readAllAdminRows((from, to) => db.from("category_groups").select("id, label, sort_order, is_hidden").order("id").range(from, to)),
   ]);
 
-  if (prosRes.error) {
-    console.error("[admin/coverage] professionals", prosRes.error.message);
+  if (prosRes.error || categoriesRes.error || groupsRes.error) {
+    console.error("[admin/coverage] professionals", (prosRes.error || categoriesRes.error || groupsRes.error)?.message);
     return NextResponse.json({ error: "No se pudo calcular la cobertura." }, { status: 500 });
   }
 
@@ -188,8 +189,7 @@ export async function GET(request: Request) {
       verified: isVerified(p),
       status: p.verification_status ?? "unverified",
     }))
-    .sort((a, b) => Number(b.basedHere) - Number(a.basedHere) || Number(b.verified) - Number(a.verified) || a.name.localeCompare(b.name, "es"))
-    .slice(0, 300);
+    .sort((a, b) => Number(b.basedHere) - Number(a.basedHere) || Number(b.verified) - Number(a.verified) || a.name.localeCompare(b.name, "es"));
 
   return NextResponse.json({
     generatedAt: new Date().toISOString(),

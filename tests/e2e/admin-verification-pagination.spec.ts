@@ -1,6 +1,6 @@
 import { PostgrestError } from "@supabase/supabase-js";
 import { test, expect } from "playwright/test";
-import { readAllAdminRows } from "../../src/lib/admin/read-all-rows";
+import { readAllAdminRows, readAdminRowsByIds } from "../../src/lib/admin/read-all-rows";
 
 test("verification reads include older pending accounts beyond the first database page", async () => {
   const source = Array.from({ length: 1203 }, (_, id) => ({ id, pending: id < 8 || (id >= 1100 && id < 1110) }));
@@ -22,4 +22,14 @@ test("a later database failure must not masquerade as a smaller verification que
     ? { data: Array.from({ length: 500 }, (_, id) => ({ id })), error: null }
     : { data: null, error });
   expect(result).toEqual({ data: null, error });
+});
+
+
+test("large enrichment filters are batched and do not lose records or repeat ids", async () => {
+  const ids = Array.from({ length: 1203 }, (_, i) => String(i));
+  const result = await readAdminRowsByIds([...ids, ids[0]], async (batch) => {
+    expect(batch.length).toBeLessThanOrEqual(100);
+    return { data: batch.map(id => ({ id })), error: null };
+  });
+  expect(result.data?.map(row => row.id)).toEqual(ids);
 });

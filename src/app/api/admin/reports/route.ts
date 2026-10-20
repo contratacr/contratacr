@@ -1,3 +1,4 @@
+import { readAllAdminRows, readAdminRowsByIds } from "@/lib/admin/read-all-rows";
 import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -12,7 +13,8 @@ export async function GET(req: Request) {
 
   let q = db.from("reports").select("*").order("created_at", { ascending: false });
   if (status === "open" || status === "resolved") q = q.eq("status", status);
-  const { data: reports } = await q;
+  const { data: reports, error } = await readAllAdminRows((from, to) => q.order("id").range(from, to));
+  if (error) return NextResponse.json({ error: "No se pudo cargar la lista completa." }, { status: 500 });
 
   // Para poder suspender desde la misma fila hay que saber si ese profesional YA
   // está suspendido: sin eso el botón diría «Suspender» sobre alguien que ya lo
@@ -20,7 +22,7 @@ export async function GET(req: Request) {
   const ids = Array.from(new Set((reports ?? []).map((r) => r.professional_id).filter(Boolean)));
   const suspendidos = new Map<string, boolean>();
   if (ids.length > 0) {
-    const { data: pros } = await db.from("professionals").select("id, is_banned").in("id", ids);
+    const { data: pros } = await readAdminRowsByIds(ids, (batch, from, to) => db.from("professionals").select("id, is_banned").in("id", batch).order("id").range(from, to));
     for (const pro of pros ?? []) suspendidos.set(pro.id as string, (pro as { is_banned?: boolean | null }).is_banned === true);
   }
 

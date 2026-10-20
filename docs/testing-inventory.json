@@ -8,7 +8,7 @@
     "handlers": 104,
     "components": 253,
     "hooks": 26,
-    "specs": 149
+    "specs": 150
   },
   "dashboardTabs": [
     "home",
@@ -22643,6 +22643,59 @@
       ]
     },
     {
+      "file": "tests/e2e/admin-list-limits-runtime.spec.ts",
+      "cases": [
+        {
+          "line": 73,
+          "title": "`${route} list includes every match beyond the default cap and agrees with its counter`"
+        },
+        {
+          "line": 79,
+          "title": "\"all support messages remain available beyond the database cap\""
+        },
+        {
+          "line": 86,
+          "title": "\"review search can find older reviews after 500 and 1000 records\""
+        },
+        {
+          "line": 90,
+          "title": "`${kind} filters and pages use all records`"
+        },
+        {
+          "line": 94,
+          "title": "\"coverage includes every matching professional beyond its old 300-row cutoff\""
+        },
+        {
+          "line": 97,
+          "title": "\"overview contacts and analytics search quality include events after 1000\""
+        },
+        {
+          "line": 102,
+          "title": "\"users and projects no longer stop silently at 10000 rows\""
+        },
+        {
+          "line": 106,
+          "title": "\"a failed later page produces an error instead of a misleading partial list\""
+        },
+        {
+          "line": 109,
+          "title": "\"complete queue reads remain restricted to administrators\""
+        },
+        {
+          "line": 114,
+          "title": "\"overview pending count excludes unverified drafts and includes client-only reviews once\""
+        },
+        {
+          "line": 125,
+          "title": "\"project contact counts include every matching event beyond the first page\""
+        },
+        {
+          "line": 130,
+          "title": "\"admin edit history is complete beyond the former 50-row cutoff\""
+        }
+      ]
+    },
+    {
       "file": "tests/e2e/admin-mfa-guard.spec.ts",
       "cases": [
         {
@@ -22705,43 +22758,43 @@
       "file": "tests/e2e/admin-profile-edit-runtime.spec.ts",
       "cases": [
         {
-          "line": 71,
+          "line": 72,
           "title": "\"admin edits persist every supported field, preserve Auth metadata and propagate only matching contacts\""
         },
         {
-          "line": 86,
+          "line": 87,
           "title": "\"only changed fields are written and calls following the old WhatsApp follow its replacement\""
         },
         {
-          "line": 92,
+          "line": 93,
           "title": "\"Auth failure cannot report success or write profile data, and a later retry persists\""
         },
         {
-          "line": 98,
+          "line": 99,
           "title": "\"retry repairs stale Auth metadata even when the profile name already matches\""
         },
         {
-          "line": 103,
+          "line": 104,
           "title": "\"failed or missing database updates are never acknowledged as saved\""
         },
         {
-          "line": 109,
+          "line": 110,
           "title": "\"a failed publication contact update stays retryable and is never reported as saved\""
         },
         {
-          "line": 119,
+          "line": 120,
           "title": "\"admin guard and invalid input prevent all writes\""
         },
         {
-          "line": 126,
+          "line": 127,
           "title": "\"successful official lookup always supplies the complete name, including after an admin correction\""
         },
         {
-          "line": 134,
+          "line": 135,
           "title": "\"editing clears every cached admin directory variant, including storage, without clearing other data\""
         },
         {
-          "line": 151,
+          "line": 152,
           "title": "\"Cloudflare edits publish a fresh shared revision and cache failures bypass stale entries\""
         }
       ]
@@ -22817,6 +22870,10 @@
         {
           "line": 19,
           "title": "\"a later database failure must not masquerade as a smaller verification queue\""
+        },
+        {
+          "line": 28,
+          "title": "\"large enrichment filters are batched and do not lose records or repeat ids\""
         }
       ]
     },
@@ -23755,23 +23812,23 @@
       "file": "tests/e2e/current-profile-names-runtime.spec.ts",
       "cases": [
         {
-          "line": 53,
+          "line": 54,
           "title": "\"admin support lists and detail use the corrected account name on every request\""
         },
         {
-          "line": 68,
+          "line": 69,
           "title": "\"the account's own support panel resolves the same current labels\""
         },
         {
-          "line": 75,
+          "line": 76,
           "title": "\"guest and deleted account snapshots remain available without matching accounts by email\""
         },
         {
-          "line": 82,
+          "line": 83,
           "title": "\"identity lookup is deduplicated and batched, and profile failures cannot silently return old labels\""
         },
         {
-          "line": 90,
+          "line": 91,
           "title": "\"support routes enforce account and admin permissions before resolving identities\""
         }
       ]

@@ -1,3 +1,4 @@
+import { readAllAdminRows, readAdminRowsByIds } from "@/lib/admin/read-all-rows";
 import { refreshApprovedCatalog } from "@/lib/data/approved-catalog-cache";
 import { APPROVED_SUGGESTION_LINK } from "@/lib/notification-link";
 import { NextResponse } from "next/server";
@@ -60,17 +61,17 @@ export async function GET(req: Request) {
 
   if (status === "catalog") {
     let rows: DbCategory[] | null = null;
-    const full = await db
+    const full = await readAllAdminRows((from, to) => db
       .from("categories")
       .select("id, name, name_en, group_id, is_hidden, es_salud, supports_videoconsulta")
-      .order("name", { ascending: true });
+      .order("name", { ascending: true }).order("id").range(from, to));
     rows = full.data;
 
     if (full.error && /name_en|group_id|is_hidden|schema cache|PGRST204|could not find/i.test(full.error.message)) {
-      const fallback = await db
+      const fallback = await readAllAdminRows((from, to) => db
         .from("categories")
         .select("id, name, es_salud, supports_videoconsulta")
-        .order("name", { ascending: true });
+        .order("name", { ascending: true }).order("id").range(from, to));
       rows = fallback.data;
     }
 
@@ -121,11 +122,11 @@ export async function GET(req: Request) {
 
   let q = db.from("category_suggestions").select("*").order("created_at", { ascending: false });
   if (status === "pending" || status === "approved" || status === "rejected") q = q.eq("status", status);
-  const qResult = await q;
+  const qResult = await readAllAdminRows((from, to) => q.order("id").range(from, to));
   let data = qResult.data;
   const qError = qResult.error;
   if (qError && isMissingColumnError(qError, "status")) {
-    const fallback = await db.from("category_suggestions").select("*").order("created_at", { ascending: false });
+    const fallback = await readAllAdminRows((from, to) => db.from("category_suggestions").select("*").order("created_at", { ascending: false }).order("id").range(from, to));
     data = fallback.data;
     if (fallback.error) {
       console.error("[admin/categories] failed to fetch suggestions", fallback.error);
@@ -141,11 +142,11 @@ export async function GET(req: Request) {
     suggestionRows = suggestionRows.filter((row) => mapLegacySuggestionStatus(row) === status);
   }
 
-  const ids = suggestionRows.map((row) => row.id).filter(Boolean);
+  const ids = suggestionRows.map((row) => row.id).filter((id): id is string => typeof id === "string" && !!id);
   const suggestedByIds = [...new Set(suggestionRows.map((row) => row.suggested_by).filter(Boolean) as string[])];
   let englishById = new Map<string, string>();
   if (ids.length) {
-    const english = await db.from("categories").select("id, name_en").in("id", ids);
+    const english = await readAdminRowsByIds(ids, (batch, from, to) => db.from("categories").select("id, name_en").in("id", batch).order("id").range(from, to));
     englishById = new Map((english.data ?? [])
       .filter((row) => row.id && row.name_en)
       .map((row) => [row.id, row.name_en as string]));
@@ -154,8 +155,8 @@ export async function GET(req: Request) {
   let professionalById = new Map<string, SuggestionProfessional>();
   if (suggestedByIds.length) {
     const [authors, professionals] = await Promise.all([
-      db.from("profiles").select("id, full_name, email").in("id", suggestedByIds),
-      db.from("professionals").select("profile_id, business_name").in("profile_id", suggestedByIds),
+      readAdminRowsByIds(suggestedByIds, (batch, from, to) => db.from("profiles").select("id, full_name, email").in("id", batch).order("id").range(from, to)),
+      readAdminRowsByIds(suggestedByIds, (batch, from, to) => db.from("professionals").select("profile_id, business_name").in("profile_id", batch).order("id").range(from, to)),
     ]);
     authorById = new Map(((authors.data ?? []) as SuggestionAuthor[]).map((row) => [row.id, row]));
     professionalById = new Map(((professionals.data ?? []) as SuggestionProfessional[])
@@ -705,11 +706,11 @@ function isNotificationsTypeConstraintError(error: NotificationInsertError | nul
 
 async function getAdminGroups(db: ReturnType<typeof createAdminClient>): Promise<Array<{ id: string; label: string; labelEn?: string; iconKey?: string; sortOrder?: number }>> {
   let dbGroups: DbCategoryGroup[] = [];
-  const res = await db
+  const res = await readAllAdminRows((from, to) => db
     .from("category_groups")
     .select("id, label, label_en, icon_key, sort_order, is_hidden")
     .eq("is_hidden", false)
-    .order("sort_order", { ascending: true });
+    .order("sort_order", { ascending: true }).order("id").range(from, to));
   if (!res.error) dbGroups = res.data ?? [];
 
   const dbIds = new Set(dbGroups.map((group) => group.id));

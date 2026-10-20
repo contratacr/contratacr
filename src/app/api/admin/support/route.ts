@@ -1,3 +1,4 @@
+import { readAllAdminRows } from "@/lib/admin/read-all-rows";
 import { withCurrentSupportNames } from "@/lib/support/current-names";
 import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
@@ -22,11 +23,12 @@ export async function GET(req: Request) {
 
   if (id) {
     const { data: ticket } = await db.from("support_tickets").select("*").eq("id", id).single();
-    const { data: messages } = await db
+    const { data: messages, error: messagesError } = await readAllAdminRows((from, to) => db
       .from("support_ticket_messages")
       .select("*")
       .eq("ticket_id", id)
-      .order("created_at", { ascending: true });
+      .order("created_at", { ascending: true }).order("id").range(from, to));
+    if (messagesError) return NextResponse.json({ error: "No se pudo cargar el historial completo." }, { status: 500 });
     const current = await withCurrentSupportNames(db, ticket ? [ticket] : [], messages ?? []);
     return NextResponse.json({ ticket: current.tickets[0] ?? null, messages: await firmarAdjuntos(db, current.messages) }, { headers: { "Cache-Control": "no-store" } });
   }
@@ -34,7 +36,8 @@ export async function GET(req: Request) {
   const status = url.searchParams.get("status") ?? "open";
   let q = db.from("support_tickets").select("*").order("last_reply_at", { ascending: false, nullsFirst: false }).order("created_at", { ascending: false });
   if (STATUSES.includes(status)) q = q.eq("status", status);
-  const { data } = await q;
+  const { data, error } = await readAllAdminRows((from, to) => q.order("id").range(from, to));
+  if (error) return NextResponse.json({ error: "No se pudo cargar la lista completa." }, { status: 500 });
 
   // Per-status badge counts. "Pendientes" = open; "En proceso" awaiting a reply
   // = in_progress whose last message is the USER's. Needs-attention = both.

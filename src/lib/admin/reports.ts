@@ -1,3 +1,4 @@
+import { readAllAdminRows } from "@/lib/admin/read-all-rows";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getProvinceById } from "@/lib/data/cr-geography";
 import { getCategoryLabel } from "@/lib/data/categories";
@@ -232,17 +233,17 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
   const sinceInteractions = new Date(now - 29 * DAY);
   sinceInteractions.setHours(0, 0, 0, 0);
   const baseQ = iniciar(Promise.all([
-    admin.from("profiles").select("id, role, created_at"),
-    admin.from("professionals").select("id, profile_id, created_at, verification_status, category_id, provincia_id, professions, service_type, services"),
+    readAllAdminRows((from, to) => admin.from("profiles").select("id, role, created_at").order("id").range(from, to)),
+    readAllAdminRows((from, to) => admin.from("professionals").select("id, profile_id, created_at, verification_status, category_id, provincia_id, professions, service_type, services").order("id").range(from, to)),
   ]));
-  const acqQ = iniciar(admin
+  const acqQ = iniciar(readAllAdminRows((from, to) => admin
     .from("profiles")
-    .select("id, role, created_at, acquisition_source, acquisition_medium, acquisition_campaign, acquisition_captured_at, acquisition_landing_path, acquisition_referrer_host").neq("role", "admin"));
-  const projectsQ = iniciar(admin.from("projects").select("id, status, created_at, category_id, client_id"));
-  const ticketsQ = iniciar(admin.from("support_tickets").select("status, created_at"));
+    .select("id, role, created_at, acquisition_source, acquisition_medium, acquisition_campaign, acquisition_captured_at, acquisition_landing_path, acquisition_referrer_host").neq("role", "admin").order("id").range(from, to)));
+  const projectsQ = iniciar(readAllAdminRows((from, to) => admin.from("projects").select("id, status, created_at, category_id, client_id").order("id").range(from, to)));
+  const ticketsQ = iniciar(readAllAdminRows((from, to) => admin.from("support_tickets").select("status, created_at").order("id").range(from, to)));
   const insightsQ = iniciar(Promise.all([
-    admin.from("interaction_events").select("event_type, created_at, category_id, metadata").gte("created_at", since14),
-    admin.from("interaction_events").select("event_type, category_id").gte("created_at", since30).in("event_type", ["search_performed", "profile_view"]),
+    readAllAdminRows((from, to) => admin.from("interaction_events").select("event_type, created_at, category_id, metadata").gte("created_at", since14).order("id").range(from, to)),
+    readAllAdminRows((from, to) => admin.from("interaction_events").select("event_type, category_id").gte("created_at", since30).in("event_type", ["search_performed", "profile_view"]).order("id").range(from, to)),
     admin.from("interaction_events").select("created_at").order("created_at", { ascending: true }).limit(1),
   ]));
   const runtimeQ = iniciar(admin.rpc("get_admin_runtime_analytics", { p_days: 7 }));
