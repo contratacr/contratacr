@@ -8,6 +8,8 @@ import fs from "node:fs";
 // source of truth. The exact occurrence count makes additions fail CI even inside
 // a previously reviewed file.
 const reviewed = new Map([
+  ["src/lib/privacy/optional-consent.ts", { count: 3, reason: "versioned device-local advertising/AI preferences, expire after 180 days, plus pending pixel cleanup on withdrawal; explicit authenticated choices are also recorded in the Supabase consent ledger" }],
+  ["src/components/privacy/optional-choice-recorder.tsx", { count: 4, reason: "short-lived session retry queue scoped to the current user and purpose; removed after the backend acknowledges the explicit action, never treated as a server receipt or inherited by another account" }],
   ["src/components/mobile/campaign-app-links.tsx", { count: 2, reason: "session-scoped boolean preventing repeated cold-launch navigation; no signed URLs, tokens, identity or account-owned records are stored" }],
   ["src/components/analytics/usage-capture.tsx", { count: 4, reason: "anonymous session ID/time and successful first-use delivery marker; all account access, registration and usage metrics are stored server-side" }],
   ["src/hooks/use-auth.ts", { count: 12, reason: "authenticated user/avatar render cache, plus a session-scoped flag so an unasked sign-out is reported once" }],
@@ -31,7 +33,7 @@ const reviewed = new Map([
   ["src/components/mobile/mobile-app-bridge.tsx", { count: 3, reason: "native first-run flag and hardware-back root marker; presentation only" }],
   ["src/components/mobile/native-first-run-onboarding.tsx", { count: 16, reason: "native first-run presentation flag and temporary navigation handoff markers; guest-menu completion writes the same completed flag and clears three existing markers (four additional accesses), without storing identity or account-owned records" }],
   ["src/lib/analytics/attribution.ts", { count: 7, reason: "recent and first marketing touches (utm/referrer) expire after thirty days; account acquisition persists in Supabase, while a short-lived cookie attributes actions" }],
-  ["src/components/analytics/attribution-capture.tsx", { count: 6, reason: "consent preference and session markers for campaign clicks and first-touch claim; attribution and interactions persist server-side" }],
+  ["src/components/analytics/attribution-capture.tsx", { count: 4, reason: "session markers for campaign clicks and first-touch claim; attribution and interactions persist server-side; advertising choice is delegated to the versioned consent module" }],
   ["src/lib/account-cache.ts", { count: 1, reason: "account-scoped removal of reviewed browser caches during disable/deletion" }],
   ["src/app/[locale]/profesionales/[slug]/profile-client.tsx", { count: 3, reason: "sessionStorage: a dónde vuelve la flecha de la ficha (regreso calculado), más una lectura del origen temporal del asistente para rotular la flecha; no se agregan claves ni datos de la cuenta" }],
   ["src/lib/borrador-sin-sesion.ts", { count: 10, reason: "borrador de proyecto/empleo/promoción escrito sin sesión (texto en localStorage, fotos en IndexedDB), vence a las 48 h y se borra al publicar; lo publicado vive en Supabase" }],
@@ -41,7 +43,7 @@ const reviewed = new Map([
   ["src/components/notifications/notification-live-toast.tsx", { count: 5, reason: "notification presentation state; records persist in backend; plus a per-app-open flag so the entry summary is checked once" }],
   ["src/components/notifications/notification-bell.tsx", { count: 2, reason: "backend notification render cache" }],
   ["src/components/analytics/meta-pixel.tsx", { count: 1, reason: "measurement preference; no account-owned data" }],
-  ["src/lib/analytics/meta-pixel.ts", { count: 7, reason: "consent preference, per-tab queue of pixel events before script load (30 min, max 20), and per-tab delivery deduplication; server receipts remain authoritative" }],
+  ["src/lib/analytics/meta-pixel.ts", { count: 6, reason: "per-tab queue of pixel events before script load (30 min, max 20), and per-tab delivery deduplication; explicit consent is read through the versioned module and server receipts remain authoritative" }],
   ["src/components/push/push-token-manager.tsx", { count: 14, reason: "native push permission presentation (ask count, denied-explained flag), navigation handoff, and legacy token-cache cleanup; active tokens persist in Supabase" }],
   ["src/lib/direct-chat/conversations-cache.ts", { count: 5, reason: "five-minute session-scoped cache of the conversation list so Mensajes paints at once after a reload; cleared on sign-out; messages persist in Supabase" }],
   ["src/lib/notifications-cache.ts", { count: 2, reason: "backend notification render cache; Supabase remains the source of truth" }],
