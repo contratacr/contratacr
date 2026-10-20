@@ -14,11 +14,11 @@ export function AdminActivityJourney() {
     if (cursor) { params.set("before",cursor.created_at); params.set("key",cursor.key); }
     fetch(`/api/admin/analytics/activity?${params}`,{ signal: controller.signal, cache:"no-store" }).then(async response=>{
       if (!response.ok) throw Error("No se pudo cargar la actividad.");
-      const data = await response.json(); setRows(old=>cursor ? [...old,...data.events] : data.events);setMore(data.more);if (!cursor) setDelivery(data.delivery ?? null);
+      const data = await response.json(); if (controller.signal.aborted) return; setRows(old=>cursor ? [...old,...data.events] : data.events);setMore(data.more);if (!cursor) setDelivery(data.delivery ?? null);
     }).catch(e=>{ if (e.name!=="AbortError") setError("No se pudo cargar la actividad."); }).finally(()=>{ if (!controller.signal.aborted) setBusy(false); });
     return ()=>controller.abort();
   },[runtime,days,actor,cursor]);
-  function reset() { setRows([]);setCursor(null); }
+  function reset() { setBusy(true);setError("");setRows([]);setCursor(null); }
   return <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
     <h2 className="text-sm font-bold text-slate-900">Recorridos y actividad</h2>
     <p className="mt-1 text-xs text-slate-500">Cuentas y visitantes sin sesión. No incluye contenido de mensajes ni campos de formularios.</p>
@@ -35,7 +35,7 @@ export function AdminActivityJourney() {
     {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
     <div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b text-slate-500">{["Fecha","Cuenta o visitante","Ambiente","Acción","Sección / detalle"].map(h=><th className="p-2" key={h}>{h}</th>)}</tr></thead><tbody>{rows.map(row=><tr className="border-b border-slate-100" key={row.key}>
       <td className="whitespace-nowrap p-2">{new Date(row.created_at).toLocaleString("es-CR")}</td>
-      <td className="p-2"><button className="text-cyan-700 hover:underline" onClick={()=>{reset();setActor(row.viewer_user_id || row.visitor_hash);}}>{row.name || `Visitante ${row.visitor_hash.slice(0,8)}`}</button></td>
+      <td className="p-2"><button className="text-cyan-700 hover:underline" onClick={()=>{const next=row.viewer_user_id || row.visitor_hash;if(next===actor)return;reset();setActor(next);}}>{row.name || `Visitante ${row.visitor_hash.slice(0,8)}`}</button></td>
       <td className="p-2">{row.runtime}</td><td className="p-2">{labels[row.event] || row.event.replaceAll("_"," ")}</td>
       <td className="max-w-xs break-words p-2">{row.page}{Object.entries(row.details).filter(([,v])=>v!==null && v!=="").map(([k,v])=><span className="ml-2 text-slate-500" key={k}>{({target:"Destino",value:"Avance",q:"Búsqueda",provincia:"Provincia",canton:"Cantón",results:"Resultados",tab:"Pestaña"} as Record<string,string>)[k] || k}: {String(v)}</span>)}</td>
     </tr>)}</tbody></table></div>

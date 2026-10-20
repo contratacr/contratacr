@@ -23,6 +23,12 @@ test("activity API rejects guests and non-admins; MFA admin can inspect guest an
   await expect(page.getByRole('heading',{name:'Recorridos y actividad'})).toBeVisible();
   await page.getByLabel('Plataforma de actividad').selectOption('android');
   await expect(page.getByText('Visitante aaaaaaaa',{exact:true}).first()).toBeVisible();
+  const accountButton=page.getByRole('table').getByRole('button',{name:/Cuenta desechable/}).first();
+  await accountButton.click();
+  await expect(page.getByRole('button',{name:'Ver todos los visitantes'})).toBeVisible();
+  await expect(accountButton).toBeVisible();
+  await accountButton.click();
+  await expect(accountButton).toBeVisible();
   await page.screenshot({path:'/tmp/contratacr-admin-journeys.png',fullPage:true});
  } finally {
   await db.from('app_journey_events').delete().in('event_id',ids);
