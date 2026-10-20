@@ -35,8 +35,6 @@ import { AppIntlProvider } from "@/components/app-intl-provider";
 import { SombrasAlDesplazar } from "@/components/util/sombras-al-desplazar";
 import { GlobalActionLoading } from "@/components/global-action-loading";
 import { OptionalChoiceRecorder } from "@/components/privacy/optional-choice-recorder";
-import { LEGAL_VERSION } from "@/lib/privacy/legal-version";
-import { LegalAcceptanceGate } from "@/components/privacy/legal-acceptance-gate";
 import { AdvertisingPreferences } from "@/components/privacy/advertising-preferences";
 import { GlobalDataRefresh } from "@/components/util/global-data-refresh";
 import { RouteScrollReset } from "@/components/util/route-scroll-reset";
@@ -145,10 +143,9 @@ export default async function LocaleLayout({
   // quien sí tiene ficha, y tendría que quitarlo después.
   let initialHasProfessionalProfile: boolean | null = null;
   const initialSavedKeys: string[] = [];
-  let initialLegalReceipt: { userId: string; accepted: boolean } | null = null;
   if (supabase && initialUser && !initialMfa.required) {
     try {
-      const [{ data }, { data: unreadNotifications }, { data: professionalRow }, { data: guardados }, { data: prosGuardados }, legalReceipt] = await withPromiseTimeout(Promise.all([
+      const [{ data }, { data: unreadNotifications }, { data: professionalRow }, { data: guardados }, { data: prosGuardados }] = await withPromiseTimeout(Promise.all([
         supabase
           .from("profiles")
           .select("avatar_url")
@@ -169,9 +166,7 @@ export default async function LocaleLayout({
         // nazcan en su estado de verdad (ver `savedKeys` en use-auth).
         supabase.from("saved_items").select("item_type, item_id").eq("user_id", initialUser.id).limit(500),
         supabase.from("saved_professionals").select("professional_id").eq("client_id", initialUser.id).limit(500),
-        supabase.from("privacy_choices").select("accepted,version").eq("user_id", initialUser.id).eq("purpose", "terms").order("id", { ascending: false }).limit(1).maybeSingle(),
       ]), 6_000, "layout-account-bootstrap-timeout");
-      if (!legalReceipt.error) initialLegalReceipt = { userId: initialUser.id, accepted: legalReceipt.data?.accepted === true && legalReceipt.data.version === LEGAL_VERSION };
       initialAvatarUrl = (data?.avatar_url as string | null | undefined) ?? null;
       initialAccountName = String((professionalRow as { business_name?: string } | null)?.business_name ?? "").trim() || null;
       initialHasProfessionalProfile = !!professionalRow;
@@ -222,14 +217,12 @@ export default async function LocaleLayout({
           </Suspense>
           <PushTokenManager />
           <MobileAppDownloadBanner initialPlatform={initialDownloadPlatform} initialDismissed={initialDownloadDismissed} />
-          <LegalAcceptanceGate initialReceipt={initialLegalReceipt}>
-            {initialMfa.required ? null : children}
-            <AdvertisingPreferences notice />
+          {initialMfa.required ? null : children}
+          <AdvertisingPreferences notice />
           <NativeBottomNav />
           <WhatsAppReviewFollowUp />
           <AiConcierge />
           <FreezeMonitor />
-          </LegalAcceptanceGate>
         </SessionMfaGate>
       </AuthProvider>
     </AppIntlProvider>

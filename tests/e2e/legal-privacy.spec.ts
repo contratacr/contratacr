@@ -38,25 +38,29 @@ test("the AI API rejects missing or outdated consent before processing a native 
  }
 });
 
-test("account acceptance is recorded once, separate from marketing, and cannot be read by another account",async({page})=>{
+for (const native of [false, true]) test(`${native ? "native" : "web"}: login never adds a second terms screen; explicit receipts remain isolated and idempotent`,async({page,context,baseURL})=>{
  test.skip(!canRunSeededRegression(),"Requires isolated TEST database");
+ if(native) {
+  await context.addCookies([{name:"ccr_platform",value:"native",url:baseURL!}]);
+  await page.addInitScript(()=>localStorage.setItem("ccr:native-first-run-onboarding:v12","1"));
+ }
  const account=await createDisposableAccount({prefix:"legal-consent"});
  const other=await createDisposableAccount({prefix:"legal-consent-other"});
  const admin=regressionAdminClient();
  try {
-  await loginAs(page,account.email,account.password,{legalAcceptance:false});
-  const gate=page.locator('[data-legal-acceptance]');await expect(gate).toBeVisible();
-  await expect(gate.getByRole("button",{name:"Aceptar y continuar"})).toBeDisabled();
-  await gate.getByRole("checkbox").focus();await gate.getByRole("checkbox").press("Space");await gate.getByRole("button",{name:"Aceptar y continuar"}).click();
+  await loginAs(page,account.email,account.password);
+  const gate=page.locator('[data-legal-acceptance]');
   await expect(gate).toHaveCount(0);
+  await expect(page.getByRole("heading",{name:"Términos y privacidad",exact:true})).toHaveCount(0);
   let result=await page.request.get("/api/privacy/choices");expect(result.status()).toBe(200);
-  const state=await result.json();expect(state.requiresAcceptance).toBe(false);expect(state.choices.marketing).toBeUndefined();
+  const state=await result.json();expect(state.choices.terms).toBeUndefined();expect(state.choices.marketing).toBeUndefined();
   for(let n=0;n<2;n++){
    result=await page.request.post("/api/privacy/choices",{data:{purpose:"terms",accepted:true,version:LEGAL_VERSION,locale:"es",channel:"web"}});expect(result.status()).toBe(200);
   }
   const receipts=await admin.from("privacy_choices").select("id").eq("user_id",account.id).eq("purpose","terms");expect(receipts.error).toBeNull();expect(receipts.data).toHaveLength(1);
   await page.reload();await expect(gate).toHaveCount(0);
-  await loginAs(page,other.email,other.password,{legalAcceptance:false});
+  await loginAs(page,other.email,other.password);
+  await expect(gate).toHaveCount(0);
   result=await page.request.get("/api/privacy/choices");expect((await result.json()).choices).toEqual({});
  } finally {await cleanupDisposableAccount(account);await cleanupDisposableAccount(other);}
 });
@@ -82,4 +86,12 @@ test("native assistant asks permission before sending the first prompt",async({p
  await assistant.getByRole("button",{name:"Permitir y continuar",exact:true}).click();
  await expect(assistant).toContainText("Respuesta de prueba");
  expect(requests).toBe(1);expect(consent).toEqual({version:LEGAL_VERSION,accepted:true});
+});
+
+for(const locale of ["es","en"]) test(`login keeps the existing legal disclosure before continuing (${locale})`,async({page})=>{
+ await gotoOK(page,locale === "en" ? "/en/login" : "/login");
+ const main=page.locator("main");
+ await expect(main).toContainText(locale === "en" ? "By continuing, you accept" : "Al continuar, aceptas");
+ await expect(main.getByRole("link",{name:locale === "en" ? "Terms" : "Términos",exact:true})).toHaveAttribute("href",/terminos/);
+ await expect(main.getByRole("link",{name:locale === "en" ? "Privacy Policy" : "Política de Privacidad",exact:true})).toHaveAttribute("href",/privacidad/);
 });
