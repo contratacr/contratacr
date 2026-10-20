@@ -11,7 +11,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
  * que manda: cuando la fila no alcanza, lo primero que cede es el lugar, que se
  * queda con su primera parte (el cantón: «Atenas» en vez de «Atenas, Alajuela»).
  * Solo si ni así alcanza se recorta el servicio, y el lugar nunca pasa de la
- * mitad de la fila.
+ * mitad de la fila cuando ya no cabe completo. Si cabe, usa todo el espacio
+ * disponible: limitarlo siempre al 50% recorta provincias innecesariamente.
  */
 export function SearchContextSummary({
   service,
@@ -65,7 +66,7 @@ export function SearchContextSummary({
       className="relative flex min-w-0 flex-1 items-baseline gap-2 overflow-hidden whitespace-nowrap text-[15px]"
     >
       <span className="min-w-0 truncate font-extrabold text-[#162543]">{service}</span>
-      <span className="max-w-[50%] shrink-0 truncate font-medium text-[#8f9aaa]">
+      <span className={`shrink-0 truncate font-medium text-[#8f9aaa] ${lugarCompleto ? "" : "max-w-[50%]"}`}>
         {lugarCompleto ? place : lugarCorto}
       </span>
       {/* Medidor: la fila entera sin recortar, para saber si el lugar cabe completo. */}

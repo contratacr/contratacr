@@ -24562,15 +24562,15 @@
           "title": "(page.viewportSize()?.width ?? 1280) >= 1024"
         },
         {
-          "line": 50,
+          "line": 66,
           "title": "`signed-in menu keeps account actions above centered social links (${native ? 'native' : 'web'})`"
         },
         {
-          "line": 51,
+          "line": 67,
           "title": "(page.viewportSize()?.width ?? 1280) >= 1024"
         },
         {
-          "line": 52,
+          "line": 68,
           "title": "!canRunSeededRegression()"
         }
       ]
@@ -25614,18 +25614,26 @@
         },
         {
           "line": 335,
-          "title": "\"nationwide video consultations survive a different physical location filter\""
+          "title": "\"mobile search uses spare width for the full province before shortening location\""
         },
         {
           "line": 336,
+          "title": "!isMobileProject(testInfo)"
+        },
+        {
+          "line": 359,
+          "title": "\"nationwide video consultations survive a different physical location filter\""
+        },
+        {
+          "line": 360,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 357,
+          "line": 381,
           "title": "\"whole-province coverage survives canton and resolved-address searches\""
         },
         {
-          "line": 358,
+          "line": 382,
           "title": "!canRunSeededRegression()"
         }
       ]

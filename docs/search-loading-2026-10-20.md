@@ -27,3 +27,9 @@ Medición local de un build de producción con datos TEST, emulación móvil Chr
 No incluye migraciones de base de datos ni publicación en tiendas.
 
 Resultado: 52 casos aprobados en la ronda final de carga/contacto y 25 de sugerencias/Enter en la ronda complementaria; 13 omisiones por diseño según el tamaño de pantalla. Dos casos requirieron repetición individual por un timeout durante la limpieza de fixtures (la limpieza se comprobó en TEST); ambos pasaron. Se corrigieron las colisiones de URL entre fixtures paralelos y se rechaza explícitamente la publicidad antes de probar el contacto anónimo. Build de producción, TypeScript, lint de archivos afectados, inventario, contrato del logo y controles locales de seguridad aprobados.
+
+## Menú sin sesión y ancho del resumen de búsqueda
+
+El pie del menú sin sesión coloca idioma a la izquierda y redes a la derecha en una fila; el menú con sesión conserva su distribución. La ubicación del buscador estaba limitada al 50% incluso cuando el medidor confirmaba que cabía completa. Ese límite solo se aplica al modo abreviado, preservando la prioridad del servicio y la adaptación al ancho/fuentes.
+
+Validación: caso Soldadura / Santa Bárbara, Heredia a 320, 390 y 440 px en Chromium y WebKit móvil; menú web y shell nativo sin sesión, objetivos táctiles de 44 px, enlaces, cierre y ausencia de desbordamiento a 320 px; menú con sesión en ambos motores; contrato de marca y recorrido sin fuentes en los tres proyectos. Una lectura de la animación de WebKit avanzó entre dos medidas consecutivas: el test encierra ahora la medida del cuerpo entre dos del encabezado y conserva el margen de 1 px y 12 fotogramas. Los seis casos de repetición Safari pasan. TypeScript y lint de resumen/tests pasan; navbar conserva exactamente los cuatro errores y dos avisos de lint preexistentes, verificados contra HEAD. No se publican versiones nativas.
