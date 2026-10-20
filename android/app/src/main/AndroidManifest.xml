@@ -23,6 +23,11 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https" android:host="contratacr.com" />
+                <data android:path="/" />
+                <data android:path="/es" />
+                <data android:path="/es/" />
+                <data android:path="/en" />
+                <data android:path="/en/" />
                 <data android:pathPrefix="/dashboard" />
                 <data android:pathPrefix="/continuar-perfil" />
                 <data android:pathPrefix="/buscar" />
