@@ -26,11 +26,8 @@ async function elegirServicio(page: Page, texto: string) {
   await campo.fill(texto);
   const opcion = page.getByRole("option").filter({ visible: true }).first();
   await expect(opcion).toBeVisible();
-  const before = page.url();
+  // The location is already filled: the service selection submits directly.
   await opcion.click();
-  await expect(page.locator(".ccr-native-search-panel")).toBeVisible();
-  expect(page.url()).toBe(before);
-  await page.getByRole("combobox", { name: "Ubicación", exact: true }).filter({ visible: true }).press("Enter");
 }
 
 test("elegir el servicio conserva la ubicación que ya estaba", async ({ page }, testInfo) => {

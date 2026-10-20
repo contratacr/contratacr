@@ -12,3 +12,5 @@ La regresión cubre ambos órdenes, recientes con y sin ubicación, reemplazos, 
 No cambia el backend de resultados, el paginado, los avisos de privacidad ni las versiones de tienda.
 
 Resultado: 58 comprobaciones dirigidas aprobadas entre los dos grupos de regresión y la repetición del caso de navegación adaptado al nuevo envío automático; 20 omisiones por tamaño de pantalla. La repetición verifica que la hoja permanezca durante una navegación pendiente y desaparezca al completar una búsqueda idéntica, sin otro Enter. Security smoke e inventario aprobados. No se publican versiones de tienda.
+
+Seguimiento de regresión: se adaptan también `buscar-servicio-y-lugar.spec.ts` y los casos de cabecera/ubicación de `search-results.spec.ts`, que todavía enviaban Enter después de la segunda selección. Se aprueban otras 16 comprobaciones en los tres navegadores, con dos omisiones por diseño móvil. Este seguimiento solo cambia pruebas y documentación.

@@ -23208,19 +23208,19 @@
       "file": "tests/e2e/buscar-servicio-y-lugar.spec.ts",
       "cases": [
         {
-          "line": 36,
+          "line": 33,
           "title": "\"elegir el servicio conserva la ubicación que ya estaba\""
         },
         {
-          "line": 37,
+          "line": 34,
           "title": "!isMobileProject(testInfo)"
         },
         {
-          "line": 44,
+          "line": 41,
           "title": "\"con el servicio escrito a medias se elige el de la lista, no otro\""
         },
         {
-          "line": 45,
+          "line": 42,
           "title": "!isMobileProject(testInfo)"
         }
       ]
@@ -25349,35 +25349,35 @@
           "title": "\"search query can navigate from the header to filtered results\""
         },
         {
-          "line": 229,
+          "line": 228,
           "title": "\"mobile no-results state uses the full-width search sheet layout\""
         },
         {
-          "line": 249,
+          "line": 248,
           "title": "\"location search suggests Costa Rica provinces and cantons\""
         },
         {
-          "line": 298,
+          "line": 296,
           "title": "\"filters expose the current search controls and retired controls stay gone\""
         },
         {
-          "line": 325,
+          "line": 323,
           "title": "\"completed searches keep the selected service and location in the mobile search header\""
         },
         {
-          "line": 337,
+          "line": 335,
           "title": "\"nationwide video consultations survive a different physical location filter\""
         },
         {
-          "line": 338,
+          "line": 336,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 359,
+          "line": 357,
           "title": "\"whole-province coverage survives canton and resolved-address searches\""
         },
         {
-          "line": 360,
+          "line": 358,
           "title": "!canRunSeededRegression()"
         }
       ]
