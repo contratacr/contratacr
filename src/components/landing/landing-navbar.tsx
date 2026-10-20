@@ -3051,10 +3051,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 </div>
 
               </nav>
-              {/* El idioma y cerrar sesión no son destinos: son ajustes de la
-                  cuenta. Iban con el mismo peso que «Mis citas» y hacían ver el
-                  cajón más largo y más cargado de lo que es. Van al pie, tras
-                  una línea, en letra menor y sin el mosaico del icono. */}
+              {/* Account actions stay together; brand social links finish the drawer. */}
               {/* Como Angi: «Ingresar» con borde y «Crear cuenta» lleno, separados
                   de la lista. shrink-0: el cajón es columna flexible y al abrir
                   «Ayuda y soporte» los botones se encogían. */}
@@ -3069,9 +3066,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 </div>
               )}
 
-              <div data-mobile-menu-footer className="mt-5 shrink-0 bg-white px-1 pt-3">
-                <SocialLinks compact testId="mobile-menu-social-links" className="flex items-center gap-1 bg-white" />
-                <div className="mt-1 flex items-center justify-between gap-3 bg-white">
+              <div data-mobile-menu-footer className="mt-2 shrink-0 bg-white pb-2">
+                <div data-mobile-menu-account-actions className={cn("flex min-h-12 items-center gap-4 bg-white", user ? "justify-between" : "justify-center")}>
                 <button
                   type="button"
                   onPointerDown={(e) => { e.stopPropagation(); switchLang.precargar(); }}
@@ -3080,7 +3076,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     switchLang(alternateLocale);
                     setMobileOpen(false);
                   }}
-                  className="inline-flex min-h-11 items-center gap-2 bg-white text-[13px] font-semibold text-[#52627a] transition-colors hover:text-[#162543]"
+                  className="inline-flex min-h-11 items-center gap-2 bg-white pr-3 text-[14px] font-medium text-[#52627a] transition-colors hover:text-[#162543] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]"
                 >
                   <Globe2 className="h-4 w-4 shrink-0" />
                   <span className="min-w-0 truncate">{alternateLanguageLabel}</span>
@@ -3093,13 +3089,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       cerrarCajon();
                       void handleSignOut();
                     }}
-                    className="inline-flex min-h-11 items-center gap-2 bg-white text-[13px] font-semibold text-[#52627a] transition-colors hover:text-[#b4232a]"
+                    className="inline-flex min-h-11 items-center gap-2 bg-white pl-3 text-[14px] font-medium text-[#52627a] transition-colors hover:text-[#b4232a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]"
                   >
                     <LogOut className="h-4 w-4 shrink-0" />
                     <span className="min-w-0 truncate">{locale === "en" ? "Sign out" : "Cerrar sesión"}</span>
                   </button>
                 )}
-              </div>
+                </div>
+                <SocialLinks compact showLabel={false} testId="mobile-menu-social-links" className="mt-3 flex items-center justify-center gap-3 bg-white" />
               </div>
             </div>
           </div>

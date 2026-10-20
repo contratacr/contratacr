@@ -17,7 +17,7 @@ test("web shows the shared inbox and enforces message moderation without a nativ
   } finally { if (account) await cleanupDisposableAccount(account); }
 });
 
-test("mobile drawer groups social links above plain white account controls", async ({ page }) => {
+test("mobile drawer keeps plain white account actions above centered social links", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 800 });
   await gotoOK(page, "/");
   await waitForInteractivePage(page);
@@ -30,10 +30,11 @@ test("mobile drawer groups social links above plain white account controls", asy
   const geometry = await footer.evaluate(element => {
     const nav = element.querySelector("nav")!;
     const button = element.querySelector("button")!;
-    return { background: getComputedStyle(element).backgroundColor, socialBottom: nav.getBoundingClientRect().bottom, actionTop: button.getBoundingClientRect().top, overflow: element.scrollWidth > element.clientWidth };
+    return { background: getComputedStyle(element).backgroundColor, socialTop: nav.getBoundingClientRect().top, actionBottom: button.getBoundingClientRect().bottom, overflow: element.scrollWidth > element.clientWidth };
   });
   expect(geometry.background).toBe("rgb(255, 255, 255)");
-  expect(geometry.actionTop).toBeGreaterThanOrEqual(geometry.socialBottom);
+  expect(geometry.socialTop).toBeGreaterThanOrEqual(geometry.actionBottom);
+  await expect(social.getByText("Síguenos", { exact: true })).toHaveCount(0);
   expect(geometry.overflow).toBe(false);
   await footer.screenshot({ path: test.info().outputPath("menu-compacto-blanco.png") });
 });

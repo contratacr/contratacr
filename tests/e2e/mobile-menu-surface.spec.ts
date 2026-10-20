@@ -1,4 +1,7 @@
 import { test, expect } from 'playwright/test';
+import { loginAs, gotoOK, waitForInteractivePage } from './helpers';
+import { canRunSeededRegression } from './seed';
+import { createDisposableAccount, cleanupDisposableAccount } from './disposable-account';
 
 for (const native of [false, true]) {
   test(`menu header travels with options and closes without displacing the page (${native ? 'native' : 'web'})`,async({page,context,baseURL})=>{
@@ -40,5 +43,72 @@ for (const native of [false, true]) {
     await expect(page.locator('.ccr-native-search-panel input').first()).toBeFocused();
     await page.locator('.ccr-native-search-panel').getByRole('button',{name:'Volver',exact:true}).click();
     if(process.env.MENU_EVIDENCE_DIR){await button.click();await expect.poll(async()=>Math.round((await menu.boundingBox())!.x)).toBe(0);await page.screenshot({path:`${process.env.MENU_EVIDENCE_DIR}/${test.info().project.name}-${native?'native':'web'}.png`});}
+  });
+}
+
+for (const native of [false, true]) {
+  test(`signed-in menu keeps account actions above centered social links (${native ? 'native' : 'web'})`, async ({page,context,baseURL}) => {
+    test.skip((page.viewportSize()?.width ?? 1280) >= 1024, 'Mobile menu');
+    test.skip(!canRunSeededRegression(), 'Isolated TEST account required');
+    if (native) {
+      await context.addCookies([{name:'ccr_platform',value:'native',url:baseURL!}]);
+      await page.addInitScript(()=>localStorage.setItem('ccr:native-first-run-onboarding:v12','1'));
+    }
+    const account=await createDisposableAccount({prefix:'menu-footer'});
+    try {
+      await loginAs(page,account.email,account.password);
+      await gotoOK(page,'/');await waitForInteractivePage(page);
+      await page.getByRole('button',{name:'Abrir menú',exact:true}).filter({visible:true}).click();
+      const menu=page.getByRole('dialog',{name:'Menú',exact:true});
+      const body=menu.locator('.ccr-menu-cuerpo');
+      await body.evaluate(el=>{el.scrollTop=el.scrollHeight});
+      const footer=menu.locator('[data-mobile-menu-footer]');
+      const actions=footer.locator('[data-mobile-menu-account-actions]');
+      const social=footer.getByTestId('mobile-menu-social-links');
+      await expect(actions.getByRole('button',{name:'English',exact:true})).toBeVisible();
+      await expect(actions.getByRole('button',{name:'Cerrar sesión',exact:true})).toBeVisible();
+      await expect(social).toHaveAccessibleName('Síguenos');
+      await expect(social.getByText('Síguenos',{exact:true})).toHaveCount(0);
+      const geometry=await footer.evaluate(el=>{
+        const actions=el.querySelector('[data-mobile-menu-account-actions]')!;
+        const social=el.querySelector('nav')!;
+        const links=[...social.querySelectorAll('a')].map(a=>a.getBoundingClientRect());
+        const rect=el.getBoundingClientRect();
+        return {background:getComputedStyle(el).backgroundColor,border:getComputedStyle(el).borderTopWidth,overflow:el.scrollWidth>el.clientWidth,
+          socialTop:social.getBoundingClientRect().top,actionsBottom:actions.getBoundingClientRect().bottom,
+          center:(links[0].left+links[links.length-1].right)/2,expectedCenter:(rect.left+rect.right)/2,
+          bottom:links[links.length-1].bottom,viewport:innerHeight,
+          targets:[...el.querySelectorAll('a,button')].map(a=>({width:a.getBoundingClientRect().width,height:a.getBoundingClientRect().height}))};
+      });
+      expect(geometry.background).toBe('rgb(255, 255, 255)');expect(geometry.border).toBe('0px');
+      expect(geometry.overflow).toBe(false);expect(geometry.socialTop).toBeGreaterThan(geometry.actionsBottom);
+      expect(Math.abs(geometry.center-geometry.expectedCenter)).toBeLessThan(1);
+      expect(geometry.bottom).toBeLessThanOrEqual(geometry.viewport-16);
+      for(const target of geometry.targets){expect(target.width).toBeGreaterThanOrEqual(44);expect(target.height).toBeGreaterThanOrEqual(44);}
+      if(process.env.MENU_EVIDENCE_DIR) {
+        const prefix=`${process.env.MENU_EVIDENCE_DIR}/${test.info().project.name}-${native?'native':'web'}`;
+        await page.screenshot({path:`${prefix}-con-sesion.png`});
+        const help=await menu.getByRole('button',{name:'Ayuda y soporte',exact:true}).boundingBox();
+        const viewport=page.viewportSize()!;
+        const y=Math.max(0,Math.floor(help!.y)-12);
+        await page.screenshot({path:`${prefix}-detalle.png`,clip:{x:0,y,width:viewport.width,height:viewport.height-y}});
+      }
+      await page.setViewportSize({width:320,height:568});
+      await body.evaluate(el=>{el.scrollTop=el.scrollHeight});
+      const smallLast=await social.getByRole('link',{name:'TikTok',exact:true}).boundingBox();
+      expect(smallLast!.y+smallLast!.height).toBeLessThanOrEqual(552);
+      expect(await footer.evaluate(el=>el.scrollWidth>el.clientWidth)).toBe(false);
+      await actions.getByRole('button',{name:'English',exact:true}).click();
+      await expect(page).toHaveURL(/\/en(?:\/|$)/);
+      await waitForInteractivePage(page);
+      await page.getByRole('button',{name:'Open menu',exact:true}).filter({visible:true}).click();
+      const english=page.getByRole('dialog',{name:'Menu',exact:true});
+      await english.locator('.ccr-menu-cuerpo').evaluate(el=>{el.scrollTop=el.scrollHeight});
+      await expect(english.getByRole('button',{name:'Español',exact:true})).toBeVisible();
+      await expect(english.getByRole('navigation',{name:'Follow us',exact:true})).toBeVisible();
+      await english.getByRole('button',{name:'Sign out',exact:true}).click();
+      await page.getByRole('button',{name:'Open menu',exact:true}).filter({visible:true}).click();
+      await expect(page.getByRole('dialog',{name:'Menu',exact:true}).getByRole('button',{name:'Sign out',exact:true})).toHaveCount(0);
+    } finally {await cleanupDisposableAccount(account);}
   });
 }
