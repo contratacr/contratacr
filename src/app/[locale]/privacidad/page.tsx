@@ -169,7 +169,7 @@ const ES_SECTIONS: LegalSection[] = [
           "**Cloudflare Workers AI:** procesamiento de las consultas dirigidas al asistente. Aplicamos filtros para reducir datos identificativos del texto; no garantizan anonimato ni detectan toda información personal.",
           "**OpenAI:** respaldo del asistente cuando el proveedor principal no responde.",
           "**Google y Apple:** inicio de sesión con su cuenta, mapas, ubicación y servicios relacionados.",
-          "**Meta:** medición de campañas mediante Meta Pixel y envío de avisos por WhatsApp. Para enviarle un aviso por WhatsApp, Meta recibe su número de teléfono y el texto del aviso, que nunca incluye el contenido de sus conversaciones.",
+          "**Meta:** medición limitada de campañas mediante Conversions API y envío de avisos por WhatsApp. Para enviarle un aviso por WhatsApp, Meta recibe su número de teléfono y el texto del aviso, que nunca incluye el contenido de sus conversaciones.",
           "**Brevo:** envío de los correos de la Plataforma y medición de si un correo se entregó, se abrió o si usted tocó un enlace.",
           "Otros servicios necesarios para comunicaciones, seguridad y soporte.",
           "**Zoho Mail:** recepción y gestión del correo de soporte del dominio; recibe el contenido y los datos de contacto incluidos en sus comunicaciones."
@@ -449,7 +449,7 @@ const EN_SECTIONS: LegalSection[] = [
     "body": [
       {
         "k": "p",
-        "text": "Depending on the feature, we use providers including **Supabase** (authentication, database, private storage), **Cloudflare** (hosting, and R2 for media and files), **Cloudinary** (image processing and hosting), **Firebase** (push notifications), **Cloudflare Workers AI** (assistant, with text filters to reduce identifying data, without guaranteeing anonymity), **OpenAI** (assistant fallback), **Zoho Mail** (receiving and managing domain support emails and their content and contact data), **Brevo** (sending our emails and measuring whether an email was delivered, opened, or a link was tapped), **Google** and **Apple** (sign-in, maps, location), and **Meta** (campaign measurement through Meta Pixel, and delivery of WhatsApp notices — Meta receives your phone number and the notice text, never your conversation content)."
+        "text": "Depending on the feature, we use providers including **Supabase** (authentication, database, private storage), **Cloudflare** (hosting, and R2 for media and files), **Cloudinary** (image processing and hosting), **Firebase** (push notifications), **Cloudflare Workers AI** (assistant, with text filters to reduce identifying data, without guaranteeing anonymity), **OpenAI** (assistant fallback), **Zoho Mail** (receiving and managing domain support emails and their content and contact data), **Brevo** (sending our emails and measuring whether an email was delivered, opened, or a link was tapped), **Google** and **Apple** (sign-in, maps, location), and **Meta** (limited campaign measurement through Conversions API, and delivery of WhatsApp notices — Meta receives your phone number and the notice text, never your conversation content)."
       },
       {
         "k": "p",
