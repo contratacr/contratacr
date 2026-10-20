@@ -1877,7 +1877,7 @@ export default function DashboardPage() {
                 su CSS, y una rejilla sin columnas reparte tres iguales —el
                 nombre quedaba en el centro de la tarjeta—. En el teléfono el
                 contenedor es flex y esta plantilla no aplica. */}
-            <div style={{ gridTemplateColumns: "auto minmax(0, 1fr)" }} className="flex min-w-0 flex-row flex-wrap items-center gap-x-2 gap-y-3 text-left min-[360px]:gap-x-3 sm:grid sm:items-center sm:gap-5">
+            <div style={{ gridTemplateColumns: "auto minmax(0, 1fr)" }} className="flex min-w-0 flex-col flex-wrap items-start gap-x-2 gap-y-3 text-left min-[360px]:flex-row min-[360px]:items-center min-[360px]:gap-x-3 sm:grid sm:items-center sm:gap-5">
               <div ref={headerPhotoMenuRef} className={`relative shrink-0 sm:self-center ${profileIdentityAvatarClass}`}>
                 <button
                   type="button"
@@ -1951,7 +1951,7 @@ export default function DashboardPage() {
                   onOpenChange={setHeaderPhotoPreviewOpen}
                 />
               </div>
-              <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5 text-left sm:block sm:w-auto sm:flex-none sm:self-center sm:py-0">
+              <div className="flex w-full min-w-0 flex-1 flex-col items-start gap-1.5 text-left min-[360px]:w-auto sm:block sm:w-auto sm:flex-none sm:self-center sm:py-0">
                 <div className="flex min-w-0 max-w-full items-center gap-0 sm:hidden">
                   <ProfileIdentityName name={mobileHeaderName || displayName} title={displayName} testId="dashboard-identity-name" badge={identityBadge()} />
                 </div>
