@@ -1,3 +1,5 @@
+import { ContactAvailabilityProvider } from "@/hooks/use-profesional-con-app";
+import { initialContactAvailability } from "@/lib/direct-chat/availability";
 import { imagenDeSeccion } from "@/lib/seo/imagen-social";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import type { Metadata } from "next";
@@ -19,7 +21,7 @@ import { categorySlug, getAllCategories, getAllCategoryGroups, getCategoryGroupL
 import { haversineKm, PROVINCES } from "@/lib/data/cr-geography";
 import { SearchResultsLayout } from "@/components/search/search-results-layout";
 import { SearchResultsInfinite } from "@/components/search/search-results-infinite";
-import { cardData, resolveSearchResults } from "@/lib/search/query-core";
+import { cardData, resolveSearchResults, RESULTS_PER_PAGE } from "@/lib/search/query-core";
 import { createClient } from "@/lib/supabase/server";
 import { redactContactEnListado } from "@/lib/contact/redact";
 import { safeGetUser } from "@/lib/supabase/get-user";
@@ -55,9 +57,6 @@ interface SearchPageProps {
 }
 
 const MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
-// 10 en la primera pintura: con 20 el HTML pesaba 688 KB y se congelaba en 4G;
-// el resto llega al desplazarse.
-const RESULTS_PER_PAGE = 10;
 const SORT_OPTIONS = new Set(["rating", "cercania", "experience"]);
 const PRICE_AVAILABILITY_OPTIONS = new Set(["visible", "quote"]);
 const PRICE_UNIT_OPTIONS = new Set(["por_hora", "por_consulta", "por_proyecto"]);
@@ -252,6 +251,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     : 1;
   const resultOffset = (currentPage - 1) * RESULTS_PER_PAGE;
   const results = orderedResults.slice(resultOffset, resultOffset + RESULTS_PER_PAGE);
+  // Resolve the first batch once, before hydration, instead of a separate browser round trip.
+  // On timeout keep the existing client retry; never guess the channel.
+  const initialContacts = await initialContactAvailability(viewerProfileId, results);
   if (currentPage === 1) {
     void recordServerInteraction({
       type: "search_performed",
@@ -605,6 +607,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       the map takes the rest (see search-results-layout). Content-driven
                       height - one card per row, each grows to its content. */}
                   <div className="ccr-search-results-list -mx-4 flex min-h-full w-[calc(100%+2rem)] min-w-0 max-w-none flex-col gap-1.5 overflow-x-clip bg-white lg:mx-0 lg:min-h-0 lg:w-full lg:gap-3 lg:bg-transparent lg:overflow-visible">
+                    <ContactAvailabilityProvider {...initialContacts}>
                     {results.map((pro, i) => (
                       // data-pro-id + scroll-mt let the map highlight/scroll to this
                       // card on pin hover; the number badge matches the map pin.
@@ -614,7 +617,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                             professional={redactContactEnListado(cardData(pro))}
                             activeCategory={activeCategoryId}
                             viewerProfileId={viewerProfileId}
-                            rank={i + 1}
+                            rank={resultOffset + i + 1}
                             highlightMetric={sortBy === "experience" ? "experience" : "rating"}
                             forceContactOnly={shouldShowContactOnly(pro)}
                             preferredLocationId={shouldPreferVideoLocation(pro) ? "videoconsulta" : undefined}
@@ -637,6 +640,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       key={infiniteQuery}
                       query={infiniteQuery}
                       initialCount={results.length}
+                      initialOffset={resultOffset}
                       total={orderedResults.length}
                       activeCategory={activeCategoryId}
                       viewerProfileId={viewerProfileId}
@@ -647,6 +651,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       failedLabel={t("pagination.loadMoreFailed")}
                       retryLabel={t("pagination.retry")}
                     />
+                    </ContactAvailabilityProvider>
                     {/* Al final de los resultados: quien no se decidió puede pedir que
                         le escriban (4-oct-2026). Solo en la última página. Va DENTRO
                         de la lista: puesta debajo, subía 332 px en computadora cuando

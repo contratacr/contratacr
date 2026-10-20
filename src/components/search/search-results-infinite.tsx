@@ -36,6 +36,7 @@ export function SearchResultsInfinite({
   searchedPlace,
   query,
   initialCount,
+  initialOffset = 0,
   total,
   activeCategory,
   viewerProfileId,
@@ -48,6 +49,7 @@ export function SearchResultsInfinite({
   /** The current search as a query string, without page/offset. */
   query: string;
   initialCount: number;
+  initialOffset?: number;
   total: number;
   activeCategory?: string;
   viewerProfileId?: string;
@@ -63,6 +65,13 @@ export function SearchResultsInfinite({
   // long task that freezes the scroll; five at a time keeps it smooth.
   const [revealed, setRevealed] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [showLoading, setShowLoading] = useState(false);
+  const retryTimer = useRef<number | null>(null);
+  const revealFrame = useRef<number | null>(null);
+  useEffect(() => () => {
+    if (retryTimer.current !== null) window.clearTimeout(retryTimer.current);
+    if (revealFrame.current !== null) window.cancelAnimationFrame(revealFrame.current);
+  }, []);
   const [failed, setFailed] = useState(false);
   const attempts = useRef(0);
   // State updates are asynchronous; the observer and the scroll backstop can
@@ -106,7 +115,7 @@ export function SearchResultsInfinite({
   // The quiet retry needs the latest loader without referencing it inside itself.
   const loadMoreRef = useRef<() => Promise<void>>(async () => {});
   const sentinel = useRef<HTMLDivElement | null>(null);
-  const loadedCount = initialCount + items.length;
+  const loadedCount = initialOffset + initialCount + items.length;
   const hasMore = loadedCount < total;
 
   // The page links are the fallback for crawlers and for a failed script; with
@@ -119,18 +128,21 @@ export function SearchResultsInfinite({
   }, []);
 
   const loadMore = useCallback(async () => {
-    if (inFlight.current || !hasMore) return;
+    // Finish mounting this batch before a scroll/observer can request another.
+    if (inFlight.current || revealedRef.current < itemsRef.current.length || !hasMore || done) return;
     inFlight.current = true;
     setLoading(true);
+    setShowLoading(false);
+    const feedbackTimer = window.setTimeout(() => setShowLoading(true), 500);
     setFailed(false);
     try {
-      const offset = initialCount + itemsRef.current.length;
+      const offset = initialOffset + initialCount + itemsRef.current.length;
       const response = await fetch(`/api/buscar/results?${query}${query ? "&" : ""}offset=${offset}`, { cache: "no-store" });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const payload = (await response.json()) as { professionals?: Loaded[] };
       const next = Array.isArray(payload.professionals) ? payload.professionals : [];
       if (next.length === 0) {
-        setFailed(true);
+        setDone(true);
         return;
       }
       attempts.current = 0;
@@ -142,40 +154,38 @@ export function SearchResultsInfinite({
       if (fresh.length === 0) {
         // Nothing new for this offset: the list is complete as far as the
         // server is concerned, so stop asking.
+        revealedRef.current = target;
         setRevealed(target);
         setDone(true);
         return;
       }
       const step = () => {
-        setRevealed((current) => Math.min(target, current + 5));
-        if (itemsRef.current.length === target && revealedRef.current < target) window.requestAnimationFrame(step);
+        revealedRef.current = Math.min(target, revealedRef.current + 5);
+        setRevealed(revealedRef.current);
+        if (itemsRef.current.length === target && revealedRef.current < target) revealFrame.current = window.requestAnimationFrame(step);
       };
-      window.requestAnimationFrame(step);
+      revealFrame.current = window.requestAnimationFrame(step);
     } catch (error) {
       console.error("[search] could not load more results", error);
       // A blip (a deploy finishing, a flaky connection) gets one quiet retry
       // before the person is asked to tap.
       attempts.current += 1;
-      if (attempts.current <= 1) window.setTimeout(() => void loadMoreRef.current(), 1500);
+      if (attempts.current <= 1) retryTimer.current = window.setTimeout(() => void loadMoreRef.current(), 1500);
       else setFailed(true);
     } finally {
+      window.clearTimeout(feedbackTimer);
+      setShowLoading(false);
       inFlight.current = false;
       setLoading(false);
     }
-  }, [hasMore, initialCount, query]);
-  useEffect(() => { revealedRef.current = revealed; }, [revealed]);
+  }, [done, hasMore, initialCount, initialOffset, query]);
   useEffect(() => { loadMoreRef.current = loadMore; }, [loadMore]);
 
   useEffect(() => {
     const node = sentinel.current;
-    if (!node || !hasMore || failed) return;
+    if (!node || !hasMore || failed || done) return;
     // Starts fetching a screen early, so the next cards are usually already
     // there by the time the last one scrolls past.
-    const observer = new IntersectionObserver((entries) => {
-      if (entries.some((entry) => entry.isIntersecting)) void loadMore();
-    }, { rootMargin: "800px 0px" });
-    observer.observe(node);
-
     // The phone list lives in the results sheet, and below it sits more of the
     // page, so a fast flick can carry the sentinel past the viewport without it
     // ever intersecting. Being near the end of whatever is scrolling is enough.
@@ -188,13 +198,18 @@ export function SearchResultsInfinite({
       }
       return null;
     })();
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) void loadMore();
+    }, { root: scroller, rootMargin: "600px 0px" });
+    observer.observe(node);
     const nearEnd = () => {
       if (scroller) {
         const remaining = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight;
-        if (remaining < 1200) { void loadMore(); return; }
+        if (remaining < 600) void loadMore();
+        return; // The outer document is not the results scroll container.
       }
       const pageRemaining = document.documentElement.scrollHeight - window.scrollY - window.innerHeight;
-      if (pageRemaining < 1200) void loadMore();
+      if (pageRemaining < 600) void loadMore();
     };
     scroller?.addEventListener("scroll", nearEnd, { passive: true });
     window.addEventListener("scroll", nearEnd, { passive: true });
@@ -203,7 +218,7 @@ export function SearchResultsInfinite({
       scroller?.removeEventListener("scroll", nearEnd);
       window.removeEventListener("scroll", nearEnd);
     };
-  }, [failed, hasMore, loadMore]);
+  }, [done, failed, hasMore, loadMore]);
 
   return (
     <>
@@ -222,7 +237,7 @@ export function SearchResultsInfinite({
               professional={item.professional}
               activeCategory={activeCategory}
               viewerProfileId={viewerProfileId}
-              rank={initialCount + index + 1}
+              rank={initialOffset + initialCount + index + 1}
               highlightMetric={highlightMetric}
               forceContactOnly={item.forceContactOnly}
               preferredLocationId={item.preferVideo ? "videoconsulta" : undefined}
@@ -235,16 +250,14 @@ export function SearchResultsInfinite({
         );
       })}
 
-      {revealed < items.length && (
-        <div className="flex flex-col gap-1.5 lg:gap-3" aria-hidden>
-          <CardSkeleton />
-        </div>
-      )}
-
       {hasMore && !failed && !done && (
-        <div ref={sentinel} className="flex flex-col gap-1.5 lg:gap-3" role="status" aria-busy={loading} aria-label={loadingLabel}>
-          <CardSkeleton />
-          <CardSkeleton />
+        <div ref={sentinel} data-search-load-more="" className="min-h-px">
+          {loading && showLoading && (
+            <div className="flex flex-col gap-1.5 lg:gap-3" role="status" aria-busy="true" aria-label={loadingLabel}>
+              <CardSkeleton />
+              <CardSkeleton />
+            </div>
+          )}
         </div>
       )}
 

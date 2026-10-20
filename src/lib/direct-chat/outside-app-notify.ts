@@ -1,3 +1,4 @@
+import { FRESH_PUSH_DAYS } from "@/lib/direct-chat/availability";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { EMAIL_LOGO_DARK_MODE_STYLES, emailLogoMarkup, sendBrevoEmail } from "@/lib/email/send";
 import { sendWhatsAppText } from "@/lib/notifications";
@@ -11,7 +12,8 @@ import { sendWhatsAppText } from "@/lib/notifications";
 type AdminDb = ReturnType<typeof createAdminClient>;
 
 /** Cuántos días sin abrir la app hacen que dejemos de confiar en el push. */
-const DIAS_DE_APP_VIVA = 30;
+// Shared with the initial search contact decision.
+const DIAS_DE_APP_VIVA = FRESH_PUSH_DAYS;
 
 /**
  * Quién tiene la app DE VERDAD, no quién la tuvo alguna vez.
