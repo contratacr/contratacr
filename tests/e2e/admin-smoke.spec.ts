@@ -393,6 +393,27 @@ test.describe("@admin surfaces", () => {
     }
   });
 
+  test("verification badge matches every account shown in the pending queue", async ({ page }) => {
+    test.skip(!canRunSeededRegression(), "Needs the isolated regression environment.");
+    const account = await createDisposableAccount({ prefix: "admin-queue-count", admin: true });
+    try {
+      await loginAdmin(page, account);
+      const [badgeResponse, queueResponse] = await Promise.all([
+        page.request.get("/api/admin/pending-counts"),
+        page.request.get("/api/admin/providers?status=pending"),
+      ]);
+      expect(badgeResponse.status()).toBe(200);
+      expect(queueResponse.status()).toBe(200);
+      const badge = await badgeResponse.json();
+      const queue = await queueResponse.json();
+      expect(queue.providers.length).toBe(badge.verificacion);
+      expect((queue.counts.pending ?? 0) + (queue.counts.under_appeal ?? 0)).toBe(badge.verificacion);
+      expect(new Set(queue.providers.map((row: { account_id: string }) => row.account_id)).size).toBe(badge.verificacion);
+    } finally {
+      await cleanupDisposableAccount(account);
+    }
+  });
+
   // WhatsApp outreach for verification is written by hand from this queue (business
   // -initiated templates would leave replies in an inbox nobody reads). What the
   // panel automates is the tally: who is still waiting for a first message.
