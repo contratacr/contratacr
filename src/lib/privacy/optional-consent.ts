@@ -17,10 +17,25 @@ export function readOptionalConsent(purpose: OptionalPurpose): OptionalChoice {
   } catch { return "unknown"; }
 }
 
+/** Limited measurement is a product setting, not a fabricated acceptance receipt.
+ * A saved refusal survives expiry/version changes, including the legacy setting. */
+export function advertisingMeasurementEnabled(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    if (window.localStorage.getItem("contratacr:analytics-consent") === "declined") return false;
+    const raw = window.localStorage.getItem(consentKey("advertising"));
+    if (!raw) return true;
+    const saved = JSON.parse(raw);
+    if (saved?.choice === "declined") return false;
+    return readOptionalConsent("advertising") === "accepted";
+  } catch { return false; }
+}
+
 export function syncAdvertisingCookie() {
   if (typeof document === "undefined") return;
   const suffix = `; Path=/; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
-  document.cookie = `${ADS_CONSENT_COOKIE}=${readOptionalConsent("advertising") === "accepted" ? "accepted" : "declined"}; Max-Age=${MAX_AGE}${suffix}`;
+  const state = !advertisingMeasurementEnabled() ? "declined" : readOptionalConsent("advertising") === "accepted" ? "accepted" : "limited";
+  document.cookie = `${ADS_CONSENT_COOKIE}=${state}; Max-Age=${MAX_AGE}${suffix}`;
   // An earlier version enabled this legacy cookie without affirmative consent.
   document.cookie = `ccr_meta_consent=declined; Max-Age=0${suffix}`;
 }
@@ -30,6 +45,7 @@ export function saveOptionalConsent(purpose: OptionalPurpose, choice: Exclude<Op
   // If storage is blocked, do not claim consent was saved or enable tracking.
   window.localStorage.setItem(consentKey(purpose), JSON.stringify({ version: OPTIONAL_CONSENT_VERSION, choice, at: new Date().toISOString() }));
   if (purpose === "advertising") {
+    window.localStorage.removeItem("contratacr:analytics-consent");
     syncAdvertisingCookie();
     if (choice === "declined") {
       try { window.sessionStorage.removeItem("contratacr:meta-pendientes"); } catch { /* storage optional */ }

@@ -28,7 +28,7 @@ test("reports separate campaigns and deduplicate people across repeated actions"
 });
 test("CAPI success requires an acknowledged event, retries preserve the event identity",async()=>{
  const requests: Record<string,unknown>[]=[];
- const payload={event_name:"Contact",event_id:"stable-id",event_time:123,custom_data:{action:"service_contact",audience:"client",consent_version:"2026-10-19"}};
+ const payload={event_name:"Contact",event_id:"stable-event-identifier",event_time:123,action_source:"website",event_source_url:"https://contratacr.com/profesionales",user_data:{fbp:"fb.1.1792500000000.123456"},custom_data:{action:"service_contact",audience:"client",measurement_version:"minimal-2026-10-20"}};
  const config={pixelId:"123",token:"test-secret",version:"v99.0",testCode:"TEST"};
  const transport=(async (_url,init)=>{requests.push(JSON.parse(String(init?.body)));return Response.json({events_received:1});}) as typeof fetch;
  expect(await sendMetaConversion(payload,config,transport)).toBe("sent");
@@ -57,7 +57,7 @@ test("October's known ad spend cannot disappear because the cost ledger is incom
  expect(summarizeGrowth([],0,"2026-11").maximumTestUsd).toBe(14);
 });
 
-test("legacy queued conversions without affirmative consent never reach Meta", async () => {
+test("legacy queued conversions without the minimal outbound contract never reach Meta", async () => {
  let calls=0;
  const result=await sendMetaConversion({}, {pixelId:"1",token:"synthetic",version:"v20.0"}, async()=>{calls++;throw Error("must not send");});
  expect(result).toBe("suppressed");expect(calls).toBe(0);

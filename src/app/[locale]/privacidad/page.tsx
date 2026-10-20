@@ -195,11 +195,11 @@ const ES_SECTIONS: LegalSection[] = [
       },
       {
         "k": "p",
-        "text": "En web, Meta Pixel y las conversiones publicitarias solo se habilitan después de elegir aceptar esa medición. Sin elección o al rechazarla no se autoriza su envío. El píxel no se carga dentro de la app nativa. La medición publicitaria puede compartir datos de navegación y acciones con Meta; no debe incluir conversaciones ni documentos privados."
+        "text": "En web utilizamos medición limitada con Meta para evaluar visitas y conversiones de nuestras campañas. El servidor envía únicamente el tipo de evento, fecha, un identificador del evento, identificadores publicitarios del navegador o del clic y datos técnicos del navegador. No envía nombres, correo, teléfono, cédula, identificadores de cuenta, ubicación precisa, búsquedas escritas, conversaciones, documentos ni URLs con datos del usuario. Estos identificadores publicitarios no son datos anónimos. No cargamos Meta Pixel ni activamos esta integración dentro de la app nativa."
       },
       {
         "k": "p",
-        "text": "Puede aceptar o rechazar desde el aviso y cambiar su elección en **Preferencias de publicidad** de esta página o desde Privacidad de su cuenta. Las opciones tienen el mismo acceso y rechazar no bloquea el servicio. Retirar el permiso detiene envíos futuros; no borra automáticamente datos ya recibidos por un proveedor."
+        "text": "La medición limitada está activada en web salvo que exista un rechazo guardado. Puede desactivarla o reactivarla en **Preferencias de publicidad** de esta página o desde Privacidad de su cuenta, sin bloquear el servicio. No mostramos una ventana automática ni interpretamos esta configuración como una aceptación expresa. Desactivarla detiene envíos futuros y cancela conversiones pendientes asociadas; no borra automáticamente datos ya recibidos por Meta."
       },
       {
         "k": "p",
@@ -471,11 +471,11 @@ const EN_SECTIONS: LegalSection[] = [
       },
       {
         "k": "p",
-        "text": "On the web, Meta Pixel and advertising conversions are enabled only after you accept that measurement. No choice or rejection does not authorize transmission. The pixel does not load inside the native app. Advertising measurement may share browsing and action data with Meta; it must not include private conversations or documents."
+        "text": "On the web, limited Meta measurement assesses campaign visits and conversions. The server sends only event type, date, event ID, browser or click advertising identifiers and technical browser data. It does not send names, email, phone, government IDs, account identifiers, precise location, typed searches, conversations, documents or URLs containing user data. Advertising identifiers are not anonymous data. We do not load Meta Pixel or enable this integration inside the native app."
       },
       {
         "k": "p",
-        "text": "Accept or reject in the notice and change your choice under **Advertising preferences** on this page or in account Privacy. Choices are equally accessible and rejection does not block the service. Withdrawal stops future transmissions; it does not automatically erase information already received by a provider."
+        "text": "Limited measurement is enabled on the web unless a saved rejection exists. Disable or enable it under **Advertising preferences** on this page or in account Privacy without losing access. We show no automatic prompt and do not treat this setting as express acceptance. Disabling stops future delivery and cancels associated pending conversions; it does not automatically erase data already received by Meta."
       },
       {
         "k": "p",

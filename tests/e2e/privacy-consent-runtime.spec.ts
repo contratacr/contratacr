@@ -7,7 +7,7 @@ function fixture() {
   const session = new Map<string,string>();
   const cookieWrites: string[]=[];
   const events = new EventTarget();
-  const localStorage = { getItem: (key:string) => storage.get(key) ?? null, setItem: (key:string,value:string) => storage.set(key,value) };
+  const localStorage = { getItem: (key:string) => storage.get(key) ?? null, setItem: (key:string,value:string) => storage.set(key,value), removeItem: (key:string)=>storage.delete(key) };
   const box = {exports:{} as typeof import("../../src/lib/privacy/optional-consent")};
   const location={protocol:"https:",hostname:"contratacr.com"};
   const document={set cookie(value:string){cookieWrites.push(value);}};
@@ -17,7 +17,7 @@ function fixture() {
   });
   return {api:box.exports, storage, session, cookieWrites};
 }
-test("no choice, legacy implicit flags, malformed or expired permissions never authorize advertising",()=>{
+test("no choice, legacy implicit flags, malformed or expired records never become an acceptance receipt",()=>{
  const h=fixture();expect(h.api.readOptionalConsent("advertising")).toBe("unknown");
  h.storage.set("contratacr:analytics-consent","enabled");expect(h.api.readOptionalConsent("advertising")).toBe("unknown");
  for(const record of ["not-json",JSON.stringify({version:"old",choice:"accepted",at:new Date().toISOString()}),JSON.stringify({version:"2026-10-19",choice:"accepted",at:"2025-01-01"})]){
@@ -33,3 +33,13 @@ test("permission is versioned, purpose-specific, withdrawable, and does not bund
  expect(h.cookieWrites.some(value=>value.startsWith("_fbp=;"))).toBe(true);
  h.api.saveOptionalConsent("ai","accepted");expect(h.api.readOptionalConsent("ai")).toBe("accepted");expect(h.api.readOptionalConsent("advertising")).toBe("declined");
 });
+
+ test("limited measurement does not fabricate acceptance and preserves legacy/expired refusals",()=>{
+ const h=fixture(); expect(h.api.advertisingMeasurementEnabled()).toBe(true);
+ h.api.syncAdvertisingCookie();expect(h.cookieWrites.some(v=>v.startsWith("ccr_ads_consent_v1=limited"))).toBe(true);
+ expect(h.api.readOptionalConsent("advertising")).toBe("unknown");
+ h.storage.set("contratacr:analytics-consent","declined");expect(h.api.advertisingMeasurementEnabled()).toBe(false);
+ h.storage.delete("contratacr:analytics-consent");
+ h.storage.set(h.api.consentKey("advertising"),JSON.stringify({choice:"declined",version:"old",at:"2020-01-01"}));
+ expect(h.api.advertisingMeasurementEnabled()).toBe(false);
+ });

@@ -1,12 +1,12 @@
-import { OPTIONAL_CONSENT_VERSION } from "@/lib/privacy/optional-consent";
+import { minimalMetaPayload } from "./meta-minimal";
 export type MetaDeliveryResult = "sent" | "retry" | "suppressed";
 export async function sendMetaConversion(payload: Record<string, unknown>, config: { pixelId: string; token: string; version: string; testCode?: string }, transport: typeof fetch = fetch): Promise<MetaDeliveryResult> {
-  const custom = payload.custom_data as Record<string, unknown> | undefined;
-  if (custom?.consent_version !== OPTIONAL_CONSENT_VERSION) return "suppressed";
+  const safePayload = minimalMetaPayload(payload);
+  if (!safePayload) return "suppressed";
   try {
     const response = await transport(`https://graph.facebook.com/${config.version}/${config.pixelId}/events`, {
       method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${config.token}` },
-      body: JSON.stringify({ data: [payload], ...(config.testCode ? { test_event_code: config.testCode } : {}) }),
+      body: JSON.stringify({ data: [safePayload], ...(config.testCode ? { test_event_code: config.testCode } : {}) }),
       signal: AbortSignal.timeout(8000),
     });
     const body = await response.json().catch(() => ({}));
