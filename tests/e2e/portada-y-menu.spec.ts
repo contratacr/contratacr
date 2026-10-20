@@ -155,7 +155,9 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
       await page.locator("img[data-guia-poster]").first().scrollIntoViewIfNeeded();
       await expect(activo).toBeVisible({ timeout: 2_000 });
     }).toPass({ timeout: 20_000 });
-    expect(await activo.evaluate((v) => Number(getComputedStyle(v).opacity))).toBe(1);
+    // Safari replaces the animated-image node when metadata refreshes its blob URL.
+    // Resolve the live node again instead of reading opacity from a detached image.
+    await expect(activo).toHaveCSS("opacity", "1");
     // Una imagen fija por paso (precargadas); se mira la del paso activo.
     const poster = page.locator("img[data-guia-poster]").first();
     const orden = await poster.evaluate((img) => {
