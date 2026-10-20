@@ -1,3 +1,4 @@
+import { contactAvailability } from "@/lib/direct-chat/availability";
 import { NextResponse } from "next/server";
 import { idiomaDeLaPeticion, mensajeDeError } from "@/lib/api-errors";
 import { createClient } from "@/lib/supabase/server";
@@ -179,18 +180,14 @@ export async function GET(req: Request) {
   const conApp = searchParams.get("conApp");
   if (conApp) {
     const ids = [...new Set(conApp.split(",").map((v) => v.trim()).filter(Boolean))].slice(0, 60);
-    const { data: filas } = await db.from("professionals").select("id, profile_id").in("id", ids);
-    const perfiles = ((filas ?? []) as { id: string; profile_id: string | null }[]).filter((f) => f.profile_id);
-    const [conPush, { data: bloqueadas }] = await Promise.all([
-      usersWithFreshPush(db, perfiles.map((f) => f.profile_id as string)),
-      db.from("direct_conversations").select("professional_id")
-        .eq("client_id", user.id).eq("status", "blocked").in("professional_id", ids),
-    ]);
-    const conBloqueo = new Set(((bloqueadas ?? []) as { professional_id: string }[]).map((b) => b.professional_id));
-    const resultado: Record<string, boolean> = {};
-    for (const id of ids) resultado[id] = false;
-    for (const f of perfiles) resultado[f.id] = conPush.has(f.profile_id as string) || conBloqueo.has(f.id);
-    return NextResponse.json({ conApp: resultado });
+    const { data: filas, error } = await db.from("professionals").select("id, profile_id").in("id", ids);
+    try {
+      if (error) throw error;
+      const recipients = ids.map(id => ({ id, profileId: filas?.find(row => row.id === id)?.profile_id }));
+      return NextResponse.json({ conApp: await contactAvailability(user.id, recipients) }, { headers: { "Cache-Control": "private, no-store" } });
+    } catch {
+      return NextResponse.json({ error: "contact-availability-unavailable" }, { status: 503 });
+    }
   }
   const id = searchParams.get("id");
   if (id) {

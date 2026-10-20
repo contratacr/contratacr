@@ -1,11 +1,17 @@
 "use client";
 
-import { useEffect, useSyncExternalStore } from "react";
+import { createContext, createElement, useContext, useEffect, useSyncExternalStore, type ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
+
+type InitialAvailability = { viewerId: string; values: Record<string, boolean>; resolvedAt: number };
+const InitialAvailabilityContext = createContext<InitialAvailability | null>(null);
+export function ContactAvailabilityProvider({ children, ...initial }: InitialAvailability & { children: ReactNode }) {
+  return createElement(InitialAvailabilityContext.Provider, { value: initial }, children);
+}
 
 // Viewer-scoped, short-lived reachability. Never persist network failures as
 // WhatsApp for the entire session; a newly registered app must become reachable.
-type Availability = { value: boolean; expiresAt: number };
+type Availability = { value: boolean; expiresAt: number; resolvedAt: number };
 const conocidos = new Map<string, Availability>();
 let pendientes = new Set<string>();
 const pedidos = new Set<string>();
@@ -36,13 +42,13 @@ async function preguntar() {
       for (const id of lote) {
         const value = json.conApp?.[id.slice(id.indexOf(":") + 1)];
         if (typeof value !== "boolean") throw new Error("availability-missing");
-        conocidos.set(id, { value, expiresAt: Date.now() + (value ? 60_000 : 15_000) });
+        conocidos.set(id, { value, expiresAt: Date.now() + (value ? 60_000 : 15_000), resolvedAt: Date.now() });
       }
     } catch {
       for (const id of lote) {
         // Preserve a confirmed channel through a transient failure. Unknown
         // recipients can still use WhatsApp, with an automatic retry in 5s.
-        conocidos.set(id, { value: conocidos.get(id)?.value ?? false, expiresAt: Date.now() + 5_000 });
+        conocidos.set(id, { value: conocidos.get(id)?.value ?? false, expiresAt: Date.now() + 5_000, resolvedAt: Date.now() });
       }
     } finally {
       lote.forEach(id => pedidos.delete(id));
@@ -54,10 +60,17 @@ async function preguntar() {
 /** null pending, true shared chat, false WhatsApp; no anonymous lookup. */
 export function useProfesionalConApp(professionalId: string | undefined, activo: boolean) {
   const { user, loading } = useAuth();
+  const initial = useContext(InitialAvailabilityContext);
+  const seed = initial && initial.viewerId === user?.id && professionalId ? initial.values[professionalId] : undefined;
+  const seedResolvedAt = initial?.resolvedAt ?? 0;
+  const seedExpiry = initial ? initial.resolvedAt + (seed ? 60_000 : 15_000) : 0;
   const consultar = Boolean(activo && user && professionalId);
   const cacheId = user && professionalId ? `${user.id}:${professionalId}` : "";
   useEffect(() => {
     if (!consultar || !cacheId) return;
+    if (typeof seed === "boolean" && seedExpiry > Date.now() && (conocidos.get(cacheId)?.resolvedAt ?? 0) < seedResolvedAt) {
+      conocidos.set(cacheId, { value: seed, expiresAt: seedExpiry, resolvedAt: seedResolvedAt });
+    }
     const refresh = () => { if (document.visibilityState !== "hidden") encolar(cacheId); };
     refresh();
     const timer = window.setInterval(refresh, 5_000);
@@ -70,15 +83,16 @@ export function useProfesionalConApp(professionalId: string | undefined, activo:
       window.removeEventListener("online", refresh);
       document.removeEventListener("visibilitychange", refresh);
     };
-  }, [consultar, cacheId]);
+  }, [consultar, cacheId, seed, seedExpiry, seedResolvedAt]);
   return useSyncExternalStore(
     suscribir,
     () => {
       if (!activo || !professionalId) return false;
       if (loading) return null;
       if (!user) return false;
-      return conocidos.get(cacheId)?.value ?? null;
+      const cached = conocidos.get(cacheId);
+      return typeof seed === "boolean" && (cached?.resolvedAt ?? 0) < seedResolvedAt ? seed : cached?.value ?? null;
     },
-    () => activo && professionalId ? null : false,
+    () => !activo || !professionalId || (!loading && !user) ? false : seed ?? null,
   );
 }

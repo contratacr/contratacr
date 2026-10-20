@@ -11,7 +11,7 @@ for (const native of [true, false]) for (const hasApp of [true, false]) {
     try {
       account = await createDisposableAccount({ prefix: "contact-stability", professional: true });
       const db = regressionAdminClient();
-      const { data: pro } = await db.from("professionals").update({ is_banned: false }).eq("id", account.professionalId!).select("slug").single().throwOnError();
+      const { data: pro } = await db.from("professionals").update({ is_banned: false, slug: `contact-stability-${account.id}` }).eq("id", account.professionalId!).select("slug").single().throwOnError();
       if (native) await context.addCookies([{ name: "ccr_platform", value: "native", url: baseURL! }]);
       await page.addInitScript(() => localStorage.setItem("ccr:native-first-run-onboarding:v12", "1"));
       await loginAs(page, account.email, account.password);
@@ -59,7 +59,7 @@ test("contact retries a transient availability failure without keeping WhatsApp 
   try {
     account = await createDisposableAccount({ prefix: "contact-retry", professional: true });
     const db = regressionAdminClient();
-    const { data: pro } = await db.from("professionals").update({ is_banned: false }).eq("id", account.professionalId!).select("slug").single().throwOnError();
+    const { data: pro } = await db.from("professionals").update({ is_banned: false, slug: `contact-stability-${account.id}` }).eq("id", account.professionalId!).select("slug").single().throwOnError();
     await loginAs(page, account.email, account.password);
     let requests = 0;
     await page.route("**/api/direct-chat?conApp=*", async route => {

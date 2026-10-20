@@ -1,6 +1,6 @@
 import { expect, test } from "playwright/test";
-import { apiJson, firstProfessionalHref, gotoOK, loginAs, resetAuth, waitForInteractivePage } from "./helpers";
-import { canRunSeededRegression, ensureRegressionSeed, regressionAdminClient, E2E_USERS } from "./seed";
+import { apiJson, firstProfessionalHref, gotoOK, resetAuth, waitForInteractivePage } from "./helpers";
+import { canRunSeededRegression, ensureRegressionSeed } from "./seed";
 
 // Contactar NO exige cuenta: pide nombre y teléfono, y con eso el profesional
 // puede devolver la llamada. Lo que sigue protegido es el listado —ahí los
@@ -52,6 +52,8 @@ test.describe("@seeded contact gate", () => {
     // Un solo rótulo en todo el app.
     const whatsapp = page.getByRole("button", { name: /^WhatsApp$/i }).filter({ visible: true }).first();
     await expect(whatsapp).toBeVisible({ timeout: 15_000 });
+    const advertising = page.locator("[data-advertising-preferences]");
+    if (await advertising.isVisible()) await advertising.getByRole("button", { name: "Rechazar", exact: true }).click();
     const urlAntes = page.url();
     await whatsapp.click();
     await page.waitForTimeout(1500);
