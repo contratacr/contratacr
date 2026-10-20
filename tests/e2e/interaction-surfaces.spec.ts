@@ -22,8 +22,8 @@ test.describe("@seeded interaction surfaces", () => {
     await expect(publish).toBeVisible();
     await publish.click();
 
-    // La ventana se llama por su título, que hoy es «Cuéntanos qué necesitas».
-    const dialog = page.getByRole("dialog", { name: /Cu.ntanos qu. necesitas|Tell us what you need|Crear (?:un )?proyecto|Create a project/i });
+    // La ventana se llama por su título, que hoy es «¿En qué consiste su proyecto?».
+    const dialog = page.getByRole("dialog", { name: /En qu. consiste su proyecto|What is your project about|Crear (?:un )?proyecto|Create a project/i });
     await expect(dialog).toBeVisible();
     await expectVisibleText(
       dialog,
