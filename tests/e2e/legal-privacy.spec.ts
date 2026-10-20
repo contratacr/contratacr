@@ -19,9 +19,9 @@ for (const locale of ["es","en"]) test(`legal documents: ${locale} identifies th
 
 test("advertising starts off; rejecting and later changing the choice works without blocking legal pages",async({page,context})=>{
  await gotoOK(page,"/privacidad");await waitForInteractivePage(page);
- const notice=page.locator('[data-advertising-preferences]').first();
- await expect(notice).toBeVisible();await notice.getByRole("button",{name:"Rechazar",exact:true}).click();
- const controls=page.locator('[data-advertising-preferences]').last();
+ const controls=page.locator('[data-advertising-preferences]');
+ await expect(controls).toHaveCount(1);
+ await expect(controls).toBeVisible();await controls.getByRole("button",{name:"Rechazar",exact:true}).click();
  await expect(controls).toContainText("desactivada");
  expect((await context.cookies()).find(cookie=>cookie.name==="ccr_ads_consent_v1")?.value).toBe("declined");
  await controls.getByRole("button",{name:"Aceptar",exact:true}).click();
@@ -94,4 +94,20 @@ for(const locale of ["es","en"]) test(`login keeps the existing legal disclosure
  await expect(main).toContainText(locale === "en" ? "By continuing, you accept" : "Al continuar, aceptas");
  await expect(main.getByRole("link",{name:locale === "en" ? "Terms" : "Términos",exact:true})).toHaveAttribute("href",/terminos/);
  await expect(main.getByRole("link",{name:locale === "en" ? "Privacy Policy" : "Política de Privacidad",exact:true})).toHaveAttribute("href",/privacidad/);
+});
+
+for (const native of [false, true]) test(`${native ? "native" : "web"}: no automatic advertising or terms notice on entry`, async ({ page, context, baseURL }) => {
+ if(native) {
+  await context.addCookies([{name:"ccr_platform",value:"native",url:baseURL!}]);
+  await page.addInitScript(()=>localStorage.setItem("ccr:native-first-run-onboarding:v12","1"));
+ }
+ const trackingRequests: string[] = [];
+ page.on("request", request => { if (/connect\.facebook\.net|www\.facebook\.com\/tr/.test(request.url())) trackingRequests.push(request.url()); });
+ for(const route of ["/profesionales", "/login", "/registro/cliente"]) {
+  await gotoOK(page,route);await waitForInteractivePage(page);
+  await expect(page.locator("[data-advertising-preferences], [data-legal-acceptance]")).toHaveCount(0);
+  expect((await context.cookies()).find(cookie=>cookie.name==="ccr_ads_consent_v1")?.value).not.toBe("accepted");
+ }
+ expect(trackingRequests).toEqual([]);
+ expect(await page.evaluate(()=>localStorage.getItem("contratacr:consent:advertising:v1"))).toBeNull();
 });
