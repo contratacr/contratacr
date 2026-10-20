@@ -12,6 +12,30 @@
         ],
         "components": [
           {
+            "/": "/"
+          },
+          {
+            "/": "/es"
+          },
+          {
+            "/": "/es/"
+          },
+          {
+            "/": "/en"
+          },
+          {
+            "/": "/en/"
+          },
+          {
+            "/": "/profesionales"
+          },
+          {
+            "/": "/es/profesionales"
+          },
+          {
+            "/": "/en/profesionales"
+          },
+          {
             "/": "/dashboard/*"
           },
           {

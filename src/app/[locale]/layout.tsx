@@ -28,6 +28,8 @@ import { WhatsAppReviewFollowUp } from "@/components/reviews/whatsapp-review-fol
 import { PushTokenManager } from "@/components/push/push-token-manager";
 import { AppResumeRecovery } from "@/components/util/app-resume-recovery";
 import { NativeBottomNav } from "@/components/mobile/native-bottom-nav";
+import { SmartAppBanner } from "@/components/mobile/smart-app-banner";
+import { prefersNativeIosAppBanner } from "@/lib/mobile/smart-app-banner";
 import { CampaignAppLinks } from "@/components/mobile/campaign-app-links";
 import { MobileAppBridge } from "@/components/mobile/mobile-app-bridge";
 import { NativeFirstRunOnboarding } from "@/components/mobile/native-first-run-onboarding";
@@ -206,6 +208,7 @@ export default async function LocaleLayout({
           <SombrasAlDesplazar />
           <AppResumeRecovery />
           <CampaignAppLinks />
+          <Suspense fallback={null}><SmartAppBanner /></Suspense>
           <CustomCategoriesLoader />
           <NotificationLiveToast scope="all" />
           <OperationalStatusBanner locale={locale} status={operationalStatus} />
@@ -215,7 +218,7 @@ export default async function LocaleLayout({
             <UsageCapture />
           </Suspense>
           <PushTokenManager />
-          <MobileAppDownloadBanner initialPlatform={initialDownloadPlatform} initialDismissed={initialDownloadDismissed} />
+          <MobileAppDownloadBanner initialPlatform={initialDownloadPlatform} initialDismissed={initialDownloadDismissed} initialNativeIosBanner={prefersNativeIosAppBanner((await headers()).get("user-agent") ?? "")} />
           {initialMfa.required ? null : children}
           <NativeBottomNav />
           <WhatsAppReviewFollowUp />

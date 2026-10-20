@@ -1,3 +1,4 @@
+import { prefersNativeIosAppBanner } from "../../src/lib/mobile/smart-app-banner";
 import { mkdirSync } from "node:fs";
 import { PWA_STARTUP_DEVICES } from "../../src/lib/pwa-startup";
 import sharp from "sharp";
@@ -9,6 +10,12 @@ test('web: tiendas correctas, reserva, teclado y cierre persistente', async ({pa
   await page.goto('/');
   await expect(page.getByTestId('app-download-section')).toBeVisible();
   const banner=page.getByTestId('mobile-app-download');
+  if (prefersNativeIosAppBanner(await page.evaluate(()=>navigator.userAgent))) {
+    await expect(banner).toHaveCount(0);
+    await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveAttribute('content',/app-id=6794559661/);
+    await expect(page.getByTestId('app-store-footer-links')).toBeVisible();
+    return;
+  }
   await expect(banner).toBeVisible();
   const href=await banner.locator('a').getAttribute('href');
   const android=await page.evaluate(()=>/Android/.test(navigator.userAgent));
@@ -49,6 +56,12 @@ test('shared download anchor always remains useful, including after dismissing t
  await page.goto('/#descargar-app');
  if ((page.viewportSize()?.width ?? 1280) < 1024) {
   const banner=page.getByTestId('mobile-app-download');
+  if (prefersNativeIosAppBanner(await page.evaluate(()=>navigator.userAgent))) {
+    await expect(banner).toHaveCount(0);
+    await expect(page.getByTestId('app-download-section')).toBeInViewport();
+    await expect(page.getByTestId('app-download-section').getByTestId('app-store-links').locator('a')).toHaveCount(2);
+    return;
+  }
   await expect(banner).toBeVisible();
   await banner.getByRole('button').click();await expect(banner).toHaveCount(0);
   await page.reload();await expect(banner).toBeVisible();
@@ -92,8 +105,15 @@ test('mobile download notice and header are correctly positioned before JavaScri
  try {
   await context.addCookies([{name:'ccr_sin_analitica',value:'1',url:baseURL!}]);
   const cold=await context.newPage();await cold.goto(`${baseURL}/`);
-  const notice=await cold.getByTestId('mobile-app-download').boundingBox();
+  const noticeLocator=cold.getByTestId('mobile-app-download');
   const header=await cold.getByTestId('landing-navbar').boundingBox();
+  if (prefersNativeIosAppBanner(ua)) {
+    await expect(noticeLocator).toHaveCount(0);
+    await expect(cold.locator('meta[name="apple-itunes-app"]')).toHaveAttribute('content',/app-id=6794559661, app-argument=https:\/\/contratacr.com\//);
+    expect(header?.y).toBe(0);
+    return;
+  }
+  const notice=await noticeLocator.boundingBox();
   expect(notice).not.toBeNull();
   expect(notice!.y + notice!.height).toBeCloseTo(844, 0);
   expect(notice!.height).toBeGreaterThanOrEqual(80);
@@ -130,6 +150,11 @@ test('notice stays at the bottom on public pages and respects account/form route
  for(const route of ['/proyectos','/empleos','/promociones','/profesionales','/ayuda']) {
   await page.goto(route);
   const notice=page.getByTestId('mobile-app-download');
+  if (route !== '/ayuda' && prefersNativeIosAppBanner(await page.evaluate(()=>navigator.userAgent))) {
+    await expect(notice).toHaveCount(0);
+    await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveAttribute('content',/app-id=6794559661/);
+    continue;
+  }
   await expect(notice).toBeVisible();
   await expect(notice).not.toContainText('Llévala contigo');
   await expect(notice.locator('a')).toHaveText('Descargar');
@@ -247,6 +272,16 @@ test('mobile listings stay behind the download notice and keep their last result
  for (const route of ['/empleos','/proyectos','/promociones']) {
   await page.goto(route);
   const banner=page.getByTestId('mobile-app-download');
+  if (prefersNativeIosAppBanner(await page.evaluate(()=>navigator.userAgent))) {
+    await expect(banner).toHaveCount(0);
+    const list=page.locator('.ccr-tablero-marco > section').first();
+    await expect(list).toBeVisible();
+    await list.evaluate(el=>{el.scrollTop=el.scrollHeight;});
+    const last=list.locator('article').last();
+    if(await last.count()) expect((await last.boundingBox())!.y+(await last.boundingBox())!.height).toBeLessThanOrEqual((page.viewportSize()?.height ?? 844)+1);
+    expect(await page.locator('html').getAttribute('data-web-download-banner')).toBeNull();
+    continue;
+  }
   await expect(banner).toBeVisible();
   const shell=page.locator('.ccr-cascaron-tablero');
   const before=await shell.boundingBox();

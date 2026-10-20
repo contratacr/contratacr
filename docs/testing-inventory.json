@@ -2,13 +2,13 @@
   "scope": "Todos los archivos TypeScript de src/app, src/components y src/hooks, controles JSX declarados, pestañas del panel y specs permanentes. No enumera cada elemento dinámico renderizado ni componentes dentro de dependencias.",
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
-    "files": 490,
+    "files": 491,
     "controls": 1298,
     "pages": 71,
     "handlers": 104,
-    "components": 253,
+    "components": 254,
     "hooks": 26,
-    "specs": 150
+    "specs": 151
   },
   "dashboardTabs": [
     "home",
@@ -13152,7 +13152,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 25,
+          "line": 27,
           "tag": "a",
           "label": "{`${en ? \"Download on\" : \"Descargar en\"} ${platform === \"ios\" ? \"App Store\" : \"Google Play\"}`}",
           "handler": "",
@@ -13160,7 +13160,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 74,
+          "line": 76,
           "tag": "a",
           "label": "{en ? \"Download ContrataCR for iOS\" : \"Descargar ContrataCR para iOS\"}",
           "handler": "",
@@ -13168,7 +13168,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 75,
+          "line": 77,
           "tag": "a",
           "label": "{en ? \"Download ContrataCR for Android\" : \"Descargar ContrataCR para Android\"}",
           "handler": "",
@@ -13176,7 +13176,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 148,
+          "line": 151,
           "tag": "button",
           "label": "{en ? \"Dismiss download notice\" : \"Cerrar aviso de descarga\"}",
           "handler": "{() => { setDismissed(true); const until = String(Date.now() + 30 * 86400000); document.cookie = `${DOWNLOAD_DISMISS_COOKIE}=${until}; Path=/; Max-Age=2592000; SameSite=Lax${location.protocol === \"https:\" ? \"; Secure\" : \"\"}`; try { localStorage.setItem(DISMISSED_KEY, until); } catch {} }}",
@@ -13184,7 +13184,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 156,
+          "line": 159,
           "tag": "a",
           "label": "{en ? `Download ContrataCR on ${platform === \"ios\" ? \"App Store\" : \"Google Play\"}` : `Descargar ContrataCR en ${platform === \"ios\" ? \"App Store\" : \"Google Play\"}`}",
           "handler": "",
@@ -15374,6 +15374,29 @@
       "route": null,
       "exports": [
         "SectionHeaderTitle"
+      ],
+      "methods": [],
+      "controls": [],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/mobile-native-shell.spec.ts",
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/native-home-paint.spec.ts",
+        "tests/e2e/reanudar-la-app.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P1"
+    },
+    {
+      "file": "src/components/mobile/smart-app-banner.tsx",
+      "kind": "Componente",
+      "group": "Navegación nativa",
+      "route": null,
+      "exports": [
+        "SmartAppBanner"
       ],
       "methods": [],
       "controls": [],
@@ -23094,95 +23117,95 @@
       "file": "tests/e2e/app-download.spec.ts",
       "cases": [
         {
-          "line": 6,
+          "line": 7,
           "title": "'web: tiendas correctas, reserva, teclado y cierre persistente'"
         },
         {
-          "line": 8,
+          "line": 9,
           "title": "(page.viewportSize()?.width ?? 1280) >= 1024"
         },
         {
-          "line": 32,
+          "line": 39,
           "title": "'native: no download section, links or banner; form: no banner'"
         },
         {
-          "line": 42,
+          "line": 49,
           "title": "'web forms never display download banner'"
         },
         {
-          "line": 48,
+          "line": 55,
           "title": "'shared download anchor always remains useful, including after dismissing the mobile notice'"
         },
         {
-          "line": 76,
+          "line": 89,
           "title": "'shared download link does not pause at the how-it-works section on a cold visit'"
         },
         {
-          "line": 88,
+          "line": 101,
           "title": "'mobile download notice and header are correctly positioned before JavaScript hydration'"
         },
         {
-          "line": 89,
+          "line": 102,
           "title": "(page.viewportSize()?.width ?? 1280)>=1024"
         },
         {
-          "line": 105,
+          "line": 125,
           "title": "'narrow desktop windows have no mobile notice or navbar gap, while download links remain available'"
         },
         {
-          "line": 106,
+          "line": 126,
           "title": "test.info().project.name!=='chromium-desktop' && test.info().project.name!=='desktop-download'"
         },
         {
-          "line": 128,
+          "line": 148,
           "title": "'notice stays at the bottom on public pages and respects account/form routes'"
         },
         {
-          "line": 129,
+          "line": 149,
           "title": "(page.viewportSize()?.width ?? 1280)>=1024"
         },
         {
-          "line": 149,
+          "line": 174,
           "title": "'web footer uses Apple and Android symbols with accessible store links'"
         },
         {
-          "line": 156,
+          "line": 181,
           "title": "'QR download opens the correct store without caching another device choice'"
         },
         {
-          "line": 171,
+          "line": 196,
           "title": "'responsive download artwork and store actions fit the viewport, including Safari tablet sizing'"
         },
         {
-          "line": 194,
+          "line": 219,
           "title": "'home-screen launch uses a white surface even in dark mode before external CSS'"
         },
         {
-          "line": 208,
+          "line": 233,
           "title": "'iOS launch images have the exact declared device dimensions and a white corner'"
         },
         {
-          "line": 221,
+          "line": 246,
           "title": "'home-screen launch shell is public, white and independent of the session'"
         },
         {
-          "line": 245,
-          "title": "'mobile listings stay behind the download notice and keep their last result reachable'"
-        },
-        {
-          "line": 246,
-          "title": "(page.viewportSize()?.width ?? 1280)>=1024"
-        },
-        {
           "line": 270,
-          "title": "'home-screen web app can show the store notice without being treated as native'"
+          "title": "'mobile listings stay behind the download notice and keep their last result reachable'"
         },
         {
           "line": 271,
           "title": "(page.viewportSize()?.width ?? 1280)>=1024"
         },
         {
-          "line": 285,
+          "line": 305,
+          "title": "'home-screen web app can show the store notice without being treated as native'"
+        },
+        {
+          "line": 306,
+          "title": "(page.viewportSize()?.width ?? 1280)>=1024"
+        },
+        {
+          "line": 320,
           "title": "`download section ${locale}: ${store} button activates its exact store link`"
         }
       ]
@@ -23610,7 +23633,7 @@
           "title": "\"campaign links preserve section, query and fragment without accepting external or auth routes\""
         },
         {
-          "line": 11,
+          "line": 14,
           "title": "`browser confirmation keeps the navy logo on a white card in ${colorScheme} mode`"
         }
       ]
@@ -24636,23 +24659,23 @@
       "file": "tests/e2e/mobile-menu-surface.spec.ts",
       "cases": [
         {
-          "line": 7,
+          "line": 8,
           "title": "`menu header travels with options and closes without displacing the page (${native ? 'native' : 'web'})`"
         },
         {
-          "line": 8,
-          "title": "(page.viewportSize()?.width ?? 1280) >= 1024"
-        },
-        {
-          "line": 66,
-          "title": "`signed-in menu keeps account actions above centered social links (${native ? 'native' : 'web'})`"
-        },
-        {
-          "line": 67,
+          "line": 9,
           "title": "(page.viewportSize()?.width ?? 1280) >= 1024"
         },
         {
           "line": 68,
+          "title": "`signed-in menu keeps account actions above centered social links (${native ? 'native' : 'web'})`"
+        },
+        {
+          "line": 69,
+          "title": "(page.viewportSize()?.width ?? 1280) >= 1024"
+        },
+        {
+          "line": 70,
           "title": "!canRunSeededRegression()"
         }
       ]
@@ -25969,6 +25992,27 @@
         {
           "line": 50,
           "title": "isMobileProject(test.info())"
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/smart-app-banner.spec.ts",
+      "cases": [
+        {
+          "line": 6,
+          "title": "\"Apple banner preserves public destinations while excluding private and authentication URLs\""
+        },
+        {
+          "line": 12,
+          "title": "\"native banner detection distinguishes Safari from other iOS browsers and embedded WebViews\""
+        },
+        {
+          "line": 17,
+          "title": "\"Apple association covers homepage and exact professional search without broadening auth routes\""
+        },
+        {
+          "line": 24,
+          "title": "\"public banner metadata is server-rendered, follows client navigation, and is absent from native tasks\""
         }
       ]
     },
