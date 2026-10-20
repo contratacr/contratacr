@@ -17,7 +17,7 @@ test("optional account MFA protects a new login, API and direct RPC until its se
     await expect(security).toBeVisible();
     await expect(security.getByText("Desactivada", { exact: true })).toBeVisible();
     await security.getByRole("button", { name: "Activar", exact: true }).click();
-    await completeAdminMfa(page, account.email);
+    await completeAdminMfa(page, account.email, false);
     await expect(security.getByText("Activada", { exact: true })).toBeVisible();
     // A fresh password session must not bypass MFA through a SECURITY DEFINER RPC.
     const direct = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { auth: { persistSession: false, autoRefreshToken: false } });
@@ -30,12 +30,12 @@ test("optional account MFA protects a new login, API and direct RPC until its se
     await loginAs(page, account.email, account.password, { adminMfa: false });
     await expect(page.locator("[data-admin-mfa]")).toBeVisible();
     expect((await page.request.get("/api/direct-chat")).status()).toBe(403);
-    await completeAdminMfa(page, account.email);
+    await completeAdminMfa(page, account.email, false);
     expect((await page.request.get("/api/direct-chat")).status()).toBe(200);
     await gotoOK(page, "/dashboard/profesional?tab=cuenta");
     await expect(security.getByText("Activada", { exact: true })).toBeVisible();
     await security.getByRole("button", { name: "Desactivar", exact: true }).click();
-    await completeAdminMfa(page, account.email);
+    await completeAdminMfa(page, account.email, false);
     await expect(security.getByText("Desactivada", { exact: true })).toBeVisible();
     await resetAuth(page);
     await loginAs(page, account.email, account.password, { adminMfa: false });

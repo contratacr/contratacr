@@ -46,6 +46,10 @@ const pageRules: OwnershipRule[] = [
 ];
 
 const handlerRules: OwnershipRule[] = [
+  { match: /^\/api\/privacy(?:\/|$)/, owner: "legal-privacy.spec.ts" },
+  { match: /^\/api\/admin\/analytics\/activity$/, owner: "admin-journey.spec.ts" },
+  { match: /^\/api\/analytics\/journey$/, owner: "journey-browser.spec.ts" },
+  { match: /^\/api\/analytics\/meta$/, owner: "meta-minimal.spec.ts" },
   { match: /^\/descargar$/, owner: "app-download.spec.ts" },
   { match: /^\/abrir-app$/, owner: "app-download.spec.ts" },
   { match: /^\/auth\/callback$/, owner: "product-contract.spec.ts" },
@@ -111,7 +115,8 @@ test.describe("application surface ownership", () => {
     // web —vive en `playwright.mobile.config.ts` y ahí sí se corre—. Cualquier
     // otra suite que alguien saque de la corrida web tiene que doler aquí.
     expect(source).toMatch(/testIgnore:\s*\["\*\*\/\.tmp-\*\.spec\.ts", "\*\*\/direct-chat\.spec\.ts", "\*\*\/mobile-native-shell\.spec\.ts"\]/);
-    expect(source.match(/\.spec\.ts/g)).toHaveLength(3);
+    const ignoreBlock = source.match(/\btestIgnore:\s*\[([^\]]*)\]/)?.[1] ?? "";
+    expect(ignoreBlock.match(/"[^"\n]+"/g)).toEqual(['"**/.tmp-*.spec.ts"', '"**/direct-chat.spec.ts"', '"**/mobile-native-shell.spec.ts"']);
     const mobileConfig = readFileSync(resolve(process.cwd(), "playwright.mobile.config.ts"), "utf8");
     for (const suite of ["direct-chat.spec.ts", "mobile-native-shell.spec.ts"]) {
       expect(mobileConfig, `${suite} must still run somewhere`).toContain(suite);

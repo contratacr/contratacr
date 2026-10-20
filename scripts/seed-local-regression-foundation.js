@@ -42,6 +42,7 @@ const actors = [
     provinceId: "sj",
     cantonId: "sj-sj",
     phone: "+50670000001",
+    syntheticId: "900000001",
     hourlyRate: 185000,
   },
   {
@@ -56,6 +57,7 @@ const actors = [
     cantonId: "al-at",
     wholeProvince: true,
     phone: "+50670000002",
+    syntheticId: "900000002",
     hourlyRate: 120000,
   },
 ];
@@ -73,7 +75,8 @@ async function main() {
       email: actor.email,
       full_name: actor.fullName,
       phone: actor.phone,
-      cedula: null,
+      // Local-only synthetic format fixture; never looked up in the padrón.
+      cedula: actor.syntheticId,
       role: "professional",
       avatar_url: "http://127.0.0.1:3000/web-app-manifest-192x192.png",
       is_provider: true,

@@ -14,7 +14,13 @@ async function textLineCount(locator: Locator) {
       range.selectNodeContents(walker.currentNode);
       for (const rect of range.getClientRects()) if (rect.width) tops.push(Math.round(rect.top));
     }
-    return new Set(tops).size;
+    // Inline links and the attached seal can shift text fragments by a
+    // subpixel without creating another rendered line.
+    const lines: number[] = [];
+    for (const top of tops.sort((a, b) => a - b)) {
+      if (!lines.some(line => Math.abs(line - top) <= 2)) lines.push(top);
+    }
+    return lines.length;
   });
 }
 

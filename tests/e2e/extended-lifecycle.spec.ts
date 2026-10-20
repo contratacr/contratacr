@@ -122,6 +122,7 @@ test.describe("@seeded extended lifecycle", () => {
       const profilePhotoField = page.locator('[data-field="photo"]');
       const profilePhoto = profilePhotoField.locator('input[type="file"]');
       await profilePhoto.setInputFiles({ name: "e2e-profile.png", mimeType: "image/png", buffer: ONE_PIXEL_PNG });
+      await page.getByRole("button", { name: "Usar foto", exact: true }).click();
       await expect(profilePhotoField.locator('img[src^="blob:"]')).toBeVisible();
       const profileSaveGate = new Promise<void>((resolve) => { releaseProfileSave = resolve; });
       await page.route("**/rest/v1/professionals*", async (route) => {

@@ -1,7 +1,28 @@
 import { test, expect } from "playwright/test";
 import { gotoOK, waitForInteractivePage, loginAs } from "./helpers";
 import { canRunSeededRegression, E2E_USERS, regressionAdminClient } from "./seed";
-import { createDisposableAccount, cleanupDisposableAccount } from "./disposable-account";
+import { createDisposableAccount, cleanupDisposableAccount, type DisposableAccount } from "./disposable-account";
+
+// The loopback CI database starts with only two professionals. Exercise real
+// server pagination with disposable discoverable rows instead of assuming that
+// a hosted catalogue happens to contain three full pages.
+const paginationFixtures: DisposableAccount[] = [];
+test.beforeAll(async () => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  if (!canRunSeededRegression() || !["127.0.0.1", "localhost"].includes(new URL(url).hostname)) return;
+  test.setTimeout(180_000);
+  for (let batch = 0; batch < 15; batch++) {
+    await Promise.all(Array.from({ length: 4 }, async () => {
+      const account = await createDisposableAccount({ prefix: "pagination", professional: true, publicDiscoverable: true });
+      paginationFixtures.push(account);
+      await regressionAdminClient().from("professionals").update({ oculto_del_buscador: false }).eq("id", account.professionalId!).throwOnError();
+    }));
+  }
+});
+test.afterAll(async () => {
+  test.setTimeout(180_000);
+  for (const account of paginationFixtures) await cleanupDisposableAccount(account);
+});
 
 for (const slow of [false, true]) {
   test(`search loads twenty near the actual list end; ${slow ? "slow" : "fast"} feedback`, async ({ page }) => {

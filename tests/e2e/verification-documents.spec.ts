@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { hasVerificationDocuments } from "../../src/lib/verification/documents";
 import { test, expect } from "playwright/test";
 import { loginAs } from "./helpers";
+import { completeAdminMfa } from "./admin-mfa-helper";
 import { E2E_USERS, regressionAdminClient } from "./seed";
 
 function capturePath(filename: string) {
@@ -12,7 +13,8 @@ function capturePath(filename: string) {
 // Isolated disposable identities: parallel regression never changes another test's role.
 for (const kind of ["company", "person", "dimex"] as const) test(`private verification documents ${kind} validate files and deduplicate retries`, async ({ page: initialPage, request }) => {
   const page = initialPage;
-  test.setTimeout(120_000);
+  // Includes private upload, reviewer enrollment and a real TOTP challenge.
+  test.setTimeout(180_000);
   const apiHeaders = { "x-forwarded-for": `2001:db8::${Math.floor(Math.random() * 65535).toString(16)}` };
   const blockedHeaders = { "x-forwarded-for": `10.99.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}` };
   const db = regressionAdminClient();
@@ -56,8 +58,8 @@ for (const kind of ["company", "person", "dimex"] as const) test(`private verifi
     await expect(badge).toBeVisible();
     await expect(page.locator("[data-current-identification] [data-verification-badge]")).toHaveCount(1);
     const alignment = await verifiedName.evaluate(element => {
-      const text = element.querySelector("span.whitespace-normal")!.getBoundingClientRect();
-      const mark = element.querySelector("[data-verification-badge] svg")!.getBoundingClientRect();
+      const text = element.querySelector("[data-profile-name-last-word]")!.getBoundingClientRect();
+      const mark = element.querySelector("[data-verification-badge]")!.getBoundingClientRect();
       return { gap: mark.left - text.right, center: Math.abs(mark.top + mark.height / 2 - text.top - text.height / 2) };
     });
     expect(alignment.gap).toBeGreaterThanOrEqual(0);
@@ -193,6 +195,10 @@ for (const kind of ["company", "person", "dimex"] as const) test(`private verifi
     await page.screenshot({path: capturePath(`${kind}-submitted-live-${test.info().project.name}.png`), fullPage: true});
     const {error: roleError} = await db.from("profiles").update({role: "admin"}).eq("id", pro.profile_id);
     if (roleError) throw roleError;
+    // Promotion to admin must not grant access with the old AAL1 session.
+    expect((await api.get(`/api/admin/providers/${pro.id}`)).status()).toBe(403);
+    await page.goto("/admin");
+    await completeAdminMfa(page, email);
     const caseResponse = await api.get(`/api/admin/providers/${pro.id}`);
     expect(caseResponse.status()).toBe(200);
     const adminCase = await caseResponse.json();

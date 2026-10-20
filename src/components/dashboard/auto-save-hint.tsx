@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Check, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -24,8 +25,8 @@ import { useTranslations } from "next-intl";
  */
 export function AutoSaveHint({ saving, saved }: { saving: boolean; saved: boolean }) {
   const t = useTranslations("common");
-  if (!saving && !saved) return null;
-  return (
+  if ((!saving && !saved) || typeof document === "undefined") return null;
+  return createPortal(
     <div
       role="status"
       aria-live="polite"
@@ -46,7 +47,8 @@ export function AutoSaveHint({ saving, saved }: { saving: boolean; saved: boolea
         ? <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
         : <Check className="h-4 w-4 shrink-0 text-[#4ade80]" strokeWidth={3} aria-hidden />}
       {saving ? t("savingShort") : t("savedShort")}
-    </div>
+    </div>,
+    document.body,
   );
 }
 
