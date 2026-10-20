@@ -104,7 +104,7 @@ export default function RegisterClientPage() {
     e.preventDefault();
     setError(null);
     setPhoneError(null);
-    if (!terminosAceptados) { setError(locale === "en" ? "Please accept the terms and privacy policy." : "Acepte los términos y la política de privacidad."); return; }
+    if (!terminosAceptados) { setError(t("termsRequired")); return; }
 
     const cleanName = limitText(fullName.trim(), NAME_MAX_LENGTH);
     if (!cleanName) { setError(t("errName")); return; }

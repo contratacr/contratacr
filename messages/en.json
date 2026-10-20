@@ -765,7 +765,8 @@
       "ratePlaceholder": "12 000",
       "errWorkplaceSiempre": "Your workplace is missing: choose the province and the canton, or the whole province.",
       "errWorkplacePais": "Besides the whole country, choose where you are based: province and canton, or the whole province.",
-      "errPhoneFijo": "That looks like a landline. Enter a mobile number with WhatsApp so clients can message you."
+      "errPhoneFijo": "That looks like a landline. Enter a mobile number with WhatsApp so clients can message you.",
+      "termsRequired": "Please accept the terms and privacy policy."
     },
     "client": {
       "title": "Create client account",
@@ -2037,7 +2038,8 @@
     "createFree": "Create account",
     "terms": "By registering you accept our <terms>Terms of use</terms> and our <privacy>Privacy Policy</privacy>.",
     "haveAccount": "Already have an account?",
-    "signIn": "Sign in"
+    "signIn": "Sign in",
+    "termsRequired": "Please accept the terms and privacy policy."
   },
   "proveedoresPage": {
     "metaTitle": "What is identity verification? — ContrataCR",
@@ -3384,5 +3386,8 @@
     "description": "Check your connection and try again. Your session is preserved.",
     "retry": "Try again",
     "checking": "Connecting…"
+  },
+  "privacyErrors": {
+    "aiConsentRequired": "Permission is required before using external AI."
   }
 }

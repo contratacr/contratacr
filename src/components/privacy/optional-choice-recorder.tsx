@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useLocale } from "next-intl";
 import { useAuth } from "@/hooks/use-auth";
 import { isNativeAppRuntime } from "@/hooks/use-native-app";
-import { LEGAL_VERSION } from "@/lib/privacy/legal-version";
+import { LEGAL_VERSION, legalLocale } from "@/lib/privacy/legal-version";
 import { OPTIONAL_CONSENT_EVENT, type OptionalPurpose } from "@/lib/privacy/optional-consent";
 
 /** Mirror only explicit actions made by this account, never another device user's old choice. */
@@ -29,7 +29,7 @@ export function OptionalChoiceRecorder() {
     const onChoice = (event: Event) => {
       const detail = (event as CustomEvent<{purpose: OptionalPurpose; choice: string}>).detail;
       if (!detail || !["advertising","ai"].includes(detail.purpose) || !["accepted","declined"].includes(detail.choice)) return;
-      enqueue(detail.purpose, JSON.stringify({ purpose: detail.purpose, accepted: detail.choice === "accepted", version: LEGAL_VERSION, locale: locale === "en" ? "en" : "es", channel: isNativeAppRuntime() ? "native" : "web" }));
+      enqueue(detail.purpose, JSON.stringify({ purpose: detail.purpose, accepted: detail.choice === "accepted", version: LEGAL_VERSION, locale: legalLocale(locale), channel: isNativeAppRuntime() ? "native" : "web" }));
     };
     const retry = () => {
       for (const purpose of ["advertising","ai"] as const) {

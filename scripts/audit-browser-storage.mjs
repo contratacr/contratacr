@@ -8,7 +8,8 @@ import fs from "node:fs";
 // source of truth. The exact occurrence count makes additions fail CI even inside
 // a previously reviewed file.
 const reviewed = new Map([
-  ["src/lib/privacy/optional-consent.ts", { count: 3, reason: "versioned device-local advertising/AI preferences, expire after 180 days, plus pending pixel cleanup on withdrawal; explicit authenticated choices are also recorded in the Supabase consent ledger" }],
+  ["src/lib/analytics/native-measurement.ts", { count: 2, reason: "session-scoped 30-minute timestamp deduplication for a closed event catalog; no identity, search text, business payload or account-owned records" }],
+  ["src/lib/privacy/optional-consent.ts", { count: 6, reason: "versioned device-local advertising/AI preferences and legacy refusal reads; expiry never converts refusal into permission, explicit changes clear legacy state and pending delivery markers; authenticated choices also persist in the consent ledger" }],
   ["src/components/privacy/optional-choice-recorder.tsx", { count: 4, reason: "short-lived session retry queue scoped to the current user and purpose; removed after the backend acknowledges the explicit action, never treated as a server receipt or inherited by another account" }],
   ["src/components/mobile/campaign-app-links.tsx", { count: 2, reason: "session-scoped boolean preventing repeated cold-launch navigation; no signed URLs, tokens, identity or account-owned records are stored" }],
   ["src/components/analytics/usage-capture.tsx", { count: 4, reason: "anonymous session ID/time and successful first-use delivery marker; all account access, registration and usage metrics are stored server-side" }],
@@ -43,7 +44,7 @@ const reviewed = new Map([
   ["src/components/notifications/notification-live-toast.tsx", { count: 5, reason: "notification presentation state; records persist in backend; plus a per-app-open flag so the entry summary is checked once" }],
   ["src/components/notifications/notification-bell.tsx", { count: 2, reason: "backend notification render cache" }],
   ["src/components/analytics/meta-pixel.tsx", { count: 1, reason: "measurement preference; no account-owned data" }],
-  ["src/lib/analytics/meta-pixel.ts", { count: 6, reason: "per-tab queue of pixel events before script load (30 min, max 20), and per-tab delivery deduplication; explicit consent is read through the versioned module and server receipts remain authoritative" }],
+  ["src/lib/analytics/meta-pixel.ts", { count: 12, reason: "per-tab UUID/time/ack markers for minimal PageView, Search and registration requests, expire after 30 minutes; old raw envelopes are only removed, no raw search or account records are stored; server conversion receipts remain authoritative" }],
   ["src/components/push/push-token-manager.tsx", { count: 14, reason: "native push permission presentation (ask count, denied-explained flag), navigation handoff, and legacy token-cache cleanup; active tokens persist in Supabase" }],
   ["src/lib/direct-chat/conversations-cache.ts", { count: 5, reason: "five-minute session-scoped cache of the conversation list so Mensajes paints at once after a reload; cleared on sign-out; messages persist in Supabase" }],
   ["src/lib/notifications-cache.ts", { count: 2, reason: "backend notification render cache; Supabase remains the source of truth" }],

@@ -115,7 +115,7 @@ const ES_SECTIONS: LegalSection[] = [
       },
       {
         "k": "note",
-        "text": "**Qué significa «Verificado».** La insignia indica una comprobación limitada de los datos de identificación de la cuenta. **Consulta automática:** cotejamos número, tipo y nombre o razón social con la API pública de Hacienda; una coincidencia confirma esos datos en la fuente, no quién controla la cuenta. **Revisión manual:** cuando corresponde, una persona revisa una foto con la identificación y, para representación empresarial, personería o autorización. No se requieren fotos de trabajos para esta revisión. La consulta de una cédula jurídica no acredita por sí sola representación de la empresa. Ninguno de estos controles certifica edad, antecedentes, licencias, experiencia, calidad, solvencia ni resultado del servicio; tampoco garantiza quién utilizará la cuenta posteriormente. Podemos revisar o retirar la insignia ante inconsistencias. Antes de contratar, compruebe la identidad, representación y habilitaciones que necesite."
+        "text": "**Qué significa «Verificado».** La insignia indica una comprobación limitada de los datos de identificación de la cuenta. **Consulta automática:** cotejamos número, tipo y nombre o razón social con la API pública de Hacienda; una coincidencia confirma esos datos en la fuente, no quién controla la cuenta. **Revisión manual:** cuando corresponde, una persona revisa una foto con la identificación y, para representación empresarial, personería o autorización. No se requieren fotos de casos de éxito para esta revisión. La consulta de una cédula jurídica no acredita por sí sola representación de la empresa. Ninguno de estos controles certifica edad, antecedentes, licencias, experiencia, calidad, solvencia ni resultado del servicio; tampoco garantiza quién utilizará la cuenta posteriormente. Podemos revisar o retirar la insignia ante inconsistencias. Antes de contratar, compruebe la identidad, representación y habilitaciones que necesite."
       }
     ]
   },
@@ -202,7 +202,7 @@ const ES_SECTIONS: LegalSection[] = [
       },
       {
         "k": "p",
-        "text": "Para usar su nombre, imagen o trabajos en campañas publicitarias externas de ContrataCR solicitaremos autorización específica, salvo otro fundamento legal aplicable. No publique documentos de identidad, expedientes, direcciones privadas ni imágenes de clientes o menores sin los permisos necesarios. Debe contar con autorización para fotos de trabajos y casos de éxito que involucren a terceros."
+        "text": "Para usar su nombre, imagen o trabajos en campañas publicitarias externas de ContrataCR solicitaremos autorización específica, salvo otro fundamento legal aplicable. No publique documentos de identidad, expedientes, direcciones privadas ni imágenes de clientes o menores sin los permisos necesarios. Debe contar con autorización para fotos de casos de éxito y casos de éxito que involucren a terceros."
       }
     ]
   },

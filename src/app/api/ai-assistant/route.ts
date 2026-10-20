@@ -1,3 +1,5 @@
+import esMessages from "../../../../messages/es.json";
+import enMessages from "../../../../messages/en.json";
 import { OPTIONAL_CONSENT_VERSION } from "@/lib/privacy/optional-consent";
 import { NextResponse } from "next/server";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
@@ -2091,7 +2093,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
     if (body.aiConsent?.accepted !== true || body.aiConsent?.version !== OPTIONAL_CONSENT_VERSION) {
-      return NextResponse.json({ error: locale === "en" ? "Permission is required before using external AI." : "Se requiere permiso antes de usar IA externa.", code: "AI_CONSENT_REQUIRED" }, { status: 428 });
+      return NextResponse.json({ error: ({ es: esMessages, en: enMessages })[locale].privacyErrors.aiConsentRequired, code: "AI_CONSENT_REQUIRED" }, { status: 428 });
     }
     const rawMessage = canonicalizeMessage(limitTrimmedText(body.message, Math.min(LONG_TEXT_MAX_LENGTH, 1200)));
     const pagePath = limitTrimmedText(body.pagePath, 240) || `${prefijoDeIdioma(locale) || "/"}`;
