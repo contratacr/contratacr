@@ -360,8 +360,14 @@ test.describe("@admin surfaces", () => {
       await gotoOK(page, `/admin/usuarios/${victim.id}`);
       await expectVisibleText(page.locator("body"), /Eliminar esta cuenta al 100%/);
       page.on("dialog", (dialog) => void (dialog.type() === "prompt" ? dialog.accept("ELIMINAR") : dialog.accept()));
+      // Subscribe before the hard navigation. WebKit can normalize history
+      // between commit and DOMContentLoaded; verify the destination and its UI.
+      const deletedResponse = page.waitForResponse(response => response.request().method() === "DELETE" && response.url().includes("/api/admin/users?"), { timeout: 60_000 });
+      const returnedToUsers = page.waitForURL(/\/admin\/usuarios\?deleted=1/, { timeout: 60_000, waitUntil: "commit" });
       await page.getByRole("button", { name: /Eliminar cuenta/ }).click();
-      await page.waitForURL(/\/admin\/usuarios\?deleted=1/, { timeout: 60_000, waitUntil: "domcontentloaded" });
+      expect((await deletedResponse).status()).toBe(200);
+      await returnedToUsers;
+      await expect(page.getByRole("heading", { name: "Usuarios", exact: true })).toBeVisible();
       await expect.poll(async () => {
         const { data } = await admin.auth.admin.getUserById(victim!.id);
         return data?.user ? "exists" : "gone";

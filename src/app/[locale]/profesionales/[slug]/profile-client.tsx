@@ -910,7 +910,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                     mismo y empujaba los botones de contacto fuera de la
                     pantalla. En computadora sigue siendo la rejilla de
                     foto | nombre y cifras | acciones. */}
-                <div className="flex min-w-0 items-center gap-2 text-left min-[360px]:gap-3 sm:contents sm:gap-0">
+                <div className="flex min-w-0 flex-col items-start gap-2 text-left min-[360px]:flex-row min-[360px]:items-center min-[360px]:gap-3 sm:contents sm:gap-0">
                   <ImagePreviewDialog
                     src={professional.avatarUrl}
                     alt={professional.fullName}
