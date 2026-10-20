@@ -23,6 +23,7 @@ import java.util.Map;
 @CapacitorPlugin(name = "ContrataCRMeasurement")
 public class ContrataCRMeasurementPlugin extends Plugin {
     private boolean enabled = false;
+    private boolean sdkReady = false;
     private AppEventsLogger logger;
     // Debug-only delivery evidence: no payloads, credentials or user identifiers.
     private boolean isDebugBuild() { return (getContext().getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0; }
@@ -42,7 +43,7 @@ public class ContrataCRMeasurementPlugin extends Plugin {
     @PluginMethod public void diagnostics(PluginCall call) {
         if (!isDebugBuild()) { call.reject("DEBUG_ONLY"); return; }
         JSObject result = new JSObject();
-        result.put("sdkReady", FacebookSdk.isFullyInitialized());
+        result.put("sdkReady", sdkReady);
         result.put("flush", lastFlush); result.put("install", receipts().getBoolean("install_sent",false) ? "accepted" : lastInstall);
         call.resolve(result);
     }
@@ -69,6 +70,7 @@ public class ContrataCRMeasurementPlugin extends Plugin {
             FacebookSdk.setAdvertiserIDCollectionEnabled(false);
             FacebookSdk.sdkInitialize(getContext().getApplicationContext());
             FacebookSdk.fullyInitialize();
+            sdkReady = true;
             AppEventsLogger.setFlushBehavior(AppEventsLogger.FlushBehavior.EXPLICIT_ONLY);
             AppEventsLogger.clearUserID(); AppEventsLogger.clearUserData();
             logger = AppEventsLogger.newLogger(getContext());
@@ -127,7 +129,7 @@ public class ContrataCRMeasurementPlugin extends Plugin {
     }
     @PluginMethod public void track(PluginCall call) {
         String event = call.getString("event", ""), id = call.getString("id", "");
-        if (!enabled || logger == null || !EVENTS.containsKey(event) || !FacebookSdk.isFullyInitialized() || !id.matches("[a-zA-Z0-9_-]{16,128}")) { call.reject("DISABLED_OR_INVALID_EVENT"); return; }
+        if (!enabled || logger == null || !EVENTS.containsKey(event) || !sdkReady || !id.matches("[a-zA-Z0-9_-]{16,128}")) { call.reject("DISABLED_OR_INVALID_EVENT"); return; }
         // Persist only a bounded set of opaque event receipts, never account IDs.
         SharedPreferences prefs = receipts();
         if (!prefs.contains(id)) {
