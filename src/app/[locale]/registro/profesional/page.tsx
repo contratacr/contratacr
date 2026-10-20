@@ -681,7 +681,7 @@ export default function RegisterProfessionalPage() {
   // }
 
   async function onStep1(data: Step1Data) {
-    if (!terminosAceptados) { setError(locale === "en" ? "Please accept the terms and privacy policy." : "Acepte los términos y la política de privacidad."); return; }
+    if (!terminosAceptados) { setError(t("termsRequired")); return; }
     if (emailCheck.taken) {
       // If the existing account is social-only, guide to that provider specifically.
       const provider = await detectSocialOnly(data.email);

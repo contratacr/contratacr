@@ -2,6 +2,7 @@ import { test, expect } from "playwright/test";
 import { gotoOK, waitForInteractivePage, loginAs } from "./helpers";
 import { canRunSeededRegression, regressionAdminClient } from "./seed";
 import { createDisposableAccount, cleanupDisposableAccount } from "./disposable-account";
+import { OPTIONAL_CONSENT_VERSION } from "../../src/lib/privacy/optional-consent";
 import { LEGAL_VERSION } from "../../src/lib/privacy/legal-version";
 
 for (const locale of ["es","en"]) test(`legal documents: ${locale} identifies the actual operator and explains the current verification`,async({page})=>{
@@ -110,4 +111,16 @@ for (const native of [false, true]) test(`${native ? "native" : "web"}: no autom
  }
  expect(trackingRequests).toEqual([]);
  expect(await page.evaluate(()=>localStorage.getItem("contratacr:consent:advertising:v1"))).toBeNull();
+});
+
+// Withdrawal is a same-origin operation, never an acceptance inferred from login.
+test("advertising withdrawal rejects cross-origin and invalid choices", async ({ request, baseURL }) => {
+ const url = new URL("/api/privacy/advertising", baseURL!).toString();
+ const valid = { accepted: false, version: OPTIONAL_CONSENT_VERSION };
+ expect((await request.post(url, { headers: { origin: "https://untrusted.invalid" }, data: valid })).status()).toBe(403);
+ for (const data of [{ accepted: true, version: OPTIONAL_CONSENT_VERSION }, { accepted: false, version: "old" }, {}]) {
+  const response = await request.post(url, { headers: { origin: new URL(url).origin }, data });
+  expect(response.status()).toBe(400);
+  expect(response.headers()["cache-control"]).toBe("private, no-store");
+ }
 });

@@ -765,7 +765,8 @@
       "ratePlaceholder": "12 000",
       "errWorkplaceSiempre": "Falta tu lugar de trabajo: elige la provincia y el cantón, o toda la provincia.",
       "errWorkplacePais": "Además de todo el país, elige de dónde sales: la provincia y el cantón, o toda la provincia.",
-      "errPhoneFijo": "Ese número parece de teléfono fijo. Escribe un celular con WhatsApp para que los clientes te puedan escribir."
+      "errPhoneFijo": "Ese número parece de teléfono fijo. Escribe un celular con WhatsApp para que los clientes te puedan escribir.",
+      "termsRequired": "Acepte los términos y la política de privacidad."
     },
     "client": {
       "title": "Crear cuenta de cliente",
@@ -2037,7 +2038,8 @@
     "createFree": "Crear cuenta",
     "terms": "Al registrarte aceptas nuestros <terms>Términos de uso</terms> y nuestra <privacy>Política de Privacidad</privacy>.",
     "haveAccount": "¿Ya tienes cuenta?",
-    "signIn": "Inicia sesión"
+    "signIn": "Inicia sesión",
+    "termsRequired": "Acepte los términos y la política de privacidad."
   },
   "proveedoresPage": {
     "metaTitle": "¿Qué es la verificación de identidad? — ContrataCR",
@@ -3384,5 +3386,8 @@
     "description": "Revise su conexión e inténtelo de nuevo. Su sesión se conserva.",
     "retry": "Reintentar",
     "checking": "Conectando…"
+  },
+  "privacyErrors": {
+    "aiConsentRequired": "Se requiere permiso antes de usar IA externa."
   }
 }

@@ -24,6 +24,10 @@ const pageRules = [
 ];
 
 const handlerRules = [
+  [/^\/api\/privacy(?:\/|$)/, "legal-privacy.spec.ts"],
+  [/^\/api\/admin\/analytics\/activity$/, "admin-journey.spec.ts"],
+  [/^\/api\/analytics\/journey$/, "journey-browser.spec.ts"],
+  [/^\/api\/analytics\/meta$/, "meta-minimal.spec.ts"],
   [/^\/descargar$/, "app-download.spec.ts"],
   [/^\/abrir-app$/, "app-download.spec.ts"],
   [/^\/auth\/callback$/, "product-contract.spec.ts"],

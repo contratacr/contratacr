@@ -2,13 +2,13 @@
   "scope": "Todos los archivos TypeScript de src/app, src/components y src/hooks, controles JSX declarados, pestañas del panel y specs permanentes. No enumera cada elemento dinámico renderizado ni componentes dentro de dependencias.",
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
-    "files": 485,
-    "controls": 1293,
+    "files": 490,
+    "controls": 1298,
     "pages": 71,
-    "handlers": 101,
-    "components": 251,
+    "handlers": 104,
+    "components": 253,
     "hooks": 26,
-    "specs": 143
+    "specs": 147
   },
   "dashboardTabs": [
     "home",
@@ -3993,6 +3993,31 @@
       "priority": "P0"
     },
     {
+      "file": "src/app/api/admin/analytics/activity/route.ts",
+      "kind": "API / handler",
+      "group": "Administración",
+      "route": "/api/admin/analytics/activity",
+      "exports": [
+        "GET"
+      ],
+      "methods": [
+        "GET"
+      ],
+      "controls": [],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/admin-smoke.spec.ts",
+        "tests/e2e/admin-bottom-nav.spec.ts",
+        "tests/e2e/admin-editar-datos.spec.ts",
+        "tests/e2e/admin-campaigns-policy.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "API + integración BD + autorización/propiedad + idempotencia; smoke solo lectura",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P0"
+    },
+    {
       "file": "src/app/api/admin/campanas/recuperar/route.ts",
       "kind": "API / handler",
       "group": "Administración",
@@ -4807,6 +4832,54 @@
       "kind": "API / handler",
       "group": "Estadísticas",
       "route": "/api/analytics/interaction",
+      "exports": [
+        "POST"
+      ],
+      "methods": [
+        "POST"
+      ],
+      "controls": [],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/statistics-dashboard.spec.ts",
+        "tests/e2e/runtime-analytics.spec.ts",
+        "tests/e2e/meta-growth-runtime.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "API + integración BD + autorización/propiedad + idempotencia; smoke solo lectura",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P1"
+    },
+    {
+      "file": "src/app/api/analytics/journey/route.ts",
+      "kind": "API / handler",
+      "group": "Estadísticas",
+      "route": "/api/analytics/journey",
+      "exports": [
+        "POST"
+      ],
+      "methods": [
+        "POST"
+      ],
+      "controls": [],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/statistics-dashboard.spec.ts",
+        "tests/e2e/runtime-analytics.spec.ts",
+        "tests/e2e/meta-growth-runtime.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "API + integración BD + autorización/propiedad + idempotencia; smoke solo lectura",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P1"
+    },
+    {
+      "file": "src/app/api/analytics/meta/route.ts",
+      "kind": "API / handler",
+      "group": "Estadísticas",
+      "route": "/api/analytics/meta",
       "exports": [
         "POST"
       ],
@@ -7069,6 +7142,70 @@
       "priority": "P0"
     },
     {
+      "file": "src/components/admin/admin-activity-journey.tsx",
+      "kind": "Componente",
+      "group": "Administración",
+      "route": null,
+      "exports": [
+        "AdminActivityJourney"
+      ],
+      "methods": [],
+      "controls": [
+        {
+          "line": 26,
+          "tag": "select",
+          "label": "\"Plataforma de actividad\"",
+          "handler": "{e=>{reset();setRuntime(e.target.value);}}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 27,
+          "tag": "select",
+          "label": "\"Periodo de actividad\"",
+          "handler": "{e=>{reset();setDays(e.target.value);}}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 28,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{()=>{reset();setActor(\"\");}}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 38,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{()=>{const next=row.viewer_user_id || row.visitor_hash;if(next===actor)return;reset();setActor(next);}}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 44,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{()=>setCursor(rows[rows.length-1])}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        }
+      ],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/admin-smoke.spec.ts",
+        "tests/e2e/admin-bottom-nav.spec.ts",
+        "tests/e2e/admin-editar-datos.spec.ts",
+        "tests/e2e/admin-campaigns-policy.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P0"
+    },
+    {
       "file": "src/components/admin/admin-analytics.tsx",
       "kind": "Componente",
       "group": "Administración",
@@ -7079,7 +7216,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 292,
+          "line": 294,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -7087,7 +7224,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 327,
+          "line": 329,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -7095,7 +7232,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 348,
+          "line": 350,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -9517,6 +9654,28 @@
       "route": null,
       "exports": [
         "AttributionCapture"
+      ],
+      "methods": [],
+      "controls": [],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/statistics-dashboard.spec.ts",
+        "tests/e2e/runtime-analytics.spec.ts",
+        "tests/e2e/meta-growth-runtime.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P1"
+    },
+    {
+      "file": "src/components/analytics/journey-capture.tsx",
+      "kind": "Componente",
+      "group": "Estadísticas",
+      "route": null,
+      "exports": [
+        "JourneyCapture"
       ],
       "methods": [],
       "controls": [],
@@ -22475,6 +22634,15 @@
       ]
     },
     {
+      "file": "tests/e2e/admin-journey.spec.ts",
+      "cases": [
+        {
+          "line": 6,
+          "title": "\"activity API rejects guests and non-admins; MFA admin can inspect guest and account journeys\""
+        }
+      ]
+    },
+    {
       "file": "tests/e2e/admin-mfa-guard.spec.ts",
       "cases": [
         {
@@ -24035,6 +24203,36 @@
       ]
     },
     {
+      "file": "tests/e2e/journey-browser.spec.ts",
+      "cases": [
+        {
+          "line": 3,
+          "title": "'batched journey events omit typed email and password and show no new dialogs'"
+        },
+        {
+          "line": 5,
+          "title": "![\"localhost\",\"127.0.0.1\",\"test.contratacr.com\"].includes(host)"
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/journey-privacy.spec.ts",
+      "cases": [
+        {
+          "line": 8,
+          "title": "\"journey contract removes private fields and classifies routes without names or queries\""
+        },
+        {
+          "line": 29,
+          "title": "\"native bridge gates events on server role check, keeps IDs opaque and honors withdrawal\""
+        },
+        {
+          "line": 40,
+          "title": "\"old installed apps and browser never call a missing native plugin\""
+        }
+      ]
+    },
+    {
       "file": "tests/e2e/landing-media-budget.spec.ts",
       "cases": [
         {
@@ -24073,36 +24271,40 @@
       "file": "tests/e2e/legal-privacy.spec.ts",
       "cases": [
         {
-          "line": 7,
+          "line": 8,
           "title": "`legal documents: ${locale} identifies the actual operator and explains the current verification`"
         },
         {
-          "line": 20,
-          "title": "\"advertising starts off; rejecting and later changing the choice works without blocking legal pages\""
+          "line": 21,
+          "title": "\"limited advertising can be disabled and enabled without blocking legal pages\""
         },
         {
-          "line": 34,
+          "line": 35,
           "title": "\"the AI API rejects missing or outdated consent before processing a native prompt\""
         },
         {
-          "line": 41,
+          "line": 42,
           "title": "`${native ? \"native\" : \"web\"}: login never adds a second terms screen; explicit receipts remain isolated and idempotent`"
         },
         {
-          "line": 42,
+          "line": 43,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 68,
+          "line": 69,
           "title": "\"native assistant asks permission before sending the first prompt\""
         },
         {
-          "line": 91,
+          "line": 92,
           "title": "`login keeps the existing legal disclosure before continuing (${locale})`"
         },
         {
-          "line": 99,
+          "line": 100,
           "title": "`${native ? \"native\" : \"web\"}: no automatic advertising or terms notice on entry`"
+        },
+        {
+          "line": 117,
+          "title": "\"advertising withdrawal rejects cross-origin and invalid choices\""
         }
       ]
     },
@@ -24257,7 +24459,7 @@
         },
         {
           "line": 60,
-          "title": "\"legacy queued conversions without affirmative consent never reach Meta\""
+          "title": "\"legacy queued conversions without the minimal outbound contract never reach Meta\""
         }
       ]
     },
@@ -24265,24 +24467,53 @@
       "file": "tests/e2e/meta-growth-runtime.spec.ts",
       "cases": [
         {
-          "line": 17,
+          "line": 18,
           "title": "\"server consent, native, bots, test domains and attribution use real runtime guards\""
         },
         {
-          "line": 25,
-          "title": "\"only first receipt emits browser conversion and CAPI payload shares its stable ID\""
+          "line": 26,
+          "title": "\"only the first successful business receipt queues a minimal CAPI payload\""
         },
         {
-          "line": 38,
-          "title": "\"Pixel queues and flushes same eventID once and excludes declined/native/test traffic\""
+          "line": 39,
+          "title": "\"browser business receipts cannot create a duplicate or leak free-text parameters\""
         },
         {
           "line": 51,
-          "title": "\"existing Pixel/CAPI connection works without a second direct sender or storing matching payloads\""
+          "title": "\"missing direct delivery configuration never pretends browser delivery succeeded\""
         },
         {
           "line": 62,
           "title": "\"administrator actions never create conversion receipts or Meta delivery\""
+        },
+        {
+          "line": 75,
+          "title": "\"landing measurement sends only event and opaque ID, expires and respects refusal/native guards\""
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/meta-minimal.spec.ts",
+      "cases": [
+        {
+          "line": 10,
+          "title": "\"outbound boundary strips account identity, names, contact, IP, location, free text and profile URLs\""
+        },
+        {
+          "line": 17,
+          "title": "\"delivery sanitizes queued envelopes again instead of trusting their contents\""
+        },
+        {
+          "line": 22,
+          "title": "\"unknown events, missing matching IDs and pre-minimization queues cannot be delivered\""
+        },
+        {
+          "line": 25,
+          "title": "\"only constant owned paths survive; query and fragments never do\""
+        },
+        {
+          "line": 30,
+          "title": "\"Search is a conversion signal without search terms or location\""
         }
       ]
     },
@@ -24757,11 +24988,15 @@
       "cases": [
         {
           "line": 20,
-          "title": "\"no choice, legacy implicit flags, malformed or expired permissions never authorize advertising\""
+          "title": "\"no choice, legacy implicit flags, malformed or expired records never become an acceptance receipt\""
         },
         {
           "line": 28,
           "title": "\"permission is versioned, purpose-specific, withdrawable, and does not bundle AI with advertising\""
+        },
+        {
+          "line": 37,
+          "title": "\"limited measurement does not fabricate acceptance and preserves legacy/expired refusals\""
         }
       ]
     },
