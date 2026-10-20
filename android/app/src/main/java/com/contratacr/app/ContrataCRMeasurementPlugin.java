@@ -1,6 +1,11 @@
 package com.contratacr.app;
 
 import android.content.SharedPreferences;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -19,6 +24,28 @@ import java.util.Map;
 public class ContrataCRMeasurementPlugin extends Plugin {
     private boolean enabled = false;
     private AppEventsLogger logger;
+    // Debug-only delivery evidence: no payloads, credentials or user identifiers.
+    private boolean isDebugBuild() { return (getContext().getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0; }
+    private volatile String lastFlush = "pending", lastInstall = "pending";
+    private final BroadcastReceiver flushReceiver = new BroadcastReceiver() {
+        @Override public void onReceive(Context context, Intent intent) {
+            Object result = intent.getSerializableExtra(AppEventsLogger.APP_EVENTS_EXTRA_FLUSH_RESULT);
+            lastFlush = result == null ? "unknown" : result.toString();
+        }
+    };
+    @Override public void load() {
+        if (isDebugBuild()) LocalBroadcastManager.getInstance(getContext()).registerReceiver(flushReceiver, new IntentFilter(AppEventsLogger.ACTION_APP_EVENTS_FLUSHED));
+    }
+    @Override protected void handleOnDestroy() {
+        if (isDebugBuild()) LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(flushReceiver);
+    }
+    @PluginMethod public void diagnostics(PluginCall call) {
+        if (!isDebugBuild()) { call.reject("DEBUG_ONLY"); return; }
+        JSObject result = new JSObject();
+        result.put("sdkReady", FacebookSdk.isFullyInitialized());
+        result.put("flush", lastFlush); result.put("install", receipts().getBoolean("install_sent",false) ? "accepted" : lastInstall);
+        call.resolve(result);
+    }
     private static final Map<String,String> EVENTS = Map.ofEntries(
         Map.entry("PageView", "fb_mobile_activate_app"), Map.entry("Search", "fb_mobile_search"),
         Map.entry("CompleteRegistration", "fb_mobile_complete_registration"),
@@ -93,13 +120,14 @@ public class ContrataCRMeasurementPlugin extends Plugin {
             if (referrer != null) payload.put("install_referrer",referrer);
             GraphRequest.newPostRequest(null,FacebookSdk.getApplicationId()+"/activities",payload,response->{
                 installInFlight = false;
+                lastInstall = response.getError() == null ? "accepted" : "error_" + response.getError().getErrorCode();
                 if (response.getError() == null) receipts().edit().putBoolean("install_sent",true).apply();
             }).executeAsync();
         } catch (Exception ignored) { installInFlight = false; }
     }
     @PluginMethod public void track(PluginCall call) {
         String event = call.getString("event", ""), id = call.getString("id", "");
-        if (!enabled || logger == null || !EVENTS.containsKey(event) || !id.matches("[a-zA-Z0-9_-]{16,128}")) { call.reject("DISABLED_OR_INVALID_EVENT"); return; }
+        if (!enabled || logger == null || !EVENTS.containsKey(event) || !FacebookSdk.isFullyInitialized() || !id.matches("[a-zA-Z0-9_-]{16,128}")) { call.reject("DISABLED_OR_INVALID_EVENT"); return; }
         // Persist only a bounded set of opaque event receipts, never account IDs.
         SharedPreferences prefs = receipts();
         if (!prefs.contains(id)) {

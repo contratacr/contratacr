@@ -242,6 +242,8 @@ for (const permission of ["com.google.android.gms.permission.AD_ID","android.per
 requireMatch("No Meta startup provider",measurementManifest,/FacebookInitProvider[^>]+tools:node="remove"/);
 const nativeMeasurement = await text("android/app/src/main/java/com/contratacr/app/ContrataCRMeasurementPlugin.java");
 requireMatch("Native Meta event gate",nativeMeasurement,/!enabled \|\| logger == null \|\| !EVENTS.containsKey/);
+requireMatch("No events before SDK readiness",nativeMeasurement,/!FacebookSdk.isFullyInitialized\(\)/);
+requireMatch("Delivery diagnostics only in debug builds",nativeMeasurement,/if \(!isDebugBuild\(\)\) \{ call.reject\("DEBUG_ONLY"\)/);
 requireMatch("No SDK account identity",nativeMeasurement,/clearUserID\(\); AppEventsLogger.clearUserData\(\)/);
 const appleMeasurement = await text("ios/App/App/AppDelegate.swift");
 requireMatch("Apple aggregated attribution",appleMeasurement,/SKAdNetwork.updatePostbackConversionValue/);
