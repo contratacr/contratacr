@@ -1588,7 +1588,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     const currentLocationLabel = locale === "en" ? "Current location" : "Ubicación actual";
     const activeCurrentCoords =
       overrides.coords ??
-      (navCurrentCoords && normalizeText(navLocation) === normalizeText(currentLocationLabel) ? navCurrentCoords : null);
+      ("location" in overrides ? null : navCurrentCoords && normalizeText(navLocation) === normalizeText(currentLocationLabel) ? navCurrentCoords : null);
     const loc = activeCurrentCoords
       ? null
       : "location" in overrides
@@ -1717,10 +1717,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
         if (!hasSearchService) {
           (nativeSearchOpen ? nativeSearchInputRef.current : compactSvcRef.current?.querySelector("input"))?.focus();
           setSearchFocused(true);
-        } else {
-          (nativeSearchOpen ? nativeLocationInputRef.current : navLocationInputRef.current)?.focus({ preventScroll: true });
-          setNavLocOpen(false);
-        }
+        } else runCompactSearch({ coords: currentCoords, locationLabel: label });
       },
       () => {
         const fallback = resolveLocation("Costa Rica");
@@ -1809,14 +1806,18 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     };
   }, [nativeSearchOpen]);
 
-  // Suggestions only fill their field. Buscar / Enter submits explicitly,
-  // after React has committed both the selected service ID and location.
+  // A selection completes the search when the other field is filled. Pass
+  // the new value explicitly so navigation never uses the previous render.
   function selectCompactSuggestion(id: string) {
     const picked = compactSuggestions.find((c) => c.id === id);
     setSearchQuery(repairVisibleText(picked?.label ?? getCategoryLabel(id, locale)));
     setSearchCategoryId(id);
     setSearchActiveIdx(-1);
     setSearchFocused(false);
+    if (navLocation.trim()) {
+      runCompactSearch({ categoria: id, servicio: repairVisibleText(picked?.label ?? getCategoryLabel(id, locale)) });
+      return;
+    }
     window.setTimeout(() => {
       navLocationInputRef.current?.focus();
       setNavLocOpen(false);
@@ -1832,7 +1833,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     if (!navLocation.trim()) {
       nativeLocationInputRef.current?.focus({ preventScroll: true });
       setNavLocOpen(false);
-    } else nativeLocationInputRef.current?.focus({ preventScroll: true });
+    } else runCompactSearch({ categoria: id, servicio: repairVisibleText(picked?.label ?? getCategoryLabel(id, locale)) });
   }
 
   function selectNavLocation(s: LocationSuggestion) {
@@ -1844,10 +1845,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     if (!hasSearchService) {
       (nativeSearchOpen ? nativeSearchInputRef.current : compactSvcRef.current?.querySelector("input"))?.focus({ preventScroll: true });
       setSearchFocused(true);
-    } else {
-      (nativeSearchOpen ? nativeLocationInputRef.current : navLocationInputRef.current)?.focus({ preventScroll: true });
-      setNavLocOpen(false);
-    }
+    } else runCompactSearch({ location: s });
   }
 
   function handleCompactSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -2703,8 +2701,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                                 setSearchQuery(reciente.busqueda!.termino);
                                 setSearchCategoryId(null);
                                 setSearchFocused(false);
-                                nativeLocationInputRef.current?.focus({ preventScroll: true });
-                                setNavLocOpen(false);
+                                if (navLocation.trim()) runCompactSearch({ servicio: reciente.busqueda!.termino, categoria: null });
+                                else {
+                                  nativeLocationInputRef.current?.focus({ preventScroll: true });
+                                  setNavLocOpen(false);
+                                }
                               }}
                               className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-2 py-2.5 text-left"
                             >

@@ -522,13 +522,13 @@ export function LandingHero() {
     return () => clearTimeout(id);
   }, [location, nearMeActiveLabel]);
 
-  // Selecting a service suggestion FILLS the field — it does NOT search. The
-  // search runs only on Buscar/Enter (see runSearch).
+  // The first selection fills its field; the second submits with fresh values.
   function selectSuggestion(s: SearchSuggestion) {
     recienElegidoRef.current = true;
     setService(s.label);
     setServiceSel(s);
     setOpenSug(false);
+    if (location.trim()) { runSearch(s); return; }
     setTimeout(() => { enfocarVisible(ubicacionInputRef, ubicacionMobileRef); setOpenLoc(false); }, 0);
   }
 
@@ -544,7 +544,7 @@ export function LandingHero() {
       setTimeout(() => enfocarVisible(servicioInputRef, servicioMobileRef), 0);
       return;
     }
-    setTimeout(() => { enfocarVisible(ubicacionInputRef, ubicacionMobileRef); setOpenLoc(false); }, 0);
+    runSearch(undefined, { kind: "taxonomy", sug: s });
   }
 
   // Picking a Google address → resolve its province/cantón (from admin areas) + lat/lng, so the
@@ -571,6 +571,10 @@ export function LandingHero() {
       pickedAddrRef.current = { provinceId, cantonId, lat, lng, label: a.label };
       sessionTokenRef.current = null; // end the Places session after a selection
     } catch { /* keep the typed label; the search falls back to text */ }
+    if (service.trim()) {
+      const resolved = pickedAddrRef.current;
+      runSearch(undefined, { kind: "address", ...resolved });
+    } else enfocarVisible(servicioInputRef, servicioMobileRef);
   }
 
   // Build params from current state and navigate. Service: a picked category
@@ -693,6 +697,8 @@ export function LandingHero() {
         setAddrSug([]);
         setLocSug([]);
         setGeoLoading(false);
+        if (service.trim()) runSearch(undefined, { kind: "nearMe", lat: pos.coords.latitude, lng: pos.coords.longitude });
+        else enfocarVisible(servicioInputRef, servicioMobileRef);
       },
       () => {
         nearMeRef.current = null;
