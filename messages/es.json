@@ -2836,7 +2836,7 @@
     "accion": "Buscar profesionales"
   },
   "terminosCasilla": {
-    "texto": "Al registrarte aceptas los <terms>Términos de uso</terms> y la <privacy>Política de privacidad</privacy> de ContrataCR."
+    "texto": "He leído y acepto los <terms>Términos de uso</terms> y la <privacy>Política de privacidad</privacy> de ContrataCR."
   },
   "bajaCorreos": {
     "listoTitulo": "Listo, no te mandamos más novedades",
