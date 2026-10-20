@@ -29,6 +29,7 @@ test("administrator panel and API require real MFA enrollment, including a new l
     await gotoOK(page, "/admin");
     await expect(page.locator("[data-admin-mfa]")).toBeVisible();
     const screen = page.locator("[data-authentication-screen]");
+    await expect(page.locator("html")).toHaveCSS("scrollbar-gutter", "auto");
     const bounds = await screen.boundingBox();
     expect(bounds!.x).toBe(0);
     expect(bounds!.y).toBe(0);

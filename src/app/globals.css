@@ -2349,6 +2349,9 @@ html.ccr-menu-sin-cierre .ccr-menu-completo, html.ccr-menu-sin-cierre .ccr-menu-
 }
 
 /* Authentication owns the viewport: no reserved navbar or bottom-tab band. */
+html:has([data-authentication-screen]) {
+  scrollbar-gutter: auto;
+}
 body:has([data-authentication-screen]) {
   background: #fff;
 }
