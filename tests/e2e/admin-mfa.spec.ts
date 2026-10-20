@@ -32,7 +32,8 @@ test("administrator panel and API require real MFA enrollment, including a new l
     const bounds = await screen.boundingBox();
     expect(bounds!.x).toBe(0);
     expect(bounds!.y).toBe(0);
-    expect(bounds!.width).toBe(await page.evaluate(() => document.documentElement.clientWidth));
+    // Read both widths in the same frame after the previous route releases its scrollbar.
+    await expect.poll(() => screen.evaluate(element => Math.abs(element.getBoundingClientRect().width - document.documentElement.clientWidth))).toBeLessThan(1);
     await expect(screen).toHaveCSS("background-color", "rgb(255, 255, 255)");
     await page.screenshot({ path: test.info().outputPath("admin-mfa-setup-screen.png") });
     if (testInfo.project.name.includes("mobile")) {
