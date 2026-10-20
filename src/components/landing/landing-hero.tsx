@@ -529,12 +529,7 @@ export function LandingHero() {
     setService(s.label);
     setServiceSel(s);
     setOpenSug(false);
-    if (!location.trim()) {
-      // Falta la ubicación: se pasa el foco en lugar de buscar a medias.
-      setTimeout(() => enfocarVisible(ubicacionInputRef, ubicacionMobileRef), 0);
-      return;
-    }
-
+    setTimeout(() => { enfocarVisible(ubicacionInputRef, ubicacionMobileRef); setOpenLoc(false); }, 0);
   }
 
   function selectLocation(s: LocationSuggestion) {
@@ -549,7 +544,7 @@ export function LandingHero() {
       setTimeout(() => enfocarVisible(servicioInputRef, servicioMobileRef), 0);
       return;
     }
-
+    setTimeout(() => { enfocarVisible(ubicacionInputRef, ubicacionMobileRef); setOpenLoc(false); }, 0);
   }
 
   // Picking a Google address → resolve its province/cantón (from admin areas) + lat/lng, so the
@@ -590,6 +585,8 @@ export function LandingHero() {
     | { kind: "address"; provinceId?: string; cantonId?: string; lat?: number; lng?: number }
     | { kind: "nearMe"; lat: number; lng: number };
   function runSearch(serviceOverride?: SearchSuggestion, locationOverride?: LocOverride) {
+    if (!(serviceOverride?.label || service.trim())) { enfocarVisible(servicioInputRef, servicioMobileRef); return; }
+    if (!location.trim() && !locationOverride) { enfocarVisible(ubicacionInputRef, ubicacionMobileRef); return; }
     const params = new URLSearchParams();
     // `serviceOverride` (from Enter) resolves a partial term to the best service
     // suggestion. Otherwise we infer the service from the typed text or send q.
@@ -710,8 +707,8 @@ export function LandingHero() {
         return;
       }
     }
-    // No open dropdown / no matches → just run the search with whatever is filled
-    // (location is OPTIONAL — service-only still searches).
+    // Enter submits only when both fields are filled; otherwise focus moves
+    // to the missing field in runSearch.
     if (e.key === "Enter") {
       e.preventDefault();
       runSearch();
@@ -863,7 +860,7 @@ export function LandingHero() {
                 <LocationDropdown anchorRef={pildoraRef} open={openLoc && location.trim().length >= 2} suggestions={locSug} addresses={addrSug} activeIdx={locActive} onPick={(s) => selectLocation(s)} onPickAddress={selectAddress} onNearMe={requestNearMe} nearMeLabel={t("nearMe")} geoLoading={geoLoading} />
               </div>
               {/* En computadora, la lupa que busca (como Angi). En el teléfono no:
-                  el panel completo incluye su botón Buscar. */}
+                  se confirma desde el teclado tras completar ambos campos. */}
               <button
                 type="submit"
                 aria-label={t("search")}

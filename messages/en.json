@@ -3378,5 +3378,12 @@
     "pendingCheck": "Verification pending.",
     "addDocuments": "Attach documents",
     "cancel": "Cancel"
+  },
+  "sessionRecovery": {
+    "connectionTitle": "We couldn’t connect",
+    "title": "We couldn’t verify your session",
+    "description": "Check your connection and try again. Your session is preserved.",
+    "retry": "Try again",
+    "checking": "Connecting…"
   }
 }
