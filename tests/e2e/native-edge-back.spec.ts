@@ -3,7 +3,7 @@ import { createDisposableAccount, cleanupDisposableAccount, type DisposableAccou
 import { gotoOK, loginAs, waitForInteractivePage } from './helpers';
 import { canRunSeededRegression, ensureRegressionSeed } from './seed';
 
-async function swipe(page: Page, x = 8, y = 250, endX = 180, endY = 255, selector = 'main', cancel = false) {
+async function swipe(page: Page, x = 8, y = 250, endX = 180, endY = 255, selector = 'main', cancel = false, compatibilityClick = false) {
   await page.locator(selector).first().evaluate((target, args) => {
     const touch = (x: number, y: number) => ({ identifier: 1, target, clientX: x, clientY: y });
     const emit = (name: string, touches: unknown[], changedTouches: unknown[] = []) => {
@@ -14,7 +14,10 @@ async function swipe(page: Page, x = 8, y = 250, endX = 180, endY = 255, selecto
     emit('touchstart', [touch(args.x, args.y)]);
     emit('touchmove', [touch(args.endX, args.endY)]);
     emit(args.cancel ? 'touchcancel' : 'touchend', [], [touch(args.endX, args.endY)]);
-  }, { x, y, endX, endY, cancel });
+    // A compatibility click belongs to the same browser gesture, not a later
+    // Playwright round trip that may outlast the app's suppression interval.
+    if (args.compatibilityClick) target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, clientX: args.endX, clientY: args.endY }));
+  }, { x, y, endX, endY, cancel, compatibilityClick });
 }
 
 for (const environment of ['responsive web', 'native app'] as const) {
@@ -119,9 +122,8 @@ test('native edge back respects direction, scrolling, controls, overlays and roo
   await swipe(page, 8, 320, 180, 325, '#qa-input'); // editable fields keep their own gesture
   await swipe(page, 8, 380, 180, 385, '#qa-rail > div'); // horizontal rails keep their scroll
   await expect(button).not.toHaveAttribute('data-calls');
-  await swipe(page, 8, 250, 180, 255, '#qa-row');
+  await swipe(page, 8, 250, 180, 255, '#qa-row', false, true);
   await expect(button).toHaveAttribute('data-calls', '1');
-  await page.locator('#qa-row').evaluate((row) => row.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, clientX: 180, clientY: 255 })));
   await expect(page.locator('#qa-row')).not.toHaveAttribute('data-calls');
   await page.evaluate(() => {
     const cover = document.createElement('div'); cover.id = 'qa-cover';

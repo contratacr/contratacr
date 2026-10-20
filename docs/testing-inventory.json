@@ -24706,31 +24706,31 @@
       "file": "tests/e2e/native-edge-back.spec.ts",
       "cases": [
         {
-          "line": 21,
+          "line": 24,
           "title": "`${environment}: edge swipe walks back through the service picker without selecting a service`"
         },
         {
-          "line": 46,
+          "line": 49,
           "title": "`${environment}: service categories return to the index by swipe`"
         },
         {
-          "line": 58,
+          "line": 61,
           "title": "`${environment}: job and promotion details return to their boards by swipe`"
         },
         {
-          "line": 59,
+          "line": 62,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 85,
+          "line": 88,
           "title": "'native edge back respects direction, scrolling, controls, overlays and root screens'"
         },
         {
-          "line": 141,
+          "line": 143,
           "title": "'native account and privacy swipe returns to Mi perfil without skipping the panel'"
         },
         {
-          "line": 142,
+          "line": 144,
           "title": "!canRunSeededRegression()"
         }
       ]
