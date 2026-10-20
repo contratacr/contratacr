@@ -1,10 +1,13 @@
 import { test,expect } from 'playwright/test';
 import { gotoOK,waitForInteractivePage,openLoginForm } from './helpers';
-test('batched journey events omit typed email and password and show no new dialogs',async({page,context})=>{
+test('batched journey events omit typed email and password and show no new dialogs',async({page,context,baseURL})=>{
+ const host=new URL(baseURL!).hostname;
+ test.skip(!["localhost","127.0.0.1","test.contratacr.com"].includes(host),"Analytics collection tests are isolated from production.");
  await context.clearCookies();
  await page.addInitScript(()=>Object.defineProperty(navigator,'webdriver',{get:()=>false}));
  const bodies:string[]=[];
  await page.route('**/api/analytics/journey',async route=>{bodies.push(route.request().postData()||'');await route.fulfill({status:204});});
+ await page.route('**/api/analytics/meta',route=>route.fulfill({status:200,json:{skipped:true}}));
  await page.route('**/api/analytics/usage',route=>route.fulfill({status:204}));
  await gotoOK(page,'/login');await waitForInteractivePage(page);await openLoginForm(page);
  await page.locator('main input[type="email"]').fill('private-person@example.com');
