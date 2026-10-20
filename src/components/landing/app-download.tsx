@@ -1,5 +1,7 @@
 "use client";
 
+import { prefersNativeIosAppBanner, smartAppBannerContent } from "@/lib/mobile/smart-app-banner";
+
 import { mobileDownloadPlatform, DOWNLOAD_DISMISS_COOKIE } from "@/lib/mobile-download-platform";
 import Image from "next/image";
 import { ContrataCRLogo } from "@/components/brand/brand-logo";
@@ -76,10 +78,11 @@ export function AppStoreFooterLinks() {
   </div>;
 }
 
-export function MobileAppDownloadBanner({ initialPlatform = null, initialDismissed = false }: { initialPlatform?: "ios" | "android" | null; initialDismissed?: boolean }) {
+export function MobileAppDownloadBanner({ initialPlatform = null, initialDismissed = false, initialNativeIosBanner = false }: { initialPlatform?: "ios" | "android" | null; initialDismissed?: boolean; initialNativeIosBanner?: boolean }) {
   const native = useNativeApp();
   const en = useLocale() === "en";
   const pathname = usePathname();
+  const nativeIosBanner = useSyncExternalStore(subscribeClient, () => prefersNativeIosAppBanner(navigator.userAgent) && !(navigator as Navigator & { standalone?: boolean }).standalone && !window.matchMedia("(display-mode: standalone)").matches, () => initialNativeIosBanner) && smartAppBannerContent(pathname) !== null;
   const platform = useSyncExternalStore(subscribeClient, () => mobileDownloadPlatform(navigator.userAgent, navigator.maxTouchPoints), () => initialPlatform);
   const storedDismissal = useSyncExternalStore(subscribeClient, () => {
     const cookie = document.cookie.split(";").map(item => item.trim()).find(item => item.startsWith(`${DOWNLOAD_DISMISS_COOKIE}=`))?.split("=")[1];
@@ -135,7 +138,7 @@ export function MobileAppDownloadBanner({ initialPlatform = null, initialDismiss
   }, [eligible, native]);
   // A compact desktop window uses the mobile layout, but is not a mobile
   // device. Require a detected platform before rendering or reserving space.
-  const visible = platform !== null && !native && eligible && (!storedDismissal || downloadRequested) && !dismissed && !blocked;
+  const visible = platform !== null && !native && !nativeIosBanner && eligible && (!storedDismissal || downloadRequested) && !dismissed && !blocked;
   useLayoutEffect(() => {
     const root = document.documentElement;
     if (visible) root.setAttribute("data-web-download-banner", "");

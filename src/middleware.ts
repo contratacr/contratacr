@@ -91,6 +91,8 @@ const CATALOGO_DEL_CODIGO = new Set(ALL_CATEGORIES.map((c) => c.id));
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  // Overwrite any client-supplied value before locale/profile rewrites.
+  request.headers.set("x-ccr-app-path", pathname + request.nextUrl.search);
 
   // The QR endpoint has no locale or profile slug: let its route handler
   // choose the store before any session/onboarding or vanity routing.
