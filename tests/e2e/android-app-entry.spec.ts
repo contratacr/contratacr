@@ -35,8 +35,7 @@ for (const state of ['installed', 'missing', 'unsupported', 'error', 'pending'] 
     const label = state === 'installed' ? 'Abrir' : state === 'missing' ? 'Descargar' : 'Abrir o descargar';
     await expect(action).toHaveText(label);
     await expect(banner.getByRole('link')).toHaveCount(1);
-    if (state === 'missing') await expect(action).toHaveAttribute('href', APP_STORES.android);
-    else await expect(action).toHaveAttribute('href', /intent:\/\/contratacr.com\/profesionales\/soldadura#resenas#Intent/);
+    await expect(action).toHaveAttribute('href', /intent:\/\/contratacr.com\/profesionales\/soldadura#resenas#Intent/);
     await expect(page).toHaveURL(/\/profesionales\/soldadura#resenas$/);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await banner.getByRole('button').click();
@@ -55,11 +54,14 @@ test('Android action refreshes on return from the store without exposing unrelat
   });
   await page.goto('/proyectos');
   const action = page.getByTestId('mobile-app-download').getByRole('link');
-  await expect(action).toHaveAttribute('href', APP_STORES.android);
+  await expect(action).toHaveText('Descargar');
+  await expect(action).toHaveAttribute('href', /^intent:/);
   await page.evaluate(() => { (window as unknown as { qaInstalled: boolean }).qaInstalled = true; window.dispatchEvent(new Event('pageshow')); });
+  await expect(action).toHaveText('Abrir');
   await expect(action).toHaveAttribute('href', /^intent:/);
   await page.evaluate(() => { (window as unknown as { qaInstalled: boolean }).qaInstalled = false; window.dispatchEvent(new Event('pageshow')); });
-  await expect(action).toHaveAttribute('href', APP_STORES.android);
+  await expect(action).toHaveText('Descargar');
+  await expect(action).toHaveAttribute('href', /^intent:/);
 });
 
 test('installed Android action translates and updates when changing language',async({page})=>{

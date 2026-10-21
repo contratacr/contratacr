@@ -184,7 +184,7 @@ export function MobileAppDownloadBanner({ initialPlatform = null, initialDismiss
   if (!visible || !platform) return null;
   const androidAction = platform === "android" && openHref;
   const actionHref = platform === "ios" ? iosHref ?? APP_STORES.ios
-    : androidAction && androidInstalled !== false ? openHref : APP_STORES.android;
+    : androidAction ? openHref : APP_STORES.android;
   const knownAndroid = platform === "android" && androidInstalled !== null;
   const actionLabel = knownAndroid ? (androidInstalled ? (en ? "Open" : "Abrir") : (en ? "Download" : "Descargar"))
     : (en ? "Open or download" : "Abrir o descargar");
@@ -201,7 +201,7 @@ export function MobileAppDownloadBanner({ initialPlatform = null, initialDismiss
       <a href={actionHref ?? APP_STORES[platform]} onClick={(event) => {
         if (platform === "ios") {
           event.currentTarget.href = iosAppEntry(location.pathname + location.search + location.hash, location.hostname) ?? iosAppEntry(en ? "/en" : "/", location.hostname) ?? APP_STORES.ios;
-        } else if (androidAction && androidInstalled !== false) {
+        } else if (androidAction) {
           const current = androidAppIntent(location.pathname + location.search + location.hash) ?? androidAppIntent(en ? "/en" : "/");
           if (current) event.currentTarget.href = current;
         }

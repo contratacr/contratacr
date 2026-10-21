@@ -23,7 +23,7 @@ test('web: tiendas correctas, reserva, teclado y cierre persistente', async ({pa
   });
   expect(row).toEqual({sameRow:true,overflow:false});
 
-  await expect(banner.locator('a')).toHaveAttribute('href',android?/play\.google\.com\/store\/apps\/details\?id=com\.contratacr\.app/:/^https:\/\/www\.contratacr\.com\/\?_ccr_open=ios$/);
+  await expect(banner.locator('a')).toHaveAttribute('href',android?/^intent:/:/^https:\/\/www\.contratacr\.com\/\?_ccr_open=ios$/);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   const notice=await banner.locator('aside').boundingBox(), header=await page.getByTestId('landing-navbar').boundingBox();
   expect(notice!.y + notice!.height).toBeCloseTo(await page.evaluate(()=>(window.visualViewport?.height ?? innerHeight) + (window.visualViewport?.offsetTop ?? 0)), 0);

@@ -13179,7 +13179,7 @@
           "line": 201,
           "tag": "a",
           "label": "{`${actionLabel} ContrataCR`}",
-          "handler": "{(event) => {\n        if (platform === \"ios\") {\n          event.currentTarget.href = iosAppEntry(location.pathname + location.search + location.hash, location.hostname) ?? iosAppEntry(en ? \"/en\" : \"/\", location.hostname) ?? APP_STORES.ios;\n        } else if (androidAction && androidInstalled !== false) {\n          const current = androidAppIntent(location.pathname + location.search + location.hash) ?? androidAppIntent(en ? \"/en\" : \"/\");\n          if (current) event.currentTarget.href = current;\n        }\n      }}",
+          "handler": "{(event) => {\n        if (platform === \"ios\") {\n          event.currentTarget.href = iosAppEntry(location.pathname + location.search + location.hash, location.hostname) ?? iosAppEntry(en ? \"/en\" : \"/\", location.hostname) ?? APP_STORES.ios;\n        } else if (androidAction) {\n          const current = androidAppIntent(location.pathname + location.search + location.hash) ?? androidAppIntent(en ? \"/en\" : \"/\");\n          if (current) event.currentTarget.href = current;\n        }\n      }}",
           "destination": "{actionHref ?? APP_STORES[platform]}",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         }
@@ -23143,19 +23143,19 @@
           "title": "!/Android/.test(await page.evaluate(() => navigator.userAgent))"
         },
         {
-          "line": 49,
+          "line": 48,
           "title": "'Android action refreshes on return from the store without exposing unrelated apps'"
         },
         {
-          "line": 50,
+          "line": 49,
           "title": "!/Android/.test(await page.evaluate(() => navigator.userAgent))"
         },
         {
-          "line": 65,
+          "line": 67,
           "title": "'installed Android action translates and updates when changing language'"
         },
         {
-          "line": 66,
+          "line": 68,
           "title": "!/Android/.test(await page.evaluate(()=>navigator.userAgent))"
         }
       ]
