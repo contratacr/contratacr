@@ -24437,23 +24437,23 @@
           "title": "'iOS fallback requires the explicit marker and never redirects normal, auth or Android traffic'"
         },
         {
-          "line": 32,
+          "line": 35,
           "title": "'unclaimed iPhone links reach the store before rendering, without caching or redirect loops'"
         },
         {
-          "line": 43,
+          "line": 46,
           "title": "`iPhone has one localized action with a cross-host link at 320px (${locale})`"
         },
         {
-          "line": 44,
+          "line": 47,
           "title": "test.info().project.name !== 'webkit-mobile'"
         },
         {
-          "line": 72,
+          "line": 75,
           "title": "'native WebView does not bounce a marked link back to the App Store'"
         },
         {
-          "line": 78,
+          "line": 81,
           "title": "'SSR ignores forged source-host headers and already exposes the localized app action'"
         }
       ]

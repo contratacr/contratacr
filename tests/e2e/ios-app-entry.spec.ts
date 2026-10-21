@@ -27,6 +27,9 @@ test('iOS fallback requires the explicit marker and never redirects normal, auth
     expect(iosAppStoreFallback(new URL(path, 'https://www.contratacr.com'), iphone)).toBeNull();
   }
   expect(iosAppStoreFallback(new URL('https://www.contratacr.com/proyectos?_ccr_open=ios'), 'Android Chrome')).toBeNull();
+  const desktopModeIpad = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) AppleWebKit/605.1.15 Version/18.0 Safari/605.1.15';
+  expect(iosAppStoreFallback(new URL('https://www.contratacr.com/proyectos?_ccr_open=ios'), desktopModeIpad)).toBe(APP_STORES.ios);
+  expect(iosAppStoreFallback(new URL('https://www.contratacr.com/proyectos'), desktopModeIpad)).toBeNull();
 });
 
 test('unclaimed iPhone links reach the store before rendering, without caching or redirect loops', async ({ request }) => {
