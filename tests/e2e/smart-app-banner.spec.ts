@@ -1,3 +1,4 @@
+import { waitForInteractivePage } from "./helpers";
 import { test, expect } from "playwright/test";
 import { readFileSync } from "node:fs";
 import { smartAppBannerContent, prefersNativeIosAppBanner } from "../../src/lib/mobile/smart-app-banner";
@@ -20,15 +21,46 @@ test("Apple association covers homepage and exact professional search without br
   for(const path of ['/*','/auth/*','/api/*','/admin*','/login'])expect(paths).not.toContain(path);
   expect(association.webcredentials.apps).toEqual(['LPB3Q4LJ5Z.com.contratacr.app']);
 });
-test("public pages use one dismissible notice instead of depending on Apple's browser UI",async({page,context,baseURL})=>{
+test("Safari receives only its native banner before opening the menu; other browsers and standalone use the custom notice",async({page,context,baseURL})=>{
+  const safari=prefersNativeIosAppBanner(await page.evaluate(()=>navigator.userAgent));
   const response=await page.goto('/profesionales?ubicacion=Heredia');
-  expect(await response!.text()).not.toContain('name="apple-itunes-app"');
-  await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveCount(0);
-  if ((page.viewportSize()?.width ?? 1280)<1024) await expect(page.getByTestId('mobile-app-download')).toBeVisible();
+  const html=await response!.text();
+  expect(html.includes('name="apple-itunes-app"')).toBe(safari);
+  await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveCount(safari?1:0);
+  if(safari) await expect(page.getByTestId('mobile-app-download')).toHaveCount(0);
+  await waitForInteractivePage(page);
+  if((page.viewportSize()?.width??1280)<1024){
+    await page.getByRole('button',{name:/Abrir menú|Abrir menu/}).filter({visible:true}).first().click();
+    await expect(page.getByTestId('mobile-menu-store-link').filter({visible:true})).toBeVisible();
+    await expect(page.getByTestId('mobile-menu-store-link').filter({visible:true})).toHaveAttribute('href','/descargar');
+    await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveCount(safari?1:0);
+  }
+  await page.goto('/en/proyectos');
+  if(safari) await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveAttribute('content',/app-argument=https:\/\/contratacr.com\/en\/proyectos/);
   await page.goto('/login');
+  await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveCount(0);
   await expect(page.getByTestId('mobile-app-download')).toHaveCount(0);
   await page.addInitScript(()=>localStorage.setItem('ccr:native-first-run-onboarding:v12','1'));
   await context.addCookies([{name:'ccr_platform',value:'native',url:baseURL!}]);
   await page.goto('/profesionales');
+  await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveCount(0);
   await expect(page.getByTestId('mobile-app-download')).toHaveCount(0);
+  await expect(page.getByTestId('mobile-menu-store-link')).toHaveCount(0);
 });
+
+for (const browserToken of ['CriOS/142.0', '[FBAN/FBIOS]']) {
+ test(`iPhone ${browserToken} uses only our translated notice`,async({browser,baseURL})=>{
+  test.skip(test.info().project.name!=='webkit-mobile','iOS browser presentation');
+  const context=await browser.newContext({viewport:{width:390,height:844},userAgent:`Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 ${browserToken} Mobile/15E148 Safari/604.1`});
+  try {
+   await context.addCookies([{name:'ccr_sin_analitica',value:'1',url:baseURL!}]);
+   const page=await context.newPage();
+   await page.goto(`${baseURL}/en/proyectos`);
+   await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveCount(0);
+   const notice=page.getByTestId('mobile-app-download');
+   await expect(notice).toBeVisible();
+   await expect(notice.getByRole('link')).toHaveText('Download');
+   await expect(notice.getByRole('link')).toHaveAttribute('href',/apps\.apple\.com/);
+  }finally{await context.close();}
+ });
+}

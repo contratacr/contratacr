@@ -1,5 +1,6 @@
 "use client";
 import { ContrataCRLogo, ContrataCRMark } from "@/components/brand/brand-logo";
+import { MobileAppStoreMenuLink } from "@/components/mobile/mobile-app-store-menu-link";
 import { SocialLinks } from "./social-links";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
@@ -3007,6 +3008,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Admin panel" : "Panel admin"}</span>
                   </Link>
                 )}
+
+                <MobileAppStoreMenuLink onClick={cerrarCajon} className={mobileDrawerItemClass} />
 
                 <div className="mt-1">
                   <button

@@ -1,3 +1,5 @@
+import { waitForInteractivePage } from "./helpers";
+import { prefersNativeIosAppBanner } from "../../src/lib/mobile/smart-app-banner";
 import { mkdirSync } from "node:fs";
 import { PWA_STARTUP_DEVICES } from "../../src/lib/pwa-startup";
 import sharp from "sharp";
@@ -10,11 +12,16 @@ test('web: tiendas correctas, reserva, teclado y cierre persistente', async ({pa
   await page.goto('/');
   await expect(page.getByTestId('app-download-section')).toBeVisible();
   const banner=page.getByTestId('mobile-app-download');
+  if (prefersNativeIosAppBanner(await page.evaluate(()=>navigator.userAgent))) {
+    await expect(banner).toHaveCount(0);
+    await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveAttribute('content',/app-id=6794559661/);
+    await expect(page.getByTestId('app-store-footer-links')).toBeVisible();
+    return;
+  }
   await expect(banner).toBeVisible();
-  await expect(banner.getByRole('link')).toHaveText(await page.evaluate(()=>/Android/.test(navigator.userAgent)) ? 'Descargar' : 'Ver app');
-  const href=await banner.locator('a').getAttribute('href');
+  await expect(banner.getByRole('link')).toHaveText('Descargar');
   const android=await page.evaluate(()=>/Android/.test(navigator.userAgent));
-  expect(href).toContain(android?'play.google.com/store/apps/details?id=com.contratacr.app':'apps.apple.com/cr/app/contratacr/id6794559661');
+  await expect(banner.locator('a')).toHaveAttribute('href',android?/play\.google\.com\/store\/apps\/details\?id=com\.contratacr\.app/:/apps\.apple\.com\/cr\/app\/contratacr\/id6794559661/);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   const notice=await banner.locator('aside').boundingBox(), header=await page.getByTestId('landing-navbar').boundingBox();
   expect(notice!.y + notice!.height).toBeCloseTo(await page.evaluate(()=>(window.visualViewport?.height ?? innerHeight) + (window.visualViewport?.offsetTop ?? 0)), 0);
@@ -51,6 +58,12 @@ test('shared download anchor always remains useful, including after dismissing t
  await page.goto('/#descargar-app');
  if ((page.viewportSize()?.width ?? 1280) < 1024) {
   const banner=page.getByTestId('mobile-app-download');
+  if (prefersNativeIosAppBanner(await page.evaluate(()=>navigator.userAgent))) {
+    await expect(banner).toHaveCount(0);
+    await expect(page.getByTestId('app-download-section')).toBeInViewport();
+    await expect(page.getByTestId('app-download-section').getByTestId('app-store-links').locator('a')).toHaveCount(2);
+    return;
+  }
   await expect(banner).toBeVisible();
   await banner.getByRole('button').click();await expect(banner).toHaveCount(0);
   await page.reload();await expect(banner).toBeVisible();
@@ -96,6 +109,12 @@ test('mobile download notice and header are correctly positioned before JavaScri
   const cold=await context.newPage();await cold.goto(`${baseURL}/`);
   const noticeLocator=cold.getByTestId('mobile-app-download');
   const header=await cold.getByTestId('landing-navbar').boundingBox();
+  if (prefersNativeIosAppBanner(ua)) {
+    await expect(noticeLocator).toHaveCount(0);
+    await expect(cold.locator('meta[name="apple-itunes-app"]')).toHaveAttribute('content',/app-id=6794559661, app-argument=https:\/\/contratacr.com\//);
+    expect(header?.y).toBe(0);
+    return;
+  }
   const notice=await noticeLocator.boundingBox();
   expect(notice).not.toBeNull();
   expect(notice!.y + notice!.height).toBeCloseTo(844, 0);
@@ -132,10 +151,16 @@ test('notice stays at the bottom on public pages and respects account/form route
  test.skip((page.viewportSize()?.width ?? 1280)>=1024, "The download notice only appears on mobile web.");
  for(const route of ['/proyectos','/empleos','/promociones','/profesionales','/ayuda']) {
   await page.goto(route);
+  await waitForInteractivePage(page);
   const notice=page.getByTestId('mobile-app-download');
+  if (route !== '/ayuda' && prefersNativeIosAppBanner(await page.evaluate(()=>navigator.userAgent))) {
+    await expect(notice).toHaveCount(0);
+    await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveAttribute('content',/app-id=6794559661/);
+    continue;
+  }
   await expect(notice).toBeVisible();
   await expect(notice).not.toContainText('Llévala contigo');
-  await expect(notice.locator('a')).toHaveText(await page.evaluate(()=>/Android/.test(navigator.userAgent)) ? 'Descargar' : 'Ver app');
+  await expect(notice.locator('a')).toHaveText('Descargar');
   await page.evaluate(()=>window.scrollTo(0,400));
   await expect.poll(async()=>{
    const box=await notice.locator('aside').boundingBox();
@@ -250,6 +275,16 @@ test('mobile listings stay behind the download notice and keep their last result
  for (const route of ['/empleos','/proyectos','/promociones']) {
   await page.goto(route);
   const banner=page.getByTestId('mobile-app-download');
+  if (prefersNativeIosAppBanner(await page.evaluate(()=>navigator.userAgent))) {
+    await expect(banner).toHaveCount(0);
+    const list=page.locator('.ccr-tablero-marco > section').first();
+    await expect(list).toBeVisible();
+    await list.evaluate(el=>{el.scrollTop=el.scrollHeight;});
+    const last=list.locator('article').last();
+    if(await last.count()) expect((await last.boundingBox())!.y+(await last.boundingBox())!.height).toBeLessThanOrEqual((page.viewportSize()?.height ?? 844)+1);
+    expect(await page.locator('html').getAttribute('data-web-download-banner')).toBeNull();
+    continue;
+  }
   await expect(banner).toBeVisible();
   const shell=page.locator('.ccr-cascaron-tablero');
   const before=await shell.boundingBox();
@@ -330,8 +365,14 @@ for (const standalone of [false, true]) {
   },{standalone});
   await page.goto('/profesionales');
   const notice=page.getByTestId('mobile-app-download');
+  if (!standalone) {
+   await expect(notice).toHaveCount(0);
+   await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveCount(1);
+   return;
+  }
+  await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveCount(0);
   await expect(notice).toBeVisible();
-  await expect(notice.getByRole('link')).toHaveText('Ver app');
+  await expect(notice.getByRole('link')).toHaveText('Descargar');
   await expect(notice.getByRole('link')).toHaveAttribute('href',/apps\.apple\.com/);
   if (process.env.DOWNLOAD_DESIGN_EVIDENCE) {
    mkdirSync(process.env.DOWNLOAD_DESIGN_EVIDENCE,{recursive:true});
@@ -340,5 +381,24 @@ for (const standalone of [false, true]) {
   await notice.getByRole('button').click();
   await page.reload();
   await expect(notice).toHaveCount(0);
+ });
+}
+
+for (const locale of ['es', 'en'] as const) {
+ test(`download notice translates its label and accessibility text in ${locale}`,async({page})=>{
+  test.skip((page.viewportSize()?.width??1280)>=1024,'Mobile notice');
+  if (test.info().project.name==='webkit-mobile') await page.addInitScript(()=>Object.defineProperty(navigator,'standalone',{configurable:true,value:true}));
+  await page.addInitScript(()=>Object.defineProperty(navigator,'getInstalledRelatedApps',{configurable:true,value:async()=>[]}));
+  await page.goto(locale==='en'?'/en/proyectos':'/proyectos');
+  const notice=page.getByTestId('mobile-app-download');
+  await expect(notice).toBeVisible();
+  const label=locale==='en'?'Download':'Descargar';
+  await expect(notice.getByRole('link',{name:`${label} ContrataCR`})).toHaveText(label);
+  await expect(notice.getByRole('button',{name:locale==='en'?'Dismiss download notice':'Cerrar aviso de descarga'})).toBeVisible();
+  await expect(notice).toContainText(locale==='en'?'for':'para');
+  await page.getByRole('button',{name:/Abrir menú|Abrir menu|Open menu/}).filter({visible:true}).first().click();
+  await expect(page.getByTestId('mobile-menu-store-link').filter({visible:true})).toHaveText(locale==='en'?'Download app':'Descargar app');
+  await page.getByRole('button',{name:locale==='en'?'Español':'English',exact:true}).filter({visible:true}).click();
+  await expect(notice.getByRole('link')).toHaveText(locale==='en'?'Descargar':'Download');
  });
 }
