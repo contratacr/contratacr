@@ -28,8 +28,6 @@ import { WhatsAppReviewFollowUp } from "@/components/reviews/whatsapp-review-fol
 import { PushTokenManager } from "@/components/push/push-token-manager";
 import { AppResumeRecovery } from "@/components/util/app-resume-recovery";
 import { NativeBottomNav } from "@/components/mobile/native-bottom-nav";
-import { SmartAppBanner } from "@/components/mobile/smart-app-banner";
-import { prefersNativeIosAppBanner } from "@/lib/mobile/smart-app-banner";
 import { CampaignAppLinks } from "@/components/mobile/campaign-app-links";
 import { MobileAppBridge } from "@/components/mobile/mobile-app-bridge";
 import { NativeFirstRunOnboarding } from "@/components/mobile/native-first-run-onboarding";
@@ -69,7 +67,7 @@ function buildMetadata(locale: string): Metadata {
     title,
     description,
     applicationName: "ContrataCR",
-    manifest: "/site.webmanifest",
+    manifest: "/site.webmanifest?v=20261021",
     appleWebApp: {
       capable: true,
       title: "ContrataCR",
@@ -191,6 +189,8 @@ export default async function LocaleLayout({
   }
 
   const initialDownloadPlatform = mobileDownloadPlatform((await headers()).get("user-agent") ?? "");
+  // Request-bound server render: compare the dismissal cookie with the current time.
+  // eslint-disable-next-line react-hooks/purity
   const initialDownloadDismissed = Number((await cookies()).get(DOWNLOAD_DISMISS_COOKIE)?.value ?? 0) > Date.now();
   return (
     <AppIntlProvider messages={messages} locale={locale}>
@@ -208,7 +208,6 @@ export default async function LocaleLayout({
           <SombrasAlDesplazar />
           <AppResumeRecovery />
           <CampaignAppLinks />
-          <Suspense fallback={null}><SmartAppBanner /></Suspense>
           <CustomCategoriesLoader />
           <NotificationLiveToast scope="all" />
           <OperationalStatusBanner locale={locale} status={operationalStatus} />
@@ -218,7 +217,7 @@ export default async function LocaleLayout({
             <UsageCapture />
           </Suspense>
           <PushTokenManager />
-          <MobileAppDownloadBanner initialPlatform={initialDownloadPlatform} initialDismissed={initialDownloadDismissed} initialNativeIosBanner={prefersNativeIosAppBanner((await headers()).get("user-agent") ?? "")} />
+          <MobileAppDownloadBanner initialPlatform={initialDownloadPlatform} initialDismissed={initialDownloadDismissed} />
           {initialMfa.required ? null : children}
           <NativeBottomNav />
           <WhatsAppReviewFollowUp />

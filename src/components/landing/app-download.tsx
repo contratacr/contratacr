@@ -2,8 +2,6 @@
 
 import { androidAppIntent, isInstalledAndroidApp, type RelatedApp } from "@/lib/mobile/android-app-entry";
 
-import { prefersNativeIosAppBanner, smartAppBannerContent } from "@/lib/mobile/smart-app-banner";
-
 import { mobileDownloadPlatform, DOWNLOAD_DISMISS_COOKIE } from "@/lib/mobile-download-platform";
 import Image from "next/image";
 import { ContrataCRLogo } from "@/components/brand/brand-logo";
@@ -16,7 +14,7 @@ import { usePathname } from "next/navigation";
 import { useNativeApp } from "@/hooks/use-native-app";
 
 const subscribeClient = () => () => {};
-const DISMISSED_KEY = "ccr:app-download-dismissed-until:v1";
+const DISMISSED_KEY = "ccr:app-download-dismissed-until:v2";
 
 export function AppStoreLinks() {
   const native = useNativeApp();
@@ -80,11 +78,10 @@ export function AppStoreFooterLinks() {
   </div>;
 }
 
-export function MobileAppDownloadBanner({ initialPlatform = null, initialDismissed = false, initialNativeIosBanner = false }: { initialPlatform?: "ios" | "android" | null; initialDismissed?: boolean; initialNativeIosBanner?: boolean }) {
+export function MobileAppDownloadBanner({ initialPlatform = null, initialDismissed = false }: { initialPlatform?: "ios" | "android" | null; initialDismissed?: boolean }) {
   const native = useNativeApp();
   const en = useLocale() === "en";
   const pathname = usePathname();
-  const nativeIosBanner = useSyncExternalStore(subscribeClient, () => prefersNativeIosAppBanner(navigator.userAgent) && !(navigator as Navigator & { standalone?: boolean }).standalone && !window.matchMedia("(display-mode: standalone)").matches, () => initialNativeIosBanner) && smartAppBannerContent(pathname) !== null;
   const platform = useSyncExternalStore(subscribeClient, () => mobileDownloadPlatform(navigator.userAgent, navigator.maxTouchPoints), () => initialPlatform);
   const storedDismissal = useSyncExternalStore(subscribeClient, () => {
     const cookie = document.cookie.split(";").map(item => item.trim()).find(item => item.startsWith(`${DOWNLOAD_DISMISS_COOKIE}=`))?.split("=")[1];
@@ -168,7 +165,7 @@ export function MobileAppDownloadBanner({ initialPlatform = null, initialDismiss
   }, [eligible, native]);
   // A compact desktop window uses the mobile layout, but is not a mobile
   // device. Require a detected platform before rendering or reserving space.
-  const visible = platform !== null && !native && !nativeIosBanner && eligible && (!storedDismissal || downloadRequested) && !dismissed && !blocked;
+  const visible = platform !== null && !native && eligible && (!storedDismissal || downloadRequested) && !dismissed && !blocked;
   useLayoutEffect(() => {
     const root = document.documentElement;
     if (visible) root.setAttribute("data-web-download-banner", "");
@@ -179,7 +176,7 @@ export function MobileAppDownloadBanner({ initialPlatform = null, initialDismiss
   const androidAction = platform === "android" && openHref;
   const actionHref = androidAction && androidInstalled !== false ? openHref : APP_STORES[platform];
   const actionLabel = androidAction && androidInstalled === true ? (en ? "Open app" : "Abrir app")
-    : androidAction && androidInstalled === null ? (en ? "View app" : "Ver app") : (en ? "Download" : "Descargar");
+    : androidAction && androidInstalled === null ? (en ? "View app" : "Ver app") : platform === "ios" ? (en ? "View app" : "Ver app") : (en ? "Download" : "Descargar");
   return <div className="ccr-solo-web ccr-download-banner-wrap lg:hidden" data-testid="mobile-app-download">
     <aside className="ccr-download-banner" aria-label={en ? "Download ContrataCR" : "Descargar ContrataCR"}>
       <button type="button" aria-label={en ? "Dismiss download notice" : "Cerrar aviso de descarga"} className="flex h-11 w-8 shrink-0 items-center justify-center text-[#64748b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]" onClick={() => { setDismissed(true); const until = String(Date.now() + 30 * 86400000); document.cookie = `${DOWNLOAD_DISMISS_COOKIE}=${until}; Path=/; Max-Age=2592000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`; try { localStorage.setItem(DISMISSED_KEY, until); } catch {} }}><X aria-hidden="true" className="h-[18px] w-[18px]" /></button>

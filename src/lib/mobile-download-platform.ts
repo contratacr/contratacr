@@ -3,4 +3,4 @@ export function mobileDownloadPlatform(userAgent: string, touchPoints = 0): "ios
   if (/iPhone|iPad|iPod/i.test(userAgent) || (/Macintosh/i.test(userAgent) && touchPoints > 1)) return "ios";
   return null;
 }
-export const DOWNLOAD_DISMISS_COOKIE = "ccr_download_dismissed_until";
+export const DOWNLOAD_DISMISS_COOKIE = "ccr_download_dismissed_until_v2";
