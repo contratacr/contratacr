@@ -63,3 +63,9 @@ npm audit --audit-level=high
 ```
 
 Moderate framework advisories should be reviewed case by case. Do not blindly downgrade framework packages to satisfy an audit suggestion.
+
+## Production rendering incident — 21 October 2026
+
+Public marketplace pages returned HTTP 200 with a streamed Server Component error digest, so transport-only checks missed the outage. The shared OG helper imported native `sharp` at module evaluation; Next also loads image metadata while rendering the parent page. Removed that runtime import. PNG/JPEG dimensions are now checked from encoded headers with no native dependency; safe source bytes/transparency are preserved exactly, and malformed or excessive decoded images are omitted. Existing fetch time/encoded-size limits remain.
+
+Validated 12 image-budget cases across WebKit/mobile Chromium/desktop Chromium and built the OpenNext Worker. Eight page renders (ES/EN marketplace lists, professionals and login) pass against local workerd. Added the same real-runtime smoke before Cloudflare deployment; it rejects streamed RSC errors even when HTTP status is 200. Store builds are not part of this incident fix.

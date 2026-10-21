@@ -89,10 +89,10 @@ test('PNG logos keep transparent pixels and sharing symbols have native resoluti
 });
 
 
-test('social cards bound decoded image dimensions without losing transparent pixels', async () => {
+test('social cards preserve transparent pixels and reject oversized decoding without native runtime modules', async () => {
   const sharp = (await import('sharp')).default;
   const { fotoLiviana } = await import('../../src/lib/seo/tarjeta-de-ficha');
-  const source = await sharp({ create: { width: 4000, height: 3000, channels: 4, background: { r: 0, g: 159, b: 217, alpha: 0.5 } } }).png().toBuffer();
+  const source = await sharp({ create: { width: 1200, height: 900, channels: 4, background: { r: 0, g: 159, b: 217, alpha: 0.5 } } }).png().toBuffer();
   const originalFetch = globalThis.fetch;
   try {
     globalThis.fetch = async () => new Response(new Uint8Array(source), { headers: { 'content-type': 'image/png', 'content-length': String(source.length) } });
@@ -102,5 +102,18 @@ test('social cards bound decoded image dimensions without losing transparent pix
     const metadata = await image.metadata();
     expect([metadata.width, metadata.height, metadata.hasAlpha]).toEqual([1200, 900, true]);
     expect((await image.stats()).channels[3].mean).toBeCloseTo(128, 0);
+    expect(Buffer.from(data!.split(',')[1], 'base64')).toEqual(source);
+    for (const format of ['png', 'jpeg'] as const) {
+      const huge = await sharp({ create: { width: 4000, height: 3000, channels: 3, background: '#009fd9' } })[format]().toBuffer();
+      globalThis.fetch = async () => new Response(new Uint8Array(huge), { headers: { 'content-type': `image/${format}` } });
+      expect(await fotoLiviana('https://assets.example.test/oversize', 3.8 * 1024 * 1024)).toBeNull();
+      const safe = await sharp({ create: { width: 600, height: 800, channels: 3, background: '#009fd9' } })[format]().toBuffer();
+      globalThis.fetch = async () => new Response(new Uint8Array(safe), { headers: { 'content-type': `image/${format}` } });
+      const result = await fotoLiviana('https://assets.example.test/safe', 900 * 1024);
+      expect(Buffer.from(result!.split(',')[1], 'base64')).toEqual(safe);
+      expect(await fotoLiviana('https://assets.example.test/safe', 1)).toBeNull();
+    }
+    globalThis.fetch = async () => new Response(new Uint8Array([0xff, 0xd8, 0xff, 0xc0, 0xff, 0xff]), { headers: { 'content-type': 'image/jpeg' } });
+    expect(await fotoLiviana('https://assets.example.test/truncated', 900 * 1024)).toBeNull();
   } finally { globalThis.fetch = originalFetch; }
 });
