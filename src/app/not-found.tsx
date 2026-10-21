@@ -1,3 +1,4 @@
+import { HomeRecoveryLink } from "@/components/error/home-recovery-link";
 import { headers } from "next/headers";
 import { Compass, Search } from "lucide-react";
 import { ErrorScreen, errorPrimaryBtn, errorSecondaryBtn } from "@/components/error/error-screen";
@@ -33,9 +34,9 @@ export default async function NotFound() {
           : "La dirección puede haber cambiado o ya no existe. Podés volver al inicio o buscar un profesional."
       }
     >
-      <a href={en ? "/en" : "/"} className={errorPrimaryBtn}>
+      <HomeRecoveryLink href={en ? "/en" : "/"} className={errorPrimaryBtn} documentNavigation>
         {en ? "Go home" : "Ir al inicio"}
-      </a>
+      </HomeRecoveryLink>
       <a href={en ? "/en/profesionales" : "/profesionales"} className={errorSecondaryBtn}>
         <Search className="h-4 w-4" /> {en ? "Search professionals" : "Buscar profesionales"}
       </a>

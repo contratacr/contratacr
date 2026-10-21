@@ -1,5 +1,6 @@
 "use client";
 
+import { HomeRecoveryLink } from "@/components/error/home-recovery-link";
 import { useEffect, useState } from "react";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { RefreshCw, WifiOff, AlertTriangle } from "lucide-react";
@@ -106,7 +107,7 @@ export default function LocaleError({
         <button onClick={retry} className={errorPrimaryBtn}>
           <RefreshCw className="h-4 w-4" /> {t.retry}
         </button>
-        <a href={`${prefijoDeIdioma(lang) || "/"}`} className={errorSecondaryBtn}>{t.home}</a>
+        <HomeRecoveryLink href={`${prefijoDeIdioma(lang) || "/"}`} className={errorSecondaryBtn} documentNavigation>{t.home}</HomeRecoveryLink>
       </ErrorScreen>
     );
   }
@@ -117,7 +118,7 @@ export default function LocaleError({
         <button onClick={retry} className={errorPrimaryBtn}>
           <RefreshCw className="h-4 w-4" /> {t.retry}
         </button>
-        <a href={`${prefijoDeIdioma(lang) || "/"}`} className={errorSecondaryBtn}>{t.home}</a>
+        <HomeRecoveryLink href={`${prefijoDeIdioma(lang) || "/"}`} className={errorSecondaryBtn} documentNavigation>{t.home}</HomeRecoveryLink>
       </ServiceUnavailableScreen>
     );
   }
@@ -131,7 +132,7 @@ export default function LocaleError({
       <button onClick={retry} className={errorPrimaryBtn}>
         <RefreshCw className="h-4 w-4" /> {t.retry}
       </button>
-      <a href={`${prefijoDeIdioma(lang) || "/"}`} className={errorSecondaryBtn}>{t.home}</a>
+      <HomeRecoveryLink href={`${prefijoDeIdioma(lang) || "/"}`} className={errorSecondaryBtn} documentNavigation>{t.home}</HomeRecoveryLink>
     </ErrorScreen>
   );
 }
