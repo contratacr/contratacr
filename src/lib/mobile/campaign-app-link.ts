@@ -7,7 +7,7 @@ export function hasAuthLinkPayload(url: URL): boolean {
 export function campaignAppPath(raw: string): string | null {
   try {
     const url = new URL(raw);
-    if (url.protocol !== "https:" || url.hostname !== "contratacr.com" || url.port || url.username || url.password) return null;
+    if (url.protocol !== "https:" || !["contratacr.com", "www.contratacr.com"].includes(url.hostname) || url.port || url.username || url.password) return null;
     const path = url.pathname.replace(/^\/(es|en)(?=\/|$)/, "") || "/";
     if (path === "/" && hasAuthLinkPayload(url)) return null;
     // The secure OAuth sheet consumes this return before session exchange.

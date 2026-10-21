@@ -1,5 +1,7 @@
 "use client";
 
+import { androidAppIntent, isInstalledAndroidApp, type RelatedApp } from "@/lib/mobile/android-app-entry";
+
 import { prefersNativeIosAppBanner, smartAppBannerContent } from "@/lib/mobile/smart-app-banner";
 
 import { mobileDownloadPlatform, DOWNLOAD_DISMISS_COOKIE } from "@/lib/mobile-download-platform";
@@ -89,6 +91,34 @@ export function MobileAppDownloadBanner({ initialPlatform = null, initialDismiss
     if (Number(cookie ?? 0) > Date.now()) return true;
     try { return Number(localStorage.getItem(DISMISSED_KEY) ?? 0) > Date.now(); } catch { return false; }
   }, () => initialDismissed);
+  const [androidInstalled, setAndroidInstalled] = useState<boolean | null>(null);
+  const [openHref, setOpenHref] = useState<string | null>(() => androidAppIntent(pathname));
+  useEffect(() => {
+    if (native || platform !== "android") return;
+    let active = true;
+    const updateDestination = () => setOpenHref(androidAppIntent(location.pathname + location.search + location.hash));
+    updateDestination();
+    window.addEventListener("hashchange", updateDestination);
+    const navigatorWithApps = navigator as Navigator & { getInstalledRelatedApps?: () => Promise<RelatedApp[]> };
+    let revision = 0;
+    const checkInstalled = () => {
+      if (!navigatorWithApps.getInstalledRelatedApps) return;
+      const current = ++revision;
+      void navigatorWithApps.getInstalledRelatedApps().then(apps => {
+        if (active && current === revision) setAndroidInstalled(isInstalledAndroidApp(apps));
+      }).catch(() => { if (active && current === revision) setAndroidInstalled(null); });
+    };
+    const onVisible = () => { if (document.visibilityState === "visible") checkInstalled(); };
+    checkInstalled();
+    window.addEventListener("pageshow", checkInstalled);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      active = false;
+      window.removeEventListener("hashchange", updateDestination);
+      window.removeEventListener("pageshow", checkInstalled);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [native, platform, pathname]);
   const [dismissed, setDismissed] = useState(false);
   const [blocked, setBlocked] = useState(false);
   const [downloadRequested, setDownloadRequested] = useState(false);
@@ -146,6 +176,10 @@ export function MobileAppDownloadBanner({ initialPlatform = null, initialDismiss
     return () => root.removeAttribute("data-web-download-banner");
   }, [visible]);
   if (!visible || !platform) return null;
+  const androidAction = platform === "android" && openHref;
+  const actionHref = androidAction && androidInstalled !== false ? openHref : APP_STORES[platform];
+  const actionLabel = androidAction && androidInstalled === true ? (en ? "Open app" : "Abrir app")
+    : androidAction && androidInstalled === null ? (en ? "View app" : "Ver app") : (en ? "Download" : "Descargar");
   return <div className="ccr-solo-web ccr-download-banner-wrap lg:hidden" data-testid="mobile-app-download">
     <aside className="ccr-download-banner" aria-label={en ? "Download ContrataCR" : "Descargar ContrataCR"}>
       <button type="button" aria-label={en ? "Dismiss download notice" : "Cerrar aviso de descarga"} className="flex h-11 w-8 shrink-0 items-center justify-center text-[#64748b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]" onClick={() => { setDismissed(true); const until = String(Date.now() + 30 * 86400000); document.cookie = `${DOWNLOAD_DISMISS_COOKIE}=${until}; Path=/; Max-Age=2592000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`; try { localStorage.setItem(DISMISSED_KEY, until); } catch {} }}><X aria-hidden="true" className="h-[18px] w-[18px]" /></button>
@@ -156,8 +190,13 @@ export function MobileAppDownloadBanner({ initialPlatform = null, initialDismiss
           {platform === "ios" ? "iOS" : "Android"}
         </span>
       </div>
-      <a href={APP_STORES[platform]} aria-label={en ? `Download ContrataCR on ${platform === "ios" ? "App Store" : "Google Play"}` : `Descargar ContrataCR en ${platform === "ios" ? "App Store" : "Google Play"}`} className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full bg-[#009fd9] px-2.5 text-xs font-semibold text-white min-[390px]:px-3 min-[390px]:text-[13px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]">
-        {en ? "Download" : "Descargar"}
+      <a href={actionHref ?? APP_STORES[platform]} onClick={(event) => {
+        if (androidAction && androidInstalled !== false) {
+          const current = androidAppIntent(location.pathname + location.search + location.hash);
+          if (current) event.currentTarget.href = current;
+        }
+      }} aria-label={`${actionLabel} ContrataCR`} className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full bg-[#009fd9] px-2.5 text-xs font-semibold text-white min-[390px]:px-3 min-[390px]:text-[13px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]">
+        {actionLabel}
       </a>
     </aside>
   </div>;
