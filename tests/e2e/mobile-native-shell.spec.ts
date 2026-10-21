@@ -133,6 +133,10 @@ async function assertKeyboardSafeComposer(page: Page, composerSelector: string, 
   expect(geometry!.composerHeight).toBeLessThan(120);
   expect(geometry!.composerBottom, JSON.stringify(geometry)).toBeLessThanOrEqual(501);
   expect(geometry!.fieldBottom).toBeLessThanOrEqual(501);
+  if (composerSelector === ".ccr-direct-chat-composer") {
+    expect(geometry!.composerBottom - geometry!.fieldBottom).toBeGreaterThanOrEqual(16);
+    expect(geometry!.composerBottom - geometry!.fieldBottom).toBeLessThan(40);
+  }
 
   await page.evaluate(() => {
     const root = document.documentElement;
