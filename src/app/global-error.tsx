@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { HomeRecoveryLink } from "@/components/error/home-recovery-link";
 import { getRuntimeErrorKind } from "@/lib/errors/runtime-error-kind";
 
 // Root-level boundary (catches errors in the root layout itself). Must render
@@ -61,13 +62,13 @@ export default function GlobalError({
             >
               Reintentar
             </button>
-            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-            <a
+            <HomeRecoveryLink
+              documentNavigation
               href="/"
-              style={{ border: "1px solid #e5e7eb", color: "#374151", background: "white", borderRadius: 12, padding: "12px 22px", fontWeight: 700, fontSize: 14, textDecoration: "none" }}
+              style={{ border: "1px solid #e5e7eb", color: "#374151", background: "white", borderRadius: 12, padding: "12px 44px", fontWeight: 700, fontSize: 14, textDecoration: "none" }}
             >
               Ir al inicio
-            </a>
+            </HomeRecoveryLink>
           </div>
         </div>
       </body>

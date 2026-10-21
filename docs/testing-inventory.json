@@ -3,7 +3,7 @@
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
     "files": 494,
-    "controls": 1297,
+    "controls": 1293,
     "pages": 71,
     "handlers": 104,
     "components": 257,
@@ -1746,19 +1746,11 @@
       "methods": [],
       "controls": [
         {
-          "line": 23,
+          "line": 24,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
           "destination": "\"\"",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 26,
-          "tag": "Link",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "",
-          "destination": "\"/\"",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         }
       ],
@@ -3418,19 +3410,11 @@
       "methods": [],
       "controls": [
         {
-          "line": 23,
+          "line": 24,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
           "destination": "\"\"",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 26,
-          "tag": "Link",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "",
-          "destination": "\"/\"",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         }
       ],
@@ -6559,7 +6543,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 43,
+          "line": 44,
           "tag": "a",
           "label": "\"ContrataCR\"",
           "handler": "",
@@ -6567,19 +6551,11 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 58,
+          "line": 59,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{retry}",
           "destination": "",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 65,
-          "tag": "a",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "",
-          "destination": "\"/\"",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         }
       ],
@@ -7046,16 +7022,7 @@
         "AdminAccess"
       ],
       "methods": [],
-      "controls": [
-        {
-          "line": 27,
-          "tag": "Link",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "",
-          "destination": "\"/\"",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        }
-      ],
+      "controls": [],
       "testIds": [],
       "relatedSpecs": [
         "tests/e2e/admin-smoke.spec.ts",
@@ -24420,7 +24387,7 @@
       "cases": [
         {
           "line": 9,
-          "title": "`${native?'native':'web'} missing-page home action acknowledges a slow navigation in ${locale}`"
+          "title": "`${native?'native':'web'} missing-page home action acknowledges a slow navigation in ${locale} from ${recoveryRoute}`"
         },
         {
           "line": 10,
@@ -24429,6 +24396,10 @@
         {
           "line": 56,
           "title": "'home streams its main content while coverage and service data are still pending'"
+        },
+        {
+          "line": 90,
+          "title": "'root error home recovery works even when the app stylesheet failed'"
         }
       ]
     },
