@@ -13152,7 +13152,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 29,
+          "line": 27,
           "tag": "a",
           "label": "{`${en ? \"Download on\" : \"Descargar en\"} ${platform === \"ios\" ? \"App Store\" : \"Google Play\"}`}",
           "handler": "",
@@ -13160,7 +13160,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 78,
+          "line": 76,
           "tag": "a",
           "label": "{en ? \"Download ContrataCR for iOS\" : \"Descargar ContrataCR para iOS\"}",
           "handler": "",
@@ -13168,7 +13168,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 79,
+          "line": 77,
           "tag": "a",
           "label": "{en ? \"Download ContrataCR for Android\" : \"Descargar ContrataCR para Android\"}",
           "handler": "",
@@ -13176,7 +13176,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 185,
+          "line": 182,
           "tag": "button",
           "label": "{en ? \"Dismiss download notice\" : \"Cerrar aviso de descarga\"}",
           "handler": "{() => { setDismissed(true); const until = String(Date.now() + 30 * 86400000); document.cookie = `${DOWNLOAD_DISMISS_COOKIE}=${until}; Path=/; Max-Age=2592000; SameSite=Lax${location.protocol === \"https:\" ? \"; Secure\" : \"\"}`; try { localStorage.setItem(DISMISSED_KEY, until); } catch {} }}",
@@ -13184,7 +13184,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 193,
+          "line": 190,
           "tag": "a",
           "label": "{`${actionLabel} ContrataCR`}",
           "handler": "{(event) => {\n        if (androidAction && androidInstalled !== false) {\n          const current = androidAppIntent(location.pathname + location.search + location.hash);\n          if (current) event.currentTarget.href = current;\n        }\n      }}",
@@ -13207,7 +13207,8 @@
         "tests/e2e/android-app-entry.spec.ts",
         "tests/e2e/app-download.spec.ts",
         "tests/e2e/landing-media-budget.spec.ts",
-        "tests/e2e/mobile-menu-surface.spec.ts"
+        "tests/e2e/mobile-menu-surface.spec.ts",
+        "tests/e2e/smart-app-banner.spec.ts"
       ],
       "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
@@ -23151,96 +23152,104 @@
       "file": "tests/e2e/app-download.spec.ts",
       "cases": [
         {
-          "line": 7,
+          "line": 6,
           "title": "'web: tiendas correctas, reserva, teclado y cierre persistente'"
         },
         {
-          "line": 9,
+          "line": 8,
           "title": "(page.viewportSize()?.width ?? 1280) >= 1024"
         },
         {
-          "line": 41,
+          "line": 34,
           "title": "'native: no download section, links or banner; form: no banner'"
         },
         {
-          "line": 51,
+          "line": 44,
           "title": "'web forms never display download banner'"
         },
         {
-          "line": 57,
+          "line": 50,
           "title": "'shared download anchor always remains useful, including after dismissing the mobile notice'"
         },
         {
-          "line": 91,
+          "line": 78,
           "title": "'shared download link does not pause at the how-it-works section on a cold visit'"
         },
         {
-          "line": 103,
+          "line": 90,
           "title": "'mobile download notice and header are correctly positioned before JavaScript hydration'"
         },
         {
-          "line": 104,
+          "line": 91,
           "title": "(page.viewportSize()?.width ?? 1280)>=1024"
         },
         {
-          "line": 127,
+          "line": 108,
           "title": "'narrow desktop windows have no mobile notice or navbar gap, while download links remain available'"
         },
         {
-          "line": 128,
+          "line": 109,
           "title": "test.info().project.name!=='chromium-desktop' && test.info().project.name!=='desktop-download'"
         },
         {
-          "line": 150,
+          "line": 131,
           "title": "'notice stays at the bottom on public pages and respects account/form routes'"
         },
         {
-          "line": 151,
+          "line": 132,
           "title": "(page.viewportSize()?.width ?? 1280)>=1024"
         },
         {
-          "line": 176,
+          "line": 152,
           "title": "'web footer uses Apple and Android symbols with accessible store links'"
         },
         {
-          "line": 183,
+          "line": 159,
           "title": "'QR download opens the correct store without caching another device choice'"
         },
         {
-          "line": 198,
+          "line": 174,
           "title": "'responsive download artwork and store actions fit the viewport, including Safari tablet sizing'"
         },
         {
-          "line": 221,
+          "line": 197,
           "title": "'home-screen launch uses a white surface even in dark mode before external CSS'"
         },
         {
-          "line": 235,
+          "line": 211,
           "title": "'iOS launch images have the exact declared device dimensions and a white corner'"
         },
         {
-          "line": 248,
+          "line": 224,
           "title": "'home-screen launch shell is public, white and independent of the session'"
         },
         {
-          "line": 272,
+          "line": 248,
           "title": "'mobile listings stay behind the download notice and keep their last result reachable'"
         },
         {
-          "line": 273,
+          "line": 249,
           "title": "(page.viewportSize()?.width ?? 1280)>=1024"
         },
         {
-          "line": 307,
+          "line": 273,
           "title": "'home-screen web app can show the store notice without being treated as native'"
         },
         {
-          "line": 308,
+          "line": 274,
           "title": "(page.viewportSize()?.width ?? 1280)>=1024"
         },
         {
-          "line": 322,
+          "line": 288,
           "title": "`download section ${locale}: ${store} button activates its exact store link`"
+        },
+        {
+          "line": 324,
+          "title": "`corrected iPhone notice survives legacy dismissals (standalone=${standalone})`"
+        },
+        {
+          "line": 325,
+          "title": "test.info().project.name !== 'webkit-mobile'"
         }
       ]
     },
@@ -26058,20 +26067,20 @@
       "file": "tests/e2e/smart-app-banner.spec.ts",
       "cases": [
         {
-          "line": 6,
+          "line": 5,
           "title": "\"Apple banner preserves public destinations while excluding private and authentication URLs\""
         },
         {
-          "line": 12,
+          "line": 11,
           "title": "\"native banner detection distinguishes Safari from other iOS browsers and embedded WebViews\""
         },
         {
-          "line": 17,
+          "line": 16,
           "title": "\"Apple association covers homepage and exact professional search without broadening auth routes\""
         },
         {
-          "line": 24,
-          "title": "\"public banner metadata is server-rendered, follows client navigation, and is absent from native tasks\""
+          "line": 23,
+          "title": "\"public pages use one dismissible notice instead of depending on Apple's browser UI\""
         }
       ]
     },

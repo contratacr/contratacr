@@ -1,4 +1,3 @@
-import { waitForInteractivePage } from "./helpers";
 import { test, expect } from "playwright/test";
 import { readFileSync } from "node:fs";
 import { smartAppBannerContent, prefersNativeIosAppBanner } from "../../src/lib/mobile/smart-app-banner";
@@ -21,19 +20,15 @@ test("Apple association covers homepage and exact professional search without br
   for(const path of ['/*','/auth/*','/api/*','/admin*','/login'])expect(paths).not.toContain(path);
   expect(association.webcredentials.apps).toEqual(['LPB3Q4LJ5Z.com.contratacr.app']);
 });
-test("public banner metadata is server-rendered, follows client navigation, and is absent from native tasks",async({page,context,baseURL})=>{
+test("public pages use one dismissible notice instead of depending on Apple's browser UI",async({page,context,baseURL})=>{
   const response=await page.goto('/profesionales?ubicacion=Heredia');
-  const html=await response!.text();expect(html).toContain('name="apple-itunes-app"');
-  await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveAttribute('content',/app-argument=https:\/\/contratacr.com\/profesionales\?ubicacion=Heredia/);
-  await page.goto('/');
-  await waitForInteractivePage(page);
-  await page.evaluate(()=>{location.hash='descargar-app';});
-  await expect(page).toHaveURL(/#descargar-app$/);
-  await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveAttribute('content',/\/#descargar-app$/);
-  await page.locator('footer a[href="/terminos"]').first().click();
-  await expect(page).toHaveURL(/\/terminos$/);
+  expect(await response!.text()).not.toContain('name="apple-itunes-app"');
   await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveCount(0);
-  await page.goto('/login');await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveCount(0);
+  if ((page.viewportSize()?.width ?? 1280)<1024) await expect(page.getByTestId('mobile-app-download')).toBeVisible();
+  await page.goto('/login');
+  await expect(page.getByTestId('mobile-app-download')).toHaveCount(0);
+  await page.addInitScript(()=>localStorage.setItem('ccr:native-first-run-onboarding:v12','1'));
   await context.addCookies([{name:'ccr_platform',value:'native',url:baseURL!}]);
-  await page.goto('/profesionales');await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveCount(0);
+  await page.goto('/profesionales');
+  await expect(page.getByTestId('mobile-app-download')).toHaveCount(0);
 });

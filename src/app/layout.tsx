@@ -1,4 +1,3 @@
-import { smartAppBannerContent } from "@/lib/mobile/smart-app-banner";
 import { WelcomeChoiceContent } from "@/components/mobile/welcome-choice-content";
 import { NativeAppInicialProvider } from "@/hooks/native-app-inicial";
 import { Suspense, type ReactNode } from "react";
@@ -81,7 +80,6 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   // cookie no bastaba: un buscador llega sin cookies y habría leído toda la
   // versión en inglés marcada como española.
   const idioma = (await headers()).get("x-ccr-locale") === "en" ? "en" : "es";
-  const appBanner = esApp ? null : smartAppBannerContent((await headers()).get("x-ccr-app-path") ?? "");
   const clasesNativas = esApp ? " ccr-native-app ccr-native-bottom-nav-visible" : "";
   // Con tope de 3 s y caché de 20 s por instancia: casi siempre es gratis, y si
   // la base tarda, la página sale igual (sin catálogo, como antes).
@@ -106,7 +104,6 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       suppressHydrationWarning
     >
       <head>
-        {appBanner && <meta name="apple-itunes-app" content={appBanner} />}
         {/* Safari launch-image support still uses this Apple-specific capability tag. */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         {/* LA FRANJA DE ACCIONES, escrita aquí y no en la hoja de estilos.
