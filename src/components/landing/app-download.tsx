@@ -186,8 +186,8 @@ export function MobileAppDownloadBanner({ initialPlatform = null, initialDismiss
   const actionHref = platform === "ios" ? iosHref ?? APP_STORES.ios
     : androidAction ? openHref : APP_STORES.android;
   const knownAndroid = platform === "android" && androidInstalled !== null;
-  const actionLabel = knownAndroid ? (androidInstalled ? (en ? "Open" : "Abrir") : (en ? "Download" : "Descargar"))
-    : (en ? "Continue" : "Continuar");
+  const actionLabel = knownAndroid ? (androidInstalled ? (en ? "Open app" : "Abrir app") : (en ? "Download" : "Descargar"))
+    : (en ? "Open app" : "Abrir app");
   return <div className="ccr-solo-web ccr-download-banner-wrap lg:hidden" data-testid="mobile-app-download">
     <aside className="ccr-download-banner" aria-label={en ? "ContrataCR mobile app" : "App móvil ContrataCR"}>
       <button type="button" aria-label={en ? "Dismiss app notice" : "Cerrar aviso de la app"} className="flex h-11 w-6 shrink-0 items-center justify-center min-[390px]:w-8 text-[#64748b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]" onClick={() => { setDismissed(true); const until = String(Date.now() + 30 * 86400000); document.cookie = `${DOWNLOAD_DISMISS_COOKIE}=${until}; Path=/; Max-Age=2592000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`; try { localStorage.setItem(DISMISSED_KEY, until); } catch {} }}><X aria-hidden="true" className="h-[18px] w-[18px]" /></button>

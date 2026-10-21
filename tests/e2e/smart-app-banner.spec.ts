@@ -57,7 +57,7 @@ for (const browserToken of ['CriOS/142.0', '[FBAN/FBIOS]']) {
    await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveCount(0);
    const notice=page.getByTestId('mobile-app-download');
    await expect(notice).toBeVisible();
-   await expect(notice.getByRole('link')).toHaveText('Continue');
+   await expect(notice.getByRole('link')).toHaveText('Open app');
    await expect(notice.getByRole('link')).toHaveAttribute('href',/^https:\/\/www\.contratacr\.com\/en\/proyectos\?_ccr_open=ios$/);
   }finally{await context.close();}
  });
