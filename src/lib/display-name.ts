@@ -54,6 +54,10 @@ function personNameCase(name: string) {
 
 // Preserve ambiguous structures (particles, compound given names and longer names).
 // Identity/verification always retains the original full_name.
+export function formatFullPersonName(name?: string | null) {
+  return personNameCase((name ?? "").trim().replace(/\s+/gu, " "));
+}
+
 export function formatPersonDisplayName(name?: string, _mode: "desktop" | "mobile" = "desktop") {
   void _mode; // Kept for existing callers; naming is identical on every viewport.
   const clean = (name ?? "").trim().replace(/\s+/gu, " ");

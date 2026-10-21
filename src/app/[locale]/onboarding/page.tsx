@@ -1,5 +1,7 @@
 "use client";
 
+import { nombreDeSaludo } from "@/lib/nombres";
+
 import { pendingRegistrationPath, registrationComplete } from "@/lib/auth/registration-state";
 
 import { providerDisplayName } from "@/lib/auth/provider-display-name";
@@ -182,7 +184,7 @@ export default function OnboardingPage() {
 
             {(
               <p className="text-sm text-[#009FD9] font-semibold mb-1 uppercase tracking-wide">
-                {displayName ? t("greeting", { name: displayName.split(" ")[0] }) : t("greetingGeneric")}
+                {displayName ? t("greeting", { name: nombreDeSaludo(displayName) }) : t("greetingGeneric")}
               </p>
             )}
             <p className="text-xs text-gray-400">{user.email}</p>

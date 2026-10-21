@@ -1,3 +1,4 @@
+import { nombreDeSaludo } from "@/lib/nombres";
 import { NextRequest, NextResponse } from "next/server";
 import { idiomaDeLaPeticion, mensajeDeError } from "@/lib/api-errors";
 import { enforceRateLimit } from "@/lib/rate-limit";
@@ -101,12 +102,12 @@ async function reseñaSinCuenta(
       user_id: (pro as { profile_id: string }).profile_id,
       type: "review_received",
       title: "Nueva reseña recibida",
-      message: `${nombre.split(" ")[0]} te dejó una reseña de ${estrellas} estrellas.`,
+      message: `${nombreDeSaludo(nombre)} te dejó una reseña de ${estrellas} estrellas.`,
       data: {
         link: `/profesionales/${(pro as { slug?: string }).slug ?? ""}?tab=resenas#resenas`,
         professional_id: professionalId,
         review_id: creada.id,
-        client_name: nombre.split(" ")[0],
+        client_name: nombreDeSaludo(nombre),
         rating: Number(rating),
       },
     };
@@ -292,7 +293,7 @@ export async function POST(req: NextRequest) {
 
   if (targetPro.profile_id && targetPro.slug && insertedReview?.id) {
     const stars = Number(rating).toLocaleString("es-CR", { maximumFractionDigits: 1 });
-    const clientName = profile?.full_name?.split(" ")[0] || "Un cliente";
+    const clientName = nombreDeSaludo(profile?.full_name) || "Un cliente";
     const admin = createAdminClient();
     const notification = {
       user_id: targetPro.profile_id,

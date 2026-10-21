@@ -95,7 +95,7 @@ function canvasToBlob(canvas: HTMLCanvasElement, quality: number): Promise<Blob>
   });
 }
 
-function resizedCanvas(decoded: DecodedImage, maxDimension: number) {
+function resizedCanvas(decoded: DecodedImage, maxDimension: number, transparent = false) {
   const longest = Math.max(decoded.width, decoded.height);
   const scale = Math.min(1, maxDimension / longest);
   const width = Math.max(1, Math.round(decoded.width * scale));
@@ -105,8 +105,10 @@ function resizedCanvas(decoded: DecodedImage, maxDimension: number) {
   canvas.height = height;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new ImageUploadPreparationError("unsupported");
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, width, height);
+  if (!transparent) {
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, width, height);
+  }
   ctx.drawImage(decoded.source, 0, 0, width, height);
   return canvas;
 }
@@ -151,26 +153,36 @@ export async function prepareImageForUpload(file: File, options: PrepareImageOpt
     // bastaba con el tamaño en píxeles y entraban fotos de 3 MB a 1500 px.
     const yaLiviana = file.size <= Math.min(targetBytes, 500 * 1024);
     if (!esHeic && yaLiviana && Math.max(decoded.width, decoded.height) <= maxDimension) return file;
-    const attempts = [
-      { dimension: maxDimension, quality: 0.86 },
-      { dimension: maxDimension, quality: 0.78 },
-      { dimension: Math.min(maxDimension, 1400), quality: 0.76 },
-      { dimension: Math.min(maxDimension, 1200), quality: 0.74 },
-      { dimension: Math.min(maxDimension, 1000), quality: 0.72 },
-      { dimension: Math.min(maxDimension, 600), quality: 0.72 },
-      { dimension: Math.min(maxDimension, 400), quality: 0.70 },
-    ];
-
-    for (const attempt of attempts) {
-      const canvas = resizedCanvas(decoded, attempt.dimension);
-      const blob = await canvasToBlob(canvas, attempt.quality);
-      if (blob.size <= targetBytes) {
-        return new File([blob], jpegName(file.name), {
-          type: "image/jpeg",
-          lastModified: Date.now(),
-        });
+    // The byte target is a preference, never a reason to blur a photo or
+    // shrink it to a thumbnail. PNG graphics keep their pixels/transparency.
+    const canvas = resizedCanvas(decoded, maxDimension, detectedKind === "png");
+    if (detectedKind === "png") {
+      const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob(
+        (value) => value ? resolve(value) : reject(new ImageUploadPreparationError("unsupported")),
+        "image/png",
+      ));
+      if (blob.size <= SAFE_UPLOAD_BYTES) {
+        return new File([blob], file.name.replace(/\.[^.]+$/, "") + ".png", { type: "image/png", lastModified: Date.now() });
       }
+      // A photo saved as a huge PNG may exceed the hosting limit. Keep
+      // its dimensions and encode as a high-quality photo instead.
+      const ctx = canvas.getContext("2d")!;
+      const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+      for (let i = 3; i < pixels.length; i += 4) {
+        if (pixels[i] < 255) throw new ImageUploadPreparationError("too_large");
+      }
+      ctx.globalCompositeOperation = "destination-over";
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
+    let best: Blob | null = null;
+    for (const quality of [0.92, 0.88]) {
+      const blob = await canvasToBlob(canvas, quality);
+      if (blob.size <= SAFE_UPLOAD_BYTES) best = blob;
+      if (blob.size <= targetBytes) break;
+    }
+    if (best) return new File([best], jpegName(file.name), { type: "image/jpeg", lastModified: Date.now() });
+
   } catch (error) {
     // Una HEIC que este navegador no sabe leer no se sube tal cual: no se vería.
     if (file.size <= targetBytes && !esHeic) return file;

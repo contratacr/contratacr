@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import sharp from "sharp";
 import { LOGO_PALABRA } from "@/lib/og-logos";
 
 /**
@@ -102,7 +103,15 @@ export async function fotoLiviana(url: string, maxBytes: number): Promise<string
     if (!/^image\/(jpeg|png)/.test(tipo)) return null;
     const datos = await respuesta.arrayBuffer();
     if (datos.byteLength > maxBytes) return null;
-    return `data:${tipo};base64,${Buffer.from(datos).toString("base64")}`;
+    // A small compressed file can still decode into millions of pixels.
+    // Bound decoded dimensions before handing the source to the OG renderer.
+    // PNG keeps transparent logos and avoids another lossy photo encoding.
+    const bounded = await sharp(Buffer.from(datos), { limitInputPixels: 16_000_000 })
+      .rotate()
+      .resize({ width: 1200, height: 1200, fit: "inside", withoutEnlargement: true })
+      .png()
+      .toBuffer();
+    return `data:image/png;base64,${bounded.toString("base64")}`;
   } catch {
     return null;
   }

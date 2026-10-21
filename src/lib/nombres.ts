@@ -12,7 +12,8 @@ import { formatPersonDisplayName } from "./display-name";
 export function nombreDeSaludo(nombre?: string | null, esNegocio = false): string {
   const limpio = (nombre ?? "").trim().replace(/\s+/gu, " ");
   if (!limpio) return "";
-  const base = esNegocio ? limpio : limpio.split(" ")[0];
+  if (esNegocio) return limpio;
+  const base = limpio.split(" ")[0];
   return base
     .split(" ")
     .map((palabra) =>

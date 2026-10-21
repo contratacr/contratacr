@@ -1,5 +1,9 @@
 "use client";
 
+import { formatFullPersonName } from "@/lib/display-name";
+
+import { nombreDeSaludo } from "@/lib/nombres";
+
 import { useEffect, useState, useCallback } from "react";
 import {
   ArrowLeft, CheckCircle2, XCircle, RotateCcw, AlertCircle, ExternalLink,
@@ -121,7 +125,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
   const waDigits = String(pro.whatsapp ?? "").replace(/\D/g, "");
   const waTo = waDigits.length === 8 ? `506${waDigits}` : waDigits;
   const waMsg = encodeURIComponent(
-    `Hola ${(profile?.full_name ?? "").split(" ")[0]}, te contactamos de ContrataCR sobre tu verificación de identidad (Caso #${caseRef(pro.id)}).`
+    `Hola ${nombreDeSaludo(profile?.full_name)}, te contactamos de ContrataCR sobre tu verificación de identidad (Caso #${caseRef(pro.id)}).`
   );
 
   return (
@@ -157,7 +161,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-lg font-bold text-[#162543]">{profile?.full_name ?? "Sin nombre"}</h1>
+                  <h1 className="text-lg font-bold text-[#162543]">{formatFullPersonName(profile?.full_name) || "Sin nombre"}</h1>
                   <span className={`text-xs font-medium px-2 py-0.5 rounded-md border ${verificationPillClasses(status)}`}>
                     {verificationLabel(status)}
                   </span>
@@ -235,7 +239,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
                 <div className="grid sm:grid-cols-2 gap-2.5 text-sm">
                   <div className="rounded-lg border border-[#eef2f6] bg-white px-3 py-2">
                     <p className="text-[11px] uppercase tracking-wide text-[#68778d]">Nombre ingresado</p>
-                    <p className="text-[#374151] font-medium mt-0.5">{profile?.full_name}</p>
+                    <p className="text-[#374151] font-medium mt-0.5">{formatFullPersonName(profile?.full_name)}</p>
                   </div>
                   <div className="rounded-lg border border-[#eef2f6] bg-white px-3 py-2">
                     <p className="text-[11px] uppercase tracking-wide text-[#68778d]">Nombre en Hacienda</p>

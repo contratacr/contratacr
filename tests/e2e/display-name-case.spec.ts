@@ -1,5 +1,5 @@
 import { test, expect } from "playwright/test";
-import { formatPersonDisplayName, getProfessionalDisplayName } from "../../src/lib/display-name";
+import { formatFullPersonName, formatPersonDisplayName, getProfessionalDisplayName } from "../../src/lib/display-name";
 
 for (const [official, displayed] of [
   ["ISAAC ALBERTO SANCHEZ MONGE", "Isaac Sanchez Monge"],
@@ -22,3 +22,12 @@ for (const business of ["SG SOLUTIONS", "iPhone CR", "AB Servicios y Soluciones"
     expect(getProfessionalDisplayName("ISAAC ALBERTO SANCHEZ MONGE", business).primaryMobile).toBe(business);
   });
 }
+
+import { nombreDeSaludo } from "../../src/lib/nombres";
+test("official names stay complete in admin and natural in greetings", () => {
+  const official = "ISAAC ALBERTO SANCHEZ MONGE";
+  expect(formatFullPersonName(official)).toBe("Isaac Alberto Sanchez Monge");
+  expect(nombreDeSaludo(official)).toBe("Isaac");
+  expect(nombreDeSaludo("SG SOLUTIONS", true)).toBe("SG SOLUTIONS");
+  expect(official).toBe("ISAAC ALBERTO SANCHEZ MONGE");
+});

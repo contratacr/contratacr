@@ -1,7 +1,7 @@
 import { test, expect } from 'playwright/test';
 import { build } from 'esbuild';
 
-test('camera images respect avatar and public-gallery budgets while small images stay intact', async ({ page }) => {
+test('camera images preserve useful dimensions within the upload limit while small images stay intact', async ({ page }) => {
   const bundle = await build({ entryPoints: ['src/lib/client-image-upload.ts'], bundle: true, write: false, platform: 'browser', format: 'iife', globalName: 'PhotoPreparation', tsconfig: 'tsconfig.json' });
   await page.route('**/photo-budget-harness', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Photo budget</title>' }));
   await page.goto('/photo-budget-harness');
@@ -31,11 +31,11 @@ test('camera images respect avatar and public-gallery budgets while small images
     return { originalBytes: original.size, bytes: output.size, dimensions, publicBytes: publicOutput.size, publicDimensions, unchanged: await api.prepareImageForUpload(small, api.PROFILE_IMAGE_OPTIONS) === small };
   });
   expect(result.originalBytes).toBeGreaterThan(1024 * 1024);
-  expect(result.bytes).toBeLessThanOrEqual(150 * 1024);
-  expect(Math.max(...result.dimensions)).toBeLessThanOrEqual(800);
+  expect(result.bytes).toBeLessThanOrEqual(3.8 * 1024 * 1024);
+  expect(Math.max(...result.dimensions)).toBe(800);
   expect(result.dimensions[0] / result.dimensions[1]).toBeCloseTo(4 / 3, 2);
-  expect(result.publicBytes).toBeLessThanOrEqual(512 * 1024);
-  expect(Math.max(...result.publicDimensions)).toBeLessThanOrEqual(1600);
+  expect(result.publicBytes).toBeLessThanOrEqual(3.8 * 1024 * 1024);
+  expect(Math.max(...result.publicDimensions)).toBe(1600);
   expect(result.publicDimensions[0] / result.publicDimensions[1]).toBeCloseTo(4 / 3, 2);
   expect(result.unchanged).toBe(true);
 });
@@ -62,4 +62,45 @@ test('migration photos remain transparent when needed and render in Open Graph c
   expect(logo.contentType).toBe('image/png');
   expect((await sharp(logo.body).metadata()).hasAlpha).toBe(true);
   expect(logo.body.length).toBeLessThanOrEqual(150 * 1024);
+});
+
+
+test('PNG logos keep transparent pixels and sharing symbols have native resolution', async ({ page }) => {
+  const bundle = await build({ entryPoints: ['src/lib/client-image-upload.ts'], bundle: true, write: false, platform: 'browser', format: 'iife', globalName: 'PhotoPreparation', tsconfig: 'tsconfig.json' });
+  await page.route('**/logo-quality-harness', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Logo quality</title>' }));
+  await page.goto('/logo-quality-harness');
+  await page.addScriptTag({ content: bundle.outputFiles[0].text });
+  const result = await page.evaluate(async () => {
+    const api = (window as unknown as { PhotoPreparation: { prepareImageForUpload: (file: File, options: object) => Promise<File> } }).PhotoPreparation;
+    const canvas = document.createElement('canvas'); canvas.width = 800; canvas.height = 800;
+    const ctx = canvas.getContext('2d')!;
+    ctx.fillStyle = '#009fd9'; ctx.fillRect(100, 100, 600, 600);
+    const source = new File([await new Promise<Blob>(resolve => canvas.toBlob(b => resolve(b!), 'image/png'))], 'logo.png', { type: 'image/png' });
+    const output = await api.prepareImageForUpload(source, { maxDimension: 800, targetBytes: 1 });
+    const bitmap = await createImageBitmap(output); ctx.clearRect(0, 0, 800, 800); ctx.drawImage(bitmap, 0, 0); bitmap.close();
+    return { type: output.type, corner: Array.from(ctx.getImageData(0, 0, 1, 1).data), fill: Array.from(ctx.getImageData(200, 200, 1, 1).data) };
+  });
+  expect(result).toEqual({ type: 'image/png', corner: [0, 0, 0, 0], fill: [0, 159, 217, 255] });
+  const sharp = (await import('sharp')).default;
+  const { LOGO_SIMBOLO } = await import('../../src/lib/og-logos');
+  const meta = await sharp(Buffer.from(LOGO_SIMBOLO.split(',')[1], 'base64')).metadata();
+  expect(meta.width).toBeGreaterThanOrEqual(960);
+  expect(meta.height).toBeGreaterThanOrEqual(960);
+});
+
+
+test('social cards bound decoded image dimensions without losing transparent pixels', async () => {
+  const sharp = (await import('sharp')).default;
+  const { fotoLiviana } = await import('../../src/lib/seo/tarjeta-de-ficha');
+  const source = await sharp({ create: { width: 4000, height: 3000, channels: 4, background: { r: 0, g: 159, b: 217, alpha: 0.5 } } }).png().toBuffer();
+  const originalFetch = globalThis.fetch;
+  try {
+    globalThis.fetch = async () => new Response(new Uint8Array(source), { headers: { 'content-type': 'image/png', 'content-length': String(source.length) } });
+    const data = await fotoLiviana('https://assets.example.test/logo.png', 3.8 * 1024 * 1024);
+    expect(data).not.toBeNull();
+    const image = sharp(Buffer.from(data!.split(',')[1], 'base64'));
+    const metadata = await image.metadata();
+    expect([metadata.width, metadata.height, metadata.hasAlpha]).toEqual([1200, 900, true]);
+    expect((await image.stats()).channels[3].mean).toBeCloseTo(128, 0);
+  } finally { globalThis.fetch = originalFetch; }
 });

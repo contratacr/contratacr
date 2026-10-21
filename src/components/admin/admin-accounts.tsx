@@ -1,5 +1,7 @@
 "use client";
 
+import { formatFullPersonName } from "@/lib/display-name";
+
 import { useCallback, useEffect, useState } from "react";
 import { UserX, Loader2 } from "lucide-react";
 import { useAdminAutoRefresh } from "@/hooks/use-admin-auto-refresh";
@@ -68,7 +70,7 @@ export function AdminAccounts() {
             <div key={account.id} className="rounded-xl border border-[#e5e7eb] bg-white px-4 py-3">
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-[#162543]">{account.full_name || account.email || account.id}</p>
+                  <p className="truncate text-sm font-semibold text-[#162543]">{formatFullPersonName(account.full_name) || account.email || account.id}</p>
                   <p className="text-xs text-[#68778d]">{account.email} · {account.role ?? "—"}</p>
                 </div>
                 <span className="shrink-0 text-xs text-[#68778d]">{account.disabled_at ? new Date(account.disabled_at).toLocaleDateString("es-CR") : ""}</span>

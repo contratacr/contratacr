@@ -1,3 +1,4 @@
+import { nombreDeSaludo } from "@/lib/nombres";
 import { MOBILE_APP_CAMPAIGN } from "./mobile-app-campaign";
 import type { createAdminClient } from "@/lib/supabase/admin";
 import { LIFECYCLE_CAMPAIGNS, lifecycleCandidate, type LifecycleAccount, type LifecycleProfessional } from "./lifecycle-policy";
@@ -92,7 +93,7 @@ export async function runLifecycleEmails(db: Admin, simulate = true) {
         return {ok:false,status:"skipped" as const,detail:"No longer eligible"};
       const href = new URL(campaign.ctaPath,origin);
       href.searchParams.set("utm_source","correo"); href.searchParams.set("utm_medium","campana"); href.searchParams.set("utm_campaign",campaign.key);
-      const name = (account.full_name ?? "").trim().split(/\s+/)[0];
+      const name = nombreDeSaludo(account.full_name);
       const greeting = /^[\p{L}][\p{L}'-]{1,}$/u.test(name) ? `<p>Hola ${escaparHtml(name)},</p>` : campaign.key === MOBILE_APP_CAMPAIGN.key ? "<p>Hola,</p>" : "";
       const signature = campaign.key === MOBILE_APP_CAMPAIGN.key ? MOBILE_APP_CAMPAIGN.signature : "Equipo ContrataCR";
       const bodyHtml = greeting + campaign.body.split(/\n\n/).map((s) => `<p style="font-size:15px;line-height:1.6">${escaparHtml(s)}</p>`).join("")

@@ -749,7 +749,7 @@ export function ProjectsBoard({
                                 renglón de sobra. */}
                             {/* El check verifica a quien publica, no el proyecto. */}
                             <div data-verification-owner className="flex min-w-0 flex-1 items-center gap-1">
-                              <InlineIdentityName className="font-semibold text-[#52627a]" name={ficha.client_name || ""} badge={ficha.client_verified ? <VerificationInfo audience="client" /> : null} />
+                              <InlineIdentityName className="font-semibold text-[#52627a]" name={formatPersonDisplayName(ficha.client_name || "")} badge={ficha.client_verified ? <VerificationInfo audience="client" /> : null} />
                             </div>
                             {/* SIN MARCA «Tu proyecto» EN LA FICHA. La tarjeta
                                 de acciones ya lo dice más fuerte que una
@@ -861,7 +861,7 @@ export function ProjectsBoard({
                       servicio de arriba: la raya entre los dos partía el bloque
                       de datos en dos por nada. Empleos ya tenía una sola. */}
                   <p className="mt-3 text-sm text-[#43536b]">
-                    {copy.publicado} <span className="font-bold text-[#162543]">{ficha.client_name}</span>
+                    {copy.publicado} <span className="font-bold text-[#162543]">{formatPersonDisplayName(ficha.client_name)}</span>
                   </p>
                   <div className="mt-4 flex flex-col gap-2 border-t border-[#eef2f6] pt-4">
                     {misProyectos.includes(ficha.id) ? (
