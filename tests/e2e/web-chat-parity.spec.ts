@@ -98,3 +98,54 @@ test("web and native resume the same conversation for the same account", async (
     if (professional) await cleanupDisposableAccount(professional);
   }
 });
+
+for (const locale of ["es", "en"] as const) {
+  test(`service drafts stay editable and leave a small keyboard gap in ${locale}`, async ({ page, context, baseURL }, testInfo) => {
+    test.setTimeout(120_000);
+    const { E2E_USERS } = await import("./seed");
+    let client: DisposableAccount | undefined;
+    try {
+      client = await createDisposableAccount({ prefix: "chat-draft-spacing" });
+      await page.addInitScript(() => localStorage.setItem("ccr:native-first-run-onboarding:v12", "1"));
+      await loginAs(page, client.email, client.password);
+      const prefix = locale === "en" ? "/en" : "";
+      await gotoOK(page, `${prefix}/profesionales/${E2E_USERS.professional.slug}`);
+      await waitForInteractivePage(page);
+      await page.getByRole("button", { name: locale === "en" ? "Send message" : "Enviar mensaje", exact: true }).filter({ visible: true }).first().click();
+      const field = page.locator(".ccr-direct-chat-composer textarea");
+      await expect(field).toBeVisible();
+      await expect(field).toHaveValue(locale === "en" ? /^Hi, I'm interested in your .+ service\. Are you available\?$/ : /^Hola, quisiera consultar por el servicio de .+\. ¿Tiene disponibilidad\?$/);
+      const original = await field.inputValue();
+      await field.fill(`${original}\n${locale === "en" ? "I'd like to discuss the details." : "Me gustaría conversar sobre los detalles."}`);
+      await expect(field).toHaveValue(new RegExp(locale === "en" ? "discuss the details" : "conversar sobre los detalles"));
+      // Editing a suggested draft must never deliver it automatically.
+      await expect(page.getByText(locale === "en" ? "No messages yet" : "Todavía no hay mensajes", { exact: true })).toBeVisible();
+      if (testInfo.project.name !== "chromium-desktop") {
+        for (const native of [false, true]) {
+          if (native) {
+            await context.addCookies([{ name: "ccr_platform", value: "native", url: baseURL! }]);
+            await page.evaluate(() => {
+              document.documentElement.classList.add("ccr-native-app");
+              document.body.classList.add("ccr-native-app");
+            });
+          }
+          await field.focus();
+          const geometry = await field.evaluate(element => {
+            // Emulate the resized viewport atomically: browsers in CI have no OS keyboard.
+            const root = document.documentElement;
+            root.setAttribute("data-keyboard-open", "");
+            root.style.setProperty("--app-visual-viewport-height", "480px");
+            root.style.setProperty("--app-visual-viewport-top", "0px");
+            root.style.setProperty("--app-keyboard-inset-bottom", "344px");
+            const composer = element.closest("form")!;
+            return { gap: composer.getBoundingClientRect().bottom - element.getBoundingClientRect().bottom, height: composer.getBoundingClientRect().height, bottom: composer.getBoundingClientRect().bottom };
+          });
+          expect(geometry.gap).toBeGreaterThanOrEqual(16);
+          expect(geometry.gap).toBeLessThan(40);
+          expect(geometry.height).toBeLessThan(190);
+          expect(geometry.bottom).toBeLessThanOrEqual(481);
+        }
+      }
+    } finally { if (client) await cleanupDisposableAccount(client); }
+  });
+}

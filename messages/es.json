@@ -3176,11 +3176,11 @@
     "enviar": "Enviar mensaje",
     "cerrar": "Cerrar",
     "sugerencia": {
-      "servicio": "Hola, te escribo por {tema}.",
-      "servicioEnLugar": "Hola, te escribo por {tema} en {lugar}.",
-      "proyecto": "Hola, te escribo por el proyecto «{tema}».",
-      "promocion": "Hola, vi tu promoción «{tema}» y me interesa.",
-      "empleo": "Hola, te escribo por la vacante «{tema}»."
+      "servicio": "Hola, quisiera consultar por el servicio de {tema}. ¿Tiene disponibilidad?",
+      "servicioEnLugar": "Hola, necesito el servicio de {tema} en {lugar}. ¿Tiene disponibilidad?",
+      "proyecto": "Hola, me interesa el proyecto «{tema}». ¿Podemos conversar sobre lo que necesita?",
+      "promocion": "Hola, me interesa la promoción «{tema}». ¿Podría darme más información?",
+      "empleo": "Hola, me interesa la vacante «{tema}». ¿Cómo puedo postularme?"
     }
   },
   "perfilProfesionalGate": {

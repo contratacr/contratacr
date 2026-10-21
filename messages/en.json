@@ -3176,11 +3176,11 @@
     "enviar": "Send message",
     "cerrar": "Close",
     "sugerencia": {
-      "servicio": "Hi, I'm writing about {tema}.",
-      "servicioEnLugar": "Hi, I'm writing about {tema} in {lugar}.",
-      "proyecto": "Hi, I'm writing about the project “{tema}”.",
-      "promocion": "Hi, I saw your promotion “{tema}” and I'm interested.",
-      "empleo": "Hi, I'm writing about the “{tema}” job posting."
+      "servicio": "Hi, I'm interested in your {tema} service. Are you available?",
+      "servicioEnLugar": "Hi, I need {tema} services in {lugar}. Are you available?",
+      "proyecto": "Hi, I'm interested in the project “{tema}”. Could we discuss what you need?",
+      "promocion": "Hi, I'm interested in the “{tema}” promotion. Could you share more details?",
+      "empleo": "Hi, I'm interested in the “{tema}” job opening. How can I apply?"
     }
   },
   "perfilProfesionalGate": {
