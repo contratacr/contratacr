@@ -50,6 +50,7 @@ for (const locale of ['es', 'en']) test(`iPhone has one localized action with a 
   const notice = page.getByTestId('mobile-app-download');
   const action = notice.getByRole('link');
   await expect(action).toHaveText(locale === 'en' ? 'Continue' : 'Continuar');
+  await expect(notice.getByTestId('app-platform-label')).toHaveText(locale === 'en' ? 'for iOS' : 'para iOS');
   await expect(action).toHaveAttribute('href', /https:\/\/www\.contratacr\.com\/.*_ccr_open=ios/);
   await expect(notice.getByRole('link')).toHaveCount(1);
   await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveCount(0);

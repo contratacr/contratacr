@@ -34,6 +34,8 @@ for (const state of ['installed', 'missing', 'unsupported', 'error', 'pending'] 
     const action = banner.getByRole('link');
     const label = state === 'installed' ? 'Abrir' : state === 'missing' ? 'Descargar' : 'Continuar';
     await expect(action).toHaveText(label);
+    await expect(banner.getByTestId('app-platform-label')).toHaveText('para Android');
+    expect((await banner.getByTestId('app-platform-label').boundingBox())!.x + (await banner.getByTestId('app-platform-label').boundingBox())!.width).toBeLessThanOrEqual((await action.boundingBox())!.x);
     await expect(banner.getByRole('link')).toHaveCount(1);
     await expect(action).toHaveAttribute('href', /intent:\/\/contratacr.com\/profesionales\/soldadura#resenas#Intent/);
     await expect(page).toHaveURL(/\/profesionales\/soldadura#resenas$/);

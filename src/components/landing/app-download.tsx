@@ -190,13 +190,12 @@ export function MobileAppDownloadBanner({ initialPlatform = null, initialDismiss
     : (en ? "Continue" : "Continuar");
   return <div className="ccr-solo-web ccr-download-banner-wrap lg:hidden" data-testid="mobile-app-download">
     <aside className="ccr-download-banner" aria-label={en ? "ContrataCR mobile app" : "App móvil ContrataCR"}>
-      <button type="button" aria-label={en ? "Dismiss app notice" : "Cerrar aviso de la app"} className="flex h-11 w-8 shrink-0 items-center justify-center text-[#64748b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]" onClick={() => { setDismissed(true); const until = String(Date.now() + 30 * 86400000); document.cookie = `${DOWNLOAD_DISMISS_COOKIE}=${until}; Path=/; Max-Age=2592000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`; try { localStorage.setItem(DISMISSED_KEY, until); } catch {} }}><X aria-hidden="true" className="h-[18px] w-[18px]" /></button>
-      <div className="flex min-w-0 flex-1 items-center gap-1 whitespace-nowrap">
+      <button type="button" aria-label={en ? "Dismiss app notice" : "Cerrar aviso de la app"} className="flex h-11 w-6 shrink-0 items-center justify-center min-[390px]:w-8 text-[#64748b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]" onClick={() => { setDismissed(true); const until = String(Date.now() + 30 * 86400000); document.cookie = `${DOWNLOAD_DISMISS_COOKIE}=${until}; Path=/; Max-Age=2592000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`; try { localStorage.setItem(DISMISSED_KEY, until); } catch {} }}><X aria-hidden="true" className="h-[18px] w-[18px]" /></button>
+      <div className="flex min-w-0 flex-1 items-center gap-0.5 whitespace-nowrap min-[390px]:gap-1">
         <ContrataCRLogo className="shrink-0 max-[389px]:[&>img:first-child]:h-7 max-[389px]:[&>img:first-child]:w-7 max-[389px]:[&>img:last-child]:h-[21px] max-[389px]:[&>img:last-child]:w-[92px]" />
-        {knownAndroid && <span className="text-[10px] leading-5 text-[#162543] min-[390px]:text-[11px]">
-          <span className="min-[390px]:hidden">· </span><span className="hidden min-[390px]:inline">{en ? "for" : "para"}{" "}</span>
-          Android
-        </span>}
+        <span data-testid="app-platform-label" className="shrink-0 text-[10px] leading-5 text-[#162543] min-[390px]:text-[11px]">
+          {en ? "for" : "para"}{" "}{platform === "ios" ? "iOS" : "Android"}
+        </span>
       </div>
       <a href={actionHref ?? APP_STORES[platform]} onClick={(event) => {
         if (platform === "ios") {
