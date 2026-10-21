@@ -2,7 +2,7 @@ import { AdminMfaEntry } from "./admin-mfa-entry";
 import { getLocale } from "next-intl/server";
 import { ShieldAlert } from "lucide-react";
 import { getAdminAccess } from "@/lib/auth/admin";
-import { Link } from "@/i18n/navigation";
+import { HomeRecoveryLink } from "@/components/error/home-recovery-link";
 import { AdminLogin } from "./admin-login";
 
 // This is a server component: hiding controls in the browser never grants access.
@@ -24,9 +24,9 @@ export async function AdminAccess() {
             ? "You do not have permission to access this section. It is available only to ContrataCR administrators."
             : "No tienes permisos para acceder a esta sección. Está disponible solo para administradores de ContrataCR."}
         </p>
-        <Link href="/" className="mt-6 inline-flex min-h-11 items-center justify-center rounded-full bg-[#009FD9] px-6 font-semibold text-white hover:bg-[#0089bb]">
+        <HomeRecoveryLink href={en ? "/en" : "/"} className="mt-6 inline-flex min-h-11 items-center justify-center rounded-full bg-[#009FD9] px-6 font-semibold text-white hover:bg-[#0089bb]">
           {en ? "Back to home" : "Volver al inicio"}
-        </Link>
+        </HomeRecoveryLink>
       </div>
     </main>
   );

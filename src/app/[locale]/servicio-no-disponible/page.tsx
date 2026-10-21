@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { Home, RefreshCw } from "lucide-react";
-import { Link } from "@/i18n/navigation";
+import { RefreshCw } from "lucide-react";
+import { HomeRecoveryLink } from "@/components/error/home-recovery-link";
+import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { ServiceUnavailableScreen } from "@/components/error/service-unavailable-screen";
 import { errorPrimaryBtn, errorSecondaryBtn } from "@/components/error/error-screen";
 
@@ -23,9 +24,9 @@ export default async function ServiceUnavailablePage({
       <a href="" className={errorPrimaryBtn}>
         <RefreshCw className="h-4 w-4" /> {retryLabel}
       </a>
-      <Link href="/" className={errorSecondaryBtn}>
-        <Home className="h-4 w-4" /> {homeLabel}
-      </Link>
+      <HomeRecoveryLink href={rutaConIdioma(locale, "/")} className={errorSecondaryBtn} documentNavigation>
+        {homeLabel}
+      </HomeRecoveryLink>
     </ServiceUnavailableScreen>
   );
 }

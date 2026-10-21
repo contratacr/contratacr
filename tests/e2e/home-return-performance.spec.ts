@@ -5,15 +5,15 @@ import { mkdir, writeFile, unlink } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { resolve } from "node:path";
 
-for (const native of [false,true]) for (const locale of ['es','en'] as const) {
-  test(`${native?'native':'web'} missing-page home action acknowledges a slow navigation in ${locale}`,async({page,context,baseURL})=>{
+for (const native of [false,true]) for (const locale of ['es','en'] as const) for (const recoveryRoute of ['/ruta-inexistente/para-regresion', '/mantenimiento', '/servicio-no-disponible']) {
+  test(`${native?'native':'web'} missing-page home action acknowledges a slow navigation in ${locale} from ${recoveryRoute}`,async({page,context,baseURL})=>{
     test.skip(native && test.info().project.name==='chromium-desktop','Native presentation on mobile');
     await context.addCookies([{name:'ccr_sin_analitica',value:'1',url:baseURL!}]);
     if(native){
       await context.addCookies([{name:'ccr_platform',value:'native',url:baseURL!}]);
       await page.addInitScript(()=>localStorage.setItem('ccr:native-first-run-onboarding:v12','1'));
     }
-    const missing=locale==='en'?'/en/ruta-inexistente/para-regresion':'/ruta-inexistente/para-regresion';
+    const missing=(locale==='en'?'/en':'')+recoveryRoute;
     await page.goto(missing);
     const home=page.locator('[data-home-recovery-link]').first();
     await expect(home).toBeVisible();
@@ -85,4 +85,31 @@ test('home streams its main content while coverage and service data are still pe
     let rest='';for(;;){const chunk=await reader.read();if(chunk.done)break;rest+=new TextDecoder().decode(chunk.value);}
     expect(rest).toContain('Ready coverage');expect(rest).toContain('Ready services');
   }finally{harness.release();delete require.cache[file];await unlink(file);}
+});
+
+test('root error home recovery works even when the app stylesheet failed', async ({ page }) => {
+  const result = await build({
+    stdin: { contents: `import React from 'react';import{createRoot}from'react-dom/client';import GlobalError from './src/app/global-error';createRoot(document).render(React.createElement(GlobalError,{error:new Error('Controlled root rendering error')}));`, resolveDir: process.cwd(), loader: 'tsx' },
+    bundle: true, write: false, platform: 'browser', format: 'iife', jsx: 'automatic', define: { 'process.env.NODE_ENV': '"production"' },
+    plugins: [{ name: 'unused-next-link', setup(b) { b.onResolve({ filter: /^next\/link$/ }, () => ({ path: 'next-link', namespace: 'fixture' })); b.onLoad({ filter: /.*/, namespace: 'fixture' }, () => ({ contents: 'export default function Link(){throw Error("Recovery must use a document link")}'})); } }],
+  });
+  await page.route('**/qa-root-recovery', route => route.fulfill({ contentType: 'text/html', body: '<html><head></head><body></body></html>' }));
+  await page.goto('/qa-root-recovery');
+  await page.addScriptTag({ content: result.outputFiles[0].text });
+  const home = page.locator('[data-home-recovery-link]');
+  await expect(home).toBeVisible();
+  await page.evaluate(() => {
+    window.addEventListener('beforeunload', () => {
+      const link = document.querySelector('[data-home-recovery-link]')!;
+      const icon = link.querySelector('svg')!;
+      const status = link.querySelector('[role=status]')!;
+      sessionStorage.setItem('qa:root-feedback', JSON.stringify({ busy: link.getAttribute('aria-busy'), iconWidth: icon.getBoundingClientRect().width, statusWidth: status.getBoundingClientRect().width }));
+    });
+  });
+  await home.click();
+  await expect(page.locator('main.ccr-portada')).toBeVisible();
+  const feedback = await page.evaluate(() => JSON.parse(sessionStorage.getItem('qa:root-feedback') ?? 'null'));
+  expect(feedback.busy).toBe('true');
+  expect(feedback.iconWidth).toBeCloseTo(16, 2);
+  expect(feedback.statusWidth).toBeCloseTo(1, 2);
 });

@@ -25,9 +25,9 @@ export function HomeRecoveryLink({ href, className, children, documentNavigation
     flushSync(() => setPending(true));
   };
   const content = <>
-    <Loader2 aria-hidden="true" className="absolute left-3 h-4 w-4 animate-spin" style={{ opacity: pending ? 1 : 0 }} />
+    <Loader2 aria-hidden="true" className="absolute left-3 h-4 w-4 animate-spin" style={{ opacity: pending ? 1 : 0, position: "absolute", left: 12, top: "50%", marginTop: -8, width: 16, height: 16 }} />
     {children}
-    {pending && <span role="status" className="sr-only">{href.startsWith("/en") ? "Opening home…" : "Abriendo el inicio…"}</span>}
+    {pending && <span role="status" className="sr-only" style={{ position: "absolute", width: 1, height: 1, padding: 0, overflow: "hidden", clipPath: "inset(50%)", whiteSpace: "nowrap" }}>{href.startsWith("/en") ? "Opening home…" : "Abriendo el inicio…"}</span>}
   </>;
   const props = { href, onClick, className, style: { ...style, position: "relative" as const }, "aria-busy": pending || undefined, "data-home-recovery-link": "" };
   // A broken root/router must be discarded rather than reused for recovery.
