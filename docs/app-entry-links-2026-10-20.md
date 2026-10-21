@@ -92,3 +92,13 @@ Validation: four targeted cases passed (five mobile/desktop-inapplicable skips),
 Isaac requested the mobile how-it-works layout remain unchanged; the proposed redesign remains desktop-only and is not implemented in this change. The bottom app notice now always labels its detected platform as para iOS/para Android or for iOS/for Android, independently of Android install-state detection. The one-row notice retains its shared logo, localized neutral/dynamic button and existing routing. Narrow-screen spacing was adjusted without altering the logo assets or proportions.
 
 Validation: 11 browser checks passed with 16 platform-inapplicable skips, including 320px iPhone ES/EN, all five Android install-detection states, Android language switching and the three mandatory cross-engine wordmark checks. TypeScript, focused lint, wordmark contract, inventory and diff checks passed. The first attempt could not connect because the local TEST server was stopped; the server was restarted before the passing run. No store release or version change.
+
+## Explicit open wording and Safari-owned banner — 21 October 2026
+
+Isaac requested Abrir app/Open app instead of Continuar/Continue after observing Safari's own OPEN notice above our bottom notice. Owned open actions now use the explicit wording; Android still uses Descargar/Download when its browser lookup returns no package. Platform labels and routing are unchanged.
+
+The supplied physical-iPhone screenshot shows Safari's top affordance despite no apple-itunes-app metadata in the current app-controlled HTML. Do not claim it can be detected or selectively hidden by DOM code. A choice between Safari-only native presentation (OS language/dismissal) and keeping the website-localized notice (possible OS duplication) was requested; no visibility-policy reversal is made without that preference.
+
+The archived iOS 1.0.11 build from b77609dc associates apex only, while the current button crosses to www from apex. The mobile branch includes www in associated domains since e2834a4e; that native entitlement requires an updated signed/store build and cannot be added to existing installed binaries by a web deployment. Both domains are present in Apple's association CDN. No claim about the user's exact installed binary or a physical opening success is made. No store submission is authorized by this wording change.
+
+Validation: 22 checks passed with 26 platform-inapplicable skips, covering ES/EN, 320px iPhone/Android, all five Android lookup states, standalone/legacy dismissal, iOS embedded browsers and SSR. TypeScript, focused ESLint, inventory and diff checks passed.
