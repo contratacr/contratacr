@@ -219,7 +219,7 @@ export default async function LocaleLayout({
             <UsageCapture />
           </Suspense>
           <PushTokenManager />
-          <MobileAppDownloadBanner initialPlatform={initialDownloadPlatform} initialDismissed={initialDownloadDismissed} />
+          <MobileAppDownloadBanner initialPlatform={initialDownloadPlatform} initialDismissed={initialDownloadDismissed} initialHostname={(await headers()).get("x-ccr-app-host") ?? "contratacr.com"} initialPath={(await headers()).get("x-ccr-app-path") ?? undefined} />
           {initialMfa.required ? null : children}
           <NativeBottomNav />
           <WhatsAppReviewFollowUp />

@@ -1,3 +1,5 @@
+export const APP_ENTRY_PARAM = "_ccr_open";
+
 export function hasAuthLinkPayload(url: URL): boolean {
   const fragment = new URLSearchParams(url.hash.slice(1));
   return ["code", "access_token", "refresh_token", "token", "token_hash", "id_token", "provider_token", "provider_refresh_token"].some(key => url.searchParams.has(key) || fragment.has(key));
@@ -13,6 +15,8 @@ export function campaignAppPath(raw: string): string | null {
     // The secure OAuth sheet consumes this return before session exchange.
     if (path === "/dashboard/native-auth-return") return null;
     if (path !== "/" && !/^\/(?:dashboard(?:\/|$)|continuar-perfil\/?$|buscar(?:\/|$)|servicios(?:\/|$)|profesionales(?:\/|$)|proyectos(?:\/|$)|empleos(?:\/|$)|promociones(?:\/|$)|publicar-proyecto\/?$|api\/trabajos\/reportar\/?$)/.test(path)) return null;
+    // The browser-only store fallback must never follow the link into the app.
+    url.searchParams.delete(APP_ENTRY_PARAM);
     return url.pathname + url.search + url.hash;
   } catch { return null; }
 }
