@@ -324,11 +324,13 @@ export async function loginAs(page: Page, email: string, password: string, optio
 export async function resetAuth(page: Page) {
   // Signing out never changes the device: the app's platform cookie survives.
   const platform = (await page.context().cookies()).find((cookie) => cookie.name === "ccr_platform");
+  // Unmount protected-route effects before clearing auth cookies. Otherwise a
+  // delayed auth redirect can interrupt WebKit's reset navigation.
+  await page.goto("/robots.txt", { waitUntil: "domcontentloaded" });
   await page.context().clearCookies();
   if (platform) await page.context().addCookies([{ name: platform.name, value: platform.value, domain: platform.domain, path: platform.path }]);
   // Same-origin text gives access to storage without mounting the whole home,
   // starting its carousel/media or reviving cached auth during fixture reset.
-  await page.goto("/robots.txt", { waitUntil: "domcontentloaded" });
   await page.evaluate(() => {
     localStorage.clear();
     sessionStorage.clear();

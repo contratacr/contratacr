@@ -2,13 +2,13 @@
   "scope": "Todos los archivos TypeScript de src/app, src/components y src/hooks, controles JSX declarados, pestañas del panel y specs permanentes. No enumera cada elemento dinámico renderizado ni componentes dentro de dependencias.",
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
-    "files": 491,
+    "files": 492,
     "controls": 1299,
     "pages": 71,
     "handlers": 104,
-    "components": 254,
+    "components": 255,
     "hooks": 26,
-    "specs": 153
+    "specs": 154
   },
   "dashboardTabs": [
     "home",
@@ -9761,6 +9761,31 @@
       "priority": "P1"
     },
     {
+      "file": "src/components/auth/authentication-loading.tsx",
+      "kind": "Componente",
+      "group": "Autenticación y registro",
+      "route": null,
+      "exports": [
+        "AuthenticationLoading"
+      ],
+      "methods": [],
+      "controls": [],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/auth-screens.spec.ts",
+        "tests/e2e/auth-support.spec.ts",
+        "tests/e2e/native-social-access.spec.ts",
+        "tests/e2e/apple-existing-account.spec.ts",
+        "tests/e2e/multiple-sign-in-methods.spec.ts",
+        "tests/e2e/last-used-sign-in.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P0"
+    },
+    {
       "file": "src/components/auth/casilla-de-terminos.tsx",
       "kind": "Componente",
       "group": "Autenticación y registro",
@@ -10119,7 +10144,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 83,
+          "line": 84,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { void check().catch(() => {}); }}",
@@ -14353,6 +14378,7 @@
         "tests/e2e/app-download.spec.ts",
         "tests/e2e/public-smoke.spec.ts",
         "tests/e2e/recent-visual-regression.spec.ts",
+        "tests/e2e/session-mfa-transition.spec.ts",
         "tests/e2e/session-recovery.spec.ts"
       ],
       "evidence": "Referencia estática detectada; verificar assertions",
@@ -25951,6 +25977,15 @@
         {
           "line": 91,
           "title": "\"selected service groups do not create a large empty gap before the service list\""
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/session-mfa-transition.spec.ts",
+      "cases": [
+        {
+          "line": 5,
+          "title": "`MFA pending transition ${path} keeps authentication presentation without the route header`"
         }
       ]
     },

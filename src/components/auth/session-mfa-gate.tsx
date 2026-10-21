@@ -2,11 +2,11 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
+import { AuthenticationLoading } from "@/components/auth/authentication-loading";
 import { AdminMfa } from "@/components/admin/admin-mfa";
 import { useTranslations } from "next-intl";
 import { Loader2, WifiOff } from "lucide-react";
 import { ContrataCRLogo } from "@/components/landing/landing-navbar";
-import { PageRouteLoading } from "@/components/ui/route-loading";
 import { useRouter, usePathname } from "@/i18n/navigation";
 
 type State = { userId: string | null; authenticated: boolean; isAdmin: boolean; enrolled: boolean; required: boolean };
@@ -22,8 +22,8 @@ export function SessionMfaGate({ children, initialState }: { children: ReactNode
   // redirect). Never show or allow
   // interaction with that form while the session is blocked; protected routes
   // still replace their children completely.
-  const content = (blocked: ReactNode = null) => authenticationForm ? <>
-    <div style={{ display: blocked ? "none" : "contents" }} inert={blocked ? true : undefined} aria-hidden={blocked ? true : undefined}>{children}</div>
+  const content = (blocked: ReactNode = null, pending = false) => authenticationForm ? <>
+    <div style={{ display: blocked ? "none" : "contents" }} inert={blocked || pending ? true : undefined} aria-hidden={blocked ? true : undefined} aria-busy={pending || undefined}>{children}</div>
     {blocked}
   </> : blocked ?? children;
   const [state, setState] = useState(initialState);
@@ -73,6 +73,7 @@ export function SessionMfaGate({ children, initialState }: { children: ReactNode
     if (user.id !== initialState.userId) update();
     return () => { active = false; lifecycle.value++; data.subscription.unsubscribe(); };
   }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  const pendingContent = () => authenticationForm ? content(null, true) : <AuthenticationLoading />;
   if (!user) return content();
   if (error) return content(<main data-session-recovery className="flex min-h-dvh items-center justify-center bg-white px-6 py-[max(2rem,env(safe-area-inset-top))]">
     <div className="w-full max-w-sm text-center">
@@ -85,8 +86,8 @@ export function SessionMfaGate({ children, initialState }: { children: ReactNode
       </button>
     </div>
   </main>);
-  if (state.userId !== user.id) return content(<PageRouteLoading />);
+  if (state.userId !== user.id) return pendingContent();
   if (state.required) return content(<AdminMfa enrolled={state.enrolled} administrator={state.isAdmin} onVerified={async () => { const next = await check(); if (next.required) throw new Error("MFA required"); router.refresh(); }} />);
-  if (checking && !state.authenticated) return content(<PageRouteLoading />);
+  if (checking && !state.authenticated) return pendingContent();
   return content();
 }

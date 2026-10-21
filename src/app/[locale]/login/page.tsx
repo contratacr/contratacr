@@ -20,7 +20,7 @@ import { isNativeAppRuntime } from "@/hooks/use-native-app";
 import { nativeSocialSignIn } from "@/lib/auth/native-social-login";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { OtpVerification } from "@/components/auth/otp-verification";
-import { PageRouteLoading } from "@/components/ui/route-loading";
+import { AuthenticationLoading } from "@/components/auth/authentication-loading";
 import type { User } from "@supabase/supabase-js";
 import { withPromiseTimeout } from "@/lib/promise-timeout";
 
@@ -481,7 +481,7 @@ export default function LoginPage() {
     <div className="ccr-account-page min-h-dvh flex flex-col bg-white">
       {/* Visual only: the press that opens Google's window must still reach its
           iframe underneath, so the cover never intercepts pointer events. */}
-      {leaving && <div className="contents pointer-events-none"><PageRouteLoading /></div>}
+      {leaving && <div className="contents pointer-events-none"><AuthenticationLoading /></div>}
 
       <Navbar mobileSearch={false} />
       <main className="flex-1 ccr-centrado-seguro py-12 px-4">
