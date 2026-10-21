@@ -8,7 +8,7 @@
     "handlers": 104,
     "components": 258,
     "hooks": 26,
-    "specs": 157
+    "specs": 158
   },
   "dashboardTabs": [
     "home",
@@ -13168,7 +13168,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 199,
+          "line": 198,
           "tag": "button",
           "label": "{en ? \"Dismiss app notice\" : \"Cerrar aviso de la app\"}",
           "handler": "{() => { setDismissed(true); const until = String(Date.now() + 30 * 86400000); document.cookie = `${DOWNLOAD_DISMISS_COOKIE}=${until}; Path=/; Max-Age=2592000; SameSite=Lax${location.protocol === \"https:\" ? \"; Secure\" : \"\"}`; try { localStorage.setItem(DISMISSED_KEY, until); } catch {} }}",
@@ -13176,7 +13176,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 206,
+          "line": 205,
           "tag": "a",
           "label": "{`${actionLabel} ContrataCR`}",
           "handler": "{(event) => {\n        if (platform === \"ios\") {\n          event.currentTarget.href = iosAppEntry(location.pathname + location.search + location.hash, location.hostname) ?? iosAppEntry(en ? \"/en\" : \"/\", location.hostname) ?? APP_STORES.ios;\n        } else if (androidAction) {\n          const current = androidAppIntent(location.pathname + location.search + location.hash) ?? androidAppIntent(en ? \"/en\" : \"/\");\n          if (current) event.currentTarget.href = current;\n        }\n      }}",
@@ -13199,6 +13199,7 @@
       "directReferences": [
         "tests/e2e/android-app-entry.spec.ts",
         "tests/e2e/app-download.spec.ts",
+        "tests/e2e/app-entry-browser-matrix.spec.ts",
         "tests/e2e/ios-app-entry.spec.ts",
         "tests/e2e/landing-media-budget.spec.ts",
         "tests/e2e/mobile-menu-surface.spec.ts",
@@ -23349,6 +23350,23 @@
         {
           "line": 379,
           "title": "(page.viewportSize()?.width??1280)>=1024"
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/app-entry-browser-matrix.spec.ts",
+      "cases": [
+        {
+          "line": 26,
+          "title": "'banner ownership is exclusive for browser, home-screen web app and native app'"
+        },
+        {
+          "line": 44,
+          "title": "`single notice and localized destination: ${ios ? 'iOS' : 'Android'} ${name} (presentation fixture)`"
+        },
+        {
+          "line": 45,
+          "title": "test.info().project.name !== (ios ? 'webkit-mobile' : 'chromium-mobile')"
         }
       ]
     },
