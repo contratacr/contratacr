@@ -2,13 +2,13 @@
   "scope": "Todos los archivos TypeScript de src/app, src/components y src/hooks, controles JSX declarados, pestañas del panel y specs permanentes. No enumera cada elemento dinámico renderizado ni componentes dentro de dependencias.",
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
-    "files": 493,
-    "controls": 1301,
+    "files": 494,
+    "controls": 1298,
     "pages": 71,
     "handlers": 104,
-    "components": 256,
+    "components": 257,
     "hooks": 26,
-    "specs": 154
+    "specs": 155
   },
   "dashboardTabs": [
     "home",
@@ -1551,7 +1551,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 106,
+          "line": 107,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{retry}",
@@ -1559,15 +1559,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 109,
-          "tag": "a",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "",
-          "destination": "{`${prefijoDeIdioma(lang) || \"/\"}`}",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 117,
+          "line": 118,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{retry}",
@@ -1575,27 +1567,11 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 120,
-          "tag": "a",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "",
-          "destination": "{`${prefijoDeIdioma(lang) || \"/\"}`}",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 131,
+          "line": 132,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{retry}",
           "destination": "",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 134,
-          "tag": "a",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "",
-          "destination": "{`${prefijoDeIdioma(lang) || \"/\"}`}",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         }
       ],
@@ -1966,15 +1942,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 16,
-          "tag": "Link",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "",
-          "destination": "\"/\"",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 17,
+          "line": 20,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -6663,15 +6631,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 36,
-          "tag": "a",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "",
-          "destination": "{en ? \"/en\" : \"/\"}",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 39,
+          "line": 40,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -12300,6 +12260,46 @@
       "priority": "P1"
     },
     {
+      "file": "src/components/error/home-recovery-link.tsx",
+      "kind": "Componente",
+      "group": "Estados de carga y errores",
+      "route": null,
+      "exports": [
+        "HomeRecoveryLink"
+      ],
+      "methods": [],
+      "controls": [
+        {
+          "line": 34,
+          "tag": "a",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 34,
+          "tag": "Link",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        }
+      ],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/dashboard-surfaces.spec.ts",
+        "tests/e2e/navigation-loading.spec.ts",
+        "tests/e2e/dashboard-cache-races.spec.ts",
+        "tests/e2e/pantallas-en-todos-los-anchos.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P1"
+    },
+    {
       "file": "src/components/error/service-unavailable-screen.tsx",
       "kind": "Componente",
       "group": "Estados de carga y errores",
@@ -13373,8 +13373,10 @@
         "tests/e2e/navbar-brand-consistency.spec.ts",
         "tests/e2e/portada-y-menu.spec.ts"
       ],
-      "directReferences": [],
-      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "directReferences": [
+        "tests/e2e/home-return-performance.spec.ts"
+      ],
+      "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
       "coverage": "Alcance detallado pendiente de revisión; no certificado",
       "priority": "P1"
@@ -14384,6 +14386,7 @@
       ],
       "directReferences": [
         "tests/e2e/app-download.spec.ts",
+        "tests/e2e/home-return-performance.spec.ts",
         "tests/e2e/public-smoke.spec.ts",
         "tests/e2e/recent-visual-regression.spec.ts",
         "tests/e2e/session-mfa-transition.spec.ts",
@@ -14410,8 +14413,10 @@
         "tests/e2e/navbar-brand-consistency.spec.ts",
         "tests/e2e/portada-y-menu.spec.ts"
       ],
-      "directReferences": [],
-      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "directReferences": [
+        "tests/e2e/home-return-performance.spec.ts"
+      ],
+      "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
       "coverage": "Alcance detallado pendiente de revisión; no certificado",
       "priority": "P1"
@@ -24415,6 +24420,23 @@
         {
           "line": 65,
           "title": "!(await campo.isVisible().catch(() => false))"
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/home-return-performance.spec.ts",
+      "cases": [
+        {
+          "line": 9,
+          "title": "`${native?'native':'web'} missing-page home action acknowledges a slow navigation in ${locale}`"
+        },
+        {
+          "line": 10,
+          "title": "native && test.info().project.name==='chromium-desktop'"
+        },
+        {
+          "line": 56,
+          "title": "'home streams its main content while coverage and service data are still pending'"
         }
       ]
     },

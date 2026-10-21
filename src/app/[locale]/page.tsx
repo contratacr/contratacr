@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { AppDownloadSection } from "@/components/landing/app-download";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { prefijoDeIdioma, rutaConIdioma } from "@/lib/prefijo-de-idioma";
@@ -66,6 +67,11 @@ const DATOS_ESTRUCTURADOS = (locale: string) => JSON.stringify([
   },
 ]);
 
+async function HomeZoneCoverage() {
+  const coverage = await getZoneCoverage();
+  return <FindByZone coverage={coverage} />;
+}
+
 export default async function HomePage({
   searchParams,
   params,
@@ -75,8 +81,7 @@ export default async function HomePage({
 }) {
   const { locale } = await params;
   // Real zone coverage, without fabricated canton counts, for the find-by-zone band.
-  const [coverage, query, t] = await Promise.all([
-    getZoneCoverage(),
+  const [query, t] = await Promise.all([
     searchParams,
     getTranslations("home.accountDeletion"),
   ]);
@@ -110,7 +115,7 @@ export default async function HomePage({
 
         {/* Services carousel. */}
         <FadeInUp>
-          <ProsSection />
+          <Suspense fallback={null}><ProsSection /></Suspense>
         </FadeInUp>
 
 
@@ -121,7 +126,7 @@ export default async function HomePage({
 
         {/* Zones: find professionals by province using real coverage. */}
         <div className="ccr-fin-de-portada">
-          <FindByZone coverage={coverage} />
+          <Suspense fallback={null}><HomeZoneCoverage /></Suspense>
         </div>
         {/* Lo que ya cabe en la primera pantalla se marca visible antes del
             primer cuadro: el aparecer solo es para lo que llega al desplazar. */}
