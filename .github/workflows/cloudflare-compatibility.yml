@@ -115,6 +115,16 @@ jobs:
           NEXT_PUBLIC_META_PIXEL_ID: ${{ secrets.NEXT_PUBLIC_META_PIXEL_ID }}
         run: npm run cloudflare:build
 
+      - name: Smoke public pages in the Worker runtime
+        run: |
+          npx wrangler dev --local --port 8788 --no-show-interactive-dev-session > worker-smoke.log 2>&1 &
+          WORKER_SMOKE_PID=$!
+          trap 'kill "$WORKER_SMOKE_PID" 2>/dev/null || true' EXIT
+          if ! node scripts/ci/verify-worker-pages.mjs http://127.0.0.1:8788; then
+            tail -80 worker-smoke.log
+            exit 1
+          fi
+
       - name: Validate Worker bundle and report size
         if: ${{ env.EFFECTIVE_MODE == 'dry-run' }}
         run: npx wrangler deploy --dry-run

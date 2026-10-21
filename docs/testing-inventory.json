@@ -25332,7 +25332,7 @@
         },
         {
           "line": 92,
-          "title": "'social cards bound decoded image dimensions without losing transparent pixels'"
+          "title": "'social cards preserve transparent pixels and reject oversized decoding without native runtime modules'"
         }
       ]
     },
