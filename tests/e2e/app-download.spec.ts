@@ -7,6 +7,7 @@ import { test, expect } from 'playwright/test';
 test('web: tiendas correctas, reserva, teclado y cierre persistente', async ({page}) => {
   if(test.info().project.name==='android-download')await page.setViewportSize({width:320,height:780});
   test.skip((page.viewportSize()?.width ?? 1280) >= 1024, "The download notice only appears on mobile web.");
+  await page.addInitScript(() => Object.defineProperty(navigator, 'getInstalledRelatedApps', { configurable: true, value: async () => [] }));
   await page.goto('/');
   await expect(page.getByTestId('app-download-section')).toBeVisible();
   const banner=page.getByTestId('mobile-app-download');
@@ -17,6 +18,7 @@ test('web: tiendas correctas, reserva, teclado y cierre persistente', async ({pa
     return;
   }
   await expect(banner).toBeVisible();
+  await expect(banner.getByRole('link')).toHaveText('Descargar');
   const href=await banner.locator('a').getAttribute('href');
   const android=await page.evaluate(()=>/Android/.test(navigator.userAgent));
   expect(href).toContain(android?'play.google.com/store/apps/details?id=com.contratacr.app':'apps.apple.com/cr/app/contratacr/id6794559661');
