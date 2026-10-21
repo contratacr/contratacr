@@ -1,5 +1,6 @@
 "use client";
 import { ContrataCRLogo, ContrataCRMark } from "@/components/brand/brand-logo";
+import { DesktopAppMenu } from "./desktop-app-menu";
 import { MobileAppStoreMenuLink } from "@/components/mobile/mobile-app-store-menu-link";
 import { SocialLinks } from "./social-links";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
@@ -857,6 +858,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const servicesMenuRef = useRef<HTMLDivElement>(null);
   const exploreMenuRef = useRef<HTMLDivElement>(null);
   const resourcesMenuRef = useRef<HTMLDivElement>(null);
+  const appMenuRef = useRef<HTMLDivElement>(null);
   const drawerTouchStart = useRef<{ x: number; y: number } | null>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -1536,12 +1538,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   }, [isHomePage]);
 
   useEffect(() => {
-    if (openMenu !== "categorias" && openMenu !== "explorar" && openMenu !== "recursos") return;
+    if (openMenu !== "categorias" && openMenu !== "explorar" && openMenu !== "recursos" && openMenu !== "app") return;
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as Node;
       if (openMenu === "categorias" && servicesMenuRef.current?.contains(target)) return;
       if (openMenu === "explorar" && exploreMenuRef.current?.contains(target)) return;
       if (openMenu === "recursos" && resourcesMenuRef.current?.contains(target)) return;
+      if (openMenu === "app" && appMenuRef.current?.contains(target)) return;
       setOpenMenu(null);
     };
     document.addEventListener("pointerdown", onPointerDown);
@@ -2394,8 +2397,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       </div>
                     )}
                   </div>
+                  {!nativeApp && <div ref={appMenuRef}><DesktopAppMenu open={openMenu === "app"} onOpenChange={open => setOpenMenu(open ? "app" : null)} /></div>}
                   {authLoading && !user ? (
-                    <div className="flex w-[250px] items-center justify-end gap-2" aria-hidden="true">
+                    <div className="flex w-[144px] items-center justify-end gap-2" aria-hidden="true">
                       <div className="h-10 w-24 animate-pulse rounded-xl bg-[#eef2f6]" />
                       <div className="h-10 w-10 animate-pulse rounded-full bg-[#eef2f6]" />
                     </div>
@@ -2439,29 +2443,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       />
                     </div>
                   ) : (
-                    // Como Upwork o Airbnb: entrar y crear cuenta siempre a la vista,
-                    // también en las propias pantallas de acceso.
+                    // Registro remains available from login and the mobile drawer.
                     <div className="flex w-auto items-center justify-end gap-2">
                       <Link
                         href={loginHref}
                         className="rounded-full bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0088bb]"
                       >
                         {t("login")}
-                      </Link>
-                      {/* Contactar ya no pide cuenta, así que «Registrarse» a
-                          secas no le sirve a nadie que llegó a buscar a alguien:
-                          de 108 cuentas de cliente, SIETE hicieron algo alguna
-                          vez. Quien sí necesita una cuenta desde el minuto uno
-                          es el profesional. La cuenta normal se crea sola en el
-                          momento en que hace falta (publicar, guardar, reseñar)
-                          y sigue estando en /registro. */}
-                      {/* 1-oct-2026: igual que el menú del teléfono, «Ingresar» y
-                          «Crear cuenta». /registro ofrece las dos cuentas. */}
-                      <Link
-                        href="/registro"
-                        className="rounded-full border border-[#d6dde5] bg-white px-4 py-2 text-sm font-semibold text-[#162543] transition-colors hover:bg-[#f8fafc]"
-                      >
-                        {t("signUp")}
                       </Link>
                     </div>
                   )}

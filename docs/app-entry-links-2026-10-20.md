@@ -80,3 +80,9 @@ Android always delegates the tap to its package-specific intent with the fixed P
 Isaac rejected the combined action label. Unknown install state now uses Continuar/Continue, one neutral word in the selected website language. Verified Android state retains Abrir/Open and Descargar/Download. Routing, fallback, dismissal, one-row layout and native store versions are unchanged. Physical iPhone opening confirmation remains pending; the user response addressed wording only.
 
 Validation for this wording change: 100 browser checks passed across mobile WebKit, mobile Chromium and desktop Chromium; 35 platform-inapplicable checks skipped. TypeScript, focused ESLint, test inventory, diff check and the wordmark contract passed.
+
+## Desktop navbar handoff — 21 October 2026
+
+The desktop navbar replaces its sign-up action with Usar app/Use app, including signed-in users. Registration remains in login and the mobile drawer. The nonmodal panel reuses the existing device-aware download QR and closes with Escape, its close button or an outside pointer. Native and mobile headers do not show the desktop action. Search width classes are unchanged, and auth loading reserves only the remaining account controls.
+
+Validation: four targeted cases passed (five mobile/desktop-inapplicable skips), covering ES/EN at 1024/1280/1440, an authenticated TEST client, QR visibility, outside/Escape dismissal and mobile exclusion. All three mandatory brand browser checks passed on rerun; the initial overlapping test runs conflicted in artifact output and timed out. TypeScript, new component/test lint, wordmark and inventory checks passed. Navbar lint retains its four existing errors and two warnings, with no new rule violations. No native release or version change.
