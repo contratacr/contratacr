@@ -14,7 +14,7 @@ test('Android entry is limited to public screens and fixes the package and fallb
   expect(campaignAppPath('https://other.contratacr.com/')).toBeNull();
   expect(campaignAppPath('https://www.contratacr.com/login')).toBeNull();
   expect(isInstalledAndroidApp([{ platform: 'play', id: 'com.contratacr.app' }])).toBe(true);
-  expect(isInstalledAndroidApp([{ platform: 'webapp', id: 'com.contratacr.app' }, { platform: 'play', id: 'other.app' }])).toBe(false);
+  expect(isInstalledAndroidApp([{ platform: 'webapp', id: 'com.contratacr.app' }, { platform: 'play', id: 'other.app' }])).toBeNull();
 });
 
 for (const state of ['installed', 'missing', 'unsupported', 'error', 'pending'] as const) {
@@ -32,7 +32,7 @@ for (const state of ['installed', 'missing', 'unsupported', 'error', 'pending'] 
     const banner = page.getByTestId('mobile-app-download');
     await expect(banner).toBeVisible();
     const action = banner.getByRole('link');
-    const label = state === 'installed' ? 'Abrir app' : state === 'missing' ? 'Descargar' : 'Abrir app';
+    const label = state === 'installed' ? 'Abrir app' : 'Usar app';
     await expect(action).toHaveText(label);
     await expect(banner.getByTestId('app-platform-label')).toHaveText('para Android');
     expect((await banner.getByTestId('app-platform-label').boundingBox())!.x + (await banner.getByTestId('app-platform-label').boundingBox())!.width).toBeLessThanOrEqual((await action.boundingBox())!.x);
@@ -56,13 +56,13 @@ test('Android action refreshes on return from the store without exposing unrelat
   });
   await page.goto('/proyectos');
   const action = page.getByTestId('mobile-app-download').getByRole('link');
-  await expect(action).toHaveText('Descargar');
+  await expect(action).toHaveText('Usar app');
   await expect(action).toHaveAttribute('href', /^intent:/);
   await page.evaluate(() => { (window as unknown as { qaInstalled: boolean }).qaInstalled = true; window.dispatchEvent(new Event('pageshow')); });
   await expect(action).toHaveText('Abrir app');
   await expect(action).toHaveAttribute('href', /^intent:/);
   await page.evaluate(() => { (window as unknown as { qaInstalled: boolean }).qaInstalled = false; window.dispatchEvent(new Event('pageshow')); });
-  await expect(action).toHaveText('Descargar');
+  await expect(action).toHaveText('Usar app');
   await expect(action).toHaveAttribute('href', /^intent:/);
 });
 
@@ -78,4 +78,34 @@ test('installed Android action translates and updates when changing language',as
  await page.getByRole('button',{name:/Open menu|Abrir menú/}).filter({visible:true}).first().click();
  await page.getByRole('button',{name:'Español',exact:true}).filter({visible:true}).click();
  await expect(action).toHaveText('Abrir app');
+});
+
+
+test('published Android app can resolve home through its supported professional route', () => {
+  for (const home of ['/', '/es', '/es/', '/en', '/en/']) {
+    const intent = androidAppIntent(`${home}?utm_source=meta#servicios`)!;
+    const entryUrl = intent.split('#Intent;')[0].replace('intent:', 'https:');
+    const entry = new URL(entryUrl);
+    expect(entry.hostname).toBe('contratacr.com');
+    expect(entry.pathname).toBe(`${home.startsWith('/en') ? '/en' : home.startsWith('/es') ? '/es' : ''}/profesionales`);
+    expect(entry.searchParams.get('_ccr_home')).toBe('1');
+    const restored = campaignAppPath(entryUrl)!;
+    expect(restored).toBe(`${home.startsWith('/en') ? '/en' : home.startsWith('/es') ? '/es' : '/'}?utm_source=meta#servicios`);
+  }
+  expect(campaignAppPath('https://contratacr.com/proyectos?_ccr_home=1')).toBe('/proyectos');
+  expect(campaignAppPath('https://contratacr.com/profesionales?_ccr_home=https://evil.test')).toBe('/profesionales');
+  expect(campaignAppPath('https://contratacr.com/profesionales?_ccr_home=1&access_token=secret')).toBeNull();
+  expect(isInstalledAndroidApp([])).toBeNull();
+});
+
+test('undetected Android installation keeps a usable translated action and a compatible home intent', async ({ page }) => {
+  test.skip(!/Android/.test(await page.evaluate(() => navigator.userAgent)), 'Android only');
+  await page.addInitScript(() => Object.defineProperty(navigator, 'getInstalledRelatedApps', { configurable: true, value: async () => [] }));
+  await page.goto('/');
+  const action = page.getByTestId('mobile-app-download').getByRole('link');
+  await expect(action).toHaveText('Usar app');
+  await expect(action).toHaveAttribute('href', /intent:\/\/contratacr.com\/profesionales\?_ccr_home=1#Intent/);
+  await page.goto('/en');
+  await expect(action).toHaveText('Use app');
+  await expect(action).toHaveAttribute('href', /intent:\/\/contratacr.com\/en\/profesionales\?_ccr_home=1#Intent/);
 });
