@@ -1,4 +1,6 @@
 "use client";
+
+import { nombreDeSaludo } from "@/lib/nombres";
 import { ProfileIdentityName, profileIdentityAvatarClass } from "@/components/professionals/profile-identity-name";
 
 import { sinPrefijoDeIdioma } from "@/lib/prefijo-de-idioma";
@@ -1299,7 +1301,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                     <div className="flex flex-col gap-6">
                       <div>
                         <h2 className="text-lg font-semibold text-[#162543] mb-1">{t("tabs.casos")}</h2>
-                        <p className="text-sm text-[#68778d]">{t("casosSubtitle", { name: professional.fullName.split(" ")[0] })}</p>
+                        <p className="text-sm text-[#68778d]">{t("casosSubtitle", { name: nombreDeSaludo(professional.fullName) })}</p>
                       </div>
                       {hasCasos ? (
                         (() => {
@@ -1379,7 +1381,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                     <div>
                       <ReviewSection
                         professionalId={professional.id}
-                        professionalName={professional.fullName}
+                        professionalName={displayName.primaryDesktop}
                         reviewCount={professional.reviewCount}
                         ratingAvg={professional.ratingAvg}
                         reviews={professional.reviews}
@@ -1521,7 +1523,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
       )}
       {reportOpen && (
         <ReportProfileModal
-          professionalName={professional.fullName}
+          professionalName={displayName.primaryDesktop}
           professionalSlug={slug}
           bloqueo={isOwn ? undefined : { profileId: professional.profileId, onBloqueado: () => setBloqueado(true) }}
           onClose={() => setReportOpen(false)}

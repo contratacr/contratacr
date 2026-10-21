@@ -1,5 +1,7 @@
 "use client";
 
+import { nombreDeSaludo } from "@/lib/nombres";
+
 import { useEffect, useState } from "react";
 import { UserPlus, Users, MessageCircle, FileText, ShieldCheck, ArrowUpRight, ArrowDownRight, FolderOpen, Headset } from "lucide-react";
 import { Link } from "@/i18n/navigation";
@@ -101,7 +103,7 @@ const ACTIVITY_META: Record<ActivityKind, { icon: typeof UserPlus; bg: string; f
 };
 
 export function AdminOverview({ adminName, data, activity = [] }: { adminName: string; data: Data; activity?: ActivityEvent[] }) {
-  const firstName = adminName.split(" ")[0] || "Admin";
+  const firstName = nombreDeSaludo(adminName) || "Admin";
   // What needs a hand today, from the same endpoint that feeds the sidebar badges.
   const [attention, setAttention] = useState<Record<string, number> | null>(null);
   useEffect(() => {

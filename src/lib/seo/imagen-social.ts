@@ -14,7 +14,7 @@
  *  (el español no lleva prefijo en las direcciones, pero el archivo sí). */
 export function rutaImagenSocial(locale: string) {
   const IDIOMAS = ["es", "en"];
-  return `/${IDIOMAS.includes(locale) ? locale : IDIOMAS[0]}/opengraph-image?v=simbolo-20261015`;
+  return `/${IDIOMAS.includes(locale) ? locale : IDIOMAS[0]}/opengraph-image?v=simbolo-20261021`;
 }
 
 export function imagenSocial(locale: string) {
@@ -31,7 +31,7 @@ export function imagenSocial(locale: string) {
 export function imagenDeSeccion(locale: string, seccion: string) {
   const idioma = ["es", "en"].includes(locale) ? locale : "es";
   // A fresh URL makes social crawlers fetch the corrected centered thumbnail.
-  const version = seccion === "/profesionales" ? "?v=simbolo-20261015" : "?v=tarjetas-20261015";
+  const version = seccion === "/profesionales" ? "?v=simbolo-20261021" : "?v=tarjetas-20261021";
   const url = `/${idioma}${seccion}/opengraph-image${version}`;
   return {
     openGraph: { images: [{ url, width: 1200, height: 630, alt: "ContrataCR" }] },

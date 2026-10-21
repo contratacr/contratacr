@@ -1,5 +1,7 @@
 "use client";
 
+import { formatFullPersonName } from "@/lib/display-name";
+
 import { InlineIdentityName } from "@/components/ui/inline-identity-name";
 import { useEffect, useRef, useState } from "react";
 import { Search, Loader2, Ban, ShieldOff } from "lucide-react";
@@ -112,7 +114,7 @@ export function AdminUserSearch({
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-[#162543]"><InlineIdentityName name={u.full_name ?? "Sin nombre"} badge={u.isPro && u.verification_status === "verified" ? <VerifiedSeal label="Verificado" className="h-4 w-4 text-[#009FD9]" /> : null} /></p>
+                  <p className="text-sm font-medium text-[#162543]"><InlineIdentityName name={formatFullPersonName(u.full_name) || "Sin nombre"} badge={u.isPro && u.verification_status === "verified" ? <VerifiedSeal label="Verificado" className="h-4 w-4 text-[#009FD9]" /> : null} /></p>
                   <p className="text-xs text-[#6b7280] truncate">
                     {u.cedula ? `${u.cedula} · ` : ""}{u.email}
                   </p>

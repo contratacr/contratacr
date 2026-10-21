@@ -76,7 +76,7 @@ function fotoReducida(url: string) {
   if (!url.startsWith("https://res.cloudinary.com/") || en < 0) return url;
   const partes = url.slice(en + marca.length).split("/");
   if (partes.length > 1 && /^[a-z]+_[^/]*$/.test(partes[0]) && !/^v\d+$/.test(partes[0])) partes.shift();
-  return `${url.slice(0, en + marca.length)}c_fill,g_face,w_256,h_256,f_jpg,q_80/${partes.join("/")}`;
+  return `${url.slice(0, en + marca.length)}c_fill,g_face,w_512,h_512,f_jpg,q_92/${partes.join("/")}`;
 }
 
 async function imageDataUrl(url?: string | null) {
@@ -84,7 +84,7 @@ async function imageDataUrl(url?: string | null) {
   const resolved = url.startsWith("/")
     ? `${process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com"}${url}`
     : fotoReducida(url);
-  return fotoLiviana(resolved, 400 * 1024);
+  return fotoLiviana(resolved, 3.8 * 1024 * 1024);
 }
 
 export default async function Image({ params }: { params: Promise<{ locale: string; slug: string }> }) {

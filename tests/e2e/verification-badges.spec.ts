@@ -35,10 +35,11 @@ for (const path of ["/profesionales", "/promociones", "/empleos", "/proyectos"])
         range.setEnd(last!, value.length);
         const word = Array.from(range.getClientRects()).at(-1)!;
         const badge = el.querySelector("[data-verification-badge]")!.getBoundingClientRect();
-        return { gap: badge.left - word.right, sameLine: badge.top < word.bottom && badge.bottom > word.top };
+        return { gap: badge.left - word.right, sameLine: badge.top < word.bottom && badge.bottom > word.top, centerDelta: Math.abs((badge.top + badge.bottom - word.top - word.bottom) / 2) };
       });
       expect(alignment.gap).toBeGreaterThanOrEqual(-1);
-      expect(alignment.gap).toBeLessThan(14);
+      expect(alignment.gap).toBeLessThanOrEqual(4);
+      expect(alignment.centerDelta).toBeLessThanOrEqual(4);
       expect(alignment.sameLine).toBe(true);
     }
     await check.click();

@@ -1,5 +1,7 @@
 "use client";
 
+import { formatFullPersonName } from "@/lib/display-name";
+
 import { rutaEmpleo, rutaPromocion } from "@/lib/marketplace-url";
 import { useEffect, useState } from "react";
 import { cldThumb } from "@/lib/cloudinary";
@@ -289,13 +291,13 @@ export function AdminUserProfile({
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-xl font-bold text-[#162543]">{pro?.business_name || profile.full_name || "Sin nombre"}</h1>
+              <h1 className="text-xl font-bold text-[#162543]">{pro?.business_name || formatFullPersonName(profile.full_name) || "Sin nombre"}</h1>
               <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${professionalSignupIncomplete ? "bg-[#fff7ed] text-[#c2410c]" : "bg-gray-100 text-gray-700"}`}>{accountTypeLabel}</span>
               <span className={`rounded-md border px-2 py-0.5 text-[11px] font-medium ${verificationPillClasses(identityStatus)}`}>{verificationLabel(identityStatus)}</span>
               {pro?.is_banned && <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-700"><Ban className="h-3 w-3" /> Baneado</span>}
               {profile.is_disabled && <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700"><ShieldOff className="h-3 w-3" /> Deshabilitada</span>}
             </div>
-            {pro?.business_name && profile.full_name && <p className="mt-0.5 text-sm text-[#6b7280]">{profile.full_name}</p>}
+            {pro?.business_name && profile.full_name && <p className="mt-0.5 text-sm text-[#6b7280]">{formatFullPersonName(profile.full_name)}</p>}
             {services.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {services.map((c) => <span key={c} className="rounded-md bg-[#EBF5FB] px-2 py-0.5 text-[11px] font-semibold text-[#0089bb]">{getCategoryLabel(c)}</span>)}
@@ -462,7 +464,7 @@ export function AdminUserProfile({
                     {receivedReviews.slice(0, 8).map((r) => (
                       <li key={r.id} className="px-4 py-2.5">
                         <div className="flex items-center justify-between gap-3">
-                          <p className="inline-flex items-center gap-1 text-sm font-semibold text-[#162543]"><Star className="h-3.5 w-3.5 text-amber-500" /> {r.rating} · {r.client_name_snapshot || "Cliente"}</p>
+                          <p className="inline-flex items-center gap-1 text-sm font-semibold text-[#162543]"><Star className="h-3.5 w-3.5 text-amber-500" /> {r.rating} · {formatFullPersonName(r.client_name_snapshot) || "Cliente"}</p>
                           {r.moderation_status && r.moderation_status !== "published" && <StatusPill status={r.moderation_status} />}
                         </div>
                         {r.comment && <p className="mt-0.5 line-clamp-2 text-xs text-[#6b7280]">{r.comment}</p>}

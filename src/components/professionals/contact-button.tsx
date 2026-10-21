@@ -1,5 +1,7 @@
 "use client";
 
+import { nombreDeSaludo } from "@/lib/nombres";
+
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { useState } from "react";
 import { Loader2, Mail, Phone } from "lucide-react";
@@ -70,7 +72,7 @@ export function ContactButton({
       const href = method === "phone"
         ? data.tel ?? null
         : data.email
-          ? `mailto:${data.email}?subject=${encodeURIComponent("Consulta desde ContrataCR")}&body=${encodeURIComponent(`Hola ${professionalName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaria coordinar un servicio.`)}`
+          ? `mailto:${data.email}?subject=${encodeURIComponent("Consulta desde ContrataCR")}&body=${encodeURIComponent(`Hola ${nombreDeSaludo(professionalName)}, vi tu perfil en ContrataCR y me gustaria coordinar un servicio.`)}`
           : null;
       if (!res.ok || !href) { await showMessage({ title: professionalName, description: t("noContact") }); return; }
       trackMetaConversion(data.metaConversion);

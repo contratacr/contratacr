@@ -1,3 +1,4 @@
+import { nombreDeSaludo } from "@/lib/nombres";
 // Branded support-ticket email notifications (Brevo). Best-effort: failures are
 // logged and never break the request. Clickable links only — no raw URLs.
 import { EMAIL_LOGO_DARK_MODE_STYLES, emailLogoMarkup, sendBrevoEmail } from "@/lib/email/send";
@@ -78,7 +79,7 @@ export function supportReplyEmail(opts: {
   topic?: string | null;
   eventKey?: string;
 }): string {
-  const firstName = (opts.toName ?? "").split(" ")[0] || "";
+  const firstName = nombreDeSaludo(opts.toName);
   const panel = opts.panel === "profesional" ? "profesional" : "cliente";
   // Account holders → deep-link straight to THIS ticket open in their panel. The
   // target is carried through login + Google OAuth (login → ?redirect=… → callback

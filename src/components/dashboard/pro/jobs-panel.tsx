@@ -1,5 +1,7 @@
 "use client";
 
+import { formatFullPersonName } from "@/lib/display-name";
+
 import { useEffect } from "react";
 import { useCachedResource } from "@/hooks/use-cached-resource";
 import { JobsManager, type ManagedJob } from "@/components/jobs/jobs-manager";
@@ -39,9 +41,9 @@ async function cargarEmpleos(professionalId: string): Promise<ManagedJob[]> {
     title: repairVisibleText(String(row.title ?? "")),
     applications: ((row.job_applications ?? []) as Array<Record<string, unknown>>).map((application) => ({
       ...application,
-      applicant_name: repairVisibleText(
+      applicant_name: formatFullPersonName(repairVisibleText(
         (application.profiles as { full_name?: string } | null)?.full_name || "Postulante",
-      ),
+      )),
     })),
   })) as ManagedJob[];
 }

@@ -1,3 +1,4 @@
+import { formatFullPersonName } from "@/lib/display-name";
 import { AdminActivityJourney } from "./admin-activity-journey";
 import { ArrowDownRight, ArrowUpRight, Headset, MapPinned, Megaphone, Minus, Search, Smartphone, UserCheck, Users } from "lucide-react";
 import { Link } from "@/i18n/navigation";
@@ -326,7 +327,7 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
                   <details className="mt-4 border-t border-[#e5e7eb] pt-3">
                     <summary className="min-h-11 cursor-pointer py-2 text-xs font-semibold text-[#009dca]">Ver acciones y pantallas</summary>
                     <ul className="space-y-2 text-xs">{Object.entries(row.actions).map(([action, count]) => <li key={action} className="flex justify-between gap-3"><span>{runtimeActionLabel(action)}</span><strong>{fmt(count)}</strong></li>)}</ul>
-                    {row.recent_accounts.length > 0 && <><p className="mb-2 mt-4 font-semibold text-xs">Cuentas con actividad reciente</p><ul className="space-y-2 text-xs">{row.recent_accounts.map(account => <li key={account.id} className="flex justify-between gap-3"><Link href={`/admin/usuarios/${account.id}`} className="min-w-0 break-words font-semibold text-[#009dca]">{account.full_name || "Usuario"}</Link><span className="shrink-0 text-[#64748b]">{new Date(account.last_seen).toLocaleDateString("es-CR", { timeZone: "America/Costa_Rica" })} · {fmt(account.sessions)} ses.</span></li>)}</ul></>}
+                    {row.recent_accounts.length > 0 && <><p className="mb-2 mt-4 font-semibold text-xs">Cuentas con actividad reciente</p><ul className="space-y-2 text-xs">{row.recent_accounts.map(account => <li key={account.id} className="flex justify-between gap-3"><Link href={`/admin/usuarios/${account.id}`} className="min-w-0 break-words font-semibold text-[#009dca]">{formatFullPersonName(account.full_name) || "Usuario"}</Link><span className="shrink-0 text-[#64748b]">{new Date(account.last_seen).toLocaleDateString("es-CR", { timeZone: "America/Costa_Rica" })} · {fmt(account.sessions)} ses.</span></li>)}</ul></>}
                     {row.top_screens.length > 0 && <><p className="mb-2 mt-4 font-semibold text-xs">Pantallas más visitadas</p><ul className="space-y-2 text-xs">{row.top_screens.map(screen => <li key={`${screen.path}:${screen.tab}`} className="flex justify-between gap-3"><span className="min-w-0 break-all">{screen.path}{screen.tab ? ` · ${screen.tab}` : ""}</span><strong>{fmt(screen.views)}</strong></li>)}</ul></>}
                   </details>
                 </div>

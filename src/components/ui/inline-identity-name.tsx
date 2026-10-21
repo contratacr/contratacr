@@ -19,6 +19,6 @@ export function InlineIdentityName({ name, badge, href, onNameClick, className =
     : onNameClick ? <button type="button" onClick={onNameClick} aria-label={secondary ? undefined : clean} aria-hidden={secondary || undefined} tabIndex={secondary ? -1 : undefined} className="inline !min-h-0 text-left font-[inherit] hover:text-[#009FD9]">{value}</button>
       : value;
   return <span data-inline-identity-name className={`min-w-0 whitespace-normal [overflow-wrap:anywhere] ${className}`}>
-    <span data-identity-name-text><span data-profile-name-start>{prefix && text(prefix)}</span><span data-identity-name-tail data-profile-name-tail className="whitespace-nowrap [overflow-wrap:normal]"><span data-profile-name-last-word>{text(tail, Boolean(prefix))}</span>{badge && <span className="ml-1 inline-block align-middle leading-none">{badge}</span>}</span></span>
+    <span data-identity-name-text><span data-profile-name-start>{prefix && text(prefix)}</span><span data-identity-name-tail data-profile-name-tail className="whitespace-nowrap [overflow-wrap:normal]"><span data-profile-name-last-word>{text(tail, Boolean(prefix))}</span>{badge && <span data-identity-name-badge className="ml-0.5 inline-block align-[calc(0.35em_-_8px)] leading-none [&_[data-verification-badge]]:h-4 [&_[data-verification-badge]]:w-4 [&_[data-verification-badge]]:before:absolute [&_[data-verification-badge]]:before:-inset-1">{badge}</span>}</span></span>
   </span>;
 }

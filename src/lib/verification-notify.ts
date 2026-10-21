@@ -1,3 +1,4 @@
+import { nombreDeSaludo } from "@/lib/nombres";
 import { hasVerificationDocuments } from "@/lib/verification/documents";
 import { cleanId, detectIdType } from "@/lib/cedula";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -50,7 +51,7 @@ export async function notifyVerificationDecision({
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const profile = pro.profiles as any;
-    const firstName = (profile?.full_name ?? "profesional").split(" ")[0];
+    const firstName = nombreDeSaludo(profile?.full_name) || "profesional";
     const email: string | undefined = profile?.email;
 
     let type: string;
@@ -234,7 +235,7 @@ export async function notifyVerificationOutreach(professionalId: string): Promis
   if (error || !pro?.profile_id || !profile?.email) return { ok: false, status: "skipped", detail: "ineligible" };
   const documents = await hasVerificationDocuments(pro.profile_id);
   if (documents !== false) return { ok: false, status: "skipped", detail: documents ? "documents_received" : "review_unavailable" };
-  const firstName = (profile.full_name ?? "profesional").split(" ")[0];
+  const firstName = nombreDeSaludo(profile.full_name) || "profesional";
   const legal = detectIdType(cleanId(profile.cedula ?? "")) === "juridica";
   const reminder = candidate.sequence === 2;
   const instructions = legal

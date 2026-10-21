@@ -1,5 +1,7 @@
 "use client";
 
+import { formatFullPersonName } from "@/lib/display-name";
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Loader2, Search, ShieldOff, Users } from "lucide-react";
 import { Link } from "@/i18n/navigation";
@@ -229,7 +231,7 @@ export function AdminUsers() {
                     </div>
                     <div className="min-w-0">
                       <div className="flex min-w-0 flex-wrap items-center gap-2">
-                        <p className="truncate text-sm font-semibold text-[#162543]">{user.full_name ?? "Sin nombre"}</p>
+                        <p className="truncate text-sm font-semibold text-[#162543]">{formatFullPersonName(user.full_name) || "Sin nombre"}</p>
                         <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold", KIND_CLASS[user.kind])}>
                           {KIND_LABEL[user.kind]}
                         </span>

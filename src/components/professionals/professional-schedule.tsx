@@ -1,5 +1,7 @@
 "use client";
 
+import { getProfessionalDisplayName } from "@/lib/display-name";
+
 import { useMemo, useState, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import { normalizeText } from "@/lib/data/categories";
@@ -361,7 +363,7 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
     <ContactButton
       method="phone"
       professionalId={professional.id}
-      professionalName={professional.fullName}
+      professionalName={getProfessionalDisplayName(professional.fullName, professional.businessName).primaryDesktop}
       contextTitle={categoryName}
       categoryId={activeCategory ?? null}
       source={contactSource}
@@ -380,7 +382,7 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
   // El rótulo «WhatsApp» lo pone el propio lanzador y es el mismo en todo el
   // app; aquí solo se le da la medida de la tarjeta.
   const whatsappDeLaTarjeta = (
-    <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} contextTitle={categoryName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} analyticsSource={stacked ? "profile" : "search"} className={searchMessageButtonClass} buttonLabel={t("whatsappLong")} />
+    <DirectChatLauncher professionalId={professional.id} professionalName={getProfessionalDisplayName(professional.fullName, professional.businessName).primaryDesktop} contextTitle={categoryName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} analyticsSource={stacked ? "profile" : "search"} className={searchMessageButtonClass} buttonLabel={t("whatsappLong")} />
   );
   const contactButtons = showCall ? (
     // Uno arriba del otro, en todos los tamaños, con el rótulo que dice qué
@@ -401,7 +403,7 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
   const chatLauncher = (
     <DirectChatLauncher
       professionalId={professional.id}
-      professionalName={professional.fullName}
+      professionalName={getProfessionalDisplayName(professional.fullName, professional.businessName).primaryDesktop}
       contextTitle={categoryName}
       isOwn={isOwn}
       onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)}

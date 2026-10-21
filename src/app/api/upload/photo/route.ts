@@ -90,8 +90,8 @@ export async function POST(req: Request) {
     const result = await cloudinary.uploader.upload(dataUri, {
       folder: isAvatar ? "contratacr/profiles" : "contratacr/portfolio",
       transformation: isAvatar
-        ? [{ width: 400, height: 400, crop: "fit", quality: "auto", fetch_format: "auto" }]
-        : [{ width: 1600, height: 1600, crop: "limit", quality: "auto", fetch_format: "auto" }],
+        ? [{ width: 800, height: 800, crop: "fit", quality: 92, fetch_format: "auto" }]
+        : [{ width: 1600, height: 1600, crop: "limit", quality: 92, fetch_format: "auto" }],
     });
 
     await recordCloudinaryAsset({

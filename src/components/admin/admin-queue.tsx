@@ -1,5 +1,9 @@
 "use client";
 
+import { formatFullPersonName } from "@/lib/display-name";
+
+import { nombreDeSaludo } from "@/lib/nombres";
+
 import { useEffect, useState, useCallback } from "react";
 import { ChevronRight, Search, Loader2 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
@@ -68,7 +72,7 @@ function contactedAgo(iso?: string | null): string | null {
 function verificationWhatsAppHref(row: Row) {
   const digits = String(row.whatsapp ?? "").replace(/\D/g, "");
   const phone = digits.length === 8 ? `506${digits}` : digits;
-  const firstName = (row.profiles?.full_name ?? "").trim().split(/\s+/)[0] || "";
+  const firstName = nombreDeSaludo(row.profiles?.full_name);
   const service = row.category_id ? getCategoryLabel(row.category_id) : "tu servicio";
   const idLabel = row.identity_type_label && row.identity_type !== "manual" ? ` (${row.identity_type_label})` : "";
   const documents = row.identity_type === "juridica"
@@ -225,7 +229,7 @@ export function AdminQueue() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="line-clamp-2 text-sm font-medium leading-snug text-[#162543] sm:truncate">
-                      {r.profiles?.full_name ?? "Sin nombre"}
+                      {formatFullPersonName(r.profiles?.full_name) || "Sin nombre"}
                     </p>
                     <p className="line-clamp-2 text-xs text-[#6b7280] sm:truncate">
                       {r.profiles?.cedula ? `${formatId(r.profiles.cedula)} · ` : ""}
