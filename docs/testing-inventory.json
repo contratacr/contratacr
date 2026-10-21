@@ -13176,7 +13176,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 201,
+          "line": 200,
           "tag": "a",
           "label": "{`${actionLabel} ContrataCR`}",
           "handler": "{(event) => {\n        if (platform === \"ios\") {\n          event.currentTarget.href = iosAppEntry(location.pathname + location.search + location.hash, location.hostname) ?? iosAppEntry(en ? \"/en\" : \"/\", location.hostname) ?? APP_STORES.ios;\n        } else if (androidAction) {\n          const current = androidAppIntent(location.pathname + location.search + location.hash) ?? androidAppIntent(en ? \"/en\" : \"/\");\n          if (current) event.currentTarget.href = current;\n        }\n      }}",
@@ -13189,7 +13189,8 @@
         "app-download-section",
         "app-download-artwork",
         "app-store-footer-links",
-        "mobile-app-download"
+        "mobile-app-download",
+        "app-platform-label"
       ],
       "relatedSpecs": [
         "tests/e2e/app-download.spec.ts",
@@ -23179,19 +23180,19 @@
           "title": "!/Android/.test(await page.evaluate(() => navigator.userAgent))"
         },
         {
-          "line": 48,
+          "line": 50,
           "title": "'Android action refreshes on return from the store without exposing unrelated apps'"
         },
         {
-          "line": 49,
+          "line": 51,
           "title": "!/Android/.test(await page.evaluate(() => navigator.userAgent))"
         },
         {
-          "line": 67,
+          "line": 69,
           "title": "'installed Android action translates and updates when changing language'"
         },
         {
-          "line": 68,
+          "line": 70,
           "title": "!/Android/.test(await page.evaluate(()=>navigator.userAgent))"
         }
       ]
@@ -24518,11 +24519,11 @@
           "title": "test.info().project.name !== 'webkit-mobile'"
         },
         {
-          "line": 75,
+          "line": 76,
           "title": "'native WebView does not bounce a marked link back to the App Store'"
         },
         {
-          "line": 81,
+          "line": 82,
           "title": "'SSR ignores forged source-host headers and already exposes the localized app action'"
         }
       ]
