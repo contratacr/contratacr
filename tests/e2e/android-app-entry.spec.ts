@@ -32,7 +32,7 @@ for (const state of ['installed', 'missing', 'unsupported', 'error', 'pending'] 
     const banner = page.getByTestId('mobile-app-download');
     await expect(banner).toBeVisible();
     const action = banner.getByRole('link');
-    const label = state === 'installed' ? 'Abrir' : state === 'missing' ? 'Descargar' : 'Abrir o descargar';
+    const label = state === 'installed' ? 'Abrir' : state === 'missing' ? 'Descargar' : 'Continuar';
     await expect(action).toHaveText(label);
     await expect(banner.getByRole('link')).toHaveCount(1);
     await expect(action).toHaveAttribute('href', /intent:\/\/contratacr.com\/profesionales\/soldadura#resenas#Intent/);

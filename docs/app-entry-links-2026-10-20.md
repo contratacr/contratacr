@@ -74,3 +74,9 @@ Verified Android state uses Abrir/Open or Descargar/Download. Unsupported, pendi
 Automated coverage passes for both source hosts, server store redirects, native no-bounce, forged host headers, first HTML, locale switching, public destinations, rejected auth payloads and 320px layouts in mobile WebKit/Chromium and desktop Chromium. The app's existing mobile branch already declares apex and www entitlements, validated with plutil. Existing installed binaries cannot be assumed to have those declarations. Physical signed-device installed/uninstalled confirmation and the previously recorded store gate remain pending; the available iPhone was disconnected. No store upload, version/build increment or signed-device success is claimed.
 
 Android always delegates the tap to its package-specific intent with the fixed Play Store fallback, even after a negative browser lookup. This avoids routing an already-installed older/unreported binary straight to the store; the browser lookup controls only the label.
+
+## Neutral action wording — 21 October 2026
+
+Isaac rejected the combined action label. Unknown install state now uses Continuar/Continue, one neutral word in the selected website language. Verified Android state retains Abrir/Open and Descargar/Download. Routing, fallback, dismissal, one-row layout and native store versions are unchanged. Physical iPhone opening confirmation remains pending; the user response addressed wording only.
+
+Validation for this wording change: 100 browser checks passed across mobile WebKit, mobile Chromium and desktop Chromium; 35 platform-inapplicable checks skipped. TypeScript, focused ESLint, test inventory, diff check and the wordmark contract passed.
