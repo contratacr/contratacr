@@ -191,8 +191,8 @@ export function MobileAppDownloadBanner({ initialNativeIosBanner = false, initia
   const androidAction = platform === "android" && openHref;
   const actionHref = platform === "ios" ? iosHref ?? APP_STORES.ios
     : androidAction ? openHref : APP_STORES.android;
-  const knownAndroid = platform === "android" && androidInstalled !== null;
-  const actionLabel = knownAndroid ? (androidInstalled ? (en ? "Open app" : "Abrir app") : (en ? "Download" : "Descargar"))
+  const actionLabel = platform === "android" && androidInstalled !== true
+    ? (en ? "Use app" : "Usar app")
     : (en ? "Open app" : "Abrir app");
   return <div className="ccr-solo-web ccr-download-banner-wrap lg:hidden" data-testid="mobile-app-download">
     <aside className="ccr-download-banner" aria-label={en ? "ContrataCR mobile app" : "App móvil ContrataCR"}>

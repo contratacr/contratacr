@@ -15,7 +15,7 @@ test('web: tiendas correctas, reserva, teclado y cierre persistente', async ({pa
 
   await expect(banner).toBeVisible();
   const android=await page.evaluate(()=>/Android/.test(navigator.userAgent));
-  await expect(banner.getByRole('link')).toHaveText(android ? 'Descargar' : 'Abrir app');
+  await expect(banner.getByRole('link')).toHaveText(android ? 'Usar app' : 'Abrir app');
   const row=await banner.locator('aside').evaluate(el=>{
     const logo=el.querySelector('[aria-label="ContrataCR"]') ?? el.querySelector('img');
     const action=el.querySelector('a')!;
@@ -157,7 +157,7 @@ test('notice stays at the bottom on public pages and respects account/form route
 
   await expect(notice).toBeVisible();
   await expect(notice).not.toContainText('Llévala contigo');
-  await expect(notice.locator('a')).toHaveText(/^(Abrir app|Descargar)$/);
+  await expect(notice.locator('a')).toHaveText(/^(Abrir app|Usar app)$/);
   await page.evaluate(()=>window.scrollTo(0,400));
   await expect.poll(async()=>{
    const box=await notice.locator('aside').boundingBox();
@@ -383,13 +383,13 @@ for (const locale of ['es', 'en'] as const) {
   const notice=page.getByTestId('mobile-app-download');
   await expect(notice).toBeVisible();
   const android=await page.evaluate(()=>/Android/.test(navigator.userAgent));
-  const label=android?(locale==='en'?'Download':'Descargar'):(locale==='en'?'Open app':'Abrir app');
+  const label=android?(locale==='en'?'Use app':'Usar app'):(locale==='en'?'Open app':'Abrir app');
   await expect(notice.getByRole('link',{name:`${label} ContrataCR`})).toHaveText(label);
   await expect(notice.getByRole('button',{name:locale==='en'?'Dismiss app notice':'Cerrar aviso de la app'})).toBeVisible();
   if(android) await expect(notice).toContainText(locale==='en'?'for':'para');
   await page.getByRole('button',{name:/Abrir menú|Abrir menu|Open menu/}).filter({visible:true}).first().click();
   await expect(page.getByTestId('mobile-menu-store-link').filter({visible:true})).toHaveText(locale==='en'?'Download app':'Descargar app');
   await page.getByRole('button',{name:locale==='en'?'Español':'English',exact:true}).filter({visible:true}).click();
-  await expect(notice.getByRole('link')).toHaveText(android?(locale==='en'?'Descargar':'Download'):(locale==='en'?'Abrir app':'Open app'));
+  await expect(notice.getByRole('link')).toHaveText(android?(locale==='en'?'Usar app':'Use app'):(locale==='en'?'Abrir app':'Open app'));
  });
 }

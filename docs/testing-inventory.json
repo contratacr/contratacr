@@ -23194,6 +23194,18 @@
         {
           "line": 70,
           "title": "!/Android/.test(await page.evaluate(()=>navigator.userAgent))"
+        },
+        {
+          "line": 84,
+          "title": "'published Android app can resolve home through its supported professional route'"
+        },
+        {
+          "line": 101,
+          "title": "'undetected Android installation keeps a usable translated action and a compatible home intent'"
+        },
+        {
+          "line": 102,
+          "title": "!/Android/.test(await page.evaluate(() => navigator.userAgent))"
         }
       ]
     },
