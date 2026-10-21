@@ -31,7 +31,7 @@ for (const state of ['installed', 'missing', 'unsupported', 'error', 'pending'] 
     const banner = page.getByTestId('mobile-app-download');
     await expect(banner).toBeVisible();
     const action = banner.getByRole('link');
-    const label = state === 'installed' ? 'Abrir app' : state === 'missing' ? 'Descargar' : 'Ver app';
+    const label = state === 'installed' ? 'Abrir app' : 'Descargar';
     await expect(action).toHaveText(label);
     await expect(banner.getByRole('link')).toHaveCount(1);
     if (state === 'missing') await expect(action).toHaveAttribute('href', APP_STORES.android);
@@ -59,4 +59,18 @@ test('Android action refreshes on return from the store without exposing unrelat
   await expect(action).toHaveText('Abrir app');
   await page.evaluate(() => { (window as unknown as { qaInstalled: boolean }).qaInstalled = false; window.dispatchEvent(new Event('pageshow')); });
   await expect(action).toHaveText('Descargar');
+});
+
+test('installed Android action translates and updates when changing language',async({page})=>{
+ test.skip(!/Android/.test(await page.evaluate(()=>navigator.userAgent)),'Android only');
+ await page.addInitScript(()=>Object.defineProperty(navigator,'getInstalledRelatedApps',{configurable:true,value:async()=>[{platform:'play',id:'com.contratacr.app'}]}));
+ await page.goto('/proyectos');
+ const action=page.getByTestId('mobile-app-download').getByRole('link');
+ await expect(action).toHaveText('Abrir app');
+ await page.goto('/en/proyectos');
+ await expect(action).toHaveText('Open app');
+ await expect(action).toHaveAttribute('aria-label','Open app ContrataCR');
+ await page.getByRole('button',{name:/Open menu|Abrir menú/}).filter({visible:true}).first().click();
+ await page.getByRole('button',{name:'Español',exact:true}).filter({visible:true}).click();
+ await expect(action).toHaveText('Abrir app');
 });
