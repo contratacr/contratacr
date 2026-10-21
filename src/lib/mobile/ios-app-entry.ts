@@ -20,7 +20,9 @@ export function iosAppEntry(path: string, sourceHostname: string): string | null
  */
 export function iosAppStoreFallback(url: URL, userAgent: string): string | null {
   if (url.searchParams.get(APP_ENTRY_PARAM) !== "ios") return null;
-  if (!/iPhone|iPad|iPod|Macintosh.*Mobile/i.test(userAgent)) return null;
+  // iPad desktop mode reports Macintosh without Mobile. The explicit iOS
+  // marker comes from the touch-aware banner, not from guessing a Mac install.
+  if (!/iPhone|iPad|iPod|Macintosh/i.test(userAgent)) return null;
   if (!smartAppBannerContent(url.pathname + url.search + url.hash)) return null;
   return APP_STORES.ios;
 }
