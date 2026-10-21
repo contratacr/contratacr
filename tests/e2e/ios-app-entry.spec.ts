@@ -43,8 +43,9 @@ test('unclaimed iPhone links reach the store before rendering, without caching o
   }
 });
 
-for (const locale of ['es', 'en']) test(`iPhone has one localized action with a cross-host link at 320px (${locale})`, async ({ page }) => {
+for (const locale of ['es', 'en']) test(`iPhone standalone has one localized action with a cross-host link at 320px (${locale})`, async ({ page }) => {
   test.skip(test.info().project.name !== 'webkit-mobile', 'iPhone presentation');
+  await page.addInitScript(() => Object.defineProperty(navigator, 'standalone', { configurable: true, value: true }));
   await page.setViewportSize({ width: 320, height: 800 });
   await page.goto(locale === 'en' ? '/en/proyectos?categoria=limpieza#detalle' : '/proyectos?categoria=limpieza#detalle');
   const notice = page.getByTestId('mobile-app-download');
@@ -80,7 +81,7 @@ for (const locale of ['es', 'en']) test(`iPhone has one localized action with a 
  });
 
 test('SSR ignores forged source-host headers and already exposes the localized app action', async ({ request, baseURL }) => {
-  const response = await request.get('/en/proyectos', { headers: { 'User-Agent': iphone, 'x-ccr-app-host': 'www.contratacr.com' } });
+  const response = await request.get('/en/proyectos', { headers: { 'User-Agent': iphone.replace('Version/18.0', 'CriOS/142.0'), 'x-ccr-app-host': 'www.contratacr.com' } });
   const html = await response.text();
   expect(response.status()).toBe(200);
   const otherHost = new URL(baseURL!).hostname === "www.contratacr.com" ? "contratacr.com" : "www.contratacr.com";

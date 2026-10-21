@@ -1,5 +1,6 @@
 "use client";
 
+import { prefersNativeIosAppBanner } from "@/lib/mobile/smart-app-banner";
 import { iosAppEntry } from "@/lib/mobile/ios-app-entry";
 import { androidAppIntent, isInstalledAndroidApp, type RelatedApp } from "@/lib/mobile/android-app-entry";
 
@@ -79,11 +80,16 @@ export function AppStoreFooterLinks() {
   </div>;
 }
 
-export function MobileAppDownloadBanner({ initialPlatform = null, initialDismissed = false, initialHostname = "contratacr.com", initialPath }: { initialHostname?: string; initialPath?: string; initialPlatform?: "ios" | "android" | null; initialDismissed?: boolean }) {
+export function MobileAppDownloadBanner({ initialNativeIosBanner = false, initialPlatform = null, initialDismissed = false, initialHostname = "contratacr.com", initialPath }: { initialNativeIosBanner?: boolean; initialHostname?: string; initialPath?: string; initialPlatform?: "ios" | "android" | null; initialDismissed?: boolean }) {
   const native = useNativeApp();
   const en = useLocale() === "en";
   const pathname = usePathname();
   const platform = useSyncExternalStore(subscribeClient, () => mobileDownloadPlatform(navigator.userAgent, navigator.maxTouchPoints), () => initialPlatform);
+  // Safari's own Open action works with existing apex-only installed binaries.
+  // Never add a competing bottom action there; standalone keeps its web notice.
+  const nativeIosBanner = useSyncExternalStore(subscribeClient, () => prefersNativeIosAppBanner(navigator.userAgent, navigator.maxTouchPoints)
+    && !(navigator as Navigator & { standalone?: boolean }).standalone
+    && !window.matchMedia("(display-mode: standalone)").matches, () => initialNativeIosBanner);
   const storedDismissal = useSyncExternalStore(subscribeClient, () => {
     const cookie = document.cookie.split(";").map(item => item.trim()).find(item => item.startsWith(`${DOWNLOAD_DISMISS_COOKIE}=`))?.split("=")[1];
     if (Number(cookie ?? 0) > Date.now()) return true;
@@ -133,7 +139,7 @@ export function MobileAppDownloadBanner({ initialPlatform = null, initialDismiss
     let alignAllowed = true;
     const stopAligning = () => { alignAllowed = false; };
     const alignDownload = () => {
-      if (cancelled || !alignAllowed || native || location.hash !== "#descargar-app" || !window.matchMedia("(max-width: 1023px)").matches) return;
+      if (cancelled || !alignAllowed || native || location.hash !== "#descargar-app") return;
       const section = document.getElementById("descargar-app");
       if (!section) return;
       const headerBottom = Math.max(0, ...Array.from(document.querySelectorAll("header")).map(el => el.getBoundingClientRect()).filter(rect => rect.height > 0).map(rect => rect.bottom));
@@ -143,7 +149,7 @@ export function MobileAppDownloadBanner({ initialPlatform = null, initialDismiss
     const sync = (event?: Event) => {
       const requested = location.hash === "#descargar-app";
       setDownloadRequested(requested);
-      if (requested && window.matchMedia("(max-width: 1023px)").matches && !native) {
+      if (requested && !native) {
         alignAllowed = true;
         if (event?.type === "hashchange") setDismissed(false);
         requestAnimationFrame(alignDownload);
@@ -174,7 +180,7 @@ export function MobileAppDownloadBanner({ initialPlatform = null, initialDismiss
   }, [eligible, native]);
   // A compact desktop window uses the mobile layout, but is not a mobile
   // device. Require a detected platform before rendering or reserving space.
-  const visible = platform !== null && !native && eligible && (!storedDismissal || downloadRequested) && !dismissed && !blocked;
+  const visible = platform !== null && !native && !nativeIosBanner && eligible && (!storedDismissal || downloadRequested) && !dismissed && !blocked;
   useLayoutEffect(() => {
     const root = document.documentElement;
     if (visible) root.setAttribute("data-web-download-banner", "");
