@@ -343,17 +343,6 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
             </PantallaDeExito>
           ) : (
             <div ref={cuerpo} className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain bg-white px-4 py-5 sm:max-h-[calc(90vh-145px)] sm:flex-none">
-              {!editar && (
-                <div className="mb-5 space-y-2 px-1">
-                  <p className="text-sm leading-relaxed text-[#526277]">{t("purpose")}</p>
-                  <Link
-                    href={yaEsProfesional ? "/dashboard/profesional?tab=services" : user ? "/continuar-perfil" : "/registro/profesional"}
-                    className="inline-block text-sm font-medium leading-relaxed text-[#007fae] underline-offset-4 hover:underline"
-                  >
-                    {t("offerServices")}
-                  </Link>
-                </div>
-              )}
               <div className="flex flex-col gap-6 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
                 <div ref={categoryFieldRef}>
                   <label className={fieldLabel}>{t("category")}{obligatorio}</label>
