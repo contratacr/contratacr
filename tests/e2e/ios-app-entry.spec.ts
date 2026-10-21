@@ -49,7 +49,7 @@ for (const locale of ['es', 'en']) test(`iPhone has one localized action with a 
   await page.goto(locale === 'en' ? '/en/proyectos?categoria=limpieza#detalle' : '/proyectos?categoria=limpieza#detalle');
   const notice = page.getByTestId('mobile-app-download');
   const action = notice.getByRole('link');
-  await expect(action).toHaveText(locale === 'en' ? 'Open or download' : 'Abrir o descargar');
+  await expect(action).toHaveText(locale === 'en' ? 'Continue' : 'Continuar');
   await expect(action).toHaveAttribute('href', /https:\/\/www\.contratacr\.com\/.*_ccr_open=ios/);
   await expect(notice.getByRole('link')).toHaveCount(1);
   await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveCount(0);
@@ -84,6 +84,6 @@ test('SSR ignores forged source-host headers and already exposes the localized a
   expect(response.status()).toBe(200);
   const otherHost = new URL(baseURL!).hostname === "www.contratacr.com" ? "contratacr.com" : "www.contratacr.com";
   expect(html).toContain(`href="https://${otherHost}/en/proyectos?_ccr_open=ios"`);
-  expect(html).toContain('Open or download');
+  expect(html).toContain('Continue');
   expect(html).not.toContain('name="apple-itunes-app"');
 });
