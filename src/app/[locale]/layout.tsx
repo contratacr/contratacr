@@ -1,5 +1,4 @@
 import { SmartAppBanner } from "@/components/mobile/smart-app-banner";
-import { prefersNativeIosAppBanner } from "@/lib/mobile/smart-app-banner";
 import { getSessionMfa } from "@/lib/auth/session-mfa";
 import { SessionMfaGate } from "@/components/auth/session-mfa-gate";
 import { PWA_STARTUP_IMAGES } from "@/lib/pwa-startup";
@@ -220,7 +219,7 @@ export default async function LocaleLayout({
             <UsageCapture />
           </Suspense>
           <PushTokenManager />
-          <MobileAppDownloadBanner initialPlatform={initialDownloadPlatform} initialDismissed={initialDownloadDismissed} initialNativeIosBanner={prefersNativeIosAppBanner((await headers()).get("user-agent") ?? "")} />
+          <MobileAppDownloadBanner initialPlatform={initialDownloadPlatform} initialDismissed={initialDownloadDismissed} />
           {initialMfa.required ? null : children}
           <NativeBottomNav />
           <WhatsAppReviewFollowUp />

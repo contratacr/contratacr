@@ -21,22 +21,20 @@ test("Apple association covers homepage and exact professional search without br
   for(const path of ['/*','/auth/*','/api/*','/admin*','/login'])expect(paths).not.toContain(path);
   expect(association.webcredentials.apps).toEqual(['LPB3Q4LJ5Z.com.contratacr.app']);
 });
-test("Safari receives only its native banner before opening the menu; other browsers and standalone use the custom notice",async({page,context,baseURL})=>{
-  const safari=prefersNativeIosAppBanner(await page.evaluate(()=>navigator.userAgent));
+test("public web pages use one localized notice without Apple promotion metadata",async({page,context,baseURL})=>{
   const response=await page.goto('/profesionales?ubicacion=Heredia');
   const html=await response!.text();
-  expect(html.includes('name="apple-itunes-app"')).toBe(safari);
-  await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveCount(safari?1:0);
-  if(safari) await expect(page.getByTestId('mobile-app-download')).toHaveCount(0);
+  expect(html.includes('name="apple-itunes-app"')).toBe(false);
+  await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveCount(0);
+  if((page.viewportSize()?.width??1280)<1024) await expect(page.getByTestId('mobile-app-download')).toBeVisible();
   await waitForInteractivePage(page);
   if((page.viewportSize()?.width??1280)<1024){
     await page.getByRole('button',{name:/Abrir menú|Abrir menu/}).filter({visible:true}).first().click();
     await expect(page.getByTestId('mobile-menu-store-link').filter({visible:true})).toBeVisible();
     await expect(page.getByTestId('mobile-menu-store-link').filter({visible:true})).toHaveAttribute('href','/descargar');
-    await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveCount(safari?1:0);
+    await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveCount(0);
   }
   await page.goto('/en/proyectos');
-  if(safari) await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveAttribute('content',/app-argument=https:\/\/contratacr.com\/en\/proyectos/);
   await page.goto('/login');
   await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveCount(0);
   await expect(page.getByTestId('mobile-app-download')).toHaveCount(0);
@@ -59,7 +57,7 @@ for (const browserToken of ['CriOS/142.0', '[FBAN/FBIOS]']) {
    await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveCount(0);
    const notice=page.getByTestId('mobile-app-download');
    await expect(notice).toBeVisible();
-   await expect(notice.getByRole('link')).toHaveText('Download');
+   await expect(notice.getByRole('link')).toHaveText('Use app');
    await expect(notice.getByRole('link')).toHaveAttribute('href',/apps\.apple\.com/);
   }finally{await context.close();}
  });

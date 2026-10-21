@@ -2,7 +2,6 @@
 
 import { androidAppIntent, isInstalledAndroidApp, type RelatedApp } from "@/lib/mobile/android-app-entry";
 
-import { prefersNativeIosAppBanner, smartAppBannerContent } from "@/lib/mobile/smart-app-banner";
 import { mobileDownloadPlatform, DOWNLOAD_DISMISS_COOKIE } from "@/lib/mobile-download-platform";
 import Image from "next/image";
 import { ContrataCRLogo } from "@/components/brand/brand-logo";
@@ -79,14 +78,10 @@ export function AppStoreFooterLinks() {
   </div>;
 }
 
-export function MobileAppDownloadBanner({ initialPlatform = null, initialDismissed = false, initialNativeIosBanner = false }: { initialPlatform?: "ios" | "android" | null; initialDismissed?: boolean; initialNativeIosBanner?: boolean }) {
+export function MobileAppDownloadBanner({ initialPlatform = null, initialDismissed = false }: { initialPlatform?: "ios" | "android" | null; initialDismissed?: boolean }) {
   const native = useNativeApp();
   const en = useLocale() === "en";
   const pathname = usePathname();
-  // Safari owns installation-aware Open/Download UI. Never stack our notice
-  // underneath it, including when Safari hides or remembers closing its banner.
-  // A home-screen web app cannot show that Safari UI and gets our store notice.
-  const nativeIosBanner = useSyncExternalStore(subscribeClient, () => prefersNativeIosAppBanner(navigator.userAgent) && !(navigator as Navigator & { standalone?: boolean }).standalone && !window.matchMedia("(display-mode: standalone)").matches, () => initialNativeIosBanner) && smartAppBannerContent(pathname) !== null;
   const platform = useSyncExternalStore(subscribeClient, () => mobileDownloadPlatform(navigator.userAgent, navigator.maxTouchPoints), () => initialPlatform);
   const storedDismissal = useSyncExternalStore(subscribeClient, () => {
     const cookie = document.cookie.split(";").map(item => item.trim()).find(item => item.startsWith(`${DOWNLOAD_DISMISS_COOKIE}=`))?.split("=")[1];
@@ -170,7 +165,7 @@ export function MobileAppDownloadBanner({ initialPlatform = null, initialDismiss
   }, [eligible, native]);
   // A compact desktop window uses the mobile layout, but is not a mobile
   // device. Require a detected platform before rendering or reserving space.
-  const visible = platform !== null && !native && !nativeIosBanner && eligible && (!storedDismissal || downloadRequested) && !dismissed && !blocked;
+  const visible = platform !== null && !native && eligible && (!storedDismissal || downloadRequested) && !dismissed && !blocked;
   useLayoutEffect(() => {
     const root = document.documentElement;
     if (visible) root.setAttribute("data-web-download-banner", "");
@@ -180,11 +175,11 @@ export function MobileAppDownloadBanner({ initialPlatform = null, initialDismiss
   if (!visible || !platform) return null;
   const androidAction = platform === "android" && openHref;
   const actionHref = androidAction && androidInstalled !== false ? openHref : APP_STORES[platform];
-  const actionLabel = androidAction && androidInstalled === true ? (en ? "Open app" : "Abrir app")
-    : (en ? "Download" : "Descargar");
+  // A neutral action remains accurate whether the app is installed or not.
+  const actionLabel = en ? "Use app" : "Usar app";
   return <div className="ccr-solo-web ccr-download-banner-wrap lg:hidden" data-testid="mobile-app-download">
-    <aside className="ccr-download-banner" aria-label={en ? "Download ContrataCR" : "Descargar ContrataCR"}>
-      <button type="button" aria-label={en ? "Dismiss download notice" : "Cerrar aviso de descarga"} className="flex h-11 w-8 shrink-0 items-center justify-center text-[#64748b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]" onClick={() => { setDismissed(true); const until = String(Date.now() + 30 * 86400000); document.cookie = `${DOWNLOAD_DISMISS_COOKIE}=${until}; Path=/; Max-Age=2592000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`; try { localStorage.setItem(DISMISSED_KEY, until); } catch {} }}><X aria-hidden="true" className="h-[18px] w-[18px]" /></button>
+    <aside className="ccr-download-banner" aria-label={en ? "ContrataCR mobile app" : "App móvil ContrataCR"}>
+      <button type="button" aria-label={en ? "Dismiss app notice" : "Cerrar aviso de la app"} className="flex h-11 w-8 shrink-0 items-center justify-center text-[#64748b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]" onClick={() => { setDismissed(true); const until = String(Date.now() + 30 * 86400000); document.cookie = `${DOWNLOAD_DISMISS_COOKIE}=${until}; Path=/; Max-Age=2592000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`; try { localStorage.setItem(DISMISSED_KEY, until); } catch {} }}><X aria-hidden="true" className="h-[18px] w-[18px]" /></button>
       <div className="flex min-w-0 flex-1 items-center gap-1 whitespace-nowrap">
         <ContrataCRLogo className="shrink-0 max-[389px]:[&>img:first-child]:h-7 max-[389px]:[&>img:first-child]:w-7 max-[389px]:[&>img:last-child]:h-[21px] max-[389px]:[&>img:last-child]:w-[92px]" />
         <span className="text-[10px] leading-5 text-[#162543] min-[390px]:text-[11px]">
