@@ -7,6 +7,7 @@ import { test, expect } from 'playwright/test';
 test('web: tiendas correctas, reserva, teclado y cierre persistente', async ({page}) => {
   if(test.info().project.name==='android-download')await page.setViewportSize({width:320,height:780});
   test.skip((page.viewportSize()?.width ?? 1280) >= 1024, "The download notice only appears on mobile web.");
+ if(test.info().project.name==='webkit-mobile') await page.addInitScript(()=>Object.defineProperty(navigator,'standalone',{configurable:true,value:true}));
   await page.addInitScript(() => Object.defineProperty(navigator, 'getInstalledRelatedApps', { configurable: true, value: async () => [] }));
   await page.goto('/');
   await expect(page.getByTestId('app-download-section')).toBeVisible();
@@ -57,6 +58,7 @@ test('web forms never display download banner',async({page})=>{
 
 
 test('shared download anchor always remains useful, including after dismissing the mobile notice',async({page})=>{
+ if(test.info().project.name==='webkit-mobile') await page.addInitScript(()=>Object.defineProperty(navigator,'standalone',{configurable:true,value:true}));
  await page.goto('/#descargar-app');
  if ((page.viewportSize()?.width ?? 1280) < 1024) {
   const banner=page.getByTestId('mobile-app-download');
@@ -107,6 +109,12 @@ test('mobile download notice and header are correctly positioned before JavaScri
   const noticeLocator=cold.getByTestId('mobile-app-download');
   const header=await cold.getByTestId('landing-navbar').boundingBox();
 
+  if(test.info().project.name==='webkit-mobile') {
+   await expect(noticeLocator).toHaveCount(0);
+   await expect(cold.locator('meta[name="apple-itunes-app"]')).toHaveAttribute('content','app-id=6794559661, app-argument=https://contratacr.com/');
+   expect(header?.y).toBe(0);
+   return;
+  }
   const notice=await noticeLocator.boundingBox();
   expect(notice).not.toBeNull();
   expect(notice!.y + notice!.height).toBeCloseTo(844, 0);
@@ -141,6 +149,7 @@ test('narrow desktop windows have no mobile notice or navbar gap, while download
 
 test('notice stays at the bottom on public pages and respects account/form routes',async({page})=>{
  test.skip((page.viewportSize()?.width ?? 1280)>=1024, "The download notice only appears on mobile web.");
+ if(test.info().project.name==='webkit-mobile') await page.addInitScript(()=>Object.defineProperty(navigator,'standalone',{configurable:true,value:true}));
  for(const route of ['/proyectos','/empleos','/promociones','/profesionales','/ayuda']) {
   await page.goto(route);
   await waitForInteractivePage(page);
@@ -260,6 +269,7 @@ test('home-screen launch shell is public, white and independent of the session',
 
 test('mobile listings stay behind the download notice and keep their last result reachable', async ({page}) => {
  test.skip((page.viewportSize()?.width ?? 1280)>=1024, 'The download notice only appears on mobile web.');
+ if(test.info().project.name==='webkit-mobile') await page.addInitScript(()=>Object.defineProperty(navigator,'standalone',{configurable:true,value:true}));
  for (const route of ['/empleos','/proyectos','/promociones']) {
   await page.goto(route);
   const banner=page.getByTestId('mobile-app-download');
@@ -345,6 +355,11 @@ for (const standalone of [false, true]) {
   await page.goto('/profesionales');
   const notice=page.getByTestId('mobile-app-download');
 
+  if(!standalone) {
+   await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveAttribute('content','app-id=6794559661, app-argument=https://contratacr.com/profesionales');
+   await expect(notice).toHaveCount(0);
+   return;
+  }
   await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveCount(0);
   await expect(notice).toBeVisible();
   await expect(notice.getByRole('link')).toHaveText('Abrir app');

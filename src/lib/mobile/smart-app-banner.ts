@@ -2,8 +2,8 @@ import { campaignAppPath, hasAuthLinkPayload } from "./campaign-app-link";
 
 export const IOS_APP_STORE_ID = "6794559661";
 
-export function prefersNativeIosAppBanner(userAgent: string): boolean {
-  const ios = /iPhone|iPad|iPod/i.test(userAgent) || /Macintosh.*Mobile/i.test(userAgent);
+export function prefersNativeIosAppBanner(userAgent: string, touchPoints = 0): boolean {
+  const ios = /iPhone|iPad|iPod/i.test(userAgent) || (/Macintosh/i.test(userAgent) && (/Mobile/i.test(userAgent) || touchPoints > 1));
   return ios && /Version\/[\d.]+.*Safari\//i.test(userAgent) && !/CriOS|FxiOS|EdgiOS|OPiOS|FBAN|FBIOS|Instagram|GSA\/|MicroMessenger|Line\//i.test(userAgent);
 }
 

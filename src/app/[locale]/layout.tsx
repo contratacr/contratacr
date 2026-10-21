@@ -1,4 +1,5 @@
 import { SmartAppBanner } from "@/components/mobile/smart-app-banner";
+import { smartAppBannerContent, prefersNativeIosAppBanner } from "@/lib/mobile/smart-app-banner";
 import { getSessionMfa } from "@/lib/auth/session-mfa";
 import { SessionMfaGate } from "@/components/auth/session-mfa-gate";
 import { PWA_STARTUP_IMAGES } from "@/lib/pwa-startup";
@@ -209,7 +210,7 @@ export default async function LocaleLayout({
           <SombrasAlDesplazar />
           <AppResumeRecovery />
           <CampaignAppLinks />
-          <Suspense fallback={null}><SmartAppBanner /></Suspense>
+          <Suspense fallback={null}><SmartAppBanner initialContent={(await cookies()).get("ccr_platform")?.value !== "native" && prefersNativeIosAppBanner((await headers()).get("user-agent") ?? "") ? smartAppBannerContent((await headers()).get("x-ccr-app-path") ?? "/") : null} /></Suspense>
           <CustomCategoriesLoader />
           <NotificationLiveToast scope="all" />
           <OperationalStatusBanner locale={locale} status={operationalStatus} />
@@ -219,7 +220,7 @@ export default async function LocaleLayout({
             <UsageCapture />
           </Suspense>
           <PushTokenManager />
-          <MobileAppDownloadBanner initialPlatform={initialDownloadPlatform} initialDismissed={initialDownloadDismissed} initialHostname={(await headers()).get("x-ccr-app-host") ?? "contratacr.com"} initialPath={(await headers()).get("x-ccr-app-path") ?? undefined} />
+          <MobileAppDownloadBanner initialNativeIosBanner={prefersNativeIosAppBanner((await headers()).get("user-agent") ?? "")} initialPlatform={initialDownloadPlatform} initialDismissed={initialDownloadDismissed} initialHostname={(await headers()).get("x-ccr-app-host") ?? "contratacr.com"} initialPath={(await headers()).get("x-ccr-app-path") ?? undefined} />
           {initialMfa.required ? null : children}
           <NativeBottomNav />
           <WhatsAppReviewFollowUp />
