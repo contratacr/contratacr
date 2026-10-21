@@ -3,7 +3,7 @@
 import { useSyncExternalStore } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useNativeApp } from "@/hooks/use-native-app";
-import { smartAppBannerContent, prefersNativeIosAppBanner } from "@/lib/mobile/smart-app-banner";
+import { smartAppBannerContent, appBannerPresentation } from "@/lib/mobile/smart-app-banner";
 
 function subscribe(callback: () => void) {
   window.addEventListener("hashchange", callback);
@@ -24,7 +24,7 @@ export function SmartAppBanner({ initialContent = null }: { initialContent?: str
   const params = useSearchParams();
   const content = useSyncExternalStore(subscribe, () => {
     const standalone = (navigator as Navigator & { standalone?: boolean }).standalone || window.matchMedia("(display-mode: standalone)").matches;
-    if (native || standalone || !prefersNativeIosAppBanner(navigator.userAgent, navigator.maxTouchPoints)) return null;
+    if (appBannerPresentation(navigator.userAgent, navigator.maxTouchPoints, standalone, native) !== "apple") return null;
     return smartAppBannerContent(pathname + (params.size ? `?${params}` : "") + location.hash);
   }, () => initialContent);
   return content ? <meta name="apple-itunes-app" content={content} /> : null;

@@ -1,6 +1,6 @@
 "use client";
 
-import { prefersNativeIosAppBanner } from "@/lib/mobile/smart-app-banner";
+import { appBannerPresentation } from "@/lib/mobile/smart-app-banner";
 import { iosAppEntry } from "@/lib/mobile/ios-app-entry";
 import { androidAppIntent, isInstalledAndroidApp, type RelatedApp } from "@/lib/mobile/android-app-entry";
 
@@ -87,9 +87,8 @@ export function MobileAppDownloadBanner({ initialNativeIosBanner = false, initia
   const platform = useSyncExternalStore(subscribeClient, () => mobileDownloadPlatform(navigator.userAgent, navigator.maxTouchPoints), () => initialPlatform);
   // Safari's own Open action works with existing apex-only installed binaries.
   // Never add a competing bottom action there; standalone keeps its web notice.
-  const nativeIosBanner = useSyncExternalStore(subscribeClient, () => prefersNativeIosAppBanner(navigator.userAgent, navigator.maxTouchPoints)
-    && !(navigator as Navigator & { standalone?: boolean }).standalone
-    && !window.matchMedia("(display-mode: standalone)").matches, () => initialNativeIosBanner);
+  const nativeIosBanner = useSyncExternalStore(subscribeClient, () => appBannerPresentation(navigator.userAgent, navigator.maxTouchPoints,
+    Boolean((navigator as Navigator & { standalone?: boolean }).standalone || window.matchMedia("(display-mode: standalone)").matches), native) === "apple", () => initialNativeIosBanner);
   const storedDismissal = useSyncExternalStore(subscribeClient, () => {
     const cookie = document.cookie.split(";").map(item => item.trim()).find(item => item.startsWith(`${DOWNLOAD_DISMISS_COOKIE}=`))?.split("=")[1];
     if (Number(cookie ?? 0) > Date.now()) return true;

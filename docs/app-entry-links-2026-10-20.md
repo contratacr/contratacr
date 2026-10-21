@@ -125,3 +125,29 @@ The old APK also lacks the reverse asset statement required by Chrome's related-
 The distinction between the user's Safari home-screen web app and App Store native app remains a clarification request. No service worker/cache storage implementation was found in src/public; do not reset user sessions or add speculative cache purges. Native manifest/entitlement changes still require a separately authorized signed store release. No store upload or build/version change in this correction.
 
 Validation: 118 browser checks passed, with 41 platform-inapplicable skips, across mobile WebKit/mobile Chromium/desktop Chromium. Coverage includes all Android lookup states, ES/EN, the old-binary compatible home entry and native destination restoration, Safari native-only metadata, standalone PWA behavior, dismissal, geometry, keyboard and required cold-font brand checks. Updated download notice assertions to the new neutral unknown state. TypeScript, focused ESLint, wordmark contract, inventory and diff checks passed. Production home returns private/no-store and the PWA launch shell requires revalidation; no speculative cache change was applied.
+
+
+## Exclusive banner ownership and browser validation — 21 October 2026
+
+Isaac authorized applying the researched recommendation, testing installed/missing-app behavior in different browsers, and pushing without a store submission. Safari remains Apple-only; home-screen web apps and other mobile browsers use the existing single-row localized, dismissible notice; native Capacitor and desktop have no mobile notice. Both React banner components now use the same presentation decision. Explicit DuckDuckGo/Yandex/Brave/Opera Touch browser tokens no longer masquerade as Safari; previously those tokens could suppress the owned notice where Apple's native UI is unavailable. No provider/SDK, new tracking, native version bump or store upload was added.
+
+### Actual Android browser checks
+
+Used the existing Android Google Play QA emulator, Chrome 133.0.6943.137 and Firefox 158.0.2 (APK obtained from Mozilla's official archive). Preserved and restored the exact installed ContrataCR 1.0.11/15 APK and kept its data. Missing-app checks removed the package for emulator user 0 with data retained, verified it was absent from the installed-package list, then restored the original APK and enabled state. No physical device, user account, default-browser choice or always-open preference was changed.
+
+| Browser | ContrataCR installed | ContrataCR absent | Notice |
+| --- | --- | --- | --- |
+| Chrome Android | Home notice tap brought com.contratacr.app/.MainActivity to foreground | Tap opened com.android.vending (Google Play) | One localized owned notice |
+| Firefox Android | Notice tap, then Firefox's own Open in App confirmation, opened com.contratacr.app/.MainActivity | English notice tap, then browser confirmation, opened com.android.vending | One localized owned notice |
+
+Firefox's permission to leave the browser is browser-controlled and is not a duplicate ContrataCR promotion. The default Ask behavior was retained. Chrome automation initially waited for a browser navigation after the OS had already switched to the native app; later verification observed the foreground activity instead. The absent-app scripts restored the original package in a finally block and the restored package was checked.
+
+### Presentation and regression coverage
+
+Added clearly labeled UA/lookup fixtures for Safari, Chrome, Firefox, Edge, DuckDuckGo, Instagram, Facebook and Google on iOS; Chrome, Samsung Internet, Firefox, Edge, Instagram and Facebook on Android. These exercise one-banner ownership, ES/EN and positive/unknown installation lookups. They validate rendered HTML and destinations, not actual handoff in those 14 browsers. The existing PWA/standalone, native suppression, dismissal, keyboard, geometry, SSR, locale transitions and cold-font wordmark tests remain.
+
+The first new iOS fixtures navigated away while the background category request was still loading; WebKit emitted access-control errors for the aborted request. The fixture now waits for the existing page-interactive/network-idle helper before switching locale, retaining the strict pageerror assertion. Final shared round: 131 passed, 73 skipped (platform or isolated-account prerequisites); the four seeded menu checks skipped from MAIN passed in a separate 8/8 menu run from the TEST checkout (four of those eight overlap the shared round). TypeScript, focused ESLint, brand contract, inventory and diff checks passed.
+
+### Remaining checks and native release boundary
+
+There is no connected physical phone in this run. Apple's Smart App Banner itself cannot be validated in an iOS simulator; its SSR metadata/absence of an owned competing notice were checked in WebKit, and Isaac previously confirmed native OPEN opens his installed iPhone app. Actual Safari/PWA opening installed/absent and physical Samsung Internet/embedded-browser handoffs remain device checks, not certified by UA fixtures. The mobile branch already declares both apex/www associated domains and exact Android homepage routes; activating those capabilities in old installed binaries requires a separately authorized signed App Store/Google Play update. In particular, older iOS apex-only binaries can still reach App Store from the cross-host owned action outside Safari. Do not claim the web push fixes those signed entitlements.
