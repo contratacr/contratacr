@@ -5,6 +5,7 @@ import { brandedEmailDocument } from "../../src/lib/email/send";
 test("campaign links preserve section, query and fragment without accepting external or auth routes", () => {
   expect(campaignAppPath("https://contratacr.com/?utm_source=google")).toBe("/?utm_source=google");
   expect(campaignAppPath("https://contratacr.com/en")).toBe("/en");
+  expect(campaignAppPath("https://www.contratacr.com/en/proyectos?categoria=limpieza&_ccr_open=ios#detalle")).toBe("/en/proyectos?categoria=limpieza#detalle");
   expect(campaignAppPath("https://contratacr.com/profesionales?categoria=soldadura")).toBe("/profesionales?categoria=soldadura");
   expect(campaignAppPath("https://contratacr.com/dashboard/profesional?tab=completion#precio")).toBe("/dashboard/profesional?tab=completion#precio");
   expect(campaignAppPath("https://contratacr.com/en/empleos/123")).toBe("/en/empleos/123");

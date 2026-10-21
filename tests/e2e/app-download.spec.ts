@@ -13,7 +13,8 @@ test('web: tiendas correctas, reserva, teclado y cierre persistente', async ({pa
   const banner=page.getByTestId('mobile-app-download');
 
   await expect(banner).toBeVisible();
-  await expect(banner.getByRole('link')).toHaveText('Usar app');
+  const android=await page.evaluate(()=>/Android/.test(navigator.userAgent));
+  await expect(banner.getByRole('link')).toHaveText(android ? 'Descargar' : 'Abrir o descargar');
   const row=await banner.locator('aside').evaluate(el=>{
     const logo=el.querySelector('[aria-label="ContrataCR"]') ?? el.querySelector('img');
     const action=el.querySelector('a')!;
@@ -22,8 +23,7 @@ test('web: tiendas correctas, reserva, teclado y cierre persistente', async ({pa
   });
   expect(row).toEqual({sameRow:true,overflow:false});
 
-  const android=await page.evaluate(()=>/Android/.test(navigator.userAgent));
-  await expect(banner.locator('a')).toHaveAttribute('href',android?/play\.google\.com\/store\/apps\/details\?id=com\.contratacr\.app/:/apps\.apple\.com\/cr\/app\/contratacr\/id6794559661/);
+  await expect(banner.locator('a')).toHaveAttribute('href',android?/play\.google\.com\/store\/apps\/details\?id=com\.contratacr\.app/:/^https:\/\/www\.contratacr\.com\/\?_ccr_open=ios$/);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   const notice=await banner.locator('aside').boundingBox(), header=await page.getByTestId('landing-navbar').boundingBox();
   expect(notice!.y + notice!.height).toBeCloseTo(await page.evaluate(()=>(window.visualViewport?.height ?? innerHeight) + (window.visualViewport?.offsetTop ?? 0)), 0);
@@ -148,7 +148,7 @@ test('notice stays at the bottom on public pages and respects account/form route
 
   await expect(notice).toBeVisible();
   await expect(notice).not.toContainText('Llévala contigo');
-  await expect(notice.locator('a')).toHaveText('Usar app');
+  await expect(notice.locator('a')).toHaveText(/^(Abrir o descargar|Descargar|Abrir)$/);
   await page.evaluate(()=>window.scrollTo(0,400));
   await expect.poll(async()=>{
    const box=await notice.locator('aside').boundingBox();
@@ -347,8 +347,8 @@ for (const standalone of [false, true]) {
 
   await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveCount(0);
   await expect(notice).toBeVisible();
-  await expect(notice.getByRole('link')).toHaveText('Usar app');
-  await expect(notice.getByRole('link')).toHaveAttribute('href',/apps\.apple\.com/);
+  await expect(notice.getByRole('link')).toHaveText('Abrir o descargar');
+  await expect(notice.getByRole('link')).toHaveAttribute('href',/^https:\/\/www\.contratacr\.com\/profesionales\?_ccr_open=ios$/);
   if (process.env.DOWNLOAD_DESIGN_EVIDENCE) {
    mkdirSync(process.env.DOWNLOAD_DESIGN_EVIDENCE,{recursive:true});
    await page.screenshot({path:`${process.env.DOWNLOAD_DESIGN_EVIDENCE}/iphone-${standalone?'inicio':'safari'}.png`});
@@ -367,13 +367,14 @@ for (const locale of ['es', 'en'] as const) {
   await page.goto(locale==='en'?'/en/proyectos':'/proyectos');
   const notice=page.getByTestId('mobile-app-download');
   await expect(notice).toBeVisible();
-  const label=locale==='en'?'Use app':'Usar app';
+  const android=await page.evaluate(()=>/Android/.test(navigator.userAgent));
+  const label=android?(locale==='en'?'Download':'Descargar'):(locale==='en'?'Open or download':'Abrir o descargar');
   await expect(notice.getByRole('link',{name:`${label} ContrataCR`})).toHaveText(label);
   await expect(notice.getByRole('button',{name:locale==='en'?'Dismiss app notice':'Cerrar aviso de la app'})).toBeVisible();
-  await expect(notice).toContainText(locale==='en'?'for':'para');
+  if(android) await expect(notice).toContainText(locale==='en'?'for':'para');
   await page.getByRole('button',{name:/Abrir menú|Abrir menu|Open menu/}).filter({visible:true}).first().click();
   await expect(page.getByTestId('mobile-menu-store-link').filter({visible:true})).toHaveText(locale==='en'?'Download app':'Descargar app');
   await page.getByRole('button',{name:locale==='en'?'Español':'English',exact:true}).filter({visible:true}).click();
-  await expect(notice.getByRole('link')).toHaveText(locale==='en'?'Usar app':'Use app');
+  await expect(notice.getByRole('link')).toHaveText(android?(locale==='en'?'Descargar':'Download'):(locale==='en'?'Abrir o descargar':'Open or download'));
  });
 }

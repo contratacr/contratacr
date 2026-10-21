@@ -8,7 +8,7 @@
     "handlers": 104,
     "components": 257,
     "hooks": 26,
-    "specs": 155
+    "specs": 156
   },
   "dashboardTabs": [
     "home",
@@ -13144,7 +13144,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 27,
+          "line": 28,
           "tag": "a",
           "label": "{`${en ? \"Download on\" : \"Descargar en\"} ${platform === \"ios\" ? \"App Store\" : \"Google Play\"}`}",
           "handler": "",
@@ -13152,7 +13152,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 76,
+          "line": 77,
           "tag": "a",
           "label": "{en ? \"Download ContrataCR for iOS\" : \"Descargar ContrataCR para iOS\"}",
           "handler": "",
@@ -13160,7 +13160,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 77,
+          "line": 78,
           "tag": "a",
           "label": "{en ? \"Download ContrataCR for Android\" : \"Descargar ContrataCR para Android\"}",
           "handler": "",
@@ -13168,7 +13168,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 182,
+          "line": 193,
           "tag": "button",
           "label": "{en ? \"Dismiss app notice\" : \"Cerrar aviso de la app\"}",
           "handler": "{() => { setDismissed(true); const until = String(Date.now() + 30 * 86400000); document.cookie = `${DOWNLOAD_DISMISS_COOKIE}=${until}; Path=/; Max-Age=2592000; SameSite=Lax${location.protocol === \"https:\" ? \"; Secure\" : \"\"}`; try { localStorage.setItem(DISMISSED_KEY, until); } catch {} }}",
@@ -13176,10 +13176,10 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 190,
+          "line": 201,
           "tag": "a",
           "label": "{`${actionLabel} ContrataCR`}",
-          "handler": "{(event) => {\n        if (androidAction && androidInstalled !== false) {\n          const current = androidAppIntent(location.pathname + location.search + location.hash);\n          if (current) event.currentTarget.href = current;\n        }\n      }}",
+          "handler": "{(event) => {\n        if (platform === \"ios\") {\n          event.currentTarget.href = iosAppEntry(location.pathname + location.search + location.hash, location.hostname) ?? iosAppEntry(en ? \"/en\" : \"/\", location.hostname) ?? APP_STORES.ios;\n        } else if (androidAction && androidInstalled !== false) {\n          const current = androidAppIntent(location.pathname + location.search + location.hash) ?? androidAppIntent(en ? \"/en\" : \"/\");\n          if (current) event.currentTarget.href = current;\n        }\n      }}",
           "destination": "{actionHref ?? APP_STORES[platform]}",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         }
@@ -13198,6 +13198,7 @@
       "directReferences": [
         "tests/e2e/android-app-entry.spec.ts",
         "tests/e2e/app-download.spec.ts",
+        "tests/e2e/ios-app-entry.spec.ts",
         "tests/e2e/landing-media-budget.spec.ts",
         "tests/e2e/mobile-menu-surface.spec.ts",
         "tests/e2e/smart-app-banner.spec.ts"
@@ -23142,19 +23143,19 @@
           "title": "!/Android/.test(await page.evaluate(() => navigator.userAgent))"
         },
         {
-          "line": 48,
+          "line": 49,
           "title": "'Android action refreshes on return from the store without exposing unrelated apps'"
         },
         {
-          "line": 49,
+          "line": 50,
           "title": "!/Android/.test(await page.evaluate(() => navigator.userAgent))"
         },
         {
-          "line": 64,
+          "line": 65,
           "title": "'installed Android action translates and updates when changing language'"
         },
         {
-          "line": 65,
+          "line": 66,
           "title": "!/Android/.test(await page.evaluate(()=>navigator.userAgent))"
         }
       ]
@@ -23725,7 +23726,7 @@
           "title": "\"campaign links preserve section, query and fragment without accepting external or auth routes\""
         },
         {
-          "line": 14,
+          "line": 15,
           "title": "`browser confirmation keeps the navy logo on a white card in ${colorScheme} mode`"
         }
       ]
@@ -24421,6 +24422,39 @@
         {
           "line": 107,
           "title": "\"empty favorites keep the type filters in English\""
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/ios-app-entry.spec.ts",
+      "cases": [
+        {
+          "line": 8,
+          "title": "'iOS entry switches associated hosts and preserves only a public app destination'"
+        },
+        {
+          "line": 25,
+          "title": "'iOS fallback requires the explicit marker and never redirects normal, auth or Android traffic'"
+        },
+        {
+          "line": 32,
+          "title": "'unclaimed iPhone links reach the store before rendering, without caching or redirect loops'"
+        },
+        {
+          "line": 43,
+          "title": "`iPhone has one localized action with a cross-host link at 320px (${locale})`"
+        },
+        {
+          "line": 44,
+          "title": "test.info().project.name !== 'webkit-mobile'"
+        },
+        {
+          "line": 72,
+          "title": "'native WebView does not bounce a marked link back to the App Store'"
+        },
+        {
+          "line": 78,
+          "title": "'SSR ignores forged source-host headers and already exposes the localized app action'"
         }
       ]
     },

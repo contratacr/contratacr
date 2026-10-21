@@ -1,3 +1,4 @@
+import { iosAppStoreFallback } from "@/lib/mobile/ios-app-entry";
 import { enforceApiMfa } from "@/lib/auth/api-mfa";
 import { pendingRegistrationPath, registrationComplete } from "@/lib/auth/registration-state";
 import { createServerClient } from "@supabase/ssr";
@@ -93,6 +94,19 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   // Overwrite any client-supplied value before locale/profile rewrites.
   request.headers.set("x-ccr-app-path", pathname + request.nextUrl.search);
+  request.headers.set("x-ccr-app-host", request.nextUrl.hostname);
+
+  // A user-tapped cross-host Universal Link reaches the server only when iOS
+  // did not hand it to the app. Keep this ahead of locale/auth/catalogue work.
+  const storeFallback = request.method === "GET" || request.method === "HEAD"
+    ? iosAppStoreFallback(request.nextUrl, request.headers.get("user-agent") ?? "") : null;
+  if (storeFallback && request.cookies.get("ccr_platform")?.value !== "native") {
+    const response = NextResponse.redirect(storeFallback, 307);
+    response.headers.set("Cache-Control", "private, no-store, max-age=0");
+    response.headers.set("Vary", "User-Agent");
+    response.headers.set("X-Robots-Tag", "noindex");
+    return conCabecerasDeSeguridad(response);
+  }
 
   // The QR endpoint has no locale or profile slug: let its route handler
   // choose the store before any session/onboarding or vanity routing.
