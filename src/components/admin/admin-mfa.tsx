@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocale } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { ContrataCRLogo } from "@/components/brand/brand-logo";
@@ -12,6 +12,14 @@ export function AdminMfa({ enrolled, onVerified, administrator = true, embedded 
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const codeInput = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    // An automatic mobile focus reopens the keyboard while the login keyboard
+    // is closing, resizing the challenge twice during its first paint.
+    if (!embedded && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+      codeInput.current?.focus({ preventScroll: true });
+    }
+  }, [embedded, enrolled, setup?.id]);
   async function startSetup() {
     setBusy(true); setError("");
     try {
@@ -67,7 +75,7 @@ export function AdminMfa({ enrolled, onVerified, administrator = true, embedded 
         {error && <p role="alert" className="mt-4 text-sm text-red-600">{error}</p>}
         {enrolled || setup ? <form onSubmit={verify} className="mt-5 space-y-4">
           <label className="block text-sm font-semibold text-[#162543]">{en ? "Verification code" : "Código de verificación"}
-            <input value={code} onChange={event => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required autoFocus className="mt-2 h-12 w-full rounded-xl border border-slate-300 px-4 text-center text-xl tracking-[0.4em]" />
+            <input ref={codeInput} value={code} onChange={event => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required autoFocus={embedded} className="mt-2 h-12 w-full rounded-xl border border-slate-300 px-4 text-center text-xl tracking-[0.4em]" />
           </label>
           <Button type="submit" loading={busy} disabled={busy || code.length !== 6} className="w-full">{en ? "Continue" : "Continuar"}</Button>
         </form> : <Button onClick={() => void startSetup()} loading={busy} disabled={busy} className="mt-5 w-full">{en ? "Set up authenticator" : "Configurar autenticador"}</Button>}

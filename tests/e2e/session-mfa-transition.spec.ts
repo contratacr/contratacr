@@ -44,3 +44,64 @@ for (const path of ["/login", "/dashboard/profesional"]) {
     await expect(page.locator(".ccr-page-route-loading")).toHaveCount(0);
   });
 }
+
+for (const locale of ["es", "en"]) {
+  test(`MFA stays centered while native navigation classes settle (${locale})`, async ({ page, isMobile }) => {
+    // Use the real stylesheet, including the more specific native shell rules.
+    await page.goto(locale === "en" ? "/en/login" : "/login", { waitUntil: "domcontentloaded" });
+    const styles = await page.locator('link[rel="stylesheet"]').evaluateAll(links => links.map(link => (link as HTMLLinkElement).href));
+    expect(styles.length).toBeGreaterThan(0);
+    const bundle = await build({
+      stdin: { contents: `import React from 'react';import{createRoot}from'react-dom/client';import{AdminMfa}from'./src/components/admin/admin-mfa';createRoot(document.getElementById('root')).render(<AdminMfa enrolled onVerified={async()=>{}}/>);`, loader: "tsx", resolveDir: process.cwd() },
+      jsx: "automatic", bundle: true, write: false, platform: "browser", format: "iife", tsconfig: "tsconfig.json", define: { "process.env.NODE_ENV": '"production"' },
+      plugins: [{ name: "mfa-transport", setup(builder) {
+        builder.onResolve({ filter: /^(next-intl|@\/lib\/supabase\/client)$/ }, args => ({ path: args.path, namespace: "mfa-centering" }));
+        builder.onLoad({ filter: /.*/, namespace: "mfa-centering" }, args => ({ contents: args.path === "next-intl" ? `export const useLocale=()=>${JSON.stringify(locale)};` : `export const createClient=()=>{throw Error('No authentication request expected')};` }));
+      } }],
+    });
+    await page.route("**/mfa-centering-harness", route => route.fulfill({ contentType: "text/html", body: `<!doctype html><meta name="viewport" content="width=device-width"><html class="ccr-native-app"><head>${styles.map(href => `<link rel="stylesheet" href="${href}">`).join("")}</head><body class="ccr-native-app ccr-native-bottom-nav-visible"><div id="root"></div></body></html>` }));
+    await page.goto("/mfa-centering-harness");
+    if (isMobile) await page.evaluate(() => document.documentElement.style.setProperty("--app-visual-viewport-height", "300px"));
+    await page.addScriptTag({ content: bundle.outputFiles[0].text });
+    const screen = page.locator("[data-admin-mfa]");
+    await expect(screen).toBeVisible();
+    await page.evaluate(() => document.fonts.ready);
+    if (isMobile) await expect(screen.locator("input")).not.toBeFocused();
+    const before = await screen.locator("h1").boundingBox();
+    expect(before).not.toBeNull();
+    const samples = await page.evaluate(async () => {
+      const title = document.querySelector('[data-admin-mfa] h1')!;
+      const positions: number[] = [];
+      for (let i = 0; i < 24; i++) {
+        if (i === 1) document.documentElement.style.setProperty("--app-visual-viewport-height", "100dvh");
+        if (i === 2) document.body.classList.remove("ccr-native-bottom-nav-visible");
+        if (i === 10) document.body.classList.add("ccr-native-bottom-nav-visible");
+        await new Promise(requestAnimationFrame);
+        positions.push(title.getBoundingClientRect().top);
+      }
+      return positions;
+    });
+    expect(Math.max(...samples) - Math.min(...samples)).toBeLessThan(1);
+    const geometry = await screen.evaluate(element => {
+      const style = getComputedStyle(element);
+      const box = element.getBoundingClientRect();
+      const content = element.firstElementChild!.getBoundingClientRect();
+      return { top: box.top, left: box.left, height: box.height, width: box.width, paddingTop: style.paddingTop, paddingBottom: style.paddingBottom,
+        centerX: content.left + content.width / 2, centerY: content.top + content.height / 2, transition: style.transitionDuration };
+    });
+    expect(geometry.top).toBe(0);
+    expect(geometry.left).toBe(0);
+    expect(geometry.paddingBottom).toBe(geometry.paddingTop);
+    expect(geometry.transition).toBe("0s");
+    expect(geometry.centerX).toBeCloseTo(geometry.width / 2, 0);
+    expect(geometry.centerY).toBeCloseTo(geometry.height / 2, 0);
+    if (isMobile) {
+      await screen.locator("input").focus();
+      await page.evaluate(() => document.documentElement.style.setProperty("--app-visual-viewport-height", "300px"));
+      expect(await screen.evaluate(element => element.getBoundingClientRect().height)).toBe(300);
+      await screen.locator("input").blur();
+      await page.evaluate(() => document.documentElement.style.setProperty("--app-visual-viewport-height", "100dvh"));
+    }
+    await screen.screenshot({ path: test.info().outputPath(`mfa-stable-${locale}.png`) });
+  });
+}
