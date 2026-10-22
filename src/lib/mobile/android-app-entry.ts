@@ -1,6 +1,6 @@
 import { APP_STORES } from "@/lib/app-stores";
 import { ANDROID_HOME_ENTRY_PARAM } from "./campaign-app-link";
-import { smartAppBannerContent } from "./smart-app-banner";
+import { publicAppEntryUrl } from "./public-app-entry";
 
 export const ANDROID_APP_ID = "com.contratacr.app";
 export type RelatedApp = { platform?: string; id?: string };
@@ -15,7 +15,7 @@ export function isInstalledAndroidApp(apps: RelatedApp[]): true | null {
  * Never probe custom schemes or redirect people away from the website on load.
  */
 export function androidAppIntent(path: string): string | null {
-  if (!smartAppBannerContent(path)) return null;
+  if (!publicAppEntryUrl(path)) return null;
   const url = new URL(path, "https://contratacr.com");
   if (url.searchParams.has("_rsc")) url.searchParams.delete("_rsc");
   // Play 1.0.11 only handles path prefixes; it cannot resolve / or /en.

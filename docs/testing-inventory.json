@@ -2,11 +2,11 @@
   "scope": "Todos los archivos TypeScript de src/app, src/components y src/hooks, controles JSX declarados, pestañas del panel y specs permanentes. No enumera cada elemento dinámico renderizado ni componentes dentro de dependencias.",
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
-    "files": 495,
+    "files": 494,
     "controls": 1294,
     "pages": 71,
     "handlers": 104,
-    "components": 258,
+    "components": 257,
     "hooks": 26,
     "specs": 158
   },
@@ -13144,7 +13144,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 29,
+          "line": 28,
           "tag": "a",
           "label": "{`${en ? \"Download on\" : \"Descargar en\"} ${platform === \"ios\" ? \"App Store\" : \"Google Play\"}`}",
           "handler": "",
@@ -13152,7 +13152,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 78,
+          "line": 77,
           "tag": "a",
           "label": "{en ? \"Download ContrataCR for iOS\" : \"Descargar ContrataCR para iOS\"}",
           "handler": "",
@@ -13160,7 +13160,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 79,
+          "line": 78,
           "tag": "a",
           "label": "{en ? \"Download ContrataCR for Android\" : \"Descargar ContrataCR para Android\"}",
           "handler": "",
@@ -13168,7 +13168,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 198,
+          "line": 193,
           "tag": "button",
           "label": "{en ? \"Dismiss app notice\" : \"Cerrar aviso de la app\"}",
           "handler": "{() => { setDismissed(true); const until = String(Date.now() + 30 * 86400000); document.cookie = `${DOWNLOAD_DISMISS_COOKIE}=${until}; Path=/; Max-Age=2592000; SameSite=Lax${location.protocol === \"https:\" ? \"; Secure\" : \"\"}`; try { localStorage.setItem(DISMISSED_KEY, until); } catch {} }}",
@@ -13176,7 +13176,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 205,
+          "line": 200,
           "tag": "a",
           "label": "{`${actionLabel} ContrataCR`}",
           "handler": "{(event) => {\n        if (platform === \"ios\") {\n          event.currentTarget.href = iosAppEntry(location.pathname + location.search + location.hash, location.hostname) ?? iosAppEntry(en ? \"/en\" : \"/\", location.hostname) ?? APP_STORES.ios;\n        } else if (androidAction) {\n          const current = androidAppIntent(location.pathname + location.search + location.hash) ?? androidAppIntent(en ? \"/en\" : \"/\");\n          if (current) event.currentTarget.href = current;\n        }\n      }}",
@@ -14396,7 +14396,8 @@
         "tests/e2e/public-smoke.spec.ts",
         "tests/e2e/recent-visual-regression.spec.ts",
         "tests/e2e/session-mfa-transition.spec.ts",
-        "tests/e2e/session-recovery.spec.ts"
+        "tests/e2e/session-recovery.spec.ts",
+        "tests/e2e/smart-app-banner.spec.ts"
       ],
       "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
@@ -15456,29 +15457,6 @@
       "route": null,
       "exports": [
         "SectionHeaderTitle"
-      ],
-      "methods": [],
-      "controls": [],
-      "testIds": [],
-      "relatedSpecs": [
-        "tests/e2e/mobile-native-shell.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts",
-        "tests/e2e/native-home-paint.spec.ts",
-        "tests/e2e/reanudar-la-app.spec.ts"
-      ],
-      "directReferences": [],
-      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
-      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
-      "coverage": "Alcance detallado pendiente de revisión; no certificado",
-      "priority": "P1"
-    },
-    {
-      "file": "src/components/mobile/smart-app-banner.tsx",
-      "kind": "Componente",
-      "group": "Navegación nativa",
-      "route": null,
-      "exports": [
-        "SmartAppBanner"
       ],
       "methods": [],
       "controls": [],
@@ -23276,79 +23254,79 @@
           "title": "(page.viewportSize()?.width ?? 1280)>=1024"
         },
         {
-          "line": 127,
+          "line": 122,
           "title": "'narrow desktop windows have no mobile notice or navbar gap, while download links remain available'"
         },
         {
-          "line": 128,
+          "line": 123,
           "title": "test.info().project.name!=='chromium-desktop' && test.info().project.name!=='desktop-download'"
         },
         {
-          "line": 150,
+          "line": 145,
           "title": "'notice stays at the bottom on public pages and respects account/form routes'"
         },
         {
-          "line": 151,
+          "line": 146,
           "title": "(page.viewportSize()?.width ?? 1280)>=1024"
         },
         {
-          "line": 174,
+          "line": 169,
           "title": "'web footer uses Apple and Android symbols with accessible store links'"
         },
         {
-          "line": 181,
+          "line": 176,
           "title": "'QR download opens the correct store without caching another device choice'"
         },
         {
-          "line": 196,
+          "line": 191,
           "title": "'responsive download artwork and store actions fit the viewport, including Safari tablet sizing'"
         },
         {
-          "line": 219,
+          "line": 214,
           "title": "'home-screen launch uses a white surface even in dark mode before external CSS'"
         },
         {
-          "line": 233,
+          "line": 228,
           "title": "'iOS launch images have the exact declared device dimensions and a white corner'"
         },
         {
-          "line": 246,
+          "line": 241,
           "title": "'home-screen launch shell is public, white and independent of the session'"
         },
         {
-          "line": 270,
+          "line": 265,
           "title": "'mobile listings stay behind the download notice and keep their last result reachable'"
         },
         {
-          "line": 271,
+          "line": 266,
           "title": "(page.viewportSize()?.width ?? 1280)>=1024"
         },
         {
-          "line": 297,
+          "line": 292,
           "title": "'home-screen web app can show the store notice without being treated as native'"
         },
         {
-          "line": 298,
+          "line": 293,
           "title": "(page.viewportSize()?.width ?? 1280)>=1024"
         },
         {
-          "line": 312,
+          "line": 307,
           "title": "`download section ${locale}: ${store} button activates its exact store link`"
         },
         {
-          "line": 348,
+          "line": 343,
           "title": "`corrected iPhone notice survives legacy dismissals (standalone=${standalone})`"
         },
         {
-          "line": 349,
+          "line": 344,
           "title": "test.info().project.name !== 'webkit-mobile'"
         },
         {
-          "line": 378,
+          "line": 368,
           "title": "`download notice translates its label and accessibility text in ${locale}`"
         },
         {
-          "line": 379,
+          "line": 369,
           "title": "(page.viewportSize()?.width??1280)>=1024"
         }
       ]
@@ -23357,15 +23335,11 @@
       "file": "tests/e2e/app-entry-browser-matrix.spec.ts",
       "cases": [
         {
-          "line": 26,
-          "title": "'banner ownership is exclusive for browser, home-screen web app and native app'"
-        },
-        {
-          "line": 44,
+          "line": 29,
           "title": "`single notice and localized destination: ${ios ? 'iOS' : 'Android'} ${name} (presentation fixture)`"
         },
         {
-          "line": 45,
+          "line": 30,
           "title": "test.info().project.name !== (ios ? 'webkit-mobile' : 'chromium-mobile')"
         }
       ]
@@ -24910,23 +24884,23 @@
       "file": "tests/e2e/mobile-menu-surface.spec.ts",
       "cases": [
         {
-          "line": 8,
+          "line": 7,
           "title": "`menu header travels with options and closes without displacing the page (${native ? 'native' : 'web'})`"
         },
         {
-          "line": 9,
+          "line": 8,
           "title": "(page.viewportSize()?.width ?? 1280) >= 1024"
         },
         {
-          "line": 68,
+          "line": 67,
           "title": "`signed-in menu keeps account actions above centered social links (${native ? 'native' : 'web'})`"
         },
         {
-          "line": 69,
+          "line": 68,
           "title": "(page.viewportSize()?.width ?? 1280) >= 1024"
         },
         {
-          "line": 70,
+          "line": 69,
           "title": "!canRunSeededRegression()"
         }
       ]
@@ -26280,32 +26254,20 @@
       "file": "tests/e2e/smart-app-banner.spec.ts",
       "cases": [
         {
-          "line": 6,
-          "title": "\"Apple banner preserves public destinations while excluding private and authentication URLs\""
+          "line": 8,
+          "title": "'public app entry preserves destinations and excludes private or authentication URLs'"
         },
         {
-          "line": 12,
-          "title": "\"native banner detection distinguishes Safari from other iOS browsers and embedded WebViews\""
+          "line": 15,
+          "title": "'Safari initial document has the custom bottom notice without native banner metadata'"
         },
         {
-          "line": 21,
-          "title": "\"Safari initial document delegates opening to Apple using the installed binary's apex domain\""
+          "line": 33,
+          "title": "'Apple association still supports verified app opening without capturing auth routes'"
         },
         {
-          "line": 35,
-          "title": "\"Apple association covers homepage and exact professional search without broadening auth routes\""
-        },
-        {
-          "line": 42,
-          "title": "\"Safari uses native opening metadata without the competing bottom store redirect\""
-        },
-        {
-          "line": 74,
-          "title": "`iPhone ${browserToken} uses only our translated notice`"
-        },
-        {
-          "line": 75,
-          "title": "test.info().project.name!=='webkit-mobile'"
+          "line": 41,
+          "title": "'custom notice keeps one owner through menu, language, private and native navigation'"
         }
       ]
     },

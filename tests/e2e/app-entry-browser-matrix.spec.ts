@@ -1,6 +1,5 @@
 import { waitForInteractivePage } from './helpers';
 import { test, expect } from 'playwright/test';
-import { appBannerPresentation } from '../../src/lib/mobile/smart-app-banner';
 
 const iphone = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1';
 const android = 'Mozilla/5.0 (Linux; Android 15; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Mobile Safari/537.36';
@@ -23,20 +22,6 @@ const androidBrowsers = [
   ['Facebook', android + ' [FBAN/FB4A]'],
 ] as const;
 
-test('banner ownership is exclusive for browser, home-screen web app and native app', () => {
-  for (const [name, ua] of iosBrowsers) {
-    expect(appBannerPresentation(ua, 5)).toBe(name === 'Safari' ? 'apple' : 'web');
-    expect(appBannerPresentation(ua, 5, true)).toBe('web');
-    expect(appBannerPresentation(ua, 5, false, true)).toBe('none');
-  }
-  for (const [, ua] of androidBrowsers) {
-    expect(appBannerPresentation(ua, 5)).toBe('web');
-    expect(appBannerPresentation(ua, 5, true)).toBe('web');
-    expect(appBannerPresentation(ua, 5, false, true)).toBe('none');
-  }
-  expect(appBannerPresentation('Mozilla/5.0 (Windows NT 10.0) Chrome/142.0')).toBe('none');
-});
-
 // UA + lookup fixtures test web presentation and link construction only.
 // They do not certify another mobile browser's actual external-app handoff.
 for (const [name, ua] of [...iosBrowsers, ...androidBrowsers]) {
@@ -54,17 +39,12 @@ for (const [name, ua] of [...iosBrowsers, ...androidBrowsers]) {
      await waitForInteractivePage(page);
      const apple = page.locator('meta[name="apple-itunes-app"]');
      const own = page.getByTestId('mobile-app-download');
-     if (ios && name === 'Safari') {
-      await expect(apple).toHaveCount(1);
-      await expect(own).toHaveCount(0);
-     } else {
-      await expect(apple).toHaveCount(0);
-      await expect(own).toHaveCount(1);
-      const action = own.getByRole('link');
-      await expect(action).toHaveText(ios || detected ? (locale === 'en' ? 'Open app' : 'Abrir app') : (locale === 'en' ? 'Use app' : 'Usar app'));
-      await expect(own.getByTestId('app-platform-label')).toHaveText(`${locale === 'en' ? 'for' : 'para'} ${ios ? 'iOS' : 'Android'}`);
-      await expect(action).toHaveAttribute('href', ios ? /^https:\/\/(?:www\.)?contratacr\.com\/(?:en\/)?proyectos\?_ccr_open=ios$/ : /^intent:\/\/contratacr.com\/(?:en\/)?proyectos#Intent;/);
-     }
+     await expect(apple).toHaveCount(0);
+     await expect(own).toHaveCount(1);
+     const action = own.getByRole('link');
+     await expect(action).toHaveText(ios || detected ? (locale === 'en' ? 'Open app' : 'Abrir app') : (locale === 'en' ? 'Use app' : 'Usar app'));
+     await expect(own.getByTestId('app-platform-label')).toHaveText(`${locale === 'en' ? 'for' : 'para'} ${ios ? 'iOS' : 'Android'}`);
+     await expect(action).toHaveAttribute('href', ios ? /^https:\/\/(?:www\.)?contratacr\.com\/(?:en\/)?proyectos\?_ccr_open=ios$/ : /^intent:\/\/contratacr.com\/(?:en\/)?proyectos#Intent;/);
     }
     expect(errors).toEqual([]);
    } finally {await context.close();}

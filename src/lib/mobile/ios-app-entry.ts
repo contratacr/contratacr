@@ -1,13 +1,13 @@
 import { APP_STORES } from "@/lib/app-stores";
 import { APP_ENTRY_PARAM } from "./campaign-app-link";
-import { smartAppBannerContent } from "./smart-app-banner";
+import { publicAppEntryUrl } from "./public-app-entry";
 
 /** A real tap changes host so Safari can hand the public URL to the app.
  * If iOS keeps it on the web, middleware serves the fixed App Store fallback.
  * No installation probing, custom schemes, timers, or arbitrary redirects.
  */
 export function iosAppEntry(path: string, sourceHostname: string): string | null {
-  if (path.length > 4096 || !smartAppBannerContent(path)) return null;
+  if (path.length > 4096 || !publicAppEntryUrl(path)) return null;
   const target = new URL(path, "https://contratacr.com");
   target.hostname = sourceHostname.toLowerCase() === "www.contratacr.com" ? "contratacr.com" : "www.contratacr.com";
   target.searchParams.delete("_rsc");
@@ -23,6 +23,6 @@ export function iosAppStoreFallback(url: URL, userAgent: string): string | null 
   // iPad desktop mode reports Macintosh without Mobile. The explicit iOS
   // marker comes from the touch-aware banner, not from guessing a Mac install.
   if (!/iPhone|iPad|iPod|Macintosh/i.test(userAgent)) return null;
-  if (!smartAppBannerContent(url.pathname + url.search + url.hash)) return null;
+  if (!publicAppEntryUrl(url.pathname + url.search + url.hash)) return null;
   return APP_STORES.ios;
 }
