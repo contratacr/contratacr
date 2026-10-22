@@ -109,7 +109,12 @@ test('mobile download notice and header are correctly positioned before JavaScri
   const noticeLocator=cold.getByTestId('mobile-app-download');
   const header=await cold.getByTestId('landing-navbar').boundingBox();
 
-  await expect(cold.locator('meta[name="apple-itunes-app"]')).toHaveCount(0);
+  if(test.info().project.name==='webkit-mobile') {
+   await expect(noticeLocator).toHaveCount(0);
+   await expect(cold.locator('meta[name="apple-itunes-app"]')).toHaveAttribute('content','app-id=6794559661, app-argument=https://contratacr.com/');
+   expect(header?.y).toBe(0);
+   return;
+  }
   const notice=await noticeLocator.boundingBox();
   expect(notice).not.toBeNull();
   expect(notice!.y + notice!.height).toBeCloseTo(844, 0);
@@ -350,6 +355,11 @@ for (const standalone of [false, true]) {
   await page.goto('/profesionales');
   const notice=page.getByTestId('mobile-app-download');
 
+  if(!standalone) {
+   await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveAttribute('content','app-id=6794559661, app-argument=https://contratacr.com/profesionales');
+   await expect(notice).toHaveCount(0);
+   return;
+  }
   await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveCount(0);
   await expect(notice).toBeVisible();
   await expect(notice.getByRole('link')).toHaveText('Abrir app');
