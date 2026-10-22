@@ -104,7 +104,7 @@ for (const runtime of ["web", "android", "ios"] as const) {
 
 test("analytics resolves the authenticated actor and excludes admins or unknown roles", async () => {
   const source = ts.transpileModule(readFileSync("src/lib/analytics/admin-activity.ts", "utf8"), { fileName: "usage-capture.tsx", compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX } }).outputText;
-  type Actor = { id: string | null; excluded: boolean };
+  type Actor = { id: string | null; excluded: boolean; administrator: boolean };
   const box = { exports: {} as { analyticsActor: (id?: string | null) => Promise<Actor> } };
   let sessionUser: { id: string } | null = { id: "admin-account" };
   let failed = false;
@@ -119,15 +119,15 @@ test("analytics resolves the authenticated actor and excludes admins or unknown 
     "@/lib/supabase/get-user": { safeGetUser: async () => sessionUser },
   };
   runInNewContext(source, { module: box, exports: box.exports, require: (name: string) => mocks[name] });
-  expect(await box.exports.analyticsActor()).toEqual({ id: "admin-account", excluded: true });
-  expect(await box.exports.analyticsActor("client-account")).toEqual({ id: "client-account", excluded: false });
+  expect(await box.exports.analyticsActor()).toEqual({ id: "admin-account", excluded: true, administrator: true });
+  expect(await box.exports.analyticsActor("client-account")).toEqual({ id: "client-account", excluded: false, administrator: false });
   const previousReads = reads;
   sessionUser = null;
-  expect(await box.exports.analyticsActor()).toEqual({ id: null, excluded: false });
-  expect(await box.exports.analyticsActor(null)).toEqual({ id: null, excluded: false });
+  expect(await box.exports.analyticsActor()).toEqual({ id: null, excluded: false, administrator: false });
+  expect(await box.exports.analyticsActor(null)).toEqual({ id: null, excluded: false, administrator: false });
   expect(reads).toBe(previousReads);
   failed = true;
-  expect(await box.exports.analyticsActor("client-account")).toEqual({ id: "client-account", excluded: true });
+  expect(await box.exports.analyticsActor("client-account")).toEqual({ id: "client-account", excluded: true, administrator: false });
 });
 
 for (const [name, ua, touch, expected] of [

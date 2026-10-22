@@ -19,19 +19,19 @@ export async function POST(req: Request) {
   let sent = 0;
   for (const row of data ?? []) {
     // A withdrawal can cancel a claimed envelope before it reaches Meta.
-    const current = await db.from("growth_conversion_events").select("status").eq("event_id", row.event_id).maybeSingle();
+    const current = await db.from("growth_conversion_events").select("status,attempts,locked_at").eq("event_id", row.event_id).maybeSingle();
     if (current.error) return NextResponse.json({ error: "queue_unavailable" }, { status: 503 });
-    if (current.data?.status !== "sending") continue;
+    if (current.data?.status !== "sending" || current.data.attempts !== row.attempts || current.data.locked_at !== row.locked_at) continue;
     const outcome = await sendMetaConversion(row.payload,{ pixelId,token,version,testCode });
     const delivered = outcome === "sent";
     const suppressed = outcome === "suppressed";
-    const { error: updateError } = await db.from("growth_conversion_events").update(delivered
-      ? { status: "sent",delivery_mode: testCode ? "test" : "production",sent_at: new Date().toISOString(),locked_at: null }
+    const { data: updated, error: updateError } = await db.from("growth_conversion_events").update(delivered
+      ? { status: "sent",payload: null,delivery_mode: testCode ? "test" : "production",sent_at: new Date().toISOString(),locked_at: null }
       : suppressed ? { status: "suppressed",payload: null,locked_at: null }
       : { status: "pending",next_attempt_at: new Date(Date.now()+Math.min(3600000,60000*2**Math.min(row.attempts,6))).toISOString(),locked_at: null })
-      .eq("event_id",row.event_id).eq("status","sending").eq("attempts",row.attempts);
+      .eq("event_id",row.event_id).eq("status","sending").eq("attempts",row.attempts).eq("locked_at",row.locked_at).select("event_id");
     if (updateError) return NextResponse.json({ error: "receipt_update_failed" },{ status: 503 });
-    if (delivered) sent++;
+    if (delivered && updated?.length) sent++;
   }
   return NextResponse.json({ ok: true,configured: true,sent,attempted: data?.length ?? 0 });
 }

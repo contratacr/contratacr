@@ -35,7 +35,7 @@ export function UsageCapture() {
   const native = useNativeApp();
   const last = useRef({ route: "", session: "", actor: "", screen: "", runtime: "" });
   useEffect(() => {
-    if (esNavegadorAutomatizado()) return;
+    if (esNavegadorAutomatizado()) { void configureNativeMeasurement(true); return; }
     setNativeMeasurementActor(user?.id ?? "");
     const track = () => {
       if (document.visibilityState === "hidden") return;

@@ -5,7 +5,7 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { GROWTH_ACTIONS, type GrowthAction, type MetaConversion } from "./growth-contract";
-import { esPeticionAutomatizada } from "./trafico-automatizado";
+import { COOKIE_ADMIN_EXCLUDED, esPeticionAutomatizada } from "./trafico-automatizado";
 
 function hash(value: string) { return createHash("sha256").update(value).digest("hex"); }
 function requestCookie(req: Request, name: string): string {
@@ -15,7 +15,7 @@ function requestCookie(req: Request, name: string): string {
 export function growthContext(req: Request, actorId?: string | null) {
   const ua = req.headers.get("user-agent") ?? "";
   const host = new URL(req.url).hostname;
-  const automated = esPeticionAutomatizada(requestCookie(req,"ccr_sin_analitica"),ua);
+  const automated = requestCookie(req, COOKIE_ADMIN_EXCLUDED) === "1" || esPeticionAutomatizada(requestCookie(req,"ccr_sin_analitica"),ua);
   const native = requestCookie(req,"ccr_platform") === "native";
   const allowed = !automated && !native && ["contratacr.com","www.contratacr.com"].includes(host)
     && ["accepted", "limited"].includes(requestCookie(req,"ccr_ads_consent_v1"));

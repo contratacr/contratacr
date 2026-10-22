@@ -2,7 +2,7 @@ import { test, expect } from "playwright/test";
 import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import ts from "typescript";
-function fixture() {
+function fixture(transport?: typeof fetch) {
   const storage = new Map<string,string>();
   const session = new Map<string,string>();
   const cookieWrites: string[]=[];
@@ -13,7 +13,7 @@ function fixture() {
   const document={set cookie(value:string){cookieWrites.push(value);}};
   class Custom extends Event { detail:unknown; constructor(type:string, options:{detail:unknown}) {super(type);this.detail=options.detail;} }
   runInNewContext(ts.transpileModule(readFileSync("src/lib/privacy/optional-consent.ts","utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText,{
-    module:box,exports:box.exports,window:Object.assign(events,{localStorage,sessionStorage:{removeItem:(key:string)=>session.delete(key)}}),location,document,Event,CustomEvent:Custom,
+    module:box,exports:box.exports,window:Object.assign(events,{localStorage,sessionStorage:{removeItem:(key:string)=>session.delete(key)}}),location,document,Event,CustomEvent:Custom,fetch:transport,AbortSignal,
   });
   return {api:box.exports, storage, session, cookieWrites};
 }
@@ -43,3 +43,42 @@ test("permission is versioned, purpose-specific, withdrawable, and does not bund
  h.storage.set(h.api.consentKey("advertising"),JSON.stringify({choice:"declined",version:"old",at:"2020-01-01"}));
  expect(h.api.advertisingMeasurementEnabled()).toBe(false);
  });
+
+
+test("guest withdrawal survives offline and server errors without enabling measurement", async () => {
+ let requests = 0;
+ const h = fixture((async () => {
+  requests++;
+  if (requests === 1) throw new Error("offline");
+  return Response.json({}, {status: requests >= 3 ? 200 : 503});
+ }) as typeof fetch);
+ h.api.saveOptionalConsent("advertising", "declined");
+ await h.api.retryAdvertisingWithdrawal();
+ expect(requests).toBe(1);
+ expect(h.api.advertisingMeasurementEnabled()).toBe(false);
+ // An attempted re-enable cannot bypass an unacknowledged withdrawal.
+ h.api.saveOptionalConsent("advertising", "accepted");
+ expect(h.api.advertisingMeasurementEnabled()).toBe(false);
+ await h.api.retryAdvertisingWithdrawal();
+ expect(h.api.advertisingMeasurementEnabled()).toBe(false);
+ await h.api.retryAdvertisingWithdrawal();
+ expect(requests).toBe(3);
+ expect(h.api.advertisingMeasurementEnabled()).toBe(true);
+ expect([...h.storage.keys()].some(key => key.includes("withdrawal-pending"))).toBe(false);
+});
+
+test("concurrent withdrawal retries share a single request and preserve the refusal", async () => {
+ let release!: () => void;
+ let requests = 0;
+ const wait = new Promise<void>(resolve => { release = resolve; });
+ const h = fixture((async () => { requests++; await wait; return Response.json({ok:true}); }) as typeof fetch);
+ h.api.saveOptionalConsent("advertising", "declined");
+ const first = h.api.retryAdvertisingWithdrawal();
+ const second = h.api.retryAdvertisingWithdrawal();
+ expect(requests).toBe(1);
+ release();
+ await Promise.all([first, second]);
+ expect(h.api.advertisingMeasurementEnabled()).toBe(false);
+ expect(h.api.readOptionalConsent("advertising")).toBe("declined");
+ expect([...h.storage.keys()].some(key => key.includes("withdrawal-pending"))).toBe(false);
+});

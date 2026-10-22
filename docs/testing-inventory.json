@@ -2133,7 +2133,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 609,
+          "line": 617,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -2141,7 +2141,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 614,
+          "line": 622,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -4893,8 +4893,10 @@
         "tests/e2e/runtime-analytics.spec.ts",
         "tests/e2e/meta-growth-runtime.spec.ts"
       ],
-      "directReferences": [],
-      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "directReferences": [
+        "tests/e2e/meta-growth-runtime.spec.ts"
+      ],
+      "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "API + integración BD + autorización/propiedad + idempotencia; smoke solo lectura",
       "coverage": "Alcance detallado pendiente de revisión; no certificado",
       "priority": "P1"
@@ -5699,8 +5701,10 @@
       "relatedSpecs": [
         "tests/e2e/meta-growth-runtime.spec.ts"
       ],
-      "directReferences": [],
-      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "directReferences": [
+        "tests/e2e/meta-growth-runtime.spec.ts"
+      ],
+      "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "API + integración BD + autorización/propiedad + idempotencia; smoke solo lectura",
       "coverage": "Alcance detallado pendiente de revisión; no certificado",
       "priority": "P1"
@@ -24635,36 +24639,40 @@
           "title": "`legal documents: ${locale} identifies the actual operator and explains the current verification`"
         },
         {
-          "line": 21,
+          "line": 23,
           "title": "\"limited advertising can be disabled and enabled without blocking legal pages\""
         },
         {
-          "line": 35,
+          "line": 37,
           "title": "\"the AI API rejects missing or outdated consent before processing a native prompt\""
         },
         {
-          "line": 42,
+          "line": 44,
           "title": "`${native ? \"native\" : \"web\"}: login never adds a second terms screen; explicit receipts remain isolated and idempotent`"
         },
         {
-          "line": 43,
+          "line": 45,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 69,
+          "line": 71,
           "title": "\"native assistant asks permission before sending the first prompt\""
         },
         {
-          "line": 92,
+          "line": 94,
           "title": "`login keeps the existing legal disclosure before continuing (${locale})`"
         },
         {
-          "line": 100,
+          "line": 102,
           "title": "`${native ? \"native\" : \"web\"}: no automatic advertising or terms notice on entry`"
         },
         {
-          "line": 117,
+          "line": 119,
           "title": "\"advertising withdrawal rejects cross-origin and invalid choices\""
+        },
+        {
+          "line": 131,
+          "title": "\"offline guest advertising withdrawal retries on reconnect without a popup\""
         }
       ]
     },
@@ -24827,28 +24835,40 @@
       "file": "tests/e2e/meta-growth-runtime.spec.ts",
       "cases": [
         {
-          "line": 18,
+          "line": 20,
           "title": "\"server consent, native, bots, test domains and attribution use real runtime guards\""
         },
         {
-          "line": 26,
+          "line": 28,
           "title": "\"only the first successful business receipt queues a minimal CAPI payload\""
         },
         {
-          "line": 39,
+          "line": 41,
           "title": "\"browser business receipts cannot create a duplicate or leak free-text parameters\""
         },
         {
-          "line": 51,
+          "line": 53,
           "title": "\"missing direct delivery configuration never pretends browser delivery succeeded\""
         },
         {
-          "line": 62,
+          "line": 64,
           "title": "\"administrator actions never create conversion receipts or Meta delivery\""
         },
         {
-          "line": 75,
+          "line": 77,
           "title": "\"landing measurement sends only event and opaque ID, expires and respects refusal/native guards\""
+        },
+        {
+          "line": 98,
+          "title": "\"queue erases delivered matching data and does not count revoked or reclaimed receipts\""
+        },
+        {
+          "line": 135,
+          "title": "\"signed-out operator browser stays excluded while a fresh guest remains measurable\""
+        },
+        {
+          "line": 143,
+          "title": "\"only a verified admin role sets the persistent exclusion cookie\""
         }
       ]
     },
@@ -25357,6 +25377,14 @@
         {
           "line": 37,
           "title": "\"limited measurement does not fabricate acceptance and preserves legacy/expired refusals\""
+        },
+        {
+          "line": 48,
+          "title": "\"guest withdrawal survives offline and server errors without enabling measurement\""
+        },
+        {
+          "line": 70,
+          "title": "\"concurrent withdrawal retries share a single request and preserve the refusal\""
         }
       ]
     },

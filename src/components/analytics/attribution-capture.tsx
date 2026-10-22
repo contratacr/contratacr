@@ -4,9 +4,10 @@ import { useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { captureAttribution, readAttribution } from "@/lib/analytics/attribution";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
+import { APP_RESUME_EVENT } from "@/lib/app-events";
 import { useAuth } from "@/hooks/use-auth";
 
-import { subscribeOptionalConsent, syncAdvertisingCookie } from "@/lib/privacy/optional-consent";
+import { retryAdvertisingWithdrawal, subscribeOptionalConsent, syncAdvertisingCookie } from "@/lib/privacy/optional-consent";
 
 const CLAIMED_KEY = "contratacr:attribution-claimed";
 
@@ -25,7 +26,18 @@ export function AttributionCapture() {
     syncAdvertisingCookie();
   }, [pathname, searchParams]);
 
-  useEffect(() => subscribeOptionalConsent(syncAdvertisingCookie), []);
+  useEffect(() => {
+    const retry = () => { syncAdvertisingCookie(); void retryAdvertisingWithdrawal(); };
+    retry();
+    const unsubscribe = subscribeOptionalConsent(retry);
+    window.addEventListener("online", retry);
+    window.addEventListener(APP_RESUME_EVENT, retry);
+    return () => {
+      unsubscribe();
+      window.removeEventListener("online", retry);
+      window.removeEventListener(APP_RESUME_EVENT, retry);
+    };
+  }, []);
 
   // EL CLIC QUE LLEGA DE UN CORREO DE CAMPAÑA. Hasta ahora solo se sabía de
   // quien terminaba REGISTRÁNDOSE: los `utm_*` se guardan en el perfil, así

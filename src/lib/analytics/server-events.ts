@@ -3,7 +3,7 @@ import { analyticsPlatform } from "./platform";
 import "server-only";
 import { createHash, randomUUID } from "node:crypto";
 import { cookies, headers } from "next/headers";
-import { COOKIE_SIN_ANALITICA, esPeticionAutomatizada } from "@/lib/analytics/trafico-automatizado";
+import { COOKIE_ADMIN_EXCLUDED, COOKIE_SIN_ANALITICA, esPeticionAutomatizada } from "@/lib/analytics/trafico-automatizado";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { InteractionEventType } from "@/lib/analytics/interaction-events";
 
@@ -36,7 +36,7 @@ function clean(value: unknown, max = 100): string | number | boolean | null {
 export async function recordServerInteraction(event: ServerInteraction): Promise<void> {
   try {
     const jar = await cookies();
-    if (esPeticionAutomatizada(jar.get(COOKIE_SIN_ANALITICA)?.value, (await headers()).get("user-agent"))) return;
+    if (jar.get(COOKIE_ADMIN_EXCLUDED)?.value === "1" || esPeticionAutomatizada(jar.get(COOKIE_SIN_ANALITICA)?.value, (await headers()).get("user-agent"))) return;
     const actor = await analyticsActor(event.viewerUserId);
     if (actor.excluded) return;
     const sessionId = jar.get(ANALYTICS_SESSION_COOKIE)?.value || randomUUID();
