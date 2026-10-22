@@ -122,6 +122,7 @@ async function assertKeyboardSafeComposer(page: Page, composerSelector: string, 
       composerHeight: composerRect.height,
       composerBottom: composerRect.bottom,
       fieldBottom: fieldRect.bottom,
+      fieldHeight: fieldRect.height,
       shellBottom: shellRect?.bottom ?? null,
       shellHeight: shellRect?.height ?? null,
       shellPosition: shell ? getComputedStyle(shell).position : null,
@@ -137,7 +138,16 @@ async function assertKeyboardSafeComposer(page: Page, composerSelector: string, 
   }, { composerSelector, inputSelector });
 
   expect(geometry).not.toBeNull();
-  expect(geometry!.composerHeight).toBeLessThan(120);
+  if (composerSelector === ".ccr-direct-chat-composer") {
+    // The textarea grows with the draft (up to 144 px). Check the space
+    // outside the field, so a valid multiline draft is not mistaken for
+    // the old bug that added the full keyboard inset to the composer.
+    expect(geometry!.fieldHeight, JSON.stringify(geometry)).toBeLessThanOrEqual(144);
+    expect(geometry!.composerHeight - geometry!.fieldHeight, JSON.stringify(geometry)).toBeLessThan(64);
+    expect(geometry!.composerHeight).toBeLessThan(208);
+  } else {
+    expect(geometry!.composerHeight).toBeLessThan(120);
+  }
   expect(geometry!.composerBottom, JSON.stringify(geometry)).toBeLessThanOrEqual(501);
   expect(geometry!.fieldBottom).toBeLessThanOrEqual(501);
   if (composerSelector === ".ccr-direct-chat-composer") {
@@ -571,14 +581,18 @@ test.describe("@mobile native shell contracts", () => {
       // Dentro de un chat no hay barra de abajo, como en WhatsApp.
       await expect(page.locator("nav.ccr-native-bottom-nav")).toBeHidden();
       await expect(page.locator(".ccr-direct-chat-composer")).toBeVisible();
+      const draft = page.locator(".ccr-direct-chat-composer textarea");
+      const prefilled = await draft.inputValue();
+      expect(prefilled.trim()).not.toBe("");
+      // Exercise a growing multiline draft, not only an empty single-line box.
+      await draft.fill(`${prefilled}\n${Array(6).fill("E2E multiline message").join("\n")}`);
       await assertKeyboardSafeComposer(
         page,
         ".ccr-direct-chat-composer",
         ".ccr-direct-chat-composer textarea",
       );
-      const draft = page.locator(".ccr-direct-chat-composer textarea");
       const message = await draft.inputValue();
-      expect(message.trim()).not.toBe("");
+      expect(message).toContain(prefilled);
       await page.locator(".ccr-direct-chat-composer").getByRole("button", { name: /^(Enviar|Send)$/ }).click();
       await expect.poll(() => directChatRequests).toBe(1);
       expect(sentPayload).toMatchObject({ professionalId: seed.professionalId, message });
