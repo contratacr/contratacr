@@ -8626,7 +8626,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 68,
+          "line": 76,
           "tag": "form",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{verify}",
@@ -8634,7 +8634,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 70,
+          "line": 78,
           "tag": "input",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{event => setCode(event.target.value.replace(/\\D/g, \"\").slice(0, 6))}",
@@ -8642,7 +8642,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 72,
+          "line": 80,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -8650,7 +8650,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 73,
+          "line": 81,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => void startSetup()}",
@@ -8658,7 +8658,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 74,
+          "line": 82,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{onCancel}",
@@ -8666,7 +8666,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 74,
+          "line": 82,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{async () => { await createClient().auth.signOut({ scope: \"local\" }); window.location.assign(en ? \"/en/login\" : \"/login\"); }}",
@@ -26201,6 +26201,10 @@
         {
           "line": 5,
           "title": "`MFA pending transition ${path} keeps authentication presentation without the route header`"
+        },
+        {
+          "line": 49,
+          "title": "`MFA stays centered while native navigation classes settle (${locale})`"
         }
       ]
     },

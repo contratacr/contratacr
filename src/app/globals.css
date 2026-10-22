@@ -2364,10 +2364,21 @@ body.ccr-native-app main.ccr-authentication-screen[data-authentication-screen] {
   z-index: 250;
   display: flex;
   justify-content: center;
-  height: var(--app-visual-viewport-height, 100dvh);
+  height: 100dvh;
   min-height: 0;
   overflow-y: auto;
   background: #fff;
   padding: max(1.5rem, env(safe-area-inset-top)) max(1.5rem, env(safe-area-inset-right)) max(1.5rem, env(safe-area-inset-bottom)) max(1.5rem, env(safe-area-inset-left));
   scroll-padding-bottom: 1.5rem;
+  /* The old screen's native tab classes can survive the first MFA frame.
+     Their !important padding must not move this independent full-screen form. */
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom)) !important;
+  transition: none;
+}
+
+/* The outgoing login keyboard must not resize the first MFA frame. Once the
+   person focuses this screen's field, use the space above their keyboard. */
+main.ccr-authentication-screen:has(input:focus, textarea:focus),
+body.ccr-native-app main.ccr-authentication-screen[data-authentication-screen]:has(input:focus, textarea:focus) {
+  height: var(--app-visual-viewport-height, 100dvh);
 }
