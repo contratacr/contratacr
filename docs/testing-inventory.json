@@ -2,13 +2,13 @@
   "scope": "Todos los archivos TypeScript de src/app, src/components y src/hooks, controles JSX declarados, pestañas del panel y specs permanentes. No enumera cada elemento dinámico renderizado ni componentes dentro de dependencias.",
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
-    "files": 495,
+    "files": 496,
     "controls": 1293,
     "pages": 71,
     "handlers": 104,
-    "components": 258,
+    "components": 259,
     "hooks": 26,
-    "specs": 159
+    "specs": 160
   },
   "dashboardTabs": [
     "home",
@@ -16296,7 +16296,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 49,
+          "line": 51,
           "tag": "button",
           "label": "{verEnGrande}",
           "handler": "{() => setEnGrande(true)}",
@@ -16304,7 +16304,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 72,
+          "line": 74,
           "tag": "button",
           "label": "\"Ver imagen anterior\"",
           "handler": "{() => goTo(activeIndex - 1)}",
@@ -16312,7 +16312,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 80,
+          "line": 82,
           "tag": "button",
           "label": "\"Ver siguiente imagen\"",
           "handler": "{() => goTo(activeIndex + 1)}",
@@ -16320,7 +16320,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 98,
+          "line": 100,
           "tag": "button",
           "label": "{`Ver imagen ${index + 1}`}",
           "handler": "{() => setActiveIndex(index)}",
@@ -16388,6 +16388,28 @@
       "priority": "P1"
     },
     {
+      "file": "src/components/offers/offer-thumbnail.tsx",
+      "kind": "Componente",
+      "group": "Promociones",
+      "route": null,
+      "exports": [
+        "OfferThumbnail"
+      ],
+      "methods": [],
+      "controls": [],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/marketplace-lifecycle.spec.ts",
+        "tests/e2e/marketplace-editors.spec.ts",
+        "tests/e2e/tableros-filtros.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P1"
+    },
+    {
       "file": "src/components/offers/offers-board.tsx",
       "kind": "Componente",
       "group": "Promociones",
@@ -16399,7 +16421,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 276,
+          "line": 275,
           "tag": "MarketplaceSearch",
           "label": "{copy.searchPlaceholder}",
           "handler": "{setQuery}",
@@ -16407,7 +16429,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 306,
+          "line": 305,
           "tag": "MarketplaceFilterChip",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{setPublished}",
@@ -16415,7 +16437,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 318,
+          "line": 317,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -16423,7 +16445,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 327,
+          "line": 326,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setPublishOpen(true)}",
@@ -16431,7 +16453,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 334,
+          "line": 333,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -16439,7 +16461,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 344,
+          "line": 343,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => void avisar(\"promocion\", \"/promociones/publicar\")}",
@@ -16447,7 +16469,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 348,
+          "line": 347,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -16455,7 +16477,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 364,
+          "line": 363,
           "tag": "button",
           "label": "{copy.openMenu}",
           "handler": "{() =>\n                window.dispatchEvent(new Event(\"ccr:open-mobile-menu\"))\n              }",
@@ -16463,7 +16485,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 374,
+          "line": 373,
           "tag": "Link",
           "label": "\"ContrataCR\"",
           "handler": "",
@@ -16471,7 +16493,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 474,
+          "line": 475,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{clearSearchAndFilters}",
@@ -16479,7 +16501,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 483,
+          "line": 484,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setPublishOpen(true)}",
@@ -16487,7 +16509,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 490,
+          "line": 491,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -16495,7 +16517,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 741,
+          "line": 707,
           "tag": "button",
           "label": "{copy.view(offer.title)}",
           "handler": "{onSelect}",
@@ -16503,7 +16525,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 755,
+          "line": 721,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -16511,7 +16533,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 878,
+          "line": 844,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => onFiltrarServicio?.(offer.service_label ?? \"\")}",
@@ -16519,7 +16541,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 898,
+          "line": 864,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{onEdit}",
@@ -16527,7 +16549,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 905,
+          "line": 871,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -19228,7 +19250,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 267,
+          "line": 278,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { attempts.current = 0; setFailed(false); void loadMore(); }}",
@@ -21166,7 +21188,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 18,
+          "line": 20,
           "tag": "span",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(event) => event.stopPropagation()}",
@@ -25954,6 +25976,23 @@
         {
           "line": 146,
           "title": "\"only native runtimes can produce first app uses\""
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/search-offer-loading.spec.ts",
+      "cases": [
+        {
+          "line": 18,
+          "title": "\"offer thumbnails start together, keep original quality and defer hidden desktop artwork\""
+        },
+        {
+          "line": 51,
+          "title": "\"an offer without artwork prioritizes its professional photo too\""
+        },
+        {
+          "line": 66,
+          "title": "`search keeps twenty cards and ${slow ? \"shows matching skeletons only while waiting\" : \"skips skeletons for an immediate next batch\"}`"
         }
       ]
     },

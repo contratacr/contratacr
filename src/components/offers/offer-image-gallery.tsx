@@ -13,11 +13,13 @@ type OfferImageGalleryProps = {
   images: string[];
   title: string;
   className?: string;
+  /** Hidden desktop previews must not compete with visible mobile thumbnails. */
+  priority?: boolean;
 };
 
 const verEnGrande = "Ver la foto en grande";
 
-export function OfferImageGallery({ images, title, className }: OfferImageGalleryProps) {
+export function OfferImageGallery({ images, title, className, priority = true }: OfferImageGalleryProps) {
   const safeImages = images.filter(Boolean).slice(0, 8);
   const [activeIndex, setActiveIndex] = useState(0);
   const [enGrande, setEnGrande] = useState(false);
@@ -57,7 +59,7 @@ export function OfferImageGallery({ images, title, className }: OfferImageGaller
             src={cldLarge(activeImage, 1280)}
             alt={title}
             fit="contain"
-            priority
+            priority={priority}
             wrapperClassName="block w-full"
             className="max-h-[62vh] min-h-0 w-full sm:max-h-[520px] lg:aspect-[4/3] lg:max-h-[560px]"
           />
