@@ -583,6 +583,7 @@ test.describe("@mobile native shell contracts", () => {
       await expect.poll(() => directChatRequests).toBe(1);
       expect(sentPayload).toMatchObject({ professionalId: seed.professionalId, message });
       await expect.poll(() => new URL(page.url()).searchParams.get("conversation")).toBe(conversationId);
+      await expect(page).toHaveURL(new RegExp(`${contract.locale === "es" ? "" : "/en"}/mensajes\\?conversation=${conversationId}(?:&.*)?$`));
       // Keep the native check after draft-to-conversation transition as well.
       await assertKeyboardSafeComposer(page, ".ccr-direct-chat-composer", ".ccr-direct-chat-composer textarea");
 
