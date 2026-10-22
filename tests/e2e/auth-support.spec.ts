@@ -57,6 +57,9 @@ test.describe("@smoke auth and support", () => {
   // the new one signs in and the old one no longer does.
   test("a real account resets its password end to end through the screens", async ({ page }) => {
     test.skip(!canRunSeededRegression(), "Needs the seeded regression environment.");
+    // Synthetic .test recipients must use the isolated CI mail provider;
+    // a cloud TEST provider may reject them and must not send real email.
+    test.skip(process.env.LOCAL_REGRESSION_SEED !== "1", "Requires the isolated synthetic-email environment; covered by the general CI round.");
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     const projectUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
     test.skip(!anonKey || !projectUrl, "Needs the public Supabase URL and anon key.");

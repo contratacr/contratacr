@@ -23508,6 +23508,10 @@
         },
         {
           "line": 62,
+          "title": "process.env.LOCAL_REGRESSION_SEED !== \"1\""
+        },
+        {
+          "line": 65,
           "title": "!anonKey || !projectUrl"
         }
       ]
@@ -25597,47 +25601,47 @@
           "title": "\"navbar exposes the core public actions\""
         },
         {
-          "line": 99,
+          "line": 103,
           "title": "\"home navbar search stays hidden until the hero search has been passed\""
         },
         {
-          "line": 161,
+          "line": 165,
           "title": "\"tocar Ubicación justo al abrir el buscador no devuelve el cursor a Servicio\""
         },
         {
-          "line": 162,
+          "line": 166,
           "title": "(page.viewportSize()?.width ?? 1280) >= 640"
         },
         {
-          "line": 173,
+          "line": 177,
           "title": "\"home near-me search uses proximity params\""
         },
         {
-          "line": 235,
+          "line": 239,
           "title": "\"services navigation keeps the matching section context\""
         },
         {
-          "line": 260,
+          "line": 264,
           "title": "\"services search uses the canonical design and art label\""
         },
         {
-          "line": 289,
+          "line": 293,
           "title": "\"footer keeps localized resources and safe external destinations\""
         },
         {
-          "line": 338,
+          "line": 342,
           "title": "\"cada servicio de la portada abre su búsqueda, nunca «Perfil no encontrado»\""
         },
         {
-          "line": 355,
+          "line": 359,
           "title": "\"una dirección que no existe responde 404, no 200\""
         },
         {
-          "line": 396,
+          "line": 400,
           "title": "\"el panel de servicio ofrece oficios aunque no haya búsquedas recientes\""
         },
         {
-          "line": 397,
+          "line": 401,
           "title": "!testInfo.project.name.includes(\"mobile\")"
         }
       ]
