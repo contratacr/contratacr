@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { readAllAdminRows } from "@/lib/admin/read-all-rows";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getProvinceById } from "@/lib/data/cr-geography";
@@ -66,6 +67,7 @@ type ContactoRow = { created_at: string };
 
 export async function getAdminOverview(locale = "es"): Promise<AdminOverview> {
   try {
+    const tRole = await getTranslations({ locale, namespace: "registerChoice" });
     const admin = createAdminClient();
     const now = Date.now();
     const last7 = now - 7 * DAY, prev7 = now - 14 * DAY;
@@ -141,13 +143,13 @@ export async function getAdminOverview(locale = "es"): Promise<AdminOverview> {
     // Altas recientes — merge pros + clients, newest first
     const proSignups: SignupItem[] = pros.map((p) => ({
       id: p.id,
-      name: p.profiles?.full_name || "Profesional",
+      name: p.profiles?.full_name || tRole("proRole"),
       role: "professional",
       meta: [p.category_id ? getCategoryLabel(p.category_id, locale) : null, p.provincia_id ? getProvinceById(p.provincia_id)?.name : null].filter(Boolean).join(" · "),
       createdAt: p.created_at,
     }));
     const clientSignups: SignupItem[] = clients.map((c) => ({
-      id: c.id, name: c.full_name || "Cliente", role: "client", meta: "", createdAt: c.created_at,
+      id: c.id, name: c.full_name || tRole("clientRole"), role: "client", meta: "", createdAt: c.created_at,
     }));
     const recentSignups = [...proSignups, ...clientSignups]
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -158,10 +160,10 @@ export async function getAdminOverview(locale = "es"): Promise<AdminOverview> {
     const pendingClients = profileRows.filter((p) => p.client_identity_status === "pending" && !professionalProfileIds.has(p.id));
     const pendingAccounts: PendingItem[] = [
       ...pendingPros.map((p) => ({
-        id: p.id, slug: p.slug, name: p.profiles?.full_name || "Profesional",
+        id: p.id, slug: p.slug, name: p.profiles?.full_name || tRole("proRole"),
         category: p.category_id ? getCategoryLabel(p.category_id, locale) : "", createdAt: p.created_at,
       })),
-      ...pendingClients.map((p) => ({ id: p.id, slug: null, name: p.full_name || "Cliente", category: locale === "en" ? "Client" : "Cliente", createdAt: p.created_at })),
+      ...pendingClients.map((p) => ({ id: p.id, slug: null, name: p.full_name || tRole("clientRole"), category: tRole("clientRole"), createdAt: p.created_at })),
     ];
     const pending = pendingAccounts.sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 3);
 

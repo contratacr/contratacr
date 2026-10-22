@@ -22751,51 +22751,51 @@
       "file": "tests/e2e/admin-list-limits-runtime.spec.ts",
       "cases": [
         {
-          "line": 73,
+          "line": 77,
           "title": "`${route} list includes every match beyond the default cap and agrees with its counter`"
         },
         {
-          "line": 79,
+          "line": 83,
           "title": "\"all support messages remain available beyond the database cap\""
         },
         {
-          "line": 86,
+          "line": 90,
           "title": "\"review search can find older reviews after 500 and 1000 records\""
         },
         {
-          "line": 90,
+          "line": 94,
           "title": "`${kind} filters and pages use all records`"
         },
         {
-          "line": 94,
+          "line": 98,
           "title": "\"coverage includes every matching professional beyond its old 300-row cutoff\""
         },
         {
-          "line": 97,
+          "line": 101,
           "title": "\"overview contacts and analytics search quality include events after 1000\""
         },
         {
-          "line": 102,
+          "line": 106,
           "title": "\"users and projects no longer stop silently at 10000 rows\""
         },
         {
-          "line": 106,
+          "line": 110,
           "title": "\"a failed later page produces an error instead of a misleading partial list\""
         },
         {
-          "line": 109,
+          "line": 113,
           "title": "\"complete queue reads remain restricted to administrators\""
         },
         {
-          "line": 114,
-          "title": "\"overview pending count excludes unverified drafts and includes client-only reviews once\""
-        },
-        {
-          "line": 125,
-          "title": "\"project contact counts include every matching event beyond the first page\""
+          "line": 118,
+          "title": "`overview pending count deduplicates reviews and translates client labels (${locale})`"
         },
         {
           "line": 130,
+          "title": "\"project contact counts include every matching event beyond the first page\""
+        },
+        {
+          "line": 135,
           "title": "\"admin edit history is complete beyond the former 50-row cutoff\""
         }
       ]
@@ -23244,111 +23244,111 @@
       "file": "tests/e2e/app-download.spec.ts",
       "cases": [
         {
-          "line": 7,
+          "line": 17,
           "title": "'web: tiendas correctas, reserva, teclado y cierre persistente'"
         },
         {
-          "line": 9,
+          "line": 19,
           "title": "(page.viewportSize()?.width ?? 1280) >= 1024"
         },
         {
-          "line": 44,
+          "line": 54,
           "title": "'native: no download section, links or banner; form: no banner'"
         },
         {
-          "line": 54,
+          "line": 64,
           "title": "'web forms never display download banner'"
         },
         {
-          "line": 60,
+          "line": 70,
           "title": "'shared download anchor always remains useful, including after dismissing the mobile notice'"
         },
         {
-          "line": 90,
+          "line": 100,
           "title": "'shared download link does not pause at the how-it-works section on a cold visit'"
         },
         {
-          "line": 102,
+          "line": 112,
           "title": "'mobile download notice and header are correctly positioned before JavaScript hydration'"
         },
         {
-          "line": 103,
+          "line": 113,
           "title": "(page.viewportSize()?.width ?? 1280)>=1024"
         },
         {
-          "line": 127,
+          "line": 137,
           "title": "'narrow desktop windows have no mobile notice or navbar gap, while download links remain available'"
         },
         {
-          "line": 128,
+          "line": 138,
           "title": "test.info().project.name!=='chromium-desktop' && test.info().project.name!=='desktop-download'"
         },
         {
-          "line": 150,
+          "line": 160,
           "title": "'notice stays at the bottom on public pages and respects account/form routes'"
         },
         {
-          "line": 151,
+          "line": 161,
           "title": "(page.viewportSize()?.width ?? 1280)>=1024"
         },
         {
-          "line": 174,
+          "line": 184,
           "title": "'web footer uses Apple and Android symbols with accessible store links'"
         },
         {
-          "line": 181,
+          "line": 191,
           "title": "'QR download opens the correct store without caching another device choice'"
         },
         {
-          "line": 196,
+          "line": 206,
           "title": "'responsive download artwork and store actions fit the viewport, including Safari tablet sizing'"
         },
         {
-          "line": 219,
+          "line": 229,
           "title": "'home-screen launch uses a white surface even in dark mode before external CSS'"
         },
         {
-          "line": 233,
+          "line": 243,
           "title": "'iOS launch images have the exact declared device dimensions and a white corner'"
         },
         {
-          "line": 246,
+          "line": 256,
           "title": "'home-screen launch shell is public, white and independent of the session'"
         },
         {
-          "line": 270,
+          "line": 280,
           "title": "'mobile listings stay behind the download notice and keep their last result reachable'"
         },
         {
-          "line": 271,
+          "line": 281,
           "title": "(page.viewportSize()?.width ?? 1280)>=1024"
         },
         {
-          "line": 297,
+          "line": 307,
           "title": "'home-screen web app can show the store notice without being treated as native'"
         },
         {
-          "line": 298,
+          "line": 308,
           "title": "(page.viewportSize()?.width ?? 1280)>=1024"
         },
         {
-          "line": 312,
+          "line": 322,
           "title": "`download section ${locale}: ${store} button activates its exact store link`"
         },
         {
-          "line": 348,
+          "line": 358,
           "title": "`corrected iPhone notice survives legacy dismissals (standalone=${standalone})`"
         },
         {
-          "line": 349,
-          "title": "test.info().project.name !== 'webkit-mobile'"
+          "line": 359,
+          "title": "!prefersNativeIosAppBanner(await page.evaluate(()=>navigator.userAgent))"
         },
         {
-          "line": 378,
+          "line": 388,
           "title": "`download notice translates its label and accessibility text in ${locale}`"
         },
         {
-          "line": 379,
+          "line": 389,
           "title": "(page.viewportSize()?.width??1280)>=1024"
         }
       ]

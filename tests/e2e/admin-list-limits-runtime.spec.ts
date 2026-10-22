@@ -56,6 +56,10 @@ function setup(size = 1203, options: { authorized?: boolean; failTable?: string;
     };return q;
   },rpc: async () => ({data:null,error:null}), auth:{admin:{ listUsers: async ({page,perPage}: any) => ({data:{users:base.slice((page-1)*perPage,page*perPage).map(row=>({id:row.id,user_metadata:{}}))},error:null})}} };
   const mocks = {
+    "next-intl/server": {getTranslations: async ({locale,namespace}: {locale:string;namespace:string}) => {
+      const messages=JSON.parse(readFileSync(`messages/${locale}.json`,"utf8"));
+      return (key:string)=>messages[namespace][key];
+    }},
     "@/lib/admin/read-all-rows":paging,
     "@/lib/auth/admin":{getApiAdmin:async()=>options.authorized===false?null:{id:"admin"}},
     "@/lib/supabase/admin":{createAdminClient:()=>db},
@@ -111,14 +115,15 @@ test("complete queue reads remain restricted to administrators",async()=>{
 });
 
 
-test("overview pending count excludes unverified drafts and includes client-only reviews once",async()=>{
+for (const locale of ["es","en"]) test(`overview pending count deduplicates reviews and translates client labels (${locale})`,async()=>{
   const s=setup(3);
   s.tables.professionals[0].verification_status="unverified";
   s.tables.professionals[1].verification_status="under_appeal";
   s.tables.professionals[2].verification_status="verified";
   s.tables.profiles[1].client_identity_status="pending";
   s.tables.profiles.push({id:"client-only",role:"client",client_identity_status:"pending",created_at:new Date().toISOString(),full_name:"Pending client"});
-  const overview=await load('src/lib/admin/overview.ts',s.mocks).getAdminOverview();
+  const overview=await load('src/lib/admin/overview.ts',s.mocks).getAdminOverview(locale);
+  expect(overview.pending.find((row:any)=>row.id==='client-only').category).toBe(locale==='en'?'Client':'Cliente');
   expect(overview.pendingCount).toBe(2);expect(overview.pending.map((row:any)=>row.id).sort()).toEqual(['client-only','id-000001']);
 });
 
