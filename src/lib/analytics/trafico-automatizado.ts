@@ -7,6 +7,7 @@
 //  - el agente de usuario de herramientas sin navegador (curl, node, Headless).
 import type { NextRequest } from "next/server";
 
+export const COOKIE_ADMIN_EXCLUDED = "ccr_admin_analytics_excluded";
 export const COOKIE_SIN_ANALITICA = "ccr_sin_analitica";
 // 4-oct-2026: también los RASTREADORES (Google, Bing, Facebook, WhatsApp…). La
 // búsqueda se anota en el servidor al pintar la página, así que cada visita de
@@ -16,7 +17,7 @@ const AGENTE_AUTOMATIZADO = /HeadlessChrome|Playwright|curl\/|node-fetch|undici|
 
 export function esNavegadorAutomatizado(): boolean {
   if (typeof navigator === "undefined") return false;
-  return navigator.webdriver === true || document.cookie.includes(`${COOKIE_SIN_ANALITICA}=1`);
+  return navigator.webdriver === true || (document.cookie.includes(`${COOKIE_SIN_ANALITICA}=1`) || document.cookie.includes(`${COOKIE_ADMIN_EXCLUDED}=1`));
 }
 
 export function esPeticionAutomatizada(cookie: string | undefined | null, agente: string | null | undefined): boolean {
@@ -24,5 +25,5 @@ export function esPeticionAutomatizada(cookie: string | undefined | null, agente
 }
 
 export function peticionAutomatizada(req: NextRequest): boolean {
-  return esPeticionAutomatizada(req.cookies.get(COOKIE_SIN_ANALITICA)?.value, req.headers.get("user-agent"));
+  return req.cookies.get(COOKIE_ADMIN_EXCLUDED)?.value === "1" || esPeticionAutomatizada(req.cookies.get(COOKIE_SIN_ANALITICA)?.value, req.headers.get("user-agent"));
 }

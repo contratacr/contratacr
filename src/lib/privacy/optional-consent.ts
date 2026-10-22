@@ -4,6 +4,8 @@ export const OPTIONAL_CONSENT_EVENT = "contratacr:privacy-choice";
 export const ADS_CONSENT_COOKIE = "ccr_ads_consent_v1";
 export type OptionalPurpose = "advertising" | "ai";
 export type OptionalChoice = "accepted" | "declined" | "unknown";
+const WITHDRAWAL_KEY = "contratacr:advertising-withdrawal-pending";
+let withdrawalInFlight: Promise<void> | null = null;
 const MAX_AGE = 180 * 86400;
 export function consentKey(purpose: OptionalPurpose) { return `contratacr:consent:${purpose}:v1`; }
 
@@ -22,6 +24,7 @@ export function readOptionalConsent(purpose: OptionalPurpose): OptionalChoice {
 export function advertisingMeasurementEnabled(): boolean {
   if (typeof window === "undefined") return false;
   try {
+    if (window.localStorage.getItem(WITHDRAWAL_KEY)) return false;
     if (window.localStorage.getItem("contratacr:analytics-consent") === "declined") return false;
     const raw = window.localStorage.getItem(consentKey("advertising"));
     if (!raw) return true;
@@ -49,12 +52,9 @@ export function saveOptionalConsent(purpose: OptionalPurpose, choice: Exclude<Op
     syncAdvertisingCookie();
     if (choice === "declined") {
       try { window.sessionStorage.removeItem("contratacr:meta-pendientes"); } catch { /* storage optional */ }
-      // Local tracking stops synchronously; notify the server to cancel any
-      // pending conversions belonging to this same browser/account as well.
-      if (typeof fetch === "function") void fetch("/api/privacy/advertising", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accepted: false, version: OPTIONAL_CONSENT_VERSION }), keepalive: true,
-      }).catch(() => { /* Network failures do not turn local tracking back on. */ });
+      // Persist only a retry marker, never an identity or advertising payload.
+      window.localStorage.setItem(WITHDRAWAL_KEY, "1");
+      void retryAdvertisingWithdrawal();
       for (const key of ["_fbp", "_fbc"]) {
         document.cookie = `${key}=; Path=/; Max-Age=0`;
         if (/(^|\.)contratacr\.com$/.test(location.hostname)) document.cookie = `${key}=; Path=/; Domain=.contratacr.com; Max-Age=0`;
@@ -71,4 +71,27 @@ export function subscribeOptionalConsent(onChange: () => void) {
     window.removeEventListener(OPTIONAL_CONSENT_EVENT, onChange);
     window.removeEventListener("storage", onChange);
   };
+}
+
+/** Guests also need withdrawal retried after a failed/offline request. A pending
+ * withdrawal blocks advertising even if another tab enables it before delivery. */
+export function retryAdvertisingWithdrawal(): Promise<void> {
+  if (typeof window === "undefined" || typeof fetch !== "function") return Promise.resolve();
+  if (withdrawalInFlight) return withdrawalInFlight;
+  try { if (!window.localStorage.getItem(WITHDRAWAL_KEY)) return Promise.resolve(); }
+  catch { return Promise.resolve(); }
+  withdrawalInFlight = (async () => {
+    try {
+      const response = await fetch("/api/privacy/advertising", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accepted: false, version: OPTIONAL_CONSENT_VERSION }), keepalive: true,
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!response.ok) return;
+      window.localStorage.removeItem(WITHDRAWAL_KEY);
+      syncAdvertisingCookie();
+      window.dispatchEvent(new CustomEvent(OPTIONAL_CONSENT_EVENT, { detail: { purpose: "advertising", synchronized: true } }));
+    } catch { /* Keep the marker and local refusal until reconnection/next load. */ }
+  })().finally(() => { withdrawalInFlight = null; });
+  return withdrawalInFlight;
 }

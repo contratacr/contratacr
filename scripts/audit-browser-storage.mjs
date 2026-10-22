@@ -9,7 +9,7 @@ import fs from "node:fs";
 // a previously reviewed file.
 const reviewed = new Map([
   ["src/lib/analytics/native-measurement.ts", { count: 2, reason: "session-scoped 30-minute timestamp deduplication for a closed event catalog; no identity, search text, business payload or account-owned records" }],
-  ["src/lib/privacy/optional-consent.ts", { count: 6, reason: "versioned device-local advertising/AI preferences and legacy refusal reads; expiry never converts refusal into permission, explicit changes clear legacy state and pending delivery markers; authenticated choices also persist in the consent ledger" }],
+  ["src/lib/privacy/optional-consent.ts", { count: 10, reason: "versioned device-local advertising/AI preferences and legacy refusal reads; expiry never converts refusal into permission, explicit changes clear legacy state and pending delivery markers; a boolean-only pending withdrawal marker survives offline guest requests until server acknowledgement; authenticated choices also persist in the consent ledger" }],
   ["src/components/privacy/optional-choice-recorder.tsx", { count: 4, reason: "short-lived session retry queue scoped to the current user and purpose; removed after the backend acknowledges the explicit action, never treated as a server receipt or inherited by another account" }],
   ["src/components/mobile/campaign-app-links.tsx", { count: 2, reason: "session-scoped boolean preventing repeated cold-launch navigation; no signed URLs, tokens, identity or account-owned records are stored" }],
   ["src/components/analytics/usage-capture.tsx", { count: 4, reason: "anonymous session ID/time and successful first-use delivery marker; all account access, registration and usage metrics are stored server-side" }],

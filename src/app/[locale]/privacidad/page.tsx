@@ -1,5 +1,5 @@
 import { AdvertisingPreferences } from "@/components/privacy/advertising-preferences";
-const PRIVACY_DATE = { es: "20 de octubre de 2026", en: "October 20, 2026" };
+const PRIVACY_DATE = { es: "22 de octubre de 2026", en: "October 22, 2026" };
 import { Link } from "@/i18n/navigation";
 import { LegalDocument, type LegalSection } from "@/components/legal/legal-document";
 import { imagenSocial } from "@/lib/seo/imagen-social";
@@ -199,7 +199,11 @@ const ES_SECTIONS: LegalSection[] = [
       },
       {
         "k": "p",
-        "text": "La medición limitada está activada en web y en las versiones móviles compatibles salvo que exista un rechazo guardado. Puede desactivarla o reactivarla en **Preferencias de publicidad** de esta página o desde Privacidad de su cuenta, sin bloquear el servicio. No mostramos una ventana automática ni interpretamos esta configuración como una aceptación expresa. Desactivarla detiene envíos futuros y cancela conversiones pendientes asociadas en nuestro servidor; no borra automáticamente datos ya recibidos por Meta."
+        "text": "La medición limitada está activada en web y en las versiones móviles compatibles salvo que exista un rechazo guardado. Puede desactivarla o reactivarla en **Preferencias de publicidad** de esta página o desde Privacidad de su cuenta, sin bloquear el servicio. No mostramos una ventana automática ni interpretamos esta configuración como una aceptación expresa. Desactivarla detiene los envíos de este dispositivo inmediatamente y solicita cancelar las conversiones pendientes asociadas en nuestro servidor. Si no hay conexión, reintentamos la solicitud al reconectar o volver a abrir la aplicación. No puede retirarse con certeza un envío ya en curso ni se borran automáticamente datos que Meta haya recibido."
+      },
+      {
+        "k": "p",
+        "text": "La medición interna de cuentas y visitantes es seudónima cuando permite relacionar acciones: no equivale a estadísticas anónimas. Las búsquedas y zonas elegidas permanecen en la analítica interna y no se envían a Meta. Excluimos los administradores identificados y conservamos una marca de exclusión en su navegador al cerrar sesión; no podemos reconocerlos sin sesión en un navegador nuevo, privado o con almacenamiento borrado."
       },
       {
         "k": "p",
@@ -475,7 +479,11 @@ const EN_SECTIONS: LegalSection[] = [
       },
       {
         "k": "p",
-        "text": "Limited measurement is enabled on the web and compatible mobile versions unless a saved rejection exists. Disable or enable it under **Advertising preferences** on this page or in account Privacy without losing access. We show no automatic prompt and do not treat this setting as express acceptance. Disabling stops future delivery and cancels associated pending conversions on our server; it does not automatically erase data already received by Meta."
+        "text": "Limited measurement is enabled on the web and compatible mobile versions unless a saved rejection exists. Disable or enable it under **Advertising preferences** on this page or in account Privacy without losing access. We show no automatic prompt and do not treat this setting as express acceptance. Disabling stops delivery from this device immediately and requests cancellation of associated pending conversions on our server. If offline, we retry when reconnecting or reopening the application. An already in-flight delivery cannot reliably be recalled, and data already received by Meta is not automatically erased."
+      },
+      {
+        "k": "p",
+        "text": "Internal account and guest activity is pseudonymous when actions can be linked; it is not anonymous statistics. Searches and selected areas remain in internal analytics and are not sent to Meta. Identified administrators are excluded, and a browser exclusion marker survives sign-out; we cannot identify a signed-out administrator in a new or private browser or after storage is cleared."
       },
       {
         "k": "p",

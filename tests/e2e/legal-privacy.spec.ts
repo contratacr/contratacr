@@ -16,6 +16,8 @@ for (const locale of ["es","en"]) test(`legal documents: ${locale} identifies th
  await expect(page.locator("main")).toContainText("Zoho Mail");
  await expect(page.locator("main")).toContainText(locale==="es"?"cinco días hábiles":"five business days");
  await expect(page.locator("main")).toContainText("PRODHAB");
+ await expect(page.locator("main")).toContainText(locale === "es" ? "no equivale a estadísticas anónimas" : "it is not anonymous statistics");
+ await expect(page.locator("main")).toContainText(locale === "es" ? "reintentamos la solicitud" : "we retry");
 });
 
 test("limited advertising can be disabled and enabled without blocking legal pages",async({page,context})=>{
@@ -26,8 +28,8 @@ test("limited advertising can be disabled and enabled without blocking legal pag
  await expect(controls).toContainText("desactivada");
  expect((await context.cookies()).find(cookie=>cookie.name==="ccr_ads_consent_v1")?.value).toBe("declined");
  await controls.getByRole("button",{name:"Activar",exact:true}).click();
- await expect(controls).toContainText("activada");
- expect((await context.cookies()).find(cookie=>cookie.name==="ccr_ads_consent_v1")?.value).toBe("accepted");
+ await expect(controls).toContainText("Medición publicitaria activada en este dispositivo.");
+ await expect.poll(async () => (await context.cookies()).find(cookie=>cookie.name==="ccr_ads_consent_v1")?.value).toBe("accepted");
  await controls.getByRole("button",{name:"Desactivar",exact:true}).click();
  await page.reload();await expect(page.locator('[data-advertising-preferences]')).toHaveCount(1);
 });
@@ -123,4 +125,28 @@ test("advertising withdrawal rejects cross-origin and invalid choices", async ({
   expect(response.status()).toBe(400);
   expect(response.headers()["cache-control"]).toBe("private, no-store");
  }
+});
+
+
+test("offline guest advertising withdrawal retries on reconnect without a popup", async ({page}) => {
+ let available = false;
+ let withdrawals = 0;
+ await page.route("**/api/privacy/advertising", async route => {
+  withdrawals++;
+  await route.fulfill({status:available ? 200 : 503,json:available ? {ok:true} : {error:"offline"}});
+ });
+ await gotoOK(page,"/privacidad");
+ const controls = page.locator("[data-advertising-preferences]");
+ await controls.getByRole("button",{name:"Desactivar",exact:true}).click();
+ await expect.poll(()=>withdrawals).toBe(1);
+ await expect(controls).toContainText("desactivada");
+ await page.reload();
+ await expect.poll(()=>withdrawals).toBe(2);
+ await expect(page.locator("[data-advertising-preferences]")).toContainText("desactivada");
+ available = true;
+ await page.evaluate(()=>window.dispatchEvent(new Event("online")));
+ await expect.poll(()=>withdrawals).toBe(3);
+ await expect.poll(()=>page.evaluate(()=>localStorage.getItem("contratacr:advertising-withdrawal-pending"))).toBeNull();
+ await expect(page.locator("[data-advertising-preferences]")).toContainText("desactivada");
+ await expect(page.getByRole("dialog")).toHaveCount(0);
 });
