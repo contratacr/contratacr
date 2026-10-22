@@ -14484,7 +14484,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 138,
+          "line": 141,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -24597,14 +24597,14 @@
       "cases": [
         {
           "line": 5,
-          "title": "\"service tabs keep hidden photos unloaded and retain visited groups\""
+          "title": "\"service tabs request their four photos before scrolling and retain visited groups\""
         },
         {
-          "line": 42,
+          "line": 57,
           "title": "\"download artwork waits near the viewport without changing reserved height\""
         },
         {
-          "line": 56,
+          "line": 71,
           "title": "\"hero keeps its current photo while the next slide is downloading\""
         }
       ]

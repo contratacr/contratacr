@@ -2,9 +2,14 @@ import { build } from "esbuild";
 import { test, expect } from "playwright/test";
 import { blockThirdParty, gotoOK, waitForInteractivePage } from "./helpers";
 
-test("service tabs keep hidden photos unloaded and retain visited groups", async ({ page }) => {
+test("service tabs request their four photos before scrolling and retain visited groups", async ({ page }) => {
   await blockThirdParty(page);
-  await page.route('https://images.unsplash.com/**', route => route.fulfill({ contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><rect width="16" height="16" fill="navy"/></svg>' }));
+  const requestedPhotos = new Set<string>();
+  await page.route('https://images.unsplash.com/**', route => {
+    const url = new URL(route.request().url());
+    if (url.searchParams.get("w") !== "24") requestedPhotos.add(url.pathname);
+    return route.fulfill({ contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><rect width="16" height="16" fill="navy"/></svg>' });
+  });
   // Exercise two real groups regardless of the professional supply in the
   // isolated database. No production/test accounts need to be changed.
   const bundled = await build({
@@ -18,7 +23,9 @@ test("service tabs keep hidden photos unloaded and retain visited groups", async
       builder.onLoad({ filter: /.*/, namespace: "test-navigation" }, () => ({ contents: `import React from 'react'; export const Link=({href,children,...props})=>React.createElement('a',{...props,href},children);`, resolveDir: process.cwd() }));
     } }],
   });
-  await page.route('**/landing-tabs-harness', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><div id="root"></div>' }));
+  // Far outside every engine's lazy-loading threshold: the four requests must
+  // start together before the visitor scrolls, without requesting other groups.
+  await page.route('**/landing-tabs-harness', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><div id="root" style="margin-top:20000px"></div>' }));
   await page.goto('/landing-tabs-harness');
   await page.addScriptTag({ content: bundled.outputFiles[0].text });
   const section = page.locator(".ccr-home-services-section");
@@ -26,9 +33,17 @@ test("service tabs keep hidden photos unloaded and retain visited groups", async
   await expect(tabs.first()).toHaveAttribute("aria-selected", "true");
   await expect(section.locator('[aria-hidden="true"] img')).toHaveCount(0);
   await expect(section.locator("img")).toHaveCount(4);
+  await expect.poll(() => requestedPhotos.size).toBe(4);
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  for (const photo of await section.locator("img").all()) {
+    await expect(photo).toHaveAttribute("loading", "eager");
+    await expect(photo).toHaveAttribute("src", /w=1100&auto=format&fit=crop&q=70/);
+    await expect(photo).toHaveAttribute("srcset", /1100w/);
+  }
   // Keyboard anticipation loads only the intended group, not every hidden tab.
   await tabs.nth(1).focus();
   await expect(section.locator("img")).toHaveCount(8);
+  await expect.poll(() => requestedPhotos.size).toBe(8);
   await tabs.nth(1).click();
   await expect(tabs.nth(1)).toHaveAttribute("aria-selected", "true");
   await expect(section.getByRole("tabpanel").locator("img")).toHaveCount(4);
