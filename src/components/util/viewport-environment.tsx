@@ -1,4 +1,5 @@
 "use client";
+import { APP_RESUME_EVENT } from "@/lib/app-events";
 
 import { useEffect } from "react";
 import { noInsistirArriba } from "@/lib/ir-al-inicio";
@@ -143,6 +144,7 @@ export function ViewportEnvironment() {
       }
     };
     document.addEventListener("focusout", remedirAlSoltar);
+    window.addEventListener(APP_RESUME_EVENT, remedirAlSoltar);
 
     return () => {
       window.removeEventListener("resize", update);
@@ -151,6 +153,7 @@ export function ViewportEnvironment() {
       vv?.removeEventListener("scroll", update);
       document.removeEventListener("focusin", scheduleFocusedFieldCheck);
       document.removeEventListener("focusout", remedirAlSoltar);
+      window.removeEventListener(APP_RESUME_EVENT, remedirAlSoltar);
       timers.forEach((id) => window.clearTimeout(id));
     };
   }, []);

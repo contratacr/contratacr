@@ -10,6 +10,8 @@ export default defineConfig({
   testIgnore: ["**/.tmp-*.spec.ts"],
   testMatch: [
     "**/direct-chat.spec.ts",
+    "**/recuperacion-al-desbloquear.spec.ts",
+    "**/reanudar-la-app.spec.ts",
     "**/mensajes-sin-parpadeo.spec.ts",
     "**/mobile-native-shell.spec.ts",
     "**/admin-bottom-nav.spec.ts",

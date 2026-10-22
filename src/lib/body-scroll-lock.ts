@@ -102,15 +102,18 @@ export function recoverBodyScrollLock(): void {
   const state = getState();
   if (state.locks.size === 0) return;
 
-  const hasVisibleModal = Boolean(
-    document.querySelector(
-      [
-        '[role="dialog"][aria-modal="true"]',
-        "[data-ai-concierge-dialog]",
-        ".app-bottom-sheet",
-      ].join(","),
-    ),
-  );
+  // The navigation drawer stays mounted, translated outside the viewport.
+  // Its presence alone must not keep an orphaned body lock after resuming.
+  const hasVisibleModal = [...document.querySelectorAll<HTMLElement>(
+    '[role="dialog"][aria-modal="true"], [data-ai-concierge-dialog], .app-bottom-sheet',
+  )].some((element) => {
+    if (element.closest('[hidden], [aria-hidden="true"], [inert]')) return false;
+    const style = getComputedStyle(element);
+    if (style.display === "none" || style.visibility === "hidden") return false;
+    const bounds = element.getBoundingClientRect();
+    return bounds.width > 0 && bounds.height > 0 && bounds.right > 0 && bounds.bottom > 0
+      && bounds.left < window.innerWidth && bounds.top < window.innerHeight;
+  });
 
   if (hasVisibleModal) return;
 

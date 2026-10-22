@@ -355,8 +355,8 @@ function useAuthState(
       if (resumeSyncRunning || !mounted) return;
       resumeSyncRunning = true;
       try {
-        const { data } = await withTimeout(supabase.auth.getSession(), RESUME_AUTH_TIMEOUT_MS);
-        if (!mounted) return;
+        const { data, error } = await withTimeout(supabase.auth.getSession(), RESUME_AUTH_TIMEOUT_MS);
+        if (!mounted || error) return;
         const siguiente = freshestAuthUser(data.session?.user ?? null, usuarioConocidoRef.current);
         // Mismo usuario y sin cambios → no se toca el estado: un objeto nuevo
         // con el mismo contenido re-renderizaba media app en cada vuelta de foco.

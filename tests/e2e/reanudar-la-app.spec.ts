@@ -96,3 +96,53 @@ test.describe("@smoke reanudar la app", () => {
     await expect(page.locator("body")).not.toContainText(/Ingresa a tu cuenta|Log in to your account/);
   });
 });
+
+for (const native of [false, true]) {
+  test(`@smoke sesión y borrador real de chat sobreviven a una suspensión larga y un corte de red (${native ? "app" : "web"})`, async ({ page, context, baseURL }) => {
+    test.skip(!canRunSeededRegression(), "Necesita las cuentas de regresión aisladas.");
+    test.setTimeout(120_000);
+    const { createDisposableAccount, cleanupDisposableAccount } = await import("./disposable-account");
+    const { getRegressionSeedState } = await import("./seed");
+    const seed = await getRegressionSeedState();
+    expect(seed).toBeTruthy();
+    const account = await createDisposableAccount({ prefix: "resume-draft" });
+    try {
+      if (native) {
+        await context.addCookies([{ name: "ccr_platform", value: "native", url: baseURL! }]);
+        await page.addInitScript(() => localStorage.setItem("ccr:native-first-run-onboarding:v12", "1"));
+      }
+      await loginAs(page, account.email, account.password);
+      const params = new URLSearchParams({ draftChat: "1", professionalId: seed!.professionalId, professionalName: "Profesional de regresión" });
+      await gotoOK(page, `/mensajes?${params}`);
+      const composer = page.getByPlaceholder("Escribe un mensaje");
+      await expect(composer).toBeVisible();
+      const text = "Borrador de regresión: no enviar este mensaje.";
+      await composer.fill(text);
+      await page.clock.install();
+      await page.evaluate(() => {
+        Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "hidden" });
+        document.dispatchEvent(new Event("visibilitychange"));
+      });
+      // Advance wall-clock age, not every timer in the application. The former
+      // 10-minute hard reload must not discard this mounted composer.
+      await page.clock.setSystemTime(new Date(await page.evaluate(() => Date.now()) + 660000));
+      await page.evaluate(() => {
+        Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "visible" });
+        document.dispatchEvent(new Event("visibilitychange"));
+      });
+      await irYVolver(page);
+      await expect(composer).toHaveValue(text);
+      const session = await page.request.get("/api/auth/session-mfa");
+      expect(session.ok()).toBe(true);
+      expect((await session.json()).userId).toBe(account.id);
+      const storedDrafts = await page.evaluate(id => JSON.parse(localStorage.getItem(`ccr:chat:drafts:${id}`) || "{}") as Record<string, string>, account.id);
+      expect(Object.values(storedDrafts)).toContain(text);
+      // Editing remains possible; resuming never sends the draft automatically.
+      await composer.fill(`${text} Sigue editable.`);
+      await expect(composer).toHaveValue(`${text} Sigue editable.`);
+    } finally {
+      await page.goto("about:blank");
+      await cleanupDisposableAccount(account);
+    }
+  });
+}
