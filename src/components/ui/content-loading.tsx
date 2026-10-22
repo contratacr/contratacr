@@ -4,8 +4,8 @@ import type { ElementType, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 
-export function Skeleton({ className }: { className: string }) {
-  return <span aria-hidden className={`ccr-delayed-loading ccr-skeleton-shimmer block ${className}`} />;
+export function Skeleton({ className, immediate = false }: { className: string; immediate?: boolean }) {
+  return <span aria-hidden className={`${immediate ? "" : "ccr-delayed-loading "}ccr-skeleton-shimmer block ${className}`} />;
 }
 
 

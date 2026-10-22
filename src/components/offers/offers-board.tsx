@@ -7,14 +7,13 @@ import { ProfilePhotoPreview } from "@/components/ui/profile-photo-preview";
 import { formatPersonDisplayName } from "@/lib/display-name";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { conFiltroDeFecha } from "@/lib/marketplace/filtros-por-volumen";
-import { ProgressiveImage } from "@/components/ui/progressive-image";
 import { PanelEmptyState } from "@/components/ui/content-loading";
 import { cn } from "@/lib/utils";
 import { VerificationInfo } from "@/components/ui/verification-info";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
-import { cldLarge } from "@/lib/cloudinary";
+import { OfferThumbnail } from "@/components/offers/offer-thumbnail";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CalendarDays, MapPin, Menu, Store } from "lucide-react";
 import { ContrataCRMark, HeaderAccountLink } from "@/components/landing/landing-navbar";
@@ -447,10 +446,12 @@ export function OffersBoard({
               </div>
             )}
             <div>
-              {filtered.map((offer) => (
+              {filtered.map((offer, index) => (
                 <OfferRow
                   key={offer.id}
                   offer={offer}
+                  imagePriority={index === 0}
+                  imageEager={index < 6}
                   selected={selected?.id === offer.id}
                   onSelect={() => setSelectedId(offer.id)}
                 />
@@ -558,45 +559,6 @@ export function OffersBoard({
   );
 }
 
-function OfferImage({
-  offer,
-  large = false,
-}: {
-  offer: ProfessionalOffer;
-  large?: boolean;
-}) {
-  const extraCount = Math.max(0, offer.image_urls.length - 1);
-  return (
-    <div
-      className={`${large ? "aspect-[16/8] w-full rounded-lg bg-white" : "h-11 w-11 shrink-0 sm:h-12 sm:w-12"} relative overflow-hidden`}
-    >
-      {offer.image_urls[0] ? (
-        <ProgressiveImage
-          src={cldLarge(offer.image_urls[0], 640)}
-          alt={offer.title}
-          fit="cover"
-          wrapperClassName="block h-full max-h-full w-full max-w-full rounded-lg"
-          className="rounded-lg"
-        />
-      ) : offer.professional_avatar_url ? (
-        // Sin arte propio, la cara de quien la ofrece: 250 de 290 profesionales
-        // tienen foto, y dice mucho más que dos letras del título. La foto del
-        // profesional NO se agrega cuando la promoción sí trae su imagen: ahí
-        // manda el arte, que es lo que se compra con los ojos.
-        <ProfilePhotoPreview src={offer.professional_avatar_url} name={offer.professional_name ?? ""} className="h-full w-full" square />
-      ) : (
-        <span className="grid h-full place-items-center rounded-lg bg-[#f3f7fa] text-xs font-extrabold text-[#009fd9]">
-          {offer.title.slice(0, 2).toUpperCase()}
-        </span>
-      )}
-      {extraCount > 0 && (
-        <span className="absolute bottom-1 right-1 rounded-full bg-[#162543]/85 px-1.5 py-0.5 text-[10px] font-extrabold leading-none text-white">
-          +{extraCount}
-        </span>
-      )}
-    </div>
-  );
-}
 
 function OfferSaveButton({
   offer,
@@ -724,10 +686,14 @@ export function OfferContactActions({
 
 function OfferRow({
   offer,
+  imagePriority,
+  imageEager,
   selected,
   onSelect,
 }: {
   offer: ProfessionalOffer;
+  imagePriority: boolean;
+  imageEager: boolean;
   selected: boolean;
   onSelect: () => void;
 }) {
@@ -748,7 +714,7 @@ function OfferRow({
         className="relative z-[1] block lg:pointer-events-none"
       >
         <div className="flex gap-2.5 sm:gap-3">
-          <OfferImage offer={offer} />
+          <OfferThumbnail offer={offer} priority={imagePriority} eager={imageEager} />
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 items-center gap-2">
               <h2 className="min-w-0 flex-1 line-clamp-2 text-[14px] font-extrabold leading-5 text-[#005eaa] sm:text-[15px] lg:text-base">
@@ -836,7 +802,7 @@ function OfferPreview({
     <article className="relative ccr-marketplace-result-list hidden min-w-0 bg-white p-7 lg:block lg:h-full lg:overflow-y-auto">
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] xl:items-start">
         <div className="relative">
-          <OfferImageGallery images={offer.image_urls} title={offer.title} className="[&_img]:max-h-[320px] xl:[&_img]:aspect-square xl:[&_img]:max-h-[560px]" />
+          <OfferImageGallery priority={false} images={offer.image_urls} title={offer.title} className="[&_img]:max-h-[320px] xl:[&_img]:aspect-square xl:[&_img]:max-h-[560px]" />
           {discount && (
             <span className="absolute left-3 top-3 rounded-md bg-[#009fd9] px-3 py-1.5 text-sm font-extrabold text-white">
               -{discount}%
