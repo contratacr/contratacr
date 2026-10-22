@@ -1,5 +1,7 @@
 "use client";
 
+import { APP_RESUME_EVENT } from "@/lib/app-events";
+
 import { APP_DATA_INVALIDATED_EVENT, APP_DATA_INVALIDATED_KEY, readLastAppDataInvalidation, type AppDataDomain, type AppDataInvalidation } from "@/lib/app-data-invalidation";
 import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 import {
@@ -26,7 +28,7 @@ type Options = {
   invalidationDomain?: AppDataDomain;
 };
 
-const REFRESH_EVENTS = ["notificationsChanged", "focus"] as const;
+const REFRESH_EVENTS = ["notificationsChanged", "focus", APP_RESUME_EVENT] as const;
 const noop = () => {};
 const serverSnapshot = () => null;
 

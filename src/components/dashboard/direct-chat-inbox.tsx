@@ -1,5 +1,7 @@
 "use client";
 
+import { APP_RESUME_EVENT } from "@/lib/app-events";
+
 import { CardActionsMenu } from "@/components/dashboard/card-actions-menu";
 import { sinPrefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { rutaInternaSegura } from "@/lib/navigation/ruta-interna";
@@ -919,7 +921,13 @@ export function DirectChatInbox({ alCambiarSubvista }: {
         if (!row.edited_at && !row.deleted_at) return;
         void loadThread(activeId, true);
       }).subscribe();
+    const onResume = () => {
+      recargarPronto();
+      if (activeId && activeId !== DRAFT_CONVERSATION_ID) void loadThread(activeId, true);
+    };
+    window.addEventListener(APP_RESUME_EVENT, onResume);
     return () => {
+      window.removeEventListener(APP_RESUME_EVENT, onResume);
       if (pendiente) window.clearTimeout(pendiente);
       void supabase.removeChannel(channel);
     };

@@ -1,4 +1,5 @@
 "use client";
+import { APP_RESUME_EVENT } from "@/lib/app-events";
 import { installNativeEdgeBackGesture, visibleNativeBackControl } from "@/lib/mobile/edge-back-gesture";
 import { syncAnalyticsPlatform } from "@/lib/analytics/platform-client";
 
@@ -134,6 +135,7 @@ export function MobileAppBridge() {
     syncNativeInsets();
     window.addEventListener("resize", syncNativeInsets);
     window.addEventListener("orientationchange", syncNativeInsets);
+    window.addEventListener(APP_RESUME_EVENT, syncNativeInsets);
     window.visualViewport?.addEventListener("resize", syncNativeInsets);
     window.visualViewport?.addEventListener("scroll", syncNativeInsets);
     const observer = new ResizeObserver(syncNativeInsets);
@@ -144,6 +146,7 @@ export function MobileAppBridge() {
       window.cancelAnimationFrame(frame);
       window.removeEventListener("resize", syncNativeInsets);
       window.removeEventListener("orientationchange", syncNativeInsets);
+      window.removeEventListener(APP_RESUME_EVENT, syncNativeInsets);
       window.visualViewport?.removeEventListener("resize", syncNativeInsets);
       window.visualViewport?.removeEventListener("scroll", syncNativeInsets);
       observer.disconnect();
