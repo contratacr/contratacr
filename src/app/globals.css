@@ -1494,7 +1494,8 @@ body.ccr-native-app.ccr-native-fullscreen-layer nav.ccr-native-bottom-nav { disp
   html[data-keyboard-open] body:not(.ccr-native-app) .ccr-direct-chat-composer,
   html[data-keyboard-open].ccr-native-app.contratacr-chat-thread-open .ccr-direct-chat-composer,
   html[data-keyboard-open].ccr-native-app body.contratacr-chat-thread-open .ccr-direct-chat-composer,
-  html[data-keyboard-open] body.ccr-native-app.contratacr-chat-thread-open .ccr-direct-chat-composer {
+  html[data-keyboard-open] body.ccr-native-app.contratacr-chat-thread-open .ccr-direct-chat-composer,
+  html[data-keyboard-open] body.ccr-native-app.ccr-native-bottom-nav-visible.contratacr-chat-thread-open:not(.ccr-native-search-route) .ccr-direct-chat-composer {
     /* The thread itself already matches the visual viewport. Adding the full
        keyboard inset here a second time turns the composer into a giant blank
        block and pushes the input away from the keyboard. */

@@ -2,12 +2,22 @@ import { waitForInteractivePage } from "./helpers";
 import { mkdirSync } from "node:fs";
 import { PWA_STARTUP_DEVICES } from "../../src/lib/pwa-startup";
 import sharp from "sharp";
-import { test, expect } from 'playwright/test';
+import { test, expect, type Page } from 'playwright/test';
+import { prefersNativeIosAppBanner } from '../../src/lib/mobile/smart-app-banner';
+
+// This spec also runs under the differently named native CI projects.
+// Select Safari behavior by the actual browser UA, never the project label.
+async function emulateHomeScreenForSafari(page: Page) {
+ if(prefersNativeIosAppBanner(await page.evaluate(()=>navigator.userAgent))) {
+  await page.addInitScript(()=>Object.defineProperty(navigator,'standalone',{configurable:true,value:true}));
+ }
+}
+
 
 test('web: tiendas correctas, reserva, teclado y cierre persistente', async ({page}) => {
   if(test.info().project.name==='android-download')await page.setViewportSize({width:320,height:780});
   test.skip((page.viewportSize()?.width ?? 1280) >= 1024, "The download notice only appears on mobile web.");
- if(test.info().project.name==='webkit-mobile') await page.addInitScript(()=>Object.defineProperty(navigator,'standalone',{configurable:true,value:true}));
+ await emulateHomeScreenForSafari(page);
   await page.addInitScript(() => Object.defineProperty(navigator, 'getInstalledRelatedApps', { configurable: true, value: async () => [] }));
   await page.goto('/');
   await expect(page.getByTestId('app-download-section')).toBeVisible();
@@ -58,7 +68,7 @@ test('web forms never display download banner',async({page})=>{
 
 
 test('shared download anchor always remains useful, including after dismissing the mobile notice',async({page})=>{
- if(test.info().project.name==='webkit-mobile') await page.addInitScript(()=>Object.defineProperty(navigator,'standalone',{configurable:true,value:true}));
+ await emulateHomeScreenForSafari(page);
  await page.goto('/#descargar-app');
  if ((page.viewportSize()?.width ?? 1280) < 1024) {
   const banner=page.getByTestId('mobile-app-download');
@@ -109,7 +119,7 @@ test('mobile download notice and header are correctly positioned before JavaScri
   const noticeLocator=cold.getByTestId('mobile-app-download');
   const header=await cold.getByTestId('landing-navbar').boundingBox();
 
-  if(test.info().project.name==='webkit-mobile') {
+  if(prefersNativeIosAppBanner(ua)) {
    await expect(noticeLocator).toHaveCount(0);
    await expect(cold.locator('meta[name="apple-itunes-app"]')).toHaveAttribute('content','app-id=6794559661, app-argument=https://contratacr.com/');
    expect(header?.y).toBe(0);
@@ -149,7 +159,7 @@ test('narrow desktop windows have no mobile notice or navbar gap, while download
 
 test('notice stays at the bottom on public pages and respects account/form routes',async({page})=>{
  test.skip((page.viewportSize()?.width ?? 1280)>=1024, "The download notice only appears on mobile web.");
- if(test.info().project.name==='webkit-mobile') await page.addInitScript(()=>Object.defineProperty(navigator,'standalone',{configurable:true,value:true}));
+ await emulateHomeScreenForSafari(page);
  for(const route of ['/proyectos','/empleos','/promociones','/profesionales','/ayuda']) {
   await page.goto(route);
   await waitForInteractivePage(page);
@@ -269,7 +279,7 @@ test('home-screen launch shell is public, white and independent of the session',
 
 test('mobile listings stay behind the download notice and keep their last result reachable', async ({page}) => {
  test.skip((page.viewportSize()?.width ?? 1280)>=1024, 'The download notice only appears on mobile web.');
- if(test.info().project.name==='webkit-mobile') await page.addInitScript(()=>Object.defineProperty(navigator,'standalone',{configurable:true,value:true}));
+ await emulateHomeScreenForSafari(page);
  for (const route of ['/empleos','/proyectos','/promociones']) {
   await page.goto(route);
   const banner=page.getByTestId('mobile-app-download');
@@ -346,7 +356,7 @@ for (const locale of ["es", "en"] as const) {
 
 for (const standalone of [false, true]) {
  test(`corrected iPhone notice survives legacy dismissals (standalone=${standalone})`, async ({page,context,baseURL})=>{
-  test.skip(test.info().project.name !== 'webkit-mobile', 'iPhone Safari regression');
+  test.skip(!prefersNativeIosAppBanner(await page.evaluate(()=>navigator.userAgent)), 'iPhone Safari regression');
   await context.addCookies([{name:'ccr_download_dismissed_until',value:String(Date.now()+86400000),url:baseURL!}]);
   await page.addInitScript(({standalone})=>{
    localStorage.setItem('ccr:app-download-dismissed-until:v1',String(Date.now()+86400000));
@@ -377,7 +387,7 @@ for (const standalone of [false, true]) {
 for (const locale of ['es', 'en'] as const) {
  test(`download notice translates its label and accessibility text in ${locale}`,async({page})=>{
   test.skip((page.viewportSize()?.width??1280)>=1024,'Mobile notice');
-  if (test.info().project.name==='webkit-mobile') await page.addInitScript(()=>Object.defineProperty(navigator,'standalone',{configurable:true,value:true}));
+  await emulateHomeScreenForSafari(page);
   await page.addInitScript(()=>Object.defineProperty(navigator,'getInstalledRelatedApps',{configurable:true,value:async()=>[]}));
   await page.goto(locale==='en'?'/en/proyectos':'/proyectos');
   const notice=page.getByTestId('mobile-app-download');
