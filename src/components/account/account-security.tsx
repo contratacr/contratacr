@@ -1,5 +1,6 @@
 "use client";
 
+import { verifyCurrentPassword } from "@/lib/auth/verify-current-password";
 import { TwoFactorSecurity } from "@/components/account/two-factor-security";
 import { SignInMethods } from "@/components/account/sign-in-methods";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
@@ -201,10 +202,9 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
     if (!user?.email) { setPwError(t("errValidate")); return; }
     setPwSaving(true);
     const supabase = createClient();
-    // Verify the CURRENT password by re-authenticating — Supabase validates the
-    // hash for us (we never read/decrypt it). Same session, no emailed code.
-    const { error: signInErr } = await supabase.auth.signInWithPassword({ email: user.email, password: currentPw });
-    if (signInErr) { setPwSaving(false); setPwError(t("errWrongPassword")); return; }
+    // Preserve the shared session and its completed second factor.
+    const validPassword = await verifyCurrentPassword(user.email, currentPw, user.id);
+    if (!validPassword) { setPwSaving(false); setPwError(t("errWrongPassword")); return; }
     const { error } = await supabase.auth.updateUser({ password: newPw });
     setPwSaving(false);
     if (error) { setPwError(error.message); return; }

@@ -105,3 +105,43 @@ for (const locale of ["es", "en"]) {
     await screen.screenshot({ path: test.info().outputPath(`mfa-stable-${locale}.png`) });
   });
 }
+
+for (const locale of ["es", "en"]) for (const administrator of [false, true]) {
+ test(`account MFA keeps its layout while checking ${locale} admin=${administrator}`, async ({page}) => {
+  await page.goto(locale === "en" ? "/en/login" : "/login",{waitUntil:"domcontentloaded"});
+  const styles = await page.locator('link[rel="stylesheet"]').evaluateAll(links=>links.map(link=>(link as HTMLLinkElement).href));
+  const bundle = await build({
+   stdin:{contents:`import React from 'react';import{createRoot}from'react-dom/client';import{TwoFactorSecurity}from'./src/components/account/two-factor-security';createRoot(document.getElementById('root')).render(<TwoFactorSecurity/>);`,loader:"tsx",resolveDir:process.cwd()},
+   jsx:"automatic",bundle:true,write:false,platform:"browser",format:"iife",tsconfig:"tsconfig.json",define:{"process.env.NODE_ENV":'"production"'},
+   plugins:[{name:"account-mfa-boundaries",setup(builder){
+    builder.onResolve({filter:/^(next-intl|@\/i18n\/navigation|@\/lib\/supabase\/client)$/},args=>({path:args.path,namespace:"account-mfa"}));
+    builder.onLoad({filter:/.*/,namespace:"account-mfa"},args=>({contents:args.path==="next-intl"?`export const useLocale=()=>${JSON.stringify(locale)};`:args.path.includes("navigation")?`export const useRouter=()=>({refresh(){}});`:`export const createClient=()=>{throw Error('No auth mutation expected')};`}));
+   }}],
+  });
+  let release!:()=>void;
+  const pending = new Promise<void>(resolve=>{release=resolve;});
+  await page.route("**/api/auth/session-mfa",async route=>{await pending;await route.fulfill({json:{isAdmin:administrator,enrolled:true}});});
+  await page.route("**/account-mfa-harness",route=>route.fulfill({contentType:"text/html",body:`<!doctype html><meta name="viewport" content="width=device-width"><head>${styles.map(href=>`<link rel="stylesheet" href="${href}">`).join('')}</head><body><div style="max-width:420px;padding:24px" id="root"></div></body>`}));
+  await page.goto("/account-mfa-harness");
+  await page.addScriptTag({content:bundle.outputFiles[0].text});
+  const section = page.locator("[data-account-mfa]");
+  const title = section.locator("h3");
+  await expect(title).toBeVisible();
+  await page.evaluate(()=>document.fonts.ready);
+  const before = await section.boundingBox();
+  const heading = await title.boundingBox();
+  release();
+  await expect(section.getByText(locale==="en"?"Enabled":"Activada",{exact:true})).toBeVisible();
+  const after = await section.boundingBox();
+  expect(after!.height).toBeCloseTo(before!.height,0);
+  expect((await title.boundingBox())!.y).toBeCloseTo(heading!.y,0);
+  await expect(section).not.toContainText(/Obligatoria|Required for administrator/);
+  const disable = section.getByRole("button",{name:locale==="en"?"Disable":"Desactivar",exact:true});
+  if (administrator) { await expect(disable).toHaveCount(0); return; }
+  await disable.click();
+  await expect(section.locator("[data-admin-mfa]")).toBeVisible();
+  await expect(section.getByRole("textbox")).toHaveAttribute("autoComplete","one-time-code");
+  await section.getByRole("button",{name:locale==="en"?"Cancel":"Cancelar",exact:true}).click();
+  await expect(section.locator("[data-admin-mfa]")).toHaveCount(0);
+ });
+}

@@ -3,7 +3,7 @@
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
     "files": 495,
-    "controls": 1294,
+    "controls": 1293,
     "pages": 71,
     "handlers": 104,
     "components": 258,
@@ -6717,7 +6717,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 53,
+          "line": 54,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -6989,18 +6989,10 @@
       "methods": [],
       "controls": [
         {
-          "line": 28,
+          "line": 36,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "{() => void refresh().catch(() => setError(true))}",
-          "destination": "",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 29,
-          "tag": "button",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "{() => setMode(state.enrolled ? \"disable\" : \"enable\")}",
+          "handler": "{() => {\n        if (!state) { setChecking(true); void refresh().catch(() => { setError(true); setChecking(false); }); }\n        else setMode(state.enrolled ? \"disable\" : \"enable\");\n      }}",
           "destination": "",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         }
@@ -22818,6 +22810,10 @@
         {
           "line": 26,
           "title": "\"opening the panel again does not expire the session second factor after 15 minutes\""
+        },
+        {
+          "line": 28,
+          "title": "\"password checks isolate their temporary session and never downgrade the current AAL2 session\""
         }
       ]
     },
@@ -26233,6 +26229,10 @@
         {
           "line": 49,
           "title": "`MFA stays centered while native navigation classes settle (${locale})`"
+        },
+        {
+          "line": 110,
+          "title": "`account MFA keeps its layout while checking ${locale} admin=${administrator}`"
         }
       ]
     },
