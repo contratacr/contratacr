@@ -26592,14 +26592,14 @@
         },
         {
           "line": 20,
-          "title": "\"mobile drawer keeps plain white account actions above centered social links\""
+          "title": "\"signed-out mobile drawer keeps language left and social links right on white\""
         },
         {
-          "line": 42,
+          "line": 48,
           "title": "\"web and native resume the same conversation for the same account\""
         },
         {
-          "line": 103,
+          "line": 109,
           "title": "`service drafts stay editable and leave a small keyboard gap in ${locale}`"
         }
       ]

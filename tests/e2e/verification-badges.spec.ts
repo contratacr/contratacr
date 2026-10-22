@@ -286,7 +286,8 @@ test("official identification and public cards preserve full names and bind the 
       return {gap: badge.left - word.right, overlap: badge.top < word.bottom && badge.bottom > word.top,
         overflow: e.parentElement!.scrollWidth > e.parentElement!.clientWidth};
     }, width);
-    expect(aligned.gap).toBeGreaterThanOrEqual(0);
+    // WebKit DOM Range edges can differ by half a 1/64 px layout unit.
+    expect(aligned.gap).toBeGreaterThanOrEqual(-1 / 64);
     expect(aligned.gap).toBeLessThan(10);
     expect(aligned.overlap).toBe(true);
     expect(aligned.overflow).toBe(false);

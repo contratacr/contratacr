@@ -1,6 +1,6 @@
 import { test, expect } from "playwright/test";
 import { createDisposableAccount, cleanupDisposableAccount, type DisposableAccount } from "./disposable-account";
-import { loginAs, gotoOK, waitForInteractivePage } from "./helpers";
+import { loginAs, gotoOK, waitForInteractivePage, resetAuth } from "./helpers";
 
 test("web shows the shared inbox and enforces message moderation without a native cookie", async ({ page }) => {
   test.setTimeout(120_000);
@@ -17,8 +17,9 @@ test("web shows the shared inbox and enforces message moderation without a nativ
   } finally { if (account) await cleanupDisposableAccount(account); }
 });
 
-test("mobile drawer keeps plain white account actions above centered social links", async ({ page }) => {
+test("signed-out mobile drawer keeps language left and social links right on white", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 800 });
+  await resetAuth(page);
   await gotoOK(page, "/");
   await waitForInteractivePage(page);
   await page.getByRole("button", { name: /abrir menú/i }).filter({ visible: true }).click();
@@ -29,11 +30,16 @@ test("mobile drawer keeps plain white account actions above centered social link
   await expect(footer.getByRole("button", { name: "English" })).toBeVisible();
   const geometry = await footer.evaluate(element => {
     const nav = element.querySelector("nav")!;
-    const button = element.querySelector("button")!;
-    return { background: getComputedStyle(element).backgroundColor, socialTop: nav.getBoundingClientRect().top, actionBottom: button.getBoundingClientRect().bottom, overflow: element.scrollWidth > element.clientWidth };
+    const actions = element.querySelector("[data-mobile-menu-account-actions]")!.getBoundingClientRect();
+    const social = nav.getBoundingClientRect();
+    return { background: getComputedStyle(element).backgroundColor,
+      socialLeft: social.left, actionRight: actions.right,
+      centerDifference: Math.abs(social.top + social.height / 2 - actions.top - actions.height / 2),
+      overflow: element.scrollWidth > element.clientWidth };
   });
   expect(geometry.background).toBe("rgb(255, 255, 255)");
-  expect(geometry.socialTop).toBeGreaterThanOrEqual(geometry.actionBottom);
+  expect(geometry.socialLeft).toBeGreaterThanOrEqual(geometry.actionRight);
+  expect(geometry.centerDifference).toBeLessThan(1);
   await expect(social.getByText("Síguenos", { exact: true })).toHaveCount(0);
   expect(geometry.overflow).toBe(false);
   await footer.screenshot({ path: test.info().outputPath("menu-compacto-blanco.png") });
@@ -109,6 +115,12 @@ for (const locale of ["es", "en"] as const) {
       await page.addInitScript(() => localStorage.setItem("ccr:native-first-run-onboarding:v12", "1"));
       await loginAs(page, client.email, client.password);
       const prefix = locale === "en" ? "/en" : "";
+      // Reachability has its own regression suite. This draft/keyboard case
+      // requires a reachable recipient regardless of the shared seed's push age.
+      await page.route("**/api/direct-chat?conApp=*", route => {
+        const ids = new URL(route.request().url()).searchParams.get("conApp")!.split(",");
+        return route.fulfill({ json: { conApp: Object.fromEntries(ids.map(id => [id, true])) } });
+      });
       await gotoOK(page, `${prefix}/profesionales/${E2E_USERS.professional.slug}`);
       await waitForInteractivePage(page);
       await page.getByRole("button", { name: locale === "en" ? "Send message" : "Enviar mensaje", exact: true }).filter({ visible: true }).first().click();

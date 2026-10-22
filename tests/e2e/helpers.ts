@@ -325,7 +325,9 @@ export async function resetAuth(page: Page) {
   // Signing out never changes the device: the app's platform cookie survives.
   const platform = (await page.context().cookies()).find((cookie) => cookie.name === "ccr_platform");
   // Unmount protected-route effects before clearing auth cookies. Otherwise a
-  // delayed auth redirect can interrupt WebKit's reset navigation.
+  // delayed auth redirect can interrupt WebKit's reset navigation. Commit a
+  // blank document first so the protected page cannot schedule another redirect.
+  await page.goto("about:blank", { waitUntil: "commit" });
   await page.goto("/robots.txt", { waitUntil: "domcontentloaded" });
   await page.context().clearCookies();
   if (platform) await page.context().addCookies([{ name: platform.name, value: platform.value, domain: platform.domain, path: platform.path }]);
