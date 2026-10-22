@@ -1,3 +1,4 @@
+import { prefersNativeIosAppBanner } from '../../src/lib/mobile/smart-app-banner';
 import { test, expect } from 'playwright/test';
 import { loginAs, gotoOK, waitForInteractivePage } from './helpers';
 import { canRunSeededRegression } from './seed';
@@ -9,7 +10,7 @@ for (const native of [false, true]) {
     if(native){await context.addCookies([{name:'ccr_platform',value:'native',url:baseURL!}]);await page.addInitScript(()=>{localStorage.setItem('ccr:native-first-run-onboarding:v12','1');const bridge={isNativePlatform:()=>true};Object.defineProperty(window,'Capacitor',{configurable:true,get:()=>bridge,set:value=>{Object.assign(bridge,value);bridge.isNativePlatform=()=>true;}});});}
     await page.goto('/');
     const banner=page.getByTestId('mobile-app-download');
-    const showsDownloadBanner=!native;
+    const showsDownloadBanner=!native && !prefersNativeIosAppBanner(await page.evaluate(()=>navigator.userAgent));
     if(showsDownloadBanner)await expect(banner).toBeVisible();
     const button=page.getByRole('button',{name:'Abrir menú'}).filter({visible:true}).first();
     await button.click();
