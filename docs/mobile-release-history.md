@@ -110,3 +110,16 @@ Cierre del control previo al envío: Regression Tests 39008894531 correcto (182 
 Google Play Console mostró «Se ha publicado la actualización de la aplicación» y «Última publicación el 17 de octubre de 2026». Android Publisher API confirmó producción 1.0.11 / versionCode 15 en completed con las notas es-419 exactas registradas arriba. No se inventa una hora de publicación: la consola consultada confirma la fecha. Puede tardar en propagarse a cada dispositivo.
 
 En la misma consulta, App Store Connect conservaba iOS 1.0.11 / build 16 WAITING_FOR_REVIEW y AFTER_APPROVAL. Las notas es-MX guardadas coinciden exactamente con las de Android. Pendiente únicamente aprobación/publicación de Apple en el flujo de envío actual.
+
+
+### Preparación local 1.0.12 — 21 de octubre de 2026, sin envío
+
+Isaac autorizó preparar la actualización nativa y prohibió subir versiones a las tiendas. Estado: preparación local; no se creó versión, edición, revisión ni publicación en App Store Connect o Google Play. No hay fecha de publicación.
+
+- Android: 1.0.12 / versionCode 16. iOS: 1.0.12 / build 17.
+- Incluye los dominios contratacr.com y www.contratacr.com, los enlaces exactos de inicio de Android y la relación inversa necesaria para la detección compatible de Chrome. El código compartido usa un único aviso inferior personalizado, también en Safari, y conserva la alternativa de tienda.
+- Se conservan las diferencias nativas previamente aprobadas de mobile. Los controles de medición y privacidad no se relajan para esta preparación.
+- Notas propuestas ES (solo locales): «Mejoramos la apertura de enlaces desde la web y la navegación en la app.» No se han guardado en las tiendas.
+- Antes de un envío autorizado: comprobar las pruebas físicas de iPhone con y sin la app, revisar los paquetes firmados y confirmar el alcance final y las notas. La configuración de enlaces de la versión anterior instalada no cambia por desplegar la web.
+
+Validación local: Android compiló APK de QA, APK release y AAB; firmas release verificadas y 7/7 pruebas instrumentadas de resolución de enlaces aprobadas. iOS compiló en simulador, archivó para dispositivo y exportó IPA local con firma válida, versión 1.0.12/17 y ambos dominios asociados. La CDN de Apple confirma la asociación correcta en ambos hosts. Paquetes conservados en mobile-builds/app-entry-preparation-2026-10-21 (ignorado por Git); no se subieron. Pendientes: pruebas físicas de apertura con instalación/ausencia y verificación de dominios con firma de distribución de Google Play antes de un envío autorizado.

@@ -60,6 +60,20 @@ public class AppLinkResolutionTest {
             assertNotNull(path, resolve(path));
         }
     }
+    @Test public void customBannerEntryMarkersResolveOnBothHosts() {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        for (String host : new String[]{"contratacr.com", "www.contratacr.com"}) {
+            for (String path : new String[]{"/profesionales?_ccr_home=1", "/en/profesionales?_ccr_open=ios&categoria=soldadura"}) {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://" + host + path));
+                intent.addCategory(Intent.CATEGORY_BROWSABLE);
+                intent.setPackage(context.getPackageName());
+                ResolveInfo info = context.getPackageManager().resolveActivity(intent, 0);
+                assertNotNull(host + path, info);
+                assertEquals(MainActivity.class.getName(), info.activityInfo.name);
+                assertEquals("https://" + host + path, intent.getDataString());
+            }
+        }
+    }
     @Test public void addingHomepageDoesNotCaptureBrowserAuthenticationOrAdmin() {
         for (String path : new String[]{"/login", "/auth/callback?code=example", "/admin", "/api/email/baja"}) {
             assertNull(path, resolve(path));

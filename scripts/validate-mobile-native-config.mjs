@@ -106,6 +106,32 @@ requireMatch(
   /uses-feature android:name="android\.hardware\.camera" android:required="false"/,
 );
 requireMatch("Android single-task launch mode", manifest, /android:launchMode="singleTask"/);
+// The custom web notice crosses between apex and www on iOS. Both signed
+// app associations, Android filters and Chrome's reverse relation must ship.
+for (const host of ["contratacr.com", "www.contratacr.com"]) {
+  if (!manifest.includes(`android:scheme="https" android:host="${host}"`)) failures.push(`Android app-link host missing: ${host}`);
+  if (!entitlements.includes(`<string>applinks:${host}</string>`)) failures.push(`iOS associated domain missing: ${host}`);
+}
+for (const path of ["/", "/es", "/es/", "/en", "/en/"]) {
+  if (!manifest.includes(`android:path="${path}"`)) failures.push(`Android exact home app link missing: ${path}`);
+}
+requireMatch("Android browser lookup relation", manifest, /android:name="asset_statements" android:resource="@string\/asset_statements"/);
+const entryStrings = await text("android/app/src/main/res/values/strings.xml");
+const statementText = entryStrings.match(/<string name="asset_statements"[^>]*>([\s\S]*?)<\/string>/)?.[1];
+try {
+  const statements = JSON.parse((statementText ?? "").replaceAll('\\"', '"'));
+  for (const host of ["contratacr.com", "www.contratacr.com"]) {
+    if (!statements.some(statement => statement.target?.namespace === "web" && statement.target.site === `https://${host}` && statement.relation?.includes("delegate_permission/common.handle_all_urls"))) failures.push(`Android related website missing: ${host}`);
+  }
+} catch { failures.push("Android related websites must be valid JSON"); }
+const appAssociation = JSON.parse(await text("public/.well-known/apple-app-site-association"));
+const developmentTeam = projectFile.match(/DEVELOPMENT_TEAM = ([A-Z0-9]+);/)?.[1];
+const association = appAssociation.applinks?.details?.find(detail => detail.appIDs?.includes(`${developmentTeam}.${expected.appId}`));
+for (const path of ["/", "/es", "/en", "/profesionales", "/es/profesionales", "/en/profesionales"]) {
+  if (!association?.components?.some(component => component["/"] === path)) failures.push(`Apple public association path missing: ${path}`);
+}
+requireMatch("iOS Universal Link delivery to Capacitor", appDelegate, /continue userActivity:[\s\S]*ApplicationDelegateProxy.shared.application\(application, continue: userActivity/);
+
 // «Nonces mismatch» (9-oct-2026): el plugin de Google en iOS restaura la
 // sesión anterior y devuelve un token viejo. Antes de cada ingreso con Google
 // se cierra esa sesión para que firme el nonce nuevo.
