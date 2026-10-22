@@ -88,10 +88,14 @@ test.describe("@smoke public routes", () => {
       await expect(navigation.getByRole("button", { name: /^Servicios$/i }).first()).toBeVisible();
       await expect(navigation.getByRole("button", { name: /^Explorar$/i }).first()).toBeVisible();
       await expect(navigation.getByRole("link", { name: /Ingresar/i }).first()).toBeVisible();
-      // Desde el 1-oct-2026: «Ingresar» y «Registrarme» (el registro ofrece las dos cuentas).
-      const registro = navigation.getByRole("link", { name: /^Registrarme$|^Sign up$/i }).first();
-      await expect(registro).toBeVisible();
-      await expect(registro).toHaveAttribute("href", /\/registro$/);
+      const app = navigation.getByRole("button", { name: /^(Usar app|Use app)$/ }).first();
+      await expect(app).toBeVisible();
+      await expect(navigation.getByRole("link", { name: /^Registrarme$|^Sign up$/i })).toHaveCount(0);
+      await app.click();
+      const code = page.getByRole("dialog", { name: /ContrataCR (en su teléfono|on your phone)/ });
+      await expect(code.getByRole("img", { name: /ContrataCR/ })).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(code).toHaveCount(0);
     }
     await expectHealthyPage(page);
   });

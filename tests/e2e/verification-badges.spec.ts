@@ -229,7 +229,10 @@ test("verification shows only the identification check and its explanation", asy
   try {
     account = await createDisposableAccount({ prefix: "verification-layout", professional: true });
     const db = regressionAdminClient();
-    const profile = await db.from("profiles").update({ cedula: "700000001" }).eq("id", account.id);
+    // A per-account synthetic identifier avoids collisions across browser runs
+    // and interrupted fixtures; its leading zeros never identify a real person.
+    const cedula = `00${Number.parseInt(account.id.slice(0, 8), 16).toString().padStart(10, "0")}`;
+    const profile = await db.from("profiles").update({ cedula }).eq("id", account.id);
     if (profile.error) throw profile.error;
     const pro = await db.from("professionals").update({ is_verified: true, verification_status: "verified" }).eq("id", account.professionalId!);
     if (pro.error) throw pro.error;
@@ -238,7 +241,7 @@ test("verification shows only the identification check and its explanation", asy
     const education = page.locator("[data-verification-education]").filter({ visible: true }).first();
     const identity = page.locator("[data-current-identification]").filter({ visible: true }).first();
     await expect(education).toHaveCount(0);
-    await expect(identity).toContainText("700000001");
+    await expect(identity).toContainText(cedula);
 
     await expect(identity.locator("[data-verification-badge]")).toHaveCount(1);
     for (const block of [identity]) {
