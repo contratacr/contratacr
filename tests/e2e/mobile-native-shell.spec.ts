@@ -126,6 +126,13 @@ async function assertKeyboardSafeComposer(page: Page, composerSelector: string, 
       shellHeight: shellRect?.height ?? null,
       shellPosition: shell ? getComputedStyle(shell).position : null,
       visualHeight: getComputedStyle(root).getPropertyValue("--app-visual-viewport-height").trim(),
+      composerPaddingBottom: getComputedStyle(composer).paddingBottom,
+      keyboardAttr: root.hasAttribute("data-keyboard-open"),
+      rootFontSize: getComputedStyle(root).fontSize,
+      rootClasses: root.className,
+      bodyClasses: document.body.className,
+      mobileMedia: matchMedia("(max-width: 1023px)").matches,
+
     };
   }, { composerSelector, inputSelector });
 
@@ -134,7 +141,7 @@ async function assertKeyboardSafeComposer(page: Page, composerSelector: string, 
   expect(geometry!.composerBottom, JSON.stringify(geometry)).toBeLessThanOrEqual(501);
   expect(geometry!.fieldBottom).toBeLessThanOrEqual(501);
   if (composerSelector === ".ccr-direct-chat-composer") {
-    expect(geometry!.composerBottom - geometry!.fieldBottom).toBeGreaterThanOrEqual(16);
+    expect(geometry!.composerBottom - geometry!.fieldBottom, JSON.stringify(geometry)).toBeGreaterThanOrEqual(16);
     expect(geometry!.composerBottom - geometry!.fieldBottom).toBeLessThan(40);
   }
 
@@ -469,6 +476,7 @@ test.describe("@mobile native shell contracts", () => {
     test(`${contract.locale.toUpperCase()} keeps native navigation, messages and assistant chat isolated from web`, async ({ page }) => {
       const conversationId = "00000000-0000-4000-8000-00000000cafe";
       let directChatRequests = 0;
+      let sentPayload: Record<string, unknown> | null = null;
       await page.route("**/api/direct-chat", async (route) => {
         if (route.request().method() === "GET") {
           const requestUrl = new URL(route.request().url());
@@ -491,6 +499,7 @@ test.describe("@mobile native shell contracts", () => {
         }
         if (route.request().method() !== "POST") return route.continue();
         directChatRequests += 1;
+        sentPayload = route.request().postDataJSON();
         await route.fulfill({
           status: 200,
           contentType: "application/json",
@@ -552,9 +561,12 @@ test.describe("@mobile native shell contracts", () => {
       await expect(dialog.getByText(/WhatsApp/i)).toHaveCount(0);
       await messageButton.click();
 
-      await expect.poll(() => directChatRequests).toBe(1);
-      // El enlace lleva además el camino de vuelta (`back=`) al panel desde donde se abrió.
-      await expect(page).toHaveURL(new RegExp(`${contract.locale === "es" ? "" : "/en"}/mensajes\\?conversation=${conversationId}(?:&.*)?$`));
+      // Opening a contact prepares a draft; only Send creates the conversation.
+      await expect(page).toHaveURL(new RegExp(`${contract.locale === "es" ? "" : "/en"}/mensajes\\?draftChat=1(?:&.*)?$`));
+      const entry = new URL(page.url());
+      expect(entry.searchParams.get("professionalId")).toBe(seed.professionalId);
+      expect(entry.searchParams.get("back")).toBe("/dashboard/profesional");
+      expect(directChatRequests).toBe(0);
       await expect(page.locator("html")).toHaveClass(/contratacr-chat-thread-open/);
       // Dentro de un chat no hay barra de abajo, como en WhatsApp.
       await expect(page.locator("nav.ccr-native-bottom-nav")).toBeHidden();
@@ -564,6 +576,14 @@ test.describe("@mobile native shell contracts", () => {
         ".ccr-direct-chat-composer",
         ".ccr-direct-chat-composer textarea",
       );
+      const draft = page.locator(".ccr-direct-chat-composer textarea");
+      const message = await draft.inputValue();
+      expect(message.trim()).not.toBe("");
+      await page.locator(".ccr-direct-chat-composer").getByRole("button", { name: /^(Enviar|Send)$/ }).click();
+      await expect.poll(() => directChatRequests).toBe(1);
+      expect(sentPayload).toMatchObject({ professionalId: seed.professionalId, message });
+      await expect.poll(() => new URL(page.url()).searchParams.get("conversation")).toBe(conversationId);
+
     });
   }
 });

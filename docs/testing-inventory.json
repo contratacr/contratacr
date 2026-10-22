@@ -24935,39 +24935,39 @@
       "file": "tests/e2e/mobile-native-shell.spec.ts",
       "cases": [
         {
-          "line": 154,
+          "line": 161,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 167,
+          "line": 174,
           "title": "\"signed-out public pages keep the marketplace header pinned at the top and a single way in\""
         },
         {
-          "line": 216,
+          "line": 223,
           "title": "\"first installation keeps incomplete login and registration journeys retryable\""
         },
         {
-          "line": 273,
+          "line": 280,
           "title": "\"welcome menu allows guest exploration and stays dismissed after reload\""
         },
         {
-          "line": 297,
+          "line": 304,
           "title": "\"native marketplace tabs survive localized document navigations\""
         },
         {
-          "line": 362,
+          "line": 369,
           "title": "\"la portada no debe romper la hidratación\""
         },
         {
-          "line": 370,
+          "line": 377,
           "title": "\"native search owns the full viewport without a hidden footer reserve\""
         },
         {
-          "line": 423,
+          "line": 430,
           "title": "\"notification rows in the app delete by swipe instead of an item menu\""
         },
         {
-          "line": 469,
+          "line": 476,
           "title": "`${contract.locale.toUpperCase()} keeps native navigation, messages and assistant chat isolated from web`"
         }
       ]
