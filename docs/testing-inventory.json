@@ -26543,7 +26543,7 @@
           "title": "!(process.env.NEXT_PUBLIC_SUPABASE_URL ?? \"\").includes(\"oqheayqqprpciqdvdaqo\") || !process.env.SUPABASE_SERVICE_ROLE_KEY"
         },
         {
-          "line": 266,
+          "line": 269,
           "title": "\"official identification and public cards preserve full names and bind the badge to the final word\""
         }
       ]
