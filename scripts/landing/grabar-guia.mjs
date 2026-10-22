@@ -217,7 +217,7 @@ const escenas = {
     }
     await contactar(p);
   },
-  proyectos: (p, g, s) => porElMenu(p, g, s, "Proyectos", "/proyectos", /Publicar proyecto/i, "/publicar-proyecto"),
+  proyectos: (p, g, s) => porElMenu(p, g, s, "Proyectos", "/proyectos", /Publicar (?:un )?proyecto/i, "/publicar-proyecto"),
   promociones: (p, g, s) => porElMenu(p, g, s, "Promociones", "/promociones", /Publicar promoción/i, "/promociones/publicar"),
   empleos: (p, g, s) => porElMenu(p, g, s, "Empleos", "/empleos", /Publicar empleo/i, "/empleos/publicar"),
 };
