@@ -19,6 +19,17 @@ test("optional account MFA protects a new login, API and direct RPC until its se
     await security.getByRole("button", { name: "Activar", exact: true }).click();
     await completeAdminMfa(page, account.email, false);
     await expect(security.getByText("Activada", { exact: true })).toBeVisible();
+    // Checking the old password must preserve the live second-factor session.
+    const nextPassword = `${account.password}2`;
+    await page.getByRole("button",{name:"Cambiar contraseña",exact:true}).click();
+    await page.getByPlaceholder("Contraseña actual",{exact:true}).fill(account.password);
+    await page.getByPlaceholder("Nueva contraseña (mínimo 8 caracteres)",{exact:true}).fill(nextPassword);
+    await page.getByPlaceholder("Repite la nueva contraseña",{exact:true}).fill(nextPassword);
+    await page.getByRole("button",{name:"Guardar contraseña",exact:true}).click();
+    await expect(page.locator("[data-account-security]")).toContainText("Tu contraseña fue actualizada.");
+    account.password = nextPassword;
+    await expect(page.locator("main[data-admin-mfa]")).toHaveCount(0);
+    expect(await (await page.request.get("/api/auth/session-mfa")).json()).toMatchObject({enrolled:true,required:false});
     // A fresh password session must not bypass MFA through a SECURITY DEFINER RPC.
     const direct = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { auth: { persistSession: false, autoRefreshToken: false } });
     const { error: loginError } = await direct.auth.signInWithPassword({ email: account.email, password: account.password });

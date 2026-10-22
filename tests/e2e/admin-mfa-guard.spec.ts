@@ -24,3 +24,20 @@ for (const [name, options] of Object.entries({ anonymous: { user: false }, nonAd
 test("server admin guard accepts only a live administrator with verified session MFA", async () => { expect(await guard()).toMatchObject({ id: "admin" }); });
 
 test("opening the panel again does not expire the session second factor after 15 minutes", async () => { expect(await guard({ age: 3600 })).toMatchObject({ id: "admin" }); });
+
+test("password checks isolate their temporary session and never downgrade the current AAL2 session", async () => {
+ for (const scenario of ["valid", "wrong-password", "other-account", "offline"] as const) {
+  const code = ts.transpileModule(readFileSync("src/lib/auth/verify-current-password.ts","utf8"), {compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText;
+  const exports = {} as {verifyCurrentPassword:(email:string,password:string,id:string)=>Promise<boolean>};
+  let options: unknown;
+  let signedOut: unknown;
+  const auth = {
+   signInWithPassword:async()=>{if(scenario==="offline")throw Error("offline");return {data:{user:{id:scenario==="other-account"?"other":"account"}},error:scenario==="wrong-password"?Error("wrong"):null};},
+   signOut:async(value:unknown)=>{signedOut=value;},
+  };
+  runInNewContext(code,{exports,crypto:{randomUUID:()=>"synthetic"},process:{env:{NEXT_PUBLIC_SUPABASE_URL:"https://synthetic.invalid",NEXT_PUBLIC_SUPABASE_ANON_KEY:"synthetic"}},require:()=>({createClient:(_url:unknown,_key:unknown,config:unknown)=>{options=config;return {auth};}})});
+  expect(await exports.verifyCurrentPassword("synthetic@example.invalid","synthetic","account")).toBe(scenario==="valid");
+  expect(options).toEqual({auth:{storageKey:"ccr-password-validation-synthetic",persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+  expect(signedOut).toEqual({scope:"local"});
+ }
+});

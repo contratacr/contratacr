@@ -12,23 +12,36 @@ export function TwoFactorSecurity() {
   const [state, setState] = useState<SecurityState | null>(null);
   const [mode, setMode] = useState<"enable" | "disable" | null>(null);
   const [error, setError] = useState(false);
-  async function refresh() {
-    const response = await fetch("/api/auth/session-mfa", { cache: "no-store" });
+  const [checking, setChecking] = useState(true);
+  async function refresh(signal?: AbortSignal) {
+    const response = await fetch("/api/auth/session-mfa", { cache: "no-store", signal });
     if (!response.ok) throw new Error("Security unavailable");
-    setState(await response.json()); setError(false);
+    const next = await response.json();
+    if (!signal?.aborted) { setState(next); setError(false); setChecking(false); }
   }
-  useEffect(() => { const timer = window.setTimeout(() => { void refresh().catch(() => setError(true)); }, 0); return () => window.clearTimeout(timer); }, []);
+  useEffect(() => {
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      void refresh(controller.signal).catch(() => { if (!controller.signal.aborted) { setError(true); setChecking(false); } });
+    }, 0);
+    return () => { window.clearTimeout(timer); controller.abort(); };
+  }, []);
   return <section data-account-mfa className="bg-white">
     <div className="flex min-h-11 items-center justify-between gap-4">
       <h3 className="text-sm font-semibold text-[#162543]">{en ? "Two-factor authentication" : "Verificación en dos pasos"}</h3>
-      {state && <span className="text-sm text-[#52627a]">{state.enrolled ? (en ? "Enabled" : "Activada") : (en ? "Disabled" : "Desactivada")}</span>}
+      <span className="w-28 shrink-0 text-right text-sm text-[#52627a]" aria-live="polite">{state ? (state.enrolled ? (en ? "Enabled" : "Activada") : (en ? "Disabled" : "Desactivada")) : (en ? "Checking…" : "Comprobando…")}</span>
     </div>
-    <p className="mt-1 text-xs leading-relaxed text-[#68778d]">{state?.isAdmin ? (en ? "Required for administrator accounts." : "Obligatoria para cuentas administradoras.") : (en ? "Use an authenticator app to protect your sign-in." : "Proteja el inicio de sesión con una app autenticadora.")}</p>
+    <p className="mt-1 text-xs leading-relaxed text-[#68778d]">{en ? "Protect your sign-in with an authenticator app." : "Proteja el inicio de sesión con una app autenticadora."}</p>
+    {!mode && <div className="min-h-11">
+      {(!state || !state.enrolled || !state.isAdmin) && <button type="button" disabled={checking} className="min-h-11 text-sm font-semibold text-[#009fd9] disabled:cursor-wait" onClick={() => {
+        if (!state) { setChecking(true); void refresh().catch(() => { setError(true); setChecking(false); }); }
+        else setMode(state.enrolled ? "disable" : "enable");
+      }}>{state ? (state.enrolled ? (en ? "Disable" : "Desactivar") : (en ? "Enable" : "Activar")) : checking ? (en ? "Checking…" : "Comprobando…") : (en ? "Try again" : "Reintentar")}</button>}
+    </div>}
     {error && <p role="alert" className="mt-2 text-sm text-red-600">{en ? "Could not update security. Try again." : "No se pudo actualizar la seguridad. Inténtelo de nuevo."}</p>}
-    {!state && <button className="min-h-11 text-sm text-[#009fd9]" onClick={() => void refresh().catch(() => setError(true))}>{en ? "Check status" : "Consultar estado"}</button>}
-    {state && !mode && (!state.enrolled || !state.isAdmin) && <button className="min-h-11 text-sm font-semibold text-[#009fd9]" onClick={() => setMode(state.enrolled ? "disable" : "enable")}>{state.enrolled ? (en ? "Disable" : "Desactivar") : (en ? "Enable" : "Activar")}</button>}
     {state && mode && <div className="mt-4"><AdminMfa embedded administrator={state.isAdmin} enrolled={mode === "disable"} onCancel={() => setMode(null)} onVerified={async () => {
       if (mode === "disable") {
+        if (state.isAdmin) throw new Error("Administrator MFA must remain enabled");
         const auth = createClient().auth;
         const { data, error } = await auth.mfa.listFactors();
         if (error) throw error;
