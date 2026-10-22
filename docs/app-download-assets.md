@@ -168,3 +168,11 @@ Validation: first-installation login/registration and guest-menu persistence in 
 ## Screen-only correction — 13 October 2026
 
 Restored the original workshop composition and responsive layout. The replacement assets `app-workshop-desktop-welcome-20261013.png` and `app-workshop-mobile-welcome-20261013.png` were edited with the built-in image tool using the original Downloads images and an actual welcome-screen capture. Prompt: preserve the workshop, framing and phone position; replace only its screen with the supplied current welcome UI, fitted to the existing perspective. Original source images remain unchanged. Removed the separate CSS phone and enlarged background crop.
+
+## Recorridos regrabados con la app actual — 21 de octubre de 2026
+
+Se regrabaron los cuatro videos y sus pósters con el mismo guion, encuadre de 402 × 874, capturas a 2×, toques visibles, desplazamientos a 30 fps y fundidos existentes. Se conservan los recorridos de profesionales/SG Solutions y menú → tablero → detalle/contacto → tablero → formulario vacío para proyectos, promociones y empleos. Las pantallas reflejan la interfaz actual, incluidos nombres, insignias, menú y campos de publicación. No se rediseña la sección móvil ni de escritorio.
+
+Producción se recorre en solo lectura. Se intercepta la salida de WhatsApp sin enviar mensajes; el proyecto de demostración se crea únicamente en TEST y se elimina por UUID y marcador propio al terminar. Los formularios usan el actor sintético de TEST y no se envían. El selector del grabador reconoce ahora «Publicar un proyecto».
+
+Los MP4 conservan H.264, 588 × 1278, 30 fps y el ajuste CRF 23 del guion original. Duraciones finales: profesionales 28,77 s; proyectos 16,70 s; promociones 21,63 s; empleos 19,47 s. Se regeneraron los pósters desde el primer cuadro y se verificó la decodificación completa de cada MP4. Todos los recursos usan `?v=20261021-current-app` para renovar caché. Las capturas y hojas de revisión están en `/tmp/contratacr-guide-current-20261021`.
