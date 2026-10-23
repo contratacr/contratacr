@@ -1,0 +1,32 @@
+import { test, expect } from 'playwright/test';
+import { build } from 'esbuild';
+import { requestSocial, reviewSocial } from '../../src/lib/pro/social';
+import { businessSchema, emptyBusiness } from '../../src/lib/pro/business';
+const input = { id: 'a', title: 'Promoción de prueba', link: 'https://contratacr.com/profesionales', description: 'Servicio ficticio' };
+test('monthly quota respects Costa Rica boundary, rejection and immutable publication', () => {
+ let rows = requestSocial([], input, new Date('2026-11-01T05:59:00Z'));
+ expect(rows[0].month).toBe('2026-10');
+ expect(() => requestSocial(rows, {...input,id:'b'}, new Date('2026-11-01T05:59:00Z'))).toThrow();
+ expect(requestSocial(rows, {...input,id:'b'}, new Date('2026-11-01T06:00:00Z'))).toHaveLength(2);
+ expect(() => reviewSocial(rows,'a','published','','https://example.com/post')).toThrow();
+ expect(() => reviewSocial(rows,'a','rejected','')).toThrow();
+ rows = reviewSocial(rows,'a','rejected','Cambie la imagen');
+ rows = requestSocial(rows,{...input,id:'b'},new Date('2026-10-24T12:00:00Z'));
+ rows = reviewSocial(rows,'b','approved','Listo');
+ expect(() => reviewSocial(rows,'b','published','')).toThrow();
+ rows = reviewSocial(rows,'b','published','','https://example.com/post');
+ expect(() => reviewSocial(rows,'b','approved','')).toThrow();
+ expect(() => requestSocial([], {...input,link:'javascript:alert(1)'})).toThrow();
+ const old = {...emptyBusiness()} as Record<string,unknown>;delete old.social;
+ expect(businessSchema.parse(old).social).toEqual([]);
+});
+test('request persists and admin approves without publishing externally', async ({page}) => {
+ const bundle=await build({stdin:{contents:`import React from 'react';import{createRoot}from'react-dom/client';import{SocialPanel}from'./src/components/pro/social-panel';createRoot(document.getElementById('root')).render(<SocialPanel admin={location.search==='?admin'}/>);`,resolveDir:process.cwd(),loader:'tsx'},bundle:true,write:false,format:'iife',platform:'browser',jsx:'automatic'});
+ await page.route('**/social-harness*',r=>r.fulfill({contentType:'text/html',body:'<div id="root"></div>'}));
+ const open=async(admin=false)=>{await page.goto('/social-harness'+(admin?'?admin':''));await page.addScriptTag({content:bundle.outputFiles[0].text});};
+ await open();await page.getByLabel('Título',{exact:true}).fill(input.title);await page.getByLabel('Enlace a su perfil o publicación').fill(input.link);await page.getByLabel('Qué desea destacar').fill(input.description);await page.getByRole('button',{name:'Solicitar difusión'}).click();
+ await expect(page.getByText(/Pendiente · Cupo/)).toBeVisible();await expect(page.getByRole('button',{name:'Solicitar difusión'})).toBeDisabled();
+ await open(true);await page.getByRole('button',{name:'Guardar revisión'}).click();await expect(page.getByText(/Aprobada · Cupo/)).toBeVisible();
+ await page.getByLabel('Enlace de publicación realizada').fill('https://example.com/post');await page.getByRole('button',{name:'Registrar como publicada'}).click();
+ await open();await expect(page.getByText(/Publicada · Cupo/)).toBeVisible();await expect(page.getByRole('button',{name:'Guardar revisión'})).toHaveCount(0);
+});

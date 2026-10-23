@@ -1,0 +1,28 @@
+// Install outside the repository, then pass PRO_PGLITE_MODULE as an absolute file URL.
+const {PGlite}=await import(process.env.PRO_PGLITE_MODULE || '@electric-sql/pglite');
+import {readFile} from 'node:fs/promises';
+import assert from 'node:assert/strict';
+const db=new PGlite();
+const admin='00000000-0000-4000-8000-000000000001',a='00000000-0000-4000-8000-000000000002',b='00000000-0000-4000-8000-000000000003';
+await db.exec(`create role anon;create role authenticated;create role service_role;create schema auth;create function auth.uid() returns uuid language sql as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;grant usage on schema auth to authenticated;create table profiles(id uuid primary key,role text,is_disabled boolean);insert into profiles values('${admin}','admin',false),('${a}','professional',false),('${b}','professional',false);`);
+await db.exec(await readFile('docs/pro/sql/memberships-draft.sql','utf8'));
+await db.query('select pro_set_membership($1,$2,$3,$4,$5)',[admin,a,'active',null,'Local test']);
+await assert.rejects(()=>db.query('select pro_set_membership($1,$2,$3,$4,$5)',[a,b,'active',null,'Forgery']));
+assert.equal((await db.query('select pro_save_workspace($1,$2,$3)',[a,{version:1},0])).rows[0].pro_save_workspace,1);
+await assert.rejects(()=>db.query('select pro_save_workspace($1,$2,$3)',[a,{},0]));
+const id='10000000-0000-4000-8000-000000000001';
+await db.query('select pro_request_social($1,$2,$3,$4,$5)',[a,id,'Test','https://contratacr.com','Test']);
+await assert.rejects(()=>db.query('select pro_request_social($1,$2,$3,$4,$5)',[a,'10000000-0000-4000-8000-000000000002','Duplicate','https://contratacr.com','Test']));
+await assert.rejects(()=>db.query('select pro_review_social($1,$2,$3,$4,$5)',[admin,id,'published','','https://example.com']));
+await assert.rejects(()=>db.query('select pro_review_social($1,$2,$3,$4,$5)',[a,id,'approved','','']));
+await db.query('select pro_review_social($1,$2,$3,$4,$5)',[admin,id,'approved','OK','']);
+await db.query('select pro_review_social($1,$2,$3,$4,$5)',[admin,id,'published','','https://example.com']);
+assert.equal((await db.query('select count(*)::int as n from pro_audit')).rows[0].n,4);
+await db.exec(`set role authenticated;set request.jwt.claim.sub='${b}';`);
+assert.equal((await db.query('select * from pro_workspaces')).rows.length,0);
+assert.equal((await db.query('select * from pro_social_requests')).rows.length,0);
+await assert.rejects(()=>db.query('select pro_save_workspace($1,$2,$3)',[b,{},0]));
+await db.exec(`set request.jwt.claim.sub='${a}';`);
+assert.equal((await db.query('select * from pro_workspaces')).rows.length,1);
+await assert.rejects(()=>db.query("update pro_memberships set status='active'"));
+await db.close();console.log('PASS: SQL, CAS conflicts, monthly quota, admin transitions, audit, owner isolation, denied direct writes/RPC');

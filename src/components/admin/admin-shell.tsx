@@ -10,6 +10,7 @@ import { ContrataCRLogo } from "@/components/landing/landing-navbar";
 import { ADMIN_REFRESH_EVENT, ADMIN_COUNTS_REFRESH_EVENT } from "@/hooks/use-admin-auto-refresh";
 
 export type AdminTab =
+  | "pro"
   | "resumen" | "identificaciones" | "verificacion" | "usuarios" | "publicaciones" | "reportes" | "aseguradoras"
   | "categorias" | "cuentas" | "soporte" | "analitica" | "actividad" | "resenas" | "empleos" | "promociones" | "cobertura" | "costos" | "campanas" | "contactos";
 
@@ -53,7 +54,7 @@ const GRUPOS_ADMIN: { label: string; ids: AdminTab[] }[] = [
   { label: "Publicaciones", ids: ["publicaciones", "empleos", "promociones", "resenas"] },
   { label: "Personas", ids: ["usuarios", "identificaciones", "contactos"] },
   { label: "Catálogo", ids: ["categorias", "cobertura"] },
-  { label: "Negocio", ids: ["campanas", "costos"] },
+  { label: "Negocio", ids: ["campanas", "costos", "pro"] },
 ];
 
 export function AdminShell(props: React.ComponentProps<typeof AdminShellContent>) {
@@ -133,6 +134,7 @@ function AdminShellContent({
     { id: "empleos", label: "Empleos", icon: Briefcase, href: "/admin/empleos", badge: 0 },
     { id: "promociones", label: "Promociones", icon: BadgePercent, href: "/admin/promociones", badge: 0 },
     { id: "cobertura", label: "Cobertura", icon: MapPinned, href: "/admin/cobertura", badge: 0 },
+    { id: "pro", label: "ContrataCR Pro", icon: Star, href: "/admin/pro", badge: 0 },
     { id: "costos", label: "Costos", icon: Wallet, href: "/admin/costos", badge: 0 },
     { id: "contactos", label: "Contactos a profesionales", icon: MessageCircle, href: "/admin/contactos", badge: 0 },
     { id: "reportes", label: "Reportes", icon: Flag, href: "/admin/reportes", badge: counts.reportes ?? 0 },

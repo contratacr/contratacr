@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { socialRequestSchema } from './social';
 import { validateWork, type WorkItem } from './workspace';
 const text=z.string().trim().min(1).max(160);
 export const clientSchema=z.object({id:text,name:text,email:z.union([z.literal(''),z.string().email()]),phone:z.string().max(30),notes:z.string().max(2000),archived:z.boolean()});
@@ -7,12 +8,12 @@ const lineSchema=z.object({description:text,quantity:z.number().finite().positiv
 export const quoteSchema=z.object({id:text,clientId:text,title:text,lines:z.array(lineSchema).min(1).max(100),status:z.enum(['draft','accepted','declined']),validUntil:z.string().regex(/^\d{4}-\d{2}-\d{2}$/)});
 const workSchema=z.object({id:text,client:text,service:text,stage:z.enum(['new','quoting','scheduled','completed']),start:z.string(),end:z.string(),clientId:text,quoteId:z.string().optional(),cancelled:z.boolean()});
 const movementSchema=z.object({id:text,productId:text,delta:z.number().finite(),reason:text,at:z.string()});
-export const businessSchema=z.object({version:z.literal(1),clients:z.array(clientSchema),products:z.array(productSchema),quotes:z.array(quoteSchema),work:z.array(workSchema),movements:z.array(movementSchema)});
+export const businessSchema=z.object({version:z.literal(1),clients:z.array(clientSchema),products:z.array(productSchema),quotes:z.array(quoteSchema),work:z.array(workSchema),movements:z.array(movementSchema),social:z.array(socialRequestSchema).default([])});
 export type Client=z.infer<typeof clientSchema>;
 export type Product=z.infer<typeof productSchema>;
 export type Quote=z.infer<typeof quoteSchema>;
 export type Business=z.infer<typeof businessSchema>;
-export const emptyBusiness=():Business=>({version:1,clients:[],products:[],quotes:[],work:[],movements:[]});
+export const emptyBusiness=():Business=>({version:1,clients:[],products:[],quotes:[],work:[],movements:[],social:[]});
 export function quoteTotal(lines:Quote['lines']) {
   return lines.reduce((sum,line)=>{const net=Math.round(line.quantity*line.price*100);return sum+net+Math.round(net*line.tax/100);},0)/100;
 }
