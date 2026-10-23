@@ -127,7 +127,8 @@ export function AdminOverview({ adminName, data, activity = [] }: { adminName: s
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard icon={UserPlus} label="Nuevos profesionales" value={data.newPros.value} kpi={data.newPros} color="#008ce0" deltaSuffix="esta semana" />
         <KpiCard icon={Users} label="Nuevos clientes" value={data.newClients.value} kpi={data.newClients} color="#16a34a" deltaSuffix="esta semana" />
-        <KpiCard icon={MessageCircle} label="Contactos a profesionales" value={data.servicios.value} kpi={data.servicios} color="#7c3aed" deltaSuffix="este mes" />
+        <KpiCard icon={MessageCircle} label="Contactos de servicios" value={data.servicios.value} kpi={data.servicios} color="#7c3aed" deltaSuffix="este mes" />
+        <KpiCard icon={MessageCircle} label="Contactos por empleos" value={data.empleos.value} kpi={data.empleos} color="#0369a1" deltaSuffix="este mes" />
         <KpiCard icon={ShieldCheck} label="Tasa de verificación" value={data.verificationRate.value} suffix="%" kpi={data.verificationRate} color="#f59e0b" deltaSuffix="vs. mes pasado" />
       </div>
 

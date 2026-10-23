@@ -2,13 +2,13 @@
   "scope": "Todos los archivos TypeScript de src/app, src/components y src/hooks, controles JSX declarados, pestañas del panel y specs permanentes. No enumera cada elemento dinámico renderizado ni componentes dentro de dependencias.",
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
-    "files": 500,
-    "controls": 1294,
+    "files": 501,
+    "controls": 1296,
     "pages": 71,
     "handlers": 105,
-    "components": 261,
+    "components": 262,
     "hooks": 27,
-    "specs": 163
+    "specs": 165
   },
   "dashboardTabs": [
     "home",
@@ -7163,7 +7163,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 295,
+          "line": 297,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -7171,7 +7171,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 330,
+          "line": 332,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -7179,7 +7179,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 351,
+          "line": 353,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -7763,6 +7763,34 @@
       "priority": "P0"
     },
     {
+      "file": "src/components/admin/admin-contact-breakdown.tsx",
+      "kind": "Componente",
+      "group": "Administración",
+      "route": null,
+      "exports": [
+        "AdminContactBreakdown"
+      ],
+      "methods": [],
+      "controls": [],
+      "testIds": [
+        "admin-contact-segments",
+        "admin-declared-hires"
+      ],
+      "relatedSpecs": [
+        "tests/e2e/admin-smoke.spec.ts",
+        "tests/e2e/admin-bottom-nav.spec.ts",
+        "tests/e2e/admin-editar-datos.spec.ts",
+        "tests/e2e/admin-campaigns-policy.spec.ts"
+      ],
+      "directReferences": [
+        "tests/e2e/admin-contact-segments.spec.ts"
+      ],
+      "evidence": "Referencia estática detectada; verificar assertions",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P0"
+    },
+    {
       "file": "src/components/admin/admin-contactos.tsx",
       "kind": "Componente",
       "group": "Administración",
@@ -7773,7 +7801,15 @@
       "methods": [],
       "controls": [
         {
-          "line": 69,
+          "line": 83,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{() => {setSegmento(key);setDatos(null);setCargando(true);}}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 87,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { setDias(periodo); setCargando(true); }}",
@@ -7781,7 +7817,15 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 120,
+          "line": 100,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{() => {setCargando(true);void cargar();}}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 139,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -8717,7 +8761,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 135,
+          "line": 136,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -8725,7 +8769,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 163,
+          "line": 164,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -8733,7 +8777,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 176,
+          "line": 177,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -8741,7 +8785,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 189,
+          "line": 190,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -16575,7 +16619,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 719,
+          "line": 723,
           "tag": "button",
           "label": "{copy.view(offer.title)}",
           "handler": "{onSelect}",
@@ -16583,7 +16627,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 733,
+          "line": 737,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -16591,7 +16635,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 856,
+          "line": 860,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => onFiltrarServicio?.(offer.service_label ?? \"\")}",
@@ -16599,7 +16643,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 876,
+          "line": 880,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{onEdit}",
@@ -16607,7 +16651,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 883,
+          "line": 887,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -17041,6 +17085,7 @@
         "tests/e2e/search-progressive-loading.spec.ts"
       ],
       "directReferences": [
+        "tests/e2e/contact-context-measurement.spec.ts",
         "tests/e2e/search-offer-loading.spec.ts"
       ],
       "evidence": "Referencia estática detectada; verificar assertions",
@@ -17059,7 +17104,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 74,
+          "line": 80,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -17067,7 +17112,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 157,
+          "line": 164,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{onClick}",
@@ -17259,6 +17304,7 @@
         "tests/e2e/search-progressive-loading.spec.ts"
       ],
       "directReferences": [
+        "tests/e2e/contact-context-measurement.spec.ts",
         "tests/e2e/search-offer-loading.spec.ts"
       ],
       "evidence": "Referencia estática detectada; verificar assertions",
@@ -17360,7 +17406,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 271,
+          "line": 274,
           "tag": "div",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(e) => e.stopPropagation()}",
@@ -17368,7 +17414,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 301,
+          "line": 304,
           "tag": "button",
           "label": "{t(\"moreZones\", { count: zonasRestantes })}",
           "handler": "{onVerZonas}",
@@ -22051,6 +22097,7 @@
         "tests/e2e/interaction-surfaces.spec.ts"
       ],
       "directReferences": [
+        "tests/e2e/contact-context-measurement.spec.ts",
         "tests/e2e/search-offer-loading.spec.ts"
       ],
       "evidence": "Referencia estática detectada; verificar assertions",
@@ -22412,6 +22459,7 @@
         "tests/e2e/reanudar-la-app.spec.ts"
       ],
       "directReferences": [
+        "tests/e2e/contact-context-measurement.spec.ts",
         "tests/e2e/meta-growth-runtime.spec.ts",
         "tests/e2e/runtime-analytics.spec.ts",
         "tests/e2e/search-offer-loading.spec.ts"
@@ -22543,6 +22591,7 @@
         "tests/e2e/search-progressive-loading.spec.ts"
       ],
       "directReferences": [
+        "tests/e2e/contact-context-measurement.spec.ts",
         "tests/e2e/search-offer-loading.spec.ts"
       ],
       "evidence": "Referencia estática detectada; verificar assertions",
@@ -22794,6 +22843,31 @@
       ]
     },
     {
+      "file": "tests/e2e/admin-contact-segments.spec.ts",
+      "cases": [
+        {
+          "line": 8,
+          "title": "\"job markers override service sources and recipient roles never imply hiring\""
+        },
+        {
+          "line": 15,
+          "title": "\"products, packages and historical promotions without a service type are not service demand\""
+        },
+        {
+          "line": 20,
+          "title": "\"repeated clicks do not inflate unique account-recipient pairs or count messages as new contacts\""
+        },
+        {
+          "line": 26,
+          "title": "\"the panel separates jobs and services and never reports an unavailable hiring count as zero\""
+        },
+        {
+          "line": 36,
+          "title": "\"contacts towards projects remain a separate activity, not service acquisition\""
+        }
+      ]
+    },
+    {
       "file": "tests/e2e/admin-editar-datos.spec.ts",
       "cases": [
         {
@@ -22889,52 +22963,64 @@
       "file": "tests/e2e/admin-list-limits-runtime.spec.ts",
       "cases": [
         {
-          "line": 77,
+          "line": 78,
           "title": "`${route} list includes every match beyond the default cap and agrees with its counter`"
         },
         {
-          "line": 83,
+          "line": 84,
           "title": "\"all support messages remain available beyond the database cap\""
         },
         {
-          "line": 90,
+          "line": 91,
           "title": "\"review search can find older reviews after 500 and 1000 records\""
         },
         {
-          "line": 94,
+          "line": 95,
           "title": "`${kind} filters and pages use all records`"
         },
         {
-          "line": 98,
+          "line": 99,
           "title": "\"coverage includes every matching professional beyond its old 300-row cutoff\""
         },
         {
-          "line": 101,
+          "line": 102,
           "title": "\"overview contacts and analytics search quality include events after 1000\""
         },
         {
-          "line": 106,
+          "line": 107,
           "title": "\"users and projects no longer stop silently at 10000 rows\""
         },
         {
-          "line": 110,
+          "line": 111,
           "title": "\"a failed later page produces an error instead of a misleading partial list\""
         },
         {
-          "line": 113,
+          "line": 114,
           "title": "\"complete queue reads remain restricted to administrators\""
         },
         {
-          "line": 118,
+          "line": 119,
           "title": "`overview pending count deduplicates reviews and translates client labels (${locale})`"
         },
         {
-          "line": 130,
+          "line": 131,
           "title": "\"project contact counts include every matching event beyond the first page\""
         },
         {
-          "line": 135,
+          "line": 136,
           "title": "\"admin edit history is complete beyond the former 50-row cutoff\""
+        },
+        {
+          "line": 142,
+          "title": "\"overview and reports separate employment from services beyond the default page cap\""
+        },
+        {
+          "line": 155,
+          "title": "\"admin and self interactions are excluded while uncertain history remains visible separately\""
+        },
+        {
+          "line": 169,
+          "title": "\"contact segmentation stays admin-only and missing hire history is not shown as zero\""
         }
       ]
     },
@@ -24050,6 +24136,15 @@
         {
           "line": 56,
           "title": "\"contact retries a transient availability failure without keeping WhatsApp for the session\""
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/contact-context-measurement.spec.ts",
+      "cases": [
+        {
+          "line": 5,
+          "title": "`${context}: WhatsApp preserves the selected context in internal measurement`"
         }
       ]
     },

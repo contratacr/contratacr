@@ -1,3 +1,4 @@
+import { AdminContactBreakdown } from "./admin-contact-breakdown";
 import { formatFullPersonName } from "@/lib/display-name";
 import { AdminActivityJourney } from "./admin-activity-journey";
 import { ArrowDownRight, ArrowUpRight, Headset, MapPinned, Megaphone, Minus, Search, Smartphone, UserCheck, Users } from "lucide-react";
@@ -61,15 +62,12 @@ function Funnel({ steps }: { steps: { label: string; value: number; help: string
   const max = Math.max(1, ...steps.map((s) => s.value));
   return (
     <ol className="space-y-3">
-      {steps.map((step, index) => {
-        const previous = index > 0 ? steps[index - 1].value : null;
-        const rate = previous != null ? pct(step.value, previous) : null;
+      {steps.map((step) => {
         return (
           <li key={step.label} title={step.help}>
             <div className="flex items-center justify-between gap-3 text-sm">
               <span className="font-semibold text-[#0f172a]">{step.label}</span>
               <span className="flex shrink-0 items-center gap-2 tabular-nums">
-                {rate != null && <span className="rounded-full bg-[#f1f5f9] px-2 py-0.5 text-[11px] font-semibold text-[#64748b]">{rate > 100 ? "↑" : `${rate}%`}</span>}
                 <span className="font-bold text-[#0f172a]">{fmt(step.value)}</span>
               </span>
             </div>
@@ -189,8 +187,8 @@ function Acquisition({ data }: { data: AdminAcquisition }) {
 
 function runtimeActionLabel(action: string) {
   const labels: Record<string, string> = {
-    profile_view: "Vistas de perfiles", search_performed: "Búsquedas", whatsapp_click: "Clics a WhatsApp",
-    phone_click: "Llamadas", email_click: "Contactos por correo", internal_message_sent: "Mensajes enviados",
+    profile_view: "Vistas de perfiles", search_performed: "Búsquedas", whatsapp_click: "Clics a WhatsApp · todas las secciones",
+    phone_click: "Clics en llamar · todas las secciones", email_click: "Correos · todas las secciones", internal_message_sent: "Mensajes enviados",
     quote_created: "Cotizaciones enviadas", project_published: "Proyectos publicados",
     project_lead_whatsapp: "Contactos a proyectos por WhatsApp", project_lead_phone: "Clics en llamar de proyectos",
     project_view: "Visitas a proyectos", review_created: "Reseñas",
@@ -203,7 +201,7 @@ function runtimeActionLabel(action: string) {
     service_offer_published: "Promociones publicadas", employer_job_published: "Empleos publicados",
     page_freeze: "Bloqueos de pantalla", availability_view: "Disponibilidad consultada",
   };
-  if (action.startsWith("conversion_")) return `${labels[action.slice(11)] ?? action.slice(11).replaceAll("_", " ")} · únicos`;
+  if (action.startsWith("conversion_")) return `${labels[action.slice(11)] ?? action.slice(11).replaceAll("_", " ")} · conversiones registradas`;
   return labels[action] ?? action.replaceAll("_", " ");
 }
 
@@ -223,12 +221,16 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
       </div>
 
       <AdminActivityJourney />
+      <Section icon={Users} title="Servicios y empleos por separado" sub="Clics de contacto · WhatsApp, llamadas y correo">
+        <AdminContactBreakdown data={data.contactBreakdown} />
+      </Section>
+
       <Section icon={Users} title="Esta semana" sub="vs. los 7 días anteriores">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
           <Kpi label="Profesionales nuevos" data={week.pros} />
           <Kpi label="Clientes nuevos" data={week.clients} />
           <Kpi label="Búsquedas" data={week.searches} />
-          <Kpi label="Contactos" data={week.contacts} help="WhatsApp, llamadas y correos" />
+          <Kpi label="Contactos de servicios" data={week.contacts} help="Clics a WhatsApp, llamadas y correos desde servicios; excluye empleos y contextos sin identificar" />
           <Kpi label="Proyectos publicados" data={week.requests} help="Proyectos que publicaron los clientes en el tablero" />
           <Kpi label="Respuestas al tablero" data={week.projectLeads} help="Profesionales que le escribieron a un proyecto publicado" />
           <Kpi label="Cotizaciones" data={week.quotes} help="Cotizaciones que enviaron los profesionales" />
@@ -257,12 +259,12 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
       </div>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <Section icon={Search} title="Del interés a la contratación" sub="Últimos 7 días · % del paso anterior">
+        <Section icon={Search} title="Actividad de servicios" sub="Últimos 7 días · conteos independientes">
           <Funnel steps={[
             { label: "Búsquedas", value: insights.funnel.searches, help: "Buscaron un servicio o profesional" },
             { label: "Vistas de perfil", value: insights.funnel.profileViews, help: "Abrieron el perfil de un profesional" },
             { label: "Intentaron contactar", value: insights.funnel.contactAttempts, help: "Tocaron WhatsApp, llamar o correo — con cuenta o sin ella" },
-            { label: "Contactaron", value: insights.funnel.contacts, help: "Ya con cuenta: el contacto se completó. La diferencia con el paso anterior es la gente que se detuvo en el registro" },
+            { label: "Abrieron un contacto", value: insights.funnel.contacts, help: "Se abrió WhatsApp, llamada o correo. No demuestra envío de mensaje, respuesta ni contratación" },
             { label: "Proyectos publicados", value: insights.funnel.requests, help: "Publicaron un proyecto en el tablero" },
             { label: "Respuestas al tablero", value: insights.funnel.projectLeads, help: "Profesionales que le escribieron a alguno de esos proyectos" },
           ]} />
@@ -287,7 +289,7 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
           )}
           {gateSince && (
             <p className="mt-3 text-xs text-[#64748b]">
-              Los intentos de contacto se registran desde el <strong className="text-[#0f172a]">{gateSince}</strong>; antes de esa fecha solo se contaban los contactos completados.
+              Los intentos de contacto se registran desde el <strong className="text-[#0f172a]">{gateSince}</strong>. Los pasos no representan las mismas personas ni una tasa de contratación.
             </p>
           )}
         </Section>
@@ -305,7 +307,7 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
                   </div>
                   <div className="shrink-0 text-right">
                     <p className="text-sm tabular-nums text-[#0f172a]"><strong>{row.supply}</strong> <span className="text-xs text-[#64748b]">prof.</span></p>
-                    <p className={`text-[11px] font-semibold ${row.gap ? "text-red-600" : "text-emerald-600"}`}>{row.gap ? "Falta oferta" : "Suficiente"}</p>
+                    <p className={`text-[11px] font-semibold ${row.gap ? "text-red-600" : "text-emerald-600"}`}>{row.gap ? "Revisar oferta" : "Oferta registrada"}</p>
                   </div>
                 </li>
               ))}

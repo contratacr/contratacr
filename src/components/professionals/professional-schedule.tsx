@@ -5,7 +5,7 @@ import { getProfessionalDisplayName } from "@/lib/display-name";
 import { useMemo, useState, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import { normalizeText } from "@/lib/data/categories";
-import { PROVINCES } from "@/lib/data/cr-geography";
+import { PROVINCES, getCantonById } from "@/lib/data/cr-geography";
 import { useTranslations } from "next-intl";
 import { MapPin, Video } from "lucide-react";
 import { SelfActionModal, SELF_MSG } from "./self-action-modal";
@@ -87,6 +87,9 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
   const t = useTranslations("schedule");
   // Qué ubicación se está buscando, para poner delante los lugares que sirven.
   const searchParams = useSearchParams();
+  const searchProvince = searchParams.get("provincia");
+  const searchCanton = getCantonById(searchParams.get("canton") ?? "");
+  const analyticsArea = { provinceId: PROVINCES.some(p => p.id === searchProvince) ? searchProvince : searchCanton?.provinceId ?? null, cantonId: searchCanton?.id ?? null };
   // When the pro acts on their OWN card we block the action with a friendly modal
   // instead of hiding the buttons (the card looks identical to a client's view).
   const [selfMsg, setSelfMsg] = useState<string | null>(null);
@@ -382,7 +385,7 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
   // El rótulo «WhatsApp» lo pone el propio lanzador y es el mismo en todo el
   // app; aquí solo se le da la medida de la tarjeta.
   const whatsappDeLaTarjeta = (
-    <DirectChatLauncher professionalId={professional.id} professionalName={getProfessionalDisplayName(professional.fullName, professional.businessName).primaryDesktop} contextTitle={categoryName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} analyticsSource={stacked ? "profile" : "search"} className={searchMessageButtonClass} buttonLabel={t("whatsappLong")} />
+    <DirectChatLauncher categoryId={activeCategory} searchArea={analyticsArea} professionalId={professional.id} professionalName={getProfessionalDisplayName(professional.fullName, professional.businessName).primaryDesktop} contextTitle={categoryName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} analyticsSource={stacked ? "profile" : "search"} className={searchMessageButtonClass} buttonLabel={t("whatsappLong")} />
   );
   const contactButtons = showCall ? (
     // Uno arriba del otro, en todos los tamaños, con el rótulo que dice qué
@@ -402,6 +405,8 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
   // conversación fuera del app.
   const chatLauncher = (
     <DirectChatLauncher
+      categoryId={activeCategory}
+      searchArea={analyticsArea}
       professionalId={professional.id}
       professionalName={getProfessionalDisplayName(professional.fullName, professional.businessName).primaryDesktop}
       contextTitle={categoryName}

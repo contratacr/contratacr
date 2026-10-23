@@ -29,7 +29,7 @@ function setup(size = 1203, options: { authorized?: boolean; failTable?: string;
     support_tickets: base.map(row => ({ ...row, status: "open", user_id: row.id, last_reply_role: "user" })),
     support_ticket_messages: base.map(row => ({ ...row, ticket_id: "ticket", sender_role: "user" })),
     account_deletion_requests: base.map(row => ({ ...row, status: "pending", user_id: row.id })),
-    interaction_events: base.map(row => ({ ...row, event_type: "whatsapp_click", category_id: "service", metadata: {} })),
+    interaction_events: base.map(row => ({ ...row, event_type: "whatsapp_click", source: "search", category_id: "service", metadata: {} })),
     projects: base.map(row => ({ ...row, title: row.name, status: "open", client_id: row.id })),
     provider_verification_log: [], provider_appeals: [], user_action_audit: [],
   };
@@ -61,6 +61,7 @@ function setup(size = 1203, options: { authorized?: boolean; failTable?: string;
       return (key:string)=>messages[namespace][key];
     }},
     "@/lib/admin/read-all-rows":paging,
+    "@/lib/analytics/contact-segments":load("src/lib/analytics/contact-segments.ts"),
     "@/lib/auth/admin":{getApiAdmin:async()=>options.authorized===false?null:{id:"admin"}},
     "@/lib/supabase/admin":{createAdminClient:()=>db},
     "@/lib/data/categories":{ALL_CATEGORIES:[],CATEGORY_GROUPS:[],getCategoryLabel:(id:string)=>id,autoEnglishCategoryLabel:(s:string)=>s},
@@ -136,4 +137,40 @@ test("admin edit history is complete beyond the former 50-row cutoff",async()=>{
   const s=setup();s.tables.user_action_audit=s.tables.profiles.map(row=>({...row,entity_owner_user_id:'owner',action:'admin_edit_user_data',actor_user_id:null}));
   const response=await s.route('users/[id]/datos').GET(new Request('https://example.test'),{params:Promise.resolve({id:'owner'})});
   expect(response.status).toBe(200);expect((await response.json()).historial).toHaveLength(1203);
+});
+
+test("overview and reports separate employment from services beyond the default page cap",async()=>{
+  const s=setup();
+  s.tables.interaction_events.forEach((e,i)=>{e.source=i<1001?'jobs':'search';e.professional_id='recipient';e.visitor_hash=`visitor-${i}`;});
+  const overview=await load('src/lib/admin/overview.ts',s.mocks).getAdminOverview();
+  expect(overview.servicios.value).toBe(202);expect(overview.empleos.value).toBe(1001);
+  const report=await load('src/lib/admin/reports.ts',s.mocks).getAdminReports();
+  expect(report.insights.week.contacts.now).toBe(202);
+  expect(report.contactBreakdown.last30.services.clicks).toBe(202);
+  expect(report.contactBreakdown.last30.jobs.clicks).toBe(1001);
+  const route=s.route('contactos');
+  expect((await (await route.GET(new Request('https://example.test/api/admin/contactos'))).json()).total).toBe(202);
+  expect((await (await route.GET(new Request('https://example.test/api/admin/contactos?segmento=jobs'))).json()).total).toBe(1001);
+});
+test("admin and self interactions are excluded while uncertain history remains visible separately",async()=>{
+  const s=setup(5);
+  s.tables.profiles[0].role='admin';
+  const [admin,self,job,unknown,service]=s.tables.interaction_events;
+  Object.assign(admin,{viewer_user_id:s.tables.profiles[0].id});
+  Object.assign(self,{viewer_user_id:s.tables.profiles[1].id,professional_id:s.tables.professionals[1].id});
+  Object.assign(job,{metadata:{jobId:'job'},professional_id:'recipient'});
+  Object.assign(unknown,{source:'unknown',professional_id:'recipient'});
+  Object.assign(service,{professional_id:'recipient'});
+  const report=await load('src/lib/admin/reports.ts',s.mocks).getAdminReports();
+  expect(report.contactBreakdown.last30.services.clicks).toBe(1);
+  expect(report.contactBreakdown.last30.jobs.clicks).toBe(1);
+  expect(report.contactBreakdown.last30.unknown.clicks).toBe(1);
+});
+test("contact segmentation stays admin-only and missing hire history is not shown as zero",async()=>{
+  const denied=setup(1,{authorized:false});
+  expect((await denied.route('contactos').GET(new Request('https://example.test/api/admin/contactos'))).status).toBe(403);
+  const s=setup(1,{failTable:'growth_conversion_events'});
+  const report=await load('src/lib/admin/reports.ts',s.mocks).getAdminReports();
+  expect(report.contactBreakdown.declaredHires30).toBeNull();
+  expect((await s.route('contactos').GET(new Request('https://example.test/api/admin/contactos?segmento=invalid'))).status).toBe(400);
 });
