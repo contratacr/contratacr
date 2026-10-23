@@ -1,3 +1,5 @@
+import { contactSegment, type ContactEvent, type ContactSegment } from "@/lib/analytics/contact-segments";
+import { readAllAdminRows } from "@/lib/admin/read-all-rows";
 import { readAdminRowsByIds } from "@/lib/admin/read-all-rows";
 import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
@@ -26,10 +28,10 @@ const TAMANO_PAGINA = 1000;
 type Db = ReturnType<typeof createAdminClient>;
 
 async function cargarContactos(db: Db, desde: string | null) {
-  const filas: Array<{ professional_id: string; visitor_hash: string; created_at: string; category_id: string | null; event_type: string; viewer_user_id: string | null }> = [];
+  const filas: Array<ContactEvent & { professional_id: string; visitor_hash: string; category_id: string | null }> = [];
   for (let inicio = 0; ; inicio += TAMANO_PAGINA) {
     let consulta = db.from("interaction_events")
-      .select("professional_id, visitor_hash, created_at, category_id, event_type, viewer_user_id")
+      .select("professional_id, visitor_hash, created_at, category_id, event_type, viewer_user_id, source, metadata")
       .in("event_type", CONTACTO)
       .order("created_at", { ascending: true })
       .order("id", { ascending: true })
@@ -42,12 +44,12 @@ async function cargarContactos(db: Db, desde: string | null) {
   }
 }
 
-async function cargarVistas(db: Db, desde: string | null) {
-  const filas: Array<{ professional_id: string; visitor_hash: string }> = [];
+async function cargarVistas(db: Db, desde: string | null, segmento: ContactSegment) {
+  const filas: Array<ContactEvent & { professional_id: string; visitor_hash: string }> = [];
   for (let inicio = 0; ; inicio += TAMANO_PAGINA) {
     let consulta = db.from("interaction_events")
-      .select("professional_id, visitor_hash")
-      .eq("event_type", "profile_view")
+      .select("professional_id, visitor_hash, viewer_user_id, created_at, event_type, source, metadata")
+      .eq("event_type", segmento === "jobs" ? "job_view" : "profile_view")
       .order("created_at", { ascending: true })
       .order("id", { ascending: true })
       .range(inicio, inicio + TAMANO_PAGINA - 1);
@@ -63,22 +65,33 @@ export async function GET(request: Request) {
   const admin = await getApiAdmin();
   if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
-  const periodo = new URL(request.url).searchParams.get("dias") ?? "30";
+  const params = new URL(request.url).searchParams;
+  const segmento = (params.get("segmento") ?? "services") as ContactSegment;
+  if (!["services", "jobs", "unknown"].includes(segmento)) return NextResponse.json({ error: "Segmento inválido" }, { status: 400 });
+  const periodo = params.get("dias") ?? "30";
   const dias = periodo === "all" ? "all" : Math.min(Math.max(Number(periodo) || 30, 1), 365);
   const desde = dias === "all" ? null : new Date(Date.now() - dias * 86_400_000).toISOString();
   const db = createAdminClient();
 
-  const [contactos, vistas] = await Promise.all([
-    cargarContactos(db, desde),
-    cargarVistas(db, desde),
+  const [rawContacts, rawViews, profiles, owners] = await Promise.all([
+    cargarContactos(db, desde), cargarVistas(db, desde, segmento),
+    readAllAdminRows((from,to) => db.from("profiles").select("id").eq("role","admin").order("id").range(from,to)),
+    readAllAdminRows((from,to) => db.from("professionals").select("id, profile_id").order("id").range(from,to)),
   ]);
+  if (profiles.error || owners.error) return NextResponse.json({error:"No se pudo verificar la exclusión de cuentas"},{status:503});
+  const excluded = new Set((profiles.data ?? []).map(p=>p.id));
+  const ownerById = new Map((owners.data ?? []).map(p=>[p.id,p.profile_id]));
+  const include = (e: ContactEvent) => !excluded.has(e.viewer_user_id ?? "") && (!e.viewer_user_id || ownerById.get(e.professional_id ?? "") !== e.viewer_user_id) && contactSegment(e) === segmento;
+  const contactos = rawContacts.filter(include), vistas = rawViews.filter(include);
 
   // Una ráfaga del mismo visitante no son diez clientes: se cuenta una vez por
   // visitante y profesional. Sin esto, once toques en un minuto se leían como
   // once contactos, que fue justo lo que confundió la primera medición.
   const unicos = new Map<string, { professional_id: string; created_at: string; category_id: string | null; canal: string; conCuenta: boolean }>();
   for (const fila of contactos) {
-    const clave = `${fila.visitor_hash}|${fila.professional_id}`;
+    const actor = fila.viewer_user_id ? `account:${fila.viewer_user_id}` : fila.visitor_hash ? `visitor:${fila.visitor_hash}` : null;
+    if (!actor || !fila.professional_id) continue;
+    const clave = JSON.stringify([actor, fila.professional_id]);
     if (!unicos.has(clave)) {
       unicos.set(clave, {
         professional_id: fila.professional_id,
@@ -134,9 +147,9 @@ export async function GET(request: Request) {
   const totalVistas = [...vistasPorPro.values()].reduce((suma, set) => suma + set.size, 0);
   return NextResponse.json({
     dias,
+    segmento,
     total: unicos.size,
     totalVistas,
-    tasa: totalVistas ? Number(((unicos.size / totalVistas) * 100).toFixed(1)) : 0,
     profesionales,
   }, { headers: { "Cache-Control": "no-store" } });
 }

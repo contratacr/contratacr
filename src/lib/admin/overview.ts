@@ -1,3 +1,4 @@
+import { contactSegment, type ContactEvent } from "@/lib/analytics/contact-segments";
 import { getTranslations } from "next-intl/server";
 import { readAllAdminRows } from "@/lib/admin/read-all-rows";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -18,6 +19,7 @@ export type AdminOverview = {
   newPros: Kpi;
   newClients: Kpi;
   servicios: Kpi;
+  empleos: Kpi;
   verificationRate: Kpi;     // value is a percentage 0–100
   growth: GrowthPoint[];     // last 14 days
   recentSignups: SignupItem[];
@@ -32,7 +34,7 @@ const DAY = 86400000;
 function emptyKpi(): Kpi { return { value: 0, deltaPct: null, prior: null, spark: [] }; }
 function emptyOverview(): AdminOverview {
   return {
-    newPros: emptyKpi(), newClients: emptyKpi(), servicios: emptyKpi(), verificationRate: emptyKpi(),
+    newPros: emptyKpi(), newClients: emptyKpi(), servicios: emptyKpi(), empleos: emptyKpi(), verificationRate: emptyKpi(),
     growth: [], recentSignups: [], pending: [], pendingCount: 0, topCategories: [], byProvince: [],
   };
 }
@@ -63,7 +65,7 @@ type ProRow = {
   professions: string[] | null; profiles: { full_name?: string } | null;
 };
 type ClientRow = { id: string; created_at: string; full_name: string | null; role: string; client_identity_status: string | null };
-type ContactoRow = { created_at: string };
+type ContactoRow = ContactEvent;
 
 export async function getAdminOverview(locale = "es"): Promise<AdminOverview> {
   try {
@@ -81,19 +83,21 @@ export async function getAdminOverview(locale = "es"): Promise<AdminOverview> {
       // más visible del panel. Lo que de verdad mide que el app sirvió es el
       // momento en que alguien decide escribirle a un profesional, y hoy eso
       // pasa por WhatsApp o por teléfono.
-      readAllAdminRows((from, to) => admin.from("interaction_events").select("created_at").in("event_type", ["whatsapp_click", "phone_click", "email_click"]).gte("created_at", new Date(prev30).toISOString()).order("created_at", { ascending: false }).order("id").range(from, to)),
+      readAllAdminRows((from, to) => admin.from("interaction_events").select("created_at, event_type, source, metadata, professional_id, viewer_user_id").in("event_type", ["whatsapp_click", "phone_click", "email_click"]).gte("created_at", new Date(prev30).toISOString()).order("created_at", { ascending: false }).order("id").range(from, to)),
     ]);
 
     if (prosRes.error || clientsRes.error || contactosRes.error) throw new Error("Incomplete overview data");
-    const pros = (prosRes.data ?? []) as unknown as ProRow[];
-    const professionalProfileIds = new Set(pros.map((professional) => professional.profile_id));
     const profileRows = (clientsRes.data ?? []) as unknown as ClientRow[];
+    const adminIds = new Set(profileRows.filter(p => p.role === "admin").map(p => p.id));
+    const pros = ((prosRes.data ?? []) as unknown as ProRow[]).filter(p => !adminIds.has(p.profile_id));
+    const professionalProfileIds = new Set(pros.map((professional) => professional.profile_id));
     const clients = profileRows.filter((client) => client.role === "client" && !professionalProfileIds.has(client.id));
-    const contactos = (contactosRes.data ?? []) as unknown as ContactoRow[];
+    const ownerByPro = new Map(((prosRes.data ?? []) as unknown as ProRow[]).map(p => [p.id, p.profile_id]));
+    const contactos = ((contactosRes.data ?? []) as unknown as ContactoRow[]).filter(e => !adminIds.has(e.viewer_user_id ?? "") && (!e.viewer_user_id || ownerByPro.get(e.professional_id ?? "") !== e.viewer_user_id));
 
     const proTimes = pros.map((p) => new Date(p.created_at).getTime()).filter((n) => !isNaN(n));
     const clientTimes = clients.map((c) => new Date(c.created_at).getTime()).filter((n) => !isNaN(n));
-    const contactoTimes = contactos.map((c) => new Date(c.created_at).getTime()).filter((n) => !isNaN(n));
+    const contactoTimes = contactos.filter(e => contactSegment(e) === "services").map((c) => new Date(c.created_at).getTime()).filter((n) => !isNaN(n));
 
     const inWindow = (times: number[], a: number, b: number) => times.filter((t) => t >= a && t < b).length;
 
@@ -108,6 +112,10 @@ export async function getAdminOverview(locale = "es"): Promise<AdminOverview> {
     // KPI 3 — Contactos (last 30 vs prior 30)
     const serv30 = inWindow(contactoTimes, last30, now);
     const servicios: Kpi = { value: serv30, deltaPct: deltaPct(serv30, inWindow(contactoTimes, prev30, last30)), prior: inWindow(contactoTimes, prev30, last30), spark: dailyCounts(contactoTimes, 7, now) };
+
+    const empleoTimes = contactos.filter(e => contactSegment(e) === "jobs").map(e => new Date(e.created_at).getTime());
+    const empleo30 = inWindow(empleoTimes, last30, now);
+    const empleos: Kpi = { value: empleo30, deltaPct: deltaPct(empleo30, inWindow(empleoTimes, prev30, last30)), prior: inWindow(empleoTimes, prev30, last30), spark: dailyCounts(empleoTimes, 7, now) };
 
     // KPI 4 — Tasa de verificación (% verified now; delta = recent cohort vs prior cohort)
     const isVerified = (p: ProRow) => p.verification_status === "verified";
@@ -186,7 +194,7 @@ export async function getAdminOverview(locale = "es"): Promise<AdminOverview> {
       .map(([id, value]) => ({ label: getProvinceById(id)?.name ?? id, value }));
 
     return {
-      newPros, newClients, servicios, verificationRate,
+      newPros, newClients, servicios, empleos, verificationRate,
       growth, recentSignups, pending, pendingCount: pendingAccounts.length, topCategories, byProvince,
     };
   } catch (err) {

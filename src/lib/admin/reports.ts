@@ -1,3 +1,5 @@
+import { contactSegment, isContactClick, summarizeContacts, type ContactEvent, type ContactBreakdown } from "@/lib/analytics/contact-segments";
+import { createHash } from "node:crypto";
 import { readAllAdminRows } from "@/lib/admin/read-all-rows";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getProvinceById } from "@/lib/data/cr-geography";
@@ -91,6 +93,7 @@ export type AdminAcquisition = {
 export type AdminReports = {
   insights: AdminInsights;
   runtimeUsage: RuntimeAnalytics | null;
+  contactBreakdown: { last7: ContactBreakdown; last30: ContactBreakdown; declaredHires7: number | null; declaredHires30: number | null } | null;
   acquisition: AdminAcquisition;
   users: { total: number; clients: number; pros: number; verifiedPros: number; activeClients: number; reg30: RegPoint[] };
   pros: { total: number; verified: number; pending: number; unverified: number; rejected: number; byCategory: Count[]; byProvince: Count[]; traveling: number; fixed: number; withServices: number; withoutServices: number };
@@ -195,6 +198,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
 
   const empty: AdminReports = {
     runtimeUsage: null,
+    contactBreakdown: null,
     insights: {
       week: { pros: { now: 0, prev: 0 }, clients: { now: 0, prev: 0 }, searches: { now: 0, prev: 0 }, requests: { now: 0, prev: 0 }, contacts: { now: 0, prev: 0 }, quotes: { now: 0, prev: 0 }, projectLeads: { now: 0, prev: 0 } },
       funnel: { searches: 0, profileViews: 0, contactAttempts: 0, contacts: 0, requests: 0, projectLeads: 0 },
@@ -219,6 +223,8 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
   // Solo proyectos: el KPI y el embudo ya no mezclan citas retiradas.
   let projectCreated: string[] = [];
   let adminProfileIds = new Set<string>();
+  let identitiesAvailable = false;
+  let professionalOwners = new Map<string, string>();
   let projectRowsForDemand: Array<{ created_at: string; category_id: string | null }> = [];
 
   // Todas las consultas son independientes entre sí: se lanzan juntas aquí
@@ -228,7 +234,6 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
   // rechazo quede sin manejar mientras otro bloque espera.
   const iniciar = <T,>(consulta: PromiseLike<T>) =>
     Promise.resolve(consulta).catch((error: unknown) => ({ data: null, error }) as unknown as T);
-  const since14 = new Date(now - 14 * DAY).toISOString();
   const since30 = new Date(now - 30 * DAY).toISOString();
   const sinceInteractions = new Date(now - 29 * DAY);
   sinceInteractions.setHours(0, 0, 0, 0);
@@ -242,10 +247,10 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
   const projectsQ = iniciar(readAllAdminRows((from, to) => admin.from("projects").select("id, status, created_at, category_id, client_id").order("id").range(from, to)));
   const ticketsQ = iniciar(readAllAdminRows((from, to) => admin.from("support_tickets").select("status, created_at").order("id").range(from, to)));
   const insightsQ = iniciar(Promise.all([
-    readAllAdminRows((from, to) => admin.from("interaction_events").select("event_type, created_at, category_id, metadata").gte("created_at", since14).order("id").range(from, to)),
-    readAllAdminRows((from, to) => admin.from("interaction_events").select("event_type, category_id").gte("created_at", since30).in("event_type", ["search_performed", "profile_view"]).order("id").range(from, to)),
+    readAllAdminRows((from, to) => admin.from("interaction_events").select("event_type, source, created_at, category_id, metadata, professional_id, viewer_user_id, visitor_hash").gte("created_at", since30).order("id").range(from, to)),
     admin.from("interaction_events").select("created_at").order("created_at", { ascending: true }).limit(1),
   ]));
+  const hiresQ = iniciar(readAllAdminRows((from, to) => admin.from("growth_conversion_events").select("created_at, actor_hash").eq("is_baseline", false).eq("action", "service_hire_confirmed").gte("created_at", since30).order("event_id").range(from, to)));
   const runtimeQ = iniciar(admin.rpc("get_admin_runtime_analytics", { p_days: 7 }));
   const interactionsQ = iniciar(admin.rpc("get_admin_interaction_analytics", { p_since: sinceInteractions.toISOString() }));
 
@@ -256,10 +261,13 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
 
   // ── Users + professionals + clients ──
   try {
-    const [{ data: profiles }, { data: pros }] = await baseQ;
+    const [{ data: profiles, error: profileError }, { data: pros, error: proError }] = await baseQ;
+    if (profileError || proError) throw new Error("No se pudo verificar la exclusión de cuentas");
+    identitiesAvailable = true;
     const allProfiles = (profiles ?? []).filter((profile) => profile.role !== "admin");
     adminProfileIds = new Set((profiles ?? []).filter((profile) => profile.role === "admin").map((profile) => profile.id));
     const proRows = (pros ?? []).filter((professional) => !adminProfileIds.has(professional.profile_id));
+    professionalOwners = new Map((pros ?? []).map(p => [p.id, p.profile_id]));
     const professionalProfileIds = new Set(proRows.map((professional) => professional.profile_id).filter(Boolean));
     const clients = allProfiles.filter((profile) => profile.role === "client" && !professionalProfileIds.has(profile.id));
 
@@ -396,12 +404,15 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
 
   // ── Plain-language insights: this week vs the previous one, the funnel,
   // demand vs supply per service and web vs app. Interaction rows of the last
-  // 14 days are read directly; everything else reuses the rows above.
+  // 30 days are read once; weekly comparisons reuse the same rows.
   try {
-    const [{ data: recent }, { data: demandEvents }, { data: oldest }] = await insightsQ;
-    const events = (recent ?? []) as Array<{ event_type: string; created_at: string; category_id: string | null; metadata: Record<string, unknown> | null }>;
+    const [{ data: recent, error: eventError }, { data: oldest }] = await insightsQ;
+    if (eventError) throw eventError;
+    if (!identitiesAvailable) throw new Error("No se pudo verificar la exclusión de cuentas");
+    const events = ((recent ?? []) as Array<ContactEvent & { category_id: string | null }>).filter(e => !adminProfileIds.has(e.viewer_user_id ?? "") && (!e.viewer_user_id || professionalOwners.get(e.professional_id ?? "") !== e.viewer_user_id));
+    const demandEvents = events;
     const t7 = now - 7 * DAY;
-    const inLast7 = (t: string) => new Date(t).getTime() >= t7;
+    const inLast7 = (t: string) => new Date(t).getTime() >= t7 && new Date(t).getTime() <= now;
     const inPrev7 = (t: string) => { const v = new Date(t).getTime(); return v < t7 && v >= now - 14 * DAY; };
     const countWeek = (times: string[]): WeekCompare => ({ now: times.filter(inLast7).length, prev: times.filter(inPrev7).length });
     const eventTimes = (types: string[]) => events.filter((e) => types.includes(e.event_type)).map((e) => e.created_at);
@@ -410,11 +421,15 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     // que solo ABRE la página de reservar, de las citas retiradas— y
     // `external_link_click`, que incluye los clics a Instagram y Facebook del
     // profesional: el KPI y el embudo contaban como contacto lo que no lo es.
-    // El mensaje interno NO entra todavía: el chat solo existe en la app y la
-    // app no está publicada, así que sumarlo solo prometía un número que nunca
-    // llega. El evento se sigue guardando; cuando la app salga, se agrega aquí.
-    const CONTACT_TYPES = ["whatsapp_click", "phone_click", "email_click"];
-    const gateEvents = events.filter((e) => e.event_type === "contact_gate_shown");
+    // Mensajes enviados se cuentan aparte: cada mensaje no es un contacto nuevo.
+    const serviceEvents = events.filter(e => contactSegment(e) === "services");
+    const contactTimes = serviceEvents.filter(isContactClick).map(e => e.created_at);
+    const gateEvents = serviceEvents.filter((e) => e.event_type === "contact_gate_shown");
+    const last30 = events.filter(e => new Date(e.created_at).getTime() >= now - 30 * DAY && new Date(e.created_at).getTime() <= now);
+    const { data: hires, error: hireError } = await hiresQ;
+    const excludedHashes = new Set([...adminProfileIds].map(id => createHash("sha256").update(id).digest("hex")));
+    const declared = (hires ?? []).filter(h => !excludedHashes.has(h.actor_hash));
+    empty.contactBreakdown = { last7: summarizeContacts(events.filter(e => inLast7(e.created_at))), last30: summarizeContacts(last30), declaredHires7: hireError ? null : declared.filter(h => inLast7(h.created_at)).length, declaredHires30: hireError ? null : declared.length };
 
     empty.insights.week = {
       pros: countWeek(proCreated),
@@ -423,7 +438,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
       // Proyectos publicados, no «citas y proyectos»: las citas salieron del
       // producto y el KPI mezclaba dos cosas, una de ellas siempre en cero.
       requests: countWeek(projectCreated),
-      contacts: countWeek(eventTimes(CONTACT_TYPES)),
+      contacts: countWeek(contactTimes),
       quotes: countWeek(eventTimes(["quote_created"])),
       // Cuántos profesionales le escribieron a un proyecto del tablero: la
       // única medida de si publicar sirve para algo.
@@ -431,9 +446,9 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     };
     empty.insights.funnel = {
       searches: eventTimes(["search_performed"]).filter(inLast7).length,
-      profileViews: eventTimes(["profile_view"]).filter(inLast7).length,
-      contactAttempts: eventTimes([...CONTACT_TYPES, "contact_gate_shown"]).filter(inLast7).length,
-      contacts: eventTimes(CONTACT_TYPES).filter(inLast7).length,
+      profileViews: serviceEvents.filter(e => e.event_type === "profile_view" && inLast7(e.created_at)).length,
+      contactAttempts: [...contactTimes, ...gateEvents.map(e => e.created_at)].filter(inLast7).length,
+      contacts: contactTimes.filter(inLast7).length,
       requests: projectCreated.filter(inLast7).length,
       projectLeads: eventTimes(["project_lead_whatsapp"]).filter(inLast7).length,
     };
@@ -487,7 +502,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
       })
       .sort((a, b) => b.demand - a.demand)
       .slice(0, 10);
-    empty.insights.tracking = { since: (oldest?.[0] as { created_at?: string } | undefined)?.created_at ?? null, events14d: events.length };
+    empty.insights.tracking = { since: (oldest?.[0] as { created_at?: string } | undefined)?.created_at ?? null, events14d: events.filter(e => new Date(e.created_at).getTime() >= now - 14 * DAY).length };
   } catch (e) { console.error("[reports] insights", e); }
 
   // First-party interaction analytics. Totals and per-professional values are

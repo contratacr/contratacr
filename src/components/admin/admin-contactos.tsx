@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { ContactSegment } from "@/lib/analytics/contact-segments";
 import { Link } from "@/i18n/navigation";
 import { ExternalLink, Loader2, MessageCircle, Phone, Mail } from "lucide-react";
 import { useAdminAutoRefresh } from "@/hooks/use-admin-auto-refresh";
@@ -26,7 +27,7 @@ type Profesional = {
   conCuenta: number;
 };
 
-type Respuesta = { dias: number | "all"; total: number; totalVistas: number; tasa: number; profesionales: Profesional[] };
+type Respuesta = { dias: number | "all"; total: number; totalVistas: number; profesionales: Profesional[] };
 
 const PERIODOS = [7, 30, "all"] as const;
 
@@ -35,20 +36,34 @@ function fecha(valor: string) {
 }
 
 export function AdminContactos() {
+  const [segmento, setSegmento] = useState<ContactSegment>("services");
   const [dias, setDias] = useState<number | "all">(30);
   const [datos, setDatos] = useState<Respuesta | null>(null);
+  const requestVersion = useRef(0);
+  const [error, setError] = useState(false);
   const [cargando, setCargando] = useState(true);
 
   const cargar = useCallback(async () => {
+    const token = ++requestVersion.current;
     try {
-      const respuesta = await fetch(`/api/admin/contactos?dias=${dias}`, { cache: "no-store" });
-      setDatos(await respuesta.json());
+      const respuesta = await fetch(`/api/admin/contactos?dias=${dias}&segmento=${segmento}`, { cache: "no-store" });
+      if (!respuesta.ok) throw new Error("contacts-unavailable");
+      const next = await respuesta.json() as Respuesta;
+      if (!Array.isArray(next.profesionales) || typeof next.total !== "number") throw new Error("invalid-contacts");
+      if (token === requestVersion.current) {setDatos(next);setError(false);}
+    } catch {
+      if (token === requestVersion.current) setError(true);
     } finally {
-      setCargando(false);
+      if (token === requestVersion.current) setCargando(false);
     }
-  }, [dias]);
+  }, [dias, segmento]);
 
-  useEffect(() => { void cargar(); }, [cargar]);
+  const invalidateRequests = useCallback(() => { requestVersion.current++; }, []);
+  useEffect(() => {
+    let canceled = false;
+    queueMicrotask(() => { if (!canceled) void cargar(); });
+    return () => { canceled = true; invalidateRequests(); };
+  }, [cargar, invalidateRequests]);
   useAdminAutoRefresh(cargar);
 
   if (cargando && !datos) {
@@ -58,12 +73,15 @@ export function AdminContactos() {
   return (
     <div className="space-y-4">
       <header>
-        <h1 className="text-xl font-extrabold text-[#0f172a]">Contactos a profesionales</h1>
+        <h1 className="text-xl font-extrabold text-[#0f172a]">Contactos por actividad</h1>
         <p className="mt-1 text-sm text-[#64748b]">
-          Cuánta gente está contactando profesionales, y a quiénes. Un mismo visitante cuenta una vez por profesional.
+          Cuánta gente está contactando profesionales, y a quiénes. Una misma cuenta o identificador de visita cuenta una vez por destinatario. Un clic no demuestra una contratación.
         </p>
       </header>
 
+      <div className="flex flex-wrap gap-1.5" aria-label="Tipo de contacto">
+        {([['services','Servicios'],['jobs','Empleos'],['unknown','Sin clasificar']] as const).map(([key,label]) => <button key={key} type="button" aria-pressed={segmento === key} onClick={() => {setSegmento(key);setDatos(null);setCargando(true);}} className={`rounded-full px-3.5 py-1.5 text-[13px] font-bold ${segmento === key ? 'bg-[#0f172a] text-white' : 'bg-[#eef2f6] text-[#475569]'}`}>{label}</button>)}
+      </div>
       <div className="flex flex-wrap gap-1.5">
         {PERIODOS.map((periodo) => (
           <button
@@ -79,12 +97,13 @@ export function AdminContactos() {
         ))}
       </div>
 
+      {error && <div role="alert" className="rounded-xl border border-[#e5e7eb] p-4 text-sm"><p>No se pudieron cargar los contactos.</p><button type="button" className="mt-2 font-bold text-[#008ce0]" onClick={() => {setCargando(true);void cargar();}}>Reintentar</button></div>}
       {datos && (
         <div className="grid grid-cols-3 gap-3">
           {[
             { rotulo: "Contactos", valor: datos.total },
-            { rotulo: "Visitas a fichas", valor: datos.totalVistas },
-            { rotulo: "Tasa de contacto", valor: `${datos.tasa}%` },
+            { rotulo: segmento === "jobs" ? "Visitas a empleos" : "Visitas a fichas", valor: datos.totalVistas },
+            { rotulo: "Destinatarios", valor: datos.profesionales.length },
           ].map((dato) => (
             <div key={dato.rotulo} className="rounded-2xl border border-[#e5e7eb] bg-white p-4">
               <p className="text-[11px] font-bold uppercase tracking-wide text-[#94a3b8]">{dato.rotulo}</p>

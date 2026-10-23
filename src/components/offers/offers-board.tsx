@@ -646,6 +646,8 @@ export function OfferContactActions({
       contextKind="promocion"
       analyticsSource="offers"
       offerId={offer.id}
+      offerType={offer.offer_type}
+      categoryId={offer.service_category_id}
       className={`${alto} ${letra} w-full rounded-full`}
     />
   );
@@ -670,6 +672,8 @@ export function OfferContactActions({
             contextKind="promocion"
             analyticsSource="offers"
             offerId={offer.id}
+            offerType={offer.offer_type}
+            categoryId={offer.service_category_id}
             className="h-12 min-w-fit flex-1 basis-0 rounded-full px-3 text-base font-semibold"
           />
         )}

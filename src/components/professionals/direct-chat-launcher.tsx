@@ -15,6 +15,9 @@ import { MessageLauncher } from "@/components/professionals/message-launcher";
 import { useContactGate } from "@/components/professionals/contact-gate";
 
 type DirectChatLauncherProps = {
+  categoryId?: string | null;
+  offerType?: import("@/lib/offers").OfferType;
+  searchArea?: { provinceId?: string | null; cantonId?: string | null };
   professionalId?: string;
   professionalName: string;
   projectId?: string;
@@ -36,6 +39,9 @@ type DirectChatLauncherProps = {
 };
 
 export function DirectChatLauncher({
+  categoryId,
+  offerType,
+  searchArea,
   professionalId = "",
   professionalName,
   projectId,
@@ -63,7 +69,7 @@ export function DirectChatLauncher({
   // se salía de la píldora. Era además el único rótulo distinto por pantalla,
   // así que la misma acción se veía como cuatro acciones diferentes.
   const whatsappLabel = "WhatsApp";
-  const { requireAccount, modals } = useContactGate({ professionalName, intent: "whatsapp", professionalId, source: analyticsSource });
+  const { requireAccount, modals } = useContactGate({ professionalName, intent: "whatsapp", professionalId, source: analyticsSource, categoryId });
   // El aviso del app, no el del navegador (ver BotonEscribir en Proyectos).
   const { dialogNode, showMessage } = useAppDialog();
 
@@ -125,7 +131,8 @@ export function DirectChatLauncher({
           professionalId,
           source: analyticsSource,
           locale,
-          metadata: jobId ? { jobId } : offerId ? { offerId } : undefined,
+          categoryId,
+          metadata: { ...(jobId ? { jobId } : {}), ...(offerId ? { offerId, offer_type: offerType ?? null } : {}), ...(intent ? { intent } : {}), ...(searchArea ? { provincia: searchArea.provinceId ?? null, canton: searchArea.cantonId ?? null } : {}) },
         });
         // El contacto es la conversión que importa y Meta no la veía: solo
         // llegaba el botón de llamar. Escribirle a quien publicó un empleo es
