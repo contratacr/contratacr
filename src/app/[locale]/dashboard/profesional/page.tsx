@@ -1,4 +1,5 @@
 "use client";
+import {ProWorkspace} from "@/components/pro/pro-workspace";
 import { ProfileIdentityName, profileIdentityAvatarClass } from "@/components/professionals/profile-identity-name";
 
 import { AvatarFileInput } from "@/components/ui/avatar-file-input";
@@ -87,7 +88,7 @@ import { Modal } from "@/components/ui/modal";
 // (the offer capability, unlocked by completing the professional profile). There
 // is no separate client panel; everyone lives here.
 type Tab =
-  | "home" | "profile" | "services" | "photos" | "quotes" | "verificacion"
+  | "pro" | "home" | "profile" | "services" | "photos" | "quotes" | "verificacion"
   | "jobs" | "offers" | "publicaciones" | "completion"
   | "sent_projects" | "applications" | "saved" | "connections"
   | "chat" | "notifications" | "soporte" | "cuenta" | "guides" | "statistics";
@@ -99,12 +100,13 @@ type ProData = Record<string, any>;
 // viejo con ?tab=availability, bookings o sent_bookings no está en este
 // conjunto y cae en el inicio del panel.
 const ALL_TABS = new Set<Tab>([
-  "home", "profile", "services", "photos", "quotes", "verificacion",
+  "pro", "home", "profile", "services", "photos", "quotes", "verificacion",
   "jobs", "offers", "publicaciones", "completion", "sent_projects", "applications", "saved", "connections",
   "chat", "notifications", "soporte", "cuenta", "guides", "statistics",
 ]);
 
 const TAB_ICONS: Record<Tab, React.ReactNode> = {
+  pro: <Sparkles className="h-4 w-4" />,
   statistics: <ChartNoAxesColumn className="h-4 w-4" />,
   home: <Home className="h-4 w-4" />,
   profile: <User className="h-4 w-4" />,
@@ -189,7 +191,7 @@ const PANEL_GROUPS: { grupo: "work" | "business" | "saved" | "account"; tabs: Ta
   // Tres entradas, no un interruptor: «Mis publicaciones» juntaba proyectos,
   // empleos y promociones en una sola puerta, y una puerta con un interruptor
   // adentro hay que descubrirla. En el menú se leen de una.
-  { grupo: "business", tabs: ["sent_projects", "jobs", "offers", "quotes"] },
+  { grupo: "business", tabs: ["sent_projects", "jobs", "offers", "quotes", "pro"] },
   { grupo: "work", tabs: ["photos", "services", "statistics", "profile", "completion"] },
   { grupo: "saved", tabs: ["saved"] },
   { grupo: "account", tabs: ["soporte", "guides"] },
@@ -204,6 +206,7 @@ function agruparPestanas(tabs: Tab[]): Tab[][] {
 }
 
 const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
+  pro: {es:"ContrataCR Pro",en:"ContrataCR Pro"},
   statistics: { es: "Estadísticas", en: "Statistics" },
   quotes: { es: "Cotizaciones", en: "Quotes" },
   sent_projects: { es: "Mis proyectos", en: "My projects" },
@@ -462,6 +465,10 @@ const ICONO_DE_CABECERA = "h-3 w-3 shrink-0 stroke-[1.9] text-[#9aa7b6] transiti
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
+  const [proEnabled,setProEnabled]=useState(false);
+  useEffect(()=>{let alive=true; if(process.env.NODE_ENV!=="development"||!user)return;
+   fetch('/api/pro/access',{cache:'no-store'}).then(r=>{if(alive)setProEnabled(r.ok);}).catch(()=>{if(alive)setProEnabled(false);});return()=>{alive=false;};
+  },[user]);
   const { cabeceraRef, conLinea } = useHairlineOnScroll();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -1648,7 +1655,7 @@ export default function DashboardPage() {
   // notifications and support stay routable from the navbar or direct links
   // instead of competing with the core panel tasks.
   const modeTabs = mode === "offer" ? OFFER_TABS : USE_TABS;
-  const sidebarTabs = modeTabs;
+  const sidebarTabs:Tab[] = proEnabled?[...modeTabs,"pro"]:modeTabs;
   // Guías también en escritorio. Estaba fuera de la columna y no había ningún
   // otro sitio donde entrar: en computadora la sección solo se alcanzaba
   // escribiendo ?tab=guides a mano. Va en el bloque de cuenta, junto a Perfil y
@@ -2357,6 +2364,7 @@ export default function DashboardPage() {
                             onSaved={(intent) => handleSaved(intent ?? "section")}
                           />
                         )}
+                        {activeTab === "pro" && (proEnabled?<ProWorkspace server embedded/>:<p className="p-4">{locale==="en"?"Checking Pro access…":"Comprobando acceso Pro…"}</p>)}
                         {activeTab === "quotes" && (
                           <QuotesSection
                             proName={professionalDisplayName}

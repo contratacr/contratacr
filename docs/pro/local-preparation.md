@@ -153,3 +153,13 @@ móvil y WebKit móvil (56,4 s), con integración real en los tres. La regresió
 específica de origen/servidor pasó 12/12 tras añadir el caso de hostname interno.
 TypeScript, ESLint y diff-check aprobados. No hubo push, despliegue, cobro ni
 publicación en redes o tiendas.
+
+## Ubicación corregida de las herramientas
+
+Agenda/clientes/cotizaciones/inventario/redes están integrados en Mi panel,
+como sección ContrataCR Pro (?tab=pro), visible a cuentas con acceso Pro verificado
+y a administradores con MFA. /dashboard/pro conserva su guardia y redirige a esa
+sección. /admin/pro queda exclusivamente para gestión de accesos y moderación
+social. Pro es plan/capacidad adicional, no reemplaza roles cliente/profesional/admin.
+La app del simulador apunta a Mi panel local y conserva sesión AAL2; no usa la
+cuenta ni datos productivos de Isaac.
