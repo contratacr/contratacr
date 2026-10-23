@@ -36,7 +36,8 @@ export type BorradorDeCotizacion = {
   taxMode: QuoteTaxMode; notes: string; validDays: number;
 };
 
-export function QuoteEditorModal({ open, onClose, projectId, defaultTitle, clientName: clienteConocido, onSent, sinSesion = false, inicial = null, proData }: {
+export function QuoteEditorModal({ open, onClose, projectId, defaultTitle, clientName: clienteConocido, onSent, sinSesion = false, inicial = null, proData, initialProClientId }: {
+  initialProClientId?:string;
   proData?: Business | null;
   open: boolean; onClose: () => void; projectId?: string | null; defaultTitle?: string;
   /** Sin cuenta: al enviar se guarda el borrador y se pide entrar o registrarse. */
@@ -50,7 +51,10 @@ export function QuoteEditorModal({ open, onClose, projectId, defaultTitle, clien
   const t = useTranslations("quotes");
   const locale = useLocale();
   const suelta = !projectId;
-  const [cedula, setCedula] = useState(inicial?.cedula ?? "");
+  const initialCustomer=proData?.clients.find(c=>c.id===initialProClientId&&!c.archived);
+ const [proClientId,setProClientId]=useState(initialCustomer?.id||'');
+ const [createdQuote,setCreatedQuote]=useState<Quote|null>(null);
+ const [cedula, setCedula] = useState(inicial?.cedula ?? "");
   // "buscando" / "sin registro" se deducen de la cédula y del resultado, en vez
   // de escribirse desde el efecto (que dispara pintadas encadenadas).
   const [resultadoCedula, setResultadoCedula] = useState<{ id: string; encontrada: boolean } | null>(null);
@@ -58,9 +62,9 @@ export function QuoteEditorModal({ open, onClose, projectId, defaultTitle, clien
   const cedulaValida = isValidId(cedulaLimpia);
   const buscandoCedula = cedulaValida && resultadoCedula?.id !== cedulaLimpia;
   const cedulaSinRegistro = resultadoCedula?.id === cedulaLimpia && !resultadoCedula.encontrada;
-  const [clientName, setClientName] = useState(inicial?.clientName ?? "");
-  const [clientPhone, setClientPhone] = useState(inicial?.clientPhone ?? "");
-  const [clientEmail, setClientEmail] = useState(inicial?.clientEmail ?? "");
+  const [clientName, setClientName] = useState(inicial?.clientName ?? initialCustomer?.name ?? "");
+  const [clientPhone, setClientPhone] = useState(inicial?.clientPhone ?? initialCustomer?.phone ?? "");
+  const [clientEmail, setClientEmail] = useState(inicial?.clientEmail ?? initialCustomer?.email ?? "");
   const [title, setTitle] = useState(inicial?.title ?? defaultTitle ?? "");
   const [rows, setRows] = useState<Row[]>(() => (inicial?.rows?.length ? inicial.rows.map((r) => ({ ...nuevaFila(), ...r })) : [nuevaFila()]));
   const [taxMode, setTaxMode] = useState<QuoteTaxMode>(inicial?.taxMode ?? "incluido");
@@ -122,11 +126,19 @@ export function QuoteEditorModal({ open, onClose, projectId, defaultTitle, clien
     }
     setSending(true); setError(null);
     try {
+      let quote=createdQuote;
+      if(!quote){
       const res = await fetch("/api/quotes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ projectId, clientName, clientPhone, clientEmail, clientCedula: cleanId(cedula), title, items, taxMode, notes, validDays }) });
       const d = await res.json().catch(() => ({}));
       if (!res.ok) { setError(res.status === 503 ? t("errorUnavailable") : d.error ?? t("errorTitle")); return; }
+      quote=d.quote as Quote;setCreatedQuote(quote);
+      }
+      if(proClientId){
+       const linked=await fetch("/api/pro/quote-link",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({quoteId:quote.id,clientId:proClientId})});
+       if(!linked.ok){setError(locale==='en'?'Quote saved. Retry to link it to the customer; it will not be created twice.':'La cotización se guardó. Reintente para vincularla al cliente; no se creará dos veces.');return;}
+      }
       borrarBorrador("cotizacion");
-      onSent(d.quote as Quote);
+      onSent(quote);
       setRows([nuevaFila()]); setNotes(""); setTitle(defaultTitle ?? ""); setClientName(""); setClientPhone(""); setClientEmail(""); setCedula("");
     } catch { setError(t("errorTitle")); } finally { setSending(false); }
   }
@@ -156,7 +168,7 @@ export function QuoteEditorModal({ open, onClose, projectId, defaultTitle, clien
           </Button>
         </>
       )}>
-      <div className="flex flex-col gap-3.5 sm:gap-4">
+      <fieldset disabled={!!createdQuote} className="flex min-w-0 flex-col gap-3.5 sm:gap-4">
         {/* 1 · Para quién. Desde una cita o un proyecto el cliente ya se sabe:
             se muestra en vez de preguntarse, y la caja no cambia de sitio. */}
         {!suelta && clienteConocido && (
@@ -168,7 +180,7 @@ export function QuoteEditorModal({ open, onClose, projectId, defaultTitle, clien
         {suelta && (
           <section className={bloque}>
             <p className={tituloBloque}><User className="h-3.5 w-3.5" />{t("forWhomLabel")}</p>
-            {proData&&<label className="mb-3 block"><span className={rotulo}>{locale==='en'?'Saved customer':'Cliente guardado'}</span><select aria-label={locale==='en'?'Saved customer':'Cliente guardado'} className={campo} defaultValue="" onChange={e=>{const c=proData.clients.find(c=>c.id===e.target.value);if(c){setCedula('');setClientName(c.name.slice(0,80));setClientEmail(c.email);setClientPhone(c.phone);}}}><option value="">{locale==='en'?'Choose a customer':'Seleccione un cliente'}</option>{proData.clients.filter(c=>!c.archived).map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>}
+            {proData&&<label className="mb-3 block"><span className={rotulo}>{locale==='en'?'Saved customer':'Cliente guardado'}</span><select aria-label={locale==='en'?'Saved customer':'Cliente guardado'} className={campo} value={proClientId} disabled={!!createdQuote} onChange={e=>{setProClientId(e.target.value);const c=proData.clients.find(c=>c.id===e.target.value);if(c){setCedula('');setClientName(c.name.slice(0,80));setClientEmail(c.email);setClientPhone(c.phone);}}}><option value="">{locale==='en'?'Choose a customer':'Seleccione un cliente'}</option>{proData.clients.filter(c=>!c.archived).map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>}
             <div className="flex flex-col gap-3 sm:grid sm:grid-cols-2 sm:gap-x-4">
               <div className="sm:col-span-2">
                 <p className="mb-2 text-xs leading-5 text-[#52627a]">{t("clientCedulaLookupNotice")}</p>
@@ -178,7 +190,7 @@ export function QuoteEditorModal({ open, onClose, projectId, defaultTitle, clien
               </div>
               <label className="block sm:col-span-2">
                 <span className={rotulo}><EtiquetaObligatoria>{t("clientNameLabel")}</EtiquetaObligatoria></span>
-                <input aria-required value={clientName} onChange={(e) => setClientName(e.target.value.slice(0, 80))} placeholder={t("clientNamePlaceholder")} className={campo} />
+                <input aria-required value={clientName} onChange={(e) => {setClientName(e.target.value.slice(0, 80));}} placeholder={t("clientNamePlaceholder")} className={campo} />
               </label>
               <PhoneInput value={clientPhone} onChange={setClientPhone} label={t("clientPhoneLabel")} optional />
               <label className="block">
@@ -276,7 +288,7 @@ export function QuoteEditorModal({ open, onClose, projectId, defaultTitle, clien
         </section>
 
         <Totales quote={{ ...totals, tax_mode: taxMode }} />
-      </div>
+      </fieldset>
     </Modal>
   );
 }

@@ -1,3 +1,4 @@
+import { validateQuoteLinks } from '@/lib/pro/quote-links-server';
 import { validateWorkspaceTransition } from '@/lib/pro/validate-transition';
 import { z } from 'zod';
 import { businessSchema, emptyBusiness } from '@/lib/pro/business';
@@ -6,7 +7,7 @@ export async function GET(req:Request) {
  const access=await proApiAccess(req);if(access.error)return access.error;
  const {data,error}=await access.db.from('pro_workspaces').select('document,revision').eq('user_id',access.user.id).maybeSingle();
  if(error)return proDbFailure(error);
- return Response.json({document:businessSchema.parse({...data?.document,social:[],...(data?{}:emptyBusiness())}),revision:data?.revision??0},{headers:{'Cache-Control':'no-store'}});
+ return Response.json({userId:access.user.id,document:businessSchema.parse({...data?.document,social:[],...(data?{}:emptyBusiness())}),revision:data?.revision??0},{headers:{'Cache-Control':'no-store'}});
 }
 export async function PUT(req:Request) {
  const access=await proApiAccess(req);if(access.error)return access.error;
@@ -16,6 +17,7 @@ export async function PUT(req:Request) {
  const {data:previous,error:readError}=await access.db.from('pro_workspaces').select('document').eq('user_id',access.user.id).maybeSingle();
  if(readError)return proDbFailure(readError);
  const document=validateWorkspaceTransition(previous?businessSchema.parse(previous.document):emptyBusiness(),body.document);
+ await validateQuoteLinks(access.db,access.user.id,document);
  const {data,error}=await access.db.rpc('pro_save_workspace',{p_user:access.user.id,p_document:document,p_revision:body.revision});
  if(error)return proDbFailure(error);
  return Response.json({revision:data});

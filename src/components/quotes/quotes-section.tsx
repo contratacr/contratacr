@@ -1,7 +1,6 @@
 "use client";
 
-import {ProWorkspace} from "@/components/pro/pro-workspace";
-import {businessSchema,emptyBusiness,type Business} from "@/lib/pro/business";
+import {ConnectedQuotes} from "@/components/pro/connected-quotes";
 import { NombreQueCabe } from "@/components/ui/nombre-que-cabe";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -33,12 +32,7 @@ export async function cargarCotizaciones(): Promise<Quote[]> {
   return filas.map((q: Quote) => ({ ...q, items: Array.isArray(q.items) ? q.items : [] }));
 }
 
-export function QuotesSection({ proName, proSlug, proId, puedeCrear = true, proEnabled = false }: { proName: string; proSlug?: string | null; proId?: string | null; puedeCrear?: boolean; proEnabled?: boolean }) {
-  const [proData,setProData]=useState<Business|null>(null);
-  const [proError,setProError]=useState('');
-  useEffect(()=>{if(!proEnabled)return;let alive=true;
-   fetch('/api/pro/workspace',{cache:'no-store'}).then(async r=>{const body=await r.json();if(!r.ok)throw Error(body.error);if(alive)setProData(businessSchema.parse(body.document));}).catch(e=>{if(alive){setProData(emptyBusiness());setProError(e.message);}});return()=>{alive=false;};
-  },[proEnabled]);
+function BasicQuotesSection({ proName, proSlug, proId, puedeCrear = true }: { proName: string; proSlug?: string | null; proId?: string | null; puedeCrear?: boolean; proEnabled?: boolean }) {
   const t = useTranslations("quotes");
   const tBorrador = useTranslations("borradorGuardado");
   const tSub = useTranslations("proPanel.subtitles");
@@ -115,17 +109,16 @@ export function QuotesSection({ proName, proSlug, proId, puedeCrear = true, proE
       {/* Qué es la sección a la izquierda y la acción a la derecha, la misma
           fila que en el resto del panel. */}
       <SectionHeadline subtitulo={tSub("quotes")}>
-        {puedeCrear && ((quotes?.length ?? 0)+(proData?.quotes.length??0)) > 0 && (
+        {puedeCrear && (quotes?.length ?? 0) > 0 && (
           <Button type="button" onClick={() => setEditor(true)} className="w-full sm:w-auto max-sm:[&>svg]:hidden"><Plus className="h-4 w-4" />{t("new")}</Button>
         )}
       </SectionHeadline>
 
-      {proError&&<p role="alert">{proError}</p>}
-      {quotes === null || (proEnabled&&proData===null) ? (
+      {quotes === null ? (
         // El MISMO esqueleto que el resto del panel: este se dibujaba a mano,
         // así que Cotizaciones cargaba distinto de todas las demás secciones.
         <PanelListSkeleton rows={3} compacto />
-      ) : quotes.length === 0 && !(proData?.quotes.length) ? (
+      ) : quotes.length === 0 ? (
         // El MISMO vacío que el resto del panel, en vez de uno dibujado a mano:
         // este llevaba esquinas más redondas, un título más grande y su propio
         // ícono, así que Cotizaciones era la única sección que se veía distinta
@@ -161,16 +154,15 @@ export function QuotesSection({ proName, proSlug, proId, puedeCrear = true, proE
                 </button>
               );
             })}
-            {lista.length === 0 && !(proData?.quotes.length) && <p className="rounded-2xl border border-[#e5e7eb] bg-white py-8 text-center text-[14px] text-[#68778d] shadow-sm">{t("emptyFilter")}</p>}
+            {lista.length === 0 && <p className="rounded-2xl border border-[#e5e7eb] bg-white py-8 text-center text-[14px] text-[#68778d] shadow-sm">{t("emptyFilter")}</p>}
           </div>
         </>
       )}
 
-      {proEnabled&&!!proData?.quotes.length&&<ProWorkspace server embedded section="Cotizaciones" quoteListOnly/>}
       {editor && (
         <>
         {inicial && <AvisoDeBorrador texto={tBorrador("cotizacion")} />}
-        <QuoteEditorModal open proData={proEnabled?proData:undefined} inicial={inicial} onClose={() => { setEditor(false); setInicial(null); }} onSent={(q) => { setQuotes((prev) => [q, ...(prev ?? [])]); setEditor(false); setDetalle({ quote: q, recien: true }); }} />
+        <QuoteEditorModal open inicial={inicial} onClose={() => { setEditor(false); setInicial(null); }} onSent={(q) => { setQuotes((prev) => [q, ...(prev ?? [])]); setEditor(false); setDetalle({ quote: q, recien: true }); }} />
         </>
       )}
       {detalle && (
@@ -180,3 +172,5 @@ export function QuotesSection({ proName, proSlug, proId, puedeCrear = true, proE
     </div>
   );
 }
+
+export function QuotesSection(props:Parameters<typeof BasicQuotesSection>[0]){return props.proEnabled?<ConnectedQuotes {...props}/>:<BasicQuotesSection {...props}/>;}

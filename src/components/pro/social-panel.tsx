@@ -1,5 +1,6 @@
 'use client';
 /* eslint-disable @next/next/no-html-link-for-pages -- Local preview uses a full navigation to reload browser-backed records. */
+import {SocialAccountPanel} from './social-account-panel';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { businessSchema, emptyBusiness, type Business } from '@/lib/pro/business';
@@ -27,6 +28,7 @@ export function SocialPanel({ admin = false, server = false }: { admin?: boolean
   }
   async function send(body:Record<string,unknown>){setBusy(true);try{const response=await fetch(admin?'/api/admin/pro':'/api/pro/social',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const result=await response.json();if(!response.ok)throw Error(result.error);await loadServer();setError('');}catch(e){setError(e instanceof Error?e.message:'No se pudo guardar.');}finally{setBusy(false);}}
   const used = data.social.some(r => r.month === socialMonth(new Date()) && r.status !== 'rejected');
+  if(server&&!admin)return <SocialAccountPanel rows={data.social} ready={ready} busy={busy} error={error} send={send}/>;
   return <section className="space-y-5 rounded-2xl border border-[#e5e7eb] bg-white p-4 text-[#162543] shadow-sm sm:p-6">
     <h2 className="text-xl font-bold">{admin ? 'Revisión de difusión' : 'Destaca en nuestras redes'}</h2>
     <p className="text-sm text-[#68778d]">Una difusión orgánica por mes calendario, en horario de Costa Rica, sujeta a revisión. No incluye anuncios pagados ni garantiza alcance o contrataciones. Los cupos no se acumulan.</p>

@@ -3,6 +3,13 @@ import {proApiAccess,proDbFailure} from '@/lib/pro/api-access';
 const https=z.string().url().refine(v=>{const u=new URL(v);return u.protocol==='https:'&&!u.username&&!u.password;});
 export async function GET(req:Request){
  const a=await proApiAccess(req,true);if(a.error)return a.error;
+ const search=new URL(req.url).searchParams.get('q');
+ if(search!==null){
+  const term=search.replace(/[^\p{L}\p{N}@. _-]/gu,'').trim().slice(0,100);
+  if(term.length<2)return Response.json({accounts:[]});
+  const {data,error}=await a.db.from('profiles').select('id,full_name,email,role,is_provider,is_disabled').or(`full_name.ilike.%${term}%,email.ilike.%${term}%`).order('full_name').limit(20);
+  if(error)return proDbFailure(error);return Response.json({accounts:data},{headers:{'Cache-Control':'no-store'}});
+ }
  const userId=new URL(req.url).searchParams.get('userId');
  if(userId){
   if(!z.string().uuid().safeParse(userId).success)return Response.json({error:'ID inválido'},{status:400});

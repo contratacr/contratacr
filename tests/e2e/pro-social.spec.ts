@@ -21,7 +21,7 @@ test('monthly quota respects Costa Rica boundary, rejection and immutable public
  expect(businessSchema.parse(old).social).toEqual([]);
 });
 test('request persists and admin approves without publishing externally', async ({page}) => {
- const bundle=await build({stdin:{contents:`import React from 'react';import{createRoot}from'react-dom/client';import{SocialPanel}from'./src/components/pro/social-panel';createRoot(document.getElementById('root')).render(<SocialPanel admin={location.search==='?admin'}/>);`,resolveDir:process.cwd(),loader:'tsx'},bundle:true,write:false,format:'iife',platform:'browser',jsx:'automatic'});
+ const bundle=await build({stdin:{contents:`import React from 'react';import{createRoot}from'react-dom/client';import{SocialPanel}from'./src/components/pro/social-panel';createRoot(document.getElementById('root')).render(<SocialPanel admin={location.search==='?admin'}/>);`,resolveDir:process.cwd(),loader:'tsx'},bundle:true,write:false,format:'iife',define:{'process.env':JSON.stringify({NODE_ENV:'test'})},platform:'browser',jsx:'automatic'});
  await page.route('**/social-harness*',r=>r.fulfill({contentType:'text/html',body:'<div id="root"></div>'}));
  const open=async(admin=false)=>{await page.goto('/social-harness'+(admin?'?admin':''));await page.addScriptTag({content:bundle.outputFiles[0].text});};
  await open();await page.getByLabel('Título',{exact:true}).fill(input.title);await page.getByLabel('Enlace a su perfil o publicación').fill(input.link);await page.getByLabel('Qué desea destacar').fill(input.description);await page.getByRole('button',{name:'Solicitar difusión'}).click();

@@ -21,7 +21,11 @@ export function validateWorkspaceTransition(previous: Business, input: Business)
   const old=previous.quotes.find(q=>q.id===quote.id);
   if(old&&old.status!=='draft'&&JSON.stringify(old)!==JSON.stringify(quote))throw Error('Una cotización resuelta no puede modificarse.');
  }
+ if(new Set(next.quoteLinks.map(l=>l.quoteId)).size!==next.quoteLinks.length)throw Error('Cotización vinculada dos veces.');
+ for(const link of next.quoteLinks)if(!next.clients.some(c=>c.id===link.clientId))throw Error('Cliente vinculado inexistente.');
+ for(const link of previous.quoteLinks)if(!next.quoteLinks.some(l=>l.quoteId===link.quoteId&&l.clientId===link.clientId))throw Error('No se puede cambiar el cliente de una cotización vinculada.');
  for(const work of next.work){
+  if(work.externalQuoteId&&!next.quoteLinks.some(l=>l.quoteId===work.externalQuoteId&&l.clientId===work.clientId))throw Error('Cotización de cita inválida.');
   if(!next.clients.some(c=>c.id===work.clientId))throw Error('Cliente de cita inexistente.');
   if(work.quoteId&&!next.quotes.some(q=>q.id===work.quoteId&&q.clientId===work.clientId&&q.status==='accepted'))throw Error('Cotización de cita inválida.');
   if(!work.cancelled){const problem=validateWork(work,next.work.filter(w=>!w.cancelled));if(problem)throw Error(problem);}

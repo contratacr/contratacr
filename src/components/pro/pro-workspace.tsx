@@ -1,4 +1,5 @@
 'use client';
+import { BusinessPanel } from './business-panel';
 import { SocialPanel } from './social-panel';
 import { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
@@ -12,20 +13,22 @@ const field='mt-1 block w-full rounded-xl border border-[#d7e1ea] bg-white px-3 
 const money=(n:number)=>new Intl.NumberFormat('es-CR',{style:'currency',currency:'CRC'}).format(n);
 const date=(value:string)=>value?new Intl.DateTimeFormat('es-CR',{timeZone:'America/Costa_Rica',dateStyle:'medium',timeStyle:'short'}).format(new Date(value)):'Sin fecha';
 function download(content:string,name:string,type:string){const url=URL.createObjectURL(new Blob([content],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-export function ProWorkspace({server=false,embedded=false,section,quoteListOnly=false}:{server?:boolean;embedded?:boolean;section?:Tab;quoteListOnly?:boolean}){
+export function ProWorkspace({server=false,embedded=false,section,quoteListOnly=false,onlyQuoteId,english=false}:{english?:boolean;onlyQuoteId?:string;server?:boolean;embedded?:boolean;section?:Tab;quoteListOnly?:boolean}){
+ const tr=(es:string,en:string)=>english?en:es;
  const Root=embedded?"div":"main";
+ const [accountId,setAccountId]=useState('');
  const revision=useRef(0);const [saving,setSaving]=useState(false);
  const [data,setData]=useState<Business>(emptyBusiness);const [ready,setReady]=useState(false);const [tab,setTab]=useState<Tab>(section||'Agenda');const [editing,setEditing]=useState<string|null>(null);const [error,setError]=useState('');
  useEffect(()=>{let alive=true;
- if(server){fetch('/api/pro/workspace',{cache:'no-store'}).then(async r=>{const body=await r.json();if(!r.ok)throw Error(body.error);if(alive){setData(businessSchema.parse(body.document));revision.current=body.revision;setReady(true);}}).catch(e=>{if(alive)setError(e.message);});}
+ if(server){fetch('/api/pro/workspace',{cache:'no-store'}).then(async r=>{const body=await r.json();if(!r.ok)throw Error(body.error);if(alive){setAccountId(body.userId||'');setData(businessSchema.parse(body.document));revision.current=body.revision;setReady(true);}}).catch(e=>{if(alive)setError(e.message);});}
  else {try{const raw=localStorage.getItem(storage);if(raw)setData(businessSchema.parse(JSON.parse(raw)));setReady(true);}catch{setError('No se pudieron leer los datos locales. No se sobrescribirán; conserve su respaldo.');}}
  return()=>{alive=false;};},[server]);
- async function commit(next:Business){if(saving||!ready)return;setSaving(true);try{
+ async function commit(next:Business){if(saving||!ready)return false;setSaving(true);try{
  let valid=businessSchema.parse(next);
  if(server){const response=await fetch('/api/pro/workspace',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({document:valid,revision:revision.current})});const result=await response.json();if(!response.ok)throw Error(result.error);revision.current=result.revision;}
  else {const latest=businessSchema.parse(JSON.parse(localStorage.getItem(storage)||JSON.stringify(emptyBusiness())));valid={...valid,social:latest.social};localStorage.setItem(storage,JSON.stringify(valid));}
- setData(valid);setError('');setEditing(null);
- }catch(e){setError(e instanceof Error?e.message:'No se pudo guardar.');}finally{setSaving(false);}}
+ setData(valid);setError('');setEditing(null);return true;
+ }catch(e){setError(e instanceof Error?e.message:'No se pudo guardar.');return false;}finally{setSaving(false);}}
  function act(run:()=>Business){try{commit(run());}catch(e){setError(e instanceof Error?e.message:'Revise los datos.');}}
  function submit(e:React.FormEvent<HTMLFormElement>){e.preventDefault();const f=new FormData(e.currentTarget);const s=(k:string)=>String(f.get(k)||'');const n=(k:string)=>Number(f.get(k));const id=editing==='new'?crypto.randomUUID():editing!;
  act(()=>{
@@ -34,6 +37,7 @@ export function ProWorkspace({server=false,embedded=false,section,quoteListOnly=
  if(tab==='Cotizaciones'){const lines=JSON.parse(s('lines')) as Business['quotes'][number]['lines'];return saveQuote(data,{id,clientId:s('clientId'),title:s('title'),lines,status:'draft',validUntil:s('validUntil')});}
  return saveAppointment(data,{id,clientId:s('clientId'),client:s('clientId'),service:s('service'),stage:'scheduled',start:costaRicaDate(s('start')),end:costaRicaDate(s('end')),cancelled:false,quoteId:s('quoteId')||undefined});
  });}
+ if(server&&embedded&&!quoteListOnly&&section&&section!=='Cotizaciones')return <div data-pro-workspace=""><BusinessPanel accountId={accountId} section={section} data={data} ready={ready} error={error} saving={saving} commit={commit} reload={()=>window.location.reload()}/></div>;
  const row=editing&&editing!=='new'?(tab==='Clientes'?data.clients:tab==='Inventario'?data.products:tab==='Cotizaciones'?data.quotes:data.work).find(r=>r.id===editing):undefined;
  const values=(row||{}) as Record<string,unknown>;
  function input(name:string,label:string,type='text',required=true){let value=values[name]??'';if(type==='datetime-local'&&value)value=String(value).slice(0,16);return <label key={name} className="text-sm font-semibold">{label}<input name={name} type={type} required={required} min={type==='number'?0:undefined} step={type==='number'?'0.01':undefined} defaultValue={String(value)} className={field}/></label>;}
@@ -54,9 +58,10 @@ export function ProWorkspace({server=false,embedded=false,section,quoteListOnly=
  </form>}
  {tab==='Clientes'&&data.clients.map(c=><Card key={c.id} title={c.name} detail={[c.email,c.phone,c.archived?'Archivado':c.notes].filter(Boolean).join(' · ')}><Button variant="secondary" onClick={()=>setEditing(c.id)}>Editar</Button><Button variant="ghost" onClick={()=>act(()=>saveClient(data,{...c,archived:!c.archived}))}>{c.archived?'Restaurar':'Archivar'}</Button></Card>)}
  {tab==='Agenda'&&[...data.work].sort((a,b)=>a.start.localeCompare(b.start)).map(w=><Card key={w.id} title={`${w.client} · ${w.service}`} detail={`${date(w.start)} — ${date(w.end)} · ${w.cancelled?'Cancelada':w.stage==='completed'?'Finalizada':'Agendada'}`}><Button variant="secondary" onClick={()=>setEditing(w.id)}>Editar</Button>{!w.cancelled&&w.stage!=='completed'&&<><Button variant="ghost" onClick={()=>act(()=>saveAppointment(data,{...w,stage:'completed'}))}>Finalizar</Button><Button variant="ghost" onClick={()=>act(()=>saveAppointment(data,{...w,cancelled:true}))}>Cancelar cita</Button></>}</Card>)}
- {tab==='Cotizaciones'&&data.quotes.map(q=><Card key={q.id} title={q.title} detail={`${data.clients.find(c=>c.id===q.clientId)?.name} · ${money(quoteTotal(q.lines))} · ${q.status==='draft'?'Borrador':q.status==='accepted'?'Aceptada':'Rechazada'}`}>
- {q.status==='draft'&&<><Button variant="secondary" onClick={()=>setEditing(q.id)}>Editar</Button><Button variant="secondary" onClick={()=>act(()=>saveQuote(data,{...q,status:'accepted'}))}>Registrar aceptación</Button><Button variant="secondary" onClick={()=>act(()=>saveQuote(data,{...q,status:'declined'}))}>Registrar rechazo</Button></>}
- <Button variant="secondary" onClick={()=>download(`Cotización — no es factura electrónica\n${q.title}\n${q.lines.map(l=>`${l.description}: ${l.quantity} × ${money(l.price)} + ${l.tax}%`).join('\n')}\nTotal ${money(quoteTotal(q.lines))}`,'cotizacion.txt','text/plain;charset=utf-8')}>Descargar</Button></Card>)}
+ {tab==='Cotizaciones'&&data.quotes.filter(q=>!onlyQuoteId||q.id===onlyQuoteId).map(q=><Card key={q.id} title={q.title} detail={`${data.clients.find(c=>c.id===q.clientId)?.name} · ${money(quoteTotal(q.lines))} · ${q.status==='draft'?tr('Borrador','Draft'):q.status==='accepted'?tr('Aceptada','Accepted'):tr('Rechazada','Declined')}`}>
+ {quoteListOnly&&<div className="space-y-3 text-sm text-[#52627a]">{q.lines.map((line,index)=><div key={index} className="flex justify-between gap-4 border-b border-[#eef2f6] pb-3"><span className="min-w-0 break-words">{line.description}<span className="block text-xs">{line.quantity} × {money(line.price)} · IVA {line.tax}%</span></span><strong className="shrink-0">{money(quoteTotal([line]))}</strong></div>)}<p className="text-xs">{tr('Válida hasta','Valid until')}: {q.validUntil}</p></div>}
+ {q.status==='draft'&&<><Button variant="secondary" onClick={()=>setEditing(q.id)}>Editar</Button><Button variant="secondary" onClick={()=>act(()=>saveQuote(data,{...q,status:'accepted'}))}>{tr('Registrar aceptación','Record acceptance')}</Button><Button variant="secondary" onClick={()=>act(()=>saveQuote(data,{...q,status:'declined'}))}>{tr('Registrar rechazo','Record rejection')}</Button></>}
+ <Button variant="secondary" onClick={()=>download(`Cotización — no es factura electrónica\n${q.title}\n${q.lines.map(l=>`${l.description}: ${l.quantity} × ${money(l.price)} + ${l.tax}%`).join('\n')}\nTotal ${money(quoteTotal(q.lines))}`,'cotizacion.txt','text/plain;charset=utf-8')}>{tr('Descargar','Download')}</Button></Card>)}
  {tab==='Inventario'&&data.products.map(p=><Card key={p.id} title={`${p.name} · ${p.sku}`} detail={`${p.stock} unidades · ${money(p.price)}${p.stock<=p.minimum?' · Existencias bajas':''}${p.archived?' · Archivado':''}`}><Button variant="secondary" onClick={()=>setEditing(p.id)}>Editar</Button><StockForm disabled={p.archived} save={(delta,reason)=>act(()=>moveStock(data,p.id,delta,reason,crypto.randomUUID(),new Date().toISOString()))}/></Card>)}
  {!quoteListOnly&&(tab==='Agenda'?data.work:tab==='Clientes'?data.clients:tab==='Cotizaciones'?data.quotes:data.products).length===0&&<p className="py-8 text-center text-[#68778d]">Todavía no hay registros. Agregue el primero para comenzar.</p>}
  {tab==='Inventario'&&data.movements.length>0&&<details><summary>Historial de movimientos</summary>{[...data.movements].reverse().map(m=><p key={m.id} className="border-b py-2 text-sm">{data.products.find(p=>p.id===m.productId)?.name} · {m.delta>0?'+':''}{m.delta} · {m.reason} · {date(m.at)}</p>)}</details>}

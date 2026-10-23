@@ -35,7 +35,7 @@ test('API access refuses anonymous, expired Pro, invalid origin and admin withou
  }finally{Object.assign(process.env,{NODE_ENV:before});delete globals.proFixture;}
 });
 test('account-backed workspace loads, saves revision and shows conflict without discarding draft',async({page})=>{
- const bundle=await build({stdin:{contents:`import React from 'react';import{createRoot}from'react-dom/client';import{ProWorkspace}from'./src/components/pro/pro-workspace';createRoot(document.getElementById('root')).render(<ProWorkspace server/>);`,resolveDir:process.cwd(),loader:'tsx'},bundle:true,write:false,platform:'browser',format:'iife',jsx:'automatic'});
+ const bundle=await build({stdin:{contents:`import React from 'react';import{createRoot}from'react-dom/client';import{ProWorkspace}from'./src/components/pro/pro-workspace';createRoot(document.getElementById('root')).render(<ProWorkspace server/>);`,resolveDir:process.cwd(),loader:'tsx'},bundle:true,write:false,define:{'process.env':JSON.stringify({NODE_ENV:'test'})},platform:'browser',format:'iife',jsx:'automatic'});
  let revision=0;let document=emptyBusiness();let conflict=false;
  await page.route('**/api/pro/workspace',async route=>{
   if(route.request().method()==='GET')return route.fulfill({json:{document,revision}});

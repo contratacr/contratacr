@@ -34,7 +34,8 @@ export function Totales({ quote }: { quote: Pick<Quote, "subtotal" | "tax_amount
   );
 }
 
-export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proName, proSlug, recienCreada = false }: {
+export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proName, proSlug, recienCreada = false, proActions }: {
+  proActions?: import("react").ReactNode;
   quote: Quote; role: "client" | "pro"; open: boolean; onClose: () => void; onChanged: (q: Quote) => void; proName?: string; proSlug?: string | null; recienCreada?: boolean;
 }) {
   const t = useTranslations("quotes");
@@ -103,6 +104,7 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
         ) : role === "client" ? (
           <BotonDescargarCotizacion quote={quote} proName={quote.professional_name ?? ""} className="w-full sm:w-auto" />
         ) : undefined}
+        footerNotice={proActions}
         footerClassName="flex-row flex-wrap items-center gap-2 sm:justify-end">
         <div className="flex flex-col gap-4">
           {/* Para el profesional, primero cómo mandarla: es a lo que viene. */}
