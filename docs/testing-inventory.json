@@ -8,7 +8,7 @@
     "handlers": 105,
     "components": 261,
     "hooks": 27,
-    "specs": 162
+    "specs": 163
   },
   "dashboardTabs": [
     "home",
@@ -24748,6 +24748,15 @@
         {
           "line": 71,
           "title": "\"hero keeps its current photo while the next slide is downloading\""
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/landing-search-examples.spec.ts",
+      "cases": [
+        {
+          "line": 7,
+          "title": "`${locale}: hero keeps its first service and rotates without repeating it`"
         }
       ]
     },
