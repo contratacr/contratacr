@@ -114,11 +114,43 @@ test("connected panel lists reveal next twenty, search, translate and retire soc
       path: testInfo.outputPath("customer-detail.png"),
       fullPage: true,
     });
+    await page.goto("/es/dashboard/profesional?tab=pro_clients");
+    await page.getByRole("button",{name:"Nuevo cliente",exact:true}).click();
+    await page.getByLabel("Nombre",{exact:true}).fill("Empresa ficticia GTI");
+    await page.getByText("Datos del negocio (opcionales)",{exact:true}).click();
+    await page.getByLabel("Cédula, DIMEX o NITE",{exact:true}).fill("9-9999-9999");
+    await page.getByLabel("Nombre comercial",{exact:true}).fill("Negocio de prueba");
+    await page.getByLabel("Grupo de clientes",{exact:true}).fill("Empresas");
+    await page.getByLabel("Dirección",{exact:true}).fill("Dirección ficticia");
+    await page.getByRole("button",{name:"Guardar",exact:true}).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await page.reload();
+    await page.getByLabel("Buscar registros").fill("999999999");
+    await expect(cards).toHaveCount(1);
+    await expect(cards).toContainText("Empresa ficticia GTI");
+    const stored=await db.from("pro_workspaces").select("document").eq("user_id",actor.id).single();
+    expect(stored.data?.document.clients.find((c:{name:string})=>c.name==="Empresa ficticia GTI")).toMatchObject({identification:"999999999",tradeName:"Negocio de prueba",group:"Empresas",address:"Dirección ficticia"});
     await page.goto("/en/dashboard/profesional?tab=pro_inventory");
     await page
       .getByRole("button", { name: "New product", exact: true })
       .click();
     await expect(page.getByRole("dialog")).toContainText("Initial stock");
+    await page.getByText("Catalog details (optional)",{exact:true}).click();
+    await page.getByLabel("Code",{exact:true}).fill("GTI-FICTICIO");
+    await page.getByLabel("Product",{exact:true}).fill("Material ficticio");
+    await page.getByLabel("Initial stock",{exact:true}).fill("5");
+    await page.getByLabel("Minimum",{exact:true}).fill("1");
+    await page.getByLabel("Unit cost ₡",{exact:true}).fill("100");
+    await page.getByLabel("Unit price ₡",{exact:true}).fill("200");
+    await page.getByLabel("Category",{exact:true}).fill("Materiales");
+    await page.getByLabel("Unit of measure",{exact:true}).fill("m");
+    await page.getByLabel("CABYS code",{exact:true}).fill("1234567890123");
+    await page.getByRole("button",{name:"Save",exact:true}).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await page.reload();
+    await page.getByLabel("Search records").fill("1234567890123");
+    await expect(cards).toContainText("Material ficticio");
+    await page.getByRole("button", {name:"New product",exact:true}).click();
     await expectNoHorizontalOverflow(page);
     await page
       .getByRole("dialog")

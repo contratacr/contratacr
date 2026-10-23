@@ -11,6 +11,8 @@ export function validateWorkspaceTransition(previous: Business, input: Business)
   if(new Set(next[key].map(r=>r.id)).size!==next[key].length)throw Error('Identificadores duplicados.');
   if(previous[key].some(old=>!next[key].some(r=>r.id===old.id)))throw Error('Archive o cancele los registros; no se permite borrar el historial.');
  }
+ const clientIds=next.clients.map(c=>c.identification).filter(Boolean);
+ if(new Set(clientIds).size!==clientIds.length)throw Error('Identificación de cliente duplicada.');
  if(new Set(next.products.map(p=>p.sku.toLowerCase())).size!==next.products.length)throw Error('Código de producto duplicado.');
  for(const movement of previous.movements){if(JSON.stringify(next.movements.find(m=>m.id===movement.id))!==JSON.stringify(movement))throw Error('No se puede modificar el historial de inventario.');}
  for(const movement of next.movements)if(!next.products.some(p=>p.id===movement.productId)||movement.delta===0)throw Error('Movimiento inválido.');

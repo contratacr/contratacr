@@ -2993,6 +2993,11 @@
     "close": "Close"
   },
   "quotes": {
+    "proLinkRetry": "Quote saved. Retry to link it to the customer; it will not be created twice.",
+    "proSavedCustomer": "Saved customer",
+    "proChooseCustomer": "Choose a customer",
+    "proAddInventory": "Add from inventory",
+    "proChooseProduct": "Choose a product",
     "blockTitle": "Quote",
     "send": "Send quote",
     "sendAnother": "Send another quote",

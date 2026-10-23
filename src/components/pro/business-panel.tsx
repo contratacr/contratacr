@@ -1,5 +1,6 @@
 "use client";
 import { crTodayISO } from "@/lib/time-cr";
+import { CatalogImport } from "./catalog-import";
 import { AgendaCalendar } from "./agenda-calendar";
 import { proMoney } from "@/lib/pro/money";
 import { useEffect, useRef, useState } from "react";
@@ -310,6 +311,7 @@ export function BusinessPanel({
             phone,
             notes: s("notes"),
             archived: Boolean(row?.archived),
+            identification:s("identification"),tradeName:s("tradeName"),group:s("group"),address:s("address"),
           })
         : section === "Inventario"
           ? saveProduct(data, {
@@ -321,6 +323,7 @@ export function BusinessPanel({
               cost: n("cost"),
               price: n("price"),
               archived: Boolean(row?.archived),
+              category:s("category"),unit:s("unit"),cabys:s("cabys"),
             })
           : saveAppointment(data, {
               id,
@@ -363,7 +366,7 @@ export function BusinessPanel({
       );
   const clients = data.clients.filter(
     (c) =>
-      matches(`${c.name} ${c.email} ${c.phone}`) &&
+      matches(`${c.name} ${c.email} ${c.phone} ${c.identification||""} ${c.tradeName||""} ${c.group||""}`) &&
       (filter === "archived"
         ? c.archived
         : filter === "all"
@@ -372,7 +375,7 @@ export function BusinessPanel({
   );
   const products = data.products.filter(
     (p) =>
-      matches(`${p.name} ${p.sku}`) &&
+      matches(`${p.name} ${p.sku} ${p.category||""} ${p.cabys||""}`) &&
       (filter === "archived"
         ? p.archived
         : !p.archived && (filter !== "low" || p.stock <= p.minimum)),
@@ -463,6 +466,7 @@ export function BusinessPanel({
           {createLabel}
         </Button>
       </SectionHeadline>
+      {ready && section!=="Agenda" && <div className="flex justify-end"><CatalogImport key={section} kind={section==="Clientes"?"clients":"products"} data={data} commit={commit} saving={saving}/></div>}
       {error && (
         <p
           role="alert"
@@ -673,6 +677,10 @@ export function BusinessPanel({
                                   [tr("Correo", "Email")]: c.email,
                                   [tr("Teléfono", "Phone")]: c.phone,
                                   [tr("Notas", "Notes")]: c.notes,
+                                  [tr("Identificación","Identification")]:c.identification||"",
+                                  [tr("Nombre comercial","Trading name")]:c.tradeName||"",
+                                  [tr("Grupo","Group")]:c.group||"",
+                                  [tr("Dirección","Address")]:c.address||"",
                                 }))
                               : products.map((p) => ({
                                   [tr("Código", "Code")]: p.sku,
@@ -681,6 +689,9 @@ export function BusinessPanel({
                                   [tr("Mínimo", "Minimum")]: p.minimum,
                                   [tr("Costo", "Cost")]: p.cost,
                                   [tr("Precio", "Price")]: p.price,
+                                  [tr("Categoría","Category")]:p.category||"",
+                                  [tr("Unidad","Unit")]:p.unit||"",
+                                  CABYS:p.cabys||"",
                                 })),
                           ),
                       `${section.toLowerCase()}.csv`,
@@ -728,6 +739,7 @@ export function BusinessPanel({
               <p className="break-words text-sm text-[#52627a]">
                 {[customer.phone, customer.email].filter(Boolean).join(" · ")}
               </p>
+              {[customer.identification,customer.tradeName,customer.group,customer.address].filter(Boolean).map((value,index)=><p key={index} className="break-words text-sm text-[#52627a]">{value}</p>)}
               {customer.notes && (
                 <p className="whitespace-pre-wrap break-words">
                   {customer.notes}
@@ -807,6 +819,7 @@ export function BusinessPanel({
           )}
           {product && (
             <div className="space-y-4">
+              <p className="break-words text-sm text-[#52627a]">{[product.category,product.unit,product.cabys&&`CABYS ${product.cabys}`].filter(Boolean).join(" · ")}</p>
               <p>
                 {product.sku} · {product.stock} {tr("unidades", "units")}
               </p>
@@ -912,6 +925,7 @@ export function BusinessPanel({
                   value={phone}
                   onChange={setPhone}
                 />
+                <details className="rounded-2xl border border-[#e5e7eb] p-4"><summary className="cursor-pointer font-bold text-[#162543]">{tr("Datos del negocio (opcionales)","Business details (optional)")}</summary><div className="mt-4 grid gap-4 sm:grid-cols-2">{input("identification",tr("Cédula, DIMEX o NITE","National ID, DIMEX or NITE"),"text",false)}{input("tradeName",tr("Nombre comercial","Trading name"),"text",false)}{input("group",tr("Grupo de clientes","Customer group"),"text",false)}{input("address",tr("Dirección","Address"),"text",false)}</div></details>
                 <label className="block text-[13px] font-bold">
                   {tr("Notas", "Notes")}
                   <textarea
@@ -940,6 +954,7 @@ export function BusinessPanel({
                   tr("Precio unitario ₡", "Unit price ₡"),
                   "number",
                 )}
+                <details className="rounded-2xl border border-[#e5e7eb] p-4"><summary className="cursor-pointer font-bold text-[#162543]">{tr("Datos del catálogo (opcionales)","Catalog details (optional)")}</summary><div className="mt-4 grid gap-4 sm:grid-cols-2">{input("category",tr("Categoría","Category"),"text",false)}{input("unit",tr("Unidad de medida","Unit of measure"),"text",false)}{input("cabys",tr("Código CABYS","CABYS code"),"text",false)}</div><p className="mt-3 text-xs text-[#68778d]">{tr("CABYS se guarda como referencia; no valida la clasificación ni emite una factura.","CABYS is saved for reference; this does not validate the classification or issue an invoice.")}</p></details>
               </>
             )}
             {section === "Agenda" && (

@@ -33,8 +33,8 @@ export function ProWorkspace({server=false,embedded=false,section,quoteListOnly=
  function act(run:()=>Business){try{commit(run());}catch(e){setError(e instanceof Error?e.message:'Revise los datos.');}}
  function submit(e:React.FormEvent<HTMLFormElement>){e.preventDefault();const f=new FormData(e.currentTarget);const s=(k:string)=>String(f.get(k)||'');const n=(k:string)=>Number(f.get(k));const id=editing==='new'?crypto.randomUUID():editing!;
  act(()=>{
- if(tab==='Clientes')return saveClient(data,{id,name:s('name'),email:s('email'),phone:s('phone'),notes:s('notes'),archived:false});
- if(tab==='Inventario')return saveProduct(data,{id,sku:s('sku'),name:s('name'),stock:editing==='new'?n('stock'):data.products.find(p=>p.id===id)!.stock,minimum:n('minimum'),cost:n('cost'),price:n('price'),archived:false});
+ if(tab==='Clientes')return saveClient(data,{...data.clients.find(c=>c.id===id),id,name:s('name'),email:s('email'),phone:s('phone'),notes:s('notes'),archived:false});
+ if(tab==='Inventario')return saveProduct(data,{...data.products.find(p=>p.id===id),id,sku:s('sku'),name:s('name'),stock:editing==='new'?n('stock'):data.products.find(p=>p.id===id)!.stock,minimum:n('minimum'),cost:n('cost'),price:n('price'),archived:false});
  if(tab==='Cotizaciones'){const lines=JSON.parse(s('lines')) as Business['quotes'][number]['lines'];return saveQuote(data,{id,clientId:s('clientId'),title:s('title'),lines,status:'draft',validUntil:s('validUntil')});}
  return saveAppointment(data,{id,clientId:s('clientId'),client:s('clientId'),service:s('service'),stage:'scheduled',start:costaRicaDate(s('start')),end:costaRicaDate(s('end')),cancelled:false,quoteId:s('quoteId')||undefined});
  });}

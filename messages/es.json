@@ -2993,6 +2993,11 @@
     "close": "Cerrar"
   },
   "quotes": {
+    "proLinkRetry": "La cotización se guardó. Reintente para vincularla al cliente; no se creará dos veces.",
+    "proSavedCustomer": "Cliente guardado",
+    "proChooseCustomer": "Seleccione un cliente",
+    "proAddInventory": "Agregar desde inventario",
+    "proChooseProduct": "Seleccione un producto",
     "blockTitle": "Cotización",
     "send": "Enviar cotización",
     "sendAnother": "Enviar otra cotización",

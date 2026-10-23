@@ -1,9 +1,11 @@
 import { z } from 'zod';
 import { socialRequestSchema } from './social';
 import { validateWork, type WorkItem } from './workspace';
+import { isValidId } from '../cedula';
 const text=z.string().trim().min(1).max(160);
-export const clientSchema=z.object({id:text,name:text,email:z.union([z.literal(''),z.string().email()]),phone:z.string().max(30),notes:z.string().max(2000),archived:z.boolean()});
-export const productSchema=z.object({id:text,sku:text,name:text,stock:z.number().finite().nonnegative(),minimum:z.number().finite().nonnegative(),cost:z.number().finite().nonnegative(),price:z.number().finite().nonnegative(),archived:z.boolean()});
+const optionalText=(max:number)=>z.string().trim().max(max).optional();
+export const clientSchema=z.object({id:text,name:text,email:z.union([z.literal(''),z.string().email()]),phone:z.string().max(30),notes:z.string().max(2000),archived:z.boolean(),identification:z.string().refine(v=>!v||isValidId(v),'Revise la identificación.').transform(v=>v.replace(/[\s-]/g,'')).optional(),tradeName:optionalText(160),group:optionalText(80),address:optionalText(500)});
+export const productSchema=z.object({id:text,sku:text,name:text,stock:z.number().finite().nonnegative(),minimum:z.number().finite().nonnegative(),cost:z.number().finite().nonnegative(),price:z.number().finite().nonnegative(),archived:z.boolean(),category:optionalText(80),unit:optionalText(30),cabys:z.string().regex(/^(?:\d{13})?$/,'CABYS debe tener 13 dígitos.').optional()});
 const lineSchema=z.object({description:text,quantity:z.number().finite().positive().max(100000),price:z.number().finite().nonnegative().max(100000000),tax:z.number().finite().min(0).max(100)});
 export const quoteSchema=z.object({id:text,clientId:text,title:text,lines:z.array(lineSchema).min(1).max(100),status:z.enum(['draft','accepted','declined']),validUntil:z.string().regex(/^\d{4}-\d{2}-\d{2}$/)});
 const slotTime=z.string().datetime({offset:true}).transform(value=>new Date(Date.parse(value)-6*3600000).toISOString().slice(0,19)+"-06:00");
@@ -20,7 +22,7 @@ export function quoteTotal(lines:Quote['lines']) {
   return lines.reduce((sum,line)=>{const net=Math.round(line.quantity*line.price*100);return sum+net+Math.round(net*line.tax/100);},0)/100;
 }
 export function saveClient(state:Business,input:Client):Business {
- const row=clientSchema.parse(input);return {...state,clients:[...state.clients.filter(c=>c.id!==row.id),row]};
+ const row=clientSchema.parse(input);if(row.identification&&state.clients.some(c=>c.id!==row.id&&c.identification===row.identification))throw Error('Esa identificación ya existe.');return {...state,clients:[...state.clients.filter(c=>c.id!==row.id),row]};
 }
 export function saveProduct(state:Business,input:Product):Business {
  const row=productSchema.parse(input);
