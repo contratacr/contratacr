@@ -2,11 +2,11 @@
   "scope": "Todos los archivos TypeScript de src/app, src/components y src/hooks, controles JSX declarados, pestañas del panel y specs permanentes. No enumera cada elemento dinámico renderizado ni componentes dentro de dependencias.",
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
-    "files": 496,
+    "files": 497,
     "controls": 1293,
     "pages": 71,
     "handlers": 104,
-    "components": 259,
+    "components": 260,
     "hooks": 26,
     "specs": 160
   },
@@ -694,7 +694,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 552,
+          "line": 553,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -702,7 +702,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 679,
+          "line": 682,
           "tag": "Link",
           "label": "{t(\"pagination.prev\")}",
           "handler": "",
@@ -710,7 +710,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 693,
+          "line": 696,
           "tag": "Link",
           "label": "{t(\"pagination.next\")}",
           "handler": "",
@@ -718,7 +718,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 709,
+          "line": 712,
           "tag": "Link",
           "label": "{t(\"pagination.prev\")}",
           "handler": "",
@@ -726,7 +726,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 721,
+          "line": 724,
           "tag": "Link",
           "label": "{t(\"pagination.status\", { page, total: totalPages })}",
           "handler": "",
@@ -734,7 +734,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 727,
+          "line": 730,
           "tag": "Link",
           "label": "{t(\"pagination.next\")}",
           "handler": "",
@@ -742,7 +742,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 737,
+          "line": 740,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -16982,8 +16982,10 @@
         "tests/e2e/contact-channel-stability.spec.ts",
         "tests/e2e/search-progressive-loading.spec.ts"
       ],
-      "directReferences": [],
-      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "directReferences": [
+        "tests/e2e/search-offer-loading.spec.ts"
+      ],
+      "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
       "coverage": "Alcance detallado pendiente de revisión; no certificado",
       "priority": "P1"
@@ -17198,8 +17200,10 @@
         "tests/e2e/contact-channel-stability.spec.ts",
         "tests/e2e/search-progressive-loading.spec.ts"
       ],
-      "directReferences": [],
-      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "directReferences": [
+        "tests/e2e/search-offer-loading.spec.ts"
+      ],
+      "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
       "coverage": "Alcance detallado pendiente de revisión; no certificado",
       "priority": "P1"
@@ -18884,6 +18888,35 @@
       "priority": "P1"
     },
     {
+      "file": "src/components/search/professional-card-loading.tsx",
+      "kind": "Componente",
+      "group": "Búsqueda y profesionales",
+      "route": null,
+      "exports": [
+        "SearchCardContactBoundary",
+        "ProfessionalCardSkeleton"
+      ],
+      "methods": [],
+      "controls": [],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/search-results.spec.ts",
+        "tests/e2e/search-ranking.spec.ts",
+        "tests/e2e/services.spec.ts",
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts",
+        "tests/e2e/search-progressive-loading.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P1"
+    },
+    {
       "file": "src/components/search/search-context-summary.tsx",
       "kind": "Componente",
       "group": "Búsqueda y profesionales",
@@ -19250,7 +19283,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 287,
+          "line": 263,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { attempts.current = 0; setFailed(false); void loadMore(); }}",
@@ -21959,8 +21992,10 @@
         "tests/e2e/cabeceras.spec.ts",
         "tests/e2e/interaction-surfaces.spec.ts"
       ],
-      "directReferences": [],
-      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "directReferences": [
+        "tests/e2e/search-offer-loading.spec.ts"
+      ],
+      "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "Contrato/integración + carreras, limpieza y navegación",
       "coverage": "Alcance detallado pendiente de revisión; no certificado",
       "priority": "P1"
@@ -22298,7 +22333,8 @@
       ],
       "directReferences": [
         "tests/e2e/meta-growth-runtime.spec.ts",
-        "tests/e2e/runtime-analytics.spec.ts"
+        "tests/e2e/runtime-analytics.spec.ts",
+        "tests/e2e/search-offer-loading.spec.ts"
       ],
       "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "Contrato/integración + carreras, limpieza y navegación",
@@ -22409,6 +22445,7 @@
       "route": null,
       "exports": [
         "ContactAvailabilityProvider",
+        "ResolvedContactAvailabilityProvider",
         "useProfesionalConApp"
       ],
       "methods": [],
@@ -25986,16 +26023,24 @@
       "file": "tests/e2e/search-offer-loading.spec.ts",
       "cases": [
         {
-          "line": 19,
+          "line": 24,
           "title": "\"offer thumbnails start together, keep original quality and defer hidden desktop artwork\""
         },
         {
-          "line": 52,
+          "line": 57,
           "title": "\"an offer without artwork prioritizes its professional photo too\""
         },
         {
-          "line": 67,
+          "line": 72,
           "title": "`${signedIn ? \"signed-in\" : \"guest\"} search keeps twenty cards and ${slow ? \"shows matching skeletons only while waiting\" : \"skips skeletons for an immediate next batch\"}`"
+        },
+        {
+          "line": 141,
+          "title": "`whole card owns contact loading when ${scenario}, ending in ${channel ? \"chat\" : \"WhatsApp\"}`"
+        },
+        {
+          "line": 180,
+          "title": "\"an expired result can remount and resume without loading inside its contact button\""
         }
       ]
     },

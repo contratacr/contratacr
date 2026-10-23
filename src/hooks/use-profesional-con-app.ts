@@ -9,6 +9,13 @@ export function ContactAvailabilityProvider({ children, ...initial }: InitialAva
   return createElement(InitialAvailabilityContext.Provider, { value: initial }, children);
 }
 
+// A result owns one channel lookup. Its contact button consumes that resolved
+// value instead of subscribing a second time or entering its own loading state.
+const ResolvedContactContext = createContext<{ professionalId: string; value: boolean } | null>(null);
+export function ResolvedContactAvailabilityProvider({ children, ...resolved }: { professionalId: string; value: boolean; children: ReactNode }) {
+  return createElement(ResolvedContactContext.Provider, { value: resolved }, children);
+}
+
 // Viewer-scoped, short-lived reachability. Never persist network failures as
 // WhatsApp for the entire session; a newly registered app must become reachable.
 type Availability = { value: boolean; expiresAt: number; resolvedAt: number };
@@ -61,10 +68,12 @@ async function preguntar() {
 export function useProfesionalConApp(professionalId: string | undefined, activo: boolean) {
   const { user, loading } = useAuth();
   const initial = useContext(InitialAvailabilityContext);
+  const resolved = useContext(ResolvedContactContext);
+  const inherited = activo && resolved && resolved.professionalId === professionalId ? resolved.value : undefined;
   const seed = initial && initial.viewerId === user?.id && professionalId ? initial.values[professionalId] : undefined;
   const seedResolvedAt = initial?.resolvedAt ?? 0;
   const seedExpiry = initial ? initial.resolvedAt + (seed ? 60_000 : 15_000) : 0;
-  const consultar = Boolean(activo && user && professionalId);
+  const consultar = Boolean(inherited === undefined && activo && user && professionalId);
   const cacheId = user && professionalId ? `${user.id}:${professionalId}` : "";
   useEffect(() => {
     if (!consultar || !cacheId) return;
@@ -88,11 +97,12 @@ export function useProfesionalConApp(professionalId: string | undefined, activo:
     suscribir,
     () => {
       if (!activo || !professionalId) return false;
+      if (typeof inherited === "boolean") return inherited;
       if (loading) return null;
       if (!user) return false;
       const cached = conocidos.get(cacheId);
       return typeof seed === "boolean" && (cached?.resolvedAt ?? 0) < seedResolvedAt ? seed : cached?.value ?? null;
     },
-    () => !activo || !professionalId || (!loading && !user) ? false : seed ?? null,
+    () => inherited ?? (!activo || !professionalId || (!loading && !user) ? false : seed ?? null),
   );
 }
