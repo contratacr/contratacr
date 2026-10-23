@@ -19250,7 +19250,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 278,
+          "line": 287,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { attempts.current = 0; setFailed(false); void loadMore(); }}",
@@ -22009,7 +22009,8 @@
         "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [
-        "tests/e2e/runtime-analytics.spec.ts"
+        "tests/e2e/runtime-analytics.spec.ts",
+        "tests/e2e/search-offer-loading.spec.ts"
       ],
       "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "Contrato/integración + carreras, limpieza y navegación",
@@ -22424,8 +22425,10 @@
         "tests/e2e/contact-channel-stability.spec.ts",
         "tests/e2e/search-progressive-loading.spec.ts"
       ],
-      "directReferences": [],
-      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "directReferences": [
+        "tests/e2e/search-offer-loading.spec.ts"
+      ],
+      "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "Contrato/integración + carreras, limpieza y navegación",
       "coverage": "Alcance detallado pendiente de revisión; no certificado",
       "priority": "P1"
@@ -25983,16 +25986,16 @@
       "file": "tests/e2e/search-offer-loading.spec.ts",
       "cases": [
         {
-          "line": 18,
+          "line": 19,
           "title": "\"offer thumbnails start together, keep original quality and defer hidden desktop artwork\""
         },
         {
-          "line": 51,
+          "line": 52,
           "title": "\"an offer without artwork prioritizes its professional photo too\""
         },
         {
-          "line": 66,
-          "title": "`search keeps twenty cards and ${slow ? \"shows matching skeletons only while waiting\" : \"skips skeletons for an immediate next batch\"}`"
+          "line": 67,
+          "title": "`${signedIn ? \"signed-in\" : \"guest\"} search keeps twenty cards and ${slow ? \"shows matching skeletons only while waiting\" : \"skips skeletons for an immediate next batch\"}`"
         }
       ]
     },
@@ -26005,18 +26008,26 @@
         },
         {
           "line": 80,
-          "title": "`first search card has its ${hasApp === \"blocked\" ? \"blocked chat\" : hasApp ? \"chat\" : \"WhatsApp\"} channel before browser lookup`"
+          "title": "`${native ? \"native\" : \"web\"} next twenty cards finish the full-card skeleton with their contact channel ready`"
         },
         {
           "line": 81,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 107,
+          "line": 154,
+          "title": "`first search card has its ${hasApp === \"blocked\" ? \"blocked chat\" : hasApp ? \"chat\" : \"WhatsApp\"} channel before browser lookup`"
+        },
+        {
+          "line": 155,
+          "title": "!canRunSeededRegression()"
+        },
+        {
+          "line": 181,
           "title": "\"a shared second page continues after its twenty cards\""
         },
         {
-          "line": 122,
+          "line": 196,
           "title": "\"an exhausted batch stops loading even when the displayed total is stale\""
         }
       ]

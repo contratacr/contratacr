@@ -76,6 +76,80 @@ for (const slow of [false, true]) {
   });
 }
 
+for (const native of [false, true]) {
+  test(`${native ? "native" : "web"} next twenty cards finish the full-card skeleton with their contact channel ready`, async ({ page, context, baseURL }) => {
+    test.skip(!canRunSeededRegression(), "Requires isolated TEST fixtures.");
+    test.setTimeout(120_000);
+    if (native) await context.addCookies([{name:"ccr_platform",value:"native",url:baseURL!}]);
+    await page.addInitScript(() => localStorage.setItem("ccr:native-first-run-onboarding:v12", "1"));
+    await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
+    const db = regressionAdminClient();
+    const {data:viewer}=await db.from("profiles").select("id").eq("email",E2E_USERS.client.email).single().throwOnError();
+    const preflight=await page.request.get(paginationPath.replace("/buscar?","/api/buscar/results?")+"&offset=20");
+    expect(preflight.ok()).toBe(true);
+    const preview=await preflight.json();
+    const nextIds=preview.professionals.map((row:{professional:{id:string}})=>row.professional.id) as string[];
+    expect(nextIds).toHaveLength(20);
+    const appAccount=paginationFixtures.find(row=>row.professionalId===nextIds[0])!;
+    const blockedAccount=paginationFixtures.find(row=>row.professionalId===nextIds[1])!;
+    const token=`regression-paginated-${crypto.randomUUID()}`;
+    let conversationId:string|undefined;
+    let release=()=>{};
+    const gate=new Promise<void>(resolve=>{release=resolve;});
+    const extraLookups:string[]=[];
+    let payload:typeof preview;
+    try {
+      await db.from("user_push_tokens").insert({user_id:appAccount.id,token,platform:"android",is_active:true,last_seen_at:new Date().toISOString()}).throwOnError();
+      const {data:conversation}=await db.from("direct_conversations").insert({client_id:viewer!.id,professional_id:blockedAccount.professionalId!,professional_profile_id:blockedAccount.id,status:"blocked"}).select("id").single().throwOnError();
+      conversationId=conversation!.id;
+      await page.route("**/api/direct-chat?conApp=*",route=>{
+        extraLookups.push(...new URL(route.request().url()).searchParams.get("conApp")!.split(",").filter(id=>nextIds.includes(id)));
+        return route.abort();
+      });
+      await page.route("**/api/buscar/results?*",async route=>{
+        const response=await route.fetch();
+        payload=await response.json();
+        await gate;
+        await route.fulfill({response});
+      });
+      await gotoOK(page,paginationPath);
+      await waitForInteractivePage(page);
+      const list=page.locator(".ccr-search-sheet-scroll").first();
+      await expect(list.locator("[data-pro-id]")).toHaveCount(20);
+      await page.evaluate(()=>{
+        (window as unknown as {pendingContactEver:boolean}).pendingContactEver=false;
+        new MutationObserver(()=>{
+          if(document.querySelector('[data-search-result] [data-contact-pending]')) (window as unknown as {pendingContactEver:boolean}).pendingContactEver=true;
+        }).observe(document.body,{childList:true,subtree:true});
+      });
+      await list.evaluate(el=>{el.scrollTop=el.scrollHeight;});
+      await expect(list.locator('[data-search-load-more] [role="status"]')).toBeVisible();
+      await expect(list.locator("[data-search-result]")).toHaveCount(0);
+      release();
+      await expect(list.locator("[data-search-result]")).toHaveCount(20);
+      await expect(list.locator('[data-search-load-more] [role="status"]')).toHaveCount(0);
+      expect(payload.contactAvailability.viewerId).toBe(viewer!.id);
+      expect(payload.contactAvailability.values[nextIds[0]]).toBe(true);
+      expect(payload.contactAvailability.values[nextIds[1]]).toBe(true);
+      expect(payload.contactAvailability.values[nextIds[2]]).toBe(false);
+      for(const [index,name] of [[0,"Enviar mensaje"],[1,"Enviar mensaje"],[2,"WhatsApp"]] as const){
+        const card=list.locator(`[data-result-id="${nextIds[index]}"]`);
+        await card.scrollIntoViewIfNeeded();
+        await expect(card.getByRole("button",{name:new RegExp(name)}).first()).toBeVisible();
+      }
+      await expect(list.locator('[data-search-result] [data-contact-pending]')).toHaveCount(0);
+      expect(await page.evaluate(()=>(window as unknown as {pendingContactEver:boolean}).pendingContactEver)).toBe(false);
+      expect(extraLookups).toEqual([]);
+      expect(payload.professionals.every((row:{professional:{whatsapp?:string;callPhone?:string;contactEmail?:string}})=>!row.professional.whatsapp&&!row.professional.callPhone&&!row.professional.contactEmail)).toBe(true);
+    } finally {
+      release();
+      await page.unrouteAll({behavior:"wait"});
+      await db.from("user_push_tokens").delete().eq("token",token).throwOnError();
+      if(conversationId) await db.from("direct_conversations").delete().eq("id",conversationId).throwOnError();
+    }
+  });
+}
+
 for (const hasApp of [true, false, "blocked"] as const) {
   test(`first search card has its ${hasApp === "blocked" ? "blocked chat" : hasApp ? "chat" : "WhatsApp"} channel before browser lookup`, async ({ page }) => {
     test.skip(!canRunSeededRegression(), "Requires isolated TEST fixtures.");

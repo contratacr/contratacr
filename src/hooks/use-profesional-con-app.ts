@@ -3,7 +3,7 @@
 import { createContext, createElement, useContext, useEffect, useSyncExternalStore, type ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
 
-type InitialAvailability = { viewerId: string; values: Record<string, boolean>; resolvedAt: number };
+export type InitialAvailability = { viewerId: string; values: Record<string, boolean>; resolvedAt: number };
 const InitialAvailabilityContext = createContext<InitialAvailability | null>(null);
 export function ContactAvailabilityProvider({ children, ...initial }: InitialAvailability & { children: ReactNode }) {
   return createElement(InitialAvailabilityContext.Provider, { value: initial }, children);

@@ -6,10 +6,11 @@ async function harness(source: string) {
     stdin: { contents: source, resolveDir: process.cwd(), loader: "tsx" },
     bundle: true, write: false, format: "iife", platform: "browser", jsx: "automatic",
     plugins: [{ name: "loading-boundaries", setup(builder) {
-      builder.onResolve({ filter: /^(next-intl|@\/components\/ui\/image-preview-dialog|@\/components\/professionals\/(professional-card|save-button))$/ }, args => ({ path: args.path, namespace: "loading-boundaries" }));
+      builder.onResolve({ filter: /^(next-intl|@\/hooks\/use-auth|@\/components\/ui\/image-preview-dialog|@\/components\/professionals\/(professional-card|save-button))$/ }, args => ({ path: args.path, namespace: "loading-boundaries" }));
       builder.onLoad({ filter: /.*/, namespace: "loading-boundaries" }, args => ({ contents: args.path === "next-intl"
         ? `export const useLocale=()=>"es"; export const useTranslations=()=>key=>key;`
-        : `import React from 'react'; export const ImagePreviewDialog=({children})=>children; export const SaveableCard=({children})=>children; export const ProfessionalCard=({professional})=>React.createElement('article',{'data-pro-id':professional.id},professional.id);`, resolveDir: process.cwd() }));
+        : args.path === "@/hooks/use-auth" ? `export const useAuth=()=>({user:window.__loadingViewer??null,loading:false});`
+        : `import React from 'react'; import {useProfesionalConApp} from '@/hooks/use-profesional-con-app'; export const ImagePreviewDialog=({children})=>children; export const SaveableCard=({children})=>children; export const ProfessionalCard=({professional})=>{const channel=useProfesionalConApp(professional.id,true);return React.createElement('article',{'data-pro-id':professional.id},React.createElement('button',channel===null?{'data-contact-pending':true}:{},channel===null?'Cargando':channel?'Mensaje':'WhatsApp'))};`, resolveDir: process.cwd() }));
     } }],
   });
   return result.outputFiles[0].text;
@@ -62,22 +63,25 @@ test("an offer without artwork prioritizes its professional photo too", async ({
   await expect(page.getByRole("img")).toHaveAttribute("fetchpriority","high");
 });
 
-for (const slow of [false, true]) {
-  test(`search keeps twenty cards and ${slow ? "shows matching skeletons only while waiting" : "skips skeletons for an immediate next batch"}`, async ({ page }) => {
+for (const signedIn of [false, true]) for (const slow of [false, true]) {
+  test(`${signedIn ? "signed-in" : "guest"} search keeps twenty cards and ${slow ? "shows matching skeletons only while waiting" : "skips skeletons for an immediate next batch"}`, async ({ page }) => {
     let release = () => {};
     const gate = new Promise<void>(resolve => { release = resolve; });
     page.on("close", release);
     const offsets: string[] = [];
+    let channelRequests = 0;
+    await page.route("**/api/direct-chat?conApp=*", route => { channelRequests++; return route.abort(); });
     await page.route("**/api/buscar/results?*", async route => {
       offsets.push(new URL(route.request().url()).searchParams.get("offset")!);
       if (slow) await gate;
-      await route.fulfill({ json: { professionals: Array.from({length:20},(_,i)=>({professional:{id:'next-'+i},forceContactOnly:false,preferVideo:false})) } });
+      await route.fulfill({ json: { professionals: Array.from({length:20},(_,i)=>({professional:{id:'next-'+i},forceContactOnly:false,preferVideo:false})), contactAvailability:{viewerId:signedIn?'viewer':'',resolvedAt:Date.now(),values:Object.fromEntries(Array.from({length:20},(_,i)=>['next-'+i,i%2===0]))} } });
     });
     await page.route("**/loading-harness", route => route.fulfill({ contentType: "text/html", body: '<!doctype html><style>.ccr-skeleton-shimmer{display:block;min-height:16px}</style><div id="root"></div>' }));
     await page.goto("/loading-harness");
     await page.addScriptTag({ content: await harness(`import React from 'react'; import {createRoot} from 'react-dom/client'; import {SearchResultsInfinite} from './src/components/search/search-results-infinite';
-      window.skeletonAppeared=false; new MutationObserver(()=>{if(document.querySelector('[role="status"]'))window.skeletonAppeared=true}).observe(document.body,{childList:true,subtree:true});
-      createRoot(document.getElementById('root')).render(<>{Array.from({length:20},(_,i)=><article key={i} data-initial-card style={{height:300}}>Profesional {i}</article>)}<SearchResultsInfinite query="q=fixture" initialCount={20} total={40} highlightMetric="rating" searchReturnHref="/buscar" loadingLabel="Cargando profesionales" failedLabel="Error" retryLabel="Reintentar"/></>);`) });
+      window.__loadingViewer=${signedIn ? "{id:'viewer'}" : "null"};
+      window.skeletonAppeared=false; window.pendingContactAppeared=false; new MutationObserver(()=>{if(document.querySelector('[data-contact-pending]'))window.pendingContactAppeared=true;if(document.querySelector('[role="status"]'))window.skeletonAppeared=true}).observe(document.body,{childList:true,subtree:true});
+      createRoot(document.getElementById('root')).render(<>{Array.from({length:20},(_,i)=><article key={i} data-initial-card style={{height:300}}>Profesional {i}</article>)}<SearchResultsInfinite viewerProfileId={${signedIn ? "'viewer'" : "undefined"}} query="q=fixture" initialCount={20} total={40} highlightMetric="rating" searchReturnHref="/buscar" loadingLabel="Cargando profesionales" failedLabel="Error" retryLabel="Reintentar"/></>);`) });
     await expect(page.locator("[data-initial-card]")).toHaveCount(20);
     await expect(page.getByRole("status")).toHaveCount(0);
     expect(offsets).toEqual([]);
@@ -95,6 +99,10 @@ for (const slow of [false, true]) {
     await expect(page.locator("[data-pro-id]")).toHaveCount(20);
     await expect(page.getByRole("status")).toHaveCount(0);
     expect(offsets).toEqual(["20"]);
+    await expect(page.locator("[data-contact-pending]")).toHaveCount(0);
+    expect(await page.evaluate(() => (window as unknown as {pendingContactAppeared:boolean}).pendingContactAppeared)).toBe(false);
+    expect(channelRequests).toBe(0);
+    if (signedIn) await expect(page.getByRole("button",{name:"Mensaje",exact:true})).toHaveCount(10);
     if (!slow) expect(await page.evaluate(() => (window as unknown as {skeletonAppeared:boolean}).skeletonAppeared)).toBe(false);
   });
 }
