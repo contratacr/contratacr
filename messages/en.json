@@ -44,6 +44,7 @@
     "uploading": "Uploading file…"
   },
   "common": {
+    "professionalFallback": "Professional on ContrataCR",
     "savingShort": "Saving…",
     "savedShort": "Saved",
     "spamNotice": "Don't see it? Check your spam or junk folder.",

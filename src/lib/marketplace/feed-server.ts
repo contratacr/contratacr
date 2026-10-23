@@ -1,4 +1,5 @@
 import "server-only";
+import { getTranslations } from "next-intl/server";
 import { contactAvailability } from "@/lib/direct-chat/availability";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { perfilesBloqueadosPor } from "@/lib/queries/bloqueos";
@@ -21,6 +22,7 @@ type Owner={profile_id?:string;is_banned?:boolean;slug?:string;business_name?:st
  * cache: publishing/editing/deleting and account blocks are visible immediately.
  */
 export async function marketplacePage(section:FeedSection,filters:FeedFilters,viewerId:string|undefined,locale:string,options:{cursor?:string|null;asOf?:string|null;selectedId?:string|null}={}) {
+  const fallbackName=section==="proyectos"?"":(await getTranslations({locale,namespace:"common"}))("professionalFallback");
   const asOf=options.asOf&&Number.isFinite(Date.parse(options.asOf))&&Date.parse(options.asOf)<=Date.now()?options.asOf:new Date().toISOString();
   const blocked=await perfilesBloqueadosPor(viewerId);
   const items:FeedItem[]=[];const owners=new Map<string,string>();
@@ -44,7 +46,7 @@ export async function marketplacePage(section:FeedSection,filters:FeedFilters,vi
         if(!owner||owner.is_banned||blocked.has(owner.profile_id??""))continue;
         owners.set(String(row[offers?"professional_id":"employer_id"]??""),owner.profile_id??"");
         const {professionals:_owner,contact_whatsapp:phone,...publicFields}=row;void _owner;
-        const display=repairVisibleText(getProfessionalDisplayName(owner.profiles?.full_name??"",owner.business_name).primaryDesktop||(locale==="en"?"Professional on ContrataCR":"Profesional en ContrataCR"));
+        const display=repairVisibleText(getProfessionalDisplayName(owner.profiles?.full_name??"",owner.business_name).primaryDesktop||fallbackName);
         const common={...publicFields,title:repairVisibleText(String(row.title??"")),description:repairVisibleText(String(row.description??"")),contact_whatsapp:viewerId&&owner.profile_id===viewerId?String(phone??""):undefined};
         if(offers)items.push({...common,image_urls:Array.isArray(row.image_urls)?row.image_urls:[],service_label:row.service_label?repairVisibleText(String(row.service_label)):null,location_label:row.location_label?repairVisibleText(String(row.location_label)):null,
           professional_name:display,professional_slug:owner.slug??null,professional_avatar_url:owner.profiles?.avatar_url??null,professional_verified:owner.verification_status==="verified",professional_has_whatsapp:!!String(phone??"").trim()} as ProfessionalOffer);

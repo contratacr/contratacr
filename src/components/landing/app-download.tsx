@@ -154,8 +154,10 @@ export function MobileAppDownloadBanner({ initialNativeIosBanner = false, initia
         requestAnimationFrame(alignDownload);
       }
     };
-    const headerObserver = new ResizeObserver(() => requestAnimationFrame(alignDownload));
-    document.querySelectorAll("header").forEach(header => headerObserver.observe(header));
+    // Streamed sections above the download anchor can grow after hydration.
+    // Track their layout as well as the header, until the user takes control.
+    const layoutObserver = new ResizeObserver(() => requestAnimationFrame(alignDownload));
+    document.querySelectorAll("header, main, #descargar-app").forEach(element => layoutObserver.observe(element));
     const intentEvents = ["wheel", "touchstart", "pointerdown", "keydown"] as const;
     intentEvents.forEach(event => window.addEventListener(event, stopAligning, { passive: true }));
     sync(); window.addEventListener("hashchange", sync);
@@ -163,7 +165,7 @@ export function MobileAppDownloadBanner({ initialNativeIosBanner = false, initia
     // cold visit. Align once more after loading, using the real header height.
     const loaded = document.readyState === "complete" ? Promise.resolve() : new Promise<void>(resolve => window.addEventListener("load", () => resolve(), { once: true }));
     void Promise.all([document.fonts.ready, loaded]).then(() => requestAnimationFrame(alignDownload));
-    return () => { cancelled = true; headerObserver.disconnect(); intentEvents.forEach(event => window.removeEventListener(event, stopAligning)); window.removeEventListener("hashchange", sync); };
+    return () => { cancelled = true; layoutObserver.disconnect(); intentEvents.forEach(event => window.removeEventListener(event, stopAligning)); window.removeEventListener("hashchange", sync); };
   }, [native]);
   // Public browsing pages share the notice; private tasks keep their space.
   const path = pathname.replace(/^\/(es|en)(?=\/|$)/, "") || "/";
