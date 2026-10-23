@@ -10,7 +10,7 @@ Nine message notifications were created. Two recent unread message notifications
 
 Firebase multicast defaults to Node HTTP/2. With the exact Worker compatibility date/flag used by this app (`2026-07-29`, `nodejs_compat`), the current sender throws `ERR_METHOD_NOT_IMPLEMENTED: The http2.connect method is not implemented`. Reproduced in local Wrangler with real Firebase dry-run requests; no delivery to unrelated users.
 
-`getFirebaseMessaging()` now selects the SDK's HTTP/1.1 transport with `enableLegacyHttpTransport()`. This still uses the current FCM HTTP v1 API, not the retired legacy FCM API. The corrected Worker accepts validation-only requests for both iOS and Android. This code change is local and has not been deployed.
+`getFirebaseMessaging()` now selects the SDK's HTTP/1.1 transport with `enableLegacyHttpTransport()`. This still uses the current FCM HTTP v1 API, not the retired legacy FCM API. The corrected Worker accepts validation-only requests for both iOS and Android. The transport correction was pushed as `bd416d8c` and successfully deployed by Cloudflare workflows to production and TEST; both health endpoints returned HTTP 200.
 
 ## Independent iOS blocker
 
@@ -50,7 +50,7 @@ Token registration currently lacks a foreground/resume recovery path after devic
 - Changed sender passes TypeScript and ESLint.
 - Production and Sandbox APNs credentials registered and uploaded with explicit owner authorization, without an additional purchase.
 - One owner-only real iOS send accepted after configuration; visible receipt confirmed by the owner.
-- No production queue manually drained, no store uploads, no Pro source changes. Server transport correction remains local and undeployed.
+- No production queue manually drained, no store uploads, no Pro source changes. Server transport correction deployed to production and TEST. Physical background/closed-state receipt still awaits owner coordination.
 
 References:
 
@@ -58,3 +58,7 @@ References:
 - https://developers.cloudflare.com/workers/runtime-apis/nodejs/
 - https://firebase.google.com/docs/cloud-messaging/error-codes
 - https://firebase.google.com/docs/cloud-messaging/ios/get-started
+
+## Follow-up CI security correction
+
+CI detected GHSA-mrhx-c7xc-m3w5 in the previously locked Zod 4.4.3. Updated only the Zod lockfile resolution to 4.6.7 within the existing declared range. Production dependency audit reports zero vulnerabilities; TypeScript and 69 product/push contract tests pass. The general CI regression is separate and must not be described as complete before it finishes.
