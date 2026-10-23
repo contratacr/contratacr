@@ -44,6 +44,7 @@
     "uploading": "Subiendo archivo…"
   },
   "common": {
+    "professionalFallback": "Profesional en ContrataCR",
     "savingShort": "Guardando…",
     "savedShort": "Guardado",
     "spamNotice": "¿No ves el correo? Revisa tu carpeta de spam o correo no deseado.",

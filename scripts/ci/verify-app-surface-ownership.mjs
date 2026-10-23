@@ -39,6 +39,7 @@ const handlerRules = [
   [/^\/api\/dashboard\/activity$/, "statistics-dashboard.spec.ts"],
   [/^\/api\/(?:projects|reviews|support|quotes)(?:\/|$)/, "seeded-regression.spec.ts"],
   [/^\/api\/(?:jobs|offers)(?:\/|$)/, "marketplace-lifecycle.spec.ts"],
+  [/^\/api\/marketplace\/results$/, "marketplace-paging-server.spec.ts"],
   [/^\/api\/direct-chat(?:\/|$)/, "direct-chat.spec.ts", true],
   [/^\/api\/(?:push|internal\/push)(?:\/|$)/, "push-outbox-contract.spec.ts"],
   [/^\/api\/internal\/soporte(?:\/|$)/, "soporte-cierre-automatico.spec.ts"],
