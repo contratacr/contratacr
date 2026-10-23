@@ -21,8 +21,8 @@ test('API access refuses anonymous, expired Pro, invalid origin and admin withou
  // Isolated compiled module; no credentials or network.
  const fixture={user:null as null|{id:string},profile:{role:'professional',is_disabled:false},grant:null as null|{status:string,expires_at:null},mfa:false};
  const globals=globalThis as typeof globalThis & {proFixture?:typeof fixture};globals.proFixture=fixture;
- const module={exports:{}};new Function('module','exports','require',bundle.outputFiles[0].text)(module,module.exports,()=>({}));
- const api=(module.exports as {proApiAccess:(r:Request,a?:boolean)=>Promise<{error?:Response}>}).proApiAccess;
+ const compiled={exports:{}};new Function('module','exports','require',bundle.outputFiles[0].text)(compiled,compiled.exports,()=>({}));
+ const api=(compiled.exports as {proApiAccess:(r:Request,a?:boolean)=>Promise<{error?:Response}>}).proApiAccess;
  const before=process.env.NODE_ENV;Object.assign(process.env,{NODE_ENV:'development'});
  try{
  const req=()=>new Request('http://localhost/api/pro/workspace');
