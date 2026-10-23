@@ -1,3 +1,5 @@
+import { contactAvailability } from "@/lib/direct-chat/availability";
+import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { cardData, locationDecisions, resolveSearchResults, RESULTS_PER_PAGE, type SearchPageParams } from "@/lib/search/query-core";
@@ -28,13 +30,17 @@ export async function GET(request: Request) {
   }
 
   try {
-    // Ya no hace falta saber quién mira: un listado nunca lleva datos de
-    // contacto. Con eso se ahorra además una consulta de sesión por cada
-    // «cargar más».
+    // Resolve the viewer's contact channel with the batch, before revealing
+    // any cards. Only booleans leave the server, never contact details.
     const { filters, ordered } = await resolveSearchResults(params);
     const decisions = locationDecisions(params, filters);
     const slice = ordered.slice(offset, offset + limit);
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError && authError.name !== "AuthSessionMissingError") throw authError;
+    const values = user ? await contactAvailability(user.id, slice) : {};
     return NextResponse.json({
+      contactAvailability: { viewerId: user?.id ?? "", values, resolvedAt: Date.now() },
       total: ordered.length,
       offset,
       professionals: slice.map((professional) => ({

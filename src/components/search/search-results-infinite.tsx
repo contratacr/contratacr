@@ -1,5 +1,6 @@
 "use client";
 
+import { ContactAvailabilityProvider, type InitialAvailability } from "@/hooks/use-profesional-con-app";
 import type { SearchedPlace } from "@/components/professionals/professional-schedule";
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -14,7 +15,7 @@ import { Skeleton } from "@/components/ui/content-loading";
 // (?page=2…) stay in the markup for crawlers and shared links; they are hidden
 // here because the list no longer needs them.
 
-type Loaded = { professional: ProfessionalCardData; forceContactOnly: boolean; preferVideo: boolean };
+type Loaded = { professional: ProfessionalCardData; forceContactOnly: boolean; preferVideo: boolean; contactAvailability?: InitialAvailability };
 
 function CardSkeleton() {
   return (
@@ -150,15 +151,21 @@ export function SearchResultsInfinite({
       const offset = initialOffset + initialCount + itemsRef.current.length;
       const response = await fetch(`/api/buscar/results?${query}${query ? "&" : ""}offset=${offset}`, { cache: "no-store" });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const payload = (await response.json()) as { professionals?: Loaded[] };
+      const payload = (await response.json()) as { professionals?: Loaded[]; contactAvailability?: InitialAvailability };
+      // Keep the entire batch in its skeleton until the same response includes
+      // its contact decisions. Never reveal a card with another loading CTA.
       const next = Array.isArray(payload.professionals) ? payload.professionals : [];
+      if (viewerProfileId && next.length > 0 && (payload.contactAvailability?.viewerId !== viewerProfileId ||
+        next.some(item => typeof payload.contactAvailability?.values[item.professional.id] !== "boolean"))) {
+        throw new Error("search-contact-availability-missing");
+      }
       if (next.length === 0) {
         setDone(true);
         return;
       }
       attempts.current = 0;
       const seen = new Set(itemsRef.current.map((item) => item.professional.id));
-      const fresh = next.filter((item) => !seen.has(item.professional.id));
+      const fresh = next.filter((item) => !seen.has(item.professional.id)).map(item => ({ ...item, contactAvailability: payload.contactAvailability }));
       itemsRef.current = [...itemsRef.current, ...fresh];
       const target = itemsRef.current.length;
       setItems(itemsRef.current);
@@ -189,7 +196,7 @@ export function SearchResultsInfinite({
       inFlight.current = false;
       setLoading(false);
     }
-  }, [done, hasMore, initialCount, initialOffset, query]);
+  }, [done, hasMore, initialCount, initialOffset, query, viewerProfileId]);
   useEffect(() => { loadMoreRef.current = loadMore; }, [loadMore]);
 
   useEffect(() => {
@@ -243,6 +250,7 @@ export function SearchResultsInfinite({
         }
         return (
         <div key={id} ref={observeSlot} data-search-result="" data-result-id={id} className="ccr-search-card-slot">
+          <ContactAvailabilityProvider {...(item.contactAvailability ?? { viewerId: "", values: {}, resolvedAt: 0 })}>
           <SaveableCard pro={item.professional} isOwn={!!viewerProfileId && viewerProfileId === item.professional.profileId}>
             <ProfessionalCard
               professional={item.professional}
@@ -257,6 +265,7 @@ export function SearchResultsInfinite({
               searchReturnHref={searchReturnHref}
             />
           </SaveableCard>
+          </ContactAvailabilityProvider>
         </div>
         );
       })}
