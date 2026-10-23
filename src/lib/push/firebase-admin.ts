@@ -27,5 +27,10 @@ export function getFirebaseMessaging() {
       }),
     }, FIREBASE_PUSH_APP_NAME);
 
-  return getMessaging(app);
+  const messaging = getMessaging(app);
+  // Firebase multicast defaults to node:http2. Workers exposes that module as
+  // a stub: http2.connect throws before Firebase can deliver anything. This
+  // selects HTTP/1.1 for the current FCM HTTP v1 API, not the retired FCM API.
+  messaging.enableLegacyHttpTransport();
+  return messaging;
 }
