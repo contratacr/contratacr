@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation";
 import { ProjectsBoard } from "@/components/projects/projects-board";
-import { cargarProyectoDelDueno, cargarProyectosPublicos } from "@/lib/queries/proyectos-publicos";
+import { cargarProyectoDelDueno, cargarProyectoPublico } from "@/lib/queries/proyectos-publicos";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import { idsDeMisProyectos } from "@/lib/queries/proyectos-publicos";
 import { createClient, hasSupabaseServerConfig } from "@/lib/supabase/server";
 import { metadatosDePantalla } from "@/lib/seo/alternates";
 import { recordServerInteraction } from "@/lib/analytics/server-events";
-import { claveDeTramo, idCoincide, tramoFicha } from "@/lib/marketplace-url";
+import { claveDeTramo, tramoFicha } from "@/lib/marketplace-url";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -32,8 +32,8 @@ type Tramo = Promise<{ id: string; locale: string }>;
 
 async function resolverProyecto(tramo: string, userId: string | undefined) {
   const clave = claveDeTramo(tramo);
-  const proyectos = await cargarProyectosPublicos();
-  const publico = proyectos.find((proyecto) => idCoincide(proyecto.id, tramo));
+  const publico = await cargarProyectoPublico(tramo,userId);
+  const proyectos = publico ? [publico] : [];
   // El dueño ve el suyo aunque ya no esté en el tablero; con solo el prefijo
   // no hay forma de buscarlo en su lista privada, así que ahí hace falta el id.
   const detalle = publico ?? (clave.id ? await cargarProyectoDelDueno(clave.id, userId) : null);

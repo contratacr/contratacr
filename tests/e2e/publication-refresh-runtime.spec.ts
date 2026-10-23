@@ -22,6 +22,7 @@ function harness() {
     document: Object.assign(new EventTarget(), { visibilityState: "visible" }),
   };
   const mocks: Record<string, unknown> = {
+    "@/lib/app-events": { APP_RESUME_EVENT: "contratacr:app-resume" },
     react: {
       useEffect: (fn: () => void) => effects.push(fn),
       useRef: (value: unknown) => refs[cursor++] ?? (refs[cursor - 1] = { current: value }),

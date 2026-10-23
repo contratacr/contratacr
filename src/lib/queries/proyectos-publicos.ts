@@ -1,3 +1,5 @@
+import { claveDeTramo, rangoDePrefijo } from "@/lib/marketplace-url";
+import { perfilesBloqueadosPor } from "@/lib/queries/bloqueos";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCategoryLabel } from "@/lib/data/categories";
@@ -22,41 +24,32 @@ export const TABLERO_PUBLICO_DESDE = "2026-09-15T00:00:00Z";
  * correo, la cédula y la identidad del beneficiario no salen nunca de aquí.
  */
 export async function cargarProyectosPublicos(limite = 100): Promise<ProyectoPublico[]> {
-  const locale = await getLocale();
+  try { return (await cargarProyectosPublicosConAutor(limite, await getLocale())).map(({ client_id: _author, ...item }) => { void _author; return item; }); }
+  catch (error) { console.error("Could not load public projects", error); return []; }
+}
+
+/** Server-only ownership metadata; callers must strip client_id before serialization. */
+export async function cargarProyectosPublicosConAutor(limite: number, locale: string, offset = 0, tramo?: string): Promise<Array<ProyectoPublico & {client_id:string}>> {
   const db = createAdminClient();
+  const clave=tramo?claveDeTramo(tramo):null;
+  if(tramo&&!clave?.id&&!clave?.prefijo)return [];
   const columnas = "id, title, description, category_id, provincia_id, canton_id, created_at, client_name_snapshot, client_id, status";
-  // Con la columna puesta (migración 207) manda el PERMISO: los viejos nacieron
-  // en `false` y los nuevos en `true`, así que la fecha ya no hace falta y el
-  // cliente puede sacar el suyo al tablero desde su panel. Sin la columna se
-  // cae a la fecha, que es como se comportaba antes de la migración.
   const consulta = (extra: string, porPermiso: boolean) => {
-    const base = db
-      .from("projects")
-      .select(`${columnas}${extra}`)
-      .eq("status", "open");
-    return (porPermiso ? base.eq("allow_direct_contact", true) : base.gte("created_at", TABLERO_PUBLICO_DESDE))
-      .order("created_at", { ascending: false })
-      .limit(limite);
+    const selection: string=columnas+extra;
+    let base=db.from("projects").select(selection).eq("status","open");
+    base=porPermiso?base.eq("allow_direct_contact",true):base.gte("created_at",TABLERO_PUBLICO_DESDE);
+    if(clave?.id)base=base.eq("id",clave.id);
+    else if(clave?.prefijo){const rango=rangoDePrefijo(clave.prefijo);base=base.gte("id",rango.desde).lte("id",rango.hasta);}
+    return base.order("created_at",{ascending:false}).order("id",{ascending:false}).range(offset,offset+limite-1);
   };
-  const consultaVieja = (extra: string) => db
-    .from("projects")
-    .select(`${columnas}${extra}`)
-    .eq("status", "open")
-    // Lo que separa a los de antes de los de ahora es la FECHA, no una columna:
-    // un proyecto publicado antes del tablero se publicó bajo otra regla —solo
-    // lo veían los profesionales de su oficio— y nadie aceptó que saliera al
-    // internet entero. Con la fecha, el tablero funciona aunque la migración 207
-    // todavía no haya corrido, y cuando corra la columna solo agrega el permiso
-    // por cliente (quien lo quita, se sale).
-    .gte("created_at", TABLERO_PUBLICO_DESDE)
-    .order("created_at", { ascending: false })
-    .limit(limite);
+  // Older schemas lack the explicit permission column; retain the launch-date
+  // privacy boundary rather than exposing projects created under older rules.
+  const consultaVieja = (extra:string)=>consulta(extra,false);
 
   let { data, error } = await consulta(", allow_direct_contact, allow_phone_contact", true);
   if (error?.code === "42703") ({ data, error } = await consultaVieja(""));
   if (error) {
-    console.error("Could not load public projects", error.message);
-    return [];
+    throw new Error(`public-projects-unavailable: ${error.code}`);
   }
 
   const filas = (data ?? []) as unknown as Array<Record<string, unknown>>;
@@ -78,7 +71,14 @@ export async function cargarProyectosPublicos(limite = 100): Promise<ProyectoPub
     }
   }
 
-  return filas.map((fila) => aProyectoPublico(fila, cuentas.get(String(fila.client_id ?? "")), locale));
+  return filas.map((fila) => ({...aProyectoPublico(fila, cuentas.get(String(fila.client_id ?? "")), locale),client_id:String(fila.client_id??"")}));
+}
+
+/** A public shared link is resolved directly, never through the first list page. */
+export async function cargarProyectoPublico(tramo:string,userId?:string):Promise<ProyectoPublico|null>{
+  const [rows,blocked]=await Promise.all([cargarProyectosPublicosConAutor(1,await getLocale(),0,tramo),perfilesBloqueadosPor(userId)]);
+  const row=rows[0];if(!row||blocked.has(row.client_id))return null;
+  const {client_id:_author,...item}=row;void _author;return item;
 }
 
 /**
