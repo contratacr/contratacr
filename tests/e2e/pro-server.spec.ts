@@ -29,6 +29,7 @@ test('API access refuses anonymous, expired Pro, invalid origin and admin withou
  expect((await api(req())).error?.status).toBe(401);fixture.user={id:'u'};
  expect((await api(req())).error?.status).toBe(403);fixture.grant={status:'active',expires_at:null};expect((await api(req())).error).toBeUndefined();
  expect((await api(new Request('http://localhost/api/pro/workspace',{method:'PUT',headers:{origin:'https://evil.example'}}))).error?.status).toBe(403);
+ expect((await api(new Request('http://localhost:3185/api/pro/workspace',{method:'PUT',headers:{host:'127.0.0.1:3185',origin:'http://127.0.0.1:3185'}}))).error).toBeUndefined();
  expect((await api(req(),true)).error?.status).toBe(403);fixture.profile.role='admin';expect((await api(req(),true)).error?.status).toBe(403);fixture.mfa=true;expect((await api(req(),true)).error).toBeUndefined();
  Object.assign(process.env,{NODE_ENV:'production'});expect((await api(req())).error?.status).toBe(404);
  }finally{Object.assign(process.env,{NODE_ENV:before});delete globals.proFixture;}

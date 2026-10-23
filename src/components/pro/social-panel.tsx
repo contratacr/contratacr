@@ -27,7 +27,7 @@ export function SocialPanel({ admin = false, server = false }: { admin?: boolean
   }
   async function send(body:Record<string,unknown>){setBusy(true);try{const response=await fetch(admin?'/api/admin/pro':'/api/pro/social',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const result=await response.json();if(!response.ok)throw Error(result.error);await loadServer();setError('');}catch(e){setError(e instanceof Error?e.message:'No se pudo guardar.');}finally{setBusy(false);}}
   const used = data.social.some(r => r.month === socialMonth(new Date()) && r.status !== 'rejected');
-  return <section className="space-y-5 rounded-2xl border bg-white p-4 text-[#162543] shadow-sm sm:p-6">
+  return <section className="space-y-5 rounded-2xl border border-[#e5e7eb] bg-white p-4 text-[#162543] shadow-sm sm:p-6">
     <h2 className="text-xl font-bold">{admin ? 'Revisión de difusión' : 'Destaca en nuestras redes'}</h2>
     <p className="text-sm text-[#68778d]">Una difusión orgánica por mes calendario, en horario de Costa Rica, sujeta a revisión. No incluye anuncios pagados ni garantiza alcance o contrataciones. Los cupos no se acumulan.</p>
     <p className="text-sm">{admin ? (server?'Revise cada solicitud antes de aprobar. Registrar una publicación no envía contenido a redes.':'Simulación administrativa local: no publica en redes ni acredita permisos de administrador.') : 'La solicitud reserva su cupo del mes. Si se rechaza, puede enviar una nueva solicitud.'}</p>
@@ -42,7 +42,7 @@ export function SocialPanel({ admin = false, server = false }: { admin?: boolean
     {admin && !server && <a href="/pro-preview" className="text-[#009fca] underline">Volver a Pro</a>}
     {server&&admin&&<div className="flex gap-3"><Button variant="secondary" disabled={page===0||busy} onClick={()=>setPage(page-1)}>Anterior</Button><span>{total} solicitudes</span><Button variant="secondary" disabled={(page+1)*20>=total||busy} onClick={()=>setPage(page+1)}>Siguiente</Button></div>}
     {data.social.length === 0 && <p>No hay solicitudes de difusión.</p>}
-    {[...data.social].reverse().map(r => <article key={r.id} className="space-y-3 rounded-2xl border p-4">
+    {[...data.social].reverse().map(r => <article key={r.id} className="space-y-3 rounded-2xl border border-[#e5e7eb] p-4">
       <h3 className="break-words font-bold">{r.title}</h3><p>{socialLabels[r.status]} · Cupo {r.month}</p><p className="break-words">{r.description}</p>
       <a href={r.link} target="_blank" rel="noopener noreferrer" className="text-[#009fca] underline">Ver contenido solicitado</a>
       {r.note && <p className="break-words">Revisión: {r.note}</p>}

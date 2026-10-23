@@ -8,5 +8,5 @@ export const dynamic = 'force-dynamic';
 export default async function AdminProPage() {
  if (process.env.NODE_ENV !== 'development') notFound();
  const admin = await requireAdmin();
- return <AdminShell adminName={admin.fullName} active="pro"><div className="min-w-0 space-y-6"><MembershipAdmin/><ProWorkspace server/><SocialPanel admin server/></div></AdminShell>;
+ return <AdminShell adminName={admin.fullName} active="pro"><div className="min-w-0 space-y-6"><MembershipAdmin/><ProWorkspace server embedded/><SocialPanel admin server/></div></AdminShell>;
 }

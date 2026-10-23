@@ -109,3 +109,47 @@ confirmados para ContrataCR. Tampoco hay precio/periodicidad de Pro definidos.
 No crear cobros, emitir documentos ni habilitar suscripciones sin resolverlo.
 Las recomendaciones de proyectos, ranking patrocinado, consultas de identidad,
 recordatorios y reservas públicas siguen siendo trabajos separados no habilitados.
+
+## Cierre con Supabase local real — 23 de octubre de 2026
+
+Se instaló Supabase CLI 2.122.0 mediante npx y arrancó el runtime nativo oficial
+para Apple silicon. No se instaló Docker. Se reconstruyeron las migraciones
+001–253 y se aplicó el borrador Pro exclusivamente a PostgreSQL en 127.0.0.1.
+Auth, PostgREST, Storage y Realtime quedaron locales. .env.test es privado y
+contiene solo claves de esta instancia de loopback. No se copiaron claves remotas.
+
+Inicio reproducible en contratacr-pro:
+
+1. `SUPABASE_EXPERIMENTAL_STACK=1 npx --yes supabase@2.122.0 start --runtime native --exclude studio,mail,functions,analytics,pooler --eager`
+2. `node scripts/pro/prepare-supabase-local.mjs`
+3. `node scripts/dev-local-test-env.js --webpack --hostname 127.0.0.1 --port 3185`
+4. `PLAYWRIGHT_BASE_URL=http://127.0.0.1:3185 PLAYWRIGHT_WEBKIT=1 npx playwright test --config=playwright.pro-local.config.ts --reporter=line`
+
+La preparación rechaza destinos fuera de loopback y archivos .env.test de otro
+entorno. Aplica grants/fixtures fundacionales solo en una instancia vacía; no
+resetea ni destruye datos existentes. El esquema Pro sigue como borrador fuera
+de las migraciones de producción. Supabase creó supabase.lock para fijar las
+versiones locales. Puede detenerse con `SUPABASE_EXPERIMENTAL_STACK=1 npx supabase stop`.
+
+La prueba de integración crea administradores y usuarios desechables, efectúa
+login de contraseña en UI y enrola/verifica TOTP real en Auth. Comprueba que el
+API admin rechaza AAL1 y que solo después de MFA permite gestionar membresías.
+Recorre agenda/cotizaciones/inventario/clientes persistidos, conflicto de revisión,
+cuota y aprobación social, auditoría y denegación RLS de otra cuenta/escrituras
+directas. Cada recorrido limpia sus cuentas y documentos de prueba al terminar.
+
+Hallazgo corregido: req.url puede usar el hostname interno de Next distinto del
+Host del navegador. La comprobación de origen usa Host y protocolo, manteniendo
+el rechazo de orígenes ajenos. La prueba WebKit espera que finalice el retorno
+MFA y entra por el enlace real del panel para no competir con esa navegación.
+Se revisaron capturas de escritorio y móvil y ausencia de desbordamiento.
+Se ajustaron bordes, campos y semántica del contenedor embebido en AdminShell.
+
+Esta validación cierra el pendiente de Auth/PostgREST local; no certifica pagos,
+GTI, tiendas o instalaciones físicas. Esas integraciones siguen deshabilitadas.
+
+Resultado final: 42/42 ejecuciones Pro aprobadas en Chromium escritorio, Chromium
+móvil y WebKit móvil (56,4 s), con integración real en los tres. La regresión
+específica de origen/servidor pasó 12/12 tras añadir el caso de hostname interno.
+TypeScript, ESLint y diff-check aprobados. No hubo push, despliegue, cobro ni
+publicación en redes o tiendas.

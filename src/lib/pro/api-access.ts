@@ -5,7 +5,9 @@ import { getApiAdmin } from '@/lib/auth/admin';
 import { hasProAccess } from './access';
 export async function proApiAccess(req: Request, adminOnly = false) {
  if (process.env.NODE_ENV !== 'development') return { error: Response.json({error:'No disponible'}, {status:404}) };
- if (req.method !== 'GET' && req.headers.get('origin') !== new URL(req.url).origin) return { error: Response.json({error:'Origen no autorizado'}, {status:403}) };
+ // Next may rewrite req.url to its internal hostname; Host retains the browser origin.
+ const expectedOrigin = `${new URL(req.url).protocol}//${req.headers.get('host') || new URL(req.url).host}`;
+ if (req.method !== 'GET' && req.headers.get('origin') !== expectedOrigin) return { error: Response.json({error:'Origen no autorizado'}, {status:403}) };
  const user = await safeGetUser(await createClient());
  if (!user) return { error: Response.json({error:'Inicie sesión'}, {status:401}) };
  const db = createAdminClient();
