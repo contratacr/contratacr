@@ -1,4 +1,5 @@
 "use client";
+import { AgendaCalendar } from "./agenda-calendar";
 import { proMoney } from "@/lib/pro/money";
 import { useEffect, useRef, useState } from "react";
 import { useLocale } from "next-intl";
@@ -84,6 +85,16 @@ export function BusinessPanel({
     [visible, setVisible] = useState(20);
   const sentinel = useRef<HTMLDivElement>(null);
   const [view, setView] = useState("list");
+  const [calendarDay,setCalendarDay]=useState("");
+  const latestReload=useRef(reload);
+  useEffect(()=>{latestReload.current=reload;},[reload]);
+  useEffect(()=>{
+    if(section!=="Agenda")return;
+    const refresh=()=>{if(document.visibilityState==="visible"&&!saving&&!editing)latestReload.current();};
+    const timer=window.setInterval(refresh,30000);
+    window.addEventListener("focus",refresh);
+    return()=>{window.clearInterval(timer);window.removeEventListener("focus",refresh);};
+  },[section,saving,editing]);
   const key = `ccr:pro:form:${accountId}:${section}`;
   const [draft, setDraft] = useState<Record<string, string>>({});
   useEffect(() => {
@@ -313,6 +324,7 @@ export function BusinessPanel({
             })
           : saveAppointment(data, {
               id,
+              bookingClientId: typeof row?.bookingClientId === "string" ? row.bookingClientId : undefined,
               clientId,
               client: data.clients.find((c) => c.id === clientId)?.name || "",
               service: s("service"),
@@ -374,6 +386,7 @@ export function BusinessPanel({
     .filter(
       (w) =>
         matches(`${w.client} ${w.service}`) &&
+        (!calendarDay || w.start.slice(0,10)===calendarDay) &&
         (filter === "completed"
           ? w.stage === "completed"
           : filter === "cancelled"
@@ -488,6 +501,7 @@ export function BusinessPanel({
         <PanelListSkeleton rows={3} compacto withSearch />
       ) : (
         <>
+          {section === "Agenda" && <><AgendaCalendar data={data} commit={commit} saving={saving} day={calendarDay} onDay={setCalendarDay}/>{calendarDay&&<Button variant="secondary" onClick={()=>setCalendarDay("")}>{tr("Ver todas las citas","View all appointments")}</Button>}</>}
           <label className="relative block">
             <Search
               aria-hidden

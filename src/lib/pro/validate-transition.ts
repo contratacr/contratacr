@@ -3,6 +3,9 @@ import { validateWork } from './workspace';
 /** Checks the full submitted document; a client cannot bypass the form rules. */
 export function validateWorkspaceTransition(previous: Business, input: Business): Business {
  const next=businessSchema.parse(input);
+ for(const slot of next.availability){if(Date.parse(slot.end)<=Date.parse(slot.start)||Date.parse(slot.end)-Date.parse(slot.start)>8*3600000)throw Error("Horario inválido.");}
+ if(new Set(next.availability.map(s=>s.start)).size!==next.availability.length)throw Error("Horario duplicado.");
+ for(const old of previous.work){if(old.bookingClientId!==next.work.find(w=>w.id===old.id)?.bookingClientId)throw Error("No se puede cambiar el cliente de una reserva.");}
  for(const key of ['clients','products','quotes','work','movements'] as const){
   if(next[key].length>10000)throw Error('Demasiados registros.');
   if(new Set(next[key].map(r=>r.id)).size!==next[key].length)throw Error('Identificadores duplicados.');

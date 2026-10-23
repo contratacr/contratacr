@@ -17,18 +17,19 @@ export function ProWorkspace({server=false,embedded=false,section,quoteListOnly=
  const tr=(es:string,en:string)=>english?en:es;
  const Root=embedded?"div":"main";
  const [accountId,setAccountId]=useState('');
- const revision=useRef(0);const [saving,setSaving]=useState(false);
+ const revision=useRef(0);const mutation=useRef(false);const [saving,setSaving]=useState(false);
  const [data,setData]=useState<Business>(emptyBusiness);const [ready,setReady]=useState(false);const [tab,setTab]=useState<Tab>(section||'Agenda');const [editing,setEditing]=useState<string|null>(null);const [error,setError]=useState('');
  useEffect(()=>{let alive=true;
  if(server){fetch('/api/pro/workspace',{cache:'no-store'}).then(async r=>{const body=await r.json();if(!r.ok)throw Error(body.error);if(alive){setAccountId(body.userId||'');setData(businessSchema.parse(body.document));revision.current=body.revision;setReady(true);}}).catch(e=>{if(alive)setError(e.message);});}
  else {try{const raw=localStorage.getItem(storage);if(raw)setData(businessSchema.parse(JSON.parse(raw)));setReady(true);}catch{setError('No se pudieron leer los datos locales. No se sobrescribirán; conserve su respaldo.');}}
  return()=>{alive=false;};},[server]);
- async function commit(next:Business){if(saving||!ready)return false;setSaving(true);try{
+ async function reload(){if(!server||mutation.current)return;try{const r=await fetch("/api/pro/workspace",{cache:"no-store"});const body=await r.json();if(!r.ok)throw Error(body.error);if(!mutation.current&&body.revision>=revision.current){setData(businessSchema.parse(body.document));revision.current=body.revision;setError("");}}catch(e){setError(e instanceof Error?e.message:"No se pudo actualizar la agenda.");}}
+ async function commit(next:Business){if(mutation.current||!ready)return false;mutation.current=true;setSaving(true);try{
  let valid=businessSchema.parse(next);
  if(server){const response=await fetch('/api/pro/workspace',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({document:valid,revision:revision.current})});const result=await response.json();if(!response.ok)throw Error(result.error);revision.current=result.revision;}
  else {const latest=businessSchema.parse(JSON.parse(localStorage.getItem(storage)||JSON.stringify(emptyBusiness())));valid={...valid,social:latest.social};localStorage.setItem(storage,JSON.stringify(valid));}
  setData(valid);setError('');setEditing(null);return true;
- }catch(e){setError(e instanceof Error?e.message:'No se pudo guardar.');return false;}finally{setSaving(false);}}
+ }catch(e){setError(e instanceof Error?e.message:'No se pudo guardar.');return false;}finally{mutation.current=false;setSaving(false);}}
  function act(run:()=>Business){try{commit(run());}catch(e){setError(e instanceof Error?e.message:'Revise los datos.');}}
  function submit(e:React.FormEvent<HTMLFormElement>){e.preventDefault();const f=new FormData(e.currentTarget);const s=(k:string)=>String(f.get(k)||'');const n=(k:string)=>Number(f.get(k));const id=editing==='new'?crypto.randomUUID():editing!;
  act(()=>{
@@ -37,7 +38,7 @@ export function ProWorkspace({server=false,embedded=false,section,quoteListOnly=
  if(tab==='Cotizaciones'){const lines=JSON.parse(s('lines')) as Business['quotes'][number]['lines'];return saveQuote(data,{id,clientId:s('clientId'),title:s('title'),lines,status:'draft',validUntil:s('validUntil')});}
  return saveAppointment(data,{id,clientId:s('clientId'),client:s('clientId'),service:s('service'),stage:'scheduled',start:costaRicaDate(s('start')),end:costaRicaDate(s('end')),cancelled:false,quoteId:s('quoteId')||undefined});
  });}
- if(server&&embedded&&!quoteListOnly&&section&&section!=='Cotizaciones')return <div data-pro-workspace=""><BusinessPanel accountId={accountId} section={section} data={data} ready={ready} error={error} saving={saving} commit={commit} reload={()=>window.location.reload()}/></div>;
+ if(server&&embedded&&!quoteListOnly&&section&&section!=='Cotizaciones')return <div data-pro-workspace=""><BusinessPanel accountId={accountId} section={section} data={data} ready={ready} error={error} saving={saving} commit={commit} reload={()=>void reload()}/></div>;
  const row=editing&&editing!=='new'?(tab==='Clientes'?data.clients:tab==='Inventario'?data.products:tab==='Cotizaciones'?data.quotes:data.work).find(r=>r.id===editing):undefined;
  const values=(row||{}) as Record<string,unknown>;
  function input(name:string,label:string,type='text',required=true){let value=values[name]??'';if(type==='datetime-local'&&value)value=String(value).slice(0,16);return <label key={name} className="text-sm font-semibold">{label}<input name={name} type={type} required={required} min={type==='number'?0:undefined} step={type==='number'?'0.01':undefined} defaultValue={String(value)} className={field}/></label>;}

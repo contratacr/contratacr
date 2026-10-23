@@ -1,5 +1,6 @@
 "use client";
 
+import { PublicReservations } from "@/components/pro/public-reservations";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 
 import { useMemo, useState, type ReactNode } from "react";
@@ -448,6 +449,7 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
       <>
         <div className="flex flex-col gap-3">
           {locationControl}
+          {process.env.NODE_ENV === "development" && <PublicReservations professional={professional.id} service={categoryName} isOwn={isOwn}/>}
           {/* En el teléfono, contactar vive en su propia franja pegada al
               fondo, igual que en Crear proyecto: la ficha es larga —servicios,
               reseñas, casos— y el botón que trajo a la persona quedaba a mitad
@@ -480,6 +482,7 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
             the card) sits cleanly in the corner ABOVE the buttons. */}
         <div className="relative z-10 flex min-w-0 flex-col gap-3 lg:justify-center lg:border-l lg:border-[#e5e7eb] lg:pt-6 lg:pl-4">
           {contactButtons}
+          {process.env.NODE_ENV === "development" && <PublicReservations professional={professional.id} service={categoryName} isOwn={isOwn}/>}
         </div>
       </div>
       {selfModal}

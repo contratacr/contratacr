@@ -6,14 +6,16 @@ export const clientSchema=z.object({id:text,name:text,email:z.union([z.literal('
 export const productSchema=z.object({id:text,sku:text,name:text,stock:z.number().finite().nonnegative(),minimum:z.number().finite().nonnegative(),cost:z.number().finite().nonnegative(),price:z.number().finite().nonnegative(),archived:z.boolean()});
 const lineSchema=z.object({description:text,quantity:z.number().finite().positive().max(100000),price:z.number().finite().nonnegative().max(100000000),tax:z.number().finite().min(0).max(100)});
 export const quoteSchema=z.object({id:text,clientId:text,title:text,lines:z.array(lineSchema).min(1).max(100),status:z.enum(['draft','accepted','declined']),validUntil:z.string().regex(/^\d{4}-\d{2}-\d{2}$/)});
-const workSchema=z.object({id:text,client:text,service:text,stage:z.enum(['new','quoting','scheduled','completed']),start:z.string(),end:z.string(),clientId:text,quoteId:z.string().optional(),externalQuoteId:z.string().uuid().optional(),cancelled:z.boolean()});
+const slotTime=z.string().datetime({offset:true}).transform(value=>new Date(Date.parse(value)-6*3600000).toISOString().slice(0,19)+"-06:00");
+export const availabilitySlotSchema=z.object({start:slotTime,end:slotTime}).refine(s=>Date.parse(s.end)>Date.parse(s.start)&&Date.parse(s.end)-Date.parse(s.start)<=8*3600000,"Horario inválido");
+const workSchema=z.object({id:text,client:text,service:text,stage:z.enum(['new','quoting','scheduled','completed']),start:z.string(),end:z.string(),clientId:text,quoteId:z.string().optional(),externalQuoteId:z.string().uuid().optional(),cancelled:z.boolean(),bookingClientId:z.string().uuid().optional()});
 const movementSchema=z.object({id:text,productId:text,delta:z.number().finite(),reason:text,at:z.string()});
-export const businessSchema=z.object({version:z.literal(1),clients:z.array(clientSchema),products:z.array(productSchema),quotes:z.array(quoteSchema),work:z.array(workSchema),movements:z.array(movementSchema),social:z.array(socialRequestSchema).default([]),quoteLinks:z.array(z.object({quoteId:z.string().uuid(),clientId:text})).default([])});
+export const businessSchema=z.object({version:z.literal(1),availability:z.array(availabilitySlotSchema).max(1000).default([]),clients:z.array(clientSchema),products:z.array(productSchema),quotes:z.array(quoteSchema),work:z.array(workSchema),movements:z.array(movementSchema),social:z.array(socialRequestSchema).default([]),quoteLinks:z.array(z.object({quoteId:z.string().uuid(),clientId:text})).default([])});
 export type Client=z.infer<typeof clientSchema>;
 export type Product=z.infer<typeof productSchema>;
 export type Quote=z.infer<typeof quoteSchema>;
 export type Business=z.infer<typeof businessSchema>;
-export const emptyBusiness=():Business=>({version:1,clients:[],products:[],quotes:[],work:[],movements:[],social:[],quoteLinks:[]});
+export const emptyBusiness=():Business=>({version:1,availability:[],clients:[],products:[],quotes:[],work:[],movements:[],social:[],quoteLinks:[]});
 export function quoteTotal(lines:Quote['lines']) {
   return lines.reduce((sum,line)=>{const net=Math.round(line.quantity*line.price*100);return sum+net+Math.round(net*line.tax/100);},0)/100;
 }
