@@ -4,6 +4,36 @@ Actualizado el 30 de septiembre de 2026. Este documento es la lista completa de
 lo que hay que probar, ambiente por ambiente, y dice con honestidad qué revisa
 la máquina, qué se revisa a mano y qué no revisa nadie todavía.
 
+## Auditoría del 23 de octubre de 2026
+
+La tabla histórica de abajo no acredita resultados actuales. Los números y estados
+antiguos (228 casos, cuatro tandas, Safari en rojo y Android sin publicar) quedaron
+obsoletos. No existe actualmente `smoke-diario.yml`; tampoco vigilancia cada tres
+horas. El workflow vigente ejecuta seis shards aislados en la ronda exhaustiva;
+el despacho manual incluye Chromium escritorio/móvil y WebKit móvil.
+
+| Recorrido crítico | Evidencia automática existente | Límite que requiere validación externa |
+| --- | --- | --- |
+| Registro, login, recuperación y eliminación | account-lifecycle, apple-existing-account, account-cache | Proveedores Google/Apple reales y entrega de correo |
+| Seguridad de cuenta y admin | account-mfa, admin-mfa, admin-mfa-guard, session-mfa-transition | Autenticador real en dispositivo |
+| Buscar, filtrar, seleccionar sugerencias y paginar | search-results, search-ranking, search-suggestion-confirmation, search-progressive-loading | GPS y mapa real |
+| Publicar y volver al listado: proyectos, promociones, empleos | publication-refresh-runtime, marketplace-paging-server, marketplace-progressive-loading, projects-board | Moderación operativa |
+| Contactar y distinguir servicio/empleo/producto | contact-channel-stability, contact-context-measurement, admin-contact-segments | Apertura real de WhatsApp y contratación confirmada |
+| Chat y recuperación con borrador | direct-chat, web-chat-parity, reanudar-la-app | Suspensión real del sistema operativo |
+| Perfil, reseñas y archivos | professional-profile y suites de panel | Compartir/guardar en apps externas con firma de distribución |
+| Admin, paginación y aislamiento | admin-list-limits-runtime, admin-verification-pagination, admin-journey | Revisión humana de las decisiones |
+| Privacidad y Meta | journey-privacy, journey-browser, meta-growth-contract, meta-growth-runtime | Atribución de anuncios y postbacks iOS |
+| Descarga y entrada nativa | app-download, mobile-native-shell, pruebas Android de enlaces | Instalado/ausente con firmas de tienda |
+
+Ampliación de esta auditoría: contactos fallidos HTTP 503 no generan eventos;
+las promociones de servicios conservan su contexto. Los casos se ejecutan en
+los tres proyectos de navegador. Son pruebas de componente con red simulada:
+no demuestran entrega real a Meta ni funcionamiento de WhatsApp externo.
+
+Pendiente adicional: carga concurrente y Firefox. Ningún inventario estático ni
+una suite aprobada acredita ausencia total de errores. Los resultados de la
+nueva ronda deben verificarse en GitHub antes de declararla aprobada.
+
 ## Lo primero: qué significa «certeza»
 
 Ninguna suite de pruebas puede garantizar que **no exista un solo bug** en toda
