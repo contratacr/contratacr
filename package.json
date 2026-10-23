@@ -94,7 +94,7 @@
   "devDependencies": {
     "@capacitor/cli": "^8.5.2",
     "@electric-sql/pglite": "^0.5.10",
-    "@opennextjs/cloudflare": "^1.20.2",
+    "@opennextjs/cloudflare": "^1.20.13",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/qrcode": "^1.5.6",
@@ -116,6 +116,9 @@
       "sharp": "0.35.5"
     },
     "postcss": "8.5.28",
-    "uuid": "11.1.1"
+    "uuid": "11.1.1",
+    "@node-minify/core": {
+      "glob": "10.5.0"
+    }
   }
 }
