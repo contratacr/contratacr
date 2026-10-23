@@ -1,3 +1,5 @@
+> Actualización del 23 de octubre: las referencias siguientes a solicitudes o cupo mensual de redes quedaron sustituidas por la [revisión de agenda y difusión](agenda-and-promotion-revision-local.md). No forman parte del beneficio actual de Pro.
+
 # Preparación local de ContrataCR Pro — 23 de octubre de 2026
 
 Autorizado por Isaac: crear local/pro-suite-no-push y contratacr-pro. No publicar.

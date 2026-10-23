@@ -62,7 +62,14 @@ test('Pro calendar: free client books, concurrent reservations do not overlap an
         const ownerPage = await ownerContext.newPage();
         await ownerPage.goto('/dashboard/profesional?tab=pro_agenda');
         await expect(ownerPage.locator('[data-reservation-calendar]')).toBeVisible();
+        await expect(ownerPage.getByRole('button',{name:'Lista',exact:true})).toHaveCount(0);
+        await expect(ownerPage.getByRole('button',{name:'Semana',exact:true})).toHaveCount(0);
+        await expect(ownerPage.getByLabel('Buscar registros')).toHaveCount(0);
+        await ownerPage.getByRole('button',{name:day,exact:true}).click();
         await expect(ownerPage.getByRole('heading', { name: / · Desarrollo web$/ }).first()).toBeVisible();
+        await ownerPage.getByRole('button',{name:'Nueva cita',exact:true}).click();
+        await expect(ownerPage.getByLabel('Inicio · Costa Rica')).toHaveValue(day+'T09:00');
+        await ownerPage.getByRole('dialog').getByRole('button',{name:'Cerrar',exact:true}).click();
         await ownerPage.getByRole('button', { name: 'Editar disponibilidad', exact: true }).click();
         await ownerPage.getByLabel('Fecha disponible').fill(day);
         await ownerPage.getByLabel('Hora disponible').fill('14:00');

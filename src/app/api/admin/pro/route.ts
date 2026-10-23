@@ -39,9 +39,7 @@ export async function POST(req:Request){
  const {error}=await a.db.rpc('pro_set_membership',{p_actor:a.user.id,p_user:body.userId,p_status:body.status,p_expires:body.expiresAt,p_reason:body.reason});
  if(error)return proDbFailure(error);
  }else{
- if(body.status==='rejected'&&!body.note.trim()||body.status==='published'&&!body.publishedUrl)return Response.json({error:'Falta motivo o enlace publicado'},{status:400});
- const {error}=await a.db.rpc('pro_review_social',{p_actor:a.user.id,p_id:body.id,p_status:body.status,p_note:body.note,p_url:body.publishedUrl});
- if(error)return Response.json({error:'La solicitud cambió o esa transición no está permitida.'},{status:409});
+ return Response.json({error:'Las solicitudes se retiraron. Registre la difusión realizada.'},{status:410});
  }
  return Response.json({ok:true});
  }catch{return Response.json({error:'Datos inválidos'},{status:400});}

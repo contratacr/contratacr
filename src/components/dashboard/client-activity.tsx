@@ -1,4 +1,5 @@
 "use client";
+import { PromotionHistory } from "@/components/pro/promotion-history";
 
 import { rutaProyecto } from "@/lib/marketplace-url";
 import { QuoteBlock } from "@/components/quotes/quote-block";
@@ -419,6 +420,7 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
                             </div>
                           )}
 
+                          {process.env.NODE_ENV === "development" && <PromotionHistory key={project.id} contentType="project" contentId={project.id}/>}
                           <QuoteBlock projectId={project.id} role="client" />
                           {/* Respuestas: quién escribió, qué dijo, y WhatsApp directo. */}
                           {/* SIN LA LISTA DE PROPUESTAS. Desde que se contesta

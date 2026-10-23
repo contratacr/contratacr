@@ -8,7 +8,7 @@ import { completeAdminMfa } from "./admin-mfa-helper";
 import { expectNoHorizontalOverflow } from "./helpers";
 import { createServerClient } from "@supabase/ssr";
 import { emptyBusiness } from "../../src/lib/pro/business";
-test("real local Supabase: admin MFA, Pro memberships, account isolation and social approval", async ({
+test("real local Supabase: admin MFA, Pro memberships, account isolation and recorded promotion", async ({
   page,
   browser,
   baseURL,
@@ -472,55 +472,49 @@ test("real local Supabase: admin MFA, Pro memberships, account isolation and soc
       await page.request.get("/api/pro/workspace")
     ).json();
     expect(ownAdmin.document.clients[0].name).toBe("Cliente del administrador");
-    const socialTitle = "Promoción local de prueba " + owner.id;
-    const id = crypto.randomUUID();
-    const submitted = await a.request.post("/api/pro/social", {
-      headers: { origin: baseURL! },
-      data: {
-        id,
-        title: socialTitle,
-        link: "https://contratacr.com/profesionales",
-        description: "Contenido ficticio",
-      },
-    });
-    expect(submitted.status()).toBe(200);
-    expect(
-      (
-        await a.request.post("/api/pro/social", {
-          headers: { origin: baseURL! },
-          data: {
-            id: crypto.randomUUID(),
-            title: "Duplicada",
-            link: "https://contratacr.com/profesionales",
-            description: "Ficticio",
-          },
-        })
-      ).status(),
-    ).toBe(409);
-    await page.goto("/admin/pro");
-    const item = page.locator("article").filter({
-      has: page.getByRole("heading", { name: socialTitle, exact: true }),
-    });
-    await expect(item).toContainText("Pendiente");
-    await item.getByLabel("Nota de revisión").fill("Aprobación de prueba");
-    await item.getByRole("button", { name: "Guardar revisión" }).click();
-    await expect(item).toContainText("Aprobada");
-    const mine = await (await a.request.get("/api/pro/social")).json();
-    expect(mine.requests[0].status).toBe("approved");
-    expect(
-      (
-        await a.request.post("/api/admin/pro", {
-          headers: { origin: baseURL! },
-          data: {
-            action: "review",
-            id,
-            status: "published",
-            note: "",
-            publishedUrl: "https://example.com",
-          },
-        })
-      ).status(),
-    ).toBe(403);
+    expect((await a.request.post("/api/pro/social",{headers:{origin:baseURL!},data:{}})).status()).toBe(410);
+    await page.goto("about:blank");
+    await page.goto("/es/admin/pro");
+    const promotion=page.locator("[data-promotion-admin]");
+    await promotion.getByLabel("Cuenta a promocionar").fill(owner.email);
+    await promotion.getByRole("button",{name:"Buscar cuenta para difusión",exact:true}).click();
+    await promotion.getByRole("button").filter({hasText:owner.email}).click();
+    await expect(promotion.getByLabel("Contenido publicado")).not.toHaveValue("");
+    await promotion.getByLabel("Enlace de la publicación en redes").fill("https://www.instagram.com/p/local-test/");
+    await promotion.getByLabel("Fue un anuncio pagado").check();
+    await promotion.getByRole("button",{name:"Registrar difusión realizada",exact:true}).click();
+    await expect(promotion.getByRole("status")).toContainText("Difusión registrada");
+    const {data:provider}=await db.from("professionals").select("id,slug").eq("profile_id",owner.id).single();
+    const historyUrl="/api/pro/promotions?type=profile&contentId="+provider!.id;
+    const history=await (await a.request.get(historyUrl)).json();
+    expect(history.records).toHaveLength(1);expect(history.records[0].paid).toBe(true);expect(history.records[0].channel).toBe("instagram");
+    expect((await page.request.get(historyUrl)).status()).toBe(404); // Admin cannot read another account's private evidence through the owner API.
+    expect((await a.request.post("/api/admin/pro/promotions",{headers:{origin:baseURL!},data:{}})).status()).toBe(403);
+    const {data:event}=await db.from("pro_audit").select("detail").eq("subject",owner.id).eq("action","publication_promotion").single();
+    const retry={...event!.detail};delete retry.title;
+    const replay=await Promise.all([page.request.post("/api/admin/pro/promotions",{headers:{origin:baseURL!},data:retry}),page.request.post("/api/admin/pro/promotions",{headers:{origin:baseURL!},data:retry})]);
+    expect(replay.map(r=>r.status())).toEqual([200,200]);
+    expect((await (await a.request.get(historyUrl)).json()).records).toHaveLength(1);
+    expect((await page.request.post("/api/admin/pro/promotions",{headers:{origin:baseURL!},data:{...retry,requestId:crypto.randomUUID(),publishedUrl:"https://example.com/fake"}})).status()).toBe(400);
+    expect((await page.request.post("/api/admin/pro/promotions",{headers:{origin:baseURL!},data:{...retry,requestId:crypto.randomUUID(),userId:admin.id}})).status()).toBe(400);
+    const historyPage=await a.newPage();await historyPage.goto("/"+provider!.slug);
+    await expect(historyPage.locator("[data-promotion-history]")).toContainText("Anuncio pagado");
+    await expect(historyPage.locator("[data-promotion-history] a")).toHaveAttribute("href","https://www.instagram.com/p/local-test/");
+    await historyPage.screenshot({path:testInfo.outputPath("promotion-history.png"),fullPage:true});
+    const offer=await db.from("professional_offers").insert({professional_id:provider!.id,title:"Promoción con difusión",description:"Contenido ficticio para validar su historial.",offer_type:"service_offer",image_urls:[],price_now:10000,currency:"CRC",price_unit:"total",status:"published"}).select("id").single();expect(offer.error).toBeNull();
+    const offerPayload={...retry,requestId:crypto.randomUUID(),contentType:"offer",contentId:offer.data!.id,paid:false};
+    expect((await page.request.post("/api/admin/pro/promotions",{headers:{origin:baseURL!},data:offerPayload})).status()).toBe(200);
+    await historyPage.goto("about:blank");
+    await historyPage.goto("/es/promociones/"+offer.data!.id);
+    await expect(historyPage.locator("[data-promotion-history]")).toContainText("Compartida en redes");
+    await expectNoHorizontalOverflow(historyPage);
+    await historyPage.screenshot({path:testInfo.outputPath("offer-promotion-history.png"),fullPage:true});
+    await historyPage.goto("about:blank");
+    await historyPage.goto("/es/dashboard/profesional?tab=offers&offer="+offer.data!.id);
+    await expect(historyPage.locator("[data-promotion-history]")).toContainText("Compartida en redes");
+    await expectNoHorizontalOverflow(historyPage);
+    await historyPage.screenshot({path:testInfo.outputPath("promotion-in-my-panel.png"),fullPage:true});
+    await historyPage.close();
     const ownerPage = await a.newPage();
     await ownerPage.bringToFront();
     await ownerPage.goto("/dashboard/pro");
@@ -567,7 +561,7 @@ test("real local Supabase: admin MFA, Pro memberships, account isolation and soc
     expect(error).toBeNull();
     expect(
       audit?.some(
-        (r) => r.action === "social.approved" && r.actor === admin.id,
+        (r) => r.action === "publication_promotion" && r.actor === admin.id,
       ),
     ).toBe(true);
   } finally {

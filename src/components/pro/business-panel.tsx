@@ -1,4 +1,5 @@
 "use client";
+import { crTodayISO } from "@/lib/time-cr";
 import { AgendaCalendar } from "./agenda-calendar";
 import { proMoney } from "@/lib/pro/money";
 import { useEffect, useRef, useState } from "react";
@@ -6,7 +7,6 @@ import { useLocale } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import {
   CalendarDays,
-  ChevronLeft,
   ChevronRight,
   Package,
   Plus,
@@ -81,11 +81,9 @@ export function BusinessPanel({
   const [formError, setFormError] = useState(""),
     [quotes, setQuotes] = useState<Quote[]>([]),
     [quoteError, setQuoteError] = useState("");
-  const [week, setWeek] = useState(""),
-    [visible, setVisible] = useState(20);
+  const [visible, setVisible] = useState(20);
   const sentinel = useRef<HTMLDivElement>(null);
-  const [view, setView] = useState("list");
-  const [calendarDay,setCalendarDay]=useState("");
+  const [calendarDay,setCalendarDay]=useState(crTodayISO);
   const latestReload=useRef(reload);
   useEffect(()=>{latestReload.current=reload;},[reload]);
   useEffect(()=>{
@@ -176,7 +174,7 @@ export function BusinessPanel({
       document.removeEventListener("scroll", check, true);
       window.removeEventListener("resize", check);
     };
-  }, [visible, ready, section, search, filter, week, data]);
+  }, [visible, ready, section, search, filter, calendarDay, data]);
   useEffect(() => {
     if (section === "Clientes" && params.get("cliente"))
       setDetail(params.get("cliente"));
@@ -237,7 +235,9 @@ export function BusinessPanel({
     submitLock.current = true;
     try {
       setFormError("");
-      if (await commit(run())) {
+      const next=run();
+      if (await commit(next)) {
+        if(section==="Agenda"&&editing){const changed=next.work.find(w=>w.id===editing)||next.work.find(w=>!data.work.some(old=>old.id===w.id));if(changed)setCalendarDay(changed.start.slice(0,10));}
         closeEdit();
         setStock(null);
       }
@@ -268,7 +268,7 @@ export function BusinessPanel({
           ? quotes.find((q) => q.id === selectedQuote)?.title ||
             data.quotes.find((q) => q.id === params.get("anterior"))?.title ||
             ""
-          : ""),
+          : section === "Agenda" && (name === "start" || name === "end") ? `${calendarDay}T${name === "start" ? "09" : "10"}:00` : ""),
     );
   const input = (
     name: string,
@@ -343,10 +343,6 @@ export function BusinessPanel({
     month: "2-digit",
     day: "2-digit",
   }).format(new Date());
-  const start = week || today;
-  const end = new Date(`${start}T00:00:00-06:00`);
-  end.setUTCDate(end.getUTCDate() + 7);
-  const weekEnd = end.toISOString().slice(0, 10);
   const date = (d: string) =>
     new Intl.DateTimeFormat(en ? "en-US" : "es-CR", {
       timeZone: "America/Costa_Rica",
@@ -385,21 +381,8 @@ export function BusinessPanel({
     .sort((a, b) => a.start.localeCompare(b.start))
     .filter(
       (w) =>
-        matches(`${w.client} ${w.service}`) &&
-        (!calendarDay || w.start.slice(0,10)===calendarDay) &&
-        (filter === "completed"
-          ? w.stage === "completed"
-          : filter === "cancelled"
-            ? w.cancelled
-            : filter === "today"
-              ? !w.cancelled && w.start.slice(0, 10) === today
-              : filter === "upcoming"
-                ? !w.cancelled &&
-                  w.stage !== "completed" &&
-                  w.start.slice(0, 10) >= today
-                : true) &&
-        (view !== "week" ||
-          (w.start.slice(0, 10) >= start && w.start.slice(0, 10) < weekEnd)),
+        w.start.slice(0,10)===calendarDay,
+
     );
   const list =
     section === "Clientes"
@@ -501,7 +484,11 @@ export function BusinessPanel({
         <PanelListSkeleton rows={3} compacto withSearch />
       ) : (
         <>
-          {section === "Agenda" && <><AgendaCalendar data={data} commit={commit} saving={saving} day={calendarDay} onDay={setCalendarDay}/>{calendarDay&&<Button variant="secondary" onClick={()=>setCalendarDay("")}>{tr("Ver todas las citas","View all appointments")}</Button>}</>}
+          {section === "Agenda" && <>
+            <AgendaCalendar data={data} commit={commit} saving={saving} day={calendarDay} onDay={(day)=>{if(!day)return;setCalendarDay(day);setVisible(20);}}/>
+            <div className="flex items-center justify-between gap-3"><h3 className="text-base font-bold first-letter:uppercase text-[#162543]">{new Date(`${calendarDay}T12:00:00-06:00`).toLocaleDateString(en?"en-US":"es-CR",{weekday:"long",day:"numeric",month:"long",timeZone:"America/Costa_Rica"})}</h3><Button variant="secondary" onClick={()=>setCalendarDay(today)}>{tr("Hoy","Today")}</Button></div>
+          </>}
+          {section !== "Agenda" && <>
           <label className="relative block">
             <Search
               aria-hidden
@@ -538,67 +525,17 @@ export function BusinessPanel({
             variant="pills"
             limpiable={false}
           />
-          {section === "Agenda" && (
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                variant={view === "list" ? "default" : "secondary"}
-                onClick={() => {
-                  setView("list");
-                  setVisible(20);
-                }}
-              >
-                {tr("Lista", "List")}
-              </Button>
-              <Button
-                variant={view === "week" ? "default" : "secondary"}
-                onClick={() => {
-                  setView("week");
-                  setVisible(20);
-                }}
-              >
-                {tr("Semana", "Week")}
-              </Button>
-              {view === "week" && (
-                <>
-                  <Button
-                    variant="secondary"
-                    aria-label={tr("Semana anterior", "Previous week")}
-                    onClick={() => {
-                      const d = new Date(`${start}T12:00:00-06:00`);
-                      d.setUTCDate(d.getUTCDate() - 7);
-                      setWeek(d.toISOString().slice(0, 10));
-                    }}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <input
-                    aria-label={tr("Inicio de semana", "Week starting")}
-                    type="date"
-                    value={start}
-                    onChange={(e) => setWeek(e.target.value)}
-                    className="min-h-11 max-w-full rounded-xl border border-[#e5e7eb] bg-white p-2"
-                  />
-                  <Button
-                    variant="secondary"
-                    aria-label={tr("Semana siguiente", "Next week")}
-                    onClick={() => setWeek(weekEnd)}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </>
-              )}
-            </div>
-          )}
+          </>}
           {!list.length ? (
             <PanelEmptyState
               icon={Icon}
               title={tr(
-                "No hay registros en esta vista",
-                "No records in this view",
+                section === "Agenda" ? "No tiene citas este día" : "No hay registros en esta vista",
+                section === "Agenda" ? "No appointments this day" : "No records in this view",
               )}
               description={tr(
-                "Pruebe otro filtro o agregue el primero.",
-                "Try another filter or add your first record.",
+                section === "Agenda" ? "Seleccione otro día en el calendario o agregue una cita." : "Pruebe otro filtro o agregue el primero.",
+                section === "Agenda" ? "Select another day in the calendar or add an appointment." : "Try another filter or add your first record.",
               )}
             />
           ) : (

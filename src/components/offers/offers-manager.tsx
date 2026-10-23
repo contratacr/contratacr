@@ -1,4 +1,5 @@
 "use client";
+import { PromotionHistory } from "@/components/pro/promotion-history";
 
 import { trackMetaConversion } from "@/lib/analytics/meta-pixel";
 import { rutaPromocion } from "@/lib/marketplace-url";
@@ -234,6 +235,7 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
                 {isOpen && (
                   <div className="border-t border-[#e5e7eb] px-4 pb-5 pt-3 sm:px-5">
                     {offer.description && <p className="mb-4 whitespace-pre-line break-words text-sm leading-6 text-[#52627a] [overflow-wrap:anywhere]">{offer.description}</p>}
+                    {process.env.NODE_ENV === "development" && <PromotionHistory key={offer.id} contentType="offer" contentId={offer.id}/>}
                                         {/* EDITAR ES LA ACCIÓN DE ESTA FILA, y va en azul lleno:
                         «Ver» solo mira, el «···» guarda lo de cambiar de estado,
                         y editar es a lo que se viene cuando se abre una

@@ -196,7 +196,7 @@ const PANEL_GROUPS: { grupo: "work" | "business" | "saved" | "account"; tabs: Ta
   // Tres entradas, no un interruptor: «Mis publicaciones» juntaba proyectos,
   // empleos y promociones en una sola puerta, y una puerta con un interruptor
   // adentro hay que descubrirla. En el menú se leen de una.
-  { grupo: "business", tabs: ["sent_projects", "jobs", "offers", "quotes", "pro_agenda", "pro_clients", "pro_inventory", "pro_social"] },
+  { grupo: "business", tabs: ["sent_projects", "jobs", "offers", "quotes", "pro_agenda", "pro_clients", "pro_inventory"] },
   { grupo: "work", tabs: ["photos", "services", "statistics", "profile", "completion"] },
   { grupo: "saved", tabs: ["saved"] },
   { grupo: "account", tabs: ["soporte", "guides"] },
@@ -215,7 +215,7 @@ const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
   pro_clients:{es:"Clientes",en:"Customers"},
   pro_quotes:{es:"Cotizaciones",en:"Quotes"},
   pro_inventory:{es:"Inventario",en:"Inventory"},
-  pro_social:{es:"Destaca en nuestras redes",en:"Social media promotion"},
+  pro_social:{es:"Difusión",en:"Promotion history"},
   pro: {es:"ContrataCR Pro",en:"ContrataCR Pro"},
   statistics: { es: "Estadísticas", en: "Statistics" },
   quotes: { es: "Cotizaciones", en: "Quotes" },
@@ -538,7 +538,7 @@ export default function DashboardPage() {
   // sigue llegando desde avisos guardados, push y enlaces de cotizaciones. Cae
   // en «Mis proyectos», que es donde esta ahora lo que esa pantalla mostraba,
   // en vez de dejar a la persona en una seccion que no existe.
-  const normalizedTab = legacyVerificationTab ? "profile" : rawRequestedTab === "proposals" ? "sent_projects" : rawRequestedTab;
+  const normalizedTab = rawRequestedTab === "pro_social" ? "home" : legacyVerificationTab ? "profile" : rawRequestedTab === "proposals" ? "sent_projects" : rawRequestedTab;
   // Un ?tab= desconocido mostraba una sección vacía titulada con el id crudo:
   // se ignora y cae al inicio del panel.
   const requestedTab = (normalizedTab && ALL_TABS.has(normalizedTab as Tab) ? normalizedTab : null) as Tab | null;
@@ -1665,7 +1665,7 @@ export default function DashboardPage() {
   // notifications and support stay routable from the navbar or direct links
   // instead of competing with the core panel tasks.
   const modeTabs = mode === "offer" ? OFFER_TABS : USE_TABS;
-  const sidebarTabs:Tab[] = proEnabled?[...modeTabs,...(!modeTabs.includes("quotes")?["quotes" as Tab]:[]),"pro_agenda","pro_clients","pro_inventory","pro_social"]:modeTabs;
+  const sidebarTabs:Tab[] = proEnabled?[...modeTabs,...(!modeTabs.includes("quotes")?["quotes" as Tab]:[]),"pro_agenda","pro_clients","pro_inventory"]:modeTabs;
   // Guías también en escritorio. Estaba fuera de la columna y no había ningún
   // otro sitio donde entrar: en computadora la sección solo se alcanzaba
   // escribiendo ?tab=guides a mano. Va en el bloque de cuenta, junto a Perfil y

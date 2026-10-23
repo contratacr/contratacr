@@ -1,4 +1,5 @@
 "use client";
+import { PromotionHistory } from "@/components/pro/promotion-history";
 import { useMarketplaceFeed } from "@/hooks/use-marketplace-feed";
 import { MarketplaceFeedFeedback } from "@/components/marketplace/feed-loading";
 import type { FeedPage } from "@/lib/marketplace/feed";
@@ -836,6 +837,7 @@ export function ProjectsBoard({
                           renglón; LinkedIn e Indeed usan entre 90 y 100. La
                           tarjeta se queda grande y el párrafo se lee. */}
                       <p className="mt-3 whitespace-pre-line break-words text-sm leading-7 text-[#43536b] [overflow-wrap:anywhere]">{ficha.description}</p>
+                      {process.env.NODE_ENV === "development" && misProyectos.includes(ficha.id) && <PromotionHistory key={ficha.id} contentType="project" contentId={ficha.id}/>}
                       {/* TELÉFONO: lo que contacta, en la franja de abajo; guardar
                           y compartir viven en el «···» de la barra de arriba. */}
                       {/* En la franja de abajo va lo que se hace con esta

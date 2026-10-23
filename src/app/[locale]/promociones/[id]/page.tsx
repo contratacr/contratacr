@@ -1,3 +1,4 @@
+import { PromotionHistory } from "@/components/pro/promotion-history";
 import { InlineIdentityName } from "@/components/ui/inline-identity-name";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { ProfilePhotoPreview } from "@/components/ui/profile-photo-preview";
@@ -356,6 +357,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
               <p className="mt-3 whitespace-pre-line break-words pr-1 text-sm leading-7 text-[#43536b] [overflow-wrap:anywhere]">
                 {offer.description}
               </p>
+              {process.env.NODE_ENV === "development" && isOwner && <PromotionHistory key={offer.id} contentType="offer" contentId={offer.id}/>}
             </section>
           </div>
         </article>

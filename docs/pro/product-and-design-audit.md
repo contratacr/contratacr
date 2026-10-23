@@ -1,3 +1,5 @@
+> Actualización del 23 de octubre: las referencias siguientes a solicitudes o cupo mensual de redes quedaron sustituidas por la [revisión de agenda y difusión](agenda-and-promotion-revision-local.md). No forman parte del beneficio actual de Pro.
+
 # Auditoría de Pro: diseño y utilidad
 
 Fecha: 23 de octubre de 2026. Alcance: rama local/pro-suite-no-push. Revisión del código local y documentación pública oficial; no se probaron cuentas de pago de los competidores. Las recomendaciones son criterio de producto, no evidencia de que los usuarios ya las prefieran.

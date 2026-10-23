@@ -7,7 +7,7 @@ import {
 import { regressionAdminClient } from "./seed";
 import { emptyBusiness } from "../../src/lib/pro/business";
 import { expectNoHorizontalOverflow } from "./helpers";
-test("connected panel lists reveal next twenty, search, translate and preview a social request", async ({
+test("connected panel lists reveal next twenty, search, translate and retire social requests", async ({
   page,
   baseURL,
 }, testInfo) => {
@@ -128,32 +128,8 @@ test("connected panel lists reveal next twenty, search, translate and preview a 
       .context()
       .addCookies([{ name: "NEXT_LOCALE", value: "es", url: baseURL! }]);
     await page.goto("/es/dashboard/profesional?tab=pro_social");
-    await page
-      .getByRole("button", { name: "Solicitar difusión", exact: true })
-      .click();
-    await page
-      .getByLabel("Título", { exact: true })
-      .fill("Ejemplo de difusión");
-    await page
-      .getByLabel("Enlace a su perfil o publicación")
-      .fill("https://contratacr.com/profesionales");
-    await page
-      .getByLabel("Qué desea destacar")
-      .fill("Contenido ficticio, sin publicación externa.");
-    await page.getByRole("button", { name: "Continuar", exact: true }).click();
-    await expect(page.getByRole("dialog")).toContainText(
-      "No incluye anuncios pagados",
-    );
-    await page
-      .getByRole("button", { name: "Enviar solicitud", exact: true })
-      .click();
-    await expect(
-      page.getByText("Su solicitud quedó registrada.", { exact: false }),
-    ).toBeVisible();
-    await page.getByRole("button", { name: "Listo", exact: true }).click();
-    await expect(
-      page.getByRole("button", { name: "Solicitar difusión", exact: true }),
-    ).toBeDisabled();
+    await expect(page.getByRole("button",{name:"Solicitar difusión",exact:true})).toHaveCount(0);
+    await expect(page.getByText("Destaca en nuestras redes",{exact:true})).toHaveCount(0);
     await expectNoHorizontalOverflow(page);
   } finally {
     await page.goto("about:blank");
