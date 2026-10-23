@@ -88,7 +88,7 @@ import { Modal } from "@/components/ui/modal";
 // (the offer capability, unlocked by completing the professional profile). There
 // is no separate client panel; everyone lives here.
 type Tab =
-  | "pro" | "home" | "profile" | "services" | "photos" | "quotes" | "verificacion"
+  | "pro_agenda" | "pro_clients" | "pro_quotes" | "pro_inventory" | "pro_social" | "pro" | "home" | "profile" | "services" | "photos" | "quotes" | "verificacion"
   | "jobs" | "offers" | "publicaciones" | "completion"
   | "sent_projects" | "applications" | "saved" | "connections"
   | "chat" | "notifications" | "soporte" | "cuenta" | "guides" | "statistics";
@@ -100,12 +100,17 @@ type ProData = Record<string, any>;
 // viejo con ?tab=availability, bookings o sent_bookings no está en este
 // conjunto y cae en el inicio del panel.
 const ALL_TABS = new Set<Tab>([
-  "pro", "home", "profile", "services", "photos", "quotes", "verificacion",
+  "pro_agenda", "pro_clients", "pro_quotes", "pro_inventory", "pro_social", "pro", "home", "profile", "services", "photos", "quotes", "verificacion",
   "jobs", "offers", "publicaciones", "completion", "sent_projects", "applications", "saved", "connections",
   "chat", "notifications", "soporte", "cuenta", "guides", "statistics",
 ]);
 
 const TAB_ICONS: Record<Tab, React.ReactNode> = {
+  pro_agenda: <ClipboardList className="h-4 w-4" />,
+  pro_clients: <Users className="h-4 w-4" />,
+  pro_quotes: <ReceiptText className="h-4 w-4" />,
+  pro_inventory: <BriefcaseBusiness className="h-4 w-4" />,
+  pro_social: <Sparkles className="h-4 w-4" />,
   pro: <Sparkles className="h-4 w-4" />,
   statistics: <ChartNoAxesColumn className="h-4 w-4" />,
   home: <Home className="h-4 w-4" />,
@@ -191,7 +196,7 @@ const PANEL_GROUPS: { grupo: "work" | "business" | "saved" | "account"; tabs: Ta
   // Tres entradas, no un interruptor: «Mis publicaciones» juntaba proyectos,
   // empleos y promociones en una sola puerta, y una puerta con un interruptor
   // adentro hay que descubrirla. En el menú se leen de una.
-  { grupo: "business", tabs: ["sent_projects", "jobs", "offers", "quotes", "pro"] },
+  { grupo: "business", tabs: ["sent_projects", "jobs", "offers", "quotes", "pro_agenda", "pro_clients", "pro_quotes", "pro_inventory", "pro_social"] },
   { grupo: "work", tabs: ["photos", "services", "statistics", "profile", "completion"] },
   { grupo: "saved", tabs: ["saved"] },
   { grupo: "account", tabs: ["soporte", "guides"] },
@@ -206,6 +211,11 @@ function agruparPestanas(tabs: Tab[]): Tab[][] {
 }
 
 const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
+  pro_agenda:{es:"Agenda",en:"Schedule"},
+  pro_clients:{es:"Clientes",en:"Customers"},
+  pro_quotes:{es:"Cotizaciones del negocio",en:"Business quotes"},
+  pro_inventory:{es:"Inventario",en:"Inventory"},
+  pro_social:{es:"Destaca en nuestras redes",en:"Social media promotion"},
   pro: {es:"ContrataCR Pro",en:"ContrataCR Pro"},
   statistics: { es: "Estadísticas", en: "Statistics" },
   quotes: { es: "Cotizaciones", en: "Quotes" },
@@ -1655,7 +1665,7 @@ export default function DashboardPage() {
   // notifications and support stay routable from the navbar or direct links
   // instead of competing with the core panel tasks.
   const modeTabs = mode === "offer" ? OFFER_TABS : USE_TABS;
-  const sidebarTabs:Tab[] = proEnabled?[...modeTabs,"pro"]:modeTabs;
+  const sidebarTabs:Tab[] = proEnabled?[...modeTabs,"pro_agenda","pro_clients","pro_quotes","pro_inventory","pro_social"]:modeTabs;
   // Guías también en escritorio. Estaba fuera de la columna y no había ningún
   // otro sitio donde entrar: en computadora la sección solo se alcanzaba
   // escribiendo ?tab=guides a mano. Va en el bloque de cuenta, junto a Perfil y
@@ -2364,6 +2374,7 @@ export default function DashboardPage() {
                             onSaved={(intent) => handleSaved(intent ?? "section")}
                           />
                         )}
+                        {(["pro_agenda","pro_clients","pro_quotes","pro_inventory","pro_social"] as Tab[]).includes(activeTab) && (proEnabled?<ProWorkspace key={activeTab} server embedded section={activeTab==="pro_agenda"?"Agenda":activeTab==="pro_clients"?"Clientes":activeTab==="pro_quotes"?"Cotizaciones":activeTab==="pro_inventory"?"Inventario":"Redes"}/>:<p className="p-4">Comprobando acceso…</p>)}
                         {activeTab === "pro" && (proEnabled?<ProWorkspace server embedded/>:<p className="p-4">{locale==="en"?"Checking Pro access…":"Comprobando acceso Pro…"}</p>)}
                         {activeTab === "quotes" && (
                           <QuotesSection

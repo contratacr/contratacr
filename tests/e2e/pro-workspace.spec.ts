@@ -24,6 +24,8 @@ test('Pro entitlement preserves admin role and denies inactive disabled or expir
  expect(hasProAccess({role:'admin',is_disabled:true},null)).toBe(false);
  expect(hasProAccess({role:'professional'},null)).toBeFalsy();
  expect(hasProAccess({role:'professional'},{status:'active',expires_at:null})).toBe(true);
+ expect(hasProAccess({role:'client'},{status:'active',expires_at:null})).toBe(false);
+ expect(hasProAccess({role:'client',is_provider:true},{status:'active',expires_at:null})).toBe(true);
  expect(hasProAccess({role:'client'},{status:'inactive',expires_at:null})).toBe(false);
  expect(hasProAccess({role:'client'},{status:'active',expires_at:'2026-01-01'},Date.parse('2026-10-23'))).toBe(false);
  expect(hasProAccess({role:'client'},{status:'active',expires_at:'invalid'})).toBe(false);

@@ -23,6 +23,12 @@ export async function POST(req:Request){
  z.object({action:z.literal('membership'),userId:z.string().uuid(),status:z.enum(['active','inactive']),expiresAt:z.string().datetime().nullable(),reason:z.string().trim().min(1).max(1000)}),
  z.object({action:z.literal('review'),id:z.string().uuid(),status:z.enum(['approved','rejected','published']),note:z.string().max(1000),publishedUrl:z.union([z.literal(''),https])})]).parse(await req.json());
  if(body.action==='membership'){
+ if(body.status==='active'){
+ const {data:target,error:targetError}=await a.db.from('profiles').select('role,is_provider,is_disabled').eq('id',body.userId).maybeSingle();
+ if(targetError)return proDbFailure(targetError);
+ if(!target||target.is_disabled||!(target.role==='admin'||target.role==='professional'||target.is_provider))return Response.json({error:'La cuenta debe tener un perfil profesional activo antes de activar Pro.'},{status:400});
+ }
+
  const {error}=await a.db.rpc('pro_set_membership',{p_actor:a.user.id,p_user:body.userId,p_status:body.status,p_expires:body.expiresAt,p_reason:body.reason});
  if(error)return proDbFailure(error);
  }else{

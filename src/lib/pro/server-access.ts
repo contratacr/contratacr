@@ -8,7 +8,7 @@ export async function requirePro() {
  const user = await safeGetUser(await createClient());
  if (!user) redirect('/login');
  const db = createAdminClient();
- const { data: profile, error } = await db.from('profiles').select('role,is_disabled').eq('id', user.id).maybeSingle();
+ const { data: profile, error } = await db.from('profiles').select('role,is_disabled,is_provider').eq('id', user.id).maybeSingle();
  if (error || !profile || profile.is_disabled) redirect('/dashboard');
  if (profile.role === 'admin') { await requireAdmin(); return user; }
  const { data: grant, error: grantError } = await db.from('pro_memberships').select('status,expires_at').eq('user_id', user.id).maybeSingle();

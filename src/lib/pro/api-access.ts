@@ -11,7 +11,7 @@ export async function proApiAccess(req: Request, adminOnly = false) {
  const user = await safeGetUser(await createClient());
  if (!user) return { error: Response.json({error:'Inicie sesión'}, {status:401}) };
  const db = createAdminClient();
- const {data:profile,error} = await db.from('profiles').select('role,is_disabled').eq('id',user.id).maybeSingle();
+ const {data:profile,error} = await db.from('profiles').select('role,is_disabled,is_provider').eq('id',user.id).maybeSingle();
  if (error || !profile || profile.is_disabled) return { error: Response.json({error:'Sin acceso'}, {status:403}) };
  const isAdmin = profile.role === 'admin' && Boolean(await getApiAdmin());
  if (adminOnly && !isAdmin || profile.role === 'admin' && !isAdmin) return { error: Response.json({error:'Se requiere acceso administrativo verificado'}, {status:403}) };

@@ -163,3 +163,16 @@ sección. /admin/pro queda exclusivamente para gestión de accesos y moderación
 social. Pro es plan/capacidad adicional, no reemplaza roles cliente/profesional/admin.
 La app del simulador apunta a Mi panel local y conserva sesión AAL2; no usa la
 cuenta ni datos productivos de Isaac.
+
+## Profesional + Pro y accesos directos
+
+Pro requiere perfil profesional (is_provider o rol profesional legado); admin
+mantiene acceso completo y MFA. No se permite activar Pro desde admin para una
+cuenta de solo cliente. No se crea un nuevo rol excluyente. En Mi panel aparecen
+Agenda, Clientes, Cotizaciones del negocio, Inventario y Destaca en nuestras redes.
+Las cotizaciones anteriores se conservan como sección independiente para no
+ocultar datos existentes. Cada entrada abre su herramienta directamente, sin menú
+intermedio. /dashboard/pro redirige a Agenda. La cuenta del simulador tiene un
+registro profesional local propio y datos ficticios; no se copió el perfil productivo.
+El script scripts/pro/seed-demo-data.cjs carga 10 ejemplos por herramienta y es
+idempotente, limitado al usuario local desechable del simulador.
