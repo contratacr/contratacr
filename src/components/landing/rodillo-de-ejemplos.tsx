@@ -20,6 +20,8 @@ import { cn } from "@/lib/utils";
 export function RodilloDeEjemplos({ quieto = false, className }: { quieto?: boolean; className?: string }) {
   const t = useTranslations("landing.hero");
   const locale = useLocale();
+  const fija = t.raw("ejemplosBusqueda") as string[];
+  const primero = fija[0];
   const [vuelta, setVuelta] = useState(0);
   const [lista, setLista] = useState<string[] | null>(null);
   useEffect(() => {
@@ -28,8 +30,10 @@ export function RodilloDeEjemplos({ quieto = false, className }: { quieto?: bool
       .map((id) => getCategoryLabel(id, locale)).filter(Boolean)
       .map((nombre) => nombre.charAt(0).toLocaleLowerCase(locale) + nombre.slice(1))
       .filter((nombre) => nombre.length <= 20);
-    if (nombres.length >= 3) queueMicrotask(() => setLista(nombres));
-  }, [locale]);
+    // Keep the server-rendered example first and exclude it from the live
+    // alternatives: hydration must not rename it or repeat it on the next turn.
+    if (nombres.length >= 3) queueMicrotask(() => setLista([primero, ...nombres.filter((nombre) => nombre !== primero)]));
+  }, [locale, primero]);
   useEffect(() => {
     if (quieto || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     // Con la app en segundo plano o el menú abierto encima no se gira: el
@@ -37,8 +41,8 @@ export function RodilloDeEjemplos({ quieto = false, className }: { quieto?: bool
     const id = window.setInterval(() => { if (document.visibilityState === "visible" && !document.querySelector(".ccr-menu-completo.ccr-menu-abierto")) setVuelta((n) => n + 1); }, 3000);
     return () => window.clearInterval(id);
   }, [quieto]);
-  const fija = t.raw("ejemplosBusqueda") as string[];
-  const palabra = (i: number) => (i === 0 || !lista ? fija[i % fija.length] : lista[i % lista.length]);
+  const ejemplos = lista ?? fija;
+  const palabra = (i: number) => ejemplos[i % ejemplos.length];
   return (
     <span aria-hidden className={cn("flex min-w-0 items-center overflow-hidden", className)}>
       <span className="shrink-0">{t("buscaPrefijo")}&nbsp;</span>

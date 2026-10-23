@@ -2737,12 +2737,12 @@
       "pidePrefijo": "Don't know who to call?",
       "pideEnlace": "Post a project",
       "ejemplosBusqueda": [
-        "an electrician",
-        "a plumber",
+        "electrical",
+        "plumbing",
         "house cleaning",
-        "a mechanic",
-        "a painter",
-        "a lawyer"
+        "auto repair",
+        "painting",
+        "legal advice"
       ],
       "location": "Location",
       "nearMe": "Search professionals near me",

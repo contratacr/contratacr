@@ -2737,12 +2737,12 @@
       "pidePrefijo": "¿No sabes a quién llamar?",
       "pideEnlace": "Crea un proyecto",
       "ejemplosBusqueda": [
-        "un electricista",
-        "un plomero",
+        "electricidad",
+        "plomería",
         "limpieza del hogar",
-        "un mecánico",
-        "un pintor",
-        "un abogado"
+        "mecánica automotriz",
+        "pintura",
+        "asesoría legal"
       ],
       "location": "Ubicación",
       "nearMe": "Buscar cerca de mí",
