@@ -176,3 +176,26 @@ intermedio. /dashboard/pro redirige a Agenda. La cuenta del simulador tiene un
 registro profesional local propio y datos ficticios; no se copió el perfil productivo.
 El script scripts/pro/seed-demo-data.cjs carga 10 ejemplos por herramienta y es
 idempotente, limitado al usuario local desechable del simulador.
+
+## Una sola sección de Cotizaciones
+
+Se eliminó la entrada «Cotizaciones del negocio». La dirección anterior
+?tab=pro_quotes se interpreta como ?tab=quotes. QuotesSection conserva el editor,
+los enlaces y el detalle habituales, y muestra también los registros anteriores
+almacenados en el documento Pro (sin crear otra cabecera o botón de creación).
+No se migraron ni borraron registros: ambos orígenes se leen dentro de la misma
+sección. El formato anterior Pro conserva edición/estado/descarga de esos registros.
+Las cotizaciones nuevas se crean con el API y el editor habituales. Con Pro,
+el editor permite elegir un cliente guardado y añadir productos del inventario.
+Los precios de inventario son netos: se adaptan al modo de IVA elegido del editor
+(incluido, más IVA o exento), respetando el redondeo entero existente.
+Sin Pro, el editor conserva sus opciones previas y no consulta el almacén Pro.
+Pruebas ampliadas: coexistencia de registro Pro y cotización nueva, selección de
+cliente/producto, IVA una sola vez y creación con profesional sin Pro.
+
+Validación de la unificación: 42 comprobaciones Pro aprobadas en Chromium de
+escritorio, Chromium móvil y WebKit móvil; 3 recorridos adicionales sin Pro
+aprobados tras precisar el botón de envío dentro del diálogo. TypeScript y ESLint
+de los archivos modificados aprobados. Se revisó el editor en la app del simulador:
+una sola sección, selector de clientes dentro del editor habitual y los 10
+registros Pro de demostración conservados. No hubo push ni publicación.

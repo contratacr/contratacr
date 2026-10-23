@@ -1,5 +1,6 @@
 "use client";
 
+import type {Business} from "@/lib/pro/business";
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { ListChecks, Loader2, Plus, Trash2, User } from "lucide-react";
@@ -35,7 +36,8 @@ export type BorradorDeCotizacion = {
   taxMode: QuoteTaxMode; notes: string; validDays: number;
 };
 
-export function QuoteEditorModal({ open, onClose, projectId, defaultTitle, clientName: clienteConocido, onSent, sinSesion = false, inicial = null }: {
+export function QuoteEditorModal({ open, onClose, projectId, defaultTitle, clientName: clienteConocido, onSent, sinSesion = false, inicial = null, proData }: {
+  proData?: Business | null;
   open: boolean; onClose: () => void; projectId?: string | null; defaultTitle?: string;
   /** Sin cuenta: al enviar se guarda el borrador y se pide entrar o registrarse. */
   sinSesion?: boolean;
@@ -166,6 +168,7 @@ export function QuoteEditorModal({ open, onClose, projectId, defaultTitle, clien
         {suelta && (
           <section className={bloque}>
             <p className={tituloBloque}><User className="h-3.5 w-3.5" />{t("forWhomLabel")}</p>
+            {proData&&<label className="mb-3 block"><span className={rotulo}>{locale==='en'?'Saved customer':'Cliente guardado'}</span><select aria-label={locale==='en'?'Saved customer':'Cliente guardado'} className={campo} defaultValue="" onChange={e=>{const c=proData.clients.find(c=>c.id===e.target.value);if(c){setCedula('');setClientName(c.name.slice(0,80));setClientEmail(c.email);setClientPhone(c.phone);}}}><option value="">{locale==='en'?'Choose a customer':'Seleccione un cliente'}</option>{proData.clients.filter(c=>!c.archived).map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>}
             <div className="flex flex-col gap-3 sm:grid sm:grid-cols-2 sm:gap-x-4">
               <div className="sm:col-span-2">
                 <p className="mb-2 text-xs leading-5 text-[#52627a]">{t("clientCedulaLookupNotice")}</p>
@@ -197,6 +200,7 @@ export function QuoteEditorModal({ open, onClose, projectId, defaultTitle, clien
           </label>
 
           <div className="mt-4">
+            {proData&&<label className="mb-3 block"><span className={rotulo}>{locale==='en'?'Add from inventory':'Agregar desde inventario'}</span><select aria-label={locale==='en'?'Add from inventory':'Agregar desde inventario'} className={campo} value="" disabled={rows.length>=QUOTE_MAX_ITEMS} onChange={e=>{const p=proData.products.find(p=>p.id===e.target.value);if(p){setRows(previous=>{const row={...nuevaFila(),description:p.name.slice(0,140),quantity:'1',unit_price:String(Math.round(p.price*(taxMode==='incluido'?1.13:1)))};return previous.length===1&&!previous[0].description&&!previous[0].unit_price?[row]:[...previous,row];});}}}><option value="">{locale==='en'?'Choose a product':'Seleccione un producto'}</option>{proData.products.filter(p=>!p.archived).map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label>}
             <span className={rotulo}><EtiquetaObligatoria>{t("itemsLabel")}</EtiquetaObligatoria></span>
             <div className="flex flex-col gap-2.5">
               {rows.map((r, indice) => {
