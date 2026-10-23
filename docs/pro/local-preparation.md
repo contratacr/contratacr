@@ -3,17 +3,26 @@
 Autorizado por Isaac: crear local/pro-suite-no-push y contratacr-pro. No publicar.
 Ruta de desarrollo: /es/pro-preview; responde 404 fuera de development.
 
-## Implementado en esta primera iteración
+## Implementado localmente
 
-Prototipo de trabajos/citas en memoria, estados, detección de solapamientos y
-exportación CSV compatible con Excel con protección frente a fórmulas.
-Sin datos reales, persistencia, cobros ni cambios de ranking. Chat, llamadas,
-WhatsApp y verificación no pasan a pago. El prototipo está en español.
+Agenda con citas vinculadas a clientes y cotizaciones aceptadas, edición,
+cancelación, finalización y detección de solapamientos en horario de Costa Rica.
+Clientes con edición y archivo; cotizaciones con múltiples líneas, IVA y total,
+registro manual de aceptación/rechazo y descarga no fiscal. Inventario con SKU,
+costo, precio, mínimos, entradas/salidas e historial; impide saldos negativos.
+Persistencia localStorage validada y respaldo JSON; agenda CSV compatible con Excel.
+Reutiliza Button y SectionHeadline del panel. Solo usar datos ficticios.
+No hay conexión de estos registros con Supabase, GTI o Hacienda.
+
+Validación: 18 ejecuciones aprobadas en Chromium escritorio/móvil y WebKit móvil;
+TypeScript y ESLint aprobados. Se corrigieron la ruta local interceptada como perfil
+y la importación de Node en instrumentación para permitir la vista de desarrollo.
+Las pruebas de componentes no equivalen a la regresión completa del producto.
 
 ## Falta antes de habilitarlo
 
 - Persistencia autenticada por profesional, RLS y aislamiento entre cuentas.
-- Edición/cancelación, zona horaria Costa Rica explícita y agenda visual.
+- Agenda visual de calendario, recurrencia y recordatorios.
 - Reservas públicas opcionales, confirmación del profesional y recordatorios.
 - Bandeja de seguimiento integrada con conversaciones y cotizaciones existentes.
 - Exportación XLSX real y controles de permisos/datos incluidos.

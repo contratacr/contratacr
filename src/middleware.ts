@@ -210,6 +210,10 @@ export async function middleware(request: NextRequest) {
   // Enlace público de cada profesional: contratacr.com/nombre-apellido (y la
   // forma con @ que se compartió antes). Solo entra aquí lo que no es una
   // sección del sitio (RUTAS_DEL_SITIO, verificada en CI).
+  if (process.env.NODE_ENV === "development" && pathname === "/pro-preview") {
+    return reescribirConIdioma(request, new URL("/es/pro-preview", request.url));
+  }
+
   const perfilCorto = /^\/@?([a-z0-9][a-z0-9-]{2,80})$/.exec(pathname.toLowerCase());
   if (perfilCorto && !RUTAS_DEL_SITIO.has(perfilCorto[1])) {
     const locale = "es";
