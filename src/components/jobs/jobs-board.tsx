@@ -1,4 +1,7 @@
 "use client";
+import { useMarketplaceFeed } from "@/hooks/use-marketplace-feed";
+import { MarketplaceFeedFeedback, MarketplaceContactBoundary } from "@/components/marketplace/feed-loading";
+import type { FeedPage } from "@/lib/marketplace/feed";
 
 import { InlineIdentityName } from "@/components/ui/inline-identity-name";
 
@@ -39,6 +42,7 @@ import { reemplazarDireccionSiCambia } from "@/lib/reemplazar-direccion";
 
 type Props = {
   jobs: JobPost[];
+  initialFeed?: FeedPage<JobPost>;
   canPost: boolean;
   initialSelectedJobId?: string | null;
   returnTo?: string | null;
@@ -114,7 +118,7 @@ function JobMetaLine({ job, className = "", showApplicants = false }: { job: Job
   </p>;
 }
 
-export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo = null, currentProfessionalId = null, currentUserId = null, detailOnly = false }: Props) {
+export function JobsBoard({ jobs:initialJobs, initialFeed, canPost, initialSelectedJobId = null, returnTo = null, currentProfessionalId = null, currentUserId = null, detailOnly = false }: Props) {
   const { avisoNode, avisar } = useAvisoPerfilProfesional();
   const { cabeceraRef, conLinea } = useHairlineOnScroll();
   const locale = marketplaceLocale(useLocale());
@@ -144,7 +148,11 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
   const [employment, setEmployment] = useState(() => deLaUrl("employment", Object.keys(EMPLOYMENT_TYPES)));
   const [ahora, setAhora] = useState(0);
   useEffect(() => { queueMicrotask(() => setAhora(Date.now())); }, []);
-  const [selectedId, setSelectedId] = useState(() => searchParams.get("job") ?? searchParams.get("apply") ?? initialSelectedJobId ?? jobs[0]?.id ?? "");
+  const [selectedId, setSelectedId] = useState(() => searchParams.get("job") ?? searchParams.get("apply") ?? initialSelectedJobId ?? initialJobs[0]?.id ?? "");
+
+  const feed=useMarketplaceFeed("empleos",detailOnly?undefined:initialFeed,{q:query,location:locationFilter,published,workplace,experience,employment},locale);
+  const jobs=useMemo(()=>feed.enabled?feed.items??[]:initialJobs,[feed.enabled,feed.items,initialJobs]);
+  const resultTotal=feed.enabled?feed.total:undefined;
 
 
   useEffect(() => {
@@ -179,7 +187,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
     queueMicrotask(() => setSelectedId(applyId));
   }, [searchParams]);
 
-  const filtered = useMemo(() => jobs.filter((job) => {
+  const filtered = useMemo(() => feed.enabled?jobs:jobs.filter((job) => {
     const matchesQuery = jobMatchesSearch(query, [job.title, job.employer_name, job.location_label, job.description, ...(job.requirements ?? []), ...(job.responsibilities ?? [])]);
     const matchesLocation = !locationFilter || job.workplace_type === "remote" || job.location_label?.toLocaleLowerCase("es-CR").includes(locationFilter.toLocaleLowerCase("es-CR"));
     const edad = ahora - new Date(job.created_at).getTime();
@@ -188,16 +196,16 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
       && (workplace === "all" || job.workplace_type === workplace)
       && (employment === "all" || job.employment_type === employment)
       && (experience === "all" || (job.experience_level ?? "any") === experience);
-  }), [ahora, employment, experience, jobs, locationFilter, published, query, workplace]);
+  }), [ahora, employment, experience, jobs, locationFilter, published, query, workplace,feed.enabled]);
 
   // El enlace corto (…/empleos/tecnico-de-redes-d4000000) trae el título y los
   // 8 primeros del id: se resuelve igual que el enlace largo de siempre.
-  const selected = filtered.find((job) => job.id === selectedId || idCoincide(job.id, selectedId)) ?? filtered[0] ?? null;
+  const selected = filtered.find((job) => job.id === selectedId || idCoincide(job.id, selectedId)) ?? (feed.selected?.id===selectedId?feed.selected:null) ?? filtered[0] ?? null;
 
-  const suggestions = [...new Set([...jobs.map((job) => job.title), ...COMMON_JOB_TITLES])];
+  const suggestions = [...new Set([...(feed.enabled?feed.suggestions:jobs.map((job) => job.title)), ...COMMON_JOB_TITLES])];
   const locationSuggestions = useMemo(
-    () => [...new Set(jobs.map((job) => job.location_label?.trim()).filter((value): value is string => Boolean(value)))],
-    [jobs],
+    () => feed.enabled?feed.locations:[...new Set(jobs.map((job) => job.location_label?.trim()).filter((value): value is string => Boolean(value)))],
+    [jobs,feed.enabled,feed.locations],
   );
   const hasActiveFilters = Boolean(query.trim()) || Boolean(locationFilter)
     || published !== "all" || workplace !== "all" || experience !== "all" || employment !== "all";
@@ -216,10 +224,10 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
   }
 
   useEffect(() => {
-    if (filtered.length > 0 && !filtered.some((job) => job.id === selectedId || idCoincide(job.id, selectedId))) {
+    if (filtered.length > 0 && !filtered.some((job) => job.id === selectedId || idCoincide(job.id, selectedId)) && feed.selected?.id!==selectedId) {
       queueMicrotask(() => setSelectedId(filtered[0].id));
     }
-  }, [filtered, selectedId]);
+  }, [filtered, selectedId,feed.selected?.id]);
 
   const renderSearch = () => (
     <MarketplaceSearch
@@ -265,7 +273,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
       <MarketplaceFilterChip label={copy.workplace} value={workplace} onChange={setWorkplace} options={[["all", copy.anyWorkplace], ...Object.keys(WORKPLACE_TYPES).map((value) => [value, workplaceTypeLabel(value as keyof typeof WORKPLACE_TYPES, locale)] as [string, string])]} />
       <MarketplaceFilterChip label={copy.employmentType} value={employment} onChange={setEmployment} options={[["all", copy.anyEmploymentType], ...Object.keys(EMPLOYMENT_TYPES).map((value) => [value, employmentTypeLabel(value as keyof typeof EMPLOYMENT_TYPES, locale)] as [string, string])]} />
       <MarketplaceFilterChip label={copy.experience} value={experience} onChange={setExperience} options={[["all", copy.anyExperience], ...Object.keys(EXPERIENCE_LEVELS).map((value) => [value, experienceLevelLabel(value as keyof typeof EXPERIENCE_LEVELS, locale)] as [string, string])]} />
-      {conFiltroDeFecha(jobs.length) && (
+      {conFiltroDeFecha(feed.enabled?feed.catalogTotal:jobs.length) && (
         <MarketplaceFilterChip label={copy.published} value={published} onChange={setPublished} options={[["all", copy.anyDate], ["1", copy.last24Hours], ["7", copy.lastWeek], ["30", copy.lastMonth]]} />
       )}
     </>
@@ -414,7 +422,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
             <h1 className="text-[17px] font-extrabold text-[#162543]">{copy.jobs}</h1>
             {hasActiveFilters && filtered.length > 0 && (
               <span className="text-[13px] font-semibold text-[#68778d]">
-                <span className="tabular-nums">{filtered.length}</span> {filtered.length === 1 ? copy.job.toLocaleLowerCase(locale) : copy.jobs.toLocaleLowerCase(locale)}{locationFilter.trim() ? ` · ${locationFilter.trim()}` : ""}
+                <span className="tabular-nums">{resultTotal??filtered.length}</span> {(resultTotal??filtered.length) === 1 ? copy.job.toLocaleLowerCase(locale) : copy.jobs.toLocaleLowerCase(locale)}{locationFilter.trim() ? ` · ${locationFilter.trim()}` : ""}
                 {limpiarFiltros}
               </span>
             )}
@@ -480,12 +488,12 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
         lista no dijera. Y «Costa Rica» se fue: el app entero es Costa Rica, así
         que era una palabra fija debajo de un número. */}
     {!detailOnly && <div className={`${showingMobileDetail ? "hidden lg:block " : ""}ccr-tablero-cuerpo mx-auto w-full max-w-7xl px-0 py-0 sm:max-w-[46rem] sm:px-6 sm:py-5 lg:max-w-7xl lg:flex-1 lg:min-h-0 lg:px-6 lg:py-0`}>
-      <div className={`ccr-tablero-marco ${filtered.length > 0 ? "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)] xl:grid-cols-[380px_minmax(0,1fr)]" : ""} sm:overflow-hidden sm:rounded-[22px] sm:border sm:border-[#e5e7eb] sm:bg-white sm:shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)] lg:h-full ccr-panel-tablero`}>
-        <section className={filtered.length > 0 ? MARKETPLACE_LIST_CLASS : "min-w-0 bg-white"}>
+      <div className={`ccr-tablero-marco ${(filtered.length > 0 || feed.loading) ? "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)] xl:grid-cols-[380px_minmax(0,1fr)]" : ""} sm:overflow-hidden sm:rounded-[22px] sm:border sm:border-[#e5e7eb] sm:bg-white sm:shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)] lg:h-full ccr-panel-tablero`}>
+        <section className={(filtered.length > 0 || feed.loading) ? MARKETPLACE_LIST_CLASS : "min-w-0 bg-white"}>
           {/* Con cero, el vacío ya lo dice: «0 empleos» encima era lo mismo dos veces. */}
           {hasActiveFilters && filtered.length > 0 && (
             <div className="border-b border-[#e5e7eb] px-4 py-3 lg:hidden">
-              <p className="font-bold">{filtered.length} {filtered.length === 1 ? copy.job.toLocaleLowerCase(locale) : copy.jobs.toLocaleLowerCase(locale)}{limpiarFiltros}</p>
+              <p className="font-bold">{resultTotal??filtered.length} {(resultTotal??filtered.length) === 1 ? copy.job.toLocaleLowerCase(locale) : copy.jobs.toLocaleLowerCase(locale)}{limpiarFiltros}</p>
               {/* La zona que se buscó, no un país fijo: «Costa Rica» debajo del
                   número era siempre la misma palabra; si alguien buscó en
                   Atenas, lo útil es que diga Atenas. */}
@@ -494,7 +502,8 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
           )}
           <div>
             {filtered.map((job) => <JobRow key={job.id} job={job} selected={selected?.id === job.id} onSelect={() => setSelectedId(job.id)} />)}
-            {filtered.length === 0 && (
+            <MarketplaceFeedFeedback feed={feed}/>
+            {filtered.length === 0 && !feed.loading && !feed.error && (
               // El MISMO vacío del resto del app: mosaico azul con el icono a
               // línea, título, apoyo y una salida. Estaba dibujado a mano con
               // un círculo distinto al de todas las demás pantallas.
@@ -528,7 +537,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
             )}
           </div>
         </section>
-        {selected && <JobPreview job={selected} isOwner={selected.employer_id === currentProfessionalId} userId={currentUserId} onEdit={() => setEditingJob(selected)} />}
+        {selected && <MarketplaceContactBoundary enabled={feed.enabled} professionalId={selected.employer_id} snapshot={feed.contactFor(selected.employer_id)}><JobPreview job={selected} isOwner={selected.employer_id === currentProfessionalId} userId={currentUserId} onEdit={() => setEditingJob(selected)} /></MarketplaceContactBoundary>}
       </div>
     </div>}
     {publishOpen && currentProfessionalId && (
@@ -582,7 +591,7 @@ function jobSaveSnapshot(job: JobPost, locale: MarketplaceLocale) {
 function JobRow({ job, selected, onSelect }: { job: JobPost; selected: boolean; onSelect: () => void }) {
   const locale = marketplaceLocale(useLocale());
   const copy = JOBS_COPY[locale];
-  return <article className={`relative min-h-[7.25rem] overflow-hidden border-b lg:min-h-0 border-[#e5e7eb] bg-white px-3 py-3 transition sm:max-lg:last:border-b-0 hover:bg-[#f8fafc] sm:px-4 ${selected ? "lg:bg-[#eef9fd] lg:shadow-[inset_4px_0_0_#162543]" : ""}`}>
+  return <article data-marketplace-row="empleos" className={`relative min-h-[7.25rem] overflow-hidden border-b lg:min-h-0 border-[#e5e7eb] bg-white px-3 py-3 transition sm:max-lg:last:border-b-0 hover:bg-[#f8fafc] sm:px-4 ${selected ? "lg:bg-[#eef9fd] lg:shadow-[inset_4px_0_0_#162543]" : ""}`}>
     <button type="button" onClick={onSelect} aria-label={`${copy.view} ${job.title}`} className="absolute inset-0 hidden lg:block" />
     <div className="relative z-[1] block w-full text-left lg:pointer-events-none">
       <div className="flex min-w-0 items-start gap-2.5 sm:gap-3">

@@ -1,4 +1,7 @@
 "use client";
+import { useMarketplaceFeed } from "@/hooks/use-marketplace-feed";
+import { MarketplaceFeedFeedback, MarketplaceContactBoundary } from "@/components/marketplace/feed-loading";
+import type { FeedPage } from "@/lib/marketplace/feed";
 
 import { InlineIdentityName } from "@/components/ui/inline-identity-name";
 
@@ -53,6 +56,7 @@ import { reemplazarDireccionSiCambia } from "@/lib/reemplazar-direccion";
 
 type Props = {
   offers: ProfessionalOffer[];
+  initialFeed?: FeedPage<ProfessionalOffer>;
   canPost: boolean;
   currentProfessionalId?: string | null;
   currentUserId?: string | null;
@@ -143,7 +147,8 @@ const OFFERS_COPY = {
 } satisfies Record<MarketplaceLocale, Record<string, unknown>>;
 
 export function OffersBoard({
-  offers,
+  offers: initialOffers,
+  initialFeed,
   canPost,
   currentProfessionalId = null,
   currentUserId = null,
@@ -171,9 +176,12 @@ export function OffersBoard({
   const [ahora, setAhora] = useState(0);
   useEffect(() => { queueMicrotask(() => setAhora(Date.now())); }, []);
   const [selectedId, setSelectedId] = useState(
-    () => searchParams.get("offer") ?? offers[0]?.id ?? "",
+    () => searchParams.get("offer") ?? initialOffers[0]?.id ?? "",
   );
   const deferredQuery = useDeferredValue(query);
+  const feed=useMarketplaceFeed("promociones",initialFeed,{q:deferredQuery,location:locationFilter,tipo,published},locale);
+  const offers=useMemo(()=>feed.enabled?feed.items??[]:initialOffers,[feed.enabled,feed.items,initialOffers]);
+  const resultTotal=feed.enabled?feed.total:undefined;
 
 
   useEffect(() => {
@@ -205,6 +213,7 @@ export function OffersBoard({
     return () => window.clearTimeout(timer);
   }, [locationFilter, query]);
   const filtered = useMemo(() => {
+    if(feed.enabled)return offers;
     const needle = deferredQuery.trim().toLocaleLowerCase("es-CR");
     return offers.filter((offer) => {
       const matchesQuery =
@@ -232,14 +241,14 @@ export function OffersBoard({
     locationFilter,
     offers,
     published,
-    tipo,
+    tipo,feed.enabled,
   ]);
 
   const selected =
-    filtered.find((offer) => offer.id === selectedId) ?? filtered[0] ?? null;
+    filtered.find((offer) => offer.id === selectedId) ?? (feed.selected?.id===selectedId?feed.selected:null) ?? filtered[0] ?? null;
   const suggestions = useMemo(
-    () => [...new Set(offers.map((offer) => offer.title).filter(Boolean))],
-    [offers],
+    () => feed.enabled ? feed.suggestions : [...new Set(offers.map((offer) => offer.title).filter(Boolean))],
+    [offers, feed.enabled, feed.suggestions],
   );
   const hasActiveFilters = Boolean(query.trim()) || Boolean(locationFilter) || tipo !== "all" || published !== "all";
 
@@ -261,14 +270,14 @@ export function OffersBoard({
   useEffect(() => {
     if (
       filtered.length > 0 &&
-      !filtered.some((offer) => offer.id === selectedId)
+      !filtered.some((offer) => offer.id === selectedId) && feed.selected?.id!==selectedId
     )
       queueMicrotask(() => setSelectedId(filtered[0].id));
-  }, [filtered, selectedId]);
+  }, [filtered, selectedId,feed.selected?.id]);
 
   const locationSuggestions = useMemo(
-    () => [...new Set(offers.map((offer) => offer.location_label?.trim()).filter((v): v is string => Boolean(v)))],
-    [offers],
+    () => feed.enabled?feed.locations:[...new Set(offers.map((offer) => offer.location_label?.trim()).filter((v): v is string => Boolean(v)))],
+    [offers,feed.enabled,feed.locations],
   );
 
   const renderSearch = () => (
@@ -298,10 +307,10 @@ export function OffersBoard({
   // Producto, Paquete— son vocabulario de quien publica, no de quien busca, y
   // nadie que llega nuevo sabe en cuál está lo que necesita. Lo que de verdad
   // se busca es el servicio, y para eso está el buscador.
-  const hayFiltros = conFiltroDeFecha(offers.length);
+  const hayFiltros = conFiltroDeFecha(feed.enabled?feed.catalogTotal:offers.length);
   const renderFilters = () => (
     <>
-      {conFiltroDeFecha(offers.length) && (
+      {conFiltroDeFecha(feed.enabled?feed.catalogTotal:offers.length) && (
         <MarketplaceFilterChip
           label={copy.date}
           value={published}
@@ -424,7 +433,7 @@ export function OffersBoard({
             <h1 className="text-[17px] font-extrabold text-[#162543]">{copy.offers}</h1>
             {hasActiveFilters && filtered.length > 0 && (
               <span className="text-[13px] font-semibold text-[#68778d]">
-                <span className="tabular-nums">{filtered.length}</span> {filtered.length === 1 ? copy.offer : copy.offerPlural}{locationFilter.trim() ? ` · ${locationFilter.trim()}` : ""}
+                <span className="tabular-nums">{resultTotal??filtered.length}</span> {(resultTotal??filtered.length) === 1 ? copy.offer : copy.offerPlural}{locationFilter.trim() ? ` · ${locationFilter.trim()}` : ""}
               </span>
             )}
           </div>
@@ -434,13 +443,13 @@ export function OffersBoard({
       </div>
 
       <div className="ccr-tablero-cuerpo mx-auto w-full max-w-7xl px-0 sm:max-w-[46rem] sm:px-6 sm:py-5 lg:max-w-7xl lg:flex-1 lg:min-h-0 lg:px-6 lg:py-0">
-        <div className={`ccr-tablero-marco ${filtered.length > 0 ? "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)] xl:grid-cols-[380px_minmax(0,1fr)]" : ""} sm:overflow-hidden sm:rounded-[22px] sm:border sm:border-[#e5e7eb] sm:bg-white sm:shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)] lg:h-full ccr-panel-tablero`}>
-          <section className={filtered.length > 0 ? MARKETPLACE_LIST_CLASS : "min-w-0 bg-white"}>
+        <div className={`ccr-tablero-marco ${(filtered.length > 0 || feed.loading) ? "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)] xl:grid-cols-[380px_minmax(0,1fr)]" : ""} sm:overflow-hidden sm:rounded-[22px] sm:border sm:border-[#e5e7eb] sm:bg-white sm:shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)] lg:h-full ccr-panel-tablero`}>
+          <section className={(filtered.length > 0 || feed.loading) ? MARKETPLACE_LIST_CLASS : "min-w-0 bg-white"}>
             {/* Con cero, el vacío ya lo dice: «0 promociones» encima era lo mismo dos veces. */}
             {hasActiveFilters && filtered.length > 0 && (
               <div className="border-b border-[#e5e7eb] px-4 py-3 lg:hidden">
                 <p className="font-bold">
-                  {filtered.length} {filtered.length === 1 ? copy.offer : copy.offerPlural}
+                  {resultTotal??filtered.length} {(resultTotal??filtered.length) === 1 ? copy.offer : copy.offerPlural}
                 </p>
                 {locationFilter.trim() && <p className="text-xs text-[#68778d]">{locationFilter.trim()}</p>}
               </div>
@@ -456,7 +465,8 @@ export function OffersBoard({
                   onSelect={() => setSelectedId(offer.id)}
                 />
               ))}
-              {filtered.length === 0 && (
+              <MarketplaceFeedFeedback feed={feed}/>
+              {filtered.length === 0 && !feed.loading && !feed.error && (
                 // El MISMO vacío del resto del app: este tenía el mosaico
                 // copiado a mano y se salía de la tarjeta compartida.
                 // En computadora la lista ocupa el alto entero de la pantalla:
@@ -501,6 +511,7 @@ export function OffersBoard({
             </div>
           </section>
           {selected && (
+            <MarketplaceContactBoundary enabled={feed.enabled} professionalId={selected.professional_id} snapshot={feed.contactFor(selected.professional_id)}>
             <OfferPreview
               onFiltrarServicio={setQuery}
               offer={selected}
@@ -508,6 +519,7 @@ export function OffersBoard({
               currentProfessionalId={currentProfessionalId}
               onEdit={() => setEditingOffer(selected)}
             />
+            </MarketplaceContactBoundary>
           )}
         </div>
       </div>
@@ -701,7 +713,7 @@ function OfferRow({
   const copy = OFFERS_COPY[locale];
   const discount = offerDiscountPercent(offer);
   return (
-    <article
+    <article data-marketplace-row="promociones"
       className={`relative overflow-hidden border-b border-[#e5e7eb] bg-white px-3 py-2 transition sm:max-lg:last:border-b-0 hover:bg-[#f8fafc] sm:px-4 sm:py-2.5 ${selected ? "lg:bg-[#eef9fd] lg:shadow-[inset_4px_0_0_#162543]" : ""}`}
     >
       <button

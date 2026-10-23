@@ -23,9 +23,9 @@ for (const route of ['/buscar', '/buscar?categoria=redes_internet', '/promocione
     for (let i = 0; i < 60; i++) {
       await list.evaluate(el => { el.scrollTop = el.scrollHeight; });
       await page.waitForTimeout(500);
-      if (await list.locator('[data-search-load-more], [role="status"]').count() === 0) break;
+      if (await list.locator('[data-search-load-more], [data-marketplace-has-more], [role="status"]').count() === 0) break;
     }
-    await expect(list.locator('[data-search-load-more], [role="status"]')).toHaveCount(0);
+    await expect(list.locator('[data-search-load-more], [data-marketplace-has-more], [role="status"]')).toHaveCount(0);
     await list.evaluate(el => { el.scrollTop = el.scrollHeight; });
     await page.waitForTimeout(200);
     // Virtualized cards are revealed over several frames after the final

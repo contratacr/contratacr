@@ -1,3 +1,6 @@
+import { marketplacePage } from "@/lib/marketplace/feed-server";
+import type { FeedPage } from "@/lib/marketplace/feed";
+import { getLocale } from "next-intl/server";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { JobsBoard } from "@/components/jobs/jobs-board";
 import { recordServerInteraction } from "@/lib/analytics/server-events";
@@ -17,13 +20,15 @@ export async function JobsPageContent({ initialSelectedJobId = null, returnTo = 
   // Ni el CV ni las postulaciones del visitante hacen falta ya: se responde por
   // WhatsApp, así que la pantalla solo necesita los empleos y saber si quien
   // mira puede publicar.
-  const [jobsResult, professionalResult] = await Promise.all([
-    supabase
+  let jobQuery=supabase
       .from("job_posts")
       .select("*, job_applications(count), professionals!job_posts_employer_id_fkey(slug,business_name,verification_status,profiles(full_name,avatar_url))")
       .eq("status", "published")
       .order("created_at", { ascending: false })
-      .limit(100),
+      .limit(detailOnly ? 1 : 100);
+  if(detailOnly&&initialSelectedJobId)jobQuery=jobQuery.eq("id",initialSelectedJobId);
+  const [jobsResult,professionalResult]=await Promise.all([
+    jobQuery,
     user ? supabase.from("professionals").select("id").eq("profile_id", user.id).maybeSingle() : Promise.resolve({ data: null, error: null }),
   ]);
 
@@ -84,7 +89,7 @@ export async function JobsPageContent({ initialSelectedJobId = null, returnTo = 
   );
 }
 
-export default async function JobsPage() {
+export default async function JobsPage({searchParams}:{searchParams:Promise<Record<string,string|undefined>>}) {
   if (!hasSupabaseServerConfig()) {
     return (
       <JobsBoard
@@ -99,20 +104,14 @@ export default async function JobsPage() {
     );
   }
 
+  let props:{jobs:JobPost[];initialFeed?:FeedPage<JobPost>;canPost:boolean;currentProfessionalId:string|null;currentUserId:string|null}={jobs:[],canPost:false,currentProfessionalId:null,currentUserId:null};
   try {
-    return await JobsPageContent();
-  } catch (error) {
-    console.error("Could not initialize jobs page", error);
-    return (
-      <JobsBoard
-        jobs={[]}
-        canPost={false}
-        initialSelectedJobId={null}
-        returnTo={null}
-        currentProfessionalId={null}
-        currentUserId={null}
-        detailOnly={false}
-      />
-    );
-  }
+    const params=await searchParams;const locale=await getLocale();const db=await createClient();const user=await safeGetUser(db);
+    const [feed,{data:professional}]=await Promise.all([
+      marketplacePage("empleos",{q:params.q,location:params.location,published:params.published,workplace:params.workplace,experience:params.experience,employment:params.employment},user?.id,locale,{selectedId:params.job??params.apply}),
+      user?db.from("professionals").select("id").eq("profile_id",user.id).maybeSingle():Promise.resolve({data:null}),
+    ]);
+    props={jobs:feed.items as JobPost[],initialFeed:feed as FeedPage<JobPost>,canPost:!!professional,currentProfessionalId:professional?.id??null,currentUserId:user?.id??null};
+  } catch(error){console.error("Could not initialize jobs page",error);}
+  return <JobsBoard {...props}/>;
 }

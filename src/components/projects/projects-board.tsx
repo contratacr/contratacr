@@ -1,4 +1,7 @@
 "use client";
+import { useMarketplaceFeed } from "@/hooks/use-marketplace-feed";
+import { MarketplaceFeedFeedback } from "@/components/marketplace/feed-loading";
+import type { FeedPage } from "@/lib/marketplace/feed";
 
 import { InlineIdentityName } from "@/components/ui/inline-identity-name";
 
@@ -10,7 +13,7 @@ import { rutaProyecto } from "@/lib/marketplace-url";
 import { conFiltroDeFecha } from "@/lib/marketplace/filtros-por-volumen";
 import { formatPersonDisplayName } from "@/lib/display-name";
 import { useAppDialog } from "@/hooks/use-app-dialog";
-import { useEffect, useMemo, useState } from "react";
+import { createElement, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import { ArrowLeft, ClipboardList, Loader2, Menu, Phone, X } from "lucide-react";
@@ -276,7 +279,7 @@ function FotoDeQuienPublica({ proyecto, grande = false }: { proyecto: ProyectoPu
   const Icono = getCategoryGroupIcon(proyecto.category_id ? getCategoryGroupId(proyecto.category_id) : null);
   return (
     <span aria-hidden className={cn("ccr-caja-icono-plana grid shrink-0 place-items-center rounded-full", medida)}>
-      <Icono className={grande ? "h-6 w-6" : "h-5 w-5"} strokeWidth={1.8} />
+      {createElement(Icono,{className:grande?"h-6 w-6":"h-5 w-5",strokeWidth:1.8})}
     </span>
   );
 }
@@ -304,7 +307,7 @@ function retrato(proyecto: ProyectoPublico) {
 function Tarjeta({ proyecto, en, elegida = false, onElegir }: { proyecto: ProyectoPublico; en: boolean; elegida?: boolean; onElegir?: () => void }) {
   const copy = COPY[en ? "en" : "es"];
   return (
-    <article
+    <article data-marketplace-row="proyectos"
       // En computadora la ficha se abre AL LADO, como en Empleos y
       // Promociones: la tarjeta la elige sin salir de la lista. En el teléfono
       // no hay lado, así que sigue abriendo su pantalla.
@@ -343,13 +346,15 @@ function Tarjeta({ proyecto, en, elegida = false, onElegir }: { proyecto: Proyec
 }
 
 export function ProjectsBoard({
-  proyectos,
+  proyectos: initialProjects,
+  initialFeed,
   currentUserId,
   detalle = null,
   volverA = null,
   misProyectos = [],
 }: {
   proyectos: ProyectoPublico[];
+  initialFeed?: FeedPage<ProyectoPublico>;
   currentUserId: string | null;
   detalle?: ProyectoPublico | null;
   /** Dirección de regreso que trajo la ficha (`?from=`), validada antes de usarse. */
@@ -401,23 +406,29 @@ export function ProjectsBoard({
     window.history.replaceState(null, "", `${base}/${id}${window.location.search}`);
   }
 
+  const [publicado, setPublicado] = useState("all");
+  const [ahora, setAhora] = useState(0);
+  useEffect(() => { queueMicrotask(() => setAhora(Date.now())); }, []);
+  const feed=useMarketplaceFeed("proyectos",detalle?undefined:initialFeed,{q:query,location:lugar,published:publicado},locale);
+  const proyectos=useMemo(()=>feed.enabled?feed.items??[]:initialProjects,[feed.enabled,feed.items,initialProjects]);
+  const resultTotal=feed.enabled?feed.total:undefined;
+  const catalogueSize=feed.enabled?feed.catalogTotal:proyectos.length;
   // Los servicios que de verdad hay en el tablero, no el catálogo entero: se
   // ofrecen como sugerencias del buscador, que es donde se escribe el servicio.
   const serviciosSugeridos = useMemo(() => {
+    if(feed.enabled)return feed.suggestions;
     const vistos = new Set<string>();
     for (const proyecto of proyectos) if (proyecto.category_name) vistos.add(proyecto.category_name);
     return [...vistos].sort((a, b) => a.localeCompare(b, "es"));
-  }, [proyectos]);
+  }, [proyectos,feed.enabled,feed.suggestions]);
 
   // UN filtro, no cuatro: de un proyecto solo se sabe el servicio, la zona y
   // cuándo se publicó, y los dos primeros ya son el buscador. La fecha es lo
   // único que no se puede escribir —y lo que más le importa a quien busca
   // trabajo: un pedido de hoy vale más que uno de hace un mes—. Inventar más
   // filtros sería poner controles que no tienen qué filtrar.
-  const [publicado, setPublicado] = useState("all");
-  const [ahora, setAhora] = useState(0);
-  useEffect(() => { queueMicrotask(() => setAhora(Date.now())); }, []);
   const filtrados = useMemo(() => {
+    if(feed.enabled)return proyectos;
     const termino = query.trim().toLowerCase();
     const zona = lugar.trim().toLowerCase();
     return proyectos.filter((p) => {
@@ -428,8 +439,8 @@ export function ProjectsBoard({
       if (!termino) return true;
       return `${p.title} ${p.description} ${p.category_name ?? ""} ${p.location_label ?? ""}`.toLowerCase().includes(termino);
     });
-  }, [ahora, lugar, proyectos, publicado, query]);
-  const filtros = conFiltroDeFecha(proyectos.length) ? (
+  }, [ahora, lugar, proyectos, publicado, query,feed.enabled]);
+  const filtros = conFiltroDeFecha(feed.enabled?feed.catalogTotal:proyectos.length) ? (
     <MarketplaceFilterChip
       label={copy.fecha}
       value={publicado}
@@ -439,8 +450,8 @@ export function ProjectsBoard({
   ) : null;
 
   const lugaresSugeridos = useMemo(
-    () => [...new Set(proyectos.map((p) => p.location_label?.trim()).filter((v): v is string => Boolean(v)))],
-    [proyectos],
+    () => feed.enabled?feed.locations:[...new Set(proyectos.map((p) => p.location_label?.trim()).filter((v): v is string => Boolean(v)))],
+    [proyectos,feed.enabled,feed.locations],
   );
 
 
@@ -604,7 +615,7 @@ export function ProjectsBoard({
             <div><h1 className="text-[17px] font-extrabold text-[#162543]">{copy.titulo}</h1></div>
             {(query.trim() || lugar.trim()) && filtrados.length > 0 && (
               <span className="text-[13px] font-semibold text-[#68778d]">
-                {copy.cuenta(filtrados.length)}{lugar.trim() ? ` · ${lugar.trim()}` : ""}
+                {copy.cuenta(resultTotal??filtrados.length)}{lugar.trim() ? ` · ${lugar.trim()}` : ""}
               </span>
             )}
           </div>
@@ -653,23 +664,23 @@ export function ProjectsBoard({
               // en computadora. Con la lista al lado, «Ver proyecto» desde el
               // panel devolvía al tablero con algo seleccionado, no a la ficha.
               !detalle && "ccr-tablero-marco",
-              !detalle && filtrados.length > 0 && "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)] xl:grid-cols-[380px_minmax(0,1fr)]",
+              !detalle && (filtrados.length > 0 || feed.loading) && "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)] xl:grid-cols-[380px_minmax(0,1fr)]",
               fichaEnMovil && "max-sm:overflow-visible max-sm:border-0 max-lg:rounded-none max-lg:border-0 max-lg:bg-transparent max-lg:shadow-none",
             )}>
               <section className={cn(
                 "ccr-lista-tablero min-w-0 bg-white lg:h-full lg:overflow-y-auto",
-                filtrados.length > 0 && "ccr-lista-tablero",
+                (filtrados.length > 0 || feed.loading) && "ccr-lista-tablero",
                 detalle && "hidden",
               )}>
                 {/* El conteo va DENTRO de la lista, con su línea, igual que en
                     Empleos: solo cuando se buscó o se filtró. */}
                 {filtrados.length > 0 && (query.trim() || lugar.trim()) && (
                   <div className="border-b border-[#e5e7eb] px-4 py-3 lg:hidden">
-                    <p className="font-bold">{copy.cuenta(filtrados.length)}</p>
+                    <p className="font-bold">{copy.cuenta(resultTotal??filtrados.length)}</p>
                     {lugar.trim() && <p className="text-xs text-[#68778d]">{lugar.trim()}</p>}
                   </div>
                 )}
-                {filtrados.length === 0 ? (
+                {filtrados.length === 0 && !feed.loading && !feed.error ? (
                   // El MISMO vacío que Empleos y Promociones: plano, mismo
                   // texto y una salida. Este decía «Probá otra búsqueda» —el
                   // único en voseo del app— y no ofrecía cómo volver.
@@ -683,9 +694,9 @@ export function ProjectsBoard({
                     className="lg:min-h-full"
                     plano
                     icon={ClipboardList}
-                    title={proyectos.length === 0 ? copy.vacio : copy.sinResultados}
-                    description={proyectos.length === 0 ? copy.vacioSub : copy.sinResultadosSub}
-                    action={proyectos.length > 0 ? (
+                    title={catalogueSize === 0 ? copy.vacio : copy.sinResultados}
+                    description={catalogueSize === 0 ? copy.vacioSub : copy.sinResultadosSub}
+                    action={catalogueSize > 0 ? (
                       <button
                         type="button"
                         onClick={() => { setQuery(""); setLugar(""); setPublicado("all"); }}
@@ -700,6 +711,7 @@ export function ProjectsBoard({
                     {filtrados.map((proyecto) => (
                       <Tarjeta key={proyecto.id} proyecto={proyecto} en={en} elegida={elegido?.id === proyecto.id} onElegir={() => elegir(proyecto.id)} />
                     ))}
+                    <MarketplaceFeedFeedback feed={feed}/>
                   </div>
                 )}
               </section>
