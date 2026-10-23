@@ -6,7 +6,7 @@ import type { SearchedPlace } from "@/components/professionals/professional-sche
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ProfessionalCard, type ProfessionalCardData } from "@/components/professionals/professional-card";
 import { SaveableCard } from "@/components/professionals/save-button";
-import { Skeleton } from "@/components/ui/content-loading";
+import { ProfessionalCardSkeleton, SearchCardContactBoundary } from "@/components/search/professional-card-loading";
 
 // The results list keeps growing as the person scrolls, twenty at a time, the
 // way a marketplace should read. The first twenty come rendered from the
@@ -17,32 +17,6 @@ import { Skeleton } from "@/components/ui/content-loading";
 
 type Loaded = { professional: ProfessionalCardData; forceContactOnly: boolean; preferVideo: boolean; contactAvailability?: InitialAvailability };
 
-function CardSkeleton() {
-  return (
-    <div className="w-full bg-white px-4 py-3 lg:rounded-2xl lg:border lg:border-[#e5e7eb] lg:p-4" aria-hidden>
-      <div className="flex flex-col gap-3 lg:grid lg:grid-cols-[minmax(0,1fr)_216px] lg:gap-4 xl:grid-cols-[minmax(0,1fr)_292px] xl:gap-5">
-        <div className="min-w-0 space-y-2.5">
-          <div className="flex items-start gap-3">
-            <Skeleton immediate className="h-[52px] w-[52px] shrink-0 rounded-full lg:h-16 lg:w-16" />
-            <div className="min-w-0 flex-1 space-y-2">
-              <Skeleton immediate className="h-5 w-2/3 rounded" />
-              <Skeleton immediate className="h-4 w-1/2 rounded" />
-              <Skeleton immediate className="h-4 w-1/3 rounded" />
-            </div>
-          </div>
-          <div className="flex items-center justify-between gap-4">
-            <Skeleton immediate className="h-4 w-1/2 rounded" />
-            <Skeleton immediate className="h-4 w-1/4 rounded" />
-          </div>
-        </div>
-        <div className="flex flex-col gap-2 lg:border-l lg:border-[#e5e7eb] lg:pt-6 lg:pl-4">
-          <Skeleton immediate className="h-11 w-full rounded-full" />
-          <Skeleton immediate className="h-11 w-full rounded-full" />
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export function SearchResultsInfinite({
   searchedPlace,
@@ -251,6 +225,7 @@ export function SearchResultsInfinite({
         return (
         <div key={id} ref={observeSlot} data-search-result="" data-result-id={id} className="ccr-search-card-slot">
           <ContactAvailabilityProvider {...(item.contactAvailability ?? { viewerId: "", values: {}, resolvedAt: 0 })}>
+          <SearchCardContactBoundary professionalId={id}>
           <SaveableCard pro={item.professional} isOwn={!!viewerProfileId && viewerProfileId === item.professional.profileId}>
             <ProfessionalCard
               professional={item.professional}
@@ -265,6 +240,7 @@ export function SearchResultsInfinite({
               searchReturnHref={searchReturnHref}
             />
           </SaveableCard>
+          </SearchCardContactBoundary>
           </ContactAvailabilityProvider>
         </div>
         );
@@ -274,8 +250,8 @@ export function SearchResultsInfinite({
         <div ref={sentinel} data-search-load-more="" className="min-h-px">
           {loading && showLoading && (
             <div className="flex flex-col gap-1.5 lg:gap-3" role="status" aria-busy="true" aria-label={loadingLabel}>
-              <CardSkeleton />
-              <CardSkeleton />
+              <ProfessionalCardSkeleton />
+              <ProfessionalCardSkeleton />
             </div>
           )}
         </div>

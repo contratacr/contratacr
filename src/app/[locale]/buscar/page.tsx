@@ -1,3 +1,4 @@
+import { SearchCardContactBoundary } from "@/components/search/professional-card-loading";
 import { ContactAvailabilityProvider } from "@/hooks/use-profesional-con-app";
 import { initialContactAvailability } from "@/lib/direct-chat/availability";
 import { imagenDeSeccion } from "@/lib/seo/imagen-social";
@@ -612,6 +613,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       // data-pro-id + scroll-mt let the map highlight/scroll to this
                       // card on pin hover; the number badge matches the map pin.
                       <div key={pro.id} id={`pro-card-${pro.id}`} data-pro-id={pro.id} className="ccr-search-card-slot relative w-full scroll-mt-24 transition-shadow lg:max-w-none lg:rounded-2xl">
+                        <SearchCardContactBoundary professionalId={pro.id}>
                         <SaveableCard pro={pro} isOwn={!!viewerProfileId && viewerProfileId === pro.profileId}>
                           <ProfessionalCard
                             professional={redactContactEnListado(cardData(pro))}
@@ -626,6 +628,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                             searchReturnHref={searchReturnHref}
                           />
                         </SaveableCard>
+                        </SearchCardContactBoundary>
                       </div>
                     ))}
                     {/* From here the list grows on its own as the person scrolls. */}
