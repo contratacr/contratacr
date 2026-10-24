@@ -5958,8 +5958,10 @@
       "controls": [],
       "testIds": [],
       "relatedSpecs": [],
-      "directReferences": [],
-      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "directReferences": [
+        "tests/e2e/legal-privacy.spec.ts"
+      ],
+      "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "API + integración BD + autorización/propiedad + idempotencia; smoke solo lectura",
       "coverage": "Alcance detallado pendiente de revisión; no certificado",
       "priority": "P1"
@@ -24905,43 +24907,43 @@
       "file": "tests/e2e/legal-privacy.spec.ts",
       "cases": [
         {
-          "line": 8,
+          "line": 9,
           "title": "`legal documents: ${locale} identifies the actual operator and explains the current verification`"
         },
         {
-          "line": 23,
+          "line": 24,
           "title": "\"privacy remains accessible without advertising controls\""
         },
         {
-          "line": 28,
+          "line": 29,
           "title": "\"native local answers require no external AI permission\""
         },
         {
-          "line": 34,
+          "line": 35,
           "title": "`${native ? \"native\" : \"web\"}: login never adds a second terms screen; explicit receipts remain isolated and idempotent`"
         },
         {
-          "line": 35,
+          "line": 36,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 61,
+          "line": 62,
           "title": "\"native assistant sends a prompt without an extra permission step\""
         },
         {
-          "line": 82,
+          "line": 83,
           "title": "`login keeps the existing legal disclosure before continuing (${locale})`"
         },
         {
-          "line": 90,
+          "line": 91,
           "title": "`${native ? \"native\" : \"web\"}: no automatic advertising or terms notice on entry`"
         },
         {
-          "line": 107,
+          "line": 108,
           "title": "\"advertising withdrawal rejects cross-origin and invalid choices\""
         },
         {
-          "line": 119,
+          "line": 128,
           "title": "\"offline guest advertising withdrawal retries on reconnect without a popup\""
         }
       ]
