@@ -1,5 +1,6 @@
 "use client";
 
+import { groupMessageDays, messageDayLabel, messageTime } from "@/lib/direct-chat/message-dates";
 import { reconcileThreadMessages, confirmThreadMessage } from "@/lib/direct-chat/thread-messages";
 import { APP_RESUME_EVENT } from "@/lib/app-events";
 
@@ -281,6 +282,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
   const [pendingDraftPayload, setPendingDraftPayload] = useState<PendingDraft | null>(initialPendingDraft.payload);
   const [activeId, setActiveId] = useState<string | null>(searchParams.get("conversation") || (initialPendingDraft.conversation ? DRAFT_CONVERSATION_ID : null));
   const [messages, setMessages] = useState<DirectMessage[]>([]);
+  const messageDays = useMemo(() => groupMessageDays(messages), [messages]);
   const activeThreadRef = useRef(activeId);
   const displayedThreadRef = useRef<string | null>(null);
   const threadRequestRef = useRef(0);
@@ -1682,7 +1684,14 @@ export function DirectChatInbox({ alCambiarSubvista }: {
               description={tChat("threadEmptySub")}
               className="h-full"
             />
-          ) : messages.map((message) => {
+          ) : messageDays.map(group => (
+            <section key={group.day} data-chat-day={group.day} className="relative space-y-2">
+              <div data-chat-day-label className="sticky top-0 z-10 flex justify-center py-2 pointer-events-none">
+                <span className="rounded-full bg-[#f1f5f9] px-3 py-1 text-[11px] font-semibold text-[#526277] shadow-sm ring-1 ring-white">
+                  {messageDayLabel(group.date, locale)}
+                </span>
+              </div>
+              {group.messages.map((message) => {
             const mine = message.sender_id === user?.id;
             const uploading = message.id.startsWith("pending-");
             // Con fotos, la burbuja toma de una vez su ancho máximo. Si no, se
@@ -1807,14 +1816,16 @@ export function DirectChatInbox({ alCambiarSubvista }: {
                     );
                   })()}
                   </>}
-                  <time className={cn("mt-1 block text-right text-[10px]", mine && !message.deleted_at ? "text-white/75" : "text-[#8996a8]")}>
+                  <time dateTime={message.created_at} data-message-time className={cn("mt-1 block text-right text-[10px]", mine && !message.deleted_at ? "text-white/75" : "text-[#8996a8]")}>
                     {message.edited_at && !message.deleted_at && <span className="mr-1">{tChat("edited")} ·</span>}
-                    {timeLabel(message.created_at, locale)}
+                    {messageTime(message.created_at, locale)}
                   </time>
                 </div>
               </div>
             );
-          })}
+              })}
+            </section>
+          ))}
           {/* EL ESTADO, COMO iMESSAGE: texto gris bajo tu ÚLTIMO mensaje, solo si
               la conversación termina en él (si el otro ya contestó, sobra). Los
               checks de color no se entendían sobre la burbuja azul. */}
