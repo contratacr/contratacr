@@ -52,7 +52,9 @@ function setup({ signedIn = false, oldSchema = false, banned = false } = {}) {
       if (name === '@/lib/text/repair-visible-text') return { repairVisibleText: value => value };
       if (name === '@/lib/cloudinary') return { cldThumb: value => value };
       if (name === '@/lib/promise-timeout') return { withPromiseTimeout: p => p };
-      if (name === '@/lib/data/languages' || name === '@/lib/search/ranking') return {};
+      // Nearby ranking is used by search, not by the profile-detail queries
+      // exercised here. Keep this harness isolated from catalogue/geography IO.
+      if (name === '@/lib/data/languages' || name === '@/lib/search/ranking' || name === '@/lib/search/nearby') return {};
       throw new Error(name);
     },
   });
