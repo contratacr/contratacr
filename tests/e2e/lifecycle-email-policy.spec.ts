@@ -59,9 +59,9 @@ test("the preview mailbox is excluded even if its account loses the admin role",
 test("starting-price copy retains the existing campaign identity and historical opt-outs", () => {
  const key = "precio-desde-profesionales-2026";
  const campaign = LIFECYCLE_CAMPAIGNS.find(item => item.key === key)!;
- expect(campaign.subject).toBe("Agrega un precio desde a tus servicios");
- expect(campaign.body).toContain("«Precio desde»");
- expect(campaign.body).toContain("«Consultar precio»");
+ expect(campaign.subject).toBe("Ayuda a tus clientes con un precio de referencia");
+ expect(campaign.body).toContain("«Desde ₡…»");
+ expect(campaign.body).toContain("el precio final lo acuerdas con el cliente según el trabajo");
  expect(campaign.ctaPath).toBe("/dashboard/profesional?mode=offer&tab=services");
  const history = [receipt(REVIEW_CAMPAIGN.key, 25), receipt(key, 20)];
  expect(lifecycleCandidate(account, pro, history, [], false, now, true)?.key).not.toBe(key);

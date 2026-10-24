@@ -42,6 +42,7 @@ for (const locale of ['es', 'en'] as const) {
 test('price notifications explain the benefit consistently in both languages', () => {
   for (const locale of ['es', 'en'] as const) {
     const copy = localizedNotificationCopy({ type: 'agrega_precio', title: '', message: '', data: {} }, locale);
+    expect(copy.title).toBe((locale === 'es' ? es : en).proPanel.completion.servicePrice);
     expect(copy.message).toBe((locale === 'es' ? es : en).proPanel.completion.servicePriceBenefit);
   }
 });
