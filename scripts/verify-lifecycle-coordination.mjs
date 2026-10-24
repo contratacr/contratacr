@@ -25,12 +25,21 @@ try {
   await checked(db.from('admin_campaign_sends').update({status:'sent',enviado_en:new Date(Date.now()-15*86400000).toISOString()}).eq('profile_id',id));
   assert.equal(await claim(first,changed),false);
   assert.equal(await claim('coordination-c',changed),true,'New campaign can follow after fourteen days');
+  // The original campaign email differs from the current profile email.
+  await checked(db.from('admin_campaign_sends').update({status:'sent',email}).eq('profile_id',id));
+  const notice = type => checked(db.from('notifications').insert({user_id:id,type,title:'Synthetic coordination test',message:'Local only',data:{push_suppressed:true}}).select('id'));
+  assert.equal((await notice('completa_perfil')).length,0,'Email cooldown follows the account after its email changes');
   await checked(db.from('admin_campaign_sends').delete().eq('profile_id',id));
+  assert.equal((await notice('pide_resenas')).length,1,'First reminder may be recorded');
+  for (const type of ['agrega_precio','completa_perfil','invita_proyecto','resena_google'])
+    assert.equal((await notice(type)).length,0,`${type} must wait behind another reminder`);
+  assert.equal(await claim('coordination-after-notice',changed),false,'Email must wait behind a reminder');
+  await checked(db.from('notification_once_receipts').delete().eq('user_id',id));
   quota=await checked(db.from('email_cuota_diaria').select('*').eq('dia',day).eq('nivel','masivo').maybeSingle());
   quotaTouched=true;
   await checked(db.from('email_cuota_diaria').upsert({dia:day,nivel:'masivo',enviados:250},{onConflict:'dia,nivel'}));
   assert.equal(await claim('coordination-quota',changed),false,'Fifty sends stay reserved');
-  console.log('Lifecycle SQL: concurrency, permanent receipts, email changes, cooldown and quota passed');
+  console.log('Lifecycle SQL: concurrency, permanent receipts, email changes, cross-channel cooldowns and quota passed');
 } finally {
   if(quotaTouched && quota) await checked(db.from('email_cuota_diaria').upsert(quota,{onConflict:'dia,nivel'}));
   else if(quotaTouched) await checked(db.from('email_cuota_diaria').delete().eq('dia',day).eq('nivel','masivo'));
