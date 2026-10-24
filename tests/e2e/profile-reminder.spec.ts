@@ -8,7 +8,7 @@ import {gotoOK,loginAs,resetAuth,waitForInteractivePage} from "./helpers";
 const now=Date.UTC(2026,9,11,15);
 const date=(days:number)=>new Date(now-days*86400000).toISOString();
 const account:LifecycleAccount={id:"profile-reminder",email:"pending@example.com",full_name:"Pending",created_at:date(3),is_disabled:false,role:"client",is_provider:false,professionalIntent:true,emailConfirmed:true,avatar_url:"https://example.com/photo.jpg"};
-const complete:LifecycleProfessional={profile_id:account.id,created_at:date(3),review_count:0,services:[{active:true,description:"Servicio",priceType:"a_convenir"}],is_banned:false,oculto_del_buscador:false,slug:"complete",bio:"Trabajo profesional",whatsapp:"+50670001234",coverage_country:true};
+const complete:LifecycleProfessional={profile_id:account.id,created_at:date(3),review_count:0,services:[{active:true,description:"Servicio",priceType:"a_convenir"}],is_banned:false,oculto_del_buscador:false,slug:"complete",bio:"Trabajo profesional",whatsapp:"+50670001234",coverage_country:true,workplaces:[{provinciaId:"alajuela",cantonId:"atenas"}]};
 const candidate=(a=account,p:LifecycleProfessional|undefined=undefined,h:CampaignHistory[]=[])=>lifecycleCandidate(a,p,h,[],false,now,true);
 test("only confirmed professional intent qualifies for an abandoned registration",()=>{
   expect(candidate()?.key).toBe(PROFILE_REMINDER.key);

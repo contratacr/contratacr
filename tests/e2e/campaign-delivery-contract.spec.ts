@@ -164,8 +164,9 @@ test.describe("campaign delivery and permanent notification contracts", () => {
 
   test("the price reminder waits four days even if a first review has already arrived", async () => {
     const now = Date.parse("2026-10-10T18:00:00Z");
-    const simulate = async (days: number) => {
+    const simulate = async (days: number, priceAlreadySent = false) => {
       const receipts = [{ user_id: "pro", type: "pide_resenas", status: "sent", sent_at: new Date(now - days * 86_400_000).toISOString() }];
+      if (priceAlreadySent) receipts.push({ user_id: "pro", type: "agrega_precio", status: "sent", sent_at: new Date(now - 20 * 86_400_000).toISOString() });
       const db = { from(table: string) {
         const chain = {
           select() { return chain; }, not() { return chain; }, eq() { return chain; }, order() { return chain; }, in() { return chain; },
@@ -179,6 +180,7 @@ test.describe("campaign delivery and permanent notification contracts", () => {
     };
     expect(await simulate(2)).toEqual({ resenas: 0, precio: 0 });
     expect(await simulate(4)).toEqual({ resenas: 0, precio: 1 });
+    expect(await simulate(4, true)).toEqual({ resenas: 0, precio: 0 });
   });
 
   test("reminders wait 24 hours even if the preceding notification was deleted", () => {

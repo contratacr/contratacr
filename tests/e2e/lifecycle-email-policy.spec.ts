@@ -1,11 +1,11 @@
 import { expect, test } from "playwright/test";
-import { lifecycleCandidate, type LifecycleAccount, type LifecycleProfessional } from "../../src/lib/email/lifecycle-policy";
+import { LIFECYCLE_CAMPAIGNS, lifecycleCandidate, type LifecycleAccount, type LifecycleProfessional } from "../../src/lib/email/lifecycle-policy";
 import { REVIEW_CAMPAIGN, SERVICES_CAMPAIGN, type CampaignHistory } from "../../src/lib/email/campaign-policy";
 import { POST } from "../../src/app/api/internal/campaigns/route";
 const now = Date.UTC(2026,9,11,15);
 const days = (n:number) => new Date(now-n*86400000).toISOString();
 const account:LifecycleAccount = {id:"account",email:"pro@example.com",full_name:"Pro",created_at:days(30),is_disabled:false,role:"client",is_provider:false,avatar_url:"https://example.com/avatar.jpg"};
-const pro:LifecycleProfessional = {profile_id:"account",created_at:days(30),review_count:0,services:[{active:true,description:"Servicio",priceType:"a_convenir"}],is_banned:false,oculto_del_buscador:false,slug:"pro",bio:"Mi trabajo",whatsapp:"+50670001234",coverage_country:true};
+const pro:LifecycleProfessional = {profile_id:"account",created_at:days(30),review_count:0,services:[{active:true,description:"Servicio",priceType:"a_convenir"}],is_banned:false,oculto_del_buscador:false,slug:"pro",bio:"Mi trabajo",whatsapp:"+50670001234",coverage_country:true,workplaces:[{provinciaId:"alajuela",cantonId:"atenas"}]};
 const receipt = (campana:string,age=15,status:CampaignHistory["status"]="sent"):CampaignHistory => ({email:account.email!,campana,enviado_en:days(age),status});
 function candidate(p:LifecycleProfessional|undefined=pro,history:CampaignHistory[]=[],a=account,hasProject=false) {
   return lifecycleCandidate(a,p,history,[],hasProject,now,true)?.key;
@@ -53,4 +53,18 @@ test("the worker rejects unauthenticated requests before accessing recipients",a
 test("the preview mailbox is excluded even if its account loses the admin role",() => {
   expect(lifecycleCandidate({...account,email:" IsaacSanchezMonge@gmail.com "},pro,[],[],false,now)).toBeNull();
   expect(lifecycleCandidate({...account,role:"admin"},pro,[],[],false,now)).toBeNull();
+});
+
+
+test("starting-price copy retains the existing campaign identity and historical opt-outs", () => {
+ const key = "precio-desde-profesionales-2026";
+ const campaign = LIFECYCLE_CAMPAIGNS.find(item => item.key === key)!;
+ expect(campaign.subject).toBe("Agrega un precio desde a tus servicios");
+ expect(campaign.body).toContain("«Precio desde»");
+ expect(campaign.body).toContain("«Consultar precio»");
+ expect(campaign.ctaPath).toBe("/dashboard/profesional?mode=offer&tab=services");
+ const history = [receipt(REVIEW_CAMPAIGN.key, 25), receipt(key, 20)];
+ expect(lifecycleCandidate(account, pro, history, [], false, now, true)?.key).not.toBe(key);
+ expect(lifecycleCandidate(account, pro, [], [account.email!], false, now, true)).toBeNull();
+ expect(lifecycleCandidate(account, {...pro,services:[{priceAmount:15000,active:true}]}, [receipt(REVIEW_CAMPAIGN.key,25)], [], false, now, true)?.key).not.toBe(key);
 });
