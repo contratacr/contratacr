@@ -947,7 +947,7 @@ export function ServicesEditor({
                   onChange={(value) => setForm((current) => ({ ...current, priceUnit: value as PricingType }))}
                   disabled={form.aConsultar}
                   className="w-32 shrink-0 sm:w-40"
-                  options={PRICE_UNITS.map((priceType) => ({ value: priceType.value, label: locale === "en" ? ({ por_hora: "Per hour", por_consulta: "Per consultation", por_proyecto: "Per project", por_dia: "Per day", paquete: "Package", a_convenir: "Ask for price" }[priceType.value]) : priceType.label }))}
+                  options={PRICE_UNITS.map((priceType) => ({ value: priceType.value, label: t(`priceUnits.${priceType.value}`) }))}
                 />
               </div>
               <p className="mt-2 text-xs leading-5 text-[#68778d]">{t("priceRefHelp")}</p>

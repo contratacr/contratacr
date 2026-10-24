@@ -7,7 +7,7 @@ import { Link } from "@/i18n/navigation";
 import { metadatosDePantalla } from "@/lib/seo/alternates";
 import { tramoFicha } from "@/lib/marketplace-url";
 import { marketplaceReturnLabelKey, safeMarketplaceReturnHref } from "@/lib/navigation/marketplace-return";
-import { JobsPageContent } from "../page";
+import { JobsPageContent } from "@/components/jobs/jobs-page-content";
 import { createClient, hasSupabaseServerConfig } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 

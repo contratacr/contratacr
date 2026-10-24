@@ -1504,6 +1504,7 @@
     "keepEditing": "Seguir editando"
   },
   "servicesEditor": {
+    "priceUnits": {"por_hora": "Por hora", "por_consulta": "Por consulta", "por_proyecto": "Por proyecto", "por_dia": "Por día", "paquete": "Paquete", "a_convenir": "Consultar precio"},
     "step1Title": "Tus servicios",
     "addProfession": "Agregar servicio",
     "alreadyAdded": "Ya agregaste ese servicio.",

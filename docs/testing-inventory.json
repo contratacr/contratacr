@@ -2,11 +2,11 @@
   "scope": "Todos los archivos TypeScript de src/app, src/components y src/hooks, controles JSX declarados, pestañas del panel y specs permanentes. No enumera cada elemento dinámico renderizado ni componentes dentro de dependencias.",
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
-    "files": 502,
+    "files": 503,
     "controls": 1295,
     "pages": 71,
     "handlers": 105,
-    "components": 262,
+    "components": 263,
     "hooks": 28,
     "specs": 176
   },
@@ -1501,7 +1501,6 @@
       "group": "Empleos",
       "route": "/[locale]/empleos",
       "exports": [
-        "JobsPageContent",
         "JobsPage"
       ],
       "methods": [],
@@ -13015,6 +13014,28 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         }
       ],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/marketplace-lifecycle.spec.ts",
+        "tests/e2e/marketplace-editors.spec.ts",
+        "tests/e2e/tableros-filtros.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P1"
+    },
+    {
+      "file": "src/components/jobs/jobs-page-content.tsx",
+      "kind": "Componente",
+      "group": "Empleos",
+      "route": null,
+      "exports": [
+        "JobsPageContent"
+      ],
+      "methods": [],
+      "controls": [],
       "testIds": [],
       "relatedSpecs": [
         "tests/e2e/marketplace-lifecycle.spec.ts",
