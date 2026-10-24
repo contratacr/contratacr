@@ -390,7 +390,7 @@ export async function POST(req: NextRequest) {
           after(() => avisarPorCorreo({
             destinatarios: recipients, eventId: projectId,
             asunto: `Nuevo proyecto de ${label}${zona ? ` en ${zona}` : ""}`,
-            titular: `Un cliente publicó un proyecto de ${label}${zona ? ` en ${zona}` : ""}: «${finalTitle}».`,
+            titular: `Un cliente publicó un proyecto de ${label}${zona ? ` en ${zona}` : ""}: "${finalTitle}".`,
             parrafos: [
               cleanDescription.length > 280 ? `${cleanDescription.slice(0, 277).trimEnd()}…` : cleanDescription,
               "Si te interesa, ábrelo y escríbele por WhatsApp. Responder rápido es lo que más pesa para que te elijan.",

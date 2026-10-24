@@ -385,7 +385,7 @@ test("registro de profesional: contraseña, provincia, tarifa, fijo, abre arriba
   // 3. Paso 2: la tarifa va junto al servicio, con su texto corto.
   await main.getByRole("button", { name: "Busca tu servicio" }).waitFor({ timeout: 30_000 });
   await expect(main.getByText("¿Desde cuánto cobras por hora?")).toBeVisible();
-  await expect(main.getByText(/tu perfil dirá «Consultar precio»/)).toBeVisible();
+  await expect(main.getByText(/tu perfil dirá "Consultar precio"/)).toBeVisible();
 
   // 4. Un lugar requiere provincia y cantón; una cobertura amplia no los sustituye.
   const agregarLugar = main.getByRole("button", { name: "Agregar este lugar", exact: true });

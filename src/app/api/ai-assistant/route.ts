@@ -633,7 +633,7 @@ function categoryClarification(text: string, locale: Locale, labels: Map<string,
       ? "Which service do you need? Please write the service name so I can search correctly."
       : "¿Qué servicio necesitas? Escríbame el nombre del servicio para buscar correctamente.";
   }
-  const formatted = options.map((option) => `“${option}”`).join(", ");
+  const formatted = options.map((option) => `"${option}"`).join(", ");
   return locale === "en"
     ? `To search correctly, which service do you mean: ${formatted}?`
     : `Para buscar correctamente, ¿te refieres a ${formatted}?`;
@@ -754,8 +754,8 @@ type ProductIntent = {
 // calidad, garantías o problemas: la plataforma da con qué comparar; la
 // contratación es un acuerdo directo entre cliente y profesional.
 const PARA_COMPARAR = {
-  es: "En cada perfil de ContrataCR puedes comparar antes de decidir: reseñas de otros clientes, casos de éxito con trabajos reales, formación y certificaciones, idiomas, años de experiencia, zonas donde trabaja y precio de referencia, además de la insignia «Verificado» cuando confirmó su identidad.",
-  en: "Every ContrataCR profile lets you compare before you decide: reviews from other clients, success stories with real work, training and certifications, languages, years of experience, the areas they cover and a reference price, plus the «Verified» badge when they confirmed their identity.",
+  es: "En cada perfil de ContrataCR puedes comparar antes de decidir: reseñas de otros clientes, casos de éxito con trabajos reales, formación y certificaciones, idiomas, años de experiencia, zonas donde trabaja y precio de referencia, además de la insignia \"Verificado\" cuando confirmó su identidad.",
+  en: "Every ContrataCR profile lets you compare before you decide: reviews from other clients, success stories with real work, training and certifications, languages, years of experience, the areas they cover and a reference price, plus the \"Verified\" badge when they confirmed their identity.",
 };
 const ACUERDO_DIRECTO = {
   // Consejo, no descargo: lo legal («no presta ni garantiza») vive en los
@@ -767,7 +767,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
   {
     test: (n) => /^(hola|holi|buenas|buenos dias|buenas tardes|buenas noches|hello|hi|hey|saludos)[\s!.,]*(\w+[\s!.,]*){0,3}$/.test(n) && n.split(/\s+/).length <= 4,
     answer: {
-      es: "¡Hola! Puedo ayudarte a encontrar un profesional (dime el servicio y la zona, por ejemplo «un electricista en Heredia») o explicarte cómo funciona ContrataCR. ¿Qué necesitas?",
+      es: "¡Hola! Puedo ayudarte a encontrar un profesional (dime el servicio y la zona, por ejemplo \"un electricista en Heredia\") o explicarte cómo funciona ContrataCR. ¿Qué necesitas?",
       en: "Hi! I can help you find a professional (tell me the service and the area, for example \"an electrician in Heredia\") or explain how ContrataCR works. What do you need?",
     },
   },
@@ -775,7 +775,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(agreg|anad|sum|add).{0,12}(un |otro |mas |another |a )?(servicio|servicios|service|services)/.test(n),
     action: "open_dashboard",
     answer: {
-      es: "Para agregar un servicio abre tu panel, entra a Servicios y toca «Agregar servicio»: eliges el servicio, tus zonas y el precio de referencia. Aparece en tu perfil y en las búsquedas de ese servicio.",
+      es: "Para agregar un servicio abre tu panel, entra a Servicios y toca \"Agregar servicio\": eliges el servicio, tus zonas y el precio de referencia. Aparece en tu perfil y en las búsquedas de ese servicio.",
       en: "To add a service open your panel, go to Services and tap \"Add service\": pick the service, your areas and a reference price. It shows on your profile and in searches for that service.",
     },
     cta: { es: "Ir a Servicios", en: "Open Services" },
@@ -821,7 +821,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
   {
     test: (n) => /(crear|creo|publicar|publico|create|post).{0,10}(o|or).{0,10}(buscar|busco|ver|find|see).{0,15}(proyectos?|projects?)/.test(n),
     answer: {
-      es: "Para pedir un trabajo, toca el «+» de abajo y elige «Publicar un proyecto»: cuentas qué necesitas y los profesionales de ese servicio te escriben. Los proyectos que ya publicó la gente están en Proyectos, en el menú de arriba.",
+      es: "Para pedir un trabajo, toca el \"+\" de abajo y elige \"Publicar un proyecto\": cuentas qué necesitas y los profesionales de ese servicio te escriben. Los proyectos que ya publicó la gente están en Proyectos, en el menú de arriba.",
       en: "To request a job, tap the \"+\" at the bottom and choose \"Post a project\": you describe what you need and professionals in that service write to you. Projects other people posted are in Projects, in the top menu.",
     },
     cta: { es: "Publicar proyecto", en: "Post project" },
@@ -834,7 +834,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
   {
     test: (n) => /^(ayuda|help|\?+|necesito algo|no se|que puedes hacer|que haces|what can you do|menu)[\s?!.]*$/.test(n),
     answer: {
-      es: "Puedo hacer tres cosas: buscar profesionales por servicio y zona (escribe, por ejemplo, «ocupo un plomero en Cartago»), explicarte cómo escribirle a un profesional, publicar lo que necesitas o dejar una reseña, y ayudarte con tu cuenta (contraseña, cédula, notificaciones). ¿Por dónde empezamos?",
+      es: "Puedo hacer tres cosas: buscar profesionales por servicio y zona (escribe, por ejemplo, \"ocupo un plomero en Cartago\"), explicarte cómo escribirle a un profesional, publicar lo que necesitas o dejar una reseña, y ayudarte con tu cuenta (contraseña, cédula, notificaciones). ¿Por dónde empezamos?",
       en: "I can do three things: find professionals by service and area (for example \"I need a plumber in Cartago\"), explain how to message a professional, post what you need or leave a review, and help with your account (password, ID, notifications). Where do we start?",
     },
   },
@@ -849,7 +849,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(olvide|olvido|no recuerdo|no me acuerdo|perdi|recuperar|restablecer|forgot|reset|recover).{0,25}(contrasena|clave|password)/.test(n) || /(contrasena|clave|password).{0,25}(olvide|olvidada|no la recuerdo|forgot|reset)/.test(n),
     action: "reset_password",
     answer: {
-      es: "Toca «¿Olvidaste tu contraseña?» en la pantalla de inicio de sesión: te enviamos un correo con un enlace para crear una nueva.",
+      es: "Toca \"¿Olvidaste tu contraseña?\" en la pantalla de inicio de sesión: te enviamos un correo con un enlace para crear una nueva.",
       en: "Tap \"Forgot your password?\" on the sign-in screen: we email you a link to create a new one.",
     },
     cta: { es: "Restablecer contraseña", en: "Reset password" },
@@ -859,7 +859,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(cambi|actualiz|modific|poner|nueva|change|update|new).{0,20}(contrasena|clave|password)/.test(n) || /(contrasena|clave|password).{0,20}(cambi|nueva|new)/.test(n),
     action: "open_dashboard",
     answer: {
-      es: "En tu panel, abre Cuenta y seguridad: ahí escribes la contraseña actual y la nueva. Si no la recuerdas, usa «¿Olvidaste tu contraseña?» al iniciar sesión.",
+      es: "En tu panel, abre Cuenta y seguridad: ahí escribes la contraseña actual y la nueva. Si no la recuerdas, usa \"¿Olvidaste tu contraseña?\" al iniciar sesión.",
       en: "In your panel, open Account & security: enter your current password and the new one. If you don't remember it, use \"Forgot your password?\" when signing in.",
     },
     cta: { es: "Ir a Cuenta y seguridad", en: "Open Account & security" },
@@ -869,7 +869,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(elimin|borr|cerr|dar de baja|desactiv|delete|close|deactivate|remove).{0,20}(mi cuenta|la cuenta|cuenta|my account|account)/.test(n),
     action: "open_dashboard",
     answer: {
-      es: "En tu panel, abre Cuenta y seguridad y baja hasta «Eliminar cuenta». Se borran tu perfil, tus proyectos y tus mensajes; no se puede deshacer.",
+      es: "En tu panel, abre Cuenta y seguridad y baja hasta \"Eliminar cuenta\". Se borran tu perfil, tus proyectos y tus mensajes; no se puede deshacer.",
       en: "In your panel, open Account & security and scroll to \"Delete account\". Your profile, requests and messages are removed; it cannot be undone.",
     },
     cta: { es: "Ir a Cuenta y seguridad", en: "Open Account & security" },
@@ -881,7 +881,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => !/garantiz|guarantee/.test(n) && (/(verific|validar|confirmar|verify|validate).{0,25}(cedula|identidad|identity|id\b)/.test(n) || /(cedula|identidad).{0,20}(verific|validar)/.test(n) || /(verificacion|verificado|verificarme|verification|verified)/.test(n)),
     action: "open_dashboard",
     answer: {
-      es: "En tu panel, abre Cuenta y seguridad → Datos básicos y escribe tu número de cédula: se comprueba contra el padrón y tu nombre queda verificado. Los profesionales además pasan por la verificación del equipo, que aparece como «Verificado» en el perfil.",
+      es: "En tu panel, abre Cuenta y seguridad → Datos básicos y escribe tu número de cédula: se comprueba contra el padrón y tu nombre queda verificado. Los profesionales además pasan por la verificación del equipo, que aparece como \"Verificado\" en el perfil.",
       en: "In your panel, open Account & security → Basic details and enter your ID number: it is checked against the national registry and your name gets verified. Professionals also go through the team's verification, shown as \"Verified\" on the profile.",
     },
     cta: { es: "Ir a Cuenta y seguridad", en: "Open Account & security" },
@@ -913,7 +913,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(contratar|contrato|busco|necesito|quiero|publicar|publico).{0,20}(empleado|empleada|trabajador|trabajadora|personal|colaborador|employee|worker|staff)/.test(n),
     action: "open_dashboard",
     answer: {
-      es: "Para contratar a alguien publicas un empleo: en tu panel abre la pestaña Empleos y toca «Publicar empleo» (puesto, modalidad, zona y salario si querés). Los interesados te escriben por Mensajes.",
+      es: "Para contratar a alguien publicas un empleo: en tu panel abre la pestaña Empleos y toca \"Publicar empleo\" (puesto, modalidad, zona y salario si querés). Los interesados te escriben por Mensajes.",
       en: "To hire someone you publish a job: in your panel open the Jobs tab and tap \"Publish job\" (position, type, area and salary if you want). Interested people message you.",
     },
     cta: { es: "Ir a Empleos", en: "Open Jobs" },
@@ -935,7 +935,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(mensaje|mensajes|chat|chats|conversacion|conversaciones|escrib|hablar con|contact|message|messages|conversation|write to)/.test(n) && !/(soporte|support|ticket)/.test(n),
     action: "help",
     answer: {
-      es: "Todos tus chats están en Mensajes. Para empezar uno, abre el perfil del profesional (o su promoción o empleo) y toca «Enviar mensaje»: el chat se abre dentro de la app y le llega el aviso. No hace falta salir a WhatsApp.",
+      es: "Todos tus chats están en Mensajes. Para empezar uno, abre el perfil del profesional (o su promoción o empleo) y toca \"Enviar mensaje\": el chat se abre dentro de la app y le llega el aviso. No hace falta salir a WhatsApp.",
       en: "All your chats are in Messages. To start one, open the professional's profile (or their promotion or job) and tap \"Send message\": the chat opens inside the app and they get notified. No need to go out to WhatsApp.",
     },
     cta: { es: "Abrir mensajes", en: "Open messages" },
@@ -947,7 +947,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => !/sin cuenta|without (an )?account/.test(n) && (/(publicar|publico|crear|creo|hacer|hago|abrir|abro|publish|create|post).{0,18}(proyecto|project|solicitud|lo que necesito|what i need)/.test(n) || /^(publicar proyecto|publish project|proyecto nuevo|new project)$/.test(n)),
     action: "publish_request",
     answer: {
-      es: "Publicar un proyecto es contar qué necesitas para que te escriban varios profesionales de esa categoría. Toca «Publicar proyecto», elige el servicio, describe el trabajo y agrega la zona; los profesionales interesados te escriben por Mensajes y comparas.",
+      es: "Publicar un proyecto es contar qué necesitas para que te escriban varios profesionales de esa categoría. Toca \"Publicar proyecto\", elige el servicio, describe el trabajo y agrega la zona; los profesionales interesados te escriben por Mensajes y comparas.",
       en: "Posting a project means describing what you need so several professionals in that category write to you. Tap \"Post project\", pick the service, describe the job and add the area; interested professionals message you and you compare.",
     },
     cta: { es: "Publicar proyecto", en: "Post project" },
@@ -957,7 +957,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(public|cre[oa]|sub[oi]|pon[eg]|hac[eo]|publish|create|post).{0,15}(una oferta|oferta|ofertas|promocion|descuento|an offer|offer|deal)/.test(n),
     action: "open_dashboard",
     answer: {
-      es: "Las promociones las publican los profesionales: en tu panel abre la pestaña Promociones y toca «Publicar promoción» (título, precio con descuento, foto y vigencia). Los clientes las ven en la sección Promociones de la app.",
+      es: "Las promociones las publican los profesionales: en tu panel abre la pestaña Promociones y toca \"Publicar promoción\" (título, precio con descuento, foto y vigencia). Los clientes las ven en la sección Promociones de la app.",
       en: "Promotions are published by professionals: in your panel open the Promotions tab and tap \"Publish promotion\" (title, discounted price, photo and validity). Clients see them in the app's Promotions section.",
     },
     cta: { es: "Ir a Promociones", en: "Open Promotions" },
@@ -966,7 +966,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
   {
     test: (n) => EMPLEOS_VISIBLE && (/(public|cre[oa]|sub[oi]|pon[eg]|hac[eo]|busco|necesito|ocupo|publish|create|post|hire).{0,15}(un empleo|empleo|empleos|vacante|puesto|plaza|un trabajo para|personal|empleado|empleada|a job|job post|vacancy)/.test(n) && !/(postul|aplic|apply)/.test(n)),    action: "open_dashboard",
     answer: {
-      es: "Para contratar personal, publica un empleo desde tu panel: pestaña Empleos → «Publicar empleo» (puesto, tipo de contrato, lugar, salario si quieres mostrarlo). Quienes quieran el puesto te escriben por WhatsApp o, en la app, por Mensajes, y por ahí mismo te envían su currículum.",
+      es: "Para contratar personal, publica un empleo desde tu panel: pestaña Empleos → \"Publicar empleo\" (puesto, tipo de contrato, lugar, salario si quieres mostrarlo). Quienes quieran el puesto te escriben por WhatsApp o, en la app, por Mensajes, y por ahí mismo te envían su currículum.",
       en: "To hire staff, publish a job from your panel: Jobs tab → \"Publish job\" (position, contract type, place, salary if you want to show it). Candidates write to you on WhatsApp or, in the app, through Messages, and send their résumé right there.",
     },
     cta: { es: "Ir a Empleos", en: "Open Jobs" },
@@ -1016,7 +1016,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     answer: {
       // En el app no se agenda: se contacta. La respuesta anterior explicaba
       // paso a paso cómo elegir día y hora en un calendario que ya no existe.
-      es: "Busca el servicio, abre el perfil del profesional y toca «Enviar mensaje»: le escribes por aquí mismo y coordinan el día y la hora entre ustedes. Si prefiere el teléfono, verás «Llamar». Dime el servicio y la zona y te muestro opciones.",
+      es: "Busca el servicio, abre el perfil del profesional y toca \"Enviar mensaje\": le escribes por aquí mismo y coordinan el día y la hora entre ustedes. Si prefiere el teléfono, verás \"Llamar\". Dime el servicio y la zona y te muestro opciones.",
       en: "Search the service, open the professional's profile and tap \"Send message\": you write to them right here and the two of you agree on the day and time. If they prefer the phone, you will see \"Call\". Tell me the service and the area and I'll show you options.",
     },
   },
@@ -1024,7 +1024,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(como|how|puedo|can i).{0,12}(chate|habl|escrib|contact|mensaje|mand|chat|message|talk|write).{0,25}(profesional|professional|alguien|cliente|persona)/.test(n),
     unlessService: true,
     answer: {
-      es: "Abre el perfil del profesional y toca «Enviar mensaje»: la conversación queda en Mensajes y te avisamos cuando responda. Necesitas una cuenta (es gratis).",
+      es: "Abre el perfil del profesional y toca \"Enviar mensaje\": la conversación queda en Mensajes y te avisamos cuando responda. Necesitas una cuenta (es gratis).",
       en: "Open the professional's profile and tap \"Send message\": the conversation stays in Messages and we notify you when they reply. You need an account (it's free).",
     },
     cta: { es: "Ir a Mensajes", en: "Open Messages" },
@@ -1035,7 +1035,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(dej|pon|escrib|hac|dar|doy|leave|write|give).{0,15}(una resena|resena|calificacion|opinion|review|rating)/.test(n) || /(calific|resen|rate|review).{0,15}(profesional|servicio|professional|service)/.test(n),
     action: "open_dashboard",
     answer: {
-      es: "Cuando el servicio termina, en tu panel → Mis proyectos aparece «Dejar reseña» junto a ese servicio: pones estrellas y un comentario, y se muestra en el perfil del profesional.",
+      es: "Cuando el servicio termina, en tu panel → Mis proyectos aparece \"Dejar reseña\" junto a ese servicio: pones estrellas y un comentario, y se muestra en el perfil del profesional.",
       en: "When the service is done, in your panel → My projects you'll see \"Leave a review\" next to that service: give stars and a comment, and it shows on the professional's profile.",
     },
     cta: { es: "Ver mis proyectos", en: "See my projects" },
@@ -1045,7 +1045,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(videoconsulta|video consulta|videollamada|consulta virtual|en linea|online|video call|video consultation)/.test(n) && /(como|funciona|hay|puedo|how|work)/.test(n),
     unlessService: true,
     answer: {
-      es: "Algunos profesionales atienden por videoconsulta: en tu perfil aparece «Videoconsulta» junto a la ubicación, y al escribirle acuerdan esa modalidad. En la búsqueda puedes filtrar «Videoconsulta» en la ubicación para ver solo esos profesionales.",
+      es: "Algunos profesionales atienden por videoconsulta: en tu perfil aparece \"Videoconsulta\" junto a la ubicación, y al escribirle acuerdan esa modalidad. En la búsqueda puedes filtrar \"Videoconsulta\" en la ubicación para ver solo esos profesionales.",
       en: "Some professionals attend by video consultation: their profile shows \"Video consultation\" next to the location, and you agree on that modality when you message them. In search, filter \"Video consultation\" under location to see only those professionals.",
     },
     cta: { es: "Buscar por videoconsulta", en: "Search video consultations" },
@@ -1601,8 +1601,8 @@ function normalizePayload(
       ...payload,
       action: "answer",
       answer: locale === "en"
-        ? `The «Verified» badge confirms their identity, not the quality of their work. To see that, their profile shows reviews from other clients, success stories with real work, training and certifications, languages and years of experience. ${ACUERDO_DIRECTO.en}`
-        : `La insignia «Verificado» confirma su identidad, no la calidad de su trabajo. Para conocer eso, en su perfil tienes reseñas de otros clientes, casos de éxito con trabajos reales, formación y certificaciones, idiomas y años de experiencia. ${ACUERDO_DIRECTO.es}`,
+        ? `The "Verified" badge confirms their identity, not the quality of their work. To see that, their profile shows reviews from other clients, success stories with real work, training and certifications, languages and years of experience. ${ACUERDO_DIRECTO.en}`
+        : `La insignia "Verificado" confirma su identidad, no la calidad de su trabajo. Para conocer eso, en su perfil tienes reseñas de otros clientes, casos de éxito con trabajos reales, formación y certificaciones, idiomas y años de experiencia. ${ACUERDO_DIRECTO.es}`,
       ctaLabel: null,
     };
   }
@@ -1888,7 +1888,7 @@ function sensitiveOrUnsafeAnswer(message: string, locale: Locale): AssistantPayl
       action: "answer",
       answer: locale === "en"
         ? "I cannot help with that. Accessing someone else's account is illegal; if you lost access to your own account, use \"Forgot your password?\" or Support."
-        : "No puedo ayudar con eso. Entrar a la cuenta de otra persona es ilegal; si perdiste el acceso a tu propia cuenta, usa «¿Olvidaste tu contraseña?» o Soporte.",
+        : "No puedo ayudar con eso. Entrar a la cuenta de otra persona es ilegal; si perdiste el acceso a tu propia cuenta, usa \"¿Olvidaste tu contraseña?\" o Soporte.",
     };
   }
   const asksForInternalData = includesAny(normalized, [

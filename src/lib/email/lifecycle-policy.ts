@@ -10,7 +10,7 @@ export const LIFECYCLE_CAMPAIGNS = ([
   MOBILE_APP_CAMPAIGN,
   { key: "precio-desde-profesionales-2026", days: 21, audience: "professional", enabled: true,
     subject: "Ayuda a tus clientes con un precio de referencia",
-    body: "Agrega una tarifa inicial e indica qué incluye. En tu perfil aparecerá como «Desde ₡…»; el precio final lo acuerdas con el cliente según el trabajo.",
+    body: "Agrega una tarifa inicial e indica qué incluye. En tu perfil aparecerá como \"Desde ₡…\"; el precio final lo acuerdas con el cliente según el trabajo.",
     ctaLabel: "Agregar precio", ctaPath: "/dashboard/profesional?mode=offer&tab=services" },
   { key: "buscar-profesionales-clientes-2026", days: 3, audience: "all", enabled: true,
     subject: "Encuentra un profesional para lo que necesitas",

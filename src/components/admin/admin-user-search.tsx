@@ -97,7 +97,7 @@ export function AdminUserSearch({
       <AnchoredDropdown anchorRef={boxRef} open={open && q.trim().length >= 2} maxHeight={360} className="shadow-2xl">
         <div className="py-1.5">
           {results.length === 0 && !loading ? (
-            <p className="px-4 py-3 text-sm text-[#68778d]">Sin resultados para “{q.trim()}”.</p>
+            <p className="px-4 py-3 text-sm text-[#68778d]">Sin resultados para &quot;{q.trim()}&quot;.</p>
           ) : (
             results.map((u) => (
               <button

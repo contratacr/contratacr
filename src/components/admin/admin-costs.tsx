@@ -344,7 +344,7 @@ function Ledger({ entries, apply }: { entries: CostEntry[]; apply: (work: () => 
   }
 
   async function remove(entry: CostEntry) {
-    if (!window.confirm(`¿Eliminar «${entry.description}» (${money(entry.amount, entry.currency)})?`)) return;
+    if (!window.confirm(`¿Eliminar "${entry.description}" (${money(entry.amount, entry.currency)})?`)) return;
     setDeleting(entry.id);
     await apply(() => send("DELETE", undefined, `?id=${encodeURIComponent(entry.id)}`));
     setDeleting(null);

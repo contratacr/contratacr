@@ -98,7 +98,7 @@
       "Veterinario"
     ],
     "location": "Ubicación",
-    "searchAll": "Buscar “{q}” en todos los servicios",
+    "searchAll": "Buscar \"{q}\" en todos los servicios",
     "search": "Buscar",
     "province": "Provincia",
     "canton": "Cantón",
@@ -207,7 +207,7 @@
   "search": {
     "title": {
       "default": "Todos los servicios",
-      "withQuery": "Resultados para «{q}»"
+      "withQuery": "Resultados para \"{q}\""
     },
     "resultsIn": "{count, plural, one {# profesional} other {# profesionales}} en {location}",
     "thisArea": "esta área",
@@ -615,7 +615,7 @@
     "contactEmail": "Correo",
     "trust": "Confianza",
     "reviewsHeading": "Reseñas ({count})",
-    "reviewOf": "Reseña de “{title}”",
+    "reviewOf": "Reseña de \"{title}\"",
     "noReviews": "Aún no hay reseñas. Deja la primera.",
     "close": "Cerrar",
     "linkCopied": "Enlace copiado",
@@ -771,7 +771,7 @@
       "skipCedulaNote": "Aparecerás sin la insignia Verificado. Podrás verificar tu identidad luego desde tu panel.",
       "allowCallsLabel": "Permitir contacto por llamada",
       "rateLabel": "¿Desde cuánto cobras por hora?",
-      "rateHelp": "Si lo dejas en blanco, tu perfil dirá «Consultar precio».",
+      "rateHelp": "Si lo dejas en blanco, tu perfil dirá \"Consultar precio\".",
       "ratePlaceholder": "12 000",
       "errWorkplaceSiempre": "Elige al menos una provincia y un cantón de base.",
       "errWorkplacePais": "Además de la cobertura nacional, elige tu provincia y cantón de base.",
@@ -1145,7 +1145,7 @@
           "steps": [
             "Mantén tu nombre y contacto actualizados.",
             "Revisa cuenta y seguridad cuando cambies datos sensibles.",
-            "Si también ofreces servicios, actívalo desde «Ofrecer mis servicios»."
+            "Si también ofreces servicios, actívalo desde \"Ofrecer mis servicios\"."
           ],
           "cta": "Ir a perfil"
         },
@@ -1265,7 +1265,7 @@
           "steps": [
             "Busca un proyecto que calce con lo que ofreces.",
             "Lee lo que necesita y en qué zona.",
-            "Toca «WhatsApp» y respóndele directamente."
+            "Toca \"WhatsApp\" y respóndele directamente."
           ],
           "cta": "Ir a proyectos"
         },
@@ -1403,7 +1403,7 @@
       "groupOptional": "Para destacar",
       "viewSteps": "Ver pasos",
       "optionalGroup": "Opcionales",
-      "servicePriceBenefit": "Se mostrará como «Desde ₡…» para orientar a los clientes. El precio final puede variar según el trabajo.",
+      "servicePriceBenefit": "Se mostrará como \"Desde ₡…\" para orientar a los clientes. El precio final puede variar según el trabajo.",
       "serviceDescriptionBenefit": "Explica qué incluye cada servicio.",
       "serviceExperienceBenefit": "Los años de experiencia dan confianza.",
       "reviews": "Pide tus primeras reseñas",
@@ -2066,7 +2066,7 @@
     "step3Title": "Datos siempre al día",
     "step3Body": "Si no encontramos tu identificación, puedes solicitar revisión manual.",
     "disclaimerTitle": "Aviso importante",
-    "disclaimer": "ContrataCR es una <strong>plataforma intermediaria</strong> que conecta a clientes con proveedores de servicios; no es la proveedora del servicio. La insignia <strong>“Verificado”</strong> confirma únicamente que la cédula es real y el nombre coincide con los registros oficiales. <strong>No garantiza ni asegura la calidad, el resultado ni la finalización de ningún trabajo</strong>, y no prueba por sí sola que quien se registró sea físicamente esa persona. La contratación ocurre directamente entre el cliente y el proveedor. Para elegir bien, en cada perfil puedes comparar <strong>reseñas, casos de éxito, formación, idiomas y años de experiencia</strong>.",
+    "disclaimer": "ContrataCR es una <strong>plataforma intermediaria</strong> que conecta a clientes con proveedores de servicios; no es la proveedora del servicio. La insignia <strong>\"Verificado\"</strong> confirma únicamente que la cédula es real y el nombre coincide con los registros oficiales. <strong>No garantiza ni asegura la calidad, el resultado ni la finalización de ningún trabajo</strong>, y no prueba por sí sola que quien se registró sea físicamente esa persona. La contratación ocurre directamente entre el cliente y el proveedor. Para elegir bien, en cada perfil puedes comparar <strong>reseñas, casos de éxito, formación, idiomas y años de experiencia</strong>.",
     "ctaVerified": "Ver profesionales"
   },
   "contacto": {
@@ -2145,10 +2145,10 @@
     "destinatarios": "{n, plural, one {# profesional de este servicio recibirá tu proyecto} other {# profesionales de este servicio recibirán tu proyecto}}",
     "borradorListo": "Quedó guardado. Revísalo y toca Publicar.",
     "cedulaYaVerificada": "Verificado",
-    "cedulaYaVerificadaAyuda": "Tu proyecto sale con «Verificado». El número no se muestra.",
+    "cedulaYaVerificadaAyuda": "Tu proyecto sale con \"Verificado\". El número no se muestra.",
     "identidadNoEncontrada": "No encontramos esta identificación. Puedes solicitar una revisión manual.",
     "identidadPadronCaido": "La verificación no está disponible en este momento. Puedes continuar e intentarlo más tarde.",
-    "identidadEnRevision": "Vamos a revisar tu identificación; mientras tanto tu proyecto sale sin «Verificado»."
+    "identidadEnRevision": "Vamos a revisar tu identificación; mientras tanto tu proyecto sale sin \"Verificado\"."
   },
   "notifications": {
     "title": "Notificaciones",
@@ -3159,7 +3159,7 @@
       },
       "resena": {
         "title": "Nueva reseña ★★★★★",
-        "body": "«Puntual y muy buen trabajo»"
+        "body": "\"Puntual y muy buen trabajo\""
       },
       "proyecto": {
         "title": "Nuevo proyecto: Electricidad",
@@ -3174,7 +3174,7 @@
     "settingsBody": "El teléfono tiene apagadas las notificaciones de ContrataCR. Se encienden en un momento:",
     "settingsStep1": "Abre Ajustes del teléfono",
     "settingsStep2": "Busca ContrataCR › Notificaciones",
-    "settingsStep3": "Activa «Permitir notificaciones»",
+    "settingsStep3": "Activa \"Permitir notificaciones\"",
     "understood": "Entendido"
   },
   "mensajeInvitado": {
@@ -3188,9 +3188,9 @@
     "sugerencia": {
       "servicio": "Hola, quisiera consultar por el servicio de {tema}. ¿Tiene disponibilidad?",
       "servicioEnLugar": "Hola, necesito el servicio de {tema} en {lugar}. ¿Tiene disponibilidad?",
-      "proyecto": "Hola, me interesa el proyecto «{tema}». ¿Podemos conversar sobre lo que necesita?",
-      "promocion": "Hola, me interesa la promoción «{tema}». ¿Podría darme más información?",
-      "empleo": "Hola, me interesa la vacante «{tema}». ¿Cómo puedo postularme?"
+      "proyecto": "Hola, me interesa el proyecto \"{tema}\". ¿Podemos conversar sobre lo que necesita?",
+      "promocion": "Hola, me interesa la promoción \"{tema}\". ¿Podría darme más información?",
+      "empleo": "Hola, me interesa la vacante \"{tema}\". ¿Cómo puedo postularme?"
     }
   },
   "perfilProfesionalGate": {
@@ -3337,8 +3337,8 @@
     "ok": "Entendido"
   },
   "avisoSinVerificar": {
-    "empleo": "Tu empleo va a salir sin «Verificado». Con la identificación verificada, quien busca trabajo confía más en la oferta.",
-    "promocion": "Tu promoción va a salir sin «Verificado». Con la identificación verificada, los clientes confían más en la oferta.",
+    "empleo": "Tu empleo va a salir sin \"Verificado\". Con la identificación verificada, quien busca trabajo confía más en la oferta.",
+    "promocion": "Tu promoción va a salir sin \"Verificado\". Con la identificación verificada, los clientes confían más en la oferta.",
     "accion": "Verificar mi cédula"
   },
   "guestSupport": {

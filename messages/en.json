@@ -98,7 +98,7 @@
       "Veterinarian"
     ],
     "location": "Location",
-    "searchAll": "Search “{q}” across all services",
+    "searchAll": "Search \"{q}\" across all services",
     "search": "Search",
     "province": "Province",
     "canton": "Canton",
@@ -207,7 +207,7 @@
   "search": {
     "title": {
       "default": "All services",
-      "withQuery": "Results for “{q}”"
+      "withQuery": "Results for \"{q}\""
     },
     "resultsIn": "{count, plural, one {# professional} other {# professionals}} in {location}",
     "thisArea": "this area",
@@ -615,7 +615,7 @@
     "contactEmail": "Email",
     "trust": "Trust",
     "reviewsHeading": "Reviews ({count})",
-    "reviewOf": "Review of “{title}”",
+    "reviewOf": "Review of \"{title}\"",
     "noReviews": "No reviews yet. Be the first to leave one.",
     "close": "Close",
     "linkCopied": "Link copied",
@@ -771,7 +771,7 @@
       "skipCedulaNote": "You will appear without the Verified badge. You can verify your identity later from your panel.",
       "allowCallsLabel": "Allow contact by phone call",
       "rateLabel": "What is your starting hourly rate?",
-      "rateHelp": "Leave it blank and your profile will say «Ask for price».",
+      "rateHelp": "Leave it blank and your profile will say \"Ask for price\".",
       "ratePlaceholder": "12 000",
       "errWorkplaceSiempre": "Choose at least one province and base canton.",
       "errWorkplacePais": "Besides nationwide coverage, choose your base province and canton.",
@@ -1115,7 +1115,7 @@
       "groupOptional": "Stand out",
       "viewSteps": "View steps",
       "optionalGroup": "Optional",
-      "servicePriceBenefit": "It will appear as “From ₡…” to guide clients. The final price may vary depending on the job.",
+      "servicePriceBenefit": "It will appear as \"From ₡…\" to guide clients. The final price may vary depending on the job.",
       "serviceDescriptionBenefit": "Explain what each service includes.",
       "serviceExperienceBenefit": "Years of experience build trust.",
       "reviews": "Ask for your first reviews",
@@ -1263,7 +1263,7 @@
           "steps": [
             "Keep name and contact updated.",
             "Review account and security when changing sensitive data.",
-            "If you also offer services, turn it on from «Offer my services»."
+            "If you also offer services, turn it on from \"Offer my services\"."
           ],
           "cta": "Go to profile"
         },
@@ -1383,7 +1383,7 @@
           "steps": [
             "Find a project that fits what you offer.",
             "Read what they need and where.",
-            "Tap “WhatsApp” and answer them yourself."
+            "Tap \"WhatsApp\" and answer them yourself."
           ],
           "cta": "Go to projects"
         },
@@ -2066,7 +2066,7 @@
     "step3Title": "Always up to date",
     "step3Body": "If we cannot find your ID, you can request manual review.",
     "disclaimerTitle": "Important notice",
-    "disclaimer": "ContrataCR is an <strong>intermediary platform</strong> that connects clients with service providers; it is not the service provider. The <strong>“Verified”</strong> badge only confirms the ID is real and the name matches official records. <strong>It does not guarantee or ensure the quality, outcome or completion of any work</strong>, and does not by itself prove that the person who registered is physically that person. Hiring happens directly between the client and the provider. To choose well, every profile lets you compare <strong>reviews, success stories, training, languages and years of experience</strong>.",
+    "disclaimer": "ContrataCR is an <strong>intermediary platform</strong> that connects clients with service providers; it is not the service provider. The <strong>\"Verified\"</strong> badge only confirms the ID is real and the name matches official records. <strong>It does not guarantee or ensure the quality, outcome or completion of any work</strong>, and does not by itself prove that the person who registered is physically that person. Hiring happens directly between the client and the provider. To choose well, every profile lets you compare <strong>reviews, success stories, training, languages and years of experience</strong>.",
     "ctaVerified": "See professionals"
   },
   "contacto": {
@@ -2145,10 +2145,10 @@
     "destinatarios": "{n, plural, one {# professional in this service will get your project} other {# professionals in this service will get your project}}",
     "borradorListo": "It was saved. Review it and tap Publish.",
     "cedulaYaVerificada": "Verified",
-    "cedulaYaVerificadaAyuda": "Your project shows «Verified». The number is never shown.",
+    "cedulaYaVerificadaAyuda": "Your project shows \"Verified\". The number is never shown.",
     "identidadNoEncontrada": "We could not find this ID. You can request a manual review.",
     "identidadPadronCaido": "Verification is temporarily unavailable. You can continue and try later.",
-    "identidadEnRevision": "We'll review your ID; meanwhile your project shows without «Verified»."
+    "identidadEnRevision": "We'll review your ID; meanwhile your project shows without \"Verified\"."
   },
   "notifications": {
     "title": "Notifications",
@@ -3159,7 +3159,7 @@
       },
       "resena": {
         "title": "New review ★★★★★",
-        "body": "“On time and great work”"
+        "body": "\"On time and great work\""
       },
       "proyecto": {
         "title": "New project: Electrical",
@@ -3174,7 +3174,7 @@
     "settingsBody": "Your phone has ContrataCR notifications off. It takes a moment:",
     "settingsStep1": "Open your phone's Settings",
     "settingsStep2": "Find ContrataCR › Notifications",
-    "settingsStep3": "Turn on “Allow notifications”",
+    "settingsStep3": "Turn on \"Allow notifications\"",
     "understood": "Got it"
   },
   "mensajeInvitado": {
@@ -3188,9 +3188,9 @@
     "sugerencia": {
       "servicio": "Hi, I'm interested in your {tema} service. Are you available?",
       "servicioEnLugar": "Hi, I need {tema} services in {lugar}. Are you available?",
-      "proyecto": "Hi, I'm interested in the project “{tema}”. Could we discuss what you need?",
-      "promocion": "Hi, I'm interested in the “{tema}” promotion. Could you share more details?",
-      "empleo": "Hi, I'm interested in the “{tema}” job opening. How can I apply?"
+      "proyecto": "Hi, I'm interested in the project \"{tema}\". Could we discuss what you need?",
+      "promocion": "Hi, I'm interested in the \"{tema}\" promotion. Could you share more details?",
+      "empleo": "Hi, I'm interested in the \"{tema}\" job opening. How can I apply?"
     }
   },
   "perfilProfesionalGate": {
@@ -3337,8 +3337,8 @@
     "ok": "Got it"
   },
   "avisoSinVerificar": {
-    "empleo": "Your job will be posted without «Verified». With a verified ID, job seekers trust the offer more.",
-    "promocion": "Your promotion will be posted without «Verified». With a verified ID, clients trust the offer more.",
+    "empleo": "Your job will be posted without \"Verified\". With a verified ID, job seekers trust the offer more.",
+    "promocion": "Your promotion will be posted without \"Verified\". With a verified ID, clients trust the offer more.",
     "accion": "Verify my ID"
   },
   "guestSupport": {
