@@ -5,7 +5,7 @@ type Admin = ReturnType<typeof createAdminClient>;
 
 /**
  * EMPUJONES AL PROFESIONAL (9-oct-2026, Isaac). «Pide tus primeras reseñas» y
- * «Agrega un precio de referencia» viven en la lista de pasos del panel; el
+ * «Agrega un precio desde» viven en la lista de pasos del panel; el
  * empujón llega por la campanita (y push). Medido ese día: de 315 profesionales
  * activos, 300 sin reseñas y 299 sin un precio real.
  *
@@ -91,10 +91,10 @@ export async function empujarResenasYPrecio(admin: Admin, { simular = false, aho
     return insertOnceNotifications(admin, [...new Set(userIds)].map((userId) => ({
       user_id: userId,
       type,
-      title: type === "pide_resenas" ? "Pide tus primeras reseñas" : "Agrega un precio de referencia",
+      title: type === "pide_resenas" ? "Pide tus primeras reseñas" : "Agrega un precio desde",
       message: type === "pide_resenas"
         ? "Pide una reseña a clientes con los que ya trabajaste. En tu panel tienes un mensaje listo para compartir por WhatsApp."
-        : "Agrega un precio de referencia para orientar al cliente. El precio final lo acuerdas según el trabajo.",
+        : "Muestra una tarifa inicial para orientar al cliente. El precio final lo acuerdas según el trabajo.",
       data: { link: "/dashboard/profesional?mode=offer&tab=completion" },
       read: false,
     })));

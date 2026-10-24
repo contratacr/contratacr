@@ -32,7 +32,7 @@ test('opt-out, disabled/admin accounts and a rejected delivery cannot be invited
 test('profile completion and reviews remain first, then price without the retired app step',()=>{
  const pending={...account,is_provider:true,professionalIntent:true};
  expect(pick(pending)).toBe(PROFILE_REMINDER.key);
- const pro={profile_id:account.id,created_at:date(30),review_count:0,services:[{active:true,description:'Servicio',priceType:'a_convenir'}],is_banned:false,oculto_del_buscador:false,slug:'pro',bio:'Trabajo',whatsapp:'+50670001234',coverage_country:true};
+ const pro={profile_id:account.id,created_at:date(30),review_count:0,services:[{active:true,description:'Servicio',priceType:'a_convenir'}],is_banned:false,oculto_del_buscador:false,slug:'pro',bio:'Trabajo',whatsapp:'+50670001234',coverage_country:true,workplaces:[{provinciaId:"alajuela",cantonId:"atenas"}]};
  expect(lifecycleCandidate(account,pro,[],[],false,now)?.key).toBe(REVIEW_CAMPAIGN.key);
  expect(lifecycleCandidate(account,pro,[sent(REVIEW_CAMPAIGN.key)],[],false,now)?.key).toBe('precio-desde-profesionales-2026');
  expect(lifecycleCandidate(account,pro,[sent(REVIEW_CAMPAIGN.key),sent(MOBILE_APP_CAMPAIGN.key,14)],[],false,now)?.key).toBe('precio-desde-profesionales-2026');
@@ -47,6 +47,7 @@ import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import ts from 'typescript';
 import * as policy from '../../src/lib/email/lifecycle-policy';
+import * as names from '../../src/lib/nombres';
 function workerHarness(usedBeforeSend: boolean, lookupFails=false) {
  let providerCalls=0;
  const profile={...account,id:'account',created_at:new Date(Date.now()-30*86400000).toISOString()};
@@ -66,6 +67,7 @@ function workerHarness(usedBeforeSend: boolean, lookupFails=false) {
   auth:{admin:{listUsers:async()=>({data:{users:[{id:profile.id,email_confirmed_at:'confirmed'}]},error:null}),getUserById:async()=>({data:{user:{email_confirmed_at:'confirmed'}},error:null})}},
  };
  const mocks:Record<string,unknown>={
+  "@/lib/nombres":names,
   './mobile-app-campaign':{MOBILE_APP_CAMPAIGN},'./lifecycle-policy':policy,'./campaign-policy':{},
   './campaign-delivery':{deliverCampaignOnce:async(_db:unknown,_key:string,_email:string,send:()=>Promise<{ok:boolean}>)=>(await send()).ok?'sent':'skipped'},
   './send':{brandedEmailDocument:()=>'',sendBrevoEmail:async()=>{providerCalls++;return {ok:true,status:'sent'};}},
