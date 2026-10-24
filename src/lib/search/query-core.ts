@@ -1,3 +1,5 @@
+import { resolveSearchSort } from "@/lib/search/sort";
+import { nearbyContext, nearbyRank, compareNearby } from "@/lib/search/nearby";
 import { searchProfessionals, type ProService } from "@/lib/queries/professionals";
 import { getAllCategories, isHealthCategory, supportsVideoConsultCategory } from "@/lib/data/categories";
 import { haversineKm, PROVINCES } from "@/lib/data/cr-geography";
@@ -8,7 +10,6 @@ import { compareByRating } from "@/lib/search/ranking";
 // the same filters, the same order and the same per-card location decisions.
 
 export const RESULTS_PER_PAGE = 20;
-const SORT_OPTIONS = new Set(["rating", "cercania", "experience"]);
 const PRICE_AVAILABILITY_OPTIONS = new Set(["visible", "quote"]);
 const PRICE_UNIT_OPTIONS = new Set(["por_hora", "por_consulta", "por_proyecto"]);
 
@@ -58,7 +59,6 @@ export function isExactWorkplacePin(workplace: SearchWorkplace) {
 
 /** Every decision the URL implies, resolved once. */
 function parseSearchParams(params: SearchPageParams) {
-  const requestedSortBy = SORT_OPTIONS.has(params.sortBy ?? "") ? (params.sortBy as "rating" | "cercania" | "experience") : "rating";
   const legacyPriceUnit = isPriceUnit(params.precio) ? params.precio : undefined;
   const priceType = PRICE_AVAILABILITY_OPTIONS.has(params.precio ?? "") ? (params.precio as "visible" | "quote") : undefined;
   const priceUnits = params.unidadPrecio
@@ -88,9 +88,7 @@ function parseSearchParams(params: SearchPageParams) {
   const parsedNearLng = params.lng ? Number(params.lng) : undefined;
   const nearLat = typeof parsedNearLat === "number" && Number.isFinite(parsedNearLat) ? parsedNearLat : undefined;
   const nearLng = typeof parsedNearLng === "number" && Number.isFinite(parsedNearLng) ? parsedNearLng : undefined;
-  const sortBy = requestedSortBy === "cercania" && (nearLat === undefined || nearLng === undefined)
-    ? "rating"
-    : requestedSortBy;
+  const sortBy = resolveSearchSort(params);
   const parsedMapBounds = params.n && params.s && params.e && params.w
     ? { north: Number(params.n), south: Number(params.s), east: Number(params.e), west: Number(params.w) }
     : undefined;
@@ -100,7 +98,7 @@ function parseSearchParams(params: SearchPageParams) {
   const insurerIds = isHealthCategory(params.categoria) ? parseMultiParam(params.aseguradora) : [];
 
   return {
-    requestedSortBy, sortBy, priceType, priceUnits, modalities, videoOnly, inPersonOnly,
+    sortBy, priceType, priceUnits, modalities, videoOnly, inPersonOnly,
     selectedCategory, selectedGroupId, selectedGroupCategoryIds, selectedCantonId, selectedProvinceId, effectiveQuery,
     nearLat, nearLng, mapBounds, languageIds, insurerIds,
   };
@@ -194,7 +192,10 @@ export function ordenFinal(results: SearchResult[], filters: SearchFiltersResolv
   // «Cerca de mí» conserva el orden por distancia. Las coordenadas por sí
   // solas no cambian «Mejor calificados» a un orden distinto del visible.
   if (filters.sortBy === "cercania" && typeof filters.nearLat === "number" &&
-      typeof filters.nearLng === "number") return results;
+      typeof filters.nearLng === "number") {
+    const context=nearbyContext(filters.nearLat,filters.nearLng);
+    return context?[...results].sort((a,b)=>compareNearby(nearbyRank(a,context),nearbyRank(b,context))):results;
+  }
   const tier = new Map<SearchResult, number>();
   for (const pro of results) tier.set(pro, localityTier(pro, filters));
   const venia = new Map<SearchResult, number>();
@@ -221,7 +222,9 @@ export function locationDecisions(params: SearchPageParams, filters: SearchFilte
   const selectedCantonName = activeCanton?.name ?? "";
   const exactLocationActive = typeof filters.nearLat === "number" && typeof filters.nearLng === "number";
 
+  const nearReference=exactLocationActive&&!activeProvince&&!activeCanton?nearbyContext(filters.nearLat!,filters.nearLng!):null;
   function matchesSelectedPhysicalLocation(pro: SearchResult) {
+    if(nearReference)return Number.isFinite(nearbyRank(pro,nearReference)[0]);
     if (exactLocationActive) {
       const distances: number[] = [];
       for (const wp of (pro.workplaces ?? []) as SearchWorkplace[]) {

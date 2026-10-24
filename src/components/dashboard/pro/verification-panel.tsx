@@ -362,9 +362,9 @@ function CurrentIdentificationPanel({
   return (
     // Un bloque, no una tarjeta: esto ya vive DENTRO de la tarjeta blanca del
     // editor de perfil, y una tarjeta blanca con borde dentro de otra tarjeta
-    // blanca solo agrega ruido. Se separa con una línea fina, igual que las
+    // blanca solo agrega ruido. Se separa con espacio, igual que las
     // demás secciones del editor.
-    <section data-current-identification className="border-t border-[#eef2f6] pt-6 first:border-t-0 first:pt-0">
+    <section data-current-identification className="pt-6 first:pt-0">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
           {/* Sin ícono (4-oct-2026): un escudo con visto junto a «no hay
@@ -423,7 +423,7 @@ function ActionPanel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="border-t border-[#eef2f6] pt-4 first:border-t-0 first:pt-0">
+    <section className="pt-4 first:pt-0">
       <h3 className="text-[15px] font-bold text-[#162543]">{title}</h3>
       <p className="mt-1.5 text-[13px] leading-relaxed text-[#6b7280]">
         {body}

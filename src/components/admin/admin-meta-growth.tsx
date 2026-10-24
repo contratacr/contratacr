@@ -4,7 +4,7 @@ import { GROWTH_ACTIONS } from "@/lib/analytics/growth-contract";
 import type { summarizeGrowth } from "@/lib/analytics/growth-report";
 type Report = ReturnType<typeof summarizeGrowth> & { month: string; capiConfigured: boolean; testMode: boolean };
 const names: Record<keyof typeof GROWTH_ACTIONS,string> = {
- service_contact: "Contactos de servicios",project_published: "Proyectos publicados",service_hire_confirmed: "Contrataciones declaradas",
+ service_contact: "Clics de contacto de servicios",project_published: "Proyectos publicados",service_hire_confirmed: "Contrataciones confirmadas por el cliente",
  professional_profile_published: "Perfiles profesionales utilizables",professional_project_contact: "Profesionales que contactaron proyectos",
  professional_project_accepted: "Proyectos con cotización aceptada",service_offer_published: "Promociones de servicios publicadas",employer_job_published: "Empleos publicados",
 };
@@ -23,7 +23,7 @@ export function AdminMetaGrowth() {
    <p className="text-sm">CAPI directa del servidor: {report.capiConfigured ? report.testMode ? "modo de pruebas" : "configurada" : "apagada"}. Entregados a producción: {report.productionSent} · de prueba: {report.testSent} · pendientes directos: {report.delivery.pending+report.delivery.sending} · excluidos de Meta: {report.delivery.suppressed} · vencidos: {report.delivery.expired}.</p>
    <p className="text-xs text-[#68778d]">{report.delivery.browser_only} acciones preparadas para Pixel/conexión web existente. Su recepción se comprueba en Events Manager. Los contadores de entrega de arriba corresponden únicamente al envío directo propio.</p>
    <div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr><th>Resultado</th><th>Campaña</th><th>Acciones</th><th>Personas/dispositivos</th></tr></thead><tbody>{report.results.map(row=><tr key={`${row.action}:${row.campaign}`}><td className="py-2">{names[row.action as keyof typeof names] ?? row.action}</td><td>{row.campaign}</td><td>{row.actions}</td><td>{row.people}</td></tr>)}</tbody></table></div>
-   <p className="text-xs text-[#68778d]">Los contactos no confirman una conversación ni un pago. Una persona puede usar varios dispositivos; la atribución de campaña no demuestra causalidad. Los empleos y productos quedan fuera de contactos de servicios.</p>
+   <p className="text-xs text-[#68778d]">Los clics en WhatsApp, llamadas o correo no son contrataciones. Las contrataciones se registran por separado cuando el cliente confirma que contrató; no verifican pago ni finalización. Una persona puede usar varios dispositivos; la atribución de campaña no demuestra causalidad. Los empleos y productos quedan fuera de contactos de servicios.</p>
   </>}
  </section>;
 }

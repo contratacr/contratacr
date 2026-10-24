@@ -20,25 +20,15 @@ for (const locale of ["es","en"]) test(`legal documents: ${locale} identifies th
  await expect(page.locator("main")).toContainText(locale === "es" ? "reintentamos la solicitud" : "we retry");
 });
 
-test("limited advertising can be disabled and enabled without blocking legal pages",async({page,context})=>{
+test("privacy remains accessible without advertising controls",async({page})=>{
  await gotoOK(page,"/privacidad");await waitForInteractivePage(page);
- const controls=page.locator('[data-advertising-preferences]');
- await expect(controls).toHaveCount(1);
- await expect(controls).toBeVisible();await controls.getByRole("button",{name:"Desactivar",exact:true}).click();
- await expect(controls).toContainText("desactivada");
- expect((await context.cookies()).find(cookie=>cookie.name==="ccr_ads_consent_v1")?.value).toBe("declined");
- await controls.getByRole("button",{name:"Activar",exact:true}).click();
- await expect(controls).toContainText("Medición publicitaria activada en este dispositivo.");
- await expect.poll(async () => (await context.cookies()).find(cookie=>cookie.name==="ccr_ads_consent_v1")?.value).toBe("accepted");
- await controls.getByRole("button",{name:"Desactivar",exact:true}).click();
- await page.reload();await expect(page.locator('[data-advertising-preferences]')).toHaveCount(1);
+ await expect(page.locator('[data-advertising-preferences], [data-ai-consent]')).toHaveCount(0);
 });
 
-test("the AI API rejects missing or outdated consent before processing a native prompt",async({request})=>{
- for(const aiConsent of [undefined,{accepted:false,version:LEGAL_VERSION},{accepted:true,version:"old"}]){
-  const response=await request.post("/api/ai-assistant",{data:{platform:"native",locale:"es",message:"Consulta de prueba",aiConsent}});
-  expect(response.status()).toBe(428);expect((await response.json()).code).toBe("AI_CONSENT_REQUIRED");
- }
+test("native local answers require no external AI permission",async({request})=>{
+ const response=await request.post("/api/ai-assistant",{data:{platform:"native",locale:"es",message:"Olvidé mi contraseña"}});
+ expect(response.status()).toBe(200);
+ expect((await response.json()).aiProvider).toBe("local");
 });
 
 for (const native of [false, true]) test(`${native ? "native" : "web"}: login never adds a second terms screen; explicit receipts remain isolated and idempotent`,async({page,context,baseURL})=>{
@@ -68,7 +58,7 @@ for (const native of [false, true]) test(`${native ? "native" : "web"}: login ne
  } finally {await cleanupDisposableAccount(account);await cleanupDisposableAccount(other);}
 });
 
-test("native assistant asks permission before sending the first prompt",async({page,context,baseURL})=>{
+test("native assistant sends a prompt without an extra permission step",async({page,context,baseURL})=>{
  await page.setViewportSize({width:390,height:844});
  await context.addCookies([{name:"ccr_platform",value:"native",url:baseURL!}]);
  await page.addInitScript(()=>{
@@ -82,13 +72,11 @@ test("native assistant asks permission before sending the first prompt",async({p
  await page.getByRole("button",{name:/Abrir men[uú]|Open menu/i}).filter({visible:true}).first().click();
  await page.getByRole("dialog",{name:/Men[uú]|Menu/i}).getByRole("button",{name:"Asistente",exact:true}).click();
  const assistant=page.getByRole("dialog",{name:"Asistente ContrataCR"});
- await expect(assistant.locator("[data-ai-consent]")).toBeVisible();
+ await expect(assistant.locator("[data-ai-consent]")).toHaveCount(0);
  await assistant.getByRole("textbox").fill("Necesito electricidad");
  await assistant.getByRole("button",{name:"Enviar mensaje",exact:true}).click();
- expect(requests).toBe(0);
- await assistant.getByRole("button",{name:"Permitir y continuar",exact:true}).click();
  await expect(assistant).toContainText("Respuesta de prueba");
- expect(requests).toBe(1);expect(consent).toEqual({version:LEGAL_VERSION,accepted:true});
+ expect(requests).toBe(1);expect(consent).toBeUndefined();
 });
 
 for(const locale of ["es","en"]) test(`login keeps the existing legal disclosure before continuing (${locale})`,async({page})=>{

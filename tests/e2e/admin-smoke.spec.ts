@@ -283,7 +283,9 @@ test.describe("@admin surfaces", () => {
       await expectVisibleText(page.locator("body"), /Esta semana/);
       await expectVisibleText(page.locator("body"), /7 días anteriores/);
       await expectVisibleText(page.locator("body"), /De dónde vienen los registros/);
-      await expectVisibleText(page.locator("body"), /Del interés a la contratación/);
+      await expect(page.getByTestId("admin-contact-segments")).toBeVisible();
+      await expect(page.locator('[data-contact-segment="services"]')).toContainText("Servicios");
+      await expect(page.locator('[data-contact-segment="jobs"]')).toContainText("Empleos");
       await expectVisibleText(page.locator("body"), /Qué buscan vs\. qué ofrecemos/);
       await expectVisibleText(page.locator("body"), /Uso de web y apps/);
       await expectHealthyPage(page);

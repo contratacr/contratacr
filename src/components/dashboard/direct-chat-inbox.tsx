@@ -1,5 +1,6 @@
 "use client";
 
+import { reconcileThreadMessages, confirmThreadMessage } from "@/lib/direct-chat/thread-messages";
 import { APP_RESUME_EVENT } from "@/lib/app-events";
 
 import { CardActionsMenu } from "@/components/dashboard/card-actions-menu";
@@ -280,6 +281,12 @@ export function DirectChatInbox({ alCambiarSubvista }: {
   const [pendingDraftPayload, setPendingDraftPayload] = useState<PendingDraft | null>(initialPendingDraft.payload);
   const [activeId, setActiveId] = useState<string | null>(searchParams.get("conversation") || (initialPendingDraft.conversation ? DRAFT_CONVERSATION_ID : null));
   const [messages, setMessages] = useState<DirectMessage[]>([]);
+  const activeThreadRef = useRef(activeId);
+  const displayedThreadRef = useRef<string | null>(null);
+  const threadRequestRef = useRef(0);
+  const sentVersionRef = useRef(0);
+  const confirmedVersionsRef = useRef(new Map<string, number>());
+  useLayoutEffect(() => { activeThreadRef.current = activeId; }, [activeId]);
   const [draft, setDraft] = useState(initialPendingDraft.payload?.draftMessage ?? "");
   const [query, setQuery] = useState("");
   const [archivedCount, setArchivedCount] = useState(0);
@@ -696,44 +703,31 @@ export function DirectChatInbox({ alCambiarSubvista }: {
     } finally { if (isCurrent()) setLoading(false); }
   }, [inboxCacheKey, isEn, pendingDraft, pendingDraftPayload, showArchived, user?.id]);
 
-  // Al recargar el hilo, cada mensaje volvía como un objeto nuevo aunque fuera
-  // el mismo: React rehacía todas las burbujas y las imágenes se volvían a
-  // pedir, y eso se veía como un parpadeo al enviar. Los mensajes que no
-  // cambiaron conservan su objeto, así el navegador no vuelve a pintarlos.
-  const conservarMensajes = useCallback((previos: DirectMessage[], nuevos: DirectMessage[]) => {
-    const porId = new Map(previos.map((mensaje) => [mensaje.id, mensaje]));
-    let iguales = previos.length === nuevos.length;
-    const fusionados = nuevos.map((nuevo, indice) => {
-      const anterior = porId.get(nuevo.id);
-      if (!anterior) { iguales = false; return nuevo; }
-      const mismo =
-        anterior.body === nuevo.body &&
-        anterior.created_at === nuevo.created_at &&
-        (anterior.attachment_urls?.length ?? 0) === (nuevo.attachment_urls?.length ?? 0);
-      if (!mismo) { iguales = false; return nuevo; }
-      if (previos[indice]?.id !== nuevo.id) iguales = false;
-      return anterior;
-    });
-    return iguales ? previos : fusionados;
-  }, []);
-
   const loadThread = useCallback(async (id: string, quiet = false, vacia = false) => {
     if (id === DRAFT_CONVERSATION_ID) {
       setMessages([]);
       setThreadLoading(false);
       return;
     }
+    const requestId = ++threadRequestRef.current;
+    const startedAtVersion = sentVersionRef.current;
+    const isCurrent = () => requestId === threadRequestRef.current && activeThreadRef.current === id;
     // A thread opened before paints from the cache at once and refreshes quietly.
     const threadKey = userId ? `chat:thread:${userId}:${id}` : null;
     const warmEntry = threadKey ? getDashboardCache<DirectMessage[] | { rows: DirectMessage[]; signedAt: number }>(threadKey) : null;
     const warm = Array.isArray(warmEntry) ? warmEntry : warmEntry?.rows ?? null;
     const warmFresh = Boolean(warmEntry) && !Array.isArray(warmEntry) && Date.now() - (warmEntry as { signedAt: number }).signedAt < 45 * 60 * 1000;
-    if (warm) setMessages(warm);
-    else if (!quiet && !vacia) setThreadLoading(true);
+    // Cache is for opening a different thread, never for replacing live sends.
+    if (activeThreadRef.current === id && displayedThreadRef.current !== id) {
+      displayedThreadRef.current = id;
+      setMessages(warm ?? []);
+    }
+    if (!warm && !quiet && !vacia) setThreadLoading(true);
     try {
       const res = await fetchWithSessionRetry(`/api/direct-chat?id=${encodeURIComponent(id)}`, { cache: "no-store" });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Error");
+      if (!isCurrent()) return;
       if (json.conversation) setHiloAbierto(json.conversation as Conversation);
       // ¿Se muestran los «visto» en este chat? (confirmaciones de lectura).
       vistosVisibles.current = json.vistos !== false;
@@ -749,13 +743,18 @@ export function DirectChatInbox({ alCambiarSubvista }: {
           return kept ? { ...a, url: kept.url } : a;
         }) };
       }) : rows;
-      if (threadKey) setDashboardCache(threadKey, { rows: merged, signedAt: warmFresh && warmEntry && !Array.isArray(warmEntry) ? warmEntry.signedAt : Date.now() });
-      setMessages((previos) => conservarMensajes(previos, merged));
+      const preserve = new Set([...confirmedVersionsRef.current].filter(([, version]) => version > startedAtVersion).map(([messageId]) => messageId));
+      if (threadKey) {
+        const entry = getDashboardCache<DirectMessage[] | { rows: DirectMessage[]; signedAt: number }>(threadKey);
+        const cachedRows = Array.isArray(entry) ? entry : entry?.rows ?? [];
+        setDashboardCache(threadKey, { rows: reconcileThreadMessages(cachedRows, merged, preserve), signedAt: warmFresh && warmEntry && !Array.isArray(warmEntry) ? warmEntry.signedAt : Date.now() });
+      }
+      setMessages((previous) => isCurrent() ? reconcileThreadMessages(previous, merged, preserve) : previous);
       setConversations((prev) => prev.map((item) => item.id === id ? { ...item, client_unread_count: 0, professional_unread_count: 0 } : item));
     } catch (err) {
-      setError(err instanceof Error ? err.message : isEn ? "Could not load the conversation." : "No se pudo cargar la conversación.");
-    } finally { if (!quiet) setThreadLoading(false); }
-  }, [conservarMensajes, isEn, userId]);
+      if (isCurrent()) setError(err instanceof Error ? err.message : isEn ? "Could not load the conversation." : "No se pudo cargar la conversación.");
+    } finally { if (isCurrent()) setThreadLoading(false); }
+  }, [isEn, userId]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -1186,24 +1185,39 @@ export function DirectChatInbox({ alCambiarSubvista }: {
         writeStoredPendingDraft(userId, null);
       }
       if (activeId === DRAFT_CONVERSATION_ID && json.conversationId) {
+        // This placeholder belongs to the draft, not to the persisted thread.
+        setMessages((current) => current.filter(message => message.id !== optimisticId));
         setPendingDraft(null);
         setPendingDraftPayload(null);
         setActiveId(json.conversationId);
         sincronizarUrl(`conversation=${json.conversationId}`);
         await Promise.all([loadThread(json.conversationId, true), loadConversations(true)]);
       } else if (json.message) {
-        setMessages((current) => current.map((mensaje) => (mensaje.id === optimisticId ? (json.message as DirectMessage) : mensaje)));
+        const confirmed = json.message as DirectMessage;
+        confirmedVersionsRef.current.set(confirmed.id, ++sentVersionRef.current);
+        if (activeThreadRef.current === activeId) {
+          setMessages((current) => confirmThreadMessage(current, optimisticId, confirmed));
+        }
+        if (userId) {
+          const key = `chat:thread:${userId}:${activeId}`;
+          const cached = getDashboardCache<DirectMessage[] | { rows: DirectMessage[]; signedAt: number }>(key);
+          const rows = Array.isArray(cached) ? cached : cached?.rows ?? [];
+          setDashboardCache(key, { rows: confirmThreadMessage(rows, optimisticId, confirmed), signedAt: cached && !Array.isArray(cached) ? cached.signedAt : Date.parse(confirmed.created_at) });
+        }
         // La lista de conversaciones se pone al día AQUÍ, con lo que ya se
         // sabe: el mensaje que se acaba de mandar. Volver a pedirla entera
         // costaba seis consultas en el servidor por cada mensaje enviado, para
         // cambiar una línea de vista previa y una fecha.
         ponerAlDiaVistaPrevia(activeId, json.message as DirectMessage);
       } else {
+        setMessages((current) => current.filter(message => message.id !== optimisticId));
         await Promise.all([loadThread(activeId, true), loadConversations(true)]);
       }
     } catch (err) {
-      setMessages((current) => current.filter((message) => message.id !== optimisticId)); setDraft(body); setRespondiendoA(citado);
-      setError(err instanceof Error ? err.message : isEn ? "Could not send the message." : "No se pudo enviar el mensaje.");
+      if (activeThreadRef.current === activeId) {
+        setMessages((current) => current.filter((message) => message.id !== optimisticId)); setDraft(body); setRespondiendoA(citado);
+        setError(err instanceof Error ? err.message : isEn ? "Could not send the message." : "No se pudo enviar el mensaje.");
+      }
     } finally { setSending(false); }
   }
 

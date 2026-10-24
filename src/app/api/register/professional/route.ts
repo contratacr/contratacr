@@ -1,3 +1,4 @@
+import { hasBaseCanton } from "@/lib/location";
 import { recordRegistrationPlatform } from "@/lib/analytics/registration-platform";
 import { recordProfessionalReady } from "@/lib/analytics/professional-growth";
 import { NextResponse } from "next/server";
@@ -127,7 +128,7 @@ export async function POST(req: Request) {
       idDocNote: bodyIdDocNote,
     } = body;
 
-    // Bio and location are now optional; only a category + WhatsApp are required.
+    // Bio is optional. A province and base canton are required below.
     if (!category || !whatsapp) {
       return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 });
     }
@@ -137,6 +138,9 @@ export async function POST(req: Request) {
     // Workplaces: [{ id, name, address, lat, lng, provinciaId, cantonId, distrito }]
     // — fixed-location pins (single source of truth). Coverage = travel areas.
     const workplaces = Array.isArray(bodyWorkplaces) ? bodyWorkplaces : [];
+    if (!hasBaseCanton(workplaces)) {
+      return NextResponse.json({ error: "Elige una provincia y un cantón de base.", code: "base_canton_required" }, { status: 400 });
+    }
     const rawCoverageAreas = Array.isArray(bodyCoverage) ? bodyCoverage : [];
     const searchProvincias = Array.isArray(bodySearchProv) ? bodySearchProv : [];
     const searchCantones = Array.isArray(bodySearchCant) ? bodySearchCant : [];

@@ -1,6 +1,4 @@
-import esMessages from "../../../../messages/es.json";
-import enMessages from "../../../../messages/en.json";
-import { OPTIONAL_CONSENT_VERSION } from "@/lib/privacy/optional-consent";
+import { assistantExternalTopics } from "@/lib/privacy/assistant-topics";
 import { NextResponse } from "next/server";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { unstable_cache } from "next/cache";
@@ -17,7 +15,7 @@ import {
 import { allLocationSuggestions, resolveLocation } from "@/lib/data/location-search";
 import { searchProfessionals } from "@/lib/queries/professionals";
 import { enforceRateLimit } from "@/lib/rate-limit";
-import { assistantPageContext, CONTRATACR_PRODUCT_KNOWLEDGE } from "@/lib/ai/product-knowledge";
+import { CONTRATACR_PRODUCT_KNOWLEDGE } from "@/lib/ai/product-knowledge";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { LONG_TEXT_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
@@ -172,7 +170,7 @@ function repairWord(word: string) {
   }
   return best ?? word;
 }
-export function canonicalizeMessage(raw: string) {
+function canonicalizeMessage(raw: string) {
   return raw.replace(/[\p{L}\p{N}]+/gu, (token) => {
     const key = token.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const mapped = CANONICAL_WORDS[key];
@@ -229,23 +227,6 @@ function sanitizeHistory(value: unknown): HistoryMessage[] {
       serviceId: typeof item.serviceId === "string" ? item.serviceId : null,
     }))
     .filter((item) => item.content.length > 0);
-}
-
-function redactExternalText(value: string) {
-  return value
-    .replace(/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/g, "[correo oculto]")
-    .replace(/https?:\/\/\S+/gi, "[enlace oculto]")
-    .replace(/\b\d[\s-]?\d{4}[\s-]?\d{4}\b/g, "[identificación oculta]")
-    .replace(/\b\d{9,12}\b/g, "[identificación oculta]")
-    .replace(/(?:\+?506[\s-]?)?(?:\d[\s-]?){8}\b/g, "[teléfono oculto]")
-    .trim();
-}
-
-function externalHistory(history: HistoryMessage[]) {
-  return history.slice(-MAX_HISTORY_MESSAGES).map((item) => ({
-    role: item.role,
-    content: redactExternalText(item.content).slice(0, 500),
-  }));
 }
 
 // El catálogo de servicios cambia cuando el panel de administración aprueba uno
@@ -1311,16 +1292,14 @@ type WorkersAiBinding = {
 async function workersAiAnswer(
   message: string,
   locale: Locale,
-  history: HistoryMessage[],
   catalogPrompt: string,
-  pageContext: string,
 ): Promise<AssistantPayload | null> {
   try {
     const { getCloudflareContext } = await import("@opennextjs/cloudflare");
     // Synchronous on purpose: inside the Worker the context is already on the
     // global scope, while the async variant would boot a local wrangler proxy
     // under `next start`/`next dev` (the regression servers) and stall the
-    // whole process. Outside the Worker this throws and the OpenAI/local
+    // whole process. Outside the Worker this throws and the local
     // answer paths take over.
     const context = getCloudflareContext();
     const ai = (context.env as { AI?: WorkersAiBinding }).AI;
@@ -1329,9 +1308,8 @@ async function workersAiAnswer(
     const result = await Promise.race([
       ai.run(WORKERS_AI_MODEL, {
         messages: [
-          { role: "system", content: systemPrompt(locale, catalogPrompt, pageContext) },
-          ...externalHistory(history),
-          { role: "user", content: redactExternalText(message).slice(0, 900) },
+          { role: "system", content: systemPrompt(locale, catalogPrompt, "Public product help; no account or conversation context.") },
+          { role: "user", content: message },
         ],
         temperature: 0.2,
         max_tokens: 220,
@@ -2092,14 +2070,9 @@ export async function POST(req: Request) {
     if (!nativeApp) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-    if (body.aiConsent?.accepted !== true || body.aiConsent?.version !== OPTIONAL_CONSENT_VERSION) {
-      return NextResponse.json({ error: ({ es: esMessages, en: enMessages })[locale].privacyErrors.aiConsentRequired, code: "AI_CONSENT_REQUIRED" }, { status: 428 });
-    }
     const rawMessage = canonicalizeMessage(limitTrimmedText(body.message, Math.min(LONG_TEXT_MAX_LENGTH, 1200)));
-    const pagePath = limitTrimmedText(body.pagePath, 240) || `${prefijoDeIdioma(locale) || "/"}`;
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    const pageContext = assistantPageContext(pagePath, Boolean(user));
     const history = sanitizeHistory(body.history);
     if (!rawMessage) {
       return NextResponse.json({
@@ -2131,27 +2104,17 @@ export async function POST(req: Request) {
 
     const catalog = await liveCatalog(locale);
     const safetyPayload = urgentSafetyAnswer(rawMessage, locale) ?? sensitiveOrUnsafeAnswer(rawMessage, locale);
-    // Deterministic, catalog-grounded answers are the default. External AI is
-    // opt-in so tests and repeated FAQ-style questions cannot silently spend
-    // API credit. Set AI_ASSISTANT_PROVIDER=openai only when that fallback is
-    // deliberately enabled for an environment.
+    // Prepared answers and the catalogue take priority over metered AI inference.
     const documentedPayload = localAnswer(rawMessage, locale);
-    const needsExternalFallback = documentedPayload.confidence === 0;
+    const publicTopics = assistantExternalTopics(rawMessage);
+    const needsExternalFallback = documentedPayload.confidence === 0 && publicTopics !== null;
     const externalRateLimited = needsExternalFallback
       ? enforceRateLimit(req, "ai-assistant-external", 3, 60_000)
       : null;
-    // Lo escrito por nosotros manda: documentación del producto, intenciones
-    // guiadas y el catálogo real. Workers AI es el respaldo acotado para las
-    // preguntas genuinamente abiertas, y corre en el mismo Worker donde vive el
-    // app, así que no cuesta por consulta.
-    //
-    // No hay un tercer escalón de pago. Cuando el respaldo tampoco sabe, el
-    // asistente lo DICE y ofrece las dos salidas que sí resuelven —las guías o
-    // un caso de soporte—: inventar es peor que admitir que no se sabe, y no se
-    // paga un proveedor por consulta para adivinar.
+    // External inference receives fixed public-help topics only, never raw input or history.
     const workersPayload = safetyPayload || !needsExternalFallback || externalRateLimited
       ? null
-      : await workersAiAnswer(rawMessage, locale, history, catalog.prompt, pageContext);
+      : await workersAiAnswer(publicTopics!, locale, catalog.prompt);
     const aiPayload = workersPayload;
     // Safety guidance is terminal: ordinary search-intent normalization must never
     // turn an emergency response back into a professional search.

@@ -48,7 +48,7 @@ export function SelectMenu({ value, onChange, options, placeholder, label, error
   const selected = options.find((o) => o.value === value);
   // 320px shows short lists (e.g. Todas + 7 provincias) without a scrollbar, while
   // longer lists (cantones, DOB years) still scroll inside the popover.
-  const pos = useAnchoredPosition(triggerRef, open, 320);
+  const pos = useAnchoredPosition(triggerRef, open, 320, listRef);
 
   // iOS does not reliably synthesize the mouse event that used to close a
   // neighboring portaled select. Coordinate every instance explicitly so the
@@ -85,7 +85,13 @@ export function SelectMenu({ value, onChange, options, placeholder, label, error
     if (didScrollSelectedRef.current) return;
     didScrollSelectedRef.current = true;
     const el = listRef.current?.querySelector<HTMLElement>("[data-selected='true']");
-    window.requestAnimationFrame(() => el?.scrollIntoView({ block: "center" }));
+    window.requestAnimationFrame(() => {
+      const list = listRef.current;
+      if (!list || !el) return;
+      // Scroll this list only; scrollIntoView can also move the modal/page.
+      list.scrollTop += el.getBoundingClientRect().top - list.getBoundingClientRect().top
+        - (list.clientHeight - el.offsetHeight) / 2;
+    });
   }, [open, pos]);
 
   useEffect(() => {
@@ -158,7 +164,7 @@ export function SelectMenu({ value, onChange, options, placeholder, label, error
           disabled && "opacity-50 cursor-not-allowed"
         )}
       >
-        <span className={cn("block min-w-0 flex-1 overflow-hidden truncate whitespace-nowrap leading-none", selected ? "text-[#162543]" : "text-[#68778d]")}>
+        <span className={cn("block min-w-0 flex-1 overflow-hidden truncate whitespace-nowrap leading-normal", selected ? "text-[#162543]" : "text-[#68778d]")}>
           {selected?.label ?? placeholder ?? ""}
         </span>
         <ChevronDown className={cn("pointer-events-none absolute right-3 h-4 w-4 text-[#68778d] transition-transform", open && "rotate-180")} />
@@ -225,7 +231,7 @@ export function SelectMenu({ value, onChange, options, placeholder, label, error
                       isSel ? "bg-[#EBF5FB] text-[#0089bb] font-semibold" : "text-[#374151] hover:bg-[#f3f4f6]"
                     )}
                   >
-                    <span className="min-w-0 truncate">{opt.label}</span>
+                    <span className="min-w-0 whitespace-normal break-words leading-normal">{opt.label}</span>
                     {isSel && <Check className="h-3.5 w-3.5 shrink-0" />}
                   </button>
                 );

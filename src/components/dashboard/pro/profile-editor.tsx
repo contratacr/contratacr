@@ -1,5 +1,7 @@
 "use client";
 
+import { hasBaseCanton } from "@/lib/location";
+
 import { AvatarFileInput } from "@/components/ui/avatar-file-input";
 
 import { PROFILE_FIELD_GROUPS, PROFILE_SECTION_FOOTER } from "@/components/dashboard/profile-section-layout";
@@ -412,7 +414,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
   const callPhoneIsValid = !allowPhoneCall || !callPhone.trim() || isPhoneComplete(callPhone);
   // Un lugar SIEMPRE: «todo el país» y las videoconsultas se suman, no
   // sustituyen (la misma regla que el registro).
-  const hasWorkplace = workplaces.some((wp) => wp.level !== "country");
+  const hasWorkplace = hasBaseCanton(workplaces);
   const socialIsValid =
     (!website.trim() || isValidWebsiteUrl(website)) &&
     SOCIAL_NETWORKS.every(({ key }) => {
@@ -432,8 +434,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
     }
     if (sectionId === "location" && !hasWorkplace) {
       return locale === "en"
-        ? "Your workplace is missing: choose the province and the canton, or the whole province."
-        : "Falta tu lugar de trabajo: elige la provincia y el cantón, o toda la provincia.";
+        ? "Choose at least one province and base canton."
+        : "Elige al menos una provincia y un cantón de base.";
     }
     if (sectionId === "contact") {
       if (!isPhoneComplete(whatsapp)) {
@@ -655,8 +657,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
       const effectiveWorkplaces = normalizedWorkplaces.filter((wp) => wp.level !== "country");
       const effectiveVideoConsult = canOfferVideoConsult && videoConsult;
       const coverageAreas = hasCountryWorkplace || (effectiveVideoConsult && videoCoverageCountry) ? [{ level: "country" as const }] : [];
-      const hasExactWorkplace = effectiveWorkplaces.some((w) => w.lat != null && w.lng != null);
-      const hasCoverageZone = effectiveWorkplaces.some((w) => w.lat == null || w.lng == null);
+      const hasExactWorkplace = effectiveWorkplaces.some((w) => w.homeService === false || (w.lat != null && w.lng != null));
+      const hasCoverageZone = effectiveWorkplaces.some((w) => w.homeService !== false && (w.lat == null || w.lng == null));
       const serviceType = [hasExactWorkplace ? "fixed" : null, hasCoverageZone ? "mobile" : null].filter(Boolean).join(",") || "mobile";
       const { provincias, cantones, coverageProvincias, coverageCountry } = computeSearchAreas(effectiveWorkplaces, coverageAreas);
       const primary = primaryArea(effectiveWorkplaces, coverageAreas);
@@ -1059,7 +1061,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
           const draftHere = !!certDraft && (certDraft.profession ?? "") === (prof || "");
           const inputCls = "h-11 w-full rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
           return (
-            <div key={prof || "general"} className="flex flex-col gap-4 border-t border-[#e1e8f0] pt-5 first:border-t-0 first:pt-0">
+            <div key={prof || "general"} className="flex flex-col gap-4 pt-5 first:pt-0">
               {professions.length > 1 && prof && (
                 <p className="text-xs font-bold uppercase tracking-wide text-[#0089bb]">{getCategoryLabel(prof, locale)}</p>
               )}
@@ -1126,7 +1128,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
           />
           {dirty && activeDirtySection === "location" && !hasWorkplace ? (
             <p className="mt-2 text-xs text-red-500">
-              {locale === "en" ? "Your workplace is missing: choose the province and the canton, or the whole province." : "Falta tu lugar de trabajo: elige la provincia y el cantón, o toda la provincia."}
+              {locale === "en" ? "Choose at least one province and base canton." : "Elige al menos una provincia y un cantón de base."}
             </p>
           ) : null}
         </div>

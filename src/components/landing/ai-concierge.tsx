@@ -1,6 +1,5 @@
 "use client";
 
-import { OPTIONAL_CONSENT_VERSION, readOptionalConsent, saveOptionalConsent, subscribeOptionalConsent, type OptionalChoice } from "@/lib/privacy/optional-consent";
 import { InlineIdentityName } from "@/components/ui/inline-identity-name";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, Suspense, type FormEvent } from "react";
 import { prefijoDeIdioma, rutaConIdioma, sinPrefijoDeIdioma } from "@/lib/prefijo-de-idioma";
@@ -305,9 +304,6 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
   const nativeApp = useNativeApp();
   const lang = language(locale);
   const copy = COPY[lang];
-  const aiChoice = useSyncExternalStore(subscribeOptionalConsent, () => readOptionalConsent("ai"), (): OptionalChoice => "unknown");
-  const [pendingPrompt, setPendingPrompt] = useState("");
-  const [consentError, setConsentError] = useState(false);
   const [open, setOpen] = useState(embedded);
   const [sessionHydrated, setSessionHydrated] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -469,7 +465,6 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
   async function ask(prefilled: string) {
     const text = prefilled.trim();
     if (!text || loading) return;
-    if (readOptionalConsent("ai") !== "accepted") { setPendingPrompt(text); return; }
     const previous = messages;
     setMessages([...previous, { role: "user", body: text, createdAt: new Date().toISOString() }]);
     setLoading(true);
@@ -479,7 +474,6 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          aiConsent: { version: OPTIONAL_CONSENT_VERSION, accepted: true },
           message: text,
           locale,
           pagePath: pathname,
@@ -706,22 +700,6 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
             )}
           </div>
         </header>
-
-        {aiChoice !== "accepted" && (
-          <div data-ai-consent className="border-b border-[#dbe3eb] bg-white px-5 py-4 text-[#162543]">
-            <h2 className="text-base font-bold">{lang === "en" ? "Before using the assistant" : "Antes de usar el asistente"}</h2>
-            <p className="mt-2 text-sm leading-6 text-[#526176]">{lang === "en" ? "Cloudflare Workers AI and, as a fallback, OpenAI receive your query and recent conversation context to answer. Do not include IDs, passwords or sensitive data. This is optional; you can keep using normal search." : "Cloudflare Workers AI y, como respaldo, OpenAI reciben su consulta y contexto reciente para responder. No incluya identificaciones, contraseñas ni datos sensibles. Es opcional; puede seguir usando el buscador."}</p>
-            <div className="mt-3 grid grid-cols-2 gap-3">
-              <button type="button" className="min-h-11 rounded-full border border-[#009FD9] px-3 text-sm font-semibold text-[#0083b0]" onClick={() => {
-                try { saveOptionalConsent("ai", "declined"); setPendingPrompt(""); setDraft(""); if (embedded) onBack?.(); else dismissAssistant(); } catch { setConsentError(true); }
-              }}>{lang === "en" ? "Not now" : "Ahora no"}</button>
-              <button type="button" className="min-h-11 rounded-full border border-[#009FD9] px-3 text-sm font-semibold text-[#0083b0]" onClick={() => {
-                try { saveOptionalConsent("ai", "accepted"); setConsentError(false); const text = pendingPrompt; setPendingPrompt(""); if (text) void ask(text); } catch { setConsentError(true); }
-              }}>{lang === "en" ? "Allow and continue" : "Permitir y continuar"}</button>
-            </div>
-            {consentError && <p role="alert" className="mt-2 text-sm text-red-700">{lang === "en" ? "Could not save permission. Nothing has been sent." : "No se pudo guardar el permiso. No se ha enviado nada."}</p>}
-          </div>
-        )}
 
         <div ref={scrollRef} data-ai-concierge-messages className="min-h-0 flex-1 space-y-5 overflow-y-auto bg-[linear-gradient(180deg,#fbfdff_0%,#ffffff_100%)] px-4 py-5 overscroll-contain sm:px-6">
           {messages.map((message, index) => (

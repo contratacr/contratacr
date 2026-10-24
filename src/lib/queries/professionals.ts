@@ -1,3 +1,4 @@
+import { nearbyContext, nearbyRank, compareNearby } from "@/lib/search/nearby";
 import { professionalRevision } from "@/lib/cache/professional-revision";
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
@@ -369,7 +370,7 @@ export async function searchProfessionals(
 
 const searchProfessionalsCached = unstable_cache(
   async (filters: SearchFilters, revision: string) => { void revision; return searchProfessionalsUncached(filters); },
-  ["public-professional-search-v6"],
+  ["public-professional-search-v7-cantonal-nearby"],
   { revalidate: SEARCH_CACHE_SECONDS, tags: ["public-professionals"] },
 );
 
@@ -710,28 +711,16 @@ async function searchProfessionalsUncached(
           }
           return distances.length ? Math.min(...distances) : Number.POSITIVE_INFINITY;
         };
-        // Coordinates attached to a resolved address are a map/ranking hint. The
-        // authoritative province/canton filter above must keep professionals who
-        // cover the whole administrative area even when they do not publish an
-        // exact pin. Only a true coordinate-only "near me" search is radius-bound.
+        const context=nearbyContext(nearLat,nearLng);
         if (!administrativeAreaActive) {
-          mapped = mapped.filter((p) => {
-            const distance = distOfExactPin(p);
-            if (distance <= NEAR_ME_RADIUS_KM) return true;
-            return includeVideoNationwideForNear && (p.videoconsulta || !!p.coverage?.country);
-          });
+          mapped = mapped.filter((p) => context
+            ? Number.isFinite(nearbyRank(p,context)[0]) || (includeVideoNationwideForNear && p.videoconsulta)
+            : distOfExactPin(p)<=NEAR_ME_RADIUS_KM || (includeVideoNationwideForNear && p.videoconsulta));
         }
-        // Coordinates also serve the map. Distance leads only when the user
-        // explicitly chooses «Cerca de mí», never «Mejor calificados».
-        if (filters.sortBy === "cercania") mapped.sort((a, b) => {
-          const da = distOfExactPin(a);
-          const db = distOfExactPin(b);
-          const aNear = da <= NEAR_ME_RADIUS_KM;
-          const bNear = db <= NEAR_ME_RADIUS_KM;
-          if (aNear && bNear) return da - db || compareByRating(a, b);
-          if (aNear) return -1;
-          if (bNear) return 1;
-          return compareByRating(a, b);
+        if (filters.sortBy === "cercania") mapped.sort((a,b)=>{
+          if(context)return compareNearby(nearbyRank(a,context),nearbyRank(b,context))||compareByRating(a,b);
+          const da=distOfExactPin(a),db=distOfExactPin(b);
+          return (da===db?0:da<db?-1:1)||compareByRating(a,b);
         });
       }
 

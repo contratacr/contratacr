@@ -33,3 +33,12 @@ test("Search is a conversion signal without search terms or location",()=>{
  expect(payload.custom_data).toEqual({measurement_version:META_MEASUREMENT_VERSION});
  expect(JSON.stringify(payload)).not.toMatch(/search_string|private search|cedula|message/);
 });
+
+
+test("a contact cannot be relabelled as a hire or delivered without its matching action", () => {
+ expect(minimalMetaPayload({...event,event_name:"ServiceHireConfirmed"})).toBeNull();
+ expect(minimalMetaPayload({...event,custom_data:{measurement_version:META_MEASUREMENT_VERSION}})).toBeNull();
+ const hire = minimalMetaPayload({...event,event_name:"ServiceHireConfirmed",custom_data:{measurement_version:META_MEASUREMENT_VERSION,action:"service_hire_confirmed"}})!;
+ expect(hire.event_name).toBe("ServiceHireConfirmed");
+ expect(hire.custom_data).toEqual({measurement_version:META_MEASUREMENT_VERSION,action:"service_hire_confirmed",audience:"client"});
+});
