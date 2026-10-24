@@ -1,4 +1,4 @@
-import { verifyFirebasePushCredentials } from "@/lib/push/firebase-admin";
+import { FirebasePushReadinessError, verifyFirebasePushCredentials } from "@/lib/push/firebase-admin";
 import { NextResponse } from "next/server";
 import { drainPushOutbox, normalizePushDrainLimit, PushWorkerError } from "@/lib/push/worker";
 import { isAuthorizedPushWorkerRequest } from "@/lib/push/worker-auth";
@@ -22,7 +22,8 @@ async function handleDrain(request: Request, limit: unknown, checkOnly = false) 
     const summary = await drainPushOutbox({ limit: normalizePushDrainLimit(limit) });
     return NextResponse.json({ ok: true, ...summary });
   } catch (error) {
-    const code = error instanceof PushWorkerError ? error.code : "push_worker_failed";
+    const code = error instanceof PushWorkerError || error instanceof FirebasePushReadinessError
+      ? error.code : "push_worker_failed";
     // Only a bounded internal code is logged. Notification bodies, raw provider
     // errors and registration tokens must never enter application logs.
     console.error("[push-worker] drain failed", { code });

@@ -79,6 +79,10 @@ jobs:
             -H "Authorization: Bearer $CRON_SECRET" \
             -H "Content-Type: application/json" -d '{"checkOnly":true}')"
           if [ "$status" != "200" ] || ! grep -q '"credentialReady":true' "$body"; then
+            # Only these bounded server codes are safe to report; never dump provider responses.
+            for code in firebase_credential_configuration_invalid firebase_oauth_failed push_worker_not_configured unauthorized; do
+              if grep -q "\"error\":\"$code\"" "$body"; then echo "Readiness category: $code"; fi
+            done
             echo "::error::Deployed Firebase credential readiness failed (HTTP $status); no notifications sent by this check."
             exit 1
           fi
