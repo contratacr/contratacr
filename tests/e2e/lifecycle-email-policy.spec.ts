@@ -60,7 +60,7 @@ test("starting-price copy retains the existing campaign identity and historical 
  const key = "precio-desde-profesionales-2026";
  const campaign = LIFECYCLE_CAMPAIGNS.find(item => item.key === key)!;
  expect(campaign.subject).toBe("Ayuda a tus clientes con un precio de referencia");
- expect(campaign.body).toContain("«Desde ₡…»");
+ expect(campaign.body).toContain('"Desde ₡…"');
  expect(campaign.body).toContain("el precio final lo acuerdas con el cliente según el trabajo");
  expect(campaign.ctaPath).toBe("/dashboard/profesional?mode=offer&tab=services");
  const history = [receipt(REVIEW_CAMPAIGN.key, 25), receipt(key, 20)];

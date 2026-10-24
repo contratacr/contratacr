@@ -109,7 +109,7 @@ const OFFER_FORM_COPY = {
     serviceError: "Selecciona un servicio de ContrataCR de las sugerencias.",
     descriptionError: "Describe la promoción con al menos 20 caracteres.",
     imagesError: "Agrega al menos una imagen de la promoción.",
-    priceError: "Ingresa el precio o marca «Precio a consultar».",
+    priceError: "Ingresa el precio o marca \"Precio a consultar\".",
     previousPriceError: "El precio anterior debe ser mayor o igual al actual.",
     priceRangeError: (maximum: string) => `Ingresa un precio entre 1 y ${maximum}.`,
     previousPriceRangeError: (maximum: string) => `Ingresa un precio anterior de hasta ${maximum}.`,

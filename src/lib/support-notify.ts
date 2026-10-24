@@ -99,7 +99,7 @@ export function supportReplyEmail(opts: {
     : { href: `${SITE}/login?redirect=${encodeURIComponent(ticketPath)}`, label: "Crear cuenta o iniciar sesión" };
   const html = shell(
     "Tienes una respuesta de soporte",
-    `<p style="margin:0 0 12px 0;">${firstName ? `Hola ${escapeHtml(firstName)}, ` : ""}respondimos a tu consulta <strong>“${escapeHtml(opts.subject)}”</strong>:</p>
+    `<p style="margin:0 0 12px 0;">${firstName ? `Hola ${escapeHtml(firstName)}, ` : ""}respondimos a tu consulta <strong>"${escapeHtml(opts.subject)}"</strong>:</p>
      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:14px;white-space:pre-wrap;">${escapeHtml(opts.body)}</div>
      ${followHtml}`,
     cta,

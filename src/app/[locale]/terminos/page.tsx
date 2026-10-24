@@ -63,7 +63,7 @@ const ES_SECTIONS: LegalSection[] = [
       },
       {
         "k": "p",
-        "text": "Los perfiles permiten comparar reseñas, casos de éxito, formación, certificaciones, experiencia y zonas de trabajo. Esta información procede de quienes la publican y puede requerir comprobación adicional. La insignia «Verificado» tiene únicamente el alcance explicado en la sección 6; no constituye una recomendación ni certificación del servicio. ContrataCR no garantiza clientes, ingresos, contrataciones ni colocación laboral."
+        "text": "Los perfiles permiten comparar reseñas, casos de éxito, formación, certificaciones, experiencia y zonas de trabajo. Esta información procede de quienes la publican y puede requerir comprobación adicional. La insignia \"Verificado\" tiene únicamente el alcance explicado en la sección 6; no constituye una recomendación ni certificación del servicio. ContrataCR no garantiza clientes, ingresos, contrataciones ni colocación laboral."
       }
     ]
   },
@@ -115,7 +115,7 @@ const ES_SECTIONS: LegalSection[] = [
       },
       {
         "k": "note",
-        "text": "**Qué significa «Verificado».** La insignia indica una comprobación limitada de los datos de identificación de la cuenta. **Consulta automática:** cotejamos número, tipo y nombre o razón social con la API pública de Hacienda; una coincidencia confirma esos datos en la fuente, no quién controla la cuenta. **Revisión manual:** cuando corresponde, una persona revisa una foto con la identificación y, para representación empresarial, personería o autorización. No se requieren fotos de casos de éxito para esta revisión. La consulta de una cédula jurídica no acredita por sí sola representación de la empresa. Ninguno de estos controles certifica edad, antecedentes, licencias, experiencia, calidad, solvencia ni resultado del servicio; tampoco garantiza quién utilizará la cuenta posteriormente. Podemos revisar o retirar la insignia ante inconsistencias. Antes de contratar, compruebe la identidad, representación y habilitaciones que necesite."
+        "text": "**Qué significa \"Verificado\".** La insignia indica una comprobación limitada de los datos de identificación de la cuenta. **Consulta automática:** cotejamos número, tipo y nombre o razón social con la API pública de Hacienda; una coincidencia confirma esos datos en la fuente, no quién controla la cuenta. **Revisión manual:** cuando corresponde, una persona revisa una foto con la identificación y, para representación empresarial, personería o autorización. No se requieren fotos de casos de éxito para esta revisión. La consulta de una cédula jurídica no acredita por sí sola representación de la empresa. Ninguno de estos controles certifica edad, antecedentes, licencias, experiencia, calidad, solvencia ni resultado del servicio; tampoco garantiza quién utilizará la cuenta posteriormente. Podemos revisar o retirar la insignia ante inconsistencias. Antes de contratar, compruebe la identidad, representación y habilitaciones que necesite."
       }
     ]
   },
@@ -154,7 +154,7 @@ const ES_SECTIONS: LegalSection[] = [
       },
       {
         "k": "p",
-        "text": "Un mensaje propio puede editarse o eliminarse para todos durante los 15 minutos siguientes a su envío; después solo puede ocultarse para usted. La conversación puede mostrar si un mensaje fue enviado, recibido o visto; los avisos de «Visto» son recíprocos y pueden desactivarse en Privacidad."
+        "text": "Un mensaje propio puede editarse o eliminarse para todos durante los 15 minutos siguientes a su envío; después solo puede ocultarse para usted. La conversación puede mostrar si un mensaje fue enviado, recibido o visto; los avisos de \"Visto\" son recíprocos y pueden desactivarse en Privacidad."
       },
       {
         "k": "p",
@@ -385,7 +385,7 @@ const EN_SECTIONS: LegalSection[] = [
       },
       {
         "k": "p",
-        "text": "Profiles allow comparisons of reviews, success stories, training, certifications, experience and work areas. This information comes from its publishers and may require further checks. The «Verified» badge has only the scope described in section 6; it is not an endorsement or certification of the service. ContrataCR does not guarantee customers, income, hiring or job placement."
+        "text": "Profiles allow comparisons of reviews, success stories, training, certifications, experience and work areas. This information comes from its publishers and may require further checks. The \"Verified\" badge has only the scope described in section 6; it is not an endorsement or certification of the service. ContrataCR does not guarantee customers, income, hiring or job placement."
       }
     ]
   },
@@ -437,7 +437,7 @@ const EN_SECTIONS: LegalSection[] = [
       },
       {
         "k": "note",
-        "text": "**What «Verified» means.** The badge indicates a limited check of account identification details. **Automatic lookup:** we compare number, type and name or company name with Hacienda’s public API; a match confirms those details in the source, not who controls the account. **Manual review:** where appropriate, a person reviews a photo with the ID and, for company representation, representation or authorization documents. Work photos are not required for this review. A corporate ID lookup does not by itself establish company representation. Neither check certifies age, background, licenses, experience, quality, solvency or service results, or guarantees who will use the account later. We may review or remove the badge for inconsistencies. Before contracting, check the identity, representation and qualifications you need."
+        "text": "**What \"Verified\" means.** The badge indicates a limited check of account identification details. **Automatic lookup:** we compare number, type and name or company name with Hacienda’s public API; a match confirms those details in the source, not who controls the account. **Manual review:** where appropriate, a person reviews a photo with the ID and, for company representation, representation or authorization documents. Work photos are not required for this review. A corporate ID lookup does not by itself establish company representation. Neither check certifies age, background, licenses, experience, quality, solvency or service results, or guarantees who will use the account later. We may review or remove the badge for inconsistencies. Before contracting, check the identity, representation and qualifications you need."
       }
     ]
   },
@@ -470,7 +470,7 @@ const EN_SECTIONS: LegalSection[] = [
       },
       {
         "k": "p",
-        "text": "Your own message can be edited or deleted for everyone within 15 minutes of sending; after that it can only be hidden for you. Conversations may show whether a message was sent, delivered, or seen; «Seen» receipts are reciprocal and can be turned off in Privacy. Contact outside the Platform —WhatsApp, calls, or other means— is outside ContrataCR's control."
+        "text": "Your own message can be edited or deleted for everyone within 15 minutes of sending; after that it can only be hidden for you. Conversations may show whether a message was sent, delivered, or seen; \"Seen\" receipts are reciprocal and can be turned off in Privacy. Contact outside the Platform —WhatsApp, calls, or other means— is outside ContrataCR's control."
       },
       {
         "k": "p",

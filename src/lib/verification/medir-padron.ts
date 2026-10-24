@@ -55,7 +55,7 @@ export async function medirPadron(): Promise<{
       completoAprox,
       detalle: completoAprox
         ? "El padrón está cargado."
-        : `El padrón está INCOMPLETO: ${filas.toLocaleString("es-CR")} filas de ~${TSE_APROXIMADO.toLocaleString("es-CR")}. Las cédulas que falten salen «pendiente de revisión» aunque sean válidas.`,
+        : `El padrón está INCOMPLETO: ${filas.toLocaleString("es-CR")} filas de ~${TSE_APROXIMADO.toLocaleString("es-CR")}. Las cédulas que falten salen "pendiente de revisión" aunque sean válidas.`,
     };
   } catch (error) {
     return {

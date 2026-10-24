@@ -153,8 +153,8 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
   }
   if (notification.type === "agrega_precio") {
     return { title, message: en
-      ? "It will appear as “From ₡…” to guide clients. The final price may vary depending on the job."
-      : "Se mostrará como «Desde ₡…» para orientar a los clientes. El precio final puede variar según el trabajo." };
+      ? "It will appear as \"From ₡…\" to guide clients. The final price may vary depending on the job."
+      : "Se mostrará como \"Desde ₡…\" para orientar a los clientes. El precio final puede variar según el trabajo." };
   }
   if (notification.type === "completa_perfil") {
     return { title, message: en

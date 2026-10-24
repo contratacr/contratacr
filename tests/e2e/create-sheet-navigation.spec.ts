@@ -87,7 +87,7 @@ test("Project opens its own form and Back returns to the original section", asyn
   await expect(page).toHaveURL(/\/publicar-proyecto\?returnTo=/);
   const form = page.getByRole("dialog");
   await expect(form).toBeVisible();
-  await expect(form.getByText("Tu proyecto sale con «Verificado». El número no se muestra.")).toHaveCount(0);
+  await expect(form.getByText('Tu proyecto sale con "Verificado". El número no se muestra.')).toHaveCount(0);
   await expect(form.locator('[data-cedula-de-la-cuenta]')).toHaveCount(0);
   await expect(form.locator('input[type="tel"]')).toBeVisible();
   await expectNoHorizontalOverflow(page);
@@ -145,7 +145,7 @@ test("Project form keeps search prefills and safely closes on desktop", async ({
   await gotoOK(page, "/publicar-proyecto?categoria=electricidad&provincia=heredia&returnTo=%2Fprofesionales");
   const form = page.getByRole("dialog");
   await expect(form).toBeVisible();
-  await expect(form.getByText("Tu proyecto sale con «Verificado». El número no se muestra.")).toHaveCount(0);
+  await expect(form.getByText('Tu proyecto sale con "Verificado". El número no se muestra.')).toHaveCount(0);
   await expect(form.locator('input[type="tel"]')).toBeVisible();
   await form.getByRole("button", { name: "Cerrar", exact: true }).click();
   await expect(page).toHaveURL(/\/profesionales$/);
