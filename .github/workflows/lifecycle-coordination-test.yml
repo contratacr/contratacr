@@ -1,5 +1,13 @@
 name: Lifecycle email coordination tests
 on:
+  push:
+    branches: [main, test]
+    paths:
+      - "supabase/migrations/**"
+      - "scripts/verify-lifecycle-coordination.mjs"
+      - "src/lib/email/**"
+      - "src/lib/notifications/**"
+      - ".github/workflows/lifecycle-coordination-test.yml"
   workflow_dispatch:
 permissions:
   contents: read
