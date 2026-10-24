@@ -24086,7 +24086,7 @@
           "title": "\"the price reminder waits four days even if a first review has already arrived\""
         },
         {
-          "line": 184,
+          "line": 186,
           "title": "\"reminders wait 24 hours even if the preceding notification was deleted\""
         }
       ]
@@ -24960,6 +24960,10 @@
         {
           "line": 53,
           "title": "\"the preview mailbox is excluded even if its account loses the admin role\""
+        },
+        {
+          "line": 59,
+          "title": "\"starting-price copy retains the existing campaign identity and historical opt-outs\""
         }
       ]
     },
@@ -25221,11 +25225,11 @@
           "title": "'download button keeps the website download section after campaign attribution is appended'"
         },
         {
-          "line": 78,
+          "line": 80,
           "title": "'worker never offers the retired invitation while remaining campaigns continue'"
         },
         {
-          "line": 85,
+          "line": 87,
           "title": "'queued retired envelopes are cancelled without reading accounts or contacting a provider'"
         }
       ]
