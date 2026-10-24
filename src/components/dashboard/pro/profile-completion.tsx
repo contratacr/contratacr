@@ -245,7 +245,7 @@ export function ProfileCompletion({
                   <ChevronRight className="h-4.5 w-4.5" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-extrabold leading-snug text-[#162543]">{t(item.key)}</span>
+                  <span className="block whitespace-normal break-words text-sm font-extrabold leading-snug text-[#162543]">{t(item.key)}</span>
                   {STEP_HINTS[item.key] && (
                     <span className="mt-1 block text-xs font-semibold leading-snug text-[#7c8fa1]">{t(STEP_HINTS[item.key])}</span>
                   )}

@@ -511,6 +511,18 @@ export function ServicesEditor({
 
   const formOpen = editCategory !== "";
 
+  // Wait until the portal and its scroll container have been laid out. Do not
+  // focus the input: opening the keyboard would move the target again.
+  useEffect(() => {
+    if (!formOpen || focusField !== "servicePrice" || !focusKey) return;
+    let frame = requestAnimationFrame(() => {
+      frame = requestAnimationFrame(() => {
+        priceFieldRef.current?.scrollIntoView({ block: "center", behavior: "instant" });
+      });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [formOpen, focusField, focusKey]);
+
   async function handleServiceImageSelect(file: File) {
     setImageUploading(true);
     setFormError(null);
@@ -818,7 +830,7 @@ export function ServicesEditor({
             </>
           }
           footerClassName="block sm:flex sm:justify-end sm:gap-3"
-          bodyClassName="bg-white px-4 py-5"
+          bodyClassName={cn("bg-white px-4 py-5", focusField === "servicePrice" && "!pb-[30dvh]")}
         >
           <div className="flex flex-col gap-4 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
             <div ref={categoryFieldRef}>
@@ -915,7 +927,7 @@ export function ServicesEditor({
               </div>
             </div>
 
-            <div ref={priceFieldRef}>
+            <div ref={priceFieldRef} data-service-price-field>
               <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("priceRef")} {!form.aConsultar && <span className="text-red-500">*</span>}</label>
               <div className="flex items-stretch gap-2">
                 <div className={cn("flex-1", form.aConsultar && "opacity-50 pointer-events-none")}>
