@@ -23903,19 +23903,19 @@
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 307,
+          "line": 309,
           "title": "`${tipo}: sin sesión → entrar con una cuenta existente → vuelve lleno y se publica`"
         },
         {
-          "line": 317,
+          "line": 319,
           "title": "`${tipo}: sin sesión → crear cuenta de cliente → vuelve lleno y se publica`"
         },
         {
-          "line": 342,
+          "line": 344,
           "title": "`${tipo}: sin sesión → crear cuenta de profesional → vuelve lleno y se publica`"
         },
         {
-          "line": 356,
+          "line": 358,
           "title": "\"registro de profesional: contraseña, provincia, tarifa, fijo, abre arriba y avisos de bienvenida\""
         }
       ]
