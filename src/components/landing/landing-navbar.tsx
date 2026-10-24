@@ -1326,9 +1326,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     router.push("/");
   }, [locale, nativeApp, router]);
 
-  // Filas como las de Angi: texto grande, línea debajo y flecha a la derecha.
+  // Navigation uses the same semibold weight as the panel, with a modest size hierarchy.
   const mobileDrawerItemClass =
-    "ccr-menu-fila flex w-full items-center gap-3 border-b border-[#e5e9ee] py-[18px] text-left text-[18px] font-semibold leading-snug text-[#162543] transition-colors hover:text-[#009FD9]";
+    "ccr-menu-fila flex w-full items-center gap-3 border-b border-[#e5e9ee] min-h-[62px] py-[18px] text-left text-[16px] font-semibold leading-snug text-[#162543] transition-colors hover:text-[#009FD9]";
   const mobileDrawerTextClass = "min-w-0 flex-1 whitespace-normal break-words";
 
   // Una sola barra superior: si la pantalla actual publica un título de sección
