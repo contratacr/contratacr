@@ -184,7 +184,9 @@ for (const ambiente of ["web", "app"] as const) {
     await page.getByRole("button", { name: /^Desarrollo web/ }).or(page.getByRole("option", { name: /^Desarrollo web/ })).first().click();
     await main.getByRole("button", { name: /^Provincia$/ }).first().click();
     await page.getByRole("option", { name: /^Alajuela$/ }).first().click();
-    await main.getByRole("button", { name: /Agregar toda la provincia/ }).click();
+    await main.getByRole("button", { name: /^Cantón$/ }).first().click();
+    await page.getByRole("option", { name: /^Atenas$/ }).first().click();
+    await main.getByRole("button", { name: "Agregar este lugar", exact: true }).click();
     const tel = main.locator('input[type="tel"]');
     if (!(await tel.inputValue())) await tel.fill("88885555");
     await main.getByRole("button", { name: /^Continuar$/ }).click();

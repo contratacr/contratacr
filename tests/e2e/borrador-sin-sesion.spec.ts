@@ -275,7 +275,9 @@ async function completarPerfilProfesional(page: Page) {
   await page.getByRole("button", { name: /^Desarrollo web/ }).or(page.getByRole("option", { name: /^Desarrollo web/ })).first().click();
   await main.getByRole("button", { name: /^Provincia$/ }).first().click();
   await page.getByRole("option", { name: /^Alajuela$/ }).first().click();
-  await main.getByRole("button", { name: /Agregar toda la provincia/ }).click();
+  await main.getByRole("button", { name: /^Cantón$/ }).first().click();
+  await page.getByRole("option", { name: /^Atenas$/ }).first().click();
+  await main.getByRole("button", { name: "Agregar este lugar", exact: true }).click();
   const tel = main.locator('input[type="tel"]');
   if (!(await tel.inputValue())) await tel.fill("88885555");
   await main.getByRole("button", { name: /^Continuar$/ }).click();
@@ -385,24 +387,28 @@ test("registro de profesional: contraseña, provincia, tarifa, fijo, abre arriba
   await expect(main.getByText("¿Desde cuánto cobras por hora?")).toBeVisible();
   await expect(main.getByText(/tu perfil dirá «Consultar precio»/)).toBeVisible();
 
-  // 4. «Agregar toda la provincia» no existe hasta elegir una provincia.
-  const agregarProvincia = main.getByRole("button", { name: /Agregar toda la provincia/ });
-  await expect(agregarProvincia).toHaveCount(0);
+  // 4. Un lugar requiere provincia y cantón; una cobertura amplia no los sustituye.
+  const agregarLugar = main.getByRole("button", { name: "Agregar este lugar", exact: true });
+  await expect(agregarLugar).toHaveCount(0);
   await main.getByRole("button", { name: "Busca tu servicio" }).click();
   await page.getByPlaceholder("Buscar servicio...").fill("Desarrollo web");
   await page.getByRole("button", { name: /^Desarrollo web/ }).or(page.getByRole("option", { name: /^Desarrollo web/ })).first().click();
 
-  // 5. «Todo el país» no cuenta como lugar: sin provincia, el aviso lo explica.
-  await main.getByRole("switch", { name: /todo el país/ }).or(main.getByText("Trabajo a domicilio en todo el país")).first().click();
+  // 5. Sin lugar de base no se puede continuar.
   await main.locator('input[type="tel"]').fill("88885555");
   await main.getByRole("button", { name: /^Continuar$/ }).click();
-  await expect(main.getByText(/Además de todo el país, elige de dónde sales/)).toBeVisible();
-  await expect(main.getByText("Todo Costa Rica")).toHaveCount(0);
+  await expect(main.getByText("Elige al menos una provincia y un cantón de base.")).toBeVisible();
 
   await main.getByRole("button", { name: /^Provincia$/ }).first().click();
   await page.getByRole("option", { name: /^Alajuela$/ }).first().click();
-  await expect(agregarProvincia).toBeVisible();
-  await agregarProvincia.click();
+  await expect(agregarLugar).toHaveCount(0);
+  await main.getByRole("button", { name: /^Cantón$/ }).first().click();
+  await page.getByRole("option", { name: /^Atenas$/ }).first().click();
+  await agregarLugar.click();
+  await main.getByRole("button", { name: /^Todo el cantón$/ }).click();
+  await page.getByRole("option", { name: "Todo el país", exact: true }).click();
+  await expect(main.getByText("Atenas, Alajuela", { exact: true }).first()).toBeVisible();
+  await expect(main.getByRole("button", { name: /^Todo el país$/ })).toBeVisible();
 
   // 6. Un teléfono fijo no sirve de WhatsApp.
   await main.locator('input[type="tel"]').fill("22223333");
