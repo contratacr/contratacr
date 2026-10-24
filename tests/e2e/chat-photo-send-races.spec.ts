@@ -158,6 +158,29 @@ test('real photo upload is stored and shown without reopening the conversation',
     await expect(bubble).toBeVisible();
     await expect(page.locator('[id^="msg-pending-"]')).toHaveCount(0);
     await expect.poll(() => bubble.locator('img').evaluate(image => (image as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
+    await bubble.locator('img').dispatchEvent('contextmenu');
+    const menu = page.locator('[data-message-context-menu]');
+    await expect(menu).toBeVisible();
+    const menuBox = (await menu.boundingBox())!;
+    const selected = page.locator('[role=menu]');
+    await expect(selected.getByRole('menuitem')).toHaveCount(3);
+    const bubbleBox = (await bubble.boundingBox())!;
+    expect(Math.min(Math.abs(menuBox.y + menuBox.height - bubbleBox.y), Math.abs(menuBox.y - bubbleBox.y - bubbleBox.height))).toBeLessThanOrEqual(10);
+    await page.keyboard.press('Escape');
+    for (const dy of [-120, 120]) {
+      await bubble.locator('img').click();
+      const viewer = page.locator('[data-chat-image-swipe]');
+      await expect(viewer).toBeVisible();
+      await viewer.evaluate((element, delta) => {
+        const start = new Event('touchstart',{bubbles:true});
+        Object.defineProperty(start,'touches',{value:[{clientX:100,clientY:300}]});
+        element.dispatchEvent(start);
+        const end = new Event('touchend',{bubbles:true});
+        Object.defineProperty(end,'changedTouches',{value:[{clientX:105,clientY:300+delta}]});
+        element.dispatchEvent(end);
+      }, dy);
+      await expect(viewer).toHaveCount(0);
+    }
     const saved = await db.from('direct_messages').select('id,attachment_urls').eq('id', result.message.id).single();
     expect(saved.error).toBeNull();
     expect(saved.data!.attachment_urls).toHaveLength(1);
