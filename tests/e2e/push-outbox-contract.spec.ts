@@ -1,3 +1,5 @@
+import { generateKeyPairSync, verify } from "node:crypto";
+import { createFirebasePushCredential } from "../../src/lib/push/firebase-credential";
 import { expect, test } from "playwright/test";
 import { buildFcmMulticastPayload, compactPushText, notificationPushUrl } from "../../src/lib/push/payload";
 import {
@@ -25,6 +27,46 @@ import {
 } from "../../src/lib/push/worker";
 
 test.describe("@contract push outbox safety contracts", () => {
+  test("Firebase OAuth uses native fetch, a signed messaging-only assertion and cached tokens", async () => {
+    const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
+    let calls = 0;
+    const credential = createFirebasePushCredential(
+      "push-contract@example.invalid",
+      privateKey.export({ type: "pkcs8", format: "pem" }).toString(),
+      async (input, init) => {
+        calls += 1;
+        expect(String(input)).toBe("https://oauth2.googleapis.com/token");
+        expect(init?.method).toBe("POST");
+        const form = new URLSearchParams(String(init?.body));
+        expect(form.get("grant_type")).toBe("urn:ietf:params:oauth:grant-type:jwt-bearer");
+        const assertion = form.get("assertion")!;
+        const [header, claims, signature] = assertion.split(".");
+        expect(JSON.parse(Buffer.from(header, "base64url").toString()).alg).toBe("RS256");
+        const payload = JSON.parse(Buffer.from(claims, "base64url").toString());
+        expect(payload.iss).toBe("push-contract@example.invalid");
+        expect(payload.scope).toBe("https://www.googleapis.com/auth/firebase.messaging");
+        expect(payload.aud).toBe("https://oauth2.googleapis.com/token");
+        expect(payload.exp - payload.iat).toBe(3600);
+        expect(verify("RSA-SHA256", Buffer.from(`${header}.${claims}`), publicKey,
+          Buffer.from(signature, "base64url"))).toBe(true);
+        return Response.json({ access_token: "contract-access-token", expires_in: 3600, token_type: "Bearer" });
+      },
+    );
+    expect(await credential.getAccessToken()).toMatchObject({ access_token: "contract-access-token" });
+    expect(await credential.getAccessToken()).toMatchObject({ access_token: "contract-access-token" });
+    expect(calls).toBe(1);
+  });
+
+  test("Firebase OAuth rejects an unusable token response", async () => {
+    const { privateKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
+    const credential = createFirebasePushCredential(
+      "push-contract@example.invalid",
+      privateKey.export({ type: "pkcs8", format: "pem" }).toString(),
+      async () => Response.json({ expires_in: 0 }),
+    );
+    await expect(credential.getAccessToken()).rejects.toThrow();
+  });
+
   test("FCM payload keeps private metadata server-side and compacts visible copy", () => {
     const payload = buildFcmMulticastPayload({
       tokens: ["fcm-token-placeholder"],
