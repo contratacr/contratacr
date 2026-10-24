@@ -2156,6 +2156,7 @@
     "markRead": "Mark as read",
     "delete": "Delete",
     "deleteAll": "Delete all",
+    "deleteAllError": "Notifications could not be deleted. Please try again.",
     "deleteAllConfirm": "Delete all your notifications?",
     "deleteAllBody": "This action can't be undone.",
     "cancel": "Cancel",

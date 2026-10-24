@@ -2156,6 +2156,7 @@
     "markRead": "Marcar como leída",
     "delete": "Eliminar",
     "deleteAll": "Eliminar todas",
+    "deleteAllError": "No se pudieron eliminar las notificaciones. Inténtelo de nuevo.",
     "deleteAllConfirm": "¿Eliminar todas tus notificaciones?",
     "deleteAllBody": "Esta acción no se puede deshacer.",
     "cancel": "Cancelar",

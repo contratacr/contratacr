@@ -8,7 +8,7 @@
     "handlers": 105,
     "components": 262,
     "hooks": 28,
-    "specs": 174
+    "specs": 175
   },
   "dashboardTabs": [
     "home",
@@ -15915,7 +15915,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 512,
+          "line": 527,
           "tag": "button",
           "label": "{locale === \"en\" ? \"Notification options\" : \"Opciones de notificaciones\"}",
           "handler": "{() => {\n              setItemMenuOpenId(null);\n              setGlobalMenuOpen((open) => !open);\n            }}",
@@ -15923,7 +15923,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 536,
+          "line": 549,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => {\n                    setGlobalMenuOpen(false);\n                    void markAllRead();\n                  }}",
@@ -15931,31 +15931,31 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 550,
+          "line": 562,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "{() => {\n                  setGlobalMenuOpen(false);\n                  setConfirmDelete(true);\n                }}",
-          "destination": "",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 599,
-          "tag": "div",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "{() => setConfirmDelete(false)}",
+          "handler": "{() => {\n                  setGlobalMenuOpen(false);\n                  setDeleteAllError(false);\n                  setConfirmDelete(true);\n                }}",
           "destination": "",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
           "line": 611,
-          "tag": "button",
+          "tag": "div",
           "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "{() => setConfirmDelete(false)}",
+          "handler": "{() => { if (!deletingAll) setConfirmDelete(false); }}",
           "destination": "",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 612,
+          "line": 624,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{() => { if (!deletingAll) setConfirmDelete(false); }}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 625,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{doDeleteAll}",
@@ -15963,7 +15963,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 653,
+          "line": 666,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { setBusy(true); void loadNotifications(); }}",
@@ -15971,7 +15971,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 716,
+          "line": 729,
           "tag": "button",
           "label": "{t(\"delete\")}",
           "handler": "{() => {\n                        setFilaAbierta(null);\n                        borrarPorDeslizar(n.id);\n                      }}",
@@ -15979,7 +15979,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 732,
+          "line": 745,
           "tag": "div",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => {\n                    if (filaAbierta === n.id) {\n                      setFilaAbierta(null);\n                      return;\n                    }\n                    open(n);\n                  }}",
@@ -15987,7 +15987,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 817,
+          "line": 830,
           "tag": "button",
           "label": "{locale === \"en\" ? \"Options\" : \"Opciones\"}",
           "handler": "{(event) => toggleItemMenu(event, n)}",
@@ -15995,7 +15995,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 840,
+          "line": 853,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(event) => void markOneRead(event, n.id)}",
@@ -16003,7 +16003,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 850,
+          "line": 863,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(event) => void dismiss(event, n.id)}",
@@ -16011,7 +16011,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 874,
+          "line": 887,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setMostrando((n) => n + DE_A)}",
@@ -16019,7 +16019,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 903,
+          "line": 916,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setEnTarjeta(null)}",
@@ -16027,7 +16027,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 907,
+          "line": 920,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { setEnTarjeta(null); router.push(conRegresoANotificaciones(destino)); }}",
@@ -16035,7 +16035,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 911,
+          "line": 924,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setEnTarjeta(null)}",
@@ -16043,7 +16043,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 934,
+          "line": 947,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{deshacerBorrado}",
@@ -25610,6 +25610,15 @@
         {
           "line": 180,
           "title": "!isolated || (page.viewportSize()?.width ?? 0) >= 1024"
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/notifications-delete-all.spec.ts",
+      "cases": [
+        {
+          "line": 8,
+          "title": "`delete all includes unloaded notifications and preserves chat records (${native ? 'native' : 'web'})`"
         }
       ]
     },

@@ -99,6 +99,8 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
   const [pending, setBusy] = useState(true);
   const busy = pending && cachedNotifications === null;
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deletingAll, setDeletingAll] = useState(false);
+  const [deleteAllError, setDeleteAllError] = useState(false);
   const [globalMenuOpen, setGlobalMenuOpen] = useState(false);
   // De a 15, con «Ver notificaciones anteriores» al pie, como Facebook: con
   // las cien que se cargan de una vez la lista era una sábana sin final.
@@ -463,19 +465,32 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
   }
 
   async function doDeleteAll() {
-    setConfirmDelete(false);
-    setGlobalMenuOpen(false);
-    if (!user || visible.length === 0) return;
-    // Delete only the CURRENT mode's notifications (the list is per-mode).
-    const ids = visible.map((n) => n.id);
-    setNotificationState((prev) => {
-      const next = prev.items.filter((n) => !ids.includes(n.id));
-      cacheNotifications(user.id, next);
-      return { userId: user.id, items: next };
-    });
-    const supabase = createClient();
-    await supabase.from("notifications").delete().in("id", ids);
-    window.dispatchEvent(new CustomEvent("notificationsChanged"));
+    if (!user || deletingAll || visible.length === 0) return;
+    setDeletingAll(true);
+    setDeleteAllError(false);
+    try {
+      const supabase = createClient();
+      // The full inbox can contain more than the 100 fetched rows. Keep chat
+      // delivery records and permanent campaign receipts untouched.
+      const query = supabase.from("notifications").delete().eq("user_id", user.id);
+      const { error } = await (scope === "all"
+        ? query.neq("type", "direct_message")
+        : query.in("id", visible.map((notification) => notification.id)));
+      if (error) throw error;
+      const ids = new Set(visible.map((notification) => notification.id));
+      setNotificationState((prev) => {
+        const next = scope === "all" ? [] : prev.items.filter((notification) => !ids.has(notification.id));
+        cacheNotifications(user.id, next);
+        return { userId: user.id, items: next };
+      });
+      setConfirmDelete(false);
+      setGlobalMenuOpen(false);
+      window.dispatchEvent(new CustomEvent("notificationsChanged"));
+    } catch {
+      setDeleteAllError(true);
+    } finally {
+      setDeletingAll(false);
+    }
   }
 
   const headingTitle = locale === "en" ? "Notifications" : "Notificaciones";
@@ -508,7 +523,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
   // la lista: suelto arriba quedaba a otra altura y parecía de otra cosa.
 
   const menuGeneral = hasVisibleNotifications ? (
-        <div ref={globalMenuRef} data-menu-general-notificaciones="" className={cn("relative shrink-0", nativeApp && scope === "all" && "[&>button]:sr-only")}>
+        <div ref={globalMenuRef} data-menu-general-notificaciones="" className="relative shrink-0">
           <button
             type="button"
             aria-label={locale === "en" ? "Notification options" : "Opciones de notificaciones"}
@@ -528,9 +543,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
               // relleno y sombra. Aqui era rounded-2xl con shadow-xl y la letra
               // mas palida, asi que dos menus del mismo panel no se parecian.
               "min-w-[220px] overflow-hidden rounded-xl border border-[#e5e7eb] bg-white p-1.5 shadow-[0_18px_45px_-22px_rgba(15,23,42,0.55)]",
-              nativeApp && scope === "all"
-                ? "fixed right-3 top-[calc(var(--ccr-native-header-height,64px)+6px)] z-[240] shadow-xl"
-                : "absolute right-0 top-full z-30 mt-1",
+              "absolute right-0 top-full z-30 mt-1",
             )}>
               {unread > 0 && (
                 <button
@@ -546,12 +559,12 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
                   {t("markAllRead")}
                 </button>
               )}
-              {!nativeApp && (
               <button
                 type="button"
                 role="menuitem"
                 onClick={() => {
                   setGlobalMenuOpen(false);
+                  setDeleteAllError(false);
                   setConfirmDelete(true);
                 }}
                 className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-bold text-red-700 transition-colors hover:bg-red-50"
@@ -559,7 +572,6 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
                 <Trash2 className="h-4 w-4" />
                 {t("deleteAll")}
               </button>
-              )}
             </div>
           )}
         </div>
@@ -596,7 +608,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
 
       {confirmDelete && (
         <div className="app-modal-screen app-centered-modal-screen fixed inset-0 z-[200] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setConfirmDelete(false)} />
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => { if (!deletingAll) setConfirmDelete(false); }} />
           <div
             role="alertdialog"
             aria-modal="true"
@@ -607,9 +619,10 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
             <BrandIconBadge icon={AlertTriangle} tone="danger" size={56} className="mx-auto mb-4" />
             <h3 id="delete-notifications-title" className="mb-1.5 text-lg font-bold text-[#162543]">{t("deleteAllConfirm")}</h3>
             <p id="delete-notifications-description" className="mb-5 text-sm text-[#6b7280]">{t("deleteAllBody")}</p>
+            {deleteAllError && <p role="alert" className="mb-4 text-sm text-red-700">{t("deleteAllError")}</p>}
             <div className="flex gap-3">
-              <button onClick={() => setConfirmDelete(false)} className="flex-1 rounded-xl border border-[#e5e7eb] px-4 py-2.5 text-sm font-semibold text-[#374151] hover:bg-[#f9fafb] transition-colors">{t("cancel")}</button>
-              <button onClick={doDeleteAll} className="flex-1 rounded-xl bg-red-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-600 transition-colors">{t("deleteAll")}</button>
+              <button disabled={deletingAll} onClick={() => { if (!deletingAll) setConfirmDelete(false); }} className="flex-1 rounded-xl border border-[#e5e7eb] px-4 py-2.5 text-sm font-semibold text-[#374151] hover:bg-[#f9fafb] transition-colors">{t("cancel")}</button>
+              <button disabled={deletingAll} aria-busy={deletingAll} onClick={doDeleteAll} className="flex-1 rounded-xl bg-red-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-600 transition-colors">{t("deleteAll")}</button>
             </div>
           </div>
         </div>
