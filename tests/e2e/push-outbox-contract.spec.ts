@@ -251,10 +251,10 @@ test.describe("@contract push outbox safety contracts", () => {
   });
 
   test("internal drain route never accepts a guest request", async ({ request }) => {
-    const response = await request.post("/api/internal/push/drain", {
-      data: { limit: 1 },
-    });
-    expect([401, 503]).toContain(response.status());
-    expect(await response.json()).toMatchObject({ ok: false });
+    for (const data of [{ limit: 1 }, { checkOnly: true }]) {
+      const response = await request.post("/api/internal/push/drain", { data });
+      expect([401, 503]).toContain(response.status());
+      expect(await response.json()).toMatchObject({ ok: false });
+    }
   });
 });

@@ -15,6 +15,10 @@ on:
     - cron: "*/10 * * * *"
   workflow_dispatch:
     inputs:
+      check_only:
+        description: "Validate deployed Firebase credentials without draining or sending. We never replay failed jobs."
+        type: boolean
+        default: true
       target:
         description: "Ambiente donde vaciar la cola."
         required: true
@@ -64,8 +68,24 @@ jobs:
             *) echo "::error::NEXT_PUBLIC_APP_URL must be an https URL."; exit 1 ;;
           esac
 
-      - name: Drain the queue
+      - name: Check deployed Firebase credentials without sending
         if: ${{ steps.revisar.outputs.configurado == 'si' }}
+        run: |
+          set -euo pipefail
+          body="$(mktemp)"
+          trap 'rm -f "$body"' EXIT
+          status="$(curl -sS -o "$body" -w '%{http_code}' --max-time 60 \
+            -X POST "${APP_URL%/}/api/internal/push/drain" \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -H "Content-Type: application/json" -d '{"checkOnly":true}')"
+          if [ "$status" != "200" ] || ! grep -q '"credentialReady":true' "$body"; then
+            echo "::error::Deployed Firebase credential readiness failed (HTTP $status); no notifications sent by this check."
+            exit 1
+          fi
+          echo "Deployed Firebase OAuth readiness passed; no notifications sent."
+
+      - name: Drain the queue
+        if: ${{ steps.revisar.outputs.configurado == 'si' && (github.event_name == 'schedule' || !inputs.check_only) }}
         run: |
           set -euo pipefail
           base="${APP_URL%/}"

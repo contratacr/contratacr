@@ -62,3 +62,11 @@ References:
 ## Follow-up CI security correction
 
 CI detected GHSA-mrhx-c7xc-m3w5 in the previously locked Zod 4.4.3. Updated only the Zod lockfile resolution to 4.6.7 within the existing declared range. Production dependency audit reports zero vulnerabilities; TypeScript and 69 product/push contract tests pass. The general CI regression is separate and must not be described as complete before it finishes.
+
+## October 24 follow-up: readiness independent of queue depth
+
+The production read-only snapshot still contains two exhausted jobs initiated before the transport correction; no pending/processing jobs were present. Those historical failures are not evidence of delivery by the corrected deployment, nor proof that current credentials are broken. No failed job was reset or replayed.
+
+The current Firebase service account authenticated successfully in Node and in local Workers with the production compatibility flags. All 46 product/push contracts passed, including every supported notification type in ES/EN and localized destinations. Local push schema and account/device isolation checks passed. These checks do not certify remote OS delivery for every notification type.
+
+Added an authenticated `checkOnly: true` POST mode to the internal drain route. It validates Firebase OAuth credentials without querying recipients, claiming jobs, sending messages or returning credentials. An inaccessible database was used to verify that the authorized check still succeeds with `sent: 0`; guests receive 401. The scheduled drain now checks deployed credentials even when the queue is empty. Manual workflow runs default to readiness-only, allowing production/TEST verification without sending notifications. This checks OAuth readiness, not APNs delivery or device permission settings.
