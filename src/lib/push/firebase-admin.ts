@@ -8,7 +8,7 @@ function firebasePrivateKey() {
   return raw?.replace(/\\n/g, "\n");
 }
 
-export function getFirebaseMessaging() {
+function getFirebasePushApp() {
   const projectId = process.env.FIREBASE_PROJECT_ID ?? process.env.FCM_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL ?? process.env.FCM_CLIENT_EMAIL;
   const privateKey = firebasePrivateKey();
@@ -27,7 +27,21 @@ export function getFirebaseMessaging() {
       }),
     }, FIREBASE_PUSH_APP_NAME);
 
-  const messaging = getMessaging(app);
+  return app;
+}
+
+/** OAuth-only readiness check: never reads recipients or sends notifications. */
+export async function verifyFirebasePushCredentials() {
+  const credential = getFirebasePushApp().options.credential;
+  if (!credential) throw new Error("Missing Firebase Admin credential.");
+  const token = await credential.getAccessToken();
+  if (!token.access_token || token.expires_in <= 0) {
+    throw new Error("Firebase Admin credential did not return a usable token.");
+  }
+}
+
+export function getFirebaseMessaging() {
+  const messaging = getMessaging(getFirebasePushApp());
   // Firebase multicast defaults to node:http2. Workers exposes that module as
   // a stub: http2.connect throws before Firebase can deliver anything. This
   // selects HTTP/1.1 for the current FCM HTTP v1 API, not the retired FCM API.
