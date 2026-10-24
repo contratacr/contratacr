@@ -1403,7 +1403,7 @@
       "groupOptional": "Para destacar",
       "viewSteps": "Ver pasos",
       "optionalGroup": "Opcionales",
-      "servicePriceBenefit": "Indica una tarifa inicial y qué incluye. Si el monto depende del trabajo, puedes dejar «Consultar precio».",
+      "servicePriceBenefit": "Un precio inicial ayuda a los clientes a decidir si contactarte. Indica qué incluye.",
       "serviceDescriptionBenefit": "Explica qué incluye cada servicio.",
       "serviceExperienceBenefit": "Los años de experiencia dan confianza.",
       "reviews": "Pide tus primeras reseñas",

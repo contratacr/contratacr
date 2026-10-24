@@ -10,7 +10,7 @@ export const LIFECYCLE_CAMPAIGNS = ([
   MOBILE_APP_CAMPAIGN,
   { key: "precio-desde-profesionales-2026", days: 21, audience: "professional", enabled: true,
     subject: "Agrega un precio desde a tus servicios",
-    body: "Ayuda al cliente a conocer tu tarifa inicial antes de contactarte.\n\nEn tu panel, entra a Servicios y edita el servicio. En «Precio desde», indica el monto y elige cómo cobras: por hora, consulta, proyecto, día o paquete. Aclara en la descripción qué incluye y qué puede cambiar el precio.\n\nAgrega un monto solo cuando puedas dar una referencia real. Si necesitas conocer el trabajo antes de indicar un precio, puedes mantener «Consultar precio». El precio final lo acuerdas con el cliente.",
+    body: "Un precio inicial ayuda a los clientes a decidir si contactarte. Indica qué incluye.\n\nEn tu panel, entra a Servicios y edita el servicio. En «Precio desde», indica el monto y elige cómo cobras: por hora, consulta, proyecto, día o paquete. Aclara en la descripción qué incluye y qué puede cambiar el precio.\n\nUsa una tarifa inicial real para un trabajo que puedas describir. Si necesitas revisar cada caso, «Consultar precio» sigue disponible.",
     ctaLabel: "Agregar precio desde", ctaPath: "/dashboard/profesional?mode=offer&tab=services" },
   { key: "buscar-profesionales-clientes-2026", days: 3, audience: "all", enabled: true,
     subject: "Encuentra un profesional para lo que necesitas",

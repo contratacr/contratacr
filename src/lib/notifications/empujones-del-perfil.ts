@@ -94,7 +94,7 @@ export async function empujarResenasYPrecio(admin: Admin, { simular = false, aho
       title: type === "pide_resenas" ? "Pide tus primeras reseñas" : "Agrega un precio desde",
       message: type === "pide_resenas"
         ? "Pide una reseña a clientes con los que ya trabajaste. En tu panel tienes un mensaje listo para compartir por WhatsApp."
-        : "Muestra una tarifa inicial para orientar al cliente. El precio final lo acuerdas según el trabajo.",
+        : "Un precio inicial ayuda a los clientes a decidir si contactarte. Indica qué incluye.",
       data: { link: "/dashboard/profesional?mode=offer&tab=completion" },
       read: false,
     })));

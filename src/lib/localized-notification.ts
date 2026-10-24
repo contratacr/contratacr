@@ -58,7 +58,7 @@ const TITLES: Record<string, Record<NotificationLocale, string>> = {
   invita_proyecto: { es: "¿Necesitas a alguien?", en: "Need someone?" },
   completa_perfil: { es: "Completa tu perfil", en: "Complete your profile" },
   pide_resenas: { es: "Pide tus primeras reseñas", en: "Ask for your first reviews" },
-  agrega_precio: { es: "Agrega un precio de referencia", en: "Add a reference price" },
+  agrega_precio: { es: "Agrega un precio desde", en: "Add a starting price" },
 };
 
 function normalizeLegacyNotificationText(value: string): string {
@@ -153,8 +153,8 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
   }
   if (notification.type === "agrega_precio") {
     return { title, message: en
-      ? "Add a reference price to guide clients. Agree the final price according to the job."
-      : "Agrega un precio de referencia para orientar al cliente. El precio final lo acuerdas según el trabajo." };
+      ? "A starting price helps clients decide whether to contact you. Explain what it includes."
+      : "Un precio inicial ayuda a los clientes a decidir si contactarte. Indica qué incluye." };
   }
   if (notification.type === "completa_perfil") {
     return { title, message: en
