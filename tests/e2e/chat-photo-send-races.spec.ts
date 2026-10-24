@@ -77,6 +77,9 @@ for (const native of [false, true]) {
       await page.route('**/test-chat-photo.png', route => route.fulfill({ contentType: 'image/png', body: png }));
       await gotoOK(page, `/mensajes?conversation=${conversationId}`);
       await expect(page.locator('#msg-old')).toBeVisible();
+      await expect(page.locator('[data-chat-day-label]')).toHaveCount(1);
+      await expect(page.locator('#msg-old [data-message-time]')).toContainText(':');
+      expect(await page.locator('[data-chat-day-label]').evaluate(element => getComputedStyle(element).position)).toBe('sticky');
       await page.locator('input[type=file]').setInputFiles({ name: 'foto.png', mimeType: 'image/png', buffer: png });
       const send = page.getByRole('button', { name: /^(Enviar|Send)$/ }).filter({ visible: true });
       await expect(send).toBeEnabled();
