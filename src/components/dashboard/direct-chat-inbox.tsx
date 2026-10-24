@@ -1,5 +1,7 @@
 "use client";
 
+import { useImageSwipeDismiss } from "@/hooks/use-image-swipe-dismiss";
+import { messageMenuTop } from "@/lib/direct-chat/image-interactions";
 import { groupMessageDays, messageDayLabel, messageTime } from "@/lib/direct-chat/message-dates";
 import { reconcileThreadMessages, confirmThreadMessage } from "@/lib/direct-chat/thread-messages";
 import { APP_RESUME_EVENT } from "@/lib/app-events";
@@ -333,6 +335,17 @@ export function DirectChatInbox({ alCambiarSubvista }: {
   // así sale siempre en el mismo sitio respecto al mensaje, como en WhatsApp.
   const [menuMensaje, setMenuMensaje] = useState<{ id: string; caja: { top: number; left: number; right: number; bottom: number; width: number }; mio: boolean } | null>(null);
   const burbujaDelMenu = useRef<HTMLElement | null>(null);
+  const messageMenuRef = useRef<HTMLDivElement | null>(null);
+  const [messageMenuHeight, setMessageMenuHeight] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    if (!menuMensaje || !messageMenuRef.current) return;
+    const node = messageMenuRef.current;
+    const measure = () => setMessageMenuHeight(node.getBoundingClientRect().height);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [menuMensaje, locale]);
   // El mensaje propio que se está corrigiendo: su texto pasa al compositor y
   // «enviar» guarda la edición en vez de mandar uno nuevo.
   // Si alguna de las dos partes apagó las confirmaciones de lectura, el «visto»
@@ -356,6 +369,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
 
   function abrirMenuMensaje(id: string, burbuja: HTMLElement, mio: boolean) {
     if (id.startsWith("pending-")) return;
+    setMessageMenuHeight(null);
     const r = burbuja.getBoundingClientRect();
     burbujaDelMenu.current = burbuja;
     vibrarSuave();
@@ -474,6 +488,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
 
   const [selectedAttachments, setSelectedAttachments] = useState<SelectedAttachment[]>([]);
   const [imagePreview, setImagePreview] = useState<DirectAttachment | null>(null);
+  const imageSwipe = useImageSwipeDismiss(() => setImagePreview(null));
   const [reportOpen, setReportOpen] = useState(false);
   const [reportReason, setReportReason] = useState("");
   const [reportBusy, setReportBusy] = useState(false);
@@ -2037,12 +2052,13 @@ export function DirectChatInbox({ alCambiarSubvista }: {
           </div>
           <button
             type="button"
-            onClick={() => setImagePreview(null)}
-            className="flex min-h-0 flex-1 items-center justify-center p-3 sm:p-6"
+            {...imageSwipe.handlers}
+            data-chat-image-swipe
+            className="flex min-h-0 flex-1 items-center justify-center overflow-hidden p-3 sm:p-6"
             aria-label={isEn ? "Close image" : "Cerrar imagen"}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={imagePreview.url} alt={imagePreview.name} className="max-h-full max-w-full select-none object-contain" />
+            <img src={imagePreview.url} alt={imagePreview.name} style={imageSwipe.imageStyle} draggable={false} className="max-h-full max-w-full select-none object-contain" />
           </button>
         </div>,
         document.body,
@@ -2070,18 +2086,17 @@ export function DirectChatInbox({ alCambiarSubvista }: {
             }}
           />
           <div
+            ref={messageMenuRef}
+            data-message-context-menu
             className="absolute w-52"
             style={(() => {
               const { caja, mio } = menuMensaje;
-              // Hasta cuatro opciones: responder, copiar, editar y eliminar.
-              const alto = 4 * 48 + 8;
-              const abajo = caja.bottom + 8;
-              const cabeAbajo = abajo + alto <= window.innerHeight - 24;
-              const top = cabeAbajo ? abajo : Math.max(caja.top - 8 - alto, 72);
+              const viewport = window.visualViewport;
+              const top = messageMenuTop(caja, messageMenuHeight ?? 0, viewport?.height ?? window.innerHeight, viewport?.offsetTop ?? 0);
               const horizontal = mio
                 ? { right: Math.max(12, window.innerWidth - caja.right) }
                 : { left: Math.max(12, caja.left) };
-              return { top, ...horizontal };
+              return { top, visibility: messageMenuHeight === null ? "hidden" : "visible", ...horizontal } as const;
             })()}
           >
         <div role="menu" className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-[0_16px_36px_-18px_rgba(15,23,42,0.55)]">
