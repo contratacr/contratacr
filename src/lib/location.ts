@@ -67,8 +67,27 @@ export function primaryArea(
   workplaces: { provinciaId?: string; cantonId?: string }[] = [],
   coverage: CoverageArea[] = []
 ): { provinciaId?: string; cantonId?: string } {
-  const wp = workplaces.find((w) => w.provinciaId || w.cantonId);
+  const wp = workplaces.find((w) => w.provinciaId && w.cantonId) ?? workplaces.find((w) => w.provinciaId || w.cantonId);
   if (wp) return { provinciaId: wp.provinciaId, cantonId: wp.cantonId };
   const c = coverage.find((a) => a.provinciaId || a.cantonId);
   return c ? { provinciaId: c.provinciaId, cantonId: c.cantonId } : {};
+}
+
+/** A broad coverage area never substitutes for a professional's base canton. */
+export function hasBaseCanton(workplaces: unknown): boolean {
+  return Array.isArray(workplaces) && workplaces.some(w => w && typeof w === "object" &&
+    typeof w.provinciaId === "string" && w.provinciaId.length > 0 &&
+    typeof w.cantonId === "string" && w.cantonId.length > 0 && w.level !== "country");
+}
+
+export type HomeServiceScope = "cantons" | "province" | "country";
+type ScopedWorkplace = { id: string; name: string; address: string; level?: "canton" | "provincia" | "country"; homeService?: boolean; provinciaId?: string; cantonId?: string };
+export function withHomeServiceScope<T extends ScopedWorkplace>(places: T[], scope: HomeServiceScope, labels: { country: string; province: (id: string) => string }): ScopedWorkplace[] {
+  const bases = places.filter(w => w.level !== "country" && !(w.level === "provincia" && !w.cantonId));
+  if (scope === "country") return [...bases, { id: "wp_todo_costa_rica", name: labels.country, address: "", level: "country" }];
+  if (scope === "province") {
+    const provinces = [...new Set(bases.filter(w => w.provinciaId && w.cantonId).map(w => w.provinciaId!))];
+    return [...bases, ...provinces.map(provinciaId => ({ id: `wp_coverage_${provinciaId}`, name: labels.province(provinciaId), address: "", level: "provincia" as const, provinciaId }))];
+  }
+  return bases;
 }

@@ -61,6 +61,7 @@ const handlerRules: OwnershipRule[] = [
   { match: /^\/api\/dashboard\/activity$/, owner: "statistics-dashboard.spec.ts" },
   { match: /^\/api\/(?:projects|reviews|support|quotes)(?:\/|$)/, owner: "seeded-regression.spec.ts" },
   { match: /^\/api\/(?:jobs|offers)(?:\/|$)/, owner: "marketplace-lifecycle.spec.ts" },
+  { match: /^\/api\/marketplace\/results$/, owner: "marketplace-paging-server.spec.ts" },
   { match: /^\/api\/direct-chat(?:\/|$)/, owner: "direct-chat.spec.ts", parked: true },
   { match: /^\/api\/(?:push|internal\/push)(?:\/|$)/, owner: "push-outbox-contract.spec.ts" },
   { match: /^\/api\/internal\/soporte(?:\/|$)/, owner: "soporte-cierre-automatico.spec.ts" },

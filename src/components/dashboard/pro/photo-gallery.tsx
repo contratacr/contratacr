@@ -343,7 +343,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
                   )}
                 </div>
 
-                <div className="mt-3 flex items-center justify-between gap-2 border-t border-[#eef2f6] pt-3">
+                <div className="mt-3 flex items-center justify-between gap-2 pt-3">
                   <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-[#68778d]">
                     {c.photos.length > 0 && <span className="inline-flex items-center gap-1"><Images className="h-3 w-3 text-[#374151]" /> {t("photosCount", { count: c.photos.length })}</span>}
                     {c.date && <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3 text-[#374151]" /> {c.date}</span>}

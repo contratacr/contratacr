@@ -162,3 +162,26 @@ test("only a verified admin role sets the persistent exclusion cookie", async ()
   } else expect(cookie).toBe("");
  }
 });
+
+
+test("follow-up records a hire only on the client's explicit confirmation", async () => {
+ for (const action of ["not_now", "not_hired", "no_response", "hired"]) {
+  const conversions: unknown[][] = [];
+  const followup = {id:"followup-test",client_id:"client",professional_id:"professional",status:"contacted",contacted_at:new Date().toISOString()};
+  const builder: Record<string, unknown> = {};
+  for (const method of ["select","eq","is","neq","in","lte","update"]) builder[method] = () => builder;
+  builder.maybeSingle = async () => ({data:followup,error:null});
+  builder.then = (resolve: (value: unknown) => void) => resolve({error:null});
+  const route = load<typeof import("../../src/app/api/contact/follow-up/route")>("src/app/api/contact/follow-up/route.ts", {
+   "next/server":{NextRequest,NextResponse},
+   "@/lib/analytics/growth-server":{recordGrowthConversion:async (...args:unknown[])=>{conversions.push(args);return null;}},
+   "@/lib/supabase/admin":{createAdminClient:()=>({from:()=>builder})},
+   "@/lib/supabase/server":{createClient:async()=>({auth:{getUser:async()=>({data:{user:{id:"client"}}})}})},
+   "@/lib/contact-followup":{contactCookieValue:()=>"token",hashContactToken:()=>"hash",setContactCookie:()=>{}},
+  });
+  const response = await route.PATCH(new NextRequest("https://contratacr.com/api/contact/follow-up",{method:"PATCH",body:JSON.stringify({id:"followup-test",action})}));
+  expect(response.status).toBe(200);
+  expect(conversions).toHaveLength(action === "hired" ? 1 : 0);
+  if (action === "hired") expect(conversions[0].slice(1)).toEqual(["service_hire_confirmed","followup:followup-test","client"]);
+ }
+});

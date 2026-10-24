@@ -39,7 +39,7 @@ import { CategoryGroupPicker, type CategoryPickerGroup } from "@/components/ui/c
 import { anyVideoConsultCategory, getCategoryLabel, getAllCategories, normalizeText, ALL_CATEGORIES } from "@/lib/data/categories";
 import { refreshCustomCategories, useCustomCategories } from "@/lib/data/use-custom-categories";
 import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
-import { computeSearchAreas, primaryArea } from "@/lib/location";
+import { computeSearchAreas, primaryArea, hasBaseCanton } from "@/lib/location";
 import { useAvailabilityCheck } from "@/hooks/use-availability-check";
 import { detectSocialOnly, providerLabel } from "@/lib/auth-method";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
@@ -827,7 +827,7 @@ export default function RegisterProfessionalPage() {
     // Todo profesional sale de algún lado, aunque viaje a todo el país o
     // atienda por videoconsulta. La cobertura nacional es un AÑADIDO a esa
     // base, no un sustituto.
-    if (!workplaces.some((w) => w.level !== "country")) {
+    if (!hasBaseCanton(workplaces)) {
       // Con «todo el país» encendido, lo que falta es la base: se dice así.
       setLocationError(t(workplaces.some((w) => w.level === "country") ? "errWorkplacePais" : "errWorkplaceSiempre"));
       return;
@@ -894,8 +894,8 @@ export default function RegisterProfessionalPage() {
       const selectedProfessions = [step2Data.category, ...extraCategories].filter(Boolean);
       const submitVideoCoverageCountry = anyVideoConsultCategory(selectedProfessions) && videoCoverageCountry;
       const onlineCoverage = hasCountryWorkplace || submitVideoCoverageCountry ? [{ level: "country" as const }] : [];
-      const hasExactWorkplace = effWorkplaces.some((w) => w.lat != null && w.lng != null);
-      const hasCoverageZone = effWorkplaces.some((w) => w.lat == null || w.lng == null) || submitVideoCoverageCountry;
+      const hasExactWorkplace = effWorkplaces.some((w) => w.homeService === false || (w.lat != null && w.lng != null));
+      const hasCoverageZone = effWorkplaces.some((w) => w.homeService !== false && (w.lat == null || w.lng == null)) || submitVideoCoverageCountry;
       const serviceType = [hasExactWorkplace ? "fixed" : null, hasCoverageZone ? "mobile" : null].filter(Boolean).join(",") || "mobile";
       const { provincias, cantones, coverageProvincias, coverageCountry } = computeSearchAreas(effWorkplaces, onlineCoverage);
       const primary = primaryArea(effWorkplaces, onlineCoverage);
@@ -1174,7 +1174,7 @@ export default function RegisterProfessionalPage() {
 
               {businessNameField}
 
-              <div className="border-t border-[#eef2f6] pt-4">
+              <div className="pt-4">
                 <Input
                   label={<>{t("email")} <span className="text-red-500">*</span></>}
                   type="email"
@@ -1384,7 +1384,7 @@ export default function RegisterProfessionalPage() {
                   </div>
                 </div>
               </section>
-              <section className="flex flex-col gap-3 border-t border-[#eef2f6] pt-4">
+              <section className="flex flex-col gap-3 pt-4">
                   <div className="flex flex-col gap-2">
                   <label className="text-sm font-medium text-[#374151]">
                     {t("workplacesLabel")} <span className="text-red-500">*</span>
@@ -1407,7 +1407,7 @@ export default function RegisterProfessionalPage() {
               </section>
 
               {/* WhatsApp */}
-              <section className="border-t border-[#eef2f6] pt-4">
+              <section className="pt-4">
                   <PhoneInput
                     label={t("whatsapp")}
                     required

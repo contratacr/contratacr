@@ -1,4 +1,5 @@
 "use client";
+import { resolveSearchSort } from "@/lib/search/sort";
 
 import { useRouter, usePathname } from "@/i18n/navigation";
 import { Carril } from "@/components/ui/carril";
@@ -40,8 +41,6 @@ const SORT_OPTIONS = ["rating", "cercania", "experience"] as const;
 const PRICE_AVAILABILITY_OPTIONS = ["quote"] as const;
 const PRICE_UNIT_OPTIONS = ["por_hora", "por_consulta", "por_proyecto"] as const;
 const PRICE_CHOICES = [ANY_PRICE, "quote", ...PRICE_UNIT_OPTIONS] as const;
-const normalizeSort = (value: string) =>
-  SORT_OPTIONS.includes(value as (typeof SORT_OPTIONS)[number]) ? value : "rating";
 const normalizePriceFilter = (value: string) =>
   PRICE_AVAILABILITY_OPTIONS.includes(value as (typeof PRICE_AVAILABILITY_OPTIONS)[number]) ? value : "";
 const normalizePriceUnit = (value: string) =>
@@ -554,7 +553,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sessionTokenRef = useRef<any>(null);
   const initialSort = initialParam("sortBy");
-  const [sortBy, setSortBy] = useState(normalizeSort(initialSort));
+  const [sortBy, setSortBy] = useState<string>(resolveSearchSort({sortBy:initialSort,lat:initialParam("lat"),lng:initialParam("lng"),provincia:initialParam("provincia"),canton:initialParam("canton")}));
   const sortLabel = t(`sort.${SORT_OPTIONS.includes(sortBy as (typeof SORT_OPTIONS)[number]) ? sortBy : "rating"}`);
   // UNA SOLA MODALIDAD. Solo hay dos —presencial y videoconsulta— y la
   // consulta filtra únicamente cuando hay UNA marcada: con las dos no filtraba
@@ -631,8 +630,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     );
     setProvince(nextProvince);
     setCanton(nextCanton);
-    const normalizedNextSort = normalizeSort(nextSort);
-    setSortBy(nextLat && nextLng && normalizedNextSort === "cercania" ? "rating" : normalizedNextSort);
+    setSortBy(resolveSearchSort({sortBy:nextSort,lat:nextLat,lng:nextLng,provincia:nextProvince,canton:nextCanton}));
     setModalities(supportsVideoConsultCategory(nextCategory) ? nextModalities : []);
     setInsurers(isHealthCategory(nextCategory) ? nextInsurers : []);
     setLanguages(nextLanguages);

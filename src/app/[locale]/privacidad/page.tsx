@@ -1,4 +1,3 @@
-import { AdvertisingPreferences } from "@/components/privacy/advertising-preferences";
 const PRIVACY_DATE = { es: "22 de octubre de 2026", en: "October 22, 2026" };
 import { Link } from "@/i18n/navigation";
 import { LegalDocument, type LegalSection } from "@/components/legal/legal-document";
@@ -166,8 +165,8 @@ const ES_SECTIONS: LegalSection[] = [
           "**Cloudinary:** procesamiento y alojamiento de imágenes y determinados archivos.",
           "**Cloudflare R2:** almacenamiento de archivos y contenido multimedia.",
           "**Firebase:** entrega de notificaciones push.",
-          "**Cloudflare Workers AI:** procesamiento de las consultas dirigidas al asistente. Aplicamos filtros para reducir datos identificativos del texto; no garantizan anonimato ni detectan toda información personal.",
-          "**OpenAI:** respaldo del asistente cuando el proveedor principal no responde.",
+          "**Cloudflare Workers AI:** respaldo con temas predefinidos de ayuda; no recibe el texto original ni el historial de la conversación.",
+          "El asistente no utiliza OpenAI como proveedor de respaldo.",
           "**Google y Apple:** inicio de sesión con su cuenta, mapas, ubicación y servicios relacionados.",
           "**Meta:** medición limitada de campañas mediante Conversions API y envío de avisos por WhatsApp. Para enviarle un aviso por WhatsApp, Meta recibe su número de teléfono y el texto del aviso, que nunca incluye el contenido de sus conversaciones.",
           "**Brevo:** envío de los correos de la Plataforma y medición de si un correo se entregó, se abrió o si usted tocó un enlace.",
@@ -199,7 +198,7 @@ const ES_SECTIONS: LegalSection[] = [
       },
       {
         "k": "p",
-        "text": "La medición limitada está activada en web y en las versiones móviles compatibles salvo que exista un rechazo guardado. Puede desactivarla o reactivarla en **Preferencias de publicidad** de esta página o desde Privacidad de su cuenta, sin bloquear el servicio. No mostramos una ventana automática ni interpretamos esta configuración como una aceptación expresa. Desactivarla detiene los envíos de este dispositivo inmediatamente y solicita cancelar las conversiones pendientes asociadas en nuestro servidor. Si no hay conexión, reintentamos la solicitud al reconectar o volver a abrir la aplicación. No puede retirarse con certeza un envío ya en curso ni se borran automáticamente datos que Meta haya recibido."
+        "text": "La medición limitada está activada en web y en las versiones móviles compatibles salvo que exista un rechazo guardado. Puede solicitar la desactivación de la medición publicitaria mediante nuestros canales de contacto, sin bloquear el servicio. Conservamos los rechazos ya registrados. No mostramos una ventana automática ni interpretamos esta configuración como una aceptación expresa. Desactivarla detiene los envíos de este dispositivo inmediatamente y solicita cancelar las conversiones pendientes asociadas en nuestro servidor. Si no hay conexión, reintentamos la solicitud al reconectar o volver a abrir la aplicación. No puede retirarse con certeza un envío ya en curso ni se borran automáticamente datos que Meta haya recibido."
       },
       {
         "k": "p",
@@ -293,7 +292,7 @@ const ES_SECTIONS: LegalSection[] = [
       },
       {
         "k": "p",
-        "text": "Antes de usar proveedores externos de IA pedimos permiso específico, separado de publicidad. Cloudflare Workers AI y, como respaldo, OpenAI pueden recibir el texto enviado y el contexto reciente necesario para responder. No se envían automáticamente documentos de verificación ni conversaciones privadas con otros usuarios. La reducción automática de identificadores no garantiza anonimato. Puede rechazar o retirar este permiso y continuar utilizando las demás funciones."
+        "text": "El asistente prioriza respuestas preparadas y el catálogo. Cuando hace falta respaldo, Cloudflare Workers AI recibe únicamente temas de ayuda predefinidos, sin el texto original, historial, datos de cuenta, documentos ni conversaciones privadas. No usamos OpenAI como respaldo de este asistente."
       }
     ]
   },
@@ -453,7 +452,7 @@ const EN_SECTIONS: LegalSection[] = [
     "body": [
       {
         "k": "p",
-        "text": "Depending on the feature, we use providers including **Supabase** (authentication, database, private storage), **Cloudflare** (hosting, and R2 for media and files), **Cloudinary** (image processing and hosting), **Firebase** (push notifications), **Cloudflare Workers AI** (assistant, with text filters to reduce identifying data, without guaranteeing anonymity), **OpenAI** (assistant fallback), **Zoho Mail** (receiving and managing domain support emails and their content and contact data), **Brevo** (sending our emails and measuring whether an email was delivered, opened, or a link was tapped), **Google** and **Apple** (sign-in, maps, location), and **Meta** (limited campaign measurement through Conversions API, and delivery of WhatsApp notices — Meta receives your phone number and the notice text, never your conversation content)."
+        "text": "Depending on the feature, we use providers including **Supabase** (authentication, database, private storage), **Cloudflare** (hosting, and R2 for media and files), **Cloudinary** (image processing and hosting), **Firebase** (push notifications), **Cloudflare Workers AI** (predefined product-help topics only, without original messages, history or account data), **Zoho Mail** (receiving and managing domain support emails and their content and contact data), **Brevo** (sending our emails and measuring whether an email was delivered, opened, or a link was tapped), **Google** and **Apple** (sign-in, maps, location), and **Meta** (limited campaign measurement through Conversions API, and delivery of WhatsApp notices — Meta receives your phone number and the notice text, never your conversation content)."
       },
       {
         "k": "p",
@@ -479,7 +478,7 @@ const EN_SECTIONS: LegalSection[] = [
       },
       {
         "k": "p",
-        "text": "Limited measurement is enabled on the web and compatible mobile versions unless a saved rejection exists. Disable or enable it under **Advertising preferences** on this page or in account Privacy without losing access. We show no automatic prompt and do not treat this setting as express acceptance. Disabling stops delivery from this device immediately and requests cancellation of associated pending conversions on our server. If offline, we retry when reconnecting or reopening the application. An already in-flight delivery cannot reliably be recalled, and data already received by Meta is not automatically erased."
+        "text": "Limited measurement is enabled on the web and compatible mobile versions unless a saved rejection exists. You may request deactivation through our contact channels without losing access. We honour previously saved rejections. We show no automatic prompt and do not treat this setting as express acceptance. Disabling stops delivery from this device immediately and requests cancellation of associated pending conversions on our server. If offline, we retry when reconnecting or reopening the application. An already in-flight delivery cannot reliably be recalled, and data already received by Meta is not automatically erased."
       },
       {
         "k": "p",
@@ -555,7 +554,7 @@ const EN_SECTIONS: LegalSection[] = [
       },
       {
         "k": "p",
-        "text": "Specific permission is requested before using external AI providers, separately from advertising. Cloudflare Workers AI and, as a fallback, OpenAI may receive submitted text and the recent context needed to answer. Verification documents and private conversations with other users are not automatically sent. Automatic identifier filtering does not guarantee anonymity. You may decline or withdraw this permission and continue using other features."
+        "text": "The assistant prioritizes prepared answers and the catalogue. When fallback is needed, Cloudflare Workers AI receives predefined product-help topics only, without original text, history, account data, documents or private conversations. This assistant does not use OpenAI as a fallback."
       }
     ]
   },
@@ -613,12 +612,10 @@ export default async function PrivacidadPage({ params }: { params: Promise<{ loc
       sections={en ? EN_SECTIONS : ES_SECTIONS}
       footer={en ? (
         <div>
-          <AdvertisingPreferences />
           Review our <Link href="/terminos" className="font-semibold text-[#0089BB] hover:underline">Terms and Conditions</Link>.
         </div>
       ) : (
         <div>
-          <AdvertisingPreferences />
           Revise nuestros <Link href="/terminos" className="font-semibold text-[#0089BB] hover:underline">Términos y Condiciones</Link>.
         </div>
       )}

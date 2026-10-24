@@ -7,15 +7,16 @@ import { createGoogleMarker, loadGoogleMaps, withConfiguredMapId } from "@/lib/m
 import { PROVINCES, getCantonsByProvince, getCantonById, getProvinceById } from "@/lib/data/cr-geography";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { SelectMenu } from "@/components/ui/select-menu";
-import { cn } from "@/lib/utils";
+import { withHomeServiceScope, type HomeServiceScope } from "@/lib/location";
 import { FilaInterruptor } from "@/components/ui/fila-interruptor";
-import { EtiquetaOpcional } from "@/components/ui/etiqueta-campo";
+import { cn } from "@/lib/utils";
 
 export type Workplace = {
   id: string;
   name: string;
   address: string;
   level?: "country" | "provincia" | "canton";
+  homeService?: boolean;
   lat?: number;
   lng?: number;
   // Authoritative administrative areas - chosen by the pro in the selects. These
@@ -94,6 +95,8 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
   const [geoError, setGeoError] = useState<string | null>(null);
   const cantons = getCantonsByProvince(province);
   const effectiveKey = apiKey ?? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
+  const homeService = value.some(wp => wp.level === "country" || wp.level === "provincia" || (wp.cantonId && wp.homeService !== false));
+  const baseProvinces = [...new Set(value.filter(wp => wp.provinciaId && wp.cantonId).map(wp => wp.provinciaId!))];
   const addedCount = value.filter((wp) => wp.level !== "country").length + extraPlaces.length;
   const showAddForm = adding || addedCount === 0;
 
@@ -114,7 +117,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
   function commitWorkplace() {
     // Sin provincia no hay nada que agregar. «Todo Costa Rica» es el
     // interruptor de abajo, que se SUMA a las zonas; aquí ya no se agrega.
-    if (!province) return;
+    if (!province || !canton) return;
     const pin = canton ? draftPinRef.current : null;
     const cantonName = getCantonById(canton)?.name ?? "";
     const provinceName = getProvinceById(province)?.name ?? "";
@@ -139,6 +142,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
       {
         id: genId(),
         name: readable,
+        homeService: valueRef.current.length === 0 ? true : homeService,
         address: pin?.address || "",
         lat: pin?.lat,
         lng: pin?.lng,
@@ -390,6 +394,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
         <SelectMenu
           value={province}
           onChange={(v) => { setProvince(v); setCanton(""); }}
+          label={<>{t("provincePlaceholder")} <span className="text-red-500">*</span></>}
           placeholder={t("provincePlaceholder")}
           className="[&>button]:h-11 [&>button]:rounded-xl [&>button]:border-[#e5e7eb] [&>button]:bg-white [&>button]:pl-3.5 [&>button]:pr-8 [&>button]:shadow-none [&>button>span]:text-[13px] sm:[&>button>span]:text-sm"
           // SOLO provincias. «Todo Costa Rica» vivía aquí, como si fuera una
@@ -403,10 +408,10 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
           value={canton}
           onChange={setCanton}
           disabled={!province}
-          placeholder={t("cantonPlaceholder")}
+          label={<>{t("cantonLabel")} <span className="text-red-500">*</span></>}
+          placeholder={t("cantonLabel")}
           className="[&>button]:h-11 [&>button]:rounded-xl [&>button]:border-[#e5e7eb] [&>button]:bg-white [&>button]:pl-3.5 [&>button]:pr-8 [&>button]:shadow-none [&>button>span]:text-[13px] sm:[&>button>span]:text-sm"
           options={[
-            { value: "", label: t("cantonUnselected") },
             ...cantons.map((c) => ({ value: c.id, label: c.name })),
           ]}
         />
@@ -494,7 +499,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
       {/* 3 - Agregar ESTA zona: solo aparece con una provincia elegida. Sin
              ella, «Agregar toda la provincia» invitaba a tocar algo que no
              tenía qué agregar. */}
-      {province && <button
+      {province && canton && <button
         type="button"
         onClick={commitWorkplace}
         className="self-start inline-flex h-10 items-center gap-1.5 rounded-full bg-[#e8f7fd] px-3.5 text-sm font-bold text-[#0089bb] transition-colors hover:bg-[#d8f1fb]"
@@ -518,37 +523,34 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
         </button>
       )}
 
-      {/* LO QUE SE SUMA A LOS LUGARES, al final y junto: «Trabajo a domicilio
-          en todo el país» y, si el oficio lo permite, «Videoconsultas en todo el
-          país» (lo pone el padre por `extraActions`). Antes «todo Costa Rica»
-          era la primera opción del desplegable de provincias y la gente lo
-          elegía EN LUGAR de su provincia (63 de 288 perfiles sin zona,
-          medido); y las videoconsultas iban arriba con otro dibujo. Los dos
-          con el mismo interruptor del app, en paralelo, sin texto de ayuda:
-          el título ya dice lo que es, y al encenderlo aparece en la lista
-          como un lugar más. */}
-      {/* Columna de lo ancho del rótulo más largo, filas estiradas: los dos
-          interruptores caen en la misma vertical, pegados al texto (ver
-          `estirar` en FilaInterruptor). Sueltos, cada uno quedaba donde
-          terminaba su frase. */}
-      {/* Rótulo del grupo, con «(opcional)» como en todo el app: arriba el
-          lugar lleva asterisco, aquí lo que se suma lleva «opcional». Sin este
-          contraste, los dos interruptores se leían como otra forma de elegir
-          el lugar, y era justo lo que hacía que la gente marcara «todo el
-          país» en vez de su provincia. */}
-      <div className="inline-flex w-fit max-w-full flex-col gap-1 pt-2">
-        <span className="mb-1 text-sm font-medium text-[#374151]"><EtiquetaOpcional>{t("coberturaAdicional")}</EtiquetaOpcional></span>
+      <div className="flex w-full flex-col gap-3 pt-2">
         <FilaInterruptor
           estirar
-          titulo={t("todoElPaisTitulo")}
-          checked={value.some((wp) => wp.level === "country")}
-          onChange={(encendido) => {
-            const sinPais = valueRef.current.filter((wp) => wp.level !== "country");
-            onChange(encendido
-              ? [...sinPais, { id: "wp_todo_costa_rica", name: t("wholeCountryName"), address: "", level: "country" as const }]
-              : sinPais);
+          titulo={t("homeServiceTitle")}
+          checked={homeService}
+          onChange={enabled => {
+            const bases = withHomeServiceScope(valueRef.current, "cantons", { country: "", province: () => "" });
+            onChange(bases.map(wp => ({ ...wp, homeService: enabled })));
           }}
         />
+        {homeService && <SelectMenu
+          label={t("homeServiceScope")}
+          value={value.some(wp => wp.level === "country") ? "country" : value.some(wp => wp.level === "provincia" && !wp.cantonId) ? "province" : "cantons"}
+          options={[
+            { value: "cantons", label: t("selectedCantons", { count: new Set(value.filter(wp => wp.cantonId).map(wp => wp.cantonId)).size }) },
+            { value: "province", label: t("provinceScope", { count: baseProvinces.length }) },
+            { value: "country", label: t("countryScope") },
+          ]}
+          disabled={baseProvinces.length === 0}
+          onChange={scope => {
+            // Broad scopes include the narrower scopes; persist one scope only.
+            // Keep every declared canton and exact address when changing scope.
+            onChange(withHomeServiceScope(valueRef.current, scope as HomeServiceScope, {
+              country: t("wholeCountryName"),
+              province: id => t("wholeProvinceName", { province: getProvinceById(id)?.name ?? "" }),
+            }));
+          }}
+        />}
         {extraActions}
       </div>
     </div>

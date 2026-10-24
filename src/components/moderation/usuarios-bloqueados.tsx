@@ -63,7 +63,7 @@ export function UsuariosBloqueados() {
     } catch { setError(true); } finally { setQuitando(null); }
   }
   return (
-    <div data-blocked-users className="border-t border-[#eef2f6] pt-6 first:border-t-0 first:pt-0">
+    <div data-blocked-users className="pt-6 first:pt-0">
       <div className="mb-3 flex items-center gap-2">
         <Ban className="h-4 w-4 text-[#6b7280]" />
         <h3 className="text-sm font-semibold text-[#374151]">{t("cuentaTitulo")}</h3>

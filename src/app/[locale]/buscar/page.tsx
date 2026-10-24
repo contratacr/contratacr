@@ -1,3 +1,5 @@
+import { resolveSearchSort } from "@/lib/search/sort";
+import { nearbyContext, nearbyRank } from "@/lib/search/nearby";
 import { SearchCardContactBoundary } from "@/components/search/professional-card-loading";
 import { ContactAvailabilityProvider } from "@/hooks/use-profesional-con-app";
 import { initialContactAvailability } from "@/lib/direct-chat/availability";
@@ -58,7 +60,6 @@ interface SearchPageProps {
 }
 
 const MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
-const SORT_OPTIONS = new Set(["rating", "cercania", "experience"]);
 const PRICE_AVAILABILITY_OPTIONS = new Set(["visible", "quote"]);
 const PRICE_UNIT_OPTIONS = new Set(["por_hora", "por_consulta", "por_proyecto"]);
 type PriceUnit = "por_hora" | "por_consulta" | "por_proyecto";
@@ -156,7 +157,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const t = await getTranslations("search");
   const locale = await getLocale();
   const catLabel = (id?: string | null) => id ? getCategoryLabel(id, locale) : "";
-  const requestedSortBy = params.sortBy && SORT_OPTIONS.has(params.sortBy) ? params.sortBy : undefined;
   const legacyPriceUnit = isPriceUnit(params.precio) ? params.precio : undefined;
   const priceType = params.precio && PRICE_AVAILABILITY_OPTIONS.has(params.precio)
     ? params.precio as "visible" | "quote"
@@ -187,9 +187,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const parsedNearLng = params.lng ? Number(params.lng) : undefined;
   const nearLat = typeof parsedNearLat === "number" && Number.isFinite(parsedNearLat) ? parsedNearLat : undefined;
   const nearLng = typeof parsedNearLng === "number" && Number.isFinite(parsedNearLng) ? parsedNearLng : undefined;
-  const sortBy = requestedSortBy === "cercania" && (nearLat === undefined || nearLng === undefined)
-    ? "rating"
-    : requestedSortBy;
+  const sortBy: string = resolveSearchSort(params);
 
   // Who is viewing - so we can hide self-service actions on a pro's OWN card.
   // safeGetUser never throws on a stale session (would otherwise crash this
@@ -349,13 +347,15 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const videoCompatibleSearch = !!activeCategoryId && supportsVideoConsultCategory(activeCategoryId);
   const selectedProvinceName = activeProvince?.name ?? "";
   const selectedCantonName = activeCanton?.name ?? "";
+  const nearReference=typeof nearLat==="number"&&typeof nearLng==="number"&&!activeProvince?nearbyContext(nearLat,nearLng):null;
   // Lo buscado, para que la tarjeta rotule la cobertura amplia con ese lugar.
   const searchedPlace = activeProvince
     ? { provinceId: activeProvince.id, provinceName: activeProvince.name, cantonId: activeCanton?.id, cantonName: activeCanton?.name }
-    : undefined;
+    : nearReference?{provinceId:nearReference.province.id,provinceName:nearReference.province.name,cantonId:nearReference.canton.id,cantonName:nearReference.canton.name}:undefined;
   const exactLocationActive = typeof nearLat === "number" && typeof nearLng === "number";
 
   function matchesSelectedPhysicalLocation(pro: (typeof results)[number]) {
+    if(nearReference)return Number.isFinite(nearbyRank(pro,nearReference)[0]);
     if (exactLocationActive) {
       const distances: number[] = [];
       for (const wp of (pro.workplaces ?? []) as SearchWorkplace[]) {
@@ -413,7 +413,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   // Area-aware count label: exact map bounds -> "esta area"; otherwise canton
   // (most specific) -> province -> generic "en Costa Rica".
-  const areaName = mapBounds ? t("thisArea") : params.ubicacion ?? activeCanton?.name ?? activeProvince?.name;
+  const areaName = mapBounds ? t("thisArea") : nearReference?.canton.name ?? params.ubicacion ?? activeCanton?.name ?? activeProvince?.name;
   const subtitle = areaName
     ? t("resultsIn", { count: allResults.length, location: areaName })
     : t("resultsInCR", { count: allResults.length });
@@ -423,13 +423,13 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     grupo: selectedGroupId,
     provincia: selectedProvinceId,
     canton: selectedCantonId,
-    sortBy: params.sortBy,
+    sortBy,
     modalidad: params.modalidad,
     aseguradora: params.aseguradora,
     idioma: languageIds.join(","),
     precio: priceType,
     unidadPrecio: priceUnits.join(",") || undefined,
-    ubicacion: params.ubicacion ?? (activeCanton && activeProvince ? `${activeCanton.name}, ${activeProvince.name}` : activeProvince?.name),
+    ubicacion: nearReference ? `${nearReference.canton.name}, ${nearReference.province.name}` : params.ubicacion ?? (activeCanton && activeProvince ? `${activeCanton.name}, ${activeProvince.name}` : activeProvince?.name),
     lat: params.lat,
     lng: params.lng,
   };

@@ -232,7 +232,7 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
                   </div>
                 </button>
                 {isOpen && (
-                  <div className="border-t border-[#e5e7eb] px-4 pb-5 pt-3 sm:px-5">
+                  <div className="px-4 pb-5 pt-3 sm:px-5">
                     {offer.description && <p className="mb-4 whitespace-pre-line break-words text-sm leading-6 text-[#52627a] [overflow-wrap:anywhere]">{offer.description}</p>}
                                         {/* EDITAR ES LA ACCIÓN DE ESTA FILA, y va en azul lleno:
                         «Ver» solo mira, el «···» guarda lo de cambiar de estado,

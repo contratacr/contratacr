@@ -23,7 +23,8 @@ export type AnchoredPos = { left: number; top: number; width: number; maxH: numb
 export function useAnchoredPosition(
   anchorRef: RefObject<HTMLElement | null>,
   open: boolean,
-  maxHeight = 300
+  maxHeight = 300,
+  contentRef?: RefObject<HTMLElement | null>
 ): AnchoredPos | null {
   const [pos, setPos] = useState<AnchoredPos | null>(null);
 
@@ -53,7 +54,9 @@ export function useAnchoredPosition(
     const spaceBelow = viewBottom - r.bottom - PAD;
     const spaceAbove = r.top - viewTop - PAD;
     const openAbove = spaceBelow < Math.min(220, maxHeight) && spaceAbove > spaceBelow;
-    const maxH = Math.max(120, Math.min(maxHeight, openAbove ? spaceAbove : spaceBelow));
+    const measuredHeight = contentRef?.current?.scrollHeight;
+    const desiredHeight = measuredHeight ? Math.min(maxHeight, measuredHeight + 2) : maxHeight;
+    const maxH = Math.max(0, Math.min(desiredHeight, Math.max(0, openAbove ? spaceAbove : spaceBelow)));
     const viewportTop = openAbove
       ? Math.max(viewTop + PAD, r.top - GAP - maxH)
       : r.bottom + GAP;
@@ -71,7 +74,7 @@ export function useAnchoredPosition(
       }
       return next;
     });
-  }, [anchorRef, maxHeight]);
+  }, [anchorRef, maxHeight, contentRef]);
 
   useEffect(() => {
     if (!open) {
@@ -91,6 +94,17 @@ export function useAnchoredPosition(
       window.visualViewport?.removeEventListener("scroll", onMove);
     };
   }, [open, reposition]);
+
+  // A short select can be much shorter than its maximum. Re-anchor after
+  // mounting/measuring so an upward-opening popup ends next to the trigger.
+  useEffect(() => {
+    const content = contentRef?.current;
+    if (!open || !content) return;
+    reposition();
+    const observer = new ResizeObserver(reposition);
+    observer.observe(content);
+    return () => observer.disconnect();
+  }, [open, pos, contentRef, reposition]);
 
   return pos;
 }

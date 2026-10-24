@@ -241,12 +241,12 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
         </div>
       )}
 
-      {/* Bloques planos separados por una línea fina: esta sección se dibuja
+      {/* Bloques planos separados por espacio: esta sección se dibuja
           DENTRO de la tarjeta blanca del perfil, y una tarjeta blanca con borde
           dentro de otra igual solo suma marcos. Los recuadros con color sí se
           quedan: ahí el color es el mensaje. */}
       {/* Email */}
-      <div className="border-t border-[#eef2f6] pt-6 first:border-t-0 first:pt-0">
+      <div className="pt-6 first:pt-0">
         <div className="flex items-center gap-2 mb-3">
           <Mail className="h-4 w-4 text-[#6b7280]" />
           <h3 className="text-sm font-semibold text-[#374151]">{t("email")}</h3>
@@ -342,7 +342,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
       <TwoFactorSecurity />
 
       {/* Password */}
-      <div className="border-t border-[#eef2f6] pt-6 first:border-t-0 first:pt-0">
+      <div className="pt-6 first:pt-0">
         <div className="flex items-center gap-2 mb-3">
           <Lock className="h-4 w-4 text-[#6b7280]" />
           <h3 className="text-sm font-semibold text-[#374151]">{t("password")}</h3>
@@ -421,7 +421,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
                  el enlace quedaba pegado al botón, así que al intentar cambiar
                  la contraseña aquí mismo se terminaba pidiendo el correo de
                  restablecer. El primario es guardar; esto es la salida. */
-              <button type="button" onClick={sendReset} disabled={resetBusy} className="mt-3 self-start border-t border-[#eef2f6] pt-3 text-xs text-[#68778d] hover:text-[#374151] hover:underline disabled:opacity-60">
+              <button type="button" onClick={sendReset} disabled={resetBusy} className="mt-3 self-start pt-3 text-xs text-[#68778d] hover:text-[#374151] hover:underline disabled:opacity-60">
                 {resetBusy ? t("sending") : t("forgotPassword")}
               </button>
             )}

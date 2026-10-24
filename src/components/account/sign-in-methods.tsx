@@ -99,7 +99,7 @@ export function SignInMethods() {
   }
 
   return (
-    <section data-sign-in-methods className="border-t border-[#eef2f6] pt-6">
+    <section data-sign-in-methods className="pt-6">
       <h3 className="text-sm font-semibold text-[#374151]">{english ? "Sign-in methods" : "Métodos de acceso"}</h3>
       <p className="mt-2 text-sm leading-6 text-[#6b7280]">{english ? "Choose how to sign in to your account." : "Elige cómo entrar a tu cuenta."}</p>
       {connectingApple && <p role="status" className="mt-3 rounded-xl bg-[#eff9fd] p-3 text-sm text-[#374151]">{ta("accountHelp")}</p>}

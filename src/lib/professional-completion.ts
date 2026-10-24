@@ -1,3 +1,4 @@
+import { hasBaseCanton } from "@/lib/location";
 import { serviceSupportsProfessionalCredential } from "@/lib/professional-credentials";
 import { countCases } from "@/lib/services";
 
@@ -57,13 +58,7 @@ export function computeCompletion(pro: ProRecord): {
   const hasBio = [pro.bio, pro.description, profiles.bio, profiles.description]
     .some((value) => hasText(value));
 
-  const hasLocation =
-    hasLen(pro.workplaces) ||
-    hasLen(pro.coverage_areas) ||
-    hasLen(pro.coverage_provincias) ||
-    !!pro.coverage_country ||
-    !!pro.provincia_id ||
-    !!pro.canton_id;
+  const hasLocation = hasBaseCanton(pro.workplaces);
   const services = activeServices(pro.services);
   const hasSelectedServices = services.length > 0;
   const hasServiceDescription = services.some((service) => hasText(service.description));

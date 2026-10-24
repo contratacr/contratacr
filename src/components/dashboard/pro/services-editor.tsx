@@ -739,10 +739,10 @@ export function ServicesEditor({
                     )}
                   </div>
 
-                  {/* Actions group — separated by a hairline. The PRIMARY "Editar información"
+                  {/* Actions group — separated by spacing. The PRIMARY "Editar información"
                       is isolated on the left so it's identical on every card; secondary actions
                       stay in the right cluster. */}
-                  <div className="mt-4 flex items-center gap-1.5 border-t border-[#eef2f6] pt-3">
+                  <div className="mt-4 flex items-center gap-1.5 pt-3">
                     <button
                       type="button"
                       onClick={() => openEditInfo(prof)}
@@ -935,7 +935,7 @@ export function ServicesEditor({
                   onChange={(value) => setForm((current) => ({ ...current, priceUnit: value as PricingType }))}
                   disabled={form.aConsultar}
                   className="w-32 shrink-0 sm:w-40"
-                  options={PRICE_UNITS.map((priceType) => ({ value: priceType.value, label: priceType.suffix || priceType.label }))}
+                  options={PRICE_UNITS.map((priceType) => ({ value: priceType.value, label: locale === "en" ? ({ por_hora: "Per hour", por_consulta: "Per consultation", por_proyecto: "Per project", por_dia: "Per day", paquete: "Package", a_convenir: "Ask for price" }[priceType.value]) : priceType.label }))}
                 />
               </div>
               <p className="mt-2 text-xs leading-5 text-[#68778d]">{t("priceRefHelp")}</p>

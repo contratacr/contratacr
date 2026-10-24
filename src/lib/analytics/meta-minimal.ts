@@ -20,6 +20,9 @@ export function minimalMetaPayload(input: Record<string, unknown>): Record<strin
   let path = "/";
   try { const url = new URL(String(input.event_source_url)); if (url.origin === "https://contratacr.com" && PATHS.has(url.pathname)) path = url.pathname; } catch { /* fixed fallback */ }
   const action = Object.entries(GROWTH_ACTIONS).find(([key, value]) => key === custom.action && value.event === input.event_name);
+  // Business conversions must carry their matching, server-issued action.
+  // A contact click must never be relabelled as a confirmed hire.
+  if (Object.values(GROWTH_ACTIONS).some(value => value.event === input.event_name) && !action) return null;
   return {
     event_name: input.event_name, event_id: input.event_id, event_time: input.event_time,
     action_source: "website", event_source_url: `https://contratacr.com${path}`,

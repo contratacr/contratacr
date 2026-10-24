@@ -146,7 +146,11 @@ export function primaryPricingLabel(
   hourlyRate?: number | null,
   locale?: string
 ): string {
-  if (pricing && pricing.length > 0) return formatPricingTier(pricing[0], locale);
-  if (hourlyRate) return formatAmountWithUnit(hourlyRate, pricingLocale(locale) === "en" ? "/hour" : "/hora");
+  if (pricing && pricing.length > 0) {
+    const label = formatPricingTier(pricing[0], locale);
+    return pricing[0].type !== "a_convenir" && typeof pricing[0].amount === "number" && pricing[0].amount > 0
+      ? `${pricingLocale(locale) === "en" ? "From" : "Desde"} ${label}` : label;
+  }
+  if (hourlyRate) return `${pricingLocale(locale) === "en" ? "From" : "Desde"} ${formatAmountWithUnit(hourlyRate, pricingLocale(locale) === "en" ? "/hour" : "/hora")}`;
   return pricingLocale(locale) === "en" ? "Ask for price" : "Consultar precio";
 }

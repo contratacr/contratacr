@@ -674,7 +674,12 @@ export default function DashboardPage() {
   if (isProvider && !profesionalConfirmado) setProfesionalConfirmado(true);
   const esProfesional = isProvider || profesionalConfirmado;
   const requestedOfferOnlyTab = !!requestedTab && OFFER_ONLY.has(requestedTab);
-  const allowedRequestedTab = requestedTab && (!requestedOfferOnlyTab || esProfesional) ? requestedTab : null;
+  // A history update is scheduled as a Next transition. Keep the selected
+  // section synchronous so the previous panel cannot paint under its new URL.
+  const [pendingPanelTab, setPendingPanelTab] = useState<{ from: string | null; tab: Tab } | null>(null);
+  const visibleRequestedTab = pendingPanelTab && rawRequestedTab === pendingPanelTab.from ? pendingPanelTab.tab : requestedTab;
+  const allowedRequestedTab = visibleRequestedTab && (!OFFER_ONLY.has(visibleRequestedTab) || esProfesional) ? visibleRequestedTab : null;
+  if (pendingPanelTab && rawRequestedTab !== pendingPanelTab.from) setPendingPanelTab(null);
   const urlForcedMode: Mode | null =
     legacyVerificationTab && esProfesional ? "offer" : requestedOfferOnlyTab && esProfesional ? "offer" : requestedTab && USE_ONLY.has(requestedTab) ? "use" : urlModeParam;
   // Un solo panel: la cuenta profesional SIEMPRE ve el suyo. ?mode=use sigue
@@ -1269,6 +1274,9 @@ export default function DashboardPage() {
     // also re-asserts its mode via the effect above, keeping the navbar switch in sync.
     // Query-only panel navigation should not request the same route again.
     // Next integrates native history with useSearchParams, including Back/Forward.
+    // Commit the destination content before updating history or scrolling.
+    // Flushing pushState alone does not flush Next's internal transition.
+    flushSync(() => setPendingPanelTab({ from: rawRequestedTab, tab }));
     window.history.pushState(null, "", `${window.location.pathname}?tab=${tab}`);
     // Reset to the top of the new section INSTANTLY via the window. A smooth scrollIntoView
     // fought the fixed mobile bottom bar (its backdrop-blur made "Más" flicker / feel covered
