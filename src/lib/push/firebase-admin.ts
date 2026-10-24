@@ -30,13 +30,27 @@ function getFirebasePushApp() {
   return app;
 }
 
+export class FirebasePushReadinessError extends Error {
+  constructor(public readonly code: "firebase_credential_configuration_invalid" | "firebase_oauth_failed") {
+    super(code);
+    this.name = "FirebasePushReadinessError";
+  }
+}
+
 /** OAuth-only readiness check: never reads recipients or sends notifications. */
 export async function verifyFirebasePushCredentials() {
-  const credential = getFirebasePushApp().options.credential;
-  if (!credential) throw new Error("Missing Firebase Admin credential.");
-  const token = await credential.getAccessToken();
-  if (!token.access_token || token.expires_in <= 0) {
-    throw new Error("Firebase Admin credential did not return a usable token.");
+  let credential;
+  try {
+    credential = getFirebasePushApp().options.credential;
+    if (!credential) throw new Error("Missing credential");
+  } catch {
+    throw new FirebasePushReadinessError("firebase_credential_configuration_invalid");
+  }
+  try {
+    const token = await credential.getAccessToken();
+    if (!token.access_token || token.expires_in <= 0) throw new Error("Unusable token");
+  } catch {
+    throw new FirebasePushReadinessError("firebase_oauth_failed");
   }
 }
 
