@@ -34,20 +34,22 @@ for (const native of [false, true]) {
         await page.evaluate(() => {
           const samples: Frame[] = [];
           (window as unknown as { __profileFrames: Frame[] }).__profileFrames = samples;
+          let destinationCount = 0;
           const tick = () => {
             samples.push({
               tab: location.search,
               previous: [...document.querySelectorAll('[data-testid="panel-tab-profile"]')]
                 .some(element => (element as HTMLElement).offsetHeight > 0),
             });
-            if (samples.length < 45) requestAnimationFrame(tick);
+            if (new URLSearchParams(location.search).get("tab") === "profile") destinationCount++;
+            if (destinationCount < 45 && samples.length < 3000) requestAnimationFrame(tick);
           };
           requestAnimationFrame(tick);
         });
         await link.click();
         await expect.poll(() => new URL(page.url()).searchParams.get('tab')).toBe('profile');
         await expect.poll(() => page.evaluate(() =>
-          (window as unknown as { __profileFrames: Frame[] }).__profileFrames.length)).toBe(45);
+          (window as unknown as { __profileFrames: Frame[] }).__profileFrames.filter(frame => new URLSearchParams(frame.tab).get("tab") === "profile").length)).toBe(45);
         const frames = await page.evaluate(() =>
           (window as unknown as { __profileFrames: Frame[] }).__profileFrames);
         const destinationFrames = frames.filter(frame => new URLSearchParams(frame.tab).get('tab') === 'profile');

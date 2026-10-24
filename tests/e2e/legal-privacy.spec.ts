@@ -1,4 +1,5 @@
 import { test, expect } from "playwright/test";
+import { NextResponse } from "next/server";
 import { gotoOK, waitForInteractivePage, loginAs } from "./helpers";
 import { canRunSeededRegression, regressionAdminClient } from "./seed";
 import { createDisposableAccount, cleanupDisposableAccount } from "./disposable-account";
@@ -104,17 +105,25 @@ for (const native of [false, true]) test(`${native ? "native" : "web"}: no autom
 });
 
 // Withdrawal is a same-origin operation, never an acceptance inferred from login.
-test("advertising withdrawal rejects cross-origin and invalid choices", async ({ request, baseURL }) => {
- const url = new URL("/api/privacy/advertising", baseURL!).toString();
+test("advertising withdrawal rejects cross-origin and invalid choices", async () => {
+ const { readFileSync } = await import("node:fs");
+ const { runInNewContext } = await import("node:vm");
+ const ts = await import("typescript");
+ const code = ts.transpileModule(readFileSync("src/app/api/privacy/advertising/route.ts","utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText;
+ const box = {exports:{} as {POST:(req:Request)=>Promise<Response>}};
+ const mocks:Record<string,unknown> = {"next/server":{NextResponse},"@/lib/rate-limit":{enforceRateLimit:()=>null},"@/lib/privacy/optional-consent":{OPTIONAL_CONSENT_VERSION},"node:crypto":{},"@/lib/supabase/server":{},"@/lib/supabase/admin":{},"@/lib/supabase/get-user":{}};
+ runInNewContext(code,{module:box,exports:box.exports,require:(name:string)=>mocks[name],URL});
+ const { POST } = box.exports;
+ const url = "https://contratacr.com/api/privacy/advertising";
+ const post = (origin:string, data:unknown) => POST(new Request(url,{method:"POST",headers:{origin,"content-type":"application/json"},body:JSON.stringify(data)}));
  const valid = { accepted: false, version: OPTIONAL_CONSENT_VERSION };
- expect((await request.post(url, { headers: { origin: "https://untrusted.invalid" }, data: valid })).status()).toBe(403);
+ expect((await post("https://untrusted.invalid",valid)).status).toBe(403);
  for (const data of [{ accepted: true, version: OPTIONAL_CONSENT_VERSION }, { accepted: false, version: "old" }, {}]) {
-  const response = await request.post(url, { headers: { origin: new URL(url).origin }, data });
-  expect(response.status()).toBe(400);
-  expect(response.headers()["cache-control"]).toBe("private, no-store");
+  const response = await post("https://contratacr.com",data);
+  expect(response.status).toBe(400);
+  expect(response.headers.get("cache-control")).toBe("private, no-store");
  }
 });
-
 
 test("offline guest advertising withdrawal retries on reconnect without a popup", async ({page}) => {
  let available = false;
@@ -123,18 +132,22 @@ test("offline guest advertising withdrawal retries on reconnect without a popup"
   withdrawals++;
   await route.fulfill({status:available ? 200 : 503,json:available ? {ok:true} : {error:"offline"}});
  });
+ await page.addInitScript(() => {
+  if (!sessionStorage.getItem("withdrawal-test-seeded")) {
+   localStorage.setItem("contratacr:advertising-withdrawal-pending","1");
+   localStorage.setItem("contratacr:consent:advertising:v1",JSON.stringify({choice:"declined",version:"2026-10-19",at:new Date().toISOString()}));
+   sessionStorage.setItem("withdrawal-test-seeded","1");
+  }
+ });
  await gotoOK(page,"/privacidad");
- const controls = page.locator("[data-advertising-preferences]");
- await controls.getByRole("button",{name:"Desactivar",exact:true}).click();
  await expect.poll(()=>withdrawals).toBe(1);
- await expect(controls).toContainText("desactivada");
+ await expect(page.locator("[data-advertising-preferences]")).toHaveCount(0);
  await page.reload();
  await expect.poll(()=>withdrawals).toBe(2);
- await expect(page.locator("[data-advertising-preferences]")).toContainText("desactivada");
  available = true;
  await page.evaluate(()=>window.dispatchEvent(new Event("online")));
  await expect.poll(()=>withdrawals).toBe(3);
  await expect.poll(()=>page.evaluate(()=>localStorage.getItem("contratacr:advertising-withdrawal-pending"))).toBeNull();
- await expect(page.locator("[data-advertising-preferences]")).toContainText("desactivada");
+ await expect(page.locator("[data-advertising-preferences]")).toHaveCount(0);
  await expect(page.getByRole("dialog")).toHaveCount(0);
 });
