@@ -26,7 +26,7 @@ export function TwoFactorSecurity() {
     }, 0);
     return () => { window.clearTimeout(timer); controller.abort(); };
   }, []);
-  return <section data-account-mfa className="bg-white">
+  return <section data-account-mfa data-security-group="mfa" className="border-t border-[#e5e7eb] bg-white pt-6">
     <div className="flex min-h-11 items-center justify-between gap-4">
       <h3 className="text-sm font-semibold text-[#162543]">{en ? "Two-factor authentication" : "Verificación en dos pasos"}</h3>
       <span className="w-28 shrink-0 text-right text-sm text-[#52627a]" aria-live="polite">{state ? (state.enrolled ? (en ? "Enabled" : "Activada") : (en ? "Disabled" : "Desactivada")) : (en ? "Checking…" : "Comprobando…")}</span>

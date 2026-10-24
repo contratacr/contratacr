@@ -36,6 +36,14 @@ for (const professional of [false, true]) {
         const security = page.locator("[data-account-security]");
         await expect(security).toBeVisible();
         await expect(page.locator("[data-blocked-users]")).toHaveCount(0);
+        const securityGroups = security.locator("[data-security-group]");
+        await expect(securityGroups).toHaveCount(4);
+        const groupStyles = await securityGroups.evaluateAll(nodes => nodes.map(node => {
+          const style = getComputedStyle(node);
+          return { border: style.borderTopWidth, padding: style.paddingTop };
+        }));
+        expect(groupStyles[0]).toEqual({ border: "0px", padding: "0px" });
+        for (const style of groupStyles.slice(1)) expect(style).toEqual({ border: "1px", padding: "24px" });
         const rows = security.locator("[data-sign-in-methods] li");
         await expect(rows).toHaveCount(3);
         for (const row of await rows.all()) {
