@@ -26178,51 +26178,59 @@
       "file": "tests/e2e/push-outbox-contract.spec.ts",
       "cases": [
         {
-          "line": 28,
+          "line": 30,
+          "title": "\"Firebase OAuth uses native fetch, a signed messaging-only assertion and cached tokens\""
+        },
+        {
+          "line": 60,
+          "title": "\"Firebase OAuth rejects an unusable token response\""
+        },
+        {
+          "line": 70,
           "title": "\"FCM payload keeps private metadata server-side and compacts visible copy\""
         },
         {
-          "line": 53,
+          "line": 95,
           "title": "\"push destinations stay app-relative\""
         },
         {
-          "line": 59,
+          "line": 101,
           "title": "\"provider failures distinguish dead tokens from retryable outages\""
         },
         {
-          "line": 79,
+          "line": 121,
           "title": "\"worker secret accepts either protected header using constant-size comparison\""
         },
         {
-          "line": 96,
+          "line": 138,
           "title": "\"delivery kill switch is fail-closed and needs an explicit enable\""
         },
         {
-          "line": 104,
+          "line": 146,
           "title": "\"migration compatibility only accepts the exact missing RPC or column\""
         },
         {
-          "line": 131,
+          "line": 173,
           "title": "\"account sign-out waits for registered cleanup work and has a hard timeout\""
         },
         {
-          "line": 154,
+          "line": 196,
           "title": "\"multicast chunks never exceed Firebase's 500-token limit\""
         },
         {
-          "line": 160,
+          "line": 202,
           "title": "\"a lost outbox lease is never reported as a successful finish\""
         },
         {
-          "line": 166,
+          "line": 208,
           "title": "\"drain claims one job immediately before each sequential delivery\""
         },
         {
-          "line": 202,
+          "line": 244,
           "title": "\"partial retries skip tokens already delivered on the next lease\""
         },
         {
-          "line": 253,
+          "line": 295,
           "title": "\"internal drain route never accepts a guest request\""
         }
       ]

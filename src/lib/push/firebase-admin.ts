@@ -1,5 +1,7 @@
-import { cert, getApps, initializeApp } from "firebase-admin/app";
+import { getApps, initializeApp } from "firebase-admin/app";
 import { getMessaging } from "firebase-admin/messaging";
+
+import { createFirebasePushCredential } from "./firebase-credential";
 
 const FIREBASE_PUSH_APP_NAME = "contratacr-push";
 
@@ -20,11 +22,8 @@ function getFirebasePushApp() {
   const app =
     getApps().find((candidate) => candidate.name === FIREBASE_PUSH_APP_NAME) ??
     initializeApp({
-      credential: cert({
-        projectId,
-        clientEmail,
-        privateKey,
-      }),
+      projectId,
+      credential: createFirebasePushCredential(clientEmail, privateKey),
     }, FIREBASE_PUSH_APP_NAME);
 
   return app;
