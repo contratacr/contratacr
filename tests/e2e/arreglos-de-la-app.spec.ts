@@ -25,7 +25,7 @@ test.describe("check de identidad en las listas", () => {
       const malas = await page.evaluate(() => {
         // El nombre más largo posible: cede él, nunca la insignia.
         for (const el of document.querySelectorAll("[data-verification-badge]")) {
-          const nombre = el.parentElement?.parentElement?.querySelector(".truncate");
+          const nombre = el.closest("[data-inline-identity-name]")?.querySelector("[data-profile-name-start]");
           if (nombre) nombre.textContent = "Constructora y Remodelaciones Hermanos Rodríguez Villalobos Sociedad Anónima";
         }
         const fallos: string[] = [];
@@ -33,7 +33,17 @@ test.describe("check de identidad en las listas", () => {
           const r = el.getBoundingClientRect();
           if (!r.width) continue;
           if (r.height > 26) fallos.push(`partida en dos renglones (${Math.round(r.height)}px)`);
-          if (el.scrollWidth > el.clientWidth + 1) fallos.push("recortada");
+          // The transparent ::before extends the touch target by 4px. Measure
+          // the visible seal instead of treating that hit area as clipped text.
+          const seal = el.querySelector("svg")?.getBoundingClientRect();
+          if (!seal || seal.width < 15 || seal.height < 15 || seal.left < r.left - 1 || seal.right > r.right + 1) fallos.push("recortada");
+          for (let parent = el.parentElement; parent; parent = parent.parentElement) {
+            const style = getComputedStyle(parent);
+            if (["hidden", "clip", "auto", "scroll"].includes(style.overflowX)) {
+              const bounds = parent.getBoundingClientRect();
+              if (seal && (seal.left < bounds.left - 1 || seal.right > bounds.right + 1)) fallos.push("recortada por contenedor");
+            }
+          }
           if (r.right > window.innerWidth + 1) fallos.push("se sale de la pantalla");
           if (el.textContent?.trim() !== "") fallos.push(`dice «${el.textContent?.trim()}»`);
         }

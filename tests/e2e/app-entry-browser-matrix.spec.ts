@@ -71,3 +71,18 @@ for (const [name, ua] of [...iosBrowsers, ...androidBrowsers]) {
   }
  });
 }
+
+// A real CI failure crossed a minute boundary (SSR 12 min, hydration 13 min).
+// A skewed device clock makes that race deterministic without suppressing errors.
+test('project dates hydrate without errors when the device clock differs', async ({page}) => {
+ const errors: string[] = [];
+ page.on('pageerror', error => errors.push(error.message));
+ await page.addInitScript(() => {
+  const now = Date.now.bind(Date);
+  Date.now = () => now() + 120_000;
+ });
+ await page.goto('/proyectos');
+ await waitForInteractivePage(page);
+ await expect(page.locator('[data-marketplace-row="proyectos"]').first()).toBeVisible();
+ expect(errors).toEqual([]);
+});

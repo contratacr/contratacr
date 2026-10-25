@@ -13,11 +13,11 @@
  */
 const DIAS_VISIBLES = 7;
 
-export function cuandoSePublico(iso: string | null | undefined, en: boolean): string {
-  if (!iso) return "";
+export function cuandoSePublico(iso: string | null | undefined, en: boolean, now = Date.now()): string {
+  if (!iso || !Number.isFinite(now) || now <= 0) return "";
   const cuando = new Date(iso).getTime();
   if (!Number.isFinite(cuando)) return "";
-  const transcurrido = Math.max(0, Date.now() - cuando);
+  const transcurrido = Math.max(0, now - cuando);
   const minutos = Math.floor(transcurrido / 60_000);
   if (minutos < 1) return en ? "Now" : "Ahora";
   if (minutos < 60) return en ? `${minutos} min ago` : `Hace ${minutos} min`;
