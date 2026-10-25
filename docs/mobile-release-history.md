@@ -159,3 +159,14 @@ Estado de entrega: paquetes firmados 1.0.12 preparados y hashes comprobados; sin
 - Pendientes de cierre: CI final general/móvil, propagación AASA de Apple y confirmación física de enlaces finales. No se declara aprobada la distribución en tiendas.
 - Notas propuestas ES (locales): "Mejoramos los enlaces compartidos y la claridad de las notificaciones."
 - Notas propuestas EN (locales): "Improved shared links and clearer notifications."
+
+### Cierre de validación previo al envío — 25 de octubre de 2026
+
+El titular autorizó subir iOS 1.0.12/17 y Android 1.0.12/16 cuando se resuelvan los fallos pendientes. Todavía no se han subido ni enviado a revisión. App Store Connect confirma iOS 1.0.11/build16 distribuida; Google Play no muestra cambios pendientes y conserva la publicación del 17 de octubre.
+
+- Fuente del binario conservada: `c927aa6fac058f23ef3a0586d3764f542d61bc6c`. Los cambios compartidos posteriores no modifican las entradas nativas de esos paquetes.
+- Corrección compartida `a9564fc4e2d29daed40924360f0e0176f6b88419`: las exclusiones AASA de rutas anidadas requieren un segundo segmento no vacío. La base de asociaciones de iOS normaliza rutas con barra final; la exclusión anterior también alcanzaba un perfil corto. La prueba falla antes en los tres prefijos y pasa después, conservando las exclusiones de autenticación y recursos. Producción ya devuelve el archivo nuevo; la CDN de Apple conservaba el anterior al revisarla. Falta demostrar apertura con la asociación actualizada en simulador y teléfono, no basta con el archivo del servidor.
+- Corrección compartida `3358f021`: reloj inicial de proyectos estable entre servidor y cliente, espacio para el área táctil del sello en el título público, y pruebas ajustadas a los controles actuales sin retirar la comprobación funcional. La regresión exhaustiva 40198511807 había encontrado estos fallos; no se considera aprobada. 25 comprobaciones focalizadas pasaron; el caso de ancho del buscador pasó por separado. Dos intentos del grupo de búsqueda no arrancaron por ausencia de los actores canónicos en la base local compartida; CI reconstruye sus propios datos aislados.
+- Pendientes: CI general, exhaustiva y móvil del cierre; CDN y apertura física del enlace corto; comprobación del candidato firmado por Google Play. Apple además exige al titular aceptar el acuerdo Developer actualizado; se le notificó y no se aceptó por él.
+- Novedades ES previstas, sin enviar: "Mejoramos los enlaces compartidos y la claridad de las notificaciones."
+- Novedades EN previstas, sin enviar: "Improved shared links and clearer notifications."
