@@ -15,7 +15,7 @@ export function campaignAppPath(raw: string): string | null {
     if (url.protocol !== "https:" || !["contratacr.com", "www.contratacr.com"].includes(url.hostname) || url.port || url.username || url.password) return null;
     if (hasAuthLinkPayload(url) || /%2f|%5c|%2e|%00/i.test(url.pathname)) return null;
     const locale = url.pathname.match(/^\/(es|en)(?:\/|$)/)?.[1];
-    const prefix = locale === "en" ? "/en" : "";
+    const prefix = ({ en: "/en", es: "" } as Record<string, string>)[locale ?? "es"];
     const path = url.pathname.replace(/^\/(es|en)(?=\/|$)/, "") || "/";
     const root = path.split("/")[1];
     if (path === "/dashboard/native-auth-return" || path.startsWith("/dashboard/native-auth-return/")) return null;
