@@ -7,6 +7,9 @@ const adb = process.env.E2E_ADB_PATH ?? `${process.env.ANDROID_HOME}/platform-to
 test('Android WebView opens shared profiles and displays complete localized notices without push delivery', async () => {
   test.setTimeout(180_000);
   expect(process.env.NEXT_PUBLIC_SUPABASE_URL).toBe('http://127.0.0.1:54321');
+  // Only the disposable emulator is eligible for a fresh-install state reset.
+  expect(execFileSync(adb, ['shell', 'getprop', 'ro.kernel.qemu'], { encoding: 'utf8' }).trim()).toBe('1');
+  execFileSync(adb, ['shell', 'pm', 'clear', 'com.contratacr.app']);
   execFileSync(adb, ['shell', 'am', 'force-stop', 'com.contratacr.app']);
   execFileSync(adb, ['shell', 'am', 'start', '-W', '-a', 'android.intent.action.VIEW', '-d', 'https://contratacr.com/perfil-prueba-inexistente', 'com.contratacr.app']);
   let socket = '';
@@ -22,6 +25,8 @@ test('Android WebView opens shared profiles and displays complete localized noti
   const base = process.env.E2E_ANDROID_APP_URL ?? 'http://localhost:3000';
   try {
     await expect(page).toHaveURL(/\/profesionales\/perfil-prueba-inexistente$/);
+    await expect(page.getByTestId('native-first-run-onboarding')).toBeHidden();
+    expect(await page.evaluate(key => localStorage.getItem(key), NATIVE_ONBOARDING_COMPLETED_KEY)).not.toBe('1');
     await page.addInitScript(key => localStorage.setItem(key, '1'), NATIVE_ONBOARDING_COMPLETED_KEY);
     await page.context().clearCookies();
     await page.goto(`${base}/login`);
