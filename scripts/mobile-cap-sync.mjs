@@ -5,6 +5,11 @@ import { spawnSync } from "node:child_process";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const capacitorCli = join(root, "node_modules", "@capacitor", "cli", "bin", "capacitor");
+// Keep the native ingress guard identical to the shared navigation policy.
+const appLinkPolicy = join(root, "src", "lib", "mobile", "app-link-policy.json");
+if (existsSync(join(root, "android", "app", "src", "main", "java", "com", "contratacr", "app", "AppLinkRouterActivity.java"))) {
+  writeFileSync(join(root, "android", "app", "src", "main", "assets", "app-link-policy.json"), readFileSync(appLinkPolicy));
+}
 const result = spawnSync(process.execPath, [capacitorCli, "sync", ...process.argv.slice(2)], {
   cwd: root,
   env: process.env,

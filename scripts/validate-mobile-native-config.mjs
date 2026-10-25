@@ -112,9 +112,11 @@ for (const host of ["contratacr.com", "www.contratacr.com"]) {
   if (!manifest.includes(`android:scheme="https" android:host="${host}"`)) failures.push(`Android app-link host missing: ${host}`);
   if (!entitlements.includes(`<string>applinks:${host}</string>`)) failures.push(`iOS associated domain missing: ${host}`);
 }
-for (const path of ["/", "/es", "/es/", "/en", "/en/"]) {
-  if (!manifest.includes(`android:path="${path}"`)) failures.push(`Android exact home app link missing: ${path}`);
-}
+const router = await text("android/app/src/main/java/com/contratacr/app/AppLinkRouterActivity.java");
+requireMatch("Android guarded host-wide ingress", manifest, /android:name="\.AppLinkRouterActivity"[\s\S]*android:autoVerify="true"/);
+requireMatch("Android rejects browser-only routes before Capacitor", router, /browserRoots[\s\S]*return false/);
+requireMatch("Android browser fallback cannot loop into this app", router, /setPackage\(pkg\)/);
+if (await text("android/app/src/main/assets/app-link-policy.json") !== await text("src/lib/mobile/app-link-policy.json")) failures.push("Android app-link policy is stale; run mobile:sync");
 requireMatch("Android browser lookup relation", manifest, /android:name="asset_statements" android:resource="@string\/asset_statements"/);
 const entryStrings = await text("android/app/src/main/res/values/strings.xml");
 const statementText = entryStrings.match(/<string name="asset_statements"[^>]*>([\s\S]*?)<\/string>/)?.[1];

@@ -1,0 +1,8 @@
+{
+  "sectionRoots": ["buscar", "servicios", "profesionales", "proyectos", "empleos", "promociones", "ofertas", "cotizacion", "dashboard", "mensajes", "notificaciones", "soporte", "registro"],
+  "screenRoots": ["continuar-perfil", "completar-perfil", "publicar-proyecto", "cotizar", "onboarding", "ayuda", "contacto", "categorias", "como-funciona", "mejorar-mi-perfil", "verificacion-de-identidad", "proveedores-autorizados", "atraer-clientes", "privacidad", "terminos", "eliminar-cuenta", "servicio-no-disponible", "resena-google"],
+  "browserRoots": ["api", "auth", "admin", "login", "olvide-contrasena", "reset-password", "baja-correos", "abrir-app", "descargar", "mantenimiento", "es", "en"],
+  "shortDetails": {"p": "proyectos", "o": "promociones", "e": "empleos", "c": "cotizacion"},
+  "vanitySources": {"ig": "instagram", "tt": "tiktok", "fb": "facebook", "wa": "whatsapp"},
+  "authParameters": ["code", "access_token", "refresh_token", "token", "token_hash", "id_token", "provider_token", "provider_refresh_token"]
+}

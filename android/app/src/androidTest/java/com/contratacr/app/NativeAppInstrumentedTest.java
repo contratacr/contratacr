@@ -39,18 +39,23 @@ public class NativeAppInstrumentedTest {
     }
 
     @Test
-    public void installedAppResolvesAppleReturnToMainActivity() {
+    public void installedAppResolvesAppleReturnThroughGuardToMainActivity() {
         // Inspect the installed, merged manifest: source XML alone did not
         // catch the missing VIEW filter in the published Play build 14.
         Intent intent = new Intent(Intent.ACTION_VIEW,
-            Uri.parse("https://contratacr.com/dashboard/native-auth-return?code=test&native_state=test"));
+            Uri.parse("https://contratacr.com/dashboard/native-auth-return?code=test&native_state=" + new String(new char[64]).replace('\0', 'a')));
         intent.addCategory(Intent.CATEGORY_BROWSABLE);
         intent.setPackage(context.getPackageName());
         ResolveInfo resolved = context.getPackageManager().resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY);
         assertNotNull("The installed APK must accept the Apple browser return", resolved);
-        assertEquals("com.contratacr.app.MainActivity", resolved.activityInfo.name);
+        assertEquals("com.contratacr.app.AppLinkRouterActivity", resolved.activityInfo.name);
         assertTrue(resolved.activityInfo.exported);
-        assertEquals(ActivityInfo.LAUNCH_SINGLE_TASK, resolved.activityInfo.launchMode);
+        Intent forwarded = AppLinkRouterActivity.targetIntent(context, intent.getData());
+        assertNotNull(forwarded);
+        assertEquals("com.contratacr.app.MainActivity", forwarded.getComponent().getClassName());
+        assertEquals(intent.getData(), forwarded.getData());
+        assertTrue((forwarded.getFlags() & Intent.FLAG_ACTIVITY_SINGLE_TOP) != 0);
+        assertTrue((forwarded.getFlags() & Intent.FLAG_ACTIVITY_CLEAR_TOP) != 0);
     }
 
     @Test

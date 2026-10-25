@@ -2,7 +2,7 @@ package com.contratacr.app;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+
 
 import android.content.Context;
 import android.content.Intent;
@@ -43,7 +43,7 @@ public class AppLinkResolutionTest {
         for (String path : new String[]{"/", "/en", "/en/", "/es", "/es/"}) {
             ResolveInfo info = resolve(path);
             assertNotNull(path, info);
-            assertEquals(MainActivity.class.getName(), info.activityInfo.name);
+            assertEquals(AppLinkRouterActivity.class.getName(), info.activityInfo.name);
         }
     }
     @Test public void googleResultsWithWwwAlsoResolveToTheApp() {
@@ -69,14 +69,49 @@ public class AppLinkResolutionTest {
                 intent.setPackage(context.getPackageName());
                 ResolveInfo info = context.getPackageManager().resolveActivity(intent, 0);
                 assertNotNull(host + path, info);
-                assertEquals(MainActivity.class.getName(), info.activityInfo.name);
+                assertEquals(AppLinkRouterActivity.class.getName(), info.activityInfo.name);
                 assertEquals("https://" + host + path, intent.getDataString());
             }
         }
     }
     @Test public void addingHomepageDoesNotCaptureBrowserAuthenticationOrAdmin() {
         for (String path : new String[]{"/login", "/auth/callback?code=example", "/admin", "/api/email/baja"}) {
-            assertNull(path, resolve(path));
+            Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+            Uri uri = Uri.parse("https://contratacr.com" + path);
+            org.junit.Assert.assertFalse(path, AppLinkRouterActivity.opensInApp(context, uri));
+            Intent target = AppLinkRouterActivity.targetIntent(context, uri);
+            assertNotNull(path, target);
+            org.junit.Assert.assertNotEquals(context.getPackageName(), target.getPackage());
+            assertEquals(uri, target.getData());
+        }
+    }
+
+    @Test public void sharedAliasesAndPrivateScreensRouteWithoutLosingTheUrl() {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        for (String host : new String[]{"contratacr.com", "www.contratacr.com"}) {
+            for (String path : new String[]{"/isaac-sanchez", "/@isaac-sanchez", "/en/isaac-sanchez", "/p/abcd1234", "/o/abcd1234", "/e/abcd1234", "/c/abcd1234", "/mensajes", "/notificaciones", "/soporte/caso/abcd1234", "/privacidad", "/registro/profesional"}) {
+                Uri uri = Uri.parse("https://" + host + path + "?utm_source=test#detalle");
+                assertNotNull(path, resolve(path));
+                org.junit.Assert.assertTrue(path, AppLinkRouterActivity.opensInApp(context, uri));
+                Intent target = AppLinkRouterActivity.targetIntent(context, uri);
+                assertEquals(MainActivity.class.getName(), target.getComponent().getClassName());
+                assertEquals(uri, target.getData());
+            }
+        }
+    }
+    @Test public void secureWindowReturnRemainsSeparateFromNavigation() {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        Uri uri = Uri.parse("https://contratacr.com/dashboard/native-auth-return?native_state=" + new String(new char[64]).replace('\0', 'a') + "&code=one-use-code");
+        org.junit.Assert.assertFalse(AppLinkRouterActivity.opensInApp(context, uri));
+        org.junit.Assert.assertTrue(AppLinkRouterActivity.isSecureOAuthReturn(uri));
+        assertEquals(MainActivity.class.getName(), AppLinkRouterActivity.targetIntent(context, uri).getComponent().getClassName());
+        org.junit.Assert.assertFalse(AppLinkRouterActivity.isSecureOAuthReturn(Uri.parse(uri + "&access_token=never")));
+        org.junit.Assert.assertFalse(AppLinkRouterActivity.isSecureOAuthReturn(Uri.parse("https://contratacr.com/dashboard/native-auth-return?code=missing-state")));
+    }
+    @Test public void unsafeLinksNeverReachTheAppWebview() {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        for (String raw : new String[]{"https://evil.example/isaac-sanchez", "https://contratacr.com@evil.example/isaac-sanchez", "https://contratacr.com/profesionales?access_token=secret", "https://contratacr.com/profesionales#refresh_token=secret", "https://contratacr.com/api/email/baja", "https://contratacr.com/admin", "https://contratacr.com/reset-password", "https://contratacr.com/unknown/nested", "https://contratacr.com/robots.txt", "https://contratacr.com/auth%2fcallback"}) {
+            org.junit.Assert.assertFalse(raw, AppLinkRouterActivity.opensInApp(context, Uri.parse(raw)));
         }
     }
 }
