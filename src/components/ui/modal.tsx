@@ -231,10 +231,10 @@ export function Modal({
               del título se lee como "siguiente", no como "atrás". */}
           {conFlecha && salida}
           <div className={cn("min-w-0 px-10 text-center", !cabeceraCentrada && "sm:px-0 sm:text-left")}>
-            {/* REGLA: en el teléfono la cabecera es UNA línea —flecha, título y
+            {/* En formularios del teléfono la cabecera es UNA línea —flecha, título y
                 nada más—, para que mida lo mismo en todas las ventanas. El título
-                se recorta con «…» y el subtítulo aparece de 640 px en adelante. */}
-            <h2 className={cn("truncate leading-tight text-[#162543] sm:whitespace-normal", fullscreenMobile ? "text-[17px] font-extrabold sm:text-lg sm:font-bold" : "text-lg font-bold")}>{title}</h2>
+                se recorta con «…». Los avisos centrados permiten varias líneas. El subtítulo aparece de 640 px en adelante. */}
+            <h2 className={cn("leading-tight text-[#162543]", mobilePresentation === "center" ? "whitespace-normal break-words" : "truncate sm:whitespace-normal", fullscreenMobile ? "text-[17px] font-extrabold sm:text-lg sm:font-bold" : "text-lg font-bold")}>{title}</h2>
             {subtitle && <p className="mt-0.5 hidden text-xs text-[#6b7280] sm:block">{subtitle}</p>}
           </div>
           {/* El «···» se ancla SOLO él a la derecha: envolviéndolo junto a la

@@ -9,6 +9,9 @@ export default defineConfig({
   ...baseConfig,
   testIgnore: ["**/.tmp-*.spec.ts"],
   testMatch: [
+    "**/notification-modal-layout.spec.ts",
+    "**/notification-action-copy.spec.ts",
+    "**/app-link-coverage.spec.ts",
     "**/direct-chat.spec.ts",
     "**/recuperacion-al-desbloquear.spec.ts",
     "**/reanudar-la-app.spec.ts",

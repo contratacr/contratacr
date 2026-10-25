@@ -12,6 +12,54 @@
         ],
         "components": [
           {
+            "?": {
+              "code": "*"
+            },
+            "exclude": true
+          },
+          {
+            "?": {
+              "access_token": "*"
+            },
+            "exclude": true
+          },
+          {
+            "?": {
+              "refresh_token": "*"
+            },
+            "exclude": true
+          },
+          {
+            "?": {
+              "token": "*"
+            },
+            "exclude": true
+          },
+          {
+            "?": {
+              "token_hash": "*"
+            },
+            "exclude": true
+          },
+          {
+            "?": {
+              "id_token": "*"
+            },
+            "exclude": true
+          },
+          {
+            "?": {
+              "provider_token": "*"
+            },
+            "exclude": true
+          },
+          {
+            "?": {
+              "provider_refresh_token": "*"
+            },
+            "exclude": true
+          },
+          {
             "/": "/"
           },
           {
@@ -27,97 +75,1066 @@
             "/": "/en/"
           },
           {
-            "/": "/profesionales"
+            "/": "/es/dashboard/native-auth-return*",
+            "exclude": true
+          },
+          {
+            "/": "/es/api/trabajos/reportar"
+          },
+          {
+            "/": "/es/api",
+            "exclude": true
+          },
+          {
+            "/": "/es/api/*",
+            "exclude": true
+          },
+          {
+            "/": "/es/auth",
+            "exclude": true
+          },
+          {
+            "/": "/es/auth/*",
+            "exclude": true
+          },
+          {
+            "/": "/es/admin",
+            "exclude": true
+          },
+          {
+            "/": "/es/admin/*",
+            "exclude": true
+          },
+          {
+            "/": "/es/login",
+            "exclude": true
+          },
+          {
+            "/": "/es/login/*",
+            "exclude": true
+          },
+          {
+            "/": "/es/olvide-contrasena",
+            "exclude": true
+          },
+          {
+            "/": "/es/olvide-contrasena/*",
+            "exclude": true
+          },
+          {
+            "/": "/es/reset-password",
+            "exclude": true
+          },
+          {
+            "/": "/es/reset-password/*",
+            "exclude": true
+          },
+          {
+            "/": "/es/baja-correos",
+            "exclude": true
+          },
+          {
+            "/": "/es/baja-correos/*",
+            "exclude": true
+          },
+          {
+            "/": "/es/abrir-app",
+            "exclude": true
+          },
+          {
+            "/": "/es/abrir-app/*",
+            "exclude": true
+          },
+          {
+            "/": "/es/descargar",
+            "exclude": true
+          },
+          {
+            "/": "/es/descargar/*",
+            "exclude": true
+          },
+          {
+            "/": "/es/mantenimiento",
+            "exclude": true
+          },
+          {
+            "/": "/es/mantenimiento/*",
+            "exclude": true
+          },
+          {
+            "/": "/es/es",
+            "exclude": true
+          },
+          {
+            "/": "/es/es/*",
+            "exclude": true
+          },
+          {
+            "/": "/es/en",
+            "exclude": true
+          },
+          {
+            "/": "/es/en/*",
+            "exclude": true
+          },
+          {
+            "/": "/es/buscar"
+          },
+          {
+            "/": "/es/buscar/*"
+          },
+          {
+            "/": "/es/servicios"
+          },
+          {
+            "/": "/es/servicios/*"
           },
           {
             "/": "/es/profesionales"
           },
           {
-            "/": "/en/profesionales"
+            "/": "/es/profesionales/*"
           },
           {
-            "/": "/dashboard/*"
+            "/": "/es/proyectos"
           },
           {
-            "/": "/continuar-perfil"
+            "/": "/es/proyectos/*"
           },
           {
-            "/": "/buscar*"
+            "/": "/es/empleos"
           },
           {
-            "/": "/servicios*"
+            "/": "/es/empleos/*"
           },
           {
-            "/": "/profesionales/*"
+            "/": "/es/promociones"
           },
           {
-            "/": "/proyectos*"
+            "/": "/es/promociones/*"
           },
           {
-            "/": "/empleos*"
+            "/": "/es/ofertas"
           },
           {
-            "/": "/promociones*"
+            "/": "/es/ofertas/*"
           },
           {
-            "/": "/publicar-proyecto"
+            "/": "/es/cotizacion"
           },
           {
-            "/": "/api/trabajos/reportar"
+            "/": "/es/cotizacion/*"
+          },
+          {
+            "/": "/es/dashboard"
           },
           {
             "/": "/es/dashboard/*"
           },
           {
+            "/": "/es/mensajes"
+          },
+          {
+            "/": "/es/mensajes/*"
+          },
+          {
+            "/": "/es/notificaciones"
+          },
+          {
+            "/": "/es/notificaciones/*"
+          },
+          {
+            "/": "/es/soporte"
+          },
+          {
+            "/": "/es/soporte/*"
+          },
+          {
+            "/": "/es/registro"
+          },
+          {
+            "/": "/es/registro/*"
+          },
+          {
             "/": "/es/continuar-perfil"
           },
           {
-            "/": "/es/buscar*"
+            "/": "/es/continuar-perfil/*"
           },
           {
-            "/": "/es/servicios*"
+            "/": "/es/completar-perfil"
           },
           {
-            "/": "/es/profesionales/*"
-          },
-          {
-            "/": "/es/proyectos*"
-          },
-          {
-            "/": "/es/empleos*"
-          },
-          {
-            "/": "/es/promociones*"
+            "/": "/es/completar-perfil/*"
           },
           {
             "/": "/es/publicar-proyecto"
           },
           {
-            "/": "/en/dashboard/*"
+            "/": "/es/publicar-proyecto/*"
           },
           {
-            "/": "/en/continuar-perfil"
+            "/": "/es/cotizar"
           },
           {
-            "/": "/en/buscar*"
+            "/": "/es/cotizar/*"
           },
           {
-            "/": "/en/servicios*"
+            "/": "/es/onboarding"
+          },
+          {
+            "/": "/es/onboarding/*"
+          },
+          {
+            "/": "/es/ayuda"
+          },
+          {
+            "/": "/es/ayuda/*"
+          },
+          {
+            "/": "/es/contacto"
+          },
+          {
+            "/": "/es/contacto/*"
+          },
+          {
+            "/": "/es/categorias"
+          },
+          {
+            "/": "/es/categorias/*"
+          },
+          {
+            "/": "/es/como-funciona"
+          },
+          {
+            "/": "/es/como-funciona/*"
+          },
+          {
+            "/": "/es/mejorar-mi-perfil"
+          },
+          {
+            "/": "/es/mejorar-mi-perfil/*"
+          },
+          {
+            "/": "/es/verificacion-de-identidad"
+          },
+          {
+            "/": "/es/verificacion-de-identidad/*"
+          },
+          {
+            "/": "/es/proveedores-autorizados"
+          },
+          {
+            "/": "/es/proveedores-autorizados/*"
+          },
+          {
+            "/": "/es/atraer-clientes"
+          },
+          {
+            "/": "/es/atraer-clientes/*"
+          },
+          {
+            "/": "/es/privacidad"
+          },
+          {
+            "/": "/es/privacidad/*"
+          },
+          {
+            "/": "/es/terminos"
+          },
+          {
+            "/": "/es/terminos/*"
+          },
+          {
+            "/": "/es/eliminar-cuenta"
+          },
+          {
+            "/": "/es/eliminar-cuenta/*"
+          },
+          {
+            "/": "/es/servicio-no-disponible"
+          },
+          {
+            "/": "/es/servicio-no-disponible/*"
+          },
+          {
+            "/": "/es/resena-google"
+          },
+          {
+            "/": "/es/resena-google/*"
+          },
+          {
+            "/": "/es/p"
+          },
+          {
+            "/": "/es/p/*"
+          },
+          {
+            "/": "/es/o"
+          },
+          {
+            "/": "/es/o/*"
+          },
+          {
+            "/": "/es/e"
+          },
+          {
+            "/": "/es/e/*"
+          },
+          {
+            "/": "/es/c"
+          },
+          {
+            "/": "/es/c/*"
+          },
+          {
+            "/": "/es/ig"
+          },
+          {
+            "/": "/es/ig/*"
+          },
+          {
+            "/": "/es/tt"
+          },
+          {
+            "/": "/es/tt/*"
+          },
+          {
+            "/": "/es/fb"
+          },
+          {
+            "/": "/es/fb/*"
+          },
+          {
+            "/": "/es/wa"
+          },
+          {
+            "/": "/es/wa/*"
+          },
+          {
+            "/": "/es/pro"
+          },
+          {
+            "/": "/es/pro/*"
+          },
+          {
+            "/": "/es/*/*",
+            "exclude": true
+          },
+          {
+            "/": "/es/*.*",
+            "exclude": true
+          },
+          {
+            "/": "/es/*"
+          },
+          {
+            "/": "/en/dashboard/native-auth-return*",
+            "exclude": true
+          },
+          {
+            "/": "/en/api/trabajos/reportar"
+          },
+          {
+            "/": "/en/api",
+            "exclude": true
+          },
+          {
+            "/": "/en/api/*",
+            "exclude": true
+          },
+          {
+            "/": "/en/auth",
+            "exclude": true
+          },
+          {
+            "/": "/en/auth/*",
+            "exclude": true
+          },
+          {
+            "/": "/en/admin",
+            "exclude": true
+          },
+          {
+            "/": "/en/admin/*",
+            "exclude": true
+          },
+          {
+            "/": "/en/login",
+            "exclude": true
+          },
+          {
+            "/": "/en/login/*",
+            "exclude": true
+          },
+          {
+            "/": "/en/olvide-contrasena",
+            "exclude": true
+          },
+          {
+            "/": "/en/olvide-contrasena/*",
+            "exclude": true
+          },
+          {
+            "/": "/en/reset-password",
+            "exclude": true
+          },
+          {
+            "/": "/en/reset-password/*",
+            "exclude": true
+          },
+          {
+            "/": "/en/baja-correos",
+            "exclude": true
+          },
+          {
+            "/": "/en/baja-correos/*",
+            "exclude": true
+          },
+          {
+            "/": "/en/abrir-app",
+            "exclude": true
+          },
+          {
+            "/": "/en/abrir-app/*",
+            "exclude": true
+          },
+          {
+            "/": "/en/descargar",
+            "exclude": true
+          },
+          {
+            "/": "/en/descargar/*",
+            "exclude": true
+          },
+          {
+            "/": "/en/mantenimiento",
+            "exclude": true
+          },
+          {
+            "/": "/en/mantenimiento/*",
+            "exclude": true
+          },
+          {
+            "/": "/en/es",
+            "exclude": true
+          },
+          {
+            "/": "/en/es/*",
+            "exclude": true
+          },
+          {
+            "/": "/en/en",
+            "exclude": true
+          },
+          {
+            "/": "/en/en/*",
+            "exclude": true
+          },
+          {
+            "/": "/en/buscar"
+          },
+          {
+            "/": "/en/buscar/*"
+          },
+          {
+            "/": "/en/servicios"
+          },
+          {
+            "/": "/en/servicios/*"
+          },
+          {
+            "/": "/en/profesionales"
           },
           {
             "/": "/en/profesionales/*"
           },
           {
-            "/": "/en/proyectos*"
+            "/": "/en/proyectos"
           },
           {
-            "/": "/en/empleos*"
+            "/": "/en/proyectos/*"
           },
           {
-            "/": "/en/promociones*"
+            "/": "/en/empleos"
+          },
+          {
+            "/": "/en/empleos/*"
+          },
+          {
+            "/": "/en/promociones"
+          },
+          {
+            "/": "/en/promociones/*"
+          },
+          {
+            "/": "/en/ofertas"
+          },
+          {
+            "/": "/en/ofertas/*"
+          },
+          {
+            "/": "/en/cotizacion"
+          },
+          {
+            "/": "/en/cotizacion/*"
+          },
+          {
+            "/": "/en/dashboard"
+          },
+          {
+            "/": "/en/dashboard/*"
+          },
+          {
+            "/": "/en/mensajes"
+          },
+          {
+            "/": "/en/mensajes/*"
+          },
+          {
+            "/": "/en/notificaciones"
+          },
+          {
+            "/": "/en/notificaciones/*"
+          },
+          {
+            "/": "/en/soporte"
+          },
+          {
+            "/": "/en/soporte/*"
+          },
+          {
+            "/": "/en/registro"
+          },
+          {
+            "/": "/en/registro/*"
+          },
+          {
+            "/": "/en/continuar-perfil"
+          },
+          {
+            "/": "/en/continuar-perfil/*"
+          },
+          {
+            "/": "/en/completar-perfil"
+          },
+          {
+            "/": "/en/completar-perfil/*"
           },
           {
             "/": "/en/publicar-proyecto"
+          },
+          {
+            "/": "/en/publicar-proyecto/*"
+          },
+          {
+            "/": "/en/cotizar"
+          },
+          {
+            "/": "/en/cotizar/*"
+          },
+          {
+            "/": "/en/onboarding"
+          },
+          {
+            "/": "/en/onboarding/*"
+          },
+          {
+            "/": "/en/ayuda"
+          },
+          {
+            "/": "/en/ayuda/*"
+          },
+          {
+            "/": "/en/contacto"
+          },
+          {
+            "/": "/en/contacto/*"
+          },
+          {
+            "/": "/en/categorias"
+          },
+          {
+            "/": "/en/categorias/*"
+          },
+          {
+            "/": "/en/como-funciona"
+          },
+          {
+            "/": "/en/como-funciona/*"
+          },
+          {
+            "/": "/en/mejorar-mi-perfil"
+          },
+          {
+            "/": "/en/mejorar-mi-perfil/*"
+          },
+          {
+            "/": "/en/verificacion-de-identidad"
+          },
+          {
+            "/": "/en/verificacion-de-identidad/*"
+          },
+          {
+            "/": "/en/proveedores-autorizados"
+          },
+          {
+            "/": "/en/proveedores-autorizados/*"
+          },
+          {
+            "/": "/en/atraer-clientes"
+          },
+          {
+            "/": "/en/atraer-clientes/*"
+          },
+          {
+            "/": "/en/privacidad"
+          },
+          {
+            "/": "/en/privacidad/*"
+          },
+          {
+            "/": "/en/terminos"
+          },
+          {
+            "/": "/en/terminos/*"
+          },
+          {
+            "/": "/en/eliminar-cuenta"
+          },
+          {
+            "/": "/en/eliminar-cuenta/*"
+          },
+          {
+            "/": "/en/servicio-no-disponible"
+          },
+          {
+            "/": "/en/servicio-no-disponible/*"
+          },
+          {
+            "/": "/en/resena-google"
+          },
+          {
+            "/": "/en/resena-google/*"
+          },
+          {
+            "/": "/en/p"
+          },
+          {
+            "/": "/en/p/*"
+          },
+          {
+            "/": "/en/o"
+          },
+          {
+            "/": "/en/o/*"
+          },
+          {
+            "/": "/en/e"
+          },
+          {
+            "/": "/en/e/*"
+          },
+          {
+            "/": "/en/c"
+          },
+          {
+            "/": "/en/c/*"
+          },
+          {
+            "/": "/en/ig"
+          },
+          {
+            "/": "/en/ig/*"
+          },
+          {
+            "/": "/en/tt"
+          },
+          {
+            "/": "/en/tt/*"
+          },
+          {
+            "/": "/en/fb"
+          },
+          {
+            "/": "/en/fb/*"
+          },
+          {
+            "/": "/en/wa"
+          },
+          {
+            "/": "/en/wa/*"
+          },
+          {
+            "/": "/en/pro"
+          },
+          {
+            "/": "/en/pro/*"
+          },
+          {
+            "/": "/en/*/*",
+            "exclude": true
+          },
+          {
+            "/": "/en/*.*",
+            "exclude": true
+          },
+          {
+            "/": "/en/*"
+          },
+          {
+            "/": "/dashboard/native-auth-return*",
+            "exclude": true
+          },
+          {
+            "/": "/api/trabajos/reportar"
+          },
+          {
+            "/": "/api",
+            "exclude": true
+          },
+          {
+            "/": "/api/*",
+            "exclude": true
+          },
+          {
+            "/": "/auth",
+            "exclude": true
+          },
+          {
+            "/": "/auth/*",
+            "exclude": true
+          },
+          {
+            "/": "/admin",
+            "exclude": true
+          },
+          {
+            "/": "/admin/*",
+            "exclude": true
+          },
+          {
+            "/": "/login",
+            "exclude": true
+          },
+          {
+            "/": "/login/*",
+            "exclude": true
+          },
+          {
+            "/": "/olvide-contrasena",
+            "exclude": true
+          },
+          {
+            "/": "/olvide-contrasena/*",
+            "exclude": true
+          },
+          {
+            "/": "/reset-password",
+            "exclude": true
+          },
+          {
+            "/": "/reset-password/*",
+            "exclude": true
+          },
+          {
+            "/": "/baja-correos",
+            "exclude": true
+          },
+          {
+            "/": "/baja-correos/*",
+            "exclude": true
+          },
+          {
+            "/": "/abrir-app",
+            "exclude": true
+          },
+          {
+            "/": "/abrir-app/*",
+            "exclude": true
+          },
+          {
+            "/": "/descargar",
+            "exclude": true
+          },
+          {
+            "/": "/descargar/*",
+            "exclude": true
+          },
+          {
+            "/": "/mantenimiento",
+            "exclude": true
+          },
+          {
+            "/": "/mantenimiento/*",
+            "exclude": true
+          },
+          {
+            "/": "/es",
+            "exclude": true
+          },
+          {
+            "/": "/es/*",
+            "exclude": true
+          },
+          {
+            "/": "/en",
+            "exclude": true
+          },
+          {
+            "/": "/en/*",
+            "exclude": true
+          },
+          {
+            "/": "/buscar"
+          },
+          {
+            "/": "/buscar/*"
+          },
+          {
+            "/": "/servicios"
+          },
+          {
+            "/": "/servicios/*"
+          },
+          {
+            "/": "/profesionales"
+          },
+          {
+            "/": "/profesionales/*"
+          },
+          {
+            "/": "/proyectos"
+          },
+          {
+            "/": "/proyectos/*"
+          },
+          {
+            "/": "/empleos"
+          },
+          {
+            "/": "/empleos/*"
+          },
+          {
+            "/": "/promociones"
+          },
+          {
+            "/": "/promociones/*"
+          },
+          {
+            "/": "/ofertas"
+          },
+          {
+            "/": "/ofertas/*"
+          },
+          {
+            "/": "/cotizacion"
+          },
+          {
+            "/": "/cotizacion/*"
+          },
+          {
+            "/": "/dashboard"
+          },
+          {
+            "/": "/dashboard/*"
+          },
+          {
+            "/": "/mensajes"
+          },
+          {
+            "/": "/mensajes/*"
+          },
+          {
+            "/": "/notificaciones"
+          },
+          {
+            "/": "/notificaciones/*"
+          },
+          {
+            "/": "/soporte"
+          },
+          {
+            "/": "/soporte/*"
+          },
+          {
+            "/": "/registro"
+          },
+          {
+            "/": "/registro/*"
+          },
+          {
+            "/": "/continuar-perfil"
+          },
+          {
+            "/": "/continuar-perfil/*"
+          },
+          {
+            "/": "/completar-perfil"
+          },
+          {
+            "/": "/completar-perfil/*"
+          },
+          {
+            "/": "/publicar-proyecto"
+          },
+          {
+            "/": "/publicar-proyecto/*"
+          },
+          {
+            "/": "/cotizar"
+          },
+          {
+            "/": "/cotizar/*"
+          },
+          {
+            "/": "/onboarding"
+          },
+          {
+            "/": "/onboarding/*"
+          },
+          {
+            "/": "/ayuda"
+          },
+          {
+            "/": "/ayuda/*"
+          },
+          {
+            "/": "/contacto"
+          },
+          {
+            "/": "/contacto/*"
+          },
+          {
+            "/": "/categorias"
+          },
+          {
+            "/": "/categorias/*"
+          },
+          {
+            "/": "/como-funciona"
+          },
+          {
+            "/": "/como-funciona/*"
+          },
+          {
+            "/": "/mejorar-mi-perfil"
+          },
+          {
+            "/": "/mejorar-mi-perfil/*"
+          },
+          {
+            "/": "/verificacion-de-identidad"
+          },
+          {
+            "/": "/verificacion-de-identidad/*"
+          },
+          {
+            "/": "/proveedores-autorizados"
+          },
+          {
+            "/": "/proveedores-autorizados/*"
+          },
+          {
+            "/": "/atraer-clientes"
+          },
+          {
+            "/": "/atraer-clientes/*"
+          },
+          {
+            "/": "/privacidad"
+          },
+          {
+            "/": "/privacidad/*"
+          },
+          {
+            "/": "/terminos"
+          },
+          {
+            "/": "/terminos/*"
+          },
+          {
+            "/": "/eliminar-cuenta"
+          },
+          {
+            "/": "/eliminar-cuenta/*"
+          },
+          {
+            "/": "/servicio-no-disponible"
+          },
+          {
+            "/": "/servicio-no-disponible/*"
+          },
+          {
+            "/": "/resena-google"
+          },
+          {
+            "/": "/resena-google/*"
+          },
+          {
+            "/": "/p"
+          },
+          {
+            "/": "/p/*"
+          },
+          {
+            "/": "/o"
+          },
+          {
+            "/": "/o/*"
+          },
+          {
+            "/": "/e"
+          },
+          {
+            "/": "/e/*"
+          },
+          {
+            "/": "/c"
+          },
+          {
+            "/": "/c/*"
+          },
+          {
+            "/": "/ig"
+          },
+          {
+            "/": "/ig/*"
+          },
+          {
+            "/": "/tt"
+          },
+          {
+            "/": "/tt/*"
+          },
+          {
+            "/": "/fb"
+          },
+          {
+            "/": "/fb/*"
+          },
+          {
+            "/": "/wa"
+          },
+          {
+            "/": "/wa/*"
+          },
+          {
+            "/": "/pro"
+          },
+          {
+            "/": "/pro/*"
+          },
+          {
+            "/": "/*/*",
+            "exclude": true
+          },
+          {
+            "/": "/*.*",
+            "exclude": true
+          },
+          {
+            "/": "/*"
           }
         ]
       }

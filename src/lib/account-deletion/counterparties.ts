@@ -48,7 +48,7 @@ export async function notifyCounterparties(db: SupabaseClient, name: string, par
     try {
       // El MISMO titulo que pinta la campana. Decia uno en el push y otro en
       // la campana, asi que el mismo aviso se leia distinto en cada lado.
-      const title = "Una cuenta con la que coordinabas se cerró";
+      const title = "Cuenta eliminada";
       const message = `${name} eliminó su cuenta de ContrataCR. Tenían ${party.what}; ya no aparece en tu panel y no hace falta que hagas nada. Si necesitas ayuda, escríbenos a soporte.`;
       const notification = { user_id: party.userId, type: "counterparty_account_deleted", title, message, // `link`, no `href`: `notificationHref` solo mira `link`, asi que el
         // aviso se enlazaba a si mismo —abria la propia lista de avisos—.

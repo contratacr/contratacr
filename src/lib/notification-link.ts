@@ -111,6 +111,7 @@ export function notificationHref(n: NotificationLinkInput, _role?: string, local
       href = "/proyectos";
       break;
 
+    case "counterparty_account_deleted":
     case "support_reply":
       href = "/dashboard/profesional?tab=soporte";
       break;
@@ -144,4 +145,31 @@ export function notificationActionHref(n: NotificationLinkInput, role?: string, 
 
 export function notificationsCenterHref(locale = "es"): string {
   return withLocale("/notificaciones", locale);
+}
+
+/** Name the actual destination, including historical notifications. */
+export function notificationActionLabel(n: NotificationLinkInput, role?: string, locale = "es"): string | null {
+  const href = notificationActionHref(n, role, locale);
+  if (!href) return null;
+  const url = new URL(href, "https://contratacr.com");
+  const tab = url.searchParams.get("tab");
+  if (tab === "notifications" || /\/notificaciones$/.test(url.pathname)) return null;
+  const en = locale === "en";
+  const label = (es: string, english: string) => en ? english : es;
+  if (n.type === "counterparty_account_deleted") return label("Contactar soporte", "Contact support");
+  if (n.type === "agrega_precio") return label("Agregar un precio", "Add a price");
+  if (n.type === "pide_resenas") return label("Pedir reseñas", "Ask for reviews");
+  if (n.type === "completa_perfil") return label("Completar mi perfil", "Complete my profile");
+  if (n.type === "invita_proyecto") return label("Publicar un proyecto", "Post a project");
+  if (n.type === "review_received") return label("Ver reseña", "View review");
+  if (n.type.startsWith("verification")) return label("Revisar verificación", "Review verification");
+  if (n.type === "suggestion_approved" || n.data?.suggestion_decision === "approved") return label("Ver servicios", "View services");
+  if (tab === "soporte" || /\/soporte(?:\/|$)/.test(url.pathname)) return label("Abrir soporte", "Open support");
+  if (n.type === "direct_message" || /\/mensajes(?:\/|$)/.test(url.pathname)) return label("Abrir conversación", "Open conversation");
+  if (/\/proyectos(?:\/|$)/.test(url.pathname)) return label("Ver proyecto", "View project");
+  if (/\/empleos(?:\/|$)/.test(url.pathname)) return label("Ver empleo", "View job");
+  if (/\/promociones(?:\/|$)/.test(url.pathname)) return label("Ver promoción", "View promotion");
+  if (/\/profesionales\//.test(url.pathname)) return label("Ver perfil", "View profile");
+  if (tab === "notifications" || /\/notificaciones$/.test(url.pathname)) return null;
+  return label("Abrir mi panel", "Open my dashboard");
 }

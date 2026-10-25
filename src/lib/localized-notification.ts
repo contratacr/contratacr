@@ -54,7 +54,7 @@ const TITLES: Record<string, Record<NotificationLocale, string>> = {
   suggestion_rejected: { es: "Sugerencia rechazada", en: "Suggestion rejected" },
   direct_message: { es: "Nuevo mensaje", en: "New message" },
   verification_outreach: { es: "Terminemos tu verificación", en: "Let's finish your verification" },
-  counterparty_account_deleted: { es: "Una cuenta con la que coordinabas se cerró", en: "An account you were coordinating with was closed" },
+  counterparty_account_deleted: { es: "Cuenta eliminada", en: "Account deleted" },
   invita_proyecto: { es: "¿Necesitas a alguien?", en: "Need someone?" },
   completa_perfil: { es: "Completa tu perfil", en: "Complete your profile" },
   pide_resenas: { es: "Pide tus primeras reseñas", en: "Ask for your first reviews" },
@@ -140,6 +140,14 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
   const data = notification.data;
   const normalizedMessage = normalizeLegacyNotificationText(notification.message);
   const title = localizedTitle(notification.type, language, notification.title);
+
+  if (notification.type === "counterparty_account_deleted") {
+    const person = normalizedMessage.match(/^(.+?) eliminó su cuenta de ContrataCR\./)?.[1]
+      || normalizedMessage.match(/^(.+?) deleted their ContrataCR account\./)?.[1];
+    return { title, message: en
+      ? `${person || "This person"} deleted their ContrataCR account. Your conversation is no longer available. You do not need to do anything. If you need help, contact support.`
+      : `${person || "Esta persona"} eliminó su cuenta de ContrataCR. La conversación ya no está disponible. No necesitas hacer nada. Si necesitas ayuda, contacta a soporte.` };
+  }
 
   if (notification.type === "invita_proyecto") {
     return { title, message: en
