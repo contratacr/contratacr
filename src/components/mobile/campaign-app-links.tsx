@@ -1,18 +1,21 @@
 "use client";
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { campaignAppPath } from "@/lib/mobile/campaign-app-link";
 
-/** OS-verified app links preserve the exact destination and the app's session. */
+/** Client navigation keeps the listener alive when a second app link arrives
+ * during a route change; a full document reload can lose that native event. */
 export function CampaignAppLinks() {
   const native = useNativeApp();
+  const router = useRouter();
   useEffect(() => {
     if (!native) return;
     let disposed = false;
     let remove: (() => Promise<void>) | undefined;
     const navigate = ({ url }: { url: string }) => {
       const path = campaignAppPath(url);
-      if (!disposed && path && path !== location.pathname + location.search + location.hash) location.assign(path);
+      if (!disposed && path && path !== location.pathname + location.search + location.hash) router.push(path);
     };
     void import("@capacitor/app").then(async ({ App }) => {
       const listener = await App.addListener("appUrlOpen", navigate);
@@ -27,6 +30,6 @@ export function CampaignAppLinks() {
       }
     }).catch(() => { /* Older binaries continue to use ordinary web links. */ });
     return () => { disposed = true; void remove?.(); };
-  }, [native]);
+  }, [native, router]);
   return null;
 }
