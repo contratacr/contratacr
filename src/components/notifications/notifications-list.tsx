@@ -11,7 +11,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useActorPhotos } from "@/lib/notifications/use-actor-photos";
 import { useAuth } from "@/hooks/use-auth";
 import { cn, formatRelativeOrDate } from "@/lib/utils";
-import { notificationActionHref, notificationInMode } from "@/lib/notification-link";
+import { notificationActionHref, notificationActionLabel, notificationInMode } from "@/lib/notification-link";
 import { localizedNotificationCopy } from "@/lib/localized-notification";
 import { useMode } from "@/hooks/use-mode";
 import { canOffer } from "@/lib/auth/capabilities";
@@ -900,6 +900,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
       {enTarjeta && (() => {
         const copia = localizedNotificationCopy(enTarjeta, locale);
         const destino = notificationActionHref(enTarjeta, role, locale);
+        const actionLabel = notificationActionLabel(enTarjeta, role, locale);
         const esGoogle = enTarjeta.type === "resena_google";
         const enIngles = locale === "en";
         const boton = "inline-flex h-11 w-full items-center justify-center rounded-full text-[15px] font-bold transition-colors";
@@ -916,9 +917,9 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
                   <a href={ENLACE_RESENA_GOOGLE} target="_blank" rel="noopener noreferrer" onClick={() => setEnTarjeta(null)} className={cn(boton, "bg-[#009FD9] text-white hover:bg-[#0089bb]")}>
                     {enIngles ? "Leave a Google review" : "Dejar reseña en Google"}
                   </a>
-                ) : destino && enTarjeta.type !== "suggestion_rejected" ? (
+                ) : destino && actionLabel ? (
                   <button type="button" onClick={() => { setEnTarjeta(null); router.push(conRegresoANotificaciones(destino)); }} className={cn(boton, "bg-[#009FD9] text-white hover:bg-[#0089bb]")}>
-                    {enIngles ? "View" : "Ver"}
+                    {actionLabel}
                   </button>
                 ) : null}
                 <button type="button" onClick={() => setEnTarjeta(null)} className={cn(boton, "bg-[#f1f5f9] text-[#162543] hover:bg-[#e6edf4]")}>

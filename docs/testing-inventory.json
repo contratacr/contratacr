@@ -8,7 +8,7 @@
     "handlers": 105,
     "components": 263,
     "hooks": 28,
-    "specs": 176
+    "specs": 179
   },
   "dashboardTabs": [
     "home",
@@ -16040,7 +16040,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 916,
+          "line": 917,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setEnTarjeta(null)}",
@@ -16048,7 +16048,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 920,
+          "line": 921,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { setEnTarjeta(null); router.push(conRegresoANotificaciones(destino)); }}",
@@ -16056,7 +16056,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 924,
+          "line": 925,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setEnTarjeta(null)}",
@@ -16064,7 +16064,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 947,
+          "line": 948,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{deshacerBorrado}",
@@ -23637,6 +23637,19 @@
       ]
     },
     {
+      "file": "tests/e2e/app-link-coverage.spec.ts",
+      "cases": [
+        {
+          "line": 17,
+          "title": "`all supported route families and aliases preserve their destination (${locale || 'default'})`"
+        },
+        {
+          "line": 31,
+          "title": "'browser-only flows and credential payloads remain outside navigation'"
+        }
+      ]
+    },
+    {
       "file": "tests/e2e/app-surface-ownership.spec.ts",
       "cases": [
         {
@@ -25644,6 +25657,24 @@
         {
           "line": 180,
           "title": "!isolated || (page.viewportSize()?.width ?? 0) >= 1024"
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/notification-action-copy.spec.ts",
+      "cases": [
+        {
+          "line": 6,
+          "title": "`notification actions describe the destination and avoid self-links (${locale})`"
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/notification-modal-layout.spec.ts",
+      "cases": [
+        {
+          "line": 7,
+          "title": "`notification cards have full titles and meaningful actions at narrow mobile widths (${locale})`"
         }
       ]
     },
