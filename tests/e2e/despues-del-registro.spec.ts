@@ -180,7 +180,7 @@ for (const ambiente of ["web", "app"] as const) {
     await expect.poll(() => alta.codigo, { timeout: 30_000 }).toBeTruthy();
     await escribirCodigo(page, alta.codigo!);
     await main.getByRole("button", { name: "Busca tu servicio" }).click();
-    await page.getByPlaceholder("Buscar servicio...").fill("Desarrollo web");
+    await page.getByRole("dialog").getByRole("textbox", { name: "Buscar servicio...", exact: true }).fill("Desarrollo web");
     await page.getByRole("button", { name: /^Desarrollo web/ }).or(page.getByRole("option", { name: /^Desarrollo web/ })).first().click();
     await main.getByRole("button", { name: /^Provincia$/ }).first().click();
     await page.getByRole("option", { name: /^Alajuela$/ }).first().click();

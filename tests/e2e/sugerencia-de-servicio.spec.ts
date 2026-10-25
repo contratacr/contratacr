@@ -96,7 +96,7 @@ test.describe("sugerencia de servicio al publicar", () => {
     await page.locator("#publish-project-title").waitFor({ timeout: 30_000 });
     await waitForInteractivePage(page);
 
-    await page.getByPlaceholder(/Tengo una fuga/).fill("Necesito una app móvil para muestreos de campo");
+    await page.getByPlaceholder("Ej.: Necesito reparar una moto que no enciende.").fill("Necesito una app móvil para muestreos de campo");
     const sugerencia = page.locator("[data-sugerencia-servicio]");
     await expect(sugerencia).toContainText(/¿Es de .*app/i);
     await sugerencia.getByRole("button", { name: "Usar" }).click();

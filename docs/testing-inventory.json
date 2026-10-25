@@ -18072,7 +18072,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 444,
+          "line": 446,
           "tag": "MarketplaceFilterChip",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{setPublicado}",
@@ -18080,7 +18080,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 459,
+          "line": 461,
           "tag": "MarketplaceSearch",
           "label": "{copy.buscar}",
           "handler": "{setQuery}",
@@ -18088,7 +18088,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 490,
+          "line": 492,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -18096,7 +18096,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 497,
+          "line": 499,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -18104,7 +18104,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 540,
+          "line": 542,
           "tag": "Link",
           "label": "{copy.volver}",
           "handler": "",
@@ -18112,7 +18112,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 565,
+          "line": 567,
           "tag": "button",
           "label": "{copy.abrirMenu}",
           "handler": "{() => window.dispatchEvent(new Event(\"ccr:open-mobile-menu\"))}",
@@ -18120,7 +18120,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 573,
+          "line": 575,
           "tag": "Link",
           "label": "\"ContrataCR\"",
           "handler": "",
@@ -18128,7 +18128,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 700,
+          "line": 702,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { setQuery(\"\"); setLugar(\"\"); setPublicado(\"all\"); }}",
@@ -18136,7 +18136,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 778,
+          "line": 780,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setQuery(ficha.category_name ?? \"\")}",
@@ -18144,7 +18144,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 792,
+          "line": 794,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -18152,7 +18152,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 846,
+          "line": 848,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -18160,7 +18160,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 880,
+          "line": 882,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setEditando(ficha)}",
@@ -18168,7 +18168,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 887,
+          "line": 889,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -23633,6 +23633,10 @@
         {
           "line": 45,
           "title": "test.info().project.name !== (ios ? 'webkit-mobile' : 'chromium-mobile')"
+        },
+        {
+          "line": 77,
+          "title": "'project dates hydrate without errors when the device clock differs'"
         }
       ]
     },
@@ -23703,11 +23707,11 @@
           "title": "true"
         },
         {
-          "line": 50,
+          "line": 60,
           "title": "\"la pantalla de espera coincide y se oculta al abrir el registro profesional\""
         },
         {
-          "line": 64,
+          "line": 74,
           "title": "\"con la cookie de la app el servidor manda la cabecera sin acciones de la web\""
         }
       ]
@@ -26937,15 +26941,15 @@
           "title": "\"Apple association covers homepage and exact professional search without broadening auth routes\""
         },
         {
-          "line": 42,
+          "line": 50,
           "title": "\"Safari uses native opening metadata without the competing bottom store redirect\""
         },
         {
-          "line": 74,
+          "line": 82,
           "title": "`iPhone ${browserToken} uses only our translated notice`"
         },
         {
-          "line": 75,
+          "line": 83,
           "title": "test.info().project.name!=='webkit-mobile'"
         }
       ]

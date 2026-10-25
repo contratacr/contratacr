@@ -36,7 +36,15 @@ test("Apple association covers homepage and exact professional search without br
   const association=JSON.parse(readFileSync('public/.well-known/apple-app-site-association','utf8'));
   const paths=association.applinks.details[0].components.map((entry:Record<string,string>)=>entry['/']);
   for(const path of ['/','/en','/es','/profesionales','/en/profesionales','/es/profesionales'])expect(paths).toContain(path);
-  for(const path of ['/*','/auth/*','/api/*','/admin*','/login'])expect(paths).not.toContain(path);
+  // Short public profiles use a fallback, after browser-only exclusions.
+  const rules = association.applinks.details[0].components;
+  const fallback = rules.findIndex((entry: Record<string, unknown>) => entry['/'] === '/*' && !entry.exclude);
+  expect(fallback).toBeGreaterThan(0);
+  for (const path of ['/auth/*', '/api/*', '/admin/*', '/login', '/*/?*', '/*.*']) {
+    const index = rules.findIndex((entry: Record<string, unknown>) => entry['/'] === path && entry.exclude === true);
+    expect(index, path).toBeGreaterThanOrEqual(0);
+    expect(index, path).toBeLessThan(fallback);
+  }
   expect(association.webcredentials.apps).toEqual(['LPB3Q4LJ5Z.com.contratacr.app']);
 });
 test("Safari uses native opening metadata without the competing bottom store redirect",async({page,context,baseURL})=>{

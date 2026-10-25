@@ -58,6 +58,7 @@ const vercelBypassHeaders = vercelBypassSecret
   : undefined;
 
 export default defineConfig({
+  tsconfig: "./tsconfig.json",
   testDir: "./tests/e2e",
   // OneDrive can transiently lock Playwright's default test-results directory.
   // Local focal runs may redirect artifacts to a disposable directory without

@@ -304,7 +304,7 @@ function retrato(proyecto: ProyectoPublico) {
 // comía la pantalla entero. Y escribirle a alguien por WhatsApp no es un gesto
 // que uno quiera ofrecer sobre algo que apenas se ojeó: cuesta un mensaje y la
 // primera impresión. Se decide adentro, con el proyecto leído.
-function Tarjeta({ proyecto, en, elegida = false, onElegir }: { proyecto: ProyectoPublico; en: boolean; elegida?: boolean; onElegir?: () => void }) {
+function Tarjeta({ proyecto, en, ahora, elegida = false, onElegir }: { proyecto: ProyectoPublico; en: boolean; ahora: number; elegida?: boolean; onElegir?: () => void }) {
   const copy = COPY[en ? "en" : "es"];
   return (
     <article data-marketplace-row="proyectos"
@@ -337,7 +337,7 @@ function Tarjeta({ proyecto, en, elegida = false, onElegir }: { proyecto: Proyec
           </p>
           <div className="mt-1 flex items-baseline justify-between gap-3 text-xs text-[#8794a7]">
             <InlineIdentityName className="text-xs text-[#8794a7]" name={formatPersonDisplayName(proyecto.client_name || "", "mobile")} badge={proyecto.client_verified ? <VerificationInfo audience="client" /> : null} />
-            <span className="shrink-0">{cuandoSePublico(proyecto.created_at, en)}</span>
+            <span className="shrink-0">{cuandoSePublico(proyecto.created_at, en, ahora)}</span>
           </div>
         </div>
       </div>
@@ -407,7 +407,9 @@ export function ProjectsBoard({
   }
 
   const [publicado, setPublicado] = useState("all");
-  const [ahora, setAhora] = useState(0);
+  // Reuse the server feed clock on the first render: a minute boundary
+  // between SSR and hydration must not change the initial text.
+  const [ahora, setAhora] = useState(() => Date.parse(initialFeed?.asOf ?? "") || 0);
   useEffect(() => { queueMicrotask(() => setAhora(Date.now())); }, []);
   const feed=useMarketplaceFeed("proyectos",detalle?undefined:initialFeed,{q:query,location:lugar,published:publicado},locale);
   const proyectos=useMemo(()=>feed.enabled?feed.items??[]:initialProjects,[feed.enabled,feed.items,initialProjects]);
@@ -709,7 +711,7 @@ export function ProjectsBoard({
                 ) : (
                   <div>
                     {filtrados.map((proyecto) => (
-                      <Tarjeta key={proyecto.id} proyecto={proyecto} en={en} elegida={elegido?.id === proyecto.id} onElegir={() => elegir(proyecto.id)} />
+                      <Tarjeta key={proyecto.id} proyecto={proyecto} en={en} ahora={ahora} elegida={elegido?.id === proyecto.id} onElegir={() => elegir(proyecto.id)} />
                     ))}
                     <MarketplaceFeedFeedback feed={feed}/>
                   </div>
@@ -818,7 +820,7 @@ export function ProjectsBoard({
                         {([
                           [copy.filaServicio, ficha.category_name] as [string, string | null],
                           [copy.filaUbicacion, ficha.location_label || copy.todoElPais] as [string, string | null],
-                          [copy.filaPublicado, cuandoSePublico(ficha.created_at, en)] as [string, string | null],
+                          [copy.filaPublicado, cuandoSePublico(ficha.created_at, en, ahora)] as [string, string | null],
                         ].filter(([, valor]) => Boolean(valor)) as Array<[string, string]>).map(([etiqueta, valor]) => (
                           // En COMPUTADORA, en la página, el servicio es el
                           // titular de la tarjeta de la derecha: repetirlo aquí

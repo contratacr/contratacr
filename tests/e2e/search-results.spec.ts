@@ -348,7 +348,7 @@ test.describe("@seeded search results", () => {
         return el.getAttribute("data-lugar") === (fits ? "completo" : "corto") &&
           (!fits || (place.textContent === "Santa Bárbara, Heredia" && place.scrollWidth <= place.clientWidth + 1 && service.scrollWidth <= service.clientWidth + 1));
       })).toBe(true);
-      if (width === 390) {
+      if (width === 440) {
         await expect(summary).toHaveAttribute("data-lugar", "completo");
         await expect(summary.locator(":scope > span").nth(1)).toHaveText("Santa Bárbara, Heredia");
       }
