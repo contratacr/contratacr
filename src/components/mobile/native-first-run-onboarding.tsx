@@ -9,6 +9,7 @@ import { useNativeApp } from "@/hooks/use-native-app";
 import { WelcomeAccessScreen, type WelcomeRole } from "@/components/mobile/welcome-access-screen";
 import {
   NATIVE_ONBOARDING_AUTH_SESSION_KEY,
+  NATIVE_ONBOARDING_EXTERNAL_LINK_EVENT,
   NATIVE_ONBOARDING_COMPLETED_EVENT,
   NATIVE_ONBOARDING_COMPLETED_KEY,
   NATIVE_ONBOARDING_EN_CAMINO_KEY,
@@ -149,10 +150,12 @@ export function NativeFirstRunOnboarding() {
     };
     syncFirstRunState();
     window.addEventListener("pageshow", syncFirstRunState);
+    window.addEventListener(NATIVE_ONBOARDING_EXTERNAL_LINK_EVENT, syncFirstRunState);
     window.addEventListener("focus", syncFirstRunState);
     document.addEventListener("visibilitychange", syncFirstRunState);
     return () => {
       window.removeEventListener("pageshow", syncFirstRunState);
+      window.removeEventListener(NATIVE_ONBOARDING_EXTERNAL_LINK_EVENT, syncFirstRunState);
       window.removeEventListener("focus", syncFirstRunState);
       document.removeEventListener("visibilitychange", syncFirstRunState);
     };

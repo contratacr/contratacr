@@ -20,3 +20,19 @@ for (const colorScheme of ["light", "dark"] as const) test(`browser confirmation
   await expect(page.locator(".ccr-dark-logo")).toBeHidden();
   await expect.poll(() => logo.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
 });
+
+for (const locale of ['', '/en']) test(`first-run native welcome yields to a validated external destination ${locale || 'es'}`, async ({ page, context, baseURL }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await context.addCookies([{ name: 'ccr_platform', value: 'native', url: baseURL! }]);
+  await page.goto(`${locale}/profesionales`);
+  const welcome = page.getByTestId('native-first-run-onboarding');
+  await expect(welcome).toBeVisible();
+  // Mirrors the accepted native-link event; destination auth remains unchanged.
+  await page.evaluate(() => {
+    sessionStorage.setItem('ccr:native-first-run-auth-session:v1', '1');
+    window.dispatchEvent(new Event('contratacr:native-external-link'));
+  });
+  await expect(welcome).toBeHidden();
+  expect(await page.evaluate(() => localStorage.getItem('ccr:native-first-run-onboarding:v12'))).not.toBe('1');
+  await expect(page).toHaveURL(new RegExp(`${locale}/profesionales$`));
+});
