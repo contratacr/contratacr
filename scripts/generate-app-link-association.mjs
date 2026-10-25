@@ -16,8 +16,10 @@ for (const prefix of ['/es', '/en', '']) {
     components.push({ '/': `${prefix}/${root}` }, { '/': `${prefix}/${root}/*` });
   }
   // Only one segment may be a profile slug; never claim unknown nested routes
-  // or static resources. Reserved paths are excluded before this fallback.
-  components.push({ '/': `${prefix}/*/*`, exclude: true }, { '/': `${prefix}/*.*`, exclude: true }, { '/': `${prefix}/*` });
+  // or static resources. swcd normalizes a single slug with a trailing slash,
+  // so require a non-empty second segment; /*/* also excludes /slug/.
+  // Reserved paths are excluded before this fallback.
+  components.push({ '/': `${prefix}/*/?*`, exclude: true }, { '/': `${prefix}/*.*`, exclude: true }, { '/': `${prefix}/*` });
 }
 previous.applinks.details[0].components = components;
 const output = JSON.stringify(previous, null, 2) + '\n';

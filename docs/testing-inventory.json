@@ -23640,11 +23640,11 @@
       "file": "tests/e2e/app-link-coverage.spec.ts",
       "cases": [
         {
-          "line": 17,
+          "line": 22,
           "title": "`all supported route families and aliases preserve their destination (${locale || 'default'})`"
         },
         {
-          "line": 31,
+          "line": 36,
           "title": "'browser-only flows and credential payloads remain outside navigation'"
         }
       ]

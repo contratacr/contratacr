@@ -6,9 +6,14 @@ const association = JSON.parse(readFileSync('public/.well-known/apple-app-site-a
 
 function appleClaims(raw: string) {
   const url = new URL(raw);
+  // swcd normalizes path components with a terminal slash, including slugs.
+  const applePath = url.pathname.endsWith('/') ? url.pathname : url.pathname + '/';
   const glob = (pattern: string, value: string) => new RegExp('^' + pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&').replaceAll('*', '.*').replaceAll('?', '.') + '$').test(value);
   for (const rule of association.applinks.details[0].components) {
-    if (rule['/'] && !glob(rule['/'], url.pathname)) continue;
+    if (rule['/']) {
+      const pattern = /[?*]/.test(rule['/']) || rule['/'].endsWith('/') ? rule['/'] : rule['/'] + '/';
+      if (!glob(pattern, applePath)) continue;
+    }
     if (rule['?'] && !Object.entries(rule['?']).every(([key, value]) => url.searchParams.has(key) && glob(String(value), url.searchParams.get(key)!))) continue;
     return !rule.exclude;
   }
@@ -16,7 +21,7 @@ function appleClaims(raw: string) {
 }
 for (const locale of ['', '/es', '/en']) test(`all supported route families and aliases preserve their destination (${locale || 'default'})`, () => {
   for (const host of ['contratacr.com', 'www.contratacr.com']) {
-    for (const route of [...policy.sectionRoots, ...policy.screenRoots, 'isaac-sanchez', '@isaac-sanchez', 'p/abcd1234', 'o/abcd1234', 'e/abcd1234', 'c/abcd1234', 'ig', 'tt', 'fb', 'wa', 'pro']) {
+    for (const route of [...policy.sectionRoots, ...policy.screenRoots, 'isaac-sanchez', 'isaac-alberto-sanchez-monge', 'isaac-alberto-sanchez-monge/', '@isaac-sanchez', 'p/abcd1234', 'o/abcd1234', 'e/abcd1234', 'c/abcd1234', 'ig', 'tt', 'fb', 'wa', 'pro']) {
       const raw = `https://${host}${locale}/${route}?utm_source=qa#detalle`;
       const result = campaignAppPath(raw);
       expect(result, raw).not.toBeNull();
