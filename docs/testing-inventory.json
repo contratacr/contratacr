@@ -24091,6 +24091,10 @@
         {
           "line": 15,
           "title": "`browser confirmation keeps the navy logo on a white card in ${colorScheme} mode`"
+        },
+        {
+          "line": 24,
+          "title": "`first-run native welcome yields to a validated external destination ${locale || 'es'}`"
         }
       ]
     },
