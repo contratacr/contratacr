@@ -10,3 +10,5 @@ export type NativeOnboardingPendingPath =
   | "/login"
   | "/registro/cliente"
   | "/registro/profesional";
+
+export const NATIVE_ONBOARDING_EXTERNAL_LINK_EVENT = "contratacr:native-external-link";
