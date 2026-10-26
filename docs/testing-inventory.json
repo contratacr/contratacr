@@ -1604,8 +1604,10 @@
         "tests/e2e/cabeceras.spec.ts",
         "tests/e2e/interaction-surfaces.spec.ts"
       ],
-      "directReferences": [],
-      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "directReferences": [
+        "tests/e2e/native-link-launch.spec.ts"
+      ],
+      "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
       "coverage": "Alcance detallado pendiente de revisión; no certificado",
       "priority": "P1"
@@ -8747,8 +8749,10 @@
         "tests/e2e/admin-mfa.spec.ts",
         "tests/e2e/admin-mfa-guard.spec.ts"
       ],
-      "directReferences": [],
-      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "directReferences": [
+        "tests/e2e/native-link-launch.spec.ts"
+      ],
+      "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
       "coverage": "Alcance detallado pendiente de revisión; no certificado",
       "priority": "P0"
@@ -9773,8 +9777,10 @@
         "tests/e2e/multiple-sign-in-methods.spec.ts",
         "tests/e2e/last-used-sign-in.spec.ts"
       ],
-      "directReferences": [],
-      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "directReferences": [
+        "tests/e2e/native-link-launch.spec.ts"
+      ],
+      "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
       "coverage": "Alcance detallado pendiente de revisión; no certificado",
       "priority": "P0"
@@ -14466,6 +14472,7 @@
         "tests/e2e/app-download.spec.ts",
         "tests/e2e/desktop-app-menu.spec.ts",
         "tests/e2e/home-return-performance.spec.ts",
+        "tests/e2e/native-link-launch.spec.ts",
         "tests/e2e/public-smoke.spec.ts",
         "tests/e2e/recent-visual-regression.spec.ts",
         "tests/e2e/session-mfa-transition.spec.ts",
@@ -22226,6 +22233,7 @@
         "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [
+        "tests/e2e/native-link-launch.spec.ts",
         "tests/e2e/runtime-analytics.spec.ts",
         "tests/e2e/search-offer-loading.spec.ts"
       ],
@@ -25647,6 +25655,10 @@
         {
           "line": 5,
           "title": "`cold link waits for destination commit and respects newer event ${newer}`"
+        },
+        {
+          "line": 40,
+          "title": "'native launch resolves while MFA blocks protected children'"
         }
       ]
     },
