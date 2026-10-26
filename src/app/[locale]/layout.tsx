@@ -205,11 +205,12 @@ export default async function LocaleLayout({
         <ViewportEnvironment />
         <MobileAppBridge />
         <NativeFirstRunOnboarding />
+        {/* Resolve native entry even when MFA replaces the protected page. */}
+        <CampaignAppLinks />
         <SessionMfaGate initialState={initialMfa}>
           <EmojiBlocker />
           <SombrasAlDesplazar />
           <AppResumeRecovery />
-          <CampaignAppLinks />
           <Suspense fallback={null}><SmartAppBanner initialContent={(await cookies()).get("ccr_platform")?.value !== "native" && prefersNativeIosAppBanner((await headers()).get("user-agent") ?? "") ? smartAppBannerContent((await headers()).get("x-ccr-app-path") ?? "/") : null} /></Suspense>
           <CustomCategoriesLoader />
           <NotificationLiveToast scope="all" />

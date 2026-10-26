@@ -54,6 +54,9 @@ test("administrator panel and API require real MFA enrollment, including a new l
     for (const route of ["/api/admin/users", "/api/admin/pending-counts", "/api/admin/identificaciones"]) expect((await page.request.get(route)).status()).toBe(403);
     const status = await page.request.get("/api/auth/admin-mfa");
     expect(await status.json()).toMatchObject({ isAdmin: true, required: true, enrolled: false });
+    // The native launch listener must remain mounted outside the MFA gate.
+    // Otherwise its prepaint cover blocks the authenticator indefinitely.
+    await expect(page.locator("#ccr-app-link-cover")).toBeHidden();
     await completeAdminMfa(page, account.email);
     expect((await page.request.get("/api/admin/pending-counts")).status()).toBe(200);
     await gotoOK(page, "/admin/usuarios");
