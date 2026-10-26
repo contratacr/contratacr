@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { LOGO_PALABRA } from "@/lib/og-logos";
+import { LOGO_PALABRA } from "../og-logos";
 
 /**
  * LA TARJETA QUE SE VE EN WHATSAPP AL COMPARTIR UNA FICHA.
