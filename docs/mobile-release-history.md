@@ -236,3 +236,8 @@ Envío iOS aceptado — 26 de octubre de 2026, 18:23:26 UTC:
 
 - Apple aceptó `submitted=true` para la solicitud `9fc18d2c-ff80-47f9-b2ed-e3add8d2834c` y devolvió `WAITING_FOR_REVIEW`, submittedDate `2026-10-26T18:23:26.87Z`. La versión 1.0.12 tiene asignado build 17 y publicación automática AFTER_APPROVAL. Está enviada a revisión, todavía no aprobada ni publicada.
 - Ambas tiendas tienen ahora 1.0.12 presentada para revisión (Android 16, iOS 17). Se continuará observando revisión y publicación; no se generan nuevos builds ni CI por este registro documental.
+
+Publicación Android confirmada — 26 de octubre de 2026, observada a las 18:32 UTC:
+
+- La API de Google Play devuelve producción 1.0.12 / versionCode 16 con `RELEASE_LIFECYCLE_STATE_PUBLISHED`. Se confirma publicación Android; esta hora es la comprobación, no una fecha exacta de publicación proporcionada por Google. Enlace: https://play.google.com/store/apps/details?id=com.contratacr.app. La propagación a cada dispositivo puede variar.
+- Apple 1.0.12/build17 y solicitud `9fc18d2c-ff80-47f9-b2ed-e3add8d2834c` continúan `WAITING_FOR_REVIEW`, con AFTER_APPROVAL. El cierre conjunto sigue pendiente de Apple. No se repitieron pruebas, builds ni cargas.
