@@ -38,8 +38,13 @@ function isPendingJourneyPath(path: string): path is NativeOnboardingPendingPath
 
 function hideNativeSplashAfterPaint() {
   let done = false;
+  const started = performance.now();
   const hide = () => {
     if (done) return;
+    if ((window as unknown as { __ccrAppLinkPending?: string }).__ccrAppLinkPending && performance.now() - started < 8000) {
+      window.setTimeout(hide, 50);
+      return;
+    }
     done = true;
     void import("@capacitor/splash-screen")
       .then(({ SplashScreen }) => SplashScreen.hide({ fadeOutDuration: 0 }))
@@ -178,9 +183,7 @@ export function NativeFirstRunOnboarding() {
 
     const firstFrame = window.requestAnimationFrame(() => {
       window.requestAnimationFrame(() => {
-        void import("@capacitor/splash-screen")
-          .then(({ SplashScreen }) => SplashScreen.hide({ fadeOutDuration: 0 }))
-          .catch(() => {});
+        hideNativeSplashAfterPaint();
       });
     });
 

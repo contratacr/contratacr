@@ -7,6 +7,8 @@ import { createClient } from "@/lib/supabase/server";
 import { repairVisibleText } from "@/lib/text/repair-visible-text";
 import { contactFlagsFor, profesionalesBloqueados } from "@/lib/contact-flags";
 import { profesionalesQueBloqueo } from "@/lib/queries/bloqueos";
+import { initialContactAvailability } from "@/lib/direct-chat/availability";
+import { ContactAvailabilityProvider } from "@/hooks/use-profesional-con-app";
 
 export async function JobsPageContent({ initialSelectedJobId = null, returnTo = null, detailOnly = false }: { initialSelectedJobId?: string | null; returnTo?: string | null; detailOnly?: boolean } = {}) {
   const supabase = await createClient();
@@ -16,7 +18,7 @@ export async function JobsPageContent({ initialSelectedJobId = null, returnTo = 
   // mira puede publicar.
   let jobQuery=supabase
       .from("job_posts")
-      .select("*, job_applications(count), professionals!job_posts_employer_id_fkey(slug,business_name,verification_status,profiles(full_name,avatar_url))")
+      .select("*, job_applications(count), professionals!job_posts_employer_id_fkey(profile_id,slug,business_name,verification_status,profiles(full_name,avatar_url))")
       .eq("status", "published")
       .order("created_at", { ascending: false })
       .limit(detailOnly ? 1 : 100);
@@ -70,7 +72,13 @@ export async function JobsPageContent({ initialSelectedJobId = null, returnTo = 
     }
   }
 
+  const contact = await initialContactAvailability(user?.id, jobs.map(job => {
+    const row = (data ?? []).find(row => row.id === job.id);
+    const employer = row?.professionals as { profile_id?: string } | null;
+    return { id: job.employer_id, profileId: employer?.profile_id };
+  }));
   return (
+    <ContactAvailabilityProvider {...contact}>
     <JobsBoard
       jobs={jobs}
       canPost={!!professional}
@@ -80,6 +88,7 @@ export async function JobsPageContent({ initialSelectedJobId = null, returnTo = 
       currentUserId={user?.id ?? null}
       detailOnly={detailOnly}
     />
+    </ContactAvailabilityProvider>
   );
 }
 
