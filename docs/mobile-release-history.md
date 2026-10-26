@@ -224,3 +224,15 @@ Estado de revisión confirmado por las APIs — 26 de octubre de 2026:
 - Google Play: `applications/com.contratacr.app/tracks/production/releases` devuelve 1.0.12 / 16 con `RELEASE_LIFECYCLE_STATE_IN_REVIEW`, mientras 1.0.11 / 15 permanece `RELEASE_LIFECYCLE_STATE_PUBLISHED`. El envío está en revisión, no publicado. Las notas es-419/en-US coinciden con las registradas.
 - Apple: nueva versión 1.0.12 id `316f90b2-7bfc-4037-b3fa-f7896b13c93e`, releaseType AFTER_APPROVAL. Localización existente es-MX id `5f6aecfa-ba83-4696-bfb5-03a284909e26`, whatsNew exacto «Mejoramos los enlaces compartidos y la claridad de las notificaciones.». Se conservaron descripción y datos de revisión aprobados, sin imprimir credenciales, y Apple copió los conjuntos de 6 capturas iPhone 6,7 y 6 iPad 12,9, todos COMPLETE. No fue necesario rehacer ni recargar capturas.
 - Se preservó el idioma de la ficha Apple (es-MX); las notas EN se aplicaron a Google Play en en-US. No se declara una localización Apple en inglés que no exista. El build iOS todavía no aparece como procesado/VALID; revisión pendiente de ese paso, sin fecha de publicación confirmada.
+
+
+Cierre de procesamiento iOS — 26 de octubre de 2026:
+
+- Apple confirmó upload COMPLETE y build 17 VALID / APP_STORE_ELIGIBLE, sin errores ni advertencias de procesamiento y usesNonExemptEncryption=false. Se asignó el build `4ff7f250-a416-4853-a317-828c482c98b3` a la versión 1.0.12 `316f90b2-7bfc-4037-b3fa-f7896b13c93e`.
+- Se creó la solicitud de revisión `9fc18d2c-ff80-47f9-b2ed-e3add8d2834c` y se añadió únicamente esa versión; estado previo al envío READY_FOR_REVIEW. Se conservan AFTER_APPROVAL, ficha es-MX, notas exactas, capturas y datos de revisión ya registrados. No se volvió a cargar el IPA ni se repitieron pruebas.
+- Google Play continúa 1.0.12/16 IN_REVIEW; 1.0.11/15 permanece PUBLISHED. Ninguna de estas comprobaciones constituye publicación de 1.0.12.
+
+Envío iOS aceptado — 26 de octubre de 2026, 18:23:26 UTC:
+
+- Apple aceptó `submitted=true` para la solicitud `9fc18d2c-ff80-47f9-b2ed-e3add8d2834c` y devolvió `WAITING_FOR_REVIEW`, submittedDate `2026-10-26T18:23:26.87Z`. La versión 1.0.12 tiene asignado build 17 y publicación automática AFTER_APPROVAL. Está enviada a revisión, todavía no aprobada ni publicada.
+- Ambas tiendas tienen ahora 1.0.12 presentada para revisión (Android 16, iOS 17). Se continuará observando revisión y publicación; no se generan nuevos builds ni CI por este registro documental.
