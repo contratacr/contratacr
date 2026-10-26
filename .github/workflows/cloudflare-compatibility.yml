@@ -35,13 +35,22 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: cloudflare-compatibility-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
+  plan:
+    name: Select required checks
+    uses: ./.github/workflows/ci-test-plan.yml
+    with:
+      kind: deploy
+      workflow: cloudflare-compatibility.yml
   build:
+    needs: plan
+    if: needs.plan.outputs.run == 'true'
     name: OpenNext Linux build
     runs-on: ubuntu-latest
     environment: ${{ github.event_name == 'workflow_dispatch' && inputs.target_environment || (github.ref_name == 'main' && 'production' || 'test') }}
@@ -458,3 +467,24 @@ jobs:
             console.log(`Deleted route ${route.pattern}`);
           }
           NODE
+
+  result:
+    name: CI selection result
+    if: always()
+    needs: [plan, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require successful selected checks
+        env:
+          PLAN_RESULT: ${{ needs.plan.result }}
+          RUN_SELECTED: ${{ needs.plan.outputs.run }}
+          CHECK_0: ${{ needs.build.result }}
+        run: |
+          test "$PLAN_RESULT" = "success"
+          if [ "$RUN_SELECTED" = "true" ]; then
+            test "$CHECK_0" = "success"
+          else
+            test "$RUN_SELECTED" = "false"
+            test "$CHECK_0" = "skipped"
+          fi
+          echo "Selected checks completed; unselected jobs were not executed." >> "$GITHUB_STEP_SUMMARY"
