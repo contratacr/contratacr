@@ -1,0 +1,68 @@
+name: Automatic test plan
+on:
+  workflow_call:
+    inputs:
+      kind:
+        required: true
+        type: string
+      workflow:
+        required: true
+        type: string
+      ref:
+        default: ''
+        type: string
+    outputs:
+      run:
+        value: ${{ jobs.plan.outputs.run }}
+      scope:
+        value: ${{ jobs.plan.outputs.scope }}
+      web_specs:
+        value: ${{ jobs.plan.outputs.web_specs }}
+      mobile_specs:
+        value: ${{ jobs.plan.outputs.mobile_specs }}
+permissions:
+  contents: read
+  actions: read
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      run: ${{ steps.select.outputs.run }}
+      scope: ${{ steps.select.outputs.scope }}
+      web_specs: ${{ steps.select.outputs.web_specs }}
+      mobile_specs: ${{ steps.select.outputs.mobile_specs }}
+    steps:
+      - name: Validate requested ref before checking out executable code
+        env:
+          REQUESTED_REF: ${{ inputs.ref }}
+        run: |
+          if [[ -n "$REQUESTED_REF" && "$REQUESTED_REF" != "mobile" && ! "$REQUESTED_REF" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::Only the canonical mobile branch or an exact commit is accepted."
+            exit 1
+          fi
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Validate selector and private environment policy
+        run: |
+          node --test tests/ci/test-plan.test.mjs
+          node scripts/check-private-env-files.mjs
+      - name: Select required checks
+        id: select
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PLAN_KIND: ${{ inputs.kind }}
+          PLAN_WORKFLOW: ${{ inputs.workflow }}
+        run: node scripts/ci/test-plan.mjs
+      - name: Save selection evidence
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: test-plan-${{ inputs.kind }}
+          path: ci-test-plan.json
+          if-no-files-found: error

@@ -30,12 +30,21 @@ concurrency:
 
 permissions:
   contents: read
+  actions: read
 
 # Use the CLI default: official ECR, GHCR and source-image fallback.
 # An explicit registry override disables fallback when that registry throttles.
 
 jobs:
+  plan:
+    name: Select required checks
+    uses: ./.github/workflows/ci-test-plan.yml
+    with:
+      kind: regression
+      workflow: regression-tests.yml
   local-database-contract:
+    needs: plan
+    if: needs.plan.outputs.run == 'true'
     name: Local schema and fast contracts
     strategy:
       fail-fast: false
@@ -49,6 +58,7 @@ jobs:
     timeout-minutes: 240
     permissions:
       contents: read
+      actions: read
       packages: read
     steps:
       - name: Checkout
@@ -191,11 +201,11 @@ jobs:
         run: npm run build
 
       - name: Install browser engines for registration and push smoke
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && needs.plan.outputs.scope != 'specs'
         run: npx playwright install --with-deps chromium webkit
 
       - name: Verify Safari registration before broader browser checks
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && needs.plan.outputs.scope != 'specs'
         env:
           PLAYWRIGHT_WEBKIT: "1"
           PLAYWRIGHT_OUTPUT_DIR: test-results-registration-safari-first
@@ -206,7 +216,7 @@ jobs:
           npm run test:e2e:verify-results
 
       - name: Verify registration and assistant navigation before broader smoke
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && needs.plan.outputs.scope != 'specs'
         env:
           PLAYWRIGHT_OUTPUT_DIR: test-results-assistant-first
           PLAYWRIGHT_JSON_REPORT: test-results-assistant-first/results.json
@@ -218,7 +228,7 @@ jobs:
           npm run test:e2e:verify-results
 
       - name: Verify assistant navigation and badges in Safari
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && needs.plan.outputs.scope != 'specs'
         env:
           PLAYWRIGHT_WEBKIT: "1"
           PLAYWRIGHT_OUTPUT_DIR: test-results-safari-first
@@ -227,16 +237,25 @@ jobs:
         run: npx playwright test --project=webkit-mobile native-social-access auth-screens despues-del-registro assistant-navigation verification-badges navbar-brand-consistency admin-mfa account-mfa web-chat-parity contact-channel-stability native-link-launch search-offer-loading last-used-sign-in search-suggestion-confirmation buscar-servicio-y-lugar
 
       - name: Require clean Safari assistant results
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && needs.plan.outputs.scope != 'specs'
         env:
           PLAYWRIGHT_JSON_REPORT: test-results-safari-first/results.json
         run: npm run test:e2e:verify-results
 
       - name: Run public routes and recent UI smoke on every push
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && needs.plan.outputs.scope != 'specs'
         run: >-
           npx playwright test
           auth-support borrador-sin-sesion ai-assistant admin-identifications hacienda-verification-runtime verification-documents current-profile-names-runtime admin-mfa account-mfa web-chat-parity contact-channel-stability native-link-launch search-offer-loading last-used-sign-in search-suggestion-confirmation buscar-servicio-y-lugar admin-profile-edit-runtime admin-padron-runtime public-smoke app-download mobile-menu-surface verification-badges navbar-brand-consistency mensajes-sin-parpadeo landing-media-budget android-auth-return-presentation avatar-framing shared-link-language admin-contact-segments admin-list-limits-runtime contact-context-measurement marketplace-paging-server marketplace-progressive-loading assistant-topics-contract chat-message-dates chat-image-interactions notifications-delete-all notification-action-copy notification-modal-layout app-link-coverage campaign-app-links android-app-entry ios-app-entry completion-price-navigation chat-photo-send-races profile-entry-stability search-nearby-cantons search-starting-price select-menu-position workplace-base-contract legal-privacy meta-minimal meta-growth-runtime lifecycle-email-policy campaign-delivery-contract profile-reminder mobile-app-campaign
+
+      - name: Run only independently changed specs in all configured engines
+        if: github.event_name == 'push' && needs.plan.outputs.scope == 'specs'
+        env:
+          PLAYWRIGHT_WEBKIT: "1"
+          SELECTED_SPECS: ${{ needs.plan.outputs.web_specs }}
+        run: |
+          npx playwright install --with-deps chromium webkit
+          node scripts/ci/run-selected-specs.mjs
 
       - name: Require clean push smoke results
         if: github.event_name == 'push'
@@ -344,3 +363,24 @@ jobs:
       - name: Stop local Supabase
         if: always()
         run: supabase stop --no-backup
+
+  result:
+    name: CI selection result
+    if: always()
+    needs: [plan, local-database-contract]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require successful selected checks
+        env:
+          PLAN_RESULT: ${{ needs.plan.result }}
+          RUN_SELECTED: ${{ needs.plan.outputs.run }}
+          CHECK_0: ${{ needs.local-database-contract.result }}
+        run: |
+          test "$PLAN_RESULT" = "success"
+          if [ "$RUN_SELECTED" = "true" ]; then
+            test "$CHECK_0" = "success"
+          else
+            test "$RUN_SELECTED" = "false"
+            test "$CHECK_0" = "skipped"
+          fi
+          echo "Selected checks completed; unselected jobs were not executed." >> "$GITHUB_STEP_SUMMARY"

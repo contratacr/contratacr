@@ -7,9 +7,6 @@ on:
   push:
     branches:
       - mobile
-    paths-ignore:
-      - "docs/**"
-      - "**/*.md"
   workflow_dispatch:
     inputs:
       mobile_ref:
@@ -19,6 +16,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: mobile-native-regression-${{ github.event.inputs.mobile_ref || github.ref }}
@@ -28,7 +26,16 @@ concurrency:
 # An explicit registry override disables fallback when that registry throttles.
 
 jobs:
+  plan:
+    name: Select required checks
+    uses: ./.github/workflows/ci-test-plan.yml
+    with:
+      kind: mobile
+      workflow: mobile-native-regression.yml
+      ref: ${{ github.event.inputs.mobile_ref || github.sha }}
   contracts:
+    needs: plan
+    if: needs.plan.outputs.run == 'true'
     name: Mobile contracts and local build
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -62,7 +69,7 @@ jobs:
     permissions:
       contents: read
       packages: read
-    needs: contracts
+    needs: [plan, contracts]
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
@@ -154,8 +161,16 @@ jobs:
       - name: Build the exact mobile commit locally
         run: npm run build
       - run: npx playwright install --with-deps chromium webkit
-      - name: Run native-only shell and direct-chat regression
-        run: npm run test:e2e:mobile
+      - name: Run planned WebView specs or the complete mobile suite
+        env:
+          SELECTED_SPECS: ${{ needs.plan.outputs.mobile_specs }}
+          PLAN_SCOPE: ${{ needs.plan.outputs.scope }}
+        run: |
+          if [ "$PLAN_SCOPE" = "specs" ]; then
+            node scripts/ci/run-selected-specs.mjs --mobile
+          else
+            npm run test:e2e:mobile
+          fi
       - name: Verify isolated fixtures after mobile regression
         if: always()
         run: npm run verify:local:relations
@@ -276,3 +291,34 @@ jobs:
             build/ios-simulator/contratacr-launch.png
             build/ios-simulator/Logs/
           if-no-files-found: ignore
+
+  result:
+    name: CI selection result
+    if: always()
+    needs: [plan, contracts, mobile-webview, android, ios]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require successful selected checks
+        env:
+          PLAN_RESULT: ${{ needs.plan.result }}
+          RUN_SELECTED: ${{ needs.plan.outputs.run }}
+          CHECK_0: ${{ needs.contracts.result }}
+          CHECK_1: ${{ needs.mobile-webview.result }}
+          ANDROID_RESULT: ${{ needs.android.result }}
+          IOS_RESULT: ${{ needs.ios.result }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          test "$PLAN_RESULT" = "success"
+          if [ "$RUN_SELECTED" = "true" ]; then
+            test "$CHECK_0" = "success"
+            test "$CHECK_1" = "success"
+          else
+            test "$RUN_SELECTED" = "false"
+            test "$CHECK_0" = "skipped"
+            test "$CHECK_1" = "skipped"
+          fi
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            test "$ANDROID_RESULT" = "success"
+            test "$IOS_RESULT" = "success"
+          fi
+          echo "Selected checks completed; unselected jobs were not executed." >> "$GITHUB_STEP_SUMMARY"

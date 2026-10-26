@@ -8,8 +8,20 @@ on:
       - main
       - test
 
+permissions:
+  contents: read
+  actions: read
+
 jobs:
+  plan:
+    name: Select required checks
+    uses: ./.github/workflows/ci-test-plan.yml
+    with:
+      kind: security
+      workflow: security-checks.yml
   checks:
+    needs: plan
+    if: needs.plan.outputs.run == 'true'
     name: Lint, build, and audit
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -69,3 +81,24 @@ jobs:
 
       - name: Audit high and critical vulnerabilities
         run: npm run audit:high
+
+  result:
+    name: CI selection result
+    if: always()
+    needs: [plan, checks]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require successful selected checks
+        env:
+          PLAN_RESULT: ${{ needs.plan.result }}
+          RUN_SELECTED: ${{ needs.plan.outputs.run }}
+          CHECK_0: ${{ needs.checks.result }}
+        run: |
+          test "$PLAN_RESULT" = "success"
+          if [ "$RUN_SELECTED" = "true" ]; then
+            test "$CHECK_0" = "success"
+          else
+            test "$RUN_SELECTED" = "false"
+            test "$CHECK_0" = "skipped"
+          fi
+          echo "Selected checks completed; unselected jobs were not executed." >> "$GITHUB_STEP_SUMMARY"
