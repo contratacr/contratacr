@@ -73,7 +73,7 @@ export function useProfesionalConApp(professionalId: string | undefined, activo:
   const seed = initial && initial.viewerId === user?.id && professionalId ? initial.values[professionalId] : undefined;
   const seedResolvedAt = initial?.resolvedAt ?? 0;
   const seedExpiry = initial ? initial.resolvedAt + (seed ? 60_000 : 15_000) : 0;
-  const consultar = Boolean(inherited === undefined && activo && user && professionalId);
+  const consultar = Boolean(inherited === undefined && activo && !loading && user && professionalId);
   const cacheId = user && professionalId ? `${user.id}:${professionalId}` : "";
   useEffect(() => {
     if (!consultar || !cacheId) return;
