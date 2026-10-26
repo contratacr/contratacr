@@ -22,9 +22,8 @@ concurrency:
 permissions:
   contents: read
 
-# Official Supabase mirror; shared ECR runner IPs exceeded the anonymous pull limit.
-env:
-  SUPABASE_INTERNAL_IMAGE_REGISTRY: ghcr.io
+# Use the CLI default: official ECR, GHCR and source-image fallback.
+# An explicit registry override disables fallback when that registry throttles.
 
 jobs:
   local-database-contract:
