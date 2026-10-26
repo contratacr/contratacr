@@ -1,5 +1,10 @@
 # Regresión de ContrataCR
 
+> Política vigente de selección y reutilización: [test-selection-policy.md](./test-selection-policy.md).
+> Antes de un lanzamiento manual, justificar el alcance según cambios y evidencia;
+> no repetir la exhaustiva por cada nuevo commit. Los disparadores automáticos
+> existentes siguen activos mientras no se modifiquen y validen sus workflows.
+
 > **Qué corre y cuándo** (30-sep-2026): la lista completa de lo que se prueba,
 > ambiente por ambiente, está en [`regression-coverage-matrix.md`](./regression-coverage-matrix.md).
 >
@@ -54,9 +59,11 @@ Do not push after every fix. During an active bug-fix batch:
    next contract that should be automated.
 4. Keep all related fixes uncommitted and unpushed until the complete batch is
    locally coherent. Run TypeScript, focused ESLint and every affected spec.
-5. Create one release-candidate commit, advance `main` and `test` atomically to
-   that same commit, let the fast gates pass, and dispatch exactly one exhaustive
-   regression run. Do not use retries to hide a flaky first attempt.
+5. Create one coherent release-candidate commit and advance `main` and `test`
+   atomically to that same commit. Select validation using
+   `test-selection-policy.md`; reuse compatible successful evidence. Dispatch an
+   exhaustive run only when the change risk or unknown impact requires it, or
+   when explicitly requested. Do not use retries to hide a flaky first attempt.
 
 Local Playwright starts the app on loopback; it does not navigate through Cloudflare
 unless `PLAYWRIGHT_BASE_URL` is explicitly provided. Seeded cases still require
