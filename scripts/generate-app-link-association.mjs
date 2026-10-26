@@ -3,7 +3,7 @@ const policy = JSON.parse(await readFile(new URL('../src/lib/mobile/app-link-pol
 const file = new URL('../public/.well-known/apple-app-site-association', import.meta.url);
 const previous = JSON.parse(await readFile(file, 'utf8'));
 const components = [];
-for (const key of policy.authParameters) components.push({ '?': { [key]: '*' }, exclude: true });
+for (const key of policy.authParameters) components.push({ '?': { [key]: '?*' }, exclude: true });
 components.push({ '/': '/' }, { '/': '/es' }, { '/': '/es/' }, { '/': '/en' }, { '/': '/en/' });
 // Localized profiles must be matched before the root-only exclusions.
 for (const prefix of ['/es', '/en', '']) {

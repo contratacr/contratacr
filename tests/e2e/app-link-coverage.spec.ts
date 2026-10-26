@@ -14,7 +14,7 @@ function appleClaims(raw: string) {
       const pattern = /[?*]/.test(rule['/']) || rule['/'].endsWith('/') ? rule['/'] : rule['/'] + '/';
       if (!glob(pattern, applePath)) continue;
     }
-    if (rule['?'] && !Object.entries(rule['?']).every(([key, value]) => url.searchParams.has(key) && glob(String(value), url.searchParams.get(key)!))) continue;
+    if (rule['?'] && !Object.entries(rule['?']).every(([key, value]) => glob(String(value), url.searchParams.get(key) ?? ''))) continue;
     return !rule.exclude;
   }
   return false;
