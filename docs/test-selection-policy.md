@@ -134,3 +134,25 @@ Cloudflare conserva su pipeline de build/deploy para cambios de ejecución o
 impacto desconocido y para solicitudes manuales. Solo se evita desplegar cuando
 la comparación demuestra documentos revisados o tests independientes. No cambia
 el worker, secretos, ambiente ni modo de publicación elegido.
+
+## Validación integrada y comprobación documental — 26 de octubre de 2026
+
+La integración sobre `d72303b3` y mobile `5b3269a7` aprobó antes de esta
+comprobación documental:
+
+- [Regresión 40398609286, intento 2](https://github.com/contratacr/contratacr/actions/runs/40398609286/attempts/2): contratos, inventario, tipos, build, verificaciones previas y smoke aprobados. El smoke final reportó 923 aprobadas y 45 omisiones declaradas, cero fallos, flakies u omisiones inesperadas. Los bloques previos reportaron 13, 88, 98 y 94 aprobadas; no sumarlos como casos únicos porque hay solapamiento.
+- [WebView móvil 40401365334](https://github.com/contratacr/contratacr/actions/runs/40401365334): 178 aprobadas y 4 omisiones previstas; contratos y resultado final aprobados. Los jobs Android nativo/iOS simulador no se ejecutaron en ese push.
+- Seguridad main/test `40398608490` / `40398609313` y Cloudflare main/test/mobile `40398608797` / `40398609351` / `40401365448`: aprobados.
+
+El primer intento de la regresión se canceló antes de E2E por descargas de
+paquetes Ubuntu extremadamente lentas. Se reintentó solo ese job en otro runner;
+no se repitieron los workflows aprobados ni se cambiaron aserciones.
+
+La regresión también certificó el arreglo de arranque/MFA: el listener de enlaces
+permanece fuera del gate de MFA, mientras el gate mantiene protegidos contenido
+y APIs. El inventario estático se actualizó sin retirar su compuerta.
+
+Este commit cambia únicamente documentación de la lista revisada y se publica
+sin `[skip ci]`. Su objetivo es comprobar que los workflows generan plan e
+informe exitosos y omiten los jobs pesados y los despliegues. El resultado de esa
+comprobación debe observarse en GitHub; este texto no lo anticipa como aprobado.
