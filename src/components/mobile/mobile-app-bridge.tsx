@@ -192,6 +192,13 @@ export function MobileAppBridge() {
     const t0 = performance.now();
     const hideSplashNow = () => {
       if (cancelled || splashHidden) return;
+      // Keep the native cover until the external destination has committed.
+      const pendingLink = (window as unknown as { __ccrAppLinkPending?: string }).__ccrAppLinkPending;
+      if (pendingLink && performance.now() - t0 < 8000) {
+        window.clearTimeout(minTimer);
+        minTimer = window.setTimeout(hideSplashNow, 50);
+        return;
+      }
       splashHidden = true;
       window.clearTimeout(minTimer);
       window.clearTimeout(maxTimer);

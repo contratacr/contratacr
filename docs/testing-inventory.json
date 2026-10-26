@@ -8,7 +8,7 @@
     "handlers": 105,
     "components": 263,
     "hooks": 28,
-    "specs": 179
+    "specs": 180
   },
   "dashboardTabs": [
     "home",
@@ -22499,6 +22499,7 @@
       "directReferences": [
         "tests/e2e/contact-context-measurement.spec.ts",
         "tests/e2e/meta-growth-runtime.spec.ts",
+        "tests/e2e/native-link-launch.spec.ts",
         "tests/e2e/runtime-analytics.spec.ts",
         "tests/e2e/search-offer-loading.spec.ts"
       ],
@@ -25577,6 +25578,15 @@
         {
           "line": 41,
           "title": "'home artwork permits browser reuse while page and session data remain fresh'"
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/native-link-launch.spec.ts",
+      "cases": [
+        {
+          "line": 4,
+          "title": "`cold link waits for destination commit and respects newer event ${newer}`"
         }
       ]
     },
