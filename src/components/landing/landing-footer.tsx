@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
@@ -57,9 +57,14 @@ const COLUMNS = [
   },
 ];
 
+const subscribeToHydration = () => () => {};
+const clientReady = () => true;
+const serverReady = () => false;
+
 export function LandingFooter() {
   const t = useTranslations("footer");
   const { user } = useAuth();
+  const interactive = useSyncExternalStore(subscribeToHydration, clientReady, serverReady);
   const [openGroup, setOpenGroup] = useState<string | null>(null);
     // Un solo panel para todos: `?mode=use` era del modo cliente, que ya no
   // existe —el panel lo acepta y lo ignora—, así que el enlace es el mismo.
@@ -91,6 +96,7 @@ export function LandingFooter() {
                 <span className="hidden md:inline">{t(col.headingKey)}</span>
                 <button
                   type="button"
+                  disabled={!interactive}
                   aria-expanded={openGroup === col.headingKey}
                   aria-controls={`footer-${col.headingKey.replaceAll(".", "-")}`}
                   onClick={() => setOpenGroup(openGroup === col.headingKey ? null : col.headingKey)}
