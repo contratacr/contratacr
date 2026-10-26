@@ -1,7 +1,16 @@
 name: Regression Tests
+run-name: Regression Tests · ${{ github.event.inputs.scope || github.event_name }}
 
 on:
   workflow_dispatch:
+    inputs:
+      scope:
+        description: Full regression or focused contact/link release checks
+        type: choice
+        default: full
+        options:
+          - full
+          - focused-release
   push:
     branches:
       - test
@@ -35,7 +44,7 @@ jobs:
         # Each exhaustive shard gets its own database and server. Push smoke
         # remains a single job; no shared fixtures are mutated concurrently.
         # Six smaller groups limit lost work if a hosted runner is reclaimed.
-        shard: ${{ fromJSON(github.event_name == 'push' && '[1]' || '[1,2,3,4,5,6]') }}
+        shard: ${{ fromJSON((github.event_name == 'push' || github.event.inputs.scope == 'focused-release') && '[1]' || '[1,2,3,4,5,6]') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 240
     permissions:
@@ -246,7 +255,7 @@ jobs:
           # Una regresión de 20 minutos sobre el mismo commit que ya pasó anoche
           # no dice nada nuevo. Se busca la última corrida exhaustiva en verde:
           # si fue sobre este mismo commit, la de hoy se salta.
-          ultimo=$(gh run list --workflow=regression-tests.yml --branch test --status success --limit 20 --json headSha,event -q '[.[] | select(.event != "push")] | .[0].headSha // ""')
+          ultimo=$(gh run list --workflow=regression-tests.yml --branch test --status success --limit 20 --json headSha,event,displayTitle -q '[.[] | select(.event != "push" and (.displayTitle | contains("focused-release") | not))] | .[0].headSha // ""')
           if [ "$ultimo" = "${{ github.sha }}" ]; then
             echo "Sin cambios desde la última certificación ($ultimo): no se repite."
             echo "repetir=false" >> "$GITHUB_OUTPUT"
@@ -275,7 +284,7 @@ jobs:
         if: github.event_name != 'push' && steps.novedad.outputs.repetir != 'false'
         run: npx playwright install --with-deps chromium
 
-      - name: Run the exhaustive local release regression once
+      - name: Run the selected local release regression
         env:
           PLAYWRIGHT_WEBKIT: ${{ github.event_name == 'workflow_dispatch' && '1' || '0' }}
         if: github.event_name != 'push' && steps.novedad.outputs.repetir != 'false'
@@ -285,7 +294,12 @@ jobs:
           export PLAYWRIGHT_JSON_REPORT="test-results/results-${{ matrix.shard }}.json"
           export PLAYWRIGHT_OUTPUT_DIR="test-results/shard-${{ matrix.shard }}"
           export PLAYWRIGHT_HTML_OUTPUT_DIR="playwright-report/shard-${{ matrix.shard }}"
-          npx playwright test --shard="${{ matrix.shard }}/6"
+          if [ "${{ github.event.inputs.scope }}" = "focused-release" ]; then
+            npx playwright test contact-channel-stability native-link-launch native-social-access \
+              --grep 'contact resolves once|contact retries|cold link waits|Play build 14'
+          else
+            npx playwright test --shard="${{ matrix.shard }}/6"
+          fi
 
       - name: Dump the local Supabase container logs after a failed regression
         if: github.event_name != 'push' && steps.novedad.outputs.repetir != 'false' && failure()
