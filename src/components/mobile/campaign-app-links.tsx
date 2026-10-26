@@ -49,8 +49,7 @@ export function CampaignAppLinks() {
       if (disposed) { await listener.remove(); return; }
       remove = () => listener.remove();
       // One cold-launch replay per WebView session; never store signed URLs.
-      const replayed = sessionStorage.getItem("ccr:campaign-launch-consumed:v1");
-      if (!replayed) {
+      if (needsLaunch) {
         sessionStorage.setItem("ccr:campaign-launch-consumed:v1", "1");
         const launch = await App.getLaunchUrl();
         if (launch && !receivedLiveLink) navigate(launch, true);
