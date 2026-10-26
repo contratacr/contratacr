@@ -13,49 +13,49 @@
         "components": [
           {
             "?": {
-              "code": "*"
+              "code": "?*"
             },
             "exclude": true
           },
           {
             "?": {
-              "access_token": "*"
+              "access_token": "?*"
             },
             "exclude": true
           },
           {
             "?": {
-              "refresh_token": "*"
+              "refresh_token": "?*"
             },
             "exclude": true
           },
           {
             "?": {
-              "token": "*"
+              "token": "?*"
             },
             "exclude": true
           },
           {
             "?": {
-              "token_hash": "*"
+              "token_hash": "?*"
             },
             "exclude": true
           },
           {
             "?": {
-              "id_token": "*"
+              "id_token": "?*"
             },
             "exclude": true
           },
           {
             "?": {
-              "provider_token": "*"
+              "provider_token": "?*"
             },
             "exclude": true
           },
           {
             "?": {
-              "provider_refresh_token": "*"
+              "provider_refresh_token": "?*"
             },
             "exclude": true
           },
