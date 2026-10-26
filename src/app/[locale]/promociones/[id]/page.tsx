@@ -1,3 +1,4 @@
+import { ServerContactAvailability } from "@/components/professionals/server-contact-availability";
 import { InlineIdentityName } from "@/components/ui/inline-identity-name";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { ProfilePhotoPreview } from "@/components/ui/profile-photo-preview";
@@ -338,7 +339,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
               <p className="mt-5 rounded-lg border border-[#e5e7eb] bg-white p-4 text-sm font-bold lg:hidden">{copy.unavailable}</p>
             ) : (
               <AccionesAlPie className="mt-5 lg:hidden">
-                <OfferContactActions offer={offer} userId={user?.id ?? null} isOwner={false} soloContacto />
+                <ServerContactAvailability professionalId={offer.professional_id}><OfferContactActions offer={offer} userId={user?.id ?? null} isOwner={false} soloContacto /></ServerContactAvailability>
               </AccionesAlPie>
             )}
             {/* Etiqueta arriba y valor debajo, como en la ficha de un empleo.
@@ -374,7 +375,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
             <OfferOwnerActions offer={offer} professionalId={offer.professional_id} serviceOptions={serviceOptions} fromPanel={vieneDelPanel(from)} />
           ) : (
             unavailable ? <p className="rounded-lg border border-[#e5e7eb] bg-white p-4 text-sm font-bold">{copy.unavailable}</p> : <div className="space-y-3">
-              <OfferContactActions offer={offer} userId={user?.id ?? null} isOwner={false} />
+              <ServerContactAvailability professionalId={offer.professional_id}><OfferContactActions offer={offer} userId={user?.id ?? null} isOwner={false} /></ServerContactAvailability>
             </div>
           )}
         </aside>

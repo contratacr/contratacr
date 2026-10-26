@@ -1,4 +1,6 @@
 import { WelcomeChoiceContent } from "@/components/mobile/welcome-choice-content";
+import { APP_LINK_PREPAINT, APP_LINK_COVER_CSS } from "@/lib/mobile/app-link-pending";
+import { AppLinkCover } from "@/components/mobile/app-link-cover";
 import { NativeAppInicialProvider } from "@/hooks/native-app-inicial";
 import { Suspense, type ReactNode } from "react";
 import { RegistrationRecovery } from "@/components/auth/registration-recovery";
@@ -418,10 +420,13 @@ body:has(.ccr-error-screen) .ccr-navbar-spacer{display:none}
             __html: `try{var k=${JSON.stringify(NATIVE_ONBOARDING_COMPLETED_KEY)};var p=new URLSearchParams(window.location.search);var local=/^(localhost|127\\.0\\.0\\.1)$/i.test(window.location.hostname);if(local&&p.get("resetNativeOnboarding")==="1"&&window.localStorage){window.localStorage.removeItem(k)}if(local&&p.get("nativePreview")==="1"){document.documentElement.classList.add("ccr-native-app");window.sessionStorage&&window.sessionStorage.setItem("ccr:native-preview","1")}else if(local&&window.sessionStorage&&window.sessionStorage.getItem("ccr:native-preview")==="1"){document.documentElement.classList.add("ccr-native-app")}if(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform()){document.documentElement.classList.add("ccr-native-app")}if(/(?:^|;\\s*)ccr_platform=native(?:;|$)/.test(document.cookie||"")){document.documentElement.classList.add("ccr-native-app")}if(document.documentElement.classList.contains("ccr-native-app")&&window.localStorage&&window.localStorage.getItem(k)!=="1"){document.documentElement.classList.add("ccr-native-first-run-pending")}}catch(e){}`,
           }}
         />
+        <style dangerouslySetInnerHTML={{ __html: APP_LINK_COVER_CSS }} />
+        <script dangerouslySetInnerHTML={{ __html: APP_LINK_PREPAINT }} />
       </head>
       {/* El script de abajo agrega clases al body antes de hidratar (por ruta,
           p. ej. en /buscar); React no las corrige, solo avisaría en consola. */}
       <body className={`min-h-full flex flex-col bg-white${clasesNativas}`} style={{ backgroundColor: "#ffffff" }} suppressHydrationWarning>
+        <AppLinkCover />
         {/* EL CATÁLOGO DE SERVICIOS VIAJA CON LA PÁGINA.
             Los nombres de los servicios viven en la base (se renombran y se
             agregan desde el panel de administración). El servidor pinta con

@@ -1,3 +1,4 @@
+import { ServerContactAvailability } from "@/components/professionals/server-contact-availability";
 import { getProfessionalBySlug, fichaEnCache } from "@/lib/queries/professionals";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { publicacionesDelProfesional } from "@/lib/queries/publicaciones-del-profesional";
@@ -33,7 +34,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ locale
   return (
     <>
       {ficha && <DatosEstructurados datos={fichaComoNegocioLocal(ficha, locale)} />}
-      <ProfileClient fichaInicial={ficha} ofertasIniciales={publicaciones.ofertas} empleosIniciales={publicaciones.empleos} />
+      {ficha ? <ServerContactAvailability professionalId={ficha.id}><ProfileClient fichaInicial={ficha} ofertasIniciales={publicaciones.ofertas} empleosIniciales={publicaciones.empleos} /></ServerContactAvailability> : <ProfileClient fichaInicial={ficha} />}
     </>
   );
 }

@@ -120,8 +120,8 @@ async function mountContactBoundary(page: import("playwright/test").Page, scenar
     import {ContactAvailabilityProvider} from './src/hooks/use-profesional-con-app';
     import {DirectChatLauncher} from './src/components/professionals/direct-chat-launcher';
     const scenario=${JSON.stringify(scenario)};
-    const seeded=scenario==='switch'||scenario==='remount';
-    const seed={viewerId:'viewer-a',values:seeded?{recipient:true}:{},resolvedAt:Date.now()-(scenario==='remount'?61000:0)};
+    const seeded=scenario==='switch'||scenario==='remount'||scenario.startsWith('seed-');
+    const seed={viewerId:'viewer-a',values:seeded?{recipient:scenario!=='seed-whatsapp'}:{},resolvedAt:Date.now()-(scenario==='remount'?61000:0)};
     const root=createRoot(document.getElementById('root'));
     window.pendingContactAppeared=false;
     new MutationObserver(()=>{if(document.querySelector('[data-contact-pending]'))window.pendingContactAppeared=true}).observe(document.body,{childList:true,subtree:true});
@@ -201,4 +201,15 @@ test("an expired result can remount and resume without loading inside its contac
     expect(await page.evaluate(()=>(window as unknown as {pendingContactAppeared:boolean}).pendingContactAppeared)).toBe(false);
     expect(lookups).toBe(1);
   }finally{release();await page.unrouteAll({behavior:"wait"});}
+});
+
+for (const channel of [true,false]) test(`prepared contact paints ready without a second lookup: ${channel}`,async({page})=>{
+  let lookups=0;
+  await page.route("**/api/direct-chat?conApp=*",r=>{lookups++;return r.fulfill({status:503});});
+  await mountContactBoundary(page,channel?"seed-chat":"seed-whatsapp");
+  await expect(page.locator("[data-ready-card]")).toBeVisible();
+  await expect(page.getByRole("button",{name:channel?"Enviar mensaje":/WhatsApp/}).first()).toBeVisible();
+  await expect(page.locator("[data-contact-pending]")).toHaveCount(0);
+  expect(await page.evaluate(()=>(window as unknown as {pendingContactAppeared:boolean}).pendingContactAppeared)).toBe(false);
+  expect(lookups).toBe(0);
 });

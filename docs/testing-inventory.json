@@ -2,11 +2,11 @@
   "scope": "Todos los archivos TypeScript de src/app, src/components y src/hooks, controles JSX declarados, pestañas del panel y specs permanentes. No enumera cada elemento dinámico renderizado ni componentes dentro de dependencias.",
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
-    "files": 503,
-    "controls": 1295,
+    "files": 505,
+    "controls": 1296,
     "pages": 71,
     "handlers": 105,
-    "components": 263,
+    "components": 265,
     "hooks": 28,
     "specs": 180
   },
@@ -2511,7 +2511,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 240,
+          "line": 241,
           "tag": "Link",
           "label": "{copy.back}",
           "handler": "",
@@ -2519,7 +2519,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 372,
+          "line": 373,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -15281,6 +15281,38 @@
       "priority": "P1"
     },
     {
+      "file": "src/components/mobile/app-link-cover.tsx",
+      "kind": "Componente",
+      "group": "Navegación nativa",
+      "route": null,
+      "exports": [
+        "AppLinkCover"
+      ],
+      "methods": [],
+      "controls": [
+        {
+          "line": 25,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{() => {\n      const path = (window as unknown as { __ccrAppLinkPending?: string }).__ccrAppLinkPending;\n      if (path?.startsWith(\"/\") && !path.startsWith(\"//\")) window.location.assign(path);\n      else window.location.reload();\n    }}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        }
+      ],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/mobile-native-shell.spec.ts",
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/native-home-paint.spec.ts",
+        "tests/e2e/reanudar-la-app.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P1"
+    },
+    {
       "file": "src/components/mobile/campaign-app-links.tsx",
       "kind": "Componente",
       "group": "Navegación nativa",
@@ -17889,6 +17921,34 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         }
       ],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/search-results.spec.ts",
+        "tests/e2e/search-ranking.spec.ts",
+        "tests/e2e/services.spec.ts",
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts",
+        "tests/e2e/search-progressive-loading.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P1"
+    },
+    {
+      "file": "src/components/professionals/server-contact-availability.tsx",
+      "kind": "Componente",
+      "group": "Búsqueda y profesionales",
+      "route": null,
+      "exports": [
+        "ServerContactAvailability"
+      ],
+      "methods": [],
+      "controls": [],
       "testIds": [],
       "relatedSpecs": [
         "tests/e2e/search-results.spec.ts",
@@ -24271,7 +24331,7 @@
           "title": "`${native ? \"native\" : \"web\"} contact resolves once to ${hasApp ? \"message\" : \"WhatsApp\"} without a provisional channel`"
         },
         {
-          "line": 56,
+          "line": 48,
           "title": "\"contact retries a transient availability failure without keeping WhatsApp for the session\""
         }
       ]
@@ -25585,7 +25645,7 @@
       "file": "tests/e2e/native-link-launch.spec.ts",
       "cases": [
         {
-          "line": 4,
+          "line": 5,
           "title": "`cold link waits for destination commit and respects newer event ${newer}`"
         }
       ]
@@ -26514,6 +26574,10 @@
         {
           "line": 180,
           "title": "\"an expired result can remount and resume without loading inside its contact button\""
+        },
+        {
+          "line": 206,
+          "title": "`prepared contact paints ready without a second lookup: ${channel}`"
         }
       ]
     },
