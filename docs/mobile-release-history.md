@@ -241,3 +241,11 @@ Publicación Android confirmada — 26 de octubre de 2026, observada a las 18:32
 
 - La API de Google Play devuelve producción 1.0.12 / versionCode 16 con `RELEASE_LIFECYCLE_STATE_PUBLISHED`. Se confirma publicación Android; esta hora es la comprobación, no una fecha exacta de publicación proporcionada por Google. Enlace: https://play.google.com/store/apps/details?id=com.contratacr.app. La propagación a cada dispositivo puede variar.
 - Apple 1.0.12/build17 y solicitud `9fc18d2c-ff80-47f9-b2ed-e3add8d2834c` continúan `WAITING_FOR_REVIEW`, con AFTER_APPROVAL. El cierre conjunto sigue pendiente de Apple. No se repitieron pruebas, builds ni cargas.
+
+Validación de la corrección web de arranque con MFA — 26 de octubre de 2026:
+
+- Fuente web `7c58ef2f`, inventario actualizado en `d72303b3`: el listener de enlaces permanece activo aunque el gate sustituya la pantalla por MFA. No cambia los permisos del contenido ni de las APIs. La regresión nueva falló antes del arreglo y aprobó nueve casos locales en tres motores; CI posterior aprobó el recorrido MFA.
+- Regresión `40398609286`, intento 2: SUCCESS; smoke final 923 aprobadas y 45 omisiones declaradas, cero fallos/flakies/omisiones inesperadas; bloques previos también aprobados, con solapamiento. WebView `40401365334`: SUCCESS, 178 aprobadas y 4 omisiones previstas. Los jobs de simulador iOS y emulador Android omitidos no cuentan como ejecutados. Seguridad y Cloudflare de las fuentes correspondientes aprobaron.
+- El primer intento de regresión se canceló antes de E2E por lentitud extrema descargando paquetes Ubuntu; solo se reintentó ese job, sin modificar aserciones. No se recompilaron ni cargaron binarios de tienda.
+- Estado de tiendas comprobado al cerrar CI: Android 1.0.12/16 ya PUBLISHED; Apple 1.0.12/17 sigue WAITING_FOR_REVIEW, con AFTER_APPROVAL. Esta corrección llega por web compartida; no se declara otra versión ni publicación iOS.
+- Se sincroniza documentación revisada con main/test para comprobar la omisión automática de jobs pesados y despliegues, sin usar skip ci. La aprobación de esta demostración queda pendiente de observar sus propios runs.
