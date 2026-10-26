@@ -122,8 +122,10 @@ Estado: investigación e implementación en curso. Este inventario no certifica 
 - 48 casos de navegador en Chromium escritorio/móvil y WebKit móvil: lanzamiento demorado, evento más reciente, almacenamiento restaurado, cubierta antes de hidratación, canales preparados sin consulta duplicada, cambio de usuario y recuperación de canal.
 - 45 casos adicionales en los mismos motores: tandas de 20 en proyectos/promociones/empleos, respuesta lenta, filtros y reintento; repetición de lanzamiento con parámetros, fragmento y barra final.
 - Estos harnesses montan los componentes reales con adaptadores controlados. No son una prueba del splash nativo ni de Universal Links del sistema.
-- Pruebas integradas de perfil con datos privados, marca, CI y comprobación física: en curso. Publicación bloqueada hasta aprobarlas.
+- Marca integrada: 3 casos aprobados. El usuario confirmó el 26-oct-2026: «al presionar los links ya no lleva a inicio primero». También respondió a la prueba de app cerrada/abierta: «Ambos llegan sin inicio y el contacto aparece listo». Queda aprobada esa matriz física de iPhone y el contacto del perfil; no certifica por sí sola todas las superficies ni la distribución firmada por Google Play. CI de contactos y móvil sigue en curso. Publicación bloqueada hasta aprobar los controles restantes.
 
 ## Esperas que no deben eliminarse
 
 Mensajes, notificaciones, identidad, permisos y formularios necesitan datos o una confirmación del servidor. Mostrar contenido previamente confirmado durante una actualización y preparar datos juntos reduce saltos; prometer que nunca habrá carga fuera de las cuatro listas sería incorrecto en una conexión lenta o sin red. No se añadió un retraso artificial ni se retiraron controles de acceso, bloqueo o doble envío.
+
+- Se canceló la exhaustiva adicional 40367837442 mientras estaba pendiente: conservar la pasada actual con regresiones de contacto/enlaces y la móvil evita duplicar la batería completa por cambios posteriores de comentarios/configuración. Esta nota documental se guarda localmente para incorporarla al siguiente registro necesario, sin provocar otro CI por sí sola.

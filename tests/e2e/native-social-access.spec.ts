@@ -90,15 +90,28 @@ test("Play build 14 explains the Apple update requirement without leaving the ap
     Object.assign(window, { androidBridge: {}, Capacitor: {
       PluginHeaders: [
         { name: "SocialLogin", methods: [{ name: "openSecureWindow", rtype: "promise" }] },
-        { name: "App", methods: [{ name: "getInfo", rtype: "promise" }] },
+        // The old SocialLogin lacks Apple support; the Capacitor App bridge
+        // still exposes launch URLs and listeners. Model both independently.
+        { name: "App", methods: [
+          { name: "getInfo", rtype: "promise" },
+          { name: "getLaunchUrl", rtype: "promise" },
+          { name: "addListener", rtype: "callback" },
+          { name: "removeListener", rtype: "promise" },
+        ] },
       ],
       nativePromise: async (plugin: string, method: string) => {
         if (plugin === "App" && method === "getInfo") return { build: "14", version: "1.0.10" };
+        if (plugin === "App" && (method === "getLaunchUrl" || method === "removeListener")) return {};
+        throw new Error("The obsolete build must not open a provider");
+      },
+      nativeCallback: (plugin: string, method: string) => {
+        if (plugin === "App" && method === "addListener") return "legacy-app-listener";
         throw new Error("The obsolete build must not open a provider");
       },
     } });
   });
   await gotoOK(page, "/login");
+  await expect(page.locator("#ccr-app-link-cover")).toBeHidden();
   await page.getByRole("button", { name: "Continuar con Apple", exact: true }).click();
   await expect(page.getByText("El acceso con Apple no está disponible en esta versión de la app. Puedes usarlo desde contratacr.com en tu navegador.")).toBeVisible();
   await expect(page).toHaveURL(/\/login$/);
