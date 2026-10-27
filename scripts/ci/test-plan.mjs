@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
-import { gitSnapshot, sectionImpact } from './section-impact.mjs';
+import { gitSnapshot, sectionImpact, dependencyGraph, consumers, runnerCompatibility } from './section-impact.mjs';
 
 // Only documents inspected as non-runtime inputs belong here. Unknown Markdown
 // (including generated content) must take the conservative route.
@@ -20,7 +20,7 @@ export const nativeSpecs = new Set([
 const nativeOnly = new Set(['tests/e2e/direct-chat.spec.ts', 'tests/e2e/mobile-native-shell.spec.ts']);
 const git = args => execFileSync('git', args, { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 }).trim();
 
-export function classify(changes, { baseline = true, force = false, importedSpecs = [], impact = null } = {}) {
+export function classify(changes, { baseline = true, force = false, importedSpecs = [], impact = null, analysisError = null } = {}) {
   const paths = changes.map(c => c.path);
   const docs = paths.every(p => documents.has(p));
   const testsOnly = paths.every(p => documents.has(p) || /^tests\/e2e\/[a-z0-9-]+\.spec\.ts$/.test(p));
@@ -34,6 +34,7 @@ export function classify(changes, { baseline = true, force = false, importedSpec
   else if (!baseline) reason = 'No compatible successful ancestor found: keep broad coverage.';
   else if (docs) { scope = 'documents'; reason = 'Only explicitly reviewed non-runtime documents changed.'; }
   else if (plannerTests) { scope = 'planner-tests'; reason = 'Only reviewed planner unit tests changed; the mandatory planning job runs all of them, without application jobs.'; }
+  else if (analysisError) reason = analysisError;
   else if (testsOnly && !unsafeSpec) { scope = 'specs'; reason = 'Only existing independent E2E specs changed; run complete specs in their configured engines.'; }
   else if (sectionInputs && !unsafeSpec && impact?.safe) { scope = 'sections'; reason = impact.reason; }
   const selected = scope === 'sections' ? impact.specs : specs;
@@ -94,20 +95,24 @@ export async function main() {
       const needle = c.path.split('/').at(-1).replace(/(?:\.ts|\.mjs)$/, '');
       for (const rev of [base, head]) {
         try {
-          const consumers = plannerTestFiles.has(c.path) ? ['src','scripts'] : ['tests','src'];
+          const consumers = plannerTestFiles.has(c.path) ? ['src','scripts','playwright*.config.*','next.config.*'] : ['tests','src',':(exclude)tests/ci/**'];
           const hits = git(['grep', '-l', '-F', needle, rev, '--', ...consumers]);
           if (hits.split('\n').some(p => p && p !== `${rev}:${c.path}`)) importedSpecs.push(c.path);
         } catch (e) { if (e.status !== 1) throw e; }
       }
     }
   }
-  let impact = null;
-  if (base && !force && changes.some(c=>c.path.startsWith('src/')) && changes.every(c=>documents.has(c.path)||/^src\/.*\.[cm]?[jt]sx?$/.test(c.path)||/^tests\/e2e\/[a-z0-9-]+\.spec\.ts$/.test(c.path))) {
-    try { impact = sectionImpact(changes,gitSnapshot(base),gitSnapshot(head)); }
-    catch(e) { impact = {safe:false,reason:`Dependency analysis unavailable: ${e.message}`}; }
+  let impact = null, analysisError = null;
+  if (base && !force && changes.some(c=>c.path.startsWith('src/')||c.path.endsWith('.spec.ts')) && changes.every(c=>documents.has(c.path)||/^src\/.*\.[cm]?[jt]sx?$/.test(c.path)||/^tests\/e2e\/[a-z0-9-]+\.spec\.ts$/.test(c.path))) {
+    try {
+      const snapshots=[gitSnapshot(base),gitSnapshot(head)],graphs=snapshots.map(dependencyGraph);
+      analysisError=[...snapshots.map(runnerCompatibility),...graphs.flatMap(g=>g.uncertainties)].filter(Boolean).slice(0,4).join('; ')||null;
+      for(const c of changes.filter(c=>c.path.endsWith('.spec.ts')))if(graphs.some(g=>[...consumers([c.path],g)].some(p=>g.globalEntries.has(p))))importedSpecs.push(c.path);
+      if(changes.some(c=>c.path.startsWith('src/')))impact=sectionImpact(changes,...snapshots,graphs);
+    }catch(e){analysisError=`Dependency analysis unavailable: ${e.message}`;impact={safe:false,reason:analysisError};}
   }
-  const plan = { head, base, baselineRun, lookupError, workflow: process.env.PLAN_WORKFLOW,
-    ...classify(changes, { baseline: !!base, force, importedSpecs, impact }) };
+  const plan = { head, base, baselineRun, lookupError, workflow: process.env.PLAN_WORKFLOW, analysisError,
+    ...classify(changes, { baseline: !!base, force, importedSpecs, impact, analysisError }) };
   const kind = process.env.PLAN_KIND;
   const run = plan[kind];
   if (typeof run !== 'boolean') throw new Error(`Unknown plan kind: ${kind}`);

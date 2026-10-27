@@ -203,14 +203,14 @@ de Playwright ni las pruebas del selector como ejecución E2E del producto.
 No hay caché global de tareas ni promesa de que todo cambio pueda reducirse.
 
 
-Validación local del cierre de la ampliación: 81 pruebas del selector aprobadas, incluida
+Validación local del cierre de la ampliación: 100 pruebas del selector aprobadas, incluida
 la integración Git/CLI y fallbacks conservadores; ESLint, actionlint, YAML,
 auditorías de archivos privados/almacenamiento/marca e inventario aprobados.
 La instalación aislada del parser se comprobó contra el lockfile real.
-La enumeración de un cambio en el tablero de empleos seleccionó 55 archivos web
-y 7 WebView; conservó pruebas visuales/compartidas que visitan empleos y excluyó
-los demás archivos sin consumidor conocido. `--list` comprobó su configuración;
-no se ejecutaron esos E2E ni se usaron fixtures de producción.
+El plan final para un cambio en el tablero de empleos seleccionó 78 archivos web
+y 9 WebView: incluye consumidores opacos que no pueden excluirse con certeza.
+La comprobación previa con `--list` validó la separación de configuraciones;
+no certifica ejecución de los E2E seleccionados. No se usaron fixtures de producción.
 
 
 Los cambios exclusivamente en los dos archivos de pruebas del planificador
@@ -225,8 +225,8 @@ alcance amplio; no se clasifican como cambios de pruebas solamente.
 
 La resolución revisada admite rutas relativas y `@/* -> ./src/*`. Un `extends`,
 `baseUrl`, `rootDirs`, sufijos o aliases nuevos, `imports/exports` de paquete,
-enlaces simbólicos o submódulos de código/configuración, imports locales con protocolos no resueltos o una configuración Next distinta
-de la huella revisada conservan cobertura amplia, incluso después de un build
+enlaces simbólicos o submódulos de código/configuración, imports locales con protocolos no resueltos o una configuración Next/Playwright distinta
+de las huellas revisadas conservan cobertura amplia, incluso después de un build
 verde. Antes de actualizar esa huella, revisar el config y sus plugins para
 comprobar que no introducen consumidores invisibles; nunca actualizarla solo
 para silenciar el fallback. La instalación de motores del job WebView y del push web tiene un
@@ -238,3 +238,22 @@ push seleccionados, antes de entrar a la rama amplia o por sección.
 Cuando existen varias extensiones locales candidatas, el grafo conserva la
 unión de consumidores de todas ellas: no elige una sola por una prioridad
 supuesta. Si esa unión llega a rutas globales/no revisadas, amplía la cobertura.
+
+
+Las dependencias que llegan a consumidores críticos (auth, sesión, UI compartida,
+i18n, arranque nativo o infraestructura global) también conservan alcance amplio,
+aunque el consumidor sea una entrada implícita de framework sin import desde una
+página. Se comprueban ambas revisiones. Un módulo terminal dentro de `src/app`
+con una convención de entrada desconocida no se descarta por no llamarse `page`.
+Las dependencias de `import.meta`, fábricas de módulos y cargas de código/workers
+no modeladas también amplían runtime; en los harnesses de tests se retienen sus
+specs como consumidores opacos. No se confunde un wrapper ordinario importado
+por una página conocida con una entrada implícita nueva.
+
+La configuración revisada de Playwright aporta las entradas globales de setup y
+teardown al grafo. Consumidores de esos fixtures mantienen cobertura amplia.
+También se conserva ante paquetes locales/workspaces, código ejecutable fuera
+del espacio analizado o comandos/hooks nativos distintos de los revisados.
+La selección de specs independientes comprueba este contexto además de su diff.
+Estas restricciones siguen vigentes tras un run verde: aprobar un build no
+convierte una resolución desconocida en un mapa de impacto confiable.
