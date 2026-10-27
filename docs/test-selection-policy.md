@@ -257,3 +257,29 @@ del espacio analizado o comandos/hooks nativos distintos de los revisados.
 La selección de specs independientes comprueba este contexto además de su diff.
 Estas restricciones siguen vigentes tras un run verde: aprobar un build no
 convierte una resolución desconocida en un mapa de impacto confiable.
+
+
+## Cierre integrado de la selección por secciones — 27 de octubre de 2026
+
+La implementación `d7d0c33c` (main/test) y su integración móvil `e77cec54`
+aprobaron todas sus compuertas automáticas:
+
+- [Regresión web 40456114590](https://github.com/contratacr/contratacr/actions/runs/40456114590): selector (100 pruebas), contratos, inventario, tipos, lint, build y recorridos previos aprobados. El smoke final reportó 923 aprobadas y 45 omisiones declaradas, cero fallos, flakies u omisiones inesperadas. Los bloques previos se solapan con el smoke; no sumar como casos únicos.
+- [WebView 40456114607, intento 2](https://github.com/contratacr/contratacr/actions/runs/40456114607/attempts/2): 178 aprobadas y 4 omisiones previstas; contratos y resultado final aprobados. Los jobs iOS simulador y Android emulador se omitieron por la política existente, no se ejecutaron.
+- Seguridad main/test `40456114425` / `40456114370` y Cloudflare main/test/mobile `40456114487` / `40456114615` / `40456114459`: aprobados.
+
+El primer intento WebView agotó el límite de instalación de navegadores antes
+de E2E: la instalación de paquetes Ubuntu consumió casi diez minutos. Se
+reintentó únicamente ese job en otro runner, conservando las demás aprobaciones
+y sin modificar producto, aserciones ni el límite. No fue un fallo de E2E.
+
+El plan integrado eligió `broad` correctamente porque cambió la implementación
+del propio selector. La reducción `sections` se validó mediante las pruebas de
+AST, snapshots reales versionados e integración Git/CLI; el ejemplo de empleos
+(78 specs web y 9 WebView) describe selección, no una ejecución focal realizada
+con un cambio ficticio de producto. No se generaron cambios de aplicación para
+forzar esa demostración ni se repitieron pruebas de distribución física.
+
+Este registro modifica solamente un documento de la lista revisada. Se publica
+sin `[skip ci]`: sus planes y resultados deben aprobar y omitir los jobs pesados
+y despliegues, reutilizando la evidencia de aplicación compatible anterior.
