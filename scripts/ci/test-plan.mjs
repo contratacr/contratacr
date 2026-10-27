@@ -9,6 +9,7 @@ const documents = new Set([
   'AGENTS.md', 'docs/test-selection-policy.md', 'docs/regression-testing.md',
   'docs/mobile-release-history.md', 'docs/loading-and-native-entry-audit.md',
 ]);
+const plannerTestFiles = new Set(['test-plan','section-impact'].map(name=>`tests/ci/${name}.test.mjs`));
 export const nativeSpecs = new Set([
   'notification-modal-layout', 'notification-action-copy', 'app-link-coverage',
   'direct-chat', 'recuperacion-al-desbloquear', 'reanudar-la-app',
@@ -23,6 +24,7 @@ export function classify(changes, { baseline = true, force = false, importedSpec
   const paths = changes.map(c => c.path);
   const docs = paths.every(p => documents.has(p));
   const testsOnly = paths.every(p => documents.has(p) || /^tests\/e2e\/[a-z0-9-]+\.spec\.ts$/.test(p));
+  const plannerTests = !importedSpecs.some(p=>plannerTestFiles.has(p)) && paths.some(p=>plannerTestFiles.has(p)) && changes.every(c=>documents.has(c.path)||(plannerTestFiles.has(c.path)&&c.status==='M'));
   const specs = paths.filter(p => p.endsWith('.spec.ts'));
   const sectionInputs = paths.every(p => documents.has(p) || /^src\/.*\.[cm]?[jt]sx?$/.test(p) || /^tests\/e2e\/[a-z0-9-]+\.spec\.ts$/.test(p));
   const unsafeSpec = changes.some(c => c.status !== 'M' && !documents.has(c.path)) || specs.some(p => importedSpecs.includes(p));
@@ -31,6 +33,7 @@ export function classify(changes, { baseline = true, force = false, importedSpec
   if (force) reason = 'Manual/scheduled execution retains its requested coverage.';
   else if (!baseline) reason = 'No compatible successful ancestor found: keep broad coverage.';
   else if (docs) { scope = 'documents'; reason = 'Only explicitly reviewed non-runtime documents changed.'; }
+  else if (plannerTests) { scope = 'planner-tests'; reason = 'Only reviewed planner unit tests changed; the mandatory planning job runs all of them, without application jobs.'; }
   else if (testsOnly && !unsafeSpec) { scope = 'specs'; reason = 'Only existing independent E2E specs changed; run complete specs in their configured engines.'; }
   else if (sectionInputs && !unsafeSpec && impact?.safe) { scope = 'sections'; reason = impact.reason; }
   const selected = scope === 'sections' ? impact.specs : specs;
@@ -87,11 +90,12 @@ export async function main() {
     for (let i = 0; i + 1 < tokens.length; i += 2) changes.push({ status: tokens[i], path: tokens[i + 1] });
     // A spec imported as a shared module is not an independent test input.
     // Scan both revisions so removal of an import cannot hide an old consumer.
-    for (const c of changes.filter(c => c.path.endsWith('.spec.ts'))) {
-      const needle = c.path.split('/').at(-1).replace(/\.ts$/, '');
+    for (const c of changes.filter(c => c.path.endsWith('.spec.ts') || plannerTestFiles.has(c.path))) {
+      const needle = c.path.split('/').at(-1).replace(/(?:\.ts|\.mjs)$/, '');
       for (const rev of [base, head]) {
         try {
-          const hits = git(['grep', '-l', '-F', needle, rev, '--', 'tests', 'src']);
+          const consumers = plannerTestFiles.has(c.path) ? ['src','scripts'] : ['tests','src'];
+          const hits = git(['grep', '-l', '-F', needle, rev, '--', ...consumers]);
           if (hits.split('\n').some(p => p && p !== `${rev}:${c.path}`)) importedSpecs.push(c.path);
         } catch (e) { if (e.status !== 1) throw e; }
       }

@@ -68,7 +68,7 @@ test('real CLI accumulates changes since last successful run, emits evidence and
   const g=(...args)=>execFileSync('git',args,{cwd:dir,encoding:'utf8'}).trim();
   try {
     g('init','-q');g('config','user.email','ci@example.invalid');g('config','user.name','CI');
-    mkdirSync(join(dir,'src'),{recursive:true});writeFileSync(join(dir,'src/main.ts'),'base');
+    mkdirSync(join(dir,'src'),{recursive:true});mkdirSync(join(dir,'tests/ci'),{recursive:true});writeFileSync(join(dir,'tests/ci/test-plan.test.mjs'),'// standalone planner fixture');writeFileSync(join(dir,'src/main.ts'),'base');
     g('add','.');g('commit','-qm','base');const base=g('rev-parse','HEAD');
     writeFileSync(join(dir,'src/main.ts'),'unvalidated runtime change');g('add','.');g('commit','-qm','failed push');const failed=g('rev-parse','HEAD');
     writeFileSync(join(dir,'AGENTS.md'),'documentation');g('add','.');g('commit','-qm','docs after failure');
@@ -89,6 +89,18 @@ test('real CLI accumulates changes since last successful run, emits evidence and
     writeFileSync(stub,'globalThis.fetch=async()=>({ok:false,status:403});');
     r=spawnSync(process.execPath,['--import',stub,cli],{cwd:dir,env,encoding:'utf8'});assert.equal(r.status,0,r.stderr);
     p=JSON.parse(readFileSync(join(dir,'ci-test-plan.json'),'utf8'));assert.equal(p.scope,'broad');assert.equal(p.regression,true);assert.match(p.lookupError,/403/);
+    const planBase=g('rev-parse','HEAD');
+    writeFileSync(join(dir,'tests/ci/test-plan.test.mjs'),'// modified standalone planner fixture');g('add','tests/ci/test-plan.test.mjs');g('commit','-qm','planner test only');
+    writeFileSync(stub,`globalThis.fetch=async()=>({ok:true,json:async()=>({workflow_runs:[{id:4,head_sha:'${planBase}',html_url:'https://example.invalid/run/4'}]})});`);
+    r=spawnSync(process.execPath,['--import',stub,cli],{cwd:dir,env,encoding:'utf8'});assert.equal(r.status,0,r.stderr);
+    p=JSON.parse(readFileSync(join(dir,'ci-test-plan.json'),'utf8'));assert.equal(p.scope,'planner-tests');assert.equal(p.regression,false);
+    // A runtime importer makes a planner test a shared input, never a light skip.
+    writeFileSync(join(dir,'src/shared.ts'),"import '../tests/ci/test-plan.test.mjs';");g('add','src/shared.ts');g('commit','-qm','shared module');const sharedBase=g('rev-parse','HEAD');
+    writeFileSync(join(dir,'tests/ci/test-plan.test.mjs'),'// shared planner fixture changed');g('add','tests/ci/test-plan.test.mjs');g('commit','-qm','shared input changed');
+    writeFileSync(stub,`globalThis.fetch=async()=>({ok:true,json:async()=>({workflow_runs:[{id:4,head_sha:'${sharedBase}',html_url:'https://example.invalid/run/4'}]})});`);
+    r=spawnSync(process.execPath,['--import',stub,cli],{cwd:dir,env,encoding:'utf8'});assert.equal(r.status,0,r.stderr);
+    p=JSON.parse(readFileSync(join(dir,'ci-test-plan.json'),'utf8'));assert.equal(p.scope,'broad');assert.equal(p.regression,true);
+
   } finally { rmSync(dir,{recursive:true,force:true}); }
 });
 

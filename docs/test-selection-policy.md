@@ -181,8 +181,7 @@ TODOS sus consumidores de rutas pertenecen a secciones conocidas en ambas
 revisiones, existe cada suite requerida y afecta como máximo tres secciones.
 La selección conserva los motores web configurados y los WebView correspondientes;
 un test nativo exclusivo no se pierde en el `testIgnore` de web. Mantiene base
-Supabase aislada, contratos, inventario, tipos, lint, build y verificación estricta
-del resultado. Evita repetir preflights de otros recorridos. Seguridad y el
+Supabase aislada, contratos, inventario, tipos, lint, build y las compuertas de resultado existentes. Evita repetir preflights de otros recorridos. Seguridad y el
 pipeline de build/despliegue Cloudflare siguen activos para cambios de runtime.
 
 Conserva cobertura amplia ante archivos nuevos/eliminados/renombrados, recursos
@@ -198,13 +197,13 @@ Manual/nocturna y la elección conservadora de base no cambian.
 La evidencia JSON incluye secciones, rutas consumidoras y specs exactas. Las
 pruebas del selector incluyen snapshots antes/después, dependencias compartidas,
 URL sin import, fixtures, globales, ciclos, imports opacos, un CLI real con Git
-y el grafo de la aplicación actual. Esta modificación de CI selecciona inicialmente
+y una revisión real fijada de la aplicación. Esta fixture versionada no impone una forma fija al grafo del HEAD: un refactor legítimo puede exigir cobertura amplia sin romper las pruebas del selector. Esta modificación de CI selecciona inicialmente
 alcance amplio por cambiar sus propias entradas; no se presenta la enumeración
 de Playwright ni las pruebas del selector como ejecución E2E del producto.
 No hay caché global de tareas ni promesa de que todo cambio pueda reducirse.
 
 
-Validación local de la ampliación: 60 pruebas del selector aprobadas, incluida
+Validación local del cierre de la ampliación: 81 pruebas del selector aprobadas, incluida
 la integración Git/CLI y fallbacks conservadores; ESLint, actionlint, YAML,
 auditorías de archivos privados/almacenamiento/marca e inventario aprobados.
 La instalación aislada del parser se comprobó contra el lockfile real.
@@ -212,3 +211,30 @@ La enumeración de un cambio en el tablero de empleos seleccionó 55 archivos we
 y 7 WebView; conservó pruebas visuales/compartidas que visitan empleos y excluyó
 los demás archivos sin consumidor conocido. `--list` comprobó su configuración;
 no se ejecutaron esos E2E ni se usaron fixtures de producción.
+
+
+Los cambios exclusivamente en los dos archivos de pruebas del planificador
+(`tests/ci/test-plan.test.mjs` y `tests/ci/section-impact.test.mjs`), existentes,
+modificados y no usados desde `src` o `scripts`, obtienen alcance `planner-tests`.
+El job obligatorio sigue ejecutando TODAS las pruebas del planificador; omite
+los jobs de aplicación y despliegue. Las referencias compartidas se comprueban
+en ambas revisiones. Archivos nuevos, helpers, eliminaciones, consumidores de
+runtime o mezclas con código conservan cobertura amplia. Las modificaciones a
+la implementación del selector o sus workflows siguen siendo cambios de CI con
+alcance amplio; no se clasifican como cambios de pruebas solamente.
+
+La resolución revisada admite rutas relativas y `@/* -> ./src/*`. Un `extends`,
+`baseUrl`, `rootDirs`, sufijos o aliases nuevos, `imports/exports` de paquete,
+enlaces simbólicos o submódulos de código/configuración, imports locales con protocolos no resueltos o una configuración Next distinta
+de la huella revisada conservan cobertura amplia, incluso después de un build
+verde. Antes de actualizar esa huella, revisar el config y sus plugins para
+comprobar que no introducen consumidores invisibles; nunca actualizarla solo
+para silenciar el fallback. La instalación de motores del job WebView y del push web tiene un
+límite de diez minutos: una demora de infraestructura bloquea el job, no acorta
+las pruebas ni permite aprobar sin navegadores. La instalación es común a los
+push seleccionados, antes de entrar a la rama amplia o por sección.
+
+
+Cuando existen varias extensiones locales candidatas, el grafo conserva la
+unión de consumidores de todas ellas: no elige una sola por una prioridad
+supuesta. Si esa unión llega a rutas globales/no revisadas, amplía la cobertura.
