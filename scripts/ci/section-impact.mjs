@@ -4,8 +4,14 @@ import { posix } from 'node:path';
 const require = createRequire(import.meta.url);
 const ts = require(process.env.CI_TYPESCRIPT_MODULE || 'typescript');
 // Configuration outside this reviewed resolver can add invisible consumers.
-export const reviewedNextConfig = { 'next.config.ts': '21877a39357bf08af41303110cb1aa76b2d7bf42' };
-const configInput = p => ['tsconfig.json','package.json'].includes(p) || /^next\.config\.[cm]?[jt]s$/.test(p);
+export const reviewedConfiguration = {
+  'next.config.ts': '21877a39357bf08af41303110cb1aa76b2d7bf42',
+  'playwright.config.ts': '8b5fb8f000ec4f7a06712557bf2c37a29386c3b2',
+  'playwright.mobile.config.ts': '00e8e54e0b45bbeda6905ea11dec97f7fcdca13b',
+};
+const configCode = p => /^(?:next|playwright(?:\.mobile)?)\.config\.[cm]?[jt]s$/.test(p);
+const analyzedCode = p => /^(src\/|tests\/e2e\/)/.test(p) || configCode(p);
+const configInput = p => ['tsconfig.json','package.json'].includes(p) || configCode(p);
 const spec = name => `tests/e2e/${name}.spec.ts`;
 
 // Reviewed behavior suites, not a filename-keyword ownership heuristic. Shared
@@ -77,10 +83,34 @@ function resolveLocal(from, request, files) {
 }
 
 export function dependencyGraph(files) {
-  const reverse = new Map(), uncertainties = [], opaqueTests = new Set(), routeTests = new Map();
+  const reverse = new Map(), uncertainties = [], opaqueTests = new Set(), routeTests = new Map(), globalEntries = new Set();
+  const link=(child,parent)=>{if(!reverse.has(child))reverse.set(child,new Set());reverse.get(child).add(parent);};
+  const localSpecs = value => typeof value==='string' ? /^(?:file:|link:|workspace:|[./])/.test(value) : value&&typeof value==='object'&&Object.values(value).some(localSpecs);
   for(const [path,file] of files) {
     if(file.mode&& !['100644','100755'].includes(file.mode)&&(path.startsWith('src/')||configInput(path)))uncertainties.push(`Unreviewed non-regular source/config input: ${path}`);
-    if(/^next\.config\.[cm]?[jt]s$/.test(path)&&file.hash!==reviewedNextConfig[path])uncertainties.push(`Unreviewed Next resolver configuration: ${path}`);
+    if(configCode(path)&&file.hash!==reviewedConfiguration[path])uncertainties.push(`Unreviewed resolver/runner configuration: ${path}`);
+    if(configCode(path)) {
+      globalEntries.add(path);
+      const configSource=ts.createSourceFile(path,file.source,ts.ScriptTarget.Latest,true);
+      const inspect=node=>{
+        if(ts.isPropertyAssignment(node)) {
+          const name=ts.isIdentifier(node.name)||ts.isStringLiteralLike(node.name)?node.name.text:null;
+          if(['globalSetup','globalTeardown'].includes(name)) {
+            const value=node.initializer;
+            const entries=ts.isStringLiteralLike(value)?[value]:ts.isArrayLiteralExpression(value)&&value.elements.every(ts.isStringLiteralLike)?[...value.elements]:null;
+            if(!entries)uncertainties.push(`Unmodeled global fixture in ${path}`);
+            for(const entry of entries??[]) {
+              const target=resolveLocal(path,entry.text.startsWith('.')?entry.text:'./'+entry.text,files);
+              if(!target.paths)uncertainties.push(`Unresolved global fixture in ${path}`);
+              for(const resolved of target.paths??[]){globalEntries.add(resolved);link(resolved,path);if(!codePattern.test(resolved)||!analyzedCode(resolved))uncertainties.push(`Unmodeled global fixture module: ${resolved}`);}
+            }
+          }
+          if(name==='dependencies'&&!(ts.isArrayLiteralExpression(node.initializer)&&node.initializer.elements.length===0))uncertainties.push(`Unmodeled project fixture dependencies in ${path}`);
+        }
+        node.forEachChild(inspect);
+      };
+      inspect(configSource);
+    }
     if(!['tsconfig.json','package.json'].includes(path))continue;
     const parsed=ts.parseConfigFileTextToJson(path,file.source);
     if(parsed.error){uncertainties.push(`Cannot read resolver configuration: ${path}`);continue;}
@@ -88,19 +118,32 @@ export function dependencyGraph(files) {
     if(path==='tsconfig.json') {
       const options=config.compilerOptions??{},paths=options.paths??{};
       if(config.extends||options.rootDirs||options.moduleSuffixes||(options.moduleResolution!==undefined&&options.moduleResolution!=='bundler')||(options.baseUrl!==undefined&&options.baseUrl!=='.')||Object.entries(paths).some(([key,targets])=>key!=='@/*'||!Array.isArray(targets)||targets.length!==1||!['./src/*','src/*'].includes(targets[0])))uncertainties.push('Unreviewed TypeScript module resolution.');
-    } else if(['imports','exports'].some(key=>config[key]&&(typeof config[key]!=='object'||Object.keys(config[key]).length)))uncertainties.push('Unreviewed package imports/exports resolution.');
+    } else {
+      if(['imports','exports'].some(key=>config[key]&&(typeof config[key]!=='object'||Object.keys(config[key]).length)))uncertainties.push('Unreviewed package imports/exports resolution.');
+      if(config.workspaces||['dependencies','devDependencies','optionalDependencies','peerDependencies','overrides','resolutions'].some(key=>localSpecs(config[key])))uncertainties.push('Unmodeled local/workspace package resolution.');
+    }
   }
-  const link=(child,parent)=>{if(!reverse.has(child))reverse.set(child,new Set());reverse.get(child).add(parent);};
-  const uncertain=(path,reason)=>path.startsWith('tests/e2e/')?opaqueTests.add(path):uncertainties.push(reason);
+  const uncertain=(path,reason)=>path.startsWith('tests/e2e/')&&!globalEntries.has(path)?opaqueTests.add(path):uncertainties.push(reason);
   for (const [path,file] of files) {
-    if(!codePattern.test(path)||!/^(src\/|tests\/e2e\/)/.test(path))continue;
+    if(!codePattern.test(path)||!analyzedCode(path))continue;
     const source=ts.createSourceFile(path,file.source,ts.ScriptTarget.Latest,true);
     if(source.parseDiagnostics.length)uncertain(path,`Cannot parse ${path}`);
-    const add=request=>{const target=resolveLocal(path,request,files);if(target.paths)for(const resolved of target.paths)link(resolved,path);else if(target.error)uncertain(path,target.error);};
+    const add=(request,typeOnly=false)=>{
+      if(!typeOnly&&['node:module','module','node:child_process','child_process','node:worker_threads','worker_threads','esbuild','esbuild-wasm','typescript','rollup','webpack','@babel/core','@swc/core'].includes(request))uncertain(path,`Unmodeled module/compiler/process factory in ${path}`);
+      if(!typeOnly&&path.startsWith('src/')&&['node:fs','fs','node:fs/promises','fs/promises'].includes(request))uncertain(path,`Unmodeled runtime filesystem dependencies in ${path}`);
+      const target=resolveLocal(path,request,files);
+      if(target.paths)for(const resolved of target.paths){link(resolved,path);if(!typeOnly&&codePattern.test(resolved)&&!analyzedCode(resolved))uncertain(path,`Unanalyzed project module: ${resolved}`);}
+      else if(target.error)uncertain(path,target.error);
+    };
     const visit=node=>{
-      if((ts.isImportDeclaration(node)||ts.isExportDeclaration(node))&&node.moduleSpecifier&&ts.isStringLiteralLike(node.moduleSpecifier))add(node.moduleSpecifier.text);
+      if(ts.isMetaProperty(node)&&node.keywordToken===ts.SyntaxKind.ImportKeyword)uncertain(path,`Unmodeled import.meta dependency in ${path}`);
+      if(ts.isCallExpression(node)||ts.isNewExpression(node)) {
+        const callee=ts.isIdentifier(node.expression)?node.expression.text:ts.isPropertyAccessExpression(node.expression)?node.expression.name.text:null;
+        if(['eval','Function','Worker','SharedWorker','createRequire'].includes(callee))uncertain(path,`Unmodeled dynamic code/worker load in ${path}`);
+      }
+      if((ts.isImportDeclaration(node)||ts.isExportDeclaration(node))&&node.moduleSpecifier&&ts.isStringLiteralLike(node.moduleSpecifier))add(node.moduleSpecifier.text,Boolean(node.importClause?.isTypeOnly||node.isTypeOnly));
       if(ts.isImportEqualsDeclaration(node)&&ts.isExternalModuleReference(node.moduleReference)&&node.moduleReference.expression&&ts.isStringLiteralLike(node.moduleReference.expression))add(node.moduleReference.expression.text);
-      if(ts.isImportTypeNode(node)&&ts.isLiteralTypeNode(node.argument)&&ts.isStringLiteralLike(node.argument.literal))add(node.argument.literal.text);
+      if(ts.isImportTypeNode(node)&&ts.isLiteralTypeNode(node.argument)&&ts.isStringLiteralLike(node.argument.literal))add(node.argument.literal.text,true);
       if(ts.isCallExpression(node)&&(node.expression.kind===ts.SyntaxKind.ImportKeyword||(ts.isIdentifier(node.expression)&&node.expression.text==='require'))) {
         const arg=node.arguments[0];
         if(arg&&ts.isStringLiteralLike(arg))add(arg.text);
@@ -113,7 +156,7 @@ export function dependencyGraph(files) {
     visit(source);
     // Browser harnesses compile inline code strings rather than importing the
     // module in the test itself. Keep those references in the reverse graph.
-    if(path.startsWith('tests/e2e/'))for(const match of file.source.matchAll(/(?:@\/|(?:\.\.\/|\.\/)*src\/)[\w./\[\]-]+/g)) {
+    if(path.startsWith('tests/e2e/')||configCode(path))for(const match of file.source.matchAll(/(?:@\/|(?:\.\.\/|\.\/)*src\/)[\w./\[\]-]+/g)) {
       const request=match[0];
       const target=resolveLocal(path,request.startsWith('@/')?request:'@/'+request.slice(request.indexOf('src/')+4),files);
       if(target.paths)for(const resolved of target.paths)link(resolved,path);
@@ -121,7 +164,7 @@ export function dependencyGraph(files) {
     }
     // URL-based E2E do not import the page. Preserve literal route consumers
     // in tests AND helpers, in addition to the reviewed behavior suites.
-    if(path.startsWith('tests/e2e/'))for(const match of file.source.matchAll(/\/(?:es\/|en\/)?([a-z-]+)(?=[/?#'"`\s)]|$)/g)) {
+    if(path.startsWith('tests/e2e/')||configCode(path))for(const match of file.source.matchAll(/\/(?:es\/|en\/)?([a-z-]+)(?=[/?#'"`\s)]|$)/g)) {
       const owner=routeSections.get(match[1]);
       if(owner){if(!routeTests.has(owner))routeTests.set(owner,new Set());routeTests.get(owner).add(path);}
     }
@@ -131,21 +174,21 @@ export function dependencyGraph(files) {
       for(const candidate of files.keys())if(candidate!==path&&candidate.startsWith(directory)&&rootPattern.test(candidate))link(path,candidate);
     }
   }
-  return {reverse,uncertainties,opaqueTests,routeTests};
+  for(const opaque of opaqueTests)if([...consumers([opaque],{reverse})].some(p=>p.startsWith('src/')||globalEntries.has(p)))uncertainties.push(`Unmodeled shared fixture/runtime dependency: ${opaque}`);
+  return {reverse,uncertainties,opaqueTests,routeTests,globalEntries};
 }
 
-function consumers(start, graph) {
+export function consumers(start, graph) {
   const seen=new Set(start),queue=[...start];
   for(let i=0;i<queue.length;i++)for(const parent of graph.reverse.get(queue[i])??[])if(!seen.has(parent)){seen.add(parent);queue.push(parent);}
   return seen;
 }
 
-export function sectionImpact(changes, before, after) {
+export function sectionImpact(changes, before, after, graphs = [dependencyGraph(before),dependencyGraph(after)]) {
   const reject=reason=>({safe:false,reason,sections:[],roots:[],specs:[]});
   const runtime=changes.filter(c=>c.path.startsWith('src/'));
   if(!runtime.length)return reject('No runtime section inputs to classify.');
   if(runtime.some(c=>c.status!=='M'||!codePattern.test(c.path)||(criticalPattern.test(c.path)||sensitiveName.test(c.path))))return reject('New/deleted, non-code or security/native/global infrastructure input.');
-  const graphs=[dependencyGraph(before),dependencyGraph(after)];
   const errors=graphs.flatMap(g=>g.uncertainties);
   if(errors.length)return reject(errors.slice(0,4).join('; '));
   const sections=new Set(),roots=new Set(),extraTests=new Set(),opaqueConsumers=new Set(),urlConsumers=new Set();
@@ -153,6 +196,10 @@ export function sectionImpact(changes, before, after) {
     for (const input of runtime) {
       if(!(graph===graphs[0]?before:after).has(input.path))return reject(`Missing source revision for ${input.path}`);
       const reached=consumers([input.path],graph);
+      const shared=[...reached].find(p=>graph.globalEntries.has(p)||(p.startsWith('src/')&&(criticalPattern.test(p)||sensitiveName.test(p))));
+      if(shared)return reject(`Critical/shared infrastructure consumer: ${shared}`);
+      const unmodeled=[...reached].find(p=>p.startsWith('src/app/')&&codePattern.test(p)&&!rootPattern.test(p)&&![...(graph.reverse.get(p)??[])].some(parent=>parent.startsWith('src/')));
+      if(unmodeled)return reject(`Unmodeled application entry consumer: ${unmodeled}`);
       const affectedRoots=[...reached].filter(p=>rootPattern.test(p));
       if(!affectedRoots.length)return reject(`No known route consumer for ${input.path}`);
       for(const root of affectedRoots){const owner=ownerOfRoot(root);if(!owner)return reject(`Shared or unmapped route consumer: ${root}`);roots.add(root);sections.add(owner);}
@@ -168,4 +215,13 @@ export function sectionImpact(changes, before, after) {
   for(const c of changes)if(c.path.endsWith('.spec.ts'))selected.add(c.path);
   for(const path of selected)if(!after.has(path))return reject(`Required suite missing: ${path}`);
   return {safe:true,reason:'Reviewed route sections plus transitive consumers in both revisions; shared entry/native smoke retained.',sections:[...sections].sort(),roots:[...roots].sort(),specs:[...selected].sort(),testConsumers:[...extraTests].sort(),opaqueTestConsumers:[...opaqueConsumers].sort(),urlTestConsumers:[...urlConsumers].sort()};
+}
+
+
+export function runnerCompatibility(files) {
+  try {
+    const pkg=JSON.parse(files.get('package.json').source);
+    if(pkg.scripts?.['test:e2e:mobile']!=='playwright test --config=playwright.mobile.config.ts'||pkg.scripts?.['pretest:e2e:mobile']||pkg.scripts?.['posttest:e2e:mobile'])return 'Unreviewed mobile runner command/hooks: keep broad coverage.';
+    return null;
+  }catch{return 'Missing/unreadable runner manifest: keep broad coverage.';}
 }

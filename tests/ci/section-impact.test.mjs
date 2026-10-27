@@ -43,7 +43,7 @@ test('Next implicit section layouts affect descendant routes, root layout affect
   const global='src/app/layout.tsx';files.set(global,{source:'export default 1;'});assert.equal(impact(files,[global]).safe,false);
 });
 for(const root of ['src/app/[locale]/page.tsx','src/app/api/jobs/route.ts','src/app/[locale]/admin/page.tsx','src/app/[locale]/new-section/page.tsx','src/app/[locale]/empleos/route.ts','src/app/[locale]/empleos/opengraph-image.tsx'])test(`unmapped/global consumer ${root} forces broad`,()=>{
-  const result=impact(snapshot({[root]:"import Board from '@/components/jobs/board';"}));assert.equal(result.safe,false);assert.match(result.reason,/unmapped/);
+  const result=impact(snapshot({[root]:"import Board from '@/components/jobs/board';"}));assert.equal(result.safe,false);assert.match(result.reason,/unmapped|Critical.shared/);
 });
 for(const path of ['src/components/mobile/shell.tsx','src/components/auth/gate.tsx','src/lib/supabase/client.ts','src/i18n/request.ts'])test(`critical input ${path} remains broad`,()=>{
   const files=snapshot({[path]:'export default 1;',[page]:`import value from '${path.replace('src/','@/').replace(/\.tsx?$/,'')}';`});assert.equal(impact(files,[path]).safe,false);
@@ -81,7 +81,7 @@ test('validated application fixture narrows jobs but preserves broad homepage co
   const result=sectionImpact(changed('src/components/jobs/jobs-board.tsx'),files,files);
   assert.equal(result.safe,true,result.reason);assert.deepEqual(result.sections,['empleos']);
   assert.ok(files.has('src/components/professionals/contact-button.tsx'));
-  const shared=sectionImpact(changed('src/components/professionals/contact-button.tsx'),files,files);assert.equal(shared.safe,false);assert.match(shared.reason,/unmapped route consumer/);
+  const shared=sectionImpact(changed('src/components/professionals/contact-button.tsx'),files,files);assert.equal(shared.safe,false);assert.match(shared.reason,/unmapped route consumer|Critical.shared/);
 });
 
 import { mkdtempSync, writeFileSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
@@ -94,6 +94,8 @@ test('real Git-to-CLI section plan emits complete engine lists and retains deplo
   try {
     git('init','-q');git('config','user.email','ci@example.invalid');git('config','user.name','CI');
     for(const [path,file] of snapshot()){mkdirSync(dirname(join(dir,path)),{recursive:true});writeFileSync(join(dir,path),file.source);}
+    for(const path of ['package.json','tsconfig.json','playwright.config.ts','playwright.mobile.config.ts'])writeFileSync(join(dir,path),readFileSync(resolve(path)));
+    writeFileSync(join(dir,'tests/e2e/global-setup.ts'),'export default async function globalSetup() {}');
     git('add','.');git('commit','-qm','base');const base=git('rev-parse','HEAD');
     writeFileSync(join(dir,jobs),'export default 2;');git('add','.');git('commit','-qm','jobs change');
     const event=join(dir,'event.json'),stub=join(dir,'fetch.mjs'),out=join(dir,'output');
@@ -109,7 +111,7 @@ test('real Git-to-CLI section plan emits complete engine lists and retains deplo
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
 
-import { reviewedNextConfig } from '../../scripts/ci/section-impact.mjs';
+import { reviewedConfiguration } from '../../scripts/ci/section-impact.mjs';
 for(const paths of [{'@/*':['./src/*'],'@jobs/*':['./src/components/jobs/*']},{'@/*':['./other/*']}])test(`unreviewed TS aliases cannot hide consumers: ${JSON.stringify(paths)}`,()=>{
   const files=snapshot({'tsconfig.json':JSON.stringify({compilerOptions:{paths}})});assert.equal(impact(files).safe,false);
 });
@@ -118,7 +120,7 @@ for(const config of [{extends:'./other.json'},{compilerOptions:{baseUrl:'src'}},
 });
 test('reviewed TS aliases and Next configuration still permit section selection',()=>{
   const files=snapshot({'tsconfig.json':JSON.stringify({compilerOptions:{paths:{'@/*':['./src/*']}}}),'package.json':'{"dependencies":{"react":"19"}}'});
-  files.set('next.config.ts',{hash:reviewedNextConfig['next.config.ts'],source:''});assert.equal(impact(files).safe,true);
+  files.set('next.config.ts',{hash:reviewedConfiguration['next.config.ts'],source:''});assert.equal(impact(files).safe,true);
   files.set('next.config.ts',{hash:'unreviewed',source:''});assert.equal(impact(files).safe,false);
 });
 for(const config of [{imports:{'#local':'./src/foo.ts'}},{exports:'./src/foo.ts'}])test(`package module alias broadens: ${JSON.stringify(config)}`,()=>{
@@ -155,4 +157,56 @@ test('embedded source Git links force broad rather than hiding nested routes',()
 });
 test('unmapped route names with control characters cannot disappear from the graph',()=>{
   const files=snapshot({'src/app/[locale]/other\nsection/page.tsx':"import Board from '@/components/jobs/board';"});assert.equal(impact(files).safe,false);
+});
+
+
+test('transitive implicit global entry consumers stay broad in either revision',()=>{
+  const before=snapshot({'src/i18n/request.ts':"import Board from '@/components/jobs/board';"});
+  const after=snapshot();const result=impact(after,[jobs],before);
+  assert.equal(result.safe,false);assert.match(result.reason,/Critical.shared infrastructure consumer/);
+});
+test('a terminal application module with an unknown entry convention cannot hide behind a known page',()=>{
+  const result=impact(snapshot({'src/app/[locale]/other/view.tsx':"import Board from '@/components/jobs/board';"}));
+  assert.equal(result.safe,false);assert.match(result.reason,/Unmodeled application entry/);
+});
+test('an application wrapper flowing into its known page still narrows',()=>{
+  const result=impact(snapshot({'src/app/[locale]/empleos/wrapper.tsx':"export {default} from '@/components/jobs/board';",[page]:"import Board from './wrapper';"}));
+  assert.equal(result.safe,true,result.reason);assert.deepEqual(result.sections,['empleos']);
+});
+for(const source of ["const url=import.meta.url;","new Worker('/worker.js');","new SharedWorker('/worker.js');","new Function('return 1');","eval('code');","import {createRequire as load} from 'node:module';"])test(`unmodeled loader broadens: ${source}`,()=>{
+  const result=impact(snapshot({[jobs]:source}));assert.equal(result.safe,false);
+});
+test('test-side module loader factories are retained even when calls use aliases',()=>{
+  const files=snapshot({'tests/e2e/aliased-loader.spec.ts':"import {createRequire as loader} from 'node:module'; const load=loader(import.meta.url); const value=load(name);"});
+  const result=impact(files);assert.equal(result.safe,true,result.reason);assert.ok(result.specs.includes('tests/e2e/aliased-loader.spec.ts'));
+});
+
+
+for(const pkg of [{workspaces:['packages/*']},{dependencies:{local:'file:../local'}},{dependencies:{local:'workspace:*'}},{overrides:{local:'./local'}}])test(`local project package resolution remains broad: ${JSON.stringify(pkg)}`,()=>{
+  assert.equal(impact(snapshot({'package.json':JSON.stringify(pkg)})).safe,false);
+});
+test('a test importing unparsed project code is retained rather than losing its hidden inputs',()=>{
+  const files=snapshot({'tools/helper.mjs':"import Board from '@/components/jobs/board';",'tests/e2e/outside-helper.spec.ts':"import '../../tools/helper.mjs';"});
+  const result=impact(files);assert.equal(result.safe,true,result.reason);assert.ok(result.specs.includes('tests/e2e/outside-helper.spec.ts'));
+});
+test('runtime project code outside the analyzed namespace cannot hide route consumers',()=>{
+  const files=snapshot({'tools/helper.mjs':'export default 1;',[jobs]:"import '../../../tools/helper.mjs';"});assert.equal(impact(files).safe,false);
+});
+test('source helper consumers in the configured shared setup and test config force broad',()=>{
+  for(const setup of [true,false]){
+    const files=snapshot();
+    files.set('playwright.config.ts',{hash:reviewedConfiguration['playwright.config.ts'],source:setup?"export default {globalSetup:'./tests/e2e/global-setup.ts'};":"import Board from '@/components/jobs/board';"});
+    if(setup)files.set('tests/e2e/global-setup.ts',{source:"import Board from '@/components/jobs/board';"});
+    const result=impact(files);assert.equal(result.safe,false);assert.match(result.reason,/Critical.shared/);
+  }
+});
+test('unknown global setup expressions and project dependency declarations cannot reduce coverage',()=>{
+  for(const source of ["export default {globalSetup: setupFile};","export default {projects:[{name:'a',dependencies:['setup']}]};"]){
+    const files=snapshot();files.set('playwright.config.ts',{hash:reviewedConfiguration['playwright.config.ts'],source});assert.equal(impact(files).safe,false);
+  }
+});
+test('unsupported runner/context errors override spec and section reduction but not reviewed non-runtime documents',()=>{
+  assert.equal(classify(changed('tests/e2e/services.spec.ts'),{analysisError:'unknown runner'}).scope,'broad');
+  assert.equal(classify(changed(jobs),{impact:impact(snapshot()),analysisError:'unknown context'}).scope,'broad');
+  assert.equal(classify(changed('AGENTS.md'),{analysisError:'unknown context'}).scope,'documents');
 });
