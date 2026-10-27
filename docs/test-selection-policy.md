@@ -92,7 +92,7 @@ deployments, auditorías de seguridad ni checks requeridos incidentalmente.
 ## Implementación automática inicial — 26 de octubre de 2026
 
 `ci-test-plan.yml` se ejecuta antes de las compuertas de regresión, seguridad,
-WebView y Cloudflare, sin instalar dependencias ni arrancar Supabase. Ejecuta
+WebView y Cloudflare, sin instalar dependencias de la aplicación ni arrancar Supabase. Desde la ampliación por secciones instala únicamente el parser TypeScript fijado por versión e integridad en el lockfile, con scripts de instalación desactivados. Ejecuta
 sus propias pruebas y la prohibición de archivos privados, publica un resumen
 con la razón y guarda `ci-test-plan.json` como artefacto por workflow.
 
@@ -127,8 +127,7 @@ Los cambios de aplicación, dependencias, migraciones, archivos nativos,
 configuración y archivos desconocidos mantienen las compuertas existentes.
 En particular, la primera modificación de estos workflows requiere validar sus
 jobs integrados; no hay una excepción que deje de probar el propio selector.
-La selección más fina por dominio de aplicación y caché por huella de entradas
-queda pendiente: esta versión no promete un grafo que aún no existe.
+La selección por sección se amplía en el apartado siguiente. La caché global por huella de entradas sigue pendiente.
 
 Cloudflare conserva su pipeline de build/deploy para cambios de ejecución o
 impacto desconocido y para solicitudes manuales. Solo se evita desplegar cuando
@@ -156,3 +155,60 @@ Este commit cambia únicamente documentación de la lista revisada y se publica
 sin `[skip ci]`. Su objetivo es comprobar que los workflows generan plan e
 informe exitosos y omiten los jobs pesados y los despliegues. El resultado de esa
 comprobación debe observarse en GitHub; este texto no lo anticipa como aprobado.
+
+
+## Selección por sección y consumidores — 26 de octubre de 2026
+
+`section-impact.mjs` analiza importaciones y reexportaciones con el AST de
+TypeScript, usando dos snapshots de Git: la base validada y el HEAD. Recorre los
+consumidores transitivos de cada módulo modificado, incluyendo imports de tipos,
+imports dinámicos literales y las dependencias implícitas de layouts y estados
+de rutas Next. Retener ambas revisiones evita perder consumidores al quitar una
+importación. No depende solo del nombre del archivo ni de `--only-changed`.
+
+El mapa revisado incluye empleos, promociones, proyectos, profesionales/búsqueda,
+servicios/categorías, ayuda, legales, soporte, mensajes, notificaciones,
+cotizaciones y panel. Cada sección agrega sus specs de comportamiento completas.
+Se agregan los tests consumidores por importación, los que contienen URLs de la
+sección (también a través de helpers), referencias de harnesses inline y las
+specs con cargas calculadas que no pueden descartarse estáticamente. Se conserva
+siempre smoke de entrada pública, enlaces/idioma y shell/navegación nativa.
+Los tests que construyen URLs dinámicamente dependen del mapa de comportamiento;
+una sección nueva o comportamiento nuevo requiere revisar ese mapa.
+
+Una modificación existente de código TS/JS solo obtiene alcance `sections` si
+TODOS sus consumidores de rutas pertenecen a secciones conocidas en ambas
+revisiones, existe cada suite requerida y afecta como máximo tres secciones.
+La selección conserva los motores web configurados y los WebView correspondientes;
+un test nativo exclusivo no se pierde en el `testIgnore` de web. Mantiene base
+Supabase aislada, contratos, inventario, tipos, lint, build y verificación estricta
+del resultado. Evita repetir preflights de otros recorridos. Seguridad y el
+pipeline de build/despliegue Cloudflare siguen activos para cambios de runtime.
+
+Conserva cobertura amplia ante archivos nuevos/eliminados/renombrados, recursos
+no analizados, fixtures compartidas, dependencias/lockfile, configuración/CI,
+API, autenticación/sesión/permisos, infraestructura nativa o global, módulos sin
+consumidor conocido, rutas no mapeadas, más de tres secciones, imports locales
+sin resolver o cargas calculadas de código fuente. La excepción finita del
+import de traducciones existente se resuelve contra todos los JSON del snapshot;
+no habilita imports calculados arbitrarios. Un error al analizar dependencias
+conserva el plan amplio. Un fallo del propio selector falla el check obligatorio.
+Manual/nocturna y la elección conservadora de base no cambian.
+
+La evidencia JSON incluye secciones, rutas consumidoras y specs exactas. Las
+pruebas del selector incluyen snapshots antes/después, dependencias compartidas,
+URL sin import, fixtures, globales, ciclos, imports opacos, un CLI real con Git
+y el grafo de la aplicación actual. Esta modificación de CI selecciona inicialmente
+alcance amplio por cambiar sus propias entradas; no se presenta la enumeración
+de Playwright ni las pruebas del selector como ejecución E2E del producto.
+No hay caché global de tareas ni promesa de que todo cambio pueda reducirse.
+
+
+Validación local de la ampliación: 60 pruebas del selector aprobadas, incluida
+la integración Git/CLI y fallbacks conservadores; ESLint, actionlint, YAML,
+auditorías de archivos privados/almacenamiento/marca e inventario aprobados.
+La instalación aislada del parser se comprobó contra el lockfile real.
+La enumeración de un cambio en el tablero de empleos seleccionó 55 archivos web
+y 7 WebView; conservó pruebas visuales/compartidas que visitan empleos y excluyó
+los demás archivos sin consumidor conocido. `--list` comprobó su configuración;
+no se ejecutaron esos E2E ni se usaron fixtures de producción.

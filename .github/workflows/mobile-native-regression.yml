@@ -166,7 +166,7 @@ jobs:
           SELECTED_SPECS: ${{ needs.plan.outputs.mobile_specs }}
           PLAN_SCOPE: ${{ needs.plan.outputs.scope }}
         run: |
-          if [ "$PLAN_SCOPE" = "specs" ]; then
+          if [ "$PLAN_SCOPE" = "specs" ] || [ "$PLAN_SCOPE" = "sections" ]; then
             node scripts/ci/run-selected-specs.mjs --mobile
           else
             npm run test:e2e:mobile

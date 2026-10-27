@@ -1,0 +1,108 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { dependencyGraph, entrySuites, sectionSuites, sectionImpact, gitSnapshot } from '../../scripts/ci/section-impact.mjs';
+import { classify } from '../../scripts/ci/test-plan.mjs';
+const changed = (...paths) => paths.map(path=>({path,status:'M'}));
+const jobs='src/components/jobs/board.tsx';
+const page='src/app/[locale]/empleos/page.tsx';
+function snapshot(extra={}) {
+  const files=new Map([...new Set([...entrySuites,...Object.values(sectionSuites).flat()])].map(name=>[`tests/e2e/${name}.spec.ts`,{source:''}]));
+  for(const [path,source] of Object.entries({[jobs]:'export default 1;',[page]:"import Board from '@/components/jobs/board';",...extra}))files.set(path,{source});
+  return files;
+}
+const impact=(files,paths=[jobs],before=files)=>sectionImpact(changed(...paths),before,files);
+test('jobs select behavior, entry and native suites, not unrelated offers suites; runtime still builds/deploys/security',()=>{
+  const result=impact(snapshot());assert.equal(result.safe,true);assert.deepEqual(result.sections,['empleos']);
+  assert.ok(result.specs.includes('tests/e2e/marketplace-editors.spec.ts'));
+  assert.ok(result.specs.includes('tests/e2e/mobile-native-shell.spec.ts'));
+  assert.ok(!result.specs.includes('tests/e2e/search-offer-loading.spec.ts'));
+  const plan=classify(changed(jobs),{impact:result});assert.equal(plan.scope,'sections');
+  for(const flag of ['regression','mobile','security','deploy'])assert.equal(plan[flag],true);
+  assert.ok(plan.mobileSpecs.includes('tests/e2e/mobile-native-shell.spec.ts'));
+});
+test('transitive barrel, type and literal dynamic imports retain all consumers in both revisions',()=>{
+  const before=snapshot({'src/components/jobs/index.ts':"export {default} from './board';",[page]:"import Board from '@/components/jobs';",'src/app/[locale]/promociones/page.tsx':"const Board=import('@/components/jobs/board');"});
+  const after=snapshot({'src/types/job.ts':`type B=typeof import('../components/jobs/board');`,[page]:"import type B from '@/types/job';",'src/app/[locale]/promociones/page.tsx':'export default 1;'});
+  const result=impact(after,[jobs],before);assert.equal(result.safe,true);assert.deepEqual(result.sections,['empleos','promociones']);
+  assert.ok(result.specs.includes('tests/e2e/search-offer-loading.spec.ts'));
+});
+test('URL-only tests and imported URL helpers are retained, unrelated section omitted',()=>{
+  const files=snapshot({'tests/e2e/helpers/paths.ts':"export const url='/en/empleos?filter=all';",'tests/e2e/url-behavior.spec.ts':"import {url} from './helpers/paths';",'tests/e2e/other-section.spec.ts':"const url='/promociones';"});
+  const result=impact(files);assert.equal(result.safe,true);
+  assert.ok(result.specs.includes('tests/e2e/url-behavior.spec.ts'));assert.ok(!result.specs.includes('tests/e2e/other-section.spec.ts'));
+});
+test('inline compiled harness references and opaque computed test loaders cannot disappear',()=>{
+  const files=snapshot({'tests/e2e/inline-harness.spec.ts':"const code=\"import Board from '@/components/jobs/board'\";",'tests/e2e/opaque.spec.ts':'const component=require(file);'});
+  const result=impact(files);assert.equal(result.safe,true);
+  for(const name of ['inline-harness','opaque'])assert.ok(result.specs.includes(`tests/e2e/${name}.spec.ts`));
+});
+test('Next implicit section layouts affect descendant routes, root layout affects global scope',()=>{
+  const layout='src/app/[locale]/empleos/layout.tsx';const files=snapshot({[layout]:'export default 1;'});
+  assert.equal(impact(files,[layout]).safe,true);
+  assert.ok(impact(files,[layout]).roots.includes(page));
+  const global='src/app/layout.tsx';files.set(global,{source:'export default 1;'});assert.equal(impact(files,[global]).safe,false);
+});
+for(const root of ['src/app/[locale]/page.tsx','src/app/api/jobs/route.ts','src/app/[locale]/admin/page.tsx','src/app/[locale]/new-section/page.tsx','src/app/[locale]/empleos/route.ts','src/app/[locale]/empleos/opengraph-image.tsx'])test(`unmapped/global consumer ${root} forces broad`,()=>{
+  const result=impact(snapshot({[root]:"import Board from '@/components/jobs/board';"}));assert.equal(result.safe,false);assert.match(result.reason,/unmapped/);
+});
+for(const path of ['src/components/mobile/shell.tsx','src/components/auth/gate.tsx','src/lib/supabase/client.ts','src/i18n/request.ts'])test(`critical input ${path} remains broad`,()=>{
+  const files=snapshot({[path]:'export default 1;',[page]:`import value from '${path.replace('src/','@/').replace(/\.tsx?$/,'')}';`});assert.equal(impact(files,[path]).safe,false);
+});
+for(const source of ["import value from './missing';",'const data=import(path);','const broken = ('])test(`uncertain source graph falls back: ${source}`,()=>{
+  assert.equal(impact(snapshot({[jobs]:source})).safe,false);
+});
+test('finite locale JSON load is recognized, arbitrary computed source load is not',()=>{
+  const files=snapshot({'src/i18n/request.ts':'const messages=import(`../../messages/${locale}.json`);','messages/es.json':'{}','messages/en.json':'{}'});
+  assert.deepEqual(dependencyGraph(files).uncertainties,[]);assert.equal(impact(files).safe,true);
+  files.set('src/i18n/request.ts',{source:'const messages=import(`../../messages/${other}.json`);'});assert.equal(impact(files).safe,false);
+});
+test('cycles terminate and missing required behavior suite fails closed',()=>{
+  const files=snapshot({[jobs]:"import './cycle';",'src/components/jobs/cycle.ts':"import './board';"});assert.equal(impact(files).safe,true);
+  files.delete('tests/e2e/marketplace-lifecycle.spec.ts');assert.equal(impact(files).safe,false);
+});
+test('more than three sections does not narrow',()=>{
+  const files=snapshot(Object.fromEntries(['promociones','proyectos','mensajes'].map(s=>[`src/app/[locale]/${s}/page.tsx`,"import Board from '@/components/jobs/board';"])));assert.equal(impact(files).safe,false);
+});
+test('unconsumed, new or deleted inputs do not narrow',()=>{
+  const files=snapshot({'src/lib/orphan.ts':'export default 1;'});assert.equal(impact(files,['src/lib/orphan.ts']).safe,false);
+  for(const status of ['A','D','R100'])assert.equal(sectionImpact([{path:jobs,status}],files,files).safe,false);
+});
+test('mixed fixtures, lock/config, new specs, manual or missing baseline cannot use safe section claim',()=>{
+  const safe=impact(snapshot());
+  for(const path of ['tests/e2e/helpers/fixture.ts','package-lock.json','playwright.config.ts','supabase/migrations/a.sql'])assert.equal(classify(changed(jobs,path),{impact:safe}).scope,'broad');
+  assert.equal(classify([...changed(jobs),{path:'tests/e2e/new.spec.ts',status:'A'}],{impact:safe}).scope,'broad');
+  assert.equal(classify(changed(jobs),{impact:safe,force:true}).scope,'broad');
+  assert.equal(classify(changed(jobs),{impact:safe,baseline:false}).scope,'broad');
+});
+test('real tracked application graph narrows a jobs board but preserves broad homepage contact coverage',()=>{
+  const files=gitSnapshot('HEAD');assert.deepEqual(dependencyGraph(files).uncertainties,[]);
+  const result=sectionImpact(changed('src/components/jobs/jobs-board.tsx'),files,files);
+  assert.equal(result.safe,true,result.reason);assert.deepEqual(result.sections,['empleos']);
+  assert.ok(files.has('src/components/professionals/contact-button.tsx'));
+  const shared=sectionImpact(changed('src/components/professionals/contact-button.tsx'),files,files);assert.equal(shared.safe,false);assert.match(shared.reason,/unmapped route consumer/);
+});
+
+import { mkdtempSync, writeFileSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join, resolve } from 'node:path';
+import { execFileSync, spawnSync } from 'node:child_process';
+test('real Git-to-CLI section plan emits complete engine lists and retains deployment/security',()=>{
+  const cli=resolve('scripts/ci/test-plan.mjs'),dir=mkdtempSync(join(tmpdir(),'ccr-section-cli-'));
+  const git=(...args)=>execFileSync('git',args,{cwd:dir,encoding:'utf8'}).trim();
+  try {
+    git('init','-q');git('config','user.email','ci@example.invalid');git('config','user.name','CI');
+    for(const [path,file] of snapshot()){mkdirSync(dirname(join(dir,path)),{recursive:true});writeFileSync(join(dir,path),file.source);}
+    git('add','.');git('commit','-qm','base');const base=git('rev-parse','HEAD');
+    writeFileSync(join(dir,jobs),'export default 2;');git('add','.');git('commit','-qm','jobs change');
+    const event=join(dir,'event.json'),stub=join(dir,'fetch.mjs'),out=join(dir,'output');
+    writeFileSync(event,'{}');writeFileSync(stub,`globalThis.fetch=async()=>({ok:true,json:async()=>({workflow_runs:[{id:4,head_sha:'${base}',html_url:'https://example.invalid/run/4'}]})});`);
+    const env={...process.env,GITHUB_EVENT_PATH:event,GITHUB_EVENT_NAME:'push',GITHUB_REPOSITORY:'test/example',GITHUB_REF_NAME:'test',GITHUB_RUN_ID:'5',GH_TOKEN:'fake',PLAN_WORKFLOW:'regression-tests.yml',PLAN_KIND:'regression',GITHUB_OUTPUT:out};
+    const result=spawnSync(process.execPath,['--import',stub,cli],{cwd:dir,env,encoding:'utf8'});assert.equal(result.status,0,result.stderr);
+    const plan=JSON.parse(readFileSync(join(dir,'ci-test-plan.json'),'utf8'));
+    assert.equal(plan.scope,'sections');assert.deepEqual(plan.impact.sections,['empleos']);
+    assert.equal(plan.security,true);assert.equal(plan.deploy,true);
+    assert.ok(plan.webSpecs.includes('tests/e2e/marketplace-lifecycle.spec.ts'));
+    assert.ok(plan.mobileSpecs.includes('tests/e2e/marketplace-editors.spec.ts'));
+    assert.match(readFileSync(out,'utf8'),/scope=sections/);
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});

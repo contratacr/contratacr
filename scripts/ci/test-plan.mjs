@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
+import { gitSnapshot, sectionImpact } from './section-impact.mjs';
 
 // Only documents inspected as non-runtime inputs belong here. Unknown Markdown
 // (including generated content) must take the conservative route.
@@ -18,11 +19,12 @@ export const nativeSpecs = new Set([
 const nativeOnly = new Set(['tests/e2e/direct-chat.spec.ts', 'tests/e2e/mobile-native-shell.spec.ts']);
 const git = args => execFileSync('git', args, { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 }).trim();
 
-export function classify(changes, { baseline = true, force = false, importedSpecs = [] } = {}) {
+export function classify(changes, { baseline = true, force = false, importedSpecs = [], impact = null } = {}) {
   const paths = changes.map(c => c.path);
   const docs = paths.every(p => documents.has(p));
   const testsOnly = paths.every(p => documents.has(p) || /^tests\/e2e\/[a-z0-9-]+\.spec\.ts$/.test(p));
   const specs = paths.filter(p => p.endsWith('.spec.ts'));
+  const sectionInputs = paths.every(p => documents.has(p) || /^src\/.*\.[cm]?[jt]sx?$/.test(p) || /^tests\/e2e\/[a-z0-9-]+\.spec\.ts$/.test(p));
   const unsafeSpec = changes.some(c => c.status !== 'M' && !documents.has(c.path)) || specs.some(p => importedSpecs.includes(p));
   let scope = 'broad';
   let reason = 'Runtime, shared fixture/configuration, deleted/renamed test or unmapped input: keep broad coverage.';
@@ -30,16 +32,19 @@ export function classify(changes, { baseline = true, force = false, importedSpec
   else if (!baseline) reason = 'No compatible successful ancestor found: keep broad coverage.';
   else if (docs) { scope = 'documents'; reason = 'Only explicitly reviewed non-runtime documents changed.'; }
   else if (testsOnly && !unsafeSpec) { scope = 'specs'; reason = 'Only existing independent E2E specs changed; run complete specs in their configured engines.'; }
+  else if (sectionInputs && !unsafeSpec && impact?.safe) { scope = 'sections'; reason = impact.reason; }
+  const selected = scope === 'sections' ? impact.specs : specs;
   return {
     scope, reason, paths,
-    regression: scope === 'broad' || (scope === 'specs' && specs.some(p => !nativeOnly.has(p))),
-    security: scope === 'broad',
-    mobile: scope === 'broad' || (scope === 'specs' && specs.some(p => nativeSpecs.has(p))),
+    impact,
+    regression: scope === 'broad' || (['specs','sections'].includes(scope) && selected.some(p => !nativeOnly.has(p))),
+    security: ['broad','sections'].includes(scope),
+    mobile: scope === 'broad' || (['specs','sections'].includes(scope) && selected.some(p => nativeSpecs.has(p))),
     // Deployment remains independent: changes to runtime/build/unknown inputs
     // retain the existing Cloudflare pipeline; tests/documents do not deploy.
-    deploy: scope === 'broad',
-    webSpecs: scope === 'specs' ? specs.filter(p => !nativeOnly.has(p)) : [],
-    mobileSpecs: scope === 'specs' ? specs.filter(p => nativeSpecs.has(p)) : [],
+    deploy: ['broad','sections'].includes(scope),
+    webSpecs: ['specs','sections'].includes(scope) ? selected.filter(p => !nativeOnly.has(p)) : [],
+    mobileSpecs: ['specs','sections'].includes(scope) ? selected.filter(p => nativeSpecs.has(p)) : [],
   };
 }
 
@@ -92,8 +97,13 @@ export async function main() {
       }
     }
   }
+  let impact = null;
+  if (base && !force && changes.some(c=>c.path.startsWith('src/')) && changes.every(c=>documents.has(c.path)||/^src\/.*\.[cm]?[jt]sx?$/.test(c.path)||/^tests\/e2e\/[a-z0-9-]+\.spec\.ts$/.test(c.path))) {
+    try { impact = sectionImpact(changes,gitSnapshot(base),gitSnapshot(head)); }
+    catch(e) { impact = {safe:false,reason:`Dependency analysis unavailable: ${e.message}`}; }
+  }
   const plan = { head, base, baselineRun, lookupError, workflow: process.env.PLAN_WORKFLOW,
-    ...classify(changes, { baseline: !!base, force, importedSpecs }) };
+    ...classify(changes, { baseline: !!base, force, importedSpecs, impact }) };
   const kind = process.env.PLAN_KIND;
   const run = plan[kind];
   if (typeof run !== 'boolean') throw new Error(`Unknown plan kind: ${kind}`);
@@ -101,7 +111,7 @@ export async function main() {
   if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT,
     `run=${run}\nscope=${plan.scope}\nweb_specs=${JSON.stringify(plan.webSpecs)}\nmobile_specs=${JSON.stringify(plan.mobileSpecs)}\n`);
   if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY,
-    `## Automatic test plan: ${kind}\n\nScope: **${plan.scope}**. Heavy job: **${run ? 'run' : 'not needed'}**.\n\n${plan.reason}\n\nHead: \`${head}\`\n\nBaseline: ${baselineRun || base || 'none — conservative fallback'}\n\nLookup: ${lookupError || 'OK'}\n\nChanged paths and selected specs are in the ci-test-plan artifact. Scheduled/manual runs are not reduced. This is not a claim that a skipped test ran.\n`);
+    `## Automatic test plan: ${kind}\n\nScope: **${plan.scope}**. Heavy job: **${run ? 'run' : 'not needed'}**.\n\n${plan.reason}\n\nHead: \`${head}\`\n\nBaseline: ${baselineRun || base || 'none — conservative fallback'}\n\nLookup: ${lookupError || 'OK'}\n\nSections: ${impact?.sections?.join(", ") || "not narrowed"}. Dependency analysis: ${impact?.reason || "not applicable"}.\n\nChanged paths, consumers and selected specs are in the ci-test-plan artifact. Scheduled/manual runs are not reduced. This is not a claim that a skipped test ran.\n`);
   console.log(JSON.stringify(plan, null, 2));
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) await main();
