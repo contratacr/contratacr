@@ -160,7 +160,9 @@ jobs:
 
       - name: Build the exact mobile commit locally
         run: npm run build
-      - run: npx playwright install --with-deps chromium webkit
+      - name: Install WebView browser engines
+        timeout-minutes: 10
+        run: npx playwright install --with-deps chromium webkit
       - name: Run planned WebView specs or the complete mobile suite
         env:
           SELECTED_SPECS: ${{ needs.plan.outputs.mobile_specs }}

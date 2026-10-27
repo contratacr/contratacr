@@ -74,8 +74,10 @@ test('mixed fixtures, lock/config, new specs, manual or missing baseline cannot 
   assert.equal(classify(changed(jobs),{impact:safe,force:true}).scope,'broad');
   assert.equal(classify(changed(jobs),{impact:safe,baseline:false}).scope,'broad');
 });
-test('real tracked application graph narrows a jobs board but preserves broad homepage contact coverage',()=>{
-  const files=gitSnapshot('HEAD');assert.deepEqual(dependencyGraph(files).uncertainties,[]);
+// This is a pinned graph fixture, not a constraint on future application wiring.
+// A legitimate new/global consumer must select broad, not fail the planner tests.
+test('validated application fixture narrows jobs but preserves broad homepage contact coverage',()=>{
+  const files=gitSnapshot('7fa53f8f7a7dfad8af39d4f190844d66e9a37bd6');assert.deepEqual(dependencyGraph(files).uncertainties,[]);
   const result=sectionImpact(changed('src/components/jobs/jobs-board.tsx'),files,files);
   assert.equal(result.safe,true,result.reason);assert.deepEqual(result.sections,['empleos']);
   assert.ok(files.has('src/components/professionals/contact-button.tsx'));
@@ -105,4 +107,52 @@ test('real Git-to-CLI section plan emits complete engine lists and retains deplo
     assert.ok(plan.mobileSpecs.includes('tests/e2e/marketplace-editors.spec.ts'));
     assert.match(readFileSync(out,'utf8'),/scope=sections/);
   }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+import { reviewedNextConfig } from '../../scripts/ci/section-impact.mjs';
+for(const paths of [{'@/*':['./src/*'],'@jobs/*':['./src/components/jobs/*']},{'@/*':['./other/*']}])test(`unreviewed TS aliases cannot hide consumers: ${JSON.stringify(paths)}`,()=>{
+  const files=snapshot({'tsconfig.json':JSON.stringify({compilerOptions:{paths}})});assert.equal(impact(files).safe,false);
+});
+for(const config of [{extends:'./other.json'},{compilerOptions:{baseUrl:'src'}},{compilerOptions:{rootDirs:['src','generated']}},{compilerOptions:{moduleResolution:'nodenext'}}])test(`unreviewed TS resolution broadens: ${JSON.stringify(config)}`,()=>{
+  assert.equal(impact(snapshot({'tsconfig.json':JSON.stringify(config)})).safe,false);
+});
+test('reviewed TS aliases and Next configuration still permit section selection',()=>{
+  const files=snapshot({'tsconfig.json':JSON.stringify({compilerOptions:{paths:{'@/*':['./src/*']}}}),'package.json':'{"dependencies":{"react":"19"}}'});
+  files.set('next.config.ts',{hash:reviewedNextConfig['next.config.ts'],source:''});assert.equal(impact(files).safe,true);
+  files.set('next.config.ts',{hash:'unreviewed',source:''});assert.equal(impact(files).safe,false);
+});
+for(const config of [{imports:{'#local':'./src/foo.ts'}},{exports:'./src/foo.ts'}])test(`package module alias broadens: ${JSON.stringify(config)}`,()=>{
+  assert.equal(impact(snapshot({'package.json':JSON.stringify(config)})).safe,false);
+});
+for(const request of ['#internal','~/components/other','/src/components/other','file:///tmp/component.mjs','data:text/javascript,export default 1','https://example.invalid/module.js'])test(`unsupported local module path ${request} never counts as an external dependency`,()=>{
+  assert.equal(impact(snapshot({[jobs]:`import value from '${request}';`})).safe,false);
+});
+for(const path of ['tests/ci/test-plan.test.mjs','tests/ci/section-impact.test.mjs'])test(`planner test-only edit ${path} keeps mandatory self-tests without app work`,()=>{
+  const p=classify(changed(path,'docs/test-selection-policy.md'));assert.equal(p.scope,'planner-tests');
+  for(const flag of ['regression','mobile','security','deploy'])assert.equal(p[flag],false);
+  assert.equal(classify(changed(path,jobs)).scope,'broad');
+  assert.equal(classify(changed(path),{importedSpecs:[path]}).scope,'broad');
+  assert.equal(classify([{path,status:'A'}]).scope,'broad');
+  assert.equal(classify(changed(path),{force:true}).scope,'broad');
+  assert.equal(classify(changed(path),{baseline:false}).scope,'broad');
+});
+
+
+test('all plausible local extension candidates retain every consuming section',()=>{
+  const files=snapshot({'src/components/jobs/board.ts':'export default 2;','src/app/[locale]/promociones/page.tsx':"import Board from '@/components/jobs/board.tsx';"});
+  const result=impact(files);assert.equal(result.safe,true,result.reason);assert.deepEqual(result.sections,['empleos','promociones']);
+});
+
+
+test('source symlinks cannot hide route consumers behind a different Git path',()=>{
+  const files=snapshot();files.set(jobs,{source:'./other.tsx',mode:'120000'});
+  const result=impact(files);assert.equal(result.safe,false);assert.match(result.reason,/non-regular/);
+});
+
+
+test('embedded source Git links force broad rather than hiding nested routes',()=>{
+  const files=snapshot();files.set('src/app/embedded',{source:'',mode:'160000'});assert.equal(impact(files).safe,false);
+});
+test('unmapped route names with control characters cannot disappear from the graph',()=>{
+  const files=snapshot({'src/app/[locale]/other\nsection/page.tsx':"import Board from '@/components/jobs/board';"});assert.equal(impact(files).safe,false);
 });

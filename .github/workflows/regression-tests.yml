@@ -200,8 +200,9 @@ jobs:
       - name: Build the production application locally
         run: npm run build
 
-      - name: Install browser engines for registration and push smoke
-        if: github.event_name == 'push' && needs.plan.outputs.scope == 'broad'
+      - name: Install browser engines for planned push checks
+        if: github.event_name == 'push'
+        timeout-minutes: 10
         run: npx playwright install --with-deps chromium webkit
 
       - name: Verify Safari registration before broader browser checks
@@ -253,9 +254,7 @@ jobs:
         env:
           PLAYWRIGHT_WEBKIT: "1"
           SELECTED_SPECS: ${{ needs.plan.outputs.web_specs }}
-        run: |
-          npx playwright install --with-deps chromium webkit
-          node scripts/ci/run-selected-specs.mjs
+        run: node scripts/ci/run-selected-specs.mjs
 
       - name: Require clean push smoke results
         if: github.event_name == 'push'

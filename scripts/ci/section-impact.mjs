@@ -3,6 +3,9 @@ import { createRequire } from 'node:module';
 import { posix } from 'node:path';
 const require = createRequire(import.meta.url);
 const ts = require(process.env.CI_TYPESCRIPT_MODULE || 'typescript');
+// Configuration outside this reviewed resolver can add invisible consumers.
+export const reviewedNextConfig = { 'next.config.ts': '21877a39357bf08af41303110cb1aa76b2d7bf42' };
+const configInput = p => ['tsconfig.json','package.json'].includes(p) || /^next\.config\.[cm]?[jt]s$/.test(p);
 const spec = name => `tests/e2e/${name}.spec.ts`;
 
 // Reviewed behavior suites, not a filename-keyword ownership heuristic. Shared
@@ -31,7 +34,7 @@ const routeSections = new Map([
   ['privacidad','legales'], ['terminos','legales'], ['mensajes','mensajes'], ['notificaciones','notificaciones'],
   ['cotizar','cotizaciones'], ['cotizacion','cotizaciones'], ['dashboard','panel'],
 ]);
-const rootPattern = /^src\/app\/(?:.*\/)?(?:page|layout|template|default|loading|error|global-error|not-found|route|opengraph-image|twitter-image|icon|apple-icon|robots|sitemap|manifest)\.[jt]sx?$/;
+const rootPattern = /^src\/app\/(?:.*\/)?(?:page|layout|template|default|loading|error|global-error|not-found|route|opengraph-image|twitter-image|icon|apple-icon|robots|sitemap|manifest)\.[jt]sx?$/s;
 const sensitiveName = /(?:^|[/.\-])(?:auth|mfa|session|permission|permissions|security|rls|access)(?:[/.\-]|$)/;
 const codePattern = /\.[cm]?[jt]sx?$/;
 const criticalPattern = /^(?:src\/(?:middleware|proxy|instrumentation)|src\/i18n\/|src\/app\/api\/|src\/lib\/(?:auth|supabase|mobile)(?:\/|[-.])|src\/hooks\/(?:use-auth|use-native-app|native-app-inicial)\.|src\/components\/(?:auth|admin|mobile|ui|landing|account)\/)/;
@@ -47,10 +50,10 @@ export function gitSnapshot(rev) {
   const tree = execFileSync('git',['ls-tree','-rz',rev],{encoding:'utf8',maxBuffer:32*1024*1024});
   const files = new Map();
   for (const row of tree.split('\0').filter(Boolean)) {
-    const m = /^(\d+) blob ([0-9a-f]+)\t(.+)$/.exec(row);
-    if (m) files.set(m[3],{hash:m[2],source:''});
+    const m = /^(\d+) (?:blob|commit) ([0-9a-f]+)\t(.+)$/s.exec(row);
+    if (m) files.set(m[3],{hash:m[2],mode:m[1],source:''});
   }
-  const sourceFiles = [...files].filter(([p])=>/^(src\/|tests\/e2e\/)/.test(p)&&codePattern.test(p));
+  const sourceFiles = [...files].filter(([p])=>(/^(src\/|tests\/e2e\/)/.test(p)&&codePattern.test(p))||configInput(p));
   const data = execFileSync('git',['cat-file','--batch'],{input:sourceFiles.map(([,f])=>f.hash).join('\n')+'\n',maxBuffer:64*1024*1024});
   let cursor=0;
   for (const [,file] of sourceFiles) {
@@ -64,23 +67,36 @@ export function gitSnapshot(rev) {
 }
 
 function resolveLocal(from, request, files) {
+  if (/^(?:[#~\/]|(?:file|data|https?):)/.test(request)) return {error:`Unsupported project module resolution in ${from}`};
   if (!request.startsWith('.')&&!request.startsWith('@/')) return {external:true};
   const base=request.startsWith('@/')?'src/'+request.slice(2):posix.normalize(posix.join(posix.dirname(from),request));
   const candidates=[base,...['.ts','.tsx','.js','.jsx','.mjs','.json','.css'].map(e=>base+e),...['.ts','.tsx','.js','.jsx'].map(e=>base+'/index'+e)];
   if (/\.jsx?$/.test(base)) candidates.push(...['.ts','.tsx'].map(e=>base.replace(/\.jsx?$/,e)));
-  const path=candidates.find(p=>files.has(p));
-  return path?{path}:{error:`Unresolved local import in ${from}: ${request}`};
+  const paths=[...new Set(candidates.filter(p=>files.has(p)))];
+  return paths.length?{paths}:{error:`Unresolved local import in ${from}: ${request}`};
 }
 
 export function dependencyGraph(files) {
   const reverse = new Map(), uncertainties = [], opaqueTests = new Set(), routeTests = new Map();
+  for(const [path,file] of files) {
+    if(file.mode&& !['100644','100755'].includes(file.mode)&&(path.startsWith('src/')||configInput(path)))uncertainties.push(`Unreviewed non-regular source/config input: ${path}`);
+    if(/^next\.config\.[cm]?[jt]s$/.test(path)&&file.hash!==reviewedNextConfig[path])uncertainties.push(`Unreviewed Next resolver configuration: ${path}`);
+    if(!['tsconfig.json','package.json'].includes(path))continue;
+    const parsed=ts.parseConfigFileTextToJson(path,file.source);
+    if(parsed.error){uncertainties.push(`Cannot read resolver configuration: ${path}`);continue;}
+    const config=parsed.config??{};
+    if(path==='tsconfig.json') {
+      const options=config.compilerOptions??{},paths=options.paths??{};
+      if(config.extends||options.rootDirs||options.moduleSuffixes||(options.moduleResolution!==undefined&&options.moduleResolution!=='bundler')||(options.baseUrl!==undefined&&options.baseUrl!=='.')||Object.entries(paths).some(([key,targets])=>key!=='@/*'||!Array.isArray(targets)||targets.length!==1||!['./src/*','src/*'].includes(targets[0])))uncertainties.push('Unreviewed TypeScript module resolution.');
+    } else if(['imports','exports'].some(key=>config[key]&&(typeof config[key]!=='object'||Object.keys(config[key]).length)))uncertainties.push('Unreviewed package imports/exports resolution.');
+  }
   const link=(child,parent)=>{if(!reverse.has(child))reverse.set(child,new Set());reverse.get(child).add(parent);};
   const uncertain=(path,reason)=>path.startsWith('tests/e2e/')?opaqueTests.add(path):uncertainties.push(reason);
   for (const [path,file] of files) {
     if(!codePattern.test(path)||!/^(src\/|tests\/e2e\/)/.test(path))continue;
     const source=ts.createSourceFile(path,file.source,ts.ScriptTarget.Latest,true);
     if(source.parseDiagnostics.length)uncertain(path,`Cannot parse ${path}`);
-    const add=request=>{const target=resolveLocal(path,request,files);if(target.path)link(target.path,path);else if(target.error)uncertain(path,target.error);};
+    const add=request=>{const target=resolveLocal(path,request,files);if(target.paths)for(const resolved of target.paths)link(resolved,path);else if(target.error)uncertain(path,target.error);};
     const visit=node=>{
       if((ts.isImportDeclaration(node)||ts.isExportDeclaration(node))&&node.moduleSpecifier&&ts.isStringLiteralLike(node.moduleSpecifier))add(node.moduleSpecifier.text);
       if(ts.isImportEqualsDeclaration(node)&&ts.isExternalModuleReference(node.moduleReference)&&node.moduleReference.expression&&ts.isStringLiteralLike(node.moduleReference.expression))add(node.moduleReference.expression.text);
@@ -100,7 +116,7 @@ export function dependencyGraph(files) {
     if(path.startsWith('tests/e2e/'))for(const match of file.source.matchAll(/(?:@\/|(?:\.\.\/|\.\/)*src\/)[\w./\[\]-]+/g)) {
       const request=match[0];
       const target=resolveLocal(path,request.startsWith('@/')?request:'@/'+request.slice(request.indexOf('src/')+4),files);
-      if(target.path)link(target.path,path);
+      if(target.paths)for(const resolved of target.paths)link(resolved,path);
       else opaqueTests.add(path);
     }
     // URL-based E2E do not import the page. Preserve literal route consumers
