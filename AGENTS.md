@@ -59,7 +59,7 @@ Use focused checks for the affected behavior and its consumers. Broaden coverage
 
 Documentation-only changes need a diff/content check, not an application rebuild or E2E run, provided those documents are not runtime/build inputs. Test-only fixes need the changed tests and relevant validation, not an automatic restart of previously successful unrelated checks. Infrastructure failures before tests are not test failures: diagnose and retry the failed stage/job when possible. Never weaken assertions, hide flakiness or seed production to make a gate pass.
 
-Retain periodic exhaustive coverage and explicit risk-based full runs. Do not change workflow gates, required checks or deployment triggers as an incidental optimization. The initial automatic selector in `ci-test-plan.yml` applies only the documented conservative reductions; application/domain mapping remains broad until separately validated. Do not use blanket `[skip ci]` for functional changes or where required checks would remain pending.
+Retain periodic exhaustive coverage and explicit risk-based full runs. Do not change workflow gates, required checks or deployment triggers as an incidental optimization. The automatic selector in `ci-test-plan.yml` uses reviewed documents, independent specs and the reviewed section/dependency map in `scripts/ci/section-impact.mjs`. Preserve broad coverage for unresolved imports, unknown/global route consumers, security/native infrastructure and mixed or unmapped inputs. Runtime section selection still retains security and deployment gates; see the policy for exact limits. Do not use blanket `[skip ci]` for functional changes or where required checks would remain pending.
 
 ## Logo stability (required brand contract)
 

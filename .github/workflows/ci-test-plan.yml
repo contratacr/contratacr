@@ -48,9 +48,12 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
+      - name: Prepare the lock-pinned dependency parser
+        timeout-minutes: 2
+        run: node scripts/ci/prepare-test-planner.mjs
       - name: Validate selector and private environment policy
         run: |
-          node --test tests/ci/test-plan.test.mjs
+          node --test tests/ci/*.test.mjs
           node scripts/check-private-env-files.mjs
       - name: Select required checks
         id: select
