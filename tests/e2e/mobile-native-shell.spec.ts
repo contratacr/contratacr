@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "playwright/test";
+import { build } from "esbuild";
 import { gotoOK, loginAs, resetAuth } from "./helpers";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, type RegressionSeedState } from "./seed";
 
@@ -606,4 +607,97 @@ test.describe("@mobile native shell contracts", () => {
 // default-denied and first-use flows are covered in legal-privacy.spec.ts.
 test.beforeEach(async ({page}) => {
   await page.addInitScript(() => localStorage.setItem("contratacr:consent:ai:v1", JSON.stringify({version:"2026-10-19",choice:"accepted",at:new Date().toISOString()})));
+});
+
+// Real navigation component, isolated from authentication, network and fixtures.
+// The three scroll containers match the actual home, marketplace and search shells.
+async function mountScrollNavigation(page: Page) {
+  const mocks: Record<string, string> = {
+    "next-intl": `export const useLocale=()=>"es";export const useTranslations=()=>key=>key;`,
+    "next/navigation": `const params=new URLSearchParams();export const useSearchParams=()=>params;`,
+    "@/i18n/navigation": `import React from 'react';const router={prefetch(){},push(){}};export const useRouter=()=>router;export const usePathname=()=>window.__testNavPath;export const Link=({href,prefetch,...rest})=>React.createElement('a',{href,...rest});`,
+    "@/hooks/use-native-app": `export const useNativeApp=()=>true;`,
+    "@/hooks/use-auth": `export const useAuth=()=>({user:null,avatarUrl:null});`,
+    "@/hooks/use-mode": `export const useMode=()=>({mode:'use'});`,
+    "@/hooks/use-avisos-por-ver": `export const useAvisosPorVer=()=>0;`,
+    "@/hooks/use-direct-message-unread": `export const useDirectMessageUnread=()=>0;`,
+    "@/components/mobile/hoja-de-crear": `export const HojaDeCrear=()=>null;`,
+    "@/lib/data/categories": `export const esServicioDelCatalogo=()=>true;`,
+    "@/lib/buscar-url": `export const esRutaDeBusqueda=path=>path?.startsWith('/buscar')??false;`,
+  };
+  const bundle = await build({
+    stdin: { resolveDir: process.cwd(), loader: "tsx", contents: `import React,{useState} from 'react';import{createRoot}from'react-dom/client';import{NativeBottomNav}from'./src/components/mobile/native-bottom-nav';function App(){const [path,setPath]=useState('/');window.__testNavPath=path;window.__setTestNavPath=setPath;const box={height:200,overflowY:'auto'};return <><div data-current-path={path}/><main id="home-scroll" style={box}><div style={{height:2000}}/></main><div className="ccr-tablero-marco"><section id="board-scroll" style={box}><div style={{height:2000}}/></section></div><div id="search-scroll" className="ccr-search-bottom-sheet" style={box}><div style={{height:2000}}/></div><NativeBottomNav/></>}createRoot(document.getElementById('root')).render(<App/>);` },
+    bundle: true, write: false, format: "iife", platform: "browser", jsx: "automatic", tsconfig: "tsconfig.json", define: { "process.env.NODE_ENV": '"production"' },
+    plugins: [{ name: "nav-boundaries", setup(builder) {
+      builder.onResolve({ filter: /.*/ }, args => args.path in mocks ? { path: args.path, namespace: "nav-mock" } : undefined);
+      builder.onLoad({ filter: /.*/, namespace: "nav-mock" }, args => ({ contents: mocks[args.path], loader: "jsx", resolveDir: process.cwd() }));
+    } }],
+  });
+  await page.route("**/nav-scroll-harness", route => route.fulfill({ contentType: "text/html", body: '<!doctype html><meta name="viewport" content="width=device-width"><div id="root"></div>' }));
+  await page.goto("/nav-scroll-harness");
+  await page.addScriptTag({ content: bundle.outputFiles[0].text });
+  await expect(page.locator("nav.ccr-native-bottom-nav")).toHaveCount(1);
+  await expect(page.locator("body")).toHaveClass(/ccr-native-bottom-nav-visible/);
+}
+
+async function scrollValues(page: Page, selector: string, values: number[]) {
+  await page.locator(selector).evaluate(async (element, positions) => {
+    for (const position of positions) {
+      element.scrollTop = position;
+      element.dispatchEvent(new Event("scroll"));
+      await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+    }
+  }, values);
+}
+
+test("native bottom navigation follows slow scroll in both directions without flicker", async ({ page }) => {
+  await mountScrollNavigation(page);
+  const body = page.locator("body");
+  for (const [path, selector] of [["/", "#home-scroll"], ["/proyectos", "#board-scroll"], ["/buscar", "#search-scroll"]] as const) {
+    await page.evaluate(pathname => (window as unknown as { __setTestNavPath: (path: string) => void }).__setTestNavPath(pathname), path);
+    await expect(page.locator("[data-current-path]")).toHaveAttribute("data-current-path", path);
+    await expect(body).not.toHaveClass(/ccr-native-bottom-nav-hidden/);
+    await scrollValues(page, selector, [60, 64, 68, 72, 76, 80, 84, 88]);
+    await expect(body).not.toHaveClass(/ccr-native-bottom-nav-hidden/);
+    await scrollValues(page, selector, [92]);
+    await expect(body).toHaveClass(/ccr-native-bottom-nav-hidden/);
+    await expect(page.locator("nav.ccr-native-bottom-nav")).toHaveClass(/translate-y-/);
+    await scrollValues(page, selector, [88, 92, 88, 92, 88, 92]);
+    await expect(body).toHaveClass(/ccr-native-bottom-nav-hidden/);
+    await scrollValues(page, selector, [88, 84, 80]);
+    await expect(body).toHaveClass(/ccr-native-bottom-nav-hidden/);
+    await scrollValues(page, selector, [76]);
+    await expect(body).not.toHaveClass(/ccr-native-bottom-nav-hidden/);
+    await scrollValues(page, selector, [80, 76, 80, 76, 80, 76, 80, 76]);
+    await expect(body).not.toHaveClass(/ccr-native-bottom-nav-hidden/);
+    await scrollValues(page, selector, [110]);
+    await expect(body).toHaveClass(/ccr-native-bottom-nav-hidden/);
+    await scrollValues(page, selector, [92]);
+    await expect(body).not.toHaveClass(/ccr-native-bottom-nav-hidden/);
+    await scrollValues(page, selector, [126, 20]);
+    await expect(body).not.toHaveClass(/ccr-native-bottom-nav-hidden/);
+  }
+  await page.evaluate(() => (window as unknown as { __setTestNavPath: (path: string) => void }).__setTestNavPath("/mensajes"));
+  await expect(page.locator("[data-current-path]")).toHaveAttribute("data-current-path", "/mensajes");
+  await scrollValues(page, "#home-scroll", [60, 100, 150]);
+  await expect(body).not.toHaveClass(/ccr-native-bottom-nav-hidden/);
+});
+
+test("native bottom navigation ignores the simulated iOS bottom bounce", async ({ page }) => {
+  await mountScrollNavigation(page);
+  const body = page.locator("body");
+  await page.locator("#board-scroll").evaluate(element => {
+    let position = 120;
+    Object.defineProperty(element, "scrollTop", { configurable: true, get: () => position, set: value => { position = value; } });
+    Object.defineProperty(element, "scrollHeight", { configurable: true, value: 1000 });
+    Object.defineProperty(element, "clientHeight", { configurable: true, value: 200 });
+  });
+  await page.evaluate(() => (window as unknown as { __setTestNavPath: (path: string) => void }).__setTestNavPath("/proyectos"));
+  await expect(page.locator("[data-current-path]")).toHaveAttribute("data-current-path", "/proyectos");
+  await scrollValues(page, "#board-scroll", [120, 152]);
+  await expect(body).toHaveClass(/ccr-native-bottom-nav-hidden/);
+  await scrollValues(page, "#board-scroll", [800, 818, 810, 800, 798]);
+  await expect(body).toHaveClass(/ccr-native-bottom-nav-hidden/);
+  await scrollValues(page, "#board-scroll", [794, 790, 786, 782]);
+  await expect(body).not.toHaveClass(/ccr-native-bottom-nav-hidden/);
 });

@@ -222,8 +222,9 @@ export function NativeBottomNav() {
 
   // Al desplazar hacia abajo la pastilla se retira; hacia arriba, vuelve. Así
   // solo ocupa pantalla cuando se la busca: quien baja está leyendo, quien
-  // sube está por irse a otro lado. Con histéresis (8px) para que un dedo
-  // tembloroso no la haga titilar, y siempre visible cerca del tope.
+  // sube está por irse a otro lado. Sumamos el desplazamiento en la misma
+  // dirección para reconocer también el scroll lento, con tolerancia para que
+  // pequeños movimientos no hagan titilar la barra. Siempre visible en el tope.
   // Retirarse al desplazar donde hay una lista larga que se recorre sin fin:
   // portada, Ofertas, Empleos y los resultados de /buscar. En Panel o Mensajes
   // la lista es corta y la barra yéndose y viniendo sería ruido.
@@ -232,7 +233,8 @@ export function NativeBottomNav() {
   const [escondida, setEscondida] = useState(false);
   useEffect(() => {
     if (!permiteRetirarse) { setEscondida(false); return; }
-    const posiciones = new WeakMap<Element, number>();
+    type Posicion = { anterior: number; direccion: -1 | 0 | 1; recorrido: number };
+    const posiciones = new WeakMap<Element, Posicion>();
     // Solo avisa a React cuando CAMBIA: en cada evento de desplazamiento volvía a pedir render.
     let ultima: boolean | null = null;
     const poner = (v: boolean) => { if (v !== ultima) { ultima = v; setEscondida(v); } };
@@ -240,18 +242,25 @@ export function NativeBottomNav() {
       const objetivo = event.target;
       if (!(objetivo instanceof Element) || !objetivo.matches("main, .ccr-tablero-marco > section, .ccr-tablero-ficha, [data-messages-page-main], .ccr-direct-chat-list, .ccr-direct-chat-thread-scroll, .ccr-search-bottom-sheet, .ccr-search-bottom-sheet *")) return;
       const actual = objetivo.scrollTop;
-      const previa = posiciones.get(objetivo) ?? actual;
-      posiciones.set(objetivo, actual);
-      if (actual < 48) { poner(false); return; }
+      const posicion: Posicion = posiciones.get(objetivo) ?? { anterior: actual, direccion: 0, recorrido: 0 };
+      posiciones.set(objetivo, posicion);
+      const delta = actual - posicion.anterior;
+      posicion.anterior = actual;
+      if (actual < 48) { posicion.direccion = 0; posicion.recorrido = 0; poner(false); return; }
       // Al llegar al fondo, iOS estira la lista y la devuelve sola. Ese regreso
       // se leía como "va subiendo" y sacaba la barra sin que nadie deslizara.
       // En el borde —y más allá, mientras dura el rebote— no se decide nada;
       // se vuelve a decidir en cuanto la lista se despega del final.
       const maximo = objetivo.scrollHeight - objetivo.clientHeight;
-      if (maximo > 0 && actual >= maximo - 2) return;
-      const delta = actual - previa;
-      if (delta > 8) poner(true);
-      else if (delta < -8) poner(false);
+      if (maximo > 0 && actual >= maximo - 2) { posicion.direccion = 0; posicion.recorrido = 0; return; }
+      if (delta === 0) return;
+      const direccion = delta > 0 ? 1 : -1;
+      if (posicion.direccion !== direccion) { posicion.direccion = direccion; posicion.recorrido = 0; }
+      posicion.recorrido += Math.abs(delta);
+      if (posicion.recorrido >= (direccion > 0 ? 32 : 16)) {
+        poner(direccion > 0);
+        posicion.recorrido = 0;
+      }
     };
     window.addEventListener("scroll", alDesplazar, { capture: true, passive: true });
     return () => window.removeEventListener("scroll", alDesplazar, { capture: true });
