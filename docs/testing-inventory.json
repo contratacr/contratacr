@@ -15399,7 +15399,8 @@
         "tests/e2e/reanudar-la-app.spec.ts"
       ],
       "directReferences": [
-        "tests/e2e/create-sheet-navigation.spec.ts"
+        "tests/e2e/create-sheet-navigation.spec.ts",
+        "tests/e2e/mobile-native-shell.spec.ts"
       ],
       "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
@@ -15475,7 +15476,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 307,
+          "line": 316,
           "tag": "div",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -15483,7 +15484,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 336,
+          "line": 345,
           "tag": "Link",
           "label": "{tNav(\"searchAria\")}",
           "handler": "{(event) => irA(event, \"/profesionales\")}",
@@ -15491,7 +15492,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 342,
+          "line": 351,
           "tag": "Link",
           "label": "{tNav(\"messages\")}",
           "handler": "{(event) => { if (user) irA(event, \"/mensajes\"); }}",
@@ -15499,7 +15500,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 359,
+          "line": 368,
           "tag": "button",
           "label": "{tNav(\"create\")}",
           "handler": "{() => { window.dispatchEvent(new Event(\"ccr:close-native-search\")); setCreateFrom(createDestination); }}",
@@ -15507,7 +15508,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 370,
+          "line": 379,
           "tag": "Link",
           "label": "{tNav(\"notifications\")}",
           "handler": "{(event) => { if (user) irA(event, \"/notificaciones\"); }}",
@@ -15515,7 +15516,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 388,
+          "line": 397,
           "tag": "Link",
           "label": "{tNav(\"panel\")}",
           "handler": "{(event) => irA(event, nativePanelHref)}",
@@ -15523,7 +15524,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 402,
+          "line": 411,
           "tag": "Link",
           "label": "{t(\"login\")}",
           "handler": "",
@@ -22255,6 +22256,7 @@
         "tests/e2e/last-used-sign-in.spec.ts"
       ],
       "directReferences": [
+        "tests/e2e/mobile-native-shell.spec.ts",
         "tests/e2e/native-link-launch.spec.ts",
         "tests/e2e/runtime-analytics.spec.ts",
         "tests/e2e/search-offer-loading.spec.ts"
@@ -22306,8 +22308,10 @@
         "tests/e2e/notifications-guides-regression.spec.ts",
         "tests/e2e/direct-chat.spec.ts"
       ],
-      "directReferences": [],
-      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "directReferences": [
+        "tests/e2e/mobile-native-shell.spec.ts"
+      ],
+      "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "Contrato/integración + carreras, limpieza y navegación",
       "coverage": "Alcance detallado pendiente de revisión; no certificado",
       "priority": "P1"
@@ -22466,8 +22470,10 @@
         "tests/e2e/notifications-guides-regression.spec.ts",
         "tests/e2e/direct-chat.spec.ts"
       ],
-      "directReferences": [],
-      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "directReferences": [
+        "tests/e2e/mobile-native-shell.spec.ts"
+      ],
+      "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "Contrato/integración + carreras, limpieza y navegación",
       "coverage": "Alcance detallado pendiente de revisión; no certificado",
       "priority": "P1"
@@ -22561,8 +22567,10 @@
         "tests/e2e/marketplace-editors.spec.ts",
         "tests/e2e/statistics-dashboard.spec.ts"
       ],
-      "directReferences": [],
-      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "directReferences": [
+        "tests/e2e/mobile-native-shell.spec.ts"
+      ],
+      "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "Contrato/integración + carreras, limpieza y navegación",
       "coverage": "Alcance detallado pendiente de revisión; no certificado",
       "priority": "P1"
@@ -22589,6 +22597,7 @@
       "directReferences": [
         "tests/e2e/contact-context-measurement.spec.ts",
         "tests/e2e/meta-growth-runtime.spec.ts",
+        "tests/e2e/mobile-native-shell.spec.ts",
         "tests/e2e/native-link-launch.spec.ts",
         "tests/e2e/navbar-brand-consistency.spec.ts",
         "tests/e2e/runtime-analytics.spec.ts",
@@ -25499,40 +25508,48 @@
       "file": "tests/e2e/mobile-native-shell.spec.ts",
       "cases": [
         {
-          "line": 171,
+          "line": 172,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 184,
+          "line": 185,
           "title": "\"signed-out public pages keep the marketplace header pinned at the top and a single way in\""
         },
         {
-          "line": 233,
+          "line": 234,
           "title": "\"first installation keeps incomplete login and registration journeys retryable\""
         },
         {
-          "line": 290,
+          "line": 291,
           "title": "\"welcome menu allows guest exploration and stays dismissed after reload\""
         },
         {
-          "line": 314,
+          "line": 315,
           "title": "\"native marketplace tabs survive localized document navigations\""
         },
         {
-          "line": 379,
+          "line": 380,
           "title": "\"la portada no debe romper la hidratación\""
         },
         {
-          "line": 387,
+          "line": 388,
           "title": "\"native search owns the full viewport without a hidden footer reserve\""
         },
         {
-          "line": 440,
+          "line": 441,
           "title": "\"notification rows in the app delete by swipe instead of an item menu\""
         },
         {
-          "line": 486,
+          "line": 487,
           "title": "`${contract.locale.toUpperCase()} keeps native navigation, messages and assistant chat isolated from web`"
+        },
+        {
+          "line": 653,
+          "title": "\"native bottom navigation follows slow scroll in both directions without flicker\""
+        },
+        {
+          "line": 686,
+          "title": "\"native bottom navigation ignores the simulated iOS bottom bounce\""
         }
       ]
     },
