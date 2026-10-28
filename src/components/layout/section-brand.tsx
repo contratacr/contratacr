@@ -1,3 +1,4 @@
+import { CABECERA_TITULO } from "@/components/layout/cabecera";
 import type { MouseEventHandler } from "react";
 import { Link } from "@/i18n/navigation";
 import { ContrataCRMark } from "@/components/brand/brand-logo";
@@ -15,7 +16,7 @@ export function SectionBrand({ title, as: Heading = "h1", onHomeClick, className
       <Link href="/" aria-label="ContrataCR" onClick={onHomeClick} className="shrink-0">
         <ContrataCRMark />
       </Link>
-      <Heading data-ccr-section-title="" className="min-w-0 truncate text-[19px] font-extrabold leading-6 text-[#162543]">{title}</Heading>
+      <Heading data-ccr-section-title="" className={CABECERA_TITULO}>{title}</Heading>
     </div>
   );
 }

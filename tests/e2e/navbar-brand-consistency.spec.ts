@@ -104,3 +104,64 @@ test("mobile search text aligns across both fields and all four search surfaces"
     await expect(sheet).toBeHidden();
   }
 });
+
+// Render the actual branded, interior/back and full-screen form headers with
+// the real generated stylesheet. No authenticated fixture or backend is needed.
+test("all navbar title variants keep the same typography at every breakpoint", async ({ page }) => {
+  const { build } = await import("esbuild");
+  const { readFileSync } = await import("node:fs");
+  const postcss = (await import("postcss")).default;
+  const tailwind = (await import("@tailwindcss/postcss")).default;
+  const css = await postcss([tailwind()]).process(readFileSync("src/app/globals.css", "utf8"), { from: "src/app/globals.css" });
+  const mocks: Record<string, string> = {
+    "@/i18n/navigation": "import React from 'react'; export const Link=({children,...props})=>React.createElement('a',props,children);",
+    "@/components/layout/navbar": "export const Navbar=()=>null;",
+    "@/components/landing/landing-navbar": "export {ContrataCRLogo,ContrataCRMark} from '@/components/brand/brand-logo';",
+    "@/hooks/use-native-app": "export const useNativeFullscreenLayer=()=>{};",
+  };
+  const bundle = await build({ stdin: { resolveDir: process.cwd(), loader: "tsx", contents: `
+    import React,{useState} from 'react';import{createRoot}from'react-dom/client';
+    import{SectionBrand}from'./src/components/layout/section-brand';
+    import{FocusedHeader}from'./src/components/layout/focused-header';
+    import{Modal}from'./src/components/ui/modal';
+    function App(){const[open,setOpen]=useState(false);const[presentation,setPresentation]=useState("fullscreen");window.openTitleForm=(value)=>{setPresentation(value);setOpen(true)};return <>
+      <SectionBrand title="Notificaciones"/>
+      <FocusedHeader title="Configuración de la cuenta con un título largo" onBack={()=>window.backClicks=(window.backClicks||0)+1}/>
+      <Modal open={open} onClose={()=>setOpen(false)} mobilePresentation={presentation} title="Editar publicación con un título largo" backLabel="Volver al formulario"><p>Formulario</p></Modal>
+    </>}createRoot(document.getElementById('root')).render(<App/>);` }, bundle: true, write: false, format: "iife", platform: "browser", jsx: "automatic", plugins: [{ name: "title-transports", setup(builder) {
+      builder.onResolve({ filter: /.*/ }, args => args.path in mocks ? { path: args.path, namespace: "title-transports" } : undefined);
+      builder.onLoad({ filter: /.*/, namespace: "title-transports" }, args => ({ contents: mocks[args.path], resolveDir: process.cwd() }));
+    } }] });
+  await page.route("**/navbar-title-harness", route => route.fulfill({ contentType: "text/html", body: `<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css.css}</style><div id="root"></div>` }));
+  await page.goto("/navbar-title-harness");
+  await page.addScriptTag({ content: bundle.outputFiles[0].text });
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    const typography = () => page.locator("[data-ccr-section-title], header h1, [role=dialog] h2").evaluateAll(elements => elements.map(el => {
+      const style = getComputedStyle(el);
+      return { size: style.fontSize, weight: style.fontWeight, line: style.lineHeight };
+    }));
+    await expect.poll(typography).toEqual(Array.from({ length: 2 }, () => ({ size: "19px", weight: "800", line: "24px" })));
+    await page.getByRole("button", { name: "Volver", exact: true }).click();
+    for (const presentation of ["fullscreen", "sheet", "sheet-compact"]) {
+      await page.evaluate(value => (window as unknown as {openTitleForm:(value:string)=>void}).openTitleForm(value), presentation);
+      await expect(page.getByRole("dialog")).toBeVisible();
+      await expect.poll(typography).toEqual(Array.from({ length: 3 }, () => ({ size: "19px", weight: "800", line: "24px" })));
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `overflow at ${width}/${presentation}`).toBe(true);
+      await page.getByRole("button", { name: "Volver al formulario", exact: true }).click();
+      await expect(page.getByRole("dialog")).toBeHidden();
+    }
+  }
+  expect(await page.evaluate(() => (window as unknown as {backClicks:number}).backClicks)).toBe(4);
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await gotoOK(page, "/buscar");
+    await waitForInteractivePage(page);
+    await page.getByRole("button", { name: "Precio", exact: true }).filter({ visible: true }).click();
+    const filter = page.getByRole("dialog", { name: "Precio", exact: true });
+    await expect(filter).toBeVisible();
+    expect(await filter.locator("h2").evaluate(el => ({ size: getComputedStyle(el).fontSize, weight: getComputedStyle(el).fontWeight, line: getComputedStyle(el).lineHeight }))).toEqual({ size: "19px", weight: "800", line: "24px" });
+    await filter.getByRole("button", { name: "Cerrar", exact: true }).click();
+    await expect(filter).toBeHidden();
+  }
+});

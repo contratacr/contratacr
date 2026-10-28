@@ -679,7 +679,7 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
           )}
           <div className={cn("-my-2 -ml-1.5 h-[58px] w-[58px] shrink-0 sm:-my-3 sm:-ml-2 sm:h-[92px] sm:w-[92px]", barraDeIndice && "hidden")}><Image src="/brand/ai-assistant-robot.webp" alt="" width={112} height={112} priority className="h-full w-full object-contain drop-shadow-[0_10px_16px_rgba(0,99,189,0.18)]" /></div>
           <div className="min-w-0 flex-1 py-1">
-            <h2 className={cn(CABECERA_TITULO, "sm:text-lg")}>{barraDeIndice ? copy.shortTitle : copy.title}</h2>
+            <h2 className={CABECERA_TITULO}>{barraDeIndice ? copy.shortTitle : copy.title}</h2>
           </div>
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <button

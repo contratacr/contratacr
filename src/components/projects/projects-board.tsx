@@ -612,7 +612,7 @@ export function ProjectsBoard({
                 sirve a nadie y que le compite al título; en el teléfono ya se
                 hacía así y en computadora no. Y la raya divisoria solo si hay
                 filtros al otro lado: sin ellos separaba el título de la nada. */}
-            <div><h1 className="text-[17px] font-extrabold text-[#162543]">{copy.titulo}</h1></div>
+            <div><h1 className={CABECERA_TITULO}>{copy.titulo}</h1></div>
             {(query.trim() || lugar.trim()) && filtrados.length > 0 && (
               <span className="text-[13px] font-semibold text-[#68778d]">
                 {copy.cuenta(resultTotal??filtrados.length)}{lugar.trim() ? ` · ${lugar.trim()}` : ""}

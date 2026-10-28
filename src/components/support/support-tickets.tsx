@@ -1,4 +1,5 @@
 "use client";
+import { CABECERA_TITULO } from "@/components/layout/cabecera";
 
 import { irAlInicio } from "@/lib/ir-al-inicio";
 import { isNativeAppRuntime } from "@/hooks/use-native-app";
@@ -507,7 +508,7 @@ export function SupportTickets({
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex min-w-0 items-center gap-2">
-                    <h3 className="min-w-0 flex-1 truncate text-base font-extrabold leading-tight text-[#162543]">{ticketSubject(ticket)}</h3>
+                    <h3 className={`${CABECERA_TITULO} flex-1`}>{ticketSubject(ticket)}</h3>
                     <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${STATUS_COLOR[ticket.status] ?? ""}`}>{statusLabel(ticket.status)}</span>
                   </div>
                   <p className="mt-0.5 truncate text-xs font-semibold text-[#6b7280]">{t("caseRef", { ref: supportTicketRef(ticket.id, ticket.created_at, ticket.case_number) })}</p>

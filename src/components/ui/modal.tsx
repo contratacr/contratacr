@@ -1,4 +1,5 @@
 "use client";
+import { CABECERA_TITULO } from "@/components/layout/cabecera";
 
 import { useLayoutEffect, useRef, useSyncExternalStore, type ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -234,7 +235,7 @@ export function Modal({
             {/* En formularios del teléfono la cabecera es UNA línea —flecha, título y
                 nada más—, para que mida lo mismo en todas las ventanas. El título
                 se recorta con «…». Los avisos centrados permiten varias líneas. El subtítulo aparece de 640 px en adelante. */}
-            <h2 className={cn("leading-tight text-[#162543]", mobilePresentation === "center" ? "whitespace-normal break-words" : "truncate sm:whitespace-normal", fullscreenMobile ? "text-[17px] font-extrabold sm:text-lg sm:font-bold" : "text-lg font-bold")}>{title}</h2>
+            <h2 className={cn("leading-tight text-[#162543]", mobilePresentation === "center" ? "whitespace-normal break-words" : "truncate sm:whitespace-normal", mobilePresentation === "center" ? "text-lg font-bold" : CABECERA_TITULO)}>{title}</h2>
             {subtitle && <p className="mt-0.5 hidden text-xs text-[#6b7280] sm:block">{subtitle}</p>}
           </div>
           {/* El «···» se ancla SOLO él a la derecha: envolviéndolo junto a la

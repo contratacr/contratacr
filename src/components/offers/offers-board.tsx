@@ -1,4 +1,5 @@
 "use client";
+import { CABECERA_TITULO } from "@/components/layout/cabecera";
 import { SectionBrand } from "@/components/layout/section-brand";
 import { useMarketplaceFeed } from "@/hooks/use-marketplace-feed";
 import { MarketplaceFeedFeedback, MarketplaceContactBoundary } from "@/components/marketplace/feed-loading";
@@ -428,7 +429,7 @@ export function OffersBoard({
                 sirve a nadie y que le compite al título; en el teléfono ya se
                 hacía así y en computadora no. Y la raya divisoria solo si hay
                 filtros al otro lado: sin ellos separaba el título de la nada. */}
-            <h1 className="text-[17px] font-extrabold text-[#162543]">{copy.offers}</h1>
+            <h1 className={CABECERA_TITULO}>{copy.offers}</h1>
             {hasActiveFilters && filtered.length > 0 && (
               <span className="text-[13px] font-semibold text-[#68778d]">
                 <span className="tabular-nums">{resultTotal??filtered.length}</span> {(resultTotal??filtered.length) === 1 ? copy.offer : copy.offerPlural}{locationFilter.trim() ? ` · ${locationFilter.trim()}` : ""}

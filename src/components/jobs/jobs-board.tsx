@@ -417,7 +417,7 @@ export function JobsBoard({ jobs:initialJobs, initialFeed, canPost, initialSelec
                 sirve a nadie y que le compite al título; en el teléfono ya se
                 hacía así y en computadora no. Y la raya divisoria solo si hay
                 filtros al otro lado: sin ellos separaba el título de la nada. */}
-            <h1 className="text-[17px] font-extrabold text-[#162543]">{copy.jobs}</h1>
+            <h1 className={CABECERA_TITULO}>{copy.jobs}</h1>
             {hasActiveFilters && filtered.length > 0 && (
               <span className="text-[13px] font-semibold text-[#68778d]">
                 <span className="tabular-nums">{resultTotal??filtered.length}</span> {(resultTotal??filtered.length) === 1 ? copy.job.toLocaleLowerCase(locale) : copy.jobs.toLocaleLowerCase(locale)}{locationFilter.trim() ? ` · ${locationFilter.trim()}` : ""}

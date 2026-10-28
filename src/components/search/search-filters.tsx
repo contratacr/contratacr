@@ -1,4 +1,5 @@
 "use client";
+import { CABECERA_TITULO } from "@/components/layout/cabecera";
 import { resolveSearchSort } from "@/lib/search/sort";
 
 import { useRouter, usePathname } from "@/i18n/navigation";
@@ -130,7 +131,7 @@ function FilterSheet({
         className={cn("relative z-10 w-full max-w-xl overflow-hidden rounded-t-[22px] bg-white shadow-2xl lg:rounded-[18px]", ancla && "ccr-filtro-anclado")}
       >
         <div className="flex items-center justify-between border-b border-[#eef2f6] px-5 py-4">
-          <h2 className="text-[20px] font-extrabold text-[#162543]">{title}</h2>
+          <h2 className={CABECERA_TITULO}>{title}</h2>
           <button
             type="button"
             onClick={onClose}
@@ -231,7 +232,7 @@ function MultiFilterSheetContent({
         className={cn("relative z-10 w-full max-w-xl overflow-hidden rounded-t-[22px] bg-white shadow-2xl lg:rounded-[18px]", ancla && "ccr-filtro-anclado")}>
         <div className="flex items-center justify-between border-b border-[#eef2f6] px-5 py-4">
           <div>
-            <h2 className="text-[20px] font-extrabold text-[#162543]">{title}</h2>
+            <h2 className={CABECERA_TITULO}>{title}</h2>
             {draftValues.length > 0 && <p className="mt-0.5 text-xs font-semibold text-[#64748b]">{draftValues.length} seleccionadas</p>}
           </div>
           <button type="button" onClick={onClose} aria-label="Cerrar" className="inline-flex h-9 w-9 items-center justify-center text-[#162543]">
@@ -418,7 +419,7 @@ function PriceFilterSheetContent({
       <section role="dialog" aria-modal="true" aria-label={t("filters.price")} style={ancla ? ({ "--ccr-anc-x": `${Math.round(Math.min(ancla.left, (typeof window === "undefined" ? 1440 : window.innerWidth) - 368))}px`, "--ccr-anc-y": `${Math.round(ancla.bottom + 8)}px` } as React.CSSProperties) : undefined}
         className={cn("relative z-10 w-full max-w-xl overflow-hidden rounded-t-[22px] bg-white shadow-2xl lg:rounded-[18px]", ancla && "ccr-filtro-anclado")}>
         <div className="flex items-center justify-between border-b border-[#eef2f6] px-5 py-4">
-          <h2 className="text-[20px] font-extrabold text-[#162543]">{t("filters.price")}</h2>
+          <h2 className={CABECERA_TITULO}>{t("filters.price")}</h2>
           <button type="button" onClick={onClose} aria-label="Cerrar" className="inline-flex h-9 w-9 items-center justify-center text-[#162543]">
             <X className="h-6 w-6" />
           </button>
