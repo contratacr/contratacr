@@ -78,7 +78,7 @@ import { PROFILE_IMAGE_OPTIONS, prepareImageForUpload, uploadPhotoFormDataWithRe
 import { deleteOwnedMediaUrl } from "@/lib/client-media-cleanup";
 import { formatPersonDisplayName, getProfessionalDisplayName } from "@/lib/display-name";
 import { OfferTagPercentIcon } from "@/components/icons/offer-tag-percent-icon";
-import { CABECERA_BOTON, CABECERA_GLIFO, COLUMNAS_CABECERA } from "@/components/layout/cabecera";
+import { CABECERA_BOTON, CABECERA_GLIFO, CABECERA_TITULO, COLUMNAS_CABECERA } from "@/components/layout/cabecera";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 import { Modal } from "@/components/ui/modal";
 
@@ -2144,12 +2144,12 @@ export default function DashboardPage() {
                     <ArrowLeft className={CABECERA_GLIFO} />
                   </button>
                   {supportThreadTitle ? (
-                    <h2 className="flex min-w-0 items-baseline justify-center gap-1.5 px-1 text-center text-[17px] font-extrabold">
+                    <h2 className={cn(CABECERA_TITULO, "flex items-baseline justify-center gap-1.5 px-1 text-center")}>
                       <span className="min-w-0 truncate">{supportThreadTitle}</span>
                       {supportThreadRef && <span className="shrink-0 text-[11px] font-semibold text-[#6b7280]">#{supportThreadRef}</span>}
                     </h2>
                   ) : (
-                    <h2 className="min-w-0 truncate px-2 text-center text-[17px] font-extrabold">{mobileProfileSectionTitle ?? (activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab))}</h2>
+                    <h2 className={cn(CABECERA_TITULO, "px-2 text-center")}>{mobileProfileSectionTitle ?? (activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab))}</h2>
                   )}
                   <div className="flex shrink-0 justify-self-end" />
                 </div>
@@ -2179,7 +2179,7 @@ export default function DashboardPage() {
                       {activeTab !== "chat" && activeTab !== "home" && !singleSurfaceTab && <CardHeader className="hidden border-b border-[#eef2f6] bg-white px-5 py-4 sm:px-6 lg:block">
                         <div className="relative">
                           <div className="flex min-w-0 items-center gap-2 pr-28">
-                            <h2 className="min-w-0 truncate text-[17px] font-bold text-[#162543]">{activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab)}</h2>
+                            <h2 className={CABECERA_TITULO}>{activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab)}</h2>
                           </div>
                         </div>
                       </CardHeader>}

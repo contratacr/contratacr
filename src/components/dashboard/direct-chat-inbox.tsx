@@ -1,4 +1,5 @@
 "use client";
+import { CABECERA_TITULO } from "@/components/layout/cabecera";
 
 import { useImageSwipeDismiss } from "@/hooks/use-image-swipe-dismiss";
 import { messageMenuTop } from "@/lib/direct-chat/image-interactions";
@@ -1489,7 +1490,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
                 <ArrowLeft className="h-5 w-5" />
               </button>
             )}
-            <h2 className={cn("text-lg font-extrabold text-[#162543]", nativeApp && !showArchived && !vistaBloqueados && "sr-only")}>{vistaBloqueados ? tChat("blocked") : showArchived ? tChat("archived") : tChat("messages")}</h2>
+            <h2 className={cn(CABECERA_TITULO, nativeApp && !showArchived && !vistaBloqueados && "sr-only")}>{vistaBloqueados ? tChat("blocked") : showArchived ? tChat("archived") : tChat("messages")}</h2>
           </div>
           {/* El mismo campo que Profesionales, Empleos y Proyectos (MarketplaceSearch):
               solo cambia el texto. Filtra en vivo, sin pantalla de búsqueda. */}
@@ -1657,12 +1658,12 @@ export function DirectChatInbox({ alCambiarSubvista }: {
           </button>
           <div className="min-w-0 flex-1">
             {activePerson?.profileHref ? (
-              <button type="button" onClick={openActiveProfile} className="flex !min-h-0 min-w-0 max-w-full items-center gap-0.5 text-left text-[15px] font-extrabold leading-tight text-[#162543] transition hover:text-[#009FD9]">
+              <button type="button" onClick={openActiveProfile} className={cn(CABECERA_TITULO, "flex !min-h-0 max-w-full items-center gap-0.5 text-left transition hover:text-[#009FD9]")}>
                 <span className="min-w-0 truncate">{compactPersonName(activePerson.name)}</span>
                 <ChevronRight className="h-4 w-4 shrink-0 text-[#8ea0b5]" />
               </button>
             ) : (
-              <p className={nativeApp ? "text-[15px] font-extrabold leading-tight text-[#162543] truncate" : "truncate text-[15px] font-extrabold leading-tight text-[#162543]"}>{activePerson ? compactPersonName(activePerson.name) : ""}</p>
+              <p className={CABECERA_TITULO}>{activePerson ? compactPersonName(activePerson.name) : ""}</p>
             )}
 
           </div>
@@ -2013,7 +2014,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
         <div className="fixed inset-0 z-[1000] grid place-items-center bg-[#0f172a]/55 p-4" role="dialog" aria-modal="true" aria-labelledby="chat-report-title">
           <div className="w-full max-w-md rounded-3xl bg-white p-5 shadow-2xl sm:p-6">
             <div className="flex items-start justify-between gap-3">
-              <div><h2 id="chat-report-title" className="text-lg font-extrabold text-[#162543]">{isEn ? "Report and block" : "Reportar y bloquear"}</h2><p className="mt-1 text-sm leading-5 text-[#64748b]">{isEn ? "The conversation is blocked immediately and ContrataCR receives the report for review within 24 hours." : "La conversación se bloquea inmediatamente y ContrataCR recibe el reporte para revisarlo en un máximo de 24 horas."}</p></div>
+              <div><h2 id="chat-report-title" className={CABECERA_TITULO}>{isEn ? "Report and block" : "Reportar y bloquear"}</h2><p className="mt-1 text-sm leading-5 text-[#64748b]">{isEn ? "The conversation is blocked immediately and ContrataCR receives the report for review within 24 hours." : "La conversación se bloquea inmediatamente y ContrataCR recibe el reporte para revisarlo en un máximo de 24 horas."}</p></div>
               <button type="button" onClick={() => setReportOpen(false)} aria-label={isEn ? "Close" : "Cerrar"} className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-[#64748b] hover:bg-[#f1f5f9]"><X className="h-5 w-5" /></button>
             </div>
             <label className="mt-5 block text-sm font-bold text-[#334155]" htmlFor="chat-report-reason">{isEn ? "What happened?" : "¿Qué ocurrió?"}</label>

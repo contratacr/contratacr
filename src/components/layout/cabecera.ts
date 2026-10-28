@@ -8,7 +8,7 @@
 // La regla es una sola: la fila mide 64 px —lo que ya medía la barra principal,
 // y lo que deja respirar un botón de 40 sin apretarlo—; el primer control es una
 // caja de 40×40 que empieza a 16 px del borde, igual que el contenido de abajo;
-// la marca, cuando está, queda a 64; y el título va a 17 px.
+// la marca, cuando está, queda a 64; y todos los títulos van a 19 px, como la escala de la marca.
 export const CABECERA_FILA = "flex min-h-16 items-center gap-2 px-4";
 
 // La variante de ficha: flecha a la izquierda, título al centro. El relleno
@@ -18,7 +18,7 @@ export const CABECERA_FILA_CENTRADA = "relative flex min-h-16 items-center justi
 export const CABECERA_BOTON =
   "grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#162543] transition-colors hover:bg-[#eef5f9]";
 
-export const CABECERA_TITULO = "min-w-0 truncate text-[17px] font-extrabold text-[#162543]";
+export const CABECERA_TITULO = "min-w-0 truncate text-[19px] font-extrabold leading-6 text-[#162543]";
 
 // El dibujo dentro del botón: 20 px. Con 24 o 28 la flecha pesaba más que el
 // título al que acompaña.
