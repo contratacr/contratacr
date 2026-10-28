@@ -186,3 +186,9 @@ La grabación usa `scripts/landing/grabar-guia.mjs`. Las rutas públicas de prod
 Los cuatro videos se decodifican completos en H.264, 588 × 1278, 30 fps. Duraciones: profesionales 29,03 s; proyectos 16,73 s; promociones 20,97 s; empleos 24,30 s. Los cuatro pósters JPEG de 588 × 1278 se generaron de nuevo desde el primer cuadro. Se actualizó la versión de caché a `?v=20261028-current-navbar-titles`. Los cuadros de revisión están en `/tmp/contratacr-guide-current-20261028`.
 
 SHA-256 MP4: profesionales `a1509502af5f489c4b0164f1d4d733f2ac6e7ec062c86f45e8500715e520ba07`; proyectos `d65d3117ed6e5f4485e045ce2535f2b8e26139181feeceb61e8613cb1e84544f`; promociones `484a1d3f95384359e2efda9d21c43b778149e5339e74935ddf69df9e9bb126b7`; empleos `b7158b3f91b0f1f225bd355e68c8f80f3f79040d93d6bf55d685183383f700c0`.
+
+## Proyecto público de limpieza del hogar — 28 de octubre de 2026
+
+Se regrabó únicamente el recorrido de Proyectos con la publicación pública de limpieza del hogar en Atenas indicada por Isaac. Conserva portada → menú → tablero → detalle → señalar WhatsApp → regreso → formulario vacío. El detalle y el formulario se abren anónimamente en producción; las solicitudes de escritura se bloquean, no se pulsa el contacto y no se envía el formulario. Ya no se crea un proyecto sintético para esta toma. El grabador identifica la publicación por su ruta y falla si no está disponible, sin elegir otra por accidente.
+
+Se revisaron el tablero, el detalle, el formulario y cuadros del MP4. El archivo se decodificó completo: H.264, 588 × 1278, 30 fps y 16,83 s. SHA-256: `34a9e3a621f38b806cb455394a46b814be5eca2a5d8b0558698536c3b88e8ce0`. El póster se regeneró del primer cuadro; ambos recursos de Proyectos usan `?v=20261028-limpieza-hogar`. La evidencia visual está en `/tmp/contratacr-guide-limpieza-20261028`.

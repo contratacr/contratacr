@@ -1,8 +1,7 @@
 // Videos de la guía de la portada (public/guia/*.mp4 + póster .jpg).
-// Producción solo lectura; proyecto demo y formularios en el test aislado.
+// Producción solo lectura; los formularios de ofertas usan el test aislado.
 //   node scripts/landing/grabar-guia.mjs https://contratacr.com <ruta-a-ffmpeg>
 import { chromium } from "playwright";
-import { randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
@@ -42,16 +41,15 @@ async function bajar(p, px, msPedido) {
   globalThis.__terminarMano?.();
 }
 
-// Professionals/offers/jobs use production read-only. Projects and blank
-// publishing forms use isolated test. Cuts remove loading, not walkthrough steps.
+// Public walkthroughs and the anonymous project form use production read-only;
+// blank offer forms use isolated test.
 const LOCAL = process.env.GUIDE_FORM_BASE || "http://localhost:3000";
 if (!["localhost", "127.0.0.1"].includes(new URL(LOCAL).hostname)) throw new Error("Guide forms require an isolated loopback test server.");
 const INICIO = base;
 let testCookies = [];
 let productionReadOnly = null;
-let demoAdmin = null;
-let demoProjectId = null;
-const DEMO_PROJECT = "Instalar cámaras de seguridad en una casa";
+const PROJECT_PATH = process.env.GUIDE_PROJECT_PATH || "/proyectos/estoy-buscando-una-persona-responsable-y-de-confianza-a1ae651d";
+if (!/^\/proyectos\/[a-z0-9-]+$/.test(PROJECT_PATH)) throw new Error("Invalid public guide project path");
 
 // Verify the real handoff, but keep WhatsApp/chats out of the public video.
 async function contactar(p) {
@@ -145,7 +143,7 @@ async function evidencia(p, name) {
 
 // Home → board → publication/detail/contact → board → blank publishing form.
 async function porElMenu(p, grabar, pausar, texto, destino, boton, formulario) {
-  const origin = destino === "/proyectos" ? LOCAL : INICIO;
+  const origin = INICIO;
   const scene = destino.slice(1);
   await p.goto(origin + "/", { waitUntil: "load" });
   await sinAvisoDeDesarrollo(p); await asentada(p); await arriba(p);
@@ -159,7 +157,7 @@ async function porElMenu(p, grabar, pausar, texto, destino, boton, formulario) {
   await evidencia(p, `${scene}-tablero-inicio`);
   grabar(); await p.waitForTimeout(700);
   const items = p.locator(`h2 a[href^="${destino}/"]`);
-  const item = (destino === "/proyectos" ? items.filter({ hasText: DEMO_PROJECT }).and(p.locator(`a[href*="${demoProjectId.slice(0, 8)}"]`)) : items).first();
+  const item = (destino === "/proyectos" ? items.and(p.locator(`a[href="${PROJECT_PATH}"]`)) : items).first();
   await tocar(p, item);
   pausar(); await p.waitForURL(new RegExp(`${destino}/.+`)); await asentada(p); await arriba(p);
   await evidencia(p, `${scene}-detalle-inicio`);
@@ -177,10 +175,9 @@ async function porElMenu(p, grabar, pausar, texto, destino, boton, formulario) {
   const publicar = p.getByRole("link", { name: boton }).or(p.getByRole("button", { name: boton })).filter({ visible: true }).first();
   await publicar.scrollIntoViewIfNeeded(); await p.waitForTimeout(300);
   await marcarToque(p, publicar); await p.waitForTimeout(250); pausar();
-  // Only the blank, isolated form needs the synthetic test actor. Public
-  // home/menu/board/detail scenes above must stay anonymous on every surface.
-  await p.context().addCookies(testCookies);
-  await p.goto(LOCAL + formulario, { waitUntil: "load" }); await sinAvisoDeDesarrollo(p); await asentada(p); await arriba(p);
+  // The project form is public. Offer forms use only the synthetic test actor.
+  if (destino !== "/proyectos") await p.context().addCookies(testCookies);
+  await p.goto((destino === "/proyectos" ? INICIO : LOCAL) + formulario, { waitUntil: "load" }); await sinAvisoDeDesarrollo(p); await asentada(p); await arriba(p);
   if (/\/login/.test(p.url())) throw new Error(`Test form requires authentication: ${formulario}`);
   await p.locator("main h1, main h2, .app-fullscreen-modal h1, .app-fullscreen-modal h2").filter({ visible: true }).first().waitFor();
   await evidencia(p, `${scene}-formulario-inicio`);
@@ -230,13 +227,16 @@ function readEnv(file) {
     return match ? [[match[1].trim(), match[2].trim().replace(/^["']|["']$/g, "")]] : [];
   }));
 }
-const prodEnv = readEnv(process.env.GUIDE_PRODUCTION_READ_ENV || new URL("../../.env.local", import.meta.url));
-if (!prodEnv.NEXT_PUBLIC_SUPABASE_URL?.includes("kskueodxaksxvjrysouw.supabase.co")) throw new Error("Unexpected production read project");
-productionReadOnly = createClient(prodEnv.NEXT_PUBLIC_SUPABASE_URL, prodEnv.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+if (process.argv[4] !== "proyectos") {
+  const prodEnv = readEnv(process.env.GUIDE_PRODUCTION_READ_ENV || new URL("../../.env.local", import.meta.url));
+  if (!prodEnv.NEXT_PUBLIC_SUPABASE_URL?.includes("kskueodxaksxvjrysouw.supabase.co")) throw new Error("Unexpected production read project");
+  productionReadOnly = createClient(prodEnv.NEXT_PUBLIC_SUPABASE_URL, prodEnv.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+}
 const b = await chromium.launch();
 try {
-// Authenticate only the synthetic test actor, outside the recorded scenes.
-if (process.argv[4] !== "profesionales") {
+// Offers and jobs need the synthetic test actor for their blank forms.
+// The project form is public and can be recorded anonymously.
+if (process.argv[4] !== "profesionales" && process.argv[4] !== "proyectos") {
   const env = readEnv(process.env.GUIDE_TEST_ENV_FILE || new URL("../../.env.test", import.meta.url));
   if (!env.NEXT_PUBLIC_SUPABASE_URL?.includes("oqheayqqprpciqdvdaqo.supabase.co")) throw new Error("Guide authentication requires the current isolated test project.");
   const authContext = await b.newContext();
@@ -250,25 +250,6 @@ if (process.argv[4] !== "profesionales") {
   await authPage.locator("main").getByRole("button", { name: /Ingresar/i }).click();
   await authPage.waitForURL(/\/dashboard\/profesional/, { timeout: 30000 });
   testCookies = (await authContext.cookies()).filter(cookie => cookie.name !== "ccr_platform"); await authContext.close();
-  // A separate realistic demonstration project, never a production write or
-  // a change to canonical regression fixtures. Remove only this UUID afterward.
-  if (!process.argv[4] || process.argv[4] === "proyectos") {
-  demoAdmin = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
-  const { data: source, error } = await demoAdmin.from("projects").select("*").eq("id", "b4000000-0000-4000-8000-000000000001").single();
-  if (error || !source) throw new Error("Missing isolated test project fixture");
-  demoProjectId = randomUUID();
-  const { error: insertError } = await demoAdmin.from("projects").insert({
-    id: demoProjectId, client_id: source.client_id, category_id: "camaras_seguridad",
-    title: DEMO_PROJECT,
-    description: "Necesito instalar cuatro cámaras de seguridad en una casa de dos plantas: entrada, cochera, patio y acceso lateral. Busco asesoría para elegir el equipo, instalación del cableado y configuración para ver las cámaras desde el celular. Me gustaría coordinar una visita para revisar los puntos y recibir una cotización.",
-    provincia_id: source.provincia_id, canton_id: source.canton_id,
-    budget_min: 150000, budget_max: 300000, timeline: "En las próximas dos semanas", status: "open",
-    client_name_snapshot: source.client_name_snapshot, client_email_snapshot: source.client_email_snapshot,
-    client_phone_snapshot: source.client_phone_snapshot, allow_direct_contact: true,
-    created_app_environment: "guide-demo-test", created_source_host: "localhost", created_supabase_project_ref: "oqheayqqprpciqdvdaqo",
-  });
-  if (insertError) throw new Error(`Could not create isolated demo: ${insertError.message}`);
-  }
 }
 for (const [clave, escena] of Object.entries(escenas)) {
   if (process.argv[4] && process.argv[4] !== clave) continue;
@@ -286,11 +267,11 @@ for (const [clave, escena] of Object.entries(escenas)) {
   });
   await ctx.route("**/*", async route => {
     const request = route.request();
-    if (new URL(request.url()).origin === base && !["GET", "HEAD", "OPTIONS"].includes(request.method())) {
+    if (new URL(request.url()).origin !== new URL(LOCAL).origin && !["GET", "HEAD", "OPTIONS"].includes(request.method())) {
       // Read-only production demonstration: the real contact API also writes
       // review follow-ups. Validate the destination against the actual public
       // professional's stored phone without creating any production contacts.
-      if (new URL(request.url()).pathname === "/api/contact/whatsapp-link") {
+      if (new URL(request.url()).origin === base && new URL(request.url()).pathname === "/api/contact/whatsapp-link" && productionReadOnly) {
         const body = request.postDataJSON();
         const { data, error } = await productionReadOnly.from("professionals").select("whatsapp,business_name,is_banned").eq("id", body.professionalId).single();
         if (error || !data?.whatsapp || data.is_banned) throw new Error("No valid professional contact for the demonstration");
@@ -395,10 +376,5 @@ for (const [clave, escena] of Object.entries(escenas)) {
 }
 } finally {
   await b.close();
-  if (demoAdmin && demoProjectId) {
-    const { error } = await demoAdmin.from("projects").delete().eq("id", demoProjectId).eq("created_app_environment", "guide-demo-test");
-    if (error) console.error("Demo cleanup failed:", error.message);
-    else console.log("Isolated demo project removed");
-  }
   fs.rmSync(tmp, { recursive: true, force: true });
 }
