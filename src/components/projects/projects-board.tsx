@@ -1,4 +1,5 @@
 "use client";
+import { SectionBrand } from "@/components/layout/section-brand";
 import { useMarketplaceFeed } from "@/hooks/use-marketplace-feed";
 import { MarketplaceFeedFeedback } from "@/components/marketplace/feed-loading";
 import type { FeedPage } from "@/lib/marketplace/feed";
@@ -19,7 +20,7 @@ import { useLocale } from "next-intl";
 import { ArrowLeft, ClipboardList, Loader2, Menu, Phone, X } from "lucide-react";
 import { createPortal } from "react-dom";
 import { Link, useRouter } from "@/i18n/navigation";
-import { ContrataCRMark, HeaderAccountLink } from "@/components/landing/landing-navbar";
+import { HeaderAccountLink } from "@/components/landing/landing-navbar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { MarketplaceFilterChip, MarketplaceNavbarPortal, MarketplaceSearch } from "@/components/marketplace/marketplace-controls";
@@ -572,10 +573,7 @@ export function ProjectsBoard({
           >
             <Menu className="h-5 w-5" strokeWidth={2.5} />
           </button>
-          <Link href="/" aria-label="ContrataCR" className="shrink-0">
-            <ContrataCRMark />
-          </Link>
-          <h1 className={CABECERA_TITULO}>{copy.titulo}</h1>
+          <SectionBrand title={copy.titulo} />
           <div className="ml-auto flex shrink-0 items-center gap-0.5">
             {/* Sin sesión va la cuenta; la campana queda para quien ya entró. */}
             {/* En la app Notificaciones vive en el menú de abajo. */}
