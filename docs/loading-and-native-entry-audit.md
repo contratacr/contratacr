@@ -171,3 +171,33 @@ conservar este arreglo compartido, en lugar de restaurar encabezados antiguos.
 Las notas históricas de CI/tiendas pendientes de apartados anteriores describen
 su revisión original; no representan el estado de esta validación. Los estados
 de tiendas y builds se registran en `docs/mobile-release-history.md`.
+
+
+## Unificación de todos los títulos de navbar — 28 de octubre de 2026
+
+La ampliación `563e9c77` (main/test), integrada en mobile `61bdb134`, elimina
+las diferencias que todavía tenían las cabeceras interiores. Todos los títulos
+de navbar reutilizan `CABECERA_TITULO`: 19 px, peso 800 y línea de 24 px, sin
+overrides de tamaño/peso por breakpoint. Incluye marca/sección, flecha de volver,
+tableros de escritorio, panel, AI, conversación, soporte, filtros y formularios
+fullscreen/sheet. Los títulos del contenido/documentos y avisos centrados no
+son navbars y mantienen su jerarquía. Pro local quedó intacto.
+
+- Pruebas locales de componentes reales y CSS generado: Chromium escritorio,
+  Chromium móvil y WebKit móvil; anchos 320/390/768/1440, títulos largos sin
+  overflow, Back accionable y formularios fullscreen/sheet/sheet-compact.
+  También se verificaron las cabeceras de filtros reales en móvil/escritorio.
+- [Regresión 40707452593, intento 2](https://github.com/contratacr/contratacr/actions/runs/40707452593/attempts/2): aprobada. Smoke final: 929 aprobadas y 45 omisiones declaradas, cero fallos, flakies u omisiones inesperadas en ese intento. Safari: 97 aprobadas y 4 omisiones previstas; los bloques se solapan, no sumar como casos únicos.
+- [WebView 40707451640](https://github.com/contratacr/contratacr/actions/runs/40707451640): 178 aprobadas y 4 omisiones previstas. Los jobs iOS simulador y Android emulador se omitieron por política, no se ejecutaron.
+- Seguridad main/test `40707452029` / `40707452441` y Cloudflare main/test/mobile `40707452464` / `40707453118` / `40707451527`: aprobados.
+- Veinte mediciones desplegadas aprobaron en producción/test, ES/EN y
+  móvil/escritorio: tableros desktop, Servicios con flecha y filtros. Todas
+  confirmaron 19 px/800/24 px. Observado a las 08:49:31 de Costa Rica
+  (14:49:31 UTC). No se repitieron pruebas físicas ni se publicaron binarios.
+
+El primer intento de regresión falló por `read ECONNRESET` en el transporte de
+un POST local de la prueba de documentos, antes de recibir respuesta para su
+aserción. No hubo cambio de API ni se estableció una causa definitiva. Se
+reintentó únicamente el job fallido, con fuentes y aserciones intactas; se
+conservaron las demás compuertas aprobadas. El segundo intento aprobó, incluido
+el caso afectado. No presentar el primer intento fallido como verde.
