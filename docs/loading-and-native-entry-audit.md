@@ -129,3 +129,45 @@ Estado: investigación e implementación en curso. Este inventario no certifica 
 Mensajes, notificaciones, identidad, permisos y formularios necesitan datos o una confirmación del servidor. Mostrar contenido previamente confirmado durante una actualización y preparar datos juntos reduce saltos; prometer que nunca habrá carga fuera de las cuatro listas sería incorrecto en una conexión lenta o sin red. No se añadió un retraso artificial ni se retiraron controles de acceso, bloqueo o doble envío.
 
 - Se canceló la exhaustiva adicional 40367837442 mientras estaba pendiente: conservar la pasada actual con regresiones de contacto/enlaces y la móvil evita duplicar la batería completa por cambios posteriores de comentarios/configuración. Esta nota documental se guarda localmente para incorporarla al siguiente registro necesario, sin provocar otro CI por sí sola.
+
+
+## Encabezados y búsquedas — cierre del 28 de octubre de 2026
+
+Fuente compartida `221e182f` (main/test), integrada en mobile `bb098e51`.
+Esta revisión visual no modifica entradas nativas ni necesita nuevos paquetes
+de tienda. El trabajo local de Pro quedó intacto: al integrar Pro se debe
+conservar este arreglo compartido, en lugar de restaurar encabezados antiguos.
+
+### Investigación y corrección
+
+- En producción, el encabezado de Proyectos tenía 8 px de separación adicional
+  entre las cajas del símbolo y el título, además del margen transparente del
+  símbolo, y texto de 17 px. `SectionBrand` agrupa símbolo de 32 px y título de
+  19 px sin gap añadido, como el conjunto de marca de inicio. Se usa en los tres
+  tableros, Servicios y las secciones raíz de la barra compartida; conserva los
+  títulos y la semántica h1/p correspondiente.
+- En la búsqueda de profesionales, servicio empezaba en x=77 y ubicación en
+  x=73 (viewport móvil de 390 px). Back reservaba 40 px, mientras ubicación
+  mezclaba un icono de 24 px con márgenes y padding diferentes. Ahora ambos
+  campos comparten fila, espacio inicial de 40 px e inset de texto de 8 px,
+  incluyendo los buscadores de proyectos, empleos y promociones. Ambos textos
+  empiezan en x=77. Se igualaron también color y placeholder.
+
+### Evidencia
+
+- Nueve comprobaciones de marca/encabezados/búsqueda aprobaron en Chromium
+  escritorio, Chromium móvil y WebKit móvil: logo sin fuentes web, cinco rutas
+  de encabezados y las cuatro superficies de búsqueda, incluyendo inglés,
+  campos vacíos/escritos/borrados y el botón de volver.
+- [Regresión 40640703673](https://github.com/contratacr/contratacr/actions/runs/40640703673): contratos, inventario, tipos, build, verificaciones previas y resultado final aprobados. Smoke final: 927 aprobadas y 45 omisiones declaradas, sin fallos, flakies ni omisiones inesperadas. El bloque Safari reportó 96 aprobadas; no sumar bloques solapados como casos únicos.
+- [WebView 40640703456](https://github.com/contratacr/contratacr/actions/runs/40640703456): 178 aprobadas y 4 omisiones previstas. Los jobs de iOS simulador y Android emulador quedaron omitidos por la política existente; no se ejecutaron.
+- Seguridad main/test `40640703481` / `40640703727` y Cloudflare main/test/mobile `40640703563` / `40640703838` / `40640703514`: aprobados.
+- Veintiuna comprobaciones HTTP y de geometría desplegada aprobaron en
+  producción/test, incluyendo www e inglés. Se observaron el 28-oct-2026 a las
+  00:08:39 de Costa Rica (06:08:39 UTC): símbolo 32 px, gap añadido 0, título
+  19 px y ambos textos de búsqueda alineados. Es una observación del despliegue,
+  no una nueva prueba física de iPhone/Android ni una publicación de binarios.
+
+Las notas históricas de CI/tiendas pendientes de apartados anteriores describen
+su revisión original; no representan el estado de esta validación. Los estados
+de tiendas y builds se registran en `docs/mobile-release-history.md`.
