@@ -4,9 +4,8 @@ import { GuiaDeLaApp, type PasoDeLaGuia } from "@/components/landing/guia-de-la-
 /* «Todo ContrataCR en tu teléfono»: la guía de la app con un teléfono que
    muestra la pantalla REAL de cada cosa que se puede hacer (buscar
    profesionales, publicar un proyecto, empleos y promociones). Las pantallas
-   viven en /public/guia. Profesionales, empleos y promociones muestran
-   publicaciones reales; el proyecto de ejemplo y los formularios usan test
-   para no publicar demostraciones en producción. */
+   viven en /public/guia y muestran contenido real y formularios vacíos,
+   sin enviar demostraciones. */
 export async function WhyContratacr() {
   const t = await getTranslations("landing.howItWorks");
   const pasos: PasoDeLaGuia[] = (["profesionales", "proyectos", "promociones", "empleos"] as const).map((clave) => ({
@@ -16,8 +15,8 @@ export async function WhyContratacr() {
     texto: t(`guia.${clave}.texto`),
     cta: t(`guia.${clave}.cta`),
     href: { profesionales: "/profesionales", proyectos: "/publicar-proyecto", empleos: "/empleos", promociones: "/promociones" }[clave],
-    video: `/guia/${clave}.mp4?v=20261028-current-navbar-titles`,
-    poster: `/guia/${clave}.jpg?v=20261028-current-navbar-titles`,
+    video: `/guia/${clave}.mp4?v=${clave === "proyectos" ? "20261028-limpieza-hogar" : "20261028-current-navbar-titles"}`,
+    poster: `/guia/${clave}.jpg?v=${clave === "proyectos" ? "20261028-limpieza-hogar" : "20261028-current-navbar-titles"}`,
     alt: t(`guia.${clave}.alt`),
   }));
 
