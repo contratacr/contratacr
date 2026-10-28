@@ -176,3 +176,13 @@ Se regrabaron los cuatro videos y sus pósters con el mismo guion, encuadre de 4
 Producción se recorre en solo lectura. Se intercepta la salida de WhatsApp sin enviar mensajes; el proyecto de demostración se crea únicamente en TEST y se elimina por UUID y marcador propio al terminar. Los formularios usan el actor sintético de TEST y no se envían. El selector del grabador reconoce ahora «Publicar un proyecto».
 
 Los MP4 conservan H.264, 588 × 1278, 30 fps y el ajuste CRF 23 del guion original. Duraciones finales: profesionales 28,77 s; proyectos 16,70 s; promociones 21,63 s; empleos 19,47 s. Se regeneraron los pósters desde el primer cuadro y se verificó la decodificación completa de cada MP4. Todos los recursos usan `?v=20261021-current-app` para renovar caché. Las capturas y hojas de revisión están en `/tmp/contratacr-guide-current-20261021`.
+
+## Recorridos regrabados con los títulos actuales de navbar — 28 de octubre de 2026
+
+Se volvieron a grabar los cuatro MP4 y sus pósters desde la interfaz pública actualizada. Se conserva el mismo guion, contenido, orden de acciones y encuadre: buscar cámaras y abrir SG Solutions; y, para proyectos, promociones y empleos, menú → tablero → publicación → detalle/contacto → regreso al tablero → formulario vacío. Solo cambian los cuadros donde ahora aparecen los títulos de navbar unificados a 19 px, peso 800 y línea de 24 px. No se agregaron pasos ni textos.
+
+La grabación usa `scripts/landing/grabar-guia.mjs`. Las rutas públicas de producción se recorrieron con escrituras bloqueadas; la salida de WhatsApp se interceptó sin enviar mensajes. El proyecto de muestra se creó únicamente en TEST con UUID propio y se eliminó al terminar; los formularios permanecieron vacíos y no se enviaron. La consulta final confirmó cero proyectos con el marcador `guide-demo-test` en TEST.
+
+Los cuatro videos se decodifican completos en H.264, 588 × 1278, 30 fps. Duraciones: profesionales 29,03 s; proyectos 16,73 s; promociones 20,97 s; empleos 24,30 s. Los cuatro pósters JPEG de 588 × 1278 se generaron de nuevo desde el primer cuadro. Se actualizó la versión de caché a `?v=20261028-current-navbar-titles`. Los cuadros de revisión están en `/tmp/contratacr-guide-current-20261028`.
+
+SHA-256 MP4: profesionales `a1509502af5f489c4b0164f1d4d733f2ac6e7ec062c86f45e8500715e520ba07`; proyectos `d65d3117ed6e5f4485e045ce2535f2b8e26139181feeceb61e8613cb1e84544f`; promociones `484a1d3f95384359e2efda9d21c43b778149e5339e74935ddf69df9e9bb126b7`; empleos `b7158b3f91b0f1f225bd355e68c8f80f3f79040d93d6bf55d685183383f700c0`.
