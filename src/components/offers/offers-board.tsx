@@ -1,4 +1,5 @@
 "use client";
+import { SectionBrand } from "@/components/layout/section-brand";
 import { useMarketplaceFeed } from "@/hooks/use-marketplace-feed";
 import { MarketplaceFeedFeedback, MarketplaceContactBoundary } from "@/components/marketplace/feed-loading";
 import type { FeedPage } from "@/lib/marketplace/feed";
@@ -19,7 +20,7 @@ import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { OfferThumbnail } from "@/components/offers/offer-thumbnail";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CalendarDays, MapPin, Menu, Store } from "lucide-react";
-import { ContrataCRMark, HeaderAccountLink } from "@/components/landing/landing-navbar";
+import { HeaderAccountLink } from "@/components/landing/landing-navbar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { Link } from "@/i18n/navigation";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
@@ -49,7 +50,7 @@ import {
   offerTypeLabel,
   type MarketplaceLocale,
 } from "@/lib/marketplace-copy";
-import { CABECERA_BOTON, CABECERA_FILA, CABECERA_GLIFO, CABECERA_TITULO } from "@/components/layout/cabecera";
+import { CABECERA_BOTON, CABECERA_FILA, CABECERA_GLIFO } from "@/components/layout/cabecera";
 import { useAvisoPerfilProfesional } from "@/components/marketplace/use-aviso-perfil-profesional";
 import { cuandoSePublico } from "@/lib/cuando-se-publico";
 import { reemplazarDireccionSiCambia } from "@/lib/reemplazar-direccion";
@@ -379,10 +380,7 @@ export function OffersBoard({
             >
               <Menu className={CABECERA_GLIFO} strokeWidth={2.5} />
             </button>
-            <Link href="/" aria-label="ContrataCR" className="shrink-0">
-              <ContrataCRMark />
-            </Link>
-            <h1 className={CABECERA_TITULO}>{copy.offers}</h1>
+            <SectionBrand title={copy.offers} />
             {/* El icono de Mensajes es de la barra de la APP: en la web se llega
                 desde el menú y desde el panel. */}
             <div className="ml-auto flex shrink-0 items-center gap-0.5">

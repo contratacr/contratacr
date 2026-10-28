@@ -1,3 +1,4 @@
+import { SEARCH_SHEET_ROW, SEARCH_SHEET_LEADING, SEARCH_SHEET_INPUT } from "@/components/search/search-field-layout";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
@@ -414,8 +415,8 @@ export function MarketplaceSearch({
           if (event.target instanceof Element && event.target.closest("button")) event.preventDefault();
         }} className="ccr-hoja-buscador fixed inset-0 z-[1300] flex flex-col bg-white text-[#162543] lg:hidden">
           <div className="shrink-0 space-y-3 px-4 py-4">
-            <div className="flex h-13 min-w-0 items-center rounded-[10px] border border-[#e5e7eb] bg-white px-3">
-              <button type="button" onClick={() => closeMobileSearch()} aria-label={copy.back} className="grid h-10 w-10 shrink-0 place-items-center text-[#1A2744]">
+            <div className={SEARCH_SHEET_ROW}>
+              <button type="button" onClick={() => closeMobileSearch()} aria-label={copy.back} className={SEARCH_SHEET_LEADING}>
                 <ChevronRight className="h-6 w-6 rotate-180" />
               </button>
               <input
@@ -428,7 +429,7 @@ export function MarketplaceSearch({
                 }}
                 placeholder={placeholder}
                 enterKeyHint={pistaPrincipal}
-                className="min-w-0 flex-1 bg-transparent px-2 text-[17px] font-semibold text-[#1A2744] outline-none placeholder:text-[#a5afbd]"
+                className={SEARCH_SHEET_INPUT}
               />
             </div>
             {/* EL MISMO DIBUJO QUE EL CAMPO DE ARRIBA. Este llevaba 16 px de
@@ -436,9 +437,9 @@ export function MarketplaceSearch({
                 va con 10 px, #e5e7eb y sin sombra: uno encima del otro se leían
                 como piezas de dos pantallas distintas. */}
             {secondary && (
-              <label className="flex h-13 min-w-0 items-center rounded-[10px] border border-[#e5e7eb] bg-white px-3">
-                <span className="grid h-10 w-10 shrink-0 place-items-center" aria-hidden="true">
-                  <SecondaryIcon className="h-6 w-6 text-[#162543]" />
+              <label className={SEARCH_SHEET_ROW}>
+                <span className={SEARCH_SHEET_LEADING} aria-hidden="true">
+                  <SecondaryIcon className="h-6 w-6" />
                 </span>
                 <input
                   ref={fullSecondaryInputRef}
@@ -449,7 +450,7 @@ export function MarketplaceSearch({
                   enterKeyHint={pistaSecundaria}
                   placeholder={secondary.placeholder}
                   aria-label={secondary.ariaLabel ?? secondary.placeholder}
-                  className="min-w-0 flex-1 bg-transparent px-2 text-[17px] font-semibold text-[#162543] outline-none placeholder:text-[#9aa8ba]"
+                  className={SEARCH_SHEET_INPUT}
                 />
                 {secondary.value && (
                   <button type="button" onClick={() => secondary.onChange("")} aria-label={secondaryClearLabel} className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#edf3f7] text-[#64748b]">

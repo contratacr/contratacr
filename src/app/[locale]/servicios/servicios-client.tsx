@@ -1,4 +1,5 @@
 "use client";
+import { SectionBrand } from "@/components/layout/section-brand";
 
 import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Carril } from "@/components/ui/carril";
@@ -8,7 +9,7 @@ import { PanelEmptyState } from "@/components/ui/content-loading";
 import { cn } from "@/lib/utils";
 import { useLocale } from "next-intl";
 import { useTranslations } from "next-intl";
-import { ContrataCRMark, HeaderAccountLink, LandingNavbar } from "@/components/landing/landing-navbar";
+import { HeaderAccountLink, LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -196,10 +197,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
                 >
                   <Menu className="h-5 w-5" strokeWidth={2.5} />
                 </button>
-                <Link href="/" aria-label="ContrataCR" className="shrink-0">
-                  <ContrataCRMark />
-                </Link>
-                <p className={CABECERA_TITULO}>{servicesTitle}</p>
+                <SectionBrand title={servicesTitle} as="p" />
                 {/* El icono de Mensajes es de la barra de la APP: en la web se
                     llega desde el menú y desde el panel. */}
                 <div className="ml-auto flex shrink-0 items-center gap-0.5">

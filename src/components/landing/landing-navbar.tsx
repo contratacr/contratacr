@@ -1,4 +1,7 @@
 "use client";
+import { SEARCH_SHEET_ROW, SEARCH_SHEET_LEADING, SEARCH_SHEET_INPUT } from "@/components/search/search-field-layout";
+
+import { SectionBrand } from "@/components/layout/section-brand";
 import { ContrataCRLogo, ContrataCRMark } from "@/components/brand/brand-logo";
 import { DesktopAppMenu } from "./desktop-app-menu";
 import { MobileAppStoreMenuLink } from "@/components/mobile/mobile-app-store-menu-link";
@@ -1921,20 +1924,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
             )}>
               <div className={cn(
                 "absolute left-0 right-0 top-0 flex h-16 items-center lg:hidden",
-                // gap-2 en la app también: la marca a 64 y el título a 104,
-                // como en los tableros (cabecera.ts). Con gap-1.5 quedaban 2 px
-                // corridos al pasar de Empleos a Notificaciones.
+                // Control spacing stays outside the shared mark/title lockup.
                 "justify-start gap-2",
               )}>
                 {sectionActive && sectionRoot ? (
                   <>
-                    <Link href="/" aria-label="ContrataCR" onClick={irAlInicio} className="shrink-0">
-                      <ContrataCRMark />
-                    </Link>
-                    {/* <p>, no <h1>: la página ya tiene su único h1 (el nombre del
-                        profesional, el título de la sección…). Este rótulo es de la
-                        barra, y como h1 quedaba un h1 oculto por delante del real. */}
-                    <p data-ccr-section-title="" className={cn(CABECERA_TITULO, "mr-auto")}>{sectionTitle}</p>
+                    <SectionBrand title={sectionTitle ?? ""} as="p" onHomeClick={irAlInicio} className="mr-auto" />
                   </>
                 ) : sectionActive ? (
                   <>
@@ -2504,12 +2499,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     de arriba —el del tablero— va con 10 px, #e5e7eb y sin
                     sombra: uno encima del otro se leían como piezas de dos
                     pantallas distintas. Y sombra, ninguna. */}
-                <div className="flex h-13 min-w-0 items-center rounded-[10px] border border-[#e5e7eb] bg-white px-3">
+                <div className={SEARCH_SHEET_ROW}>
                   <button
                     type="button"
                     onClick={closeNativeSearch}
                     aria-label={t("back")}
-                    className="grid h-10 w-10 shrink-0 place-items-center text-[#1A2744]"
+                    className={SEARCH_SHEET_LEADING}
                   >
                     <ChevronRight className="h-6 w-6 rotate-180" />
                   </button>
@@ -2527,7 +2522,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     onFocus={() => setSearchFocused(true)}
                     onKeyDown={handleCompactSearchKeyDown}
                     placeholder={locale === "en" ? "Service" : "Servicio"}
-                    className="min-w-0 flex-1 bg-transparent px-2 text-[17px] font-semibold text-[#1A2744] placeholder:text-[#a5afbd] focus:outline-none"
+                    className={SEARCH_SHEET_INPUT}
                     aria-label={locale === "en" ? "Service" : "Servicio"}
                     role="combobox"
                     aria-autocomplete="list"
@@ -2556,8 +2551,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     </button>
                   )}
                 </div>
-                <div className="flex h-13 min-w-0 items-center rounded-[10px] border border-[#e5e7eb] bg-white px-3">
-                  <MapPin className="ml-2 h-6 w-6 shrink-0 text-[#1A2744]" />
+                <div className={SEARCH_SHEET_ROW}>
+                  <span className={SEARCH_SHEET_LEADING} aria-hidden="true"><MapPin className="h-6 w-6" /></span>
                   <input
                     ref={nativeLocationInputRef}
                     enterKeyHint="search"
@@ -2578,7 +2573,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     }}
                     onKeyDown={handleNavLocKeyDown}
                             placeholder={locale === "en" ? "Location" : "Ubicación"}
-                    className="min-w-0 flex-1 bg-transparent px-3 text-[17px] font-semibold text-[#1A2744] placeholder:text-[#a5afbd] focus:outline-none"
+                    className={SEARCH_SHEET_INPUT}
                             aria-label={locale === "en" ? "Location" : "Ubicación"}
                             role="combobox"
                             aria-autocomplete="list"

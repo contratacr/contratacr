@@ -1,4 +1,5 @@
 "use client";
+import { SectionBrand } from "@/components/layout/section-brand";
 import { useMarketplaceFeed } from "@/hooks/use-marketplace-feed";
 import { MarketplaceFeedFeedback, MarketplaceContactBoundary } from "@/components/marketplace/feed-loading";
 import type { FeedPage } from "@/lib/marketplace/feed";
@@ -20,7 +21,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { ArrowLeft, BriefcaseBusiness, Building2, Menu } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { recordRecentVisit } from "@/lib/recent-visits";
-import { ContrataCRMark, HeaderAccountLink } from "@/components/landing/landing-navbar";
+import { HeaderAccountLink } from "@/components/landing/landing-navbar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { MarketplaceClearFilters, MarketplaceFilterChip, MarketplaceNavbarPortal, MarketplaceSearch } from "@/components/marketplace/marketplace-controls";
 import { ScrollRail } from "@/components/ui/scroll-rail";
@@ -367,10 +368,7 @@ export function JobsBoard({ jobs:initialJobs, initialFeed, canPost, initialSelec
           <button type="button" onClick={() => window.dispatchEvent(new Event("ccr:open-mobile-menu"))} aria-label={copy.openMenu} className={cn(CABECERA_BOTON, "order-last")}>
             <Menu className={CABECERA_GLIFO} strokeWidth={2.5} />
           </button>
-          <Link href="/" aria-label="ContrataCR" className="shrink-0">
-            <ContrataCRMark />
-          </Link>
-          <h1 className={CABECERA_TITULO}>{copy.jobs}</h1>
+          <SectionBrand title={copy.jobs} />
           {/* El icono de Mensajes es de la barra de la APP: en la web, Mensajes
               se llega desde el menú y desde el panel, y ninguna otra pantalla
               del sitio lo lleva arriba. Aquí se colaba y era la única pantalla
