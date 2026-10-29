@@ -15478,7 +15478,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 333,
+          "line": 347,
           "tag": "div",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -15486,7 +15486,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 362,
+          "line": 376,
           "tag": "Link",
           "label": "{tNav(\"searchAria\")}",
           "handler": "{(event) => irA(event, \"/profesionales\")}",
@@ -15494,7 +15494,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 368,
+          "line": 382,
           "tag": "Link",
           "label": "{tNav(\"messages\")}",
           "handler": "{(event) => { if (user) irA(event, \"/mensajes\"); }}",
@@ -15502,7 +15502,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 385,
+          "line": 399,
           "tag": "button",
           "label": "{tNav(\"create\")}",
           "handler": "{() => { window.dispatchEvent(new Event(\"ccr:close-native-search\")); setCreateFrom(createDestination); }}",
@@ -15510,7 +15510,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 396,
+          "line": 410,
           "tag": "Link",
           "label": "{tNav(\"notifications\")}",
           "handler": "{(event) => { if (user) irA(event, \"/notificaciones\"); }}",
@@ -15518,7 +15518,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 414,
+          "line": 428,
           "tag": "Link",
           "label": "{tNav(\"panel\")}",
           "handler": "{(event) => irA(event, nativePanelHref)}",
@@ -15526,7 +15526,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 428,
+          "line": 442,
           "tag": "Link",
           "label": "{t(\"login\")}",
           "handler": "",
@@ -25555,7 +25555,7 @@
         },
         {
           "line": 730,
-          "title": "\"native bottom navigation continues from its painted position when reveal is interrupted\""
+          "title": "\"native bottom navigation slides in from below and can reverse without jumping\""
         }
       ]
     },

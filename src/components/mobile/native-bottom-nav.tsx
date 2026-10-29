@@ -230,12 +230,25 @@ export function NativeBottomNav() {
     if (!visible || !nav) return;
     const roots = [document.documentElement, document.body];
     let retirada = 0;
+    let entrada: Animation | undefined;
     const reducirMovimiento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const pintar = (valor: number, animar = false) => {
       const limite = nav.getBoundingClientRect().height + 16;
-      retirada = Math.max(0, Math.min(limite, valor));
-      nav.style.transition = animar && !reducirMovimiento ? "transform 180ms cubic-bezier(0.22,1,0.36,1)" : "none";
+      const destino = Math.max(0, Math.min(limite, valor));
+      // Más eventos de subida no reinician ni completan de golpe la entrada.
+      if (animar && destino === retirada) return;
+      const desde = animar ? new DOMMatrixReadOnly(getComputedStyle(nav).transform).m42 : 0;
+      entrada?.cancel();
+      entrada = undefined;
+      retirada = destino;
+      nav.style.transition = "none";
       nav.style.transform = `translate3d(0, ${retirada}px, 0)`;
+      if (animar && !reducirMovimiento && desde !== retirada) {
+        entrada = nav.animate([
+          { transform: `translate3d(0, ${desde}px, 0)` },
+          { transform: `translate3d(0, ${retirada}px, 0)` },
+        ], { duration: 200, easing: "cubic-bezier(0.2,0.5,0.4,1)" });
+      }
       const oculta = retirada >= limite;
       nav.inert = oculta;
       roots.forEach(root => root.classList.toggle("ccr-native-bottom-nav-hidden", oculta));
@@ -287,6 +300,7 @@ export function NativeBottomNav() {
     nav.addEventListener("focusin", alEnfocar);
     window.addEventListener("scroll", alDesplazar, { capture: true, passive: true });
     return () => {
+      entrada?.cancel();
       nav.removeEventListener("focusin", alEnfocar);
       window.removeEventListener("scroll", alDesplazar, { capture: true });
       nav.style.removeProperty("transform");

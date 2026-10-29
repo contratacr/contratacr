@@ -727,18 +727,37 @@ test("native bottom navigation ignores the simulated iOS bottom bounce", async (
   await expect(body).not.toHaveClass(/ccr-native-bottom-nav-hidden/);
 });
 
-test("native bottom navigation continues from its painted position when reveal is interrupted", async ({ page }) => {
+test("native bottom navigation slides in from below and can reverse without jumping", async ({ page }) => {
   await mountScrollNavigation(page);
   await scrollValues(page, "#home-scroll", [200]);
   await scrollValues(page, "#home-scroll", [196, 192, 188], 8);
   const movement = await page.locator("#home-scroll").evaluate(element => {
     const nav = document.querySelector("nav.ccr-native-bottom-nav")!;
+    const animation = nav.getAnimations()[0];
+    if (!animation) throw new Error("The upward gesture must start a visible entrance animation");
+    animation.pause();
+    animation.currentTime = 0;
+    const start = new DOMMatrixReadOnly(getComputedStyle(nav).transform).m42;
+    animation.currentTime = 100;
     const before = new DOMMatrixReadOnly(getComputedStyle(nav).transform).m42;
+    (window as unknown as { __navTestNow: number }).__navTestNow += 8;
+    element.scrollTop -= 4;
+    element.dispatchEvent(new Event("scroll"));
+    const sameAnimation = nav.getAnimations()[0] === animation && animation.currentTime === 100;
+    animation.currentTime = 200;
+    const end = new DOMMatrixReadOnly(getComputedStyle(nav).transform).m42;
+    animation.currentTime = 100;
     (window as unknown as { __navTestNow: number }).__navTestNow += 8;
     element.scrollTop += 1;
     element.dispatchEvent(new Event("scroll"));
-    return { before, after: new DOMMatrixReadOnly(getComputedStyle(nav).transform).m42 };
+    return { start, before, end, sameAnimation, duration: animation.effect?.getTiming().duration, after: new DOMMatrixReadOnly(getComputedStyle(nav).transform).m42 };
   });
+  expect(movement.start).toBeGreaterThan(movement.before);
+  expect(movement.before).toBeGreaterThan(0);
+  expect(movement.before / movement.start).toBeGreaterThan(0.15);
+  expect(movement.duration).toBe(200);
+  expect(movement.end).toBeCloseTo(0, 1);
+  expect(movement.sameAnimation).toBe(true);
   expect(movement.after - movement.before).toBeCloseTo(1, 1);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.evaluate(() => (window as unknown as { __setTestNavPath: (path: string) => void }).__setTestNavPath("/buscar"));
