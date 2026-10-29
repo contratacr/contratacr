@@ -344,3 +344,21 @@ resolvers, hooks o alias. Sus 100 comprobaciones aprobaron. La enumeración de
 14 casos WebView valida su inclusión, no su ejecución; el nuevo CI debe
 certificarlos. Las seis comprobaciones locales de la guía siguen siendo
 la evidencia focal previa, sin repetición por este traslado.
+
+### Autorización del primer canal de chat — 29 de octubre de 2026
+
+El run móvil `40850103505` mostró que el evento sí llega al observador de
+servicio y el receptor puede leer la fila, pero los registros de suscripción
+Postgres del navegador permanecen con rol `anon`, sin sujeto. Esto explica que
+RLS no entregue el evento aunque el cliente obtenga después un JWT válido.
+
+Se reprodujo la carrera con el efecto real de la bandeja y el SDK Realtime
+instalado: la restauración del token termina mientras el primer join espera
+confirmación; ese join salió sin credencial y la actualización posterior no
+corrige su autorización. La prueba falló antes del cambio en ambos motores.
+La bandeja ahora espera la sesión del mismo usuario y `realtime.setAuth` antes
+de subscribirse; conserva la reconciliación tras cada join y no inicia un canal
+si el efecto ya se retiró. Ambos motores aprobaron esa prueba y la regresión
+previa de mensajes durante la suscripción (4 casos focales). Tipos, lint,
+textos e inventario aprobaron. Falta la nueva validación integrada de CI;
+no se considera cerrado el chat ni el incidente físico por estos casos focales.

@@ -554,9 +554,9 @@ test('chat reconciles messages missed while subscribing and ignores obsolete cha
     let stored='initial'; let loads=0; const callbacks=[];
     const loadThread=async()=>{loads++;document.getElementById('messages').textContent=stored;};
     const loadConversations=async()=>{};
-    const createClient=()=>({channel:()=>{const c={on:()=>c,subscribe:cb=>{callbacks.push(cb);return c;}};return c;},removeChannel:async()=>{}});
+    const createClient=()=>({auth:{getSession:async()=>({data:{session:{access_token:'fixture',user:{id:'recipient'}}}})},realtime:{setAuth:async()=>{}},channel:()=>{const c={on:()=>c,subscribe:cb=>{callbacks.push(cb);return c;}};return c;},removeChannel:async()=>{}});
     ${compiled}
-    window.chatProbe={insert:value=>{stored=value;},subscribe:index=>callbacks[index]?.('SUBSCRIBED'),loads:()=>loads};
+    window.chatProbe={insert:value=>{stored=value;},subscribe:index=>callbacks[index]?.('SUBSCRIBED'),ready:()=>callbacks.length,loads:()=>loads};
     window.disposeChat=window.mountChat();
   ` });
   // The first HTTP snapshot is visible, but the server has not acknowledged
@@ -569,8 +569,10 @@ test('chat reconciles messages missed while subscribing and ignores obsolete cha
   await page.evaluate(() => {
     const w = window as unknown as { disposeChat(): void; mountChat(): () => void; chatProbe: { insert(v: string): void; subscribe(i: number): void } };
     w.disposeChat(); w.disposeChat=w.mountChat();
-    w.chatProbe.insert('message during reconnect'); w.chatProbe.subscribe(1);
+    w.chatProbe.insert('message during reconnect');
   });
+  await expect.poll(() => page.evaluate(() => (window as unknown as { chatProbe: { ready(): number } }).chatProbe.ready())).toBe(2);
+  await page.evaluate(() => (window as unknown as { chatProbe: { subscribe(i: number): void } }).chatProbe.subscribe(1));
   await expect(page.locator('#messages')).toHaveText('message during reconnect');
   const before = await page.evaluate(() => (window as unknown as { chatProbe: { loads(): number } }).chatProbe.loads());
   await page.evaluate(() => (window as unknown as { chatProbe: { subscribe(i: number): void } }).chatProbe.subscribe(0));
@@ -617,3 +619,59 @@ async function attachRealtimeDiagnostic(testInfo: import("playwright/test").Test
         }
       }
 }
+
+test('chat waits for the recipient credential before its first realtime join', async ({ page }) => {
+  const { readFileSync } = await import('node:fs');
+  const ts = await import('typescript');
+  const { build } = await import('esbuild');
+  const ast = ts.createSourceFile('inbox.tsx', readFileSync('src/components/dashboard/direct-chat-inbox.tsx', 'utf8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  let effect = '';
+  const visit = (node: import('typescript').Node) => {
+    if (ts.isCallExpression(node) && node.expression.getText(ast) === 'useEffect' && node.arguments[0]?.getText(ast).includes('direct-chat-')) effect = node.arguments[0].getText(ast);
+    ts.forEachChild(node, visit);
+  };
+  visit(ast); expect(effect).not.toBe('');
+  const compiled = ts.transpileModule(`window.mountChat = ${effect};`, { compilerOptions: { target: ts.ScriptTarget.ES2020 } }).outputText;
+  const sdk = await build({ stdin: { contents: `
+    import {RealtimeClient} from '@supabase/realtime-js';
+    const ready=new Promise(resolve=>window.finishAuth=()=>resolve('recipient-credential'));
+    const realtime=new RealtimeClient('ws://127.0.0.1:3186/realtime/v1',{params:{apikey:'anonymous-fixture'},accessToken:()=>ready,heartbeatIntervalMs:60000});
+    window.sdkClient={realtime,auth:{getSession:async()=>({data:{session:{access_token:await ready,user:{id:'recipient'}}},error:null})},channel:(...a)=>realtime.channel(...a),removeChannel:c=>realtime.removeChannel(c)};
+  `, resolveDir: process.cwd() }, bundle: true, platform: 'browser', format: 'iife', write: false });
+  type Frame = [string | null, string | null, string, string, Record<string, unknown>];
+  const joins: Array<{ frame: Frame; send: (data: string) => void }> = [];
+  let authorized = false;
+  await page.routeWebSocket('**/realtime/v1/websocket**', socket => socket.onMessage(raw => {
+    const frame = JSON.parse(String(raw)) as Frame;
+    if (frame[3] === 'phx_join') {
+      authorized = frame[4].access_token === 'recipient-credential';
+      joins.push({ frame, send: data => socket.send(data) });
+    } else if (frame[3] === 'access_token') authorized = frame[4].access_token === 'recipient-credential';
+  }));
+  await page.route('**/chat-auth-join-harness', r => r.fulfill({ contentType: 'text/html', body: '<!doctype html><div id="messages">initial</div>' }));
+  await page.goto('/chat-auth-join-harness');
+  await page.addScriptTag({ content: sdk.outputFiles[0].text });
+  await page.addScriptTag({ content: `
+    const user={id:'recipient'},activeId='thread',DRAFT_CONVERSATION_ID='draft',APP_RESUME_EVENT='resume';
+    const vistosVisibles={current:true};const setMessages=()=>{};let stored='initial',loads=0;
+    const loadThread=async()=>{loads++;document.getElementById('messages').textContent=stored;};
+    const loadConversations=async()=>{};const createClient=()=>window.sdkClient;
+    ${compiled}
+    window.chatProbe={insert:v=>stored=v,loads:()=>loads};window.disposeChat=window.mountChat();
+  ` });
+  // The cached UI user can exist while the browser auth callback is unresolved.
+  await page.waitForTimeout(100);
+  await page.evaluate(() => (window as unknown as { finishAuth(): void }).finishAuth());
+  await expect.poll(() => joins.length).toBe(1);
+  await page.waitForTimeout(50); // Resolve auth while a premature join is still in flight.
+  const current = joins[0];
+  const config = current.frame[4].config as { postgres_changes: Array<Record<string, unknown>> };
+  current.send(JSON.stringify([current.frame[0], current.frame[1], current.frame[2], 'phx_reply', { status: 'ok', response: { postgres_changes: config.postgres_changes.map((filter, id) => ({ ...filter, id: id + 1 })) } }]));
+  await expect.poll(() => page.evaluate(() => (window as unknown as { chatProbe: { loads(): number } }).chatProbe.loads())).toBeGreaterThan(0);
+  await page.evaluate(() => (window as unknown as { chatProbe: { insert(v: string): void } }).chatProbe.insert('live recipient message'));
+  if (authorized) {
+    const id = config.postgres_changes.findIndex(f => f.table === 'direct_messages' && String(f.event).toUpperCase() === 'INSERT') + 1;
+    current.send(JSON.stringify([current.frame[0], null, current.frame[2], 'postgres_changes', { ids: [id], data: { schema: 'public', table: 'direct_messages', type: 'INSERT', record: { conversation_id: 'thread', sender_id: 'other' }, old_record: {}, columns: [] } }]));
+  }
+  await expect(page.locator('#messages')).toHaveText('live recipient message', { timeout: 3000 });
+});
