@@ -391,6 +391,16 @@ test.describe("@seeded contextual direct chat", () => {
       });
     });
     const admin = regressionAdminClient();
+    let probeConversation: string | undefined;
+    let probeMessage: string | undefined;
+    const serviceProbe = { subscribed: false, matchingInsert: false };
+    // Observe the SAME synthetic insert through a service-role channel. No
+    // extra writes, waits or retries affect the browser delivery assertion.
+    const serviceChannel = admin.channel(`delivery-diagnostic-${Date.now()}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "direct_messages" }, ({ new: row }) => {
+        if (row.conversation_id === probeConversation && row.body === probeMessage) serviceProbe.matchingInsert = true;
+      }).subscribe(status => { if (status === "SUBSCRIBED") serviceProbe.subscribed = true; });
+    try {
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
     const empty = await apiJson<ChatResponse>(page, "/api/direct-chat", {
       method: "POST",
@@ -415,6 +425,8 @@ test.describe("@seeded contextual direct chat", () => {
     await gotoOK(page, `/mensajes?conversation=${created.body.conversationId}`);
     await expect(page.getByText("E2E inicia tiempo real").last()).toBeVisible();
     const realtimeBody = `E2E tiempo real ${Date.now()}`;
+    probeConversation = created.body.conversationId;
+    probeMessage = realtimeBody;
     const { error: realtimeError } = await admin.rpc("send_direct_message_atomic", {
       p_conversation_id: created.body.conversationId,
       p_sender_id: seed.professionalUserId,
@@ -425,6 +437,9 @@ test.describe("@seeded contextual direct chat", () => {
     try {
       await expect(page.getByText(realtimeBody).last()).toBeVisible({ timeout: 15_000 });
     } finally {
+      await testInfo.attach("realtime-service-observer", {
+        body: JSON.stringify(serviceProbe), contentType: "application/json",
+      });
       await testInfo.attach("realtime-protocol-states", {
         body: JSON.stringify(realtimeStates), contentType: "application/json",
       });
@@ -474,6 +489,9 @@ test.describe("@seeded contextual direct chat", () => {
       .eq("conversation_id", created.body.conversationId)
       .eq("body", "E2E no debe guardarse");
     expect(count).toBe(0);
+    } finally {
+      await admin.removeChannel(serviceChannel);
+    }
   });
 });
 
