@@ -8,7 +8,7 @@ import { OPEN_PRIVACY_SETTINGS, readOptionalConsent, saveOptionalConsent, subscr
 
 const snapshot = () => `${readOptionalConsent("analytics")}:${readOptionalConsent("advertising")}`;
 const serverSnapshot = () => "pending";
-const button = "min-h-11 rounded-2xl border border-[#162543] px-5 py-3 text-sm font-bold transition-colors hover:bg-[#edf7fb] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]";
+const button = "min-h-11 rounded-2xl border border-[#162543] bg-[#f3fbfe] px-5 py-3 text-sm font-bold text-[#162543] transition-colors hover:border-[#0083b0] hover:bg-[#e5f6fc] active:bg-[#d8f0fa] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]";
 
 export function CookiePreferences() {
   const en = useLocale() === "en";
@@ -46,10 +46,9 @@ export function CookiePreferences() {
   const actions = <div className="grid gap-2.5">
     <button className={button} onClick={() => save(true, true)}>{en ? "Accept all" : "Aceptar todas"}</button>
     <button className={button} onClick={() => save(false, false)}>{en ? "Only necessary" : "Solo necesarias"}</button>
-
   </div>;
   return <>
-    {needsChoice && !settings && <section role="region" aria-labelledby="cookie-title" data-cookie-banner className="fixed inset-x-3 bottom-[max(12px,env(safe-area-inset-bottom))] z-[130] max-h-[85dvh] overflow-y-auto rounded-[24px] border border-[#dce6ec] bg-white p-5 text-[#162543] shadow-[0_16px_64px_rgba(22,37,67,0.18)] sm:left-6 sm:right-auto sm:w-[380px] sm:p-6">
+    {needsChoice && !settings && <section role="region" aria-labelledby="cookie-title" data-cookie-banner className="fixed inset-x-0 bottom-0 z-[130] max-h-[85dvh] overflow-y-auto overscroll-contain rounded-t-[24px] border border-b-0 border-[#dce6ec] bg-white p-5 pb-[max(20px,env(safe-area-inset-bottom))] text-[#162543] shadow-[0_-8px_40px_rgba(22,37,67,0.12)] sm:bottom-6 sm:left-6 sm:right-auto sm:w-[380px] sm:rounded-[24px] sm:border-b sm:p-6 sm:shadow-[0_16px_64px_rgba(22,37,67,0.18)]">
       <h2 id="cookie-title" className="mb-3 text-lg font-extrabold leading-6">{en ? "Your privacy, your choice" : "Tu privacidad, tú decides"}</h2>
       <p className="mb-3 text-sm leading-6 text-[#526176]">{notice}</p>
       {actions}
