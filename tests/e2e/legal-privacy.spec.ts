@@ -146,13 +146,14 @@ test("offline guest advertising withdrawal retries on reconnect without a popup"
  });
  await gotoOK(page,"/privacidad");
  await expect.poll(()=>withdrawals).toBe(1);
- await expect(page.locator("[data-advertising-preferences]")).toHaveCount(0);
+ await expect(page.locator("main [data-advertising-preferences] button")).toBeVisible();
+ await expect(page.getByRole("dialog")).toHaveCount(0);
  await page.reload();
  await expect.poll(()=>withdrawals).toBe(2);
  available = true;
  await page.evaluate(()=>window.dispatchEvent(new Event("online")));
  await expect.poll(()=>withdrawals).toBe(3);
  await expect.poll(()=>page.evaluate(()=>localStorage.getItem("contratacr:advertising-withdrawal-pending"))).toBeNull();
- await expect(page.locator("[data-advertising-preferences]")).toHaveCount(0);
+ await expect(page.locator("main [data-advertising-preferences] button")).toBeVisible();
  await expect(page.getByRole("dialog")).toHaveCount(0);
 });
