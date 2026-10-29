@@ -23534,6 +23534,18 @@
         {
           "line": 207,
           "title": "\"la cinta de marcas nunca deja un hueco: lo que se ve no salta al reiniciar\""
+        },
+        {
+          "line": 258,
+          "title": "\"la cinta de marcas sigue avanzando con una sesión anónima\""
+        },
+        {
+          "line": 262,
+          "title": "\"la cinta de marcas sigue avanzando con una sesión iniciada\""
+        },
+        {
+          "line": 263,
+          "title": "!canRunSeededRegression()"
         }
       ]
     },
