@@ -904,6 +904,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
     // INSERT y un UPDATE casi juntos, y cada uno recargaba la lista entera
     // (seis consultas del servidor cada vez). Se junta lo que llegue en tres
     // cuartos de segundo y se pide UNA sola vez.
+    let disposed = false;
     let pendiente: number | null = null;
     const recargarPronto = () => {
       if (pendiente) window.clearTimeout(pendiente);
@@ -937,13 +938,21 @@ export function DirectChatInbox({ alCambiarSubvista }: {
         }
         if (!row.edited_at && !row.deleted_at) return;
         void loadThread(activeId, true);
-      }).subscribe();
+      }).subscribe((status) => {
+        // The HTTP snapshot may finish before the channel is ready. Reconcile
+        // after every successful join, including reconnects, to recover inserts
+        // that happened in that gap. Removed channels must not reload old UI.
+        if (disposed || status !== "SUBSCRIBED") return;
+        recargarPronto();
+        if (activeId && activeId !== DRAFT_CONVERSATION_ID) void loadThread(activeId, true);
+      });
     const onResume = () => {
       recargarPronto();
       if (activeId && activeId !== DRAFT_CONVERSATION_ID) void loadThread(activeId, true);
     };
     window.addEventListener(APP_RESUME_EVENT, onResume);
     return () => {
+      disposed = true;
       window.removeEventListener(APP_RESUME_EVENT, onResume);
       if (pendiente) window.clearTimeout(pendiente);
       void supabase.removeChannel(channel);

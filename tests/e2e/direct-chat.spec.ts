@@ -353,7 +353,24 @@ test.describe("@seeded contextual direct chat", () => {
     expect(intento.body.conversationId).toBeFalsy();
   });
 
-  test("validation, blocked threads and realtime delivery protect the conversation", async ({ page }) => {
+  test("validation, blocked threads and realtime delivery protect the conversation", async ({ page }, testInfo) => {
+    // Record protocol states, never credentials, channel identifiers or messages.
+    // A 101 handshake alone does not certify a subscribed Postgres channel.
+    const realtimeStates: Array<{ event: string; status?: string; at: number }> = [];
+    page.on("websocket", socket => {
+      if (!socket.url().includes("/realtime/")) return;
+      socket.on("framereceived", frame => {
+        try {
+          const data = JSON.parse(String(frame.payload));
+          const event = Array.isArray(data) ? data[3] : data.event;
+          const payload = Array.isArray(data) ? data[4] : data.payload;
+          if (!["phx_reply", "system", "postgres_changes", "phx_error", "phx_close"].includes(event)) return;
+          const rawStatus = payload?.status;
+          const status = ["ok", "error", "timeout"].includes(rawStatus) ? rawStatus : undefined;
+          if (realtimeStates.length < 100) realtimeStates.push({ event, status, at: Date.now() });
+        } catch { /* Binary frames are not diagnostic text. */ }
+      });
+    });
     const admin = regressionAdminClient();
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
     const empty = await apiJson<ChatResponse>(page, "/api/direct-chat", {
@@ -386,7 +403,13 @@ test.describe("@seeded contextual direct chat", () => {
       p_attachment_urls: [],
     });
     if (realtimeError) throw realtimeError;
-    await expect(page.getByText(realtimeBody).last()).toBeVisible({ timeout: 15_000 });
+    try {
+      await expect(page.getByText(realtimeBody).last()).toBeVisible({ timeout: 15_000 });
+    } finally {
+      await testInfo.attach("realtime-protocol-states", {
+        body: JSON.stringify(realtimeStates), contentType: "application/json",
+      });
+    }
 
     const reportAndBlock = await apiJson<ChatResponse>(page, "/api/direct-chat", {
       method: "PATCH",
@@ -451,4 +474,49 @@ test('canceling the mobile file sheet never downloads or opens another page',asy
   await (window as unknown as {ChatDownload:{downloadChatAttachment:(a:unknown)=>Promise<void>}}).ChatDownload.downloadChatAttachment({url:'/chat-download-test.png',name:'foto.png',type:'image/png'});
  });
  expect(downloads).toBe(0);expect(page.context().pages()).toHaveLength(1);
+});
+
+test('chat reconciles messages missed while subscribing and ignores obsolete channels', async ({ page }) => {
+  const { readFileSync } = await import('node:fs');
+  const ts = await import('typescript');
+  const source = readFileSync('src/components/dashboard/direct-chat-inbox.tsx', 'utf8');
+  const ast = ts.createSourceFile('inbox.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  let effect = '';
+  const visit = (node: import('typescript').Node) => {
+    if (ts.isCallExpression(node) && node.expression.getText(ast) === 'useEffect'
+      && node.arguments[0]?.getText(ast).includes('`direct-chat-${user.id}`')) effect = node.arguments[0].getText(ast);
+    ts.forEachChild(node, visit);
+  };
+  visit(ast);
+  expect(effect, 'Exercise the actual inbox subscription effect').not.toBe('');
+  const compiled = ts.transpileModule(`window.mountChat = ${effect};`, { compilerOptions: { target: ts.ScriptTarget.ES2020 } }).outputText;
+  await page.route('**/chat-subscription-harness', r => r.fulfill({ contentType: 'text/html', body: '<!doctype html><div id="messages">initial</div>' }));
+  await page.goto('/chat-subscription-harness');
+  await page.addScriptTag({ content: `
+    const user={id:'recipient'},activeId='thread',DRAFT_CONVERSATION_ID='draft',APP_RESUME_EVENT='resume';
+    const vistosVisibles={current:true}; const setMessages=()=>{};
+    let stored='initial'; let loads=0; const callbacks=[];
+    const loadThread=async()=>{loads++;document.getElementById('messages').textContent=stored;};
+    const loadConversations=async()=>{};
+    const createClient=()=>({channel:()=>{const c={on:()=>c,subscribe:cb=>{callbacks.push(cb);return c;}};return c;},removeChannel:async()=>{}});
+    ${compiled}
+    window.chatProbe={insert:value=>{stored=value;},subscribe:index=>callbacks[index]?.('SUBSCRIBED'),loads:()=>loads};
+    window.disposeChat=window.mountChat();
+  ` });
+  // The first HTTP snapshot is visible, but the server has not acknowledged
+  // the channel yet. An insert in that interval has no realtime recipient.
+  await page.evaluate(() => {
+    const w = window as unknown as { chatProbe: { insert(v: string): void; subscribe(i: number): void } };
+    w.chatProbe.insert('message during subscription'); w.chatProbe.subscribe(0);
+  });
+  await expect(page.locator('#messages')).toHaveText('message during subscription');
+  await page.evaluate(() => {
+    const w = window as unknown as { disposeChat(): void; mountChat(): () => void; chatProbe: { insert(v: string): void; subscribe(i: number): void } };
+    w.disposeChat(); w.disposeChat=w.mountChat();
+    w.chatProbe.insert('message during reconnect'); w.chatProbe.subscribe(1);
+  });
+  await expect(page.locator('#messages')).toHaveText('message during reconnect');
+  const before = await page.evaluate(() => (window as unknown as { chatProbe: { loads(): number } }).chatProbe.loads());
+  await page.evaluate(() => (window as unknown as { chatProbe: { subscribe(i: number): void } }).chatProbe.subscribe(0));
+  expect(await page.evaluate(() => (window as unknown as { chatProbe: { loads(): number } }).chatProbe.loads())).toBe(before);
 });
