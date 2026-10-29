@@ -15478,7 +15478,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 358,
+          "line": 362,
           "tag": "div",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -15486,7 +15486,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 387,
+          "line": 391,
           "tag": "Link",
           "label": "{tNav(\"searchAria\")}",
           "handler": "{(event) => irA(event, \"/profesionales\")}",
@@ -15494,7 +15494,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 393,
+          "line": 397,
           "tag": "Link",
           "label": "{tNav(\"messages\")}",
           "handler": "{(event) => { if (user) irA(event, \"/mensajes\"); }}",
@@ -15502,7 +15502,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 410,
+          "line": 414,
           "tag": "button",
           "label": "{tNav(\"create\")}",
           "handler": "{() => { window.dispatchEvent(new Event(\"ccr:close-native-search\")); setCreateFrom(createDestination); }}",
@@ -15510,7 +15510,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 421,
+          "line": 425,
           "tag": "Link",
           "label": "{tNav(\"notifications\")}",
           "handler": "{(event) => { if (user) irA(event, \"/notificaciones\"); }}",
@@ -15518,7 +15518,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 439,
+          "line": 443,
           "tag": "Link",
           "label": "{tNav(\"panel\")}",
           "handler": "{(event) => irA(event, nativePanelHref)}",
@@ -15526,7 +15526,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 453,
+          "line": 457,
           "tag": "Link",
           "label": "{t(\"login\")}",
           "handler": "",
@@ -25546,16 +25546,20 @@
           "title": "`${contract.locale.toUpperCase()} keeps native navigation, messages and assistant chat isolated from web`"
         },
         {
-          "line": 671,
+          "line": 674,
           "title": "\"native bottom navigation follows each downward pixel and requires a fast upward gesture\""
         },
         {
-          "line": 718,
+          "line": 721,
           "title": "\"native bottom navigation ignores the simulated iOS bottom bounce\""
         },
         {
-          "line": 739,
+          "line": 742,
           "title": "\"native bottom navigation restores at the top and can reverse without jumping\""
+        },
+        {
+          "line": 783,
+          "title": "\"native bottom navigation interpolates both directions instead of jumping\""
         }
       ]
     },

@@ -667,6 +667,9 @@ async function scrollValues(page: Page, selector: string, values: number[], inte
       await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
     }
   }, { positions: values, interval });
+  await page.locator("nav.ccr-native-bottom-nav").evaluate(async nav => {
+    await Promise.all(nav.getAnimations().map(animation => animation.finished.catch(() => {})));
+  });
 }
 
 const navigationOffset = (page: Page) => page.locator("nav.ccr-native-bottom-nav").evaluate(nav => new DOMMatrixReadOnly(getComputedStyle(nav).transform).m42);
@@ -742,7 +745,7 @@ test("native bottom navigation ignores the simulated iOS bottom bounce", async (
 test("native bottom navigation restores at the top and can reverse without jumping", async ({ page }) => {
   await mountScrollNavigation(page);
   await scrollValues(page, "#home-scroll", [200]);
-  await scrollValues(page, "#home-scroll", [0], 1000);
+  await page.locator("#home-scroll").evaluate(element => { element.scrollTop = 0; element.dispatchEvent(new Event("scroll")); });
   const movement = await page.locator("#home-scroll").evaluate(element => {
     const nav = document.querySelector("nav.ccr-native-bottom-nav")!;
     const animation = nav.getAnimations()[0];
@@ -770,7 +773,7 @@ test("native bottom navigation restores at the top and can reverse without jumpi
   expect(movement.duration).toBe(240);
   expect(movement.end).toBeCloseTo(0, 1);
   expect(movement.sameAnimation).toBe(true);
-  expect(movement.after - movement.before).toBeCloseTo(1, 1);
+  expect(movement.after).toBeCloseTo(movement.before, 1);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.evaluate(() => (window as unknown as { __setTestNavPath: (path: string) => void }).__setTestNavPath("/buscar"));
   await expect(page.locator("[data-current-path]")).toHaveAttribute("data-current-path", "/buscar");
@@ -778,4 +781,34 @@ test("native bottom navigation restores at the top and can reverse without jumpi
   await scrollValues(page, "#search-scroll", [0], 1000);
   expect(await navigationOffset(page)).toBe(0);
   await expect(page.locator("nav.ccr-native-bottom-nav")).toHaveCSS("transition-duration", "0s");
+});
+
+test("native bottom navigation interpolates both directions instead of jumping", async ({ page }) => {
+  await mountScrollNavigation(page);
+  const sample = async (position: number) => page.locator("#home-scroll").evaluate((element, position) => {
+    (window as unknown as { __navTestNow: number }).__navTestNow += 16;
+    element.scrollTop = position;
+    element.dispatchEvent(new Event("scroll"));
+    const nav = document.querySelector("nav.ccr-native-bottom-nav")!;
+    const animation = nav.getAnimations()[0];
+    if (!animation) throw new Error("Scroll must interpolate its movement");
+    animation.pause();
+    const duration = Number(animation.effect!.getTiming().duration);
+    const samples = [0, .25, .5, .75, 1].map(fraction => {
+      animation.currentTime = duration * fraction;
+      return new DOMMatrixReadOnly(getComputedStyle(nav).transform).m42;
+    });
+    animation.finish();
+    return { samples, duration };
+  }, position);
+  const down = await sample(200);
+  const up = await sample(150);
+  expect(down.samples[0]).toBeCloseTo(0, 1);
+  for (let index = 1; index < 5; index++) {
+    expect(down.samples[index]).toBeGreaterThan(down.samples[index - 1]);
+    expect(up.samples[index]).toBeLessThan(up.samples[index - 1]);
+  }
+  expect(up.samples[0]).toBeCloseTo(down.samples[4], 1);
+  expect(up.duration).toBeLessThan(down.duration);
+  expect(up.samples[1]).toBeGreaterThan(up.samples[0] * .5);
 });
