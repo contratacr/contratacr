@@ -693,8 +693,17 @@ test("native bottom navigation follows each downward pixel and requires a fast u
     await expect(body).toHaveClass(/ccr-native-bottom-nav-hidden/);
     await scrollValues(page, selector, [172, 168, 164], 8);
     await expect(body).not.toHaveClass(/ccr-native-bottom-nav-hidden/);
-    await expect.poll(() => navigationOffset(page)).toBeCloseTo(0, 1);
-    await scrollValues(page, selector, [165], 120);
+    const partial = await navigationOffset(page);
+    expect(partial).toBeGreaterThan(0);
+    expect(partial).toBeLessThan(hidden);
+    await scrollValues(page, selector, [160], 8);
+    expect(await navigationOffset(page)).toBeCloseTo(partial - 6, 1);
+    // A pause cannot turn a partial entrance into an automatic appearance.
+    await page.waitForTimeout(250);
+    expect(await navigationOffset(page)).toBeCloseTo(partial - 6, 1);
+    await scrollValues(page, selector, [156, 152, 148, 144, 140, 136, 132, 128], 8);
+    expect(await navigationOffset(page)).toBe(0);
+    await scrollValues(page, selector, [129], 120);
     expect(await navigationOffset(page)).toBeCloseTo(1, 1);
     await scrollValues(page, selector, [300]);
     await expect(body).toHaveClass(/ccr-native-bottom-nav-hidden/);
@@ -730,26 +739,26 @@ test("native bottom navigation ignores the simulated iOS bottom bounce", async (
   await expect(body).not.toHaveClass(/ccr-native-bottom-nav-hidden/);
 });
 
-test("native bottom navigation slides in from below and can reverse without jumping", async ({ page }) => {
+test("native bottom navigation restores at the top and can reverse without jumping", async ({ page }) => {
   await mountScrollNavigation(page);
   await scrollValues(page, "#home-scroll", [200]);
-  await scrollValues(page, "#home-scroll", [196, 192, 188], 8);
+  await scrollValues(page, "#home-scroll", [0], 1000);
   const movement = await page.locator("#home-scroll").evaluate(element => {
     const nav = document.querySelector("nav.ccr-native-bottom-nav")!;
     const animation = nav.getAnimations()[0];
-    if (!animation) throw new Error("The upward gesture must start a visible entrance animation");
+    if (!animation) throw new Error("Reaching the top must start a visible entrance animation");
     animation.pause();
     animation.currentTime = 0;
     const start = new DOMMatrixReadOnly(getComputedStyle(nav).transform).m42;
-    animation.currentTime = 100;
+    animation.currentTime = 120;
     const before = new DOMMatrixReadOnly(getComputedStyle(nav).transform).m42;
     (window as unknown as { __navTestNow: number }).__navTestNow += 8;
     element.scrollTop -= 4;
     element.dispatchEvent(new Event("scroll"));
-    const sameAnimation = nav.getAnimations()[0] === animation && animation.currentTime === 100;
-    animation.currentTime = 200;
+    const sameAnimation = nav.getAnimations()[0] === animation && animation.currentTime === 120;
+    animation.currentTime = 240;
     const end = new DOMMatrixReadOnly(getComputedStyle(nav).transform).m42;
-    animation.currentTime = 100;
+    animation.currentTime = 120;
     (window as unknown as { __navTestNow: number }).__navTestNow += 8;
     element.scrollTop += 1;
     element.dispatchEvent(new Event("scroll"));
@@ -758,7 +767,7 @@ test("native bottom navigation slides in from below and can reverse without jump
   expect(movement.start).toBeGreaterThan(movement.before);
   expect(movement.before).toBeGreaterThan(0);
   expect(movement.before / movement.start).toBeGreaterThan(0.15);
-  expect(movement.duration).toBe(200);
+  expect(movement.duration).toBe(240);
   expect(movement.end).toBeCloseTo(0, 1);
   expect(movement.sameAnimation).toBe(true);
   expect(movement.after - movement.before).toBeCloseTo(1, 1);
@@ -766,7 +775,7 @@ test("native bottom navigation slides in from below and can reverse without jump
   await page.evaluate(() => (window as unknown as { __setTestNavPath: (path: string) => void }).__setTestNavPath("/buscar"));
   await expect(page.locator("[data-current-path]")).toHaveAttribute("data-current-path", "/buscar");
   await scrollValues(page, "#search-scroll", [200]);
-  await scrollValues(page, "#search-scroll", [196, 192, 188], 8);
+  await scrollValues(page, "#search-scroll", [0], 1000);
   expect(await navigationOffset(page)).toBe(0);
   await expect(page.locator("nav.ccr-native-bottom-nav")).toHaveCSS("transition-duration", "0s");
 });

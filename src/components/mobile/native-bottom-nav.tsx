@@ -222,7 +222,8 @@ export function NativeBottomNav() {
 
   // Al bajar, la barra acompaña cada píxel del contenido. Para recuperarla
   // fuera del inicio hace falta subir con intención: al menos 12px a 0,4px/ms
-  // en una ventana de 100ms. Un regreso lento o el rebote inferior no la saca.
+  // en una ventana de 100ms. Desde ahí sube ligada al scroll, a 1,5 veces su
+  // recorrido. Un regreso lento o el rebote inferior no inicia la entrada.
   const permiteRetirarse = /^\/(?:promociones|empleos|proyectos)?\/?$/.test(pathname ?? "/") || esRutaDeBusqueda(pathname, esServicioDelCatalogo);
 
   useEffect(() => {
@@ -247,7 +248,7 @@ export function NativeBottomNav() {
         entrada = nav.animate([
           { transform: `translate3d(0, ${desde}px, 0)` },
           { transform: `translate3d(0, ${retirada}px, 0)` },
-        ], { duration: 200, easing: "cubic-bezier(0.2,0.5,0.4,1)" });
+        ], { duration: 240, easing: "cubic-bezier(0.32,0,0.5,1)" });
       }
       const oculta = retirada >= limite;
       nav.inert = oculta;
@@ -255,21 +256,21 @@ export function NativeBottomNav() {
     };
     pintar(0);
     const selector = "main, .ccr-tablero-marco > section, .ccr-tablero-ficha, [data-messages-page-main], .ccr-direct-chat-list, .ccr-direct-chat-thread-scroll, .ccr-search-bottom-sheet, .ccr-search-bottom-sheet *";
-    type Posicion = { anterior: number; instante: number; desde: number; subida: number };
+    type Posicion = { anterior: number; instante: number; desde: number; subida: number; revelando: boolean };
     const posiciones = new WeakMap<Element, Posicion>();
-    document.querySelectorAll(selector).forEach(elemento => posiciones.set(elemento, { anterior: elemento.scrollTop, instante: performance.now(), desde: 0, subida: 0 }));
+    document.querySelectorAll(selector).forEach(elemento => posiciones.set(elemento, { anterior: elemento.scrollTop, instante: performance.now(), desde: 0, subida: 0, revelando: false }));
     const alDesplazar = (event: Event) => {
       const objetivo = event.target;
       if (!permiteRetirarse || !(objetivo instanceof Element) || !objetivo.matches(selector)) return;
       const maximo = Math.max(0, objetivo.scrollHeight - objetivo.clientHeight);
       const actual = Math.max(0, Math.min(maximo, objetivo.scrollTop));
       const ahora = performance.now();
-      const posicion = posiciones.get(objetivo) ?? { anterior: 0, instante: ahora, desde: ahora, subida: 0 };
+      const posicion = posiciones.get(objetivo) ?? { anterior: 0, instante: ahora, desde: ahora, subida: 0, revelando: false };
       posiciones.set(objetivo, posicion);
       const delta = actual - posicion.anterior;
       const transcurrido = ahora - posicion.instante;
       posicion.anterior = actual;
-      if (actual <= 0) { posicion.subida = 0; posicion.instante = ahora; pintar(0, true); return; }
+      if (actual <= 0) { posicion.subida = 0; posicion.revelando = false; posicion.instante = ahora; pintar(0, true); return; }
       if (delta === 0) return;
       const anteriorInstante = posicion.instante;
       posicion.instante = ahora;
@@ -277,16 +278,23 @@ export function NativeBottomNav() {
       // subida: la devolución automática de iOS no expresa intención.
       if (actual >= maximo - 2) {
         posicion.subida = 0;
+        posicion.revelando = false;
         if (delta > 0) pintar(retirada + delta);
         return;
       }
       if (nav.querySelector(":focus-visible")) { pintar(0); return; }
       if (delta > 0) {
         posicion.subida = 0;
+        posicion.revelando = false;
         // Si se interrumpe la animación de regreso, continuar desde la
         // posición pintada, sin saltar a su destino antes de seguir al dedo.
         const pintada = new DOMMatrixReadOnly(getComputedStyle(nav).transform).m42;
         pintar(pintada + delta);
+        return;
+      }
+      if (transcurrido > 100) posicion.revelando = false;
+      if (posicion.revelando) {
+        pintar(retirada + delta * 1.5);
         return;
       }
       if (!posicion.subida || transcurrido > 100 || ahora - posicion.desde > 100) {
@@ -294,7 +302,10 @@ export function NativeBottomNav() {
         posicion.subida = 0;
       }
       posicion.subida += -delta;
-      if (posicion.subida >= 12 && posicion.subida / Math.max(16, ahora - posicion.desde) >= 0.4) pintar(0, true);
+      if (posicion.subida >= 12 && posicion.subida / Math.max(16, ahora - posicion.desde) >= 0.4) {
+        posicion.revelando = true;
+        pintar(retirada - posicion.subida * 1.5);
+      }
     };
     const alEnfocar = () => pintar(0, true);
     nav.addEventListener("focusin", alEnfocar);
