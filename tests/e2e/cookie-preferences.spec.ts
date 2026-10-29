@@ -15,7 +15,7 @@ test.beforeAll(async () => {
 });
 for(const locale of ['es','en']) for(const width of [320,390,768,1440]) test(`consent UI ${locale} ${width}: explicit choices, independent purposes and reopening`,async({page})=>{
  await page.addInitScript(()=>{ if (!sessionStorage.getItem("consent-fixture-ready")) { localStorage.clear(); sessionStorage.setItem("consent-fixture-ready","1"); } });
- await page.setViewportSize({width,height:width===320?568:900});
+ await page.setViewportSize({width,height:width===320?568:width===390?700:900});
  await page.route('**/api/privacy/**',r=>r.fulfill({status:200,json:{ok:true}}));
  await page.route('**/cookie-harness',r=>r.fulfill({contentType:'text/html',body:`<!doctype html><html lang="${locale}"><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body><div id="root"></div></body></html>`}));
  await page.goto('http://localhost/cookie-harness');
@@ -31,6 +31,10 @@ for(const locale of ['es','en']) for(const width of [320,390,768,1440]) test(`co
 
  await banner.getByRole('button',{name:locale==='en'?'Manage preferences':'Configurar preferencias',exact:true}).click();
  const dialog=page.getByRole('dialog');await expect(dialog).toBeVisible();
+ if(width===390){expect(await dialog.evaluate(n=>n.scrollHeight<=n.clientHeight)).toBe(true);}
+ await expect(dialog.getByRole('button',{name:locale==='en'?'Back':'Volver',exact:true})).toBeVisible();
+ await page.screenshot({path:`/tmp/ccr-cookie-compact-settings-${locale}-${width}.png`});
+
  await expect(dialog.getByRole('checkbox')).toHaveCount(2);
  for(const checkbox of await dialog.getByRole('checkbox').all()) await expect(checkbox).not.toBeChecked();
  await dialog.getByRole('checkbox').first().check();
