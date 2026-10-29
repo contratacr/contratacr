@@ -21,6 +21,7 @@ for(const locale of ['es','en']) for(const width of [320,390,768,1440]) test(`co
  await page.goto('http://localhost/cookie-harness');
  await page.addStyleTag({content:css}); await page.addScriptTag({content:script});
  const banner=page.locator('[data-cookie-banner]');await expect(banner).toBeVisible();
+ await expect(banner.getByRole('heading',{name:locale==='en'?'Cookies and privacy':'Cookies y privacidad',exact:true})).toBeVisible();
  expect(await page.evaluate(()=>localStorage.getItem('contratacr:consent:advertising:v1'))).toBeNull();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  const box=await banner.boundingBox();expect(box).not.toBeNull();
