@@ -146,13 +146,13 @@ test("al despertar libera un candado huérfano y conserva el de un diálogo abie
   await expect(page.locator("body")).toHaveCSS("position", "fixed");
 });
 
-test("un error de sesión al reanudar conserva el usuario; un cierre explícito sí se aplica", async ({ page }) => {
+for (const initiallyFailing of [false, true]) test(`un error de sesión conserva el usuario; cierre explícito se aplica (fallo inicial ${initiallyFailing})`, async ({ page }) => {
   const result = await build({
     stdin: { resolveDir: process.cwd(), loader: "tsx", contents: `
       import React from 'react'; import {createRoot} from 'react-dom/client';
       import {AuthProvider,useAuth} from './src/hooks/use-auth';
       const user={id:'synthetic-resume-user',updated_at:'2026-10-22T00:00:00Z',user_metadata:{},app_metadata:{}};
-      window.authResumeQA={fail:false,callback:()=>{}};
+      window.authResumeQA={fail:${initiallyFailing},callback:()=>{}};
       function Screen(){const {user}=useAuth();return <output>{user?.id??'signed-out'}</output>}
       createRoot(document.getElementById('root')).render(<AuthProvider initialUser={user} initialAvatarUrl={null}><Screen/></AuthProvider>);`,
     }, jsx: "automatic", bundle: true, write: false, platform: "browser", format: "iife", tsconfig: "tsconfig.json",
@@ -171,6 +171,7 @@ test("un error de sesión al reanudar conserva el usuario; un cierre explícito 
   await page.route("**/auth-resume-harness", route => route.fulfill({ contentType: "text/html", body: '<!doctype html><div id="root"></div>' }));
   await page.goto("/auth-resume-harness");
   await page.addScriptTag({ content: result.outputFiles[0].text });
+  await page.waitForTimeout(initiallyFailing ? 1700 : 100);
   await expect(page.locator("output")).toHaveText("synthetic-resume-user");
   await page.evaluate(() => {
     (window as unknown as { authResumeQA: { fail: boolean } }).authResumeQA.fail = true;
@@ -181,3 +182,67 @@ test("un error de sesión al reanudar conserva el usuario; un cierre explícito 
   await page.evaluate(() => (window as unknown as { authResumeQA: { callback: (event: string, session: null) => void } }).authResumeQA.callback("SIGNED_OUT", null));
   await expect(page.locator("output")).toHaveText("signed-out");
 });
+
+for (const native of [false, true]) {
+  test(`cada regreso rápido recupera candados sin perder borradores (${native ? "nativo" : "web"})`, async ({ page }) => {
+    await harness(page, native);
+    await page.getByLabel("Borrador").fill("Conservar al alternar apps");
+    for (let cycle = 0; cycle < 4; cycle++) {
+      await page.evaluate(() => window.resumeQA.lock());
+      await suspend(page, 120, native);
+      await resume(page, native);
+      await expect(page.locator("body")).not.toHaveCSS("position", "fixed");
+      await expect(page.getByLabel("Borrador")).toHaveValue("Conservar al alternar apps");
+    }
+    expect(await page.evaluate(() => window.resumeQA.wakes)).toBe(4);
+    expect(await page.evaluate(() => window.resumeQA.refreshes)).toBe(0);
+  });
+}
+
+for (const phase of ["startup", "resume", "hung"]) {
+  for (const event of ["SIGNED_IN", "SIGNED_OUT"] as const) {
+    test(`sesión tardía de ${phase} no revierte ${event}`, async ({ page }) => {
+      const result = await build({
+        stdin: { resolveDir: process.cwd(), loader: "tsx", contents: `
+          import React from 'react';import{createRoot}from'react-dom/client';
+          import{AuthProvider,useAuth}from'./src/hooks/use-auth';
+          function Screen(){const{user,loading}=useAuth();return <output>{loading?'loading':user?.id??'signed-out'}</output>}
+          createRoot(document.getElementById('root')).render(<AuthProvider initialAvatarUrl={null}><Screen/></AuthProvider>);`,
+        }, jsx: "automatic", bundle: true, write: false, platform: "browser", format: "iife", tsconfig: "tsconfig.json",
+        define: { "process.env.NODE_ENV": '"production"' },
+        plugins: [{ name: "delayed-auth", setup(builder) {
+          builder.onResolve({ filter: /^@\/lib\/(supabase\/client|auth\/sign-out|dashboard-prefetch-cache|direct-chat\/conversations-cache)$/ }, args => ({ path: args.path, namespace: "delayed-auth" }));
+          builder.onLoad({ filter: /.*/, namespace: "delayed-auth" }, args => ({ contents: args.path.endsWith("supabase/client") ? `
+            export const hasSupabaseBrowserConfig=()=>true;
+            export const createClient=()=>({auth:{
+              getSession:()=>new Promise(resolve=>window.delayedAuth.resolve=resolve),
+              onAuthStateChange:callback=>{window.delayedAuth.callback=callback;return{data:{subscription:{unsubscribe(){}}}}}},
+              from:()=>({select:()=>({eq:()=>({single:async()=>({data:null})})})})});` :
+            `export const isSigningOut=()=>true;export const clearDashboardCache=()=>{};export const clearConversationsCache=()=>{};`,
+          }));
+        } }],
+      });
+      await page.route("**/delayed-auth", route => route.fulfill({contentType:"text/html",body:'<!doctype html><div id="root"></div>'}));
+      await page.goto("/delayed-auth");
+      await page.evaluate(() => Object.assign(window, { delayedAuth: {} }));
+      await page.addScriptTag({ content: result.outputFiles[0].text });
+      await expect.poll(() => page.evaluate(() => typeof (window as unknown as { delayedAuth: {callback: unknown} }).delayedAuth.callback)).toBe("function");
+      if (phase === "resume") {
+        await page.evaluate(() => {
+          const qa = (window as unknown as { delayedAuth: {resolve: (value: unknown) => void} }).delayedAuth;
+          qa.resolve({data:{session:null},error:null});
+        });
+        await expect(page.locator("output")).toHaveText("signed-out");
+        await page.evaluate(() => window.dispatchEvent(new Event("contratacr:app-resume")));
+      }
+      await page.evaluate(({event, phase}) => {
+        const qa = (window as unknown as { delayedAuth: {callback: (event: string, session: unknown) => void; resolve: (value: unknown) => void} }).delayedAuth;
+        const user = {id:"new-session",updated_at:"2026-10-29T00:00:00Z",user_metadata:{},app_metadata:{}};
+        qa.callback(event, event === "SIGNED_IN" ? {user} : null);
+        // The old read arrives AFTER the authoritative event with opposite state.
+        if (phase !== "hung") qa.resolve({data:{session:event === "SIGNED_IN" ? null : {user}},error:null});
+      }, {event, phase});
+      await expect(page.locator("output")).toHaveText(event === "SIGNED_IN" ? "new-session" : "signed-out");
+    });
+  }
+}

@@ -232,6 +232,8 @@ function useAuthState(
     let mounted = true;
     let sessionSettled = false;
     let resumeSyncRunning = false;
+    // An auth event supersedes reads started before it (login/logout/resume).
+    let authRevision = 0;
     const sessionTimeout = window.setTimeout(() => {
       if (!mounted || sessionSettled) return;
       // Con una sesión ya conocida (servidor o caché de este navegador), agotar
@@ -252,8 +254,9 @@ function useAuthState(
 
     supabase.auth
       .getSession()
-      .then(({ data }) => {
-        if (!mounted) return;
+      .then(({ data, error }) => {
+        if (!mounted || authRevision !== 0) return;
+        if (error) throw error;
         sessionSettled = true;
         window.clearTimeout(sessionTimeout);
         const u = freshestAuthUser(data.session?.user ?? null, usuarioConocidoRef.current);
@@ -273,7 +276,7 @@ function useAuthState(
         else setAvatarReady(true); // logged out → nothing to load, render immediately
       })
       .catch(() => {
-        if (!mounted) return;
+        if (!mounted || authRevision !== 0) return;
         sessionSettled = true;
         window.clearTimeout(sessionTimeout);
         // Que la comprobación falle NO significa que la sesión sea inválida:
@@ -284,10 +287,11 @@ function useAuthState(
         // llega igual por onAuthStateChange.
         if (usuarioConocidoRef.current) {
           setAvatarReady(true);
+          const revision = authRevision;
           window.setTimeout(() => {
-            if (!mounted) return;
-            void supabase.auth.getSession().then(({ data }) => {
-              if (!mounted) return;
+            if (!mounted || revision !== authRevision) return;
+            void supabase.auth.getSession().then(({ data, error }) => {
+              if (!mounted || error || revision !== authRevision) return;
               const u = freshestAuthUser(data.session?.user ?? null, usuarioConocidoRef.current);
               lastAppliedRef.current = u;
               setUser(u);
@@ -308,6 +312,10 @@ function useAuthState(
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((evento, session) => {
+      authRevision++;
+      sessionSettled = true;
+      window.clearTimeout(sessionTimeout);
+      setLoading(false);
       const u = freshestAuthUser(session?.user ?? null, usuarioConocidoRef.current);
       if (!u && usuarioConocidoRef.current) anotarCierreNoPedido(evento, true);
       usuarioConocidoRef.current = u;
@@ -354,9 +362,10 @@ function useAuthState(
     const reconcileSession = async () => {
       if (resumeSyncRunning || !mounted) return;
       resumeSyncRunning = true;
+      const revision = authRevision;
       try {
         const { data, error } = await withTimeout(supabase.auth.getSession(), RESUME_AUTH_TIMEOUT_MS);
-        if (!mounted || error) return;
+        if (!mounted || error || revision !== authRevision) return;
         const siguiente = freshestAuthUser(data.session?.user ?? null, usuarioConocidoRef.current);
         // Mismo usuario y sin cambios → no se toca el estado: un objeto nuevo
         // con el mismo contenido re-renderizaba media app en cada vuelta de foco.
@@ -375,9 +384,10 @@ function useAuthState(
     };
 
     const refreshUser = async () => {
+      const revision = authRevision;
       try {
         const { data } = await withTimeout(supabase.auth.getUser(), RESUME_AUTH_TIMEOUT_MS);
-        if (mounted) applyUser(data.user ?? null);
+        if (mounted && revision === authRevision) applyUser(data.user ?? null);
       } catch { /* keep the last known profile while the network recovers */ }
     };
 

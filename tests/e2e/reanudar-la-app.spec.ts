@@ -32,18 +32,21 @@ async function irYVolver(page: import("playwright/test").Page) {
   await page.context().setOffline(false);
   await page.evaluate(() => window.dispatchEvent(new Event("online")));
 
-  // 2. Oculta → visible, como al cambiar de app, y «pageshow» desde la memoria.
-  await page.evaluate(() => {
-    Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "hidden" });
-    document.dispatchEvent(new Event("visibilitychange"));
-  });
-  await page.waitForTimeout(500);
-  await page.evaluate(() => {
-    Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "visible" });
-    document.dispatchEvent(new Event("visibilitychange"));
-    window.dispatchEvent(new Event("focus"));
-    window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: true }));
-  });
+  // Include repeated quick app switches, not just one long suspension. Each
+  // real background/foreground cycle must recover despite signal deduplication.
+  for (let cycle = 0; cycle < 5; cycle++) {
+    await page.evaluate(() => {
+      Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "hidden" });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    await page.waitForTimeout(120);
+    await page.evaluate(() => {
+      Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "visible" });
+      document.dispatchEvent(new Event("visibilitychange"));
+      window.dispatchEvent(new Event("focus"));
+      window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: true }));
+    });
+  }
 }
 
 async function sigueRespondiendo(page: import("playwright/test").Page) {

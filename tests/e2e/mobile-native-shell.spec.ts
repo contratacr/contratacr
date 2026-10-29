@@ -811,8 +811,8 @@ test("native bottom navigation interpolates both directions instead of jumping",
   }
   expect(up.samples[0]).toBeCloseTo(down.samples[4], 1);
   expect(down.duration).toBe(60);
-  expect(up.duration).toBe(300);
-  // At 75ms at least 80% remains below: no early pop even on a fast flick.
+  expect(up.duration).toBe(160);
+  // At 40ms at least 80% remains below: no early pop even on a fast flick.
   expect(up.samples[1]).toBeGreaterThan(up.samples[0] * .8);
   expect(up.samples[2] / up.samples[0]).toBeCloseTo(.5, 1);
   expect(up.samples[4]).toBeCloseTo(0, 1);

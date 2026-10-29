@@ -201,3 +201,53 @@ aserción. No hubo cambio de API ni se estableció una causa definitiva. Se
 reintentó únicamente el job fallido, con fuentes y aserciones intactas; se
 conservaron las demás compuertas aprobadas. El segundo intento aprobó, incluido
 el caso afectado. No presentar el primer intento fallido como verde.
+
+## CRÍTICO abierto — bloqueo/pantalla blanca al alternar apps o iniciar sesión (29-oct-2026)
+
+Reporte de Isaac: ocurre en iPhone y Android al regresar rápidamente desde otra
+app y con distintos métodos de inicio de sesión. No se considera cerrado por
+pasar una prueba aislada ni por corregir una sola causa.
+
+Base de investigación: `e748cdbd` compartido. Defectos investigados con
+componentes/lógica reales y transportes aislados:
+
+- La deduplicación de señales de foreground (2 s) ignoraba una segunda suspensión
+  real rápida. Un candado huérfano quedaba activo. Las cuatro variantes web/nativo
+  en Chromium/WebKit fallaron antes del arreglo. Ahora cada ciclo suspendido se
+  recupera; se siguen agrupando señales duplicadas del mismo regreso.
+- Lecturas de sesión iniciadas antes de SIGNED_IN/SIGNED_OUT podían llegar tarde
+  y deshacer el evento más reciente. Reproducción negativa en arranque y regreso.
+  Ahora una revisión invalida esas lecturas y los reintentos antiguos, incluidos
+  los de perfil. Un evento válido también termina el estado de carga aunque la
+  lectura inicial nunca responda. No se altera la validación servidor/MFA.
+
+También se corrigió el manejo de errores devueltos por getSession al arrancar
+y en su reintento: un error conserva la identidad conocida, mientras SIGNED_OUT
+sí se aplica. Se comprueba con error inicial persistente y con error al reanudar.
+
+Regresiones permanentes: `recuperacion-al-desbloquear.spec.ts` cubre cuatro vueltas
+rápidas, borradores/adjuntos/cookies, suspensión corta/larga, offline/reconexión,
+limpieza de listeners, candados de diálogos, respuestas tardías y lecturas colgadas
+con SIGNED_IN/SIGNED_OUT. `reanudar-la-app.spec.ts` añade cinco vueltas rápidas al
+recorrido real con red interrumpida, panel y borradores de chat en base aislada.
+Este último recorrido requiere CI y sus fixtures: no se sembró producción.
+
+Validación focal: 34 casos finales de recuperación/sesión en motores móviles,
+8 casos de navegación móvil y 15 casos de MFA/enlaces de arranque en tres motores.
+No confundir estos casos aislados con ejecución de todos los proveedores OAuth
+en dispositivos físicos. Se conserva la cubierta de enlaces hasta confirmar destino y se conserva
+MFA: no se retiran barreras de seguridad para mostrar contenido.
+
+Pendiente para cierre crítico: CI de esta revisión, prueba física repetida en
+ambas plataformas con correo/contraseña, Google y Apple donde estén disponibles,
+y captura de diagnóstico del episodio si reaparece. Diferenciar DOM bloqueado,
+fallo de navegación/red, restauración de sesión y terminación del renderer por el
+sistema. Capacitor iOS ya maneja webViewWebContentProcessDidTerminate con reload;
+no se ha probado aquí que ese mecanismo recupere un proceso real terminado ni se
+ha cambiado el binario. Un navegador simulado no certifica ese caso. No borrar
+sesiones/borradores ni introducir recargas automáticas indiscriminadas.
+
+Video de referencia de navegación: muestreo cada 25 ms entre 1,85 y 2,43 s muestra
+entrada visible aproximadamente 1,85–2,00 s; no es medición de constantes internas
+de Facebook. Ajuste compartido: ocultación60 ms y entrada160 ms con inicio gradual.
+Pruebas verifican posiciones intermedias y gesto rápido, no solo estado final.
