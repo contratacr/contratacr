@@ -7,7 +7,7 @@ const ts = require(process.env.CI_TYPESCRIPT_MODULE || 'typescript');
 export const reviewedConfiguration = {
   'next.config.ts': '21877a39357bf08af41303110cb1aa76b2d7bf42',
   'playwright.config.ts': '8b5fb8f000ec4f7a06712557bf2c37a29386c3b2',
-  'playwright.mobile.config.ts': '00e8e54e0b45bbeda6905ea11dec97f7fcdca13b',
+  'playwright.mobile.config.ts': '462f6aabe45a0657fa7a69601599c7f0e0d90af3',
 };
 const configCode = p => /^(?:next|playwright(?:\.mobile)?)\.config\.[cm]?[jt]s$/.test(p);
 const analyzedCode = p => /^(src\/|tests\/e2e\/)/.test(p) || configCode(p);
@@ -88,7 +88,10 @@ export function dependencyGraph(files) {
   const localSpecs = value => typeof value==='string' ? /^(?:file:|link:|workspace:|[./])/.test(value) : value&&typeof value==='object'&&Object.values(value).some(localSpecs);
   for(const [path,file] of files) {
     if(file.mode&& !['100644','100755'].includes(file.mode)&&(path.startsWith('src/')||configInput(path)))uncertainties.push(`Unreviewed non-regular source/config input: ${path}`);
-    if(configCode(path)&&file.hash!==reviewedConfiguration[path])uncertainties.push(`Unreviewed resolver/runner configuration: ${path}`);
+    // Both sides of a change are analyzed. The previous mobile config differs
+    // only by the reviewed media-spec inclusion and remains a known resolver.
+    const previousMobileConfig = path === 'playwright.mobile.config.ts' && file.hash === '00e8e54e0b45bbeda6905ea11dec97f7fcdca13b';
+    if(configCode(path)&&file.hash!==reviewedConfiguration[path]&&!previousMobileConfig)uncertainties.push(`Unreviewed resolver/runner configuration: ${path}`);
     if(configCode(path)) {
       globalEntries.add(path);
       const configSource=ts.createSourceFile(path,file.source,ts.ScriptTarget.Latest,true);

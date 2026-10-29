@@ -122,6 +122,11 @@ test('reviewed TS aliases and Next configuration still permit section selection'
   const files=snapshot({'tsconfig.json':JSON.stringify({compilerOptions:{paths:{'@/*':['./src/*']}}}),'package.json':'{"dependencies":{"react":"19"}}'});
   files.set('next.config.ts',{hash:reviewedConfiguration['next.config.ts'],source:''});assert.equal(impact(files).safe,true);
   files.set('next.config.ts',{hash:'unreviewed',source:''});assert.equal(impact(files).safe,false);
+  files.set('next.config.ts',{hash:reviewedConfiguration['next.config.ts'],source:''});
+  for(const hash of [reviewedConfiguration['playwright.mobile.config.ts'],'00e8e54e0b45bbeda6905ea11dec97f7fcdca13b']){
+    files.set('playwright.mobile.config.ts',{hash,source:''});assert.equal(impact(files).safe,true);
+  }
+  files.set('playwright.mobile.config.ts',{hash:'unreviewed',source:''});assert.equal(impact(files).safe,false);
 });
 for(const config of [{imports:{'#local':'./src/foo.ts'}},{exports:'./src/foo.ts'}])test(`package module alias broadens: ${JSON.stringify(config)}`,()=>{
   assert.equal(impact(snapshot({'package.json':JSON.stringify(config)})).safe,false);

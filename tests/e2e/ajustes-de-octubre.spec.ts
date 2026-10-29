@@ -235,33 +235,4 @@ test.describe("portada: foto y cinta de marcas", () => {
     }
   });
 
-
-  async function comprobarAvanceContinuo(page: import("playwright/test").Page, sesion: string) {
-    await gotoOK(page, "/");
-    await waitForInteractivePage(page);
-    const cinta = page.locator(".featured-brands-ribbon");
-    await cinta.scrollIntoViewIfNeeded();
-    const juegos = page.locator(".featured-brands-set");
-    await expect(juegos).toHaveCount(4);
-    await expect.poll(() => juegos.evaluateAll((items) => items.map((item) => item.getAnimations()[0]?.playState ?? "missing")), { timeout: 10_000 })
-      .toEqual(["running", "running", "running", "running"]);
-    for (let cycle = 0; cycle < 3; cycle += 1) {
-      const before = await juegos.evaluateAll((items) => items.map((item) => Number(item.getAnimations()[0]?.currentTime ?? -1)));
-      await page.waitForTimeout(300);
-      const after = await juegos.evaluateAll((items) => items.map((item) => Number(item.getAnimations()[0]?.currentTime ?? -1)));
-      expect(after.every((time, index) => time > before[index]), `${sesion}: cada juego avanza en el ciclo ${cycle + 1}`).toBe(true);
-      await expect.poll(() => juegos.evaluateAll((items) => items.map((item) => item.getAnimations()[0]?.playState ?? "missing")))
-        .toEqual(["running", "running", "running", "running"]);
-    }
-  }
-
-  test("la cinta de marcas sigue avanzando con una sesión anónima", async ({ page }) => {
-    await comprobarAvanceContinuo(page, "sin sesión");
-  });
-
-  test("la cinta de marcas sigue avanzando con una sesión iniciada", async ({ page }) => {
-    test.skip(!canRunSeededRegression(), "Requires the isolated regression account.");
-    await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
-    await comprobarAvanceContinuo(page, "sesión iniciada");
-  });
 });

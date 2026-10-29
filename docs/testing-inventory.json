@@ -8,7 +8,7 @@
     "handlers": 105,
     "components": 267,
     "hooks": 28,
-    "specs": 181
+    "specs": 180
   },
   "dashboardTabs": [
     "home",
@@ -23534,18 +23534,6 @@
         {
           "line": 207,
           "title": "\"la cinta de marcas nunca deja un hueco: lo que se ve no salta al reiniciar\""
-        },
-        {
-          "line": 258,
-          "title": "\"la cinta de marcas sigue avanzando con una sesión anónima\""
-        },
-        {
-          "line": 262,
-          "title": "\"la cinta de marcas sigue avanzando con una sesión iniciada\""
-        },
-        {
-          "line": 263,
-          "title": "!canRunSeededRegression()"
         }
       ]
     },
@@ -24703,15 +24691,15 @@
           "title": "\"validation, blocked threads and realtime delivery protect the conversation\""
         },
         {
-          "line": 480,
+          "line": 498,
           "title": "'chat download saves bytes without opening the storage URL'"
         },
         {
-          "line": 500,
+          "line": 518,
           "title": "'canceling the mobile file sheet never downloads or opens another page'"
         },
         {
-          "line": 517,
+          "line": 535,
           "title": "'chat reconciles messages missed while subscribing and ignores obsolete channels'"
         }
       ]
@@ -24844,15 +24832,6 @@
         {
           "line": 54,
           "title": "!isMobileProject(testInfo)"
-        }
-      ]
-    },
-    {
-      "file": "tests/e2e/guia-media-resume.spec.ts",
-      "cases": [
-        {
-          "line": 7,
-          "title": "`guide media preserves step across app switches (reduced motion: ${reduced})`"
         }
       ]
     },
@@ -25100,16 +25079,32 @@
       "file": "tests/e2e/landing-media-budget.spec.ts",
       "cases": [
         {
-          "line": 5,
+          "line": 6,
           "title": "\"service tabs request their four photos before scrolling and retain visited groups\""
         },
         {
-          "line": 57,
+          "line": 58,
           "title": "\"download artwork waits near the viewport without changing reserved height\""
         },
         {
-          "line": 71,
+          "line": 72,
           "title": "\"hero keeps its current photo while the next slide is downloading\""
+        },
+        {
+          "line": 101,
+          "title": "`guide media preserves step across app switches (reduced motion: ${reduced})`"
+        },
+        {
+          "line": 181,
+          "title": "\"la cinta de marcas sigue avanzando con una sesión anónima\""
+        },
+        {
+          "line": 185,
+          "title": "\"la cinta de marcas sigue avanzando con una sesión iniciada\""
+        },
+        {
+          "line": 186,
+          "title": "!canRunSeededRegression()"
         }
       ]
     },

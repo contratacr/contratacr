@@ -322,3 +322,25 @@ como con la cuenta sintética aislada de regresión. La prueba confirma que las
 animaciones Web Animations permanecen activas mientras la cinta está visible;
 se mantiene separada de la comprobación visual de huecos y de las pruebas de
 cambio de app. No reproduce una credencial ni modifica datos de producción.
+
+### Resultado y conexión de regresiones — 29 de octubre de 2026
+
+La regresión web `40833598617` sobre `5cfb4ee8` aprobó: smoke final 929
+aprobadas y 45 omisiones declaradas; los recorridos previos de Safari y acceso
+aprobaron también. No sumar esos bloques solapados como casos únicos.
+El run móvil `40833598719` conservó los dos fallos de entrega en tiempo real:
+la credencial del canal corresponde al receptor autenticado y permite leer
+el mensaje con HTTP 200, pero no llega `postgres_changes`. La siguiente
+instrumentación observa el mismo INSERT también con el rol de servicio y
+comprueba la publicación de las tablas en el entorno local, sin nuevas
+escrituras ni cambiar el plazo o la aserción del navegador.
+
+La lista de smoke web no incluía la spec independiente de recuperación de la
+guía ni `ajustes-de-octubre`. Se trasladaron las pruebas nuevas de guía y
+avance de marcas a `landing-media-budget`, ya incluido en ese smoke, y se
+incluyó esa spec en WebView. El planificador conserva la misma lista nativa;
+la revisión de configuración solo agrega ese archivo de pruebas, sin nuevos
+resolvers, hooks o alias. Sus 100 comprobaciones aprobaron. La enumeración de
+14 casos WebView valida su inclusión, no su ejecución; el nuevo CI debe
+certificarlos. Las seis comprobaciones locales de la guía siguen siendo
+la evidencia focal previa, sin repetición por este traslado.
