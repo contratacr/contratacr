@@ -31,7 +31,7 @@ export async function recordServerInteraction(admin: AdminClient, req: NextReque
     if (actor.excluded) return;
     const sessionId = req.cookies.get(SESSION_COOKIE)?.value;
     const visitorKey = sessionId || input.viewerUserId || randomUUID();
-    await admin.from("interaction_events").insert({
+    const { error } = await admin.from("interaction_events").insert({
       event_type: input.type,
       professional_id: input.professionalId ?? null,
       viewer_user_id: actor.id,
@@ -41,6 +41,7 @@ export async function recordServerInteraction(admin: AdminClient, req: NextReque
       category_id: input.categoryId ?? null,
       metadata: { ...input.metadata, ...requestAnalyticsPlatform(req) },
     });
+    if (error) console.warn("[analytics] server interaction insert failed", error.code);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     // Analytics must never block core marketplace actions.
