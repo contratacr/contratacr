@@ -23,7 +23,7 @@ for(const locale of ['es','en']) for(const width of [320,390,768,1440]) test(`co
  const banner=page.locator('[data-cookie-banner]');await expect(banner).toBeVisible();
  expect(await page.evaluate(()=>localStorage.getItem('contratacr:consent:advertising:v1'))).toBeNull();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
- await banner.getByRole('button',{name:locale==='en'?'Settings':'Configurar',exact:true}).click();
+ await banner.getByRole('button',{name:locale==='en'?'Manage preferences':'Configurar preferencias',exact:true}).click();
  const dialog=page.getByRole('dialog');await expect(dialog).toBeVisible();
  await expect(dialog.getByRole('checkbox')).toHaveCount(2);
  for(const checkbox of await dialog.getByRole('checkbox').all()) await expect(checkbox).not.toBeChecked();
