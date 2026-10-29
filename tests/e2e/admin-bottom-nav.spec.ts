@@ -41,7 +41,8 @@ test("native admin login has no bottom nav or bottom-nav space", async ({ page, 
     Object.defineProperty(window, "Capacitor", { configurable: true, get: () => runtime, set: () => {} });
   });
   await page.goto("/admin/login");
-  await expect(page.locator("input").first()).toBeVisible();
+  await expect(page.locator('input[type="email"]')).toBeVisible();
+  await expect(page.locator('input[type="password"]')).toBeVisible();
   await expect(page.locator("nav.ccr-native-bottom-nav")).toHaveCount(0);
   await expect(page.locator("html")).not.toHaveClass(/ccr-native-bottom-nav-visible/);
   await expect(page.locator("body")).not.toHaveClass(/ccr-native-bottom-nav-visible/);
