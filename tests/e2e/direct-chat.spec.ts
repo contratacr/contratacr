@@ -356,9 +356,28 @@ test.describe("@seeded contextual direct chat", () => {
   test("validation, blocked threads and realtime delivery protect the conversation", async ({ page }, testInfo) => {
     // Record protocol states, never credentials, channel identifiers or messages.
     // A 101 handshake alone does not certify a subscribed Postgres channel.
-    const realtimeStates: Array<{ event: string; status?: string; at: number }> = [];
+    const realtimeStates: Array<{ event: string; status?: string; at: number; recipientMatches?: boolean; authenticated?: boolean }> = [];
+    // Keep the actual channel credential only in memory, so a failed delivery
+    // can distinguish a stale/anonymous browser session from an RLS failure.
+    let realtimeCredential: string | undefined;
     page.on("websocket", socket => {
       if (!socket.url().includes("/realtime/")) return;
+      socket.on("framesent", frame => {
+        try {
+          const data = JSON.parse(String(frame.payload));
+          const event = Array.isArray(data) ? data[3] : data.event;
+          const payload = Array.isArray(data) ? data[4] : data.payload;
+          if (!["phx_join", "access_token"].includes(event)) return;
+          const credential = payload?.access_token;
+          if (typeof credential !== "string") return;
+          realtimeCredential = credential;
+          const claims = JSON.parse(Buffer.from(credential.split(".")[1], "base64url").toString());
+          if (realtimeStates.length < 100) realtimeStates.push({
+            event, at: Date.now(), recipientMatches: claims.sub === seed.videoProfessionalUserId,
+            authenticated: claims.role === "authenticated",
+          });
+        } catch { /* Never retain a raw frame or credential in diagnostics. */ }
+      });
       socket.on("framereceived", frame => {
         try {
           const data = JSON.parse(String(frame.payload));
@@ -409,6 +428,25 @@ test.describe("@seeded contextual direct chat", () => {
       await testInfo.attach("realtime-protocol-states", {
         body: JSON.stringify(realtimeStates), contentType: "application/json",
       });
+      const localUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      if (localUrl && ["127.0.0.1", "localhost"].includes(new URL(localUrl).hostname) && realtimeCredential) {
+        const query = new URL("/rest/v1/direct_messages", localUrl);
+        query.searchParams.set("select", "id");
+        query.searchParams.set("conversation_id", `eq.${created.body.conversationId}`);
+        query.searchParams.set("body", `eq.${realtimeBody}`);
+        try {
+          const response = await fetch(query, { headers: {
+            apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
+            Authorization: `Bearer ${realtimeCredential}`,
+          }, signal: AbortSignal.timeout(5_000) });
+          const rows = await response.json().catch(() => null);
+          await testInfo.attach("realtime-recipient-read", { contentType: "application/json", body: JSON.stringify({
+            status: response.status, messageReadable: Array.isArray(rows) && rows.length === 1,
+          }) });
+        } catch {
+          await testInfo.attach("realtime-recipient-read", { contentType: "application/json", body: JSON.stringify({ requestFailed: true }) });
+        }
+      }
     }
 
     const reportAndBlock = await apiJson<ChatResponse>(page, "/api/direct-chat", {
