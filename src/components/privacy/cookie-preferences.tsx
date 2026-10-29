@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useLocale } from "next-intl";
-import { ShieldCheck, SlidersHorizontal, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { OPEN_PRIVACY_SETTINGS, readOptionalConsent, saveOptionalConsent, subscribeOptionalConsent, syncAdvertisingCookie, syncAnalyticsCookie } from "@/lib/privacy/optional-consent";
 
@@ -41,19 +41,22 @@ export function CookiePreferences() {
     } catch { setError(true); }
   }
   const notice = en
-    ? "Necessary technologies keep your session secure and the app working. With your permission, we also measure how ContrataCR is used and the results of our ads with Meta. You choose, and can change your choice at any time."
-    : "Las tecnologías necesarias protegen tu sesión y permiten usar la app. Con tu permiso, también medimos el uso de ContrataCR y los resultados de nuestros anuncios con Meta. Tú eliges y puedes cambiar tu decisión cuando quieras.";
+    ? "We use cookies and similar technologies to keep ContrataCR working securely. With your permission, they also help us improve the app and measure our ads with Meta. You can change your preferences at any time."
+    : "Usamos cookies y tecnologías similares para que ContrataCR funcione de forma segura. Con tu permiso, también nos ayudan a mejorar la app y medir nuestros anuncios con Meta. Puedes cambiar tus preferencias cuando quieras.";
   const actions = <div className="grid gap-2.5">
     <button className={button} onClick={() => save(true, true)}>{en ? "Accept all" : "Aceptar todas"}</button>
     <button className={button} onClick={() => save(false, false)}>{en ? "Only necessary" : "Solo necesarias"}</button>
-    <button className="flex min-h-11 items-center justify-center gap-2 rounded-2xl px-5 text-sm font-semibold text-[#526176] hover:bg-[#f1f5f9] focus-visible:outline-2 focus-visible:outline-[#009fd9]" onClick={() => { setAnalytics(readOptionalConsent("analytics") === "accepted"); setAdvertising(readOptionalConsent("advertising") === "accepted"); setSettings(true); }}><SlidersHorizontal size={16} aria-hidden="true" />{en ? "Settings" : "Configurar"}</button>
+
   </div>;
   return <>
     {needsChoice && !settings && <section role="region" aria-labelledby="cookie-title" data-cookie-banner className="fixed inset-x-3 bottom-[max(12px,env(safe-area-inset-bottom))] z-[130] max-h-[85dvh] overflow-y-auto rounded-[24px] border border-[#dce6ec] bg-white p-5 text-[#162543] shadow-[0_16px_64px_rgba(22,37,67,0.18)] sm:left-6 sm:right-auto sm:w-[380px] sm:p-6">
-      <div className="mb-4 flex items-center gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#e9f8fd] text-[#0083b0]"><ShieldCheck size={23} aria-hidden="true" /></span><h2 id="cookie-title" className="text-lg font-extrabold leading-6">{en ? "Your privacy, your choice" : "Tu privacidad, tú decides"}</h2></div>
+      <h2 id="cookie-title" className="mb-3 text-lg font-extrabold leading-6">{en ? "Your privacy, your choice" : "Tu privacidad, tú decides"}</h2>
       <p className="mb-3 text-sm leading-6 text-[#526176]">{notice}</p>
-      <p className="mb-5 text-xs leading-5 text-[#526176]">{en ? "Only necessary turns off optional statistics and advertising measurement." : "Solo necesarias desactiva las estadísticas opcionales y la medición publicitaria."} <Link href="/privacidad#cookies" className="font-semibold text-[#007fae] underline underline-offset-2">{en ? "Privacy policy" : "Política de privacidad"}</Link></p>
       {actions}
+      <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4">
+    <button className="min-h-11 rounded-lg text-xs font-semibold text-[#007fae] underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-[#009fd9]" onClick={() => { setAnalytics(readOptionalConsent("analytics") === "accepted"); setAdvertising(readOptionalConsent("advertising") === "accepted"); setSettings(true); }}>{en ? "Manage preferences" : "Configurar preferencias"}</button>
+        <Link href="/privacidad#cookies" className="inline-flex min-h-11 items-center rounded-lg text-xs font-semibold text-[#007fae] underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-[#009fd9]">{en ? "Privacy policy" : "Política de privacidad"}</Link>
+      </div>
       {error && <p role="alert" className="mt-3 text-sm text-red-700">{en ? "Could not save your preferences. Please try again." : "No pudimos guardar tus preferencias. Inténtalo de nuevo."}</p>}
     </section>}
     <dialog ref={dialog} onCancel={() => setSettings(false)} onClose={() => setSettings(false)} aria-labelledby="privacy-settings-title" className="fixed inset-0 m-auto max-h-[90dvh] w-[calc(100%_-_24px)] max-w-lg overflow-y-auto rounded-[24px] border border-[#dce6ec] bg-white p-5 text-[#162543] shadow-2xl backdrop:bg-[#162543]/40 sm:p-7">
