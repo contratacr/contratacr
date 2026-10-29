@@ -5,6 +5,34 @@ import { runInNewContext } from "node:vm";
 import ts from "typescript";
 import { webcrypto } from "node:crypto";
 
+test("journey drains all bounded batches after navigation even when a send is in flight", async () => {
+  const source = ts.transpileModule(readFileSync("src/components/analytics/journey-capture.tsx", "utf8"), { fileName: "journey-capture.tsx", compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
+  const listeners = new Map<string, (event?: unknown) => void>();
+  const effects: (() => void | (() => void))[] = [];
+  class ElementStub { closest() { return this; } getAttribute() { return null; } textContent = "Save"; }
+  class AnchorStub extends ElementStub {}
+  class FormStub extends ElementStub {}
+  class InputStub extends ElementStub {}
+  class SelectStub extends ElementStub {}
+  const surface = { addEventListener: (name: string, fn: (event?: unknown) => void) => listeners.set(name, fn), removeEventListener: (name: string) => listeners.delete(name), visibilityState: "visible", setInterval: () => 1 };
+  const sent: { events: { id: string }[] }[] = [];
+  let release!: () => void;
+  const blocked = new Promise<void>(resolve => { release = resolve; });
+  const mocks: Record<string, unknown> = { react: { useEffect: (fn: () => void) => effects.push(fn) }, "next/navigation": { usePathname: () => "/" }, "@/hooks/use-auth": { useAuth: () => ({ user: null }) }, "@/lib/analytics/trafico-automatizado": { esNavegadorAutomatizado: () => false }, "@/lib/analytics/platform-client": { syncAnalyticsPlatform: () => {} }, "@/lib/analytics/journey-contract": { routeSection: () => "home", buttonTarget: () => "save" } };
+  const box = { exports: {} as { JourneyCapture: () => null } };
+  runInNewContext(source, { module: box, exports: box.exports, require: (name: string) => mocks[name], document: surface, window: surface, Element: ElementStub, HTMLElement: ElementStub, HTMLAnchorElement: AnchorStub, HTMLFormElement: FormStub, HTMLInputElement: InputStub, HTMLSelectElement: SelectStub, crypto: webcrypto, clearInterval: () => {}, fetch: async (_url: string, options: { body: string }) => { sent.push(JSON.parse(options.body)); if (sent.length === 1) await blocked; return { ok: true }; } });
+  box.exports.JourneyCapture();
+  const cleanup = effects[0]();
+  for (let i = 0; i < 45; i++) listeners.get("click")?.({ target: new ElementStub() });
+  listeners.get("pagehide")?.();
+  expect(sent.map(x => x.events.length)).toEqual([20]);
+  if (typeof cleanup === "function") cleanup();
+  release();
+  await expect.poll(() => sent.length).toBe(3);
+  expect(sent.map(x => x.events.length)).toEqual([20, 20, 5]);
+  expect(new Set(sent.flatMap(x => x.events.map(e => e.id))).size).toBe(45);
+});
+
 for (const runtime of ["web", "web_desktop", "web_mobile", "android", "ios", "native_unknown"] as const) {
   test(`all action writers identify ${runtime} using the same platform contract`, () => {
     const cookies = { ccr_platform: runtime.startsWith("web") ? "web" : "native", ccr_native_os: runtime, ccr_web_device: runtime.replace("web_", "") };

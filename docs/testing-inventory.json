@@ -9675,8 +9675,10 @@
         "tests/e2e/runtime-analytics.spec.ts",
         "tests/e2e/meta-growth-runtime.spec.ts"
       ],
-      "directReferences": [],
-      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "directReferences": [
+        "tests/e2e/runtime-analytics.spec.ts"
+      ],
+      "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
       "coverage": "Alcance detallado pendiente de revisión; no certificado",
       "priority": "P1"
@@ -26566,27 +26568,31 @@
       "file": "tests/e2e/runtime-analytics.spec.ts",
       "cases": [
         {
-          "line": 9,
+          "line": 8,
+          "title": "\"journey drains all bounded batches after navigation even when a send is in flight\""
+        },
+        {
+          "line": 37,
           "title": "`all action writers identify ${runtime} using the same platform contract`"
         },
         {
-          "line": 16,
+          "line": 44,
           "title": "\"warm navigation, sign-in, resume and StrictMode do not duplicate usage; expiry opens a session\""
         },
         {
-          "line": 63,
+          "line": 91,
           "title": "`browser records usage classified as ${runtime}`"
         },
         {
-          "line": 105,
+          "line": 133,
           "title": "\"analytics resolves the authenticated actor and excludes admins or unknown roles\""
         },
         {
-          "line": 142,
+          "line": 170,
           "title": "`device classification: ${name}`"
         },
         {
-          "line": 146,
+          "line": 174,
           "title": "\"only native runtimes can produce first app uses\""
         }
       ]

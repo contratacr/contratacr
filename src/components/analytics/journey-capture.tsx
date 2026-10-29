@@ -20,11 +20,21 @@ export function JourneyCapture() {
       if (sending || !events.length) return;
       sending = true;
       syncAnalyticsPlatform();
-      const batch = events.splice(0, 20);
       try {
-        const response = await fetch("/api/analytics/journey", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ events: batch }), credentials: "same-origin", keepalive: true });
-        if (!response.ok && response.status >= 500 && !disposed) events = [...batch, ...events].slice(0, 60);
-      } catch { if (!disposed) events = [...batch, ...events].slice(0, 60); }
+        while (events.length) {
+          const batch = events.splice(0, 20);
+          try {
+            const response = await fetch("/api/analytics/journey", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ events: batch }), credentials: "same-origin", keepalive: true });
+            if (!response.ok && response.status >= 500) {
+              if (!disposed) events = [...batch, ...events].slice(0, 60);
+              break;
+            }
+          } catch {
+            if (!disposed) events = [...batch, ...events].slice(0, 60);
+            break;
+          }
+        }
+      }
       finally { sending = false; }
     };
     const started = new Set<HTMLFormElement>(), submitted = new Set<HTMLFormElement>();
