@@ -25,7 +25,7 @@ test("privacy provides a permanent way to change optional choices",async({page})
  await gotoOK(page,"/privacidad");await waitForInteractivePage(page);
  await expect(page.locator('main [data-advertising-preferences] button')).toBeVisible();
  await page.locator('main [data-advertising-preferences] button').click();
- await expect(page.getByRole('dialog',{name:'Preferencias de privacidad'})).toBeVisible();
+ await expect(page.getByRole('dialog',{name:'Cookies y privacidad'})).toBeVisible();
  await expect(page.locator('[data-ai-consent]')).toHaveCount(0);
 });
 
