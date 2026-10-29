@@ -356,7 +356,7 @@ test.describe("@seeded contextual direct chat", () => {
   test("validation, blocked threads and realtime delivery protect the conversation", async ({ page }, testInfo) => {
     // Record protocol states, never credentials, channel identifiers or messages.
     // A 101 handshake alone does not certify a subscribed Postgres channel.
-    const realtimeStates: Array<{ event: string; status?: string; at: number; recipientMatches?: boolean; authenticated?: boolean }> = [];
+    const realtimeStates: Array<{ event: string; status?: string; at: number; recipientMatches?: boolean; authenticated?: boolean; messageInsertRequested?: boolean; messageUpdateRequested?: boolean; bindingCount?: number }> = [];
     // Keep the actual channel credential only in memory, so a failed delivery
     // can distinguish a stale/anonymous browser session from an RLS failure.
     let realtimeCredential: string | undefined;
@@ -374,7 +374,7 @@ test.describe("@seeded contextual direct chat", () => {
           const claims = JSON.parse(Buffer.from(credential.split(".")[1], "base64url").toString());
           if (realtimeStates.length < 100) realtimeStates.push({
             event, at: Date.now(), recipientMatches: claims.sub === seed.videoProfessionalUserId,
-            authenticated: claims.role === "authenticated",
+            ...realtimeJoinState(event, payload, claims),
           });
         } catch { /* Never retain a raw frame or credential in diagnostics. */ }
       });
@@ -440,7 +440,7 @@ test.describe("@seeded contextual direct chat", () => {
       await testInfo.attach("realtime-service-observer", {
         body: JSON.stringify(serviceProbe), contentType: "application/json",
       });
-      await testInfo.attach("realtime-protocol-states", {
+      await attachRealtimeDiagnostic(testInfo, seed.videoProfessionalUserId, {
         body: JSON.stringify(realtimeStates), contentType: "application/json",
       });
       const localUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -576,3 +576,44 @@ test('chat reconciles messages missed while subscribing and ignores obsolete cha
   await page.evaluate(() => (window as unknown as { chatProbe: { subscribe(i: number): void } }).chatProbe.subscribe(0));
   expect(await page.evaluate(() => (window as unknown as { chatProbe: { loads(): number } }).chatProbe.loads())).toBe(before);
 });
+
+// Diagnostic helpers stay local to this independent native spec. No shared
+// fixture or runtime module is changed by this additional observation.
+function realtimeJoinState(event: string, payload: { config?: { postgres_changes?: Array<{ table?: string; event?: string }> } }, claims: { role?: string }) {
+  const bindings = payload?.config?.postgres_changes ?? [];
+  return {
+    authenticated: claims.role === "authenticated",
+    ...(event === "phx_join" ? {
+      messageInsertRequested: bindings.some(binding => binding.table === "direct_messages" && binding.event === "INSERT"),
+      messageUpdateRequested: bindings.some(binding => binding.table === "direct_messages" && binding.event === "UPDATE"),
+      bindingCount: bindings.length,
+    } : {}),
+  };
+}
+
+async function attachRealtimeDiagnostic(testInfo: import("playwright/test").TestInfo, expectedUser: string, attachment: { body: string; contentType: string }) {
+  await testInfo.attach("realtime-protocol-states", attachment);
+      const localDb = process.env.SUPABASE_DB_URL;
+      if (localDb && ["127.0.0.1", "localhost"].includes(new URL(localDb).hostname)) {
+        const db = new URL(localDb);
+        const { execFileSync } = await import("node:child_process");
+        try {
+          const output = execFileSync("psql", ["-XAt", "-v", "ON_ERROR_STOP=1", "-v", `expected_user=${expectedUser}`], {
+            encoding: "utf8", stdio: ["pipe", "pipe", "pipe"], timeout: 5000,
+            env: { ...process.env, PGHOST: db.hostname, PGPORT: db.port || "5432", PGDATABASE: db.pathname.slice(1), PGUSER: decodeURIComponent(db.username), PGPASSWORD: decodeURIComponent(db.password), PGCONNECT_TIMEOUT: "3" },
+            input: `select coalesce(json_agg(s), '[]'::json) from (
+              select entity::regclass::text as entity, claims->>'role' as role,
+                claims->>'sub' = :'expected_user' as recipient_matches,
+                cardinality(filters) as filter_count, count(*) as subscriptions
+              from realtime.subscription
+              where entity in ('public.direct_messages'::regclass, 'public.direct_conversations'::regclass)
+              group by entity, claims->>'role', claims->>'sub' = :'expected_user', cardinality(filters)
+            ) s;`,
+          });
+          await testInfo.attach("realtime-server-subscriptions", { contentType: "application/json", body: JSON.stringify(JSON.parse(output)) });
+        } catch {
+          // Credentials, claims and raw server errors never enter artifacts.
+          await testInfo.attach("realtime-server-subscriptions", { contentType: "application/json", body: JSON.stringify({ unavailable: true }) });
+        }
+      }
+}
