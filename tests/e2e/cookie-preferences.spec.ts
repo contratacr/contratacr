@@ -23,6 +23,12 @@ for(const locale of ['es','en']) for(const width of [320,390,768,1440]) test(`co
  const banner=page.locator('[data-cookie-banner]');await expect(banner).toBeVisible();
  expect(await page.evaluate(()=>localStorage.getItem('contratacr:consent:advertising:v1'))).toBeNull();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ const box=await banner.boundingBox();expect(box).not.toBeNull();
+ if(width<640){expect(box!.x).toBe(0);expect(box!.width).toBe(width);expect(Math.abs(box!.y+box!.height-page.viewportSize()!.height)).toBeLessThan(1);}
+ else {expect(box!.x).toBeGreaterThan(0);expect(box!.width).toBeLessThan(width);expect(box!.y+box!.height).toBeLessThan(page.viewportSize()!.height);}
+ const primary= banner.getByRole('button').filter({hasText:locale==='en'?/^(Accept all|Only necessary)$/:/^(Aceptar todas|Solo necesarias)$/});
+ expect(await primary.evaluateAll(nodes=>new Set(nodes.map(n=>{const s=getComputedStyle(n);return `${s.color}|${s.backgroundColor}|${s.borderColor}`;})).size)).toBe(1);
+
  await banner.getByRole('button',{name:locale==='en'?'Manage preferences':'Configurar preferencias',exact:true}).click();
  const dialog=page.getByRole('dialog');await expect(dialog).toBeVisible();
  await expect(dialog.getByRole('checkbox')).toHaveCount(2);
