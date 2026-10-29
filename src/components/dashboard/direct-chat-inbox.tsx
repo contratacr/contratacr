@@ -938,15 +938,37 @@ export function DirectChatInbox({ alCambiarSubvista }: {
         }
         if (!row.edited_at && !row.deleted_at) return;
         void loadThread(activeId, true);
-      }).subscribe((status) => {
-        // The HTTP snapshot may finish before the channel is ready. Reconcile
-        // after every successful join, including reconnects, to recover inserts
-        // that happened in that gap. Removed channels must not reload old UI.
-        if (disposed || status !== "SUBSCRIBED") return;
-        recargarPronto();
-        if (activeId && activeId !== DRAFT_CONVERSATION_ID) void loadThread(activeId, true);
       });
+    let subscriptionStarted = false;
+    const subscribe = async () => {
+      if (disposed || subscriptionStarted) return;
+      subscriptionStarted = true;
+      try {
+        // A cached UI user can precede the SDK's async session restoration.
+        // Joining first can leave the server subscription anonymous even when
+        // the SDK obtains the user token while that join is still in flight.
+        const { data, error } = await supabase.auth.getSession();
+        if (disposed) return;
+        if (error || !data.session?.access_token || data.session.user.id !== user.id) {
+          subscriptionStarted = false;
+          return;
+        }
+        await supabase.realtime.setAuth(data.session.access_token);
+        if (disposed) return;
+        channel.subscribe((status) => {
+          // Reconcile the HTTP snapshot after every join and reconnect.
+          if (disposed || status !== "SUBSCRIBED") return;
+          recargarPronto();
+          if (activeId && activeId !== DRAFT_CONVERSATION_ID) void loadThread(activeId, true);
+        });
+      } catch {
+        subscriptionStarted = false;
+        console.warn("[direct-chat] realtime session initialization unavailable");
+      }
+    };
+    void subscribe();
     const onResume = () => {
+      void subscribe();
       recargarPronto();
       if (activeId && activeId !== DRAFT_CONVERSATION_ID) void loadThread(activeId, true);
     };
