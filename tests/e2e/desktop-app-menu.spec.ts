@@ -10,7 +10,7 @@ test("desktop app handoff replaces sign-up, translates and closes accessibly wit
       await gotoOK(page, locale === "en" ? "/en/proyectos" : "/proyectos");
       await waitForInteractivePage(page);
       const header = page.getByTestId("landing-navbar").filter({ visible: true });
-      const action = header.getByRole("button", { name: locale === "en" ? "Use app" : "Usar app", exact: true });
+      const action = header.getByRole("button", { name: locale === "en" ? "Download app" : "Descargar app", exact: true });
       await expect(action).toBeVisible();
       await expect(header.locator('a[href$="/registro"]')).toHaveCount(0);
       await expect(header.locator('a[href*="/login"]').filter({ visible: true })).toBeVisible();
@@ -44,7 +44,7 @@ test("signed-in desktop keeps app access beside account controls", async ({ page
     await waitForInteractivePage(page);
     const header = page.getByTestId("landing-navbar").filter({ visible: true });
     await expect(header.locator('a[href*="/login"]').filter({ visible: true })).toHaveCount(0);
-    await header.getByRole("button", { name: "Usar app", exact: true }).click();
+    await header.getByRole("button", { name: "Descargar app", exact: true }).click();
     await expect(header.getByRole("dialog")).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
     await header.getByRole("button", { name: "Cerrar código de la app" }).click();

@@ -88,7 +88,7 @@ test.describe("@smoke public routes", () => {
       await expect(navigation.getByRole("button", { name: /^Servicios$/i }).first()).toBeVisible();
       await expect(navigation.getByRole("button", { name: /^Explorar$/i }).first()).toBeVisible();
       await expect(navigation.getByRole("link", { name: /Ingresar/i }).first()).toBeVisible();
-      const app = navigation.getByRole("button", { name: /^(Usar app|Use app)$/ }).first();
+      const app = navigation.getByRole("button", { name: /^(Descargar app|Download app)$/ }).first();
       await expect(app).toBeVisible();
       await expect(navigation.getByRole("link", { name: /^Registrarme$|^Sign up$/i })).toHaveCount(0);
       await app.click();
