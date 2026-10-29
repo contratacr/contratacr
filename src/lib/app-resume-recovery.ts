@@ -49,9 +49,10 @@ export function installAppResumeRecovery(refreshRoute: () => void): () => void {
     if (!visible()) return;
     const now = Date.now();
     const slept = hiddenSince === null ? 0 : now - hiddenSince;
+    const newForeground = hiddenSince !== null;
     hiddenSince = null;
     needsRevalidation ||= force || slept >= LONG_SLEEP_MS;
-    if (now - lastWake < WAKE_THROTTLE_MS) { scheduleRefresh(); return; }
+    if (!newForeground && now - lastWake < WAKE_THROTTLE_MS) { scheduleRefresh(); return; }
     lastWake = now;
     lastTouch = now;
     recoverBodyScrollLock();

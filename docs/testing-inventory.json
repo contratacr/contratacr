@@ -26422,23 +26422,23 @@
       "file": "tests/e2e/reanudar-la-app.spec.ts",
       "cases": [
         {
-          "line": 74,
+          "line": 77,
           "title": "`la búsqueda sigue respondiendo tras un corte de red y volver del segundo plano${nativa ? \" (app)\" : \"\"}`"
         },
         {
-          "line": 87,
+          "line": 90,
           "title": "\"el panel con sesión sigue respondiendo tras volver del segundo plano\""
         },
         {
-          "line": 88,
+          "line": 91,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 101,
+          "line": 104,
           "title": "`@smoke sesión y borrador real de chat sobreviven a una suspensión larga y un corte de red (${native ? \"app\" : \"web\"})`"
         },
         {
-          "line": 102,
+          "line": 105,
           "title": "!canRunSeededRegression()"
         }
       ]
@@ -26493,7 +26493,15 @@
         },
         {
           "line": 149,
-          "title": "\"un error de sesión al reanudar conserva el usuario; un cierre explícito sí se aplica\""
+          "title": "`un error de sesión conserva el usuario; cierre explícito se aplica (fallo inicial ${initiallyFailing})`"
+        },
+        {
+          "line": 187,
+          "title": "`cada regreso rápido recupera candados sin perder borradores (${native ? \"nativo\" : \"web\"})`"
+        },
+        {
+          "line": 204,
+          "title": "`sesión tardía de ${phase} no revierte ${event}`"
         }
       ]
     },
