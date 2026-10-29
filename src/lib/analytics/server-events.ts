@@ -36,6 +36,7 @@ function clean(value: unknown, max = 100): string | number | boolean | null {
 export async function recordServerInteraction(event: ServerInteraction): Promise<void> {
   try {
     const jar = await cookies();
+    if (jar.get("ccr_statistics_consent_v1")?.value !== "accepted") return;
     if (jar.get(COOKIE_ADMIN_EXCLUDED)?.value === "1" || esPeticionAutomatizada(jar.get(COOKIE_SIN_ANALITICA)?.value, (await headers()).get("user-agent"))) return;
     const actor = await analyticsActor(event.viewerUserId);
     if (actor.excluded) return;

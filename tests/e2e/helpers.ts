@@ -334,8 +334,11 @@ export async function resetAuth(page: Page) {
   // Same-origin text gives access to storage without mounting the whole home,
   // starting its carousel/media or reviving cached auth during fixture reset.
   await page.evaluate(() => {
+    const privacy = ["analytics", "advertising"].map(purpose => { const key = `contratacr:consent:${purpose}:v1`; return [key, localStorage.getItem(key)] as const; });
     localStorage.clear();
     sessionStorage.clear();
+    // Reset authentication, not the separate device preference.
+    for (const [key,value] of privacy) if (value) localStorage.setItem(key,value);
   });
 }
 

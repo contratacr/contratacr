@@ -1,5 +1,6 @@
 "use client";
-import { useEffect } from "react";
+import { analyticsMeasurementEnabled, subscribeOptionalConsent } from "@/lib/privacy/optional-consent";
+import { useSyncExternalStore, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { esNavegadorAutomatizado } from "@/lib/analytics/trafico-automatizado";
@@ -7,9 +8,11 @@ import { syncAnalyticsPlatform } from "@/lib/analytics/platform-client";
 import { routeSection, buttonTarget, type JourneyAction } from "@/lib/analytics/journey-contract";
 type Event = { id: string; action: JourneyAction; target: string; section: string; value?: number };
 export function JourneyCapture() {
+  const consent = useSyncExternalStore(subscribeOptionalConsent, analyticsMeasurementEnabled, () => false);
   const pathname = usePathname();
   const { user } = useAuth();
   useEffect(() => {
+    if (!consent) return;
     if (esNavegadorAutomatizado() || routeSection(pathname) === "admin") return;
     let events: Event[] = [], sending = false, disposed = false;
     const section = routeSection(pathname);
@@ -17,6 +20,7 @@ export function JourneyCapture() {
       if (events.length < 60) events.push({ id: crypto.randomUUID(), action, target, section, value });
     };
     const flush = async () => {
+      if (!analyticsMeasurementEnabled()) { events = []; return; }
       if (sending || !events.length) return;
       sending = true;
       syncAnalyticsPlatform();
@@ -84,6 +88,6 @@ export function JourneyCapture() {
       document.removeEventListener("visibilitychange", hide); window.removeEventListener("error", error);
       window.removeEventListener("pagehide", flush);
     };
-  }, [pathname, user?.id]);
+  }, [pathname, user?.id, consent]);
   return null;
 }

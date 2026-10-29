@@ -1,3 +1,4 @@
+import { requestStatisticsAllowed } from "@/lib/privacy/measurement-request";
 import { createHash, randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { analyticsActor } from "@/lib/analytics/admin-activity";
@@ -7,6 +8,7 @@ import { requestAnalyticsPlatform } from "@/lib/analytics/platform";
 import { peticionAutomatizada } from "@/lib/analytics/trafico-automatizado";
 import { cleanJourney } from "@/lib/analytics/journey-contract";
 export async function POST(req: NextRequest) {
+  if (!requestStatisticsAllowed(req)) return new NextResponse(null, { status: 204 });
   if (req.headers.get("origin") !== new URL(req.url).origin) return new NextResponse(null, { status: 403 });
   if (peticionAutomatizada(req)) return new NextResponse(null, { status: 204 });
   const limited = enforceRateLimit(req, "analytics-journey", 30, 60_000);

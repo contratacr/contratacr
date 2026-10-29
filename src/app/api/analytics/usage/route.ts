@@ -1,3 +1,4 @@
+import { requestStatisticsAllowed } from "@/lib/privacy/measurement-request";
 import { isNativeAnalyticsRuntime } from "@/lib/analytics/platform";
 import { analyticsActor } from "@/lib/analytics/admin-activity";
 import { createHash, randomUUID } from "node:crypto";
@@ -16,6 +17,7 @@ const schema = z.object({
   firstUse: z.boolean().optional(),
 });
 export async function POST(req: NextRequest) {
+  if (!requestStatisticsAllowed(req)) return new NextResponse(null, { status: 204 });
   if (req.cookies.get(COOKIE_ADMIN_EXCLUDED)?.value === "1") return new NextResponse(null, { status: 204, headers: { "x-analytics-excluded": "1" } });
   if (peticionAutomatizada(req)) return new NextResponse(null, { status: 204 });
   const limited = enforceRateLimit(req, "analytics-usage", 90, 60_000);

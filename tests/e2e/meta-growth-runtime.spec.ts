@@ -7,22 +7,23 @@ import * as platform from "../../src/lib/analytics/platform";
 import * as contract from "../../src/lib/analytics/growth-contract";
 import { NextRequest, NextResponse } from "next/server";
 import { peticionAutomatizada } from "../../src/lib/analytics/trafico-automatizado";
+import * as measurement from "../../src/lib/privacy/measurement-request";
 import * as minimal from "../../src/lib/analytics/meta-minimal";
 const requireNode=createRequire(`${process.cwd()}/tests/e2e/meta-growth-runtime.spec.ts`);
 function load<T>(file: string, mocks: Record<string,unknown>, globals: Record<string,unknown>={}) {
  const source=readFileSync(`${process.cwd()}/${file}`,"utf8");
  const code=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
  const moduleBox={exports:{} as T};
- runInNewContext(code,{module:moduleBox,exports:moduleBox.exports,require:(name:string)=>name in mocks?mocks[name]:requireNode(name),console:{warn:()=>{},log:()=>{}},URL,Date,process:{env:{META_CAPI_ENABLED:"true"}},...globals});
+ runInNewContext(code,{module:moduleBox,exports:moduleBox.exports,require:(name:string)=>name in mocks?mocks[name]:name === "@/lib/privacy/measurement-request" ? measurement : requireNode(name),console:{warn:()=>{},log:()=>{}},URL,Date,process:{env:{META_CAPI_ENABLED:"true"}},...globals});
  return moduleBox.exports;
 }
-const request=(cookie="cc_analytics_sid=visitor; ccr_ads_consent_v1=limited; _fbp=fb.1.1792500000000.123456",host="contratacr.com",ua="Mozilla/5.0")=>new Request(`https://${host}/api/projects`,{headers:{cookie,"user-agent":ua}});
+const request=(cookie="cc_analytics_sid=visitor; ccr_ads_consent_v2=accepted; _fbp=fb.1.1792500000000.123456",host="contratacr.com",ua="Mozilla/5.0")=>new Request(`https://${host}/api/projects`,{headers:{cookie,"user-agent":ua}});
 test("server consent, native, bots, test domains and attribution use real runtime guards",()=>{
  const lib=load<typeof import("../../src/lib/analytics/growth-server")>("src/lib/analytics/growth-server.ts",{"@/lib/analytics/admin-activity":{analyticsActor:async (id:string)=>({id,excluded:false})},"@/lib/privacy/optional-consent":{OPTIONAL_CONSENT_VERSION:"2026-10-19"},"server-only":{},"./platform":platform,"./growth-contract":contract,"./meta-minimal":minimal,"./trafico-automatizado":{COOKIE_ADMIN_EXCLUDED:"ccr_admin_analytics_excluded",esPeticionAutomatizada:(cookie:string,ua:string)=>cookie==="1"||ua.includes("Headless")},"@/lib/supabase/admin":{createAdminClient:()=>{throw new Error("unexpected DB");}}});
  expect(lib.growthContext(request()).allowed).toBe(true);
- for(const req of [request("cc_analytics_sid=x"),request("cc_analytics_sid=x; ccr_meta_consent=enabled"),request("cc_analytics_sid=x; ccr_ads_consent_v1=declined"),request("cc_analytics_sid=x; ccr_ads_consent_v1=limited; ccr_admin_analytics_excluded=1"),request("cc_analytics_sid=x; ccr_ads_consent_v1=accepted; ccr_platform=native"),request(undefined,"test.contratacr.com"),request(undefined,"localhost"),request(undefined,undefined,"HeadlessChrome")])expect(lib.growthContext(req).allowed).toBe(false);
+ for(const req of [request("cc_analytics_sid=x"),request("cc_analytics_sid=x; ccr_meta_consent=enabled"),request("cc_analytics_sid=x; ccr_ads_consent_v2=declined"),request("cc_analytics_sid=x; ccr_ads_consent_v2=accepted; ccr_admin_analytics_excluded=1"),request("cc_analytics_sid=x; ccr_ads_consent_v2=accepted; ccr_platform=native"),request(undefined,"test.contratacr.com"),request(undefined,"localhost"),request(undefined,undefined,"HeadlessChrome")])expect(lib.growthContext(req).allowed).toBe(false);
  const attribution=encodeURIComponent(JSON.stringify({source:"meta",campaign:"clientes",content:"one",capturedAt:new Date().toISOString(),privateText:"secret"}));
- const context=lib.growthContext(request(`cc_analytics_sid=x; ccr_ads_consent_v1=accepted; ccr_action_attribution=${attribution}`));
+ const context=lib.growthContext(request(`cc_analytics_sid=x; ccr_ads_consent_v2=accepted; ccr_statistics_consent_v1=accepted; ccr_action_attribution=${attribution}`));
  expect(context.attribution.campaign).toBe("clientes");expect(context.attribution.privateText).toBeUndefined();expect(context.actorHash).not.toBe("x");
 });
 test("only the first successful business receipt queues a minimal CAPI payload",async()=>{
@@ -32,10 +33,10 @@ test("only the first successful business receipt queues a minimal CAPI payload",
  const lib=load<typeof import("../../src/lib/analytics/growth-server")>("src/lib/analytics/growth-server.ts",{"@/lib/analytics/admin-activity":{analyticsActor:async (id:string)=>({id,excluded:false})},"@/lib/privacy/optional-consent":{OPTIONAL_CONSENT_VERSION:"2026-10-19"},"server-only":{},"./platform":platform,"./growth-contract":contract,"./meta-minimal":minimal,"./trafico-automatizado":{COOKIE_ADMIN_EXCLUDED:"ccr_admin_analytics_excluded",esPeticionAutomatizada:()=>false},"@/lib/supabase/admin":{createAdminClient:()=>db}});
  const first=await lib.recordServiceContact(request(),"professional");
  if (!first) throw new Error("expected successful conversion receipt");
- expect(first.eventName).toBe("Contact");expect(rows[0].payload?.event_id).toBe(first.eventId);expect(rows[0].payload?.custom_data).toEqual({action:"service_contact",audience:"client",measurement_version:"minimal-2026-10-20"});
+ expect(first.eventName).toBe("Contact");expect(rows[0].payload?.event_id).toBe(first.eventId);expect(rows[0].payload?.custom_data).toEqual({action:"service_contact",audience:"client",measurement_version:"minimal-optin-2026-10-29"});
  expect(await lib.recordServiceContact(request(),"professional")).toBeNull();expect(rows).toHaveLength(1);
  expect(JSON.stringify(rows[0].payload)).not.toMatch(/email|cedula|description|message|budget/);
- await lib.recordGrowthConversion(request("cc_analytics_sid=visitor; ccr_ads_consent_v1=declined"),"project_published","project");
+ await lib.recordGrowthConversion(request("cc_analytics_sid=visitor; ccr_ads_consent_v2=declined; ccr_statistics_consent_v1=accepted"),"project_published","project");
  expect(rows[1]).toMatchObject({status:"suppressed",payload:null});
 });
 test("browser business receipts cannot create a duplicate or leak free-text parameters",()=>{
@@ -151,7 +152,7 @@ test("only a verified admin role sets the persistent exclusion cookie", async ()
    "@/lib/supabase/server": {createClient:async()=>({auth:{getUser:async()=>({data:{user:{id:"operator"}}})}})},
    "@/lib/supabase/admin": {createAdminClient:()=>({rpc:async()=>({error:null})})},
   },{process:{env:{NODE_ENV:"production"}}});
-  const response = await route.POST(new NextRequest("https://contratacr.com/api/analytics/usage", {method:"POST",body:JSON.stringify({session:"00000000-0000-4000-8000-000000000001",screen:"00000000-0000-4000-8000-000000000002",path:"/"})}));
+  const response = await route.POST(new NextRequest("https://contratacr.com/api/analytics/usage", {method:"POST",headers:{cookie:"ccr_statistics_consent_v1=accepted"},body:JSON.stringify({session:"00000000-0000-4000-8000-000000000001",screen:"00000000-0000-4000-8000-000000000002",path:"/"})}));
   expect(response.status).toBe(204);
   expect(response.headers.get("x-analytics-excluded")).toBe("1");
   const cookie = response.headers.get("set-cookie") ?? "";
@@ -185,3 +186,41 @@ test("follow-up records a hire only on the client's explicit confirmation", asyn
   if (action === "hired") expect(conversions[0].slice(1)).toEqual(["service_hire_confirmed","followup:followup-test","client"]);
  }
 });
+
+ test("declined or missing statistics never reach analytics storage", async () => {
+ for (const file of ["usage", "journey", "interaction"]) {
+ const route=load<{POST:(req:NextRequest)=>Promise<Response>}>(`src/app/api/analytics/${file}/route.ts`, {
+ "next/server":{NextResponse}, "@/lib/analytics/admin-activity":{}, "@/lib/analytics/platform":platform,
+ "@/lib/analytics/trafico-automatizado":{}, "@/lib/rate-limit":{},
+ "@/lib/supabase/server":{createClient:()=>{throw new Error("must not read account");}},
+ "@/lib/supabase/admin":{createAdminClient:()=>{throw new Error("must not record");}}
+ });
+ for(const cookie of ["", "ccr_statistics_consent_v1=declined", "ccr_ads_consent_v2=accepted"]) {
+ const response=await route.POST(new NextRequest(`https://contratacr.com/api/analytics/${file}`,{method:"POST",headers:{cookie}}));
+ expect(response.status).toBe(204);expect(response.headers.get("set-cookie")).toBeNull();
+ }
+ }
+ });
+
+ test("native advertising configuration does not require statistics and cleanup is same-origin HttpOnly", async () => {
+ let lookups=0;
+ const route=load<typeof import("../../src/app/api/privacy/measurement/route")>("src/app/api/privacy/measurement/route.ts",{
+ "next/server":{NextResponse}, "@/lib/analytics/admin-activity":{analyticsActor:async()=>{lookups++;return {excluded:false};}},
+ "@/lib/analytics/trafico-automatizado":{COOKIE_ADMIN_EXCLUDED:"ccr_admin_analytics_excluded",peticionAutomatizada:()=>false}
+ });
+ const request=(cookie:string,origin="https://contratacr.com")=>new NextRequest("https://contratacr.com/api/privacy/measurement",{headers:{cookie,origin}});
+ expect(await (await route.GET(request(""))).json()).toMatchObject({excluded:true});expect(lookups).toBe(0);
+ expect(await (await route.GET(request("ccr_ads_consent_v2=accepted"))).json()).toMatchObject({excluded:false});expect(lookups).toBe(1);
+ expect((await route.DELETE(request("","https://other.test"))).status).toBe(403);
+ const response=await route.DELETE(request(""));expect(response.status).toBe(204);
+ expect(response.headers.get("set-cookie")).toMatch(/cc_analytics_sid=;.*Max-Age=0.*HttpOnly/i);
+ });
+
+ test("requested contacts remain in connections without optional interaction events", async () => {
+ const tables:Record<string,unknown[]>={whatsapp_contact_followups:[{professional_id:"pro",contacted_at:"2026-10-29T00:00:00Z"}],professionals:[{id:"pro",profiles:{full_name:"Professional"},verification_status:"verified"}]};
+ const db={from:(table:string)=>{ const chain:Record<string,unknown>={};for(const method of ["select","eq","in","not"]) chain[method]=()=>chain;chain.then=(resolve:(value:unknown)=>void)=>resolve({data:tables[table]??[],error:null});return chain;}};
+ const route=load<typeof import("../../src/app/api/client/connections/route")>("src/app/api/client/connections/route.ts",{
+ "next/server":{NextResponse},"@/lib/supabase/admin":{createAdminClient:()=>db},"@/lib/supabase/server":{createClient:async()=>({auth:{getUser:async()=>({data:{user:{id:"client"}}})}})},"@/lib/display-name":{getProfessionalDisplayName:(name:string)=>({primaryDesktop:name})},"@/lib/data/categories":{getCategoryLabel:()=>null},"@/lib/text/repair-visible-text":{repairVisibleText:(s:string)=>s}
+ });
+ const result=await (await route.GET()).json();expect(result.connections).toHaveLength(1);expect(result.connections[0]).toMatchObject({professionalId:"pro",source:"contact",count:1});
+ });

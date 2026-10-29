@@ -1,3 +1,4 @@
+import { requestStatisticsAllowed } from "@/lib/privacy/measurement-request";
 import { analyticsActor } from "@/lib/analytics/admin-activity";
 import { requestAnalyticsPlatform } from "@/lib/analytics/platform";
 import { peticionAutomatizada } from "@/lib/analytics/trafico-automatizado";
@@ -43,6 +44,7 @@ function cleanMetadata(value: unknown): Record<string, string | number | boolean
 }
 
 export async function POST(req: NextRequest) {
+  if (!requestStatisticsAllowed(req)) return new NextResponse(null, { status: 204 });
   // Pruebas automáticas: se acepta en silencio y no se guarda.
   if (peticionAutomatizada(req)) return new NextResponse(null, { status: 204 });
   // Cualquiera podía inflar las vistas y los contactos de un profesional en bucle.

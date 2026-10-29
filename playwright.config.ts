@@ -81,6 +81,9 @@ export default defineConfig({
     : "list",
   use: {
     baseURL,
+    // Most regression journeys begin after a prior necessary-only choice.
+    // Consent-specific specs explicitly clear these records and test first entry.
+    storageState: { cookies: [], origins: [{ origin: new URL(baseURL).origin, localStorage: ["analytics", "advertising"].map(purpose => ({ name: `contratacr:consent:${purpose}:v1`, value: JSON.stringify({version:"2026-10-29",choice:"declined",at:new Date().toISOString()}) })) }] },
     // All date buckets in ContrataCR are defined in Costa Rica local time.
     // Pin the browser clock so CI (UTC) and local runs agree at day boundaries.
     timezoneId: "America/Costa_Rica",

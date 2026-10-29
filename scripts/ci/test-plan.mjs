@@ -15,7 +15,7 @@ export const nativeSpecs = new Set([
   'direct-chat', 'recuperacion-al-desbloquear', 'reanudar-la-app',
   'mensajes-sin-parpadeo', 'mobile-native-shell', 'admin-bottom-nav',
   'native-social-access', 'apple-existing-account', 'native-edge-back',
-  'native-home-paint', 'landing-media-budget', 'app-download', 'marketplace-editors',
+  'native-home-paint', 'landing-media-budget', 'cookie-preferences', 'app-download', 'marketplace-editors',
 ].map(n => `tests/e2e/${n}.spec.ts`));
 const nativeOnly = new Set(['tests/e2e/direct-chat.spec.ts', 'tests/e2e/mobile-native-shell.spec.ts']);
 const git = args => execFileSync('git', args, { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 }).trim();

@@ -1,3 +1,4 @@
+import { requestStatisticsAllowed } from "@/lib/privacy/measurement-request";
 import { META_MEASUREMENT_VERSION, minimalMetaPayload } from "./meta-minimal";
 import { analyticsActor } from "@/lib/analytics/admin-activity";
 import { requestAnalyticsPlatform } from "./platform";
@@ -18,13 +19,13 @@ export function growthContext(req: Request, actorId?: string | null) {
   const automated = requestCookie(req, COOKIE_ADMIN_EXCLUDED) === "1" || esPeticionAutomatizada(requestCookie(req,"ccr_sin_analitica"),ua);
   const native = requestCookie(req,"ccr_platform") === "native";
   const allowed = !automated && !native && ["contratacr.com","www.contratacr.com"].includes(host)
-    && ["accepted", "limited"].includes(requestCookie(req,"ccr_ads_consent_v1"));
+    && requestCookie(req,"ccr_ads_consent_v2") === "accepted";
   const actor = actorId || requestCookie(req,"cc_analytics_sid") || requestCookie(req,"ccr_whatsapp_contact");
   let attribution: Record<string,string> = {};
   try {
     const parsed = JSON.parse(requestCookie(req,"ccr_action_attribution"));
     const age = Date.now()-Date.parse(parsed.capturedAt);
-    if (Number.isFinite(age) && age >= -60000 && age < 30*86400000) {
+    if (requestStatisticsAllowed(req) && Number.isFinite(age) && age >= -60000 && age < 30*86400000) {
       attribution = Object.fromEntries(["source","medium","campaign","content","firstSource","firstCampaign"].flatMap(k => typeof parsed[k]==="string" ? [[k,parsed[k].replace(/[^a-zA-Z0-9_ .-]/g,"").slice(0,120)]] : []));
     }
   } catch { /* direct or no storage */ }
@@ -34,11 +35,12 @@ export function growthContext(req: Request, actorId?: string | null) {
     if (/^fb\.\d+\.\d+\.[a-zA-Z0-9_-]+$/.test(value)) userData[name.slice(1)] = value;
   }
   // Account identity remains internal; never forward even its hash to Meta.
-  return { automated, allowed, native, nativeAllowed: native && !automated && ["contratacr.com","www.contratacr.com"].includes(host) && ["accepted","limited"].includes(requestCookie(req,"ccr_ads_consent_v1")), actorHash: actor ? hash(actor) : null, attribution, userData };
+  return { automated, allowed, native, nativeAllowed: native && !automated && ["contratacr.com","www.contratacr.com"].includes(host) && requestCookie(req,"ccr_ads_consent_v2") === "accepted", actorHash: actor ? hash(actor) : null, attribution, userData };
 }
 /** Only invoke after a successful, authorized business action. Database conflicts are the deduplication boundary. */
 export async function recordGrowthConversion(req: Request, action: GrowthAction, businessKey: string, actorId?: string | null, options: { metaAllowed?: boolean } = {}): Promise<MetaConversion | null> {
   try {
+    if (!requestStatisticsAllowed(req) && requestCookie(req,"ccr_ads_consent_v2") !== "accepted") return null;
     const actor = await analyticsActor(actorId ?? undefined);
     if (actor.excluded) return null;
     const context = growthContext(req,actor.id);

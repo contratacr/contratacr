@@ -1,3 +1,4 @@
+import { analyticsMeasurementEnabled } from "@/lib/privacy/optional-consent";
 import { syncAnalyticsPlatform } from "./platform-client";
 import { esNavegadorAutomatizado } from "@/lib/analytics/trafico-automatizado";
 export const INTERACTION_EVENT_TYPES = [
@@ -50,7 +51,7 @@ type InteractionEvent = {
 };
 
 export function trackInteraction(event: InteractionEvent) {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || !analyticsMeasurementEnabled()) return;
   // Las pruebas automáticas no cuentan (ver trafico-automatizado.ts).
   if (esNavegadorAutomatizado()) return;
   syncAnalyticsPlatform();

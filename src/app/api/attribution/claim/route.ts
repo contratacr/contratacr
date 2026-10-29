@@ -1,3 +1,4 @@
+import { requestStatisticsAllowed } from "@/lib/privacy/measurement-request";
 import { NextResponse } from "next/server";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -11,6 +12,7 @@ import { attributionColumnsFromBody } from "@/lib/analytics/attribution-server";
 // Only fills empty columns, and only on accounts younger than 3 days — an old
 // account logging in from a fresh device must not be re-attributed.
 export async function POST(req: Request) {
+  if (!requestStatisticsAllowed(req)) return new NextResponse(null, { status: 204 });
   const limited = enforceRateLimit(req, "attribution-claim", 20, 600000);
   if (limited) return limited;
   try {

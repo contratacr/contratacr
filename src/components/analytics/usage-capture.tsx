@@ -1,9 +1,10 @@
 "use client";
+import { advertisingMeasurementEnabled, analyticsMeasurementEnabled, subscribeOptionalConsent } from "@/lib/privacy/optional-consent";
 import { configureNativeMeasurement, setNativeMeasurementActor } from "@/lib/analytics/native-measurement";
 
 import { JourneyCapture } from "./journey-capture";
 import { isNativeAnalyticsRuntime } from "@/lib/analytics/platform";
-import { useEffect, useRef } from "react";
+import { useSyncExternalStore, useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { useNativeApp } from "@/hooks/use-native-app";
@@ -28,6 +29,8 @@ function session(now: number) {
   return current.id;
 }
 export function UsageCapture() {
+  const consent = useSyncExternalStore(subscribeOptionalConsent, analyticsMeasurementEnabled, () => false);
+  const advertising = useSyncExternalStore(subscribeOptionalConsent, advertisingMeasurementEnabled, () => false);
   const pathname = usePathname();
   const params = useSearchParams();
   const tab = params.get("tab") ?? "";
@@ -35,10 +38,27 @@ export function UsageCapture() {
   const native = useNativeApp();
   const last = useRef({ route: "", session: "", actor: "", screen: "", runtime: "" });
   useEffect(() => {
-    if (esNavegadorAutomatizado()) { void configureNativeMeasurement(true); return; }
     setNativeMeasurementActor(user?.id ?? "");
+    if (!native || !advertising || esNavegadorAutomatizado()) { void configureNativeMeasurement(true); return; }
+    let active = true;
+    const configure = async () => {
+      try {
+        const response = await fetch("/api/privacy/measurement", { cache: "no-store" });
+        if (!response.ok) throw new Error("configuration unavailable");
+        const result = await response.json();
+        if (active) await configureNativeMeasurement(result.excluded !== false, result.schemaReady === true);
+      } catch { if (active) await configureNativeMeasurement(true); }
+    };
+    void configure();
+    window.addEventListener("online", configure);
+    window.addEventListener(APP_RESUME_EVENT, configure);
+    return () => { active = false; window.removeEventListener("online", configure); window.removeEventListener(APP_RESUME_EVENT, configure); };
+  }, [native, advertising, user?.id]);
+  useEffect(() => {
+    if (!consent) { fallback = { id: "", at: 0 }; last.current = { route: "", session: "", actor: "", screen: "", runtime: "" }; return; }
+    if (esNavegadorAutomatizado()) { void configureNativeMeasurement(true); return; }
     const track = () => {
-      if (document.visibilityState === "hidden") return;
+      if (!analyticsMeasurementEnabled() || document.visibilityState === "hidden") return;
       const runtime = syncAnalyticsPlatform();
       const isApp = isNativeAnalyticsRuntime(runtime);
       const id = session(Date.now());
@@ -50,6 +70,7 @@ export function UsageCapture() {
       const screen = last.current.route === route && last.current.session === id ? last.current.screen : crypto.randomUUID();
       last.current = { route, session: id, actor, screen, runtime };
       queue = queue.catch(() => undefined).then(async () => {
+        if (!analyticsMeasurementEnabled()) return;
         let firstUse = false;
         try { firstUse = isApp && localStorage.getItem(FIRST_USE_KEY) !== "1"; } catch { /* no persistence */ }
         const body = JSON.stringify({ session: id, screen, path: pathname, tab: safeTab, firstUse });
@@ -57,7 +78,6 @@ export function UsageCapture() {
         try {
           let response = await send();
           if (!response.ok && response.status >= 500) response = await send();
-          if (response.ok && isApp && last.current.actor === actor) await configureNativeMeasurement(response.headers?.get("x-analytics-excluded") === "1", response.headers?.get("x-meta-skan-schema") === "ready");
           if (response.ok && firstUse && response.headers?.get("x-analytics-excluded") !== "1") { try { localStorage.setItem(FIRST_USE_KEY, "1"); } catch { /* optional */ } }
           if (!response.ok && last.current.screen === screen) last.current.actor = "retry";
         } catch { if (last.current.screen === screen) last.current.actor = "retry"; }
@@ -80,6 +100,6 @@ export function UsageCapture() {
       document.removeEventListener("pointerdown", touch);
       document.removeEventListener("keydown", touch);
     };
-  }, [pathname, tab, user?.id, native]);
+  }, [pathname, tab, user?.id, native, consent]);
   return <JourneyCapture />;
 }

@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useLocale } from "next-intl";
 import { useAuth } from "@/hooks/use-auth";
 import { isNativeAppRuntime } from "@/hooks/use-native-app";
-import { LEGAL_VERSION, legalLocale } from "@/lib/privacy/legal-version";
+import { privacyChoiceVersion, legalLocale } from "@/lib/privacy/legal-version";
 import { OPTIONAL_CONSENT_EVENT, type OptionalPurpose } from "@/lib/privacy/optional-consent";
 
 /** Mirror only explicit actions made by this account, never another device user's old choice. */
@@ -28,16 +28,16 @@ export function OptionalChoiceRecorder() {
     };
     const onChoice = (event: Event) => {
       const detail = (event as CustomEvent<{purpose: OptionalPurpose; choice: string}>).detail;
-      if (!detail || !["advertising","ai"].includes(detail.purpose) || !["accepted","declined"].includes(detail.choice)) return;
-      enqueue(detail.purpose, JSON.stringify({ purpose: detail.purpose, accepted: detail.choice === "accepted", version: LEGAL_VERSION, locale: legalLocale(locale), channel: isNativeAppRuntime() ? "native" : "web" }));
+      if (!detail || !["advertising","ai","analytics"].includes(detail.purpose) || !["accepted","declined"].includes(detail.choice)) return;
+      enqueue(detail.purpose, JSON.stringify({ purpose: detail.purpose, accepted: detail.choice === "accepted", version: privacyChoiceVersion(detail.purpose), locale: legalLocale(locale), channel: isNativeAppRuntime() ? "native" : "web" }));
     };
     const retry = () => {
-      for (const purpose of ["advertising","ai"] as const) {
+      for (const purpose of ["advertising","ai","analytics"] as const) {
         try {
           const body = sessionStorage.getItem(key(purpose));
           if (body) {
             const pending = JSON.parse(body);
-            if (pending.purpose === purpose && pending.version === LEGAL_VERSION && typeof pending.accepted === "boolean") enqueue(purpose, body);
+            if (pending.purpose === purpose && pending.version === privacyChoiceVersion(purpose) && typeof pending.accepted === "boolean") enqueue(purpose, body);
           }
         } catch { /* no pending receipt */ }
       }

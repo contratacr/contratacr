@@ -1,0 +1,46 @@
+import { test, expect } from 'playwright/test';
+import { build } from 'esbuild';
+import postcss from 'postcss';
+import tailwind from '@tailwindcss/postcss';
+import { readFileSync } from 'node:fs';
+
+let script: string, css: string;
+test.beforeAll(async () => {
+ const result = await build({stdin:{contents:`import React from 'react'; import {createRoot} from 'react-dom/client'; import {CookiePreferences} from './src/components/privacy/cookie-preferences'; import {AdvertisingPreferences} from './src/components/privacy/advertising-preferences'; createRoot(document.getElementById('root')).render(<><main><h1>ContrataCR</h1><AdvertisingPreferences/></main><CookiePreferences/></>);`,resolveDir:process.cwd(),loader:'tsx'},bundle:true,write:false,jsx:'automatic',format:'iife',platform:'browser',tsconfig:'tsconfig.json',define:{'process.env.NODE_ENV':'"production"'},plugins:[{name:'framework-boundaries',setup(b){
+ b.onResolve({filter:/^(next-intl|@\/i18n\/navigation)$/},args=>({path:args.path,namespace:'boundary'}));
+ b.onLoad({filter:/.*/,namespace:'boundary'},args=>({contents:args.path==='next-intl'?`export const useLocale=()=>document.documentElement.lang;`:`import React from 'react'; export const Link=({children,...props})=>React.createElement('a',props,children);`,resolveDir:process.cwd()}));
+ }}]});
+ script=result.outputFiles[0].text;
+ css=(await postcss([tailwind()]).process(readFileSync('src/app/globals.css','utf8'),{from:'src/app/globals.css'})).css;
+});
+for(const locale of ['es','en']) for(const width of [320,390,768,1440]) test(`consent UI ${locale} ${width}: explicit choices, independent purposes and reopening`,async({page})=>{
+ await page.addInitScript(()=>{ if (!sessionStorage.getItem("consent-fixture-ready")) { localStorage.clear(); sessionStorage.setItem("consent-fixture-ready","1"); } });
+ await page.setViewportSize({width,height:width===320?568:900});
+ await page.route('**/api/privacy/**',r=>r.fulfill({status:200,json:{ok:true}}));
+ await page.route('**/cookie-harness',r=>r.fulfill({contentType:'text/html',body:`<!doctype html><html lang="${locale}"><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body><div id="root"></div></body></html>`}));
+ await page.goto('http://localhost/cookie-harness');
+ await page.addStyleTag({content:css}); await page.addScriptTag({content:script});
+ const banner=page.locator('[data-cookie-banner]');await expect(banner).toBeVisible();
+ expect(await page.evaluate(()=>localStorage.getItem('contratacr:consent:advertising:v1'))).toBeNull();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await banner.getByRole('button',{name:locale==='en'?'Settings':'Configurar',exact:true}).click();
+ const dialog=page.getByRole('dialog');await expect(dialog).toBeVisible();
+ await expect(dialog.getByRole('checkbox')).toHaveCount(2);
+ for(const checkbox of await dialog.getByRole('checkbox').all()) await expect(checkbox).not.toBeChecked();
+ await dialog.getByRole('checkbox').first().check();
+ await dialog.getByRole('button',{name:locale==='en'?'Save preferences':'Guardar preferencias',exact:true}).click();
+ await expect(dialog).not.toBeVisible();await expect(banner).toHaveCount(0);
+ const choices=await page.evaluate(()=>['analytics','advertising'].map(p=>JSON.parse(localStorage.getItem(`contratacr:consent:${p}:v1`)! ).choice));
+ expect(choices).toEqual(['accepted','declined']);
+ await page.locator('main button').click();await expect(dialog).toBeVisible();
+ await expect(dialog.getByRole('checkbox').first()).toBeChecked();
+ await dialog.getByRole('button',{name:locale==='en'?'Only necessary':'Solo necesarias',exact:true}).click();
+ expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('contratacr:consent:analytics:v1')!).choice)).toBe('declined');
+ await page.locator('main button').click();await page.keyboard.press('Escape');await expect(dialog).not.toBeVisible();
+ await page.evaluate(()=>localStorage.clear());await page.reload();await page.addStyleTag({content:css});await page.addScriptTag({content:script});
+ await expect(banner).toBeVisible();
+ await page.screenshot({path:`/tmp/ccr-cookies-${locale}-${width}.png`});
+ await banner.getByRole('button',{name:locale==='en'?'Accept all':'Aceptar todas',exact:true}).click();
+ await expect(banner).toHaveCount(0);
+ expect(await page.evaluate(()=>['analytics','advertising'].map(p=>JSON.parse(localStorage.getItem(`contratacr:consent:${p}:v1`)! ).choice))).toEqual(['accepted','accepted']);
+});
