@@ -130,7 +130,7 @@ for (const [platform, provider] of [["ios", "google"], ["android", "google"], ["
         "@/lib/report-client-error":"export const reportClientError=(_,v)=>window.initQA.reports.push(v.message);",
         "@capacitor/app":"export const App={getInfo:async()=>({build:'16'})};",
         "@capacitor/core":`export const Capacitor={getPlatform:()=>'${platform}'};`,
-        "@capgo/capacitor-social-login":`export const SocialLogin={initialize:()=>{window.initQA.attempts++;return window.initQA.stalled?new Promise(()=>{}):Promise.resolve()},logout:async()=>{},login:()=>window.initQA.providerStalled?new Promise(resolve=>window.initQA.finishProvider=resolve):Promise.resolve({result:{idToken:'synthetic-token'}})};`,
+        "@capgo/capacitor-social-login":`export const SocialLogin={initialize:()=>{window.initQA.attempts++;if(window.initQA.stalled){return new Promise(()=>{});}return Promise.resolve();},logout:async()=>{},login:()=>{if(window.initQA.providerStalled){return new Promise(resolve=>window.initQA.finishProvider=resolve);}return Promise.resolve({result:{idToken:'synthetic-token'}});}};`,
       };
       b.onResolve({filter:/.*/},a=>a.path in mocks?{path:a.path,namespace:"stalled-native"}:undefined);
       b.onLoad({filter:/.*/,namespace:"stalled-native"},a=>({contents:mocks[a.path]}));
