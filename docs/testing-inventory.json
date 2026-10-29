@@ -16981,7 +16981,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 49,
+          "line": 57,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { setAnalytics(readOptionalConsent(\"analytics\") === \"accepted\"); setAdvertising(readOptionalConsent(\"advertising\") === \"accepted\"); setSettings(true); }}",
@@ -16989,7 +16989,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 55,
+          "line": 58,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -16997,7 +16997,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 60,
+          "line": 63,
           "tag": "button",
           "label": "{en ? \"Close\" : \"Cerrar\"}",
           "handler": "{() => setSettings(false)}",
@@ -17005,7 +17005,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 64,
+          "line": 67,
           "tag": "input",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{event => item.change(event.target.checked)}",
@@ -17013,7 +17013,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 66,
+          "line": 69,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => save(analytics, advertising)}",
@@ -17021,7 +17021,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 67,
+          "line": 70,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => save(false, false)}",
@@ -17029,7 +17029,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 68,
+          "line": 71,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setSettings(false)}",
