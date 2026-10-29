@@ -249,7 +249,12 @@ export function NativeBottomNav() {
         entrada = nav.animate([
           { transform: `translate3d(0, ${desde}px, 0)` },
           { transform: `translate3d(0, ${retirada}px, 0)` },
-        ], { duration: animar ? 240 : retirada < desde ? 180 : 220, easing: "cubic-bezier(0.25,0.1,0.25,1)" });
+        ], {
+          // Una subida fuerte puede pedir todo el recorrido en un solo evento.
+          // Mantener una entrada pausada al inicio, independiente de ese delta.
+          duration: animar ? 240 : retirada < desde ? 300 : 220,
+          easing: retirada < desde ? "cubic-bezier(0.42,0,0.58,1)" : "cubic-bezier(0.25,0.1,0.25,1)",
+        });
       }
       const oculta = retirada >= limite;
       nav.inert = oculta;

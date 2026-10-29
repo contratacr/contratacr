@@ -802,13 +802,17 @@ test("native bottom navigation interpolates both directions instead of jumping",
     return { samples, duration };
   }, position);
   const down = await sample(200);
-  const up = await sample(150);
+  // A fast 100px upward event requests the entire reveal in one frame.
+  const up = await sample(100);
   expect(down.samples[0]).toBeCloseTo(0, 1);
   for (let index = 1; index < 5; index++) {
     expect(down.samples[index]).toBeGreaterThan(down.samples[index - 1]);
     expect(up.samples[index]).toBeLessThan(up.samples[index - 1]);
   }
   expect(up.samples[0]).toBeCloseTo(down.samples[4], 1);
-  expect(up.duration).toBeLessThan(down.duration);
-  expect(up.samples[1]).toBeGreaterThan(up.samples[0] * .5);
+  expect(up.duration).toBe(300);
+  // At 75ms at least 80% remains below: no early pop even on a fast flick.
+  expect(up.samples[1]).toBeGreaterThan(up.samples[0] * .8);
+  expect(up.samples[2] / up.samples[0]).toBeCloseTo(.5, 1);
+  expect(up.samples[4]).toBeCloseTo(0, 1);
 });
