@@ -252,8 +252,8 @@ export function NativeBottomNav() {
         ], {
           // Una subida fuerte puede pedir todo el recorrido en un solo evento.
           // Mantener una entrada pausada al inicio, independiente de ese delta.
-          duration: animar ? 240 : retirada < desde ? 300 : 220,
-          easing: retirada < desde ? "cubic-bezier(0.42,0,0.58,1)" : "cubic-bezier(0.25,0.1,0.25,1)",
+          duration: animar ? 240 : retirada < desde ? 300 : 60,
+          easing: retirada < desde ? "cubic-bezier(0.42,0,0.58,1)" : "linear",
         });
       }
       const oculta = retirada >= limite;
