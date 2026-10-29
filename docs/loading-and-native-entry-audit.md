@@ -362,3 +362,27 @@ si el efecto ya se retiró. Ambos motores aprobaron esa prueba y la regresión
 previa de mensajes durante la suscripción (4 casos focales). Tipos, lint,
 textos e inventario aprobaron. Falta la nueva validación integrada de CI;
 no se considera cerrado el chat ni el incidente físico por estos casos focales.
+
+### Compuertas integradas aprobadas; validación física pendiente
+
+El arreglo de autorización previa al primer join (`71627fd1` compartido;
+integración móvil `840d990a`) aprobó las compuertas automáticas, sin reintentos:
+
+- Regresión web `40859122934`: smoke 937 aprobadas y 45 omisiones previstas;
+  Safari 100 aprobadas y 4 omisiones previstas. Los bloques previos 13/88/104
+  también aprobaron y se solapan con el smoke; no sumar como casos únicos.
+- WebView `40859122865`: 228 aprobadas y 4 omisiones previstas. La entrega real
+  de mensajes y el caso nuevo de restauración de credencial aprobaron en ambos
+  motores. Los jobs de simulador iOS y emulador Android fueron omitidos.
+- Seguridad main/test `40859122924` / `40859123898` y Cloudflare
+  main/test/mobile `40859123902` / `40859124026` / `40859122928`: aprobados.
+
+La guía y el avance de marcas, con y sin sesión, quedan conectados a las suites
+web y WebView. Producción y test ya sirvieron cuatro elementos video y ningún
+MP4 como imagen en la comprobación de WebKit con un documento nuevo.
+
+El incidente crítico sigue abierto: falta volver a comprobar el iPhone con el
+documento actualizado, la alternancia real de apps y un inicio de sesión real.
+El dispositivo estaba desconectado al finalizar CI y se solicitó reconectarlo
+cuando sea posible. Android físico tampoco se ha certificado. Este registro
+solo documenta resultados existentes; no solicita repetir las suites aprobadas.
