@@ -275,3 +275,41 @@ aprobación del SHA previo. El iPhone emparejado estaba desconectado y se pidió
 conectarlo para diagnóstico físico. No se tocó ningún simulador de otros trabajos.
 El caso crítico continúa abierto hasta validación física y CI, sin prometer que
 las causas encontradas expliquen todas las pantallas blancas reportadas.
+
+### Investigación física de bloqueo de WebKit — 28 de octubre de 2026
+
+En el iPhone 16 Pro con iOS 26.6.2, la sesión se conservó al instalar una
+compilación Debug como actualización, sin desinstalar ni borrar el contenedor.
+El usuario reprodujo el congelamiento al alternar apps. El Inspector dejó de
+responder incluso a una expresión constante. Dos capturas de pila mostraron el
+hilo principal WebContent esperando `RemoteImageDecoderAVF::createFrameImageAtIndex`
+y el hilo principal GPU esperando `WebCoreDecompressionSession::decodeSampleSync`
+a través de `ImageDecoderAVFObjC`. La guía usaba MP4 dentro de `img` en Safari.
+Esto identifica una ruta de bloqueo físico; no demuestra que explique todos los
+casos de login ni los fallos Android.
+
+El candidato elimina esa ruta y utiliza `video` en todos los motores, mantiene
+las tomas/posters y pausa al ocultarse. El componente real con transporte de
+medios simulado aprobó tres motores y cinco ciclos de ocultar/mostrar por motor,
+verificando pausa, reanudación, pestaña conservada y ausencia de MP4/blob en img.
+En una vista nativa aislada con el componente corregido y los MP4 reales, seis
+cambios físicos Facebook/ContrataCR conservaron respuesta del Inspector y vídeo
+en reproducción. Evidencia local: `/tmp/ccr-guide-physical-cycles.jsonl`.
+La vista aislada no valida la portada completa, autenticación ni Android.
+
+Estado: ABIERTO. Regresión web `40818961240` aprobó el runtime anterior; WebView
+`40818971041` falló dos veces en entrega en tiempo real de chat (198 aprobadas).
+Esos resultados no certifican el candidato actual. Falta resolver el fallo de
+chat, validar integración desplegada y repetir los recorridos físicos completos.
+
+La investigación del chat reprodujo además una ventana sin reconciliación:
+la primera lectura HTTP puede preceder a la confirmación del canal y perder
+inserciones de ese intervalo. Una prueba del efecto real con transporte
+controlado falló en ambos motores antes del cambio y aprobó en ambos después:
+al recibir SUBSCRIBED se actualiza el hilo y se ignoran confirmaciones de
+canales retirados. No establece por sí sola que esta sea la causa de los dos
+fallos anteriores de CI. La aserción de entrega en 15 segundos se conserva y
+adjunta únicamente estados del protocolo, sin payloads ni credenciales, para
+verificarlo en la siguiente ejecución aislada. El candidato final de la guía
+sin autoPlay aprobó otros dos ciclos físicos; siguen siendo una vista aislada,
+no certificación de portada completa, login o Android. El incidente sigue abierto.
