@@ -313,3 +313,12 @@ adjunta únicamente estados del protocolo, sin payloads ni credenciales, para
 verificarlo en la siguiente ejecución aislada. El candidato final de la guía
 sin autoPlay aprobó otros dos ciclos físicos; siguen siendo una vista aislada,
 no certificación de portada completa, login o Android. El incidente sigue abierto.
+
+### Portada y cinta de marcas según sesión
+
+Se añadió una regresión de portada que comprueba el avance de los cuatro juegos
+visibles de marcas en tres intervalos consecutivos, tanto sin iniciar sesión
+como con la cuenta sintética aislada de regresión. La prueba confirma que las
+animaciones Web Animations permanecen activas mientras la cinta está visible;
+se mantiene separada de la comprobación visual de huecos y de las pruebas de
+cambio de app. No reproduce una credencial ni modifica datos de producción.
