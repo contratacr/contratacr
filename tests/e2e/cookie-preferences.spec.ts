@@ -34,6 +34,11 @@ for(const locale of ['es','en']) for(const width of [320,390,768,1440]) test(`co
  const dialog=page.getByRole('dialog');await expect(dialog).toBeVisible();
  if(width===390){expect(await dialog.evaluate(n=>n.scrollHeight<=n.clientHeight)).toBe(true);}
  await expect(dialog.getByRole('button',{name:locale==='en'?'Back':'Volver',exact:true})).toBeVisible();
+ await expect(dialog.getByRole('heading',{level:2})).toBeFocused();
+ expect(await dialog.getByRole('heading',{level:2}).evaluate(n=>getComputedStyle(n).outlineStyle)).toBe('none');
+ const back=dialog.getByRole('button',{name:locale==='en'?'Back':'Volver',exact:true});
+ expect((await back.boundingBox())!.width).toBeLessThan(100);
+
  await page.screenshot({path:`/tmp/ccr-cookie-compact-settings-${locale}-${width}.png`});
 
  await expect(dialog.getByRole('checkbox')).toHaveCount(2);
