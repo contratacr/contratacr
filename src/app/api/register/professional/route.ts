@@ -1,3 +1,4 @@
+import { requestStatisticsAllowed } from "@/lib/privacy/measurement-request";
 import { hasBaseCanton } from "@/lib/location";
 import { recordRegistrationPlatform } from "@/lib/analytics/registration-platform";
 import { recordProfessionalReady } from "@/lib/analytics/professional-growth";
@@ -95,7 +96,7 @@ export async function POST(req: Request) {
   if (limited) return limited;
   try {
     const body = await req.json();
-    const attribution = attributionColumnsFromBody(body.attribution);
+    const attribution = requestStatisticsAllowed(req) ? attributionColumnsFromBody(body.attribution) : null;
     const {
       category,
       professions: bodyProfessions,

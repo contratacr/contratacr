@@ -32,7 +32,7 @@ export async function GET() {
   const admin = createAdminClient();
   // Sin la tabla de citas (borradas el 8-oct-2026): si su consulta fallaba,
   // toda la lista devolvía 500.
-  const [projectsResult, chatsResult, whatsappResult] = await Promise.all([
+  const [projectsResult, chatsResult, whatsappResult, contactResult] = await Promise.all([
     admin
       .from("projects")
       .select("id, accepted_professional_id, status, title, category_id, created_at, updated_at, completed_at, work_done_at")
@@ -48,6 +48,8 @@ export async function GET() {
       .select("professional_id, created_at")
       .eq("viewer_user_id", user.id)
       .in("event_type", CONTACT_EVENT_TYPES),
+    // An actual requested contact remains available even when optional analytics is off.
+    admin.from("whatsapp_contact_followups").select("professional_id, contacted_at").eq("client_id", user.id),
   ]);
 
   if (projectsResult.error) {
@@ -56,6 +58,7 @@ export async function GET() {
   }
 
   const rows = [
+    ...((contactResult.data ?? []) as Array<Record<string, unknown>>).filter(row => !(whatsappResult.data ?? []).some(event => event.professional_id === row.professional_id)).map(row => ({ professionalId: String(row.professional_id ?? ""), source: "contact" as const, status: "contact", title: null as string | null, categoryId: null as string | null, date: String(row.contacted_at ?? "") })),
     ...((projectsResult.data ?? []) as Array<Record<string, unknown>>).map((row) => ({
       professionalId: String(row.accepted_professional_id ?? ""),
       source: "project" as const,

@@ -1,3 +1,4 @@
+import { requestStatisticsAllowed } from "@/lib/privacy/measurement-request";
 import { recordRegistrationPlatform } from "@/lib/analytics/registration-platform";
 import { NextResponse } from "next/server";
 import { mensajeDeError } from "@/lib/api-errors";
@@ -21,7 +22,7 @@ export async function POST(req: Request) {
     // service-request, not signup), and `profiles` has no provincia_id/canton_id
     // columns anyway — never write them here.
     const { fullName, phone, cedula, userId: bodyUserId } = body;
-    const attribution = attributionColumnsFromBody(body.attribution);
+    const attribution = requestStatisticsAllowed(req) ? attributionColumnsFromBody(body.attribution) : null;
     if (typeof fullName !== "string" || !fullName.trim() || typeof phone !== "string" || !/^\d{8,15}$/.test(phone.replace(/\D/g, ""))) {
       return NextResponse.json({ error: mensajeDeError(req, { es: "Completa tu nombre y WhatsApp para continuar.", en: "Enter your name and WhatsApp number to continue." }) }, { status: 400 });
     }

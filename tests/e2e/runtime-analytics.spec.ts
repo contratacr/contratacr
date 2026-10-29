@@ -18,7 +18,7 @@ test("journey drains all bounded batches after navigation even when a send is in
   const sent: { events: { id: string }[] }[] = [];
   let release!: () => void;
   const blocked = new Promise<void>(resolve => { release = resolve; });
-  const mocks: Record<string, unknown> = { react: { useEffect: (fn: () => void) => effects.push(fn) }, "next/navigation": { usePathname: () => "/" }, "@/hooks/use-auth": { useAuth: () => ({ user: null }) }, "@/lib/analytics/trafico-automatizado": { esNavegadorAutomatizado: () => false }, "@/lib/analytics/platform-client": { syncAnalyticsPlatform: () => {} }, "@/lib/analytics/journey-contract": { routeSection: () => "home", buttonTarget: () => "save" } };
+  const mocks: Record<string, unknown> = { "@/lib/privacy/optional-consent": {analyticsMeasurementEnabled:()=>true,advertisingMeasurementEnabled:()=>false,subscribeOptionalConsent:()=>()=>{}}, react: { useSyncExternalStore: (_subscribe: unknown, snapshot: () => boolean) => snapshot(), useEffect: (fn: () => void) => effects.push(fn) }, "next/navigation": { usePathname: () => "/" }, "@/hooks/use-auth": { useAuth: () => ({ user: null }) }, "@/lib/analytics/trafico-automatizado": { esNavegadorAutomatizado: () => false }, "@/lib/analytics/platform-client": { syncAnalyticsPlatform: () => {} }, "@/lib/analytics/journey-contract": { routeSection: () => "home", buttonTarget: () => "save" } };
   const box = { exports: {} as { JourneyCapture: () => null } };
   runInNewContext(source, { module: box, exports: box.exports, require: (name: string) => mocks[name], document: surface, window: surface, Element: ElementStub, HTMLElement: ElementStub, HTMLAnchorElement: AnchorStub, HTMLFormElement: FormStub, HTMLInputElement: InputStub, HTMLSelectElement: SelectStub, crypto: webcrypto, clearInterval: () => {}, fetch: async (_url: string, options: { body: string }) => { sent.push(JSON.parse(options.body)); if (sent.length === 1) await blocked; return { ok: true }; } });
   box.exports.JourneyCapture();
@@ -52,12 +52,12 @@ test("warm navigation, sign-in, resume and StrictMode do not duplicate usage; ex
   const DateShim = class extends Date { static now() { return now; } };
   const source = ts.transpileModule(readFileSync("src/components/analytics/usage-capture.tsx","utf8"), { fileName: "usage-capture.tsx", compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX } }).outputText;
   const moduleBox = { exports: {} as { UsageCapture: () => null } };
-  const mocks: Record<string, unknown> = {
+  const mocks: Record<string, unknown> = { "@/lib/privacy/optional-consent": {analyticsMeasurementEnabled:()=>true,advertisingMeasurementEnabled:()=>false,subscribeOptionalConsent:()=>()=>{}},
     "@/lib/analytics/platform": { isNativeAnalyticsRuntime },
     "react/jsx-runtime": { jsx: () => null },
     "./journey-capture": { JourneyCapture: () => null },
     "@/lib/analytics/native-measurement": { setNativeMeasurementActor: () => {}, configureNativeMeasurement: async () => {} },
-    react: { useEffect: (fn: () => void) => effects.push(fn), useRef: () => ref },
+    react: { useSyncExternalStore: (_subscribe: unknown, snapshot: () => boolean) => snapshot(), useEffect: (fn: () => void) => effects.push(fn), useRef: () => ref },
     "next/navigation": { usePathname: () => path, useSearchParams: () => new URLSearchParams({ tab, code: "private-code", email: "private@example.com" }) },
     "@/hooks/use-auth": { useAuth: () => ({ user }) },
     "@/hooks/use-native-app": { useNativeApp: () => true },
@@ -89,6 +89,7 @@ test("warm navigation, sign-in, resume and StrictMode do not duplicate usage; ex
 
 for (const runtime of ["web", "android", "ios"] as const) {
   test(`browser records usage classified as ${runtime}`, async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("contratacr:consent:analytics:v1",JSON.stringify({version:"2026-10-29",choice:"accepted",at:new Date().toISOString()})));
     const requests: { body: { path: string; session: string }; cookie: string }[] = [];
     await page.route("**/api/analytics/usage", async route => {
       // WebKit omits Cookie from intercepted request headers. Read the
@@ -141,7 +142,7 @@ test("analytics resolves the authenticated actor and excludes admins or unknown 
     reads++;
     return { data: failed ? null : { role: id === "admin-account" ? "admin" : "client" }, error: failed ? { message: "unavailable" } : null };
   } }) };
-  const mocks: Record<string, unknown> = {
+  const mocks: Record<string, unknown> = { "@/lib/privacy/optional-consent": {analyticsMeasurementEnabled:()=>true,advertisingMeasurementEnabled:()=>false,subscribeOptionalConsent:()=>()=>{}},
     "@/lib/supabase/admin": { createAdminClient: () => ({ from: () => profiles }) },
     "@/lib/supabase/server": { createClient: async () => ({}) },
     "@/lib/supabase/get-user": { safeGetUser: async () => sessionUser },

@@ -1,3 +1,4 @@
+import { CookiePreferences } from "@/components/privacy/cookie-preferences";
 import { SmartAppBanner } from "@/components/mobile/smart-app-banner";
 import { smartAppBannerContent, prefersNativeIosAppBanner } from "@/lib/mobile/smart-app-banner";
 import { getSessionMfa } from "@/lib/auth/session-mfa";
@@ -202,6 +203,7 @@ export default async function LocaleLayout({
       <AuthProvider initialUser={initialUser} initialAvatarUrl={initialAvatarUrl} initialAccountName={initialAccountName} initialNotificationUnread={initialNotificationUnread} initialHasProfessionalProfile={initialHasProfessionalProfile} initialSavedKeys={initialSavedKeys}>
         <DocumentLocale locale={locale} />
         <OptionalChoiceRecorder />
+        <CookiePreferences />
         <ViewportEnvironment />
         <MobileAppBridge />
         <NativeFirstRunOnboarding />

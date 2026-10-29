@@ -23,6 +23,7 @@ export default defineConfig({
     "**/native-edge-back.spec.ts",
     "**/native-home-paint.spec.ts",
     "**/landing-media-budget.spec.ts",
+    "**/cookie-preferences.spec.ts",
     "**/app-download.spec.ts",
     "**/marketplace-editors.spec.ts",
   ],

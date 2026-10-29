@@ -18,12 +18,15 @@ for (const locale of ["es","en"]) test(`legal documents: ${locale} identifies th
  await expect(page.locator("main")).toContainText(locale==="es"?"cinco días hábiles":"five business days");
  await expect(page.locator("main")).toContainText("PRODHAB");
  await expect(page.locator("main")).toContainText(locale === "es" ? "no equivale a estadísticas anónimas" : "it is not anonymous statistics");
- await expect(page.locator("main")).toContainText(locale === "es" ? "reintentamos la solicitud" : "we retry");
+ await expect(page.locator("main")).toContainText(locale === "es" ? "se reintenta al reconectar" : "retry on reconnection");
 });
 
-test("privacy remains accessible without advertising controls",async({page})=>{
+test("privacy provides a permanent way to change optional choices",async({page})=>{
  await gotoOK(page,"/privacidad");await waitForInteractivePage(page);
- await expect(page.locator('[data-advertising-preferences], [data-ai-consent]')).toHaveCount(0);
+ await expect(page.locator('main [data-advertising-preferences] button')).toBeVisible();
+ await page.locator('main [data-advertising-preferences] button').click();
+ await expect(page.getByRole('dialog',{name:'Preferencias de privacidad'})).toBeVisible();
+ await expect(page.locator('[data-ai-consent]')).toHaveCount(0);
 });
 
 test("native local answers require no external AI permission",async({request})=>{
@@ -83,12 +86,13 @@ test("native assistant sends a prompt without an extra permission step",async({p
 for(const locale of ["es","en"]) test(`login keeps the existing legal disclosure before continuing (${locale})`,async({page})=>{
  await gotoOK(page,locale === "en" ? "/en/login" : "/login");
  const main=page.locator("main");
- await expect(main).toContainText(locale === "en" ? "By continuing, you accept" : "Al continuar, aceptas");
+ await expect(main).toContainText(locale === "en" ? "Consult our" : "Consulta nuestros");
  await expect(main.getByRole("link",{name:locale === "en" ? "Terms" : "Términos",exact:true})).toHaveAttribute("href",/terminos/);
  await expect(main.getByRole("link",{name:locale === "en" ? "Privacy Policy" : "Política de Privacidad",exact:true})).toHaveAttribute("href",/privacidad/);
 });
 
-for (const native of [false, true]) test(`${native ? "native" : "web"}: no automatic advertising or terms notice on entry`, async ({ page, context, baseURL }) => {
+for (const native of [false, true]) test(`${native ? "native" : "web"}: optional consent notice never implies acceptance of terms on entry`, async ({ page, context, baseURL }) => {
+ await page.addInitScript(()=>{ localStorage.removeItem("contratacr:consent:analytics:v1"); localStorage.removeItem("contratacr:consent:advertising:v1"); });
  if(native) {
   await context.addCookies([{name:"ccr_platform",value:"native",url:baseURL!}]);
   await page.addInitScript(()=>localStorage.setItem("ccr:native-first-run-onboarding:v12","1"));
@@ -97,8 +101,9 @@ for (const native of [false, true]) test(`${native ? "native" : "web"}: no autom
  page.on("request", request => { if (/connect\.facebook\.net|www\.facebook\.com\/tr/.test(request.url())) trackingRequests.push(request.url()); });
  for(const route of ["/profesionales", "/login", "/registro/cliente"]) {
   await gotoOK(page,route);await waitForInteractivePage(page);
-  await expect(page.locator("[data-advertising-preferences], [data-legal-acceptance]")).toHaveCount(0);
-  expect((await context.cookies()).find(cookie=>cookie.name==="ccr_ads_consent_v1")?.value).not.toBe("accepted");
+  await expect(page.locator("[data-legal-acceptance]")).toHaveCount(0);
+  await expect(page.locator("[data-cookie-banner]")).toBeVisible();
+  expect((await context.cookies()).find(cookie=>cookie.name==="ccr_ads_consent_v2")?.value).not.toBe("accepted");
  }
  expect(trackingRequests).toEqual([]);
  expect(await page.evaluate(()=>localStorage.getItem("contratacr:consent:advertising:v1"))).toBeNull();

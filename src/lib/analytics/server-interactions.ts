@@ -1,3 +1,4 @@
+import { requestStatisticsAllowed } from "@/lib/privacy/measurement-request";
 import { analyticsActor } from "@/lib/analytics/admin-activity";
 import { requestAnalyticsPlatform } from "./platform";
 import { peticionAutomatizada } from "@/lib/analytics/trafico-automatizado";
@@ -25,7 +26,7 @@ function hashStable(value: string) {
 }
 
 export async function recordServerInteraction(admin: AdminClient, req: NextRequest, input: ServerInteractionInput) {
-  if (peticionAutomatizada(req)) return;
+  if (!requestStatisticsAllowed(req) || peticionAutomatizada(req)) return;
   try {
     const actor = await analyticsActor(input.viewerUserId);
     if (actor.excluded) return;

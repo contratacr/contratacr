@@ -4,6 +4,7 @@ test('batched journey events omit typed email and password and show no new dialo
  const host=new URL(baseURL!).hostname;
  test.skip(!["localhost","127.0.0.1","test.contratacr.com"].includes(host),"Analytics collection tests are isolated from production.");
  await context.clearCookies();
+ await page.addInitScript(()=>{ for(const p of ["analytics","advertising"]) localStorage.setItem(`contratacr:consent:${p}:v1`,JSON.stringify({version:"2026-10-29",choice:p==="analytics"?"accepted":"declined",at:new Date().toISOString()})); });
  await page.addInitScript(()=>Object.defineProperty(navigator,'webdriver',{get:()=>false}));
  const bodies:string[]=[];
  await page.route('**/api/analytics/journey',async route=>{bodies.push(route.request().postData()||'');await route.fulfill({status:204});});

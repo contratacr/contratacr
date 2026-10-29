@@ -1,3 +1,4 @@
+import { analyticsMeasurementEnabled } from "@/lib/privacy/optional-consent";
 // Preserve the first available marketing touch separately from the most recent
 // explicit campaign. Existing callers keep reading the recent record; actions
 // also carry the original touch, so returning users can be attributed without
@@ -51,7 +52,7 @@ function deriveSource(params: URLSearchParams, referrerHost: string | null): { s
 }
 
 export function readAttribution(): Attribution | null {
-  if (typeof window === "undefined") return null;
+  if (typeof window === "undefined" || !analyticsMeasurementEnabled()) return null;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
@@ -72,7 +73,7 @@ export function readAttribution(): Attribution | null {
 // unless THIS visit carries explicit campaign parameters — a paid click must
 // not be credited to an older organic visit.
 export function captureAttribution(): Attribution | null {
-  if (typeof window === "undefined") return null;
+  if (typeof window === "undefined" || !analyticsMeasurementEnabled()) return null;
   try {
     const params = new URLSearchParams(window.location.search);
     const utmSource = clean(params.get("utm_source"));

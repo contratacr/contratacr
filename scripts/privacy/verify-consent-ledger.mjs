@@ -9,6 +9,7 @@ grant usage on schema auth to authenticated; grant execute on function auth.uid(
 create function public.session_mfa_satisfied() returns boolean language sql stable as $$ select coalesce(current_setting('test.mfa',true),'ok') <> 'blocked' $$;
 create function public.enforce_session_mfa() returns void language plpgsql as $$ begin if not public.session_mfa_satisfied() then raise insufficient_privilege; end if; end $$;`);
 await db.exec(fs.readFileSync(new URL('../../supabase/migrations/248_consentimientos_versionados.sql', import.meta.url),'utf8'));
+await db.exec(fs.readFileSync(new URL('../../supabase/migrations/255_eleccion_estadisticas_y_publicidad.sql', import.meta.url),'utf8'));
 const first='00000000-0000-4000-8000-000000000001',second='00000000-0000-4000-8000-000000000002';
 await db.query(`insert into auth.users(id,raw_user_meta_data) values ($1,$2),($3,'{}')`,[first,JSON.stringify({legal_acceptance:{version:'2026-10-19',accepted:true,locale:'es'}}),second]);
 assert.equal((await db.query(`select count(*)::int as n from privacy_choices`)).rows[0].n,1);
@@ -19,6 +20,8 @@ const original=await record('marketing',true);assert.equal(await record('marketi
 assert.notEqual(await record('marketing',false),original);
 assert.equal((await db.query(`select accepted from privacy_choices where purpose='marketing' order by id desc limit 1`)).rows[0].accepted,false);
 await assert.rejects(db.query(`insert into privacy_choices(user_id,purpose,accepted,version,privacy_version,locale,channel) values('${first}','marketing',true,'2026-10-19','2026-10-19','es','web')`));
+await record('analytics',true); await record('advertising',false);
+assert.deepEqual((await db.query("select purpose,version from privacy_choices where purpose in ('analytics','advertising') order by purpose")).rows,[{purpose:'advertising',version:'2026-10-29'},{purpose:'analytics',version:'2026-10-29'}]);
 await assert.rejects(record('anything',true));
 await db.exec(`select set_config('test.mfa','blocked',false)`);
 assert.equal((await db.query('select count(*)::int as n from privacy_choices')).rows[0].n,0);

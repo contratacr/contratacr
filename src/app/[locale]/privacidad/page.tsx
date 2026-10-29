@@ -1,4 +1,5 @@
-const PRIVACY_DATE = { es: "22 de octubre de 2026", en: "October 22, 2026" };
+const PRIVACY_DATE = { es: "29 de octubre de 2026", en: "October 29, 2026" };
+import { AdvertisingPreferences } from "@/components/privacy/advertising-preferences";
 import { Link } from "@/i18n/navigation";
 import { LegalDocument, type LegalSection } from "@/components/legal/legal-document";
 import { imagenSocial } from "@/lib/seo/imagen-social";
@@ -190,7 +191,7 @@ const ES_SECTIONS: LegalSection[] = [
     "body": [
       {
         "k": "p",
-        "text": "Usamos cookies y almacenamiento necesarios para sesión, idioma, seguridad y preferencias. También registramos actividad interna para operar, diagnosticar y mejorar ContrataCR. Esto se distingue de la medición publicitaria de terceros."
+        "text": "Usamos cookies y almacenamiento necesarios para sesión, idioma, seguridad y guardar sus preferencias. Solo necesarias mantiene los registros imprescindibles para prestar el servicio, proteger cuentas y atender obligaciones; no activa estadísticas opcionales ni publicidad. Las estadísticas de uso y la medición con Meta tienen opciones independientes, inicialmente desactivadas."
       },
       {
         "k": "p",
@@ -198,7 +199,7 @@ const ES_SECTIONS: LegalSection[] = [
       },
       {
         "k": "p",
-        "text": "La medición limitada está activada en web y en las versiones móviles compatibles salvo que exista un rechazo guardado. Puede solicitar la desactivación de la medición publicitaria mediante nuestros canales de contacto, sin bloquear el servicio. Conservamos los rechazos ya registrados. No mostramos una ventana automática ni interpretamos esta configuración como una aceptación expresa. Desactivarla detiene los envíos de este dispositivo inmediatamente y solicita cancelar las conversiones pendientes asociadas en nuestro servidor. Si no hay conexión, reintentamos la solicitud al reconectar o volver a abrir la aplicación. No puede retirarse con certeza un envío ya en curso ni se borran automáticamente datos que Meta haya recibido."
+        "text": "Estadísticas y medición publicitaria están desactivadas hasta que usted las acepte por separado. El aviso ofrece Aceptar todas, Solo necesarias y Configurar, también en móvil. Puede cambiar su elección desde Configurar cookies y privacidad en el pie del sitio o esta política. La elección se guarda en este navegador o app durante un máximo de 180 días; no se interpreta el silencio como aceptación. Retirar publicidad detiene nuevos envíos y solicita cancelar conversiones pendientes. Sin conexión se reintenta al reconectar. No se pueden recuperar envíos ya en curso ni borrar automáticamente datos recibidos por Meta. Estos permisos son independientes de términos, correos promocionales, IA y permisos del sistema operativo."
       },
       {
         "k": "p",
@@ -470,7 +471,7 @@ const EN_SECTIONS: LegalSection[] = [
     "body": [
       {
         "k": "p",
-        "text": "Necessary cookies and storage support sessions, language, security and preferences. Internal activity is also recorded to operate, diagnose and improve ContrataCR. This is separate from third-party advertising measurement."
+        "text": "Necessary cookies and storage support sessions, language, security and saving your choices. Only necessary retains records essential to provide the service, protect accounts and meet obligations; it does not enable optional statistics or advertising. Usage statistics and Meta measurement have separate choices, initially off."
       },
       {
         "k": "p",
@@ -478,7 +479,7 @@ const EN_SECTIONS: LegalSection[] = [
       },
       {
         "k": "p",
-        "text": "Limited measurement is enabled on the web and compatible mobile versions unless a saved rejection exists. You may request deactivation through our contact channels without losing access. We honour previously saved rejections. We show no automatic prompt and do not treat this setting as express acceptance. Disabling stops delivery from this device immediately and requests cancellation of associated pending conversions on our server. If offline, we retry when reconnecting or reopening the application. An already in-flight delivery cannot reliably be recalled, and data already received by Meta is not automatically erased."
+        "text": "Statistics and advertising measurement remain off until you accept each purpose. The notice offers Accept all, Only necessary and Settings, including on mobile. Change your choice through Cookie and privacy settings in the site footer or this policy. Choices last up to 180 days in this browser or app; silence is not acceptance. Withdrawing advertising stops new deliveries and requests cancellation of pending conversions. Offline requests retry on reconnection. In-flight deliveries cannot be recalled and data received by Meta is not automatically erased. These permissions are separate from terms, marketing emails, AI and operating-system permissions."
       },
       {
         "k": "p",
@@ -612,10 +613,12 @@ export default async function PrivacidadPage({ params }: { params: Promise<{ loc
       sections={en ? EN_SECTIONS : ES_SECTIONS}
       footer={en ? (
         <div>
+          <AdvertisingPreferences />
           Review our <Link href="/terminos" className="font-semibold text-[#0089BB] hover:underline">Terms and Conditions</Link>.
         </div>
       ) : (
         <div>
+          <AdvertisingPreferences />
           Revise nuestros <Link href="/terminos" className="font-semibold text-[#0089BB] hover:underline">Términos y Condiciones</Link>.
         </div>
       )}

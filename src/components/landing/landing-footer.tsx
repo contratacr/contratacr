@@ -1,5 +1,6 @@
 "use client";
 
+import { AdvertisingPreferences } from "@/components/privacy/advertising-preferences";
 import { useState, useSyncExternalStore } from "react";
 import { ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -153,6 +154,7 @@ export function LandingFooter() {
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
             <Link href="/terminos" className="text-xs text-[#162543] hover:text-[#0083b0] transition-colors">{t("terms")}</Link>
             <Link href="/privacidad" className="text-xs text-[#162543] hover:text-[#0083b0] transition-colors">{t("privacy")}</Link>
+            <AdvertisingPreferences />
           </div>
         </div>
       </div>

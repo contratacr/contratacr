@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { captureAttribution, readAttribution } from "@/lib/analytics/attribution";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { APP_RESUME_EVENT } from "@/lib/app-events";
 import { useAuth } from "@/hooks/use-auth";
 
-import { retryAdvertisingWithdrawal, subscribeOptionalConsent, syncAdvertisingCookie } from "@/lib/privacy/optional-consent";
+import { retryStatisticsCleanup, retryAdvertisingWithdrawal, subscribeOptionalConsent, syncAdvertisingCookie, syncAnalyticsCookie, analyticsMeasurementEnabled } from "@/lib/privacy/optional-consent";
 
 const CLAIMED_KEY = "contratacr:attribution-claimed";
 
@@ -16,6 +16,7 @@ const CLAIMED_KEY = "contratacr:attribution-claimed";
 // server so accounts created outside /api/register/* (Google/Apple sign-in,
 // onboarding, native app) are attributed too. First-party, no third-party script.
 export function AttributionCapture() {
+  const consent = useSyncExternalStore(subscribeOptionalConsent, analyticsMeasurementEnabled, () => false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { user } = useAuth();
@@ -24,10 +25,10 @@ export function AttributionCapture() {
   useEffect(() => {
     captureAttribution();
     syncAdvertisingCookie();
-  }, [pathname, searchParams]);
+  }, [pathname, searchParams, consent]);
 
   useEffect(() => {
-    const retry = () => { syncAdvertisingCookie(); void retryAdvertisingWithdrawal(); };
+    const retry = () => { syncAdvertisingCookie(); syncAnalyticsCookie(); void retryAdvertisingWithdrawal(); void retryStatisticsCleanup(); };
     retry();
     const unsubscribe = subscribeOptionalConsent(retry);
     window.addEventListener("online", retry);
@@ -48,6 +49,7 @@ export function AttributionCapture() {
   // escribía. Los demás eventos de la visita comparten la misma cookie
   // (visitor_hash), así que con este primero se sigue su recorrido.
   useEffect(() => {
+    if (!analyticsMeasurementEnabled()) return;
     const medio = searchParams.get("utm_medium");
     if (medio !== "campana" && medio !== "paid") return;
     const campana = (searchParams.get("utm_campaign") ?? "").slice(0, 100) || "sin_nombre";
@@ -58,7 +60,7 @@ export function AttributionCapture() {
     } catch { /* sin almacenamiento se registra igual, como mucho dos veces */ }
     const contenido = (searchParams.get("utm_content") ?? "").slice(0, 100) || null;
     void trackInteraction({ type: "campaign_click", source: "api", metadata: { campana, medio, contenido, ruta: pathname } });
-  }, [pathname, searchParams]);
+  }, [pathname, searchParams, consent]);
 
   useEffect(() => {
     if (!user || claiming.current) return;
@@ -77,7 +79,7 @@ export function AttributionCapture() {
       .then(() => { try { window.sessionStorage.setItem(CLAIMED_KEY, user.id); } catch { /* ignore */ } })
       .catch(() => { /* best-effort */ })
       .finally(() => { claiming.current = false; });
-  }, [user]);
+  }, [user, consent]);
 
   return null;
 }

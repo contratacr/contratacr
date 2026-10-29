@@ -4,10 +4,12 @@ import { posix } from 'node:path';
 const require = createRequire(import.meta.url);
 const ts = require(process.env.CI_TYPESCRIPT_MODULE || 'typescript');
 // Configuration outside this reviewed resolver can add invisible consumers.
+// 2026-10-29 review: necessary-only storage fixture and consent UI spec.
+// No resolver, setup hooks, engines or executable source imports changed.
 export const reviewedConfiguration = {
   'next.config.ts': '21877a39357bf08af41303110cb1aa76b2d7bf42',
-  'playwright.config.ts': '8b5fb8f000ec4f7a06712557bf2c37a29386c3b2',
-  'playwright.mobile.config.ts': '462f6aabe45a0657fa7a69601599c7f0e0d90af3',
+  'playwright.config.ts': '222b8d6fd13d98030afd527b35e5de1cb4396b02',
+  'playwright.mobile.config.ts': '965ffec956c9f1833e5e1e83659edc9ec5c999df',
 };
 const configCode = p => /^(?:next|playwright(?:\.mobile)?)\.config\.[cm]?[jt]s$/.test(p);
 const analyzedCode = p => /^(src\/|tests\/e2e\/)/.test(p) || configCode(p);
@@ -90,7 +92,7 @@ export function dependencyGraph(files) {
     if(file.mode&& !['100644','100755'].includes(file.mode)&&(path.startsWith('src/')||configInput(path)))uncertainties.push(`Unreviewed non-regular source/config input: ${path}`);
     // Both sides of a change are analyzed. The previous mobile config differs
     // only by the reviewed media-spec inclusion and remains a known resolver.
-    const previousMobileConfig = path === 'playwright.mobile.config.ts' && file.hash === '00e8e54e0b45bbeda6905ea11dec97f7fcdca13b';
+    const previousMobileConfig = (path === 'playwright.mobile.config.ts' && ['00e8e54e0b45bbeda6905ea11dec97f7fcdca13b','462f6aabe45a0657fa7a69601599c7f0e0d90af3'].includes(file.hash)) || (path === 'playwright.config.ts' && file.hash === '8b5fb8f000ec4f7a06712557bf2c37a29386c3b2');
     if(configCode(path)&&file.hash!==reviewedConfiguration[path]&&!previousMobileConfig)uncertainties.push(`Unreviewed resolver/runner configuration: ${path}`);
     if(configCode(path)) {
       globalEntries.add(path);
