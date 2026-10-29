@@ -22601,6 +22601,7 @@
         "tests/e2e/meta-growth-runtime.spec.ts",
         "tests/e2e/mobile-native-shell.spec.ts",
         "tests/e2e/native-link-launch.spec.ts",
+        "tests/e2e/native-social-access.spec.ts",
         "tests/e2e/navbar-brand-consistency.spec.ts",
         "tests/e2e/runtime-analytics.spec.ts",
         "tests/e2e/search-offer-loading.spec.ts"
@@ -25751,6 +25752,10 @@
         {
           "line": 85,
           "title": "\"Play build 14 explains the Apple update requirement without leaving the app\""
+        },
+        {
+          "line": 122,
+          "title": "`${platform} ${provider}: stalled native initialization releases login and allows retry`"
         }
       ]
     },

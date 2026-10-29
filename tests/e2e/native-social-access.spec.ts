@@ -117,3 +117,43 @@ test("Play build 14 explains the Apple update requirement without leaving the ap
   await expect(page).toHaveURL(/\/login$/);
   expect(browserOAuth).toBe(0);
 });
+
+for (const [platform, provider] of [["ios", "google"], ["android", "google"], ["ios", "apple"]]) {
+  test(`${platform} ${provider}: stalled native initialization releases login and allows retry`, async ({ page }) => {
+    const { build } = await import("esbuild");
+    const bundle = await build({stdin:{resolveDir:process.cwd(),loader:"ts",contents:`
+      import{nativeSocialSignIn}from'./src/lib/auth/native-social-login';
+      window.initQA={stalled:true,attempts:0,exchanges:0,state:'idle',reports:[]};
+      window.startNative=()=>{window.initQA.state='pending';nativeSocialSignIn('${provider}',{auth:{signInWithIdToken:async()=>{window.initQA.exchanges++;return{error:null}}}}).then(v=>window.initQA.state=v).catch(()=>window.initQA.state='error');};`},bundle:true,write:false,platform:"browser",format:"iife",define:{"process.env":'{}',"process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID":'"test-client"',"process.env.NEXT_PUBLIC_GOOGLE_IOS_CLIENT_ID":'"test-ios"'},plugins:[{name:"stalled-native",setup(b){
+      const mocks: Record<string,string> = {
+        "@/hooks/use-native-app":"export const isNativeAppRuntime=()=>true;",
+        "@/lib/report-client-error":"export const reportClientError=(_,v)=>window.initQA.reports.push(v.message);",
+        "@capacitor/app":"export const App={getInfo:async()=>({build:'16'})};",
+        "@capacitor/core":`export const Capacitor={getPlatform:()=>'${platform}'};`,
+        "@capgo/capacitor-social-login":`export const SocialLogin={initialize:()=>{window.initQA.attempts++;return window.initQA.stalled?new Promise(()=>{}):Promise.resolve()},logout:async()=>{},login:()=>window.initQA.providerStalled?new Promise(resolve=>window.initQA.finishProvider=resolve):Promise.resolve({result:{idToken:'synthetic-token'}})};`,
+      };
+      b.onResolve({filter:/.*/},a=>a.path in mocks?{path:a.path,namespace:"stalled-native"}:undefined);
+      b.onLoad({filter:/.*/,namespace:"stalled-native"},a=>({contents:mocks[a.path]}));
+    }}]});
+    await page.route("**/native-initialize-harness",r=>r.fulfill({contentType:"text/html",body:"<!doctype html><main>Login harness</main>"}));
+    await page.goto("/native-initialize-harness");
+    await page.clock.install();
+    await page.addScriptTag({content:bundle.outputFiles[0].text});
+    const state = () => page.evaluate(()=>(window as unknown as {initQA:{state:string}}).initQA.state);
+    await page.evaluate(()=>(window as unknown as {startNative:()=>void}).startNative());
+    await expect.poll(()=>page.evaluate(()=>(window as unknown as {initQA:{attempts:number}}).initQA.attempts)).toBe(1);
+    await page.clock.fastForward(10_001);
+    await expect.poll(state).toBe("error");
+    expect(await page.evaluate(()=>(window as unknown as {initQA:{exchanges:number}}).initQA.exchanges)).toBe(0);
+    await page.evaluate(()=>{const w=window as unknown as {initQA:{stalled:boolean};startNative:()=>void};w.initQA.stalled=false;w.startNative();});
+    await expect.poll(state).toBe("signed-in");
+    expect(await page.evaluate(()=>(window as unknown as {initQA:{exchanges:number}}).initQA.exchanges)).toBe(1);
+    // The deadline must not interrupt a person choosing an account.
+    await page.evaluate(()=>{const w=window as unknown as {initQA:{providerStalled:boolean};startNative:()=>void};w.initQA.providerStalled=true;w.startNative();});
+    await expect.poll(()=>page.evaluate(()=>typeof (window as unknown as {initQA:{finishProvider:unknown}}).initQA.finishProvider)).toBe("function");
+    await page.clock.fastForward(120_000);
+    expect(await state()).toBe("pending");
+    await page.evaluate(()=>(window as unknown as {initQA:{finishProvider:(value:unknown)=>void}}).initQA.finishProvider({result:{idToken:"synthetic-token"}}));
+    await expect.poll(state).toBe("signed-in");
+  });
+}

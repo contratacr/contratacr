@@ -251,3 +251,27 @@ Video de referencia de navegación: muestreo cada 25 ms entre 1,85 y 2,43 s mues
 entrada visible aproximadamente 1,85–2,00 s; no es medición de constantes internas
 de Facebook. Ajuste compartido: ocultación60 ms y entrada160 ms con inicio gradual.
 Pruebas verifican posiciones intermedias y gesto rápido, no solo estado final.
+
+### Continuación de investigación — 28-oct-2026, Costa Rica
+
+La comprobación desplegada de lectura en producción/test pasó en Chromium y
+WebKit móviles para login/búsqueda, diez vueltas rápidas por recorrido. Login
+conservó el texto sin enviarlo; no había cubierta ni body inert/position fixed,
+y health respondió200. Evidencia local `/tmp/ccr-live-resume-proof.json`.
+Esto no es autenticación real ni suspensión física del proceso.
+
+Otro bloqueo reproducido: `SocialLogin.initialize()` sin respuesta dejaba pendiente
+la operación de login. Ahora ese paso técnico tiene plazo10s, diagnóstico de
+categoría fija y permite reintentar. La hoja interactiva de selección de cuenta no
+tiene ese plazo. Seis casos en Chromium/WebKit cubren Google Android/iOS y Apple
+iOS, inicialización colgada, reintento y selección de cuenta prolongada120s.
+No se alteró el flujo PKCE distinto de Apple Android. Logs `/tmp/ccr-init-before.log`
+(fallo esperado pending), `/tmp/ccr-init-after.log` (corrección). Tipos/lint pass.
+
+Al registrar esta continuación los CI web40818961240 y mobile40818971041 de
+`f2c3ea2d`/`bb69e836` siguen en ejecución. Seguridad y Cloudflare aprobaron.
+El arreglo adicional debe pasar sus propias compuertas tras publicarse; no hereda
+aprobación del SHA previo. El iPhone emparejado estaba desconectado y se pidió
+conectarlo para diagnóstico físico. No se tocó ningún simulador de otros trabajos.
+El caso crítico continúa abierto hasta validación física y CI, sin prometer que
+las causas encontradas expliquen todas las pantallas blancas reportadas.

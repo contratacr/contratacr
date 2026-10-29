@@ -1,6 +1,7 @@
 import { ANDROID_OAUTH_RETURN_ORIGIN, ANDROID_OAUTH_RETURN_PATH, readAndroidOAuthReturn } from "@/lib/auth/android-oauth-return";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isNativeAppRuntime } from "@/hooks/use-native-app";
+import { withPromiseTimeout } from "@/lib/promise-timeout";
 import { reportClientError } from "@/lib/report-client-error";
 
 // Google and iOS Apple exchange native ID tokens directly with Supabase.
@@ -25,6 +26,7 @@ let initializationFailure = "unknown";
 // the phone's console.
 function failureCategory(error: unknown) {
   const message = String((error as { message?: string })?.message ?? error).toLowerCase();
+  if (/native-initialize-timeout/.test(message)) return "native-timeout";
   if (/url scheme|urlscheme/.test(message)) return "url-scheme";
   if (/no credential|no credentials/.test(message)) return "no-credentials";
   if (/developer console|sha.?1|oauth.*config/.test(message)) return "provider-configuration";
@@ -59,18 +61,18 @@ function ensureInitialized() {
       // Android validates the Apple block eagerly (it needs the Services ID and
       // redirect URL), so an unconfigured Apple must not take Google down with it.
       const appleConfigured = platform === "ios" || (Boolean(APPLE_SERVICES_ID) && Boolean(APPLE_REDIRECT_URL));
-      await SocialLogin.initialize({
+      await withPromiseTimeout(SocialLogin.initialize({
         ...(GOOGLE_WEB_CLIENT_ID
           ? { google: { webClientId: GOOGLE_WEB_CLIENT_ID, iOSClientId: GOOGLE_IOS_CLIENT_ID || undefined, mode: "online" as const } }
           : {}),
         ...(appleConfigured
           ? { apple: { clientId: APPLE_SERVICES_ID || undefined, redirectUrl: APPLE_REDIRECT_URL || undefined } }
           : {}),
-      });
+      }), 10_000, "native-initialize-timeout");
       return true;
     })().catch((error) => {
-      console.warn("[native-auth] plugin initialization failed:", error);
       initializationFailure = failureCategory(error);
+      console.warn("[native-auth] plugin initialization failed:", initializationFailure);
       initialization = null;
       return false;
     });
