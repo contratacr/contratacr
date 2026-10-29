@@ -15,6 +15,13 @@ vm.runInNewContext(ts.transpileModule(readFileSync(new URL("../src/lib/auth/andr
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
 }).outputText, { exports: returnExports, URL, URLSearchParams, Response });
 
+// Use the real timeout boundary imported by native-social-login. Keeping the
+// dependency in this VM preserves the same initialization path as the app.
+const timeoutExports = {};
+vm.runInNewContext(ts.transpileModule(readFileSync(new URL("../src/lib/promise-timeout.ts", import.meta.url), "utf8"), {
+  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+}).outputText, { exports: timeoutExports, setTimeout, clearTimeout });
+
 function setup({ build = "15", native = true, platform = "ios", providerError, providerErrors, linkError, returnState = true, accounts = ["existing", "existing"] } = {}) {
   const calls = { login: [], logout: [], link: [], signIn: [], oauth: [], exchange: [], diagnostics: [] };
   const plugin = {
@@ -39,6 +46,7 @@ function setup({ build = "15", native = true, platform = "ios", providerError, p
     process: { env: { NEXT_PUBLIC_GOOGLE_CLIENT_ID: "web-client", NEXT_PUBLIC_GOOGLE_IOS_CLIENT_ID: "ios-client" } },
     require: (name) => {
       if (name === "@/lib/auth/android-oauth-return") return returnExports;
+      if (name === "@/lib/promise-timeout") return timeoutExports;
       if (name === "@/lib/report-client-error") return { reportClientError: (_origin, error) => calls.diagnostics.push(error.message) };
       if (name === "@/hooks/use-native-app") return { isNativeAppRuntime: () => native };
       if (name === "@capgo/capacitor-social-login") return { SocialLogin: plugin };
