@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "playwright/test";
 import { build } from "esbuild";
+import { readFileSync } from "node:fs";
 import { gotoOK, loginAs, resetAuth } from "./helpers";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, type RegressionSeedState } from "./seed";
 
@@ -611,7 +612,13 @@ test.beforeEach(async ({page}) => {
 
 // Real navigation component, isolated from authentication, network and fixtures.
 // The three scroll containers match the actual home, marketplace and search shells.
+let scrollNavigationCSS: Promise<string> | undefined;
 async function mountScrollNavigation(page: Page) {
+  scrollNavigationCSS ??= (async () => {
+    const postcss = (await import("postcss")).default;
+    const tailwind = (await import("@tailwindcss/postcss")).default;
+    return (await postcss([tailwind()]).process(readFileSync("src/app/globals.css", "utf8"), { from: "src/app/globals.css" })).css;
+  })();
   const mocks: Record<string, string> = {
     "next-intl": `export const useLocale=()=>"es";export const useTranslations=()=>key=>key;`,
     "next/navigation": `const params=new URLSearchParams();export const useSearchParams=()=>params;`,
@@ -635,52 +642,68 @@ async function mountScrollNavigation(page: Page) {
   });
   await page.route("**/nav-scroll-harness", route => route.fulfill({ contentType: "text/html", body: '<!doctype html><meta name="viewport" content="width=device-width"><div id="root"></div>' }));
   await page.goto("/nav-scroll-harness");
+  await page.addStyleTag({ content: await scrollNavigationCSS });
+  await page.evaluate(() => {
+    document.documentElement.classList.add("ccr-native-app");
+    document.body.classList.add("ccr-native-app");
+    const clock = window as unknown as { __navTestNow: number };
+    clock.__navTestNow = 0;
+    Object.defineProperty(performance, "now", { configurable: true, value: () => clock.__navTestNow });
+  });
   await page.addScriptTag({ content: bundle.outputFiles[0].text });
   await expect(page.locator("nav.ccr-native-bottom-nav")).toHaveCount(1);
   await expect(page.locator("body")).toHaveClass(/ccr-native-bottom-nav-visible/);
 }
 
-async function scrollValues(page: Page, selector: string, values: number[]) {
-  await page.locator(selector).evaluate(async (element, positions) => {
+async function scrollValues(page: Page, selector: string, values: number[], interval = 16) {
+  await page.locator(selector).evaluate(async (element, { positions, interval }) => {
     for (const position of positions) {
+      (window as unknown as { __navTestNow: number }).__navTestNow += interval;
       element.scrollTop = position;
       element.dispatchEvent(new Event("scroll"));
       await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
     }
-  }, values);
+  }, { positions: values, interval });
 }
 
-test("native bottom navigation follows slow scroll in both directions without flicker", async ({ page }) => {
+const navigationOffset = (page: Page) => page.locator("nav.ccr-native-bottom-nav").evaluate(nav => new DOMMatrixReadOnly(getComputedStyle(nav).transform).m42);
+
+test("native bottom navigation follows each downward pixel and requires a fast upward gesture", async ({ page }) => {
   await mountScrollNavigation(page);
   const body = page.locator("body");
   for (const [path, selector] of [["/", "#home-scroll"], ["/proyectos", "#board-scroll"], ["/buscar", "#search-scroll"]] as const) {
     await page.evaluate(pathname => (window as unknown as { __setTestNavPath: (path: string) => void }).__setTestNavPath(pathname), path);
     await expect(page.locator("[data-current-path]")).toHaveAttribute("data-current-path", path);
     await expect(body).not.toHaveClass(/ccr-native-bottom-nav-hidden/);
-    await scrollValues(page, selector, [60, 64, 68, 72, 76, 80, 84, 88]);
+    await scrollValues(page, selector, [1], 120);
+    expect(await navigationOffset(page)).toBeCloseTo(1, 1);
+    await scrollValues(page, selector, [2, 3, 4, 5], 120);
+    expect(await navigationOffset(page)).toBeCloseTo(5, 1);
+    await scrollValues(page, selector, [25], 120);
+    expect(await navigationOffset(page)).toBeCloseTo(25, 1);
     await expect(body).not.toHaveClass(/ccr-native-bottom-nav-hidden/);
-    await scrollValues(page, selector, [92]);
+    await scrollValues(page, selector, [200]);
     await expect(body).toHaveClass(/ccr-native-bottom-nav-hidden/);
-    await expect(page.locator("nav.ccr-native-bottom-nav")).toHaveClass(/translate-y-/);
-    await scrollValues(page, selector, [88, 92, 88, 92, 88, 92]);
+    const hidden = await navigationOffset(page);
+    await scrollValues(page, selector, [196, 192, 188, 184, 180, 176], 120);
+    expect(await navigationOffset(page)).toBeCloseTo(hidden, 1);
     await expect(body).toHaveClass(/ccr-native-bottom-nav-hidden/);
-    await scrollValues(page, selector, [88, 84, 80]);
+    await scrollValues(page, selector, [172, 168, 164], 8);
+    await expect(body).not.toHaveClass(/ccr-native-bottom-nav-hidden/);
+    await expect.poll(() => navigationOffset(page)).toBeCloseTo(0, 1);
+    await scrollValues(page, selector, [165], 120);
+    expect(await navigationOffset(page)).toBeCloseTo(1, 1);
+    await scrollValues(page, selector, [300]);
     await expect(body).toHaveClass(/ccr-native-bottom-nav-hidden/);
-    await scrollValues(page, selector, [76]);
+    // Reaching the top remains an accessible way to recover the menu slowly.
+    await scrollValues(page, selector, [200, 100, 0], 1000);
     await expect(body).not.toHaveClass(/ccr-native-bottom-nav-hidden/);
-    await scrollValues(page, selector, [80, 76, 80, 76, 80, 76, 80, 76]);
-    await expect(body).not.toHaveClass(/ccr-native-bottom-nav-hidden/);
-    await scrollValues(page, selector, [110]);
-    await expect(body).toHaveClass(/ccr-native-bottom-nav-hidden/);
-    await scrollValues(page, selector, [92]);
-    await expect(body).not.toHaveClass(/ccr-native-bottom-nav-hidden/);
-    await scrollValues(page, selector, [126, 20]);
-    await expect(body).not.toHaveClass(/ccr-native-bottom-nav-hidden/);
+    await expect.poll(() => navigationOffset(page)).toBeCloseTo(0, 1);
   }
   await page.evaluate(() => (window as unknown as { __setTestNavPath: (path: string) => void }).__setTestNavPath("/mensajes"));
   await expect(page.locator("[data-current-path]")).toHaveAttribute("data-current-path", "/mensajes");
   await scrollValues(page, "#home-scroll", [60, 100, 150]);
-  await expect(body).not.toHaveClass(/ccr-native-bottom-nav-hidden/);
+  expect(await navigationOffset(page)).toBe(0);
 });
 
 test("native bottom navigation ignores the simulated iOS bottom bounce", async ({ page }) => {
@@ -694,10 +717,34 @@ test("native bottom navigation ignores the simulated iOS bottom bounce", async (
   });
   await page.evaluate(() => (window as unknown as { __setTestNavPath: (path: string) => void }).__setTestNavPath("/proyectos"));
   await expect(page.locator("[data-current-path]")).toHaveAttribute("data-current-path", "/proyectos");
-  await scrollValues(page, "#board-scroll", [120, 152]);
+  await scrollValues(page, "#board-scroll", [120, 300]);
   await expect(body).toHaveClass(/ccr-native-bottom-nav-hidden/);
-  await scrollValues(page, "#board-scroll", [800, 818, 810, 800, 798]);
+  await scrollValues(page, "#board-scroll", [800, 818, 810, 800, 798], 8);
   await expect(body).toHaveClass(/ccr-native-bottom-nav-hidden/);
-  await scrollValues(page, "#board-scroll", [794, 790, 786, 782]);
+  await scrollValues(page, "#board-scroll", [794, 790, 786, 782], 120);
+  await expect(body).toHaveClass(/ccr-native-bottom-nav-hidden/);
+  await scrollValues(page, "#board-scroll", [778, 774, 770], 8);
   await expect(body).not.toHaveClass(/ccr-native-bottom-nav-hidden/);
+});
+
+test("native bottom navigation continues from its painted position when reveal is interrupted", async ({ page }) => {
+  await mountScrollNavigation(page);
+  await scrollValues(page, "#home-scroll", [200]);
+  await scrollValues(page, "#home-scroll", [196, 192, 188], 8);
+  const movement = await page.locator("#home-scroll").evaluate(element => {
+    const nav = document.querySelector("nav.ccr-native-bottom-nav")!;
+    const before = new DOMMatrixReadOnly(getComputedStyle(nav).transform).m42;
+    (window as unknown as { __navTestNow: number }).__navTestNow += 8;
+    element.scrollTop += 1;
+    element.dispatchEvent(new Event("scroll"));
+    return { before, after: new DOMMatrixReadOnly(getComputedStyle(nav).transform).m42 };
+  });
+  expect(movement.after - movement.before).toBeCloseTo(1, 1);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.evaluate(() => (window as unknown as { __setTestNavPath: (path: string) => void }).__setTestNavPath("/buscar"));
+  await expect(page.locator("[data-current-path]")).toHaveAttribute("data-current-path", "/buscar");
+  await scrollValues(page, "#search-scroll", [200]);
+  await scrollValues(page, "#search-scroll", [196, 192, 188], 8);
+  expect(await navigationOffset(page)).toBe(0);
+  await expect(page.locator("nav.ccr-native-bottom-nav")).toHaveCSS("transition-duration", "0s");
 });
