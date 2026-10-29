@@ -232,29 +232,30 @@ export function NativeBottomNav() {
     const roots = [document.documentElement, document.body];
     let retirada = 0;
     let entrada: Animation | undefined;
+    let direccion = 0;
     const reducirMovimiento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const pintar = (valor: number, animar = false) => {
+    const pintar = (valor: number, animar = false, inmediato = false) => {
       const limite = nav.getBoundingClientRect().height + 16;
       const destino = Math.max(0, Math.min(limite, valor));
       // Más eventos de subida no reinician ni completan de golpe la entrada.
-      if (animar && destino === retirada) return;
-      const desde = animar ? new DOMMatrixReadOnly(getComputedStyle(nav).transform).m42 : 0;
+      if (destino === retirada && !inmediato) return;
+      const desde = new DOMMatrixReadOnly(getComputedStyle(nav).transform).m42;
       entrada?.cancel();
       entrada = undefined;
       retirada = destino;
       nav.style.transition = "none";
       nav.style.transform = `translate3d(0, ${retirada}px, 0)`;
-      if (animar && !reducirMovimiento && desde !== retirada) {
+      if (!inmediato && !reducirMovimiento && desde !== retirada) {
         entrada = nav.animate([
           { transform: `translate3d(0, ${desde}px, 0)` },
           { transform: `translate3d(0, ${retirada}px, 0)` },
-        ], { duration: 240, easing: "cubic-bezier(0.32,0,0.5,1)" });
+        ], { duration: animar ? 240 : retirada < desde ? 180 : 220, easing: "cubic-bezier(0.25,0.1,0.25,1)" });
       }
       const oculta = retirada >= limite;
       nav.inert = oculta;
       roots.forEach(root => root.classList.toggle("ccr-native-bottom-nav-hidden", oculta));
     };
-    pintar(0);
+    pintar(0, false, true);
     const selector = "main, .ccr-tablero-marco > section, .ccr-tablero-ficha, [data-messages-page-main], .ccr-direct-chat-list, .ccr-direct-chat-thread-scroll, .ccr-search-bottom-sheet, .ccr-search-bottom-sheet *";
     type Posicion = { anterior: number; instante: number; desde: number; subida: number; revelando: boolean };
     const posiciones = new WeakMap<Element, Posicion>();
@@ -289,7 +290,8 @@ export function NativeBottomNav() {
         // Si se interrumpe la animación de regreso, continuar desde la
         // posición pintada, sin saltar a su destino antes de seguir al dedo.
         const pintada = new DOMMatrixReadOnly(getComputedStyle(nav).transform).m42;
-        pintar(pintada + delta);
+        pintar((direccion < 0 ? pintada : retirada) + delta);
+        direccion = 1;
         return;
       }
       if (transcurrido > 100) posicion.revelando = false;
@@ -303,6 +305,8 @@ export function NativeBottomNav() {
       }
       posicion.subida += -delta;
       if (posicion.subida >= 12 && posicion.subida / Math.max(16, ahora - posicion.desde) >= 0.4) {
+        if (direccion > 0) retirada = new DOMMatrixReadOnly(getComputedStyle(nav).transform).m42;
+        direccion = -1;
         posicion.revelando = true;
         pintar(retirada - posicion.subida * 1.5);
       }
