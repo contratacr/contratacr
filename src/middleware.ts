@@ -56,7 +56,7 @@ function reescribirConIdioma(request: NextRequest, destino: URL) {
 // `categories` —incluye los servicios creados desde el panel, que el código no
 // conoce—. Se lee sin sesión (es público) y se guarda cinco minutos por
 // instancia: un perfil no paga una consulta por visita. Si la base no contesta,
-// decide la forma: todo perfil termina en un sufijo aleatorio de 8 caracteres.
+// decide la forma: sufijo personal antiguo o identificador comercial estable.
 let serviciosPublicados: { ids: Set<string>; hasta: number } | null = null;
 async function esServicioPublicado(id: string): Promise<boolean> {
   if (!serviciosPublicados || serviciosPublicados.hasta < Date.now()) {
@@ -78,7 +78,7 @@ async function esServicioPublicado(id: string): Promise<boolean> {
       if (!Array.isArray(filas) || filas.length === 0) throw new Error("catálogo vacío");
       serviciosPublicados = { ids: new Set(filas.map((f) => f.id)), hasta: Date.now() + 5 * 60_000 };
     } catch {
-      return !/-[a-z0-9]{8}$/.test(categorySlug(id));
+      return !/-(?:[a-z0-9]{8}|[a-f0-9]{10}|[a-f0-9]{32})$/.test(categorySlug(id));
     }
   }
   return serviciosPublicados.ids.has(id) || CATALOGO_DEL_CODIGO.has(id);
@@ -210,13 +210,13 @@ export async function middleware(request: NextRequest) {
   // Enlace público de cada profesional: contratacr.com/nombre-apellido (y la
   // forma con @ que se compartió antes). Solo entra aquí lo que no es una
   // sección del sitio (RUTAS_DEL_SITIO, verificada en CI).
-  const perfilCorto = /^\/@?([a-z0-9][a-z0-9-]{2,80})$/.exec(pathname.toLowerCase());
-  if (perfilCorto && !RUTAS_DEL_SITIO.has(perfilCorto[1])) {
-    const locale = "es";
+  const perfilCorto = /^\/(?:(en)\/)?@?([a-z0-9][a-z0-9-]{2,80})$/.exec(pathname.toLowerCase());
+  if (perfilCorto && !RUTAS_DEL_SITIO.has(perfilCorto[2])) {
+    const locale = perfilCorto[1] || "es";
     // SE REESCRIBE, NO SE REDIRIGE (4-oct-2026): la ficha se sirve en la misma
     // dirección corta, así lo que se copia de la barra es contratacr.com/nombre,
     // igual que «Copiar enlace».
-    const destino = new URL(`/${locale}/profesionales/${perfilCorto[1]}`, request.url);
+    const destino = new URL(`/${locale}/profesionales/${perfilCorto[2]}`, request.url);
     destino.search = request.nextUrl.search;
     return reescribirConIdioma(request, destino);
   }

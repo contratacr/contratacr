@@ -77,5 +77,24 @@ assert.equal((await db.query("select * from professional_slug_aliases where prof
 await db.exec('reset role');
 await db.query('delete from professionals where id=$1',[first]);
 assert.equal((await db.query('select * from professional_slug_aliases where professional_id=$1',[first])).rows.length,0);
+// Exercise the actual vanity rewrite in both languages, including @ legacy links.
+const middleware = fs.readFileSync(new URL('../src/middleware.ts',import.meta.url),'utf8');
+const rewriteStart=middleware.indexOf('  const perfilCorto =');
+const rewriteEnd=middleware.indexOf('  // Direcciones que se renombraron.',rewriteStart);
+assert.ok(rewriteStart>0 && rewriteEnd>rewriteStart);
+const routesJS=ts.transpileModule(fs.readFileSync(new URL('../src/lib/site-routes.ts',import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
+const routes={};new Function('exports',routesJS)(routes);
+const rewrite=new Function('pathname','request','RUTAS_DEL_SITIO','reescribirConIdioma',middleware.slice(rewriteStart,rewriteEnd));
+for(const lang of ['es','en']) for(const name of ['ley-total-abogados-4a2c72f36b','luis-gerardo-suarez-chaves','@luis-gerardo-suarez-chaves']) {
+ const path=`${lang==='en'?'/en':''}/${name}`;
+ const url=new URL(`https://contratacr.com${path}?tab=reviews`);
+ const destination=rewrite(path,{url:url.href,nextUrl:url},routes.RUTAS_DEL_SITIO,(_request,destination)=>destination);
+ assert.equal(destination.pathname,`/${lang}/profesionales/${name.replace('@','')}`);
+ assert.equal(destination.search,'?tab=reviews');
+}
+for(const name of routes.RUTAS_DEL_SITIO) for(const prefix of ['','/en']) {
+ const path=`${prefix}/${name}`; const url=new URL(`https://contratacr.com${path}`);
+ assert.equal(rewrite(path,{url:url.href,nextUrl:url},routes.RUTAS_DEL_SITIO,()=>{throw Error('Site route captured');}),undefined);
+}
 await db.close();
 console.log('Business URL SQL passed: existing/new/renamed businesses, personal URLs unchanged, accents, duplicate names and ID-prefix collision, reserved route safety, historical full/short aliases, ambiguity, public RLS, banned/hidden profiles, write denial and deletion cleanup.');
