@@ -63,7 +63,7 @@ test("el final de cada pantalla con franja: sin scroll al vacío y a la misma di
     ["ficha de empleo", await id("/empleos", /\/empleos\/[0-9a-f-]{36}/)],
     ["ficha de promoción", await id("/promociones", /\/promociones\/[0-9a-f-]{36}/)],
     ["ficha de proyecto", await id("/proyectos", /\/proyectos\/[0-9a-f-]{36}/)],
-    ["ficha profesional", "/profesionales/estudio-delta-pruebas"],
+    ["ficha profesional", "/profesionales/estudio-delta-ae9caa2b1f"],
   ];
   for (const [nombre, ruta, previo] of casos) {
     if (!ruta) continue;

@@ -30,6 +30,11 @@ await db.query('update professionals set business_name=$1 where id=$2',['Ley Tot
 assert.equal(await slug(first),'ley-total-renovada-4a2c72f36b');
 await assert.rejects(db.exec(`insert into professionals(id,slug) values
  ('55555555-5555-4555-8555-555555555555','luis-gerardo-suarez-chaves-54xrmtku')`));
+const actors=JSON.parse(fs.readFileSync(new URL('./actores-de-regresion.json',import.meta.url),'utf8'));
+for(const actor of [actors.cliente,actors.profesional]) {
+ await db.query('insert into professionals(id,slug,business_name) values($1,$2,$3)',[actor.professionalId,actor.slug,actor.negocio]);
+ assert.equal(await slug(actor.professionalId),actor.slug,'Shared fixture must use its actual persisted business URL');
+}
 await db.exec('set role anon');
 for(const old of ['luis-gerardo-suarez-chaves-54xrmtku','luis-gerardo-suarez-chaves','ley-total-abogados-4a2c72f36b','ley-total-costa-rica-4a2c72f36b']) {
  assert.deepEqual((await db.query('select professional_id from professional_slug_aliases where slug=$1',[old])).rows,[{professional_id:first}]);
