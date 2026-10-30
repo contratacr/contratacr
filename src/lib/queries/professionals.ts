@@ -964,6 +964,18 @@ async function getProfessionalBySlugUncached(
           .eq("slug", normalizedSlug)
           .maybeSingle();
 
+        // Historical business/personal links remain valid after a trade-name
+        // change. Public RLS still decides whether the destination is visible.
+        if (!data && !error) {
+          const aliases = await supabase.from("professional_slug_aliases")
+            .select("professional_id").eq("slug", normalizedSlug).limit(2);
+          if (!aliases.error && (aliases.data?.length ?? 0) > 1) return { data: null, error: null };
+          if (!aliases.error && aliases.data?.length === 1) {
+            ({ data, error } = await supabase.from("professionals").select(select)
+              .eq("id", aliases.data[0].professional_id).maybeSingle());
+          }
+        }
+
         // Enlace corto: "nombre-apellido" sin el sufijo aleatorio del slug.
         // Solo cuenta como candidato el slug que es exactamente el nombre + un
         // sufijo de 8 caracteres (así "juan-perez" no se confunde con

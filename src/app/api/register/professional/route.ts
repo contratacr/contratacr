@@ -362,7 +362,9 @@ export async function POST(req: Request) {
       await marcarComoProfesional(supabase, userId);
       await recordRegistrationPlatform(req, userId);
       const metaConversion = await recordProfessionalReady(req,userId);
-      return NextResponse.json({ ok: true, slug: existingPro.slug, metaConversion });
+      const { data: updatedProfile } = await supabase.from("professionals")
+        .select("slug").eq("id", existingPro.id).maybeSingle();
+      return NextResponse.json({ ok: true, slug: updatedProfile?.slug ?? existingPro.slug, metaConversion });
     }
 
     // ── 5. Build slug ─────────────────────────────────────────────────────────
@@ -372,7 +374,7 @@ export async function POST(req: Request) {
       .replace(/[̀-ͯ]/g, "")
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "");
-    const slug = `${baseName}-${Math.random().toString(36).slice(2, 10)}`;
+    let slug = `${baseName}-${Math.random().toString(36).slice(2, 10)}`;
 
     // ── 6. Insert professional ────────────────────────────────────────────────
     const baseInsert = {
@@ -414,6 +416,11 @@ export async function POST(req: Request) {
           : "No pudimos crear tu perfil profesional. Revisa tus datos e intenta de nuevo.";
       return NextResponse.json({ error: friendly }, { status: 500 });
     }
+
+    // The database assigns the business URL atomically, including collisions.
+    const { data: savedProfile } = await supabase.from("professionals")
+      .select("slug").eq("profile_id", userId).maybeSingle();
+    slug = savedProfile?.slug ?? slug;
 
     // Accounts without a Costa Rican ID skip the automatic Hacienda check and go
     // straight to manual review: tell them right away what we need to verify them.
