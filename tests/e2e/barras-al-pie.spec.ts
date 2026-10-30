@@ -85,7 +85,7 @@ test.describe("@seeded franjas de acciones al pie", () => {
     pantallas.push({ nombre: "soporte", abrir: async () => { await gotoOK(page, "/soporte"); } });
     if (empleo) pantallas.push({ nombre: "ficha de empleo", abrir: async () => { await gotoOK(page, empleo); } });
     if (proyecto) pantallas.push({ nombre: "ficha de proyecto", abrir: async () => { await gotoOK(page, proyecto); } });
-    pantallas.push({ nombre: "ficha profesional", abrir: async () => { await gotoOK(page, "/profesionales/redes-bahia-pruebas"); await page.waitForTimeout(1200); } });
+    pantallas.push({ nombre: "ficha profesional", abrir: async () => { await gotoOK(page, "/profesionales/redes-bahia-988428c7a0"); await page.waitForTimeout(1200); } });
 
     const medidas: { nombre: string; franja: Franja }[] = [];
     for (const pantalla of pantallas) {
@@ -147,7 +147,7 @@ test.describe("@seeded franjas de acciones al pie", () => {
     // 320 px es el teléfono más angosto que soportamos: si algo va a desbordar,
     // desborda aquí primero.
     await page.setViewportSize({ width: 320, height: 720 });
-    for (const ruta of ["/soporte", "/profesionales/redes-bahia-pruebas"]) {
+    for (const ruta of ["/soporte", "/profesionales/redes-bahia-988428c7a0"]) {
       await gotoOK(page, ruta);
       const franja = await medirFranja(page);
       expect(franja.caja, `«${ruta}» perdió su franja a 320 px`).not.toBeNull();
@@ -165,7 +165,7 @@ test.describe("@seeded franjas de acciones al pie", () => {
     // franja salía sin relleno, sin línea y con los botones contra el filo. La
     // regla vive ahora DENTRO del documento (layout.tsx). Esta prueba le quita
     // a la franja todas sus utilidades y exige que siga midiendo lo mismo.
-    for (const ruta of ["/soporte", "/profesionales/redes-bahia-pruebas"]) {
+    for (const ruta of ["/soporte", "/profesionales/redes-bahia-988428c7a0"]) {
       await gotoOK(page, ruta);
       await page.waitForTimeout(1200);
       await expect(page.locator("style[data-ccr-franja]"), "La regla de la franja tiene que viajar dentro del documento").toHaveCount(1);

@@ -22,8 +22,8 @@ const PANTALLAS: Array<{ ruta: string; como?: "pro" | "cliente" }> = [
   { ruta: "/dashboard/profesional", como: "pro" },
   // La ficha de un profesional llegando del panel y llegando de resultados: es
   // donde salía «Volver a mi panel» y «Volver a resultados».
-  { ruta: "/profesionales/redes-bahia-pruebas?from=panel", como: "pro" },
-  { ruta: "/profesionales/redes-bahia-pruebas?from=%2Fprofesionales" },
+  { ruta: "/profesionales/redes-bahia-988428c7a0?from=panel", como: "pro" },
+  { ruta: "/profesionales/redes-bahia-988428c7a0?from=%2Fprofesionales" },
 ];
 
 async function volveresVisibles(page: import("playwright/test").Page) {
