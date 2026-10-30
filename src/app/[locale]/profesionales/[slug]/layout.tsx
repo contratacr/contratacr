@@ -50,7 +50,7 @@ export async function generateMetadata({ params }: ProfileLayoutProps): Promise<
     ? `View ${displayName}'s professional profile on ContrataCR${location ? ` in ${location}` : ""}.`
     : `Conoce el perfil profesional de ${displayName} en ContrataCR${location ? ` en ${location}` : ""}.`;
   const description = cleanDescription(pro.bio) || fallbackDescription;
-  const path = `${prefijoDeIdioma(locale)}/profesionales/${slug}`;
+  const path = `${prefijoDeIdioma(locale)}/profesionales/${pro.slug}`;
   const absoluteUrl = `${APP_URL}${path}`;
   const imageUrl = `${APP_URL}${path}/opengraph-image`;
 
@@ -59,7 +59,7 @@ export async function generateMetadata({ params }: ProfileLayoutProps): Promise<
     description,
     // La misma pantalla en los dos idiomas: sin `hreflang`, Google trata /es y
     // /en como dos páginas que compiten entre sí.
-    alternates: alternativasDeIdioma(locale, `/profesionales/${slug}`),
+    alternates: alternativasDeIdioma(locale, `/profesionales/${pro.slug}`),
     openGraph: {
       type: "profile",
       siteName: "ContrataCR",
