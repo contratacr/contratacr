@@ -61,6 +61,7 @@ function setup(size = 1203, options: { authorized?: boolean; failTable?: string;
       return (key:string)=>messages[namespace][key];
     }},
     "@/lib/admin/read-all-rows":paging,
+    "@/lib/analytics/self-interaction":load("src/lib/analytics/self-interaction.ts"),
     "@/lib/analytics/contact-segments":load("src/lib/analytics/contact-segments.ts"),
     "@/lib/auth/admin":{getApiAdmin:async()=>options.authorized===false?null:{id:"admin"}},
     "@/lib/supabase/admin":{createAdminClient:()=>db},
@@ -215,4 +216,18 @@ test('activity history accepts all-time only behind the existing admin gate',asy
   expect((await route.GET(new NextRequest('https://example.test/api/admin/analytics/activity?days=0'))).status).toBe(200);
   expect(calls[0][0]).toBe('admin_activity_journey');expect(calls[0][1].p_days).toBe(0);
   expect((await route.GET(new NextRequest('https://example.test/api/admin/analytics/activity?days=999'))).status).toBe(400);
+});
+
+test('own profile exclusion preserves legitimate project replies and quotes in all-time reports',async()=>{
+  const s=setup(3);
+  const [view,lead,quote]=s.tables.interaction_events;
+  for(const row of [view,lead,quote])Object.assign(row,{viewer_user_id:s.tables.profiles[0].id,professional_id:s.tables.professionals[0].id});
+  view.event_type='profile_view';
+  lead.event_type='project_lead_whatsapp';lead.source='project';lead.metadata={projectId:'another-clients-project'};
+  quote.event_type='quote_created';
+  const report=await load('src/lib/admin/reports.ts',s.mocks).getAdminReports('es','all');
+  expect(report.insights.funnel.profileViews).toBe(0);
+  expect(report.insights.week.projectLeads.now).toBe(1);
+  expect(report.insights.week.quotes.now).toBe(1);
+  expect(report.contactBreakdown.allTime.projects.clicks).toBe(1);
 });

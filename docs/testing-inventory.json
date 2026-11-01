@@ -23233,76 +23233,80 @@
       "file": "tests/e2e/admin-list-limits-runtime.spec.ts",
       "cases": [
         {
-          "line": 78,
+          "line": 79,
           "title": "`${route} list includes every match beyond the default cap and agrees with its counter`"
         },
         {
-          "line": 84,
+          "line": 85,
           "title": "\"all support messages remain available beyond the database cap\""
         },
         {
-          "line": 91,
+          "line": 92,
           "title": "\"review search can find older reviews after 500 and 1000 records\""
         },
         {
-          "line": 95,
+          "line": 96,
           "title": "`${kind} filters and pages use all records`"
         },
         {
-          "line": 99,
+          "line": 100,
           "title": "\"coverage includes every matching professional beyond its old 300-row cutoff\""
         },
         {
-          "line": 102,
+          "line": 103,
           "title": "\"overview contacts and analytics search quality include events after 1000\""
         },
         {
-          "line": 107,
+          "line": 108,
           "title": "\"users and projects no longer stop silently at 10000 rows\""
         },
         {
-          "line": 111,
+          "line": 112,
           "title": "\"a failed later page produces an error instead of a misleading partial list\""
         },
         {
-          "line": 114,
+          "line": 115,
           "title": "\"complete queue reads remain restricted to administrators\""
         },
         {
-          "line": 119,
+          "line": 120,
           "title": "`overview pending count deduplicates reviews and translates client labels (${locale})`"
         },
         {
-          "line": 131,
+          "line": 132,
           "title": "\"project contact counts include every matching event beyond the first page\""
         },
         {
-          "line": 136,
+          "line": 137,
           "title": "\"admin edit history is complete beyond the former 50-row cutoff\""
         },
         {
-          "line": 142,
+          "line": 143,
           "title": "\"overview and reports separate employment from services beyond the default page cap\""
         },
         {
-          "line": 155,
+          "line": 156,
           "title": "\"admin and self interactions are excluded while uncertain history remains visible separately\""
         },
         {
-          "line": 169,
+          "line": 170,
           "title": "\"contact segmentation stays admin-only and missing hire history is not shown as zero\""
         },
         {
-          "line": 178,
+          "line": 179,
           "title": "'admin history includes old events without relabeling 7/30-day contacts'"
         },
         {
-          "line": 203,
+          "line": 204,
           "title": "'@contract admin all-time RPCs preserve permissions and retained history'"
         },
         {
-          "line": 208,
+          "line": 209,
           "title": "'activity history accepts all-time only behind the existing admin gate'"
+        },
+        {
+          "line": 221,
+          "title": "'own profile exclusion preserves legitimate project replies and quotes in all-time reports'"
         }
       ]
     },
