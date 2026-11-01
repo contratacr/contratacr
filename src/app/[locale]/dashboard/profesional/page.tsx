@@ -1330,11 +1330,16 @@ export default function DashboardPage() {
   }
 
   function goToCompletionChecklist({ clearFlow = true }: { clearFlow?: boolean } = {}) {
-    setMobileProfileSectionTitle(null);
-    setProfileFocus(null);
-    setServiceFocus(null);
-    if (clearFlow) clearCompletionFlow();
-    setMode("offer");
+    // Commit the destination and its header together. Clearing the editor
+    // first painted the profile overview while Next deferred the history update.
+    flushSync(() => {
+      setPendingPanelTab({ from: rawRequestedTab, tab: "completion" });
+      setMobileProfileSectionTitle(null);
+      setProfileFocus(null);
+      setServiceFocus(null);
+      if (clearFlow) clearCompletionFlow();
+      setMode("offer");
+    });
     if (typeof window !== "undefined") {
       window.history.pushState(null, "", `${window.location.pathname}?tab=completion&mode=offer`);
     }
@@ -2112,9 +2117,6 @@ export default function DashboardPage() {
                           return;
                         }
                         if (hasActiveCompletionFlow()) {
-                          if (activeTab === "profile" && mobileProfileSectionTitle) {
-                            window.dispatchEvent(new Event("ccr:profile-mobile-close-section"));
-                          }
                           goToCompletionChecklist();
                           return;
                         }

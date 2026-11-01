@@ -24,6 +24,27 @@ for (const locale of ['es', 'en'] as const) {
         const style = getComputedStyle(node);
         return style.whiteSpace !== 'nowrap' && node.scrollWidth <= node.clientWidth + 1 && node.scrollHeight <= node.clientHeight + 1;
       })).toBe(true);
+      await location.click();
+      await expect(page.locator('[data-dashboard-current="profile"]')).toBeVisible();
+      await expect(page.locator('[data-native-back="dashboard-section"]')).toBeVisible();
+      // Capture every committed panel state, including commits between frames.
+      await page.evaluate(() => {
+        const samples: string[] = [];
+        const observer = new MutationObserver(() => {
+          samples.push(document.querySelector('[data-dashboard-current]')?.getAttribute('data-dashboard-current') ?? 'none');
+        });
+        observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+        Object.assign(window, { completionBackSamples: samples, completionBackObserver: observer });
+      });
+      await page.locator('[data-native-back="dashboard-section"]').click();
+      await expect(location).toBeVisible();
+      const panels = await page.evaluate(() => {
+        const state = window as unknown as { completionBackSamples: string[]; completionBackObserver: MutationObserver };
+        state.completionBackObserver.disconnect();
+        return state.completionBackSamples;
+      });
+      expect(panels.length).toBeGreaterThan(0);
+      expect(panels.every(panel => panel === 'completion')).toBe(true);
       const step = page.locator('[data-completion-step="servicePrice"]');
       await expect(step).toContainText((locale === 'es' ? es : en).proPanel.completion.servicePriceBenefit);
       await step.click();
