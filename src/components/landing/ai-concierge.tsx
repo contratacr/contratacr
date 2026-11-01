@@ -1,7 +1,7 @@
 "use client";
 
 import { InlineIdentityName } from "@/components/ui/inline-identity-name";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore, Suspense, type FormEvent } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, Suspense, type FormEvent } from "react";
 import { prefijoDeIdioma, rutaConIdioma, sinPrefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import {
   Menu,
@@ -313,7 +313,13 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const sessionHydratedRef = useRef(false);
-  const previousPathnameRef = useRef(routeKey);
+  const [previousRouteKey, setPreviousRouteKey] = useState(routeKey);
+  // Keep the assistant over the origin while Next resolves the destination.
+  // Dismiss/restore it in the destination render, never an intermediate frame.
+  if (previousRouteKey !== routeKey) {
+    setPreviousRouteKey(routeKey);
+    if (!embedded) setOpen(isAssistantReturn());
+  }
   useContainedTouchScroll(scrollRef, open || embedded);
   const dismissAssistant = useCallback(() => {
     try { window.sessionStorage.removeItem(VOLVER_AL_ASISTENTE); } catch { /* Storage is optional. */ }
@@ -393,22 +399,6 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
   }, [conversationId, embedded, lang, messages, open]);
 
   useEffect(() => {
-    if (previousPathnameRef.current !== routeKey) {
-      previousPathnameRef.current = routeKey;
-      const frame = requestAnimationFrame(() => {
-        if (!embedded) {
-          let restore = false;
-          try {
-            restore = window.sessionStorage.getItem(VOLVER_AL_ASISTENTE) === `${window.location.pathname}${window.location.search}`;
-          } catch { /* History still works without storage. */ }
-          setOpen(restore);
-        }
-      });
-      return () => cancelAnimationFrame(frame);
-    }
-  }, [embedded, routeKey]);
-
-  useEffect(() => {
     if (!open || embedded) return;
     const minimizeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") dismissAssistant();
@@ -417,7 +407,7 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
     return () => window.removeEventListener("keydown", minimizeOnEscape);
   }, [dismissAssistant, embedded, open]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!open) return;
     const shouldLockScroll = window.matchMedia("(max-width: 1023px)").matches;
     if (!shouldLockScroll) return;
@@ -563,7 +553,8 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
     } catch {
       /* Sin almacenamiento solo se pierde el regreso al chat. */
     }
-    if (!embedded) setOpen(false);
+    // A same-page action has no route commit to dismiss the overlay for us.
+    if (!embedded && destination.split("#")[0] === `${window.location.pathname}${window.location.search}`) setOpen(false);
     routerDeNext.push(destination);
   }
 

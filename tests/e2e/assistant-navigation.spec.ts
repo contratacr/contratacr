@@ -47,7 +47,22 @@ for (const locale of ["es", "en"] as const) test(`native assistant ${locale} kee
   await expect(verification).not.toContainText(/Hacienda|biométric|biometric|revisión manual|manual review/);
   await page.getByRole("button", { name: locale === "es" ? "Entendido" : "Got it", exact: true }).click();
   await page.screenshot({ path: test.info().outputPath(`assistant-${locale}-verified-name.png`) });
-  await dialog.getByRole("button", { name: locale === "es" ? "Ver perfil" : "View profile", exact: true }).click();
+  // A slow destination must keep the assistant covering the origin page.
+  let releaseDestination: (() => void) | undefined;
+  let destinationRequested = false;
+  const destinationReady = new Promise<void>(resolve => { releaseDestination = resolve; });
+  await page.route(`**${profileHref}*`, async route => {
+    destinationRequested = true;
+    await destinationReady;
+    await route.continue();
+  });
+  const openProfile = dialog.getByRole("button", { name: locale === "es" ? "Ver perfil" : "View profile", exact: true }).click();
+  try {
+    await expect.poll(() => destinationRequested).toBe(true);
+    await expect(dialog).toBeVisible();
+    await expect(page).toHaveURL(new RegExp("assistantNavigationTest=1"));
+  } finally { releaseDestination?.(); }
+  await openProfile;
   await expect(dialog).toHaveCount(0);
   await expect(page.getByRole("heading", { level: 1 }).filter({ visible: true }).first()).toBeVisible();
   await expect(page.locator("[data-ccr-section-title]").filter({ visible: true })).toContainText(locale === "es" ? "Volver al asistente" : "Back to assistant");
