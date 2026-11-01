@@ -1,5 +1,8 @@
 {
   "panelStatistics": {
+    "viewProject": "View project",
+    "viewJob": "View job",
+    "viewOffer": "View promotion",
     "loading": "Loading statistics…",
     "loadError": "We couldn't load your statistics. Please try again later.",
     "empty": "Once you post a project, you’ll see its visits and contacts here.",
@@ -1225,11 +1228,11 @@
           "short": "Projects, favorites and your profile",
           "body": "Your panel gathers what you need to hire: your projects, your favorites and your profile.",
           "steps": [
-            "Review your requests and projects from their sections.",
+            "Review your projects and replies in My projects.",
             "Check the status of jobs you applied to.",
             "Add professionals, offers and jobs to favorites for later.",
             "Use Connections to see professionals with confirmed service history.",
-            "Open support if you need help with a request, account or access."
+            "Open support if you need help with a project, your account or signing in."
           ],
           "cta": "Go to my panel"
         },
@@ -1238,9 +1241,9 @@
           "short": "What you asked for and the replies",
           "body": "My projects lets you say what you need and have professionals reply.",
           "steps": [
-            "Create a clear post with service, location and description.",
-            "Professionals who can do it write to you on WhatsApp.",
-            "Choose the professional that fits the job best."
+            "Choose the service and describe what you need the professional to do.",
+            "Choose the province and canton, and review the requested contact details.",
+            "Publish the project. Review the replies and choose whom to contact."
           ],
           "cta": "Go to my projects"
         },
@@ -1276,7 +1279,7 @@
             "Use Search this area when you move the map.",
             "Filter by top rated, price and service language.",
             "Review verification, reviews, coverage, availability and price.",
-            "Open the profile or contact by WhatsApp when you find a good option."
+            "Open the profile and choose an available contact option."
           ],
           "cta": "Find professionals"
         },
@@ -1313,7 +1316,7 @@
             "Search by role or profession.",
             "Use filters like date posted, workplace, experience and employment type.",
             "Open the job to review responsibilities, requirements, benefits and salary if published.",
-            "To apply, log in, confirm your contact details and attach your CV."
+            "Use the contact option in the job to talk to the person who posted it."
           ],
           "cta": "View jobs"
         },
@@ -1369,21 +1372,21 @@
           "short": "Checklist to build trust",
           "body": "Complete your profile shows useful steps so your profile feels clearer and more trustworthy.",
           "steps": [
-            "Complete required steps first so you appear better in search.",
-            "Add optional steps like education, languages, public links and success stories if they strengthen your profile.",
-            "Ignore optional steps when they do not apply to your work.",
-            "When you save a checklist step, you return to the next pending step or to the panel if you are done."
+            "Open the list of steps remaining for your profile.",
+            "Choose a missing item to see what needs completing.",
+            "Review optional steps; you can ignore those that do not apply.",
+            "Use the checklist to continue with any remaining information."
           ],
           "cta": "View pending steps"
         },
         "opportunities": {
           "title": "Projects",
           "short": "What people need today",
-          "body": "Projects is the public board of what clients post. If something fits what you do, you message them straight on WhatsApp.",
+          "body": "Projects is the public board of needs posted by clients. Open a project that fits your services and use its contact option.",
           "steps": [
             "Find a project that fits what you offer.",
             "Read what they need and where.",
-            "Tap \"WhatsApp\" and answer them yourself."
+            "Use the contact option in the project to reply to the client."
           ],
           "cta": "Go to projects"
         },
@@ -1404,10 +1407,10 @@
           "short": "What you offer and how clients find you",
           "body": "Each service should include a clear name, description, fixed or negotiable price, experience and coverage.",
           "steps": [
-            "Add each service separately.",
-            "Use simple names clients would search for.",
-            "Complete description, price, experience and coverage.",
-            "Add a professional credential only when it applies to that service."
+            "Choose the service you offer from the catalog.",
+            "Describe what it includes and optionally add a real image.",
+            "Enter a starting price and its unit, or turn on Price on request.",
+            "Choose when you started offering this service and save your changes."
           ],
           "cta": "Go to services"
         },
@@ -1419,7 +1422,7 @@
             "Write a clear role or profession.",
             "Define workplace, employment type, required experience and location.",
             "Add salary if you want to show it.",
-            "Publish and manage your jobs from the panel; people apply on WhatsApp."
+            "Publish and manage your jobs from the panel. A paused job can be published again or deleted."
           ],
           "cta": "Go to jobs"
         },
@@ -1428,10 +1431,10 @@
           "short": "Promote services or products",
           "body": "From Promotions you publish your discounts and packages, with photos and clear conditions.",
           "steps": [
-            "Write a direct title and select a service from the ContrataCR catalog.",
-            "Add price, offer type and real images.",
-            "Define coverage, quantity and an available-until date when relevant.",
-            "Publish and edit the offer from your panel."
+            "Write a clear title and choose the service for the promotion.",
+            "Describe what it includes and add 1 to 5 real images.",
+            "Enter a price or turn on Price on request, and review availability.",
+            "Choose the location when applicable and review everything before publishing."
           ],
           "cta": "Go to promotions"
         },
@@ -1447,10 +1450,30 @@
             "Use View my profile to see the public version."
           ],
           "cta": "Go to professional profile"
+        },
+        "workplacesGuide": {
+          "title": "Work locations",
+          "short": "Province, canton and coverage",
+          "body": "Set where you work so clients can find you in the right area.",
+          "steps": [
+            "Open Profile and choose Work locations.",
+            "Choose the province and canton where you work.",
+            "Enable home visits or video consultations when they apply to your service.",
+            "Review your coverage and save your changes."
+          ],
+          "cta": "Open work locations"
         }
       },
       "searchPlaceholder": "Search the guides",
-      "searchEmpty": "No guide matches that word."
+      "searchEmpty": "No guide matches that word.",
+      "visualStep": "Step {step} of {total}",
+      "previousStep": "Previous",
+      "nextStep": "Next",
+      "reduceCapture": "Reduce screenshot",
+      "enlargeCapture": "Enlarge screenshot",
+      "captureAlt": "Step {step}: {text}",
+      "exampleNotice": "Example data",
+      "allSteps": "Read all steps"
     },
     "headerReviews": "{count, plural, one {# review} other {# reviews}}",
     "sectionErrorTitle": "We couldn't show this section",
@@ -1547,7 +1570,8 @@
     "descriptionLimit": "{count}/{max} characters",
     "priceRef": "Starting price",
     "priceRefHelp": "Enter an indicative rate and explain in the description what it includes and what may change the price.",
-    "aConsultarLabel": "Ask price (do not show amount)",
+    "aConsultarLabel": "Price on request",
+    "aConsultarHelp": "The client will contact you to ask about the price.",
     "amountPlaceholder": "12 000",
     "editInfo": "Edit details",
     "serviceLabel": "Service",

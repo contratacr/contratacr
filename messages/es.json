@@ -1,5 +1,8 @@
 {
   "panelStatistics": {
+    "viewProject": "Ver proyecto",
+    "viewJob": "Ver empleo",
+    "viewOffer": "Ver promoción",
     "loading": "Cargando estadísticas…",
     "loadError": "No pudimos cargar las estadísticas. Inténtalo de nuevo más tarde.",
     "empty": "Cuando publiques un proyecto, aquí verás sus visitas y contactos.",
@@ -1107,11 +1110,11 @@
           "short": "Proyectos, favoritos y tu perfil",
           "body": "Tu panel reúne lo que necesitas para contratar: tus proyectos, tus favoritos y tu perfil.",
           "steps": [
-            "Revisa tus citas y proyectos desde sus secciones.",
+            "Revisá tus proyectos y sus respuestas desde Mis proyectos.",
             "Guarda los empleos que te interesan y escríbele por WhatsApp a quien los publicó.",
             "Agrega profesionales, promociones y empleos a favoritos para revisarlos después.",
             "Usa Conexiones para ver profesionales con los que ya tuviste un servicio confirmado.",
-            "Abre soporte si necesitas ayuda con una cita, un proyecto, tu cuenta o el acceso."
+            "Abrí soporte si necesitás ayuda con un proyecto, tu cuenta o el acceso."
           ],
           "cta": "Ir a mi panel"
         },
@@ -1120,9 +1123,9 @@
           "short": "Lo que pediste y las respuestas",
           "body": "Mis proyectos sirve para contar qué necesitas y que los profesionales te respondan.",
           "steps": [
-            "Publica una necesidad clara con servicio, ubicación y descripción.",
-            "Los profesionales que puedan hacerlo te escriben por WhatsApp.",
-            "Elige el profesional que mejor calce con el trabajo."
+            "Elegí el servicio y describí qué necesitás que haga el profesional.",
+            "Indicá la provincia y el cantón, y revisá los datos de contacto solicitados.",
+            "Publicá el proyecto. Revisá sus respuestas y elegí con quién conversar."
           ],
           "cta": "Ir a mis proyectos"
         },
@@ -1158,7 +1161,7 @@
             "Usa Buscar en esta zona cuando muevas el mapa.",
             "Filtra por mejor calificados, precio e idioma de atención.",
             "Revisa verificación, reseñas, cobertura, disponibilidad y precio.",
-            "Abre el perfil o contacta por WhatsApp cuando encuentres una buena opción."
+            "Abrí el perfil y elegí la opción de contacto disponible."
           ],
           "cta": "Buscar profesionales"
         },
@@ -1195,7 +1198,7 @@
             "Busca por puesto o profesión.",
             "Usa filtros como fecha de publicación, modalidad, experiencia y tipo de empleo.",
             "Abre el empleo para revisar responsabilidades, requisitos, beneficios y salario si está publicado.",
-            "Pulsa Contactar por WhatsApp para escribirle a quien publicó el empleo."
+            "Usá la opción de contacto del empleo para conversar con quien lo publicó."
           ],
           "cta": "Ver empleos"
         },
@@ -1251,21 +1254,21 @@
           "short": "Checklist para ganar confianza",
           "body": "Completa tu perfil muestra pasos útiles para que tu perfil sea más claro y confiable.",
           "steps": [
-            "Completa primero los pasos obligatorios para aparecer mejor en búsquedas.",
-            "Agrega pasos opcionales como formación, idiomas, enlaces y casos de éxito si fortalecen tu perfil.",
-            "Puedes ignorar pasos opcionales si no aplican a tu trabajo.",
-            "Cuando guardas un paso desde el checklist, vuelves al siguiente pendiente o al panel si ya terminaste."
+            "Abrí la lista de pasos pendientes de tu perfil.",
+            "Elegí un dato pendiente para ver qué necesitás completar.",
+            "Revisá los pasos opcionales; podés ignorar los que no apliquen.",
+            "Usá la lista para continuar con los datos que todavía faltan."
           ],
           "cta": "Ver pasos pendientes"
         },
         "opportunities": {
           "title": "Proyectos",
           "short": "Lo que la gente necesita hoy",
-          "body": "Proyectos es el tablero público de lo que publican los clientes. Si algo calza con lo que haces, le escribes directo por WhatsApp.",
+          "body": "Proyectos es el tablero público de necesidades que publican los clientes. Abrí un proyecto que calce con lo que hacés y usá su opción de contacto.",
           "steps": [
             "Busca un proyecto que calce con lo que ofreces.",
             "Lee lo que necesita y en qué zona.",
-            "Toca \"WhatsApp\" y respóndele directamente."
+            "Usá la opción de contacto del proyecto para responderle al cliente."
           ],
           "cta": "Ir a proyectos"
         },
@@ -1286,10 +1289,10 @@
           "short": "Qué ofreces y cómo te encuentran",
           "body": "Cada servicio debe tener nombre claro, descripción, precio fijo o a convenir, experiencia y cobertura.",
           "steps": [
-            "Agrega cada servicio por separado.",
-            "Usa nombres simples que los clientes sí buscarían.",
-            "Completa descripción, precio, experiencia y cobertura.",
-            "Agrega credencial profesional solo cuando aplique a ese servicio."
+            "Elegí el servicio del catálogo que ofrecés.",
+            "Describí qué incluye y, si querés, agregá una imagen real.",
+            "Indicá un precio desde y su unidad, o activá Precio a consultar.",
+            "Elegí desde cuándo trabajás en ese servicio y guardá los cambios."
           ],
           "cta": "Ir a servicios"
         },
@@ -1301,7 +1304,7 @@
             "Escribe un puesto o profesión claro.",
             "Define modalidad, tipo de empleo, experiencia requerida y ubicación.",
             "Agrega salario si quieres mostrarlo.",
-            "Publica y administra tus empleos desde el panel; la gente te escribe por WhatsApp. Un empleo detenido se puede volver a publicar o eliminar."
+            "Publicá y administrá tus empleos desde el panel. Un empleo detenido se puede volver a publicar o eliminar."
           ],
           "cta": "Ir a empleos"
         },
@@ -1310,10 +1313,10 @@
           "short": "Promociona servicios o productos",
           "body": "Desde Promociones publicas tus descuentos y paquetes, con fotos y condiciones claras.",
           "steps": [
-            "Escribe un título directo y selecciona un servicio del catálogo de ContrataCR.",
-            "Agrega el precio (o déjalo a consultar), el tipo de promoción y hasta 5 imágenes reales.",
-            "Define cobertura, cantidad y hasta cuándo estará disponible cuando corresponda.",
-            "Publica, edita, detén o elimina la promoción desde tu panel."
+            "Escribí un título claro y elegí el servicio de la promoción.",
+            "Describí lo que incluye y agregá entre 1 y 5 imágenes reales.",
+            "Indicá el precio o activá Precio a consultar, y revisá la vigencia.",
+            "Elegí la ubicación cuando aplique y revisá todo antes de publicar."
           ],
           "cta": "Ir a promociones"
         },
@@ -1329,10 +1332,30 @@
             "Usa Ver mi perfil para ver la versión pública."
           ],
           "cta": "Ir a perfil profesional"
+        },
+        "workplacesGuide": {
+          "title": "Lugares de trabajo",
+          "short": "Provincia, cantón y cobertura",
+          "body": "Indicá dónde atendés para que te encuentren en la zona correcta.",
+          "steps": [
+            "Abrí Perfil y entrá a Lugares de trabajo.",
+            "Elegí la provincia y el cantón donde atendés.",
+            "Activá atención a domicilio o videoconsultas si aplican a tu servicio.",
+            "Revisá la cobertura y guardá los cambios."
+          ],
+          "cta": "Ir a lugares de trabajo"
         }
       },
       "searchPlaceholder": "Buscar en las guías",
-      "searchEmpty": "No encontramos una guía con esa palabra."
+      "searchEmpty": "No encontramos una guía con esa palabra.",
+      "visualStep": "Paso {step} de {total}",
+      "previousStep": "Anterior",
+      "nextStep": "Siguiente",
+      "reduceCapture": "Reducir captura",
+      "enlargeCapture": "Ampliar captura",
+      "captureAlt": "Paso {step}: {text}",
+      "exampleNotice": "Datos de ejemplo",
+      "allSteps": "Leer todos los pasos"
     },
     "subtitles": {
       "proposals": "Trabajos que publicaron los clientes y a los que puedes postularte.",
@@ -1547,7 +1570,8 @@
     "descriptionLimit": "{count}/{max} caracteres",
     "priceRef": "Precio desde",
     "priceRefHelp": "Indica una tarifa orientativa y aclara en la descripción qué incluye y qué puede cambiar el precio.",
-    "aConsultarLabel": "Consultar precio (no mostrar monto)",
+    "aConsultarLabel": "Precio a consultar",
+    "aConsultarHelp": "El cliente te contactará para conocer el precio.",
     "amountPlaceholder": "12 000",
     "editInfo": "Editar información",
     "serviceLabel": "Servicio",

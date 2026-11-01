@@ -29,15 +29,15 @@ export function ShareLinkPanel({ url, label, copyLabel, copiedLabel }: {
     // se quiere ensenar quedaba feo. El enlace toma el renglon entero y el
     // boton va debajo, a todo el ancho: no hay donde fallar y el area de toque
     // es la mayor posible.
-    <div className="rounded-2xl bg-gradient-to-br from-[#162543] to-[#1d3b63] p-3.5 text-left">
-      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#8fb8d8]">{label}</p>
-      <p className="mt-1 text-[15px] font-extrabold leading-snug text-white [overflow-wrap:anywhere]">{visible}</p>
+    <div className="rounded-2xl border border-[#c6eaf6] bg-[#eef9fd] p-3.5 text-left">
+      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#526277]">{label}</p>
+      <p className="mt-1 text-[15px] font-extrabold leading-snug text-[#162543] [overflow-wrap:anywhere]">{visible}</p>
       <button
         type="button"
         onClick={() => void copiar()}
-        className="mt-3 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-white/10 text-[13px] font-bold text-white transition-colors hover:bg-white/20"
+        className="mt-3 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-[#b9e3f3] bg-white text-[13px] font-bold text-[#162543] transition-colors hover:bg-[#e0f4fc]"
       >
-        {copiado ? <Check className="h-4 w-4 text-[#7ee2a8]" /> : <Copy className="h-4 w-4" />}
+        {copiado ? <Check className="h-4 w-4 text-[#0089bb]" /> : <Copy className="h-4 w-4" />}
         {copiado ? copiedLabel : copyLabel}
       </button>
     </div>

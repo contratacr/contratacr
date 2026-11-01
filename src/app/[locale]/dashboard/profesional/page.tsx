@@ -1,11 +1,12 @@
 "use client";
+import { GuideVisualWalkthrough, hasVisualGuide } from "@/components/dashboard/guide-visual-walkthrough";
 import { ProfileIdentityName, profileIdentityAvatarClass } from "@/components/professionals/profile-identity-name";
 
 import { AvatarFileInput } from "@/components/ui/avatar-file-input";
 
 import { rutaInternaSegura } from "@/lib/navigation/ruta-interna";
 import { useAppDialog } from "@/hooks/use-app-dialog";
-import { prefijoDeIdioma, rutaConIdioma } from "@/lib/prefijo-de-idioma";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { irAlInicio } from "@/lib/ir-al-inicio";
 import { enlacePerfil } from "@/lib/profile-url";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
@@ -225,6 +226,7 @@ type GuideItem = {
   id: string;
   section: "client" | "shared" | "professional";
   actionTab?: Tab;
+  targetField?: string;
   href?: string;
   targetMode?: Mode;
   stepCount: number;
@@ -248,7 +250,8 @@ const GUIDE_ITEMS: GuideItem[] = ([
   { id: "completionGuide", section: "professional", actionTab: "completion", targetMode: "offer", stepCount: 4 },
   { id: "opportunities", section: "shared", href: "/proyectos", stepCount: 3 },
   { id: "successCases", section: "professional", actionTab: "profile", targetMode: "offer", stepCount: 4 },
-  { id: "services", section: "professional", actionTab: "profile", targetMode: "offer", stepCount: 4 },
+  { id: "services", section: "professional", actionTab: "services", targetMode: "offer", stepCount: 4 },
+  { id: "workplacesGuide", section: "professional", actionTab: "profile", targetField: "location", targetMode: "offer", stepCount: 4 },
   { id: "jobsPanel", section: "professional", actionTab: "publicaciones", targetMode: "offer", stepCount: 4 },
   { id: "offersPanel", section: "professional", actionTab: "publicaciones", targetMode: "offer", stepCount: 4 },
   { id: "professionalProfile", section: "professional", actionTab: "profile", targetMode: "offer", stepCount: 5 },
@@ -314,7 +317,7 @@ function GuidesBody({
   onClose?: () => void;
 }) {
   const t = useTranslations("proPanel.guides");
-  const locale = useLocale();
+  const router = useRouter();
   const [busqueda, setBusqueda] = useState("");
   const [selectedGuideId, setSelectedGuideId] = useState<string | null>(null);
 
@@ -335,11 +338,11 @@ function GuidesBody({
   const go = (guide: GuideItem) => {
     onClose?.();
     if (!isProvider && guide.section === "professional") {
-      window.location.assign(`${prefijoDeIdioma(locale)}/registro/profesional`);
+      router.push("/registro/profesional");
       return;
     }
     if (guide.href) {
-      window.location.assign(rutaConIdioma(locale, guide.href));
+      router.push(guide.href);
       return;
     }
     if (guide.actionTab) onGo(guide);
@@ -394,7 +397,7 @@ function GuidesBody({
                   {abierta && (
                     <div className="border-t border-[#eef2f6] px-4 pb-4 pt-3">
                       <p className="text-sm leading-relaxed text-[#526277]">{t(`items.${guide.id}.body`)}</p>
-                      <ol className="mt-3 space-y-2">
+                      {hasVisualGuide(guide.id) ? <GuideVisualWalkthrough id={guide.id} title={t(`items.${guide.id}.title`)} steps={Array.from({ length: guide.stepCount }, (_, i) => t(`items.${guide.id}.steps.${i}`))} /> : <ol className="mt-3 space-y-2">
                         {Array.from({ length: guide.stepCount }, (_, stepIndex) => (
                           <li key={stepIndex} className="flex gap-2 text-sm leading-relaxed text-[#374151]">
                             <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#EBF5FB] text-[11px] font-extrabold text-[#0089bb]">
@@ -403,7 +406,7 @@ function GuidesBody({
                             <span>{t(`items.${guide.id}.steps.${stepIndex}`)}</span>
                           </li>
                         ))}
-                      </ol>
+                      </ol>}
                       <Button type="button" className="mt-4 w-full rounded-full px-5 sm:w-auto" onClick={() => go(guide)}>
                         {!isProvider && guide.section === "professional" ? t("activateProfessionalCta") : t(`items.${guide.id}.cta`)}
                         <ArrowRight className="h-4 w-4" />
@@ -434,7 +437,7 @@ function GuidesBody({
           type="button"
           onClick={() => {
             onClose?.();
-            window.location.assign(`${prefijoDeIdioma(locale)}/dashboard/profesional?tab=soporte`);
+            onGo({ id: "supportGuide", section: "shared", actionTab: "soporte", stepCount: 3 });
           }}
           className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]"
         >
@@ -1687,7 +1690,10 @@ export default function DashboardPage() {
         onGo={(guide) => {
           requestUnsavedAction(() => {
             if (guide.targetMode) setMode(guide.targetMode);
-            setTab(guide.actionTab ?? "home");
+            if (guide.targetField) {
+              clearCompletionFlow();
+              openCompletionTarget(guide.actionTab ?? "profile", guide.targetField, { track: false });
+            } else setTab(guide.actionTab ?? "home");
           });
         }}
       />

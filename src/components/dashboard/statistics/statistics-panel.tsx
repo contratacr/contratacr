@@ -2,10 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Eye, Phone, ChevronDown } from "lucide-react";
+import { Eye, Phone, ChevronDown, ChevronRight } from "lucide-react";
 import { WhatsAppLogo } from "@/components/ui/whatsapp-logo";
 import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { PANEL_SECTION_SURFACE } from "@/components/dashboard/profile-section-layout";
+import { Link, usePathname } from "@/i18n/navigation";
+import { useSearchParams } from "next/navigation";
+import { rutaEmpleo, rutaProyecto, rutaPromocion } from "@/lib/marketplace-url";
 import { cn } from "@/lib/utils";
 
 type Publication = { id: string; title: string; views: number; whatsapp: number };
@@ -20,8 +23,16 @@ const PUBLICATION_SECTIONS = ["projects", "jobs", "offers"] as const;
 
 export function StatisticsPanel({ professional, callsEnabled }: { professional: boolean; callsEnabled: boolean }) {
   const t = useTranslations("panelStatistics");
-  const [period, setPeriod] = useState<0 | 7 | 30 | 90>(30);
-  const [section, setSection] = useState<Section>(professional ? "profile" : "projects");
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const [period, setPeriod] = useState<0 | 7 | 30 | 90>(() => {
+    const days = Number(params.get("statsDays") ?? 30);
+    return [0,7,30,90].includes(days) ? days as 0|7|30|90 : 30;
+  });
+  const [section, setSection] = useState<Section>(() => {
+    const value = params.get("statsSection");
+    return ["profile","projects","jobs","offers"].includes(value ?? "") ? value as Section : professional ? "profile" : "projects";
+  });
   const [activity, setActivity] = useState<AccountActivity | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -44,6 +55,17 @@ export function StatisticsPanel({ professional, callsEnabled }: { professional: 
     : professional ? ["profile"] : [];
   const activeSection = sections.includes(section) ? section : sections[0];
   const publicationRows = activeSection && activeSection !== "profile" ? activity?.[activeSection] ?? [] : [];
+
+  const returnParams = new URLSearchParams(params.toString());
+  returnParams.set("tab", "statistics");
+  returnParams.set("statsDays", String(period));
+  returnParams.set("statsSection", activeSection ?? section);
+  const returnHref = `${pathname}?${returnParams}`;
+  const rememberFilters = () => window.history.replaceState(window.history.state, "", `${window.location.pathname}?${returnParams}`);
+  const publicationHref = (row: Publication) => {
+    const path = activeSection === "projects" ? rutaProyecto(row) : activeSection === "jobs" ? rutaEmpleo(row) : rutaPromocion(row);
+    return `${path}?from=${encodeURIComponent(returnHref)}`;
+  };
 
   return <div data-testid="statistics-panel" className={cn(PANEL_SECTION_SURFACE, "text-[#162543] lg:rounded-none lg:border-0 lg:shadow-none")} aria-busy={loading}>
     <div className="flex items-center justify-between gap-3 px-4 pb-2 pt-4 sm:px-5 lg:px-0">
@@ -81,7 +103,7 @@ export function StatisticsPanel({ professional, callsEnabled }: { professional: 
     {activity && activeSection !== "profile" && activeSection && <section className="px-4 pb-4 pt-5 sm:px-5 lg:px-0" aria-label={t(activeSection)}>
       <div className="hidden grid-cols-[1fr_85px_110px] gap-4 border-b border-[#e5e7eb] py-3 text-right text-xs font-medium text-[#68778d] sm:grid"><span className="text-left">{t("post")}</span><span>{t("views")}</span><span>{t("whatsapp")}</span></div>
       {publicationRows.map(row => <div key={row.id} className="grid grid-cols-2 gap-x-3 gap-y-2 border-b border-[#eef2f6] py-4 last:border-b-0 sm:grid-cols-[1fr_85px_110px] sm:items-center sm:gap-4">
-        <p className="col-span-2 text-[14px] font-semibold leading-5 sm:col-span-1">{row.title}</p>
+        <div className="col-span-2 min-w-0 sm:col-span-1"><p className="text-[14px] font-semibold leading-5">{row.title}</p><Link href={publicationHref(row)} onClick={rememberFilters} className="mt-1 inline-flex min-h-10 items-center gap-1 text-[13px] font-semibold text-[#0089bb] hover:underline">{t(activeSection === "projects" ? "viewProject" : activeSection === "jobs" ? "viewJob" : "viewOffer")}<ChevronRight className="h-4 w-4" aria-hidden /></Link></div>
         <div className="flex items-center gap-1.5 text-[11px] text-[#526277] sm:justify-end sm:text-[13px]"><Eye className="h-4 w-4 text-[#009FD9]" aria-hidden /><strong className="text-[#162543]">{row.views}</strong><span className="sm:hidden">{t("views").toLowerCase()}</span></div>
         <div className="flex items-center gap-1.5 text-[11px] text-[#526277] sm:justify-end sm:text-[13px]"><WhatsAppLogo className="h-4 w-4 text-[#009FD9]" aria-hidden /><strong className="text-[#162543]">{row.whatsapp}</strong><span className="sm:hidden">{t("clickShort")}</span></div>
       </div>)}

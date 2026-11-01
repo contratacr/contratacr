@@ -1,4 +1,5 @@
 "use client";
+import { WhatsAppLogo } from "@/components/ui/whatsapp-logo";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
@@ -223,7 +224,7 @@ export function ShareKit({ open, onClose, initialView = "menu", profileUrl, name
   // El subtitulo existia en los textos y no se estaba usando: dice POR QUE vale
   // la pena compartir el perfil, que es lo unico que la ventana no contaba.
   return (
-    <Modal open={open} onClose={cerrar} title={t("title")} subtitle={t("subtitle")} size="sm" mobilePresentation="center" closeLabel={t("close")}>
+    <Modal open={open} onClose={cerrar} title={t(view === "reviews" ? "reviewsTitle" : "title")} subtitle={view === "reviews" ? undefined : t("subtitle")} size="sm" mobilePresentation="center" closeLabel={t("close")}>
       {view === "menu" && (
         <div className="flex flex-col gap-3">
           {/* Lo mismo que ve un cliente al compartir un perfil (enlace a la vista,
@@ -256,7 +257,7 @@ export function ShareKit({ open, onClose, initialView = "menu", profileUrl, name
         <div className="flex flex-col gap-3">
           <p className="text-left text-[14px] leading-6 text-[#52627a]">{t("reviewsHint")}</p>
           <p className="rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3 text-left text-[14px] leading-6 text-[#162543] [overflow-wrap:anywhere]">{reviewsMessage}</p>
-          <a href={waHref} target="_blank" rel="noopener noreferrer" className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[#009FD9] px-5 text-[14px] font-bold text-white transition-colors hover:bg-[#0089bb]">{t("sendWhatsApp")}</a>
+          <a href={waHref} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 w-full items-center justify-center gap-2.5 rounded-2xl bg-[#25d366] px-5 text-[15px] font-bold text-white transition-colors hover:bg-[#1eb457]"><WhatsAppLogo className="h-[18px] w-[18px]" aria-hidden />{t("sendWhatsApp")}</a>
           <Button type="button" variant="secondary" className="w-full" onClick={() => void copy(reviewsMessage, "message")}>
             {copied === "message" ? <><Check className="h-4 w-4" />{t("messageCopied")}</> : t("copyMessage")}
           </Button>
