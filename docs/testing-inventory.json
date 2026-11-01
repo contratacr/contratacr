@@ -23188,7 +23188,7 @@
           "title": "\"the panel separates jobs and services and never reports an unavailable hiring count as zero\""
         },
         {
-          "line": 36,
+          "line": 42,
           "title": "\"contacts towards projects remain a separate activity, not service acquisition\""
         }
       ]
@@ -23572,87 +23572,87 @@
           "title": "\"does not guess a catalog category when the need is unclear\""
         },
         {
-          "line": 98,
+          "line": 105,
           "title": "\"keeps unclear Spanish and English requests as free-text searches\""
         },
         {
-          "line": 118,
+          "line": 125,
           "title": "\"asks before guessing when the service word is too generic\""
         },
         {
-          "line": 132,
+          "line": 139,
           "title": "\"understands more than 1,000 natural service requests with conversational wrappers\""
         },
         {
-          "line": 161,
+          "line": 168,
           "title": "\"keeps obvious first messages and follow-ups out of the uncertain fallback\""
         },
         {
-          "line": 178,
+          "line": 185,
           "title": "\"does not reuse an old location for a fresh service-only search\""
         },
         {
-          "line": 194,
+          "line": 201,
           "title": "\"does not turn emergencies or unsafe requests into service searches\""
         },
         {
-          "line": 218,
+          "line": 225,
           "title": "\"resolves service boundaries from natural Spanish, tico phrases and English synonyms\""
         },
         {
-          "line": 267,
+          "line": 274,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 349,
+          "line": 356,
           "title": "\"does not promise availability when a matched professional has no public slots\""
         },
         {
-          "line": 368,
+          "line": 375,
           "title": "\"answers product questions with stable, actionable destinations\""
         },
         {
-          "line": 393,
+          "line": 400,
           "title": "\"covers every assistant navigation intent and validation boundary\""
         },
         {
-          "line": 445,
+          "line": 452,
           "title": "\"product manual contains every current business area the AI must explain\""
         },
         {
-          "line": 466,
+          "line": 473,
           "title": "\"resolves every canonical service in the complete catalog\""
         },
         {
-          "line": 490,
+          "line": 497,
           "title": "\"answers high-risk product questions without turning them into service searches\""
         },
         {
-          "line": 516,
+          "line": 523,
           "title": "\"keeps the contact flow inside the app in Spanish and English\""
         },
         {
-          "line": 533,
+          "line": 540,
           "title": "\"uses internal messaging copy and actions for the native app\""
         },
         {
-          "line": 550,
+          "line": 557,
           "title": "\"searches real professionals through a trustworthy filtered-results link\""
         },
         {
-          "line": 567,
+          "line": 574,
           "title": "\"keeps search intent, service and location across natural follow-ups\""
         },
         {
-          "line": 619,
+          "line": 626,
           "title": "\"uses deterministic safety guidance and does not expose internal instructions\""
         },
         {
-          "line": 631,
+          "line": 638,
           "title": "\"keeps the retired assistant UI out of public navigation\""
         },
         {
-          "line": 652,
+          "line": 659,
           "title": "\"responds in English with localized navigation\""
         }
       ]
@@ -24565,7 +24565,7 @@
           "title": "`completion titles wrap and the price step opens at the price field (${locale})`"
         },
         {
-          "line": 63,
+          "line": 67,
           "title": "'price notifications explain the benefit consistently in both languages'"
         }
       ]
