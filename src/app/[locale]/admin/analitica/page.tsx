@@ -8,10 +8,11 @@ export const dynamic = "force-dynamic";
 
 // Comprehensive admin analytics — users, professionals, marketplace activity,
 // interactions and support. Admin-only.
-export default async function AdminAnaliticaPage() {
+export default async function AdminAnaliticaPage({ searchParams }: { searchParams: Promise<{ period?: string }> }) {
   const admin = await getAdminUser();
   if (!admin) return <AdminAccess />;
-  const data = await getAdminReports("es");
+  const { period } = await searchParams;
+  const data = await getAdminReports("es", period === "week" ? "week" : "all");
   return (
     <AdminShell adminName={admin.fullName} active="analitica">
       <AdminAnalytics data={data} />

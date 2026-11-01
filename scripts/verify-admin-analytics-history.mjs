@@ -1,0 +1,35 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { PGlite } from '@electric-sql/pglite';
+const db=new PGlite();
+try {
+ await db.exec(`create role anon;create role authenticated;create role service_role;
+ create table profiles(id uuid primary key,full_name text,role text,created_at timestamptz default now());
+ create table app_usage_tracking_start(id boolean,started_at timestamptz);
+ create table app_usage_events(event_key text,created_at timestamptz,viewer_user_id uuid,visitor_hash text,runtime text,event_type text,session_id uuid,path text,tab text);
+ create table interaction_events(id uuid,created_at timestamptz,viewer_user_id uuid,visitor_hash text,metadata jsonb,event_type text,source text);
+ create table growth_conversion_events(created_at timestamptz,is_baseline boolean,attribution jsonb,action text,status text);
+ create table app_registration_sources(user_id uuid,runtime text);
+ create table app_journey_events(event_id uuid,created_at timestamptz,viewer_user_id uuid,visitor_hash text,runtime text,action text,target text,section text,value integer);
+ insert into profiles(id,full_name,role) values('00000000-0000-4000-8000-000000000001','Visitor','client'),('00000000-0000-4000-8000-000000000002','Excluded admin','admin');
+ insert into app_usage_tracking_start values(true,now()-interval '400 days');
+ insert into app_usage_events select 'key-'||n,now()-make_interval(days=>n),'00000000-0000-4000-8000-000000000001','visitor','ios','screen','00000000-0000-4000-8000-000000000003','/profesionales',null from unnest(array[0,200])n;
+ insert into app_journey_events select ('00000000-0000-4000-8000-'||lpad((n+10)::text,12,'0'))::uuid,now()-make_interval(days=>n),'00000000-0000-4000-8000-000000000001','visitor','ios','navigation','search','home',null from unnest(array[0,200])n;
+ insert into app_journey_events values('00000000-0000-4000-8000-000000000999',now(),'00000000-0000-4000-8000-000000000002','admin','ios','navigation','search','home',null);
+ insert into growth_conversion_events select now()-make_interval(days=>n),false,'{"runtime":"ios"}','service_contact','sent' from unnest(array[0,200])n;
+ insert into growth_conversion_events values(now(),true,'{}','service_contact','sent');`);
+ const sql=await readFile(new URL('../supabase/migrations/258_analitica_historico_disponible.sql',import.meta.url),'utf8');
+ await db.exec(sql);await db.exec(sql);
+ const rpc=async(fn,days)=>(await db.query(`select ${fn}($1) data`,[days])).rows[0].data;
+ const recent=await rpc('get_admin_runtime_analytics',7),all=await rpc('get_admin_runtime_analytics',0);
+ assert.equal(recent.rows.find(r=>r.runtime==='ios').screens,1);assert.equal(all.rows.find(r=>r.runtime==='ios').screens,2);assert.equal(all.days,0);
+ assert.equal((await rpc('admin_meta_delivery',7)).sent,1);assert.equal((await rpc('admin_meta_delivery',0)).sent,2);
+ assert.equal((await rpc('admin_activity_journey',7)).length,2);const journey=await rpc('admin_activity_journey',0);assert.equal(journey.length,4);assert(!journey.some(r=>r.name==='Excluded admin'));
+ const old=journey.find(r=>new Date(r.created_at)<new Date(Date.now()-100*86400000));assert(old);
+ const filtered=(await db.query("select admin_activity_journey(0,'ios','visitor') data")).rows[0].data;assert.equal(filtered.length,4);
+ await db.exec('set role authenticated');
+ for(const fn of ['get_admin_runtime_analytics','admin_meta_delivery','admin_activity_journey'])await assert.rejects(()=>db.query(`select ${fn}(0)`));
+ await db.exec('reset role');
+ const retention=await readFile(new URL('../supabase/migrations/249_recorridos_sin_contenido_privado.sql',import.meta.url),'utf8');assert(retention.includes("interval '90 days'"));assert(!sql.includes('cron.schedule'));
+ console.log('PASS: real RPCs all retained history beyond 90 days, period isolation, admin exclusion, baseline exclusion, filters, private ACL, repeat migration, retention unchanged.');
+} finally {await db.close();}

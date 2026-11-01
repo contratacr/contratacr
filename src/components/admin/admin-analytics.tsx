@@ -1,3 +1,5 @@
+"use client";
+import { createContext, useContext, useState } from "react";
 import { AdminContactBreakdown } from "./admin-contact-breakdown";
 import { formatFullPersonName } from "@/lib/display-name";
 import { AdminActivityJourney } from "./admin-activity-journey";
@@ -16,7 +18,12 @@ function pct(part: number, whole: number) {
   return Math.round((part / whole) * 100);
 }
 
-function Section({ icon: Icon, title, sub, children, action, className }: { icon: typeof Users; title: string; sub?: string; children: React.ReactNode; action?: React.ReactNode; className?: string }) {
+type AnalyticsView = "overview" | "contacts" | "acquisition" | "platforms" | "activity";
+const AnalyticsViewContext = createContext<AnalyticsView>("overview");
+
+function Section({ icon: Icon, title, sub, children, action, className, group = "overview" }: { group?: AnalyticsView; icon: typeof Users; title: string; sub?: string; children: React.ReactNode; action?: React.ReactNode; className?: string }) {
+  const active = useContext(AnalyticsViewContext);
+  if (active !== group) return null;
   return (
     <section className={`rounded-2xl border border-[#e5e7eb] bg-white p-4 sm:p-5 ${className ?? ""}`}>
       <div className="mb-4 flex items-center justify-between gap-3">
@@ -24,7 +31,7 @@ function Section({ icon: Icon, title, sub, children, action, className }: { icon
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#f1f5f9] text-[#0f172a]"><Icon className="h-4 w-4" /></span>
           <div>
             <h2 className="text-sm font-bold text-[#0f172a]">{title}</h2>
-            {sub && <p className="text-[11px] text-[#94a3b8]">{sub}</p>}
+            {sub && <p className="text-[11px] text-[#64748b]">{sub}</p>}
           </div>
         </div>
         {action}
@@ -46,13 +53,13 @@ function Delta({ data }: { data: WeekCompare }) {
   );
 }
 
-function Kpi({ label, data, help }: { label: string; data: WeekCompare; help?: string }) {
+function Kpi({ label, data, help, compare = true }: { label: string; data: WeekCompare; help?: string; compare?: boolean }) {
   return (
     <div className="rounded-xl border border-[#e5e7eb] bg-white p-3" title={help}>
-      <p className="truncate text-xs font-medium text-[#64748b]">{label}</p>
+      <p className="min-h-8 text-xs font-medium leading-4 text-[#64748b]">{label}</p>
       <div className="mt-1 flex items-end justify-between gap-2">
         <p className="text-3xl font-bold leading-none tabular-nums text-[#0f172a]">{fmt(data.now)}</p>
-        <Delta data={data} />
+        {compare && <Delta data={data} />}
       </div>
     </div>
   );
@@ -83,7 +90,7 @@ function Funnel({ steps }: { steps: { label: string; value: number; help: string
 
 function Segmented({ parts }: { parts: { label: string; value: number; color: string }[] }) {
   const total = parts.reduce((a, p) => a + p.value, 0);
-  if (total === 0) return <p className="text-sm text-[#94a3b8]">Sin datos</p>;
+  if (total === 0) return <p className="text-sm text-[#64748b]">Sin datos</p>;
   return (
     <div>
       <div className="flex h-3 w-full overflow-hidden rounded-full bg-[#f1f5f9]">
@@ -104,7 +111,7 @@ function Segmented({ parts }: { parts: { label: string; value: number; color: st
 }
 
 function Ranked({ items, color }: { items: Count[]; color: string }) {
-  if (items.length === 0) return <p className="text-sm text-[#94a3b8]">Sin datos</p>;
+  if (items.length === 0) return <p className="text-sm text-[#64748b]">Sin datos</p>;
   const max = Math.max(1, ...items.map((i) => i.value));
   return (
     <div className="flex flex-col gap-2.5">
@@ -127,20 +134,20 @@ function Ranked({ items, color }: { items: Count[]; color: string }) {
 // all time. Campaign names come straight from utm_campaign.
 function Acquisition({ data }: { data: AdminAcquisition }) {
   if (data.tracked === 0) {
-    return <p className="text-sm text-[#94a3b8]">Sin datos todavía. Se guarda el origen de cada cuenta nueva a partir de hoy.</p>;
+    return <p className="text-sm text-[#64748b]">Sin datos de origen registrados. Las cuentas anteriores al seguimiento pueden no tener este dato.</p>;
   }
-  const th = "pb-2 text-right text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]";
+  const th = "pb-2 text-right text-[11px] font-semibold uppercase tracking-wide text-[#64748b]";
   return (
     <div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr>
-              <th className="pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">Origen</th>
+              <th className="pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-[#64748b]">Origen</th>
               <th className={th} colSpan={2}>30 días</th>
               <th className={th} colSpan={2}>Total</th>
             </tr>
-            <tr className="text-right text-[11px] text-[#94a3b8]">
+            <tr className="text-right text-[11px] text-[#64748b]">
               <th />
               <th className="pb-1 font-medium">Prof.</th>
               <th className="pb-1 font-medium">Clientes</th>
@@ -160,9 +167,9 @@ function Acquisition({ data }: { data: AdminAcquisition }) {
             ))}
             {data.untracked > 0 && (
               <tr>
-                <td className="py-2 pr-3 text-[#94a3b8]">Sin dato</td>
-                <td className="py-2 text-right tabular-nums text-[#94a3b8]" colSpan={2}>{fmt(data.untracked30)}</td>
-                <td className="py-2 text-right tabular-nums text-[#94a3b8]" colSpan={2}>{fmt(data.untracked)}</td>
+                <td className="py-2 pr-3 text-[#64748b]">Sin dato</td>
+                <td className="py-2 text-right tabular-nums text-[#64748b]" colSpan={2}>{fmt(data.untracked30)}</td>
+                <td className="py-2 text-right tabular-nums text-[#64748b]" colSpan={2}>{fmt(data.untracked)}</td>
               </tr>
             )}
           </tbody>
@@ -170,11 +177,11 @@ function Acquisition({ data }: { data: AdminAcquisition }) {
       </div>
       {data.campaigns.length > 0 && (
         <div className="mt-4">
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">Por campaña</p>
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#64748b]">Por campaña</p>
           <ul className="divide-y divide-[#eef2f6]">
             {data.campaigns.map((c) => (
               <li key={`${c.source}|${c.label}`} className="flex items-center justify-between gap-3 py-1.5 text-sm">
-                <span className="min-w-0 truncate font-semibold text-[#0f172a]">{c.label} <span className="font-normal text-[#94a3b8]">· {c.source}</span></span>
+                <span className="min-w-0 truncate font-semibold text-[#0f172a]">{c.label} <span className="font-normal text-[#64748b]">· {c.source}</span></span>
                 <span className="shrink-0 text-xs tabular-nums text-[#64748b]"><strong className="text-[#0f172a]">{c.pros}</strong> prof. · <strong className="text-[#0f172a]">{c.clients}</strong> clientes</span>
               </li>
             ))}
@@ -206,38 +213,50 @@ function runtimeActionLabel(action: string) {
 }
 
 export function AdminAnalytics({ data }: { data: AdminReports }) {
+  const [active, setActive] = useState<AnalyticsView>("overview");
+  const allTime = data.reportingPeriod === "all";
+  const periodLabel = allTime ? "Todo el tiempo" : "Últimos 7 días";
   const { users, pros, support, insights } = data;
   const week = insights.week;
   const gateSince = insights.gateSince ? new Date(insights.gateSince).toLocaleDateString("es-CR", { day: "numeric", month: "short" }) : null;
   const pendingTickets = support.byStatus.filter((s) => s.label !== "Resuelto").reduce((sum, s) => sum + s.value, 0);
 
   return (
+    <AnalyticsViewContext.Provider value={active}>
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <h1 className="text-2xl font-bold text-[#0f172a]">Analítica</h1>
-        <p className="text-xs text-[#94a3b8]">
+        <p className="text-xs text-[#64748b]">
           {fmt(users.total)} cuentas · {fmt(users.pros)} profesionales ({fmt(users.verifiedPros)} verificados) · {fmt(users.clients)} clientes
         </p>
       </div>
 
-      <AdminActivityJourney />
-      <Section icon={Users} title="Servicios y empleos por separado" sub="Clics de contacto · WhatsApp, llamadas y correo">
+      <div className="rounded-2xl border border-[#d5eaf3] bg-[#f0f9fc] p-4 sm:p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div><p className="text-sm font-bold text-[#162543]">Período de análisis</p><p className="mt-1 text-xs text-[#475569]">El histórico incluye únicamente los datos registrados y conservados. No reconstruye actividad anterior al seguimiento.</p></div>
+          <div className="flex gap-2">{([['week', '7 días'], ['all', 'Todo el tiempo']] as const).map(([id,label]) => <Link key={id} href={`/admin/analitica?period=${id}`} aria-current={(allTime ? 'all' : 'week') === id ? 'page' : undefined} className={`rounded-full px-4 py-2 text-sm font-semibold ${(allTime ? 'all' : 'week') === id ? 'bg-[#009FD9] text-white' : 'border border-[#c5d9e5] bg-white text-[#162543]'}`}>{label}</Link>)}</div>
+        </div>
+      </div>
+      <nav aria-label="Secciones de analítica" className="flex flex-wrap gap-2">{([['overview','Resumen'],['contacts','Contactos'],['acquisition','Adquisición'],['platforms','Web y apps'],['activity','Actividad detallada']] as const).map(([id,label]) => <button key={id} type="button" aria-pressed={active===id} onClick={()=>setActive(id)} className={`min-h-11 rounded-xl px-4 py-2 text-sm font-semibold ${active===id ? 'bg-[#162543] text-white' : 'border border-[#e5e7eb] bg-white text-[#475569]'}`}>{label}</button>)}</nav>
+      {data.analyticsAvailable === false && (active === 'overview' || active === 'contacts') && <p role="alert" className="rounded-xl bg-amber-50 p-4 text-sm text-amber-900">No se pudo verificar la actividad de este período. Los ceros no deben interpretarse como ausencia de actividad.</p>}
+      {active === 'activity' && <AdminActivityJourney initialDays={allTime ? "0" : "7"} key={allTime ? 'all' : 'week'} />}
+      <Section icon={Users} group="contacts" title="Contactos por tipo de publicación" sub="Clics de contacto · WhatsApp, llamadas y correo">
         <AdminContactBreakdown data={data.contactBreakdown} />
       </Section>
 
-      <Section icon={Users} title="Esta semana" sub="vs. los 7 días anteriores">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
-          <Kpi label="Profesionales nuevos" data={week.pros} />
-          <Kpi label="Clientes nuevos" data={week.clients} />
-          <Kpi label="Búsquedas" data={week.searches} />
-          <Kpi label="Contactos de servicios" data={week.contacts} help="Clics a WhatsApp, llamadas y correos desde servicios; excluye empleos y contextos sin identificar" />
-          <Kpi label="Proyectos publicados" data={week.requests} help="Proyectos que publicaron los clientes en el tablero" />
-          <Kpi label="Respuestas al tablero" data={week.projectLeads} help="Profesionales que le escribieron a un proyecto publicado" />
-          <Kpi label="Cotizaciones" data={week.quotes} help="Cotizaciones que enviaron los profesionales" />
+      <Section icon={Users} title={periodLabel} sub={allTime ? "Histórico disponible · sin comparación semanal" : "Comparado con los 7 días anteriores"}>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+          <Kpi compare={!allTime} label={allTime ? "Profesionales registrados" : "Profesionales nuevos"} data={week.pros} />
+          <Kpi compare={!allTime} label={allTime ? "Clientes registrados" : "Clientes nuevos"} data={week.clients} />
+          <Kpi compare={!allTime} label="Búsquedas" data={week.searches} />
+          <Kpi compare={!allTime} label="Contactos de servicios" data={week.contacts} help="Clics a WhatsApp, llamadas y correos desde servicios; excluye empleos y contextos sin identificar" />
+          <Kpi compare={!allTime} label="Proyectos publicados" data={week.requests} help="Proyectos que publicaron los clientes en el tablero" />
+          <Kpi compare={!allTime} label="Respuestas al tablero" data={week.projectLeads} help="Profesionales que le escribieron a un proyecto publicado" />
+          <Kpi compare={!allTime} label="Cotizaciones" data={week.quotes} help="Cotizaciones que enviaron los profesionales" />
         </div>
       </Section>
 
-      <Section icon={Megaphone} title="De dónde vienen los registros" sub="Por canal de origen">
+      <Section icon={Megaphone} group="acquisition" title="Origen de las cuentas" sub="Histórico y últimos 30 días · independiente del filtro del resumen">
         <Acquisition data={data.acquisition} />
       </Section>
 
@@ -245,21 +264,21 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
           es lo que contesta si las páginas por oficio —hay 784, una por oficio
           y provincia— están trayendo gente o si todo llega por la portada. El
           dato ya se guardaba; no se estaba mirando. */}
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <Section icon={Search} title="Por dónde entraron" sub="Primera página de cada cuenta registrada">
+      {active === 'acquisition' && <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <Section icon={Search} group="acquisition" title="Primera página de entrada" sub="Primera página de cada cuenta registrada">
           {data.acquisition.landings.length
             ? <Ranked items={data.acquisition.landings} color="#009FD9" />
-            : <p className="text-sm text-[#94a3b8]">Todavía sin datos.</p>}
+            : <p className="text-sm text-[#64748b]">Todavía sin datos.</p>}
         </Section>
-        <Section icon={Megaphone} title="De qué sitio venían" sub="El sitio que los mandó">
+        <Section icon={Megaphone} group="acquisition" title="Sitios de referencia" sub="El sitio que los mandó">
           {data.acquisition.referrers.length
             ? <Ranked items={data.acquisition.referrers} color="#16a34a" />
-            : <p className="text-sm text-[#94a3b8]">Llegaron directo, sin sitio que los refiriera.</p>}
+            : <p className="text-sm text-[#64748b]">Llegaron directo, sin sitio que los refiriera.</p>}
         </Section>
-      </div>
+      </div>}
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <Section icon={Search} title="Actividad de servicios" sub="Últimos 7 días · conteos independientes">
+      {active === 'overview' && <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <Section icon={Search} title="Actividad de servicios" sub={`${periodLabel} · conteos independientes`}>
           <Funnel steps={[
             { label: "Búsquedas", value: insights.funnel.searches, help: "Buscaron un servicio o profesional" },
             { label: "Vistas de perfil", value: insights.funnel.profileViews, help: "Abrieron el perfil de un profesional" },
@@ -271,12 +290,12 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
           {insights.searchQuality.total > 0 && (
             <p className="mt-3 text-xs text-[#64748b]">
               <strong className={insights.searchQuality.empty > 0 ? "text-red-600" : "text-[#0f172a]"}>{pct(insights.searchQuality.empty, insights.searchQuality.total)}%</strong> de las búsquedas no encontraron a nadie
-              <span className="text-[#94a3b8]"> ({fmt(insights.searchQuality.empty)} de {fmt(insights.searchQuality.total)})</span>
+              <span className="text-[#64748b]"> ({fmt(insights.searchQuality.empty)} de {fmt(insights.searchQuality.total)})</span>
             </p>
           )}
           {insights.searchQuality.topEmpty.length > 0 && (
             <div className="mt-3">
-              <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">Buscaron y no había nadie</p>
+              <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#64748b]">Buscaron y no había nadie</p>
               <ul className="divide-y divide-[#eef2f6]">
                 {insights.searchQuality.topEmpty.map((row) => (
                   <li key={row.label} className="flex items-center justify-between gap-3 py-1.5 text-sm">
@@ -294,16 +313,16 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
           )}
         </Section>
 
-        <Section icon={MapPinned} title="Qué buscan vs. qué ofrecemos" sub="Últimos 30 días" action={<Link href="/admin/cobertura" className="text-xs font-semibold text-[#008ce0] hover:underline">Cobertura</Link>}>
+        <Section icon={MapPinned} title="Qué buscan vs. qué ofrecemos" sub={allTime ? "Demanda histórica · oferta actual" : "Últimos 30 días · oferta actual"} action={<Link href="/admin/cobertura" className="text-xs font-semibold text-[#008ce0] hover:underline">Cobertura</Link>}>
           {insights.demand.length === 0 ? (
-            <p className="text-sm text-[#94a3b8]">Sin datos</p>
+            <p className="text-sm text-[#64748b]">Sin datos</p>
           ) : (
             <ul className="divide-y divide-[#eef2f6]">
               {insights.demand.map((row) => (
                 <li key={row.id} className="flex items-center justify-between gap-3 py-2 text-sm">
                   <div className="min-w-0">
                     <p className="truncate font-semibold text-[#0f172a]">{row.label}</p>
-                    <p className="text-[11px] text-[#94a3b8]">{row.searches} búsquedas · {row.projects} proyectos</p>
+                    <p className="text-[11px] text-[#64748b]">{row.searches} búsquedas · {row.projects} proyectos</p>
                   </div>
                   <div className="shrink-0 text-right">
                     <p className="text-sm tabular-nums text-[#0f172a]"><strong>{row.supply}</strong> <span className="text-xs text-[#64748b]">prof.</span></p>
@@ -314,10 +333,10 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
             </ul>
           )}
         </Section>
-      </div>
+      </div>}
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-        <Section icon={Smartphone} title="Uso de web y apps" sub="Últimos 7 días" className="lg:col-span-3">
+      {(active === 'overview' || active === 'platforms') && <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <Section icon={Smartphone} group="platforms" title="Uso de web y apps" sub={periodLabel} className="lg:col-span-3">
           {!data.runtimeUsage ? <p className="text-sm text-[#64748b]">La medición de uso no está disponible. Intenta de nuevo más tarde.</p> : <>
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {data.runtimeUsage.rows.filter(row => ["web_desktop", "web_mobile", "android", "ios"].includes(row.runtime) || row.sessions > 0 || row.visitors > 0 || row.registrations > 0 || Object.keys(row.actions).length > 0).map(row => (
@@ -339,21 +358,22 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
           </>}
         </Section>
 
-        <Section icon={UserCheck} title="Profesionales" sub={`${fmt(pros.total)} registrados · ${fmt(pros.withServices)} con servicios publicados`}>
+        <Section icon={UserCheck} title="Profesionales" sub={`Estado actual · ${fmt(pros.total)} registrados · ${fmt(pros.withServices)} con servicios publicados`}>
           <Segmented parts={[
             { label: "Verificados", value: pros.verified, color: "#16a34a" },
             { label: "Pendientes", value: pros.pending, color: "#f59e0b" },
             { label: "Sin verificar", value: pros.unverified, color: "#94a3b8" },
             { label: "Rechazados", value: pros.rejected, color: "#ef4444" },
           ]} />
-          <p className="mb-2 mt-4 text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">Por provincia</p>
+          <p className="mb-2 mt-4 text-[11px] font-semibold uppercase tracking-wide text-[#64748b]">Por provincia</p>
           <Ranked items={pros.byProvince} color="#16a34a" />
         </Section>
 
-        <Section icon={Headset} title="Soporte" sub={`${fmt(pendingTickets)} sin resolver`} action={<Link href="/admin/soporte" className="text-xs font-semibold text-[#008ce0] hover:underline">Soporte</Link>}>
+        <Section icon={Headset} title="Soporte" sub={`Estado actual · ${fmt(pendingTickets)} sin resolver`} action={<Link href="/admin/soporte" className="text-xs font-semibold text-[#008ce0] hover:underline">Soporte</Link>}>
           <Ranked items={support.byStatus} color="#7c3aed" />
         </Section>
-      </div>
+      </div>}
     </div>
+    </AnalyticsViewContext.Provider>
   );
 }

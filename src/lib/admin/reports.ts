@@ -91,9 +91,11 @@ export type AdminAcquisition = {
   referrers: Count[];
 };
 export type AdminReports = {
+  reportingPeriod?: "week" | "all";
+  analyticsAvailable?: boolean;
   insights: AdminInsights;
   runtimeUsage: RuntimeAnalytics | null;
-  contactBreakdown: { last7: ContactBreakdown; last30: ContactBreakdown; declaredHires7: number | null; declaredHires30: number | null } | null;
+  contactBreakdown: { last7: ContactBreakdown; last30: ContactBreakdown; declaredHires7: number | null; declaredHires30: number | null; allTime?: ContactBreakdown; declaredHiresAll?: number | null } | null;
   acquisition: AdminAcquisition;
   users: { total: number; clients: number; pros: number; verifiedPros: number; activeClients: number; reg30: RegPoint[] };
   pros: { total: number; verified: number; pending: number; unverified: number; rejected: number; byCategory: Count[]; byProvince: Count[]; traveling: number; fixed: number; withServices: number; withoutServices: number };
@@ -191,12 +193,15 @@ function nombreDePagina(ruta: string): string {
   return ruta;
 }
 
-export async function getAdminReports(locale = "es"): Promise<AdminReports> {
+export async function getAdminReports(locale = "es", period: "week" | "all" = "week"): Promise<AdminReports> {
   const admin = createAdminClient();
   const now = Date.now();
   const days30 = lastNDays(30, now);
 
+  const allTime = period === "all";
   const empty: AdminReports = {
+    reportingPeriod: period,
+    analyticsAvailable: false,
     runtimeUsage: null,
     contactBreakdown: null,
     insights: {
@@ -247,11 +252,17 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
   const projectsQ = iniciar(readAllAdminRows((from, to) => admin.from("projects").select("id, status, created_at, category_id, client_id").order("id").range(from, to)));
   const ticketsQ = iniciar(readAllAdminRows((from, to) => admin.from("support_tickets").select("status, created_at").order("id").range(from, to)));
   const insightsQ = iniciar(Promise.all([
-    readAllAdminRows((from, to) => admin.from("interaction_events").select("event_type, source, created_at, category_id, metadata, professional_id, viewer_user_id, visitor_hash").gte("created_at", since30).order("id").range(from, to)),
+    readAllAdminRows((from, to) => {
+      const query = admin.from("interaction_events").select("event_type, source, created_at, category_id, metadata, professional_id, viewer_user_id, visitor_hash");
+      return (allTime ? query : query.gte("created_at", since30)).order("id").range(from, to);
+    }),
     admin.from("interaction_events").select("created_at").order("created_at", { ascending: true }).limit(1),
   ]));
-  const hiresQ = iniciar(readAllAdminRows((from, to) => admin.from("growth_conversion_events").select("created_at, actor_hash").eq("is_baseline", false).eq("action", "service_hire_confirmed").gte("created_at", since30).order("event_id").range(from, to)));
-  const runtimeQ = iniciar(admin.rpc("get_admin_runtime_analytics", { p_days: 7 }));
+  const hiresQ = iniciar(readAllAdminRows((from, to) => {
+    const query = admin.from("growth_conversion_events").select("created_at, actor_hash").eq("is_baseline", false).eq("action", "service_hire_confirmed");
+    return (allTime ? query : query.gte("created_at", since30)).order("event_id").range(from, to);
+  }));
+  const runtimeQ = iniciar(admin.rpc("get_admin_runtime_analytics", { p_days: allTime ? 0 : 7 }));
   const interactionsQ = iniciar(admin.rpc("get_admin_interaction_analytics", { p_since: sinceInteractions.toISOString() }));
 
   try {
@@ -414,7 +425,8 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     const t7 = now - 7 * DAY;
     const inLast7 = (t: string) => new Date(t).getTime() >= t7 && new Date(t).getTime() <= now;
     const inPrev7 = (t: string) => { const v = new Date(t).getTime(); return v < t7 && v >= now - 14 * DAY; };
-    const countWeek = (times: string[]): WeekCompare => ({ now: times.filter(inLast7).length, prev: times.filter(inPrev7).length });
+    const inPeriod = (t: string) => allTime ? new Date(t).getTime() <= now : inLast7(t);
+    const countWeek = (times: string[]): WeekCompare => ({ now: times.filter(inPeriod).length, prev: allTime ? 0 : times.filter(inPrev7).length });
     const eventTimes = (types: string[]) => events.filter((e) => types.includes(e.event_type)).map((e) => e.created_at);
     // CONTACTO es lo que abre una conversación con el profesional: WhatsApp,
     // llamada o correo. Antes estaban aquí `service_request_started` —un clic
@@ -429,7 +441,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     const { data: hires, error: hireError } = await hiresQ;
     const excludedHashes = new Set([...adminProfileIds].map(id => createHash("sha256").update(id).digest("hex")));
     const declared = (hires ?? []).filter(h => !excludedHashes.has(h.actor_hash));
-    empty.contactBreakdown = { last7: summarizeContacts(events.filter(e => inLast7(e.created_at))), last30: summarizeContacts(last30), declaredHires7: hireError ? null : declared.filter(h => inLast7(h.created_at)).length, declaredHires30: hireError ? null : declared.length };
+    empty.contactBreakdown = { last7: summarizeContacts(events.filter(e => inLast7(e.created_at))), last30: summarizeContacts(last30), declaredHires7: hireError ? null : declared.filter(h => inLast7(h.created_at)).length, declaredHires30: hireError ? null : declared.filter(h => new Date(h.created_at).getTime() >= now - 30 * DAY).length, ...(allTime ? { allTime: summarizeContacts(events), declaredHiresAll: hireError ? null : declared.length } : {}) };
 
     empty.insights.week = {
       pros: countWeek(proCreated),
@@ -445,12 +457,12 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
       projectLeads: countWeek(eventTimes(["project_lead_whatsapp"])),
     };
     empty.insights.funnel = {
-      searches: eventTimes(["search_performed"]).filter(inLast7).length,
-      profileViews: serviceEvents.filter(e => e.event_type === "profile_view" && inLast7(e.created_at)).length,
-      contactAttempts: [...contactTimes, ...gateEvents.map(e => e.created_at)].filter(inLast7).length,
-      contacts: contactTimes.filter(inLast7).length,
-      requests: projectCreated.filter(inLast7).length,
-      projectLeads: eventTimes(["project_lead_whatsapp"]).filter(inLast7).length,
+      searches: eventTimes(["search_performed"]).filter(inPeriod).length,
+      profileViews: serviceEvents.filter(e => e.event_type === "profile_view" && inPeriod(e.created_at)).length,
+      contactAttempts: [...contactTimes, ...gateEvents.map(e => e.created_at)].filter(inPeriod).length,
+      contacts: contactTimes.filter(inPeriod).length,
+      requests: projectCreated.filter(inPeriod).length,
+      projectLeads: eventTimes(["project_lead_whatsapp"]).filter(inPeriod).length,
     };
     empty.insights.gateSince = gateEvents.length > 0
       ? gateEvents.map((e) => e.created_at).sort()[0]
@@ -459,7 +471,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     // A search that returns nobody is the clearest reason a visitor leaves: the
     // event carries `results`, so empty searches and what they asked for are
     // countable. This is what tells the owner which professionals to recruit.
-    const searchRows = events.filter((e) => e.event_type === "search_performed" && inLast7(e.created_at));
+    const searchRows = events.filter((e) => e.event_type === "search_performed" && inPeriod(e.created_at));
     const emptyLabels = new Map<string, number>();
     let emptyCount = 0;
     for (const row of searchRows) {
@@ -480,7 +492,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     };
     const platform = { web: 0, native: 0 };
     for (const e of events) {
-      if (!inLast7(e.created_at)) continue;
+      if (!inPeriod(e.created_at)) continue;
       if (e.metadata && e.metadata.platform === "native") platform.native += 1; else platform.web += 1;
     }
     empty.insights.platform = platform;
@@ -493,7 +505,8 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
       demand.set(id, entry);
     };
     for (const e of (demandEvents ?? []) as Array<{ event_type: string; category_id: string | null }>) if (e.event_type === "search_performed") bump(e.category_id, "searches");
-    for (const p of projectRowsForDemand) if (new Date(p.created_at).getTime() >= now - 30 * DAY) bump(p.category_id, "projects");
+    for (const p of projectRowsForDemand) if (allTime || new Date(p.created_at).getTime() >= now - 30 * DAY) bump(p.category_id, "projects");
+    empty.analyticsAvailable = true;
     empty.insights.demand = [...demand.entries()]
       .map(([id, d]) => {
         const supply = supplyByCategory.get(id) ?? 0;
