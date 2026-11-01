@@ -23576,83 +23576,83 @@
           "title": "\"keeps unclear Spanish and English requests as free-text searches\""
         },
         {
-          "line": 125,
+          "line": 130,
           "title": "\"asks before guessing when the service word is too generic\""
         },
         {
-          "line": 139,
+          "line": 144,
           "title": "\"understands more than 1,000 natural service requests with conversational wrappers\""
         },
         {
-          "line": 168,
+          "line": 173,
           "title": "\"keeps obvious first messages and follow-ups out of the uncertain fallback\""
         },
         {
-          "line": 185,
+          "line": 190,
           "title": "\"does not reuse an old location for a fresh service-only search\""
         },
         {
-          "line": 201,
+          "line": 206,
           "title": "\"does not turn emergencies or unsafe requests into service searches\""
         },
         {
-          "line": 225,
+          "line": 230,
           "title": "\"resolves service boundaries from natural Spanish, tico phrases and English synonyms\""
         },
         {
-          "line": 274,
+          "line": 279,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 356,
+          "line": 361,
           "title": "\"does not promise availability when a matched professional has no public slots\""
         },
         {
-          "line": 375,
+          "line": 380,
           "title": "\"answers product questions with stable, actionable destinations\""
         },
         {
-          "line": 400,
+          "line": 405,
           "title": "\"covers every assistant navigation intent and validation boundary\""
         },
         {
-          "line": 452,
+          "line": 457,
           "title": "\"product manual contains every current business area the AI must explain\""
         },
         {
-          "line": 473,
+          "line": 478,
           "title": "\"resolves every canonical service in the complete catalog\""
         },
         {
-          "line": 497,
+          "line": 502,
           "title": "\"answers high-risk product questions without turning them into service searches\""
         },
         {
-          "line": 523,
+          "line": 528,
           "title": "\"keeps the contact flow inside the app in Spanish and English\""
         },
         {
-          "line": 540,
+          "line": 545,
           "title": "\"uses internal messaging copy and actions for the native app\""
         },
         {
-          "line": 557,
+          "line": 562,
           "title": "\"searches real professionals through a trustworthy filtered-results link\""
         },
         {
-          "line": 574,
+          "line": 579,
           "title": "\"keeps search intent, service and location across natural follow-ups\""
         },
         {
-          "line": 626,
+          "line": 631,
           "title": "\"uses deterministic safety guidance and does not expose internal instructions\""
         },
         {
-          "line": 638,
+          "line": 643,
           "title": "\"keeps the retired assistant UI out of public navigation\""
         },
         {
-          "line": 659,
+          "line": 664,
           "title": "\"responds in English with localized navigation\""
         }
       ]
@@ -25477,7 +25477,7 @@
           "title": "\"publica un empleo solo con los campos obligatorios\""
         },
         {
-          "line": 336,
+          "line": 340,
           "title": "\"publicar oferta avisa cuando en realidad es una vacante\""
         }
       ]

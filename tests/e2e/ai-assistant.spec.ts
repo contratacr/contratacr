@@ -115,10 +115,15 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
     for (const prompt of unclearRequests) {
       const response = await ask(page, prompt);
       expect(response.status, JSON.stringify(response.body)).toBe(200);
-      expect(response.body.searchHref, prompt).toBeTruthy();
-      expect(response.body.searchHref, prompt).not.toContain("categoria=");
-      expect(response.body.searchHref, prompt).toMatch(/\/profesionales\?q=|openPublish=1/);
-      expect(response.body.answer, prompt).toMatch(/no tengo total certeza|buscar|cree un proyecto|create a project/i);
+      expect(response.body.action, prompt).toBe("search_professionals");
+      expect(response.body.serviceId, prompt).toBeNull();
+      const href = new URL(response.body.searchHref!, page.url());
+      expect(href.pathname, prompt).toBe("/profesionales");
+      expect(href.searchParams.has("categoria"), prompt).toBe(false);
+      expect(href.searchParams.has("provincia"), prompt).toBe(false);
+      expect(href.searchParams.has("canton"), prompt).toBe(false);
+      expect(href.searchParams.get("q")?.toLocaleLowerCase(), prompt).toBe(prompt.toLocaleLowerCase());
+      expect(response.body.answer, prompt).toMatch(/buscar|search/i);
     }
   });
 
@@ -605,7 +610,7 @@ test.describe("@seeded ContrataCR AI", () => {
     if (third.body.professionals?.length === 1) {
       expect(third.body.searchHref).toBe(third.body.professionals[0].profileHref);
     } else {
-      expect(third.body.searchHref).toContain("categoria=redes_internet");
+      expect(third.body.searchHref).toBe(rutaDeBusqueda({ categoria: "redes_internet", provincia: "al", canton: "al-at" }));
       expect(third.body.searchHref).not.toContain("medico_especialista");
     }
     expect(third.body.ctaLabel).toMatch(/Ver \d+ profesional(?:es)?/i);

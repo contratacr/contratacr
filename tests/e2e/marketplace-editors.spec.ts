@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "playwright/test";
-import { expectHealthyPage, expectVisibleText, gotoOK, loginAs } from "./helpers";
+import { expectHealthyPage, expectVisibleText, gotoOK, loginAs, waitForInteractivePage } from "./helpers";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionAdminClient } from "./seed";
 
 // Block A of docs/quality-roadmap.md: the marketplace editors through the real
@@ -319,6 +319,9 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     test.slow();
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
     await gotoOK(page, "/empleos/publicar");
+    // The streamed form can be visible before its controlled inputs hydrate.
+    // Wait for the shared interactive-page contract before entering the title.
+    await waitForInteractivePage(page);
     const titulo = `Empleo mínimo ${Date.now()}`;
     await page.locator('input[name="title"]').fill(titulo);
     // El servicio TAMBIÉN es obligatorio: de ahí sale a quién se le avisa la
@@ -328,6 +331,7 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     await page.getByRole("button", { name: /^Desarrollo web$/ }).first().click();
     await pickSelectMenu(page, /^Presencial$/, /^Remoto$/);
     await page.locator('textarea[name="description"]').fill("Empleo publicado solo con los campos obligatorios para validar el camino mínimo.");
+    await expect(page.locator('input[name="title"]')).toHaveValue(titulo);
     const id = await publicarYAbrirFicha(page, "empleos", /^Publicar empleo$/);
     await expectVisibleText(page.locator("body"), titulo);
     await regressionAdminClient().from("job_posts").delete().eq("id", id);
