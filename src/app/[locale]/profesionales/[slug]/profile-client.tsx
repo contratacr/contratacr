@@ -881,6 +881,11 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
             )}>
               <Link
                 href={profileReturnHref}
+                onClick={() => {
+                  // Cover the destination while the origin route is resolving;
+                  // returning to the assistant must not expose the old panel.
+                  if (assistantReturn) window.dispatchEvent(new Event("contratacr:open-ai"));
+                }}
                 ref={(node) => { volverRef.current = node ? () => node.click() : null; }}
                 className="inline-flex h-10 min-w-0 items-center gap-1.5 text-sm font-semibold text-[#374151] transition-colors hover:text-[#009FD9] lg:rounded-lg lg:px-2 lg:font-extrabold lg:text-[#162543] lg:hover:bg-[#eaf6fc]"
               >

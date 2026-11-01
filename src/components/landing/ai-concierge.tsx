@@ -122,9 +122,18 @@ function storePendingIntent(href: string) {
 
 /** Dirección desde la que un botón del asistente llevó a otra pantalla. */
 const VOLVER_AL_ASISTENTE = "ccr:volver-al-asistente";
-function isAssistantReturn() {
-  try { return window.sessionStorage.getItem(VOLVER_AL_ASISTENTE) === `${window.location.pathname}${window.location.search}`; }
-  catch { return false; }
+function isAssistantReturn(pathname?: string, query?: string) {
+  try {
+    const origin = window.sessionStorage.getItem(VOLVER_AL_ASISTENTE);
+    if (!origin) return false;
+    const target = new URL(origin, window.location.origin);
+    // During a Next commit the address bar can still contain the outgoing URL.
+    // Compare the route being rendered, including its query, instead.
+    const path = pathname ?? window.location.pathname;
+    const search = query === undefined ? window.location.search.slice(1) : query;
+    return sinPrefijoDeIdioma(target.pathname) === sinPrefijoDeIdioma(path)
+      && target.searchParams.toString() === new URLSearchParams(search).toString();
+  } catch { return false; }
 }
 
 const COPY = {
@@ -318,7 +327,7 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
   // Dismiss/restore it in the destination render, never an intermediate frame.
   if (previousRouteKey !== routeKey) {
     setPreviousRouteKey(routeKey);
-    if (!embedded) setOpen(isAssistantReturn());
+    if (!embedded) setOpen(isAssistantReturn(pathname, searchParams.toString()));
   }
   useContainedTouchScroll(scrollRef, open || embedded);
   const dismissAssistant = useCallback(() => {

@@ -66,7 +66,16 @@ for (const locale of ["es", "en"] as const) test(`native assistant ${locale} kee
   await expect(dialog).toHaveCount(0);
   await expect(page.getByRole("heading", { level: 1 }).filter({ visible: true }).first()).toBeVisible();
   await expect(page.locator("[data-ccr-section-title]").filter({ visible: true })).toContainText(locale === "es" ? "Volver al asistente" : "Back to assistant");
-  await page.locator("[data-ccr-section-back]").filter({ visible: true }).click();
+  // The arrow should cover the outgoing profile with the restored assistant,
+  // even while the origin route has not finished resolving.
+  await page.route(`**${origin}*`, async route => {
+    await new Promise(resolve => setTimeout(resolve, 400));
+    await route.continue();
+  });
+  const returnToAssistant = page.locator("[data-ccr-section-back]").filter({ visible: true }).click();
+  await expect(dialog).toBeVisible();
+  await returnToAssistant;
+  await expect(page).toHaveURL(new RegExp("assistantNavigationTest=1"));
   await expect(dialog).toBeVisible();
   await expect(dialog.getByText("Encontré 18 profesionales de Electricidad en Atenas.")).toBeVisible();
   await dialog.getByRole("button", { name: "Ver 18 profesionales", exact: true }).click();
