@@ -1,3 +1,4 @@
+import { isSelfInteraction } from "./self-interaction";
 import { requestStatisticsAllowed } from "@/lib/privacy/measurement-request";
 import { analyticsActor } from "@/lib/analytics/admin-activity";
 import { requestAnalyticsPlatform } from "./platform";
@@ -29,7 +30,7 @@ export async function recordServerInteraction(admin: AdminClient, req: NextReque
   if (!requestStatisticsAllowed(req) || peticionAutomatizada(req)) return;
   try {
     const actor = await analyticsActor(input.viewerUserId);
-    if (actor.excluded) return;
+    if (actor.excluded || await isSelfInteraction(admin, input.professionalId, actor.id, input.type)) return;
     const sessionId = req.cookies.get(SESSION_COOKIE)?.value;
     const visitorKey = sessionId || input.viewerUserId || randomUUID();
     const { error } = await admin.from("interaction_events").insert({

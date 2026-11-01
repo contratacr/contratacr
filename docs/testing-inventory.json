@@ -8,7 +8,7 @@
     "handlers": 106,
     "components": 268,
     "hooks": 28,
-    "specs": 181
+    "specs": 182
   },
   "dashboardTabs": [
     "home",
@@ -23050,6 +23050,15 @@
         {
           "line": 12,
           "title": "!testDatabase"
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/admin-attention-contract.spec.ts",
+      "cases": [
+        {
+          "line": 5,
+          "title": "\"@contract admin attention and self-profile measurement isolation\""
         }
       ]
     },

@@ -48,7 +48,7 @@ type FinishPushJobInput = {
 
 export type PushOutboxRepository = {
   claim(workerId: string, limit: number, leaseSeconds: number): Promise<PushOutboxJob[]>;
-  activeFcmTokens(userId: string): Promise<PushToken[]>;
+  activeFcmTokens(userId: string, adminOnly?: boolean): Promise<PushToken[]>;
   deliveredTokenIds(outboxId: string): Promise<Set<string>>;
   deactivateTokens(tokenIds: string[]): Promise<void>;
   finish(input: FinishPushJobInput): Promise<void>;
@@ -101,7 +101,13 @@ function defaultRepository(): PushOutboxRepository {
       return (data ?? []) as PushOutboxJob[];
     },
 
-    async activeFcmTokens(userId) {
+    async activeFcmTokens(userId, adminOnly = false) {
+      if (adminOnly) {
+        const { data: profile, error: roleError } = await db.from("profiles")
+          .select("role,is_disabled").eq("id", userId).maybeSingle();
+        if (roleError) throw new PushWorkerError("push_admin_role_read_failed");
+        if (profile?.role !== "admin" || profile.is_disabled) return [];
+      }
       const { data, error } = await db
         .from("user_push_tokens")
         .select("id,token")
@@ -180,7 +186,7 @@ export async function processClaimedPushJob(
 ) {
   try {
     const [tokens, alreadyDelivered] = await Promise.all([
-      repository.activeFcmTokens(job.user_id),
+      repository.activeFcmTokens(job.user_id, !!job.data && typeof job.data === "object" && (job.data as Record<string, unknown>).admin_attention === true),
       repository.deliveredTokenIds(job.id),
     ]);
     const remainingTokens = tokens.filter((row) => !alreadyDelivered.has(row.id));
