@@ -26,7 +26,11 @@ for (const locale of ['es', 'en'] as const) {
       })).toBe(true);
       await location.click();
       await expect(page.locator('[data-dashboard-current="profile"]')).toBeVisible();
-      await expect(page.locator('[data-native-back="dashboard-section"]')).toBeVisible();
+      // The shared navbar owns this header on mobile; the panel fallback is
+      // deliberately hidden after the header acknowledgment.
+      const back = page.locator('[data-ccr-section-back], [data-native-back="dashboard-section"]').filter({ visible: true });
+      await expect(back).toHaveCount(1);
+      await expect(back).toBeVisible();
       // Capture every committed panel state, including commits between frames.
       await page.evaluate(() => {
         const samples: string[] = [];
@@ -36,7 +40,7 @@ for (const locale of ['es', 'en'] as const) {
         observer.observe(document.body, { childList: true, subtree: true, attributes: true });
         Object.assign(window, { completionBackSamples: samples, completionBackObserver: observer });
       });
-      await page.locator('[data-native-back="dashboard-section"]').click();
+      await back.click();
       await expect(location).toBeVisible();
       const panels = await page.evaluate(() => {
         const state = window as unknown as { completionBackSamples: string[]; completionBackObserver: MutationObserver };

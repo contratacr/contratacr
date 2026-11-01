@@ -27,8 +27,14 @@ test("the panel separates jobs and services and never reports an unavailable hir
   const last7=summarizeContacts([row(),row({source:"jobs"}),row({source:"jobs"})]);
   const last30=summarizeContacts([row(),row(),row({source:"jobs"}),row({source:"unknown"})]);
   await page.setContent(renderToStaticMarkup(createElement(AdminContactBreakdown,{data:{last7,last30,declaredHires7:null,declaredHires30:null}})));
-  await expect(page.locator('[data-contact-segment="services"]')).toHaveText(/Servicios\s*1\s*2\s*1/);
-  await expect(page.locator('[data-contact-segment="jobs"]')).toHaveText(/Empleos\s*2\s*1\s*1/);
+  for (const [segment, clicks] of [["services", "1"], ["jobs", "2"]] as const) {
+    const card = page.locator(`[data-contact-segment="${segment}"]`);
+    await expect(card.getByText("Clics de contacto").locator("..").locator("dd")).toHaveText(clicks);
+    await expect(card.getByText("Pares únicos").locator("..").locator("dd")).toHaveText("1");
+  }
+  await page.getByText("Comparar últimos 7 y 30 días", { exact: true }).click();
+  await expect(page.getByRole("row", { name: /^Servicios/ }).locator("td")).toHaveText(["1", "2"]);
+  await expect(page.getByRole("row", { name: /^Empleos/ }).locator("td")).toHaveText(["2", "1"]);
   await expect(page.getByTestId('admin-declared-hires')).toHaveText('No disponible');
   await expect(page.getByText(/No verifica pago ni finalización/)).toBeVisible();
 });
