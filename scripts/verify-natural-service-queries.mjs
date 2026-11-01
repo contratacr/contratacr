@@ -160,12 +160,34 @@ test('real assistant normalization recognizes everyday needs before a low-confid
  const source=readFileSync(new URL('../src/app/api/ai-assistant/route.ts',import.meta.url),'utf8');
  const exports={};
  const pure=new Set(['@/lib/privacy/assistant-topics','@/lib/prefijo-de-idioma','@/lib/buscar-url','@/lib/feature-flags','@/lib/data/categories','@/lib/data/location-search','@/lib/ai/product-knowledge','@/lib/text-limits','@/lib/pricing']);
- vm.runInNewContext(ts.transpileModule(source+'\nexport const testApi={normalizePayload,localAnswer,actionHref};',{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,{exports,URL,URLSearchParams,console,process:{env:{}},require:name=>{
+ vm.runInNewContext(ts.transpileModule(source+'\nexport const testApi={normalizePayload,localAnswer,actionHref,resolveLocationIntent};',{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,{exports,URL,URLSearchParams,console,process:{env:{}},require:name=>{
   if(name==='next/cache')return{unstable_cache:fn=>fn};
   if(pure.has(name))return loadModule(name.slice(2));
   return {};
  }});
  const labels=new Map(api.getAllCategories().map(c=>[c.id,c.label]));
+ for(const message of ['No se que profesional buscar para una cosa de la casa','no tengo luz en mi casa','se rompió una cosa','necesito reparar las losas','quiero podar mis rosas','something in my house','es','san','la']) {
+  assert.equal(exports.testApi.resolveLocationIntent(message),null,message);
+  const href=exports.testApi.actionHref({action:'search_professionals',searchQuery:message},message,'es');
+  assert.equal(new URL(href,'https://contratacr.com').pathname,'/profesionales',message);
+  assert.equal(new URL(href,'https://contratacr.com').searchParams.get('q'),message);
+ }
+ for(const message of ['No se que profesional buscar para una cosa de la casa','No se si ocupo abogado o notario','No se si esto es electrico o de plomeria','I am not sure what service I need',"I don't know who can fix this problem",'I am not sure whether I need an electrician or a plumber']) {
+  const local=exports.testApi.localAnswer(message,'es');
+  const result=exports.testApi.normalizePayload(local,message,'es',[],labels);
+  const href=new URL(exports.testApi.actionHref(result,message,'es'),'https://contratacr.com');
+  assert.equal(result.action,'search_professionals',message);
+  assert.equal(result.serviceId,null,message);
+  assert.equal(href.pathname,'/profesionales',message);
+  assert.equal(href.searchParams.get('q')?.toLowerCase(),message.toLowerCase(),message);
+  assert.match(result.answer,/buscar|search/i,message);
+ }
+ const clearNeed='No sé cómo se llama, pero no tengo luz en mi casa';
+ assert.equal(exports.testApi.normalizePayload(exports.testApi.localAnswer(clearNeed,'es'),clearNeed,'es',[],labels).serviceId,'electricidad');
+ for(const [message,label] of [['Osa','Osa'],['Necesito ayuda en Osa, Puntarenas','Osa'],['Necesito un plomero en Atenas','Atenas'],['Busco ayuda en Alajuela','Alajuela'],['Necesito un electricista en Escazú.','Escazú'],['San José','San José'],['Pavas','Pavas']]) {
+  assert.equal(exports.testApi.resolveLocationIntent(message)?.label,label,message);
+ }
+
  for(const [id,phrases]of Object.entries(cases))for(const message of phrases){
   const result=exports.testApi.normalizePayload({action:'search_professionals',confidence:0},message,'es',[],labels);
   assert.equal(result.serviceId,id,message);assert.equal(result.action,'answer',message);

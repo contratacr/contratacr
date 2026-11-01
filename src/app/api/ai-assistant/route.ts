@@ -272,14 +272,19 @@ function compactLocations() {
 }
 
 function resolveLocationIntent(raw: string) {
-  const direct = resolveLocation(raw);
-  if (direct) return direct;
-  const normalized = normalizeText(raw);
+  const words = (text: string) => normalizeText(text).replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+  const query = words(raw);
+  if (!query) return null;
+  const direct = resolveLocation(raw.trim());
+  // Autocomplete accepts partial names. A conversation needs an explicit place:
+  // "es" must not become Escazú, nor "cosa" / "rosas" become Osa.
+  if (direct && words(direct.label) === query) return direct;
+  const normalized = ` ${query} `;
   return allLocationSuggestions()
-    .filter((item) => normalized.includes(normalizeText(item.label)))
+    .filter((item) => normalized.includes(` ${words(item.label)} `))
     .sort((a, b) => {
       if (a.type !== b.type) return a.type === "canton" ? -1 : 1;
-      const position = normalized.indexOf(normalizeText(a.label)) - normalized.indexOf(normalizeText(b.label));
+      const position = normalized.indexOf(` ${words(a.label)} `) - normalized.indexOf(` ${words(b.label)} `);
       return position || b.label.length - a.label.length;
     })[0] ?? null;
 }
@@ -1530,6 +1535,8 @@ function normalizePayload(
     "no se si necesito",
     "no se si esto es",
     "not sure what service",
+    "not sure if",
+    "not sure whether",
     "not sure who to search",
     "not sure what professional",
     "do not know who can fix",
@@ -1698,7 +1705,11 @@ function normalizePayload(
     return { ...payload, action: "open_dashboard", ctaLabel: locale === "en" ? "Open services" : "Ir a servicios" };
   }
   const wantsToPublish = publishConversation || hasExplicitPublishIntent(message);
-  if (userSaysServiceIsUnclear && !directService && !wantsToPublish) {
+  // Explicit alternatives need clarification even when the catalog groups both
+  // words together (for example, a lawyer and a notary).
+  const weighingAlternatives = /\b(?:no se si (?:ocupo|necesito|esto es)|not sure (?:if|whether))\b/u.test(normalized)
+    && /\b(?:o|or)\b/u.test(normalized);
+  if (userSaysServiceIsUnclear && (!directService || weighingAlternatives) && !wantsToPublish) {
     return uncertainSearchPayload(message, locale);
   }
   if (lowConfidenceServiceGuess && !wantsToPublish) {
