@@ -151,7 +151,9 @@ async function assertKeyboardSafeComposer(page: Page, composerSelector: string, 
     expect(geometry!.composerHeight).toBeLessThan(120);
   }
   expect(geometry!.composerBottom, JSON.stringify(geometry)).toBeLessThanOrEqual(501);
-  expect(geometry!.fieldBottom).toBeLessThanOrEqual(501);
+  // Measure against the keyboard edge, not just the composer: an extended
+  // native shell used to consume its own padding below the visible viewport.
+  expect(500 - geometry!.fieldBottom, JSON.stringify(geometry)).toBeGreaterThanOrEqual(16);
   if (composerSelector === ".ccr-direct-chat-composer") {
     expect(geometry!.composerBottom - geometry!.fieldBottom, JSON.stringify(geometry)).toBeGreaterThanOrEqual(16);
     expect(geometry!.composerBottom - geometry!.fieldBottom).toBeLessThan(40);
