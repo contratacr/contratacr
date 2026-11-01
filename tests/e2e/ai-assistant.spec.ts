@@ -87,12 +87,19 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
 
   test("does not guess a catalog category when the need is unclear", async ({ page }) => {
     await gotoOK(page, "/");
-    const response = await ask(page, "Ocupo ayuda con algo raro que no se como se llama");
+    const prompt = "ocupo ayuda con algo raro que no se como se llama";
+    const response = await ask(page, prompt);
     expect(response.status, JSON.stringify(response.body)).toBe(200);
-    expect(response.body.searchHref, JSON.stringify(response.body)).toBeTruthy();
-    expect(response.body.searchHref, JSON.stringify(response.body)).not.toContain("categoria=");
-    expect(response.body.searchHref, JSON.stringify(response.body)).toMatch(/\/profesionales\?q=|openPublish=1/);
-    expect(response.body.answer, JSON.stringify(response.body)).toMatch(/no estoy seguro|no tengo total certeza|crea(r)? un proyecto|publica un proyecto/i);
+    expect(response.body.action).toBe("search_professionals");
+    expect(response.body.serviceId).toBeNull();
+    const href = new URL(response.body.searchHref!, page.url());
+    expect(href.pathname).toMatch(/\/profesionales$/);
+    expect(href.searchParams.has("categoria")).toBe(false);
+    expect(href.searchParams.get("q")).toBe(prompt);
+    expect(response.body.ctaLabel).toContain(prompt);
+    expect(response.body.answer).toContain(prompt);
+    expect(response.body.answer).toMatch(/no identifiqu[eé] un servicio concreto/i);
+    expect(response.body.answer).toMatch(/¿[^?]+\?/);
   });
 
   test("keeps unclear Spanish and English requests as free-text searches", async ({ page }) => {

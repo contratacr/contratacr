@@ -37,7 +37,8 @@ for (const kind of ["company", "person", "dimex"] as const) test(`private verifi
       whatsapp: "+50670000009", bio: "Cuenta temporal de regresión.", verification_status: "pending", is_verified: false, verification_provider: "hacienda_api", verification_reason: "Identificación no encontrada.", verification_updated_at: reviewTime });
     if (proError) throw proError;
     await loginAs(page, email, password);
-    await page.waitForLoadState("networkidle");
+    // loginAs waits for the auth cookie and rendered dashboard. Realtime
+    // traffic can keep the network busy; the protected API below proves access.
     const api = page.request;
     expect((await api.get("/api/verification/documents")).status()).toBe(200);
     const originalId = kind === "company" ? "3101999999" : kind === "dimex" ? "12345678901" : "199999999";
