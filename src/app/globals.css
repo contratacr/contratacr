@@ -766,16 +766,6 @@ html[data-keyboard-visible] .ccr-native-bottom-nav {
   display: none !important;
 }
 
-/* Con el teclado abierto el área segura de abajo la cubre el propio teclado: si
-   la seguimos reservando, el campo de escribir queda flotando sobre él. */
-body.ccr-native-app {
-  --ccr-extra-teclado: 0px;
-}
-
-html[data-keyboard-open] body.ccr-native-app {
-  --ccr-extra-teclado: env(safe-area-inset-bottom);
-}
-
 /* Con el teclado abierto no hay franja del sistema abajo, así que el respiro
    tiene que ponerlo el compositor: con 0.35rem la caja de escribir quedaba
    pegada a la barra gris del teclado (la de las flechas y el visto), y las dos
@@ -783,7 +773,9 @@ html[data-keyboard-open] body.ccr-native-app {
    pantalla útil. */
 html[data-keyboard-open].ccr-native-app .ccr-direct-chat-composer,
 html[data-keyboard-open].ccr-native-app .ccr-support-thread-composer,
-html[data-keyboard-open].ccr-native-app .ccr-ai-composer {
+html[data-keyboard-open].ccr-native-app .ccr-ai-composer,
+html[data-keyboard-open] body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-ai-composer,
+html[data-keyboard-open] body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-support-thread-composer {
   padding-bottom: 1rem !important;
 }
 
@@ -1415,13 +1407,13 @@ body.ccr-native-app.ccr-native-fullscreen-layer nav.ccr-native-bottom-nav { disp
     overscroll-behavior: none;
   }
   html.ccr-native-app.contratacr-chat-thread-open .direct-chat-shell--thread {
-    /* Deja fuera el alto de la barra de pestañas: si no, el compositor queda
-       detrás de ella y no se puede escribir. */
-    height: calc(var(--app-visual-viewport-height) + var(--ccr-extra-teclado, 0px)) !important;
+    /* Match the visible viewport exactly: extending under the keyboard by the
+       safe area consumed the composer padding and left its field touching it. */
+    height: var(--app-visual-viewport-height) !important;
     /* Llega hasta el borde: la barra flota encima y el panel le deja su alto por dentro. */
     box-sizing: border-box !important;
     padding-bottom: var(--ccr-reserva-barra, 0px) !important;
-    max-height: calc(var(--app-visual-viewport-height) + var(--ccr-extra-teclado, 0px)) !important;
+    max-height: var(--app-visual-viewport-height) !important;
   }
 
   .contratacr-chat-thread-open .ccr-support-thread {
@@ -1454,7 +1446,7 @@ body.ccr-native-app.ccr-native-fullscreen-layer nav.ccr-native-bottom-nav { disp
 
 
   html[data-keyboard-open] .ccr-support-thread-composer {
-    padding-bottom: 0.5rem !important;
+    padding-bottom: 1rem !important;
   }
 
   /* EL HILO A PANTALLA COMPLETA, ANCLADO ARRIBA CUANDO NO HAY TECLADO.
@@ -1499,7 +1491,7 @@ body.ccr-native-app.ccr-native-fullscreen-layer nav.ccr-native-bottom-nav { disp
     /* The thread itself already matches the visual viewport. Adding the full
        keyboard inset here a second time turns the composer into a giant blank
        block and pushes the input away from the keyboard. */
-    padding-bottom: max(1rem, env(safe-area-inset-bottom)) !important;
+    padding-bottom: 1rem !important;
   }
 
   .contratacr-chat-thread-open .direct-chat-shell--thread > section,
