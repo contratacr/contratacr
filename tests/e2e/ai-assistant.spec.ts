@@ -626,7 +626,7 @@ test.describe("@seeded ContrataCR AI", () => {
     expect(fourth.status, JSON.stringify(fourth.body)).toBe(200);
     expect(fourth.body.action).toBe("answer");
     expect(fourth.body.serviceId).toBe("redes_internet");
-    expect(fourth.body.answer).toMatch(/zona de Costa Rica/i);
+    expect(fourth.body.answer).toMatch(/provincia o cant[oó]n de Costa Rica/i);
     expect(fourth.body.ctaLabel).toBeNull();
   });
 
