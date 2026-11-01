@@ -1,7 +1,7 @@
 "use client";
 
 import { InlineIdentityName } from "@/components/ui/inline-identity-name";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, Suspense, type FormEvent } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, useTransition, Suspense, type FormEvent } from "react";
 import { prefijoDeIdioma, rutaConIdioma, sinPrefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import {
   Menu,
@@ -322,10 +322,11 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const sessionHydratedRef = useRef(false);
+  const [navigating, startNavigation] = useTransition();
   const [previousRouteKey, setPreviousRouteKey] = useState(routeKey);
   // Keep the assistant over the origin while Next resolves the destination.
   // Dismiss/restore it in the destination render, never an intermediate frame.
-  if (previousRouteKey !== routeKey) {
+  if (previousRouteKey !== routeKey && !navigating) {
     setPreviousRouteKey(routeKey);
     if (!embedded) setOpen(isAssistantReturn(pathname, searchParams.toString()));
   }
@@ -564,7 +565,7 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
     }
     // A same-page action has no route commit to dismiss the overlay for us.
     if (!embedded && destination.split("#")[0] === `${window.location.pathname}${window.location.search}`) setOpen(false);
-    routerDeNext.push(destination);
+    startNavigation(() => routerDeNext.push(destination));
   }
 
   function resetConversation() {

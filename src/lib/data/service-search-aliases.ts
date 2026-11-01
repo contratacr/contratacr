@@ -5,7 +5,15 @@
  * pedir el trabajo van aquí, sin convertir términos ambiguos en equivalencias.
  */
 export const SERVICE_SEARCH_ALIASES: Record<string, string[]> = {
-  costura_y_arreglos_de_ropa: ["arreglar ropa", "ajustar pantalon", "hacer ruedos", "modista", "seamstress", "clothing alterations"],
+  mudanzas: ["necesito trasladar mis muebles a otra casa", "me voy a cambiar de casa", "i am moving to another house"],
+  jardineria: ["el zacate esta muy alto", "necesito cortar el pasto del patio", "my lawn needs mowing"],
+  fumigacion: ["tengo cucarachas en mi casa", "hay termitas en los muebles", "tengo una plaga de hormigas", "there are cockroaches in my house"],
+  reparacion_celulares: ["se quebro la pantalla de mi celular", "mi telefono no carga", "my phone will not charge"],
+  reparacion_computadoras: ["mi laptop esta muy lenta", "la computadora se queda pegada", "mi laptop no prende", "my laptop will not turn on"],
+  redes_internet: ["el wifi no llega a mi cuarto", "mi wifi se desconecta a cada rato", "el internet esta lento en mi casa", "my wifi keeps disconnecting"],
+  aire_acondicionado: ["el aire acondicionado no enfria", "el aire acondicionado gotea", "my air conditioner is not cooling"],
+  calentadores: ["la ducha no calienta", "no sale agua caliente de la ducha", "el calentador de agua no prende", "my shower has no hot water"],
+  costura_y_arreglos_de_ropa: ["necesito hacerle el ruedo a un pantalon", "el pantalon me queda muy largo", "my pants are too long", "arreglar ropa", "ajustar pantalon", "hacer ruedos", "modista", "seamstress", "clothing alterations"],
   publicidad: ["agencia publicitaria", "campaña publicitaria", "publicidad comercial", "advertising agency"],
   rotulacion: ["rotulos", "letreros", "rotulista", "rotular negocio", "rotulacion vehicular", "sign making", "signage"],
   operador_turistico: ["operador de tours", "excursiones guiadas", "tour operator"],
@@ -119,13 +127,13 @@ export const SERVICE_SEARCH_ALIASES: Record<string, string[]> = {
   consultoria_alimentaria: ["consultoria alimentaria", "consultoria para negocios de alimentos", "asesoria para restaurantes", "inocuidad alimentaria", "buenas practicas de manufactura de alimentos", "food business consulting"],
 
   // Rechazadas por duplicidad: el vocabulario queda en su servicio real.
-  cerrajeria: ["cerrajeria a domicilio", "cerrajeria de vehiculos", "apertura de vehiculo por llaves adentro", "apertura de carros"],
+  cerrajeria: ["me quede fuera de mi casa sin llaves", "perdi las llaves de mi casa", "la llave se quebro en la cerradura", "i am locked out of my house", "cerrajeria a domicilio", "cerrajeria de vehiculos", "apertura de vehiculo por llaves adentro", "apertura de carros"],
   construccion: ["construccion llave en mano"],
-  electricidad: ["tecnico electricista", "electricidad residencial", "electricidad comercial"],
-  reparacion_electrodomesticos: ["tecnico linea blanca", "reparacion de linea blanca", "reparacion de cocinas"],
+  electricidad: ["no tengo luz en mi casa", "no tengo luz en casa", "no hay luz en mi casa", "se va la luz en una parte de la casa", "se bajan los breakers", "el enchufe no funciona", "el tomacorriente no funciona", "the power is out in my house", "my wall socket is not working", "tecnico electricista", "electricidad residencial", "electricidad comercial"],
+  reparacion_electrodomesticos: ["la lavadora no centrifuga", "la lavadora no enciende", "la refrigeradora no enfria", "la refri no enfria", "el microondas no calienta", "my washing machine is not spinning", "my refrigerator is not cooling", "tecnico linea blanca", "reparacion de linea blanca", "reparacion de cocinas"],
   transporte_privado: ["transporte de personas modalidad taxi", "taxi privado"],
   mecanica: ["pasos de corriente", "mecanica rapida a domicilio", "mecanico a domicilio"],
-  plomeria: ["fontaneria", "fontanero"],
+  plomeria: ["el inodoro esta tapado", "el servicio sanitario esta tapado", "el lavamanos no desagua", "el fregadero esta tapado", "se sale el agua del tubo", "el tubo tiene una fuga", "my sink is clogged", "my toilet is clogged", "fontaneria", "fontanero"],
   ventanas_puertas: ["ventaneria", "ventaneria de aluminio"],
   vidrieria: ["puertas de baño", "puertas de ducha"],
   unhas: ["manicura", "manicure y pedicure", "pedicure", "pedicura"],
@@ -133,7 +141,7 @@ export const SERVICE_SEARCH_ALIASES: Record<string, string[]> = {
   control_acceso: ["control de accseso"],
   bombas_agua: ["sistemas de bombeo", "sistema de bombeo"],
   monitoreo_alarmas: ["respuesta armada inmediata", "respuesta ante activacion de alarmas"],
-  techos: ["operario en techos", "reparacion de techos"],
+  techos: ["tengo goteras en el techo", "cae agua del techo cuando llueve", "se mete la lluvia por el techo", "my roof is leaking", "operario en techos", "reparacion de techos"],
   contabilidad: ["contabilidad para pymes", "servicios contables", "contador publico", "contadora", "teneduria de libros"],
   asesoria_tributaria: ["exoneraciones tributarias", "asesoria en exoneraciones"],
   consultoria: ["consultoria iso", "asesoria para certificacion iso"],

@@ -1,5 +1,6 @@
 import { assistantExternalTopics } from "@/lib/privacy/assistant-topics";
 import { NextResponse } from "next/server";
+import { rutaDeBusqueda } from "@/lib/buscar-url";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { unstable_cache } from "next/cache";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
@@ -206,9 +207,9 @@ function uncertainSearchPayload(message: string, locale: Locale): AssistantPaylo
     locationText: null,
     confidence: 0,
     answer: locale === "en"
-      ? "I am not fully sure which service fits that request. Search with those words first; if you do not find the right option, create a project with the details."
-      : "No estoy seguro de qué servicio calza con eso. Prueba a buscar con esas palabras; si no aparece la opción correcta, publica un proyecto con los detalles.",
-    ctaLabel: locale === "en" ? "Search in ContrataCR" : "Buscar en ContrataCR",
+      ? `I have not identified a specific service for “${message}” yet. You can search ContrataCR using those exact words. What needs fixing or what would you like someone to do?`
+      : `Todavía no identifiqué un servicio concreto para “${message}”. Podés buscar esas mismas palabras en ContrataCR. ¿Qué necesitás arreglar o qué trabajo querés que haga la persona?`,
+    ctaLabel: locale === "en" ? `Search “${message}”` : `Buscar “${message}”`,
   };
 }
 
@@ -723,7 +724,7 @@ function resolveSearch(message: string, locale: Locale, serviceId?: string | nul
     params.set("canton", place.id);
   }
   return {
-    href: `/profesionales${params.toString() ? `?${params.toString()}` : ""}`,
+    href: rutaDeBusqueda(params),
     category,
     place,
   };
@@ -1387,7 +1388,7 @@ function actionHref(payload: AssistantPayload, originalMessage: string, locale: 
       params.set("provincia", place.provinceId);
       params.set("canton", place.id);
     }
-    return `/profesionales?${params.toString()}`;
+    return rutaDeBusqueda(params);
   }
   return resolveSearch(originalMessage, locale, payload.serviceId, payload.locationText).href;
 }
@@ -1490,7 +1491,7 @@ function normalizePayload(
     "hire",
     "recommend",
   ]);
-  const describesServiceNeed = !!messageCategory && includesAny(normalized, [
+  const describesServiceNeed = !!messageCategory && (!!resolveStrongCategoryIntent(message, locale) || includesAny(normalized, [
     "ayuda",
     "arreglar",
     "reparar",
@@ -1514,7 +1515,7 @@ function normalizePayload(
     "need",
     "not working",
     "broken",
-  ]);
+  ]));
   const userSaysServiceIsUnclear = includesAny(normalized, [
     "no se como se llama",
     "no se cual servicio",
@@ -1697,7 +1698,7 @@ function normalizePayload(
     return { ...payload, action: "open_dashboard", ctaLabel: locale === "en" ? "Open services" : "Ir a servicios" };
   }
   const wantsToPublish = publishConversation || hasExplicitPublishIntent(message);
-  if (userSaysServiceIsUnclear && !wantsToPublish) {
+  if (userSaysServiceIsUnclear && !directService && !wantsToPublish) {
     return uncertainSearchPayload(message, locale);
   }
   if (lowConfidenceServiceGuess && !wantsToPublish) {
@@ -1746,8 +1747,8 @@ function normalizePayload(
       serviceId: directService.id,
       locationText: null,
       answer: locale === "en"
-        ? `In which Costa Rica area would you like to search for ${serviceLabel}?`
-        : `¿En qué zona de Costa Rica buscas ${serviceLabel}?`,
+        ? `I can help you find professionals for ${serviceLabel}. In which Costa Rica province or canton do you need the service?`
+        : `Puedo ayudarte a buscar profesionales de ${serviceLabel}. ¿En qué provincia o cantón de Costa Rica necesitás el servicio?`,
       ctaLabel: null,
     };
   }

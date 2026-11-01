@@ -1128,7 +1128,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1719,
+          "line": 1724,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => {\n          requestUnsavedAction(() => openPanelDestination(tab));\n        }}",
@@ -1136,7 +1136,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1782,
+          "line": 1787,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -1144,7 +1144,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1802,
+          "line": 1807,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => {\n          if (tab === \"home\") {\n            setMobilePanelOpen(true);\n            scrollDashboardToPageTop();\n            return;\n          }\n          if (tab === \"guides\") { setGuiasAbiertas(true); return; }\n          requestUnsavedAction(() => openPanelDestination(tab));\n        }}",
@@ -1152,7 +1152,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1890,
+          "line": 1895,
           "tag": "button",
           "label": "{locale === \"en\" ? \"Profile photo options\" : \"Opciones de foto de perfil\"}",
           "handler": "{() => setHeaderPhotoMenuOpen((open) => !open)}",
@@ -1160,7 +1160,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1913,
+          "line": 1918,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { setHeaderPhotoMenuOpen(false); setHeaderPhotoPreviewOpen(true); }}",
@@ -1168,7 +1168,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1918,
+          "line": 1923,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { setHeaderPhotoMenuOpen(false); headerPhotoInputRef.current?.click(); }}",
@@ -1176,7 +1176,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1927,
+          "line": 1932,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => void handleHeaderPhotoRemove()}",
@@ -1184,7 +1184,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1976,
+          "line": 1981,
           "tag": "Link",
           "label": "{locale === \"en\" ? \"View public profile\" : \"Ver perfil público\"}",
           "handler": "{openInNewTabOnDesktop}",
@@ -1192,7 +1192,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1988,
+          "line": 1993,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setShareKitTab(activeTab)}",
@@ -1200,7 +1200,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1993,
+          "line": 1998,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setGuiasAbiertas(true)}",
@@ -1208,7 +1208,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2014,
+          "line": 2019,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{openInNewTabOnDesktop}",
@@ -1216,7 +1216,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2028,
+          "line": 2033,
           "tag": "Link",
           "label": "{locale === \"en\" ? \"View public profile\" : \"Ver perfil público\"}",
           "handler": "{openInNewTabOnDesktop}",
@@ -1224,7 +1224,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2037,
+          "line": 2042,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setShareKitTab(activeTab)}",
@@ -1232,7 +1232,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2078,
+          "line": 2083,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => fetchPro()}",
@@ -1240,7 +1240,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2090,
+          "line": 2095,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => router.push(\"/registro/profesional\")}",
@@ -1248,15 +1248,15 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2104,
+          "line": 2109,
           "tag": "button",
           "label": "{t(\"backToPanel\")}",
-          "handler": "{() => {\n                      requestUnsavedAction(() => {\n                        const chatReturn = chatReturnRef.current;\n                        if (chatReturn) {\n                          chatReturnRef.current = null;\n                          router.push(chatReturn);\n                          return;\n                        }\n                        if (hasActiveCompletionFlow()) {\n                          if (activeTab === \"profile\" && mobileProfileSectionTitle) {\n                            window.dispatchEvent(new Event(\"ccr:profile-mobile-close-section\"));\n                          }\n                          goToCompletionChecklist();\n                          return;\n                        }\n                        if (activeTab === \"profile\" && mobileProfileSectionTitle) {\n                          window.dispatchEvent(new Event(\"ccr:profile-mobile-close-section\"));\n                          return;\n                        }\n                        if (activeTab === \"soporte\" && supportThreadTitle) {\n                          window.dispatchEvent(new Event(\"ccr:support-close-thread\"));\n                          return;\n                        }\n                        const volverA = externalReturnTo ?? returnToRef.current;\n                        if (volverA && (activeTab === \"offers\" || activeTab === \"jobs\" || activeTab === \"sent_projects\" || volverA.startsWith(\"/mensajes\") || volverA === \"/notificaciones\")) {\n                          router.push(volverA);\n                          return;\n                        }\n                        setTab(\"home\");\n                      });\n                    }}",
+          "handler": "{() => {\n                      requestUnsavedAction(() => {\n                        const chatReturn = chatReturnRef.current;\n                        if (chatReturn) {\n                          chatReturnRef.current = null;\n                          router.push(chatReturn);\n                          return;\n                        }\n                        if (hasActiveCompletionFlow()) {\n                          goToCompletionChecklist();\n                          return;\n                        }\n                        if (activeTab === \"profile\" && mobileProfileSectionTitle) {\n                          window.dispatchEvent(new Event(\"ccr:profile-mobile-close-section\"));\n                          return;\n                        }\n                        if (activeTab === \"soporte\" && supportThreadTitle) {\n                          window.dispatchEvent(new Event(\"ccr:support-close-thread\"));\n                          return;\n                        }\n                        const volverA = externalReturnTo ?? returnToRef.current;\n                        if (volverA && (activeTab === \"offers\" || activeTab === \"jobs\" || activeTab === \"sent_projects\" || volverA.startsWith(\"/mensajes\") || volverA === \"/notificaciones\")) {\n                          router.push(volverA);\n                          return;\n                        }\n                        setTab(\"home\");\n                      });\n                    }}",
           "destination": "",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2210,
+          "line": 2212,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => router.push(`${prefijoDeIdioma(locale)}/dashboard/profesional?tab=soporte`)}",
@@ -1264,7 +1264,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2238,
+          "line": 2240,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => signOutToHome(locale)}",
@@ -1272,7 +1272,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2409,
+          "line": 2411,
           "tag": "StatusFilterTabs",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(id) => setPublicacionTipo(id as Publicacion)}",
@@ -2329,12 +2329,12 @@
           "line": 882,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "",
+          "handler": "{() => {\n                  // Cover the destination while the origin route is resolving;\n                  // returning to the assistant must not expose the old panel.\n                  if (assistantReturn) window.dispatchEvent(new Event(\"contratacr:open-ai\"));\n                }}",
           "destination": "{profileReturnHref}",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 983,
+          "line": 988,
           "tag": "button",
           "label": "{`${professional.ratingAvg.toFixed(1)} · ${t(\"reviewCountLabel\", { count: professional.reviewCount })}`}",
           "handler": "{() => setActiveTab(\"resenas\")}",
@@ -2342,7 +2342,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1048,
+          "line": 1053,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setActiveTab(tab.id)}",
@@ -2350,7 +2350,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1152,
+          "line": 1157,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => hasFullDescription && setServiceDescriptionOpen({ title, description })}",
@@ -2358,7 +2358,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1227,
+          "line": 1232,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -2366,7 +2366,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1274,
+          "line": 1279,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -2374,7 +2374,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1541,
+          "line": 1546,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -2382,7 +2382,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1547,
+          "line": 1552,
           "tag": "button",
           "label": "{t(\"cerrar\")}",
           "handler": "{() => setOfrecerProyecto(false)}",
@@ -13103,7 +13103,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 271,
+          "line": 278,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => onNavigate(result.profileHref)}",
@@ -13111,7 +13111,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 282,
+          "line": 289,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => onNavigate(result.actionHref)}",
@@ -13119,7 +13119,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 589,
+          "line": 588,
           "tag": "button",
           "label": "{copy.closedLabel}",
           "handler": "{() => setOpen(true)}",
@@ -13127,7 +13127,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 643,
+          "line": 642,
           "tag": "button",
           "label": "{lang === \"en\" ? \"Open menu\" : \"Abrir menú\"}",
           "handler": "{() => window.dispatchEvent(new Event(\"ccr:open-mobile-menu\"))}",
@@ -13135,7 +13135,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 651,
+          "line": 650,
           "tag": "Link",
           "label": "\"ContrataCR\"",
           "handler": "{(event) => {\n                  // El logo SIEMPRE deja al usuario en la portada: cierra esta\n                  // ventana y, si la ruta de abajo no era la portada, navega.\n                  // Sin esto, abierto desde la portada era un no-viaje mudo.\n                  event.preventDefault();\n                  dismissAssistant();\n                  const enPortada = /^\\/(?:es|en)?\\/?$/.test(window.location.pathname);\n                  if (!enPortada) router.push(\"/\");\n                }}",
@@ -13143,7 +13143,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 671,
+          "line": 670,
           "tag": "button",
           "label": "{lang === \"en\" ? \"Back\" : \"Atrás\"}",
           "handler": "{onBack}",
@@ -13151,7 +13151,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 685,
+          "line": 684,
           "tag": "button",
           "label": "{copy.reset}",
           "handler": "{resetConversation}",
@@ -13159,7 +13159,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 698,
+          "line": 697,
           "tag": "button",
           "label": "{copy.minimize}",
           "handler": "{dismissAssistant}",
@@ -13167,7 +13167,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 726,
+          "line": 725,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => navigate(message.action!.href)}",
@@ -13175,7 +13175,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 732,
+          "line": 731,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => void suggestService(index, message.suggestedService!)}",
@@ -13183,7 +13183,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 763,
+          "line": 762,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => void ask(topic.prompt)}",
@@ -13191,7 +13191,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 798,
+          "line": 797,
           "tag": "form",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{submitDraft}",
@@ -13199,7 +13199,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 799,
+          "line": 798,
           "tag": "input",
           "label": "{lang === \"en\" ? \"Ask anything...\" : \"Escribe una pregunta...\"}",
           "handler": "{(event) => setDraft(event.target.value.slice(0, 240))}",
@@ -13207,7 +13207,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 805,
+          "line": 804,
           "tag": "button",
           "label": "{copy.send}",
           "handler": "",
@@ -23468,99 +23468,103 @@
       "file": "tests/e2e/ai-assistant.spec.ts",
       "cases": [
         {
-          "line": 55,
+          "line": 57,
+          "title": "\"@contract everyday wording works in assistant and professional search\""
+        },
+        {
+          "line": 61,
           "title": "\"resolves a natural customer scenario for every catalog service\""
         },
         {
-          "line": 66,
+          "line": 72,
           "title": "\"understands every catalog service in natural Spanish and English\""
         },
         {
-          "line": 82,
+          "line": 88,
           "title": "\"does not guess a catalog category when the need is unclear\""
         },
         {
-          "line": 92,
+          "line": 98,
           "title": "\"keeps unclear Spanish and English requests as free-text searches\""
         },
         {
-          "line": 112,
+          "line": 118,
           "title": "\"asks before guessing when the service word is too generic\""
         },
         {
-          "line": 126,
+          "line": 132,
           "title": "\"understands more than 1,000 natural service requests with conversational wrappers\""
         },
         {
-          "line": 155,
+          "line": 161,
           "title": "\"keeps obvious first messages and follow-ups out of the uncertain fallback\""
         },
         {
-          "line": 172,
+          "line": 178,
           "title": "\"does not reuse an old location for a fresh service-only search\""
         },
         {
-          "line": 188,
+          "line": 194,
           "title": "\"does not turn emergencies or unsafe requests into service searches\""
         },
         {
-          "line": 212,
+          "line": 218,
           "title": "\"resolves service boundaries from natural Spanish, tico phrases and English synonyms\""
         },
         {
-          "line": 261,
+          "line": 267,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 343,
+          "line": 349,
           "title": "\"does not promise availability when a matched professional has no public slots\""
         },
         {
-          "line": 362,
+          "line": 368,
           "title": "\"answers product questions with stable, actionable destinations\""
         },
         {
-          "line": 387,
+          "line": 393,
           "title": "\"covers every assistant navigation intent and validation boundary\""
         },
         {
-          "line": 439,
+          "line": 445,
           "title": "\"product manual contains every current business area the AI must explain\""
         },
         {
-          "line": 460,
+          "line": 466,
           "title": "\"resolves every canonical service in the complete catalog\""
         },
         {
-          "line": 484,
+          "line": 490,
           "title": "\"answers high-risk product questions without turning them into service searches\""
         },
         {
-          "line": 510,
+          "line": 516,
           "title": "\"keeps the contact flow inside the app in Spanish and English\""
         },
         {
-          "line": 527,
+          "line": 533,
           "title": "\"uses internal messaging copy and actions for the native app\""
         },
         {
-          "line": 544,
+          "line": 550,
           "title": "\"searches real professionals through a trustworthy filtered-results link\""
         },
         {
-          "line": 563,
+          "line": 567,
           "title": "\"keeps search intent, service and location across natural follow-ups\""
         },
         {
-          "line": 616,
+          "line": 619,
           "title": "\"uses deterministic safety guidance and does not expose internal instructions\""
         },
         {
-          "line": 628,
+          "line": 631,
           "title": "\"keeps the retired assistant UI out of public navigation\""
         },
         {
-          "line": 649,
+          "line": 652,
           "title": "\"responds in English with localized navigation\""
         }
       ]
@@ -23944,15 +23948,15 @@
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 72,
+          "line": 96,
           "title": "`signed-in assistant Message opens ${existing ? \"an existing conversation\" : \"a new draft\"} and back restores the assistant`"
         },
         {
-          "line": 73,
+          "line": 97,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 117,
+          "line": 141,
           "title": "\"assistant return routes preserve root queries and hash in both languages\""
         }
       ]
@@ -24473,7 +24477,7 @@
           "title": "`completion titles wrap and the price step opens at the price field (${locale})`"
         },
         {
-          "line": 42,
+          "line": 63,
           "title": "'price notifications explain the benefit consistently in both languages'"
         }
       ]
@@ -25668,55 +25672,55 @@
       "file": "tests/e2e/mobile-native-shell.spec.ts",
       "cases": [
         {
-          "line": 173,
+          "line": 175,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 186,
+          "line": 188,
           "title": "\"signed-out public pages keep the marketplace header pinned at the top and a single way in\""
         },
         {
-          "line": 235,
+          "line": 237,
           "title": "\"first installation keeps incomplete login and registration journeys retryable\""
         },
         {
-          "line": 292,
+          "line": 294,
           "title": "\"welcome menu allows guest exploration and stays dismissed after reload\""
         },
         {
-          "line": 316,
+          "line": 318,
           "title": "\"native marketplace tabs survive localized document navigations\""
         },
         {
-          "line": 381,
+          "line": 383,
           "title": "\"la portada no debe romper la hidratación\""
         },
         {
-          "line": 389,
+          "line": 391,
           "title": "\"native search owns the full viewport without a hidden footer reserve\""
         },
         {
-          "line": 442,
+          "line": 444,
           "title": "\"notification rows in the app delete by swipe instead of an item menu\""
         },
         {
-          "line": 488,
+          "line": 490,
           "title": "`${contract.locale.toUpperCase()} keeps native navigation, messages and assistant chat isolated from web`"
         },
         {
-          "line": 674,
+          "line": 676,
           "title": "\"native bottom navigation follows each downward pixel and requires a fast upward gesture\""
         },
         {
-          "line": 721,
+          "line": 723,
           "title": "\"native bottom navigation ignores the simulated iOS bottom bounce\""
         },
         {
-          "line": 742,
+          "line": 744,
           "title": "\"native bottom navigation restores at the top and can reverse without jumping\""
         },
         {
-          "line": 783,
+          "line": 785,
           "title": "\"native bottom navigation interpolates both directions instead of jumping\""
         }
       ]
