@@ -1,3 +1,4 @@
+import { isSelfInteraction } from "./self-interaction";
 import { analyticsActor } from "@/lib/analytics/admin-activity";
 import { analyticsPlatform } from "./platform";
 import "server-only";
@@ -49,6 +50,7 @@ export async function recordServerInteraction(event: ServerInteraction): Promise
     }
     Object.assign(metadata, analyticsPlatform(name => jar.get(name)?.value));
     const db = createAdminClient();
+    if (await isSelfInteraction(db, event.professionalId, actor.id, event.type)) return;
     const { error } = await db.from("interaction_events").insert({
       event_type: event.type,
       professional_id: event.professionalId ?? null,
