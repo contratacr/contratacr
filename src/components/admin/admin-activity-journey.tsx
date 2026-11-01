@@ -2,8 +2,8 @@
 import { useEffect, useState } from "react";
 type Row = { key: string; created_at: string; viewer_user_id: string | null; visitor_hash: string; name: string | null; runtime: string; event: string; page: string; details: Record<string,unknown> };
 const labels: Record<string,string> = { screen:"Pantalla",access:"Acceso",first_use:"Primer uso",navigation:"Navegación",button:"Botón",filter:"Filtro",form_start:"Formulario iniciado",form_submit:"Intento de envío",form_abandon:"Formulario sin enviar",form_error:"Validación del formulario",scroll:"Lectura",client_error:"Error del navegador",search_performed:"Búsqueda",profile_view:"Perfil visto",whatsapp_click:"WhatsApp",internal_message_sent:"Mensaje enviado",project_published:"Proyecto publicado" };
-export function AdminActivityJourney() {
-  const [runtime,setRuntime] = useState(""),[days,setDays] = useState("7"),[actor,setActor] = useState("");
+export function AdminActivityJourney({ initialDays = "7" }: { initialDays?: string } = {}) {
+  const [runtime,setRuntime] = useState(""),[days,setDays] = useState(initialDays),[actor,setActor] = useState("");
   const [rows,setRows] = useState<Row[]>([]),[more,setMore] = useState(false),[busy,setBusy] = useState(true),[error,setError] = useState("");
   const [delivery,setDelivery] = useState<Record<string,number> | null>(null);
   const [cursor,setCursor] = useState<Row | null>(null);
@@ -21,10 +21,10 @@ export function AdminActivityJourney() {
   function reset() { setBusy(true);setError("");setRows([]);setCursor(null); }
   return <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
     <h2 className="text-sm font-bold text-slate-900">Recorridos y actividad</h2>
-    <p className="mt-1 text-xs text-slate-500">Cuentas y visitantes sin sesión. No incluye contenido de mensajes ni campos de formularios.</p>
+    <p className="mt-1 text-xs text-slate-500">Cuentas y visitantes sin sesión. No incluye contenido de mensajes ni campos de formularios. Los recorridos detallados se conservan 90 días; otros eventos pueden tener un histórico distinto.</p>
     <div className="my-4 flex flex-wrap gap-3">
       <select aria-label="Plataforma de actividad" className="rounded-lg border p-2 text-sm" value={runtime} onChange={e=>{reset();setRuntime(e.target.value);}}>{[["","Todos los ambientes"],["web_desktop","Web PC"],["web_mobile","Web móvil"],["android","Android"],["ios","iOS"]].map(([id,label])=><option key={id} value={id}>{label}</option>)}</select>
-      <select aria-label="Periodo de actividad" className="rounded-lg border p-2 text-sm" value={days} onChange={e=>{reset();setDays(e.target.value);}}>{[1,7,30,90].map(n=><option key={n} value={n}>{n} días</option>)}</select>
+      <select aria-label="Periodo de actividad" className="rounded-lg border p-2 text-sm" value={days} onChange={e=>{reset();setDays(e.target.value);}}><option value="0">Todo el tiempo disponible</option>{[1,7,30,90].map(n=><option key={n} value={n}>{n} días</option>)}</select>
       {actor && <button className="text-sm text-cyan-700" onClick={()=>{reset();setActor("");}}>Ver todos los visitantes</button>}
     </div>
     {!actor && !runtime && delivery && <div className="mb-4 rounded-xl bg-slate-50 p-3">

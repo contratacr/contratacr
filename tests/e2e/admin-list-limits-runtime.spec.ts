@@ -54,7 +54,7 @@ function setup(size = 1203, options: { authorized?: boolean; failTable?: string;
         return Promise.resolve({data:fail||head?null:single?selected[0]??null:selected.slice(start,end+1),count:counted?selected.length:null,error:fail?{message:"Database unavailable",code:"57014"}:null}).then(resolve);
       },
     };return q;
-  },rpc: async () => ({data:null,error:null}), auth:{admin:{ listUsers: async ({page,perPage}: any) => ({data:{users:base.slice((page-1)*perPage,page*perPage).map(row=>({id:row.id,user_metadata:{}}))},error:null})}} };
+  },rpc: async (): Promise<{data:any;error:any}> => ({data:null,error:null}), auth:{admin:{ listUsers: async ({page,perPage}: any) => ({data:{users:base.slice((page-1)*perPage,page*perPage).map(row=>({id:row.id,user_metadata:{}}))},error:null})}} };
   const mocks = {
     "next-intl/server": {getTranslations: async ({locale,namespace}: {locale:string;namespace:string}) => {
       const messages=JSON.parse(readFileSync(`messages/${locale}.json`,"utf8"));
@@ -173,4 +173,46 @@ test("contact segmentation stays admin-only and missing hire history is not show
   const report=await load('src/lib/admin/reports.ts',s.mocks).getAdminReports();
   expect(report.contactBreakdown.declaredHires30).toBeNull();
   expect((await s.route('contactos').GET(new Request('https://example.test/api/admin/contactos?segmento=invalid'))).status).toBe(400);
+});
+
+test('admin history includes old events without relabeling 7/30-day contacts',async()=>{
+  const s=setup(3);
+  const old=new Date(Date.now()-200*86400000).toISOString();
+  for(const row of s.tables.interaction_events) {row.event_type='search_performed';row.metadata={q:'electricidad',results:1};}
+  s.tables.interaction_events[0].created_at=old;
+  s.tables.profiles[0].created_at=old;
+  s.tables.profiles.push({id:'old-client-only',role:'client',created_at:old,acquisition_source:null});
+  s.tables.professionals[0].created_at=old;
+  const rpcCalls:any[]=[];
+  s.db.rpc=async(...args:any[])=>{rpcCalls.push(args);return{data:null,error:null};};
+  const reports=load('src/lib/admin/reports.ts',s.mocks);
+  const week=await reports.getAdminReports('es','week');
+  const all=await reports.getAdminReports('es','all');
+  expect(week.insights.week.searches.now).toBe(2);
+  expect(all.insights.week.searches.now).toBe(3);
+  expect(all.insights.week.pros.now).toBe(3);
+  expect(week.insights.week.clients.now).toBe(0);
+  expect(all.insights.week.clients.now).toBe(1);
+  expect(all.insights.week.searches.prev).toBe(0);
+  expect(all.insights.searchQuality.total).toBe(3);
+  expect(all.analyticsAvailable).toBe(true);
+  expect(all.contactBreakdown.allTime).toBeTruthy();
+  expect(rpcCalls).toContainEqual(['get_admin_runtime_analytics',{p_days:0}]);
+  expect(rpcCalls).toContainEqual(['get_admin_runtime_analytics',{p_days:7}]);
+});
+test('@contract admin all-time RPCs preserve permissions and retained history',async()=>{
+  const {execFileSync}=await import('node:child_process');
+  const output=execFileSync(process.execPath,['scripts/verify-admin-analytics-history.mjs'],{encoding:'utf8',timeout:25000});
+  expect(output).toContain('PASS:');
+});
+test('activity history accepts all-time only behind the existing admin gate',async()=>{
+  const {NextRequest}=nativeRequire('next/server');
+  const denied=setup(1,{authorized:false});
+  expect((await denied.route('analytics/activity').GET(new NextRequest('https://example.test/api/admin/analytics/activity?days=0'))).status).toBe(403);
+  const s=setup(1),calls:any[]=[];
+  s.db.rpc=async(...args:any[])=>{calls.push(args);return{data:[],error:null};};
+  const route=s.route('analytics/activity');
+  expect((await route.GET(new NextRequest('https://example.test/api/admin/analytics/activity?days=0'))).status).toBe(200);
+  expect(calls[0][0]).toBe('admin_activity_journey');expect(calls[0][1].p_days).toBe(0);
+  expect((await route.GET(new NextRequest('https://example.test/api/admin/analytics/activity?days=999'))).status).toBe(400);
 });

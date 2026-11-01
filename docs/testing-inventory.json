@@ -3,7 +3,7 @@
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
     "files": 509,
-    "controls": 1299,
+    "controls": 1301,
     "pages": 71,
     "handlers": 106,
     "components": 268,
@@ -7185,7 +7185,23 @@
       "methods": [],
       "controls": [
         {
-          "line": 297,
+          "line": 237,
+          "tag": "Link",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "",
+          "destination": "{`/admin/analitica?period=${id}`}",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 240,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{()=>setActive(id)}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 316,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -7193,7 +7209,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 332,
+          "line": 351,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -7201,7 +7217,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 353,
+          "line": 372,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -23275,6 +23291,18 @@
         {
           "line": 169,
           "title": "\"contact segmentation stays admin-only and missing hire history is not shown as zero\""
+        },
+        {
+          "line": 178,
+          "title": "'admin history includes old events without relabeling 7/30-day contacts'"
+        },
+        {
+          "line": 203,
+          "title": "'@contract admin all-time RPCs preserve permissions and retained history'"
+        },
+        {
+          "line": 208,
+          "title": "'activity history accepts all-time only behind the existing admin gate'"
         }
       ]
     },
