@@ -28,9 +28,9 @@ test("filters only categories with publications and changes period", async ({ pa
       contentType: "application/json",
       body: JSON.stringify({
         profile: days === "7" ? { views: 31, whatsapp: 3, calls: 1 } : days === "0" ? { views: 290, whatsapp: 34, calls: 9 } : profile,
-        projects: [{ id: "project-1", title: "Remodelación de cocina", views: 76, whatsapp: 8 }],
+        projects: [{ id: "a1000000-0000-4000-8000-000000000001", title: "Remodelación de cocina", views: 76, whatsapp: 8 }],
         jobs: [],
-        offers: [{ id: "offer-1", title: "Mantenimiento de aire acondicionado", views: 92, whatsapp: 11 }],
+        offers: [{ id: "a2000000-0000-4000-8000-000000000002", title: "Mantenimiento de aire acondicionado", views: 92, whatsapp: 11 }],
       }),
     });
   });
@@ -49,6 +49,18 @@ test("filters only categories with publications and changes period", async ({ pa
   await panel.getByRole("button", { name: "Promociones", exact: true }).click();
   await expect(panel.getByText("Mantenimiento de aire acondicionado")).toBeVisible();
   await expect(panel.getByText("Remodelación de cocina")).not.toBeVisible();
+  const link = panel.getByRole("link", { name: "Ver promoción", exact: true });
+  const destination = new URL((await link.getAttribute("href"))!, page.url());
+  expect(destination.pathname).toMatch(/\/promociones\/mantenimiento-de-aire-acondicionado-a2000000$/);
+  const returnHref = destination.searchParams.get("from")!;
+  const returnUrl = new URL(returnHref, page.url());
+  expect(returnUrl.searchParams.get("tab")).toBe("statistics");
+  expect(returnUrl.searchParams.get("statsDays")).toBe("0");
+  expect(returnUrl.searchParams.get("statsSection")).toBe("offers");
+  await page.goto(returnHref);
+  await expect(panel.getByRole("combobox", { name: "Período" })).toHaveValue("0");
+  await expect(panel.getByText("Mantenimiento de aire acondicionado")).toBeVisible();
+  await expect(panel.getByRole("link", { name: "Ver promoción", exact: true })).toBeVisible();
 });
 
 test("activity endpoint requires an account and returns only owned publication groups", async ({ page }) => {

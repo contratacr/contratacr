@@ -419,7 +419,9 @@ test.describe("@seeded dashboard surfaces", () => {
         locale: "es",
         guideButton: /^Guías$/i,
         expected: [/^Proyectos$/i, /Favoritos/i, /^Empleos$/i, /^Promociones$/i, /Publicar empleos/i, /Publicar una promoción/i],
-        expandable: /tablero p.blico de lo que publican/i,
+        expandable: /tablero p.blico de necesidades/i,
+        visualGuide: /^Servicios$/i,
+        nextStep: "Siguiente", enlarge: "Ampliar captura", reduce: "Reducir captura",
         profileGuide: /^Perfil profesional$/i,
         profileLastStep: /Usa Ver mi perfil para ver la versi.n p.blica/i,
       },
@@ -427,7 +429,9 @@ test.describe("@seeded dashboard surfaces", () => {
         locale: "en",
         guideButton: /^Guides$/i,
         expected: [/^Projects$/i, /Favorites/i, /^Jobs$/i, /^Promotions$/i, /Post jobs/i, /Publish promotions/i],
-        expandable: /board of what clients post/i,
+        expandable: /public board of needs posted by clients/i,
+        visualGuide: /^Services$/i,
+        nextStep: "Next", enlarge: "Enlarge screenshot", reduce: "Reduce screenshot",
         profileGuide: /^Professional profile$/i,
         profileLastStep: /Use View my profile to see the public version/i,
       },
@@ -449,6 +453,15 @@ test.describe("@seeded dashboard surfaces", () => {
       await expect(page.getByRole("listitem").filter({ visible: true }).first()).toBeVisible();
       await page.getByRole("button").filter({ has: page.getByText(copy.profileGuide, { exact: true }) }).filter({ visible: true }).first().click();
       await expect(page.getByText(copy.profileLastStep).filter({ visible: true }).first()).toBeVisible();
+      await page.getByRole("button").filter({ has: page.getByText(copy.visualGuide, { exact: true }) }).filter({ visible: true }).first().click();
+      const visual = page.locator('[data-guide-visual="services"]');
+      await expect(visual.locator("img")).toHaveAttribute("src", `/panel-guides/${copy.locale}-services-1.jpg`);
+      await expect(visual.locator("img")).toBeVisible();
+      await expect.poll(() => visual.locator("img").evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
+      await visual.getByRole("button", { name: copy.nextStep, exact: true }).click();
+      await expect(visual.locator("img")).toHaveAttribute("src", `/panel-guides/${copy.locale}-services-2.jpg`);
+      await visual.getByRole("button", { name: copy.enlarge, exact: true }).click();
+      await expect(visual.getByRole("button", { name: copy.reduce, exact: true })).toHaveAttribute("aria-pressed", "true");
       await expectHealthyPage(page);
     }
   });

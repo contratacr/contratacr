@@ -928,6 +928,7 @@ export function ServicesEditor({
             </div>
 
             <div ref={priceFieldRef} data-service-price-field>
+              {!form.aConsultar && <>
               <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("priceRef")} {!form.aConsultar && <span className="text-red-500">*</span>}</label>
               <div className="flex items-stretch gap-2">
                 <div className={cn("flex-1", form.aConsultar && "opacity-50 pointer-events-none")}>
@@ -951,6 +952,7 @@ export function ServicesEditor({
                 />
               </div>
               <p className="mt-2 text-xs leading-5 text-[#68778d]">{t("priceRefHelp")}</p>
+              </>}
               <FilaInterruptor
                 className="mt-3"
                 testId="servicio-consultar-precio"
@@ -958,6 +960,7 @@ export function ServicesEditor({
                 checked={form.aConsultar}
                 onChange={(valor) => { setForm((f) => ({ ...f, aConsultar: valor })); setFormError(null); }}
               />
+              {form.aConsultar && <p className="mt-2 text-xs leading-5 text-[#68778d]">{t("aConsultarHelp")}</p>}
             </div>
 
             <div ref={experienceFieldRef}>
