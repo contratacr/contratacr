@@ -1,3 +1,5 @@
+import { execFileSync } from "node:child_process";
+import { rutaDeBusqueda } from "../../src/lib/buscar-url";
 import { expect, test } from "playwright/test";
 import { apiJson, expectHealthyPage, expectNoHorizontalOverflow, gotoOK, isMobileProject, resetAuth, loginAs } from "./helpers";
 import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccount } from "./disposable-account";
@@ -52,6 +54,10 @@ test.beforeEach(async ({ page }, testInfo) => {
 });
 
 test.describe("@smoke ContrataCR AI service resolver", () => {
+  test("@contract everyday wording works in assistant and professional search", () => {
+    const output = execFileSync(process.execPath, ["scripts/verify-natural-service-queries.mjs"], { encoding: "utf8", timeout: 25000 });
+    expect(output).toContain("fail 0");
+  });
   test("resolves a natural customer scenario for every catalog service", async () => {
     const services = getAllCategories();
     for (const service of services) {
@@ -554,9 +560,7 @@ test.describe("@seeded ContrataCR AI", () => {
     if (search.body.professionals?.length === 1) {
       expect(search.body.searchHref).toBe(search.body.professionals[0].profileHref);
     } else {
-      expect(search.body.searchHref).toContain("categoria=plomeria");
-      expect(search.body.searchHref).toContain("provincia=al");
-      expect(search.body.searchHref).toContain("canton=al-at");
+      expect(search.body.searchHref).toBe(rutaDeBusqueda({ categoria: "plomeria", provincia: "al", canton: "al-at" }));
     }
   });
 
@@ -578,8 +582,7 @@ test.describe("@seeded ContrataCR AI", () => {
     if (second.body.professionals?.length === 1) {
       expect(second.body.searchHref).toBe(second.body.professionals[0].profileHref);
     } else {
-      expect(second.body.searchHref).toContain("categoria=redes_internet");
-      expect(second.body.searchHref).toContain("canton=al-at");
+      expect(second.body.searchHref).toBe(rutaDeBusqueda({ categoria: "redes_internet", provincia: "al", canton: "al-at" }));
     }
     expect(second.body.ctaLabel).toMatch(/Ver \d+ profesional(?:es)?/i);
 
