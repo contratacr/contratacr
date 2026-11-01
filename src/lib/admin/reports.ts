@@ -1,3 +1,4 @@
+import { SELF_PROFILE_EVENT_TYPES } from "@/lib/analytics/self-interaction";
 import { contactSegment, isContactClick, summarizeContacts, type ContactEvent, type ContactBreakdown } from "@/lib/analytics/contact-segments";
 import { createHash } from "node:crypto";
 import { readAllAdminRows } from "@/lib/admin/read-all-rows";
@@ -420,7 +421,7 @@ export async function getAdminReports(locale = "es", period: "week" | "all" = "w
     const [{ data: recent, error: eventError }, { data: oldest }] = await insightsQ;
     if (eventError) throw eventError;
     if (!identitiesAvailable) throw new Error("No se pudo verificar la exclusión de cuentas");
-    const events = ((recent ?? []) as Array<ContactEvent & { category_id: string | null }>).filter(e => !adminProfileIds.has(e.viewer_user_id ?? "") && (!e.viewer_user_id || professionalOwners.get(e.professional_id ?? "") !== e.viewer_user_id));
+    const events = ((recent ?? []) as Array<ContactEvent & { category_id: string | null }>).filter(e => !adminProfileIds.has(e.viewer_user_id ?? "") && (!e.viewer_user_id || !SELF_PROFILE_EVENT_TYPES.has(e.event_type) || professionalOwners.get(e.professional_id ?? "") !== e.viewer_user_id));
     const demandEvents = events;
     const t7 = now - 7 * DAY;
     const inLast7 = (t: string) => new Date(t).getTime() >= t7 && new Date(t).getTime() <= now;
