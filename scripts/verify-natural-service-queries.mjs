@@ -182,6 +182,11 @@ test('real assistant normalization recognizes everyday needs before a low-confid
   assert.equal(href.searchParams.get('q')?.toLowerCase(),message.toLowerCase(),message);
   assert.match(result.answer,/buscar|search/i,message);
  }
+ const freshHistory=[{role:'user',content:'Necesito un electricista en Siquirres'},{role:'assistant',content:'Encontré profesionales de electricidad en Siquirres, Limón.'}];
+ const fresh=exports.testApi.normalizePayload(exports.testApi.localAnswer('limpieza','es'),'limpieza','es',freshHistory,labels);
+ assert.equal(fresh.serviceId,'limpieza');assert.equal(fresh.action,'answer');
+ assert.match(fresh.answer,/provincia o cant[oó]n/i);assert.doesNotMatch(fresh.answer,/Siquirres|Lim[oó]n/i);
+ assert.equal(exports.testApi.actionHref(fresh,'limpieza','es'),null);
  const clearNeed='No sé cómo se llama, pero no tengo luz en mi casa';
  assert.equal(exports.testApi.normalizePayload(exports.testApi.localAnswer(clearNeed,'es'),clearNeed,'es',[],labels).serviceId,'electricidad');
  for(const [message,label] of [['Osa','Osa'],['Necesito ayuda en Osa, Puntarenas','Osa'],['Necesito un plomero en Atenas','Atenas'],['Busco ayuda en Alajuela','Alajuela'],['Necesito un electricista en Escazú.','Escazú'],['San José','San José'],['Pavas','Pavas']]) {

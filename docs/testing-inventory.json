@@ -23592,67 +23592,67 @@
           "title": "\"does not reuse an old location for a fresh service-only search\""
         },
         {
-          "line": 206,
+          "line": 208,
           "title": "\"does not turn emergencies or unsafe requests into service searches\""
         },
         {
-          "line": 230,
+          "line": 232,
           "title": "\"resolves service boundaries from natural Spanish, tico phrases and English synonyms\""
         },
         {
-          "line": 279,
+          "line": 281,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 361,
+          "line": 363,
           "title": "\"does not promise availability when a matched professional has no public slots\""
         },
         {
-          "line": 380,
+          "line": 382,
           "title": "\"answers product questions with stable, actionable destinations\""
         },
         {
-          "line": 405,
+          "line": 407,
           "title": "\"covers every assistant navigation intent and validation boundary\""
         },
         {
-          "line": 457,
+          "line": 459,
           "title": "\"product manual contains every current business area the AI must explain\""
         },
         {
-          "line": 478,
+          "line": 480,
           "title": "\"resolves every canonical service in the complete catalog\""
         },
         {
-          "line": 502,
+          "line": 504,
           "title": "\"answers high-risk product questions without turning them into service searches\""
         },
         {
-          "line": 528,
+          "line": 530,
           "title": "\"keeps the contact flow inside the app in Spanish and English\""
         },
         {
-          "line": 545,
+          "line": 547,
           "title": "\"uses internal messaging copy and actions for the native app\""
         },
         {
-          "line": 562,
+          "line": 564,
           "title": "\"searches real professionals through a trustworthy filtered-results link\""
         },
         {
-          "line": 579,
+          "line": 581,
           "title": "\"keeps search intent, service and location across natural follow-ups\""
         },
         {
-          "line": 631,
+          "line": 633,
           "title": "\"uses deterministic safety guidance and does not expose internal instructions\""
         },
         {
-          "line": 643,
+          "line": 645,
           "title": "\"keeps the retired assistant UI out of public navigation\""
         },
         {
-          "line": 664,
+          "line": 666,
           "title": "\"responds in English with localized navigation\""
         }
       ]

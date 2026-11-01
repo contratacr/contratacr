@@ -198,7 +198,9 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
 
     expect(response.status, JSON.stringify(response.body)).toBe(200);
     expect(response.body.action, JSON.stringify(response.body)).toBe("answer");
-    expect(response.body.answer, JSON.stringify(response.body)).toMatch(/zona|[aá]rea|ubicaci/i);
+    expect(response.body.serviceId, JSON.stringify(response.body)).toBe("limpieza");
+    expect(response.body.answer, JSON.stringify(response.body)).toMatch(/provincia o cant[oó]n/i);
+    expect(response.body.searchHref, JSON.stringify(response.body)).toBeNull();
     expect(response.body.answer, JSON.stringify(response.body)).not.toMatch(/Siquirres|Lim[oó]n/i);
     expect(response.body.searchHref ?? "", JSON.stringify(response.body)).not.toMatch(/provincia=|canton=/);
   });
