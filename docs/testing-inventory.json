@@ -25615,11 +25615,11 @@
           "title": "\"campaign report separates unknown origin, production receipt, retries, test delivery and excludes staff and other actions\""
         },
         {
-          "line": 28,
+          "line": 29,
           "title": "\"admin view labels missing sources and does not confuse server receipt with ad attribution\""
         },
         {
-          "line": 40,
+          "line": 41,
           "title": "\"server aggregation reads no message bodies or ad payloads and fails closed per source\""
         }
       ]
