@@ -683,6 +683,7 @@ test("native bottom navigation follows each downward pixel and requires a fast u
     await page.evaluate(pathname => (window as unknown as { __setTestNavPath: (path: string) => void }).__setTestNavPath(pathname), path);
     await expect(page.locator("[data-current-path]")).toHaveAttribute("data-current-path", path);
     await expect(body).not.toHaveClass(/ccr-native-bottom-nav-hidden/);
+    await page.evaluate(() => window.dispatchEvent(new Event("touchstart")));
     await scrollValues(page, selector, [1], 120);
     expect(await navigationOffset(page)).toBeCloseTo(1, 1);
     await scrollValues(page, selector, [2, 3, 4, 5], 120);
@@ -716,6 +717,7 @@ test("native bottom navigation follows each downward pixel and requires a fast u
     await scrollValues(page, selector, [200, 100, 0], 1000);
     await expect(body).not.toHaveClass(/ccr-native-bottom-nav-hidden/);
     await expect.poll(() => navigationOffset(page)).toBeCloseTo(0, 1);
+    await page.evaluate(() => window.dispatchEvent(new Event("touchend")));
   }
   await page.evaluate(() => (window as unknown as { __setTestNavPath: (path: string) => void }).__setTestNavPath("/mensajes"));
   await expect(page.locator("[data-current-path]")).toHaveAttribute("data-current-path", "/mensajes");
@@ -818,4 +820,42 @@ test("native bottom navigation interpolates both directions instead of jumping",
   expect(up.samples[1]).toBeGreaterThan(up.samples[0] * .8);
   expect(up.samples[2] / up.samples[0]).toBeCloseTo(.5, 1);
   expect(up.samples[4]).toBeCloseTo(0, 1);
+});
+
+
+test("native bottom navigation completes a short downward gesture even when content cannot scroll further", async ({page}) => {
+  await mountScrollNavigation(page);
+  const nav=page.locator("nav.ccr-native-bottom-nav");
+  await page.locator("#home-scroll").evaluate(element=>{
+    let top=0;
+    Object.defineProperty(element,"scrollTop",{configurable:true,get:()=>top,set:value=>{top=value;}});
+    Object.defineProperty(element,"scrollHeight",{configurable:true,value:228});
+    Object.defineProperty(element,"clientHeight",{configurable:true,value:200});
+  });
+  await page.evaluate(()=>window.dispatchEvent(new Event("touchstart")));
+  await scrollValues(page,"#home-scroll",[8,18,28]);
+  expect(await navigationOffset(page)).toBeGreaterThan(0);
+  await expect(page.locator("body")).not.toHaveClass(/ccr-native-bottom-nav-hidden/);
+  await page.waitForTimeout(220);
+  await expect(page.locator("body")).not.toHaveClass(/ccr-native-bottom-nav-hidden/);
+  await page.evaluate(()=>window.dispatchEvent(new Event("touchend")));
+  await expect(page.locator("body")).toHaveClass(/ccr-native-bottom-nav-hidden/);
+  await expect.poll(()=>nav.evaluate(element=>element.getBoundingClientRect().top>=innerHeight)).toBe(true);
+  expect(await nav.evaluate(element=>(element as HTMLElement).inert)).toBe(true);
+  await scrollValues(page,"#home-scroll",[0]);
+  await expect(page.locator("body")).not.toHaveClass(/ccr-native-bottom-nav-hidden/);
+  await scrollValues(page,"#home-scroll",[12]);
+  await expect(page.locator("body")).toHaveClass(/ccr-native-bottom-nav-hidden/);
+});
+
+test("native bottom navigation cancels its pending exit after reversing a short gesture", async ({page}) => {
+  await mountScrollNavigation(page);
+  await page.evaluate(() => window.dispatchEvent(new Event("touchstart")));
+  await scrollValues(page,"#home-scroll",[20,40]);
+  await scrollValues(page,"#home-scroll",[38],120);
+  const partial=await navigationOffset(page);
+  await page.evaluate(() => window.dispatchEvent(new Event("touchend")));
+  await page.waitForTimeout(220);
+  expect(await navigationOffset(page)).toBeCloseTo(partial,1);
+  await expect(page.locator("body")).not.toHaveClass(/ccr-native-bottom-nav-hidden/);
 });

@@ -75,6 +75,7 @@ async function llenarSinSesion(page: Page, tipo: Tipo): Promise<string> {
     await gotoOK(page, "/publicar-proyecto?categoria=electricidad");
     await waitForInteractivePage(page);
     await page.locator("#publish-project-title").waitFor();
+    await page.getByRole("button", { name: "Necesito un profesional", exact: true }).click();
     await escribirFirme(page.locator("textarea").first(), `${marca}: instalar tres tomacorrientes en la cocina.`);
     await page.locator('input[type="tel"]').first().fill("88887777");
     await page.getByRole("button", { name: /^Publicar proyecto$/ }).last().click();

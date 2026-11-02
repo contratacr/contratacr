@@ -233,6 +233,10 @@ export function NativeBottomNav() {
     let retirada = 0;
     let entrada: Animation | undefined;
     let direccion = 0;
+    let finDelDesplazamiento: number | undefined;
+    let tocando = false;
+    let ultimaDireccionBaja = false;
+    const cancelarSalida = () => { window.clearTimeout(finDelDesplazamiento); finDelDesplazamiento = undefined; };
     const reducirMovimiento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const pintar = (valor: number, animar = false, inmediato = false) => {
       const limite = nav.getBoundingClientRect().height + 16;
@@ -260,6 +264,17 @@ export function NativeBottomNav() {
       nav.inert = oculta;
       roots.forEach(root => root.classList.toggle("ccr-native-bottom-nav-hidden", oculta));
     };
+    const completarSalida = () => {
+      cancelarSalida();
+      if (tocando || !permiteRetirarse || !ultimaDireccionBaja || nav.querySelector(":focus-visible")) return;
+      if (retirada <= 0 || retirada >= nav.getBoundingClientRect().height + 16) return;
+      finDelDesplazamiento = window.setTimeout(() => {
+        finDelDesplazamiento = undefined;
+        if (!tocando && ultimaDireccionBaja && !nav.querySelector(":focus-visible")) pintar(nav.getBoundingClientRect().height + 16, true);
+      }, 150);
+    };
+    const alTocar = () => { tocando = true; cancelarSalida(); };
+    const alSoltar = () => { tocando = false; completarSalida(); };
     pintar(0, false, true);
     const selector = "main, .ccr-tablero-marco > section, .ccr-tablero-ficha, [data-messages-page-main], .ccr-direct-chat-list, .ccr-direct-chat-thread-scroll, .ccr-search-bottom-sheet, .ccr-search-bottom-sheet *";
     type Posicion = { anterior: number; instante: number; desde: number; subida: number; revelando: boolean };
@@ -276,8 +291,10 @@ export function NativeBottomNav() {
       const delta = actual - posicion.anterior;
       const transcurrido = ahora - posicion.instante;
       posicion.anterior = actual;
-      if (actual <= 0) { posicion.subida = 0; posicion.revelando = false; posicion.instante = ahora; pintar(0, true); return; }
+      if (actual <= 0) { cancelarSalida(); ultimaDireccionBaja = false; direccion = 0; posicion.subida = 0; posicion.revelando = false; posicion.instante = ahora; pintar(0, true); return; }
       if (delta === 0) return;
+      ultimaDireccionBaja = delta > 0;
+      cancelarSalida();
       const anteriorInstante = posicion.instante;
       posicion.instante = ahora;
       // Clamping descarta el tramo elástico. En el borde no acumulamos una
@@ -285,7 +302,7 @@ export function NativeBottomNav() {
       if (actual >= maximo - 2) {
         posicion.subida = 0;
         posicion.revelando = false;
-        if (delta > 0) pintar(retirada + delta);
+        if (delta > 0) { pintar(retirada + delta); direccion = 1; completarSalida(); }
         return;
       }
       if (nav.querySelector(":focus-visible")) { pintar(0); return; }
@@ -297,6 +314,7 @@ export function NativeBottomNav() {
         const pintada = new DOMMatrixReadOnly(getComputedStyle(nav).transform).m42;
         pintar((direccion < 0 ? pintada : retirada) + delta);
         direccion = 1;
+        completarSalida();
         return;
       }
       if (transcurrido > 100) posicion.revelando = false;
@@ -316,10 +334,17 @@ export function NativeBottomNav() {
         pintar(retirada - posicion.subida * 1.5);
       }
     };
-    const alEnfocar = () => pintar(0, true);
+    const alEnfocar = () => { cancelarSalida(); ultimaDireccionBaja = false; direccion = 0; pintar(0, true); };
     nav.addEventListener("focusin", alEnfocar);
     window.addEventListener("scroll", alDesplazar, { capture: true, passive: true });
+    window.addEventListener("touchstart", alTocar, { passive: true });
+    window.addEventListener("touchend", alSoltar, { passive: true });
+    window.addEventListener("touchcancel", alSoltar, { passive: true });
     return () => {
+      cancelarSalida();
+      window.removeEventListener("touchstart", alTocar);
+      window.removeEventListener("touchend", alSoltar);
+      window.removeEventListener("touchcancel", alSoltar);
       entrada?.cancel();
       nav.removeEventListener("focusin", alEnfocar);
       window.removeEventListener("scroll", alDesplazar, { capture: true });
