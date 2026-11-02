@@ -2,6 +2,7 @@ import { getAdminUser } from "@/lib/auth/admin";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { AdminAnalytics } from "@/components/admin/admin-analytics";
 import { AdminAccess } from "@/components/admin/admin-access";
+import { getAdminMeasurement } from "@/lib/admin/measurement";
 import { getAdminReports } from "@/lib/admin/reports";
 
 export const dynamic = "force-dynamic";
@@ -12,10 +13,11 @@ export default async function AdminAnaliticaPage({ searchParams }: { searchParam
   const admin = await getAdminUser();
   if (!admin) return <AdminAccess />;
   const { period } = await searchParams;
-  const data = await getAdminReports("es", period === "week" ? "week" : "all");
+  const selectedPeriod = period === "week" ? "week" : "all";
+  const [data, measurement] = await Promise.all([getAdminReports("es", selectedPeriod), getAdminMeasurement(selectedPeriod)]);
   return (
     <AdminShell adminName={admin.fullName} active="analitica">
-      <AdminAnalytics data={data} />
+      <AdminAnalytics data={data} measurement={measurement} />
     </AdminShell>
   );
 }

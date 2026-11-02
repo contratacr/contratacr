@@ -1,4 +1,6 @@
 "use client";
+import { AdminMeasurement } from "./admin-measurement";
+import type { MeasurementReport } from "@/lib/analytics/measurement-report";
 import { createContext, useContext, useState } from "react";
 import { AdminContactBreakdown } from "./admin-contact-breakdown";
 import { formatFullPersonName } from "@/lib/display-name";
@@ -212,7 +214,7 @@ function runtimeActionLabel(action: string) {
   return labels[action] ?? action.replaceAll("_", " ");
 }
 
-export function AdminAnalytics({ data }: { data: AdminReports }) {
+export function AdminAnalytics({ data, measurement }: { data: AdminReports; measurement?: MeasurementReport }) {
   const [active, setActive] = useState<AnalyticsView>("overview");
   const allTime = data.reportingPeriod === "all";
   const periodLabel = allTime ? "Todo el tiempo" : "Últimos 7 días";
@@ -239,7 +241,9 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
       </div>
       <nav aria-label="Secciones de analítica" className="flex flex-wrap gap-2">{([['overview','Resumen'],['contacts','Contactos'],['acquisition','Adquisición'],['platforms','Web y apps'],['activity','Actividad detallada']] as const).map(([id,label]) => <button key={id} type="button" aria-pressed={active===id} onClick={()=>setActive(id)} className={`min-h-11 rounded-xl px-4 py-2 text-sm font-semibold ${active===id ? 'bg-[#162543] text-white' : 'border border-[#e5e7eb] bg-white text-[#475569]'}`}>{label}</button>)}</nav>
       {data.analyticsAvailable === false && (active === 'overview' || active === 'contacts') && <p role="alert" className="rounded-xl bg-amber-50 p-4 text-sm text-amber-900">No se pudo verificar la actividad de este período. Los ceros no deben interpretarse como ausencia de actividad.</p>}
+      {(active === "overview" || active === "platforms") && <p className="rounded-xl bg-sky-50 p-4 text-sm text-[#162543]">Desde el 29 de octubre de 2026, la navegación y los eventos de uso requieren aceptar estadísticas. Una caída de estas métricas no demuestra una caída de usuarios. Los registros del servicio se muestran por separado en Contactos.</p>}
       {active === 'activity' && <AdminActivityJourney initialDays={allTime ? "0" : "7"} key={allTime ? 'all' : 'week'} />}
+      {measurement && <Section icon={Megaphone} group="contacts" title="Resultados y medición" sub="Actividad real, permisos y señales publicitarias"><AdminMeasurement data={measurement} /></Section>}
       <Section icon={Users} group="contacts" title="Contactos por tipo de publicación" sub="Clics de contacto · WhatsApp, llamadas y correo">
         <AdminContactBreakdown data={data.contactBreakdown} />
       </Section>
@@ -249,7 +253,7 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
           <Kpi compare={!allTime} label={allTime ? "Profesionales registrados" : "Profesionales nuevos"} data={week.pros} />
           <Kpi compare={!allTime} label={allTime ? "Clientes registrados" : "Clientes nuevos"} data={week.clients} />
           <Kpi compare={!allTime} label="Búsquedas" data={week.searches} />
-          <Kpi compare={!allTime} label="Contactos de servicios" data={week.contacts} help="Clics a WhatsApp, llamadas y correos desde servicios; excluye empleos y contextos sin identificar" />
+          <Kpi compare={!allTime} label="Aperturas de contacto de servicios" data={week.contacts} help="Clics a WhatsApp, llamadas y correos desde servicios; excluye empleos y contextos sin identificar" />
           <Kpi compare={!allTime} label="Proyectos publicados" data={week.requests} help="Proyectos que publicaron los clientes en el tablero" />
           <Kpi compare={!allTime} label="Respuestas al tablero" data={week.projectLeads} help="Profesionales que le escribieron a un proyecto publicado" />
           <Kpi compare={!allTime} label="Cotizaciones" data={week.quotes} help="Cotizaciones que enviaron los profesionales" />
