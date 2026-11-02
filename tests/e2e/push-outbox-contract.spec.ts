@@ -1,4 +1,6 @@
 import { generateKeyPairSync, verify } from "node:crypto";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { createFirebasePushCredential } from "../../src/lib/push/firebase-credential";
 import { expect, test } from "playwright/test";
 import { buildFcmMulticastPayload, compactPushText, notificationPushUrl } from "../../src/lib/push/payload";
@@ -16,6 +18,7 @@ import {
   isMissingPushTransportColumn,
 } from "../../src/lib/push/migration-compat";
 import { waitForAccountSignOutWork } from "../../src/lib/auth/sign-out";
+import { runScheduledPushDrain } from "../../src/lib/push/scheduled";
 import {
   assertPushOutboxFinished,
   chunkPushItems,
@@ -27,6 +30,52 @@ import {
 } from "../../src/lib/push/worker";
 
 test.describe("@contract push outbox safety contracts", () => {
+  test("deployed Worker entry handles a scheduled event in workerd", async () => {
+    const { stdout } = await promisify(execFile)(process.execPath, ["scripts/verify-push-schedule-worker.mjs"], { cwd: process.cwd(), timeout: 25_000 });
+    expect(stdout).toContain("PASS: actual workerd scheduled event");
+  });
+
+  test("Cloudflare schedule drains locally with authentication and reports delivery failures", async () => {
+    const env = { NEXT_PUBLIC_APP_URL: "https://contratacr.com/", CRON_SECRET: "schedule-test-secret", PUSH_DELIVERY_ENABLED: "true" };
+    const context = {};
+    let calls = 0;
+    const fetchHandler = async (request: Request, bindings: typeof env, ctx: object) => {
+      calls++;
+      expect(bindings).toBe(env);
+      expect(ctx).toBe(context);
+      expect(request.url).toBe("https://contratacr.com/api/internal/push/drain");
+      expect(request.method).toBe("POST");
+      expect(request.headers.get("authorization")).toBe("Bearer schedule-test-secret");
+      expect(await request.json()).toEqual({ limit: 100 });
+      return Response.json({ ok: true, disabled: false, claimed: 1, delivered: 1, failed: 0, retried: 0 });
+    };
+    await runScheduledPushDrain(fetchHandler, env, context);
+    expect(calls).toBe(1);
+    for (const result of [{ ok: false }, { ok: true, disabled: true }, { ok: true, failed: 1 }, { ok: true, retried: 1 }]) {
+      await expect(runScheduledPushDrain(async () => Response.json(result), env, context)).rejects.toThrow("push_schedule_delivery_incomplete");
+    }
+    await expect(runScheduledPushDrain(async () => new Response("private provider error", { status: 503 }), env, context)).rejects.toThrow("push_schedule_drain_failed");
+    await expect(runScheduledPushDrain(fetchHandler, { ...env, CRON_SECRET: "" }, context)).rejects.toThrow("push_schedule_not_configured");
+  });
+
+  test("Cloudflare schedule respects environment isolation and delivery disable switch", async () => {
+    let calls = 0;
+    const handler = async () => { calls++; return Response.json({ ok: true }); };
+    for (const NEXT_PUBLIC_APP_URL of [undefined, "https://test.contratacr.com", "https://preview.workers.dev", "https://contratacr.com.evil.invalid", "http://contratacr.com"]) {
+      await runScheduledPushDrain(handler, { NEXT_PUBLIC_APP_URL, CRON_SECRET: "test", PUSH_DELIVERY_ENABLED: "true" }, {});
+    }
+    for (const PUSH_DELIVERY_ENABLED of [undefined, "false", "0", ""]) {
+      await runScheduledPushDrain(handler, { NEXT_PUBLIC_APP_URL: "https://contratacr.com", CRON_SECRET: "test", PUSH_DELIVERY_ENABLED }, {});
+    }
+    expect(calls).toBe(0);
+    await runScheduledPushDrain(async request => {
+      expect(request.headers.get("authorization")).toBe("Bearer worker-secret");
+      calls++;
+      return Response.json({ ok: true });
+    }, { NEXT_PUBLIC_APP_URL: "https://contratacr.com", CRON_SECRET: "cron-secret", PUSH_WORKER_SECRET: "worker-secret", PUSH_DELIVERY_ENABLED: "true" }, {});
+    expect(calls).toBe(1);
+  });
+
   test("Firebase OAuth uses native fetch, a signed messaging-only assertion and cached tokens", async () => {
     const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
     let calls = 0;
