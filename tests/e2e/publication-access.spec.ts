@@ -15,6 +15,7 @@ test('a client can open project publishing but cannot publish jobs or offers wit
  expect(professional).toBeNull();
  await gotoOK(page,'/publicar-proyecto');await waitForInteractivePage(page);
  await expect(page.locator('#publish-project-title')).toBeVisible();
+ await page.getByRole('button',{name:'Necesito un profesional',exact:true}).click();
  await expect(page.locator('#publish-project-title')).toHaveText('Cuéntenos sobre su proyecto');
  await expect(page.locator('textarea').first()).toBeVisible();
  await expect(page.getByRole('button',{name:/^Publicar proyecto$/}).last()).toBeVisible();

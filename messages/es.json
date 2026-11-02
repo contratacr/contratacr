@@ -2160,7 +2160,7 @@
     "successNext": "Te avisamos apenas alguien te responda. Después le escribes al que quieras.",
     "successGoToProjects": "Ver mis proyectos",
     "avisoAnuncio": "Esto se lee como si estuvieras ofreciendo un servicio. Acá se pide, no se ofrece.",
-    "avisoAnuncioCta": "Publicalo como promoción",
+    "avisoAnuncioCta": "Ver mi perfil profesional",
     "avisoAnuncioCtaNew": "Crea tu perfil profesional",
     "dismiss": "Cerrar",
     "editTitle": "Editar proyecto",
@@ -2172,7 +2172,14 @@
     "cedulaYaVerificadaAyuda": "Tu proyecto sale con \"Verificado\". El número no se muestra.",
     "identidadNoEncontrada": "No encontramos esta identificación. Puedes solicitar una revisión manual.",
     "identidadPadronCaido": "La verificación no está disponible en este momento. Puedes continuar e intentarlo más tarde.",
-    "identidadEnRevision": "Vamos a revisar tu identificación; mientras tanto tu proyecto sale sin \"Verificado\"."
+    "identidadEnRevision": "Vamos a revisar tu identificación; mientras tanto tu proyecto sale sin \"Verificado\".",
+    "intentHeader": "Publicar un proyecto",
+    "intentQuestion": "¿Qué necesitás hacer?",
+    "intentNeed": "Necesito un profesional",
+    "intentNeedHint": "Quiero publicar un servicio que necesito.",
+    "intentOffer": "Quiero ofrecer mis servicios",
+    "intentOfferHint": "Quiero dar a conocer mi trabajo.",
+    "intentBack": "Volver a elegir"
   },
   "notifications": {
     "title": "Notificaciones",

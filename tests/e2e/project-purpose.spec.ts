@@ -5,6 +5,8 @@ for (const locale of ['es', 'en'] as const) {
   test(`project fields explain that a client needs a professional (${locale})`, async ({ page }) => {
     await gotoOK(page, `${locale === 'en' ? '/en' : ''}/publicar-proyecto`);
     await waitForInteractivePage(page);
+    await expect(page.getByTestId('project-intent-choice')).toBeVisible();
+    await page.getByRole('button',{name:locale === 'es' ? 'Necesito un profesional' : 'I need a professional',exact:true}).click();
     await expect(page.locator('#publish-project-title')).toHaveText(locale === 'es' ? 'Cuéntenos sobre su proyecto' : 'Tell us about your project');
     await expect(page.getByText(locale === 'es' ? 'Publique el trabajo que necesita para recibir contactos de profesionales.' : 'Post the work you need done so professionals can contact you.')).toHaveCount(0);
     await expect(page.getByRole('link', { name: locale === 'es' ? '¿Quiere ofrecer sus servicios? Agréguelos a su perfil.' : 'Want to offer your services? Add them to your profile.' })).toHaveCount(0);

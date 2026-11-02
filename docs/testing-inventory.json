@@ -3,12 +3,12 @@
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
     "files": 511,
-    "controls": 1305,
+    "controls": 1307,
     "pages": 71,
     "handlers": 106,
     "components": 270,
     "hooks": 28,
-    "specs": 184
+    "specs": 185
   },
   "dashboardTabs": [
     "home",
@@ -15605,7 +15605,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 367,
+          "line": 392,
           "tag": "div",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -15613,7 +15613,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 396,
+          "line": 421,
           "tag": "Link",
           "label": "{tNav(\"searchAria\")}",
           "handler": "{(event) => irA(event, \"/profesionales\")}",
@@ -15621,7 +15621,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 402,
+          "line": 427,
           "tag": "Link",
           "label": "{tNav(\"messages\")}",
           "handler": "{(event) => { if (user) irA(event, \"/mensajes\"); }}",
@@ -15629,7 +15629,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 419,
+          "line": 444,
           "tag": "button",
           "label": "{tNav(\"create\")}",
           "handler": "{() => { window.dispatchEvent(new Event(\"ccr:close-native-search\")); setCreateFrom(createDestination); }}",
@@ -15637,7 +15637,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 430,
+          "line": 455,
           "tag": "Link",
           "label": "{tNav(\"notifications\")}",
           "handler": "{(event) => { if (user) irA(event, \"/notificaciones\"); }}",
@@ -15645,7 +15645,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 448,
+          "line": 473,
           "tag": "Link",
           "label": "{tNav(\"panel\")}",
           "handler": "{(event) => irA(event, nativePanelHref)}",
@@ -15653,7 +15653,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 462,
+          "line": 487,
           "tag": "Link",
           "label": "{t(\"login\")}",
           "handler": "",
@@ -18489,7 +18489,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 307,
+          "line": 316,
           "tag": "div",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{onClose}",
@@ -18497,15 +18497,15 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 323,
+          "line": 332,
           "tag": "button",
-          "label": "{t(\"dismiss\")}",
-          "handler": "{onClose}",
+          "label": "{puedeVolverAEleccion ? t(\"intentBack\") : t(\"dismiss\")}",
+          "handler": "{() => { if (puedeVolverAEleccion) setSolicitudElegida(false); else onClose(); }}",
           "destination": "",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 335,
+          "line": 343,
           "tag": "form",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{handleSubmit}",
@@ -18513,7 +18513,23 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 349,
+          "line": 356,
+          "tag": "button",
+          "label": "{t(\"intentNeed\")}",
+          "handler": "{() => setSolicitudElegida(true)}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 361,
+          "tag": "Link",
+          "label": "{t(\"intentOffer\")}",
+          "handler": "",
+          "destination": "{yaEsProfesional ? \"/dashboard/profesional?tab=profile&mode=offer\" : \"/registro/profesional\"}",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 373,
           "tag": "CategorySearch",
           "label": "{t(\"categoryPlaceholder\")}",
           "handler": "{(id) => update(\"categoryId\", id)}",
@@ -18521,7 +18537,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 367,
+          "line": 391,
           "tag": "textarea",
           "label": "{t(\"descriptionPlaceholder\")}",
           "handler": "{(e) => update(\"description\", e.target.value)}",
@@ -18529,15 +18545,15 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 382,
+          "line": 406,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
-          "destination": "{yaEsProfesional ? \"/promociones/publicar\" : \"/registro/profesional\"}",
+          "destination": "{yaEsProfesional ? \"/dashboard/profesional?tab=profile&mode=offer\" : \"/registro/profesional\"}",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 397,
+          "line": 421,
           "tag": "SelectMenu",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(v) => update(\"provinciaId\", v)}",
@@ -18545,7 +18561,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 402,
+          "line": 426,
           "tag": "SelectMenu",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(v) => update(\"cantonId\", v)}",
@@ -18553,7 +18569,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 423,
+          "line": 447,
           "tag": "PhoneInput",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{setTelefono}",
@@ -18561,7 +18577,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 437,
+          "line": 461,
           "tag": "CedulaInput",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{setCedula}",
@@ -18569,7 +18585,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 464,
+          "line": 488,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{onClose}",
@@ -18577,7 +18593,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 479,
+          "line": 503,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{onClose}",
@@ -18585,7 +18601,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 482,
+          "line": 506,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -18593,7 +18609,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 483,
+          "line": 507,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{onClose}",
@@ -18601,7 +18617,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 491,
+          "line": 515,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -18610,6 +18626,7 @@
         }
       ],
       "testIds": [
+        "project-intent-choice",
         "project-form-error"
       ],
       "relatedSpecs": [
@@ -18619,7 +18636,9 @@
       ],
       "directReferences": [
         "tests/e2e/client-project-identity.spec.ts",
-        "tests/e2e/interaction-surfaces.spec.ts"
+        "tests/e2e/interaction-surfaces.spec.ts",
+        "tests/e2e/project-intent.spec.ts",
+        "tests/e2e/project-purpose.spec.ts"
       ],
       "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
@@ -20837,7 +20856,8 @@
       ],
       "directReferences": [
         "tests/e2e/interaction-surfaces.spec.ts",
-        "tests/e2e/native-edge-back.spec.ts"
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/project-intent.spec.ts"
       ],
       "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
@@ -20931,8 +20951,10 @@
         "tests/e2e/verificacion-repesca.spec.ts",
         "tests/e2e/verification-badges.spec.ts"
       ],
-      "directReferences": [],
-      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "directReferences": [
+        "tests/e2e/project-intent.spec.ts"
+      ],
+      "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
       "coverage": "Alcance detallado pendiente de revisión; no certificado",
       "priority": "P1"
@@ -21588,8 +21610,10 @@
         "tests/e2e/calidad-general.spec.ts",
         "tests/e2e/recent-visual-regression.spec.ts"
       ],
-      "directReferences": [],
-      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "directReferences": [
+        "tests/e2e/project-intent.spec.ts"
+      ],
+      "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
       "coverage": "Alcance detallado pendiente de revisión; no certificado",
       "priority": "P1"
@@ -21969,8 +21993,10 @@
         "tests/e2e/about-guides.spec.ts",
         "tests/e2e/public-smoke.spec.ts"
       ],
-      "directReferences": [],
-      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "directReferences": [
+        "tests/e2e/project-intent.spec.ts"
+      ],
+      "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
       "coverage": "Alcance detallado pendiente de revisión; no certificado",
       "priority": "P1"
@@ -22463,6 +22489,7 @@
         "tests/e2e/campaign-consent-capture.spec.ts",
         "tests/e2e/mobile-native-shell.spec.ts",
         "tests/e2e/native-link-launch.spec.ts",
+        "tests/e2e/project-intent.spec.ts",
         "tests/e2e/runtime-analytics.spec.ts",
         "tests/e2e/search-offer-loading.spec.ts"
       ],
@@ -23714,55 +23741,55 @@
           "title": "\"el formulario dice cuántos profesionales recibirán el proyecto, también sin sesión\""
         },
         {
-          "line": 63,
+          "line": 64,
           "title": "\"el tablero de Proyectos no lleva la línea aclaratoria que se quitó\""
         },
         {
-          "line": 69,
+          "line": 70,
           "title": "\"tras abrir WhatsApp en una ficha, al volver se ofrece publicar\""
         },
         {
-          "line": 70,
+          "line": 71,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 91,
+          "line": 92,
           "title": "\"la cotización sin sesión vuelve a la página que la abrió\""
         },
         {
-          "line": 100,
+          "line": 101,
           "title": "\"un perfil que no existe, abierto desde la portada, ofrece volver al inicio\""
         },
         {
-          "line": 114,
+          "line": 115,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 116,
+          "line": 117,
           "title": "\"una reseña muestra el nombre público en una línea y la fecha junto a las estrellas\""
         },
         {
-          "line": 139,
+          "line": 140,
           "title": "\"el panel precarga Mis proyectos y Cotizaciones: entrar no muestra esqueleto\""
         },
         {
-          "line": 151,
+          "line": 152,
           "title": "\"el menú del admin agrupa las secciones y muestra Contactos\""
         },
         {
-          "line": 174,
+          "line": 175,
           "title": "\"cuenta por la IP real de Cloudflare: cambiar x-forwarded-for no lo salta\""
         },
         {
-          "line": 175,
+          "line": 176,
           "title": "!esLocal()"
         },
         {
-          "line": 195,
+          "line": 196,
           "title": "\"la primera foto sale del propio sitio y se pide con la página\""
         },
         {
-          "line": 207,
+          "line": 208,
           "title": "\"la cinta de marcas nunca deja un hueco: lo que se ve no salta al reiniciar\""
         }
       ]
@@ -24256,19 +24283,19 @@
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 309,
+          "line": 310,
           "title": "`${tipo}: sin sesión → entrar con una cuenta existente → vuelve lleno y se publica`"
         },
         {
-          "line": 319,
+          "line": 320,
           "title": "`${tipo}: sin sesión → crear cuenta de cliente → vuelve lleno y se publica`"
         },
         {
-          "line": 344,
+          "line": 345,
           "title": "`${tipo}: sin sesión → crear cuenta de profesional → vuelve lleno y se publica`"
         },
         {
-          "line": 358,
+          "line": 359,
           "title": "\"registro de profesional: contraseña, provincia, tarifa, fijo, abre arriba y avisos de bienvenida\""
         }
       ]
@@ -24709,15 +24736,15 @@
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 99,
+          "line": 101,
           "title": "\"Completion opens the profile subsection without painting its menu first\""
         },
         {
-          "line": 100,
+          "line": 102,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 144,
+          "line": 146,
           "title": "\"Project form keeps search prefills and safely closes on desktop\""
         }
       ]
@@ -25255,11 +25282,11 @@
           "title": "\"create project modal opens from client projects without submitting\""
         },
         {
-          "line": 69,
+          "line": 70,
           "title": "\"favorite actions persist, render and remove for a disposable client\""
         },
         {
-          "line": 107,
+          "line": 108,
           "title": "\"empty favorites keep the type filters in English\""
         }
       ]
@@ -25862,16 +25889,24 @@
           "title": "\"native bottom navigation follows each downward pixel and requires a fast upward gesture\""
         },
         {
-          "line": 723,
+          "line": 725,
           "title": "\"native bottom navigation ignores the simulated iOS bottom bounce\""
         },
         {
-          "line": 744,
+          "line": 746,
           "title": "\"native bottom navigation restores at the top and can reverse without jumping\""
         },
         {
-          "line": 785,
+          "line": 787,
           "title": "\"native bottom navigation interpolates both directions instead of jumping\""
+        },
+        {
+          "line": 823,
+          "title": "\"native bottom navigation completes a short downward gesture even when content cannot scroll further\""
+        },
+        {
+          "line": 848,
+          "title": "\"native bottom navigation cancels its pending exit after reversing a short gesture\""
         }
       ]
     },
@@ -25969,27 +26004,27 @@
           "title": "`${environment}: edge swipe walks back through the service picker without selecting a service`"
         },
         {
-          "line": 49,
+          "line": 50,
           "title": "`${environment}: service categories return to the index by swipe`"
         },
         {
-          "line": 61,
+          "line": 62,
           "title": "`${environment}: job and promotion details return to their boards by swipe`"
         },
         {
-          "line": 62,
+          "line": 63,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 88,
+          "line": 89,
           "title": "'native edge back respects direction, scrolling, controls, overlays and root screens'"
         },
         {
-          "line": 143,
+          "line": 144,
           "title": "'native account and privacy swipe returns to Mi perfil without skipping the panel'"
         },
         {
-          "line": 144,
+          "line": 145,
           "title": "!canRunSeededRegression()"
         }
       ]
@@ -26540,6 +26575,27 @@
       ]
     },
     {
+      "file": "tests/e2e/project-intent.spec.ts",
+      "cases": [
+        {
+          "line": 27,
+          "title": "`project intention ${locale} ${account||'guest'} routes and preserves request`"
+        },
+        {
+          "line": 43,
+          "title": "'editing bypasses intention and retains description'"
+        },
+        {
+          "line": 45,
+          "title": "'saved draft resumes the form while an expired draft returns to choices'"
+        },
+        {
+          "line": 49,
+          "title": "`project choices fit width ${width}`"
+        }
+      ]
+    },
+    {
       "file": "tests/e2e/project-purpose.spec.ts",
       "cases": [
         {
@@ -26547,7 +26603,7 @@
           "title": "`project fields explain that a client needs a professional (${locale})`"
         },
         {
-          "line": 20,
+          "line": 22,
           "title": "`project board keeps its section name without the explanatory subtitle (${locale})`"
         }
       ]

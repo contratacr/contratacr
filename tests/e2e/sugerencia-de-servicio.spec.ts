@@ -95,6 +95,7 @@ test.describe("sugerencia de servicio al publicar", () => {
     await gotoOK(page, "/publicar-proyecto");
     await page.locator("#publish-project-title").waitFor({ timeout: 30_000 });
     await waitForInteractivePage(page);
+    await page.getByRole("button", { name: "Necesito un profesional", exact: true }).click();
 
     await page.getByPlaceholder("Ej.: Necesito reparar una moto que no enciende.").fill("Necesito una app móvil para muestreos de campo");
     const sugerencia = page.locator("[data-sugerencia-servicio]");

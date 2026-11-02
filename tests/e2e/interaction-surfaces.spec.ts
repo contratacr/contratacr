@@ -22,6 +22,7 @@ test.describe("@seeded interaction surfaces", () => {
     await expect(publish).toBeVisible();
     await publish.click();
 
+    await page.getByRole("button", { name: "Necesito un profesional", exact: true }).click();
     // El nombre accesible sigue el título visible del formulario.
     const dialog = page.getByRole("dialog", { name: /Cuéntenos sobre su proyecto|Tell us about your project|Crear (?:un )?proyecto|Create a project/i });
     await expect(dialog).toBeVisible();

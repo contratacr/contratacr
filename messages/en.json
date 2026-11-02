@@ -2160,7 +2160,7 @@
     "successNext": "We'll let you know as soon as someone replies. Then you write to whoever you like.",
     "successGoToProjects": "View my projects",
     "avisoAnuncio": "This reads as if you were offering a service. This section is for requesting, not offering.",
-    "avisoAnuncioCta": "Publish it as a promotion",
+    "avisoAnuncioCta": "View my professional profile",
     "avisoAnuncioCtaNew": "Create your professional profile",
     "dismiss": "Close",
     "editTitle": "Edit project",
@@ -2172,7 +2172,14 @@
     "cedulaYaVerificadaAyuda": "Your project shows \"Verified\". The number is never shown.",
     "identidadNoEncontrada": "We could not find this ID. You can request a manual review.",
     "identidadPadronCaido": "Verification is temporarily unavailable. You can continue and try later.",
-    "identidadEnRevision": "We'll review your ID; meanwhile your project shows without \"Verified\"."
+    "identidadEnRevision": "We'll review your ID; meanwhile your project shows without \"Verified\".",
+    "intentHeader": "Post a project",
+    "intentQuestion": "What would you like to do?",
+    "intentNeed": "I need a professional",
+    "intentNeedHint": "I want to post a service I need.",
+    "intentOffer": "I want to offer my services",
+    "intentOfferHint": "I want to showcase my work.",
+    "intentBack": "Back to choices"
   },
   "notifications": {
     "title": "Notifications",
