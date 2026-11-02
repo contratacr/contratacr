@@ -43,8 +43,8 @@ export function CookiePreferences() {
     } catch { setError(true); }
   }
   const notice = en
-    ? "We use cookies and similar technologies to keep ContrataCR working securely. With your permission, they also help us improve the app and measure our ads with Meta. You can change your preferences at any time."
-    : "Usamos cookies y tecnologías similares para que ContrataCR funcione de forma segura. Con tu permiso, también nos ayudan a mejorar la app y medir nuestros anuncios con Meta. Puedes cambiar tus preferencias cuando quieras.";
+    ? "Necessary cookies keep ContrataCR working securely. With your permission, usage statistics help improve the app, and advertising cookies measure campaigns with Meta. You can use the app without accepting these optional purposes and change your choice at any time."
+    : "Las cookies necesarias permiten que ContrataCR funcione de forma segura. Con tu permiso, las estadísticas ayudan a mejorar la app y las cookies publicitarias permiten medir campañas con Meta. Puedes usar la app sin aceptar estos fines opcionales y cambiar tu elección cuando quieras.";
   const actions = <div className="grid gap-2.5">
     <button className={button} onClick={() => save(true, true)}>{en ? "Accept all" : "Aceptar todas"}</button>
     <button className={button} onClick={() => save(false, false)}>{en ? "Only necessary" : "Solo necesarias"}</button>

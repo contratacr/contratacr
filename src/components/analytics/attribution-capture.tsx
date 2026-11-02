@@ -51,7 +51,7 @@ export function AttributionCapture() {
   useEffect(() => {
     if (!analyticsMeasurementEnabled()) return;
     const medio = searchParams.get("utm_medium");
-    if (medio !== "campana" && medio !== "paid") return;
+    if (!["campana", "paid", "paid_social", "cpc", "ads", "ppc"].includes(medio ?? "")) return;
     const campana = (searchParams.get("utm_campaign") ?? "").slice(0, 100) || "sin_nombre";
     const clave = `ccr:clic-campana:${campana}`;
     try {
