@@ -23,3 +23,5 @@ También se ejecutan build, TypeScript, ESLint focal, UTF-8, presupuesto biling�
 La evidencia focal no sustituye la suite exhaustiva periódica. El despliegue web y las migraciones remotas se comprueban por separado; sincronizar `mobile` no publica una versión nueva en las tiendas.
 
 Resultado local final: 21/21 pruebas de flujo/enlaces/acciones; 29/29 contratos de administración/notificaciones; 12/12 comprobaciones de marca y cabeceras reutilizadas de la ejecución inmediatamente anterior (sin cambios posteriores de geometría/marca). Build, TypeScript, ESLint focal, UTF-8, i18n e inventario correctos. En los dos componentes grandes modificados se compararon los diagnósticos completos de ESLint con la base: no se introdujeron diagnósticos; no se presenta el lint global preexistente como limpio.
+
+El arranque de CI vuelve a aplicar las revocaciones de la tabla de solicitudes después de sus grants generales. Se comprobó en una transacción local que anon/authenticated no recuperan lectura y que service_role mantiene acceso. Esto conserva el contrato de producción al reconstruir la base de pruebas.
