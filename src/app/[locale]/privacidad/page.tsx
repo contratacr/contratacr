@@ -199,7 +199,7 @@ const ES_SECTIONS: LegalSection[] = [
       },
       {
         "k": "p",
-        "text": "Estadísticas y medición publicitaria están desactivadas hasta que usted las acepte por separado. El aviso ofrece Aceptar todas, Solo necesarias y Configurar, también en móvil. Puede cambiar su elección desde Configurar cookies y privacidad en el pie del sitio o esta política. La elección se guarda en este navegador o app durante un máximo de 180 días; no se interpreta el silencio como aceptación. Retirar publicidad detiene nuevos envíos y solicita cancelar conversiones pendientes. Sin conexión se reintenta al reconectar. No se pueden recuperar envíos ya en curso ni borrar automáticamente datos recibidos por Meta. Estos permisos son independientes de términos, correos promocionales, IA y permisos del sistema operativo."
+        "text": "Estadísticas y medición publicitaria están desactivadas hasta que usted las autorice. El aviso ofrece Configuración y De acuerdo, también en móvil. De acuerdo acepta ambos fines opcionales. En Configuración puede elegir cada fin, aceptar todo o guardar solo las necesarias. Puede cambiar su elección desde Configurar cookies y privacidad en el pie del sitio o esta política. La elección se guarda en este navegador o app durante un máximo de 180 días; no se interpreta el silencio como aceptación. Retirar publicidad detiene nuevos envíos y solicita cancelar conversiones pendientes. Sin conexión se reintenta al reconectar. No se pueden recuperar envíos ya en curso ni borrar automáticamente datos recibidos por Meta. Estos permisos son independientes de términos, correos promocionales, IA y permisos del sistema operativo."
       },
       {
         "k": "p",
@@ -479,7 +479,7 @@ const EN_SECTIONS: LegalSection[] = [
       },
       {
         "k": "p",
-        "text": "Statistics and advertising measurement remain off until you accept each purpose. The notice offers Accept all, Only necessary and Settings, including on mobile. Change your choice through Cookie and privacy settings in the site footer or this policy. Choices last up to 180 days in this browser or app; silence is not acceptance. Withdrawing advertising stops new deliveries and requests cancellation of pending conversions. Offline requests retry on reconnection. In-flight deliveries cannot be recalled and data received by Meta is not automatically erased. These permissions are separate from terms, marketing emails, AI and operating-system permissions."
+        "text": "Statistics and advertising measurement remain off until you authorize them. The notice offers Settings and Agree, including on mobile. Agree accepts both optional purposes. In Settings you can choose each purpose, accept all or save only necessary cookies. Change your choice through Cookie and privacy settings in the site footer or this policy. Choices last up to 180 days in this browser or app; silence is not acceptance. Withdrawing advertising stops new deliveries and requests cancellation of pending conversions. Offline requests retry on reconnection. In-flight deliveries cannot be recalled and data received by Meta is not automatically erased. These permissions are separate from terms, marketing emails, AI and operating-system permissions."
       },
       {
         "k": "p",
