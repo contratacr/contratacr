@@ -183,6 +183,7 @@ export function AdminCategories() {
   const [status, setStatus] = useState<"pending" | "approved" | "rejected">("pending");
   const [items, setItems] = useState<Suggestion[]>([]);
   const [pendingCount, setPendingCount] = useState(0);
+  const [existingTargets, setExistingTargets] = useState<Record<string, string>>({});
   const [catalog, setCatalog] = useState<CatalogCategory[]>([]);
   const [groups, setGroups] = useState<CatalogGroup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -539,7 +540,8 @@ export function AdminCategories() {
     labelEn?: string,
     groupId?: string,
     flags?: { esSalud: boolean; supportsVideoconsulta: boolean },
-    reviewReason?: string
+    reviewReason?: string,
+    existingCategoryId?: string
   ) {
     setBusy(i.id);
     try {
@@ -553,6 +555,7 @@ export function AdminCategories() {
           labelEn,
           groupId: groupId ?? groupOfSuggestion(i),
           reviewReason,
+          existingCategoryId,
           ...(flags ?? flagsOf(i)),
         }),
       });
@@ -1019,6 +1022,18 @@ export function AdminCategories() {
                           <Toggle checked={flags.supportsVideoconsulta} label="Video" onChange={(v) => setFlagEdits((p) => ({ ...p, [i.id]: { ...flags, supportsVideoconsulta: v } }))} />
                         </div>
                         <div className="flex flex-wrap justify-end gap-2 xl:pt-5">
+                          <div className="w-full space-y-2">
+                            <label className="block text-xs font-semibold text-[#52627a]" htmlFor={`existing-${i.id}`}>Ya existe en el catálogo</label>
+                            <select id={`existing-${i.id}`} value={existingTargets[i.id] ?? ""} onChange={event => setExistingTargets(current => ({ ...current, [i.id]: event.target.value }))} className="h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-2 text-sm">
+                              <option value="">Seleccionar servicio existente</option>
+                              {catalog.filter(c => !c.isHidden).map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+                            </select>
+                            <button disabled={busy !== null || !existingTargets[i.id]} onClick={() => {
+                              const target = catalog.find(c => c.id === existingTargets[i.id]);
+                              if (!target) return;
+                              setDialog({ title: "Usar servicio existente", description: `Se avisará a quienes lo solicitaron que pueden completar «${target.label}». No se publicará en sus perfiles hasta que guarden.`, confirmLabel: "Confirmar servicio", onConfirm: () => applySuggestionDecision(i, "rejected", undefined, undefined, undefined, undefined, undefined, target.id) });
+                            }} className="rounded-lg border border-[#d7e3ee] px-3 py-2 text-sm font-semibold text-[#162543] disabled:opacity-50">Ya existe → ofrecer este servicio</button>
+                          </div>
                           <button onClick={() => decide(i, "approved")} disabled={busy !== null} className="inline-flex h-9 items-center gap-1 rounded-lg bg-[#16a34a] px-3 text-sm font-medium text-white hover:bg-[#15803d] disabled:opacity-50">
                             {busy === i.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />} Aprobar
                           </button>

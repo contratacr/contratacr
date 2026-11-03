@@ -238,7 +238,7 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
       const reason = stringData(data, "review_reason");
       const approved = suggestionDecision === "approved";
       const body = approved
-        ? (en ? `Your suggestion "${service}" was approved and is now available in search.` : `Tu sugerencia "${service}" fue aprobada y ya está disponible para la búsqueda.`)
+        ? (en ? `Your suggestion "${service}" is now available. Complete its details to publish it on your profile.` : `Tu sugerencia "${service}" ya está disponible. Completá la información para publicarlo en tu perfil.`)
         : (en ? `Your suggestion "${service}" was not approved.` : `Tu sugerencia "${service}" no fue aprobada.`);
       return { title: localizedTitle(approved ? "suggestion_approved" : "suggestion_rejected", language, notification.title), message: appendReason(body, reason, language) };
     }
@@ -321,7 +321,7 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
     const reason = stringData(data, "review_reason");
     const approved = notification.type === "suggestion_approved";
     const body = approved
-      ? (en ? `Your suggestion "${service}" was approved and is now available in search.` : `Tu sugerencia "${service}" fue aprobada y ya está disponible para la búsqueda.`)
+      ? (en ? `Your suggestion "${service}" is now available. Complete its details to publish it on your profile.` : `Tu sugerencia "${service}" ya está disponible. Completá la información para publicarlo en tu perfil.`)
       : (en ? `Your suggestion "${service}" was not approved.` : `Tu sugerencia "${service}" no fue aprobada.`);
     return { title, message: appendReason(body, reason, language) };
   }

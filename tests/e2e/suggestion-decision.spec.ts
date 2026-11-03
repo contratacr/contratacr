@@ -3,7 +3,8 @@ import { notificationActionHref } from "../../src/lib/notification-link";
 import { expectHealthyPage, gotoOK, loginAs } from "./helpers";
 import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccount } from "./disposable-account";
 
-const hasTestDatabase = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").includes("oqheayqqprpciqdvdaqo") && !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+import { canRunSeededRegression } from "./seed";
+const hasTestDatabase = canRunSeededRegression();
 let account: DisposableAccount;
 test.beforeAll(async () => { if (hasTestDatabase) account = await createDisposableAccount({ prefix: "suggestion-decision", professional: true }); });
 test.afterAll(async () => { if (account) await cleanupDisposableAccount(account); });

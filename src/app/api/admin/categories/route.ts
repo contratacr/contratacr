@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+import { serviceSuggestionEditorLink } from "@/lib/service-suggestion-request";
 import { readAllAdminRows, readAdminRowsByIds } from "@/lib/admin/read-all-rows";
 import { refreshApprovedCatalog } from "@/lib/data/approved-catalog-cache";
 import { APPROVED_SUGGESTION_LINK } from "@/lib/notification-link";
@@ -211,6 +213,7 @@ export async function PATCH(req: Request) {
     esSalud,
     supportsVideoconsulta,
     reviewReason,
+    existingCategoryId,
   } = body;
   if (!id || (status && !["approved", "rejected", "pending"].includes(status))) {
     return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
@@ -286,7 +289,21 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "Sugerencia no encontrada" }, { status: 404 });
   }
 
+  if (existingCategoryId) {
+    if (status !== "rejected" || typeof existingCategoryId !== "string") return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
+    const { data: target, error } = await db.from("categories").select("id,name,is_hidden,is_active").eq("id", existingCategoryId).maybeSingle();
+    if (error || !target || target.is_hidden || target.is_active === false) return NextResponse.json({ error: "Seleccioná un servicio activo del catálogo" }, { status: 400 });
+    update.resolved_category_id = target.id;
+    update.review_reason = `Ya disponible como «${target.name}». Completá la información para agregarlo a tu perfil.`;
+    const updateError = await updateSuggestionRow(db, id, update);
+    if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
+    await notifySuggestionDecision(db, suggestionRow!, "approved", target.name, undefined, target.id);
+    await refreshApprovedCatalog();
+    return NextResponse.json({ ok: true });
+  }
+
   if (status === "approved") {
+    update.resolved_category_id = id;
     update.review_reason = null;
     const rawName = cleanLabel || suggestionRow!.label || suggestionRow!.suggested_name || labelFromId(id);
     const rawNameEn = normalizeServiceDisplayName(typeof labelEn === "string" ? labelEn : "");
@@ -312,6 +329,7 @@ export async function PATCH(req: Request) {
   }
 
   if (status === "rejected") {
+    update.resolved_category_id = null;
     update.review_reason = normalizedReviewReason;
     const rawName = cleanLabel || suggestionRow!.label || suggestionRow!.suggested_name || labelFromId(id);
     const finalName = normalizeServiceDisplayName(rawName);
@@ -545,7 +563,7 @@ async function syncProfessionalServiceNames(
   const { data, error } = await db
     .from("professionals")
     .select("id, services")
-    .contains("services", [{ category: categoryId }])
+    .filter("services", "cs", JSON.stringify([{ category: categoryId }]))
     .limit(1000);
   if (error) {
     console.warn("[admin/categories] could not read professional services for name sync", {
@@ -617,7 +635,7 @@ function suggestionNotificationMessage(
   if (decision === "approved") {
     return {
       title: "Sugerencia aprobada",
-      message: `Tu sugerencia "${name}" fue aprobada y ya está disponible para la búsqueda.`,
+      message: `Tu sugerencia "${name}" fue aprobada y ya está disponible. Completá la información para publicarlo en tu perfil.`,
     };
   }
 
@@ -629,37 +647,44 @@ function suggestionNotificationMessage(
   };
 }
 
+function suggestionDecisionNotificationId(suggestionId: string, recipientId: string, decision: string, categoryId: string) {
+  const hash = createHash("sha256").update(`service-request:${suggestionId}:${recipientId}:${decision}:${categoryId}`).digest("hex");
+  return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-4${hash.slice(13, 16)}-a${hash.slice(17, 20)}-${hash.slice(20, 32)}`;
+}
+
 async function notifySuggestionDecision(
   db: ReturnType<typeof createAdminClient>,
   suggestionRow: { id: string; suggested_by?: string | null },
   decision: "approved" | "rejected",
   serviceName: string,
-  reviewReason?: string | null
+  reviewReason?: string | null,
+  categoryId = suggestionRow.id,
+  recipientId?: string
 ) {
-  if (!suggestionRow.suggested_by) {
-    console.warn("[admin/categories] suggestion has no suggested_by; cannot send decision notification", {
-      id: suggestionRow.id,
-      decision,
-    });
+  if (!recipientId) {
+    const { data: requests, error } = await readAllAdminRows((from, to) => db.from("service_suggestion_requests").select("profile_id").eq("suggestion_id", suggestionRow.id).order("profile_id").range(from, to));
+    if (error) throw error;
+    const recipients = new Set([...(requests ?? []).map(r => r.profile_id), suggestionRow.suggested_by].filter((id): id is string => !!id));
+    for (const id of recipients) await notifySuggestionDecision(db, suggestionRow, decision, serviceName, reviewReason, categoryId, id);
     return;
   }
-
   const { title, message } = suggestionNotificationMessage(serviceName, decision, reviewReason);
   const notificationType = decision === "approved" ? "suggestion_approved" : "suggestion_rejected";
   const payload = {
-    user_id: suggestionRow.suggested_by,
+    id: suggestionDecisionNotificationId(suggestionRow.id, recipientId, decision, categoryId),
+    user_id: recipientId,
     title,
     message,
-    data: notificationData(decision, serviceName, reviewReason),
+    data: { ...notificationData(decision, serviceName, reviewReason), category_id: categoryId, suggestion_id: suggestionRow.id, ...(decision === "approved" ? { link: serviceSuggestionEditorLink(categoryId) } : {}) },
   };
 
-  const primary = await db.from("notifications").insert({
+  const primary = await db.from("notifications").upsert({
     ...payload,
     type: notificationType,
-  });
+  }, { onConflict: "id", ignoreDuplicates: true }).select("id");
 
   if (!primary.error) {
-    await sendNotificationPush({ userId: payload.user_id, ...payload });
+    if (primary.data?.length) await sendNotificationPush({ userId: payload.user_id, ...payload });
     return;
   }
 
@@ -678,17 +703,17 @@ async function notifySuggestionDecision(
     });
   }
 
-  const fallback = await db.from("notifications").insert({
+  const fallback = await db.from("notifications").upsert({
     ...payload,
     type: "support_reply",
-  });
+  }, { onConflict: "id", ignoreDuplicates: true }).select("id");
   if (fallback.error) {
     console.error("[admin/categories] failed to insert suggestion decision fallback notification:", {
       decision,
       notificationType,
       error: fallback.error,
     });
-  } else {
+  } else if (fallback.data?.length) {
     await sendNotificationPush({ userId: payload.user_id, ...payload });
   }
 }

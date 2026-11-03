@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { trackMetaConversion } from "@/lib/analytics/meta-pixel";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
@@ -11,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { PanelEmptyState } from "@/components/ui/content-loading";
 import { PriceInput } from "@/components/ui/price-input";
 import { Modal } from "@/components/ui/modal";
+import { refreshCustomCategories } from "@/lib/data/use-custom-categories";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { CategoryGroupPicker, type CategoryPickerGroup } from "@/components/ui/category-group-picker";
 import { SelectMenu } from "@/components/ui/select-menu";
@@ -188,6 +190,9 @@ export function ServicesEditor({
   focusKey,
 }: ServicesEditorProps) {
   const locale = useLocale();
+  const requestParams = useSearchParams();
+  const requestedCategory = requestParams.get("serviceRequest");
+  const openedRequest = useRef<string | null>(null);
   const t = useTranslations("servicesEditor");
   const tSub = useTranslations("proPanel.subtitles");
   const tp = useTranslations("categoriesPage");
@@ -493,6 +498,28 @@ export function ServicesEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusField, focusKey]);
 
+  useEffect(() => {
+    if (!requestedCategory) { openedRequest.current = null; return; }
+    if (openedRequest.current === requestedCategory) return;
+    let active = true;
+    void refreshCustomCategories({ force: true });
+    void fetch("/api/categories/requests", { cache: "no-store" }).then(async response => {
+      if (!response.ok) throw new Error();
+      const data = await response.json();
+      if (!active || !(data.invitations ?? []).some((i: { categoryId: string }) => i.categoryId === requestedCategory)) return;
+      // Wait for the approved catalog before opening: never render an unknown slug.
+      if (!allCategories.some(c => c.id === requestedCategory)) return;
+      openedRequest.current = requestedCategory;
+      addService(requestedCategory);
+      const url = new URL(window.location.href);
+      url.searchParams.delete("serviceRequest");
+      window.history.replaceState(null, "", url.pathname + url.search);
+    }).catch(() => setFormError(t("requestLoadError")));
+    return () => { active = false; };
+    // The modal is opened once per explicit request, not on form changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requestedCategory, customCategoryRefreshKey]);
+
   const formConCambios = editCategory !== "" && formAbiertoConRef.current !== "" &&
     formAbiertoConRef.current !== JSON.stringify({ ...form, categoria: editCategory });
 
@@ -613,6 +640,7 @@ export function ServicesEditor({
     ];
     const didSave = await persist(nextProfessions, next, { intent: "internal" });
     if (!didSave) return;
+    window.dispatchEvent(new Event("ccr:services-saved"));
     setProfessions(nextProfessions);
     setServices(next);
     setPendingNewCategory(null);
@@ -868,7 +896,7 @@ export function ServicesEditor({
 
             <div>
               <label className="mb-1.5 block text-sm font-medium text-[#374151]">
-                {locale === "en" ? "Service image" : "Imagen de tu servicio"} <span className="font-normal text-[#68778d]">{t("optional")}</span>
+                {t("imageHeading")} <span className="font-normal text-[#68778d]">{t("optional")}</span>
               </label>
               <div className="overflow-hidden rounded-2xl border border-[#dbe7ef] bg-[#f8fbfe]">
                 {form.imageUrl ? (
@@ -1116,6 +1144,7 @@ export function ServicesEditor({
                 teclado la perseguía. Aquí ya está donde el teclado la deja. */}
             <div className={PIE_VENTANA_BASE}>
               <CategorySuggestionBox
+                forOffering
                 variante="boton"
                 prominent
                 rowTitle={tp("notListed")}

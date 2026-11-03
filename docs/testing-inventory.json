@@ -2,13 +2,13 @@
   "scope": "Todos los archivos TypeScript de src/app, src/components y src/hooks, controles JSX declarados, pestañas del panel y specs permanentes. No enumera cada elemento dinámico renderizado ni componentes dentro de dependencias.",
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
-    "files": 511,
-    "controls": 1306,
+    "files": 513,
+    "controls": 1311,
     "pages": 71,
-    "handlers": 106,
-    "components": 270,
+    "handlers": 107,
+    "components": 271,
     "hooks": 28,
-    "specs": 185
+    "specs": 186
   },
   "dashboardTabs": [
     "home",
@@ -1096,7 +1096,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 359,
+          "line": 360,
           "tag": "input",
           "label": "{t(\"searchPlaceholder\")}",
           "handler": "{(event) => setBusqueda(event.target.value)}",
@@ -1104,7 +1104,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 380,
+          "line": 381,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setSelectedGuideId(abierta ? null : guide.id)}",
@@ -1112,7 +1112,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 410,
+          "line": 411,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => go(guide)}",
@@ -1120,7 +1120,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 436,
+          "line": 437,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => {\n            onClose?.();\n            onGo({ id: \"supportGuide\", section: \"shared\", actionTab: \"soporte\", stepCount: 3 });\n          }}",
@@ -1128,7 +1128,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1730,
+          "line": 1731,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => {\n          requestUnsavedAction(() => openPanelDestination(tab));\n        }}",
@@ -1136,7 +1136,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1793,
+          "line": 1794,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -1144,7 +1144,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1813,
+          "line": 1814,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => {\n          if (tab === \"home\") {\n            setMobilePanelOpen(true);\n            scrollDashboardToPageTop();\n            return;\n          }\n          if (tab === \"guides\") { setGuiasAbiertas(true); return; }\n          requestUnsavedAction(() => openPanelDestination(tab));\n        }}",
@@ -1152,7 +1152,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1901,
+          "line": 1902,
           "tag": "button",
           "label": "{locale === \"en\" ? \"Profile photo options\" : \"Opciones de foto de perfil\"}",
           "handler": "{() => setHeaderPhotoMenuOpen((open) => !open)}",
@@ -1160,7 +1160,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1924,
+          "line": 1925,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { setHeaderPhotoMenuOpen(false); setHeaderPhotoPreviewOpen(true); }}",
@@ -1168,7 +1168,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1929,
+          "line": 1930,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { setHeaderPhotoMenuOpen(false); headerPhotoInputRef.current?.click(); }}",
@@ -1176,7 +1176,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1938,
+          "line": 1939,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => void handleHeaderPhotoRemove()}",
@@ -1184,7 +1184,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1987,
+          "line": 1988,
           "tag": "Link",
           "label": "{locale === \"en\" ? \"View public profile\" : \"Ver perfil público\"}",
           "handler": "{openInNewTabOnDesktop}",
@@ -1192,7 +1192,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1999,
+          "line": 2000,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setShareKitTab(activeTab)}",
@@ -1200,7 +1200,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2004,
+          "line": 2005,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setGuiasAbiertas(true)}",
@@ -1208,7 +1208,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2025,
+          "line": 2026,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{openInNewTabOnDesktop}",
@@ -1216,7 +1216,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2039,
+          "line": 2040,
           "tag": "Link",
           "label": "{locale === \"en\" ? \"View public profile\" : \"Ver perfil público\"}",
           "handler": "{openInNewTabOnDesktop}",
@@ -1224,7 +1224,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2048,
+          "line": 2049,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setShareKitTab(activeTab)}",
@@ -1232,7 +1232,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2089,
+          "line": 2090,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => fetchPro()}",
@@ -1240,7 +1240,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2101,
+          "line": 2102,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => router.push(\"/registro/profesional\")}",
@@ -1248,7 +1248,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2115,
+          "line": 2116,
           "tag": "button",
           "label": "{t(\"backToPanel\")}",
           "handler": "{() => {\n                      requestUnsavedAction(() => {\n                        const chatReturn = chatReturnRef.current;\n                        if (chatReturn) {\n                          chatReturnRef.current = null;\n                          router.push(chatReturn);\n                          return;\n                        }\n                        if (hasActiveCompletionFlow()) {\n                          goToCompletionChecklist();\n                          return;\n                        }\n                        if (activeTab === \"profile\" && mobileProfileSectionTitle) {\n                          window.dispatchEvent(new Event(\"ccr:profile-mobile-close-section\"));\n                          return;\n                        }\n                        if (activeTab === \"soporte\" && supportThreadTitle) {\n                          window.dispatchEvent(new Event(\"ccr:support-close-thread\"));\n                          return;\n                        }\n                        const volverA = externalReturnTo ?? returnToRef.current;\n                        if (volverA && (activeTab === \"offers\" || activeTab === \"jobs\" || activeTab === \"sent_projects\" || volverA.startsWith(\"/mensajes\") || volverA === \"/notificaciones\")) {\n                          router.push(volverA);\n                          return;\n                        }\n                        setTab(\"home\");\n                      });\n                    }}",
@@ -1256,7 +1256,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2218,
+          "line": 2219,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => router.push(`${prefijoDeIdioma(locale)}/dashboard/profesional?tab=soporte`)}",
@@ -1264,7 +1264,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2246,
+          "line": 2248,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => signOutToHome(locale)}",
@@ -1272,7 +1272,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 2417,
+          "line": 2419,
           "tag": "StatusFilterTabs",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(id) => setPublicacionTipo(id as Publicacion)}",
@@ -5161,6 +5161,38 @@
       "priority": "P1"
     },
     {
+      "file": "src/app/api/categories/requests/route.ts",
+      "kind": "API / handler",
+      "group": "Búsqueda y profesionales",
+      "route": "/api/categories/requests",
+      "exports": [
+        "GET",
+        "PATCH"
+      ],
+      "methods": [
+        "GET",
+        "PATCH"
+      ],
+      "controls": [],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/search-results.spec.ts",
+        "tests/e2e/search-ranking.spec.ts",
+        "tests/e2e/services.spec.ts",
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts",
+        "tests/e2e/search-progressive-loading.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "API + integración BD + autorización/propiedad + idempotencia; smoke solo lectura",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P1"
+    },
+    {
       "file": "src/app/api/categories/suggest/route.ts",
       "kind": "API / handler",
       "group": "Búsqueda y profesionales",
@@ -7515,7 +7547,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 895,
+          "line": 898,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => {\n                  if (tab.id === view) return;\n                  setLoading(true);\n                  setView(tab.id as \"suggestions\" | \"services\" | \"groups\");\n                }}",
@@ -7523,7 +7555,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 934,
+          "line": 937,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => {\n                  if (s.id === status) return;\n                  setLoading(true);\n                  setStatus(s.id);\n                }}",
@@ -7531,7 +7563,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 967,
+          "line": 970,
           "tag": "input",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(e) => {\n                                const nextLabel = e.target.value;\n                                setEdits((p) => ({ ...p, [i.id]: nextLabel }));\n                                if (!manualEnglishEdits[i.id]) {\n                                  setEnglishEdits((p) => ({ ...p, [i.id]: autoEnglishCategoryLabel(nextLabel) }));\n                                }\n                              }}",
@@ -7539,7 +7571,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 982,
+          "line": 985,
           "tag": "input",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(e) => {\n                                setManualEnglishEdits((p) => ({ ...p, [i.id]: true }));\n                                setEnglishEdits((p) => ({ ...p, [i.id]: e.target.value }));\n                              }}",
@@ -7547,7 +7579,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1009,
+          "line": 1012,
           "tag": "select",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(e) => setSuggestionGroups((p) => ({ ...p, [i.id]: e.target.value }))}",
@@ -7555,7 +7587,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1018,
+          "line": 1021,
           "tag": "Toggle",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(v) => setFlagEdits((p) => ({ ...p, [i.id]: { ...flags, esSalud: v } }))}",
@@ -7563,7 +7595,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1019,
+          "line": 1022,
           "tag": "Toggle",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(v) => setFlagEdits((p) => ({ ...p, [i.id]: { ...flags, supportsVideoconsulta: v } }))}",
@@ -7571,7 +7603,23 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1022,
+          "line": 1027,
+          "tag": "select",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{event => setExistingTargets(current => ({ ...current, [i.id]: event.target.value }))}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 1031,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{() => {\n                              const target = catalog.find(c => c.id === existingTargets[i.id]);\n                              if (!target) return;\n                              setDialog({ title: \"Usar servicio existente\", description: `Se avisará a quienes lo solicitaron que pueden completar «${target.label}». No se publicará en sus perfiles hasta que guarden.`, confirmLabel: \"Confirmar servicio\", onConfirm: () => applySuggestionDecision(i, \"rejected\", undefined, undefined, undefined, undefined, undefined, target.id) });\n                            }}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 1037,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => decide(i, \"approved\")}",
@@ -7579,7 +7627,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1025,
+          "line": 1040,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => decide(i, \"rejected\")}",
@@ -7587,7 +7635,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1046,
+          "line": 1061,
           "tag": "form",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{addService}",
@@ -7595,7 +7643,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1050,
+          "line": 1065,
           "tag": "input",
           "label": "\"\"",
           "handler": "{(e) => {\n                    const nextLabel = e.target.value;\n                    setNewServiceNameManual(true);\n                    setNewServiceName(nextLabel);\n                    programarTraduccion(\"nuevo-servicio\", nextLabel, setNewServiceNameEn);\n                  }}",
@@ -7603,7 +7651,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1068,
+          "line": 1083,
           "tag": "input",
           "label": "\"\"",
           "handler": "{(e) => {\n                    setNewServiceNameEn(e.target.value);\n                    anotarIngles(\"nuevo-servicio\", newServiceName);\n                  }}",
@@ -7611,7 +7659,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1081,
+          "line": 1096,
           "tag": "select",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(e) => setNewServiceGroupId(e.target.value)}",
@@ -7619,7 +7667,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1090,
+          "line": 1105,
           "tag": "Toggle",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(v) => setNewServiceFlags((p) => ({ ...p, esSalud: v }))}",
@@ -7627,7 +7675,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1091,
+          "line": 1106,
           "tag": "Toggle",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(v) => setNewServiceFlags((p) => ({ ...p, supportsVideoconsulta: v }))}",
@@ -7635,7 +7683,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1092,
+          "line": 1107,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -7643,7 +7691,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1103,
+          "line": 1118,
           "tag": "input",
           "label": "\"Buscar servicio o categoría\"",
           "handler": "{(e) => setQuery(e.target.value)}",
@@ -7651,7 +7699,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1117,
+          "line": 1132,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setServiceFilter(filter.id as \"all\" | \"custom\" | \"health\" | \"video\")}",
@@ -7659,7 +7707,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1140,
+          "line": 1155,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setOpenGroups((current) => ({ ...current, [section.id]: !open }))}",
@@ -7667,7 +7715,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1156,
+          "line": 1171,
           "tag": "input",
           "label": "\"Nombre del servicio\"",
           "handler": "{(e) => {\n                        const nextLabel = e.target.value;\n                        setCatalogDrafts((prev) => ({ ...prev, [item.id]: { ...draftOf(item), label: nextLabel } }));\n                        programarTraduccion(item.id, nextLabel, (ingles) =>\n                          setCatalogDrafts((prev) => ({ ...prev, [item.id]: { ...draftOf(item), labelEn: ingles } })));\n                      }}",
@@ -7675,7 +7723,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1168,
+          "line": 1183,
           "tag": "input",
           "label": "\"Nombre del servicio en inglés\"",
           "handler": "{(e) => {\n                        setCatalogDrafts((prev) => ({ ...prev, [item.id]: { ...draftOf(item), labelEn: e.target.value } }));\n                        anotarIngles(item.id, draftOf(item).label);\n                      }}",
@@ -7683,7 +7731,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1182,
+          "line": 1197,
           "tag": "select",
           "label": "\"Categoría del servicio\"",
           "handler": "{(e) => setCatalogDrafts((prev) => ({ ...prev, [item.id]: { ...draftOf(item), groupId: e.target.value } }))}",
@@ -7691,7 +7739,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1191,
+          "line": 1206,
           "tag": "Toggle",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(v) => updateCatalogFlag(item, { esSalud: v })}",
@@ -7699,7 +7747,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1192,
+          "line": 1207,
           "tag": "Toggle",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(v) => updateCatalogFlag(item, { supportsVideoconsulta: v })}",
@@ -7707,7 +7755,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1196,
+          "line": 1211,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => saveCatalogItem(item)}",
@@ -7715,7 +7763,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1200,
+          "line": 1215,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => deleteService(item)}",
@@ -7723,7 +7771,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1218,
+          "line": 1233,
           "tag": "form",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{addGroup}",
@@ -7731,7 +7779,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1222,
+          "line": 1237,
           "tag": "input",
           "label": "\"\"",
           "handler": "{(e) => {\n                    const nextLabel = e.target.value;\n                    setNewGroupNameManual(true);\n                    setNewGroupName(nextLabel);\n                    if (!newGroupNameEnManual) setNewGroupNameEn(autoEnglishCategoryLabel(nextLabel));\n                  }}",
@@ -7739,7 +7787,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1237,
+          "line": 1252,
           "tag": "input",
           "label": "\"\"",
           "handler": "{(e) => {\n                    setNewGroupNameEnManual(true);\n                    setNewGroupNameEn(e.target.value);\n                  }}",
@@ -7747,7 +7795,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1248,
+          "line": 1263,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -7755,7 +7803,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1263,
+          "line": 1278,
           "tag": "input",
           "label": "\"Nombre de la categoría\"",
           "handler": "{(e) => setGroupDrafts((prev) => ({ ...prev, [group.id]: { ...draft, label: e.target.value } }))}",
@@ -7763,7 +7811,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1269,
+          "line": 1284,
           "tag": "input",
           "label": "\"Nombre de la categoría en inglés\"",
           "handler": "{(e) => setGroupDrafts((prev) => ({ ...prev, [group.id]: { ...draft, labelEn: e.target.value } }))}",
@@ -7771,7 +7819,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1277,
+          "line": 1292,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => saveGroup(group)}",
@@ -7779,7 +7827,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1281,
+          "line": 1296,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => deleteGroup(group)}",
@@ -11660,6 +11708,49 @@
       "priority": "P1"
     },
     {
+      "file": "src/components/dashboard/pro/service-request-invitations.tsx",
+      "kind": "Componente",
+      "group": "Panel y publicaciones",
+      "route": null,
+      "exports": [
+        "ServiceRequestInvitations"
+      ],
+      "methods": [],
+      "controls": [
+        {
+          "line": 37,
+          "tag": "Link",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "",
+          "destination": "{item.link}",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 38,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{() => void defer(item.suggestionId)}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        }
+      ],
+      "testIds": [
+        "service-request-invitations"
+      ],
+      "relatedSpecs": [
+        "tests/e2e/dashboard-surfaces.spec.ts",
+        "tests/e2e/marketplace-editors.spec.ts",
+        "tests/e2e/statistics-dashboard.spec.ts"
+      ],
+      "directReferences": [
+        "tests/e2e/service-suggestion-flow.spec.ts"
+      ],
+      "evidence": "Referencia estática detectada; verificar assertions",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P1"
+    },
+    {
       "file": "src/components/dashboard/pro/services-editor.tsx",
       "kind": "Componente",
       "group": "Servicios, ayuda y legales",
@@ -11670,7 +11761,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 159,
+          "line": 161,
           "tag": "SelectMenu",
           "label": "{locale === \"en\" ? \"Month\" : \"Mes\"}",
           "handler": "{(month) => commit(selectedYear || String(currentYear), month)}",
@@ -11678,7 +11769,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 165,
+          "line": 167,
           "tag": "SelectMenu",
           "label": "{locale === \"en\" ? \"Year\" : \"Año\"}",
           "handler": "{(year) => {\n            const month = selectedMonth && Number(selectedMonth) <= (Number(year) === currentYear ? currentMonth : 12)\n              ? selectedMonth\n              : \"\";\n            commit(year, month);\n          }}",
@@ -11686,7 +11777,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 658,
+          "line": 686,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { setPickerMode(\"add\"); setPickerQuery(\"\"); setActivePickerGroupId(null); }}",
@@ -11694,7 +11785,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 721,
+          "line": 749,
           "tag": "button",
           "label": "{isActive ? t(\"hideService\") : t(\"publishService\")}",
           "handler": "{() => toggleServiceActive(prof)}",
@@ -11702,7 +11793,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 744,
+          "line": 772,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => makePrincipal(prof)}",
@@ -11710,7 +11801,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 758,
+          "line": 786,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => openEditInfo(prof)}",
@@ -11718,7 +11809,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 767,
+          "line": 795,
           "tag": "button",
           "label": "{t(\"removeProfession\")}",
           "handler": "{() => void removeService(prof)}",
@@ -11726,7 +11817,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 811,
+          "line": 839,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{cancelForm}",
@@ -11734,7 +11825,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 814,
+          "line": 842,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{handleFormSave}",
@@ -11742,7 +11833,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 838,
+          "line": 866,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { setPickerMode(\"change\"); setPickerQuery(\"\"); setActivePickerGroupId(null); }}",
@@ -11750,7 +11841,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 857,
+          "line": 885,
           "tag": "textarea",
           "label": "{t(\"offerDescPlaceholder\")}",
           "handler": "{(e) => setForm((f) => ({ ...f, description: e.target.value.slice(0, SERVICE_DESCRIPTION_MAX_LENGTH) }))}",
@@ -11758,7 +11849,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 878,
+          "line": 906,
           "tag": "button",
           "label": "{locale === \"en\" ? \"Remove service image\" : \"Eliminar imagen del servicio\"}",
           "handler": "{() => setForm((current) => ({ ...current, imageUrl: \"\" }))}",
@@ -11766,23 +11857,23 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 888,
-          "tag": "button",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "{() => serviceImageInputRef.current?.click()}",
-          "destination": "",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 906,
-          "tag": "button",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "{() => serviceImageInputRef.current?.click()}",
-          "destination": "",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
           "line": 916,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{() => serviceImageInputRef.current?.click()}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 934,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{() => serviceImageInputRef.current?.click()}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 944,
           "tag": "input",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(event) => {\n                    const file = event.target.files?.[0];\n                    event.currentTarget.value = \"\";\n                    if (file) void handleServiceImageSelect(file);\n                  }}",
@@ -11790,7 +11881,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 935,
+          "line": 963,
           "tag": "PriceInput",
           "label": "{t(\"amountPlaceholder\")}",
           "handler": "{(v) => {\n                      setForm((f) => ({ ...f, priceAmount: v }));\n                      setFormError(null);\n                    }}",
@@ -11798,7 +11889,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 946,
+          "line": 974,
           "tag": "SelectMenu",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(value) => setForm((current) => ({ ...current, priceUnit: value as PricingType }))}",
@@ -11806,7 +11897,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 956,
+          "line": 984,
           "tag": "FilaInterruptor",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(valor) => { setForm((f) => ({ ...f, aConsultar: valor })); setFormError(null); }}",
@@ -11814,7 +11905,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 970,
+          "line": 998,
           "tag": "ServiceStartMonthPicker",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(startedAt) => {\n                  setForm((f) => ({ ...f, startedAt }));\n                  setFormError(null);\n                }}",
@@ -11822,7 +11913,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 999,
+          "line": 1027,
           "tag": "input",
           "label": "{locale === \"en\" ? \"Enter the number\" : \"Ingresa el número\"}",
           "handler": "{(event) => setForm((current) => ({ ...current, professionalCredentialNumber: event.target.value }))}",
@@ -11830,7 +11921,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1009,
+          "line": 1037,
           "tag": "input",
           "label": "{locale === \"en\" ? \"Professional association\" : \"Colegio o entidad\"}",
           "handler": "{(event) => setForm((current) => ({ ...current, professionalCredentialIssuer: event.target.value }))}",
@@ -11838,7 +11929,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1050,
+          "line": 1078,
           "tag": "input",
           "label": "{t(\"pickerSearch\")}",
           "handler": "{(e) => { setPickerQuery(e.target.value); setActivePickerGroupId(null); }}",
@@ -11846,7 +11937,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1077,
+          "line": 1105,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => pickerMode === \"change\" ? changeEditingService(cat.id) : addService(cat.id)}",
@@ -11869,6 +11960,7 @@
         "tests/e2e/dashboard-surfaces.spec.ts",
         "tests/e2e/extended-lifecycle.spec.ts",
         "tests/e2e/navigation-loading.spec.ts",
+        "tests/e2e/service-suggestion-flow.spec.ts",
         "tests/e2e/suggestion-decision.spec.ts"
       ],
       "evidence": "Referencia estática detectada; verificar assertions",
@@ -20867,7 +20959,15 @@
       "methods": [],
       "controls": [
         {
-          "line": 143,
+          "line": 148,
+          "tag": "Link",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "",
+          "destination": "{serviceSuggestionEditorLink(availableCategory)}",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 156,
           "tag": "input",
           "label": "{placeholder}",
           "handler": "{(e) => setName(e.target.value)}",
@@ -20875,7 +20975,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 161,
+          "line": 174,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => {\n                soltarFoco();\n                setSuggesting(false);\n                setError(\"\");\n              }}",
@@ -20883,7 +20983,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 172,
+          "line": 185,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{send}",
@@ -20891,7 +20991,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 184,
+          "line": 197,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => {\n            setError(\"\");\n            setName(defaultName.trim());\n            setSuggesting(true);\n          }}",
@@ -26173,6 +26273,10 @@
         {
           "line": 6,
           "title": "`notification actions describe the destination and avoid self-links (${locale})`"
+        },
+        {
+          "line": 25,
+          "title": "`approved service action targets the selected draft (${locale})`"
         }
       ]
     },
@@ -27331,6 +27435,19 @@
       ]
     },
     {
+      "file": "tests/e2e/service-suggestion-flow.spec.ts",
+      "cases": [
+        {
+          "line": 10,
+          "title": "!canRunSeededRegression()"
+        },
+        {
+          "line": 11,
+          "title": "\"multiple requesters, authenticated ownership, approval, editor draft, defer, save and duplicate resolution\""
+        }
+      ]
+    },
+    {
       "file": "tests/e2e/services.spec.ts",
       "cases": [
         {
@@ -27591,11 +27708,11 @@
       "file": "tests/e2e/suggestion-decision.spec.ts",
       "cases": [
         {
-          "line": 12,
+          "line": 13,
           "title": "`approved suggestion opens service selection without adding a service (${locale})`"
         },
         {
-          "line": 14,
+          "line": 15,
           "title": "!hasTestDatabase"
         }
       ]

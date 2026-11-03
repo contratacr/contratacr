@@ -1,3 +1,4 @@
+import { serviceSuggestionEditorLink } from "@/lib/service-suggestion-request";
 // Maps each notification to the role context and dashboard target it belongs to.
 // One account can receive client, professional, support, and account notifications
 // in the same stream, so routing and per-panel filtering must stay explicit.
@@ -6,6 +7,7 @@ export type NotificationLinkInput = {
   data?: {
     link?: string;
     suggestion_decision?: string | null;
+    category_id?: string | null;
     project_id?: string | null;
     activity_id?: string | null;
     job_id?: string | null;
@@ -92,7 +94,7 @@ export const APPROVED_SUGGESTION_LINK = "/dashboard/profesional?mode=offer&tab=s
 export function notificationHref(n: NotificationLinkInput, _role?: string, locale = "es"): string {
   // Also repair stored approvals that still point to the notifications panel.
   if (n.type === "suggestion_approved" || (n.type === "support_reply" && n.data?.suggestion_decision === "approved")) {
-    return withLocale(APPROVED_SUGGESTION_LINK, locale);
+    return withLocale(n.data?.category_id ? serviceSuggestionEditorLink(n.data.category_id) : APPROVED_SUGGESTION_LINK, locale);
   }
   if (n.data?.link && n.data.link.startsWith("/")) {
     const link = n.type === "review_received" ? withReviewTarget(n.data.link) : n.data.link;
@@ -163,7 +165,7 @@ export function notificationActionLabel(n: NotificationLinkInput, role?: string,
   if (n.type === "invita_proyecto") return label("Publicar un proyecto", "Post a project");
   if (n.type === "review_received") return label("Ver reseña", "View review");
   if (n.type.startsWith("verification")) return label("Revisar verificación", "Review verification");
-  if (n.type === "suggestion_approved" || n.data?.suggestion_decision === "approved") return label("Ver servicios", "View services");
+  if (n.type === "suggestion_approved" || n.data?.suggestion_decision === "approved") return n.data?.category_id ? label("Completar servicio", "Complete service") : label("Ver servicios", "View services");
   if (tab === "soporte" || /\/soporte(?:\/|$)/.test(url.pathname)) return label("Abrir soporte", "Open support");
   if (n.type === "direct_message" || /\/mensajes(?:\/|$)/.test(url.pathname)) return label("Abrir conversación", "Open conversation");
   if (/\/proyectos(?:\/|$)/.test(url.pathname)) return label("Ver proyecto", "View project");

@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { soltarFoco } from "@/lib/soltar-foco";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
+import { serviceSuggestionEditorLink } from "@/lib/service-suggestion-request";
 import { Check, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
@@ -12,7 +14,6 @@ import { useAuth } from "@/hooks/use-auth";
 export function CategorySuggestionBox({
   notListedLabel,
   placeholder,
-  sendLabel,
   sendingLabel,
   cancelLabel,
   thanksLabel,
@@ -22,7 +23,9 @@ export function CategorySuggestionBox({
   rowTitle,
   defaultName = "",
   onActiveChange,
+  forOffering = false,
 }: {
+  forOffering?: boolean;
   notListedLabel: string;
   placeholder: string;
   sendLabel: string;
@@ -43,12 +46,15 @@ export function CategorySuggestionBox({
   const [suggesting, setSuggesting] = useState(false);
   const [name, setName] = useState("");
   const [sent, setSent] = useState(false);
+  const [availableCategory, setAvailableCategory] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const locale = useLocale();
+  const tr = useTranslations("serviceRequests");
   const { user } = useAuth();
+  const offering = forOffering && !!user;
 
   useEffect(() => {
     onActiveChange?.(suggesting || sent);
@@ -96,10 +102,12 @@ export function CategorySuggestionBox({
       const response = await fetch("/api/categories/suggest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: clean, locale, userId: user?.id }),
+        body: JSON.stringify({ name: clean, locale }),
       });
       const payload = (await response.json().catch(() => null)) as {
         ok?: boolean;
+        alreadyApproved?: boolean;
+        categoryId?: string;
         error?: string;
       } | null;
 
@@ -109,6 +117,7 @@ export function CategorySuggestionBox({
       }
 
       soltarFoco();
+      setAvailableCategory(payload.alreadyApproved && offering ? payload.categoryId ?? null : null);
       setSent(true);
       setName("");
       setSuggesting(false);
@@ -132,14 +141,18 @@ export function CategorySuggestionBox({
       )}
     >
       {sent ? (
-        <p className="inline-flex items-center gap-1.5 text-sm text-[#15803d]">
-          <Check className="h-3.5 w-3.5" /> {thanksLabel}
-        </p>
+        <div className="space-y-2">
+          <p className="inline-flex items-center gap-1.5 text-sm text-[#15803d]">
+            <Check className="h-3.5 w-3.5" /> {availableCategory ? tr("alreadyAvailable") : thanksLabel}
+          </p>
+          {availableCategory && <Link href={serviceSuggestionEditorLink(availableCategory)} className="block text-sm font-bold text-[#009FD9]">{tr("complete")}</Link>}
+        </div>
       ) : suggesting ? (
         <div ref={panelRef} className="scroll-mb-4 flex flex-col gap-3">
           {rowTitle && variante === "boton" && (
             <p className="text-sm font-semibold text-[#162543]">{rowTitle}</p>
           )}
+          <p className="text-sm leading-5 text-[#52627a]">{tr(offering ? "offerExplanation" : user ? "catalogExplanation" : "guestExplanation")}</p>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -175,7 +188,7 @@ export function CategorySuggestionBox({
               onClick={send}
               className="h-11 flex-1 rounded-xl bg-[#009FD9] text-sm font-semibold text-white transition-colors hover:bg-[#0089bb] disabled:cursor-not-allowed disabled:opacity-45"
             >
-              {sending ? sendingLabel : sendLabel}
+              {sending ? sendingLabel : tr("request")}
             </button>
           </div>
           {error && <p className="text-xs font-medium text-[#dc2626]">{error}</p>}
