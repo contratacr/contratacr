@@ -1586,7 +1586,9 @@
     "deleteTitle": "Delete service",
     "deleteBody": "This service and its information will be removed from your profile.",
     "deleteConfirm": "Delete",
-    "deleteCancel": "Cancel"
+    "deleteCancel": "Cancel",
+    "imageHeading": "Service image",
+    "requestLoadError": "Could not open your service. Please try again."
   },
   "profileEditor": {
     "secBasic": "Basic info",
@@ -2390,8 +2392,8 @@
     "viewAll": "See all services",
     "ctaTitle": "Can't find your service?",
     "notListed": "Don't see your service?",
-    "suggestDescription": "Tell us what service you were looking for and we'll add it to the list.",
-    "suggestCta": "Suggest a service",
+    "suggestDescription": "Tell us which service is missing. Our team will review it before adding it to the catalog.",
+    "suggestCta": "Request service",
     "suggestPlaceholder": "Service name",
     "suggestSend": "Send",
     "suggestSending": "Sending…",
@@ -3431,5 +3433,17 @@
   },
   "privacyErrors": {
     "aiConsentRequired": "Permission is required before using external AI."
+  },
+  "serviceRequests": {
+    "title": "Your service is now available",
+    "body": "“{service}” is now available. Complete its details to add it to your profile.",
+    "complete": "Complete service",
+    "later": "Not now",
+    "error": "Could not save. Please try again.",
+    "alreadyAvailable": "This service is already available.",
+    "request": "Request service",
+    "offerExplanation": "Request a service you offer. If approved, we’ll notify you to complete its details and publish it on your profile.",
+    "catalogExplanation": "Request a service missing from the catalog. We’ll notify you of the decision.",
+    "guestExplanation": "We’ll review your request. After registration, request it from your account to receive updates."
   }
 }

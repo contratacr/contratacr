@@ -1586,7 +1586,9 @@
     "deleteTitle": "Eliminar servicio",
     "deleteBody": "Este servicio y su información se quitarán de tu perfil.",
     "deleteConfirm": "Eliminar",
-    "deleteCancel": "Cancelar"
+    "deleteCancel": "Cancelar",
+    "imageHeading": "Imagen de tu servicio",
+    "requestLoadError": "No pudimos abrir tu servicio. Intentá nuevamente."
   },
   "profileEditor": {
     "secBasic": "Datos básicos",
@@ -2390,8 +2392,8 @@
     "viewAll": "Ver todos los servicios",
     "ctaTitle": "¿No encuentras tu servicio?",
     "notListed": "¿No ves tu servicio?",
-    "suggestDescription": "Cuéntanos qué servicio buscabas y lo agregamos a la lista.",
-    "suggestCta": "Sugerir servicio",
+    "suggestDescription": "Contanos qué servicio falta. Lo revisaremos antes de agregarlo al catálogo.",
+    "suggestCta": "Solicitar servicio",
     "suggestPlaceholder": "Nombre del servicio",
     "suggestSend": "Enviar",
     "suggestSending": "Enviando…",
@@ -3431,5 +3433,17 @@
   },
   "privacyErrors": {
     "aiConsentRequired": "Se requiere permiso antes de usar IA externa."
+  },
+  "serviceRequests": {
+    "title": "Tu servicio ya está disponible",
+    "body": "«{service}» ya está disponible. Completá la información para agregarlo a tu perfil.",
+    "complete": "Completar servicio",
+    "later": "Ahora no",
+    "error": "No se pudo guardar. Intentá nuevamente.",
+    "alreadyAvailable": "Este servicio ya está disponible.",
+    "request": "Solicitar servicio",
+    "offerExplanation": "Solicitá el servicio que ofrecés. Si lo aprobamos, te avisaremos para que completes la información y lo publiques en tu perfil.",
+    "catalogExplanation": "Solicitá un servicio que falta en el catálogo. Te avisaremos de la decisión.",
+    "guestExplanation": "Revisaremos tu solicitud. Después de registrarte, solicitalo desde tu cuenta para recibir avisos."
   }
 }

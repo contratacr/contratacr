@@ -37,6 +37,7 @@ import { Button } from "@/components/ui/button";
 import { ProfileEditor } from "@/components/dashboard/pro/profile-editor";
 import { ProfileCompletion, computeCompletion } from "@/components/dashboard/pro/profile-completion";
 import { PhotoGallery } from "@/components/dashboard/pro/photo-gallery";
+import { ServiceRequestInvitations } from "@/components/dashboard/pro/service-request-invitations";
 import { ServicesEditor } from "@/components/dashboard/pro/services-editor";
 import { JobsPanel } from "@/components/dashboard/pro/jobs-panel";
 import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
@@ -2224,6 +2225,7 @@ export default function DashboardPage() {
                             </button>
                           </div>
                         )}
+                        {pro && mode === "offer" && (activeTab === "home" || activeTab === "services") && <ServiceRequestInvitations showDeferred={activeTab === "services"} />}
                         <SectionBoundary titulo={t("sectionErrorTitle")} cuerpo={t("sectionErrorBody")} reintentar={t("sectionErrorRetry")}>
                         {TABS_WITH_SUBTITLE.has(activeTab) && (
                           <SectionHeadline subtitulo={t(`subtitles.${activeTab}`)} className="mb-4" />

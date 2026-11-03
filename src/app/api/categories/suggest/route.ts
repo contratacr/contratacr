@@ -10,13 +10,6 @@ import {
 } from "@/lib/translation/service-labels";
 import { auditUserAction } from "@/lib/audit/user-action";
 
-function isValidUuid(value: unknown): value is string {
-  return (
-    typeof value === "string" &&
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value.trim())
-  );
-}
-
 // A user suggests a category that isn't in the official list. Creates a tracked,
 // pending row in `category_suggestions` (an admin moderation ticket) — NOT usable
 // or filterable until an admin approves it. The row id (reused as the real category
@@ -28,10 +21,9 @@ export async function POST(req: NextRequest) {
   if (limited) return limited;
   try {
     const body = await req.json();
-    const { name, locale, userId } = body as {
+    const { name, locale } = body as {
       name?: unknown;
       locale?: unknown;
-      userId?: unknown;
     };
 
     const clean = normalizeServiceDisplayName(typeof name === "string" ? name : "");
@@ -47,24 +39,7 @@ export async function POST(req: NextRequest) {
     const admin = createAdminClient();
     const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-    let resolvedUserId = !userError ? user?.id ?? null : null;
-    if (!resolvedUserId && isValidUuid(userId)) {
-      const normalizedUserId = userId.trim().toLowerCase();
-      const { data: profile, error: profileError } = await admin
-        .from("profiles")
-        .select("id")
-        .eq("id", normalizedUserId)
-        .maybeSingle();
-
-      if (!profileError && profile?.id) {
-        resolvedUserId = profile.id;
-      } else if (profileError) {
-        console.error("[categories/suggest] fallback profile lookup for userId failed", {
-          userId: normalizedUserId,
-          error: profileError,
-        });
-      }
-    }
+    const resolvedUserId = !userError ? user?.id ?? null : null;
 
     const id = slugifyCategory(labelEs || clean);
     const authenticatedUserId = resolvedUserId ?? null;
@@ -76,7 +51,7 @@ export async function POST(req: NextRequest) {
     {
       const { data, error } = await admin
         .from("category_suggestions")
-        .select("id, suggested_by, status, review_reason, label, suggested_name")
+        .select("id, suggested_by, status, review_reason, label, suggested_name, resolved_category_id")
         .eq("id", id)
         .maybeSingle();
       existingSuggestion = data as Record<string, unknown> | null;
@@ -112,8 +87,13 @@ export async function POST(req: NextRequest) {
       const wasPending = isPendingSuggestion(existingSuggestion);
       const wasRejected = isRejectedSuggestion(existingSuggestion);
       const wasApproved = isApprovedSuggestion(existingSuggestion);
-      if (wasApproved) {
-        return NextResponse.json({ ok: true, alreadyApproved: true });
+      if (authenticatedUserId) {
+        const { error: requestError } = await admin.from("service_suggestion_requests").upsert(
+          { suggestion_id: id, profile_id: authenticatedUserId }, { onConflict: "suggestion_id,profile_id", ignoreDuplicates: true });
+        if (requestError) throw requestError;
+      }
+      if (wasApproved || existingSuggestion.resolved_category_id) {
+        return NextResponse.json({ ok: true, suggestionId: id, alreadyApproved: true, categoryId: existingSuggestion.resolved_category_id || id });
       }
       if (wasPending) {
         // Re-suggested row: keep it pending and refresh its public labels. If the
@@ -164,6 +144,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    if (authenticatedUserId) {
+      const { error: requestError } = await admin.from("service_suggestion_requests").upsert(
+        { suggestion_id: id, profile_id: authenticatedUserId }, { onConflict: "suggestion_id,profile_id", ignoreDuplicates: true });
+      if (requestError) throw requestError;
+    }
+
     const existingCategory = await admin.from("categories").select("id, is_hidden").eq("id", id).maybeSingle();
     if (!existingCategory.data) {
       await admin.from("categories").upsert(
@@ -185,7 +171,7 @@ export async function POST(req: NextRequest) {
       metadata: { submitted_locale: locale ?? null },
     });
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, suggestionId: id });
   } catch (err) {
     console.error("[categories/suggest] unexpected:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -201,7 +187,7 @@ async function upsertSuggestion(
   const current = { ...row };
   const { error } = await admin.from("category_suggestions").upsert(
     current,
-    { onConflict: "id", ignoreDuplicates: false }
+    { onConflict: "id", ignoreDuplicates: true }
   );
   if (!error || !isMissingColumnError(error, "status")) return { error };
 
@@ -209,7 +195,7 @@ async function upsertSuggestion(
   delete (fallback as { status?: string }).status;
   return admin.from("category_suggestions").upsert(
     fallback,
-    { onConflict: "id", ignoreDuplicates: false }
+    { onConflict: "id", ignoreDuplicates: true }
   );
 }
 
