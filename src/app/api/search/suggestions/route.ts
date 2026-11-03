@@ -3,6 +3,7 @@ import { unstable_cache } from "next/cache";
 import { ensureServerCategoryCatalog } from "@/lib/data/server-category-catalog";
 import {
   searchCategories,
+  categoryLabelSearchScore,
   getCategoryLabel,
   normalizeText,
   resolveCategoryIntent,
@@ -75,10 +76,15 @@ export async function GET(req: NextRequest) {
     if (dbLabel) return locale === "en" && dbLabel.labelEn ? dbLabel.labelEn : dbLabel.label;
     return getCategoryLabel(id, locale);
   };
-  const staticCats: SearchSuggestion[] = [
-    ...(inferredCat ? [inferredCat] : []),
-    ...searchCategories(q).filter((c) => c.id !== inferredCat?.id),
-  ]
+  const matches = searchCategories(q, locale);
+  // Natural requests still benefit from intent resolution. A literal name
+  // match must retain the shared autocomplete order instead of being displaced
+  // by an inferred synonym ("Flete": Mudanzas used to precede Fletes y carga).
+  const hasLiteralName = matches.some((item) => categoryLabelSearchScore(item, q, locale) > 0);
+  const orderedCats = inferredCat && !hasLiteralName
+    ? [inferredCat, ...matches.filter((item) => item.id !== inferredCat.id)]
+    : [...matches, ...(inferredCat && !matches.some((item) => item.id === inferredCat.id) ? [inferredCat] : [])];
+  const staticCats: SearchSuggestion[] = orderedCats
     .slice(0, 6)
     .map((c) => ({ type: "category", id: c.id, label: categoryLabel(c.id) }));
 

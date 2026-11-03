@@ -1019,6 +1019,18 @@ function searchMorphologyScore(term: string, query: string, score: number): numb
   }) ? score : 0;
 }
 
+/** Literal service names outrank synonyms, including an exact synonym of a
+ * different service. Keep typo/morphology matches below exact keywords. */
+export function categoryLabelSearchScore(
+  item: CategoryItem,
+  query: string,
+  locale?: string,
+): number {
+  return Math.max(0, ...[getCategoryLabel(item.id, locale), item.label]
+    .filter(Boolean)
+    .map((label) => searchTextScore(label, query, 120, 115, 112)));
+}
+
 /* ─── Fuzzy search across all categories (fixed + custom) by label + keywords ─── */
 export function categorySearchScore(
   item: CategoryItem & { groupId: string; groupLabel: string },
@@ -1029,8 +1041,7 @@ export function categorySearchScore(
   if (!q) return 0;
   const serviceLabels = [getCategoryLabel(item.id, locale), item.label].filter(Boolean);
   const groupLabels = [item.groupLabel, getCategoryGroupLabel(item.groupId), getCategoryGroupLabel(item.groupId, locale)].filter(Boolean);
-  const serviceScore = Math.max(0, ...serviceLabels.map((term) => Math.max(
-    searchTextScore(term, q, 120, 90, 55),
+  const serviceScore = Math.max(categoryLabelSearchScore(item, q, locale), ...serviceLabels.map((term) => Math.max(
     searchMorphologyScore(term, q, 82),
     searchTypoScore(term, q, 76),
   )));

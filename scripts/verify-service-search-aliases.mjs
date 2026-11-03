@@ -124,3 +124,15 @@ test("a cold autocomplete API loads approved aliases before answering", async ()
   const pending = await exports.GET({ url: "https://example.test/api/search/suggestions?q=litografia" });
   assert.equal(pending.suggestions.some(c => c.id === "imprenta"), false);
 });
+
+test("literal service names precede an exact synonym of another service", () => {
+  api.setCustomCategories([]);
+  for (const [query, locale] of [["Flete", "es"], ["fletes", "es"], ["Freight", "en"]]) {
+    const matches = api.searchCategories(query, locale);
+    assert.equal(matches[0]?.id, "fletes", query);
+    assert.ok(api.categoryLabelSearchScore(matches[0], query, locale) > 110, query);
+  }
+  assert.ok(api.searchCategories("flete").some(item => item.id === "mudanzas"));
+  assert.equal(api.searchCategories("Mudanzas", "es")[0]?.id, "mudanzas");
+  assert.equal(api.searchCategories("Moving", "en")[0]?.id, "mudanzas");
+});
