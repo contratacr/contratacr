@@ -7,7 +7,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import type { SearchSuggestion } from "@/app/api/search/suggestions/route";
-import { searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
+import { searchLocations, resolveLocation, locationSuggestionKey, locationSuggestionContext, type LocationSuggestion } from "@/lib/data/location-search";
 import { loadGoogleMaps } from "@/lib/maps/loader";
 import { matchProvinceCanton } from "@/lib/data/cr-geography";
 import { resolveCategoryIntent } from "@/lib/data/categories";
@@ -294,6 +294,7 @@ function LocationDropdown({
   nearMeLabel: string;
   geoLoading: boolean;
 }) {
+  const locale = useLocale();
   const show = open;
   const pos = useAnchoredRect(anchorRef, show, 260);
   if (!show || !pos || typeof document === "undefined") return null;
@@ -317,7 +318,7 @@ function LocationDropdown({
       {/* Our province/cantón taxonomy (keyboard-navigable). */}
       {suggestions.map((s, i) => (
         <button
-          key={`${s.type}-${s.id}`}
+          key={locationSuggestionKey(s)}
           type="button"
           role="option"
           aria-selected={i === activeIdx}
@@ -331,12 +332,7 @@ function LocationDropdown({
           <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
           <span className="flex-1 min-w-0">
             <span className="block text-sm leading-snug text-[#162543] break-words">{s.label}</span>
-            {s.type === "canton" && (
-              <span className="block text-xs leading-snug text-gray-400 break-words">{s.sublabel}</span>
-            )}
-          </span>
-          <span className="text-[10px] uppercase tracking-wide text-gray-300 shrink-0">
-            {s.type === "province" ? "Provincia" : "Cantón"}
+            <span className="block text-xs leading-snug text-gray-400 break-words">{locationSuggestionContext(s, locale)}</span>
           </span>
         </button>
       ))}
@@ -642,7 +638,10 @@ export function LandingHero() {
       const loc = locationSel && locationSel.label === location ? locationSel : resolveLocation(location);
       if (loc) {
         if (loc.type === "province") params.set("provincia", loc.id);
-        else params.set("canton", loc.id);
+        else {
+          params.set("provincia", loc.provinceId);
+          params.set("canton", loc.id);
+        }
       }
     }
     setOpenSug(false);
