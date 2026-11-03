@@ -191,7 +191,7 @@ const ES_SECTIONS: LegalSection[] = [
     "body": [
       {
         "k": "p",
-        "text": "Usamos cookies y almacenamiento necesarios para sesión, idioma, seguridad y guardar sus preferencias. Solo necesarias mantiene los registros imprescindibles para prestar el servicio, proteger cuentas y atender obligaciones; no activa estadísticas opcionales ni publicidad. Las estadísticas de uso y la medición con Meta tienen opciones independientes, inicialmente desactivadas."
+        "text": "Usamos cookies y almacenamiento necesarios para sesión, idioma, seguridad y guardar sus preferencias. Solo necesarias mantiene los registros imprescindibles para prestar el servicio, proteger cuentas y atender obligaciones; no activa estadísticas opcionales ni publicidad. Las estadísticas de uso y la medición con Meta tienen opciones independientes, preseleccionadas en Configuración. No se activan hasta que pulse De acuerdo, Aceptar todo o Guardar con esas opciones seleccionadas."
       },
       {
         "k": "p",
@@ -471,7 +471,7 @@ const EN_SECTIONS: LegalSection[] = [
     "body": [
       {
         "k": "p",
-        "text": "Necessary cookies and storage support sessions, language, security and saving your choices. Only necessary retains records essential to provide the service, protect accounts and meet obligations; it does not enable optional statistics or advertising. Usage statistics and Meta measurement have separate choices, initially off."
+        "text": "Necessary cookies and storage support sessions, language, security and saving your choices. Only necessary retains records essential to provide the service, protect accounts and meet obligations; it does not enable optional statistics or advertising. Usage statistics and Meta measurement have separate choices, preselected in Settings. They remain inactive until you press Agree, Accept all or Save with those options selected."
       },
       {
         "k": "p",

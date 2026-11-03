@@ -49,14 +49,17 @@ for(const locale of ['es','en']) for(const width of [320,390,768,1440]) test(`co
  await expect(statisticsInfo.locator('p')).toContainText(locale==='en'?'not necessarily anonymous':'no son necesariamente anónimos');
  await statisticsInfo.locator('summary').click();
  await expect(dialog.getByRole('checkbox')).toHaveCount(2);
- for(const checkbox of await dialog.getByRole('checkbox').all()) await expect(checkbox).not.toBeChecked();
- await dialog.getByRole('checkbox').first().check();
+ for(const checkbox of await dialog.getByRole('checkbox').all()) await expect(checkbox).toBeChecked();
+ // Preselection is a draft, not a saved consent or permission to measure.
+ expect(await page.evaluate(()=>['analytics','advertising'].map(p=>localStorage.getItem(`contratacr:consent:${p}:v1`)))).toEqual([null,null]);
+ await dialog.getByRole('checkbox').last().uncheck();
  await dialog.getByRole('button',{name:locale==='en'?'Save':'Guardar',exact:true}).click();
  await expect(dialog).not.toBeVisible();await expect(banner).toHaveCount(0);
  const choices=await page.evaluate(()=>['analytics','advertising'].map(p=>JSON.parse(localStorage.getItem(`contratacr:consent:${p}:v1`)! ).choice));
  expect(choices).toEqual(['accepted','declined']);
  await page.locator('main button').click();await expect(dialog).toBeVisible();
  await expect(dialog.getByRole('checkbox').first()).toBeChecked();
+ await expect(dialog.getByRole('checkbox').last()).not.toBeChecked();
  await dialog.getByRole('checkbox').first().uncheck();
  await dialog.getByRole('button',{name:locale==='en'?'Save':'Guardar',exact:true}).click();
  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('contratacr:consent:analytics:v1')!).choice)).toBe('declined');
