@@ -28,10 +28,11 @@ for(const locale of ['es','en']) for(const width of [320,390,768,1440]) test(`co
  const box=await banner.boundingBox();expect(box).not.toBeNull();
  if(width<640){expect(box!.x).toBe(0);expect(box!.width).toBe(await page.evaluate(()=>document.documentElement.getBoundingClientRect().width));expect(Math.abs(box!.y+box!.height-page.viewportSize()!.height)).toBeLessThan(1);}
  else {expect(box!.x).toBeGreaterThan(0);expect(box!.width).toBeLessThan(width);expect(box!.y+box!.height).toBeLessThan(page.viewportSize()!.height);}
- const primary= banner.getByRole('button').filter({hasText:locale==='en'?/^(Accept all|Only necessary)$/:/^(Aceptar todas|Solo necesarias)$/});
+ const primary= banner.getByRole('button').filter({hasText:locale==='en'?/^(Settings|Agree)$/:/^(Configuración|De acuerdo)$/});
+ await expect(primary).toHaveCount(2);
  expect(await primary.evaluateAll(nodes=>new Set(nodes.map(n=>{const s=getComputedStyle(n);return `${s.color}|${s.backgroundColor}|${s.borderColor}`;})).size)).toBe(1);
 
- await banner.getByRole('button',{name:locale==='en'?'Manage preferences':'Configurar preferencias',exact:true}).click();
+ await banner.getByRole('button',{name:locale==='en'?'Settings':'Configuración',exact:true}).click();
  const dialog=page.getByRole('dialog');await expect(dialog).toBeVisible();
  if(width===390){expect(await dialog.evaluate(n=>n.scrollHeight<=n.clientHeight)).toBe(true);}
  await expect(dialog.getByRole('button',{name:locale==='en'?'Back':'Volver',exact:true})).toBeVisible();
@@ -42,22 +43,31 @@ for(const locale of ['es','en']) for(const width of [320,390,768,1440]) test(`co
 
  await page.screenshot({path:`/tmp/ccr-cookie-compact-settings-${locale}-${width}.png`});
 
+ await expect(dialog.getByRole('heading',{name:locale==='en'?'Data privacy settings':'Configuración de privacidad',exact:true})).toBeVisible();
+ await expect(dialog.locator('summary')).toHaveCount(3);
+ const statisticsInfo=dialog.locator('details').nth(1);await statisticsInfo.locator('summary').click();
+ await expect(statisticsInfo.locator('p')).toContainText(locale==='en'?'not necessarily anonymous':'no son necesariamente anónimos');
+ await statisticsInfo.locator('summary').click();
  await expect(dialog.getByRole('checkbox')).toHaveCount(2);
  for(const checkbox of await dialog.getByRole('checkbox').all()) await expect(checkbox).not.toBeChecked();
  await dialog.getByRole('checkbox').first().check();
- await dialog.getByRole('button',{name:locale==='en'?'Save preferences':'Guardar preferencias',exact:true}).click();
+ await dialog.getByRole('button',{name:locale==='en'?'Save':'Guardar',exact:true}).click();
  await expect(dialog).not.toBeVisible();await expect(banner).toHaveCount(0);
  const choices=await page.evaluate(()=>['analytics','advertising'].map(p=>JSON.parse(localStorage.getItem(`contratacr:consent:${p}:v1`)! ).choice));
  expect(choices).toEqual(['accepted','declined']);
  await page.locator('main button').click();await expect(dialog).toBeVisible();
  await expect(dialog.getByRole('checkbox').first()).toBeChecked();
- await dialog.getByRole('button',{name:locale==='en'?'Only necessary':'Solo necesarias',exact:true}).click();
+ await dialog.getByRole('checkbox').first().uncheck();
+ await dialog.getByRole('button',{name:locale==='en'?'Save':'Guardar',exact:true}).click();
  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('contratacr:consent:analytics:v1')!).choice)).toBe('declined');
  await page.locator('main button').click();await page.keyboard.press('Escape');await expect(dialog).not.toBeVisible();
+ await page.locator('main button').click();
+ await dialog.getByRole('button',{name:locale==='en'?'Accept all':'Aceptar todo',exact:true}).click();
+ expect(await page.evaluate(()=>['analytics','advertising'].map(p=>JSON.parse(localStorage.getItem(`contratacr:consent:${p}:v1`)! ).choice))).toEqual(['accepted','accepted']);
  await page.evaluate(()=>localStorage.clear());await page.reload();await page.addStyleTag({content:css});await page.addScriptTag({content:script});
  await expect(banner).toBeVisible();
  await page.screenshot({path:`/tmp/ccr-cookies-${locale}-${width}.png`});
- await banner.getByRole('button',{name:locale==='en'?'Accept all':'Aceptar todas',exact:true}).click();
+ await banner.getByRole('button',{name:locale==='en'?'Agree':'De acuerdo',exact:true}).click();
  await expect(banner).toHaveCount(0);
  expect(await page.evaluate(()=>['analytics','advertising'].map(p=>JSON.parse(localStorage.getItem(`contratacr:consent:${p}:v1`)! ).choice))).toEqual(['accepted','accepted']);
 });
