@@ -21,8 +21,8 @@ export function CookiePreferences() {
   useEffect(() => {
     try { syncAdvertisingCookie(); syncAnalyticsCookie(); } catch { /* Choice stays unknown when storage is unavailable. */ }
     const open = () => {
-      setAnalytics(readOptionalConsent("analytics") === "accepted");
-      setAdvertising(readOptionalConsent("advertising") === "accepted");
+      setAnalytics(readOptionalConsent("analytics") !== "declined");
+      setAdvertising(readOptionalConsent("advertising") !== "declined");
       setSettings(true);
     };
     window.addEventListener(OPEN_PRIVACY_SETTINGS, open);
@@ -43,8 +43,8 @@ export function CookiePreferences() {
     } catch { setError(true); }
   }
   function openSettings() {
-    setAnalytics(readOptionalConsent("analytics") === "accepted");
-    setAdvertising(readOptionalConsent("advertising") === "accepted");
+    setAnalytics(readOptionalConsent("analytics") !== "declined");
+    setAdvertising(readOptionalConsent("advertising") !== "declined");
     setSettings(true);
   }
   const notice = en
@@ -68,7 +68,7 @@ export function CookiePreferences() {
     </section>}
     <dialog ref={dialog} onCancel={() => setSettings(false)} onClose={() => setSettings(false)} aria-labelledby="privacy-settings-title" className="fixed inset-x-0 bottom-0 top-auto m-0 max-h-[95dvh] w-full max-w-none overflow-y-auto overscroll-contain rounded-t-[24px] border border-b-0 border-[#dce6ec] bg-white p-4 pb-[max(16px,env(safe-area-inset-bottom))] text-[#162543] shadow-2xl backdrop:bg-[#162543]/30 sm:inset-0 sm:m-auto sm:max-h-[90dvh] sm:max-w-lg sm:rounded-[24px] sm:border-b sm:p-6">
       <h2 id="privacy-settings-title" tabIndex={-1} className="text-lg font-extrabold leading-6 outline-none!">{en ? "Data privacy settings" : "Configuración de privacidad"}</h2>
-      <p className="mb-3 mt-2 text-xs leading-4 text-[#526176]">{en ? "Choose which optional purposes to accept on this device. You can use ContrataCR with only necessary cookies and change your decision from the footer at any time." : "Elegí qué fines opcionales aceptás en este dispositivo. Podés usar ContrataCR solo con las cookies necesarias y cambiar tu decisión desde el pie de página cuando quieras."}</p>
+      <p className="mb-3 mt-2 text-xs leading-4 text-[#526176]">{en ? "Choose what to accept and press Save. Turn off both options to use only necessary cookies. Change your decision from the footer at any time." : "Elegí qué aceptás y pulsá Guardar. Desactivá ambas opciones para usar solo las cookies necesarias. Cambiá tu decisión desde el pie de página cuando quieras."}</p>
       <button className={`${button} mb-3 w-full`} onClick={() => save(true, true)}>{en ? "Accept all" : "Aceptar todo"}</button>
       <div className="grid gap-2">
         {categories.map(item => <div key={item.key} className="rounded-2xl border border-[#e5edf2] p-3">
