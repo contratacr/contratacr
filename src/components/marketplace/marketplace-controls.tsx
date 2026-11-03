@@ -3,7 +3,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode }
 import { createPortal } from "react-dom";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { useContainedTouchScroll } from "@/hooks/use-contained-touch-scroll";
-import { allLocationSuggestions, searchLocations } from "@/lib/data/location-search";
+import { allLocationSuggestions, searchLocations, locationSuggestionKey, locationSuggestionContext } from "@/lib/data/location-search";
 import { soltarFoco } from "@/lib/soltar-foco";
 import { Check, ChevronDown, ChevronRight, Clock3, MapPin, Search, Wrench, X } from "lucide-react";
 import { useLocale } from "next-intl";
@@ -192,24 +192,25 @@ export function MarketplaceSearch({
   // barrio filtra por su cantón, que es como vienen las publicaciones.
   const esUbicacion = secondary?.icon === "location";
   const lugares = useMemo(() => {
-    if (!esUbicacion) return [] as { valor: string; etiqueta: string; sub?: string }[];
+    if (!esUbicacion) return [] as { key: string; valor: string; etiqueta: string; sub: string }[];
     const encontrados = secondaryNeedle ? searchLocations(secondaryNeedle, 12) : allLocationSuggestions().filter((l) => l.type === "province");
-    const vistos = new Set<string>();
-    return encontrados.flatMap((l) => {
-      const esBarrio = l.type === "canton" && l.sublabel.includes(",");
-      const valor = esBarrio ? l.sublabel.split(",")[0].trim() : l.label;
-      if (vistos.has(l.label)) return [];
-      vistos.add(l.label);
-      return [{ valor, etiqueta: l.label, sub: l.type === "canton" ? l.sublabel : undefined }];
+    return encontrados.map((l) => {
+      const canton = l.type === "canton" ? allLocationSuggestions().find((c) => c.type === "canton" && c.id === l.id) : null;
+      return {
+        key: locationSuggestionKey(l),
+        valor: canton?.label ?? l.label,
+        etiqueta: l.label,
+        sub: locationSuggestionContext(l, locale),
+      };
     }).slice(0, 7);
-  }, [esUbicacion, secondaryNeedle]);
+  }, [esUbicacion, secondaryNeedle, locale]);
   const visibleSecondarySuggestions = useMemo(() => {
-    if (esUbicacion) return lugares.map((l) => l.etiqueta);
+    if (esUbicacion) return lugares.map((l) => l.key);
     return uniqueSecondarySuggestions
       .filter((suggestion) => !secondaryNeedle || suggestion.toLocaleLowerCase("es-CR").includes(secondaryNeedle))
       .slice(0, 6);
   }, [esUbicacion, lugares, secondaryNeedle, uniqueSecondarySuggestions]);
-  const lugarPorEtiqueta = useMemo(() => new Map(lugares.map((l) => [l.etiqueta, l])), [lugares]);
+  const lugarPorClave = useMemo(() => new Map(lugares.map((l) => [l.key, l])), [lugares]);
 
   useEffect(() => {
     setRecents(readRecentSearches(recentStorageKey));
@@ -398,10 +399,11 @@ export function MarketplaceSearch({
                     key={suggestion}
                     type="button"
                     onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => chooseSecondarySuggestion(lugarPorEtiqueta.get(suggestion)?.valor ?? suggestion)}
+                    onClick={() => chooseSecondarySuggestion(lugarPorClave.get(suggestion)?.valor ?? suggestion)}
                     className="block w-full px-3 py-2.5 text-left text-sm font-semibold text-[#162543] transition hover:bg-[#f1f9fc] focus:bg-[#f1f9fc] focus:outline-none"
                   >
-                    {suggestion}
+                    {lugarPorClave.get(suggestion)?.etiqueta ?? suggestion}
+                    {lugarPorClave.get(suggestion)?.sub && <span className="block text-xs font-normal text-[#6b7280]">{lugarPorClave.get(suggestion)?.sub}</span>}
                   </button>
                 ))}
               </div>
@@ -476,11 +478,11 @@ export function MarketplaceSearch({
                 visibleSecondarySuggestions.map((suggestion) => (
                   // Un lugar se marca con un pin, no con una lupa: es el mismo
                   // icono que usa /buscar para lo mismo.
-                  <button key={suggestion} type="button" onClick={() => chooseSecondarySuggestion(lugarPorEtiqueta.get(suggestion)?.valor ?? suggestion)} className="flex min-h-14 w-full items-center gap-4 rounded-xl px-1 text-left transition hover:bg-[#f4f8fb]">
+                  <button key={suggestion} type="button" onClick={() => chooseSecondarySuggestion(lugarPorClave.get(suggestion)?.valor ?? suggestion)} className="flex min-h-14 w-full items-center gap-4 rounded-xl px-1 text-left transition hover:bg-[#f4f8fb]">
                     <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#f4f8fb] text-[#162543]"><SecondaryIcon className="h-5 w-5" /></span>
                     <span className="min-w-0">
-                      <span className="block truncate text-base font-bold">{suggestion}</span>
-                      {lugarPorEtiqueta.get(suggestion)?.sub && <span className="block truncate text-[12px] font-semibold text-[#6b7280]">{lugarPorEtiqueta.get(suggestion)?.sub}</span>}
+                      <span className="block truncate text-base font-bold">{lugarPorClave.get(suggestion)?.etiqueta ?? suggestion}</span>
+                      {lugarPorClave.get(suggestion)?.sub && <span className="block truncate text-[12px] font-semibold text-[#6b7280]">{lugarPorClave.get(suggestion)?.sub}</span>}
                     </span>
                   </button>
                 ))
@@ -497,7 +499,7 @@ export function MarketplaceSearch({
                         <Search className="h-5 w-5" />
                       </span>
                       <span className="min-w-0">
-                        <span className="block truncate text-base font-bold">{suggestion}</span>
+                        <span className="block truncate text-base font-bold">{lugarPorClave.get(suggestion)?.etiqueta ?? suggestion}</span>
                         <span className="block text-sm font-semibold text-[#7a8798]">{copy.country}</span>
                       </span>
                     </button>

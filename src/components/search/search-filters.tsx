@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { matchProvinceCanton, PROVINCES } from "@/lib/data/cr-geography";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { getCategoryGroupLabel, getCategoryLabel, isHealthCategory, searchCategories, supportsVideoConsultCategory } from "@/lib/data/categories";
-import { resolveLocation, searchLocations, type LocationSuggestion } from "@/lib/data/location-search";
+import { resolveLocation, searchLocations, locationSuggestionKey, locationSuggestionContext, type LocationSuggestion } from "@/lib/data/location-search";
 import { INSURERS } from "@/lib/data/insurers";
 import { LANGUAGES, languageLabel } from "@/lib/data/languages";
 import { createClient } from "@/lib/supabase/client";
@@ -1370,7 +1370,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                   </li>
                 )}
                 {locationSug.map((suggestion, i) => (
-                  <li key={suggestion.type === "address" ? `address-${suggestion.placeId}` : `${suggestion.type}-${suggestion.type === "province" ? suggestion.id : `${suggestion.provinceId}-${suggestion.id}`}`}>
+                  <li key={suggestion.type === "address" ? `address-${suggestion.placeId}` : locationSuggestionKey(suggestion)}>
                     <button
                       type="button"
                       role="option"
@@ -1380,7 +1380,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                       className={`flex w-full flex-col px-3.5 py-2.5 text-left text-sm transition-colors ${i === locationActiveIndex ? "bg-[#EBF5FB]" : "hover:bg-[#f9fafb]"}`}
                     >
                       <span className="font-semibold text-[#162543]">{suggestion.label}</span>
-                      {suggestion.type !== "province" && suggestion.sublabel && <span className="text-xs text-[#6b7280]">{suggestion.sublabel}</span>}
+                      <span className="text-xs text-[#6b7280]">{suggestion.type === "address" ? suggestion.sublabel : locationSuggestionContext(suggestion, locale)}</span>
                     </button>
                   </li>
                 ))}

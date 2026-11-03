@@ -39,7 +39,7 @@ import { getCategoryGroupIcon } from "@/lib/data/category-group-visuals";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { oficiosDeArranque } from "@/lib/data/oficios-de-arranque";
 
-import { allLocationSuggestions, searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
+import { allLocationSuggestions, searchLocations, resolveLocation, locationSuggestionKey, locationSuggestionContext, type LocationSuggestion } from "@/lib/data/location-search";
 import { lockBodyScroll, olvidarDesplazamientoGuardado } from "@/lib/body-scroll-lock";
 import { useContainedTouchScroll } from "@/hooks/use-contained-touch-scroll";
 import { createClient } from "@/lib/supabase/client";
@@ -870,7 +870,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // Una provincia ES «toda la provincia», pero eso no se veía: al escribir
   // «alajuela» salían «Alajuela» (provincia) y «Alajuela» (cantón) una debajo
   // de otra diciendo casi lo mismo, y nada indicaba que la primera cubre todo.
-  const tWholeProvince = useTranslations("search")("wholeProvince");
   const switchLang = useSwitchLang();
   const alternateLocale = locale === "en" ? "es" : "en";
   const alternateLanguageLabel = locale === "en" ? "Español" : "English";
@@ -2309,7 +2308,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                               </button>
                               {navLocSug.map((s, i) => (
                                 <button
-                                  key={`${s.type}-${s.id}`}
+                                  key={locationSuggestionKey(s)}
                                   type="button"
                                   onMouseDown={(e) => { e.preventDefault(); selectNavLocation(s); }}
                                   role="option"
@@ -2322,9 +2321,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                                   <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
                                   <span className="flex-1 min-w-0">
                                     <span className="block text-sm font-medium text-[#1a2744] truncate">{s.label}</span>
-                                    {s.type === "canton" && <span className="block text-[11px] text-gray-400 truncate">{s.sublabel}</span>}
+                                    <span className="block text-[11px] text-gray-400 truncate">{locationSuggestionContext(s, locale)}</span>
                                   </span>
-                                  <span className="text-[10px] uppercase tracking-wide text-gray-300 shrink-0">{s.type === "province" ? tWholeProvince : t("canton")}</span>
                                 </button>
                               ))}
                             </div>
@@ -2806,10 +2804,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   )}
                   {!searchFocused && nativeLocationSuggestions.slice(0, 7).map((suggestion) => (
                     <button
-                      key={`${suggestion.type}-${suggestion.id}-${suggestion.label}`}
+                      key={locationSuggestionKey(suggestion)}
                       type="button"
                       role="option"
-                      aria-selected={suggestion.id === navLocationSel?.id}
+                      aria-selected={navLocationSel !== null && locationSuggestionKey(suggestion) === locationSuggestionKey(navLocationSel)}
                       onClick={() => {
                         selectNavLocation(suggestion);
                       }}
@@ -2820,7 +2818,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       </span>
                       <span>
                         {suggestion.label}
-                        {suggestion.type === "canton" && <span className="block text-[12px] font-semibold text-[#6b7280]">{suggestion.sublabel}</span>}
+                        <span className="block text-[12px] font-semibold text-[#6b7280]">{locationSuggestionContext(suggestion, locale)}</span>
                       </span>
                     </button>
                   ))}
