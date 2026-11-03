@@ -166,3 +166,14 @@ test("near me completes the search and a later place selection replaces its coor
   await expect(page).toHaveURL(/\/profesionales\/desarrollo-web\/heredia/);
   expect(new URL(page.url()).searchParams.has("lat")).toBe(false);
 });
+
+for (const [query, locale] of [["Flete", "es"], ["Freight", "en"]]) {
+  test(`literal service name leads autocomplete API: ${query}`, async ({ request }) => {
+    const response = await request.get(`/api/search/suggestions?q=${encodeURIComponent(query)}&locale=${locale}`);
+    expect(response.status()).toBe(200);
+    const { suggestions } = await response.json();
+    expect(suggestions[0]?.id).toBe("fletes");
+    expect(new Set(suggestions.map((item: { id: string }) => item.id)).size).toBe(suggestions.length);
+    if (locale === "es") expect(suggestions.some((item: { id: string }) => item.id === "mudanzas")).toBe(true);
+  });
+}
