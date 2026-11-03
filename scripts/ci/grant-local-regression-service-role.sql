@@ -71,3 +71,13 @@ begin
     execute 'revoke all on table public.padron_staging from public, anon, authenticated';
   end if;
 end $$;
+
+-- Migration 259 keeps request ownership behind the authenticated server API.
+-- Replay its revocation after the blanket bootstrap grants, just as we do for
+-- private profile fields above. Service-role fixtures retain their access.
+do $$
+begin
+  if to_regclass('public.service_suggestion_requests') is not null then
+    execute 'revoke all on table public.service_suggestion_requests from public, anon, authenticated';
+  end if;
+end $$;
