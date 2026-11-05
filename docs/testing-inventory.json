@@ -24209,11 +24209,11 @@
       "file": "tests/e2e/admin-moderation-live.spec.ts",
       "cases": [
         {
-          "line": 23,
+          "line": 32,
           "title": "\"live administrative metadata and health require MFA and never grant chat content with the admin role alone\""
         },
         {
-          "line": 122,
+          "line": 131,
           "title": "\"live moderation withdraws and restores an offer and resolves its case with a durable audit\""
         }
       ]
@@ -24271,7 +24271,7 @@
           "title": "'reports identify a client, require a reason and preserve the case on resolution'"
         },
         {
-          "line": 70,
+          "line": 75,
           "title": "'operational health distinguishes unavailable from zero and never offers a push replay'"
         }
       ]

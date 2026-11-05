@@ -20,6 +20,15 @@ async function loginAdmin(page: Page, account: DisposableAccount) {
   await completeAdminMfa(page, account.email);
 }
 
+async function saveModeration(page: Page) {
+  const saved = page.waitForResponse(response => new URL(response.url()).pathname === "/api/admin/moderacion" && response.request().method() === "POST");
+  await page.getByRole("button", { name: "Guardar acción y auditoría", exact: true }).click();
+  const response = await saved;
+  expect(response.status(), await response.text()).toBe(200);
+  await expect(page.getByRole("button", { name: "Guardar acción y auditoría", exact: true })).toBeEnabled();
+  await expect(page.getByRole("alert")).toHaveCount(0);
+}
+
 test("live administrative metadata and health require MFA and never grant chat content with the admin role alone", async ({ page }) => {
   test.setTimeout(180_000);
   const db = regressionAdminClient();
@@ -65,7 +74,7 @@ test("live administrative metadata and health require MFA and never grant chat c
     expect(grant.status()).toBe(200);
     await gotoOK(page,`/admin/conversaciones?conversation=${conversationId}&report=${caseId}`);
     await expect(page.getByLabel("ID del caso",{exact:true})).toHaveValue(caseId);
-    await page.getByLabel("Motivo de consulta",{exact:true}).fill("Synthetic investigation authorized for this participant report");
+    await page.getByRole("textbox",{name:"Motivo de consulta",exact:true}).fill("Synthetic investigation authorized for this participant report");
     const auditedResponse=page.waitForResponse(r=>r.url().endsWith("/api/admin/conversaciones")&&r.request().method()==="POST");
     await page.getByRole("button",{name:"Registrar consulta y abrir mensajes",exact:true}).click();
     const reviewed=await auditedResponse;
@@ -149,22 +158,25 @@ test("live moderation withdraws and restores an offer and resolves its case with
     await page.getByLabel(/^Prioridad\b/).selectOption("urgent");
     await page.locator("article").filter({ hasText: title }).getByRole("button", { name: "Atender y ver historial", exact: true }).click();
     await expect(page.getByLabel("ID del contenido o cuenta", { exact: true })).toHaveValue(offerId);
-    const reason = page.getByLabel("Motivo (visible al afectado si se registra como decisión)", { exact: true });
+    const reason = page.getByRole("textbox", { name: "Motivo (visible al afectado si se registra como decisión)", exact: true });
     const action = page.getByLabel("Acción de moderación", { exact: true });
     await reason.fill("Synthetic policy violation confirmed by the reviewer");
     await action.selectOption("hide");
-    await page.getByRole("button", { name: "Guardar acción y auditoría", exact: true }).click();
+    await saveModeration(page);
     await expect.poll(async () => (await db.from("moderation_holds").select("active").eq("target_type", "offer").eq("target_id", offerId).single()).data?.active).toBe(true);
     expect((await db.from("professional_offers").select("status").eq("id", offerId).single()).data?.status).toBe("paused");
     await expect(page.getByRole("button", { name: "Guardar acción y auditoría", exact: true })).toBeEnabled();
     await reason.fill("Synthetic case reviewed; restore its previous publication state");
     await action.selectOption("restore");
-    await page.getByRole("button", { name: "Guardar acción y auditoría", exact: true }).click();
+    await saveModeration(page);
     await expect.poll(async () => (await db.from("moderation_holds").select("active").eq("target_type", "offer").eq("target_id", offerId).single()).data?.active).toBe(false);
     expect((await db.from("professional_offers").select("status").eq("id", offerId).single()).data?.status).toBe("published");
     await expect(page.getByRole("button", { name: "Resolver con motivo", exact: true })).toBeEnabled();
     await reason.fill("Synthetic report resolved after withdrawal and review");
+    const resolvedResponse=page.waitForResponse(response=>new URL(response.url()).pathname==="/api/admin/reports"&&response.request().method()==="PATCH");
     await page.getByRole("button", { name: "Resolver con motivo", exact: true }).click();
+    const resolved=await resolvedResponse;
+    expect(resolved.status(),await resolved.text()).toBe(200);
     await expect.poll(async () => (await db.from("reports").select("status").eq("id", reportId).single()).data?.status).toBe("resolved");
     const audit = await db.from("moderation_actions").select("actor_id,action,reason").eq("report_id", reportId);
     expect(audit.error).toBeNull();
