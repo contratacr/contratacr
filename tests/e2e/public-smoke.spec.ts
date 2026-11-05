@@ -283,8 +283,10 @@ test.describe("@smoke public routes", () => {
       const menuSearch = megaMenu.getByTestId("services-mega-menu-search");
       await expect(menuSearch).toBeVisible();
       await menuSearch.fill("diseño");
-
-      await expect(page.getByRole("button", { name: /Diseño y arte/i }).first()).toBeVisible();
+      await megaMenu.getByRole("button",{name:/^Creatividad\b/i}).click();
+      await expect(megaMenu.getByRole("heading",{name:"Creatividad",exact:true})).toBeVisible();
+      await expect(menuSearch).toHaveValue("diseño");
+      await expect(megaMenu.getByRole("button", { name: "Diseño y arte",exact:true })).toBeVisible();
       await expect(page.locator("body")).not.toContainText(/Diseño\s*\/\s*Arte|Diseno/i);
       await expectHealthyPage(page);
     }

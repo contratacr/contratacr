@@ -8,7 +8,7 @@
     "handlers": 113,
     "components": 275,
     "hooks": 28,
-    "specs": 188
+    "specs": 189
   },
   "dashboardTabs": [
     "home",
@@ -24206,6 +24206,19 @@
       ]
     },
     {
+      "file": "tests/e2e/admin-moderation-live.spec.ts",
+      "cases": [
+        {
+          "line": 23,
+          "title": "\"live administrative metadata and health require MFA and never grant chat content with the admin role alone\""
+        },
+        {
+          "line": 122,
+          "title": "\"live moderation withdraws and restores an offer and resolves its case with a durable audit\""
+        }
+      ]
+    },
+    {
       "file": "tests/e2e/admin-moderation-runtime.spec.ts",
       "cases": [
         {
@@ -26246,35 +26259,35 @@
           "title": "\"privacy provides a permanent way to change optional choices\""
         },
         {
-          "line": 32,
+          "line": 39,
           "title": "\"native local answers require no external AI permission\""
         },
         {
-          "line": 38,
+          "line": 45,
           "title": "`${native ? \"native\" : \"web\"}: login never adds a second terms screen; explicit receipts remain isolated and idempotent`"
         },
         {
-          "line": 39,
+          "line": 46,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 65,
+          "line": 72,
           "title": "\"native assistant sends a prompt without an extra permission step\""
         },
         {
-          "line": 86,
+          "line": 93,
           "title": "`login keeps the existing legal disclosure before continuing (${locale})`"
         },
         {
-          "line": 94,
+          "line": 101,
           "title": "`${native ? \"native\" : \"web\"}: optional consent notice never implies acceptance of terms on entry`"
         },
         {
-          "line": 113,
+          "line": 120,
           "title": "\"advertising withdrawal rejects cross-origin and invalid choices\""
         },
         {
-          "line": 133,
+          "line": 140,
           "title": "\"offline guest advertising withdrawal retries on reconnect without a popup\""
         }
       ]
@@ -27489,23 +27502,23 @@
           "title": "\"services search uses the canonical design and art label\""
         },
         {
-          "line": 293,
+          "line": 295,
           "title": "\"footer keeps localized resources and safe external destinations\""
         },
         {
-          "line": 342,
+          "line": 344,
           "title": "\"cada servicio de la portada abre su búsqueda, nunca «Perfil no encontrado»\""
         },
         {
-          "line": 359,
+          "line": 361,
           "title": "\"una dirección que no existe responde 404, no 200\""
         },
         {
-          "line": 400,
+          "line": 402,
           "title": "\"el panel de servicio ofrece oficios aunque no haya búsquedas recientes\""
         },
         {
-          "line": 401,
+          "line": 403,
           "title": "!testInfo.project.name.includes(\"mobile\")"
         }
       ]

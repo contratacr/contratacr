@@ -25,7 +25,14 @@ test("privacy provides a permanent way to change optional choices",async({page})
  await gotoOK(page,"/privacidad");await waitForInteractivePage(page);
  await expect(page.locator('main [data-advertising-preferences] button')).toBeVisible();
  await page.locator('main [data-advertising-preferences] button').click();
- await expect(page.getByRole('dialog',{name:'Cookies y privacidad'})).toBeVisible();
+ const settings=page.getByRole('dialog',{name:'Configuración de privacidad',exact:true});
+ await expect(settings).toBeVisible();
+ await expect(settings.getByRole('checkbox',{name:'Estadísticas',exact:true})).toBeVisible();
+ await expect(settings.getByRole('checkbox',{name:'Marketing',exact:true})).toBeVisible();
+ await expect(settings.getByRole('button',{name:'Guardar',exact:true})).toBeVisible();
+ await page.keyboard.press('Escape');
+ await expect(settings).toBeHidden();
+ await expect(page.locator('main [data-advertising-preferences] button')).toBeVisible();
  await expect(page.locator('[data-ai-consent]')).toHaveCount(0);
 });
 
