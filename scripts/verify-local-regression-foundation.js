@@ -42,6 +42,8 @@ async function must(label, promise) {
 }
 
 async function main() {
+  const freight = await must("local bilingual catalogue", admin.from("categories").select("name,name_en").eq("id","fletes").single());
+  assert(freight.name === "Fletes y carga" && freight.name_en === "Freight & hauling", "Local English search requires the bilingual freight fixture.");
   for (const actor of expected) {
     const authUser = await admin.auth.admin.getUserById(actor.profileId);
     if (authUser.error) throw new Error(`Auth ${actor.businessName}: ${authUser.error.message}`);

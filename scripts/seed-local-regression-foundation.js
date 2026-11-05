@@ -69,6 +69,12 @@ async function must(label, promise) {
 }
 
 async function main() {
+  // The migration-only catalogue has no English name for this built-in row.
+  // Reproduce the existing bilingual public catalogue for English API checks.
+  // The loopback-only guard above forbids this fixture on hosted environments.
+  await must("local bilingual freight fixture", db.from("categories")
+    .update({ name_en: "Freight & hauling" }).eq("id", "fletes")
+    .eq("name", "Fletes y carga").is("name_en", null));
   for (const actor of actors) {
     await must(`local profile ${actor.fullName}`, db.from("profiles").upsert({
       id: actor.profileId,

@@ -136,3 +136,15 @@ test("literal service names precede an exact synonym of another service", () => 
   assert.equal(api.searchCategories("Mudanzas", "es")[0]?.id, "mudanzas");
   assert.equal(api.searchCategories("Moving", "en")[0]?.id, "mudanzas");
 });
+test("the bilingual local catalogue preserves literal freight ranking after the operational overlay", () => {
+  try {
+    api.setCustomCategories([{ id:"fletes",label:"Fletes y carga",labelEn:"Freight & hauling",groupId:"vehiculos" }]);
+    assert.equal(api.getCategoryLabel("fletes","en"),"Freight & hauling");
+    for(const [query,locale] of [["Flete","es"],["Freight","en"]]) {
+      const matches=api.searchCategories(query,locale);
+      assert.equal(matches[0]?.id,"fletes");
+      assert.equal(new Set(matches.map(c=>c.id)).size,matches.length);
+    }
+    assert.ok(api.searchCategories("Flete","es").some(c=>c.id==="mudanzas"));
+  } finally {api.setCustomCategories([]);}
+});
