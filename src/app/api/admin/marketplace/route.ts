@@ -1,7 +1,8 @@
 import { readAllAdminRows, readAdminRowsByIds } from "@/lib/admin/read-all-rows";
 import { rutaEmpleo, rutaPromocion } from "@/lib/marketplace-url";
+import { moderationAccess } from "@/lib/moderation/admin";
 import { NextResponse } from "next/server";
-import { getApiAdmin } from "@/lib/auth/admin";
+import { getModerationAdmin as getApiAdmin } from "@/lib/moderation/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { getCantonById, getProvinceById } from "@/lib/data/cr-geography";
@@ -13,8 +14,6 @@ import { getCantonById, getProvinceById } from "@/lib/data/cr-geography";
 //   GET  ?kind=jobs|offers&filter=all|published|paused|closed|expired|sold_out|draft&q=&page=
 //   PATCH { kind, id, status }   — pause, republish, close or expire a publication
 
-const JOB_STATUSES = new Set(["draft", "published", "paused", "closed"]);
-const OFFER_STATUSES = new Set(["draft", "published", "paused", "expired", "sold_out"]);
 const PAGE_SIZE = 25;
 
 type CreatorRow = {
@@ -121,6 +120,9 @@ export async function GET(request: Request) {
   }
 
   const rows = (listRes.data ?? []) as unknown as Array<JobRow | OfferRow>;
+  const held=await readAllAdminRows((from,to)=>db.from("moderation_holds").select("target_id").eq("target_type",kind==="jobs"?"job":"offer").eq("active",true).order("target_id").range(from,to));
+  if(held.error)return NextResponse.json({error:"No se pudo comprobar el estado de moderación."},{status:503});
+  const heldIds=new Set((held.data??[]).map(row=>row.target_id));
   const creatorIds = [...new Set(rows.map((row) => ("employer_id" in row ? row.employer_id : row.professional_id)).filter(Boolean))] as string[];
   const creatorsRes = creatorIds.length
     ? await readAdminRowsByIds(creatorIds, (batch, from, to) => db.from("professionals").select("id, profile_id, slug, business_name, verification_status, profiles(full_name, email, avatar_url)").in("id", batch).order("id").range(from, to))
@@ -137,6 +139,7 @@ export async function GET(request: Request) {
         id: row.id,
         title: row.title ?? "Sin título",
         status: row.status ?? "draft",
+        moderationHidden:heldIds.has(row.id),
         category,
         place: placeLabel(row.provincia_id, row.canton_id, row.location_label),
         employmentType: row.employment_type,
@@ -156,6 +159,7 @@ export async function GET(request: Request) {
       id: row.id,
       title: row.title ?? "Sin título",
       status: row.status ?? "draft",
+      moderationHidden:heldIds.has(row.id),
       category: category ?? row.service_label,
       place: row.location_label || "Costa Rica",
       offerType: row.offer_type,
@@ -194,43 +198,12 @@ export async function GET(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const admin = await getApiAdmin();
-  if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
-
-  const body = (await request.json().catch(() => ({}))) as { kind?: string; id?: string; status?: string };
-  const kind = body.kind === "offers" || body.kind === "offer" ? "offers" : "jobs";
-  const id = typeof body.id === "string" ? body.id : "";
-  const status = typeof body.status === "string" ? body.status : "";
-  const allowed = kind === "jobs" ? JOB_STATUSES : OFFER_STATUSES;
-  if (!id || !allowed.has(status)) return NextResponse.json({ error: "Estado no válido." }, { status: 400 });
-
-  const db = createAdminClient();
-  const table = kind === "jobs" ? "job_posts" : "professional_offers";
-  const { data, error } = await db.from(table).update({ status, updated_at: new Date().toISOString() }).eq("id", id).select("id, status").maybeSingle();
-  if (error) {
-    console.error(`[admin/marketplace] ${kind} status`, error.message);
-    return NextResponse.json({ error: "No se pudo actualizar la publicación." }, { status: 500 });
-  }
-  if (!data) return NextResponse.json({ error: "La publicación ya no existe." }, { status: 404 });
-  return NextResponse.json({ id: data.id, status: data.status });
+ const access=await moderationAccess();if(!access)return NextResponse.json({error:"No autorizado"},{status:403});
+ if(request.headers.get("origin")!==new URL(request.url).origin)return NextResponse.json({error:"Origen inválido"},{status:403});
+ const p=await request.json().catch(()=>({}));
+ if(!["jobs","offers"].includes(p.kind)||!p.id||typeof p.reason!=="string"||p.reason.trim().length<5)return NextResponse.json({error:"Indica publicación, estado y motivo."},{status:400});
+ const {error}=await access.db.rpc("admin_publication_state",{p_kind:p.kind==="jobs"?"job":"offer",p_id:p.id,p_status:p.status,p_reason:p.reason});
+ if(error)return NextResponse.json({error:"No se guardó el estado y su auditoría; comprueba si existe un retiro de moderación."},{status:409});
+ return NextResponse.json({id:p.id,status:p.status});
 }
-
-// DELETE /api/admin/marketplace?kind=jobs|offers&id=… — removes the publication,
-// its follower-feed rows and the notifications that pointed at it.
-export async function DELETE(request: Request) {
-  const admin = await getApiAdmin();
-  if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
-  const url = new URL(request.url);
-  const kind = url.searchParams.get("kind") === "offers" ? "offers" : "jobs";
-  const id = url.searchParams.get("id") ?? "";
-  if (!/^[0-9a-f-]{36}$/i.test(id)) return NextResponse.json({ error: "Identificador requerido." }, { status: 400 });
-  const db = createAdminClient();
-  await db.from("notifications").delete().eq("type", "followed_professional_activity").eq("data->>content_id", id);
-  await db.from("professional_activity").delete().eq("content_id", id);
-  const { error } = await db.from(kind === "jobs" ? "job_posts" : "professional_offers").delete().eq("id", id);
-  if (error) {
-    console.error(`[admin/marketplace] delete ${kind}`, error.message);
-    return NextResponse.json({ error: "No se pudo eliminar la publicación." }, { status: 500 });
-  }
-  return NextResponse.json({ ok: true, id });
-}
+export async function DELETE(){if(!(await moderationAccess()))return NextResponse.json({error:"No autorizado"},{status:403});return NextResponse.json({error:"Usa el retiro reversible desde Reportes y moderación."},{status:405});}

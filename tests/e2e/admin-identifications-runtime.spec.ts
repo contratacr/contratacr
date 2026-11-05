@@ -8,6 +8,8 @@ import ts from "typescript";
 type Value = any;
 const nativeRequire = createRequire(`${process.cwd()}/tests/e2e/admin-identifications-runtime.spec.ts`);
 function load(file: string, mocks: Record<string, unknown> = {}) {
+  const auth=mocks["@/lib/auth/admin"] as {getApiAdmin?:()=>Promise<unknown>}|undefined;
+  if(auth?.getApiAdmin && !mocks["@/lib/moderation/admin"])mocks["@/lib/moderation/admin"]={getIdentityAdmin:auth.getApiAdmin,getModerationAdmin:auth.getApiAdmin,getSupportAdmin:auth.getApiAdmin};
   const box = { exports: {} as Record<string, Value> };
   runInNewContext(ts.transpileModule(readFileSync(file, "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText,
     { module: box, exports: box.exports, require: (name: string) => mocks[name] ?? nativeRequire(name), Request, Response, Date, setTimeout, console });

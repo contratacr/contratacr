@@ -25,6 +25,8 @@ const adminRoutes = [
   { path: "/admin/costos", marker: /Costos/i },
   { path: "/admin/actividad", marker: /Resumen|Actividad reciente/i },
   { path: "/admin/resenas", marker: /Rese.nas|Reseñas/i },
+  { path: "/admin/conversaciones", marker: /Conversaciones por responder/i },
+  { path: "/admin/salud", marker: /Salud operativa/i },
 ] as const;
 
 async function loginAdmin(page: Page, account: DisposableAccount) {
@@ -61,6 +63,10 @@ test.describe("@admin surfaces", () => {
       "/api/admin/users",
       "/api/admin/providers",
       "/api/admin/reports",
+      "/api/admin/conversaciones",
+      "/api/admin/moderacion",
+      "/api/admin/permisos",
+      "/api/admin/salud",
       "/api/admin/support",
       "/api/admin/costs",
       "/api/admin/accounts",
@@ -186,6 +192,7 @@ test.describe("@admin surfaces", () => {
 
       account = await createDisposableAccount({ prefix: "admin-actions", admin: true });
       await loginAdmin(page, account);
+      page.on("dialog",dialog=>void dialog.accept("Revisión administrativa de prueba"));
 
       // Ofertas: the owner finds the publication with its creator and moderates it.
       await gotoOK(page, "/admin/promociones");
@@ -213,11 +220,10 @@ test.describe("@admin surfaces", () => {
       await pestana("Vencidas");
       await expect(row.getByText("Vencida", { exact: true })).toBeVisible();
       await expect.poll(async () => (await admin.from("professional_offers").select("status").eq("id", offerId).single()).data?.status).toBe("expired");
-      page.once("dialog", (dialog) => void dialog.accept());
-      await row.getByRole("button", { name: /^Eliminar$/ }).click();
+      await row.getByRole("button", { name: /^Retirar de publicación$/ }).click();
       await expect(row).toBeHidden();
-      await expect.poll(async () => (await admin.from("professional_offers").select("id").eq("id", offerId).maybeSingle()).data).toBeNull();
-      offerId = "";
+      await expect.poll(async () => (await admin.from("moderation_holds").select("active").eq("target_type","offer").eq("target_id",offerId).single()).data?.active).toBe(true);
+      expect((await admin.from("professional_offers").select("id").eq("id",offerId).single()).data?.id).toBe(offerId);
       await expectHealthyPage(page);
 
       // Empleos: the seeded SG job lists its creator and the application count.
@@ -348,14 +354,15 @@ test.describe("@admin surfaces", () => {
       ticketId = "";
       await expectHealthyPage(page);
 
-      // Reportes: delete the record.
+      // Reportes: resolve with a reason and preserve the record and audit.
       await gotoOK(page, "/admin/reportes");
-      const reportRow = page.locator("li").filter({ hasText: `Reporte admin regression ${stamp}` }).first();
+      const reportRow = page.locator("article").filter({ hasText: `Reporte admin regression ${stamp}` }).first();
       await expect(reportRow).toBeVisible();
-      page.once("dialog", (dialog) => void dialog.accept());
-      await reportRow.getByRole("button", { name: /^Eliminar$/ }).click();
-      await expect.poll(async () => (await admin.from("reports").select("id").eq("id", reportId).maybeSingle()).data).toBeNull();
-      reportId = "";
+      await reportRow.getByRole("button",{name:"Atender y ver historial"}).click();
+      await page.getByLabel("Motivo (visible al afectado si se registra como decisión)").fill("Caso revisado con evidencia de prueba");
+      await page.getByRole("button",{name:"Resolver con motivo"}).click();
+      await expect.poll(async () => (await admin.from("reports").select("status").eq("id", reportId).single()).data?.status).toBe("resolved");
+      expect((await admin.from("moderation_actions").select("id").eq("report_id",reportId)).data?.length).toBeGreaterThan(0);
       await expectHealthyPage(page);
 
       // Usuarios: delete a whole account from its profile (confirm + typed word).

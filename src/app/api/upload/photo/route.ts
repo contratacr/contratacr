@@ -1,3 +1,4 @@
+import { scanUpload } from "@/lib/moderation/files";
 import { NextResponse } from "next/server";
 import { mensajeDeError } from "@/lib/api-errors";
 import { v2 as cloudinary } from "cloudinary";
@@ -48,6 +49,7 @@ export async function POST(req: Request) {
       allowLabel: "JPG, PNG, WEBP, AVIF, HEIC/HEIF o GIF",
     });
     if (!check.ok) return NextResponse.json({ error: check.error, code: check.motivo }, { status: 400 });
+  try { await scanUpload(buffer); } catch(e) { return NextResponse.json({error:e instanceof Error?e.message:"Análisis no disponible."},{status:422}); }
 
     // Correct MIME from the DETECTED kind (never the uploaded file.type).
     const dataUri = `data:${MIME_FOR[check.kind]};base64,${buffer.toString("base64")}`;

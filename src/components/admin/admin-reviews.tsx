@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { AlertTriangle, Eye, EyeOff, Loader2, RotateCcw, Search, Star, Trash2 } from "lucide-react";
+import { AlertTriangle, Eye, EyeOff, Loader2, RotateCcw, Search, Star } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 
 type AdminReview = {
@@ -67,16 +67,15 @@ export function AdminReviews() {
   });
   const counts = data.counts ?? { total: 0, needsReview: 0, profile: 0, hidden: 0, sinCuenta: 0 };
 
-  async function moderate(review: AdminReview, action: "hide" | "restore" | "delete") {
-    const label = action === "hide" ? "ocultar" : action === "restore" ? "restaurar" : "eliminar permanentemente";
+  async function moderate(review: AdminReview, action: "hide" | "restore") {
+    const label = action === "hide" ? "ocultar" : "restaurar";
     const reason = window.prompt(`Motivo para ${label} esta reseña:`)?.trim();
-    if (!reason) return;
-    if (action === "delete" && !window.confirm("Esta eliminación es permanente. ¿Deseas continuar?")) return;
+    if (!reason || reason.length<5) return;
 
     setActingId(review.id);
     try {
       const response = await fetch("/api/admin/reviews", {
-        method: action === "delete" ? "DELETE" : "PATCH",
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: review.id, action, reason }),
       });
@@ -225,9 +224,6 @@ export function AdminReviews() {
                       <Eye className="h-4 w-4" /> Ocultar
                     </button>
                   )}
-                  <button type="button" disabled={actingId === review.id} onClick={() => void moderate(review, "delete")} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[#fecaca] px-3 text-sm font-bold text-[#b91c1c] hover:bg-[#fef2f2] disabled:opacity-50">
-                    {actingId === review.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />} Eliminar
-                  </button>
                 </div>
               </article>
             ))}

@@ -81,3 +81,15 @@ begin
     execute 'revoke all on table public.service_suggestion_requests from public, anon, authenticated';
   end if;
 end $$;
+
+-- Moderation/chat records never inherit blanket local bootstrap permissions.
+do $$ declare t text; begin
+  foreach t in array array['admin_chat_reviewers','admin_chat_access_log','moderation_actions','moderation_holds','moderation_restrictions','moderation_files','moderation_photo_holds','admin_staff_permissions','moderation_retention_state'] loop
+    if to_regclass('public.'||t) is not null then
+      execute format('revoke all on public.%I from public,anon,authenticated,service_role',t);
+      execute format('grant select on public.%I to service_role',t);
+    end if;
+  end loop;
+  if to_regclass('public.admin_chat_reviewers') is not null then grant insert,delete on public.admin_chat_reviewers to service_role; end if;
+  if to_regclass('public.admin_staff_permissions') is not null then grant insert,update,delete on public.admin_staff_permissions to service_role; end if;
+end $$;

@@ -10,6 +10,7 @@ import { ArrowLeft, Headset, Home } from "lucide-react";
 import { SuccessIcon } from "@/components/ui/success-icon";
 import { Link } from "@/i18n/navigation";
 import { SupportForm } from "@/components/support/support-form";
+import { ModerationDecisions } from "@/components/support/moderation-decisions";
 import { SpamNotice } from "@/components/ui/spam-notice";
 import { canOffer } from "@/lib/auth/capabilities";
 import { irAlInicio } from "@/lib/ir-al-inicio";
@@ -134,6 +135,7 @@ export default function SoportePage() {
 
           {/* Primary: support ticket form (shared SupportForm component) */}
           <SupportForm onSuccess={(email) => { setSuccessEmail(email); setSuccess(true); }} />
+          {user&&<ModerationDecisions/>}
 
         </div>
       </main>

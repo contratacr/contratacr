@@ -1,7 +1,7 @@
 import { readAllAdminRows } from "@/lib/admin/read-all-rows";
 import { withCurrentSupportNames } from "@/lib/support/current-names";
 import { NextResponse } from "next/server";
-import { getApiAdmin } from "@/lib/auth/admin";
+import { getSupportAdmin as getApiAdmin } from "@/lib/moderation/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyUserOfReply } from "@/lib/support-notify";
 import { LONG_TEXT_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";

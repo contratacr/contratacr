@@ -1,7 +1,7 @@
 import { readAllAdminRows, readAdminRowsByIds } from "@/lib/admin/read-all-rows";
 import { firmarAdjuntos } from "@/lib/support/adjuntos";
 import { NextResponse } from "next/server";
-import { getApiAdmin } from "@/lib/auth/admin";
+import { getIdentityAdmin as getApiAdmin } from "@/lib/moderation/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { detectIdType, idTypeLabel, isValidId, cleanId } from "@/lib/cedula";
 import { getIdentityVerifier, nameSimilarity, NAME_MATCH_THRESHOLD } from "@/lib/verification/identity-verifier";

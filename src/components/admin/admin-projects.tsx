@@ -27,6 +27,7 @@ type AdminProject = {
   archived_by_client: boolean;
   /** Falso solo en los publicados antes del tablero público: no salen ahí. */
   allow_direct_contact: boolean;
+  moderationHidden?: boolean;
   for_someone_else: boolean;
   beneficiary_name: string | null;
   beneficiary_dob: string | null;
@@ -202,12 +203,13 @@ export function AdminProjects() {
   }
 
   async function removeProject(id: string) {
-    if (!window.confirm("Esta eliminación es permanente: el proyecto desaparece. ¿Deseas continuar?")) return;
+    const reason=window.prompt("Motivo para retirar este proyecto de publicación (reversible):")?.trim();
+    if(!reason || reason.length<5)return;
     setDeletingId(id);
     try {
-      const res = await fetch(`/api/admin/projects?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      const res = await fetch("/api/admin/moderacion", { method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({kind:"project",id,action:"hide",reason}) });
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "No se pudo eliminar.");
-      setListing((current) => ({ ...current, items: current.items.filter((item) => item.id !== id) }));
+      await refresh();
     } catch (error) {
       window.alert(error instanceof Error ? error.message : "No se pudo eliminar.");
     } finally {
@@ -345,7 +347,8 @@ export function AdminProjects() {
                         <p className="mt-1 text-xs text-[#68778d]">Creada: {fmtDateTime(project.created_at)} · ID: {project.id.slice(0, 8)}</p>
                       </div>
                       <div className="sm:col-span-2 lg:col-span-1 xl:col-span-2">
-                        {project.status === "open" && !project.allow_direct_contact && (
+                        {project.moderationHidden&&<p className="text-xs font-semibold text-red-800">Retirado por moderación</p>}
+                        {project.status === "open" && !project.allow_direct_contact && !project.moderationHidden && (
                           <button
                             type="button"
                             disabled={publicandoId === project.id}
@@ -362,8 +365,9 @@ export function AdminProjects() {
                           onClick={() => void removeProject(project.id)}
                           className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-semibold text-[#b91c1c] hover:bg-[#fef2f2] disabled:opacity-60"
                         >
-                          {deletingId === project.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />} Eliminar proyecto
+                          {deletingId === project.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />} Retirar de publicación
                         </button>
+                        <Link className="text-xs underline" href={`/admin/reportes?targetType=project&targetId=${project.id}`}>Historial y restauración</Link>
                       </div>
                     </div>
                   </div>

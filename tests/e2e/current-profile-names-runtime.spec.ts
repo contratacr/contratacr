@@ -6,6 +6,8 @@ import { runInNewContext } from "node:vm";
 import ts from "typescript";
 const nativeRequire = createRequire(`${process.cwd()}/tests/e2e/current-profile-names-runtime.spec.ts`);
 function load(path: string, mocks: Record<string, unknown>) {
+  const auth=mocks["@/lib/auth/admin"] as {getApiAdmin?:()=>Promise<unknown>}|undefined;
+  if(auth?.getApiAdmin && !mocks["@/lib/moderation/admin"])mocks["@/lib/moderation/admin"]={getIdentityAdmin:auth.getApiAdmin,getModerationAdmin:auth.getApiAdmin,getSupportAdmin:auth.getApiAdmin};
   const box = { exports: {} as Record<string, (...args: any[]) => any> };
   runInNewContext(ts.transpileModule(readFileSync(path, "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText,
     { module: box, exports: box.exports, require: (id: string) => mocks[id] ?? nativeRequire(id), Response, URL });

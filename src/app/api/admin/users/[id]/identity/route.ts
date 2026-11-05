@@ -1,7 +1,7 @@
 import { syncOfficialProfileName } from "@/lib/verification/profile-name";
 import { invalidateProfessionalCache } from "@/lib/cache/professional-revision";
 import { NextResponse } from "next/server";
-import { getApiAdmin } from "@/lib/auth/admin";
+import { getIdentityAdmin as getApiAdmin } from "@/lib/moderation/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyVerificationDecision } from "@/lib/verification-notify";
 import type { VerificationStatus } from "@/lib/verification";

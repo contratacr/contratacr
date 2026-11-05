@@ -11,7 +11,7 @@ import { ADMIN_REFRESH_EVENT, ADMIN_COUNTS_REFRESH_EVENT } from "@/hooks/use-adm
 
 export type AdminTab =
   | "resumen" | "identificaciones" | "verificacion" | "usuarios" | "publicaciones" | "reportes" | "aseguradoras"
-  | "categorias" | "cuentas" | "soporte" | "analitica" | "actividad" | "resenas" | "empleos" | "promociones" | "cobertura" | "costos" | "campanas" | "contactos";
+  | "categorias" | "cuentas" | "soporte" | "analitica" | "actividad" | "resenas" | "empleos" | "promociones" | "cobertura" | "costos" | "campanas" | "contactos" | "conversaciones" | "salud";
 
 // Cada página del panel monta su propio AdminShell, así que el componente se
 // desmonta y vuelve a montar en cada cambio de sección. Los contadores viven
@@ -48,8 +48,8 @@ function PendingMark({ variant }: { variant: "side" | "top" }) {
 // «Marketplace», y Contactos no estaba en ningún grupo: en computadora no
 // aparecía. Lo publicado va junto; lo que espera una respuesta, arriba.
 const GRUPOS_ADMIN: { label: string; ids: AdminTab[] }[] = [
-  { label: "Principal", ids: ["resumen", "analitica"] },
-  { label: "Por atender", ids: ["verificacion", "soporte", "reportes", "cuentas"] },
+  { label: "Principal", ids: ["resumen", "analitica", "salud"] },
+  { label: "Por atender", ids: ["verificacion", "soporte", "reportes", "conversaciones", "cuentas"] },
   { label: "Publicaciones", ids: ["publicaciones", "empleos", "promociones", "resenas"] },
   { label: "Personas", ids: ["usuarios", "identificaciones", "contactos"] },
   { label: "Catálogo", ids: ["categorias", "cobertura"] },
@@ -81,7 +81,7 @@ function AdminShellContent({
       if (document.visibilityState !== "visible") return;
       countsCacheAt = Date.now();
       fetch("/api/admin/pending-counts")
-        .then((r) => r.json())
+        .then((r) => {if(!r.ok)throw new Error("No se pudieron comprobar los pendientes.");return r.json();})
         .then((d) => {
           if (!alive) return;
           const nextCounts = (d ?? {}) as Record<string, number>;
@@ -135,6 +135,8 @@ function AdminShellContent({
     { id: "cobertura", label: "Cobertura", icon: MapPinned, href: "/admin/cobertura", badge: 0 },
     { id: "costos", label: "Costos", icon: Wallet, href: "/admin/costos", badge: 0 },
     { id: "contactos", label: "Contactos a profesionales", icon: MessageCircle, href: "/admin/contactos", badge: 0 },
+    { id: "conversaciones", label: "Conversaciones por responder", icon: MessageCircle, href: "/admin/conversaciones", badge: 0 },
+    { id: "salud", label: "Salud operativa", icon: ShieldCheck, href: "/admin/salud", badge: 0 },
     { id: "reportes", label: "Reportes", icon: Flag, href: "/admin/reportes", badge: counts.reportes ?? 0 },
     { id: "categorias", label: "Servicios", icon: Tag, href: "/admin/servicios", badge: counts.categorias ?? 0 },
     { id: "soporte", label: "Soporte", icon: Headset, href: "/admin/soporte", badge: counts.soporte ?? 0 },

@@ -1,112 +1,27 @@
-export const runtime = "nodejs";
-
-import { NextRequest, NextResponse } from "next/server";
-import { correoValido, escaparHtml } from "@/lib/email/escape";
-import { enforceRateLimit } from "@/lib/rate-limit";
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { brandedEmailDocument, sendBrevoEmail } from "@/lib/email/send";
-import { auditUserAction } from "@/lib/audit/user-action";
-import { writeSourceColumns } from "@/lib/security/write-guard";
-
-const SUPPORT_TO = "soporte@contratacr.com";
-
-export async function POST(req: NextRequest) {
-  // Public endpoint: bound abuse and enumeration per client IP.
-  const limited = enforceRateLimit(req, "report-public", 10, 600000);
-  if (limited) return limited;
-  try {
-    const { professionalName, professionalSlug, reason, reporterEmail } = await req.json();
-
-    if (!professionalSlug) {
-      return NextResponse.json({ error: "Falta el perfil a reportar." }, { status: 400 });
-    }
-
-    // Impersonation reports are the real-world deterrent against an impostor who
-    // entered a real cédula + matching name (the padrón cannot prove physical
-    // identity) — flag them HIGH PRIORITY so support triages first (items 8/10).
-    const isImpersonation = /suplantaci[oó]n de identidad/i.test(String(reason ?? ""));
-    const storedReason = isImpersonation ? `[PRIORIDAD ALTA] ${reason}` : (reason ?? "Sin detalle");
-
-    // Persist the report so the admin moderation queue can action it (best-effort;
-    // resolve the professional_id from the slug). Never blocks the email path.
-    let reportId: string | null = null;
-    try {
-      const admin = createAdminClient();
-      const { data: pro } = await admin.from("professionals").select("id").eq("slug", professionalSlug).maybeSingle();
-      let { data: reportRow, error: reportError } = await admin.from("reports").insert({
-        professional_id: pro?.id ?? null,
-        professional_slug: professionalSlug,
-        professional_name: professionalName ?? null,
-        reason: storedReason,
-        reporter_email: reporterEmail ?? null,
-        ...writeSourceColumns(req),
-      }).select("id").single();
-      if (reportError && /created_source|created_app|created_supabase|column|schema cache|PGRST204|could not find/i.test(reportError.message)) {
-        ({ data: reportRow, error: reportError } = await admin.from("reports").insert({
-          professional_id: pro?.id ?? null,
-          professional_slug: professionalSlug,
-          professional_name: professionalName ?? null,
-          reason: storedReason,
-          reporter_email: reporterEmail ?? null,
-        }).select("id").single());
-      }
-      if (reportError) throw reportError;
-      reportId = reportRow?.id ?? null;
-      await auditUserAction(admin, req, {
-        action: "report.professional_profile",
-        entityTable: "reports",
-        entityId: reportId,
-        afterData: {
-          professional_id: pro?.id ?? null,
-          professional_slug: professionalSlug,
-          professional_name: professionalName ?? null,
-          reporter_email: reporterEmail ?? null,
-          high_priority: isImpersonation,
-        },
-      });
-    } catch (e) {
-      console.error("[report] persist failed (continuing to email):", e);
-    }
-
-    // El reporte YA vive en la cola de moderación del panel admin, con su
-    // contador en la barra lateral (Reportes ← /api/admin/pending-counts, que
-    // cuenta los que están en «open»). Mandar además un correo a soporte era
-    // avisar dos veces de lo mismo, así que el correo queda SOLO como red: si
-    // el guardado falló, el reporte no aparecería en ninguna pantalla y ahí sí
-    // hay que enterarse por correo.
-    if (reportId) return NextResponse.json({ ok: true });
-
-    const profileUrl = `https://contratacr.com/profesionales/${professionalSlug}`;
-    const html = brandedEmailDocument({
-      title: "Reporte de perfil — ContrataCR",
-      bodyHtml: `
-          <h1 style="font-size:20px;line-height:1.3;margin:0 0 16px">Reporte de perfil</h1>
-          <table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:14px;">
-            <tr><td style="padding:6px 0;color:#6b7280;width:120px;">Profesional:</td><td style="padding:6px 0;font-weight:600;color:#111827;">${professionalName ?? "—"}</td></tr>
-            <tr><td style="padding:6px 0;color:#6b7280;">Perfil:</td><td style="padding:6px 0;"><a href="${escaparHtml(profileUrl)}" style="color:#009FD9;">${escaparHtml(profileUrl)}</a></td></tr>
-            <tr><td style="padding:6px 0;color:#6b7280;">Reportado por:</td><td style="padding:6px 0;color:#111827;">${escaparHtml(reporterEmail || "Anónimo")}</td></tr>
-          </table>
-          <hr style="border:none;border-top:1px solid #f3f4f6;margin:12px 0;"/>
-          <p style="font-size:13px;color:#6b7280;margin:0 0 6px;">Motivo:</p>
-          <div style="font-size:14px;color:#374151;line-height:1.6;white-space:pre-wrap;">${escaparHtml(reason ?? "Sin detalle")}</div>`,
-    });
-
-    const r = await sendBrevoEmail({
-      to: SUPPORT_TO, purpose: "support",
-      replyTo: correoValido(reporterEmail) || undefined,
-      subject: `${isImpersonation ? "[PRIORIDAD ALTA] " : ""}[Reporte SIN GUARDAR] Perfil de ${escaparHtml(professionalName ?? professionalSlug)}`,
-      html,
-    });
-
-    // Aquí el guardado falló: el correo es lo único que queda, así que un fallo
-    // duro sí se le devuelve a quien reportó.
-    if (r.status === "failed") {
-      return NextResponse.json({ error: "No se pudo enviar el reporte." }, { status: 500 });
-    }
-
-    return NextResponse.json({ ok: true });
-  } catch (err) {
-    console.error("[report] error:", err);
-    return NextResponse.json({ error: "Error interno del servidor." }, { status: 500 });
-  }
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { resolveReportTarget,type ReportKind } from "@/lib/moderation/report-target";
+const schema=z.object({professionalSlug:z.string().min(1).max(200),professionalName:z.string().max(200).optional(),reason:z.string().trim().min(5).max(2000),reporterEmail:z.unknown().optional(),targetType:z.enum(["professional","project","job","offer","review"]).optional(),targetId:z.string().uuid().optional()});
+export async function POST(req: Request) {
+ const limited=enforceRateLimit(req,"report-public",10,600000);if(limited)return limited;
+ const parsed=schema.safeParse(await req.json().catch(()=>null));if(!parsed.success)return NextResponse.json({error:"Indica el contenido y un motivo de 5–2000 caracteres."},{status:400});
+ const p=parsed.data,db=createAdminClient();
+ const {data:{user}}=await (await createClient()).auth.getUser();
+ let kind:ReportKind=p.targetType??"professional",id=p.targetId;
+ if(!id){
+  const project=p.professionalSlug.match(/^proyecto-([0-9a-f-]{36})$/i);
+  const context=p.reason.match(/^(Empleo|Promoción|Proyecto)[\s\S]*?\(([0-9a-f-]{36})\)/i);
+  if(project){kind="project";id=project[1];}
+  else if(context){kind=context[1].toLowerCase()==="empleo"?"job":context[1].toLowerCase()==="proyecto"?"project":"offer";id=context[2];}
+  else {const {data}=await db.from("professionals").select("id").eq("slug",p.professionalSlug).maybeSingle();id=data?.id;}
+ }
+ if(!id)return NextResponse.json({error:"Contenido no encontrado."},{status:404});
+ const target=await resolveReportTarget(db,kind,id);if(!target)return NextResponse.json({error:"Contenido no encontrado."},{status:404});
+ const priority=/suplantaci[oó]n|estafa|fraude/i.test(p.reason)?"high":"normal";
+ const {error}=await db.from("reports").insert({...target,reason:p.reason,reporter_id:user?.id??null,reporter_email:user?.email??null,priority,status:"open"});
+ if(error)return NextResponse.json({error:"No se pudo guardar el reporte. Intenta de nuevo o contacta soporte."},{status:503});
+ return NextResponse.json({ok:true});
 }

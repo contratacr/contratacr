@@ -1031,7 +1031,7 @@ export function AdminCategories() {
                             <button disabled={busy !== null || !existingTargets[i.id]} onClick={() => {
                               const target = catalog.find(c => c.id === existingTargets[i.id]);
                               if (!target) return;
-                              setDialog({ title: "Usar servicio existente", description: `Se avisará a quienes lo solicitaron que pueden completar «${target.label}». No se publicará en sus perfiles hasta que guarden.`, confirmLabel: "Confirmar servicio", onConfirm: () => applySuggestionDecision(i, "rejected", undefined, undefined, undefined, undefined, undefined, target.id) });
+                              setDialog({ title: "Usar servicio existente", description: `Se avisará a quienes lo solicitaron que pueden completar “${target.label}”. No se publicará en sus perfiles hasta que guarden.`, confirmLabel: "Confirmar servicio", onConfirm: () => applySuggestionDecision(i, "rejected", undefined, undefined, undefined, undefined, undefined, target.id) });
                             }} className="rounded-lg border border-[#d7e3ee] px-3 py-2 text-sm font-semibold text-[#162543] disabled:opacity-50">Ya existe → ofrecer este servicio</button>
                           </div>
                           <button onClick={() => decide(i, "approved")} disabled={busy !== null} className="inline-flex h-9 items-center gap-1 rounded-lg bg-[#16a34a] px-3 text-sm font-medium text-white hover:bg-[#15803d] disabled:opacity-50">

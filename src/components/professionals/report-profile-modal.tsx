@@ -10,6 +10,8 @@ import { createClient } from "@/lib/supabase/client";
 interface ReportProfileModalProps {
   professionalName: string;
   professionalSlug: string;
+  targetType?: "professional"|"project"|"job"|"offer"|"review";
+  targetId?: string;
   /** Qué se reporta, cuando no es el perfil: «Empleo "Técnico de redes" (id)». */
   contexto?: string;
   /** Título propio del modal, para un empleo o una oferta. */
@@ -35,7 +37,7 @@ const REASON_DEFS: { key: string; es: string }[] = [
   { key: "other", es: "Otro" },
 ];
 
-export function ReportProfileModal({ professionalName, professionalSlug, contexto, titulo, bloqueo, onClose }: ReportProfileModalProps) {
+export function ReportProfileModal({ professionalName, professionalSlug, targetType,targetId, contexto, titulo, bloqueo, onClose }: ReportProfileModalProps) {
   const t = useTranslations("report");
   const tBloqueo = useTranslations("bloqueo");
   const [reason, setReason] = useState("");
@@ -70,6 +72,7 @@ export function ReportProfileModal({ professionalName, professionalSlug, context
         body: JSON.stringify({
           professionalName,
           professionalSlug,
+          targetType,targetId,
           reason: `${contexto ? `${contexto} — ` : ""}${reasonEs}${detail.trim() ? ` — ${detail.trim()}` : ""}`,
           reporterEmail: user?.email ?? null,
         }),

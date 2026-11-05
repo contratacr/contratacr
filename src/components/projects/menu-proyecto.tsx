@@ -98,6 +98,7 @@ export function MenuProyecto({
           // Un proyecto no tiene perfil: lo que viaja es su dirección, para que
           // la cola de moderación sepa exactamente qué publicación revisar.
           professionalSlug={`proyecto-${proyectoId}`}
+          targetType="project" targetId={proyectoId}
           contexto={`Proyecto "${titulo}" (${proyectoId})`}
           titulo={t("reportProject")}
           bloqueo={{ projectId: proyectoId, onBloqueado: () => window.location.assign(window.location.pathname.replace(/\/[^/]+$/, "") || "/") }}

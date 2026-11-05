@@ -89,6 +89,7 @@ export function MenuEmpleo({
         <ReportProfileModal
           professionalName={empleadorNombre}
           professionalSlug={empleadorSlug}
+          targetType="job" targetId={empleoId}
           contexto={`Empleo "${titulo}" (${empleoId})`}
           titulo={t("reportJob")}
           bloqueo={{ slug: empleadorSlug, onBloqueado: () => window.location.assign(window.location.pathname.replace(/\/[^/]+$/, "") || "/") }}

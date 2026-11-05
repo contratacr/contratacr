@@ -54,6 +54,7 @@ const handlerRules: OwnershipRule[] = [
   { match: /^\/abrir-app$/, owner: "app-download.spec.ts" },
   { match: /^\/auth\/callback$/, owner: "product-contract.spec.ts" },
   { match: /^\/api\/admin(?:\/|$)/, owner: "admin-smoke.spec.ts" },
+  { match: /^\/api\/moderation(?:\/|$)/, owner: "admin-moderation-runtime.spec.ts" },
   { match: /^\/api\/ai-assistant(?:\/|$)/, owner: "ai-assistant.spec.ts" },
   { match: /^\/api\/account(?:\/|$)/, owner: "account-lifecycle.spec.ts" },
   { match: /^\/api\/auth(?:\/|$)/, owner: "auth-support.spec.ts" },

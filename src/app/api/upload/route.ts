@@ -1,3 +1,4 @@
+import { scanUpload } from "@/lib/moderation/files";
 import { NextRequest, NextResponse } from "next/server";
 import { validateUpload, IMAGE_KINDS, MIME_FOR, type FileKind } from "@/lib/upload-validation";
 import { enforceRateLimit } from "@/lib/rate-limit";
@@ -41,6 +42,7 @@ export async function POST(req: NextRequest) {
       allowLabel: "JPG, PNG, WEBP, AVIF, HEIC/HEIF o GIF",
     });
     if (!check.ok) return NextResponse.json({ error: check.error }, { status: 400 });
+  try { await scanUpload(buffer); } catch(e) { return NextResponse.json({error:e instanceof Error?e.message:"Análisis no disponible."},{status:422}); }
 
     if (isR2Configured()) {
       const result = await uploadR2Object({

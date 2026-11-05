@@ -260,6 +260,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
 } = {}) {
   const locale = useLocale();
   const tChat = useTranslations("directChat");
+  const tModeration=useTranslations("moderation");
   const isEn = locale === "en";
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -491,6 +492,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
   const [imagePreview, setImagePreview] = useState<DirectAttachment | null>(null);
   const imageSwipe = useImageSwipeDismiss(() => setImagePreview(null));
   const [reportOpen, setReportOpen] = useState(false);
+  const [reportMessageId,setReportMessageId]=useState<string|null>(null);
   const [reportReason, setReportReason] = useState("");
   const [reportBusy, setReportBusy] = useState(false);
   const [mobileThread, setMobileThread] = useState(!!searchParams.get("conversation"));
@@ -1132,7 +1134,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
     const response = await fetchWithSessionRetry("/api/direct-chat", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ conversationId: active.id, action: "block_and_report", reason: reportReason }),
+      body: JSON.stringify({ conversationId: active.id, action: "block_and_report", reason: reportReason,messageId:reportMessageId??undefined }),
     });
     const result = await response.json().catch(() => ({}));
     if (!response.ok) {
@@ -1142,6 +1144,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
     }
     setReportBusy(false);
     setReportOpen(false);
+    setReportMessageId(null);
     setReportReason("");
     setMessages([]);
     setActiveId(null);
@@ -1404,7 +1407,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
           {showArchived ? tChat("unarchive") : tChat("archive")}
         </button>
         {!showArchived && (
-          <button type="button" onClick={() => { setActiveId(filaDeLaHoja.id); setHojaDeFila(null); setReportOpen(true); }} className="flex w-full items-center gap-3 px-5 py-3.5 text-left text-[15px] font-bold text-red-600 transition hover:bg-red-50">
+          <button type="button" onClick={() => { setActiveId(filaDeLaHoja.id); setHojaDeFila(null);setReportMessageId(null); setReportOpen(true); }} className="flex w-full items-center gap-3 px-5 py-3.5 text-left text-[15px] font-bold text-red-600 transition hover:bg-red-50">
             <Flag className="h-5 w-5" />
             {tChat("reportAndBlock")}
           </button>
@@ -1592,7 +1595,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
             const desktopActions = [
               { label: !!unread ? (isEn ? "Mark as read" : "Marcar como leído") : (isEn ? "Mark as unread" : "Marcar como no leído"), icon: <MessageSquareText className="h-4 w-4 text-[#009FD9]" />, onClick: () => { void marcarLeida(item.id, !!unread); } },
               { label: showArchived ? tChat("unarchive") : tChat("archive"), icon: showArchived ? <ArchiveRestore className="h-4 w-4 text-[#009FD9]" /> : <Archive className="h-4 w-4 text-[#009FD9]" />, onClick: () => { void archivarFila(item.id, !showArchived); } },
-              ...(!showArchived ? [{ label: tChat("reportAndBlock"), icon: <Flag className="h-4 w-4" />, destructive: true, onClick: () => { setActiveId(item.id); setReportOpen(true); } }] : []),
+              ...(!showArchived ? [{ label: tChat("reportAndBlock"), icon: <Flag className="h-4 w-4" />, destructive: true, onClick: () => { setActiveId(item.id);setReportMessageId(null); setReportOpen(true); } }] : []),
               { label: tChat("delete"), icon: <Trash2 className="h-4 w-4" />, destructive: true, onClick: () => { if (window.confirm(tChat("confirmDelete"))) void eliminarFila(item.id); } },
             ];
             return (
@@ -2046,11 +2049,11 @@ export function DirectChatInbox({ alCambiarSubvista }: {
           <div className="w-full max-w-md rounded-3xl bg-white p-5 shadow-2xl sm:p-6">
             <div className="flex items-start justify-between gap-3">
               <div><h2 id="chat-report-title" className={CABECERA_TITULO}>{isEn ? "Report and block" : "Reportar y bloquear"}</h2><p className="mt-1 text-sm leading-5 text-[#64748b]">{isEn ? "The conversation is blocked immediately and ContrataCR receives the report for review within 24 hours." : "La conversación se bloquea inmediatamente y ContrataCR recibe el reporte para revisarlo en un máximo de 24 horas."}</p></div>
-              <button type="button" onClick={() => setReportOpen(false)} aria-label={isEn ? "Close" : "Cerrar"} className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-[#64748b] hover:bg-[#f1f5f9]"><X className="h-5 w-5" /></button>
+              <button type="button" onClick={() => {setReportOpen(false);setReportMessageId(null);}} aria-label={isEn ? "Close" : "Cerrar"} className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-[#64748b] hover:bg-[#f1f5f9]"><X className="h-5 w-5" /></button>
             </div>
             <label className="mt-5 block text-sm font-bold text-[#334155]" htmlFor="chat-report-reason">{isEn ? "What happened?" : "¿Qué ocurrió?"}</label>
             <textarea id="chat-report-reason" value={reportReason} onChange={(event) => setReportReason(event.target.value.slice(0, 1000))} rows={4} autoFocus className="mt-2 w-full resize-none rounded-2xl border border-[#d8e5ee] p-3 text-sm outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/10" placeholder={isEn ? "Describe the abusive content or conduct" : "Describe el contenido o la conducta abusiva"} />
-            <div className="mt-5 flex gap-3"><button type="button" onClick={() => setReportOpen(false)} className="flex-1 rounded-xl border border-[#d8e5ee] px-4 py-3 text-sm font-bold text-[#526277]">{isEn ? "Cancel" : "Cancelar"}</button><button type="button" disabled={reportBusy || reportReason.trim().length < 3} onClick={() => void reportAndBlockActive()} className="flex-1 rounded-xl bg-red-600 px-4 py-3 text-sm font-bold text-white disabled:opacity-50">{reportBusy ? (isEn ? "Sending..." : "Enviando...") : (isEn ? "Report and block" : "Reportar y bloquear")}</button></div>
+            <div className="mt-5 flex gap-3"><button type="button" onClick={() => {setReportOpen(false);setReportMessageId(null);}} className="flex-1 rounded-xl border border-[#d8e5ee] px-4 py-3 text-sm font-bold text-[#526277]">{isEn ? "Cancel" : "Cancelar"}</button><button type="button" disabled={reportBusy || reportReason.trim().length < 3} onClick={() => void reportAndBlockActive()} className="flex-1 rounded-xl bg-red-600 px-4 py-3 text-sm font-bold text-white disabled:opacity-50">{reportBusy ? (isEn ? "Sending..." : "Enviando...") : (isEn ? "Report and block" : "Reportar y bloquear")}</button></div>
           </div>
         </div>,
         document.body,
@@ -2142,6 +2145,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
                 <Copy className="h-4 w-4 text-[#526277]" />{tChat("copy")}
               </button>
             )}
+            {!mensajeDelMenu.deleted_at && !menuMensaje.mio && <button type="button" role="menuitem" onClick={()=>{setReportMessageId(mensajeDelMenu.id);setMenuMensaje(null);setReportOpen(true);}} className="flex w-full items-center gap-3 border-t border-[#eef2f6] px-4 py-3 text-left text-sm font-bold text-red-600"><Flag className="h-4 w-4"/>{tModeration("reportMessage")}</button>}
             {puedeEditarDelMenu && (
               <button type="button" role="menuitem" onClick={() => empezarEdicion(mensajeDelMenu)} className="flex w-full items-center gap-3 border-t border-[#eef2f6] px-4 py-3 text-left text-sm font-bold text-[#162543] active:bg-[#f2f8fb]">
                 <Pencil className="h-4 w-4 text-[#526277]" />{tChat("editMessage")}

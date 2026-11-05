@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { quarantinedPaths } from "@/lib/moderation/files";
 
 /** Bucket privado de los adjuntos de soporte (migración 227). */
 export const BUCKET_SOPORTE = "support-attachments";
@@ -31,7 +32,8 @@ export function adjuntosValidos(valor: unknown, ticketId: string): AdjuntoDeSopo
 export async function firmarAdjuntos<T extends { attachments?: AdjuntoDeSoporte[] | null }>(db: SupabaseClient, mensajes: T[]): Promise<T[]> {
   const rutas = mensajes.flatMap((m) => (m.attachments ?? []).map((a) => a.path));
   if (!rutas.length) return mensajes;
-  const { data } = await db.storage.from(BUCKET_SOPORTE).createSignedUrls(rutas, 60 * 60);
+  const held=await quarantinedPaths(db,BUCKET_SOPORTE,rutas);
+  const { data } = await db.storage.from(BUCKET_SOPORTE).createSignedUrls(rutas.filter(p=>!held.has(p)), 60 * 60);
   const porRuta = new Map((data ?? []).map((f) => [f.path, f.signedUrl]));
   return mensajes.map((m) => (m.attachments?.length
     ? { ...m, attachments: m.attachments.map((a) => ({ ...a, url: porRuta.get(a.path) ?? null })) }

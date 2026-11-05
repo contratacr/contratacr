@@ -1,4 +1,15 @@
 {
+  "moderation": {
+    "reportReview": "Reportar reseña",
+    "reportMessage": "Reportar mensaje y bloquear",
+    "decisionsTitle": "Decisiones de moderación",
+    "loading": "Cargando…",
+    "loadError": "No se pudieron cargar las decisiones de moderación.",
+    "appealPrompt": "Explica por qué debería revisarse esta decisión (15–1000 caracteres).",
+    "appealError": "No se pudo pedir revisión. Contacta soporte.",
+    "requestReview": "Solicitar revisión",
+    "followSupport": "Consulta soporte para dar seguimiento al caso."
+  },
   "panelStatistics": {
     "viewProject": "Ver proyecto",
     "viewJob": "Ver empleo",
@@ -3436,7 +3447,7 @@
   },
   "serviceRequests": {
     "title": "Tu servicio ya está disponible",
-    "body": "«{service}» ya está disponible. Completá la información para agregarlo a tu perfil.",
+    "body": "“{service}” ya está disponible. Completá la información para agregarlo a tu perfil.",
     "complete": "Completar servicio",
     "later": "Ahora no",
     "error": "No se pudo guardar. Intentá nuevamente.",

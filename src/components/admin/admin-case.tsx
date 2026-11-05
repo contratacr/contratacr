@@ -70,13 +70,15 @@ export function AdminCase({ providerId }: { providerId: string }) {
 
   // Moderation: ban/unban a professional or remove a fake/inappropriate caso de éxito.
   async function moderate(action: "ban" | "unban" | "remove_photo", opts: { reason?: string; url?: string } = {}) {
+    const reason=opts.reason?.trim() || window.prompt("Motivo de moderación (mínimo 5 caracteres):")?.trim();
+    if(!reason || reason.length<5)return;
     setBusy(true);
     setError(null);
     try {
       const res = await fetch(`/api/admin/providers/${providerId}/moderate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, ...opts }),
+        body: JSON.stringify({ action, ...opts,reason }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Error");

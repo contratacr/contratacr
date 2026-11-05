@@ -32,6 +32,7 @@ const handlerRules = [
   [/^\/abrir-app$/, "app-download.spec.ts"],
   [/^\/auth\/callback$/, "product-contract.spec.ts"],
   [/^\/api\/admin(?:\/|$)/, "admin-smoke.spec.ts"],
+  [/^\/api\/moderation(?:\/|$)/, "admin-moderation-runtime.spec.ts"],
   [/^\/api\/ai-assistant(?:\/|$)/, "ai-assistant.spec.ts"],
   [/^\/api\/account(?:\/|$)/, "account-lifecycle.spec.ts"],
   [/^\/api\/auth(?:\/|$)/, "auth-support.spec.ts"],

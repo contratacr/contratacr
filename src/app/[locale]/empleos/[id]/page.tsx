@@ -1,5 +1,6 @@
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { notFound } from "next/navigation";
+import { contentIsHeld } from "@/lib/moderation/visibility";
 import { claveDeTramo, rangoDePrefijo } from "@/lib/marketplace-url";
 import { getTranslations } from "next-intl/server";
 import { ArrowLeft } from "lucide-react";
@@ -92,7 +93,7 @@ export default async function JobDetailRedirect({ params, searchParams }: Props)
   const from = (await searchParams)?.from;
   if (!hasSupabaseServerConfig()) notFound();
   const id = await idDelTramo(tramo);
-  if (!id) notFound();
+  if (!id || await contentIsHeld("job",id)) notFound();
   const supabase = await createClient();
   const { data: publicado } = await supabase
     .from("job_posts")

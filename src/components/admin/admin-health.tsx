@@ -1,0 +1,11 @@
+"use client";
+import { useCallback,useEffect,useState } from "react";
+import { Link } from "@/i18n/navigation";
+import { AdminPermissions } from "@/components/admin/admin-permissions";
+type Health={checkedAt:string;rows:Array<{key:string;label:string;count:number|null;error:boolean}>;scannerConfigured:boolean;note:string};
+export function AdminHealth(){
+ const [data,setData]=useState<Health|null>(null),[error,setError]=useState(""),[busy,setBusy]=useState(false);
+ const load=useCallback(async()=>{setBusy(true);setError("");try{const r=await fetch("/api/admin/salud",{cache:"no-store"});const d=await r.json();if(!r.ok)throw Error(d.error);setData(d);}catch(e){setError(e instanceof Error?e.message:"No se pudo cargar.");}finally{setBusy(false);}},[]);
+ useEffect(()=>{let alive=true;queueMicrotask(()=>{if(alive)void load();});return ()=>{alive=false;};},[load]);
+ return <div className="space-y-4"><h1 className="text-xl font-extrabold">Salud operativa</h1><p className="text-sm">Estado de entregas, errores y tareas pendientes. Un dato no disponible no significa cero incidencias.</p><button className="rounded-xl border p-3" disabled={busy} onClick={()=>void load()}>{busy?"Consultando…":"Actualizar"}</button>{error&&<p role="alert">{error}</p>}{data&&<><p className="text-xs">Consulta: {new Date(data.checkedAt).toLocaleString("es-CR")}</p><div className="grid gap-3 sm:grid-cols-2">{data.rows.map(r=><article key={r.key} className="rounded-xl border p-4"><h2 className="font-bold">{r.label}</h2><p className="mt-2 text-2xl">{r.error?"No disponible":r.count}</p>{r.error&&<p role="status" className="text-sm">Revisar conexión, permisos o migraciones; no se pudo comprobar.</p>}</article>)}</div><p className="text-sm">{data.note}</p><p className="text-sm">Análisis antivirus: {data.scannerConfigured?"Configurado; esta vista no certifica su disponibilidad":"Pendiente de configurar un servicio privado. La validación de formato sigue activa; no equivale a un análisis antivirus."}</p></>}<nav className="flex flex-wrap gap-4 text-sm underline"><Link href="/admin/cuentas">Revisar eliminaciones</Link><Link href="/admin/reportes">Atender reportes</Link><Link href="/admin/soporte">Atender soporte</Link></nav><AdminPermissions/></div>;
+}

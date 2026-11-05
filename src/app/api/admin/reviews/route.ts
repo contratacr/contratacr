@@ -1,10 +1,11 @@
 import { readAllAdminRows, readAdminRowsByIds } from "@/lib/admin/read-all-rows";
+import { moderationAccess } from "@/lib/moderation/admin";
 import { NextResponse } from "next/server";
 import { getCategoryLabel } from "@/lib/data/categories";
-import { getApiAdmin } from "@/lib/auth/admin";
+import { getModerationAdmin as getApiAdmin } from "@/lib/moderation/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { validateReviewText } from "@/lib/moderation/reviews";
-import { auditUserAction } from "@/lib/audit/user-action";
+import { invalidateProfessionalCache } from "@/lib/cache/professional-revision";
 
 type ReviewRow = {
   id: string;
@@ -140,79 +141,14 @@ export async function GET(req: Request) {
   });
 }
 
-async function parseModerationRequest(req: Request) {
-  const body = await req.json().catch(() => null) as { id?: unknown; action?: unknown; reason?: unknown } | null;
-  const id = typeof body?.id === "string" ? body.id.trim() : "";
-  const reason = typeof body?.reason === "string" ? body.reason.trim() : "";
-  return { id, action: body?.action, reason };
+export async function PATCH(req:Request){
+ const access=await moderationAccess();if(!access)return NextResponse.json({error:"No autorizado"},{status:403});
+ if(req.headers.get("origin")!==new URL(req.url).origin)return NextResponse.json({error:"Origen inválido"},{status:403});
+ const p=await req.json().catch(()=>({}));
+ if(!["hide","restore"].includes(p.action)||typeof p.reason!=="string"||p.reason.trim().length<5)return NextResponse.json({error:"Indica la reseña, acción y motivo."},{status:400});
+ const {error}=await access.db.rpc("moderate_content",{p_kind:"review",p_id:p.id,p_action:p.action,p_reason:p.reason,p_report:null,p_days:7});
+ if(error)return NextResponse.json({error:"No se guardó la moderación y su auditoría."},{status:409});
+ await invalidateProfessionalCache();
+ return NextResponse.json({ok:true});
 }
-
-export async function PATCH(req: Request) {
-  const admin = await getApiAdmin();
-  if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
-
-  const { id, action, reason } = await parseModerationRequest(req);
-  if (!id || (action !== "hide" && action !== "restore") || reason.length < 3) {
-    return NextResponse.json({ error: "Indica la reseña, la acción y un motivo." }, { status: 400 });
-  }
-
-  const db = createAdminClient();
-  const { data: before, error: readError } = await db
-    .from("reviews")
-    .select("id, client_id, professional_id, moderation_status, moderation_reason")
-    .eq("id", id)
-    .maybeSingle();
-  if (readError) return NextResponse.json({ error: readError.message }, { status: 500 });
-  if (!before) return NextResponse.json({ error: "Reseña no encontrada." }, { status: 404 });
-
-  const after = {
-    moderation_status: action === "hide" ? "hidden" : "published",
-    moderation_reason: reason,
-    moderated_at: new Date().toISOString(),
-    moderated_by: admin.id,
-  };
-  const { error } = await db.from("reviews").update(after).eq("id", id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  await auditUserAction(db, req, {
-    actorUserId: admin.id,
-    actorRole: "admin",
-    action: action === "hide" ? "review.hide" : "review.restore",
-    entityTable: "reviews",
-    entityId: id,
-    entityOwnerUserId: before.client_id,
-    beforeData: before,
-    afterData: after,
-  });
-  return NextResponse.json({ ok: true });
-}
-
-export async function DELETE(req: Request) {
-  const admin = await getApiAdmin();
-  if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
-
-  const { id, reason } = await parseModerationRequest(req);
-  if (!id || reason.length < 3) {
-    return NextResponse.json({ error: "Indica la reseña y el motivo de eliminación." }, { status: 400 });
-  }
-
-  const db = createAdminClient();
-  const { data: before, error: readError } = await db.from("reviews").select("*").eq("id", id).maybeSingle();
-  if (readError) return NextResponse.json({ error: readError.message }, { status: 500 });
-  if (!before) return NextResponse.json({ error: "Reseña no encontrada." }, { status: 404 });
-
-  const { error } = await db.from("reviews").delete().eq("id", id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  await auditUserAction(db, req, {
-    actorUserId: admin.id,
-    actorRole: "admin",
-    action: "review.delete",
-    entityTable: "reviews",
-    entityId: id,
-    entityOwnerUserId: before.client_id,
-    beforeData: before,
-    afterData: { deletion_reason: reason },
-  });
-  return NextResponse.json({ ok: true });
-}
+export async function DELETE(){if(!(await moderationAccess()))return NextResponse.json({error:"No autorizado"},{status:403});return NextResponse.json({error:"Oculta la reseña con un motivo para conservar su historial."},{status:405});}
