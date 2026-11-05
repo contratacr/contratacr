@@ -60,11 +60,16 @@ test('reports identify a client, require a reason and preserve the case on resol
  await expect(page.getByRole('heading',{name:/Cliente reportado QA/})).toBeVisible();
  await page.getByRole('button',{name:'Atender y ver historial'}).click();
  await expect(page.getByRole('button',{name:'Resolver con motivo'})).toBeDisabled();
- await page.getByLabel('Motivo (visible al afectado si se registra como decisión)').fill('Se revisó la evidencia y se atendió el caso.');
+ const reason=page.getByRole('textbox',{name:'Motivo (visible al afectado si se registra como decisión)',exact:true});
+ await reason.fill('Se revisó la evidencia y se atendió el caso.');
  await page.getByRole('button',{name:'Resolver con motivo'}).click();
  expect(calls).toHaveLength(1);expect(calls[0]).toMatchObject({id:rid,status:'resolved',priority:'high'});
  await expect(page.getByRole('button',{name:/^Eliminar$/})).toHaveCount(0);
  await expect(page.getByRole('link',{name:'Revisión restringida del chat'})).toHaveAttribute('href',`/admin/conversaciones?conversation=${cid}&report=${rid}`);
+ await expect(page.getByRole('button',{name:'Guardar acción y auditoría',exact:true})).toBeEnabled();
+ await reason.fill('Nuevo motivo para una revisión posterior.');
+ await expect(reason).toHaveValue('Nuevo motivo para una revisión posterior.');
+ expect(calls).toHaveLength(1);
 });
 
 test('operational health distinguishes unavailable from zero and never offers a push replay',async({page})=>{
