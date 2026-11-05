@@ -6716,6 +6716,7 @@
         "tests/e2e/verification-badges.spec.ts"
       ],
       "directReferences": [
+        "tests/e2e/admin-moderation-runtime.spec.ts",
         "tests/e2e/hacienda-verification-runtime.spec.ts"
       ],
       "evidence": "Referencia estática detectada; verificar assertions",
@@ -24233,6 +24234,10 @@
         },
         {
           "line": 78,
+          "title": "'@contract verification uploads never save a file or case after a scanner rejection'"
+        },
+        {
+          "line": 93,
           "title": "'@contract operational health distinguishes an unavailable source from a verified zero without exposing records'"
         }
       ]
