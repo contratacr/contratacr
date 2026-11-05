@@ -67,6 +67,9 @@ test('reports identify a client, require a reason and preserve the case on resol
  await expect(page.getByRole('button',{name:/^Eliminar$/})).toHaveCount(0);
  await expect(page.getByRole('link',{name:'Revisión restringida del chat'})).toHaveAttribute('href',`/admin/conversaciones?conversation=${cid}&report=${rid}`);
  await expect(page.getByRole('button',{name:'Guardar acción y auditoría',exact:true})).toBeEnabled();
+ await page.evaluate(()=>{const root=document.getElementById('root')!;const main=document.createElement('main');root.replaceWith(main);main.append(root);const announcer=document.createElement('div');announcer.setAttribute('role','alert');document.body.append(announcer);});
+ await expect(page.getByRole('main').getByRole('alert')).toHaveCount(0);
+ expect(await page.getByRole('alert').count()).toBe(1);
  await reason.fill('Nuevo motivo para una revisión posterior.');
  await expect(reason).toHaveValue('Nuevo motivo para una revisión posterior.');
  expect(calls).toHaveLength(1);

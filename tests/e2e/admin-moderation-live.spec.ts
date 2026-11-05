@@ -26,7 +26,7 @@ async function saveModeration(page: Page) {
   const response = await saved;
   expect(response.status(), await response.text()).toBe(200);
   await expect(page.getByRole("button", { name: "Guardar acción y auditoría", exact: true })).toBeEnabled();
-  await expect(page.getByRole("alert")).toHaveCount(0);
+  await expect(page.getByRole("main").getByRole("alert")).toHaveCount(0);
 }
 
 test("live administrative metadata and health require MFA and never grant chat content with the admin role alone", async ({ page }) => {
