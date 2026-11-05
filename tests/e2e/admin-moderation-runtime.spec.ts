@@ -75,6 +75,21 @@ test('@contract staff scopes fail closed on denied permissions and database erro
  allowed=true;expect(await box.exports.getModerationAdmin()).toEqual({id:'admin'});
  failed=true;expect(await box.exports.getModerationAdmin()).toBeNull();
 });
+test('@contract verification uploads never save a file or case after a scanner rejection',async()=>{
+ let scans=0;
+ const db={from:(table:string)=>{const q:Record<string,unknown>={};for(const method of ['select','eq','in','order','limit','gte'])q[method]=()=>q;
+  q.maybeSingle=async()=>({data:table==='professionals'?{id:'qa',verification_status:'pending',is_verified:false,profiles:{cedula:'199999999',full_name:'Synthetic QA',email:'qa@example.test'}}:null,error:null});
+  q.upsert=q.update=q.insert=()=>{throw Error('No case or record may be written before a clean scan');};return q;},storage:{from:()=>{throw Error('No file may be uploaded before a clean scan');}}};
+ const route=load('src/app/api/verification/documents/route.ts',{
+  '@/lib/verification/review-scope':{identityReviewBoundary:async()=>null},'@/lib/verification/review-eligibility':{canRequestIdentityReview:()=>true},
+  '@/lib/supabase/server':{createClient:async()=>({auth:{getUser:async()=>({data:{user:{id:'qa',email:'qa@example.test'}}})}})},'@/lib/supabase/admin':{createAdminClient:()=>db},
+  '@/lib/rate-limit':{enforceRateLimit:()=>null},'@/lib/cedula':{cleanId:(v:string)=>v,detectIdType:()=> 'fisica'},'@/lib/upload-validation':{DOC_KINDS:[],IMAGE_KINDS:['png'],MIME_FOR:{png:'image/png'},validateUpload:()=>({ok:true,kind:'png'})},
+  '@/lib/support/adjuntos':{BUCKET_SOPORTE:'support-attachments'},'@/lib/verification/documents':{documentCaseId:()=> 'case'},'@/lib/moderation/files':{scanUpload:async()=>{scans++;throw Error('Scanner rejected file');}}
+ },{File,Buffer});
+ const form=new FormData();form.set('identity',new File([new Uint8Array([1,2,3])],'synthetic.png',{type:'image/png'}));
+ const response=await route.POST(new Request('https://example.test/api/verification/documents',{method:'POST',body:form}));
+ expect(response.status).toBe(503);expect(scans).toBe(1);expect(await response.json()).not.toHaveProperty('ticketId');
+});
 test('@contract operational health distinguishes an unavailable source from a verified zero without exposing records',async()=>{
  const queried:string[]=[];
  const db={from:(table:string)=>{queried.push(table);const q:Record<string,unknown>={};for(const method of ['select','eq','in','lt','gte','or'])q[method]=()=>q;

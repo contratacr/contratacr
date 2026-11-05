@@ -201,6 +201,12 @@ for (const kind of ["company", "person", "dimex"] as const) test(`private verifi
     expect((await api.get(`/api/admin/providers/${pro.id}`)).status()).toBe(403);
     await page.goto("/admin");
     await completeAdminMfa(page, email);
+    // MFA plus the admin role still cannot read identity documents without
+    // the explicit identity-review scope. The grant belongs to this isolated
+    // fixture only; promoting a real account never grants it automatically.
+    expect((await api.get(`/api/admin/providers/${pro.id}`)).status()).toBe(403);
+    const {error: permissionError}=await db.from("admin_staff_permissions").upsert({user_id:pro.profile_id,moderation:false,support:false,identity_review:true});
+    if(permissionError)throw permissionError;
     const caseResponse = await api.get(`/api/admin/providers/${pro.id}`);
     expect(caseResponse.status()).toBe(200);
     const adminCase = await caseResponse.json();
@@ -211,6 +217,9 @@ for (const kind of ["company", "person", "dimex"] as const) test(`private verifi
     await page.getByText("Documentos recibidos", {exact: true}).scrollIntoViewIfNeeded();
     await page.screenshot({path: capturePath(`${kind}-admin-live-${test.info().project.name}.png`), fullPage: true});
     await page.getByText("Documentos recibidos", {exact: true}).locator("..").screenshot({path: capturePath(`${kind}-admin-detail-${test.info().project.name}.png`)});
+    const {error: revokeError}=await db.from("admin_staff_permissions").delete().eq("user_id",pro.profile_id);
+    if(revokeError)throw revokeError;
+    expect((await api.get(`/api/admin/providers/${pro.id}`)).status()).toBe(403);
     // Only a private case is created; submission never creates outgoing mail.
     const { count: deliveries } = await db.from("email_deliveries").select("id", { count: "exact", head: true }).eq("professional_id", pro.id).gte("created_at", reviewTime);
     expect(deliveries).toBe(0);

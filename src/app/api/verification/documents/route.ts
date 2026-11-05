@@ -9,6 +9,7 @@ import { cleanId, detectIdType, isValidId } from "@/lib/cedula";
 import { DOC_KINDS, IMAGE_KINDS, MIME_FOR, validateUpload } from "@/lib/upload-validation";
 import { BUCKET_SOPORTE, type AdjuntoDeSoporte } from "@/lib/support/adjuntos";
 import { documentCaseId } from "@/lib/verification/documents";
+import { scanUpload } from "@/lib/moderation/files";
 
 export const runtime = "nodejs";
 
@@ -85,6 +86,7 @@ export async function POST(req: Request) {
       const bytes = Buffer.from(await file.arrayBuffer());
       const validation = validateUpload(bytes, { allow: [...IMAGE_KINDS, ...DOC_KINDS], maxBytes: 4 * 1024 * 1024, allowLabel: "Foto o PDF" });
       if (!validation.ok) return NextResponse.json({ error: validation.error }, { status: 400 });
+      await scanUpload(bytes);
       checked.push({ key, file, bytes, mime: MIME_FOR[validation.kind] });
     }
     // Reserve once without overwriting an administrator's handling on a retry.
