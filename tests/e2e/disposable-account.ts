@@ -55,6 +55,10 @@ export async function createDisposableAccount(options: {
       disabled_at: null,
     }, { onConflict: "id" });
     if (profileError) throw profileError;
+    if(options.admin){
+      const {error:permissionError}=await admin.from("admin_staff_permissions").upsert({user_id:id,moderation:true,support:true,identity_review:true});
+      if(permissionError)throw permissionError;
+    }
 
     let professionalId: string | undefined;
     let businessName: string | undefined;

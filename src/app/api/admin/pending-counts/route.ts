@@ -35,6 +35,9 @@ export async function GET() {
   if (verificacionPros.error || pendingClientProfiles.error || proProfiles.error) {
     return NextResponse.json({ error: "No se pudo contar la cola de verificación." }, { status: 500 });
   }
+  if(reportes.error||categorias.error||supportOpen.error||supportAwaiting.error||accountDeletions.error) {
+    return NextResponse.json({error:"No se pudieron comprobar todas las colas pendientes."},{status:503});
+  }
 
   const proProfileIds = new Set((proProfiles.data ?? []).map((row) => row.profile_id).filter(Boolean));
   const clientOnlyPending = (pendingClientProfiles.data ?? []).filter((row) => !proProfileIds.has(row.id)).length;

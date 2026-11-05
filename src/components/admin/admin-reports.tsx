@@ -1,223 +1,79 @@
 "use client";
-
-import { useEffect, useState, useCallback } from "react";
-import { Flag, ExternalLink, Check, RotateCcw, Loader2, Trash2, Ban, ShieldCheck } from "lucide-react";
+import { useCallback,useEffect,useState } from "react";
 import { Link } from "@/i18n/navigation";
-import { useAdminAutoRefresh } from "@/hooks/use-admin-auto-refresh";
-
-type Report = {
-  id: string;
-  professional_id: string | null;
-  professional_slug: string | null;
-  professional_name: string | null;
-  reason: string;
-  reporter_email: string | null;
-  status: "open" | "resolved";
-  created_at: string;
-  professional_banned: boolean;
-};
-
-const FILTERS = [
-  { value: "open", label: "Abiertos" },
-  { value: "resolved", label: "Resueltos" },
-  { value: "all", label: "Todos" },
-];
-
-export function AdminReports() {
-  const [status, setStatus] = useState("open");
-  const [reports, setReports] = useState<Report[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [busyId, setBusyId] = useState<string | null>(null);
-
-  const load = useCallback(async (s: string, silent = false) => {
-    if (!silent) setLoading(true);
-    try {
-      const res = await fetch(`/api/admin/reports?status=${s}`);
-      const data = await res.json();
-      setReports(data.reports ?? []);
-    } catch {
-      setReports([]);
-    } finally {
-      if (!silent) setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { load(status); }, [status, load]);
-  useAdminAutoRefresh(() => {
-    if (busyId) return;
-    void load(status, true);
-  }, [busyId, load, status]);
-
-  async function setReportStatus(id: string, next: "open" | "resolved") {
-    setBusyId(id);
-    await fetch("/api/admin/reports", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, status: next }),
-    });
-    setBusyId(null);
-    load(status);
-  }
-
-  // Suspender desde el reporte mismo: el motivo del reporte es el motivo de la
-  // suspensión, y leerlo en una pantalla y actuar en otra era el paso que hacía
-  // que un reporte se quedara «resuelto» sin que nadie hiciera nada. Usa el
-  // mismo endpoint de moderación que el caso del proveedor, así que la acción
-  // queda en el historial con quién la hizo.
-  async function suspender(r: Report, suspender: boolean) {
-    if (!r.professional_id) return;
-    const motivo = suspender
-      ? window.prompt("Motivo de la suspensión (lo verá el profesional en su panel):", r.reason.slice(0, 200))
-      : window.prompt("Motivo para quitar la suspensión (opcional):", "");
-    if (suspender && !motivo?.trim()) return;
-    if (!suspender && motivo === null) return;
-    setBusyId(r.id);
-    try {
-      const res = await fetch(`/api/admin/providers/${r.professional_id}/moderate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: suspender ? "ban" : "unban", reason: motivo ?? "" }),
-      });
-      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "No se pudo aplicar la acción.");
-      setReports((current) => current.map((item) => (item.professional_id === r.professional_id ? { ...item, professional_banned: suspender } : item)));
-    } catch (error) {
-      window.alert(error instanceof Error ? error.message : "No se pudo aplicar la acción.");
-    } finally {
-      setBusyId(null);
-    }
-  }
-
-  async function removeReport(id: string) {
-    if (!window.confirm("Esta eliminación es permanente. ¿Deseas eliminar el reporte?")) return;
-    setBusyId(id);
-    try {
-      const res = await fetch(`/api/admin/reports?id=${encodeURIComponent(id)}`, { method: "DELETE" });
-      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "No se pudo eliminar.");
-      setReports((current) => current.filter((item) => item.id !== id));
-    } catch (error) {
-      window.alert(error instanceof Error ? error.message : "No se pudo eliminar.");
-    } finally {
-      setBusyId(null);
-    }
-  }
-
-  return (
-    <div>
-      <div className="flex items-center gap-2 mb-5">
-        <Flag className="h-5 w-5 text-[#dc2626]" />
-        <h1 className="text-xl font-bold text-[#162543]">Reportes y moderación</h1>
-      </div>
-
-      <div className="flex flex-wrap gap-2 mb-4">
-        {FILTERS.map((f) => (
-          <button
-            key={f.value}
-            onClick={() => setStatus(f.value)}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
-              status === f.value
-                ? "bg-[#009FD9] text-white border-[#009FD9]"
-                : "bg-white text-[#374151] border-[#e5e7eb] hover:border-[#009FD9]"
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="bg-white rounded-xl border border-[#e5e7eb] overflow-hidden">
-        {loading ? (
-          <div className="py-16 flex justify-center">
-            <Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" />
-          </div>
-        ) : reports.length === 0 ? (
-          <div className="py-16 text-center text-sm text-[#6b7280]">No hay reportes en esta vista.</div>
-        ) : (
-          <ul className="divide-y divide-[#eef2f6]">
-            {reports.map((r) => (
-              <li key={r.id} className="p-4">
-                <div className="flex items-start justify-between gap-4 flex-wrap">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-medium text-[#162543] text-sm">{r.professional_name ?? "Perfil"}</p>
-                      <span className={`text-xs px-2 py-0.5 rounded-md ${r.status === "open" ? "bg-[#fef3c7] text-[#b45309]" : "bg-[#dcfce7] text-[#15803d]"}`}>
-                        {r.status === "open" ? "Abierto" : "Resuelto"}
-                      </span>
-                      {r.professional_banned && (
-                        <span className="text-xs px-2 py-0.5 rounded-md bg-[#fee2e2] text-[#b91c1c]">Suspendido</span>
-                      )}
-                      <span className="text-xs text-[#68778d]">{new Date(r.created_at).toLocaleString("es-CR")}</span>
-                    </div>
-                    <p className="text-sm text-[#374151] mt-1 whitespace-pre-wrap">{r.reason}</p>
-                    <p className="text-xs text-[#68778d] mt-1">Reportado por: {r.reporter_email ?? "Anónimo"}</p>
-                    <div className="flex items-center gap-3 mt-2">
-                      {r.professional_slug && (
-                        <a href={`/profesionales/${r.professional_slug}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-[#009FD9] hover:underline">
-                          Ver perfil <ExternalLink className="h-3 w-3" />
-                        </a>
-                      )}
-                      {r.professional_id && (
-                        <>
-                          <Link href={`/admin/proveedores/${r.professional_id}`} className="text-xs text-[#009FD9] hover:underline">
-                            Abrir caso (moderar)
-                          </Link>
-                          <Link href={`/admin/usuarios/${r.professional_id}`} className="text-xs text-[#009FD9] hover:underline">
-                            Ver perfil del usuario
-                          </Link>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex shrink-0 flex-col items-end gap-2">
-                    {r.professional_id && (
-                      r.professional_banned ? (
-                        <button
-                          onClick={() => void suspender(r, false)}
-                          disabled={busyId === r.id}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-[#e5e7eb] px-3 py-2 text-xs font-semibold text-[#15803d] hover:bg-[#f0fdf4] disabled:opacity-60"
-                        >
-                          <ShieldCheck className="h-3.5 w-3.5" /> Quitar suspensión
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => void suspender(r, true)}
-                          disabled={busyId === r.id}
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-[#b91c1c] px-3 py-2 text-xs font-semibold text-white hover:bg-[#991b1b] disabled:opacity-60"
-                        >
-                          <Ban className="h-3.5 w-3.5" /> Suspender profesional
-                        </button>
-                      )
-                    )}
-                    <button
-                      onClick={() => void removeReport(r.id)}
-                      disabled={busyId === r.id}
-                      className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-[#b91c1c] hover:bg-[#fef2f2] disabled:opacity-60"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" /> Eliminar
-                    </button>
-                    {r.status === "open" ? (
-                      <button
-                        onClick={() => setReportStatus(r.id, "resolved")}
-                        disabled={busyId === r.id}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-[#16a34a] hover:bg-[#15803d] text-white text-xs font-semibold px-3 py-2 disabled:opacity-60"
-                      >
-                        <Check className="h-3.5 w-3.5" /> Marcar resuelto
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => setReportStatus(r.id, "open")}
-                        disabled={busyId === r.id}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-[#e5e7eb] text-[#374151] text-xs font-medium px-3 py-2 disabled:opacity-60"
-                      >
-                        <RotateCcw className="h-3.5 w-3.5" /> Reabrir
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </div>
-  );
+type Report={id:string;subject_name:string;subject_user_id:string|null;professional_id:string|null;target_type:string|null;target_id:string|null;conversation_id:string|null;reason:string;reporter_name:string|null;status:"open"|"resolved";priority:"normal"|"high"|"urgent";assigned_name:string|null;created_at:string;decision_reason:string|null;appeal_reason:string|null};
+const box="rounded-xl border border-slate-300 bg-white p-3 text-sm";
+const kindLabel:Record<string,string>={project:"Proyecto",job:"Empleo",offer:"Promoción",professional:"Profesional",review:"Reseña",account:"Cuenta"};
+export function AdminReports(){
+ const [rows,setRows]=useState<Report[]>([]),[error,setError]=useState(""),[loading,setLoading]=useState(true);
+ const [status,setStatus]=useState("open"),[priority,setPriority]=useState(""),[offset,setOffset]=useState(0),[total,setTotal]=useState(0),[busy,setBusy]=useState(false);
+ const [selected,setSelected]=useState<Report|null>(null),[reason,setReason]=useState(""),[action,setAction]=useState("hide"),[targetKind,setTargetKind]=useState("professional"),[targetId,setTargetId]=useState(""),[reportId,setReportId]=useState(""),[days,setDays]=useState(7);
+ const [history,setHistory]=useState<Array<{id:string;actor_id:string;action:string;reason:string;created_at:string}>>([]);
+ const [path,setPath]=useState("");
+ const [photo,setPhoto]=useState("");
+ useEffect(()=>{const q=new URLSearchParams(window.location.search),kind=q.get("targetType"),id=q.get("targetId");if(kind&&id&&kind in kindLabel)queueMicrotask(()=>{setTargetKind(kind);setTargetId(id);});},[]);
+ const [signals,setSignals]=useState<Array<{kind:string;id:string;reason:string;total:number}>>([]);
+ async function loadSignals(){try{const r=await fetch("/api/admin/moderacion?signals=1",{cache:"no-store"});const d=await r.json();if(!r.ok)throw Error(d.error);setSignals(d.rows);}catch(e){setError(e instanceof Error?e.message:"No se pudieron cargar señales.");}}
+ const load=useCallback(async()=>{
+  setLoading(true);setError("");
+  try{const r=await fetch(`/api/admin/reports?status=${status}&priority=${priority}&offset=${offset}`,{cache:"no-store"});const d=await r.json();if(!r.ok)throw Error(d.error);setRows(d.reports);setTotal(d.total);}
+  catch(e){setError(e instanceof Error?e.message:"No se pudo cargar la cola.");}
+  finally{setLoading(false);}
+ },[status,priority,offset]);
+ useEffect(()=>{let alive=true;queueMicrotask(()=>{if(alive)void load();});return ()=>{alive=false;};},[load]);
+ async function request(url:string,method:string,body:unknown){
+  setBusy(true);setError("");
+  try{const r=await fetch(url,{method,headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});const d=await r.json();if(!r.ok)throw Error(d.error||"No se pudo guardar.");await load();return true;}
+  catch(e){setError(e instanceof Error?e.message:"No se pudo guardar.");return false;}
+  finally{setBusy(false);}
+ }
+ async function inspect(r:Report){
+  setSelected(r);setReportId(r.id);setReason("");setHistory([]);setPath("");
+  setTargetKind(r.target_type|| (r.professional_id?"professional":"account"));setTargetId(r.target_id||r.professional_id||r.subject_user_id||"");setAction("hide");
+  const response=await fetch(`/api/admin/moderacion?id=${encodeURIComponent(r.target_id||r.professional_id||r.subject_user_id||r.id)}`,{cache:"no-store"});
+  if(response.ok)setHistory((await response.json()).rows);
+ }
+ return <div className="space-y-4">
+  <h1 className="text-xl font-extrabold">Reportes y moderación</h1>
+  <p className="text-sm text-slate-600">Prioriza riesgos, verifica evidencia y registra una decisión proporcional. Reportar, recibir varios reportes o tardar en contestar no demuestran una infracción. No copies mensajes privados en los motivos.</p>
+  <div className="flex flex-wrap gap-3">
+   <label>Estado <select className={box} value={status} onChange={e=>{setStatus(e.target.value);setOffset(0);}}><option value="open">Abiertos</option><option value="resolved">Resueltos</option><option value="all">Todos</option></select></label>
+   <label>Prioridad <select className={box} value={priority} onChange={e=>{setPriority(e.target.value);setOffset(0);}}><option value="">Todas</option><option value="urgent">Urgente</option><option value="high">Alta</option><option value="normal">Normal</option></select></label>
+   <button className={box} onClick={()=>void load()}>Actualizar</button>
+  </div>
+  {error&&<p role="alert">{error}</p>}
+  <button className={box} onClick={()=>void loadSignals()}>Consultar señales de spam o reincidencia</button>
+  {signals.map(s=><article className="rounded-xl border p-3 text-sm" key={`${s.kind}-${s.id}`}><p>{s.reason} · {s.total} registros. Es una señal para revisar, no una prueba de abuso.</p><button className={box} onClick={()=>{setSelected(null);setTargetKind(s.kind);setTargetId(s.id);setReportId("");setReason("");setHistory([]);}}>Revisar contenido identificado</button></article>)}
+  {loading?<p role="status">Cargando casos…</p>:<><p>{total} casos · ordenados del más antiguo al más reciente</p>{!rows.length&&<p>No hay casos en esta vista.</p>}{rows.map(r=><article key={r.id} className="space-y-2 rounded-xl border p-4">
+   <h2 className="font-bold">{r.subject_name} · {kindLabel[r.target_type||""]||"Cuenta o contenido"}</h2>
+   <p className="text-sm">{r.priority==="urgent"?"Urgente":r.priority==="high"?"Alta":"Normal"} · {r.status==="open"?"Abierto":"Resuelto"} · {new Date(r.created_at).toLocaleString("es-CR")} · Responsable: {r.assigned_name||"Sin asignar"}</p>
+   <p className="whitespace-pre-wrap break-words text-sm">{r.reason}</p>
+   <p className="text-xs">Reportado por: {r.reporter_name||"Visitante o registro anterior"} · Caso {r.id}</p>
+   {r.decision_reason&&<p className="text-sm">Última decisión: {r.decision_reason}</p>}
+   {r.appeal_reason&&<p className="text-sm">Solicitud de revisión: {r.appeal_reason}</p>}
+   {r.target_type&&r.target_id&&["project","job","offer","professional"].includes(r.target_type)&&<Link className="text-sm underline" href={`${({project:"/proyectos/",job:"/empleos/",offer:"/promociones/",professional:"/admin/proveedores/"} as Record<string,string>)[r.target_type]}${r.target_id}`}>Abrir contenido</Link>}
+   {r.conversation_id&&<Link className="ml-3 text-sm underline" href={`/admin/conversaciones?conversation=${r.conversation_id}&report=${r.id}`}>Revisión restringida del chat</Link>}
+   <button className={box} onClick={()=>void inspect(r)}>Atender y ver historial</button>
+  </article>)}
+  <div className="flex gap-3"><button className={box} disabled={offset===0} onClick={()=>setOffset(offset-50)}>Anterior</button><button className={box} disabled={offset+50>=total} onClick={()=>setOffset(offset+50)}>Siguiente</button></div></>}
+  <section className="space-y-3 rounded-xl border-2 p-4">
+   <h2 className="font-bold">{selected?"Atender caso seleccionado":"Acción sobre contenido identificado"}</h2>
+   <p className="text-sm">Retirar oculta la publicación y permite restaurarla. Una restricción de cuenta impide nuevas publicaciones y mensajes por el plazo elegido; no elimina la cuenta. Una advertencia se registra en el expediente.</p>
+   <label className="block">Tipo <select className={box} value={targetKind} onChange={e=>setTargetKind(e.target.value)}>{Object.entries(kindLabel).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></label>
+   <label className="block">ID del contenido o cuenta <input className={`${box} block w-full`} value={targetId} onChange={e=>setTargetId(e.target.value)}/></label>
+   <button className={box} disabled={!targetId} onClick={async()=>{const r=await fetch(`/api/admin/moderacion?id=${encodeURIComponent(targetId)}`,{cache:"no-store"});if(r.ok)setHistory((await r.json()).rows);else setError("No se pudo leer el historial.");}}>Consultar historial de este contenido</button>
+   <label className="block">ID del reporte relacionado (opcional) <input className={`${box} block w-full`} value={reportId} onChange={e=>setReportId(e.target.value)}/></label>
+   <label className="block">Motivo (visible al afectado si se registra como decisión) <textarea className={`${box} block w-full`} minLength={5} maxLength={1000} value={reason} onChange={e=>setReason(e.target.value)}/></label>
+   <div className="flex flex-wrap gap-3"><select aria-label="Acción de moderación" className={box} value={action} onChange={e=>setAction(e.target.value)}><option value="hide">Retirar de publicación</option><option value="restore">Restaurar</option><option value="warn">Registrar advertencia</option><option value="restrict">Restringir cuenta temporalmente</option><option value="unrestrict">Quitar restricción de cuenta</option></select>
+   {action==="restrict"&&<label>Días <input className={box} type="number" min={1} max={30} value={days} onChange={e=>setDays(Number(e.target.value))}/></label>}
+   <button className={box} disabled={busy||reason.trim().length<5||!targetId} onClick={()=>void request("/api/admin/moderacion","POST",{kind:targetKind,id:targetId,action,reason,report:reportId||null,days})}>Guardar acción y auditoría</button></div>
+   {selected&&<div className="flex flex-wrap gap-2"><button className={box} disabled={busy||reason.trim().length<5} onClick={()=>void request("/api/admin/reports","PATCH",{id:selected.id,status:"open",priority:selected.priority,reason,assign:true})}>Asignarme el caso</button>
+   {(["normal","high","urgent"] as const).map(p=><button key={p} className={box} disabled={busy||reason.trim().length<5} onClick={()=>void request("/api/admin/reports","PATCH",{id:selected.id,status:"open",priority:p,reason,assign:false})}>Prioridad {p==="normal"?"normal":p==="high"?"alta":"urgente"}</button>)}
+   <button className={box} disabled={busy||reason.trim().length<5} onClick={()=>void request("/api/admin/reports","PATCH",{id:selected.id,status:selected.status==="open"?"resolved":"open",priority:selected.priority,reason,assign:false})}>{selected.status==="open"?"Resolver con motivo":"Reabrir con motivo"}</button>
+   {selected.subject_user_id&&<button className={box} onClick={()=>{setTargetKind("account");setTargetId(selected.subject_user_id!);}}>Actuar sobre la cuenta</button>}</div>}
+   {targetKind==="professional"&&<div className="space-y-2"><label>URL pública de la foto del portafolio <input className={`${box} block w-full`} value={photo} onChange={e=>setPhoto(e.target.value)}/></label>{[false,true].map(restore=><button key={String(restore)} className={box} disabled={busy||!photo||!targetId||reason.trim().length<5} onClick={()=>void request(`/api/admin/providers/${encodeURIComponent(targetId)}/moderate`,"POST",{action:restore?"restore_photo":"remove_photo",url:photo,reason})}>{restore?"Restaurar foto del portafolio":"Retirar foto del portafolio"}</button>)}</div>}
+   {selected?.conversation_id&&<div className="space-y-2"><label>Ruta del adjunto denunciado <input className={`${box} block w-full`} value={path} onChange={e=>setPath(e.target.value)}/></label><button className={box} disabled={busy||!path||reason.trim().length<5} onClick={()=>void request("/api/admin/moderacion/archivos","POST",{report:selected.id,path,action:"quarantine",reason})}>Poner adjunto en cuarentena</button><button className={box} disabled={busy||!path||reason.trim().length<5} onClick={()=>void request("/api/admin/moderacion/archivos","POST",{report:selected.id,path,action:"release",reason})}>Liberar adjunto tras revisión</button></div>}
+   {history.length>0&&<><h3 className="font-bold">Historial del contenido</h3>{history.map(h=><p key={h.id} className="text-sm">{new Date(h.created_at).toLocaleString("es-CR")} · {h.action} · {h.reason} · Administrador {h.actor_id}</p>)}</>}
+  </section>
+ </div>;
 }

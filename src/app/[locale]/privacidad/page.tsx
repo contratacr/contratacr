@@ -113,6 +113,7 @@ const ES_SECTIONS: LegalSection[] = [
           "Crear, autenticar y administrar su cuenta.",
           "Publicar perfiles profesionales y conectar Clientes con Profesionales.",
           "Gestionar búsquedas, proyectos, cotizaciones, mensajes, archivos, reseñas y soporte.",
+          "Mostrar al personal administrador qué participante de un chat interno espera respuesta y desde cuándo, sin mostrar el contenido en ese seguimiento. El contenido solo puede consultarse por personal con permiso específico y autenticación reforzada para atender un caso abierto de soporte de un participante o un reporte abierto de un participante vinculado a esa conversación. Cada consulta registra quién accedió, cuándo, el caso y el motivo; los adjuntos no se muestran en esta herramienta. El acceso debe limitarse a lo necesario para atender el caso, no a supervisión general ni publicidad. Los registros de consulta y decisiones cerradas se conservan hasta 365 días, salvo casos abiertos o resueltos recientemente que requieran conservarlos. Puede solicitar revisión de una decisión desde Soporte.",
           "Personalizar resultados según servicio, zona y preferencias indicadas.",
           "Enviar correos y notificaciones relacionados con su cuenta o actividad.",
           "Enviar campañas y novedades promocionales cuando exista la autorización aplicable. Puede solicitar la baja mediante el enlace del correo o respondiendo; esto no cancela los mensajes necesarios para acceso, seguridad o atención de su cuenta.",
@@ -191,7 +192,7 @@ const ES_SECTIONS: LegalSection[] = [
     "body": [
       {
         "k": "p",
-        "text": "Usamos cookies y almacenamiento necesarios para sesión, idioma, seguridad y guardar sus preferencias. Solo necesarias mantiene los registros imprescindibles para prestar el servicio, proteger cuentas y atender obligaciones; no activa estadísticas opcionales ni publicidad. Las estadísticas de uso y la medición con Meta tienen opciones independientes, preseleccionadas en Configuración. No se activan hasta que pulse De acuerdo, Aceptar todo o Guardar con esas opciones seleccionadas."
+        "text": "Usamos cookies y almacenamiento necesarios para sesión, idioma, seguridad y guardar sus preferencias. “Solo necesarias” mantiene los registros imprescindibles para prestar el servicio, proteger cuentas y atender obligaciones; no activa estadísticas opcionales ni publicidad. Las estadísticas de uso y la medición con Meta tienen opciones independientes, preseleccionadas en “Configuración”. No se activan hasta que pulse “De acuerdo”, “Aceptar todo” o “Guardar” con esas opciones seleccionadas."
       },
       {
         "k": "p",
@@ -199,7 +200,7 @@ const ES_SECTIONS: LegalSection[] = [
       },
       {
         "k": "p",
-        "text": "Estadísticas y medición publicitaria están desactivadas hasta que usted las autorice. El aviso ofrece Configuración y De acuerdo, también en móvil. De acuerdo acepta ambos fines opcionales. En Configuración puede elegir cada fin, aceptar todo o guardar solo las necesarias. Puede cambiar su elección desde Configurar cookies y privacidad en el pie del sitio o esta política. La elección se guarda en este navegador o app durante un máximo de 180 días; no se interpreta el silencio como aceptación. Retirar publicidad detiene nuevos envíos y solicita cancelar conversiones pendientes. Sin conexión se reintenta al reconectar. No se pueden recuperar envíos ya en curso ni borrar automáticamente datos recibidos por Meta. Estos permisos son independientes de términos, correos promocionales, IA y permisos del sistema operativo."
+        "text": "Estadísticas y medición publicitaria están desactivadas hasta que usted las autorice. El aviso ofrece “Configuración” y “De acuerdo”, también en móvil. “De acuerdo” acepta ambos fines opcionales. En “Configuración” puede elegir cada fin, “Aceptar todo” o “Guardar” solo las necesarias. Puede cambiar su elección desde “Configurar cookies y privacidad” en el pie del sitio o esta política. La elección se guarda en este navegador o app durante un máximo de 180 días; no se interpreta el silencio como aceptación. Retirar publicidad detiene nuevos envíos y solicita cancelar conversiones pendientes. Sin conexión se reintenta al reconectar. No se pueden recuperar envíos ya en curso ni borrar automáticamente datos recibidos por Meta. Estos permisos son independientes de términos, correos promocionales, IA y permisos del sistema operativo."
       },
       {
         "k": "p",
@@ -414,6 +415,7 @@ const EN_SECTIONS: LegalSection[] = [
           "Send necessary account and activity communications. Promotional campaigns require the applicable authorization and can be stopped through the included link or by replying; necessary access, security and account support messages remain separate.",
           "Publish professional profiles and connect Clients with Professionals.",
           "Operate search, requests, quotes, messages, files, reviews, support, AI, and notifications.",
+          "Show administrators which internal-chat participant is awaiting a reply and since when, without exposing message content in this overview. Content may only be consulted by specifically authorized staff using reinforced authentication to handle an open support case from a participant or an open participant report linked to that conversation. Each consultation records who accessed it, when, the case and the reason; attachments are excluded from this tool. Access must be limited to what is needed for the case, not general monitoring or advertising. Access logs and closed decisions are retained for up to 365 days, except open or recently resolved cases requiring preservation. You can request review of a decision through Support.",
           "Personalize results, measure product use, improve the service, and assess acquisition campaigns. Internal analytics includes screens, searches and filters, navigation, form attempts and errors, and relevant account and guest actions. New detailed journeys are retained for up to 90 days; analytics does not record keystrokes, private fields, passwords or conversation content.",
           "Prevent fraud, abuse, impersonation, and security incidents.",
           "Comply with legal obligations and lawful authority requests."
@@ -471,7 +473,7 @@ const EN_SECTIONS: LegalSection[] = [
     "body": [
       {
         "k": "p",
-        "text": "Necessary cookies and storage support sessions, language, security and saving your choices. Only necessary retains records essential to provide the service, protect accounts and meet obligations; it does not enable optional statistics or advertising. Usage statistics and Meta measurement have separate choices, preselected in Settings. They remain inactive until you press Agree, Accept all or Save with those options selected."
+        "text": "Necessary cookies and storage support sessions, language, security and saving your choices. “Only necessary” retains records essential to provide the service, protect accounts and meet obligations; it does not enable optional statistics or advertising. Usage statistics and Meta measurement have separate choices, preselected in “Settings”. They remain inactive until you press “Agree”, “Accept all” or “Save” with those options selected."
       },
       {
         "k": "p",
@@ -479,7 +481,7 @@ const EN_SECTIONS: LegalSection[] = [
       },
       {
         "k": "p",
-        "text": "Statistics and advertising measurement remain off until you authorize them. The notice offers Settings and Agree, including on mobile. Agree accepts both optional purposes. In Settings you can choose each purpose, accept all or save only necessary cookies. Change your choice through Cookie and privacy settings in the site footer or this policy. Choices last up to 180 days in this browser or app; silence is not acceptance. Withdrawing advertising stops new deliveries and requests cancellation of pending conversions. Offline requests retry on reconnection. In-flight deliveries cannot be recalled and data received by Meta is not automatically erased. These permissions are separate from terms, marketing emails, AI and operating-system permissions."
+        "text": "Statistics and advertising measurement remain off until you authorize them. The notice offers “Settings” and “Agree”, including on mobile. “Agree” accepts both optional purposes. In “Settings” you can choose each purpose, “Accept all” or “Save” only necessary cookies. Change your choice through “Cookie and privacy settings” in the site footer or this policy. Choices last up to 180 days in this browser or app; silence is not acceptance. Withdrawing advertising stops new deliveries and requests cancellation of pending conversions. Offline requests retry on reconnection. In-flight deliveries cannot be recalled and data received by Meta is not automatically erased. These permissions are separate from terms, marketing emails, AI and operating-system permissions."
       },
       {
         "k": "p",

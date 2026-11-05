@@ -1235,7 +1235,7 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
 }
 
 function systemPrompt(locale: Locale, catalogPrompt: string, pageContext: string) {
-  const language = locale === "en" ? "English" : "natural Costa Rican Spanish addressing the person as tú (the app's own voice: «Escribe», «Crea», «tu panel»); never use usted, te, tu, vos or voseo";
+  const language = locale === "en" ? "English" : "natural Costa Rican Spanish addressing the person as tú (the app's own voice: “Escribe”, “Crea”, “tu panel”); never use usted, te, tu, vos or voseo";
   return `
 You are ContrataCR AI, the official assistant for ContrataCR, Costa Rica's service marketplace.
 Answer in ${language}. Be concise, warm and practical.

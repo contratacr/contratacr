@@ -64,24 +64,33 @@ function setup(size = 1203, options: { authorized?: boolean; failTable?: string;
     "@/lib/analytics/self-interaction":load("src/lib/analytics/self-interaction.ts"),
     "@/lib/analytics/contact-segments":load("src/lib/analytics/contact-segments.ts"),
     "@/lib/auth/admin":{getApiAdmin:async()=>options.authorized===false?null:{id:"admin"}},
+    "@/lib/moderation/admin":{getModerationAdmin:async()=>options.authorized===false?null:{id:"admin"},getIdentityAdmin:async()=>options.authorized===false?null:{id:"admin"},getSupportAdmin:async()=>options.authorized===false?null:{id:"admin"},moderationAccess:async()=>options.authorized===false?null:{admin:{id:"admin"},db}},
     "@/lib/supabase/admin":{createAdminClient:()=>db},
     "@/lib/data/categories":{ALL_CATEGORIES:[],CATEGORY_GROUPS:[],getCategoryLabel:(id:string)=>id,autoEnglishCategoryLabel:(s:string)=>s},
     "@/lib/data/cr-geography":geography,
     "@/lib/marketplace-url":{rutaEmpleo:(id:string)=>`/empleos/${id}`,rutaPromocion:(id:string)=>`/promociones/${id}`},
     "@/lib/moderation/reviews":{validateReviewText:()=>({ok:true})},
+    "@/lib/cache/professional-revision":{invalidateProfessionalCache:async()=>{}},
     "@/lib/support/current-names":{withCurrentSupportNames:async(_db:any,tickets:any,messages:any=[])=>({tickets,messages})},
     "@/lib/support/adjuntos":{firmarAdjuntos:async(_db:any,rows:any)=>rows},
     "@/lib/profiles/current-names":{getCurrentProfileNames:async()=>new Map()},
   };
   return {tables,db,mocks,route:(file:string)=>load(`src/app/api/admin/${file}/route.ts`,mocks)};
 }
-for (const [route, field, badge] of [["reports","reports","openCount"],["insurers","insurers","pendingCount"],["categories","categories","pendingCount"],["support","tickets","needsAttention"],["accounts","accounts",null]] as const) {
+for (const [route, field, badge] of [["insurers","insurers","pendingCount"],["categories","categories","pendingCount"],["support","tickets","needsAttention"],["accounts","accounts",null]] as const) {
   test(`${route} list includes every match beyond the default cap and agrees with its counter`,async()=>{
     const s=setup();const response=await s.route(route).GET(new Request(`https://example.test/api/admin/${route}`));
     expect(response.status).toBe(200);const data=await response.json();expect(data[field]).toHaveLength(1203);
     if(badge)expect(data[badge]).toBe(1203);
   });
 }
+test("report pages and total reach beyond 1000 without truncating the queue",async()=>{
+ const s=setup();const route=s.route("reports");
+ const first=await(await route.GET(new Request("https://example.test/api/admin/reports?offset=0"))).json();
+ expect(first.total).toBe(1203);expect(first.reports).toHaveLength(50);expect(first.reports[0].id).toBe("id-000000");
+ const last=await(await route.GET(new Request("https://example.test/api/admin/reports?offset=1200"))).json();
+ expect(last.total).toBe(1203);expect(last.reports).toHaveLength(3);expect(last.reports[2].id).toBe("id-001202");
+});
 test("all support messages remain available beyond the database cap",async()=>{
   const s=setup();const response=await s.route('support').GET(new Request('https://example.test/api/admin/support?id=does-not-exist'));
   // Missing tickets do not imply that an unrelated thread can be read.
@@ -99,6 +108,19 @@ for(const kind of ['jobs','offers'])test(`${kind} filters and pages use all reco
 });
 test("coverage includes every matching professional beyond its old 300-row cutoff",async()=>{
   const s=setup();const data=await (await s.route('coverage').GET(new Request('https://example.test/api/admin/coverage?service=service'))).json();expect(data.totals.professionals).toBe(1203);expect(data.professionals).toHaveLength(1203);expect(data.filter.total).toBe(1203);
+});
+test("administrative publication lists distinguish active moderation holds from ordinary pauses",async()=>{
+ const s=setup(3);
+ s.tables.moderation_holds=[{target_type:'job',target_id:'id-000000',active:true},{target_type:'offer',target_id:'id-000001',active:true},{target_type:'project',target_id:'id-000002',active:true},{target_type:'job',target_id:'id-000001',active:false}];
+ for(const [kind,held] of [['jobs','id-000000'],['offers','id-000001']]){
+  const data=await(await s.route('marketplace').GET(new Request(`https://example.test/api/admin/marketplace?kind=${kind}`))).json();
+  expect(data.items.filter((r:any)=>r.moderationHidden).map((r:any)=>r.id)).toEqual([held]);expect(data.counts.all).toBe(3);
+ }
+ const projects=await(await s.route('projects').GET(new Request('https://example.test/api/admin/projects'))).json();
+ expect(projects.projects.filter((r:any)=>r.moderationHidden).map((r:any)=>r.id)).toEqual(['id-000002']);
+ const unavailable=setup(3,{failTable:'moderation_holds'});
+ expect((await unavailable.route('marketplace').GET(new Request('https://example.test/api/admin/marketplace?kind=jobs'))).status).toBe(503);
+ expect((await unavailable.route('projects').GET(new Request('https://example.test/api/admin/projects'))).status).toBe(503);
 });
 test("overview contacts and analytics search quality include events after 1000",async()=>{
   const s=setup();const overview=await load('src/lib/admin/overview.ts',s.mocks).getAdminOverview();expect(overview.servicios.value).toBe(1203);

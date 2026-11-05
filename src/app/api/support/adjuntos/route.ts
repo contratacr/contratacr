@@ -1,7 +1,8 @@
+import { scanUpload } from "@/lib/moderation/files";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getApiAdmin } from "@/lib/auth/admin";
+import { getSupportAdmin as getApiAdmin } from "@/lib/moderation/admin";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { DOC_KINDS, IMAGE_KINDS, MIME_FOR, validateUpload } from "@/lib/upload-validation";
 import { BUCKET_SOPORTE } from "@/lib/support/adjuntos";
@@ -53,6 +54,7 @@ export async function POST(req: Request) {
     allowLabel: "JPG, PNG, WEBP, AVIF, HEIC/HEIF, GIF o PDF",
   });
   if (!check.ok) return NextResponse.json({ error: check.error }, { status: 400 });
+  try { await scanUpload(buffer); } catch(e) { return NextResponse.json({error:e instanceof Error?e.message:"Análisis no disponible."},{status:422}); }
   const mime = MIME_FOR[check.kind];
 
   const name = nombreSeguro(file.name);

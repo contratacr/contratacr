@@ -1,70 +1,30 @@
-import { readAllAdminRows, readAdminRowsByIds } from "@/lib/admin/read-all-rows";
 import { NextResponse } from "next/server";
-import { getApiAdmin } from "@/lib/auth/admin";
+import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
-
-// GET /api/admin/reports?status=open|resolved|all — moderation queue. Admin-only.
+import { moderationAccess,privateHeaders as headers } from "@/lib/moderation/admin";
 export async function GET(req: Request) {
-  const admin = await getApiAdmin();
-  if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
-
-  const status = new URL(req.url).searchParams.get("status") ?? "open";
-  const db = createAdminClient();
-
-  let q = db.from("reports").select("*").order("created_at", { ascending: false });
-  if (status === "open" || status === "resolved") q = q.eq("status", status);
-  const { data: reports, error } = await readAllAdminRows((from, to) => q.order("id").range(from, to));
-  if (error) return NextResponse.json({ error: "No se pudo cargar la lista completa." }, { status: 500 });
-
-  // Para poder suspender desde la misma fila hay que saber si ese profesional YA
-  // está suspendido: sin eso el botón diría «Suspender» sobre alguien que ya lo
-  // está. Una sola consulta con todos los ids de la vista.
-  const ids = Array.from(new Set((reports ?? []).map((r) => r.professional_id).filter(Boolean)));
-  const suspendidos = new Map<string, boolean>();
-  if (ids.length > 0) {
-    const { data: pros } = await readAdminRowsByIds(ids, (batch, from, to) => db.from("professionals").select("id, is_banned").in("id", batch).order("id").range(from, to));
-    for (const pro of pros ?? []) suspendidos.set(pro.id as string, (pro as { is_banned?: boolean | null }).is_banned === true);
-  }
-
-  const { count: openCount } = await db
-    .from("reports")
-    .select("id", { count: "exact", head: true })
-    .eq("status", "open");
-
-  return NextResponse.json({
-    reports: (reports ?? []).map((r) => ({ ...r, professional_banned: r.professional_id ? suspendidos.get(r.professional_id) === true : false })),
-    openCount: openCount ?? 0,
-  });
+ if(!(await moderationAccess()))return NextResponse.json({error:"No autorizado"},{status:403,headers});
+ const params=new URL(req.url).searchParams,offset=Math.max(0,Math.min(100000,Number(params.get("offset"))||0));
+ const db=createAdminClient();
+ let q=db.from("reports").select("*",{count:"exact"}).order("created_at",{ascending:true}).order("id").range(offset,offset+49);
+ const status=params.get("status")??"open",priority=params.get("priority");
+ if(status==="open"||status==="resolved")q=q.eq("status",status);
+ if(priority&&["normal","high","urgent"].includes(priority))q=q.eq("priority",priority);
+ const {data,error,count}=await q;if(error)return NextResponse.json({error:"No se pudo cargar la cola de moderación."},{status:503,headers});
+ const ids=[...new Set((data??[]).flatMap(r=>[r.subject_user_id,r.reported_client_id,r.blocked_profile_id,r.reporter_id,r.assigned_to]).filter(Boolean))];
+ const {data:people,error:peopleError}=ids.length?await db.from("profiles").select("id,full_name").in("id",ids):{data:[],error:null};
+ if(peopleError)return NextResponse.json({error:"No se pudieron identificar los participantes."},{status:503,headers});
+ const names=new Map((people??[]).map(p=>[p.id,p.full_name]));
+ return NextResponse.json({reports:(data??[]).map(r=>({...r,subject_user_id:r.subject_user_id??r.reported_client_id??r.blocked_profile_id??null,subject_name:names.get(r.subject_user_id??r.reported_client_id??r.blocked_profile_id)??r.professional_name??"Cuenta o contenido",reporter_name:names.get(r.reporter_id)??null,assigned_name:names.get(r.assigned_to)??null})),total:count},{headers});
 }
-
-// PATCH /api/admin/reports — resolve / reopen a report. Admin-only.
+const update=z.object({id:z.string().uuid(),status:z.enum(["open","resolved"]),priority:z.enum(["normal","high","urgent"]),reason:z.string().trim().min(5).max(1000),assign:z.boolean().default(false)}).strict();
 export async function PATCH(req: Request) {
-  const admin = await getApiAdmin();
-  if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
-
-  const { id, status } = await req.json();
-  if (!id || !["open", "resolved"].includes(status)) {
-    return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
-  }
-  const db = createAdminClient();
-  const { error } = await db
-    .from("reports")
-    .update({ status, resolved_at: status === "resolved" ? new Date().toISOString() : null })
-    .eq("id", id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ ok: true });
+ const access=await moderationAccess();if(!access)return NextResponse.json({error:"No autorizado"},{status:403,headers});
+ if(req.headers.get("origin")!==new URL(req.url).origin)return NextResponse.json({error:"Origen inválido"},{status:403,headers});
+ const parsed=update.safeParse(await req.json().catch(()=>null));if(!parsed.success)return NextResponse.json({error:"Indica estado, prioridad y motivo."},{status:400,headers});
+ const p=parsed.data;
+ const {error}=await access.db.rpc("admin_case_update",{p_id:p.id,p_status:p.status,p_priority:p.priority,p_reason:p.reason,p_assign:p.assign});
+ if(error)return NextResponse.json({error:"No se guardó la decisión y su auditoría."},{status:409,headers});
+ return NextResponse.json({ok:true},{headers});
 }
-// DELETE /api/admin/reports?id=… — removes a report record.
-export async function DELETE(req: Request) {
-  const admin = await getApiAdmin();
-  if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
-  const id = new URL(req.url).searchParams.get("id") ?? "";
-  if (!/^[0-9a-f-]{36}$/i.test(id)) return NextResponse.json({ error: "Identificador requerido." }, { status: 400 });
-  const db = createAdminClient();
-  const { error } = await db.from("reports").delete().eq("id", id);
-  if (error) {
-    console.error("[admin/reports] delete", error.message);
-    return NextResponse.json({ error: "No se pudo eliminar el reporte." }, { status: 500 });
-  }
-  return NextResponse.json({ ok: true, id });
-}
+export async function DELETE(){if(!(await moderationAccess()))return NextResponse.json({error:"No autorizado"},{status:403,headers});return NextResponse.json({error:"Conserva el expediente: resuelve el caso con un motivo."},{status:405,headers});}

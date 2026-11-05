@@ -2,7 +2,7 @@ import { readAllAdminRows } from "@/lib/admin/read-all-rows";
 import { getCurrentProfileNames } from "@/lib/profiles/current-names";
 import { NextResponse } from "next/server";
 import { processAccountDeletion } from "@/lib/account-deletion/process";
-import { getApiAdmin } from "@/lib/auth/admin";
+import { getIdentityAdmin as getApiAdmin } from "@/lib/moderation/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { cleanId } from "@/lib/cedula";
 

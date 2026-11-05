@@ -294,7 +294,7 @@ export async function PATCH(req: Request) {
     const { data: target, error } = await db.from("categories").select("id,name,is_hidden,is_active").eq("id", existingCategoryId).maybeSingle();
     if (error || !target || target.is_hidden || target.is_active === false) return NextResponse.json({ error: "Seleccioná un servicio activo del catálogo" }, { status: 400 });
     update.resolved_category_id = target.id;
-    update.review_reason = `Ya disponible como «${target.name}». Completá la información para agregarlo a tu perfil.`;
+    update.review_reason = `Ya disponible como “${target.name}”. Completá la información para agregarlo a tu perfil.`;
     const updateError = await updateSuggestionRow(db, id, update);
     if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
     await notifySuggestionDecision(db, suggestionRow!, "approved", target.name, undefined, target.id);

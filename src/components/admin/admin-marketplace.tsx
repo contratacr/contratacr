@@ -57,7 +57,7 @@ type OfferItem = {
   href: string;
 };
 
-type Item = JobItem | OfferItem;
+type Item = (JobItem | OfferItem) & {moderationHidden?:boolean};
 type Pagination = { page: number; pageSize: number; total: number; pages: number };
 
 const JOB_FILTERS = [
@@ -121,6 +121,7 @@ function salaryLabel(item: JobItem) {
 }
 
 function StatusPill({ item }: { item: Item }) {
+  if(item.moderationHidden)return <span className="rounded-md border border-red-300 bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-800">Retirada por moderación</span>;
   const meta = STATUS_META[item.status] ?? { label: item.status, className: "border-[#e5e7eb] bg-[#f9fafb] text-[#6b7280]" };
   const label = item.kind === "job" ? JOB_STATUS_LABEL[item.status] ?? meta.label : meta.label;
   return <span className={cn("inline-flex shrink-0 rounded-md border px-2 py-0.5 text-[11px] font-semibold", meta.className)}>{label}</span>;
@@ -210,13 +211,15 @@ export function AdminMarketplace({ kind }: { kind: "jobs" | "offers" }) {
   const filterCounts = useMemo(() => Object.fromEntries(filters.map((tab) => [tab.id, counts[tab.id] ?? 0])), [counts, filters]);
 
   async function setStatus(item: Item, status: string) {
+    const reason=window.prompt("Motivo del cambio de estado (mínimo 5 caracteres):")?.trim();
+    if(!reason || reason.length<5)return;
     setBusy(item.id);
     setNotice(null);
     try {
       const res = await fetch("/api/admin/marketplace", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind, id: item.id, status }),
+        body: JSON.stringify({ kind, id: item.id, status, reason }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "No se pudo actualizar.");
@@ -233,18 +236,15 @@ export function AdminMarketplace({ kind }: { kind: "jobs" | "offers" }) {
   }
 
   async function remove(item: Item) {
-    if (!window.confirm(`Esta eliminación es permanente: se borra "${item.title}" con sus avisos. ¿Deseas continuar?`)) return;
+    const reason=window.prompt(`Motivo para retirar “${item.title}” de publicación (reversible):`)?.trim();
+    if(!reason || reason.length<5)return;
     setBusy(item.id);
     setNotice(null);
     try {
-      const res = await fetch(`/api/admin/marketplace?kind=${kind}&id=${encodeURIComponent(item.id)}`, { method: "DELETE" });
+      const res = await fetch("/api/admin/moderacion", { method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({kind:kind==="jobs"?"job":"offer",id:item.id,action:"hide",reason}) });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "No se pudo eliminar.");
-      setListing((current) => ({
-        ...current,
-        items: current.items.filter((entry) => entry.id !== item.id),
-        counts: { ...current.counts, all: Math.max(0, (current.counts.all ?? 1) - 1), [item.status]: Math.max(0, (current.counts[item.status] ?? 1) - 1) },
-      }));
+      await refresh();
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "No se pudo eliminar.");
     } finally {
@@ -253,6 +253,7 @@ export function AdminMarketplace({ kind }: { kind: "jobs" | "offers" }) {
   }
 
   const actionsFor = (item: Item): { label: string; status: string; tone?: "danger" }[] => {
+    if(item.moderationHidden)return [];
     if (item.kind === "job") {
       if (item.status === "published") return [{ label: "Pausar", status: "paused" }, { label: "Cerrar vacante", status: "closed", tone: "danger" }];
       if (item.status === "paused") return [{ label: "Publicar", status: "published" }, { label: "Cerrar vacante", status: "closed", tone: "danger" }];
@@ -373,8 +374,9 @@ export function AdminMarketplace({ kind }: { kind: "jobs" | "offers" }) {
                     onClick={() => void remove(item)}
                     className="inline-flex h-9 items-center justify-center gap-1 rounded-lg px-3 text-xs font-semibold text-[#b91c1c] hover:bg-[#fef2f2] disabled:opacity-60"
                   >
-                    <Trash2 className="h-3.5 w-3.5" /> Eliminar
+                    <Trash2 className="h-3.5 w-3.5" /> Retirar de publicación
                   </button>
+                  <Link className="text-xs underline" href={`/admin/reportes?targetType=${item.kind}&targetId=${item.id}`}>Historial y restauración</Link>
                 </div>
               </li>
             ))}

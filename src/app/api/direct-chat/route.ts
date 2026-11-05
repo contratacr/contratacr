@@ -7,6 +7,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { recordServerInteraction } from "@/lib/analytics/server-interactions";
 import { limitTrimmedText } from "@/lib/text-limits";
 import { validateDirectMessage } from "@/lib/moderation/messages";
+import { quarantinedPaths } from "@/lib/moderation/files";
 
 // Web and native share moderation, conversations and recipient-based alerts.
 
@@ -85,7 +86,9 @@ async function signMessageAttachments(db: ReturnType<typeof createAdminClient>, 
   return Promise.all(rows.map(async (row) => {
     const refs = normalizeAttachments(row.attachment_urls, row.conversation_id, row.sender_id);
     if (!refs.length) return { ...row, attachment_urls: [] };
+    const quarantined = await quarantinedPaths(db,ATTACHMENT_BUCKET,refs.map(a=>a.path));
     const signed = await Promise.all(refs.map(async (attachment) => {
+      if(quarantined.has(attachment.path)) return { ...attachment,url:null };
       const { data } = await db.storage.from(ATTACHMENT_BUCKET).createSignedUrl(attachment.path, 60 * 60);
       return { ...attachment, url: data?.signedUrl ?? null };
     }));
@@ -631,11 +634,24 @@ export async function PATCH(req: Request) {
     if (reportReason.length < 3) return NextResponse.json({ error: "Explica brevemente el motivo del reporte." }, { status: 400 });
 
     const reportingAsClient = conversation.client_id === user.id;
+    let reportedMessageId:string|null=null;
+    if(typeof body.messageId==="string") {
+      const {data:m,error:me}=await db.from("direct_messages").select("id").eq("id",body.messageId).eq("conversation_id",conversation.id).maybeSingle();
+      if(me||!m)return NextResponse.json({error:"Mensaje no encontrado en esta conversación."},{status:400});
+      reportedMessageId=m.id;
+    }
     const { error: reportError } = await db.from("reports").insert({
       professional_id: reportingAsClient ? conversation.professional_id ?? null : null,
       reported_client_id: reportingAsClient ? null : conversation.client_id,
       reporter_professional_id: reportingAsClient ? null : conversation.professional_id ?? null,
       reporter_email: user.email ?? null,
+      reporter_id: user.id,
+      conversation_id: conversation.id,
+      message_id:reportedMessageId,
+      target_type: "account",
+      target_id: reportingAsClient ? conversation.professional_profile_id : conversation.client_id,
+      subject_user_id: reportingAsClient ? conversation.professional_profile_id : conversation.client_id,
+      priority: "high",
       reason: `[Mensaje directo] ${reportReason}`,
       status: "open",
     });

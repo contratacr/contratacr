@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PanelEmptyState } from "@/components/ui/content-loading";
 import { StarRating } from "@/components/ui/star-rating";
 import { LeaveReviewModal } from "@/components/professionals/leave-review-modal";
+import { ReportProfileModal } from "@/components/professionals/report-profile-modal";
 import { getInitials, formatRelativeTime } from "@/lib/utils";
 import { nombreCorto } from "@/lib/nombre-corto";
 import { ALL_CATEGORIES, getCategoryLabel } from "@/lib/data/categories";
@@ -53,8 +54,10 @@ export function ReviewSection({
   isAuthenticated,
 }: ReviewSectionProps) {
   const t = useTranslations("profile");
+  const tModeration=useTranslations("moderation");
   const locale = useLocale();
   const router = useRouter();
+  const [reportedReview,setReportedReview]=useState<string|null>(null);
   const [translatedComments, setTranslatedComments] = useState<Record<string, string>>({});
   const commentsToTranslate = useMemo(
     () => reviews.filter((review) => review.comment.trim()).map((review) => ({ id: review.id, comment: review.comment.trim() })),
@@ -158,6 +161,7 @@ export function ReviewSection({
                 <p className="text-sm text-[#374151] leading-relaxed mt-1">
                   {locale === "en" ? translatedComments[review.id] ?? review.comment : review.comment}
                 </p>
+                <button type="button" className="mt-2 min-h-10 text-xs text-slate-600 underline" onClick={()=>setReportedReview(review.id)}>{tModeration("reportReview")}</button>
               </div>
             </div>
           );
@@ -170,6 +174,7 @@ export function ReviewSection({
         )}
       </div>
 
+      {reportedReview&&<ReportProfileModal professionalName={professionalName} professionalSlug={professionalId} targetType="review" targetId={reportedReview} titulo={tModeration("reportReview")} onClose={()=>setReportedReview(null)}/>}
     </>
   );
 }

@@ -3,6 +3,7 @@ import { InlineIdentityName } from "@/components/ui/inline-identity-name";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { ProfilePhotoPreview } from "@/components/ui/profile-photo-preview";
 import { notFound } from "next/navigation";
+import { contentIsHeld } from "@/lib/moderation/visibility";
 import { ArrowLeft } from "lucide-react";
 import { VerificationInfo } from "@/components/ui/verification-info";
 import { Link } from "@/i18n/navigation";
@@ -168,7 +169,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
         })();
     return cerrada;
   })();
-  if (!ofertaVisible) notFound();
+  if (!ofertaVisible || await contentIsHeld("offer",ofertaVisible.id)) notFound();
   const offerOwnerProfileId = (ofertaVisible.professionals as { profile_id?: string | null } | null)?.profile_id ?? null;
   if (!user || offerOwnerProfileId !== user.id) {
     void recordServerInteraction({ type: "offer_view", source: "offers", locale, professionalId: ofertaVisible.professional_id ?? null, categoryId: ofertaVisible.service_category_id ?? null, viewerUserId: user?.id ?? null, metadata: { offerId: ofertaVisible.id } });

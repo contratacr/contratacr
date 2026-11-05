@@ -77,6 +77,10 @@ export async function POST(req: Request) {
   const { data: bloqueado } = await admin.from("profiles").select("full_name").eq("id", profileId).maybeSingle();
   await admin.from("reports").insert({
     kind: "block",
+    reporter_id: user.id,
+    subject_user_id: profileId,
+    target_type: "account",
+    target_id: profileId,
     blocked_profile_id: profileId,
     professional_id: p?.id ?? null,
     professional_slug: p?.slug ?? null,

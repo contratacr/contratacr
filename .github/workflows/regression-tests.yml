@@ -173,6 +173,8 @@ jobs:
 
       - name: Verify durable push isolation locally
         run: npm run test:push-isolation
+      - name: Verify moderation permissions, audit and reversible actions in isolated Postgres
+        run: node scripts/verify-admin-moderation.mjs
 
       - name: Reverify canonical fixtures after isolation contracts
         run: npm run verify:local:relations

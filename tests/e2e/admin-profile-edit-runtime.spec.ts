@@ -10,6 +10,8 @@ const damagedName = ["Marco Antonio Nu", "ez Fernandez"].join("?");
 
 const nativeRequire = createRequire(`${process.cwd()}/tests/e2e/admin-profile-edit-runtime.spec.ts`);
 function load(path: string, mocks: Record<string, unknown>, globals: Record<string, unknown> = {}) {
+  const auth=mocks["@/lib/auth/admin"] as {getApiAdmin?:()=>Promise<unknown>}|undefined;
+  if(auth?.getApiAdmin && !mocks["@/lib/moderation/admin"])mocks["@/lib/moderation/admin"]={getIdentityAdmin:auth.getApiAdmin,getModerationAdmin:auth.getApiAdmin,getSupportAdmin:auth.getApiAdmin};
   const code = ts.transpileModule(readFileSync(path, "utf8"), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
   }).outputText;

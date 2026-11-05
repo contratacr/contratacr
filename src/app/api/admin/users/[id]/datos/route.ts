@@ -1,7 +1,7 @@
 import { readAllAdminRows } from "@/lib/admin/read-all-rows";
 import { invalidateProfessionalCache } from "@/lib/cache/professional-revision";
 import { NextResponse } from "next/server";
-import { getApiAdmin } from "@/lib/auth/admin";
+import { getIdentityAdmin as getApiAdmin } from "@/lib/moderation/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { auditUserAction } from "@/lib/audit/user-action";
 import { whatsappDigits } from "@/lib/quotes";

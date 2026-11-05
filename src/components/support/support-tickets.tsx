@@ -1,4 +1,5 @@
 "use client";
+import { ModerationDecisions } from "@/components/support/moderation-decisions";
 import { CABECERA_TITULO } from "@/components/layout/cabecera";
 
 import { irAlInicio } from "@/lib/ir-al-inicio";
@@ -605,6 +606,7 @@ export function SupportTickets({
   // ── List view ──
   return (
     <div className="mx-auto w-full max-w-[34rem] space-y-4 px-4 sm:max-w-none sm:px-0">
+      <ModerationDecisions/>
       {/* Cabecera de la sección: el contexto a la izquierda y la acción a la
           derecha, ARRIBA de los filtros, igual que en Mis proyectos. El filtro
           tiene que quedar pegado a la lista que filtra. No se dibuja mientras

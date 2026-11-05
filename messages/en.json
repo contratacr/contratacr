@@ -1,4 +1,15 @@
 {
+  "moderation": {
+    "reportReview": "Report review",
+    "reportMessage": "Report message and block",
+    "decisionsTitle": "Moderation decisions",
+    "loading": "Loading…",
+    "loadError": "Could not load moderation decisions.",
+    "appealPrompt": "Explain why this decision should be reviewed (15–1000 characters).",
+    "appealError": "Could not request a review. Please contact support.",
+    "requestReview": "Request a review",
+    "followSupport": "Contact support to follow up on this case."
+  },
   "panelStatistics": {
     "viewProject": "View project",
     "viewJob": "View job",

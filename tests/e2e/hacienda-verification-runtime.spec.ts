@@ -10,6 +10,8 @@ type RuntimeValue = any;
 
 const requireNode = createRequire(`${process.cwd()}/tests/e2e/hacienda-verification-runtime.spec.ts`);
 function load(file: string, mocks: Record<string, unknown> = {}, globals: Record<string, unknown> = {}) {
+  const auth=mocks["@/lib/auth/admin"] as {getApiAdmin?:()=>Promise<unknown>}|undefined;
+  if(auth?.getApiAdmin && !mocks["@/lib/moderation/admin"])mocks["@/lib/moderation/admin"]={getIdentityAdmin:auth.getApiAdmin,getModerationAdmin:auth.getApiAdmin,getSupportAdmin:auth.getApiAdmin};
   const box = { exports: {} as Record<string, RuntimeValue> };
   const code = ts.transpileModule(readFileSync(file, "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
   runInNewContext(code, { module: box, exports: box.exports, require: (name: string) => mocks[name] ?? (name === "@/lib/verification/profile-name" ? { syncOfficialProfileName: async () => {} } : name === "./review-scope" || name === "@/lib/verification/review-scope" ? reviewScope : name === "@/lib/cache/professional-revision" ? { invalidateProfessionalCache: async () => {} } : name === "@/lib/verification/review-eligibility" ? eligibility : requireNode(name)), Response, Request, AbortSignal, Date, Buffer, console, ...globals });

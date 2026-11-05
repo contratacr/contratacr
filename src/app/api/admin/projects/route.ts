@@ -1,6 +1,6 @@
 import { readAllAdminRows, readAdminRowsByIds } from "@/lib/admin/read-all-rows";
 import { NextResponse } from "next/server";
-import { getApiAdmin } from "@/lib/auth/admin";
+import { getModerationAdmin as getApiAdmin } from "@/lib/moderation/admin";
 import { auditUserAction } from "@/lib/audit/user-action";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCategoryLabel } from "@/lib/data/categories";
@@ -93,6 +93,9 @@ export async function GET(req: Request) {
   const page = Math.max(1, Number(url.searchParams.get("page") ?? "1") || 1);
   const pageSize = Math.min(100, Math.max(10, Number(url.searchParams.get("pageSize") ?? "25") || 25));
   const db = createAdminClient();
+  const held=await readAllAdminRows((from,to)=>db.from("moderation_holds").select("target_id").eq("target_type","project").eq("active",true).order("target_id").range(from,to));
+  if(held.error)return NextResponse.json({error:"No se pudo comprobar el estado de moderación."},{status:503});
+  const heldIds=new Set((held.data??[]).map(row=>row.target_id));
 
   const rows: ProjectRow[] = [];
   const batchSize = 1000;
@@ -231,7 +234,7 @@ export async function GET(req: Request) {
   });
 
   return NextResponse.json({
-    projects: items,
+    projects: items.map(item=>({...item,moderationHidden:heldIds.has(item.id)})),
     counts,
     pagination: {
       page,
@@ -278,16 +281,4 @@ export async function PATCH(req: Request) {
   return NextResponse.json({ ok: true, id });
 }
 
-export async function DELETE(req: Request) {
-  const admin = await getApiAdmin();
-  if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
-  const id = new URL(req.url).searchParams.get("id") ?? "";
-  if (!/^[0-9a-f-]{36}$/i.test(id)) return NextResponse.json({ error: "Identificador requerido." }, { status: 400 });
-  const db = createAdminClient();
-  const { error } = await db.from("projects").delete().eq("id", id);
-  if (error) {
-    console.error("[admin/projects] delete", error.message);
-    return NextResponse.json({ error: "No se pudo eliminar el proyecto." }, { status: 500 });
-  }
-  return NextResponse.json({ ok: true, id });
-}
+export async function DELETE(){if(!(await getApiAdmin()))return NextResponse.json({error:"No autorizado"},{status:403});return NextResponse.json({error:"Usa el retiro reversible desde Reportes y moderación."},{status:405});}
