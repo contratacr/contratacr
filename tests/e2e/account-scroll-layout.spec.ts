@@ -11,7 +11,7 @@ test('short account screens fit and center in the available mobile viewport', as
    return {above:c.top-r.top,below:r.bottom-c.bottom};
   });
   expect(Math.abs(layout.above-layout.below)).toBeLessThanOrEqual(2);
-  await expect(page.locator('footer')).toBeHidden();
+  await expect(page.locator('.ccr-app-footer')).toBeHidden();
  }
 });
 
@@ -19,7 +19,7 @@ test('long account forms scroll to their final controls without nested visible s
  for(const route of ['/registro/cliente','/registro/profesional','/login','/reset-password']) {
   await page.setViewportSize({width:320,height:480});
   await page.goto(route);await waitForInteractivePage(page);const main=page.locator('main');await expect(main).toBeVisible();
-  await expect(page.locator('footer')).toBeHidden();
+  await expect(page.locator('.ccr-app-footer')).toBeHidden();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   const controls=main.locator('input,button,a').filter({visible:true});
   await controls.first().scrollIntoViewIfNeeded();await expect(controls.first()).toBeInViewport();
