@@ -634,8 +634,8 @@ function suggestionNotificationMessage(
 ): { title: string; message: string } {
   if (decision === "approved") {
     return {
-      title: "Sugerencia aprobada",
-      message: `Tu sugerencia "${name}" fue aprobada y ya está disponible. Completá la información para publicarlo en tu perfil.`,
+      title: "El servicio que sugeriste ya está disponible",
+      message: `“${name}” ya está en ContrataCR. Podés completar sus datos y agregarlo a tu perfil.`,
     };
   }
 

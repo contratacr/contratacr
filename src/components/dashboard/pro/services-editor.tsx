@@ -58,6 +58,7 @@ export type ProService = {
 };
 
 interface ServicesEditorProps {
+  categoryToComplete?: string | null;
   professionalId: string;
   primaryCategory?: string;
   initialProfessions?: string[];
@@ -181,6 +182,7 @@ function ServiceStartMonthPicker({
 }
 
 export function ServicesEditor({
+  categoryToComplete,
   professionalId,
   primaryCategory,
   initialProfessions = [],
@@ -191,7 +193,7 @@ export function ServicesEditor({
 }: ServicesEditorProps) {
   const locale = useLocale();
   const requestParams = useSearchParams();
-  const requestedCategory = requestParams.get("serviceRequest");
+  const requestedCategory = categoryToComplete ?? requestParams.get("serviceRequest");
   const openedRequest = useRef<string | null>(null);
   const t = useTranslations("servicesEditor");
   const tSub = useTranslations("proPanel.subtitles");

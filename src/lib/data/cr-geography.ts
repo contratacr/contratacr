@@ -19,6 +19,7 @@ export type Canton = {
   id: string;
   name: string;
   provinceId: string;
+  searchAliases?: string[];
   /** «Vásquez de Coronado» → «vasquez-de-coronado»; lo que va en la dirección. */
   slug?: string;
 };
@@ -39,7 +40,7 @@ export const PROVINCES: Province[] = [
       { id: "sj-go", name: "Goicoechea", provinceId: "sj" },
       { id: "sj-sa", name: "Santa Ana", provinceId: "sj" },
       { id: "sj-al", name: "Alajuelita", provinceId: "sj" },
-      { id: "sj-vb", name: "Vásquez de Coronado", provinceId: "sj" },
+      { id: "sj-vb", name: "Vásquez de Coronado", provinceId: "sj", searchAliases: ["Vázquez de Coronado"] },
       { id: "sj-ac", name: "Acosta", provinceId: "sj" },
       { id: "sj-ti", name: "Tibás", provinceId: "sj" },
       { id: "sj-mo2", name: "Moravia", provinceId: "sj" },

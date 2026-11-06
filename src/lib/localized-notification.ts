@@ -50,7 +50,7 @@ const TITLES: Record<string, Record<NotificationLocale, string>> = {
   verification_rejected: { es: "Tu verificación no fue aprobada", en: "Your verification was not approved" },
   verification_reverted: { es: "Tu verificación fue actualizada", en: "Your verification was updated" },
   verification_appeal_received: { es: "Nueva apelación de verificación", en: "New verification appeal" },
-  suggestion_approved: { es: "Sugerencia aprobada", en: "Suggestion approved" },
+  suggestion_approved: { es: "El servicio que sugeriste ya está disponible", en: "The service you suggested is now available" },
   suggestion_rejected: { es: "Sugerencia rechazada", en: "Suggestion rejected" },
   direct_message: { es: "Nuevo mensaje", en: "New message" },
   verification_outreach: { es: "Terminemos tu verificación", en: "Let's finish your verification" },
@@ -238,7 +238,7 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
       const reason = stringData(data, "review_reason");
       const approved = suggestionDecision === "approved";
       const body = approved
-        ? (en ? `Your suggestion "${service}" is now available. Complete its details to publish it on your profile.` : `Tu sugerencia "${service}" ya está disponible. Completá la información para publicarlo en tu perfil.`)
+        ? (en ? `“${service}” is now on ContrataCR. You can complete its details and add it to your profile.` : `“${service}” ya está en ContrataCR. Podés completar sus datos y agregarlo a tu perfil.`)
         : (en ? `Your suggestion "${service}" was not approved.` : `Tu sugerencia "${service}" no fue aprobada.`);
       return { title: localizedTitle(approved ? "suggestion_approved" : "suggestion_rejected", language, notification.title), message: appendReason(body, reason, language) };
     }
@@ -321,7 +321,7 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
     const reason = stringData(data, "review_reason");
     const approved = notification.type === "suggestion_approved";
     const body = approved
-      ? (en ? `Your suggestion "${service}" is now available. Complete its details to publish it on your profile.` : `Tu sugerencia "${service}" ya está disponible. Completá la información para publicarlo en tu perfil.`)
+      ? (en ? `“${service}” is now on ContrataCR. You can complete its details and add it to your profile.` : `“${service}” ya está en ContrataCR. Podés completar sus datos y agregarlo a tu perfil.`)
       : (en ? `Your suggestion "${service}" was not approved.` : `Tu sugerencia "${service}" no fue aprobada.`);
     return { title, message: appendReason(body, reason, language) };
   }

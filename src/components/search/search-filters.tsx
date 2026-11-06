@@ -1380,7 +1380,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                       className={`flex w-full flex-col px-3.5 py-2.5 text-left text-sm transition-colors ${i === locationActiveIndex ? "bg-[#EBF5FB]" : "hover:bg-[#f9fafb]"}`}
                     >
                       <span className="font-semibold text-[#162543]">{suggestion.label}</span>
-                      <span className="text-xs text-[#6b7280]">{suggestion.type === "address" ? suggestion.sublabel : locationSuggestionContext(suggestion, locale)}</span>
+                      {(suggestion.type === "address" ? suggestion.sublabel : locationSuggestionContext(suggestion)) && <span className="text-xs text-[#6b7280]">{suggestion.type === "address" ? suggestion.sublabel : locationSuggestionContext(suggestion)}</span>}
                     </button>
                   </li>
                 ))}

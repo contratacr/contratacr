@@ -112,6 +112,7 @@
       "Veterinarian"
     ],
     "location": "Location",
+    "locationNotFound": "We couldn’t find that place. Try its canton or province.",
     "searchAll": "Search \"{q}\" across all services",
     "search": "Search",
     "province": "Province",
@@ -3446,8 +3447,8 @@
     "aiConsentRequired": "Permission is required before using external AI."
   },
   "serviceRequests": {
-    "title": "Your service is now available",
-    "body": "“{service}” is now available. Complete its details to add it to your profile.",
+    "title": "The service you suggested is now available",
+    "body": "“{service}” is now on ContrataCR. You can complete its details and add it to your profile.",
     "complete": "Complete service",
     "later": "Not now",
     "error": "Could not save. Please try again.",

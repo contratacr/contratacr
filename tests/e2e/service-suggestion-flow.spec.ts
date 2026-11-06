@@ -73,6 +73,10 @@ test.describe("service requests require an explicit profile save", () => {
       expect((await db.from("professionals").select("professions,services").eq("id", a.professionalId!).single()).data).toEqual(before);
       const invitations = await (await page.request.get("/api/categories/requests")).json();
       expect(invitations.invitations).toEqual(expect.arrayContaining([expect.objectContaining({ categoryId: suggestion!.id, name: renamed })]));
+      // An approval stays available in notifications and Services, never as a
+      // repeated home prompt, even before the requester defers it.
+      await gotoOK(page, "/dashboard/profesional?tab=home&mode=offer");
+      await expect(page.getByTestId("service-request-invitations")).toHaveCount(0);
       // No cross-account dismissal, even if a client submits somebody else's ID.
       await page.request.patch("/api/categories/requests", { data: { suggestionId: suggestion!.id, profile_id: b.id } });
       expect((await db.from("service_suggestion_requests").select("dismissed").eq("suggestion_id", suggestion!.id).eq("profile_id", b.id).single()).data?.dismissed).toBe(false);
@@ -81,10 +85,30 @@ test.describe("service requests require an explicit profile save", () => {
       await gotoOK(page, "/dashboard/profesional?tab=services&mode=offer");
       const card = page.getByTestId("service-request-invitations");
       await expect(card).toContainText(renamed);
+      await expect(card).toContainText("El servicio que sugeriste ya está disponible");
       await page.screenshot({ path: test.info().outputPath("approved-service-invitation.png"), fullPage: true });
+      const documentMarker = randomUUID();
+      await page.evaluate((marker) => {
+        const state = { marker, frames: [] as string[], running: true };
+        (window as unknown as { serviceRequestNavigation: typeof state }).serviceRequestNavigation = state;
+        const sample = () => {
+          if (!state.running) return;
+          state.frames.push(document.querySelector("[data-dashboard-current]")?.getAttribute("data-dashboard-current") ?? "missing");
+          requestAnimationFrame(sample);
+        };
+        requestAnimationFrame(sample);
+      }, documentMarker);
       await card.getByRole("link", { name: "Completar servicio" }).click();
       let dialog = page.getByRole("dialog").filter({ has: page.getByTestId("service-edit-save") });
       await expect(dialog).toBeVisible(); await expect(dialog).toContainText(renamed);
+      const navigation = await page.evaluate(() => {
+        const state = (window as unknown as { serviceRequestNavigation?: { marker: string; frames: string[]; running: boolean } }).serviceRequestNavigation;
+        if (state) state.running = false;
+        return state;
+      });
+      expect(navigation?.marker).toBe(documentMarker);
+      expect(navigation?.frames.length).toBeGreaterThan(0);
+      expect(navigation?.frames.every(frame => frame === "services")).toBe(true);
       await expectNoHorizontalOverflow(page);
       await page.screenshot({ path: test.info().outputPath("approved-service-editor.png"), fullPage: true });
       expect((await db.from("professionals").select("professions,services").eq("id", a.professionalId!).single()).data).toEqual(before);

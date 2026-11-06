@@ -1,8 +1,11 @@
 // Nombres de distritos para búsqueda por cantón. Base histórica del catálogo
-// ubicaciones.paginasweb.cr, revisada con la DTA 2025 (SNIT/IGN).
+// ubicaciones.paginasweb.cr, revisada con las DTA 2025 y 2026 (SNIT/IGN).
 // Se omiten cabeceras homónimas; no es un conteo de distritos oficiales.
 // Referencia: decreto 44882-MGP, DTA 2025, tabla SNIT/IGN.
 // https://www.pgrweb.go.cr/DOCS/NORMAS/1/VIGENTE/D/2020-2029/2025-2029/2025/1953C/17275C.HTML
+// https://www.snitcr.go.cr/pdfs/ign_repositorio/DTA-TABLA%20POR%20PROVINCIA-CANT%C3%93N-DISTRITO%202026.pdf
+// La tabla de áreas 2026 enumera 493 códigos aunque su resumen indica 494:
+// omite Duacarí, que se conserva desde la DTA anterior; no inferir su supresión.
 //
 // POR QUÉ EXISTE ESTE ARCHIVO: la gente busca por el nombre del lugar donde
 // vive —San Pedro, Jacó, Tres Ríos, Tamarindo—, no por el cantón. Con solo
@@ -57,7 +60,7 @@ export const DISTRICTS: District[] = [
   { name: "Legua", cantonId: "sj-as" },
   { name: "Monterrey", cantonId: "sj-as" },
   { name: "Salitrillos", cantonId: "sj-as" },
-  { name: "Colón", cantonId: "sj-mo" },
+  { name: "Ciudad Colón", cantonId: "sj-mo", searchAliases: ["Colón", "Villa Colón"] },
   { name: "Quitirrisí", cantonId: "sj-mo" },
   { name: "Guayabo", cantonId: "sj-mo" },
   { name: "Tabarcia", cantonId: "sj-mo" },
@@ -120,7 +123,7 @@ export const DISTRICTS: District[] = [
   { name: "Rivas", cantonId: "sj-pm" },
   { name: "San Pedro", cantonId: "sj-pm" },
   { name: "Platanares", cantonId: "sj-pm" },
-  { name: "Pejibaye", cantonId: "sj-pm" },
+  { name: "Pejibaye", cantonId: "sj-pm", searchAliases: ["Pejivalle"] },
   { name: "Cajon", cantonId: "sj-pm" },
   { name: "Baru", cantonId: "sj-pm" },
   { name: "Rio Nuevo", cantonId: "sj-pm" },
@@ -162,7 +165,7 @@ export const DISTRICTS: District[] = [
   { name: "San José", cantonId: "al-gr" },
   { name: "San Roque", cantonId: "al-gr" },
   { name: "Tacares", cantonId: "al-gr" },
-  { name: "Rio Cuarto", cantonId: "al-gr" },
+  { name: "Río Cuarto", cantonId: "al-rc" },
   { name: "Puente de Piedra", cantonId: "al-gr" },
   { name: "Bolivar", cantonId: "al-gr" },
   { name: "Desmonte", cantonId: "al-sm" },
@@ -351,6 +354,7 @@ export const DISTRICTS: District[] = [
   { name: "La Fortuna", cantonId: "gu-ba" },
   { name: "Mogote", cantonId: "gu-ba" },
   { name: "Rio Naranjo", cantonId: "gu-ba" },
+  { name: "Pijije", cantonId: "gu-ba" },
   { name: "Filadelfia", cantonId: "gu-ca" },
   { name: "Palmira", cantonId: "gu-ca" },
   { name: "Sardinal", cantonId: "gu-ca" },
@@ -413,6 +417,7 @@ export const DISTRICTS: District[] = [
   { name: "Changuena", cantonId: "pu-bv" },
   { name: "Biolley", cantonId: "pu-bv" },
   { name: "Brunka", cantonId: "pu-bv" },
+  { name: "Cabagra", cantonId: "pu-bv" },
   { name: "Miramar", cantonId: "pu-mo" },
   { name: "La Unión", cantonId: "pu-mo" },
   { name: "San Isidro", cantonId: "pu-mo" },

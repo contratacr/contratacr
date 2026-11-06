@@ -43,9 +43,9 @@ test("capital names keep separate province and canton scopes without repeated di
     assert.equal(exact.length, 2, label);
     assert.equal(exact[0].id, province);
     assert.equal(exact[1].id, canton);
-    assert.equal(locationSuggestionContext(exact[0]), "Provincia");
-    assert.equal(locationSuggestionContext(exact[1]), `Cantón · ${label}`);
-    assert.equal(locationSuggestionContext(exact[0], "en"), "Province");
+    assert.equal(locationSuggestionContext(exact[0]), "");
+    assert.equal(locationSuggestionContext(exact[1]), label);
+    assert.equal(locationSuggestionContext(exact[0], "en"), "");
   }
   assert.equal(searchLocations("Cahuita").filter(s => s.label === "Cahuita").length, 1);
 });
@@ -76,8 +76,24 @@ test("nine DTA 2025 additions resolve by name, accents and canton", () => {
   for (const [name, id] of [["Quitirrisí","sj-mo"],["La Amistad","sj-pm"],["Birrisito","ca-pa"],["La Victoria","ca-ji"],["Puente Salas","he-ba"],["Matambú","gu-ho"],["Gutiérrez Braun","pu-cc"],["Lagunillas","pu-ga2"],["Reventazón","li-si"]]) {
     assert.equal(resolveLocation(normalizeText(name)).id, id, name);
     assert.equal(resolveLocation(name).kind, "district");
-    assert.match(locationSuggestionContext(resolveLocation(name), "en"), /^District · /);
+    const location = resolveLocation(name);
+    const province = PROVINCES.find(p => p.id === location.provinceId);
+    const canton = province.cantons.find(c => c.id === id);
+    assert.equal(locationSuggestionContext(location, "en"), `${canton.name}, ${province.name}`);
   }
   assert.equal(resolveLocation("Rohrmoser").kind, "place");
-  assert.match(locationSuggestionContext(resolveLocation("Rohrmoser")), /^Lugar · /);
+  assert.equal(locationSuggestionContext(resolveLocation("Rohrmoser")), "San José, San José");
+});
+
+test("2026 districts and familiar names use their current canton, never a province fallback", () => {
+  for (const [query, canton] of [["Ciudad Colón", "sj-mo"], ["Colon", "sj-mo"], ["Villa Colón", "sj-mo"], ["Pijije", "gu-ba"], ["Cabagra", "pu-bv"], ["Pejivalle", "sj-pm"], ["Río Cuarto", "al-rc"], ["Vázquez de Coronado", "sj-vb"]]) {
+    const place = resolveLocation(query);
+    assert.equal(place.id, canton, query);
+    assert.equal(place.type, "canton", query);
+  }
+  assert.equal(resolveLocation("Ciudad Colón").label, "Ciudad Colón");
+  assert.equal(locationSuggestionContext(resolveLocation("Ciudad Colón")), "Mora, San José");
+  assert.ok(!searchLocations("Río Cuarto").some(place => place.id === "al-gr"));
+  assert.equal(searchLocations("Lugar que no existe 987654").length, 0);
+  assert.deepEqual(searchLocations("San"), searchLocations("San", 10000));
 });

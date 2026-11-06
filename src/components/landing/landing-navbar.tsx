@@ -42,6 +42,7 @@ import { oficiosDeArranque } from "@/lib/data/oficios-de-arranque";
 import { allLocationSuggestions, searchLocations, resolveLocation, locationSuggestionKey, locationSuggestionContext, type LocationSuggestion } from "@/lib/data/location-search";
 import { lockBodyScroll, olvidarDesplazamientoGuardado } from "@/lib/body-scroll-lock";
 import { useContainedTouchScroll } from "@/hooks/use-contained-touch-scroll";
+import { PersistentScrollIndicator } from "@/components/ui/persistent-scroll-indicator";
 import { createClient } from "@/lib/supabase/client";
 import { repairVisibleText } from "@/lib/text/repair-visible-text";
 import { OfferTagPercentIcon } from "@/components/icons/offer-tag-percent-icon";
@@ -1459,7 +1460,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const navLocSug = useMemo(() => searchLocations(navLocation), [navLocation]);
   const nativeLocationSuggestions = useMemo(() => {
     const typed = searchLocations(navLocation).filter((suggestion) => suggestion.type === "province" || suggestion.type === "canton");
-    if (typed.length > 0) return typed;
+    if (navLocation.trim()) return typed;
     return currentLocationSuggestions?.length ? currentLocationSuggestions : provinceSuggestions();
   }, [currentLocationSuggestions, navLocation]);
 
@@ -2321,7 +2322,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                                   <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
                                   <span className="flex-1 min-w-0">
                                     <span className="block text-sm font-medium text-[#1a2744] truncate">{s.label}</span>
-                                    <span className="block text-[11px] text-gray-400 truncate">{locationSuggestionContext(s, locale)}</span>
+                                    {locationSuggestionContext(s) && <span className="block text-[11px] text-gray-400 truncate">{locationSuggestionContext(s)}</span>}
                                   </span>
                                 </button>
                               ))}
@@ -2596,7 +2597,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 </div>
               </div>
 
-              <div ref={listaBuscadorRef} className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-6">
+              <div className="relative mt-4 min-h-0 flex-1">
+              <div ref={listaBuscadorRef} className="ccr-search-suggestions-scroll h-full overflow-y-auto overscroll-contain pb-3 pr-2">
                 {showNativeServiceSuggestions ? (
                   <div id="native-service-suggestions" className="space-y-1" role="listbox" aria-label={locale === "en" ? "Suggested services" : "Servicios sugeridos"}>
                     <p className="px-2 pb-1 pt-1 text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#7a8797]">
@@ -2802,7 +2804,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         <span>{locale === "en" ? "Search near me" : "Buscar cerca de mí"}</span>
                   </button>
                   )}
-                  {!searchFocused && nativeLocationSuggestions.slice(0, 7).map((suggestion) => (
+                  {!searchFocused && nativeLocationSuggestions.map((suggestion) => (
                     <button
                       key={locationSuggestionKey(suggestion)}
                       type="button"
@@ -2818,14 +2820,17 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       </span>
                       <span>
                         {suggestion.label}
-                        <span className="block text-[12px] font-semibold text-[#6b7280]">{locationSuggestionContext(suggestion, locale)}</span>
+                        {locationSuggestionContext(suggestion) && <span className="block text-[12px] font-semibold text-[#6b7280]">{locationSuggestionContext(suggestion)}</span>}
                       </span>
                     </button>
                   ))}
+                  {!searchFocused && navLocation.trim() && nativeLocationSuggestions.length === 0 && <p role="status" className="px-2 py-3 text-sm text-[#6b7280]">{t("locationNotFound")}</p>}
                 </div>
                 )}
               </div>
 
+              <PersistentScrollIndicator scrollRef={listaBuscadorRef} />
+              </div>
             </form>
           </div>
         )}
