@@ -45,8 +45,17 @@ for(const locale of ['es','en']) for(const width of [320,390,768,1440]) test(`co
 
  await expect(dialog.getByRole('heading',{name:locale==='en'?'Data privacy settings':'Configuración de privacidad',exact:true})).toBeVisible();
  await expect(dialog.locator('summary')).toHaveCount(3);
+ const accept=dialog.getByRole('button',{name:locale==='en'?'Accept all':'Aceptar todas',exact:true});
+ const save=dialog.getByRole('button',{name:locale==='en'?'Save':'Guardar',exact:true});
+ const acceptBounds=(await accept.boundingBox())!,saveBounds=(await save.boundingBox())!;
+ expect(Math.abs(acceptBounds.y-saveBounds.y)).toBeLessThan(1);
+ expect(Math.abs(acceptBounds.width-saveBounds.width)).toBeLessThan(1);
+ expect(Math.abs(acceptBounds.height-saveBounds.height)).toBeLessThan(1);
+ expect(await save.evaluate(n=>getComputedStyle(n).backgroundColor)).toBe('rgb(0, 159, 217)');
  const statisticsInfo=dialog.locator('details').nth(1);await statisticsInfo.locator('summary').click();
  await expect(statisticsInfo.locator('p')).toContainText(locale==='en'?'not necessarily anonymous':'no son necesariamente anónimos');
+ await expect(accept).toBeInViewport({ratio:1});
+ await expect(save).toBeInViewport({ratio:1});
  await statisticsInfo.locator('summary').click();
  await expect(dialog.getByRole('checkbox')).toHaveCount(2);
  for(const checkbox of await dialog.getByRole('checkbox').all()) await expect(checkbox).toBeChecked();
@@ -65,7 +74,7 @@ for(const locale of ['es','en']) for(const width of [320,390,768,1440]) test(`co
  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('contratacr:consent:analytics:v1')!).choice)).toBe('declined');
  await page.locator('main button').click();await page.keyboard.press('Escape');await expect(dialog).not.toBeVisible();
  await page.locator('main button').click();
- await dialog.getByRole('button',{name:locale==='en'?'Accept all':'Aceptar todo',exact:true}).click();
+ await dialog.getByRole('button',{name:locale==='en'?'Accept all':'Aceptar todas',exact:true}).click();
  expect(await page.evaluate(()=>['analytics','advertising'].map(p=>JSON.parse(localStorage.getItem(`contratacr:consent:${p}:v1`)! ).choice))).toEqual(['accepted','accepted']);
  await page.evaluate(()=>localStorage.clear());await page.reload();await page.addStyleTag({content:css});await page.addScriptTag({content:script});
  await expect(banner).toBeVisible();

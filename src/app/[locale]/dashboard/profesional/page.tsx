@@ -680,10 +680,13 @@ export default function DashboardPage() {
   const requestedOfferOnlyTab = !!requestedTab && OFFER_ONLY.has(requestedTab);
   // A history update is scheduled as a Next transition. Keep the selected
   // section synchronous so the previous panel cannot paint under its new URL.
-  const [pendingPanelTab, setPendingPanelTab] = useState<{ from: string | null; tab: Tab } | null>(null);
+  const [pendingPanelTab, setPendingPanelTab] = useState<{ from: string | null; tab: Tab; serviceRequest?: string } | null>(null);
   const visibleRequestedTab = pendingPanelTab && rawRequestedTab === pendingPanelTab.from ? pendingPanelTab.tab : requestedTab;
+  const serviceRequestToComplete = pendingPanelTab && rawRequestedTab === pendingPanelTab.from
+    ? pendingPanelTab.serviceRequest ?? searchParams.get("serviceRequest")
+    : searchParams.get("serviceRequest");
   const allowedRequestedTab = visibleRequestedTab && (!OFFER_ONLY.has(visibleRequestedTab) || esProfesional) ? visibleRequestedTab : null;
-  if (pendingPanelTab && rawRequestedTab !== pendingPanelTab.from) setPendingPanelTab(null);
+  if (pendingPanelTab && (rawRequestedTab !== pendingPanelTab.from || (pendingPanelTab.serviceRequest && searchParams.get("serviceRequest") === pendingPanelTab.serviceRequest))) setPendingPanelTab(null);
   const urlForcedMode: Mode | null =
     legacyVerificationTab && esProfesional ? "offer" : requestedOfferOnlyTab && esProfesional ? "offer" : requestedTab && USE_ONLY.has(requestedTab) ? "use" : urlModeParam;
   // Un solo panel: la cuenta profesional SIEMPRE ve el suyo. ?mode=use sigue
@@ -1286,6 +1289,26 @@ export default function DashboardPage() {
     // fought the fixed mobile bottom bar (its backdrop-blur made "Más" flicker / feel covered
     // during the animated scroll); an instant window scroll never interferes with it.
     scrollDashboardToPageTop();
+  }
+
+  function openRequestedService(categoryId: string) {
+    requestUnsavedAction(() => {
+      // This is an internal panel action, not a new route. Commit the section
+      // and requested draft together before Next observes the history update.
+      flushSync(() => {
+        clearCompletionFlow();
+        setServiceFocus(null);
+        setProfileFocus(null);
+        setMobilePanelOpen(false);
+        setPendingPanelTab({ from: rawRequestedTab, tab: "services", serviceRequest: categoryId });
+      });
+      const url = new URL(window.location.href);
+      url.searchParams.set("tab", "services");
+      url.searchParams.set("mode", "offer");
+      url.searchParams.set("serviceRequest", categoryId);
+      window.history.pushState(null, "", url.pathname + url.search);
+      scrollDashboardToPageTop();
+    });
   }
 
   function openProfileVerification() {
@@ -2225,7 +2248,7 @@ export default function DashboardPage() {
                             </button>
                           </div>
                         )}
-                        {pro && mode === "offer" && (activeTab === "home" || activeTab === "services") && <ServiceRequestInvitations showDeferred={activeTab === "services"} />}
+                        {pro && mode === "offer" && activeTab === "services" && <ServiceRequestInvitations showDeferred onComplete={openRequestedService} />}
                         <SectionBoundary titulo={t("sectionErrorTitle")} cuerpo={t("sectionErrorBody")} reintentar={t("sectionErrorRetry")}>
                         {TABS_WITH_SUBTITLE.has(activeTab) && (
                           <SectionHeadline subtitulo={t(`subtitles.${activeTab}`)} className="mb-4" />
@@ -2354,6 +2377,7 @@ export default function DashboardPage() {
                             key={`servicios:${(pro.professions ?? []).length}:${(pro.services ?? []).length}`}
                             professionalId={pro.id}
                             primaryCategory={pro.category_id}
+                            categoryToComplete={serviceRequestToComplete}
                             initialProfessions={pro.professions ?? []}
                             initialServices={pro.services ?? []}
                             onSaved={(intent) => handleSaved(intent ?? "section")}

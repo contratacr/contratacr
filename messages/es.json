@@ -112,6 +112,7 @@
       "Veterinario"
     ],
     "location": "Ubicación",
+    "locationNotFound": "No encontramos ese lugar. Probá con su cantón o provincia.",
     "searchAll": "Buscar \"{q}\" en todos los servicios",
     "search": "Buscar",
     "province": "Provincia",
@@ -3446,8 +3447,8 @@
     "aiConsentRequired": "Se requiere permiso antes de usar IA externa."
   },
   "serviceRequests": {
-    "title": "Tu servicio ya está disponible",
-    "body": "“{service}” ya está disponible. Completá la información para agregarlo a tu perfil.",
+    "title": "El servicio que sugeriste ya está disponible",
+    "body": "“{service}” ya está en ContrataCR. Podés completar sus datos y agregarlo a tu perfil.",
     "complete": "Completar servicio",
     "later": "Ahora no",
     "error": "No se pudo guardar. Intentá nuevamente.",

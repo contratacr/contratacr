@@ -19,6 +19,7 @@ const ALL_LOCATIONS: LocationSuggestion[] = [
       id: c.id,
       provinceId: p.id,
       label: c.name,
+      searchAliases: c.searchAliases,
       sublabel: p.name,
     }))
   ),
@@ -56,11 +57,8 @@ export function locationSuggestionKey(item: LocationSuggestion): string {
   return `${item.type}:${item.id}:${normalizeText(item.label)}`;
 }
 
-export function locationSuggestionContext(item: LocationSuggestion, locale = "es"): string {
-  const names = locale === "en"
-    ? { province: "Province", canton: "Canton", district: "District", place: "Place" }
-    : { province: "Provincia", canton: "Cantón", district: "Distrito", place: "Lugar" };
-  return item.type === "province" ? names[item.kind] : `${names[item.kind]} · ${item.sublabel}`;
+export function locationSuggestionContext(item: LocationSuggestion): string {
+  return item.type === "province" ? "" : item.sublabel;
 }
 
 // Prefer the administrative entry over a redundant district/alias, retaining
@@ -81,7 +79,7 @@ export function allLocationSuggestions(): LocationSuggestion[] {
 
 /* Smart-ish match: provinces always rank above cantons; prefix matches above
    loose "contains" matches. Returns up to `limit` suggestions. */
-export function searchLocations(query: string, limit = ALL_LOCATIONS.length): LocationSuggestion[] {
+export function searchLocations(query: string, limit = SEARCH_LOCATIONS.size): LocationSuggestion[] {
   const q = normalizeText(query.trim());
   if (!q) return [];
 

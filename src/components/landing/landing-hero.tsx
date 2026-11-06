@@ -332,7 +332,7 @@ function LocationDropdown({
           <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
           <span className="flex-1 min-w-0">
             <span className="block text-sm leading-snug text-[#162543] break-words">{s.label}</span>
-            <span className="block text-xs leading-snug text-gray-400 break-words">{locationSuggestionContext(s, locale)}</span>
+            {locationSuggestionContext(s) && <span className="block text-xs leading-snug text-gray-400 break-words">{locationSuggestionContext(s)}</span>}
           </span>
         </button>
       ))}

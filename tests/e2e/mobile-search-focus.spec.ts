@@ -86,3 +86,38 @@ test('Enter in location submits marketplace search without a service',async({pag
   await expect(page).toHaveURL(/location=Alajuela/);
  }
 });
+
+test('search suggestions use the visual viewport and keep an overflow cue visible while idle',async({page})=>{
+ await page.setViewportSize({width:390,height:700});
+ for(const path of ['/profesionales','/proyectos']) {
+  const panel=await openSearch(page,path);
+  const location=panel.locator('input').nth(1);
+  await location.fill('San');
+  await page.evaluate(()=>{
+   document.documentElement.setAttribute('data-keyboard-open','');
+   document.documentElement.style.setProperty('--app-visual-viewport-height','360px');
+   document.documentElement.style.setProperty('--app-visual-viewport-top','0px');
+  });
+  const list=panel.locator('.ccr-search-suggestions-scroll');
+  const indicator=panel.locator('[data-persistent-scroll-indicator]');
+  await expect(indicator).toBeVisible();
+  const bounds=await panel.boundingBox();
+  expect(bounds!.height).toBe(360);
+  const listBounds=await list.boundingBox();
+  expect(listBounds!.y+listBounds!.height).toBeLessThanOrEqual(bounds!.y+bounds!.height);
+  // The old reservation removed another 64px on top of the browser's viewport.
+  expect(bounds!.y+bounds!.height-listBounds!.y-listBounds!.height).toBeLessThan(24);
+  const before=await indicator.locator('div').evaluate(n=>parseFloat(n.style.top));
+  await list.evaluate(n=>{n.scrollTop=n.scrollHeight;});
+  await expect.poll(()=>indicator.locator('div').evaluate(n=>parseFloat(n.style.top))).toBeGreaterThan(before);
+  await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+  await expect(indicator).toBeVisible();
+  await location.fill('Atenas');
+  await expect(indicator).toHaveCount(0);
+  if(path==='/profesionales') {
+   await location.fill('Lugar que no existe 987654');
+   await expect(panel.getByRole('status')).toHaveText('No encontramos ese lugar. Probá con su cantón o provincia.');
+   await expect(panel.getByRole('option')).toHaveCount(0);
+  }
+ }
+});

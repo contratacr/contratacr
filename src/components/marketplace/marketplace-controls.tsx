@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode }
 import { createPortal } from "react-dom";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { useContainedTouchScroll } from "@/hooks/use-contained-touch-scroll";
+import { PersistentScrollIndicator } from "@/components/ui/persistent-scroll-indicator";
 import { allLocationSuggestions, searchLocations, locationSuggestionKey, locationSuggestionContext } from "@/lib/data/location-search";
 import { soltarFoco } from "@/lib/soltar-foco";
 import { Check, ChevronDown, ChevronRight, Clock3, MapPin, Search, Wrench, X } from "lucide-react";
@@ -188,22 +189,22 @@ export function MarketplaceSearch({
   //
   // 3-oct-2026 (Isaac): la UBICACIÓN se sugiere IGUAL que en /profesionales:
   // vacío → las siete provincias; al escribir → provincias, cantones y barrios
-  // del país (searchLocations), siete como mucho, con su provincia debajo. Un
+  // del país (searchLocations), con su provincia debajo y sin truncar la lista. Un
   // barrio filtra por su cantón, que es como vienen las publicaciones.
   const esUbicacion = secondary?.icon === "location";
   const lugares = useMemo(() => {
     if (!esUbicacion) return [] as { key: string; valor: string; etiqueta: string; sub: string }[];
-    const encontrados = secondaryNeedle ? searchLocations(secondaryNeedle, 12) : allLocationSuggestions().filter((l) => l.type === "province");
+    const encontrados = secondaryNeedle ? searchLocations(secondaryNeedle) : allLocationSuggestions().filter((l) => l.type === "province");
     return encontrados.map((l) => {
       const canton = l.type === "canton" ? allLocationSuggestions().find((c) => c.type === "canton" && c.id === l.id) : null;
       return {
         key: locationSuggestionKey(l),
         valor: canton?.label ?? l.label,
         etiqueta: l.label,
-        sub: locationSuggestionContext(l, locale),
+        sub: locationSuggestionContext(l),
       };
-    }).slice(0, 7);
-  }, [esUbicacion, secondaryNeedle, locale]);
+    });
+  }, [esUbicacion, secondaryNeedle]);
   const visibleSecondarySuggestions = useMemo(() => {
     if (esUbicacion) return lugares.map((l) => l.key);
     return uniqueSecondarySuggestions
@@ -464,7 +465,8 @@ export function MarketplaceSearch({
           </div>
           {/* La lista se desplaza POR DENTRO: antes la hoja no tenía nada que
               se desplazara y con el teclado abierto lo de abajo era inalcanzable. */}
-          <div ref={listaHojaRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5">
+          <div className="relative min-h-0 flex-1">
+          <div ref={listaHojaRef} className="ccr-search-suggestions-scroll h-full overflow-y-auto overscroll-contain px-6 py-5">
             <div className="mb-3 flex items-center justify-between gap-3">
               <h2 className="text-base font-extrabold">{mobileField === "secondary" || cleanValue ? copy.suggestions : copy.recents}</h2>
               {mobileField === "primary" && !cleanValue && recents.length > 0 && (
@@ -578,6 +580,8 @@ export function MarketplaceSearch({
                 </>
               )}
             </div>
+          </div>
+          <PersistentScrollIndicator scrollRef={listaHojaRef} />
           </div>
         </div>
       )}

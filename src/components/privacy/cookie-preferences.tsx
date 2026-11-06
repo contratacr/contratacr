@@ -50,6 +50,11 @@ export function CookiePreferences() {
   const notice = en
     ? 'We use necessary cookies to keep ContrataCR working securely. By choosing “Agree”, you accept optional usage statistics and advertising measurement with Meta. In “Settings” you can accept or reject each purpose. You can change your choice at any time.'
     : 'Usamos cookies necesarias para que ContrataCR funcione de forma segura. Al elegir “De acuerdo”, aceptás las estadísticas de uso y la medición publicitaria con Meta. En “Configuración” podés aceptar o rechazar cada fin opcional. Podés cambiar tu decisión cuando quieras.';
+  const categorySummaries: Record<string, string> = {
+    necessary: en ? "Sign-in, security and essential preferences." : "Inicio de sesión, seguridad y preferencias esenciales.",
+    analytics: en ? "Visits and actions to improve ContrataCR." : "Visitas y acciones para mejorar ContrataCR.",
+    advertising: en ? "Advertising campaign measurement with Meta." : "Medición de campañas publicitarias con Meta.",
+  };
   const categories = [
     { key: "necessary", title: en ? "Necessary" : "Necesarias", description: en ? "Sign-in, security, language, privacy choices and essential service records. These functions are always active and cannot be disabled here." : "Inicio de sesión, seguridad, idioma, preferencias y registros indispensables del servicio. Estas funciones están siempre activas y no se pueden desactivar aquí." },
     { key: "analytics", title: en ? "Statistics" : "Estadísticas", value: analytics, change: setAnalytics, description: en ? "Visits and actions to improve the app, linked to your account or a visitor identifier. These records are not necessarily anonymous. Optional statistics stay off unless you accept them." : "Visitas y acciones para mejorar la app, vinculadas a tu cuenta o a un identificador de visitante. Estos registros no son necesariamente anónimos. Las estadísticas opcionales permanecen desactivadas hasta que las aceptés." },
@@ -66,26 +71,42 @@ export function CookiePreferences() {
       <Link href="/privacidad#cookies" className="mx-auto mt-2 flex min-h-11 w-fit items-center rounded-lg text-xs font-semibold text-[#007fae] underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-[#009fd9]">{en ? "Privacy policy" : "Política de privacidad"}</Link>
       {error && <p role="alert" className="mt-3 text-sm text-red-700">{en ? "Could not save your preferences. Please try again." : "No pudimos guardar tus preferencias. Inténtalo de nuevo."}</p>}
     </section>}
-    <dialog ref={dialog} onCancel={() => setSettings(false)} onClose={() => setSettings(false)} aria-labelledby="privacy-settings-title" className="fixed inset-x-0 bottom-0 top-auto m-0 max-h-[95dvh] w-full max-w-none overflow-y-auto overscroll-contain rounded-t-[24px] border border-b-0 border-[#dce6ec] bg-white p-4 pb-[max(16px,env(safe-area-inset-bottom))] text-[#162543] shadow-2xl backdrop:bg-[#162543]/30 sm:inset-0 sm:m-auto sm:max-h-[90dvh] sm:max-w-lg sm:rounded-[24px] sm:border-b sm:p-6">
-      <h2 id="privacy-settings-title" tabIndex={-1} className="text-lg font-extrabold leading-6 outline-none!">{en ? "Data privacy settings" : "Configuración de privacidad"}</h2>
-      <p className="mb-3 mt-2 text-xs leading-4 text-[#526176]">{en ? "Choose what to accept and press “Save”. Turn off both options to use only necessary cookies. Change your decision from the footer at any time." : "Elegí qué aceptás y pulsá “Guardar”. Desactivá ambas opciones para usar solo las cookies necesarias. Cambiá tu decisión desde el pie de página cuando quieras."}</p>
-      <button className={`${button} mb-3 w-full`} onClick={() => save(true, true)}>{en ? "Accept all" : "Aceptar todo"}</button>
-      <div className="grid gap-2">
-        {categories.map(item => <div key={item.key} className="rounded-2xl border border-[#e5edf2] p-3">
+    <dialog ref={dialog} onCancel={() => setSettings(false)} onClose={() => setSettings(false)} aria-labelledby="privacy-settings-title" className="fixed inset-x-0 bottom-0 top-auto m-0 max-h-[95dvh] w-full max-w-none overflow-hidden rounded-t-[24px] border border-b-0 border-[#dce6ec] bg-white p-0 text-[#162543] shadow-2xl backdrop:bg-[#162543]/30 open:flex open:flex-col sm:inset-0 sm:m-auto sm:max-h-[90dvh] sm:max-w-lg sm:rounded-[24px] sm:border-b">
+      <header className="shrink-0 px-5 pb-4 pt-5 sm:px-6 sm:pt-6">
+        <h2 id="privacy-settings-title" tabIndex={-1} className="text-lg font-extrabold leading-6 outline-none!">{en ? "Data privacy settings" : "Configuración de privacidad"}</h2>
+        <p className="mt-2 text-sm leading-5 text-[#526176]">{en ? "Choose what to allow. Optional categories can be turned off; your changes apply when you save." : "Elegí qué permitís. Podés desactivar las categorías opcionales; los cambios se aplican al guardar."}</p>
+      </header>
+      <div className="min-h-0 overflow-y-auto overscroll-contain px-5 pb-5 sm:px-6">
+      <div className="grid gap-3">
+        {categories.map(item => <section key={item.key} aria-labelledby={`privacy-${item.key}`} className="rounded-2xl border border-[#dce6ec] bg-white p-4">
           <div className="flex items-center justify-between gap-3">
-            <h3 id={`privacy-${item.key}`} className="text-sm font-bold">{item.title}</h3>
-            {item.change ? <input type="checkbox" aria-labelledby={`privacy-${item.key}`} checked={item.value} onChange={event => item.change?.(event.target.checked)} className="h-5 w-5 shrink-0 accent-[#0083b0]" /> : <span className="text-xs font-semibold text-[#526176]">{en ? "Always active" : "Siempre activas"}</span>}
+            {item.change ? <label className="flex min-h-6 cursor-pointer items-center gap-3">
+              <input type="checkbox" aria-labelledby={`privacy-${item.key}`} checked={item.value} onChange={event => item.change?.(event.target.checked)} className="h-5 w-5 shrink-0 cursor-pointer accent-[#0083b0]" />
+              <span id={`privacy-${item.key}`} className="text-sm font-bold">{item.title}</span>
+            </label> : <>
+              <h3 id={`privacy-${item.key}`} className="text-sm font-bold">{item.title}</h3>
+              <span className="text-xs font-semibold text-[#526176]">{en ? "Always active" : "Siempre activas"}</span>
+            </>}
           </div>
-          <details className="mt-1 text-xs leading-4 text-[#526176]">
-            <summary className="w-fit cursor-pointer rounded py-1 font-semibold text-[#007fae] underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-[#009fd9]">{en ? "More information" : "Más información"}<span className="sr-only">: {item.title}</span></summary>
+          <p className="mt-2 text-sm leading-5 text-[#526176]">{categorySummaries[item.key]}</p>
+          <details className="mt-2 text-sm leading-5 text-[#526176]">
+            <summary className="w-fit cursor-pointer rounded py-2 font-semibold text-[#007fae] underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-[#009fd9]">{en ? "More information" : "Más información"}<span className="sr-only">: {item.title}</span></summary>
             <p className="mt-2">{item.description}</p>
           </details>
-        </div>)}
+        </section>)}
       </div>
-      <Link href="/privacidad#cookies" onClick={() => setSettings(false)} className="flex min-h-11 items-center text-xs font-semibold text-[#007fae] underline underline-offset-2">{en ? "Privacy policy" : "Política de privacidad"}</Link>
-      <button onClick={() => save(analytics, advertising)} className={`${button} w-full`}>{en ? "Save" : "Guardar"}</button>
-      <button onClick={() => setSettings(false)} className="mx-auto mt-1 flex min-h-11 w-fit items-center justify-center rounded px-2 text-sm font-semibold text-[#162543] underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]">{en ? "Back" : "Volver"}</button>
-      {error && <p role="alert" className="mt-3 text-sm text-red-700">{en ? "Could not save your preferences." : "No pudimos guardar tus preferencias."}</p>}
+      </div>
+      <footer className="shrink-0 border-t border-[#e5edf2] bg-white px-5 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] sm:px-6">
+        <div className="grid grid-cols-2 items-stretch gap-3">
+          <button className="min-h-12 rounded-2xl border border-[#9aabba] bg-white px-3 py-3 text-sm font-bold text-[#162543] transition-colors hover:border-[#0083b0] hover:bg-[#f3fbfe] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]" onClick={() => save(true, true)}>{en ? "Accept all" : "Aceptar todas"}</button>
+          <button onClick={() => save(analytics, advertising)} className="min-h-12 rounded-2xl border border-[#009fd9] bg-[#009fd9] px-3 py-3 text-sm font-bold text-[#162543] transition-colors hover:bg-[#21afe2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0083b0]">{en ? "Save" : "Guardar"}</button>
+        </div>
+        <div className="mt-2 flex flex-wrap items-center justify-center gap-x-5">
+          <button onClick={() => setSettings(false)} className="flex min-h-11 items-center justify-center rounded px-1 text-sm font-semibold text-[#162543] underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]">{en ? "Back" : "Volver"}</button>
+          <Link href="/privacidad#cookies" onClick={() => setSettings(false)} className="flex min-h-11 items-center rounded text-sm font-semibold text-[#007fae] underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]">{en ? "Privacy policy" : "Política de privacidad"}</Link>
+        </div>
+        {error && <p role="alert" className="mt-2 text-sm text-red-700">{en ? "Could not save your preferences." : "No pudimos guardar tus preferencias."}</p>}
+      </footer>
     </dialog>
   </>;
 }

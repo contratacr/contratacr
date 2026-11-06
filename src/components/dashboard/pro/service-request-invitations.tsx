@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 
 type Invitation = { suggestionId: string; categoryId: string; name: string; nameEn?: string; link: string; dismissed: boolean };
-export function ServiceRequestInvitations({ showDeferred = false }: { showDeferred?: boolean }) {
+export function ServiceRequestInvitations({ showDeferred = false, onComplete }: { showDeferred?: boolean; onComplete?: (categoryId: string) => void }) {
   const t = useTranslations("serviceRequests");
   const locale = useLocale();
   const [items, setItems] = useState<Invitation[]>([]);
@@ -34,7 +34,11 @@ export function ServiceRequestInvitations({ showDeferred = false }: { showDeferr
       <p className="font-bold text-[#162543]">{t("title")}</p>
       <p className="mt-1 text-sm text-[#52627a]">{t("body", { service: ({ es: item.name, en: item.nameEn || item.name } as Record<string, string>)[locale] || item.name })}</p>
       <div className="mt-3 flex flex-wrap items-center gap-3">
-        <Link href={item.link} className="rounded-full bg-[#009FD9] px-4 py-2 text-sm font-bold text-white">{t("complete")}</Link>
+        <Link href={item.link} onClick={event => {
+          if (!onComplete || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+          event.preventDefault();
+          onComplete(item.categoryId);
+        }} className="rounded-full bg-[#009FD9] px-4 py-2 text-sm font-bold text-white">{t("complete")}</Link>
         {!item.dismissed && <button type="button" onClick={() => void defer(item.suggestionId)} className="px-2 py-2 text-sm font-semibold text-[#52627a]">{t("later")}</button>}
       </div>
     </div>)}
