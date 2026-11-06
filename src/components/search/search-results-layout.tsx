@@ -616,7 +616,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
             // taking it over for the header fires `lostpointercapture` on that child,
             // which bubbles here. Only the header itself losing capture ends a drag.
             onLostPointerCapture={(event) => { if (event.target === event.currentTarget) onHandleUp(); }}
-            className="relative z-40 shrink-0 cursor-grab touch-none select-none overflow-visible rounded-t-[20px] pb-1 active:cursor-grabbing lg:hidden"
+            className="relative z-40 shrink-0 cursor-grab touch-none select-none overflow-visible rounded-t-[20px] active:cursor-grabbing lg:hidden"
           >
             <div
               data-sheet-drag-handle
@@ -640,7 +640,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
               </div>
             )}
             {countLabel && <p className="px-4 pb-2 pt-0.5 text-[13px] font-semibold text-[#162543]">{countLabel}{limpiar && <> · <Link href={limpiar.href} className="text-[#007fae] hover:underline">{limpiar.label}</Link></>}</p>}
-            <div data-sheet-drag-handle aria-hidden="true" className="h-1 bg-[#f6f8fb] shadow-[inset_0_1px_0_rgba(226,232,240,0.58)]" />
+            <div data-sheet-drag-handle aria-hidden="true" className="h-px bg-[#e5e7eb]" />
           </div>
 
           {/* Cards — mobile: the sheet's scrolling body. Desktop: the middle column (order-2). */}
