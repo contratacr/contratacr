@@ -1807,6 +1807,13 @@ html.ccr-js .fade-in-up.visible > section > div > *:nth-child(3) { transition-de
 body.ccr-search-sheet-page {
   overscroll-behavior-y: none;
 }
+/* Mobile results form one continuous list: real dividers between measured
+   slots, including paginated cards, instead of white gaps and card shadows. */
+@media (max-width: 1023px) {
+  .ccr-search-results-list { gap: 0; }
+  .ccr-search-results-list > .ccr-search-card-slot { border-bottom: 1px solid #e5e7eb; }
+  .ccr-search-results-list > .ccr-search-card-slot article { box-shadow: none; }
+}
 /* Inside the results panel header the chip rail pans sideways only; vertical
    movement belongs to the panel drag, so the browser must not claim it. */
 .ccr-search-bottom-sheet [data-rail-trim],
