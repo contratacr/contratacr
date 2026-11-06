@@ -106,7 +106,7 @@ test.describe("@seeded cabeceras", () => {
         await page.waitForTimeout(900);
         const m = await page.evaluate(() => {
           const W = window.innerWidth;
-          const nav = document.querySelector("header")!;
+          const nav = document.querySelector('header[data-testid="landing-navbar"]')!;
           const items = Array.from(nav.querySelectorAll<HTMLElement>("a, button")).filter((n) => { const r = n.getBoundingClientRect(); return r.width > 0 && r.height > 0 && r.y < 70; });
           const fuera = items.filter((n) => n.getBoundingClientRect().right > W + 1).map((n) => (n.getAttribute("aria-label") || n.textContent || "").trim().slice(0, 24));
           const campo = Array.from(nav.querySelectorAll<HTMLElement>("input")).find((n) => n.getBoundingClientRect().width > 0);

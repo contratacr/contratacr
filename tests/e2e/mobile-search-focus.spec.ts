@@ -87,22 +87,26 @@ test('Enter in location submits marketplace search without a service',async({pag
  }
 });
 
-test('search suggestions use the visual viewport and keep an overflow cue visible while idle',async({page})=>{
+test.describe('viewport sizing',()=>{
+ test.use({hasTouch:true});
+ test('search suggestions use the visual viewport and keep an overflow cue visible while idle',async({page})=>{
  await page.setViewportSize({width:390,height:700});
  for(const path of ['/profesionales','/proyectos']) {
   const panel=await openSearch(page,path);
   const location=panel.locator('input').nth(1);
   await location.fill('San');
   await page.evaluate(()=>{
-   document.documentElement.setAttribute('data-keyboard-open','');
-   document.documentElement.style.setProperty('--app-visual-viewport-height','360px');
-   document.documentElement.style.setProperty('--app-visual-viewport-top','0px');
+   // Exercise the viewport observer itself. Writing its CSS output races the
+   // pending focus/scroll events, which correctly restore the real 700px height.
+   Object.defineProperty(window.visualViewport!, 'height', {configurable:true,get:()=>360});
+   Object.defineProperty(window.visualViewport!, 'offsetTop', {configurable:true,get:()=>0});
+   window.visualViewport!.dispatchEvent(new Event('resize'));
   });
   const list=panel.locator('.ccr-search-suggestions-scroll');
   const indicator=panel.locator('[data-persistent-scroll-indicator]');
   await expect(indicator).toBeVisible();
+  await expect.poll(async()=>(await panel.boundingBox())!.height).toBe(360);
   const bounds=await panel.boundingBox();
-  expect(bounds!.height).toBe(360);
   const listBounds=await list.boundingBox();
   expect(listBounds!.y+listBounds!.height).toBeLessThanOrEqual(bounds!.y+bounds!.height);
   // The old reservation removed another 64px on top of the browser's viewport.
@@ -120,4 +124,5 @@ test('search suggestions use the visual viewport and keep an overflow cue visibl
    await expect(panel.getByRole('option')).toHaveCount(0);
   }
  }
+});
 });

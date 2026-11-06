@@ -26802,7 +26802,7 @@
           "title": "(page.viewportSize()?.width??1280)>=1024"
         },
         {
-          "line": 90,
+          "line": 92,
           "title": "'search suggestions use the visual viewport and keep an overflow cue visible while idle'"
         }
       ]
