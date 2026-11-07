@@ -640,7 +640,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
               </div>
             )}
             {countLabel && <p className="px-4 pb-2 pt-0.5 text-[13px] font-semibold text-[#162543]">{countLabel}{limpiar && <> · <Link href={limpiar.href} className="text-[#007fae] hover:underline">{limpiar.label}</Link></>}</p>}
-            <div data-sheet-drag-handle aria-hidden="true" className="h-px bg-[#e5e7eb]" />
+            <div data-sheet-drag-handle aria-hidden="true" className="ccr-search-results-divider" />
           </div>
 
           {/* Cards — mobile: the sheet's scrolling body. Desktop: the middle column (order-2). */}
