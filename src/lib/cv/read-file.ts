@@ -1,3 +1,4 @@
+import { pdfTextLines } from './pdf-lines';
 import { Unzip, UnzipInflate, strFromU8 } from 'fflate';
 export const MAX_CV_BYTES = 5 * 1024 * 1024;
 const MAX_TEXT = 80000;
@@ -56,7 +57,7 @@ export async function readCvFile(file: File): Promise<string> {
           for (let i = 1; i <= pdf.numPages; i++) {
             const page = await pdf.getPage(i);
             const content = await page.getTextContent();
-            output += content.items.map(item => 'str' in item ? item.str + (item.hasEOL ? '\n' : ' ') : '').join('') + '\n\n';
+            output += pdfTextLines(content.items.filter(item => 'str' in item)) + '\n\n';
             page.cleanup();
             if (output.length > MAX_TEXT) throw new CvReadError('size');
           }

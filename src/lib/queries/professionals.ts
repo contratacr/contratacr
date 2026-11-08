@@ -931,9 +931,18 @@ async function getProfessionalBySlugEnVivo(slug: string): Promise<ProfessionalDe
       return !error && !!data;
     } catch { return false; }
   })();
-  const [estaSuspendido, contactEmail, hasCvFile] = await Promise.all([suspendido, correo, archivoCv]);
+  const formacionActual = (async () => {
+    try {
+      const { createPublicClient } = await import("@/lib/supabase/server");
+      const publico = await createPublicClient();
+      const { data, error } = await publico.from("professionals").select("cv_profile, certifications").eq("id", pro.id).maybeSingle();
+      if (error || !data) return { cvProfile: normalizeCv(null), certifications: pro.certifications };
+      return { cvProfile: normalizeCv(data.cv_profile), certifications: Array.isArray(data.certifications) ? data.certifications as Certification[] : [] };
+    } catch { return { cvProfile: normalizeCv(null), certifications: pro.certifications }; }
+  })();
+  const [estaSuspendido, contactEmail, hasCvFile, formacion] = await Promise.all([suspendido, correo, archivoCv, formacionActual]);
   if (estaSuspendido) return null;
-  return { ...pro, hasCvFile, ...(contactEmail ? { contactEmail } : {}) };
+  return { ...pro, ...formacion, hasCvFile, ...(contactEmail ? { contactEmail } : {}) };
 }
 
 async function getProfessionalBySlugUncached(
