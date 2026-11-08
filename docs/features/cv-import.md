@@ -60,3 +60,11 @@ Pruebas adicionales: tests/cv/sharing.test.mjs (API con dependencias simuladas y
 Validación de la revisión: 6 casos API/permisos y 1 caso DOCX aprobados en bloques separados; 2 recorridos de compartir en Chromium/WebKit y 3 regresiones del editor en Chromium móvil/escritorio y WebKit aprobados. TypeScript sin errores. ESLint focal sin errores, una advertencia de hook preexistente. La disponibilidad de Ver CV se consulta fuera de la caché del perfil.
 
 El encabezado de la previsualización también se llama Formación. La etiqueta de pruebas Vista pública guardada nunca formó parte del perfil de producción. Evidencia local anterior reutilizada: solo cambia esta etiqueta del harness y documentación; no requiere repetir pruebas de aplicación.
+
+## Corrección con un documento real — 8-nov-2026
+
+La extracción anterior agrupaba toda una sección cuando no había líneas vacías, no reconocía fechas mes/año y asignaba la primera responsabilidad como empresa. Se reconstruyen filas del PDF por posición para juntar las fechas laterales con su encabezado; se separan entradas fechadas, se reconocen encabezados empresa/puesto y puesto/empresa y se normalizan espacios y habilidades. La revisión muestra cantidades y avisa sobre entradas ambiguas o que superan límites, en lugar de cortar silenciosamente la descripción.
+
+El documento privado autorizado se probó localmente en Chromium y WebKit: 4 experiencias, 2 estudios, 22 habilidades, guardado/relectura simulados y cero subida durante extracción. No se incluyen el documento ni sus datos personales en Git. Se mantienen los límites: no es OCR ni un parser universal de diseños multicolumna.
+
+La revisión de la cuenta real descubrió que anon no tenía permiso de columna para cv_profile. La migración 264 concede únicamente SELECT de esa columna pública confirmada, conservando RLS y denegación de datos privados. Formación se consulta en vivo fuera de la caché de ficha para reflejar guardados/retiros. Validación: 9 pruebas de modelo/permisos y 1 prueba adicional de filas PDF; 3 regresiones de navegador, 2 de límites/reimportación y 2 con el documento real, en bloques separados. TypeScript/lint sin errores. Evidencia local en /tmp/ccr-cv-diagnosis.

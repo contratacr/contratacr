@@ -5,7 +5,7 @@ import { useLocale } from 'next-intl';
 import { CvFileEditor } from './cv-file-editor';
 import { Button } from '@/components/ui/button';
 import { Upload, X, Plus, FileText } from 'lucide-react';
-import { CV_LIMITS, emptyCv, hasCv, keyOf, mergeCv, normalizeCv, suggestCv, type CvEntry, type CvProfile } from '@/lib/cv/model';
+import { CV_LIMITS, emptyCv, hasCv, keyOf, mergeCv, normalizeCv, reviewCv, type CvEntry, type CvProfile } from '@/lib/cv/model';
 
 const inputClass = 'min-h-11 w-full rounded-xl border border-[#dce5ee] bg-white px-3 py-2 text-sm text-[#162543] focus:outline-none focus:ring-2 focus:ring-[#009FD9]';
 function Fields({ value, onChange, english, educationExtra }: { value: CvProfile; onChange: (value: CvProfile) => void; english: boolean; educationExtra?: ReactNode }) {
@@ -39,6 +39,7 @@ export function CvEditor({ value, onChange, disabled = false, existingEducation 
   const [candidate, setCandidate] = useState<CvProfile | null>(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [warnings, setWarnings] = useState<string[]>([]);
   useEffect(() => () => { request.current++; }, []);
   const reviewing = candidate !== null;
   useEffect(() => { if (reviewing) reviewRef.current?.focus(); }, [reviewing]);
@@ -46,7 +47,7 @@ export function CvEditor({ value, onChange, disabled = false, existingEducation 
     if (!file) return;
     setSelectedFile(file);
     const seq = ++request.current;
-    setBusy(true); setError(''); setNotice(''); setCandidate(null);
+    setBusy(true); setError(''); setNotice(''); setWarnings([]); setCandidate(null);
     try {
       const { readCvFile, CvReadError } = await import('@/lib/cv/read-file');
       let content: string;
@@ -55,10 +56,12 @@ export function CvEditor({ value, onChange, disabled = false, existingEducation 
         const messages = english ? { format: 'Choose a PDF or DOCX file. Save older Word files as DOCX.', size: 'The file is empty or too large. Maximum 5 MB and 80,000 characters.', pages: 'Choose a CV with up to 15 pages.', timeout: 'Reading took too long. Try a simpler file or enter your information manually.', protected: 'Export an unprotected copy of your CV.', unreadable: 'We could not read this document. Use a PDF with selectable text or a DOCX, or complete the fields manually.' } : { format: 'Elegí un archivo PDF o DOCX. Guardá los Word antiguos como DOCX.', size: 'El archivo está vacío o es demasiado grande. Máximo 5 MB y 80.000 caracteres.', pages: 'Elegí un CV de hasta 15 páginas.', timeout: 'La lectura tardó demasiado. Probá un archivo más sencillo o completá los campos manualmente.', protected: 'Exportá una copia de tu CV sin contraseña.', unreadable: 'No pudimos leer este documento. Usá un PDF con texto seleccionable o DOCX, o completá los campos manualmente.' };
         throw new Error(messages[code]);
       }
-      const extracted = suggestCv(content);
+      const result = reviewCv(content);
+      const extracted = result.profile;
       if (seq !== request.current) return;
+      if (!hasCv(extracted) && result.warnings.length) { setError(english ? 'The detected content exceeds the field limits. Complete it manually using your original CV.' : 'El contenido detectado supera los límites de los campos. Completalo manualmente usando tu CV original.'); return; }
       if (!hasCv(extracted)) { setError(english ? 'No education, experience or skills headings were recognized. You can complete the fields manually.' : 'No reconocimos secciones de formación, experiencia o habilidades. Podés completar los campos manualmente.'); return; }
-      setCandidate(extracted);
+      setWarnings(result.warnings); setCandidate(extracted);
     } catch (err) { if (seq === request.current) setError(err instanceof Error ? err.message : (english ? 'Could not read the file.' : 'No se pudo leer el archivo.')); }
     finally { if (seq === request.current) setBusy(false); }
   }
@@ -88,6 +91,8 @@ export function CvEditor({ value, onChange, disabled = false, existingEducation 
     {notice && <p role="status" className="text-sm text-[#0089bb]">{notice}</p>}
     {candidate && <div ref={reviewRef} tabIndex={-1} className="space-y-5 rounded-2xl border-2 border-[#009FD9] p-4" aria-label={english ? 'Review imported information' : 'Revisar información importada'}>
       <div><h3 className="font-semibold text-[#162543]">{english ? 'Review before adding' : 'Revisá antes de agregar'}</h3><p className="mt-1 text-sm text-[#52627a]">{english ? 'Correct or remove anything you do not want to publish. Existing information is kept.' : 'Corregí o quitá lo que no querés publicar. Conservamos tus datos actuales.'}</p></div>
+      <p role="status" className="text-sm font-semibold text-[#0089bb]">{candidate.experience.length} {english ? 'work experiences' : 'experiencias'} · {candidate.education.length} {english ? 'education entries' : 'estudios'} · {candidate.skills.length} {english ? 'skills' : 'habilidades'}</p>
+      {warnings.length > 0 && <p role="alert" className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">{english ? 'Some content could not be separated reliably or exceeds the field limits. Compare with your CV and complete the missing information before saving.' : 'Parte del contenido no se pudo separar con seguridad o supera los límites. Compará con tu CV y completá lo que falta antes de guardar.'}</p>}
       <Fields value={candidate} onChange={setCandidate} english={english}/>
       <div className="flex flex-wrap gap-3"><Button type="button" className="min-h-11" onClick={apply}>{english ? 'Add to my profile form' : 'Agregar al formulario'}</Button><Button type="button" variant="outline" className="min-h-11" onClick={() => { setCandidate(null); setError(''); }}>{english ? 'Discard import' : 'Descartar importación'}</Button></div>
     </div>}

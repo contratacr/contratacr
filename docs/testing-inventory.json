@@ -11911,7 +11911,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 81,
+          "line": 84,
           "tag": "input",
           "label": "{english ? 'Choose CV' : 'Elegir CV'}",
           "handler": "{e => { void selectFile(e.target.files?.[0]); e.target.value = ''; }}",
@@ -11919,7 +11919,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 82,
+          "line": 85,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => fileInput.current?.click()}",
@@ -11927,7 +11927,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 91,
+          "line": 96,
           "tag": "Fields",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{setCandidate}",
@@ -11935,7 +11935,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 92,
+          "line": 97,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{apply}",
@@ -11943,7 +11943,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 92,
+          "line": 97,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { setCandidate(null); setError(''); }}",
@@ -11951,7 +11951,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 94,
+          "line": 99,
           "tag": "Fields",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{onChange}",
