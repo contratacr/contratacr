@@ -1,5 +1,8 @@
 "use client";
 
+import { CvEditor, cvValidationError } from "./cv-editor";
+import { normalizeCv } from "@/lib/cv/model";
+
 import { hasBaseCanton } from "@/lib/location";
 
 import { AvatarFileInput } from "@/components/ui/avatar-file-input";
@@ -12,7 +15,6 @@ import { pareceFijoDeCostaRica } from "@/lib/telefono-movil";
 import { AvisoDeError } from "@/components/ui/etiqueta-campo";
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
 import { FilaInterruptor } from "@/components/ui/fila-interruptor";
@@ -24,7 +26,7 @@ import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-p
 import { PROFILE_IMAGE_OPTIONS, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 import { createClient } from "@/lib/supabase/client";
 import { detectIdType } from "@/lib/cedula";
-import { Camera, X, Plus, ChevronDown, ChevronLeft, ChevronRight, Lock, Award, Globe, Pencil } from "lucide-react";
+import { Camera, X, ChevronDown, ChevronLeft, ChevronRight, Lock, Award, Globe, Pencil } from "lucide-react";
 import { InstagramIcon, FacebookIcon, TikTokIcon, LinkedInIcon } from "@/components/icons/social-icons";
 import { SOCIAL_NETWORKS, cleanUsername, cleanWebsiteUrl, isValidUsername, isValidWebsiteUrl, type SocialNetwork } from "@/lib/social";
 import { Link } from "@/i18n/navigation";
@@ -35,7 +37,7 @@ import { getCategoryLabel, anyHealthCategory, anyVideoConsultCategory } from "@/
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import type { Certification } from "@/components/professionals/professional-card";
 import { cn } from "@/lib/utils";
-import { NAME_MAX_LENGTH, PROFILE_BIO_MAX_LENGTH, SHORT_TEXT_MAX_LENGTH, limitText } from "@/lib/text-limits";
+import { NAME_MAX_LENGTH, PROFILE_BIO_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { normalizeWorkplaceId } from "@/lib/workplaces";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -223,18 +225,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
       return next;
     });
   const toggleSection = (id: string) => {
-    const isClosingEmptyCertification =
-      id === "certs" &&
-      openSections.has(id) &&
-      !!certDraft &&
-      !certDraft.name.trim() &&
-      !certDraft.institution.trim() &&
-      !certDraft.year.trim();
-    if (isClosingEmptyCertification) {
-      cancelCertDraft();
-      applySectionToggle(id);
-      return;
-    }
     const isClosingDirtySection = openSections.has(id) && activeDirtySection === id;
     const isLeavingDirtySection = isMobileProfileLayout() && activeDirtySection && activeDirtySection !== id;
     if (dirty && hayCambiosReales && (isClosingDirtySection || isLeavingDirtySection)) {
@@ -323,20 +313,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
       setHasNationalCedula(!!ced && detectIdType(String(ced)) === "cedula");
     });
   }, []);
-  useEffect(() => {
-    function onIdentityUpdated(event: Event) {
-      const detail = (event as CustomEvent<{ fullName?: string | null; cedula?: string | null; verified?: boolean }>).detail;
-      const nextName = typeof detail?.fullName === "string" ? detail.fullName.trim() : "";
-      const nextCedula = typeof detail?.cedula === "string" ? detail.cedula.trim() : "";
-      if (nextName) setFullName(nextName);
-      if (nextCedula) setHasNationalCedula(detectIdType(nextCedula) === "cedula");
-      setDirty(false);
-      setActiveDirtySection(null);
-      dirtyRef.current = false;
-    }
-    window.addEventListener("ccr:identity-updated", onIdentityUpdated);
-    return () => window.removeEventListener("ccr:identity-updated", onIdentityUpdated);
-  }, []);
   const nameLocked = verified || hasNationalCedula;
   const resolvedFullName = fullName.trim() || initialFullName;
   const seedProfessions: string[] =
@@ -366,10 +342,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
   const [certifications, setCertifications] = useState<Certification[]>(
     Array.isArray(initial.certifications) ? initial.certifications : []
   );
-  // Draft being added (one at a time, per profession). null = no form open.
-  const [certDraft, setCertDraft] = useState<{ profession?: string; name: string; institution: string; year: string } | null>(null);
-  const certDraftOpenedWhileDirtyRef = useRef(false);
-  const [certError, setCertError] = useState<string | null>(null);
+  const [cvProfile, setCvProfile] = useState(() => normalizeCv(initial.cv_profile));
+  const savedCvRef = useRef(JSON.stringify(normalizeCv(initial.cv_profile)));
   const [videoConsult, setVideoConsult] = useState(!!initial.videoconsulta && canOfferVideoConsult);
   const [videoCoverageCountry, setVideoCoverageCountry] = useState(!!initial.videoconsulta && !!initial.coverage_country && canOfferVideoConsult);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(
@@ -403,6 +377,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
       languages,
       insurers,
       certifications,
+      cvProfile,
       videoConsult,
       videoCoverageCountry,
     });
@@ -426,11 +401,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
     if (sectionId === "basic") {
       if (!resolvedFullName.trim()) return locale === "en" ? "Full name is required." : "El nombre completo es obligatorio.";
       if (!bio.trim()) return locale === "en" ? "Description is required." : "La descripción es obligatoria.";
-    }
-    if (sectionId === "certs" && certDraft) {
-      return locale === "en"
-        ? "Save or cancel the certification you are editing."
-        : "Guarda o cancela la certificación que estás editando.";
     }
     if (sectionId === "location" && !hasWorkplace) {
       return locale === "en"
@@ -458,6 +428,20 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
   const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savedFlashSeq = useRef(0);
   const dirtyRef = useRef(false);
+  useEffect(() => {
+    function onIdentityUpdated(event: Event) {
+      const detail = (event as CustomEvent<{ fullName?: string | null; cedula?: string | null; verified?: boolean }>).detail;
+      const nextName = typeof detail?.fullName === "string" ? detail.fullName.trim() : "";
+      const nextCedula = typeof detail?.cedula === "string" ? detail.cedula.trim() : "";
+      if (nextName) setFullName(nextName);
+      if (nextCedula) setHasNationalCedula(detectIdType(nextCedula) === "cedula");
+      setDirty(false);
+      setActiveDirtySection(null);
+      dirtyRef.current = false;
+    }
+    window.addEventListener("ccr:identity-updated", onIdentityUpdated);
+    return () => window.removeEventListener("ccr:identity-updated", onIdentityUpdated);
+  }, []);
   const saveSeq = useRef(0);
 
   useEffect(() => {
@@ -496,45 +480,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
     if (avatarObjectUrlRef.current) URL.revokeObjectURL(avatarObjectUrlRef.current);
   }, []);
 
-  function openCertForm(profession?: string) {
-    certDraftOpenedWhileDirtyRef.current = dirty;
-    setCertError(null);
-    setCertDraft({ profession, name: "", institution: "", year: "" });
-  }
-  function updateCertDraft(field: "name" | "institution" | "year", value: string) {
-    setCertDraft((current) => current ? { ...current, [field]: value } : current);
-    setCertError(null);
-    touch("certs");
-  }
-  function cancelCertDraft() {
-    setCertDraft(null);
-    setCertError(null);
-    if (!certDraftOpenedWhileDirtyRef.current) {
-      setDirty(false);
-      dirtyRef.current = false;
-      setActiveDirtySection(null);
-    }
-    certDraftOpenedWhileDirtyRef.current = false;
-  }
-  // Save the cert being typed — all three fields are REQUIRED, so an incomplete
-  // certification can never be added (the button explicitly SAVES this one).
-  function saveCert() {
-    if (!certDraft) return;
-    const name = limitText(certDraft.name.trim(), SHORT_TEXT_MAX_LENGTH);
-    const institution = limitText(certDraft.institution.trim(), SHORT_TEXT_MAX_LENGTH);
-    const year = certDraft.year.trim();
-    if (!name || !institution || year.length !== 4) {
-      setCertError(t("certAllRequired"));
-      return;
-    }
-    setCertifications((prev) => [...prev, { id: `ct_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, name, institution, year, profession: certDraft.profession }]);
-    setCertDraft(null);
-    certDraftOpenedWhileDirtyRef.current = false;
-    setCertError(null);
-    touch("certs");
-  }
-  function removeCertification(id: string) {
-    setCertifications((prev) => prev.filter((c) => c.id !== id));
+  function removeCertification(id: string, index: number) {
+    setCertifications((prev) => prev.filter((c, i) => id ? c.id !== id : i !== index));
     touch("certs");
   }
 
@@ -559,9 +506,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
     setLanguages(Array.isArray(initial.languages) && initial.languages.length > 0 ? initial.languages : ["es"]);
     setInsurers(Array.isArray(initial.insurance_networks) ? initial.insurance_networks : []);
     setCertifications(Array.isArray(initial.certifications) ? initial.certifications : []);
-    setCertDraft(null);
-    certDraftOpenedWhileDirtyRef.current = false;
-    setCertError(null);
+    setCvProfile(normalizeCv(initial.cv_profile));
     setVideoConsult(!!initial.videoconsulta && canOfferVideoConsult);
     setVideoCoverageCountry(!!initial.videoconsulta && !!initial.coverage_country && canOfferVideoConsult);
     setAvatarPreview(initialAvatarUrl);
@@ -633,6 +578,10 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
   }
 
   async function handleSave(): Promise<boolean> {
+    if (cvValidationError(cvProfile)) {
+      setError(locale === "en" ? "Review the titles and skills in Education." : "Revisá los títulos y las habilidades en Formación.");
+      return false;
+    }
     const validationError = sectionValidationError(activeDirtySection);
     if (validationError) {
       setError(validationError);
@@ -748,7 +697,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
 
       // Persist certifications in their OWN update so an unrelated optional column
       // can never drop them (that was the "not saving" bug). Each keeps its
-      // profession tag. Errors here (column not migrated) are non-fatal.
+      // profession tag. Surface errors instead of confirming an incomplete save.
       const cleanCerts = certifications
         .filter((c) => c.name?.trim())
         .map((c) => ({
@@ -759,7 +708,15 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
           // Default an untagged cert to the principal profession so it has a home.
           profession: c.profession || professions[0] || undefined,
         }));
-      await supabase.from("professionals").update({ certifications: cleanCerts }).eq("id", professionalId);
+      const { error: certSaveError } = await supabase.from("professionals").update({ certifications: cleanCerts }).eq("id", professionalId);
+      if (certSaveError) throw certSaveError;
+      const cleanCv = normalizeCv(cvProfile);
+      if (JSON.stringify(cleanCv) !== savedCvRef.current) {
+        const { error: cvError } = await supabase.from("professionals")
+          .update({ cv_profile: cleanCv }).eq("id", professionalId).select("id").single();
+        if (cvError) throw cvError;
+        savedCvRef.current = JSON.stringify(cleanCv);
+      }
 
       // Social links — store ONLY clean usernames, valid + non-empty. The write
       // result is CHECKED so "Guardado" is never shown on a silent failure: if the
@@ -906,7 +863,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
     };
     window.addEventListener("ccr:profile-mobile-close-section", close);
     return () => window.removeEventListener("ccr:profile-mobile-close-section", close);
-  }, [openSections, dirty, activeDirtySection, certDraft]);
+  }, [openSections, dirty, activeDirtySection]);
 
   return (
     <div className="mx-auto flex w-full max-w-none flex-col gap-4">
@@ -1052,54 +1009,13 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
       {/* Profesiones + servicios are managed in the "Profesiones" tab (consolidated
           there so they're not edited in two places). */}
 
-      {/* ── Certificaciones — POR PROFESIÓN. Saved certs are read-only rows; a
-             cert is ADDED via an explicit form whose "Guardar certificación"
-             button requires all three fields. ─────── */}
+      {/* Formación unificada; conserva las certificaciones anteriores por profesión. */}
       <Section footer={makeSectionFooter("certs")} id="certs" title={t("secCerts")} desc={t("secCertsDesc")} open={openSections.has("certs")} mobileFocused={mobileSectionFocused} onToggle={toggleSection} onActivate={setActiveDirtySection}>
-        {(professions.length > 0 ? professions : [""]).map((prof) => {
-          const certsForProf = certifications.filter((c) => (c.profession || professions[0] || "") === prof);
-          const draftHere = !!certDraft && (certDraft.profession ?? "") === (prof || "");
-          const inputCls = "h-11 w-full rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
-          return (
-            <div key={prof || "general"} className="flex flex-col gap-4 pt-5 first:pt-0">
-              {professions.length > 1 && prof && (
-                <p className="text-xs font-bold uppercase tracking-wide text-[#0089bb]">{getCategoryLabel(prof, locale)}</p>
-              )}
-              {/* Saved certs — read-only */}
-              {certsForProf.map((c) => (
-                <div key={c.id} className="flex items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white px-3 py-2">
-                  <Award className="h-4 w-4 text-[#009FD9] shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[#162543] truncate">{c.name}</p>
-                    <p className="text-xs text-[#6b7280] truncate">{[c.institution, c.year].filter(Boolean).join(" · ")}</p>
-                  </div>
-                  <button type="button" onClick={() => removeCertification(c.id!)} className="h-8 w-8 rounded-lg flex items-center justify-center text-[#68778d] hover:text-red-500 hover:bg-red-50 transition-colors shrink-0" aria-label={t("certRemove")}>
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
-              {/* Add form (all fields required) OR the add-another action */}
-              {draftHere ? (
-                <div className="rounded-xl border border-[#dce5ee] bg-white p-4 flex flex-col gap-4">
-                  <input type="text" value={certDraft!.name} maxLength={SHORT_TEXT_MAX_LENGTH} onChange={(e) => updateCertDraft("name", limitText(e.target.value, SHORT_TEXT_MAX_LENGTH))} placeholder={t("certNamePlaceholder")} className={inputCls} autoFocus />
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_7rem]">
-                    <input type="text" value={certDraft!.institution} maxLength={SHORT_TEXT_MAX_LENGTH} onChange={(e) => updateCertDraft("institution", limitText(e.target.value, SHORT_TEXT_MAX_LENGTH))} placeholder={t("certInstitution")} className={inputCls} />
-                    <input type="text" inputMode="numeric" maxLength={4} value={certDraft!.year} onChange={(e) => updateCertDraft("year", e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder={t("certYear")} className={inputCls} />
-                  </div>
-                  {certError && <p className="text-xs text-red-600">{certError}</p>}
-                  <div className="flex gap-2 pt-0.5">
-                    <Button type="button" size="sm" className="min-h-11" onClick={saveCert}>{t("certSave")}</Button>
-                    <Button type="button" size="sm" variant="ghost" className="min-h-11" onClick={cancelCertDraft}>{t("cancel")}</Button>
-                  </div>
-                </div>
-              ) : (
-                <button type="button" onClick={() => openCertForm(prof || undefined)} className="inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline self-start">
-                  <Plus className="h-4 w-4" /> {professions.length > 1 && prof ? t("addCertTo", { profession: getCategoryLabel(prof, locale) }) : t("addCert")}
-                </button>
-              )}
-            </div>
-          );
-        })}
+        <CvEditor professionalId={professionalId} existingEducation={certifications.map(c => ({ title: c.name, organization: c.institution || "", period: c.year || "", description: "" }))} value={cvProfile} onChange={(next) => { setCvProfile(next); touch("certs"); }} disabled={saving} educationExtra={certifications.length ? <div className="space-y-2">{certifications.map((c, index) => <div key={c.id || index} className="flex items-center gap-2 rounded-xl border border-[#e5e7eb] p-3">
+          <Award className="h-4 w-4 shrink-0 text-[#009FD9]" /><div className="min-w-0 flex-1"><p className="text-sm font-medium text-[#162543]">{c.name}</p><p className="text-xs text-[#68778d]">{[c.institution, c.year, c.profession ? getCategoryLabel(c.profession, locale) : ""].filter(Boolean).join(" · ")}</p></div>
+          <button type="button" className="flex h-11 w-11 items-center justify-center rounded-full text-[#68778d]" aria-label={t("certRemove")} onClick={() => removeCertification(c.id!, index)}><X className="h-4 w-4" /></button>
+        </div>)}</div> : undefined}/>
+
       </Section>
 
       {/* ── Ubicación y cobertura ─────────────────────────────────────── */}

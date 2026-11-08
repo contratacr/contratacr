@@ -86,7 +86,7 @@ export function computeCompletion(pro: ProRecord): {
   // An empty legacy value means the platform default: Spanish.
   const hasLanguages = !Array.isArray(pro.languages) || pro.languages.length === 0 ||
     pro.languages.some((language) => hasText(language));
-  const hasEducation = hasLen(pro.certifications);
+  const hasEducation = hasLen(pro.certifications) || hasLen(firstObject(pro.cv_profile).education);
   const hasPortfolio =
     countCases(
       Array.isArray(pro.portfolio_items) ? pro.portfolio_items : null,

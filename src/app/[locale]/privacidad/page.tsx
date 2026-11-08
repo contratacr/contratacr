@@ -59,6 +59,7 @@ const ES_SECTIONS: LegalSection[] = [
           "Nombre o nombre comercial, servicios, descripción, teléfonos, correo de contacto y enlaces profesionales.",
           "Provincia, cantón, lugares de trabajo, zonas de cobertura y, si lo agrega, un punto en el mapa.",
           "Fotografía de perfil, casos de éxito, certificaciones, idiomas, aseguradoras y disponibilidad.",
+          "Importación opcional de currículum: el archivo PDF o DOCX se lee localmente en su dispositivo para sugerir información, sin enviarlo a una inteligencia artificial. Si activa “Mostrar mi CV en el perfil”, el documento se sube a almacenamiento privado y se permite abrirlo o descargarlo desde su perfil público. Puede ocultarlo, reemplazarlo o retirarlo; esto no elimina las copias que otras personas hayan descargado. Solo se guardan y publican los estudios, experiencia y habilidades que usted revise, confirme y guarde en el perfil. Puede editarlos o quitarlos desde Formación.",
           "Proyectos, reseñas, casos de éxito y demás actividad relacionada con su perfil."
         ]
       },
@@ -369,6 +370,7 @@ const EN_SECTIONS: LegalSection[] = [
           "Requests, posts, quotes, reviews, favorites, and related activity.",
           "A project phone number is not shown on the public board. Registered professionals using its contact options can obtain it to coordinate, even before sending a message. Do not put it in the public description.",
           "Professional profile data, services, location, work areas, success stories, availability, and contact details.",
+          "Optional CV import: the PDF or DOCX is read locally on your device to suggest information, without sending it to an AI provider. If you enable “Show my CV on my profile”, the document is uploaded to private storage and visitors can open or download it from your public profile. You can hide, replace or remove it; this does not delete copies that others have downloaded. Only education, work experience and skills that you review, confirm and save are stored and published on your profile. You can edit or remove them in Education.",
           "Content you include in descriptions, notes, reports, and conversations."
         ]
       },

@@ -610,7 +610,7 @@
     "casosSubtitle": "Casos de éxito de {name}.",
     "otherWorks": "Otros casos",
     "noCasos": "Todavía no hay casos de éxito publicados.",
-    "certsSubtitle": "Cursos, títulos y certificados indicados en el perfil.",
+    "certsSubtitle": "Formación, experiencia y habilidades indicadas por el profesional.",
     "subRating": {
       "price": "Precio",
       "quality": "Calidad"
@@ -1606,7 +1606,7 @@
     "secBasic": "Datos básicos",
     "secBasicDesc": "Foto, nombre y descripción",
     "secCerts": "Formación",
-    "secCertsDesc": "Cursos, títulos o certificados",
+    "secCertsDesc": "Estudios, experiencia laboral y habilidades",
     "secLocation": "Lugares de trabajo",
     "secLocationDesc": "Dónde trabajas y a dónde te desplazas",
     "secContact": "Contacto",
