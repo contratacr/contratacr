@@ -1,5 +1,8 @@
 "use client";
 
+import { CvProfileDetails } from "@/components/professionals/cv-profile";
+import { hasCv, normalizeCv } from "@/lib/cv/model";
+
 import { nombreDeSaludo } from "@/lib/nombres";
 import { ProfileIdentityName, profileIdentityAvatarClass } from "@/components/professionals/profile-identity-name";
 
@@ -665,7 +668,8 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
 
   const hasCasos = !!professional.portfolioUrls && professional.portfolioUrls.length > 0;
   const certificationsList = (professional.certifications ?? []).filter((c) => c?.name?.trim());
-  const hasCerts = certificationsList.length > 0;
+  const cvProfile = normalizeCv(professional.cvProfile);
+  const hasCerts = certificationsList.length > 0 || hasCv(cvProfile) || !!professional.hasCvFile;
   // Group certifications by profession (legacy untagged → principal profession).
   const principalProfession = professional.professions?.[0] ?? professional.categoryId ?? "";
   const certGroups = (() => {
@@ -1352,7 +1356,8 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                     <div>
                       <h2 className="text-lg font-semibold text-[#162543] mb-1">{t("tabs.certificaciones")}</h2>
                       <p className="text-sm text-[#68778d] mb-4">{t("certsSubtitle")}</p>
-                      <div className="flex flex-col gap-5">
+                      <CvProfileDetails professionalId={professional.id} hasFile={professional.hasCvFile} value={cvProfile} english={locale === "en"} />
+                      <div className="mt-5 flex flex-col gap-5">
                         {certGroups.map(([prof, certs]) => (
                           <div key={prof || "general"}>
                             {certGroups.length > 1 && prof && (

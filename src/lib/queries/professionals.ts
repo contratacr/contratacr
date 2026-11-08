@@ -1,3 +1,4 @@
+import { normalizeCv, type CvProfile } from "@/lib/cv/model";
 import { nearbyContext, nearbyRank, compareNearby } from "@/lib/search/nearby";
 import { professionalRevision } from "@/lib/cache/professional-revision";
 import { cache } from "react";
@@ -269,6 +270,8 @@ export type ProfessionalDetail = ProfessionalCardData & {
   reviews: Review[];
   services: ProService[];
   certifications: Certification[];
+  cvProfile?: CvProfile;
+  hasCvFile?: boolean;
   socialLinks?: SocialLinks;
 };
 
@@ -920,10 +923,17 @@ async function getProfessionalBySlugEnVivo(slug: string): Promise<ProfessionalDe
       return null;
     }
   })();
-  const [estaSuspendido, contactEmail] = await Promise.all([suspendido, correo]);
+  const archivoCv = (async () => {
+    try {
+      const { createPublicClient } = await import("@/lib/supabase/server");
+      const publico = await createPublicClient();
+      const { data, error } = await publico.from("professional_cv_files").select("professional_id").eq("professional_id", pro.id).eq("visible", true).maybeSingle();
+      return !error && !!data;
+    } catch { return false; }
+  })();
+  const [estaSuspendido, contactEmail, hasCvFile] = await Promise.all([suspendido, correo, archivoCv]);
   if (estaSuspendido) return null;
-  if (contactEmail) return { ...pro, contactEmail };
-  return pro;
+  return { ...pro, hasCvFile, ...(contactEmail ? { contactEmail } : {}) };
 }
 
 async function getProfessionalBySlugUncached(
@@ -1030,7 +1040,7 @@ async function getProfessionalBySlugUncached(
       // These are public columns. One read on a cold profile instead of five
       // single-column round trips; keep the old-schema fallback only on error.
       const extras = await supabase.from("professionals")
-        .select("portfolio_items, allow_phone_call, coverage_areas, coverage_provincias, coverage_country, certifications, call_phone, social_links")
+        .select("portfolio_items, allow_phone_call, coverage_areas, coverage_provincias, coverage_country, certifications, cv_profile, call_phone, social_links")
         .eq("id", proRow.id).maybeSingle();
       async function profileExtras(columns: string) {
         if (!extras.error) return { data: extras.data };
@@ -1063,6 +1073,8 @@ async function getProfessionalBySlugUncached(
           certifications = (certRow as { certifications: unknown[] }).certifications;
         }
       } catch { /* column not migrated yet */ }
+      const { data: cvRow } = await profileExtras("cv_profile");
+      const cvProfile = normalizeCv((cvRow as { cv_profile?: unknown } | null)?.cv_profile);
       let callPhone: string | undefined;
       try {
         const { data: cpRow } = await profileExtras("call_phone");
@@ -1167,6 +1179,7 @@ async function getProfessionalBySlugUncached(
         verificationStatus: (proRow.verification_status as ProfessionalCardData["verificationStatus"]) ?? "pending",
         insuranceNetworks: (proRow.insurance_networks as string[]) ?? [],
         certifications: certifications as Certification[],
+        cvProfile,
         profileId: proRow.profile_id ?? undefined,
         callPhone,
         socialLinks,

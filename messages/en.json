@@ -610,7 +610,7 @@
     "casosSubtitle": "Success stories by {name}.",
     "otherWorks": "Other stories",
     "noCasos": "There are no success stories yet.",
-    "certsSubtitle": "Courses, degrees and certificates listed on the profile.",
+    "certsSubtitle": "Education, experience and skills provided by the professional.",
     "subRating": {
       "price": "Price",
       "quality": "Quality"
@@ -1606,7 +1606,7 @@
     "secBasic": "Basic info",
     "secBasicDesc": "Photo, name and description",
     "secCerts": "Education",
-    "secCertsDesc": "Courses, degrees or certificates",
+    "secCertsDesc": "Education, work experience and skills",
     "secLocation": "Workplaces",
     "secLocationDesc": "Where you work and where you travel",
     "secContact": "Contact",
