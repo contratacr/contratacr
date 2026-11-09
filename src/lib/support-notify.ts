@@ -108,5 +108,6 @@ export function supportReplyEmail(opts: {
 }
 
 export async function notifyUserOfReply(opts: Parameters<typeof supportReplyEmail>[0]): Promise<void> {
+  if (opts.topic === "service_suggestion") return;
   await sendEmail(opts.toEmail, `Re: ${opts.subject} — ContrataCR`, supportReplyEmail(opts), undefined, opts.eventKey);
 }

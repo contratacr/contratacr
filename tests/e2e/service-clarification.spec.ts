@@ -1,0 +1,71 @@
+import { test, expect } from "playwright/test";
+import { randomUUID } from "node:crypto";
+import { createClient } from "@supabase/supabase-js";
+import { loginAs, gotoOK, expectNoHorizontalOverflow } from "./helpers";
+import { createDisposableAccount, cleanupDisposableAccount, type DisposableAccount } from "./disposable-account";
+import { canRunSeededRegression, regressionAdminClient } from "./seed";
+
+test("ambiguous service asks privately, retries once, reuses support and returns for review", async ({ page, browser }) => {
+  test.skip(!canRunSeededRegression(), "Requires isolated database"); test.slow();
+  const db = regressionAdminClient(); const accounts: DisposableAccount[] = []; const tickets: string[] = [];
+  const context = await browser.newContext(); const adminPage = await context.newPage(); let suggestionId = "";
+  try {
+    const owner = await createDisposableAccount({ prefix: "clarification-owner", professional: true }); accounts.push(owner);
+    const peer = await createDisposableAccount({ prefix: "clarification-peer", professional: true }); accounts.push(peer);
+    const admin = await createDisposableAccount({ prefix: "clarification-admin", admin: true }); accounts.push(admin);
+    suggestionId = `aclaracion_${randomUUID().slice(0,8)}`;
+    await db.from("categories").insert({ id: suggestionId, name: "Inscipciones de prueba", name_en: "Test request", is_hidden: true }).throwOnError();
+    await db.from("category_suggestions").insert({ id: suggestionId, label: "Inscipciones de prueba", suggested_name: "Inscipciones de prueba", suggested_by: owner.id, status: "pending", approved: false }).throwOnError();
+    await db.from("service_suggestion_requests").insert([owner,peer].map(a => ({ suggestion_id: suggestionId, profile_id: a.id }))).throwOnError();
+    const anon = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { auth: { persistSession: false } });
+    expect((await anon.rpc("request_service_clarification", { p_suggestion_id: suggestionId,p_admin_id:admin.id,p_question:"Pregunta ajena",p_request_key:randomUUID() })).error).toBeTruthy();
+    await loginAs(page,owner.email,owner.password);
+    expect((await page.request.post("/api/admin/categories/clarification",{data:{id:suggestionId,question:"Pregunta",requestKey:randomUUID()}})).status()).toBe(403);
+    const before = (await db.from("professionals").select("professions,services").eq("id",owner.professionalId!).single()).data;
+    await loginAs(adminPage,admin.email,admin.password);
+    await gotoOK(adminPage,"/admin/servicios"); await adminPage.getByRole("button",{name:/^Sugerencias/}).click();
+    const row = adminPage.locator("div.grid").filter({has:adminPage.locator(`select[id="existing-${suggestionId}"]`)}).last();
+    await row.getByRole("button",{name:"Solicitar aclaración",exact:true}).click();
+    const question="¿Te referís a inscripciones o a inspecciones? Contanos qué trabajos realizás.";
+    const dialog=adminPage.getByRole("dialog"); await dialog.locator("textarea").fill(question);
+    const [sent]=await Promise.all([adminPage.waitForResponse(r=>r.url().endsWith("/api/admin/categories/clarification")&&r.request().method()==="POST"),dialog.getByRole("button",{name:"Enviar pregunta"}).click()]);
+    expect(sent.ok()).toBe(true);const payload=sent.request().postDataJSON(); expect(payload.question).toBe(question);
+    expect((await adminPage.request.post("/api/admin/categories/clarification",{data:payload})).ok()).toBe(true);
+    await expect(row).toContainText("Esperando respuesta");
+    const {data: links}=await db.from("service_suggestion_requests").select("profile_id,clarification_ticket_id").eq("suggestion_id",suggestionId);
+    expect(links).toHaveLength(2); tickets.push(...links!.map(r=>r.clarification_ticket_id)); expect(new Set(tickets).size).toBe(2);
+    const ownTicket=links!.find(r=>r.profile_id===owner.id)!.clarification_ticket_id;
+    const peerTicket=links!.find(r=>r.profile_id===peer.id)!.clarification_ticket_id;
+    expect((await db.from("support_ticket_messages").select("id").in("ticket_id",tickets)).data).toHaveLength(2);
+    expect((await db.from("notifications").select("id").in("data->>ticketId",tickets)).data).toHaveLength(2);
+    expect((await page.request.get(`/api/support?id=${peerTicket}`)).status()).toBe(404);
+    expect((await page.request.post("/api/support",{data:{ticketId:peerTicket,body:"No soy el dueño"}})).status()).toBe(404);
+    await gotoOK(page,`/dashboard/profesional?tab=soporte&ticket=${ownTicket}`);
+    await expect(page.getByText(question,{exact:true})).toBeVisible();
+    const reply="Me refiero a inspecciones de casas antes de comprarlas.";
+    await page.locator("textarea").filter({visible:true}).fill(reply);
+    const [replied]=await Promise.all([page.waitForResponse(r=>r.url().endsWith("/api/support")&&r.request().method()==="POST"),page.getByRole("button",{name:"Enviar",exact:true}).click()]);expect(replied.ok()).toBe(true);
+    const list=await (await adminPage.request.get("/api/admin/categories?status=pending")).json();
+    expect(list.categories.find((s:{id:string})=>s.id===suggestionId).clarifications).toEqual(expect.arrayContaining([expect.objectContaining({ticketId:ownTicket,state:"review",reply})]));
+    await adminPage.reload(); await adminPage.getByRole("button",{name:/^Sugerencias/}).click();
+    await expect(row).toContainText("Por revisar");await expect(row).toContainText(reply);
+    await expectNoHorizontalOverflow(page);await expectNoHorizontalOverflow(adminPage);
+    await adminPage.screenshot({path:test.info().outputPath("clarification-reviewed.png"),fullPage:true});
+    expect((await adminPage.request.post("/api/admin/categories/clarification",{data:{...payload,requestKey:randomUUID(),question:"¿Incluís un informe de la inspección?"}})).ok()).toBe(true);
+    expect((await db.from("service_suggestion_requests").select("clarification_ticket_id").eq("suggestion_id",suggestionId)).data?.map(r=>r.clarification_ticket_id).sort()).toEqual([...tickets].sort());
+    expect((await db.from("support_ticket_messages").select("id").in("ticket_id",tickets)).data).toHaveLength(5);
+    expect((await adminPage.request.post("/api/admin/support",{data:{id:ownTicket,body:"Gracias, revisaremos el servicio."}})).ok()).toBe(true);
+    expect((await db.from("category_suggestions").select("status,approved").eq("id",suggestionId).single()).data).toMatchObject({status:"pending",approved:false});
+    expect((await db.from("professionals").select("professions,services").eq("id",owner.professionalId!).single()).data).toEqual(before);
+    expect((await db.from("categories").select("is_hidden").eq("id",suggestionId).single()).data?.is_hidden).toBe(true);
+    expect((await adminPage.request.patch("/api/admin/categories",{data:{id:suggestionId,status:"approved",label:"Inspección de prueba",labelEn:"Test inspection",groupId:"hogar"}})).ok()).toBe(true);
+    expect((await page.request.get("/api/categories/requests")).ok()).toBe(true);
+    expect((await (await page.request.get("/api/categories/requests")).json()).invitations.some((i:{categoryId:string})=>i.categoryId===suggestionId)).toBe(true);
+    expect((await adminPage.request.post("/api/admin/categories/clarification",{data:{...payload,requestKey:randomUUID()}})).status()).toBe(409);
+  } finally {
+    await context.close();
+    if(tickets.length) await db.from("support_tickets").delete().in("id",tickets).throwOnError();
+    for(const a of accounts.reverse()) await cleanupDisposableAccount(a);
+    if(suggestionId){await db.from("category_suggestions").delete().eq("id",suggestionId).throwOnError();await db.from("categories").delete().eq("id",suggestionId).throwOnError();}
+  }
+});
