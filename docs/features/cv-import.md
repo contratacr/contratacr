@@ -68,3 +68,34 @@ La extracción anterior agrupaba toda una sección cuando no había líneas vac�
 El documento privado autorizado se probó localmente en Chromium y WebKit: 4 experiencias, 2 estudios, 22 habilidades, guardado/relectura simulados y cero subida durante extracción. No se incluyen el documento ni sus datos personales en Git. Se mantienen los límites: no es OCR ni un parser universal de diseños multicolumna.
 
 La revisión de la cuenta real descubrió que anon no tenía permiso de columna para cv_profile. La migración 264 concede únicamente SELECT de esa columna pública confirmada, conservando RLS y denegación de datos privados. Formación se consulta en vivo fuera de la caché de ficha para reflejar guardados/retiros. Validación: 9 pruebas de modelo/permisos y 1 prueba adicional de filas PDF; 3 regresiones de navegador, 2 de límites/reimportación y 2 con el documento real, en bloques separados. TypeScript/lint sin errores. Evidencia local en /tmp/ccr-cv-diagnosis.
+
+### Edición y presentación de formación — 8 de noviembre, revisión local
+
+Las habilidades se agregan individualmente con Enter o Agregar y se quitan por
+etiqueta; se mantiene el límite de 40 y la deduplicación sin distinguir tildes o
+mayúsculas. Inicio y fin exigen mes y año cuando se indica un período; “Actualmente trabajo/estudio
+aquí” sustituye el fin. Se conserva el contrato `period` existente, sin migrar
+ni reescribir perfiles. Las fechas anteriores no reconocidas siguen visibles y
+editables hasta que la persona decida reemplazarlas. Se bloquean rangos invertidos.
+
+El perfil público separa puesto, empresa y fechas, añade duración solo cuando
+hay meses suficientes y permite expandir descripciones. Los estudios anteriores
+se muestran dentro de Formación académica, antes de las habilidades. El bloque vacío ofrece Subir CV; con archivo ofrece Ver CV y Cambiar CV, con
+Retirar CV como acción secundaria. El reemplazo se confirma antes de sustituir
+el anterior y mostrar el nuevo. Los controles tienen área táctil de 44 px; se retiraron los textos auxiliares
+solicitados sin cambiar los permisos ni la operación de compartir el archivo.
+
+Referencia de interacción: [habilidades individuales de LinkedIn](https://www.linkedin.com/help/linkedin/answer/a549047)
+y las capturas aportadas por Isaac. No se agregaron logos, empleadores ni meses
+inferidos del documento.
+
+Evidencia focal `/tmp/ccr-cv-ui/`: fechas 3 casos; interacción Chromium/WebKit 2
+recorridos; PDF autorizado Chromium/WebKit 2 recorridos; compartir/ocultar/retirar
+Chromium/WebKit 2 recorridos. Tipos aprobados; lint de componentes CV sin errores
+ni advertencias, tres advertencias anteriores en los dos componentes contenedores.
+No certifica ejecución física iOS/Android ni publicación de esta revisión.
+
+La revisión de estados del archivo y meses obligatorios se comprobó con fechas (3 casos),
+campos (2 recorridos), compartir/reemplazar/cancelar/retirar (2), importación y
+guardado móvil/escritorio (3), inglés y entradas límite (2) y el PDF autorizado (2).
+No se suman estos recorridos como casos únicos: tienen cobertura solapada.

@@ -2,12 +2,46 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useLocale } from 'next-intl';
+import { blankDates, parseCvDates, serializeCvDates, invalidCvDates } from '@/lib/cv/dates';
 import { CvFileEditor } from './cv-file-editor';
 import { Button } from '@/components/ui/button';
-import { Upload, X, Plus, FileText } from 'lucide-react';
+import { X, Plus, FileText, ChevronDown } from 'lucide-react';
 import { CV_LIMITS, emptyCv, hasCv, keyOf, mergeCv, normalizeCv, reviewCv, type CvEntry, type CvProfile } from '@/lib/cv/model';
 
 const inputClass = 'min-h-11 w-full rounded-xl border border-[#dce5ee] bg-white px-3 py-2 text-sm text-[#162543] focus:outline-none focus:ring-2 focus:ring-[#009FD9]';
+function DateFields({ period, onChange, english, education }: { period: string; onChange: (value: string) => void; english: boolean; education: boolean }) {
+  const dates = parseCvDates(period);
+  const months = english ? ['January','February','March','April','May','June','July','August','September','October','November','December'] : ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const years = Array.from({ length: new Date().getFullYear() + 11 - 1900 }, (_, i) => String(new Date().getFullYear() + 10 - i));
+  if (!dates) return <div className="space-y-2"><label className="block text-sm text-[#52627a]">{english ? 'Previous dates' : 'Fechas anteriores'}<input className={inputClass} value={period} maxLength={80} onChange={e => onChange(e.target.value)}/></label><button type="button" className="min-h-11 text-sm font-semibold text-[#0089bb]" onClick={() => onChange(serializeCvDates(blankDates()))}>{english ? 'Choose start and end dates' : 'Elegir fecha de inicio y fin'}</button></div>;
+  return <div className="space-y-3">
+    <label className="flex min-h-11 items-center gap-3 text-sm text-[#162543]"><input type="checkbox" className="h-5 w-5 accent-[#009FD9]" checked={dates.current} onChange={e => onChange(serializeCvDates({ ...dates, current: e.target.checked, endMonth: '', endYear: '' }))}/>{education ? (english ? 'Currently studying here' : 'Actualmente estudio aquí') : (english ? 'I currently work here' : 'Actualmente trabajo aquí')}</label>
+    {(['start', 'end'] as const).map(kind => (kind === 'start' || !dates.current) && <fieldset key={kind} className="min-w-0"><legend className="mb-1 text-sm text-[#52627a]">{kind === 'start' ? (english ? 'Start date' : 'Fecha de inicio') : (english ? 'End date' : 'Fecha de fin')}</legend><div className="grid grid-cols-2 gap-3">
+      <label className="relative block text-xs text-[#68778d]">{english ? 'Year' : 'Año'}<select className={`${inputClass} mt-1 h-11 appearance-none pr-8`} aria-label={`${kind === 'start' ? (english ? 'Start' : 'Inicio') : (english ? 'End' : 'Fin')}: ${english ? 'year' : 'año'}`} value={dates[`${kind}Year`]} onChange={e => onChange(serializeCvDates({ ...dates, [`${kind}Year`]: e.target.value, ...(!e.target.value ? { [`${kind}Month`]: '' } : {}) }))}><option value="">{english ? 'Select' : 'Seleccionar'}</option>{years.map(year => <option key={year} value={year}>{year}</option>)}</select><ChevronDown aria-hidden="true" size={16} className="pointer-events-none absolute bottom-3.5 right-3"/></label>
+      <label className="relative block text-xs text-[#68778d]">{english ? 'Month' : 'Mes'}<select className={`${inputClass} mt-1 h-11 appearance-none pr-8 disabled:opacity-50`} disabled={!dates[`${kind}Year`]} aria-label={`${kind === 'start' ? (english ? 'Start' : 'Inicio') : (english ? 'End' : 'Fin')}: ${english ? 'month' : 'mes'}`} value={dates[`${kind}Month`]} onChange={e => onChange(serializeCvDates({ ...dates, [`${kind}Month`]: e.target.value }))}><option value="">{english ? 'Select' : 'Seleccionar'}</option>{months.map((month, i) => <option key={month} value={String(i + 1)}>{month}</option>)}</select><ChevronDown aria-hidden="true" size={16} className="pointer-events-none absolute bottom-3.5 right-3"/></label>
+    </div></fieldset>)}
+    {invalidCvDates(period) && <p role="alert" className="text-sm text-red-600">{english ? 'Complete the start and end month and year, or select current. The end cannot be earlier than the start.' : 'Completá el mes y año de inicio y fin, o marcá que continúa actualmente. El fin no puede ser anterior al inicio.'}</p>}
+  </div>;
+}
+
+function SkillsField({ value, onChange, english }: { value: string[]; onChange: (skills: string[]) => void; english: boolean }) {
+  const [draft, setDraft] = useState('');
+  const [error, setError] = useState('');
+  const input = useRef<HTMLInputElement>(null);
+  function add() {
+    const skill = draft.trim().replace(/\s+/g, ' ');
+    if (!skill) return;
+    if (value.some(v => keyOf(v) === keyOf(skill))) { setError(english ? 'This skill is already added.' : 'Ya agregaste esta habilidad.'); return; }
+    if (value.length >= CV_LIMITS.skills) { setError(english ? 'You can add up to 40 skills.' : 'Podés agregar hasta 40 habilidades.'); return; }
+    onChange([...value, skill]); setDraft(''); setError(''); input.current?.focus();
+  }
+  return <fieldset className="min-w-0 space-y-3"><legend className="mb-3 text-sm font-semibold text-[#162543]">{english ? 'Skills' : 'Habilidades'}</legend>
+    <ul className="flex flex-wrap gap-2">{value.map((skill, index) => <li key={`${index}-${skill}`} className="flex max-w-full items-center rounded-xl bg-[#f1f8fb] pl-3 text-sm text-[#162543]"><span className="min-w-0 break-words">{skill}</span><button type="button" className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-xl text-[#52627a]" aria-label={`${english ? 'Remove' : 'Quitar'} ${skill}`} onClick={() => onChange(value.filter((_, i) => i !== index))}><X size={16}/></button></li>)}</ul>
+    <div className="flex gap-2"><input ref={input} className={`${inputClass} min-w-0 flex-1`} aria-label={english ? 'New skill' : 'Nueva habilidad'} placeholder={english ? 'Add a skill' : 'Agregar una habilidad'} maxLength={80} value={draft} onChange={e => { setDraft(e.target.value); setError(''); }} onKeyDown={e => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) { e.preventDefault(); add(); } }}/><Button type="button" variant="outline" className="min-h-11 shrink-0" disabled={!draft.trim()} onClick={add}><Plus size={16}/>{english ? 'Add' : 'Agregar'}</Button></div>
+    {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+  </fieldset>;
+}
+
 function Fields({ value, onChange, english, educationExtra }: { value: CvProfile; onChange: (value: CvProfile) => void; english: boolean; educationExtra?: ReactNode }) {
   const labels = english ? { education: 'Education', experience: 'Work experience', skills: 'Skills', title: 'Qualification or course', role: 'Job title', institution: 'Institution (optional)', employer: 'Employer (optional)', period: 'Dates (optional)', description: 'Details (optional)', remove: 'Remove', add: 'Add', skillHelp: 'One skill per line. Up to 40.' } : { education: 'Formación académica', experience: 'Experiencia laboral', skills: 'Habilidades', title: 'Título o curso', role: 'Puesto', institution: 'Institución (opcional)', employer: 'Empresa (opcional)', period: 'Fechas (opcional)', description: 'Detalles (opcional)', remove: 'Quitar', add: 'Agregar', skillHelp: 'Una habilidad por línea. Hasta 40.' };
   function update(section: 'education' | 'experience', index: number, field: keyof CvEntry, text: string) {
@@ -19,13 +53,15 @@ function Fields({ value, onChange, english, educationExtra }: { value: CvProfile
       {section === 'education' && educationExtra}
       {value[section].map((entry, index) => <div key={index} className="space-y-3 rounded-xl border border-[#dce5ee] bg-white p-4">
         <div className="flex items-center justify-between gap-2"><span className="text-xs text-[#68778d]">{labels[section]} {index + 1}</span><button type="button" className="flex min-h-11 min-w-11 items-center justify-center rounded-full text-[#68778d]" aria-label={`${labels.remove} ${labels[section]} ${index + 1}`} onClick={() => onChange({ ...value, [section]: value[section].filter((_, i) => i !== index) })}><X size={18}/></button></div>
-        {(['title', 'organization', 'period', 'description'] as const).map(field => <label key={field} className="block text-sm text-[#52627a]">{field === 'title' ? section === 'education' ? labels.title : labels.role : field === 'organization' ? section === 'education' ? labels.institution : labels.employer : labels[field]}
-          {field === 'description' ? <textarea className={`${inputClass} mt-1 min-h-20`} maxLength={CV_LIMITS[field]} value={entry[field]} onChange={e => update(section, index, field, e.target.value)}/> : <input className={`${inputClass} mt-1`} maxLength={CV_LIMITS[field]} value={entry[field]} onChange={e => update(section, index, field, e.target.value)}/>}
+        {(['title', 'organization'] as const).map(field => <label key={field} className="block text-sm text-[#52627a]">{field === 'title' ? section === 'education' ? labels.title : labels.role : field === 'organization' ? section === 'education' ? labels.institution : labels.employer : labels[field]}
+          <input className={`${inputClass} mt-1`} maxLength={CV_LIMITS[field]} value={entry[field]} onChange={e => update(section, index, field, e.target.value)}/>
         </label>)}
+        <DateFields period={entry.period} english={english} education={section === 'education'} onChange={period => update(section, index, 'period', period)}/>
+        <label className="block text-sm text-[#52627a]">{labels.description}<textarea className={`${inputClass} mt-1 min-h-24`} maxLength={CV_LIMITS.description} value={entry.description} onChange={e => update(section, index, 'description', e.target.value)}/></label>
       </div>)}
       <Button type="button" variant="outline" className="min-h-11" disabled={value[section].length >= CV_LIMITS.entries} onClick={() => onChange({ ...value, [section]: [...value[section], { title: '', organization: '', period: '', description: '' }] })}><Plus size={16}/>{labels.add} {section === 'education' ? (english ? 'education' : 'estudio') : (english ? 'experience' : 'experiencia')}</Button>
     </fieldset>)}
-    <label className="block text-sm font-semibold text-[#162543]">{labels.skills}<textarea className={`${inputClass} mt-2 min-h-24 font-normal`} value={value.skills.join('\n')} maxLength={3240} onChange={e => onChange({ ...value, skills: e.target.value.split('\n') })}/><span className="mt-1 block text-xs font-normal text-[#68778d]">{labels.skillHelp}</span></label>
+    <SkillsField value={value.skills} onChange={skills => onChange({ ...value, skills })} english={english}/>
   </div>;
 }
 
@@ -67,8 +103,8 @@ export function CvEditor({ value, onChange, disabled = false, existingEducation 
   }
   function apply() {
     if (!candidate) return;
-    if ([...candidate.education, ...candidate.experience].some(e => !e.title.trim()) || candidate.skills.filter(s => s.trim()).length > 40 || candidate.skills.some(s => s.length > 80)) {
-      setError(english ? 'Review the titles and skills (up to 40, 80 characters each).' : 'Revisá los títulos y las habilidades (hasta 40, de 80 caracteres cada una).'); return;
+    if ([...candidate.education, ...candidate.experience].some(e => !e.title.trim() || invalidCvDates(e.period)) || candidate.skills.filter(s => s.trim()).length > 40 || candidate.skills.some(s => s.length > 80)) {
+      setError(english ? 'Review the titles, dates and skills (up to 40, 80 characters each).' : 'Revisá los títulos, las fechas y las habilidades (hasta 40, de 80 caracteres cada una).'); return;
     }
     const legacyKeys = new Set(existingEducation.map(e => keyOf(`${e.title}|${e.organization}|${e.period}`)));
     const additions = { ...candidate, education: candidate.education.filter(e => !legacyKeys.has(keyOf(`${e.title}|${e.organization}|${e.period}`))) };
@@ -80,11 +116,11 @@ export function CvEditor({ value, onChange, disabled = false, existingEducation 
   }
   return <fieldset disabled={disabled} className="min-w-0 space-y-5" data-cv-editor>
     <div className="rounded-2xl border border-[#c9e7f2] bg-[#f1faff] p-4">
-      <div className="flex items-start gap-3"><FileText className="mt-0.5 shrink-0 text-[#009FD9]" size={22}/><div><h3 className="text-base font-semibold text-[#162543]">{english ? 'Complete your profile with your CV' : 'Completá tu perfil con tu CV'}</h3><p className="mt-1 text-sm leading-6 text-[#52627a]">{english ? 'Import your education, experience and skills, then review before saving.' : 'Importá tus estudios, experiencia y habilidades y revisalos antes de guardar.'}</p></div></div>
+      <div className="flex items-start gap-3"><FileText className="mt-0.5 shrink-0 text-[#009FD9]" size={22}/><div><h3 className="text-base font-semibold text-[#162543]">{english ? 'Your CV' : 'Tu CV'}</h3></div></div>
       <input ref={fileInput} hidden type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" aria-label={english ? 'Choose CV' : 'Elegir CV'} onChange={e => { void selectFile(e.target.files?.[0]); e.target.value = ''; }}/>
-      <Button type="button" className="mt-4 min-h-11" disabled={busy} onClick={() => fileInput.current?.click()}><Upload size={16}/>{busy ? (english ? 'Reading CV…' : 'Leyendo CV…') : (english ? 'Choose CV' : 'Elegir CV')}</Button>
-      <p className="mt-2 text-xs text-[#68778d]">PDF · DOCX · {english ? 'Maximum 5 MB' : 'Máximo 5 MB'}</p>
-      <CvFileEditor professionalId={professionalId} selectedFile={selectedFile} english={english}/>
+
+
+      <CvFileEditor professionalId={professionalId} selectedFile={selectedFile} english={english} reading={busy} onChoose={() => fileInput.current?.click()} onCancel={() => { setSelectedFile(null); setCandidate(null); setError(''); }}/>
 
     </div>
     {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
@@ -101,6 +137,6 @@ export function CvEditor({ value, onChange, disabled = false, existingEducation 
 }
 
 export function cvValidationError(value: CvProfile): boolean {
-  return new TextEncoder().encode(JSON.stringify(normalizeCv(value))).byteLength > 65000 || [...value.education, ...value.experience].some(e => !e.title.trim()) || value.skills.filter(s => s.trim()).length > 40 || value.skills.some(s => s.length > 80);
+  return new TextEncoder().encode(JSON.stringify(normalizeCv(value))).byteLength > 65000 || [...value.education, ...value.experience].some(e => !e.title.trim() || invalidCvDates(e.period)) || value.skills.filter(s => s.trim()).length > 40 || value.skills.some(s => s.length > 80);
 }
 export { emptyCv, normalizeCv };

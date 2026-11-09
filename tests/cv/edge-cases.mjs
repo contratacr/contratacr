@@ -9,7 +9,7 @@ for(const [name,engine] of [['chromium',chromium],['webkit',webkit]]) {
   await page.goto('http://127.0.0.1:3194/?lang=en');
   const input=page.locator('input[type=file][accept*=".docx"]');
   const review=page.getByLabel('Review imported information',{exact:true});
-  const buffer=docx(['Education','Technical course','Example Institute','2020','','Skills','Excel; Organization']);
+  const buffer=docx(['Education','Technical course','Example Institute','01/2018 – 12/2020','','Skills','Excel; Organization']);
   await input.setInputFiles({name:'cv.docx',mimeType:'application/octet-stream',buffer});
   await expect(review).toBeVisible();await review.getByRole('button',{name:'Add to my profile form'}).click();
   await input.setInputFiles({name:'cv.docx',mimeType:'application/octet-stream',buffer});
@@ -19,7 +19,8 @@ for(const [name,engine] of [['chromium',chromium],['webkit',webkit]]) {
   await expect.poll(()=>page.evaluate(()=>JSON.parse(sessionStorage.getItem('cv-saved')||'{}').education?.length)).toBe(1);
   await page.reload();
   await page.getByRole('button',{name:'Remove Education 1',exact:true}).click();
-  await page.locator('[data-cv-editor] textarea').fill('');
+  await page.getByRole('button',{name:'Remove Excel',exact:true}).click();
+  await page.getByRole('button',{name:'Remove Organization',exact:true}).click();
   await page.getByTestId('profile-save-certs').click();
   await expect.poll(()=>page.evaluate(()=>JSON.parse(sessionStorage.getItem('cv-saved')||'{}').education?.length)).toBe(0);
   await page.reload();

@@ -1356,8 +1356,8 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                     <div>
                       <h2 className="text-lg font-semibold text-[#162543] mb-1">{t("tabs.certificaciones")}</h2>
                       <p className="text-sm text-[#68778d] mb-4">{t("certsSubtitle")}</p>
-                      <CvProfileDetails professionalId={professional.id} hasFile={professional.hasCvFile} value={cvProfile} english={locale === "en"} />
-                      <div className="mt-5 flex flex-col gap-5">
+                      <CvProfileDetails professionalId={professional.id} hasFile={professional.hasCvFile} value={cvProfile} english={locale === "en"} educationExtra={certGroups.length ? (
+                      <div className="flex flex-col gap-3">
                         {certGroups.map(([prof, certs]) => (
                           <div key={prof || "general"}>
                             {certGroups.length > 1 && prof && (
@@ -1383,6 +1383,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                           </div>
                         ))}
                       </div>
+                      ) : undefined} />
                     </div>
                   )}</div>}
 
