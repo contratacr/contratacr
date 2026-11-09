@@ -3448,7 +3448,7 @@
   },
   "serviceRequests": {
     "title": "El servicio que sugeriste ya está disponible",
-    "body": "“{service}” ya está en ContrataCR. Podés completar sus datos y agregarlo a tu perfil.",
+    "body": "\"{service}\" ya está en ContrataCR. Podés completar sus datos y agregarlo a tu perfil.",
     "complete": "Completar servicio",
     "later": "Ahora no",
     "error": "No se pudo guardar. Intentá nuevamente.",

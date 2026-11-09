@@ -236,7 +236,7 @@ export function AdminMarketplace({ kind }: { kind: "jobs" | "offers" }) {
   }
 
   async function remove(item: Item) {
-    const reason=window.prompt(`Motivo para retirar “${item.title}” de publicación (reversible):`)?.trim();
+    const reason=window.prompt(`Motivo para retirar "${item.title}" de publicación (reversible):`)?.trim();
     if(!reason || reason.length<5)return;
     setBusy(item.id);
     setNotice(null);

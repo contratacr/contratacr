@@ -29,7 +29,7 @@ for (const locale of ["es", "en"]) {
       expect(notificationActionLabel(n, undefined, locale)).toBe(locale === "en" ? "Complete service" : "Completar servicio");
       expect(localizedNotificationCopy(n, locale)).toEqual({
         title: locale === "en" ? "The service you suggested is now available" : "El servicio que sugeriste ya está disponible",
-        message: locale === "en" ? "“Clases de doblaje” is now on ContrataCR. You can complete its details and add it to your profile." : "“Clases de doblaje” ya está en ContrataCR. Podés completar sus datos y agregarlo a tu perfil.",
+        message: locale === "en" ? "\"Clases de doblaje\" is now on ContrataCR. You can complete its details and add it to your profile." : "\"Clases de doblaje\" ya está en ContrataCR. Podés completar sus datos y agregarlo a tu perfil.",
       });
     }
   });

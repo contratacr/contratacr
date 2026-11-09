@@ -207,9 +207,9 @@ function uncertainSearchPayload(message: string, locale: Locale): AssistantPaylo
     locationText: null,
     confidence: 0,
     answer: locale === "en"
-      ? `I have not identified a specific service for “${message}” yet. You can search ContrataCR using those exact words. What needs fixing or what would you like someone to do?`
-      : `Todavía no identifiqué un servicio concreto para “${message}”. Podés buscar esas mismas palabras en ContrataCR. ¿Qué necesitás arreglar o qué trabajo querés que haga la persona?`,
-    ctaLabel: locale === "en" ? `Search “${message}”` : `Buscar “${message}”`,
+      ? `I have not identified a specific service for "${message}" yet. You can search ContrataCR using those exact words. What needs fixing or what would you like someone to do?`
+      : `Todavía no identifiqué un servicio concreto para "${message}". Podés buscar esas mismas palabras en ContrataCR. ¿Qué necesitás arreglar o qué trabajo querés que haga la persona?`,
+    ctaLabel: locale === "en" ? `Search "${message}"` : `Buscar "${message}"`,
   };
 }
 
@@ -1235,7 +1235,7 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
 }
 
 function systemPrompt(locale: Locale, catalogPrompt: string, pageContext: string) {
-  const language = locale === "en" ? "English" : "natural Costa Rican Spanish addressing the person as tú (the app's own voice: “Escribe”, “Crea”, “tu panel”); never use usted, te, tu, vos or voseo";
+  const language = locale === "en" ? "English" : "natural Costa Rican Spanish addressing the person as tú (the app's own voice: \"Escribe\", \"Crea\", \"tu panel\"); never use usted, te, tu, vos or voseo";
   return `
 You are ContrataCR AI, the official assistant for ContrataCR, Costa Rica's service marketplace.
 Answer in ${language}. Be concise, warm and practical.

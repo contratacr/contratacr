@@ -67,6 +67,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useAvisosSinLeer } from "@/hooks/use-avisos-sin-leer";
 import { useDirectMessageUnread } from "@/hooks/use-direct-message-unread";
 import { cn } from "@/lib/utils";
+import { SupportThreadSkeleton } from "@/components/support/support-thread-skeleton";
 import { PanelSkeleton } from "@/components/ui/section-skeletons";
 import { PublishProjectModal } from "@/components/projects/publish-project-modal";
 import { withPromiseTimeout } from "@/lib/promise-timeout";
@@ -1624,7 +1625,7 @@ export default function DashboardPage() {
   if (authLoading || loading || !user || professionalRecordResolving) {
     return <>{formularioPublicar}{/* La forma sale solo de la URL: la preferencia del teléfono no existe
         en el servidor y romper la hidratación rehacía toda la página. */}
-      <PanelSkeleton seccion={allowedRequestedTab !== null && allowedRequestedTab !== "home"} /></>;
+      {requestedTab === "soporte" && searchParams.get("ticket") ? <SupportThreadSkeleton fullPage /> : <PanelSkeleton seccion={allowedRequestedTab !== null && allowedRequestedTab !== "home"} />}</>;
   }
 
   const proProfile = Array.isArray(pro?.profiles) ? pro?.profiles[0] : pro?.profiles;
