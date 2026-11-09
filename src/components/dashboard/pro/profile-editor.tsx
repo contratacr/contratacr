@@ -579,7 +579,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
 
   async function handleSave(): Promise<boolean> {
     if (cvValidationError(cvProfile)) {
-      setError(locale === "en" ? "Review the titles and skills in Education." : "Revisá los títulos y las habilidades en Formación.");
+      setError(locale === "en" ? "Review the titles, dates and skills in Education." : "Revisá los títulos, las fechas y las habilidades en Formación.");
       return false;
     }
     const validationError = sectionValidationError(activeDirtySection);

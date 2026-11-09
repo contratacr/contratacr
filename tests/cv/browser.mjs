@@ -3,7 +3,7 @@ import { zipSync, strToU8 } from 'fflate';
 import { jsPDF } from 'jspdf';
 import { mkdir } from 'node:fs/promises';
 const directory='/tmp/ccr-cv-review'; await mkdir(directory,{recursive:true});
-const lines=['María Ejemplo','correo@example.test','Formación académica','Técnico en Administración','Instituto de Ejemplo','2020','','Experiencia laboral','Asistente administrativa','Empresa de Ejemplo','2021 - 2024','Atención a clientes','','Habilidades','Excel, Organización','Referencias','Persona privada'];
+const lines=['María Ejemplo','correo@example.test','Formación académica','Técnico en Administración','Instituto de Ejemplo','01/2018 – 12/2020','','Experiencia laboral','Asistente administrativa','Empresa de Ejemplo','01/2021 – 12/2024','Atención a clientes','','Habilidades','Excel, Organización','Referencias','Persona privada'];
 const xml='<?xml version="1.0"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'+lines.map(l=>`<w:p><w:r><w:t>${l}</w:t></w:r></w:p>`).join('')+'</w:body></w:document>';
 const docx=Buffer.from(zipSync({'word/document.xml':strToU8(xml)}));
 const pdf=new jsPDF(); lines.forEach((line,i)=>pdf.text(line,20,20+i*8)); const pdfBytes=Buffer.from(pdf.output('arraybuffer'));
@@ -14,7 +14,7 @@ for(const [name,engine,viewport] of [['chromium-mobile',chromium,{width:390,heig
  await page.route('**/*',route=>{const req=route.request();requests.push({url:req.url(),method:req.method(),body:req.postData()});return req.url().startsWith('http://127.0.0.1:3194/') ? route.continue():route.abort();});
  try {
  await page.goto('http://127.0.0.1:3194');
- await expect(page.getByRole('heading',{name:'Completá tu perfil con tu CV'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Tu CV'})).toBeVisible();
  const input=page.locator('input[type=file][accept*=".docx"]');
  await page.screenshot({path:`${directory}/${name}-start.png`,fullPage:true});
  await input.setInputFiles({name:'curriculum.docx',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',buffer:docx});
