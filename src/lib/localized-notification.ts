@@ -1,3 +1,4 @@
+import { straightDoubleQuotes } from "@/lib/display-quotes";
 import { getAllCategories, getCategoryLabel } from "./data/categories";
 
 // SOLO LO QUE EL APP GENERA HOY. Las citas, las propuestas, las postulaciones,
@@ -134,7 +135,7 @@ function legacyOr(message: string, fallback: string) {
   return message.trim() || fallback;
 }
 
-export function localizedNotificationCopy(notification: NotificationCopyInput, locale: string) {
+function notificationCopy(notification: NotificationCopyInput, locale: string) {
   const language: NotificationLocale = locale === "en" ? "en" : "es";
   const en = language === "en";
   const data = notification.data;
@@ -238,7 +239,7 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
       const reason = stringData(data, "review_reason");
       const approved = suggestionDecision === "approved";
       const body = approved
-        ? (en ? `“${service}” is now on ContrataCR. You can complete its details and add it to your profile.` : `“${service}” ya está en ContrataCR. Podés completar sus datos y agregarlo a tu perfil.`)
+        ? (en ? `"${service}" is now on ContrataCR. You can complete its details and add it to your profile.` : `"${service}" ya está en ContrataCR. Podés completar sus datos y agregarlo a tu perfil.`)
         : (en ? `Your suggestion "${service}" was not approved.` : `Tu sugerencia "${service}" no fue aprobada.`);
       return { title: localizedTitle(approved ? "suggestion_approved" : "suggestion_rejected", language, notification.title), message: appendReason(body, reason, language) };
     }
@@ -321,7 +322,7 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
     const reason = stringData(data, "review_reason");
     const approved = notification.type === "suggestion_approved";
     const body = approved
-      ? (en ? `“${service}” is now on ContrataCR. You can complete its details and add it to your profile.` : `“${service}” ya está en ContrataCR. Podés completar sus datos y agregarlo a tu perfil.`)
+      ? (en ? `"${service}" is now on ContrataCR. You can complete its details and add it to your profile.` : `"${service}" ya está en ContrataCR. Podés completar sus datos y agregarlo a tu perfil.`)
       : (en ? `Your suggestion "${service}" was not approved.` : `Tu sugerencia "${service}" no fue aprobada.`);
     return { title, message: appendReason(body, reason, language) };
   }
@@ -364,4 +365,9 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
   }
 
   return { title, message: legacyOr(normalizedMessage, en ? "Open the notification to see the details." : "Abre la notificación para ver los detalles.") };
+}
+
+export function localizedNotificationCopy(notification: NotificationCopyInput, locale: string) {
+  const copy = notificationCopy(notification, locale);
+  return { ...copy, title: straightDoubleQuotes(copy.title), message: straightDoubleQuotes(copy.message) };
 }

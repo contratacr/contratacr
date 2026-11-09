@@ -1,4 +1,5 @@
 "use client";
+import { straightDoubleQuotes } from "@/lib/display-quotes";
 
 import { formatFullPersonName } from "@/lib/display-name";
 
@@ -283,7 +284,7 @@ export function AdminSupport() {
                       {m.sender_role === "admin" ? "Soporte ContrataCR" : (formatFullPersonName(m.sender_name) || "Usuario")} · {fmt(m.created_at)}
                     </div>
                     <AdjuntosDelMensaje adjuntos={m.attachments} propio={m.sender_role === "admin"} />
-                    {m.body && <p className="text-sm leading-relaxed whitespace-pre-wrap">{m.body}</p>}
+                    {m.body && <p className="text-sm leading-relaxed whitespace-pre-wrap">{straightDoubleQuotes(m.body)}</p>}
                   </div>
                 </div>
               ))}

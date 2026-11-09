@@ -1,9 +1,10 @@
+import { straightDoubleQuotes } from "@/lib/display-quotes";
 import type { MulticastMessage } from "firebase-admin/messaging";
 
 const DEFAULT_NOTIFICATION_URL = "/notificaciones";
 
 export function compactPushText(value: string, maxLength: number) {
-  const text = value.replace(/\s+/g, " ").trim();
+  const text = straightDoubleQuotes(value).replace(/\s+/g, " ").trim();
   if (text.length <= maxLength) return text;
   return `${text.slice(0, Math.max(0, maxLength - 1)).trimEnd()}…`;
 }

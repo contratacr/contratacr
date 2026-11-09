@@ -59,7 +59,7 @@ const ES_SECTIONS: LegalSection[] = [
           "Nombre o nombre comercial, servicios, descripción, teléfonos, correo de contacto y enlaces profesionales.",
           "Provincia, cantón, lugares de trabajo, zonas de cobertura y, si lo agrega, un punto en el mapa.",
           "Fotografía de perfil, casos de éxito, certificaciones, idiomas, aseguradoras y disponibilidad.",
-          "Importación opcional de currículum: el archivo PDF o DOCX se lee localmente en su dispositivo para sugerir información, sin enviarlo a una inteligencia artificial. Si activa “Mostrar mi CV en el perfil”, el documento se sube a almacenamiento privado y se permite abrirlo o descargarlo desde su perfil público. Puede ocultarlo, reemplazarlo o retirarlo; esto no elimina las copias que otras personas hayan descargado. Solo se guardan y publican los estudios, experiencia y habilidades que usted revise, confirme y guarde en el perfil. Puede editarlos o quitarlos desde Formación.",
+          "Importación opcional de currículum: el archivo PDF o DOCX se lee localmente en su dispositivo para sugerir información, sin enviarlo a una inteligencia artificial. Si activa \"Mostrar mi CV en el perfil\", el documento se sube a almacenamiento privado y se permite abrirlo o descargarlo desde su perfil público. Puede ocultarlo, reemplazarlo o retirarlo; esto no elimina las copias que otras personas hayan descargado. Solo se guardan y publican los estudios, experiencia y habilidades que usted revise, confirme y guarde en el perfil. Puede editarlos o quitarlos desde Formación.",
           "Proyectos, reseñas, casos de éxito y demás actividad relacionada con su perfil."
         ]
       },
@@ -193,7 +193,7 @@ const ES_SECTIONS: LegalSection[] = [
     "body": [
       {
         "k": "p",
-        "text": "Usamos cookies y almacenamiento necesarios para sesión, idioma, seguridad y guardar sus preferencias. “Solo necesarias” mantiene los registros imprescindibles para prestar el servicio, proteger cuentas y atender obligaciones; no activa estadísticas opcionales ni publicidad. Las estadísticas de uso y la medición con Meta tienen opciones independientes, preseleccionadas en “Configuración”. No se activan hasta que pulse “De acuerdo”, “Aceptar todo” o “Guardar” con esas opciones seleccionadas."
+        "text": "Usamos cookies y almacenamiento necesarios para sesión, idioma, seguridad y guardar sus preferencias. \"Solo necesarias\" mantiene los registros imprescindibles para prestar el servicio, proteger cuentas y atender obligaciones; no activa estadísticas opcionales ni publicidad. Las estadísticas de uso y la medición con Meta tienen opciones independientes, preseleccionadas en \"Configuración\". No se activan hasta que pulse \"De acuerdo\", \"Aceptar todo\" o \"Guardar\" con esas opciones seleccionadas."
       },
       {
         "k": "p",
@@ -201,7 +201,7 @@ const ES_SECTIONS: LegalSection[] = [
       },
       {
         "k": "p",
-        "text": "Estadísticas y medición publicitaria están desactivadas hasta que usted las autorice. El aviso ofrece “Configuración” y “De acuerdo”, también en móvil. “De acuerdo” acepta ambos fines opcionales. En “Configuración” puede elegir cada fin, “Aceptar todo” o “Guardar” solo las necesarias. Puede cambiar su elección desde “Configurar cookies y privacidad” en el pie del sitio o esta política. La elección se guarda en este navegador o app durante un máximo de 180 días; no se interpreta el silencio como aceptación. Retirar publicidad detiene nuevos envíos y solicita cancelar conversiones pendientes. Sin conexión se reintenta al reconectar. No se pueden recuperar envíos ya en curso ni borrar automáticamente datos recibidos por Meta. Estos permisos son independientes de términos, correos promocionales, IA y permisos del sistema operativo."
+        "text": "Estadísticas y medición publicitaria están desactivadas hasta que usted las autorice. El aviso ofrece \"Configuración\" y \"De acuerdo\", también en móvil. \"De acuerdo\" acepta ambos fines opcionales. En \"Configuración\" puede elegir cada fin, \"Aceptar todo\" o \"Guardar\" solo las necesarias. Puede cambiar su elección desde \"Configurar cookies y privacidad\" en el pie del sitio o esta política. La elección se guarda en este navegador o app durante un máximo de 180 días; no se interpreta el silencio como aceptación. Retirar publicidad detiene nuevos envíos y solicita cancelar conversiones pendientes. Sin conexión se reintenta al reconectar. No se pueden recuperar envíos ya en curso ni borrar automáticamente datos recibidos por Meta. Estos permisos son independientes de términos, correos promocionales, IA y permisos del sistema operativo."
       },
       {
         "k": "p",
@@ -370,7 +370,7 @@ const EN_SECTIONS: LegalSection[] = [
           "Requests, posts, quotes, reviews, favorites, and related activity.",
           "A project phone number is not shown on the public board. Registered professionals using its contact options can obtain it to coordinate, even before sending a message. Do not put it in the public description.",
           "Professional profile data, services, location, work areas, success stories, availability, and contact details.",
-          "Optional CV import: the PDF or DOCX is read locally on your device to suggest information, without sending it to an AI provider. If you enable “Show my CV on my profile”, the document is uploaded to private storage and visitors can open or download it from your public profile. You can hide, replace or remove it; this does not delete copies that others have downloaded. Only education, work experience and skills that you review, confirm and save are stored and published on your profile. You can edit or remove them in Education.",
+          "Optional CV import: the PDF or DOCX is read locally on your device to suggest information, without sending it to an AI provider. If you enable \"Show my CV on my profile\", the document is uploaded to private storage and visitors can open or download it from your public profile. You can hide, replace or remove it; this does not delete copies that others have downloaded. Only education, work experience and skills that you review, confirm and save are stored and published on your profile. You can edit or remove them in Education.",
           "Content you include in descriptions, notes, reports, and conversations."
         ]
       },
@@ -475,7 +475,7 @@ const EN_SECTIONS: LegalSection[] = [
     "body": [
       {
         "k": "p",
-        "text": "Necessary cookies and storage support sessions, language, security and saving your choices. “Only necessary” retains records essential to provide the service, protect accounts and meet obligations; it does not enable optional statistics or advertising. Usage statistics and Meta measurement have separate choices, preselected in “Settings”. They remain inactive until you press “Agree”, “Accept all” or “Save” with those options selected."
+        "text": "Necessary cookies and storage support sessions, language, security and saving your choices. \"Only necessary\" retains records essential to provide the service, protect accounts and meet obligations; it does not enable optional statistics or advertising. Usage statistics and Meta measurement have separate choices, preselected in \"Settings\". They remain inactive until you press \"Agree\", \"Accept all\" or \"Save\" with those options selected."
       },
       {
         "k": "p",
@@ -483,7 +483,7 @@ const EN_SECTIONS: LegalSection[] = [
       },
       {
         "k": "p",
-        "text": "Statistics and advertising measurement remain off until you authorize them. The notice offers “Settings” and “Agree”, including on mobile. “Agree” accepts both optional purposes. In “Settings” you can choose each purpose, “Accept all” or “Save” only necessary cookies. Change your choice through “Cookie and privacy settings” in the site footer or this policy. Choices last up to 180 days in this browser or app; silence is not acceptance. Withdrawing advertising stops new deliveries and requests cancellation of pending conversions. Offline requests retry on reconnection. In-flight deliveries cannot be recalled and data received by Meta is not automatically erased. These permissions are separate from terms, marketing emails, AI and operating-system permissions."
+        "text": "Statistics and advertising measurement remain off until you authorize them. The notice offers \"Settings\" and \"Agree\", including on mobile. \"Agree\" accepts both optional purposes. In \"Settings\" you can choose each purpose, \"Accept all\" or \"Save\" only necessary cookies. Change your choice through \"Cookie and privacy settings\" in the site footer or this policy. Choices last up to 180 days in this browser or app; silence is not acceptance. Withdrawing advertising stops new deliveries and requests cancellation of pending conversions. Offline requests retry on reconnection. In-flight deliveries cannot be recalled and data received by Meta is not automatically erased. These permissions are separate from terms, marketing emails, AI and operating-system permissions."
       },
       {
         "k": "p",

@@ -1,3 +1,4 @@
+import { straightDoubleQuotes } from "@/lib/display-quotes";
 import { createHash } from "node:crypto";
 import { serviceSuggestionEditorLink } from "@/lib/service-suggestion-request";
 import { readAllAdminRows, readAdminRowsByIds } from "@/lib/admin/read-all-rows";
@@ -193,6 +194,7 @@ export async function GET(req: Request) {
       const professional = typeof row.suggested_by === "string" ? professionalById.get(row.suggested_by) : null;
       return {
         ...row,
+        review_reason: typeof row.review_reason === "string" ? straightDoubleQuotes(row.review_reason) : row.review_reason,
         clarifications: (clarificationLinks.data ?? []).filter(r => r.suggestion_id === row.id).map(r => {
           const ticket = clarificationTickets.data?.find(t => t.id === r.clarification_ticket_id);
           return { ticketId: r.clarification_ticket_id, state: ticket?.last_reply_role === "user" ? "review" : "waiting", reply: clarificationReplies.data?.find(m => m.ticket_id === r.clarification_ticket_id)?.body ?? null };
@@ -308,7 +310,7 @@ export async function PATCH(req: Request) {
     const { data: target, error } = await db.from("categories").select("id,name,is_hidden,is_active").eq("id", existingCategoryId).maybeSingle();
     if (error || !target || target.is_hidden || target.is_active === false) return NextResponse.json({ error: "Seleccioná un servicio activo del catálogo" }, { status: 400 });
     update.resolved_category_id = target.id;
-    update.review_reason = `Ya disponible como “${target.name}”. Completá la información para agregarlo a tu perfil.`;
+    update.review_reason = `Ya disponible como "${target.name}". Completá la información para agregarlo a tu perfil.`;
     const updateError = await updateSuggestionRow(db, id, update);
     if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
     await notifySuggestionDecision(db, suggestionRow!, "approved", target.name, undefined, target.id);
@@ -649,7 +651,7 @@ function suggestionNotificationMessage(
   if (decision === "approved") {
     return {
       title: "El servicio que sugeriste ya está disponible",
-      message: `“${name}” ya está en ContrataCR. Podés completar sus datos y agregarlo a tu perfil.`,
+      message: `"${name}" ya está en ContrataCR. Podés completar sus datos y agregarlo a tu perfil.`,
     };
   }
 

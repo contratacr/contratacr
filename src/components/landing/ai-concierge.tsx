@@ -1,4 +1,5 @@
 "use client";
+import { straightDoubleQuotes } from "@/lib/display-quotes";
 
 import { InlineIdentityName } from "@/components/ui/inline-identity-name";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, useTransition, Suspense, type FormEvent } from "react";
@@ -479,7 +480,7 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
           platform: nativeApp ? "native" : "web",
           history: previous.slice(-8).map((message) => ({
             role: message.role,
-            content: `${message.body}${message.professionals?.length ? `\nResultados mostrados: ${message.professionals.map((result, index) => `${index + 1}. ${result.name}`).join("; ")}` : ""}`,
+            content: `${message.role === "assistant" ? straightDoubleQuotes(message.body) : message.body}${message.professionals?.length ? `\nResultados mostrados: ${message.professionals.map((result, index) => `${index + 1}. ${result.name}`).join("; ")}` : ""}`,
             serviceId: message.serviceId ?? null,
           })),
         }),
@@ -711,7 +712,7 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
                     ? "rounded-br-md bg-[linear-gradient(135deg,#176eea_0%,#0789f4_100%)] font-medium text-white"
                     : "rounded-bl-md border border-[#dbe7f0] bg-white text-[#173052]",
                 )}>
-                  {message.body}
+                  {message.role === "assistant" ? straightDoubleQuotes(message.body) : message.body}
                 </div>
 
                 {/* A card made for the conversation: the essentials and two actions that
@@ -723,7 +724,7 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
 
                 {message.action && (
                   <button type="button" onClick={() => navigate(message.action!.href)} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#009FD9] bg-[#eef9fd] px-4 py-2.5 text-center text-sm font-extrabold text-[#008dbf] transition hover:bg-[#dff5fc] active:scale-[0.99]">
-                    {message.action.label}{actionIcon(message.action.kind)}
+                    {straightDoubleQuotes(message.action.label)}{actionIcon(message.action.kind)}
                   </button>
                 )}
 

@@ -1,4 +1,6 @@
 "use client";
+import { straightDoubleQuotes } from "@/lib/display-quotes";
+import { SupportThreadSkeleton, SupportMessageSkeleton } from "@/components/support/support-thread-skeleton";
 import { ModerationDecisions } from "@/components/support/moderation-decisions";
 import { CABECERA_TITULO } from "@/components/layout/cabecera";
 
@@ -171,9 +173,10 @@ export function SupportTickets({
   // the per-ticket "Nueva respuesta" marker and the dashboard Soporte badge
   // (via onUnreadChange). Filter tabs keep only their normal item count.
 
-  const [openId, setOpenId] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(initialTicketId ?? null);
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const threadRequest = useRef(0);
   const [threadLoading, setThreadLoading] = useState(false);
   const [sending, setSending] = useState(false);
   // In-panel "Contactar soporte" opens the support form as a MODAL (no navigation
@@ -247,6 +250,10 @@ export function SupportTickets({
 
 
   const closeThread = useCallback(() => {
+    threadRequest.current++;
+    const url = new URL(window.location.href);
+    url.searchParams.delete("ticket");
+    window.history.replaceState(null, "", url.pathname + url.search);
     setOpenId(null);
     setTicket(null);
     setMessages([]);
@@ -290,13 +297,14 @@ export function SupportTickets({
   }, [openId, showNewTicketPage, load]);
 
   const openTicket = useCallback(async (id: string, { silencioso = false }: { silencioso?: boolean } = {}) => {
+    const request = ++threadRequest.current;
     setOpenId(id);
     // La conversación se abre YA: el asunto, el estado y la referencia ya están
     // en la fila que se acaba de tocar, así que el encabezado y el compositor se
     // pintan de inmediato y lo único que espera son los mensajes. Antes toda la
     // pantalla se iba a un esqueleto antes de llegar al chat.
     const deLaLista = items.find((fila) => fila.id === id);
-    if (deLaLista) setTicket(deLaLista);
+    if (!silencioso) { setTicket(deLaLista ?? null); setMessages([]); }
     if (!silencioso) setThreadLoading(true);
     fetchWithSessionRetry(`/api/support?id=${id}`)
       .then(async (r) => {
@@ -307,14 +315,15 @@ export function SupportTickets({
       // Not theirs / not found (e.g. a deep-link opened by the wrong account) →
       // fall back to the list gracefully instead of a stuck loader.
       .then(({ ticket, messages }) => {
+        if (request !== threadRequest.current) return;
         if (!ticket) { setOpenId(null); return; }
         setTicket(ticket); setMessages((previos) => conservarEnlaces(previos, messages ?? []));
         // Reflect the ticket's ACTUAL status in the filter (so an email deep-link to
         // an in-progress conversation lands in the in-progress view, not pending).
         if (ticket.status) setFilter(ticket.status);
       })
-      .catch(() => { setOpenId(null); setLoadError(true); })
-      .finally(() => setThreadLoading(false));
+      .catch(() => { if (request === threadRequest.current) { setOpenId(null); setLoadError(true); } })
+      .finally(() => { if (request === threadRequest.current) setThreadLoading(false); });
     // Reading the ticket clears its "new reply" notifications (auto-refresh badges).
     if (user) {
       const supabase = createClient();
@@ -328,10 +337,11 @@ export function SupportTickets({
 
   // Deep-link: open a specific ticket on mount (e.g. ?ticket=<id> from a support
   // email's "Ver conversación", carried through login → callback). Runs once.
-  const didOpenInitial = useRef(false);
+  const didOpenInitial = useRef<string | null>(null);
   useEffect(() => {
-    if (initialTicketId && !didOpenInitial.current) {
-      didOpenInitial.current = true;
+    if (!initialTicketId) didOpenInitial.current = null;
+    if (initialTicketId && didOpenInitial.current !== initialTicketId) {
+      didOpenInitial.current = initialTicketId;
       openTicket(initialTicketId);
     }
   }, [initialTicketId, openTicket]);
@@ -486,9 +496,7 @@ export function SupportTickets({
         className="ccr-support-thread flex h-[calc(100dvh-153px)] min-h-[360px] flex-col lg:-mx-5 lg:-mb-5 lg:h-auto lg:min-h-96 lg:max-h-[45rem] lg:overflow-hidden lg:rounded-b-2xl"
       >
         {!ticket ? (
-          <div className="grid min-h-0 flex-1 place-items-center px-4">
-            <PanelListSkeleton rows={2} />
-          </div>
+          <SupportThreadSkeleton />
         ) : (
           <div className="ccr-support-thread-card flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
             {/* SIN LINEAS DURAS. La cabecera, el lienzo y el campo de escribir
@@ -523,12 +531,7 @@ export function SupportTickets({
             <div ref={messagesRef} className="ccr-support-thread-messages flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain bg-white px-4 py-5 sm:px-6">
               {/* Lo único que espera son los mensajes, y esperan con forma de
                   mensaje: dos globos grises, uno de cada lado. */}
-              {threadLoading && messages.length === 0 && (
-                <>
-                  <div className="flex justify-start"><div className="h-14 w-[70%] animate-pulse rounded-[18px] rounded-bl-md bg-white/80" /></div>
-                  <div className="flex justify-end"><div className="h-12 w-[55%] animate-pulse rounded-[18px] rounded-br-md bg-[#dbeaf3]" /></div>
-                </>
-              )}
+              {threadLoading && messages.length === 0 && <SupportMessageSkeleton />}
               {messages.map((m, i) => (
                 <Fragment key={m.id}>
                   {/* La fecha se dice UNA vez por dia, en el centro, como en
@@ -559,7 +562,7 @@ export function SupportTickets({
                         mensaje. De soporte SI se dice quien contesta, que ahi
                         no es obvio. La hora baja al pie del globo, chiquita. */}
                     <AdjuntosDelMensaje adjuntos={m.attachments} propio={m.sender_role === "user"} />
-                    {m.body && <p className="whitespace-pre-wrap">{m.body}</p>}
+                    {m.body && <p className="whitespace-pre-wrap">{straightDoubleQuotes(m.body)}</p>}
                     <div className={`mt-1 text-[11px] leading-none ${m.sender_role === "user" ? "text-right text-white/65" : "text-[#8fa1b6]"}`}>{hora(m.created_at)}</div>
                   </div>
                 </div>

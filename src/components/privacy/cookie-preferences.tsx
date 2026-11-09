@@ -48,8 +48,8 @@ export function CookiePreferences() {
     setSettings(true);
   }
   const notice = en
-    ? 'We use necessary cookies to keep ContrataCR working securely. By choosing “Agree”, you accept optional usage statistics and advertising measurement with Meta. In “Settings” you can accept or reject each purpose. You can change your choice at any time.'
-    : 'Usamos cookies necesarias para que ContrataCR funcione de forma segura. Al elegir “De acuerdo”, aceptás las estadísticas de uso y la medición publicitaria con Meta. En “Configuración” podés aceptar o rechazar cada fin opcional. Podés cambiar tu decisión cuando quieras.';
+    ? 'We use necessary cookies to keep ContrataCR working securely. By choosing "Agree", you accept optional usage statistics and advertising measurement with Meta. In "Settings" you can accept or reject each purpose. You can change your choice at any time.'
+    : 'Usamos cookies necesarias para que ContrataCR funcione de forma segura. Al elegir "De acuerdo", aceptás las estadísticas de uso y la medición publicitaria con Meta. En "Configuración" podés aceptar o rechazar cada fin opcional. Podés cambiar tu decisión cuando quieras.';
   const categorySummaries: Record<string, string> = {
     necessary: en ? "Sign-in, security and essential preferences." : "Inicio de sesión, seguridad y preferencias esenciales.",
     analytics: en ? "Visits and actions to improve ContrataCR." : "Visitas y acciones para mejorar ContrataCR.",

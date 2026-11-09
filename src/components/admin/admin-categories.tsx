@@ -579,7 +579,7 @@ export function AdminCategories() {
   }
 
   function requestClarification(i: Suggestion) {
-    let question = `¡Hola! Estamos revisando el servicio que solicitaste: «${nameOf(i)}». ¿Nos contás qué trabajos realizás? Podés responder aquí mismo para ayudarnos a ubicarlo con el nombre correcto.`;
+    let question = `¡Hola! Estamos revisando el servicio que solicitaste: "${nameOf(i)}". ¿Nos contás qué trabajos realizás? Podés responder aquí mismo para ayudarnos a ubicarlo con el nombre correcto.`;
     const requestKey = crypto.randomUUID();
     setDialog({ title: "Solicitar aclaración", description: "Se abrirá un caso privado para cada solicitante. Podrán responder directamente; si ya existe un caso, se reutilizará. La sugerencia seguirá pendiente.",
       input: { value: question, label: "Pregunta", maxLength: 2000, onChange: value => { question = value; setDialog(current => current?.input ? { ...current, input: { ...current.input, value } } : current); } }, confirmLabel: "Enviar pregunta",
@@ -1057,7 +1057,7 @@ export function AdminCategories() {
                             <button disabled={busy !== null || !existingTargets[i.id]} onClick={() => {
                               const target = catalog.find(c => c.id === existingTargets[i.id]);
                               if (!target) return;
-                              setDialog({ title: "Usar servicio existente", description: `Se avisará a quienes lo solicitaron que pueden completar “${target.label}”. No se publicará en sus perfiles hasta que guarden.`, confirmLabel: "Confirmar servicio", onConfirm: () => applySuggestionDecision(i, "rejected", undefined, undefined, undefined, undefined, undefined, target.id) });
+                              setDialog({ title: "Usar servicio existente", description: `Se avisará a quienes lo solicitaron que pueden completar "${target.label}". No se publicará en sus perfiles hasta que guarden.`, confirmLabel: "Confirmar servicio", onConfirm: () => applySuggestionDecision(i, "rejected", undefined, undefined, undefined, undefined, undefined, target.id) });
                             }} className="rounded-lg border border-[#d7e3ee] px-3 py-2 text-sm font-semibold text-[#162543] disabled:opacity-50">Ya existe → ofrecer este servicio</button>
                           </div>
                           <button onClick={() => requestClarification(i)} disabled={busy !== null} className="inline-flex h-9 items-center rounded-lg border border-[#009FD9] px-3 text-sm font-semibold text-[#007a9f] disabled:opacity-50">Solicitar aclaración</button>

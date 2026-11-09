@@ -78,7 +78,7 @@ test("native assistant sends a prompt without an extra permission step",async({p
   Object.defineProperty(window,"Capacitor",{configurable:true,get:()=>runtime,set:value=>{if(value&&typeof value==="object")Object.assign(runtime,value);runtime.isNativePlatform=()=>true;}});
  });
  let requests=0;let consent:unknown;
- await page.route("**/api/ai-assistant",async route=>{requests++;consent=route.request().postDataJSON().aiConsent;await route.fulfill({json:{answer:"Respuesta de prueba",action:"answer"}});});
+ await page.route("**/api/ai-assistant",async route=>{requests++;consent=route.request().postDataJSON().aiConsent;await route.fulfill({json:{answer:"Respuesta de prueba: «Servicio».",action:"answer"}});});
  await gotoOK(page,"/");await waitForInteractivePage(page);
  await page.getByRole("button",{name:/Abrir men[uú]|Open menu/i}).filter({visible:true}).first().click();
  await page.getByRole("dialog",{name:/Men[uú]|Menu/i}).getByRole("button",{name:"Asistente",exact:true}).click();
@@ -86,7 +86,7 @@ test("native assistant sends a prompt without an extra permission step",async({p
  await expect(assistant.locator("[data-ai-consent]")).toHaveCount(0);
  await assistant.getByRole("textbox").fill("Necesito electricidad");
  await assistant.getByRole("button",{name:"Enviar mensaje",exact:true}).click();
- await expect(assistant).toContainText("Respuesta de prueba");
+ await expect(assistant).toContainText('Respuesta de prueba: "Servicio".');
  expect(requests).toBe(1);expect(consent).toBeUndefined();
 });
 

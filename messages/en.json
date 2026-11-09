@@ -3448,7 +3448,7 @@
   },
   "serviceRequests": {
     "title": "The service you suggested is now available",
-    "body": "“{service}” is now on ContrataCR. You can complete its details and add it to your profile.",
+    "body": "\"{service}\" is now on ContrataCR. You can complete its details and add it to your profile.",
     "complete": "Complete service",
     "later": "Not now",
     "error": "Could not save. Please try again.",
