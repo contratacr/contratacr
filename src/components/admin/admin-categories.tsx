@@ -13,6 +13,7 @@ import { notifyCategoryCatalogChanged } from "@/lib/data/use-custom-categories";
 import { useAdminAutoRefresh } from "@/hooks/use-admin-auto-refresh";
 
 type Suggestion = {
+  clarifications?: { ticketId: string; state: "review" | "waiting"; reply: string | null }[];
   id: string;
   label: string;
   labelEn?: string | null;
@@ -577,6 +578,24 @@ export function AdminCategories() {
     }
   }
 
+  function requestClarification(i: Suggestion) {
+    let question = `¡Hola! Estamos revisando el servicio que solicitaste: «${nameOf(i)}». ¿Nos contás qué trabajos realizás? Podés responder aquí mismo para ayudarnos a ubicarlo con el nombre correcto.`;
+    const requestKey = crypto.randomUUID();
+    setDialog({ title: "Solicitar aclaración", description: "Se abrirá un caso privado para cada solicitante. Podrán responder directamente; si ya existe un caso, se reutilizará. La sugerencia seguirá pendiente.",
+      input: { value: question, label: "Pregunta", maxLength: 2000, onChange: value => { question = value; setDialog(current => current?.input ? { ...current, input: { ...current.input, value } } : current); } }, confirmLabel: "Enviar pregunta",
+      onConfirm: async () => {
+        setBusy(i.id);
+        try {
+          const response = await fetch("/api/admin/categories/clarification", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: i.id, question, requestKey }) });
+          const data = await response.json();
+          if (!response.ok) { showNotice("No se pudo enviar la pregunta", data.error || "Intentá nuevamente."); return; }
+          const updated = await fetch(`/api/admin/categories?status=${status}`).then(r => r.json());
+          setItems(updated.categories ?? []);
+        } finally { setBusy(null); }
+      },
+    });
+  }
+
   async function decide(i: Suggestion, next: "approved" | "rejected") {
     let label: string | undefined;
     const flags = flagsOf(i);
@@ -999,6 +1018,13 @@ export function AdminCategories() {
                         <span>Sugerida el {new Date(i.created_at).toLocaleDateString("es-CR")}</span>
                         {sender && <span className="text-[#64748b]">Sugerida por {sender}</span>}
                       </div>
+                      {status === "pending" && !!i.clarifications?.length && <div className="mt-3 space-y-2">
+                        <p className="text-sm font-bold text-[#007a9f]">{i.clarifications.some(c => c.state === "review") ? "Por revisar: recibiste una respuesta" : "Esperando respuesta"}</p>
+                        {i.clarifications.map(c => <div key={c.ticketId} className="rounded-lg border border-[#d7e3ee] p-3 text-sm">
+                          {c.reply && <p className="mb-2 whitespace-pre-wrap break-words">{c.reply}</p>}
+                          <a href={`/admin/soporte?ticket=${c.ticketId}`} className="font-semibold text-[#009FD9]">Ver conversación</a>
+                        </div>)}
+                      </div>}
                       {status === "rejected" && i.review_reason && (
                         <p className="mt-2 text-xs text-[#c2410c] [overflow-wrap:anywhere] break-words">
                           Motivo anterior: {i.review_reason}
@@ -1034,6 +1060,7 @@ export function AdminCategories() {
                               setDialog({ title: "Usar servicio existente", description: `Se avisará a quienes lo solicitaron que pueden completar “${target.label}”. No se publicará en sus perfiles hasta que guarden.`, confirmLabel: "Confirmar servicio", onConfirm: () => applySuggestionDecision(i, "rejected", undefined, undefined, undefined, undefined, undefined, target.id) });
                             }} className="rounded-lg border border-[#d7e3ee] px-3 py-2 text-sm font-semibold text-[#162543] disabled:opacity-50">Ya existe → ofrecer este servicio</button>
                           </div>
+                          <button onClick={() => requestClarification(i)} disabled={busy !== null} className="inline-flex h-9 items-center rounded-lg border border-[#009FD9] px-3 text-sm font-semibold text-[#007a9f] disabled:opacity-50">Solicitar aclaración</button>
                           <button onClick={() => decide(i, "approved")} disabled={busy !== null} className="inline-flex h-9 items-center gap-1 rounded-lg bg-[#16a34a] px-3 text-sm font-medium text-white hover:bg-[#15803d] disabled:opacity-50">
                             {busy === i.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />} Aprobar
                           </button>

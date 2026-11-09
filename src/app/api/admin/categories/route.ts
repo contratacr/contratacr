@@ -166,6 +166,16 @@ export async function GET(req: Request) {
       .map((row) => [row.profile_id as string, row]));
   }
 
+  const clarificationLinks = ids.length ? await readAdminRowsByIds(ids, (batch, from, to) => db.from("service_suggestion_requests")
+    .select("suggestion_id,profile_id,clarification_ticket_id").in("suggestion_id", batch).not("clarification_ticket_id", "is", null).order("suggestion_id").order("profile_id").range(from, to)) : { data: [], error: null };
+  if (clarificationLinks.error) return NextResponse.json({ error: "No se pudieron consultar las aclaraciones." }, { status: 503 });
+  const ticketIds = (clarificationLinks.data ?? []).map(r => r.clarification_ticket_id).filter((id): id is string => !!id);
+  const [clarificationTickets, clarificationReplies] = ticketIds.length ? await Promise.all([
+    readAdminRowsByIds(ticketIds, (batch, from, to) => db.from("support_tickets").select("id,last_reply_role,status").in("id", batch).order("id").range(from, to)),
+    readAdminRowsByIds(ticketIds, (batch, from, to) => db.from("support_ticket_messages").select("id,ticket_id,body,created_at").in("ticket_id", batch).eq("sender_role", "user").order("created_at", { ascending: false }).order("id").range(from, to)),
+  ]) : [{ data: [], error: null }, { data: [], error: null }];
+  if (clarificationTickets.error || clarificationReplies.error) return NextResponse.json({ error: "No se pudieron consultar las respuestas." }, { status: 503 });
+
   const { count: pendingCount } = await db
     .from("category_suggestions")
     .select("id", { count: "exact", head: true })
@@ -183,6 +193,10 @@ export async function GET(req: Request) {
       const professional = typeof row.suggested_by === "string" ? professionalById.get(row.suggested_by) : null;
       return {
         ...row,
+        clarifications: (clarificationLinks.data ?? []).filter(r => r.suggestion_id === row.id).map(r => {
+          const ticket = clarificationTickets.data?.find(t => t.id === r.clarification_ticket_id);
+          return { ticketId: r.clarification_ticket_id, state: ticket?.last_reply_role === "user" ? "review" : "waiting", reply: clarificationReplies.data?.find(m => m.ticket_id === r.clarification_ticket_id)?.body ?? null };
+        }),
         labelEn: englishById.get(String(row.id)) ?? null,
         suggestedByName: author?.full_name ?? null,
         suggestedByEmail: author?.email ?? null,
