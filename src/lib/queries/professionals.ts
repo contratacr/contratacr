@@ -935,10 +935,10 @@ async function getProfessionalBySlugEnVivo(slug: string): Promise<ProfessionalDe
     try {
       const { createPublicClient } = await import("@/lib/supabase/server");
       const publico = await createPublicClient();
-      const { data, error } = await publico.from("professionals").select("cv_profile, certifications").eq("id", pro.id).maybeSingle();
-      if (error || !data) return { cvProfile: normalizeCv(null), certifications: pro.certifications };
-      return { cvProfile: normalizeCv(data.cv_profile), certifications: Array.isArray(data.certifications) ? data.certifications as Certification[] : [] };
-    } catch { return { cvProfile: normalizeCv(null), certifications: pro.certifications }; }
+      const { data, error } = await publico.from("professionals").select("cv_profile, certifications, workplaces").eq("id", pro.id).maybeSingle();
+      if (error || !data) return { cvProfile: normalizeCv(null), certifications: pro.certifications, workplaces: [] };
+      return { workplaces: Array.isArray(data.workplaces) ? data.workplaces as ProfessionalCardData["workplaces"] : [], cvProfile: normalizeCv(data.cv_profile), certifications: Array.isArray(data.certifications) ? data.certifications as Certification[] : [] };
+    } catch { return { cvProfile: normalizeCv(null), certifications: pro.certifications, workplaces: [] }; }
   })();
   const [estaSuspendido, contactEmail, hasCvFile, formacion] = await Promise.all([suspendido, correo, archivoCv, formacionActual]);
   if (estaSuspendido) return null;

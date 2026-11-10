@@ -347,6 +347,8 @@
     "useMyLocation": "Usar mi ubicación"
   },
   "workplacesPicker": {
+    "showAddress": "Mostrar esta dirección en mi perfil",
+    "showAddressHelp": "La dirección y el botón Cómo llegar serán públicos.",
     "lead": "Elige la provincia y el cantón donde ofreces tus servicios.",
     "searchPlaceholder": "Busca la dirección… ejemplo: Escazú Centro",
     "geoUnsupported": "Tu navegador no permite geolocalización.",

@@ -9,6 +9,7 @@ import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { withHomeServiceScope, type HomeServiceScope } from "@/lib/location";
 import { FilaInterruptor } from "@/components/ui/fila-interruptor";
+import { isFixedWorkplace } from "@/lib/public-workplaces";
 import { cn } from "@/lib/utils";
 
 export type Workplace = {
@@ -17,6 +18,7 @@ export type Workplace = {
   address: string;
   level?: "country" | "provincia" | "canton";
   homeService?: boolean;
+  showAddress?: boolean;
   lat?: number;
   lng?: number;
   // Authoritative administrative areas - chosen by the pro in the selects. These
@@ -343,6 +345,10 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
                       : t("wholeProvinceTag")}
                   {wp.lat != null && wp.lng != null ? ` · ${t("pinnedTag")}` : ""}
                 </p>
+                {isFixedWorkplace(wp) && <div className="mt-2">
+                  {wp.address && <p className="mb-1 break-words text-xs leading-5 text-[#64748b]">{wp.address}</p>}
+                  <FilaInterruptor titulo={t("showAddress")} ayuda={t("showAddressHelp")} checked={wp.showAddress === true} onChange={showAddress => onChange(value.map(place => place.id === wp.id ? { ...place, showAddress } : place))}/>
+                </div>}
               </div>
               <button
                 type="button"

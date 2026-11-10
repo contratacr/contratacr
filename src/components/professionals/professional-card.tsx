@@ -51,7 +51,7 @@ export type ProfessionalCardData = {
   languages?: string[];
   businessName?: string;
   publicBusinessNameOnly?: boolean;
-  workplaces?: { id?: string; name: string; address?: string; lat?: number; lng?: number }[];
+  workplaces?: { id?: string; name: string; address?: string; lat?: number; lng?: number; level?: string; showAddress?: boolean }[];
   verificationStatus?: "pending" | "verified" | "rejected" | "under_appeal";
   lat?: number | null;
   lng?: number | null;
