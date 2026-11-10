@@ -1412,6 +1412,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                     const uniqueWorkplaces = Array.from(
                       new Map(
                         (professional.workplaces ?? [])
+                          .filter(w => w.homeService !== false || (typeof w.lat === 'number' && typeof w.lng === 'number' && w.receivesClients !== false))
                           .map((w) => {
                             const name = String(w.name ?? "").trim();
                             const address = String(w.address ?? "").trim();
@@ -1429,7 +1430,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                           return [cantonName, provinceName].filter(Boolean).join(", ");
                         })
                         .filter(Boolean),
-                      locationText,
+                      ...(professional.workplaces?.length ? [] : [locationText]),
                     ].filter(Boolean)));
                     const profileCategoryIds = (professional.professions && professional.professions.length > 0)
                       ? professional.professions
@@ -1445,8 +1446,8 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                     });
                     const visibleLocal = (professional.workplaces ?? []).filter(w => typeof w.lat === 'number' && typeof w.lng === 'number' && w.receivesClients !== false);
                     const travels = (professional.workplaces ?? []).some(w => w.homeService !== false);
-                    const modalities = [visibleLocal.length ? (locale === 'en' ? 'At my premises' : 'En mi local') : '', travels ? (locale === 'en' ? 'At your location' : 'A domicilio') : '', offersVideoConsult ? (locale === 'en' ? 'By video call' : 'Por videollamada') : ''].filter(Boolean);
-                    if (modalities.length) facts.push({ key: 'modalities', icon: <MapPin className="h-5 w-5"/>, label: locale === 'en' ? 'Service options' : 'Modalidades de atención', value: modalities.join(' · ') });
+                    const modalities = [visibleLocal.length ? (locale === 'en' ? 'Clients visit me at a location' : 'Recibo clientes en un lugar') : '', travels ? (locale === 'en' ? 'I travel to clients' : 'Voy donde el cliente') : '', offersVideoConsult ? (locale === 'en' ? 'I offer video calls' : 'Atiendo por videollamada') : ''].filter(Boolean);
+                    if (modalities.length) facts.push({ key: 'modalities', icon: <MapPin className="h-5 w-5"/>, label: locale === 'en' ? 'Where I offer services' : 'Dónde ofrezco mis servicios', value: modalities.join(' · ') });
                     if (workplaceAreaLines.length > 0 || offersVideoConsult) facts.push({
                       key: "loc", icon: <MapPin className="h-5 w-5" />,
                       label: workplaceAreaLines.length > 1 || offersVideoConsult ? t("whereServes") : t("location"),

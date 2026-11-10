@@ -17,6 +17,7 @@ export type Workplace = {
   address: string;
   level?: "country" | "provincia" | "canton";
   homeService?: boolean;
+  homeServicePaused?: boolean;
   showAddress?: boolean;
   receivesClients?: boolean;
   lat?: number;
@@ -513,7 +514,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
       </button>}
       {editingId && <button type="button" className="min-h-11 self-start text-sm font-semibold text-[#68778d]" onClick={() => { setEditingId(null); setAdding(false); setProvince(''); setCanton(''); setDraftPin(null); setShowMap(false); }}>{t("cancelEdit")}</button>}
       {avisoRepetido && (
-        <p role="status" className="text-xs font-semibold text-[#0089bb]">{t("yaAgregado")}</p>
+        <p role="status" className="text-xs font-semibold text-[#0089bb]">{avisoRepetido === t("localPinRequired") ? avisoRepetido : t("yaAgregado")}</p>
       )}
       </div>
       )}

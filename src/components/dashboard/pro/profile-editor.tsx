@@ -3,7 +3,6 @@
 import { CvEditor, cvValidationError } from "./cv-editor";
 import { normalizeCv } from "@/lib/cv/model";
 
-import { hasBaseCanton } from "@/lib/location";
 
 import { AvatarFileInput } from "@/components/ui/avatar-file-input";
 
@@ -40,6 +39,7 @@ import { cn } from "@/lib/utils";
 import { NAME_MAX_LENGTH, PROFILE_BIO_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { AttentionModalities } from "./attention-modalities";
 import { normalizeWorkplaceId } from "@/lib/workplaces";
+import { isFixedWorkplace } from "@/lib/public-workplaces";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProData = Record<string, any>;
@@ -180,7 +180,7 @@ function seedZones(init: ProData): Workplace[] {
       ? [{ id: "wp_todo_costa_rica", name: "Todo Costa Rica", address: "", level: "country" as const }]
       : [];
   if (Array.isArray(init.workplaces) && init.workplaces.length > 0) {
-    return [...seededCountry, ...init.workplaces.map((wp, index) => normalizeWorkplaceId(wp, index))];
+    return [...(init.workplaces.some(wp => wp.level === "country") ? [] : seededCountry), ...init.workplaces.map((wp, index) => normalizeWorkplaceId(wp, index))];
   }
   const out: Workplace[] = [];
   const cov = Array.isArray(init.coverage_areas) ? init.coverage_areas : [];
@@ -388,9 +388,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
   const hayCambiosReales = huellaActual !== huellaGuardada || !!pendingAvatarFile;
 
   const callPhoneIsValid = !allowPhoneCall || !callPhone.trim() || isPhoneComplete(callPhone);
-  // Un lugar SIEMPRE: «todo el país» y las videoconsultas se suman, no
-  // sustituyen (la misma regla que el registro).
-  const hasWorkplace = hasBaseCanton(workplaces);
+  const hasWorkplace = workplaces.some(w => (w.homeService !== false && (w.level === "country" || !!w.provinciaId)) || (isFixedWorkplace(w) && w.receivesClients !== false)) || (canOfferVideoConsult && videoConsult);
   const socialIsValid =
     (!website.trim() || isValidWebsiteUrl(website)) &&
     SOCIAL_NETWORKS.every(({ key }) => {
@@ -405,8 +403,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
     }
     if (sectionId === "location" && !hasWorkplace) {
       return locale === "en"
-        ? "Choose at least one province and base canton."
-        : "Elige al menos una provincia y un cantón de base.";
+        ? "Add a location or enable video calls."
+        : "Agregá una zona, un lugar o activá las videollamadas.";
     }
     if (sectionId === "contact") {
       if (!isPhoneComplete(whatsapp)) {
@@ -606,12 +604,23 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
       const hasCountryWorkplace = normalizedWorkplaces.some((wp) => wp.level === "country" && wp.homeService !== false);
       const effectiveWorkplaces = normalizedWorkplaces.filter((wp) => wp.level !== "country");
       const effectiveVideoConsult = canOfferVideoConsult && videoConsult;
-      const coverageAreas = hasCountryWorkplace || (effectiveVideoConsult && videoCoverageCountry) ? [{ level: "country" as const }] : [];
+      const coverageAreas = [
+        ...(hasCountryWorkplace || (effectiveVideoConsult && videoCoverageCountry) ? [{ level: "country" as const }] : []),
+        ...effectiveWorkplaces.filter(w => w.homeService !== false && !isFixedWorkplace(w)).map(w => ({
+          level: w.level === "provincia" || (!w.cantonId && !!w.provinciaId) ? "provincia" as const : "canton" as const,
+          provinciaId: w.provinciaId,
+          cantonId: w.cantonId,
+          provinceName: w.provinciaId ? getProvinceById(w.provinciaId)?.name : undefined,
+          cantonName: w.cantonId ? getCantonById(w.cantonId)?.name : undefined,
+        })),
+      ];
       const hasExactWorkplace = effectiveWorkplaces.some((w) => w.receivesClients !== false && (w.lat != null && w.lng != null));
       const hasCoverageZone = effectiveWorkplaces.some((w) => w.homeService !== false);
       const serviceType = [hasExactWorkplace ? "fixed" : null, hasCoverageZone ? "mobile" : null].filter(Boolean).join(",") || "mobile";
-      const { provincias, cantones, coverageProvincias, coverageCountry } = computeSearchAreas(effectiveWorkplaces, coverageAreas);
+      const activeWorkplaces = effectiveWorkplaces.filter(w => w.homeService !== false || (isFixedWorkplace(w) && w.receivesClients !== false));
+      const { provincias, cantones, coverageProvincias, coverageCountry } = computeSearchAreas(activeWorkplaces, coverageAreas);
       const primary = primaryArea(effectiveWorkplaces, coverageAreas);
+      const primaryPin = activeWorkplaces.find(w => isFixedWorkplace(w) && w.receivesClients !== false);
 
       const baseUpdate: Record<string, unknown> = {
         bio: limitText(bio, PROFILE_BIO_MAX_LENGTH),
@@ -623,8 +632,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
         provincia_id: primary.provinciaId ?? null,
         canton_id: primary.cantonId ?? null,
         address: address || null,
-        lat: effectiveWorkplaces[0]?.lat ?? null,
-        lng: effectiveWorkplaces[0]?.lng ?? null,
+        lat: primaryPin?.lat ?? null,
+        lng: primaryPin?.lng ?? null,
       };
       // The OTHER optional identity columns. These may not all be migrated on every
       // environment, so they're saved best-effort (a missing column is ignored) — and,
@@ -665,10 +674,10 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
       // swallowed into a false confirmation.
       let { error: locError } = await supabase
         .from("professionals")
-        .update({ workplaces: effectiveWorkplaces, search_provincias: provincias, search_cantones: cantones })
+        .update({ workplaces: normalizedWorkplaces, search_provincias: provincias, search_cantones: cantones })
         .eq("id", professionalId);
       if (locError && /search_provincias|search_cantones|could not find|PGRST204|schema cache/i.test(locError.message)) {
-        ({ error: locError } = await supabase.from("professionals").update({ workplaces: effectiveWorkplaces }).eq("id", professionalId));
+        ({ error: locError } = await supabase.from("professionals").update({ workplaces: normalizedWorkplaces }).eq("id", professionalId));
       }
       if (locError) throw locError;
 
@@ -1026,7 +1035,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
           <AttentionModalities value={workplaces} onChange={next => { setWorkplaces(next); touch("location"); }} english={locale === "en"} canVideo={canOfferVideoConsult} video={videoConsult && videoCoverageCountry} onVideoChange={next => { setVideoConsult(next); setVideoCoverageCountry(next); touch("location"); }}/>
           {dirty && activeDirtySection === "location" && !hasWorkplace ? (
             <p className="mt-2 text-xs text-red-500">
-              {locale === "en" ? "Choose at least one province and base canton." : "Elige al menos una provincia y un cantón de base."}
+              {locale === "en" ? "Add a location or enable video calls." : "Agregá una zona, un lugar o activá las videollamadas."}
             </p>
           ) : null}
         </div>
