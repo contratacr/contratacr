@@ -1,5 +1,5 @@
 "use client";
-import { WorkplaceDirections, WorkplaceDirectionsAction } from "@/components/professionals/workplace-directions";
+import { WorkplaceDirections } from "@/components/professionals/workplace-directions";
 
 import { CvProfileDetails } from "@/components/professionals/cv-profile";
 import { hasCv, normalizeCv } from "@/lib/cv/model";
@@ -802,7 +802,6 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
           requestAnimationFrame(() => document.getElementById("resenas")?.scrollIntoView({ behavior: "smooth", block: "start" }));
         }}
       />
-      <WorkplaceDirectionsAction places={professional.workplaces} english={locale === "en"}/>
       {/* Las redes van DESPUÉS de los botones de contacto: son para creerle al
           profesional, no para contactarlo, así que no compiten con «Enviar
           mensaje» ni con «Llamar». Solo iconos, centrados. */}
@@ -830,7 +829,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
           ))}
         </div>
       )}
-
+      <WorkplaceDirections places={professional.workplaces} english={locale === "en"}/>
     </div>
   );
 

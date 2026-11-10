@@ -55,3 +55,17 @@ sobre mantener acciones frecuentes visibles y revelar opciones secundarias.
 Esta revisión se publica por instrucción explícita de Isaac sin ejecutar pruebas
 locales. Los recorridos y contratos fueron actualizados pero no ejecutados; los
 resultados de la implementación anterior no certifican estos cambios de comportamiento.
+
+## Diseño aprobado, 10 de noviembre de 2026
+
+Se conserva el resumen y edición de lugares, dirección completa, visibilidad,
+atención a domicilio/cobertura, videoconsulta y guardado existentes. En el perfil,
+debajo de redes sociales, cada sede presenta nombre y dirección seguidos de dos
+accesos con texto: Google Maps y Waze. Información conserva las mismas sedes.
+Ambos enlaces usan las coordenadas exactas guardadas; Waze utiliza el enlace HTTPS
+`https://www.waze.com/ul?ll=lat,lng&navigate=yes`, con comportamiento web/app según
+[Waze Deep Links](https://developers.google.com/waze/deeplinks).
+No se recrean logos oficiales: se usan los iconos de mapa/navegación del sistema
+junto al nombre visible de cada proveedor. Se retira el botón único Cómo llegar.
+Isaac autoriza publicación sin pruebas locales; esta revisión no fue ejecutada
+localmente ni se presenta evidencia anterior como validación del nuevo diseño.
