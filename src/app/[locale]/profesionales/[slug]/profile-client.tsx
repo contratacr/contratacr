@@ -805,7 +805,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
       {/* Las redes van DESPUÉS de los botones de contacto: son para creerle al
           profesional, no para contactarlo, así que no compiten con «Enviar
           mensaje» ni con «Llamar». Solo iconos, centrados. */}
-      {redesDelProfesional.length > 0 && (
+      {(redesDelProfesional.length > 0 || professional.workplaces?.length) ? (
         <div className="flex flex-wrap items-center justify-center gap-2">
           {redesDelProfesional.map(({ k, href, Icon }) => (
             <a
@@ -827,9 +827,9 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
               <Icon className="h-4 w-4" />
             </a>
           ))}
+          <WorkplaceDirections places={professional.workplaces} english={locale === "en"}/>
         </div>
-      )}
-      <WorkplaceDirections places={professional.workplaces} english={locale === "en"}/>
+      ) : null}
     </div>
   );
 
@@ -1469,7 +1469,6 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                             </p>
                           </section>
                         )}
-                        <WorkplaceDirections places={professional.workplaces} english={locale === "en"}/>
                         {facts.length > 0 && (
                           <section className={professional.bio ? "border-t border-[#eef2f6]" : ""}>
                             <div className="divide-y divide-[#eef2f6]">

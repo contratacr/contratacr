@@ -421,13 +421,14 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
             type="button"
             onClick={toggleMap}
             aria-expanded={showMap}
-            className="self-start inline-flex items-center gap-1.5 text-sm font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb] hover:underline cursor-pointer"
+            className="self-start inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap text-sm font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb] hover:underline cursor-pointer"
           >
             <MapPin className="h-4 w-4" />
-            <span>{t("mapPointTitle")}</span>
+            <span>{draftPin ? t("changeMapPoint") : t("mapPointTitle")}</span>
             {draftPin && !showMap && <Check className="h-3.5 w-3.5 text-[#16a34a]" />}
             <ChevronDown className={cn("h-4 w-4 transition-transform", showMap && "rotate-180")} />
           </button>
+          <p className="text-xs leading-5 text-[#68778d]">{t("mapPointHelp")}</p>
           {showMap && (
             <div className="flex flex-col gap-2">
               {/* Address search -> drops the pin. OUR standard input (single border
