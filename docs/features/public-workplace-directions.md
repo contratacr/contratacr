@@ -32,3 +32,26 @@ Chromium/WebKit móvil con guardado/recarga simulados, desactivación y traducci
 inglesa. Tipos, comillas e inventario aprobados; lint sin errores y con dos
 advertencias anteriores en profile-client. Evidencia en `/tmp/ccr-public-workplaces/`.
 No se activaron direcciones reales ni se afirma validación física nativa.
+
+## Revisión de jerarquía visual y valor predeterminado
+
+Al crear un punto exacto se activa showAddress. Los lugares anteriores sin esta
+propiedad también se muestran; false explícito conserva la ocultación. No se
+reescriben registros de otras personas ni se amplían permisos de base de datos.
+El selector presenta título, dirección completa, interruptor y acciones de texto
+Editar ubicación/Quitar, sin repetir el cantón ni truncar el estado del punto.
+Editar conserva el lugar hasta confirmar Actualizar ubicación; Cancelar edición
+no elimina la sede anterior. Se conserva una ocultación explícita al editarla.
+
+Cómo llegar aparece en el bloque de contacto (móvil arriba, escritorio lateral).
+Una sede abre directamente Maps; varias despliegan destinos por nombre/dirección.
+Información conserva el detalle completo. No se agregan mapas o consultas de pago.
+
+Investigación: [Material, cards](https://m1.material.io/components/cards.html)
+sobre jerarquía de contenido/acciones y moderación de controles;
+[NN/g, progressive disclosure](https://www.nngroup.com/articles/progressive-disclosure/)
+sobre mantener acciones frecuentes visibles y revelar opciones secundarias.
+
+Esta revisión se publica por instrucción explícita de Isaac sin ejecutar pruebas
+locales. Los recorridos y contratos fueron actualizados pero no ejecutados; los
+resultados de la implementación anterior no certifican estos cambios de comportamiento.

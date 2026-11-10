@@ -5,9 +5,10 @@ import ts from 'typescript';
 const code = ts.transpileModule(readFileSync('src/lib/public-workplaces.ts','utf8'), {compilerOptions:{module:ts.ModuleKind.ES2022}}).outputText;
 const { isFixedWorkplace, publicWorkplaces, directionsUrl } = await import('data:text/javascript;base64,'+Buffer.from(code).toString('base64'));
 const location = {name:'Local de ejemplo',address:'Dirección de ejemplo',lat:9.9,lng:-84.2,level:'canton'};
-test('existing pins stay off until explicit opt-in',()=>{
- assert.deepEqual(publicWorkplaces([location,{...location,showAddress:false}]),[]);
- assert.equal(directionsUrl(location),null);
+test('exact pins default on while explicit hiding is respected',()=>{
+ assert.deepEqual(publicWorkplaces([location,{...location,showAddress:false}]),[location]);
+ assert.ok(directionsUrl(location)?.includes('destination='));
+ assert.equal(directionsUrl({...location,showAddress:false}),null);
  assert.equal(publicWorkplaces([{...location,showAddress:true}]).length,1);
 });
 test('coverage and invalid coordinates cannot expose an address or a route',()=>{
