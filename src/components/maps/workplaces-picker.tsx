@@ -18,6 +18,7 @@ export type Workplace = {
   level?: "country" | "provincia" | "canton";
   homeService?: boolean;
   showAddress?: boolean;
+  receivesClients?: boolean;
   lat?: number;
   lng?: number;
   // Authoritative administrative areas - chosen by the pro in the selects. These
@@ -28,6 +29,7 @@ export type Workplace = {
 };
 
 interface WorkplacesPickerProps {
+  mode?: "local" | "coverage" | "reference";
   value: Workplace[];
   onChange: (next: Workplace[]) => void;
   apiKey?: string;
@@ -60,7 +62,7 @@ function genId() {
  * re-asks or overrides the provincia/cantón the pro already chose. Multiple zones
  * are supported; each is listed and removable.
  */
-export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, extraPlaces = [], extraActions }: WorkplacesPickerProps) {
+export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, extraPlaces = [], extraActions, mode }: WorkplacesPickerProps) {
   const t = useTranslations("workplacesPicker");
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<GMaps>(null);
@@ -97,9 +99,10 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
   const [geoError, setGeoError] = useState<string | null>(null);
   const cantons = getCantonsByProvince(province);
   const effectiveKey = apiKey ?? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
-  const homeService = value.some(wp => wp.level === "country" || wp.level === "provincia" || (wp.cantonId && wp.homeService !== false));
+  const homeService = value.some(wp => wp.homeService !== false && (wp.level === "country" || wp.level === "provincia" || wp.cantonId));
   const baseProvinces = [...new Set(value.filter(wp => wp.provinciaId && wp.cantonId).map(wp => wp.provinciaId!))];
-  const addedCount = value.filter((wp) => wp.level !== "country").length + extraPlaces.length;
+  const visiblePlaces = value.filter(wp => wp.level !== "country" && (mode === 'local' ? isFixedWorkplace(wp) && wp.receivesClients !== false : mode === 'coverage' ? !!wp.cantonId && wp.homeService !== false : true));
+  const addedCount = visiblePlaces.length + extraPlaces.length;
   const showAddForm = adding || addedCount === 0;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -120,7 +123,8 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
     // Sin provincia no hay nada que agregar. «Todo Costa Rica» es el
     // interruptor de abajo, que se SUMA a las zonas; aquí ya no se agrega.
     if (!province || !canton) return;
-    const pin = canton ? draftPinRef.current : null;
+    const pin = mode === 'coverage' || mode === 'reference' ? null : canton ? draftPinRef.current : null;
+    if (mode === 'local' && !pin) { setAvisoRepetido(t('localPinRequired')); return; }
     const cantonName = getCantonById(canton)?.name ?? "";
     const provinceName = getProvinceById(province)?.name ?? "";
     const readable = canton
@@ -130,6 +134,12 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
     // toda la provincia» con Alajuela ya en la lista metía un segundo chip
     // idéntico, y quien lo pulsaba no sabía si había pasado algo. Se avisa y
     // no se agrega (un punto en el mapa sí distingue: es otra dirección).
+    const referencePlace = mode === "coverage" && valueRef.current.find(w => w.provinciaId === province && w.cantonId === canton && !isFixedWorkplace(w) && w.homeService === false);
+    if (referencePlace && !editingId) {
+      onChange(valueRef.current.map(w => w.id === referencePlace.id ? { ...w, homeService: true } : w));
+      setProvince(""); setCanton(""); setAdding(false);
+      return;
+    }
     const repetido = !pin && valueRef.current.some((wp) => {
       const w = wp as { id?: string; provinciaId?: string; cantonId?: string; lat?: number | null };
       return w.id !== editingId && w.provinciaId === province && (w.cantonId ?? "") === (canton || "") && w.lat == null;
@@ -143,9 +153,10 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
       ...valueRef.current.filter(w => w.id !== editingId),
       {
         id: editingId || genId(),
+        receivesClients: mode === "local" ? true : mode === "reference" ? false : undefined,
         showAddress: editingId ? valueRef.current.find(w => w.id === editingId)?.showAddress : pin ? true : undefined,
         name: readable,
-        homeService: editingId ? valueRef.current.find(w => w.id === editingId)?.homeService : valueRef.current.length === 0 ? true : homeService,
+        homeService: mode === "reference" ? false : mode === "coverage" ? true : mode === "local" ? (editingId ? valueRef.current.find(w => w.id === editingId)?.homeService : false) : editingId ? valueRef.current.find(w => w.id === editingId)?.homeService : valueRef.current.length === 0 ? true : homeService,
         address: pin?.address || "",
         lat: pin?.lat,
         lng: pin?.lng,
@@ -173,7 +184,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
 
   function removeWorkplace(id: string) {
     if (editingId === id) { setEditingId(null); setAdding(false); }
-    const next = valueRef.current.filter((w) => w.id !== id);
+    const next = mode === "coverage" && valueRef.current.some(w => w.id === id && isFixedWorkplace(w)) ? valueRef.current.map(w => w.id === id ? { ...w, homeService: false } : w) : valueRef.current.filter((w) => w.id !== id);
     onChange(next);
     if (next.length + extraPlaces.length === 0) setAdding(true);
   }
@@ -333,18 +344,18 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
           {/* «Todo el país» no se lista como lugar: es cobertura y ya lo dice su
               interruptor. Listado aquí parecía cumplir el lugar obligatorio y el
               formulario igual pedía uno («Falta tu lugar de trabajo»). */}
-          {value.filter((wp) => wp.level !== "country").map((wp) => (
+          {visiblePlaces.map((wp) => (
             <div key={wp.id} className="rounded-xl border border-[#e5e7eb] bg-white p-4">
               <div className="flex items-start gap-3">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#f1f8fb] text-[#009FD9]"><MapPin size={20}/></span>
                 <div className="min-w-0 flex-1">
                   <p className="break-words text-sm font-semibold text-[#162543]">{wp.name}</p>
-                  {wp.address && isFixedWorkplace(wp) && <p className="mt-1 break-words text-sm leading-6 text-[#64748b]">{wp.address}</p>}
+                  {mode !== "coverage" && wp.address && isFixedWorkplace(wp) && <p className="mt-1 break-words text-sm leading-6 text-[#64748b]">{wp.address}</p>}
                 </div>
               </div>
-              {isFixedWorkplace(wp) && <div className="mt-3 border-t border-[#eef2f6] pt-2"><FilaInterruptor titulo={t("showAddress")} checked={wp.showAddress !== false} onChange={showAddress => onChange(value.map(place => place.id === wp.id ? { ...place, showAddress } : place))}/></div>}
+              {mode !== "coverage" && isFixedWorkplace(wp) && <div className="mt-3 border-t border-[#eef2f6] pt-2"><FilaInterruptor titulo={t("showAddress")} checked={wp.showAddress !== false} onChange={showAddress => onChange(value.map(place => place.id === wp.id ? { ...place, showAddress } : place))}/></div>}
               <div className="mt-2 flex flex-wrap items-center gap-x-5">
-                {wp.cantonId && <button type="button" className="min-h-11 text-sm font-semibold text-[#0089bb]" onClick={() => { setEditingId(wp.id); setProvince(wp.provinciaId || ''); setCanton(wp.cantonId || ''); setDraftPin(isFixedWorkplace(wp) ? { lat: wp.lat!, lng: wp.lng!, address: wp.address } : null); setShowMap(isFixedWorkplace(wp)); setAdding(true); }}>{t("editPlace")}</button>}
+                {wp.cantonId && mode !== "coverage" && <button type="button" className="min-h-11 text-sm font-semibold text-[#0089bb]" onClick={() => { setEditingId(wp.id); setProvince(wp.provinciaId || ''); setCanton(wp.cantonId || ''); setDraftPin(isFixedWorkplace(wp) ? { lat: wp.lat!, lng: wp.lng!, address: wp.address } : null); setShowMap(isFixedWorkplace(wp)); setAdding(true); }}>{t("editPlace")}</button>}
                 <button type="button" className="min-h-11 text-sm font-medium text-[#a12828]" onClick={() => removeWorkplace(wp.id)}>{t("removePlace")}</button>
               </div>
             </div>
@@ -414,7 +425,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
 
       {/* 2 - OPTIONAL exact pin (refinement), HIDDEN by default. A clean expandable
              link reveals the address search + map only when the pro chooses to pin. */}
-      {effectiveKey && canton ? (
+      {(mode === "local" || !mode) && effectiveKey && canton ? (
         <div className="flex flex-col gap-2">
           <button
             type="button"
@@ -487,7 +498,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
           )}
         </div>
       ) : (
-        canton && <p className="text-xs text-[#68778d]">{t("mapUnavailable")}</p>
+        (mode === "local" || !mode) && canton && <p className="text-xs text-[#68778d]">{t("mapUnavailable")}</p>
       )}
 
       {/* 3 - Agregar ESTA zona: solo aparece con una provincia elegida. Sin
@@ -519,7 +530,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
       )}
 
       <div className="flex w-full flex-col gap-3 pt-2">
-        <FilaInterruptor
+        {!mode && <FilaInterruptor
           estirar
           titulo={t("homeServiceTitle")}
           checked={homeService}
@@ -527,10 +538,10 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
             const bases = withHomeServiceScope(valueRef.current, "cantons", { country: "", province: () => "" });
             onChange(bases.map(wp => ({ ...wp, homeService: enabled })));
           }}
-        />
-        {homeService && <SelectMenu
+        />}
+        {(mode === "coverage" || !mode) && homeService && <SelectMenu
           label={t("homeServiceScope")}
-          value={value.some(wp => wp.level === "country") ? "country" : value.some(wp => wp.level === "provincia" && !wp.cantonId) ? "province" : "cantons"}
+          value={value.some(wp => wp.level === "country" && wp.homeService !== false) ? "country" : value.some(wp => wp.level === "provincia" && !wp.cantonId && wp.homeService !== false) ? "province" : "cantons"}
           options={[
             { value: "cantons", label: t("selectedCantons", { count: new Set(value.filter(wp => wp.cantonId).map(wp => wp.cantonId)).size }) },
             { value: "province", label: t("provinceScope", { count: baseProvinces.length }) },

@@ -347,10 +347,11 @@
     "useMyLocation": "Usar mi ubicación"
   },
   "workplacesPicker": {
+    "localPinRequired": "Marcá el lugar donde recibís clientes.",
     "editPlace": "Editar ubicación",
     "savePlace": "Actualizar ubicación",
     "cancelEdit": "Cancelar edición",
-    "showAddress": "Mostrar esta dirección en mi perfil",
+    "showAddress": "Mostrar dirección",
     "showAddressHelp": "La dirección y el botón Cómo llegar serán públicos.",
     "lead": "Elige la provincia y el cantón donde ofreces tus servicios.",
     "searchPlaceholder": "Busca la dirección… ejemplo: Escazú Centro",
@@ -1614,7 +1615,7 @@
     "secBasicDesc": "Foto, nombre y descripción",
     "secCerts": "Formación",
     "secCertsDesc": "Estudios, experiencia laboral y habilidades",
-    "secLocation": "Lugares de trabajo",
+    "secLocation": "Modalidades de atención",
     "secLocationDesc": "Dónde trabajas y a dónde te desplazas",
     "secContact": "Contacto",
     "secContactDesc": "Cómo te contactan los clientes",

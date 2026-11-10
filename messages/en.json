@@ -347,10 +347,11 @@
     "useMyLocation": "Use my location"
   },
   "workplacesPicker": {
+    "localPinRequired": "Mark where clients visit you.",
     "editPlace": "Edit location",
     "savePlace": "Update location",
     "cancelEdit": "Cancel editing",
-    "showAddress": "Show this address on my profile",
+    "showAddress": "Show address",
     "showAddressHelp": "The address and Get directions button will be public.",
     "lead": "Choose the province and canton where you offer your services.",
     "searchPlaceholder": "Search the address… example: Escazú Centro",
@@ -1614,7 +1615,7 @@
     "secBasicDesc": "Photo, name and description",
     "secCerts": "Education",
     "secCertsDesc": "Education, work experience and skills",
-    "secLocation": "Workplaces",
+    "secLocation": "Service options",
     "secLocationDesc": "Where you work and where you travel",
     "secContact": "Contact",
     "secContactDesc": "How clients reach you",
