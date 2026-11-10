@@ -16,3 +16,8 @@ export function directionsUrl(w: PublicWorkplace): string | null {
   if (!isFixedWorkplace(w) || w.showAddress === false) return null;
   return `https://www.google.com/maps/dir/?${new URLSearchParams({ api: '1', destination: `${w.lat},${w.lng}` })}`;
 }
+
+export function wazeUrl(w: PublicWorkplace): string | null {
+  if (!isFixedWorkplace(w) || w.showAddress === false) return null;
+  return `https://www.waze.com/ul?${new URLSearchParams({ ll: `${w.lat},${w.lng}`, navigate: 'yes' })}`;
+}
