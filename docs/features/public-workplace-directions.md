@@ -69,3 +69,15 @@ No se recrean logos oficiales: se usan los iconos de mapa/navegación del sistem
 junto al nombre visible de cada proveedor. Se retira el botón único Cómo llegar.
 Isaac autoriza publicación sin pruebas locales; esta revisión no fue ejecutada
 localmente ni se presenta evidencia anterior como validación del nuevo diseño.
+
+## Revisión compacta, 10 de noviembre
+
+Se retira la sección repetida Dónde atiende presencialmente del contacto e
+Información. Maps/Waze son controles circulares en la misma fila de redes, con
+etiqueta accesible y destino exacto. Con varias sedes cada proveedor permite
+seleccionarlas por nombre/dirección. Solo se muestran lugares públicos válidos.
+El formulario distingue Marcar en el mapa (secundario, una línea), explicación
+opcional debajo y Guardar lugar como confirmación principal. Un punto existente
+se edita con Cambiar punto. Se conserva dirección, cobertura y visibilidad.
+Publicación explícitamente solicitada sin pruebas locales; esta revisión no se
+presenta como validada por las ejecuciones anteriores.

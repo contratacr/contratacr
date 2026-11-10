@@ -1,17 +1,16 @@
-import { MapPin, Navigation, Map } from 'lucide-react';
+import { Navigation, Map } from 'lucide-react';
 import { publicWorkplaces, directionsUrl, wazeUrl, type PublicWorkplace } from '@/lib/public-workplaces';
+/** Compact navigation controls share the social row; each provider keeps its own destination chooser. */
 export function WorkplaceDirections({ places, english = false }: { places?: PublicWorkplace[]; english?: boolean }) {
   const locations = publicWorkplaces(places);
   if (!locations.length) return null;
-  return <section className="border-t border-[#eef2f6] pt-5" data-workplace-directions>
-    <h3 className="mb-3 text-base font-semibold text-[#162543]">{english ? 'In-person locations' : 'Dónde atiende presencialmente'}</h3>
-    <div className="space-y-3">{locations.map(w => <div key={`${w.lat},${w.lng}`} className="rounded-xl border border-[#dce5ee] p-4">
-      <div className="flex items-start gap-3"><MapPin size={20} className="mt-0.5 shrink-0 text-[#009FD9]"/><div className="min-w-0"><p className="break-words text-sm font-semibold text-[#162543]">{w.name || (english ? 'In-person location' : 'Lugar presencial')}</p>{w.address && <p className="mt-1 break-words text-sm leading-6 text-[#52627a]">{w.address}</p>}</div></div>
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        <a href={directionsUrl(w)!} target="_blank" rel="noopener noreferrer" aria-label={`Google Maps: ${w.name || w.address || ''}`} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#c9e7f2] bg-[#f1faff] px-3 text-sm font-semibold text-[#0089bb]"><Map size={16} className="shrink-0"/>Google Maps</a>
-        <a href={wazeUrl(w)!} target="_blank" rel="noopener noreferrer" aria-label={`Waze: ${w.name || w.address || ''}`} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#c9e7f2] bg-[#f1faff] px-3 text-sm font-semibold text-[#0089bb]"><Navigation size={16} className="shrink-0"/>Waze</a>
-      </div>
-    </div>)}</div>
-  </section>;
+  const style = 'grid h-11 w-11 place-items-center rounded-full border border-[#e5e7eb] text-[#52627a] transition-colors hover:border-[#009FD9] hover:text-[#009FD9]';
+  return <>{([{ name: 'Google Maps', Icon: Map, url: directionsUrl }, { name: 'Waze', Icon: Navigation, url: wazeUrl }]).map(({name, Icon, url}) => locations.length === 1 ? (
+    <a key={name} data-directions-provider={name} href={url(locations[0])!} target="_blank" rel="noopener noreferrer" aria-label={`${name}: ${locations[0].name || (english ? 'Get directions' : 'Cómo llegar')}`} title={name} className={style}><Icon className="h-4 w-4"/></a>
+  ) : (
+    <details key={name} className="group relative" data-directions-provider={name}>
+      <summary aria-label={name} title={name} className={`${style} mx-auto cursor-pointer list-none [&::-webkit-details-marker]:hidden`}><Icon className="h-4 w-4"/></summary>
+      <div className="absolute right-0 z-20 mt-2 w-56 max-w-[calc(100vw-4rem)] shadow-lg divide-y divide-[#eef2f6] rounded-xl border border-[#e5e7eb] bg-white px-3 text-left">{locations.map(w => <a key={`${w.lat},${w.lng}`} href={url(w)!} target="_blank" rel="noopener noreferrer" className="block min-h-11 py-3 text-sm text-[#162543]"><span className="font-semibold">{w.name || name}</span>{w.address && <span className="mt-1 block break-words text-xs text-[#68778d]">{w.address}</span>}</a>)}</div>
+    </details>
+  ))}</>;
 }
-
