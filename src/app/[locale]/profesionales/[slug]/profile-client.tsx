@@ -1,4 +1,5 @@
 "use client";
+import { WorkplaceDirections } from "@/components/professionals/workplace-directions";
 
 import { CvProfileDetails } from "@/components/professionals/cv-profile";
 import { hasCv, normalizeCv } from "@/lib/cv/model";
@@ -1468,6 +1469,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                             </p>
                           </section>
                         )}
+                        <WorkplaceDirections places={professional.workplaces} english={locale === "en"}/>
                         {facts.length > 0 && (
                           <section className={professional.bio ? "border-t border-[#eef2f6]" : ""}>
                             <div className="divide-y divide-[#eef2f6]">
