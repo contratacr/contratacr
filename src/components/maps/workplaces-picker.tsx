@@ -93,7 +93,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
   const [showMap, setShowMap] = useState(false);
   // The draft form is shown while adding; once a zone is committed it collapses
   // behind an explicit "+ Agregar otra ubicación" action so the flow is clear.
-  const [adding, setAdding] = useState(value.length + extraPlaces.length === 0);
+  const [adding, setAdding] = useState(mode === "local" ? false : value.length + extraPlaces.length === 0);
   const [draftPin, setDraftPin] = useState<{ lat: number; lng: number; address: string } | null>(null);
   const draftPinRef = useRef<typeof draftPin>(null);
   const [locating, setLocating] = useState(false);
@@ -341,24 +341,25 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
     <div className="flex flex-col gap-3.5">
       {/* Added zones - listed FIRST, above the add-another-location form. */}
       {addedCount > 0 && (
-        <div className="flex flex-col gap-2.5">
+        <div className={mode === "local" ? "overflow-hidden rounded-xl border border-[#e5e7eb] bg-white" : "flex flex-col gap-2.5"}>
           {/* «Todo el país» no se lista como lugar: es cobertura y ya lo dice su
               interruptor. Listado aquí parecía cumplir el lugar obligatorio y el
               formulario igual pedía uno («Falta tu lugar de trabajo»). */}
-          {visiblePlaces.map((wp) => (
-            <div key={wp.id} className="rounded-xl border border-[#e5e7eb] bg-white p-4">
+          {visiblePlaces.map((wp, index) => (
+            <div key={wp.id} className={mode === "local" ? `bg-white px-4 py-3 ${index ? "border-t border-[#e5e7eb]" : ""}` : "rounded-xl border border-[#e5e7eb] bg-white p-4"}>
               <div className="flex items-start gap-3">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#f1f8fb] text-[#009FD9]"><MapPin size={20}/></span>
                 <div className="min-w-0 flex-1">
                   <p className="break-words text-sm font-semibold text-[#162543]">{wp.name}</p>
                   {mode !== "coverage" && wp.address && isFixedWorkplace(wp) && <p className="mt-1 break-words text-sm leading-6 text-[#64748b]">{wp.address}</p>}
                 </div>
+                {mode === "local" && <div className="flex shrink-0 items-center gap-1"><button type="button" className="min-h-11 px-2 text-xs font-semibold text-[#0089bb]" onClick={() => { setEditingId(wp.id); setProvince(wp.provinciaId || ''); setCanton(wp.cantonId || ''); setDraftPin(isFixedWorkplace(wp) ? { lat: wp.lat!, lng: wp.lng!, address: wp.address } : null); setShowMap(isFixedWorkplace(wp)); setAdding(true); }}>{t("editPlace")}</button><button type="button" className="grid h-11 w-11 place-items-center text-[#a12828]" aria-label={`${t("removePlace")}: ${wp.name}`} onClick={() => removeWorkplace(wp.id)}><X className="h-4 w-4"/></button></div>}
               </div>
               {mode !== "coverage" && isFixedWorkplace(wp) && <div className="mt-3 border-t border-[#eef2f6] pt-2"><FilaInterruptor titulo={t("showAddress")} checked={wp.showAddress !== false} onChange={showAddress => onChange(value.map(place => place.id === wp.id ? { ...place, showAddress } : place))}/></div>}
-              <div className="mt-2 flex flex-wrap items-center gap-x-5">
+              {mode !== "local" && <div className="mt-1 flex flex-wrap items-center gap-x-5">
                 {wp.cantonId && mode !== "coverage" && <button type="button" className="min-h-11 text-sm font-semibold text-[#0089bb]" onClick={() => { setEditingId(wp.id); setProvince(wp.provinciaId || ''); setCanton(wp.cantonId || ''); setDraftPin(isFixedWorkplace(wp) ? { lat: wp.lat!, lng: wp.lng!, address: wp.address } : null); setShowMap(isFixedWorkplace(wp)); setAdding(true); }}>{t("editPlace")}</button>}
                 <button type="button" className="min-h-11 text-sm font-medium text-[#a12828]" onClick={() => removeWorkplace(wp.id)}>{t("removePlace")}</button>
-              </div>
+              </div>}
             </div>
           ))}
           {extraPlaces.map((place) => (
@@ -390,7 +391,8 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
           provincia -> cantón -> optional map pin -> "Agregar esta ubicación". Shown
           while adding; collapses behind "Agregar otra ubicación" after a commit. */}
       {showAddForm && (
-      <div className="flex flex-col gap-3">
+      <div className={mode === "local" ? "flex flex-col gap-3 rounded-xl border border-[#dbe7ef] bg-[#f8fcff] p-4" : "flex flex-col gap-3"}>
+      {mode === "local" && <div className="flex items-center justify-between gap-2"><p className="text-sm font-bold text-[#162543]">{editingId ? t("editPlace") : t("addAnotherPlace")}</p>{addedCount > 0 && !editingId && <button type="button" onClick={() => { setAdding(false); setProvince(""); setCanton(""); setDraftPin(null); setShowMap(false); }} className="min-h-11 px-2 text-sm font-semibold text-[#64748b]">{t("cancelEdit")}</button>}</div>}
       {/* 1 - Structured field FIRST: provincia -> cantón (authoritative for search).
           Polished popover dropdowns (shared SelectMenu) - same look/behavior as the
           Disponibilidad time selector. SIDE-BY-SIDE (provincia | cantón), matching the

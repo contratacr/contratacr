@@ -24,7 +24,7 @@ export type ProfessionalCardData = {
   isAvailable: boolean;
   businessName?: string;
   publicBusinessNameOnly?: boolean;
-  workplaces?: { id?: string; name: string; address?: string; lat?: number; lng?: number }[];
+  workplaces?: { id?: string; name: string; address?: string; lat?: number; lng?: number; receivesClients?: boolean; showAddress?: boolean; homeService?: boolean }[];
   videoconsulta?: boolean;
   coverage?: { country?: boolean; provincias?: string[]; cantones?: string[] };
   /** Opt-in: the pro exposes phone-call contact (Disponibilidad). */
