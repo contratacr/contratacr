@@ -81,3 +81,8 @@ opcional debajo y Guardar lugar como confirmación principal. Un punto existente
 se edita con Cambiar punto. Se conserva dirección, cobertura y visibilidad.
 Publicación explícitamente solicitada sin pruebas locales; esta revisión no se
 presenta como validada por las ejecuciones anteriores.
+
+Se compacta el control a una sola línea: Marcar en el mapa (opcional). Se retira
+la explicación visible repetida y la flecha decorativa para dejar espacio en
+móvil, conservando el botón de 44px y el estado expandido accesible. Sin pruebas
+locales por preferencia vigente; push solicitado expresamente.

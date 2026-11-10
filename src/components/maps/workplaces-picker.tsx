@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { MapPin, X, Plus, ChevronDown, Check, Search } from "lucide-react";
+import { MapPin, X, Plus, Check, Search } from "lucide-react";
 import { createGoogleMarker, loadGoogleMaps, withConfiguredMapId } from "@/lib/maps/loader";
 import { PROVINCES, getCantonsByProvince, getCantonById, getProvinceById } from "@/lib/data/cr-geography";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
@@ -10,7 +10,6 @@ import { SelectMenu } from "@/components/ui/select-menu";
 import { withHomeServiceScope, type HomeServiceScope } from "@/lib/location";
 import { FilaInterruptor } from "@/components/ui/fila-interruptor";
 import { isFixedWorkplace } from "@/lib/public-workplaces";
-import { cn } from "@/lib/utils";
 
 export type Workplace = {
   id: string;
@@ -421,14 +420,12 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
             type="button"
             onClick={toggleMap}
             aria-expanded={showMap}
-            className="self-start inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap text-sm font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb] hover:underline cursor-pointer"
+            className="self-start inline-flex min-h-11 max-w-full items-center gap-1.5 whitespace-nowrap text-[13px] font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb] hover:underline cursor-pointer"
           >
-            <MapPin className="h-4 w-4" />
+            <MapPin className="h-4 w-4 shrink-0" />
             <span>{draftPin ? t("changeMapPoint") : t("mapPointTitle")}</span>
             {draftPin && !showMap && <Check className="h-3.5 w-3.5 text-[#16a34a]" />}
-            <ChevronDown className={cn("h-4 w-4 transition-transform", showMap && "rotate-180")} />
           </button>
-          <p className="text-xs leading-5 text-[#68778d]">{t("mapPointHelp")}</p>
           {showMap && (
             <div className="flex flex-col gap-2">
               {/* Address search -> drops the pin. OUR standard input (single border

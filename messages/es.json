@@ -359,7 +359,7 @@
     "locating": "Obteniendo tu ubicación…",
     "useMyLocation": "Usar mi ubicación actual",
     "mapUnavailable": "Mapa no disponible — configura NEXT_PUBLIC_GOOGLE_MAPS_API_KEY. Puedes agregar el lugar igual con provincia y cantón.",
-    "mapPointTitle": "Marcar en el mapa",
+    "mapPointTitle": "Marcar en el mapa (opcional)",
     "changeMapPoint": "Cambiar punto",
     "mapPointHelp": "Opcional: indicá el punto donde atendés.",
     "pinPlaced": "Punto marcado en el mapa",
