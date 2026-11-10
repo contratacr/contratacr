@@ -6,13 +6,13 @@ export function isFixedWorkplace(w: PublicWorkplace): boolean {
 export function publicWorkplaces(places: PublicWorkplace[] = []): PublicWorkplace[] {
   const seen = new Set<string>();
   return places.filter(w => {
-    if (!isFixedWorkplace(w) || w.showAddress !== true) return false;
+    if (!isFixedWorkplace(w) || w.showAddress === false) return false;
     const key = `${w.lat},${w.lng}`;
     if (seen.has(key)) return false;
     seen.add(key); return true;
   });
 }
 export function directionsUrl(w: PublicWorkplace): string | null {
-  if (!isFixedWorkplace(w) || w.showAddress !== true) return null;
+  if (!isFixedWorkplace(w) || w.showAddress === false) return null;
   return `https://www.google.com/maps/dir/?${new URLSearchParams({ api: '1', destination: `${w.lat},${w.lng}` })}`;
 }

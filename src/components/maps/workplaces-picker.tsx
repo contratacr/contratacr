@@ -84,6 +84,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
 
   // Draft for the zone being added: provincia/cantón (+ optional pin). The exact
   // place SEARCH now lives inside the map option (no separate "name" field).
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [province, setProvince] = useState("");
   const [canton, setCanton] = useState("");
   const [avisoRepetido, setAvisoRepetido] = useState<string | null>(null);
@@ -131,8 +132,8 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
     // idéntico, y quien lo pulsaba no sabía si había pasado algo. Se avisa y
     // no se agrega (un punto en el mapa sí distingue: es otra dirección).
     const repetido = !pin && valueRef.current.some((wp) => {
-      const w = wp as { provinciaId?: string; cantonId?: string; lat?: number | null };
-      return w.provinciaId === province && (w.cantonId ?? "") === (canton || "") && w.lat == null;
+      const w = wp as { id?: string; provinciaId?: string; cantonId?: string; lat?: number | null };
+      return w.id !== editingId && w.provinciaId === province && (w.cantonId ?? "") === (canton || "") && w.lat == null;
     });
     if (repetido) {
       setAvisoRepetido(readable);
@@ -140,11 +141,12 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
       return;
     }
     onChange([
-      ...valueRef.current,
+      ...valueRef.current.filter(w => w.id !== editingId),
       {
-        id: genId(),
+        id: editingId || genId(),
+        showAddress: editingId ? valueRef.current.find(w => w.id === editingId)?.showAddress : pin ? true : undefined,
         name: readable,
-        homeService: valueRef.current.length === 0 ? true : homeService,
+        homeService: editingId ? valueRef.current.find(w => w.id === editingId)?.homeService : valueRef.current.length === 0 ? true : homeService,
         address: pin?.address || "",
         lat: pin?.lat,
         lng: pin?.lng,
@@ -153,6 +155,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
         cantonId: canton || undefined,
       },
     ]);
+    setEditingId(null);
     setProvince("");
     setCanton("");
     setDraftPin(null);
@@ -170,6 +173,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
   }
 
   function removeWorkplace(id: string) {
+    if (editingId === id) { setEditingId(null); setAdding(false); }
     const next = valueRef.current.filter((w) => w.id !== id);
     onChange(next);
     if (next.length + extraPlaces.length === 0) setAdding(true);
@@ -331,33 +335,19 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
               interruptor. Listado aquí parecía cumplir el lugar obligatorio y el
               formulario igual pedía uno («Falta tu lugar de trabajo»). */}
           {value.filter((wp) => wp.level !== "country").map((wp) => (
-            <div key={wp.id} className="flex items-center gap-3 rounded-xl border border-[#e5e7eb] bg-white px-3 py-2.5">
-              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white text-[#009FD9] shadow-sm ring-1 ring-[#e5eef6]">
-                <MapPin className="h-4.5 w-4.5" />
-              </span>
-              <div className="flex-1 min-w-0">
-                <p className="truncate text-sm font-semibold text-[#162543]">{wp.name}</p>
-                <p className="mt-0.5 truncate text-xs font-medium text-[#64748b]">
-                  {wp.level === "country"
-                    ? t("wholeCountryTag")
-                    : wp.cantonId
-                      ? [getCantonById(wp.cantonId)?.name, getProvinceById(wp.provinciaId ?? "")?.name].filter(Boolean).join(", ")
-                      : t("wholeProvinceTag")}
-                  {wp.lat != null && wp.lng != null ? ` · ${t("pinnedTag")}` : ""}
-                </p>
-                {isFixedWorkplace(wp) && <div className="mt-2">
-                  {wp.address && <p className="mb-1 break-words text-xs leading-5 text-[#64748b]">{wp.address}</p>}
-                  <FilaInterruptor titulo={t("showAddress")} ayuda={t("showAddressHelp")} checked={wp.showAddress === true} onChange={showAddress => onChange(value.map(place => place.id === wp.id ? { ...place, showAddress } : place))}/>
-                </div>}
+            <div key={wp.id} className="rounded-xl border border-[#e5e7eb] bg-white p-4">
+              <div className="flex items-start gap-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#f1f8fb] text-[#009FD9]"><MapPin size={20}/></span>
+                <div className="min-w-0 flex-1">
+                  <p className="break-words text-sm font-semibold text-[#162543]">{wp.name}</p>
+                  {wp.address && isFixedWorkplace(wp) && <p className="mt-1 break-words text-sm leading-6 text-[#64748b]">{wp.address}</p>}
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={() => removeWorkplace(wp.id)}
-                className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[#68778d] transition-colors hover:bg-red-50 hover:text-red-500"
-                aria-label={t("removePlace")}
-              >
-                <X className="h-4 w-4" />
-              </button>
+              {isFixedWorkplace(wp) && <div className="mt-3 border-t border-[#eef2f6] pt-2"><FilaInterruptor titulo={t("showAddress")} checked={wp.showAddress !== false} onChange={showAddress => onChange(value.map(place => place.id === wp.id ? { ...place, showAddress } : place))}/></div>}
+              <div className="mt-2 flex flex-wrap items-center gap-x-5">
+                {wp.cantonId && <button type="button" className="min-h-11 text-sm font-semibold text-[#0089bb]" onClick={() => { setEditingId(wp.id); setProvince(wp.provinciaId || ''); setCanton(wp.cantonId || ''); setDraftPin(isFixedWorkplace(wp) ? { lat: wp.lat!, lng: wp.lng!, address: wp.address } : null); setShowMap(isFixedWorkplace(wp)); setAdding(true); }}>{t("editPlace")}</button>}
+                <button type="button" className="min-h-11 text-sm font-medium text-[#a12828]" onClick={() => removeWorkplace(wp.id)}>{t("removePlace")}</button>
+              </div>
             </div>
           ))}
           {extraPlaces.map((place) => (
@@ -510,8 +500,9 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
         onClick={commitWorkplace}
         className="self-start inline-flex h-10 items-center gap-1.5 rounded-full bg-[#e8f7fd] px-3.5 text-sm font-bold text-[#0089bb] transition-colors hover:bg-[#d8f1fb]"
       >
-        <Plus className="h-4 w-4" /> {canton ? t("addThisPlace") : t("addWholeProvince")}
+        <Plus className="h-4 w-4" /> {editingId ? t("savePlace") : canton ? t("addThisPlace") : t("addWholeProvince")}
       </button>}
+      {editingId && <button type="button" className="min-h-11 self-start text-sm font-semibold text-[#68778d]" onClick={() => { setEditingId(null); setAdding(false); setProvince(''); setCanton(''); setDraftPin(null); setShowMap(false); }}>{t("cancelEdit")}</button>}
       {avisoRepetido && (
         <p role="status" className="text-xs font-semibold text-[#0089bb]">{t("yaAgregado")}</p>
       )}

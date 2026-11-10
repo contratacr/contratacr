@@ -347,6 +347,9 @@
     "useMyLocation": "Usar mi ubicación"
   },
   "workplacesPicker": {
+    "editPlace": "Editar ubicación",
+    "savePlace": "Actualizar ubicación",
+    "cancelEdit": "Cancelar edición",
     "showAddress": "Mostrar esta dirección en mi perfil",
     "showAddressHelp": "La dirección y el botón Cómo llegar serán públicos.",
     "lead": "Elige la provincia y el cantón donde ofreces tus servicios.",
