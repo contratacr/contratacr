@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
 import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
 import { LanguagesInput } from "@/components/ui/languages-input";
-import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
+import { type Workplace } from "@/components/maps/workplaces-picker";
 import { PROFILE_IMAGE_OPTIONS, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 import { createClient } from "@/lib/supabase/client";
 import { detectIdType } from "@/lib/cedula";
@@ -38,6 +38,7 @@ import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import type { Certification } from "@/components/professionals/professional-card";
 import { cn } from "@/lib/utils";
 import { NAME_MAX_LENGTH, PROFILE_BIO_MAX_LENGTH, limitText } from "@/lib/text-limits";
+import { AttentionModalities } from "./attention-modalities";
 import { normalizeWorkplaceId } from "@/lib/workplaces";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -602,12 +603,12 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
       // provincia_id/canton_id keep the PRIMARY area for back-compat display;
       // search_* arrays drive location-aware /buscar.
       const normalizedWorkplaces = workplaces.map((wp, index) => normalizeWorkplaceId(wp, index));
-      const hasCountryWorkplace = normalizedWorkplaces.some((wp) => wp.level === "country");
+      const hasCountryWorkplace = normalizedWorkplaces.some((wp) => wp.level === "country" && wp.homeService !== false);
       const effectiveWorkplaces = normalizedWorkplaces.filter((wp) => wp.level !== "country");
       const effectiveVideoConsult = canOfferVideoConsult && videoConsult;
       const coverageAreas = hasCountryWorkplace || (effectiveVideoConsult && videoCoverageCountry) ? [{ level: "country" as const }] : [];
-      const hasExactWorkplace = effectiveWorkplaces.some((w) => w.homeService === false || (w.lat != null && w.lng != null));
-      const hasCoverageZone = effectiveWorkplaces.some((w) => w.homeService !== false && (w.lat == null || w.lng == null));
+      const hasExactWorkplace = effectiveWorkplaces.some((w) => w.receivesClients !== false && (w.lat != null && w.lng != null));
+      const hasCoverageZone = effectiveWorkplaces.some((w) => w.homeService !== false);
       const serviceType = [hasExactWorkplace ? "fixed" : null, hasCoverageZone ? "mobile" : null].filter(Boolean).join(",") || "mobile";
       const { provincias, cantones, coverageProvincias, coverageCountry } = computeSearchAreas(effectiveWorkplaces, coverageAreas);
       const primary = primaryArea(effectiveWorkplaces, coverageAreas);
@@ -1022,26 +1023,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
       <Section footer={makeSectionFooter("location")} id="location" title={t("secLocation")} desc={t("secLocationDesc")} open={openSections.has("location")} mobileFocused={mobileSectionFocused} onToggle={toggleSection} onActivate={setActiveDirtySection}>
         {/* Work zones — provincia/cantón first (drives /buscar), optional exact pin. */}
         <div data-field="location">
-          <label className="text-sm font-medium text-[#374151] block mb-2">
-            {t("workplaces")} <span className="text-red-500">*</span>
-          </label>
-          <WorkplacesPicker
-            value={workplaces}
-            onChange={(next) => { setWorkplaces(next); touch("location"); }}
-            mapHeight={168}
-            extraActions={canOfferVideoConsult ? (
-              <FilaInterruptor
-                estirar
-                titulo={t("videoConsultOption")}
-                checked={videoConsult && videoCoverageCountry}
-                onChange={(next) => {
-                  setVideoConsult(next);
-                  setVideoCoverageCountry(next);
-                  touch("location");
-                }}
-              />
-            ) : undefined}
-          />
+          <AttentionModalities value={workplaces} onChange={next => { setWorkplaces(next); touch("location"); }} english={locale === "en"} canVideo={canOfferVideoConsult} video={videoConsult && videoCoverageCountry} onVideoChange={next => { setVideoConsult(next); setVideoCoverageCountry(next); touch("location"); }}/>
           {dirty && activeDirtySection === "location" && !hasWorkplace ? (
             <p className="mt-2 text-xs text-red-500">
               {locale === "en" ? "Choose at least one province and base canton." : "Elige al menos una provincia y un cantón de base."}

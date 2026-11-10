@@ -103,7 +103,8 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
   // workplaces have one — coverage zones (cov_*) / videoconsulta / general don't.
   function locAddress(id: string | null): string {
     if (!id || id === "general" || id === "videoconsulta" || id.startsWith("cov_")) return "";
-    return professional.workplaces?.find((w) => w.id === id)?.address?.trim() ?? "";
+    const place = professional.workplaces?.find((w) => w.id === id);
+    return place?.receivesClients === false || place?.showAddress === false ? "" : place?.address?.trim() ?? "";
   }
   // ── SERVICE LOCATIONS ── the pro's named WORKPLACES (plus videoconsulta), keyed
   // by id. `cov_*` is travel coverage, not a place, so it never becomes a row.
@@ -136,6 +137,7 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
     });
     const primero = new Map<string, string>();
     for (const w of professional.workplaces ?? []) {
+      if (w.receivesClients === false && w.homeService === false) continue;
       const rawLabel = (w as { label?: unknown }).label;
       const label = w.name?.trim() || (typeof rawLabel === "string" ? rawLabel.trim() : "");
       const isVideoWorkplace = label.trim().toLocaleLowerCase() === normalizedVideoLabel || (w as { type?: unknown }).type === "video";

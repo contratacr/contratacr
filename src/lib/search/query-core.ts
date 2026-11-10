@@ -39,7 +39,7 @@ export type SearchPageParams = {
 
 type PriceUnit = "por_hora" | "por_consulta" | "por_proyecto";
 export type SearchResult = Awaited<ReturnType<typeof searchProfessionals>>[number];
-type SearchWorkplace = { id?: string; lat?: number; lng?: number; cantonId?: string; provinciaId?: string; provinceId?: string; name?: string; address?: string };
+type SearchWorkplace = { receivesClients?: boolean; id?: string; lat?: number; lng?: number; cantonId?: string; provinciaId?: string; provinceId?: string; name?: string; address?: string };
 
 function isPriceUnit(value: string | undefined): value is PriceUnit {
   return value !== undefined && PRICE_UNIT_OPTIONS.has(value);
@@ -54,7 +54,7 @@ function isModality(value: string): value is "in_person" | "video" {
 }
 
 export function isExactWorkplacePin(workplace: SearchWorkplace) {
-  return typeof workplace.lat === "number" && typeof workplace.lng === "number";
+  return workplace.receivesClients !== false && typeof workplace.lat === "number" && typeof workplace.lng === "number";
 }
 
 /** Every decision the URL implies, resolved once. */

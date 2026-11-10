@@ -1443,6 +1443,10 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                       key: "ins", icon: <Shield className="h-5 w-5" />, label: t("insurers"),
                       value: professional.insuranceNetworks.map((id) => insurerLabel(id)).join(" · "),
                     });
+                    const visibleLocal = (professional.workplaces ?? []).filter(w => typeof w.lat === 'number' && typeof w.lng === 'number' && w.receivesClients !== false);
+                    const travels = (professional.workplaces ?? []).some(w => w.homeService !== false);
+                    const modalities = [visibleLocal.length ? (locale === 'en' ? 'At my premises' : 'En mi local') : '', travels ? (locale === 'en' ? 'At your location' : 'A domicilio') : '', offersVideoConsult ? (locale === 'en' ? 'By video call' : 'Por videollamada') : ''].filter(Boolean);
+                    if (modalities.length) facts.push({ key: 'modalities', icon: <MapPin className="h-5 w-5"/>, label: locale === 'en' ? 'Service options' : 'Modalidades de atención', value: modalities.join(' · ') });
                     if (workplaceAreaLines.length > 0 || offersVideoConsult) facts.push({
                       key: "loc", icon: <MapPin className="h-5 w-5" />,
                       label: workplaceAreaLines.length > 1 || offersVideoConsult ? t("whereServes") : t("location"),

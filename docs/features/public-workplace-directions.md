@@ -86,3 +86,20 @@ Se compacta el control a una sola línea: Marcar en el mapa (opcional). Se retir
 la explicación visible repetida y la flecha decorativa para dejar espacio en
 móvil, conservando el botón de 44px y el estado expandido accesible. Sin pruebas
 locales por preferencia vigente; push solicitado expresamente.
+
+## Modalidades de atención — revisión local
+
+El panel muestra tres interruptores combinables: En mi local, A domicilio y Por
+videollamada. La edición de sedes exactas vive bajo En mi local; A domicilio usa
+solo zonas administrativas y cobertura. La videollamada conserva las restricciones
+de categorías y la cobertura nacional existentes. Quien no tiene local ni zonas
+puede agregar un cantón de referencia, sin publicarlo como local ni dirección.
+
+Se conserva el JSON workplaces; receivesClients=false desactiva la atención en
+la sede sin eliminar coordenadas/dirección. El interruptor A domicilio conserva
+los lugares al desactivar su homeService. Maps/Waze y el filtro de puntos fijos
+respetan receivesClients=false. El perfil muestra las modalidades por separado.
+Mostrar dirección controla la visibilidad del local, no habilita una modalidad.
+
+No se ejecutaron pruebas locales por preferencia expresa del usuario. Pendiente validar los consumidores compartidos registro/panel,
+persistencia de combinaciones, cobertura/búsqueda y perfil en ambos navegadores.

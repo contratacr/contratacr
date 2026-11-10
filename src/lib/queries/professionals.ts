@@ -242,7 +242,7 @@ function serviceMatchesPriceFilters(
 type ProfessionalWorkplace = NonNullable<ProfessionalCardData["workplaces"]>[number];
 
 function isExactWorkplacePin(workplace: ProfessionalWorkplace | undefined): workplace is ProfessionalWorkplace & { lat: number; lng: number } {
-  if (!workplace || typeof workplace.lat !== "number" || typeof workplace.lng !== "number") return false;
+  if (!workplace || workplace.receivesClients === false || typeof workplace.lat !== "number" || typeof workplace.lng !== "number") return false;
   return typeof workplace.address === "string" && workplace.address.trim().length > 0;
 }
 
