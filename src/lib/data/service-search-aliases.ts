@@ -150,6 +150,7 @@ export const SERVICE_SEARCH_ALIASES: Record<string, string[]> = {
   entrenamiento_personal: ["entrenador personal", "entrenadora personal"],
   tapiceria: ["tapiceria", "tapicero de muebles"],
   detailing: ["detallado de carros a domicilio", "detallado automotriz"],
+  recursos_humanos: ["reclutamiento y seleccion", "reclutamiento de personal", "seleccion de talento", "headhunter", "recruitment", "talent acquisition"],
 
   // Preparada para la revisión pendiente; no aparece hasta que se apruebe.
   imprenta: ["impresion comercial", "impresion digital", "impresion offset", "litografia", "impresion de tarjetas", "impresion de volantes", "impresion de folletos", "impresion de afiches", "print shop", "commercial printing"],

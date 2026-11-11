@@ -47,6 +47,8 @@ test("reviewed wording reaches the real service in both search and intent resolu
   const cases = [
     ["contabilidad para pymes", "contabilidad"],
     ["contadora", "contabilidad"],
+    ["reclutamiento y selección", "recursos_humanos"],
+    ["headhunter", "recursos_humanos"],
     ["fontanería", "plomeria"],
     ["técnico línea blanca", "reparacion_electrodomesticos"],
     ["construcción llave en mano", "construccion"],
