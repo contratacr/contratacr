@@ -40,6 +40,14 @@ function guardarAlmacen(): void {
 // el perfil de quien empezó a seguirte. Se resuelve por lotes, nunca por fila.
 type ConDatos = { data?: Record<string, unknown> | null };
 
+export function notificationActorInitials(item: ConDatos): string | null {
+  const datos = item.data ?? {};
+  const nombre = [datos.actor_name, datos.client_name, datos.sender_name]
+    .find((value): value is string => typeof value === "string" && value.trim().length > 0);
+  if (!nombre) return null;
+  return nombre.trim().split(/\s+/u).slice(0, 2).map((parte) => Array.from(parte)[0]?.toLocaleUpperCase("es-CR") ?? "").join("");
+}
+
 export function useActorPhotos(items: ConDatos[]) {
   leerAlmacen();
   const [fotos, setFotos] = useState<Record<string, string>>(() => Object.fromEntries(cacheFotos));
@@ -51,6 +59,7 @@ export function useActorPhotos(items: ConDatos[]) {
     for (const item of items) {
       const datos = (item.data ?? {}) as Record<string, unknown>;
       // Lo ya conocido no se vuelve a pedir.
+      if (typeof datos.actor_profile_id === "string" && !cacheFotos.has(datos.actor_profile_id)) idsPerfil.add(datos.actor_profile_id);
       if (typeof datos.professional_id === "string" && !cacheFotos.has(datos.professional_id)) idsProfesional.add(datos.professional_id);
       if (typeof datos.proposal_id === "string" && !cacheFotos.has(datos.proposal_id)) idsPropuesta.add(datos.proposal_id);
       if (typeof datos.follower_id === "string" && !cacheFotos.has(datos.follower_id)) idsPerfil.add(datos.follower_id);
@@ -107,7 +116,7 @@ export function useActorPhotos(items: ConDatos[]) {
 
   return (item: ConDatos) => {
     const datos = (item.data ?? {}) as Record<string, unknown>;
-    for (const clave of [datos.professional_id, datos.proposal_id, datos.follower_id]) {
+    for (const clave of [datos.actor_profile_id, datos.professional_id, datos.proposal_id, datos.follower_id]) {
       if (typeof clave === "string" && fotos[clave]) return fotos[clave];
     }
     return null;

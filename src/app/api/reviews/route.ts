@@ -108,6 +108,7 @@ async function reseñaSinCuenta(
         professional_id: professionalId,
         review_id: creada.id,
         client_name: nombreDeSaludo(nombre),
+        actor_name: nombreDeSaludo(nombre),
         rating: Number(rating),
       },
     };
@@ -305,6 +306,8 @@ export async function POST(req: NextRequest) {
         professional_id: professionalId,
         review_id: insertedReview.id,
         client_name: clientName,
+        actor_profile_id: user.id,
+        actor_name: clientName,
         rating: Number(rating),
       },
     };

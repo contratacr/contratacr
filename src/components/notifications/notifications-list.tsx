@@ -8,7 +8,7 @@ import { Bell, CheckCheck, Check, Trash2, AlertTriangle, MoreHorizontal } from "
 import { useRouter } from "next/navigation";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 import { createClient } from "@/lib/supabase/client";
-import { useActorPhotos } from "@/lib/notifications/use-actor-photos";
+import { notificationActorInitials, useActorPhotos } from "@/lib/notifications/use-actor-photos";
 import { useAuth } from "@/hooks/use-auth";
 import { cn, formatRelativeOrDate } from "@/lib/utils";
 import { notificationActionHref, notificationActionLabel, notificationInMode } from "@/lib/notification-link";
@@ -782,7 +782,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
                         />
                       ) : (
                         <span className="flex h-9 w-9 items-center justify-center rounded-full ccr-caja-icono-plana">
-                          <NotificationSourceIcon type={n.type} className="h-4 w-4" />
+                          {notificationActorInitials(n) || <NotificationSourceIcon type={n.type} className="h-4 w-4" />}
                         </span>
                       )}
                     </div>
