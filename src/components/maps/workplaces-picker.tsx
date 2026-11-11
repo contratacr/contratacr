@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { MapPin, X, Plus, Check, Search } from "lucide-react";
+import { MapPin, X, Plus, Check, Search, Pencil } from "lucide-react";
 import { createGoogleMarker, loadGoogleMaps, withConfiguredMapId } from "@/lib/maps/loader";
 import { PROVINCES, getCantonsByProvince, getCantonById, getProvinceById } from "@/lib/data/cr-geography";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
@@ -349,13 +349,24 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
             <div key={wp.id} className={mode === "local" ? `bg-white px-4 py-3 ${index ? "border-t border-[#e5e7eb]" : ""}` : "rounded-xl border border-[#e5e7eb] bg-white p-4"}>
               <div className="flex items-start gap-3">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#f1f8fb] text-[#009FD9]"><MapPin size={20}/></span>
-                <div className="min-w-0 flex-1">
-                  <p className="break-words text-sm font-semibold text-[#162543]">{wp.name}</p>
-                  {mode !== "coverage" && wp.address && isFixedWorkplace(wp) && <p className="mt-1 break-words text-sm leading-6 text-[#64748b]">{wp.address}</p>}
+                <div className="min-w-0 flex-1 pt-0.5">
+                  <p className="break-words text-sm font-semibold leading-5 text-[#162543]">{wp.name}</p>
+                  {mode !== "coverage" && wp.address && isFixedWorkplace(wp) && <p className="mt-0.5 break-words text-[13px] leading-5 text-[#64748b]">{wp.address}</p>}
                 </div>
-                {mode === "local" && <div className="flex shrink-0 items-center gap-1"><button type="button" className="min-h-11 px-2 text-xs font-semibold text-[#0089bb]" onClick={() => { setEditingId(wp.id); setProvince(wp.provinciaId || ''); setCanton(wp.cantonId || ''); setDraftPin(isFixedWorkplace(wp) ? { lat: wp.lat!, lng: wp.lng!, address: wp.address } : null); setShowMap(isFixedWorkplace(wp)); setAdding(true); }}>{t("editPlace")}</button><button type="button" className="grid h-11 w-11 place-items-center text-[#a12828]" aria-label={`${t("removePlace")}: ${wp.name}`} onClick={() => removeWorkplace(wp.id)}><X className="h-4 w-4"/></button></div>}
               </div>
-              {mode !== "coverage" && isFixedWorkplace(wp) && <div className="mt-3 border-t border-[#eef2f6] pt-2"><FilaInterruptor titulo={t("showAddress")} checked={wp.showAddress !== false} onChange={showAddress => onChange(value.map(place => place.id === wp.id ? { ...place, showAddress } : place))}/></div>}
+              {/* EN «RECIBO CLIENTES», LAS ACCIONES VAN ABAJO. Con «Editar
+                  ubicación» y la X al lado del nombre, la dirección quedaba en
+                  una columna angosta y bajaba palabra por palabra. Ahora el
+                  nombre y la dirección usan todo el ancho, y abajo quedan
+                  juntas la opción de mostrar la dirección y las dos acciones. */}
+              {mode === "local" && <div className="mt-2 flex items-center justify-between gap-2 border-t border-[#eef2f6] pt-1">
+                {isFixedWorkplace(wp) ? <FilaInterruptor titulo={t("showAddress")} checked={wp.showAddress !== false} onChange={showAddress => onChange(value.map(place => place.id === wp.id ? { ...place, showAddress } : place))}/> : <span/>}
+                <div className="-mr-2 flex shrink-0 items-center">
+                  <button type="button" title={t("editPlace")} aria-label={t("editPlace")} className="grid h-11 w-11 place-items-center rounded-full text-[#0089bb] hover:bg-[#f1f8fb]" onClick={() => { setEditingId(wp.id); setProvince(wp.provinciaId || ''); setCanton(wp.cantonId || ''); setDraftPin(isFixedWorkplace(wp) ? { lat: wp.lat!, lng: wp.lng!, address: wp.address } : null); setShowMap(isFixedWorkplace(wp)); setAdding(true); }}><Pencil className="h-4 w-4"/></button>
+                  <button type="button" title={t("removePlace")} aria-label={`${t("removePlace")}: ${wp.name}`} className="grid h-11 w-11 place-items-center rounded-full text-[#a12828] hover:bg-red-50" onClick={() => removeWorkplace(wp.id)}><X className="h-4 w-4"/></button>
+                </div>
+              </div>}
+              {mode !== "coverage" && mode !== "local" && isFixedWorkplace(wp) && <div className="mt-3 border-t border-[#eef2f6] pt-2"><FilaInterruptor titulo={t("showAddress")} checked={wp.showAddress !== false} onChange={showAddress => onChange(value.map(place => place.id === wp.id ? { ...place, showAddress } : place))}/></div>}
               {mode !== "local" && <div className="mt-1 flex flex-wrap items-center gap-x-5">
                 {wp.cantonId && mode !== "coverage" && <button type="button" className="min-h-11 text-sm font-semibold text-[#0089bb]" onClick={() => { setEditingId(wp.id); setProvince(wp.provinciaId || ''); setCanton(wp.cantonId || ''); setDraftPin(isFixedWorkplace(wp) ? { lat: wp.lat!, lng: wp.lng!, address: wp.address } : null); setShowMap(isFixedWorkplace(wp)); setAdding(true); }}>{t("editPlace")}</button>}
                 <button type="button" className="min-h-11 text-sm font-medium text-[#a12828]" onClick={() => removeWorkplace(wp.id)}>{t("removePlace")}</button>
@@ -532,7 +543,8 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
         </button>
       )}
 
-      <div className="flex w-full flex-col gap-3 pt-2">
+      {/* En «local» este bloque queda vacío: sin él no sobra un hueco debajo de «Agregar otro lugar». */}
+      {(mode !== "local" || extraActions) && <div className="flex w-full flex-col gap-3 pt-2">
         {!mode && <FilaInterruptor
           estirar
           titulo={t("homeServiceTitle")}
@@ -561,7 +573,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
           }}
         />}
         {extraActions}
-      </div>
+      </div>}
     </div>
   );
 }

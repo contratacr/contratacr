@@ -28,3 +28,14 @@ test('multiple sites remain distinct and duplicate points appear once',()=>{
  assert.deepEqual(publicWorkplaces([a,{...a,id:'duplicate'},b]),[a,b]);
  assert.deepEqual(publicWorkplaces([{...a,showAddress:false},b]),[b]);
 });
+test('coverage areas: canton, province and country count; sites that do not travel do not',async()=>{
+ const { coversArea, coverageKey } = await import('data:text/javascript;base64,'+Buffer.from(code).toString('base64'));
+ assert.equal(coversArea({level:'country'}),true);
+ assert.equal(coversArea({level:'provincia',provinciaId:'he'}),true);
+ assert.equal(coversArea({level:'canton',provinciaId:'al',cantonId:'al-at'}),true);
+ assert.equal(coversArea({...location,cantonId:'al-at',homeService:false}),false);
+ assert.equal(coversArea({level:'canton',homeService:true}),false);
+ // a legacy site and an explicit area for the same canton are one area
+ assert.equal(coverageKey({...location,cantonId:'al-at'}),coverageKey({level:'canton',cantonId:'al-at',homeService:true}));
+ assert.notEqual(coverageKey({level:'provincia',provinciaId:'al'}),coverageKey({level:'provincia',provinciaId:'he'}));
+});

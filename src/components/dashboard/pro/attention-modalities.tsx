@@ -6,10 +6,10 @@ import { WorkplacesPicker, type Workplace } from '@/components/maps/workplaces-p
 import { FilaInterruptor } from '@/components/ui/fila-interruptor';
 import { SelectMenu } from '@/components/ui/select-menu';
 import { PROVINCES, getCantonsByProvince, getCantonById, getProvinceById } from '@/lib/data/cr-geography';
-import { isFixedWorkplace } from '@/lib/public-workplaces';
+import { isFixedWorkplace, coversArea, coverageKey } from '@/lib/public-workplaces';
 
 type Props = { value: Workplace[]; onChange: (value: Workplace[]) => void; english: boolean; video: boolean; onVideoChange: (value: boolean) => void; canVideo: boolean };
-const coverage = (place: Workplace) => place.homeService !== false && (place.level === 'country' || place.level === 'provincia' || !!place.cantonId);
+const coverage = (place: Workplace) => coversArea(place);
 
 export function AttentionModalities({ value, onChange, english, video, onVideoChange, canVideo }: Props) {
   const [local, setLocal] = useState(value.some(place => isFixedWorkplace(place) && place.receivesClients !== false));
@@ -20,13 +20,25 @@ export function AttentionModalities({ value, onChange, english, video, onVideoCh
   const [addingArea, setAddingArea] = useState(false);
   const [error, setError] = useState('');
   const selected = value.filter(coverage);
+  // UNA FILA POR ZONA, CON SU NOMBRE GEOGRÁFICO. Una sede vieja que también
+  // cubría su cantón aparecía aquí con el nombre de la sede («Segunda sede ·
+  // Cantón») y, si había dos sedes en el mismo cantón, repetida. La zona se
+  // nombra por cantón/provincia y quitarla quita todas sus copias.
+  const zones = Array.from(selected.reduce((groups, place) => {
+    const key = coverageKey(place);
+    const group = groups.get(key);
+    if (group) group.ids.push(place.id);
+    else groups.set(key, { key, ids: [place.id], level: place.level === 'country' ? 'country' : place.level === 'provincia' ? 'provincia' : 'canton', name: place.level === 'country' ? (english ? 'All Costa Rica' : 'Todo Costa Rica') : place.level === 'provincia' ? (getProvinceById(place.provinciaId ?? '')?.name ?? place.name) : ([getCantonById(place.cantonId ?? '')?.name, getProvinceById(place.provinciaId ?? '')?.name].filter(Boolean).join(', ') || place.name) });
+    return groups;
+  }, new Map<string, { key: string; ids: string[]; level: 'country' | 'provincia' | 'canton'; name: string }>()).values());
 
   function addArea() {
     if (!province && areaKind !== 'country') return;
     if (areaKind === 'canton' && !canton) return;
     const level = areaKind === 'country' ? 'country' : areaKind === 'province' ? 'provincia' : 'canton';
     const existing = value.find(place => (place.level ?? (place.cantonId ? 'canton' : 'provincia')) === level && (level === 'country' || (place.provinciaId === province && (level === 'provincia' || place.cantonId === canton))) && !isFixedWorkplace(place));
-    if (existing && existing.homeService !== false) { setError(english ? 'This area is already added.' : 'Esta zona ya está agregada.'); return; }
+    const newKey = coverageKey({ level, provinciaId: province, cantonId: level === 'canton' ? canton : undefined });
+    if ((existing && existing.homeService !== false) || selected.some(place => coverageKey(place) === newKey)) { setError(english ? 'This area is already added.' : 'Esta zona ya está agregada.'); return; }
     if (existing) onChange(value.map(place => place.id === existing.id ? { ...place, homeService: true, homeServicePaused: false } : place));
     else onChange([...value, {
       id: `wp_coverage_${level}_${province}_${canton || 'all'}`,
@@ -43,9 +55,9 @@ export function AttentionModalities({ value, onChange, english, video, onVideoCh
       {local && <WorkplacesPicker mode="local" value={value} onChange={onChange} mapHeight={168}/>}
     </div>
     <div className="space-y-3 py-5">
-      <FilaInterruptor titulo={english ? 'I travel to clients' : 'Voy donde el cliente'} ayuda={english ? 'Choose the areas you cover.' : 'Elegí las zonas donde atendés.'} checked={home} onChange={enabled => { setHome(enabled); onChange(value.map(place => enabled ? (place.homeServicePaused ? { ...place, homeService: true, homeServicePaused: false } : place) : (coverage(place) ? { ...place, homeService: false, homeServicePaused: true } : place))); }}/>
-      {home && <div className="space-y-3 pl-1">
-        {selected.length > 0 && <div className="overflow-hidden rounded-xl border border-[#e5e7eb] bg-white">{selected.map((place, index) => <div key={place.id} className={`flex items-center justify-between gap-3 px-4 py-2 ${index ? 'border-t border-[#e5e7eb]' : ''}`}><div className="min-w-0"><p className="truncate text-sm font-semibold text-[#162543]">{place.name}</p><p className="text-xs text-[#64748b]">{place.level === 'country' ? (english ? 'Entire country' : 'Todo el país') : place.level === 'provincia' ? (english ? 'Entire province' : 'Toda la provincia') : (english ? 'Canton' : 'Cantón')}</p></div><button type="button" className="grid h-11 w-11 shrink-0 place-items-center text-[#a12828]" aria-label={english ? `Remove ${place.name}` : `Quitar ${place.name}`} onClick={() => onChange(value.map(item => item.id === place.id ? { ...item, homeService: false, homeServicePaused: false } : item))}><X className="h-4 w-4"/></button></div>)}</div>}
+      <FilaInterruptor titulo={english ? 'I travel to clients' : 'Voy donde el cliente'} checked={home} onChange={enabled => { setHome(enabled); onChange(value.map(place => enabled ? (place.homeServicePaused ? { ...place, homeService: true, homeServicePaused: false } : place) : (coverage(place) ? { ...place, homeService: false, homeServicePaused: true } : place))); }}/>
+      {home && <div className="space-y-3">
+        {zones.length > 0 && <div className="overflow-hidden rounded-xl border border-[#e5e7eb] bg-white">{zones.map((zone, index) => <div key={zone.key} className={`flex items-center justify-between gap-3 py-1 pl-4 pr-1 ${index ? 'border-t border-[#e5e7eb]' : ''}`}><div className="min-w-0 py-1.5"><p className="break-words text-sm font-semibold leading-5 text-[#162543]">{zone.name}</p><p className="text-xs text-[#64748b]">{zone.level === 'country' ? (english ? 'Entire country' : 'Todo el país') : zone.level === 'provincia' ? (english ? 'Entire province' : 'Toda la provincia') : (english ? 'Canton' : 'Cantón')}</p></div><button type="button" className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-[#a12828] hover:bg-red-50" aria-label={english ? `Remove ${zone.name}` : `Quitar ${zone.name}`} onClick={() => onChange(value.map(item => zone.ids.includes(item.id) ? { ...item, homeService: false, homeServicePaused: false } : item))}><X className="h-4 w-4"/></button></div>)}</div>}
         {!addingArea && selected.length > 0 && <button type="button" onClick={() => setAddingArea(true)} className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-[#0089bb]"><Plus className="h-4 w-4"/>{english ? 'Add another area' : 'Agregar otra zona'}</button>}
         {(addingArea || selected.length === 0) && <div className="space-y-3 rounded-xl border border-[#dbe7ef] bg-[#f8fcff] p-4">
         <div className="flex items-center justify-between"><p className="text-sm font-bold text-[#162543]">{english ? 'New service area' : 'Nueva zona de atención'}</p>{selected.length > 0 && <button type="button" onClick={() => { setAddingArea(false); setError(''); }} className="min-h-11 px-2 text-sm font-semibold text-[#64748b]">{english ? 'Cancel' : 'Cancelar'}</button>}</div>
