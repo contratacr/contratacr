@@ -1,5 +1,7 @@
 "use client";
 import { WorkplaceDirections } from "@/components/professionals/workplace-directions";
+import { serviceModalities } from "@/components/professionals/service-modalities";
+import type { CoverageArea } from "@/lib/public-workplaces";
 
 import { CvProfileDetails } from "@/components/professionals/cv-profile";
 import { hasCv, normalizeCv } from "@/lib/cv/model";
@@ -37,7 +39,6 @@ import { casoProfession } from "@/lib/services";
 import { addTaxIncludedToPriceLabel, formatServicePrice, primaryPricingLabel, splitPricingLabel } from "@/lib/pricing";
 import { languageLabel } from "@/lib/data/languages";
 import { insurerLabel } from "@/lib/data/insurers";
-import { getCantonById, getProvinceById } from "@/lib/data/cr-geography";
 import { ReviewSection } from "@/components/professionals/review-section";
 import { CaseShowcase } from "@/components/professionals/case-showcase";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
@@ -1409,29 +1410,6 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                     // + an optional caption, laid out in a hairline-divided grid (owner mockup).
                     type Fact = { key: string; icon: ReactNode; label: string; value: ReactNode; caption?: ReactNode };
                     const facts: Fact[] = [];
-                    const uniqueWorkplaces = Array.from(
-                      new Map(
-                        (professional.workplaces ?? [])
-                          .filter(w => w.homeService !== false || (typeof w.lat === 'number' && typeof w.lng === 'number' && w.receivesClients !== false))
-                          .map((w) => {
-                            const name = String(w.name ?? "").trim();
-                            const address = String(w.address ?? "").trim();
-                            return [`${name.toLowerCase()}|${address.toLowerCase()}`, { ...w, name, address }] as const;
-                          })
-                          .filter(([, w]) => w.name || w.address)
-                      ).values()
-                    );
-                    const workplaceAreaLines = Array.from(new Set([
-                      ...uniqueWorkplaces
-                        .map((w) => {
-                          const area = w as typeof w & { provinciaId?: string; cantonId?: string };
-                          const cantonName = area.cantonId ? getCantonById(area.cantonId)?.name : "";
-                          const provinceName = area.provinciaId ? getProvinceById(area.provinciaId)?.name : "";
-                          return [cantonName, provinceName].filter(Boolean).join(", ");
-                        })
-                        .filter(Boolean),
-                      ...(professional.workplaces?.length ? [] : [locationText]),
-                    ].filter(Boolean)));
                     const profileCategoryIds = (professional.professions && professional.professions.length > 0)
                       ? professional.professions
                       : (professional.categoryId ? [professional.categoryId] : []);
@@ -1444,19 +1422,16 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                       key: "ins", icon: <Shield className="h-5 w-5" />, label: t("insurers"),
                       value: professional.insuranceNetworks.map((id) => insurerLabel(id)).join(" · "),
                     });
-                    const visibleLocal = (professional.workplaces ?? []).filter(w => typeof w.lat === 'number' && typeof w.lng === 'number' && w.receivesClients !== false);
-                    const travels = (professional.workplaces ?? []).some(w => w.homeService !== false);
-                    const modalities = [visibleLocal.length ? (locale === 'en' ? 'In-person at my location' : 'Presencial en mi local') : '', travels ? (locale === 'en' ? 'At the client location' : 'A domicilio') : '', offersVideoConsult ? (locale === 'en' ? 'Video calls' : 'Videollamada') : ''].filter(Boolean);
-                    if (modalities.length || workplaceAreaLines.length > 0 || offersVideoConsult) facts.push({
+                    const dondeAtiende = serviceModalities({
+                      workplaces: professional.workplaces as CoverageArea[] | undefined,
+                      fallbackLocation: locationText,
+                      video: offersVideoConsult,
+                      videoCountry: !!professional.coverage?.country,
+                      english: locale === "en",
+                    });
+                    if (dondeAtiende) facts.unshift({
                       key: "service-location", icon: <MapPin className="h-5 w-5" />,
-                      label: locale === "en" ? "Service and location" : "Atención y ubicación",
-                      value: (
-                        <span className="flex flex-col gap-1">
-                          {modalities.length > 0 && <span className="[overflow-wrap:anywhere]">{modalities.join(" · ")}</span>}
-                          {workplaceAreaLines.map((line) => <span key={line} className="[overflow-wrap:anywhere]">{line}</span>)}
-                          {offersVideoConsult && <span className="[overflow-wrap:anywhere]">{professional.coverage?.country ? t("videoConsultCountry") : t("videoConsult")}</span>}
-                        </span>
-                      ),
+                      label: t("whereServes"), value: dondeAtiende,
                     });
                     return (
                       <div className="flex flex-col gap-6">
