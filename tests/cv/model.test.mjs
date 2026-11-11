@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import ts from 'typescript';
 import { PGlite } from '@electric-sql/pglite';
 const code = ts.transpileModule(readFileSync('src/lib/cv/model.ts', 'utf8'), { compilerOptions: { module: ts.ModuleKind.ES2022, target: ts.ScriptTarget.ES2022 } }).outputText;
-const { suggestCv, mergeCv, normalizeCv, emptyCv } = await import('data:text/javascript;base64,' + Buffer.from(code).toString('base64'));
+const { suggestCv, mergeCv, normalizeCv, emptyCv, sameCvEntry } = await import('data:text/javascript;base64,' + Buffer.from(code).toString('base64'));
 const sample = `María Ejemplo\ncorreo@example.test\nFormación académica\nTécnico en Administración\nInstituto de Ejemplo\n2020\n\nExperiencia laboral\nAsistente administrativa\nEmpresa de Ejemplo\n2021 - 2024\nAtención a clientes\n\nHabilidades\nExcel, Organización, Excel\nReferencias\nPersona privada\nprivate@example.test`;
 test('suggests explicit sections without importing contacts/references or invented dates', () => {
  const cv = suggestCv(sample);
@@ -67,4 +67,13 @@ test('PDF visual rows attach side dates and join adjacent text fragments',async(
  const item=(str,x,y,width)=>({str,transform:[10,0,0,10,x,y],width,height:10});
  const rows=pdfTextLines([item('School',10,90,35),item('2020 – 2024',400,100,60),item('Engineering',10,100,65),item('CI/',10,80,12),item('CD',22,80,12)]);
  assert.equal(rows,'Engineering 2020 – 2024\nSchool\nCI/CD');
+});
+test('same study or job is detected even when dates differ (reimport, legacy certification)', () => {
+ assert.equal(sameCvEntry({ title: 'Ingeniero de Software', organization: 'ULACIT' }, { title: 'ingeniero de software', organization: 'Ulacit' }), true);
+ assert.equal(sameCvEntry({ title: 'Ingeniero de Software', organization: '' }, { title: 'Ingeniero de Software', organization: 'ULACIT' }), true);
+ assert.equal(sameCvEntry({ title: 'Ingeniero de Software', organization: 'ULACIT' }, { title: 'Ingeniero de Software', organization: 'UCR' }), false);
+ const existing = normalizeCv({ ...emptyCv(), experience: [{ title: 'QA', organization: 'Intel', period: '04/2024 – 12/2024', description: 'Corregido' }] });
+ const reimport = normalizeCv({ ...emptyCv(), experience: [{ title: 'QA', organization: 'INTEL', period: '2024', description: 'Original' }, { title: 'QA', organization: 'RGA', period: '', description: '' }, { title: 'qa', organization: 'rga', period: '', description: 'repeated in the file' }] });
+ const merged = mergeCv(existing, reimport);
+ assert.deepEqual(merged.experience.map(e => [e.organization, e.description]), [['Intel', 'Corregido'], ['RGA', '']]);
 });

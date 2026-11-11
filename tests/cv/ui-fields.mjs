@@ -18,16 +18,20 @@ for(const [name,engine] of [['chromium',chromium],['webkit',webkit]]) {
  await expect(editor.getByText('Ya agregaste esta habilidad.')).toBeVisible();
  await editor.getByLabel('Nueva habilidad',{exact:true}).fill('');
  await editor.getByRole('button',{name:'Quitar TypeScript',exact:true}).click();
- const startYear=editor.getByRole('combobox',{name:'Inicio: año',exact:true}).nth(1);
+ // Entries are closed cards; the pencil opens the form.
+ await expect(editor.getByRole('combobox')).toHaveCount(0);
+ await expect(editor.locator('[data-cv-editor-section="experience"]')).toContainText('Ingeniero de calidad');
+ await editor.getByRole('button',{name:'Editar Experiencia laboral 1',exact:true}).click();
+ const startYear=editor.getByRole('combobox',{name:'Inicio: año',exact:true}).nth(0);
  await expect(startYear).toHaveValue('2024');
  for(const select of await editor.getByRole('combobox').all()){expect((await select.boundingBox()).height).toBeGreaterThanOrEqual(44);}
- await expect(editor.getByRole('combobox',{name:'Inicio: mes',exact:true}).nth(1)).toHaveValue('4');
- await editor.getByRole('combobox',{name:'Fin: año',exact:true}).nth(1).selectOption('2023');
+ await expect(editor.getByRole('combobox',{name:'Inicio: mes',exact:true}).nth(0)).toHaveValue('4');
+ await editor.getByRole('combobox',{name:'Fin: año',exact:true}).nth(0).selectOption('2023');
  await page.getByTestId('profile-save-certs').click();
  await expect(page.getByRole('alert').filter({hasText:'Revisá los títulos, las fechas'})).toBeVisible();
  expect(await page.evaluate(()=>JSON.parse(sessionStorage.getItem('cv-saved')).experience[0].period)).toBe('04/2024 – 12/2024');
  await editor.getByLabel('Actualmente trabajo aquí',{exact:true}).check();
- await expect(editor.getByRole('combobox',{name:'Fin: año',exact:true})).toHaveCount(1);
+ await expect(editor.getByRole('combobox',{name:'Fin: año',exact:true})).toHaveCount(0);
  await page.getByTestId('profile-save-certs').click();
  await expect.poll(()=>page.evaluate(()=>JSON.parse(sessionStorage.getItem('cv-saved')).experience[0].period)).toBe('04/2024 – Present');
  const publicView=page.locator('[data-cv-public]');
@@ -40,6 +44,8 @@ for(const [name,engine] of [['chromium',chromium],['webkit',webkit]]) {
  await publicView.screenshot({path:`/tmp/ccr-cv-ui/${name}-public.png`});
  await page.reload();
  await expect(editor.getByRole('button',{name:'Quitar Comunicación',exact:true})).toBeVisible();
+ await expect(editor.locator('[data-cv-editor-section="experience"]')).toContainText('Actualidad');
+ await editor.getByRole('button',{name:'Editar Experiencia laboral 1',exact:true}).click();
  await expect(editor.getByLabel('Actualmente trabajo aquí',{exact:true})).toBeChecked();
  await editor.screenshot({path:`/tmp/ccr-cv-ui/${name}-editor.png`});
  await editor.locator('[data-cv-sharing]').screenshot({path:`/tmp/ccr-cv-ui/${name}-cv-actions.png`});

@@ -104,7 +104,7 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
   function locAddress(id: string | null): string {
     if (!id || id === "general" || id === "videoconsulta" || id.startsWith("cov_")) return "";
     const place = professional.workplaces?.find((w) => w.id === id);
-    return place?.receivesClients === false || place?.showAddress === false ? "" : place?.address?.trim() ?? "";
+    return place?.receivesClients === false ? "" : place?.address?.trim() ?? "";
   }
   // ── SERVICE LOCATIONS ── the pro's named WORKPLACES (plus videoconsulta), keyed
   // by id. `cov_*` is travel coverage, not a place, so it never becomes a row.

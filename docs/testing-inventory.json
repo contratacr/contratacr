@@ -2,11 +2,11 @@
   "scope": "Todos los archivos TypeScript de src/app, src/components y src/hooks, controles JSX declarados, pestañas del panel y specs permanentes. No enumera cada elemento dinámico renderizado ni componentes dentro de dependencias.",
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
-    "files": 534,
-    "controls": 1397,
+    "files": 535,
+    "controls": 1399,
     "pages": 73,
     "handlers": 115,
-    "components": 282,
+    "components": 283,
     "hooks": 28,
     "specs": 192
   },
@@ -2332,7 +2332,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 610,
+          "line": 611,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -2340,7 +2340,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 635,
+          "line": 636,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -2348,7 +2348,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 642,
+          "line": 643,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -2356,7 +2356,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 811,
+          "line": 801,
           "tag": "a",
           "label": "{k === \"website\" ? t(\"linksWebsite\") : k}",
           "handler": "{() => trackInteraction({\n                type: \"external_link_click\",\n                professionalId: professional.id,\n                source: \"profile_social\",\n                locale,\n                metadata: { channel: k },\n              })}",
@@ -2364,7 +2364,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 868,
+          "line": 858,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -2372,7 +2372,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 887,
+          "line": 877,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => {\n                  // Cover the destination while the origin route is resolving;\n                  // returning to the assistant must not expose the old panel.\n                  if (assistantReturn) window.dispatchEvent(new Event(\"contratacr:open-ai\"));\n                }}",
@@ -2380,7 +2380,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 993,
+          "line": 983,
           "tag": "button",
           "label": "{`${professional.ratingAvg.toFixed(1)} · ${t(\"reviewCountLabel\", { count: professional.reviewCount })}`}",
           "handler": "{() => setActiveTab(\"resenas\")}",
@@ -2388,7 +2388,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1058,
+          "line": 1048,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setActiveTab(tab.id)}",
@@ -2396,7 +2396,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1162,
+          "line": 1152,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => hasFullDescription && setServiceDescriptionOpen({ title, description })}",
@@ -2404,7 +2404,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1237,
+          "line": 1227,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -2412,7 +2412,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1284,
+          "line": 1274,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -2420,7 +2420,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1558,
+          "line": 1492,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -2428,7 +2428,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1564,
+          "line": 1498,
           "tag": "button",
           "label": "{t(\"cerrar\")}",
           "handler": "{() => setOfrecerProyecto(false)}",
@@ -11911,7 +11911,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 42,
+          "line": 54,
           "tag": "FilaInterruptor",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{enabled => { setLocal(enabled); onChange(value.map(place => isFixedWorkplace(place) ? { ...place, receivesClients: enabled } : place)); }}",
@@ -11919,7 +11919,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 43,
+          "line": 55,
           "tag": "WorkplacesPicker",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{onChange}",
@@ -11927,7 +11927,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 46,
+          "line": 58,
           "tag": "FilaInterruptor",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{enabled => { setHome(enabled); onChange(value.map(place => enabled ? (place.homeServicePaused ? { ...place, homeService: true, homeServicePaused: false } : place) : (coverage(place) ? { ...place, homeService: false, homeServicePaused: true } : place))); }}",
@@ -11935,15 +11935,15 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 48,
+          "line": 60,
           "tag": "button",
-          "label": "{english ? `Remove ${place.name}` : `Quitar ${place.name}`}",
-          "handler": "{() => onChange(value.map(item => item.id === place.id ? { ...item, homeService: false, homeServicePaused: false } : item))}",
+          "label": "{english ? `Remove ${zone.name}` : `Quitar ${zone.name}`}",
+          "handler": "{() => onChange(value.map(item => zone.ids.includes(item.id) ? { ...item, homeService: false, homeServicePaused: false } : item))}",
           "destination": "",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 49,
+          "line": 61,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setAddingArea(true)}",
@@ -11951,7 +11951,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 51,
+          "line": 63,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { setAddingArea(false); setError(''); }}",
@@ -11959,7 +11959,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 52,
+          "line": 64,
           "tag": "SelectMenu",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{next => { setAreaKind(next); setProvince(''); setCanton(''); setError(''); }}",
@@ -11967,7 +11967,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 53,
+          "line": 65,
           "tag": "SelectMenu",
           "label": "{english ? 'Choose a province' : 'Elegí una provincia'}",
           "handler": "{next => { setProvince(next); setCanton(''); }}",
@@ -11975,7 +11975,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 54,
+          "line": 66,
           "tag": "SelectMenu",
           "label": "{english ? 'Choose a canton' : 'Elegí un cantón'}",
           "handler": "{setCanton}",
@@ -11983,7 +11983,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 55,
+          "line": 67,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{addArea}",
@@ -11991,7 +11991,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 60,
+          "line": 72,
           "tag": "FilaInterruptor",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{onVideoChange}",
@@ -12087,15 +12087,23 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 55,
+          "line": 82,
           "tag": "button",
-          "label": "{`${labels.remove} ${labels[section]} ${index + 1}`}",
-          "handler": "{() => onChange({ ...value, [section]: value[section].filter((_, i) => i !== index) })}",
+          "label": "{`${labels.remove} ${name}`}",
+          "handler": "{() => remove(section, index)}",
           "destination": "",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 57,
+          "line": 86,
+          "tag": "button",
+          "label": "{`${labels.edit} ${name}`}",
+          "handler": "{() => toggle(id, true)}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 91,
           "tag": "input",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{e => update(section, index, field, e.target.value)}",
@@ -12103,7 +12111,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 59,
+          "line": 93,
           "tag": "DateFields",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{period => update(section, index, 'period', period)}",
@@ -12111,7 +12119,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 60,
+          "line": 94,
           "tag": "textarea",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{e => update(section, index, 'description', e.target.value)}",
@@ -12119,15 +12127,31 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 62,
+          "line": 95,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "{() => onChange({ ...value, [section]: [...value[section], { title: '', organization: '', period: '', description: '' }] })}",
+          "handler": "{() => toggle(id, false)}",
           "destination": "",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 64,
+          "line": 100,
+          "tag": "button",
+          "label": "{`${labels.remove} ${old.entry.title}`}",
+          "handler": "{old.onRemove}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 102,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{() => { onChange({ ...value, [section]: [...value[section], { title: '', organization: '', period: '', description: '' }] }); toggle(`${section}:${value[section].length}`, true); }}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 104,
           "tag": "SkillsField",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{skills => onChange({ ...value, skills })}",
@@ -12135,15 +12159,23 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 120,
+          "line": 171,
           "tag": "input",
           "label": "{english ? 'Choose CV' : 'Elegir CV'}",
-          "handler": "{e => { void selectFile(e.target.files?.[0]); e.target.value = ''; }}",
+          "handler": "{e => { picked(e.target.files?.[0]); e.target.value = ''; }}",
           "destination": "",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 132,
+          "line": 176,
+          "tag": "Button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{() => choose('import')}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 186,
           "tag": "Fields",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{setCandidate}",
@@ -12151,7 +12183,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 133,
+          "line": 187,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{apply}",
@@ -12159,7 +12191,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 133,
+          "line": 187,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { setCandidate(null); setError(''); }}",
@@ -12167,7 +12199,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 135,
+          "line": 189,
           "tag": "Fields",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{onChange}",
@@ -12631,15 +12663,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1026,
-          "tag": "button",
-          "label": "{t(\"certRemove\")}",
-          "handler": "{() => removeCertification(c.id!, index)}",
-          "destination": "",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 1035,
+          "line": 1032,
           "tag": "AttentionModalities",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{next => { setWorkplaces(next); touch(\"location\"); }}",
@@ -12647,7 +12671,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1048,
+          "line": 1045,
           "tag": "PhoneInput",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(digits) => { setWhatsapp(digits); touch(\"contact\"); }}",
@@ -12655,7 +12679,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1076,
+          "line": 1073,
           "tag": "PhoneInput",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(digits) => { setCallPhone(digits); touch(\"contact\"); }}",
@@ -12663,7 +12687,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1107,
+          "line": 1104,
           "tag": "input",
           "label": "{t(\"websitePlaceholder\")}",
           "handler": "{(e) => { setWebsite(e.target.value.slice(0, 120)); touch(\"social\"); }}",
@@ -12671,7 +12695,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1137,
+          "line": 1134,
           "tag": "input",
           "label": "{t(\"socialUserPlaceholder\")}",
           "handler": "{(e) => { setSocial((s) => ({ ...s, [key]: e.target.value.slice(0, 50) })); touch(\"social\"); }}",
@@ -12679,7 +12703,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1168,
+          "line": 1165,
           "tag": "LanguagesInput",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(next) => { setLanguages(next); touch(\"lang\"); }}",
@@ -12687,7 +12711,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 1178,
+          "line": 1175,
           "tag": "AseguradorasInput",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(next) => { setInsurers(next); touch(\"lang\"); }}",
@@ -16096,33 +16120,9 @@
       "methods": [],
       "controls": [
         {
-          "line": 356,
-          "tag": "button",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "{() => { setEditingId(wp.id); setProvince(wp.provinciaId || ''); setCanton(wp.cantonId || ''); setDraftPin(isFixedWorkplace(wp) ? { lat: wp.lat!, lng: wp.lng!, address: wp.address } : null); setShowMap(isFixedWorkplace(wp)); setAdding(true); }}",
-          "destination": "",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 356,
-          "tag": "button",
-          "label": "{`${t(\"removePlace\")}: ${wp.name}`}",
-          "handler": "{() => removeWorkplace(wp.id)}",
-          "destination": "",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 358,
-          "tag": "FilaInterruptor",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "{showAddress => onChange(value.map(place => place.id === wp.id ? { ...place, showAddress } : place))}",
-          "destination": "",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
           "line": 360,
           "tag": "button",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "label": "{t(\"editPlace\")}",
           "handler": "{() => { setEditingId(wp.id); setProvince(wp.provinciaId || ''); setCanton(wp.cantonId || ''); setDraftPin(isFixedWorkplace(wp) ? { lat: wp.lat!, lng: wp.lng!, address: wp.address } : null); setShowMap(isFixedWorkplace(wp)); setAdding(true); }}",
           "destination": "",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
@@ -16130,13 +16130,29 @@
         {
           "line": 361,
           "tag": "button",
+          "label": "{`${t(\"removePlace\")}: ${wp.name}`}",
+          "handler": "{() => removeWorkplace(wp.id)}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 371,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{() => { setEditingId(wp.id); setProvince(wp.provinciaId || ''); setCanton(wp.cantonId || ''); setDraftPin(isFixedWorkplace(wp) ? { lat: wp.lat!, lng: wp.lng!, address: wp.address } : null); setShowMap(isFixedWorkplace(wp)); setAdding(true); }}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 372,
+          "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => removeWorkplace(wp.id)}",
           "destination": "",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 375,
+          "line": 386,
           "tag": "button",
           "label": "{place.removeLabel ?? t(\"removePlace\")}",
           "handler": "{place.onRemove}",
@@ -16144,7 +16160,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 395,
+          "line": 406,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { setAdding(false); setProvince(\"\"); setCanton(\"\"); setDraftPin(null); setShowMap(false); }}",
@@ -16152,7 +16168,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 403,
+          "line": 414,
           "tag": "SelectMenu",
           "label": "{t(\"provincePlaceholder\")}",
           "handler": "{(v) => { setProvince(v); setCanton(\"\"); }}",
@@ -16160,7 +16176,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 416,
+          "line": 427,
           "tag": "SelectMenu",
           "label": "{t(\"cantonLabel\")}",
           "handler": "{setCanton}",
@@ -16168,7 +16184,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 433,
+          "line": 444,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{toggleMap}",
@@ -16176,7 +16192,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 449,
+          "line": 460,
           "tag": "input",
           "label": "{t(\"searchPlaceholder\")}",
           "handler": "{(e) => {\n                    const next = e.target.value;\n                    setAddrQuery(next);\n                    setAddrOpen(true);\n                    if (next.trim().length < 3) setAddrSug([]);\n                  }}",
@@ -16184,7 +16200,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 468,
+          "line": 479,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => selectAddress(a.placeId, a.label)}",
@@ -16192,7 +16208,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 482,
+          "line": 493,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{useMyLocation}",
@@ -16200,7 +16216,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 494,
+          "line": 505,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setDraftPin(null)}",
@@ -16208,7 +16224,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 510,
+          "line": 521,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{commitWorkplace}",
@@ -16216,7 +16232,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 517,
+          "line": 528,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { setEditingId(null); setAdding(false); setProvince(''); setCanton(''); setDraftPin(null); setShowMap(false); }}",
@@ -16224,7 +16240,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 526,
+          "line": 537,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setAdding(true)}",
@@ -16232,7 +16248,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 536,
+          "line": 548,
           "tag": "FilaInterruptor",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{enabled => {\n            const bases = withHomeServiceScope(valueRef.current, \"cantons\", { country: \"\", province: () => \"\" });\n            onChange(bases.map(wp => ({ ...wp, homeService: enabled })));\n          }}",
@@ -16240,7 +16256,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 545,
+          "line": 557,
           "tag": "SelectMenu",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{scope => {\n            // Broad scopes include the narrower scopes; persist one scope only.\n            // Keep every declared canton and exact address when changing scope.\n            onChange(withHomeServiceScope(valueRef.current, scope as HomeServiceScope, {\n              country: t(\"wholeCountryName\"),\n              province: id => t(\"wholeProvinceName\", { province: getProvinceById(id)?.name ?? \"\" }),\n            }));\n          }}",
@@ -18513,7 +18529,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 14,
+          "line": 23,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -19397,6 +19413,34 @@
       "priority": "P1"
     },
     {
+      "file": "src/components/professionals/service-modalities.tsx",
+      "kind": "Componente",
+      "group": "Búsqueda y profesionales",
+      "route": null,
+      "exports": [
+        "serviceModalities"
+      ],
+      "methods": [],
+      "controls": [],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/search-results.spec.ts",
+        "tests/e2e/search-ranking.spec.ts",
+        "tests/e2e/services.spec.ts",
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts",
+        "tests/e2e/search-progressive-loading.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P1"
+    },
+    {
       "file": "src/components/professionals/verification-cta.tsx",
       "kind": "Componente",
       "group": "Verificación",
@@ -19439,7 +19483,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 9,
+          "line": 19,
           "tag": "a",
           "label": "{`${name}: ${locations[0].name || (english ? 'Get directions' : 'Cómo llegar')}`}",
           "handler": "",
@@ -19447,7 +19491,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 13,
+          "line": 23,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",

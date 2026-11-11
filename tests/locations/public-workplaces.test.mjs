@@ -5,11 +5,13 @@ import ts from 'typescript';
 const code = ts.transpileModule(readFileSync('src/lib/public-workplaces.ts','utf8'), {compilerOptions:{module:ts.ModuleKind.ES2022}}).outputText;
 const { isFixedWorkplace, publicWorkplaces, directionsUrl } = await import('data:text/javascript;base64,'+Buffer.from(code).toString('base64'));
 const location = {name:'Local de ejemplo',address:'Dirección de ejemplo',lat:9.9,lng:-84.2,level:'canton'};
-test('exact pins default on while explicit hiding is respected',()=>{
- assert.deepEqual(publicWorkplaces([location,{...location,showAddress:false}]),[location]);
+test('a place that receives clients always shows its address, even if saved hidden (legacy showAddress:false)',()=>{
+ assert.deepEqual(publicWorkplaces([location]),[location]);
  assert.ok(directionsUrl(location)?.includes('destination='));
- assert.equal(directionsUrl({...location,showAddress:false}),null);
- assert.equal(publicWorkplaces([{...location,showAddress:true}]).length,1);
+ assert.ok(directionsUrl({...location,showAddress:false})?.includes('destination='));
+ assert.equal(publicWorkplaces([{...location,showAddress:false}]).length,1);
+ assert.equal(directionsUrl({...location,receivesClients:false}),null);
+ assert.deepEqual(publicWorkplaces([{...location,receivesClients:false}]),[]);
 });
 test('coverage and invalid coordinates cannot expose an address or a route',()=>{
  for(const w of [{...location,level:'country'},{...location,level:'provincia'},{...location,lat:undefined},{...location,lng:NaN},{...location,lat:91},{...location,lng:Infinity}]){
@@ -26,7 +28,7 @@ test('directions retain the saved point and never supply a visitor origin',()=>{
 test('multiple sites remain distinct and duplicate points appear once',()=>{
  const a={...location,showAddress:true},b={...a,lng:-84.3};
  assert.deepEqual(publicWorkplaces([a,{...a,id:'duplicate'},b]),[a,b]);
- assert.deepEqual(publicWorkplaces([{...a,showAddress:false},b]),[b]);
+ assert.deepEqual(publicWorkplaces([{...a,receivesClients:false},b]),[b]);
 });
 test('coverage areas: canton, province and country count; sites that do not travel do not',async()=>{
  const { coversArea, coverageKey } = await import('data:text/javascript;base64,'+Buffer.from(code).toString('base64'));

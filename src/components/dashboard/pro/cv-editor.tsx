@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocale } from 'next-intl';
-import { blankDates, parseCvDates, serializeCvDates, invalidCvDates } from '@/lib/cv/dates';
+import { blankDates, parseCvDates, serializeCvDates, invalidCvDates, formatCvDates } from '@/lib/cv/dates';
 import { CvFileEditor } from './cv-file-editor';
 import { Button } from '@/components/ui/button';
-import { X, Plus, FileText, ChevronDown } from 'lucide-react';
-import { CV_LIMITS, emptyCv, hasCv, keyOf, mergeCv, normalizeCv, reviewCv, type CvEntry, type CvProfile } from '@/lib/cv/model';
+import { X, Plus, FileText, ChevronDown, Pencil, Check, BriefcaseBusiness, GraduationCap, ScanText } from 'lucide-react';
+import { CV_LIMITS, emptyCv, hasCv, keyOf, mergeCv, normalizeCv, reviewCv, sameCvEntry, type CvEntry, type CvProfile } from '@/lib/cv/model';
 
 const inputClass = 'min-h-11 w-full rounded-xl border border-[#dce5ee] bg-white px-3 py-2 text-sm text-[#162543] focus:outline-none focus:ring-2 focus:ring-[#009FD9]';
 function DateFields({ period, onChange, english, education }: { period: string; onChange: (value: string) => void; english: boolean; education: boolean }) {
@@ -42,32 +42,76 @@ function SkillsField({ value, onChange, english }: { value: string[]; onChange: 
   </fieldset>;
 }
 
-function Fields({ value, onChange, english, educationExtra }: { value: CvProfile; onChange: (value: CvProfile) => void; english: boolean; educationExtra?: ReactNode }) {
-  const labels = english ? { education: 'Education', experience: 'Work experience', skills: 'Skills', title: 'Qualification or course', role: 'Job title', institution: 'Institution (optional)', employer: 'Employer (optional)', period: 'Dates (optional)', description: 'Details (optional)', remove: 'Remove', add: 'Add', skillHelp: 'One skill per line. Up to 40.' } : { education: 'Formación académica', experience: 'Experiencia laboral', skills: 'Habilidades', title: 'Título o curso', role: 'Puesto', institution: 'Institución (opcional)', employer: 'Empresa (opcional)', period: 'Fechas (opcional)', description: 'Detalles (opcional)', remove: 'Quitar', add: 'Agregar', skillHelp: 'Una habilidad por línea. Hasta 40.' };
+type LegacyEducation = { entry: CvEntry; onRemove: () => void };
+
+/**
+ * CADA ESTUDIO Y CADA EXPERIENCIA ES UNA TARJETA CERRADA (título, lugar y
+ * fechas) con lápiz y X, como los locales. Antes cada una quedaba abierta como
+ * formulario completo —puesto, empresa, casilla, cuatro menús de fecha y
+ * detalles— y con cuatro experiencias la sección no terminaba. Se abre al
+ * tocar el lápiz, al agregar una nueva o si le falta algo para guardarse.
+ * Las certificaciones del sistema anterior van en Estudios con la misma
+ * tarjeta (solo se pueden quitar), no como un bloque aparte con otro dibujo.
+ */
+function Fields({ value, onChange, english, legacyEducation = [], existing }: { value: CvProfile; onChange: (value: CvProfile) => void; english: boolean; legacyEducation?: LegacyEducation[]; existing?: CvProfile }) {
+  const labels = english ? { education: 'Education and certifications', entry: { education: 'Education', experience: 'Work experience' }, experience: 'Work experience', skills: 'Skills', title: 'Qualification or course', role: 'Job title', institution: 'Institution (optional)', employer: 'Employer (optional)', period: 'Dates (optional)', description: 'Details (optional)', remove: 'Remove', edit: 'Edit', done: 'Done', add: 'Add', untitled: 'Untitled', already: 'Already on your profile' } : { education: 'Estudios y certificaciones', entry: { education: 'Formación académica', experience: 'Experiencia laboral' }, experience: 'Experiencia laboral', skills: 'Habilidades', title: 'Título o curso', role: 'Puesto', institution: 'Institución (opcional)', employer: 'Empresa (opcional)', period: 'Fechas (opcional)', description: 'Detalles (opcional)', remove: 'Quitar', edit: 'Editar', done: 'Listo', add: 'Agregar', untitled: 'Sin título', already: 'Ya está en tu perfil' };
+  const [open, setOpen] = useState<Set<string>>(() => new Set());
+  const toggle = (id: string, next: boolean) => setOpen(prev => { const copy = new Set(prev); if (next) copy.add(id); else copy.delete(id); return copy; });
   function update(section: 'education' | 'experience', index: number, field: keyof CvEntry, text: string) {
     onChange({ ...value, [section]: value[section].map((entry, i) => i === index ? { ...entry, [field]: text } : entry) });
   }
+  function remove(section: 'education' | 'experience', index: number) {
+    onChange({ ...value, [section]: value[section].filter((_, i) => i !== index) });
+    // Las posiciones se corren: se cierran las de esa sección para no abrir otra.
+    setOpen(prev => new Set([...prev].filter(id => !id.startsWith(`${section}:`))));
+  }
+  const summary = (section: 'education' | 'experience', entry: CvEntry) => <div className="min-w-0 flex-1 pt-0.5">
+    <p className="break-words text-sm font-semibold leading-5 text-[#162543]">{entry.title.trim() || <span className="text-[#68778d]">{labels.untitled}</span>}</p>
+    {entry.organization && <p className="break-words text-[13px] leading-5 text-[#52627a]">{entry.organization}</p>}
+    {entry.period && <p className="break-words text-xs leading-5 text-[#68778d]">{formatCvDates(entry.period, english, section === 'experience')}</p>}
+  </div>;
+  const tile = (section: 'education' | 'experience') => <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#f1f8fb] text-[#009FD9]">{section === 'experience' ? <BriefcaseBusiness size={18}/> : <GraduationCap size={18}/>}</span>;
   return <div className="space-y-6">
-    {(['education', 'experience'] as const).map(section => <fieldset key={section} className="min-w-0 space-y-3">
+    {(['experience', 'education'] as const).map(section => <fieldset key={section} className="min-w-0 space-y-2.5" data-cv-editor-section={section}>
       <legend className="mb-3 text-sm font-semibold text-[#162543]">{labels[section]}</legend>
-      {section === 'education' && educationExtra}
-      {value[section].map((entry, index) => <div key={index} className="space-y-3 rounded-xl border border-[#dce5ee] bg-white p-4">
-        <div className="flex items-center justify-between gap-2"><span className="text-xs text-[#68778d]">{labels[section]} {index + 1}</span><button type="button" className="flex min-h-11 min-w-11 items-center justify-center rounded-full text-[#68778d]" aria-label={`${labels.remove} ${labels[section]} ${index + 1}`} onClick={() => onChange({ ...value, [section]: value[section].filter((_, i) => i !== index) })}><X size={18}/></button></div>
-        {(['title', 'organization'] as const).map(field => <label key={field} className="block text-sm text-[#52627a]">{field === 'title' ? section === 'education' ? labels.title : labels.role : field === 'organization' ? section === 'education' ? labels.institution : labels.employer : labels[field]}
-          <input className={`${inputClass} mt-1`} maxLength={CV_LIMITS[field]} value={entry[field]} onChange={e => update(section, index, field, e.target.value)}/>
-        </label>)}
-        <DateFields period={entry.period} english={english} education={section === 'education'} onChange={period => update(section, index, 'period', period)}/>
-        <label className="block text-sm text-[#52627a]">{labels.description}<textarea className={`${inputClass} mt-1 min-h-24`} maxLength={CV_LIMITS.description} value={entry.description} onChange={e => update(section, index, 'description', e.target.value)}/></label>
+      {value[section].map((entry, index) => {
+        const id = `${section}:${index}`;
+        const needsWork = !entry.title.trim() || invalidCvDates(entry.period);
+        const duplicate = !!existing && existing[section].some(old => sameCvEntry(old, entry));
+        const name = `${labels.entry[section]} ${index + 1}`;
+        const removeButton = <button type="button" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#a12828] hover:bg-red-50" aria-label={`${labels.remove} ${name}`} title={labels.remove} onClick={() => remove(section, index)}><X size={18}/></button>;
+        if (!open.has(id) && !needsWork) return <div key={index} className="flex items-start gap-3 rounded-xl border border-[#dce5ee] bg-white py-2 pl-3 pr-1" data-cv-entry={section}>
+          {tile(section)}
+          <div className="min-w-0 flex-1">{summary(section, entry)}{duplicate && <span className="mt-1 inline-block rounded-md bg-[#f1f5f9] px-2 py-0.5 text-xs font-medium text-[#52627a]">{labels.already}</span>}</div>
+          <div className="flex shrink-0 items-center"><button type="button" className="flex h-11 w-11 items-center justify-center rounded-full text-[#0089bb] hover:bg-[#f1f8fb]" aria-label={`${labels.edit} ${name}`} title={labels.edit} onClick={() => toggle(id, true)}><Pencil size={16}/></button>{removeButton}</div>
+        </div>;
+        return <div key={index} className="space-y-3 rounded-xl border border-[#009FD9] bg-white p-4" data-cv-entry={section} data-open>
+          <div className="flex items-center justify-between gap-2"><span className="text-xs font-semibold text-[#68778d]">{name}</span>{removeButton}</div>
+          {(['title', 'organization'] as const).map(field => <label key={field} className="block text-sm text-[#52627a]">{field === 'title' ? section === 'education' ? labels.title : labels.role : section === 'education' ? labels.institution : labels.employer}
+            <input className={`${inputClass} mt-1`} maxLength={CV_LIMITS[field]} value={entry[field]} onChange={e => update(section, index, field, e.target.value)}/>
+          </label>)}
+          <DateFields period={entry.period} english={english} education={section === 'education'} onChange={period => update(section, index, 'period', period)}/>
+          <label className="block text-sm text-[#52627a]">{labels.description}<textarea className={`${inputClass} mt-1 min-h-24`} maxLength={CV_LIMITS.description} value={entry.description} onChange={e => update(section, index, 'description', e.target.value)}/></label>
+          {!needsWork && <div className="flex justify-end"><Button type="button" variant="outline" className="min-h-11" onClick={() => toggle(id, false)}><Check size={16}/>{labels.done}</Button></div>}
+        </div>;
+      })}
+      {section === 'education' && legacyEducation.filter(old => !value.education.some(entry => sameCvEntry(entry, old.entry))).map((old, index) => <div key={`legacy-${index}`} className="flex items-start gap-3 rounded-xl border border-[#dce5ee] bg-white py-2 pl-3 pr-1" data-cv-entry="legacy">
+        {tile('education')}{summary('education', old.entry)}
+        <button type="button" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#a12828] hover:bg-red-50" aria-label={`${labels.remove} ${old.entry.title}`} title={labels.remove} onClick={old.onRemove}><X size={18}/></button>
       </div>)}
-      <Button type="button" variant="outline" className="min-h-11" disabled={value[section].length >= CV_LIMITS.entries} onClick={() => onChange({ ...value, [section]: [...value[section], { title: '', organization: '', period: '', description: '' }] })}><Plus size={16}/>{labels.add} {section === 'education' ? (english ? 'education' : 'estudio') : (english ? 'experience' : 'experiencia')}</Button>
+      <button type="button" className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-1 text-sm font-bold text-[#0089bb] disabled:opacity-50" disabled={value[section].length >= CV_LIMITS.entries} onClick={() => { onChange({ ...value, [section]: [...value[section], { title: '', organization: '', period: '', description: '' }] }); toggle(`${section}:${value[section].length}`, true); }}><Plus size={16}/>{labels.add} {section === 'education' ? (english ? 'education' : 'estudio') : (english ? 'experience' : 'experiencia')}</button>
     </fieldset>)}
     <SkillsField value={value.skills} onChange={skills => onChange({ ...value, skills })} english={english}/>
   </div>;
 }
 
-export function CvEditor({ value, onChange, disabled = false, existingEducation = [], educationExtra, professionalId }: { value: CvProfile; onChange: (value: CvProfile) => void; disabled?: boolean; existingEducation?: CvEntry[]; educationExtra?: ReactNode; professionalId: string }) {
+export function CvEditor({ value, onChange, disabled = false, legacyEducation = [], professionalId }: { value: CvProfile; onChange: (value: CvProfile) => void; disabled?: boolean; legacyEducation?: LegacyEducation[]; professionalId: string }) {
   const english = useLocale() === 'en';
   const fileInput = useRef<HTMLInputElement>(null);
+  // DOS ACCIONES, UN SOLO SELECTOR DE ARCHIVO. «Subir CV» adjunta el
+  // documento para «Ver CV»; «Completar con mi CV» lo lee para llenar los
+  // campos. Antes elegir el archivo hacía las dos cosas a la vez sin decirlo.
+  const pickFor = useRef<'attach' | 'import'>('import');
   const request = useRef(0);
   const reviewRef = useRef<HTMLDivElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -79,9 +123,11 @@ export function CvEditor({ value, onChange, disabled = false, existingEducation 
   useEffect(() => () => { request.current++; }, []);
   const reviewing = candidate !== null;
   useEffect(() => { if (reviewing) reviewRef.current?.focus(); }, [reviewing]);
-  async function selectFile(file?: File) {
+  const legacyEntries = legacyEducation.map(l => l.entry);
+  const current: CvProfile = { ...value, education: [...value.education, ...legacyEntries] };
+  function choose(kind: 'attach' | 'import') { pickFor.current = kind; fileInput.current?.click(); }
+  async function readFile(file?: File) {
     if (!file) return;
-    setSelectedFile(file);
     const seq = ++request.current;
     setBusy(true); setError(''); setNotice(''); setWarnings([]); setCandidate(null);
     try {
@@ -101,38 +147,46 @@ export function CvEditor({ value, onChange, disabled = false, existingEducation 
     } catch (err) { if (seq === request.current) setError(err instanceof Error ? err.message : (english ? 'Could not read the file.' : 'No se pudo leer el archivo.')); }
     finally { if (seq === request.current) setBusy(false); }
   }
+  function picked(file?: File) {
+    if (!file) return;
+    if (pickFor.current === 'attach') { setSelectedFile(file); setError(''); return; }
+    void readFile(file);
+  }
   function apply() {
     if (!candidate) return;
     if ([...candidate.education, ...candidate.experience].some(e => !e.title.trim() || invalidCvDates(e.period)) || candidate.skills.filter(s => s.trim()).length > 40 || candidate.skills.some(s => s.length > 80)) {
       setError(english ? 'Review the titles, dates and skills (up to 40, 80 characters each).' : 'Revisá los títulos, las fechas y las habilidades (hasta 40, de 80 caracteres cada una).'); return;
     }
-    const legacyKeys = new Set(existingEducation.map(e => keyOf(`${e.title}|${e.organization}|${e.period}`)));
-    const additions = { ...candidate, education: candidate.education.filter(e => !legacyKeys.has(keyOf(`${e.title}|${e.organization}|${e.period}`))) };
+    const additions = { ...candidate, education: candidate.education.filter(e => !legacyEntries.some(old => sameCvEntry(old, e))) };
     const merged = mergeCv(value, additions);
-    if (value.education.length + candidate.education.length > 20 || value.experience.length + candidate.experience.length > 20 || new Set([...value.skills, ...candidate.skills]).size > 40) {
+    if (merged.education.length > 20 || merged.experience.length > 20 || merged.skills.length > 40 || new Set([...value.skills, ...candidate.skills].map(keyOf)).size > 40) {
       setError(english ? 'Remove entries before importing: up to 20 per section and 40 skills.' : 'Quitá entradas antes de importar: hasta 20 por sección y 40 habilidades.'); return;
     }
     onChange(merged); setCandidate(null); setError(''); setNotice(english ? 'Added to the form. Save your changes to publish them.' : 'Agregado al formulario. Guardá los cambios para publicarlos.');
   }
+  const repeated = candidate ? [...candidate.experience.filter(e => current.experience.some(o => sameCvEntry(o, e))), ...candidate.education.filter(e => current.education.some(o => sameCvEntry(o, e)))].length : 0;
   return <fieldset disabled={disabled} className="min-w-0 space-y-5" data-cv-editor>
     <div className="rounded-2xl border border-[#c9e7f2] bg-[#f1faff] p-4">
-      <div className="flex items-start gap-3"><FileText className="mt-0.5 shrink-0 text-[#009FD9]" size={22}/><div><h3 className="text-base font-semibold text-[#162543]">{english ? 'Your CV' : 'Tu CV'}</h3></div></div>
-      <input ref={fileInput} hidden type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" aria-label={english ? 'Choose CV' : 'Elegir CV'} onChange={e => { void selectFile(e.target.files?.[0]); e.target.value = ''; }}/>
-
-
-      <CvFileEditor professionalId={professionalId} selectedFile={selectedFile} english={english} reading={busy} onChoose={() => fileInput.current?.click()} onCancel={() => { setSelectedFile(null); setCandidate(null); setError(''); }}/>
-
+      <div className="flex items-start gap-3"><FileText className="mt-0.5 shrink-0 text-[#009FD9]" size={22}/><div><h3 className="text-base font-semibold text-[#162543]">{english ? 'Your CV' : 'Tu CV'}</h3><p className="mt-0.5 text-[13px] leading-snug text-[#52627a]">{english ? 'Upload it so clients can open it from your profile.' : 'Subilo para que los clientes lo abran desde tu perfil.'}</p></div></div>
+      <input ref={fileInput} hidden type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" aria-label={english ? 'Choose CV' : 'Elegir CV'} onChange={e => { picked(e.target.files?.[0]); e.target.value = ''; }}/>
+      <CvFileEditor professionalId={professionalId} selectedFile={selectedFile} english={english} reading={busy} onChoose={() => choose('attach')} onCancel={() => { setSelectedFile(null); setError(''); }}/>
+      <div className="mt-4 border-t border-[#c9e7f2] pt-4">
+        <p className="text-sm font-semibold text-[#162543]">{english ? 'Fill in from my CV' : 'Completar con mi CV'}</p>
+        <p className="mt-0.5 text-[13px] leading-snug text-[#52627a]">{english ? 'We read your experience, education and skills so you can review them before adding.' : 'Leemos tu experiencia, estudios y habilidades para que los revisés antes de agregarlos.'}</p>
+        <Button type="button" variant="outline" className="mt-3 min-h-11 bg-white" disabled={busy} onClick={() => choose('import')}><ScanText size={16}/>{english ? 'Choose CV to read' : 'Elegir CV para leer'}</Button>
+        {busy && <p role="status" className="mt-2 text-xs text-[#68778d]">{english ? 'Reading CV…' : 'Leyendo CV…'}</p>}
+      </div>
     </div>
     {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
     {notice && <p role="status" className="text-sm text-[#0089bb]">{notice}</p>}
     {candidate && <div ref={reviewRef} tabIndex={-1} className="space-y-5 rounded-2xl border-2 border-[#009FD9] p-4" aria-label={english ? 'Review imported information' : 'Revisar información importada'}>
       <div><h3 className="font-semibold text-[#162543]">{english ? 'Review before adding' : 'Revisá antes de agregar'}</h3><p className="mt-1 text-sm text-[#52627a]">{english ? 'Correct or remove anything you do not want to publish. Existing information is kept.' : 'Corregí o quitá lo que no querés publicar. Conservamos tus datos actuales.'}</p></div>
-      <p role="status" className="text-sm font-semibold text-[#0089bb]">{candidate.experience.length} {english ? 'work experiences' : 'experiencias'} · {candidate.education.length} {english ? 'education entries' : 'estudios'} · {candidate.skills.length} {english ? 'skills' : 'habilidades'}</p>
+      <p role="status" className="text-sm font-semibold text-[#0089bb]">{([[candidate.experience.length, english ? ['work experience', 'work experiences'] : ['experiencia', 'experiencias']], [candidate.education.length, english ? ['education entry', 'education entries'] : ['estudio', 'estudios']], [candidate.skills.length, english ? ['skill', 'skills'] : ['habilidad', 'habilidades']]] as [number, string[]][]).map(([n, [one, many]]) => `${n} ${n === 1 ? one : many}`).join(' · ')}{repeated > 0 && <span className="font-normal text-[#52627a]"> · {repeated} {english ? 'already on your profile (will not be added again)' : (repeated === 1 ? 'ya está en tu perfil (no se agrega de nuevo)' : 'ya están en tu perfil (no se agregan de nuevo)')}</span>}</p>
       {warnings.length > 0 && <p role="alert" className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">{english ? 'Some content could not be separated reliably or exceeds the field limits. Compare with your CV and complete the missing information before saving.' : 'Parte del contenido no se pudo separar con seguridad o supera los límites. Compará con tu CV y completá lo que falta antes de guardar.'}</p>}
-      <Fields value={candidate} onChange={setCandidate} english={english}/>
+      <Fields value={candidate} onChange={setCandidate} english={english} existing={current}/>
       <div className="flex flex-wrap gap-3"><Button type="button" className="min-h-11" onClick={apply}>{english ? 'Add to my profile form' : 'Agregar al formulario'}</Button><Button type="button" variant="outline" className="min-h-11" onClick={() => { setCandidate(null); setError(''); }}>{english ? 'Discard import' : 'Descartar importación'}</Button></div>
     </div>}
-    {!candidate && <Fields value={value} onChange={onChange} english={english} educationExtra={educationExtra}/>}
+    {!candidate && <Fields value={value} onChange={onChange} english={english} legacyEducation={legacyEducation}/>}
   </fieldset>;
 }
 

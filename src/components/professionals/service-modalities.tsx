@@ -26,13 +26,13 @@ export function serviceModalities({ workplaces = [], fallbackLocation = '', vide
     w.provinciaId ? getProvinceById(w.provinciaId)?.name : '',
   ].filter(Boolean).join(', ');
 
-  // Locales: punto exacto y «Recibo clientes». Si oculta la dirección, se
-  // muestra solo su cantón; el mismo punto guardado dos veces sale una vez.
+  // Locales: punto exacto y «Recibo clientes», siempre con su dirección (si no
+  // la tiene, su cantón). El mismo punto guardado dos veces sale una vez.
   const locales = Array.from(new Map(workplaces
     .filter(w => isFixedWorkplace(w) && w.receivesClients !== false)
     .map(w => {
       const name = String(w.name ?? '').trim();
-      const address = w.showAddress !== false ? String(w.address ?? '').trim() : '';
+      const address = String(w.address ?? '').trim();
       const detail = address && address.toLowerCase() !== name.toLowerCase() ? address : areaName(w);
       return [`${w.lat},${w.lng}`, { name: name || detail, detail: name ? detail : '' }] as const;
     })
