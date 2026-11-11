@@ -1446,21 +1446,15 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                     });
                     const visibleLocal = (professional.workplaces ?? []).filter(w => typeof w.lat === 'number' && typeof w.lng === 'number' && w.receivesClients !== false);
                     const travels = (professional.workplaces ?? []).some(w => w.homeService !== false);
-                    const modalities = [visibleLocal.length ? (locale === 'en' ? 'Clients visit me at a location' : 'Recibo clientes en un lugar') : '', travels ? (locale === 'en' ? 'I travel to clients' : 'Voy donde el cliente') : '', offersVideoConsult ? (locale === 'en' ? 'I offer video calls' : 'Atiendo por videollamada') : ''].filter(Boolean);
-                    if (modalities.length) facts.push({ key: 'modalities', icon: <MapPin className="h-5 w-5"/>, label: locale === 'en' ? 'Where I offer services' : 'Dónde ofrezco mis servicios', value: modalities.join(' · ') });
-                    if (workplaceAreaLines.length > 0 || offersVideoConsult) facts.push({
-                      key: "loc", icon: <MapPin className="h-5 w-5" />,
-                      label: workplaceAreaLines.length > 1 || offersVideoConsult ? t("whereServes") : t("location"),
+                    const modalities = [visibleLocal.length ? (locale === 'en' ? 'In-person at my location' : 'Presencial en mi local') : '', travels ? (locale === 'en' ? 'At the client location' : 'A domicilio') : '', offersVideoConsult ? (locale === 'en' ? 'Video calls' : 'Videollamada') : ''].filter(Boolean);
+                    if (modalities.length || workplaceAreaLines.length > 0 || offersVideoConsult) facts.push({
+                      key: "service-location", icon: <MapPin className="h-5 w-5" />,
+                      label: locale === "en" ? "Service and location" : "Atención y ubicación",
                       value: (
                         <span className="flex flex-col gap-1">
-                          {workplaceAreaLines.map((line) => (
-                            <span key={line} className="[overflow-wrap:anywhere]">{line}</span>
-                          ))}
-                          {offersVideoConsult && (
-                            <span className="[overflow-wrap:anywhere]">
-                              {professional.coverage?.country ? t("videoConsultCountry") : t("videoConsult")}
-                            </span>
-                          )}
+                          {modalities.length > 0 && <span className="[overflow-wrap:anywhere]">{modalities.join(" · ")}</span>}
+                          {workplaceAreaLines.map((line) => <span key={line} className="[overflow-wrap:anywhere]">{line}</span>)}
+                          {offersVideoConsult && <span className="[overflow-wrap:anywhere]">{professional.coverage?.country ? t("videoConsultCountry") : t("videoConsult")}</span>}
                         </span>
                       ),
                     });

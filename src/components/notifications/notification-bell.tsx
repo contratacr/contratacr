@@ -13,7 +13,7 @@ import { localizedNotificationCopy } from "@/lib/localized-notification";
 import { cacheNotifications, readCachedNotifications, uniqueNotifications } from "@/lib/notifications-cache";
 import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
 import { PanelEmptyState } from "@/components/ui/content-loading";
-import { useActorPhotos } from "@/lib/notifications/use-actor-photos";
+import { notificationActorInitials, useActorPhotos } from "@/lib/notifications/use-actor-photos";
 import { pedirAvisos, pedirTotalSinLeer, suscribirseAAvisos } from "@/lib/notifications-live";
 import { avisosRecordados, recordarAvisos } from "@/hooks/use-avisos-por-ver";
 import { cn, formatRelativeOrDate } from "@/lib/utils";
@@ -254,7 +254,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
           <img src={fotoDe(item) as string} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
         ) : (
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full ccr-caja-icono-plana">
-            <NotificationSourceIcon type={item.type} className="h-[18px] w-[18px]" />
+            {notificationActorInitials(item) || <NotificationSourceIcon type={item.type} className="h-[18px] w-[18px]" />}
           </span>
         )}
         <span className="min-w-0 flex-1">
