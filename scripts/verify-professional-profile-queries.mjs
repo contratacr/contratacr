@@ -7,6 +7,11 @@ import ts from 'typescript';
 const source = ts.transpileModule(readFileSync(new URL('../src/lib/queries/professionals.ts', import.meta.url), 'utf8'), {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
 }).outputText;
+// The real CV normalizer (pure, import-free): profile reads must keep using it.
+const cvModel = {};
+vm.runInNewContext(ts.transpileModule(readFileSync(new URL('../src/lib/cv/model.ts', import.meta.url), 'utf8'), {
+  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+}).outputText, { exports: cvModel });
 function setup({ signedIn = false, oldSchema = false, banned = false } = {}) {
   const queries = [];
   let revision = "test";
@@ -52,6 +57,7 @@ function setup({ signedIn = false, oldSchema = false, banned = false } = {}) {
       if (name === '@/lib/text/repair-visible-text') return { repairVisibleText: value => value };
       if (name === '@/lib/cloudinary') return { cldThumb: value => value };
       if (name === '@/lib/promise-timeout') return { withPromiseTimeout: p => p };
+      if (name === '@/lib/cv/model') return cvModel;
       // Nearby ranking is used by search, not by the profile-detail queries
       // exercised here. Keep this harness isolated from catalogue/geography IO.
       if (name === '@/lib/data/languages' || name === '@/lib/search/ranking' || name === '@/lib/search/nearby') return {};
@@ -60,18 +66,24 @@ function setup({ signedIn = false, oldSchema = false, banned = false } = {}) {
   });
   return { api: exports, queries, metadata, row, revise: () => { revision = "updated"; } };
 }
-test('a cold anonymous profile uses five reads, preserves metadata and never probes protected email', async () => {
+// Live, uncached reads (docs/features/cv-import.md, 8-nov-2026): suspension, the
+// visible CV file and the current education/workplaces, so saves and removals
+// show at once. Everything else comes from the cached public profile.
+const LIVE = ['professionals:is_banned', 'professional_cv_files:professional_id', 'professionals:cv_profile, certifications, workplaces'];
+const live = queries => queries.map(q => `${q.table}:${q.columns}`).filter(k => LIVE.includes(k)).sort();
+test('a cold anonymous profile uses five cached reads plus the live ones, preserves metadata and never probes protected email', async () => {
   const s = setup(); const result = await s.api.getProfessionalBySlug('example');
-  assert.ok(result); assert.equal(s.queries.length, 5);
+  assert.ok(result); assert.equal(s.queries.length, 5 + 2);
+  assert.deepEqual(live(s.queries), [...LIVE].sort());
   assert.equal(result.portfolioItems[0].url, s.metadata.portfolio_items[0].url);
   assert.equal(result.callPhone, s.metadata.call_phone); assert.equal(result.coverage.country, true);
   assert.equal(result.certifications[0].name, 'Certification'); assert.equal(result.socialLinks.instagram, s.metadata.social_links.instagram);
   assert.equal(result.contactEmail, undefined);
 });
-test('a warm anonymous profile needs only the live suspension check', async () => {
+test('a warm anonymous profile needs only the live reads (suspension, CV file, current education)', async () => {
   const s = setup(); await s.api.getProfessionalBySlug('example'); s.queries.length = 0;
-  await s.api.getProfessionalBySlug('example'); assert.equal(s.queries.length, 1);
-  assert.equal(s.queries[0].columns, 'is_banned');
+  await s.api.getProfessionalBySlug('example'); assert.equal(s.queries.length, LIVE.length);
+  assert.deepEqual(s.queries.map(q => `${q.table}:${q.columns}`).sort(), [...LIVE].sort());
 });
 test('signed-in viewers retain contact email outside the public cache', async () => {
   const s = setup({ signedIn: true }); const result = await s.api.getProfessionalBySlug('example');

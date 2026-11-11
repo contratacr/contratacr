@@ -12,6 +12,7 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
       const info = page.locator('[data-service-modalities]');
       await expect(info.locator('[data-service-modality]')).toHaveText([/En sus locales/, /A domicilio/, /Por videollamada/]);
       await expect(info.locator('[data-service-modality="local"] li')).toHaveCount(2);
+      await expect(info.locator('[data-service-modality="local"]')).toContainText('Otra dirección de ejemplo'); // saved hidden before: shown now
       await expect(info.locator('[data-service-modality="domicilio"] li')).toHaveText(['Atenas, Alajuela', 'Heredia (toda la provincia)']);
       await expect(info.locator('[data-service-modality="video"]')).toContainText('En todo Costa Rica');
       await expect(info).not.toContainText('mi local');
@@ -29,6 +30,7 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
       await page.evaluate(() => sessionStorage.removeItem('locations'));
       await page.goto(`${base}/?editor&multi`);
       await expect(page.getByText('Elegí las zonas donde atendés.')).toHaveCount(0);
+      await expect(page.getByRole('switch', { name: /Mostrar dirección/ })).toHaveCount(0);
       await expect(page.getByRole('button', { name: /^Quitar / })).toHaveText(['', '', '']);
       await expect(page.getByRole('button', { name: 'Quitar Atenas, Alajuela' })).toHaveCount(1);
       await expect(page.getByText('Segunda sede', { exact: true })).toHaveCount(1);

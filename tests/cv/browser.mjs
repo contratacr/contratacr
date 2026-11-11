@@ -19,7 +19,9 @@ for(const [name,engine,viewport] of [['chromium-mobile',chromium,{width:390,heig
  await page.screenshot({path:`${directory}/${name}-start.png`,fullPage:true});
  await input.setInputFiles({name:'curriculum.docx',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',buffer:docx});
  const review=page.getByLabel('Revisar información importada',{exact:true});
- await expect(review).toBeVisible(); await expect(review.getByLabel('Título o curso',{exact:true})).toHaveValue('Técnico en Administración');
+ await expect(review).toBeVisible(); await expect(review.locator('[data-cv-entry]')).toHaveCount(2); await expect(review.getByLabel('Título o curso',{exact:true})).toHaveCount(0);
+ await review.getByRole('button',{name:'Editar Formación académica 1',exact:true}).click(); await expect(review.getByLabel('Título o curso',{exact:true})).toHaveValue('Técnico en Administración');
+ await review.getByRole('button',{name:'Editar Experiencia laboral 1',exact:true}).click();
  expect(await page.evaluate(()=>sessionStorage.getItem('cv-saved'))).toBeNull();
  await review.getByLabel('Empresa (opcional)',{exact:true}).fill('Empresa corregida');
  await page.screenshot({path:`directory/${name}-review.png`.replace('directory',directory),fullPage:true});
@@ -29,12 +31,16 @@ for(const [name,engine,viewport] of [['chromium-mobile',chromium,{width:390,heig
  await expect.poll(()=>page.evaluate(()=>JSON.parse(sessionStorage.getItem('cv-saved')||'{}').experience?.[0]?.organization)).toBe('Empresa corregida');
  await expect(page.locator('[data-cv-public]').getByText('Empresa corregida',{exact:false})).toBeVisible();
  await page.reload();
+ await expect(page.locator('[data-cv-editor]').getByText('Empresa corregida',{exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Editar Experiencia laboral 1',exact:true}).click();
  await expect(page.getByLabel('Empresa (opcional)',{exact:true})).toHaveValue('Empresa corregida');
  // Reimport cannot overwrite the corrected record if the original key still matches.
  await input.setInputFiles({name:'curriculum.pdf',mimeType:'application/pdf',buffer:pdfBytes});
  await expect(review).toBeVisible({timeout:25000});
- await expect(review.getByLabel('Título o curso',{exact:true})).toHaveValue('Técnico en Administración');
+ // Same title and institution with the same CV: marked, and never added twice.
+ await expect(review.getByText('Ya está en tu perfil',{exact:true})).toHaveCount(1);
  await review.getByRole('button',{name:'Descartar importación'}).click();
+ await page.getByRole('button',{name:'Editar Experiencia laboral 1',exact:true}).click();
  await expect(page.getByLabel('Empresa (opcional)',{exact:true})).toHaveValue('Empresa corregida');
  // Denied persistence must remain dirty and show the error, never a success.
  await page.evaluate(()=>sessionStorage.setItem('cv-denied','1'));

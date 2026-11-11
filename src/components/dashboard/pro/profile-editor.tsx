@@ -25,14 +25,14 @@ import { type Workplace } from "@/components/maps/workplaces-picker";
 import { PROFILE_IMAGE_OPTIONS, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 import { createClient } from "@/lib/supabase/client";
 import { detectIdType } from "@/lib/cedula";
-import { Camera, X, ChevronDown, ChevronLeft, ChevronRight, Lock, Award, Globe, Pencil } from "lucide-react";
+import { Camera, X, ChevronDown, ChevronLeft, ChevronRight, Lock, Globe, Pencil } from "lucide-react";
 import { InstagramIcon, FacebookIcon, TikTokIcon, LinkedInIcon } from "@/components/icons/social-icons";
 import { SOCIAL_NETWORKS, cleanUsername, cleanWebsiteUrl, isValidUsername, isValidWebsiteUrl, type SocialNetwork } from "@/lib/social";
 import { Link } from "@/i18n/navigation";
 import { computeSearchAreas, primaryArea } from "@/lib/location";
 import { getProvinceById, getCantonById } from "@/lib/data/cr-geography";
 import { AseguradorasInput } from "@/components/ui/aseguradoras-input";
-import { getCategoryLabel, anyHealthCategory, anyVideoConsultCategory } from "@/lib/data/categories";
+import { anyHealthCategory, anyVideoConsultCategory } from "@/lib/data/categories";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import type { Certification } from "@/components/professionals/professional-card";
 import { cn } from "@/lib/utils";
@@ -1021,10 +1021,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
 
       {/* Formación unificada; conserva las certificaciones anteriores por profesión. */}
       <Section footer={makeSectionFooter("certs")} id="certs" title={t("secCerts")} desc={t("secCertsDesc")} open={openSections.has("certs")} mobileFocused={mobileSectionFocused} onToggle={toggleSection} onActivate={setActiveDirtySection}>
-        <CvEditor professionalId={professionalId} existingEducation={certifications.map(c => ({ title: c.name, organization: c.institution || "", period: c.year || "", description: "" }))} value={cvProfile} onChange={(next) => { setCvProfile(next); touch("certs"); }} disabled={saving} educationExtra={certifications.length ? <div className="space-y-2">{certifications.map((c, index) => <div key={c.id || index} className="flex items-center gap-2 rounded-xl border border-[#e5e7eb] p-3">
-          <Award className="h-4 w-4 shrink-0 text-[#009FD9]" /><div className="min-w-0 flex-1"><p className="text-sm font-medium text-[#162543]">{c.name}</p><p className="text-xs text-[#68778d]">{[c.institution, c.year, c.profession ? getCategoryLabel(c.profession, locale) : ""].filter(Boolean).join(" · ")}</p></div>
-          <button type="button" className="flex h-11 w-11 items-center justify-center rounded-full text-[#68778d]" aria-label={t("certRemove")} onClick={() => removeCertification(c.id!, index)}><X className="h-4 w-4" /></button>
-        </div>)}</div> : undefined}/>
+        <CvEditor professionalId={professionalId} value={cvProfile} onChange={(next) => { setCvProfile(next); touch("certs"); }} disabled={saving} legacyEducation={certifications.map((c, index) => ({ entry: { title: c.name, organization: c.institution || "", period: c.year || "", description: "" }, onRemove: () => removeCertification(c.id!, index) }))}/>
 
       </Section>
 

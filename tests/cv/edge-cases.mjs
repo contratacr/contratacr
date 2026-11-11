@@ -14,7 +14,7 @@ for(const [name,engine] of [['chromium',chromium],['webkit',webkit]]) {
   await expect(review).toBeVisible();await review.getByRole('button',{name:'Add to my profile form'}).click();
   await input.setInputFiles({name:'cv.docx',mimeType:'application/octet-stream',buffer});
   await expect(review).toBeVisible();await review.getByRole('button',{name:'Add to my profile form'}).click();
-  await expect(page.getByLabel('Qualification or course',{exact:true})).toHaveCount(1);
+  await expect(page.locator('[data-cv-editor-section="education"] [data-cv-entry]')).toHaveCount(1);
   await page.getByTestId('profile-save-certs').click();
   await expect.poll(()=>page.evaluate(()=>JSON.parse(sessionStorage.getItem('cv-saved')||'{}').education?.length)).toBe(1);
   await page.reload();

@@ -155,7 +155,6 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
       {
         id: editingId || genId(),
         receivesClients: mode === "local" ? true : mode === "reference" ? false : undefined,
-        showAddress: editingId ? valueRef.current.find(w => w.id === editingId)?.showAddress : pin ? true : undefined,
         name: readable,
         homeService: mode === "reference" ? false : mode === "coverage" ? true : mode === "local" ? (editingId ? valueRef.current.find(w => w.id === editingId)?.homeService : false) : editingId ? valueRef.current.find(w => w.id === editingId)?.homeService : valueRef.current.length === 0 ? true : homeService,
         address: pin?.address || "",
@@ -349,24 +348,25 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
             <div key={wp.id} className={mode === "local" ? `bg-white px-4 py-3 ${index ? "border-t border-[#e5e7eb]" : ""}` : "rounded-xl border border-[#e5e7eb] bg-white p-4"}>
               <div className="flex items-start gap-3">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#f1f8fb] text-[#009FD9]"><MapPin size={20}/></span>
-                <div className="min-w-0 flex-1 pt-0.5">
-                  <p className="break-words text-sm font-semibold leading-5 text-[#162543]">{wp.name}</p>
+                <div className="min-w-0 flex-1">
+                  {/* EL NOMBRE COMPARTE FILA CON LAS ACCIONES; LA DIRECCIÓN NO.
+                      Con «Editar ubicación» y la X al lado de todo el texto, la
+                      dirección quedaba en una columna angosta y bajaba palabra
+                      por palabra. El nombre es corto; la dirección va debajo,
+                      con todo el ancho de la tarjeta. */}
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="min-w-0 break-words pt-2 text-sm font-semibold leading-5 text-[#162543]">{wp.name}</p>
+                    {mode === "local" && <div className="-mr-2 flex shrink-0 items-center">
+                      <button type="button" title={t("editPlace")} aria-label={t("editPlace")} className="grid h-9 w-9 place-items-center rounded-full text-[#0089bb] hover:bg-[#f1f8fb]" onClick={() => { setEditingId(wp.id); setProvince(wp.provinciaId || ''); setCanton(wp.cantonId || ''); setDraftPin(isFixedWorkplace(wp) ? { lat: wp.lat!, lng: wp.lng!, address: wp.address } : null); setShowMap(isFixedWorkplace(wp)); setAdding(true); }}><Pencil className="h-4 w-4"/></button>
+                      <button type="button" title={t("removePlace")} aria-label={`${t("removePlace")}: ${wp.name}`} className="grid h-9 w-9 place-items-center rounded-full text-[#a12828] hover:bg-red-50" onClick={() => removeWorkplace(wp.id)}><X className="h-4 w-4"/></button>
+                    </div>}
+                  </div>
                   {mode !== "coverage" && wp.address && isFixedWorkplace(wp) && <p className="mt-0.5 break-words text-[13px] leading-5 text-[#64748b]">{wp.address}</p>}
                 </div>
               </div>
-              {/* EN «RECIBO CLIENTES», LAS ACCIONES VAN ABAJO. Con «Editar
-                  ubicación» y la X al lado del nombre, la dirección quedaba en
-                  una columna angosta y bajaba palabra por palabra. Ahora el
-                  nombre y la dirección usan todo el ancho, y abajo quedan
-                  juntas la opción de mostrar la dirección y las dos acciones. */}
-              {mode === "local" && <div className="mt-2 flex items-center justify-between gap-2 border-t border-[#eef2f6] pt-1">
-                {isFixedWorkplace(wp) ? <FilaInterruptor titulo={t("showAddress")} checked={wp.showAddress !== false} onChange={showAddress => onChange(value.map(place => place.id === wp.id ? { ...place, showAddress } : place))}/> : <span/>}
-                <div className="-mr-2 flex shrink-0 items-center">
-                  <button type="button" title={t("editPlace")} aria-label={t("editPlace")} className="grid h-11 w-11 place-items-center rounded-full text-[#0089bb] hover:bg-[#f1f8fb]" onClick={() => { setEditingId(wp.id); setProvince(wp.provinciaId || ''); setCanton(wp.cantonId || ''); setDraftPin(isFixedWorkplace(wp) ? { lat: wp.lat!, lng: wp.lng!, address: wp.address } : null); setShowMap(isFixedWorkplace(wp)); setAdding(true); }}><Pencil className="h-4 w-4"/></button>
-                  <button type="button" title={t("removePlace")} aria-label={`${t("removePlace")}: ${wp.name}`} className="grid h-11 w-11 place-items-center rounded-full text-[#a12828] hover:bg-red-50" onClick={() => removeWorkplace(wp.id)}><X className="h-4 w-4"/></button>
-                </div>
-              </div>}
-              {mode !== "coverage" && mode !== "local" && isFixedWorkplace(wp) && <div className="mt-3 border-t border-[#eef2f6] pt-2"><FilaInterruptor titulo={t("showAddress")} checked={wp.showAddress !== false} onChange={showAddress => onChange(value.map(place => place.id === wp.id ? { ...place, showAddress } : place))}/></div>}
+              {/* SIN «MOSTRAR DIRECCIÓN». Un lugar donde se reciben clientes
+                  siempre muestra su dirección (y Maps/Waze): ocultarla dejaba
+                  un local al que nadie podía llegar. */}
               {mode !== "local" && <div className="mt-1 flex flex-wrap items-center gap-x-5">
                 {wp.cantonId && mode !== "coverage" && <button type="button" className="min-h-11 text-sm font-semibold text-[#0089bb]" onClick={() => { setEditingId(wp.id); setProvince(wp.provinciaId || ''); setCanton(wp.cantonId || ''); setDraftPin(isFixedWorkplace(wp) ? { lat: wp.lat!, lng: wp.lng!, address: wp.address } : null); setShowMap(isFixedWorkplace(wp)); setAdding(true); }}>{t("editPlace")}</button>}
                 <button type="button" className="min-h-11 text-sm font-medium text-[#a12828]" onClick={() => removeWorkplace(wp.id)}>{t("removePlace")}</button>

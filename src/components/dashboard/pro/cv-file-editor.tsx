@@ -55,7 +55,7 @@ export function CvFileEditor({ professionalId, selectedFile, english, onChoose, 
       <p className="break-all text-sm font-medium text-[#162543]">{selectedFile.name}</p>
       <div className="flex flex-wrap gap-2"><Button type="button" className="min-h-11" disabled={busy || reading || loading} onClick={() => void save('POST')}><Upload size={16}/>{file ? (english ? 'Replace and show CV' : 'Reemplazar y mostrar CV') : (english ? 'Attach and show CV' : 'Adjuntar y mostrar CV')}</Button><Button type="button" variant="ghost" className="min-h-11" disabled={busy || reading} onClick={onCancel}>{english ? 'Cancel' : 'Cancelar'}</Button></div>
     </div>}
-    {(busy || reading) && <p role="status" className="text-xs text-[#68778d]">{reading ? (english ? 'Reading CV…' : 'Leyendo CV…') : (english ? 'Saving CV…' : 'Guardando CV…')}</p>}
+    {busy && <p role="status" className="text-xs text-[#68778d]">{english ? 'Saving CV…' : 'Guardando CV…'}</p>}
     {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
   </div>;
 }

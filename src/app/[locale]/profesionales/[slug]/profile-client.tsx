@@ -20,7 +20,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useParams, useSearchParams } from "next/navigation";
 import {
   MapPin, Shield, ArrowLeft, Star, Briefcase, Banknote, BadgeCheck, Languages,
-  Flag, Award, SearchX, Globe, BadgePercent, Share2, Link2, ChevronRight, Bookmark,
+  Flag, SearchX, Globe, BadgePercent, Share2, Link2, ChevronRight, Bookmark,
   X, Ban,
 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
@@ -672,17 +672,6 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   const certificationsList = (professional.certifications ?? []).filter((c) => c?.name?.trim());
   const cvProfile = normalizeCv(professional.cvProfile);
   const hasCerts = certificationsList.length > 0 || hasCv(cvProfile) || !!professional.hasCvFile;
-  // Group certifications by profession (legacy untagged → principal profession).
-  const principalProfession = professional.professions?.[0] ?? professional.categoryId ?? "";
-  const certGroups = (() => {
-    const map = new Map<string, typeof certificationsList>();
-    for (const c of certificationsList) {
-      const key = c.profession || principalProfession || "";
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(c);
-    }
-    return Array.from(map.entries());
-  })();
   // A pro viewing their OWN public profile cannot request a service from themselves.
   const isOwn = !!viewerId && viewerId === professional.profileId;
 
@@ -1353,40 +1342,16 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                     </div>
                   )}</div>}
 
-                  {/* ── TAB: Formación (texto, sin imágenes) ── */}
+                  {/* ── TAB: Experiencia y formación (texto, sin imágenes) ── */}
                   {montada("certificaciones") && <div hidden={tabEfectiva !== "certificaciones"}>{hasCerts && (
-                    <div>
-                      <h2 className="text-lg font-semibold text-[#162543] mb-1">{t("tabs.certificaciones")}</h2>
-                      <p className="text-sm text-[#68778d] mb-4">{t("certsSubtitle")}</p>
-                      <CvProfileDetails professionalId={professional.id} hasFile={professional.hasCvFile} value={cvProfile} english={locale === "en"} educationExtra={certGroups.length ? (
-                      <div className="flex flex-col gap-3">
-                        {certGroups.map(([prof, certs]) => (
-                          <div key={prof || "general"}>
-                            {certGroups.length > 1 && prof && (
-                              <h3 className="text-xs font-bold uppercase tracking-wide text-[#0089bb] mb-2">{getCategoryLabel(prof, locale)}</h3>
-                            )}
-                            <div className="flex flex-col gap-2.5">
-                              {certs.map((c, i) => (
-                                <div key={c.id ?? i} className="flex items-start gap-3 rounded-xl border border-[#e5e7eb] p-3.5">
-                                  <div className="flex h-9 w-9 items-center justify-center rounded-full shrink-0 ccr-caja-icono-plana">
-                                    <Award className="h-4 w-4 text-[#009FD9]" />
-                                  </div>
-                                  <div className="min-w-0">
-                                    <p className="text-sm font-semibold text-[#162543] break-words">{c.name}</p>
-                                    {(c.institution || c.year) && (
-                                      <p className="text-xs text-[#52627a] mt-0.5 break-words">
-                                        {[c.institution, c.year].filter(Boolean).join(" · ")}
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      ) : undefined} />
-                    </div>
+                    <CvProfileDetails
+                      professionalId={professional.id}
+                      hasFile={professional.hasCvFile}
+                      value={cvProfile}
+                      english={locale === "en"}
+                      title={<h2 className="text-lg font-semibold text-[#162543]">{t("tabs.certificaciones")}</h2>}
+                      legacyEducation={certificationsList.map(c => ({ title: c.name ?? "", organization: c.institution ?? "", period: c.year ?? "", description: "" }))}
+                    />
                   )}</div>}
 
                   {/* ── TAB: Reseñas ── */}

@@ -12,8 +12,20 @@ export function normalizeCv(value: unknown): CvProfile {
   })).filter(v => v.title) : [];
   return { education: entries(raw.education), experience: entries(raw.experience), skills: Array.isArray(raw.skills) ? [...new Map(raw.skills.map(v => text(v, 80)).filter(Boolean).map(v => [keyOf(v), v])).values()].slice(0, CV_LIMITS.skills) : [] };
 }
+/**
+ * The same study or job, even if the dates or capitalisation differ: same title
+ * and same institution/employer (or one of them left blank). Re-importing a CV,
+ * or a legacy certification saved as "2021" next to the CV's "2017 – 2021",
+ * must not appear twice.
+ */
+export function sameCvEntry(a: Pick<CvEntry, 'title' | 'organization'>, b: Pick<CvEntry, 'title' | 'organization'>): boolean {
+  if (keyOf(a.title) !== keyOf(b.title)) return false;
+  const ao = keyOf(a.organization), bo = keyOf(b.organization);
+  return !ao || !bo || ao === bo;
+}
+/** Existing entries win: an import never overwrites what the professional already corrected. */
 export function mergeCv(existing: CvProfile, added: CvProfile): CvProfile {
-  const merge = (a: CvEntry[], b: CvEntry[]) => [...new Map([...b, ...a].map(v => [keyOf(`${v.title}|${v.organization}|${v.period}`), v])).values()];
+  const merge = (a: CvEntry[], b: CvEntry[]) => [...a, ...b.filter((entry, index) => !a.some(old => sameCvEntry(old, entry)) && !b.slice(0, index).some(prev => sameCvEntry(prev, entry)))];
   return normalizeCv({ education: merge(existing.education, added.education), experience: merge(existing.experience, added.experience), skills: [...added.skills, ...existing.skills] });
 }
 export const hasCv = (cv: CvProfile) => cv.education.length + cv.experience.length + cv.skills.length > 0;
