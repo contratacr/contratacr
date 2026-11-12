@@ -34,6 +34,7 @@ const approved = [
   ["cesped_sintetico", "Césped sintético"],
   ["instalaciones_y_armado_de_muebles", "Instalaciones y armado de muebles"],
   ["neuropsicologa", "Neuropsicóloga"],
+  ["elaboracion_de_curriculum", "Elaboración de currículum"],
 ].map(([id, label]) => ({ id, label, groupId: "profesional" }));
 
 test("aliases never create or publish a pending service", () => {
@@ -49,6 +50,8 @@ test("reviewed wording reaches the real service in both search and intent resolu
     ["contadora", "contabilidad"],
     ["reclutamiento y selección", "recursos_humanos"],
     ["headhunter", "recursos_humanos"],
+    ["creación de cv", "elaboracion_de_curriculum"],
+    ["crear cv", "elaboracion_de_curriculum"],
     ["fontanería", "plomeria"],
     ["técnico línea blanca", "reparacion_electrodomesticos"],
     ["construcción llave en mano", "construccion"],
