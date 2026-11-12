@@ -32,7 +32,7 @@ export const SERVICE_SEARCH_ALIASES: Record<string, string[]> = {
   sublimacion_y_personalizacion: ["personalizacion de productos", "regalos personalizados", "estampado personalizado", "personalized gifts"],
   sublimaciones: ["sublimacion", "sublimado", "sublimar camisetas", "sublimar tazas", "sublimation printing"],
   captacion_y_reuso_de_agua_de_lluvia: ["captacion pluvial", "recoleccion de agua de lluvia", "aprovechamiento de lluvia", "rainwater harvesting"],
-  elaboracion_de_curriculum: ["hacer curriculum", "redactar curriculum", "hoja de vida", "mejorar cv", "resume writing"],
+  elaboracion_de_curriculum: ["hacer curriculum", "redactar curriculum", "hoja de vida", "mejorar cv", "creacion de cv", "crear cv", "hacer cv", "redactar cv", "creacion de curriculum", "resume writing"],
   capacitacion_en_manipulacion_de_alimento: ["curso manipulacion de alimentos", "carne de manipulacion de alimentos", "carnet de manipulacion de alimentos", "manipulacion alimentos carnet digital", "food handling course"],
   yoga: ["clases de yoga", "instructor de yoga", "yoga classes"],
   invitaciones_digitales: ["invitacion digital", "invitaciones virtuales", "invitaciones para whatsapp", "digital invitations"],
