@@ -143,7 +143,7 @@ export function cartaInicial(cv: CvDocumento, vacante: { puesto?: string; empres
 // ── REVISIÓN ── lo que suele hacer que un CV se descarte, dicho en simple.
 export type Aviso = { id: string; nivel: "falta" | "mejora"; texto: Record<Idioma, string> };
 
-const VERBOS = /^(?:[•\-–]\s*)?(instal|lider|dirig|gestion|coordin|desarroll|dise[nñ]|implement|cre[eé]|logr|aument|reduj|mejor|atend|repar|constru|vend|capacit|organic|supervis|administr|optimic|negoci|plane|install|led|manag|coordinat|develop|design|implement|creat|achiev|increas|reduc|improv|serv|repair|built|sold|train|organiz|supervis|administer|optimiz|negotiat|plann)/i;
+const VERBOS = /^(?:[•\-–]\s*)?(instal|lider|dirig|gestion|coordin|desarroll|dise[nñ]|implement|cre[eé]|logr|aument|reduj|mejor|atend|repar|constru|vend|capacit|organic|supervis|administr|optimic|negoci|plane|install|led|manag|coordinat|develop|design|implement|creat|achiev|increas|reduc|improv|serv|repair|built|sold|train|organiz|supervis|administer|optimiz|negotiat|plann|integrat|defin|expand|set ?up|partner|migrat|automat|launch|deliver|defin[ií]|integr[eé]|ampli[eé]|automatic[eé]|migr[eé]|lanc[eé])/i;
 const PLACEHOLDER = /\[[^\]]+\]/;
 
 export function revisarCv(cv: CvDocumento): Aviso[] {
@@ -158,10 +158,15 @@ export function revisarCv(cv: CvDocumento): Aviso[] {
   const sinDescripcion = cv.experiencia.filter((e) => !e.description.trim());
   if (sinDescripcion.length) add("logros", "mejora", `${sinDescripcion.length === 1 ? "Una experiencia no tiene" : `${sinDescripcion.length} experiencias no tienen`} logros: contá en 2 o 3 viñetas qué hiciste.`, `${sinDescripcion.length === 1 ? "One job has" : `${sinDescripcion.length} jobs have`} no achievements: add 2–3 bullet points.`);
   const descripciones = cv.experiencia.map((e) => e.description).join("\n");
-  if (descripciones.trim() && !descripciones.split("\n").some((l) => VERBOS.test(l.trim()))) add("verbos", "mejora", "Empezá cada logro con un verbo de acción: Instalé, Lideré, Reduje…", "Start each achievement with an action verb: Installed, Led, Reduced…");
+  // «Liderazgo: Definí…» también empieza con un verbo: la etiqueta corta del
+  // principio no cuenta.
+  const sinEtiqueta = (l: string) => l.trim().replace(/^[•\-–]\s*/, "").replace(/^[^:]{1,40}:\s*/, "");
+  if (descripciones.trim() && !descripciones.split("\n").some((l) => VERBOS.test(sinEtiqueta(l)))) add("verbos", "mejora", "Empezá cada logro con un verbo de acción: Instalé, Lideré, Reduje…", "Start each achievement with an action verb: Installed, Led, Reduced…");
   if (descripciones.trim() && !/\d/.test(descripciones)) add("numeros", "mejora", "Agregá números a tus logros (30 clientes, 15 %, 2 años): hacen el CV más creíble.", "Add numbers to your achievements (30 clients, 15%, 2 years): they make your CV more credible.");
   if (cv.experiencia.some((e) => !parseCvDates(e.period)?.startYear)) add("fechas", "mejora", "Poné fecha de inicio (mes y año) en cada experiencia.", "Add a start date (month and year) to every job.");
   if (cv.habilidades.length < 4) add("habilidades", "mejora", "Agregá al menos 4 habilidades: los filtros buscan esas palabras.", "Add at least 4 skills: screening filters look for those words.");
+  // Unos 2.900 caracteres por página carta con esta plantilla.
+  if (cvComoTexto(cv).length > 5800) add("largo", "mejora", "Pasa de unas 2 páginas: dejá solo lo más relevante para el puesto.", "It runs past about 2 pages: keep only what matters most for the job.");
   if ([cv.resumen, ...cv.experiencia.map((e) => e.description)].some((t) => PLACEHOLDER.test(t))) add("corchetes", "falta", "Quedó texto entre [corchetes] por completar.", "There is [bracketed] text left to fill in.");
   return avisos;
 }
@@ -213,14 +218,21 @@ export function cvComoTexto(cv: CvDocumento): string {
   ].filter((l, i, a) => !(l === "" && a[i - 1] === "")).join("\n").trim();
 }
 
+// «Estimado equipo de selección», en minúscula a media frase; un nombre propio queda igual.
+function saludo(destinatario: string, en: boolean) {
+  const d = destinatario.trim() || (en ? "Hiring team" : "Equipo de selección");
+  return /^(equipo de selecci[oó]n|hiring team)$/i.test(d) ? d.charAt(0).toLowerCase() + d.slice(1) : d;
+}
+
 /** Desde la fecha hasta la firma: lo mismo en el PDF y en el texto copiado. */
 export function cuerpoDeLaCarta(cv: CvDocumento, carta: Carta, hoy = new Date()): string {
   const en = cv.idioma === "en";
   const fecha = hoy.toLocaleDateString(en ? "en-US" : "es-CR", { day: "numeric", month: "long", year: "numeric" });
   return [
     fecha, "",
-    [carta.destinatario, carta.empresa].filter((v) => v.trim()).join(en ? ", " : " · "), "",
-    `${en ? "Dear" : "Estimado"} ${carta.destinatario.trim() || (en ? "Hiring team" : "equipo de selección")}:`, "",
+    // El bloque del destinatario solo cuando hay empresa: sin ella repetía el saludo.
+    carta.empresa.trim() ? [carta.destinatario, carta.empresa].filter((v) => v.trim()).join("\n") : "", "",
+    `${en ? "Dear" : "Estimado"} ${saludo(carta.destinatario, en)}:`, "",
     carta.apertura.trim(), "", carta.porQueEncajo.trim(), "", carta.porQueLaEmpresa.trim(), "", carta.cierre.trim(), "",
     en ? "Sincerely," : "Saludos cordiales,", cv.nombre,
   ].filter((l, i, a) => !(l === "" && (i === 0 || a[i - 1] === ""))).join("\n").trim();
