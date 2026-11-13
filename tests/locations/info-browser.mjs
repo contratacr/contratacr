@@ -21,8 +21,12 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
       const row = page.locator('[data-social-row]');
       const boxes = await row.locator(':scope > a, [data-directions-provider] > summary').evaluateAll(els => els.map(e => [Math.round(e.getBoundingClientRect().width), Math.round(e.getBoundingClientRect().height)]));
       expect(boxes).toEqual([[36, 36], [36, 36], [36, 36]]);
-      const srcs = await row.locator('img').evaluateAll(els => els.map(e => [e.getAttribute('src'), e.naturalWidth > 0, Math.round(e.getBoundingClientRect().width)]));
-      expect(srcs).toEqual([['/brand/maps/google-maps.png', true, 20], ['/brand/waze/waze-icon.png', true, 20]]);
+      // Same 16px glyph and the same grey as the social icons (brand shape as a mask, painted with currentColor).
+      const socialColor = await row.locator(':scope > a').first().evaluate(e => getComputedStyle(e).color);
+      const glyphs = await row.locator('[data-brand-glyph]').evaluateAll(els => els.map(e => { const s = getComputedStyle(e); return [e.dataset.brandGlyph, Math.round(e.getBoundingClientRect().width), Math.round(e.getBoundingClientRect().height), s.backgroundColor, (s.maskImage || s.webkitMaskImage).includes(e.dataset.brandGlyph)]; }));
+      expect(glyphs).toEqual([['/brand/maps/google-maps.png', 16, 16, socialColor, true], ['/brand/waze/waze-glyph.png', 16, 16, socialColor, true]]);
+      await expect(row.locator('img')).toHaveCount(0);
+      for (const src of ['/brand/maps/google-maps.png', '/brand/waze/waze-glyph.png']) expect((await page.request.get(base + src)).status()).toBe(200);
       await page.screenshot({ path: `/tmp/ccr-public-workplaces/${name}-${width}-info.png`, fullPage: true });
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
 

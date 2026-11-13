@@ -6,10 +6,12 @@ import { getModerationAdmin as getApiAdmin } from "@/lib/moderation/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { getCantonById, getProvinceById } from "@/lib/data/cr-geography";
+import { emptyPublicationStats, readPublicationStats } from "@/lib/admin/publication-stats";
 
 // /api/admin/marketplace — the job board and the offers board as the owner sees
 // them: every publication with the account that created it, its status, its
-// reach (applications for jobs) and the moderation actions an admin can take.
+// reach (views and WhatsApp clicks: applications no longer exist) and the
+// moderation actions an admin can take.
 //
 //   GET  ?kind=jobs|offers&filter=all|published|paused|closed|expired|sold_out|draft&q=&page=
 //   PATCH { kind, id, status }   — pause, republish, close or expire a publication
@@ -29,6 +31,7 @@ type JobRow = {
   id: string;
   employer_id: string | null;
   title: string | null;
+  description: string | null;
   status: string | null;
   employment_type: string | null;
   workplace_type: string | null;
@@ -45,13 +48,13 @@ type JobRow = {
   service_category_id: string | null;
   created_at: string;
   updated_at: string | null;
-  job_applications?: { count: number }[] | null;
 };
 
 type OfferRow = {
   id: string;
   professional_id: string | null;
   title: string | null;
+  description: string | null;
   status: string | null;
   offer_type: string | null;
   service_label: string | null;
@@ -107,11 +110,11 @@ export async function GET(request: Request) {
   const listRes = kind === "jobs"
     ? await readAllAdminRows((from, to) => db
       .from("job_posts")
-      .select("id, employer_id, title, status, employment_type, workplace_type, provincia_id, canton_id, location_label, salary_min, salary_max, salary_period, currency, show_salary, openings, application_deadline, service_category_id, created_at, updated_at, job_applications(count)")
+      .select("id, employer_id, title, description, status, employment_type, workplace_type, provincia_id, canton_id, location_label, salary_min, salary_max, salary_period, currency, show_salary, openings, application_deadline, service_category_id, created_at, updated_at")
       .order("created_at", { ascending: false }).order("id").range(from, to))
     : await readAllAdminRows((from, to) => db
       .from("professional_offers")
-      .select("id, professional_id, title, status, offer_type, service_label, service_category_id, image_urls, price_now, price_before, currency, price_unit, location_label, valid_until, quantity_available, created_at, updated_at")
+      .select("id, professional_id, title, description, status, offer_type, service_label, service_category_id, image_urls, price_now, price_before, currency, price_unit, location_label, valid_until, quantity_available, created_at, updated_at")
       .order("created_at", { ascending: false }).order("id").range(from, to));
 
   if (listRes.error) {
@@ -133,11 +136,11 @@ export async function GET(request: Request) {
     const creator = creatorOf(creators.get(("employer_id" in row ? row.employer_id : row.professional_id) ?? ""));
     const category = row.service_category_id ? getCategoryLabel(row.service_category_id) : null;
     if ("employer_id" in row) {
-      const applications = Array.isArray(row.job_applications) ? Number(row.job_applications[0]?.count ?? 0) : 0;
       return {
         kind: "job" as const,
         id: row.id,
         title: row.title ?? "Sin título",
+        description: row.description ?? "",
         status: row.status ?? "draft",
         moderationHidden:heldIds.has(row.id),
         category,
@@ -147,7 +150,6 @@ export async function GET(request: Request) {
         salary: row.show_salary === false ? null : { min: row.salary_min, max: row.salary_max, period: row.salary_period, currency: row.currency ?? "CRC" },
         openings: row.openings ?? 1,
         deadline: row.application_deadline,
-        applications,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
         creator,
@@ -158,6 +160,7 @@ export async function GET(request: Request) {
       kind: "offer" as const,
       id: row.id,
       title: row.title ?? "Sin título",
+      description: row.description ?? "",
       status: row.status ?? "draft",
       moderationHidden:heldIds.has(row.id),
       category: category ?? row.service_label,
@@ -188,10 +191,17 @@ export async function GET(request: Request) {
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const current = Math.min(page, pages);
   const start = (current - 1) * PAGE_SIZE;
+  const pageItems = filtered.slice(start, start + PAGE_SIZE);
+  // Solo las de esta página: el panel nunca pide las de todo el historial.
+  const stats = await readPublicationStats(db, kind === "jobs" ? "job" : "offer", pageItems.map((item) => item.id));
+  if (stats.error) {
+    console.error(`[admin/marketplace] stats ${kind}`, stats.error.message);
+    return NextResponse.json({ error: "No se pudieron contar los clics de contacto." }, { status: 500 });
+  }
 
   return NextResponse.json({
     kind,
-    items: filtered.slice(start, start + PAGE_SIZE),
+    items: pageItems.map((item) => ({ ...item, stats: stats.data.get(item.id) ?? emptyPublicationStats() })),
     counts,
     pagination: { page: current, pageSize: PAGE_SIZE, total, pages },
   });

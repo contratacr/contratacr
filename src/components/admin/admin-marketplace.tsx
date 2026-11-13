@@ -8,6 +8,8 @@ import { AdminFilterTabs } from "@/components/admin/admin-filter-tabs";
 import { useAdminAutoRefresh } from "@/hooks/use-admin-auto-refresh";
 import { useCachedResource } from "@/hooks/use-cached-resource";
 import { cn, getInitials } from "@/lib/utils";
+import { EditPublicationButton, PublicationEditor, PublicationStatsLine } from "@/components/admin/admin-publication-tools";
+import type { PublicationStats } from "@/lib/admin/publication-stats";
 
 type Creator = {
   id: string;
@@ -32,7 +34,6 @@ type JobItem = {
   salary: { min: number | null; max: number | null; period: string | null; currency: string } | null;
   openings: number;
   deadline: string | null;
-  applications: number;
   createdAt: string;
   updatedAt: string | null;
   creator: Creator | null;
@@ -57,7 +58,7 @@ type OfferItem = {
   href: string;
 };
 
-type Item = (JobItem | OfferItem) & {moderationHidden?:boolean};
+type Item = (JobItem | OfferItem) & { moderationHidden?: boolean; description?: string; stats?: PublicationStats };
 type Pagination = { page: number; pageSize: number; total: number; pages: number };
 
 const JOB_FILTERS = [
@@ -194,6 +195,7 @@ export function AdminMarketplace({ kind }: { kind: "jobs" | "offers" }) {
   const { items, counts, pagination } = listing;
   const [busy, setBusy] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -342,8 +344,8 @@ export function AdminMarketplace({ kind }: { kind: "jobs" | "offers" }) {
                     )}
                     <p className="mt-1 text-[11px] text-[#68778d]">
                       Creada {fmtDate(item.createdAt)}{item.updatedAt && item.updatedAt !== item.createdAt ? ` · actualizada ${fmtDate(item.updatedAt)}` : ""} · ID {item.id.slice(0, 8)}
-                      {item.kind === "job" ? ` · ${item.applications} ${item.applications === 1 ? "postulación" : "postulaciones"}` : ""}
                     </p>
+                    <PublicationStatsLine stats={item.stats} />
                   </div>
                 </div>
                 <div className="min-w-0 rounded-xl border border-[#e5e7eb] bg-white p-3">
@@ -354,6 +356,7 @@ export function AdminMarketplace({ kind }: { kind: "jobs" | "offers" }) {
                   <Link href={item.href} className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-[#e5e7eb] px-3 text-xs font-semibold text-[#374151] hover:bg-[#f9fafb]">
                     <ExternalLink className="h-3.5 w-3.5" /> Ver publicación
                   </Link>
+                  {!item.moderationHidden && <EditPublicationButton disabled={busy === item.id} onClick={() => setEditingId(editingId === item.id ? null : item.id)} />}
                   {actionsFor(item).map((action) => (
                     <button
                       key={action.status}
@@ -378,6 +381,22 @@ export function AdminMarketplace({ kind }: { kind: "jobs" | "offers" }) {
                   </button>
                   <Link className="text-xs underline" href={`/admin/reportes?targetType=${item.kind}&targetId=${item.id}`}>Historial y restauración</Link>
                 </div>
+                {editingId === item.id && (
+                  <div className="lg:col-span-3">
+                    <PublicationEditor
+                      kind={item.kind}
+                      id={item.id}
+                      title={item.title}
+                      description={item.description ?? ""}
+                      onCancel={() => setEditingId(null)}
+                      onSaved={(value) => {
+                        setEditingId(null);
+                        setNotice(null);
+                        setListing((current) => ({ ...current, items: current.items.map((entry) => (entry.id === item.id ? { ...entry, ...value, updatedAt: new Date().toISOString() } : entry)) }));
+                      }}
+                    />
+                  </div>
+                )}
               </li>
             ))}
           </ul>

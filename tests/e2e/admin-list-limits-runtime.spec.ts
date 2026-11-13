@@ -13,7 +13,7 @@ function load(path: string, mocks: Record<string, any> = {}) {
 }
 const paging = load("src/lib/admin/read-all-rows.ts");
 const geography = load("src/lib/data/cr-geography.ts");
-function setup(size = 1203, options: { authorized?: boolean; failTable?: string; failAfter?: number } = {}) {
+function setup(size = 1203, options: { authorized?: boolean; failTable?: string; failAfter?: number; heldTable?: string } = {}) {
   const now = new Date(Date.now() - 3600_000).toISOString();
   const base = Array.from({ length: size }, (_, i) => ({ id: `id-${String(i).padStart(6,"0")}`, created_at: now, name: i === size-1 ? "needle-last" : `Item ${i}` }));
   const tables: Record<string, any[]> = {
@@ -34,11 +34,12 @@ function setup(size = 1203, options: { authorized?: boolean; failTable?: string;
     provider_verification_log: [], provider_appeals: [], user_action_audit: [],
   };
   const db = { from(table: string) {
-    const filters: ((r: any) => boolean)[] = []; let start=0, end=999, single=false, counted=false, head=false;
+    const filters: ((r: any) => boolean)[] = []; let start=0, end=999, single=false, counted=false, head=false; let patch: any=null;
     const value = (r: any, key: string) => key.includes("->>") ? r[key.split("->>")[0]]?.[key.split("->>")[1]] : r[key];
     const q: any = {
       select: (_s: string, opts?: any) => { counted=!!opts?.count;head=!!opts?.head;return q; },
       order: () => q,
+      update: (v: any) => { patch=v; return q; },
       range: (from: number, to: number) => { start=from;end=Math.min(to,from+999);return q; },
       limit: (n: number) => { start=0;end=Math.min(n,1000)-1;return q; },
       eq: (key: string, v: any) => {filters.push(r=>value(r,key)===v);return q;},
@@ -50,6 +51,7 @@ function setup(size = 1203, options: { authorized?: boolean; failTable?: string;
       single: () => {single=true;return q;},maybeSingle: () => {single=true;return q;},
       then(resolve: any) {
         const selected=(tables[table]??[]).filter(r=>filters.every(f=>f(r)));
+        if(patch){const blocked=options.heldTable===table;if(!blocked)selected.forEach(r=>Object.assign(r,patch));return Promise.resolve({data:null,error:blocked?{message:"held",code:"42501"}:null}).then(resolve);}
         const fail=options.failTable===table && start>=(options.failAfter??0);
         return Promise.resolve({data:fail||head?null:single?selected[0]??null:selected.slice(start,end+1),count:counted?selected.length:null,error:fail?{message:"Database unavailable",code:"57014"}:null}).then(resolve);
       },
@@ -61,6 +63,11 @@ function setup(size = 1203, options: { authorized?: boolean; failTable?: string;
       return (key:string)=>messages[namespace][key];
     }},
     "@/lib/admin/read-all-rows":paging,
+    "@/lib/admin/publication-stats":load("src/lib/admin/publication-stats.ts",{"@/lib/admin/read-all-rows":paging}),
+    "@/lib/admin/publication-edit":load("src/lib/admin/publication-edit.ts"),
+    "@/lib/audit/user-action":{auditUserAction:async(_db:any,_req:any,input:any)=>{tables.user_action_audit.push(input);}},
+    "@/lib/prefijo-de-idioma":{rutasDeCache:(locale:string,path:string)=>[`/${locale}${path}`]},
+    "next/cache":{revalidatePath:()=>{}},
     "@/lib/analytics/self-interaction":load("src/lib/analytics/self-interaction.ts"),
     "@/lib/analytics/contact-segments":load("src/lib/analytics/contact-segments.ts"),
     "@/lib/auth/admin":{getApiAdmin:async()=>options.authorized===false?null:{id:"admin"}},
@@ -154,7 +161,7 @@ for (const locale of ["es","en"]) test(`overview pending count deduplicates revi
 test("project contact counts include every matching event beyond the first page",async()=>{
   const s=setup();s.tables.interaction_events.forEach(row=>{row.event_type='project_lead_whatsapp';row.metadata={project_id:'id-000000'};});
   const data=await (await s.route('projects').GET(new Request('https://example.test/api/admin/projects'))).json();
-  expect(data.projects.find((row:any)=>row.id==='id-000000').contactos).toBe(1203);
+  expect(data.projects.find((row:any)=>row.id==='id-000000').stats.whatsapp.clicks).toBe(1203);
 });
 test("admin edit history is complete beyond the former 50-row cutoff",async()=>{
   const s=setup();s.tables.user_action_audit=s.tables.profiles.map(row=>({...row,entity_owner_user_id:'owner',action:'admin_edit_user_data',actor_user_id:null}));
@@ -252,4 +259,65 @@ test('own profile exclusion preserves legitimate project replies and quotes in a
   expect(report.insights.week.projectLeads.now).toBe(1);
   expect(report.insights.week.quotes.now).toBe(1);
   expect(report.contactBreakdown.allTime.projects.clicks).toBe(1);
+});
+
+test("job and offer rows show WhatsApp clicks, distinct people and views instead of applications",async()=>{
+  const s=setup(3);
+  let n=0;const ev=(event_type:string,metadata:any,visitor_hash:string)=>({id:`ev-${n++}`,event_type,metadata,visitor_hash,created_at:new Date().toISOString()});
+  s.tables.interaction_events=[
+    ev('whatsapp_click',{jobId:'id-000000'},'a'),ev('whatsapp_click',{jobId:'id-000000'},'a'),ev('whatsapp_click',{jobId:'id-000000'},'b'),
+    ev('job_view',{jobId:'id-000000'},'c'),ev('whatsapp_click',{offerId:'id-000000'},'d'),ev('whatsapp_click',{},'e'),
+    ev('offer_view',{offerId:'id-000001'},'f'),ev('whatsapp_click',{offerId:'id-000001'},'f'),
+  ];
+  const jobs=await(await s.route('marketplace').GET(new Request('https://example.test/api/admin/marketplace?kind=jobs'))).json();
+  const job=jobs.items.find((r:any)=>r.id==='id-000000');
+  expect(job.applications).toBeUndefined();
+  expect(job.stats).toEqual({views:1,whatsapp:{clicks:3,people:2},phone:{clicks:0,people:0}});
+  expect(jobs.items.find((r:any)=>r.id==='id-000001').stats.whatsapp.clicks).toBe(0);
+  const offers=await(await s.route('marketplace').GET(new Request('https://example.test/api/admin/marketplace?kind=offers'))).json();
+  expect(offers.items.find((r:any)=>r.id==='id-000000').stats.whatsapp).toEqual({clicks:1,people:1});
+  expect(offers.items.find((r:any)=>r.id==='id-000001').stats).toEqual({views:1,whatsapp:{clicks:1,people:1},phone:{clicks:0,people:0}});
+});
+
+test("project rows count WhatsApp and phone contacts and views under both metadata keys",async()=>{
+  const s=setup(2);
+  s.tables.interaction_events=[
+    {id:'p1',event_type:'project_lead_whatsapp',metadata:{project_id:'id-000001'},viewer_user_id:'pro-1'},
+    {id:'p2',event_type:'project_lead_whatsapp',metadata:{project_id:'id-000001'},viewer_user_id:'pro-2'},
+    {id:'p3',event_type:'project_lead_phone',metadata:{project_id:'id-000001'},viewer_user_id:'pro-1'},
+    {id:'p4',event_type:'project_view',metadata:{projectId:'id-000001'},visitor_hash:'v'},
+  ];
+  const data=await(await s.route('projects').GET(new Request('https://example.test/api/admin/projects'))).json();
+  expect(data.projects.find((r:any)=>r.id==='id-000001').stats).toEqual({views:1,whatsapp:{clicks:2,people:2},phone:{clicks:1,people:1}});
+});
+
+const editRequest=(body:any,origin='https://example.test')=>new Request('https://example.test/api/admin/publication-edit',{method:'PATCH',headers:{'Content-Type':'application/json',origin},body:JSON.stringify(body)});
+const jobId='00000000-0000-4000-8000-000000000001';
+test("an administrator corrects a job title and the change is audited with the previous text",async()=>{
+  const s=setup(1);
+  s.tables.job_posts=[{id:jobId,title:'Ayudannte',description:'Se busca ayudante para obra en Alajuela, jornada completa.',employer_id:'id-000000',status:'published'}];
+  const route=s.route('publication-edit');
+  const res=await route.PATCH(editRequest({kind:'job',id:jobId,title:'  Ayudante   de construcción ',description:s.tables.job_posts[0].description}));
+  expect(res.status).toBe(200);
+  expect(await res.json()).toMatchObject({id:jobId,title:'Ayudante de construcción'});
+  expect(s.tables.job_posts[0].title).toBe('Ayudante de construcción');
+  const audit=s.tables.user_action_audit.at(-1);
+  expect(audit).toMatchObject({action:'job.admin_edit',entityTable:'job_posts',entityId:jobId,entityOwnerUserId:'id-000000',beforeData:{title:'Ayudannte'},afterData:{title:'Ayudante de construcción'}});
+});
+test("publication edits are validated, restricted to moderators and refused for held content",async()=>{
+  const s=setup(1);
+  s.tables.job_posts=[{id:jobId,title:'Ayudannte',description:'Se busca ayudante para obra en Alajuela, jornada completa.',employer_id:'id-000000'}];
+  const route=s.route('publication-edit');
+  const ok={kind:'job',id:jobId,title:'Ayudante de construcción',description:s.tables.job_posts[0].description};
+  expect((await route.PATCH(editRequest({...ok,title:'A'}))).status).toBe(400);
+  expect((await route.PATCH(editRequest({...ok,description:'corta'}))).status).toBe(400);
+  expect((await route.PATCH(editRequest({...ok,kind:'review'}))).status).toBe(400);
+  expect((await route.PATCH(editRequest({...ok,id:'no-es-uuid'}))).status).toBe(400);
+  expect((await route.PATCH(editRequest(ok,'https://evil.test'))).status).toBe(403);
+  expect((await route.PATCH(editRequest({...ok,id:'00000000-0000-4000-8000-000000000009'}))).status).toBe(404);
+  expect(s.tables.job_posts[0].title).toBe('Ayudannte');
+  expect((await setup(1,{authorized:false}).route('publication-edit').PATCH(editRequest(ok))).status).toBe(403);
+  const held=setup(1,{heldTable:'job_posts'});held.tables.job_posts=[{...s.tables.job_posts[0]}];
+  expect((await held.route('publication-edit').PATCH(editRequest(ok))).status).toBe(409);
+  expect(held.tables.user_action_audit).toHaveLength(0);
 });

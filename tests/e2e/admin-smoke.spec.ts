@@ -226,12 +226,19 @@ test.describe("@admin surfaces", () => {
       expect((await admin.from("professional_offers").select("id").eq("id",offerId).single()).data?.id).toBe(offerId);
       await expectHealthyPage(page);
 
-      // Empleos: the seeded SG job lists its creator and the application count.
+      // Empleos: the seeded SG job lists its creator, its WhatsApp clicks and views
+      // (applications no longer exist) and can be edited from the row.
       await gotoOK(page, "/admin/empleos");
       await expectVisibleText(page.locator("body"), /en esta vista/);
       await page.getByPlaceholder(/Título, servicio, ubicación, creador o correo/).filter({ visible: true }).first().fill("Redes Bahía");
       await expect(page.locator("li").filter({ hasText: "Redes Bahía" }).first()).toBeVisible();
-      await expect(page.getByText(/postulaci(?:ón|ones)/).first()).toBeVisible();
+      const jobRow = page.locator("li").filter({ hasText: "Redes Bahía" }).first();
+      await expect(jobRow.getByText(/clics? a WhatsApp/)).toBeVisible();
+      await expect(jobRow.getByText(/postulaci(?:ón|ones)/)).toHaveCount(0);
+      await jobRow.getByRole("button", { name: "Editar texto" }).click();
+      await expect(jobRow.locator("[data-publication-editor] input[name=title]")).not.toHaveValue("");
+      await jobRow.getByRole("button", { name: "Cancelar" }).click();
+      await expect(jobRow.locator("[data-publication-editor]")).toHaveCount(0);
       await expectHealthyPage(page);
 
       // Cobertura: services with supply, every province, a canton by search.
