@@ -143,6 +143,7 @@ function sortResults(results: SearchResult[], sortBy: string) {
  * Qué tan puntual es la cobertura de un profesional para la zona que se pidió.
  * 3 = marcó ese cantón (o vive ahí, o tiene un local ahí), 2 = cubre toda la
  * provincia, 1 = cubre todo el país, 0 = llega por otra vía (videoconsulta).
+ * Buscando solo una provincia: 3 = está en ella, 2 = la cubre entera, 1 = país.
  *
  * Desempata perfiles con la misma evidencia de calidad para que quien trabaja
  * en el cantón aparezca antes que quien cubre una zona más amplia.
@@ -167,9 +168,18 @@ function localityTier(pro: SearchResult, filters: SearchFiltersResolved) {
       // provincia: si no, en una búsqueda por provincia caía por debajo de
       // quien solo marcó "todo el país".
       || provincia.cantons.some((c) => pro.coverage?.cantones?.includes(c.name))
-      || workplaces.some((w) => w.provinciaId === provincia.id || w.provinceId === provincia.id || w.name?.includes(provincia.name) || w.address?.includes(provincia.name));
-    // Sin cantón elegido, cubrir la provincia es lo más puntual que hay.
-    if (enLaProvincia) return canton ? 2 : 3;
+      || workplaces.some((w) => w.provinciaId === provincia.id || w.provinceId === provincia.id || w.name?.includes(provincia.name) || w.address?.includes(provincia.name)
+        || (!!w.cantonId && provincia.cantons.some((c) => c.id === w.cantonId)));
+    if (enLaProvincia && canton) return 2;
+    // Buscando solo la provincia, el mismo orden que dice la tarjeta: quien
+    // ESTÁ en ella (vive ahí, o tiene un lugar o un cantón suyo dentro) va
+    // antes que quien solo marcó «toda la provincia», y este antes que el país.
+    if (enLaProvincia) {
+      const estaEnElla = pro.provinceName === provincia.name
+        || provincia.cantons.some((c) => pro.coverage?.cantones?.includes(c.name))
+        || workplaces.some((w) => !!w.cantonId && provincia.cantons.some((c) => c.id === w.cantonId));
+      return estaEnElla ? 3 : 2;
+    }
   }
   return pro.coverage?.country ? 1 : 0;
 }

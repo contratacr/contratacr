@@ -24,6 +24,19 @@ test("a named-place search puts verified professionals ahead when nobody has rev
     .toEqual(["verified-local", "verified-province", "unverified-local"]);
 });
 
+test("a province search: in it, then the whole province, then the country, as the card reads", () => {
+  const national = candidate("national", { verificationStatus: "verified", provinceName: "San José", coverage: { country: true, provincias: [], cantones: [] } });
+  const wholeProvince = candidate("whole-province", { verificationStatus: "verified", provinceName: "Alajuela", coverage: { country: false, provincias: ["Heredia"], cantones: [] } });
+  const inBelen = candidate("in-belen", { verificationStatus: "verified", provinceName: "Alajuela", workplaces: [{ id: "w1", name: "Taller", cantonId: "he-be" }] } as unknown as Partial<SearchResult>);
+  const livesThere = candidate("lives-there", { verificationStatus: "verified", cantonName: "Barva", provinceName: "Heredia" });
+  const filters = { sortBy: "rating", selectedProvinceId: "he" } as SearchFiltersResolved;
+  expect(ordenFinal([national, wholeProvince, inBelen, livesThere], filters).map(pro => pro.id))
+    .toEqual(["in-belen", "lives-there", "whole-province", "national"]);
+  // Las reseñas siguen mandando por encima de la zona.
+  const reviewedNational = { ...national, id: "reviewed-national", ratingAvg: 5, reviewCount: 8 };
+  expect(ordenFinal([inBelen, reviewedNational], filters)[0].id).toBe("reviewed-national");
+});
+
 test("real reviews lead; verification resolves equal review evidence", () => {
   const verifiedNoReviews = candidate("verified-new", { verificationStatus: "verified" });
   const verifiedOneReview = candidate("verified-one", { verificationStatus: "verified", ratingAvg: 5, reviewCount: 1 });

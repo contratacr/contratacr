@@ -6,7 +6,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import { normalizeText } from "@/lib/data/categories";
 import { PROVINCES, getCantonById } from "@/lib/data/cr-geography";
-import { baseDelProfesional, rotuloDeCobertura } from "@/lib/search/rotulo-de-cobertura";
+import { rotuloDeCobertura } from "@/lib/search/rotulo-de-cobertura";
 import { useTranslations } from "next-intl";
 import { MapPin, Video } from "lucide-react";
 import { SelfActionModal, SELF_MSG } from "./self-action-modal";
@@ -127,32 +127,31 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
     const lugarBuscado = searchedPlace?.cantonName
       ? [searchedPlace.cantonName, searchedPlace.provinceName].filter(Boolean).join(", ")
       : searchedPlace?.provinceName?.trim() || "";
-    // Si el profesional YA tiene ese cantón entre sus lugares, la cobertura
-    // amplia se queda con su propio nombre: si no, la fila mostraba dos veces
-    // «Atenas, Alajuela» —el lugar de verdad y la provincia re-rotulada— y
-    // parecía un error.
+    // ¿ESTÁ en la zona buscada? Un lugar suyo de UN cantón dentro de ella (el
+    // cantón buscado, o cualquiera de la provincia buscada) o, si no, el cantón
+    // de su perfil. Entonces la tarjeta dice ese lugar («Belén, Heredia») y no
+    // la cobertura amplia, que solo se usa para quien no está en la zona.
+    const enLaZona = (cantonId: string | undefined) => {
+      if (!cantonId) return false;
+      if (searchedPlace?.cantonId) return cantonId === searchedPlace.cantonId;
+      return !!searchedPlace?.provinceId && getCantonById(cantonId)?.provinceId === searchedPlace.provinceId;
+    };
+    const normal = (texto: string | undefined) => normalizeText(texto ?? "").trim();
     const yaAtiendeElCanton = !!lugarBuscado && (professional.workplaces ?? []).some((w) => {
-      const lugar = w as { cantonId?: string; name?: string };
-      return (!!searchedPlace?.cantonId && lugar.cantonId === searchedPlace.cantonId)
-        || (lugar.name?.trim() ?? "") === lugarBuscado;
+      const lugar = w as { cantonId?: string; level?: string; name?: string };
+      return (enLaZona(lugar.cantonId) && (!lugar.level || lugar.level === "canton")) || (lugar.name?.trim() ?? "") === lugarBuscado;
     });
-    // DÓNDE ESTÁ arriba, HASTA DÓNDE LLEGA debajo en gris (rotulo-de-cobertura.ts).
-    const base = baseDelProfesional(
-      professional.workplaces as { receivesClients?: boolean; level?: string; cantonId?: string }[] | undefined,
-      { canton: professional.cantonName, provincia: professional.provinceName },
-      (id) => {
-        const canton = getCantonById(id);
-        return canton ? { canton: canton.name, provincia: PROVINCES.find((p) => p.id === canton.provinceId)?.name ?? "" } : undefined;
-      },
-    );
-    // En línea: el servicio admite videollamada y la ofrece. Un contador que
-    // cubre «todo el país» no llega a la casa: la nota lo dice.
-    const enLinea = videoConsultApplies && !!professional.videoconsulta;
-    const rotuloDeCoberturaAqui = (pais: boolean, provincia: string) => rotuloDeCobertura(t, { pais, base, enLinea, provincia, cantonBuscado: searchedPlace?.cantonName, lugarBuscado });
+    // Sin lugar propio en la zona, pero su perfil dice que vive en ella.
+    const perfilEnLaZona = !!lugarBuscado && !yaAtiendeElCanton && !!professional.cantonName?.trim() && (searchedPlace?.cantonName
+      ? normal(professional.cantonName) === normal(searchedPlace.cantonName)
+      : normal(professional.provinceName) === normal(searchedPlace?.provinceName));
+    // Una sola regla, tres rótulos (decisión de Isaac, 13-nov-2026):
+    //   está en la zona → su lugar · cubre la provincia → «Provincia de X» ·
+    //   cubre el país → «Todo Costa Rica».
+    let cobertura: { id: string; lugar: string; pais: boolean } | null = null;
+    let fijo: string | null = null;
     const amplios = new Set<string>();
     const primero = new Map<string, string>();
-    const notas = new Map<string, string>();
-    let cobertura: { id: string; lugar: string; nota: string } | null = null;
     for (const w of professional.workplaces ?? []) {
       if (w.receivesClients === false && w.homeService === false) continue;
       const rawLabel = (w as { label?: unknown }).label;
@@ -166,34 +165,39 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
         && ((!!searchedPlace?.provinceId && lugar.provinciaId === searchedPlace.provinceId) || (!!searchedPlace?.provinceName && label.includes(searchedPlace.provinceName)));
       const cubreElPaisYBuscaronLugar = !!lugarBuscado && cubrePaisEntero(lugar, label);
       if (!isVideoWorkplace && !yaAtiendeElCanton && (cubreLaProvinciaBuscada || cubreElPaisYBuscaronLugar)) {
-        // Decir LAS DOS COSAS: que llega al lugar buscado, y desde qué
-        // cobertura. «Atenas, Alajuela» a secas presentaba como vecino a
-        // quien cubre cuatro provincias desde San Ramón; «Toda la provincia
-        // de Alajuela» a secas obligaba al cliente a deducir si Atenas entra.
-        // En Atenas, 23 de 27 tarjetas eran de cobertura, no del cantón.
-        // Buscando solo una provincia, la cobertura de esa provincia se queda
-        // con el nombre de la provincia, que ya dice todo.
-        // Una sola fórmula para toda la lista: de dónde viene y cómo llega.
-        cobertura ??= { id, ...rotuloDeCoberturaAqui(cubreElPaisYBuscaronLugar, searchedPlace?.provinceName || "") };
+        // La provincia gana al país: es lo más puntual que calza.
+        if (!cobertura || (cobertura.pais && !cubreElPaisYBuscaronLugar)) {
+          cobertura = { id, pais: cubreElPaisYBuscaronLugar, lugar: rotuloDeCobertura(t, { pais: cubreElPaisYBuscaronLugar, provincia: searchedPlace?.provinceName || "" }) };
+        }
         continue;
       }
       if (!isVideoWorkplace && (cubreProvinciaEntera(lugar, label) || cubrePaisEntero(lugar, label))) amplios.add(id);
       map.set(id, label);
     }
     if (lugarBuscado && !yaAtiendeElCanton && !cobertura && professional.coverage?.country) {
-      cobertura = { id: "pais", ...rotuloDeCoberturaAqui(true, searchedPlace?.provinceName || "") };
+      cobertura = { id: "pais", pais: true, lugar: rotuloDeCobertura(t, { pais: true, provincia: "" }) };
+    }
+    if (perfilEnLaZona && cobertura) {
+      cobertura = { ...cobertura, lugar: searchedPlace?.cantonName ? lugarBuscado : [professional.cantonName, professional.provinceName].filter(Boolean).join(", ") };
     }
     if (cobertura) {
-      // Si su base ya es uno de sus lugares («San Ramón, Alajuela»), la nota va
-      // en ese mismo lugar: dos renglones iguales parecerían un error.
-      const mismo = Array.from(map.keys()).find((id) => map.get(id)?.trim().toLocaleLowerCase() === cobertura!.lugar.trim().toLocaleLowerCase());
-      const id = mismo ?? cobertura.id;
-      primero.set(id, mismo ? map.get(mismo)! : cobertura.lugar);
-      if (cobertura.nota) notas.set(id, cobertura.nota);
+      // Si ese rótulo ya es uno de sus lugares, se usa ese: dos iguales parecerían un error.
+      const mismo = Array.from(map.keys()).find((id) => normal(map.get(id)) === normal(cobertura!.lugar));
+      fijo = mismo ?? cobertura.id;
+      primero.set(fijo, mismo ? map.get(mismo)! : cobertura.lugar);
     }
-    // Sin zona buscada, la base va primero: «San Ramón, Alajuela +3» dice más
-    // que «Todo Costa Rica +1». Lo concreto delante, la cobertura amplia detrás.
-    if (!lugarBuscado && amplios.size) {
+    // Con zona buscada, sus lugares DENTRO de ella van antes que los de fuera.
+    if (lugarBuscado && !fijo) {
+      const dentro = new Set((professional.workplaces ?? [])
+        .filter((w) => enLaZona((w as { cantonId?: string }).cantonId) || (w.name?.trim() ?? "") === lugarBuscado)
+        .map((w) => w.id));
+      const ordenados = [...map].sort(([a], [b]) => Number(dentro.has(b)) - Number(dentro.has(a)));
+      map.clear();
+      for (const [id, label] of ordenados) map.set(id, label);
+    }
+    // Lo concreto delante, la cobertura amplia detrás: «Belén, Heredia +1»
+    // dice más que «Todo Costa Rica +1», con o sin zona buscada.
+    if (amplios.size) {
       const ordenados = [...map].sort(([a], [b]) => Number(amplios.has(a)) - Number(amplios.has(b)));
       map.clear();
       for (const [id, label] of ordenados) map.set(id, label);
@@ -205,7 +209,8 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
     if (videoConsultApplies && (professional.videoconsulta || professional.coverage?.country) && !hasVideoOption) {
       map.set("videoconsulta", videoLabel);
     }
-    return Array.from(map, ([id, label]): { id: string; label: string; nota?: string } => ({ id, label, nota: notas.get(id) }));
+    // `fijo`: el rótulo de la regla manda; ningún reordenamiento lo saca del frente.
+    return Array.from(map, ([id, label]) => ({ id, label, fijo: id === fijo }));
   }, [professional.cantonName, professional.provinceName, professional.coverage?.country, professional.workplaces, professional.videoconsulta, searchedPlace, t, videoConsultApplies]);
 
   const visibleLocationOptions = useMemo(() => {
@@ -260,7 +265,7 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
   const coincideConLaBusqueda = useMemo(() => {
     if (zonasBuscadas.length === 0) return () => false;
     return (option: { id: string; label: string }) => {
-      if ((option as { nota?: string }).nota) return true;
+      if ((option as { fijo?: boolean }).fijo) return true;
       const texto = normalizeText(`${option.label} ${locAddress(option.id)}`);
       return zonasBuscadas.some((parte) => texto.includes(parte));
     };
@@ -268,7 +273,8 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
   }, [zonasBuscadas, professional.workplaces]);
 
   const locTabsOrdenados = useMemo(() => {
-    if (locTabs.length <= 2 || zonasBuscadas.length === 0) return locTabs;
+    // Ahora la fila muestra UNA zona: con dos ya importa cuál va primero.
+    if (locTabs.length <= 1 || zonasBuscadas.length === 0) return locTabs;
     const cerca = locTabs.filter(coincideConLaBusqueda);
     if (cerca.length === 0) return locTabs;
     return [...cerca, ...locTabs.filter((option) => !cerca.some((c) => c.id === option.id))];
@@ -278,7 +284,6 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
   // La fila es una sola línea informativa —la zona principal y cuántas más
   // hay—; la lista completa vive en Información.
   const zonasRestantes = Math.max(0, primaryLocationTabs.length - 1);
-  const notaDeCobertura = (primaryLocationTabs[0] as { nota?: string } | undefined)?.nota ?? "";
   const zonaPrincipalEsVideo = primaryLocationTabs[0]?.id === "videoconsulta"
     || (!hasRealLoc && videoConsultApplies && !!(professional.videoconsulta || professional.coverage?.country));
   // Address under the tabs: follow the selected tab. If a workplace has no exact
@@ -315,8 +320,7 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
             línea: la zona se recorta con «…» antes que el precio, que pesa
             más en la decisión (8-oct-2026). */}
           <div data-testid="professional-card-location-row" className="flex min-w-0 items-center gap-3">
-          <div className={alLadoDeLaZona ? "min-w-0 flex-1" : "min-w-0"}>
-          <p className={`flex min-w-0 items-center gap-x-1.5 gap-y-1 text-[12px] font-semibold leading-5 text-[#6b7280] ${alLadoDeLaZona ? "flex-nowrap" : "flex-wrap"}`} aria-label={t("location")}>
+          <p className={`flex min-w-0 items-center gap-x-1.5 gap-y-1 text-[12px] font-semibold leading-5 text-[#6b7280] ${alLadoDeLaZona ? "flex-1 flex-nowrap" : "flex-wrap"}`} aria-label={t("location")}>
             <span className="inline-flex min-w-0 items-center gap-1">
               {zonaPrincipalEsVideo ? <Video className="h-3 w-3 shrink-0" /> : <MapPin className="h-3 w-3 shrink-0" />}
               <span className={alLadoDeLaZona ? "min-w-0 truncate" : "min-w-0"}>{locTabLabel(primaryLocationTabs[0].label)}</span>
@@ -350,14 +354,6 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
               )
             )}
           </p>
-          {/* Hasta dónde llega quien cubre una provincia o el país: un renglón
-              aparte, más chico y en gris, alineado con el texto del lugar. */}
-          {notaDeCobertura && (
-            <p data-testid="professional-card-coverage-note" className="truncate pl-4 text-[11px] font-medium leading-4 text-[#8b95a5]">
-              {notaDeCobertura}
-            </p>
-          )}
-          </div>
           {alLadoDeLaZona}
           </div>
       </div>
