@@ -19017,7 +19017,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 304,
+          "line": 309,
           "tag": "div",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(e) => e.stopPropagation()}",
@@ -19025,7 +19025,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 335,
+          "line": 339,
           "tag": "button",
           "label": "{t(\"moreZones\", { count: zonasRestantes })}",
           "handler": "{onVerZonas}",
@@ -19034,8 +19034,7 @@
         }
       ],
       "testIds": [
-        "professional-card-location-row",
-        "professional-card-coverage-note"
+        "professional-card-location-row"
       ],
       "relatedSpecs": [
         "tests/e2e/search-results.spec.ts",
@@ -28636,19 +28635,11 @@
       "file": "tests/e2e/rotulo-de-cobertura.spec.ts",
       "cases": [
         {
-          "line": 20,
-          "title": "\"la base sale del local; sin local, del perfil; sin nada, ninguna\""
+          "line": 14,
+          "title": "\"provincia y país\""
         },
         {
-          "line": 30,
-          "title": "\"el nombre de la base no repite la provincia\""
-        },
-        {
-          "line": 36,
-          "title": "\"cada caso: lugar arriba, cobertura debajo\""
-        },
-        {
-          "line": 54,
+          "line": 22,
           "title": "\"inglés\""
         }
       ]
@@ -28782,10 +28773,14 @@
         },
         {
           "line": 27,
+          "title": "\"a province search: in it, then the whole province, then the country, as the card reads\""
+        },
+        {
+          "line": 40,
           "title": "\"real reviews lead; verification resolves equal review evidence\""
         },
         {
-          "line": 44,
+          "line": 57,
           "title": "\"coordinates do not override rating unless nearby order is selected\""
         }
       ]

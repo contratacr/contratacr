@@ -55,7 +55,7 @@ try{for(const lang of ['es','en'])for(const view of ['completionGuide','services
   if(view==='workplacesGuide')return [
    ()=>page.locator('[data-field="location"]'),
    async()=>{await choose(es?'Provincia':'Province','Alajuela');await choose(es?'Cantón':'Canton','Atenas');return page.locator('[data-field="location"]');},
-   async()=>{await page.getByRole('button',{name:es?'Agregar este lugar':'Add this place',exact:true}).click();const field=page.getByRole('switch').first();if(await field.getAttribute('aria-checked')==='false')await field.click();return field;},
+   async()=>{await page.getByRole('button',{name:es?'Guardar lugar':'Save location',exact:true}).click();const field=page.getByRole('switch').first();if(await field.getAttribute('aria-checked')==='false')await field.click();return field;},
    ()=>page.getByRole('button',{name:es?'Guardar cambios':'Save changes',exact:true}).last(),
   ];
   if(view==='clientProjects')return [
