@@ -60,6 +60,7 @@ const handlerRules = [
   [/^\/api\/(?:register|cedula|cedula-available|add-cedula|verify-identity)(?:\/|$)/, "product-contract.spec.ts"],
   [/^\/api\/(?:appeals|report|client\/connections)(?:\/|$)/, "interaction-surfaces.spec.ts"],
   [/^\/api\/(?:check-availability|professionals|buscar)(?:\/|$)/, "search-results.spec.ts"],
+  [/^\/api\/professional-cv$/, "professional-cv-runtime.spec.ts"],
   [/^\/api\/analytics\/professional-ready$/, "meta-growth-runtime.spec.ts"],
   [/^\/api\/(?:analytics|attribution|translate|client-error)(?:\/|$)/, "product-contract.spec.ts"],
   [/^\/api\/health$/, "health.spec.ts"],

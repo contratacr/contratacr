@@ -82,6 +82,7 @@ const handlerRules: OwnershipRule[] = [
   { match: /^\/api\/(?:register|cedula|cedula-available|add-cedula|verify-identity)(?:\/|$)/, owner: "product-contract.spec.ts" },
   { match: /^\/api\/(?:appeals|report|client\/connections)(?:\/|$)/, owner: "interaction-surfaces.spec.ts" },
   { match: /^\/api\/(?:check-availability|professionals|buscar)(?:\/|$)/, owner: "search-results.spec.ts" },
+  { match: /^\/api\/professional-cv$/, owner: "professional-cv-runtime.spec.ts" },
   { match: /^\/api\/analytics\/professional-ready$/, owner: "meta-growth-runtime.spec.ts" },
   { match: /^\/api\/(?:analytics|attribution|translate|client-error)(?:\/|$)/, owner: "product-contract.spec.ts" },
   { match: /^\/api\/health$/, owner: "health.spec.ts" },
