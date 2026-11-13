@@ -6,6 +6,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import { normalizeText } from "@/lib/data/categories";
 import { PROVINCES, getCantonById } from "@/lib/data/cr-geography";
+import { baseDelProfesional, rotuloDeCobertura } from "@/lib/search/rotulo-de-cobertura";
 import { useTranslations } from "next-intl";
 import { MapPin, Video } from "lucide-react";
 import { SelfActionModal, SELF_MSG } from "./self-action-modal";
@@ -135,6 +136,13 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
       return (!!searchedPlace?.cantonId && lugar.cantonId === searchedPlace.cantonId)
         || (lugar.name?.trim() ?? "") === lugarBuscado;
     });
+    // DESDE DÓNDE VIENE y cómo llega: una sola fórmula (rotulo-de-cobertura.ts).
+    const base = baseDelProfesional(professional.workplaces as { receivesClients?: boolean; level?: string; cantonId?: string }[] | undefined, professional.cantonName, (id) => getCantonById(id)?.name);
+    // En línea: el servicio admite videollamada y la ofrece. Un contador que
+    // cubre «todo el país» no llega a la casa; decirlo «desde Heredia» engaña.
+    const enLinea = videoConsultApplies && !!professional.videoconsulta;
+    const rotuloDeCoberturaAqui = (pais: boolean, provincia: string) => rotuloDeCobertura(t, { pais, base, enLinea, provincia, cantonBuscado: searchedPlace?.cantonName, lugarBuscado });
+    const amplios = new Set<string>();
     const primero = new Map<string, string>();
     for (const w of professional.workplaces ?? []) {
       if (w.receivesClients === false && w.homeService === false) continue;
@@ -156,20 +164,25 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
         // En Atenas, 23 de 27 tarjetas eran de cobertura, no del cantón.
         // Buscando solo una provincia, la cobertura de esa provincia se queda
         // con el nombre de la provincia, que ya dice todo.
-        const rotulo = cubreElPaisYBuscaronLugar
-          ? t("atiendeEnPais", { lugar: searchedPlace?.cantonName || searchedPlace?.provinceName || "" })
-          : searchedPlace?.cantonName
-            ? t("atiendeEnProvincia", { lugar: searchedPlace.cantonName })
-            : lugarBuscado;
+        // Una sola fórmula para toda la lista: de dónde viene y cómo llega.
+        const rotulo = rotuloDeCoberturaAqui(cubreElPaisYBuscaronLugar, searchedPlace?.provinceName || "");
         const repetido = Array.from(primero.values()).includes(rotulo)
           || Array.from(map.values()).includes(rotulo);
         if (!primero.size && !repetido) primero.set(id, rotulo);
         continue;
       }
+      if (!isVideoWorkplace && (cubreProvinciaEntera(lugar, label) || cubrePaisEntero(lugar, label))) amplios.add(id);
       map.set(id, label);
     }
     if (lugarBuscado && !yaAtiendeElCanton && !primero.size && professional.coverage?.country) {
-      primero.set("pais", t("atiendeEnPais", { lugar: searchedPlace?.cantonName || searchedPlace?.provinceName || "" }));
+      primero.set("pais", rotuloDeCoberturaAqui(true, searchedPlace?.provinceName || ""));
+    }
+    // Sin zona buscada, la base va primero: «San Ramón, Alajuela +3» dice más
+    // que «Todo Costa Rica +1». Lo concreto delante, la cobertura amplia detrás.
+    if (!lugarBuscado && amplios.size) {
+      const ordenados = [...map].sort(([a], [b]) => Number(amplios.has(a)) - Number(amplios.has(b)));
+      map.clear();
+      for (const [id, label] of ordenados) map.set(id, label);
     }
     for (const [id, label] of Array.from(map)) { if (!primero.has(id)) primero.set(id, label); }
     map.clear();
@@ -179,8 +192,7 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
       map.set("videoconsulta", videoLabel);
     }
     return Array.from(map, ([id, label]) => ({ id, label }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [professional.coverage?.country, professional.workplaces, professional.videoconsulta, searchedPlace, t, videoConsultApplies]);
+  }, [professional.cantonName, professional.coverage?.country, professional.workplaces, professional.videoconsulta, searchedPlace, t, videoConsultApplies]);
 
   const visibleLocationOptions = useMemo(() => {
     if ((forceContactOnly || restrictToPreferredLocation) && preferredLocationId) {

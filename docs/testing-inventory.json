@@ -8,7 +8,7 @@
     "handlers": 116,
     "components": 285,
     "hooks": 28,
-    "specs": 193
+    "specs": 195
   },
   "dashboardTabs": [
     "home",
@@ -19017,7 +19017,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 276,
+          "line": 288,
           "tag": "div",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(e) => e.stopPropagation()}",
@@ -19025,7 +19025,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 306,
+          "line": 318,
           "tag": "button",
           "label": "{t(\"moreZones\", { count: zonasRestantes })}",
           "handler": "{onVerZonas}",
@@ -25633,23 +25633,23 @@
       "file": "tests/e2e/app-surface-ownership.spec.ts",
       "cases": [
         {
-          "line": 98,
+          "line": 99,
           "title": "\"every page route is owned by an active or explicitly parked regression surface\""
         },
         {
-          "line": 105,
+          "line": 106,
           "title": "\"every route handler has a regression owner\""
         },
         {
-          "line": 112,
+          "line": 113,
           "title": "\"the default web suite only excludes temporary drafts, parked chat and the app-only shell\""
         },
         {
-          "line": 128,
+          "line": 129,
           "title": "\"the CI ownership script and this contract share the same rules\""
         },
         {
-          "line": 141,
+          "line": 142,
           "title": "\"GitHub result verification rejects retries and skips\""
         }
       ]
@@ -28049,6 +28049,15 @@
       ]
     },
     {
+      "file": "tests/e2e/professional-cv-runtime.spec.ts",
+      "cases": [
+        {
+          "line": 11,
+          "title": "\"CV compartido: la ruta /api/professional-cv cumple su contrato\""
+        }
+      ]
+    },
+    {
       "file": "tests/e2e/professional-data-matrix.spec.ts",
       "cases": [
         {
@@ -28619,6 +28628,23 @@
         {
           "line": 60,
           "title": "\"abrir el enlace pide confirmar; solo «Confirmar» anota\""
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/rotulo-de-cobertura.spec.ts",
+      "cases": [
+        {
+          "line": 17,
+          "title": "\"la base sale del local; sin local, del perfil; sin nada, vacía\""
+        },
+        {
+          "line": 25,
+          "title": "\"cada caso de la tabla\""
+        },
+        {
+          "line": 38,
+          "title": "\"inglés\""
         }
       ]
     },
