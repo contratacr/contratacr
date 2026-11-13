@@ -2,11 +2,11 @@
   "scope": "Todos los archivos TypeScript de src/app, src/components y src/hooks, controles JSX declarados, pestañas del panel y specs permanentes. No enumera cada elemento dinámico renderizado ni componentes dentro de dependencias.",
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
-    "files": 535,
-    "controls": 1399,
+    "files": 537,
+    "controls": 1407,
     "pages": 73,
-    "handlers": 115,
-    "components": 283,
+    "handlers": 116,
+    "components": 284,
     "hooks": 28,
     "specs": 192
   },
@@ -4728,6 +4728,31 @@
       "priority": "P0"
     },
     {
+      "file": "src/app/api/admin/publication-edit/route.ts",
+      "kind": "API / handler",
+      "group": "Administración",
+      "route": "/api/admin/publication-edit",
+      "exports": [
+        "PATCH"
+      ],
+      "methods": [
+        "PATCH"
+      ],
+      "controls": [],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/admin-smoke.spec.ts",
+        "tests/e2e/admin-bottom-nav.spec.ts",
+        "tests/e2e/admin-editar-datos.spec.ts",
+        "tests/e2e/admin-campaigns-policy.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "API + integración BD + autorización/propiedad + idempotencia; smoke solo lectura",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P0"
+    },
+    {
       "file": "src/app/api/admin/reports/route.ts",
       "kind": "API / handler",
       "group": "Administración",
@@ -9083,7 +9108,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 144,
+          "line": 145,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -9091,7 +9116,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 292,
+          "line": 294,
           "tag": "input",
           "label": "\"Título, servicio, ubicación, creador o correo\"",
           "handler": "{(event) => setQ(event.target.value)}",
@@ -9099,7 +9124,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 302,
+          "line": 304,
           "tag": "AdminFilterTabs",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(next) => { setFilter(next); setPage(1); }}",
@@ -9107,7 +9132,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 324,
+          "line": 326,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -9115,7 +9140,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 354,
+          "line": 356,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -9123,7 +9148,15 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 358,
+          "line": 359,
+          "tag": "EditPublicationButton",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{() => setEditingId(editingId === item.id ? null : item.id)}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 361,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => void setStatus(item, action.status)}",
@@ -9131,7 +9164,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 371,
+          "line": 374,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => void remove(item)}",
@@ -9139,7 +9172,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 379,
+          "line": 382,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -9147,7 +9180,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 391,
+          "line": 410,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setPage((p) => Math.max(1, p - 1))}",
@@ -9155,7 +9188,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 395,
+          "line": 414,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setPage((p) => p + 1)}",
@@ -9522,7 +9555,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 117,
+          "line": 119,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -9530,7 +9563,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 261,
+          "line": 264,
           "tag": "input",
           "label": "\"Titulo, cliente, profesional, servicio, identificacion o ubicacion\"",
           "handler": "{(event) => setQ(event.target.value)}",
@@ -9538,10 +9571,18 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 272,
+          "line": 275,
           "tag": "AdminFilterTabs",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{changeFilter}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 350,
+          "tag": "EditPublicationButton",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{() => setEditingId(editingId === project.id ? null : project.id)}",
           "destination": "",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
@@ -9570,7 +9611,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 387,
+          "line": 400,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setPage((current) => Math.max(1, current - 1))}",
@@ -9578,10 +9619,84 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 399,
+          "line": 412,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setPage((current) => Math.min(pagination.pages, current + 1))}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        }
+      ],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/admin-smoke.spec.ts",
+        "tests/e2e/admin-bottom-nav.spec.ts",
+        "tests/e2e/admin-editar-datos.spec.ts",
+        "tests/e2e/admin-campaigns-policy.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P0"
+    },
+    {
+      "file": "src/components/admin/admin-publication-tools.tsx",
+      "kind": "Componente",
+      "group": "Administración",
+      "route": null,
+      "exports": [
+        "PublicationStatsLine",
+        "PublicationEditor",
+        "EditPublicationButton"
+      ],
+      "methods": [],
+      "controls": [
+        {
+          "line": 81,
+          "tag": "form",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{(event) => { event.preventDefault(); void save(); }}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 84,
+          "tag": "input",
+          "label": "\"title\"",
+          "handler": "{(event) => setDraft({ ...draft, title: event.target.value })}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 88,
+          "tag": "textarea",
+          "label": "\"description\"",
+          "handler": "{(event) => setDraft({ ...draft, description: event.target.value })}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 93,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{onCancel}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 94,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 104,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{onClick}",
           "destination": "",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         }
@@ -19483,7 +19598,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 19,
+          "line": 23,
           "tag": "a",
           "label": "{`${name}: ${locations[0].name || (english ? 'Get directions' : 'Cómo llegar')}`}",
           "handler": "",
@@ -19491,7 +19606,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 23,
+          "line": 27,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -24708,88 +24823,104 @@
       "file": "tests/e2e/admin-list-limits-runtime.spec.ts",
       "cases": [
         {
-          "line": 81,
+          "line": 88,
           "title": "`${route} list includes every match beyond the default cap and agrees with its counter`"
         },
         {
-          "line": 87,
+          "line": 94,
           "title": "\"report pages and total reach beyond 1000 without truncating the queue\""
         },
         {
-          "line": 94,
+          "line": 101,
           "title": "\"all support messages remain available beyond the database cap\""
         },
         {
-          "line": 101,
+          "line": 108,
           "title": "\"review search can find older reviews after 500 and 1000 records\""
         },
         {
-          "line": 105,
+          "line": 112,
           "title": "`${kind} filters and pages use all records`"
         },
         {
-          "line": 109,
+          "line": 116,
           "title": "\"coverage includes every matching professional beyond its old 300-row cutoff\""
         },
         {
-          "line": 112,
+          "line": 119,
           "title": "\"administrative publication lists distinguish active moderation holds from ordinary pauses\""
         },
         {
-          "line": 125,
+          "line": 132,
           "title": "\"overview contacts and analytics search quality include events after 1000\""
         },
         {
-          "line": 130,
+          "line": 137,
           "title": "\"users and projects no longer stop silently at 10000 rows\""
         },
         {
-          "line": 134,
+          "line": 141,
           "title": "\"a failed later page produces an error instead of a misleading partial list\""
         },
         {
-          "line": 137,
+          "line": 144,
           "title": "\"complete queue reads remain restricted to administrators\""
         },
         {
-          "line": 142,
+          "line": 149,
           "title": "`overview pending count deduplicates reviews and translates client labels (${locale})`"
         },
         {
-          "line": 154,
+          "line": 161,
           "title": "\"project contact counts include every matching event beyond the first page\""
         },
         {
-          "line": 159,
+          "line": 166,
           "title": "\"admin edit history is complete beyond the former 50-row cutoff\""
         },
         {
-          "line": 165,
+          "line": 172,
           "title": "\"overview and reports separate employment from services beyond the default page cap\""
         },
         {
-          "line": 178,
+          "line": 185,
           "title": "\"admin and self interactions are excluded while uncertain history remains visible separately\""
         },
         {
-          "line": 192,
+          "line": 199,
           "title": "\"contact segmentation stays admin-only and missing hire history is not shown as zero\""
         },
         {
-          "line": 201,
+          "line": 208,
           "title": "'admin history includes old events without relabeling 7/30-day contacts'"
         },
         {
-          "line": 226,
+          "line": 233,
           "title": "'@contract admin all-time RPCs preserve permissions and retained history'"
         },
         {
-          "line": 231,
+          "line": 238,
           "title": "'activity history accepts all-time only behind the existing admin gate'"
         },
         {
-          "line": 243,
+          "line": 250,
           "title": "'own profile exclusion preserves legitimate project replies and quotes in all-time reports'"
+        },
+        {
+          "line": 264,
+          "title": "\"job and offer rows show WhatsApp clicks, distinct people and views instead of applications\""
+        },
+        {
+          "line": 282,
+          "title": "\"project rows count WhatsApp and phone contacts and views under both metadata keys\""
+        },
+        {
+          "line": 296,
+          "title": "\"an administrator corrects a job title and the change is audited with the previous text\""
+        },
+        {
+          "line": 307,
+          "title": "\"publication edits are validated, restricted to moderators and refused for held content\""
         }
       ]
     },
@@ -25000,31 +25131,31 @@
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 323,
+          "line": 330,
           "title": "\"admin deletes support cases, reports and whole accounts, and a renamed service shows everywhere\""
         },
         {
-          "line": 324,
+          "line": 331,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 405,
+          "line": 412,
           "title": "\"verification badge matches every account shown in the pending queue\""
         },
         {
-          "line": 406,
+          "line": 413,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 429,
+          "line": 436,
           "title": "\"the verification queue records who was already written to by WhatsApp\""
         },
         {
-          "line": 430,
+          "line": 437,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 439,
+          "line": 446,
           "title": "!target"
         }
       ]

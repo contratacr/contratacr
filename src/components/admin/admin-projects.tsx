@@ -8,6 +8,8 @@ import { useAdminAutoRefresh } from "@/hooks/use-admin-auto-refresh";
 import { useCachedResource } from "@/hooks/use-cached-resource";
 import { cn, getInitials } from "@/lib/utils";
 import { formatId } from "@/lib/cedula";
+import { EditPublicationButton, PublicationEditor, PublicationStatsLine } from "@/components/admin/admin-publication-tools";
+import type { PublicationStats } from "@/lib/admin/publication-stats";
 
 type AdminProject = {
   id: string;
@@ -31,7 +33,7 @@ type AdminProject = {
   for_someone_else: boolean;
   beneficiary_name: string | null;
   beneficiary_dob: string | null;
-  contactos: number;
+  stats?: PublicationStats;
   client: {
     id: string | null;
     name: string | null;
@@ -177,6 +179,7 @@ export function AdminProjects() {
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [publicandoId, setPublicandoId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   // Un proyecto abierto de antes del tablero no lo ve NADIE hoy: bajo la regla
   // vieja lo veían los profesionales de su oficio en «Oportunidades», y esa
   // pestaña ya no existe. Esto le devuelve audiencia, con el alcance mayor que
@@ -242,7 +245,7 @@ export function AdminProjects() {
           <ClipboardList className="h-5 w-5 text-[#009FD9]" />
           <div>
             <h1 className="text-xl font-bold text-[#162543]">Proyectos</h1>
-            <p className="mt-0.5 text-sm text-[#6b7280]">Proyectos publicados por clientes. Los profesionales responden por WhatsApp..</p>
+            <p className="mt-0.5 text-sm text-[#6b7280]">Proyectos publicados por clientes. Los profesionales los contactan por WhatsApp o llamada.</p>
           </div>
         </div>
         {!loading && (
@@ -329,11 +332,7 @@ export function AdminProjects() {
                       </div>
                       <div className="min-w-0">
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Contactos</p>
-                        <p className="mt-0.5 text-sm font-semibold text-[#162543]">
-                          {project.contactos === 0
-                            ? "Nadie le ha escrito"
-                            : `${project.contactos} profesional${project.contactos === 1 ? "" : "es"} le escribió por WhatsApp`}
-                        </p>
+                        <PublicationStatsLine stats={project.stats} showPhone />
                         {project.accepted_professional ? (
                           <>
                             <p className="mt-1 truncate text-xs text-[#6b7280]">Aceptada:</p>
@@ -346,8 +345,9 @@ export function AdminProjects() {
                         )}
                         <p className="mt-1 text-xs text-[#68778d]">Creada: {fmtDateTime(project.created_at)} · ID: {project.id.slice(0, 8)}</p>
                       </div>
-                      <div className="sm:col-span-2 lg:col-span-1 xl:col-span-2">
+                      <div className="flex flex-wrap items-center gap-2 sm:col-span-2 lg:col-span-1 xl:col-span-2">
                         {project.moderationHidden&&<p className="text-xs font-semibold text-red-800">Retirado por moderación</p>}
+                        {!project.moderationHidden && <EditPublicationButton disabled={deletingId === project.id} onClick={() => setEditingId(editingId === project.id ? null : project.id)} />}
                         {project.status === "open" && !project.allow_direct_contact && !project.moderationHidden && (
                           <button
                             type="button"
@@ -371,6 +371,19 @@ export function AdminProjects() {
                       </div>
                     </div>
                   </div>
+                  {editingId === project.id && (
+                    <PublicationEditor
+                      kind="project"
+                      id={project.id}
+                      title={project.title}
+                      description={project.description ?? ""}
+                      onCancel={() => setEditingId(null)}
+                      onSaved={(value) => {
+                        setEditingId(null);
+                        setListing((current) => ({ ...current, items: current.items.map((item) => (item.id === project.id ? { ...item, ...value, updated_at: new Date().toISOString() } : item)) }));
+                      }}
+                    />
+                  )}
                 </li>
               );
             })}

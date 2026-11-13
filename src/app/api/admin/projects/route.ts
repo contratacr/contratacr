@@ -5,6 +5,7 @@ import { auditUserAction } from "@/lib/audit/user-action";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { getCantonById, getProvinceById } from "@/lib/data/cr-geography";
+import { emptyPublicationStats, readPublicationStats } from "@/lib/admin/publication-stats";
 
 type ProposalSummary = {
   id: string;
@@ -168,25 +169,11 @@ export async function GET(req: Request) {
   const start = (page - 1) * pageSize;
   // CUÁNTOS LE ESCRIBIERON, no cuántas propuestas recibió. Las propuestas se
   // retiraron: el panel mostraba «0 total» en todos los proyectos porque ya
-  // nadie las crea. Hoy el profesional contacta por WhatsApp y eso sí queda
-  // registrado, con el proyecto en la metadata del evento.
-  const contactosPorProyecto = new Map<string, number>();
-  {
-    const idsPagina = filtered.slice(start, start + pageSize).map((row) => row.id as string);
-    if (idsPagina.length) {
-      const { data: contactos, error: contactError } = await readAllAdminRows((from, to) => db
-        .from("interaction_events")
-        .select("metadata")
-        .eq("event_type", "project_lead_whatsapp")
-        .in("metadata->>project_id", idsPagina)
-        .order("id").range(from, to));
-      if (contactError) return NextResponse.json({ error: "No se pudo contar los contactos." }, { status: 500 });
-      for (const fila of contactos ?? []) {
-        const pid = (fila.metadata as { project_id?: string } | null)?.project_id;
-        if (pid && idsPagina.includes(pid)) contactosPorProyecto.set(pid, (contactosPorProyecto.get(pid) ?? 0) + 1);
-      }
-    }
-  }
+  // nadie las crea. Hoy el profesional contacta por WhatsApp (o lo llama) y
+  // eso sí queda registrado, con el proyecto en la metadata del evento. Mismo
+  // conteo que empleos y promociones: clics, personas distintas y vistas.
+  const stats = await readPublicationStats(db, "project", filtered.slice(start, start + pageSize).map((row) => row.id as string));
+  if (stats.error) return NextResponse.json({ error: "No se pudo contar los contactos." }, { status: 500 });
   const items = filtered.slice(start, start + pageSize).map((row) => {
     const accepted = row.accepted_professional_id ? professionalMap.get(row.accepted_professional_id) : null;
     return {
@@ -211,7 +198,7 @@ export async function GET(req: Request) {
       for_someone_else: row.for_someone_else === true,
       beneficiary_name: row.beneficiary_name,
       beneficiary_dob: row.beneficiary_dob,
-      contactos: contactosPorProyecto.get(row.id as string) ?? 0,
+      stats: stats.data.get(row.id as string) ?? emptyPublicationStats(),
       client: {
         id: row.client_id,
         name: row.profiles?.full_name || row.client_name_snapshot || "Cliente",
