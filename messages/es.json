@@ -990,6 +990,7 @@
       "saved": "Mis favoritos",
       "notifications": "Notificaciones",
       "guides": "Guías",
+      "cv": "Mi CV",
       "soporte": "Soporte",
       "cuenta": "Cuenta y seguridad",
       "privacidad": "Privacidad"
@@ -1389,7 +1390,8 @@
       "notifications": "Todo lo que pasó en tu cuenta.",
       "soporte": "Abre un caso y te respondemos aquí.",
       "cuenta": "Tu correo, tu contraseña y tu cuenta.",
-      "guides": "Cómo usar ContrataCR paso a paso."
+      "guides": "Cómo usar ContrataCR paso a paso.",
+      "cv": "Arma tu CV y tu carta de presentación con lo que ya está en tu perfil."
     },
     "profileSections": {
       "verificationDesc": "Identidad y estado de verificación.",
@@ -3298,14 +3300,16 @@
       "phone": "por llamada",
       "email": "por correo"
     },
-    "titulo": "Contactaste a {nombre} {metodo}",
-    "pregunta": "¿Llegaste a contratarlo?",
+    "titulo": "¿Contrataste a {nombre}?",
     "pendientes": "1 de {n} confirmaciones pendientes",
-    "ayuda": "Tu experiencia puede ayudar a otras personas a elegir.",
     "si": "Sí, dejar una reseña",
-    "aunNo": "Aún no lo decido",
+    "aunNo": "Preguntame después",
     "no": "No lo contraté",
-    "sinRespuesta": "No me respondió"
+    "sinRespuesta": "No me respondió",
+    "comoContactaste": "Lo contactaste {metodo}",
+    "graciasTitulo": "Gracias por avisarnos",
+    "graciasCuerpo": "Lo tomamos en cuenta. ¿Buscamos a otra persona para {servicio}?",
+    "verOtros": "Ver otros profesionales"
   },
   "tarjetaSocial": {
     "pie": "Ofrece y encuentra servicios en Costa Rica.",

@@ -20,8 +20,9 @@ import { useSearchParams } from "next/navigation";
 import {
   User, Award, Wrench,
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, ArrowLeft, ArrowRight, ChevronDown, ChevronRight, Sparkles, AlertCircle, MessageSquareMore, Home, LogOut, Users, CheckCircle2, FileText, Search, Camera, Eye, Trash2, Loader2,
-  BriefcaseBusiness, Star, ReceiptText, ExternalLink, Share2, BookOpen, ChartNoAxesColumn,
+  BriefcaseBusiness, Star, ReceiptText, ExternalLink, Share2, BookOpen, ChartNoAxesColumn, FileUser,
   } from "lucide-react";
+import { CvBuilder } from "@/components/dashboard/cv-builder";
 import { StatisticsPanel } from "@/components/dashboard/statistics/statistics-panel";
 import { QuotesSection, cargarCotizaciones } from "@/components/quotes/quotes-section";
 import { SectionBoundary } from "@/components/dashboard/section-boundary";
@@ -93,7 +94,7 @@ type Tab =
   | "home" | "profile" | "services" | "photos" | "quotes" | "verificacion"
   | "jobs" | "offers" | "publicaciones" | "completion"
   | "sent_projects" | "applications" | "saved" | "connections"
-  | "chat" | "notifications" | "soporte" | "cuenta" | "guides" | "statistics";
+  | "chat" | "notifications" | "soporte" | "cuenta" | "guides" | "statistics" | "cv";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProData = Record<string, any>;
@@ -104,7 +105,7 @@ type ProData = Record<string, any>;
 const ALL_TABS = new Set<Tab>([
   "home", "profile", "services", "photos", "quotes", "verificacion",
   "jobs", "offers", "publicaciones", "completion", "sent_projects", "applications", "saved", "connections",
-  "chat", "notifications", "soporte", "cuenta", "guides", "statistics",
+  "chat", "notifications", "soporte", "cuenta", "guides", "statistics", "cv",
 ]);
 
 const TAB_ICONS: Record<Tab, React.ReactNode> = {
@@ -124,6 +125,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   soporte: <Headset className="h-4 w-4" />,
   cuenta: <Settings className="h-4 w-4" />,
   guides: <FileText className="h-4 w-4" />,
+  cv: <FileUser className="h-4 w-4" />,
   jobs: <BriefcaseBusiness className="h-4 w-4" />,
   offers: <OfferTagPercentIcon className="h-4 w-4" />,
   publicaciones: <OfferTagPercentIcon className="h-4 w-4" />,
@@ -135,7 +137,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
 // 1024px para arriba y a media pantalla el subtítulo desaparecía.
 const TABS_WITH_SUBTITLE = new Set<Tab>([
   "verificacion", "completion",
-  "applications", "saved", "connections", "notifications", "cuenta", "guides",
+  "applications", "saved", "connections", "notifications", "cuenta", "guides", "cv",
 ]);
 
 // Las que faltan —sent_projects, soporte, photos, offers, jobs, quotes y
@@ -167,9 +169,9 @@ const USE_ONLY = new Set<Tab>([]);
 // «Servicios» vive dentro de «Mi perfil», que es donde se ven; empleos y
 // promociones comparten «Mis publicaciones», que es lo mismo: algo que publico.
 const OFFER_TABS: Tab[] = ([
-  "sent_projects", "jobs", "offers", "quotes", "photos", "services", "statistics", "profile", "saved", "soporte", "guides",
+  "sent_projects", "jobs", "offers", "quotes", "photos", "services", "statistics", "profile", "cv", "saved", "soporte", "guides",
 ] as Tab[]).filter((tab) => EMPLEOS_VISIBLE || tab !== "jobs");
-const USE_TABS: Tab[] = ["sent_projects", "statistics", "saved", "profile", "soporte", "guides"] as Tab[];
+const USE_TABS: Tab[] = ["sent_projects", "statistics", "saved", "profile", "cv", "soporte", "guides"] as Tab[];
 // «Mis publicaciones» reúne TODO lo que uno saca a un tablero público: el
 // proyecto que pide un trabajo, el empleo que ofrece uno y la promoción. Son el
 // mismo acto —publicar— y antes vivían en dos paneles distintos, con un
@@ -193,7 +195,7 @@ const PANEL_GROUPS: { grupo: "work" | "business" | "saved" | "account"; tabs: Ta
   // empleos y promociones en una sola puerta, y una puerta con un interruptor
   // adentro hay que descubrirla. En el menú se leen de una.
   { grupo: "business", tabs: ["sent_projects", "jobs", "offers", "quotes"] },
-  { grupo: "work", tabs: ["photos", "services", "statistics", "profile", "completion"] },
+  { grupo: "work", tabs: ["photos", "services", "statistics", "profile", "cv", "completion"] },
   { grupo: "saved", tabs: ["saved"] },
   { grupo: "account", tabs: ["soporte", "guides"] },
 ];
@@ -222,6 +224,8 @@ const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
   offers: { es: "Promociones", en: "Promotions" },
   completion: { es: "Completa tu perfil", en: "Complete your profile" },
   guides: { es: "Guías", en: "Guides" },
+  // El CV y la carta de presentación: para postularse a un empleo, con o sin ficha.
+  cv: { es: "Mi CV", en: "My CV" },
 };
 
 type GuideItem = {
@@ -2415,6 +2419,7 @@ export default function DashboardPage() {
                             La dirección sigue existiendo y muestra el aviso de
                             sección vacía, para no romper enlaces viejos. */}
                         {activeTab === "saved" && <ClientActivity section="saved" />}
+                        {activeTab === "cv" && <CvBuilder pro={pro} />}
                         {activeTab === "connections" && <ClientConnections />}
                         {activeTab === "notifications" && <NotificationsList scope="all" />}
                         {activeTab === "soporte" && (
