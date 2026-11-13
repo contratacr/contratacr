@@ -8,7 +8,7 @@
     "handlers": 116,
     "components": 285,
     "hooks": 28,
-    "specs": 194
+    "specs": 195
   },
   "dashboardTabs": [
     "home",
@@ -19017,7 +19017,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 276,
+          "line": 288,
           "tag": "div",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(e) => e.stopPropagation()}",
@@ -19025,7 +19025,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 306,
+          "line": 318,
           "tag": "button",
           "label": "{t(\"moreZones\", { count: zonasRestantes })}",
           "handler": "{onVerZonas}",
@@ -28628,6 +28628,23 @@
         {
           "line": 60,
           "title": "\"abrir el enlace pide confirmar; solo «Confirmar» anota\""
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/rotulo-de-cobertura.spec.ts",
+      "cases": [
+        {
+          "line": 17,
+          "title": "\"la base sale del local; sin local, del perfil; sin nada, vacía\""
+        },
+        {
+          "line": 25,
+          "title": "\"cada caso de la tabla\""
+        },
+        {
+          "line": 38,
+          "title": "\"inglés\""
         }
       ]
     },
