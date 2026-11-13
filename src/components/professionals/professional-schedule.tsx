@@ -136,14 +136,23 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
       return (!!searchedPlace?.cantonId && lugar.cantonId === searchedPlace.cantonId)
         || (lugar.name?.trim() ?? "") === lugarBuscado;
     });
-    // DESDE DÓNDE VIENE y cómo llega: una sola fórmula (rotulo-de-cobertura.ts).
-    const base = baseDelProfesional(professional.workplaces as { receivesClients?: boolean; level?: string; cantonId?: string }[] | undefined, professional.cantonName, (id) => getCantonById(id)?.name);
+    // DÓNDE ESTÁ arriba, HASTA DÓNDE LLEGA debajo en gris (rotulo-de-cobertura.ts).
+    const base = baseDelProfesional(
+      professional.workplaces as { receivesClients?: boolean; level?: string; cantonId?: string }[] | undefined,
+      { canton: professional.cantonName, provincia: professional.provinceName },
+      (id) => {
+        const canton = getCantonById(id);
+        return canton ? { canton: canton.name, provincia: PROVINCES.find((p) => p.id === canton.provinceId)?.name ?? "" } : undefined;
+      },
+    );
     // En línea: el servicio admite videollamada y la ofrece. Un contador que
-    // cubre «todo el país» no llega a la casa; decirlo «desde Heredia» engaña.
+    // cubre «todo el país» no llega a la casa: la nota lo dice.
     const enLinea = videoConsultApplies && !!professional.videoconsulta;
     const rotuloDeCoberturaAqui = (pais: boolean, provincia: string) => rotuloDeCobertura(t, { pais, base, enLinea, provincia, cantonBuscado: searchedPlace?.cantonName, lugarBuscado });
     const amplios = new Set<string>();
     const primero = new Map<string, string>();
+    const notas = new Map<string, string>();
+    let cobertura: { id: string; lugar: string; nota: string } | null = null;
     for (const w of professional.workplaces ?? []) {
       if (w.receivesClients === false && w.homeService === false) continue;
       const rawLabel = (w as { label?: unknown }).label;
@@ -165,17 +174,22 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
         // Buscando solo una provincia, la cobertura de esa provincia se queda
         // con el nombre de la provincia, que ya dice todo.
         // Una sola fórmula para toda la lista: de dónde viene y cómo llega.
-        const rotulo = rotuloDeCoberturaAqui(cubreElPaisYBuscaronLugar, searchedPlace?.provinceName || "");
-        const repetido = Array.from(primero.values()).includes(rotulo)
-          || Array.from(map.values()).includes(rotulo);
-        if (!primero.size && !repetido) primero.set(id, rotulo);
+        cobertura ??= { id, ...rotuloDeCoberturaAqui(cubreElPaisYBuscaronLugar, searchedPlace?.provinceName || "") };
         continue;
       }
       if (!isVideoWorkplace && (cubreProvinciaEntera(lugar, label) || cubrePaisEntero(lugar, label))) amplios.add(id);
       map.set(id, label);
     }
-    if (lugarBuscado && !yaAtiendeElCanton && !primero.size && professional.coverage?.country) {
-      primero.set("pais", rotuloDeCoberturaAqui(true, searchedPlace?.provinceName || ""));
+    if (lugarBuscado && !yaAtiendeElCanton && !cobertura && professional.coverage?.country) {
+      cobertura = { id: "pais", ...rotuloDeCoberturaAqui(true, searchedPlace?.provinceName || "") };
+    }
+    if (cobertura) {
+      // Si su base ya es uno de sus lugares («San Ramón, Alajuela»), la nota va
+      // en ese mismo lugar: dos renglones iguales parecerían un error.
+      const mismo = Array.from(map.keys()).find((id) => map.get(id)?.trim().toLocaleLowerCase() === cobertura!.lugar.trim().toLocaleLowerCase());
+      const id = mismo ?? cobertura.id;
+      primero.set(id, mismo ? map.get(mismo)! : cobertura.lugar);
+      if (cobertura.nota) notas.set(id, cobertura.nota);
     }
     // Sin zona buscada, la base va primero: «San Ramón, Alajuela +3» dice más
     // que «Todo Costa Rica +1». Lo concreto delante, la cobertura amplia detrás.
@@ -191,8 +205,8 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
     if (videoConsultApplies && (professional.videoconsulta || professional.coverage?.country) && !hasVideoOption) {
       map.set("videoconsulta", videoLabel);
     }
-    return Array.from(map, ([id, label]) => ({ id, label }));
-  }, [professional.cantonName, professional.coverage?.country, professional.workplaces, professional.videoconsulta, searchedPlace, t, videoConsultApplies]);
+    return Array.from(map, ([id, label]): { id: string; label: string; nota?: string } => ({ id, label, nota: notas.get(id) }));
+  }, [professional.cantonName, professional.provinceName, professional.coverage?.country, professional.workplaces, professional.videoconsulta, searchedPlace, t, videoConsultApplies]);
 
   const visibleLocationOptions = useMemo(() => {
     if ((forceContactOnly || restrictToPreferredLocation) && preferredLocationId) {
@@ -246,6 +260,7 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
   const coincideConLaBusqueda = useMemo(() => {
     if (zonasBuscadas.length === 0) return () => false;
     return (option: { id: string; label: string }) => {
+      if ((option as { nota?: string }).nota) return true;
       const texto = normalizeText(`${option.label} ${locAddress(option.id)}`);
       return zonasBuscadas.some((parte) => texto.includes(parte));
     };
@@ -263,6 +278,7 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
   // La fila es una sola línea informativa —la zona principal y cuántas más
   // hay—; la lista completa vive en Información.
   const zonasRestantes = Math.max(0, primaryLocationTabs.length - 1);
+  const notaDeCobertura = (primaryLocationTabs[0] as { nota?: string } | undefined)?.nota ?? "";
   const zonaPrincipalEsVideo = primaryLocationTabs[0]?.id === "videoconsulta"
     || (!hasRealLoc && videoConsultApplies && !!(professional.videoconsulta || professional.coverage?.country));
   // Address under the tabs: follow the selected tab. If a workplace has no exact
@@ -299,7 +315,8 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
             línea: la zona se recorta con «…» antes que el precio, que pesa
             más en la decisión (8-oct-2026). */}
           <div data-testid="professional-card-location-row" className="flex min-w-0 items-center gap-3">
-          <p className={`flex min-w-0 items-center gap-x-1.5 gap-y-1 text-[12px] font-semibold leading-5 text-[#6b7280] ${alLadoDeLaZona ? "flex-1 flex-nowrap" : "flex-wrap"}`} aria-label={t("location")}>
+          <div className={alLadoDeLaZona ? "min-w-0 flex-1" : "min-w-0"}>
+          <p className={`flex min-w-0 items-center gap-x-1.5 gap-y-1 text-[12px] font-semibold leading-5 text-[#6b7280] ${alLadoDeLaZona ? "flex-nowrap" : "flex-wrap"}`} aria-label={t("location")}>
             <span className="inline-flex min-w-0 items-center gap-1">
               {zonaPrincipalEsVideo ? <Video className="h-3 w-3 shrink-0" /> : <MapPin className="h-3 w-3 shrink-0" />}
               <span className={alLadoDeLaZona ? "min-w-0 truncate" : "min-w-0"}>{locTabLabel(primaryLocationTabs[0].label)}</span>
@@ -333,6 +350,14 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
               )
             )}
           </p>
+          {/* Hasta dónde llega quien cubre una provincia o el país: un renglón
+              aparte, más chico y en gris, alineado con el texto del lugar. */}
+          {notaDeCobertura && (
+            <p data-testid="professional-card-coverage-note" className="truncate pl-4 text-[11px] font-medium leading-4 text-[#8b95a5]">
+              {notaDeCobertura}
+            </p>
+          )}
+          </div>
           {alLadoDeLaZona}
           </div>
       </div>
