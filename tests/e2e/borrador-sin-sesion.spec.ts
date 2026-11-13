@@ -278,7 +278,7 @@ async function completarPerfilProfesional(page: Page) {
   await page.getByRole("option", { name: /^Alajuela$/ }).first().click();
   await main.getByRole("button", { name: /^Cantón$/ }).first().click();
   await page.getByRole("option", { name: /^Atenas$/ }).first().click();
-  await main.getByRole("button", { name: "Agregar este lugar", exact: true }).click();
+  await main.getByRole("button", { name: "Guardar lugar", exact: true }).click();
   const tel = main.locator('input[type="tel"]');
   if (!(await tel.inputValue())) await tel.fill("88885555");
   await main.getByRole("button", { name: /^Continuar$/ }).click();
@@ -389,7 +389,7 @@ test("registro de profesional: contraseña, provincia, tarifa, fijo, abre arriba
   await expect(main.getByText(/tu perfil dirá "Consultar precio"/)).toBeVisible();
 
   // 4. Un lugar requiere provincia y cantón; una cobertura amplia no los sustituye.
-  const agregarLugar = main.getByRole("button", { name: "Agregar este lugar", exact: true });
+  const agregarLugar = main.getByRole("button", { name: "Guardar lugar", exact: true });
   await expect(agregarLugar).toHaveCount(0);
   await main.getByRole("button", { name: "Busca tu servicio" }).click();
   await page.getByPlaceholder("Buscar servicio...").fill("Desarrollo web");
