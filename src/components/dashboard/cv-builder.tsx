@@ -56,8 +56,8 @@ const pastilla = "inline-flex h-11 items-center justify-center gap-2 rounded-ful
 function Tarjeta({ titulo, ayuda, children, accion }: { titulo: string; ayuda?: string; children: ReactNode; accion?: ReactNode }) {
   return (
     <section className="rounded-2xl border border-[#e5e7eb] bg-white p-4 sm:p-5">
-      <div className="mb-3 flex items-start justify-between gap-3">
-        <div className="min-w-0">
+      <div className="mb-3 flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
+        <div className="min-w-0 flex-1 basis-56">
           <h3 className="text-[15px] font-black text-[#162543]">{titulo}</h3>
           {ayuda && <p className="mt-0.5 text-[13px] leading-5 text-[#667085]">{ayuda}</p>}
         </div>
@@ -103,7 +103,7 @@ function Fechas({ periodo, alCambiar, en }: { periodo: string; alCambiar: (p: st
     </div>
   );
   return (
-    <div className="grid gap-2 sm:grid-cols-2">
+    <div className="grid gap-2 @[560px]:grid-cols-2">
       <div><p className="mb-1 text-xs font-semibold text-[#52627a]">{en ? "Start" : "Inicio"}</p>{parte(d.startMonth, d.startYear, "start")}</div>
       <div>
         <div className="mb-1 flex items-center justify-between">
@@ -126,7 +126,7 @@ function Entradas({ lista, alCambiar, en, tipo }: { lista: CvEntry[]; alCambiar:
     <div className="grid gap-3">
       {lista.map((e, i) => (
         <div key={i} className="grid gap-3 rounded-xl border border-[#eef2f6] bg-[#fbfcfd] p-3">
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 @[560px]:grid-cols-2">
             <Input label={exp ? (en ? "Role" : "Cargo") : (en ? "Degree or course" : "Título o curso")} value={e.title} maxLength={160} onChange={(ev) => cambiar(i, { title: ev.target.value })} />
             <Input label={exp ? (en ? "Company or client" : "Empresa o cliente") : (en ? "Institution" : "Institución")} value={e.organization} maxLength={160} onChange={(ev) => cambiar(i, { organization: ev.target.value })} />
           </div>
@@ -328,13 +328,16 @@ function Editor({ pro, clave, nombreCuenta, correo }: { pro: ProData; clave: str
   };
 
   const hoja = (
-    <div className="mx-auto aspect-[8.5/11] w-full max-w-[430px] overflow-hidden rounded-lg bg-white p-6 shadow-[0_12px_40px_-18px_rgba(22,37,67,0.45)] ring-1 ring-[#e5e7eb]" data-testid="cv-hoja">
+    <div className="mx-auto min-h-[520px] w-full max-w-[430px] rounded-lg bg-white p-6 shadow-[0_12px_40px_-18px_rgba(22,37,67,0.45)] ring-1 ring-[#e5e7eb]" data-testid="cv-hoja">
       {pestana === "cv" ? <HojaCv cv={cv} /> : <HojaCarta cv={cv} carta={carta} />}
     </div>
   );
 
   return (
-    <div className="grid gap-4" data-testid="cv-builder">
+    // El ancho que manda es el del panel, no el de la pantalla: en computadora
+    // el panel deja ~600 px y lado a lado el editor quedaba apretado. Lado a
+    // lado solo cuando el panel mide 980 px o más; si no, la hoja va abajo.
+    <div className="@container grid gap-4" data-testid="cv-builder">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Segmentos etiqueta={en ? "Document" : "Documento"} valor={pestana} alCambiar={setPestana} opciones={[{ id: "cv", texto: en ? "Resume" : "CV" }, { id: "carta", texto: en ? "Cover letter" : "Carta de presentación" }]} />
         <div className="flex flex-wrap items-center gap-2">
@@ -343,7 +346,7 @@ function Editor({ pro, clave, nombreCuenta, correo }: { pro: ProData; clave: str
         </div>
       </div>
 
-      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(340px,430px)]">
+      <div className="grid items-start gap-4 @[980px]:grid-cols-[minmax(0,1fr)_400px]">
         <div className="grid min-w-0 gap-4">
           {pestana === "cv" ? (
             <>
@@ -361,7 +364,7 @@ function Editor({ pro, clave, nombreCuenta, correo }: { pro: ProData; clave: str
                     </span>
                   </div>
                 )}
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-3 @[560px]:grid-cols-2">
                   <Input label={en ? "Full name" : "Nombre completo"} value={cv.nombre} maxLength={120} onChange={(e) => setCv({ nombre: e.target.value })} />
                   <Input label={en ? "Headline" : "Título"} placeholder={en ? "Residential electrician" : "Electricista residencial"} value={cv.titular} maxLength={120} onChange={(e) => setCv({ titular: e.target.value })} />
                   <Input label={en ? "Email" : "Correo"} type="email" value={cv.correo} maxLength={160} onChange={(e) => setCv({ correo: e.target.value })} />
@@ -383,7 +386,7 @@ function Editor({ pro, clave, nombreCuenta, correo }: { pro: ProData; clave: str
               <Tarjeta titulo={TITULOS[cv.idioma].habilidades} ayuda={en ? "Use the same words job posts use." : "Usá las mismas palabras que usan las vacantes."}>
                 <Etiquetas en={en} lista={cv.habilidades} alCambiar={(habilidades) => setCv({ habilidades })} ejemplo={en ? "Excel, customer service…" : "Excel, servicio al cliente…"} />
               </Tarjeta>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 @[560px]:grid-cols-2">
                 <Tarjeta titulo={TITULOS[cv.idioma].idiomas}>
                   <Etiquetas en={en} lista={cv.idiomas} alCambiar={(idiomas) => setCv({ idiomas })} ejemplo={en ? "English (B2)" : "Inglés (B2)"} />
                 </Tarjeta>
@@ -405,10 +408,10 @@ function Editor({ pro, clave, nombreCuenta, correo }: { pro: ProData; clave: str
           ) : (
             <>
               <Tarjeta titulo={en ? "The position" : "El puesto"} ayuda={en ? "A cover letter goes with your CV: one page, about 300 words." : "La carta acompaña tu CV: una página, unas 300 palabras."}>
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-3 @[560px]:grid-cols-2">
                   <Input label={en ? "Position" : "Puesto"} value={carta.puesto} maxLength={120} onChange={(e) => setCarta({ puesto: e.target.value })} />
                   <Input label={en ? "Company" : "Empresa"} value={carta.empresa} maxLength={120} onChange={(e) => setCarta({ empresa: e.target.value })} />
-                  <div className="sm:col-span-2"><Input label={en ? "Addressed to" : "Dirigida a"} value={carta.destinatario} maxLength={120} onChange={(e) => setCarta({ destinatario: e.target.value })} /></div>
+                  <div className="@[560px]:col-span-2"><Input label={en ? "Addressed to" : "Dirigida a"} value={carta.destinatario} maxLength={120} onChange={(e) => setCarta({ destinatario: e.target.value })} /></div>
                 </div>
                 <button type="button" onClick={() => setCarta(cartaInicial(cv, { puesto: carta.puesto, empresa: carta.empresa }))} className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-[13px] font-semibold text-[#007fae] hover:bg-[#eef6fb]">
                   <RotateCcw className="h-4 w-4" />{en ? "Rewrite with this position" : "Rehacer con este puesto"}
@@ -427,14 +430,14 @@ function Editor({ pro, clave, nombreCuenta, correo }: { pro: ProData; clave: str
             </>
           )}
 
-          <button type="button" onClick={() => setVerHoja((v) => !v)} className={cn(pastilla, "border border-[#d7e1ea] bg-white text-[#162543] hover:bg-[#f6f9fb] lg:hidden")}>
+          <button type="button" onClick={() => setVerHoja((v) => !v)} className={cn(pastilla, "border border-[#d7e1ea] bg-white text-[#162543] hover:bg-[#f6f9fb] @[980px]:hidden")}>
             <FileText className="h-4 w-4" />{verHoja ? (en ? "Hide preview" : "Ocultar vista previa") : (en ? "See preview" : "Ver vista previa")}
           </button>
-          {verHoja && <div className="lg:hidden">{hoja}</div>}
+          {verHoja && <div className="@[980px]:hidden">{hoja}</div>}
         </div>
 
-        <aside className="grid gap-3 lg:sticky lg:top-24">
-          <div className="hidden lg:block">{hoja}</div>
+        <aside className="grid gap-3 @[980px]:sticky @[980px]:top-24">
+          <div className="hidden @[980px]:block">{hoja}</div>
           <div className="rounded-2xl border border-[#e5e7eb] bg-white p-4">
             <p className="mb-2 text-[13px] font-black text-[#162543]">{en ? "Review before sending" : "Revisión antes de enviar"}</p>
             <Revision avisos={avisos} idiomaApp={idiomaApp} />

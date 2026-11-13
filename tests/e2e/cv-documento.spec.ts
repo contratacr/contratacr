@@ -53,6 +53,11 @@ test("la revisión señala lo que falta y lo que conviene mejorar", () => {
   expect(revisarCv(flojo).map((a) => a.id)).toEqual(expect.arrayContaining(["nombre", "contacto", "resumen", "experiencia", "habilidades"]));
   const sinVerbos = { ...cv, experiencia: [{ title: "Ayudante", organization: "", period: "", description: "Cosas varias del taller" }] };
   expect(revisarCv(sinVerbos).map((a) => a.id)).toEqual(expect.arrayContaining(["verbos", "numeros", "fechas"]));
+  // «Liderazgo: Definí…» empieza con un verbo aunque lleve una etiqueta delante.
+  const conEtiqueta = { ...cv, experiencia: [{ ...cv.experiencia[0], description: "Leadership: Defined coding standards for 3 teams" }] };
+  expect(revisarCv(conEtiqueta).map((a) => a.id)).not.toContain("verbos");
+  const largo = { ...cv, resumen: "x".repeat(600), experiencia: Array.from({ length: 12 }, () => ({ ...cv.experiencia[0], description: "Instalé 40 sistemas eléctricos completos en casas y comercios. ".repeat(8) })) };
+  expect(revisarCv(largo).map((a) => a.id)).toContain("largo");
 });
 
 test("la carta arranca con el puesto y avisa de lo que queda por completar", () => {
@@ -63,7 +68,10 @@ test("la carta arranca con el puesto y avisa de lo que queda por completar", () 
   expect(revisarCarta(carta).map((a) => a.id)).toEqual(["corchetes"]);
   const texto = cartaComoTexto(cv, carta, new Date(2026, 10, 13));
   expect(texto.split("\n").slice(0, 2)).toEqual(["Ana Mora", "ana@example.com | 8888-5555 | Atenas, Alajuela, Costa Rica"]);
-  expect(texto).toContain("Estimado Equipo de selección:");
+  expect(texto).toContain("Equipo de selección\nHotel Atenas");
+  expect(texto).toContain("Estimado equipo de selección:");
+  // Sin empresa no se repite el destinatario antes del saludo.
+  expect(cartaComoTexto(cv, { ...carta, empresa: "" })).not.toMatch(/Equipo de selección\n/);
   expect(texto.trim().endsWith("Saludos cordiales,\nAna Mora")).toBe(true);
   const ingles = cartaInicial(prellenar(perfil, "en"), { puesto: "Electrician" });
   expect(ingles.apertura).toBe("I am writing to apply for the Electrician position.");
