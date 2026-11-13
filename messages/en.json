@@ -423,11 +423,10 @@
     "whatsappLong": "Contact via WhatsApp",
     "countryCoverage": "All of Costa Rica",
     "moreZones": "+{count, plural, one {# more area} other {# more areas}}",
-    "desdeTodoElPais": "From {base} · nationwide",
-    "desdeADomicilio": "From {base} · home service",
-    "enLineaTodoElPais": "Online · nationwide",
-    "cubreTodoElPais": "Covers all of Costa Rica",
-    "cubreTodaLaProvincia": "Covers all of {provincia}"
+    "coberturaPais": "Covers all of Costa Rica",
+    "coberturaEnLinea": "Works online across Costa Rica",
+    "coberturaProvincia": "Covers all of {provincia} province",
+    "provinciaEntera": "{provincia} province"
   },
   "selfAction": {
     "title": "This is your profile",

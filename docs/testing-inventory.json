@@ -19017,7 +19017,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 288,
+          "line": 304,
           "tag": "div",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(e) => e.stopPropagation()}",
@@ -19025,7 +19025,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 318,
+          "line": 335,
           "tag": "button",
           "label": "{t(\"moreZones\", { count: zonasRestantes })}",
           "handler": "{onVerZonas}",
@@ -19034,7 +19034,8 @@
         }
       ],
       "testIds": [
-        "professional-card-location-row"
+        "professional-card-location-row",
+        "professional-card-coverage-note"
       ],
       "relatedSpecs": [
         "tests/e2e/search-results.spec.ts",
@@ -28635,15 +28636,19 @@
       "file": "tests/e2e/rotulo-de-cobertura.spec.ts",
       "cases": [
         {
-          "line": 17,
-          "title": "\"la base sale del local; sin local, del perfil; sin nada, vacía\""
+          "line": 20,
+          "title": "\"la base sale del local; sin local, del perfil; sin nada, ninguna\""
         },
         {
-          "line": 25,
-          "title": "\"cada caso de la tabla\""
+          "line": 30,
+          "title": "\"el nombre de la base no repite la provincia\""
         },
         {
-          "line": 38,
+          "line": 36,
+          "title": "\"cada caso: lugar arriba, cobertura debajo\""
+        },
+        {
+          "line": 54,
           "title": "\"inglés\""
         }
       ]
