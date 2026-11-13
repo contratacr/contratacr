@@ -22,6 +22,7 @@ const reviewed = new Map([
   ["src/components/marketplace/marketplace-controls.tsx", { count: 2, reason: "device-local marketplace recent-search history" }],
   ["src/lib/recent-visits.ts", { count: 9, reason: "device-local list of recently opened records and recent searches, offered back by the search screen, each removable one by one; nothing account-owned" }],
   ["src/components/landing/ai-concierge.tsx", { count: 12, reason: "tab-scoped anonymous conversation, post-auth intent and CTA-origin navigation handoff; route restoration now shares isAssistantReturn instead of a duplicate effect read, removing one access with no new keys, writes or account records; explicit dismissal still clears the origin and authenticated history persists in Supabase" }],
+  ["src/components/notifications/resena-invitacion.tsx", { count: 4, reason: "per-device postponement of the review invitation (count and date, sixty days, three times at most) and a session marker so it appears once per app opening; the invitation itself and its read state live in Supabase" }],
   ["src/components/landing/app-download.tsx", { count: 2, reason: "device-local dismissal of the mobile web download notice, expires after thirty days; no account-owned records" }],
   ["src/components/status/operational-status-banner.tsx", { count: 2, reason: "dismissed operational notice" }],
   ["src/components/professionals/save-button.tsx", { count: 16, reason: "Supabase-backed favorites cache and login handoff" }],
