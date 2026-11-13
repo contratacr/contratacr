@@ -2,13 +2,13 @@
   "scope": "Todos los archivos TypeScript de src/app, src/components y src/hooks, controles JSX declarados, pestañas del panel y specs permanentes. No enumera cada elemento dinámico renderizado ni componentes dentro de dependencias.",
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
-    "files": 537,
-    "controls": 1407,
+    "files": 538,
+    "controls": 1409,
     "pages": 73,
     "handlers": 116,
-    "components": 284,
+    "components": 285,
     "hooks": 28,
-    "specs": 192
+    "specs": 193
   },
   "dashboardTabs": [
     "home",
@@ -17315,7 +17315,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 357,
+          "line": 350,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => {\n            cerrarResumen();\n            router.push(targetHref);\n          }}",
@@ -17323,7 +17323,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 374,
+          "line": 367,
           "tag": "button",
           "label": "\"Cerrar\"",
           "handler": "{cerrarResumen}",
@@ -17331,7 +17331,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 423,
+          "line": 416,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{openToast}",
@@ -17339,7 +17339,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 434,
+          "line": 427,
           "tag": "button",
           "label": "\"Cerrar\"",
           "handler": "{() => setToast(null)}",
@@ -17524,6 +17524,45 @@
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{deshacerBorrado}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        }
+      ],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/notifications-guides-regression.spec.ts",
+        "tests/e2e/push-outbox-contract.spec.ts",
+        "tests/e2e/mobile-native-shell.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P1"
+    },
+    {
+      "file": "src/components/notifications/resena-invitacion.tsx",
+      "kind": "Componente",
+      "group": "Notificaciones y push",
+      "route": null,
+      "exports": [
+        "ResenaInvitacion"
+      ],
+      "methods": [],
+      "controls": [
+        {
+          "line": 142,
+          "tag": "a",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{() => { marcarLeida(); setAviso(null); }}",
+          "destination": "{aviso.destino.href}",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 153,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{posponer}",
           "destination": "",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         }
@@ -28513,6 +28552,23 @@
         {
           "line": 122,
           "title": "!canRunSeededRegression()"
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/resena-destino.spec.ts",
+      "cases": [
+        {
+          "line": 8,
+          "title": "\"app de iPhone → formulario de reseña del App Store\""
+        },
+        {
+          "line": 13,
+          "title": "\"app de Android → ficha de Google Play\""
+        },
+        {
+          "line": 18,
+          "title": "\"navegador o sistema desconocido → reseña de Google, nunca una tienda adivinada\""
         }
       ]
     },

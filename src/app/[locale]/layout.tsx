@@ -16,6 +16,7 @@ import { ensureServerCategoryCatalog } from "@/lib/data/server-category-catalog"
 import { routing } from "@/i18n/routing";
 import { EmojiBlocker } from "@/components/util/emoji-blocker";
 import { NotificationLiveToast } from "@/components/notifications/notification-live-toast";
+import { ResenaInvitacion } from "@/components/notifications/resena-invitacion";
 import { CustomCategoriesLoader } from "@/lib/data/use-custom-categories";
 import { ViewportEnvironment } from "@/components/util/viewport-environment";
 import { DocumentLocale } from "@/components/util/document-locale";
@@ -216,6 +217,7 @@ export default async function LocaleLayout({
           <Suspense fallback={null}><SmartAppBanner initialContent={(await cookies()).get("ccr_platform")?.value !== "native" && prefersNativeIosAppBanner((await headers()).get("user-agent") ?? "") ? smartAppBannerContent((await headers()).get("x-ccr-app-path") ?? "/") : null} /></Suspense>
           <CustomCategoriesLoader />
           <NotificationLiveToast scope="all" />
+          <ResenaInvitacion />
           <OperationalStatusBanner locale={locale} status={operationalStatus} />
           <Suspense fallback={null}>
             <MetaPixel pixelId={META_PIXEL_ID} />
