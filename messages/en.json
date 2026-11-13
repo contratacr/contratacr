@@ -989,6 +989,7 @@
       "sent_projects": "My projects",
       "saved": "My favorites",
       "guides": "Guides",
+      "cv": "My CV",
       "notifications": "Notifications",
       "soporte": "Support",
       "cuenta": "Account & security",
@@ -1081,7 +1082,8 @@
       "notifications": "Everything that happened in your account.",
       "soporte": "Open a ticket and we answer you here.",
       "cuenta": "Your email, your password and your account.",
-      "guides": "How to use ContrataCR step by step."
+      "guides": "How to use ContrataCR step by step.",
+      "cv": "Build your resume and cover letter from what's already in your profile."
     },
     "profileSections": {
       "verificationDesc": "Identity and verification status.",
@@ -3298,14 +3300,16 @@
       "phone": "by phone",
       "email": "by email"
     },
-    "titulo": "You contacted {nombre} {metodo}",
-    "pregunta": "Did you end up hiring them?",
+    "titulo": "Did you hire {nombre}?",
     "pendientes": "1 of {n} pending confirmations",
-    "ayuda": "Your experience can help other people choose.",
     "si": "Yes, leave a review",
-    "aunNo": "I haven't decided yet",
+    "aunNo": "Ask me later",
     "no": "I didn't hire them",
-    "sinRespuesta": "They didn't reply"
+    "sinRespuesta": "They didn't reply",
+    "comoContactaste": "You contacted them {metodo}",
+    "graciasTitulo": "Thanks for letting us know",
+    "graciasCuerpo": "We'll take it into account. Shall we find someone else for {servicio}?",
+    "verOtros": "See other professionals"
   },
   "tarjetaSocial": {
     "pie": "Offer and find services in Costa Rica.",

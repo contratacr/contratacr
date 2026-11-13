@@ -16,6 +16,9 @@ const CADUCA_MS = 30 * DIA_MS;
 // «Aún no» también quiere decir «ahora no me pregunten»: las demás pendientes
 // esperan al menos un día, así nunca sale más de una tarjeta por día.
 const RESPIRO_MS = DIA_MS;
+// Dijo «Sí» y cerró la reseña sin escribirla: UN recordatorio a los 2 días.
+// Si la vuelve a cerrar, no se insiste más.
+const RECORDATORIO_RESENA_MS = 2 * DIA_MS;
 
 async function currentUserId() {
   const supabase = await createClient();
@@ -40,7 +43,7 @@ export async function GET(request: NextRequest) {
   let query = db
     .from("whatsapp_contact_followups")
     .select("id, professional_id, professional_name, service_name, contact_method, status, contacted_at", { count: "exact" })
-    .in("status", userId ? ["contacted", "hire_intent"] : ["contacted"])
+    .in("status", ["contacted", "hire_intent"])
     .lte("follow_up_at", new Date().toISOString())
     .gte("contacted_at", new Date(Date.now() - CADUCA_MS).toISOString())
     .order("contacted_at", { ascending: false })
@@ -63,7 +66,7 @@ export async function PATCH(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
   const id = String(body.id ?? "");
   const action = String(body.action ?? "");
-  if (!id || !["hired", "not_now", "not_hired", "no_response"].includes(action)) {
+  if (!id || !["hired", "not_now", "not_hired", "no_response", "review_later"].includes(action)) {
     return NextResponse.json({ error: "Acción inválida." }, { status: 400 });
   }
 
@@ -73,7 +76,7 @@ export async function PATCH(request: NextRequest) {
   const db = createAdminClient();
   const { data: followUp } = await db
     .from("whatsapp_contact_followups")
-    .select("id, client_id, anonymous_token_hash, professional_id, professional_name, service_name, contact_method, status, contacted_at")
+    .select("id, client_id, anonymous_token_hash, professional_id, professional_name, service_name, contact_method, status, contacted_at, follow_up_at, responded_at")
     .eq("id", id)
     .maybeSingle();
 
@@ -82,6 +85,24 @@ export async function PATCH(request: NextRequest) {
     (!followUp.client_id && followUp.anonymous_token_hash === tokenHash)
   );
   if (!ownsFollowUp) return NextResponse.json({ error: "Seguimiento no encontrado." }, { status: 404 });
+
+  // Cerró el formulario de reseña sin publicarla. `responded_at` guarda el
+  // PRIMER «Sí»: si la cita ya quedó después de esa fecha, ese recordatorio
+  // ya se dio y no se programa otro.
+  if (action === "review_later") {
+    if (followUp.status !== "hired") return NextResponse.json({ ok: true, reminder: false });
+    const primerSi = followUp.responded_at ? new Date(String(followUp.responded_at)).getTime() : 0;
+    const cita = new Date(String(followUp.follow_up_at)).getTime();
+    if (primerSi && cita > primerSi) return NextResponse.json({ ok: true, reminder: false });
+    const ahora = Date.now();
+    const { error } = await db.from("whatsapp_contact_followups").update({
+      status: "hire_intent",
+      follow_up_at: new Date(ahora + RECORDATORIO_RESENA_MS).toISOString(),
+      updated_at: new Date(ahora).toISOString(),
+    }).eq("id", id);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: true, reminder: true });
+  }
 
   if (action === "not_now") {
     const ahora = Date.now();
@@ -126,7 +147,7 @@ export async function PATCH(request: NextRequest) {
     // reseñas. El nombre se pide en el formulario.
     const { error } = await db.from("whatsapp_contact_followups").update({
       status: "hired",
-      responded_at: new Date().toISOString(),
+      responded_at: followUp.responded_at ?? new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }).eq("id", id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -148,7 +169,7 @@ export async function PATCH(request: NextRequest) {
   const { error } = await db.from("whatsapp_contact_followups").update({
     client_id: userId,
     status: "hired",
-    responded_at: new Date().toISOString(),
+    responded_at: followUp.responded_at ?? new Date().toISOString(),
     updated_at: new Date().toISOString(),
   }).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

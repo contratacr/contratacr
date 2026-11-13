@@ -3,11 +3,11 @@
 import { trackMetaConversion } from "@/lib/analytics/meta-pixel";
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { esRutaDeBusqueda } from "@/lib/buscar-url";
+import { esRutaDeBusqueda, rutaDeBusqueda } from "@/lib/buscar-url";
 import { esServicioDelCatalogo } from "@/lib/data/categories";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { alCambiarElTurno, hayAlguienEnTurno } from "@/lib/turno-en-pantalla";
-import { Clock3, Star, X } from "lucide-react";
+import { Search, Star, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
@@ -33,7 +33,7 @@ type ReviewTarget = {
 export function WhatsAppReviewFollowUp() {
   const locale = useLocale();
   const t = useTranslations("seguimientoContacto");
-  const { user, loading: authLoading } = useAuth();
+  const { loading: authLoading } = useAuth();
   // SOLO EN PANTALLAS TRANQUILAS. La tarjeta se montaba en toda ruta y salía
   // encima de la franja de contactar de la ficha (justo sobre el botón que la
   // persona iba a tocar), en medio del registro y en los flujos de publicar.
@@ -45,15 +45,17 @@ export function WhatsAppReviewFollowUp() {
   const [followUp, setFollowUp] = useState<FollowUp | null>(null);
   const [pendingCount, setPendingCount] = useState(0);
   const [reviewTarget, setReviewTarget] = useState<ReviewTarget | null>(null);
+  // Tras «No me respondió»: la tarjeta ofrece buscar a otra persona para ese servicio.
+  const [sinRespuesta, setSinRespuesta] = useState<{ servicio: string } | null>(null);
+  const reseñaPublicada = useRef(false);
   const [submitting, setSubmitting] = useState(false);
   const handledFollowUpId = useRef<string | null>(null);
   // La persona dijo «Aún no» en esta visita: no se le pregunta nada más hasta la próxima.
   const enPausa = useRef(false);
   const followUpRequestInFlight = useRef(false);
   const lastFollowUpCheckAt = useRef(0);
-  const userId = user?.id ?? null;
 
-  const act = useCallback(async (item: FollowUp, action: "hired" | "not_now" | "not_hired" | "no_response") => {
+  const act = useCallback(async (item: Pick<FollowUp, "id">, action: "hired" | "not_now" | "not_hired" | "no_response" | "review_later") => {
     const response = await fetch("/api/contact/follow-up", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -87,7 +89,9 @@ export function WhatsAppReviewFollowUp() {
         return;
       }
 
-      if (item.status === "hire_intent" && userId) {
+      // «hire_intent»: ya dijo que sí (o pidió el recordatorio de la reseña):
+      // se abre directo el formulario, con o sin cuenta.
+      if (item.status === "hire_intent") {
         const result = await act(item, "hired");
         if (active && result?.review) setReviewTarget(result.review);
         return;
@@ -99,7 +103,7 @@ export function WhatsAppReviewFollowUp() {
       lastFollowUpCheckAt.current = Date.now();
       followUpRequestInFlight.current = false;
     }
-  }, [act, userId]);
+  }, [act]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -145,14 +149,19 @@ export function WhatsAppReviewFollowUp() {
     try {
       const result = await act(followUp, action);
       if (result?.review) {
+        reseñaPublicada.current = false;
         setReviewTarget(result.review);
       } else {
+        // «No me respondió»: primero se le ofrece buscar a alguien más; la
+        // siguiente pendiente espera a que cierre esa tarjeta.
+        const servicio = action === "no_response" ? followUp.service_name?.trim() : "";
+        if (servicio) setSinRespuesta({ servicio });
         handledFollowUpId.current = followUp.id;
         // «Aún no» (o la X) también quiere decir «ahora no me pregunten»: no se
         // pasa a la siguiente pendiente en esta visita. Con un «No» sí: ahí la
         // persona está contestando y terminar la lista le toma un toque más.
         if (action === "not_now") enPausa.current = true;
-        else window.setTimeout(() => void checkFollowUp(true), 500);
+        else if (!servicio) window.setTimeout(() => void checkFollowUp(true), 500);
       }
       setFollowUp(null);
     } catch {
@@ -164,8 +173,10 @@ export function WhatsAppReviewFollowUp() {
 
   const service = followUp?.service_name?.trim();
   const method = followUp?.contact_method ?? "whatsapp";
-  const title = followUp ? t("titulo", { nombre: followUp.professional_name, metodo: t(`metodo.${method}`) }) : "";
-  const question = t("pregunta");
+  const title = followUp ? t("titulo", { nombre: followUp.professional_name }) : "";
+  const subtitle = followUp ? [t("comoContactaste", { metodo: t(`metodo.${method}`) }), service].filter(Boolean).join(" · ") : "";
+  const boton = "inline-flex h-11 w-full items-center justify-center rounded-full px-3 text-sm font-bold leading-none transition-colors disabled:opacity-60";
+  const botonSecundario = "border border-[#d7e1ea] bg-white text-[#162543] hover:bg-[#f6f9fb]";
   const pendingLabel = pendingCount > 1 ? t("pendientes", { n: pendingCount }) : "";
 
   // La tarjeta flota en el borde inferior. En la app ahí vive la barra de
@@ -193,7 +204,7 @@ export function WhatsAppReviewFollowUp() {
   // pintado coincide con el primer render del navegador.
   const turnoAjeno = useSyncExternalStore(alCambiarElTurno, hayAlguienEnTurno, () => false);
   useEffect(() => {
-    if (!followUp) return;
+    if (!followUp && !sinRespuesta) return;
     const medir = () => {
       const barra = document.querySelector<HTMLElement>(".ccr-native-bottom-nav");
       const alto = barra ? barra.getBoundingClientRect().height : 0;
@@ -221,7 +232,7 @@ export function WhatsAppReviewFollowUp() {
       window.removeEventListener("resize", medir);
       window.clearInterval(repaso);
     };
-  }, [followUp]);
+  }, [followUp, sinRespuesta]);
 
   return (
     <>
@@ -244,48 +255,35 @@ export function WhatsAppReviewFollowUp() {
             type="button"
             onClick={() => void handle("not_now")}
             aria-label={t("cerrar")}
-            className="absolute right-3 top-3 rounded-md p-1 text-[#8a96aa] hover:bg-[#f2f6f9] hover:text-[#162543]"
+            className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full text-[#8a96aa] hover:bg-[#f2f6f9] hover:text-[#162543]"
           >
             <X className="h-4 w-4" />
           </button>
-          <div className="pr-7">
-            <div className="min-w-0">
-              {pendingLabel && <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.08em] text-[#009FD9]">{pendingLabel}</p>}
-              <p className="text-[15px] font-bold leading-5 text-[#162543]">{title}</p>
-              <p className="mt-1 text-sm font-semibold text-[#162543]">{question}</p>
-              {service && <p className="mt-2 inline-flex rounded-full bg-[#eef4f8] px-2.5 py-1 text-xs font-semibold text-[#667085]">{service}</p>}
-              <p className="mt-1 text-xs leading-5 text-[#667085]">
-                {t("ayuda")}
-              </p>
-            </div>
+          <div className="pr-8">
+            {pendingLabel && <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.08em] text-[#009FD9]">{pendingLabel}</p>}
+            <p className="text-[17px] font-black leading-6 text-[#162543]">{title}</p>
+            <p className="mt-1 text-[13px] leading-5 text-[#667085]">{subtitle}</p>
           </div>
+          {/* Alturas FIJAS (h-11), no mínimas: en la búsqueda de la app una regla
+              global quita la altura mínima a los botones (globals.css) y la
+              tarjeta salía aplastada. Pastillas como el resto de la app. */}
           <div className="mt-4 grid gap-2">
             <button
               type="button"
               disabled={submitting}
               onClick={() => void handle("hired")}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#009FD9] px-4 text-sm font-bold text-white hover:bg-[#0089bb] disabled:opacity-60"
+              className={`${boton} gap-2 bg-[#009FD9] text-white hover:bg-[#0089bb]`}
             >
-              <Star className="h-4 w-4" />
+              <Star className="h-4 w-4 shrink-0" />
               {t("si")}
             </button>
             {/* Dos «no» distintos: no haberlo contratado no dice nada malo del
                 profesional; que no contestara, sí. */}
             <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                disabled={submitting}
-                onClick={() => void handle("not_hired")}
-                className="min-h-11 rounded-xl border border-[#d7e1ea] px-3 text-sm font-semibold text-[#162543] hover:bg-[#f7fafc] disabled:opacity-60"
-              >
+              <button type="button" disabled={submitting} onClick={() => void handle("not_hired")} className={`${boton} ${botonSecundario}`}>
                 {t("no")}
               </button>
-              <button
-                type="button"
-                disabled={submitting}
-                onClick={() => void handle("no_response")}
-                className="min-h-11 rounded-xl border border-[#d7e1ea] px-3 text-sm font-semibold text-[#162543] hover:bg-[#f7fafc] disabled:opacity-60"
-              >
+              <button type="button" disabled={submitting} onClick={() => void handle("no_response")} className={`${boton} ${botonSecundario}`}>
                 {t("sinRespuesta")}
               </button>
             </div>
@@ -293,12 +291,41 @@ export function WhatsAppReviewFollowUp() {
               type="button"
               disabled={submitting}
               onClick={() => void handle("not_now")}
-              className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-semibold text-[#667085] hover:bg-[#f7fafc] hover:text-[#162543] disabled:opacity-60"
+              className={`${boton} text-[#667085] hover:text-[#162543]`}
             >
-              <Clock3 className="h-4 w-4" />
               {t("aunNo")}
             </button>
           </div>
+        </section>
+      )}
+
+      {sinRespuesta && !followUp && pantallaTranquila && !hayVentana && !turnoAjeno && (
+        <section
+          role="dialog"
+          aria-label={t("aria")}
+          className="ccr-seguimiento-servicio ccr-entrada fixed inset-x-3 bottom-[calc(max(0.75rem,env(safe-area-inset-bottom))+var(--ccr-barra-app,0px))] z-[145] rounded-2xl border border-[#d9e8f2] bg-white p-4 shadow-[0_18px_55px_-18px_rgba(26,39,68,0.38)] sm:inset-x-auto sm:bottom-[calc(1.5rem+var(--ccr-barra-app,0px))] sm:right-6 sm:w-[390px] sm:p-5"
+          style={{ "--ccr-barra-app": `${altoBarra}px` } as React.CSSProperties}
+        >
+          <button
+            type="button"
+            onClick={() => { setSinRespuesta(null); window.setTimeout(() => void checkFollowUp(true), 500); }}
+            aria-label={t("cerrar")}
+            className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full text-[#8a96aa] hover:bg-[#f2f6f9] hover:text-[#162543]"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          <div className="pr-8">
+            <p className="text-[17px] font-black leading-6 text-[#162543]">{t("graciasTitulo")}</p>
+            <p className="mt-1 text-[13px] leading-5 text-[#667085]">{t("graciasCuerpo", { servicio: sinRespuesta.servicio })}</p>
+          </div>
+          <a
+            href={`${prefijoDeIdioma(locale)}${rutaDeBusqueda({ q: sinRespuesta.servicio })}`}
+            onClick={() => setSinRespuesta(null)}
+            className={`${boton} mt-4 gap-2 bg-[#009FD9] text-white hover:bg-[#0089bb]`}
+          >
+            <Search className="h-4 w-4 shrink-0" />
+            <span className="truncate">{t("verOtros")}</span>
+          </a>
         </section>
       )}
 
@@ -308,7 +335,12 @@ export function WhatsAppReviewFollowUp() {
           professionalId={reviewTarget.professionalId}
           professionalName={reviewTarget.professionalName}
           pedirNombre={!!reviewTarget.needsName}
-          onClose={() => setReviewTarget(null)}
+          onSuccess={() => { reseñaPublicada.current = true; }}
+          onClose={() => {
+            // Cerró sin publicar: un solo recordatorio en 2 días (lo decide el servidor).
+            if (!reseñaPublicada.current) void act({ id: reviewTarget.contactId }, "review_later").catch(() => {});
+            setReviewTarget(null);
+          }}
         />
       )}
     </>

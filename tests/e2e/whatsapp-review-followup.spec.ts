@@ -38,11 +38,10 @@ test("contact follow-up is readable and dismissible without blocking the page", 
   await page.goto("/");
   const dialog = page.getByRole("dialog", { name: "Seguimiento del servicio" });
   await expect(dialog).toBeVisible(ESPERA);
-  await expect(dialog).toContainText("Contactaste a Redes Bahía por WhatsApp");
-  await expect(dialog).toContainText("¿Llegaste a contratarlo?");
-  await expect(dialog).toContainText("Reparación de computadoras");
+  await expect(dialog).toContainText("¿Contrataste a Redes Bahía?");
+  await expect(dialog).toContainText("Lo contactaste por WhatsApp · Reparación de computadoras");
   await expect(dialog.getByRole("button", { name: "Sí, dejar una reseña" })).toBeVisible();
-  await expect(dialog.getByRole("button", { name: "Aún no" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Preguntame después" })).toBeVisible();
   await expect(dialog.getByRole("button", { name: "No lo contraté" })).toBeVisible();
   await expect(dialog.getByRole("button", { name: "No me respondió" })).toBeVisible();
 
@@ -54,7 +53,14 @@ test("contact follow-up is readable and dismissible without blocking the page", 
   expect(box!.x + box!.width).toBeLessThanOrEqual(viewport!.width);
   expect(box!.y + box!.height).toBeLessThanOrEqual(viewport!.height);
 
-  await dialog.getByRole("button", { name: "Aún no" }).click();
+  // En la búsqueda de la app una regla global quita la altura mínima de los
+  // botones: con esas clases puestas, los de la tarjeta siguen midiendo 44 px.
+  await page.evaluate(() => document.body.classList.add("ccr-native-app", "ccr-native-search-route"));
+  const alturas = await dialog.locator("button:not([aria-label])").evaluateAll((botones) => botones.map((b) => Math.round(b.getBoundingClientRect().height)));
+  expect(alturas).toHaveLength(4);
+  for (const alto of alturas) expect(alto).toBe(44);
+
+  await dialog.getByRole("button", { name: "Preguntame después" }).click();
   await expect(dialog).toBeHidden();
   expect(action).toBe("not_now");
 });
@@ -113,14 +119,42 @@ test("contact follow-up shows pending confirmations one at a time", async ({ pag
   // toque más. «No me respondió» viaja aparte: es el dato de si el profesional
   // contesta (8-oct-2026).
   await dialog.getByRole("button", { name: "No me respondió" }).click();
-  await expect(dialog).toContainText("Juan Electricidad", { timeout: 2000 });
+  // Antes de la siguiente, se le ofrece buscar a otra persona para ese servicio.
+  await expect(dialog).toContainText("Gracias por avisarnos");
+  const otros = dialog.getByRole("link", { name: "Ver otros profesionales" });
+  await expect(otros).toHaveAttribute("href", /\/profesionales\?q=Reparaci/);
+  await dialog.getByRole("button", { name: "Cerrar por ahora" }).click();
+  await expect(dialog).toContainText("Juan Electricidad", { timeout: 3000 });
   await expect(dialog).toContainText("Electricidad");
   await dialog.getByRole("button", { name: "No lo contraté" }).click();
   await expect(dialog).toBeHidden({ timeout: 3000 });
   expect(actions).toEqual(["no_response", "not_hired"]);
 });
 
-test("«Aún no» deja de preguntar en esa visita aunque queden pendientes", async ({ page }) => {
+test("closing the review form without publishing asks the server for the single reminder", async ({ page }) => {
+  const actions: string[] = [];
+  await page.route("**/api/contact/follow-up", async (route) => {
+    if (route.request().method() === "GET") {
+      await route.fulfill({ json: { followUp, pendingCount: 1, authenticated: false } });
+      return;
+    }
+    const action = String((route.request().postDataJSON() as { action?: string }).action ?? "");
+    actions.push(action);
+    await route.fulfill({ json: action === "hired"
+      ? { review: { contactId: followUp.id, professionalId: followUp.professional_id, professionalName: followUp.professional_name, needsName: true } }
+      : { ok: true, reminder: true } });
+  });
+
+  await marcarContactoPrevio(page, test.info());
+  await page.goto("/");
+  await page.getByRole("button", { name: "Sí, dejar una reseña" }).click(ESPERA);
+  await expect(page.getByRole("heading", { name: "Dejar una reseña" })).toBeVisible();
+  await page.getByRole("button", { name: "Omitir por ahora" }).click();
+  await expect(page.getByRole("heading", { name: "Dejar una reseña" })).toBeHidden();
+  await expect.poll(() => actions).toEqual(["hired", "review_later"]);
+});
+
+test("«Preguntame después» deja de preguntar en esa visita aunque queden pendientes", async ({ page }) => {
   const queue = [
     { ...followUp, id: "00000000-0000-4000-8000-000000000301", professional_name: "Redes Bahía" },
     { ...followUp, id: "00000000-0000-4000-8000-000000000302", professional_name: "Juan Electricidad" },
@@ -140,9 +174,9 @@ test("«Aún no» deja de preguntar en esa visita aunque queden pendientes", asy
   await page.goto("/");
   const dialog = page.getByRole("dialog", { name: "Seguimiento del servicio" });
   await expect(dialog).toContainText("Redes Bahía");
-  await dialog.getByRole("button", { name: "Aún no" }).click();
+  await dialog.getByRole("button", { name: "Preguntame después" }).click();
   await expect(dialog).toBeHidden();
-  // «Aún no» también es «ahora no me pregunten»: la segunda no salta.
+  // «Preguntame después» también es «ahora no me pregunten»: la segunda no salta.
   await page.waitForTimeout(1500);
   await expect(dialog).toBeHidden();
 });
