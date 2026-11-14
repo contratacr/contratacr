@@ -106,6 +106,39 @@ const plano = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").
 const unicas = (lista: string[]) => [...new Map(lista.map((h) => h.trim()).filter(Boolean).map((h) => [plano(h), h])).values()];
 
 /** Lo que ya está en el perfil, listo para editar. Nada se inventa. */
+/**
+ * SUMAR LO QUE SE LEYÓ DE UN CV EN ARCHIVO (PDF o Word). No borra nada de lo
+ * que la persona ya tiene: agrega las entradas que faltan, separa los
+ * certificados de los títulos y completa las habilidades hasta las esenciales;
+ * el resto queda como sugerencia para sumar con un toque.
+ */
+export function sumarDesdeArchivo(actual: CvDocumento, leido: unknown): { cv: CvDocumento; agregadas: number } {
+  const cv = normalizeCv(leido);
+  const nuevas = (base: CvEntry[], extra: CvEntry[]) => extra.filter((e, i) => e.title.trim() && !base.some((x) => sameCvEntry(x, e)) && !extra.slice(0, i).some((x) => sameCvEntry(x, e)));
+  const experiencia = nuevas(actual.experiencia, cv.experience);
+  const estudios = cv.education.filter((e) => !esCertificacion(e.title, e.organization));
+  const educacion = nuevas(actual.educacion, estudios);
+  const certificaciones = cv.education.filter((e) => esCertificacion(e.title, e.organization))
+    .map((e) => [e.title.trim(), e.organization.trim(), e.period.trim()].filter(Boolean).join(" · "))
+    .filter((c) => !actual.certificaciones.some((x) => plano(x) === plano(c)));
+  const yaEstan = new Set([...actual.habilidades, ...actual.sugeridas].map(plano));
+  const habilidadesNuevas = unicas(cv.skills).filter((h) => !yaEstan.has(plano(h)));
+  const espacio = Math.max(0, LIMITES.porDefecto - actual.habilidades.length);
+  const todasExp = masRecientePrimero([...actual.experiencia, ...experiencia]).slice(0, LIMITES.entradas);
+  return {
+    cv: {
+      ...actual,
+      titular: actual.titular.trim() || todasExp[0]?.title || "",
+      experiencia: todasExp,
+      educacion: masRecientePrimero([...actual.educacion, ...educacion]).slice(0, LIMITES.entradas),
+      certificaciones: [...actual.certificaciones, ...certificaciones],
+      habilidades: [...actual.habilidades, ...habilidadesNuevas.slice(0, espacio)],
+      sugeridas: unicas([...habilidadesNuevas.slice(espacio), ...actual.sugeridas]).slice(0, LIMITES.sugeridas),
+    },
+    agregadas: experiencia.length + educacion.length + certificaciones.length + habilidadesNuevas.length,
+  };
+}
+
 export function prellenar(datos: DatosDelPerfil, idioma: Idioma): CvDocumento {
   const cv = normalizeCv(datos.cv);
   const servicios = (datos.servicios ?? []).map((s) => s.trim()).filter(Boolean);

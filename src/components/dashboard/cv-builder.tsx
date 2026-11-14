@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocale } from "next-intl";
-import { AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, ClipboardPaste, Copy, Download, FileText, ImageUp, Lightbulb, Mail, Plus, RotateCcw, Target, Trash2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, ClipboardPaste, Copy, Download, FileText, FileUp, ImageUp, Lightbulb, Mail, Plus, RotateCcw, Target, Trash2 } from "lucide-react";
 import { AccionesAlPie } from "@/components/ui/acciones-al-pie";
 import { VACANTE_PARA_CURRICULUM } from "@/components/jobs/preparar-curriculum";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,7 @@ import { languageLabel } from "@/lib/data/languages";
 import { blankDates, parseCvDates, serializeCvDates, type CvDates } from "@/lib/cv/dates";
 import type { CvEntry } from "@/lib/cv/model";
 import {
-  LIMITES, TITULOS, ajustarAVacante, cartaComoTexto, cartaInicial, cuerpoDeLaCarta, cvComoTexto, fechasAts, nombreDeArchivo, palabrasClave, prellenar, revisarCarta, revisarCv,
+  LIMITES, TITULOS, ajustarAVacante, cartaComoTexto, cartaInicial, cuerpoDeLaCarta, cvComoTexto, fechasAts, nombreDeArchivo, palabrasClave, prellenar, revisarCarta, revisarCv, sumarDesdeArchivo,
   type Aviso, type Carta, type CvDocumento, type DatosDelPerfil, type Idioma, type Plantilla,
 } from "@/lib/cv/documento";
 import { cn } from "@/lib/utils";
@@ -335,6 +335,92 @@ function Pasos<T extends PasoCv | PasoCarta>({ pasos, actual, hechos, alElegir, 
 }
 
 /**
+ * «LLENAR DESDE MI CV»: si la persona ya tiene su CV en un archivo (el que
+ * adjuntó en Formación u otro), se lee aquí mismo y se suma a lo que ya hay.
+ * Usa el mismo lector que Formación; nada se borra y todo queda editable.
+ */
+function LlenarDesdeCv({ professionalId, vacio, en, alLeer }: { professionalId: string; vacio: boolean; en: boolean; alLeer: (leido: unknown) => number }) {
+  const endpoint = professionalId ? `/api/professional-cv?professionalId=${encodeURIComponent(professionalId)}` : "";
+  const [adjunto, setAdjunto] = useState<{ name: string } | null>(null);
+  const [leyendo, setLeyendo] = useState(false);
+  const [mensaje, setMensaje] = useState<{ tipo: "ok" | "error"; texto: string } | null>(null);
+  const input = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (!endpoint) return;
+    const abort = new AbortController();
+    fetch(`${endpoint}&metadata=1`, { cache: "no-store", signal: abort.signal })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d?.file?.name) setAdjunto({ name: String(d.file.name) }); })
+      .catch(() => { /* sin CV adjunto: queda la opción de elegir un archivo */ });
+    return () => abort.abort();
+  }, [endpoint]);
+
+  const leer = async (obtener: () => Promise<File>) => {
+    setLeyendo(true); setMensaje(null);
+    try {
+      const archivo = await obtener();
+      const { readCvFile, CvReadError } = await import("@/lib/cv/read-file");
+      const { reviewCv } = await import("@/lib/cv/model");
+      let texto: string;
+      try { texto = await readCvFile(archivo); } catch (err) {
+        const codigo = err instanceof CvReadError ? err.code : "unreadable";
+        const textos: Record<string, [string, string]> = {
+          format: ["Elegí un PDF o un Word (.docx).", "Choose a PDF or a Word file (.docx)."],
+          size: ["El archivo está vacío o pesa más de 5 MB.", "The file is empty or larger than 5 MB."],
+          protected: ["El archivo tiene contraseña. Exportá una copia sin contraseña.", "The file is password-protected. Export an unprotected copy."],
+        };
+        const [es, eng] = textos[codigo] ?? ["No pudimos leerlo. Usá un PDF con texto seleccionable o un Word.", "We couldn't read it. Use a PDF with selectable text or a Word file."];
+        throw new Error(en ? eng : es);
+      }
+      const n = alLeer(reviewCv(texto).profile);
+      setMensaje(n
+        ? { tipo: "ok", texto: en ? `Added ${n} item${n === 1 ? "" : "s"}. Review them in each step.` : `Agregamos ${n} dato${n === 1 ? "" : "s"}. Revisalos en cada paso.` }
+        : { tipo: "ok", texto: en ? "Everything in that CV is already here." : "Todo lo de ese CV ya estaba aquí." });
+    } catch (err) {
+      setMensaje({ tipo: "error", texto: err instanceof Error && err.message ? err.message : (en ? "We couldn't read it." : "No pudimos leerlo.") });
+    } finally { setLeyendo(false); }
+  };
+  const usarAdjunto = () => leer(async () => {
+    const r = await fetch(endpoint, { cache: "no-store" });
+    if (!r.ok) throw new Error(en ? "We couldn't open the CV on your profile." : "No pudimos abrir el CV de tu perfil.");
+    const blob = await r.blob();
+    return new File([blob], adjunto?.name || "cv", { type: blob.type });
+  });
+  const destacado = vacio && !!adjunto;
+
+  return (
+    <section className={cn("rounded-2xl border p-4", destacado ? "border-[#9fd8ee] bg-[#f1faff]" : "border-[#e5e7eb] bg-white")}>
+      <div className="flex items-start gap-3">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#e6f6fc] text-[#007fae]"><FileUp className="h-5 w-5" /></span>
+        <div className="min-w-0 flex-1">
+          <h3 className="text-[15px] font-black text-[#162543]">
+            {destacado ? (en ? "You have a CV on your profile" : "Tenés un CV en tu perfil") : (en ? "Already have a CV?" : "¿Ya tenés un CV?")}
+          </h3>
+          <p className="mt-0.5 text-[13px] leading-5 text-[#667085]">
+            {destacado
+              ? (en ? "Shall we use it to fill this in? Nothing you wrote is deleted." : "¿Lo usamos para llenar esto? No se borra nada de lo que ya tenés.")
+              : (en ? "Fill this in from your file (PDF or Word). Nothing you wrote is deleted." : "Llenalo desde tu archivo (PDF o Word). No se borra nada de lo que ya tenés.")}
+          </p>
+        </div>
+      </div>
+      <input ref={input} hidden type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" aria-label={en ? "Choose CV file" : "Elegir archivo del CV"} onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void leer(async () => f); }} />
+      <div className="mt-3 grid gap-2 @[560px]:grid-cols-2">
+        {adjunto && (
+          <button type="button" disabled={leyendo} onClick={() => void usarAdjunto()} className={cn(pastilla, "bg-[#009FD9] text-white hover:bg-[#0089bb]")}>
+            <FileText className="h-4 w-4" />{en ? "Use my profile CV" : "Usar el CV de mi perfil"}
+          </button>
+        )}
+        <button type="button" disabled={leyendo} onClick={() => input.current?.click()} className={cn(pastilla, "border border-[#d7e1ea] bg-white text-[#162543] hover:bg-[#f8fafc]")}>
+          <FileUp className="h-4 w-4" />{adjunto ? (en ? "Choose another file" : "Elegir otro archivo") : (en ? "Choose file" : "Elegir archivo")}
+        </button>
+      </div>
+      {leyendo && <p role="status" className="mt-2 text-[13px] text-[#667085]">{en ? "Reading your CV…" : "Leyendo tu CV…"}</p>}
+      {mensaje && <p role={mensaje.tipo === "error" ? "alert" : "status"} className={cn("mt-2 text-[13px] font-semibold", mensaje.tipo === "error" ? "text-[#b42318]" : "text-[#067647]")}>{mensaje.texto}</p>}
+    </section>
+  );
+}
+
+/**
  * «ADAPTAR A UN PUESTO»: lo primero del generador. Se pega la vacante o se sube
  * una foto (se lee en el dispositivo). Sin IA, adaptar es ORDENAR, RESALTAR y
  * PRELLENAR: suben las habilidades que pide, se ven las palabras que faltan y
@@ -493,6 +579,11 @@ function Editor({ pro, clave, documentoInicial, nombreCuenta, correo }: { pro: P
     return { ...b, cv: cvAdaptado, carta, vacante: texto };
   });
   const quitarVacante = () => setBorrador((b) => ({ ...b, vacante: "" }));
+  const sumarArchivo = (leido: unknown) => {
+    const { cv: nuevo, agregadas } = sumarDesdeArchivo(cv, leido);
+    if (agregadas) setCv(nuevo);
+    return agregadas;
+  };
   const sumarHabilidad = (h: string) => setCv({ habilidades: [...cv.habilidades, h], sugeridas: cv.sugeridas.filter((x) => x.toLowerCase() !== h.toLowerCase()) });
   const cobertura = useMemo(() => (vacante.trim().length > 30 ? palabrasClave(vacante, cv) : null), [vacante, cv]);
 
@@ -570,6 +661,8 @@ function Editor({ pro, clave, documentoInicial, nombreCuenta, correo }: { pro: P
   // ── LOS PASOS ──
   const pasoDelCv: Record<PasoCv, ReactNode> = {
     contacto: (
+      <div className="grid gap-4">
+      <LlenarDesdeCv professionalId={String(pro?.id ?? "")} vacio={!cv.experiencia.length && !cv.educacion.length} en={en} alLeer={sumarArchivo} />
       <Tarjeta
         titulo={en ? "Your details" : "Tus datos"}
         ayuda={en ? "They go in the body of the document, where screening systems read them." : "Van en el cuerpo del documento, donde los filtros automáticos sí los leen."}
@@ -593,6 +686,7 @@ function Editor({ pro, clave, documentoInicial, nombreCuenta, correo }: { pro: P
           <Input label={en ? "Link (profile or website)" : "Enlace (perfil o sitio web)"} value={cv.enlace} maxLength={200} onChange={(e) => setCv({ enlace: e.target.value })} />
         </div>
       </Tarjeta>
+      </div>
     ),
     experiencia: (
       <Tarjeta titulo={tituloCv.experiencia} ayuda={en ? "Most recent first. Start each achievement with a verb and add numbers." : "Lo más reciente primero. Empezá cada logro con un verbo y agregá números."}>

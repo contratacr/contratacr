@@ -1,6 +1,6 @@
 import { expect, test } from "playwright/test";
 import {
-  ajustarAVacante, cartaComoTexto, cartaInicial, cvComoTexto, esCertificacion, fechasAts, nombreDeArchivo, palabrasClave, prellenar, revisarCarta, revisarCv,
+  ajustarAVacante, cartaComoTexto, cartaInicial, cvComoTexto, esCertificacion, fechasAts, nombreDeArchivo, palabrasClave, prellenar, revisarCarta, revisarCv, sumarDesdeArchivo,
 } from "../../src/lib/cv/documento";
 import { pdfDelCv, pdfDeLaCarta } from "../../src/lib/cv/pdf-documento";
 import { empresaProbable, imagenValida, limpiarTextoLeido, puestoProbable } from "../../src/lib/cv/leer-imagen";
@@ -43,6 +43,25 @@ test("se prellena con el perfil, lo más reciente primero, sin habilidades repet
   // Una cuenta sin ficha arranca con lo poco que hay, sin inventar nada.
   const vacio = prellenar({ nombre: "Luis", correo: "luis@example.com" }, "en");
   expect(vacio).toMatchObject({ nombre: "Luis", titular: "", resumen: "", experiencia: [], habilidades: [], sugeridas: [] });
+});
+
+test("llenar desde un CV en archivo suma sin borrar ni repetir", () => {
+  const base = prellenar(perfil, "es");
+  const yaTenia = base.experiencia[0];
+  const leido = {
+    experience: [{ ...yaTenia }, { title: "Técnico de soporte", organization: "Helpdesk SA", period: "2015 - 2017", description: "" }],
+    education: [{ title: "Bachillerato en Informática", organization: "UCR", period: "2014", description: "" }, { title: "Certificación ISTQB", organization: "ISTQB", period: "2020", description: "" }],
+    skills: ["Liderazgo", "liderazgo"],
+  };
+  const { cv, agregadas } = sumarDesdeArchivo(base, leido);
+  expect(cv.experiencia.filter((e) => e.title === yaTenia.title)).toHaveLength(1);
+  expect(cv.experiencia.some((e) => e.title === "Técnico de soporte")).toBe(true);
+  expect(cv.educacion.some((e) => e.title === "Bachillerato en Informática")).toBe(true);
+  expect(cv.certificaciones.some((c) => c.startsWith("Certificación ISTQB"))).toBe(true);
+  expect([...cv.habilidades, ...cv.sugeridas].filter((h) => h.toLowerCase() === "liderazgo")).toHaveLength(1);
+  expect(cv.nombre).toBe(base.nombre);
+  expect(agregadas).toBe(4);
+  expect(sumarDesdeArchivo(cv, leido).agregadas).toBe(0);
 });
 
 test("títulos y certificaciones se distinguen", () => {

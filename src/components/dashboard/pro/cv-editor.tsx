@@ -5,7 +5,8 @@ import { useLocale } from 'next-intl';
 import { blankDates, parseCvDates, serializeCvDates, invalidCvDates, formatCvDates } from '@/lib/cv/dates';
 import { CvFileEditor } from './cv-file-editor';
 import { Button } from '@/components/ui/button';
-import { X, Plus, FileText, ChevronDown, Pencil, Check, BriefcaseBusiness, GraduationCap, ScanText } from 'lucide-react';
+import { Link } from '@/i18n/navigation';
+import { X, Plus, FileText, ChevronDown, Pencil, Check, BriefcaseBusiness, GraduationCap, ScanText, ArrowRight } from 'lucide-react';
 import { CV_LIMITS, emptyCv, hasCv, keyOf, mergeCv, normalizeCv, reviewCv, sameCvEntry, type CvEntry, type CvProfile } from '@/lib/cv/model';
 
 const inputClass = 'min-h-11 w-full rounded-xl border border-[#dce5ee] bg-white px-3 py-2 text-sm text-[#162543] focus:outline-none focus:ring-2 focus:ring-[#009FD9]';
@@ -175,6 +176,11 @@ export function CvEditor({ value, onChange, disabled = false, legacyEducation = 
         <p className="mt-0.5 text-[13px] leading-snug text-[#52627a]">{english ? 'We read your experience, education and skills so you can review them before adding.' : 'Leemos tu experiencia, estudios y habilidades para que los revisés antes de agregarlos.'}</p>
         <Button type="button" variant="outline" className="mt-3 min-h-11 bg-white" disabled={busy} onClick={() => choose('import')}><ScanText size={16}/>{english ? 'Choose CV to read' : 'Elegir CV para leer'}</Button>
         {busy && <p role="status" className="mt-2 text-xs text-[#68778d]">{english ? 'Reading CV…' : 'Leyendo CV…'}</p>}
+      </div>
+      <div className="mt-4 border-t border-[#c9e7f2] pt-4">
+        <p className="text-sm font-semibold text-[#162543]">{english ? 'Applying for a job?' : '¿Vas a postular a un empleo?'}</p>
+        <p className="mt-0.5 text-[13px] leading-snug text-[#52627a]">{english ? 'Create a version that passes screening filters, with a cover letter, from this information.' : 'Creá una versión que pase los filtros automáticos, con carta de presentación, a partir de estos datos.'}</p>
+        <Link href="/dashboard/profesional?tab=cv" className="mt-3 inline-flex min-h-11 items-center gap-1.5 rounded-full px-1 text-sm font-bold text-[#0089bb]">{english ? 'Create a version to apply' : 'Crear versión para postular'}<ArrowRight size={16}/></Link>
       </div>
     </div>
     {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
