@@ -582,7 +582,7 @@ function Editor({ pro, clave, documentoInicial, nombreCuenta, correo }: { pro: P
           <Input label={en ? "Email" : "Correo"} type="email" value={cv.correo} maxLength={160} onChange={(e) => setCv({ correo: e.target.value })} />
           <Input label={en ? "Phone" : "Teléfono"} inputMode="tel" value={cv.telefono} maxLength={40} onChange={(e) => setCv({ telefono: e.target.value })} />
           <Input label={en ? "Location" : "Ubicación"} value={cv.ubicacion} maxLength={120} onChange={(e) => setCv({ ubicacion: e.target.value })} />
-          <Input label={en ? "Link (profile or portfolio)" : "Enlace (perfil o portafolio)"} value={cv.enlace} maxLength={200} onChange={(e) => setCv({ enlace: e.target.value })} />
+          <Input label={en ? "Link (profile or website)" : "Enlace (perfil o sitio web)"} value={cv.enlace} maxLength={200} onChange={(e) => setCv({ enlace: e.target.value })} />
         </div>
       </Tarjeta>
     ),
