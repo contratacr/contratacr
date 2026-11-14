@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocale } from "next-intl";
-import { AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, ClipboardPaste, Copy, Download, FileText, ImageUp, Lightbulb, Mail, Plus, RotateCcw, Target, Trash2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, ClipboardPaste, Copy, Download, FileText, FileUp, ImageUp, Lightbulb, Mail, Plus, RotateCcw, Target, Trash2 } from "lucide-react";
 import { AccionesAlPie } from "@/components/ui/acciones-al-pie";
+import { Link } from "@/i18n/navigation";
 import { VACANTE_PARA_CURRICULUM } from "@/components/jobs/preparar-curriculum";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
@@ -13,7 +14,7 @@ import { languageLabel } from "@/lib/data/languages";
 import { blankDates, parseCvDates, serializeCvDates, type CvDates } from "@/lib/cv/dates";
 import type { CvEntry } from "@/lib/cv/model";
 import {
-  LIMITES, TITULOS, ajustarAVacante, cartaComoTexto, cartaInicial, cuerpoDeLaCarta, cvComoTexto, fechasAts, nombreDeArchivo, palabrasClave, prellenar, revisarCarta, revisarCv,
+  LIMITES, TITULOS, ajustarAVacante, cartaComoTexto, cartaInicial, cuerpoDeLaCarta, cvComoTexto, fechasAts, nombreDeArchivo, palabrasClave, prellenar, revisarCarta, revisarCv, sumarDesdeArchivo,
   type Aviso, type Carta, type CvDocumento, type DatosDelPerfil, type Idioma, type Plantilla,
 } from "@/lib/cv/documento";
 import { cn } from "@/lib/utils";
@@ -271,16 +272,16 @@ function leerVacante(): VacanteRecibida | null {
 }
 
 /** Espera la sesión: el borrador es de cada cuenta. Se rearma si llega el perfil. */
-export function CvBuilder({ pro, documentoInicial = "cv" }: { pro: ProData; documentoInicial?: "cv" | "carta" }) {
+export function CvBuilder({ pro, documento = "cv" }: { pro: ProData; documento?: "cv" | "carta" }) {
   const { user } = useAuth();
   if (!user) return null;
   const clave = `${CLAVE}:${user.id}`;
-  return <Editor key={`${clave}:${pro?.id ?? ""}`} pro={pro} clave={clave} documentoInicial={documentoInicial} nombreCuenta={String(user.user_metadata?.full_name ?? "")} correo={user.email ?? ""} />;
+  return <Editor key={`${clave}:${pro?.id ?? ""}:${documento}`} pro={pro} clave={clave} documento={documento} nombreCuenta={String(user.user_metadata?.full_name ?? "")} correo={user.email ?? ""} />;
 }
 
-type PasoCv = "contacto" | "experiencia" | "educacion" | "habilidades" | "perfil" | "revisar";
+type PasoCv = "contacto" | "experiencia" | "educacion" | "habilidades" | "perfil" | "adaptar" | "revisar";
 type PasoCarta = "puesto" | "contenido" | "revisar";
-const PASOS_CV: PasoCv[] = ["contacto", "experiencia", "educacion", "habilidades", "perfil", "revisar"];
+const PASOS_CV: PasoCv[] = ["contacto", "experiencia", "educacion", "habilidades", "perfil", "adaptar", "revisar"];
 const PASOS_CARTA: PasoCarta[] = ["puesto", "contenido", "revisar"];
 const NOMBRE_PASO: Record<PasoCv | PasoCarta, { es: string; en: string }> = {
   contacto: { es: "Contacto", en: "Contact" },
@@ -288,6 +289,7 @@ const NOMBRE_PASO: Record<PasoCv | PasoCarta, { es: string; en: string }> = {
   educacion: { es: "Educación", en: "Education" },
   habilidades: { es: "Habilidades", en: "Skills" },
   perfil: { es: "Perfil", en: "Summary" },
+  adaptar: { es: "Adaptar (opcional)", en: "Tailor (optional)" },
   revisar: { es: "Revisar y descargar", en: "Review & download" },
   puesto: { es: "Puesto", en: "Position" },
   contenido: { es: "Contenido", en: "Content" },
@@ -316,8 +318,16 @@ function Pasos<T extends PasoCv | PasoCarta>({ pasos, actual, hechos, alElegir, 
                 paso === actual ? "border-[#009FD9] bg-[#eef8fd] text-[#007fae]" : "border-[#e5e7eb] bg-white text-[#52627a] hover:text-[#162543]",
               )}
             >
-              {hechos.has(paso) && paso !== actual ? <CheckCircle2 className="h-4 w-4 text-[#12b76a]" /> : <span className="text-[11px] font-bold">{i + 1}</span>}
+              <span
+                className={cn(
+                  "inline-flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold",
+                  paso === actual ? "bg-[#009FD9] text-white" : hechos.has(paso) ? "bg-[#d1f0e0] text-[#067647]" : "bg-[#eef3f7] text-[#52627a]",
+                )}
+              >
+                {i + 1}
+              </span>
               {NOMBRE_PASO[paso][en ? "en" : "es"]}
+              {hechos.has(paso) && paso !== actual && <span className="sr-only">{en ? " (done)" : " (completo)"}</span>}
             </button>
           </li>
         ))}
@@ -327,21 +337,111 @@ function Pasos<T extends PasoCv | PasoCarta>({ pasos, actual, hechos, alElegir, 
 }
 
 /**
+ * «LLENAR DESDE MI CV»: si la persona ya tiene su CV en un archivo (el que
+ * adjuntó en Formación u otro), se lee aquí mismo y se suma a lo que ya hay.
+ * Usa el mismo lector que Formación; nada se borra y todo queda editable.
+ */
+function LlenarDesdeCv({ professionalId, vacio, en, alLeer }: { professionalId: string; vacio: boolean; en: boolean; alLeer: (leido: unknown) => number }) {
+  const endpoint = professionalId ? `/api/professional-cv?professionalId=${encodeURIComponent(professionalId)}` : "";
+  const [adjunto, setAdjunto] = useState<{ name: string } | null>(null);
+  const [leyendo, setLeyendo] = useState(false);
+  const [mensaje, setMensaje] = useState<{ tipo: "ok" | "error"; texto: string } | null>(null);
+  const input = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (!endpoint) return;
+    const abort = new AbortController();
+    fetch(`${endpoint}&metadata=1`, { cache: "no-store", signal: abort.signal })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d?.file?.name) setAdjunto({ name: String(d.file.name) }); })
+      .catch(() => { /* sin CV adjunto: queda la opción de elegir un archivo */ });
+    return () => abort.abort();
+  }, [endpoint]);
+
+  const leer = async (obtener: () => Promise<File>) => {
+    setLeyendo(true); setMensaje(null);
+    try {
+      const archivo = await obtener();
+      const { readCvFile, CvReadError } = await import("@/lib/cv/read-file");
+      const { reviewCv } = await import("@/lib/cv/model");
+      let texto: string;
+      try { texto = await readCvFile(archivo); } catch (err) {
+        const codigo = err instanceof CvReadError ? err.code : "unreadable";
+        const textos: Record<string, [string, string]> = {
+          format: ["Elegí un PDF o un Word (.docx).", "Choose a PDF or a Word file (.docx)."],
+          size: ["El archivo está vacío o pesa más de 5 MB.", "The file is empty or larger than 5 MB."],
+          protected: ["El archivo tiene contraseña. Exportá una copia sin contraseña.", "The file is password-protected. Export an unprotected copy."],
+        };
+        const [es, eng] = textos[codigo] ?? ["No pudimos leerlo. Usá un PDF con texto seleccionable o un Word.", "We couldn't read it. Use a PDF with selectable text or a Word file."];
+        throw new Error(en ? eng : es);
+      }
+      const n = alLeer(reviewCv(texto).profile);
+      setMensaje(n
+        ? { tipo: "ok", texto: en ? `Added ${n} item${n === 1 ? "" : "s"}. Review them in each step.` : `Agregamos ${n} dato${n === 1 ? "" : "s"}. Revisalos en cada paso.` }
+        : { tipo: "ok", texto: en ? "Everything in that CV is already here." : "Todo lo de ese CV ya estaba aquí." });
+    } catch (err) {
+      setMensaje({ tipo: "error", texto: err instanceof Error && err.message ? err.message : (en ? "We couldn't read it." : "No pudimos leerlo.") });
+    } finally { setLeyendo(false); }
+  };
+  const usarAdjunto = () => leer(async () => {
+    const r = await fetch(endpoint, { cache: "no-store" });
+    if (!r.ok) throw new Error(en ? "We couldn't open the CV on your profile." : "No pudimos abrir el CV de tu perfil.");
+    const blob = await r.blob();
+    return new File([blob], adjunto?.name || "cv", { type: blob.type });
+  });
+  const destacado = vacio && !!adjunto;
+
+  return (
+    <section className={cn("rounded-2xl border p-4", destacado ? "border-[#9fd8ee] bg-[#f1faff]" : "border-[#e5e7eb] bg-white")}>
+      <div className="flex items-start gap-3">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#e6f6fc] text-[#007fae]"><FileUp className="h-5 w-5" /></span>
+        <div className="min-w-0 flex-1">
+          <h3 className="text-[15px] font-black text-[#162543]">
+            {destacado ? (en ? "You have a CV on your profile" : "Tenés un CV en tu perfil") : (en ? "Already have a CV?" : "¿Ya tenés un CV?")}
+          </h3>
+          <p className="mt-0.5 text-[13px] leading-5 text-[#667085]">
+            {destacado
+              ? (en ? "Shall we use it to fill this in? Nothing you wrote is deleted." : "¿Lo usamos para llenar esto? No se borra nada de lo que ya tenés.")
+              : (en ? "Fill this in from your file (PDF or Word). Nothing you wrote is deleted." : "Llenalo desde tu archivo (PDF o Word). No se borra nada de lo que ya tenés.")}
+          </p>
+        </div>
+      </div>
+      <input ref={input} hidden type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" aria-label={en ? "Choose CV file" : "Elegir archivo del CV"} onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void leer(async () => f); }} />
+      <div className="mt-3 grid gap-2 @[560px]:grid-cols-2">
+        {adjunto && (
+          <button type="button" disabled={leyendo} onClick={() => void usarAdjunto()} className={cn(pastilla, "bg-[#009FD9] text-white hover:bg-[#0089bb]")}>
+            <FileText className="h-4 w-4" />{en ? "Use my profile CV" : "Usar el CV de mi perfil"}
+          </button>
+        )}
+        <button type="button" disabled={leyendo} onClick={() => input.current?.click()} className={cn(pastilla, "border border-[#d7e1ea] bg-white text-[#162543] hover:bg-[#f8fafc]")}>
+          <FileUp className="h-4 w-4" />{adjunto ? (en ? "Choose another file" : "Elegir otro archivo") : (en ? "Choose file" : "Elegir archivo")}
+        </button>
+      </div>
+      {leyendo && <p role="status" className="mt-2 text-[13px] text-[#667085]">{en ? "Reading your CV…" : "Leyendo tu CV…"}</p>}
+      {mensaje && <p role={mensaje.tipo === "error" ? "alert" : "status"} className={cn("mt-2 text-[13px] font-semibold", mensaje.tipo === "error" ? "text-[#b42318]" : "text-[#067647]")}>{mensaje.texto}</p>}
+    </section>
+  );
+}
+
+/**
  * «ADAPTAR A UN PUESTO»: lo primero del generador. Se pega la vacante o se sube
  * una foto (se lee en el dispositivo). Sin IA, adaptar es ORDENAR, RESALTAR y
  * PRELLENAR: suben las habilidades que pide, se ven las palabras que faltan y
  * la carta sale dirigida. Lo que la persona escribió no se reescribe.
  */
-function AdaptarAPuesto({ en, vacante, puesto, empresa, cv, alAdaptar, alQuitar, alSumar }: {
+function AdaptarAPuesto({ en, vacante, puesto, empresa, cv, completo, alAdaptar, alQuitar, alSumar, alUsarTitulo }: {
   en: boolean; vacante: string; puesto: string; empresa: string; cv: CvDocumento;
+  /** En el currículum se muestra todo el análisis; en la carta, solo a quién va dirigida. */
+  completo: boolean;
   alAdaptar: (v: { texto: string; puesto: string; empresa: string }) => void;
   alQuitar: () => void;
   alSumar: (habilidad: string) => void;
+  alUsarTitulo: (titulo: string) => void;
 }) {
   const [abierto, setAbierto] = useState(false);
   const [texto, setTexto] = useState(vacante);
-  const [p, setP] = useState(puesto);
-  const [e, setE] = useState(empresa);
+  // Sin vacante todavía, el puesto lo trae la vacante, no el título del CV.
+  const [p, setP] = useState(vacante ? puesto : "");
+  const [e, setE] = useState(vacante ? empresa : "");
   const [leyendo, setLeyendo] = useState<number | null>(null);
   const [error, setError] = useState("");
   const archivo = useRef<HTMLInputElement>(null);
@@ -349,7 +449,7 @@ function AdaptarAPuesto({ en, vacante, puesto, empresa, cv, alAdaptar, alQuitar,
 
   const leerImagen = async (f: File | undefined) => {
     if (!f) return;
-    const { imagenValida, leerTextoDeImagen, puestoProbable } = await import("@/lib/cv/leer-imagen");
+    const { empresaProbable, imagenValida, leerTextoDeImagen, puestoProbable } = await import("@/lib/cv/leer-imagen");
     const ok = imagenValida(f);
     if (ok !== "ok") { setError(ok === "tipo" ? (en ? "That file isn't an image." : "Ese archivo no es una imagen.") : (en ? "The image is over 10 MB." : "La imagen pasa de 10 MB.")); return; }
     setError(""); setLeyendo(0); setAbierto(true);
@@ -357,7 +457,8 @@ function AdaptarAPuesto({ en, vacante, puesto, empresa, cv, alAdaptar, alQuitar,
       const leido = await leerTextoDeImagen(f, (a) => setLeyendo(a));
       if (leido.length < 20) setError(en ? "We couldn't read much from that image. Try a sharper one or paste the text." : "No pudimos leer casi nada de esa imagen. Probá con una más nítida o pegá el texto.");
       setTexto((t) => [t.trim(), leido].filter(Boolean).join("\n\n"));
-      if (!p.trim()) setP(puestoProbable(leido));
+      setP((actual) => actual.trim() || puestoProbable(leido));
+      setE((actual) => actual.trim() || empresaProbable(leido));
     } catch {
       setError(en ? "The image couldn't be read on this device. Paste the text instead." : "No se pudo leer la imagen en este dispositivo. Pegá el texto.");
     } finally {
@@ -371,25 +472,54 @@ function AdaptarAPuesto({ en, vacante, puesto, empresa, cv, alAdaptar, alQuitar,
   );
 
   if (vacante.trim() && !abierto) {
+    const nivel = !coincidencia ? null : coincidencia.puntaje >= 70 ? "alta" : coincidencia.puntaje >= 40 ? "media" : "baja";
+    const etiquetaNivel = nivel === "alta" ? (en ? "Strong match" : "Buena coincidencia") : nivel === "media" ? (en ? "Partial match" : "Coincidencia media") : (en ? "Low match" : "Coincidencia baja");
+    const colorNivel = nivel === "alta" ? "#12b76a" : nivel === "media" ? "#f79009" : "#f04438";
+    const tituloAjeno = puesto.trim() && puesto.trim().toLowerCase() !== cv.titular.trim().toLowerCase();
     return (
-      <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#cfe8f4] bg-[#f3fafe] px-4 py-3" data-testid="cv-adaptado">
-        <div className="min-w-0">
-          <p className="flex items-center gap-1.5 text-[13px] font-black text-[#162543]"><Target className="h-4 w-4 text-[#007fae]" />{en ? "Tailored to: " : "Adaptado a: "}<span className="truncate">{[puesto, empresa].filter(Boolean).join(" – ") || (en ? "a job post" : "una vacante")}</span></p>
-          {coincidencia && <p className="mt-0.5 text-xs text-[#52627a]">{en ? `Your resume has ${coincidencia.estan.length} of ${coincidencia.estan.length + coincidencia.faltan.length} keywords from the post.` : `Tu currículum tiene ${coincidencia.estan.length} de ${coincidencia.estan.length + coincidencia.faltan.length} palabras clave del puesto.`}</p>}
-        </div>
-        <div className="flex gap-1">
-          <button type="button" onClick={() => { setTexto(vacante); setP(puesto); setE(empresa); setAbierto(true); }} className="h-9 rounded-full px-3 text-[13px] font-semibold text-[#007fae] hover:bg-white">{en ? "Change" : "Cambiar"}</button>
-          <button type="button" onClick={alQuitar} className="h-9 rounded-full px-3 text-[13px] font-semibold text-[#52627a] hover:bg-white">{en ? "Remove" : "Quitar"}</button>
-        </div>
-        {coincidencia && coincidencia.faltan.length > 0 && (
-          <div className="w-full">
-            <p className="mb-1.5 text-xs font-semibold text-[#93370d]">{en ? "It asks for — add only if true for you:" : "Pide esto, sumalo solo si de verdad aplica a vos:"}</p>
-            <ul className="flex flex-wrap gap-1.5">
-              {coincidencia.faltan.slice(0, 12).map((h) => (
-                <li key={h}><button type="button" onClick={() => alSumar(h)} className="inline-flex h-8 items-center gap-1 rounded-full border border-dashed border-[#f1b37a] bg-white px-2.5 text-[12px] font-semibold text-[#93370d] hover:bg-[#fffaeb]"><Plus className="h-3.5 w-3.5" />{h}</button></li>
-              ))}
-            </ul>
+      <section className="grid gap-4 rounded-2xl border border-[#cfe8f4] bg-[#f3fafe] p-4 sm:p-5" data-testid="cv-adaptado">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="flex min-w-0 items-center gap-1.5 text-[13px] font-black text-[#162543]"><Target className="h-4 w-4 shrink-0 text-[#007fae]" />{en ? "Tailored to: " : "Adaptado a: "}<span className="truncate">{[puesto, empresa].filter(Boolean).join(" – ") || (en ? "a job post" : "una vacante")}</span></p>
+          <div className="flex gap-1">
+            <button type="button" onClick={() => { setTexto(vacante); setP(puesto); setE(empresa); setAbierto(true); }} className="h-9 rounded-full px-3 text-[13px] font-semibold text-[#007fae] hover:bg-white">{en ? "Change" : "Cambiar"}</button>
+            <button type="button" onClick={alQuitar} className="h-9 rounded-full px-3 text-[13px] font-semibold text-[#52627a] hover:bg-white">{en ? "Remove" : "Quitar"}</button>
           </div>
+        </div>
+        {!completo && <p className="text-[13px] leading-5 text-[#52627a]">{en ? "Your letter is addressed to this position and company." : "Tu carta va dirigida a este puesto y esta empresa."}</p>}
+        {completo && coincidencia && (
+          <>
+            <div className="rounded-xl bg-white p-3.5">
+              <div className="flex items-baseline justify-between gap-2">
+                <p className="text-[13px] font-black text-[#162543]">{etiquetaNivel}</p>
+                <p className="text-2xl font-black text-[#162543]" aria-label={en ? `${coincidencia.puntaje} percent` : `${coincidencia.puntaje} por ciento`}>{coincidencia.puntaje}%</p>
+              </div>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#eef3f7]" aria-hidden><div className="h-full rounded-full transition-[width] duration-500" style={{ width: `${Math.max(4, coincidencia.puntaje)}%`, backgroundColor: colorNivel }} /></div>
+              <p className="mt-2 text-xs leading-5 text-[#667085]">{en ? `Your resume has ${coincidencia.estan.length} of the ${coincidencia.estan.length + coincidencia.faltan.length} key words in the post. Screening systems compare exact words.` : `Tu currículum tiene ${coincidencia.estan.length} de las ${coincidencia.estan.length + coincidencia.faltan.length} palabras clave de la vacante. Los filtros automáticos comparan palabras exactas.`}</p>
+            </div>
+            {coincidencia.estan.length > 0 && (
+              <div>
+                <p className="mb-1.5 text-xs font-semibold text-[#067647]">{en ? "Already in your resume" : "Ya las tenés"}</p>
+                <ul className="flex flex-wrap gap-1.5">{coincidencia.estan.slice(0, 14).map((h) => <li key={h} className="inline-flex h-7 items-center gap-1 rounded-full bg-[#ecfdf3] px-2.5 text-[12px] font-semibold text-[#067647]"><CheckCircle2 className="h-3.5 w-3.5" />{h}</li>)}</ul>
+              </div>
+            )}
+            {coincidencia.faltan.length > 0 && (
+              <div>
+                <p className="mb-1.5 text-xs font-semibold text-[#93370d]">{en ? "It asks for these and they don't appear. Add one only if it is true for you:" : "Lo pide y no aparece. Sumala solo si de verdad aplica a vos:"}</p>
+                <ul className="flex flex-wrap gap-1.5">
+                  {coincidencia.faltan.slice(0, 12).map((h) => (
+                    <li key={h}><button type="button" onClick={() => alSumar(h)} className="inline-flex h-8 items-center gap-1 rounded-full border border-dashed border-[#f1b37a] bg-white px-2.5 text-[12px] font-semibold text-[#93370d] hover:bg-[#fffaeb]"><Plus className="h-3.5 w-3.5" />{h}</button></li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {tituloAjeno && (
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white p-3">
+                <p className="min-w-0 flex-1 basis-56 text-[13px] leading-5 text-[#162543]">{en ? `Your title says "${cv.titular || "(empty)"}" and the post says "${puesto}". If the post describes you, use its title: it's the first thing filters compare.` : `Tu título dice "${cv.titular || "(vacío)"}" y la vacante dice "${puesto}". Si la vacante te describe, usá su título: es lo primero que comparan los filtros.`}</p>
+                <button type="button" onClick={() => alUsarTitulo(puesto.trim())} className="h-9 shrink-0 rounded-full border border-[#b9d9e8] bg-white px-4 text-[13px] font-bold text-[#007fae] hover:bg-[#f1f9fc]">{en ? "Use this title" : "Usar este título"}</button>
+              </div>
+            )}
+            <p className="text-xs leading-5 text-[#667085]">{en ? "We put first the skills it asks for and, inside each job, the achievements closest to the post. No sentence was rewritten." : "Pusimos primero las habilidades que pide y, dentro de cada trabajo, los logros que más se parecen a la vacante. No se reescribió ninguna frase."}</p>
+          </>
         )}
       </section>
     );
@@ -401,7 +531,7 @@ function AdaptarAPuesto({ en, vacante, puesto, empresa, cv, alAdaptar, alQuitar,
       <div className="flex items-start gap-3">
         <span className="ccr-caja-icono grid h-10 w-10 shrink-0 place-items-center rounded-xl"><Target className="h-5 w-5" /></span>
         <div className="min-w-0 flex-1">
-          <h3 className="text-[15px] font-black text-[#162543]">{en ? "Tailor my resume to a job" : "Adaptar mi currículum a un puesto"}</h3>
+          <h3 className="text-[15px] font-black text-[#162543]">{completo ? (en ? "Tailor my resume to a job (optional)" : "Adaptar mi currículum a un puesto (opcional)") : (en ? "Address it to a job post (optional)" : "Dirigirla a una vacante (opcional)")}</h3>
           <p className="mt-0.5 text-[13px] leading-5 text-[#667085]">{en ? "Paste the job post or upload a photo of it. We put first the skills it asks for and address your letter. Your own sentences stay as you wrote them." : "Pegá la vacante o subí una foto. Ponemos primero las habilidades que pide y dirigimos tu carta. Tus frases quedan como las escribiste."}</p>
         </div>
       </div>
@@ -439,7 +569,7 @@ function AdaptarAPuesto({ en, vacante, puesto, empresa, cv, alAdaptar, alQuitar,
   );
 }
 
-function Editor({ pro, clave, documentoInicial, nombreCuenta, correo }: { pro: ProData; clave: string; documentoInicial: "cv" | "carta"; nombreCuenta: string; correo: string }) {
+function Editor({ pro, clave, documento, nombreCuenta, correo }: { pro: ProData; clave: string; documento: "cv" | "carta"; nombreCuenta: string; correo: string }) {
   const idiomaApp: Idioma = useLocale() === "en" ? "en" : "es";
   const en = idiomaApp === "en";
   const desdeElPerfil = (idioma: Idioma): Borrador => {
@@ -455,8 +585,9 @@ function Editor({ pro, clave, documentoInicial, nombreCuenta, correo }: { pro: P
     const cv = ajustarAVacante(base.cv, [v.puesto, v.texto].filter(Boolean).join("\n"));
     return { cv, carta: cartaInicial(cv, { puesto: v.puesto, empresa: v.empresa }), vacante: v.texto ?? "" };
   });
-  const [pestana, setPestana] = useState<"cv" | "carta">(documentoInicial);
-  const [pasoCv, setPasoCv] = useState<PasoCv>("contacto");
+  const pestana = documento;
+  // Si se llegó desde una vacante, se abre directo en «Adaptar»: ahí está lo que se vino a hacer.
+  const [pasoCv, setPasoCv] = useState<PasoCv>(() => (borrador.vacante ? "adaptar" : "contacto"));
   const [pasoCarta, setPasoCarta] = useState<PasoCarta>("puesto");
   const [verHoja, setVerHoja] = useState(false);
   const [aviso, setAviso] = useState("");
@@ -467,6 +598,10 @@ function Editor({ pro, clave, documentoInicial, nombreCuenta, correo }: { pro: P
     const t = window.setTimeout(() => { try { window.localStorage.setItem(clave, JSON.stringify(borrador)); } catch { /* sin almacenamiento */ } }, 400);
     return () => window.clearTimeout(t);
   }, [borrador, clave]);
+  // Cada herramienta es su propia pantalla: al cambiar de una a otra no se pierde lo último que se escribió.
+  const ultimo = useRef(borrador);
+  useEffect(() => { ultimo.current = borrador; }, [borrador]);
+  useEffect(() => () => { try { window.localStorage.setItem(clave, JSON.stringify(ultimo.current)); } catch { /* sin almacenamiento */ } }, [clave]);
 
   const { cv, carta, vacante } = borrador;
   const setCv = (cambio: Partial<CvDocumento>) => setBorrador((b) => ({ ...b, cv: { ...b.cv, ...cambio } }));
@@ -483,6 +618,11 @@ function Editor({ pro, clave, documentoInicial, nombreCuenta, correo }: { pro: P
     return { ...b, cv: cvAdaptado, carta, vacante: texto };
   });
   const quitarVacante = () => setBorrador((b) => ({ ...b, vacante: "" }));
+  const sumarArchivo = (leido: unknown) => {
+    const { cv: nuevo, agregadas } = sumarDesdeArchivo(cv, leido);
+    if (agregadas) setCv(nuevo);
+    return agregadas;
+  };
   const sumarHabilidad = (h: string) => setCv({ habilidades: [...cv.habilidades, h], sugeridas: cv.sugeridas.filter((x) => x.toLowerCase() !== h.toLowerCase()) });
   const cobertura = useMemo(() => (vacante.trim().length > 30 ? palabrasClave(vacante, cv) : null), [vacante, cv]);
 
@@ -492,7 +632,8 @@ function Editor({ pro, clave, documentoInicial, nombreCuenta, correo }: { pro: P
     ["educacion", cv.educacion.some((e) => e.title.trim())],
     ["habilidades", cv.habilidades.length >= 4 && cv.habilidades.length <= LIMITES.habilidades],
     ["perfil", cv.resumen.trim().length >= 80],
-  ] as [PasoCv, boolean][]).filter(([, ok]) => ok).map(([p]) => p)), [cv]);
+    ["adaptar", !!vacante.trim()],
+  ] as [PasoCv, boolean][]).filter(([, ok]) => ok).map(([p]) => p)), [cv, vacante]);
   const hechosCarta = useMemo(() => new Set<PasoCarta>(([
     ["puesto", !!carta.puesto.trim()],
     ["contenido", !revisarCarta(carta).some((a) => a.id === "corchetes")],
@@ -560,6 +701,8 @@ function Editor({ pro, clave, documentoInicial, nombreCuenta, correo }: { pro: P
   // ── LOS PASOS ──
   const pasoDelCv: Record<PasoCv, ReactNode> = {
     contacto: (
+      <div className="grid gap-4">
+      <LlenarDesdeCv professionalId={String(pro?.id ?? "")} vacio={!cv.experiencia.length && !cv.educacion.length} en={en} alLeer={sumarArchivo} />
       <Tarjeta
         titulo={en ? "Your details" : "Tus datos"}
         ayuda={en ? "They go in the body of the document, where screening systems read them." : "Van en el cuerpo del documento, donde los filtros automáticos sí los leen."}
@@ -576,13 +719,14 @@ function Editor({ pro, clave, documentoInicial, nombreCuenta, correo }: { pro: P
         )}
         <div className="grid gap-3 @[560px]:grid-cols-2">
           <Input label={en ? "Full name" : "Nombre completo"} value={cv.nombre} maxLength={120} onChange={(e) => setCv({ nombre: e.target.value })} />
-          <Input label={en ? "Headline" : "Título"} placeholder={en ? "Residential electrician" : "Electricista residencial"} value={cv.titular} maxLength={120} onChange={(e) => setCv({ titular: e.target.value })} />
+          <Input label={en ? "Professional title" : "Título profesional"} placeholder={en ? "E.g. Residential electrician" : "Ej.: Electricista residencial"} value={cv.titular} maxLength={120} onChange={(e) => setCv({ titular: e.target.value })} />
           <Input label={en ? "Email" : "Correo"} type="email" value={cv.correo} maxLength={160} onChange={(e) => setCv({ correo: e.target.value })} />
           <Input label={en ? "Phone" : "Teléfono"} inputMode="tel" value={cv.telefono} maxLength={40} onChange={(e) => setCv({ telefono: e.target.value })} />
           <Input label={en ? "Location" : "Ubicación"} value={cv.ubicacion} maxLength={120} onChange={(e) => setCv({ ubicacion: e.target.value })} />
-          <Input label={en ? "Link (profile or portfolio)" : "Enlace (perfil o portafolio)"} value={cv.enlace} maxLength={200} onChange={(e) => setCv({ enlace: e.target.value })} />
+          <Input label={en ? "Link (profile or website)" : "Enlace (perfil o sitio web)"} value={cv.enlace} maxLength={200} onChange={(e) => setCv({ enlace: e.target.value })} />
         </div>
       </Tarjeta>
+      </div>
     ),
     experiencia: (
       <Tarjeta titulo={tituloCv.experiencia} ayuda={en ? "Most recent first. Start each achievement with a verb and add numbers." : "Lo más reciente primero. Empezá cada logro con un verbo y agregá números."}>
@@ -647,10 +791,18 @@ function Editor({ pro, clave, documentoInicial, nombreCuenta, correo }: { pro: P
         </div>
       </Tarjeta>
     ),
+    adaptar: (
+      <>
+        <AdaptarAPuesto key={vacante ? "con" : "sin"} completo en={en} vacante={vacante} puesto={carta.puesto} empresa={carta.empresa} cv={cv} alAdaptar={adaptar} alQuitar={quitarVacante} alSumar={sumarHabilidad} alUsarTitulo={(titular) => setCv({ titular })} />
+        {!vacante.trim() && <p className="px-1 text-[13px] leading-5 text-[#667085]">{en ? "Skip this step if you're not applying to a specific job: your resume is already complete." : "Saltá este paso si no es para un puesto en particular: tu currículum ya está completo."}</p>}
+      </>
+    ),
     revisar: null,
   };
   const pasoDeLaCarta: Record<PasoCarta, ReactNode> = {
     puesto: (
+      <>
+      <AdaptarAPuesto key={vacante ? "con" : "sin"} completo={false} en={en} vacante={vacante} puesto={carta.puesto} empresa={carta.empresa} cv={cv} alAdaptar={adaptar} alQuitar={quitarVacante} alSumar={sumarHabilidad} alUsarTitulo={(titular) => setCv({ titular })} />
       <Tarjeta titulo={en ? "The position" : "El puesto"} ayuda={en ? "A cover letter goes with your resume: one page, about 300 words." : "La carta acompaña tu currículum: una página, unas 300 palabras."}>
         <div className="grid gap-3 @[560px]:grid-cols-2">
           <Input label={en ? "Position" : "Puesto"} value={carta.puesto} maxLength={120} onChange={(e) => setCarta({ puesto: e.target.value })} />
@@ -661,6 +813,7 @@ function Editor({ pro, clave, documentoInicial, nombreCuenta, correo }: { pro: P
           <RotateCcw className="h-4 w-4" />{en ? "Rewrite with this position" : "Rehacer con este puesto"}
         </button>
       </Tarjeta>
+      </>
     ),
     contenido: (
       <>
@@ -704,6 +857,9 @@ function Editor({ pro, clave, documentoInicial, nombreCuenta, correo }: { pro: P
         </button>
       </div>
       <p role="status" aria-live="polite" className="-mt-2 min-h-4 text-center text-xs font-semibold text-[#067647]">{aviso}</p>
+      <Link href={pestana === "cv" ? "/dashboard/profesional?tab=carta" : "/dashboard/profesional?tab=cv"} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full px-3 text-sm font-bold text-[#007fae] hover:bg-[#eef6fb]">
+        {pestana === "cv" ? (en ? "Next: your cover letter" : "Siguiente: tu carta de presentación") : (en ? "See my resume" : "Ver mi currículum")}<ChevronRight className="h-4 w-4" />
+      </Link>
       <p className="-mt-2 text-center text-[11px] leading-4 text-[#98a2b3]">{en ? "Your draft is saved on this device only." : "El borrador se guarda solo en este dispositivo."}</p>
     </div>
   );
@@ -712,8 +868,6 @@ function Editor({ pro, clave, documentoInicial, nombreCuenta, correo }: { pro: P
     // El ancho que manda es el del panel, no el de la pantalla: lado a lado
     // solo cuando el panel mide 980 px o más; si no, la hoja va abajo.
     <div ref={arriba} className="@container grid scroll-mt-24 gap-4" data-testid="cv-builder">
-      <Segmentos etiqueta={en ? "Document" : "Documento"} valor={pestana} alCambiar={(d) => irA(() => setPestana(d))} opciones={[{ id: "cv", texto: en ? "Resume" : "Currículum" }, { id: "carta", texto: en ? "Cover letter" : "Carta de presentación" }]} />
-      <AdaptarAPuesto key={vacante ? "con" : "sin"} en={en} vacante={vacante} puesto={carta.puesto} empresa={carta.empresa} cv={cv} alAdaptar={adaptar} alQuitar={quitarVacante} alSumar={sumarHabilidad} />
       {pestana === "cv"
         ? <Pasos en={en} pasos={PASOS_CV} actual={pasoCv} hechos={hechosCv} alElegir={(p) => irA(() => setPasoCv(p))} />
         : <Pasos en={en} pasos={PASOS_CARTA} actual={pasoCarta} hechos={hechosCarta} alElegir={(p) => irA(() => setPasoCarta(p))} />}
@@ -729,7 +883,7 @@ function Editor({ pro, clave, documentoInicial, nombreCuenta, correo }: { pro: P
             <>
               {pestana === "cv" ? pasoDelCv[pasoCv] : pasoDeLaCarta[pasoCarta]}
               <button type="button" onClick={() => setVerHoja((v) => !v)} className={cn(pastilla, "justify-self-start px-3 text-[#007fae] hover:bg-[#eef6fb] @[980px]:hidden")}>
-                <FileText className="h-4 w-4" />{verHoja ? (en ? "Hide preview" : "Ocultar vista previa") : (en ? "See how it looks" : "Ver cómo va")}
+                <FileText className="h-4 w-4" />{verHoja ? (en ? "Hide preview" : "Ocultar vista previa") : (en ? "See preview" : "Ver vista previa")}
               </button>
               {verHoja && <div className="@[980px]:hidden">{hoja}</div>}
             </>

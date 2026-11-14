@@ -1,9 +1,9 @@
 import { expect, test } from "playwright/test";
 import {
-  ajustarAVacante, cartaComoTexto, cartaInicial, cvComoTexto, esCertificacion, fechasAts, nombreDeArchivo, palabrasClave, prellenar, revisarCarta, revisarCv,
+  ajustarAVacante, cartaComoTexto, cartaInicial, cvComoTexto, esCertificacion, fechasAts, nombreDeArchivo, palabrasClave, prellenar, revisarCarta, revisarCv, sumarDesdeArchivo,
 } from "../../src/lib/cv/documento";
 import { pdfDelCv, pdfDeLaCarta } from "../../src/lib/cv/pdf-documento";
-import { imagenValida, limpiarTextoLeido, puestoProbable } from "../../src/lib/cv/leer-imagen";
+import { empresaProbable, imagenValida, limpiarTextoLeido, puestoProbable } from "../../src/lib/cv/leer-imagen";
 
 // El generador de CV del panel: se prellena con el perfil, señala lo que suele
 // hacer que un CV se descarte y saca un PDF con texto de verdad, en una columna.
@@ -43,6 +43,25 @@ test("se prellena con el perfil, lo más reciente primero, sin habilidades repet
   // Una cuenta sin ficha arranca con lo poco que hay, sin inventar nada.
   const vacio = prellenar({ nombre: "Luis", correo: "luis@example.com" }, "en");
   expect(vacio).toMatchObject({ nombre: "Luis", titular: "", resumen: "", experiencia: [], habilidades: [], sugeridas: [] });
+});
+
+test("llenar desde un CV en archivo suma sin borrar ni repetir", () => {
+  const base = prellenar(perfil, "es");
+  const yaTenia = base.experiencia[0];
+  const leido = {
+    experience: [{ ...yaTenia }, { title: "Técnico de soporte", organization: "Helpdesk SA", period: "2015 - 2017", description: "" }],
+    education: [{ title: "Bachillerato en Informática", organization: "UCR", period: "2014", description: "" }, { title: "Certificación ISTQB", organization: "ISTQB", period: "2020", description: "" }],
+    skills: ["Liderazgo", "liderazgo"],
+  };
+  const { cv, agregadas } = sumarDesdeArchivo(base, leido);
+  expect(cv.experiencia.filter((e) => e.title === yaTenia.title)).toHaveLength(1);
+  expect(cv.experiencia.some((e) => e.title === "Técnico de soporte")).toBe(true);
+  expect(cv.educacion.some((e) => e.title === "Bachillerato en Informática")).toBe(true);
+  expect(cv.certificaciones.some((c) => c.startsWith("Certificación ISTQB"))).toBe(true);
+  expect([...cv.habilidades, ...cv.sugeridas].filter((h) => h.toLowerCase() === "liderazgo")).toHaveLength(1);
+  expect(cv.nombre).toBe(base.nombre);
+  expect(agregadas).toBe(4);
+  expect(sumarDesdeArchivo(cv, leido).agregadas).toBe(0);
 });
 
 test("títulos y certificaciones se distinguen", () => {
@@ -122,6 +141,23 @@ test("palabras de la vacante que están y que faltan en el CV", () => {
   expect(faltan).not.toContain("experiencia");
 });
 
+test("adaptar a una vacante: puntaje, sin relleno, y los logros afines suben sin reescribirse", () => {
+  const cv = prellenar(perfil, "es");
+  const vacante = "Buscamos electricista residencial. Requisitos: tableros eléctricos, cableado estructurado y licencia B1. Ofrecemos buen ambiente. Tableros y licencia son indispensables.";
+  const { estan, faltan, puntaje } = palabrasClave(vacante, cv);
+  expect(estan).toEqual(expect.arrayContaining(["electricista", "tableros"]));
+  expect(faltan).toContain("licencia");
+  expect([...estan, ...faltan]).not.toEqual(expect.arrayContaining(["buscamos"]));
+  expect([...estan, ...faltan]).not.toEqual(expect.arrayContaining(["ofrecemos"]));
+  expect(puntaje).toBeGreaterThan(0);
+  expect(puntaje).toBeLessThan(100);
+  expect(palabrasClave("", cv).puntaje).toBe(0);
+  const conLogros = { ...cv, experiencia: [{ title: "Electricista", organization: "X", period: "2020", description: "Atendí llamadas de clientes\nInstalé tableros eléctricos en 40 casas" }] };
+  const ajustado = ajustarAVacante(conLogros, vacante);
+  expect(ajustado.experiencia[0].description.split("\n")).toEqual(["Instalé tableros eléctricos en 40 casas", "Atendí llamadas de clientes"]);
+  // Mismas frases, solo otro orden.
+  expect([...ajustado.experiencia[0].description.split("\n")].sort()).toEqual([...conLogros.experiencia[0].description.split("\n")].sort());
+});
 test("nombre de archivo que el reclutador encuentra", () => {
   expect(nombreDeArchivo("Ana María Mora", "CV", "es")).toBe("Ana-Maria-Mora-CV.pdf");
   expect(nombreDeArchivo("Ana Mora", "Carta", "en")).toBe("Ana-Mora-Cover-Letter.pdf");
@@ -147,6 +183,8 @@ test("lo leído de una foto de la vacante se limpia y propone el puesto", () => 
   expect(limpio).toBe("SE BUSCA\n\nElectricista de mantenimiento\nHotel Atenas\n\n- Licencia B1");
   expect(puestoProbable(limpio)).toBe("Electricista de mantenimiento");
   expect(puestoProbable("Se busca: Cajero bilingüe\nTiempo completo")).toBe("Cajero bilingüe");
+  expect(empresaProbable("QA\nRequisitos\nEmpresa: Hotel Atenas")).toBe("Hotel Atenas");
+  expect(empresaProbable("Sin datos de la empresa")).toBe("");
   expect(imagenValida(new File(["x"], "v.png", { type: "image/png" }))).toBe("ok");
   expect(imagenValida(new File(["x"], "v.pdf", { type: "application/pdf" }))).toBe("tipo");
 });
