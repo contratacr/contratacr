@@ -2170,14 +2170,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                             (catálogo, clientes, facturación) son de Pro y viven
                             en su panel, no aquí. */}
                         <div className="mx-3 my-2 h-px bg-gray-100" aria-hidden />
-                        <p className="px-3 pb-1 pt-0.5 text-[11px] font-bold uppercase tracking-[0.08em] text-[#7a899d]">{locale === "en" ? "Free tools" : "Herramientas gratis"}</p>
+                        <p className="px-3 pb-1 pt-0.5 text-[11px] font-bold uppercase tracking-[0.08em] text-[#7a899d]">{t("freeTools")}</p>
                         <Link href="/dashboard/profesional?tab=cv" onClick={() => setOpenMenu(null)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
                           <FileUser className="h-5 w-5 shrink-0" />
-                          {locale === "en" ? "Create a resume" : "Crear currículum"}
+                          {t("createResume")}
                         </Link>
                         <Link href="/dashboard/profesional?tab=cv&doc=carta" onClick={() => setOpenMenu(null)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
                           <Mail className="h-5 w-5 shrink-0" />
-                          {locale === "en" ? "Cover letter" : "Carta de presentación"}
+                          {t("coverLetter")}
                         </Link>
                       </div>
                     )}
@@ -2972,7 +2972,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 {/* Herramienta gratis para quien busca empleo: va junto a Empleos. */}
                 <Link href="/dashboard/profesional?tab=cv" prefetch={false} onClick={cerrarCajon} className={claseCajon("/dashboard/profesional?tab=cv")}>
                   <DrawerIcon><FileUser /></DrawerIcon>
-                  <span className={mobileDrawerTextClass}>{locale === "en" ? "Resume & cover letter" : "Currículum y carta"}</span>
+                  <span className={mobileDrawerTextClass}>{t("resumeAndLetter")}</span>
                 </Link>
                 <Link href="/servicios" prefetch={true} onClick={cerrarCajon} className={claseCajon("/servicios")}>
                   <DrawerIcon><Wrench /></DrawerIcon>

@@ -79,6 +79,10 @@
     "searchProfessionals": "Buscar profesionales"
   },
   "header": {
+    "freeTools": "Herramientas gratis",
+    "createResume": "Crear currículum",
+    "coverLetter": "Carta de presentación",
+    "resumeAndLetter": "Currículum y carta",
     "categories": "Servicios",
     "howItWorks": "Cómo usar",
     "resources": "Sobre ContrataCR",

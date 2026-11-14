@@ -79,6 +79,10 @@
     "searchProfessionals": "Find services"
   },
   "header": {
+    "freeTools": "Free tools",
+    "createResume": "Create a resume",
+    "coverLetter": "Cover letter",
+    "resumeAndLetter": "Resume & cover letter",
     "categories": "Services",
     "howItWorks": "How it works",
     "resources": "About ContrataCR",
