@@ -157,8 +157,8 @@ test("all navbar title variants keep the same typography at every breakpoint", a
     await page.setViewportSize({ width, height: 900 });
     await gotoOK(page, "/buscar");
     await waitForInteractivePage(page);
-    await page.getByRole("button", { name: "Precio", exact: true }).filter({ visible: true }).click();
-    const filter = page.getByRole("dialog", { name: "Precio", exact: true });
+    await page.getByRole("button", { name: "Idioma", exact: true }).filter({ visible: true }).click();
+    const filter = page.getByRole("dialog", { name: "Idioma de atención", exact: true });
     await expect(filter).toBeVisible();
     expect(await filter.locator("h2").evaluate(el => ({ size: getComputedStyle(el).fontSize, weight: getComputedStyle(el).fontWeight, line: getComputedStyle(el).lineHeight }))).toEqual({ size: "19px", weight: "800", line: "24px" });
     await filter.getByRole("button", { name: "Cerrar", exact: true }).click();

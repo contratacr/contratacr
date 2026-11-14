@@ -60,14 +60,6 @@ interface SearchPageProps {
 }
 
 const MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
-const PRICE_AVAILABILITY_OPTIONS = new Set(["visible", "quote"]);
-const PRICE_UNIT_OPTIONS = new Set(["por_hora", "por_consulta", "por_proyecto"]);
-type PriceUnit = "por_hora" | "por_consulta" | "por_proyecto";
-
-function isPriceUnit(value: string | undefined): value is PriceUnit {
-  return value !== undefined && PRICE_UNIT_OPTIONS.has(value);
-}
-
 function parseMultiParam(value: string | undefined): string[] {
   return [...new Set((value ?? "").split(",").map((item) => item.trim()).filter(Boolean))];
 }
@@ -157,18 +149,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const t = await getTranslations("search");
   const locale = await getLocale();
   const catLabel = (id?: string | null) => id ? getCategoryLabel(id, locale) : "";
-  const legacyPriceUnit = isPriceUnit(params.precio) ? params.precio : undefined;
-  const priceType = params.precio && PRICE_AVAILABILITY_OPTIONS.has(params.precio)
-    ? params.precio as "visible" | "quote"
-    : legacyPriceUnit
-      ? "visible"
-      : undefined;
-  const parsedPriceUnits = parseMultiParam(params.unidadPrecio).filter(isPriceUnit);
-  const priceUnits = parsedPriceUnits.length > 0
-    ? parsedPriceUnits
-    : legacyPriceUnit
-      ? [legacyPriceUnit]
-      : [];
   const modalities = parseMultiParam(params.modalidad).filter(isModality);
   const videoOnly = modalities.length === 1 && modalities[0] === "video";
   const inPersonOnly = modalities.length === 1 && modalities[0] === "in_person";
@@ -427,8 +407,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     modalidad: params.modalidad,
     aseguradora: params.aseguradora,
     idioma: languageIds.join(","),
-    precio: priceType,
-    unidadPrecio: priceUnits.join(",") || undefined,
     ubicacion: nearReference ? `${nearReference.canton.name}, ${nearReference.province.name}` : params.ubicacion ?? (activeCanton && activeProvince ? `${activeCanton.name}, ${activeProvince.name}` : activeProvince?.name),
     lat: params.lat,
     lng: params.lng,
@@ -462,8 +440,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     !!activeCanton ||
     !!mapBounds ||
     languageIds.length > 0 ||
-    !!priceType ||
-    priceUnits.length > 0 ||
     !!nearLat ||
     (!!params.aseguradora && canFilterByInsurer) ||
     (!!params.sortBy && params.sortBy !== "rating" && params.sortBy !== "cercania") ||
@@ -472,8 +448,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   // que la persona vino a buscar, no un filtro que se le quita.
   const hayFiltrosDePastilla =
     languageIds.length > 0 ||
-    !!priceType ||
-    priceUnits.length > 0 ||
     (!!params.aseguradora && canFilterByInsurer) ||
     (!!params.sortBy && params.sortBy !== "rating" && params.sortBy !== "cercania") ||
     (!!params.modalidad && params.modalidad !== "any");
