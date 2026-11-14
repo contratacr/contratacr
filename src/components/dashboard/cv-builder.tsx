@@ -476,49 +476,64 @@ function AdaptarAPuesto({ en, vacante, puesto, empresa, cv, completo, alAdaptar,
     const etiquetaNivel = nivel === "alta" ? (en ? "Strong match" : "Buena coincidencia") : nivel === "media" ? (en ? "Partial match" : "Coincidencia media") : (en ? "Low match" : "Coincidencia baja");
     const colorNivel = nivel === "alta" ? "#12b76a" : nivel === "media" ? "#f79009" : "#f04438";
     const tituloAjeno = puesto.trim() && puesto.trim().toLowerCase() !== cv.titular.trim().toLowerCase();
+    const faltan = coincidencia?.faltan ?? [];
+    const estan = coincidencia?.estan ?? [];
+    const chipFalta = (h: string) => (
+      <li key={h}><button type="button" onClick={() => alSumar(h)} className="inline-flex h-9 items-center gap-1 rounded-full border border-dashed border-[#f1b37a] bg-white px-3 text-[13px] font-semibold text-[#93370d] hover:bg-[#fffaeb]"><Plus className="h-3.5 w-3.5" />{h}</button></li>
+    );
     return (
-      <section className="grid gap-4 rounded-2xl border border-[#cfe8f4] bg-[#f3fafe] p-4 sm:p-5" data-testid="cv-adaptado">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="flex min-w-0 items-center gap-1.5 text-[13px] font-black text-[#162543]"><Target className="h-4 w-4 shrink-0 text-[#007fae]" />{en ? "Tailored to: " : "Adaptado a: "}<span className="truncate">{[puesto, empresa].filter(Boolean).join(" – ") || (en ? "a job post" : "una vacante")}</span></p>
-          <div className="flex gap-1">
-            <button type="button" onClick={() => { setTexto(vacante); setP(puesto); setE(empresa); setAbierto(true); }} className="h-9 rounded-full px-3 text-[13px] font-semibold text-[#007fae] hover:bg-white">{en ? "Change" : "Cambiar"}</button>
-            <button type="button" onClick={alQuitar} className="h-9 rounded-full px-3 text-[13px] font-semibold text-[#52627a] hover:bg-white">{en ? "Remove" : "Quitar"}</button>
+      <section className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 rounded-2xl border border-[#cfe8f4] bg-[#f3fafe] p-4 sm:p-5" data-testid="cv-adaptado">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white text-[#007fae]"><Target className="h-4 w-4" /></span>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-semibold text-[#667085]">{en ? "Tailored to" : "Adaptado a"}</p>
+            <p className="break-words text-[15px] font-black leading-5 text-[#162543]">{[puesto, empresa].filter(Boolean).join(" – ") || (en ? "a job post" : "una vacante")}</p>
+            <div className="mt-1 flex gap-4">
+              <button type="button" onClick={() => { setTexto(vacante); setP(puesto); setE(empresa); setAbierto(true); }} className="text-[13px] font-semibold text-[#007fae] underline-offset-2 hover:underline">{en ? "Change" : "Cambiar"}</button>
+              <button type="button" onClick={alQuitar} className="text-[13px] font-semibold text-[#52627a] underline-offset-2 hover:underline">{en ? "Remove" : "Quitar"}</button>
+            </div>
           </div>
         </div>
         {!completo && <p className="text-[13px] leading-5 text-[#52627a]">{en ? "Your letter is addressed to this position and company." : "Tu carta va dirigida a este puesto y esta empresa."}</p>}
         {completo && coincidencia && (
           <>
             <div className="rounded-xl bg-white p-3.5">
-              <div className="flex items-baseline justify-between gap-2">
-                <p className="text-[13px] font-black text-[#162543]">{etiquetaNivel}</p>
-                <p className="text-2xl font-black text-[#162543]" aria-label={en ? `${coincidencia.puntaje} percent` : `${coincidencia.puntaje} por ciento`}>{coincidencia.puntaje}%</p>
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[13px] font-black text-[#162543]">{etiquetaNivel}</p>
+                  <p className="text-xs leading-5 text-[#667085]">{en ? `${estan.length} of ${estan.length + faltan.length} key words` : `${estan.length} de ${estan.length + faltan.length} palabras clave`}</p>
+                </div>
+                <p className="shrink-0 text-3xl font-black leading-none text-[#162543]" aria-label={en ? `${coincidencia.puntaje} percent` : `${coincidencia.puntaje} por ciento`}>{coincidencia.puntaje}%</p>
               </div>
-              <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#eef3f7]" aria-hidden><div className="h-full rounded-full transition-[width] duration-500" style={{ width: `${Math.max(4, coincidencia.puntaje)}%`, backgroundColor: colorNivel }} /></div>
-              <p className="mt-2 text-xs leading-5 text-[#667085]">{en ? `Your resume has ${coincidencia.estan.length} of the ${coincidencia.estan.length + coincidencia.faltan.length} key words in the post. Screening systems compare exact words.` : `Tu currículum tiene ${coincidencia.estan.length} de las ${coincidencia.estan.length + coincidencia.faltan.length} palabras clave de la vacante. Los filtros automáticos comparan palabras exactas.`}</p>
+              <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-[#eef3f7]" aria-hidden><div className="h-full rounded-full transition-[width] duration-500" style={{ width: `${Math.max(4, coincidencia.puntaje)}%`, backgroundColor: colorNivel }} /></div>
             </div>
-            {coincidencia.estan.length > 0 && (
-              <div>
-                <p className="mb-1.5 text-xs font-semibold text-[#067647]">{en ? "Already in your resume" : "Ya las tenés"}</p>
-                <ul className="flex flex-wrap gap-1.5">{coincidencia.estan.slice(0, 14).map((h) => <li key={h} className="inline-flex h-7 items-center gap-1 rounded-full bg-[#ecfdf3] px-2.5 text-[12px] font-semibold text-[#067647]"><CheckCircle2 className="h-3.5 w-3.5" />{h}</li>)}</ul>
-              </div>
-            )}
-            {coincidencia.faltan.length > 0 && (
-              <div>
-                <p className="mb-1.5 text-xs font-semibold text-[#93370d]">{en ? "It asks for these and they don't appear. Add one only if it is true for you:" : "Lo pide y no aparece. Sumala solo si de verdad aplica a vos:"}</p>
-                <ul className="flex flex-wrap gap-1.5">
-                  {coincidencia.faltan.slice(0, 12).map((h) => (
-                    <li key={h}><button type="button" onClick={() => alSumar(h)} className="inline-flex h-8 items-center gap-1 rounded-full border border-dashed border-[#f1b37a] bg-white px-2.5 text-[12px] font-semibold text-[#93370d] hover:bg-[#fffaeb]"><Plus className="h-3.5 w-3.5" />{h}</button></li>
-                  ))}
-                </ul>
-              </div>
-            )}
             {tituloAjeno && (
-              <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white p-3">
-                <p className="min-w-0 flex-1 basis-56 text-[13px] leading-5 text-[#162543]">{en ? `Your title says "${cv.titular || "(empty)"}" and the post says "${puesto}". If the post describes you, use its title: it's the first thing filters compare.` : `Tu título dice "${cv.titular || "(vacío)"}" y la vacante dice "${puesto}". Si la vacante te describe, usá su título: es lo primero que comparan los filtros.`}</p>
-                <button type="button" onClick={() => alUsarTitulo(puesto.trim())} className="h-9 shrink-0 rounded-full border border-[#b9d9e8] bg-white px-4 text-[13px] font-bold text-[#007fae] hover:bg-[#f1f9fc]">{en ? "Use this title" : "Usar este título"}</button>
+              <div className="grid gap-2 rounded-xl bg-white p-3.5">
+                <p className="text-[13px] font-black text-[#162543]">{en ? "1. Use the title of the post" : "1. Usá el título de la vacante"}</p>
+                <p className="text-[13px] leading-5 text-[#52627a]">{en ? `Your title says "${cv.titular || "(empty)"}". The post says "${puesto}". Filters compare it first.` : `Tu título dice "${cv.titular || "(vacío)"}". La vacante dice "${puesto}". Los filtros lo comparan primero.`}</p>
+                <button type="button" onClick={() => alUsarTitulo(puesto.trim())} className="h-10 justify-self-start rounded-full border border-[#b9d9e8] bg-white px-4 text-[13px] font-bold text-[#007fae] hover:bg-[#f1f9fc]">{en ? "Use this title" : "Usar este título"}</button>
               </div>
             )}
-            <p className="text-xs leading-5 text-[#667085]">{en ? "We put first the skills it asks for and, inside each job, the achievements closest to the post. No sentence was rewritten." : "Pusimos primero las habilidades que pide y, dentro de cada trabajo, los logros que más se parecen a la vacante. No se reescribió ninguna frase."}</p>
+            {faltan.length > 0 && (
+              <div className="grid gap-2 rounded-xl bg-white p-3.5">
+                <p className="text-[13px] font-black text-[#162543]">{tituloAjeno ? "2. " : "1. "}{en ? "Add what is true for you" : "Sumá lo que de verdad aplica a vos"}</p>
+                <p className="text-[13px] leading-5 text-[#52627a]">{en ? "The post asks for these and they are not in your resume. Tap one to add it as a skill." : "La vacante pide esto y no aparece en tu currículum. Tocá una para sumarla como habilidad."}</p>
+                <ul className="flex flex-wrap gap-2">{faltan.slice(0, 6).map(chipFalta)}</ul>
+                {faltan.length > 6 && (
+                  <details className="group">
+                    <summary className="cursor-pointer list-none text-[13px] font-semibold text-[#007fae]"><span className="group-open:hidden">{en ? `Show ${Math.min(faltan.length, 12) - 6} more` : `Ver ${Math.min(faltan.length, 12) - 6} más`}</span><span className="hidden group-open:inline">{en ? "Show fewer" : "Ver menos"}</span></summary>
+                    <ul className="mt-2 flex flex-wrap gap-2">{faltan.slice(6, 12).map(chipFalta)}</ul>
+                  </details>
+                )}
+              </div>
+            )}
+            {estan.length > 0 && (
+              <details className="rounded-xl bg-white p-3.5">
+                <summary className="cursor-pointer list-none text-[13px] font-bold text-[#067647]">{en ? `Already in your resume (${estan.length})` : `Ya están en tu currículum (${estan.length})`}</summary>
+                <ul className="mt-2 flex flex-wrap gap-1.5">{estan.slice(0, 14).map((h) => <li key={h} className="inline-flex h-7 items-center gap-1 rounded-full bg-[#ecfdf3] px-2.5 text-[12px] font-semibold text-[#067647]"><CheckCircle2 className="h-3.5 w-3.5" />{h}</li>)}</ul>
+              </details>
+            )}
+            <p className="text-xs leading-5 text-[#667085]">{en ? "We already put your matching skills first and, inside each job, the closest achievements. No sentence was rewritten." : "Ya pusimos primero tus habilidades afines y, dentro de cada trabajo, los logros más parecidos. No se reescribió ninguna frase."}</p>
           </>
         )}
       </section>
