@@ -82,7 +82,6 @@
     "freeTools": "Free tools",
     "createResume": "Create a resume",
     "coverLetter": "Cover letter",
-    "resumeAndLetter": "Resume & cover letter",
     "categories": "Services",
     "howItWorks": "How it works",
     "resources": "About ContrataCR",
@@ -1087,7 +1086,8 @@
       "soporte": "Open a ticket and we answer you here.",
       "cuenta": "Your email, your password and your account.",
       "guides": "How to use ContrataCR step by step.",
-      "cv": "Build your resume and cover letter step by step from what's already in your profile."
+      "cv": "Build your resume step by step from what's already in your profile.",
+      "carta": "Write your cover letter, addressed to the job, from what's already in your resume."
     },
     "profileSections": {
       "verificationDesc": "Identity and verification status.",
@@ -1500,6 +1500,7 @@
       "allSteps": "Read all steps"
     },
     "headerReviews": "{count, plural, one {# review} other {# reviews}}",
+    "toolsHeading": "Tools",
     "sectionErrorTitle": "We couldn't show this section",
     "sectionErrorBody": "This was a problem drawing the screen, not with your data. Try again; we already got the report to fix it.",
     "sectionErrorRetry": "Try again"

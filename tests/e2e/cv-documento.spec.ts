@@ -141,6 +141,23 @@ test("palabras de la vacante que están y que faltan en el CV", () => {
   expect(faltan).not.toContain("experiencia");
 });
 
+test("adaptar a una vacante: puntaje, sin relleno, y los logros afines suben sin reescribirse", () => {
+  const cv = prellenar(perfil, "es");
+  const vacante = "Buscamos electricista residencial. Requisitos: tableros eléctricos, cableado estructurado y licencia B1. Ofrecemos buen ambiente. Tableros y licencia son indispensables.";
+  const { estan, faltan, puntaje } = palabrasClave(vacante, cv);
+  expect(estan).toEqual(expect.arrayContaining(["electricista", "tableros"]));
+  expect(faltan).toContain("licencia");
+  expect([...estan, ...faltan]).not.toEqual(expect.arrayContaining(["buscamos"]));
+  expect([...estan, ...faltan]).not.toEqual(expect.arrayContaining(["ofrecemos"]));
+  expect(puntaje).toBeGreaterThan(0);
+  expect(puntaje).toBeLessThan(100);
+  expect(palabrasClave("", cv).puntaje).toBe(0);
+  const conLogros = { ...cv, experiencia: [{ title: "Electricista", organization: "X", period: "2020", description: "Atendí llamadas de clientes\nInstalé tableros eléctricos en 40 casas" }] };
+  const ajustado = ajustarAVacante(conLogros, vacante);
+  expect(ajustado.experiencia[0].description.split("\n")).toEqual(["Instalé tableros eléctricos en 40 casas", "Atendí llamadas de clientes"]);
+  // Mismas frases, solo otro orden.
+  expect([...ajustado.experiencia[0].description.split("\n")].sort()).toEqual([...conLogros.experiencia[0].description.split("\n")].sort());
+});
 test("nombre de archivo que el reclutador encuentra", () => {
   expect(nombreDeArchivo("Ana María Mora", "CV", "es")).toBe("Ana-Maria-Mora-CV.pdf");
   expect(nombreDeArchivo("Ana Mora", "Carta", "en")).toBe("Ana-Mora-Cover-Letter.pdf");

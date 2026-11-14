@@ -180,9 +180,18 @@ export function ajustarAVacante(cv: CvDocumento, vacante: string): CvDocumento {
   const pide = (h: string) => new RegExp(`(^|[^\\p{L}\\p{N}+#])${plano(h).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}($|[^\\p{L}\\p{N}+#])`, "u").test(texto);
   const todas = [...cv.habilidades, ...cv.sugeridas];
   const elegidas = unicas([...todas.filter(pide), ...cv.habilidades]).slice(0, LIMITES.habilidades);
-  return { ...cv, habilidades: elegidas, sugeridas: unicas(todas).filter((h) => !elegidas.some((e) => plano(e) === plano(h))) };
+  // Dentro de cada puesto, los logros que más se parecen a la vacante van
+  // primero. Solo cambia el orden: ninguna frase se reescribe ni se inventa.
+  const terminos = [...terminosDeVacante(vacante).keys()];
+  const peso = (linea: string) => { const l = plano(linea); return terminos.filter((t) => l.includes(t)).length; };
+  const experiencia = cv.experiencia.map((e) => {
+    const lineas = e.description.split("\n");
+    if (lineas.length < 2) return e;
+    const ordenadas = lineas.map((l, i) => ({ l, i, w: peso(l) })).sort((x, y) => y.w - x.w || x.i - y.i).map((x) => x.l);
+    return ordenadas.join("\n") === e.description ? e : { ...e, description: ordenadas.join("\n") };
+  });
+  return { ...cv, experiencia, habilidades: elegidas, sugeridas: unicas(todas).filter((h) => !elegidas.some((e) => plano(e) === plano(h))) };
 }
-
 export function cartaInicial(cv: CvDocumento, vacante: { puesto?: string; empresa?: string } = {}): Carta {
   const en = cv.idioma === "en";
   const puesto = vacante.puesto?.trim() || cv.titular;
@@ -252,20 +261,28 @@ export function revisarCarta(carta: Carta): Aviso[] {
 }
 
 /** Palabras de la vacante que aparecen (o no) en el CV: lo que miran los filtros. */
-const VACIAS = new Set("para con por los las una unos unas del que como sus este esta entre sobre desde hasta tener experiencia trabajo puesto empresa and the for with you your our are will have from this that years work job".split(" "));
+const VACIAS = new Set("para con por los las una unos unas del que como sus este esta entre sobre desde hasta tener experiencia trabajo puesto empresa and the for with you your our are will have from this that years work job buscamos ofrecemos persona personas equipo requisitos requisito deseable indispensable conocimientos conocimiento disponibilidad horario salario beneficios incorporacion tiempo completo jornada nuestra nuestro nuestros nuestras estamos buscando responsabilidades funciones principales area areas dentro cada todas todos tambien ademas manejo capacidad habilidades excelente buen buena bueno nivel minimo minima mas menos mayor menor anos seras ser estar hacer realizar apoyo apoyar gran grandes importante importantes junto cargo vacante oferta empleo contrato contratar contratamos position role company team looking seeking candidate candidates ability strong excellent good must should including etc about their they them who what when where which while within across also more than into other such being been were over under join opportunity benefits salary full time part time required requirements preferred knowledge skills responsibilities".split(" "));
 const norm = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
-export function palabrasClave(vacante: string, cv: CvDocumento): { estan: string[]; faltan: string[] } {
-  const texto = norm([cv.titular, cv.resumen, ...cv.habilidades, ...cv.experiencia.flatMap((e) => [e.title, e.description]), ...cv.certificaciones].join(" "));
+/** Palabras que pide la vacante, sin relleno, las más repetidas primero. */
+export function terminosDeVacante(vacante: string): Map<string, string> {
   const vistas = new Map<string, string>();
+  const veces = new Map<string, number>();
   for (const palabra of vacante.split(/[^\p{L}\p{N}+#.]+/u)) {
     const limpia = palabra.replace(/^[.]+|[.]+$/g, "");
     const n = norm(limpia);
     if (n.length < 4 || VACIAS.has(n) || /^\d+$/.test(n)) continue;
     if (!vistas.has(n)) vistas.set(n, limpia);
+    veces.set(n, (veces.get(n) ?? 0) + 1);
   }
+  const orden = [...vistas.entries()].sort((a, b) => (veces.get(b[0]) ?? 0) - (veces.get(a[0]) ?? 0) || b[0].length - a[0].length).slice(0, 24);
+  return new Map(orden);
+}
+export function palabrasClave(vacante: string, cv: CvDocumento): { estan: string[]; faltan: string[]; puntaje: number } {
+  const texto = norm([cv.titular, cv.resumen, ...cv.habilidades, ...cv.experiencia.flatMap((e) => [e.title, e.description]), ...cv.certificaciones].join(" "));
   const estan: string[] = [], faltan: string[] = [];
-  for (const [n, original] of vistas) (texto.includes(n) ? estan : faltan).push(original);
-  return { estan: estan.slice(0, 20), faltan: faltan.slice(0, 20) };
+  for (const [n, original] of terminosDeVacante(vacante)) (texto.includes(n) ? estan : faltan).push(original);
+  const total = estan.length + faltan.length;
+  return { estan: estan.slice(0, 20), faltan: faltan.slice(0, 20), puntaje: total ? Math.round((estan.length / total) * 100) : 0 };
 }
 
 // ── TEXTO ── el mismo contenido que el PDF, para pegar en un formulario.

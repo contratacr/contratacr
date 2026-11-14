@@ -2175,7 +2175,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           <FileUser className="h-5 w-5 shrink-0" />
                           {t("createResume")}
                         </Link>
-                        <Link href="/dashboard/profesional?tab=cv&doc=carta" onClick={() => setOpenMenu(null)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
+                        <Link href="/dashboard/profesional?tab=carta" onClick={() => setOpenMenu(null)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
                           <Mail className="h-5 w-5 shrink-0" />
                           {t("coverLetter")}
                         </Link>
@@ -2972,7 +2972,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 {/* Herramienta gratis para quien busca empleo: va junto a Empleos. */}
                 <Link href="/dashboard/profesional?tab=cv" prefetch={false} onClick={cerrarCajon} className={claseCajon("/dashboard/profesional?tab=cv")}>
                   <DrawerIcon><FileUser /></DrawerIcon>
-                  <span className={mobileDrawerTextClass}>{t("resumeAndLetter")}</span>
+                  <span className={mobileDrawerTextClass}>{t("createResume")}</span>
                 </Link>
                 <Link href="/servicios" prefetch={true} onClick={cerrarCajon} className={claseCajon("/servicios")}>
                   <DrawerIcon><Wrench /></DrawerIcon>

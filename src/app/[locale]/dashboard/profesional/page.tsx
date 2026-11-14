@@ -20,7 +20,7 @@ import { useSearchParams } from "next/navigation";
 import {
   User, Award, Wrench,
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, ArrowLeft, ArrowRight, ChevronDown, ChevronRight, Sparkles, AlertCircle, MessageSquareMore, Home, LogOut, Users, CheckCircle2, FileText, Search, Camera, Eye, Trash2, Loader2,
-  BriefcaseBusiness, Star, ReceiptText, ExternalLink, Share2, BookOpen, ChartNoAxesColumn, FileUser,
+  BriefcaseBusiness, Star, ReceiptText, ExternalLink, Share2, BookOpen, ChartNoAxesColumn, FileUser, Mail,
   } from "lucide-react";
 import { CvBuilder } from "@/components/dashboard/cv-builder";
 import { StatisticsPanel } from "@/components/dashboard/statistics/statistics-panel";
@@ -94,7 +94,7 @@ type Tab =
   | "home" | "profile" | "services" | "photos" | "quotes" | "verificacion"
   | "jobs" | "offers" | "publicaciones" | "completion"
   | "sent_projects" | "applications" | "saved" | "connections"
-  | "chat" | "notifications" | "soporte" | "cuenta" | "guides" | "statistics" | "cv";
+  | "chat" | "notifications" | "soporte" | "cuenta" | "guides" | "statistics" | "cv" | "carta";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProData = Record<string, any>;
@@ -105,7 +105,7 @@ type ProData = Record<string, any>;
 const ALL_TABS = new Set<Tab>([
   "home", "profile", "services", "photos", "quotes", "verificacion",
   "jobs", "offers", "publicaciones", "completion", "sent_projects", "applications", "saved", "connections",
-  "chat", "notifications", "soporte", "cuenta", "guides", "statistics", "cv",
+  "chat", "notifications", "soporte", "cuenta", "guides", "statistics", "cv", "carta",
 ]);
 
 const TAB_ICONS: Record<Tab, React.ReactNode> = {
@@ -126,6 +126,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   cuenta: <Settings className="h-4 w-4" />,
   guides: <FileText className="h-4 w-4" />,
   cv: <FileUser className="h-4 w-4" />,
+  carta: <Mail className="h-4 w-4" />,
   jobs: <BriefcaseBusiness className="h-4 w-4" />,
   offers: <OfferTagPercentIcon className="h-4 w-4" />,
   publicaciones: <OfferTagPercentIcon className="h-4 w-4" />,
@@ -137,7 +138,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
 // 1024px para arriba y a media pantalla el subtítulo desaparecía.
 const TABS_WITH_SUBTITLE = new Set<Tab>([
   "verificacion", "completion",
-  "applications", "saved", "connections", "notifications", "cuenta", "guides", "cv",
+  "applications", "saved", "connections", "notifications", "cuenta", "guides", "cv", "carta",
 ]);
 
 // Las que faltan —sent_projects, soporte, photos, offers, jobs, quotes y
@@ -169,9 +170,9 @@ const USE_ONLY = new Set<Tab>([]);
 // «Servicios» vive dentro de «Mi perfil», que es donde se ven; empleos y
 // promociones comparten «Mis publicaciones», que es lo mismo: algo que publico.
 const OFFER_TABS: Tab[] = ([
-  "sent_projects", "jobs", "offers", "quotes", "cv", "photos", "services", "statistics", "profile", "saved", "soporte", "guides",
+  "sent_projects", "jobs", "offers", "quotes", "cv", "carta", "photos", "services", "statistics", "profile", "saved", "soporte", "guides",
 ] as Tab[]).filter((tab) => EMPLEOS_VISIBLE || tab !== "jobs");
-const USE_TABS: Tab[] = ["sent_projects", "cv", "statistics", "saved", "profile", "soporte", "guides"] as Tab[];
+const USE_TABS: Tab[] = ["sent_projects", "cv", "carta", "statistics", "saved", "profile", "soporte", "guides"] as Tab[];
 // «Mis publicaciones» reúne TODO lo que uno saca a un tablero público: el
 // proyecto que pide un trabajo, el empleo que ofrece uno y la promoción. Son el
 // mismo acto —publicar— y antes vivían en dos paneles distintos, con un
@@ -190,12 +191,13 @@ const PUBLICACION_TABS = [{ id: "proyectos" }, { id: "empleos" }, { id: "promoci
 // del perfil, sí, pero también son las dos cosas que un profesional vuelve a
 // tocar, y «Trabajos» es la más floja de todas (29 de 289 tienen alguno) y la
 // que más vende. Enterrada dos niveles no la iba a encontrar nadie.
-const PANEL_GROUPS: { grupo: "work" | "business" | "saved" | "account"; tabs: Tab[] }[] = [
+const PANEL_GROUPS: { grupo: "work" | "business" | "tools" | "saved" | "account"; tabs: Tab[] }[] = [
   // Tres entradas, no un interruptor: «Mis publicaciones» juntaba proyectos,
   // empleos y promociones en una sola puerta, y una puerta con un interruptor
   // adentro hay que descubrirla. En el menú se leen de una.
-  // Cotizaciones y Currículum y carta: documentos que uno arma y descarga.
-  { grupo: "business", tabs: ["sent_projects", "jobs", "offers", "quotes", "cv"] },
+  { grupo: "business", tabs: ["sent_projects", "jobs", "offers"] },
+  // Herramientas: documentos que uno arma y descarga, cada una en su pantalla.
+  { grupo: "tools", tabs: ["quotes", "cv", "carta"] },
   { grupo: "work", tabs: ["photos", "services", "statistics", "profile", "completion"] },
   { grupo: "saved", tabs: ["saved"] },
   { grupo: "account", tabs: ["soporte", "guides"] },
@@ -226,7 +228,8 @@ const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
   completion: { es: "Completa tu perfil", en: "Complete your profile" },
   guides: { es: "Guías", en: "Guides" },
   // El CV y la carta de presentación: para postularse a un empleo, con o sin ficha.
-  cv: { es: "Currículum y carta", en: "Resume & cover letter" },
+  cv: { es: "Currículum", en: "Resume" },
+  carta: { es: "Carta de presentación", en: "Cover letter" },
 };
 
 type GuideItem = {
@@ -531,7 +534,8 @@ export default function DashboardPage() {
   // sigue llegando desde avisos guardados, push y enlaces de cotizaciones. Cae
   // en «Mis proyectos», que es donde esta ahora lo que esa pantalla mostraba,
   // en vez de dejar a la persona en una seccion que no existe.
-  const normalizedTab = legacyVerificationTab ? "profile" : rawRequestedTab === "proposals" ? "sent_projects" : rawRequestedTab;
+  // Antes el currículum y la carta eran una sola sección: ?tab=cv&doc=carta abre la carta.
+  const normalizedTab = legacyVerificationTab ? "profile" : rawRequestedTab === "proposals" ? "sent_projects" : rawRequestedTab === "cv" && searchParams.get("doc") === "carta" ? "carta" : rawRequestedTab;
   // Un ?tab= desconocido mostraba una sección vacía titulada con el id crudo:
   // se ignora y cae al inicio del panel.
   const requestedTab = (normalizedTab && ALL_TABS.has(normalizedTab as Tab) ? normalizedTab : null) as Tab | null;
@@ -1796,6 +1800,7 @@ export default function DashboardPage() {
               <nav className="flex flex-col divide-y divide-[#eef2f6]">
                 {agruparPestanas(desktopSidebarTabs).map((grupo, i) => (
                   <div key={grupo[0] ?? i} className="flex flex-col divide-y divide-[#eef2f6]">
+                    {grupo.includes("cv") && <p className="bg-[#f8fafc] px-4 py-2 text-[11px] font-black uppercase tracking-wide text-[#667085]">{t("toolsHeading")}</p>}
                     {grupo.map(desktopSidebarButton)}
                   </div>
                 ))}
@@ -2269,6 +2274,7 @@ export default function DashboardPage() {
                                     {ofrecerServiciosCard()}
                                     {agruparPestanas(mobileSectionTabs).map((grupo, i) => (
                                       <div key={grupo[0] ?? i} className="flex flex-col gap-2.5">
+                                        {grupo.includes("cv") && <p className="px-1 pt-1 text-[12px] font-black uppercase tracking-wide text-[#667085]">{t("toolsHeading")}</p>}
                                         {grupo.map(mobileSectionButton)}
                                       </div>
                                     ))}
@@ -2420,7 +2426,8 @@ export default function DashboardPage() {
                             La dirección sigue existiendo y muestra el aviso de
                             sección vacía, para no romper enlaces viejos. */}
                         {activeTab === "saved" && <ClientActivity section="saved" />}
-                        {activeTab === "cv" && <CvBuilder pro={pro} documentoInicial={searchParams.get("doc") === "carta" ? "carta" : "cv"} />}
+                        {activeTab === "cv" && <CvBuilder pro={pro} documento="cv" />}
+                        {activeTab === "carta" && <CvBuilder pro={pro} documento="carta" />}
                         {activeTab === "connections" && <ClientConnections />}
                         {activeTab === "notifications" && <NotificationsList scope="all" />}
                         {activeTab === "soporte" && (

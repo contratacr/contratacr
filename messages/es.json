@@ -82,7 +82,6 @@
     "freeTools": "Herramientas gratis",
     "createResume": "Crear currículum",
     "coverLetter": "Carta de presentación",
-    "resumeAndLetter": "Currículum y carta",
     "categories": "Servicios",
     "howItWorks": "Cómo usar",
     "resources": "Sobre ContrataCR",
@@ -1395,7 +1394,8 @@
       "soporte": "Abre un caso y te respondemos aquí.",
       "cuenta": "Tu correo, tu contraseña y tu cuenta.",
       "guides": "Cómo usar ContrataCR paso a paso.",
-      "cv": "Arma tu currículum y tu carta de presentación paso a paso, con lo que ya está en tu perfil."
+      "cv": "Arma tu currículum paso a paso, con lo que ya está en tu perfil.",
+      "carta": "Escribe tu carta de presentación, dirigida al puesto, con lo que ya está en tu currículum."
     },
     "profileSections": {
       "verificationDesc": "Identidad y estado de verificación.",
@@ -1500,6 +1500,7 @@
       "close": "Cerrar"
     },
     "headerReviews": "{count, plural, one {# reseña} other {# reseñas}}",
+    "toolsHeading": "Herramientas",
     "sectionErrorTitle": "No se pudo mostrar esta sección",
     "sectionErrorBody": "Fue un problema al dibujar la pantalla, no de tus datos. Vuelve a intentarlo; ya nos llegó el aviso para arreglarlo.",
     "sectionErrorRetry": "Volver a intentar"
