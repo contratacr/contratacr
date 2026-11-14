@@ -993,8 +993,8 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     const languageText = languages.length === 1
       ? languageOptions.find((option) => option.value === languages[0])?.label ?? t("filters.language")
       : languages.length > 1
-        ? `${locale === "en" ? "Language" : "Idioma"} · ${languages.length}`
-        : locale === "en" ? "Language" : "Idioma";
+        ? `${t("filters.languageShort")} · ${languages.length}`
+        : t("filters.languageShort");
     // Los filtros solo se abren si el dedo empezó en ellos: al tocar el campo
     // de búsqueda, el teclado mueve la página y el «click» caía sobre el chip
     // que quedaba debajo (ver useToquePropio).

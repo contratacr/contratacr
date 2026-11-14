@@ -270,6 +270,7 @@
       "insurer": "Aseguradora",
       "anyInsurer": "Cualquier aseguradora",
       "language": "Idioma de atención",
+      "languageShort": "Idioma",
       "anyLanguage": "Cualquier idioma",
       "allLanguages": "Todos los idiomas",
       "nearMe": "Buscar cerca de mí",

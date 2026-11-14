@@ -270,6 +270,7 @@
       "insurer": "Insurer",
       "anyInsurer": "Any insurer",
       "language": "Service language",
+      "languageShort": "Language",
       "anyLanguage": "Any language",
       "allLanguages": "All languages",
       "nearMe": "Search near me",
