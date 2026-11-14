@@ -10,8 +10,6 @@ import { compareByRating } from "@/lib/search/ranking";
 // the same filters, the same order and the same per-card location decisions.
 
 export const RESULTS_PER_PAGE = 20;
-const PRICE_AVAILABILITY_OPTIONS = new Set(["visible", "quote"]);
-const PRICE_UNIT_OPTIONS = new Set(["por_hora", "por_consulta", "por_proyecto"]);
 
 export type SearchPageParams = {
   categoria?: string;
@@ -41,10 +39,6 @@ type PriceUnit = "por_hora" | "por_consulta" | "por_proyecto";
 export type SearchResult = Awaited<ReturnType<typeof searchProfessionals>>[number];
 type SearchWorkplace = { receivesClients?: boolean; id?: string; lat?: number; lng?: number; cantonId?: string; provinciaId?: string; provinceId?: string; name?: string; address?: string };
 
-function isPriceUnit(value: string | undefined): value is PriceUnit {
-  return value !== undefined && PRICE_UNIT_OPTIONS.has(value);
-}
-
 export function parseMultiParam(value: string | undefined): string[] {
   return [...new Set((value ?? "").split(",").map((item) => item.trim()).filter(Boolean))];
 }
@@ -59,13 +53,11 @@ export function isExactWorkplacePin(workplace: SearchWorkplace) {
 
 /** Every decision the URL implies, resolved once. */
 function parseSearchParams(params: SearchPageParams) {
-  const legacyPriceUnit = isPriceUnit(params.precio) ? params.precio : undefined;
-  const priceType = PRICE_AVAILABILITY_OPTIONS.has(params.precio ?? "") ? (params.precio as "visible" | "quote") : undefined;
-  const priceUnits = params.unidadPrecio
-    ? parseMultiParam(params.unidadPrecio).filter(isPriceUnit)
-    : legacyPriceUnit
-      ? [legacyPriceUnit]
-      : [];
+  // El filtro de precio salió de la búsqueda: el precio se compara en la
+  // tarjeta. Los enlaces viejos con ?precio= o ?unidadPrecio= abren la
+  // búsqueda completa en vez de una lista recortada sin forma de quitarlo.
+  const priceType: "visible" | "quote" | undefined = undefined;
+  const priceUnits: PriceUnit[] = [];
   const modalities = parseMultiParam(params.modalidad).filter(isModality);
   const videoOnly = modalities.length === 1 && modalities[0] === "video";
   const inPersonOnly = modalities.length === 1 && modalities[0] === "in_person";

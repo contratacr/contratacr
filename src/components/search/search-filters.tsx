@@ -35,28 +35,9 @@ const FILTER_TRIGGER = "text-sm";
 const FILTER_CONTENT = "min-w-0 w-[var(--radix-select-trigger-width)]";
 // Sentinel for the in-dropdown "Cualquier aseguradora" reset item (Radix Select forbids
 // an empty-string value, so we map this back to "" = no insurer filter).
-const ANY_PRICE = "__any_price__";
 const ANY_LANGUAGE = "__any_language__";
 const GMAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 const SORT_OPTIONS = ["rating", "cercania", "experience"] as const;
-const PRICE_AVAILABILITY_OPTIONS = ["quote"] as const;
-const PRICE_UNIT_OPTIONS = ["por_hora", "por_consulta", "por_proyecto"] as const;
-const PRICE_CHOICES = [ANY_PRICE, "quote", ...PRICE_UNIT_OPTIONS] as const;
-const normalizePriceFilter = (value: string) =>
-  PRICE_AVAILABILITY_OPTIONS.includes(value as (typeof PRICE_AVAILABILITY_OPTIONS)[number]) ? value : "";
-const normalizePriceUnit = (value: string) =>
-  PRICE_UNIT_OPTIONS.includes(value as (typeof PRICE_UNIT_OPTIONS)[number]) ? value : "";
-const priceChoiceFromFilters = (availability: string, units: string[]) => {
-  const unit = units.find((value) => PRICE_UNIT_OPTIONS.includes(value as (typeof PRICE_UNIT_OPTIONS)[number]));
-  return unit || (availability === "quote" ? "quote" : ANY_PRICE);
-};
-const filtersFromPriceChoice = (choice: string) => {
-  if (PRICE_UNIT_OPTIONS.includes(choice as (typeof PRICE_UNIT_OPTIONS)[number])) {
-    return { availability: "", units: [choice] };
-  }
-  if (choice === "quote") return { availability: choice, units: [] };
-  return { availability: "", units: [] };
-};
 const parseMultiParam = (value?: string | null) =>
   Array.from(new Set((value ?? "").split(",").map((item) => item.trim()).filter(Boolean)));
 const serializeMultiParam = (values: string[]) => values.join(",");
@@ -343,106 +324,6 @@ function DesktopMultiSelect({
   );
 }
 
-function PriceFilterSheet({
-  open,
-  availability,
-  units,
-  onClose,
-  onApply,
-  ancla,
-}: {
-  open: boolean;
-  availability: string;
-  units: string[];
-  onClose: () => void;
-  onApply: (availability: string, units: string[]) => void;
-  /** Caja del filtro que abrió: en computadora el panel cuelga de él. */
-  ancla?: DOMRect | null;
-}) {
-  if (!open) return null;
-
-  return (
-    <PriceFilterSheetContent
-      availability={availability}
-      units={units}
-      onClose={onClose}
-      onApply={onApply}
-      ancla={ancla}
-    />
-  );
-}
-
-function PriceFilterSheetContent({
-  availability,
-  units,
-  onClose,
-  onApply,
-  ancla,
-}: Omit<React.ComponentProps<typeof PriceFilterSheet>, "open">) {
-  const t = useTranslations("search");
-  const currentChoice = priceChoiceFromFilters(availability, units);
-
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [onClose]);
-
-  const option = (value: string, label: string, selected: boolean, onSelect: () => void) => (
-    <button
-      key={value}
-      type="button"
-      onClick={onSelect}
-      className="flex min-h-[52px] w-full items-center justify-between gap-4 border-b border-[#eef2f6] py-2.5 text-left last:border-b-0"
-    >
-      <span className={cn("text-[15px] font-semibold", selected ? "text-[#008fbe]" : "text-[#162543]")}>{label}</span>
-      <span className={cn(
-        "grid h-6 w-6 shrink-0 place-items-center rounded-full border-2",
-        selected ? "border-[#009FD9] bg-[#009FD9]" : "border-[#d7e1ea] bg-white",
-      )}>
-        {selected && <Check className="h-4 w-4 stroke-[3] text-white" />}
-      </span>
-    </button>
-  );
-
-  return (
-    <ViewportPortal>
-    <div className={cn("fixed inset-0 z-[220] flex items-end justify-center", ancla ? "lg:block" : "lg:items-center lg:p-6")} role="presentation">
-      <button type="button" aria-label="Cerrar" className={cn("absolute inset-0 bg-[#071426]/55", ancla && "ccr-filtro-anclado-velo")} onClick={onClose} />
-      <section role="dialog" aria-modal="true" aria-label={t("filters.price")} style={ancla ? ({ "--ccr-anc-x": `${Math.round(Math.min(ancla.left, (typeof window === "undefined" ? 1440 : window.innerWidth) - 368))}px`, "--ccr-anc-y": `${Math.round(ancla.bottom + 8)}px` } as React.CSSProperties) : undefined}
-        className={cn("relative z-10 w-full max-w-xl overflow-hidden rounded-t-[22px] bg-white shadow-2xl lg:rounded-[18px]", ancla && "ccr-filtro-anclado")}>
-        <div className="flex items-center justify-between border-b border-[#eef2f6] px-5 py-4">
-          <h2 className={CABECERA_TITULO}>{t("filters.price")}</h2>
-          <button type="button" onClick={onClose} aria-label="Cerrar" className="inline-flex h-9 w-9 items-center justify-center text-[#162543]">
-            <X className="h-6 w-6" />
-          </button>
-        </div>
-        <div className="max-h-[70vh] overflow-y-auto px-5 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-          <div className="py-3">
-            {PRICE_CHOICES.map((value) => option(
-              value,
-              value === ANY_PRICE ? t("filters.anyPrice") : t(`priceFilter.${value}`),
-              currentChoice === value,
-              () => {
-                const next = filtersFromPriceChoice(value);
-                onApply(next.availability, next.units);
-              },
-            ))}
-          </div>
-        </div>
-      </section>
-    </div>
-    </ViewportPortal>
-  );
-}
-
 function locationFilterLabel(provinceId: string, cantonId: string) {
   if (!provinceId || provinceId === "todas") return "";
   const province = PROVINCES.find((p) => p.id === provinceId);
@@ -485,8 +366,6 @@ type SearchFiltersInitialValues = {
   modalidad?: string;
   aseguradora?: string;
   idioma?: string;
-  precio?: string;
-  unidadPrecio?: string;
   ubicacion?: string;
   lat?: string;
   lng?: string;
@@ -499,6 +378,21 @@ type SearchFiltersProps = {
   closable?: boolean;
   initialValues?: SearchFiltersInitialValues;
 };
+
+// «Cerca de mí» sin preguntar, solo si la persona YA dio permiso de ubicación
+// antes: pedirlo al entrar hace que muchos lo rechacen por reflejo. Una vez por
+// sesión (la página monta varias instancias de estos filtros) y nunca después
+// de que la persona lo apague.
+const CERCA_AUTOMATICA = "ccr_cerca_automatica";
+let cercaAutomaticaIntentada = false;
+function marcarCercaAutomatica() {
+  cercaAutomaticaIntentada = true;
+  try { sessionStorage.setItem(CERCA_AUTOMATICA, "1"); } catch { /* sin almacenamiento: basta la marca en memoria */ }
+}
+function cercaAutomaticaYaIntentada() {
+  if (cercaAutomaticaIntentada) return true;
+  try { return sessionStorage.getItem(CERCA_AUTOMATICA) === "1"; } catch { return false; }
+}
 
 export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHeader = false, closable = false, initialValues }: SearchFiltersProps = {}) {
   const router = useRouter();
@@ -568,11 +462,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     isHealthCategory(initialCategory) ? parseMultiParam(initialParam("aseguradora")) : []
   );
   const [languages, setLanguages] = useState<string[]>(() => parseMultiParam(initialParam("idioma")));
-  const initialPrice = initialParam("precio");
-  const initialPriceUnits = parseMultiParam(initialParam("unidadPrecio") || initialPrice).map(normalizePriceUnit).filter(Boolean);
-  const [priceFilter, setPriceFilter] = useState(normalizePriceFilter(initialPrice));
-  const [priceUnits, setPriceUnits] = useState(initialPriceUnits);
-  const [openChip, setOpenChip] = useState<"sort" | "price" | "language" | "modality" | "insurer" | null>(null);
+  const [openChip, setOpenChip] = useState<"sort" | "language" | "modality" | "insurer" | null>(null);
   // EL PANEL CUELGA DEL FILTRO QUE LO ABRIÓ, como en Empleos, Promociones y
   // Proyectos. Era una ventana centrada con velo oscuro que tapaba los
   // resultados: para cambiar un filtro y ver el efecto había que cerrarla.
@@ -614,9 +504,6 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     const nextModalities = parseMultiParam(params.get("modalidad") ?? initialValues?.modalidad ?? "").filter((value) => value === "video" || value === "in_person").slice(0, 1);
     const nextInsurers = parseMultiParam(params.get("aseguradora") ?? initialValues?.aseguradora ?? "");
     const nextLanguages = parseMultiParam(params.get("idioma") ?? initialValues?.idioma ?? "");
-    const nextPrice = params.get("precio") ?? initialValues?.precio ?? "";
-    const nextPriceUnitRaw = params.get("unidadPrecio") ?? initialValues?.unidadPrecio ?? "";
-    const nextPriceUnits = parseMultiParam(nextPriceUnitRaw || nextPrice).map(normalizePriceUnit).filter(Boolean);
     const nextLat = params.get("lat") ?? initialValues?.lat ?? "";
     const nextLng = params.get("lng") ?? initialValues?.lng ?? "";
     const nextLocation = params.get("ubicacion") ?? initialValues?.ubicacion ?? "";
@@ -635,8 +522,6 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     setModalities(supportsVideoConsultCategory(nextCategory) ? nextModalities : []);
     setInsurers(isHealthCategory(nextCategory) ? nextInsurers : []);
     setLanguages(nextLanguages);
-    setPriceFilter(normalizePriceFilter(nextPrice));
-    setPriceUnits(nextPriceUnits);
     setLocationQuery(
       nextLocation
         ? nextLocation
@@ -657,8 +542,6 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     initialValues?.grupo,
     etiquetaDeGrupo,
     initialValues?.idioma,
-    initialValues?.precio,
-    initialValues?.unidadPrecio,
     initialValues?.lat,
     initialValues?.lng,
     initialValues?.modalidad,
@@ -759,7 +642,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   const showVideoFilter = supportsVideoConsultCategory(category && category !== "todas" ? category : null);
 
   const applyFilters = useCallback(
-    (overrides: Record<string, string> = {}) => {
+    (overrides: Record<string, string> = {}, opciones: { reemplazar?: boolean } = {}) => {
       const next = new URLSearchParams();
       // In CHIPS mode the search input lives in the header search bar, not here,
       // so take `q` from the URL - never from this instance's stale local `query` - to
@@ -773,8 +656,6 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         modalidad: serializeMultiParam(modalities),
         aseguradora: serializeMultiParam(insurers),
         idioma: serializeMultiParam(languages),
-        precio: priceFilter,
-        unidadPrecio: serializeMultiParam(priceUnits),
         lat: params.get("lat") ?? "",
         lng: params.get("lng") ?? "",
         ubicacion: params.get("ubicacion") ?? "",
@@ -802,8 +683,6 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
       if (supportsVideoConsultCategory(vals.categoria) && vals.modalidad) next.set("modalidad", vals.modalidad);
       if (isHealthCategory(vals.categoria) && vals.aseguradora) next.set("aseguradora", vals.aseguradora);
       if (vals.idioma) next.set("idioma", vals.idioma);
-      if (vals.precio && vals.precio !== "todos") next.set("precio", vals.precio);
-      if (vals.unidadPrecio) next.set("unidadPrecio", vals.unidadPrecio);
       // Carry the geolocation coords so changing another filter keeps proximity.
       if (vals.lat && vals.lng) { next.set("lat", vals.lat); next.set("lng", vals.lng); }
       if (vals.ubicacion && vals.lat && vals.lng) next.set("ubicacion", vals.ubicacion);
@@ -815,15 +694,17 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         next.set("e", vals.e);
         next.set("w", vals.w);
       }
-      router.push(rutaDeBusqueda(next));
+      if (opciones.reemplazar) router.replace(rutaDeBusqueda(next));
+      else router.push(rutaDeBusqueda(next));
     },
-    [query, category, province, canton, sortBy, modalities, insurers, languages, priceFilter, priceUnits, params, router, pathname, variant]
+    [query, category, province, canton, sortBy, modalities, insurers, languages, params, router, pathname, variant]
   );
 
   // Request geolocation on demand; the visible sort label matches the order.
   function requestMyLocation() {
     if (geoActive) {
       // Toggle OFF - drop the proximity sort + coords, keep other filters.
+      marcarCercaAutomatica();
       setGeoError(null);
       setLocationQuery("");
       const fallbackSort = sortBy === "cercania" ? "rating" : sortBy;
@@ -858,6 +739,40 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
       { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
     );
   }
+
+  // Sin ubicación en la búsqueda y con el permiso ya concedido: ordenar por
+  // cercanía de una vez. Con provincia, cantón, área del mapa, un orden elegido
+  // o atención por video, se respeta lo que la búsqueda ya dice.
+  useEffect(() => {
+    if (cercaAutomaticaYaIntentada()) return;
+    const tieneUbicacion = ["lat", "lng", "ubicacion", "provincia", "canton", "n", "s", "e", "w"].some((clave) => {
+      const valor = params.get(clave);
+      return !!valor && valor !== "todas" && valor !== "todos";
+    });
+    if (tieneUbicacion || params.get("sortBy") || parseMultiParam(params.get("modalidad") ?? "").includes("video")) return;
+    if (typeof navigator === "undefined" || !navigator.geolocation || !navigator.permissions?.query) return;
+    marcarCercaAutomatica();
+    navigator.permissions.query({ name: "geolocation" }).then((estado) => {
+      if (estado.state !== "granted") return;
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude, longitude } = pos.coords;
+          setProvince("");
+          setCanton("");
+          setLocationQuery(t("filters.nearMeActive"));
+          setSortBy("cercania");
+          applyFilters(
+            { sortBy: "cercania", provincia: "", canton: "", ubicacion: "", lat: String(latitude.toFixed(2)), lng: String(longitude.toFixed(2)) },
+            { reemplazar: true },
+          );
+        },
+        () => { /* silencioso: la persona no pidió nada, se queda el orden normal */ },
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 },
+      );
+    }).catch(() => { /* navegadores sin consulta de permisos: se queda el orden normal */ });
+    // Solo al montar: después, la ubicación la decide la persona.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function handleQueryChange(value: string) {
     setQuery(value);
@@ -1038,7 +953,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   }
 
   function clearAll() {
-    setQuery(""); setCategory(""); setProvince(""); setCanton(""); setLocationQuery(""); setSortBy("rating"); setModalities([]); setInsurers([]); setLanguages([]); setPriceFilter(""); setPriceUnits([]);
+    setQuery(""); setCategory(""); setProvince(""); setCanton(""); setLocationQuery(""); setSortBy("rating"); setModalities([]); setInsurers([]); setLanguages([]);
     setAddressSuggestions([]);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     router.push("/profesionales");
@@ -1055,8 +970,6 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     (showVideoFilter && modalities.length ? 1 : 0) +
     (areaActive ? 1 : 0) +
     (showInsurerFilter && insurers.length ? 1 : 0) +
-    (priceFilter ? 1 : 0) +
-    (priceUnits.length ? 1 : 0) +
     (languages.length > 0 ? 1 : 0);
 
   // -- MOBILE chips variant --------------------------------------------------
@@ -1077,12 +990,10 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     // vienen del buscador de arriba y no se borran aquí.
     // «Limpiar filtros» ya no vive aquí: va en la línea del conteo, que la
     // página dibuja con el enlace sin filtros (ver MarketplaceClearFilters).
-    const priceChoice = priceChoiceFromFilters(priceFilter, priceUnits);
-    const priceText = priceChoice === ANY_PRICE ? t("filters.price") : t(`priceFilter.${priceChoice}`);
     const languageText = languages.length === 1
       ? languageOptions.find((option) => option.value === languages[0])?.label ?? t("filters.language")
       : languages.length > 1
-        ? `${t("filters.language")} · ${languages.length}`
+        ? `${locale === "en" ? "Language" : "Idioma"} · ${languages.length}`
         : locale === "en" ? "Language" : "Idioma";
     // Los filtros solo se abren si el dedo empezó en ellos: al tocar el campo
     // de búsqueda, el teclado mueve la página y el «click» caía sobre el chip
@@ -1093,9 +1004,6 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         <div className="flex w-max min-w-full items-center justify-start gap-1">
           <button type="button" onPointerDown={anclarEn} onClick={alTocarChip(() => setOpenChip("sort"))} className={pill}>
             <span className="min-w-0 whitespace-nowrap">{sortLabel}</span><ChevronDown className="h-3 w-3 shrink-0 min-[390px]:h-3.5 min-[390px]:w-3.5" />
-          </button>
-          <button type="button" onPointerDown={anclarEn} onClick={alTocarChip(() => setOpenChip("price"))} className={pill}>
-            <span className="min-w-0 whitespace-nowrap">{priceText}</span><ChevronDown className="h-3 w-3 shrink-0 min-[390px]:h-3.5 min-[390px]:w-3.5" />
           </button>
           {showVideoFilter && <button type="button" onPointerDown={anclarEn} onClick={alTocarChip(() => setOpenChip("modality"))} className={pill}>
             <span className="min-w-0 whitespace-nowrap">{modalityOptions.find((option) => option.value === modalities[0])?.label ?? t("filters.attention")}</span><ChevronDown className="h-3.5 w-3.5 shrink-0" />
@@ -1124,18 +1032,6 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
             setSortBy(value);
             if (value === "cercania" && !geoActive) requestMyLocation();
             else applyFilters({ sortBy: value });
-            setOpenChip(null);
-          }}
-        />
-        <PriceFilterSheet ancla={anclaChip}
-          open={openChip === "price"}
-          availability={priceFilter}
-          units={priceUnits}
-          onClose={() => setOpenChip(null)}
-          onApply={(nextAvailability, nextUnits) => {
-            setPriceFilter(nextAvailability);
-            setPriceUnits(nextUnits);
-            applyFilters({ precio: nextAvailability, unidadPrecio: serializeMultiParam(nextUnits) });
             setOpenChip(null);
           }}
         />
@@ -1388,33 +1284,6 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
             </AnchoredDropdown>
           </div>
           {geoError && <span className="mt-1 block px-1 text-[11px] text-[#b45309]">{geoError}</span>}
-        </div>
-
-        <div>
-          <label className={fieldLabel}>{t("filters.price")}</label>
-          <Select
-            value={priceChoiceFromFilters(priceFilter, priceUnits)}
-            onValueChange={(choice) => {
-              const next = filtersFromPriceChoice(choice);
-              setPriceFilter(next.availability);
-              setPriceUnits(next.units);
-              applyFilters({ precio: next.availability, unidadPrecio: serializeMultiParam(next.units) });
-            }}
-          >
-            <SelectTrigger className={FILTER_TRIGGER}>
-              {/* Rótulo explícito: así sale en el primer pintado, no al montar. */}
-              <SelectValue>
-                {(() => { const c = priceChoiceFromFilters(priceFilter, priceUnits); return c === ANY_PRICE ? t("filters.anyPrice") : t(`priceFilter.${c}`); })()}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent className={FILTER_CONTENT}>
-              {PRICE_CHOICES.map((choice) => (
-                <SelectItem key={choice} value={choice}>
-                  {choice === ANY_PRICE ? t("filters.anyPrice") : t(`priceFilter.${choice}`)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
 
         {showVideoFilter && (
