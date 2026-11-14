@@ -169,9 +169,9 @@ const USE_ONLY = new Set<Tab>([]);
 // «Servicios» vive dentro de «Mi perfil», que es donde se ven; empleos y
 // promociones comparten «Mis publicaciones», que es lo mismo: algo que publico.
 const OFFER_TABS: Tab[] = ([
-  "sent_projects", "jobs", "offers", "quotes", "photos", "services", "statistics", "profile", "cv", "saved", "soporte", "guides",
+  "sent_projects", "jobs", "offers", "quotes", "cv", "photos", "services", "statistics", "profile", "saved", "soporte", "guides",
 ] as Tab[]).filter((tab) => EMPLEOS_VISIBLE || tab !== "jobs");
-const USE_TABS: Tab[] = ["sent_projects", "statistics", "saved", "profile", "cv", "soporte", "guides"] as Tab[];
+const USE_TABS: Tab[] = ["sent_projects", "cv", "statistics", "saved", "profile", "soporte", "guides"] as Tab[];
 // «Mis publicaciones» reúne TODO lo que uno saca a un tablero público: el
 // proyecto que pide un trabajo, el empleo que ofrece uno y la promoción. Son el
 // mismo acto —publicar— y antes vivían en dos paneles distintos, con un
@@ -194,8 +194,9 @@ const PANEL_GROUPS: { grupo: "work" | "business" | "saved" | "account"; tabs: Ta
   // Tres entradas, no un interruptor: «Mis publicaciones» juntaba proyectos,
   // empleos y promociones en una sola puerta, y una puerta con un interruptor
   // adentro hay que descubrirla. En el menú se leen de una.
-  { grupo: "business", tabs: ["sent_projects", "jobs", "offers", "quotes"] },
-  { grupo: "work", tabs: ["photos", "services", "statistics", "profile", "cv", "completion"] },
+  // Cotizaciones y Currículum y carta: documentos que uno arma y descarga.
+  { grupo: "business", tabs: ["sent_projects", "jobs", "offers", "quotes", "cv"] },
+  { grupo: "work", tabs: ["photos", "services", "statistics", "profile", "completion"] },
   { grupo: "saved", tabs: ["saved"] },
   { grupo: "account", tabs: ["soporte", "guides"] },
 ];
@@ -225,7 +226,7 @@ const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
   completion: { es: "Completa tu perfil", en: "Complete your profile" },
   guides: { es: "Guías", en: "Guides" },
   // El CV y la carta de presentación: para postularse a un empleo, con o sin ficha.
-  cv: { es: "Mi CV", en: "My CV" },
+  cv: { es: "Currículum y carta", en: "Resume & cover letter" },
 };
 
 type GuideItem = {
@@ -2419,7 +2420,7 @@ export default function DashboardPage() {
                             La dirección sigue existiendo y muestra el aviso de
                             sección vacía, para no romper enlaces viejos. */}
                         {activeTab === "saved" && <ClientActivity section="saved" />}
-                        {activeTab === "cv" && <CvBuilder pro={pro} />}
+                        {activeTab === "cv" && <CvBuilder pro={pro} documentoInicial={searchParams.get("doc") === "carta" ? "carta" : "cv"} />}
                         {activeTab === "connections" && <ClientConnections />}
                         {activeTab === "notifications" && <NotificationsList scope="all" />}
                         {activeTab === "soporte" && (

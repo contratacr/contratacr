@@ -1,4 +1,4 @@
-import { normalizeCv, type CvEntry } from "./model";
+import { normalizeCv, sameCvEntry, type CvEntry } from "./model";
 import { parseCvDates } from "./dates";
 
 /**
@@ -33,7 +33,8 @@ export type CvDocumento = {
   resumen: string;
   experiencia: CvEntry[];
   educacion: CvEntry[];
-  habilidades: string[];
+  habilidades: string[]; // las que salen en el CV: de 6 a 10
+  sugeridas: string[]; // el resto del perfil, para sumar con un toque
   idiomas: string[];
   certificaciones: string[];
 };
@@ -48,7 +49,7 @@ export type Carta = {
   cierre: string;
 };
 
-export const LIMITES = { resumen: 600, carta: 2200, entradas: 12, habilidades: 25 };
+export const LIMITES = { resumen: 600, carta: 2200, entradas: 12, habilidades: 10, porDefecto: 8, sugeridas: 30 };
 
 export const TITULOS: Record<Idioma, Record<"resumen" | "experiencia" | "educacion" | "habilidades" | "idiomas" | "certificaciones" | "contacto", string>> = {
   es: { resumen: "Perfil profesional", experiencia: "Experiencia", educacion: "Educación", habilidades: "Habilidades", idiomas: "Idiomas", certificaciones: "Certificaciones", contacto: "Contacto" },
@@ -88,30 +89,65 @@ export type DatosDelPerfil = {
   certificaciones?: { name: string; institution?: string; year?: string }[];
 };
 
+/**
+ * ¿Título o certificación? En el perfil, «Certificaciones» guarda de todo:
+ * «Ingeniero de Software · ULACIT» es un TÍTULO y va en Educación (como ya lo
+ * muestra el perfil público). Solo queda en Certificaciones lo que suena a
+ * certificado, curso corto o licencia.
+ */
+const ES_CERTIFICACION = /\b(certific|certified|curso|course|licencia|license|taller|workshop|seminario|istqb|aws|azure|scrum|pmp|itil|cisco|ccna|google|microsoft|oracle|comptia|toefl|ielts|rcp|cpr|primeros auxilios|first aid|manipulaci[oó]n de alimentos|alturas)\b/i;
+const ES_TITULO = /\b(bachiller|bachelor|licenciatura|licenciad|ingenier|maestr[ií]a|master|m[aá]ster|doctorado|phd|t[eé]cnico|diplomado|universidad|university|colegio|school|grado|degree)\b/i;
+export function esCertificacion(nombre: string, institucion = ""): boolean {
+  const texto = `${nombre} ${institucion}`;
+  return ES_CERTIFICACION.test(texto) && !ES_TITULO.test(nombre);
+}
+
+const plano = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+const unicas = (lista: string[]) => [...new Map(lista.map((h) => h.trim()).filter(Boolean).map((h) => [plano(h), h])).values()];
+
 /** Lo que ya está en el perfil, listo para editar. Nada se inventa. */
 export function prellenar(datos: DatosDelPerfil, idioma: Idioma): CvDocumento {
   const cv = normalizeCv(datos.cv);
   const servicios = (datos.servicios ?? []).map((s) => s.trim()).filter(Boolean);
-  const certificaciones = (datos.certificaciones ?? [])
-    .filter((c) => c.name?.trim())
+  const certs = (datos.certificaciones ?? []).filter((c) => c.name?.trim());
+  const comoEstudio = certs.filter((c) => !esCertificacion(c.name, c.institution))
+    .map((c): CvEntry => ({ title: c.name.trim(), organization: c.institution?.trim() ?? "", period: c.year?.trim() ?? "", description: "" }));
+  const educacion = [...cv.education, ...comoEstudio.filter((e, i) => !cv.education.some((x) => sameCvEntry(x, e)) && !comoEstudio.slice(0, i).some((x) => sameCvEntry(x, e)))];
+  const certificaciones = certs.filter((c) => esCertificacion(c.name, c.institution))
     .map((c) => [c.name.trim(), c.institution?.trim(), c.year?.trim()].filter(Boolean).join(" · "));
-  const habilidades = [...new Map([...cv.skills, ...servicios].map((h) => [h.toLowerCase(), h])).values()].slice(0, LIMITES.habilidades);
+  // Habilidades: de 6 a 10, las primeras de su propio CV. Los nombres de los
+  // servicios («Desarrollo web») no son habilidades: quedan como sugerencia.
+  const propias = unicas(cv.skills);
+  const habilidades = propias.slice(0, LIMITES.porDefecto);
+  const sugeridas = unicas([...propias.slice(LIMITES.porDefecto), ...servicios]).filter((s) => !habilidades.some((h) => plano(h) === plano(s))).slice(0, LIMITES.sugeridas);
   return {
     idioma,
     plantilla: "clasica",
     nombre: datos.nombre?.trim() ?? "",
-    titular: servicios[0] ?? "",
+    titular: cv.experience.length ? masRecientePrimero(cv.experience)[0].title : servicios[0] ?? "",
     correo: datos.correo?.trim() ?? "",
     telefono: datos.telefono?.trim() ?? "",
     ubicacion: datos.ubicacion?.trim() ?? "",
     enlace: datos.enlace?.trim() ?? "",
     resumen: (datos.bio ?? "").trim().slice(0, LIMITES.resumen),
     experiencia: masRecientePrimero(cv.experience).slice(0, LIMITES.entradas),
-    educacion: masRecientePrimero(cv.education).slice(0, LIMITES.entradas),
-    habilidades,
+    educacion: masRecientePrimero(educacion).slice(0, LIMITES.entradas),
+    habilidades: habilidades.length ? habilidades : servicios.slice(0, 4),
+    sugeridas: habilidades.length ? sugeridas : sugeridas.filter((s) => !servicios.slice(0, 4).includes(s)),
     idiomas: (datos.idiomas ?? []).filter(Boolean),
     certificaciones,
   };
+}
+
+/** Desde una vacante: suben primero las habilidades que pide, hasta el tope. */
+export function ajustarAVacante(cv: CvDocumento, vacante: string): CvDocumento {
+  const texto = plano(vacante);
+  if (!texto.trim()) return cv;
+  // Palabra completa: «Java» no debe calzar dentro de «JavaScript».
+  const pide = (h: string) => new RegExp(`(^|[^\\p{L}\\p{N}+#])${plano(h).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}($|[^\\p{L}\\p{N}+#])`, "u").test(texto);
+  const todas = [...cv.habilidades, ...cv.sugeridas];
+  const elegidas = unicas([...todas.filter(pide), ...cv.habilidades]).slice(0, LIMITES.habilidades);
+  return { ...cv, habilidades: elegidas, sugeridas: unicas(todas).filter((h) => !elegidas.some((e) => plano(e) === plano(h))) };
 }
 
 export function cartaInicial(cv: CvDocumento, vacante: { puesto?: string; empresa?: string } = {}): Carta {
@@ -165,6 +201,7 @@ export function revisarCv(cv: CvDocumento): Aviso[] {
   if (descripciones.trim() && !/\d/.test(descripciones)) add("numeros", "mejora", "Agregá números a tus logros (30 clientes, 15 %, 2 años): hacen el CV más creíble.", "Add numbers to your achievements (30 clients, 15%, 2 years): they make your CV more credible.");
   if (cv.experiencia.some((e) => !parseCvDates(e.period)?.startYear)) add("fechas", "mejora", "Poné fecha de inicio (mes y año) en cada experiencia.", "Add a start date (month and year) to every job.");
   if (cv.habilidades.length < 4) add("habilidades", "mejora", "Agregá al menos 4 habilidades: los filtros buscan esas palabras.", "Add at least 4 skills: screening filters look for those words.");
+  if (cv.habilidades.length > LIMITES.habilidades) add("demasiadas", "mejora", `Dejá ${LIMITES.habilidades} habilidades como máximo, las que más pide el puesto: una lista larga se lee como relleno.`, `Keep ${LIMITES.habilidades} skills at most, the ones the job asks for: a long list reads as filler.`);
   // Unos 2.900 caracteres por página carta con esta plantilla.
   if (cvComoTexto(cv).length > 5800) add("largo", "mejora", "Pasa de unas 2 páginas: dejá solo lo más relevante para el puesto.", "It runs past about 2 pages: keep only what matters most for the job.");
   if ([cv.resumen, ...cv.experiencia.map((e) => e.description)].some((t) => PLACEHOLDER.test(t))) add("corchetes", "falta", "Quedó texto entre [corchetes] por completar.", "There is [bracketed] text left to fill in.");
