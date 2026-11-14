@@ -35,6 +35,11 @@ export function puestoProbable(texto: string): string {
   return (linea ?? "").replace(/^(se busca|buscamos|vacante|puesto|we are hiring|hiring)[:\s-]+/i, "").trim().slice(0, 120);
 }
 
+/** «Empresa: Hotel Atenas» / «Company: …», si la vacante lo dice. */
+export function empresaProbable(texto: string): string {
+  return (texto.match(/^(?:empresa|compa[nñ][ií]a|company|employer)\s*:\s*(.+)$/im)?.[1] ?? "").trim().slice(0, 120);
+}
+
 export async function leerTextoDeImagen(archivo: File, alProgreso?: (avance: number) => void): Promise<string> {
   const { createWorker } = await import("tesseract.js");
   const worker = await createWorker(["spa", "eng"], 1, {

@@ -3,7 +3,7 @@ import {
   ajustarAVacante, cartaComoTexto, cartaInicial, cvComoTexto, esCertificacion, fechasAts, nombreDeArchivo, palabrasClave, prellenar, revisarCarta, revisarCv,
 } from "../../src/lib/cv/documento";
 import { pdfDelCv, pdfDeLaCarta } from "../../src/lib/cv/pdf-documento";
-import { imagenValida, limpiarTextoLeido, puestoProbable } from "../../src/lib/cv/leer-imagen";
+import { empresaProbable, imagenValida, limpiarTextoLeido, puestoProbable } from "../../src/lib/cv/leer-imagen";
 
 // El generador de CV del panel: se prellena con el perfil, señala lo que suele
 // hacer que un CV se descarte y saca un PDF con texto de verdad, en una columna.
@@ -147,6 +147,8 @@ test("lo leído de una foto de la vacante se limpia y propone el puesto", () => 
   expect(limpio).toBe("SE BUSCA\n\nElectricista de mantenimiento\nHotel Atenas\n\n- Licencia B1");
   expect(puestoProbable(limpio)).toBe("Electricista de mantenimiento");
   expect(puestoProbable("Se busca: Cajero bilingüe\nTiempo completo")).toBe("Cajero bilingüe");
+  expect(empresaProbable("QA\nRequisitos\nEmpresa: Hotel Atenas")).toBe("Hotel Atenas");
+  expect(empresaProbable("Sin datos de la empresa")).toBe("");
   expect(imagenValida(new File(["x"], "v.png", { type: "image/png" }))).toBe("ok");
   expect(imagenValida(new File(["x"], "v.pdf", { type: "application/pdf" }))).toBe("tipo");
 });

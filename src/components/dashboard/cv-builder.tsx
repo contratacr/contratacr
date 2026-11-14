@@ -340,8 +340,9 @@ function AdaptarAPuesto({ en, vacante, puesto, empresa, cv, alAdaptar, alQuitar,
 }) {
   const [abierto, setAbierto] = useState(false);
   const [texto, setTexto] = useState(vacante);
-  const [p, setP] = useState(puesto);
-  const [e, setE] = useState(empresa);
+  // Sin vacante todavía, el puesto lo trae la vacante, no el título del CV.
+  const [p, setP] = useState(vacante ? puesto : "");
+  const [e, setE] = useState(vacante ? empresa : "");
   const [leyendo, setLeyendo] = useState<number | null>(null);
   const [error, setError] = useState("");
   const archivo = useRef<HTMLInputElement>(null);
@@ -349,7 +350,7 @@ function AdaptarAPuesto({ en, vacante, puesto, empresa, cv, alAdaptar, alQuitar,
 
   const leerImagen = async (f: File | undefined) => {
     if (!f) return;
-    const { imagenValida, leerTextoDeImagen, puestoProbable } = await import("@/lib/cv/leer-imagen");
+    const { empresaProbable, imagenValida, leerTextoDeImagen, puestoProbable } = await import("@/lib/cv/leer-imagen");
     const ok = imagenValida(f);
     if (ok !== "ok") { setError(ok === "tipo" ? (en ? "That file isn't an image." : "Ese archivo no es una imagen.") : (en ? "The image is over 10 MB." : "La imagen pasa de 10 MB.")); return; }
     setError(""); setLeyendo(0); setAbierto(true);
@@ -357,7 +358,8 @@ function AdaptarAPuesto({ en, vacante, puesto, empresa, cv, alAdaptar, alQuitar,
       const leido = await leerTextoDeImagen(f, (a) => setLeyendo(a));
       if (leido.length < 20) setError(en ? "We couldn't read much from that image. Try a sharper one or paste the text." : "No pudimos leer casi nada de esa imagen. Probá con una más nítida o pegá el texto.");
       setTexto((t) => [t.trim(), leido].filter(Boolean).join("\n\n"));
-      if (!p.trim()) setP(puestoProbable(leido));
+      setP((actual) => actual.trim() || puestoProbable(leido));
+      setE((actual) => actual.trim() || empresaProbable(leido));
     } catch {
       setError(en ? "The image couldn't be read on this device. Paste the text instead." : "No se pudo leer la imagen en este dispositivo. Pegá el texto.");
     } finally {
