@@ -11618,23 +11618,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 484,
-          "tag": "button",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "{() => { setTexto(vacante); setP(puesto); setE(empresa); setAbierto(true); }}",
-          "destination": "",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 485,
-          "tag": "button",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "{alQuitar}",
-          "destination": "",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 510,
+          "line": 482,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => alSumar(h)}",
@@ -11642,7 +11626,23 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 518,
+          "line": 492,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{() => { setTexto(vacante); setP(puesto); setE(empresa); setAbierto(true); }}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 493,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{alQuitar}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 514,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => alUsarTitulo(puesto.trim())}",
@@ -11650,7 +11650,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 540,
+          "line": 555,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setAbierto(true)}",
@@ -11658,7 +11658,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 541,
+          "line": 556,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => archivo.current?.click()}",
@@ -11666,7 +11666,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 546,
+          "line": 561,
           "tag": "Input",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(ev) => setP(ev.target.value)}",
@@ -11674,7 +11674,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 547,
+          "line": 562,
           "tag": "Input",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(ev) => setE(ev.target.value)}",
@@ -11682,7 +11682,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 551,
+          "line": 566,
           "tag": "textarea",
           "label": "{en ? \"Paste the job post here…\" : \"Pegá aquí la vacante…\"}",
           "handler": "{(ev) => setTexto(ev.target.value.slice(0, 6000))}",
@@ -11690,7 +11690,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 562,
+          "line": 577,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { alAdaptar({ texto: texto.trim(), puesto: p.trim(), empresa: e.trim() }); setAbierto(false); }}",
@@ -11698,7 +11698,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 563,
+          "line": 578,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => archivo.current?.click()}",
@@ -11706,7 +11706,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 564,
+          "line": 579,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => { setAbierto(false); setError(\"\"); }}",
@@ -11714,7 +11714,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 709,
+          "line": 724,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setConfirmarRecarga(true)}",
@@ -11722,7 +11722,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 715,
+          "line": 730,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setConfirmarRecarga(false)}",
@@ -11730,7 +11730,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 716,
+          "line": 731,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{recargar}",
@@ -11738,7 +11738,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 721,
+          "line": 736,
           "tag": "Input",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(e) => setCv({ nombre: e.target.value })}",
@@ -11746,7 +11746,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 722,
+          "line": 737,
           "tag": "Input",
           "label": "{en ? \"E.g. Residential electrician\" : \"Ej.: Electricista residencial\"}",
           "handler": "{(e) => setCv({ titular: e.target.value })}",
@@ -11754,7 +11754,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 723,
+          "line": 738,
           "tag": "Input",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(e) => setCv({ correo: e.target.value })}",
@@ -11762,7 +11762,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 724,
+          "line": 739,
           "tag": "Input",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(e) => setCv({ telefono: e.target.value })}",
@@ -11770,7 +11770,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 725,
+          "line": 740,
           "tag": "Input",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(e) => setCv({ ubicacion: e.target.value })}",
@@ -11778,7 +11778,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 726,
+          "line": 741,
           "tag": "Input",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(e) => setCv({ enlace: e.target.value })}",
@@ -11786,7 +11786,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 767,
+          "line": 782,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setCv({ habilidades: [...cv.habilidades, h], sugeridas: cv.sugeridas.filter((x) => x !== h) })}",
@@ -11794,7 +11794,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 785,
+          "line": 800,
           "tag": "textarea",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(e) => setCv({ resumen: e.target.value })}",
@@ -11802,7 +11802,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 787,
+          "line": 802,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setCv({ resumen: baseDelPerfil() })}",
@@ -11810,7 +11810,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 808,
+          "line": 823,
           "tag": "Input",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(e) => setCarta({ puesto: e.target.value })}",
@@ -11818,7 +11818,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 809,
+          "line": 824,
           "tag": "Input",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(e) => setCarta({ empresa: e.target.value })}",
@@ -11826,7 +11826,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 810,
+          "line": 825,
           "tag": "Input",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(e) => setCarta({ destinatario: e.target.value })}",
@@ -11834,7 +11834,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 812,
+          "line": 827,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setCarta(cartaInicial(cv, { puesto: carta.puesto, empresa: carta.empresa }))}",
@@ -11842,7 +11842,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 827,
+          "line": 842,
           "tag": "textarea",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(e) => setCarta({ [k]: e.target.value } as Partial<Carta>)}",
@@ -11850,7 +11850,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 852,
+          "line": 867,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => void descargar()}",
@@ -11858,7 +11858,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 855,
+          "line": 870,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => void copiar()}",
@@ -11866,7 +11866,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 860,
+          "line": 875,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -11874,7 +11874,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 885,
+          "line": 900,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setVerHoja((v) => !v)}",
@@ -11882,7 +11882,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 894,
+          "line": 909,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => mover(-1)}",
@@ -11890,7 +11890,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 898,
+          "line": 913,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => void descargar()}",
@@ -11898,7 +11898,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 902,
+          "line": 917,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => mover(1)}",
