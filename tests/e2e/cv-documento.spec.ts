@@ -1,8 +1,9 @@
 import { expect, test } from "playwright/test";
 import {
-  cartaComoTexto, cartaInicial, cvComoTexto, fechasAts, nombreDeArchivo, palabrasClave, prellenar, revisarCarta, revisarCv,
+  ajustarAVacante, cartaComoTexto, cartaInicial, cvComoTexto, esCertificacion, fechasAts, nombreDeArchivo, palabrasClave, prellenar, revisarCarta, revisarCv,
 } from "../../src/lib/cv/documento";
 import { pdfDelCv, pdfDeLaCarta } from "../../src/lib/cv/pdf-documento";
+import { imagenValida, limpiarTextoLeido, puestoProbable } from "../../src/lib/cv/leer-imagen";
 
 // El generador de CV del panel: se prellena con el perfil, señala lo que suele
 // hacer que un CV se descarte y saca un PDF con texto de verdad, en una columna.
@@ -19,23 +20,50 @@ const perfil = {
       { title: "Electricista", organization: "Por cuenta propia", period: "01/2019 – Present", description: "Instalé el sistema eléctrico de 40 casas\nReduje 20 % el tiempo de reparación" },
     ],
     education: [{ title: "Técnico en Electricidad", organization: "INA", period: "2014", description: "" }],
-    skills: ["Tableros eléctricos", "electricidad", "Domótica"],
+    skills: ["Tableros eléctricos", "electricidad", "Domótica", "Cableado estructurado"],
   },
   idiomas: ["Español", "Inglés"],
-  certificaciones: [{ name: "Trabajo en alturas", institution: "INS", year: "2023" }],
+  certificaciones: [{ name: "Trabajo en alturas", institution: "INS", year: "2023" }, { name: "Ingeniero de Software", institution: "ULACIT", year: "2021" }],
 };
 
 test("se prellena con el perfil, lo más reciente primero, sin habilidades repetidas", () => {
   const cv = prellenar(perfil, "es");
   expect(cv.nombre).toBe("Ana Mora");
-  expect(cv.titular).toBe("Electricidad");
+  // El título sale del cargo más reciente, no del nombre del servicio.
+  expect(cv.titular).toBe("Electricista");
   expect(cv.experiencia.map((e) => e.title)).toEqual(["Electricista", "Técnica"]);
   // «electricidad» del CV y «Electricidad» del servicio son la misma habilidad.
   expect(cv.habilidades.filter((h) => h.toLowerCase() === "electricidad")).toHaveLength(1);
+  // Un título universitario guardado como «certificación» va en Educación.
   expect(cv.certificaciones).toEqual(["Trabajo en alturas · INS · 2023"]);
+  expect(cv.educacion.map((e) => e.title)).toEqual(["Ingeniero de Software", "Técnico en Electricidad"]);
+  // Los nombres de servicio no son habilidades: quedan como sugerencia.
+  expect(cv.habilidades).not.toContain("Cámaras de seguridad");
+  expect(cv.sugeridas).toContain("Cámaras de seguridad");
   // Una cuenta sin ficha arranca con lo poco que hay, sin inventar nada.
   const vacio = prellenar({ nombre: "Luis", correo: "luis@example.com" }, "en");
-  expect(vacio).toMatchObject({ nombre: "Luis", titular: "", resumen: "", experiencia: [], habilidades: [] });
+  expect(vacio).toMatchObject({ nombre: "Luis", titular: "", resumen: "", experiencia: [], habilidades: [], sugeridas: [] });
+});
+
+test("títulos y certificaciones se distinguen", () => {
+  expect(esCertificacion("Certificación ISTQB Foundation")).toBe(true);
+  expect(esCertificacion("Curso de Excel avanzado", "INA")).toBe(true);
+  expect(esCertificacion("Ingeniero de Software", "ULACIT")).toBe(false);
+  expect(esCertificacion("Bachillerato en Administración", "UCR")).toBe(false);
+  expect(esCertificacion("Técnico en Electricidad", "INA")).toBe(false);
+});
+
+test("habilidades: 8 por defecto, el resto como sugerencia, y la vacante manda", () => {
+  const muchas = Array.from({ length: 14 }, (_, i) => `Habilidad ${i + 1}`);
+  const cv = prellenar({ nombre: "Ana", cv: { experience: [], education: [], skills: [...muchas, "Playwright"] } }, "es");
+  expect(cv.habilidades).toHaveLength(8);
+  expect(cv.sugeridas).toContain("Playwright");
+  // Desde una vacante que pide Playwright, sube primero y no pasa del tope.
+  const ajustado = ajustarAVacante(cv, "Buscamos QA con Playwright y Habilidad 12");
+  expect(ajustado.habilidades.slice(0, 2)).toEqual(["Habilidad 12", "Playwright"]);
+  expect(ajustado.habilidades.length).toBeLessThanOrEqual(10);
+  expect(ajustado.sugeridas).not.toContain("Playwright");
+  expect(revisarCv({ ...cv, habilidades: muchas }).map((a) => a.id)).toContain("demasiadas");
 });
 
 test("fechas iguales en todo el documento, en cada idioma", () => {
@@ -88,8 +116,9 @@ test("texto para pegar: títulos estándar en el idioma del documento", () => {
 
 test("palabras de la vacante que están y que faltan en el CV", () => {
   const { estan, faltan } = palabrasClave("Buscamos electricista con experiencia en tableros, cámaras y licencia B1.", prellenar(perfil, "es"));
-  expect(estan).toEqual(expect.arrayContaining(["electricista", "tableros", "cámaras"]));
-  expect(faltan).toEqual(expect.arrayContaining(["licencia"]));
+  expect(estan).toEqual(expect.arrayContaining(["electricista", "tableros"]));
+  // «Cámaras de seguridad» es un servicio: queda como sugerencia, no en el CV.
+  expect(faltan).toEqual(expect.arrayContaining(["licencia", "cámaras"]));
   expect(faltan).not.toContain("experiencia");
 });
 
@@ -110,4 +139,14 @@ test("el PDF lleva texto de verdad, con el contacto en el cuerpo", async () => {
   expect(pdf).not.toMatch(/\/Subtype \/Image/);
   const carta = Buffer.from(await (await pdfDeLaCarta(cv, cartaInicial(cv, { puesto: "Electricista" }))).arrayBuffer()).toString("latin1");
   expect(carta).toContain("(Saludos cordiales,) Tj");
+});
+
+test("lo leído de una foto de la vacante se limpia y propone el puesto", () => {
+  const leido = "SE BUSCA\n\nElectricista de mantenimiento |\nHotel  Atenas\n\n\n\n- Licencia B1 ~\n_";
+  const limpio = limpiarTextoLeido(leido);
+  expect(limpio).toBe("SE BUSCA\n\nElectricista de mantenimiento\nHotel Atenas\n\n- Licencia B1");
+  expect(puestoProbable(limpio)).toBe("Electricista de mantenimiento");
+  expect(puestoProbable("Se busca: Cajero bilingüe\nTiempo completo")).toBe("Cajero bilingüe");
+  expect(imagenValida(new File(["x"], "v.png", { type: "image/png" }))).toBe("ok");
+  expect(imagenValida(new File(["x"], "v.pdf", { type: "application/pdf" }))).toBe("tipo");
 });

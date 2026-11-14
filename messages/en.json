@@ -989,7 +989,7 @@
       "sent_projects": "My projects",
       "saved": "My favorites",
       "guides": "Guides",
-      "cv": "My CV",
+      "cv": "Resume & cover letter",
       "notifications": "Notifications",
       "soporte": "Support",
       "cuenta": "Account & security",
@@ -1083,7 +1083,7 @@
       "soporte": "Open a ticket and we answer you here.",
       "cuenta": "Your email, your password and your account.",
       "guides": "How to use ContrataCR step by step.",
-      "cv": "Build your resume and cover letter from what's already in your profile."
+      "cv": "Build your resume and cover letter step by step from what's already in your profile."
     },
     "profileSections": {
       "verificationDesc": "Identity and verification status.",

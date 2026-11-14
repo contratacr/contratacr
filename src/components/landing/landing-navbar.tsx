@@ -15,7 +15,7 @@ import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin, List, Map as MapIcon, ArrowLeft, Share2, ReceiptText,
   Briefcase, Compass, Wrench,
   UserRound, UserRoundPlus, LogOut, FileText, Settings, MoreHorizontal,
-  HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Shield, Mail, ClipboardList, Clock, Bookmark } from "lucide-react";
+  HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Shield, Mail, ClipboardList, Clock, Bookmark, FileUser } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { readRecentVisits, clearRecentVisits, leerBusquedasRecientesConFecha, guardarBusquedaReciente, olvidarBusquedaReciente, olvidarBusquedasRecientes, removeRecentVisit, type BusquedaReciente, type RecentVisit } from "@/lib/recent-visits";
 import { useLocale, useTranslations } from "next-intl";
@@ -2165,6 +2165,20 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           <ClipboardList className="h-5 w-5 shrink-0" />
                           {locale === "en" ? "Projects" : "Proyectos"}
                         </Link>
+                        {/* HERRAMIENTAS GRATIS: documentos que cualquiera arma y
+                            descarga, sin ser Pro. Las herramientas de negocio
+                            (catálogo, clientes, facturación) son de Pro y viven
+                            en su panel, no aquí. */}
+                        <div className="mx-3 my-2 h-px bg-gray-100" aria-hidden />
+                        <p className="px-3 pb-1 pt-0.5 text-[11px] font-bold uppercase tracking-[0.08em] text-[#7a899d]">{locale === "en" ? "Free tools" : "Herramientas gratis"}</p>
+                        <Link href="/dashboard/profesional?tab=cv" onClick={() => setOpenMenu(null)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
+                          <FileUser className="h-5 w-5 shrink-0" />
+                          {locale === "en" ? "Create a resume" : "Crear currículum"}
+                        </Link>
+                        <Link href="/dashboard/profesional?tab=cv&doc=carta" onClick={() => setOpenMenu(null)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
+                          <Mail className="h-5 w-5 shrink-0" />
+                          {locale === "en" ? "Cover letter" : "Carta de presentación"}
+                        </Link>
                       </div>
                     )}
                   </div>
@@ -2955,6 +2969,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Jobs" : "Empleos"}</span>
                   </Link>
                 )}
+                {/* Herramienta gratis para quien busca empleo: va junto a Empleos. */}
+                <Link href="/dashboard/profesional?tab=cv" prefetch={false} onClick={cerrarCajon} className={claseCajon("/dashboard/profesional?tab=cv")}>
+                  <DrawerIcon><FileUser /></DrawerIcon>
+                  <span className={mobileDrawerTextClass}>{locale === "en" ? "Resume & cover letter" : "Currículum y carta"}</span>
+                </Link>
                 <Link href="/servicios" prefetch={true} onClick={cerrarCajon} className={claseCajon("/servicios")}>
                   <DrawerIcon><Wrench /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{t("categories")}</span>

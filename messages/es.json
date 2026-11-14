@@ -990,7 +990,7 @@
       "saved": "Mis favoritos",
       "notifications": "Notificaciones",
       "guides": "Guías",
-      "cv": "Mi CV",
+      "cv": "Currículum y carta",
       "soporte": "Soporte",
       "cuenta": "Cuenta y seguridad",
       "privacidad": "Privacidad"
@@ -1391,7 +1391,7 @@
       "soporte": "Abre un caso y te respondemos aquí.",
       "cuenta": "Tu correo, tu contraseña y tu cuenta.",
       "guides": "Cómo usar ContrataCR paso a paso.",
-      "cv": "Arma tu CV y tu carta de presentación con lo que ya está en tu perfil."
+      "cv": "Arma tu currículum y tu carta de presentación paso a paso, con lo que ya está en tu perfil."
     },
     "profileSections": {
       "verificationDesc": "Identidad y estado de verificación.",
