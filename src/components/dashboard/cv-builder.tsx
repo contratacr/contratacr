@@ -316,8 +316,16 @@ function Pasos<T extends PasoCv | PasoCarta>({ pasos, actual, hechos, alElegir, 
                 paso === actual ? "border-[#009FD9] bg-[#eef8fd] text-[#007fae]" : "border-[#e5e7eb] bg-white text-[#52627a] hover:text-[#162543]",
               )}
             >
-              {hechos.has(paso) && paso !== actual ? <CheckCircle2 className="h-4 w-4 text-[#12b76a]" /> : <span className="text-[11px] font-bold">{i + 1}</span>}
+              <span
+                className={cn(
+                  "inline-flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold",
+                  paso === actual ? "bg-[#009FD9] text-white" : hechos.has(paso) ? "bg-[#d1f0e0] text-[#067647]" : "bg-[#eef3f7] text-[#52627a]",
+                )}
+              >
+                {i + 1}
+              </span>
               {NOMBRE_PASO[paso][en ? "en" : "es"]}
+              {hechos.has(paso) && paso !== actual && <span className="sr-only">{en ? " (done)" : " (completo)"}</span>}
             </button>
           </li>
         ))}
@@ -578,7 +586,7 @@ function Editor({ pro, clave, documentoInicial, nombreCuenta, correo }: { pro: P
         )}
         <div className="grid gap-3 @[560px]:grid-cols-2">
           <Input label={en ? "Full name" : "Nombre completo"} value={cv.nombre} maxLength={120} onChange={(e) => setCv({ nombre: e.target.value })} />
-          <Input label={en ? "Headline" : "Título"} placeholder={en ? "Residential electrician" : "Electricista residencial"} value={cv.titular} maxLength={120} onChange={(e) => setCv({ titular: e.target.value })} />
+          <Input label={en ? "Professional title" : "Título profesional"} placeholder={en ? "E.g. Residential electrician" : "Ej.: Electricista residencial"} value={cv.titular} maxLength={120} onChange={(e) => setCv({ titular: e.target.value })} />
           <Input label={en ? "Email" : "Correo"} type="email" value={cv.correo} maxLength={160} onChange={(e) => setCv({ correo: e.target.value })} />
           <Input label={en ? "Phone" : "Teléfono"} inputMode="tel" value={cv.telefono} maxLength={40} onChange={(e) => setCv({ telefono: e.target.value })} />
           <Input label={en ? "Location" : "Ubicación"} value={cv.ubicacion} maxLength={120} onChange={(e) => setCv({ ubicacion: e.target.value })} />
@@ -731,7 +739,7 @@ function Editor({ pro, clave, documentoInicial, nombreCuenta, correo }: { pro: P
             <>
               {pestana === "cv" ? pasoDelCv[pasoCv] : pasoDeLaCarta[pasoCarta]}
               <button type="button" onClick={() => setVerHoja((v) => !v)} className={cn(pastilla, "justify-self-start px-3 text-[#007fae] hover:bg-[#eef6fb] @[980px]:hidden")}>
-                <FileText className="h-4 w-4" />{verHoja ? (en ? "Hide preview" : "Ocultar vista previa") : (en ? "See how it looks" : "Ver cómo va")}
+                <FileText className="h-4 w-4" />{verHoja ? (en ? "Hide preview" : "Ocultar vista previa") : (en ? "See preview" : "Ver vista previa")}
               </button>
               {verHoja && <div className="@[980px]:hidden">{hoja}</div>}
             </>
