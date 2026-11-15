@@ -12,7 +12,7 @@ import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { useContext, useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback, useTransition, type ReactNode } from "react";
 import { soltarFoco } from "@/lib/soltar-foco";
 import {
-  X, Menu, ChevronDown, ChevronRight, Search, MapPin, List, Map as MapIcon, ArrowLeft, Share2, ReceiptText,
+  X, Menu, ChevronDown, ChevronRight, Search, MapPin, List, Map as MapIcon, ArrowLeft, Share2,
   Briefcase, Compass, Wrench,
   UserRound, UserRoundPlus, LogOut, FileText, Settings, MoreHorizontal,
   HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Shield, Mail, ClipboardList, Clock, Bookmark, FileUser } from "lucide-react";
@@ -643,9 +643,9 @@ function AccountMenu({
             {/* Cotizar es lo que el profesional hace seguido: en la app está en
                 la barra de abajo y aquí, en la web, en su menú. */}
             {isPro && (
-              <Link href={`${professionalPanelHref.split("?")[0]}?mode=offer&tab=quotes`} onClick={() => setOpen(false)} className={menuItemClass}>
-                <ReceiptText className="h-4 w-4 text-[#009FD9]" />
-                {t("quotes")}
+              <Link href={`${professionalPanelHref.split("?")[0]}?mode=offer&tab=tools`} onClick={() => setOpen(false)} className={menuItemClass}>
+                <Wrench className="h-4 w-4 text-[#009FD9]" />
+                {t("tools")}
               </Link>
             )}
             <Link href="/mensajes" onClick={() => setOpen(false)} className={menuItemClass}>
@@ -867,7 +867,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const t = useTranslations("header");
-  const tNav = useTranslations("bottomNav");
   // Una provincia ES «toda la provincia», pero eso no se veía: al escribir
   // «alajuela» salían «Alajuela» (provincia) y «Alajuela» (cantón) una debajo
   // de otra diciendo casi lo mismo, y nada indicaba que la primera cubre todo.
@@ -2970,12 +2969,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   </Link>
                 )}
                 {/* Herramienta gratis para quien busca empleo: va junto a Empleos. */}
-                <Link href="/dashboard/profesional?tab=cv" prefetch={false} onClick={cerrarCajon} className={claseCajon("/dashboard/profesional?tab=cv")}>
-                  <DrawerIcon><FileUser /></DrawerIcon>
-                  <span className={mobileDrawerTextClass}>{t("createResume")}</span>
+                <Link href="/dashboard/profesional?tab=tools" prefetch={false} onClick={cerrarCajon} className={claseCajon("/dashboard/profesional?tab=tools")}>
+                  <DrawerIcon><Wrench /></DrawerIcon>
+                  <span className={mobileDrawerTextClass}>{t("tools")}</span>
                 </Link>
                 <Link href="/servicios" prefetch={true} onClick={cerrarCajon} className={claseCajon("/servicios")}>
-                  <DrawerIcon><Wrench /></DrawerIcon>
+                  <DrawerIcon><Compass /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{t("categories")}</span>
                 </Link>
                 {/* El asistente pasó del menú de abajo a este menú (1-oct-2026). Solo en la
@@ -2993,15 +2992,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   <Link href="/mensajes" onClick={cerrarCajon} className={claseCajon("/mensajes")}>
                     <DrawerIcon><Mail /></DrawerIcon>
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Messages" : "Mensajes"}</span>
-                  </Link>
-                )}
-                {/* PRIMERO LO QUE SE HACE, DESPUÉS LO QUE AYUDA. Cotizaciones
-                    es trabajo del profesional y va arriba del Asistente, que es
-                    una ayuda que se abre encima y se cierra. */}
-                {isPro && (
-                  <Link href="/dashboard/profesional?tab=quotes" prefetch={false} onClick={cerrarCajon} className={claseCajon("/dashboard/profesional?tab=quotes")}>
-                    <DrawerIcon><FileText /></DrawerIcon>
-                    <span className={mobileDrawerTextClass}>{tNav("quotes")}</span>
                   </Link>
                 )}
                 {/* El Asistente es lo único que el cajón aporta de nuevo en la

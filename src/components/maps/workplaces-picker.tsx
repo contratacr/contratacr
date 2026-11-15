@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { MapPin, X, Plus, Check, Search, Pencil } from "lucide-react";
+import { MapPin, X, Plus, Check, Search, Pencil, Trash2 } from "lucide-react";
 import { createGoogleMarker, loadGoogleMaps, withConfiguredMapId } from "@/lib/maps/loader";
 import { PROVINCES, getCantonsByProvince, getCantonById, getProvinceById } from "@/lib/data/cr-geography";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
@@ -358,7 +358,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
                     <p className="min-w-0 break-words pt-2 text-sm font-semibold leading-5 text-[#162543]">{wp.name}</p>
                     {mode === "local" && <div className="-mr-2 flex shrink-0 items-center">
                       <button type="button" title={t("editPlace")} aria-label={t("editPlace")} className="grid h-9 w-9 place-items-center rounded-full text-[#0089bb] hover:bg-[#f1f8fb]" onClick={() => { setEditingId(wp.id); setProvince(wp.provinciaId || ''); setCanton(wp.cantonId || ''); setDraftPin(isFixedWorkplace(wp) ? { lat: wp.lat!, lng: wp.lng!, address: wp.address } : null); setShowMap(isFixedWorkplace(wp)); setAdding(true); }}><Pencil className="h-4 w-4"/></button>
-                      <button type="button" title={t("removePlace")} aria-label={`${t("removePlace")}: ${wp.name}`} className="grid h-9 w-9 place-items-center rounded-full text-[#a12828] hover:bg-red-50" onClick={() => removeWorkplace(wp.id)}><X className="h-4 w-4"/></button>
+                      <button type="button" title={t("removePlace")} aria-label={`${t("removePlace")}: ${wp.name}`} className="grid h-9 w-9 place-items-center rounded-full text-[#a12828] hover:bg-red-50" onClick={() => removeWorkplace(wp.id)}><Trash2 className="h-4 w-4"/></button>
                     </div>}
                   </div>
                   {mode !== "coverage" && wp.address && isFixedWorkplace(wp) && <p className="mt-0.5 break-words text-[13px] leading-5 text-[#64748b]">{wp.address}</p>}
@@ -389,7 +389,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
                   className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[#68778d] transition-colors hover:bg-red-50 hover:text-red-500"
                   aria-label={place.removeLabel ?? t("removePlace")}
                 >
-                  <X className="h-4 w-4" />
+                  <Trash2 className="h-4 w-4" />
                 </button>
               )}
             </div>
