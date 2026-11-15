@@ -79,6 +79,7 @@
     "searchProfessionals": "Find services"
   },
   "header": {
+    "tools": "Tools",
     "freeTools": "Free tools",
     "createResume": "Create a resume",
     "coverLetter": "Cover letter",

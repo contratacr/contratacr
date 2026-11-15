@@ -7,8 +7,8 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
   page.on('pageerror', error => errors.push(error.message));
   try {
     await page.goto('http://127.0.0.1:3195/?editor&multi');
-    await expect(page.getByRole('switch', { name: 'Recibo clientes en un lugar' })).toBeVisible();
-    await expect(page.getByRole('switch', { name: 'Voy donde el cliente' })).toBeVisible();
+    await expect(page.getByRole('switch', { name: 'Atiendo en mi local' })).toBeVisible();
+    await expect(page.getByRole('switch', { name: 'Atiendo a domicilio' })).toBeVisible();
     await expect(page.getByText('Segunda sede', { exact: true }).first()).toBeVisible();
     await expect(page.getByText('Sede de ejemplo').first()).toBeVisible();
     await expect(page.getByText('Nueva zona de atención')).toHaveCount(0);

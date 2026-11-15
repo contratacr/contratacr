@@ -20,6 +20,7 @@ export function FilaInterruptor({
   disabled = false,
   cargando = false,
   estirar = false,
+  columna = false,
   className,
   testId,
 }: {
@@ -32,6 +33,8 @@ export function FilaInterruptor({
   cargando?: boolean;
   /** Dentro de una lista: la fila se estira para que todos los interruptores se alineen. */
   estirar?: boolean;
+  /** Rótulo de ancho fijo: varias filas seguidas alinean sus interruptores en la misma vertical, pegados al texto. */
+  columna?: boolean;
   className?: string;
   testId?: string;
 }) {
@@ -62,7 +65,7 @@ export function FilaInterruptor({
           dos líneas: con una ayuda debajo quedaba flotando a media altura,
           sin nada a su lado con qué alinearse. */}
       <span className={cn("inline-flex max-w-full items-center gap-3", estirar && "w-full justify-between")}>
-        <span className="min-w-0 text-sm font-semibold text-[#162543]">{titulo}</span>
+        <span className={cn("min-w-0 text-sm font-semibold text-[#162543]", columna && "w-56 shrink-0")}>{titulo}</span>
         {cargando ? <Loader2 className="h-5 w-5 shrink-0 animate-spin text-[#009FD9]" /> : <ToggleSwitch checked={checked} disabled={disabled} />}
       </span>
       {ayuda && <span className="mt-0.5 block text-[13px] leading-snug text-[#68778d]">{ayuda}</span>}
