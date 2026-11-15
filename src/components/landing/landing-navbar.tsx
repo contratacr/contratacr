@@ -817,6 +817,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileHelpOpen, setMobileHelpOpen] = useState(false);
+  const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
   const locale = useLocale();
   const pathname = usePathname();
   const currentSearchParams = useParametrosDeBusqueda();
@@ -2968,11 +2969,35 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Jobs" : "Empleos"}</span>
                   </Link>
                 )}
-                {/* Herramienta gratis para quien busca empleo: va junto a Empleos. */}
-                <Link href="/dashboard/profesional?tab=tools" prefetch={false} onClick={cerrarCajon} className={claseCajon("/dashboard/profesional?tab=tools")}>
-                  <DrawerIcon><Wrench /></DrawerIcon>
-                  <span className={mobileDrawerTextClass}>{t("tools")}</span>
-                </Link>
+                {/* Herramientas se despliega como «Ayuda y soporte»: cada opción
+                    abre su herramienta directo, sin pasar por la lista del panel. */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setMobileToolsOpen((open) => !open)}
+                    className={cn(mobileDrawerItemClass, "gap-2")}
+                    aria-expanded={mobileToolsOpen}
+                    data-testid="menu-herramientas"
+                  >
+                    <DrawerIcon><Wrench /></DrawerIcon>
+                    <span className="min-w-0 flex-1 whitespace-nowrap">{t("tools")}</span>
+                    <ChevronRight className={cn("ccr-menu-flecha-ayuda ml-auto h-[22px] w-[22px] shrink-0 transition-transform duration-300", mobileToolsOpen && "rotate-90")} strokeWidth={2.2} />
+                  </button>
+                  {mobileToolsOpen && (
+                    <div className="ccr-menu-sub">
+                      {[
+                        // Cotizaciones es del profesional; el CV y la carta, de todos.
+                        ...(isPro ? [{ href: "/dashboard/profesional?mode=offer&tab=quotes", k: "quotes" as const }] : []),
+                        { href: "/dashboard/profesional?tab=cv", k: "createResume" as const },
+                        { href: "/dashboard/profesional?tab=carta", k: "createCoverLetter" as const },
+                      ].map((o) => (
+                        <Link key={o.href} href={o.href} prefetch={false} onClick={cerrarCajon} className="ccr-menu-sub-fila">
+                          {t(o.k)}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <Link href="/servicios" prefetch={true} onClick={cerrarCajon} className={claseCajon("/servicios")}>
                   <DrawerIcon><Compass /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{t("categories")}</span>
