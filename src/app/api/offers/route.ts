@@ -1,5 +1,5 @@
 import { recordGrowthConversion } from "@/lib/analytics/growth-server";
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 import { rutasDeCache } from "@/lib/prefijo-de-idioma";
 import { mensajeDeError } from "@/lib/api-errors";
 import { createClient } from "@/lib/supabase/server";
@@ -10,6 +10,7 @@ import { OFFER_PRICE_UNITS, OFFER_TYPES, sanitizeOfferImages } from "@/lib/offer
 import { crTodayISO } from "@/lib/time-cr";
 import { revalidatePath } from "next/cache";
 import { invitarAResenaAhora } from "@/lib/notifications/invitar-ahora";
+import { avisarPromocionNueva } from "@/lib/notifications/aviso-de-promocion";
 
 const STATUSES = new Set(["draft", "published", "paused", "expired", "sold_out"]);
 const CURRENCIES = new Set(["CRC", "USD"]);
@@ -103,6 +104,11 @@ export async function POST(req: NextRequest) {
     revalidateOfferViews(data.id);
     const metaConversion = payload.status === "published" && payload.offer_type === "service_offer" ? await recordGrowthConversion(req,"service_offer_published",data.id,user.id) : null;
     await invitarAResenaAhora(user.id);
+    // Avisa a quien buscó o contactó ese servicio en la zona; una sola vez por promoción.
+    if (payload.status === "published") {
+      const offerId = data.id;
+      after(() => avisarPromocionNueva({ offerId, professionalId, categoryId: payload.service_category_id, title }).catch((e) => console.error("[POST /api/offers] aviso de promoción", e)));
+    }
     return NextResponse.json({ id: data.id, metaConversion });
   } catch (error) {
     console.error("[POST /api/offers] unexpected failure", error);
@@ -119,7 +125,7 @@ export async function PATCH(req: NextRequest) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    const { data: offer } = await supabase.from("professional_offers").select("professional_id, offer_type, valid_until, professionals!inner(profile_id)").eq("id", id).maybeSingle();
+    const { data: offer } = await supabase.from("professional_offers").select("professional_id, offer_type, valid_until, title, service_category_id, professionals!inner(profile_id)").eq("id", id).maybeSingle();
     const owner = offer?.professionals as unknown as { profile_id?: string } | null;
     if (!offer || owner?.profile_id !== user.id) return NextResponse.json({ error: "No tienes permiso para modificar esta oferta." }, { status: 403 });
     // Volver a publicar una promoción con la vigencia ya pasada la dejaba
@@ -133,6 +139,11 @@ export async function PATCH(req: NextRequest) {
     const { error } = await supabase.from("professional_offers").update(cambios).eq("id", id).eq("professional_id", offer.professional_id);
     if (error) throw error;
     revalidateOfferViews(id);
+    // Un borrador que se publica avisa igual que uno nuevo; si ya avisó, no repite.
+    if (status === "published") {
+      const o = offer as { professional_id: string; title?: string | null; service_category_id?: string | null };
+      after(() => avisarPromocionNueva({ offerId: id, professionalId: o.professional_id, categoryId: o.service_category_id, title: o.title ?? "" }).catch((e) => console.error("[PATCH /api/offers] aviso de promoción", e)));
+    }
     const metaConversion = status === "published" && offer.offer_type === "service_offer" ? await recordGrowthConversion(req,"service_offer_published",id,user.id) : null;
     return NextResponse.json({ ok: true, metaConversion });
   } catch (error) {

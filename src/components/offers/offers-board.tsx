@@ -108,6 +108,7 @@ const OFFERS_COPY = {
     call: "Llamar",
     view: (title: string) => `Ver ${title}`,
     availableUntil: "Disponible hasta",
+    untilSoldOut: "Hasta agotar existencias",
   },
   en: {
     location: "Location",
@@ -145,6 +146,7 @@ const OFFERS_COPY = {
     call: "Call",
     view: (title: string) => `View ${title}`,
     availableUntil: "Available until",
+    untilSoldOut: "While supplies last",
   },
 } satisfies Record<MarketplaceLocale, Record<string, unknown>>;
 
@@ -902,15 +904,15 @@ function OfferPreview({
                 {offer.location_label}
               </span>
             )}
-            {offer.valid_until && (
-              <span className="inline-flex items-center gap-1.5">
-                <CalendarDays className="h-4 w-4 text-[#009fd9]" />
+            <span className="inline-flex items-center gap-1.5">
+              <CalendarDays className="h-4 w-4 text-[#009fd9]" />
+              {offer.valid_until ? (<>
                 {copy.availableUntil}{" "}
                 {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "es-CR", { day: "numeric", month: "long", year: "numeric" }).format(
                   new Date(`${offer.valid_until}T12:00:00`),
                 )}
-              </span>
-            )}
+              </>) : copy.untilSoldOut}
+            </span>
           </div>
         </div>
       </div>

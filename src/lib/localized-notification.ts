@@ -338,7 +338,7 @@ function notificationCopy(notification: NotificationCopyInput, locale: string) {
     const TIPO_ES: Record<string, string> = {
       success_case: "publicó un nuevo caso de éxito",
       service: "agregó un nuevo servicio",
-      offer: "publicó una nueva oferta",
+      offer: "publicó una nueva promoción",
       job: "publicó una nueva oportunidad de empleo",
     };
     const TIPO_EN: Record<string, string> = {
@@ -358,7 +358,7 @@ function notificationCopy(notification: NotificationCopyInput, locale: string) {
       const servicio = tipo === "service" ? getAllCategories().find((c) => c.id === contenido || getCategoryLabel(c.id, "es") === tituloEs) : undefined;
       const tituloEn = servicio ? getCategoryLabel(servicio.id, "en") : tituloEs;
       return {
-        title: `New post from ${nombre}`,
+        title: tipo === "offer" ? "New promotion near you" : `New post from ${nombre}`,
         message: `${nombre} ${TIPO_EN[tipo] ?? "posted an update"}${tituloEn ? `: ${tituloEn}` : ""}.`,
       };
     }

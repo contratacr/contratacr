@@ -92,6 +92,9 @@ const OFFER_FORM_COPY = {
     moreOptions: "Más opciones (moneda, unidad, cantidad)",
     availableUntil: "Disponible hasta",
     availabilityHelp: "La promoción se ocultará automáticamente después de esta fecha.",
+    untilSoldOut: "Hasta agotar existencias",
+    untilSoldOutHelp: "Sin fecha de cierre: la pausas o la marcas agotada cuando se termine.",
+    dateRequired: "Elige hasta qué fecha vale la promoción o activa Hasta agotar existencias.",
     location: "Ubicación",
     province: "Provincia",
     allCostaRica: "Todo Costa Rica",
@@ -156,6 +159,9 @@ const OFFER_FORM_COPY = {
     moreOptions: "More options (currency, unit, quantity)",
     availableUntil: "Available until",
     availabilityHelp: "The promotion will be hidden automatically after this date.",
+    untilSoldOut: "While supplies last",
+    untilSoldOutHelp: "No end date: pause it or mark it sold out when it runs out.",
+    dateRequired: "Choose an end date or turn on While supplies last.",
     location: "Location",
     province: "Province",
     allCostaRica: "All Costa Rica",
@@ -258,6 +264,9 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/promoci
   const [sinPrecio, setSinPrecio] = useState<boolean>(Boolean(initialOffer && initialOffer.price_now == null));
   const [priceUnit, setPriceUnit] = useState<string>(initialOffer?.price_unit ?? "total");
   const [validUntil, setValidUntil] = useState(initialOffer?.valid_until ?? "");
+  // Sin fecha de cierre = "Hasta agotar existencias" (15-nov-2026). Es lo que
+  // ya significaba una promoción sin fecha; ahora se elige a la vista.
+  const [hastaAgotar, setHastaAgotar] = useState(!initialOffer?.valid_until);
   const [locationProvince, setLocationProvince] = useState("");
   const [locationCanton, setLocationCanton] = useState("");
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>(Array.isArray(initialOffer?.image_urls) ? initialOffer.image_urls : []);
@@ -367,7 +376,11 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/promoci
       if (!isWholeNumberInRange(beforePrice || null, 1, MAX_MONEY_AMOUNT)) nextErrors.priceBefore = copy.previousPriceRangeError(formatNumberForMessage(MAX_MONEY_AMOUNT));
     }
     if (!isWholeNumberInRange(quantityAvailable, 1, MAX_OFFER_QUANTITY)) nextErrors.quantity = copy.quantityRangeError(formatNumberForMessage(MAX_OFFER_QUANTITY));
-    if (validUntil && /^\d{4}-\d{2}-\d{2}$/.test(validUntil) && validUntil < TODAY) {
+    if (!hastaAgotar && !/^\d{4}-\d{2}-\d{2}$/.test(validUntil)) {
+      setError(copy.dateRequired);
+      return;
+    }
+    if (!hastaAgotar && validUntil < TODAY) {
       setError(copy.dateError);
       return;
     }
@@ -397,7 +410,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/promoci
         currency,
         price_unit: priceUnit,
         location_label: locationLabel || null,
-        valid_until: /^\d{4}-\d{2}-\d{2}$/.test(validUntil) ? validUntil : null,
+        valid_until: !hastaAgotar && /^\d{4}-\d{2}-\d{2}$/.test(validUntil) ? validUntil : null,
         quantity_available: quantityAvailable,
         contact_whatsapp: whatsapp.trim() || null,
       }, files);
@@ -425,7 +438,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/promoci
         currency,
         price_unit: priceUnit,
         location_label: locationLabel || null,
-        valid_until: /^\d{4}-\d{2}-\d{2}$/.test(validUntil) ? validUntil : null,
+        valid_until: !hastaAgotar && /^\d{4}-\d{2}-\d{2}$/.test(validUntil) ? validUntil : null,
         quantity_available: quantityAvailable,
         contact_whatsapp: whatsapp.trim() || null,
         status: editing ? (initialOffer?.status ?? "published") : "published",
@@ -653,11 +666,21 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/promoci
                 <label className="text-sm font-medium text-[#374151]">{copy.quantity} <span className="font-normal text-[#68778d]">({copy.optional})</span><input name="quantity_available" inputMode="numeric" maxLength={7} defaultValue={initialOffer?.quantity_available ?? ""} placeholder="10" className={FIELD_CLASS} /><FieldError>{fieldErrors.quantity}</FieldError></label>
               </div>
             </details>
-            <div className="text-sm font-semibold">
-              {copy.availableUntil} <span className="font-normal text-[#68778d]">({copy.optional})</span>
-              <div className="mt-1.5"><FutureDatePicker value={validUntil} onChange={setValidUntil} /></div>
-              <p className="mt-1.5 text-xs font-normal text-[#68778d]">{copy.availabilityHelp}</p>
-            </div>
+            <FilaInterruptor
+              className="sm:col-span-2"
+              testId="promo-hasta-agotar"
+              titulo={copy.untilSoldOut}
+              ayuda={copy.untilSoldOutHelp}
+              checked={hastaAgotar}
+              onChange={(valor) => { setHastaAgotar(valor); setError(""); }}
+            />
+            {!hastaAgotar && (
+              <div className="text-sm font-semibold">
+                {copy.availableUntil}
+                <div className="mt-1.5"><FutureDatePicker value={validUntil} onChange={setValidUntil} /></div>
+                <p className="mt-1.5 text-xs font-normal text-[#68778d]">{copy.availabilityHelp}</p>
+              </div>
+            )}
             <div className="sm:col-span-2">
               <span className="text-sm font-semibold">{copy.location} <span className="font-normal text-[#68778d]">({copy.optional})</span></span>
               <input type="hidden" name="location_label_fallback" value={initialOffer?.location_label ?? ""} />
