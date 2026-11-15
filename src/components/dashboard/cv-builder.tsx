@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocale } from "next-intl";
-import { AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, ClipboardPaste, Copy, Download, FileText, FileUp, ImageUp, Lightbulb, Mail, Plus, RotateCcw, Target, Trash2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, Copy, Download, FileText, FileUp, Lightbulb, Mail, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { AccionesAlPie } from "@/components/ui/acciones-al-pie";
 import { Link } from "@/i18n/navigation";
 import { VACANTE_PARA_CURRICULUM } from "@/components/jobs/preparar-curriculum";
@@ -14,7 +14,7 @@ import { languageLabel } from "@/lib/data/languages";
 import { blankDates, parseCvDates, serializeCvDates, type CvDates } from "@/lib/cv/dates";
 import type { CvEntry } from "@/lib/cv/model";
 import {
-  LIMITES, TITULOS, ajustarAVacante, cartaComoTexto, cartaInicial, cuerpoDeLaCarta, cvComoTexto, fechasAts, nombreDeArchivo, palabrasClave, prellenar, revisarCarta, revisarCv, sumarDesdeArchivo,
+  LIMITES, TITULOS, cartaComoTexto, cartaInicial, cuerpoDeLaCarta, cvComoTexto, fechasAts, nombreDeArchivo, prellenar, revisarCarta, revisarCv, sumarDesdeArchivo,
   type Aviso, type Carta, type CvDocumento, type DatosDelPerfil, type Idioma, type Plantilla,
 } from "@/lib/cv/documento";
 import { cn } from "@/lib/utils";
@@ -31,7 +31,7 @@ type ProData = Record<string, any> | null;
 
 // v2: el prellenado separa títulos de certificaciones y limita las habilidades.
 const CLAVE = "ccr:cv-borrador:v2";
-type Borrador = { cv: CvDocumento; carta: Carta; vacante: string };
+type Borrador = { cv: CvDocumento; carta: Carta };
 
 function datosDelPerfil(pro: ProData, nombreCuenta: string, correo: string, idioma: Idioma): DatosDelPerfil {
   const servicios = Array.isArray(pro?.services)
@@ -260,13 +260,13 @@ function leerBorrador(clave: string): Borrador | null {
   try {
     const guardado = JSON.parse(window.localStorage.getItem(clave) ?? "null") as Borrador | null;
     if (!guardado?.cv || !guardado?.carta) return null;
-    return { ...guardado, cv: { ...guardado.cv, sugeridas: guardado.cv.sugeridas ?? [] }, vacante: guardado.vacante ?? "" };
+    return { ...guardado, cv: { ...guardado.cv, sugeridas: guardado.cv.sugeridas ?? [] } };
   } catch { return null; /* sin almacenamiento: se trabaja con el perfil */ }
 }
 
 /** La vacante desde la que se llegó («Preparar mi currículum para este puesto»). */
 const VACANTE = VACANTE_PARA_CURRICULUM;
-type VacanteRecibida = { puesto?: string; empresa?: string; texto?: string };
+type VacanteRecibida = { puesto?: string; empresa?: string };
 function leerVacante(): VacanteRecibida | null {
   try { return JSON.parse(window.sessionStorage.getItem(VACANTE) ?? "null") as VacanteRecibida | null; } catch { return null; }
 }
@@ -279,9 +279,9 @@ export function CvBuilder({ pro, documento = "cv" }: { pro: ProData; documento?:
   return <Editor key={`${clave}:${pro?.id ?? ""}:${documento}`} pro={pro} clave={clave} documento={documento} nombreCuenta={String(user.user_metadata?.full_name ?? "")} correo={user.email ?? ""} />;
 }
 
-type PasoCv = "contacto" | "experiencia" | "educacion" | "habilidades" | "perfil" | "adaptar" | "revisar";
+type PasoCv = "contacto" | "experiencia" | "educacion" | "habilidades" | "perfil" | "revisar";
 type PasoCarta = "puesto" | "contenido" | "revisar";
-const PASOS_CV: PasoCv[] = ["contacto", "experiencia", "educacion", "habilidades", "perfil", "adaptar", "revisar"];
+const PASOS_CV: PasoCv[] = ["contacto", "experiencia", "educacion", "habilidades", "perfil", "revisar"];
 const PASOS_CARTA: PasoCarta[] = ["puesto", "contenido", "revisar"];
 const NOMBRE_PASO: Record<PasoCv | PasoCarta, { es: string; en: string }> = {
   contacto: { es: "Contacto", en: "Contact" },
@@ -289,7 +289,6 @@ const NOMBRE_PASO: Record<PasoCv | PasoCarta, { es: string; en: string }> = {
   educacion: { es: "Educación", en: "Education" },
   habilidades: { es: "Habilidades", en: "Skills" },
   perfil: { es: "Perfil", en: "Summary" },
-  adaptar: { es: "Adaptar (opcional)", en: "Tailor (optional)" },
   revisar: { es: "Revisar y descargar", en: "Review & download" },
   puesto: { es: "Puesto", en: "Position" },
   contenido: { es: "Contenido", en: "Content" },
@@ -422,187 +421,24 @@ function LlenarDesdeCv({ professionalId, vacio, en, alLeer }: { professionalId: 
   );
 }
 
-/**
- * «ADAPTAR A UN PUESTO»: lo primero del generador. Se pega la vacante o se sube
- * una foto (se lee en el dispositivo). Sin IA, adaptar es ORDENAR, RESALTAR y
- * PRELLENAR: suben las habilidades que pide, se ven las palabras que faltan y
- * la carta sale dirigida. Lo que la persona escribió no se reescribe.
- */
-function AdaptarAPuesto({ en, vacante, puesto, empresa, cv, completo, alAdaptar, alQuitar, alSumar, alUsarTitulo }: {
-  en: boolean; vacante: string; puesto: string; empresa: string; cv: CvDocumento;
-  /** En el currículum se muestra todo el análisis; en la carta, solo a quién va dirigida. */
-  completo: boolean;
-  alAdaptar: (v: { texto: string; puesto: string; empresa: string }) => void;
-  alQuitar: () => void;
-  alSumar: (habilidad: string) => void;
-  alUsarTitulo: (titulo: string) => void;
-}) {
-  const [abierto, setAbierto] = useState(false);
-  const [texto, setTexto] = useState(vacante);
-  // Sin vacante todavía, el puesto lo trae la vacante, no el título del CV.
-  const [p, setP] = useState(vacante ? puesto : "");
-  const [e, setE] = useState(vacante ? empresa : "");
-  const [leyendo, setLeyendo] = useState<number | null>(null);
-  const [error, setError] = useState("");
-  const archivo = useRef<HTMLInputElement>(null);
-  const coincidencia = useMemo(() => (vacante.trim().length > 30 ? palabrasClave(vacante, cv) : null), [vacante, cv]);
-
-  const leerImagen = async (f: File | undefined) => {
-    if (!f) return;
-    const { empresaProbable, imagenValida, leerTextoDeImagen, puestoProbable } = await import("@/lib/cv/leer-imagen");
-    const ok = imagenValida(f);
-    if (ok !== "ok") { setError(ok === "tipo" ? (en ? "That file isn't an image." : "Ese archivo no es una imagen.") : (en ? "The image is over 10 MB." : "La imagen pasa de 10 MB.")); return; }
-    setError(""); setLeyendo(0); setAbierto(true);
-    try {
-      const leido = await leerTextoDeImagen(f, (a) => setLeyendo(a));
-      if (leido.length < 20) setError(en ? "We couldn't read much from that image. Try a sharper one or paste the text." : "No pudimos leer casi nada de esa imagen. Probá con una más nítida o pegá el texto.");
-      setTexto((t) => [t.trim(), leido].filter(Boolean).join("\n\n"));
-      setP((actual) => actual.trim() || puestoProbable(leido));
-      setE((actual) => actual.trim() || empresaProbable(leido));
-    } catch {
-      setError(en ? "The image couldn't be read on this device. Paste the text instead." : "No se pudo leer la imagen en este dispositivo. Pegá el texto.");
-    } finally {
-      setLeyendo(null);
-      if (archivo.current) archivo.current.value = "";
-    }
-  };
-
-  const entrada = (
-    <input ref={archivo} type="file" accept="image/*" className="sr-only" aria-label={en ? "Upload an image of the job post" : "Subir una imagen de la vacante"} onChange={(ev) => void leerImagen(ev.target.files?.[0])} />
-  );
-
-  if (vacante.trim() && !abierto) {
-    const nivel = !coincidencia ? null : coincidencia.puntaje >= 70 ? "alta" : coincidencia.puntaje >= 40 ? "media" : "baja";
-    const etiquetaNivel = nivel === "alta" ? (en ? "Strong match" : "Buena coincidencia") : nivel === "media" ? (en ? "Partial match" : "Coincidencia media") : (en ? "Low match" : "Coincidencia baja");
-    const colorNivel = nivel === "alta" ? "#12b76a" : nivel === "media" ? "#f79009" : "#f04438";
-    const tituloAjeno = puesto.trim() && puesto.trim().toLowerCase() !== cv.titular.trim().toLowerCase();
-    const faltan = coincidencia?.faltan ?? [];
-    const estan = coincidencia?.estan ?? [];
-    const chipFalta = (h: string) => (
-      <li key={h}><button type="button" onClick={() => alSumar(h)} className="inline-flex h-9 items-center gap-1 rounded-full border border-dashed border-[#f1b37a] bg-white px-3 text-[13px] font-semibold text-[#93370d] hover:bg-[#fffaeb]"><Plus className="h-3.5 w-3.5" />{h}</button></li>
-    );
-    return (
-      <section className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 rounded-2xl border border-[#cfe8f4] bg-[#f3fafe] p-4 sm:p-5" data-testid="cv-adaptado">
-        <div className="flex min-w-0 items-start gap-3">
-          <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white text-[#007fae]"><Target className="h-4 w-4" /></span>
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold text-[#667085]">{en ? "Tailored to" : "Adaptado a"}</p>
-            <p className="break-words text-[15px] font-black leading-5 text-[#162543]">{[puesto, empresa].filter(Boolean).join(" – ") || (en ? "a job post" : "una vacante")}</p>
-            <div className="mt-1 flex gap-4">
-              <button type="button" onClick={() => { setTexto(vacante); setP(puesto); setE(empresa); setAbierto(true); }} className="text-[13px] font-semibold text-[#007fae] underline-offset-2 hover:underline">{en ? "Change" : "Cambiar"}</button>
-              <button type="button" onClick={alQuitar} className="text-[13px] font-semibold text-[#52627a] underline-offset-2 hover:underline">{en ? "Remove" : "Quitar"}</button>
-            </div>
-          </div>
-        </div>
-        {!completo && <p className="text-[13px] leading-5 text-[#52627a]">{en ? "Your letter is addressed to this position and company." : "Tu carta va dirigida a este puesto y esta empresa."}</p>}
-        {completo && coincidencia && (
-          <>
-            <div className="rounded-xl bg-white p-3.5">
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-[13px] font-black text-[#162543]">{etiquetaNivel}</p>
-                  <p className="text-xs leading-5 text-[#667085]">{en ? `${estan.length} of ${estan.length + faltan.length} key words` : `${estan.length} de ${estan.length + faltan.length} palabras clave`}</p>
-                </div>
-                <p className="shrink-0 text-3xl font-black leading-none text-[#162543]" aria-label={en ? `${coincidencia.puntaje} percent` : `${coincidencia.puntaje} por ciento`}>{coincidencia.puntaje}%</p>
-              </div>
-              <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-[#eef3f7]" aria-hidden><div className="h-full rounded-full transition-[width] duration-500" style={{ width: `${Math.max(4, coincidencia.puntaje)}%`, backgroundColor: colorNivel }} /></div>
-            </div>
-            {tituloAjeno && (
-              <div className="grid gap-2 rounded-xl bg-white p-3.5">
-                <p className="text-[13px] font-black text-[#162543]">{en ? "1. Use the title of the post" : "1. Usá el título de la vacante"}</p>
-                <p className="text-[13px] leading-5 text-[#52627a]">{en ? `Your title says "${cv.titular || "(empty)"}". The post says "${puesto}". Filters compare it first.` : `Tu título dice "${cv.titular || "(vacío)"}". La vacante dice "${puesto}". Los filtros lo comparan primero.`}</p>
-                <button type="button" onClick={() => alUsarTitulo(puesto.trim())} className="h-10 justify-self-start rounded-full border border-[#b9d9e8] bg-white px-4 text-[13px] font-bold text-[#007fae] hover:bg-[#f1f9fc]">{en ? "Use this title" : "Usar este título"}</button>
-              </div>
-            )}
-            {faltan.length > 0 && (
-              <div className="grid gap-2 rounded-xl bg-white p-3.5">
-                <p className="text-[13px] font-black text-[#162543]">{tituloAjeno ? "2. " : "1. "}{en ? "Add what is true for you" : "Sumá lo que de verdad aplica a vos"}</p>
-                <p className="text-[13px] leading-5 text-[#52627a]">{en ? "The post asks for these and they are not in your resume. Tap one to add it as a skill." : "La vacante pide esto y no aparece en tu currículum. Tocá una para sumarla como habilidad."}</p>
-                <ul className="flex flex-wrap gap-2">{faltan.slice(0, 6).map(chipFalta)}</ul>
-                {faltan.length > 6 && (
-                  <details className="group">
-                    <summary className="cursor-pointer list-none text-[13px] font-semibold text-[#007fae]"><span className="group-open:hidden">{en ? `Show ${Math.min(faltan.length, 12) - 6} more` : `Ver ${Math.min(faltan.length, 12) - 6} más`}</span><span className="hidden group-open:inline">{en ? "Show fewer" : "Ver menos"}</span></summary>
-                    <ul className="mt-2 flex flex-wrap gap-2">{faltan.slice(6, 12).map(chipFalta)}</ul>
-                  </details>
-                )}
-              </div>
-            )}
-            {estan.length > 0 && (
-              <details className="rounded-xl bg-white p-3.5">
-                <summary className="cursor-pointer list-none text-[13px] font-bold text-[#067647]">{en ? `Already in your resume (${estan.length})` : `Ya están en tu currículum (${estan.length})`}</summary>
-                <ul className="mt-2 flex flex-wrap gap-1.5">{estan.slice(0, 14).map((h) => <li key={h} className="inline-flex h-7 items-center gap-1 rounded-full bg-[#ecfdf3] px-2.5 text-[12px] font-semibold text-[#067647]"><CheckCircle2 className="h-3.5 w-3.5" />{h}</li>)}</ul>
-              </details>
-            )}
-            <p className="text-xs leading-5 text-[#667085]">{en ? "We already put your matching skills first and, inside each job, the closest achievements. No sentence was rewritten." : "Ya pusimos primero tus habilidades afines y, dentro de cada trabajo, los logros más parecidos. No se reescribió ninguna frase."}</p>
-          </>
-        )}
-      </section>
-    );
-  }
-
-  return (
-    <section className="rounded-2xl border border-[#e5e7eb] bg-white p-4 sm:p-5" data-testid="cv-adaptar">
-      {entrada}
-      <div className="flex items-start gap-3">
-        <span className="ccr-caja-icono grid h-10 w-10 shrink-0 place-items-center rounded-xl"><Target className="h-5 w-5" /></span>
-        <div className="min-w-0 flex-1">
-          <h3 className="text-[15px] font-black text-[#162543]">{completo ? (en ? "Tailor my resume to a job (optional)" : "Adaptar mi currículum a un puesto (opcional)") : (en ? "Address it to a job post (optional)" : "Dirigirla a una vacante (opcional)")}</h3>
-          <p className="mt-0.5 text-[13px] leading-5 text-[#667085]">{en ? "Paste the job post or upload a photo of it. We put first the skills it asks for and address your letter. Your own sentences stay as you wrote them." : "Pegá la vacante o subí una foto. Ponemos primero las habilidades que pide y dirigimos tu carta. Tus frases quedan como las escribiste."}</p>
-        </div>
-      </div>
-      {!abierto ? (
-        <div className="mt-3 grid gap-2 @[420px]:grid-cols-2">
-          <button type="button" onClick={() => setAbierto(true)} className={cn(pastilla, "border border-[#d7e1ea] bg-white text-[#162543] hover:bg-[#f6f9fb]")}><ClipboardPaste className="h-4 w-4" />{en ? "Paste text" : "Pegar texto"}</button>
-          <button type="button" onClick={() => archivo.current?.click()} className={cn(pastilla, "border border-[#d7e1ea] bg-white text-[#162543] hover:bg-[#f6f9fb]")}><ImageUp className="h-4 w-4" />{en ? "Upload image" : "Subir imagen"}</button>
-        </div>
-      ) : (
-        <div className="mt-3 grid gap-3">
-          <div className="grid gap-3 @[560px]:grid-cols-2">
-            <Input label={en ? "Position" : "Puesto"} value={p} maxLength={120} onChange={(ev) => setP(ev.target.value)} />
-            <Input label={en ? "Company" : "Empresa"} value={e} maxLength={120} onChange={(ev) => setE(ev.target.value)} />
-          </div>
-          <label className="grid gap-1">
-            <span className="text-sm font-semibold text-[#162543]">{en ? "Job post" : "La vacante"}</span>
-            <textarea rows={6} value={texto} onChange={(ev) => setTexto(ev.target.value.slice(0, 6000))} className={campo} placeholder={en ? "Paste the job post here…" : "Pegá aquí la vacante…"} />
-          </label>
-          {leyendo !== null && (
-            <div role="status" className="grid gap-1.5">
-              <p className="text-xs font-semibold text-[#52627a]">{en ? "Reading the image on your device…" : "Leyendo la imagen en tu dispositivo…"} {Math.round(leyendo * 100)}%</p>
-              <div className="h-1.5 overflow-hidden rounded-full bg-[#eef3f7]"><div className="h-full rounded-full bg-[#009FD9] transition-[width]" style={{ width: `${Math.max(4, leyendo * 100)}%` }} /></div>
-            </div>
-          )}
-          {error && <p role="alert" className="text-[13px] text-[#b42318]">{error}</p>}
-          <p className="text-xs leading-5 text-[#667085]">{en ? "Tip: on iPhone and Android you can press and hold the text in a photo to copy it, and paste it here." : "Consejo: en iPhone y Android podés mantener presionado el texto de una foto para copiarlo y pegarlo aquí."}</p>
-          <div className="flex flex-wrap gap-2">
-            <button type="button" disabled={texto.trim().length < 20 || leyendo !== null} onClick={() => { alAdaptar({ texto: texto.trim(), puesto: p.trim(), empresa: e.trim() }); setAbierto(false); }} className={cn(pastilla, "bg-[#009FD9] text-white hover:bg-[#0089bb]")}><Target className="h-4 w-4" />{en ? "Tailor" : "Adaptar"}</button>
-            <button type="button" disabled={leyendo !== null} onClick={() => archivo.current?.click()} className={cn(pastilla, "border border-[#d7e1ea] bg-white text-[#162543] hover:bg-[#f6f9fb]")}><ImageUp className="h-4 w-4" />{en ? "Read an image" : "Leer una imagen"}</button>
-            <button type="button" onClick={() => { setAbierto(false); setError(""); }} className={cn(pastilla, "px-3 text-[#52627a] hover:bg-[#f6f9fb]")}>{en ? "Cancel" : "Cancelar"}</button>
-          </div>
-        </div>
-      )}
-    </section>
-  );
-}
-
 function Editor({ pro, clave, documento, nombreCuenta, correo }: { pro: ProData; clave: string; documento: "cv" | "carta"; nombreCuenta: string; correo: string }) {
   const idiomaApp: Idioma = useLocale() === "en" ? "en" : "es";
   const en = idiomaApp === "en";
   const desdeElPerfil = (idioma: Idioma): Borrador => {
     const cv = prellenar(datosDelPerfil(pro, nombreCuenta, correo, idioma), idioma);
-    return { cv, carta: cartaInicial(cv), vacante: "" };
+    return { cv, carta: cartaInicial(cv) };
   };
   // El borrador vive en este dispositivo. Si no hay, se arma desde el perfil.
   // Si se llegó desde una vacante, ese puesto se aplica encima.
   const [borrador, setBorrador] = useState<Borrador>(() => {
     const base = leerBorrador(clave) ?? desdeElPerfil(idiomaApp);
-    const v = leerVacante();
-    if (!v?.texto && !v?.puesto) return base;
-    const cv = ajustarAVacante(base.cv, [v.puesto, v.texto].filter(Boolean).join("\n"));
-    return { cv, carta: cartaInicial(cv, { puesto: v.puesto, empresa: v.empresa }), vacante: v.texto ?? "" };
+    // Solo la carta recibe el puesto y la empresa de la vacante; el currículum abre limpio.
+    const v = documento === "carta" ? leerVacante() : null;
+    if (!v?.puesto && !v?.empresa) return base;
+    return { ...base, carta: cartaInicial(base.cv, { puesto: v.puesto, empresa: v.empresa }) };
   });
   const pestana = documento;
-  // Si se llegó desde una vacante, se abre directo en «Adaptar»: ahí está lo que se vino a hacer.
-  const [pasoCv, setPasoCv] = useState<PasoCv>(() => (borrador.vacante ? "adaptar" : "contacto"));
+  const [pasoCv, setPasoCv] = useState<PasoCv>("contacto");
   const [pasoCarta, setPasoCarta] = useState<PasoCarta>("puesto");
   const [verHoja, setVerHoja] = useState(false);
   const [aviso, setAviso] = useState("");
@@ -618,28 +454,15 @@ function Editor({ pro, clave, documento, nombreCuenta, correo }: { pro: ProData;
   useEffect(() => { ultimo.current = borrador; }, [borrador]);
   useEffect(() => () => { try { window.localStorage.setItem(clave, JSON.stringify(ultimo.current)); } catch { /* sin almacenamiento */ } }, [clave]);
 
-  const { cv, carta, vacante } = borrador;
+  const { cv, carta } = borrador;
   const setCv = (cambio: Partial<CvDocumento>) => setBorrador((b) => ({ ...b, cv: { ...b.cv, ...cambio } }));
   const setCarta = (cambio: Partial<Carta>) => setBorrador((b) => ({ ...b, carta: { ...b.carta, ...cambio } }));
   const avisos = useMemo(() => (pestana === "cv" ? revisarCv(cv) : revisarCarta(carta)), [pestana, cv, carta]);
-  // Adaptar: ordena habilidades y dirige la carta. La carta solo se rehace si
-  // sigue siendo la plantilla; si la persona ya la escribió, cambian puesto y empresa.
-  const adaptar = ({ texto, puesto, empresa }: { texto: string; puesto: string; empresa: string }) => setBorrador((b) => {
-    const cvAdaptado = ajustarAVacante(b.cv, [puesto, texto].filter(Boolean).join("\n"));
-    const anterior = cartaInicial(b.cv, { puesto: b.carta.puesto, empresa: b.carta.empresa });
-    const nueva = cartaInicial(cvAdaptado, { puesto, empresa });
-    const carta = { ...b.carta, puesto, empresa };
-    for (const k of ["apertura", "porQueEncajo"] as const) if (b.carta[k] === anterior[k]) carta[k] = nueva[k];
-    return { ...b, cv: cvAdaptado, carta, vacante: texto };
-  });
-  const quitarVacante = () => setBorrador((b) => ({ ...b, vacante: "" }));
   const sumarArchivo = (leido: unknown) => {
     const { cv: nuevo, agregadas } = sumarDesdeArchivo(cv, leido);
     if (agregadas) setCv(nuevo);
     return agregadas;
   };
-  const sumarHabilidad = (h: string) => setCv({ habilidades: [...cv.habilidades, h], sugeridas: cv.sugeridas.filter((x) => x.toLowerCase() !== h.toLowerCase()) });
-  const cobertura = useMemo(() => (vacante.trim().length > 30 ? palabrasClave(vacante, cv) : null), [vacante, cv]);
 
   const hechosCv = useMemo(() => new Set<PasoCv>(([
     ["contacto", !!cv.nombre.trim() && !!(cv.correo.trim() || cv.telefono.trim())],
@@ -647,8 +470,7 @@ function Editor({ pro, clave, documento, nombreCuenta, correo }: { pro: ProData;
     ["educacion", cv.educacion.some((e) => e.title.trim())],
     ["habilidades", cv.habilidades.length >= 4 && cv.habilidades.length <= LIMITES.habilidades],
     ["perfil", cv.resumen.trim().length >= 80],
-    ["adaptar", !!vacante.trim()],
-  ] as [PasoCv, boolean][]).filter(([, ok]) => ok).map(([p]) => p)), [cv, vacante]);
+  ] as [PasoCv, boolean][]).filter(([, ok]) => ok).map(([p]) => p)), [cv]);
   const hechosCarta = useMemo(() => new Set<PasoCarta>(([
     ["puesto", !!carta.puesto.trim()],
     ["contenido", !revisarCarta(carta).some((a) => a.id === "corchetes")],
@@ -806,18 +628,11 @@ function Editor({ pro, clave, documento, nombreCuenta, correo }: { pro: ProData;
         </div>
       </Tarjeta>
     ),
-    adaptar: (
-      <>
-        <AdaptarAPuesto key={vacante ? "con" : "sin"} completo en={en} vacante={vacante} puesto={carta.puesto} empresa={carta.empresa} cv={cv} alAdaptar={adaptar} alQuitar={quitarVacante} alSumar={sumarHabilidad} alUsarTitulo={(titular) => setCv({ titular })} />
-        {!vacante.trim() && <p className="px-1 text-[13px] leading-5 text-[#667085]">{en ? "Skip this step if you're not applying to a specific job: your resume is already complete." : "Saltá este paso si no es para un puesto en particular: tu currículum ya está completo."}</p>}
-      </>
-    ),
     revisar: null,
   };
   const pasoDeLaCarta: Record<PasoCarta, ReactNode> = {
     puesto: (
       <>
-      <AdaptarAPuesto key={vacante ? "con" : "sin"} completo={false} en={en} vacante={vacante} puesto={carta.puesto} empresa={carta.empresa} cv={cv} alAdaptar={adaptar} alQuitar={quitarVacante} alSumar={sumarHabilidad} alUsarTitulo={(titular) => setCv({ titular })} />
       <Tarjeta titulo={en ? "The position" : "El puesto"} ayuda={en ? "A cover letter goes with your resume: one page, about 300 words." : "La carta acompaña tu currículum: una página, unas 300 palabras."}>
         <div className="grid gap-3 @[560px]:grid-cols-2">
           <Input label={en ? "Position" : "Puesto"} value={carta.puesto} maxLength={120} onChange={(e) => setCarta({ puesto: e.target.value })} />
@@ -833,10 +648,10 @@ function Editor({ pro, clave, documento, nombreCuenta, correo }: { pro: ProData;
     contenido: (
       <>
         {([
-          ["apertura", en ? "1. Opening" : "1. Apertura", en ? "Which position and how you found it." : "A qué puesto te postulás y cómo lo encontraste."],
-          ["porQueEncajo", en ? "2. Why you fit" : "2. Por qué encajás", en ? "2–3 achievements from your resume, with numbers." : "2 o 3 logros de tu currículum, con números."],
-          ["porQueLaEmpresa", en ? "3. Why this company" : "3. Por qué esta empresa", en ? "Something specific about them." : "Algo concreto de ellos."],
-          ["cierre", en ? "4. Closing" : "4. Cierre", en ? "Invite them to talk and say thanks." : "Invitá a conversar y agradecé."],
+          ["apertura", en ? "Which job are you applying for?" : "¿A qué puesto te postulás?", en ? "Say the position and how you found it." : "Decilo y contá cómo lo encontraste."],
+          ["porQueEncajo", en ? "What shows you can do this job?" : "¿Qué muestra que podés hacer este trabajo?", en ? "2–3 achievements from your resume, with numbers." : "2 o 3 logros de tu currículum, con números."],
+          ["porQueLaEmpresa", en ? "Why this company?" : "¿Por qué esta empresa?", en ? "Something specific about them." : "Algo concreto de ellos."],
+          ["cierre", en ? "How do you want to close?" : "¿Cómo querés cerrar?", en ? "Invite them to talk and say thanks." : "Invitá a conversar y agradecé."],
         ] as const).map(([k, titulo, ayuda]) => (
           <Tarjeta key={k} titulo={titulo} ayuda={ayuda}>
             <textarea rows={k === "porQueEncajo" ? 5 : 3} maxLength={900} value={carta[k]} onChange={(e) => setCarta({ [k]: e.target.value } as Partial<Carta>)} className={campo} />
@@ -855,12 +670,6 @@ function Editor({ pro, clave, documento, nombreCuenta, correo }: { pro: ProData;
       </div>
       <div>
         <p className="mb-2 text-[13px] font-black text-[#162543]">{en ? "Review before sending" : "Revisión antes de enviar"}</p>
-        {cobertura && pestana === "cv" && (
-          <p className="mb-2 flex items-center gap-2 rounded-xl bg-[#f3fafe] px-3 py-2.5 text-[13px] text-[#162543]">
-            <Target className="h-4 w-4 shrink-0 text-[#007fae]" />
-            {en ? `It has ${cobertura.estan.length} of ${cobertura.estan.length + cobertura.faltan.length} keywords from the job post.` : `Tiene ${cobertura.estan.length} de ${cobertura.estan.length + cobertura.faltan.length} palabras clave del puesto.`}
-          </p>
-        )}
         <Revision avisos={avisos} idiomaApp={idiomaApp} />
       </div>
       <div className="grid gap-2 @[560px]:grid-cols-2">
