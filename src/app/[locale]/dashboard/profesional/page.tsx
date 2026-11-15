@@ -27,6 +27,7 @@ import { StatisticsPanel } from "@/components/dashboard/statistics/statistics-pa
 import { QuotesSection, cargarCotizaciones } from "@/components/quotes/quotes-section";
 import { SectionBoundary } from "@/components/dashboard/section-boundary";
 import { SectionHeadline } from "@/components/dashboard/section-headline";
+import { Herramientas } from "@/components/dashboard/herramientas";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -94,7 +95,7 @@ type Tab =
   | "home" | "profile" | "services" | "photos" | "quotes" | "verificacion"
   | "jobs" | "offers" | "publicaciones" | "completion"
   | "sent_projects" | "applications" | "saved" | "connections"
-  | "chat" | "notifications" | "soporte" | "cuenta" | "guides" | "statistics" | "cv" | "carta";
+  | "chat" | "notifications" | "soporte" | "cuenta" | "guides" | "statistics" | "cv" | "carta" | "tools";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProData = Record<string, any>;
@@ -105,7 +106,7 @@ type ProData = Record<string, any>;
 const ALL_TABS = new Set<Tab>([
   "home", "profile", "services", "photos", "quotes", "verificacion",
   "jobs", "offers", "publicaciones", "completion", "sent_projects", "applications", "saved", "connections",
-  "chat", "notifications", "soporte", "cuenta", "guides", "statistics", "cv", "carta",
+  "chat", "notifications", "soporte", "cuenta", "guides", "statistics", "cv", "carta", "tools",
 ]);
 
 const TAB_ICONS: Record<Tab, React.ReactNode> = {
@@ -127,6 +128,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   guides: <FileText className="h-4 w-4" />,
   cv: <FileUser className="h-4 w-4" />,
   carta: <Mail className="h-4 w-4" />,
+  tools: <Wrench className="h-4 w-4" />,
   jobs: <BriefcaseBusiness className="h-4 w-4" />,
   offers: <OfferTagPercentIcon className="h-4 w-4" />,
   publicaciones: <OfferTagPercentIcon className="h-4 w-4" />,
@@ -170,9 +172,9 @@ const USE_ONLY = new Set<Tab>([]);
 // «Servicios» vive dentro de «Mi perfil», que es donde se ven; empleos y
 // promociones comparten «Mis publicaciones», que es lo mismo: algo que publico.
 const OFFER_TABS: Tab[] = ([
-  "sent_projects", "jobs", "offers", "quotes", "cv", "carta", "photos", "services", "statistics", "profile", "saved", "soporte", "guides",
+  "sent_projects", "jobs", "offers", "tools", "photos", "services", "statistics", "profile", "saved", "soporte", "guides",
 ] as Tab[]).filter((tab) => EMPLEOS_VISIBLE || tab !== "jobs");
-const USE_TABS: Tab[] = ["sent_projects", "cv", "carta", "statistics", "saved", "profile", "soporte", "guides"] as Tab[];
+const USE_TABS: Tab[] = ["sent_projects", "tools", "statistics", "saved", "profile", "soporte", "guides"] as Tab[];
 // «Mis publicaciones» reúne TODO lo que uno saca a un tablero público: el
 // proyecto que pide un trabajo, el empleo que ofrece uno y la promoción. Son el
 // mismo acto —publicar— y antes vivían en dos paneles distintos, con un
@@ -197,7 +199,7 @@ const PANEL_GROUPS: { grupo: "work" | "business" | "tools" | "saved" | "account"
   // adentro hay que descubrirla. En el menú se leen de una.
   { grupo: "business", tabs: ["sent_projects", "jobs", "offers"] },
   // Herramientas: documentos que uno arma y descarga, cada una en su pantalla.
-  { grupo: "tools", tabs: ["quotes", "cv", "carta"] },
+  { grupo: "tools", tabs: ["tools"] },
   { grupo: "work", tabs: ["photos", "services", "statistics", "profile", "completion"] },
   { grupo: "saved", tabs: ["saved"] },
   { grupo: "account", tabs: ["soporte", "guides"] },
@@ -230,6 +232,7 @@ const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
   // El CV y la carta de presentación: para postularse a un empleo, con o sin ficha.
   cv: { es: "Currículum", en: "Resume" },
   carta: { es: "Carta de presentación", en: "Cover letter" },
+  tools: { es: "Herramientas", en: "Tools" },
 };
 
 type GuideItem = {
@@ -1757,6 +1760,9 @@ export default function DashboardPage() {
     setTab(tab);
   }
 
+  // «Herramientas» sigue marcada mientras se está dentro de una de sus tres pantallas.
+  const tabActiva = (tab: Tab) => activeTab === tab || (tab === "tools" && (activeTab === "quotes" || activeTab === "cv" || activeTab === "carta"));
+
   function desktopSidebarButton(tab: Tab) {
     const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : tab === "chat" ? chatUnread : 0;
     const label = panelTabLabel(tab);
@@ -1770,14 +1776,14 @@ export default function DashboardPage() {
         }}
         className={cn(
           "relative flex min-h-[54px] w-full items-center gap-3 px-5 py-3 text-left text-[14px] font-semibold transition-colors",
-          activeTab === tab
+          tabActiva(tab)
             ? "bg-[#f6fbfe] text-[#009FD9]"
             : "text-[#162543] hover:bg-[#f8fbfd] hover:text-[#009FD9]"
         )}
       >
         <span className={cn(
           "relative inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors [&>svg]:h-4.5 [&>svg]:w-4.5",
-          activeTab === tab ? "bg-[#EBF5FB] text-[#009FD9]" : "text-[#64748b]",
+          tabActiva(tab) ? "bg-[#EBF5FB] text-[#009FD9]" : "text-[#64748b]",
         )}>
           {TAB_ICONS[tab]}
           {badge > 0 && (
@@ -1800,7 +1806,6 @@ export default function DashboardPage() {
               <nav className="flex flex-col divide-y divide-[#eef2f6]">
                 {agruparPestanas(desktopSidebarTabs).map((grupo, i) => (
                   <div key={grupo[0] ?? i} className="flex flex-col divide-y divide-[#eef2f6]">
-                    {grupo.includes("cv") && <p className="bg-[#f8fafc] px-4 py-2 text-[11px] font-black uppercase tracking-wide text-[#667085]">{t("toolsHeading")}</p>}
                     {grupo.map(desktopSidebarButton)}
                   </div>
                 ))}
@@ -2174,6 +2179,10 @@ export default function DashboardPage() {
                           router.push(volverA);
                           return;
                         }
+                        if (activeTab === "quotes" || activeTab === "cv" || activeTab === "carta") {
+                          setTab("tools");
+                          return;
+                        }
                         setTab("home");
                       });
                     }}
@@ -2274,7 +2283,6 @@ export default function DashboardPage() {
                                     {ofrecerServiciosCard()}
                                     {agruparPestanas(mobileSectionTabs).map((grupo, i) => (
                                       <div key={grupo[0] ?? i} className="flex flex-col gap-2.5">
-                                        {grupo.includes("cv") && <p className="px-1 pt-1 text-[12px] font-black uppercase tracking-wide text-[#667085]">{t("toolsHeading")}</p>}
                                         {grupo.map(mobileSectionButton)}
                                       </div>
                                     ))}
@@ -2426,6 +2434,7 @@ export default function DashboardPage() {
                             La dirección sigue existiendo y muestra el aviso de
                             sección vacía, para no romper enlaces viejos. */}
                         {activeTab === "saved" && <ClientActivity section="saved" />}
+                        {activeTab === "tools" && <Herramientas esProfesional={esProfesional} alAbrir={(destino) => requestUnsavedAction(() => setTab(destino))} />}
                         {activeTab === "cv" && <CvBuilder pro={pro} documento="cv" />}
                         {activeTab === "carta" && <CvBuilder pro={pro} documento="carta" />}
                         {activeTab === "connections" && <ClientConnections />}

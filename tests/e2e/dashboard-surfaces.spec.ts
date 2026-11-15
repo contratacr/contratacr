@@ -270,9 +270,12 @@ test.describe("@seeded dashboard surfaces", () => {
       await page.getByRole("button", { name: /^Volver(?: al panel)?$|^Back(?: to panel)?$/i }).filter({ visible: true }).first().click();
     }
 
-    const quotesTab = page.getByTestId("panel-tab-quotes").filter({ visible: true });
-    await expect(quotesTab).toHaveCount(1);
-    await quotesTab.click();
+    // «Herramientas» es una sección con sus tres pantallas adentro.
+    const toolsTab = page.getByTestId("panel-tab-tools").filter({ visible: true });
+    await expect(toolsTab).toHaveCount(1);
+    await toolsTab.click();
+    await expect(page).toHaveURL(/tab=tools/);
+    await page.getByTestId("herramienta-quotes").click();
     await expect(page).toHaveURL(/tab=quotes/);
     // En el teléfono el nombre de la sección lo pone la barra de arriba, no el
     // cuerpo: se mira la página entera.
@@ -295,7 +298,7 @@ test.describe("@seeded dashboard surfaces", () => {
     await expect(page.getByTestId("panel-tab-notifications").filter({ visible: true })).toHaveCount(0);
     if (isMobileProject(testInfo)) {
       await expect(page).not.toHaveURL(/tab=sent_projects/);
-      await expect(page.getByTestId("panel-tab-quotes").filter({ visible: true })).toHaveCount(1);
+      await expect(page.getByTestId("panel-tab-tools").filter({ visible: true })).toHaveCount(1);
       await page.getByRole("button", { name: /Abrir men|Open menu/i }).click();
       await expect(page.getByText(/^Asistente$|^Assistant$/i).filter({ visible: true })).toHaveCount(0);
     } else {
