@@ -297,7 +297,7 @@ const NOMBRE_PASO: Record<PasoCv | PasoCarta, { es: string; en: string }> = {
 function Pasos<T extends PasoCv | PasoCarta>({ pasos, actual, hechos, alElegir, en }: { pasos: T[]; actual: T; hechos: Set<T>; alElegir: (p: T) => void; en: boolean }) {
   const indice = pasos.indexOf(actual);
   return (
-    <div className="grid gap-2">
+    <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2">
       <div className="flex items-center justify-between text-xs font-semibold text-[#52627a]">
         <span>{en ? `Step ${indice + 1} of ${pasos.length}` : `Paso ${indice + 1} de ${pasos.length}`}</span>
         <span className="text-[#162543]">{NOMBRE_PASO[actual][en ? "en" : "es"]}</span>
@@ -691,7 +691,7 @@ function Editor({ pro, clave, documento, nombreCuenta, correo }: { pro: ProData;
   return (
     // El ancho que manda es el del panel, no el de la pantalla: lado a lado
     // solo cuando el panel mide 980 px o más; si no, la hoja va abajo.
-    <div ref={arriba} className="@container grid scroll-mt-24 gap-4" data-testid="cv-builder">
+    <div ref={arriba} className="@container grid min-w-0 max-w-full grid-cols-[minmax(0,1fr)] scroll-mt-24 gap-4 overflow-x-clip" data-testid="cv-builder">
       {pestana === "cv"
         ? <Pasos en={en} pasos={PASOS_CV} actual={pasoCv} hechos={hechosCv} alElegir={(p) => irA(() => setPasoCv(p))} />
         : <Pasos en={en} pasos={PASOS_CARTA} actual={pasoCarta} hechos={hechosCarta} alElegir={(p) => irA(() => setPasoCarta(p))} />}
