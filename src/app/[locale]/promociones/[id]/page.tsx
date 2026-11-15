@@ -53,6 +53,7 @@ const COPY = {
     rowService: "Servicio",
     rowLocation: "Ubicación",
     rowValid: "Vigencia",
+    untilSoldOut: "Hasta agotar existencias",
     rowAvailable: "Disponibles",
     wholeCountry: "Todo Costa Rica",
     details: "Detalles",
@@ -71,6 +72,7 @@ const COPY = {
     rowService: "Service",
     rowLocation: "Location",
     rowValid: "Valid until",
+    untilSoldOut: "While supplies last",
     rowAvailable: "Available",
     wholeCountry: "All of Costa Rica",
     details: "Details",
@@ -207,7 +209,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
     [copy.rowType, offerTypeLabel(offer.offer_type, locale)] as [string, string],
     ...(offer.service_label ? [[copy.rowService, offer.service_label] as [string, string]] : []),
     [copy.rowLocation, offer.location_label || copy.wholeCountry],
-    ...(offer.valid_until ? [[copy.rowValid, new Intl.DateTimeFormat(dateLocale, { day: "numeric", month: "long", year: "numeric" }).format(new Date(`${offer.valid_until}T12:00:00`))] as [string, string]] : []),
+    [copy.rowValid, offer.valid_until ? new Intl.DateTimeFormat(dateLocale, { day: "numeric", month: "long", year: "numeric" }).format(new Date(`${offer.valid_until}T12:00:00`)) : copy.untilSoldOut] as [string, string],
     ...(offer.quantity_available != null ? [[copy.rowAvailable, `${offer.quantity_available}`] as [string, string]] : []),
   ] as Array<[string, string]>).filter(([, valor]) => Boolean(valor));
   const quienPublica = <InlineIdentityName className={offer.professional_slug ? "font-semibold text-[#005eaa]" : "font-semibold text-[#52627a]"} name={offer.professional_name || ""}
