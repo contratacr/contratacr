@@ -22,7 +22,6 @@ export function PrepararCurriculum({ job }: { job: Pick<JobPost, "title" | "desc
       window.sessionStorage.setItem(VACANTE_PARA_CURRICULUM, JSON.stringify({
         puesto: job.title,
         empresa: job.employer_name ?? "",
-        texto: [job.title, job.description, ...(job.requirements ?? []), ...(job.responsibilities ?? [])].filter(Boolean).join("\n").slice(0, 6000),
       }));
     } catch { /* sin almacenamiento: el generador abre igual, sin la vacante */ }
   };
@@ -31,12 +30,12 @@ export function PrepararCurriculum({ job }: { job: Pick<JobPost, "title" | "desc
       <div className="flex min-w-0 gap-3">
         <span className="ccr-caja-icono grid h-10 w-10 shrink-0 place-items-center rounded-xl"><FileUser className="h-5 w-5" /></span>
         <div className="min-w-0">
-          <p className="text-[15px] font-black text-[#162543]">{en ? "Apply with a ready resume" : "Postulate con tu currículum listo"}</p>
-          <p className="mt-0.5 text-[13px] leading-5 text-[#52627a]">{en ? "We prefill it from your profile and put first the skills this job asks for. Free." : "Lo prellenamos con tu perfil y ponemos primero las habilidades que pide este puesto. Gratis."}</p>
+          <p className="text-[15px] font-black text-[#162543]">{en ? "Apply with a ready cover letter" : "Postulate con tu carta lista"}</p>
+          <p className="mt-0.5 text-[13px] leading-5 text-[#52627a]">{en ? "We address it to this job and company and prefill it from your profile. Free." : "La dirigimos a este puesto y empresa y la prellenamos con tu perfil. Gratis."}</p>
         </div>
       </div>
-      <Link href="/dashboard/profesional?tab=cv" onClick={guardar} className="inline-flex h-11 shrink-0 items-center justify-center rounded-full border border-[#b9d9e8] bg-white px-5 text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc]">
-        {en ? "Prepare my resume" : "Preparar mi currículum"}
+      <Link href="/dashboard/profesional?tab=carta" onClick={guardar} className="inline-flex h-11 shrink-0 items-center justify-center rounded-full border border-[#b9d9e8] bg-white px-5 text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc]">
+        {en ? "Prepare my letter" : "Preparar mi carta"}
       </Link>
     </section>
   );
