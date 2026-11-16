@@ -4,6 +4,7 @@ import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ALL_CATEGORIES } from "@/lib/data/categories";
 import { PROVINCES } from "@/lib/data/cr-geography";
+import { formatFullPersonName } from "@/lib/display-name";
 
 // GET /api/admin/coverage — where the supply actually is.
 //
@@ -177,8 +178,8 @@ export async function GET(request: Request) {
       id: p.id,
       slug: p.slug,
       profileId: p.profile_id,
-      name: (p.business_name ?? "").trim().length > 1 ? (p.business_name as string).trim() : p.profiles?.full_name || "Profesional",
-      personName: p.profiles?.full_name ?? null,
+      name: (p.business_name ?? "").trim().length > 1 ? (p.business_name as string).trim() : formatFullPersonName(p.profiles?.full_name) || "Profesional",
+      personName: formatFullPersonName(p.profiles?.full_name) || null,
       avatarUrl: p.profiles?.avatar_url ?? null,
       category: p.category_id ? serviceMeta.get(p.category_id)?.label ?? p.category_id : null,
       services: [...new Set([p.category_id, ...(p.professions ?? [])].filter(Boolean) as string[])].length,

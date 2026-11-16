@@ -2268,7 +2268,7 @@ export default function DashboardPage() {
                             </button>
                           </div>
                         )}
-                        {pro && mode === "offer" && activeTab === "services" && <ServiceRequestInvitations showDeferred onComplete={openRequestedService} />}
+                        {pro && mode === "offer" && activeTab === "services" && <ServiceRequestInvitations onComplete={openRequestedService} />}
                         <SectionBoundary titulo={t("sectionErrorTitle")} cuerpo={t("sectionErrorBody")} reintentar={t("sectionErrorRetry")}>
                         {TABS_WITH_SUBTITLE.has(activeTab) && (
                           <SectionHeadline subtitulo={t(`subtitles.${activeTab}`)} className="mb-4" />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { formatFullPersonName } from "@/lib/display-name";
 
 type Row = { id: string; client_name: string; professional_name: string; waiting_for: string; since: string; last_message_at: string };
 type Message = { id: string; from_client: boolean; created_at: string; body: string | null; deleted: boolean; edited_at: string | null };
@@ -84,8 +85,8 @@ export function AdminConversations() {
     {loading ? <p role="status">Cargando conversaciones…</p> : error ? <p role="alert">{error}</p> : <>
       <p className="text-sm">{total} conversaciones abiertas con un turno pendiente.</p>
       {rows.map(row => <article key={row.id} className="space-y-2 rounded-xl border border-slate-200 p-4">
-        <p><strong>Profesional:</strong> {row.professional_name || "Cuenta sin nombre"}</p>
-        <p><strong>Cliente:</strong> {row.client_name || "Cuenta sin nombre"}</p>
+        <p><strong>Profesional:</strong> {formatFullPersonName(row.professional_name) || "Cuenta sin nombre"}</p>
+        <p><strong>Cliente:</strong> {formatFullPersonName(row.client_name) || "Cuenta sin nombre"}</p>
         <p className="text-sm">Espera respuesta del {row.waiting_for === "professional" ? "profesional" : "cliente"} desde {fecha(row.since)}{checkedAt!==null?` (${Math.max(0,Math.floor((checkedAt-Date.parse(row.since))/3600000))} h al consultar)`:""}.</p>
         {canReview && <button className={control} onClick={() => { closeReview(); setSelected(row); }}>Revisar por un caso de soporte</button>}
       </article>)}
@@ -93,7 +94,7 @@ export function AdminConversations() {
     </>}
     {!canReview && <p className="text-sm text-slate-600">El contenido requiere un permiso de revisión adicional al rol administrador.</p>}
     {selected && <section role="region" aria-label="Revisión restringida" className="space-y-3 rounded-xl border-2 border-slate-400 p-4">
-      <h2 className="font-bold">Revisión restringida · {selected.professional_name} / {selected.client_name}</h2>
+      <h2 className="font-bold">Revisión restringida · {formatFullPersonName(selected.professional_name)} / {formatFullPersonName(selected.client_name)}</h2>
       <p className="text-sm">Solo para atender soporte abierto de un participante o un reporte vinculado a esta conversación. Limita la consulta a lo necesario para ese caso. Cada página queda registrada con tu cuenta, fecha, caso y motivo. Los adjuntos quedan excluidos.</p>
       <label className="block text-sm">Tipo de caso <select className={control} disabled={busy} value={caseType} onChange={e=>{setCaseType(e.target.value);setMessages(null);}}><option value="support">Soporte de un participante</option><option value="report">Reporte de esta conversación</option></select></label>
       <label className="block text-sm">ID del caso <input className={`${control} block w-full`} disabled={busy} value={ticket} onChange={e => { setTicket(e.target.value); setMessages(null); }} autoComplete="off" /></label>
@@ -101,7 +102,7 @@ export function AdminConversations() {
       <div className="flex flex-wrap gap-2"><button className={control} disabled={busy || reason.trim().length < 15 || !ticket} onClick={() => void openContent(0)}>{busy ? "Abriendo…" : "Registrar consulta y abrir mensajes"}</button><button className={control} onClick={closeReview}>Cerrar y ocultar contenido</button></div>
       {reviewError && <p role="alert">{reviewError}</p>}
       <button className={control} onClick={()=>void loadAccessHistory()}>Consultar registro de accesos</button>
-      {accessHistory.map(h=><p key={h.id} className="break-words text-xs">{fecha(h.accessed_at)} · {h.actor_name||h.actor_id} · Caso {h.report_id||h.support_ticket_id} · Desde mensaje {h.page_offset+1} · {h.reason}</p>)}
+      {accessHistory.map(h=><p key={h.id} className="break-words text-xs">{fecha(h.accessed_at)} · {formatFullPersonName(h.actor_name)||h.actor_id} · Caso {h.report_id||h.support_ticket_id} · Desde mensaje {h.page_offset+1} · {h.reason}</p>)}
       {messages && <><p className="break-all text-xs">Consulta registrada: {auditId}</p>{messages.map(m => <div key={m.id} className="rounded-lg bg-slate-50 p-3"><p className="text-xs">{m.from_client ? "Cliente" : "Profesional"} · {fecha(m.created_at)}{m.edited_at ? " · Editado" : ""}</p><p className="whitespace-pre-wrap break-words">{m.deleted ? "Mensaje eliminado" : m.body || "Mensaje con adjunto (contenido no incluido)"}</p></div>)}<div className="flex gap-2"><button className={control} disabled={busy || messageOffset === 0} onClick={() => void openContent(messageOffset-50)}>Mensajes anteriores</button><button className={control} disabled={busy || messages.length < 50} onClick={() => void openContent(messageOffset+50)}>Mensajes siguientes</button></div></>}
     </section>}
   </div>;

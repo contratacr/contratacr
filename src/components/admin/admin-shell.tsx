@@ -6,6 +6,7 @@ import { IdCard, MessageCircle, ShieldCheck, Flag, Shield, Tag, Headset, Users, 
 import { useLinkStatus } from "next/link";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
+import { formatFullPersonName } from "@/lib/display-name";
 import { ContrataCRLogo } from "@/components/landing/landing-navbar";
 import { ADMIN_REFRESH_EVENT, ADMIN_COUNTS_REFRESH_EVENT } from "@/hooks/use-admin-auto-refresh";
 
@@ -148,8 +149,9 @@ function AdminShellContent({
   // The sidebar footer is narrow — show ONLY first name + first surname so the name
   // never truncates with "…". (First surname = the second-to-last word in a CR name.)
   const shortAdminName = (() => {
-    const w = adminName.trim().split(/\s+/).filter(Boolean);
-    return w.length <= 2 ? adminName : `${w[0]} ${w[w.length - 2]}`;
+    const nombre = formatFullPersonName(adminName);
+    const w = nombre.split(" ").filter(Boolean);
+    return w.length <= 2 ? nombre : `${w[0]} ${w[w.length - 2]}`;
   })();
 
   const navLink = (it: (typeof items)[number], variant: "side" | "top") => (

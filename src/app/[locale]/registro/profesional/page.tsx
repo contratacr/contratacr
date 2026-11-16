@@ -25,6 +25,9 @@ import { CasillaDeTerminos } from "@/components/auth/casilla-de-terminos";
 import { Button } from "@/components/ui/button";
 import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
 import { PriceInput } from "@/components/ui/price-input";
+import { SelectMenu } from "@/components/ui/select-menu";
+import { formatFullPersonName } from "@/lib/display-name";
+import { PRICING_TYPES, type PricingType } from "@/lib/pricing";
 import { EtiquetaOpcional } from "@/components/ui/etiqueta-campo";
 import { IdentityField } from "@/components/ui/identity-field";
 import { FooterSoloWeb } from "@/components/landing/footer-solo-web";
@@ -38,7 +41,9 @@ import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { CategoryGroupPicker, type CategoryPickerGroup } from "@/components/ui/category-group-picker";
 import { anyVideoConsultCategory, getCategoryLabel, getAllCategories, normalizeText, ALL_CATEGORIES } from "@/lib/data/categories";
 import { refreshCustomCategories, useCustomCategories } from "@/lib/data/use-custom-categories";
-import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
+import { type Workplace } from "@/components/maps/workplaces-picker";
+import { AttentionModalities } from "@/components/dashboard/pro/attention-modalities";
+import { isFixedWorkplace } from "@/lib/public-workplaces";
 import { computeSearchAreas, primaryArea, hasBaseCanton } from "@/lib/location";
 import { useAvailabilityCheck } from "@/hooks/use-availability-check";
 import { detectSocialOnly, providerLabel } from "@/lib/auth-method";
@@ -66,7 +71,7 @@ function validateCedulaFormat(v: string): boolean {
 // see `makeSchemas` near the top of RegisterProfessionalPage.
 type Step1Data = { fullName: string; cedula: string; email: string; password: string; confirmPassword: string };
 type Step2Data = { category: string; whatsapp: string; address?: string };
-type Step3Data = { yearsExperience?: string; hourlyRate?: string };
+type Step3Data = { yearsExperience?: string; hourlyRate?: string; rateUnit?: Exclude<PricingType, "a_convenir"> };
 
 // ─── Helper components ────────────────────────────────────────────────────────
 
@@ -409,6 +414,15 @@ function NoCrIdFields({
 // completo del sitio —Servicios, Soporte, redes— en medio de un trámite. Solo
 // aplica con sesión: sin ella arriba va el navbar entero y la página es una
 // página normal, con su pie.
+/** Lugares que siguen activos (misma regla que el panel): zonas a domicilio encendidas o locales que reciben clientes. */
+function activeWorkplacesOf(places: Workplace[]): Workplace[] {
+  return places.filter((w) => w.level !== "country" && (w.homeService !== false || (isFixedWorkplace(w) && w.receivesClients !== false)));
+}
+/** «Todo Costa Rica» cuenta solo si la zona sigue encendida. */
+function hasCountryCoverageOf(places: Workplace[]): boolean {
+  return places.some((w) => w.level === "country" && w.homeService !== false);
+}
+
 function BarraDeAcciones({ activa, children }: { activa: boolean; children: React.ReactNode }) {
   useBarraAccionFija(activa);
   if (!activa) return <div className="mt-2 flex gap-3">{children}</div>;
@@ -423,6 +437,7 @@ export default function RegisterProfessionalPage() {
   useRegistrationIntent("professional");
   const t = useTranslations("registration.pro");
   const tRp = useTranslations("resetPassword");
+  const tUnidad = useTranslations("servicesEditor");
   const locale = useLocale();
   const router = useRouter();
 
@@ -458,6 +473,7 @@ export default function RegisterProfessionalPage() {
     step3Schema: z.object({
       yearsExperience: z.string().optional(),
       hourlyRate: z.string().optional(),
+      rateUnit: z.enum(["por_hora", "por_consulta", "por_proyecto", "por_dia", "paquete"]).optional(),
     }),
   }), [t, tRp]);
   const { user: currentUser, loading: authLoading } = useAuth();
@@ -533,7 +549,7 @@ export default function RegisterProfessionalPage() {
   const form3 = useForm<Step3Data>({
     resolver: zodResolver(step3Schema),
     mode: "onBlur",
-    defaultValues: { yearsExperience: "", hourlyRate: "" },
+    defaultValues: { yearsExperience: "", hourlyRate: "", rateUnit: "por_hora" },
   });
   const watchedPrimaryCategory = form2.watch("category");
   const selectedServiceIds = useMemo(
@@ -827,9 +843,11 @@ export default function RegisterProfessionalPage() {
     // Todo profesional sale de algún lado, aunque viaje a todo el país o
     // atienda por videoconsulta. La cobertura nacional es un AÑADIDO a esa
     // base, no un sustituto.
-    if (!hasBaseCanton(workplaces)) {
+    // Solo cuentan los lugares activos: apagar «Atiendo a domicilio» o «Atiendo
+    // en mi local» deja las filas guardadas pero pausadas, igual que en el panel.
+    if (!hasBaseCanton(activeWorkplacesOf(workplaces))) {
       // Con «todo el país» encendido, lo que falta es la base: se dice así.
-      setLocationError(t(workplaces.some((w) => w.level === "country") ? "errWorkplacePais" : "errWorkplaceSiempre"));
+      setLocationError(t(hasCountryCoverageOf(workplaces) || (canOfferVideoConsult && videoCoverageCountry) ? "errWorkplacePais" : "errWorkplaceSiempre"));
       return;
     }
     setLocationError(null);
@@ -889,16 +907,27 @@ export default function RegisterProfessionalPage() {
       // «Todo el país» no es un lugar: es cobertura. Se saca de la lista y va
       // a `coverage_areas`, igual que hace el editor de perfil. Antes se quedaba
       // en `workplaces` sin provincia y no contaba para nada.
-      const hasCountryWorkplace = workplaces.some((w) => w.level === "country");
-      const effWorkplaces = workplaces.filter((w) => w.level !== "country");
+      // Misma semántica que el panel (profile-editor): una modalidad apagada deja
+      // sus lugares pausados (homeService:false / receivesClients:false) y no se
+      // envían; solo viajan los lugares activos.
+      const hasCountryWorkplace = hasCountryCoverageOf(workplaces);
+      const activeWorkplaces = activeWorkplacesOf(workplaces);
       const selectedProfessions = [step2Data.category, ...extraCategories].filter(Boolean);
       const submitVideoCoverageCountry = anyVideoConsultCategory(selectedProfessions) && videoCoverageCountry;
-      const onlineCoverage = hasCountryWorkplace || submitVideoCoverageCountry ? [{ level: "country" as const }] : [];
-      const hasExactWorkplace = effWorkplaces.some((w) => w.homeService === false || (w.lat != null && w.lng != null));
-      const hasCoverageZone = effWorkplaces.some((w) => w.homeService !== false && (w.lat == null || w.lng == null)) || submitVideoCoverageCountry;
+      const coverageAreas = [
+        ...(hasCountryWorkplace || submitVideoCoverageCountry ? [{ level: "country" as const }] : []),
+        ...activeWorkplaces.filter((w) => w.homeService !== false && !isFixedWorkplace(w)).map((w) => ({
+          level: w.level === "provincia" || (!w.cantonId && !!w.provinciaId) ? "provincia" as const : "canton" as const,
+          provinciaId: w.provinciaId,
+          cantonId: w.cantonId,
+        })),
+      ];
+      const hasExactWorkplace = activeWorkplaces.some((w) => w.receivesClients !== false && w.lat != null && w.lng != null);
+      const hasCoverageZone = activeWorkplaces.some((w) => w.homeService !== false);
       const serviceType = [hasExactWorkplace ? "fixed" : null, hasCoverageZone ? "mobile" : null].filter(Boolean).join(",") || "mobile";
-      const { provincias, cantones, coverageProvincias, coverageCountry } = computeSearchAreas(effWorkplaces, onlineCoverage);
-      const primary = primaryArea(effWorkplaces, onlineCoverage);
+      const { provincias, cantones, coverageProvincias, coverageCountry } = computeSearchAreas(activeWorkplaces, coverageAreas);
+      const primary = primaryArea(activeWorkplaces, coverageAreas);
+      const primaryPin = activeWorkplaces.find((w) => isFixedWorkplace(w) && w.receivesClients !== false);
       const submitMetadata = submitUser.user_metadata ?? {};
       const storedNoCrId = submitMetadata.professional_no_cr_id === true;
       const storedIdentityMismatch = submitMetadata.professional_identity_mismatch === true;
@@ -928,20 +957,21 @@ export default function RegisterProfessionalPage() {
           province: primary.provinciaId ?? null,
           canton: primary.cantonId ?? null,
           // Work zones (provincia/cantón + optional pin) + denormalized search arrays.
-          workplaces: effWorkplaces,
-          coverageAreas: onlineCoverage,
+          workplaces: activeWorkplaces,
+          coverageAreas,
           searchProvincias: provincias,
           searchCantones: cantones,
           coverageProvincias,
           coverageCountry,
           videoconsulta: submitVideoCoverageCountry,
-          address: workplaces[0]?.address || step2Data.address || null,
-          lat: workplaces[0]?.lat ?? null,
-          lng: workplaces[0]?.lng ?? null,
+          address: primaryPin?.address || step2Data.address || null,
+          lat: primaryPin?.lat ?? null,
+          lng: primaryPin?.lng ?? null,
           whatsapp: step2Data.whatsapp,
           allowPhoneCall: aceptaLlamadas,
           yearsExperience: data.yearsExperience,
           hourlyRate: data.hourlyRate,
+          rateUnit: data.rateUnit ?? "por_hora",
         }),
       });
 
@@ -1021,7 +1051,8 @@ export default function RegisterProfessionalPage() {
   if (otpEmail) {
     return (
       <div className="ccr-account-page min-h-dvh flex flex-col bg-white">
-        {currentUser ? <CabeceraDeTramite title={t("headerTitle")} backHref="/dashboard/profesional" onBack={step > 0 ? () => setStep(step - 1) : undefined} backLabel={step > 0 ? t("back") : undefined} /> : <Navbar mobileSearch={false} />}
+        {/* 15-nov-2026: «Atrás» en el paso 0 va al inicio, no al panel: el panel manda una cuenta que puede ofrecer pero aún no tiene fila de profesional de vuelta a /registro/profesional, y se formaba un bucle. */}
+        {currentUser ? <CabeceraDeTramite title={t("headerTitle")} backHref="/" onBack={step > 0 ? () => setStep(step - 1) : undefined} backLabel={step > 0 ? t("back") : undefined} /> : <Navbar mobileSearch={false} />}
         <main className="flex-1 ccr-centrado-seguro py-12 px-4">
           <div className="w-full max-w-sm">
             <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
@@ -1082,7 +1113,8 @@ export default function RegisterProfessionalPage() {
 
   return (
     <div className="ccr-account-page min-h-dvh flex flex-col bg-white">
-      {currentUser ? <CabeceraDeTramite title={t("headerTitle")} backHref="/dashboard/profesional" onBack={step > 0 ? () => setStep(step - 1) : undefined} backLabel={step > 0 ? t("back") : undefined} /> : <Navbar mobileSearch={false} />}
+      {/* 15-nov-2026: «Atrás» en el paso 0 va al inicio, no al panel: el panel manda una cuenta que puede ofrecer pero aún no tiene fila de profesional de vuelta a /registro/profesional, y se formaba un bucle. */}
+      {currentUser ? <CabeceraDeTramite title={t("headerTitle")} backHref="/" onBack={step > 0 ? () => setStep(step - 1) : undefined} backLabel={step > 0 ? t("back") : undefined} /> : <Navbar mobileSearch={false} />}
       {/* Con sesión la tarjeta se pega arriba, debajo del título: `ccr-centrado-seguro`
           la centra a lo alto de la pantalla y en un paso corto eso dejaba un
           hueco enorme entre la cabecera y el formulario. Sin sesión sigue
@@ -1228,7 +1260,7 @@ export default function RegisterProfessionalPage() {
                 <div className="rounded-2xl border border-[#d8eef8] bg-white px-4 py-3">
                   <p className="text-xs font-semibold text-[#6b7280]">{t("identityAlreadyRegistered")}</p>
                   <p className="mt-1 break-words text-sm font-bold text-[#162543]">
-                    {t("usesAccountId", { name: oauthFullName || t("yourAccount") })}
+                    {t("usesAccountId", { name: formatFullPersonName(oauthFullName) || t("yourAccount") })}
                   </p>
                 </div>
               ) : !noCrId ? (
@@ -1374,36 +1406,44 @@ export default function RegisterProfessionalPage() {
                     <label htmlFor="tarifa-por-hora" className="mb-1.5 block text-sm font-medium text-[#374151]">
                       <EtiquetaOpcional>{t("rateLabel")}</EtiquetaOpcional>
                     </label>
-                    <PriceInput
-                      id="tarifa-por-hora"
-                      placeholder={t("ratePlaceholder")}
-                      value={form3.watch("hourlyRate") ?? ""}
-                      onChange={(v) => form3.setValue("hourlyRate", v)}
-                    />
+                    {/* Por hora, por proyecto, por consulta…: la misma unidad que
+                        el editor de servicios (15-nov-2026). Antes solo por hora. */}
+                    <div className="flex items-stretch gap-2">
+                      <div className="min-w-0 flex-1">
+                        <PriceInput
+                          id="tarifa-por-hora"
+                          placeholder={t("ratePlaceholder")}
+                          value={form3.watch("hourlyRate") ?? ""}
+                          onChange={(v) => form3.setValue("hourlyRate", v)}
+                        />
+                      </div>
+                      <SelectMenu
+                        value={form3.watch("rateUnit") ?? "por_hora"}
+                        onChange={(value) => form3.setValue("rateUnit", value as Exclude<PricingType, "a_convenir">)}
+                        className="w-36 shrink-0 sm:w-40"
+                        options={PRICING_TYPES.filter((p) => p.value !== "a_convenir").map((p) => ({ value: p.value, label: tUnidad(`priceUnits.${p.value}`) }))}
+                      />
+                    </div>
                     <p className="mt-1.5 text-xs leading-snug text-[#68778d]">{t("rateHelp")}</p>
                   </div>
                 </div>
               </section>
               <section className="flex flex-col gap-3 pt-4">
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-2" data-field="location">
                   <label className="text-sm font-medium text-[#374151]">
                     {t("workplacesLabel")} <span className="text-red-500">*</span>
                   </label>
-                  <WorkplacesPicker
+                  <AttentionModalities
                     value={workplaces}
                     onChange={(n) => { setWorkplaces(n); setLocationError(null); }}
-                    extraActions={canOfferVideoConsult ? (
-                      <FilaInterruptor
-                        estirar
-                        titulo={t("videoConsultOption")}
-                        checked={videoCoverageCountry}
-                        onChange={(next) => { setVideoCoverageCountry(next); setLocationError(null); }}
-                      />
-                    ) : undefined}
+                    english={locale === "en"}
+                    canVideo={canOfferVideoConsult}
+                    video={videoCoverageCountry}
+                    onVideoChange={(next) => { setVideoCoverageCountry(next); setLocationError(null); }}
                   />
                 </div>
 
-                  {locationError && <p className="text-xs text-red-500">{locationError}</p>}
+                  {locationError && <p role="alert" className="text-xs text-red-500">{locationError}</p>}
               </section>
 
               {/* WhatsApp */}

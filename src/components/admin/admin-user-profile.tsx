@@ -227,7 +227,7 @@ export function AdminUserProfile({
   }
 
   async function deleteAccount() {
-    const name = data?.profile?.full_name || data?.profile?.email || "esta cuenta";
+    const name = formatFullPersonName(data?.profile?.full_name) || data?.profile?.email || "esta cuenta";
     if (!window.confirm(`Vas a eliminar al 100% la cuenta de ${name}. Se borra todo lo que creó y no se puede deshacer. ¿Continuar?`)) return;
     if (window.prompt("Escribe ELIMINAR para confirmar") !== "ELIMINAR") return;
     setDeleting(true);
@@ -423,7 +423,7 @@ export function AdminUserProfile({
                 ))}
                 {verificationLog.map((l) => (
                   <li key={l.id} className="px-4 py-2.5 text-sm">
-                    <p className="font-medium text-[#162543]">{l.decision ?? l.action ?? l.status ?? "Cambio"}{l.admin_name ? ` · por ${l.admin_name}` : ""}</p>
+                    <p className="font-medium text-[#162543]">{l.decision ?? l.action ?? l.status ?? "Cambio"}{l.admin_name ? ` · por ${formatFullPersonName(l.admin_name)}` : ""}</p>
                     {(l.note || l.reason) && <p className="mt-0.5 text-xs text-[#6b7280]">{l.note ?? l.reason}</p>}
                     <p className="text-[11px] text-[#68778d]">{fmt(l.created_at)}</p>
                   </li>

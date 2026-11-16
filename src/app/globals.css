@@ -2201,6 +2201,17 @@ body.ccr-native-app:has(.ccr-native-search-panel) .ccr-native-bottom-nav {
   .ccr-account-page > .ccr-centrado-seguro > * {
     margin-block: auto;
   }
+  /* CON EL TECLADO ABIERTO (15-nov-2026): la página medía todo el alto de la
+     pantalla y la tarjeta (el código de "Verifica tu correo", el login…) se
+     centraba detrás del teclado, con un hueco enorme arriba y scroll. En una
+     pantalla corta la página mide lo que queda visible y la tarjeta se centra
+     ahí. Un formulario largo (data-teclado-formulario-largo) sigue igual. */
+  html[data-keyboard-open]:not([data-teclado-formulario-largo]) .ccr-account-page {
+    min-height: var(--app-visual-viewport-height, 100dvh);
+  }
+  html[data-keyboard-open]:not([data-teclado-formulario-largo]) .ccr-account-page > .ccr-centrado-seguro {
+    padding-block: 12px !important;
+  }
 }
 
 /* Donde hay una franja de acciones fija abajo, el pie del sitio sobra en el

@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { contactCookieValue, hashContactToken, setContactCookie } from "@/lib/contact-followup";
 import { limitTrimmedText } from "@/lib/text-limits";
+import { formatPersonDisplayName } from "@/lib/display-name";
 
 // A los 3 días (eran 5): quien contrata decide en 1–3 días, y cuanto antes
 // vuelve a entrar más probable es que vea la pregunta (8-oct-2026).
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest) {
   if (!professional) return NextResponse.json({ error: "Profesional no encontrado." }, { status: 404 });
 
   const profile = Array.isArray(professional.profiles) ? professional.profiles[0] : professional.profiles;
-  const professionalName = professional.business_name || profile?.full_name || "Profesional";
+  const professionalName = professional.business_name || formatPersonDisplayName(profile?.full_name ?? "") || "Profesional";
   const token = contactCookieValue(request);
   const tokenHash = hashContactToken(token);
   const userId = await currentUserId();

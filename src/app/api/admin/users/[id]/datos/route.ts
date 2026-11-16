@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { auditUserAction } from "@/lib/audit/user-action";
 import { whatsappDigits } from "@/lib/quotes";
 import { enviarEnlaceDeContrasena, requestOrigin } from "@/lib/auth/enlace-de-contrasena";
+import { formatFullPersonName } from "@/lib/display-name";
 
 /**
  * EDITAR LOS DATOS DE UNA CUENTA DESDE EL ADMIN (7-oct-2026).
@@ -64,7 +65,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const nombres = new Map<string, string>();
   if (actores.length) {
     const { data: perfiles } = await db.from("profiles").select("id, full_name, email").in("id", actores);
-    for (const p of perfiles ?? []) nombres.set(p.id, p.full_name || p.email || "Admin");
+    for (const p of perfiles ?? []) nombres.set(p.id, formatFullPersonName(p.full_name) || p.email || "Admin");
   }
 
   return NextResponse.json({

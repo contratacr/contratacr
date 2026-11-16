@@ -1,4 +1,5 @@
 import { recordServiceContact } from "@/lib/analytics/growth-server";
+import { formatPersonDisplayName } from "@/lib/display-name";
 import { qualifiesServiceContact } from "@/lib/analytics/growth-contract";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
@@ -219,7 +220,7 @@ export async function POST(req: NextRequest) {
         professional_id: targetProfessionalId,
         client_id: userId,
         anonymous_token_hash: userId ? null : tokenHash,
-        professional_name: recipientName || (locale === "en" ? "Professional" : "Profesional"),
+        professional_name: (esNegocio ? recipientName : formatPersonDisplayName(recipientName ?? "")) || (locale === "en" ? "Professional" : "Profesional"),
         service_name: contextTitle || null,
         contact_method: "whatsapp",
         follow_up_at: new Date(Date.now() + FOLLOW_UP_DELAY_MS).toISOString(),

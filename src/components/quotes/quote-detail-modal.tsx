@@ -6,6 +6,7 @@ import { Trash2, Undo2 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { formatColones } from "@/lib/pricing";
+import { formatFullPersonName } from "@/lib/display-name";
 import { desgloseQuote, isQuoteExpired, numeroCotizacion, type Quote } from "@/lib/quotes";
 import { MenuFicha } from "@/components/ui/menu-ficha";
 import { BotonCompartirCotizacion, BotonDescargarCotizacion, QuoteShare } from "@/components/quotes/quote-share";
@@ -114,7 +115,7 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
           )}
           {!recienCreada && role === "pro" && (quote.client_name || quote.title) && (
             <p className="text-[14px] leading-6 text-[#52627a]">
-              {quote.client_name && <span className="font-bold text-[#162543]">{quote.client_name}</span>}
+              {quote.client_name && <span className="font-bold text-[#162543]">{formatFullPersonName(quote.client_name)}</span>}
               {quote.client_name && quote.title && " · "}
               {quote.title}
             </p>

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { CAMPAIGN_BATCH_SIZE, REVIEW_CAMPAIGN, eligibleCampaignRecipients, isRetiredCampaign, type CampaignHistory } from "@/lib/email/campaign-policy";
 import { deliverCampaignOnce } from "@/lib/email/campaign-delivery";
 import { enlaceDeBaja } from "@/lib/email/baja";
+import { nombreDeSaludo } from "@/lib/nombres";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { brandedEmailDocument, sendBrevoEmail } from "@/lib/email/send";
@@ -59,7 +60,7 @@ function escapeHtml(s: string) {
 }
 
 function primerNombre(nombre: string | null | undefined) {
-  const limpio = (nombre ?? "").trim().split(/\s+/)[0] ?? "";
+  const limpio = nombreDeSaludo(nombre);
   // Un nombre de una letra o un correo metido en el campo no sirven de saludo.
   return /^[\p{L}][\p{L}'\-]{1,}$/u.test(limpio) ? limpio : "";
 }

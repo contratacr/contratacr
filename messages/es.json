@@ -342,6 +342,7 @@
     "rate": "Tarifa",
     "noReviews": "Sin reseñas",
     "reviewsCount": "{count, plural, one {# reseña} other {# reseñas}}",
+    "contactsThisMonth": "{count, plural, one {contacto este mes} other {contactos este mes}}",
     "verifiedShort": "Verificado",
     "email": "Contactar por correo",
     "saveShort": "Guardar"
@@ -607,7 +608,7 @@
       "servicios": "Servicios",
       "disponibilidad": "Contactar",
       "casos": "Casos de éxito",
-      "certificaciones": "Experiencia y formación",
+      "certificaciones": "Currículum",
       "resenas": "Reseñas",
       "sobre": "Información"
     },
@@ -783,7 +784,7 @@
       "searchAnotherProfession": "Busca otro servicio…",
       "cancel": "Cancelar",
       "addAnotherProfession": "Agregar otro servicio",
-      "workplacesLabel": "Lugares de trabajo",
+      "workplacesLabel": "Ubicación del servicio",
       "uploadingPhoto": "Subiendo foto…",
       "photoChange": "Cambiar foto",
       "photoRemove": "Quitar foto",
@@ -797,7 +798,7 @@
       "videoConsultOption": "Videoconsultas en todo el país",
       "skipCedulaNote": "Aparecerás sin la insignia Verificado. Podrás verificar tu identidad luego desde tu panel.",
       "allowCallsLabel": "Permitir contacto por llamada",
-      "rateLabel": "¿Desde cuánto cobras por hora?",
+      "rateLabel": "¿Desde cuánto cobras?",
       "rateHelp": "Si lo dejas en blanco, tu perfil dirá \"Consultar precio\".",
       "ratePlaceholder": "12 000",
       "errWorkplaceSiempre": "Elige al menos una provincia y un cantón de base.",
@@ -1007,7 +1008,7 @@
         "profile": "Perfil",
         "services": "Servicios",
         "locations": "Lugares",
-        "workplaces": "Lugares de trabajo",
+        "workplaces": "Ubicación del servicio",
         "identity": "Identidad",
         "mode": "Modo",
         "provider": "Profesional",
@@ -1359,16 +1360,16 @@
           "cta": "Ir a perfil profesional"
         },
         "workplacesGuide": {
-          "title": "Lugares de trabajo",
+          "title": "Ubicación del servicio",
           "short": "Provincia, cantón y cobertura",
           "body": "Indicá dónde atendés para que te encuentren en la zona correcta.",
           "steps": [
-            "Abrí Perfil y entrá a Lugares de trabajo.",
-            "Elegí la provincia y el cantón donde atendés.",
-            "Activá atención a domicilio o videoconsultas si aplican a tu servicio.",
+            "Abrí Perfil y entrá a Ubicación del servicio.",
+            "Activá cómo atendés: en tu local, a domicilio o por videollamada.",
+            "Agregá tu local o elegí la provincia y el cantón de las zonas a las que vas.",
             "Revisá la cobertura y guardá los cambios."
           ],
-          "cta": "Ir a lugares de trabajo"
+          "cta": "Ir a ubicación del servicio"
         }
       },
       "searchPlaceholder": "Buscar en las guías",
@@ -1621,7 +1622,7 @@
   "profileEditor": {
     "secBasic": "Datos básicos",
     "secBasicDesc": "Foto, nombre y descripción",
-    "secCerts": "Experiencia y formación",
+    "secCerts": "Currículum",
     "secCertsDesc": "Experiencia laboral, estudios y habilidades",
     "secLocation": "Ubicación del servicio",
     "secLocationDesc": "En tu local, a domicilio o por videollamada",
@@ -3468,6 +3469,7 @@
     "title": "El servicio que sugeriste ya está disponible",
     "body": "\"{service}\" ya está en ContrataCR. Podés completar sus datos y agregarlo a tu perfil.",
     "complete": "Completar servicio",
+    "close": "Cerrar",
     "later": "Ahora no",
     "error": "No se pudo guardar. Intentá nuevamente.",
     "alreadyAvailable": "Este servicio ya está disponible.",

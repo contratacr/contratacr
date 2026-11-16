@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { enforceRateLimit } from "@/lib/rate-limit";
+import { formatPersonDisplayName } from "@/lib/display-name";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,7 +31,7 @@ export async function GET() {
   const porId = new Map((perfiles ?? []).map((p) => [String((p as { id: string }).id), p as { id: string; full_name?: string | null; avatar_url?: string | null }]));
   const proPorId = new Map((pros ?? []).map((p) => [String((p as { profile_id: string }).profile_id), p as { slug?: string | null; business_name?: string | null }]));
   return NextResponse.json({
-    blocked: ids.map((id) => ({ id, name: proPorId.get(id)?.business_name || porId.get(id)?.full_name || "Usuario", avatarUrl: porId.get(id)?.avatar_url ?? null, slug: proPorId.get(id)?.slug ?? null })),
+    blocked: ids.map((id) => ({ id, name: proPorId.get(id)?.business_name || formatPersonDisplayName(porId.get(id)?.full_name ?? "") || "Usuario", avatarUrl: porId.get(id)?.avatar_url ?? null, slug: proPorId.get(id)?.slug ?? null })),
   });
 }
 

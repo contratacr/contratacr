@@ -1,4 +1,5 @@
 import { contactAvailability } from "@/lib/direct-chat/availability";
+import { formatPersonDisplayName } from "@/lib/display-name";
 import { NextResponse } from "next/server";
 import { idiomaDeLaPeticion, mensajeDeError } from "@/lib/api-errors";
 import { createClient } from "@/lib/supabase/server";
@@ -576,7 +577,7 @@ export async function POST(req: Request) {
             : db.from("professionals").select("business_name").eq("profile_id", user.id).maybeSingle(),
         ]);
         const senderName = (senderProfessional as { business_name?: string | null } | null)?.business_name
-          || senderProfile?.full_name
+          || formatPersonDisplayName(senderProfile?.full_name ?? "")
           || "Alguien";
         await notifyRecipientOutsideApp({
           db,

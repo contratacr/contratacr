@@ -77,35 +77,34 @@ export function SupportForm({ onSuccess, onCancel }: { onSuccess?: (email: strin
     });
   }, [searchParams, t]);
 
+  // Nombre y correo se llenan UNA vez: primero se consulta el perfil y, con su
+  // respuesta (o, si falla, con los datos de la sesión), se escriben ambos campos.
+  // Antes se llenaban con user_metadata y medio segundo después se reescribían
+  // con profiles: el campo cambiaba delante de la persona.
+  const identityFilledForRef = useRef<string | null>(null);
   useEffect(() => {
-    if (user && !authLoading) {
-      queueMicrotask(() => {
-        setForm((f) => ({
-          ...f,
-          name: limitText((user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || f.name, NAME_MAX_LENGTH),
-          email: user.email ?? f.email,
-        }));
-      });
-    }
-  }, [user, authLoading]);
-
-  useEffect(() => {
-    if (!user || authLoading) return;
+    if (!user || authLoading || identityFilledForRef.current === user.id) return;
     let alive = true;
+    const metadataName = (user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || "";
+    const fill = (profile?: { full_name: string | null; email: string | null } | null) => {
+      if (!alive) return;
+      identityFilledForRef.current = user.id;
+      const name = profile?.full_name || metadataName;
+      const email = profile?.email || user.email || "";
+      // Lo que la persona ya escribió mientras tanto no se pisa.
+      setForm((f) => ({
+        ...f,
+        name: f.name.trim() ? f.name : limitText(name, NAME_MAX_LENGTH),
+        email: f.email.trim() ? f.email : email,
+      }));
+    };
     const supabase = createClient();
-    supabase
+    void Promise.resolve(supabase
       .from("profiles")
       .select("full_name, email")
       .eq("id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!alive || !data) return;
-        setForm((f) => ({
-          ...f,
-          name: limitText(data.full_name || f.name, NAME_MAX_LENGTH),
-          email: data.email || f.email,
-        }));
-      });
+      .maybeSingle())
+      .then(({ data }) => fill(data), () => fill(null));
     return () => { alive = false; };
   }, [user, authLoading]);
 

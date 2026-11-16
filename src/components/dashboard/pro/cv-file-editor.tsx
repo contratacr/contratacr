@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { ExternalLink, Trash2, RefreshCw, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FilaInterruptor } from '@/components/ui/fila-interruptor';
+import { Skeleton } from '@/components/ui/content-loading';
 export type CvFileMetadata = { name: string; visible: boolean; version: string };
 export function CvFileEditor({ professionalId, selectedFile, english, onChoose, onCancel, reading = false }: { professionalId: string; selectedFile: File | null; english: boolean; onChoose: () => void; onCancel: () => void; reading?: boolean }) {
   const endpoint = `/api/professional-cv?professionalId=${encodeURIComponent(professionalId)}`;
@@ -39,7 +40,7 @@ export function CvFileEditor({ professionalId, selectedFile, english, onChoose, 
     finally { setBusy(false); }
   }
   return <div className="mt-4 space-y-3" data-cv-sharing>
-    {loading && <p role="status" className="text-sm text-[#68778d]">{english ? 'Checking CV…' : 'Consultando CV…'}</p>}
+    {loading && <span role="status" aria-busy="true" className="block"><Skeleton className="h-11 w-36 rounded-full" /></span>}
     {!loading && !file && !pending && <Button type="button" className="min-h-11" disabled={reading || busy} onClick={onChoose}><Upload size={16}/>{english ? 'Upload CV' : 'Subir CV'}</Button>}
     {file && <>
       <div className="grid grid-cols-2 gap-2">
@@ -51,7 +52,7 @@ export function CvFileEditor({ professionalId, selectedFile, english, onChoose, 
       </div>
       <button type="button" className="inline-flex min-h-11 items-center gap-2 rounded-lg px-1 text-sm font-medium text-[#a12828] disabled:opacity-50" disabled={busy} onClick={() => void save('DELETE')}><Trash2 size={16}/>{english ? 'Remove CV' : 'Retirar CV'}</button>
     </>}
-    {pending && <div className="space-y-3 rounded-xl border border-[#c9e7f2] bg-white p-3">
+    {pending && !loading && <div className="space-y-3 rounded-xl border border-[#c9e7f2] bg-white p-3">
       <p className="break-all text-sm font-medium text-[#162543]">{selectedFile.name}</p>
       <div className="flex flex-wrap gap-2"><Button type="button" className="min-h-11" disabled={busy || reading || loading} onClick={() => void save('POST')}><Upload size={16}/>{file ? (english ? 'Replace and show CV' : 'Reemplazar y mostrar CV') : (english ? 'Attach and show CV' : 'Adjuntar y mostrar CV')}</Button><Button type="button" variant="ghost" className="min-h-11" disabled={busy || reading} onClick={onCancel}>{english ? 'Cancel' : 'Cancelar'}</Button></div>
     </div>}

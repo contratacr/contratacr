@@ -6,6 +6,8 @@ import { Link } from "@/i18n/navigation";
 import { AdjuntosDelMensaje } from "@/components/support/compositor-de-soporte";
 import type { AdjuntoDeSoporte } from "@/lib/support/adjuntos";
 import { LONG_TEXT_MAX_LENGTH } from "@/lib/text-limits";
+import { SupportMessageSkeleton } from "@/components/support/support-thread-skeleton";
+import { Skeleton } from "@/components/ui/content-loading";
 
 type Message = { id: string; body: string; sender_role: string; attachments?: AdjuntoDeSoporte[] };
 type Thread = { ticket: { subject: string; status: string }; messages: Message[] };
@@ -68,7 +70,14 @@ export function GuestSupportCase({ id }: { id: string }) {
       <Link href="/" className="text-sm font-bold text-[#009FD9]">ContrataCR</Link>
       <h1 className="mt-4 text-xl font-bold">{t("title")}</h1>
       <p className="mt-2 text-sm text-[#5b6472]">{t("intro")}</p>
-      {loading && <p role="status" className="mt-5">{t("loading")}</p>}
+      {loading && <div role="status" aria-busy="true" aria-label={t("loading")} className="ccr-delayed-loading mt-5">
+        {/* La forma del caso ya cargado: asunto, mensajes y la caja de respuesta. */}
+        <Skeleton className="h-5 w-2/3 rounded-full" immediate />
+        <div className="-mx-4 sm:-mx-6"><SupportMessageSkeleton /></div>
+        <Skeleton className="h-4 w-24 rounded-full" immediate />
+        <Skeleton className="mt-2 h-[106px] w-full rounded-xl" immediate />
+        <Skeleton className="mt-3 h-11 w-28 rounded-full" immediate />
+      </div>}
       {error && <p role="alert" className="mt-4 text-sm text-red-700">{t(error)}</p>}
       {!thread && error === "failed" && <button className="mt-3 text-sm text-[#0089bb] underline" onClick={() => { setError(""); setLoading(true); setAttempt(n => n + 1); }}>{t("retry")}</button>}
       {thread && error !== "invalid" && <>

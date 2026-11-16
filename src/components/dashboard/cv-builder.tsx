@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocale } from "next-intl";
 import { AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, Copy, Download, FileText, FileUp, Lightbulb, Mail, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { AccionesAlPie } from "@/components/ui/acciones-al-pie";
+import { Skeleton } from "@/components/ui/content-loading";
 import { Link } from "@/i18n/navigation";
 import { VACANTE_PARA_CURRICULUM } from "@/components/jobs/preparar-curriculum";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,7 @@ import {
   type Aviso, type Carta, type CvDocumento, type DatosDelPerfil, type Idioma, type Plantilla,
 } from "@/lib/cv/documento";
 import { cn } from "@/lib/utils";
+import { formatFullPersonName } from "@/lib/display-name";
 
 /**
  * «MI CV» EN EL PANEL: CV y carta de presentación listos para descargar.
@@ -41,7 +43,7 @@ function datosDelPerfil(pro: ProData, nombreCuenta: string, correo: string, idio
   const ubicacion = [getCantonById(String(pro?.canton_id ?? ""))?.name, getProvinceById(String(pro?.provincia_id ?? ""))?.name].filter(Boolean).join(", ");
   const perfil = Array.isArray(pro?.profiles) ? pro.profiles[0] : pro?.profiles;
   return {
-    nombre: perfil?.full_name || nombreCuenta,
+    nombre: formatFullPersonName(perfil?.full_name || nombreCuenta),
     correo,
     telefono: pro?.whatsapp || pro?.call_phone || "",
     ubicacion: ubicacion ? `${ubicacion}, Costa Rica` : "",
@@ -305,15 +307,17 @@ function Pasos<T extends PasoCv | PasoCarta>({ pasos, actual, hechos, alElegir, 
       <div className="h-1.5 overflow-hidden rounded-full bg-[#eef3f7]" aria-hidden>
         <div className="h-full rounded-full bg-[#009FD9] transition-[width] duration-300" style={{ width: `${((indice + 1) / pasos.length) * 100}%` }} />
       </div>
-      <ol className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 [scrollbar-width:none]">
+      {/* En el teléfono los pasos caben en una fila (solo el número; el nombre
+          del paso actual va arriba). Antes la fila se deslizaba de lado. */}
+      <ol className="grid gap-1.5 @[640px]:flex @[640px]:flex-wrap" style={{ gridTemplateColumns: `repeat(${pasos.length}, minmax(0, 1fr))` }}>
         {pasos.map((paso, i) => (
-          <li key={paso} className="shrink-0">
+          <li key={paso} className="min-w-0 @[640px]:shrink-0">
             <button
               type="button"
               onClick={() => alElegir(paso)}
               aria-current={paso === actual ? "step" : undefined}
               className={cn(
-                "inline-flex h-9 items-center gap-1.5 rounded-full border px-3 text-[13px] font-semibold transition-colors",
+                "inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-full border px-0 text-[13px] font-semibold transition-colors @[640px]:w-auto @[640px]:px-3",
                 paso === actual ? "border-[#009FD9] bg-[#eef8fd] text-[#007fae]" : "border-[#e5e7eb] bg-white text-[#52627a] hover:text-[#162543]",
               )}
             >
@@ -325,7 +329,7 @@ function Pasos<T extends PasoCv | PasoCarta>({ pasos, actual, hechos, alElegir, 
               >
                 {i + 1}
               </span>
-              {NOMBRE_PASO[paso][en ? "en" : "es"]}
+              <span className="sr-only @[640px]:not-sr-only">{NOMBRE_PASO[paso][en ? "en" : "es"]}</span>
               {hechos.has(paso) && paso !== actual && <span className="sr-only">{en ? " (done)" : " (completo)"}</span>}
             </button>
           </li>
@@ -343,6 +347,9 @@ function Pasos<T extends PasoCv | PasoCarta>({ pasos, actual, hechos, alElegir, 
 function LlenarDesdeCv({ professionalId, vacio, en, alLeer }: { professionalId: string; vacio: boolean; en: boolean; alLeer: (leido: unknown) => number }) {
   const endpoint = professionalId ? `/api/professional-cv?professionalId=${encodeURIComponent(professionalId)}` : "";
   const [adjunto, setAdjunto] = useState<{ name: string } | null>(null);
+  // Hasta saber si hay CV en el perfil se muestra el esqueleto: antes salía
+  // "¿Ya tenés un CV?" y al rato cambiaba a "Tenés un CV en tu perfil" (parpadeo).
+  const [listo, setListo] = useState(!endpoint);
   const [leyendo, setLeyendo] = useState(false);
   const [mensaje, setMensaje] = useState<{ tipo: "ok" | "error"; texto: string } | null>(null);
   const input = useRef<HTMLInputElement>(null);
@@ -352,7 +359,8 @@ function LlenarDesdeCv({ professionalId, vacio, en, alLeer }: { professionalId: 
     fetch(`${endpoint}&metadata=1`, { cache: "no-store", signal: abort.signal })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => { if (d?.file?.name) setAdjunto({ name: String(d.file.name) }); })
-      .catch(() => { /* sin CV adjunto: queda la opción de elegir un archivo */ });
+      .catch(() => { /* sin CV adjunto: queda la opción de elegir un archivo */ })
+      .finally(() => { if (!abort.signal.aborted) setListo(true); });
     return () => abort.abort();
   }, [endpoint]);
 
@@ -388,6 +396,21 @@ function LlenarDesdeCv({ professionalId, vacio, en, alLeer }: { professionalId: 
     return new File([blob], adjunto?.name || "cv", { type: blob.type });
   });
   const destacado = vacio && !!adjunto;
+
+  if (!listo) {
+    return (
+      <section className="rounded-2xl border border-[#e5e7eb] bg-white p-4" aria-busy="true" data-testid="cv-llenar-cargando">
+        <div className="flex items-start gap-3">
+          <Skeleton className="h-10 w-10 shrink-0 rounded-xl" />
+          <div className="min-w-0 flex-1 space-y-2 pt-1">
+            <Skeleton className="h-4 w-1/2 rounded-full" />
+            <Skeleton className="h-3 w-5/6 rounded-full" />
+          </div>
+        </div>
+        <Skeleton className="mt-3 h-11 w-full rounded-full" />
+      </section>
+    );
+  }
 
   return (
     <section className={cn("rounded-2xl border p-4", destacado ? "border-[#9fd8ee] bg-[#f1faff]" : "border-[#e5e7eb] bg-white")}>

@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { getCantonById, getProvinceById } from "@/lib/data/cr-geography";
 import { emptyPublicationStats, readPublicationStats } from "@/lib/admin/publication-stats";
+import { formatFullPersonName } from "@/lib/display-name";
 
 type ProposalSummary = {
   id: string;
@@ -201,7 +202,7 @@ export async function GET(req: Request) {
       stats: stats.data.get(row.id as string) ?? emptyPublicationStats(),
       client: {
         id: row.client_id,
-        name: row.profiles?.full_name || row.client_name_snapshot || "Cliente",
+        name: formatFullPersonName(row.profiles?.full_name || row.client_name_snapshot) || "Cliente",
         email: row.client_email_snapshot ?? row.profiles?.email ?? null,
         cedula: row.profiles?.cedula ?? null,
         avatar_url: row.profiles?.avatar_url ?? null,
@@ -212,7 +213,7 @@ export async function GET(req: Request) {
             id: accepted.id,
             profile_id: accepted.profile_id,
             slug: accepted.slug,
-            name: accepted.business_name || accepted.profiles?.full_name || "Profesional",
+            name: accepted.business_name || formatFullPersonName(accepted.profiles?.full_name) || "Profesional",
             email: accepted.profiles?.email ?? null,
             avatar_url: accepted.profiles?.avatar_url ?? null,
           }

@@ -220,6 +220,13 @@ export async function middleware(request: NextRequest) {
     destino.search = request.nextUrl.search;
     return reescribirConIdioma(request, destino);
   }
+  // Y su CV: contratacr.com/nombre-apellido/cv (15-nov-2026).
+  const cvCorto = /^\/(?:(en)\/)?@?([a-z0-9][a-z0-9-]{2,80})\/cv\/?$/.exec(pathname.toLowerCase());
+  if (cvCorto && !RUTAS_DEL_SITIO.has(cvCorto[2])) {
+    const destino = new URL(`/${cvCorto[1] || "es"}/profesionales/${cvCorto[2]}/cv`, request.url);
+    destino.search = request.nextUrl.search;
+    return reescribirConIdioma(request, destino);
+  }
 
   // Direcciones que se renombraron. Los `redirect()` que vivían en la propia
   // página NUNCA redirigieron de verdad: `/es/categorias` y `/es/contacto`

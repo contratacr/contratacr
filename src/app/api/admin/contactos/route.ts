@@ -4,6 +4,7 @@ import { readAdminRowsByIds } from "@/lib/admin/read-all-rows";
 import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { formatFullPersonName } from "@/lib/display-name";
 
 /**
  * GET /api/admin/contactos — quién está recibiendo contactos y quién no.
@@ -128,7 +129,7 @@ export async function GET(request: Request) {
   const nombre = new Map((pros ?? []).map((p) => {
     const fila = p as { id: string; slug: string; business_name: string | null; profiles?: { full_name?: string } | Array<{ full_name?: string }> | null };
     const perfil = Array.isArray(fila.profiles) ? fila.profiles[0] : fila.profiles;
-    return [fila.id, { nombre: (fila.business_name ?? "").trim() || perfil?.full_name || fila.slug, slug: fila.slug }];
+    return [fila.id, { nombre: (fila.business_name ?? "").trim() || formatFullPersonName(perfil?.full_name) || fila.slug, slug: fila.slug }];
   }));
 
   const profesionales = [...porPro.entries()]

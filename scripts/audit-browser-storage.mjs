@@ -55,6 +55,8 @@ const reviewed = new Map([
   ["src/lib/notifications/use-actor-photos.ts", { count: 2, reason: "avatar render cache for notification rows; profiles remain the source of truth" }],
   ["src/app/[locale]/login/page.tsx", { count: 1, reason: "short-lived post-login presentation handoff" }],
   ["src/app/[locale]/dashboard/profesional/page.tsx", { count: 10, reason: "section-return handoff and profile-completion navigation cache; backend remains authoritative" }],
+  ["src/lib/auth/sign-out.ts", { count: 1, reason: "sessionStorage: marca de una sola recarga para que la portada siga diciendo \"Cerrando sesión…\"; se borra al leerla, sin datos de la cuenta" }],
+  ["src/components/global-action-loading.tsx", { count: 2, reason: "lee y borra la marca de cierre de sesión de una sola recarga; sin datos de la cuenta" }],
 ]);
 
 const trackedSource = execFileSync("git", ["ls-files", "src"], { encoding: "utf8" })

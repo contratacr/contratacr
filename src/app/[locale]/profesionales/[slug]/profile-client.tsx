@@ -208,7 +208,8 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   // donde no hay URL, y el perfil se abría siempre en "Disponibilidad".
   const searchParams = useSearchParams();
   const tabFromUrl = ((): Tab | null => {
-    const value = searchParams.get("tab");
+    // ?tab=curriculum es el nombre visible de la pestaña "certificaciones".
+    const value = searchParams.get("tab") === "curriculum" ? "certificaciones" : searchParams.get("tab");
     return (["disponibilidad", "servicios", "promociones", "empleos", "casos", "certificaciones", "resenas", "sobre"] as const).includes(value as Tab)
       ? (value as Tab)
       : null;
@@ -1342,10 +1343,11 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                     </div>
                   )}</div>}
 
-                  {/* ── TAB: Experiencia y formación (texto, sin imágenes) ── */}
+                  {/* ── TAB: Currículum (texto, sin imágenes) ── */}
                   {montada("certificaciones") && <div hidden={tabEfectiva !== "certificaciones"}>{hasCerts && (
                     <CvProfileDetails
                       professionalId={professional.id}
+                      slug={professional.slug ?? slug}
                       hasFile={professional.hasCvFile}
                       value={cvProfile}
                       english={locale === "en"}
