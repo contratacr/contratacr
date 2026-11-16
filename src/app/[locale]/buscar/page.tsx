@@ -3,6 +3,7 @@ import { nearbyContext, nearbyRank } from "@/lib/search/nearby";
 import { SearchCardContactBoundary } from "@/components/search/professional-card-loading";
 import { ContactAvailabilityProvider } from "@/hooks/use-profesional-con-app";
 import { initialContactAvailability } from "@/lib/direct-chat/availability";
+import { contactosDelMes } from "@/lib/queries/contactos-del-mes";
 import { imagenDeSeccion } from "@/lib/seo/imagen-social";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import type { Metadata } from "next";
@@ -232,7 +233,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const results = orderedResults.slice(resultOffset, resultOffset + RESULTS_PER_PAGE);
   // Resolve the first batch once, before hydration, instead of a separate browser round trip.
   // On timeout keep the existing client retry; never guess the channel.
-  const initialContacts = await initialContactAvailability(viewerProfileId, results);
+  const [initialContacts, contactos] = await Promise.all([
+    initialContactAvailability(viewerProfileId, results),
+    contactosDelMes(results.map((pro) => pro.id)),
+  ]);
   if (currentPage === 1) {
     void recordServerInteraction({
       type: "search_performed",
@@ -590,7 +594,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                         <SearchCardContactBoundary professionalId={pro.id}>
                         <SaveableCard pro={pro} isOwn={!!viewerProfileId && viewerProfileId === pro.profileId}>
                           <ProfessionalCard
-                            professional={redactContactEnListado(cardData(pro))}
+                            professional={redactContactEnListado({ ...cardData(pro), contactsThisMonth: contactos[pro.id] })}
                             activeCategory={activeCategoryId}
                             viewerProfileId={viewerProfileId}
                             rank={resultOffset + i + 1}

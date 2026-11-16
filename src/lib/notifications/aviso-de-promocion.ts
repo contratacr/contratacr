@@ -1,5 +1,6 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { formatPersonDisplayName } from "@/lib/display-name";
 import { hasDurablePushOutbox, sendNotificationPush } from "@/lib/push/notify";
 import { matchesProjectCoverage } from "@/lib/projects/project-recipients";
 
@@ -122,7 +123,7 @@ export async function avisarPromocionNueva({
 
   const perfil = (Array.isArray(publicador.profiles) ? publicador.profiles[0] : publicador.profiles) as { full_name?: string | null } | null;
   const nombre = (typeof publicador.business_name === "string" && publicador.business_name.trim())
-    || perfil?.full_name?.trim()
+    || formatPersonDisplayName(perfil?.full_name ?? "")
     || "Un profesional";
   const titulo = title.trim().slice(0, 120);
   // El texto sigue la forma "<nombre> publicó una nueva promoción: <título>."

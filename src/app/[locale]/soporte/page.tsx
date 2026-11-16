@@ -10,7 +10,8 @@ import { ArrowLeft, Headset, Home } from "lucide-react";
 import { SuccessIcon } from "@/components/ui/success-icon";
 import { Link } from "@/i18n/navigation";
 import { SupportForm } from "@/components/support/support-form";
-import { ModerationDecisions } from "@/components/support/moderation-decisions";
+import { ModerationDecisions, ModerationDecisionsSkeleton } from "@/components/support/moderation-decisions";
+import { Skeleton } from "@/components/ui/content-loading";
 import { SpamNotice } from "@/components/ui/spam-notice";
 import { canOffer } from "@/lib/auth/capabilities";
 import { irAlInicio } from "@/lib/ir-al-inicio";
@@ -18,7 +19,7 @@ import { irAlInicio } from "@/lib/ir-al-inicio";
 export default function SoportePage() {
   const tSeccion = useTranslations("sectionTitles");
   const t = useTranslations("soporte");
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const panelHref = "/dashboard/profesional?tab=soporte";
   const panelHomeHref = canOffer(user) ? "/dashboard/profesional" : "/dashboard/profesional?mode=use";
 
@@ -47,8 +48,12 @@ export default function SoportePage() {
             <h1 className="text-2xl font-bold text-[#162543] mb-2">{t("successTitle")}</h1>
 
             {/* Primary message (one line) */}
+            {/* Invitado o con cuenta se decide cuando la sesión ya se resolvió:
+                antes se pintaban los botones de invitado y luego se cambiaban. */}
             <p className="text-[#6b7280]">
-              {user
+              {authLoading
+                ? <Skeleton className="mx-auto h-6 w-64 max-w-full rounded-full" />
+                : user
                 ? t("successUserDesc")
                 : t.rich("successGuestDesc", {
                     email: successEmail,
@@ -58,7 +63,12 @@ export default function SoportePage() {
 
             {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
-              {user ? (
+              {authLoading ? (
+                <>
+                  <Skeleton className="h-11 w-full rounded-full sm:w-44" />
+                  <Skeleton className="h-11 w-full rounded-full sm:w-44" />
+                </>
+              ) : user ? (
                 <>
                   <Link
                     href={panelHref}
@@ -97,7 +107,7 @@ export default function SoportePage() {
             {/* Secondary, subtle footnotes (spam note + guest follow-tickets hint) */}
             <div className="mt-6 space-y-1">
               <SpamNotice />
-              {!user && <p className="text-xs text-[#68778d]">{t("guestFollow")}</p>}
+              {!authLoading && !user && <p className="text-xs text-[#68778d]">{t("guestFollow")}</p>}
             </div>
           </div>
         </main>
@@ -112,7 +122,8 @@ export default function SoportePage() {
       <div className="ccr-navbar-spacer h-16" aria-hidden />
       <main className="ccr-native-compact-page flex-1 px-4 pb-0 pt-4 lg:pt-8">
         <div className="mx-auto max-w-xl">
-          {user && (
+          {authLoading && <div className="mb-5"><Skeleton className="h-[38px] w-40 rounded-full" /></div>}
+          {user && !authLoading && (
             <div className="mb-5">
               <Link
                 href={panelHref}
@@ -135,7 +146,7 @@ export default function SoportePage() {
 
           {/* Primary: support ticket form (shared SupportForm component) */}
           <SupportForm onSuccess={(email) => { setSuccessEmail(email); setSuccess(true); }} />
-          {user&&<ModerationDecisions/>}
+          {authLoading ? <ModerationDecisionsSkeleton/> : user&&<ModerationDecisions/>}
 
         </div>
       </main>

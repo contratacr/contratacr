@@ -16,6 +16,6 @@ test("CV compartido: la ruta /api/professional-cv cumple su contrato", () => {
   });
   const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;
   expect(result.status, output).toBe(0);
-  expect(output).toMatch(/ℹ pass 7\b/);
+  expect(output).toMatch(/ℹ pass 8\b/);
   expect(output).toMatch(/ℹ fail 0\b/);
 });

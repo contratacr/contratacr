@@ -65,6 +65,7 @@ function fixture(options: { authorized?: boolean; authFail?: boolean; writeFail?
     "@/lib/audit/user-action": { auditUserAction: async (_db: unknown, _req: unknown, entry: unknown) => { audits.push(entry); } },
     "@/lib/quotes": { whatsappDigits: (v: unknown) => String(v ?? "").replace(/\D/g, "") },
     "@/lib/auth/enlace-de-contrasena": {},
+    "@/lib/display-name": load("src/lib/display-name.ts", {}),
     "@/lib/cache/professional-revision": { invalidateProfessionalCache: async () => { invalidations.push(["public-professionals", { expire: 0 }]); } },
   });
   const call = (body: object) => route.PATCH(new Request("https://contratacr.test/api/admin/users/owner/datos", { method: "PATCH", body: JSON.stringify(body) }), { params: Promise.resolve({ id: "owner" }) });

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { MARCA_CERRANDO_SESION } from "@/lib/auth/sign-out";
 
 export function GlobalActionLoading() {
   const [signingOut, setSigningOut] = useState(false);
@@ -11,7 +12,23 @@ export function GlobalActionLoading() {
   useEffect(() => {
     const showSigningOut = () => setSigningOut(true);
     window.addEventListener("contratacr:signing-out", showSigningOut);
-    return () => window.removeEventListener("contratacr:signing-out", showSigningOut);
+    // Se llega desde un cierre de sesión: el mismo aviso sigue hasta que la
+    // portada terminó de cargar, en vez de un círculo suelto en medio.
+    let marca = false;
+    try { marca = window.sessionStorage.getItem(MARCA_CERRANDO_SESION) === "1"; window.sessionStorage.removeItem(MARCA_CERRANDO_SESION); } catch { /* sin almacenamiento */ }
+    let quitar: number | undefined;
+    const alCargar = () => { quitar = window.setTimeout(() => setSigningOut(false), 150); };
+    if (marca) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- aviso que viene de la página anterior
+      setSigningOut(true);
+      if (document.readyState === "complete") alCargar();
+      else window.addEventListener("load", alCargar, { once: true });
+    }
+    return () => {
+      window.removeEventListener("contratacr:signing-out", showSigningOut);
+      window.removeEventListener("load", alCargar);
+      if (quitar) window.clearTimeout(quitar);
+    };
   }, []);
 
   if (!signingOut) return null;

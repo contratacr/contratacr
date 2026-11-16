@@ -16,7 +16,10 @@ for (const mode of ["light", "dark", "outlook-dark"] as const) {
       const html = example.html.replace(/https:\/\/contratacr\.com\/brand\/(email-logo-(?:light|dark)\.png)\?v=2/g,
         (_, file: string) => `data:image/png;base64,${readFileSync(`public/brand/${file}`).toString("base64")}`);
       await page.setContent(html);
-      if (mode === "outlook-dark") await page.locator("body").evaluate((el) => el.setAttribute("data-ogsc", ""));
+      // Como Outlook.com: data-ogsc va en cada elemento con color de texto en
+      // línea, nunca en <body> (lo descarta). Marcar el body ocultaba que el
+      // logo para fondo oscuro no se activaba en Outlook (15-nov-2026).
+      if (mode === "outlook-dark") await page.evaluate(() => document.querySelectorAll<HTMLElement>("body *").forEach((el) => { if (el.style.color) el.setAttribute("data-ogsc", ""); }));
       const light = page.locator(".light-logo, .ccr-light-logo");
       const dark = page.locator(".dark-logo, .ccr-dark-logo");
       await expect(mode === "light" ? light : dark, example.name).toBeVisible();

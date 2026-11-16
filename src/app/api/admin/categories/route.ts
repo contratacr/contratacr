@@ -22,6 +22,7 @@ import {
   supportsVideoConsultCategory,
 } from "@/lib/data/categories";
 import { normalizeServiceDisplayName, suggestEnglishServiceLabel, suggestSpanishServiceLabel } from "@/lib/translation/service-labels";
+import { formatFullPersonName } from "@/lib/display-name";
 
 type DbCategory = {
   id: string;
@@ -200,7 +201,7 @@ export async function GET(req: Request) {
           return { ticketId: r.clarification_ticket_id, state: ticket?.last_reply_role === "user" ? "review" : "waiting", reply: clarificationReplies.data?.find(m => m.ticket_id === r.clarification_ticket_id)?.body ?? null };
         }),
         labelEn: englishById.get(String(row.id)) ?? null,
-        suggestedByName: author?.full_name ?? null,
+        suggestedByName: formatFullPersonName(author?.full_name) || null,
         suggestedByEmail: author?.email ?? null,
         suggestedByBusinessName: professional?.business_name ?? null,
       };

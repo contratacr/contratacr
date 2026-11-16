@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { cardData, locationDecisions, resolveSearchResults, RESULTS_PER_PAGE, type SearchPageParams } from "@/lib/search/query-core";
 import { redactContactEnListado } from "@/lib/contact/redact";
+import { contactosDelMes } from "@/lib/queries/contactos-del-mes";
 
 // The next slice of a /buscar search, so the list can keep growing as the
 // person scrolls instead of paging. It resolves the URL exactly like the page
@@ -38,13 +39,16 @@ export async function GET(request: Request) {
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError && authError.name !== "AuthSessionMissingError") throw authError;
-    const values = user ? await contactAvailability(user.id, slice) : {};
+    const [values, contactos] = await Promise.all([
+      user ? contactAvailability(user.id, slice) : Promise.resolve({}),
+      contactosDelMes(slice.map((professional) => professional.id)),
+    ]);
     return NextResponse.json({
       contactAvailability: { viewerId: user?.id ?? "", values, resolvedAt: Date.now() },
       total: ordered.length,
       offset,
       professionals: slice.map((professional) => ({
-        professional: redactContactEnListado(cardData(professional)),
+        professional: redactContactEnListado({ ...cardData(professional), contactsThisMonth: contactos[professional.id] }),
         forceContactOnly: decisions.shouldShowContactOnly(professional),
         preferVideo: decisions.shouldPreferVideoLocation(professional),
       })),

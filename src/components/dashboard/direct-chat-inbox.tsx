@@ -1462,6 +1462,8 @@ export function DirectChatInbox({ alCambiarSubvista }: {
       action={(
         <button type="button" onClick={() => updateArchiveView(true)} className="inline-flex items-center justify-center gap-1.5 text-sm font-bold text-[#008fc4] hover:underline">
           {tChat("viewArchived")}
+          {/* Cuántas hay, con la misma pastilla que la fila "Archivados" de la lista. */}
+          {archivedCount > 0 && <span data-testid="chat-archived-count" className="grid h-5 min-w-5 place-items-center rounded-full bg-[#e8eef4] px-1.5 text-[10px] font-extrabold text-[#526277]">{archivedCount > 99 ? "99+" : archivedCount}</span>}
         </button>
       )}
     />

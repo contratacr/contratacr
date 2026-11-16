@@ -6,6 +6,7 @@ import { getModerationAdmin as getApiAdmin } from "@/lib/moderation/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { validateReviewText } from "@/lib/moderation/reviews";
 import { invalidateProfessionalCache } from "@/lib/cache/professional-revision";
+import { formatFullPersonName } from "@/lib/display-name";
 
 type ReviewRow = {
   id: string;
@@ -99,13 +100,13 @@ export async function GET(req: Request) {
       moderatedAt: row.moderated_at ?? null,
       professional: {
         id: row.professional_id,
-        name: professional?.business_name || (professional?.profiles as { full_name?: string | null } | null)?.full_name || "Profesional",
+        name: professional?.business_name || formatFullPersonName((professional?.profiles as { full_name?: string | null } | null)?.full_name) || "Profesional",
         slug: professional?.slug ?? null,
         profession: professional?.category_id ? getCategoryLabel(professional.category_id) : null,
       },
       client: {
         id: row.client_id,
-        name: client?.full_name || row.client_name_snapshot || "Cliente",
+        name: formatFullPersonName(client?.full_name || row.client_name_snapshot) || "Cliente",
         email: client?.email || row.client_email_snapshot || null,
         avatarUrl: client?.avatar_url ?? null,
       },

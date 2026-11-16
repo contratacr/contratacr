@@ -1,4 +1,5 @@
 import type { createAdminClient } from "@/lib/supabase/admin";
+import { nombreDeSaludo } from "@/lib/nombres";
 import { brandedEmailDocument, sendBrevoEmail } from "@/lib/email/send";
 import { enlaceDeBaja, firmaDeBaja, firmaValida, normalizarCorreo } from "@/lib/email/baja";
 import { escaparHtml } from "@/lib/email/escape";
@@ -45,7 +46,7 @@ function fechaCorta(iso: string) {
 }
 
 function primerNombre(nombre: string | null | undefined) {
-  const n = String(nombre ?? "").trim().split(/\s+/)[0] ?? "";
+  const n = nombreDeSaludo(nombre);
   return /^[\p{L}][\p{L}'-]{1,30}$/u.test(n) ? n : "";
 }
 

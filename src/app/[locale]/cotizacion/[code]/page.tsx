@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PublicQuote, type PublicQuoteData } from "@/components/quotes/public-quote";
 import { proDisplayName } from "@/lib/utils";
+import { formatFullPersonName } from "@/lib/display-name";
 import { enlacePerfil } from "@/lib/profile-url";
 import { codigoDeEnlace, whatsappDigits, type Quote } from "@/lib/quotes";
 import { getCategoryGroupId, getCategoryGroupLabel, getCategoryLabel } from "@/lib/data/categories";
@@ -40,7 +41,7 @@ async function cargar(tramo: string, locale: string): Promise<PublicQuoteData | 
   const perfil = (pro?.profiles ?? null) as { full_name?: string | null; avatar_url?: string | null } | null;
   const nombre = pro?.business_name?.trim() || proDisplayName(perfil?.full_name ?? "");
   return {
-    quote: { ...q, professional_name: nombre, professional_full_name: pro?.business_name?.trim() || perfil?.full_name || nombre } as Quote,
+    quote: { ...q, professional_name: nombre, professional_full_name: pro?.business_name?.trim() || formatFullPersonName(perfil?.full_name) || nombre } as Quote,
     pro: {
       name: nombre,
       avatarUrl: perfil?.avatar_url ?? null,

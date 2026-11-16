@@ -341,6 +341,7 @@
     "rate": "Rate",
     "noReviews": "No reviews yet",
     "reviewsCount": "{count, plural, one {# review} other {# reviews}}",
+    "contactsThisMonth": "{count, plural, one {contact this month} other {contacts this month}}",
     "verifiedShort": "Verified",
     "email": "Contact by email",
     "priceConsult": "Ask price",
@@ -607,7 +608,7 @@
       "servicios": "Services",
       "disponibilidad": "Contact",
       "casos": "Success stories",
-      "certificaciones": "Experience and education",
+      "certificaciones": "Resume",
       "resenas": "Reviews",
       "sobre": "Information"
     },
@@ -783,7 +784,7 @@
       "searchAnotherProfession": "Search another service…",
       "cancel": "Cancel",
       "addAnotherProfession": "Add another service",
-      "workplacesLabel": "Workplaces",
+      "workplacesLabel": "Service location",
       "uploadingPhoto": "Uploading photo…",
       "photoChange": "Change photo",
       "photoRemove": "Remove photo",
@@ -797,7 +798,7 @@
       "videoConsultOption": "Video consultations anywhere in the country",
       "skipCedulaNote": "You will appear without the Verified badge. You can verify your identity later from your panel.",
       "allowCallsLabel": "Allow contact by phone call",
-      "rateLabel": "What is your starting hourly rate?",
+      "rateLabel": "What is your starting price?",
       "rateHelp": "Leave it blank and your profile will say \"Ask for price\".",
       "ratePlaceholder": "12 000",
       "errWorkplaceSiempre": "Choose at least one province and base canton.",
@@ -1007,7 +1008,7 @@
         "profile": "Profile",
         "services": "Services",
         "locations": "Locations",
-        "workplaces": "Work locations",
+        "workplaces": "Service location",
         "identity": "Identity",
         "mode": "Mode",
         "provider": "Professional",
@@ -1479,16 +1480,16 @@
           "cta": "Go to professional profile"
         },
         "workplacesGuide": {
-          "title": "Work locations",
+          "title": "Service location",
           "short": "Province, canton and coverage",
           "body": "Set where you work so clients can find you in the right area.",
           "steps": [
-            "Open Profile and choose Work locations.",
-            "Choose the province and canton where you work.",
-            "Enable home visits or video consultations when they apply to your service.",
+            "Open Profile and choose Service location.",
+            "Turn on how you work: at your place, at the client's home or by video call.",
+            "Add your place or choose the province and canton of the areas you travel to.",
             "Review your coverage and save your changes."
           ],
-          "cta": "Open work locations"
+          "cta": "Open service location"
         }
       },
       "searchPlaceholder": "Search the guides",
@@ -1621,7 +1622,7 @@
   "profileEditor": {
     "secBasic": "Basic info",
     "secBasicDesc": "Photo, name and description",
-    "secCerts": "Experience and education",
+    "secCerts": "Resume",
     "secCertsDesc": "Work experience, education and skills",
     "secLocation": "Service location",
     "secLocationDesc": "At your place, at the client's or by video call",
@@ -3468,6 +3469,7 @@
     "title": "The service you suggested is now available",
     "body": "\"{service}\" is now on ContrataCR. You can complete its details and add it to your profile.",
     "complete": "Complete service",
+    "close": "Close",
     "later": "Not now",
     "error": "Could not save. Please try again.",
     "alreadyAvailable": "This service is already available.",

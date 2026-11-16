@@ -10,6 +10,7 @@ import { Link, usePathname } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
 import { rutaEmpleo, rutaProyecto, rutaPromocion } from "@/lib/marketplace-url";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/content-loading";
 
 type Publication = { id: string; title: string; views: number; whatsapp: number };
 type AccountActivity = {
@@ -82,7 +83,23 @@ export function StatisticsPanel({ professional, callsEnabled }: { professional: 
         onChange={id => { if (sections.includes(id as Section)) setSection(id as Section); }}
         labelFor={id => t(id === "profile" ? "profileFilter" : id)} variant="chips" limpiable={false} />
     </div>}
-    {!activity && <p className="px-4 pb-6 pt-5 text-[13px] text-[#68778d] sm:px-5 lg:px-0" role="status">{t(error ? "loadError" : "loading")}</p>}
+    {!activity && error && <p className="px-4 pb-6 pt-5 text-[13px] text-[#68778d] sm:px-5 lg:px-0" role="alert">{t("loadError")}</p>}
+    {/* Mientras llega el dato, la forma del panel: filas de perfil (ícono, etiqueta
+        y número) o filas de publicaciones (título, enlace y dos cifras). */}
+    {!activity && !error && <div className="ccr-delayed-loading px-4 pb-4 pt-3 sm:px-5 lg:px-0" role="status" aria-label={t("loading")}>
+      {professional ? <div className="divide-y divide-[#eef2f6]">
+        {Array.from({ length: callsEnabled ? 3 : 2 }).map((_, index) => <div key={index} className="flex min-h-14 items-center justify-between gap-4 py-3">
+          <span className="flex min-w-0 items-center gap-3"><Skeleton className="h-[18px] w-[18px] shrink-0 rounded-full" immediate /><Skeleton className="h-3.5 w-32 rounded-full" immediate /></span>
+          <Skeleton className="h-[22px] w-10 shrink-0 rounded-md" immediate />
+        </div>)}
+      </div> : <div className="pt-2">
+        {Array.from({ length: 3 }).map((_, index) => <div key={index} className="grid grid-cols-2 gap-x-3 gap-y-2 border-b border-[#eef2f6] py-4 last:border-b-0 sm:grid-cols-[1fr_85px_110px] sm:items-center sm:gap-4">
+          <div className="col-span-2 space-y-2.5 sm:col-span-1"><Skeleton className="h-4 w-2/3 rounded-full" immediate /><Skeleton className="h-3 w-24 rounded-full" immediate /></div>
+          <Skeleton className="h-4 w-12 rounded-full sm:ml-auto" immediate />
+          <Skeleton className="h-4 w-12 rounded-full sm:ml-auto" immediate />
+        </div>)}
+      </div>}
+    </div>}
     {activity && !activeSection && <p className="px-4 pb-6 pt-5 text-[13px] text-[#68778d] sm:px-5 lg:px-0">{t("empty")}</p>}
     {activity && activeSection === "profile" && <section className="px-4 pt-3 sm:px-5 lg:px-0" aria-label={t("profile")}>
       <div className="divide-y divide-[#eef2f6]">

@@ -6,6 +6,7 @@ import { Ban } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
 import { getInitials } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/content-loading";
 
 type Bloqueado = { id: string; name: string; avatarUrl: string | null; slug: string | null };
 
@@ -70,7 +71,14 @@ export function UsuariosBloqueados() {
       </div>
       <p className="mb-3 text-xs leading-relaxed text-[#6b7280]">{t("cuentaTexto")}</p>
       {error && <p role="alert" className="mb-3 text-sm text-red-700">{t("cuentaError")} <button type="button" onClick={() => void cargar()} className="font-semibold underline">{t("cuentaReintentar")}</button></p>}
-      {lista === null ? (!error && <div aria-busy="true" className="h-12 animate-pulse rounded-xl bg-slate-100" />) : lista.length === 0 ? (
+      {lista === null ? (!error && (
+        // La forma de una fila ya cargada: avatar, nombre y el botón de desbloquear.
+        <div role="status" aria-busy="true" className="ccr-delayed-loading flex items-center gap-3 rounded-xl border border-[#e5e7eb] bg-white px-3 py-2.5">
+          <Skeleton className="h-9 w-9 shrink-0 rounded-full" immediate />
+          <Skeleton className="h-3.5 flex-1 rounded-full" immediate />
+          <Skeleton className="h-7 w-24 shrink-0 rounded-full" immediate />
+        </div>
+      )) : lista.length === 0 ? (
         <p className="text-sm text-[#68778d]">{t("cuentaVacio")}</p>
       ) : (
         <ul className="flex flex-col gap-2">

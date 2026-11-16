@@ -460,7 +460,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
                   <li key={l.id} className="text-xs border-l-2 border-[#e5e7eb] pl-3">
                     <p className="font-medium text-[#162543]">{auditLabel(l.action)}</p>
                     <p className="text-[#6b7280]">
-                      {l.admin_name ?? "Sistema"} · {new Date(l.created_at).toLocaleString("es-CR")}
+                      {formatFullPersonName(l.admin_name) || "Sistema"} · {new Date(l.created_at).toLocaleString("es-CR")}
                     </p>
                     {l.reason && l.action !== "identity_document_changed" && <p className="text-[#374151] mt-0.5 italic">&quot;{l.reason}&quot;</p>}
                   </li>

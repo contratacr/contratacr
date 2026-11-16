@@ -81,6 +81,7 @@ function setup(size = 1203, options: { authorized?: boolean; failTable?: string;
     "@/lib/support/current-names":{withCurrentSupportNames:async(_db:any,tickets:any,messages:any=[])=>({tickets,messages})},
     "@/lib/support/adjuntos":{firmarAdjuntos:async(_db:any,rows:any)=>rows},
     "@/lib/profiles/current-names":{getCurrentProfileNames:async()=>new Map()},
+    "@/lib/display-name":load("src/lib/display-name.ts"),
   };
   return {tables,db,mocks,route:(file:string)=>load(`src/app/api/admin/${file}/route.ts`,mocks)};
 }

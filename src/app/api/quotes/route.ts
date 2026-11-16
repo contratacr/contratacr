@@ -1,4 +1,4 @@
-import { getProfessionalDisplayName } from "@/lib/display-name";
+import { formatFullPersonName, getProfessionalDisplayName } from "@/lib/display-name";
 import { recordGrowthConversion } from "@/lib/analytics/growth-server";
 import { NextRequest, NextResponse } from "next/server";
 import { mensajeDeError } from "@/lib/api-errors";
@@ -40,7 +40,7 @@ async function whoAmI() {
   const admin = createAdminClient();
   const { data: pro } = await admin.from("professionals").select("id, business_name, profiles(full_name)").eq("profile_id", user.id).maybeSingle();
   const proName = (pro?.profiles as { full_name?: string | null } | null)?.full_name ?? null;
-  const proFullName = (pro?.business_name as string | null)?.trim() || proName;
+  const proFullName = (pro?.business_name as string | null)?.trim() || formatFullPersonName(proName) || null;
   const proDisplayName = getProfessionalDisplayName(proName ?? "", pro?.business_name ?? undefined).primaryDesktop;
   return { user, admin, proId: pro?.id ?? null, proName, proDisplayName, proFullName };
 }
@@ -79,7 +79,7 @@ export async function GET(req: NextRequest) {
       .in("id", ajenos);
     for (const pro of (otros ?? []) as Array<Record<string, unknown>>) {
       const perfil = pro.profiles as { full_name?: string | null } | null;
-      completos.set(pro.id as string, (pro.business_name as string | null)?.trim() || perfil?.full_name || null);
+      completos.set(pro.id as string, (pro.business_name as string | null)?.trim() || formatFullPersonName(perfil?.full_name) || null);
       nombres.set(pro.id as string, getProfessionalDisplayName(perfil?.full_name ?? "", pro.business_name as string | undefined).primaryDesktop);
     }
   }

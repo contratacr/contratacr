@@ -7,6 +7,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { getCantonById, getProvinceById } from "@/lib/data/cr-geography";
 import { emptyPublicationStats, readPublicationStats } from "@/lib/admin/publication-stats";
+import { formatFullPersonName } from "@/lib/display-name";
 
 // /api/admin/marketplace — the job board and the offers board as the owner sees
 // them: every publication with the account that created it, its status, its
@@ -88,8 +89,8 @@ function creatorOf(row: CreatorRow | undefined) {
     id: row.id,
     profileId: row.profile_id,
     slug: row.slug,
-    name: (row.business_name ?? "").trim().length > 1 ? (row.business_name as string).trim() : row.profiles?.full_name || "Profesional",
-    personName: row.profiles?.full_name ?? null,
+    name: (row.business_name ?? "").trim().length > 1 ? (row.business_name as string).trim() : formatFullPersonName(row.profiles?.full_name) || "Profesional",
+    personName: formatFullPersonName(row.profiles?.full_name) || null,
     email: row.profiles?.email ?? null,
     avatarUrl: row.profiles?.avatar_url ?? null,
     verified: row.verification_status === "verified",

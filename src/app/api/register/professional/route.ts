@@ -10,6 +10,7 @@ import { createClient as createServerClient } from "@/lib/supabase/server";
 import { runIdentityVerification } from "@/lib/verification/run-verification";
 import { reconcileProfileEmail } from "@/lib/auth/reconcile-profile-email";
 import { parseMoneyAmount } from "@/lib/money-limits";
+import { formatServicePrice, type PricingType } from "@/lib/pricing";
 import { LONG_TEXT_MAX_LENGTH, NAME_MAX_LENGTH, PROFILE_BIO_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
 import { anyVideoConsultCategory, getCategoryLabel } from "@/lib/data/categories";
 import { auditUserAction } from "@/lib/audit/user-action";
@@ -23,8 +24,9 @@ type SeedService = {
   name: string;
   category: string;
   active: boolean;
-  priceType: "a_convenir";
+  priceType: PricingType;
   price: string;
+  priceAmount?: number;
 };
 
 function uniqueServices(category: string, professions: unknown): string[] {
@@ -38,16 +40,18 @@ function isCountryCoverageArea(area: unknown): boolean {
   return (item.level ?? (item.cantonId ? "canton" : "provincia")) === "country";
 }
 
-function seedServicesFromProfessions(professions: string[]): SeedService[] {
-  return professions.map((categoryId, index) => ({
-    id: `svc_${Date.now()}_${index}_${crypto.randomUUID().slice(0, 8)}`,
-    name: getCategoryLabel(categoryId),
-    category: categoryId,
-    active: true,
-    priceType: "a_convenir",
-    price: "Consultar precio",
-  }));
+// La tarifa del registro va en el servicio PRINCIPAL, con su unidad (por hora,
+// por proyecto…), igual que si se pusiera en el editor de servicios. Antes solo
+// existía "por hora" y quedaba fuera del servicio: el editor decía "Consultar
+// precio" mientras la tarjeta mostraba la tarifa (15-nov-2026).
+function seedServicesFromProfessions(professions: string[], tarifa?: { category: string; amount: number; type: PricingType } | null): SeedService[] {
+  return professions.map((categoryId, index) => {
+    const base = { id: `svc_${Date.now()}_${index}_${crypto.randomUUID().slice(0, 8)}`, name: getCategoryLabel(categoryId), category: categoryId, active: true };
+    if (tarifa && categoryId === tarifa.category) return { ...base, priceType: tarifa.type, priceAmount: tarifa.amount, price: formatServicePrice(tarifa.amount, tarifa.type) ?? "Consultar precio" };
+    return { ...base, priceType: "a_convenir" as const, price: "Consultar precio" };
+  });
 }
+const UNIDADES_DE_TARIFA: PricingType[] = ["por_hora", "por_consulta", "por_proyecto", "por_dia", "paquete"];
 
 function hasStoredServices(services: unknown): boolean {
   return Array.isArray(services) && services.length > 0;
@@ -109,6 +113,7 @@ export async function POST(req: Request) {
       bio,
       yearsExperience,
       hourlyRate,
+      rateUnit,
       lat,
       lng,
       // email/fullName/cedula/photoUrl come from the body but we verify userId from session
@@ -156,7 +161,11 @@ export async function POST(req: Request) {
     const coverageCountry = !!bodyCoverageCountry;
     const videoconsulta = anyVideoConsultCategory(professions) && !!bodyVideoconsulta;
     const coverageAreas = rawCoverageAreas.filter((area) => !isCountryCoverageArea(area) || coverageCountry);
-    const seededServices = seedServicesFromProfessions(professions);
+    const montoTarifa = parseMoneyAmount(hourlyRate);
+    const unidadTarifa: PricingType = UNIDADES_DE_TARIFA.includes(rateUnit) ? rateUnit : "por_hora";
+    const seededServices = seedServicesFromProfessions(professions, montoTarifa ? { category, amount: montoTarifa, type: unidadTarifa } : null);
+    // hourly_rate solo significa "por hora": con otra unidad el precio vive en el servicio.
+    const tarifaPorHora = unidadTarifa === "por_hora" ? montoTarifa : null;
 
     // Optional columns (migrations 019/021/022/030) — if the DB hasn't been
     // migrated yet, retry the write without them instead of failing registration.
@@ -315,7 +324,7 @@ export async function POST(req: Request) {
         whatsapp,
         allow_phone_call: allowPhoneCall !== false,
         years_experience: yearsExperience ? parseInt(yearsExperience, 10) : null,
-        hourly_rate: parseMoneyAmount(hourlyRate),
+        hourly_rate: tarifaPorHora,
         service_type: serviceType ?? "mobile",
         address: address ?? null,
         ...writeSourceColumns(req),
@@ -391,7 +400,7 @@ export async function POST(req: Request) {
       // Preguntado en el registro; viene puesto salvo que lo apaguen ahí.
       allow_phone_call: allowPhoneCall !== false,
       years_experience: yearsExperience ? parseInt(yearsExperience, 10) : null,
-      hourly_rate: parseMoneyAmount(hourlyRate),
+      hourly_rate: tarifaPorHora,
       service_type: serviceType ?? "mobile",
       address: address ?? null,
       slug,

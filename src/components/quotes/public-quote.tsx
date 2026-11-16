@@ -9,6 +9,7 @@ import { VerificationInfo } from "@/components/ui/verification-info";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatColones } from "@/lib/pricing";
 import { getInitials } from "@/lib/utils";
+import { formatFullPersonName } from "@/lib/display-name";
 import { cldThumb } from "@/lib/cloudinary";
 import { isQuoteExpired, type Quote } from "@/lib/quotes";
 import { Totales } from "@/components/quotes/quote-detail-modal";
@@ -76,7 +77,7 @@ export function PublicQuote({ locale, data }: { locale: string; data: PublicQuot
           {(quote.title || quote.client_name) && (
             <div className="mb-4">
               {quote.title && <h1 className="text-[20px] font-extrabold leading-snug text-[#162543]">{quote.title}</h1>}
-              {quote.client_name && <p className="mt-1 text-[14px] text-[#52627a]">{t("clientLabel")}: <span className="font-semibold text-[#162543]">{quote.client_name}</span></p>}
+              {quote.client_name && <p className="mt-1 text-[14px] text-[#52627a]">{t("clientLabel")}: <span className="font-semibold text-[#162543]">{formatFullPersonName(quote.client_name)}</span></p>}
             </div>
           )}
           <div className="divide-y divide-[#eef2f6] overflow-hidden rounded-2xl border border-[#e5e7eb]">

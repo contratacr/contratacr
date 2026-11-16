@@ -49,10 +49,13 @@ export const EMAIL_LOGO_DARK_MODE_STYLES = `
 
 export function emailLogoMarkup(origin = "https://contratacr.com") {
   const site = origin.replace(/\/$/, "");
-  return `
+  // El color propio del bloque es lo que hace que Outlook.com le ponga
+  // data-ogsc al oscurecer el correo: sin él, [data-ogsc] .ccr-dark-logo no
+  // encontraba a quién aplicarse y salía el logo azul marino sobre fondo oscuro.
+  return `<div class="ccr-email-logo" style="color:#162543;">
     <img class="ccr-light-logo" src="${site}/brand/email-logo-light.png?v=2" width="167" height="39" alt="ContrataCR" style="display:block;border:0;outline:none;text-decoration:none;width:167px;height:auto;margin:0;">
     <img class="ccr-dark-logo" src="${site}/brand/email-logo-dark.png?v=2" width="167" height="39" alt="ContrataCR" style="display:none;border:0;outline:none;text-decoration:none;width:167px;height:auto;margin:0;max-height:0;overflow:hidden;mso-hide:all;">
-  `;
+  </div>`;
 }
 
 /**
@@ -72,7 +75,7 @@ export function brandedEmailDocument({ title, bodyHtml, origin = "https://contra
       <style>${browserPage ? ":root{color-scheme:light} .ccr-dark-logo{display:none!important} .ccr-light-logo{display:block!important}" : EMAIL_LOGO_DARK_MODE_STYLES}</style>
     </head>
     <body style="margin:0;padding:0;background:#ffffff;color:#162543;font-family:Arial,Helvetica,sans-serif">
-      <div class="ccr-email-background" style="padding:0">
+      <div class="ccr-email-background" style="padding:0;color:#162543">
         <div class="ccr-email-card ccr-email-content" style="box-sizing:border-box;width:100%;max-width:600px;margin:0 auto;padding:44px 28px 36px;background:#fff">
           <div style="margin:0 0 36px">${emailLogoMarkup(origin)}</div>
           ${bodyHtml}

@@ -182,11 +182,15 @@ for (const ambiente of ["web", "app"] as const) {
     await main.getByRole("button", { name: "Busca tu servicio" }).click();
     await page.getByRole("dialog").getByRole("textbox", { name: "Buscar servicio...", exact: true }).fill("Desarrollo web");
     await page.getByRole("button", { name: /^Desarrollo web/ }).or(page.getByRole("option", { name: /^Desarrollo web/ })).first().click();
-    await main.getByRole("button", { name: /^Provincia$/ }).first().click();
+    // «Ubicación del servicio»: la misma pieza del panel (AttentionModalities).
+    const ubicacion = main.locator('[data-field="location"]');
+    await ubicacion.getByRole("switch", { name: /Atiendo a domicilio/ }).click();
+    await ubicacion.getByRole("button", { name: "Elegí una provincia", exact: true }).click();
     await page.getByRole("option", { name: /^Alajuela$/ }).first().click();
-    await main.getByRole("button", { name: /^Cantón$/ }).first().click();
+    await ubicacion.getByRole("button", { name: "Elegí un cantón", exact: true }).click();
     await page.getByRole("option", { name: /^Atenas$/ }).first().click();
-    await main.getByRole("button", { name: "Guardar lugar", exact: true }).click();
+    await ubicacion.getByRole("button", { name: "Agregar zona", exact: true }).click();
+    await expect(ubicacion.getByText("Atenas, Alajuela", { exact: true })).toBeVisible();
     const tel = main.locator('input[type="tel"]');
     if (!(await tel.inputValue())) await tel.fill("88885555");
     await main.getByRole("button", { name: /^Continuar$/ }).click();

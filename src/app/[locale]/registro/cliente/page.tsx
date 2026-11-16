@@ -29,6 +29,7 @@ import { CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { SuccessIcon } from "@/components/ui/success-icon";
 import { cn } from "@/lib/utils";
 import { getInitials } from "@/lib/utils";
+import { formatFullPersonName } from "@/lib/display-name";
 import { detectSocialOnly, providerLabel } from "@/lib/auth-method";
 import { useRedirectIfRegistered } from "@/hooks/use-redirect-if-registered";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
@@ -280,7 +281,7 @@ export default function RegisterClientPage() {
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-[#009FD9] font-semibold">{t("identityConfirmed")}</p>
-                  <p className="text-sm font-bold text-[#162543] truncate">{fullName || user.email}</p>
+                  <p className="text-sm font-bold text-[#162543] truncate">{formatFullPersonName(fullName) || user.email}</p>
                 </div>
                 <CheckCircle2 className="h-5 w-5 text-[#009FD9] shrink-0" />
               </div>

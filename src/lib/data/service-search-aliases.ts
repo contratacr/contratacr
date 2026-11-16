@@ -122,7 +122,7 @@ export const SERVICE_SEARCH_ALIASES: Record<string, string[]> = {
   instalaciones_y_armado_de_muebles: ["armado de muebles", "ensamblaje de muebles", "montaje de muebles", "furniture assembly"],
   ascensores_y_escaleras_electricas: ["mantenimiento de ascensores", "reparacion de elevadores", "escaleras mecanicas", "elevator maintenance"],
   cesped_sintetico: ["zacate sintetico", "grama artificial", "instalacion de cesped artificial", "artificial turf"],
-  asistente_administrativo: ["asistencia administrativa", "auxiliar administrativo", "apoyo administrativo", "administrative assistant", "servicio al cliente", "atencion al cliente", "agente de servicio al cliente", "servicio al cliente desde casa", "customer service"],
+  asistente_administrativo: ["asistencia administrativa", "auxiliar administrativo", "apoyo administrativo", "administrative assistant"],
   logistica_y_distribucion: ["distribucion de mercancias", "gestion logistica", "logistics and distribution"],
   consultoria_alimentaria: ["consultoria alimentaria", "consultoria para negocios de alimentos", "asesoria para restaurantes", "inocuidad alimentaria", "buenas practicas de manufactura de alimentos", "food business consulting"],
 

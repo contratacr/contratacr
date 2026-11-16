@@ -61,6 +61,7 @@ const handlerRules = [
   [/^\/api\/(?:appeals|report|client\/connections)(?:\/|$)/, "interaction-surfaces.spec.ts"],
   [/^\/api\/(?:check-availability|professionals|buscar)(?:\/|$)/, "search-results.spec.ts"],
   [/^\/api\/professional-cv$/, "professional-cv-runtime.spec.ts"],
+  [/^\/\[locale\]\/profesionales\/\[slug\]\/cv$/, "professional-cv-runtime.spec.ts"],
   [/^\/api\/analytics\/professional-ready$/, "meta-growth-runtime.spec.ts"],
   [/^\/api\/(?:analytics|attribution|translate|client-error)(?:\/|$)/, "product-contract.spec.ts"],
   [/^\/api\/health$/, "health.spec.ts"],

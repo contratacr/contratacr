@@ -1,5 +1,9 @@
 import { createClient } from "@/lib/supabase/client";
 import { clearStoredMode } from "@/hooks/use-mode";
+import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
+
+/** Marca de UNA recarga: la página de destino sigue diciendo "Cerrando sesión…". */
+export const MARCA_CERRANDO_SESION = "ccr:cerrando-sesion";
 
 // Module-level flag, shared across the whole client bundle — the navbar AND every
 // protected page import this same instance. It's set the INSTANT a sign-out begins
@@ -56,5 +60,9 @@ export async function signOutToHome(locale: string, options?: { accountDeletion?
     /* even if the network call fails, the local session is cleared — go home anyway */
   }
   const query = options?.accountDeletion ? `?accountDeletion=${options.accountDeletion}` : "";
-  window.location.replace(`/${locale || "es"}${query}`);
+  // UNA SOLA ESPERA (15-nov-2026): antes se iba a /es, que salta con 308 a /,
+  // y en esa segunda carga quedaba un círculo suelto después de "Cerrando
+  // sesión…". Se va directo a la portada y la página nueva mantiene el aviso.
+  try { window.sessionStorage.setItem(MARCA_CERRANDO_SESION, "1"); } catch { /* sin almacenamiento */ }
+  window.location.replace(`${rutaConIdioma(locale, "/")}${query}`);
 }

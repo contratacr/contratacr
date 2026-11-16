@@ -89,6 +89,9 @@ export type ProfessionalCardData = {
   callPhone?: string;
   /** Optional public contact email the pro opted in to show clients. */
   contactEmail?: string;
+  /** Personas distintas que lo contactaron en 30 días (lib/queries/contactos-del-mes.ts);
+   *  solo llega cuando pasa el mínimo visible. */
+  contactsThisMonth?: number;
 };
 
 interface ProfessionalCardProps {
@@ -236,6 +239,14 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
       </Link>
     );
   })();
+
+  const contactos = professional.contactsThisMonth ?? 0;
+  const contactosDelMes = (clase: string) => contactos > 0 ? (
+    <span className={clase} data-testid="professional-card-contacts-month">
+      <span className="font-bold tabular-nums text-[#162543]">{contactos}</span>
+      <span className="whitespace-nowrap">{tCard("contactsThisMonth", { count: contactos })}</span>
+    </span>
+  ) : null;
 
   const mobileMetricClass = "relative z-10 inline-flex min-w-0 w-fit shrink-0 items-center gap-1 text-[12px] font-semibold leading-none text-[#5f6f86] transition-colors hover:text-[#0089BB] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30";
   const mobileMetric = (() => {
@@ -393,12 +404,13 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
                 />
               )}
               {/* Reseñas o experiencia; el check ya acompaña al nombre. */}
-              {mobileMetric && (
+              {(mobileMetric || contactos > 0) && (
                 <div
                   data-testid="professional-card-mobile-meta-row"
-                  className="mt-1.5 flex min-w-0 items-center justify-between gap-3 lg:hidden"
+                  className="mt-1.5 flex min-w-0 items-center gap-3 lg:hidden"
                 >
                   {mobileMetric}
+                  {contactosDelMes(mobileMetricClass)}
                 </div>
               )}
             </div>
@@ -420,9 +432,10 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
             </div>
             </>
           )}
-          {desktopMetric && (
+          {(desktopMetric || contactos > 0) && (
           <div className="mt-1.5 hidden min-w-0 items-center gap-3 lg:flex">
               {desktopMetric}
+              {contactosDelMes(desktopMetricClass)}
           </div>
           )}
         </div>
