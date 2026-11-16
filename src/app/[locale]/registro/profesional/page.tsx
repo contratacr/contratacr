@@ -1441,9 +1441,8 @@ export default function RegisterProfessionalPage() {
                     video={videoCoverageCountry}
                     onVideoChange={(next) => { setVideoCoverageCountry(next); setLocationError(null); }}
                   />
-                </div>
-
                   {locationError && <p role="alert" className="text-xs text-red-500">{locationError}</p>}
+                </div>
               </section>
 
               {/* WhatsApp */}
