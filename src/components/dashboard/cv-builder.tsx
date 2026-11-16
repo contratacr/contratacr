@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocale } from "next-intl";
-import { AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, Copy, Download, FileText, FileUp, Lightbulb, Mail, Plus, RotateCcw, Trash2 } from "lucide-react";
+import { AlertCircle, Check, CheckCircle2, ChevronLeft, ChevronRight, Copy, Download, FileText, FileUp, Lightbulb, Mail, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { AccionesAlPie } from "@/components/ui/acciones-al-pie";
 import { Skeleton } from "@/components/ui/content-loading";
 import { Link } from "@/i18n/navigation";
@@ -76,7 +76,11 @@ function Tarjeta({ titulo, ayuda, children, accion }: { titulo: string; ayuda?: 
 
 function Segmentos<T extends string>({ valor, opciones, alCambiar, etiqueta }: { valor: T; opciones: { id: T; texto: string }[]; alCambiar: (v: T) => void; etiqueta: string }) {
   return (
-    <div role="radiogroup" aria-label={etiqueta} className="inline-flex rounded-full bg-[#eef3f7] p-1">
+    // La etiqueta se ve: sin ella «Español / English» y «Clásica / Moderna» no
+    // decían que eran el idioma y el diseño del documento (16-nov-2026).
+    <div className="flex flex-col gap-1.5">
+    <span className="text-xs font-semibold text-[#52627a]">{etiqueta}</span>
+    <div role="radiogroup" aria-label={etiqueta} className="inline-flex w-fit rounded-full bg-[#eef3f7] p-1">
       {opciones.map((o) => (
         <button
           key={o.id}
@@ -89,6 +93,7 @@ function Segmentos<T extends string>({ valor, opciones, alCambiar, etiqueta }: {
           {o.texto}
         </button>
       ))}
+    </div>
     </div>
   );
 }
@@ -327,7 +332,7 @@ function Pasos<T extends PasoCv | PasoCarta>({ pasos, actual, hechos, alElegir, 
                   paso === actual ? "bg-[#009FD9] text-white" : hechos.has(paso) ? "bg-[#d1f0e0] text-[#067647]" : "bg-[#eef3f7] text-[#52627a]",
                 )}
               >
-                {i + 1}
+                {hechos.has(paso) && paso !== actual ? <Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden /> : i + 1}
               </span>
               <span className="sr-only @[640px]:not-sr-only">{NOMBRE_PASO[paso][en ? "en" : "es"]}</span>
               {hechos.has(paso) && paso !== actual && <span className="sr-only">{en ? " (done)" : " (completo)"}</span>}
@@ -525,13 +530,13 @@ function Editor({ pro, clave, documento, nombreCuenta, correo }: { pro: ProData;
     try {
       const { pdfDelCv, pdfDeLaCarta } = await import("@/lib/cv/pdf-documento");
       const blob = pestana === "cv" ? await pdfDelCv(cv) : await pdfDeLaCarta(cv, carta);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = nombreDeArchivo(cv.nombre, pestana === "cv" ? "CV" : "Carta", cv.idioma);
-      document.body.appendChild(a); a.click(); a.remove();
-      window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
-    } catch {
+      // En el app un <a download> no hace nada (16-nov-2026): saveFile entrega
+      // el archivo al sistema (guardar o compartir), igual que las cotizaciones.
+      const { saveFile } = await import("@/lib/file-download");
+      await saveFile(blob, nombreDeArchivo(cv.nombre, pestana === "cv" ? "CV" : "Carta", cv.idioma));
+    } catch (error) {
+      // Cerrar la hoja de compartir sin elegir nada no es un error.
+      if (/cancel/i.test(String((error as Error)?.message ?? error))) return;
       avisar(en ? "The PDF couldn't be created. Try again." : "No se pudo crear el PDF. Probá de nuevo.");
     } finally {
       setGenerando(false);
@@ -689,7 +694,7 @@ function Editor({ pro, clave, documento, nombreCuenta, correo }: { pro: ProData;
     <div className="grid gap-4 rounded-2xl border border-[#e5e7eb] bg-white p-4 sm:p-5">
       <div className="flex flex-wrap items-center gap-2">
         <Segmentos etiqueta={en ? "Document language" : "Idioma del documento"} valor={cv.idioma} alCambiar={cambiarIdioma} opciones={[{ id: "es", texto: "Español" }, { id: "en", texto: "English" }]} />
-        <Segmentos<Plantilla> etiqueta={en ? "Template" : "Plantilla"} valor={cv.plantilla} alCambiar={(plantilla) => setCv({ plantilla })} opciones={[{ id: "clasica", texto: en ? "Classic" : "Clásica" }, { id: "moderna", texto: en ? "Modern" : "Moderna" }]} />
+        <Segmentos<Plantilla> etiqueta={en ? "Design" : "Diseño"} valor={cv.plantilla} alCambiar={(plantilla) => setCv({ plantilla })} opciones={[{ id: "clasica", texto: en ? "Classic" : "Clásica" }, { id: "moderna", texto: en ? "Modern" : "Moderna" }]} />
       </div>
       <div>
         <p className="mb-2 text-[13px] font-black text-[#162543]">{en ? "Review before sending" : "Revisión antes de enviar"}</p>
