@@ -80,6 +80,10 @@ test.describe("service requests require an explicit profile save", () => {
       // No cross-account dismissal, even if a client submits somebody else's ID.
       await page.request.patch("/api/categories/requests", { data: { suggestionId: suggestion!.id, profile_id: b.id } });
       expect((await db.from("service_suggestion_requests").select("dismissed").eq("suggestion_id", suggestion!.id).eq("profile_id", b.id).single()).data?.dismissed).toBe(false);
+      // That PATCH dismissed the caller's own invitation (the X hides it for
+      // good), so restore it to keep exercising the Services card below.
+      expect((await db.from("service_suggestion_requests").select("dismissed").eq("suggestion_id", suggestion!.id).eq("profile_id", a.id).single()).data?.dismissed).toBe(true);
+      await db.from("service_suggestion_requests").update({ dismissed: false }).eq("suggestion_id", suggestion!.id).eq("profile_id", a.id);
       await gotoOK(page, "/dashboard/profesional?tab=home&mode=offer");
       await expect(page.getByTestId("service-request-invitations")).toHaveCount(0);
       await gotoOK(page, "/dashboard/profesional?tab=services&mode=offer");
@@ -119,6 +123,12 @@ test.describe("service requests require an explicit profile save", () => {
       await expect(dialog).toBeVisible();
       await dialog.getByRole("button", { name: "Cancelar", exact: true }).filter({ visible: true }).first().click();
       await expect(dialog).toHaveCount(0);
+      // The X closes the card for good; the notification link still works.
+      await card.getByTestId("service-request-invitation-close").click();
+      await expect(card).toHaveCount(0);
+      await expect.poll(async () => (await db.from("service_suggestion_requests").select("dismissed").eq("suggestion_id", suggestion!.id).eq("profile_id", a.id).single()).data?.dismissed).toBe(true);
+      await gotoOK(page, "/dashboard/profesional?tab=services&mode=offer");
+      await expect(page.getByTestId("service-request-invitations")).toHaveCount(0);
       const href = notificationActionHref(matching[0], undefined, "en")!;
       expect(href).toContain("serviceRequest=");
       await gotoOK(page, href);
