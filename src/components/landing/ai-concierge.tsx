@@ -155,19 +155,19 @@ const COPY = {
     reset: "Nuevo chat",
     resetHint: "Limpia esta conversacion y empieza de cero.",
     emptyTitle: "¿En qué te ayudo?",
-    emptySubtitle: "Te guío dentro de ContrataCR con información de la app: profesionales, proyectos, empleos, promociones y tu cuenta.",
+    emptySubtitle: "Te guío dentro de ContrataCR con información de la app: profesionales, solicitudes, empleos, promociones y tu cuenta.",
     // Quien NO es profesional: buscar, mirar, pedir y la puerta para ofrecer.
     topics: [
       { label: "Buscar un profesional", example: "Necesito un profesional", prompt: "Quiero buscar un profesional", icon: "search" },
       { label: "Empleos y promociones", example: "¿Dónde veo empleos y promociones?", prompt: "¿Dónde veo empleos y promociones?", icon: "jobs" },
-      { label: "Proyectos", example: "Crear o buscar proyectos", prompt: "¿Cómo creo o busco proyectos?", icon: "request" },
+      { label: "Solicitudes", example: "Crear o buscar solicitudes", prompt: "¿Cómo creo o busco solicitudes?", icon: "request" },
       { label: "Ofrecer mis servicios", example: "Quiero ofrecer mis servicios", prompt: "Quiero ofrecer mis servicios", icon: "offer" },
       { label: "Cómo funciona la app", example: "¿Cómo funciona ContrataCR?", prompt: "¿Cómo funciona ContrataCR?", icon: "how" },
       { label: "Soporte", example: "Necesito ayuda con mi cuenta", prompt: "Necesito soporte", icon: "support" },
     ] satisfies GuidedTopic[],
     // El profesional: todo lo que publica, y ya no «ofrecer mis servicios».
     topicsPro: [
-      { label: "Publicar un proyecto", example: "Quiero publicar un proyecto", prompt: "Quiero publicar un proyecto", icon: "request" },
+      { label: "Publicar una solicitud", example: "Quiero publicar una solicitud", prompt: "Quiero publicar una solicitud", icon: "request" },
       { label: "Publicar un empleo", example: "Quiero publicar un empleo", prompt: "Quiero publicar un empleo", icon: "jobs" },
       { label: "Publicar una promoción", example: "Quiero publicar una promoción", prompt: "Quiero publicar una promoción", icon: "deal" },
       { label: "Agregar un servicio", example: "Quiero agregar un servicio", prompt: "Quiero agregar un servicio", icon: "service" },
@@ -196,13 +196,13 @@ const COPY = {
     topics: [
       { label: "Find a professional", example: "I need a professional", prompt: "I want to find a professional", icon: "search" },
       { label: "Jobs and promotions", example: "Where do I see jobs and promotions?", prompt: "Where do I see jobs and promotions?", icon: "jobs" },
-      { label: "Projects", example: "Create or find projects", prompt: "How do I create or find projects?", icon: "request" },
+      { label: "Requests", example: "Create or find requests", prompt: "How do I create or find requests?", icon: "request" },
       { label: "Offer my services", example: "I want to offer my services", prompt: "I want to offer my services", icon: "offer" },
       { label: "How the app works", example: "How does ContrataCR work?", prompt: "How does ContrataCR work?", icon: "how" },
       { label: "Support", example: "I need help with my account", prompt: "I need support", icon: "support" },
     ] satisfies GuidedTopic[],
     topicsPro: [
-      { label: "Post a project", example: "I want to publish a project", prompt: "I want to publish a project", icon: "request" },
+      { label: "Post a request", example: "I want to post a request", prompt: "I want to post a request", icon: "request" },
       { label: "Post a job", example: "I want to post a job", prompt: "I want to post a job", icon: "jobs" },
       { label: "Post a promotion", example: "I want to publish a promotion", prompt: "I want to publish a promotion", icon: "deal" },
       { label: "Add a service", example: "I want to add a service", prompt: "I want to add a service", icon: "service" },
@@ -533,7 +533,7 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
   }
 
   function navigate(href: string) {
-    const protectedDestination = href.includes("/publicar-proyecto") || href.includes("/dashboard/");
+    const protectedDestination = href.includes("/publicar-solicitud") || href.includes("/dashboard/");
     if (!user && protectedDestination) storePendingIntent(href);
     let destination = localizedDestination(href, lang);
     if (destination.startsWith("/") && !destination.startsWith("//")) {

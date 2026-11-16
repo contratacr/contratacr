@@ -351,7 +351,7 @@ export async function POST(req: Request) {
     // siguen leyendo; lo que se retira es la puerta para crear nuevas.
     if (projectId && professionalId) {
       const { data: project } = await db.from("projects").select("id, client_id, title").eq("id", projectId).maybeSingle();
-      if (!project) return NextResponse.json({ error: "Proyecto no encontrado." }, { status: 404 });
+      if (!project) return NextResponse.json({ error: "Solicitud no encontrada." }, { status: 404 });
       clientId = project.client_id; resolvedProjectId = project.id; subject = project.title;
     }
 

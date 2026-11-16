@@ -41,9 +41,9 @@ type NotificationLocale = "es" | "en";
 
 const TITLES: Record<string, Record<NotificationLocale, string>> = {
   review_received: { es: "Nueva reseña recibida", en: "New review received" },
-  new_project: { es: "Nuevo proyecto", en: "New project" },
+  new_project: { es: "Nueva solicitud", en: "New request" },
   new_job: { es: "Nueva vacante", en: "New job" },
-  project_cancelled: { es: "Proyecto cancelado", en: "Project cancelled" },
+  project_cancelled: { es: "Solicitud cancelada", en: "Request cancelled" },
   support_reply: { es: "Respuesta de soporte", en: "Support reply" },
   verification: { es: "Actualización de verificación", en: "Verification update" },
   verification_approved: { es: "¡Tu identidad fue verificada!", en: "Your identity was verified!" },
@@ -217,7 +217,7 @@ function notificationCopy(notification: NotificationCopyInput, locale: string) {
       /^Un cliente public[oó] ["“](.+?)["”] en (.+?)\.$/i,
       /^A client published ["“](.+?)["”] in (.+?)\.$/i,
     ]);
-    const project = stringData(data, "project_title") || legacy?.[1] || (en ? "a new project" : "un nuevo proyecto");
+    const project = stringData(data, "project_title") || legacy?.[1] || (en ? "a new request" : "una nueva solicitud");
     const categoryId = stringData(data, "category_id");
     const category = categoryId
       ? getCategoryLabel(categoryId, language)
@@ -226,10 +226,10 @@ function notificationCopy(notification: NotificationCopyInput, locale: string) {
   }
 
   if (["project_completed", "project_cancelled", "project_deleted"].includes(notification.type)) {
-    const project = stringData(data, "project_title") || quotedValue(normalizedMessage) || (en ? "the project" : "el proyecto");
+    const project = stringData(data, "project_title") || quotedValue(normalizedMessage) || (en ? "the request" : "la solicitud");
     if (notification.type === "project_completed") return { title, message: en ? `The client confirmed completion of "${project}". Great work.` : `El cliente confirmó la finalización de "${project}". Buen trabajo.` };
     const deleted = notification.type === "project_deleted";
-    return { title, message: en ? `The client ${deleted ? "deleted" : "cancelled"} the project "${project}". It is no longer active.` : `El cliente ${deleted ? "eliminó" : "canceló"} la solicitud "${project}". Ya no está activa.` };
+    return { title, message: en ? `The client ${deleted ? "deleted" : "cancelled"} the request "${project}". It is no longer active.` : `El cliente ${deleted ? "eliminó" : "canceló"} la solicitud "${project}". Ya no está activa.` };
   }
 
   if (notification.type === "support_reply") {

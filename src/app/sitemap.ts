@@ -48,7 +48,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const crudo = (data as { updated_at?: string } | null)?.updated_at;
     if (crudo) ultimoCambio = new Date(crudo);
   } catch { /* sin fecha es mejor que una fecha falsa */ }
-  const fijos = ["", "/profesionales", "/servicios", "/promociones", "/empleos", "/proyectos", "/como-funciona", "/ayuda", "/mejorar-mi-perfil", "/verificacion-de-identidad", "/terminos", "/privacidad"];
+  const fijos = ["", "/profesionales", "/servicios", "/promociones", "/empleos", "/solicitudes", "/como-funciona", "/ayuda", "/mejorar-mi-perfil", "/verificacion-de-identidad", "/terminos", "/privacidad"];
   for (const p of fijos) for (const l of IDIOMAS) out.push({ url: `${APP_URL}${rutaConIdioma(l, `${p}` || "/")}`, lastModified: ultimoCambio, changeFrequency: "daily", priority: p === "" ? 1 : 0.8 });
 
   try {
@@ -96,7 +96,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const proyectos = await cargarProyectosPublicos(2000);
     for (const proyecto of proyectos) {
-      for (const l of IDIOMAS) out.push({ url: `${APP_URL}${rutaConIdioma(l, `/proyectos/${tramoFicha(proyecto.title ?? "", proyecto.id)}` || "/")}`, lastModified: proyecto.created_at ? new Date(proyecto.created_at) : ultimoCambio, changeFrequency: "weekly", priority: 0.6 });
+      for (const l of IDIOMAS) out.push({ url: `${APP_URL}${rutaConIdioma(l, `/solicitudes/${tramoFicha(proyecto.title ?? "", proyecto.id)}` || "/")}`, lastModified: proyecto.created_at ? new Date(proyecto.created_at) : ultimoCambio, changeFrequency: "weekly", priority: 0.6 });
     }
   } catch (err) {
     console.error("[sitemap] proyectos:", err);

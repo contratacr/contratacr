@@ -92,7 +92,7 @@ test.describe("sugerencia de servicio al publicar", () => {
 
   test("la descripción del proyecto sugiere el servicio y con un toque queda elegido", async ({ page }) => {
     await resetAuth(page);
-    await gotoOK(page, "/publicar-proyecto");
+    await gotoOK(page, "/publicar-solicitud");
     await page.locator("#publish-project-title").waitFor({ timeout: 30_000 });
     await waitForInteractivePage(page);
     await page.getByRole("button", { name: "Necesito un profesional", exact: true }).click();

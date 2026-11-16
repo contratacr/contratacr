@@ -468,6 +468,12 @@ function Editor({ pro, clave, documento, nombreCuenta, correo }: { pro: ProData;
   const pestana = documento;
   const [pasoCv, setPasoCv] = useState<PasoCv>("contacto");
   const [pasoCarta, setPasoCarta] = useState<PasoCarta>("puesto");
+  // El ✓ es "ya pasaste por aquí y quedó completo", no "el dato existe": al
+  // abrir por primera vez el CV viene lleno desde el perfil y todos los pasos
+  // salían marcados sin haberlos visto (16-nov-2026). Se anota el paso que se
+  // deja al moverse.
+  const [visitados, setVisitados] = useState<Set<string>>(() => new Set());
+  const dejar = (p: string) => setVisitados((v) => (v.has(p) ? v : new Set(v).add(p)));
   const [verHoja, setVerHoja] = useState(false);
   const [aviso, setAviso] = useState("");
   const [generando, setGenerando] = useState(false);
@@ -498,11 +504,11 @@ function Editor({ pro, clave, documento, nombreCuenta, correo }: { pro: ProData;
     ["educacion", cv.educacion.some((e) => e.title.trim())],
     ["habilidades", cv.habilidades.length >= 4 && cv.habilidades.length <= LIMITES.habilidades],
     ["perfil", cv.resumen.trim().length >= 80],
-  ] as [PasoCv, boolean][]).filter(([, ok]) => ok).map(([p]) => p)), [cv]);
+  ] as [PasoCv, boolean][]).filter(([p, ok]) => ok && visitados.has(`cv:${p}`)).map(([p]) => p)), [cv, visitados]);
   const hechosCarta = useMemo(() => new Set<PasoCarta>(([
     ["puesto", !!carta.puesto.trim()],
     ["contenido", !revisarCarta(carta).some((a) => a.id === "corchetes")],
-  ] as [PasoCarta, boolean][]).filter(([, ok]) => ok).map(([p]) => p)), [carta]);
+  ] as [PasoCarta, boolean][]).filter(([p, ok]) => ok && visitados.has(`carta:${p}`)).map(([p]) => p)), [carta, visitados]);
 
   const irA = (accion: () => void) => { accion(); window.setTimeout(() => arriba.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 0); };
   const pasos: string[] = pestana === "cv" ? PASOS_CV : PASOS_CARTA;
@@ -510,6 +516,7 @@ function Editor({ pro, clave, documento, nombreCuenta, correo }: { pro: ProData;
   const indice = pasos.indexOf(paso);
   const mover = (delta: number) => irA(() => {
     const siguiente = pasos[Math.max(0, Math.min(pasos.length - 1, indice + delta))];
+    dejar(`${pestana}:${paso}`);
     if (pestana === "cv") setPasoCv(siguiente as PasoCv); else setPasoCarta(siguiente as PasoCarta);
   });
 
@@ -721,8 +728,8 @@ function Editor({ pro, clave, documento, nombreCuenta, correo }: { pro: ProData;
     // solo cuando el panel mide 980 px o más; si no, la hoja va abajo.
     <div ref={arriba} className="@container grid min-w-0 max-w-full grid-cols-[minmax(0,1fr)] scroll-mt-24 gap-4 overflow-x-clip" data-testid="cv-builder">
       {pestana === "cv"
-        ? <Pasos en={en} pasos={PASOS_CV} actual={pasoCv} hechos={hechosCv} alElegir={(p) => irA(() => setPasoCv(p))} />
-        : <Pasos en={en} pasos={PASOS_CARTA} actual={pasoCarta} hechos={hechosCarta} alElegir={(p) => irA(() => setPasoCarta(p))} />}
+        ? <Pasos en={en} pasos={PASOS_CV} actual={pasoCv} hechos={hechosCv} alElegir={(p) => irA(() => { dejar(`cv:${pasoCv}`); setPasoCv(p); })} />
+        : <Pasos en={en} pasos={PASOS_CARTA} actual={pasoCarta} hechos={hechosCarta} alElegir={(p) => irA(() => { dejar(`carta:${pasoCarta}`); setPasoCarta(p); })} />}
 
       <div className="grid items-start gap-4 @[980px]:grid-cols-[minmax(0,1fr)_400px]">
         <div className="grid min-w-0 gap-4" data-testid={`cv-paso-${paso}`}>

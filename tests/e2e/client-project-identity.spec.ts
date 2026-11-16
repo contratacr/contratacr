@@ -18,7 +18,7 @@ test.describe("client and professional identity", () => {
         const missing = await page.request.post("/api/projects", { data: { categoryId: category!.id, description: "Necesito reparar una puerta", phone: "+50670009999" } });
         expect(missing.status()).toBe(400);
         expect((await missing.json()).error).toContain("identificación");
-        await gotoOK(page, `/publicar-proyecto?categoria=${category!.id}`);
+        await gotoOK(page, `/publicar-solicitud?categoria=${category!.id}`);
         await page.getByRole("button", { name: "Necesito un profesional", exact: true }).click();
         const identification = page.locator("#cedula-del-proyecto");
         await expect(identification).toBeVisible();
@@ -45,7 +45,7 @@ test.describe("client and professional identity", () => {
           await page.screenshot({ path: test.info().outputPath(`${professional ? "professional" : "client"}-${cedula.length}-${cedula[0]}-badge.png`), fullPage: true });
           await dialog.getByRole("button", { name: "Entendido", exact: true }).click();
         }
-        await gotoOK(page, `/publicar-proyecto?categoria=${category!.id}`);
+        await gotoOK(page, `/publicar-solicitud?categoria=${category!.id}`);
         await page.getByRole("button", { name: "Necesito un profesional", exact: true }).click();
         await expect(page.locator('input[type="tel"]').first()).toHaveValue(/7000/);
         await expect(page.locator("#cedula-del-proyecto")).toHaveCount(0);

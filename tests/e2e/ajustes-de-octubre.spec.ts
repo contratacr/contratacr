@@ -21,7 +21,7 @@ test.describe("invitación a publicar un proyecto", () => {
     await gotoOK(page, "/");
     await waitForInteractivePage(page);
     await expect(page.getByText("¿No sabes a quién llamar?")).toBeVisible();
-    await page.getByRole("link", { name: "Crea un proyecto" }).click();
+    await page.getByRole("link", { name: "Crea una solicitud" }).click();
     const titulo = page.locator("#publish-project-title");
     await titulo.waitFor({ timeout: 30_000 });
     // El formulario ya no lleva frases debajo del título ni de los campos.
@@ -32,17 +32,17 @@ test.describe("invitación a publicar un proyecto", () => {
 
   test("una búsqueda sin resultados ofrece publicar lo que se necesita", async ({ page }) => {
     await gotoOK(page, "/profesionales?q=zzqqxxyy-no-existe-123");
-    const publicar = page.locator('a[href*="/publicar-proyecto"]').filter({ visible: true }).first();
+    const publicar = page.locator('a[href*="/publicar-solicitud"]').filter({ visible: true }).first();
     await expect(publicar).toBeVisible({ timeout: 30_000 });
     await expect(page.getByText("Gratis · Tu número no se publica")).toHaveCount(0);
-    await expect(page.getByText(/Publica tu proyecto y los profesionales te escriben por WhatsApp/).first()).toBeVisible();
+    await expect(page.getByText(/Publica tu solicitud y los profesionales te escriben por WhatsApp/).first()).toBeVisible();
   });
 
   test("el final de los resultados ofrece publicar, con el servicio de la búsqueda", async ({ page }) => {
     // Se pide una página muy alta: la app la recorta a la última, que es donde
     // vive la tarjeta.
     await gotoOK(page, "/profesionales?categoria=desarrollo_web&page=999");
-    const tarjeta = page.locator('a[href*="/publicar-proyecto"][href*="categoria=desarrollo_web"]').filter({ visible: true }).first();
+    const tarjeta = page.locator('a[href*="/publicar-solicitud"][href*="categoria=desarrollo_web"]').filter({ visible: true }).first();
     await expect(tarjeta).toBeVisible({ timeout: 30_000 });
   });
 
@@ -55,14 +55,14 @@ test.describe("invitación a publicar un proyecto", () => {
     const raro = await request.get("/api/projects?role=destinatarios&category=" + encodeURIComponent("x'; drop table--"));
     expect((await raro.json() as { total: number }).total).toBe(0);
     if (total > 0) {
-      await gotoOK(page, "/publicar-proyecto?categoria=desarrollo_web");
+      await gotoOK(page, "/publicar-solicitud?categoria=desarrollo_web");
       await page.getByRole("button", { name: "Necesito un profesional", exact: true }).click();
-      await expect(page.getByText(/recibirán? tu proyecto/)).toBeVisible({ timeout: 30_000 });
+      await expect(page.getByText(/recibirán? tu solicitud/)).toBeVisible({ timeout: 30_000 });
     }
   });
 
   test("el tablero de Proyectos no lleva la línea aclaratoria que se quitó", async ({ page }) => {
-    await gotoOK(page, "/proyectos");
+    await gotoOK(page, "/solicitudes");
     await waitForInteractivePage(page);
     await expect(page.getByText(/Aquí la gente pide servicios/)).toHaveCount(0);
   });
@@ -80,7 +80,7 @@ test.describe("invitación a publicar un proyecto", () => {
     await expect(page.getByText("¿No te respondió?")).toBeVisible();
     const publicar = page.getByRole("link", { name: "Publicar", exact: true });
     await expect(publicar).toBeVisible();
-    expect(await publicar.getAttribute("href")).toContain("/publicar-proyecto");
+    expect(await publicar.getAttribute("href")).toContain("/publicar-solicitud");
     await page.getByRole("button", { name: "Cerrar" }).last().click();
     await expect(page.getByText("¿No te respondió?")).toHaveCount(0);
   });
@@ -90,12 +90,12 @@ test.describe("la flecha vuelve a la pantalla de origen", () => {
   test.use(TELEFONO);
 
   test("la cotización sin sesión vuelve a la página que la abrió", async ({ page }) => {
-    await page.goto("/cotizar", { referer: `${base()}/proyectos`, waitUntil: "domcontentloaded" });
+    await page.goto("/cotizar", { referer: `${base()}/solicitudes`, waitUntil: "domcontentloaded" });
     const editor = page.getByRole("dialog");
     await editor.waitFor({ timeout: 30_000 });
     await waitForInteractivePage(page);
     await editor.getByRole("button").first().click();
-    await expect.poll(() => new URL(page.url()).pathname, { timeout: 15_000 }).toBe("/proyectos");
+    await expect.poll(() => new URL(page.url()).pathname, { timeout: 15_000 }).toBe("/solicitudes");
   });
 
   test("un perfil que no existe, abierto desde la portada, ofrece volver al inicio", async ({ page }) => {

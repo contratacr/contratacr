@@ -164,7 +164,7 @@ export async function middleware(request: NextRequest) {
   if (conEs) {
     const destino = request.nextUrl.clone();
     // Y de paso el nombre viejo de la sección, para que sea UN salto.
-    destino.pathname = (pathname.slice(3) || "/").replace(/^\/ofertas(?=\/|$)/i, "/promociones").replace(/^\/promociones\/mis-ofertas(?=\/|$)/i, "/promociones/mis-promociones").replace(/^\/buscar(?=\/|$)/i, RAIZ_DE_BUSQUEDA);
+    destino.pathname = (pathname.slice(3) || "/").replace(/^\/ofertas(?=\/|$)/i, "/promociones").replace(/^\/proyectos(?=\/|$)/i, "/solicitudes").replace(/^\/publicar-proyecto(?=\/|$)/i, "/publicar-solicitud").replace(/^\/promociones\/mis-ofertas(?=\/|$)/i, "/promociones/mis-promociones").replace(/^\/buscar(?=\/|$)/i, RAIZ_DE_BUSQUEDA);
     // /es/buscar?categoria=…: la búsqueda con parámetros va directo a la bonita.
     if (/^\/profesionales\/?$/.test(destino.pathname) && (destino.searchParams.has("categoria") || destino.searchParams.has("provincia"))) {
       return NextResponse.redirect(new URL(rutaDeBusqueda(destino.searchParams), request.url), 308);
@@ -198,7 +198,7 @@ export async function middleware(request: NextRequest) {
   // /e/… (empleo) y /c/… (cotización). Se REESCRIBEN, no se redirigen: la
   // dirección se queda corta en la barra, que es de lo que se trata. La forma
   // larga de siempre sigue abriendo lo mismo.
-  const FICHAS: Record<string, string> = { o: "promociones", e: "empleos", c: "cotizacion", p: "proyectos" };
+  const FICHAS: Record<string, string> = { o: "promociones", e: "empleos", c: "cotizacion", p: "solicitudes" };
   const fichaCorta = /^\/([oecp])\/([a-z0-9][a-z0-9-]{3,80})$/i.exec(pathname);
   if (fichaCorta) {
     const locale = "es";
@@ -255,6 +255,19 @@ export async function middleware(request: NextRequest) {
     const idioma = promociones[1] ?? (request.cookies.get("NEXT_LOCALE")?.value === "en" ? "en" : "es");
     const cola = (promociones[2] ?? "").replace(/^\/mis-ofertas(?=\/|$)/i, "/mis-promociones");
     const destino = new URL(rutaConIdioma(idioma, `/promociones${cola}`), request.url);
+    destino.search = request.nextUrl.search;
+    return NextResponse.redirect(destino, 308);
+  }
+
+  // /proyectos → /solicitudes y /publicar-proyecto → /publicar-solicitud
+  // (16-nov-2026): la sección se llama Solicitudes. 308 permanente por lo mismo
+  // que /ofertas: enlaces compartidos, correos y avisos guardados con la
+  // dirección vieja, y Google.
+  const solicitudes = /^(?:\/(es|en))?\/(proyectos|publicar-proyecto)(\/.*)?$/i.exec(pathname);
+  if (solicitudes) {
+    const idioma = solicitudes[1] ?? (request.cookies.get("NEXT_LOCALE")?.value === "en" ? "en" : "es");
+    const raiz = solicitudes[2].toLowerCase() === "proyectos" ? "/solicitudes" : "/publicar-solicitud";
+    const destino = new URL(rutaConIdioma(idioma, `${raiz}${solicitudes[3] ?? ""}`), request.url);
     destino.search = request.nextUrl.search;
     return NextResponse.redirect(destino, 308);
   }

@@ -61,7 +61,7 @@ function Journey({
   title: string;
   description: string;
   steps: Array<{ title: string; body: string }>;
-  href: "/profesionales" | "/publicar-proyecto" | "/registro/profesional";
+  href: "/profesionales" | "/publicar-solicitud" | "/registro/profesional";
   cta: string;
   emphasized?: boolean;
 }) {
@@ -120,7 +120,7 @@ export default async function ComoFuncionaPage() {
         <section className="px-4 py-10 sm:py-12">
           <div className="mx-auto max-w-4xl">
             <Journey icon={Search} label={t("clientPathBadge")} title={t("clientPathTitle")} description={t("clientPathDesc")} steps={steps("client")} href="/profesionales" cta={t("clientPathCta")} />
-            <Journey icon={FileText} label={t("publishPathBadge")} title={t("publishPathTitle")} description={t("publishPathDesc")} steps={steps("publish")} href="/publicar-proyecto" cta={t("publishPathCta")} emphasized />
+            <Journey icon={FileText} label={t("publishPathBadge")} title={t("publishPathTitle")} description={t("publishPathDesc")} steps={steps("publish")} href="/publicar-solicitud" cta={t("publishPathCta")} emphasized />
             <Journey icon={BriefcaseBusiness} label={t("prosEyebrow")} title={t("proFlowTitle")} description={t("proFlowDesc")} steps={steps("pro")} href="/registro/profesional" cta={t("prosCta")} />
           </div>
         </section>
@@ -145,7 +145,7 @@ export default async function ComoFuncionaPage() {
                 </span>
               </Link>
               )}
-              <Link href="/proyectos" className="group flex min-h-40 flex-col justify-between rounded-lg border border-[#e5e7eb] bg-white p-5 transition-colors hover:border-[#9bd8ef]">
+              <Link href="/solicitudes" className="group flex min-h-40 flex-col justify-between rounded-lg border border-[#e5e7eb] bg-white p-5 transition-colors hover:border-[#9bd8ef]">
                 <div>
                   <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ccr-caja-icono"><ClipboardList className="h-5 w-5" /></span>
                   <h3 className="mt-4 text-lg font-bold text-[#162543]">{t("marketplaceProjectsTitle")}</h3>

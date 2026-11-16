@@ -7,33 +7,33 @@ const iphone = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebK
 
 test('iOS entry switches associated hosts and preserves only a public app destination', () => {
   for (const host of ['contratacr.com', 'www.contratacr.com']) {
-    const entry = new URL(iosAppEntry('/en/proyectos?categoria=limpieza&_rsc=internal#detalle', host)!);
+    const entry = new URL(iosAppEntry('/en/solicitudes?categoria=limpieza&_rsc=internal#detalle', host)!);
     expect(entry.hostname).toBe(host === 'contratacr.com' ? 'www.contratacr.com' : 'contratacr.com');
-    expect(entry.pathname).toBe('/en/proyectos');
+    expect(entry.pathname).toBe('/en/solicitudes');
     expect(entry.searchParams.get('_ccr_open')).toBe('ios');
     expect(entry.searchParams.get('categoria')).toBe('limpieza');
     expect(entry.searchParams.has('_rsc')).toBe(false);
     expect(entry.hash).toBe('#detalle');
-    expect(campaignAppPath(entry.href)).toBe('/en/proyectos?categoria=limpieza#detalle');
+    expect(campaignAppPath(entry.href)).toBe('/en/solicitudes?categoria=limpieza#detalle');
     expect(iosAppStoreFallback(entry, iphone)).toBe(APP_STORES.ios);
   }
-  for (const path of ['//evil.example/', '/login', '/admin', '/dashboard', '/proyectos/publicar', '/profesionales?code=secret', '/profesionales#access_token=secret']) {
+  for (const path of ['//evil.example/', '/login', '/admin', '/dashboard', '/solicitudes/publicar', '/profesionales?code=secret', '/profesionales#access_token=secret']) {
     expect(iosAppEntry(path, 'contratacr.com')).toBeNull();
   }
 });
 
 test('iOS fallback requires the explicit marker and never redirects normal, auth or Android traffic', () => {
-  for (const path of ['/proyectos', '/proyectos?_ccr_open=no', '/login?_ccr_open=ios', '/proyectos?_ccr_open=ios&access_token=secret']) {
+  for (const path of ['/solicitudes', '/solicitudes?_ccr_open=no', '/login?_ccr_open=ios', '/solicitudes?_ccr_open=ios&access_token=secret']) {
     expect(iosAppStoreFallback(new URL(path, 'https://www.contratacr.com'), iphone)).toBeNull();
   }
-  expect(iosAppStoreFallback(new URL('https://www.contratacr.com/proyectos?_ccr_open=ios'), 'Android Chrome')).toBeNull();
+  expect(iosAppStoreFallback(new URL('https://www.contratacr.com/solicitudes?_ccr_open=ios'), 'Android Chrome')).toBeNull();
   const desktopModeIpad = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) AppleWebKit/605.1.15 Version/18.0 Safari/605.1.15';
-  expect(iosAppStoreFallback(new URL('https://www.contratacr.com/proyectos?_ccr_open=ios'), desktopModeIpad)).toBe(APP_STORES.ios);
-  expect(iosAppStoreFallback(new URL('https://www.contratacr.com/proyectos'), desktopModeIpad)).toBeNull();
+  expect(iosAppStoreFallback(new URL('https://www.contratacr.com/solicitudes?_ccr_open=ios'), desktopModeIpad)).toBe(APP_STORES.ios);
+  expect(iosAppStoreFallback(new URL('https://www.contratacr.com/solicitudes'), desktopModeIpad)).toBeNull();
 });
 
 test('unclaimed iPhone links reach the store before rendering, without caching or redirect loops', async ({ request }) => {
-  for (const route of ['/profesionales/soldadura?categoria=soldadura&_ccr_open=ios', '/en/proyectos?_ccr_open=ios']) {
+  for (const route of ['/profesionales/soldadura?categoria=soldadura&_ccr_open=ios', '/en/solicitudes?_ccr_open=ios']) {
     const response = await request.get(route, { maxRedirects: 0, headers: { 'User-Agent': iphone } });
     expect(response.status()).toBe(307);
     expect(response.headers().location).toBe(APP_STORES.ios);
@@ -47,7 +47,7 @@ for (const locale of ['es', 'en']) test(`iPhone standalone has one localized act
   test.skip(test.info().project.name !== 'webkit-mobile', 'iPhone presentation');
   await page.addInitScript(() => Object.defineProperty(navigator, 'standalone', { configurable: true, value: true }));
   await page.setViewportSize({ width: 320, height: 800 });
-  await page.goto(locale === 'en' ? '/en/proyectos?categoria=limpieza#detalle' : '/proyectos?categoria=limpieza#detalle');
+  await page.goto(locale === 'en' ? '/en/solicitudes?categoria=limpieza#detalle' : '/solicitudes?categoria=limpieza#detalle');
   const notice = page.getByTestId('mobile-app-download');
   const action = notice.getByRole('link');
   await expect(action).toHaveText(locale === 'en' ? 'Open app' : 'Abrir app');
@@ -75,17 +75,17 @@ for (const locale of ['es', 'en']) test(`iPhone standalone has one localized act
 });
 
  test('native WebView does not bounce a marked link back to the App Store', async ({ request }) => {
-  const response = await request.get('/en/proyectos?_ccr_open=ios', { maxRedirects: 0, headers: { 'User-Agent': iphone, Cookie: 'ccr_platform=native' } });
+  const response = await request.get('/en/solicitudes?_ccr_open=ios', { maxRedirects: 0, headers: { 'User-Agent': iphone, Cookie: 'ccr_platform=native' } });
   expect(response.headers().location).not.toBe(APP_STORES.ios);
   expect(response.status()).toBe(200);
  });
 
 test('SSR ignores forged source-host headers and already exposes the localized app action', async ({ request, baseURL }) => {
-  const response = await request.get('/en/proyectos', { headers: { 'User-Agent': iphone.replace('Version/18.0', 'CriOS/142.0'), 'x-ccr-app-host': 'www.contratacr.com' } });
+  const response = await request.get('/en/solicitudes', { headers: { 'User-Agent': iphone.replace('Version/18.0', 'CriOS/142.0'), 'x-ccr-app-host': 'www.contratacr.com' } });
   const html = await response.text();
   expect(response.status()).toBe(200);
   const otherHost = new URL(baseURL!).hostname === "www.contratacr.com" ? "contratacr.com" : "www.contratacr.com";
-  expect(html).toContain(`href="https://${otherHost}/en/proyectos?_ccr_open=ios"`);
+  expect(html).toContain(`href="https://${otherHost}/en/solicitudes?_ccr_open=ios"`);
   expect(html).toContain('Open app');
   expect(html).not.toContain('name="apple-itunes-app"');
 });

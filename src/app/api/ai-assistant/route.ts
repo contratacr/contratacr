@@ -827,11 +827,11 @@ const PRODUCT_INTENTS: ProductIntent[] = [
   {
     test: (n) => /(crear|creo|publicar|publico|create|post).{0,10}(o|or).{0,10}(buscar|busco|ver|find|see).{0,15}(proyectos?|projects?)/.test(n),
     answer: {
-      es: "Para pedir un trabajo, toca el \"+\" de abajo y elige \"Publicar un proyecto\": cuentas qué necesitas y los profesionales de ese servicio te escriben. Los proyectos que ya publicó la gente están en Proyectos, en el menú de arriba.",
-      en: "To request a job, tap the \"+\" at the bottom and choose \"Post a project\": you describe what you need and professionals in that service write to you. Projects other people posted are in Projects, in the top menu.",
+      es: "Para pedir un trabajo, toca el \"+\" de abajo y elige \"Publicar una solicitud\": cuentas qué necesitas y los profesionales de ese servicio te escriben. Las solicitudes que ya publicó la gente están en Solicitudes, en el menú de arriba.",
+      en: "To request a job, tap the \"+\" at the bottom and choose \"Post a request\": you describe what you need and professionals in that service write to you. Requests other people posted are in Requests, in the top menu.",
     },
-    cta: { es: "Publicar proyecto", en: "Post project" },
-    href: (locale) => `${prefijoDeIdioma(locale)}/publicar-proyecto`,
+    cta: { es: "Publicar solicitud", en: "Post request" },
+    href: (locale) => `${prefijoDeIdioma(locale)}/publicar-solicitud`,
   },
   {
     test: (n) => /^(muchas gracias|mil gracias|gracias|thank you|thanks|ok gracias|perfecto gracias)[\s!.]*$/.test(n),
@@ -875,7 +875,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(elimin|borr|cerr|dar de baja|desactiv|delete|close|deactivate|remove).{0,20}(mi cuenta|la cuenta|cuenta|my account|account)/.test(n),
     action: "open_dashboard",
     answer: {
-      es: "En tu panel, abre Cuenta y seguridad y baja hasta \"Eliminar cuenta\". Se borran tu perfil, tus proyectos y tus mensajes; no se puede deshacer.",
+      es: "En tu panel, abre Cuenta y seguridad y baja hasta \"Eliminar cuenta\". Se borran tu perfil, tus solicitudes y tus mensajes; no se puede deshacer.",
       en: "In your panel, open Account & security and scroll to \"Delete account\". Your profile, requests and messages are removed; it cannot be undone.",
     },
     cta: { es: "Ir a Cuenta y seguridad", en: "Open Account & security" },
@@ -953,11 +953,11 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => !/sin cuenta|without (an )?account/.test(n) && (/(publicar|publico|crear|creo|hacer|hago|abrir|abro|publish|create|post).{0,18}(proyecto|project|solicitud|lo que necesito|what i need)/.test(n) || /^(publicar proyecto|publish project|proyecto nuevo|new project)$/.test(n)),
     action: "publish_request",
     answer: {
-      es: "Publicar un proyecto es contar qué necesitas para que te escriban varios profesionales de esa categoría. Toca \"Publicar proyecto\", elige el servicio, describe el trabajo y agrega la zona; los profesionales interesados te escriben por Mensajes y comparas.",
-      en: "Posting a project means describing what you need so several professionals in that category write to you. Tap \"Post project\", pick the service, describe the job and add the area; interested professionals message you and you compare.",
+      es: "Publicar una solicitud es contar qué necesitas para que te escriban varios profesionales de esa categoría. Toca \"Publicar solicitud\", elige el servicio, describe el trabajo y agrega la zona; los profesionales interesados te escriben por Mensajes y comparas.",
+      en: "Posting a request means describing what you need so several professionals in that category write to you. Tap \"Post request\", pick the service, describe the job and add the area; interested professionals message you and you compare.",
     },
-    cta: { es: "Publicar proyecto", en: "Post project" },
-    href: (locale) => `${prefijoDeIdioma(locale)}/publicar-proyecto`,
+    cta: { es: "Publicar solicitud", en: "Post request" },
+    href: (locale) => `${prefijoDeIdioma(locale)}/publicar-solicitud`,
   },
   {
     test: (n) => /(public|cre[oa]|sub[oi]|pon[eg]|hac[eo]|publish|create|post).{0,15}(una oferta|oferta|ofertas|promocion|descuento|an offer|offer|deal)/.test(n),
@@ -1000,11 +1000,11 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(editar|modificar|cambiar|corregir|retirar|borrar|edit|change|withdraw).{0,15}(mi propuesta|una propuesta|la propuesta|propuesta|mi respuesta|la respuesta|respuesta|proposal|reply)/.test(n),
     action: "open_dashboard",
     answer: {
-      es: "Ya no hay propuestas ni respuestas dentro del app: abre el proyecto en Proyectos y escríbele al cliente por WhatsApp. Lo que acuerden pasa ahí.",
-      en: "There are no proposals or replies inside the app any more: open the project in Projects and message the client on WhatsApp. Whatever you agree happens there.",
+      es: "Ya no hay propuestas ni respuestas dentro del app: abre la solicitud en Solicitudes y escríbele al cliente por WhatsApp. Lo que acuerden pasa ahí.",
+      en: "There are no proposals or replies inside the app any more: open the request in Requests and message the client on WhatsApp. Whatever you agree happens there.",
     },
-    cta: { es: "Ver proyectos", en: "See projects" },
-    href: (locale) => `${prefijoDeIdioma(locale)}/proyectos`,
+    cta: { es: "Ver solicitudes", en: "See requests" },
+    href: (locale) => `${prefijoDeIdioma(locale)}/solicitudes`,
   },
   {
     test: (n) => /(instal|descarg|baj[oa]|install|download).{0,15}(la app|app|aplicacion|contratacr)/.test(n) || /(app|aplicacion).{0,15}(instal|descarg|install|download)/.test(n),
@@ -1041,10 +1041,10 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(dej|pon|escrib|hac|dar|doy|leave|write|give).{0,15}(una resena|resena|calificacion|opinion|review|rating)/.test(n) || /(calific|resen|rate|review).{0,15}(profesional|servicio|professional|service)/.test(n),
     action: "open_dashboard",
     answer: {
-      es: "Cuando el servicio termina, en tu panel → Mis proyectos aparece \"Dejar reseña\" junto a ese servicio: pones estrellas y un comentario, y se muestra en el perfil del profesional.",
-      en: "When the service is done, in your panel → My projects you'll see \"Leave a review\" next to that service: give stars and a comment, and it shows on the professional's profile.",
+      es: "Cuando el servicio termina, en tu panel → Mis solicitudes aparece \"Dejar reseña\" junto a ese servicio: pones estrellas y un comentario, y se muestra en el perfil del profesional.",
+      en: "When the service is done, in your panel → My requests you'll see \"Leave a review\" next to that service: give stars and a comment, and it shows on the professional's profile.",
     },
-    cta: { es: "Ver mis proyectos", en: "See my projects" },
+    cta: { es: "Ver mis solicitudes", en: "See my requests" },
     href: (locale) => `${prefijoDeIdioma(locale)}/dashboard/profesional?tab=sent_projects`,
   },
   {
@@ -1192,8 +1192,8 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
       confidence: 1,
       documented: true,
       answer: locale === "en"
-        ? "Using ContrataCR to search, create projects and create a professional profile is currently free. ContrataCR does not add a commission to the price agreed between client and professional."
-        : "Actualmente buscar, crear proyectos y crear un perfil profesional en ContrataCR es gratis. ContrataCR no agrega comisión al precio acordado entre cliente y profesional.",
+        ? "Using ContrataCR to search, create requests and create a professional profile is currently free. ContrataCR does not add a commission to the price agreed between client and professional."
+        : "Actualmente buscar, crear solicitudes y crear un perfil profesional en ContrataCR es gratis. ContrataCR no agrega comisión al precio acordado entre cliente y profesional.",
     };
   }
 
@@ -1202,9 +1202,9 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
       action: "publish_request",
       confidence: 1,
       answer: locale === "en"
-        ? "Create a project with what you need, the area and the details. ContrataCR notifies every professional of that service, and whoever is interested messages you on WhatsApp."
-        : "Crea un proyecto con lo que necesitas, la zona y los detalles. ContrataCR avisa a todos los profesionales de ese servicio, y quien se interese te escribe por WhatsApp.",
-      ctaLabel: locale === "en" ? "Post a project" : "Publicar proyecto",
+        ? "Create a request with what you need, the area and the details. ContrataCR notifies every professional of that service, and whoever is interested messages you on WhatsApp."
+        : "Crea una solicitud con lo que necesitas, la zona y los detalles. ContrataCR avisa a todos los profesionales de ese servicio, y quien se interese te escribe por WhatsApp.",
+      ctaLabel: locale === "en" ? "Post a request" : "Publicar solicitud",
     };
   }
 
@@ -1370,7 +1370,7 @@ function actionHref(payload: AssistantPayload, originalMessage: string, locale: 
   if (payload.action === "open_dashboard") {
     const normalized = normalizeText(originalMessage);
     if (includesAny(normalized, ["oportunidad", "oportunidades", "propuesta", "propuestas", "opportunity", "opportunities", "proposal", "proposals"])) {
-      return `${prefijoDeIdioma(locale)}/proyectos`;
+      return `${prefijoDeIdioma(locale)}/solicitudes`;
     }
     if (includesAny(normalized, ["mensaje", "mensajes", "chat", "message", "messages"])) {
       return `${prefijoDeIdioma(locale)}/mensajes`;
@@ -1401,7 +1401,7 @@ function actionHref(payload: AssistantPayload, originalMessage: string, locale: 
 function defaultCtaLabel(action: AssistantAction | undefined, locale: Locale) {
   const english = locale === "en";
   if (action === "search_professionals") return english ? "See all results" : "Ver todos los resultados";
-  if (action === "publish_request") return english ? "Post a project" : "Publicar proyecto";
+  if (action === "publish_request") return english ? "Post a request" : "Publicar solicitud";
   if (action === "how_it_works") return english ? "See how it works" : "Ver cómo funciona";
   if (action === "support") return english ? "Open support" : "Ir a soporte";
   if (action === "browse_services") return english ? "Browse services" : "Ver servicios";
@@ -1619,9 +1619,9 @@ function normalizePayload(
       ...payload,
       action: "open_dashboard",
       answer: locale === "en"
-        ? "There are no proposals any more: open the project in Projects and message the client on WhatsApp. Whatever you agree happens there."
-        : "Ya no hay propuestas: abre el proyecto en Proyectos y escríbele al cliente por WhatsApp. Lo que acuerden pasa ahí.",
-      ctaLabel: locale === "en" ? "See projects" : "Ver proyectos",
+        ? "There are no proposals any more: open the request in Requests and message the client on WhatsApp. Whatever you agree happens there."
+        : "Ya no hay propuestas: abre la solicitud en Solicitudes y escríbele al cliente por WhatsApp. Lo que acuerden pasa ahí.",
+      ctaLabel: locale === "en" ? "See requests" : "Ver solicitudes",
     };
   }
   if (includesAny(normalized, ["profesional puede reprogramar", "profesional puede cambiar mi cita", "can the professional reschedule", "provider reschedule my appointment"])) {
@@ -1650,8 +1650,8 @@ function normalizePayload(
       ...payload,
       action: "login",
       answer: locale === "en"
-        ? "You need to sign in to create a project so it stays linked to your account. If you do not have an account yet, you can create one from the sign-in screen."
-        : "Necesitas iniciar sesión para crear un proyecto, así queda vinculado a tu cuenta. Si todavía no tienes una, puede crearla desde la pantalla de ingreso.",
+        ? "You need to sign in to create a request so it stays linked to your account. If you do not have an account yet, you can create one from the sign-in screen."
+        : "Necesitas iniciar sesión para crear una solicitud, así queda vinculada a tu cuenta. Si todavía no tienes una, puede crearla desde la pantalla de ingreso.",
       ctaLabel: locale === "en" ? "Sign in" : "Iniciar sesión",
     };
   }
@@ -1670,9 +1670,9 @@ function normalizePayload(
       ...payload,
       action: "open_dashboard",
       answer: locale === "en"
-        ? "Open Projects in your professional dashboard to see the projects related to your services and message the client on WhatsApp."
-        : "Abre Proyectos en tu panel profesional para ver los proyectos relacionados con tus servicios y escribirle al cliente por WhatsApp.",
-      ctaLabel: locale === "en" ? "Open projects" : "Ver proyectos",
+        ? "Open Requests in your professional dashboard to see the requests related to your services and message the client on WhatsApp."
+        : "Abre Solicitudes en tu panel profesional para ver las solicitudes relacionadas con tus servicios y escribirle al cliente por WhatsApp.",
+      ctaLabel: locale === "en" ? "Open requests" : "Ver solicitudes",
     };
   }
   if (includesAny(normalized, ["hablar con soporte", "contactar soporte", "abrir soporte", "ticket de soporte", "support ticket", "contact support"])) {
@@ -1817,9 +1817,9 @@ function normalizePayload(
       searchQuery: serviceLabel,
       locationText: publishPlaceLabel,
       answer: locale === "en"
-        ? `Done — I added ${serviceLabel} in ${publishPlaceLabel} to your project. Tap "Create project" to complete the details and publish it.`
-        : `Listo: agregué ${serviceLabel} en ${publishPlaceLabel} a tu proyecto. Toca "Publicar" para revisarlo y publicarlo.`,
-      ctaLabel: locale === "en" ? "Post a project" : "Publicar proyecto",
+        ? `Done — I added ${serviceLabel} in ${publishPlaceLabel} to your request. Tap "Create request" to complete the details and publish it.`
+        : `Listo: agregué ${serviceLabel} en ${publishPlaceLabel} a tu solicitud. Toca "Publicar" para revisarla y publicarla.`,
+      ctaLabel: locale === "en" ? "Post a request" : "Publicar solicitud",
     };
   }
   if (includesAny(normalized, ["olvide mi contrasena", "olvide la contrasena", "recuperar contrasena", "forgot password", "forgot my password", "reset password"])) {
@@ -1919,8 +1919,8 @@ function sensitiveOrUnsafeAnswer(message: string, locale: Locale): AssistantPayl
     return {
       action: "answer",
       answer: locale === "en"
-        ? "I cannot share internal instructions, secrets or implementation details. I can help you search for services, create a project or answer questions about ContrataCR."
-        : "No puedo compartir instrucciones internas, secretos ni detalles de implementación. Puedo ayudarte a buscar servicios, crear un proyecto o resolver dudas sobre ContrataCR.",
+        ? "I cannot share internal instructions, secrets or implementation details. I can help you search for services, create a request or answer questions about ContrataCR."
+        : "No puedo compartir instrucciones internas, secretos ni detalles de implementación. Puedo ayudarte a buscar servicios, crear una solicitud o resolver dudas sobre ContrataCR.",
     };
   }
 
@@ -2106,11 +2106,11 @@ export async function POST(req: Request) {
         // publicar un proyecto y se deja el botón; suelta, la pregunta no le
         // servía a quien todavía no sabe cómo funciona.
         answer: locale === "en"
-          ? "Posting a project means describing what you need so several professionals in that category write to you. What service is it? For example: plumbing, electrical or cleaning."
-          : "Publicar un proyecto es contar qué necesitas para que te escriban varios profesionales de esa categoría. ¿De qué servicio se trata? Por ejemplo: plomería, electricidad o limpieza.",
+          ? "Posting a request means describing what you need so several professionals in that category write to you. What service is it? For example: plumbing, electrical or cleaning."
+          : "Publicar una solicitud es contar qué necesitas para que te escriban varios profesionales de esa categoría. ¿De qué servicio se trata? Por ejemplo: plomería, electricidad o limpieza.",
         action: "publish_request",
-        searchHref: `${prefijoDeIdioma(locale)}/publicar-proyecto`,
-        ctaLabel: locale === "en" ? "Post project" : "Publicar proyecto",
+        searchHref: `${prefijoDeIdioma(locale)}/publicar-solicitud`,
+        ctaLabel: locale === "en" ? "Post request" : "Publicar solicitud",
       });
     }
 
@@ -2238,8 +2238,8 @@ export async function POST(req: Request) {
     const placePhrase = requestedPlaceLabel || "Costa Rica";
     const rawAssistantAnswer = noResults
       ? locale === "en"
-        ? `I could not find professionals for ${servicePhrase} in ${placePhrase} yet. You can create a project so related professionals are notified.`
-        : `Todavía no encontré profesionales de ${servicePhrase} en ${placePhrase}. Puedes crear un proyecto para avisar a los profesionales de ese servicio.`
+        ? `I could not find professionals for ${servicePhrase} in ${placePhrase} yet. You can create a request so related professionals are notified.`
+        : `Todavía no encontré profesionales de ${servicePhrase} en ${placePhrase}. Puedes crear una solicitud para avisar a los profesionales de ese servicio.`
       : hasResults
         ? resultCount === 1
           ? locale === "en"
@@ -2283,7 +2283,7 @@ export async function POST(req: Request) {
         ? actionHref({ ...payload, action: "publish_request" }, rawMessage, locale)
         : singleProfessionalHref ?? searchHref,
       ctaLabel: noResults
-        ? locale === "en" ? "Post a project" : "Publicar proyecto"
+        ? locale === "en" ? "Post a request" : "Publicar solicitud"
         : hasResults ? resultCta : payload.ctaLabel || defaultCtaLabel(payload.action, locale),
       professionals: assistantProfessionals,
       suggestedService,

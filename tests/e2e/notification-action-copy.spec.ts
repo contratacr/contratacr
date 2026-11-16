@@ -12,7 +12,7 @@ for (const locale of ["es", "en"]) {
       ["direct_message", "/mensajes?conversation=test", "Abrir conversación", "Open conversation"],
       ["support_reply", "/dashboard/profesional?tab=soporte", "Abrir soporte", "Open support"],
       ["new_job", "/empleos/123", "Ver empleo", "View job"],
-      ["new_project", "/proyectos/123", "Ver proyecto", "View project"],
+      ["new_project", "/solicitudes/123", "Ver solicitud", "View request"],
       ["agrega_precio", "/dashboard/profesional?tab=completion", "Agregar un precio", "Add a price"],
     ]) expect(notificationActionLabel({ type, data: { link } }, undefined, locale)).toBe(locale === "es" ? es : en);
     expect(notificationActionLabel({ type: "suggestion_rejected" }, undefined, locale)).toBeNull();

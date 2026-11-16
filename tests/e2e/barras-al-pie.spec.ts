@@ -80,7 +80,7 @@ test.describe("@seeded franjas de acciones al pie", () => {
       }, patron);
     };
     const empleo = await primerEnlace("/empleos", "/empleos/[0-9a-f-]{8,}");
-    const proyecto = await primerEnlace("/proyectos", "/proyectos/[0-9a-f-]{8,}");
+    const proyecto = await primerEnlace("/solicitudes", "/solicitudes/[0-9a-f-]{8,}");
 
     pantallas.push({ nombre: "soporte", abrir: async () => { await gotoOK(page, "/soporte"); } });
     if (empleo) pantallas.push({ nombre: "ficha de empleo", abrir: async () => { await gotoOK(page, empleo); } });
@@ -105,7 +105,7 @@ test.describe("@seeded franjas de acciones al pie", () => {
     // La referencia, medida en el mismo viaje.
     await gotoOK(page, "/dashboard/profesional?tab=sent_projects");
     await page.waitForTimeout(1200);
-    await page.getByRole("button", { name: /Publicar proyecto|Post a project/i }).filter({ visible: true }).first().click();
+    await page.getByRole("button", { name: /Publicar solicitud|Post a request/i }).filter({ visible: true }).first().click();
     const referencia = await medirFranja(page);
     expect(referencia.caja, "Crear proyecto es la referencia: tiene que tener franja").not.toBeNull();
     expect(referencia.caja).toEqual(CAJA_ESPERADA);

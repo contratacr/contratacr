@@ -428,7 +428,7 @@ test.describe("@seeded ContrataCR AI", () => {
     expect(requestStart.body.answer).toMatch(/servicio/i);
     // One question at a time: the first turn asks only for the service.
     expect(requestStart.body.answer).not.toMatch(/zona|ubicaci/i);
-    expect(requestStart.body.searchHref).toBe("/publicar-proyecto");
+    expect(requestStart.body.searchHref).toBe("/publicar-solicitud");
 
     const requestReady = await ask(page, "carpinteria, Orotina", {
       history: [
@@ -440,7 +440,7 @@ test.describe("@seeded ContrataCR AI", () => {
     expect(requestReady.body.action).toBe("publish_request");
     expect(requestReady.body.answer).toMatch(/publicar/i);
     expect(requestReady.body.answer).not.toMatch(/voy a (?:proceder|crear|publicar)|creare|publicare/i);
-    expect(requestReady.body.ctaLabel).toBe("Publicar proyecto");
+    expect(requestReady.body.ctaLabel).toBe("Publicar solicitud");
     expect(requestReady.body.searchHref).toContain("tab=sent_projects");
     expect(requestReady.body.searchHref).toContain("openPublish=1");
     expect(requestReady.body.searchHref).toContain("categoria=carpinteria");
@@ -507,7 +507,7 @@ test.describe("@seeded ContrataCR AI", () => {
       { prompt: "¿La verificación garantiza que el profesional es bueno?", action: "answer", answer: /confirma su identidad, no la calidad/i },
       // Las propuestas salieron del producto: el asistente lo dice y manda al
       // tablero de proyectos, donde se contacta al cliente por WhatsApp.
-      { prompt: "¿Puedo editar una propuesta después de enviarla?", action: "open_dashboard", href: "/proyectos", answer: /ya no hay propuestas|WhatsApp/i },
+      { prompt: "¿Puedo editar una propuesta después de enviarla?", action: "open_dashboard", href: "/solicitudes", answer: /ya no hay propuestas|WhatsApp/i },
       { prompt: "¿El profesional puede reprogramar mi cita?", action: "answer", answer: /ya no se agendan citas|acuerdan por mensaje/i },
       { prompt: "¿Puedo crear un proyecto sin cuenta?", action: "login", href: "/login", answer: /iniciar sesión/i },
       { prompt: "Me duele mucho el pecho, ¿busco un cardiólogo aquí?", action: "answer", answer: /9-1-1/i },
@@ -515,7 +515,7 @@ test.describe("@seeded ContrataCR AI", () => {
       { prompt: "¿Cómo cambio de cliente a profesional?", action: "open_dashboard", href: "/dashboard/profesional", answer: /selector Cliente \/ Profesional/i },
       { prompt: "¿Cómo agrego otro servicio a mi perfil?", action: "open_dashboard", href: "tab=services", answer: /servicio/i },
       { prompt: "¿Cómo cambio mi contraseña?", action: "open_dashboard", href: "tab=cuenta", answer: /contraseña/i },
-      { prompt: "¿Dónde reviso las oportunidades para mis servicios?", action: "open_dashboard", href: "/proyectos", answer: /proyectos/i },
+      { prompt: "¿Dónde reviso las oportunidades para mis servicios?", action: "open_dashboard", href: "/solicitudes", answer: /solicitudes/i },
     ];
 
     for (const item of cases) {

@@ -182,7 +182,7 @@ function nombreDePagina(ruta: string): string {
     "/": "Portada", "/registro/profesional": "Registro de profesional", "/registro/cliente": "Registro de cliente",
     "/registro": "Registro", "/login": "Iniciar sesión", "/profesionales": "Búsqueda de profesionales",
     "/servicios": "Lista de servicios", "/onboarding": "Bienvenida", "/promociones": "Promociones",
-    "/empleos": "Empleos", "/proyectos": "Proyectos", "/publicar-proyecto": "Publicar proyecto", "/cotizar": "Hacer cotización",
+    "/empleos": "Empleos", "/solicitudes": "Solicitudes", "/publicar-solicitud": "Publicar solicitud", "/cotizar": "Hacer cotización",
     "/ayuda": "Ayuda", "/como-funciona": "Cómo funciona", "/mejorar-mi-perfil": "Mejorar mi perfil",
   };
   if (fijas[sinIdioma]) return fijas[sinIdioma] + ingles;
@@ -190,7 +190,7 @@ function nombreDePagina(ruta: string): string {
   if (/^\/servicios\/[^/]+/.test(sinIdioma)) return `Página de servicio: ${sinIdioma.split("/")[2]}` + ingles;
   if (/^\/profesionales\/[^/]+-[a-z0-9]{8}$/.test(sinIdioma)) return "Perfil de un profesional" + ingles;
   if (/^\/profesionales\/[^/]+/.test(sinIdioma)) return `Búsqueda: ${sinIdioma.split("/").slice(2).join(" › ")}` + ingles;
-  if (/^\/(promociones|empleos|proyectos)\/[^/]+/.test(sinIdioma)) return `Ficha de ${sinIdioma.split("/")[1].replace(/s$/, "")}` + ingles;
+  if (/^\/(promociones|empleos|solicitudes|proyectos)\/[^/]+/.test(sinIdioma)) return `Ficha de ${({ solicitudes: "solicitud", proyectos: "solicitud" } as Record<string, string>)[sinIdioma.split("/")[1]] ?? sinIdioma.split("/")[1].replace(/s$/, "")}` + ingles;
   return ruta;
 }
 

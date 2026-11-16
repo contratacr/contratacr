@@ -24,7 +24,7 @@ export async function POST(req: Request) {
   const {data,error}=await access.db.rpc("moderate_content",{p_kind:p.kind,p_id:p.id,p_action:p.action,p_reason:p.reason,p_report:p.report,p_days:p.days});
   if(error) return NextResponse.json({error:"No se pudo guardar la decisión y su auditoría. Revisa el contenido y los permisos."},{status:409,headers});
   if(p.kind === "professional" || p.kind === "review") await invalidateProfessionalCache();
-  for(const path of ["/proyectos","/empleos","/promociones","/profesionales","/buscar"]) {
+  for(const path of ["/solicitudes","/empleos","/promociones","/profesionales","/buscar"]) {
     revalidatePath(path,"layout"); revalidatePath(`/en${path}`,"layout");
   }
   return NextResponse.json(data,{headers});

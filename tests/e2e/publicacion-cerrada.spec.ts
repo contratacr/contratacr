@@ -8,7 +8,7 @@ const FANTASMA = "d4000000-0000-4000-8000-0000000fffff";
 
 test("@seeded una dirección que no existe no enseña otra publicación", async ({ page }) => {
   test.skip(isMobileProject(test.info()), "Basta comprobarlo una vez.");
-  for (const ruta of [`/empleos/${FANTASMA}`, `/promociones/${FANTASMA}`, `/proyectos/${FANTASMA}`]) {
+  for (const ruta of [`/empleos/${FANTASMA}`, `/promociones/${FANTASMA}`, `/solicitudes/${FANTASMA}`]) {
     await page.goto(ruta);
     await expect(page.locator(".ccr-error-screen").getByRole("heading", { name: /no encontrada|not found/i }), `${ruta} no debe enseñar otra ficha`).toBeVisible();
   }

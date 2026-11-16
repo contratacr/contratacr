@@ -8,7 +8,7 @@ test('Android entry is limited to public screens and fixes the package and fallb
   expect(intent).toContain('intent://contratacr.com/en/profesionales?categoria=soldadura#resenas#Intent;scheme=https;package=com.contratacr.app;');
   expect(intent).toContain(`S.browser_fallback_url=${encodeURIComponent(APP_STORES.android)};end`);
   expect(intent).not.toContain('_rsc');
-  expect(androidAppIntent('/proyectos/example?title=a;b#Intent;component=evil')).not.toContain(';component=evil');
+  expect(androidAppIntent('/solicitudes/example?title=a;b#Intent;component=evil')).not.toContain(';component=evil');
   for (const path of ['/login', '/auth/callback?code=secret', '/admin', '/dashboard', '/empleos/publicar', '/#access_token=secret', '//other.test', '/profesionales?token=secret']) expect(androidAppIntent(path)).toBeNull();
   expect(campaignAppPath('https://www.contratacr.com/profesionales?categoria=soldadura')).toBe('/profesionales?categoria=soldadura');
   expect(campaignAppPath('https://other.contratacr.com/')).toBeNull();
@@ -54,7 +54,7 @@ test('Android action refreshes on return from the store without exposing unrelat
     state.qaInstalled = false;
     Object.defineProperty(navigator, 'getInstalledRelatedApps', { configurable: true, value: async () => state.qaInstalled ? [{ platform: 'play', id: 'com.contratacr.app' }] : [{ platform: 'play', id: 'unrelated.app' }] });
   });
-  await page.goto('/proyectos');
+  await page.goto('/solicitudes');
   const action = page.getByTestId('mobile-app-download').getByRole('link');
   await expect(action).toHaveText('Usar app');
   await expect(action).toHaveAttribute('href', /^intent:/);
@@ -69,10 +69,10 @@ test('Android action refreshes on return from the store without exposing unrelat
 test('installed Android action translates and updates when changing language',async({page})=>{
  test.skip(!/Android/.test(await page.evaluate(()=>navigator.userAgent)),'Android only');
  await page.addInitScript(()=>Object.defineProperty(navigator,'getInstalledRelatedApps',{configurable:true,value:async()=>[{platform:'play',id:'com.contratacr.app'}]}));
- await page.goto('/proyectos');
+ await page.goto('/solicitudes');
  const action=page.getByTestId('mobile-app-download').getByRole('link');
  await expect(action).toHaveText('Abrir app');
- await page.goto('/en/proyectos');
+ await page.goto('/en/solicitudes');
  await expect(action).toHaveText('Open app');
  await expect(action).toHaveAttribute('aria-label','Open app ContrataCR');
  await page.getByRole('button',{name:/Open menu|Abrir menú/}).filter({visible:true}).first().click();
@@ -92,7 +92,7 @@ test('published Android app can resolve home through its supported professional 
     const restored = campaignAppPath(entryUrl)!;
     expect(restored).toBe(`${home.startsWith('/en') ? '/en' : home.startsWith('/es') ? '/es' : '/'}?utm_source=meta#servicios`);
   }
-  expect(campaignAppPath('https://contratacr.com/proyectos?_ccr_home=1')).toBe('/proyectos');
+  expect(campaignAppPath('https://contratacr.com/solicitudes?_ccr_home=1')).toBe('/solicitudes');
   expect(campaignAppPath('https://contratacr.com/profesionales?_ccr_home=https://evil.test')).toBe('/profesionales');
   expect(campaignAppPath('https://contratacr.com/profesionales?_ccr_home=1&access_token=secret')).toBeNull();
   expect(isInstalledAndroidApp([])).toBeNull();

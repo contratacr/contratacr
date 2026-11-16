@@ -30,7 +30,7 @@ const EN_LOS_DOS_IDIOMAS = [
   "/eliminar-cuenta",
   "/olvide-contrasena",
   "/reset-password",
-  "/publicar-proyecto",
+  "/publicar-solicitud",
   "/empleos/publicar",
   "/empleos/mis-empleos",
   "/promociones/publicar",

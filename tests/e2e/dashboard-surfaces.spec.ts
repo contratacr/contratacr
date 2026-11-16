@@ -5,7 +5,7 @@ import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, type Regressio
 const professionalTabs = [
   // En escritorio «home» cae en la sección de arranque del panel profesional
   // en teléfono muestra el menú de secciones con el cambio de panel.
-  { tab: "home", marker: /Mis proyectos|My projects|Mi perfil|My profile/i },
+  { tab: "home", marker: /Mis solicitudes|My requests|Mi perfil|My profile/i },
   { tab: "profile", marker: /Mi perfil|My profile|Perfil|Profile/i },
   // Los nombres de las secciones cambiaron para que digan lo que son: «Ofertas»
   // significaba también «oferta laboral» y por eso llegaron dos vacantes ahí;
@@ -27,9 +27,9 @@ const professionalTabs = [
 ] as const;
 
 const clientTabs = [
-  { tab: "home&mode=use", marker: /Mis proyectos|My projects/i },
+  { tab: "home&mode=use", marker: /Mis solicitudes|My requests/i },
   { tab: "profile&mode=use", marker: /Perfil|Profile/i },
-  { tab: "sent_projects", marker: /Mis proyectos|My projects/i },
+  { tab: "sent_projects", marker: /Mis solicitudes|My requests/i },
   { tab: "connections", marker: /Volver a contratar|Hire again/i },
   { tab: "saved", marker: /Favoritos|Favorites/i },
   { tab: "notifications&mode=use", marker: /Notificaciones|Notifications/i },
@@ -242,7 +242,7 @@ test.describe("@seeded dashboard surfaces", () => {
     }
 
     await expect(page.locator("[data-panel-loading]")).toHaveCount(0);
-    await expect(page.getByRole("button", { name: /Publicar proyecto|Post a project/i }).filter({ visible: true }).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: /Publicar solicitud|Post a request/i }).filter({ visible: true }).first()).toBeVisible();
   });
 
   test("panel tabs navigate without reloading the document", async ({ page }) => {
@@ -263,7 +263,7 @@ test.describe("@seeded dashboard surfaces", () => {
     await expect(page).toHaveURL(/tab=sent_projects/);
     // En el teléfono el nombre de la sección lo pone la barra de arriba, no el
     // cuerpo: se mira la página entera.
-    await expectVisibleText(page.locator("body"), /Mis proyectos|My projects/i);
+    await expectVisibleText(page.locator("body"), /Mis solicitudes|My requests/i);
     expect(await page.evaluate(() => (window as Window & { __contratacrSoftNavigation?: string }).__contratacrSoftNavigation)).toBe("active");
 
     if (isMobileProject(test.info())) {
@@ -421,7 +421,7 @@ test.describe("@seeded dashboard surfaces", () => {
       {
         locale: "es",
         guideButton: /^Guías$/i,
-        expected: [/^Proyectos$/i, /Favoritos/i, /^Empleos$/i, /^Promociones$/i, /Publicar empleos/i, /Publicar una promoción/i],
+        expected: [/^Solicitudes de clientes$/i, /Favoritos/i, /^Empleos$/i, /^Promociones$/i, /Publicar empleos/i, /Publicar una promoción/i],
         expandable: /tablero p.blico de necesidades/i,
         visualGuide: /^Servicios$/i,
         nextStep: "Siguiente", enlarge: "Ampliar captura", reduce: "Reducir captura",
@@ -431,7 +431,7 @@ test.describe("@seeded dashboard surfaces", () => {
       {
         locale: "en",
         guideButton: /^Guides$/i,
-        expected: [/^Projects$/i, /Favorites/i, /^Jobs$/i, /^Promotions$/i, /Post jobs/i, /Publish promotions/i],
+        expected: [/^Client requests$/i, /Favorites/i, /^Jobs$/i, /^Promotions$/i, /Post jobs/i, /Publish promotions/i],
         expandable: /public board of needs posted by clients/i,
         visualGuide: /^Services$/i,
         nextStep: "Next", enlarge: "Enlarge screenshot", reduce: "Reduce screenshot",

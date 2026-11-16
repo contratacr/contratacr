@@ -25,8 +25,8 @@ test("la cuenta profesional ve su panel aunque el enlace pida el de cliente", as
 
 test("«Mis proyectos» del tablero de Proyectos no pide el panel de cliente", async ({ page }) => {
   await loginAs(page, "e2e.pro@contratacr.test", process.env.E2E_TEST_PASSWORD ?? "");
-  await gotoOK(page, "/proyectos");
-  const enlace = page.getByRole("link", { name: /Mis proyectos/i }).filter({ visible: true }).first();
+  await gotoOK(page, "/solicitudes");
+  const enlace = page.getByRole("link", { name: /Mis solicitudes/i }).filter({ visible: true }).first();
   await expect(enlace).toBeVisible();
   expect(await enlace.getAttribute("href")).not.toContain("mode=use");
 });
@@ -36,7 +36,7 @@ test("«Mis proyectos» del tablero de Proyectos no pide el panel de cliente", a
 // marca + menú, y «Ingresar» vive dentro del menú (y abajo, en el perfil).
 test("sin sesión la barra del teléfono lleva a iniciar sesión desde el menú", async ({ page }, testInfo) => {
   test.skip(!isMobileProject(testInfo), "En computadora la barra ya trae Iniciar sesión y Registrarse.");
-  for (const ruta of ["/", "/empleos", "/proyectos", "/ayuda"]) {
+  for (const ruta of ["/", "/empleos", "/solicitudes", "/ayuda"]) {
     await gotoOK(page, ruta);
     await expect(page.getByRole("link", { name: "Notificaciones" }).filter({ visible: true }), ruta).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Abrir menú" }).filter({ visible: true }), ruta).toHaveCount(1);

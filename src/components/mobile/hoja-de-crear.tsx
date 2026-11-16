@@ -42,12 +42,12 @@ export function HojaDeCrear({ abierta, onCerrar, esProfesional }: { abierta: boo
   const opciones = esProfesional
     ? [
         { href: "/dashboard/profesional?tab=photos&nuevo=1", titulo: t("tileCase"), linea: t("tileCaseSub"), mosaico: "ccr-mosaico-pro", Icono: ImagePlus },
-        { href: "/publicar-proyecto", titulo: t("tileProject"), linea: t("createProjectAsk"), mosaico: "ccr-mosaico-cliente", Icono: ClipboardList },
+        { href: "/publicar-solicitud", titulo: t("tileProject"), linea: t("createProjectAsk"), mosaico: "ccr-mosaico-cliente", Icono: ClipboardList },
         { href: "/promociones/publicar", titulo: t("tileDeal"), linea: t("tileDealSub"), mosaico: "ccr-mosaico-cliente", Icono: OfferTagPercentIcon },
         ...(EMPLEOS_VISIBLE ? [{ href: "/empleos/publicar", titulo: t("tileJob"), linea: t("tileJobSub"), mosaico: "ccr-mosaico-pro", Icono: Briefcase }] : []),
       ]
     : [
-        { href: "/publicar-proyecto", titulo: t("tileProjectPost"), linea: t("createProjectAsk"), mosaico: "ccr-mosaico-cliente", Icono: ClipboardList },
+        { href: "/publicar-solicitud", titulo: t("tileProjectPost"), linea: t("createProjectAsk"), mosaico: "ccr-mosaico-cliente", Icono: ClipboardList },
         { href: "/cotizar", titulo: t("tileQuote"), linea: t("tileQuoteSub"), mosaico: "ccr-mosaico-pro", Icono: ReceiptText, Loader2 },
         { href: "/registro/profesional", titulo: t("tileOffer"), linea: t("tileOfferSub"), mosaico: "ccr-mosaico-pro", Icono: BriefcaseBusiness },
       ];
@@ -81,8 +81,8 @@ export function HojaDeCrear({ abierta, onCerrar, esProfesional }: { abierta: boo
           {opciones.map(({ href, titulo, linea, mosaico, Icono }, n) => (
             <Link
               key={href}
-              href={href === "/publicar-proyecto" ? `${href}?returnTo=${encodeURIComponent(pathname + (searchParams.size ? `?${searchParams}` : ""))}` : href}
-              prefetch={href === "/publicar-proyecto" ? true : false}
+              href={href === "/publicar-solicitud" ? `${href}?returnTo=${encodeURIComponent(pathname + (searchParams.size ? `?${searchParams}` : ""))}` : href}
+              prefetch={href === "/publicar-solicitud" ? true : false}
               onNavigate={() => {
                 // Cerrar solo si ya estamos en ese destino; en los demás casos
                 // la barra cierra la hoja cuando llega la ruta nueva.

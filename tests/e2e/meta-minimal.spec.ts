@@ -23,8 +23,8 @@ test("unknown events, missing matching IDs and pre-minimization queues cannot be
  for(const change of [{event_name:"PrivateMessage"},{custom_data:{consent_version:"2026-10-19"}},{user_data:{external_id:["account"]}},{event_id:"private@example.com"}]) expect(minimalMetaPayload({...event,...change})).toBeNull();
 });
 test("only constant owned paths survive; query and fragments never do",()=>{
- expect(minimalMetaPayload({...event,event_source_url:"https://contratacr.com/proyectos?q=private#secret"})?.event_source_url).toBe("https://contratacr.com/proyectos");
- expect(minimalMetaPayload({...event,event_source_url:"https://evil.example/proyectos"})?.event_source_url).toBe("https://contratacr.com/");
+ expect(minimalMetaPayload({...event,event_source_url:"https://contratacr.com/solicitudes?q=private#secret"})?.event_source_url).toBe("https://contratacr.com/solicitudes");
+ expect(minimalMetaPayload({...event,event_source_url:"https://evil.example/solicitudes"})?.event_source_url).toBe("https://contratacr.com/");
 });
 
 test("Search is a conversion signal without search terms or location",()=>{

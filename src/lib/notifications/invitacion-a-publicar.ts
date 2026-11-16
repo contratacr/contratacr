@@ -25,7 +25,7 @@ export async function invitarAPublicarProyecto(admin: Admin, profileIds: string[
     const nuevos = destinatarios.filter((id) => !yaTienen.has(id));
     const enviadas = await insertOnceNotifications(admin, nuevos.map((userId) => ({
       user_id: userId, type: "invita_proyecto", title: TITULO[idioma], message: CUERPO[idioma],
-      data: { link: "/publicar-proyecto" }, read: false,
+      data: { link: "/publicar-solicitud" }, read: false,
     })));
     return { enviadas, yaTenian: yaTienen.size };
   } catch {

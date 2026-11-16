@@ -110,7 +110,7 @@ export function notificationHref(n: NotificationLinkInput, _role?: string, local
 
     case "new_project":
     case "project_cancelled":
-      href = "/proyectos";
+      href = "/solicitudes";
       break;
 
     case "counterparty_account_deleted":
@@ -119,7 +119,7 @@ export function notificationHref(n: NotificationLinkInput, _role?: string, local
       break;
 
     case "invita_proyecto":
-      href = "/publicar-proyecto";
+      href = "/publicar-solicitud";
       break;
 
     case "completa_perfil":
@@ -162,13 +162,13 @@ export function notificationActionLabel(n: NotificationLinkInput, role?: string,
   if (n.type === "agrega_precio") return label("Agregar un precio", "Add a price");
   if (n.type === "pide_resenas") return label("Pedir reseñas", "Ask for reviews");
   if (n.type === "completa_perfil") return label("Completar mi perfil", "Complete my profile");
-  if (n.type === "invita_proyecto") return label("Publicar un proyecto", "Post a project");
+  if (n.type === "invita_proyecto") return label("Publicar una solicitud", "Post a request");
   if (n.type === "review_received") return label("Ver reseña", "View review");
   if (n.type.startsWith("verification")) return label("Revisar verificación", "Review verification");
   if (n.type === "suggestion_approved" || n.data?.suggestion_decision === "approved") return n.data?.category_id ? label("Completar servicio", "Complete service") : label("Ver servicios", "View services");
   if (tab === "soporte" || /\/soporte(?:\/|$)/.test(url.pathname)) return label("Abrir soporte", "Open support");
   if (n.type === "direct_message" || /\/mensajes(?:\/|$)/.test(url.pathname)) return label("Abrir conversación", "Open conversation");
-  if (/\/proyectos(?:\/|$)/.test(url.pathname)) return label("Ver proyecto", "View project");
+  if (/\/(?:solicitudes|proyectos)(?:\/|$)/.test(url.pathname)) return label("Ver solicitud", "View request");
   if (/\/empleos(?:\/|$)/.test(url.pathname)) return label("Ver empleo", "View job");
   if (/\/promociones(?:\/|$)/.test(url.pathname)) return label("Ver promoción", "View promotion");
   if (/\/profesionales\//.test(url.pathname)) return label("Ver perfil", "View profile");

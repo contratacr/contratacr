@@ -595,7 +595,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
     }, [isEn, user?.id]);
   const contextFor = useCallback((item: Conversation) => {
     const type = item.context?.type ?? "profile";
-    const labels = isEn ? { project: "Project", proposal: "Reply", profile: "Profile" } : { project: "Proyecto", proposal: "Respuesta", profile: "Perfil" };
+    const labels = isEn ? { project: "Request", proposal: "Reply", profile: "Profile" } : { project: "Solicitud", proposal: "Respuesta", profile: "Perfil" };
     return { type, label: labels[type], title: item.context?.title || item.subject || (isEn ? "General inquiry" : "Consulta general") };
   }, [isEn]);
   const contextSummaryFor = useCallback((item: Conversation) => {
@@ -1458,7 +1458,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
       plano
       icon={MessageSquareMore}
       title={isEn ? "No conversations yet" : "No hay conversaciones todavía"}
-      description={isEn ? "Messages about profiles, projects, promotions and jobs are organized here." : "Aquí se organizan los mensajes sobre perfiles, proyectos, promociones y empleos."}
+      description={isEn ? "Messages about profiles, requests, promotions and jobs are organized here." : "Aquí se organizan los mensajes sobre perfiles, solicitudes, promociones y empleos."}
       action={(
         <button type="button" onClick={() => updateArchiveView(true)} className="inline-flex items-center justify-center gap-1.5 text-sm font-bold text-[#008fc4] hover:underline">
           {tChat("viewArchived")}

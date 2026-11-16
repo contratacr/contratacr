@@ -14,7 +14,7 @@ export function MarketplaceSectionLayoutShell({ children }: { children: React.Re
   // Las LISTAS (/empleos, /promociones) no desplazan la página: el cascarón mide la
   // pantalla y se desplaza la lista (regla data-ccr-tablero-fijo en layout.tsx).
   // Se decide por la ruta, en el servidor, para que llegue en el primer pintado.
-  const esTablero = /^\/(?:es|en)?\/?(?:empleos|promociones|proyectos)\/?$/u.test(pathname);
+  const esTablero = /^\/(?:es|en)?\/?(?:empleos|promociones|solicitudes)\/?$/u.test(pathname);
 
   return (
     <div className={esTablero ? "ccr-cascaron ccr-cascaron-tablero flex min-h-screen flex-col bg-white" : "ccr-cascaron flex min-h-screen flex-col bg-white"}>

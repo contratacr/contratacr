@@ -7,7 +7,7 @@ import { gotoOK } from "./helpers";
 const TABLEROS = [
   { ruta: "/empleos", enlace: 'a[href*="/empleos/"]' },
   { ruta: "/promociones", enlace: 'a[href*="/promociones/"]' },
-  { ruta: "/proyectos", enlace: 'a[href*="/proyectos/"]' },
+  { ruta: "/solicitudes", enlace: 'a[href*="/solicitudes/"]' },
 ];
 
 async function contar(page: Page, ruta: string, enlace: string, consulta = "") {

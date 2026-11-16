@@ -33,10 +33,10 @@ test.describe("@seeded tablero público de proyectos", () => {
 
   test("un invitado ve el tablero y ningún teléfono viaja con la página", async ({ page }) => {
     await resetAuth(page);
-    await gotoOK(page, "/proyectos");
+    await gotoOK(page, "/solicitudes");
     await waitForInteractivePage(page);
 
-    const tarjetas = page.locator('a[href*="/proyectos/"]').filter({ visible: true });
+    const tarjetas = page.locator('a[href*="/solicitudes/"]').filter({ visible: true });
     await expect(tarjetas.first()).toBeVisible({ timeout: 15_000 });
 
     const html = await page.content();
@@ -52,7 +52,7 @@ test.describe("@seeded tablero público de proyectos", () => {
 
     // Sin cuenta: la ruta no entrega nada.
     await resetAuth(page);
-    await gotoOK(page, "/proyectos");
+    await gotoOK(page, "/solicitudes");
     const invitado = await apiJson<{ error?: string }>(page, "/api/contact/project-lead", {
       method: "POST",
       body: { projectId: abiertos[0].id },
@@ -61,7 +61,7 @@ test.describe("@seeded tablero público de proyectos", () => {
 
     // Con cuenta profesional: enlace de WhatsApp, y nunca al propio proyecto.
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
-    await gotoOK(page, "/proyectos");
+    await gotoOK(page, "/solicitudes");
     const { data: pro } = await admin
       .from("professionals")
       .select("profile_id")
@@ -86,4 +86,22 @@ test.describe("@seeded tablero público de proyectos", () => {
       expect(respuesta.status).toBe(409);
     }
   });
+});
+
+// La sección pasó de Proyectos a Solicitudes (16-nov-2026). Las direcciones
+// viejas siguen vivas en WhatsApp, correos y avisos guardados: un solo salto
+// permanente a la nueva, con el idioma y los filtros intactos.
+test("las direcciones viejas de proyectos llevan a solicitudes con un 308", async ({ request }) => {
+  for (const [vieja, nueva] of [
+    ["/proyectos", "/solicitudes"],
+    ["/proyectos/app-movil-1b93475f?x=1", "/solicitudes/app-movil-1b93475f?x=1"],
+    ["/es/proyectos", "/solicitudes"],
+    ["/en/proyectos", "/en/solicitudes"],
+    ["/publicar-proyecto?categoria=electricidad", "/publicar-solicitud?categoria=electricidad"],
+  ] as const) {
+    const respuesta = await request.get(vieja, { maxRedirects: 0 });
+    expect(respuesta.status(), vieja).toBe(308);
+    const destino = new URL(respuesta.headers().location!, "http://x");
+    expect(`${destino.pathname}${destino.search}`, vieja).toBe(nueva);
+  }
 });

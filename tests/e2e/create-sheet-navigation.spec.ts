@@ -83,11 +83,11 @@ test("Project opens its own form and Back returns to the original section", asyn
   await gotoOK(page, "/dashboard/profesional?tab=cuenta");
   await waitForInteractivePage(page);
   await page.locator("nav.ccr-native-bottom-nav").getByRole("button", { name: "Crear", exact: true }).click();
-  await page.getByTestId("native-create-sheet").locator('a[href^="/publicar-proyecto"]').click();
-  await expect(page).toHaveURL(/\/publicar-proyecto\?returnTo=/);
+  await page.getByTestId("native-create-sheet").locator('a[href^="/publicar-solicitud"]').click();
+  await expect(page).toHaveURL(/\/publicar-solicitud\?returnTo=/);
   const form = page.getByRole("dialog");
   await expect(form).toBeVisible();
-  await expect(form.getByText('Tu proyecto sale con "Verificado". El número no se muestra.')).toHaveCount(0);
+  await expect(form.getByText('Tu solicitud sale con "Verificado". El número no se muestra.')).toHaveCount(0);
   await expect(form.locator('[data-cedula-de-la-cuenta]')).toHaveCount(0);
   await form.getByRole("button", { name: "Necesito un profesional", exact: true }).click();
   await expect(form.locator('input[type="tel"]')).toBeVisible();
@@ -144,10 +144,10 @@ test("Completion opens the profile subsection without painting its menu first", 
 
 
 test("Project form keeps search prefills and safely closes on desktop", async ({ page }) => {
-  await gotoOK(page, "/publicar-proyecto?categoria=electricidad&provincia=heredia&returnTo=%2Fprofesionales");
+  await gotoOK(page, "/publicar-solicitud?categoria=electricidad&provincia=heredia&returnTo=%2Fprofesionales");
   const form = page.getByRole("dialog");
   await expect(form).toBeVisible();
-  await expect(form.getByText('Tu proyecto sale con "Verificado". El número no se muestra.')).toHaveCount(0);
+  await expect(form.getByText('Tu solicitud sale con "Verificado". El número no se muestra.')).toHaveCount(0);
   await form.getByRole("button", { name: "Necesito un profesional", exact: true }).click();
   await expect(form.locator('input[type="tel"]')).toBeVisible();
   await form.getByRole("button", { name: "Volver a elegir", exact: true }).click();

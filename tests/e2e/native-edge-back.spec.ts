@@ -24,7 +24,7 @@ for (const environment of ['responsive web', 'native app'] as const) {
   test(`${environment}: edge swipe walks back through the service picker without selecting a service`, async ({ page, baseURL }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     if (environment === 'native app') await native(page, baseURL!);
-    await gotoOK(page, '/publicar-proyecto?returnTo=%2Fproyectos');
+    await gotoOK(page, '/publicar-solicitud?returnTo=%2Fsolicitudes');
     await page.getByRole('button', { name: 'Necesito un profesional', exact: true }).click();
     await page.getByRole('button', { name: /Ej\.: plomería, electricista, pintura/ }).first().click();
     const sheet = page.getByTestId('category-picker-sheet');
@@ -34,7 +34,7 @@ for (const environment of ['responsive web', 'native app'] as const) {
     // Rows are buttons: a horizontal swipe must go back, not choose Agro.
     await swipe(page, 8, 360, 180, 365, '[data-testid="category-picker-options"] button');
     await expect(sheet).toHaveCount(0);
-    await expect(page).toHaveURL(/\/publicar-proyecto/);
+    await expect(page).toHaveURL(/\/publicar-solicitud/);
 
     await page.getByRole('button', { name: /Ej\.: plomería, electricista, pintura/ }).first().click();
     const category = sheet.getByTestId('category-picker-options').getByRole('button').first();

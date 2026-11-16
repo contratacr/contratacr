@@ -65,13 +65,13 @@ function meaningfulRedirect(raw: string | null): string | null {
   if (
     pathname === "/empleos/publicar"
     || pathname === "/promociones/publicar"
-    || pathname === "/publicar-proyecto"
+    || pathname === "/publicar-solicitud"
     || pathname === "/cotizar"
   ) return raw;
   const params = new URLSearchParams(query);
   if (pathname.startsWith("/profesionales/") && params.get("pendingReview") === "1") return raw;
   // Quien quiso escribirle al cliente de un proyecto vuelve a ese proyecto.
-  if (/^\/proyectos\/[^/]+$/.test(pathname)) return raw;
+  if (/^\/solicitudes\/[^/]+$/.test(pathname)) return raw;
   return null;
 }
 
@@ -219,7 +219,7 @@ export default function LoginPage() {
       redirect === "projects"
         // Viene de «Publicar proyecto»: entra directo al formulario, no a la
         // lista, y conserva de dónde venía para la flecha de atrás.
-        ? `/dashboard/profesional?tab=sent_projects&openPublish=1${desde === "proyectos" ? "&returnTo=/proyectos" : ""}`
+        ? `/dashboard/profesional?tab=sent_projects&openPublish=1${desde === "proyectos" ? "&returnTo=/solicitudes" : ""}`
         : "/dashboard/profesional";
     window.location.assign(withPostLoginActivity(rutaConIdioma(locale, dest)));
   }

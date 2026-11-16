@@ -126,13 +126,13 @@ export async function POST(req: NextRequest) {
   let clientId: string | null = null; let contextTitle = "";
   if (projectId) {
     const { data: p } = await me.admin.from("projects").select("id, client_id, title").eq("id", projectId).maybeSingle();
-    if (!p) return NextResponse.json({ error: "Proyecto no encontrado." }, { status: 404 });
+    if (!p) return NextResponse.json({ error: "Solicitud no encontrada." }, { status: 404 });
     // El permiso era «tener una propuesta en este proyecto». Ya no hay
     // propuestas: quien cotiza un proyecto es quien lo esta atendiendo por
     // WhatsApp, y la cotizacion se manda a la cuenta del cliente.
     clientId = p.client_id ?? null; contextTitle = p.title ?? "";
   }
-  if (projectId && !clientId) return NextResponse.json({ error: mensajeDeError(req, { es: "Este proyecto no tiene una cuenta de cliente a la que enviarle la cotización.", en: "This project has no client account to send the quote to." }) }, { status: 400 });
+  if (projectId && !clientId) return NextResponse.json({ error: mensajeDeError(req, { es: "Esta solicitud no tiene una cuenta de cliente a la que enviarle la cotización.", en: "This request has no client account to send the quote to." }) }, { status: 400 });
 
   // El consecutivo del profesional: 1, 2, 3… Si dos cotizaciones salen al mismo
   // tiempo, la segunda choca con el índice único y se reintenta con el siguiente.
@@ -198,7 +198,7 @@ export async function PATCH(req: NextRequest) {
   // deja rastro) y solo si nadie respondió. El número NO se reutiliza.
   if (action === "delete") {
     if (q.professional_id !== me.proId) return NextResponse.json({ error: "Solo quien la hizo puede borrarla." }, { status: 403 });
-    if (q.project_id) return NextResponse.json({ error: mensajeDeError(req, { es: "Está en un proyecto: quítala de ahí primero.", en: "It belongs to a project: remove it from there first." }) }, { status: 409 });
+    if (q.project_id) return NextResponse.json({ error: mensajeDeError(req, { es: "Está en una solicitud: quítala de ahí primero.", en: "It belongs to a request: remove it from there first." }) }, { status: 409 });
     const patch = { deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() };
     const { error: upErr } = await me.admin.from("quotes").update(patch).eq("id", id);
     if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 });
@@ -224,9 +224,9 @@ export async function PATCH(req: NextRequest) {
   if (action === "attach") {
     if (q.professional_id !== me.proId) return NextResponse.json({ error: "Solo quien la hizo puede enviarla." }, { status: 403 });
     const projectId = typeof body.projectId === "string" ? body.projectId : null;
-    if (!projectId) return NextResponse.json({ error: "Elige un proyecto." }, { status: 400 });
+    if (!projectId) return NextResponse.json({ error: "Elige una solicitud." }, { status: 400 });
     const { data: p } = await me.admin.from("projects").select("id, client_id, title").eq("id", projectId).maybeSingle();
-    if (!p) return NextResponse.json({ error: "Proyecto no encontrado." }, { status: 404 });
+    if (!p) return NextResponse.json({ error: "Solicitud no encontrada." }, { status: 404 });
     const clientId: string | null = p.client_id ?? null;
     if (!clientId) return NextResponse.json({ error: "Ese trabajo no tiene una cuenta de cliente a la que enviarle la cotización." }, { status: 400 });
     const patch = { project_id: projectId, client_id: clientId, updated_at: new Date().toISOString() };

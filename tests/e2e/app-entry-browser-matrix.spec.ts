@@ -50,7 +50,7 @@ for (const [name, ua] of [...iosBrowsers, ...androidBrowsers]) {
     const page = await context.newPage();
     const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
     for (const locale of ['es', 'en']) {
-     await page.goto(`${baseURL}${locale === 'en' ? '/en/proyectos' : '/proyectos'}`);
+     await page.goto(`${baseURL}${locale === 'en' ? '/en/solicitudes' : '/solicitudes'}`);
      await waitForInteractivePage(page);
      const apple = page.locator('meta[name="apple-itunes-app"]');
      const own = page.getByTestId('mobile-app-download');
@@ -81,7 +81,7 @@ test('project dates hydrate without errors when the device clock differs', async
   const now = Date.now.bind(Date);
   Date.now = () => now() + 120_000;
  });
- await page.goto('/proyectos');
+ await page.goto('/solicitudes');
  await waitForInteractivePage(page);
  await expect(page.locator('[data-marketplace-row="proyectos"]').first()).toBeVisible();
  expect(errors).toEqual([]);

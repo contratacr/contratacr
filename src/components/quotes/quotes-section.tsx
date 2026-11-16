@@ -7,7 +7,7 @@ import { leerBorrador } from "@/lib/borrador-sin-sesion";
 import { AvisoDeBorrador } from "@/components/ui/aviso-de-borrador";
 import { useCachedResource } from "@/hooks/use-cached-resource";
 import { useLocale, useTranslations } from "next-intl";
-import { ChevronRight, Clock3, Handshake, Plus, ReceiptText, X } from "lucide-react";
+import { ChevronRight, Plus, ReceiptText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatColones } from "@/lib/pricing";
 import { isQuoteExpired, type Quote } from "@/lib/quotes";
@@ -89,17 +89,16 @@ export function QuotesSection({ proName, proSlug, proId, puedeCrear = true }: { 
   // Cada estado con su color y su ícono: se lee de un vistazo cuál está viva.
   const marca = (q: Quote) => {
     const e = estadoDe(q);
-    // Ni palomita ni nada que suene a "aceptada": el ícono dice dónde vive la
-    // cotización —en una cita o en un proyecto—, que es lo único cierto.
-    // La caja es la misma de la marca en todas: lo que cambia es el icono, que
-    // dice dónde vive la cotización. Un gris plano hacía ver la lista apagada.
+    // Una cotización lleva SIEMPRE el mismo ícono (el recibo), como en el menú
+    // y en el botón "+" (16-nov-2026). Antes cambiaba según el estado (apretón
+    // de manos, reloj, X) y parecían cosas distintas; el estado ya lo dice la
+    // pastilla de color. Las vencidas y retiradas solo se ven apagadas.
     const caja = "ccr-caja-icono-plana";
     const apagada = "border border-[#e5e7eb] bg-white text-[#68778d]";
-    if (e === "enviada") return { fondo: caja, pastilla: "bg-[#eaf7fc] text-[#0089bb]", icono: <Handshake className="h-[18px] w-[18px]" strokeWidth={1.6} /> };
-    if (e === "documento") return { fondo: caja, pastilla: "bg-[#eef3f8] text-[#52627a]", icono: <ReceiptText className="h-[18px] w-[18px]" strokeWidth={1.6} /> };
-    // Vencida: un reloj (se le pasó el plazo), no una X que parece «error» o «borrar».
-    if (e === "expired") return { fondo: apagada, pastilla: "bg-[#f3f4f6] text-[#6b7280]", icono: <Clock3 className="h-[18px] w-[18px]" strokeWidth={1.6} /> };
-    return { fondo: apagada, pastilla: "bg-[#f3f4f6] text-[#6b7280]", icono: <X className="h-4 w-4" strokeWidth={1.8} /> };
+    const icono = <ReceiptText className="h-[18px] w-[18px]" strokeWidth={1.6} />;
+    if (e === "enviada") return { fondo: caja, pastilla: "bg-[#eaf7fc] text-[#0089bb]", icono };
+    if (e === "documento") return { fondo: caja, pastilla: "bg-[#eef3f8] text-[#52627a]", icono };
+    return { fondo: apagada, pastilla: "bg-[#f3f4f6] text-[#6b7280]", icono };
   };
   const lista = (quotes ?? []).filter((q) => !q.deleted_at);
 

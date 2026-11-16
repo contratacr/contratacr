@@ -7,7 +7,7 @@ export function publicAppEntryUrl(path: string): URL | null {
   const resolved = campaignAppPath(url.href);
   if (!resolved) return null;
   const normalized = new URL(resolved, url.origin).pathname.replace(/^\/(es|en)(?=\/|$)/, "") || "/";
-  if (normalized !== "/" && !/^\/(?:buscar|profesionales|servicios|proyectos|empleos|promociones|cotizacion|ofertas)(?:\/|$)/.test(normalized)) return null;
+  if (normalized !== "/" && !/^\/(?:buscar|profesionales|servicios|solicitudes|proyectos|empleos|promociones|cotizacion|ofertas)(?:\/|$)/.test(normalized)) return null;
   if (/\/(?:publicar|editar|mis-empleos|mis-promociones)(?:\/|$)/.test(normalized)) return null;
   if (hasAuthLinkPayload(url)) return null;
   if (url.searchParams.has("_rsc")) url.searchParams.delete("_rsc");

@@ -1492,7 +1492,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
             <p className="text-xs text-[#5b6b82]">{t("noRespondioTexto")}</p>
           </div>
           <Link
-            href={`/publicar-proyecto${professional.professions?.[0] ? `?categoria=${encodeURIComponent(professional.professions[0])}` : ""}`}
+            href={`/publicar-solicitud${professional.professions?.[0] ? `?categoria=${encodeURIComponent(professional.professions[0])}` : ""}`}
             className="shrink-0 rounded-xl bg-[#009FD9] px-3 py-2 text-xs font-bold text-white"
           >
             {t("noRespondioBoton")}

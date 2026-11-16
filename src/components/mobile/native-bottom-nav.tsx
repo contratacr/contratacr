@@ -134,7 +134,7 @@ export function NativeBottomNav() {
   const precargadas = useRef<Set<string>>(new Set());
   useEffect(() => {
     if (!visible) return;
-    const destinos = ["/", ...(EMPLEOS_VISIBLE ? ["/empleos"] : []), "/proyectos", "/promociones", primaryPanelHref].filter((d) => !precargadas.current.has(d));
+    const destinos = ["/", ...(EMPLEOS_VISIBLE ? ["/empleos"] : []), "/solicitudes", "/promociones", primaryPanelHref].filter((d) => !precargadas.current.has(d));
     const ids = destinos.map((destino, i) => window.setTimeout(() => { precargadas.current.add(destino); router.prefetch(destino); }, 1500 + i * 400));
     return () => ids.forEach((id) => window.clearTimeout(id));
   }, [pathname, primaryPanelHref, router, visible]);
@@ -224,7 +224,7 @@ export function NativeBottomNav() {
   // fuera del inicio hace falta subir con intención: al menos 12px a 0,4px/ms
   // en una ventana de 100ms. Desde ahí sube ligada al scroll, a 1,5 veces su
   // recorrido. Un regreso lento o el rebote inferior no inicia la entrada.
-  const permiteRetirarse = /^\/(?:promociones|empleos|proyectos)?\/?$/.test(pathname ?? "/") || esRutaDeBusqueda(pathname, esServicioDelCatalogo);
+  const permiteRetirarse = /^\/(?:promociones|empleos|solicitudes)?\/?$/.test(pathname ?? "/") || esRutaDeBusqueda(pathname, esServicioDelCatalogo);
 
   useEffect(() => {
     const nav = navRef.current;

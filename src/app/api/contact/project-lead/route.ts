@@ -27,7 +27,7 @@ export async function POST(req: Request) {
 
   const { projectId, channel } = (await req.json().catch(() => ({}))) as { projectId?: string; channel?: string };
   if (!projectId || !/^[0-9a-f-]{36}$/i.test(projectId)) {
-    return NextResponse.json({ error: "Proyecto inválido." }, { status: 400 });
+    return NextResponse.json({ error: "Solicitud inválida." }, { status: 400 });
   }
 
   const supabase = await createClient();
@@ -72,14 +72,14 @@ export async function POST(req: Request) {
     ? fila?.allow_direct_contact === true
     : String(fila?.created_at ?? "") >= TABLERO_PUBLICO_DESDE;
   if (!fila || fila.status !== "open" || !admitido) {
-    return NextResponse.json({ error: "Este proyecto ya no recibe mensajes.", code: "no_publicado" }, { status: 404 });
+    return NextResponse.json({ error: "Esta solicitud ya no recibe mensajes.", code: "no_publicado" }, { status: 404 });
   }
   if (channel === "llamada" && fila.allow_phone_contact !== true) {
-    return NextResponse.json({ error: "Este proyecto no permite llamadas." }, { status: 403 });
+    return NextResponse.json({ error: "Esta solicitud no permite llamadas." }, { status: 403 });
   }
   // Nadie se escribe a sí mismo: un profesional también puede publicar proyectos.
   if (fila.client_id === user.id) {
-    return NextResponse.json({ error: "Este proyecto es tuyo." }, { status: 409 });
+    return NextResponse.json({ error: "Esta solicitud es tuya." }, { status: 409 });
   }
   // El proyecto guarda el teléfono del momento de publicarlo; si cambió después,
   // manda el del perfil, que es el que la persona mantiene al día.
@@ -103,7 +103,7 @@ export async function POST(req: Request) {
   // padrón y en mayúsculas.
   const { data: cliente } = await db.from("profiles").select("full_name").eq("id", fila.client_id ?? "").maybeSingle();
   const saludo = nombreDeSaludo((cliente as { full_name?: string | null } | null)?.full_name);
-  const texto = `Hola${saludo ? ` ${saludo}` : ""}, soy ${quien}. Vi tu proyecto "${(fila.title ?? "").slice(0, 60)}" en ContrataCR y puedo ayudarte. ¿Lo conversamos?`;
+  const texto = `Hola${saludo ? ` ${saludo}` : ""}, soy ${quien}. Vi tu solicitud "${(fila.title ?? "").slice(0, 60)}" en ContrataCR y puedo ayudarte. ¿Lo conversamos?`;
   // LA ÚNICA MEDIDA DE SI EL TABLERO SIRVE. Se publican proyectos y se
   // notifica a toda la categoría, pero no había forma de saber cuántos
   // profesionales llegan a escribirle al cliente: el tablero podía estar

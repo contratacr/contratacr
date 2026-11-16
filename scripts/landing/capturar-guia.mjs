@@ -9,7 +9,7 @@ const salida = new URL("../../public/guia/", import.meta.url).pathname;
 fs.mkdirSync(salida, { recursive: true });
 const pantallas = {
   profesionales: "/profesionales/redes-internet",
-  proyectos: "/proyectos",
+  proyectos: "/solicitudes",
   empleos: "/empleos",
   promociones: "/promociones",
 };

@@ -22,7 +22,7 @@ test("Safari initial document delegates opening to Apple using the installed bin
   const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 390, height: 844 }, userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1' });
   try {
     const page = await context.newPage();
-    for (const path of ['/', '/profesionales?categoria=soldadura', '/en/proyectos']) {
+    for (const path of ['/', '/profesionales?categoria=soldadura', '/en/solicitudes']) {
       const response = await page.goto(`${baseURL}${path}`);
       expect(response!.status()).toBe(200);
       expect(response!.headers().location).toBeUndefined();
@@ -62,9 +62,9 @@ test("Safari uses native opening metadata without the competing bottom store red
     await expect(page.getByTestId('mobile-menu-store-link').filter({visible:true})).toHaveAttribute('href','/descargar');
     await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveCount(safari ? 1 : 0);
   }
-  await page.goto('/en/proyectos');
+  await page.goto('/en/solicitudes');
   if(safari) {
-    await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveAttribute('content', 'app-id=6794559661, app-argument=https://contratacr.com/en/proyectos');
+    await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveAttribute('content', 'app-id=6794559661, app-argument=https://contratacr.com/en/solicitudes');
     await expect(page.getByTestId('mobile-app-download')).toHaveCount(0);
   }
   await page.goto('/login');
@@ -85,12 +85,12 @@ for (const browserToken of ['CriOS/142.0', '[FBAN/FBIOS]']) {
   try {
    await context.addCookies([{name:'ccr_sin_analitica',value:'1',url:baseURL!}]);
    const page=await context.newPage();
-   await page.goto(`${baseURL}/en/proyectos`);
+   await page.goto(`${baseURL}/en/solicitudes`);
    await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveCount(0);
    const notice=page.getByTestId('mobile-app-download');
    await expect(notice).toBeVisible();
    await expect(notice.getByRole('link')).toHaveText('Open app');
-   await expect(notice.getByRole('link')).toHaveAttribute('href',/^https:\/\/www\.contratacr\.com\/en\/proyectos\?_ccr_open=ios$/);
+   await expect(notice.getByRole('link')).toHaveAttribute('href',/^https:\/\/www\.contratacr\.com\/en\/solicitudes\?_ccr_open=ios$/);
   }finally{await context.close();}
  });
 }

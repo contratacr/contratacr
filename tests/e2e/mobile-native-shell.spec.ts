@@ -676,7 +676,7 @@ const navigationOffset = (page: Page) => page.locator("nav.ccr-native-bottom-nav
 test("native bottom navigation follows each downward pixel and requires a fast upward gesture", async ({ page }) => {
   await mountScrollNavigation(page);
   const body = page.locator("body");
-  for (const [path, selector] of [["/", "#home-scroll"], ["/proyectos", "#board-scroll"], ["/buscar", "#search-scroll"]] as const) {
+  for (const [path, selector] of [["/", "#home-scroll"], ["/solicitudes", "#board-scroll"], ["/buscar", "#search-scroll"]] as const) {
     await page.evaluate(pathname => (window as unknown as { __setTestNavPath: (path: string) => void }).__setTestNavPath(pathname), path);
     await expect(page.locator("[data-current-path]")).toHaveAttribute("data-current-path", path);
     await expect(body).not.toHaveClass(/ccr-native-bottom-nav-hidden/);
@@ -731,8 +731,8 @@ test("native bottom navigation ignores the simulated iOS bottom bounce", async (
     Object.defineProperty(element, "scrollHeight", { configurable: true, value: 1000 });
     Object.defineProperty(element, "clientHeight", { configurable: true, value: 200 });
   });
-  await page.evaluate(() => (window as unknown as { __setTestNavPath: (path: string) => void }).__setTestNavPath("/proyectos"));
-  await expect(page.locator("[data-current-path]")).toHaveAttribute("data-current-path", "/proyectos");
+  await page.evaluate(() => (window as unknown as { __setTestNavPath: (path: string) => void }).__setTestNavPath("/solicitudes"));
+  await expect(page.locator("[data-current-path]")).toHaveAttribute("data-current-path", "/solicitudes");
   await scrollValues(page, "#board-scroll", [120, 300]);
   await expect(body).toHaveClass(/ccr-native-bottom-nav-hidden/);
   await scrollValues(page, "#board-scroll", [800, 818, 810, 800, 798], 8);

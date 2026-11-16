@@ -17,9 +17,9 @@ export const LIFECYCLE_CAMPAIGNS = ([
     body: "¿Tienes un trabajo pendiente en tu casa o negocio?\n\nEn ContrataCR puedes buscar profesionales por servicio y ubicación, revisar sus perfiles y contactar directamente a quien te interese.",
     ctaLabel: "Buscar profesionales", ctaPath: "/buscar" },
   { key: "crear-proyecto-clientes-2026", days: 17, audience: "all", enabled: true,
-    subject: "¿Necesitas ayuda con un trabajo? Publica un proyecto",
+    subject: "¿Necesitas ayuda con un trabajo? Publica una solicitud",
     body: "¿Necesitas pintar tu casa, reparar una fuga o hacer otro trabajo?\n\nPublica lo que necesitas en ContrataCR: cuenta qué hay que hacer y en qué zona. Los profesionales interesados podrán contactarte.\n\nTú conversas con ellos y eliges a quién contratar. No necesitas una cuenta profesional para publicar.",
-    ctaLabel: "Crear un proyecto", ctaPath: "/publicar-proyecto" },
+    ctaLabel: "Crear una solicitud", ctaPath: "/publicar-solicitud" },
 ] as const).filter(campaign => !("retired" in campaign && campaign.retired));
 
 export type LifecycleAccount = { id: string; email: string | null; full_name: string | null; created_at: string | null; is_disabled: boolean | null; role: string | null; is_provider: boolean | null; hasUsedMobileApp?: boolean; professionalIntent?: boolean; emailConfirmed?: boolean; avatar_url?: string | null };

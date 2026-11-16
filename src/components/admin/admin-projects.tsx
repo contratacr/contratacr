@@ -185,7 +185,7 @@ export function AdminProjects() {
   // pestaña ya no existe. Esto le devuelve audiencia, con el alcance mayor que
   // eso implica; por eso lo decide un administrador y queda en la bitácora.
   async function publicarEnTablero(id: string) {
-    if (!window.confirm("El proyecto saldrá en el tablero público /proyectos, donde lo ve cualquiera. ¿Continuar?")) return;
+    if (!window.confirm("El proyecto saldrá en el tablero público /solicitudes, donde lo ve cualquiera. ¿Continuar?")) return;
     setPublicandoId(id);
     try {
       const res = await fetch("/api/admin/projects", {

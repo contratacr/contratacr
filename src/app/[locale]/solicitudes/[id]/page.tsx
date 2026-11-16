@@ -22,7 +22,7 @@ export const dynamic = "force-dynamic";
  * Se describe el trabajo, NUNCA a la persona: el tablero público no muestra
  * datos de contacto y esto no puede ser la rendija por donde se filtren.
  */
-// EL ENLACE QUE SE COMPARTE ES contratacr.com/proyectos/app-movil-para-muestreos-1b93475f
+// EL ENLACE QUE SE COMPARTE ES contratacr.com/solicitudes/app-movil-para-muestreos-1b93475f
 // (o el corto /p/1b93475f), no el id de 36 caracteres. Era la única ficha del
 // app que todavía mandaba el UUID pelado: en WhatsApp se lee como un enlace
 // de máquina, no como un trabajo. El tramo puede venir de las tres formas
@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: { params: Tramo }): Promise<M
   const descripcion = String(detalle.description ?? "").replace(/\s+/gu, " ").trim();
   return metadatosDePantalla({
     locale,
-    ruta: `/proyectos/${tramoFicha(titulo, detalle.id)}`,
+    ruta: `/solicitudes/${tramoFicha(titulo, detalle.id)}`,
     tarjetaPropia: true,
     titulo: titulo ? `${titulo} | ContrataCR` : "Proyecto | ContrataCR",
     descripcion: descripcion.slice(0, 160) || "Un cliente busca profesional para este trabajo en ContrataCR.",

@@ -26,7 +26,7 @@ export function TarjetaPublicarProyecto({
   if (categoria) p.set("categoria", categoria);
   if (provincia) p.set("provincia", provincia);
   if (canton) p.set("canton", canton);
-  const href = `/publicar-proyecto${p.toString() ? `?${p.toString()}` : ""}`;
+  const href = `/publicar-solicitud${p.toString() ? `?${p.toString()}` : ""}`;
   return (
     <article
       data-tarjeta-publicar-proyecto

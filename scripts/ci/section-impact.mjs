@@ -36,7 +36,7 @@ export const sectionSuites = {
 // native shell. They are still separate web and WebView configurations.
 export const entrySuites = ['public-smoke', 'app-link-coverage', 'shared-link-language', 'native-link-launch', 'mobile-native-shell', 'native-edge-back', 'navbar-brand-consistency'];
 const routeSections = new Map([
-  ['empleos','empleos'], ['promociones','promociones'], ['proyectos','proyectos'], ['publicar-proyecto','proyectos'],
+  ['empleos','empleos'], ['promociones','promociones'], ['proyectos','proyectos'], ['publicar-solicitud','proyectos'],
   ['profesionales','profesionales'], ['buscar','profesionales'], ['categorias','servicios'], ['servicios','servicios'],
   ['ayuda','ayuda'], ['como-funciona','ayuda'], ['contacto','soporte'], ['soporte','soporte'],
   ['privacidad','legales'], ['terminos','legales'], ['mensajes','mensajes'], ['notificaciones','notificaciones'],

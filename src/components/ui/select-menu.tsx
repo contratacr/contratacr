@@ -32,7 +32,7 @@ interface SelectMenuProps {
 // Closes on outside click / Escape and scrolls the selected option into view.
 //
 // The listbox is PORTALED to <body> (via `useAnchoredPosition`) so it is NEVER clipped
-// by an ancestor with `overflow` — e.g. the publicar-proyecto modal's scrolling body or
+// by an ancestor with `overflow` — e.g. the publicar-solicitud modal's scrolling body or
 // the pro panel's accordion, which used to "cut off" the open options. `max-h-72` (≈8 rows
 // at ~36px) shows a SHORT list in full (all 7 provinces, no scrollbar) while a LONG list
 // (cantones, DOB years) scrolls. Width grows to the longest option but never narrower than

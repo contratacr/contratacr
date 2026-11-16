@@ -62,7 +62,7 @@ test('native: no download section, links or banner; form: no banner', async ({pa
 });
 
 test('web forms never display download banner',async({page})=>{
- await page.goto('/publicar-proyecto');
+ await page.goto('/publicar-solicitud');
  await expect(page.getByTestId('mobile-app-download')).toHaveCount(0);
 });
 
@@ -166,7 +166,7 @@ test('narrow desktop windows have no mobile notice or navbar gap, while download
 test('notice stays at the bottom on public pages and respects account/form routes',async({page})=>{
  test.skip((page.viewportSize()?.width ?? 1280)>=1024, "The download notice only appears on mobile web.");
  await emulateHomeScreenForSafari(page);
- for(const route of ['/proyectos','/empleos','/promociones','/profesionales','/ayuda']) {
+ for(const route of ['/solicitudes','/empleos','/promociones','/profesionales','/ayuda']) {
   await page.goto(route);
   await waitForInteractivePage(page);
   const notice=page.getByTestId('mobile-app-download');
@@ -182,7 +182,7 @@ test('notice stays at the bottom on public pages and respects account/form route
   }).toBeLessThan(1);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  }
- for(const route of ['/login','/registro','/reset-password','/olvide-contrasena','/empleos/publicar','/publicar-proyecto']) {
+ for(const route of ['/login','/registro','/reset-password','/olvide-contrasena','/empleos/publicar','/publicar-solicitud']) {
   await page.goto(route);await expect(page.getByTestId('mobile-app-download')).toHaveCount(0);
  }
 });
@@ -286,7 +286,7 @@ test('home-screen launch shell is public, white and independent of the session',
 test('mobile listings stay behind the download notice and keep their last result reachable', async ({page}) => {
  test.skip((page.viewportSize()?.width ?? 1280)>=1024, 'The download notice only appears on mobile web.');
  await emulateHomeScreenForSafari(page);
- for (const route of ['/empleos','/proyectos','/promociones']) {
+ for (const route of ['/empleos','/solicitudes','/promociones']) {
   await page.goto(route);
   const banner=page.getByTestId('mobile-app-download');
 
@@ -395,7 +395,7 @@ for (const locale of ['es', 'en'] as const) {
   test.skip((page.viewportSize()?.width??1280)>=1024,'Mobile notice');
   await emulateHomeScreenForSafari(page);
   await page.addInitScript(()=>Object.defineProperty(navigator,'getInstalledRelatedApps',{configurable:true,value:async()=>[]}));
-  await page.goto(locale==='en'?'/en/proyectos':'/proyectos');
+  await page.goto(locale==='en'?'/en/solicitudes':'/solicitudes');
   const notice=page.getByTestId('mobile-app-download');
   await expect(notice).toBeVisible();
   const android=await page.evaluate(()=>/Android/.test(navigator.userAgent));

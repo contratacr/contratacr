@@ -35,7 +35,7 @@ const PUBLICAS = [
   "/servicios",
   "/empleos",
   "/promociones",
-  "/proyectos",
+  "/solicitudes",
   "/ayuda",
   "/como-funciona",
   "/soporte",
