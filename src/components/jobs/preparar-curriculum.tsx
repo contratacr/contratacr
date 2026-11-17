@@ -9,7 +9,8 @@ import type { JobPost } from "@/lib/jobs";
  * «PREPARAR MI CURRÍCULUM PARA ESTE PUESTO», al pie de cada vacante.
  * Es el momento de más intención: quien lee una vacante está por postularse.
  * Le pasa al generador el puesto, la empresa y el texto de la vacante para
- * que la carta salga dirigida y las habilidades que pide queden primero.
+ * que la carta salga dirigida. Abre una carta NUEVA en «Mis cartas»: antes
+ * pisaba la que ya había (16-nov-2026).
  * Va por el almacenamiento de la sesión y no por la dirección: el texto de una vacante no
  * cabe en un enlace y no tiene por qué quedar en el historial.
  */
@@ -31,7 +32,7 @@ export function PrepararCurriculum({ job }: { job: Pick<JobPost, "title" | "desc
         <span className="ccr-caja-icono grid h-10 w-10 shrink-0 place-items-center rounded-xl"><FileUser className="h-5 w-5" /></span>
         <div className="min-w-0">
           <p className="text-[15px] font-black text-[#162543]">{en ? "Apply with a ready cover letter" : "Postulate con tu carta lista"}</p>
-          <p className="mt-0.5 text-[13px] leading-5 text-[#52627a]">{en ? "We address it to this job and company and prefill it from your profile. Free." : "La dirigimos a este puesto y empresa y la prellenamos con tu perfil. Gratis."}</p>
+          <p className="mt-0.5 text-[13px] leading-5 text-[#52627a]">{en ? "A new letter for this job and company, prefilled from your profile. Your other letters stay. Free." : "Una carta nueva para este puesto y empresa, prellenada con tu perfil. Tus otras cartas quedan. Gratis."}</p>
         </div>
       </div>
       <Link href="/dashboard/profesional?tab=carta" onClick={guardar} className="inline-flex h-11 shrink-0 items-center justify-center rounded-full border border-[#b9d9e8] bg-white px-5 text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc]">

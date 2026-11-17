@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
 import { useLocale } from "next-intl";
-import { AlertCircle, Check, CheckCircle2, ChevronLeft, ChevronRight, Copy, Download, FileText, FileUp, Lightbulb, Mail, Plus, RotateCcw, Trash2 } from "lucide-react";
+import { AlertCircle, Check, CheckCircle2, ChevronLeft, ChevronRight, Copy, CopyPlus, Download, FileText, FileUp, Lightbulb, Mail, Pencil, Plus, RotateCcw, Search, Trash2, UserRound } from "lucide-react";
 import { AccionesAlPie } from "@/components/ui/acciones-al-pie";
 import { Skeleton } from "@/components/ui/content-loading";
 import { Link } from "@/i18n/navigation";
@@ -15,7 +15,7 @@ import { languageLabel } from "@/lib/data/languages";
 import { blankDates, parseCvDates, serializeCvDates, type CvDates } from "@/lib/cv/dates";
 import type { CvEntry } from "@/lib/cv/model";
 import {
-  LIMITES, TITULOS, cartaComoTexto, cartaInicial, cuerpoDeLaCarta, cvComoTexto, fechasAts, nombreDeArchivo, prellenar, revisarCarta, revisarCv, sumarDesdeArchivo,
+  LIMITES, TITULOS, cartaComoTexto, cartaInicial, cuerpoDeLaCarta, cvComoTexto, fechasAts, nombreDeArchivo, palabrasClave, prellenar, revisarCarta, revisarCv, sumarDesdeArchivo,
   type Aviso, type Carta, type CvDocumento, type DatosDelPerfil, type Idioma, type Plantilla,
 } from "@/lib/cv/documento";
 import { cn } from "@/lib/utils";
@@ -23,9 +23,13 @@ import { formatFullPersonName } from "@/lib/display-name";
 
 /**
  * «MI CV» EN EL PANEL: CV y carta de presentación listos para descargar.
- * Se prellena con el perfil, todo se puede editar, y el borrador queda en este
- * dispositivo (no se sube a ningún lado: el CV lleva teléfono y correo).
+ * Se prellena con el perfil, todo se puede editar, y los documentos quedan en
+ * este dispositivo (no se suben a ningún lado: el CV lleva teléfono y correo).
  * «Volver a cargar desde mi perfil» lo rehace desde cero.
+ *
+ * VARIOS DOCUMENTOS (16-nov-2026): «Mis currículums» y «Mis cartas». Antes
+ * había un solo borrador y «Preparar mi carta» desde una vacante lo pisaba sin
+ * avisar; ahora cada vacante abre una carta nueva y las anteriores quedan.
  */
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -278,18 +282,156 @@ function leerVacante(): VacanteRecibida | null {
   try { return JSON.parse(window.sessionStorage.getItem(VACANTE) ?? "null") as VacanteRecibida | null; } catch { return null; }
 }
 
-/** Espera la sesión: el borrador es de cada cuenta. Se rearma si llega el perfil. */
+// v3: varios currículums y cartas por cuenta. El borrador único (v2) se pasa
+// a la lista la primera vez.
+const CLAVE_DOCS = "ccr:cv-documentos:v3";
+const MAX_DOCUMENTOS = 10;
+type Tipo = "cv" | "carta";
+type Documento = { id: string; tipo: Tipo; actualizado: number; borrador: Borrador };
+const nuevoId = () => (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`);
+
+function leerDocumentos(uid: string): Documento[] {
+  try {
+    const lista = JSON.parse(window.localStorage.getItem(`${CLAVE_DOCS}:${uid}`) ?? "null") as Documento[] | null;
+    if (Array.isArray(lista)) {
+      return lista
+        .filter((d) => d?.id && (d.tipo === "cv" || d.tipo === "carta") && d.borrador?.cv && d.borrador?.carta)
+        .map((d) => ({ ...d, borrador: { ...d.borrador, cv: { ...d.borrador.cv, sugeridas: d.borrador.cv.sugeridas ?? [] } } }));
+    }
+  } catch { /* sin almacenamiento: se trabaja con el perfil */ }
+  const viejo = leerBorrador(`${CLAVE}:${uid}`);
+  if (!viejo) return [];
+  const ahora = Date.now();
+  const cartaTocada = JSON.stringify(viejo.carta) !== JSON.stringify(cartaInicial(viejo.cv, { puesto: viejo.carta.puesto, empresa: viejo.carta.empresa }));
+  return [
+    { id: nuevoId(), tipo: "cv", actualizado: ahora, borrador: viejo },
+    ...(cartaTocada || viejo.carta.puesto.trim() ? [{ id: nuevoId(), tipo: "carta" as const, actualizado: ahora, borrador: viejo }] : []),
+  ];
+}
+
+function guardarDocumentos(uid: string, lista: Documento[]) {
+  try {
+    window.localStorage.setItem(`${CLAVE_DOCS}:${uid}`, JSON.stringify(lista));
+    window.localStorage.removeItem(`${CLAVE}:${uid}`);
+  } catch { /* sin almacenamiento */ }
+}
+
+const tituloDe = (d: Documento, en: boolean) => d.tipo === "cv"
+  ? d.borrador.cv.titular.trim() || d.borrador.cv.nombre.trim() || (en ? "Resume" : "Currículum")
+  : [d.borrador.carta.puesto.trim(), d.borrador.carta.empresa.trim()].filter(Boolean).join(" · ") || (en ? "Letter without a position" : "Carta sin puesto");
+
+/** Espera la sesión: los documentos son de cada cuenta. Se rearma si llega el perfil. */
 export function CvBuilder({ pro, documento = "cv" }: { pro: ProData; documento?: "cv" | "carta" }) {
   const { user } = useAuth();
   if (!user) return null;
-  const clave = `${CLAVE}:${user.id}`;
-  return <Editor key={`${clave}:${pro?.id ?? ""}:${documento}`} pro={pro} clave={clave} documento={documento} nombreCuenta={String(user.user_metadata?.full_name ?? "")} correo={user.email ?? ""} />;
+  return <Documentos key={`${user.id}:${pro?.id ?? ""}:${documento}`} pro={pro} uid={user.id} tipo={documento} nombreCuenta={String(user.user_metadata?.full_name ?? "")} correo={user.email ?? ""} />;
+}
+
+function Documentos({ pro, uid, tipo, nombreCuenta, correo }: { pro: ProData; uid: string; tipo: Tipo; nombreCuenta: string; correo: string }) {
+  const idiomaApp: Idioma = useLocale() === "en" ? "en" : "es";
+  const en = idiomaApp === "en";
+  const desdeElPerfil = (idioma: Idioma): Borrador => {
+    const cv = prellenar(datosDelPerfil(pro, nombreCuenta, correo, idioma), idioma);
+    return { cv, carta: cartaInicial(cv) };
+  };
+  const nuevo = (docs: Documento[], vacante?: VacanteRecibida): Documento => {
+    const base = desdeElPerfil(idiomaApp);
+    // La carta toma el encabezado del currículum editado más reciente.
+    const cv = tipo === "carta" ? (docs.filter((d) => d.tipo === "cv").sort((x, y) => y.actualizado - x.actualizado)[0]?.borrador.cv ?? base.cv) : base.cv;
+    return { id: nuevoId(), tipo, actualizado: Date.now(), borrador: { cv, carta: cartaInicial(cv, vacante ?? {}) } };
+  };
+  // Si no hay ninguno, o se llegó desde una vacante, se abre uno nuevo directo.
+  const [estado, setEstado] = useState<{ docs: Documento[]; abierto: string | null }>(() => {
+    const docs = leerDocumentos(uid);
+    const v = tipo === "carta" ? leerVacante() : null;
+    if (!v?.puesto && !v?.empresa && docs.some((d) => d.tipo === tipo)) return { docs, abierto: null };
+    const doc = nuevo(docs, v ?? undefined);
+    return { docs: [doc, ...docs], abierto: doc.id };
+  });
+  const [borrar, setBorrar] = useState<string | null>(null);
+  useEffect(() => { try { window.sessionStorage.removeItem(VACANTE); } catch { /* sin almacenamiento */ } }, []);
+  useEffect(() => {
+    const t = window.setTimeout(() => guardarDocumentos(uid, estado.docs), 400);
+    return () => window.clearTimeout(t);
+  }, [estado.docs, uid]);
+  // Al salir no se pierde lo último que se escribió.
+  const ultimo = useRef(estado.docs);
+  useEffect(() => { ultimo.current = estado.docs; }, [estado.docs]);
+  useEffect(() => () => guardarDocumentos(uid, ultimo.current), [uid]);
+
+  const propios = estado.docs.filter((d) => d.tipo === tipo).sort((x, y) => y.actualizado - x.actualizado);
+  const abierto = estado.docs.find((d) => d.id === estado.abierto && d.tipo === tipo);
+  const lleno = propios.length >= MAX_DOCUMENTOS;
+  const crear = () => setEstado((s) => { const doc = nuevo(s.docs); return { docs: [doc, ...s.docs], abierto: doc.id }; });
+  const duplicar = (id: string) => setEstado((s) => {
+    const original = s.docs.find((d) => d.id === id);
+    if (!original) return s;
+    const copia: Documento = { ...original, id: nuevoId(), actualizado: Date.now(), borrador: JSON.parse(JSON.stringify(original.borrador)) as Borrador };
+    return { ...s, docs: [copia, ...s.docs] };
+  });
+  const eliminar = (id: string) => { setEstado((s) => ({ ...s, docs: s.docs.filter((d) => d.id !== id) })); setBorrar(null); };
+
+  if (abierto) {
+    const setBorrador: Dispatch<SetStateAction<Borrador>> = (cambio) => setEstado((s) => ({
+      ...s,
+      docs: s.docs.map((d) => (d.id === abierto.id ? { ...d, actualizado: Date.now(), borrador: typeof cambio === "function" ? cambio(d.borrador) : cambio } : d)),
+    }));
+    return <Editor key={abierto.id} pro={pro} documento={tipo} borrador={abierto.borrador} setBorrador={setBorrador} desdeElPerfil={desdeElPerfil} alVolver={() => setEstado((s) => ({ ...s, abierto: null }))} />;
+  }
+
+  const fecha = (t: number) => new Date(t).toLocaleDateString(en ? "en-US" : "es-CR", { day: "numeric", month: "short", year: "numeric" });
+  const icono = "grid h-11 w-11 shrink-0 place-items-center rounded-full text-[#52627a] hover:bg-[#f2f6f9] hover:text-[#162543] disabled:opacity-40";
+  return (
+    <div className="grid min-w-0 gap-4" data-testid="cv-documentos">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-lg font-black text-[#162543]">{tipo === "cv" ? (en ? "My resumes" : "Mis currículums") : (en ? "My cover letters" : "Mis cartas")}</h2>
+          <p className="text-[13px] leading-5 text-[#667085]">{en ? "One per job type, if you like. Saved on this device only." : "Puedes tener uno para cada tipo de puesto. Se guardan solo en este dispositivo."}</p>
+        </div>
+        <button type="button" disabled={lleno} onClick={crear} className={cn(pastilla, "bg-[#009FD9] text-white hover:bg-[#0089bb]")} data-testid="cv-nuevo">
+          <Plus className="h-4 w-4" />{tipo === "cv" ? (en ? "New resume" : "Nuevo currículum") : (en ? "New letter" : "Nueva carta")}
+        </button>
+      </div>
+      {lleno && <p className="text-[13px] text-[#667085]">{en ? `You can keep up to ${MAX_DOCUMENTOS}. Delete one to create another.` : `Puedes guardar hasta ${MAX_DOCUMENTOS}. Elimina uno para crear otro.`}</p>}
+      {propios.length === 0 ? (
+        <p className="rounded-2xl border border-dashed border-[#d7e1ea] bg-white px-4 py-8 text-center text-sm text-[#667085]">
+          {tipo === "cv" ? (en ? "You have no resumes yet." : "Todavía no tienes currículums.") : (en ? "You have no letters yet." : "Todavía no tienes cartas.")}
+        </p>
+      ) : (
+        <ul className="grid gap-3">
+          {propios.map((d) => (
+            <li key={d.id} className="flex flex-wrap items-center gap-2 rounded-2xl border border-[#e5e7eb] bg-white p-3 sm:p-4" data-testid="cv-documento">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#e6f6fc] text-[#007fae]">{tipo === "cv" ? <FileText className="h-5 w-5" /> : <Mail className="h-5 w-5" />}</span>
+              <button type="button" onClick={() => setEstado((s) => ({ ...s, abierto: d.id }))} className="min-h-11 min-w-0 flex-1 text-left">
+                <span className="block truncate text-[15px] font-black text-[#162543]">{tituloDe(d, en)}</span>
+                <span className="block text-[13px] text-[#667085]">{d.borrador.cv.idioma === "en" ? "English" : "Español"} · {en ? "Edited" : "Editado"} {fecha(d.actualizado)}</span>
+              </button>
+              <span className="flex shrink-0">
+                <button type="button" aria-label={en ? "Edit" : "Editar"} title={en ? "Edit" : "Editar"} onClick={() => setEstado((s) => ({ ...s, abierto: d.id }))} className={icono}><Pencil className="h-[18px] w-[18px]" /></button>
+                <button type="button" aria-label={en ? "Duplicate" : "Duplicar"} title={en ? "Duplicate" : "Duplicar"} disabled={lleno} onClick={() => duplicar(d.id)} className={icono}><CopyPlus className="h-[18px] w-[18px]" /></button>
+                <button type="button" aria-label={en ? "Delete" : "Eliminar"} title={en ? "Delete" : "Eliminar"} onClick={() => setBorrar(d.id)} className={cn(icono, "hover:text-[#b42318]")}><Trash2 className="h-[18px] w-[18px]" /></button>
+              </span>
+              {borrar === d.id && (
+                <div role="alert" className="flex basis-full flex-wrap items-center justify-between gap-2 rounded-xl bg-[#fef3f2] px-3 py-2.5 text-[13px] text-[#912018]">
+                  <span>{en ? `Delete "${tituloDe(d, en)}"? This can't be undone.` : `¿Eliminar "${tituloDe(d, en)}"? No se puede deshacer.`}</span>
+                  <span className="flex gap-2">
+                    <button type="button" onClick={() => setBorrar(null)} className="h-11 rounded-full px-3 font-semibold text-[#52627a] hover:bg-white">{en ? "Cancel" : "Cancelar"}</button>
+                    <button type="button" onClick={() => eliminar(d.id)} className="h-11 rounded-full bg-[#b42318] px-4 font-bold text-white">{en ? "Delete" : "Eliminar"}</button>
+                  </span>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
 }
 
 type PasoCv = "contacto" | "experiencia" | "educacion" | "habilidades" | "perfil" | "revisar";
-type PasoCarta = "puesto" | "contenido" | "revisar";
+type PasoCarta = "contenido" | "revisar";
 const PASOS_CV: PasoCv[] = ["contacto", "experiencia", "educacion", "habilidades", "perfil", "revisar"];
-const PASOS_CARTA: PasoCarta[] = ["puesto", "contenido", "revisar"];
+const PASOS_CARTA: PasoCarta[] = ["contenido", "revisar"];
 const NOMBRE_PASO: Record<PasoCv | PasoCarta, { es: string; en: string }> = {
   contacto: { es: "Contacto", en: "Contact" },
   experiencia: { es: "Experiencia", en: "Experience" },
@@ -297,8 +439,7 @@ const NOMBRE_PASO: Record<PasoCv | PasoCarta, { es: string; en: string }> = {
   habilidades: { es: "Habilidades", en: "Skills" },
   perfil: { es: "Perfil", en: "Summary" },
   revisar: { es: "Revisar y descargar", en: "Review & download" },
-  puesto: { es: "Puesto", en: "Position" },
-  contenido: { es: "Contenido", en: "Content" },
+  contenido: { es: "Escribir", en: "Write" },
 };
 
 function Pasos<T extends PasoCv | PasoCarta>({ pasos, actual, hechos, alElegir, en }: { pasos: T[]; actual: T; hechos: Set<T>; alElegir: (p: T) => void; en: boolean }) {
@@ -449,25 +590,95 @@ function LlenarDesdeCv({ professionalId, vacio, en, alLeer }: { professionalId: 
   );
 }
 
-function Editor({ pro, clave, documento, nombreCuenta, correo }: { pro: ProData; clave: string; documento: "cv" | "carta"; nombreCuenta: string; correo: string }) {
+/**
+ * «REVISAR PARA UNA VACANTE» (opcional, al final): se pega el anuncio y se ve
+ * qué palabras clave ya tiene el currículum y cuáles no. Solo informa: no
+ * reescribe ni agrega nada, para no meter en el CV algo que la persona no tiene.
+ */
+function RevisarVacante({ cv, en }: { cv: CvDocumento; en: boolean }) {
+  const [texto, setTexto] = useState("");
+  const resultado = useMemo(() => (texto.trim().length >= 40 ? palabrasClave(texto, cv) : null), [texto, cv]);
+  const chips = (lista: string[], clase: string) => (
+    <ul className="mt-1.5 flex flex-wrap gap-1.5">{lista.map((p) => <li key={p} className={cn("rounded-full px-2.5 py-1 text-[12px] font-semibold", clase)}>{p}</li>)}</ul>
+  );
+  return (
+    <details className="group rounded-xl border border-[#e5e7eb] px-3" data-testid="cv-revisar-vacante">
+      <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 text-[13px] font-black text-[#162543]">
+        <Search className="h-4 w-4 text-[#007fae]" />{en ? "Check against a job post (optional)" : "Revisar para una vacante (opcional)"}
+        <ChevronRight className="ml-auto h-4 w-4 text-[#98a2b3] transition-transform group-open:rotate-90" />
+      </summary>
+      <div className="grid gap-2 pb-3">
+        <p className="text-[13px] leading-5 text-[#667085]">{en ? "Paste the job post. We show which keywords your resume already has and which are missing. Nothing is changed." : "Pega el anuncio. Te mostramos qué palabras clave ya tiene tu currículum y cuáles faltan. No cambiamos nada."}</p>
+        <textarea rows={5} maxLength={6000} value={texto} onChange={(e) => setTexto(e.target.value)} aria-label={en ? "Job post" : "Anuncio de la vacante"} placeholder={en ? "Paste the job post here" : "Pega aquí el anuncio"} className={campo} />
+        {resultado && (
+          <div className="grid gap-2" role="status">
+            <p className="text-[13px] font-black text-[#162543]">{en ? `${resultado.puntaje}% of the keywords match` : `Coincide el ${resultado.puntaje} % de las palabras clave`}</p>
+            {resultado.estan.length > 0 && <div><p className="text-xs font-semibold text-[#067647]">{en ? "Already in your resume" : "Ya están en tu currículum"}</p>{chips(resultado.estan, "bg-[#ecfdf3] text-[#067647]")}</div>}
+            {resultado.faltan.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-[#93370d]">{en ? "Not in your resume" : "No aparecen"}</p>
+                {chips(resultado.faltan, "bg-[#fffaeb] text-[#93370d]")}
+                <p className="mt-1.5 text-[12px] leading-4 text-[#667085]">{en ? "Add them only if they are true for you, in your own words, in skills or achievements." : "Agrégalas solo si de verdad las tienes, con tus palabras, en habilidades o en tus logros."}</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </details>
+  );
+}
+
+/**
+ * «USAR EN MI PERFIL»: el currículum terminado pasa a ser el PDF de «Ver PDF»
+ * en el perfil público. Se sube sin correo ni teléfono (al profesional se le
+ * escribe por ContrataCR) y reemplaza el archivo que hubiera.
+ */
+function UsarEnMiPerfil({ professionalId, cv, en, avisar }: { professionalId: string; cv: CvDocumento; en: boolean; avisar: (t: string) => void }) {
+  const [paso, setPaso] = useState<"inicio" | "confirmar" | "subiendo">("inicio");
+  const subir = async () => {
+    setPaso("subiendo");
+    try {
+      const endpoint = `/api/professional-cv?professionalId=${encodeURIComponent(professionalId)}`;
+      const meta = await fetch(`${endpoint}&metadata=1`, { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).catch(() => null) as { file?: { version?: string } | null } | null;
+      const { pdfDelCv } = await import("@/lib/cv/pdf-documento");
+      const blob = await pdfDelCv({ ...cv, correo: "", telefono: "" });
+      const form = new FormData();
+      form.append("file", new File([blob], nombreDeArchivo(cv.nombre, "CV", cv.idioma), { type: "application/pdf" }));
+      form.append("share", "true");
+      form.append("version", meta?.file?.version ?? "");
+      const r = await fetch(endpoint, { method: "POST", body: form });
+      if (!r.ok) throw new Error(String(r.status));
+      avisar(en ? "Done: it's on your profile" : "Listo: ya está en tu perfil");
+      setPaso("inicio");
+    } catch {
+      avisar(en ? "It couldn't be added to your profile. Try again." : "No se pudo poner en tu perfil. Prueba de nuevo.");
+      setPaso("confirmar");
+    }
+  };
+  if (paso === "inicio") {
+    return (
+      <button type="button" onClick={() => setPaso("confirmar")} className={cn(pastilla, "w-full border border-[#d7e1ea] bg-white text-[#162543] hover:bg-[#f6f9fb]")} data-testid="cv-usar-en-perfil">
+        <UserRound className="h-4 w-4" />{en ? "Use on my profile" : "Usar en mi perfil"}
+      </button>
+    );
+  }
+  return (
+    <div role="alert" className="grid gap-2 rounded-xl bg-[#f1faff] px-3 py-2.5 text-[13px] leading-5 text-[#162543]">
+      <span>{en ? "Clients will see this resume when they tap \"View PDF\" on your profile. It goes without your email or phone, and replaces the file you had." : "Los clientes verán este currículum al tocar \"Ver PDF\" en tu perfil. Va sin tu correo ni tu teléfono y reemplaza el archivo que tenías."}</span>
+      <span className="flex flex-wrap justify-end gap-2">
+        <button type="button" disabled={paso === "subiendo"} onClick={() => setPaso("inicio")} className="h-11 rounded-full px-3 font-semibold text-[#52627a] hover:bg-white">{en ? "Cancel" : "Cancelar"}</button>
+        <button type="button" disabled={paso === "subiendo"} onClick={() => void subir()} className="h-11 rounded-full bg-[#009FD9] px-4 font-bold text-white disabled:opacity-60">{paso === "subiendo" ? (en ? "Uploading…" : "Subiendo…") : (en ? "Put it on my profile" : "Ponerlo en mi perfil")}</button>
+      </span>
+    </div>
+  );
+}
+
+function Editor({ pro, documento, borrador, setBorrador, desdeElPerfil, alVolver }: { pro: ProData; documento: Tipo; borrador: Borrador; setBorrador: Dispatch<SetStateAction<Borrador>>; desdeElPerfil: (idioma: Idioma) => Borrador; alVolver: () => void }) {
   const idiomaApp: Idioma = useLocale() === "en" ? "en" : "es";
   const en = idiomaApp === "en";
-  const desdeElPerfil = (idioma: Idioma): Borrador => {
-    const cv = prellenar(datosDelPerfil(pro, nombreCuenta, correo, idioma), idioma);
-    return { cv, carta: cartaInicial(cv) };
-  };
-  // El borrador vive en este dispositivo. Si no hay, se arma desde el perfil.
-  // Si se llegó desde una vacante, ese puesto se aplica encima.
-  const [borrador, setBorrador] = useState<Borrador>(() => {
-    const base = leerBorrador(clave) ?? desdeElPerfil(idiomaApp);
-    // Solo la carta recibe el puesto y la empresa de la vacante; el currículum abre limpio.
-    const v = documento === "carta" ? leerVacante() : null;
-    if (!v?.puesto && !v?.empresa) return base;
-    return { ...base, carta: cartaInicial(base.cv, { puesto: v.puesto, empresa: v.empresa }) };
-  });
   const pestana = documento;
   const [pasoCv, setPasoCv] = useState<PasoCv>("contacto");
-  const [pasoCarta, setPasoCarta] = useState<PasoCarta>("puesto");
+  const [pasoCarta, setPasoCarta] = useState<PasoCarta>("contenido");
   // El ✓ es "ya pasaste por aquí y quedó completo", no "el dato existe": al
   // abrir por primera vez el CV viene lleno desde el perfil y todos los pasos
   // salían marcados sin haberlos visto (16-nov-2026). Se anota el paso que se
@@ -478,15 +689,6 @@ function Editor({ pro, clave, documento, nombreCuenta, correo }: { pro: ProData;
   const [aviso, setAviso] = useState("");
   const [generando, setGenerando] = useState(false);
   const arriba = useRef<HTMLDivElement>(null);
-  useEffect(() => { try { window.sessionStorage.removeItem(VACANTE); } catch { /* sin almacenamiento */ } }, []);
-  useEffect(() => {
-    const t = window.setTimeout(() => { try { window.localStorage.setItem(clave, JSON.stringify(borrador)); } catch { /* sin almacenamiento */ } }, 400);
-    return () => window.clearTimeout(t);
-  }, [borrador, clave]);
-  // Cada herramienta es su propia pantalla: al cambiar de una a otra no se pierde lo último que se escribió.
-  const ultimo = useRef(borrador);
-  useEffect(() => { ultimo.current = borrador; }, [borrador]);
-  useEffect(() => () => { try { window.localStorage.setItem(clave, JSON.stringify(ultimo.current)); } catch { /* sin almacenamiento */ } }, [clave]);
 
   const { cv, carta } = borrador;
   const setCv = (cambio: Partial<CvDocumento>) => setBorrador((b) => ({ ...b, cv: { ...b.cv, ...cambio } }));
@@ -506,8 +708,7 @@ function Editor({ pro, clave, documento, nombreCuenta, correo }: { pro: ProData;
     ["perfil", cv.resumen.trim().length >= 80],
   ] as [PasoCv, boolean][]).filter(([p, ok]) => ok && visitados.has(`cv:${p}`)).map(([p]) => p)), [cv, visitados]);
   const hechosCarta = useMemo(() => new Set<PasoCarta>(([
-    ["puesto", !!carta.puesto.trim()],
-    ["contenido", !revisarCarta(carta).some((a) => a.id === "corchetes")],
+    ["contenido", !!carta.puesto.trim() && !revisarCarta(carta).some((a) => a.id === "corchetes")],
   ] as [PasoCarta, boolean][]).filter(([p, ok]) => ok && visitados.has(`carta:${p}`)).map(([p]) => p)), [carta, visitados]);
 
   const irA = (accion: () => void) => { accion(); window.setTimeout(() => arriba.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 0); };
@@ -666,7 +867,9 @@ function Editor({ pro, clave, documento, nombreCuenta, correo }: { pro: ProData;
     revisar: null,
   };
   const pasoDeLaCarta: Record<PasoCarta, ReactNode> = {
-    puesto: (
+    // Un solo paso para escribir (16-nov-2026): el puesto ya no es un paso
+    // aparte al inicio; va arriba, como un dato más de la carta.
+    contenido: (
       <>
       <Tarjeta titulo={en ? "The position" : "El puesto"} ayuda={en ? "A cover letter goes with your resume: one page, about 300 words." : "La carta acompaña tu currículum: una página, unas 300 palabras."}>
         <div className="grid gap-3 @[560px]:grid-cols-2">
@@ -678,10 +881,6 @@ function Editor({ pro, clave, documento, nombreCuenta, correo }: { pro: ProData;
           <RotateCcw className="h-4 w-4" />{en ? "Rewrite with this position" : "Rehacer con este puesto"}
         </button>
       </Tarjeta>
-      </>
-    ),
-    contenido: (
-      <>
         {([
           ["apertura", en ? "Which job are you applying for?" : "¿A qué puesto te postulás?", en ? "Say the position and how you found it." : "Decilo y contá cómo lo encontraste."],
           ["porQueEncajo", en ? "What shows you can do this job?" : "¿Qué muestra que podés hacer este trabajo?", en ? "2–3 achievements from your resume, with numbers." : "2 o 3 logros de tu currículum, con números."],
@@ -707,6 +906,7 @@ function Editor({ pro, clave, documento, nombreCuenta, correo }: { pro: ProData;
         <p className="mb-2 text-[13px] font-black text-[#162543]">{en ? "Review before sending" : "Revisión antes de enviar"}</p>
         <Revision avisos={avisos} idiomaApp={idiomaApp} />
       </div>
+      {pestana === "cv" && <RevisarVacante cv={cv} en={en} />}
       <div className="grid gap-2 @[560px]:grid-cols-2">
         <button type="button" disabled={generando} onClick={() => void descargar()} className={cn(pastilla, "w-full bg-[#009FD9] text-white hover:bg-[#0089bb]")}>
           <Download className="h-4 w-4" />{pestana === "cv" ? (en ? "Download resume (PDF)" : "Descargar currículum (PDF)") : (en ? "Download letter (PDF)" : "Descargar carta (PDF)")}
@@ -715,11 +915,12 @@ function Editor({ pro, clave, documento, nombreCuenta, correo }: { pro: ProData;
           {pestana === "cv" ? <Copy className="h-4 w-4" /> : <Mail className="h-4 w-4" />}{en ? "Copy as text" : "Copiar como texto"}
         </button>
       </div>
+      {pestana === "cv" && pro?.id && <UsarEnMiPerfil professionalId={String(pro.id)} cv={cv} en={en} avisar={avisar} />}
       <p role="status" aria-live="polite" className="-mt-2 min-h-4 text-center text-xs font-semibold text-[#067647]">{aviso}</p>
       <Link href={pestana === "cv" ? "/dashboard/profesional?tab=carta" : "/dashboard/profesional?tab=cv"} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full px-3 text-sm font-bold text-[#007fae] hover:bg-[#eef6fb]">
         {pestana === "cv" ? (en ? "Next: your cover letter" : "Siguiente: tu carta de presentación") : (en ? "See my resume" : "Ver mi currículum")}<ChevronRight className="h-4 w-4" />
       </Link>
-      <p className="-mt-2 text-center text-[11px] leading-4 text-[#98a2b3]">{en ? "Your draft is saved on this device only." : "El borrador se guarda solo en este dispositivo."}</p>
+      <p className="-mt-2 text-center text-[11px] leading-4 text-[#98a2b3]">{en ? "Your resumes and letters are saved on this device only." : "Tus currículums y cartas se guardan solo en este dispositivo."}</p>
     </div>
   );
 
@@ -727,6 +928,9 @@ function Editor({ pro, clave, documento, nombreCuenta, correo }: { pro: ProData;
     // El ancho que manda es el del panel, no el de la pantalla: lado a lado
     // solo cuando el panel mide 980 px o más; si no, la hoja va abajo.
     <div ref={arriba} className="@container grid min-w-0 max-w-full grid-cols-[minmax(0,1fr)] scroll-mt-24 gap-4 overflow-x-clip" data-testid="cv-builder">
+      <button type="button" onClick={alVolver} className="inline-flex min-h-11 items-center gap-1 justify-self-start rounded-full pr-3 text-sm font-bold text-[#007fae] hover:bg-[#eef6fb]" data-testid="cv-volver-lista">
+        <ChevronLeft className="h-4 w-4" />{pestana === "cv" ? (en ? "My resumes" : "Mis currículums") : (en ? "My cover letters" : "Mis cartas")}
+      </button>
       {pestana === "cv"
         ? <Pasos en={en} pasos={PASOS_CV} actual={pasoCv} hechos={hechosCv} alElegir={(p) => irA(() => { dejar(`cv:${pasoCv}`); setPasoCv(p); })} />
         : <Pasos en={en} pasos={PASOS_CARTA} actual={pasoCarta} hechos={hechosCarta} alElegir={(p) => irA(() => { dejar(`carta:${pasoCarta}`); setPasoCarta(p); })} />}

@@ -63,7 +63,7 @@ function encabezado(l: Lienzo, cv: CvDocumento) {
   if (contacto) { l.y += 2; parrafo(l, contacto, { tam: 9.5, color: GRIS }); }
 }
 
-export async function pdfDelCv(cv: CvDocumento): Promise<Blob> {
+async function dibujarCv(cv: CvDocumento): Promise<JsPdf> {
   const l = await lienzo(cv.plantilla === "moderna");
   const t = TITULOS[cv.idioma];
   l.doc.setProperties({ title: `${cv.nombre} — ${cv.idioma === "en" ? "Resume" : "CV"}`, author: cv.nombre, subject: cv.titular, creator: "ContrataCR" });
@@ -90,7 +90,16 @@ export async function pdfDelCv(cv: CvDocumento): Promise<Blob> {
   if (cv.certificaciones.length) { titulo(l, t.certificaciones); cv.certificaciones.forEach((c) => parrafo(l, c)); }
   if (cv.habilidades.length) { titulo(l, t.habilidades); parrafo(l, cv.habilidades.join(", ")); }
   if (cv.idiomas.length) { titulo(l, t.idiomas); parrafo(l, cv.idiomas.join(", ")); }
-  return l.doc.output("blob");
+  return l.doc;
+}
+
+export async function pdfDelCv(cv: CvDocumento): Promise<Blob> {
+  return (await dibujarCv(cv)).output("blob");
+}
+
+/** Lo mismo en bytes, para el servidor (contratacr.com/<perfil>/cv). */
+export async function pdfDelCvEnBytes(cv: CvDocumento): Promise<ArrayBuffer> {
+  return (await dibujarCv(cv)).output("arraybuffer");
 }
 
 export async function pdfDeLaCarta(cv: CvDocumento, carta: Carta): Promise<Blob> {

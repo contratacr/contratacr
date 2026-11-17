@@ -1,7 +1,6 @@
 'use client';
 import { useState, type ReactNode } from 'react';
-import { BriefcaseBusiness, Download, GraduationCap, ExternalLink, Share2 } from 'lucide-react';
-import { useCompartir } from '@/components/ui/boton-compartir';
+import { BriefcaseBusiness, FileText, GraduationCap } from 'lucide-react';
 import { enlacePerfil } from '@/lib/profile-url';
 import { normalizeCv, sameCvEntry, type CvEntry, type CvProfile } from '@/lib/cv/model';
 import { formatCvDates, parseCvDates } from '@/lib/cv/dates';
@@ -16,28 +15,24 @@ function Description({ text, english }: { text: string; english: boolean }) {
  * Las certificaciones del sistema anterior (`legacyEducation`) entran en
  * Estudios con la misma fila que los estudios del CV —antes eran tarjetas con
  * otra forma y parecían otra sección— y si ya están en el CV salen una vez.
- * «Ver CV» va en el encabezado, al lado del título.
+ * «Ver PDF» va en el encabezado, al lado del título.
  */
 export function CvProfileDetails({ value, english = false, professionalId, slug, hasFile = false, legacyEducation = [], title }: { value?: CvProfile; english?: boolean; professionalId?: string; slug?: string; hasFile?: boolean; legacyEducation?: CvEntry[]; title?: ReactNode }) {
   const cv = normalizeCv(value);
   const education = [...cv.education, ...legacyEducation.filter(old => old.title.trim() && !cv.education.some(entry => sameCvEntry(entry, old)))];
   const sections = { experience: cv.experience, education } as const;
-  const { compartir, avisoNodo } = useCompartir();
-  // CURRÍCULUM (15-nov-2026): ver, descargar y compartir con un enlace corto
-  // (contratacr.com/<perfil>/cv), no /api/professional-cv?professionalId=<uuid>.
-  // Sin archivo adjunto se comparte la pestaña Currículum del perfil.
+  // UN SOLO CURRÍCULUM (16-nov-2026): antes había «Compartir» aunque no hubiera
+  // archivo (compartía la pestaña) y, con archivo, «Ver / Descargar / Compartir»
+  // aparte de lo escrito. Ahora lo escrito es la vista rápida y «Ver PDF» abre
+  // ese mismo currículum como documento: el archivo propio si lo subió, o el
+  // que se arma con el perfil (contratacr.com/<perfil>/cv). Desde el PDF se
+  // descarga o se comparte.
   const corto = slug ? new URL(enlacePerfil(slug)).pathname : '';
-  const enlaceCv = corto ? `${corto}/cv` : professionalId ? `/api/professional-cv?professionalId=${encodeURIComponent(professionalId)}` : '';
-  const conArchivo = hasFile && !!enlaceCv;
-  const boton = 'inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border border-[#dce5ee] px-4 text-sm font-semibold text-[#0089bb] hover:border-[#009FD9]';
-  const fileLink = conArchivo || slug ? <div className="flex flex-wrap items-center gap-2" data-testid="cv-acciones">
-    {conArchivo && <a href={enlaceCv} target="_blank" rel="noopener noreferrer" className={boton}><ExternalLink size={16}/>{english ? 'View' : 'Ver'}</a>}
-    {conArchivo && <a href={`${enlaceCv}${enlaceCv.includes('?') ? '&' : '?'}descargar=1`} download className={boton} data-testid="cv-descargar"><Download size={16}/>{english ? 'Download' : 'Descargar'}</a>}
-    {slug && <button type="button" className={boton} data-testid="cv-compartir" onClick={() => void compartir(`${enlacePerfil(slug, process.env.NEXT_PUBLIC_APP_URL || window.location.origin)}${conArchivo ? '/cv' : '?tab=curriculum'}`, english ? 'Resume' : 'Currículum')}><Share2 size={16}/>{english ? 'Share' : 'Compartir'}</button>}
-  </div> : null;
+  const enlaceCv = corto ? `${corto}/cv` : hasFile && professionalId ? `/api/professional-cv?professionalId=${encodeURIComponent(professionalId)}` : '';
+  const conPdf = !!enlaceCv && (hasFile || education.length + cv.experience.length + cv.skills.length > 0);
+  const fileLink = conPdf ? <a href={enlaceCv} target="_blank" rel="noopener noreferrer" data-testid="cv-ver-pdf" className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border border-[#dce5ee] px-4 text-sm font-semibold text-[#0089bb] hover:border-[#009FD9]"><FileText size={16}/>{english ? 'View PDF' : 'Ver PDF'}</a> : null;
   return <div className="space-y-7" data-cv-public>
     {(title || fileLink) && <div className="flex flex-wrap items-center justify-between gap-3">{title ?? <span/>}{fileLink}</div>}
-    {avisoNodo}
     {(['experience', 'education'] as const).map(section => sections[section].length > 0 && <section key={section} data-cv-section={section}>
       <h3 className="text-base font-semibold text-[#162543]">{section === 'education' ? (english ? 'Education and certifications' : 'Estudios y certificaciones') : (english ? 'Work experience' : 'Experiencia laboral')}</h3>
       <div className="divide-y divide-[#eef2f6]">{sections[section].map((entry, index) => <div key={`${index}-${entry.title}`} className="flex gap-3 py-4">
