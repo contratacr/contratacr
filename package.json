@@ -15,7 +15,7 @@
     "security:env": "node scripts/check-private-env-files.mjs",
     "security:smoke": "node scripts/security-smoke.mjs",
     "supabase:templates:validate": "node scripts/sync-supabase-email-templates.mjs --validate-only",
-    "audit:high": "npm audit --omit=dev --audit-level=high",
+    "audit:high": "node scripts/ci/audit-high.mjs",
     "perf:budgets": "node scripts/perf-budgets.mjs",
     "padron:check": "node scripts/check-padron.mjs",
     "padron:load": "node scripts/load-padron.mjs",
