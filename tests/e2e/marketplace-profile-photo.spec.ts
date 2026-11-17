@@ -1,7 +1,7 @@
 import { expect, test } from "playwright/test";
 import { gotoOK, waitForInteractivePage } from "./helpers";
 
-for (const route of ["/empleos", "/proyectos", "/promociones"]) {
+for (const route of ["/empleos", "/solicitudes", "/promociones"]) {
   test(`la foto de perfil se amplía sin navegar en ${route}`, async ({ page }) => {
     await gotoOK(page, route);
     await waitForInteractivePage(page);

@@ -4,7 +4,7 @@ import {waitForInteractivePage} from './helpers';
 declare global { interface Window { __searchFocusTrace: { tag: string; to: string | null }[]; } }
 const routes = [
  { path:'/profesionales', query:'Cámaras' },
- { path:'/proyectos', query:'web' },
+ { path:'/solicitudes', query:'web' },
  { path:'/empleos', query:'Téc' },
  { path:'/promociones', query:'web' },
 ];
@@ -67,7 +67,7 @@ test('professional search stays over old results while navigation is pending, in
 
 test('hidden desktop navbar never opens a second professional search sheet',async({page})=>{
  test.skip((page.viewportSize()?.width??1280)>=1024,'Mobile search sheet');
- for(const path of ['/proyectos','/empleos','/promociones']) {
+ for(const path of ['/solicitudes','/empleos','/promociones']) {
   await page.goto(path);await waitForInteractivePage(page);
   const before=await page.evaluate(()=>({position:document.body.style.position,overflow:document.body.style.overflow}));
   await page.evaluate(()=>window.dispatchEvent(new CustomEvent('ccr:open-native-search',{detail:{atendido:false}})));
@@ -79,7 +79,7 @@ test('hidden desktop navbar never opens a second professional search sheet',asyn
 
 test('Enter in location submits marketplace search without a service',async({page})=>{
  test.skip((page.viewportSize()?.width??1280)>=1024,'Mobile search sheet');
- for(const path of ['/proyectos','/empleos','/promociones']) {
+ for(const path of ['/solicitudes','/empleos','/promociones']) {
   const panel=await openSearch(page,path);const location=panel.locator('input').nth(1);
   await location.fill('Alajuela');await location.press('Enter');
   await expect(panel).toHaveCount(0);
@@ -91,7 +91,7 @@ test.describe('viewport sizing',()=>{
  test.use({hasTouch:true});
  test('search suggestions use the visual viewport and keep an overflow cue visible while idle',async({page})=>{
  await page.setViewportSize({width:390,height:700});
- for(const path of ['/profesionales','/proyectos']) {
+ for(const path of ['/profesionales','/solicitudes']) {
   const panel=await openSearch(page,path);
   const location=panel.locator('input').nth(1);
   await location.fill('San');

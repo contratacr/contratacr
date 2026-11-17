@@ -297,7 +297,7 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
     await loginAs(page, "e2e.pro@contratacr.test", process.env.E2E_TEST_PASSWORD ?? "");
     // Como al abrir la app en Proyectos (iOS recarga la pantalla al volver del
     // fondo): se toca la campana en cuanto existe, en el acto.
-    await page.goto("/proyectos", { waitUntil: "commit" });
+    await page.goto("/solicitudes", { waitUntil: "commit" });
     const campana = page.locator("nav.ccr-native-bottom-nav").getByRole("link", { name: "Notificaciones" });
     await campana.waitFor({ state: "attached" });
     await campana.tap({ force: true });

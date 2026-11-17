@@ -169,7 +169,7 @@ export function MobileAppDownloadBanner({ initialNativeIosBanner = false, initia
   }, [native]);
   // Public browsing pages share the notice; private tasks keep their space.
   const path = pathname.replace(/^\/(es|en)(?=\/|$)/, "") || "/";
-  const eligible = (path === "/" || /^\/(?:como-funciona|servicios|categorias|buscar|profesionales|proyectos|empleos|promociones|ayuda|contacto|privacidad|terminos)(?:\/|$)/.test(path)) && !/\/(?:publicar|editar|mis-empleos|mis-promociones)(?:\/|$)/.test(path);
+  const eligible = (path === "/" || /^\/(?:como-funciona|servicios|categorias|buscar|profesionales|solicitudes|empleos|promociones|ayuda|contacto|privacidad|terminos)(?:\/|$)/.test(path)) && !/\/(?:publicar|editar|mis-empleos|mis-promociones)(?:\/|$)/.test(path);
   useEffect(() => {
     if (native || !eligible) return;
     const update = () => setBlocked(document.documentElement.hasAttribute("data-keyboard-open") || document.documentElement.hasAttribute("data-keyboard-visible") || /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName ?? "") || document.body.classList.contains("ccr-con-barra-accion") || Array.from(document.querySelectorAll<HTMLElement>('[role="dialog"], [aria-modal="true"]')).some(el => !(el.classList.contains('ccr-menu-completo') && !el.classList.contains('ccr-menu-abierto')) && el.getAttribute('data-state') !== 'closed' && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden'));

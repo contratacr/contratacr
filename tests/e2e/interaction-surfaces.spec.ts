@@ -18,13 +18,13 @@ test.describe("@seeded interaction surfaces", () => {
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
     await gotoOK(page, "/dashboard/profesional?tab=sent_projects");
 
-    const publish = page.getByRole("button", { name: /Publicar proyecto|Post a project|Crear/i }).first();
+    const publish = page.getByRole("button", { name: /Publicar solicitud|Post a request|Crear/i }).first();
     await expect(publish).toBeVisible();
     await publish.click();
 
     await page.getByRole("button", { name: "Necesito un profesional", exact: true }).click();
     // El nombre accesible sigue el título visible del formulario.
-    const dialog = page.getByRole("dialog", { name: /Cuéntenos sobre su proyecto|Tell us about your project|Crear (?:un )?proyecto|Create a project/i });
+    const dialog = page.getByRole("dialog", { name: /Cuéntanos qué necesitas|Tell us what you need|Crear (?:una )?solicitud|Create a request/i });
     await expect(dialog).toBeVisible();
     await expectVisibleText(
       dialog,

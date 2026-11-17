@@ -27,7 +27,7 @@ const COLUMNS = [
       { key: "clients.search",     href: "/profesionales" },
       { key: "clients.categories", href: "/servicios" },
       { key: "clients.offers",     href: "/promociones" },
-      { key: "clients.publish",    href: "/publicar-proyecto" },
+      { key: "clients.publish",    href: "/publicar-solicitud" },
     ],
   },
   {
@@ -36,7 +36,7 @@ const COLUMNS = [
       { key: "pros.register",     href: "/registro/profesional" },
       // Los tres tableros son la puerta de entrada al trabajo: de aquí sale el
       // enlace interno que los buscadores siguen hasta ellos.
-      { key: "pros.projects",     href: "/proyectos" },
+      { key: "pros.projects",     href: "/solicitudes" },
       // Empleos se puede apagar entero con la bandera; el resto del app la
       // respeta y el pie lo enlazaba igual.
       ...(EMPLEOS_VISIBLE ? [{ key: "pros.jobs", href: "/empleos" }] : []),

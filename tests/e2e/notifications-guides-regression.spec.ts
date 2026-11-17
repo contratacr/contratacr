@@ -31,7 +31,7 @@ const GUIDE_EXPECTATIONS: GuideExpectation[] = [
   { id: "accountSecurityGuide", stepCount: 4, target: { kind: "tab", value: "cuenta" } },
   { id: "professionalPanel", stepCount: 4, target: { kind: "tab", value: "publicaciones" } },
   { id: "completionGuide", stepCount: 4, target: { kind: "tab", value: "completion" } },
-  { id: "opportunities", stepCount: 3, target: { kind: "path", value: "/proyectos" } },
+  { id: "opportunities", stepCount: 3, target: { kind: "path", value: "/solicitudes" } },
   { id: "successCases", stepCount: 4, target: { kind: "tab", value: "profile" } },
   { id: "services", stepCount: 4, target: { kind: "tab", value: "profile" } },
   { id: "jobsPanel", stepCount: 4, target: { kind: "tab", value: "publicaciones" } },
@@ -87,7 +87,7 @@ async function seedNotifications(userId: string, locale: Locale) {
       type: "new_project",
       title: "Nuevo proyecto",
       message: `Un cliente publicó "${projectTitle}" en Desarrollo web.`,
-      data: { regression_run: runId, push_suppressed: true, link: "/proyectos", project_title: projectTitle, category_id: "desarrollo_web" },
+      data: { regression_run: runId, push_suppressed: true, link: "/solicitudes", project_title: projectTitle, category_id: "desarrollo_web" },
       read: false,
     },
     {
@@ -211,7 +211,7 @@ test.describe("@notifications-guides disposable bilingual UI regression", () => 
         // Abrir «nuevo proyecto» lleva al tablero de proyectos y deja el aviso leido.
         const projectRow = list.locator(".ccr-notifications-items > li").filter({ hasText: seeded.projectTitle });
         await projectRow.locator("div[role='button']").first().click();
-        await page.waitForURL(new RegExp(`${locale === "es" ? "" : `/${locale}`}/proyectos`), { waitUntil: "domcontentloaded" });
+        await page.waitForURL(new RegExp(`${locale === "es" ? "" : `/${locale}`}/solicitudes`), { waitUntil: "domcontentloaded" });
         await expect.poll(async () => {
           const rows = await notificationRows([seeded.projectId]);
           return rows[0]?.read;

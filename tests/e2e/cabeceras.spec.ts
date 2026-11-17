@@ -65,13 +65,13 @@ test.describe("@seeded cabeceras", () => {
     test.slow();
     if (!isMobileProject(testInfo)) test.skip(true, "La barra con marca + título es la del teléfono; en computadora el navbar es uno solo.");
 
-    for (const ruta of ["/empleos", "/promociones", "/proyectos", "/servicios", "/login", "/registro/profesional"]) {
+    for (const ruta of ["/empleos", "/promociones", "/solicitudes", "/servicios", "/login", "/registro/profesional"]) {
       await gotoOK(page, ruta);
       revisar(ruta, await medirCabecera(page));
     }
 
     // Fichas: la barra pasa a ser «flecha + título», y tiene que medir igual.
-    for (const [lista, patron] of [["/empleos", "/empleos/[0-9a-f-]{8,}"], ["/proyectos", "/proyectos/[0-9a-f-]{8,}"], ["/promociones", "/promociones/[0-9a-f-]{8,}"]] as const) {
+    for (const [lista, patron] of [["/empleos", "/empleos/[0-9a-f-]{8,}"], ["/solicitudes", "/solicitudes/[0-9a-f-]{8,}"], ["/promociones", "/promociones/[0-9a-f-]{8,}"]] as const) {
       await gotoOK(page, lista);
       await page.waitForTimeout(1500);
       const href = await page.evaluate((p) => {
@@ -127,7 +127,7 @@ test.describe("@seeded cabeceras", () => {
     // hoja servida. Las uniones viven ahora en el documento; aquí se les quitan
     // todas las utilidades de borde y tienen que seguir iguales.
     await page.setViewportSize({ width: 1440, height: 900 });
-    for (const ruta of ["/empleos", "/promociones", "/proyectos"]) {
+    for (const ruta of ["/empleos", "/promociones", "/solicitudes"]) {
       await gotoOK(page, ruta);
       await page.waitForTimeout(900);
       const m = await page.evaluate(() => {

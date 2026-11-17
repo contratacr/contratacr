@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return metadatosDePantalla({
     locale,
     tarjetaPropia: true,
-    ruta: "/proyectos",
+    ruta: "/solicitudes",
     titulo: en ? "Projects clients need | ContrataCR" : "Proyectos que la gente necesita | ContrataCR",
     descripcion: en
       ? "Work posted by clients across Costa Rica. Read the brief and message them on WhatsApp."

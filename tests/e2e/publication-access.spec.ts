@@ -13,13 +13,13 @@ test('a client can open project publishing but cannot publish jobs or offers wit
  expect(profile?.role).toBe('client');
  const {data:professional}=await admin.from('professionals').select('id').eq('profile_id',profile!.id).maybeSingle();
  expect(professional).toBeNull();
- await gotoOK(page,'/publicar-proyecto');await waitForInteractivePage(page);
+ await gotoOK(page,'/publicar-solicitud');await waitForInteractivePage(page);
  await expect(page.locator('#publish-project-title')).toBeVisible();
  await page.getByRole('button',{name:'Necesito un profesional',exact:true}).click();
- await expect(page.locator('#publish-project-title')).toHaveText('Cuéntenos sobre su proyecto');
+ await expect(page.locator('#publish-project-title')).toHaveText('Cuéntanos qué necesitas');
  await expect(page.locator('textarea').first()).toBeVisible();
- await expect(page.getByRole('button',{name:/^Publicar proyecto$/}).last()).toBeVisible();
- expect(new URL(page.url()).pathname).toBe('/publicar-proyecto');
+ await expect(page.getByRole('button',{name:/^Publicar solicitud$/}).last()).toBeVisible();
+ expect(new URL(page.url()).pathname).toBe('/publicar-solicitud');
  const projects=await apiJson(page,'/api/projects?role=client');
  expect(projects.status).toBe(200);
  for(const [path,body]of [

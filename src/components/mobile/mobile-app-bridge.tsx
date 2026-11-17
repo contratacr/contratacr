@@ -24,7 +24,7 @@ function isSearchPath(pathname: string) {
 function isNativeFullscreenPath(pathname: string) {
   // Task flows own the whole screen: no app header, no bottom nav, no reserved
   // gaps. Each one carries its own title bar and way back.
-  return /(^|\/)(?:publicar-proyecto|(?:empleos|promociones)\/publicar)(\/|$)/.test(pathname);
+  return /(^|\/)(?:publicar-solicitud|(?:empleos|promociones)\/publicar)(\/|$)/.test(pathname);
 }
 
 // Overlays own the back gesture while they are open, and each one listens for a
@@ -276,7 +276,7 @@ export function MobileAppBridge() {
     // misma cabecera propia que Promociones y Empleos, pero el cascarón seguía
     // reservándole los 64 px de una cabecera de app que ahí no existe, y esa
     // reserva se veía como una franja gris encima del título.
-    const isMarketplaceRoute = /(^|\/)(?:promociones|empleos|proyectos|servicios)(\/|$)/.test(pathname);
+    const isMarketplaceRoute = /(^|\/)(?:promociones|empleos|solicitudes|servicios)(\/|$)/.test(pathname);
     const isFullscreenRoute = isNativeFullscreenPath(pathname);
     document.documentElement.classList.toggle("ccr-native-search-route", isSearchRoute);
     document.body.classList.toggle("ccr-native-search-route", isSearchRoute);

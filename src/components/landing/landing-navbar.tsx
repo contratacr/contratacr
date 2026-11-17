@@ -637,7 +637,7 @@ function AccountMenu({
               {t(isAdmin && isPro ? "professionalPanel" : "myPanel")}
             </Link>
             {/* Ni «Mis proyectos» ni «Publicar proyecto» viven aquí: las
-                dos cosas se hacen en el tablero de /proyectos, que ya está en el
+                dos cosas se hacen en el tablero de /solicitudes, que ya está en el
                 menú. Repetirlas alargaba la lista sin llevar a ningún lado
                 nuevo. */}
             {/* Cotizar es lo que el profesional hace seguido: en la app está en
@@ -711,7 +711,7 @@ export function HeaderAccountLink() {
 function GemeloDelBuscador({ pathname }: { pathname: string | null }) {
   const t = useTranslations("tableroBuscador");
   const tablero = /(^|\/)empleos(\/|$)/.test(pathname ?? "") ? "empleos"
-    : /(^|\/)proyectos(\/|$)/.test(pathname ?? "") ? "proyectos"
+    : /(^|\/)solicitudes(\/|$)/.test(pathname ?? "") ? "proyectos"
       : "ofertas";
   return (
     <div aria-hidden data-gemelo-buscador="" className="pointer-events-none absolute inset-0 flex items-center">
@@ -959,7 +959,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // with CSS: leaving it mounted keeps its layout class and safe-area reserve
   // active, which shortens the sheet and the full-screen search overlay.
   const enMensajes = /(^|\/)mensajes(?:\/|$)/.test(pathname ?? "");
-  const nativeFullscreenRoute = /(^|\/)(?:publicar-proyecto|(?:empleos|promociones)\/publicar)(?:\/|$)/.test(pathname ?? "");
+  const nativeFullscreenRoute = /(^|\/)(?:publicar-solicitud|(?:empleos|promociones)\/publicar)(?:\/|$)/.test(pathname ?? "");
   // LA PRIMERA PINTURA YA SABE SI ESTA CUENTA OFRECE SERVICIOS.
   //
   // Esto decidía «Ofrecer mis servicios» y se resolvía con una consulta desde
@@ -995,7 +995,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // behavior so the compact search never flashes during hydration/refresh.
   const isHomePage = !pathname || pathname === "/" || /^\/(?:es|en)\/?$/.test(pathname);
   const isMarketplaceEditor = /\/(?:empleos|promociones)\/(?:publicar|[^/]+\/editar)\/?$/.test(pathname);
-  const isMarketplaceRoute = /\/(?:empleos|promociones|proyectos)(?:\/|$)/.test(pathname);
+  const isMarketplaceRoute = /\/(?:empleos|promociones|solicitudes)(?:\/|$)/.test(pathname);
   const effectiveMarketplaceDesktop = marketplaceDesktop || (isMarketplaceRoute && !isMarketplaceEditor);
   // Empleos, ofertas y /buscar traen sus propios filtros pegados a la barra: la
   // línea de la barra caía justo encima de ellos y se leía como una raya suelta.
@@ -1015,7 +1015,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // reservar— y las pantallas de la app —mensajes, avisos— se quedan sin él.
   // Notificaciones sí lleva buscador: es una pantalla de la web como las demás,
   // y desde un aviso lo siguiente suele ser ir a buscar algo.
-  const rutaSinBuscador = drawerOnly || /\/(?:admin|onboarding|mensajes|completar-perfil|eliminar-cuenta|publicar-proyecto)(?:\/|$)/.test(pathname ?? "");
+  const rutaSinBuscador = drawerOnly || /\/(?:admin|onboarding|mensajes|completar-perfil|eliminar-cuenta|publicar-solicitud)(?:\/|$)/.test(pathname ?? "");
   const showDesktopCompactSearch = effectiveCompact && !effectiveMarketplaceDesktop && !rutaSinBuscador;
   // The global navbar is navigation-only. /buscar explicitly opts into its
   // contextual professional search; every other destination owns its search.
@@ -1427,7 +1427,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   }, [openMobileMenu]);
 
   const navigateNativeMarketplace = useCallback(
-    (event: React.MouseEvent<HTMLAnchorElement>, href: "/promociones" | "/empleos" | "/proyectos") => {
+    (event: React.MouseEvent<HTMLAnchorElement>, href: "/promociones" | "/empleos" | "/solicitudes") => {
       if (!nativeApp) return;
       // Same-document navigation, like every other tab. The old full reload
       // cost a blank frame plus re-running all scripts on each tap; if the RSC
@@ -2161,7 +2161,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         </Link>
                         {/* Proyectos ya no vive solo adentro del panel: es un
                             tablero público más, como empleos y promociones. */}
-                        <Link href="/proyectos" onClick={() => setOpenMenu(null)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
+                        <Link href="/solicitudes" onClick={() => setOpenMenu(null)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
                           <ClipboardList className="h-5 w-5 shrink-0" />
                           {locale === "en" ? "Projects" : "Proyectos"}
                         </Link>
@@ -2952,7 +2952,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     Empleos viven aquí también en la app: abajo quedan buscar,
                     el asistente, crear, notificaciones y el panel. */}
                 {(
-                  <Link href="/proyectos" prefetch={true} onClick={(event) => { cerrarCajon(event); navigateNativeMarketplace(event, "/proyectos"); }} className={claseCajon("/proyectos")}>
+                  <Link href="/solicitudes" prefetch={true} onClick={(event) => { cerrarCajon(event); navigateNativeMarketplace(event, "/solicitudes"); }} className={claseCajon("/solicitudes")}>
                     <DrawerIcon><ClipboardList /></DrawerIcon>
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Projects" : "Proyectos"}</span>
                   </Link>

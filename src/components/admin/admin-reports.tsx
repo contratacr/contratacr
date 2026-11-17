@@ -51,7 +51,7 @@ export function AdminReports(){
    <p className="text-xs">Reportado por: {r.reporter_name||"Visitante o registro anterior"} · Caso {r.id}</p>
    {r.decision_reason&&<p className="text-sm">Última decisión: {r.decision_reason}</p>}
    {r.appeal_reason&&<p className="text-sm">Solicitud de revisión: {r.appeal_reason}</p>}
-   {r.target_type&&r.target_id&&["project","job","offer","professional"].includes(r.target_type)&&<Link className="text-sm underline" href={`${({project:"/proyectos/",job:"/empleos/",offer:"/promociones/",professional:"/admin/proveedores/"} as Record<string,string>)[r.target_type]}${r.target_id}`}>Abrir contenido</Link>}
+   {r.target_type&&r.target_id&&["project","job","offer","professional"].includes(r.target_type)&&<Link className="text-sm underline" href={`${({project:"/solicitudes/",job:"/empleos/",offer:"/promociones/",professional:"/admin/proveedores/"} as Record<string,string>)[r.target_type]}${r.target_id}`}>Abrir contenido</Link>}
    {r.conversation_id&&<Link className="ml-3 text-sm underline" href={`/admin/conversaciones?conversation=${r.conversation_id}&report=${r.id}`}>Revisión restringida del chat</Link>}
    <button className={box} onClick={()=>void inspect(r)}>Atender y ver historial</button>
   </article>)}

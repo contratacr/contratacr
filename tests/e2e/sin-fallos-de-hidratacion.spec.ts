@@ -22,7 +22,7 @@ import { firstProfessionalHref, loginAs } from "./helpers";
  */
 const PUBLICAS = [
   "/", "/en", "/profesionales", "/profesionales?provincia=sj", "/profesionales?categoria=plomeria",
-  "/servicios", "/empleos", "/promociones", "/proyectos", "/ayuda", "/como-funciona", "/login",
+  "/servicios", "/empleos", "/promociones", "/solicitudes", "/ayuda", "/como-funciona", "/login",
 ];
 const CON_SESION = [
   "/", "/profesionales?provincia=sj", "/empleos", "/promociones",

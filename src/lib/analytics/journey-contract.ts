@@ -3,6 +3,9 @@ export const JOURNEY_ACTIONS = ["navigation", "button", "filter", "form_start", 
 export type JourneyAction = typeof JOURNEY_ACTIONS[number];
 export function routeSection(path: string): string {
   const first = path.replace(/^\/(?:es|en)(?=\/|$)/, "").split("/").filter(Boolean)[0] ?? "home";
+  // La URL pasó de /proyectos a /solicitudes (16-nov-2026); la clave de
+  // analítica se queda igual para no partir las series históricas.
+  if (first === "solicitudes" || first === "publicar-solicitud") return first === "solicitudes" ? "proyectos" : "perfil_publico";
   const known = ["home","buscar","profesionales","proyectos","promociones","empleos","servicios","asistente","mensajes","cotizaciones","dashboard","perfil","cuenta","login","registro","privacidad","terminos","ayuda","admin"];
   return known.includes(first) ? first : "perfil_publico";
 }

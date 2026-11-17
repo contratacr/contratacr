@@ -14,7 +14,7 @@ import { PUBLICATION_TABLE, validatePublicationEdit } from "@/lib/admin/publicat
 // Una publicación retirada por moderación no se edita: la base la protege
 // (migración 261) y primero hay que restaurarla.
 
-const PATHS = { job: "/empleos", offer: "/promociones", project: "/proyectos" } as const;
+const PATHS = { job: "/empleos", offer: "/promociones", project: "/solicitudes" } as const;
 
 export async function PATCH(request: Request) {
   const access = await moderationAccess();

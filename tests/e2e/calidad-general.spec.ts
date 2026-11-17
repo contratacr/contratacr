@@ -22,8 +22,8 @@ const esLocal = () => /localhost|127\.0\.0\.1/.test(base());
 const medirTiempos = () => !esLocal() || process.env.PLAYWRIGHT_LOCAL_PRODUCTION === "1" || !!process.env.CI;
 
 const PUBLICAS = [
-  "/", "/profesionales", "/servicios", "/promociones", "/empleos", "/proyectos", "/como-funciona", "/ayuda",
-  "/login", "/registro", "/registro/cliente", "/registro/profesional", "/publicar-proyecto", "/cotizar",
+  "/", "/profesionales", "/servicios", "/promociones", "/empleos", "/solicitudes", "/como-funciona", "/ayuda",
+  "/login", "/registro", "/registro/cliente", "/registro/profesional", "/publicar-solicitud", "/cotizar",
   "/empleos/publicar", "/promociones/publicar", "/soporte", "/terminos", "/privacidad", "/mejorar-mi-perfil",
   "/verificacion-de-identidad",
 ];
@@ -93,12 +93,12 @@ test.describe("inglés", () => {
     await gotoOK(page, "/en");
     await expect(page.locator("html")).toHaveAttribute("lang", /^en/);
     await expect(page.getByText("Don't know who to call?")).toBeVisible();
-    await expect(page.getByRole("main").getByRole("link", { name: "Post a project" })).toBeVisible();
-    await expect(page.getByText(/No sabes a quién llamar|Crea un proyecto/)).toHaveCount(0);
+    await expect(page.getByRole("main").getByRole("link", { name: "Post a request" })).toBeVisible();
+    await expect(page.getByText(/No sabes a quién llamar|Crea una solicitud/)).toHaveCount(0);
 
-    await gotoOK(page, "/en/publicar-proyecto?categoria=desarrollo_web");
+    await gotoOK(page, "/en/publicar-solicitud?categoria=desarrollo_web");
     await page.locator("#publish-project-title").waitFor({ timeout: 30_000 });
-    await expect(page.getByText(/Cuéntanos|¿Qué necesitas|¿Dónde\?|recibirán tu proyecto/)).toHaveCount(0);
+    await expect(page.getByText(/Cuéntanos|¿Qué necesitas|¿Dónde\?|recibirán tu solicitud/)).toHaveCount(0);
 
     await gotoOK(page, "/en/cotizar");
     await page.getByRole("dialog").waitFor({ timeout: 30_000 });
@@ -201,7 +201,7 @@ test.describe("tiempos de carga", () => {
     const lentas: string[] = [];
     for (const [nombre, tamano] of [["teléfono", TELEFONO], ["computadora", COMPUTADORA]] as const) {
       await page.setViewportSize(tamano);
-      for (const ruta of ["/", "/profesionales", "/servicios", "/promociones", "/empleos", "/proyectos", "/login", "/registro/profesional", "/publicar-proyecto", "/en"]) {
+      for (const ruta of ["/", "/profesionales", "/servicios", "/promociones", "/empleos", "/solicitudes", "/login", "/registro/profesional", "/publicar-solicitud", "/en"]) {
         // La mejor de dos visitas: la primera puede pagar el arranque en frío.
         let mejor = { respuesta: Infinity, interactiva: Infinity, completa: Infinity };
         for (let intento = 0; intento < 2; intento += 1) {
@@ -262,7 +262,7 @@ test.describe("esqueletos", () => {
         await page.goto(ruta, { waitUntil: "load" });
         await page.waitForTimeout(700);
         const m = await medida(page);
-        if (ruta === "/publicar-proyecto") {
+        if (ruta === "/publicar-solicitud") {
           // This request-dependent route has its own loading boundary while the
           // server resolves the return destination. Its form mounts in a portal;
           // a first loading frame is valid, but it must be gone when ready.
@@ -327,7 +327,7 @@ test.describe("compartir", () => {
     // prefijo en la dirección, pero el archivo de la imagen sí), y Facebook y
     // WhatsApp no mostraban nada al pegar el enlace (6-oct-2026).
     const dinamicas: string[] = [];
-    for (const [tablero, prefijo] of [["/profesionales", "/profesionales/"], ["/empleos", "/empleos/"], ["/promociones", "/promociones/"], ["/proyectos", "/proyectos/"]] as const) {
+    for (const [tablero, prefijo] of [["/profesionales", "/profesionales/"], ["/empleos", "/empleos/"], ["/promociones", "/promociones/"], ["/solicitudes", "/solicitudes/"]] as const) {
       const html = await (await request.get(tablero)).text();
       const enlace = [...html.matchAll(new RegExp(`href="(${prefijo}[^"?#/]+)`, "g"))].map((m) => m[1]).find((h) => !/publicar|mis-/.test(h));
       if (enlace) dinamicas.push(enlace);

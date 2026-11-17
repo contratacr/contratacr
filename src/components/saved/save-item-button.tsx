@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 function etiquetasGuardado(locale: string, itemType: "offer" | "job" | "project") {
   return locale === "en"
     ? { save: "Save", short: "Save", saved: "Saved", remove: `Remove ${{ offer: "promotion", job: "job", project: "project" }[itemType]} from favorites` }
-    : { save: "Guardar", short: "Guardar", saved: "Guardado", remove: `Quitar ${{ offer: "la promoción", job: "el empleo", project: "el proyecto" }[itemType]} de favoritos` };
+    : { save: "Guardar", short: "Guardar", saved: "Guardado", remove: `Quitar ${{ offer: "la promoción", job: "el empleo", project: "la solicitud" }[itemType]} de favoritos` };
 }
 
 export type SaveItemKind = "offer" | "job" | "project";

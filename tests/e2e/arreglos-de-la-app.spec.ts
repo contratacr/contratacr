@@ -15,7 +15,7 @@ import { gotoOK, waitForInteractivePage } from "./helpers";
 test.describe("check de identidad en las listas", () => {
   test.use({ viewport: { width: 320, height: 800 }, isMobile: true, hasTouch: true });
 
-  for (const ruta of ["/profesionales", "/promociones", "/empleos", "/proyectos"]) {
+  for (const ruta of ["/profesionales", "/promociones", "/empleos", "/solicitudes"]) {
     test(`${ruta}: la insignia va en un renglón aunque el nombre sea larguísimo`, async ({ page }) => {
       await gotoOK(page, ruta);
       await waitForInteractivePage(page);

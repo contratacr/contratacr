@@ -24,7 +24,7 @@ test("@seeded el cliente corrige su proyecto y el cambio queda", async ({ page }
     projectId = project.id;
     await page.setViewportSize({ width: 1366, height: 900 });
     await loginAs(page, account.email, account.password);
-    await gotoOK(page, `/proyectos/${projectId}`);
+    await gotoOK(page, `/solicitudes/${projectId}`);
     await expect(page.getByRole("button", { name: "Editar", exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: "Administrar", exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Editar", exact: true }).click();

@@ -4,16 +4,16 @@ const ALLOWED_RETURN_PATHS = [
   "/profesionales/",
   "/dashboard/cliente",
   "/dashboard/profesional",
-  "/proyectos",
+  "/solicitudes",
   "/notificaciones",
 ] as const;
 
-type Tablero = "/promociones" | "/empleos" | "/proyectos";
+type Tablero = "/promociones" | "/empleos" | "/solicitudes";
 
 const PANEL_POR_TABLERO: Record<Tablero, string> = {
   "/promociones": "/dashboard/profesional?mode=offer&tab=offers",
   "/empleos": "/dashboard/profesional?mode=offer&tab=jobs",
-  "/proyectos": "/dashboard/profesional?tab=sent_projects",
+  "/solicitudes": "/dashboard/profesional?tab=sent_projects",
 };
 
 function withoutLocale(pathname: string) {

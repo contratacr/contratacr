@@ -6,7 +6,7 @@ import { rutaInternaSegura } from "@/lib/navigation/ruta-interna";
  * que la flecha de atrás de un formulario a pantalla completa vuelva ahí.
  * Nunca a pantallas de entrada ni a otro formulario.
  */
-const NO_SE_VUELVE_A = /^\/(?:en\/)?(?:login|registro|onboarding|publicar-proyecto|cotizar|auth)(?:[/?]|$)/;
+const NO_SE_VUELVE_A = /^\/(?:en\/)?(?:login|registro|onboarding|publicar-solicitud|cotizar|auth)(?:[/?]|$)/;
 
 export async function paginaDeOrigen(): Promise<string | null> {
   const h = await headers();

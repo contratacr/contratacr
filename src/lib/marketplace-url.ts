@@ -49,7 +49,7 @@ export function rutaEmpleo(job: { id: string; title?: string | null }): string {
   return `/empleos/${tramoFicha(job.title ?? "", job.id)}`;
 }
 export function rutaProyecto(project: { id: string; title?: string | null }): string {
-  return `/proyectos/${tramoFicha(project.title ?? "", project.id)}`;
+  return `/solicitudes/${tramoFicha(project.title ?? "", project.id)}`;
 }
 
 // EL ENLACE QUE SE COMPARTE ES EL LEGIBLE (3-oct-2026): contratacr.com/empleos/

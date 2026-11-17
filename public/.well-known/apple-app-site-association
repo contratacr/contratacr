@@ -196,6 +196,12 @@
             "/": "/es/profesionales/*"
           },
           {
+            "/": "/es/solicitudes"
+          },
+          {
+            "/": "/es/solicitudes/*"
+          },
+          {
             "/": "/es/proyectos"
           },
           {
@@ -266,6 +272,12 @@
           },
           {
             "/": "/es/completar-perfil/*"
+          },
+          {
+            "/": "/es/publicar-solicitud"
+          },
+          {
+            "/": "/es/publicar-solicitud/*"
           },
           {
             "/": "/es/publicar-proyecto"
@@ -550,6 +562,12 @@
             "/": "/en/profesionales/*"
           },
           {
+            "/": "/en/solicitudes"
+          },
+          {
+            "/": "/en/solicitudes/*"
+          },
+          {
             "/": "/en/proyectos"
           },
           {
@@ -620,6 +638,12 @@
           },
           {
             "/": "/en/completar-perfil/*"
+          },
+          {
+            "/": "/en/publicar-solicitud"
+          },
+          {
+            "/": "/en/publicar-solicitud/*"
           },
           {
             "/": "/en/publicar-proyecto"
@@ -904,6 +928,12 @@
             "/": "/profesionales/*"
           },
           {
+            "/": "/solicitudes"
+          },
+          {
+            "/": "/solicitudes/*"
+          },
+          {
             "/": "/proyectos"
           },
           {
@@ -974,6 +1004,12 @@
           },
           {
             "/": "/completar-perfil/*"
+          },
+          {
+            "/": "/publicar-solicitud"
+          },
+          {
+            "/": "/publicar-solicitud/*"
           },
           {
             "/": "/publicar-proyecto"

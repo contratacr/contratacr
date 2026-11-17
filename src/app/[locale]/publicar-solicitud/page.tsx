@@ -15,6 +15,6 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function PublicarProyectoPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { returnTo } = await searchParams;
   const origen = rutaInternaSegura(typeof returnTo === "string" ? returnTo : null) ?? await paginaDeOrigen();
-  const volverA = origen && !/^\/(?:en\/)?(?:publicar-proyecto|login|auth|registro)(?:[/?]|$)/.test(origen) ? origen : "/proyectos";
+  const volverA = origen && !/^\/(?:en\/)?(?:publicar-solicitud|login|auth|registro)(?:[/?]|$)/.test(origen) ? origen : "/solicitudes";
   return <PublicarProyectoSinSesion volverA={volverA} />;
 }

@@ -21,7 +21,7 @@ test("section links describe their content and preserve individual cards", async
   expect(Math.abs((bounds.top+bounds.bottom)/2-315)).toBeLessThan(12);
   expect(bounds.left).toBeGreaterThan(300); expect(bounds.right).toBeLessThan(900);
   expect(bounds.top).toBeGreaterThan(60); expect(bounds.bottom).toBeLessThan(570);
-  for (const section of ["profesionales", "empleos", "promociones", "proyectos", "publicar-proyecto", "cotizar"]) {
+  for (const section of ["profesionales", "empleos", "promociones", "proyectos", "publicar-solicitud", "cotizar"]) {
     const image = await request.get(`/es/${section}/opengraph-image`);
     expect(image.ok(), section).toBeTruthy();
     expect(image.headers()["content-type"]).toContain("image/png");

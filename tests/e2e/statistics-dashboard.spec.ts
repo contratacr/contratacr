@@ -38,7 +38,7 @@ test("filters only categories with publications and changes period", async ({ pa
   await page.goto("/dashboard/profesional?tab=statistics");
   const panel = page.getByTestId("statistics-panel");
   await expect(panel.getByRole("heading", { name: "Resumen de actividad" })).toBeVisible();
-  await expect(panel.getByRole("button", { name: "Proyectos", exact: true })).toBeVisible();
+  await expect(panel.getByRole("button", { name: "Solicitudes", exact: true })).toBeVisible();
   await expect(panel.getByRole("button", { name: "Promociones", exact: true })).toBeVisible();
   await expect(panel.getByRole("button", { name: "Empleos", exact: true })).toHaveCount(0);
   await panel.getByRole("combobox", { name: "Período" }).selectOption("7");

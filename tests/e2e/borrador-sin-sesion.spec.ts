@@ -72,13 +72,13 @@ const MARCA = () => `Borrador ${Date.now().toString(36)}`;
 async function llenarSinSesion(page: Page, tipo: Tipo): Promise<string> {
   const marca = MARCA();
   if (tipo === "proyecto") {
-    await gotoOK(page, "/publicar-proyecto?categoria=electricidad");
+    await gotoOK(page, "/publicar-solicitud?categoria=electricidad");
     await waitForInteractivePage(page);
     await page.locator("#publish-project-title").waitFor();
     await page.getByRole("button", { name: "Necesito un profesional", exact: true }).click();
     await escribirFirme(page.locator("textarea").first(), `${marca}: instalar tres tomacorrientes en la cocina.`);
     await page.locator('input[type="tel"]').first().fill("88887777");
-    await page.getByRole("button", { name: /^Publicar proyecto$/ }).last().click();
+    await page.getByRole("button", { name: /^Publicar solicitud$/ }).last().click();
   } else if (tipo === "empleo") {
     await gotoOK(page, "/empleos/publicar");
     await waitForInteractivePage(page);
@@ -163,7 +163,7 @@ async function publicar(page: Page, tipo: Tipo, marca: string) {
   }
   const api = { proyecto: "/api/projects", empleo: "/api/jobs/posts", promocion: "/api/offers", cotizacion: "/api/quotes" }[tipo];
   const respuesta = page.waitForResponse((r) => new URL(r.url()).pathname === api && r.request().method() === "POST", { timeout: 60_000 });
-  const boton = { proyecto: /^Publicar proyecto$/, empleo: /^Publicar empleo$/, promocion: /^Publicar promoción$/, cotizacion: /^Crear cotización$/ }[tipo];
+  const boton = { proyecto: /^Publicar solicitud$/, empleo: /^Publicar empleo$/, promocion: /^Publicar promoción$/, cotizacion: /^Crear cotización$/ }[tipo];
   await page.getByRole("button", { name: boton }).filter({ visible: true }).last().click();
   const r = await respuesta;
   expect(r.status(), `${tipo}: ${await r.text().catch(() => "")}`).toBeLessThan(300);

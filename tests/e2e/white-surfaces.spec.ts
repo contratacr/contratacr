@@ -2,7 +2,7 @@ import { test, expect } from 'playwright/test';
 import { gotoOK } from './helpers';
 
 test('content canvases stay white on public sections', async ({ page }) => {
-  for (const route of ['/ayuda', '/servicios', '/registro', '/login', '/proyectos', '/promociones', '/empleos', '/privacidad']) {
+  for (const route of ['/ayuda', '/servicios', '/registro', '/login', '/solicitudes', '/promociones', '/empleos', '/privacidad']) {
     await gotoOK(page, route);
     await expect(page.locator('main').first()).toBeVisible();
     const grayContainers = await page.locator('main').first().evaluate(main => {

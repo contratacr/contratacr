@@ -1,7 +1,7 @@
 // Run against the actual Worker runtime, not Next's Node development server.
 // RSC rendering failures may be streamed with HTTP 200 and an error digest.
 const base = process.argv[2] || 'http://127.0.0.1:8788';
-const routes = ['/proyectos', '/empleos', '/promociones', '/en/proyectos', '/en/empleos', '/en/promociones', '/profesionales', '/login'];
+const routes = ['/solicitudes', '/empleos', '/promociones', '/en/solicitudes', '/en/empleos', '/en/promociones', '/profesionales', '/login'];
 let ready = false;
 for (let attempt = 0; attempt < 30; attempt++) {
   try {

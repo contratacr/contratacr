@@ -11,9 +11,9 @@ export const RUTAS_DEL_SITIO = new Set([
   // secciones de src/app/[locale]
   "admin", "atraer-clientes", "ayuda", "buscar", "categorias", "como-funciona",
   "completar-perfil", "continuar-perfil", "contacto", "cotizacion", "dashboard", "eliminar-cuenta", "empleos",
-  "login", "mantenimiento", "mejorar-mi-perfil", "mensajes", "notificaciones", "ofertas", "promociones", "proyectos",
+  "login", "mantenimiento", "mejorar-mi-perfil", "mensajes", "notificaciones", "ofertas", "promociones", "proyectos", "solicitudes",
   "olvide-contrasena", "onboarding", "privacidad", "profesionales",
-  "proveedores-autorizados", "publicar-proyecto", "cotizar", "registro",
+  "proveedores-autorizados", "publicar-solicitud", "publicar-proyecto", "cotizar", "registro",
   // La invitación a reseñar en Google, a la que lleva el aviso de la campanita.
   "resena-google", "reset-password", "verificacion-de-identidad", "baja-correos",
   "servicio-no-disponible", "servicios", "soporte", "terminos",

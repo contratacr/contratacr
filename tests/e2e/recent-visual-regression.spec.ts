@@ -181,7 +181,7 @@ test.describe("@visual recent bug contracts", () => {
     const booking = page.locator('[id^="project-"]').first();
     await expect(booking).toBeVisible();
     await booking.locator("button[aria-expanded='false']").first().click();
-    const actions = booking.locator("button, a").filter({ hasText: /^(Ver proyecto|Editar|View project|Edit)$/i });
+    const actions = booking.locator("button, a").filter({ hasText: /^(Ver solicitud|Editar|View request|Edit)$/i });
     await expect(actions).toHaveCount(2);
     const boxes = await actions.evaluateAll((nodes) => nodes.map((node) => {
       const box = node.getBoundingClientRect();

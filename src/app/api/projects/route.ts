@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
     }
     // Category is required: it routes the project to matching professionals.
     if (!categoryId) {
-      return NextResponse.json({ error: "Elige una categoria para tu proyecto." }, { status: 400 });
+      return NextResponse.json({ error: "Elige una categoria para tu solicitud." }, { status: 400 });
     }
     // The form no longer asks for a title: the service name plus the start of the
     // description reads better in every list than what people typed.
@@ -149,7 +149,7 @@ export async function POST(req: NextRequest) {
 
     const requiredIdentity = projectIdentity(cedula, existingProfile);
     if (!requiredIdentity) {
-      return NextResponse.json({ error: mensajeDeError(req, { es: "Ingresá tu número de identificación para publicar el proyecto.", en: "Enter your identification number to publish the project." }) }, { status: 400 });
+      return NextResponse.json({ error: mensajeDeError(req, { es: "Ingresá tu número de identificación para publicar la solicitud.", en: "Enter your identification number to publish the request." }) }, { status: 400 });
     }
     cedula = requiredIdentity;
 
@@ -319,7 +319,7 @@ export async function POST(req: NextRequest) {
     }
     const projectId = data?.id;
     if (!projectId) {
-      return NextResponse.json({ error: "No se pudo crear el proyecto." }, { status: 500 });
+      return NextResponse.json({ error: "No se pudo crear la solicitud." }, { status: 500 });
     }
     const projectCreatedAt = data?.created_at ?? null;
 
@@ -369,14 +369,14 @@ export async function POST(req: NextRequest) {
           const rows = recipients.map((profileId) => ({
             user_id: profileId,
             type: "new_project",
-            title: "Nuevo proyecto",
+            title: "Nueva solicitud",
             // «Respóndele y, si le interesa, te escribe» contaba el flujo de las
             // PROPUESTAS: el profesional respondia y esperaba que el cliente lo
             // eligiera. Hoy le escribe directo por WhatsApp desde el tablero.
             // (Y «publico» iba sin tilde: el push muestra este texto tal cual.)
             message: `Un cliente publicó "${finalTitle}" en ${label}. Escríbele por WhatsApp si te interesa.`,
             data: {
-              link: "/proyectos",
+              link: "/solicitudes",
               project_id: projectId,
               project_created_at: projectCreatedAt,
               project_title: finalTitle,
@@ -389,13 +389,13 @@ export async function POST(req: NextRequest) {
           const zona = [...new Set([getCantonById(cantonId ?? "")?.name, getProvinceById(provinciaId ?? "")?.name].filter(Boolean))].join(", ");
           after(() => avisarPorCorreo({
             destinatarios: recipients, eventId: projectId,
-            asunto: `Nuevo proyecto de ${label}${zona ? ` en ${zona}` : ""}`,
-            titular: `Un cliente publicó un proyecto de ${label}${zona ? ` en ${zona}` : ""}: "${finalTitle}".`,
+            asunto: `Nueva solicitud de ${label}${zona ? ` en ${zona}` : ""}`,
+            titular: `Un cliente publicó una solicitud de ${label}${zona ? ` en ${zona}` : ""}: "${finalTitle}".`,
             parrafos: [
               cleanDescription.length > 280 ? `${cleanDescription.slice(0, 277).trimEnd()}…` : cleanDescription,
               "Si te interesa, ábrelo y escríbele por WhatsApp. Responder rápido es lo que más pesa para que te elijan.",
             ],
-            boton: { texto: "Ver el proyecto", ruta: rutaProyecto({ id: projectId, title: finalTitle }) },
+            boton: { texto: "Ver la solicitud", ruta: rutaProyecto({ id: projectId, title: finalTitle }) },
             porQue: `Te llega porque ofreces ${label} en ContrataCR.`,
             campana: "aviso-proyecto",
           }));
@@ -537,7 +537,7 @@ async function autoCloseStale(admin: any, rows: any[]): Promise<any[]> {
   const notifications = stale.map((r) => ({
     user_id: r.client_id,
     type: "project_cancelled",
-    title: "Cerramos tu proyecto por inactividad",
+    title: "Cerramos tu solicitud por inactividad",
     message: `"${r.title}" llevaba ${AUTO_CLOSE_DAYS} días sin movimiento. Si todavía la necesitas, puedes volver a publicarla con un toque.`,
     data: { link: "/dashboard/profesional?tab=sent_projects", project_id: r.id, project_title: r.title, project_action: "auto_closed" },
   }));
@@ -624,7 +624,7 @@ export async function PATCH(req: NextRequest) {
   if (action === "publicar_en_tablero") {
     const { data: project } = await admin.from("projects").select("client_id, status, title").eq("id", id).maybeSingle();
     if (!project || project.client_id !== uid) return NextResponse.json({ error: "No autorizado." }, { status: 403 });
-    if (project.status !== "open") return NextResponse.json({ error: "Solo un proyecto abierto sale al tablero." }, { status: 409 });
+    if (project.status !== "open") return NextResponse.json({ error: "Solo una solicitud abierta sale al tablero." }, { status: 409 });
     const { error } = await admin.from("projects").update({ allow_direct_contact: true }).eq("id", id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     await auditUserAction(admin, req, {
@@ -643,7 +643,7 @@ export async function PATCH(req: NextRequest) {
   if (action === "archive") {
     const { data: project } = await admin.from("projects").select("client_id, status, title").eq("id", id).maybeSingle();
     if (!project || project.client_id !== uid) return NextResponse.json({ error: "No autorizado." }, { status: 403 });
-    if (project.status !== "cancelled") return NextResponse.json({ error: "Solo puedes archivar proyectos cancelados." }, { status: 409 });
+    if (project.status !== "cancelled") return NextResponse.json({ error: "Solo puedes archivar solicitudes canceladas." }, { status: 409 });
     const { error } = await admin.from("projects").update({ archived_by_client: true }).eq("id", id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     await auditUserAction(admin, req, {
@@ -685,7 +685,7 @@ export async function PATCH(req: NextRequest) {
   // un empleo cerrado siempre se puede republicar. Ahora las tres secciones se
   // comportan igual.
   if (status === "open" && ownRow.status !== "cancelled" && ownRow.status !== "completed") {
-    return NextResponse.json({ error: "Este proyecto ya esta publicado." }, { status: 409 });
+    return NextResponse.json({ error: "Esta solicitud ya está publicada." }, { status: 409 });
   }
   if (status === "open") {
     // Las propuestas viejas no vuelven con el proyecto: se respondieron en otra
@@ -739,7 +739,7 @@ export async function DELETE(req: NextRequest) {
   // porque se cerro o porque se dio por terminado en su dia. Lo publicado no,
   // que para eso esta «Cerrar proyecto».
   if (ownRow.status !== "cancelled" && ownRow.status !== "completed") {
-    return NextResponse.json({ error: "Primero cierra el proyecto." }, { status: 409 });
+    return NextResponse.json({ error: "Primero cierra la solicitud." }, { status: 409 });
   }
 
   // Las propuestas historicas se van con el proyecto (por si la FK no fuera

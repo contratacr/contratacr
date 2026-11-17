@@ -48,8 +48,8 @@ if (!["localhost", "127.0.0.1"].includes(new URL(LOCAL).hostname)) throw new Err
 const INICIO = base;
 let testCookies = [];
 let productionReadOnly = null;
-const PROJECT_PATH = process.env.GUIDE_PROJECT_PATH || "/proyectos/estoy-buscando-una-persona-responsable-y-de-confianza-a1ae651d";
-if (!/^\/proyectos\/[a-z0-9-]+$/.test(PROJECT_PATH)) throw new Error("Invalid public guide project path");
+const PROJECT_PATH = process.env.GUIDE_PROJECT_PATH || "/solicitudes/estoy-buscando-una-persona-responsable-y-de-confianza-a1ae651d";
+if (!/^\/solicitudes\/[a-z0-9-]+$/.test(PROJECT_PATH)) throw new Error("Invalid public guide project path");
 
 // Verify the real handoff, but keep WhatsApp/chats out of the public video.
 async function contactar(p) {
@@ -57,7 +57,7 @@ async function contactar(p) {
   await wa.waitFor();
   // In the anonymous project walkthrough, point out the contact action.
   // Do not invoke it: the sign-in prompt is outside this short demonstration.
-  if (new URL(p.url()).pathname.startsWith("/proyectos/")) {
+  if (new URL(p.url()).pathname.startsWith("/solicitudes/")) {
     await wa.scrollIntoViewIfNeeded();
     await marcarToque(p, wa);
     await p.waitForTimeout(750);
@@ -157,7 +157,7 @@ async function porElMenu(p, grabar, pausar, texto, destino, boton, formulario) {
   await evidencia(p, `${scene}-tablero-inicio`);
   grabar(); await p.waitForTimeout(700);
   const items = p.locator(`h2 a[href^="${destino}/"]`);
-  const item = (destino === "/proyectos" ? items.and(p.locator(`a[href="${PROJECT_PATH}"]`)) : items).first();
+  const item = (destino === "/solicitudes" ? items.and(p.locator(`a[href="${PROJECT_PATH}"]`)) : items).first();
   await tocar(p, item);
   pausar(); await p.waitForURL(new RegExp(`${destino}/.+`)); await asentada(p); await arriba(p);
   await evidencia(p, `${scene}-detalle-inicio`);
@@ -176,8 +176,8 @@ async function porElMenu(p, grabar, pausar, texto, destino, boton, formulario) {
   await publicar.scrollIntoViewIfNeeded(); await p.waitForTimeout(300);
   await marcarToque(p, publicar); await p.waitForTimeout(250); pausar();
   // The project form is public. Offer forms use only the synthetic test actor.
-  if (destino !== "/proyectos") await p.context().addCookies(testCookies);
-  await p.goto((destino === "/proyectos" ? INICIO : LOCAL) + formulario, { waitUntil: "load" }); await sinAvisoDeDesarrollo(p); await asentada(p); await arriba(p);
+  if (destino !== "/solicitudes") await p.context().addCookies(testCookies);
+  await p.goto((destino === "/solicitudes" ? INICIO : LOCAL) + formulario, { waitUntil: "load" }); await sinAvisoDeDesarrollo(p); await asentada(p); await arriba(p);
   if (/\/login/.test(p.url())) throw new Error(`Test form requires authentication: ${formulario}`);
   await p.locator("main h1, main h2, .app-fullscreen-modal h1, .app-fullscreen-modal h2").filter({ visible: true }).first().waitFor();
   await evidencia(p, `${scene}-formulario-inicio`);
@@ -214,7 +214,7 @@ const escenas = {
     }
     await contactar(p);
   },
-  proyectos: (p, g, s) => porElMenu(p, g, s, "Proyectos", "/proyectos", /Publicar (?:un )?proyecto/i, "/publicar-proyecto"),
+  proyectos: (p, g, s) => porElMenu(p, g, s, "Proyectos", "/solicitudes", /Publicar (?:un )?proyecto/i, "/publicar-solicitud"),
   promociones: (p, g, s) => porElMenu(p, g, s, "Promociones", "/promociones", /Publicar promoción/i, "/promociones/publicar"),
   empleos: (p, g, s) => porElMenu(p, g, s, "Empleos", "/empleos", /Publicar empleo/i, "/empleos/publicar"),
 };

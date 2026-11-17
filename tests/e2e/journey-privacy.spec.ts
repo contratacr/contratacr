@@ -8,7 +8,7 @@ const id="00000000-0000-4000-8000-000000000001";
 test("journey contract removes private fields and classifies routes without names or queries",()=>{
  expect(cleanJourney({id,action:"navigation",target:"proyectos",section:"buscar",value:999,name:"Private Name",email:"private@example.com",input:"secret",url:"https://private.test"})).toEqual({id,action:"navigation",target:"proyectos",section:"buscar",value:100});
  expect(routeSection("/en/isaac-sanchez?private=secret")).toBe("perfil_publico");
- expect(routeSection("/es/proyectos/private-id")).toBe("proyectos");
+ expect(routeSection("/es/solicitudes/private-id")).toBe("proyectos");
  for (const change of [{action:"password"},{target:"private@example.com"},{section:"private@example.com"},{id:"account-id"}]) expect(cleanJourney({id,action:"button",target:"action",section:"home",...change})).toBeNull();
 });
 function nativeRuntime() {

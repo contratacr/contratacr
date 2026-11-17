@@ -7,7 +7,7 @@ test("desktop app handoff replaces sign-up, translates and closes accessibly wit
   for (const locale of ["es", "en"]) {
     for (const width of [1024, 1280, 1440]) {
       await page.setViewportSize({ width, height: 900 });
-      await gotoOK(page, locale === "en" ? "/en/proyectos" : "/proyectos");
+      await gotoOK(page, locale === "en" ? "/en/solicitudes" : "/solicitudes");
       await waitForInteractivePage(page);
       const header = page.getByTestId("landing-navbar").filter({ visible: true });
       const action = header.getByRole("button", { name: locale === "en" ? "Download app" : "Descargar app", exact: true });
@@ -40,7 +40,7 @@ test("signed-in desktop keeps app access beside account controls", async ({ page
   await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
   for (const width of [1024, 1280]) {
     await page.setViewportSize({ width, height: 900 });
-    await gotoOK(page, "/proyectos");
+    await gotoOK(page, "/solicitudes");
     await waitForInteractivePage(page);
     const header = page.getByTestId("landing-navbar").filter({ visible: true });
     await expect(header.locator('a[href*="/login"]').filter({ visible: true })).toHaveCount(0);

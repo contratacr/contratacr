@@ -45,14 +45,14 @@ import { reemplazarDireccionSiCambia } from "@/lib/reemplazar-direccion";
 
 const COPY = {
   es: {
-    titulo: "Proyectos",
+    titulo: "Solicitudes",
     // Cada tablero pregunta por lo suyo: aquí se buscan PROYECTOS, no
     // profesionales. «¿Qué servicio estás buscando?» es la frase de /buscar, y
     // repetida aquí parecía que la pantalla buscaba a quién contratar.
-    buscar: "¿Qué proyecto buscas?",
+    buscar: "¿Qué solicitud buscas?",
     abrirMenu: "Abrir menú",
     notificaciones: "Notificaciones",
-    publicar: "Publicar un proyecto",
+    publicar: "Publicar una solicitud",
     // «Fecha», igual en los tres tableros. «Publicado» a secas se leía como
     // un estado —¿publicado o no?— y no como «cuándo se publicó».
     loQueNecesita: "Lo que necesita",
@@ -62,23 +62,23 @@ const COPY = {
     hoy: "Últimas 24 horas",
     semana: "Última semana",
     mes: "Último mes",
-    misProyectos: "Mis proyectos",
-    administrar: "Administrar proyecto",
+    misProyectos: "Mis solicitudes",
+    administrar: "Administrar solicitud",
     editar: "Editar",
     administrarCorto: "Administrar",
     ubicacion: "Ubicación",
-    volver: "Volver a proyectos",
-    ficha: "Proyecto",
+    volver: "Volver a solicitudes",
+    ficha: "Solicitud",
     escribir: "WhatsApp",
     llamar: "Llamar",
     publicado: "Publicado por",
-    vacio: "Todavía no hay proyectos",
+    vacio: "Todavía no hay solicitudes",
     vacioSub: "Cuando alguien publique lo que necesita, aparecerá aquí.",
-    sinResultados: "No encontramos proyectos",
+    sinResultados: "No encontramos solicitudes",
     sinResultadosSub: "Prueba otra búsqueda o cambia los filtros.",
-    verTodos: "Ver todos los proyectos",
+    verTodos: "Ver todas las solicitudes",
     sinContacto: "Este cliente no dejó un WhatsApp.",
-    noPublicado: "Este proyecto ya no recibe mensajes.",
+    noPublicado: "Esta solicitud ya no recibe mensajes.",
     fallo: "No pudimos abrir WhatsApp. Intentá de nuevo en un momento.",
     necesitaCuenta: "Entra con tu cuenta profesional para escribirle por WhatsApp o llamarle.",
     ingresar: "Ingresar",
@@ -88,16 +88,16 @@ const COPY = {
     // La llamada solo existe si el cliente la habilitó al publicar.
     necesitaCuentaConLlamada: "Entra con tu cuenta profesional para escribirle por WhatsApp o llamarle.",
     necesitaCuentaSoloWhatsapp: "Entra con tu cuenta profesional para escribirle por WhatsApp.",
-    esTuyo: "Este proyecto es tuyo.",
+    esTuyo: "Esta solicitud es tuya.",
     todoElPais: "Todo Costa Rica",
-    cuenta: (n: number) => `${n} ${n === 1 ? "proyecto" : "proyectos"}`,
+    cuenta: (n: number) => `${n} ${n === 1 ? "solicitud" : "solicitudes"}`,
   },
   en: {
-    titulo: "Projects",
-    buscar: "Search projects",
+    titulo: "Requests",
+    buscar: "Search requests",
     abrirMenu: "Open menu",
     notificaciones: "Notifications",
-    publicar: "Post a project",
+    publicar: "Post a request",
     loQueNecesita: "What they need",
     filaServicio: "Service", filaUbicacion: "Location", filaPublicado: "Posted",
     fecha: "Date posted",
@@ -105,23 +105,23 @@ const COPY = {
     hoy: "Past 24 hours",
     semana: "Past week",
     mes: "Past month",
-    misProyectos: "My projects",
-    administrar: "Manage project",
+    misProyectos: "My requests",
+    administrar: "Manage request",
     editar: "Edit",
     administrarCorto: "Manage",
     ubicacion: "Location",
-    volver: "Back to projects",
-    ficha: "Project",
+    volver: "Back to requests",
+    ficha: "Request",
     escribir: "WhatsApp",
     llamar: "Call",
     publicado: "Posted by",
-    vacio: "There are no projects yet",
+    vacio: "There are no requests yet",
     vacioSub: "When someone posts what they need, it will show up here.",
-    sinResultados: "No projects found",
+    sinResultados: "No requests found",
     sinResultadosSub: "Try another search or change the filters.",
-    verTodos: "View all projects",
+    verTodos: "View all requests",
     sinContacto: "This client did not leave a WhatsApp number.",
-    noPublicado: "This project is no longer taking messages.",
+    noPublicado: "This request is no longer taking messages.",
     fallo: "We could not open WhatsApp. Try again in a moment.",
     necesitaCuenta: "Sign in with your professional account to message or call them.",
     ingresar: "Sign in",
@@ -130,9 +130,9 @@ const COPY = {
     pideCuentaTitulo: "Contact this client",
     necesitaCuentaConLlamada: "Sign in with your professional account to message or call them.",
     necesitaCuentaSoloWhatsapp: "Sign in with your professional account to message them on WhatsApp.",
-    esTuyo: "This project is yours.",
+    esTuyo: "This request is yours.",
     todoElPais: "All Costa Rica",
-    cuenta: (n: number) => `${n} ${n === 1 ? "project" : "projects"}`,
+    cuenta: (n: number) => `${n} ${n === 1 ? "request" : "requests"}`,
   },
 } as const;
 
@@ -368,7 +368,7 @@ export function ProjectsBoard({
   const copy = COPY[locale];
   const nativeApp = useNativeApp();
   // Se puede llegar con la búsqueda puesta en la dirección, como en Empleos y
-  // Promociones: un enlace a /proyectos?q=fontaneria tiene que abrir ya
+  // Promociones: un enlace a /solicitudes?q=fontaneria tiene que abrir ya
   // filtrado, si no el enlace miente.
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(() => searchParams.get("q")?.trim() ?? "");
@@ -379,7 +379,7 @@ export function ProjectsBoard({
   const { cabeceraRef, conLinea } = useHairlineOnScroll();
   // Lo escrito también SALE a la dirección, como en Empleos y Promociones: sin
   // esto una búsqueda de proyectos no se podía compartir ni recargar —la
-  // dirección se quedaba en /proyectos aunque hubiera filtros puestos—. Con un
+  // dirección se quedaba en /solicitudes aunque hubiera filtros puestos—. Con un
   // respiro de 300 ms para no reescribir la barra en cada tecla.
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -394,7 +394,7 @@ export function ProjectsBoard({
     return () => window.clearTimeout(timer);
   }, [query, lugar]);
   // La ficha que se ve a la derecha en computadora. Llegando por
-  // /proyectos/[id] es esa; si no, la primera de la lista.
+  // /solicitudes/[id] es esa; si no, la primera de la lista.
   const [elegidoId, setElegidoId] = useState<string | null>(detalle?.id ?? null);
   // Editar el proyecto propio, igual que en Empleos y Promociones: el mismo
   // formulario de publicar, con lo escrito puesto.
@@ -403,7 +403,7 @@ export function ProjectsBoard({
   function elegir(id: string) {
     setElegidoId(id);
     // La dirección sigue a la ficha, para que se pueda compartir o recargar.
-    const base = window.location.pathname.replace(/\/proyectos(?:\/[^/]*)?$/, "/proyectos");
+    const base = window.location.pathname.replace(/\/solicitudes(?:\/[^/]*)?$/, "/solicitudes");
     window.history.replaceState(null, "", `${base}/${id}${window.location.search}`);
   }
 
@@ -500,7 +500,7 @@ export function ProjectsBoard({
       <Link
         // `desde` viaja para que la flecha de atrás devuelva AQUÍ y no deje a
         // la persona dentro del panel, en una lista que no fue a buscar.
-        href="/publicar-proyecto?desde=proyectos" prefetch={false}
+        href="/publicar-solicitud?desde=proyectos" prefetch={false}
         className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-full bg-[#009fd9] px-3 text-[13px] font-bold text-white transition hover:bg-[#008fc3] lg:h-11 lg:px-6 lg:text-sm"
       >
         {copy.publicar}
@@ -516,7 +516,7 @@ export function ProjectsBoard({
     // entre la última y el pie —un fondo que solo se ve donde no hay nada—. En
     // pantalla grande el gris sí hace falta: ahí la lista es una tarjeta que
     // flota y necesita algo detrás.
-    // Con dirección propia (/proyectos/[id]) la pantalla es una PÁGINA que se
+    // Con dirección propia (/solicitudes/[id]) la pantalla es una PÁGINA que se
     // desplaza sobre gris, como la de un empleo o una promoción; sin ella es un
     // tablero de alto fijo con la lista y la ficha lado a lado.
     <main className={cn(
@@ -543,7 +543,7 @@ export function ProjectsBoard({
             <Link
               // Desde el panel, la flecha devuelve a la lista exacta de donde
               // se vino (pestaña y etapa); sin origen, al tablero.
-              href={safeMarketplaceReturnHref(volverA, "/proyectos")}
+              href={safeMarketplaceReturnHref(volverA, "/solicitudes")}
               data-native-back="project-detail"
               aria-label={copy.volver}
               className={cn("absolute left-4", CABECERA_BOTON)}
@@ -626,7 +626,7 @@ export function ProjectsBoard({
 
       {(() => {
         const elegido = (elegidoId ? filtrados.find((p) => p.id === elegidoId) ?? (detalle?.id === elegidoId ? detalle : null) : null) ?? filtrados[0] ?? null;
-        // En el teléfono: con /proyectos/[id] se ve SOLO la ficha; si no, solo
+        // En el teléfono: con /solicitudes/[id] se ve SOLO la ficha; si no, solo
         // la lista. En computadora, las dos a la vez.
         const fichaEnMovil = !!detalle;
         const ficha = fichaEnMovil ? detalle : elegido;
@@ -660,7 +660,7 @@ export function ProjectsBoard({
                 ? "ccr-ficha-pagina lg:flex lg:items-start lg:gap-5 lg:overflow-visible lg:rounded-none lg:border-0 lg:bg-transparent lg:shadow-none"
                 : "lg:h-full",
               // UNA DIRECCIÓN PROPIA ABRE UNA PÁGINA PROPIA, como en Empleos y
-              // Promociones: /proyectos/[id] muestra SOLO el proyecto, también
+              // Promociones: /solicitudes/[id] muestra SOLO el proyecto, también
               // en computadora. Con la lista al lado, «Ver proyecto» desde el
               // panel devolvía al tablero con algo seleccionado, no a la ficha.
               !detalle && "ccr-tablero-marco",

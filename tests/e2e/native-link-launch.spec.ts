@@ -21,10 +21,10 @@ for (const newer of [false, true]) test(`cold link waits for destination commit 
   await expect(page.locator('#ccr-app-link-cover')).toBeVisible();
   await page.evaluate(newer=>{
     const w=window as unknown as {deliver:(v:{url:string})=>void;resolveLaunch:(v:{url:string})=>void};
-    if(newer)w.deliver({url:'https://contratacr.com/en/proyectos/?utm_source=notes#list'});
+    if(newer)w.deliver({url:'https://contratacr.com/en/solicitudes/?utm_source=notes#list'});
     w.resolveLaunch({url:'https://contratacr.com/isaac-alberto-sanchez-monge?utm_source=notes#contact'});
   },newer);
-  const path=newer?'/en/proyectos/?utm_source=notes#list':'/profesionales/isaac-alberto-sanchez-monge?utm_source=notes#contact';
+  const path=newer?'/en/solicitudes/?utm_source=notes#list':'/profesionales/isaac-alberto-sanchez-monge?utm_source=notes#contact';
   await expect.poll(()=>page.evaluate(()=>(window as unknown as {moves:unknown[]}).moves)).toEqual([{kind:newer?'push':'replace',path}]);
   expect(await page.evaluate(()=>(window as unknown as {__ccrAppLinkPending:string}).__ccrAppLinkPending)).toBe(path);
   // Native hide timeouts may elapse; the document must still cover home.

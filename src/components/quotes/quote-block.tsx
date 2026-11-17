@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { FileText, ChevronRight } from "lucide-react";
+import { ReceiptText, ChevronRight } from "lucide-react";
 import { formatColones } from "@/lib/pricing";
 import { isQuoteExpired, type Quote } from "@/lib/quotes";
 import { actualizarCotizacion, agregarCotizacion, cargarCotizaciones, useCotizaciones } from "@/lib/quotes-store";
@@ -61,7 +61,7 @@ export function QuoteBlock({ projectId, role, canCreate = false, defaultTitle, p
     if (!canCreate || role !== "pro") return null;
     return asButton ? (
       <button type="button" onClick={() => setEditor(true)} className={CLASE_BOTON_FILA}>
-        <FileText className="h-4 w-4 shrink-0 text-[#009FD9]" />
+        <ReceiptText className="h-4 w-4 shrink-0 text-[#009FD9]" />
         <RotuloEnviarCotizacion t={t} />
       </button>
     ) : (
@@ -105,7 +105,7 @@ export function QuoteBlock({ projectId, role, canCreate = false, defaultTitle, p
       <>
         {conNombre ? (
           <button type="button" onClick={() => setDetail(conNombre)} className="flex w-full items-center gap-3 rounded-2xl border border-[#e5e7eb] bg-[#f8fbfd] px-3.5 py-2.5 text-left transition-colors hover:border-[#bfe3f5] hover:bg-[#f2f9fd]">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-[#009FD9]"><FileText className="h-4 w-4" /></span>
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-[#009FD9]"><ReceiptText className="h-4 w-4" /></span>
             <span className="min-w-0 flex-1">
               {/* Una línea: qué pasó y cuánto. El número y la fecha viven adentro. */}
               <span className="block truncate text-[13px] font-extrabold text-[#162543]">
@@ -116,7 +116,7 @@ export function QuoteBlock({ projectId, role, canCreate = false, defaultTitle, p
           </button>
         ) : canCreate ? (
           <button type="button" onClick={() => setEditor(true)} className={clase}>
-            <FileText className="h-4 w-4 shrink-0 text-[#009FD9]" />
+            <ReceiptText className="h-4 w-4 shrink-0 text-[#009FD9]" />
             <RotuloEnviarCotizacion t={t} />
           </button>
         ) : null}
@@ -129,7 +129,7 @@ export function QuoteBlock({ projectId, role, canCreate = false, defaultTitle, p
     <div className="flex flex-col gap-2">
       {conNombre && (
         <button type="button" onClick={() => setDetail(conNombre)} className="flex w-full items-center gap-3 rounded-2xl border border-[#e5e7eb] bg-white px-3.5 py-3 text-left transition-colors hover:border-[#bfe3f5] hover:bg-[#f8fcfe]">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full ccr-caja-icono-plana"><FileText className="h-5 w-5" /></span>
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full ccr-caja-icono-plana"><ReceiptText className="h-5 w-5" /></span>
           <span className="min-w-0 flex-1">
             <span className="block text-[14px] font-extrabold text-[#162543]">{isQuoteExpired(conNombre) || conNombre.status === "withdrawn" ? `${t("blockTitle")} · ${estado(conNombre)}` : role === "client" ? t("rowReceivedTitle") : t("rowSentTitle")} · {formatColones(conNombre.total)}</span>
           </span>

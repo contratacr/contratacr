@@ -2,7 +2,7 @@ import { GROWTH_ACTIONS } from "./growth-contract";
 /** Closed outbound contract: never forward caller-supplied objects to Meta. */
 export const META_MEASUREMENT_VERSION = "minimal-optin-2026-10-29";
 export const META_EVENTS = ["PageView", "Search", "CompleteRegistration", "Contact", "Lead", "ServiceHireConfirmed", "ProfessionalProfilePublished", "ProfessionalProjectContact", "ProfessionalProjectAccepted", "ServiceOfferPublished", "EmployerJobPublished"] as const;
-const PATHS = new Set(["/", "/profesionales", "/proyectos", "/promociones", "/empleos", "/registro", "/dashboard/cliente", "/dashboard/profesional"]);
+const PATHS = new Set(["/", "/profesionales", "/solicitudes", "/promociones", "/empleos", "/registro", "/dashboard/cliente", "/dashboard/profesional"]);
 export function minimalMetaPayload(input: Record<string, unknown>): Record<string, unknown> | null {
   const custom = input.custom_data as Record<string, unknown> | undefined;
   if (custom?.measurement_version !== META_MEASUREMENT_VERSION || !META_EVENTS.includes(input.event_name as typeof META_EVENTS[number])) return null;

@@ -4,12 +4,12 @@ import { gotoOK, waitForInteractivePage } from "./helpers";
 test("navbar logo stays identical without web fonts across public routes", async ({ page }) => {
   // Reproduce a cold/slow font request: the logo must not fall back to Arial.
   await page.route(/\.woff2(?:\?.*)?$/, route => route.abort());
-  for (const path of ["/", "/registro", "/login", "/proyectos", "/promociones", "/empleos"]) {
+  for (const path of ["/", "/registro", "/login", "/solicitudes", "/promociones", "/empleos"]) {
     await gotoOK(page, path);
     await waitForInteractivePage(page);
     // Marketplace mobile headers intentionally show only the mark + section
     // title. The full brand lives in their shared navigation drawer.
-    const marketplace = (page.viewportSize()?.width ?? 1440) < 1024 && ["/proyectos", "/promociones", "/empleos"].includes(path);
+    const marketplace = (page.viewportSize()?.width ?? 1440) < 1024 && ["/solicitudes", "/promociones", "/empleos"].includes(path);
     if (marketplace) await page.getByRole("button", { name: /abrir menú/i }).filter({ visible: true }).click();
     const surface = marketplace ? page.getByRole("dialog").filter({ visible: true }) : page.locator("header");
     const wordmark = surface.locator('img[src="/brand/wordmark-light.svg"]').filter({ visible: true });
@@ -54,7 +54,7 @@ test("section headers keep home mark size and title spacing", async ({ page }) =
   const home = page.locator('header img[src="/brand/wordmark-light.svg"]').filter({ visible: true }).first();
   await expect(home).toBeVisible();
   const homeGap = await home.evaluate(word => word.getBoundingClientRect().left - word.previousElementSibling!.getBoundingClientRect().right);
-  for (const path of ["/proyectos", "/empleos", "/promociones", "/servicios", "/en/proyectos"]) {
+  for (const path of ["/solicitudes", "/empleos", "/promociones", "/servicios", "/en/solicitudes"]) {
     await gotoOK(page, path);
     const brand = page.locator("[data-ccr-section-brand]").filter({ visible: true }).first();
     await expect(brand).toBeVisible();
@@ -75,7 +75,7 @@ test("section headers keep home mark size and title spacing", async ({ page }) =
 test("mobile search text aligns across both fields and all four search surfaces", async ({ page }) => {
   test.setTimeout(120_000);
   await page.setViewportSize({ width: 390, height: 844 });
-  for (const path of ["/buscar", "/proyectos", "/empleos", "/promociones", "/en/buscar"]) {
+  for (const path of ["/buscar", "/solicitudes", "/empleos", "/promociones", "/en/buscar"]) {
     await gotoOK(page, path);
     const entry = path.includes("buscar") ? page.locator("header").getByRole("button", { name: /What service are you looking for|Qué servicio estás buscando/i }).filter({ visible: true }).first() : page.locator(".ccr-marketplace-sticky input").filter({ visible: true }).first();
     await expect(entry).toBeVisible();

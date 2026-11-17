@@ -836,7 +836,7 @@ export function LandingHero() {
         {/* La otra forma de conseguir quien te ayude, en una línea: pedirlo y que te escriban. */}
         <p className="mt-3 text-center whitespace-nowrap text-[12.5px] font-semibold sm:text-[14px] text-white/90 drop-shadow lg:text-left">
           {t("pidePrefijo")}{" "}
-          <Link href="/publicar-proyecto" className="font-extrabold text-white underline decoration-[#7fd3f7] decoration-2 underline-offset-4">{t("pideEnlace")}</Link>
+          <Link href="/publicar-solicitud" className="font-extrabold text-white underline decoration-[#7fd3f7] decoration-2 underline-offset-4">{t("pideEnlace")}</Link>
         </p>
 
         {/* Sentinel — IntersectionObserver in navbar watches this */}

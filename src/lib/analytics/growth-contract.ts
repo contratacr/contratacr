@@ -1,10 +1,10 @@
 export const GROWTH_ACTIONS = {
   service_contact: { event: "Contact", audience: "client", path: "/profesionales" },
-  project_published: { event: "Lead", audience: "client", path: "/proyectos" },
+  project_published: { event: "Lead", audience: "client", path: "/solicitudes" },
   service_hire_confirmed: { event: "ServiceHireConfirmed", audience: "client", path: "/dashboard/cliente" },
   professional_profile_published: { event: "ProfessionalProfilePublished", audience: "professional", path: "/dashboard/profesional" },
-  professional_project_contact: { event: "ProfessionalProjectContact", audience: "professional", path: "/proyectos" },
-  professional_project_accepted: { event: "ProfessionalProjectAccepted", audience: "professional", path: "/proyectos" },
+  professional_project_contact: { event: "ProfessionalProjectContact", audience: "professional", path: "/solicitudes" },
+  professional_project_accepted: { event: "ProfessionalProjectAccepted", audience: "professional", path: "/solicitudes" },
   service_offer_published: { event: "ServiceOfferPublished", audience: "professional", path: "/promociones" },
   employer_job_published: { event: "EmployerJobPublished", audience: "employer", path: "/empleos" },
 } as const;

@@ -165,7 +165,7 @@ const USE_ONLY = new Set<Tab>([]);
 // se borró el código entero; si vuelve, está en el historial de git.
 //
 // Oportunidades también sale: los proyectos pasan a un tablero público
-// (/proyectos), como empleos y promociones, y el profesional contacta directo
+// (/solicitudes), como empleos y promociones, y el profesional contacta directo
 // en vez de mandar una propuesta que nadie contesta (1 en toda la historia).
 // Mis postulaciones (0) y Volver a contratar (0) se retiran por lo mismo.
 // Seis secciones para el profesional y cuatro para el cliente. «Mis trabajos» y
@@ -216,7 +216,7 @@ function agruparPestanas(tabs: Tab[]): Tab[][] {
 const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
   statistics: { es: "Estadísticas", en: "Statistics" },
   quotes: { es: "Cotizaciones", en: "Quotes" },
-  sent_projects: { es: "Mis proyectos", en: "My projects" },
+  sent_projects: { es: "Mis solicitudes", en: "My requests" },
   applications: { es: "Mis postulaciones", en: "My applications" },
   connections: { es: "Volver a contratar", en: "Hire again" },
   photos: { es: "Casos de éxito", en: "Success stories" },
@@ -261,7 +261,7 @@ const GUIDE_ITEMS: GuideItem[] = ([
   { id: "accountSecurityGuide", section: "shared", actionTab: "cuenta", stepCount: 4 },
   { id: "professionalPanel", section: "professional", actionTab: "publicaciones", targetMode: "offer", stepCount: 4 },
   { id: "completionGuide", section: "professional", actionTab: "completion", targetMode: "offer", stepCount: 4 },
-  { id: "opportunities", section: "shared", href: "/proyectos", stepCount: 3 },
+  { id: "opportunities", section: "shared", href: "/solicitudes", stepCount: 3 },
   { id: "successCases", section: "professional", actionTab: "profile", targetMode: "offer", stepCount: 4 },
   { id: "services", section: "professional", actionTab: "services", targetMode: "offer", stepCount: 4 },
   { id: "workplacesGuide", section: "professional", actionTab: "profile", targetField: "location", targetMode: "offer", stepCount: 4 },
@@ -498,7 +498,7 @@ export default function DashboardPage() {
     setGuiasAbiertas(true);
     setTab("home", true);
   }, [searchParams]);
-  // A dónde vuelve la flecha del formulario abierto por /publicar-proyecto:
+  // A dónde vuelve la flecha del formulario abierto por /publicar-solicitud:
   // la página de la que vino (inicio, búsqueda, Proyectos…), si es interna.
   const [publicarVolverA] = useState(() => (publicarDirecto ? rutaInternaSegura(searchParams.get("returnTo")) : null));
   const publicadoRef = useRef(false);
@@ -545,7 +545,7 @@ export default function DashboardPage() {
   const requestedMode = searchParams.get("mode");
   const urlModeParam: Mode | null = requestedMode === "use" || requestedMode === "offer" ? requestedMode : null;
   const requestedReturnTo = searchParams.get("returnTo");
-  const externalReturnTo = requestedReturnTo === "/promociones" || requestedReturnTo === "/empleos" || requestedReturnTo === "/proyectos" || requestedReturnTo === "/notificaciones"
+  const externalReturnTo = requestedReturnTo === "/promociones" || requestedReturnTo === "/empleos" || requestedReturnTo === "/solicitudes" || requestedReturnTo === "/notificaciones"
     ? requestedReturnTo
     : requestedReturnTo?.startsWith("/mensajes") && !requestedReturnTo.startsWith("//") && !requestedReturnTo.includes("\\")
       ? requestedReturnTo

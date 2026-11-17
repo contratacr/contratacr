@@ -65,7 +65,7 @@ function conRegresoANotificaciones(href: string) {
   const ruta = href.replace(/^\/(?:es|en)(?=\/|$)/u, "");
   const clave = ruta.startsWith("/dashboard/") ? "returnTo"
     : ruta.startsWith("/mensajes") ? "back"
-    : /^\/(?:promociones|empleos|proyectos|profesionales)\//u.test(ruta) ? "from"
+    : /^\/(?:promociones|empleos|solicitudes|proyectos|profesionales)\//u.test(ruta) ? "from"
     : null;
   if (!clave || new RegExp(`[?&]${clave}=`).test(href)) return href;
   const [base, ancla] = href.split("#");

@@ -237,7 +237,7 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
     // ventana se abre llena y solo falta tocar «Publicar».
     if (!user && !editar) {
       await guardarBorrador("proyecto", { form, telefono });
-      window.location.assign(rutaParaEntrar(prefijoDeIdioma(locale), "/publicar-proyecto"));
+      window.location.assign(rutaParaEntrar(prefijoDeIdioma(locale), "/publicar-solicitud"));
       return;
     }
     setSubmitting(true);

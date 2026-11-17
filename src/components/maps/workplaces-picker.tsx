@@ -407,7 +407,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
       {/* 1 - Structured field FIRST: provincia -> cantón (authoritative for search).
           Polished popover dropdowns (shared SelectMenu) - same look/behavior as the
           Disponibilidad time selector. SIDE-BY-SIDE (provincia | cantón), matching the
-          publicar-proyecto layout exactly (`grid grid-cols-2 gap-3`). The SelectMenu's
+          publicar-solicitud layout exactly (`grid grid-cols-2 gap-3`). The SelectMenu's
           OPTIONS popup grows to its content + scrolls past `max-h-72` (sprint 301/321), so
           a long cantón name is never cut off in the open list even in a half-width cell. */}
       <div className="grid w-full grid-cols-1 gap-2.5 sm:grid-cols-2">
