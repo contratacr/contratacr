@@ -2163,7 +2163,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                             tablero público más, como empleos y promociones. */}
                         <Link href="/solicitudes" onClick={() => setOpenMenu(null)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
                           <ClipboardList className="h-5 w-5 shrink-0" />
-                          {locale === "en" ? "Projects" : "Proyectos"}
+                          {locale === "en" ? "Requests" : "Solicitudes"}
                         </Link>
                         {/* HERRAMIENTAS GRATIS: documentos que cualquiera arma y
                             descarga, sin ser Pro. Las herramientas de negocio
@@ -2954,7 +2954,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 {(
                   <Link href="/solicitudes" prefetch={true} onClick={(event) => { cerrarCajon(event); navigateNativeMarketplace(event, "/solicitudes"); }} className={claseCajon("/solicitudes")}>
                     <DrawerIcon><ClipboardList /></DrawerIcon>
-                    <span className={mobileDrawerTextClass}>{locale === "en" ? "Projects" : "Proyectos"}</span>
+                    <span className={mobileDrawerTextClass}>{locale === "en" ? "Requests" : "Solicitudes"}</span>
                   </Link>
                 )}
                 {(

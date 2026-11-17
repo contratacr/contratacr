@@ -1169,7 +1169,7 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
       documented: true,
       answer: locale === "en"
         ? "Open sign in to access your panel, messages, saved professionals and projects."
-        : "Abre inicio de sesión para entrar a tu panel, mensajes, favoritos y proyectos.",
+        : "Abre inicio de sesión para entrar a tu panel, mensajes, favoritos y solicitudes.",
       ctaLabel: locale === "en" ? "Sign in" : "Iniciar sesión",
     };
   }
