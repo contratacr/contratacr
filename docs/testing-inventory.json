@@ -8,7 +8,7 @@
     "handlers": 117,
     "components": 288,
     "hooks": 28,
-    "specs": 196
+    "specs": 197
   },
   "dashboardTabs": [
     "home",
@@ -27327,6 +27327,15 @@
         {
           "line": 86,
           "title": "`campaign delivery requires an affirmative permission (${consent})`"
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/enlace-con-puntuacion.spec.ts",
+      "cases": [
+        {
+          "line": 7,
+          "title": "\"el código del enlace se lee aunque traiga puntuación al final\""
         }
       ]
     },
