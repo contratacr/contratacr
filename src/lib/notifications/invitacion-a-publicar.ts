@@ -1,3 +1,4 @@
+import { textoCompletarPerfil, type FaltaDelPerfil } from "@/lib/notifications/completar-perfil-texto";
 import { insertOnceNotifications, onceReceipts } from "@/lib/notifications/once";
 import type { createAdminClient } from "@/lib/supabase/admin";
 
@@ -61,20 +62,31 @@ export async function invitarAPublicarATodas(admin: Admin, { simular = false } =
 
 /**
  * «COMPLETA TU PERFIL» al profesional recién registrado (5-oct-2026): lleva a
- * los pasos que faltan (foto, descripción, servicios…). Una sola vez.
+ * los pasos que faltan. Una sola vez.
+ * SOLO LO QUE FALTA (18-nov-2026): decía siempre "foto, descripción y
+ * servicios", también a quien ya había subido su foto en el registro. Ahora
+ * nombra lo que falta de verdad y, si no falta nada, no se manda.
  */
 export async function avisarCompletarPerfil(admin: Admin, profileId: string, idioma: "es" | "en" = "es") {
   try {
     const recibos = await onceReceipts(admin, [profileId], ["completa_perfil"]);
     if (recibos.length > 0) return;
+    const [{ data: perfil }, { data: pro }] = await Promise.all([
+      admin.from("profiles").select("avatar_url").eq("id", profileId).maybeSingle(),
+      admin.from("professionals").select("bio, services").eq("profile_id", profileId).maybeSingle(),
+    ]);
+    const servicios = Array.isArray(pro?.services) ? pro.services : [];
+    const faltan: FaltaDelPerfil[] = [];
+    if (!String(perfil?.avatar_url ?? "").trim()) faltan.push("foto");
+    if (!String(pro?.bio ?? "").trim()) faltan.push("descripcion");
+    if (servicios.length === 0) faltan.push("servicios");
+    if (faltan.length === 0) return;
     await insertOnceNotifications(admin, [{
       user_id: profileId,
       type: "completa_perfil",
       title: idioma === "en" ? "Complete your profile" : "Completa tu perfil",
-      message: idioma === "en"
-        ? "Add your photo, description and services so clients can learn what you offer."
-        : "Agrega tu foto, descripción y servicios para que los clientes conozcan lo que ofreces.",
-      data: { link: "/dashboard/profesional?mode=offer&tab=completion" },
+      message: textoCompletarPerfil(faltan, idioma),
+      data: { link: "/dashboard/profesional?mode=offer&tab=completion", faltan },
       read: false,
     }]);
   } catch {

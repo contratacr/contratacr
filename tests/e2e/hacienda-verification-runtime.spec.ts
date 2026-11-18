@@ -123,7 +123,13 @@ function verification(result: RuntimeValue, status = "pending", name = "Nombre o
 for (const type of ["cedula", "dimex", "nite"]) test(`record found for ${type} verifies account and open projects`, async () => {
   const v = verification(found(type)); expect(await v.run()).toBe("verified");
   expect(v.rows.professionals[0].is_verified).toBe(true); expect(v.rows.profiles[0].client_identity_status).toBe("verified");
-  expect(v.rows.projects[0].client_identity_status).toBe("verified"); expect(v.notifications).toHaveLength(1);
+  expect(v.rows.projects[0].client_identity_status).toBe("verified");
+  // En pantalla (registro o panel) ya lo vio: sin aviso repetido en la campanita.
+  expect(v.notifications).toEqual([]);
+});
+test("a verification decided outside the screen still notifies", async () => {
+  const v = verification(found("cedula")); expect(await v.run({ notifyChannel: "both" })).toBe("verified");
+  expect(v.notifications).toHaveLength(1);
 });
 test("all found ID types accept the official record; missing records remain eligible to appeal", async () => {
   for (const type of ["cedula", "juridica", "dimex", "nite"]) {

@@ -52,7 +52,7 @@ export type Carta = {
 export const LIMITES = { resumen: 600, carta: 2200, entradas: 12, habilidades: 10, porDefecto: 8, sugeridas: 30 };
 
 export const TITULOS: Record<Idioma, Record<"resumen" | "experiencia" | "educacion" | "habilidades" | "idiomas" | "certificaciones" | "contacto", string>> = {
-  es: { resumen: "Perfil profesional", experiencia: "Experiencia", educacion: "Educación", habilidades: "Habilidades", idiomas: "Idiomas", certificaciones: "Certificaciones", contacto: "Contacto" },
+  es: { resumen: "Resumen profesional", experiencia: "Experiencia", educacion: "Educación", habilidades: "Habilidades", idiomas: "Idiomas", certificaciones: "Certificaciones", contacto: "Contacto" },
   en: { resumen: "Professional summary", experiencia: "Experience", educacion: "Education", habilidades: "Skills", idiomas: "Languages", certificaciones: "Certifications", contacto: "Contact" },
 };
 

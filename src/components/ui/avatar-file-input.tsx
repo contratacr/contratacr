@@ -8,10 +8,15 @@ import { prepareImageForUpload } from "@/lib/client-image-upload";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 
 // Coordinates are relative to the square viewport, independent of device size.
+// La foto llena el círculo (18-nov-2026): zoom 1 ya cubre todo el cuadro y la
+// barra no baja de ahí, como en WhatsApp o Instagram. Antes se podía alejar
+// hasta un cuarto y moverla hasta el borde, y quedaban franjas blancas a los
+// lados. Solo "Mostrar logo completo" la deja más chica, a propósito.
 export function avatarGeometry(width: number, height: number, zoom: number, x: number, y: number) {
   const scale = Math.max(1 / width, 1 / height) * zoom;
   const w = width * scale, h = height * scale;
-  return { w, h, x: Math.max(-w / 2, Math.min(w / 2, x)), y: Math.max(-h / 2, Math.min(h / 2, y)) };
+  const mx = Math.max(0, (w - 1) / 2), my = Math.max(0, (h - 1) / 2);
+  return { w, h, x: Math.max(-mx, Math.min(mx, x)), y: Math.max(-my, Math.min(my, y)) };
 }
 
 type Props = Omit<InputHTMLAttributes<HTMLInputElement>, "onChange" | "type"> & { onFile: (file: File) => void };
@@ -74,7 +79,7 @@ export const AvatarFileInput = forwardRef<HTMLInputElement, Props>(function Avat
         onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }}>
         {source && <img ref={image} src={source} alt="" draggable={false} onLoad={e => setSize({ width: e.currentTarget.naturalWidth, height: e.currentTarget.naturalHeight })} onError={() => setError(en ? "Choose another photo." : "Elige otra foto.")} style={g ? { position: "absolute", maxWidth: "none", width: `${g.w * 100}%`, height: `${g.h * 100}%`, left: `${(0.5 - g.w / 2 + g.x) * 100}%`, top: `${(0.5 - g.h / 2 + g.y) * 100}%` } : { visibility: "hidden" }} />}
       </div>
-      <label className="mt-5 block text-sm font-medium">Zoom<input aria-label="Zoom" type="range" min={size.width ? Math.min(0.25, Math.min(size.width, size.height) / Math.hypot(size.width, size.height)) : 0.25} max="3" step="0.01" value={zoom} disabled={!g || busy} className="mt-2 block min-h-11 w-full accent-[#009FD9]" onChange={e => setZoom(Number(e.target.value))} /></label>
+      <label className="mt-5 block text-sm font-medium">Zoom<input aria-label="Zoom" type="range" min={Math.min(1, zoom)} max="3" step="0.01" value={zoom} disabled={!g || busy} className="mt-2 block min-h-11 w-full accent-[#009FD9]" onChange={e => setZoom(Number(e.target.value))} /></label>
       <div className="flex flex-wrap gap-2"><Button type="button" variant="outline" size="sm" disabled={!g || busy} onClick={() => { setZoom(Math.min(size.width, size.height) / Math.hypot(size.width, size.height)); setPosition({ x: 0, y: 0 }); }}>{en ? "Fit logo" : "Mostrar logo completo"}</Button><Button type="button" variant="ghost" size="sm" disabled={busy} onClick={() => { setZoom(1); setPosition({ x: 0, y: 0 }); }}>{en ? "Centre" : "Centrar"}</Button></div>
       <div className="mt-2 flex justify-center gap-2" aria-label={en ? "Move photo" : "Mover foto"}>{[["←",-.05,0],["↑",0,-.05],["↓",0,.05],["→",.05,0]].map(([label,x,y]) => <button type="button" key={label} disabled={!g || busy} aria-label={`${en ? "Move" : "Mover"} ${label}`} className="h-11 w-11 rounded-full border border-[#d7e1ea]" onClick={() => setPosition(p => { const next = avatarGeometry(size.width, size.height, zoom, p.x + Number(x), p.y + Number(y)); return { x: next.x, y: next.y }; })}>{label}</button>)}</div>
       {error && <p role="alert" className="mt-3 text-sm text-red-600">{error}</p>}
