@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { anyVideoConsultCategory, getAllCategories, getCategoryGroupLabel, getCategoryLabel, normalizeText } from "@/lib/data/categories";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
-import { PRICING_TYPES, TAX_INCLUDED_SUFFIX, formatServicePrice, splitPricingLabel, type PricingType } from "@/lib/pricing";
+import { TAX_INCLUDED_SUFFIX, formatServicePrice, splitPricingLabel, unidadParaCategoria, unidadesDeTarifa, type PricingType } from "@/lib/pricing";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 import { useAppDialog } from "@/hooks/use-app-dialog";
@@ -74,7 +74,6 @@ function genId() {
 
 // Price units offered in the service modal's <select> (the "Consultar precio"
 // checkbox covers a_convenir separately, so it's excluded here).
-const PRICE_UNITS = PRICING_TYPES.filter((p) => p.value !== "a_convenir");
 
 interface ServiceFormState {
   description: string;
@@ -87,7 +86,7 @@ interface ServiceFormState {
   professionalCredentialNumber: string;
   professionalCredentialIssuer: string;
 }
-const EMPTY_FORM: ServiceFormState = { description: "", priceUnit: "por_hora", priceAmount: "", aConsultar: false, startedAt: "", imageUrl: "", professionalCredentialLabel: "", professionalCredentialNumber: "", professionalCredentialIssuer: "" };
+const EMPTY_FORM: ServiceFormState = { description: "", priceUnit: "a_convenir", priceAmount: "", aConsultar: false, startedAt: "", imageUrl: "", professionalCredentialLabel: "", professionalCredentialNumber: "", professionalCredentialIssuer: "" };
 // 2000 (antes 600): un profesional pidió espacio para explicar bien su
 // servicio (9-oct-2026). En la ficha se recorta a dos líneas con «Ver
 // descripción completa», así que un texto largo no ensucia la tarjeta.
@@ -434,7 +433,7 @@ export function ServicesEditor({
     const suggestedCredential = professionalCredentialSuggestion(prof, locale);
     const siguiente = {
       description: rep?.description ?? "",
-      priceUnit: rep?.priceType && !isAsk ? rep.priceType : "por_hora",
+      priceUnit: unidadParaCategoria(rep?.priceType, prof),
       priceAmount: rep?.priceAmount != null ? String(rep.priceAmount) : "",
       aConsultar: isAsk,
       startedAt: rep?.startedAt ?? monthValueFromExperience(rep?.years, rep?.months),
@@ -591,7 +590,7 @@ export function ServicesEditor({
       return;
     }
 
-    const priceType: PricingType = form.aConsultar ? "a_convenir" : form.priceUnit;
+    const priceType: PricingType = form.aConsultar ? "a_convenir" : unidadParaCategoria(form.priceUnit, editCategory);
     const amount = form.aConsultar
       ? undefined
       : parseMoneyAmount(form.priceAmount) ?? undefined;
@@ -974,11 +973,11 @@ export function ServicesEditor({
                   />
                 </div>
                 <SelectMenu
-                  value={form.priceUnit}
+                  value={unidadParaCategoria(form.priceUnit, editCategory)}
                   onChange={(value) => setForm((current) => ({ ...current, priceUnit: value as PricingType }))}
                   disabled={form.aConsultar}
                   className="w-32 shrink-0 sm:w-40"
-                  options={PRICE_UNITS.map((priceType) => ({ value: priceType.value, label: t(`priceUnits.${priceType.value}`) }))}
+                  options={unidadesDeTarifa(editCategory).map((unidad) => ({ value: unidad, label: t(`priceUnits.${unidad}`) }))}
                 />
               </div>
               <p className="mt-2 text-xs leading-5 text-[#68778d]">{t("priceRefHelp")}</p>
