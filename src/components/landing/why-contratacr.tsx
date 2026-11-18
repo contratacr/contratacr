@@ -15,8 +15,8 @@ export async function WhyContratacr() {
     texto: t(`guia.${clave}.texto`),
     cta: t(`guia.${clave}.cta`),
     href: { profesionales: "/profesionales", proyectos: "/publicar-solicitud", empleos: "/empleos", promociones: "/promociones" }[clave],
-    video: `/guia/${clave}.mp4?v=${clave === "proyectos" ? "20261028-limpieza-hogar" : "20261028-current-navbar-titles"}`,
-    poster: `/guia/${clave}.jpg?v=${clave === "proyectos" ? "20261028-limpieza-hogar" : "20261028-current-navbar-titles"}`,
+    video: `/guia/${clave}.mp4?v=20261117-solicitudes`,
+    poster: `/guia/${clave}.jpg?v=20261117-solicitudes`,
     alt: t(`guia.${clave}.alt`),
   }));
 
