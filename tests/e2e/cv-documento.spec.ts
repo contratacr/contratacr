@@ -117,7 +117,7 @@ test("la carta arranca con el puesto y avisa de lo que queda por completar", () 
   const texto = cartaComoTexto(cv, carta, new Date(2026, 10, 13));
   expect(texto.split("\n").slice(0, 2)).toEqual(["Ana Mora", "ana@example.com | 8888-5555 | Atenas, Alajuela, Costa Rica"]);
   expect(texto).toContain("Equipo de selección\nHotel Atenas");
-  expect(texto).toContain("Estimado equipo de selección:");
+  expect(texto).toContain("Hotel Atenas\n\nPostulación al puesto de Electricista de mantenimiento\n\nEstimado equipo de selección:");
   // Sin empresa no se repite el destinatario antes del saludo.
   expect(cartaComoTexto(cv, { ...carta, empresa: "" })).not.toMatch(/Equipo de selección\n/);
   expect(texto.trim().endsWith("Saludos cordiales,\nAna Mora")).toBe(true);
@@ -127,7 +127,7 @@ test("la carta arranca con el puesto y avisa de lo que queda por completar", () 
 
 test("texto para pegar: títulos estándar en el idioma del documento", () => {
   const es = cvComoTexto(prellenar(perfil, "es"));
-  for (const titulo of ["PERFIL PROFESIONAL", "EXPERIENCIA", "EDUCACIÓN", "HABILIDADES", "IDIOMAS", "CERTIFICACIONES"]) expect(es).toContain(titulo);
+  for (const titulo of ["RESUMEN PROFESIONAL", "EXPERIENCIA", "EDUCACIÓN", "HABILIDADES", "IDIOMAS", "CERTIFICACIONES"]) expect(es).toContain(titulo);
   expect(es).toContain("Electricista — Por cuenta propia (01/2019 – Actualidad)");
   expect(es).toContain("- Instalé el sistema eléctrico de 40 casas");
   const en = cvComoTexto(prellenar(perfil, "en"));
