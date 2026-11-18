@@ -44,7 +44,30 @@ export function ViewportEnvironment() {
       // El campo enfocado manda sobre «estrenar arriba»: si el teclado acaba de
       // abrirse, lo que importa es ver dónde se escribe.
       noInsistirArriba();
-      active.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
+      // SIN ANIMACIÓN (18-nov-2026): en iPhone el desplazamiento suave, mientras
+      // el teclado todavía sube, dejaba la rayita del cursor dibujada donde
+      // estaba el campo antes de moverse: escribías y el cursor quedaba más
+      // arriba que las letras. Se mueve de una vez y se vuelve a pintar.
+      active.scrollIntoView({ block: "center", inline: "nearest", behavior: "instant" });
+      repintarCursor(active);
+    };
+
+    // WebKit en iOS no recoloca el cursor cuando el campo enfocado se mueve
+    // por un desplazamiento o un cambio de alto de la página. Volver a poner
+    // la misma selección lo obliga a dibujarlo donde está el campo ahora.
+    const repintarCursor = (campo: HTMLElement) => {
+      window.requestAnimationFrame(() => {
+        if (document.activeElement !== campo) return;
+        if (!(campo instanceof HTMLInputElement || campo instanceof HTMLTextAreaElement)) return;
+        try {
+          const { selectionStart: inicio, selectionEnd: fin, selectionDirection: sentido } = campo;
+          if (inicio == null || fin == null) return;
+          campo.setSelectionRange(inicio === 0 ? 1 : 0, inicio === 0 ? 1 : 0);
+          campo.setSelectionRange(inicio, fin, sentido ?? undefined);
+        } catch {
+          // email y number no admiten selección: ahí no hay nada que repintar.
+        }
+      });
     };
 
     const scheduleFocusedFieldCheck = () => {
@@ -118,6 +141,13 @@ export function ViewportEnvironment() {
       // acaba de cerrarse y hay un hilo abierto.
       const habiaTeclado = tecladoAbierto;
       tecladoAbierto = keyboardInset > 80;
+      // El teclado terminó de subir: la página ya se acomodó y el cursor puede
+      // haber quedado donde estaba el campo antes. Se repinta una vez.
+      if (!habiaTeclado && tecladoAbierto && isEditable(document.activeElement)) {
+        const campo = document.activeElement;
+        const id = window.setTimeout(() => { timers.delete(id); repintarCursor(campo); }, 320);
+        timers.add(id);
+      }
       if (habiaTeclado && !tecladoAbierto && root.classList.contains("contratacr-chat-thread-open")) {
         window.scrollTo({ top: 0, left: 0, behavior: "instant" });
         window.setTimeout(() => window.scrollTo({ top: 0, left: 0, behavior: "instant" }), 120);
