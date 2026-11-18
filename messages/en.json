@@ -2203,14 +2203,7 @@
     "cedulaYaVerificadaAyuda": "Your request shows \"Verified\". The number is never shown.",
     "identidadNoEncontrada": "We could not find this ID. You can request a manual review.",
     "identidadPadronCaido": "Verification is temporarily unavailable. You can continue and try later.",
-    "identidadEnRevision": "We'll review your ID; meanwhile your request shows without \"Verified\".",
-    "intentHeader": "Post a request",
-    "intentQuestion": "What would you like to do?",
-    "intentNeed": "I need a professional",
-    "intentNeedHint": "I want to post a service I need.",
-    "intentOffer": "I want to offer my services",
-    "intentOfferHint": "I want to showcase my work.",
-    "intentBack": "Back to choices"
+    "identidadEnRevision": "We'll review your ID; meanwhile your request shows without \"Verified\"."
   },
   "notifications": {
     "title": "Notifications",

@@ -19,7 +19,6 @@ test.describe("client and professional identity", () => {
         expect(missing.status()).toBe(400);
         expect((await missing.json()).error).toContain("identificación");
         await gotoOK(page, `/publicar-solicitud?categoria=${category!.id}`);
-        await page.getByRole("button", { name: "Necesito un profesional", exact: true }).click();
         const identification = page.locator("#cedula-del-proyecto");
         await expect(identification).toBeVisible();
         await expect(page.locator('label[for="cedula-del-proyecto"]')).toContainText("*");
@@ -46,7 +45,6 @@ test.describe("client and professional identity", () => {
           await dialog.getByRole("button", { name: "Entendido", exact: true }).click();
         }
         await gotoOK(page, `/publicar-solicitud?categoria=${category!.id}`);
-        await page.getByRole("button", { name: "Necesito un profesional", exact: true }).click();
         await expect(page.locator('input[type="tel"]').first()).toHaveValue(/7000/);
         await expect(page.locator("#cedula-del-proyecto")).toHaveCount(0);
         await page.locator("textarea").fill("Necesito reparar una puerta — prueba aislada");

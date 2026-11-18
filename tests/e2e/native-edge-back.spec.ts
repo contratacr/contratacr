@@ -25,7 +25,6 @@ for (const environment of ['responsive web', 'native app'] as const) {
     await page.setViewportSize({ width: 390, height: 844 });
     if (environment === 'native app') await native(page, baseURL!);
     await gotoOK(page, '/publicar-solicitud?returnTo=%2Fsolicitudes');
-    await page.getByRole('button', { name: 'Necesito un profesional', exact: true }).click();
     await page.getByRole('button', { name: /Ej\.: plomería, electricista, pintura/ }).first().click();
     const sheet = page.getByTestId('category-picker-sheet');
     await expect(sheet.getByText('Elige el servicio')).toBeVisible();

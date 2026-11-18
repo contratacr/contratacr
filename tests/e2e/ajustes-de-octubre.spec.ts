@@ -56,7 +56,6 @@ test.describe("invitación a publicar un proyecto", () => {
     expect((await raro.json() as { total: number }).total).toBe(0);
     if (total > 0) {
       await gotoOK(page, "/publicar-solicitud?categoria=desarrollo_web");
-      await page.getByRole("button", { name: "Necesito un profesional", exact: true }).click();
       await expect(page.getByText(/recibirán? tu solicitud/)).toBeVisible({ timeout: 30_000 });
     }
   });

@@ -3,7 +3,7 @@
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
     "files": 542,
-    "controls": 1466,
+    "controls": 1464,
     "pages": 73,
     "handlers": 117,
     "components": 288,
@@ -20517,7 +20517,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 316,
+          "line": 310,
           "tag": "div",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{onClose}",
@@ -20525,15 +20525,15 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 332,
+          "line": 326,
           "tag": "button",
-          "label": "{puedeVolverAEleccion ? t(\"intentBack\") : t(\"dismiss\")}",
-          "handler": "{() => { if (puedeVolverAEleccion) setSolicitudElegida(false); else onClose(); }}",
+          "label": "{t(\"dismiss\")}",
+          "handler": "{onClose}",
           "destination": "",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 343,
+          "line": 337,
           "tag": "form",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{handleSubmit}",
@@ -20541,23 +20541,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 356,
-          "tag": "button",
-          "label": "{t(\"intentNeed\")}",
-          "handler": "{() => setSolicitudElegida(true)}",
-          "destination": "",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 361,
-          "tag": "Link",
-          "label": "{t(\"intentOffer\")}",
-          "handler": "",
-          "destination": "{yaEsProfesional ? \"/dashboard/profesional?tab=profile&mode=offer\" : \"/registro/profesional\"}",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 373,
+          "line": 351,
           "tag": "CategorySearch",
           "label": "{t(\"categoryPlaceholder\")}",
           "handler": "{(id) => update(\"categoryId\", id)}",
@@ -20565,7 +20549,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 391,
+          "line": 369,
           "tag": "textarea",
           "label": "{t(\"descriptionPlaceholder\")}",
           "handler": "{(e) => update(\"description\", e.target.value)}",
@@ -20573,7 +20557,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 406,
+          "line": 384,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -20581,7 +20565,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 421,
+          "line": 399,
           "tag": "SelectMenu",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(v) => update(\"provinciaId\", v)}",
@@ -20589,7 +20573,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 426,
+          "line": 404,
           "tag": "SelectMenu",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(v) => update(\"cantonId\", v)}",
@@ -20597,7 +20581,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 447,
+          "line": 425,
           "tag": "PhoneInput",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{setTelefono}",
@@ -20605,7 +20589,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 461,
+          "line": 439,
           "tag": "CedulaInput",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{setCedula}",
@@ -20613,7 +20597,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 488,
+          "line": 466,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{onClose}",
@@ -20621,7 +20605,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 503,
+          "line": 481,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{onClose}",
@@ -20629,7 +20613,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 506,
+          "line": 484,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -20637,7 +20621,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 507,
+          "line": 485,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{onClose}",
@@ -20645,7 +20629,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 515,
+          "line": 493,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -20654,7 +20638,6 @@
         }
       ],
       "testIds": [
-        "project-intent-choice",
         "project-form-error"
       ],
       "relatedSpecs": [
@@ -20664,9 +20647,7 @@
       ],
       "directReferences": [
         "tests/e2e/client-project-identity.spec.ts",
-        "tests/e2e/interaction-surfaces.spec.ts",
-        "tests/e2e/project-intent.spec.ts",
-        "tests/e2e/project-purpose.spec.ts"
+        "tests/e2e/interaction-surfaces.spec.ts"
       ],
       "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
@@ -25931,55 +25912,55 @@
           "title": "\"el formulario dice cuántos profesionales recibirán el proyecto, también sin sesión\""
         },
         {
-          "line": 64,
+          "line": 63,
           "title": "\"el tablero de Proyectos no lleva la línea aclaratoria que se quitó\""
         },
         {
-          "line": 70,
+          "line": 69,
           "title": "\"tras abrir WhatsApp en una ficha, al volver se ofrece publicar\""
         },
         {
-          "line": 71,
+          "line": 70,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 92,
+          "line": 91,
           "title": "\"la cotización sin sesión vuelve a la página que la abrió\""
         },
         {
-          "line": 101,
+          "line": 100,
           "title": "\"un perfil que no existe, abierto desde la portada, ofrece volver al inicio\""
         },
         {
-          "line": 115,
+          "line": 114,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 117,
+          "line": 116,
           "title": "\"una reseña muestra el nombre público en una línea y la fecha junto a las estrellas\""
         },
         {
-          "line": 140,
+          "line": 139,
           "title": "\"el panel precarga Mis proyectos y Cotizaciones: entrar no muestra esqueleto\""
         },
         {
-          "line": 152,
+          "line": 151,
           "title": "\"el menú del admin agrupa las secciones y muestra Contactos\""
         },
         {
-          "line": 175,
+          "line": 174,
           "title": "\"cuenta por la IP real de Cloudflare: cambiar x-forwarded-for no lo salta\""
         },
         {
-          "line": 176,
+          "line": 175,
           "title": "!esLocal()"
         },
         {
-          "line": 196,
+          "line": 195,
           "title": "\"la primera foto sale del propio sitio y se pide con la página\""
         },
         {
-          "line": 208,
+          "line": 207,
           "title": "\"la cinta de marcas nunca deja un hueco: lo que se ve no salta al reiniciar\""
         }
       ]
@@ -26473,19 +26454,19 @@
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 314,
+          "line": 313,
           "title": "`${tipo}: sin sesión → entrar con una cuenta existente → vuelve lleno y se publica`"
         },
         {
-          "line": 324,
+          "line": 323,
           "title": "`${tipo}: sin sesión → crear cuenta de cliente → vuelve lleno y se publica`"
         },
         {
-          "line": 349,
+          "line": 348,
           "title": "`${tipo}: sin sesión → crear cuenta de profesional → vuelve lleno y se publica`"
         },
         {
-          "line": 363,
+          "line": 362,
           "title": "\"registro de profesional: contraseña, provincia, tarifa, fijo, abre arriba y avisos de bienvenida\""
         }
       ]
@@ -26938,15 +26919,15 @@
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 101,
+          "line": 99,
           "title": "\"Completion opens the profile subsection without painting its menu first\""
         },
         {
-          "line": 102,
+          "line": 100,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 146,
+          "line": 144,
           "title": "\"Project form keeps search prefills and safely closes on desktop\""
         }
       ]
@@ -27554,11 +27535,11 @@
           "title": "\"create project modal opens from client projects without submitting\""
         },
         {
-          "line": 70,
+          "line": 69,
           "title": "\"favorite actions persist, render and remove for a disposable client\""
         },
         {
-          "line": 108,
+          "line": 107,
           "title": "\"empty favorites keep the type filters in English\""
         }
       ]
@@ -28280,27 +28261,27 @@
           "title": "`${environment}: edge swipe walks back through the service picker without selecting a service`"
         },
         {
-          "line": 50,
+          "line": 49,
           "title": "`${environment}: service categories return to the index by swipe`"
         },
         {
-          "line": 62,
+          "line": 61,
           "title": "`${environment}: job and promotion details return to their boards by swipe`"
         },
         {
-          "line": 63,
+          "line": 62,
           "title": "!canRunSeededRegression()"
         },
         {
-          "line": 89,
+          "line": 88,
           "title": "'native edge back respects direction, scrolling, controls, overlays and root screens'"
         },
         {
-          "line": 144,
+          "line": 143,
           "title": "'native account and privacy swipe returns to Mi perfil without skipping the panel'"
         },
         {
-          "line": 145,
+          "line": 144,
           "title": "!canRunSeededRegression()"
         }
       ]
@@ -28867,20 +28848,20 @@
       "file": "tests/e2e/project-intent.spec.ts",
       "cases": [
         {
-          "line": 27,
-          "title": "`project intention ${locale} ${account||'guest'} routes and preserves request`"
-        },
-        {
-          "line": 43,
-          "title": "'editing bypasses intention and retains description'"
+          "line": 31,
+          "title": "`project request opens the form directly and redirects service ads ${locale} ${account||'guest'}`"
         },
         {
           "line": 45,
-          "title": "'saved draft resumes the form while an expired draft returns to choices'"
+          "title": "'editing keeps the description and the edit title'"
         },
         {
-          "line": 49,
-          "title": "`project choices fit width ${width}`"
+          "line": 47,
+          "title": "'saved draft resumes the form while an expired draft opens it empty'"
+        },
+        {
+          "line": 51,
+          "title": "`project form fits width ${width}`"
         }
       ]
     },
@@ -28892,7 +28873,7 @@
           "title": "`project fields explain that a client needs a professional (${locale})`"
         },
         {
-          "line": 22,
+          "line": 20,
           "title": "`project board keeps its section name without the explanatory subtitle (${locale})`"
         }
       ]
