@@ -55,7 +55,7 @@ export async function generateMetadata({ params }: { params: Tramo }): Promise<M
     locale,
     ruta: `/solicitudes/${tramoFicha(titulo, detalle.id)}`,
     tarjetaPropia: true,
-    titulo: titulo ? `${titulo} | ContrataCR` : "Proyecto | ContrataCR",
+    titulo: titulo ? `${titulo} | ContrataCR` : "Solicitud | ContrataCR",
     descripcion: descripcion.slice(0, 160) || "Un cliente busca profesional para este trabajo en ContrataCR.",
   });
 }

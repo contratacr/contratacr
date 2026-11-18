@@ -75,7 +75,10 @@ export function enlaceEmpleo(job: { id: string; title?: string | null }, baseUrl
  * entero, o el prefijo de 8 del enlace corto.
  */
 export function claveDeTramo(tramo: string): { id?: string; prefijo?: string } {
-  const valor = String(tramo ?? "").trim().toLowerCase();
+  // Al pegar el enlace en Facebook o WhatsApp a veces se lleva el punto, la
+  // coma o el paréntesis que venía después («…-ff72840e.»). Eso daba
+  // «Página no encontrada» (17-nov-2026); el código del final sigue claro.
+  const valor = String(tramo ?? "").trim().toLowerCase().replace(/[^\p{L}\p{N}]+$/u, "");
   if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(valor)) return { id: valor };
   // El enlace corto es solo el código; el intermedio traía título y código.
   if (/^[0-9a-f]{8}$/.test(valor)) return { prefijo: valor };

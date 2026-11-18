@@ -42,9 +42,9 @@ const ES_SECTIONS: LegalSection[] = [
       {
         "k": "ul",
         "items": [
-          "Proyectos, cotizaciones, reseñas y favoritos.",
+          "Solicitudes, cotizaciones, reseñas y favoritos.",
           "Los datos que aporta al pedir una cotización: nombre, teléfono, correo y, si lo indica, número de identificación.",
-          "El teléfono de un proyecto no se muestra en el tablero público. Profesionales registrados que utilicen sus opciones de contacto pueden obtenerlo para coordinar, incluso antes de enviar un mensaje. No lo incluya en la descripción pública.",
+          "El teléfono de una solicitud no se muestra en el tablero público. Profesionales registrados que utilicen sus opciones de contacto pueden obtenerlo para coordinar, incluso antes de enviar un mensaje. No lo incluya en la descripción pública.",
           "Información incluida por usted en descripciones, notas, reportes y conversaciones.",
           "Zona, ubicación o punto geográfico cuando lo proporciona o autoriza."
         ]
@@ -60,7 +60,7 @@ const ES_SECTIONS: LegalSection[] = [
           "Provincia, cantón, lugares de trabajo, zonas de cobertura y, si lo agrega, un punto en el mapa.",
           "Fotografía de perfil, casos de éxito, certificaciones, idiomas, aseguradoras y disponibilidad.",
           "Importación opcional de currículum: el archivo PDF o DOCX se lee localmente en su dispositivo para sugerir información, sin enviarlo a una inteligencia artificial. Si activa \"Mostrar mi CV en el perfil\", el documento se sube a almacenamiento privado y se permite abrirlo o descargarlo desde su perfil público. Puede ocultarlo, reemplazarlo o retirarlo; esto no elimina las copias que otras personas hayan descargado. Solo se guardan y publican los estudios, experiencia y habilidades que usted revise, confirme y guarde en el perfil. Puede editarlos o quitarlos desde Formación.",
-          "Proyectos, reseñas, casos de éxito y demás actividad relacionada con su perfil."
+          "Solicitudes, reseñas, casos de éxito y demás actividad relacionada con su perfil."
         ]
       },
       {
@@ -92,7 +92,7 @@ const ES_SECTIONS: LegalSection[] = [
         "k": "ul",
         "items": [
           "Dirección IP, tipo de dispositivo y navegador, sistema operativo, idioma, versión de la aplicación, identificadores técnicos y registros de seguridad.",
-          "Interacciones con perfiles, servicios, botones de contacto, favoritos, proyectos y funciones de la Plataforma.",
+          "Interacciones con perfiles, servicios, botones de contacto, favoritos, solicitudes y funciones de la Plataforma.",
           "Lo que escribe en el buscador junto con la zona y el orden elegidos, para entender qué se busca y qué no encuentra respuesta.",
           "Token de notificaciones push, plataforma, identificador del dispositivo y estado del permiso cuando activa notificaciones.",
           "Cookies y tecnologías similares necesarias para sesión, idioma, seguridad y funcionamiento; además de medición publicitaria cuando corresponda."
@@ -113,7 +113,7 @@ const ES_SECTIONS: LegalSection[] = [
         "items": [
           "Crear, autenticar y administrar su cuenta.",
           "Publicar perfiles profesionales y conectar Clientes con Profesionales.",
-          "Gestionar búsquedas, proyectos, cotizaciones, mensajes, archivos, reseñas y soporte.",
+          "Gestionar búsquedas, solicitudes, cotizaciones, mensajes, archivos, reseñas y soporte.",
           "Mostrar al personal administrador qué participante de un chat interno espera respuesta y desde cuándo, sin mostrar el contenido en ese seguimiento. El contenido solo puede consultarse por personal con permiso específico y autenticación reforzada para atender un caso abierto de soporte de un participante o un reporte abierto de un participante vinculado a esa conversación. Cada consulta registra quién accedió, cuándo, el caso y el motivo; los adjuntos no se muestran en esta herramienta. El acceso debe limitarse a lo necesario para atender el caso, no a supervisión general ni publicidad. Los registros de auditoría de consultas y acciones administrativas se conservan hasta 365 días, salvo casos abiertos o resueltos recientemente que requieran conservarlos. Puede solicitar revisión de una decisión desde Soporte.",
           "Personalizar resultados según servicio, zona y preferencias indicadas.",
           "Enviar correos y notificaciones relacionados con su cuenta o actividad.",
@@ -148,7 +148,7 @@ const ES_SECTIONS: LegalSection[] = [
       },
       {
         "k": "p",
-        "text": "Los proyectos, promociones, empleos y reseñas publicados también pueden difundirse por enlaces y aparecer en buscadores. Terceros pueden conservar capturas, mensajes compartidos o copias en caché. Retirar contenido de ContrataCR no elimina automáticamente esas copias; puede solicitar apoyo para gestionar su retiro cuando proceda."
+        "text": "Las solicitudes, promociones, empleos y reseñas publicadas también pueden difundirse por enlaces y aparecer en buscadores. Terceros pueden conservar capturas, mensajes compartidos o copias en caché. Retirar contenido de ContrataCR no elimina automáticamente esas copias; puede solicitar apoyo para gestionar su retiro cuando proceda."
       }
     ]
   },
@@ -368,7 +368,7 @@ const EN_SECTIONS: LegalSection[] = [
         "k": "ul",
         "items": [
           "Requests, posts, quotes, reviews, favorites, and related activity.",
-          "A project phone number is not shown on the public board. Registered professionals using its contact options can obtain it to coordinate, even before sending a message. Do not put it in the public description.",
+          "A request phone number is not shown on the public board. Registered professionals using its contact options can obtain it to coordinate, even before sending a message. Do not put it in the public description.",
           "Professional profile data, services, location, work areas, success stories, availability, and contact details.",
           "Optional CV import: the PDF or DOCX is read locally on your device to suggest information, without sending it to an AI provider. If you enable \"Show my CV on my profile\", the document is uploaded to private storage and visitors can open or download it from your public profile. You can hide, replace or remove it; this does not delete copies that others have downloaded. Only education, work experience and skills that you review, confirm and save are stored and published on your profile. You can edit or remove them in Education.",
           "Content you include in descriptions, notes, reports, and conversations."
@@ -447,7 +447,7 @@ const EN_SECTIONS: LegalSection[] = [
       },
       {
         "k": "p",
-        "text": "Published projects, promotions, jobs and reviews may also be shared through links and appear in search engines. Third parties may retain screenshots, shared messages or cached copies. Removal from ContrataCR does not automatically erase those copies; you may request help seeking removal where appropriate."
+        "text": "Published requests, promotions, jobs and reviews may also be shared through links and appear in search engines. Third parties may retain screenshots, shared messages or cached copies. Removal from ContrataCR does not automatically erase those copies; you may request help seeking removal where appropriate."
       }
     ]
   },

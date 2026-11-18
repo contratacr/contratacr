@@ -2,7 +2,8 @@ import { expect, test } from "playwright/test";
 import {
   ajustarAVacante, cartaComoTexto, cartaInicial, cvComoTexto, esCertificacion, fechasAts, nombreDeArchivo, palabrasClave, prellenar, revisarCarta, revisarCv, sumarDesdeArchivo,
 } from "../../src/lib/cv/documento";
-import { pdfDelCv, pdfDeLaCarta } from "../../src/lib/cv/pdf-documento";
+import { pdfDelCv, pdfDelCvEnBytes, pdfDeLaCarta } from "../../src/lib/cv/pdf-documento";
+import { cvPublico } from "../../src/lib/cv/cv-publico";
 import { empresaProbable, imagenValida, limpiarTextoLeido, puestoProbable } from "../../src/lib/cv/leer-imagen";
 
 // El generador de CV del panel: se prellena con el perfil, señala lo que suele
@@ -175,6 +176,25 @@ test("el PDF lleva texto de verdad, con el contacto en el cuerpo", async () => {
   expect(pdf).not.toMatch(/\/Subtype \/Image/);
   const carta = Buffer.from(await (await pdfDeLaCarta(cv, cartaInicial(cv, { puesto: "Electricista" }))).arrayBuffer()).toString("latin1");
   expect(carta).toContain("(Saludos cordiales,) Tj");
+});
+
+test("el PDF del perfil público: lo que el perfil ya muestra, sin correo ni teléfono", async () => {
+  const publico = {
+    slug: "ana-mora-ab12cd34", fullName: "Ana Mora", bio: "Electricista residencial con 8 años de experiencia.",
+    provinceName: "San José", cantonName: "Escazú", languages: [], services: [{ name: "Instalaciones eléctricas" }],
+    certifications: [{ name: "Técnico en electricidad", institution: "INA", year: "2018" }],
+    cvProfile: { education: [], experience: [{ title: "Electricista", organization: "Hotel Atenas", period: "2019", description: "Instalé tableros en 40 casas" }], skills: ["Tableros eléctricos"] },
+  };
+  const cv = cvPublico(publico, "es")!;
+  expect(cv.correo).toBe("");
+  expect(cv.telefono).toBe("");
+  expect(cv.ubicacion).toBe("Escazú, San José, Costa Rica");
+  expect(cv.enlace).toMatch(/\/ana-mora$/);
+  const pdf = Buffer.from(await pdfDelCvEnBytes(cv)).toString("latin1");
+  expect(pdf.startsWith("%PDF-")).toBe(true);
+  expect(pdf).toContain("(Ana Mora) Tj");
+  // Sin estudios, experiencia, habilidades ni certificaciones no hay PDF que mostrar.
+  expect(cvPublico({ ...publico, certifications: [], cvProfile: null }, "es")).toBeNull();
 });
 
 test("lo leído de una foto de la vacante se limpia y propone el puesto", () => {

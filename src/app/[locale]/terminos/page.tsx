@@ -69,12 +69,12 @@ const ES_SECTIONS: LegalSection[] = [
   },
   {
     "id": "publicaciones",
-    "h": "4. Proyectos, promociones y empleos",
+    "h": "4. Solicitudes, promociones y empleos",
     "body": [
       {
         "k": "ul",
         "items": [
-          "**Proyectos:** al publicar autoriza que su solicitud, nombre visible y zona se muestren en el tablero público y puedan compartirse mediante enlaces. Avisamos a profesionales relacionados con el servicio. El teléfono no se muestra en el tablero: profesionales registrados que utilicen las opciones de contacto del proyecto pueden obtenerlo para coordinar, aunque todavía no hayan enviado un mensaje. No incluya dirección exacta, documentos de identificación ni datos privados en la descripción.",
+          "**Solicitudes:** al publicar autoriza que su solicitud, nombre visible y zona se muestren en el tablero público y puedan compartirse mediante enlaces. Avisamos a profesionales relacionados con el servicio. El teléfono no se muestra en el tablero: profesionales registrados que utilicen las opciones de contacto del proyecto pueden obtenerlo para coordinar, aunque todavía no hayan enviado un mensaje. No incluya dirección exacta, documentos de identificación ni datos privados en la descripción.",
           "**Promociones:** quien publica debe informar claramente el precio final, impuestos y cargos aplicables, condiciones, vigencia, restricciones y disponibilidad, y cumplir lo anunciado. La publicación no garantiza ventas ni convierte a ContrataCR en prestador del servicio.",
           "**Empleos:** quien publica responde por la legitimidad de la vacante, la información y las condiciones laborales. No se permiten ofertas fraudulentas, discriminatorias o contrarias a la legislación ni cobros a candidatos para postularse. ContrataCR no es el empleador ni interviene en la selección. El contacto se realiza con quien publicó, mediante las opciones disponibles."
         ]
@@ -162,7 +162,7 @@ const ES_SECTIONS: LegalSection[] = [
       },
       {
         "k": "p",
-        "text": "Si activa notificaciones, podemos enviar avisos sobre mensajes, proyectos y empleos de su servicio, reseñas, soporte, seguridad y actividad de su cuenta. Puede desactivarlas desde el sistema operativo, aunque ciertos correos esenciales de cuenta o seguridad seguirán enviándose."
+        "text": "Si activa notificaciones, podemos enviar avisos sobre mensajes, solicitudes y empleos de su servicio, reseñas, soporte, seguridad y actividad de su cuenta. Puede desactivarlas desde el sistema operativo, aunque ciertos correos esenciales de cuenta o seguridad seguirán enviándose."
       },
       {
         "k": "p",
@@ -391,12 +391,12 @@ const EN_SECTIONS: LegalSection[] = [
   },
   {
     "id": "listings",
-    "h": "4. Projects, promotions, and jobs",
+    "h": "4. Requests, promotions, and jobs",
     "body": [
       {
         "k": "ul",
         "items": [
-          "**Projects:** by posting, you authorize your request, display name and area to appear on the public board and be shared through links. We notify professionals related to the service. Your phone is not shown on the board: registered professionals using project contact options can obtain it to coordinate, even before sending a message. Do not include an exact address, identity documents or private data in the description.",
+          "**Requests:** by posting, you authorize your request, display name and area to appear on the public board and be shared through links. We notify professionals related to the service. Your phone is not shown on the board: registered professionals using project contact options can obtain it to coordinate, even before sending a message. Do not include an exact address, identity documents or private data in the description.",
           "**Promotions:** publishers must clearly disclose the final price, applicable taxes and charges, conditions, validity, restrictions and availability, and honor the offer. A post does not guarantee sales or make ContrataCR the service provider.",
           "**Jobs:** publishers are responsible for legitimate vacancies, accurate information and lawful employment conditions. Fraudulent, discriminatory or unlawful offers and application fees for candidates are prohibited. ContrataCR is not the employer and does not take part in selection. Interested people contact the publisher through the available options."
         ]
