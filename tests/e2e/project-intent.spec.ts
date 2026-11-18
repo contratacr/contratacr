@@ -24,26 +24,28 @@ async function mount(page:import('playwright/test').Page,locale:string,query='')
  await page.route('**/intent-harness*',r=>r.fulfill({contentType:'text/html',body:`<!doctype html><html lang="${locale}"><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body><div id="root"></div></body></html>`}));
  await page.goto('/intent-harness'+query);await page.addStyleTag({content:css});await page.addScriptTag({content:script});
 }
-for(const locale of ['es','en'])for(const account of ['','client','pro'])test(`project intention ${locale} ${account||'guest'} routes and preserves request`,async({page})=>{
+// SIN PANTALLA DE ELECCIÓN (17-nov-2026): con el nombre "Solicitud" ya se
+// entiende que es para pedir. Se abre el formulario directo y, si lo escrito
+// parece un anuncio de servicio, el aviso manda a la puerta del profesional.
+const anuncio='Ofrezco mis servicios de pintura a domicilio, contáctame por WhatsApp';
+for(const locale of ['es','en'])for(const account of ['','client','pro'])test(`project request opens the form directly and redirects service ads ${locale} ${account||'guest'}`,async({page})=>{
  await mount(page,locale,account?'?account='+account:'');
- await expect(page.getByTestId('project-intent-choice')).toBeVisible();
- await expect(page.locator('button[type=submit]')).toHaveCount(0);
- const offer=page.getByRole('link',{name:locale==='es'?'Quiero ofrecer mis servicios':'I want to offer my services',exact:true});
- await expect(offer).toHaveAttribute('href',account==='pro'?'/dashboard/profesional?tab=profile&mode=offer':'/registro/profesional');
- await expect(page.getByText(locale==='es'?'Quiero publicar un servicio que necesito.':'I want to post a service I need.',{exact:true})).toBeVisible();
+ await expect(page.getByTestId('project-intent-choice')).toHaveCount(0);
+ await expect(page.locator('#publish-project-title')).toHaveText(locale==='es'?'Cuéntanos qué necesitas':'Tell us what you need');
+ await expect(page.locator('button[type=submit]')).toBeVisible();
+ const text=page.locator('textarea');
+ await text.fill('Necesito pintar una casa de dos pisos en Heredia');
+ await expect(page.getByRole('status')).toHaveCount(0);
+ await text.fill(anuncio);
+ const cta=page.getByRole('status').getByRole('link');
+ await expect(cta).toHaveAttribute('href',account==='pro'?'/dashboard/profesional?tab=profile&mode=offer':'/registro/profesional');
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
- if(locale==='es'&&!account)await page.screenshot({path:test.info().outputPath('project-intent.png')});
- await page.getByRole('button',{name:locale==='es'?'Necesito un profesional':'I need a professional',exact:true}).click();
- const text=page.locator('textarea');await text.fill('Necesito pintar una casa');
- await page.getByRole('button',{name:locale==='es'?'Volver a elegir':'Back to choices',exact:true}).click();
- await expect(page.getByTestId('project-intent-choice')).toBeVisible();
- await page.getByRole('button',{name:locale==='es'?'Necesito un profesional':'I need a professional',exact:true}).click();
- await expect(text).toHaveValue('Necesito pintar una casa');await expect(page.locator('button[type=submit]')).toBeVisible();
+ if(locale==='es'&&!account)await page.screenshot({path:test.info().outputPath('project-form.png')});
 });
-test('editing bypasses intention and retains description',async({page})=>{await mount(page,'es','?edit=1');await expect(page.getByTestId('project-intent-choice')).toHaveCount(0);await expect(page.locator('textarea')).toHaveValue('Necesito pintar una casa');});
+test('editing keeps the description and the edit title',async({page})=>{await mount(page,'es','?edit=1');await expect(page.locator('#publish-project-title')).toHaveText('Editar solicitud');await expect(page.locator('textarea')).toHaveValue('Necesito pintar una casa');});
 
-test('saved draft resumes the form while an expired draft returns to choices',async({page})=>{
- await mount(page,'es','?borrador=1&saved=1');await expect(page.locator('textarea')).toHaveValue('Solicitud restaurada');await expect(page.getByTestId('project-intent-choice')).toHaveCount(0);
- await mount(page,'es','?borrador=1');await expect(page.getByTestId('project-intent-choice')).toBeVisible();
+test('saved draft resumes the form while an expired draft opens it empty',async({page})=>{
+ await mount(page,'es','?borrador=1&saved=1');await expect(page.locator('textarea')).toHaveValue('Solicitud restaurada');
+ await mount(page,'es','?borrador=1');await expect(page.locator('textarea')).toHaveValue('');await expect(page.locator('button[type=submit]')).toBeVisible();
 });
-for(const width of [320,1440])test(`project choices fit width ${width}`,async({page})=>{await page.setViewportSize({width,height:900});await mount(page,'es');await expect(page.getByTestId('project-intent-choice')).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await expect(page.getByRole('link',{name:'Quiero ofrecer mis servicios',exact:true})).toBeInViewport();});
+for(const width of [320,1440])test(`project form fits width ${width}`,async({page})=>{await page.setViewportSize({width,height:900});await mount(page,'es');await expect(page.locator('textarea')).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);});

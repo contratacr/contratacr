@@ -2203,14 +2203,7 @@
     "cedulaYaVerificadaAyuda": "Tu solicitud sale con \"Verificado\". El número no se muestra.",
     "identidadNoEncontrada": "No encontramos esta identificación. Puedes solicitar una revisión manual.",
     "identidadPadronCaido": "La verificación no está disponible en este momento. Puedes continuar e intentarlo más tarde.",
-    "identidadEnRevision": "Vamos a revisar tu identificación; mientras tanto tu solicitud sale sin \"Verificado\".",
-    "intentHeader": "Publicar una solicitud",
-    "intentQuestion": "¿Qué necesitás hacer?",
-    "intentNeed": "Necesito un profesional",
-    "intentNeedHint": "Quiero publicar un servicio que necesito.",
-    "intentOffer": "Quiero ofrecer mis servicios",
-    "intentOfferHint": "Quiero dar a conocer mi trabajo.",
-    "intentBack": "Volver a elegir"
+    "identidadEnRevision": "Vamos a revisar tu identificación; mientras tanto tu solicitud sale sin \"Verificado\"."
   },
   "notifications": {
     "title": "Notificaciones",
