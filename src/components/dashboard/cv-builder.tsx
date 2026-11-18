@@ -430,14 +430,16 @@ function Documentos({ pro, uid, tipo, nombreCuenta, correo }: { pro: ProData; ui
 
 type PasoCv = "contacto" | "experiencia" | "educacion" | "habilidades" | "perfil" | "revisar";
 type PasoCarta = "contenido" | "revisar";
-const PASOS_CV: PasoCv[] = ["contacto", "experiencia", "educacion", "habilidades", "perfil", "revisar"];
+// EL RESUMEN VA SEGUNDO (18-nov-2026), justo después del contacto, como en
+// FlowCV, Resume.io y los demás armadores: es lo primero que se lee en el CV.
+const PASOS_CV: PasoCv[] = ["contacto", "perfil", "experiencia", "educacion", "habilidades", "revisar"];
 const PASOS_CARTA: PasoCarta[] = ["contenido", "revisar"];
 const NOMBRE_PASO: Record<PasoCv | PasoCarta, { es: string; en: string }> = {
   contacto: { es: "Contacto", en: "Contact" },
   experiencia: { es: "Experiencia", en: "Experience" },
   educacion: { es: "Educación", en: "Education" },
   habilidades: { es: "Habilidades", en: "Skills" },
-  perfil: { es: "Perfil", en: "Summary" },
+  perfil: { es: "Resumen", en: "Summary" },
   revisar: { es: "Revisar y descargar", en: "Review & download" },
   contenido: { es: "Escribir", en: "Write" },
 };
@@ -854,7 +856,7 @@ function Editor({ pro, documento, borrador, setBorrador, desdeElPerfil, alVolver
       </>
     ),
     perfil: (
-      <Tarjeta titulo={tituloCv.resumen} ayuda={en ? "Written last on purpose: 2–3 lines with what you do, your experience and your strengths." : "Se escribe al final a propósito: 2 o 3 líneas con qué hacés, tu experiencia y en qué sos fuerte."}>
+      <Tarjeta titulo={tituloCv.resumen} ayuda={en ? "2–3 lines at the top of your CV: what you do, your experience and your strengths." : "2 o 3 líneas que van arriba en tu CV: qué hacés, tu experiencia y en qué sos fuerte."}>
         <textarea rows={5} maxLength={600} value={cv.resumen} onChange={(e) => setCv({ resumen: e.target.value })} className={campo} />
         <div className="mt-1 flex items-center justify-between gap-2">
           <button type="button" onClick={() => setCv({ resumen: baseDelPerfil() })} className="inline-flex h-9 items-center gap-1.5 rounded-full px-2 text-[13px] font-semibold text-[#007fae] hover:bg-[#eef6fb]">

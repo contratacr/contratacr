@@ -2212,6 +2212,19 @@ body.ccr-native-app:has(.ccr-native-search-panel) .ccr-native-bottom-nav {
   html[data-keyboard-open]:not([data-teclado-formulario-largo]) .ccr-account-page > .ccr-centrado-seguro {
     padding-block: 12px !important;
   }
+  /* EL CÓDIGO DE "VERIFICA TU CORREO" (18-nov-2026): la tarjeta se centraba en
+     todo el alto de la pantalla y quedaba a media pantalla, con un hueco arriba
+     y scroll detrás del teclado, que se abre solo para escribir el código. Va
+     arriba, bajo el encabezado, y la página mide solo lo que lleva. */
+  .ccr-account-page.ccr-paso-codigo {
+    min-height: 0 !important;
+  }
+  .ccr-account-page.ccr-paso-codigo > .ccr-centrado-seguro {
+    flex: 0 0 auto;
+  }
+  .ccr-account-page.ccr-paso-codigo > .ccr-centrado-seguro > * {
+    margin-block: 0;
+  }
 }
 
 /* Donde hay una franja de acciones fija abajo, el pie del sitio sobra en el
@@ -2412,4 +2425,10 @@ body.ccr-native-app main.ccr-authentication-screen[data-authentication-screen] {
 main.ccr-authentication-screen:has(input:focus, textarea:focus),
 body.ccr-native-app main.ccr-authentication-screen[data-authentication-screen]:has(input:focus, textarea:focus) {
   height: var(--app-visual-viewport-height, 100dvh);
+  /* 18-nov-2026: en iPhone, al tocar el campo el teléfono desplaza la vista
+     para dejarlo encima del teclado. La pantalla seguía pegada arriba de la
+     página, así que se cortaba el título y sobraba blanco abajo: el campo no
+     quedaba centrado. Se pega a la parte que se ve, como las ventanas. */
+  top: var(--app-visual-viewport-top, 0px);
+  bottom: auto;
 }

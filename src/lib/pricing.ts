@@ -19,11 +19,52 @@ export const TAX_INCLUDED_SUFFIX = "I.V.A.I.";
 export const PRICING_TYPES: { value: PricingType; label: string; suffix: string }[] = [
   { value: "por_hora", label: "Por hora", suffix: "/hora" },
   { value: "por_consulta", label: "Por consulta", suffix: "/consulta" },
-  { value: "por_proyecto", label: "Por proyecto", suffix: "/proyecto" },
-  { value: "por_dia", label: "Por día", suffix: "/día" },
-  { value: "paquete", label: "Paquete", suffix: "" },
+  { value: "por_proyecto", label: "Por trabajo", suffix: "" },
+  { value: "por_dia", label: "Por trabajo", suffix: "" },
+  { value: "paquete", label: "Por trabajo", suffix: "" },
   { value: "a_convenir", label: "Consultar precio", suffix: "" },
 ];
+
+/**
+ * SOLO DOS FORMAS DE COBRAR (18-nov-2026). De 386 perfiles, 327 no ponían
+ * precio y casi todos los demás usaban "Por hora"; "Por proyecto", "Paquete",
+ * "Por día" y "Por consulta" decían lo mismo con otro nombre: un precio por el
+ * trabajo completo. Al profesional se le ofrece "Por trabajo" (guardado como
+ * por_proyecto, sin migrar nada) o "Por hora"; en salud la primera se llama
+ * "Por consulta". Lo viejo se sigue leyendo: por_dia y paquete se muestran
+ * como "Por trabajo".
+ */
+const CATEGORIAS_POR_CONSULTA = new Set([
+  "psicologia", "psiquiatria", "nutricion", "fisioterapia", "odontologia", "ortodoncia", "pediatria",
+  "optometria", "medico_especialista", "cardiologia", "medicina_domicilio", "terapia_lenguaje",
+  "terapia_ocupacional", "podologia", "acupuntura", "veterinaria",
+]);
+const CATEGORIAS_POR_HORA = new Set([
+  "tutorias", "idiomas", "clases_frances", "clases_portugues", "clases_mandarin", "clases_japones", "musica",
+  "matematicas", "preparacion_universitaria", "clases_manejo", "clases_baile", "clases_cocina",
+  "entrenamiento_personal", "entrenamiento_deportivo", "enfermeria", "cuidado_adultos", "cuidado_discapacidad",
+  "cuidado_infantil", "soporte_tecnico", "consultoria_ti", "legal", "consultoria",
+]);
+
+export type UnidadDeTarifa = "por_proyecto" | "por_consulta" | "por_hora";
+
+/** Las dos unidades que se ofrecen para un servicio, la sugerida primero. */
+export function unidadesDeTarifa(categoryId?: string | null): UnidadDeTarifa[] {
+  const fija: UnidadDeTarifa = categoryId && CATEGORIAS_POR_CONSULTA.has(categoryId) ? "por_consulta" : "por_proyecto";
+  return categoryId && CATEGORIAS_POR_HORA.has(categoryId) ? ["por_hora", fija] : [fija, "por_hora"];
+}
+
+/** La unidad que viene marcada para un servicio nuevo. */
+export function unidadSugerida(categoryId?: string | null): UnidadDeTarifa {
+  return unidadesDeTarifa(categoryId)[0];
+}
+
+/** Lleva una unidad guardada (también las viejas) a una de las dos que se ofrecen. */
+export function unidadParaCategoria(type: PricingType | null | undefined, categoryId?: string | null): UnidadDeTarifa {
+  if (type === "por_hora") return "por_hora";
+  if (!type || type === "a_convenir") return unidadSugerida(categoryId);
+  return unidadesDeTarifa(categoryId).find((u) => u !== "por_hora")!;
+}
 
 /**
  * Agrupa los miles a mano en vez de pedírselo al navegador. `toLocaleString("es-CR")`
@@ -71,17 +112,17 @@ const PRICING_COPY: Record<"es" | "en", Record<PricingType, { fallback: string; 
   es: {
     por_hora: { fallback: "Consultar precio", suffix: "/hora", packagePrefix: "Paquete: " },
     por_consulta: { fallback: "Consultar precio", suffix: "/consulta", packagePrefix: "Paquete: " },
-    por_proyecto: { fallback: "Consultar precio", suffix: "/proyecto", packagePrefix: "Paquete: " },
-    por_dia: { fallback: "Consultar precio", suffix: "/día", packagePrefix: "Paquete: " },
-    paquete: { fallback: "a convenir", suffix: "", packagePrefix: "Paquete: " },
+    por_proyecto: { fallback: "Consultar precio", suffix: "", packagePrefix: "Paquete: " },
+    por_dia: { fallback: "Consultar precio", suffix: "", packagePrefix: "Paquete: " },
+    paquete: { fallback: "Consultar precio", suffix: "", packagePrefix: "Paquete: " },
     a_convenir: { fallback: "Consultar precio", suffix: "", packagePrefix: "Paquete: " },
   },
   en: {
     por_hora: { fallback: "Ask for price", suffix: "/hour", packagePrefix: "Package: " },
     por_consulta: { fallback: "Ask for price", suffix: "/consultation", packagePrefix: "Package: " },
-    por_proyecto: { fallback: "Ask for price", suffix: "/project", packagePrefix: "Package: " },
-    por_dia: { fallback: "Ask for price", suffix: "/day", packagePrefix: "Package: " },
-    paquete: { fallback: "to be agreed", suffix: "", packagePrefix: "Package: " },
+    por_proyecto: { fallback: "Ask for price", suffix: "", packagePrefix: "Package: " },
+    por_dia: { fallback: "Ask for price", suffix: "", packagePrefix: "Package: " },
+    paquete: { fallback: "Ask for price", suffix: "", packagePrefix: "Package: " },
     a_convenir: { fallback: "Ask for price", suffix: "", packagePrefix: "Package: " },
   },
 };
@@ -101,10 +142,6 @@ function formatPricingTier(tier: PricingTier, locale?: string): string {
   const copy = PRICING_COPY[pricingLocale(locale)][tier.type];
   if (tier.type === "a_convenir") return copy.fallback;
   const suffix = copy.suffix;
-  if (tier.type === "paquete") {
-    const base = tier.label ? `${tier.label}: ` : copy.packagePrefix;
-    return tier.amount != null ? `${base}${formatColonesTaxIncluded(tier.amount)}` : `${base}${copy.fallback}`;
-  }
   return tier.amount != null ? formatAmountWithUnit(tier.amount, suffix) : copy.fallback;
 }
 

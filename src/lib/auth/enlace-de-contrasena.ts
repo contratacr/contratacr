@@ -54,9 +54,9 @@ export async function enviarEnlaceDeContrasena({
         <meta name="supported-color-schemes" content="light dark">
         <style>${EMAIL_LOGO_DARK_MODE_STYLES}</style>
       </head>
-      <body style="margin:0;padding:0;background:#ffffff;color:#162543;font-family:Arial,Helvetica,sans-serif">
+      <body style="margin:0;padding:0;color:#162543;font-family:Arial,Helvetica,sans-serif">
         <div class="ccr-email-background" style="padding:0;color:#162543">
-        <div class="ccr-email-card ccr-email-content" style="box-sizing:border-box;width:100%;max-width:600px;margin:0 auto;padding:44px 28px 36px;background:#fff">
+        <div class="ccr-email-card ccr-email-content" style="box-sizing:border-box;width:100%;max-width:600px;margin:0 auto;padding:44px 28px 36px">
           <div style="margin:0 0 36px">${emailLogoMarkup(origin)}</div>
           <h1 style="font-size:21px;line-height:1.25;margin:0 0 10px">Restablece tu contrase&ntilde;a</h1>
           <p style="font-size:15px;line-height:1.65;color:#374151;margin:0 0 24px">Recibimos una solicitud para restablecer la contrase&ntilde;a de tu cuenta. Usa este bot&oacute;n para crear una nueva.</p>

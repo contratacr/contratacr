@@ -1,4 +1,5 @@
 import { straightDoubleQuotes } from "@/lib/display-quotes";
+import { textoCompletarPerfil, type FaltaDelPerfil } from "@/lib/notifications/completar-perfil-texto";
 import { getAllCategories, getCategoryLabel } from "./data/categories";
 
 // SOLO LO QUE EL APP GENERA HOY. Las citas, las propuestas, las postulaciones,
@@ -166,9 +167,10 @@ function notificationCopy(notification: NotificationCopyInput, locale: string) {
       : "Se mostrará como \"Desde ₡…\" para orientar a los clientes. El precio final puede variar según el trabajo." };
   }
   if (notification.type === "completa_perfil") {
-    return { title, message: en
-      ? "Add your photo, description and services so clients can learn what you offer."
-      : "Agrega tu foto, descripción y servicios para que los clientes conozcan lo que ofreces." };
+    // Lo que faltaba al registrarse (18-nov-2026); los avisos viejos no lo traen.
+    const faltan = (Array.isArray(notification.data?.faltan) ? notification.data.faltan : [])
+      .filter((f: unknown): f is FaltaDelPerfil => f === "foto" || f === "descripcion" || f === "servicios");
+    return { title, message: textoCompletarPerfil(faltan.length > 0 ? faltan : ["foto", "descripcion", "servicios"], en ? "en" : "es") };
   }
 
   if (notification.type === "review_received") {

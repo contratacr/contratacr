@@ -52,7 +52,7 @@ export type Carta = {
 export const LIMITES = { resumen: 600, carta: 2200, entradas: 12, habilidades: 10, porDefecto: 8, sugeridas: 30 };
 
 export const TITULOS: Record<Idioma, Record<"resumen" | "experiencia" | "educacion" | "habilidades" | "idiomas" | "certificaciones" | "contacto", string>> = {
-  es: { resumen: "Perfil profesional", experiencia: "Experiencia", educacion: "Educación", habilidades: "Habilidades", idiomas: "Idiomas", certificaciones: "Certificaciones", contacto: "Contacto" },
+  es: { resumen: "Resumen profesional", experiencia: "Experiencia", educacion: "Educación", habilidades: "Habilidades", idiomas: "Idiomas", certificaciones: "Certificaciones", contacto: "Contacto" },
   en: { resumen: "Professional summary", experiencia: "Experience", educacion: "Education", habilidades: "Skills", idiomas: "Languages", certificaciones: "Certifications", contacto: "Contact" },
 };
 
@@ -319,6 +319,9 @@ export function cuerpoDeLaCarta(cv: CvDocumento, carta: Carta, hoy = new Date())
     fecha, "",
     // El bloque del destinatario solo cuando hay empresa: sin ella repetía el saludo.
     carta.empresa.trim() ? [carta.destinatario, carta.empresa].filter((v) => v.trim()).join("\n") : "", "",
+    // La línea de asunto, como en FlowCV y en una carta formal (18-nov-2026):
+    // quien la recibe sabe a qué puesto va antes de leer el saludo.
+    carta.puesto.trim() ? `${en ? "Application for" : "Postulación al puesto de"} ${carta.puesto.trim()}` : "", "",
     `${en ? "Dear" : "Estimado"} ${saludo(carta.destinatario, en)}:`, "",
     carta.apertura.trim(), "", carta.porQueEncajo.trim(), "", carta.porQueLaEmpresa.trim(), "", carta.cierre.trim(), "",
     en ? "Sincerely," : "Saludos cordiales,", cv.nombre,

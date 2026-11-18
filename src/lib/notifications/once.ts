@@ -23,7 +23,7 @@ export function hasRecentOnceReceipt(receipts: OnceReceipt[], userId: string, no
 }
 
 export async function insertOnceNotifications(admin: Admin, rows: Array<{
-  user_id: string; type: OnceNotificationType; title: string; message: string; data: { link: string }; read: boolean;
+  user_id: string; type: OnceNotificationType; title: string; message: string; data: { link: string } & Record<string, unknown>; read: boolean;
 }>) {
   rows = [...rows].sort((a, b) => a.user_id.localeCompare(b.user_id));
   let sent = 0;

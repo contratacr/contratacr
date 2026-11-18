@@ -53,15 +53,15 @@ function escapeHtml(value: string) {
 function emailHtml({ origin, senderName, preview, threadUrl }: { origin: string; senderName: string; preview: string; threadUrl: string }) {
   return `
   <head><meta name="color-scheme" content="light dark"><meta name="supported-color-schemes" content="light dark"><style>${EMAIL_LOGO_DARK_MODE_STYLES}</style></head>
-  <body style="margin:0;padding:0;background-color:#ffffff;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="ccr-email-background" style="background-color:#ffffff;color:#162543;"><tr><td align="center" style="padding:16px 0;">
-    <table class="ccr-email-card" role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;background-color:#ffffff;">
+  <body style="margin:0;padding:0;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="ccr-email-background" style="color:#162543;"><tr><td align="center" style="padding:16px 0;">
+    <table class="ccr-email-card" role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;">
       <tr><td align="left" style="padding:28px 28px 12px 28px;">${emailLogoMarkup(origin)}</td></tr>
       <tr><td style="padding:6px 28px 0 28px;font-family:Arial,Helvetica,sans-serif;">
         <h1 style="font-size:19px;font-weight:bold;margin:14px 0 10px 0;color:#162543;">${escapeHtml(senderName)} te escribió en ContrataCR</h1>
         <div class="ccr-email-body" style="font-size:14px;line-height:1.6;color:#374151;">
           <p style="margin:0 0 12px;">Tienes un mensaje nuevo en ContrataCR.</p>
-          <blockquote style="margin:0 0 12px;padding:12px 16px;border-left:3px solid #009FD9;background:#f8fcff;color:#173052;border-radius:8px;">${escapeHtml(preview)}</blockquote>
+          <blockquote style="margin:0 0 12px;padding:12px 16px;border-left:3px solid #009FD9;color:#173052;border-radius:8px;">${escapeHtml(preview)}</blockquote>
           <p style="margin:0;">Puedes leerlo y responder desde la web o la app ContrataCR.</p>
         </div>
       </td></tr>

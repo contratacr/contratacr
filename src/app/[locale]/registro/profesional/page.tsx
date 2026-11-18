@@ -27,7 +27,7 @@ import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
 import { PriceInput } from "@/components/ui/price-input";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { formatFullPersonName } from "@/lib/display-name";
-import { PRICING_TYPES, type PricingType } from "@/lib/pricing";
+import { unidadParaCategoria, unidadesDeTarifa, type PricingType } from "@/lib/pricing";
 import { EtiquetaOpcional } from "@/components/ui/etiqueta-campo";
 import { IdentityField } from "@/components/ui/identity-field";
 import { FooterSoloWeb } from "@/components/landing/footer-solo-web";
@@ -551,6 +551,9 @@ export default function RegisterProfessionalPage() {
     mode: "onBlur",
     defaultValues: { yearsExperience: "", hourlyRate: "", rateUnit: "por_hora" },
   });
+  // La unidad sugerida sigue al servicio principal hasta que la persona elige
+  // una a mano (18-nov-2026: solo "Por trabajo"/"Por consulta" y "Por hora").
+  const [unidadTocada, setUnidadTocada] = useState(false);
   const watchedPrimaryCategory = form2.watch("category");
   const selectedServiceIds = useMemo(
     () => [watchedPrimaryCategory, ...extraCategories].filter(Boolean),
@@ -971,7 +974,7 @@ export default function RegisterProfessionalPage() {
           allowPhoneCall: aceptaLlamadas,
           yearsExperience: data.yearsExperience,
           hourlyRate: data.hourlyRate,
-          rateUnit: data.rateUnit ?? "por_hora",
+          rateUnit: unidadParaCategoria(unidadTocada ? data.rateUnit : undefined, step2Data.category),
         }),
       });
 
@@ -1050,12 +1053,12 @@ export default function RegisterProfessionalPage() {
   // ── OTP screen ──────────────────────────────────────────────────────────────
   if (otpEmail) {
     return (
-      <div className="ccr-account-page min-h-dvh flex flex-col bg-white">
+      <div className="ccr-account-page ccr-paso-codigo min-h-dvh flex flex-col bg-white">
         {/* 15-nov-2026: «Atrás» en el paso 0 va al inicio, no al panel: el panel manda una cuenta que puede ofrecer pero aún no tiene fila de profesional de vuelta a /registro/profesional, y se formaba un bucle. */}
         {currentUser ? <CabeceraDeTramite title={t("headerTitle")} backHref="/" onBack={step > 0 ? () => setStep(step - 1) : undefined} backLabel={step > 0 ? t("back") : undefined} /> : <Navbar mobileSearch={false} />}
         <main className="flex-1 ccr-centrado-seguro py-12 px-4">
           <div className="w-full max-w-sm">
-            <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
+            <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-6 sm:p-8">
               <OtpVerification email={otpEmail} onVerified={() => { setOtpEmail(null); setStep(1); }} />
             </div>
           </div>
@@ -1406,8 +1409,8 @@ export default function RegisterProfessionalPage() {
                     <label htmlFor="tarifa-por-hora" className="mb-1.5 block text-sm font-medium text-[#374151]">
                       <EtiquetaOpcional>{t("rateLabel")}</EtiquetaOpcional>
                     </label>
-                    {/* Por hora, por proyecto, por consulta…: la misma unidad que
-                        el editor de servicios (15-nov-2026). Antes solo por hora. */}
+                    {/* Por trabajo (o por consulta en salud) y por hora: las mismas
+                        dos unidades que el editor de servicios (18-nov-2026). */}
                     <div className="flex items-stretch gap-2">
                       <div className="min-w-0 flex-1">
                         <PriceInput
@@ -1418,10 +1421,10 @@ export default function RegisterProfessionalPage() {
                         />
                       </div>
                       <SelectMenu
-                        value={form3.watch("rateUnit") ?? "por_hora"}
-                        onChange={(value) => form3.setValue("rateUnit", value as Exclude<PricingType, "a_convenir">)}
+                        value={unidadParaCategoria(unidadTocada ? form3.watch("rateUnit") : undefined, form2.watch("category"))}
+                        onChange={(value) => { setUnidadTocada(true); form3.setValue("rateUnit", value as Exclude<PricingType, "a_convenir">); }}
                         className="w-36 shrink-0 sm:w-40"
-                        options={PRICING_TYPES.filter((p) => p.value !== "a_convenir").map((p) => ({ value: p.value, label: tUnidad(`priceUnits.${p.value}`) }))}
+                        options={unidadesDeTarifa(form2.watch("category")).map((unidad) => ({ value: unidad, label: tUnidad(`priceUnits.${unidad}`) }))}
                       />
                     </div>
                     <p className="mt-1.5 text-xs leading-snug text-[#68778d]">{t("rateHelp")}</p>

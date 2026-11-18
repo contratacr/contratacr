@@ -18,9 +18,9 @@ async function sendEmail(to: string, subject: string, html: string, replyTo?: st
 function shell(headline: string, bodyHtml: string, cta?: { href: string; label: string }): string {
   return `
   <head><meta name="color-scheme" content="light dark"><meta name="supported-color-schemes" content="light dark"><style>${EMAIL_LOGO_DARK_MODE_STYLES}</style></head>
-  <body style="margin:0;padding:0;background-color:#ffffff;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="ccr-email-background" style="background-color:#ffffff;color:#162543;"><tr><td align="center" style="padding:16px 0;">
-    <table class="ccr-email-card" role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;background-color:#ffffff;">
+  <body style="margin:0;padding:0;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="ccr-email-background" style="color:#162543;"><tr><td align="center" style="padding:16px 0;">
+    <table class="ccr-email-card" role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;">
       <tr><td align="left" style="padding:28px 28px 12px 28px;">
         ${emailLogoMarkup(SITE)}
       </td></tr>
@@ -100,7 +100,7 @@ export function supportReplyEmail(opts: {
   const html = shell(
     "Tienes una respuesta de soporte",
     `<p style="margin:0 0 12px 0;">${firstName ? `Hola ${escapeHtml(firstName)}, ` : ""}respondimos a tu consulta <strong>"${escapeHtml(opts.subject)}"</strong>:</p>
-     <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:14px;white-space:pre-wrap;">${escapeHtml(opts.body)}</div>
+     <div style="border:1px solid #e5e7eb;border-radius:8px;padding:14px;white-space:pre-wrap;">${escapeHtml(opts.body)}</div>
      ${followHtml}`,
     cta,
   );

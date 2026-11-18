@@ -87,7 +87,13 @@ export async function runIdentityVerification(
   });
   try { await invalidateProfessionalCache(); } catch { /* Verification persists; public caches expire normally if invalidation fails. */ }
   if (pro.verification_status !== target || opts.isInitial) {
-    await notifyVerificationDecision({ professionalId: pro.id, kind: verified ? "verified" : "pending", channel });
+    // "in_app" = la persona está en la pantalla viendo el resultado (registro o
+    // el botón del panel). Si quedó verificada ya lo vio ahí: el aviso en la
+    // campanita repetía lo mismo al estrenar la cuenta (18-nov-2026). El de
+    // "en revisión" sí se manda, porque dice qué hacer después.
+    if (!(verified && channel === "in_app")) {
+      await notifyVerificationDecision({ professionalId: pro.id, kind: verified ? "verified" : "pending", channel });
+    }
     if (!verified && channel === "both") await notifyVerificationOutreach(pro.id);
   }
   return target;

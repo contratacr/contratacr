@@ -457,7 +457,8 @@ test("registro de profesional: contraseña, provincia, tarifa, fijo, abre arriba
 
   // 10. Notificaciones: el texto se lee COMPLETO y cada aviso lleva su raya.
   await gotoOK(page, "/notificaciones");
-  const largo = page.getByText("Agrega tu foto, descripción y servicios para que los clientes conozcan lo que ofreces.");
+  // Nombra solo lo que falta (18-nov-2026): esta cuenta no subió foto.
+  const largo = page.getByText(/^Agrega tu foto.* para que los clientes conozcan lo que ofreces\.$/);
   await expect(largo).toBeVisible({ timeout: 30_000 });
   const medidas = await largo.evaluate((el) => {
     const fila = el.closest('[role="button"]') as HTMLElement;
