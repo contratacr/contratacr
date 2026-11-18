@@ -207,14 +207,14 @@ const escenas = {
     await tocar(p, p.getByText("SG Solutions", { exact: true }).filter({ visible: true }).first());
     pausar(); await p.getByTestId("professional-profile-name").waitFor(); await asentada(p);
     grabar(); await p.waitForTimeout(900); await bajar(p, 300, 2200); await p.waitForTimeout(300);
-    for (const seccion of ["Reseñas", "Casos de éxito", "Formación"]) {
+    for (const seccion of ["Reseñas", "Casos de éxito", "Currículum"]) {
       const tab = p.getByRole("tab", { name: seccion, exact: true });
       await tab.waitFor(); await tocar(p, tab); await p.waitForTimeout(1300);
       await bajar(p, 180, 1400); await p.waitForTimeout(500);
     }
     await contactar(p);
   },
-  proyectos: (p, g, s) => porElMenu(p, g, s, "Proyectos", "/solicitudes", /Publicar (?:un )?proyecto/i, "/publicar-solicitud"),
+  proyectos: (p, g, s) => porElMenu(p, g, s, "Solicitudes", "/solicitudes", /Publicar (?:una )?solicitud/i, "/publicar-solicitud"),
   promociones: (p, g, s) => porElMenu(p, g, s, "Promociones", "/promociones", /Publicar promoción/i, "/promociones/publicar"),
   empleos: (p, g, s) => porElMenu(p, g, s, "Empleos", "/empleos", /Publicar empleo/i, "/empleos/publicar"),
 };
@@ -258,6 +258,14 @@ for (const [clave, escena] of Object.entries(escenas)) {
     userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
   });
   await ctx.addCookies([base, LOCAL].flatMap(url => [{ name: "ccr_platform", value: "native", url }, { name: "ccr_sin_analitica", value: "1", url }]));
+  // El aviso de cookies tapaba el contacto: la grabación entra con los fines
+  // opcionales ya rechazados, igual que las pruebas (playwright.config.ts).
+  await ctx.addInitScript(() => {
+    const at = new Date().toISOString();
+    for (const purpose of ["analytics", "advertising"]) {
+      try { localStorage.setItem(`contratacr:consent:${purpose}:v1`, JSON.stringify({ version: "2026-10-29", choice: "declined", at })); } catch { /* sin almacenamiento */ }
+    }
+  });
   // The app uses font-display:optional. Cold recording pages could therefore
   // retain a system fallback even after fonts.ready. Load the actual app fonts
   // before shooting; do not substitute a different font or draw a fake logo.
