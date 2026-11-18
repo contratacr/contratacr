@@ -403,7 +403,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
           while adding; collapses behind "Agregar otra ubicación" after a commit. */}
       {showAddForm && (
       <div className={mode === "local" ? "flex flex-col gap-3 rounded-xl border border-[#dbe7ef] bg-[#f8fcff] p-4" : "flex flex-col gap-3"}>
-      {mode === "local" && <div className="flex items-center justify-between gap-2"><p className="text-sm font-bold text-[#162543]">{editingId ? t("editPlace") : addedCount > 0 ? t("addAnotherPlace") : t("addFirstPlace")}</p>{addedCount > 0 && !editingId && <button type="button" onClick={() => { setAdding(false); setProvince(""); setCanton(""); setDraftPin(null); setShowMap(false); }} className="min-h-11 px-2 text-sm font-semibold text-[#64748b]">{t("cancelEdit")}</button>}</div>}
+      {mode === "local" && <div className="flex items-center justify-between gap-2"><p className="text-sm font-bold text-[#162543]">{editingId ? t("editPlace") : addedCount > 0 ? t("addAnotherPlace") : t("addFirstPlace")}</p>{addedCount > 0 && !editingId && <button type="button" onClick={() => { setAdding(false); setProvince(""); setCanton(""); setDraftPin(null); setShowMap(false); }} className="min-h-11 px-2 text-sm font-semibold text-[#64748b]">{t("cancelAdd")}</button>}</div>}
       {/* 1 - Structured field FIRST: provincia -> cantón (authoritative for search).
           Polished popover dropdowns (shared SelectMenu) - same look/behavior as the
           Disponibilidad time selector. SIDE-BY-SIDE (provincia | cantón), matching the

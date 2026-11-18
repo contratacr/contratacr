@@ -14,8 +14,8 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
     await expect(page.getByText('Nueva zona de atención')).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Agregar otro lugar' })).toBeVisible();
     await page.getByRole('button', { name: 'Agregar otro lugar' }).click();
-    await expect(page.getByRole('button', { name: 'Cancelar edición' })).toBeVisible();
-    await page.getByRole('button', { name: 'Cancelar edición' }).click();
+    await expect(page.getByRole('button', { name: 'Cancelar', exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Cancelar', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Agregar otro lugar' })).toBeVisible();
     await page.getByRole('button', { name: 'Agregar otra zona' }).click();
     await page.getByRole('button', { name: 'Un cantón', exact: true }).click();

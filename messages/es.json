@@ -387,6 +387,7 @@
     "cantonUnselected": "Toda la provincia",
     "addThisPlace": "Guardar lugar",
     "addWholeProvince": "Agregar toda la provincia",
+    "cancelAdd": "Cancelar",
     "addFirstPlace": "Agregar un lugar",
     "addAnotherPlace": "Agregar otro lugar",
     "wholeProvinceName": "Toda la provincia de {province}",
