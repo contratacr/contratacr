@@ -209,11 +209,11 @@ export default function RegisterClientPage() {
 
   if (otpEmail) {
     return (
-      <div className="ccr-account-page min-h-dvh flex flex-col bg-white">
+      <div className="ccr-account-page ccr-paso-codigo min-h-dvh flex flex-col bg-white">
         {user ? <CabeceraDeTramite title={t("title")} /> : <Navbar mobileSearch={false} />}
         <main className="flex-1 ccr-centrado-seguro px-4 py-12">
           <div className="w-full max-w-sm">
-            <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
+            <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-6 sm:p-8">
               <OtpVerification email={otpEmail} onVerified={() => { void completeSuccess(); }} />
             </div>
           </div>

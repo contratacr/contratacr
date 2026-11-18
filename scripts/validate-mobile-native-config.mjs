@@ -47,6 +47,7 @@ const [
   mobilePlaywright,
   mobileShellSpec,
   mobileWorkflow,
+  nativeSocialLogin,
 ] = await Promise.all([
   text("capacitor.config.ts"),
   text("android/app/src/main/AndroidManifest.xml"),
@@ -75,6 +76,7 @@ const [
   text("playwright.mobile.config.ts"),
   text("tests/e2e/mobile-native-shell.spec.ts"),
   text(".github/workflows/mobile-native-regression.yml"),
+  text("src/lib/auth/native-social-login.ts"),
 ]);
 
 requireMatch("Capacitor app id", capacitor, new RegExp(`appId:\\s*"${expected.appId.replaceAll(".", "\\.")}"`));
@@ -104,12 +106,59 @@ requireMatch(
   /uses-feature android:name="android\.hardware\.camera" android:required="false"/,
 );
 requireMatch("Android single-task launch mode", manifest, /android:launchMode="singleTask"/);
+// The custom web notice crosses between apex and www on iOS. Both signed
+// app associations, Android filters and Chrome's reverse relation must ship.
+for (const host of ["contratacr.com", "www.contratacr.com"]) {
+  if (!manifest.includes(`android:scheme="https" android:host="${host}"`)) failures.push(`Android app-link host missing: ${host}`);
+  if (!entitlements.includes(`<string>applinks:${host}</string>`)) failures.push(`iOS associated domain missing: ${host}`);
+}
+const router = await text("android/app/src/main/java/com/contratacr/app/AppLinkRouterActivity.java");
+requireMatch("Android guarded host-wide ingress", manifest, /android:name="\.AppLinkRouterActivity"[\s\S]*android:autoVerify="true"/);
+requireMatch("Android rejects browser-only routes before Capacitor", router, /browserRoots[\s\S]*return false/);
+requireMatch("Android browser fallback cannot loop into this app", router, /setPackage\(pkg\)/);
+if (await text("android/app/src/main/assets/app-link-policy.json") !== await text("src/lib/mobile/app-link-policy.json")) failures.push("Android app-link policy is stale; run mobile:sync");
+requireMatch("Android browser lookup relation", manifest, /android:name="asset_statements" android:resource="@string\/asset_statements"/);
+const entryStrings = await text("android/app/src/main/res/values/strings.xml");
+const statementText = entryStrings.match(/<string name="asset_statements"[^>]*>([\s\S]*?)<\/string>/)?.[1];
+try {
+  const statements = JSON.parse((statementText ?? "").replaceAll('\\"', '"'));
+  for (const host of ["contratacr.com", "www.contratacr.com"]) {
+    if (!statements.some(statement => statement.target?.namespace === "web" && statement.target.site === `https://${host}` && statement.relation?.includes("delegate_permission/common.handle_all_urls"))) failures.push(`Android related website missing: ${host}`);
+  }
+} catch { failures.push("Android related websites must be valid JSON"); }
+const appAssociation = JSON.parse(await text("public/.well-known/apple-app-site-association"));
+const developmentTeam = projectFile.match(/DEVELOPMENT_TEAM = ([A-Z0-9]+);/)?.[1];
+const association = appAssociation.applinks?.details?.find(detail => detail.appIDs?.includes(`${developmentTeam}.${expected.appId}`));
+for (const path of ["/", "/es", "/en", "/profesionales", "/es/profesionales", "/en/profesionales"]) {
+  if (!association?.components?.some(component => component["/"] === path)) failures.push(`Apple public association path missing: ${path}`);
+}
+requireMatch("iOS Universal Link delivery to Capacitor", appDelegate, /continue userActivity:[\s\S]*ApplicationDelegateProxy.shared.application\(application, continue: userActivity/);
+
+// «Nonces mismatch» (9-oct-2026): el plugin de Google en iOS restaura la
+// sesión anterior y devuelve un token viejo. Antes de cada ingreso con Google
+// se cierra esa sesión para que firme el nonce nuevo.
+requireMatch(
+  "Google native sign-in clears the previous plugin session first",
+  nativeSocialLogin,
+  /SocialLogin\.logout\(\{ provider: "google" \}\)[\s\S]*SocialLogin\.login\(\{ provider: "google"/,
+);
+// Google rechazó la 1.0.8 (8-oct-2026) por la política de fotos: las fotos se
+// eligen con el selector del sistema (input de archivo), que no necesita leer
+// toda la galería. Ningún permiso de medios puede volver al manifiesto.
+if (/android\.permission\.(?:READ_MEDIA_(?:IMAGES|VIDEO|VISUAL_USER_SELECTED)|READ_EXTERNAL_STORAGE)/.test(manifest)) {
+  failures.push("Android asks to read the whole photo library; Google Play rejects it (use the system picker)");
+}
 requireMatch("iOS camera disclosure", infoPlist, /<key>NSCameraUsageDescription<\/key>/);
 requireMatch("iOS photo disclosure", infoPlist, /<key>NSPhotoLibraryUsageDescription<\/key>/);
+// «Cerca de mí» usa navigator.geolocation: sin esta clave el WKWebView no puede pedir la ubicación.
+requireMatch("iOS location disclosure", infoPlist, /<key>NSLocationWhenInUseUsageDescription<\/key>/);
 requireMatch("iOS encryption declaration", infoPlist, /<key>ITSAppUsesNonExemptEncryption<\/key>\s*<false\/>/);
 requireMatch("iOS push entitlement", entitlements, /<key>aps-environment<\/key>\s*<string>production<\/string>/);
 requireMatch("iOS bundle id", projectFile, /PRODUCT_BUNDLE_IDENTIFIER = com\.contratacr\.app;/);
 requireMatch("iOS registration callback", appDelegate, /didRegisterForRemoteNotificationsWithDeviceToken[\s\S]*capacitorDidRegisterForRemoteNotifications/);
+// El token FCM se pide de nuevo cada vez que la app se registra: si solo se
+// esperaba el aviso de Firebase, desde el segundo arranque no llegaba nunca.
+requireMatch("iOS FCM token re-sent on every register", appDelegate, /didRegisterForRemoteNotificationsWithDeviceToken[\s\S]*Messaging\.messaging\(\)\.token \{[\s\S]*capacitorDidRegisterForRemoteNotifications/);
 requireMatch("iOS registration error callback", appDelegate, /didFailToRegisterForRemoteNotificationsWithError[\s\S]*capacitorDidFailToRegisterForRemoteNotifications/);
 if (/path:\s*"[^"]*\\/.test(packageSwift)) {
   failures.push("SwiftPM dependency paths contain Windows backslashes");
@@ -150,7 +199,7 @@ if (/HeaderMessagesLink/.test(navbar)) failures.push("Messages came back to the 
 requireMatch("Native messages badge counter", bottomNav, /mensajesPorLeer > 9 \? "9\+" : mensajesPorLeer/);
 // En la app el botón se adapta al profesional: chat si tiene la app, WhatsApp
 // si no (decidido el 29-sep-2026 para el lanzamiento).
-requireMatch("Native contact adapts to the professional", directChatLauncher, /useProfesionalConApp\(professionalId, nativeApp\)[\s\S]*if \(usaChat\)[\s\S]*<MessageLauncher/);
+requireMatch("Shared web/native contact adapts to the professional", directChatLauncher, /useProfesionalConApp\(professionalId, true\)[\s\S]*const usaChat = conApp === true \|\| \(nativeApp && !professionalId\);[\s\S]*if \(usaChat\)[\s\S]*<MessageLauncher/);
 requireMatch(
   "Native assistant message action",
   aiConcierge,
@@ -209,6 +258,25 @@ if (process.argv.includes("--remote")) {
     if (!/ContrataCR/i.test(body)) failures.push(`${path} did not return the ContrataCR application`);
   }
 }
+
+// Advertising privacy is a release contract, independent of SDK defaults.
+const measurementManifest = await text("android/app/src/main/AndroidManifest.xml");
+for (const flag of ["AutoInitEnabled","AutoLogAppEventsEnabled","AutoLogMetaDataEnabled","AutoLogProductImprovementEnabled","AdvertiserIDCollectionEnabled"]) {
+  requireMatch(`Meta ${flag} disabled`, measurementManifest, new RegExp(`android:name="com\\.facebook\\.sdk\\.${flag}" android:value="false"`));
+}
+for (const permission of ["com.google.android.gms.permission.AD_ID","android.permission.ACCESS_ADSERVICES_AD_ID","android.permission.ACCESS_ADSERVICES_ATTRIBUTION","android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE","android.permission.ACCESS_ADSERVICES_TOPICS"]) {
+  if (!measurementManifest.includes(`android:name="${permission}" tools:node="remove"`)) failures.push(`Advertising permission must be removed: ${permission}`);
+}
+requireMatch("No Meta startup provider",measurementManifest,/FacebookInitProvider[^>]+tools:node="remove"/);
+const nativeMeasurement = await text("android/app/src/main/java/com/contratacr/app/ContrataCRMeasurementPlugin.java");
+requireMatch("Native Meta event gate",nativeMeasurement,/!enabled \|\| logger == null \|\| !EVENTS.containsKey/);
+requireMatch("No events before SDK readiness",nativeMeasurement,/!sdkReady/);
+requireMatch("Delivery diagnostics only in debug builds",nativeMeasurement,/if \(!isDebugBuild\(\)\) \{ call.reject\("DEBUG_ONLY"\)/);
+requireMatch("No SDK account identity",nativeMeasurement,/clearUserID\(\); AppEventsLogger.clearUserData\(\)/);
+const appleMeasurement = await text("ios/App/App/AppDelegate.swift");
+requireMatch("Apple aggregated attribution",appleMeasurement,/SKAdNetwork.updatePostbackConversionValue/);
+requireMatch("Apple schema activation gate",appleMeasurement,/self.schemaReady \? max\(previous,value\) : 0/);
+requireMatch("Manual native plugin registration",await text("ios/App/App/Base.lproj/Main.storyboard"),/MeasurementBridgeViewController/);
 
 if (failures.length) {
   console.error("Mobile native contract validation failed:");

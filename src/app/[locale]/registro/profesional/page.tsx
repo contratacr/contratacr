@@ -1050,12 +1050,12 @@ export default function RegisterProfessionalPage() {
   // ── OTP screen ──────────────────────────────────────────────────────────────
   if (otpEmail) {
     return (
-      <div className="ccr-account-page min-h-dvh flex flex-col bg-white">
+      <div className="ccr-account-page ccr-paso-codigo min-h-dvh flex flex-col bg-white">
         {/* 15-nov-2026: «Atrás» en el paso 0 va al inicio, no al panel: el panel manda una cuenta que puede ofrecer pero aún no tiene fila de profesional de vuelta a /registro/profesional, y se formaba un bucle. */}
         {currentUser ? <CabeceraDeTramite title={t("headerTitle")} backHref="/" onBack={step > 0 ? () => setStep(step - 1) : undefined} backLabel={step > 0 ? t("back") : undefined} /> : <Navbar mobileSearch={false} />}
         <main className="flex-1 ccr-centrado-seguro py-12 px-4">
           <div className="w-full max-w-sm">
-            <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
+            <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-6 sm:p-8">
               <OtpVerification email={otpEmail} onVerified={() => { setOtpEmail(null); setStep(1); }} />
             </div>
           </div>

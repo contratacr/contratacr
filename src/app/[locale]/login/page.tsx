@@ -453,11 +453,11 @@ export default function LoginPage() {
 
   if (otpEmail) {
     return (
-      <div className="ccr-account-page min-h-dvh flex flex-col bg-white">
+      <div className="ccr-account-page ccr-paso-codigo min-h-dvh flex flex-col bg-white">
         <Navbar mobileSearch={false} />
         <main className="flex-1 ccr-centrado-seguro py-12 px-4">
           <div className="w-full max-w-sm">
-            <div className="rounded-3xl border border-[#e5e7eb] bg-white p-8 shadow-[0_18px_44px_-28px_rgba(15,23,42,0.45)]">
+            <div className="rounded-3xl border border-[#e5e7eb] bg-white p-6 sm:p-8 shadow-[0_18px_44px_-28px_rgba(15,23,42,0.45)]">
                             <OtpVerification
                 email={otpEmail}
                 autoResendOnMount

@@ -166,7 +166,7 @@ export function OtpVerification({ email, onVerified, autoResendOnMount = false }
         </div>
       )}
 
-      <div className="flex gap-2 justify-center mb-6">
+      <div className="flex gap-2 justify-center mb-4">
         {digits.map((digit, i) => (
           <input
             key={i}

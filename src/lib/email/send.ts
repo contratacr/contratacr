@@ -23,25 +23,24 @@ const DEFAULT_SENDER = { name: "ContrataCR", email: "soporte@contratacr.com" };
 
 export const EMAIL_LOGO_DARK_MODE_STYLES = `
   :root { color-scheme: light dark; supported-color-schemes: light dark; }
-  body, .email-bg, .ccr-email-background { background:#ffffff; }
   .ccr-email-card { border:0 !important; border-radius:0 !important; box-shadow:none !important; }
   .ccr-dark-logo, .dark-logo { display:none !important; mso-hide:all; max-height:0; overflow:hidden; }
   @media (max-width:600px) { .ccr-email-content { padding:32px 24px !important; } }
   @media (prefers-color-scheme: dark) {
-    body, .email-bg, .ccr-email-background, .ccr-email-card { background:#111827 !important; color:#f3f4f6 !important; }
+    body, .email-bg, .ccr-email-background, .ccr-email-card { color:#f3f4f6 !important; }
     .ccr-email-card h1, .ccr-email-card h2, .ccr-email-card p strong { color:#f3f4f6 !important; }
     .ccr-email-card p, .ccr-email-body { color:#cbd5e1 !important; }
     .ccr-email-card .ccr-email-muted { color:#9ca9bb !important; }
-    .ccr-email-code { background:#173449 !important; color:#67d5f4 !important; }
+    .ccr-email-code { color:#67d5f4 !important; }
     .ccr-email-code div { color:#67d5f4 !important; }
     .ccr-light-logo, .light-logo { display:none !important; }
     .ccr-dark-logo, .dark-logo { display:block !important; max-height:none !important; overflow:visible !important; }
   }
-  [data-ogsc], [data-ogsc] .email-bg, [data-ogsc] .ccr-email-background, [data-ogsc] .ccr-email-card { background:#111827 !important; color:#f3f4f6 !important; }
+  [data-ogsc], [data-ogsc] .email-bg, [data-ogsc] .ccr-email-background, [data-ogsc] .ccr-email-card { color:#f3f4f6 !important; }
   [data-ogsc] .ccr-email-card h1, [data-ogsc] .ccr-email-card h2, [data-ogsc] .ccr-email-card p strong { color:#f3f4f6 !important; }
   [data-ogsc] .ccr-email-card p, [data-ogsc] .ccr-email-body { color:#cbd5e1 !important; }
   [data-ogsc] .ccr-email-card .ccr-email-muted { color:#9ca9bb !important; }
-  [data-ogsc] .ccr-email-code { background:#173449 !important; color:#67d5f4 !important; }
+  [data-ogsc] .ccr-email-code { color:#67d5f4 !important; }
   [data-ogsc] .ccr-email-code div { color:#67d5f4 !important; }
   [data-ogsc] .ccr-light-logo, [data-ogsc] .light-logo { display:none !important; }
   [data-ogsc] .ccr-dark-logo, [data-ogsc] .dark-logo { display:block !important; max-height:none !important; overflow:visible !important; }
@@ -74,9 +73,9 @@ export function brandedEmailDocument({ title, bodyHtml, origin = "https://contra
       <title>${title}</title>
       <style>${browserPage ? ":root{color-scheme:light} .ccr-dark-logo{display:none!important} .ccr-light-logo{display:block!important}" : EMAIL_LOGO_DARK_MODE_STYLES}</style>
     </head>
-    <body style="margin:0;padding:0;background:#ffffff;color:#162543;font-family:Arial,Helvetica,sans-serif">
+    <body style="margin:0;padding:0;color:#162543;font-family:Arial,Helvetica,sans-serif">
       <div class="ccr-email-background" style="padding:0;color:#162543">
-        <div class="ccr-email-card ccr-email-content" style="box-sizing:border-box;width:100%;max-width:600px;margin:0 auto;padding:44px 28px 36px;background:#fff">
+        <div class="ccr-email-card ccr-email-content" style="box-sizing:border-box;width:100%;max-width:600px;margin:0 auto;padding:44px 28px 36px">
           <div style="margin:0 0 36px">${emailLogoMarkup(origin)}</div>
           ${bodyHtml}
         </div>

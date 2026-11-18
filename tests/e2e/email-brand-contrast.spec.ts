@@ -24,7 +24,11 @@ for (const mode of ["light", "dark", "outlook-dark"] as const) {
       const dark = page.locator(".dark-logo, .ccr-dark-logo");
       await expect(mode === "light" ? light : dark, example.name).toBeVisible();
       await expect(mode === "light" ? dark : light, example.name).toBeHidden();
-      await expect(page.locator(".ccr-email-card"), example.name).toHaveCSS("background-color", mode === "light" ? "rgb(255, 255, 255)" : "rgb(17, 24, 39)");
+      // Sin fondos propios (18-nov-2026): solo logo y letra sobre el fondo del
+      // cliente de correo, claro u oscuro. Los botones de acción sí llevan color.
+      for (const sel of ["body", ".email-bg, .ccr-email-background", ".ccr-email-card", ".ccr-email-code"]) {
+        for (const el of await page.locator(sel).all()) await expect(el, `${example.name} ${sel}`).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+      }
       await expect(page.locator(".ccr-email-card"), example.name).toHaveCSS("border-top-width", "0px");
       await expect(page.locator(".ccr-email-card"), example.name).toHaveCSS("border-radius", "0px");
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), example.name).toBe(true);
