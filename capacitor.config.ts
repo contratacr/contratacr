@@ -38,9 +38,6 @@ const config: CapacitorConfig = {
     backgroundColor: "#FFFFFF",
   },
   plugins: {
-    // Iconos oscuros sobre las zonas claras del sistema, incluidos los tres
-    // botones de navegación de Android.
-    SystemBars: { style: "LIGHT" },
     SplashScreen: {
       launchAutoHide: false,
       launchFadeOutDuration: 0,
