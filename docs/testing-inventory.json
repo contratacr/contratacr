@@ -8,7 +8,7 @@
     "handlers": 117,
     "components": 288,
     "hooks": 28,
-    "specs": 197
+    "specs": 198
   },
   "dashboardTabs": [
     "home",
@@ -28469,6 +28469,15 @@
         {
           "line": 305,
           "title": "\"every guide CTA and representative English links reach the documented destination\""
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/otp-sin-hueco.spec.ts",
+      "cases": [
+        {
+          "line": 7,
+          "title": "\"el codigo de verificacion queda bajo el encabezado y sin scroll en el telefono\""
         }
       ]
     },
