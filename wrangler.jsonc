@@ -47,5 +47,8 @@
   ],
   "observability": {
     "enabled": false
-  }
+  },
+  // Source maps are not uploaded: observability is off, and with the directory the
+  // encoded maps exceed the 60 MiB Cloudflare limit (67 MiB on 2026-11-19).
+  "upload_source_maps": false
 }
