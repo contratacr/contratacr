@@ -34,9 +34,9 @@ async function resolverProyecto(tramo: string, userId: string | undefined) {
   const clave = claveDeTramo(tramo);
   const publico = await cargarProyectoPublico(tramo,userId);
   const proyectos = publico ? [publico] : [];
-  // El dueño ve el suyo aunque ya no esté en el tablero; con solo el prefijo
-  // no hay forma de buscarlo en su lista privada, así que ahí hace falta el id.
-  const detalle = publico ?? (clave.id ? await cargarProyectoDelDueno(clave.id, userId) : null);
+  // El dueño ve el suyo aunque ya no esté en el tablero, con el enlace largo o
+  // con el corto: el prefijo se busca solo entre sus propios proyectos.
+  const detalle = publico ?? ((clave.id || clave.prefijo) ? await cargarProyectoDelDueno(tramo, userId) : null);
   return { proyectos, detalle };
 }
 

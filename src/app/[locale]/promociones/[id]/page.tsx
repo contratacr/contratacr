@@ -1,4 +1,5 @@
 import { ServerContactAvailability } from "@/components/professionals/server-contact-availability";
+import { VolverAPublicar } from "@/components/marketplace/volver-a-publicar";
 import { InlineIdentityName } from "@/components/ui/inline-identity-name";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { ProfilePhotoPreview } from "@/components/ui/profile-photo-preview";
@@ -333,6 +334,9 @@ export default async function OfferDetailPage({ params, searchParams }: { params
               <p className="text-base font-extrabold text-[#007fae]">{formatOfferPrice(offer, locale)}</p>
               {before && <p className="text-sm font-bold text-[#8794a7] line-through">{before}</p>}
             </div>
+            {/* Su dueño ve la suya cerrada (pausada, agotada o vencida) con
+                el botón para volver a publicarla ahí mismo (18-nov-2026). */}
+            {isOwner && unavailable && offer.status !== "draft" && <VolverAPublicar tipo="promocion" id={offer.id} className="mt-5" />}
             {isOwner ? (
               // En la franja fija de abajo, igual que el contacto para los demás.
               <AccionesAlPie className="mt-5 lg:hidden">

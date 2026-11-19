@@ -26,6 +26,8 @@ export type ProyectoPublico = {
   allow_direct_contact: boolean;
   /** Quien publicó autorizó que le llamen al mismo número del WhatsApp. */
   allow_phone_contact: boolean;
+  /** Solo en la ficha que ve su dueño: «open», «cancelled», «completed»… */
+  status?: string;
 };
 
 /** El primer nombre alcanza; el apellido no aporta nada en un tablero público. */

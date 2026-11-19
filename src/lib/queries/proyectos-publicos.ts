@@ -132,12 +132,21 @@ function aProyectoPublico(
  * nada. Sale con el MISMO recorte que el tablero: ni teléfono, ni correo, ni
  * cédula.
  */
-export async function cargarProyectoDelDueno(id: string, userId: string | null | undefined): Promise<ProyectoPublico | null> {
-  if (!id || !userId) return null;
+// Acepta el enlace corto (título + 8): «Ver solicitud» del panel lo usa, y con
+// solo el id completo una cerrada por inactividad daba «página no encontrada»
+// a su propio dueño (18-nov-2026). Con el prefijo se busca SOLO entre las suyas.
+export async function cargarProyectoDelDueno(tramo: string, userId: string | null | undefined): Promise<ProyectoPublico | null> {
+  const clave = claveDeTramo(tramo);
+  if ((!clave.id && !clave.prefijo) || !userId) return null;
   const locale = await getLocale();
   const db = createAdminClient();
   const columnas = "id, title, description, category_id, provincia_id, canton_id, created_at, client_name_snapshot, client_id, status";
-  const consulta = (extra: string) => db.from("projects").select(`${columnas}${extra}`).eq("id", id).maybeSingle();
+  const consulta = (extra: string) => {
+    const base = db.from("projects").select(`${columnas}${extra}`).eq("client_id", userId);
+    if (clave.id) return base.eq("id", clave.id).maybeSingle();
+    const { desde, hasta } = rangoDePrefijo(clave.prefijo!);
+    return base.gte("id", desde).lte("id", hasta).limit(1).maybeSingle();
+  };
   let { data, error } = await consulta(", allow_direct_contact");
   if (error?.code === "42703") ({ data, error } = await consulta(""));
   if (error || !data) return null;
@@ -145,11 +154,14 @@ export async function cargarProyectoDelDueno(id: string, userId: string | null |
   if (String(fila.client_id ?? "") !== userId) return null;
   const { data: perfil } = await db.from("profiles").select("full_name, avatar_url, client_identity_status").eq("id", userId).maybeSingle();
   const p = perfil as { full_name?: string | null; avatar_url?: string | null; client_identity_status?: string | null } | null;
-  return aProyectoPublico(fila, {
-    nombre: p?.full_name ? repairVisibleText(String(p.full_name)) : null,
-    foto: p?.avatar_url ? String(p.avatar_url) : null,
-    verificada: p?.client_identity_status === "verified",
-  }, locale);
+  return {
+    ...aProyectoPublico(fila, {
+      nombre: p?.full_name ? repairVisibleText(String(p.full_name)) : null,
+      foto: p?.avatar_url ? String(p.avatar_url) : null,
+      verificada: p?.client_identity_status === "verified",
+    }, locale),
+    status: String(fila.status ?? ""),
+  };
 }
 
 /**
@@ -162,7 +174,9 @@ export async function idsDeMisProyectos(
   userId: string | null | undefined,
 ): Promise<string[]> {
   if (!userId) return [];
-  const { data, error } = await supabase.from("projects").select("id").eq("client_id", userId).eq("status", "open");
+  // En cualquier estado: una cerrada también es suya, y su ficha no puede
+  // ofrecerle escribirse a sí mismo (18-nov-2026).
+  const { data, error } = await supabase.from("projects").select("id").eq("client_id", userId);
   if (error) return [];
   return ((data ?? []) as Array<{ id: string }>).map((fila) => String(fila.id));
 }

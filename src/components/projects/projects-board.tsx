@@ -27,6 +27,7 @@ import { MarketplaceFilterChip, MarketplaceNavbarPortal, MarketplaceSearch } fro
 import { ScrollRail } from "@/components/ui/scroll-rail";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 import { cn } from "@/lib/utils";
+import { VolverAPublicar } from "@/components/marketplace/volver-a-publicar";
 import { safeMarketplaceReturnHref } from "@/lib/navigation/marketplace-return";
 import { PanelEmptyState } from "@/components/ui/content-loading";
 import { WhatsAppLogo } from "@/components/ui/whatsapp-logo";
@@ -814,6 +815,11 @@ export function ProjectsBoard({
                           teléfono no hay fila de acciones, así que ahí el bloque
                           sí pone la suya. Es la misma regla que ya usaba la
                           ficha de un empleo. */}
+                      {/* Cerrada (por inactividad, cancelada o finalizada): solo
+                          su dueño llega aquí, y la reactiva sin ir al panel. */}
+                      {misProyectos.includes(ficha.id) && (ficha.status === "cancelled" || ficha.status === "completed") && (
+                        <VolverAPublicar tipo="proyecto" id={ficha.id} className="mt-5" />
+                      )}
                       <dl className={cn("grid gap-3 border-b border-[#e5e7eb] pb-5 pt-5 text-sm sm:grid-cols-2 max-lg:mt-6 max-lg:border-t", detalle && "lg:mt-6 lg:border-t")}>
                         {([
                           [copy.filaServicio, ficha.category_name] as [string, string | null],
