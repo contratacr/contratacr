@@ -41,13 +41,42 @@ Requiere WebGL 2.
 ## Variable de entorno
 
 `NEXT_PUBLIC_MAP_STYLE_URL` — URL `https://` de un estilo MapLibre (style JSON).
-Sin ella se usa `https://tiles.openfreemap.org/styles/positron` (gris claro, deja
-resaltar los marcadores azules de la marca). Otros estilos de OpenFreeMap:
-`liberty` y `bright`.
+Sin ella se usa `https://tiles.openfreemap.org/styles/liberty`, retocado por
+`brandMapStyle()` (ver «Colores del mapa»). Otros estilos de OpenFreeMap:
+`positron` (gris, el anterior) y `bright`; esos se usan tal cual.
 
 El middleware agrega a la CSP el origen de esa URL. Si el estilo pide teselas,
 fuentes o sprites de **otro** dominio, ese dominio hay que agregarlo a
 `img-src` y `connect-src` en `src/middleware.ts`.
+
+## Colores del mapa (2026-11-19)
+
+El dueño vio el mapa «muy apagado» con `positron` (escala de grises). Se
+compararon en los mapas reales (lugares, resultados de profesionales y mini mapa
+del lugar; San José y todo el país) `positron`, `liberty`, `bright` y `positron`
+recoloreado. Elegido: **`liberty` con retoques**, porque trae el color que hace
+falta (parques y bosques verdes, agua azul, relieve suave a escala de país,
+hospitales en rosa) y solo hubo que calmarlo:
+
+- `liberty`/`bright` tal cual pintan casi todas las calles de amarillo y, desde el
+  zoom 15, muestran íconos de buses, comercios y salud que compiten con nuestros
+  marcadores celestes; además levantan los edificios en 3D.
+- `positron` recoloreado quedaba limpio pero plano en la ciudad (sin jerarquía de
+  vías ni usos del suelo).
+
+`brandMapStyle()` (`src/lib/maps/maplibre.ts`, aplicado con `transformStyle` al
+crear el mapa) deja calles blancas, vías primarias en amarillo suave y autopistas
+en amarillo más cálido (como Google/Yelp), agua `#a9d3f2`, parques `#cfe8c3`,
+fondo `#f5f3ee`, hospitales más suaves, y quita las capas `poi_*`, `building-3d`
+y las flechas de un sentido. Solo cambia colores y visibilidad: ninguna petición
+extra. Si `NEXT_PUBLIC_MAP_STYLE_URL` apunta a otro estilo, no lo toca.
+
+Lo que pide `liberty` y ya estaba permitido: estilo, teselas vectoriales
+(`/planet`), relieve en PNG (`/natural_earth/ne2sr/…`), sprites
+(`/sprites/ofm_f384/ofm`, escudos de rutas y patrones) y glyphs, todo en
+`tiles.openfreemap.org` (CSP `img-src` y `connect-src` en `src/middleware.ts`).
+Las fuentes son las mismas tres de `positron` (Noto Sans Regular, Bold e Italic),
+así que los glyphs locales cubren el estilo completo.
 
 ## Atribución
 
@@ -87,6 +116,11 @@ comercial intensivo y puede bloquear sin aviso.
   el mapa, y en escritorio hace falta Ctrl/⌘ + rueda para acercar.
 - Textos de los controles en español con «usted» (`mapLocale()`).
 - Sin WebGL 2 el mapa muestra «Mapa no disponible» y la lista sigue funcionando.
+- En el teléfono, el mapa de resultados (profesionales y secciones del
+  directorio) queda debajo de la hoja de resultados, que descansa a media
+  pantalla. `sheetAwarePadding()` agrega ese alto como margen inferior al
+  encuadrar, para que los puntos queden en la parte visible y no detrás de la
+  hoja (antes, en /farmacias se veía Nicaragua y Costa Rica quedaba tapada).
 - Zoom: el de MapLibre es uno menos que el de Google (teselas de 512 px).
   `MapFocusTarget.zoom` sigue en la escala de Google y el panel resta 1.
 

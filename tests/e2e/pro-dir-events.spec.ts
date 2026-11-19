@@ -83,7 +83,7 @@ test('events + «Pedir»: owner publishes, /eventos filters, team role, staff mo
     await expect(p.locator('[data-place-events]')).toContainText(title);
     await expect(p.locator('[data-place-order="whatsapp"]')).toHaveAttribute('href','https://wa.me/50688776655');
     await expect(p.locator('[data-place-order="whatsapp"]')).toHaveAttribute('rel',/nofollow/);
-    await expect(p.locator('[data-place-order-note]')).toBeVisible();
+    await expect(p.locator('[data-place-order-note]')).toHaveCount(0);// 2026-11-19: the «Pedir» explanation lives in the Terms (13.1)
     if(process.env.E2E_HEALTH_OFF!=='1'){await gotoOK(p,`${prefix}/lugar/${clinic}`);await expect(p.locator('[data-place-order]')).toHaveCount(0);}// health pages 404 while DIR_HEALTH_ENABLED is off
    }
    // Staff: the new events are in the queue; hiding one removes it from /eventos (logged with the reason).

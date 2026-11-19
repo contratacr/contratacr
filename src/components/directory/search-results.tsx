@@ -1,14 +1,13 @@
 import {encodeCursor,placePriceMode,type DirectorySearchResult} from '@/lib/directory/search-schemas';
 import {ListingCard} from './listing-card';
 import {PlaceCard} from './place-card';
-import {sortLabel} from './search-filters';
 import {ResultsMapToggle} from '@/components/maps/results-map-toggle';
 
 /**
  * LOCAL PRO ONLY (multivertical F6): result list for /restaurantes, /farmacias, /supermercados, /gasolineras,
  * /vehiculos and /inmuebles. Server component, not imported yet. Keyset pagination with a plain «Ver más» link
- * (no JavaScript needed; the link keeps every current parameter and only adds the cursor). States the order rule
- * and links to /como-ordenamos. One column at 390 px, two columns from md.
+ * (no JavaScript needed; the link keeps every current parameter and only adds the cursor). One column at 390 px,
+ * two columns from md. Used by the classified listings (/vehiculos, /inmuebles); places use places-section-home.tsx.
  */
 export function SearchResults({result,locale,basePath,params,title}:{result:DirectorySearchResult;locale:string;basePath:string;params:Record<string,string|undefined>;title:string}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es;
@@ -17,16 +16,12 @@ export function SearchResults({result,locale,basePath,params,title}:{result:Dire
  return <section aria-labelledby="dir-results-title" className="space-y-4 text-[#162543]" data-search-results={result.vertical}>
   <header className="space-y-1">
    <h2 id="dir-results-title" className="text-xl font-bold">{title}</h2>
-   <p className="text-sm text-slate-600">{t('Orden: ','Order: ')}{sortLabel(result.sort,en)}. {t('El orden nunca depende de pagos.','Order never depends on payment.')}{' '}
-    <a className="underline underline-offset-2" href={en?'/en/como-ordenamos':'/como-ordenamos'}>{t('Cómo ordenamos','How we rank')}</a></p>
    {result.priceProduct&&<p className="text-sm text-slate-700" data-price-product={result.priceProduct.slug}>{t('Precios de: ','Prices for: ')}<strong>{result.priceProduct.name}{result.priceProduct.presentation?` (${result.priceProduct.presentation})`:''}</strong>. {t('Solo precios vigentes; los comercios sin ese precio aparecen al final.','Current prices only; stores without that price are listed last.')}{' '}
     <a className="underline underline-offset-2" href={`${en?'/en':''}/precios?producto=${encodeURIComponent(result.priceProduct.slug)}`}>{t('Comparar este producto','Compare this product')}</a></p>}
    {!result.priceProduct&&params.product&&placePriceMode(result.vertical)==='product'&&<p className="text-sm text-slate-700" data-price-product-missing>
     {t(`No encontramos "${params.product}" en el catálogo de precios. Pruebe con otro nombre o con el código de barras.`,`We did not find "${params.product}" in the price catalog. Try another name or the barcode.`)}</p>}
    {reserved&&<p className="text-sm text-slate-600">{t('Los anuncios "Reservado" siguen visibles por si la negociación no se concreta.','"Reserved" listings stay visible in case the deal does not go through.')}</p>}
   </header>
-  {result.items.some(i=>i.kind==='place'&&(i.verificationLevel==='imported'||i.verificationLevel==='unverified'))&&<p data-unverified-notice className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
-   {t('Datos públicos sin verificar: los lugares que el negocio aún no administra muestran información de fuentes abiertas (por ejemplo OpenStreetMap). Confirme con el negocio antes de ir.','Unverified public data: places not yet managed by the business show information from open sources (for example OpenStreetMap). Please confirm with the business before going.')}</p>}
   {/* Optional map of this page of results (MapLibre + OpenFreeMap, downloaded only when opened). */}
   <ResultsMapToggle locale={locale} points={result.items.flatMap(i=>i.kind==='place'&&i.location?[{id:i.slug,lat:i.location.lat,lng:i.location.lng,label:i.name,href:`${en?'/en':''}/lugar/${i.slug}`}]:[])}/>
   {result.items.length===0

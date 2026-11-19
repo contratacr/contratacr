@@ -37,7 +37,6 @@ export function PlacePrices({prices,locale}:{prices:PublicPriceCurrent;locale:st
    <h3 className="font-semibold">{i.item.name}{i.item.presentation?<span className="font-normal text-slate-600"> · {i.item.presentation}</span>:null}</h3>
    {i.current?<Observation o={i.current} en={en} stale={false}/>:i.lastKnown?<Observation o={i.lastKnown} en={en} stale/>:null}
   </li>)}</ul>
-  <p className="text-sm text-slate-700">{t('Los precios pueden cambiar. Confirme con el negocio antes de comprar.','Prices may change. Please confirm with the business before buying.')}</p>
  </section>;
 }
 
@@ -47,9 +46,9 @@ export function NationalFuelPrices({prices,locale}:{prices:PublicPriceCurrent;lo
  const items=prices.items.filter(i=>i.current);
  if(!items.length)return null;
  const ref=items[0]!.current!;
- return <aside aria-labelledby="fuel-national" data-national-fuel className="space-y-2 rounded-2xl border border-[#d7e1ea] bg-[#F7FAFC] p-4 text-[#162543]">
-  <h2 id="fuel-national" className="text-lg font-bold">{t('Precio nacional de los combustibles','National fuel prices')}</h2>
+ return <aside aria-labelledby="fuel-national" data-national-fuel className="space-y-1.5 rounded-2xl border border-[#e5e7eb] bg-[#F7FAFC] p-4 text-sm text-[#162543]">
+  <h2 id="fuel-national" className="text-[15px] font-bold">{t('Precio nacional de los combustibles','National fuel prices')}</h2>
   <ul className="flex flex-wrap gap-x-6 gap-y-1">{items.map(i=><li key={i.item.slug} data-price-item={i.item.slug}><span className="font-semibold">{i.item.name}:</span> {money(i.current!.price,i.current!.currency,en)} / {i.item.unitBase==='l'?t('litro','liter'):i.item.unitBase}</li>)}</ul>
-  <p className="text-sm text-slate-700">{t('Precio regulado por ARESEP, igual en todas las estaciones del país.','Price regulated by ARESEP, the same at every station in the country.')} {ref.sourceRef?`${t('Resolución','Resolution')} ${ref.sourceRef}. `:''}{t('Vigente desde el ','Valid from ')}{day(ref.validFrom,en)}{ref.validTo?`${t(' hasta el ',' to ')}${day(ref.validTo,en)}`:''}.</p>
+  <p className="text-[12px] text-[#526277]">{t('Precio regulado por ARESEP, igual en todas las estaciones del país.','Price regulated by ARESEP, the same at every station in the country.')} {ref.sourceRef?`${t('Resolución','Resolution')} ${ref.sourceRef}. `:''}{t('Vigente desde el ','Valid from ')}{day(ref.validFrom,en)}{ref.validTo?`${t(' hasta el ',' to ')}${day(ref.validTo,en)}`:''}.</p>
  </aside>;
 }

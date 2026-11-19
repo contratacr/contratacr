@@ -26,7 +26,7 @@ for(const language of ['es','en'] as const)test(`F1/F2: place page, attribution,
  rev=(await mutate({action:'status',placeId,revision:rev,status:'published'})).revision;
  await gotoOK(page,prefix+'/lugar/'+slug);
  await expect(page.getByRole('heading',{level:1})).toHaveText('Soda E2E '+label);
- await expect(page.locator('[data-place-verification="imported"]')).toHaveText(t('Datos públicos sin verificar','Unverified public data'));
+ await expect(page.locator('[data-place-verification="imported"]')).toHaveText(t('No reclamado','Unclaimed'));// 2026-11-19: quiet badge; the data sources are explained in the Terms (13.1)
  await expect(page.locator('[data-place-source="OpenStreetMap"]')).toContainText('OpenStreetMap');
  await expect(page.locator('section[aria-labelledby="place-hours"] dt',{hasText:t('Lunes','Monday')})).toBeVisible();
  await expectNoHorizontalOverflow(page);

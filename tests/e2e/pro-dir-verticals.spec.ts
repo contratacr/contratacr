@@ -4,9 +4,11 @@ import {local,origin} from './pro-round2-fixture';
 import {dirDb,hideSeededPlaces,label,seedPlace} from './pro-dir-fixture';
 import {PLACE_SECTIONS} from '@/lib/directory/place-verticals';
 
-// Launch polish (2026-11-18): on phones the filters are folded behind «Filtros (n)»; open them before using a field.
-async function openFilters(page:import('playwright/test').Page){const b=page.locator('[data-filters-disclosure] > button');if(!(await b.isVisible()))return;
- await expect(async()=>{if((await b.getAttribute('aria-expanded'))!=='true')await b.click();await expect(b).toHaveAttribute('aria-expanded','true',{timeout:1500});}).toPass({timeout:30000});}
+// 2026-11-19: the places sections use the /profesionales layout; the complete GET form lives in the «Filtros» drawer
+// (chip next to the title on desktop, in the results sheet on phones). Open it before using a field.
+async function openFilters(page:import('playwright/test').Page){const form=page.locator('form[role="search"]');if(await form.isVisible())return;
+ const b=page.locator('[data-dir-filters-button]').filter({visible:true}).first();
+ await expect(async()=>{if(!(await form.isVisible()))await b.click();await expect(form).toBeVisible({timeout:1500});}).toPass({timeout:30000});}
 
 
 // Owner approval 2026-11-17 (LOCAL Pro): the eleven new place sections /cafes, /pulperias, /ferreterias, /hospedaje,
@@ -31,9 +33,13 @@ for(const language of ['es','en'] as const)test(`new sections: listings, type ch
   await seedPlace(db,{slug:`e2e-${s.section}-${tag}`,vertical:s.id,name:`E2E ${s.section} ${tag}`,adminArea1:'Heredia',adminArea2:'Heredia',locality:'Heredia',attributes:{kind:kind.value}});
   await gotoOK(page,`${prefix}/${s.section}`);
   await expect(page.getByRole('heading',{level:1})).toBeVisible();
-  await expect(page.locator('form[role="search"]')).toBeVisible();
-  await expect(page.locator(`[data-chip="kind-${kind.value}"]`)).toBeVisible();
+  // 2026-11-19: the kind filter is a «Tipo» chip menu next to the title (desktop) and a field of the filters drawer.
+  const tipo=page.locator('[data-chip-menu="kind"] > button').filter({visible:true});
+  if(await tipo.count()){await expect(async()=>{if((await tipo.getAttribute('aria-expanded'))!=='true')await tipo.click();
+   await expect(page.locator(`[data-chip="kind-${kind.value}"]`)).toBeVisible({timeout:1500});}).toPass({timeout:30000});await page.keyboard.press('Escape');}
   await openFilters(page);
+  await expect(page.locator('form[role="search"]')).toBeVisible();
+  await expect(page.locator(`form[role="search"] select[name="kind"] option[value="${kind.value}"]`)).toHaveCount(1);
   expect(await page.locator('[data-search-item]').count(),`${s.section} lists imported places`).toBeGreaterThan(0);
   await expect(page.locator('[data-search-item] [data-place-kind]').first()).toBeVisible();
   // Price filter only where prices apply (menu: cafes; product: pulperías, ferreterías, veterinarias).
@@ -79,9 +85,10 @@ for(const language of ['es','en'] as const)test(`cafés moved out of restaurants
  // Banks: map points only.
  await seedPlace(db,{slug:`e2e-banco-${tag}`,vertical:'banking',name:`E2E Banco ${tag}`,adminArea1:'Heredia',attributes:{kind:'bank',atm:true}});
  await gotoOK(page,`${prefix}/bancos`);
- await expect(page.locator('[data-section-policy="bancos"]')).toContainText(en?'does not compare rates':'no compara tasas');
+ // 2026-11-19: the policy notes are not on the results screen or the place page; they live in the Terms (13.1).
+ await expect(page.locator('[data-places-home="bancos"]')).not.toContainText(en?'does not compare rates':'no compara tasas');
  await gotoOK(page,`${prefix}/lugar/e2e-banco-${tag}`);
- await expect(page.locator('[data-place-map-only]')).toBeVisible();
+ await expect(page.locator('[data-place-map-only]')).toHaveCount(0);
  await expect(page.locator('[data-place-reviews]')).toBeVisible();// service reviews (2026-11-17)
  await expect(page.locator('[data-place-review-note]')).toContainText(en?'not about rates, fees, financial products':'No tratan sobre tasas, comisiones, productos financieros');
  await expect(page.locator('[data-place-price-report]')).toHaveCount(0);
@@ -99,7 +106,7 @@ for(const language of ['es','en'] as const)test(`cafés moved out of restaurants
  const card=page.locator(`[data-search-item="p:e2e-clinica-${tag}"]`);
  await expect(card.locator('[data-health-permit="unverified"]')).toHaveText(en?'Permit not verified by ContrataCR':'Habilitación sin verificar por ContrataCR');
  await expect(card.locator('[data-public-service]')).toBeVisible();
- await expect(page.locator('[data-section-policy="salud"]')).toContainText(en?'no medical advice':'no da consejo médico');
+ await expect(page.locator('[data-places-home="salud"]')).not.toContainText(en?'medical or veterinary advice':'no da consejo médico');
  await gotoOK(page,`${prefix}/lugar/e2e-clinica-${tag}`);
  await expect(page.locator('[data-health-permit="unverified"]')).toContainText(en?'Permit not verified by ContrataCR.':'Habilitación sin verificar por ContrataCR.');
  await expect(page.locator('[data-place-review-note]')).toContainText(en?'attention and service':'la atención y el servicio');
@@ -108,7 +115,12 @@ for(const language of ['es','en'] as const)test(`cafés moved out of restaurants
  // Lodging: no ICT declaratoria claimed.
  await seedPlace(db,{slug:`e2e-hotel-${tag}`,vertical:'lodging',name:`E2E Hotel ${tag}`,adminArea1:'Heredia',attributes:{kind:'hotel'}});
  await gotoOK(page,`${prefix}/lugar/e2e-hotel-${tag}`);
- await expect(page.locator('[data-place-tourism-note]')).toContainText('ICT');
+ await expect(page.locator('[data-place-tourism-note]')).toHaveCount(0);
  await expectNoHorizontalOverflow(page);
+ // Where those notes went: the Terms, section 13.1 «Directorio de lugares y negocios», with the ranking page one tap away.
+ await gotoOK(page,`${prefix}/terminos`);
+ const terms=page.locator('#'+(en?'directory':'directorio'));
+ for(const text of en?['does not compare rates','gives no medical or veterinary advice','ICT tourism declaration','prescription medicines']:['no compara tasas','no da consejo médico','declaratoria turística del ICT','requieren receta médica'])await expect(terms).toContainText(text);
+ await expect(terms.getByRole('link',{name:en?'How we rank results':'Cómo ordenamos los resultados'})).toHaveAttribute('href',`${prefix}/como-ordenamos`);
  expect(errors()).toEqual([]);
 });

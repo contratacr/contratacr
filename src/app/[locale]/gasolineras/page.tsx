@@ -1,8 +1,6 @@
 import type {Metadata} from 'next';
 import {notFound} from 'next/navigation';
-import {DirectoryShell} from '@/components/directory/directory-shell';
 import {PlacesSectionHome} from '@/components/directory/places-section-home';
-import {searchSlots} from '@/components/directory/search-section';
 import {NationalFuelPrices} from '@/components/directory/place-prices';
 import {createAdminClient} from '@/lib/supabase/admin';
 import type {PublicPriceCurrent} from '@/lib/directory/price-schemas';
@@ -27,6 +25,5 @@ export default async function SectionRoute({params,searchParams}:{params:Promise
  // Fuel prices are national (ARESEP): one banner instead of a price per station.
  const national=await createAdminClient().rpc('public_price_current',{p_place_slug:null,p_item_slug:null});
  const banner=national.error||!national.data?null:<NationalFuelPrices prices={national.data as PublicPriceCurrent} locale={locale}/>;
- const {filters,results}=searchSlots({vertical:'gasolineras',locale,page,basePath,title:en?'Results':'Resultados'});
- return <DirectoryShell><PlacesSectionHome section="gasolineras" locale={locale} selected={{province:page.values.province}} banner={banner} filters={filters} results={results}/></DirectoryShell>;
+ return <PlacesSectionHome section="gasolineras" locale={locale} page={page} basePath={basePath} banner={banner}/>;
 }

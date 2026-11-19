@@ -18,13 +18,14 @@ import {checkPlacePhone} from '@/lib/directory/phone';
  * - verification badge coloured by level (verified/licence = green, imported/unverified = neutral);
  * - pharmacies (all shown since the owner decision of 2026-11-17): one line on the permit, verified or a neutral note;
  * - «Llamar» and «Cómo llegar» as 44 px buttons (navy), website as secondary button (rel nofollow ugc noopener);
- * - hours imported from OpenStreetMap carry «Horario según OpenStreetMap; confírmelo con el negocio»; 00:00–24:00 reads «24 horas»;
+ * - hours imported from OpenStreetMap carry the short credit «Horario según OpenStreetMap»; 00:00–24:00 reads «24 horas»;
  * - today's row highlighted in the hours table (America/Costa_Rica) with «Hoy» for screen readers;
  * - photos before hours on mobile (first visual content), lazy images keep alt text;
  * - children slot after the hours (menu link, prices, reviews, claim); same data attributes as before.
  * - 2026-11-17 sections: subtype (`kind`) next to the section name; health/vet places carry the neutral permit line
- *   «Habilitación sin verificar por ContrataCR» and «no medical advice»; banks state «map only, no rates/products»;
- *   lodging/tours state that no ICT declaratoria is claimed (policy notes pending lawyer review).
+ *   «Habilitación sin verificar por ContrataCR». Since 2026-11-19 the explanatory notes (no medical advice, banks map
+ *   only, no ICT declaratoria, «Pedir» goes to the business's own channel, order never paid) live in the Terms
+ *   («Directorio de lugares y negocios») and /como-ordenamos, not on this page.
  * - Place features round (2026-11-17): «Pedir» link-out to the business's OWN channel (WhatsApp / its order page / phone;
  *   ContrataCR takes no orders or payments), «Sucursal de <marca>» link to /marca/<slug> with the brand's common info,
  *   and a `saveSlot` (save to a list) next to the main buttons. Banks accept service reviews (note in the reviews block).
@@ -59,27 +60,19 @@ export function PlacePage({place,locale,hoursSource,children,orderLink,brand,sav
    <h1 className="break-words text-3xl font-extrabold leading-tight sm:text-4xl">{place.name}</h1>
    {(kind||area)&&<p className="text-base text-slate-700">{kind&&<span data-place-kind={String(place.attributes.kind)} className="font-semibold">{kind}{area?' · ':''}</span>}{area}</p>}
    <p className="flex flex-wrap gap-2 text-sm">
-    <span data-place-verification={place.verificationLevel} className={`rounded-full px-3 py-1 font-semibold ${trusted?'bg-emerald-50 text-emerald-900':'border border-slate-300 text-slate-800'}`}>{verification}</span>
+    {/* Imported / unverified listings: a quiet «No reclamado» (the data sources are listed at the end of the page and the
+        Terms explain them); the claim call to action is in the claim block. */}
+    <span data-place-verification={place.verificationLevel} className={`rounded-full px-3 py-1 font-semibold ${trusted?'bg-emerald-50 text-emerald-900':'border border-slate-200 text-slate-600'}`}>{trusted?verification:t('No reclamado','Unclaimed')}</span>
     {place.status==='closed_permanently'&&<span data-place-closed className="rounded-full bg-red-50 px-3 py-1 font-semibold text-red-800">{t('Cerrado definitivamente','Permanently closed')}</span>}
     {place.rating.count>0&&place.rating.average!=null&&<span className="rounded-full border border-slate-300 px-3 py-1">{new Intl.NumberFormat(en?'en-US':'es-CR',{minimumFractionDigits:1,maximumFractionDigits:1}).format(place.rating.average)} / 5 · {place.rating.count} {t(place.rating.count===1?'reseña':'reseñas',place.rating.count===1?'review':'reviews')}</span>}
    </p>
    {place.vertical.id==='pharmacy'&&(place.verificationLevel==='license_verified'
     ?<p data-pharmacy-license="verified" className="text-sm text-slate-700">{t('ContrataCR verificó el permiso de funcionamiento de esta farmacia.','ContrataCR verified this pharmacy\'s operating license.')}</p>
-    :<p data-pharmacy-license="unverified" className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
-     <span className="font-semibold">{t('Permiso sin verificar por ContrataCR.','License not verified by ContrataCR.')}</span>{' '}
-     {t('Mostramos la farmacia con datos públicos; todavía no revisamos su permiso de funcionamiento. Confirme con la farmacia antes de ir.',
-      'We show this pharmacy from public data; we have not reviewed its operating license yet. Please confirm with the pharmacy before going.')}</p>)}
+    :<p data-pharmacy-license="unverified" className="text-sm text-slate-700">{t('Permiso sin verificar por ContrataCR.','License not verified by ContrataCR.')}</p>)}
    {section?.policy.health&&(place.verificationLevel==='license_verified'
     ?<p data-health-permit="verified" className="text-sm text-slate-700">{t('ContrataCR verificó la habilitación de este establecimiento.','ContrataCR verified this facility\'s health permit.')}</p>
-    :<p data-health-permit="unverified" className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
-     <span className="font-semibold">{t('Habilitación sin verificar por ContrataCR.','Permit not verified by ContrataCR.')}</span>{' '}
-     {t('Mostramos el establecimiento con datos públicos. ContrataCR no da consejo médico ni veterinario, no recomienda tratamientos y no muestra precios de consultas.',
-      'We show this facility from public data. ContrataCR gives no medical or veterinary advice, recommends no treatments and shows no consultation prices.')}
+    :<p data-health-permit="unverified" className="text-sm text-slate-700">{t('Habilitación sin verificar por ContrataCR.','Permit not verified by ContrataCR.')}
      {place.vertical.id==='health'?` ${t('En una emergencia llame al 9-1-1.','In an emergency, call 9-1-1.')}`:''}</p>)}
-   {section?.policy.mapOnly&&<p data-place-map-only className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
-    {t('Mostramos ubicación y horario. ContrataCR no muestra tasas, comisiones ni productos financieros; las reseñas solo tratan sobre la atención y el servicio.','We show location and hours. ContrataCR shows no rates, fees or financial products; reviews are only about attention and service.')}</p>}
-   {section?.policy.tourism&&<p data-place-tourism-note className="text-sm text-slate-700">
-    {t('ContrataCR no indica si este negocio cuenta con declaratoria turística del ICT. Confírmelo directamente con el negocio.','ContrataCR does not state whether this business holds an ICT tourism declaration. Please confirm directly with the business.')}</p>}
    <div className="flex flex-wrap gap-2 pt-1">
     {phone?.kind==='cr'&&<PlaceContactLink slug={place.slug} channel="call" className={`${button} bg-[#162543] text-white`} href={`tel:${phone.tel}`}>{t('Llamar','Call')} {phone.display}</PlaceContactLink>}
     {mapHref&&<a className={`${button} border border-[#162543] bg-white`} href={mapHref} rel="noopener noreferrer" target="_blank">{t('Cómo llegar','Directions')}<span className="sr-only"> (OpenStreetMap)</span></a>}
@@ -91,7 +84,6 @@ export function PlacePage({place,locale,hoursSource,children,orderLink,brand,sav
    </div>
    {phone?.kind==='other'&&<p data-place-phone-other={phone.reason} className="text-sm text-slate-700"><span className="font-semibold">{t('Otros datos:','Other details:')}</span>{' '}
     {phone.reason==='foreign'?t('teléfono registrado de otro país (sin verificar)','phone registered in another country (not verified)'):t('teléfono registrado con un formato que no es costarricense válido (sin verificar)','phone on file not in a valid Costa Rican format (not verified)')}: <span className="whitespace-nowrap">{phone.display}</span></p>}
-   {orderLink&&place.status==='published'&&<p data-place-order-note className="text-sm text-slate-700">{t('"Pedir" lo lleva al canal del propio negocio. ContrataCR no toma pedidos, no hace entregas ni cobra pagos.','"Order" takes you to the business’s own channel. ContrataCR takes no orders, makes no deliveries and handles no payments.')}</p>}
    {brand&&<p data-place-brand={brand.slug} className="text-sm text-slate-800">{t('Sucursal de','Branch of')}{' '}
     <a className={`font-semibold underline underline-offset-2 ${ring}`} href={`${en?'/en':''}/marca/${brand.slug}`}>{brand.name}</a>
     {' · '}{brand.branches} {t(brand.branches===1?'sucursal':'sucursales',brand.branches===1?'branch':'branches')}
@@ -127,9 +119,7 @@ export function PlacePage({place,locale,hoursSource,children,orderLink,brand,sav
      <dt className={now?'font-bold':'font-medium'}>{day}{now&&<span className="ml-1 text-xs">({t('hoy','today')})</span>}</dt>
      <dd>{slots.length?slots.map(h=>h.opens==='00:00'&&(h.closes==='24:00'||h.closes==='23:59')?t('24 horas','24 hours'):`${h.opens}–${h.closes}`).join(', '):t('Cerrado','Closed')}</dd></div>;})}
    </dl>
-   {hoursSource==='osm'
-    ?<p data-place-hours-source="osm" className="text-sm text-slate-700">{t('Horario según OpenStreetMap; confírmelo con el negocio antes de ir.','Hours from OpenStreetMap; please confirm them with the business before going.')}</p>
-    :<p className="text-sm text-slate-700">{t('Confirme el horario con el negocio antes de ir.','Please confirm the hours with the business before going.')}</p>}
+   {hoursSource==='osm'&&<p data-place-hours-source="osm" className="text-sm text-slate-600">{t('Horario según OpenStreetMap.','Hours from OpenStreetMap.')}</p>}
   </section>}
 
   {children}
@@ -139,7 +129,6 @@ export function PlacePage({place,locale,hoursSource,children,orderLink,brand,sav
    {place.sources.length?<ul className="space-y-1">{place.sources.map(s=><li key={s.name} data-place-source={s.name}>
     {s.url?<a className={`underline underline-offset-2 ${ring}`} href={s.url} rel="noopener noreferrer" target="_blank">{bilingual(s.attribution,en)}</a>:bilingual(s.attribution,en)} · {bilingual(s.license,en)}</li>)}</ul>
     :<p>{t('Información aportada a ContrataCR.','Information provided to ContrataCR.')}</p>}
-   <p>{t('El orden y la visibilidad en ContrataCR no dependen de pagos.','Order and visibility on ContrataCR never depend on payment.')} <a className={`underline underline-offset-2 ${ring}`} href={en?'/en/como-ordenamos':'/como-ordenamos'}>{t('Cómo ordenamos','How we rank')}</a></p>
   </section>
 
   <PlaceReportForm slug={place.slug} locale={locale}/>

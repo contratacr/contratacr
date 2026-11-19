@@ -49,7 +49,9 @@ function Text({name,label,values,list,placeholder}:{name:string;label:string;val
  return <label className={field}>{label}<input type="text" name={name} maxLength={80} list={list} placeholder={placeholder} defaultValue={values[name]??''} className={input+' placeholder:text-slate-500'} autoComplete="off"/></label>;
 }
 
-export function SearchFilters({vertical,values,facets,locale,action,sorts}:{vertical:SearchVertical;values:Values;facets?:DirectoryFacets['facets']|null;locale:string;action:string;sorts?:SearchSort[]}){
+/** `panel`: rendered inside the places filters drawer (places-search-view.tsx), which brings its own title and close
+ * button; the fields are then always open (no «Filtros» fold) and the buttons sit side by side. */
+export function SearchFilters({vertical,values,facets,locale,action,sorts,panel=false}:{vertical:SearchVertical;values:Values;facets?:DirectoryFacets['facets']|null;locale:string;action:string;sorts?:SearchSort[];panel?:boolean}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es,any=t('Cualquiera','Any');
  const listing=isListingVertical(vertical),priceMode=placePriceMode(vertical);
  // Price sorts: listings and restaurants always; pharmacies/supermarkets only once a product is typed; never fuel stations.
@@ -60,12 +62,13 @@ export function SearchFilters({vertical,values,facets,locale,action,sorts}:{vert
  const provinces=facets?.province?.map(p=>String(p.value))??[];
  // Filters the person set (the free text «q» and the order are not filters): shown on the phone «Filtros (n)» button.
  const activeFilters=Object.entries(values).filter(([k,v])=>!!v&&!['q','sort','cursor','page','lat','lng'].includes(k)).length;
+ const grid=panel?'grid grid-cols-1 gap-3':'grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1';
  const kinds=placeSection(vertical)?.kinds??[],example=PRODUCT_EXAMPLE[vertical]??PRODUCT_EXAMPLE.supermercados!;
- return <form method="get" action={action} role="search" aria-label={t('Buscar y filtrar','Search and filter')} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 text-[#162543]" data-search-filters={vertical}>
+ return <form method="get" action={action} role="search" aria-label={t('Buscar y filtrar','Search and filter')} className={`space-y-4 text-[#162543] ${panel?'':'rounded-2xl border border-slate-200 bg-white p-4'}`} data-search-filters={vertical}>
   <label className={field}>{t('¿Qué busca?','What are you looking for?')}
    <input type="search" name="q" maxLength={100} defaultValue={values.q??''} className={input} enterKeyHint="search"/></label>
-  <FiltersDisclosure en={en} active={activeFilters}>
-  <fieldset className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1">
+  {(()=>{const fields=<>
+  <fieldset className={grid}>
    <legend className="mb-2 text-base font-bold lg:text-sm">{t('Ubicación','Location')}</legend>
    <Text name="province" label={t('Provincia','Province')} values={values} list="dir-provinces" placeholder={t('Todas las provincias','All provinces')}/>
    <Text name="canton" label={t('Cantón','Canton')} values={values} placeholder={t('Todos los cantones','All cantons')}/>
@@ -74,7 +77,7 @@ export function SearchFilters({vertical,values,facets,locale,action,sorts}:{vert
     <NumberField name="radiusKm" label={t('Distancia máxima (km)','Maximum distance (km)')} values={values} min={1} max={100}/></>}
   </fieldset>
 
-  {vertical==='vehiculos'&&<fieldset className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1">
+  {vertical==='vehiculos'&&<fieldset className={grid}>
    <legend className="mb-2 text-base font-bold lg:text-sm">{t('Vehículo','Vehicle')}</legend>
    <Select name="type" label={t('Tipo','Type')} options={VEHICLE_TYPES} values={values} facet={facets?.type} en={en} anyLabel={any}/>
    <label className={field}>{t('Marca','Make')}
@@ -91,7 +94,7 @@ export function SearchFilters({vertical,values,facets,locale,action,sorts}:{vert
    <p className="text-sm text-slate-600 sm:col-span-2 lg:col-span-1">{t('Precios en dólares se comparan en colones con el tipo de cambio registrado.','Prices in US dollars are compared in colones using the recorded exchange rate.')}</p>
   </fieldset>}
 
-  {vertical==='inmuebles'&&<fieldset className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1">
+  {vertical==='inmuebles'&&<fieldset className={grid}>
    <legend className="mb-2 text-base font-bold lg:text-sm">{t('Propiedad','Property')}</legend>
    <Select name="operation" label={t('Operación','Operation')} options={PROPERTY_OPERATIONS} values={values} facet={facets?.operation} en={en} anyLabel={any}/>
    <Select name="type" label={t('Tipo','Type')} options={PROPERTY_TYPES} values={values} facet={facets?.type} en={en} anyLabel={any}/>
@@ -102,7 +105,7 @@ export function SearchFilters({vertical,values,facets,locale,action,sorts}:{vert
    <NumberField name="m2Max" label={t('Área máxima (m²)','Maximum area (m²)')} values={values} min={0}/>
   </fieldset>}
 
-  {priceMode&&<fieldset className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1" data-price-filters={priceMode}>
+  {priceMode&&<fieldset className={grid} data-price-filters={priceMode}>
    <legend className="mb-2 text-base font-bold lg:text-sm">{t('Precio','Price')}</legend>
    {priceMode==='product'&&<div className="sm:col-span-2 lg:col-span-1"><Text name="product" label={t(`Producto (por ejemplo: ${example[0]})`,`Product (for example: ${example[1]})`)} values={values}/></div>}
    {priceMode==='product'&&!values.product
@@ -110,16 +113,11 @@ export function SearchFilters({vertical,values,facets,locale,action,sorts}:{vert
     :<>
      <NumberField name="priceMin" label={t('Precio mínimo (₡)','Minimum price (₡)')} values={values} min={0} step={priceMode==='menu'?500:100}/>
      <NumberField name="priceMax" label={t('Precio máximo (₡)','Maximum price (₡)')} values={values} min={0} step={priceMode==='menu'?500:100}/>
-     <p className="text-sm text-slate-600 sm:col-span-2 lg:col-span-1">{priceMode==='menu'
-      ?t('Precio típico: la mediana de los platos del menú publicado, con IVA y servicio. Los negocios sin menú publicado solo se ocultan si usa un filtro de precio.',
-       'Typical price: the median dish of the published menu, with VAT and service. Places without a published menu are only hidden when you use a price filter.')
-      :t('Precio vigente del producto en cada comercio (fuente y fecha en cada resultado). Los comercios sin ese precio solo se ocultan si usa un filtro de precio.',
-       'Current price of the product at each store (source and date on every result). Stores without that price are only hidden when you use a price filter.')}
-      {range?` ${t('Rango en estos resultados:','Range in these results:')} ${money(range.min!)} – ${money(range.max!)}.`:''}</p>
+     {range&&<p className="text-sm text-slate-600 sm:col-span-2 lg:col-span-1" data-price-range>{t('En estos resultados:','In these results:')} {money(range.min!)} – {money(range.max!)}</p>}
     </>}
   </fieldset>}
 
-  {kinds.length>0&&<fieldset className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1" data-kind-filter={vertical}>
+  {kinds.length>0&&<fieldset className={grid} data-kind-filter={vertical}>
    <label className={field}>{t('Tipo de lugar','Kind of place')}
     <select name="kind" defaultValue={values.kind??''} className={input}>
      <option value="">{t('Todos','All')}</option>
@@ -134,20 +132,21 @@ export function SearchFilters({vertical,values,facets,locale,action,sorts}:{vert
     {t('Abierto ahora','Open now')}{facets?.openNow!=null?` (${facets.openNow})`:''}</label>
    <label className="flex min-h-11 items-center gap-3 text-sm"><input type="checkbox" name="open24h" value="1" defaultChecked={values.open24h==='1'||values.open24h==='true'} className="h-5 w-5"/>
     {t('Abierto 24 horas','Open 24 hours')}{facets?.open24h!=null?` (${facets.open24h})`:''}</label>
-   <p className="text-sm text-slate-600">{t('Horario en hora de Costa Rica. Confirme con el negocio antes de ir.','Costa Rica time. Please confirm with the business before going.')}</p>
   </fieldset>}
 
   <label className={field}>{t('Ordenar por','Sort by')}
    <select name="sort" defaultValue={values.sort??'relevance'} className={input}>
     {sortOptions.map(s=><option key={s} value={s} disabled={s==='distance'&&!values.lat}>{sortLabel(s,en)}{s==='distance'&&!values.lat?t(' (requiere su ubicación)',' (needs your location)'):''}</option>)}
    </select></label>
-  </FiltersDisclosure>
-  {/* Outside the folded panel: it explains the price filter even before «Filtros» is opened on a phone. */}
-  {priceMode==='product'&&!values.product&&<p className="text-sm text-slate-700" data-price-filters-hint>{t('Escriba un producto para filtrar y ordenar por su precio en cada comercio. Sin producto se muestran todos los comercios.',
-      'Type a product to filter and sort by its price at each store. Without a product every store is shown.')}</p>}
-  <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
+  </>;return panel?<div className="space-y-4">{fields}</div>:<FiltersDisclosure en={en} active={activeFilters}>{fields}</FiltersDisclosure>;})()}
+  {panel
+   ?<div className="sticky bottom-0 -mx-4 flex gap-2 border-t border-[#eef2f6] bg-white px-4 pb-1 pt-3">
+    <a href={action} className="inline-flex h-11 flex-1 items-center justify-center rounded-full border border-[#d7e1ea] bg-white px-4 text-sm font-bold text-[#162543] hover:border-[#009FD9]">{t('Limpiar','Clear')}</a>
+    <button type="submit" className="inline-flex h-11 flex-[2] items-center justify-center rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white hover:bg-[#0089bb] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#162543]">{t('Aplicar filtros','Apply filters')}</button>
+   </div>
+   :<div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
    <button type="submit" className="min-h-11 rounded-xl bg-[#162543] px-5 font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b7fab]">{t('Aplicar filtros','Apply filters')}</button>
    <a href={action} className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 px-5 font-semibold">{t('Limpiar','Clear')}</a>
-  </div>
+  </div>}
  </form>;
 }

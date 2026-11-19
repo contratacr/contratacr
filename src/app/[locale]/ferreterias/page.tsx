@@ -1,8 +1,6 @@
 import type {Metadata} from 'next';
 import {notFound} from 'next/navigation';
-import {DirectoryShell} from '@/components/directory/directory-shell';
 import {PlacesSectionHome} from '@/components/directory/places-section-home';
-import {searchSlots} from '@/components/directory/search-section';
 import {loadDirectorySearch,type SearchPageParams} from '@/lib/directory/search-server';
 import {DIR_ENABLED} from '@/lib/directory/feature-flags';
 
@@ -21,6 +19,5 @@ export default async function SectionRoute({params,searchParams}:{params:Promise
  if(!DIR_ENABLED)notFound();
  const {locale}=await params,sp=await searchParams,en=locale==='en',basePath=(en?'/en':'')+'/ferreterias';
  const page=await loadDirectorySearch('ferreterias',sp);
- const {filters,results}=searchSlots({vertical:'ferreterias',locale,page,basePath,title:en?'Results':'Resultados'});
- return <DirectoryShell><PlacesSectionHome section="ferreterias" locale={locale} selected={{province:page.values.province,kind:page.values.kind}} filters={filters} results={results}/></DirectoryShell>;
+ return <PlacesSectionHome section="ferreterias" locale={locale} page={page} basePath={basePath}/>;
 }

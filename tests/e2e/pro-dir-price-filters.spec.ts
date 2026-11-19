@@ -6,9 +6,11 @@ import {local} from './pro-round2-fixture';
 import {dirDb,hideSeededPlaces,label,seedPlace,uid,type Db} from './pro-dir-fixture';
 import {seedPriceComparison} from './pro-dir-prices-fixture';
 
-// Launch polish (2026-11-18): on phones the filters are folded behind «Filtros (n)»; open them before using a field.
-async function openFilters(page:import('playwright/test').Page){const b=page.locator('[data-filters-disclosure] > button');if(!(await b.isVisible()))return;
- await expect(async()=>{if((await b.getAttribute('aria-expanded'))!=='true')await b.click();await expect(b).toHaveAttribute('aria-expanded','true',{timeout:1500});}).toPass({timeout:30000});}
+// 2026-11-19: the places sections use the /profesionales layout; the complete GET form lives in the «Filtros» drawer
+// (chip next to the title on desktop, in the results sheet on phones). Open it before using a field.
+async function openFilters(page:import('playwright/test').Page){const form=page.locator('form[role="search"]');if(await form.isVisible())return;
+ const b=page.locator('[data-dir-filters-button]').filter({visible:true}).first();
+ await expect(async()=>{if(!(await form.isVisible()))await b.click();await expect(form).toBeVisible({timeout:1500});}).toPass({timeout:30000});}
 
 
 // Owner decision 2026-11-17 (LOCAL Pro): «farmacias quiero mostrar todo y en todo donde aplique filtrar precios, solo
@@ -53,10 +55,11 @@ for(const language of ['es','en'] as const)test(`2026-11-17: restaurant price fi
  expect(await keys(page)).toEqual([`p:soda-precio-a-${tag}`,`p:soda-precio-b-${tag}`,`p:soda-precio-c-${tag}`]);
  const cardA=page.locator(`[data-search-item="p:soda-precio-a-${tag}"]`);
  await expect(cardA.locator('[data-place-price="menu"]')).toContainText(t('Precio típico','Typical price'));
- await expect(cardA.locator('[data-place-price="menu"]')).toContainText(t('mediana de 2 platos del menú publicado por el negocio, con IVA y servicio','median of 2 dishes on the menu published by the business, VAT and service included'));
+ await expect(cardA.locator('[data-place-price="menu"]')).toContainText(t('2 platos del menú, con IVA y servicio','2 dishes on the menu, VAT and service included'));
  await expect(cardA.locator('[data-place-price="menu"]')).toHaveAttribute('data-price-amount','4354');
  await expect(page.locator(`[data-search-item="p:soda-precio-c-${tag}"] [data-place-price]`)).toHaveCount(0);
- await expect(page.locator(`[data-search-item="p:soda-precio-c-${tag}"] [data-ranking-reason="price_missing"]`)).toHaveCount(1);
+ // 2026-11-19: the ranking reasons are no longer shown («¿Por qué aparece aquí?» moved to /como-ordenamos); they stay machine-readable.
+ await expect(page.locator(`[data-search-item="p:soda-precio-c-${tag}"]`)).toHaveAttribute('data-ranking-reasons',/(^| )price_missing( |$)/);
  await gotoOK(page,`${prefix}/restaurantes?q=${q}&sort=price_desc`);
  expect(await keys(page)).toEqual([`p:soda-precio-b-${tag}`,`p:soda-precio-a-${tag}`,`p:soda-precio-c-${tag}`]);
  // The range from the plain GET form drops the places outside it, including the one without a menu.
@@ -95,7 +98,9 @@ for(const language of ['es','en'] as const)test(`2026-11-17: product price filte
 
   // Pharmacies without a product: no range inputs, a hint instead, and no price sort; a range in the URL is refused.
   await gotoOK(page,`${prefix}/farmacias`);
-  await expect(page.locator('[data-price-filters-hint]')).toBeVisible();
+  // 2026-11-19: no hint paragraph on the screen; the drawer offers the product field instead of the range inputs.
+  await expect(page.locator('[data-price-filters-hint]')).toHaveCount(0);
+  await openFilters(page);await expect(page.locator('form[role="search"] input[name="product"]')).toBeVisible();
   await expect(page.locator('form[role="search"] input[name="priceMin"]')).toHaveCount(0);
   await expect(page.locator('select[name="sort"] option[value="price_asc"]')).toHaveCount(0);
   await gotoOK(page,`${prefix}/farmacias?priceMax=900`);

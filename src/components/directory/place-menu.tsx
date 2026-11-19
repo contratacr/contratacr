@@ -43,7 +43,6 @@ export function PlaceMenu({menu,locale}:{menu:PublicMenu;locale:string}){
 
   <footer className="space-y-1 border-t border-[#d7e1ea] pt-4 text-sm text-slate-700">
    <p>{t('Menú y precios informados por el negocio.','Menu and prices provided by the business.')} {t('Actualizado el','Updated on')} {updated}.</p>
-   <p>{t('Confirme disponibilidad y precio con el negocio antes de ordenar.','Please confirm availability and price with the business before ordering.')}</p>
   </footer>
  </main>;
 }

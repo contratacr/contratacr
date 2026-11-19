@@ -10,15 +10,16 @@
 // ./maplibre-runtime). MapLibre 6 is ESM-only: a namespace import, no default.
 //
 // Tiles/style: `NEXT_PUBLIC_MAP_STYLE_URL` (any MapLibre style JSON). Default is
-// OpenFreeMap «positron» (light grey, lets the brand-blue pins stand out). See
+// OpenFreeMap «liberty», toned down by `brandMapStyle()` (2026-11-19: positron was
+// greyscale and the owner found it dull). See
 // docs/maps-maplibre.md for the fallbacks (MapTiler, Stadia, self-hosted PMTiles)
 // and the CSP hosts each one needs.
 
-import type { Map as MapLibreMap, MapOptions } from "maplibre-gl";
+import type { Map as MapLibreMap, MapOptions, StyleSpecification } from "maplibre-gl";
 
 export type MapLibreModule = typeof import("maplibre-gl");
 
-export const DEFAULT_MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/positron";
+export const DEFAULT_MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
 
 export function mapStyleUrl(): string {
   const configured = process.env.NEXT_PUBLIC_MAP_STYLE_URL?.trim();
@@ -50,6 +51,56 @@ export function localGlyphUrl(url: string, origin: string): string | null {
   const folder = LOCAL_GLYPH_STACKS[stack];
   if (!folder || !LOCAL_GLYPH_RANGES.has(match[2])) return null;
   return `${origin}/map-fonts/${folder}/${match[2]}.pbf`;
+}
+
+// Map colours (owner, 2026-11-19: «muy apagado»). OpenFreeMap «liberty» as is
+// paints every street yellow, shows bus/shop icons from zoom 15 and extrudes
+// buildings: our cyan pins got lost. `brandMapStyle()` keeps its colour (green
+// parks and forest, blue water, shaded relief at country zoom, pink hospitals)
+// and makes it read like Google/Yelp: white streets, soft-yellow primary roads,
+// warmer yellow motorways, no third-party POI icons, flat buildings. Only
+// colours/visibility change, so it needs no extra request; it applies only to
+// the OpenFreeMap liberty style (a custom NEXT_PUBLIC_MAP_STYLE_URL is left as is).
+type StyleLayer = StyleSpecification["layers"][number];
+const BRAND_FILLS: Record<string, string> = {
+  background: "#f5f3ee",
+  water: "#a9d3f2",
+  park: "#cfe8c3",
+  landcover_wood: "hsla(100,40%,74%,0.55)",
+  landcover_grass: "#d3eac4",
+  landuse_residential: "#efede7",
+  landuse_hospital: "#f8e3e8",
+  building: "#e7e3dc",
+};
+const BRAND_WATERWAYS = new Set(["waterway_river", "waterway_other", "waterway_tunnel"]);
+const HIDDEN_LAYER = /^poi_|^building-3d$|one_way_arrow/;
+
+function brandRoadColor(id: string): string | null {
+  const casing = id.includes("casing");
+  if (id.includes("motorway")) return casing ? "#e3b25d" : "#fcd68a";
+  if (id.includes("trunk_primary")) return casing ? "#e6cf96" : "#fff3c4";
+  if (/secondary_tertiary|_link|street|minor|service_track/.test(id)) return casing ? "#dcd8cf" : "#ffffff";
+  return null;
+}
+
+function brandLayer(layer: StyleLayer): StyleLayer | null {
+  if (HIDDEN_LAYER.test(layer.id)) return null;
+  const fill = BRAND_FILLS[layer.id];
+  if (fill && layer.type === "background") return { ...layer, paint: { ...layer.paint, "background-color": fill } };
+  if (fill && layer.type === "fill") return { ...layer, paint: { ...layer.paint, "fill-color": fill } };
+  if (layer.type === "line" && BRAND_WATERWAYS.has(layer.id)) return { ...layer, paint: { ...layer.paint, "line-color": "#a9d3f2" } };
+  if (layer.type === "line" && layer["source-layer"] === "transportation") {
+    const color = brandRoadColor(layer.id);
+    if (color) return { ...layer, paint: { ...layer.paint, "line-color": color } };
+  }
+  if (layer.type === "symbol" && layer.id === "waterway_line_label") return { ...layer, paint: { ...layer.paint, "text-color": "#3d6f9e" } };
+  return layer;
+}
+
+/** Recolours OpenFreeMap «liberty» for ContrataCR; any other style is returned unchanged. */
+export function brandMapStyle(style: StyleSpecification, styleUrl: string): StyleSpecification {
+  if (!/^https:\/\/tiles\.openfreemap\.org\/styles\/liberty\/?$/.test(styleUrl)) return style;
+  return { ...style, layers: style.layers.flatMap((layer) => brandLayer(layer) ?? []) };
 }
 
 let modulePromise: Promise<MapLibreModule> | null = null;
@@ -113,9 +164,11 @@ export function createMap(
   container: HTMLElement,
   { language = "es", ...options }: CreateMapOptions,
 ): MapLibreMap {
+  const styleUrl = mapStyleUrl();
   return new maplibre.Map({
     container,
-    style: mapStyleUrl(),
+    style: styleUrl,
+    transformStyle: (_previous, next) => brandMapStyle(next, styleUrl),
     attributionControl: { compact: true },
     dragRotate: false,
     pitchWithRotate: false,
@@ -129,6 +182,23 @@ export function createMap(
     },
     ...options,
   });
+}
+
+/**
+ * fitBounds padding for a map that sits UNDER the mobile results sheet
+ * (SearchResultsLayout: the sheet rests at half the viewport, CARD_PEEK 0.5).
+ * Without it the fitted points land behind the sheet and the visible part of
+ * the map shows the empty north (Nicaragua) instead of Costa Rica. Desktop and
+ * maps that are not under a sheet get the plain padding.
+ */
+export function sheetAwarePadding(container: HTMLElement, base: number) {
+  if (typeof window === "undefined" || !window.matchMedia("(max-width: 1023px)").matches) return base;
+  const rect = container.getBoundingClientRect();
+  const sheetTop = window.innerHeight * 0.5;
+  const hidden = rect.bottom - sheetTop;
+  if (hidden <= 0 || rect.height <= 0) return base;
+  const bottom = Math.min(Math.round(hidden + base / 2), Math.round(rect.height * 0.7));
+  return { top: base, left: base, right: base, bottom: Math.max(base, bottom) };
 }
 
 /** Plain-URL directions (no API, no key): Google Maps and Waze open their own app or site. */

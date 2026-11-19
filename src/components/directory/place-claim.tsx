@@ -89,7 +89,7 @@ export function PlaceClaim({slug,locale,loginHref,choices={emailListed:null,webs
      <ul className="list-disc space-y-1 pl-5 text-sm text-slate-700">{claimBenefits(vertical,proEnabled).map(([es,english])=><li key={es}>{t(es,english)}</li>)}</ul>
      <p className="text-sm font-semibold" data-claim-neutrality>{t('No puede pagar para salir primero ni borrar reseñas.','You cannot pay to appear first or to remove reviews.')}</p>
     </div>}
-    <p className="text-sm text-slate-700">{t('Reclamar y verificar su negocio es gratis y no cambia el orden de los resultados.','Claiming and verifying your business is free and does not change the order of results.')}</p>
+    <p className="text-sm text-slate-700">{t('Reclamar y verificar su negocio es gratis.','Claiming and verifying your business is free.')}</p>
     {loginHref?<a className={button} href={loginHref}>{t('Inicie sesión para reclamar','Sign in to claim')}</a>
      :step.kind==='code'
       ?<form className="space-y-3" onSubmit={e=>{e.preventDefault();void verify(step.claimId);}}>

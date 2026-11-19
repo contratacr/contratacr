@@ -4,26 +4,18 @@ import { Utensils, Coffee, Fuel, Pill, ShoppingCart, Store, Hammer, BedDouble, S
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { useSiteFeatures } from "@/components/site-features";
+import { DIRECTORY_SECTION_LABELS } from "@/lib/search/directory-search";
 
 // Public navigation to the place directory (2026-11-18): the «Explorar» menu (desktop) and the mobile drawer list the
 // sections that are on (useSiteFeatures, from the server flags). Short menu labels; the section page keeps its full name.
-const SECTIONS: Record<string, { es: string; en: string; icon: LucideIcon }> = {
-  restaurantes: { es: "Restaurantes", en: "Restaurants", icon: Utensils },
-  cafes: { es: "Cafés y bares", en: "Cafés and bars", icon: Coffee },
-  supermercados: { es: "Supermercados", en: "Supermarkets", icon: ShoppingCart },
-  pulperias: { es: "Pulperías", en: "Corner stores", icon: Store },
-  farmacias: { es: "Farmacias", en: "Pharmacies", icon: Pill },
-  ferreterias: { es: "Ferreterías", en: "Hardware stores", icon: Hammer },
-  gasolineras: { es: "Gasolineras", en: "Fuel stations", icon: Fuel },
-  talleres: { es: "Talleres", en: "Auto repair", icon: Wrench },
-  hospedaje: { es: "Hospedaje", en: "Lodging", icon: BedDouble },
-  tours: { es: "Tours", en: "Tours", icon: Compass },
-  belleza: { es: "Belleza", en: "Beauty", icon: Scissors },
-  gimnasios: { es: "Gimnasios", en: "Gyms", icon: Dumbbell },
-  veterinarias: { es: "Veterinarias", en: "Vets and pets", icon: PawPrint },
-  salud: { es: "Salud", en: "Health", icon: Stethoscope },
-  bancos: { es: "Bancos y cajeros", en: "Banks and ATMs", icon: Landmark },
+export const DIRECTORY_SECTION_ICONS: Record<string, LucideIcon> = {
+  restaurantes: Utensils, cafes: Coffee, supermercados: ShoppingCart, pulperias: Store, farmacias: Pill, ferreterias: Hammer,
+  gasolineras: Fuel, talleres: Wrench, hospedaje: BedDouble, tours: Compass, belleza: Scissors, gimnasios: Dumbbell,
+  veterinarias: PawPrint, salud: Stethoscope, bancos: Landmark,
 };
+const SECTIONS: Record<string, { es: string; en: string; icon: LucideIcon }> = Object.fromEntries(
+  Object.entries(DIRECTORY_SECTION_LABELS).map(([section, label]) => [section, { ...label, icon: DIRECTORY_SECTION_ICONS[section] ?? Store }]),
+);
 function useSections() {
   const { directorySections } = useSiteFeatures();
   return Object.keys(SECTIONS).filter((s) => directorySections.includes(s));

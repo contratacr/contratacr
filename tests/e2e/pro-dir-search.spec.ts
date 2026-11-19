@@ -4,9 +4,11 @@ import {local,origin} from './pro-round2-fixture';
 import {dirDb,hideSeededPlaces,label,seedPlace,syntheticFuelSet,uid} from './pro-dir-fixture';
 import {ordenFinal,type SearchFiltersResolved,type SearchResult} from '@/lib/search/query-core';
 
-// Launch polish (2026-11-18): on phones the filters are folded behind «Filtros (n)»; open them before using a field.
-async function openFilters(page:import('playwright/test').Page){const b=page.locator('[data-filters-disclosure] > button');if(!(await b.isVisible()))return;
- await expect(async()=>{if((await b.getAttribute('aria-expanded'))!=='true')await b.click();await expect(b).toHaveAttribute('aria-expanded','true',{timeout:1500});}).toPass({timeout:30000});}
+// 2026-11-19: the places sections use the /profesionales layout; the complete GET form lives in the «Filtros» drawer
+// (chip next to the title on desktop, in the results sheet on phones). Open it before using a field.
+async function openFilters(page:import('playwright/test').Page){const form=page.locator('form[role="search"]');if(await form.isVisible())return;
+ const b=page.locator('[data-dir-filters-button]').filter({visible:true}).first();
+ await expect(async()=>{if(!(await form.isVisible()))await b.click();await expect(form).toBeVisible({timeout:1500});}).toPass({timeout:30000});}
 
 
 // Multivertical F6 + F0 (LOCAL Pro): public section pages /restaurantes, /farmacias, /supermercados, /gasolineras with
@@ -30,9 +32,12 @@ for(const language of ['es','en'] as const)test(`F6: section pages, filters and 
   await gotoOK(page,`${prefix}/${section}?q=${encodeURIComponent('E2E '+section+' '+tag)}&province=Heredia`);
   await expect(page.getByRole('heading',{level:1})).toHaveText(en?english:es);
   await expect(page.locator(`[data-search-item="p:e2e-${section}-${tag}"]`)).toBeVisible();
-  await expect(page.locator('form[role="search"]')).toBeVisible();
-  await expect(page.getByRole('link',{name:en?'How we rank':'Cómo ordenamos'}).first()).toBeVisible();
+  // 2026-11-19: /profesionales layout; no order/disclaimer notes on the results screen (they live in the Terms 13.1).
+  await expect(page.locator(`[data-places-home="${section}"]`)).not.toContainText(en?'never depends on payment':'nunca depende de pagos');
+  await expect(page.locator('[data-unverified-notice]')).toHaveCount(0);
   await expectNoHorizontalOverflow(page);
+  await openFilters(page);
+  await expect(page.locator('form[role="search"]')).toBeVisible();
  }
  // Owner decision 2026-11-17: every pharmacy is shown. Without a verified licence: a neutral note; verified: the badge.
  await gotoOK(page,`${prefix}/farmacias?q=${encodeURIComponent('E2E farmacia sin permiso '+tag)}`);

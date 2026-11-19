@@ -21,7 +21,8 @@ for(const language of ['es','en'] as const)test(`P3: price comparison, neutral o
   // Search page: the product is found by a word of its name; the Rx product is not.
   await gotoOK(page,`${prefix}/precios`);
   const form=page.locator('[data-price-search-form]');await expect(form).toBeVisible();
-  await expect(page.locator('[data-price-rx-note]')).toHaveText(t('ContrataCR nunca muestra precios de medicamentos que requieren receta.','ContrataCR never shows prices of prescription medicines.'));
+  // 2026-11-19: the prescription notice moved to the Terms (13.1); prescription products stay unsearchable (below).
+  await expect(page.locator('[data-price-rx-note]')).toHaveCount(0);
   await form.getByLabel(t('Producto o código de barras','Product or barcode')).fill(`arroz ${seed.tag}`);
   await Promise.all([page.waitForURL(/\/precios\?q=/),form.getByRole('button',{name:t('Buscar','Search')}).click()]);
   const result=page.locator(`[data-price-search-item="${seed.rice}"]`);

@@ -1,5 +1,5 @@
 import type {ListingSearchItem} from '@/lib/directory/search-schemas';
-import {WhyHere,formatDistance} from './place-card';
+import {formatDistance} from './place-card';
 import {proMoney} from '@/lib/pro/money';
 
 /**
@@ -55,6 +55,5 @@ export function ListingCard({item,locale,headingLevel=3}:{item:ListingSearchItem
   <p className="text-sm text-slate-600">{item.sellerKind==='business'
    ?<>{item.placeSlug?<a className="underline underline-offset-2" href={`${en?'/en':''}/lugar/${item.placeSlug}`}>{item.placeName}</a>:t('Negocio','Business')}{item.sellerBusinessVerified?t(' · Negocio verificado',' · Verified business'):''}</>
    :t('Particular','Private seller')}</p>
-  <WhyHere reasons={item.ranking_reason} en={en}/>
  </article>;
 }

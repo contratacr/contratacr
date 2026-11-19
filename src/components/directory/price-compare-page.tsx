@@ -1,7 +1,7 @@
 import {CR_PROVINCES} from '@/lib/directory/listing-public';
 import {COMPARE_SORTS,CONFIDENCE_LABEL,crDay,money,perUnitLabel,sourceLine,stalenessLine,
  type CompareSort,type PriceComparison,type PriceQuery,type PriceSearchResult} from '@/lib/directory/price-compare';
-import {ChipGroup,HomeHero,NeutralityNote,hrefWith} from './listing-home-parts';
+import {ChipGroup,hrefWith} from './listing-home-parts';
 import {SELECT_CLASS,SELECT_STYLE} from './select-style';
 
 /**
@@ -9,6 +9,8 @@ import {SELECT_CLASS,SELECT_STYLE} from './select-style';
  * form (works without JavaScript). Every price shows its source, date, staleness and confidence; unit price is
  * normalized per kg / litre / unit; the default order is the lowest unit price first (current prices before out-of-date
  * ones), ties by place name. Never payment. Prescription medicines are never searchable (filtered in SQL).
+ * 2026-11-19: the order/sources/prescription explanations moved to the Terms («Directorio de lugares y negocios») and
+ * /como-ordenamos; this screen keeps only the per-price labels (source, date, staleness, confidence).
  */
 const field='flex flex-col gap-1 text-sm font-medium';
 const input='min-h-11 rounded-xl border border-slate-300 bg-white px-3 text-base text-[#162543] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b7fab]';
@@ -21,10 +23,12 @@ export function PriceComparePage({locale,query,invalid,unavailable,search,compar
  const en=locale==='en',t=(es:string,english:string)=>en?english:es,base=(en?'/en':'')+'/precios';
  const keep={q:query.q??undefined,tipo:query.verticalParam??undefined,provincia:query.province??undefined,orden:query.sort==='unit_price'?undefined:query.sort,
   precioMin:query.priceMin!=null?String(query.priceMin):undefined,precioMax:query.priceMax!=null?String(query.priceMax):undefined};
- return <main id="contenido" data-price-compare className="mx-auto max-w-6xl space-y-8 px-4 py-6 text-[#162543] sm:py-10">
-  <HomeHero title={t('Comparar precios','Compare prices')}
-   lead={t('Busque un producto de supermercado o un medicamento de venta libre y vea su precio en cada comercio, con la fuente y la fecha de cada dato.',
-    'Search for a supermarket product or an over-the-counter medicine and see its price at each store, with the source and date of every figure.')}/>
+ return <main id="contenido" data-price-compare className="mx-auto max-w-6xl space-y-6 px-4 py-5 text-[#162543] sm:py-6">
+  {/* Same compact title strip as the results screens (accent bar + short H1); the explanations live in the Terms. */}
+  <header className="flex items-center gap-2.5">
+   <span className="h-5 w-1.5 shrink-0 rounded-full bg-[#009FD9]" aria-hidden/>
+   <h1 className="text-lg font-bold leading-tight text-[#162543]">{t('Comparar precios','Compare prices')}</h1>
+  </header>
   <form method="get" action={base} role="search" aria-label={t('Buscar un producto','Search for a product')} data-price-search-form
    className={`grid grid-cols-1 gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:grid-cols-2 lg:items-end ${query.item?'lg:grid-cols-[2fr_1fr_1fr_auto]':'lg:grid-cols-[2fr_1fr_1fr_1fr_1fr_auto]'}`}>
    <label className={field}>{t('Producto o código de barras','Product or barcode')}
@@ -41,8 +45,7 @@ export function PriceComparePage({locale,query,invalid,unavailable,search,compar
    <button type="submit" className={`min-h-11 rounded-xl bg-[#162543] px-5 font-semibold text-white hover:bg-[#0f1a30] ${ring}`}>{t('Buscar','Search')}</button>
   </form>
   {(query.priceMin!=null||query.priceMax!=null)&&<p className="text-sm text-slate-700" data-price-range-note>{t('Rango de precio del producto: ','Product price range: ')}
-   {query.priceMin!=null?money(query.priceMin,'CRC',en):t('sin mínimo','no minimum')} – {query.priceMax!=null?money(query.priceMax,'CRC',en):t('sin máximo','no maximum')}. {t('Se aplica al precio mostrado de cada comercio.','It applies to the price shown for each store.')}</p>}
-  <p className="text-sm text-slate-700" data-price-rx-note>{t('ContrataCR nunca muestra precios de medicamentos que requieren receta.','ContrataCR never shows prices of prescription medicines.')}</p>
+   {query.priceMin!=null?money(query.priceMin,'CRC',en):t('sin mínimo','no minimum')} – {query.priceMax!=null?money(query.priceMax,'CRC',en):t('sin máximo','no maximum')}.</p>}
 
   {invalid&&<p role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-3">{t('Revise la búsqueda e intente de nuevo.','Please check your search and try again.')}</p>}
   {unavailable&&<p role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-3">{t('Los precios no están disponibles en este momento. Intente de nuevo en unos minutos.','Prices are not available right now. Please try again in a few minutes.')}</p>}
@@ -61,12 +64,6 @@ export function PriceComparePage({locale,query,invalid,unavailable,search,compar
   {comparison&&<Comparison c={comparison} en={en} base={base} keep={keep} query={query}/>}
   {query.item&&!comparison&&!unavailable&&<p data-price-empty>{t('Ese producto no está disponible.','That product is not available.')}</p>}
 
-  <NeutralityNote locale={locale}>
-   <p>{t('El orden de precios es: precios vigentes primero, luego el menor precio por kilo, litro o unidad; los empates se ordenan por nombre del comercio. Ningún comercio paga por aparecer primero.',
-    'Prices are ordered: current prices first, then the lowest price per kilo, liter or unit; ties are ordered by store name. No store pays to appear first.')}</p>
-   <p>{t('Fuentes: datos oficiales (por ejemplo MEIC), precios informados por el negocio y reportes de usuarios. Un precio viejo aparece como desactualizado. Confirme con el comercio antes de comprar.',
-    'Sources: official data (for example MEIC), prices reported by the business and user reports. An old price is marked as out of date. Please confirm with the store before buying.')}</p>
-  </NeutralityNote>
  </main>;
 }
 

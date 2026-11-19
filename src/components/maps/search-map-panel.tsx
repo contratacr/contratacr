@@ -16,7 +16,7 @@ import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { useRouter } from "next/navigation";
 import { Loader2, MapPin, RefreshCw } from "lucide-react";
 import type { LngLatBounds, Map as MapLibreMap, Marker, NavigationControl, FullscreenControl } from "maplibre-gl";
-import { createMap, loadMapLibre, supportsWebGL, type MapLibreModule } from "@/lib/maps/maplibre";
+import { createMap, loadMapLibre, sheetAwarePadding, supportsWebGL, type MapLibreModule } from "@/lib/maps/maplibre";
 import { areaView } from "@/lib/maps/cr-area-centers";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { APP_RESUME_EVENT } from "@/lib/app-events";
@@ -302,7 +302,8 @@ export function SearchMapPanel({ professionals, locale = "es", numbering, focusT
     moveQuietly(map, () => {
       if (!bounds || count === 0) { map.jumpTo({ center: GAM_CENTER, zoom: z(11) }); return; }
       if (count === 1) { map.jumpTo({ center: bounds.getCenter(), zoom: z(13) }); return; }
-      map.fitBounds(bounds, { padding: 64, maxZoom: z(13), duration: 0 });
+      // On the phone the results sheet covers the lower half: fit above it.
+      map.fitBounds(bounds, { padding: sheetAwarePadding(map.getContainer(), 64), maxZoom: z(13), duration: 0 });
     });
   }
 
@@ -322,7 +323,7 @@ export function SearchMapPanel({ professionals, locale = "es", numbering, focusT
     if (!view) return false;
     lastFocusKeyRef.current = target.key;
     moveQuietly(map, () => {
-      if (view.bbox && (target.zoom ?? 12) <= 10) map.fitBounds(view.bbox, { padding: 48, duration: 0 });
+      if (view.bbox && (target.zoom ?? 12) <= 10) map.fitBounds(view.bbox, { padding: sheetAwarePadding(map.getContainer(), 48), duration: 0 });
       else map.jumpTo({ center: view.center, zoom });
     });
     setSearchAreaVisible(false);

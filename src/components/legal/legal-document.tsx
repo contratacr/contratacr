@@ -30,6 +30,9 @@ const INTERNAL_LEGAL_LINKS = [
   { text: "public Account Deletion page", href: "/eliminar-cuenta" },
   { text: "public account deletion page", href: "/eliminar-cuenta" },
   { text: "public account or data deletion page", href: "/eliminar-cuenta" },
+  // Ley 10.946: the ranking parameters stay one tap away from the Terms (section 13.1, places directory).
+  { text: "Cómo ordenamos los resultados", href: "/como-ordenamos" },
+  { text: "How we rank results", href: "/como-ordenamos" },
 ] as const;
 
 // Render a run of text: **bold** segments + legal contact/internal links.

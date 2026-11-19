@@ -33,14 +33,14 @@ for(const language of ['es','en'] as const)test(`F2 extras: OSM hours note, webs
 
  await gotoOK(page,`${prefix}/lugar/${open247}`);
  const hours=page.locator('section[aria-labelledby="place-hours"]');
- await expect(hours.locator('[data-place-hours-source="osm"]')).toHaveText(t('Horario según OpenStreetMap; confírmelo con el negocio antes de ir.','Hours from OpenStreetMap; please confirm them with the business before going.'));
+ await expect(hours.locator('[data-place-hours-source="osm"]')).toHaveText(t('Horario según OpenStreetMap.','Hours from OpenStreetMap.'));
  await expect(hours.locator('dd').first()).toHaveText(t('24 horas','24 hours'));
  const site=page.locator('[data-place-website]');await expect(site).toHaveAttribute('href','http://www.example.com');
  const rel=(await site.getAttribute('rel'))!.split(' ');for(const r of ['nofollow','ugc','noopener'])expect(rel).toContain(r);
  await expect(page.locator('[data-place-source="OpenStreetMap"]')).toBeVisible();
  await expectNoHorizontalOverflow(page);
  await gotoOK(page,`${prefix}/lugar/${owner}`);
- await expect(page.locator('section[aria-labelledby="place-hours"]')).toContainText(t('Confirme el horario con el negocio antes de ir.','Please confirm the hours with the business before going.'));
+ await expect(page.locator('section[aria-labelledby="place-hours"]')).not.toContainText(t('Confirme el horario','Please confirm the hours'));// 2026-11-19: moved to the Terms (13.1)
  await expect(page.locator('[data-place-hours-source]')).toHaveCount(0);
 
  const q=encodeURIComponent(`Soda Horario ${tag}`);

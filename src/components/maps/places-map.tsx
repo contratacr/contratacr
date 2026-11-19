@@ -10,7 +10,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { GeoJSONSource, Map as MapLibreMap, Marker } from "maplibre-gl";
 import type { MapLibreModule } from "@/lib/maps/maplibre";
-import { createMap, loadMapLibre, supportsWebGL } from "@/lib/maps/maplibre";
+import { createMap, loadMapLibre, sheetAwarePadding, supportsWebGL } from "@/lib/maps/maplibre";
 // Static on purpose (route CSS, not a runtime <link>): see src/lib/maps/maplibre-runtime.ts.
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -22,6 +22,8 @@ export type PlacesMapPoint = {
   label: string;
   /** When set, the marker is a link to this page. */
   href?: string;
+  /** Result number (1..N) mirrored from the list card, drawn on the pin (directory result lists). */
+  rank?: number;
 };
 
 const PIN =
@@ -41,19 +43,24 @@ const CSS =
   ".ccr-pclu{display:grid;place-items:center;min-width:36px;height:36px;padding:0 8px;border-radius:9999px;border:3px solid #fff;background:#009FD9;color:#0b1730;font:800 13px/1 Inter,system-ui,sans-serif;cursor:pointer;box-shadow:0 2px 6px rgba(15,23,42,.35);}" +
   ".ccr-pclu.is-big{min-width:44px;height:44px;font-size:14px;}" +
   ".ccr-pclu:hover,.ccr-pclu:focus-visible{background:#162543;color:#fff;}" +
-  ".ccr-pclu:focus-visible{outline:3px solid #162543;outline-offset:2px;}";
+  ".ccr-pclu:focus-visible{outline:3px solid #162543;outline-offset:2px;}" +
+  // Numbered pin of a result list: the same navy number badge the list card carries (like the professionals map).
+  // Navy like the card badge, so a numbered place never reads as a blue cluster bubble.
+  ".ccr-pmark.is-num{width:28px;height:28px;display:grid;place-items:center;border-radius:9999px;border:2px solid #fff;background:#162543;color:#fff;font:800 12px/1 Inter,system-ui,sans-serif;}" +
+  ".ccr-pmark.is-num:hover,.ccr-pmark.is-num:focus-visible{background:#009FD9;}";
 
 const SOURCE = "ccr-places";
 
 function pointMarker(lib: MapLibreModule, p: PlacesMapPoint): Marker {
   const el = document.createElement(p.href ? "a" : "div");
-  el.className = "ccr-pmark";
-  el.innerHTML = PIN;
+  el.className = p.rank != null ? "ccr-pmark is-num" : "ccr-pmark";
+  if (p.rank != null) el.textContent = String(p.rank);
+  else el.innerHTML = PIN;
   el.setAttribute("aria-label", p.label);
   el.title = p.label;
   if (p.href) (el as HTMLAnchorElement).href = p.href;
   else el.setAttribute("role", "img");
-  return new lib.Marker({ element: el, anchor: "bottom" }).setLngLat([p.lng, p.lat]);
+  return new lib.Marker({ element: el, anchor: p.rank != null ? "center" : "bottom" }).setLngLat([p.lng, p.lat]);
 }
 
 /**
@@ -134,6 +141,8 @@ export function PlacesMap({
   className = "h-64 sm:h-80",
   zoom = 15,
   cluster = false,
+  cooperative = true,
+  bare = false,
 }: {
   points: PlacesMapPoint[];
   locale: string;
@@ -144,6 +153,10 @@ export function PlacesMap({
   zoom?: number;
   /** Group nearby points into count bubbles (brand branches, list results). */
   cluster?: boolean;
+  /** Two-finger / Ctrl+scroll gestures (embedded maps inside a scrolling page). Off for the full-height results map. */
+  cooperative?: boolean;
+  /** No rounded frame of its own (the results map sits in the search layout's own frame). */
+  bare?: boolean;
 }) {
   const en = locale === "en";
   const boxRef = useRef<HTMLDivElement>(null);
@@ -168,7 +181,7 @@ export function PlacesMap({
             center: [points[0].lng, points[0].lat],
             zoom,
             maxZoom: 18,
-            cooperativeGestures: true,
+            cooperativeGestures: cooperative,
           });
           mapRef.current = map;
           map.addControl(new lib.NavigationControl({ showCompass: false }), "top-right");
@@ -176,7 +189,8 @@ export function PlacesMap({
           for (const p of points) bounds.extend([p.lng, p.lat]);
           const clustered = cluster && points.length > 1;
           if (!clustered) for (const p of points) pointMarker(lib, p).addTo(map);
-          if (points.length > 1) map.fitBounds(bounds, { padding: 48, maxZoom: 15, duration: 0 });
+          // The bare map is the results map under the mobile sheet: keep the points above it.
+          if (points.length > 1) map.fitBounds(bounds, { padding: bare ? sheetAwarePadding(boxRef.current, 48) : 48, maxZoom: 15, duration: 0 });
           map.once("load", () => {
             if (cancelled) return;
             if (clustered) addClusteredMarkers(lib, map, points, en);
@@ -206,7 +220,7 @@ export function PlacesMap({
 
   if (points.length === 0) return null;
   return (
-    <div className={`ccr-pmap relative overflow-hidden rounded-2xl border border-[#d7e1ea] bg-[#eef2f6] ${className}`} data-places-map={points.length} data-map-state={state}>
+    <div className={`ccr-pmap relative overflow-hidden bg-[#eef2f6] ${bare ? "" : "rounded-2xl border border-[#d7e1ea] "}${className}`} data-places-map={points.length} data-map-state={state}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       {/* Inline position: maplibre-gl.css sets `.maplibregl-map{position:relative}`, which beat a Tailwind
           `absolute inset-0` and left the map 0 px tall (clipped by its overflow:hidden). */}
