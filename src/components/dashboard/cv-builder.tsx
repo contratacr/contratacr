@@ -2,7 +2,7 @@
 
 import { Fragment, useEffect, useId, useMemo, useRef, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
 import { useLocale } from "next-intl";
-import { AlertCircle, ArrowDown, ArrowUp, Bold, Check, CheckCircle2, ChevronLeft, ChevronRight, Cloud, CloudOff, Copy, CopyPlus, Download, Eye, EyeOff, FileText, FileUp, Lightbulb, Link2, List, Mail, Pencil, Plus, RefreshCw, RotateCcw, Search, Trash2, UserRound } from "lucide-react";
+import { AlertCircle, ArrowDown, ArrowUp, Bold, Palette, Check, CheckCircle2, ChevronLeft, ChevronRight, Cloud, CloudOff, Copy, CopyPlus, Download, Eye, EyeOff, FileText, FileUp, Lightbulb, Link2, List, Mail, Pencil, Plus, RefreshCw, RotateCcw, Search, Trash2, UserRound } from "lucide-react";
 import { MenuFicha } from "@/components/ui/menu-ficha";
 import { AccionesAlPie } from "@/components/ui/acciones-al-pie";
 import { Skeleton } from "@/components/ui/content-loading";
@@ -16,10 +16,12 @@ import { languageLabel } from "@/lib/data/languages";
 import { blankDates, parseCvDates, serializeCvDates, type CvDates } from "@/lib/cv/dates";
 import type { CvEntry } from "@/lib/cv/model";
 import {
-  LIMITES, TITULOS, bloquesDelCv, cartaComoTexto, cartaInicial, cuerpoDeLaCarta, cvComoTexto, encabezadoDeEntrada, fechasAts, lineasDeReferencia, nombreDeArchivo, ordenDeSecciones, palabrasClave, prellenar, revisarCarta, revisarCv, seccionConContenido, sumarDesdeArchivo,
-  type Aviso, type Bloque, type Carta, type CvDocumento, type DatosDelPerfil, type Idioma, type Referencia, type SeccionId, type SeccionLibre,
+  LIMITES, TITULOS, cartaComoTexto, cartaInicial, cvComoTexto, encabezadoDeEntrada, nombreDeArchivo, ordenDeSecciones, palabrasClave, prellenar, revisarCarta, revisarCv, seccionConContenido, sumarDesdeArchivo,
+  type Aviso, type Carta, type CvDocumento, type DatosDelPerfil, type Idioma, type Referencia, type SeccionId, type SeccionLibre,
 } from "@/lib/cv/documento";
-import { lineasRicas, type Trozo } from "@/lib/cv/texto-rico";
+import { VistaPrevia } from "./cv-hoja";
+import { PanelDiseno } from "./cv-diseno";
+import type { Diseno } from "@/lib/cv/diseno";
 import { htmlDeTexto, textoDeHtml } from "@/lib/cv/editor-formato";
 import { cn } from "@/lib/utils";
 import { formatFullPersonName } from "@/lib/display-name";
@@ -407,100 +409,6 @@ function Revision({ avisos, idiomaApp }: { avisos: Aviso[]; idiomaApp: Idioma })
   );
 }
 
-function TituloHoja({ children }: { children: ReactNode }) {
-  return <h4 className="mt-4 border-b border-[#52627a]/40 pb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-[#162543]">{children}</h4>;
-}
-
-/** Negrita y enlaces dentro de una línea, igual que en el PDF. */
-function Rico({ partes }: { partes: Trozo[] }) {
-  return (
-    <>
-      {partes.map((t, i) => t.url
-        ? <a key={i} href={t.url} target="_blank" rel="noopener noreferrer" className={cn("text-[#006f9c] underline underline-offset-2", t.negrita && "font-bold")}>{t.texto}</a>
-        : t.negrita ? <strong key={i} className="font-bold">{t.texto}</strong> : <Fragment key={i}>{t.texto}</Fragment>)}
-    </>
-  );
-}
-/** Párrafos y viñetas: las líneas con «- » seguidas forman una lista. */
-function TextoHoja({ texto, todoVinetas = false, className }: { texto: string; todoVinetas?: boolean; className?: string }) {
-  const grupos: { vineta: boolean; lineas: Trozo[][] }[] = [];
-  for (const l of lineasRicas(texto, todoVinetas)) {
-    const ultimo = grupos[grupos.length - 1];
-    if (ultimo && ultimo.vineta && l.vineta) ultimo.lineas.push(l.trozos);
-    else grupos.push({ vineta: l.vineta, lineas: [l.trozos] });
-  }
-  return (
-    <div className={cn("text-[10.5px] leading-[1.45] text-[#162543]", className)}>
-      {grupos.map((g, i) => g.vineta
-        ? <ul key={i} className="list-disc pl-4">{g.lineas.map((t, j) => <li key={j}><Rico partes={t} /></li>)}</ul>
-        : g.lineas.map((t, j) => <p key={`${i}-${j}`}><Rico partes={t} /></p>))}
-    </div>
-  );
-}
-
-function EntradasHoja({ lista, idioma }: { lista: CvEntry[]; idioma: Idioma }) {
-  return (
-    <div className="mt-1.5 grid gap-2">
-      {lista.map((e, i) => (
-        <div key={i}>
-          <p className="text-[11px] font-bold text-[#162543]">{encabezadoDeEntrada(e)}</p>
-          {e.period && <p className="text-[10px] text-[#52627a]">{fechasAts(e.period, idioma)}</p>}
-          {e.description.trim() && <TextoHoja texto={e.description} todoVinetas className="mt-0.5" />}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/** Un bloque del CV en la hoja: lo mismo, en el mismo orden, que el PDF. */
-function BloqueHoja({ b, cv }: { b: Bloque; cv: CvDocumento }) {
-  const cuerpo = (() => {
-    switch (b.tipo) {
-      case "texto": return <TextoHoja texto={b.texto} className="mt-1.5" />;
-      case "entradas": return <EntradasHoja lista={b.entradas} idioma={cv.idioma} />;
-      case "lineas": return b.lineas.map((c) => <p key={c} className="mt-1 text-[10.5px] text-[#162543]">{c}</p>);
-      case "comas": return <p className="mt-1.5 text-[10.5px] leading-[1.45] text-[#162543]">{b.items.join(", ")}</p>;
-      case "referencias": return b.referencias.map((r, i) => {
-        const [primera, ...resto] = lineasDeReferencia(r);
-        return <div key={i} className="mt-1.5"><p className="text-[11px] font-bold text-[#162543]">{primera}</p>{resto.map((x) => <p key={x} className="text-[10px] text-[#52627a]">{x}</p>)}</div>;
-      });
-      case "declaracion": return (
-        <div className="mt-1.5">
-          <TextoHoja texto={b.texto} />
-          {b.lugarFecha && <p className="mt-3 text-[10px] text-[#52627a]">{b.lugarFecha}</p>}
-          {cv.nombre.trim() && <p className="text-[11px] font-bold text-[#162543]">{cv.nombre}</p>}
-        </div>
-      );
-    }
-  })();
-  return <div data-seccion={b.id}><TituloHoja>{b.titulo}</TituloHoja>{cuerpo}</div>;
-}
-
-/** La vista previa dibuja lo MISMO que el PDF: una columna, mismos títulos y fechas. */
-function HojaCv({ cv }: { cv: CvDocumento }) {
-  const contacto = [cv.correo, cv.telefono, cv.ubicacion, cv.enlace].filter((v) => v.trim()).join("  |  ");
-  return (
-    <div className="text-left">
-      <p className="text-[20px] font-black leading-tight text-[#162543]">{cv.nombre || "—"}</p>
-      {cv.titular && <p className="text-[12px] text-[#52627a]">{cv.titular}</p>}
-      {contacto && <p className="mt-1 break-words text-[10px] text-[#52627a]">{contacto}</p>}
-      {bloquesDelCv(cv).map((b) => <BloqueHoja key={b.clave} b={b} cv={cv} />)}
-    </div>
-  );
-}
-
-function HojaCarta({ cv, carta }: { cv: CvDocumento; carta: Carta }) {
-  const contacto = [cv.correo, cv.telefono, cv.ubicacion].filter((v) => v.trim()).join("  |  ");
-  return (
-    <div className="text-left">
-      <p className="text-[20px] font-black leading-tight text-[#162543]">{cv.nombre || "—"}</p>
-      {cv.titular && <p className="text-[12px] text-[#52627a]">{cv.titular}</p>}
-      {contacto && <p className="mt-1 break-words text-[10px] text-[#52627a]">{contacto}</p>}
-      <div className="mt-5 whitespace-pre-line text-[11px] leading-[1.55] text-[#162543]">{cuerpoDeLaCarta(cv, carta)}</div>
-    </div>
-  );
-}
-
 function leerBorrador(clave: string): Borrador | null {
   try {
     const guardado = JSON.parse(window.localStorage.getItem(clave) ?? "null") as Borrador | null;
@@ -757,7 +665,8 @@ function Documentos({ pro, uid, tipo, nombreCuenta, correo, alCambiarEditor }: {
       ...s,
       docs: s.docs.map((d) => (d.id === abierto.id ? { ...d, actualizado: Date.now(), borrador: typeof cambio === "function" ? cambio(d.borrador) : cambio } : d)),
     }));
-    return <Editor key={abierto.id} pro={pro} documento={tipo} borrador={abierto.borrador} setBorrador={setBorrador} desdeElPerfil={desdeElPerfil} nube={nube} alVolver={() => setEstado((s) => ({ ...s, abierto: null }))} />;
+    return <Editor key={abierto.id} pro={pro} documento={tipo} borrador={abierto.borrador} setBorrador={setBorrador} desdeElPerfil={desdeElPerfil} nube={nube} alVolver={() => setEstado((s) => ({ ...s, abierto: null }))}
+      disenoDelCv={tipo === "carta" ? estado.docs.filter((d) => d.tipo === "cv").sort((x, y) => y.actualizado - x.actualizado)[0]?.borrador.cv.diseno : undefined} />;
   }
 
   const fecha = (t: number) => new Date(t).toLocaleDateString(en ? "en-US" : "es-CR", { day: "numeric", month: "short", year: "numeric" });
@@ -1221,7 +1130,10 @@ function UsarEnMiPerfil({ professionalId, cv, en, avisar }: { professionalId: st
   );
 }
 
-function Editor({ pro, documento, borrador, setBorrador, desdeElPerfil, nube, alVolver }: { pro: ProData; documento: Tipo; borrador: Borrador; setBorrador: Dispatch<SetStateAction<Borrador>>; desdeElPerfil: (idioma: Idioma) => Borrador; nube: EstadoNube; alVolver: () => void }) {
+type Vista = "editar" | "diseno" | "vista";
+const VISTAS = [["editar", Pencil, "Editar", "Edit"], ["diseno", Palette, "Diseño", "Design"], ["vista", Eye, "Vista previa", "Preview"]] as const;
+
+function Editor({ pro, documento, borrador, setBorrador, desdeElPerfil, nube, alVolver, disenoDelCv }: { pro: ProData; documento: Tipo; borrador: Borrador; setBorrador: Dispatch<SetStateAction<Borrador>>; desdeElPerfil: (idioma: Idioma) => Borrador; nube: EstadoNube; alVolver: () => void; disenoDelCv?: Partial<Diseno> }) {
   const idiomaApp: Idioma = useLocale() === "en" ? "en" : "es";
   const en = idiomaApp === "en";
   const pestana = documento;
@@ -1233,7 +1145,9 @@ function Editor({ pro, documento, borrador, setBorrador, desdeElPerfil, nube, al
   // deja al moverse.
   const [visitados, setVisitados] = useState<Set<string>>(() => new Set());
   const dejar = (p: string) => setVisitados((v) => (v.has(p) ? v : new Set(v).add(p)));
-  const [verHoja, setVerHoja] = useState(false);
+  // EDITAR / DISEÑO / VISTA PREVIA (19-nov-2026), como FlowCV en el teléfono.
+  // En la computadora la vista previa está siempre a la derecha.
+  const [vista, setVista] = useState<Vista>("editar");
   const [aviso, setAviso] = useState("");
   const [generando, setGenerando] = useState(false);
   const arriba = useRef<HTMLDivElement>(null);
@@ -1300,10 +1214,10 @@ function Editor({ pro, documento, borrador, setBorrador, desdeElPerfil, nube, al
     } catch { avisar(en ? "Couldn't copy" : "No se pudo copiar"); }
   };
 
-  const hoja = (
-    <div className="mx-auto min-h-[520px] w-full max-w-[430px] rounded-lg bg-white p-6 shadow-[0_12px_40px_-18px_rgba(22,37,67,0.45)] ring-1 ring-[#e5e7eb]" data-testid="cv-hoja">
-      {pestana === "cv" ? <HojaCv cv={cv} /> : <HojaCarta cv={cv} carta={carta} />}
-    </div>
+  const botonDescargar = (
+    <button type="button" disabled={generando} onClick={() => void descargar()} className={cn(pastilla, "w-full bg-[#009FD9] text-white hover:bg-[#0089bb]")}>
+      <Download className="h-4 w-4" />{en ? "Download PDF" : "Descargar PDF"}
+    </button>
   );
   const tituloCv = TITULOS[cv.idioma];
   const lleno = cv.habilidades.length >= LIMITES.habilidades;
@@ -1467,53 +1381,77 @@ function Editor({ pro, documento, borrador, setBorrador, desdeElPerfil, nube, al
     </div>
   );
 
+  const contenido = enRevision ? revision : (pestana === "cv" ? pasoDelCv[pasoCv] : pasoDeLaCarta[pasoCarta]);
+  const enDiseno = vista === "diseno";
   return (
     // El ancho que manda es el del panel, no el de la pantalla: lado a lado
-    // solo cuando el panel mide 980 px o más; si no, la hoja va abajo.
+    // solo cuando el panel mide 980 px o más; si no, la hoja va en su pestaña.
     <div ref={arriba} className="@container grid min-w-0 max-w-full grid-cols-[minmax(0,1fr)] scroll-mt-24 gap-4 overflow-x-clip" data-testid="cv-builder">
       {/* Debajo de lg la barra ya tiene la flecha que vuelve a la lista. */}
       <button type="button" onClick={alVolver} className="hidden min-h-11 items-center gap-1 justify-self-start rounded-full pr-3 text-sm font-bold text-[#007fae] hover:bg-[#eef6fb] lg:inline-flex" data-testid="cv-volver-lista">
         <ChevronLeft className="h-4 w-4" />{pestana === "cv" ? (en ? "My resumes" : "Mis currículums") : (en ? "My cover letters" : "Mis cartas")}
       </button>
-      <EstadoGuardado estado={nube} en={en} className="-mb-2 justify-self-end" />
-      {pestana === "cv"
-        ? <Pasos en={en} pasos={PASOS_CV} actual={pasoCv} hechos={hechosCv} alElegir={(p) => irA(() => { dejar(`cv:${pasoCv}`); setPasoCv(p); })} />
-        : <Pasos en={en} pasos={PASOS_CARTA} actual={pasoCarta} hechos={hechosCarta} alElegir={(p) => irA(() => { dejar(`carta:${pasoCarta}`); setPasoCarta(p); })} />}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div role="tablist" aria-label={en ? "Editor" : "Editor"} className="grid w-full grid-cols-3 gap-1 rounded-2xl bg-[#eef3f7] p-1 @[980px]:w-fit @[980px]:grid-cols-2">
+          {VISTAS.map(([id, Icono, es, eng]) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={vista === id}
+              onClick={() => irA(() => setVista(id))}
+              className={cn("inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl px-3 text-[13px] font-bold transition-colors @[980px]:px-5", vista === id ? "bg-white text-[#162543] shadow-sm" : "text-[#52627a] hover:text-[#162543]", id === "vista" && "@[980px]:hidden")}
+              data-testid={`cv-vista-${id}`}
+            >
+              {/* En un teléfono angosto sin ícono: «Vista previa» cabe en una línea. */}
+              <Icono className="hidden h-4 w-4 shrink-0 @[440px]:block" /><span className="whitespace-nowrap">{en ? eng : es}</span>
+            </button>
+          ))}
+        </div>
+        <EstadoGuardado estado={nube} en={en} className="ml-auto" />
+      </div>
+      {!enDiseno && (
+        <div className={cn(vista === "vista" && "hidden @[980px]:block")}>
+          {pestana === "cv"
+            ? <Pasos en={en} pasos={PASOS_CV} actual={pasoCv} hechos={hechosCv} alElegir={(p) => irA(() => { dejar(`cv:${pasoCv}`); setPasoCv(p); })} />
+            : <Pasos en={en} pasos={PASOS_CARTA} actual={pasoCarta} hechos={hechosCarta} alElegir={(p) => irA(() => { dejar(`carta:${pasoCarta}`); setPasoCarta(p); })} />}
+        </div>
+      )}
 
-      <div className="grid items-start gap-4 @[980px]:grid-cols-[minmax(0,1fr)_400px]">
-        <div className="grid min-w-0 gap-4" data-testid={`cv-paso-${paso}`}>
-          {enRevision ? (
-            <>
-              {revision}
-              <div className="@[980px]:hidden">{hoja}</div>
-            </>
-          ) : (
-            <>
-              {pestana === "cv" ? pasoDelCv[pasoCv] : pasoDeLaCarta[pasoCarta]}
-              <button type="button" onClick={() => setVerHoja((v) => !v)} className={cn(pastilla, "justify-self-start px-3 text-[#007fae] hover:bg-[#eef6fb] @[980px]:hidden")}>
-                <FileText className="h-4 w-4" />{verHoja ? (en ? "Hide preview" : "Ocultar vista previa") : (en ? "See preview" : "Ver vista previa")}
-              </button>
-              {verHoja && <div className="@[980px]:hidden">{hoja}</div>}
-            </>
-          )}
+      <div className="grid items-start gap-4 @[980px]:grid-cols-[minmax(0,1fr)_minmax(360px,0.9fr)]">
+        <div className={cn("grid min-w-0 gap-4", vista === "vista" && "hidden @[980px]:grid")} data-testid={enDiseno ? "cv-paso-diseno" : `cv-paso-${paso}`}>
+          {enDiseno
+            ? <PanelDiseno cv={cv} carta={pestana === "carta" ? carta : undefined} setCv={setCv} en={en} disenoDelCv={pestana === "carta" ? disenoDelCv : undefined} />
+            : contenido}
           {/* Atrás / Siguiente pegados al fondo en el teléfono, ENCIMA de la
               barra del app (antes la barra tapaba descargar). */}
           <AccionesAlPie className="grid grid-cols-2 gap-3">
-            <button type="button" disabled={indice === 0} onClick={() => mover(-1)} className={cn(pastilla, "w-full border border-[#d7e1ea] bg-white text-[#162543] hover:bg-[#f6f9fb] disabled:opacity-40")}>
-              <ChevronLeft className="h-4 w-4" />{en ? "Back" : "Atrás"}
-            </button>
-            {enRevision ? (
-              <button type="button" disabled={generando} onClick={() => void descargar()} className={cn(pastilla, "w-full bg-[#009FD9] text-white hover:bg-[#0089bb]")}>
-                <Download className="h-4 w-4" />{en ? "Download PDF" : "Descargar PDF"}
-              </button>
+            {enDiseno ? (
+              <>
+                <button type="button" onClick={() => irA(() => setVista("editar"))} className={cn(pastilla, "w-full border border-[#d7e1ea] bg-white text-[#162543] hover:bg-[#f6f9fb]")}>
+                  <Pencil className="h-4 w-4" />{en ? "Edit" : "Editar"}
+                </button>
+                {botonDescargar}
+              </>
             ) : (
-              <button type="button" onClick={() => mover(1)} className={cn(pastilla, "w-full bg-[#009FD9] text-white hover:bg-[#0089bb]")}>
-                {indice === pasos.length - 2 ? (en ? "Review" : "Revisar") : (en ? "Next" : "Siguiente")}<ChevronRight className="h-4 w-4" />
-              </button>
+              <>
+                <button type="button" disabled={indice === 0} onClick={() => mover(-1)} className={cn(pastilla, "w-full border border-[#d7e1ea] bg-white text-[#162543] hover:bg-[#f6f9fb] disabled:opacity-40")}>
+                  <ChevronLeft className="h-4 w-4" />{en ? "Back" : "Atrás"}
+                </button>
+                {enRevision ? botonDescargar : (
+                  <button type="button" onClick={() => mover(1)} className={cn(pastilla, "w-full bg-[#009FD9] text-white hover:bg-[#0089bb]")}>
+                    {indice === pasos.length - 2 ? (en ? "Review" : "Revisar") : (en ? "Next" : "Siguiente")}<ChevronRight className="h-4 w-4" />
+                  </button>
+                )}
+              </>
             )}
           </AccionesAlPie>
         </div>
-        <aside className="hidden @[980px]:sticky @[980px]:top-24 @[980px]:block">{hoja}</aside>
+        {/* Una sola vista previa: a la derecha en la computadora, y en su
+            pestaña en el teléfono. */}
+        <aside className={cn("min-w-0", vista === "vista" ? "block" : "hidden", "@[980px]:sticky @[980px]:top-24 @[980px]:block @[980px]:max-h-[calc(100dvh-7rem)] @[980px]:overflow-y-auto")}>
+          <VistaPrevia cv={cv} carta={pestana === "carta" ? carta : undefined} en={en} pie={<div className="@[980px]:hidden">{botonDescargar}</div>} />
+        </aside>
       </div>
     </div>
   );

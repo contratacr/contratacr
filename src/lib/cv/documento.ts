@@ -1,5 +1,6 @@
 import { normalizeCv, sameCvEntry, type CvEntry } from "./model";
 import { parseCvDates } from "./dates";
+import type { Diseno } from "./diseno";
 import { sinVineta, textoPlano } from "./texto-rico";
 
 /**
@@ -72,6 +73,10 @@ export type CvDocumento = {
   orden?: SeccionId[];
   ocultas?: SeccionId[];
   titulosPropios?: Partial<Record<SeccionId, string>>;
+  // Diseño (19-nov-2026): sin él, se ve como siempre. Ver lib/cv/diseno.
+  diseno?: Partial<Diseno>;
+  /** Nivel de 1 a 5 por habilidad, para mostrarlas con puntos. */
+  niveles?: Record<string, number>;
 };
 
 export type Carta = {
@@ -171,13 +176,23 @@ export function opcionales(cv: CvDocumento) {
   };
 }
 
-/** «03/2021 – Actualidad»: el formato que los ATS leen sin dudas, igual en todo el CV. */
-export function fechasAts(periodo: string, idioma: Idioma): string {
+const MESES_CORTOS = { es: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"], en: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] };
+/**
+ * «03/2021 – Actualidad»: el formato que los ATS leen sin dudas, igual en todo
+ * el CV. El diseño puede mostrarlo como «Mar 2021» o solo «2021»; el texto
+ * para pegar en un formulario siempre va con números.
+ */
+export function fechasAts(periodo: string, idioma: Idioma, formato: Diseno["formatoFecha"] = "numero"): string {
   const d = parseCvDates(periodo);
   if (!d || !d.startYear) return periodo.trim();
-  const parte = (anio: string, mes: string) => anio ? `${mes ? mes.padStart(2, "0") + "/" : ""}${anio}` : "";
+  const parte = (anio: string, mes: string) => !anio ? ""
+    : formato === "anio" || !mes ? anio
+    : formato === "mes" ? `${MESES_CORTOS[idioma][Number(mes) - 1] ?? ""} ${anio}`.trim()
+    : `${mes.padStart(2, "0")}/${anio}`;
   const fin = d.current ? (idioma === "en" ? "Present" : "Actualidad") : parte(d.endYear, d.endMonth);
-  return [parte(d.startYear, d.startMonth), fin].filter(Boolean).join(" – ");
+  const inicio = parte(d.startYear, d.startMonth);
+  // «2019 – 2019» con solo años se lee raro: queda «2019».
+  return [inicio, fin === inicio ? "" : fin].filter(Boolean).join(" – ");
 }
 
 /** Para ordenar: lo actual y lo más reciente primero. */

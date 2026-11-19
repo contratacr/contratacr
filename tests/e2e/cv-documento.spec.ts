@@ -6,6 +6,8 @@ import { pdfDelCv, pdfDelCvEnBytes, pdfDeLaCarta } from "../../src/lib/cv/pdf-do
 import { textoPlano, trozos } from "../../src/lib/cv/texto-rico";
 import { htmlDeTexto, textoDeHtml } from "../../src/lib/cv/editor-formato";
 import { cvPublico } from "../../src/lib/cv/cv-publico";
+import { aplicarPlantilla, DISENO_BASE, disenoDe, esAptaAts, PLANTILLAS } from "../../src/lib/cv/diseno";
+import { maquetar, nuevoDocumento, type Op } from "../../src/lib/cv/maquetar";
 import { empresaProbable, imagenValida, limpiarTextoLeido, puestoProbable } from "../../src/lib/cv/leer-imagen";
 
 // El generador de CV del panel: se prellena con el perfil, señala lo que suele
@@ -311,4 +313,105 @@ test("lo leído de una foto de la vacante se limpia y propone el puesto", () => 
   expect(empresaProbable("Sin datos de la empresa")).toBe("");
   expect(imagenValida(new File(["x"], "v.png", { type: "image/png" }))).toBe("ok");
   expect(imagenValida(new File(["x"], "v.pdf", { type: "application/pdf" }))).toBe("tipo");
+});
+
+// ── DISEÑO (19-nov-2026) ── la vista previa y el PDF salen de la misma maqueta.
+const textos = (ops: Op[]) => ops.flatMap((o) => (o.t === "texto" ? [o.s] : []));
+const paginasDelPdf = (pdf: string) => (pdf.match(/\/Type \/Page\b(?!s)/g) ?? []).length;
+
+test("diseño: sin diseño se ve como siempre, y lo raro o viejo cae en la Clásica", () => {
+  expect(disenoDe({})).toEqual(DISENO_BASE);
+  expect(disenoDe({ diseno: null })).toEqual(DISENO_BASE);
+  // Un borrador viejo con «plantilla: moderna» (ya quitada) no cambia nada.
+  const viejo = { ...prellenar(perfil, "es"), plantilla: "moderna" as const };
+  expect(disenoDe(viejo)).toEqual(DISENO_BASE);
+  const raro = disenoDe({ diseno: { columnas: "tres", tamano: 9, color: "rojo", fuente: "comic", formato: "a4", margen: 3 } as never });
+  expect(raro).toEqual({ ...DISENO_BASE, formato: "a4", margen: 3 });
+  // Cada plantilla es una combinación válida, y las de una columna son las aptas para ATS.
+  for (const p of PLANTILLAS) {
+    expect(disenoDe({ diseno: aplicarPlantilla(p.id) })).toEqual(aplicarPlantilla(p.id));
+    expect(esAptaAts(p.diseno)).toBe(p.diseno.columnas === "una");
+  }
+  expect(fechasAts("03/2021 – Present", "es", "mes")).toBe("Mar 2021 – Actualidad");
+  expect(fechasAts("03/2021 – 08/2021", "en", "anio")).toBe("2021");
+  expect(fechasAts("03/2021 – 08/2023", "es", "numero")).toBe("03/2021 – 08/2023");
+});
+
+test("diseño: cambiar de plantilla no toca el contenido ni el texto para pegar", async () => {
+  const cv = prellenar(perfil, "es");
+  for (const p of PLANTILLAS) expect(cvComoTexto({ ...cv, diseno: aplicarPlantilla(p.id) })).toBe(cvComoTexto(cv));
+  // Y la Clásica dibuja exactamente lo mismo que un documento sin diseño.
+  const doc = await nuevoDocumento(cv);
+  expect(maquetar(doc, { ...cv, diseno: aplicarPlantilla("clasica") })).toEqual(maquetar(doc, cv));
+});
+
+test("diseño: el PDF sigue el tamaño de página, la letra y las dos columnas, con las mismas páginas que la vista previa", async () => {
+  const base = prellenar(perfil, "es");
+  const carta = Buffer.from(await (await pdfDelCv(base)).arrayBuffer()).toString("latin1");
+  expect(carta).toContain("/MediaBox [0 0 612. 792.]");
+  const a4 = Buffer.from(await (await pdfDelCv({ ...base, diseno: { ...DISENO_BASE, formato: "a4", fuente: "times" } })).arrayBuffer()).toString("latin1");
+  expect(a4).toMatch(/\/MediaBox \[0 0 595\.\d+ 841\.\d+\]/);
+  // jsPDF declara siempre sus 14 letras; lo que cuenta es cuál usa el texto.
+  const usadas = (pdf: string) => new Set([...pdf.matchAll(/\/(F\d+) [\d.]+ Tf/g)].map((x) => x[1]));
+  const id = (pdf: string, nombre: string) => [...pdf.matchAll(/\/(F\d+) (\d+) 0 R/g)].map((x) => ({ f: x[1], obj: x[2] }))
+    .find(({ obj }) => new RegExp(`(?:^|\\n)${obj} 0 obj\\s*<<\\s*/Type /Font\\s*/BaseFont /${nombre}\\b`).test(pdf))?.f;
+  expect(usadas(a4).has(id(a4, "Times-Bold")!)).toBe(true);
+  expect(usadas(a4).has(id(a4, "Helvetica-Bold")!)).toBe(false);
+  expect(usadas(carta).has(id(carta, "Helvetica-Bold")!)).toBe(true);
+
+  // Dos columnas: certificaciones, habilidades e idiomas a la izquierda, lo demás a la derecha; todo es texto.
+  const lateral = { ...base, diseno: aplicarPlantilla("lateral") };
+  const doc = await nuevoDocumento(lateral);
+  const m = maquetar(doc, lateral);
+  const op = (s: string) => m.paginas[0].find((o) => o.t === "texto" && o.s === s) as Extract<Op, { t: "texto" }>;
+  expect(op("HABILIDADES").x).toBeLessThan(op("EXPERIENCIA").x);
+  // Las dos columnas arrancan a la misma altura, debajo del encabezado.
+  expect(Math.abs(op("CERTIFICACIONES").y - op("RESUMEN PROFESIONAL").y)).toBeLessThan(1);
+  expect(m.paginas[0].some((o) => o.t === "caja" && o.x === 0)).toBe(true);
+  const pdf = Buffer.from(await (await pdfDelCv(lateral)).arrayBuffer()).toString("latin1");
+  for (const t of ["(HABILIDADES) Tj", "(EXPERIENCIA) Tj", "(Ana Mora) Tj"]) expect(pdf).toContain(t);
+  expect(pdf).not.toMatch(/\/Subtype \/Image/);
+
+  // Letra grande y márgenes amplios en A4: más páginas, las mismas en la maqueta y en el PDF.
+  const largo = {
+    ...base,
+    experiencia: Array.from({ length: 8 }, (_, i) => ({ title: `Electricista ${i + 1}`, organization: "Eléctrica Sur", period: "02/2015 – 12/2018", description: "Instalé tableros en 40 casas\nReduje 20 % el tiempo de reparación\nCapacité a 5 aprendices" })),
+    diseno: { ...DISENO_BASE, formato: "a4" as const, tamano: 5 as const, margen: 3 as const, interlineado: 3 as const, espacio: 3 as const },
+  };
+  const ml = maquetar(await nuevoDocumento(largo), largo);
+  expect(ml.paginas.length).toBeGreaterThan(1);
+  const pdfLargo = Buffer.from(await (await pdfDelCv(largo)).arrayBuffer()).toString("latin1");
+  expect(paginasDelPdf(pdfLargo)).toBe(ml.paginas.length);
+  // Ningún texto se sale del área de la página.
+  for (const pagina of ml.paginas) for (const o of pagina) if (o.t === "texto") {
+    expect(o.y).toBeLessThanOrEqual(ml.alto - 72 + 0.5);
+    expect(o.x + o.ancho).toBeLessThanOrEqual(ml.ancho - 72 + 0.5);
+  }
+  expect(textos(ml.paginas.flat())).toContain("EXPERIENCIA");
+});
+
+test("diseño: fechas a la derecha, habilidades en etiquetas o con nivel, y la carta con el mismo encabezado", async () => {
+  const base = prellenar(perfil, "es");
+  const cv = { ...base, niveles: { "Tableros eléctricos": 4 }, diseno: { ...DISENO_BASE, fechas: "derecha" as const, formatoFecha: "mes" as const, habilidades: "niveles" as const, color: "#009fd9" } };
+  const doc = await nuevoDocumento(cv);
+  const m = maquetar(doc, cv);
+  const ops = m.paginas.flat();
+  const titulo = ops.find((o) => o.t === "texto" && o.s.startsWith("Electricista — Por cuenta propia")) as Extract<Op, { t: "texto" }>;
+  const fecha = ops.find((o) => o.t === "texto" && o.s === "Ene 2019 – Actualidad") as Extract<Op, { t: "texto" }>;
+  expect(fecha.y).toBe(titulo.y);
+  expect(fecha.x).toBeGreaterThan(titulo.x + titulo.ancho);
+  // 4 de 5 puntos llenos con el color elegido, solo en la habilidad con nivel.
+  const puntos = ops.filter((o) => o.t === "punto");
+  expect(puntos).toHaveLength(5);
+  expect(puntos.filter((o) => o.t === "punto" && o.color.join() === "0,159,217")).toHaveLength(4);
+  const etiquetas = maquetar(doc, { ...cv, diseno: { ...cv.diseno, habilidades: "etiquetas" } }).paginas.flat();
+  expect(etiquetas.filter((o) => o.t === "caja" && o.seccion === "habilidades").length).toBe(base.habilidades.length);
+  // La carta usa la letra, el color y el encabezado del diseño.
+  const conDiseno = { ...base, diseno: aplicarPlantilla("ejecutiva") };
+  const mc = maquetar(doc, conDiseno, cartaInicial(conDiseno, { puesto: "Electricista" })).paginas.flat();
+  const nombre = mc.find((o) => o.t === "texto" && o.s === "Ana Mora") as Extract<Op, { t: "texto" }>;
+  expect(nombre.fuente).toBe("times");
+  expect(nombre.color.join()).toBe("31,58,95");
+  const pdfCarta = Buffer.from(await (await pdfDeLaCarta(conDiseno, cartaInicial(conDiseno, { puesto: "Electricista" }))).arrayBuffer()).toString("latin1");
+  expect(pdfCarta).toContain("(Saludos cordiales,) Tj");
 });

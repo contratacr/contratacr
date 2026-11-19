@@ -7,7 +7,7 @@ import { loginAs, isMobileProject } from "./helpers";
  *    no con un segundo «< Mis currículums» debajo de la barra.
  *  - En la lista, tocar la fila abre el documento y lo demás va en el «···».
  *  - «Más secciones» suma Proyectos, Referencias o una sección propia.
- *  - Ya no hay selector de diseño; el idioma del documento sí queda.
+ *  - Editar / Diseño / Vista previa en pestañas; la hoja es la misma maqueta del PDF.
  *  - (19-nov-2026) Logros con negrita, más secciones y orden de las secciones.
  *    Los documentos se guardan en la cuenta: la prueba borra los que crea.
  */
@@ -60,7 +60,7 @@ test.describe("editor de currículum", () => {
     await borrarLosDeLaPrueba(page);
   });
 
-  test("lista con menú «···», más secciones y sin selector de diseño", async ({ page }) => {
+  test("lista con menú «···», más secciones, pestañas de vista previa y diseño", async ({ page }) => {
     await abrirEditorNuevo(page);
 
     await page.getByRole("button", { name: /Más secciones/ }).click();
@@ -84,15 +84,33 @@ test.describe("editor de currículum", () => {
     const orden = page.getByTestId("cv-orden-secciones");
     await expect(orden.locator('[data-seccion="proyectos"]')).toBeVisible();
     await orden.getByRole("button", { name: "Ocultar Proyectos" }).click();
-    await page.getByRole("button", { name: /Ver vista previa/ }).click();
-    await expect(page.getByTestId("cv-hoja").locator('[data-seccion="proyectos"]')).toHaveCount(0);
+    // En el teléfono la hoja va en su pestaña, como en FlowCV (19-nov-2026).
+    const pestana = (nombre: string) => page.getByRole("tab", { name: nombre });
+    await pestana("Vista previa").click();
+    const hoja = page.getByTestId("cv-hoja");
+    await expect(hoja.locator("svg").first()).toBeVisible();
+    await expect(hoja.locator('[data-seccion="proyectos"]')).toHaveCount(0);
+    await pestana("Editar").click();
     await orden.getByRole("button", { name: "Mostrar Proyectos" }).click();
-    await expect(page.getByTestId("cv-hoja").locator('[data-seccion="proyectos"] strong')).toHaveText("Ventas");
+    await pestana("Vista previa").click();
+    // La hoja es la misma maqueta del PDF: la negrita va como texto en negrita.
+    await expect(hoja.locator('[data-seccion="proyectos"] text[font-weight="700"]').filter({ hasText: "Ventas" })).toHaveCount(1);
+    await expect(hoja.getByText("PROYECTOS", { exact: true })).toBeVisible();
 
+    // Diseño: cambiar de plantilla cambia la hoja, no el contenido.
+    await pestana("Diseño").click();
+    await expect(page.getByTestId("cv-panel-diseno")).toBeVisible();
+    await page.getByTestId("cv-plantilla-lateral").click();
+    await expect(page.getByTestId("cv-plantilla-lateral")).toHaveAttribute("aria-checked", "true");
+    await expect(page.getByText(/algunos filtros automáticos \(ATS\) leen mejor una sola/)).toBeVisible();
+    await page.getByRole("radio", { name: "A4" }).click();
+    await pestana("Vista previa").click();
+    await expect(hoja.getByText("PROYECTOS", { exact: true })).toBeVisible();
+    await expect(page.getByText(/^\d+ páginas?$/)).toBeVisible();
+
+    await pestana("Editar").click();
     await page.getByRole("button", { name: /Revisar y descargar/ }).click();
     await expect(page.getByRole("radiogroup", { name: "Idioma del documento" })).toBeVisible();
-    await expect(page.getByText("Diseño", { exact: true })).toHaveCount(0);
-    await expect(page.getByTestId("cv-hoja").getByText("PROYECTOS", { exact: false })).toBeVisible();
 
     await flechaDeLaBarra(page).click();
     const fila = page.getByTestId("cv-documento").first();
