@@ -1,5 +1,6 @@
 import type { jsPDF as JsPdf } from "jspdf";
-import { TITULOS, cuerpoDeLaCarta, encabezadoDeEntrada, fechasAts, lineasDeReferencia, opcionales, type Carta, type CvDocumento } from "./documento";
+import { bloquesDelCv, cuerpoDeLaCarta, encabezadoDeEntrada, fechasAts, lineasDeReferencia, type Bloque, type Carta, type CvDocumento } from "./documento";
+import { lineasRicas, tieneFormato, type Trozo } from "./texto-rico";
 
 /**
  * EL PDF DEL CV Y DE LA CARTA. Texto de verdad (seleccionable) con Helvetica,
@@ -34,6 +35,57 @@ function parrafo(l: Lienzo, texto: string, opciones: { tam?: number; negrita?: b
   }
 }
 
+const ENLACE: [number, number, number] = [0, 111, 156];
+
+/**
+ * Un párrafo con negrita o enlaces: se arma palabra por palabra, midiendo cada
+ * una con su letra, y los enlaces quedan para tocar en el PDF. Sin formato se
+ * usa `parrafo`, igual que siempre.
+ */
+function parrafoRico(l: Lienzo, partes: Trozo[], opciones: { tam?: number; sangria?: number } = {}) {
+  if (!tieneFormato(partes)) { parrafo(l, partes.map((t) => t.texto).join(""), opciones); return; }
+  const tam = opciones.tam ?? 10.5;
+  const sangria = opciones.sangria ?? 0;
+  const alto = tam * 1.35;
+  const ancho = l.ancho - sangria;
+  l.doc.setFontSize(tam);
+  const medir = (texto: string, negrita?: boolean) => { l.doc.setFont("helvetica", negrita ? "bold" : "normal"); return l.doc.getTextWidth(texto); };
+  type Palabra = { texto: string; negrita?: boolean; url?: string; espacio: boolean };
+  const palabras: Palabra[] = [];
+  for (const t of partes) {
+    t.texto.split(/(\s+)/).forEach((p) => {
+      if (!p) return;
+      if (/^\s+$/.test(p)) { if (palabras.length) palabras[palabras.length - 1].espacio = true; return; }
+      palabras.push({ texto: p, negrita: t.negrita, url: t.url, espacio: false });
+    });
+  }
+  const espacio = medir(" ");
+  let linea: { p: Palabra; w: number }[] = [];
+  let usado = 0;
+  const dibujar = () => {
+    asegurar(l, alto);
+    let x = MARGEN + sangria;
+    for (const { p, w } of linea) {
+      l.doc.setFont("helvetica", p.negrita ? "bold" : "normal");
+      l.doc.setTextColor(...(p.url ? ENLACE : TINTA));
+      if (p.url) l.doc.textWithLink(p.texto, x, l.y + tam, { url: p.url });
+      else l.doc.text(p.texto, x, l.y + tam);
+      x += w + (p.espacio ? espacio : 0);
+    }
+    l.y += alto;
+    linea = []; usado = 0;
+  };
+  for (const p of palabras) {
+    const w = medir(p.texto, p.negrita);
+    const antes = linea.length ? (linea[linea.length - 1].p.espacio ? espacio : 0) : 0;
+    if (linea.length && usado + antes + w > ancho) dibujar();
+    usado += (linea.length ? antes : 0) + w;
+    linea.push({ p, w });
+  }
+  if (linea.length) dibujar();
+  l.doc.setTextColor(...TINTA);
+}
+
 function titulo(l: Lienzo, texto: string) {
   l.y += 10;
   asegurar(l, 30);
@@ -64,43 +116,47 @@ function encabezado(l: Lienzo, cv: CvDocumento) {
 
 async function dibujarCv(cv: CvDocumento): Promise<JsPdf> {
   const l = await lienzo();
-  const t = TITULOS[cv.idioma];
-  const extra = opcionales(cv);
   l.doc.setProperties({ title: `${cv.nombre} — ${cv.idioma === "en" ? "Resume" : "CV"}`, author: cv.nombre, subject: cv.titular, creator: "ContrataCR" });
   encabezado(l, cv);
-  if (cv.resumen.trim()) { titulo(l, t.resumen); parrafo(l, cv.resumen.trim()); }
-  const entradas = (nombre: string, lista: CvDocumento["experiencia"]) => {
-    if (!lista.length) return;
-    titulo(l, nombre);
-    lista.forEach((e, i) => {
-      if (i) l.y += 6;
-      asegurar(l, 34);
-      parrafo(l, encabezadoDeEntrada(e), { negrita: true, tam: 10.5 });
-      if (e.period.trim()) parrafo(l, fechasAts(e.period, cv.idioma), { tam: 9.5, color: GRIS });
-      for (const linea of e.description.split("\n").map((x) => x.trim().replace(/^[•\-–]\s*/, "")).filter(Boolean)) {
-        asegurar(l, 14);
-        l.doc.setFont("helvetica", "normal"); l.doc.setFontSize(10.5); l.doc.setTextColor(...TINTA);
-        l.doc.text("•", MARGEN + 2, l.y + 10.5);
-        parrafo(l, linea, { sangria: 12 });
-      }
-    });
+  const vineta = (partes: Trozo[]) => {
+    asegurar(l, 14);
+    l.doc.setFont("helvetica", "normal"); l.doc.setFontSize(10.5); l.doc.setTextColor(...TINTA);
+    l.doc.text("•", MARGEN + 2, l.y + 10.5);
+    parrafoRico(l, partes, { sangria: 12 });
   };
-  entradas(t.experiencia, cv.experiencia);
-  entradas(t.proyectos, extra.proyectos);
-  entradas(t.educacion, cv.educacion);
-  if (cv.certificaciones.length) { titulo(l, t.certificaciones); cv.certificaciones.forEach((c) => parrafo(l, c)); }
-  if (cv.habilidades.length) { titulo(l, t.habilidades); parrafo(l, cv.habilidades.join(", ")); }
-  if (cv.idiomas.length) { titulo(l, t.idiomas); parrafo(l, cv.idiomas.join(", ")); }
-  for (const x of extra.secciones) { titulo(l, x.titulo.trim()); for (const linea of x.texto.trim().split("\n")) parrafo(l, linea || " "); }
-  if (extra.referencias.length) {
-    titulo(l, t.referencias);
-    extra.referencias.forEach((r, i) => {
-      if (i) l.y += 6;
-      const [primera, ...resto] = lineasDeReferencia(r);
-      parrafo(l, primera, { negrita: true });
-      resto.forEach((x) => parrafo(l, x, { tam: 9.5, color: GRIS }));
-    });
-  }
+  const texto = (t: string) => lineasRicas(t).forEach((x) => (x.vineta ? vineta(x.trozos) : parrafoRico(l, x.trozos)));
+  const dibujar = (b: Bloque) => {
+    titulo(l, b.titulo);
+    switch (b.tipo) {
+      case "texto": texto(b.texto); break;
+      case "entradas":
+        b.entradas.forEach((e, i) => {
+          if (i) l.y += 6;
+          asegurar(l, 34);
+          parrafo(l, encabezadoDeEntrada(e), { negrita: true, tam: 10.5 });
+          if (e.period.trim()) parrafo(l, fechasAts(e.period, cv.idioma), { tam: 9.5, color: GRIS });
+          for (const x of lineasRicas(e.description, true)) vineta(x.trozos);
+        });
+        break;
+      case "lineas": b.lineas.forEach((c) => parrafo(l, c)); break;
+      case "comas": parrafo(l, b.items.join(", ")); break;
+      case "referencias":
+        b.referencias.forEach((r, i) => {
+          if (i) l.y += 6;
+          const [primera, ...resto] = lineasDeReferencia(r);
+          parrafo(l, primera, { negrita: true });
+          resto.forEach((x) => parrafo(l, x, { tam: 9.5, color: GRIS }));
+        });
+        break;
+      case "declaracion":
+        texto(b.texto);
+        l.y += 10;
+        if (b.lugarFecha) parrafo(l, b.lugarFecha, { tam: 9.5, color: GRIS });
+        if (cv.nombre.trim()) parrafo(l, cv.nombre, { negrita: true });
+        break;
+    }
+  };
+  bloquesDelCv(cv).forEach(dibujar);
   return l.doc;
 }
 

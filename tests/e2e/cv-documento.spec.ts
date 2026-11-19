@@ -3,6 +3,8 @@ import {
   ajustarAVacante, cartaComoTexto, cartaInicial, cvComoTexto, esCertificacion, fechasAts, nombreDeArchivo, palabrasClave, prellenar, revisarCarta, revisarCv, sumarDesdeArchivo,
 } from "../../src/lib/cv/documento";
 import { pdfDelCv, pdfDelCvEnBytes, pdfDeLaCarta } from "../../src/lib/cv/pdf-documento";
+import { textoPlano, trozos } from "../../src/lib/cv/texto-rico";
+import { htmlDeTexto, textoDeHtml } from "../../src/lib/cv/editor-formato";
 import { cvPublico } from "../../src/lib/cv/cv-publico";
 import { empresaProbable, imagenValida, limpiarTextoLeido, puestoProbable } from "../../src/lib/cv/leer-imagen";
 
@@ -158,6 +160,82 @@ test("secciones opcionales y ubicación por puesto: salen solo con contenido, ig
   expect(revisarCv({ ...cv, proyectos: [{ title: "App", organization: "", period: "", description: "[logro]" }] }).map((a) => a.id)).toContain("corchetes");
   const pdf = Buffer.from(await (await pdfDelCv(cv)).arrayBuffer()).toString("latin1");
   for (const linea of ["(PROYECTOS) Tj", "(REFERENCIAS) Tj", "(VOLUNTARIADO) Tj", "(Luis Rojas ", "Por cuenta propia, Atenas"]) expect(pdf).toContain(linea);
+});
+
+test("orden, secciones ocultas o renombradas y secciones nuevas: lo mismo en texto y PDF", async () => {
+  const base = prellenar(perfil, "es");
+  const cv = {
+    ...base,
+    cursos: [{ title: "Excel avanzado", organization: "INA", period: "2023", description: "" }],
+    premios: [{ title: "Técnica del año", organization: "Eléctrica Sur", period: "2017", description: "" }],
+    voluntariado: [{ title: "Brigadista", organization: "Cruz Roja", period: "2020", description: "Atendí 15 emergencias" }],
+    publicaciones: [{ title: "Guía de cableado", organization: "Revista Hogar", period: "2022", description: "", hidden: true }],
+    intereses: ["Ciclismo"],
+    declaracion: { texto: "Declaro que la información es verdadera.", lugarFecha: "Atenas, 19 de noviembre de 2026" },
+  };
+  const texto = cvComoTexto(cv);
+  for (const t of ["CURSOS\nExcel avanzado — INA (2023)", "PREMIOS\nTécnica del año — Eléctrica Sur (2017)", "VOLUNTARIADO Y ORGANIZACIONES\nBrigadista — Cruz Roja (2020)\n- Atendí 15 emergencias", "INTERESES\nCiclismo"]) expect(texto).toContain(t);
+  // Una entrada oculta no sale, y su sección vacía tampoco.
+  expect(texto).not.toContain("PUBLICACIONES");
+  expect(texto.trimEnd().endsWith("DECLARACIÓN\nDeclaro que la información es verdadera.\nAtenas, 19 de noviembre de 2026\nAna Mora")).toBe(true);
+  // La persona sube Habilidades arriba de todo, oculta Idiomas y renombra Experiencia.
+  const propio = cvComoTexto({ ...cv, orden: ["habilidades", "resumen"], ocultas: ["idiomas"], titulosPropios: { experiencia: "Trayectoria" } });
+  expect(propio.indexOf("HABILIDADES")).toBeLessThan(propio.indexOf("RESUMEN PROFESIONAL"));
+  expect(propio).not.toContain("IDIOMAS");
+  expect(propio).toContain("TRAYECTORIA\n");
+  expect(propio).not.toContain("EXPERIENCIA\n");
+  // Lo que no estaba en el orden guardado queda en su lugar de siempre.
+  expect(propio.indexOf("TRAYECTORIA")).toBeLessThan(propio.indexOf("EDUCACIÓN"));
+  expect(cvComoTexto({ ...cv, idioma: "en" })).toContain("VOLUNTEERING & ORGANIZATIONS");
+  const pdf = Buffer.from(await (await pdfDelCv({ ...cv, orden: ["habilidades", "resumen"], ocultas: ["idiomas"], titulosPropios: { experiencia: "Trayectoria" } })).arrayBuffer()).toString("latin1");
+  for (const linea of ["(CURSOS) Tj", "(TRAYECTORIA) Tj", "(INTERESES) Tj"]) expect(pdf).toContain(linea);
+  expect(pdf).not.toContain("(IDIOMAS) Tj");
+  expect(pdf).not.toContain("(PUBLICACIONES) Tj");
+  expect(pdf.indexOf("(HABILIDADES) Tj")).toBeLessThan(pdf.indexOf("(RESUMEN PROFESIONAL) Tj"));
+});
+
+test("negrita, viñetas y enlaces: con formato en el PDF, sin marcas en el texto para pegar", async () => {
+  expect(trozos("Lideré **12 obras** en [mi sitio](https://ana.cr) y https://x.cr/a.")).toEqual([
+    { texto: "Lideré " }, { texto: "12 obras", negrita: true }, { texto: " en " }, { texto: "mi sitio", url: "https://ana.cr" }, { texto: " y " }, { texto: "https://x.cr/a", url: "https://x.cr/a" }, { texto: "." },
+  ]);
+  expect(textoPlano("**Lideré** el [portafolio](https://ana.cr)")).toBe("Lideré el portafolio (https://ana.cr)");
+  const base = prellenar(perfil, "es");
+  const cv = {
+    ...base,
+    resumen: "Electricista con **8 años** de experiencia.\n- Instalaciones residenciales\n- Reparaciones",
+    experiencia: base.experiencia.map((e, i) => (i === 0 ? { ...e, description: "**Instalé** el sistema eléctrico de 40 casas\nVer [fotos](https://ana.cr/obras)" } : e)),
+  };
+  const texto = cvComoTexto(cv);
+  expect(texto).toContain("Electricista con 8 años de experiencia.\n- Instalaciones residenciales\n- Reparaciones");
+  expect(texto).toContain("- Instalé el sistema eléctrico de 40 casas\n- Ver fotos (https://ana.cr/obras)");
+  expect(texto).not.toContain("**");
+  // El verbo en negrita sigue contando como verbo de acción.
+  expect(revisarCv(cv).map((a) => a.id)).not.toContain("verbos");
+  const pdf = Buffer.from(await (await pdfDelCv(cv)).arrayBuffer()).toString("latin1");
+  expect(pdf).toContain("(Instalé) Tj".replace("é", "\xe9"));
+  expect(pdf).toContain("/URI (https://ana.cr/obras)");
+  expect(pdf).not.toContain("**");
+});
+
+test("el editor con formato: lo guardado va y vuelve igual, y lo que arma el navegador se entiende", async ({ page }) => {
+  const serializar = (html: string) => page.evaluate(([fn, h]) => {
+    const raiz = document.createElement("div");
+    raiz.innerHTML = h;
+    return (new Function(`return (${fn})`)() as (r: Element) => string)(raiz);
+  }, [textoDeHtml.toString(), html] as const);
+  for (const texto of [
+    "Electricista con **8 años** de experiencia.\n- Instalaciones residenciales\n- Ver [fotos](https://ana.cr/obras)\nY https://ana.cr",
+    "Una línea\n\nOtra después de una vacía",
+    "Precios <menores> & \"buenos\"",
+  ]) expect(await serializar(htmlDeTexto(texto, true))).toBe(texto);
+  // En un logro cada línea ya es viñeta: un «- » escrito a mano queda como texto.
+  expect(htmlDeTexto("- Instalé 40 casas", false)).toBe("<div>- Instalé 40 casas</div>");
+  // Lo que arman Chrome y Safari al escribir y usar la barrita.
+  expect(await serializar("Primera<div>Segunda</div><div><br></div><div>Cuarta <b>fuerte </b>fin</div>")).toBe("Primera\nSegunda\n\nCuarta **fuerte** fin");
+  expect(await serializar("<div><ul><li>uno</li><li><span style=\"font-weight: 700\">dos</span></li></ul></div><div>después</div>")).toBe("- uno\n- **dos**\ndespués");
+  expect(await serializar("<div>ver <a href=\"https://x.cr\">mi sitio</a> y <a href=\"javascript:alert(1)\">esto</a></div>")).toBe("ver [mi sitio](https://x.cr) y esto");
+  // Lo que no es del editor (estilos, imágenes, scripts) se descarta.
+  expect(await serializar("<div><i>hola</i><img src=x><script>1</script>&nbsp;chau</div>")).toBe("hola chau");
 });
 
 test("palabras de la vacante que están y que faltan en el CV", () => {
