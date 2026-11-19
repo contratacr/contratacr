@@ -134,6 +134,32 @@ test("texto para pegar: títulos estándar en el idioma del documento", () => {
   for (const titulo of ["PROFESSIONAL SUMMARY", "EXPERIENCE", "EDUCATION", "SKILLS"]) expect(en).toContain(titulo);
 });
 
+test("secciones opcionales y ubicación por puesto: salen solo con contenido, igual en texto y PDF", async () => {
+  const base = prellenar(perfil, "es");
+  // Un borrador viejo, sin las secciones nuevas, se sigue leyendo igual.
+  expect(cvComoTexto(base)).not.toMatch(/PROYECTOS|REFERENCIAS/);
+  const cv = {
+    ...base,
+    experiencia: base.experiencia.map((e, i) => (i === 0 ? { ...e, location: "Atenas" } : e)),
+    proyectos: [{ title: "Tienda en línea", organization: "Panadería Sol", period: "03/2024", description: "Ventas +30 % en 3 meses" }, { title: "", organization: "", period: "", description: "" }],
+    referencias: [{ nombre: "Luis Rojas", cargo: "Gerente, Hotel Atenas", contacto: "8888-1111" }, { nombre: "", cargo: "", contacto: "" }],
+    secciones: [{ titulo: "Voluntariado", texto: "Cruz Roja, 2022" }, { titulo: "Sin contenido", texto: "" }],
+  };
+  const texto = cvComoTexto(cv);
+  expect(texto).toContain("Electricista — Por cuenta propia, Atenas (01/2019 – Actualidad)");
+  expect(texto).toContain("PROYECTOS\nTienda en línea — Panadería Sol (03/2024)\n- Ventas +30 % en 3 meses");
+  expect(texto).toContain("VOLUNTARIADO\nCruz Roja, 2022");
+  expect(texto).not.toContain("SIN CONTENIDO");
+  expect(texto.trimEnd().endsWith("REFERENCIAS\nLuis Rojas — Gerente, Hotel Atenas\n8888-1111")).toBe(true);
+  // Los proyectos van después de la experiencia y antes de la educación.
+  expect(texto.indexOf("PROYECTOS")).toBeGreaterThan(texto.indexOf("EXPERIENCIA"));
+  expect(texto.indexOf("PROYECTOS")).toBeLessThan(texto.indexOf("EDUCACIÓN"));
+  expect(cvComoTexto({ ...cv, idioma: "en" })).toContain("PROJECTS");
+  expect(revisarCv({ ...cv, proyectos: [{ title: "App", organization: "", period: "", description: "[logro]" }] }).map((a) => a.id)).toContain("corchetes");
+  const pdf = Buffer.from(await (await pdfDelCv(cv)).arrayBuffer()).toString("latin1");
+  for (const linea of ["(PROYECTOS) Tj", "(REFERENCIAS) Tj", "(VOLUNTARIADO) Tj", "(Luis Rojas ", "Por cuenta propia, Atenas"]) expect(pdf).toContain(linea);
+});
+
 test("palabras de la vacante que están y que faltan en el CV", () => {
   const { estan, faltan } = palabrasClave("Buscamos electricista con experiencia en tableros, cámaras y licencia B1.", prellenar(perfil, "es"));
   expect(estan).toEqual(expect.arrayContaining(["electricista", "tableros"]));

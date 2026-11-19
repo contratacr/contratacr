@@ -11,6 +11,8 @@ import { marketplaceReturnLabelKey, safeMarketplaceReturnHref } from "@/lib/navi
 import { JobsPageContent } from "@/components/jobs/jobs-page-content";
 import { createClient, hasSupabaseServerConfig } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { safeGetUser } from "@/lib/supabase/get-user";
+import { VolverAPublicar } from "@/components/marketplace/volver-a-publicar";
 
 // UN EMPLEO CERRADO NO DESAPARECE: DICE QUE SE CERRÓ.
 //
@@ -60,7 +62,7 @@ async function idDelTramo(tramo: string): Promise<string | null> {
 async function empleoCerrado(id: string) {
   const { data } = await createAdminClient()
     .from("job_posts")
-    .select("id, title, status, location_label, professionals!job_posts_employer_id_fkey(business_name,profiles(full_name))")
+    .select("id, title, status, location_label, description, professionals!job_posts_employer_id_fkey(business_name,profile_id,profiles(full_name))")
     .eq("id", id)
     .maybeSingle();
   return data;
@@ -137,8 +139,13 @@ export default async function JobDetailRedirect({ params, searchParams }: Props)
   const tSalida = await getTranslations("marketplaceReturn");
   const volverHref = safeMarketplaceReturnHref(from, "/empleos");
   const volverTexto = from ? tSalida(marketplaceReturnLabelKey(volverHref, "/empleos")) : t("backAll");
-  const empleador = (cerrado.professionals as { business_name?: string | null; profiles?: { full_name?: string | null } | null } | null);
+  const empleador = (cerrado.professionals as { business_name?: string | null; profile_id?: string | null; profiles?: { full_name?: string | null } | null } | null);
   const nombre = getProfessionalDisplayName(empleador?.profiles?.full_name || "", empleador?.business_name || undefined).primaryDesktop || null;
+  // Quien lo publicó no ve una lápida: ve su empleo con el botón para volver
+  // a publicarlo, como en el panel (18-nov-2026). Un borrador no aplica.
+  const usuario = await safeGetUser(supabase);
+  const esDelDueno = !!usuario && !!empleador?.profile_id && empleador.profile_id === usuario.id && cerrado.status !== "draft";
+  const reactivar = esDelDueno ? <VolverAPublicar tipo="empleo" id={String(cerrado.id)} /> : null;
 
   return (
     <main className="min-h-[calc(100vh-72px)] bg-white text-[#162543] sm:bg-white">
@@ -165,11 +172,12 @@ export default async function JobDetailRedirect({ params, searchParams }: Props)
             {cerrado.location_label && <p className="mt-1 text-sm text-[#68778d]">{cerrado.location_label}</p>}
             {/* En computadora el aviso vive en la tarjeta de la derecha, donde
                 iría el salario: repetido en las dos se leía como un error. */}
-            <p className="mt-5 rounded-lg border border-[#e5e7eb] bg-white p-4 text-sm font-bold lg:hidden">{t("unavailable")}</p>
+            {reactivar ? <div className="mt-5 lg:hidden">{reactivar}</div> : <p className="mt-5 rounded-lg border border-[#e5e7eb] bg-white p-4 text-sm font-bold lg:hidden">{t("unavailable")}</p>}
+            {esDelDueno && cerrado.description && <p className="mt-6 whitespace-pre-line break-words text-sm leading-7 text-[#43536b] [overflow-wrap:anywhere]">{cerrado.description}</p>}
           </article>
           <aside className="hidden h-fit w-80 shrink-0 rounded-lg border border-[#e5e7eb] bg-white p-5 lg:block">
             <p className="text-xs font-bold uppercase tracking-wide text-[#7a899d]">{t("heading")}</p>
-            <p className="mt-3 rounded-lg border border-[#e5e7eb] bg-white p-4 text-sm font-bold">{t("unavailable")}</p>
+            {reactivar ? <div className="mt-3">{reactivar}</div> : <p className="mt-3 rounded-lg border border-[#e5e7eb] bg-white p-4 text-sm font-bold">{t("unavailable")}</p>}
           </aside>
         </div>
       </div>

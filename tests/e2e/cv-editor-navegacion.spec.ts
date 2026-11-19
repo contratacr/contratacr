@@ -1,0 +1,68 @@
+import { expect, test, type Page } from "playwright/test";
+import { loginAs, isMobileProject } from "./helpers";
+
+/**
+ * EL EDITOR DE CURRÍCULUM EN EL TELÉFONO (18-nov-2026).
+ *  - Se vuelve a la lista con la flecha de la barra (y con el gesto de volver),
+ *    no con un segundo «< Mis currículums» debajo de la barra.
+ *  - En la lista, tocar la fila abre el documento y lo demás va en el «···».
+ *  - «Más secciones» suma Proyectos, Referencias o una sección propia.
+ *  - Ya no hay selector de diseño; el idioma del documento sí queda.
+ */
+
+const EMAIL = "e2e.pro@contratacr.test";
+const PASSWORD = process.env.E2E_TEST_PASSWORD || "";
+
+const flechaDeLaBarra = (page: Page) =>
+  page.locator('[data-ccr-section-back], [data-native-back="dashboard-section"]').filter({ visible: true }).first();
+
+async function abrirEditorNuevo(page: Page) {
+  await page.goto("/dashboard/profesional?tab=cv");
+  await page.evaluate(() => { for (const k of Object.keys(localStorage)) if (k.startsWith("ccr:cv-documentos")) localStorage.removeItem(k); });
+  await page.reload();
+  // Sin documentos, se abre uno nuevo directo.
+  await expect(page.getByTestId("cv-builder")).toBeVisible({ timeout: 20_000 });
+}
+
+test.describe("editor de currículum", () => {
+  test.beforeEach(async ({ page }, testInfo) => {
+    test.skip(!isMobileProject(testInfo), "la flecha de la barra es del teléfono");
+    await loginAs(page, EMAIL, PASSWORD);
+  });
+
+  test("la flecha y el gesto de volver regresan a la lista, sin un segundo botón", async ({ page }) => {
+    await abrirEditorNuevo(page);
+    await expect(page.getByTestId("cv-volver-lista")).toBeHidden();
+
+    await flechaDeLaBarra(page).click();
+    await expect(page.getByTestId("cv-documentos")).toBeVisible();
+    expect(new URL(page.url()).searchParams.get("tab")).toBe("cv");
+
+    await page.getByTestId("cv-documento").first().getByRole("button").first().click();
+    await expect(page.getByTestId("cv-builder")).toBeVisible();
+    await page.goBack();
+    await expect(page.getByTestId("cv-documentos")).toBeVisible();
+    expect(new URL(page.url()).searchParams.get("tab")).toBe("cv");
+  });
+
+  test("lista con menú «···», más secciones y sin selector de diseño", async ({ page }) => {
+    await abrirEditorNuevo(page);
+
+    await page.getByRole("button", { name: /Más secciones/ }).click();
+    await expect(page.getByTestId("cv-paso-extras")).toBeVisible();
+    await page.getByRole("button", { name: "Proyectos", exact: true }).click();
+    await expect(page.getByLabel("Nombre del proyecto")).toBeVisible();
+    await page.getByLabel("Nombre del proyecto").fill("Tienda en línea");
+
+    await page.getByRole("button", { name: /Revisar y descargar/ }).click();
+    await expect(page.getByRole("radiogroup", { name: "Idioma del documento" })).toBeVisible();
+    await expect(page.getByText("Diseño", { exact: true })).toHaveCount(0);
+    await expect(page.getByTestId("cv-hoja").getByText("PROYECTOS", { exact: false })).toBeVisible();
+
+    await flechaDeLaBarra(page).click();
+    const fila = page.getByTestId("cv-documento").first();
+    await expect(fila.getByRole("button", { name: /Editar|Duplicar|Eliminar/ })).toHaveCount(0);
+    await fila.getByRole("button", { name: "Más opciones" }).click();
+    for (const opcion of ["Descargar PDF", "Duplicar", "Eliminar"]) await expect(page.getByRole("menuitem", { name: opcion }).or(page.getByRole("button", { name: opcion })).first()).toBeVisible();
+  });
+});

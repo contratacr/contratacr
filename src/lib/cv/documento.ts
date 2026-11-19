@@ -19,7 +19,13 @@ import { parseCvDates } from "./dates";
  */
 
 export type Idioma = "es" | "en";
+// «Moderna» se quitó del editor (18-nov-2026): solo cambiaba un color y a un
+// filtro automático le da igual. Queda el tipo para leer borradores viejos.
 export type Plantilla = "clasica" | "moderna";
+/** Quien puede dar referencias: nombre, cargo y empresa, y cómo contactarle. */
+export type Referencia = { nombre: string; cargo: string; contacto: string };
+/** Una sección con nombre propio (Voluntariado, Publicaciones…), como en FlowCV. */
+export type SeccionLibre = { titulo: string; texto: string };
 
 export type CvDocumento = {
   idioma: Idioma;
@@ -37,6 +43,11 @@ export type CvDocumento = {
   sugeridas: string[]; // el resto del perfil, para sumar con un toque
   idiomas: string[];
   certificaciones: string[];
+  // Secciones opcionales (18-nov-2026). Opcionales también en el tipo: los
+  // borradores guardados antes no las traen.
+  proyectos?: CvEntry[];
+  referencias?: Referencia[];
+  secciones?: SeccionLibre[];
 };
 
 export type Carta = {
@@ -51,10 +62,26 @@ export type Carta = {
 
 export const LIMITES = { resumen: 600, carta: 2200, entradas: 12, habilidades: 10, porDefecto: 8, sugeridas: 30 };
 
-export const TITULOS: Record<Idioma, Record<"resumen" | "experiencia" | "educacion" | "habilidades" | "idiomas" | "certificaciones" | "contacto", string>> = {
-  es: { resumen: "Resumen profesional", experiencia: "Experiencia", educacion: "Educación", habilidades: "Habilidades", idiomas: "Idiomas", certificaciones: "Certificaciones", contacto: "Contacto" },
-  en: { resumen: "Professional summary", experiencia: "Experience", educacion: "Education", habilidades: "Skills", idiomas: "Languages", certificaciones: "Certifications", contacto: "Contact" },
+export const TITULOS: Record<Idioma, Record<"resumen" | "experiencia" | "educacion" | "habilidades" | "idiomas" | "certificaciones" | "contacto" | "proyectos" | "referencias", string>> = {
+  es: { resumen: "Resumen profesional", experiencia: "Experiencia", educacion: "Educación", habilidades: "Habilidades", idiomas: "Idiomas", certificaciones: "Certificaciones", contacto: "Contacto", proyectos: "Proyectos", referencias: "Referencias" },
+  en: { resumen: "Professional summary", experiencia: "Experience", educacion: "Education", habilidades: "Skills", idiomas: "Languages", certificaciones: "Certifications", contacto: "Contact", proyectos: "Projects", referencias: "References" },
 };
+
+/** «Electricista — Hotel Atenas, Heredia»: la ubicación va pegada a la empresa. */
+export function encabezadoDeEntrada(e: CvEntry): string {
+  const lugar = [e.organization, e.location ?? ""].map((v) => v.trim()).filter(Boolean).join(", ");
+  return [e.title.trim(), lugar].filter(Boolean).join(" — ");
+}
+/** «Ana Mora — Gerente, Hotel Atenas» y debajo cómo contactarla. */
+export const lineasDeReferencia = (r: Referencia) => [[r.nombre.trim(), r.cargo.trim()].filter(Boolean).join(" — "), r.contacto.trim()].filter(Boolean);
+/** Las secciones opcionales con contenido, sin las que quedaron en blanco. */
+export function opcionales(cv: CvDocumento) {
+  return {
+    proyectos: (cv.proyectos ?? []).filter((e) => e.title.trim()),
+    referencias: (cv.referencias ?? []).filter((r) => r.nombre.trim()),
+    secciones: (cv.secciones ?? []).filter((s) => s.titulo.trim() && s.texto.trim()),
+  };
+}
 
 /** «03/2021 – Actualidad»: el formato que los ATS leen sin dudas, igual en todo el CV. */
 export function fechasAts(periodo: string, idioma: Idioma): string {
@@ -246,7 +273,7 @@ export function revisarCv(cv: CvDocumento): Aviso[] {
   if (cv.habilidades.length > LIMITES.habilidades) add("demasiadas", "mejora", `Dejá ${LIMITES.habilidades} habilidades como máximo, las que más pide el puesto: una lista larga se lee como relleno.`, `Keep ${LIMITES.habilidades} skills at most, the ones the job asks for: a long list reads as filler.`);
   // Unos 2.900 caracteres por página carta con esta plantilla.
   if (cvComoTexto(cv).length > 5800) add("largo", "mejora", "Pasa de unas 2 páginas: dejá solo lo más relevante para el puesto.", "It runs past about 2 pages: keep only what matters most for the job.");
-  if ([cv.resumen, ...cv.experiencia.map((e) => e.description)].some((t) => PLACEHOLDER.test(t))) add("corchetes", "falta", "Quedó texto entre [corchetes] por completar.", "There is [bracketed] text left to fill in.");
+  if ([cv.resumen, ...cv.experiencia.map((e) => e.description), ...(cv.proyectos ?? []).map((e) => e.description), ...(cv.secciones ?? []).map((x) => x.texto)].some((t) => PLACEHOLDER.test(t))) add("corchetes", "falta", "Quedó texto entre [corchetes] por completar.", "There is [bracketed] text left to fill in.");
   return avisos;
 }
 
@@ -278,7 +305,7 @@ export function terminosDeVacante(vacante: string): Map<string, string> {
   return new Map(orden);
 }
 export function palabrasClave(vacante: string, cv: CvDocumento): { estan: string[]; faltan: string[]; puntaje: number } {
-  const texto = norm([cv.titular, cv.resumen, ...cv.habilidades, ...cv.experiencia.flatMap((e) => [e.title, e.description]), ...cv.certificaciones].join(" "));
+  const texto = norm([cv.titular, cv.resumen, ...cv.habilidades, ...cv.experiencia.flatMap((e) => [e.title, e.description]), ...(cv.proyectos ?? []).flatMap((e) => [e.title, e.description]), ...cv.certificaciones, ...(cv.secciones ?? []).map((x) => x.texto)].join(" "));
   const estan: string[] = [], faltan: string[] = [];
   for (const [n, original] of terminosDeVacante(vacante)) (texto.includes(n) ? estan : faltan).push(original);
   const total = estan.length + faltan.length;
@@ -290,18 +317,22 @@ export function cvComoTexto(cv: CvDocumento): string {
   const t = TITULOS[cv.idioma];
   const contacto = [cv.correo, cv.telefono, cv.ubicacion, cv.enlace].filter((v) => v.trim()).join(" | ");
   const bloque = (titulo: string, lineas: string[]) => lineas.length ? [`${titulo.toUpperCase()}`, ...lineas, ""] : [];
+  const extra = opcionales(cv);
   const entrada = (e: CvEntry) => [
-    [e.title, e.organization].filter(Boolean).join(" — ") + (e.period ? ` (${fechasAts(e.period, cv.idioma)})` : ""),
+    encabezadoDeEntrada(e) + (e.period ? ` (${fechasAts(e.period, cv.idioma)})` : ""),
     ...e.description.split("\n").map((l) => l.trim()).filter(Boolean).map((l) => `- ${l.replace(/^[•\-–]\s*/, "")}`),
   ];
   return [
     cv.nombre, cv.titular, contacto, "",
     ...bloque(t.resumen, cv.resumen.trim() ? [cv.resumen.trim()] : []),
     ...bloque(t.experiencia, cv.experiencia.flatMap(entrada)),
+    ...bloque(t.proyectos, extra.proyectos.flatMap(entrada)),
     ...bloque(t.educacion, cv.educacion.flatMap(entrada)),
     ...bloque(t.certificaciones, cv.certificaciones),
     ...bloque(t.habilidades, cv.habilidades.length ? [cv.habilidades.join(", ")] : []),
     ...bloque(t.idiomas, cv.idiomas.length ? [cv.idiomas.join(", ")] : []),
+    ...extra.secciones.flatMap((x) => bloque(x.titulo.trim(), [x.texto.trim()])),
+    ...bloque(t.referencias, extra.referencias.flatMap(lineasDeReferencia)),
   ].filter((l, i, a) => !(l === "" && a[i - 1] === "")).join("\n").trim();
 }
 
