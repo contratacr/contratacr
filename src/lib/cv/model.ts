@@ -1,5 +1,5 @@
 /** Only confirmed public profile fields. Never store the source CV or contact data. */
-export type CvEntry = { title: string; organization: string; period: string; description: string };
+export type CvEntry = { title: string; organization: string; period: string; description: string; /** Solo en los CV armados en el panel (ciudad o "Remoto"); el perfil no la guarda. */ location?: string };
 export type CvProfile = { education: CvEntry[]; experience: CvEntry[]; skills: string[] };
 export const emptyCv = (): CvProfile => ({ education: [], experience: [], skills: [] });
 export const CV_LIMITS = { entries: 20, skills: 40, title: 160, organization: 160, period: 80, description: 1000 };
@@ -58,7 +58,7 @@ export function reviewCv(source: string): CvImportReview {
         return out;
       }, []).join('\n');
       const entry = { title, organization, period, description };
-      if (Object.entries(entry).some(([k,v]) => v.length > CV_LIMITS[k as keyof CvEntry]) || cv[section].length >= CV_LIMITS.entries) warnings.add('limit');
+      if (Object.entries(entry).some(([k,v]) => v.length > CV_LIMITS[k as keyof typeof CV_LIMITS]) || cv[section].length >= CV_LIMITS.entries) warnings.add('limit');
       else cv[section].push(entry);
     }
     block = []; period = '';

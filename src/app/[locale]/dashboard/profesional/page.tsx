@@ -22,7 +22,7 @@ import {
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, ArrowLeft, ArrowRight, ChevronDown, ChevronRight, Sparkles, AlertCircle, MessageSquareMore, Home, LogOut, Users, CheckCircle2, FileText, Search, Camera, Eye, Trash2, Loader2,
   BriefcaseBusiness, Star, ReceiptText, ExternalLink, Share2, BookOpen, ChartNoAxesColumn, FileUser, Mail,
   } from "lucide-react";
-import { CvBuilder } from "@/components/dashboard/cv-builder";
+import { CERRAR_EDITOR_CV, CvBuilder } from "@/components/dashboard/cv-builder";
 import { StatisticsPanel } from "@/components/dashboard/statistics/statistics-panel";
 import { QuotesSection, cargarCotizaciones } from "@/components/quotes/quotes-section";
 import { SectionBoundary } from "@/components/dashboard/section-boundary";
@@ -625,6 +625,8 @@ export default function DashboardPage() {
   const [profileResetKey, setProfileResetKey] = useState(0);
   const [mobileProfileSectionTitle, setMobileProfileSectionTitle] = useState<string | null>(null);
   const [supportThreadTitle, setSupportThreadTitle] = useState<string | null>(null);
+  // Un currículum o carta abierto: la flecha de la barra vuelve a la lista.
+  const [cvEditorAbierto, setCvEditorAbierto] = useState(false);
   // Qué mitad de «Mis publicaciones» se está viendo.
   const [publicacionTipo, setPublicacionTipo] = useState<Publicacion>("proyectos");
   const [conteoPublicaciones, setConteoPublicaciones] = useState<Record<string, number>>({});
@@ -1572,13 +1574,14 @@ export default function DashboardPage() {
   // secciones son un acordeón y no son un paso de navegación.
   const pasoInternoAbierto =
     (activeTab === "profile" && !!mobileProfileSectionTitle)
-    || (activeTab === "soporte" && !!supportThreadTitle);
+    || (activeTab === "soporte" && !!supportThreadTitle)
+    || ((activeTab === "cv" || activeTab === "carta") && cvEditorAbierto);
   useEffect(() => {
     if (!pasoInternoAbierto) return;
     if (!window.matchMedia("(max-width: 639px)").matches) return;
     const centinela = { ...(window.history.state ?? {}), ccrPasoInterno: true };
     if (!window.history.state?.ccrPasoInterno) window.history.pushState(centinela, "", window.location.href);
-    const enSoporte = activeTab === "soporte";
+    const cierre = activeTab === "soporte" ? "ccr:support-close-thread" : activeTab === "cv" || activeTab === "carta" ? CERRAR_EDITOR_CV : "ccr:profile-mobile-close-section";
     function alVolver() {
       // El aviso de cambios sin guardar atiende este mismo gesto con su propio
       // centinela: cuando está puesto, manda él y aquí no se cierra nada.
@@ -1586,7 +1589,7 @@ export default function DashboardPage() {
       // Ni cuando ese aviso está RETIRANDO su centinela porque ya no hay
       // cambios: es limpieza del historial, no alguien queriendo volver.
       if ((window as unknown as { __ccrRetirandoCentinela?: boolean }).__ccrRetirandoCentinela) return;
-      window.dispatchEvent(new Event(enSoporte ? "ccr:support-close-thread" : "ccr:profile-mobile-close-section"));
+      window.dispatchEvent(new Event(cierre));
     }
     window.addEventListener("popstate", alVolver);
     return () => {
@@ -2179,6 +2182,10 @@ export default function DashboardPage() {
                           router.push(volverA);
                           return;
                         }
+                        if ((activeTab === "cv" || activeTab === "carta") && cvEditorAbierto) {
+                          window.dispatchEvent(new Event(CERRAR_EDITOR_CV));
+                          return;
+                        }
                         if (activeTab === "quotes" || activeTab === "cv" || activeTab === "carta") {
                           setTab("tools");
                           return;
@@ -2435,8 +2442,8 @@ export default function DashboardPage() {
                             sección vacía, para no romper enlaces viejos. */}
                         {activeTab === "saved" && <ClientActivity section="saved" />}
                         {activeTab === "tools" && <Herramientas esProfesional={esProfesional} alAbrir={(destino) => requestUnsavedAction(() => setTab(destino))} />}
-                        {activeTab === "cv" && <CvBuilder pro={pro} documento="cv" />}
-                        {activeTab === "carta" && <CvBuilder pro={pro} documento="carta" />}
+                        {activeTab === "cv" && <CvBuilder pro={pro} documento="cv" alCambiarEditor={setCvEditorAbierto} />}
+                        {activeTab === "carta" && <CvBuilder pro={pro} documento="carta" alCambiarEditor={setCvEditorAbierto} />}
                         {activeTab === "connections" && <ClientConnections />}
                         {activeTab === "notifications" && <NotificationsList scope="all" />}
                         {activeTab === "soporte" && (
