@@ -42,7 +42,7 @@ test.describe("service requests require an explicit profile save", () => {
       await page.getByRole("button", { name: "Agregar servicio", exact: true }).click();
       const picker = page.getByTestId("services-add-picker");
       await picker.getByRole("button", { name: "Solicitar servicio", exact: true }).click();
-      await expect(picker).toContainText("Si lo aprobamos, te avisaremos");
+      await expect(picker).toContainText("Si lo aprobamos, le avisaremos");
       await picker.getByPlaceholder("Nombre del servicio", { exact: true }).fill(name);
       const [uiRequest] = await Promise.all([
         page.waitForResponse(r => r.url().endsWith("/api/categories/suggest") && r.request().method() === "POST"),
