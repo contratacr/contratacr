@@ -112,7 +112,7 @@ export function CategorySuggestionBox({
       } | null;
 
       if (!response.ok || !payload?.ok) {
-        setError(payload?.error ?? "No se pudo enviar la sugerencia. Inténtalo de nuevo.");
+        setError(payload?.error ?? "No se pudo enviar la sugerencia. Inténtelo de nuevo.");
         return;
       }
 
@@ -122,7 +122,7 @@ export function CategorySuggestionBox({
       setName("");
       setSuggesting(false);
     } catch {
-      setError("No se pudo enviar la sugerencia. Inténtalo de nuevo.");
+      setError("No se pudo enviar la sugerencia. Inténtelo de nuevo.");
     } finally {
       setSending(false);
     }

@@ -1,4 +1,5 @@
 "use client";
+import { PromotionHistory } from "@/components/pro/promotion-history";
 
 import { trackMetaConversion } from "@/lib/analytics/meta-pixel";
 
@@ -36,13 +37,13 @@ const JOBS_MANAGER_COPY = {
     // formulario publica SIEMPRE (nunca manda `draft`), así que era una
     // palabra para un estado que nadie podía crear. Si alguna fila vieja lo
     // trae, se lee como cerrada, que es lo que es: no se ve en público.
-    back: "Volver al panel", title: "Mis empleos", subtitle: "Vacantes para cuando necesitas contratar.", publish: "Publicar empleo",
+    back: "Volver al panel", title: "Mis empleos", subtitle: "Vacantes para cuando necesita contratar.", publish: "Publicar empleo",
     application: "postulación", applications: "postulaciones", view: "Ver empleo", edit: "Editar", more: "Más opciones",
     close: "Cerrar vacante", republish: "Volver a publicar", remove: "Eliminar", removeTitle: "¿Eliminar este empleo?", removeBody: "Se borra del todo y no se puede recuperar.", removeCancel: "Cancelar", applicationsTitle: "Postulaciones",
     received: "Postulación recibida", message: "Mensaje", viewCv: "Ver CV", viewPortfolio: "Ver su sitio o portafolio",
-    noApplications: "Aún no hay postulaciones.", emptyTitle: "Todavía no has publicado empleos", emptyBody: "Publica tu primera oportunidad laboral.",
-    publishTitle: "Publicar empleo", publishSubtitle: "Describe la oportunidad con información clara y verificable.",
-    editTitle: "Editar empleo", editSubtitle: "Actualiza la información de esta publicación.",
+    noApplications: "Aún no hay postulaciones.", emptyTitle: "Todavía no ha publicado empleos", emptyBody: "Publique su primera oportunidad laboral.",
+    publishTitle: "Publicar empleo", publishSubtitle: "Describa la oportunidad con información clara y verificable.",
+    editTitle: "Editar empleo", editSubtitle: "Actualice la información de esta publicación.",
   },
   en: {
     applicationStates: { submitted: "Received", reviewing: "In review", shortlisted: "Shortlisted", rejected: "Rejected", hired: "Hired" },
@@ -221,6 +222,7 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
                 {isOpen && (
                   <div className="px-4 pb-5 pt-3 sm:px-5">
                     {job.description && <p className="mb-4 whitespace-pre-line break-words text-sm leading-6 text-[#52627a] [overflow-wrap:anywhere]">{job.description}</p>}
+                    {process.env.NODE_ENV === "development" && <PromotionHistory key={job.id} contentType="job" contentId={job.id}/>}
                                         {/* EDITAR ES LA ACCIÓN DE ESTA FILA, y va en azul lleno:
                         «Ver» solo mira, el «···» guarda lo de cambiar de estado,
                         y editar es a lo que se viene cuando se abre una

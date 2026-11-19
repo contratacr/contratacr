@@ -14,6 +14,6 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     locale,
     ruta: "/mejorar-mi-perfil",
     titulo: en ? 'How to attract more clients | ContrataCR' : 'Cómo atraer más clientes | ContrataCR',
-    descripcion: en ? 'A practical guide for professionals in Costa Rica: complete your profile, earn reviews and rank first in searches.' : 'Guía práctica para profesionales en Costa Rica: cómo completar tu perfil, conseguir reseñas y aparecer de primero en las búsquedas.',
+    descripcion: en ? 'A practical guide for professionals in Costa Rica: complete your profile, earn reviews and rank first in searches.' : 'Guía práctica para profesionales en Costa Rica: cómo completar su perfil, conseguir reseñas y aparecer de primero en las búsquedas.',
   });
 }

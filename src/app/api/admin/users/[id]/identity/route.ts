@@ -82,7 +82,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   }
 
   if (action !== "verify" && updatedProfile?.cedula) {
-    return NextResponse.json({ error: "La verificación cambió, pero la identificación guardada no se limpió. Intenta de nuevo." }, { status: 500 });
+    return NextResponse.json({ error: "La verificación cambió, pero la identificación guardada no se limpió. Intente de nuevo." }, { status: 500 });
   }
 
   if ((professionals ?? []).length > 0) {

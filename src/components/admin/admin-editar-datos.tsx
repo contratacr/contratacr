@@ -200,7 +200,7 @@ export function AdminEditarDatos({
             <Input label="Correo" type="email" value={correo} onChange={(e) => setCorreo(e.target.value)} />
           </fieldset>
           <p className="mt-3 text-xs text-[#68778d]">
-            Si cambias el WhatsApp, también se cambia en sus empleos y promociones que tenían el número anterior, y en el teléfono de llamadas si era el mismo número. Con el correo nuevo la persona entra igual que antes, con su misma contraseña.
+            Si cambia el WhatsApp, también se cambia en sus empleos y promociones que tenían el número anterior, y en el teléfono de llamadas si era el mismo número. Con el correo nuevo la persona entra igual que antes, con su misma contraseña.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <button type="button" onClick={() => void guardar()} disabled={guardando} className="inline-flex items-center gap-1.5 rounded-lg bg-[#009FD9] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0089bb] disabled:opacity-60">

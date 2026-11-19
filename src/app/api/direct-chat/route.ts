@@ -318,7 +318,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const user = await currentUser();
-  if (!user) return NextResponse.json({ error: mensajeDeError(req, { es: "Inicia sesión para usar el chat.", en: "Sign in to use chat." }) }, { status: 401 });
+  if (!user) return NextResponse.json({ error: mensajeDeError(req, { es: "Inicie sesión para usar el chat.", en: "Sign in to use chat." }) }, { status: 401 });
   const body = await req.json().catch(() => ({}));
   const professionalId = String(body.professionalId ?? "");
   const conversationId = String(body.conversationId ?? "");
@@ -332,7 +332,7 @@ export async function POST(req: Request) {
   const initialMessage = limitTrimmedText(body.initialMessage, 2000);
   const openConversation = body.openConversation === true;
   const hasRawAttachments = Array.isArray(body.attachmentUrls) && body.attachmentUrls.length > 0;
-  if (!message && !hasRawAttachments && !openConversation) return NextResponse.json({ error: "Escribe un mensaje o adjunta un archivo." }, { status: 400 });
+  if (!message && !hasRawAttachments && !openConversation) return NextResponse.json({ error: "Escriba un mensaje o adjunte un archivo." }, { status: 400 });
   const db = createAdminClient();
   let conversation: ConversationRow | null = null;
   let conversationCreated = false;
@@ -358,7 +358,7 @@ export async function POST(req: Request) {
     const { data: professional } = await db.from("professionals").select("id, profile_id, business_name, profiles(full_name)").eq("id", resolvedProfessionalId).maybeSingle();
     if (!professional) return NextResponse.json({ error: "Profesional no encontrado." }, { status: 404 });
     const professionalProfileId = professional.profile_id as string;
-    if (clientId === professionalProfileId) return NextResponse.json({ error: "No puedes abrir un chat contigo mismo." }, { status: 400 });
+    if (clientId === professionalProfileId) return NextResponse.json({ error: "No puede abrir un chat con usted mismo." }, { status: 400 });
     if (user.id !== clientId && user.id !== professionalProfileId) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
     const { data: existing } = await db.from("direct_conversations")
@@ -632,7 +632,7 @@ export async function PATCH(req: Request) {
     const { data } = await db.from("direct_conversations").select("*").eq("id", conversationId).maybeSingle();
     const conversation = data as ConversationRow | null;
     if (!conversation || !participant(conversation, user.id)) return NextResponse.json({ error: mensajeDeError(req, { es: "Conversación no encontrada", en: "Conversation not found" }) }, { status: 404 });
-    if (reportReason.length < 3) return NextResponse.json({ error: "Explica brevemente el motivo del reporte." }, { status: 400 });
+    if (reportReason.length < 3) return NextResponse.json({ error: "Explique brevemente el motivo del reporte." }, { status: 400 });
 
     const reportingAsClient = conversation.client_id === user.id;
     let reportedMessageId:string|null=null;

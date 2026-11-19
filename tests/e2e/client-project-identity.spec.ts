@@ -1,5 +1,5 @@
 import { test, expect } from "playwright/test";
-import { gotoOK, loginAs, expectNoHorizontalOverflow } from "./helpers";
+import { gotoOK, loginAs, expectNoHorizontalOverflow, waitForInteractivePage } from "./helpers";
 import { createDisposableAccount, cleanupDisposableAccount } from "./disposable-account";
 import { canRunSeededRegression, regressionAdminClient } from "./seed";
 
@@ -25,7 +25,7 @@ test.describe("client and professional identity", () => {
         await page.locator("textarea").fill("Necesito reparar una puerta");
         await page.locator('button[type="submit"]').click();
         await expect(identification).toHaveAttribute("aria-invalid", "true");
-        await expect(page.getByTestId("project-form-error")).toContainText("Ingresá un número de identificación válido.");
+        await expect(page.getByTestId("project-form-error")).toContainText("Ingrese un número de identificación válido.");
         await expectNoHorizontalOverflow(page);
         await page.screenshot({ path: test.info().outputPath("project-identification-required.png"), fullPage: true });
         // All supported types show the client badge without a professional record.

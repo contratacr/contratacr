@@ -150,7 +150,9 @@ export function loadGoogleMaps(apiKey: string): Promise<void> {
       key: apiKey,
       v: "weekly",
       loading: "async",
-      libraries: "marker,places,geocoding",
+      // Map display moved to MapLibre (src/lib/maps/maplibre.ts); Google only
+      // serves address autocomplete + geocoding, loaded on address-field focus.
+      libraries: "places,geocoding",
       callback: cb,
       // El idioma del mapa sigue al de la página (sin esto salía en inglés).
       language: document.documentElement.lang?.startsWith("en") ? "en" : "es",

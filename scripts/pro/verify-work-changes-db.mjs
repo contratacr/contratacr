@@ -1,0 +1,64 @@
+import {installRequestQuoteAccountOverride} from './request-quote-account-test-helper.mjs';
+// Isolated PostgreSQL only: never connects to Supabase or sends notifications.
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {PGlite} from '@electric-sql/pglite';
+const {workChangeMutation,signedCents}=await import('../../src/lib/pro/work-changes.ts');
+const db=new PGlite();
+const owner='00000000-0000-4000-8000-000000000001',otherOwner='00000000-0000-4000-8000-000000000002',client='00000000-0000-4000-8000-000000000003',outsider='00000000-0000-4000-8000-000000000004';
+const professional='10000000-0000-4000-8000-000000000001',otherProfessional='10000000-0000-4000-8000-000000000002';
+const day=new Date(Date.now()+2*86400000).toISOString().slice(0,10),laterDay=new Date(Date.now()+3*86400000).toISOString().slice(0,10),time=(hour,whichDay=day)=>`${whichDay}T${String(hour).padStart(2,'0')}:00:00-06:00`;
+await db.exec(`create role anon;create role authenticated;create role service_role bypassrls;create schema auth;create function auth.uid() returns uuid language sql as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema auth to authenticated;
+create table profiles(id uuid primary key,full_name text,role text,is_disabled boolean,is_provider boolean);
+create table professionals(id uuid primary key,profile_id uuid,business_name text,slug text,is_banned boolean);
+create table quotes(id uuid primary key,professional_id uuid,client_id uuid,title text,client_name text,total numeric,status text,created_at timestamptz,deleted_at timestamptz);
+insert into profiles values('${owner}','Proveedor original','professional',false,true),('${otherOwner}','Otro proveedor','professional',false,true),('${client}','Cliente de cuenta','client',false,false),('${outsider}','Cuenta ajena','client',false,false);
+insert into professionals values('${professional}','${owner}','Proveedor original','citas-original',false),('${otherProfessional}','${otherOwner}','Otro proveedor','citas-otro',false);`);
+await db.exec(await readFile('docs/pro/sql/memberships-draft.sql','utf8'));await db.exec(await readFile('docs/pro/sql/pro-entitled-draft.sql','utf8'));
+const contact={id:'reservation-'+client,name:'Contacto conservado',email:'saved@example.test',phone:'8888-1234',notes:'Nota privada conservada',address:'Dirección original conservada',archived:false};
+const legacyWork={id:'legacy-work',clientId:contact.id,client:contact.name,service:'Trabajo anterior conservado',stage:'scheduled',start:time(10),end:time(11),cancelled:false,bookingClientId:client};
+const original={version:1,clients:[contact],products:[{id:'material',sku:'MAT',name:'Material conservado',stock:20,minimum:2,cost:15,price:25,archived:false}],movements:[],work:[legacyWork],availability:[{start:time(8),end:time(16)},{start:time(8,laterDay),end:time(16,laterDay)}],quotes:[],quoteLinks:[],social:[]};
+for(const actor of [owner,otherOwner]){await db.query('select pro_save_workspace($1,$2,0)',[actor,original]);await db.query("insert into pro_memberships(user_id,status) values($1,'active')",[actor]);}
+for(const file of ['catalog-storage-draft.sql','catalog-item-types-local.sql','catalog-mutations-draft.sql','catalog-pages-draft.sql','panel-storage-draft.sql','panel-queries-draft.sql','client-operations-draft.sql'])await db.exec(await readFile('docs/pro/sql/'+file,'utf8'));
+await db.query('select pro_record_client_operation($1,$2,1)',[owner,{actionId:crypto.randomUUID(),clientId:contact.id,workId:legacyWork.id,kind:'agreement',amountCents:100000,note:'Acuerdo original'}]);
+const coreRevision=async()=>(await db.query('select revision from pro_workspace_core where user_id=$1',[owner])).rows[0].revision;
+await db.query('select pro_record_client_operation($1,$2,$3)',[owner,{actionId:crypto.randomUUID(),clientId:contact.id,workId:legacyWork.id,kind:'payment',amountCents:1000,note:'Pago original'},await coreRevision()]);
+const privateSnapshot=async()=>{
+ const tables=['pro_clients','pro_products','pro_movements','pro_client_entries','pro_workspace_legacy_backup','pro_panel_legacy_backup'];const out={};
+ for(const table of tables)out[table]=(await db.query(`select coalesce(jsonb_agg(to_jsonb(t) order by to_jsonb(t)::text),'[]') result from ${table} t`)).rows[0].result;
+ out.core=(await db.query('select user_id,document from pro_workspace_core order by user_id')).rows;
+ out.legacyWork=(await db.query('select to_jsonb(w) row from pro_work w where id=$1 order by user_id',[legacyWork.id])).rows;
+ return out;
+};
+const baseline=await privateSnapshot();
+await db.exec(await readFile('docs/pro/sql/appointment-requests-local.sql','utf8'));
+await installRequestQuoteAccountOverride(db);
+const sql=await readFile('docs/pro/sql/work-changes-local.sql','utf8');await db.exec(sql);
+const change=async(actor,input)=>(await db.query('select pro_work_changes_mutate($1,$2) result',[actor,input])).rows[0].result;
+const page=async(actor=owner,request=null)=>(await db.query('select pro_work_changes_page($1,$2,$3,null) result',[actor,legacyWork.id,request])).rows[0].result;
+assert.equal(signedCents('-125,25'),-12525);assert.equal(signedCents('0.01'),1);assert.equal(signedCents('1.999'),null);
+const proposal={action:'propose',id:crypto.randomUUID(),actionId:crypto.randomUUID(),workId:legacyWork.id,baseCents:100000,reason:'Material adicional',lines:[{description:'Pieza autorizada',amountCents:2500},{description:'Descuento',amountCents:-500}]};
+assert.equal(workChangeMutation.safeParse(proposal).success,true);for(const patch of [{lines:[{description:'',amountCents:1}]},{lines:[{description:'Pieza',amountCents:0}]},{lines:[{description:'Pieza',amountCents:-200000}]},{extra:true}])assert.equal(workChangeMutation.safeParse({...proposal,...patch}).success,false);
+assert.equal((await page()).account.agreedCents,100000);
+assert.equal(await page(outsider),null);
+const receipt=await change(owner,proposal);assert.equal(receipt.status,'proposed');assert.deepEqual(await change(owner,proposal),receipt);assert.equal((await page()).account.agreedCents,100000);
+await assert.rejects(()=>change(owner,{...proposal,reason:'Otra descripción'}),e=>e.code==='22023');
+// A shared customer must never resolve an approval to another owner's colliding UUID.
+const otherRevision=(await db.query('select revision from pro_workspace_core where user_id=$1',[otherOwner])).rows[0].revision;
+await db.query('select pro_record_client_operation($1,$2,$3)',[otherOwner,{actionId:crypto.randomUUID(),clientId:contact.id,workId:legacyWork.id,kind:'agreement',amountCents:100000},otherRevision]);
+await assert.rejects(()=>change(otherOwner,{...proposal,actionId:crypto.randomUUID()}),e=>e.code==='23505');
+assert.equal((await db.query('select count(*)::int n from pro_work_changes where id=$1',[proposal.id])).rows[0].n,1);
+await assert.rejects(()=>change(outsider,{action:'accept',id:proposal.id,actionId:crypto.randomUUID(),revision:1}),e=>e.code==='42501');
+await assert.rejects(()=>change(owner,{action:'accept',id:proposal.id,actionId:crypto.randomUUID(),revision:1}),e=>e.code==='42501');
+const accept={action:'accept',id:proposal.id,actionId:crypto.randomUUID(),revision:1};await change(client,accept);assert.equal((await page()).account.agreedCents,102000);assert.equal((await page()).account.paidCents,1000);assert.equal((await page()).items[0].recordedBy,'client');assert.deepEqual(await change(client,accept),{id:proposal.id,revision:2,status:'accepted'});assert.equal((await db.query("select count(*)::int n from pro_client_entries where user_id=$1 and kind='agreement'",[owner])).rows[0].n,2);
+const second={...proposal,id:crypto.randomUUID(),actionId:crypto.randomUUID(),baseCents:102000};await change(owner,second);
+await db.query('select pro_record_client_operation($1,$2,$3)',[owner,{actionId:crypto.randomUUID(),clientId:contact.id,workId:legacyWork.id,kind:'agreement',amountCents:103000},await coreRevision()]);
+assert.equal((await page()).items[0].stale,true);
+await assert.rejects(()=>change(client,{action:'accept',id:second.id,actionId:crypto.randomUUID(),revision:1}),e=>e.code==='40001');
+await change(owner,{action:'withdraw',id:second.id,actionId:crypto.randomUUID(),revision:1});
+const third={...proposal,id:crypto.randomUUID(),actionId:crypto.randomUUID(),baseCents:103000};await change(owner,third);const external={action:'record_acceptance',id:third.id,actionId:crypto.randomUUID(),revision:1,note:'El cliente autorizó el cambio personalmente el día de hoy.'};await change(owner,external);assert.equal((await page()).account.agreedCents,105000);assert.equal((await page()).items[0].recordedBy,'provider');
+const fourth={...proposal,id:crypto.randomUUID(),actionId:crypto.randomUUID(),baseCents:105000};await change(owner,fourth);await db.query("update pro_memberships set expires_at=now()-interval '1 day' where user_id=$1",[owner]);await assert.rejects(()=>change(client,{action:'accept',id:fourth.id,actionId:crypto.randomUUID(),revision:1}),e=>e.code==='42501');await change(client,{action:'decline',id:fourth.id,actionId:crypto.randomUUID(),revision:1});
+for(const role of ['anon','authenticated']){for(const table of ['pro_work_changes','pro_work_change_actions'])assert.equal((await db.query('select has_table_privilege($1,$2,$3) yes',[role,table,'SELECT'])).rows[0].yes,false);assert.equal((await db.query("select has_function_privilege($1,'pro_work_changes_mutate(uuid,jsonb)','EXECUTE') yes",[role])).rows[0].yes,false);}
+const after=await privateSnapshot();for(const name of ['pro_clients','pro_products','pro_movements','pro_workspace_legacy_backup','pro_panel_legacy_backup','core','legacyWork'])assert.deepEqual(after[name],baseline[name]);
+await db.exec(sql);assert.equal((await page()).items.length,4);assert.equal((await page()).account.agreedCents,105000);
+console.log('PASS commercial changes: immutable proposals, approvals, exact retries, updated agreement without duplicate payment, stale balances, third parties, free customer, expiry, grants and preservation');await db.close();

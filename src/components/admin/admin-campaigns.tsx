@@ -52,7 +52,7 @@ export function AdminCampaigns() {
       if (r.ok) { setResena(d); setResenaError(""); }
       else setResenaError(d.error || "No se pudo comprobar el historial.");
     } catch {
-      setResenaError("No se pudo confirmar el resultado. Actualiza el estado antes de reintentar.");
+      setResenaError("No se pudo confirmar el resultado. Actualice el estado antes de reintentar.");
     } finally {
       setInvitando(false);
     }
@@ -119,7 +119,7 @@ export function AdminCampaigns() {
         description: `Sale ahora a las primeras ${tanda.porTanda} que faltan (quedan ${tanda.restantes} de ${clientes ?? 0}). Solo se incluyen cuentas pendientes, sin baja ni rebote, y sin otro correo de campaña en los últimos 14 días. El resto queda pendiente para otra tanda. No se puede deshacer.`,
         confirmLabel: "Enviar ahora",
         tone: "danger",
-        input: { label: "Escribe ENVIAR para confirmar", placeholder: "ENVIAR" },
+        input: { label: "Escriba ENVIAR para confirmar", placeholder: "ENVIAR" },
       });
       if (!confirmed || value !== "ENVIAR") return;
     }
@@ -127,7 +127,7 @@ export function AdminCampaigns() {
     try {
       const res = await fetch("/api/admin/campanas", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ subject, body, ctaLabel, ctaPath, mode, audiencia: plantilla.audiencia, campaignId: plantilla.id, confirm: mode === "all" ? "ENVIAR" : undefined }) });
       const d = await res.json();
-      if (!res.ok) { await showMessage({ title: "No se pudo enviar", description: d.error ?? "Intenta de nuevo.", tone: "danger" }); return; }
+      if (!res.ok) { await showMessage({ title: "No se pudo enviar", description: d.error ?? "Intente de nuevo.", tone: "danger" }); return; }
       if (mode === "test") await showMessage({ title: d.ok ? "Prueba enviada" : "La prueba no salió", description: d.ok ? `Revisa ${d.to}.` : String(d.detail ?? ""), tone: d.ok ? "success" : "danger" });
       else {
         await showMessage({
@@ -138,7 +138,7 @@ export function AdminCampaigns() {
         await cargarEstado();
       }
     } catch {
-      await showMessage({ title: "No se pudo confirmar el resultado", description: "Actualiza el estado antes de reintentar. Los destinatarios reservados no se volverán a enviar automáticamente.", tone: "danger" });
+      await showMessage({ title: "No se pudo confirmar el resultado", description: "Actualice el estado antes de reintentar. Los destinatarios reservados no se volverán a enviar automáticamente.", tone: "danger" });
       await cargarEstado();
     } finally {
       setEnviando(null);
@@ -265,7 +265,7 @@ export function AdminCampaigns() {
               {body.split(/\n{2,}/).map((p, i) => <p key={i} className="whitespace-pre-line">{p}</p>)}
             </div>
             {ctaLabel && ctaPath && <span className="mt-4 inline-flex h-10 items-center rounded-full bg-[#009FD9] px-5 text-sm font-bold text-white">{ctaLabel}</span>}
-            <p className="mt-5 text-[11px] leading-5 text-[#68778d]">Recibes este correo porque tienes una cuenta en ContrataCR. <span className="underline">No quiero recibir novedades</span>.</p>
+            <p className="mt-5 text-[11px] leading-5 text-[#68778d]">Recibe este correo porque tiene una cuenta en ContrataCR. <span className="underline">No quiero recibir novedades</span>.</p>
           </div>
         </div>
       </div>

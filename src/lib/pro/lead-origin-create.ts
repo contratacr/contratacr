@@ -1,0 +1,11 @@
+import {z} from 'zod';
+import {leadCenterMutationSchema,leadCenterResultSchema,leadCenterItemSchema} from './lead-center';
+import {leadOriginChannelIdSchema,leadOriginResultSchema,leadOriginSchema} from './lead-origins';
+const id=z.string().uuid();
+const legacyCreate=leadCenterMutationSchema.options[0];
+export const leadOriginCreateInputSchema=z.object({action:z.literal('create_lead'),actionId:id,lead:legacyCreate,channel:z.object({id:leadOriginChannelIdSchema,revision:z.number().int().nonnegative().max(2147483647)}).strict().nullable()}).strict().refine(v=>v.actionId!==v.lead.actionId);
+export const leadOriginCreateResultSchema=z.object({action:z.literal('create_lead'),lead:leadCenterResultSchema,origin:leadOriginResultSchema.nullable()}).strict().refine(v=>v.lead.action==='create'&&v.lead.before===null&&v.lead.item.kind==='manual'&&v.lead.item.manual.revision===1&&(v.origin===null||v.origin.type==='origin'&&v.origin.action==='assign'&&v.origin.origin.kind==='manual'&&v.origin.origin.id===v.lead.item.id&&v.origin.before.revision===0&&v.origin.before.channel===null&&v.origin.before.canWrite&&v.origin.origin.canWrite&&v.origin.origin.revision===1&&v.origin.origin.channel!==null&&v.origin.before.legacyLabel===v.lead.item.manual.sourceLabel&&v.origin.origin.legacyLabel===v.lead.item.manual.sourceLabel));
+export const leadOriginCreateReceiptSchema=z.object({receipt:z.object({input:leadOriginCreateInputSchema,result:leadOriginCreateResultSchema}).strict().refine(v=>v.result.lead.item.id===v.input.lead.id&&(v.input.channel===null?v.result.origin===null:v.result.origin?.type==='origin'&&v.result.origin.origin.channel?.id===v.input.channel.id&&v.result.origin.origin.channel.revision===v.input.channel.revision)).nullable()}).strict();
+export const leadOriginCreateCurrentSchema=z.object({item:leadCenterItemSchema,origin:leadOriginSchema}).strict().refine(v=>v.item.kind==='manual'&&v.origin.kind==='manual'&&v.item.id===v.origin.id&&v.origin.legacyLabel===v.item.manual.sourceLabel&&v.origin.canWrite===(!v.item.manual.archived&&!v.item.client.archived));
+export type LeadOriginCreateInput=z.infer<typeof leadOriginCreateInputSchema>;
+export type LeadOriginCreateResult=z.infer<typeof leadOriginCreateResultSchema>;

@@ -88,18 +88,18 @@ export function supportReplyEmail(opts: {
   const privateLink = !opts.hasAccount && opts.topic === "subject1" && opts.ticketId
     ? guestAccessLink(SITE, opts.ticketId, opts.toEmail) : null;
   const followHtml = privateLink
-    ? `<p style="margin:14px 0 0;color:#6b7280;font-size:13px;">Puedes continuar este caso de acceso sin crear una cuenta mediante el enlace privado. Es válido por 14 días; no lo compartas. Responde desde el caso: las respuestas a este correo no se agregan a la conversación.</p>`
+    ? `<p style="margin:14px 0 0;color:#6b7280;font-size:13px;">Puede continuar este caso de acceso sin crear una cuenta mediante el enlace privado. Es válido por 14 días; no lo comparta. Responda desde el caso: las respuestas a este correo no se agregan a la conversación.</p>`
     : opts.hasAccount
-    ? `<p style="margin:14px 0 0 0;color:#6b7280;font-size:13px;">Puedes responder desde tu panel para continuar la conversación.</p>`
-    : `<p style="margin:14px 0 0 0;color:#6b7280;font-size:13px;">Para ver la conversación completa y seguir respondiendo, crea una cuenta o inicia sesión con este correo (${escapeHtml(opts.toEmail)}). Encontrarás este caso en tu panel.</p>`;
+    ? `<p style="margin:14px 0 0 0;color:#6b7280;font-size:13px;">Puede responder desde su panel para continuar la conversación.</p>`
+    : `<p style="margin:14px 0 0 0;color:#6b7280;font-size:13px;">Para ver la conversación completa y seguir respondiendo, cree una cuenta o inicie sesión con este correo (${escapeHtml(opts.toEmail)}). Encontrará este caso en su panel.</p>`;
   const cta = privateLink
     ? { href: privateLink, label: "Continuar mi caso" }
     : opts.hasAccount
     ? { href: `${SITE}${ticketPath}`, label: "Ver conversación" }
     : { href: `${SITE}/login?redirect=${encodeURIComponent(ticketPath)}`, label: "Crear cuenta o iniciar sesión" };
   const html = shell(
-    "Tienes una respuesta de soporte",
-    `<p style="margin:0 0 12px 0;">${firstName ? `Hola ${escapeHtml(firstName)}, ` : ""}respondimos a tu consulta <strong>"${escapeHtml(opts.subject)}"</strong>:</p>
+    "Tiene una respuesta de soporte",
+    `<p style="margin:0 0 12px 0;">${firstName ? `Hola ${escapeHtml(firstName)}, ` : ""}respondimos a su consulta <strong>"${escapeHtml(opts.subject)}"</strong>:</p>
      <div style="border:1px solid #e5e7eb;border-radius:8px;padding:14px;white-space:pre-wrap;">${escapeHtml(opts.body)}</div>
      ${followHtml}`,
     cta,

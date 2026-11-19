@@ -34,6 +34,30 @@ function loadEnvFile(filePath) {
 
 const localTestEnv = loadEnvFile(".env.test") ?? {};
 
+// Required server secrets (development only fallback). PRO_BID_PORTAL_SECRET keys the stored hashes of the vendor
+// portal links and sessions; DIR_CLAIM_OTP_PEPPER the HMAC of the one-time claim codes; DIR_VISITOR_PEPPER the HMAC of
+// the device id behind guest reviews/contacts/reservations. When no env source defines one, this dev server uses a
+// DETERMINISTIC, PUBLIC, NOT-SECRET local value: sha256hex('contratacr-local-dev-only:' + NAME), the same value
+// src/lib/security/local-dev-secrets.ts uses, so codes and links survive restarts. Production refuses that value and
+// never generates a random one (missing secret -> 503 and a server error). In the Next.js env files only the presence
+// of the variable NAME is checked (no value is used or logged), so a secret defined there always wins.
+function definesVariable(filePath, name) {
+  const absolute = path.resolve(process.cwd(), filePath);
+  if (!fs.existsSync(absolute)) return false;
+  const pattern = new RegExp(`^\\s*(?:export\\s+)?${name}\\s*=\\s*\\S`, "m");
+  return pattern.test(fs.readFileSync(absolute, "utf8"));
+}
+const localDevOnlyEnv = {};
+for (const secretName of ["PRO_BID_PORTAL_SECRET", "DIR_CLAIM_OTP_PEPPER", "DIR_VISITOR_PEPPER"]) {
+  if (
+    !process.env[secretName] &&
+    !localTestEnv[secretName] &&
+    ![".env.development.local", ".env.local", ".env.development", ".env"].some((file) => definesVariable(file, secretName))
+  ) {
+    localDevOnlyEnv[secretName] = process.getBuiltinModule("node:crypto").createHash("sha256").update(`contratacr-local-dev-only:${secretName}`, "utf8").digest("hex");
+  }
+}
+
 const nextEntry = path.join(process.cwd(), "node_modules", "next", "dist", "bin", "next");
 const nextCmd = process.execPath;
 const nextArgs = [nextEntry, "dev", ...process.argv.slice(2)];
@@ -44,6 +68,7 @@ const child = spawn(nextCmd, nextArgs, {
   env: {
     ...process.env,
     ...localTestEnv,
+    ...localDevOnlyEnv,
     NODE_ENV: "development",
   },
 });

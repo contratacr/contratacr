@@ -1,0 +1,50 @@
+import {test,expect,type BrowserContext,type Locator,type Page} from 'playwright/test';
+import {createServerClient} from '@supabase/ssr';
+import {createDisposableAccount,cleanupDisposableAccount,type DisposableAccount} from './disposable-account';
+import {regressionAdminClient} from './seed';
+import {emptyBusiness} from '../../src/lib/pro/business';
+import {gotoOK,expectNoHorizontalOverflow} from './helpers';
+
+async function ready(page:Page,target:Locator){
+ const recovery=page.locator('[data-session-recovery]');await expect.poll(async()=>await recovery.isVisible()||await target.isVisible()).toBe(true);
+ if(await recovery.isVisible()){await expect(recovery.getByRole('alert')).toBeVisible();await recovery.getByRole('button',{name:'Try again',exact:true}).click();await expect(recovery).toHaveCount(0);}
+ await expect(target).toBeVisible();
+}
+
+test('Ordinary quote response keeps its exact pending approval after a lost acknowledgement, 401 and expiry [en]',async({page,browser,baseURL},info)=>{
+ test.setTimeout(150000);expect(process.env.NEXT_PUBLIC_SUPABASE_URL).toBe('http://127.0.0.1:54321');
+ const db=regressionAdminClient(),actors:DisposableAccount[]=[];let provider:BrowserContext|undefined,bodyError:unknown;
+ async function login(context:BrowserContext,actor:DisposableAccount){const auth=createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!,process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,{cookies:{getAll:()=>[],setAll:async cookies=>{await context.addCookies(cookies.map(cookie=>({name:cookie.name,value:cookie.value,url:baseURL!,sameSite:'Lax' as const})));}}});expect((await auth.auth.signInWithPassword({email:actor.email,password:actor.password})).error).toBeNull();await context.addCookies([{name:'NEXT_LOCALE',value:'en',url:baseURL!}]);}
+ try{
+  const owner=await createDisposableAccount({prefix:'quote-response-owner'});actors.push(owner);const client=await createDisposableAccount({prefix:'quote-response-client'});actors.push(client);
+  const account=await db.auth.admin.getUserById(owner.id);expect((await db.auth.admin.updateUserById(owner.id,{user_metadata:{...account.data.user!.user_metadata,role:'professional',is_provider:true}})).error).toBeNull();await db.from('profiles').update({role:'professional',is_provider:true}).eq('id',owner.id).throwOnError();await db.from('pro_memberships').insert({user_id:owner.id,status:'active'}).throwOnError();await db.from('pro_appointment_preferences').insert({owner_id:owner.id,enabled:true,revision:1}).throwOnError();
+  const professional=(await db.from('professionals').insert({profile_id:owner.id,category_id:'desarrollo_web',business_name:'Response recovery local',slug:'quote-response-'+owner.id,whatsapp:'',provincia_id:'al',canton_id:'al-at',verification_status:'pending',is_available:true,is_banned:false}).select('id').single().throwOnError()).data!;
+  const contactId='reservation-'+client.id,day=new Date(Date.now()+3*86400000).toISOString().slice(0,10),workspace=emptyBusiness();workspace.clients=[{id:contactId,name:'Response recovery customer',email:'',phone:'',notes:'Original private contact',archived:false}];workspace.availability=[{start:day+'T08:00:00-06:00',end:day+'T16:00:00-06:00'}];await db.from('pro_workspaces').insert({user_id:owner.id,document:workspace,revision:1}).throwOnError();
+  for(const actor of actors)await db.from('notification_once_receipts').insert({user_id:actor.id,type:'resena_google',status:'historical_unknown',sent_at:null}).throwOnError();
+  const {viewport,isMobile,hasTouch,userAgent,deviceScaleFactor}=info.project.use;provider=await browser.newContext({baseURL,viewport,isMobile,hasTouch,userAgent,deviceScaleFactor});await login(provider,owner);await login(page.context(),client);const headers={origin:new URL(baseURL!).origin},requestId=crypto.randomUUID();
+  const requested=await page.request.post('/api/pro/appointment-requests',{headers,data:{action:'create',id:requestId,actionId:crypto.randomUUID(),professionalId:professional.id,service:'Response recovery visit',durationMinutes:60,locationKind:'agree',locationText:'',note:'Original request retained',start:day+'T10:00:00-06:00',preferredDay:null,preference:''}});expect(requested.status()).toBe(200);expect((await requested.json()).status).toBe('requested');
+  expect((await provider.request.post('/api/pro/appointment-quote-context',{headers,data:{requestId}})).status()).toBe(200);
+  const created=await provider.request.post('/api/quotes',{headers,data:{sourceRequestId:requestId,clientActionId:crypto.randomUUID(),clientName:'Response recovery customer',title:'Ordinary response recovery',items:[{description:'Service line retained through response retries',quantity:1,unit_price:2000}],taxMode:'exento',validDays:1}});expect(created.status()).toBe(200);const quote=(await created.json()).quote;expect(quote).toMatchObject({client_id:client.id,status:'sent',total:2000});
+  const snapshot=async()=>({quote:(await db.from('quotes').select('*').eq('id',quote.id).single().throwOnError()).data,request:(await db.from('pro_appointment_requests').select('*').eq('id',requestId).single().throwOnError()).data,events:(await db.from('pro_appointment_events').select('*').eq('request_id',requestId).order('position').throwOnError()).data,work:(await db.from('pro_work').select('*').eq('user_id',owner.id).throwOnError()).data,ledger:(await db.from('pro_client_entries').select('*').eq('user_id',owner.id).throwOnError()).data,contact:(await db.from('pro_clients').select('*').eq('user_id',owner.id).eq('id',contactId).single().throwOnError()).data,receipts:(await db.from('pro_request_quote_actions').select('*').eq('actor_id',client.id).order('action_id').throwOnError()).data,notices:(await db.from('notifications').select('*').in('user_id',actors.map(actor=>actor.id)).order('id').throwOnError()).data});const before=await snapshot();expect(before.work).toEqual([]);expect(before.ledger).toEqual([]);expect(before.receipts).toEqual([]);
+  const attempts:string[]=[];
+  await page.route('**/api/quotes',async route=>{
+   if(route.request().method()!=='PATCH'){await route.continue();return;}
+   attempts.push(route.request().postData()!);
+   if(attempts.length===2){await route.fulfill({status:401,contentType:'application/json',body:JSON.stringify({error:'Session denial cannot undo a prior response'})});return;}
+   const response=await route.fetch();expect(response.status()).toBe(200);if(attempts.length===1){await route.abort('failed');return;}await route.fulfill({response});
+  });
+  await gotoOK(page,'/en/dashboard/profesional?tab=appointments&citaSolicitud='+requestId);const requestDialog=page.getByRole('dialog',{name:'Appointment request',exact:true});await ready(page,requestDialog);const quoteRow=requestDialog.locator('[data-client-quote-choices]').getByRole('button',{name:/Ordinary response recovery/});await ready(page,quoteRow);await quoteRow.click();
+  const detail=page.getByRole('dialog').filter({hasText:'Service line retained through response retries'});await ready(page,detail);await expect(detail.getByRole('heading').first()).toContainText('Quote No.');await detail.getByRole('button',{name:'Accept quote',exact:true}).click();const confirmation=page.getByRole('dialog').filter({has:page.getByRole('heading',{name:'Accept this quote?',exact:true})});await confirmation.getByRole('button',{name:'Accept quote',exact:true}).click();
+  const message=()=>page.getByRole('dialog').filter({has:page.getByRole('heading',{name:'Could not send',exact:true})});await expect(message()).toBeVisible();await message().getByRole('button',{name:'Close',exact:true}).click();const retry=detail.getByRole('button',{name:'Check saved result',exact:true});await expect(retry).toBeEnabled();expect(attempts).toHaveLength(1);const action=JSON.parse(attempts[0]);expect(action).toMatchObject({id:quote.id,action:'accept',clientActionId:expect.any(String),expectedUpdatedAt:quote.updated_at});
+  const committed=await snapshot();expect(committed.quote).toMatchObject({status:'accepted',total:2000});expect(committed.receipts).toHaveLength(1);expect(committed.receipts![0].input).toEqual(action);expect(committed.request).toEqual(before.request);expect(committed.events).toEqual(before.events);expect(committed.work).toEqual([]);expect(committed.ledger).toEqual([]);
+  await detail.getByRole('button',{name:'Close',exact:true}).click();await expect(detail).toBeVisible();
+  // Advance Date only. The next retry triggers a React render of this still-
+  // mounted, stale sent document after its Costa Rica validity date ended.
+  // Do not reload: the pending response identity belongs to this editor.
+  await page.clock.setFixedTime(Date.parse(quote.valid_until+'T06:00:00Z')+86400000);
+  await retry.click();await expect(message()).toBeVisible();await message().getByRole('button',{name:'Close',exact:true}).click();await expect(detail.getByText('Expired',{exact:true})).toBeVisible();await expect(retry).toBeEnabled();await expect(detail.getByRole('button',{name:'Accept quote',exact:true})).toHaveCount(0);expect(attempts).toHaveLength(2);expect(attempts[1]).toBe(attempts[0]);expect(await snapshot()).toEqual(committed);
+  await expectNoHorizontalOverflow(page);await page.screenshot({path:info.outputPath('expired-uncertain-response-keeps-retry.png'),fullPage:true});
+  await retry.click();await expect(detail).toHaveCount(0);expect(attempts).toHaveLength(3);expect(attempts[2]).toBe(attempts[0]);expect(await snapshot()).toEqual(committed);await expect(requestDialog).toBeVisible();await expect(requestDialog).toContainText('Response recovery visit');
+ }catch(error){bodyError=error;await page.screenshot({path:info.outputPath('quote-response-recovery-failure.png'),fullPage:true}).catch(()=>{});throw error;}
+ finally{await page.close().catch(()=>{});await provider?.close();const failures:unknown[]=[];for(const actor of actors){try{await cleanupDisposableAccount(actor);}catch(error){failures.push(error);}}if(failures.length)throw new AggregateError(bodyError?[bodyError,...failures]:failures,'Response recovery fixture cleanup failed',{cause:bodyError});}
+});

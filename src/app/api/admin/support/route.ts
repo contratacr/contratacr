@@ -74,7 +74,7 @@ export async function PATCH(req: Request) {
   // Cerrar exige un motivo: es lo que el usuario va a leer en el hilo.
   const cerrando = status === "resolved" && ticket.status !== "resolved";
   if (cerrando && !supportCloseReason(String(reason ?? ""))) {
-    return NextResponse.json({ error: "Elige el motivo del cierre." }, { status: 400 });
+    return NextResponse.json({ error: "Elija el motivo del cierre." }, { status: 400 });
   }
 
   // One-way flow: open→in_progress→resolved (open→resolved allowed). Never move
@@ -125,7 +125,7 @@ export async function PATCH(req: Request) {
         user_id: ticket.user_id,
         type: "support_reply",
         title: "Caso de soporte cerrado",
-        message: `Soporte cerró tu caso "${ticket.subject}". Puedes responder si el problema continúa.`,
+        message: `Soporte cerró su caso "${ticket.subject}". Puede responder si el problema continúa.`,
         data: { link: `/dashboard/${panel}?tab=soporte&ticket=${id}`, ticketId: id, ticket_subject: ticket.subject },
       };
       await db.from("notifications").insert(notification);
@@ -145,7 +145,7 @@ export async function POST(req: Request) {
   const safeBody = limitTrimmedText(body, LONG_TEXT_MAX_LENGTH);
   const adjuntos = id ? adjuntosValidos(attachments, id) : [];
   if (!id || (!safeBody && !adjuntos.length)) {
-    return NextResponse.json({ error: "Escribe una respuesta." }, { status: 400 });
+    return NextResponse.json({ error: "Escriba una respuesta." }, { status: 400 });
   }
   const db = createAdminClient();
   const { data: ticket } = await db.from("support_tickets").select("*").eq("id", id).single();
@@ -180,14 +180,14 @@ export async function POST(req: Request) {
   if (ticket.email) {
     // `user_id` set → the requester has an account → deep-link to the exact ticket in
     // their panel; null → a guest (no panel) → "create account / sign in" path instead.
-    await notifyUserOfReply({ toEmail: ticket.email, toName: ticket.name, subject: ticket.subject, body: safeBody || "Te enviamos un archivo adjunto.", eventKey: `support-reply:${replyMessage!.id}`, hasAccount: !!ticket.user_id, panel, ticketId: id, topic: ticket.topic });
+    await notifyUserOfReply({ toEmail: ticket.email, toName: ticket.name, subject: ticket.subject, body: safeBody || "Le enviamos un archivo adjunto.", eventKey: `support-reply:${replyMessage!.id}`, hasAccount: !!ticket.user_id, panel, ticketId: id, topic: ticket.topic });
   }
   if (ticket.user_id) {
     const notification = {
       user_id: ticket.user_id,
       type: "support_reply",
       title: "Respuesta de soporte",
-      message: `Soporte respondió a tu ticket "${ticket.subject}".`,
+      message: `Soporte respondió a su ticket "${ticket.subject}".`,
       data: {
         link: `/dashboard/${panel}?tab=soporte&ticket=${id}`,
         ticketId: id,

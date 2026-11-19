@@ -7,7 +7,9 @@ import { DesktopAppMenu } from "./desktop-app-menu";
 import { MobileAppStoreMenuLink } from "@/components/mobile/mobile-app-store-menu-link";
 import { SocialLinks } from "./social-links";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
-import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
+import { DirectoryExploreMenu, DirectoryDrawerGroup } from "./directory-nav";
+import { prefijoDeIdioma, rutaConIdioma } from "@/lib/prefijo-de-idioma";
+import { useRouter as useRouterDeNext } from "next/navigation";
 
 import { useContext, useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback, useTransition, type ReactNode } from "react";
 import { soltarFoco } from "@/lib/soltar-foco";
@@ -22,6 +24,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { signOutToHome } from "@/lib/auth/sign-out";
 import { useAuth } from "@/hooks/use-auth";
+import { useManagesBusiness } from "@/hooks/use-manages-business";
+import { Store } from "lucide-react";
 import { canOffer } from "@/lib/auth/capabilities";
 import { useMode } from "@/hooks/use-mode";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
@@ -65,7 +69,14 @@ import { getProfessionalDisplayName } from "@/lib/display-name";
 export { ContrataCRLogo, ContrataCRMark } from "@/components/brand/brand-logo";
 
 export function useSwitchLang() {
-  const router = useRouter();
+  // El router de Next, no el de next-intl: con `{ locale }` next-intl fuerza el
+  // prefijo también para el español (/es/servicios) y el middleware responde
+  // 308 a / —también a la petición RSC del cambio—. Next revalida esa respuesta
+  // contra su `_rsc` y vuelve a saltar a /es/…: un bucle de redirecciones hasta
+  // que el navegador se rinde y Next recarga la página entera, segundos
+  // después y con <html lang="en"> mientras tanto. La dirección de cada idioma
+  // se arma aquí con la misma regla que el resto del app: español sin prefijo.
+  const router = useRouterDeNext();
   const pathname = usePathname();
   const locale = useLocale();
   const [, startTransition] = useTransition();
@@ -74,7 +85,7 @@ export function useSwitchLang() {
   // La otra versión se precarga recién cuando el dedo o el ratón llegan al
   // botón (ver `precargar`). Antes se bajaba en TODAS las páginas, por si
   // acaso: ~200 KB por pantalla para algo que casi nadie usa (7-oct-2026).
-  const precargar = () => router.prefetch(pathname, { locale: otroIdioma });
+  const precargar = () => router.prefetch(rutaConIdioma(otroIdioma, pathname));
 
   useEffect(() => {
     document.documentElement.removeAttribute("data-locale-switch");
@@ -99,7 +110,7 @@ export function useSwitchLang() {
       window.setTimeout(() => document.documentElement.removeAttribute("data-locale-switch"), 2500);
     }
     startTransition(() => {
-      router.replace(`${pathname}${currentState}`, { locale: lang, scroll: false });
+      router.replace(`${rutaConIdioma(lang, pathname)}${currentState}`, { scroll: false });
     });
   };
   return Object.assign(cambiar, { precargar });
@@ -588,6 +599,7 @@ function AccountMenu({
   const locale = useLocale();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const managesBusiness = useManagesBusiness(true);
   const menuItemClass = "flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]";
 
   useEffect(() => {
@@ -609,6 +621,7 @@ function AccountMenu({
   return (
     <div ref={ref} className="relative">
       <button
+        data-account-menu-button
         onClick={toggle}
         className="grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"
         aria-label={displayName || t("myPanel")}
@@ -652,6 +665,12 @@ function AccountMenu({
               <Mail className="h-4 w-4 text-[#009FD9]" />
               {locale === "en" ? "Messages" : "Mensajes"}
             </Link>
+            {managesBusiness && (
+              <Link href="/dashboard/negocio" prefetch={false} data-account-business onClick={() => setOpen(false)} className={menuItemClass}>
+                <Store className="h-4 w-4 text-[#009FD9]" />
+                {locale === "en" ? "My business" : "Mi negocio"}
+              </Link>
+            )}
             <Link href={savedHref} onClick={() => setOpen(false)} className={menuItemClass}>
               <Bookmark className="h-4 w-4 text-[#009FD9]" />
               {t("favorites")}
@@ -1177,6 +1196,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const clientPanelHref = `${panelHref}?mode=use`;
   const primaryPanelHref = isPro ? (mode === "offer" ? professionalPanelHref : clientPanelHref) : clientPanelHref;
   const savedHref = "/dashboard/profesional?tab=saved";
+  const drawerManagesBusiness = useManagesBusiness(!!user);
   const profilePanelHref = `${panelHref}?mode=${isPro && mode === "offer" ? "offer" : "use"}&tab=profile`;
   // El nombre del negocio vive en otra tabla, así que pedirlo desde el navegador
   // hacía pintar el nombre de la persona y cambiarlo medio segundo después. Ahora
@@ -1975,7 +1995,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           menú de abajo (30-sep y 1-oct-2026). */}
                     </div>
                   ) : (
-                    <span className="h-10 w-10 shrink-0" aria-hidden />
+                    <div data-pro-section-actions-slot className="flex h-10 w-10 shrink-0 items-center justify-end" />
                   )
                 ) : (
                 <div className="ccr-cabecera-acciones-web ml-auto flex shrink-0 items-center gap-0.5">
@@ -1983,9 +2003,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       se vuelve y el «···» de la publicación. La campana es de la
                       cuenta, no de lo que se está mirando, y ahí solo compite
                       con el «···» —que es el que cierra la fila por la derecha,
-                      como en todas las apps—. En las secciones sí va. */}
-                  {user && !sectionPaso && !sectionMenu && <NotificationBell scope="all" />}
-                  {user && sectionPaso && !sectionMenu && <span className="h-10 w-10" aria-hidden />}
+                      como en todas las apps—. En móvil queda en las pantallas raíz;
+                      las secciones internas respetan la misma regla que la app. */}
+                  {user && (!sectionActive || sectionRoot) && !sectionPaso && !sectionMenu && <NotificationBell scope="all" />}
+                  {user && (sectionPaso || (sectionActive && !sectionRoot)) && !sectionMenu && <div data-pro-section-actions-slot className="flex h-10 w-10 items-center justify-end" />}
                   {!user && !sectionShare && !sectionMenu && <HeaderAccountLink />}
                 </div>
                 )}
@@ -2039,7 +2060,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       type="button"
                       onClick={openNativeSearch}
                       className="flex min-w-0 flex-1 items-center gap-3 text-left"
-                      aria-label={locale === "en" ? "What service are you looking for?" : "¿Qué servicio estás buscando?"}
+                      aria-label={locale === "en" ? "What service are you looking for?" : "¿Qué servicio está buscando?"}
                     >
                       <Search className="h-5 w-5 shrink-0 text-[#162543]" />
                       {searchRouteHasContext ? (
@@ -2049,7 +2070,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         />
                       ) : (
                         <span className="min-w-0 flex-1 truncate text-[15px] font-semibold text-[#8f9aaa]">
-                          {locale === "en" ? "What service are you looking for?" : "¿Qué servicio estás buscando?"}
+                          {locale === "en" ? "What service are you looking for?" : "¿Qué servicio está buscando?"}
                         </span>
                       )}
                     </button>
@@ -2179,6 +2200,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           <Mail className="h-5 w-5 shrink-0" />
                           {t("coverLetter")}
                         </Link>
+                        {/* Directorio de lugares (2026-11-18): solo las secciones encendidas (DIR_ENABLED). */}
+                        <DirectoryExploreMenu locale={locale} onNavigate={() => setOpenMenu(null)} />
                       </div>
                     )}
                   </div>
@@ -2232,7 +2255,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                                 onKeyDown={handleCompactSearchKeyDown}
                                 onFocus={() => { if (searchBlurTimer.current) clearTimeout(searchBlurTimer.current); setSearchFocused(true); }}
                                 onBlur={() => { searchBlurTimer.current = setTimeout(() => setSearchFocused(false), 150); }}
-                                placeholder={locale === "en" ? "What service are you looking for?" : "¿Qué servicio estás buscando?"}
+                                placeholder={locale === "en" ? "What service are you looking for?" : "¿Qué servicio está buscando?"}
                                 className="min-w-0 flex-1 bg-transparent text-[15px] text-[#162543] placeholder:text-[#8f9aaa] focus:outline-none"
                                 role="combobox"
                                 aria-label={locale === "en" ? "Service" : "Servicio"}
@@ -2998,6 +3021,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     </div>
                   )}
                 </div>
+                {/* Directorio de lugares (2026-11-18): se despliega con las secciones encendidas (DIR_ENABLED). */}
+                <DirectoryDrawerGroup locale={locale} itemClass={mobileDrawerItemClass} textClass={mobileDrawerTextClass} icon={<DrawerIcon><MapPin /></DrawerIcon>} onNavigate={() => cerrarCajon()} />
                 <Link href="/servicios" prefetch={true} onClick={cerrarCajon} className={claseCajon("/servicios")}>
                   <DrawerIcon><Compass /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{t("categories")}</span>
@@ -3017,6 +3042,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   <Link href="/mensajes" onClick={cerrarCajon} className={claseCajon("/mensajes")}>
                     <DrawerIcon><Mail /></DrawerIcon>
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Messages" : "Mensajes"}</span>
+                  </Link>
+                )}
+                {user && drawerManagesBusiness && (
+                  <Link href="/dashboard/negocio" prefetch={false} data-drawer-business onClick={cerrarCajon} className={claseCajon("/dashboard/negocio")}>
+                    <DrawerIcon><Store /></DrawerIcon>
+                    <span className={mobileDrawerTextClass}>{locale === "en" ? "My business" : "Mi negocio"}</span>
                   </Link>
                 )}
                 {/* El Asistente es lo único que el cajón aporta de nuevo en la

@@ -96,7 +96,7 @@ test.describe("@smoke reanudar la app", () => {
     await irYVolver(page);
     await sigueRespondiendo(page);
     // La sesión no se perdió en el camino.
-    await expect(page.locator("body")).not.toContainText(/Ingresa a tu cuenta|Log in to your account/);
+    await expect(page.locator("body")).not.toContainText(/Ingrese a su cuenta|Log in to your account/);
   });
 });
 
@@ -117,8 +117,13 @@ for (const native of [false, true]) {
       await loginAs(page, account.email, account.password);
       const params = new URLSearchParams({ draftChat: "1", professionalId: seed!.professionalId, professionalName: "Profesional de regresión" });
       await gotoOK(page, `/mensajes?${params}`);
-      const composer = page.getByPlaceholder("Escribe un mensaje");
+      const composer = page.getByPlaceholder("Escriba un mensaje");
       await expect(composer).toBeVisible();
+      // El compositor llega pintado del servidor antes de que el JS de la
+      // página termine de bajar. La prueba es «suspender y cortar la red con la
+      // pantalla ya abierta», no cortar la red a mitad del arranque (eso daba
+      // un ChunkLoadError de app/layout en un servidor de desarrollo lento).
+      await waitForInteractivePage(page);
       const text = "Borrador de regresión: no enviar este mensaje.";
       await composer.fill(text);
       await page.clock.install();

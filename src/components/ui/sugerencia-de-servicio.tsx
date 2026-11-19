@@ -39,7 +39,7 @@ export function SugerenciaDeServicio({
   const frase = servicioActual
     ? en
       ? fuente === "puesto" ? `By the job title, it looks like ${nombre}.` : `By your description, it looks like ${nombre}.`
-      : fuente === "puesto" ? `Por el puesto, parece de ${nombre}.` : `Por lo que describes, parece ${nombre}.`
+      : fuente === "puesto" ? `Por el puesto, parece de ${nombre}.` : `Por lo que describe, parece ${nombre}.`
     : en ? `Is it ${nombre}?` : `¿Es de ${nombre}?`;
 
   return (

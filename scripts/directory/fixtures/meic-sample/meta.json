@@ -1,0 +1,9 @@
+{
+ "_note": "FIXTURE SINTÉTICO. No es un archivo del MEIC: MEIC no publica un archivo descargable (ver research-verticales/meic-precios.md). Comercios, productos y precios son inventados solo para pruebas; nunca se importan a una base compartida.",
+ "source": "meic",
+ "sourceUrl": "https://example.invalid/meic-fixture/precios-sinteticos.csv",
+ "publicationDate": "2026-11-02",
+ "surveyRef": "SINTETICO-MEIC-0001",
+ "licenseNote": "Fixture de prueba; licencia MEIC por confirmar",
+ "file": "precios-sinteticos.csv"
+}

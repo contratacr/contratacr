@@ -1,5 +1,6 @@
 "use client";
 
+import {parseQuoteProfileReturn} from "@/lib/pro/manual-lead-quote-capability";
 import { signupLegalAcceptance } from "@/lib/privacy/legal-version";
 
 import { useRegistrationIntent } from "@/hooks/use-registration-intent";
@@ -477,6 +478,12 @@ export default function RegisterProfessionalPage() {
     }),
   }), [t, tRp]);
   const { user: currentUser, loading: authLoading } = useAuth();
+  const quoteReturnRef=useRef<{path:string;account:string}|null>(null),quoteFlowRef=useRef(false);
+  const [quoteReturnSnapshot,setQuoteReturnSnapshot]=useState<{path:string;account:string}|null>(null);
+  const quoteReturn=quoteReturnSnapshot?.account===currentUser?.id?quoteReturnSnapshot:null;
+  useEffect(()=>{const params=new URLSearchParams(window.location.search);if(params.has('quoteReturnTo')||params.has('quoteReturnActor'))quoteFlowRef.current=true;const candidate=parseQuoteProfileReturn(params.get('quoteReturnTo'),params.get('quoteReturnActor'));if(candidate)quoteReturnRef.current=candidate;if(currentUser?.id&&quoteReturnRef.current?.account!==currentUser.id)quoteReturnRef.current=null;setQuoteReturnSnapshot(quoteReturnRef.current);},[currentUser?.id]);
+  function backToQuoteLead(){const target=quoteReturnRef.current;if(!target||target.account!==currentUser?.id)return;let sameReferrer=false;try{const previous=new URL(document.referrer);sameReferrer=previous.origin===window.location.origin&&previous.pathname+previous.search===target.path;}catch{/* No reliable previous document. */}if(sameReferrer&&window.history.length>1){window.history.back();return;}window.location.replace(target.path);}
+
   const authMetadata = currentUser?.app_metadata as { provider?: string; providers?: string[] } | undefined;
   const connectedProvider =
     authMetadata?.provider && authMetadata.provider !== "email"
@@ -665,6 +672,9 @@ export default function RegisterProfessionalPage() {
   // Quien llegó aquí para publicar algo (o para reservar) vuelve a eso al
   // terminar; sin destino guardado, al panel profesional de siempre.
   function destinoTrasCrear(sufijo = ""): string {
+    const quoteTarget=quoteReturnRef.current;
+    if(quoteTarget&&quoteTarget.account===currentUser?.id)return quoteTarget.path;
+    if(quoteFlowRef.current)return `${prefijoDeIdioma(locale)}/dashboard/profesional?mode=offer${sufijo}`;
     const guardado = typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("redirect");
     if (guardado && guardado.startsWith("/") && !guardado.startsWith("//")) {
       return /^\/(es|en)(\/|$)/.test(guardado) ? guardado : rutaConIdioma(locale, guardado);
@@ -1055,10 +1065,11 @@ export default function RegisterProfessionalPage() {
     return (
       <div className="ccr-account-page ccr-paso-codigo min-h-dvh flex flex-col bg-white">
         {/* 15-nov-2026: «Atrás» en el paso 0 va al inicio, no al panel: el panel manda una cuenta que puede ofrecer pero aún no tiene fila de profesional de vuelta a /registro/profesional, y se formaba un bucle. */}
-        {currentUser ? <CabeceraDeTramite title={t("headerTitle")} backHref="/" onBack={step > 0 ? () => setStep(step - 1) : undefined} backLabel={step > 0 ? t("back") : undefined} /> : <Navbar mobileSearch={false} />}
+        {currentUser ? <CabeceraDeTramite title={t("headerTitle")} backHref={quoteReturn?.path??"/"} onBack={step > 0 ? () => setStep(step - 1) : quoteReturn ? backToQuoteLead : undefined} backLabel={step > 0 ? t("back") : quoteReturn ? (locale==='en'?'Back to lead':'Volver a solicitud') : undefined} /> : <Navbar mobileSearch={false} />}
         <main className="flex-1 ccr-centrado-seguro py-12 px-4">
           <div className="w-full max-w-sm">
             <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-6 sm:p-8">
+              {quoteReturn&&<Button type="button" variant="ghost" className="mb-3 hidden lg:inline-flex" onClick={()=>{if(step>0)setStep(step-1);else backToQuoteLead();}}><ArrowLeft aria-hidden="true" className="h-4 w-4"/>{step>0?t("back"):(locale==='en'?'Back to lead':'Volver a solicitud')}</Button>}
               <OtpVerification email={otpEmail} onVerified={() => { setOtpEmail(null); setStep(1); }} />
             </div>
           </div>
@@ -1117,7 +1128,7 @@ export default function RegisterProfessionalPage() {
   return (
     <div className="ccr-account-page min-h-dvh flex flex-col bg-white">
       {/* 15-nov-2026: «Atrás» en el paso 0 va al inicio, no al panel: el panel manda una cuenta que puede ofrecer pero aún no tiene fila de profesional de vuelta a /registro/profesional, y se formaba un bucle. */}
-      {currentUser ? <CabeceraDeTramite title={t("headerTitle")} backHref="/" onBack={step > 0 ? () => setStep(step - 1) : undefined} backLabel={step > 0 ? t("back") : undefined} /> : <Navbar mobileSearch={false} />}
+      {currentUser ? <CabeceraDeTramite title={t("headerTitle")} backHref={quoteReturn?.path??"/"} onBack={step > 0 ? () => setStep(step - 1) : quoteReturn ? backToQuoteLead : undefined} backLabel={step > 0 ? t("back") : quoteReturn ? (locale==='en'?'Back to lead':'Volver a solicitud') : undefined} /> : <Navbar mobileSearch={false} />}
       {/* Con sesión la tarjeta se pega arriba, debajo del título: `ccr-centrado-seguro`
           la centra a lo alto de la pantalla y en un paso corto eso dejaba un
           hueco enorme entre la cabecera y el formulario. Sin sesión sigue
@@ -1132,6 +1143,7 @@ export default function RegisterProfessionalPage() {
               Estirarla dejaba una caja blanca enorme y vacía en el paso de la
               foto, que es el más corto de los tres. */}
           <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
+          {quoteReturn&&<Button type="button" variant="ghost" className="mb-3 hidden lg:inline-flex" onClick={()=>{if(step>0)setStep(step-1);else backToQuoteLead();}}><ArrowLeft aria-hidden="true" className="h-4 w-4"/>{step>0?t("back"):(locale==='en'?'Back to lead':'Volver a solicitud')}</Button>}
           {/* El título del trámite va en la tarjeta, encima de los pasos. En
               el teléfono con sesión ya lo dice la cabecera («Ofrecer mis
               servicios»), así que ahí no se repite. */}

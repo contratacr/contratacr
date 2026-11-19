@@ -4,14 +4,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { analyticsActor } from "@/lib/analytics/admin-activity";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { enforceRateLimit } from "@/lib/rate-limit";
+import { isSameOriginRequest } from "@/lib/security/write-guard";
 import { requestAnalyticsPlatform } from "@/lib/analytics/platform";
 import { peticionAutomatizada } from "@/lib/analytics/trafico-automatizado";
 import { cleanJourney } from "@/lib/analytics/journey-contract";
 export async function POST(req: NextRequest) {
   if (!requestStatisticsAllowed(req)) return new NextResponse(null, { status: 204 });
-  if (req.headers.get("origin") !== new URL(req.url).origin) return new NextResponse(null, { status: 403 });
+  if (!isSameOriginRequest(req)) return new NextResponse(null, { status: 403 });
   if (peticionAutomatizada(req)) return new NextResponse(null, { status: 204 });
-  const limited = enforceRateLimit(req, "analytics-journey", 30, 60_000);
+  const limited = await enforceRateLimit(req, "analytics-journey", 30, 60_000);
   if (limited) return limited;
   if (Number(req.headers.get("content-length") || 0) > 12000) return new NextResponse(null, { status: 413 });
   const raw = await req.text();

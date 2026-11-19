@@ -37,7 +37,7 @@ export function SignInMethods() {
     const supabase = createClient();
     const { data: session } = await supabase.auth.getUser();
     if (!session.user || session.user.id !== user?.id) {
-      setMessage(english ? "Sign in again before connecting another method." : "Vuelve a iniciar sesión antes de conectar otro método.");
+      setMessage(english ? "Sign in again before connecting another method." : "Vuelva a iniciar sesión antes de conectar otro método.");
       setBusy(null);
       return;
     }
@@ -59,7 +59,7 @@ export function SignInMethods() {
       const { error } = await supabase.auth.linkIdentity({ provider, options: { redirectTo } });
       if (error) throw error;
     } catch {
-      setMessage(english ? "We couldn't connect this method. Your existing sign-in methods still work." : "No pudimos conectar este método. Tus accesos actuales siguen funcionando.");
+      setMessage(english ? "We couldn't connect this method. Your existing sign-in methods still work." : "No pudimos conectar este método. Sus accesos actuales siguen funcionando.");
       setBusy(null);
     }
   }
@@ -79,7 +79,7 @@ export function SignInMethods() {
       if (error) throw error;
       window.dispatchEvent(new Event("ccr:profile-updated"));
     } catch {
-      setMessage(english ? "We couldn't connect this method. Your existing sign-in methods still work." : "No pudimos conectar este método. Tus accesos actuales siguen funcionando.");
+      setMessage(english ? "We couldn't connect this method. Your existing sign-in methods still work." : "No pudimos conectar este método. Sus accesos actuales siguen funcionando.");
     } finally {
       setBusy(null);
     }
@@ -94,14 +94,14 @@ export function SignInMethods() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: user.email, redirectTo: `${window.location.origin}${english ? "/en" : ""}/reset-password` }),
     }).catch(() => null);
-    setMessage(response?.ok ? (english ? "Check your email to set a password for this same account." : "Revisa tu correo para establecer una contraseña para esta misma cuenta.") : (english ? "We couldn't send the email. Please try again." : "No pudimos enviar el correo. Intenta de nuevo."));
+    setMessage(response?.ok ? (english ? "Check your email to set a password for this same account." : "Revise su correo para establecer una contraseña para esta misma cuenta.") : (english ? "We couldn't send the email. Please try again." : "No pudimos enviar el correo. Intente de nuevo."));
     setBusy(null);
   }
 
   return (
     <section data-sign-in-methods data-security-group="methods" className="border-t border-[#e5e7eb] pt-6">
       <h3 className="text-sm font-semibold text-[#374151]">{english ? "Sign-in methods" : "Métodos de acceso"}</h3>
-      <p className="mt-2 text-sm leading-6 text-[#6b7280]">{english ? "Choose how to sign in to your account." : "Elige cómo entrar a tu cuenta."}</p>
+      <p className="mt-2 text-sm leading-6 text-[#6b7280]">{english ? "Choose how to sign in to your account." : "Elija cómo entrar a su cuenta."}</p>
       {connectingApple && <p role="status" className="mt-3 rounded-xl bg-[#eff9fd] p-3 text-sm text-[#374151]">{ta("accountHelp")}</p>}
       <ul className="mt-3 space-y-1">
         {(["email", "google", "apple"] as const).map((provider) => {

@@ -5,7 +5,7 @@ import { PantallaFija } from "@/components/util/pantalla-fija";
 import { Link } from "@/i18n/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2, RefreshCw } from "lucide-react";
-import { GoogleMapPanel, type MapFocusTarget, type MapProfessional } from "@/components/maps/google-map-panel";
+import { SearchMapPanel, type MapFocusTarget, type MapProfessional } from "@/components/maps/search-map-panel";
 import { APP_RESUME_EVENT } from "@/lib/app-events";
 
 interface SearchResultsLayoutProps {
@@ -544,7 +544,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
             nombre a un lado y los botones al otro con un desierto en medio. */}
         <aside className="min-h-0 min-w-0 flex-1 lg:order-3 lg:flex-[2]">
           <div className="relative isolate h-full w-full overflow-hidden bg-[#eef2f6] lg:sticky lg:top-20 lg:h-[calc(100vh-104px)] lg:rounded-2xl lg:border lg:border-[#e5e7eb] lg:bg-transparent">
-            <GoogleMapPanel apiKey={apiKey} professionals={mapData} locale={locale} numbering={numbering} focusTarget={mapFocusTarget} />
+            <SearchMapPanel apiKey={apiKey} professionals={mapData} locale={locale} numbering={numbering} focusTarget={mapFocusTarget} />
           </div>
         </aside>
 

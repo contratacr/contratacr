@@ -388,7 +388,7 @@ export async function DELETE(req: Request) {
   if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   const id = new URL(req.url).searchParams.get("id") ?? "";
   if (!/^[0-9a-f-]{36}$/i.test(id)) return NextResponse.json({ error: "Identificador requerido." }, { status: 400 });
-  if (id === admin.id) return NextResponse.json({ error: "No puedes eliminar tu propia cuenta de administrador desde aquí." }, { status: 400 });
+  if (id === admin.id) return NextResponse.json({ error: "No puede eliminar su propia cuenta de administrador desde aquí." }, { status: 400 });
   const db = createAdminClient();
   const { data: target } = await db.from("profiles").select("id, role").eq("id", id).maybeSingle();
   if (!target) return NextResponse.json({ error: "La cuenta no existe." }, { status: 404 });

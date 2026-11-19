@@ -13,7 +13,7 @@ import type { createAdminClient } from "@/lib/supabase/admin";
  */
 type Admin = ReturnType<typeof createAdminClient>;
 
-const TITULO = { es: "¿Nos dejas una reseña?", en: "Would you leave us a review?" };
+const TITULO = { es: "¿Nos deja una reseña?", en: "Would you leave us a review?" };
 const CUERPO = {
   es: "Una reseña en Google ayuda a que más personas encuentren ContrataCR. Tarda menos de un minuto.",
   en: "A Google review helps more people find ContrataCR. It takes less than a minute.",

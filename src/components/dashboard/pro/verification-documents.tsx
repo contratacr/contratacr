@@ -1,5 +1,6 @@
 "use client";
 
+import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
 import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { SupportLink } from "@/components/support/support-link";
@@ -63,7 +64,7 @@ export function VerificationDocuments({ legal, preview = false, onVerified }: { 
         if (state.outcome === "skipped") setRetryNote(t("unavailable"));
       }
       setLoaded(true);
-    }).catch(() => { if (active) setError(en ? "Could not load your review. Reload to try again." : "No se pudo cargar tu revisión. Recarga para intentarlo de nuevo."); });
+    }).catch(() => { if (active) setError(en ? "Could not load your review. Reload to try again." : "No se pudo cargar su revisión. Recarga para intentarlo de nuevo."); });
     return () => { active = false; };
   }, [preview, en, t]);
   async function submit() {
@@ -77,12 +78,26 @@ export function VerificationDocuments({ legal, preview = false, onVerified }: { 
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
       setSubmitted(true); setReviewOpen(false); setFiles({});
-    } catch (error) { setError(error instanceof Error ? error.message : (en ? "Please try again." : "Intenta nuevamente.")); }
+    } catch (error) { setError(error instanceof Error ? error.message : (en ? "Please try again." : "Intente nuevamente.")); }
     finally { setBusy(false); }
+  }
+  async function chooseFile(id: string, file: File) {
+    setError("");
+    const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+    try {
+      // 2400 px: documentos de identidad deben seguir legibles (más que los 1600 px de los adjuntos de chat).
+      const ready = isPdf ? file : await prepareImageForUpload(file, { maxDimension: 2400, targetBytes: 3.8 * 1024 * 1024 });
+      if (ready.size > 4 * 1024 * 1024) { setError(en ? "Each file must be 4 MB or smaller." : "Cada archivo debe pesar 4 MB o menos."); return; }
+      setFiles(prev => ({ ...prev, [id]: ready }));
+    } catch (attachmentError) {
+      setError(getImageUploadPreparationErrorCode(attachmentError) === "too_large"
+        ? (en ? "That image is too large. Choose a lighter image." : "La imagen es muy pesada. Elija una imagen más liviana.")
+        : (en ? "Attach JPG, PNG, WEBP, AVIF, HEIC, HEIF, or PDF files only." : "Adjunte solo archivos JPG, PNG, WEBP, AVIF, HEIC, HEIF o PDF."));
+    }
   }
   const refs = useRef<Record<string, HTMLInputElement | null>>({});
   const documents = [
-    { id: "identity", title: isLegal ? (en ? "Authorized person" : "Persona autorizada") : (en ? "Photo with your ID" : "Foto con tu identificación"), description: en ? "Hold your ID next to your face, with the details clearly visible." : "Tu rostro junto a la identificación, con los datos legibles." },
+    { id: "identity", title: isLegal ? (en ? "Authorized person" : "Persona autorizada") : (en ? "Photo with your ID" : "Foto con su identificación"), description: en ? "Hold your ID next to your face, with the details clearly visible." : "Su rostro junto a la identificación, con los datos legibles." },
     ...(isLegal ? [{ id: "company", title: en ? "Legal representation" : "Personería o autorización", description: en ? "A current document confirming your authorization to represent the company." : "Documento vigente que confirme la representación de la empresa." }] : []),
   ];
   const ready = documents.every(doc => files[doc.id]);
@@ -114,7 +129,7 @@ export function VerificationDocuments({ legal, preview = false, onVerified }: { 
             </div>
             {files[doc.id] ? <div className="mt-3 flex items-center gap-2 rounded-xl bg-[#f5f8fb] px-3 py-2"><Check className="h-4 w-4 shrink-0 text-[#087ca3]" aria-hidden="true" /><span className="min-w-0 flex-1 break-all text-sm text-[#162543]">{files[doc.id].name}</span>{!submitted && <button type="button" aria-label={en ? `Remove ${doc.title}` : `Quitar ${doc.title}`} disabled={busy} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#68778d] hover:bg-white" onClick={() => setFiles(prev => { const next = { ...prev }; delete next[doc.id]; return next; })}><X className="h-4 w-4" /></button>}</div>
               : <button type="button" disabled={busy} onClick={() => refs.current[doc.id]?.click()} className={`mt-3 ${verificationActionButtonClass} border-[#e5e7eb] bg-white text-[#162543] hover:border-[#009FD9]/50 hover:bg-[#f1fbfe] hover:text-[#0089bb]`}>{doc.id === "identity" ? (en ? "Upload photo" : "Subir foto") : (en ? "Upload document" : "Subir documento")}</button>}
-            <input className="sr-only" aria-label={doc.title} ref={el => { refs.current[doc.id] = el; }} disabled={busy} type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/heic,image/heif,application/pdf" onChange={event => { const file = event.target.files?.[0]; event.target.value = ""; if (!file) return; if (file.size > 4 * 1024 * 1024) { setError(en ? "Each file must be 4 MB or smaller." : "Cada archivo debe pesar 4 MB o menos."); return; } setError(""); setFiles(prev => ({ ...prev, [doc.id]: file })); }} />
+            <input className="sr-only" aria-label={doc.title} ref={el => { refs.current[doc.id] = el; }} disabled={busy} type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/heic,image/heif,application/pdf" onChange={event => { const file = event.target.files?.[0]; event.target.value = ""; if (!file) return; void chooseFile(doc.id, file); }} />
           </div>)}
         </div>
         {!submitted && <button type="button" disabled={!ready || busy || !loaded} onClick={submit} className={`mt-5 ${verificationActionButtonClass} border-transparent bg-[#009FD9] text-white hover:bg-[#0089bb] disabled:opacity-45`}>{busy ? (en ? "Sending…" : "Enviando…") : (en ? "Send for review" : "Enviar a revisión")}</button>}

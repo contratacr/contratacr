@@ -24,9 +24,9 @@ test("optional account MFA protects a new login, API and direct RPC until its se
     await page.getByRole("button",{name:"Cambiar contraseña",exact:true}).click();
     await page.getByPlaceholder("Contraseña actual",{exact:true}).fill(account.password);
     await page.getByPlaceholder("Nueva contraseña (mínimo 8 caracteres)",{exact:true}).fill(nextPassword);
-    await page.getByPlaceholder("Repite la nueva contraseña",{exact:true}).fill(nextPassword);
+    await page.getByPlaceholder("Repita la nueva contraseña",{exact:true}).fill(nextPassword);
     await page.getByRole("button",{name:"Guardar contraseña",exact:true}).click();
-    await expect(page.locator("[data-account-security]")).toContainText("Tu contraseña fue actualizada.");
+    await expect(page.locator("[data-account-security]")).toContainText("Su contraseña fue actualizada.");
     account.password = nextPassword;
     await expect(page.locator("main[data-admin-mfa]")).toHaveCount(0);
     expect(await (await page.request.get("/api/auth/session-mfa")).json()).toMatchObject({enrolled:true,required:false});

@@ -1,15 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { MapPin, X, Plus, Check, Search, Pencil, Trash2 } from "lucide-react";
-import { createGoogleMarker, loadGoogleMaps, withConfiguredMapId } from "@/lib/maps/loader";
+import type { Map as MapLibreMap, Marker } from "maplibre-gl";
+import { loadGoogleMaps } from "@/lib/maps/loader";
+import { createMap, loadMapLibre, supportsWebGL, type MapLibreModule } from "@/lib/maps/maplibre";
 import { PROVINCES, getCantonsByProvince, getCantonById, getProvinceById } from "@/lib/data/cr-geography";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { withHomeServiceScope, type HomeServiceScope } from "@/lib/location";
 import { FilaInterruptor } from "@/components/ui/fila-interruptor";
 import { isFixedWorkplace } from "@/lib/public-workplaces";
+// Static on purpose (route CSS, not a runtime <link>): see src/lib/maps/maplibre-runtime.ts.
+import "maplibre-gl/dist/maplibre-gl.css";
 
 export type Workplace = {
   id: string;
@@ -50,7 +54,9 @@ interface WorkplacesPickerProps {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type GMaps = any;
 
-const COSTA_RICA_CENTER = { lat: 9.7489, lng: -83.7534 };
+// [lng, lat] (MapLibre order). The map shows with MapLibre + OpenFreeMap; Google is
+// loaded ONLY for the address search box and to put an address to a dropped pin.
+const COSTA_RICA_CENTER: [number, number] = [-83.7534, 9.7489];
 
 function genId() {
   return `wp_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
@@ -65,10 +71,12 @@ function genId() {
  */
 export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, extraPlaces = [], extraActions, mode }: WorkplacesPickerProps) {
   const t = useTranslations("workplacesPicker");
+  const locale = useLocale();
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<GMaps>(null);
-  const geocoderRef = useRef<GMaps>(null);
-  const markersRef = useRef<GMaps[]>([]);
+  const mapInstanceRef = useRef<MapLibreMap | null>(null);
+  const libRef = useRef<MapLibreModule | null>(null);
+  const markersRef = useRef<Marker[]>([]);
+  const [mapFailed, setMapFailed] = useState(false);
   const valueRef = useRef<Workplace[]>(value);
 
   // Address search - OUR OWN standard input + dropdown (NOT the Google
@@ -77,6 +85,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
   // `AutocompleteSuggestion` data API (same one the homepage hero uses), so the
   // field uses the app's standard input chrome with ONE clean border.
   const mapsReadyRef = useRef(false);
+  const googleRequestRef = useRef<Promise<boolean> | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sessionTokenRef = useRef<any>(null);
   const addrFieldRef = useRef<HTMLDivElement>(null);
@@ -110,6 +119,31 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
   function getMaps(): any {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (window as any).google?.maps;
+  }
+
+  // Google Places/Geocoder on demand: when the pro focuses the address box or
+  // drops a pin (to name the address). Showing the map never loads Google.
+  function ensureGoogle(): Promise<boolean> {
+    if (!effectiveKey) return Promise.resolve(false);
+    if (!googleRequestRef.current) {
+      googleRequestRef.current = loadGoogleMaps(effectiveKey)
+        .then(() => { mapsReadyRef.current = true; return true; })
+        .catch(() => { googleRequestRef.current = null; return false; });
+    }
+    return googleRequestRef.current;
+  }
+
+  async function reverseGeocode(lat: number, lng: number): Promise<string> {
+    if (!(await ensureGoogle())) return "";
+    const maps = getMaps();
+    if (!maps?.Geocoder) return "";
+    return new Promise((resolve) => {
+      try {
+        new maps.Geocoder().geocode({ location: { lat, lng } }, (results: GMaps, status: string) => {
+          resolve(status === "OK" && results?.[0] ? (results[0].formatted_address as string) : "");
+        });
+      } catch { resolve(""); }
+    });
   }
 
   useEffect(() => {
@@ -191,6 +225,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
 
   function toggleMap() {
     if (showMap) {
+      mapInstanceRef.current?.remove();
       mapInstanceRef.current = null;
       setAddrQuery("");
       setAddrSug([]);
@@ -200,27 +235,32 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
   }
 
   function renderMarkers() {
-    const maps = getMaps();
+    const lib = libRef.current;
     const map = mapInstanceRef.current;
-    if (!maps || !map) return;
-    markersRef.current.forEach((m) => { m.map = null; });
+    if (!lib || !map) return;
+    markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
-    const bounds = new maps.LatLngBounds();
+    const bounds = new lib.LngLatBounds();
     let count = 0;
     const pins = [
-      ...valueRef.current.filter((w) => w.lat != null && w.lng != null).map((w) => ({ lat: w.lat!, lng: w.lng!, title: w.name })),
-      ...(draftPinRef.current ? [{ lat: draftPinRef.current.lat, lng: draftPinRef.current.lng, title: "Nuevo lugar" }] : []),
+      ...valueRef.current.filter((w) => w.lat != null && w.lng != null).map((w) => ({ lat: w.lat!, lng: w.lng!, title: w.name, draft: false })),
+      ...(draftPinRef.current ? [{ lat: draftPinRef.current.lat, lng: draftPinRef.current.lng, title: t("pinPlaced"), draft: true }] : []),
     ];
     for (const p of pins) {
-      markersRef.current.push(createGoogleMarker(maps, { position: { lat: p.lat, lng: p.lng }, map, title: p.title }));
-      bounds.extend({ lat: p.lat, lng: p.lng });
+      const marker = new lib.Marker({ color: p.draft ? "#009FD9" : "#162543" }).setLngLat([p.lng, p.lat]).addTo(map);
+      const el = marker.getElement();
+      el.setAttribute("role", "img");
+      el.setAttribute("aria-label", p.title);
+      el.removeAttribute("tabindex");
+      markersRef.current.push(marker);
+      bounds.extend([p.lng, p.lat]);
       count++;
     }
+    // MapLibre zoom = Google zoom − 1 (the previous map used 15 for one pin).
     if (count === 1) {
-      map.setCenter({ lat: pins[0].lat, lng: pins[0].lng });
-      map.setZoom(15);
+      map.jumpTo({ center: [pins[0].lng, pins[0].lat], zoom: 14 });
     } else if (count > 1) {
-      map.fitBounds(bounds, 48);
+      map.fitBounds(bounds, { padding: 48, maxZoom: 14, duration: 0 });
     }
   }
 
@@ -239,37 +279,35 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
       if (!loc) return;
       const lat = typeof loc.lat === "function" ? loc.lat() : loc.lat;
       const lng = typeof loc.lng === "function" ? loc.lng() : loc.lng;
-      const map = mapInstanceRef.current;
-      if (map) { map.setCenter({ lat, lng }); map.setZoom(15); }
+      mapInstanceRef.current?.jumpTo({ center: [lng, lat], zoom: 14 });
       onPinPlaced(lat, lng, place.formattedAddress || label);
       sessionTokenRef.current = null; // end the Places session after a selection
     } catch { /* keep the typed label; the map click still works */ }
   }
 
-  function initMap() {
+  function initMap(lib: MapLibreModule) {
     if (!mapRef.current || mapInstanceRef.current) return;
-    const maps = getMaps();
-    if (!maps) return;
-    mapsReadyRef.current = true;
-
+    libRef.current = lib;
     const first = value.find((w) => w.lat != null && w.lng != null);
-    const map = new maps.Map(mapRef.current, withConfiguredMapId({
-      center: first ? { lat: first.lat, lng: first.lng } : COSTA_RICA_CENTER,
-      zoom: first ? 14 : 8,
-      mapTypeControl: false,
-      streetViewControl: false,
-      fullscreenControl: true,
-      gestureHandling: "greedy",
-    }));
+    const map = createMap(lib, mapRef.current, {
+      language: locale,
+      center: first ? [first.lng!, first.lat!] : COSTA_RICA_CENTER,
+      zoom: first ? 13 : 7,
+      // Inside a long form: one finger scrolls the page, two fingers move the map
+      // (Ctrl/⌘ + wheel on desktop), so the map never traps the scroll.
+      cooperativeGestures: true,
+    });
+    map.addControl(new lib.NavigationControl({ showCompass: false }), "top-right");
+    map.addControl(new lib.FullscreenControl(), "top-right");
     mapInstanceRef.current = map;
-    geocoderRef.current = new maps.Geocoder();
 
-    map.addListener("click", (e: { latLng: GMaps }) => {
-      if (!e.latLng) return;
-      const latLng = e.latLng;
-      geocoderRef.current?.geocode({ location: latLng }, (results: GMaps, status: string) => {
-        const ok = status === "OK" && results?.[0];
-        onPinPlaced(latLng.lat(), latLng.lng(), ok ? (results[0].formatted_address as string) : "");
+    map.on("click", (e) => {
+      const { lat, lng } = e.lngLat;
+      // Pin first (instant feedback), address when the geocoder answers.
+      onPinPlaced(lat, lng, "");
+      void reverseGeocode(lat, lng).then((address) => {
+        const current = draftPinRef.current;
+        if (address && current && current.lat === lat && current.lng === lng) onPinPlaced(lat, lng, address);
       });
     });
 
@@ -284,15 +322,13 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
       (pos) => {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
-        const map = mapInstanceRef.current;
-        if (map) { map.setCenter({ lat, lng }); map.setZoom(15); }
-        if (geocoderRef.current) {
-          geocoderRef.current.geocode({ location: { lat, lng } }, (results: GMaps, status: string) => {
-            const ok = status === "OK" && results?.[0];
-            onPinPlaced(lat, lng, ok ? (results[0].formatted_address as string) : "");
-            setLocating(false);
-          });
-        } else { onPinPlaced(lat, lng, ""); setLocating(false); }
+        mapInstanceRef.current?.jumpTo({ center: [lng, lat], zoom: 14 });
+        onPinPlaced(lat, lng, "");
+        setLocating(false);
+        void reverseGeocode(lat, lng).then((address) => {
+          const current = draftPinRef.current;
+          if (address && current && current.lat === lat && current.lng === lng) onPinPlaced(lat, lng, address);
+        });
       },
       () => { setGeoError(t("geoFailed")); setLocating(false); },
       { enableHighAccuracy: true, timeout: 10000 }
@@ -302,11 +338,20 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
   // Initialize the map only once the optional refinement is opened (the container
   // doesn't exist until then). On CLOSE, drop the map instance + clear the search.
   useEffect(() => {
-    if (!effectiveKey) return;
     if (!showMap) return;
-    loadGoogleMaps(effectiveKey).then(initMap).catch(() => {});
+    let cancelled = false;
+    loadMapLibre()
+      .then((lib) => {
+        if (cancelled) return;
+        if (!supportsWebGL()) { setMapFailed(true); return; }
+        initMap(lib);
+      })
+      .catch(() => { if (!cancelled) setMapFailed(true); });
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showMap]);
+
+  useEffect(() => () => { mapInstanceRef.current?.remove(); mapInstanceRef.current = null; }, []);
 
   useEffect(() => {
     renderMarkers();
@@ -320,6 +365,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
     if (q.length < 3) return;
     const id = setTimeout(async () => {
       try {
+        await ensureGoogle();
         const maps = getMaps();
         if (!mapsReadyRef.current || !maps?.places?.AutocompleteSuggestion) { setAddrSug([]); return; }
         if (!sessionTokenRef.current) sessionTokenRef.current = new maps.places.AutocompleteSessionToken();
@@ -334,6 +380,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
       } catch { setAddrSug([]); }
     }, 250);
     return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [addrQuery]);
 
   return (
@@ -439,7 +486,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
 
       {/* 2 - OPTIONAL exact pin (refinement), HIDDEN by default. A clean expandable
              link reveals the address search + map only when the pro chooses to pin. */}
-      {(mode === "local" || !mode) && effectiveKey && canton ? (
+      {(mode === "local" || !mode) && canton && !mapFailed ? (
         <div className="flex flex-col gap-2">
           <button
             type="button"
@@ -455,7 +502,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
             <div className="flex flex-col gap-2">
               {/* Address search -> drops the pin. OUR standard input (single border
                   matching the section's other fields) + the app's shared dropdown. */}
-              <div ref={addrFieldRef} className="relative">
+              {effectiveKey && <div ref={addrFieldRef} className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#68778d]" />
                 <input
                   type="text"
@@ -466,7 +513,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
                     setAddrOpen(true);
                     if (next.trim().length < 3) setAddrSug([]);
                   }}
-                  onFocus={() => { if (addrSug.length > 0) setAddrOpen(true); }}
+                  onFocus={() => { void ensureGoogle(); if (addrSug.length > 0) setAddrOpen(true); }}
                   onBlur={() => setTimeout(() => setAddrOpen(false), 150)}
                   placeholder={t("searchPlaceholder")}
                   aria-label={t("searchPlaceholder")}
@@ -489,14 +536,14 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
                     ))}
                   </ul>
                 </AnchoredDropdown>
-              </div>
+              </div>}
               <button type="button" onClick={useMyLocation} disabled={locating} className="self-start inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline disabled:opacity-60">
                 <MapPin className="h-4 w-4" />
                 {locating ? t("locating") : t("useMyLocation")}
               </button>
               {geoError && <p className="text-xs text-amber-600">{geoError}</p>}
-              <div className="relative rounded-xl overflow-hidden border border-[#e5e7eb]" style={{ height: mapHeight }}>
-                <div ref={mapRef} className="w-full h-full" />
+              <div className="relative rounded-xl overflow-hidden border border-[#e5e7eb]" style={{ height: mapHeight }} data-workplaces-map="maplibre">
+                <div ref={mapRef} className="w-full h-full" role="region" aria-label={t("mapPointTitle")} />
               </div>
               {draftPin && (
                 <div className="flex items-center gap-2 rounded-xl border border-[#bbf7d0] bg-[#f0fdf4] px-3 py-2 text-xs text-[#166534]">
@@ -512,7 +559,9 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
           )}
         </div>
       ) : (
-        (mode === "local" || !mode) && canton && <p className="text-xs text-[#68778d]">{t("mapUnavailable")}</p>
+        (mode === "local" || !mode) && canton && <p className="text-xs text-[#68778d]">{locale === "en"
+          ? "Your browser could not show the map. You can still add the place with province and canton."
+          : "Su navegador no pudo mostrar el mapa. Puede agregar el lugar igual con provincia y cantón."}</p>
       )}
 
       {/* 3 - Agregar ESTA zona: solo aparece con una provincia elegida. Sin

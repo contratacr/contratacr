@@ -73,12 +73,12 @@ function verificationWhatsAppHref(row: Row) {
   const digits = String(row.whatsapp ?? "").replace(/\D/g, "");
   const phone = digits.length === 8 ? `506${digits}` : digits;
   const firstName = nombreDeSaludo(row.profiles?.full_name);
-  const service = row.category_id ? getCategoryLabel(row.category_id) : "tu servicio";
+  const service = row.category_id ? getCategoryLabel(row.category_id) : "su servicio";
   const idLabel = row.identity_type_label && row.identity_type !== "manual" ? ` (${row.identity_type_label})` : "";
   const documents = row.identity_type === "juridica"
     ? "la personería jurídica vigente o una autorización que podamos validar, y una foto de la persona autorizada junto a su documento de identidad"
-    : `una foto tuya sosteniendo tu identificación${idLabel} junto a tu rostro, con los datos legibles`;
-  const text = `Hola${firstName ? ` ${firstName}` : ""}, te escribimos de ContrataCR para revisar la identidad del perfil de ${service}. Necesitamos ${documents}. Puedes adjuntar los documentos en https://contratacr.com/dashboard/profesional?tab=verificacion. ¡Gracias!`;
+    : `una foto suya sosteniendo su identificación${idLabel} junto a su rostro, con los datos legibles`;
+  const text = `Hola${firstName ? ` ${firstName}` : ""}, le escribimos de ContrataCR para revisar la identidad del perfil de ${service}. Necesitamos ${documents}. Puede adjuntar los documentos en https://contratacr.com/dashboard/profesional?tab=verificacion. ¡Gracias!`;
   return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
 }
 

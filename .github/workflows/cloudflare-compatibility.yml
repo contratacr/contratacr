@@ -122,6 +122,10 @@ jobs:
           NEXT_PUBLIC_GOOGLE_IDENTITY_ORIGINS: ${{ secrets.NEXT_PUBLIC_GOOGLE_IDENTITY_ORIGINS }}
           NEXT_PUBLIC_FACEBOOK_APP_ID: ${{ secrets.NEXT_PUBLIC_FACEBOOK_APP_ID }}
           NEXT_PUBLIC_META_PIXEL_ID: ${{ secrets.NEXT_PUBLIC_META_PIXEL_ID }}
+          # Mismas banderas que "vars" en wrangler.jsonc: las páginas que se
+          # generan al compilar deben ver el directorio encendido y Pro apagado.
+          DIR_ENABLED: "true"
+          PRO_ENABLED: "false"
         run: npm run cloudflare:build
 
       - name: Smoke public pages in the Worker runtime
@@ -199,6 +203,14 @@ jobs:
           META_CAPI_ACCESS_TOKEN: ${{ secrets.META_CAPI_ACCESS_TOKEN }}
           META_GRAPH_API_VERSION: ${{ secrets.META_GRAPH_API_VERSION }}
           META_CAPI_TEST_EVENT_CODE: ${{ secrets.META_CAPI_TEST_EVENT_CODE }}
+          # Directorio (2026-11-19). EMAIL_MODE: "live" en producción, "sandbox"
+          # en test (Brevo valida y no entrega). Sin los pimientos los códigos de
+          # reclamo y las reseñas de visitantes responden 503 en vez de inventar
+          # un valor al azar por instancia.
+          EMAIL_MODE: ${{ secrets.EMAIL_MODE }}
+          DIR_CLAIM_OTP_PEPPER: ${{ secrets.DIR_CLAIM_OTP_PEPPER }}
+          DIR_VISITOR_PEPPER: ${{ secrets.DIR_VISITOR_PEPPER }}
+          RATE_LIMIT_PEPPER: ${{ secrets.RATE_LIMIT_PEPPER }}
         run: |
           node - <<'NODE'
           const fs = require("node:fs");
@@ -238,7 +250,11 @@ jobs:
             "META_CAPI_ENABLED",
             "META_CAPI_ACCESS_TOKEN",
             "META_GRAPH_API_VERSION",
-            "META_CAPI_TEST_EVENT_CODE"
+            "META_CAPI_TEST_EVENT_CODE",
+            "EMAIL_MODE",
+            "DIR_CLAIM_OTP_PEPPER",
+            "DIR_VISITOR_PEPPER",
+            "RATE_LIMIT_PEPPER"
           ];
           const secrets = {};
           for (const name of names) {

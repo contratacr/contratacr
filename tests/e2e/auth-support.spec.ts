@@ -9,7 +9,7 @@ test.describe("@smoke auth and support", () => {
     await gotoOK(page, "/login");
     await openLoginForm(page);
 
-    await expect(page.getByRole("heading", { name: /Ingresa a tu cuenta|Bienvenido de vuelta/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Ingrese a su cuenta|Bienvenido de vuelta/i })).toBeVisible();
     await expect(page.getByLabel(/Correo/i).first()).toBeVisible();
     await expect(page.getByLabel(/Contras/i).first()).toBeVisible();
     await expect(page.getByRole("button", { name: /Ingresar/i }).last()).toBeVisible();
@@ -21,14 +21,14 @@ test.describe("@smoke auth and support", () => {
   test("support form opens the reason dropdown and keeps required fields visible", async ({ page }) => {
     await gotoOK(page, "/soporte");
 
-    await expect(page.getByRole("textbox", { name: /Tu nombre/i })).toBeVisible();
+    await expect(page.getByRole("textbox", { name: /Su nombre/i })).toBeVisible();
     await expect(page.getByRole("textbox", { name: /tucorreo/i })).toBeVisible();
     await expect(page.getByRole("textbox", { name: /^Mensaje/i })).toBeVisible();
 
     // El selector se rotula con su marcador, «Motivo de tu consulta». Decía
     // «Selecciona el motivo», texto que el formulario ya no usa: deriva de la
     // prueba, no del app.
-    await expect(page.getByRole("button", { name: /Motivo de tu consulta|Reason for your enquiry/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Motivo de su consulta|Reason for your enquiry/i })).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
 
@@ -45,7 +45,7 @@ test.describe("@smoke auth and support", () => {
 
     await email.fill(`missing-${Date.now()}@contratacr.test`);
     await page.getByRole("button", { name: /Enviar|Restablecer/i }).click();
-    await expect(page.locator("body")).toContainText(/Revisa tu correo|Check your email/i);
+    await expect(page.locator("body")).toContainText(/Revise su correo|Check your email/i);
     await expect(page.locator("body")).not.toContainText(/no existe|not found|sin cuenta/i);
     await expectNoHorizontalOverflow(page);
   });
@@ -74,7 +74,7 @@ test.describe("@smoke auth and support", () => {
       await waitForInteractivePage(page);
       await page.getByLabel(/Correo/i).first().fill(account.email);
       await page.getByRole("button", { name: /Enviar|Restablecer/i }).click();
-      await expect(page.locator("body")).toContainText(/Revisa tu correo|Check your email/i);
+      await expect(page.locator("body")).toContainText(/Revise su correo|Check your email/i);
 
       // 2. The recovery token the email would carry, without needing a mailbox.
       const admin = regressionAdminClient();

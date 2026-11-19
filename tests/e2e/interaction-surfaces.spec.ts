@@ -23,13 +23,13 @@ test.describe("@seeded interaction surfaces", () => {
     await publish.click();
 
     // El nombre accesible sigue el título visible del formulario.
-    const dialog = page.getByRole("dialog", { name: /Cuéntanos qué necesitas|Tell us what you need|Crear (?:una )?solicitud|Create a request/i });
+    const dialog = page.getByRole("dialog", { name: /Cuéntenos qué necesita|Tell us what you need|Crear (?:una )?solicitud|Create a request/i });
     await expect(dialog).toBeVisible();
     await expectVisibleText(
       dialog,
       // El formulario se simplificó: ahora pregunta qué necesitas, qué hay que
       // hacer y dónde, en lenguaje llano.
-      /.Qu. necesitas\?|What do you need\?|Contanos qu. hay que hacer|Tell us what needs doing|.D.nde\?|Where\?|T.tulo|Descripci.n|Provincia|Cant.n/i,
+      /.Qu. necesita\?|What do you need\?|Cuéntenos qu. hay que hacer|Tell us what needs doing|.D.nde\?|Where\?|T.tulo|Descripci.n|Provincia|Cant.n/i,
     );
     const submit = dialog.getByRole("button", { name: /Publicar|Publish/i });
     await expect(submit).toBeEnabled();

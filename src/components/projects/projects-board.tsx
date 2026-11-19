@@ -1,4 +1,6 @@
 "use client";
+import { ProjectQuoteAction } from "./project-quote-action";
+import { PromotionHistory } from "@/components/pro/promotion-history";
 import { SectionBrand } from "@/components/layout/section-brand";
 import { useMarketplaceFeed } from "@/hooks/use-marketplace-feed";
 import { MarketplaceFeedFeedback } from "@/components/marketplace/feed-loading";
@@ -50,7 +52,7 @@ const COPY = {
     // Cada tablero pregunta por lo suyo: aquí se buscan PROYECTOS, no
     // profesionales. «¿Qué servicio estás buscando?» es la frase de /buscar, y
     // repetida aquí parecía que la pantalla buscaba a quién contratar.
-    buscar: "¿Qué solicitud buscas?",
+    buscar: "¿Qué solicitud busca?",
     abrirMenu: "Abrir menú",
     notificaciones: "Notificaciones",
     publicar: "Publicar una solicitud",
@@ -76,20 +78,20 @@ const COPY = {
     vacio: "Todavía no hay solicitudes",
     vacioSub: "Cuando alguien publique lo que necesita, aparecerá aquí.",
     sinResultados: "No encontramos solicitudes",
-    sinResultadosSub: "Prueba otra búsqueda o cambia los filtros.",
+    sinResultadosSub: "Pruebe otra búsqueda o cambie los filtros.",
     verTodos: "Ver todas las solicitudes",
     sinContacto: "Este cliente no dejó un WhatsApp.",
     noPublicado: "Esta solicitud ya no recibe mensajes.",
-    fallo: "No pudimos abrir WhatsApp. Intentá de nuevo en un momento.",
-    necesitaCuenta: "Entra con tu cuenta profesional para escribirle por WhatsApp o llamarle.",
+    fallo: "No pudimos abrir WhatsApp. Intente de nuevo en un momento.",
+    necesitaCuenta: "Entre con su cuenta profesional para escribirle por WhatsApp o llamarle.",
     ingresar: "Ingresar",
     crearCuenta: "Crear cuenta profesional",
     cerrar: "Cerrar",
-    pideCuentaTitulo: "Contacta a este cliente",
+    pideCuentaTitulo: "Contacte a este cliente",
     // La llamada solo existe si el cliente la habilitó al publicar.
-    necesitaCuentaConLlamada: "Entra con tu cuenta profesional para escribirle por WhatsApp o llamarle.",
-    necesitaCuentaSoloWhatsapp: "Entra con tu cuenta profesional para escribirle por WhatsApp.",
-    esTuyo: "Esta solicitud es tuya.",
+    necesitaCuentaConLlamada: "Entre con su cuenta profesional para escribirle por WhatsApp o llamarle.",
+    necesitaCuentaSoloWhatsapp: "Entre con su cuenta profesional para escribirle por WhatsApp.",
+    esTuyo: "Esta solicitud es suya.",
     todoElPais: "Todo Costa Rica",
     cuenta: (n: number) => `${n} ${n === 1 ? "solicitud" : "solicitudes"}`,
   },
@@ -842,6 +844,8 @@ export function ProjectsBoard({
                           renglón; LinkedIn e Indeed usan entre 90 y 100. La
                           tarjeta se queda grande y el párrafo se lee. */}
                       <p className="mt-3 whitespace-pre-line break-words text-sm leading-7 text-[#43536b] [overflow-wrap:anywhere]">{ficha.description}</p>
+                      {ficha.allow_direct_contact&&!misProyectos.includes(ficha.id)&&<ProjectQuoteAction projectId={ficha.id}/>}
+                      {process.env.NODE_ENV === "development" && misProyectos.includes(ficha.id) && <PromotionHistory key={ficha.id} contentType="project" contentId={ficha.id}/>}
                       {/* TELÉFONO: lo que contacta, en la franja de abajo; guardar
                           y compartir viven en el «···» de la barra de arriba. */}
                       {/* En la franja de abajo va lo que se hace con esta

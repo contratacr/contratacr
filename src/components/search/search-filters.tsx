@@ -567,16 +567,26 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     })();
   }, []);
 
-  useEffect(() => {
-    if (!GMAPS_KEY) return;
-    loadGoogleMaps(GMAPS_KEY).then(() => { mapsReadyRef.current = true; }).catch(() => {});
-  }, []);
+  // Google Places is only for ADDRESS autocomplete: it loads the first time the
+  // location field gets focus (like the home hero), never with the results map,
+  // which now draws with MapLibre/OpenFreeMap.
+  const mapsRequestRef = useRef<Promise<void> | null>(null);
+  const ensureMaps = () => {
+    if (!GMAPS_KEY) return Promise.resolve();
+    if (!mapsRequestRef.current) {
+      mapsRequestRef.current = loadGoogleMaps(GMAPS_KEY)
+        .then(() => { mapsReadyRef.current = true; })
+        .catch(() => { mapsRequestRef.current = null; });
+    }
+    return mapsRequestRef.current;
+  };
 
   useEffect(() => {
     const q = locationQuery.trim();
     if (q.length < 3) return;
     const id = setTimeout(async () => {
       try {
+        await ensureMaps();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const maps = (window as any).google?.maps;
         if (!mapsReadyRef.current || !maps?.places?.AutocompleteSuggestion) {
@@ -852,6 +862,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     setLocationActiveIndex(-1);
     setAddressSuggestions([]);
     try {
+      await ensureMaps();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const maps = (window as any).google?.maps;
       if (!mapsReadyRef.current || !maps?.places?.Place) throw new Error("Google Places unavailable");
@@ -1220,7 +1231,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                   applyFilters({ provincia: "", canton: "", lat: "", lng: "", ubicacion: "" });
                 }
               }}
-              onFocus={() => setLocationOpen(locationQuery.trim().length >= 2)}
+              onFocus={() => { void ensureMaps(); setLocationOpen(locationQuery.trim().length >= 2); }}
               onBlur={() => { locationBlurRef.current = setTimeout(() => setLocationOpen(false), 150); }}
               ref={locationInputRef}
               enterKeyHint={pistaUbicacion}
