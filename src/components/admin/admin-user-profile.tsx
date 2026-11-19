@@ -229,7 +229,7 @@ export function AdminUserProfile({
   async function deleteAccount() {
     const name = formatFullPersonName(data?.profile?.full_name) || data?.profile?.email || "esta cuenta";
     if (!window.confirm(`Vas a eliminar al 100% la cuenta de ${name}. Se borra todo lo que creó y no se puede deshacer. ¿Continuar?`)) return;
-    if (window.prompt("Escribe ELIMINAR para confirmar") !== "ELIMINAR") return;
+    if (window.prompt("Escriba ELIMINAR para confirmar") !== "ELIMINAR") return;
     setDeleting(true);
     setDeleteError(null);
     try {
@@ -399,7 +399,7 @@ export function AdminUserProfile({
                 <p className="mt-1 text-xs text-[#6b7280]">
                   {identityReasonAction === "reject" ? "El profesional verá este motivo y podrá corregir o apelar desde su panel." : "Se quitará la insignia Verificado, se borrará la identificación guardada y se notificará al profesional."}
                 </p>
-                <textarea value={identityReason} onChange={(event) => setIdentityReason(event.target.value)} rows={3} placeholder={identityReasonAction === "reject" ? "Explica por qué no se aprueba la verificación." : "Explica por qué se quita la verificación."} className="mt-3 w-full rounded-lg border border-[#e5e7eb] p-2.5 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30" />
+                <textarea value={identityReason} onChange={(event) => setIdentityReason(event.target.value)} rows={3} placeholder={identityReasonAction === "reject" ? "Explique por qué no se aprueba la verificación." : "Explique por qué se quita la verificación."} className="mt-3 w-full rounded-lg border border-[#e5e7eb] p-2.5 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30" />
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button type="button" onClick={() => updateIdentity(identityReasonAction, identityReason)} disabled={identityBusy != null || identityReason.trim().length === 0} className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60">
                     {identityBusy === identityReasonAction && <Loader2 className="h-3.5 w-3.5 animate-spin" />}

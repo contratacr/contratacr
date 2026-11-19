@@ -1,8 +1,14 @@
 import { expect, test } from "playwright/test";
 import { gotoOK, loginAs, waitForInteractivePage } from "./helpers";
+import { completeAdminMfa } from "./admin-mfa-helper";
 import { nombreCorto } from "../../src/lib/nombre-corto";
-import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionAdminClient } from "./seed";
+import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionAdminClient, regressionProfessionalWithoutPro } from "./seed";
 import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccount } from "./disposable-account";
+
+// The professional panel asserted here is the one WITHOUT Pro; park a local Pro grant (loopback only) for this file.
+const withoutPro = regressionProfessionalWithoutPro();
+test.beforeAll(withoutPro.park);
+test.afterAll(withoutPro.restore);
 
 // LO QUE SE PIDIÓ Y SE ARREGLÓ EL 4 Y 5 DE OCTUBRE DE 2026, UNA PRUEBA POR COSA.
 // La investigación de ese día encontró que catorce ajustes no tenían ninguna
@@ -20,8 +26,8 @@ test.describe("invitación a publicar un proyecto", () => {
   test("la portada invita a crear un proyecto y la flecha del formulario vuelve a la portada", async ({ page }) => {
     await gotoOK(page, "/");
     await waitForInteractivePage(page);
-    await expect(page.getByText("¿No sabes a quién llamar?")).toBeVisible();
-    await page.getByRole("link", { name: "Crea una solicitud" }).click();
+    await expect(page.getByText("¿No sabe a quién llamar?")).toBeVisible();
+    await page.getByRole("link", { name: "Cree una solicitud" }).click();
     const titulo = page.locator("#publish-project-title");
     await titulo.waitFor({ timeout: 30_000 });
     // El formulario ya no lleva frases debajo del título ni de los campos.
@@ -35,7 +41,7 @@ test.describe("invitación a publicar un proyecto", () => {
     const publicar = page.locator('a[href*="/publicar-solicitud"]').filter({ visible: true }).first();
     await expect(publicar).toBeVisible({ timeout: 30_000 });
     await expect(page.getByText("Gratis · Tu número no se publica")).toHaveCount(0);
-    await expect(page.getByText(/Publica tu solicitud y los profesionales te escriben por WhatsApp/).first()).toBeVisible();
+    await expect(page.getByText(/Publique su solicitud y los profesionales le escriben por WhatsApp/).first()).toBeVisible();
   });
 
   test("el final de los resultados ofrece publicar, con el servicio de la búsqueda", async ({ page }) => {
@@ -56,7 +62,7 @@ test.describe("invitación a publicar un proyecto", () => {
     expect((await raro.json() as { total: number }).total).toBe(0);
     if (total > 0) {
       await gotoOK(page, "/publicar-solicitud?categoria=desarrollo_web");
-      await expect(page.getByText(/recibirán? tu solicitud/)).toBeVisible({ timeout: 30_000 });
+      await expect(page.getByText(/recibirán? su solicitud/)).toBeVisible({ timeout: 30_000 });
     }
   });
 
@@ -71,17 +77,17 @@ test.describe("invitación a publicar un proyecto", () => {
     await ensureRegressionSeed();
     await gotoOK(page, `/profesionales/${E2E_USERS.professional.slug}`);
     await waitForInteractivePage(page);
-    await expect(page.getByText("¿No te respondió?")).toHaveCount(0);
+    await expect(page.getByText("¿No le respondió?")).toHaveCount(0);
     await page.evaluate(() => {
       window.dispatchEvent(new CustomEvent("ccr:whatsapp-abierto"));
       window.dispatchEvent(new Event("focus"));
     });
-    await expect(page.getByText("¿No te respondió?")).toBeVisible();
+    await expect(page.getByText("¿No le respondió?")).toBeVisible();
     const publicar = page.getByRole("link", { name: "Publicar", exact: true });
     await expect(publicar).toBeVisible();
     expect(await publicar.getAttribute("href")).toContain("/publicar-solicitud");
     await page.getByRole("button", { name: "Cerrar" }).last().click();
-    await expect(page.getByText("¿No te respondió?")).toHaveCount(0);
+    await expect(page.getByText("¿No le respondió?")).toHaveCount(0);
   });
 });
 
@@ -155,6 +161,10 @@ test.describe("reseñas, panel y administración", () => {
       await page.setViewportSize({ width: 1366, height: 900 });
       await loginAs(page, cuenta.email, cuenta.password).catch(() => undefined);
       await gotoOK(page, "/admin");
+      await waitForInteractivePage(page);
+      // El panel admin exige verificación en dos pasos: sin ella se ve la
+      // pantalla del autenticador, no el menú. Mismo paso que admin-smoke.
+      await completeAdminMfa(page, cuenta.email);
       const menu = page.locator("aside nav");
       await expect(menu).toBeVisible({ timeout: 30_000 });
       const grupos = (await menu.locator("p").allTextContents()).map((t) => t.trim());

@@ -157,7 +157,7 @@ export function AdminOverview({ adminName, data, activity = [] }: { adminName: s
 
       {/* What needs attention + the verification queue + recent activity */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <Card title={attention == null ? "Qué necesita tu atención" : attentionTotal === 0 ? "Nada pendiente hoy" : `Qué necesita tu atención · ${attentionTotal}`}>
+        <Card title={attention == null ? "Qué necesita su atención" : attentionTotal === 0 ? "Nada pendiente hoy" : `Qué necesita su atención · ${attentionTotal}`}>
           <ul className="flex flex-col divide-y divide-[#eef2f6]">
             {attentionItems.map((item) => (
               <li key={item.key}>

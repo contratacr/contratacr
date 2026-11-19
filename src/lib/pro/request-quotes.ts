@@ -1,0 +1,10 @@
+import {z} from 'zod';
+import type {SupabaseClient} from '@supabase/supabase-js';
+import {NextResponse} from 'next/server';
+
+export const requestQuoteCreateSchema=z.object({sourceRequestId:z.string().uuid(),clientActionId:z.string().uuid(),clientName:z.string().nullable(),clientPhone:z.string().nullable(),clientCedula:z.string().nullable(),clientEmail:z.string().nullable(),title:z.string().nullable(),items:z.array(z.object({description:z.string(),quantity:z.number(),unit_price:z.number()})).min(1),taxMode:z.enum(['incluido','mas_iva','exento']),notes:z.string().nullable(),validDays:z.number().int().min(1).max(90)}).strict();
+export const requestQuoteResponseSchema=z.object({id:z.string().uuid(),action:z.enum(['accept','decline']),clientActionId:z.string().uuid(),expectedUpdatedAt:z.string().datetime({offset:true})}).strict();
+const fields='id,professional_id,client_id,client_name,client_phone,client_cedula,client_email,public_code,quote_number,project_id,proposal_id,title,items,tax_mode,subtotal,tax_amount,total,notes,valid_until,status,accepted_at,declined_at,created_at,updated_at'.split(',');
+export function requestQuoteDto(quote:Record<string,unknown>,sourceRequestId:string){return {...Object.fromEntries(fields.map(key=>[key,quote[key]])),source_request_id:sourceRequestId};}
+export function requestQuoteFailure(error:{code?:string}|null){const code=error?.code;return NextResponse.json({error:code==='P0002'?'Cotización o solicitud no disponible.':code==='42501'?'Sin acceso a esta cotización.':code==='40001'||code==='23514'||code==='23505'?'La solicitud o cotización cambió. Actualice antes de continuar.':code==='22023'||code==='22P02'?'Revise la solicitud y los datos de la cotización.':'No se pudo completar. Reintente la misma acción sin cambiar los datos.'},{status:code==='P0002'?404:code==='42501'?403:code==='40001'||code==='23514'||code==='23505'?409:code==='22023'||code==='22P02'?400:503,headers:{'Cache-Control':'no-store, private'}});}
+export async function isRequestQuote(db:SupabaseClient,id:string){return db.from('pro_request_quotes').select('request_id').eq('quote_id',id).maybeSingle();}

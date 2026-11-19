@@ -659,7 +659,8 @@ async function searchProfessionalsUncached(
       }
 
       if (!filters.sortBy || filters.sortBy === "rating") {
-        mapped.sort((a, b) => compareByRating(a, b) || Number(b.isFeatured) - Number(a.isFeatured));
+        // Ranking neutrality (F0, /como-ordenamos): ties keep the query order; no paid or featured boost.
+        mapped.sort((a, b) => compareByRating(a, b));
       }
 
       if (filters.sortBy === "priceAsc" || filters.sortBy === "priceDesc") {

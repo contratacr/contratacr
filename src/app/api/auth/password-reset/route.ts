@@ -8,7 +8,7 @@ function isValidEmail(value: string) {
 }
 
 export async function POST(req: NextRequest) {
-  const rl = enforceRateLimit(req, "password-reset", 8, 60_000);
+  const rl = await enforceRateLimit(req, "password-reset", 8, 60_000);
   if (rl) return rl;
 
   let email = "";

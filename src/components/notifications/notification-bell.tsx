@@ -6,7 +6,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Bell, ArrowRight } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
-import { createClient } from "@/lib/supabase/client";
+import { useNotificationRead } from "@/lib/notifications/use-notification-read";
 import { useAuth } from "@/hooks/use-auth";
 import { notificationActionHref, notificationInMode } from "@/lib/notification-link";
 import { localizedNotificationCopy } from "@/lib/localized-notification";
@@ -181,25 +181,22 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
     router.push(`${prefijoDeIdioma(locale)}/notificaciones`);
   };
 
-  async function openNotification(item: Notification) {
+  const { markRead, readError, retryRead, retrying } = useNotificationRead(user?.id, (operation) => {
+    const ids = operation.ids ?? operation.snapshotIds;
+    updateNotifications((prev) => prev.map((item) => (ids.includes(item.id) ? { ...item, read: true } : item)));
+    window.dispatchEvent(new CustomEvent("notificationsChanged"));
+  });
+
+  function openNotification(item: Notification) {
     setMenuOpen(false);
-    if (!item.read) {
-      updateNotifications((prev) => prev.map((entry) => entry.id === item.id ? { ...entry, read: true } : entry));
-      const supabase = createClient();
-      await supabase.from("notifications").update({ read: true }).eq("id", item.id);
-      window.dispatchEvent(new CustomEvent("notificationsChanged"));
-    }
+    if (!item.read) void markRead({ ids: [item.id] });
     router.push(notificationActionHref(item, undefined, locale) ?? `${prefijoDeIdioma(locale)}/notificaciones`);
   }
 
-  async function markAllRead() {
-    if (!user) return;
-    const ids = visible.filter((item) => !item.read).map((item) => item.id);
-    if (ids.length === 0) return;
-    const supabase = createClient();
-    await supabase.from("notifications").update({ read: true }).in("id", ids);
-    updateNotifications((prev) => prev.map((item) => (ids.includes(item.id) ? { ...item, read: true } : item)));
-    window.dispatchEvent(new CustomEvent("notificationsChanged"));
+  function markAllRead() {
+    return markRead(scope === "all"
+      ? { ids: null, snapshotIds: notifications.map((item) => item.id) }
+      : { ids: visible.filter((item) => !item.read).map((item) => item.id) });
   }
 
   // The panel is anchored to the bell on the website; inside the app it is
@@ -288,6 +285,11 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
           </div>
 
 
+          {readError && <div role="alert" className="px-4 pb-3 text-sm text-red-700">
+            <p>{t("markReadError")}</p>
+            <button type="button" disabled={retrying} onClick={retryRead} className="mt-1 font-semibold underline disabled:opacity-50">{t("markReadRetry")}</button>
+          </div>}
+
           {listaFiltrada.length > 0 ? (
             <div className="max-h-[22rem] overflow-y-auto px-1.5 pb-1.5">
               {grupos.map((grupo) => (
@@ -304,7 +306,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
               plano
               tamano="compacto"
               icon={Bell}
-              title={locale === "en" ? "No notifications yet" : "Aún no tienes notificaciones"}
+              title={locale === "en" ? "No notifications yet" : "Aún no tiene notificaciones"}
               className="min-h-0 px-4 pb-5 pt-2"
             />
           )}

@@ -12,7 +12,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 // —ahí van solo banderas— más el tope de abajo: un humano pide uno o dos
 // contactos, un raspador pide cincuenta.
 export async function GET(req: Request) {
-  const limited = enforceRateLimit(req, "contact-reveal", 15, 3_600_000);
+  const limited = await enforceRateLimit(req, "contact-reveal", 15, 3_600_000);
   if (limited) return limited;
   const professionalId = new URL(req.url).searchParams.get("professionalId") ?? "";
   if (!/^[0-9a-f-]{36}$/i.test(professionalId)) {

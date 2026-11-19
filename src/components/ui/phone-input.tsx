@@ -72,6 +72,7 @@ interface PhoneInputProps {
   optional?: boolean;
   id?: string;
   className?: string;
+  language?: string;
 }
 
 function formatCRNational(digits: string): string {
@@ -79,11 +80,13 @@ function formatCRNational(digits: string): string {
   return d.length > 4 ? `${d.slice(0, 4)}-${d.slice(4)}` : d;
 }
 
-export function PhoneInput({ value, onChange, label, error, required, optional, id, className }: PhoneInputProps) {
+export function PhoneInput({ value, onChange, label, error, required, optional, id, className, language = "es" }: PhoneInputProps) {
   // Initialise the selected country from the value once; selection is then
   // driven by internal state so picking a country always "sticks".
   const [code, setCode] = useState(() => detect(value).country.code);
   const country = COUNTRIES.find((c) => c.code === code) ?? COUNTRIES[0];
+  const names = useMemo(() => language === "en" ? new Intl.DisplayNames(["en"], {type: "region"}) : null, [language]);
+  const countryName = (item: Country) => names ? item.iso === "us" ? "United States / Canada" : names.of(item.iso.toUpperCase()) || item.name : item.name;
 
   // National digits for the *currently selected* country.
   const national = useMemo(() => {
@@ -142,18 +145,18 @@ export function PhoneInput({ value, onChange, label, error, required, optional, 
             srcSet={`https://flagcdn.com/48x36/${country.iso}.png 2x`}
             width={22}
             height={16}
-            alt={country.name}
+            alt={countryName(country)}
             className="rounded-[2px] shrink-0 h-4 w-[22px] object-cover"
           />
           <span className="text-sm font-medium text-[#374151] leading-none whitespace-nowrap">+{country.code}</span>
           <select
             value={code}
             onChange={(e) => changeCountry(e.target.value)}
-            aria-label="País"
+            aria-label={language === "en" ? "Country" : "País"}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           >
             {COUNTRIES.map((c) => (
-              <option key={c.iso} value={c.code}>{c.name} (+{c.code})</option>
+              <option key={c.iso} value={c.code}>{countryName(c)} (+{c.code})</option>
             ))}
           </select>
         </div>
@@ -166,6 +169,7 @@ export function PhoneInput({ value, onChange, label, error, required, optional, 
           // El asterisco es un símbolo: quien oye la pantalla necesita que el
           // CAMPO diga que es obligatorio. En todo el app no había un solo
           // `aria-required`.
+          aria-label={language === "en" && typeof label === "string" ? label : undefined}
           aria-required={required || undefined}
           aria-invalid={!!error}
           className="flex-1 min-w-0 h-full px-3 bg-transparent border-0 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-0"
@@ -174,7 +178,7 @@ export function PhoneInput({ value, onChange, label, error, required, optional, 
       {/* Live length hint — enforces exactly N digits for the selected country. */}
       {national.length > 0 && !complete && (
         <p className="text-xs text-amber-600 mt-1">
-          {country.name} usa {country.len} dígitos ({national.length}/{country.len}).
+          {language === "en" ? `${countryName(country)} uses ${country.len} digits (${national.length}/${country.len}).` : `${country.name} usa ${country.len} dígitos (${national.length}/${country.len}).`}
         </p>
       )}
       {error && <p className="text-xs text-red-500 mt-1">{error}</p>}

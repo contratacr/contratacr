@@ -27,7 +27,7 @@ for (const environment of ['responsive web', 'native app'] as const) {
     await gotoOK(page, '/publicar-solicitud?returnTo=%2Fsolicitudes');
     await page.getByRole('button', { name: /Ej\.: plomería, electricista, pintura/ }).first().click();
     const sheet = page.getByTestId('category-picker-sheet');
-    await expect(sheet.getByText('Elige el servicio')).toBeVisible();
+    await expect(sheet.getByText('Elija el servicio')).toBeVisible();
     await expect(sheet.locator('[data-native-back="category-picker"]')).toBeVisible();
 
     // Rows are buttons: a horizontal swipe must go back, not choose Agro.

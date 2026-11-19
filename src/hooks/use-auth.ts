@@ -8,6 +8,7 @@ import { APP_RESUME_EVENT } from "@/lib/app-events";
 import { isSigningOut } from "@/lib/auth/sign-out";
 import { clearDashboardCache } from "@/lib/dashboard-prefetch-cache";
 import { clearConversationsCache } from "@/lib/direct-chat/conversations-cache";
+import { clearProBrowserStorage, sweepProBrowserStorage } from "@/lib/pro/browser-storage-cleanup";
 
 // Resolve once the image is decoded (or fails / times out — never hangs). Used to keep
 // the avatar skeleton up until the photo can paint INSTANTLY, so the navbar never shows
@@ -136,6 +137,9 @@ function useAuthState(
   const initialResolvedUser = initialUser === undefined ? readCachedUser() : initialUser;
   const [user, setUser] = useState<User | null>(() => initialResolvedUser);
   const savedKeys = useMemo(() => new Set(initialSavedKeys), [initialSavedKeys]);
+  // Expire stale Pro drafts/journals (30 days without a visit, archives after 7).
+  const signedInId = user?.id ?? null;
+  useEffect(() => { if (signedInId) sweepProBrowserStorage(); }, [signedInId]);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(() => {
     if (!initialResolvedUser) return null;
     if (typeof window === "undefined") return initialAvatarUrl ?? null;
@@ -339,6 +343,10 @@ function useAuthState(
         clearDashboardCache();
         // La lista de conversaciones tampoco puede sobrevivir a la sesión.
         clearConversationsCache();
+        // Pro drafts and pending-write journals end with the session too, also
+        // when it ends in another tab or expires (not on anonymous page loads,
+        // which would erase pre-login handoffs).
+        if (evento === "SIGNED_OUT") void clearProBrowserStorage();
       }
     });
 

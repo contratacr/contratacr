@@ -30,6 +30,9 @@ const INTERNAL_LEGAL_LINKS = [
   { text: "public Account Deletion page", href: "/eliminar-cuenta" },
   { text: "public account deletion page", href: "/eliminar-cuenta" },
   { text: "public account or data deletion page", href: "/eliminar-cuenta" },
+  // Ley 10.946: the ranking parameters stay one tap away from the Terms (section 13.1, places directory).
+  { text: "Cómo ordenamos los resultados", href: "/como-ordenamos" },
+  { text: "How we rank results", href: "/como-ordenamos" },
 ] as const;
 
 // Render a run of text: **bold** segments + legal contact/internal links.
@@ -164,7 +167,7 @@ export async function LegalDocument({ title, updated, intro, summary, sections, 
             </div>
 
             <p className="text-center text-sm italic text-[#68778d]">
-              ContrataCR - {en ? "Offer and find services in Costa Rica." : "Ofrece y encuentra servicios en Costa Rica."}
+              ContrataCR - {en ? "Offer and find services in Costa Rica." : "Ofrezca y encuentre servicios en Costa Rica."}
             </p>
           </div>
         </div>

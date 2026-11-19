@@ -31,7 +31,9 @@ export function SessionMfaGate({ children, initialState }: { children: ReactNode
   const [offline, setOffline] = useState(false);
   const [checking, setChecking] = useState(false);
   const sequence = useRef({ value: 0 });
-  async function check() {
+  // Launch fix I4: a slow first answer (dev on-demand compile took up to 15 s, over the 8 s abort) or one
+  // transient 5xx showed «No pudimos verificar la sesión» until Retry. Two quiet automatic retries first.
+  async function check(attempt = 0) {
     const request = ++sequence.current.value;
     setChecking(true);
     const controller = new AbortController();
@@ -44,7 +46,10 @@ export function SessionMfaGate({ children, initialState }: { children: ReactNode
       if (request === sequence.current.value) { setState(next); setError(false); if (error) router.refresh(); }
       return next;
     } catch (failure) {
-      if (request === sequence.current.value) { setError(true); setOffline(!navigator.onLine || failure instanceof TypeError); }
+      if (request === sequence.current.value) {
+        if (attempt < 2 && navigator.onLine) window.setTimeout(() => { if (request === sequence.current.value) void check(attempt + 1).catch(() => {}); }, 1500 * (attempt + 1));
+        else { setError(true); setOffline(!navigator.onLine || failure instanceof TypeError); }
+      }
       throw failure;
     } finally {
       window.clearTimeout(timeout);

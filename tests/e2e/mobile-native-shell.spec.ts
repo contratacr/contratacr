@@ -28,7 +28,7 @@ const LOCALES: LocaleContract[] = [
     messages: "Mensajes",
     assistant: "Asistente",
     assistantDialog: /Asistente ContrataCR/i,
-    assistantInput: /Escribe una pregunta/i,
+    assistantInput: /Escriba una pregunta/i,
     assistantSend: /^Enviar mensaje$/i,
     assistantAnswer: "Encontré una opción para su solicitud.",
     messageAction: "Mensaje",
@@ -245,7 +245,7 @@ test.describe("@mobile native shell contracts", () => {
 
     const onboarding = page.getByTestId("native-first-run-onboarding");
     await expect(onboarding).toBeVisible();
-    await expect(onboarding.getByRole("heading", { name: "¿Cómo quieres empezar?" })).toBeVisible();
+    await expect(onboarding.getByRole("heading", { name: "¿Cómo quiere empezar?" })).toBeVisible();
     await expect(onboarding.locator('img[src="/logo-mark-transparent.png"]').filter({ visible: true })).toBeVisible();
     await onboarding.getByRole("button", { name: /Busco servicios/i }).click();
     await expect(onboarding).toBeHidden();
@@ -258,31 +258,31 @@ test.describe("@mobile native shell contracts", () => {
     await page.goBack({ waitUntil: "domcontentloaded" });
     await expect(page).toHaveURL(/^https?:\/\/[^/]+\/?$/);
     await expect(onboarding).toBeVisible();
-    await expect(onboarding.getByRole("heading", { name: "¿Cómo quieres empezar?" })).toBeVisible();
+    await expect(onboarding.getByRole("heading", { name: "¿Cómo quiere empezar?" })).toBeVisible();
 
     await onboarding.getByRole("button", { name: /Ofrezco servicios/i }).click();
     await expect(page).toHaveURL(/\/registro\/profesional/);
-    await expect(page.getByRole("heading", { name: "Crea tu cuenta profesional", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Cree su cuenta profesional", exact: true })).toBeVisible();
     await page.goBack({ waitUntil: "domcontentloaded" });
     await expect(page).toHaveURL(/^https?:\/\/[^/]+\/?$/);
     await expect(onboarding).toBeVisible();
 
-    await onboarding.getByRole("button", { name: /Inicia sesión/i }).click();
+    await onboarding.getByRole("button", { name: /Inicie sesión/i }).click();
     await expect(page).toHaveURL(/\/login/);
-    await expect(page.getByRole("heading", { name: "Ingresa a tu cuenta", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Ingrese a su cuenta", exact: true })).toBeVisible();
     await page.goBack({ waitUntil: "domcontentloaded" });
     await expect(page).toHaveURL(/^https?:\/\/[^/]+\/?$/);
     await expect(onboarding).toBeVisible();
 
-    await onboarding.getByRole("button", { name: /Inicia sesión/i }).click();
+    await onboarding.getByRole("button", { name: /Inicie sesión/i }).click();
     await expect(page).toHaveURL(/\/login/);
-    await expect(page.getByRole("heading", { name: "Ingresa a tu cuenta", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Ingrese a su cuenta", exact: true })).toBeVisible();
     await expect.poll(() => page.evaluate(() => window.localStorage.getItem("ccr:native-first-run-onboarding:v12"))).toBeNull();
 
     // Términos y Privacidad desde el registro (6-oct-2026): abrían la
     // bienvenida otra vez en vez de la página, porque no eran rutas «del
     // camino». Solo el inicio la vuelve a levantar.
-    await page.getByRole("link", { name: /Regístrate/i }).click();
+    await page.getByRole("link", { name: /Regístrese/i }).click();
     await page.getByRole("link", { name: /Busco servicios/i }).click();
     await expect(page).toHaveURL(/\/registro\/cliente/);
     await page.getByRole("link", { name: "Términos de uso" }).click();
@@ -422,8 +422,8 @@ test.describe("@mobile native shell contracts", () => {
     expect(sheetGeometry.top).toBeGreaterThanOrEqual(sheetGeometry.headerHeight + 57);
     expect(sheetGeometry.bottom).toBeLessThanOrEqual(sheetGeometry.viewportHeight + 1);
 
-    await page.getByRole("button", { name: "¿Qué servicio estás buscando?" }).click();
-    const serviceInput = page.getByRole("combobox", { name: "Servicio" });
+    await page.getByRole("button", { name: /^(¿Qué servicio está buscando\?|Servicios, restaurantes, farmacias\.\.\.)$/ }).click();
+    const serviceInput = page.getByRole("combobox", { name: /^(Servicio|Servicios y lugares)$/ });
     await expect(serviceInput).toBeVisible();
     const overlayGeometry = await serviceInput.evaluate((element) => {
       const overlay = element.closest<HTMLElement>(".fixed.z-\\[220\\]");

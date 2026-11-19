@@ -1,10 +1,20 @@
 "use client";
 
+import { idiomaDe } from "@/lib/prefijo-de-idioma";
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { getAllCategories, getCategoryLabel } from "@/lib/data/categories";
 import { oficiosDeArranque } from "@/lib/data/oficios-de-arranque";
 import { cn } from "@/lib/utils";
+import { useSiteFeatures } from "@/components/site-features";
+
+// With the directory on (one search for services and places, 2026-11-19) a few
+// place sections join the rotation, after every second service.
+const LUGARES_DE_EJEMPLO: { section: string; es: string; en: string }[] = [
+  { section: "restaurantes", es: "restaurantes", en: "restaurants" },
+  { section: "farmacias", es: "farmacias", en: "pharmacies" },
+  { section: "gasolineras", es: "gasolineras", en: "fuel stations" },
+];
 
 /**
  * «Busca» FIJO Y EL SERVICIO RUEDA (3-oct-2026). Lo usan el buscador de la
@@ -24,6 +34,8 @@ export function RodilloDeEjemplos({ quieto = false, className }: { quieto?: bool
   const primero = fija[0];
   const [vuelta, setVuelta] = useState(0);
   const [lista, setLista] = useState<string[] | null>(null);
+  const { directorySections } = useSiteFeatures();
+  const lugaresActivos = LUGARES_DE_EJEMPLO.filter((l) => directorySections.includes(l.section)).map((l) => l[idiomaDe(locale)]).join("|");
   useEffect(() => {
     const vivos = new Set(getAllCategories().map((c) => c.id));
     const nombres = oficiosDeArranque().filter((id) => vivos.has(id)).slice(0, 8)
@@ -32,8 +44,11 @@ export function RodilloDeEjemplos({ quieto = false, className }: { quieto?: bool
       .filter((nombre) => nombre.length <= 20);
     // Keep the server-rendered example first and exclude it from the live
     // alternatives: hydration must not rename it or repeat it on the next turn.
-    if (nombres.length >= 3) queueMicrotask(() => setLista([primero, ...nombres.filter((nombre) => nombre !== primero)]));
-  }, [locale, primero]);
+    const servicios = nombres.filter((nombre) => nombre !== primero);
+    const lugares = lugaresActivos ? lugaresActivos.split("|") : [];
+    const mezcla = servicios.flatMap((nombre, i) => (i % 2 === 1 && lugares[(i - 1) / 2] ? [nombre, lugares[(i - 1) / 2]] : [nombre]));
+    if (nombres.length >= 3) queueMicrotask(() => setLista([primero, ...mezcla]));
+  }, [locale, primero, lugaresActivos]);
   useEffect(() => {
     if (quieto || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     // Con la app en segundo plano o el menú abierto encima no se gira: el

@@ -16,7 +16,7 @@ const action = z.object({
 export async function POST(req: Request) {
   const access = await moderationAccess();
   if (!access) return NextResponse.json({error:"No autorizado para moderar."},{status:403,headers});
-  const limited = enforceRateLimit(req,"admin-moderation",30,60000); if(limited) return limited;
+  const limited = await enforceRateLimit(req,"admin-moderation",30,60000); if(limited) return limited;
   if(req.headers.get("origin") !== new URL(req.url).origin) return NextResponse.json({error:"Origen inválido"},{status:403,headers});
   const parsed = action.safeParse(await req.json().catch(()=>null));
   if(!parsed.success) return NextResponse.json({error:"Indica contenido, acción y motivo (5–1000 caracteres)."},{status:400,headers});

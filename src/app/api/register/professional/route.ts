@@ -96,7 +96,7 @@ async function rollbackFreshSignup(supabase: ReturnType<typeof createAdminClient
 
 export async function POST(req: Request) {
   // Public endpoint: bound abuse and enumeration per client IP.
-  const limited = enforceRateLimit(req, "register", 10, 600000);
+  const limited = await enforceRateLimit(req, "register", 10, 600000);
   if (limited) return limited;
   try {
     const body = await req.json();
@@ -213,7 +213,7 @@ export async function POST(req: Request) {
       const bodyUserId: string | undefined = body.userId;
       if (!bodyUserId) {
         return NextResponse.json(
-          { error: "Usuario inválido. Intenta de nuevo." },
+          { error: "Usuario inválido. Intente de nuevo." },
           { status: 401 }
         );
       }
@@ -221,7 +221,7 @@ export async function POST(req: Request) {
         await supabase.auth.admin.getUserById(bodyUserId);
       if (adminError || !adminLookup.user) {
         return NextResponse.json(
-          { error: "Este correo ya está registrado. Inicia sesión.", code: "email_taken" },
+          { error: "Este correo ya está registrado. Inicie sesión.", code: "email_taken" },
           { status: 409 }
         );
       }
@@ -252,7 +252,7 @@ export async function POST(req: Request) {
       if (existingCedula) {
         await rollbackFreshSignup(supabase, userId, freshSignup);
         return NextResponse.json(
-          { error: "Esta identificación ya está registrada. Inicia sesión o recupera tu cuenta.", code: "cedula_taken" },
+          { error: "Esta identificación ya está registrada. Inicie sesión o recupera su cuenta.", code: "cedula_taken" },
           { status: 409 }
         );
       }
@@ -295,10 +295,10 @@ export async function POST(req: Request) {
       await rollbackFreshSignup(supabase, userId, freshSignup);
       const dupEmail = /profiles_email_key|idx_profiles_email_unique/i.test(profileError.message);
       const friendly = dupEmail
-        ? "Este correo ya está registrado. Inicia sesión."
+        ? "Este correo ya está registrado. Inicie sesión."
         : /duplicate key|cedula/i.test(profileError.message)
-          ? "Esta identificación ya está registrada. Inicia sesión o recupera tu cuenta."
-          : "No pudimos crear tu cuenta. Intenta de nuevo en unos minutos.";
+          ? "Esta identificación ya está registrada. Inicie sesión o recupera su cuenta."
+          : "No pudimos crear su cuenta. Intente de nuevo en unos minutos.";
       return NextResponse.json({ error: friendly, ...(dupEmail ? { code: "email_taken" } : {}) }, { status: dupEmail ? 409 : 500 });
     }
 
@@ -345,7 +345,7 @@ export async function POST(req: Request) {
       if (updErr) {
         console.error("[register/professional] update error:", updErr);
         await rollbackFreshSignup(supabase, userId, freshSignup);
-        return NextResponse.json({ error: "No pudimos actualizar tu perfil. Intenta de nuevo." }, { status: 500 });
+        return NextResponse.json({ error: "No pudimos actualizar su perfil. Intente de nuevo." }, { status: 500 });
       }
       // Fire automatic identity verification (best-effort; never blocks).
       // Registration → in-app notification only (no email); re-saves notify only
@@ -422,7 +422,7 @@ export async function POST(req: Request) {
       const friendly =
         /duplicate key|already exists/i.test(proError.message)
           ? "Ya existe un perfil profesional para esta cuenta."
-          : "No pudimos crear tu perfil profesional. Revisa tus datos e intenta de nuevo.";
+          : "No pudimos crear su perfil profesional. Revise sus datos e intente de nuevo.";
       return NextResponse.json({ error: friendly }, { status: 500 });
     }
 

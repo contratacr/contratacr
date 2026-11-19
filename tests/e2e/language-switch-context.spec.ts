@@ -1,9 +1,13 @@
 import { test, expect } from 'playwright/test';
-import { gotoOK, expectNoRawI18nKeys } from './helpers';
+import { gotoOK, expectNoRawI18nKeys, waitForInteractivePage } from './helpers';
 
 for (const pathname of ['/servicios', '/empleos', '/promociones']) {
   test(`ES/EN switch preserves route, query and anchor on ${pathname}`, async ({ page, context }) => {
     await gotoOK(page, `${pathname}?regression_context=keep#contenido`);
+    // The switcher (and the mobile menu) are server-rendered buttons: a press
+    // before hydration does nothing. Wait for the navbar to hydrate, as a person
+    // would see it respond, before pressing it.
+    await waitForInteractivePage(page);
     for (const locale of ['en', 'es'] as const) {
       const mobile = (page.viewportSize()?.width ?? 1366) < 1024;
       if (mobile) {
@@ -21,6 +25,7 @@ for (const pathname of ['/servicios', '/empleos', '/promociones']) {
       expect(cookie?.expires).toBeGreaterThan(Date.now() / 1000 + 86400);
       await page.reload();
       await expect(page.locator('html')).toHaveAttribute('lang', locale);
+      await waitForInteractivePage(page);
     }
   });
 }

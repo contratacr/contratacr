@@ -99,7 +99,7 @@ export async function runLifecycleEmails(db: Admin, simulate = true) {
       const bodyHtml = greeting + campaign.body.split(/\n\n/).map((s) => `<p style="font-size:15px;line-height:1.6">${escaparHtml(s)}</p>`).join("")
         + `<p><a href="${escaparHtml(href)}" style="display:inline-block;background:#009FD9;color:white;padding:12px 22px;border-radius:24px;text-decoration:none">${escaparHtml(campaign.ctaLabel)}</a></p>`
         + `<p>${escaparHtml(signature)}</p><p><a href="${origin}/soporte">Soporte en ContrataCR</a></p>`
-        + `<p style="font-size:12px">Recibes este correo porque tienes una cuenta en ContrataCR. <a href="${escaparHtml(enlaceDeBaja(origin,account.email!))}">No quiero recibir novedades</a>.</p>`;
+        + `<p style="font-size:12px">Recibe este correo porque tiene una cuenta en ContrataCR. <a href="${escaparHtml(enlaceDeBaja(origin,account.email!))}">No quiero recibir novedades</a>.</p>`;
       return sendBrevoEmail({to:account.email!,eventKey:`campaign:${campaign.key}:${account.email!.trim().toLowerCase()}`,subject:campaign.subject,nivel:"masivo",campana:campaign.key,
         html:brandedEmailDocument({title:campaign.subject,bodyHtml,origin})});
     },{coordinated:true});

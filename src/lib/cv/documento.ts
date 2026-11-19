@@ -1,5 +1,6 @@
 import { normalizeCv, sameCvEntry, type CvEntry } from "./model";
 import { parseCvDates } from "./dates";
+import { sinVineta, textoPlano } from "./texto-rico";
 
 /**
  * GENERADOR DE CV Y CARTA DE PRESENTACIÓN (panel → «Mi CV»).
@@ -26,6 +27,19 @@ export type Plantilla = "clasica" | "moderna";
 export type Referencia = { nombre: string; cargo: string; contacto: string };
 /** Una sección con nombre propio (Voluntariado, Publicaciones…), como en FlowCV. */
 export type SeccionLibre = { titulo: string; texto: string };
+/** «Declaro que los datos son verdaderos», con lugar y fecha, como en FlowCV. */
+export type Declaracion = { texto: string; lugarFecha: string };
+
+/**
+ * LAS SECCIONES, EN EL ORDEN QUE ELIJA LA PERSONA (19-nov-2026). Cada una se
+ * puede subir, bajar, ocultar o renombrar; la vista previa, el texto y el PDF
+ * salen de la misma lista (`bloquesDelCv`), así nunca difieren. «libres» es el
+ * lugar de las secciones con nombre propio.
+ */
+export type SeccionId =
+  | "resumen" | "experiencia" | "proyectos" | "educacion" | "certificaciones" | "cursos" | "habilidades" | "idiomas"
+  | "premios" | "voluntariado" | "publicaciones" | "intereses" | "libres" | "referencias" | "declaracion";
+export const ORDEN_BASE: SeccionId[] = ["resumen", "experiencia", "proyectos", "educacion", "certificaciones", "cursos", "habilidades", "idiomas", "premios", "voluntariado", "publicaciones", "intereses", "libres", "referencias", "declaracion"];
 
 export type CvDocumento = {
   idioma: Idioma;
@@ -48,6 +62,16 @@ export type CvDocumento = {
   proyectos?: CvEntry[];
   referencias?: Referencia[];
   secciones?: SeccionLibre[];
+  // Más secciones y su orden (19-nov-2026). También opcionales.
+  cursos?: CvEntry[];
+  premios?: CvEntry[];
+  voluntariado?: CvEntry[];
+  publicaciones?: CvEntry[];
+  intereses?: string[];
+  declaracion?: Declaracion;
+  orden?: SeccionId[];
+  ocultas?: SeccionId[];
+  titulosPropios?: Partial<Record<SeccionId, string>>;
 };
 
 export type Carta = {
@@ -62,10 +86,74 @@ export type Carta = {
 
 export const LIMITES = { resumen: 600, carta: 2200, entradas: 12, habilidades: 10, porDefecto: 8, sugeridas: 30 };
 
-export const TITULOS: Record<Idioma, Record<"resumen" | "experiencia" | "educacion" | "habilidades" | "idiomas" | "certificaciones" | "contacto" | "proyectos" | "referencias", string>> = {
-  es: { resumen: "Resumen profesional", experiencia: "Experiencia", educacion: "Educación", habilidades: "Habilidades", idiomas: "Idiomas", certificaciones: "Certificaciones", contacto: "Contacto", proyectos: "Proyectos", referencias: "Referencias" },
-  en: { resumen: "Professional summary", experiencia: "Experience", educacion: "Education", habilidades: "Skills", idiomas: "Languages", certificaciones: "Certifications", contacto: "Contact", proyectos: "Projects", referencias: "References" },
+export const TITULOS: Record<Idioma, Record<Exclude<SeccionId, "libres"> | "contacto", string>> = {
+  es: { resumen: "Resumen profesional", experiencia: "Experiencia", educacion: "Educación", habilidades: "Habilidades", idiomas: "Idiomas", certificaciones: "Certificaciones", contacto: "Contacto", proyectos: "Proyectos", referencias: "Referencias", cursos: "Cursos", premios: "Premios", voluntariado: "Voluntariado y organizaciones", publicaciones: "Publicaciones", intereses: "Intereses", declaracion: "Declaración" },
+  en: { resumen: "Professional summary", experiencia: "Experience", educacion: "Education", habilidades: "Skills", idiomas: "Languages", certificaciones: "Certifications", contacto: "Contact", proyectos: "Projects", referencias: "References", cursos: "Courses", premios: "Awards", voluntariado: "Volunteering & organizations", publicaciones: "Publications", intereses: "Interests", declaracion: "Declaration" },
 };
+
+/** El orden guardado, con las secciones que falten en su lugar de siempre. */
+export function ordenDeSecciones(cv: Pick<CvDocumento, "orden">): SeccionId[] {
+  const guardado = [...new Set((cv.orden ?? []).filter((id) => ORDEN_BASE.includes(id)))];
+  for (const [i, id] of ORDEN_BASE.entries()) {
+    if (guardado.includes(id)) continue;
+    // Va detrás de la sección que la precede normalmente, si está.
+    const antes = ORDEN_BASE.slice(0, i).reverse().find((x) => guardado.includes(x));
+    guardado.splice(antes ? guardado.indexOf(antes) + 1 : 0, 0, id);
+  }
+  return guardado;
+}
+/** El nombre que sale en el documento: el propio, si la persona lo cambió. */
+export function tituloDeSeccion(cv: Pick<CvDocumento, "idioma" | "titulosPropios">, id: Exclude<SeccionId, "libres">): string {
+  return cv.titulosPropios?.[id]?.trim() || TITULOS[cv.idioma][id];
+}
+
+export type Bloque = { id: SeccionId; clave: string; titulo: string } & (
+  | { tipo: "texto"; texto: string }
+  | { tipo: "entradas"; entradas: CvEntry[] }
+  | { tipo: "lineas"; lineas: string[] }
+  | { tipo: "comas"; items: string[] }
+  | { tipo: "referencias"; referencias: Referencia[] }
+  | { tipo: "declaracion"; texto: string; lugarFecha: string }
+);
+const visibles = (lista: CvEntry[] | undefined) => (lista ?? []).filter((e) => !e.hidden && (e.title.trim() || e.organization.trim()));
+
+/**
+ * Lo que sale en el documento, en orden: sin secciones ocultas, vacías ni
+ * entradas ocultas. La vista previa, el texto y el PDF salen de aquí.
+ */
+export function bloquesDelCv(cv: CvDocumento): Bloque[] {
+  const ocultas = new Set(cv.ocultas ?? []);
+  const extra = opcionales(cv);
+  const salida: Bloque[] = [];
+  for (const id of ordenDeSecciones(cv)) {
+    if (ocultas.has(id)) continue;
+    if (id === "libres") {
+      extra.secciones.forEach((x, i) => salida.push({ id, clave: `libre-${i}`, titulo: x.titulo.trim(), tipo: "texto", texto: x.texto.trim() }));
+      continue;
+    }
+    const base = { id, clave: id, titulo: tituloDeSeccion(cv, id) };
+    if (id === "resumen") { if (cv.resumen.trim()) salida.push({ ...base, tipo: "texto", texto: cv.resumen.trim() }); continue; }
+    if (id === "certificaciones") { if (cv.certificaciones.length) salida.push({ ...base, tipo: "lineas", lineas: cv.certificaciones }); continue; }
+    if (id === "habilidades" || id === "idiomas" || id === "intereses") {
+      const items = (id === "intereses" ? cv.intereses ?? [] : cv[id]).filter((x) => x.trim());
+      if (items.length) salida.push({ ...base, tipo: "comas", items });
+      continue;
+    }
+    if (id === "referencias") { if (extra.referencias.length) salida.push({ ...base, tipo: "referencias", referencias: extra.referencias }); continue; }
+    if (id === "declaracion") {
+      const d = cv.declaracion;
+      if (d?.texto.trim()) salida.push({ ...base, tipo: "declaracion", texto: d.texto.trim(), lugarFecha: d.lugarFecha.trim() });
+      continue;
+    }
+    const entradas = visibles(cv[id]);
+    if (entradas.length) salida.push({ ...base, tipo: "entradas", entradas });
+  }
+  return salida;
+}
+/** ¿Tiene algo que mostrar esta sección (aunque esté oculta)? Para el organizador. */
+export function seccionConContenido(cv: CvDocumento, id: SeccionId): boolean {
+  return bloquesDelCv({ ...cv, ocultas: [], orden: [id] }).some((b) => b.id === id);
+}
 
 /** «Electricista — Hotel Atenas, Heredia»: la ubicación va pegada a la empresa. */
 export function encabezadoDeEntrada(e: CvEntry): string {
@@ -265,7 +353,7 @@ export function revisarCv(cv: CvDocumento): Aviso[] {
   const descripciones = cv.experiencia.map((e) => e.description).join("\n");
   // «Liderazgo: Definí…» también empieza con un verbo: la etiqueta corta del
   // principio no cuenta.
-  const sinEtiqueta = (l: string) => l.trim().replace(/^[•\-–]\s*/, "").replace(/^[^:]{1,40}:\s*/, "");
+  const sinEtiqueta = (l: string) => textoPlano(l.trim().replace(/^[•\-–]\s*/, "")).replace(/^[^:]{1,40}:\s*/, "");
   if (descripciones.trim() && !descripciones.split("\n").some((l) => VERBOS.test(sinEtiqueta(l)))) add("verbos", "mejora", "Empezá cada logro con un verbo de acción: Instalé, Lideré, Reduje…", "Start each achievement with an action verb: Installed, Led, Reduced…");
   if (descripciones.trim() && !/\d/.test(descripciones)) add("numeros", "mejora", "Agregá números a tus logros (30 clientes, 15 %, 2 años): hacen el CV más creíble.", "Add numbers to your achievements (30 clients, 15%, 2 years): they make your CV more credible.");
   if (cv.experiencia.some((e) => !parseCvDates(e.period)?.startYear)) add("fechas", "mejora", "Poné fecha de inicio (mes y año) en cada experiencia.", "Add a start date (month and year) to every job.");
@@ -273,7 +361,7 @@ export function revisarCv(cv: CvDocumento): Aviso[] {
   if (cv.habilidades.length > LIMITES.habilidades) add("demasiadas", "mejora", `Dejá ${LIMITES.habilidades} habilidades como máximo, las que más pide el puesto: una lista larga se lee como relleno.`, `Keep ${LIMITES.habilidades} skills at most, the ones the job asks for: a long list reads as filler.`);
   // Unos 2.900 caracteres por página carta con esta plantilla.
   if (cvComoTexto(cv).length > 5800) add("largo", "mejora", "Pasa de unas 2 páginas: dejá solo lo más relevante para el puesto.", "It runs past about 2 pages: keep only what matters most for the job.");
-  if ([cv.resumen, ...cv.experiencia.map((e) => e.description), ...(cv.proyectos ?? []).map((e) => e.description), ...(cv.secciones ?? []).map((x) => x.texto)].some((t) => PLACEHOLDER.test(t))) add("corchetes", "falta", "Quedó texto entre [corchetes] por completar.", "There is [bracketed] text left to fill in.");
+  if ([cv.resumen, ...cv.experiencia.map((e) => e.description), ...(cv.proyectos ?? []).map((e) => e.description), ...(cv.secciones ?? []).map((x) => x.texto), ...[cv.cursos, cv.premios, cv.voluntariado, cv.publicaciones].flatMap((l) => (l ?? []).map((e) => e.description)), cv.declaracion?.texto ?? ""].some((t) => PLACEHOLDER.test(t))) add("corchetes", "falta", "Quedó texto entre [corchetes] por completar.", "There is [bracketed] text left to fill in.");
   return avisos;
 }
 
@@ -305,7 +393,7 @@ export function terminosDeVacante(vacante: string): Map<string, string> {
   return new Map(orden);
 }
 export function palabrasClave(vacante: string, cv: CvDocumento): { estan: string[]; faltan: string[]; puntaje: number } {
-  const texto = norm([cv.titular, cv.resumen, ...cv.habilidades, ...cv.experiencia.flatMap((e) => [e.title, e.description]), ...(cv.proyectos ?? []).flatMap((e) => [e.title, e.description]), ...cv.certificaciones, ...(cv.secciones ?? []).map((x) => x.texto)].join(" "));
+  const texto = norm([cv.titular, cv.resumen, ...cv.habilidades, ...cv.experiencia.flatMap((e) => [e.title, e.description]), ...(cv.proyectos ?? []).flatMap((e) => [e.title, e.description]), ...cv.certificaciones, ...(cv.secciones ?? []).map((x) => x.texto), ...[cv.cursos, cv.premios, cv.voluntariado, cv.publicaciones].flatMap((l) => (l ?? []).flatMap((e) => [e.title, e.description])), ...(cv.intereses ?? [])].join(" "));
   const estan: string[] = [], faltan: string[] = [];
   for (const [n, original] of terminosDeVacante(vacante)) (texto.includes(n) ? estan : faltan).push(original);
   const total = estan.length + faltan.length;
@@ -314,25 +402,25 @@ export function palabrasClave(vacante: string, cv: CvDocumento): { estan: string
 
 // ── TEXTO ── el mismo contenido que el PDF, para pegar en un formulario.
 export function cvComoTexto(cv: CvDocumento): string {
-  const t = TITULOS[cv.idioma];
   const contacto = [cv.correo, cv.telefono, cv.ubicacion, cv.enlace].filter((v) => v.trim()).join(" | ");
   const bloque = (titulo: string, lineas: string[]) => lineas.length ? [`${titulo.toUpperCase()}`, ...lineas, ""] : [];
-  const extra = opcionales(cv);
   const entrada = (e: CvEntry) => [
     encabezadoDeEntrada(e) + (e.period ? ` (${fechasAts(e.period, cv.idioma)})` : ""),
-    ...e.description.split("\n").map((l) => l.trim()).filter(Boolean).map((l) => `- ${l.replace(/^[•\-–]\s*/, "")}`),
+    ...e.description.split("\n").map((l) => l.trim()).filter(Boolean).map((l) => `- ${textoPlano(sinVineta(l))}`),
   ];
+  const lineas = (b: Bloque): string[] => {
+    switch (b.tipo) {
+      case "texto": return [b.texto.split("\n").map((l) => textoPlano(l)).join("\n")];
+      case "entradas": return b.entradas.flatMap(entrada);
+      case "lineas": return b.lineas;
+      case "comas": return [b.items.join(", ")];
+      case "referencias": return b.referencias.flatMap(lineasDeReferencia);
+      case "declaracion": return [textoPlano(b.texto), ...(b.lugarFecha ? [b.lugarFecha] : []), cv.nombre].filter((l) => l.trim());
+    }
+  };
   return [
     cv.nombre, cv.titular, contacto, "",
-    ...bloque(t.resumen, cv.resumen.trim() ? [cv.resumen.trim()] : []),
-    ...bloque(t.experiencia, cv.experiencia.flatMap(entrada)),
-    ...bloque(t.proyectos, extra.proyectos.flatMap(entrada)),
-    ...bloque(t.educacion, cv.educacion.flatMap(entrada)),
-    ...bloque(t.certificaciones, cv.certificaciones),
-    ...bloque(t.habilidades, cv.habilidades.length ? [cv.habilidades.join(", ")] : []),
-    ...bloque(t.idiomas, cv.idiomas.length ? [cv.idiomas.join(", ")] : []),
-    ...extra.secciones.flatMap((x) => bloque(x.titulo.trim(), [x.texto.trim()])),
-    ...bloque(t.referencias, extra.referencias.flatMap(lineasDeReferencia)),
+    ...bloquesDelCv(cv).flatMap((b) => bloque(b.titulo, lineas(b))),
   ].filter((l, i, a) => !(l === "" && a[i - 1] === "")).join("\n").trim();
 }
 

@@ -92,7 +92,7 @@ export function OtpVerification({ email, onVerified, autoResendOnMount = false }
     setVerifying(false);
 
     if (otpError) {
-      setError(isEn ? "Incorrect or expired code. Request a new one." : "Codigo incorrecto o expirado. Solicita uno nuevo.");
+      setError(isEn ? "Incorrect or expired code. Request a new one." : "Codigo incorrecto o expirado. Solicite uno nuevo.");
       setDigits(["", "", "", "", "", ""]);
       setTimeout(() => inputRefs.current[0]?.focus({ preventScroll: true }), 50);
       return;
@@ -147,15 +147,15 @@ export function OtpVerification({ email, onVerified, autoResendOnMount = false }
 
   return (
     <div ref={containerRef} className="scroll-mt-24 text-center">
-      <h1 className="text-xl font-bold text-[#162543]">{isEn ? "Verify your email" : "Verifica tu correo"}</h1>
+      <h1 className="text-xl font-bold text-[#162543]">{isEn ? "Verify your email" : "Verifique su correo"}</h1>
       <p className="text-sm text-[#6b7280] mt-1.5 mb-6">
-        {isEn ? "Enter the 6-digit code we sent to" : "Ingresa el código de 6 dígitos que enviamos a"}{" "}
+        {isEn ? "Enter the 6-digit code we sent to" : "Ingrese el código de 6 dígitos que enviamos a"}{" "}
         <strong className="text-[#162543]">{email}</strong>.
       </p>
 
       {resentOnOpen && (
         <div className="rounded-xl border border-[#bae6fd] bg-[#f0f9ff] px-3 py-2.5 text-left text-sm text-[#075985] mb-4">
-          {isEn ? "We sent you a new code." : "Te enviamos un código nuevo."}
+          {isEn ? "We sent you a new code." : "Le enviamos un código nuevo."}
         </div>
       )}
 

@@ -1,0 +1,50 @@
+import {z} from 'zod';
+import {dailyLogDuplicateAttemptSchema,dailyLogDuplicateRetireInputSchema,dailyLogDuplicateRetirementSchema,dailyLogDuplicateRetireReceiptSchema,type DailyLogDuplicateRetireInput} from './daily-log-duplicate';
+type Store=Pick<Storage,'getItem'|'setItem'|'removeItem'>;
+type Locks=Pick<LockManager,'request'>;
+const baselineSchema=z.object({duplicateActorId:z.string().uuid(),duplicateActorName:z.string().max(160),attempt:dailyLogDuplicateAttemptSchema}).strict();
+const schema=z.object({version:z.literal(1),accountId:z.string().uuid(),body:z.string().min(1).max(4096),inputHash:z.string().regex(/^[a-f0-9]{64}$/),baseline:baselineSchema,phase:z.enum(['ready','uncertain','confirmed']),ack:dailyLogDuplicateRetirementSchema.nullable()}).strict();
+export type DailyLogDuplicateRetireWrite=z.infer<typeof schema>;
+const equal=(a:unknown,b:unknown)=>JSON.stringify(a)===JSON.stringify(b),api='/api/pro/daily-log-duplicate';
+const hash=async(text:string)=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text))),b=>b.toString(16).padStart(2,'0')).join('');
+const verified=new WeakSet<DailyLogDuplicateRetireWrite>(),checked=new WeakSet<DailyLogDuplicateRetireWrite>(),denied=new WeakSet<DailyLogDuplicateRetireFailure>();
+export const dailyLogDuplicateRetireWriteKey=(actor:string)=>'ccr:pro:daily-log-duplicate-retire:v1:'+z.string().uuid().parse(actor);
+function matches(record:DailyLogDuplicateRetireWrite,receipt:z.infer<typeof dailyLogDuplicateRetirementSchema>){
+ const baseline=record.baseline.attempt,actual=receipt.attempt;
+ return JSON.stringify(receipt.input)===record.body&&equal(baseline.input,actual.input)&&equal(baseline.source,actual.source)&&equal(baseline.selectedFiles,actual.selectedFiles)&&baseline.reservedAt===actual.reservedAt&&baseline.verifiedFileIds.every(id=>actual.verifiedFileIds.includes(id))&&actual.abortedAt===receipt.at&&actual.phase==='aborted'&&actual.result===null;
+}
+export function parseDailyLogDuplicateRetireWrite(value:unknown,actor:string){
+ const record=schema.parse(value),input=dailyLogDuplicateRetireInputSchema.parse(JSON.parse(record.body)),baseline=record.baseline;
+ if(record.accountId!==actor||JSON.stringify(input)!==record.body||baseline.attempt.phase!=='pending'||baseline.attempt.source.ownerId!==actor||baseline.duplicateActorId!==input.duplicateActorId||baseline.attempt.input.actionId!==input.duplicateActionId||baseline.attempt.input.workId!==input.workId||(baseline.attempt.input.grantId===null)!==(baseline.duplicateActorId===actor)||(record.phase==='confirmed')!==(record.ack!==null)||record.ack&&!matches(record,record.ack)||new TextEncoder().encode(JSON.stringify(record)).byteLength>1024*1024)throw Error('Invalid copy retirement journal');
+ return record;
+}
+export async function validateDailyLogDuplicateRetireWrite(value:unknown,actor:string){const record=parseDailyLogDuplicateRetireWrite(value,actor);if(await hash(record.body)!==record.inputHash)throw Error('Retirement checksum changed');return record;}
+export async function createDailyLogDuplicateRetireWrite(actor:string,input:DailyLogDuplicateRetireInput,baseline:z.infer<typeof baselineSchema>){const body=JSON.stringify(dailyLogDuplicateRetireInputSchema.parse(input));return validateDailyLogDuplicateRetireWrite({version:1,accountId:actor,body,inputHash:await hash(body),baseline,phase:'ready',ack:null},actor);}
+export function readDailyLogDuplicateRetireWrite(store:Store,actor:string){const raw=store.getItem(dailyLogDuplicateRetireWriteKey(actor));if(raw===null)return null;if(raw.length>1024*1024)throw Error('Retirement journal too large');return parseDailyLogDuplicateRetireWrite(JSON.parse(raw),actor);}
+export function mergeDailyLogDuplicateRetireWrite(a:DailyLogDuplicateRetireWrite,b:DailyLogDuplicateRetireWrite|null){a=parseDailyLogDuplicateRetireWrite(a,a.accountId);if(!b)return a;b=parseDailyLogDuplicateRetireWrite(b,a.accountId);if(a.body!==b.body||a.inputHash!==b.inputHash||!equal(a.baseline,b.baseline)||a.ack&&b.ack&&!equal(a.ack,b.ack))throw Error('Retirement identity changed');const rank={ready:0,uncertain:1,confirmed:2};return parseDailyLogDuplicateRetireWrite({...a,phase:rank[a.phase]>=rank[b.phase]?a.phase:b.phase,ack:a.ack??b.ack},a.accountId);}
+function save(store:Store,record:DailyLogDuplicateRetireWrite){if(!equal(mergeDailyLogDuplicateRetireWrite(record,readDailyLogDuplicateRetireWrite(store,record.accountId)),record))throw Error('Retirement moved backwards');const key=dailyLogDuplicateRetireWriteKey(record.accountId),raw=JSON.stringify(record);store.setItem(key,raw);if(store.getItem(key)!==raw)throw Error('Retirement not retained');}
+async function locked<T>(actor:string,run:()=>Promise<T>,locks:Locks|undefined){if(!locks)throw Error('Retirement locking unavailable');return locks.request(dailyLogDuplicateRetireWriteKey(actor)+':lock',{mode:'exclusive',ifAvailable:true},held=>{if(!held)throw Error('Retirement busy');return run();});}
+export class DailyLogDuplicateRetireFailure extends Error{constructor(readonly kind:'scope'|'storage'|'uncertain'|'read',readonly attempt:DailyLogDuplicateRetireWrite,readonly permissionStatus?:403|404){super(kind);}}
+type Options={store:Store;attempt:DailyLogDuplicateRetireWrite;request:(url:string,init?:RequestInit)=>Promise<Response>;currentAccount:()=>string|undefined;mode:'check'|'retry';onCheckpoint:(record:DailyLogDuplicateRetireWrite)=>void;locks?:Locks};
+export async function continueDailyLogDuplicateRetireWrite({store,attempt:initial,request,currentAccount,mode,onCheckpoint,locks=globalThis.navigator?.locks}:Options):Promise<{status:'missing'|'confirmed';attempt:DailyLogDuplicateRetireWrite;retirement:z.infer<typeof dailyLogDuplicateRetirementSchema>|null}>{return locked(initial.accountId,async()=>{
+ let attempt=await validateDailyLogDuplicateRetireWrite(initial,initial.accountId);const scope=()=>{if(currentAccount()!==attempt.accountId)throw new DailyLogDuplicateRetireFailure('scope',attempt);};scope();
+ try{const disk=readDailyLogDuplicateRetireWrite(store,attempt.accountId);if(disk)await validateDailyLogDuplicateRetireWrite(disk,attempt.accountId);attempt=mergeDailyLogDuplicateRetireWrite(attempt,disk);}catch{throw new DailyLogDuplicateRetireFailure('storage',attempt);}scope();
+ const checkpoint=(record:DailyLogDuplicateRetireWrite)=>{attempt=record;scope();try{save(store,attempt);scope();onCheckpoint(attempt);}catch(error){if(error instanceof DailyLogDuplicateRetireFailure)throw error;throw new DailyLogDuplicateRetireFailure('storage',attempt);}};
+ const failure=(kind:'read'|'uncertain',status:number)=>{const error=new DailyLogDuplicateRetireFailure(kind,attempt,status===403||status===404?status:undefined);if(error.permissionStatus)denied.add(error);return error;};
+ checkpoint(attempt);const input=dailyLogDuplicateRetireInputSchema.parse(JSON.parse(attempt.body)),headers={'X-Pro-Expected-Actor':attempt.accountId};let observed:z.infer<typeof dailyLogDuplicateRetirementSchema>|null=null;
+ try{
+  if(mode==='retry'&&attempt.phase!=='confirmed'){
+   checkpoint({...attempt,phase:'uncertain'});let response:Response;try{response=await request(api,{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:attempt.body});}catch{throw new DailyLogDuplicateRetireFailure('uncertain',attempt);}scope();if(!response.ok)throw failure('uncertain',response.status);
+   observed=dailyLogDuplicateRetireReceiptSchema.parse(await response.json()).retirement;scope();if(!observed||!matches(attempt,observed))throw Error('Retirement acknowledgement changed');
+  }
+  const response=await request(api+'?'+new URLSearchParams({view:'retirement',actionId:input.actionId}),{cache:'no-store',headers});scope();if(!response.ok)throw failure('read',response.status);const receipt=dailyLogDuplicateRetireReceiptSchema.parse(await response.json()).retirement;scope();
+  if(!receipt){if(attempt.phase==='confirmed'||observed)throw Error('Retirement disappeared');checked.add(attempt);return{status:'missing',attempt,retirement:null};}
+  if(!matches(attempt,receipt)||observed&&!equal(observed,receipt)||attempt.ack&&!equal(attempt.ack,receipt))throw Error('Retirement proof changed');
+  checkpoint({...attempt,phase:'confirmed',ack:receipt});verified.add(attempt);return{status:'confirmed',attempt,retirement:receipt};
+ }catch(error){if(error instanceof DailyLogDuplicateRetireFailure)throw error;throw new DailyLogDuplicateRetireFailure('read',attempt);}
+},locks);}
+export async function clearDailyLogDuplicateRetireWrite(store:Store,attempt:DailyLogDuplicateRetireWrite,locks:Locks|undefined=globalThis.navigator?.locks){return locked(attempt.accountId,async()=>{if(attempt.phase==='uncertain'||attempt.phase==='confirmed'&&!verified.has(attempt)||!equal(readDailyLogDuplicateRetireWrite(store,attempt.accountId),attempt))throw Error('Retirement unresolved');const key=dailyLogDuplicateRetireWriteKey(attempt.accountId);store.removeItem(key);if(store.getItem(key)!==null)throw Error('Retirement journal retained');},locks);}
+export async function archiveDailyLogDuplicateRetireWrite(store:Store,attempt:DailyLogDuplicateRetireWrite,error?:DailyLogDuplicateRetireFailure,locks:Locks|undefined=globalThis.navigator?.locks){return locked(attempt.accountId,async()=>{
+ const permission=!!error&&denied.has(error)&&equal(error.attempt,attempt);if(!checked.has(attempt)&&!permission||attempt.phase==='confirmed'&&!permission||!equal(readDailyLogDuplicateRetireWrite(store,attempt.accountId),attempt))throw Error('Checked missing receipt or observed denial required');
+ const key=dailyLogDuplicateRetireWriteKey(attempt.accountId),input=dailyLogDuplicateRetireInputSchema.parse(JSON.parse(attempt.body)),archive=key+':archived:'+input.actionId,raw=JSON.stringify(attempt),prior=store.getItem(archive);if(prior!==null&&prior!==raw)throw Error('Retirement archive collision');store.setItem(archive,raw);if(store.getItem(archive)!==raw)throw Error('Retirement archive not retained');store.removeItem(key);if(store.getItem(key)!==null)throw Error('Retirement journal retained');if(error)denied.delete(error);
+},locks);}

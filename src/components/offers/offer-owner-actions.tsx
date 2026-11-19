@@ -14,7 +14,7 @@ const OWNER_ACTION_COPY = {
   // `editCorto`: el rótulo que va en MEDIA columna. «Editar promoción» no cabe
   // ahí y salía como «Editar promo…», que no es un botón, es un acertijo. La
   // pantalla ya dice de qué es: al lado está «Administrar», también en corto.
-  es: { edit: "Editar promoción", editCorto: "Editar", manage: "Administrar promoción", manageCorto: "Administrar", subtitle: "Actualiza la información de esta publicación." },
+  es: { edit: "Editar promoción", editCorto: "Editar", manage: "Administrar promoción", manageCorto: "Administrar", subtitle: "Actualice la información de esta publicación." },
   en: { edit: "Edit promotion", editCorto: "Edit", manage: "Manage promotion", manageCorto: "Manage", subtitle: "Update this promotion's information." },
 } as const;
 

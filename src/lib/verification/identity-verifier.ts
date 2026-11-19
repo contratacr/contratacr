@@ -13,7 +13,7 @@ export interface IdentityLookupResult {
 }
 export interface IdentityVerifier {
   readonly name: string;
-  lookup(cedula: string, options?: { fresh?: boolean }): Promise<IdentityLookupResult>;
+  lookup(cedula: string, options?: { fresh?: boolean; cache?: boolean }): Promise<IdentityLookupResult>;
   verify(input: { cedula: string; fullName: string }): Promise<{ matched: boolean; found: boolean; score: number; provider: string }>;
 }
 
@@ -62,12 +62,12 @@ export class HaciendaIdentityVerifier implements IdentityVerifier {
   private windowStart = 0;
   private calls = 0;
   private blockedUntil = 0;
-  async lookup(raw: string, options: { fresh?: boolean } = {}): Promise<IdentityLookupResult> {
+  async lookup(raw: string, options: { fresh?: boolean; cache?: boolean } = {}): Promise<IdentityLookupResult> {
     const base: IdentityLookupResult = { found: false, fullName: null, dob: null, isAdult: false, provider: this.name };
     if (!/^[\d\s-]+$/.test(raw)) return base;
     const id = raw.replace(/[\s-]/g, "");
     if (id.length > 12 || !isValidId(id)) return base;
-    if (!options.fresh) {
+    if (options.cache !== false && !options.fresh) {
       const cached = await readHaciendaCache(id);
       if (cached) return cached;
     }
@@ -87,7 +87,7 @@ export class HaciendaIdentityVerifier implements IdentityVerifier {
       if (response.status === 404) {
         const missing = await response.json();
         if (missing?.code !== 404) return { ...base, unavailable: true };
-        await writeHaciendaCache(id, base); return base;
+        if (options.cache !== false) await writeHaciendaCache(id, base); return base;
       }
       if (!response.ok) return { ...base, unavailable: true };
       const data = await response.json();
@@ -97,7 +97,7 @@ export class HaciendaIdentityVerifier implements IdentityVerifier {
       const idType = TYPES[String(data.tipoIdentificacion).padStart(2, "0")];
       if (!idType || !LENGTHS[idType].includes(id.length) || name.length > 300) return { ...base, unavailable: true };
       const result = { ...base, found: true, fullName: name, idType };
-      await writeHaciendaCache(id, result);
+      if (options.cache !== false) await writeHaciendaCache(id, result);
       return result;
     } catch {
       // Timeouts, non-JSON and transport errors are NOT "identification not found".

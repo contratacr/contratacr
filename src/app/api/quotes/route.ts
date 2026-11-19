@@ -1,3 +1,6 @@
+import {requestQuoteCreateSchema,requestQuoteResponseSchema,requestQuoteDto,requestQuoteFailure,isRequestQuote} from '@/lib/pro/request-quotes';
+import {proApiAccess} from '@/lib/pro/api-access';
+import {crTodayISO} from '@/lib/time-cr';
 import { formatFullPersonName, getProfessionalDisplayName } from "@/lib/display-name";
 import { recordGrowthConversion } from "@/lib/analytics/growth-server";
 import { NextRequest, NextResponse } from "next/server";
@@ -10,6 +13,7 @@ import { writeSourceColumns } from "@/lib/security/write-guard";
 import { randomBytes } from "node:crypto";
 import { quoteTotals, sanitizeQuoteItems, type QuoteTaxMode } from "@/lib/quotes";
 import { invitarAResenaAhora } from "@/lib/notifications/invitar-ahora";
+import { quoteValidUntil } from "@/lib/quote-validity";
 
 /**
  * Cotizaciones: el profesional las crea desde su sección (a cualquier cliente,
@@ -18,7 +22,7 @@ import { invitarAResenaAhora } from "@/lib/notifications/invitar-ahora";
  * llave de servicio tras verificar quién es quién.
  */
 const TAX_MODES = new Set<QuoteTaxMode>(["incluido", "mas_iva", "exento"]);
-const SELECT = "id, professional_id, client_id, client_name, client_phone, client_cedula, client_email, public_code, quote_number, project_id, proposal_id, title, items, tax_mode, subtotal, tax_amount, total, notes, valid_until, status, accepted_at, declined_at, created_at";
+const SELECT = "id, professional_id, client_id, client_name, client_phone, client_cedula, client_email, public_code, quote_number, project_id, proposal_id, title, items, tax_mode, subtotal, tax_amount, total, notes, valid_until, status, accepted_at, declined_at, created_at, updated_at";
 
 // Código del enlace público: 12 caracteres de un alfabeto sin ambigüedades.
 const ALFABETO = "abcdefghjkmnpqrstuvwxyz23456789";
@@ -47,7 +51,7 @@ async function whoAmI() {
 
 export async function GET(req: NextRequest) {
   const me = await whoAmI();
-  if (!me) return NextResponse.json({ error: mensajeDeError(req, { es: "Inicia sesión.", en: "Sign in." }) }, { status: 401 });
+  if (!me) return NextResponse.json({ error: mensajeDeError(req, { es: "Inicie sesión.", en: "Sign in." }) }, { status: 401 });
   const url = new URL(req.url);
   const projectId = url.searchParams.get("projectId");
   // Con el nombre de quien cotiza: el cliente lo ve en "De X" y el profesional
@@ -105,22 +109,23 @@ function rangoDeMonto(total: number): string {
 
 export async function POST(req: NextRequest) {
   const me = await whoAmI();
-  if (!me) return NextResponse.json({ error: mensajeDeError(req, { es: "Inicia sesión.", en: "Sign in." }) }, { status: 401 });
+  if (!me) return NextResponse.json({ error: mensajeDeError(req, { es: "Inicie sesión.", en: "Sign in." }) }, { status: 401 });
   if (!me.proId) return NextResponse.json({ error: mensajeDeError(req, { es: "Solo los profesionales envían cotizaciones.", en: "Only professionals send quotes." }) }, { status: 403 });
   const body = await req.json().catch(() => ({})) as Record<string, unknown>;
   const items = sanitizeQuoteItems(body.items);
-  if (items.length === 0) return NextResponse.json({ error: mensajeDeError(req, { es: "Agrega al menos un renglón con descripción y precio.", en: "Add at least one line with a description and a price." }) }, { status: 400 });
+  if (items.length === 0) return NextResponse.json({ error: mensajeDeError(req, { es: "Agregue al menos un renglón con descripción y precio.", en: "Add at least one line with a description and a price." }) }, { status: 400 });
   const taxMode = TAX_MODES.has(body.taxMode as QuoteTaxMode) ? (body.taxMode as QuoteTaxMode) : "incluido";
   const title = String(body.title ?? "").replace(/\s+/g, " ").trim().slice(0, 120) || null;
   const notes = String(body.notes ?? "").trim().slice(0, 1000) || null;
   const validDays = Math.min(90, Math.max(1, Number(body.validDays) || 15));
-  const validUntil = new Date(Date.now() + validDays * 86_400_000).toISOString().slice(0, 10);
   const projectId = typeof body.projectId === "string" ? body.projectId : null;
   const clientName = String(body.clientName ?? "").replace(/\s+/g, " ").trim().slice(0, 80) || null;
   const clientPhone = String(body.clientPhone ?? "").replace(/[^\d+]/g, "").slice(0, 20) || null;
   const clientCedula = String(body.clientCedula ?? "").replace(/\D/g, "").slice(0, 20) || null;
   const clientEmail = String(body.clientEmail ?? "").trim().slice(0, 120).toLowerCase() || null;
-  if (!projectId && !clientName) return NextResponse.json({ error: mensajeDeError(req, { es: "Escribe para quién es la cotización.", en: "Enter who the quote is for." }) }, { status: 400 });
+  if (!projectId && !clientName) return NextResponse.json({ error: mensajeDeError(req, { es: "Escriba para quién es la cotización.", en: "Enter who the quote is for." }) }, { status: 400 });
+
+  if(body.sourceRequestId!==undefined&&(projectId||body.proProjectContext===true))return NextResponse.json({error:'No mezcle una solicitud con un proyecto.'},{status:400});
 
   // El contexto: un proyecto que el profesional está atendiendo.
   let clientId: string | null = null; let contextTitle = "";
@@ -132,7 +137,29 @@ export async function POST(req: NextRequest) {
     // WhatsApp, y la cotizacion se manda a la cuenta del cliente.
     clientId = p.client_id ?? null; contextTitle = p.title ?? "";
   }
+  if(process.env.NODE_ENV==='development'&&body.proProjectContext===true){
+    const access=await proApiAccess(req);if(access.error)return access.error;
+    const professional=await me.admin.from('professionals').select('is_banned').eq('id',me.proId).maybeSingle();if(professional.error||!professional.data||professional.data.is_banned)return NextResponse.json({error:'Sin acceso'},{status:403});
+    const project=projectId?await me.admin.from('projects').select('status,allow_direct_contact,client_id').eq('id',projectId).maybeSingle():null;
+    if(!project?.data||project.error||project.data.status!=='open'||!project.data.allow_direct_contact)return NextResponse.json({error:'Solicitud no disponible'},{status:404});
+    if(project.data.client_id===me.user.id)return NextResponse.json({error:'No puede cotizar su propia solicitud'},{status:403});
+    const contact=await me.admin.from('pro_clients').select('id,archived').eq('user_id',me.user.id).eq('id','reservation-'+project.data.client_id).maybeSingle();
+    if(contact.error||!contact.data||contact.data.archived)return NextResponse.json({error:'Prepare el cliente desde la solicitud'},{status:409});
+  }
   if (projectId && !clientId) return NextResponse.json({ error: mensajeDeError(req, { es: "Esta solicitud no tiene una cuenta de cliente a la que enviarle la cotización.", en: "This request has no client account to send the quote to." }) }, { status: 400 });
+
+  // A request-backed quote is a local-only, causal transaction, never an email/name match.
+  if(body.sourceRequestId!==undefined){
+    if(process.env.NODE_ENV!=='development')return NextResponse.json({error:'No disponible'},{status:404});
+    if(projectId||body.proProjectContext===true)return NextResponse.json({error:'No mezcle una solicitud con un proyecto.'},{status:400});
+    const access=await proApiAccess(req);if(access.error)return access.error;
+    const parsed=requestQuoteCreateSchema.safeParse({sourceRequestId:body.sourceRequestId,clientActionId:body.clientActionId,clientName,clientPhone,clientCedula,clientEmail,title,items,taxMode,notes,validDays});
+    if(!parsed.success)return NextResponse.json({error:'Revise la solicitud y los datos de la cotización.'},{status:400});
+    const saved=await access.db.rpc('pro_request_quote_create',{p_actor:access.user.id,p_input:parsed.data,p_source:{...writeSourceColumns(req),public_code:codigoPublico()}});
+    if(saved.error)return requestQuoteFailure(saved.error);
+    if(!saved.data?.quote||typeof saved.data.sourceRequestId!=='string')return requestQuoteFailure(null);
+    return NextResponse.json({quote:{...requestQuoteDto(saved.data.quote,saved.data.sourceRequestId),professional_name:me.proDisplayName,professional_full_name:me.proFullName}},{headers:{'Cache-Control':'no-store, private'}});
+  }
 
   // El consecutivo del profesional: 1, 2, 3… Si dos cotizaciones salen al mismo
   // tiempo, la segunda choca con el índice único y se reintenta con el siguiente.
@@ -142,6 +169,7 @@ export async function POST(req: NextRequest) {
     return Number(data?.quote_number ?? 0) + 1;
   }
 
+  const validUntil = quoteValidUntil(validDays);
   const totals = quoteTotals(items, taxMode);
   const insert = {
     professional_id: me.proId, client_id: clientId, client_name: clientName, client_phone: clientPhone, client_cedula: clientCedula, client_email: clientEmail, public_code: codigoPublico(),
@@ -176,10 +204,8 @@ export async function POST(req: NextRequest) {
 
   await auditUserAction(me.admin, req, { actorUserId: me.user.id, actorRole: "professional", action: "quote.create", entityTable: "quotes", entityId: String(data.id), entityOwnerUserId: me.user.id, afterData: insert });
 
-  // Sin aviso al cliente: una cotizacion atada a una cita o a un proyecto ya no
-  // se puede crear —las citas salieron del producto y las de proyecto vivian
-  // en Oportunidades—, asi que `clientId` es siempre nulo aqui. La cotizacion
-  // suelta se comparte como PDF o enlace, por fuera del app.
+  // No automatic client notice. Local Pro project quotes remain available in
+  // the existing client project view; loose documents can be shared explicitly.
 
   await invitarAResenaAhora(me.user.id);
   return NextResponse.json({ quote: { ...data, professional_name: me.proDisplayName, professional_full_name: me.proFullName } });
@@ -187,12 +213,45 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   const me = await whoAmI();
-  if (!me) return NextResponse.json({ error: mensajeDeError(req, { es: "Inicia sesión.", en: "Sign in." }) }, { status: 401 });
-  const body = await req.json().catch(() => ({})) as { id?: string; action?: string; projectId?: string };
+  if (!me) return NextResponse.json({ error: mensajeDeError(req, { es: "Inicie sesión.", en: "Sign in." }) }, { status: 401 });
+  const body = await req.json().catch(() => ({})) as { id?: string; action?: string; projectId?: string; clientActionId?:string; expectedUpdatedAt?:string };
   const id = String(body.id ?? ""); const action = String(body.action ?? "");
   if (!id || !["accept", "decline", "withdraw", "attach", "detach", "delete"].includes(action)) return NextResponse.json({ error: "Acción no válida." }, { status: 400 });
   const { data: q, error } = await me.admin.from("quotes").select(SELECT).eq("id", id).is("deleted_at", null).maybeSingle();
   if (error || !q) return NextResponse.json({ error: mensajeDeError(req, { es: "Cotización no encontrada.", en: "Quote not found." }) }, { status: 404 });
+
+  if(process.env.NODE_ENV==='development'){
+    const linked=await isRequestQuote(me.admin,id);
+    if(linked.error&&!['42P01','PGRST205'].includes(linked.error.code))return requestQuoteFailure(linked.error);
+    if(linked.data&&q.status==='accepted'&&q.professional_id===me.proId&&['withdraw','delete'].includes(action))return NextResponse.json({error:mensajeDeError(req,{es:'La cotización ya fue aceptada y se conserva como parte del acuerdo. Proponga los cambios desde la cita.',en:'This quote has been accepted and is kept as part of the agreement. Propose changes from the appointment.'})},{status:409});
+    if(linked.data&&['accept','decline'].includes(action)){
+      const expected=`${req.nextUrl.protocol}//${req.headers.get('host')||req.nextUrl.host}`;
+      if(req.headers.get('origin')!==expected)return NextResponse.json({error:'Origen no autorizado'},{status:403});
+      const parsed=requestQuoteResponseSchema.safeParse({id,action,clientActionId:body.clientActionId,expectedUpdatedAt:body.expectedUpdatedAt});
+      if(!parsed.success)return NextResponse.json({error:'Actualice la cotización antes de responder.'},{status:400});
+      const response=await me.admin.rpc('pro_request_quote_respond',{p_actor:me.user.id,p_input:parsed.data});
+      if(response.error)return requestQuoteFailure(response.error);
+      if(!response.data?.quote||typeof response.data.sourceRequestId!=='string')return requestQuoteFailure(null);
+      return NextResponse.json({quote:requestQuoteDto(response.data.quote,response.data.sourceRequestId)},{headers:{'Cache-Control':'no-store, private'}});
+    }
+  }
+
+  const localProjectResponse=process.env.NODE_ENV==='development'&&!!q.project_id&&['accept','decline'].includes(action);
+  if(localProjectResponse){
+    const profile=await me.admin.from('profiles').select('is_disabled').eq('id',me.user.id).maybeSingle();if(profile.error)return NextResponse.json({error:'No disponible'},{status:503});if(!profile.data||profile.data.is_disabled)return NextResponse.json({error:'Sin acceso'},{status:403});
+    if(q.client_id!==me.user.id)return NextResponse.json({error:mensajeDeError(req,{es:'Solo el cliente puede responder la cotización.',en:'Only the client can answer the quote.'})},{status:403});
+    const expected=`${req.nextUrl.protocol}//${req.headers.get('host')||req.nextUrl.host}`;
+    if(req.headers.get('origin')!==expected)return NextResponse.json({error:'Origen no autorizado'},{status:403});
+    if(q.valid_until&&q.valid_until<crTodayISO())return NextResponse.json({error:mensajeDeError(req,{es:'La cotización está vencida.',en:'The quote has expired.'})},{status:409});
+  }
+
+  // Local Pro choice quotes must be answered against their immutable version.
+  // The production and ordinary quote paths retain their existing behavior.
+  if (process.env.NODE_ENV === "development" && ["accept", "decline"].includes(action)) {
+    const choices = await me.admin.from("pro_quote_choices").select("quote_id").eq("quote_id", id).maybeSingle();
+    if (choices.error && !["42P01", "PGRST205"].includes(choices.error.code)) return NextResponse.json({ error: "No se pudo comprobar la versión de la cotización." }, { status: 503 });
+    if (choices.data) return NextResponse.json({ error: "Revise y responda los complementos desde Citas antes de aceptar esta cotización." }, { status: 409 });
+  }
 
   // Borrar: solo las que no están en un proyecto (ahí se retira, que
   // deja rastro) y solo si nadie respondió. El número NO se reutiliza.
@@ -213,7 +272,10 @@ export async function PATCH(req: NextRequest) {
   if (action === "detach") {
     if (q.professional_id !== me.proId) return NextResponse.json({ error: "Solo quien la hizo puede quitarla." }, { status: 403 });
     const patch = { project_id: null, proposal_id: null, client_id: null, updated_at: new Date().toISOString() };
-    const { data: updated, error: upErr } = await me.admin.from("quotes").update(patch).eq("id", id).select(SELECT).single();
+    let update=me.admin.from("quotes").update(patch).eq("id", id);
+  if(process.env.NODE_ENV==='development'&&q.project_id)update=update.eq('status',q.status).eq('project_id',q.project_id).is('deleted_at',null);
+  const { data: updated, error: upErr } = await update.select(SELECT).maybeSingle();
+  if(!upErr&&!updated)return NextResponse.json({error:mensajeDeError(req,{es:'La cotización cambió. Actualice antes de responder.',en:'The quote changed. Refresh before responding.'})},{status:409});
     if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 });
     await auditUserAction(me.admin, req, { actorUserId: me.user.id, actorRole: "professional", action: "quote.detach", entityTable: "quotes", entityId: id, entityOwnerUserId: me.user.id, afterData: patch });
     return NextResponse.json({ quote: updated });
@@ -224,13 +286,16 @@ export async function PATCH(req: NextRequest) {
   if (action === "attach") {
     if (q.professional_id !== me.proId) return NextResponse.json({ error: "Solo quien la hizo puede enviarla." }, { status: 403 });
     const projectId = typeof body.projectId === "string" ? body.projectId : null;
-    if (!projectId) return NextResponse.json({ error: "Elige una solicitud." }, { status: 400 });
+    if (!projectId) return NextResponse.json({ error: "Elija una solicitud." }, { status: 400 });
     const { data: p } = await me.admin.from("projects").select("id, client_id, title").eq("id", projectId).maybeSingle();
     if (!p) return NextResponse.json({ error: "Solicitud no encontrada." }, { status: 404 });
     const clientId: string | null = p.client_id ?? null;
     if (!clientId) return NextResponse.json({ error: "Ese trabajo no tiene una cuenta de cliente a la que enviarle la cotización." }, { status: 400 });
     const patch = { project_id: projectId, client_id: clientId, updated_at: new Date().toISOString() };
-    const { data: updated, error: upErr } = await me.admin.from("quotes").update(patch).eq("id", id).select(SELECT).single();
+    let update=me.admin.from("quotes").update(patch).eq("id", id);
+  if(process.env.NODE_ENV==='development'&&q.project_id)update=update.eq('status',q.status).eq('project_id',q.project_id).is('deleted_at',null);
+  const { data: updated, error: upErr } = await update.select(SELECT).maybeSingle();
+  if(!upErr&&!updated)return NextResponse.json({error:mensajeDeError(req,{es:'La cotización cambió. Actualice antes de responder.',en:'The quote changed. Refresh before responding.'})},{status:409});
     if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 });
     await auditUserAction(me.admin, req, { actorUserId: me.user.id, actorRole: "professional", action: "quote.attach", entityTable: "quotes", entityId: id, entityOwnerUserId: me.user.id, afterData: patch });
     return NextResponse.json({ quote: updated });
@@ -245,7 +310,10 @@ export async function PATCH(req: NextRequest) {
     if (q.client_id !== me.user.id) return NextResponse.json({ error: mensajeDeError(req, { es: "Solo el cliente puede responder la cotización.", en: "Only the client can answer the quote." }) }, { status: 403 });
     patch = action === "accept" ? { status: "accepted", accepted_at: now, updated_at: now } : { status: "declined", declined_at: now, updated_at: now };
   }
-  const { data: updated, error: upErr } = await me.admin.from("quotes").update(patch).eq("id", id).select(SELECT).single();
+  let update=me.admin.from("quotes").update(patch).eq("id", id);
+  if(process.env.NODE_ENV==='development'&&q.project_id)update=update.eq('status',q.status).eq('project_id',q.project_id).is('deleted_at',null);
+  const { data: updated, error: upErr } = await update.select(SELECT).maybeSingle();
+  if(!upErr&&!updated)return NextResponse.json({error:mensajeDeError(req,{es:'La cotización cambió. Actualice antes de responder.',en:'The quote changed. Refresh before responding.'})},{status:409});
   if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 });
   await auditUserAction(me.admin, req, { actorUserId: me.user.id, actorRole: action === "withdraw" ? "professional" : "client", action: `quote.${action}`, entityTable: "quotes", entityId: id, entityOwnerUserId: q.client_id, afterData: patch });
   if (action === "accept" && q.project_id) {
@@ -254,8 +322,7 @@ export async function PATCH(req: NextRequest) {
     // The winner's separate consent/context is unavailable, so keep this result first-party only.
     if (winner?.profile_id) await recordGrowthConversion(req,"professional_project_accepted",`project:${q.project_id}`,winner.profile_id,{ metaAllowed: false });
   }
-  // Sin aviso al profesional: aceptar o rechazar dentro del app solo existia
-  // para las cotizaciones atadas a una cita o a un proyecto, que ya no se
-  // pueden crear. Lo que se cotiza hoy se manda por WhatsApp y se responde alli.
+  // Record the response without automatic messages or notifications. Local
+  // project approval does not book a time, close the project or create debt.
   return NextResponse.json({ quote: updated });
 }

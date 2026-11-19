@@ -10,7 +10,7 @@ export const SUPPORT_CLOSE_REASONS = [
     id: "solved",
     label: { es: "Resuelto", en: "Solved" },
     message: {
-      es: "Tu consulta quedó resuelta y cerramos el caso. Si todavía necesitas ayuda, abre la conversación desde el botón y responde allí.",
+      es: "Su consulta quedó resuelta y cerramos el caso. Si todavía necesita ayuda, abra la conversación desde el botón y responda allí.",
       en: "We're marking this case as solved. If the problem comes back, reply to this message and we'll pick it up with the full history at hand.",
     },
   },
@@ -18,7 +18,7 @@ export const SUPPORT_CLOSE_REASONS = [
     id: "no_reply",
     label: { es: "Sin respuesta del usuario", en: "No reply from the user" },
     message: {
-      es: "Cerramos el caso porque no recibimos respuesta. No perdiste nada: si todavía necesitas ayuda, responde a este mensaje y el caso se reabre donde quedó.",
+      es: "Cerramos el caso porque no recibimos respuesta. No perdió nada: si todavía necesita ayuda, responda a este mensaje y el caso se reabre donde quedó.",
       en: "We're closing this case because we didn't hear back. Nothing is lost: if you still need help, reply to this message and the case reopens right where it left off.",
     },
   },
@@ -34,7 +34,7 @@ export const SUPPORT_CLOSE_REASONS = [
     id: "out_of_scope",
     label: { es: "Fuera del alcance de soporte", en: "Outside support's scope" },
     message: {
-      es: "Este caso queda fuera de lo que soporte puede resolver, así que lo cerramos. Si tienes otra consulta sobre la plataforma, escríbenos un caso nuevo y con gusto la vemos.",
+      es: "Este caso queda fuera de lo que soporte puede resolver, así que lo cerramos. Si tiene otra consulta sobre la plataforma, escríbanos un caso nuevo y con gusto la vemos.",
       en: "This case is outside what support can resolve, so we're closing it. If you have another question about the platform, open a new case and we'll gladly look at it.",
     },
   },

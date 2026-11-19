@@ -26,6 +26,8 @@ import {
 type Options = {
   refreshOn?: boolean;
   invalidationDomain?: AppDataDomain;
+  /** Abort this read only when the whole document leaves, never on soft unmount. */
+  cancelOnDocumentLeave?: boolean;
 };
 
 const REFRESH_EVENTS = ["notificationsChanged", "focus", APP_RESUME_EVENT] as const;
@@ -41,8 +43,8 @@ export function useDashboardCacheSnapshot<T>(key: string | null) {
   return useSyncExternalStore(subscribe, snapshot, serverSnapshot);
 }
 
-export function useCachedResource<T>(key: string | null, loader: () => Promise<T>, fallback: T, options: Options = {}) {
-  const { refreshOn = false, invalidationDomain } = options;
+export function useCachedResource<T>(key: string | null, loader: (signal?: AbortSignal) => Promise<T>, fallback: T, options: Options = {}) {
+  const { refreshOn = false, invalidationDomain, cancelOnDocumentLeave = false } = options;
   // The loader is usually an inline closure; it is read through a ref so a new
   // identity per render never re-triggers the fetch.
   const loaderRef = useRef(loader);
@@ -70,13 +72,31 @@ export function useCachedResource<T>(key: string | null, loader: () => Promise<T
   const refresh = useCallback(async ({ esperandoNuevo = false } = {}): Promise<T | undefined> => {
     if (!key) return undefined;
     if (esperandoNuevo) olvidarDashboardCache(key);
-    try {
-      return await loadDashboardCache<T>(key, () => loaderRef.current(), { force: true });
-    } catch (error) {
-      console.error(`[cached-resource] ${key} failed:`, error);
-      return undefined;
+    // A soft unmount may leave another consumer awaiting this shared promise.
+    // Keep it alive until completion; only document departure cancels the read.
+    const controller = cancelOnDocumentLeave ? new AbortController() : null;
+    const cancel = () => controller?.abort();
+    if (controller) {
+      window.addEventListener("beforeunload", cancel);
+      window.addEventListener("pagehide", cancel);
     }
-  }, [key]);
+    try {
+      return await loadDashboardCache<T>(key, async () => {
+        const value = await loaderRef.current(controller?.signal);
+        // A loader that ignored its signal must not commit after cancellation.
+        if (controller?.signal.aborted) throw new DOMException("Document left", "AbortError");
+        return value;
+      }, { force: true });
+    } catch (error) {
+      if (!controller?.signal.aborted) console.error(`[cached-resource] ${key} failed:`, error);
+      return undefined;
+    } finally {
+      if (controller) {
+        window.removeEventListener("beforeunload", cancel);
+        window.removeEventListener("pagehide", cancel);
+      }
+    }
+  }, [key, cancelOnDocumentLeave]);
 
   const setData = useCallback((next: T | ((previous: T) => T)) => {
     if (!key) return;

@@ -268,6 +268,36 @@ const ES_SECTIONS: LegalSection[] = [
     ]
   },
   {
+    "id": "directorio",
+    "h": "13.1 Directorio de lugares y negocios",
+    "body": [
+      {
+        "k": "p",
+        "text": "ContrataCR publica un directorio de lugares y negocios: restaurantes, cafés, farmacias, supermercados, pulperías, ferreterías, gasolineras, hospedaje, establecimientos de salud, veterinarias, talleres, belleza, gimnasios, tours, bancos y otros. Estas reglas se aplican a esas secciones, a la ficha de cada lugar y a la comparación de precios."
+      },
+      {
+        "k": "ul",
+        "items": [
+          "**Orden de los resultados:** ningún pago, plan, suscripción ni anuncio cambia la posición de un lugar, y no existe una posición \"destacada\" pagada. \"Más relevantes\" combina, en este orden, la coincidencia con su búsqueda, la zona elegida, la calificación de clientes (con un ajuste cuando hay pocas reseñas), la cantidad de reseñas, la verificación y qué tan completa está la ficha. También puede ordenar por calificación, cercanía, fecha o precio cuando la sección lo permite. Los criterios completos están en la página Cómo ordenamos los resultados.",
+          "**Origen de los datos:** la información inicial de las fichas proviene de fuentes públicas y abiertas, como OpenStreetMap (© colaboradores de OpenStreetMap, licencia ODbL), y de lo que aportan los negocios y las personas usuarias. Cada ficha indica sus fuentes. Una ficha \"No reclamado\" todavía no la administra el negocio y sus datos no están verificados por ContrataCR. Confirme horario, dirección, servicios y precios directamente con el negocio antes de ir o de comprar.",
+          "**Horarios:** se muestran en hora de Costa Rica. Los horarios tomados de OpenStreetMap se identifican como tales y pueden no estar al día.",
+          "**Reclamar una ficha:** cualquier negocio puede reclamar y verificar su ficha gratis para corregir y mantener sus datos, o pedir que la retiremos. Reclamarla o verificarla no mejora su posición por sí misma, más allá del criterio \"verificado\" descrito arriba.",
+          "**Precios:** cada precio indica su origen (precio oficial, informado por el negocio o reportado por personas usuarias), su fecha y, cuando corresponde, su vigencia. Un precio viejo se marca como desactualizado y nunca cuenta como vigente. Los precios pueden cambiar: confírmelos con el comercio antes de comprar.",
+          "**Combustibles:** el precio lo fija la ARESEP y es igual en todas las estaciones del país, por eso las gasolineras no se filtran ni se ordenan por precio.",
+          "**Precio típico de restaurantes y cafés:** es la mediana de los platos del menú publicado por el negocio, con IVA y servicio incluidos. Los lugares sin menú publicado solo se ocultan si usted usa un filtro de precio. El menú y sus precios los informa cada negocio.",
+          "**Precio de un producto:** en farmacias, supermercados, pulperías, ferreterías y tiendas de mascotas se usa el precio vigente del producto que usted escribe. En la comparación de precios se muestran primero los precios vigentes y luego el menor precio por kilo, litro o unidad; los empates se ordenan por el nombre del comercio. Los comercios sin ese precio aparecen al final.",
+          "**Medicamentos con receta:** ContrataCR no publica ni guarda precios de medicamentos que requieren receta médica; solo se muestran precios de productos de venta libre. Cada farmacia indica si ContrataCR verificó su permiso de funcionamiento.",
+          "**Salud y veterinarias:** solo listamos establecimientos, no profesionales como personas. Cada ficha indica \"Habilitación sin verificar por ContrataCR\" hasta que verifiquemos su permiso. ContrataCR no da consejo médico ni veterinario, no recomienda tratamientos y no muestra precios de consultas. En una emergencia llame al 9-1-1.",
+          "**Bancos y cajeros:** mostramos ubicación y horario. ContrataCR no compara tasas, comisiones ni productos financieros y no publica precios.",
+          "**Hospedaje y tours:** ContrataCR no indica si un negocio cuenta con declaratoria turística del ICT ni muestra categorías oficiales de estrellas. Confírmelo directamente con el negocio.",
+          "**Pedidos y reservas:** el botón \"Pedir\" lleva al canal propio del negocio (WhatsApp, su sitio o su teléfono). ContrataCR no toma pedidos, no hace entregas ni cobra pagos.",
+          "**Reseñas:** se publican tanto reseñas positivas como negativas de experiencias reales, siempre que cumplan las reglas de la sección 11. En salud, veterinarias y bancos solo pueden referirse a la atención y el servicio.",
+          "**Errores:** use \"Reportar un problema\" en la ficha. Revisamos los reportes y corregimos o retiramos la información cuando corresponde."
+        ]
+      }
+    ]
+  },
+  {
     "id": "disponibilidad",
     "h": "14. Disponibilidad y limitación de responsabilidad",
     "body": [
@@ -560,6 +590,36 @@ const EN_SECTIONS: LegalSection[] = [
       {
         "k": "p",
         "text": "The Platform relies on authentication, hosting, storage, maps, email, notifications, AI, and other providers. Their terms and policies may also apply. ContrataCR does not control external websites or outages outside its reasonable control."
+      }
+    ]
+  },
+  {
+    "id": "directory",
+    "h": "13.1 Places and business directory",
+    "body": [
+      {
+        "k": "p",
+        "text": "ContrataCR publishes a directory of places and businesses: restaurants, cafés, pharmacies, supermarkets, corner stores, hardware stores, fuel stations, lodging, health facilities, vets, car services, beauty, gyms, tours, banks and others. These rules apply to those sections, to each place page and to the price comparison."
+      },
+      {
+        "k": "ul",
+        "items": [
+          "**Order of results:** no payment, plan, subscription or advertising changes where a place appears, and there is no paid \"featured\" position. \"Most relevant\" combines, in this order, how well it matches your search, the chosen area, the customer rating (adjusted when there are few reviews), the number of reviews, verification and how complete the listing is. You can also sort by rating, distance, date or price where the section allows it. The full criteria are on the How we rank results page.",
+          "**Where the data comes from:** the initial information on listings comes from public and open sources such as OpenStreetMap (© OpenStreetMap contributors, ODbL licence) and from what businesses and users provide. Each listing names its sources. An \"Unclaimed\" listing is not yet managed by the business and its details are not verified by ContrataCR. Please confirm hours, address, services and prices directly with the business before going or buying.",
+          "**Opening hours:** shown in Costa Rica time. Hours taken from OpenStreetMap are labelled as such and may be out of date.",
+          "**Claiming a listing:** any business can claim and verify its listing for free to correct and maintain its details, or ask us to remove it. Claiming or verifying does not improve its position by itself, beyond the \"verified\" criterion described above.",
+          "**Prices:** every price states its origin (official price, reported by the business or reported by users), its date and, where applicable, its validity. An old price is marked as out of date and never counts as current. Prices may change: please confirm them with the store before buying.",
+          "**Fuel:** ARESEP sets the price and it is the same at every station in the country, so fuel stations are not filtered or sorted by price.",
+          "**Typical price at restaurants and cafés:** the median dish of the menu published by the business, with VAT and service included. Places without a published menu are only hidden when you use a price filter. Each business reports its own menu and prices.",
+          "**Price of a product:** at pharmacies, supermarkets, corner stores, hardware stores and pet shops, the current price of the product you type is used. In the price comparison, current prices come first, then the lowest price per kilo, liter or unit; ties are ordered by store name. Stores without that price are listed last.",
+          "**Prescription medicines:** ContrataCR neither publishes nor stores prices of prescription medicines; only over-the-counter prices are shown. Each pharmacy states whether ContrataCR verified its operating licence.",
+          "**Health and vets:** we only list facilities, never practitioners as individuals. Each listing says \"Permit not verified by ContrataCR\" until we verify its permit. ContrataCR gives no medical or veterinary advice, recommends no treatments and shows no consultation prices. In an emergency, call 9-1-1.",
+          "**Banks and ATMs:** we show location and hours. ContrataCR does not compare rates, fees or financial products and publishes no prices.",
+          "**Lodging and tours:** ContrataCR does not state whether a business holds an ICT tourism declaration and shows no official star ratings. Please confirm directly with the business.",
+          "**Orders and reservations:** the \"Order\" button leads to the business's own channel (WhatsApp, its website or its phone). ContrataCR takes no orders, makes no deliveries and handles no payments.",
+          "**Reviews:** both positive and negative reviews of real experiences are published, as long as they follow the rules in section 11. For health, vets and banks they may only be about attention and service.",
+          "**Errors:** use \"Report a problem\" on the listing. We review reports and correct or remove information when appropriate."
+        ]
       }
     ]
   },

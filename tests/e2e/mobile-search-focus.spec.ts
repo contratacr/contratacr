@@ -13,7 +13,7 @@ async function openSearch(page: Page, path: string) {
  await waitForInteractivePage(page);
  if(path==='/profesionales') {
   await page.evaluate(()=>window.dispatchEvent(new CustomEvent('ccr:open-native-search')));
- } else await page.getByPlaceholder(/Qué .* buscas/).filter({visible:true}).tap();
+ } else await page.getByPlaceholder(/Qué .* busca/).filter({visible:true}).tap();
  const panel=page.locator(path==='/profesionales'?'.ccr-native-search-panel':'.ccr-hoja-buscador');
  await expect(panel).toBeVisible();
  await expect(panel.locator('input').first()).toBeFocused();
@@ -46,7 +46,7 @@ test('professional search stays over old results while navigation is pending, in
  test.skip((page.viewportSize()?.width??1280)>=1024,'Mobile search sheet');
  const panel=await openSearch(page,'/profesionales');
  await panel.locator('input').nth(1).fill('Alajuela');await panel.getByRole('option').filter({hasText:'Alajuela'}).first().tap();
- await panel.getByLabel('Servicio',{exact:true}).fill('Cámaras');
+ await panel.getByLabel(/^(Servicio|Servicios y lugares)$/).fill('Cámaras');
  let release!:()=>void;const gate=new Promise<void>(resolve=>{release=resolve;});
  await page.route('**/*',async route=>{if(route.request().headers().rsc==='1')await gate;await route.continue();});
  const initial=page.url();await panel.getByRole('option').filter({hasText:'Cámaras de seguridad'}).first().tap();
@@ -60,7 +60,7 @@ test('professional search stays over old results while navigation is pending, in
  expect(await page.evaluate(()=>(window as unknown as {__searchPaints:{fixed:boolean;overlay:boolean}[]}).__searchPaints.some(frame=>frame.fixed||frame.overlay))).toBe(false);
  await page.unrouteAll({behavior:'wait'});
  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('ccr:open-native-search')));await expect(panel).toBeVisible();
- await panel.getByLabel('Servicio',{exact:true}).fill('Cámaras');await panel.getByRole('option').filter({hasText:'Cámaras de seguridad'}).first().tap();
+ await panel.getByLabel(/^(Servicio|Servicios y lugares)$/).fill('Cámaras');await panel.getByRole('option').filter({hasText:'Cámaras de seguridad'}).first().tap();
  // Selecting the same completed search dismisses it without another Enter.
  await expect(panel).toHaveCount(0);
 });
@@ -120,7 +120,7 @@ test.describe('viewport sizing',()=>{
   await expect(indicator).toHaveCount(0);
   if(path==='/profesionales') {
    await location.fill('Lugar que no existe 987654');
-   await expect(panel.getByRole('status')).toHaveText('No encontramos ese lugar. Probá con su cantón o provincia.');
+   await expect(panel.getByRole('status')).toHaveText('No encontramos ese lugar. Pruebe con su cantón o provincia.');
    await expect(panel.getByRole('option')).toHaveCount(0);
   }
  }

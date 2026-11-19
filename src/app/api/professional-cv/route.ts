@@ -13,7 +13,7 @@ async function boundedBody(req: Request, limit: number) {
   const bytes = new Uint8Array(size); let at = 0; for (const part of parts) { bytes.set(part, at); at += part.length; } return bytes;
 }
 export async function POST(req: Request) {
-  const rate = enforceRateLimit(req, 'professional-cv-upload', 8, 60_000); if (rate) return rate;
+  const rate = await enforceRateLimit(req, 'professional-cv-upload', 8, 60_000); if (rate) return rate;
   try {
     const c = await context(req, true); if ('error' in c) return c.error;
     let form: FormData;
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
   } catch { return fail('No se pudo guardar el CV.', 503); }
 }
 async function mutate(req: Request, removing: boolean) {
-  const rate = enforceRateLimit(req, 'professional-cv-change', 30, 60_000); if (rate) return rate;
+  const rate = await enforceRateLimit(req, 'professional-cv-change', 30, 60_000); if (rate) return rate;
   try {
     const c = await context(req, true); if ('error' in c) return c.error;
     let body; try { body = JSON.parse(new TextDecoder().decode(await boundedBody(req, 2048))); } catch { return fail('Solicitud inválida.', 400); }

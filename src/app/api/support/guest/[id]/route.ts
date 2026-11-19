@@ -24,7 +24,7 @@ async function load(id: string) {
 }
 
 export async function GET(req: NextRequest, ctx: Context) {
-  const rl = enforceRateLimit(req, "support-guest-read", 60, 60_000);
+  const rl = await enforceRateLimit(req, "support-guest-read", 60, 60_000);
   if (rl) return rl;
   const { id } = await ctx.params;
   const access = await load(id);
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest, ctx: Context) {
   let input;
   try { input = await req.json(); } catch { return json({ error: "invalid_body" }, 400); }
   if (!input || typeof input !== "object" || Array.isArray(input)) return json({ error: "invalid_body" }, 400);
-  const rl = enforceRateLimit(req, input.action === "open" ? "support-guest-open" : "support-guest-reply", input.action === "open" ? 30 : 10, 60_000);
+  const rl = await enforceRateLimit(req, input.action === "open" ? "support-guest-open" : "support-guest-reply", input.action === "open" ? 30 : 10, 60_000);
   if (rl) return rl;
   const access = await load(id);
   if (!access) return denied();

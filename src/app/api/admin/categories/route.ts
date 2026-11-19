@@ -263,7 +263,7 @@ export async function PATCH(req: Request) {
     if (isHidden === true) {
       const inUse = await countProfessionalsUsingCategory(db, id);
       if (inUse === null) {
-        return NextResponse.json({ error: "No se pudo comprobar qué profesionales usan este servicio. Inténtalo de nuevo." }, { status: 500 });
+        return NextResponse.json({ error: "No se pudo comprobar qué profesionales usan este servicio. Inténtelo de nuevo." }, { status: 500 });
       }
       if (inUse > 0) {
         return NextResponse.json({
@@ -487,7 +487,7 @@ export async function DELETE(req: Request) {
   // to move those professionals first (their count is shown in the catalog).
   const inUse = await countProfessionalsUsingCategory(db, id);
   if (inUse === null) {
-    return NextResponse.json({ error: "No se pudo comprobar qué profesionales usan este servicio. Inténtalo de nuevo." }, { status: 500 });
+    return NextResponse.json({ error: "No se pudo comprobar qué profesionales usan este servicio. Inténtelo de nuevo." }, { status: 500 });
   }
   if (inUse > 0) {
     return NextResponse.json({
@@ -651,8 +651,8 @@ function suggestionNotificationMessage(
 ): { title: string; message: string } {
   if (decision === "approved") {
     return {
-      title: "El servicio que sugeriste ya está disponible",
-      message: `"${name}" ya está en ContrataCR. Podés completar sus datos y agregarlo a tu perfil.`,
+      title: "El servicio que sugirió ya está disponible",
+      message: `"${name}" ya está en ContrataCR. Puede completar sus datos y agregarlo a su perfil.`,
     };
   }
 
@@ -660,7 +660,7 @@ function suggestionNotificationMessage(
   const safeReason = normalizedReason ? ` Motivo: ${notificationReasonPreview(normalizedReason)}` : "";
   return {
     title: "Sugerencia rechazada",
-    message: `Tu sugerencia "${name}" no fue aprobada.${safeReason}`,
+    message: `Su sugerencia "${name}" no fue aprobada.${safeReason}`,
   };
 }
 

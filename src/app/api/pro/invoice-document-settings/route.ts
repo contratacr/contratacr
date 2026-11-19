@@ -1,0 +1,5 @@
+import {proApiAccess,proDbFailure} from '@/lib/pro/api-access';
+import {documentSettingsMutationSchema} from '@/lib/pro/invoice-document-settings';
+const headers={'Cache-Control':'no-store'};
+export async function GET(req:Request){const access=await proApiAccess(req);if(access.error)return access.error;const result=await access.db.rpc('pro_invoice_document_settings_read',{p_user:access.user.id});return result.error?proDbFailure(result.error):Response.json(result.data,{headers});}
+export async function POST(req:Request){const access=await proApiAccess(req);if(access.error)return access.error;try{const input=documentSettingsMutationSchema.parse(await req.json());const result=await access.db.rpc('pro_invoice_document_settings_save',{p_user:access.user.id,p_revision:input.revision,p_defaults:input.defaults});return result.error?proDbFailure(result.error):Response.json(result.data,{headers});}catch{return Response.json({error:'Revise la configuración del documento.'},{status:400,headers});}}

@@ -13,7 +13,7 @@ import { attributionColumnsFromBody } from "@/lib/analytics/attribution-server";
 // account logging in from a fresh device must not be re-attributed.
 export async function POST(req: Request) {
   if (!requestStatisticsAllowed(req)) return new NextResponse(null, { status: 204 });
-  const limited = enforceRateLimit(req, "attribution-claim", 20, 600000);
+  const limited = await enforceRateLimit(req, "attribution-claim", 20, 600000);
   if (limited) return limited;
   try {
     const body = await req.json().catch(() => ({}));

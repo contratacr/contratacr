@@ -209,7 +209,7 @@ export function BasicProfileSection({
     if (profileError) {
       if (isCurrentSave()) {
         setProfileSaving(false);
-        void showMessage({ title: errorTitle, description: locale === "en" ? "We couldn't save your profile. Try again." : "No pudimos guardar tu perfil. Intenta de nuevo.", tone: "danger" });
+        void showMessage({ title: errorTitle, description: locale === "en" ? "We couldn't save your profile. Try again." : "No pudimos guardar su perfil. Intente de nuevo.", tone: "danger" });
       }
       return;
     }
@@ -386,7 +386,7 @@ export function BasicProfileSection({
           <p className="mt-1 text-sm text-[#6b7280]">
             {locale === "en"
               ? "Complete your basic information and keep your account up to date."
-              : "Completa tu información básica y mantén tu cuenta al día."}
+              : "Complete su información básica y mantenga su cuenta al día."}
           </p>
         </div>
       </div>

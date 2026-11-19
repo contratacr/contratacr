@@ -64,7 +64,7 @@ export function CompositorDeSoporte({
     try {
       for (const file of Array.from(files)) {
         if (siguientes.length >= MAX_ADJUNTOS_SOPORTE) {
-          setError(en ? "You can attach up to 3 files per message." : "Puedes adjuntar hasta 3 archivos por mensaje.");
+          setError(en ? "You can attach up to 3 files per message." : "Puede adjuntar hasta 3 archivos por mensaje.");
           break;
         }
         const pdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
@@ -77,8 +77,8 @@ export function CompositorDeSoporte({
           siguientes.push({ id: `${Date.now()}-${crypto.randomUUID()}`, file: listo, vista: pdf ? undefined : URL.createObjectURL(listo) });
         } catch (fallo) {
           setError(getImageUploadPreparationErrorCode(fallo) === "too_large"
-            ? (en ? "That image is too large. Choose a lighter image." : "La imagen es muy pesada. Elige una más liviana.")
-            : (en ? "Attach JPG, PNG, WEBP, HEIC, GIF or PDF files only." : "Adjunta solo archivos JPG, PNG, WEBP, HEIC, GIF o PDF."));
+            ? (en ? "That image is too large. Choose a lighter image." : "La imagen es muy pesada. Elija una más liviana.")
+            : (en ? "Attach JPG, PNG, WEBP, HEIC, GIF or PDF files only." : "Adjunte solo archivos JPG, PNG, WEBP, HEIC, GIF o PDF."));
         }
       }
       setElegidos(siguientes);

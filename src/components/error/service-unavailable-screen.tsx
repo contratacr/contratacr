@@ -7,11 +7,11 @@ const COPY = {
     code: "Error temporal",
     title: "Servicio temporalmente no disponible",
     message:
-      "No pudimos completar esta carga por un problema temporal de conexión o de proveedor. Intenta de nuevo en unos minutos.",
+      "No pudimos completar esta carga por un problema temporal de conexión o de proveedor. Intente de nuevo en unos minutos.",
     maintenanceCode: "Mantenimiento temporal",
     maintenanceTitle: "Estamos en mantenimiento",
     maintenanceMessage:
-      "Estamos haciendo ajustes para que ContrataCR siga funcionando bien. Vuelve en unos minutos; si estabas guardando algo, espera antes de enviarlo otra vez.",
+      "Estamos haciendo ajustes para que ContrataCR siga funcionando bien. Vuelva en unos minutos; si estaba guardando algo, espere antes de enviarlo otra vez.",
   },
   en: {
     code: "Temporary error",

@@ -32,3 +32,28 @@ test('explicit English profile keeps English metadata routing', async () => {
   expect(response.headers.get('location')).toBeNull();
   expect(response.status).toBe(200);
 });
+
+// Launch fixes (2026-11-17): the URL locale wins. An English visit cookie no longer sends
+// unprefixed (Spanish) addresses to /en/…; the document navigation renders Spanish and
+// rewrites the visit cookie to Spanish.
+for (const path of ['/dashboard/pro?tab=pro_social', '/dashboard/pro/trabajo/00000000-0000-4000-8000-000000000000/bids', '/profesionales', '/como-funciona']) {
+  test(`unprefixed ${path} stays Spanish after an English visit`, async () => {
+    const request = new NextRequest(`https://contratacr.com${path}`, { headers: { 'accept-language':'en-US,en;q=0.9', 'sec-fetch-dest':'document', cookie:'NEXT_LOCALE=en' } });
+    const response = await middleware(request);
+    const location = response.headers.get('location');
+    if (location) expect(new URL(location).pathname).not.toMatch(/^\/en(\/|$)/);
+    else {
+      const rewrite = response.headers.get('x-middleware-rewrite');
+      if (rewrite) expect(new URL(rewrite).pathname).toMatch(/^\/es(\/|$)/);
+      else expect(request.headers.get('x-ccr-locale')).toBe('es');
+    }
+    if (!path.startsWith('/profesionales')) expect(response.headers.get('set-cookie') ?? '').toMatch(/NEXT_LOCALE=es/);
+  });
+}
+
+test('explicit /en address still renders English with a Spanish cookie', async () => {
+  const request = new NextRequest('https://contratacr.com/en/como-funciona', { headers: { 'sec-fetch-dest':'document', cookie:'NEXT_LOCALE=es' } });
+  const response = await middleware(request);
+  expect(response.headers.get('location')).toBeNull();
+  expect(request.headers.get('x-ccr-locale')).toBe('en');
+});

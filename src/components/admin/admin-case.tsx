@@ -127,7 +127,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
   const waDigits = String(pro.whatsapp ?? "").replace(/\D/g, "");
   const waTo = waDigits.length === 8 ? `506${waDigits}` : waDigits;
   const waMsg = encodeURIComponent(
-    `Hola ${nombreDeSaludo(profile?.full_name)}, te contactamos de ContrataCR sobre tu verificación de identidad (Caso #${caseRef(pro.id)}).`
+    `Hola ${nombreDeSaludo(profile?.full_name)}, le contactamos de ContrataCR sobre su verificación de identidad (Caso #${caseRef(pro.id)}).`
   );
 
   return (
@@ -263,7 +263,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
               <p className="text-xs text-[#68778d]">{new Date(message.created_at).toLocaleDateString("es-CR")}</p>
               {message.attachments.map(attachment => attachment.url ? <a key={attachment.path} href={attachment.url} target="_blank" rel="noopener noreferrer" className="flex min-h-11 items-center justify-between gap-3 rounded-lg bg-[#f5f8fb] px-3 py-2 text-sm font-semibold text-[#0089bb]">
                 <span className="min-w-0 break-all">{attachment.name}</span><ExternalLink className="h-4 w-4 shrink-0" />
-              </a> : <p key={attachment.path} className="text-sm text-red-700">No se pudo abrir {attachment.name}. Recarga para intentarlo de nuevo.</p>)}
+              </a> : <p key={attachment.path} className="text-sm text-red-700">No se pudo abrir {attachment.name}. Recargue para intentarlo de nuevo.</p>)}
             </div>)}</div>
           </section>}
 
@@ -391,7 +391,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
                   </button>
                 )}
                 <p className="text-[11px] text-[#68778d] pt-1">
-                  Las decisiones nunca quedan bloqueadas: puedes cambiarlas en cualquier momento.
+                  Las decisiones nunca quedan bloqueadas: puede cambiarlas en cualquier momento.
                 </p>
               </div>
             ) : (
@@ -405,8 +405,8 @@ export function AdminCase({ providerId }: { providerId: string }) {
                   rows={4}
                   placeholder={
                     reasonAction === "reject"
-                      ? "Explica por qué no pasa la verificación. El proveedor verá este motivo y podrá apelar."
-                      : "Explica por qué se quita la verificación. El profesional verá este motivo en su panel."
+                      ? "Explique por qué no pasa la verificación. El proveedor verá este motivo y podrá apelar."
+                      : "Explique por qué se quita la verificación. El profesional verá este motivo en su panel."
                   }
                   className="w-full rounded-lg border border-[#e5e7eb] p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#dc2626]"
                 />

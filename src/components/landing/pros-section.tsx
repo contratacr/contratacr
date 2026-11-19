@@ -4,6 +4,7 @@ import { DEMANDA_DE_SERVICIOS } from "@/lib/data/home-categories";
 import { CATEGORY_GROUPS, CATEGORY_GROUP_LABELS_EN, getCategoryLabel } from "@/lib/data/categories";
 import { categoryGroupId, categoryImageUrl } from "@/lib/data/category-images";
 import { getSupplyCounts } from "@/lib/queries/supply";
+import { ensureServerCategoryCatalog } from "@/lib/data/server-category-catalog";
 import { rutaDeBusqueda } from "@/lib/buscar-url";
 
 /* «Profesionales para cada proyecto, cerca de ti»: pestañas por sección y, en
@@ -15,6 +16,9 @@ export async function ProsSection() {
   const t = await getTranslations("landing.carousel");
   const locale = await getLocale();
   const supply = await getSupplyCounts();
+  // Layouts and page segments can render in parallel. Resolve the catalogue
+  // before serializing labels instead of relying on a layout's side effect.
+  await ensureServerCategoryCatalog();
   const rango = new Map(DEMANDA_DE_SERVICIOS.map((id, i) => [id, i]));
   const orden = (id: string) => rango.get(id) ?? 1000 - Math.min(999, supply.byCategory[id] ?? 0);
 

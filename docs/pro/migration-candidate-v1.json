@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "status": "isolated-rehearsal-only",
+  "scope": "legacy workspace to normalized clients, catalog, agenda and quotes",
+  "prerequisites": [
+    "profiles",
+    "professionals",
+    "quotes",
+    "legacy pro_memberships and pro_workspaces"
+  ],
+  "excluded": [
+    "public activation",
+    "billing issuance",
+    "production installation"
+  ],
+  "steps": [
+    {
+      "path": "docs/pro/sql/catalog-storage-draft.sql",
+      "sha256": "38bd6e58c05a7a1f9b9f6ab111f512c3090d940a0ad5358a9b0fa5b8f4efbfaf"
+    },
+    {
+      "path": "docs/pro/sql/catalog-item-types-local.sql",
+      "sha256": "5006c6ada8f9da94c622841b993f2dd7f5fc18c84cd34daa01b9ca8a82d21689"
+    },
+    {
+      "path": "docs/pro/sql/catalog-mutations-draft.sql",
+      "sha256": "826fedb54cfef43dc85066be6ac0b0967a4f42c4d1f7e1e16ff12102b1402365"
+    },
+    {
+      "path": "docs/pro/sql/catalog-pages-draft.sql",
+      "sha256": "6dd0af96ebd072ee8ca00daa3241f1a8fac78de0d4c83fbda7b1f10d9dfe6648"
+    },
+    {
+      "path": "docs/pro/sql/panel-storage-draft.sql",
+      "sha256": "faf2a349d6593c794efa15faa3ee1b7857c72b197294795749060b69cc5a2af9"
+    },
+    {
+      "path": "docs/pro/sql/panel-queries-draft.sql",
+      "sha256": "f4048e85a1bc949f33b72ee8fcf5724757e344f84812a824163f1068e7455e62"
+    },
+    {
+      "path": "docs/pro/sql/catalog-item-types-local.sql",
+      "sha256": "5006c6ada8f9da94c622841b993f2dd7f5fc18c84cd34daa01b9ca8a82d21689"
+    }
+  ]
+}

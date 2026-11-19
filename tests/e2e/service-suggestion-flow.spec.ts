@@ -42,14 +42,14 @@ test.describe("service requests require an explicit profile save", () => {
       await page.getByRole("button", { name: "Agregar servicio", exact: true }).click();
       const picker = page.getByTestId("services-add-picker");
       await picker.getByRole("button", { name: "Solicitar servicio", exact: true }).click();
-      await expect(picker).toContainText("Si lo aprobamos, te avisaremos");
+      await expect(picker).toContainText("Si lo aprobamos, le avisaremos");
       await picker.getByPlaceholder("Nombre del servicio", { exact: true }).fill(name);
       const [uiRequest] = await Promise.all([
         page.waitForResponse(r => r.url().endsWith("/api/categories/suggest") && r.request().method() === "POST"),
         picker.getByRole("button", { name: "Solicitar servicio", exact: true }).click(),
       ]);
       expect(uiRequest.ok()).toBe(true);
-      await expect(picker).toContainText("Enviamos tu sugerencia al equipo para revisión");
+      await expect(picker).toContainText("Enviamos su sugerencia al equipo para revisión");
       const before = (await db.from("professionals").select("professions,services").eq("id", a.professionalId!).single()).data;
       expect((await page.request.patch("/api/admin/categories", { data: { id: "no", status: "approved" } })).status()).toBe(403);
       const submitted = await page.request.post("/api/categories/suggest", { headers, data: { name, userId: b.id } });
@@ -89,7 +89,7 @@ test.describe("service requests require an explicit profile save", () => {
       await gotoOK(page, "/dashboard/profesional?tab=services&mode=offer");
       const card = page.getByTestId("service-request-invitations");
       await expect(card).toContainText(renamed);
-      await expect(card).toContainText("El servicio que sugeriste ya está disponible");
+      await expect(card).toContainText("El servicio que sugirió ya está disponible");
       await page.screenshot({ path: test.info().outputPath("approved-service-invitation.png"), fullPage: true });
       const documentMarker = randomUUID();
       await page.evaluate((marker) => {

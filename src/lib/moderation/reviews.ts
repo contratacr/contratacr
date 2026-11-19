@@ -15,7 +15,7 @@ export function validateReviewText(comment: string, idioma: "es" | "en" = "es") 
   const en = idioma === "en";
   const clean = normalizeReviewText(comment);
   if (!clean) {
-    return { ok: false, error: en ? "Write a comment to post your review." : "Escribe un comentario para publicar tu reseña." };
+    return { ok: false, error: en ? "Write a comment to post your review." : "Escriba un comentario para publicar su reseña." };
   }
   if (clean.length > 300) {
     return { ok: false, error: en ? "A review cannot be longer than 300 characters." : "La reseña no puede superar 300 caracteres." };
@@ -25,7 +25,7 @@ export function validateReviewText(comment: string, idioma: "es" | "en" = "es") 
       ok: false,
       error: en
         ? "Your review contains offensive language, threats or contact details. Edit the text to post it."
-        : "Tu reseña contiene lenguaje ofensivo, amenazas o datos de contacto. Edita el texto para publicarla.",
+        : "Su reseña contiene lenguaje ofensivo, amenazas o datos de contacto. Edite el texto para publicarla.",
     };
   }
   return { ok: true, comment: clean };

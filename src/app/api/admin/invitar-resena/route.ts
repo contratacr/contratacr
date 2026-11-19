@@ -50,6 +50,6 @@ export async function POST() {
     const resultado = await invitarAResenaDeGoogle(db, pendientes);
     return NextResponse.json({ ok: true, ...resultado, ...(await estado()).resumen });
   } catch {
-    return NextResponse.json({ error: "No se pudo completar el envío. Actualiza el estado antes de reintentar; las invitaciones guardadas no se repetirán." }, { status: 503 });
+    return NextResponse.json({ error: "No se pudo completar el envío. Actualice el estado antes de reintentar; las invitaciones guardadas no se repetirán." }, { status: 503 });
   }
 }

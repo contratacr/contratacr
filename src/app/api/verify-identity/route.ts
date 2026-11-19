@@ -16,7 +16,7 @@ export async function POST(req: Request) {
   } = await session.auth.getUser();
   if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-  const limited = enforceRateLimit(req, "verify-identity", 6, 60_000);
+  const limited = await enforceRateLimit(req, "verify-identity", 6, 60_000);
   if (limited) return limited;
   const admin = createAdminClient();
   const { data: pro } = await admin
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     .select("id, verification_status")
     .eq("profile_id", user.id)
     .maybeSingle();
-  if (!pro) return NextResponse.json({ error: mensajeDeError(req, { es: "No se encontró tu perfil profesional.", en: "We could not find your professional profile." }) }, { status: 404 });
+  if (!pro) return NextResponse.json({ error: mensajeDeError(req, { es: "No se encontró su perfil profesional.", en: "We could not find your professional profile." }) }, { status: 404 });
 
   // Already verified → no-op (don't re-run unnecessarily).
   if (pro.verification_status === "verified") {
