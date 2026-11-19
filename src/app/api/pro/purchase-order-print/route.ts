@@ -29,7 +29,7 @@ export async function GET(req:Request){
   const nonce=printNonce(req);
   const html=purchaseOrderPrintHtml(detail.order,{workTitle:'workTitle' in detail?detail.workTitle:'',issuer:(profile.data.full_name as string|null)||null},nonce,parsed.data.lang==='en',parsed.data.preview==='1');
   // Round 9: company branding of the document's owner.
-  const branded=applyDocumentBranding(html,await loadPrintBranding(db,user.id));
+  const branded=applyDocumentBranding(html,await loadPrintBranding(db,user.id),'purchase_order');
   return new Response(branded,{headers:{...headers,'Content-Type':'text/html; charset=utf-8','Content-Security-Policy':`default-src 'none'; ${printImgSrc}; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'`}});
  }catch{return fail(503,'No se pudo preparar la orden de compra.');}
 }

@@ -344,7 +344,10 @@ export const localSqlManifest=Object.freeze([
   {"file":"directory-place-photos-local.sql"},
   {"file":"price-overview-local.sql"},
   {"file":"rate-limit-buckets-local.sql"},
-  {"file":"pro-work-activity-local.sql"}
+  {"file":"pro-work-activity-local.sql"},
+  {"file":"payables-cashflow-local.sql"},
+  {"file":"quote-cost-templates-local.sql"},
+  {"file":"cost-codes-local.sql"}
 ].map(step=>Object.freeze(step)));
 
 export const localSqlDependencies=Object.freeze([
@@ -1060,5 +1063,28 @@ export const localSqlDependencies=Object.freeze([
   ["work-tasks-local.sql", "pro-work-activity-local.sql"],
   ["daily-logs-local.sql", "pro-work-activity-local.sql"],
   ["work-updates-local.sql", "pro-work-activity-local.sql"],
-  ["work-client-invitations-local.sql", "pro-work-activity-local.sql"]
+  ["work-client-invitations-local.sql", "pro-work-activity-local.sql"],
+  // Round F1-A (row 55): accounts payable over expenses + PO supplier bills, cash flow and income statement.
+  ["purchase-orders-local.sql", "payables-cashflow-local.sql"],
+  ["expenses-local.sql", "payables-cashflow-local.sql"],
+  ["work-billing-local.sql", "payables-cashflow-local.sql"],
+  ["work-costs-local.sql", "payables-cashflow-local.sql"],
+  ["company-vendors-local.sql", "payables-cashflow-local.sql"],
+  ["payment-plans-local.sql", "payables-cashflow-local.sql"],
+  ["finance-identity-reports-local.sql", "payables-cashflow-local.sql"],
+  ["credits-retainers-local.sql", "payables-cashflow-local.sql"],
+  ["invoice-payments-local.sql", "payables-cashflow-local.sql"],
+  ["invoice-preparation-local.sql", "payables-cashflow-local.sql"],
+  ["invoice-management-local.sql", "payables-cashflow-local.sql"],
+  ["private-work-tools-access-local.sql", "payables-cashflow-local.sql"],
+  // Round F1-C: document templates (row 45) and sections in the per-item proposal (row 43).
+  ["document-branding-local.sql", "quote-cost-templates-local.sql"],
+  ["quote-line-decisions-local.sql", "quote-cost-templates-local.sql"],
+  ["private-work-tools-access-local.sql", "quote-cost-templates-local.sql"],
+  // Row 54 (Ronda F1-B): company cost-code library, budget markup/VAT, forecast and client summary.
+  ["private-work-tools-access-local.sql", "cost-codes-local.sql"],
+  ["work-budget-local.sql", "cost-codes-local.sql"],
+  ["purchase-orders-local.sql", "cost-codes-local.sql"],
+  ["appointment-requests-local.sql", "cost-codes-local.sql"],
+  ["client-operations-draft.sql", "cost-codes-local.sql"]
 ].map(edge=>Object.freeze(edge)));

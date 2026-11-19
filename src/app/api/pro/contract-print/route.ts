@@ -45,7 +45,7 @@ export async function GET(req:Request){
   const html=contractPrintHtml(source,nonce,lang==='en',preview);
   // Round 9: company branding of the document's owner.
   const owner=asOwner.success?a.user.id:asCustomer?.success?((await a.db.from('pro_appointment_requests').select('owner_id').eq('id',asCustomer.data.requestId).maybeSingle()).data?.owner_id as string|undefined):undefined;
-  const branded=applyDocumentBranding(html,await loadPrintBranding(a.db,owner));
+  const branded=applyDocumentBranding(html,await loadPrintBranding(a.db,owner),'contract');
   return new Response(branded,{headers:{...headers,'Content-Type':'text/html; charset=utf-8','Content-Security-Policy':`default-src 'none'; ${printImgSrc}; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'`}});
  }catch{return fail(503,'No se pudo preparar el contrato.');}
 }

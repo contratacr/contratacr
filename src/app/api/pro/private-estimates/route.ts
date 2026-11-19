@@ -118,10 +118,22 @@ export async function POST(req:Request){
     const limited=await enforceRateLimit(req,'private-estimates-'+a.user.id,60,60000);if(limited)return limited;
     let input:z.infer<typeof privateEstimateMutationSchema>;
     try{input=privateEstimateMutationSchema.parse(await boundedBody(req));}catch(error){return fail(error instanceof RangeError?413:400,'invalid_input','Revise los datos de la cotización.');}
+    // Round F1-C: Member and Read-only never see the internal unit cost, so they must not erase or set it either.
+    // Their save keeps the cost already saved for each line (same line id) and ignores any cost they send.
+    const hide=!await proInternalFinanceAllowed();
+    if(hide&&input.action==='save'){
+      const known=new Map<string,number>();
+      if(input.revision>0){
+        const current=await a.db.rpc('pro_private_estimate_read',{p_actor:a.user.id,p_estimate:input.estimateId,p_status:'draft',p_query:'',p_client:null,p_currency:null,p_after:null,p_kind:null,p_source:null});
+        if(current.error)return databaseError(current.error);
+        if(current.data){const detail=privateEstimateDetailSchema.parse(current.data);if(detail.estimate.id!==input.estimateId||detail.estimate.ownerId!==a.user.id)return fail(503,'unavailable','No se pudo comprobar la cotización.');for(const line of detail.estimate.lines)if(line.unitCostCents!==undefined)known.set(line.id,line.unitCostCents);}
+      }
+      input={...input,lines:input.lines.map(sent=>{const line={...sent};delete line.unitCostCents;return known.has(line.id)?{...line,unitCostCents:known.get(line.id)!}:line;})};
+    }
     const result=await a.db.rpc('pro_private_estimate_mutate',{p_actor:a.user.id,p_input:input});
     if(result.error)return databaseError(result.error);
     const data=privateEstimateResultSchema.parse(result.data);
     if(data.action!==input.action||data.estimate.ownerId!==a.user.id||data.estimate.id!==(input.action==='duplicate'?input.targetEstimateId:input.estimateId))return fail(503,'unavailable','No se pudo comprobar el guardado.');
-    return Response.json(data,{headers});
+    return Response.json(hide?proWithoutInternalCost(data,{remove:['unitCostCents']}):data,{headers});
   }catch{return fail(503,'unavailable','No se pudo comprobar el guardado. Consulte el resultado antes de reintentar.');}
 }

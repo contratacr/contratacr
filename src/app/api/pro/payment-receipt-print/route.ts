@@ -9,6 +9,6 @@ export async function GET(req:Request){
  const access=await proApiAccess(req);if(access.error)return privateError(access.error);
  try{const id=z.string().uuid().parse(new URL(req.url).searchParams.get('id')),result=await access.db.rpc('pro_payment_receipt_read',{p_user:access.user.id,p_id:id});if(result.error)return privateError(proDbFailure(result.error));if(!result.data)return Response.json({error:'Recibo no encontrado.'},{status:404,headers});
   const nonce=crypto.randomUUID().replaceAll('-','');// Round 9: company branding.
-  const html=applyDocumentBranding(paymentReceiptPrintHtml(result.data,nonce,new URL(req.url).searchParams.get('preview')==='1'),await loadPrintBranding(access.db,access.user.id));return new Response(html,{headers:{...headers,'Content-Type':'text/html; charset=utf-8','Content-Security-Policy':`default-src 'none'; ${printImgSrc}; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'`}});
+  const html=applyDocumentBranding(paymentReceiptPrintHtml(result.data,nonce,new URL(req.url).searchParams.get('preview')==='1'),await loadPrintBranding(access.db,access.user.id),'receipt');return new Response(html,{headers:{...headers,'Content-Type':'text/html; charset=utf-8','Content-Security-Policy':`default-src 'none'; ${printImgSrc}; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'`}});
  }catch{return Response.json({error:'Consulta inválida.'},{status:400,headers});}
 }

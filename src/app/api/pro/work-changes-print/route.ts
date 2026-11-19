@@ -25,7 +25,7 @@ export async function GET(req:Request){
   const change=changePrintSchema.parse(result.data);
   const nonce=printNonce(req);
   const html=changeOrderPrintHtml(change,nonce,parsed.data.lang==='en',parsed.data.preview==='1');
-  const branded=applyDocumentBranding(html,await loadPrintBranding(db,user.id));
+  const branded=applyDocumentBranding(html,await loadPrintBranding(db,user.id),'change_order');
   return new Response(branded,{headers:{...headers,'Content-Type':'text/html; charset=utf-8','Content-Security-Policy':`default-src 'none'; ${printImgSrc}; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'`}});
  }catch{return fail(503,'No se pudo preparar el documento.');}
 }

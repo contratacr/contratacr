@@ -222,6 +222,8 @@ const handlerRules = [
   [/^\/api\/pro\/visit-preparation$/, "pro-visit-preparation-english.spec.ts"],
   [/^\/api\/pro\/work-billing$/, "pro-round4b-billing.spec.ts"],
   [/^\/api\/pro\/work-budget$/, "pro-purchase-orders.spec.ts"],
+  // Row 54 (Ronda F1-B): company cost-code library, budget markup/VAT, forecast and the client summary.
+  [/^\/api\/pro\/(?:cost-codes|work-budget-forecast)$/, "pro-cost-codes.spec.ts"],
   [/^\/api\/pro\/work-changes$/, "pro-work-changes.spec.ts"],
   [/^\/api\/pro\/work-client-invitations$/, "pro-round4a.spec.ts"],
   [/^\/api\/pro\/work-costs$/, "pro-purchase-orders.spec.ts"],
@@ -242,6 +244,8 @@ const handlerRules = [
   [/^\/api\/pro\/(?:time-report|notifications|company-file-trash|document-branding|subcontractors\/files|sub-portal\/files)$/, "pro-round9-features.spec.ts"],
   [/^\/api\/pro\/(?:client-contacts|lead-board|schedule-links|daily-log-autofill|task-templates-apply|selections-tracking|quote-print|work-changes-print|selections-print)$/, "pro-round10-features.spec.ts"],
   [/^\/api\/pro\/(?:finance-reports|purchase-order-sources|selections-visibility)$/, "pro-round11-features.spec.ts"],
+  // Round F1-A (row 55): accounts payable, cash flow and income statement in Statistics › Reports.
+  [/^\/api\/pro\/(?:payables|cash-flow|income-statement)$/, "pro-payables-cashflow.spec.ts"],
   [/^\/api\/pro\/(?:client-project-overview|getting-started)$/, "pro-round12-features.spec.ts"],
   // Fix 14 (local Pro): per-item customer approval of a shared quote version (row 39).
   [/^\/api\/pro\/quote-line-decisions$/, "pro-fix14.spec.ts"],

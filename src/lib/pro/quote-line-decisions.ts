@@ -7,7 +7,9 @@ import {z} from 'zod';
 const uuid=z.string().uuid();
 export const quoteLineDecisionValues=['approved','declined'] as const;
 export const quoteLineSchema=z.object({lineId:uuid,position:z.number().int().positive(),description:z.string().max(2000),unit:z.string().max(40).nullable(),
- qtyMilli:z.number().int().nonnegative(),unitPriceCents:z.number().int().nonnegative(),totalCents:z.number().int().nonnegative(),hasImage:z.boolean(),
+ qtyMilli:z.number().int().nonnegative(),unitPriceCents:z.number().int().nonnegative(),totalCents:z.number().int().nonnegative(),
+ /** Round F1-C: section name of the line (null or absent without one). */
+ group:z.string().max(80).nullable().optional(),hasImage:z.boolean(),
  decision:z.enum(quoteLineDecisionValues).nullable(),note:z.string().max(300),revision:z.number().int().nonnegative(),decidedAt:z.string().nullable()}).strict();
 export type QuoteLine=z.infer<typeof quoteLineSchema>;
 export const quoteLineDecisionsSchema=z.object({publicationId:uuid,side:z.enum(['owner','client']),status:z.string().min(1).max(40),version:z.number().int().positive(),

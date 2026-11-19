@@ -12,6 +12,7 @@ import {ServicePackageManager} from './service-packages';
 import {DiscountPresetManager} from './discount-presets';
 import {TaskTemplates,type TaskTemplatesState} from './task-templates';
 import {ContractTemplates} from './contract-templates';
+import {CostCodeLibraryCard} from './cost-code-library';
 
 /**
  * Company hub: collaborators, library and marketing in one place. Each view reuses the
@@ -174,7 +175,8 @@ function CompanyCategories(){
    <PreviewList {...groups} unit={uses} empty={en?'You have no customer groups yet.':'Todavía no tiene grupos de clientes.'}/>
    <CatalogOrganizations kind="client_group" renderTrigger={open=><Button type="button" variant="secondary" onClick={open}>{en?'Manage groups':'Administrar grupos'}</Button>}/>
   </section>
-  <p className="text-sm text-[#52627a] lg:col-span-2">{en?'Budget codes are still defined inside each project (Finance › Budget).':'Los códigos de presupuesto se siguen definiendo dentro de cada proyecto (Finanzas › Presupuesto).'}</p>
+  {/* Row 54 (Ronda F1-B): company cost-code library, applied to each project from Finance › Budget. */}
+  <CostCodeLibraryCard/>
  </div>;
 }
 

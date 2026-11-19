@@ -86,8 +86,10 @@ for(const language of ['es','en'] as const)test(`Job workspace preserves context
   // Planning > Bid requests (row 53): intentional +1 in the independent space.
   // Round 8 (2026-11-15): Management > Files (job file organizer) and Management > Subcontractors: intentional +2 in the independent space.
   // 2026-11-17: Activity (per-job history, next to Overview): intentional +1 in the independent space.
-  await expect(nav.getByRole('button')).toHaveCount(independent?21:7);
+  // 2026-11-19 (Ronda F1-B, row 54): Finance > Budget & forecast (markup/VAT, client summary): intentional +1 in the independent space.
+  await expect(nav.getByRole('button')).toHaveCount(independent?22:7);
   await expect(nav.getByRole('button',{name:en?'Activity':'Actividad',exact:true})).toHaveCount(independent?1:0);
+  await expect(nav.getByRole('button',{name:en?'Budget & forecast':'Presupuesto y previsión',exact:true})).toHaveCount(independent?1:0);
   // Notes and calls + Project details open from the header bar, not the nav (nav count intentionally unchanged).
   const jobHeader=workspace.locator('[data-job-workspace-header]');await expect(jobHeader.getByRole('button')).toHaveCount(independent?2:0);
   await expect(jobHeader.getByRole('button',{name:en?'Notes and calls':'Notas y llamadas',exact:true})).toHaveCount(independent?1:0);await expect(jobHeader.getByRole('button',{name:en?'Project details':'Detalles del proyecto',exact:true})).toHaveCount(independent?1:0);

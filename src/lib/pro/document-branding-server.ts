@@ -14,7 +14,7 @@ export async function loadPrintBranding(db:ReturnType<typeof createAdminClient>,
   // Fix 13: without saved branding (or without a name) the header still names the company, not only ContrataCR.
   const company=b&&b.revision>0&&b.displayName.trim()?'':await companyName(db,owner);
   if(!b||b.revision===0)return company?{theme:'celeste',displayName:company,tagline:'',footer:'',logoDataUri:null}:null;
-  return {theme:b.theme,displayName:b.displayName.trim()||company,tagline:b.tagline,footer:b.footer,logoDataUri};
+  return {theme:b.theme,displayName:b.displayName.trim()||company,tagline:b.tagline,footer:b.footer,logoDataUri,template:b.template};
  }catch{return null;}
 }
 /** Business name of the professional profile, else the account name (no e-mail or other personal data). */

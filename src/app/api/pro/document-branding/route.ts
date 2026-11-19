@@ -44,7 +44,7 @@ export async function POST(req:Request){
    const stored=await a.db.storage.from(DOCUMENT_LOGO_BUCKET).upload(String(path.data),normalized.bytes,{contentType:'image/jpeg',upsert:true});if(stored.error)return proFail(503,'No se pudo guardar el logo. Reintente: no se duplicará.');
    logo={path:String(path.data),sha256:createHash('sha256').update(normalized.bytes).digest('hex'),bytes:normalized.bytes.length};
   }
-  const r=await a.db.rpc('pro_document_branding_save',{p_actor:a.user.id,p_input:{actionId:input.actionId,revision:input.revision,theme:input.theme,displayName:input.displayName,tagline:input.tagline,footer:input.footer,logo}});
+  const r=await a.db.rpc('pro_document_branding_save',{p_actor:a.user.id,p_input:{actionId:input.actionId,revision:input.revision,theme:input.theme,displayName:input.displayName,tagline:input.tagline,footer:input.footer,logo,...(input.template?{template:input.template}:{})}});
   if(r.error)return proDbError(r.error,'La marca cambió en otra pestaña. Recargue antes de guardar.');
   return Response.json(r.data,{headers});
  }catch{return proFail(503,'No se pudo comprobar el guardado. Reintente: no se duplicará.');}

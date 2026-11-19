@@ -5,6 +5,7 @@ import {AppointmentDailyLogs} from './daily-logs';
 import {ClientMessages} from './work-messages';
 import {AppointmentFiles} from './work-files';
 import {AppointmentAllowances} from './work-allowances';
+import {AppointmentBudgetSummary} from './client-budget-summary';
 import {AppointmentSelections} from './work-selections';
 import {AppointmentMoodBoards} from './appointment-mood-boards';
 import {AppointmentSchedule} from './project-schedule';
@@ -37,6 +38,8 @@ export function ClientWorkSections({requestId,parentBlocked=false,onDailyState,o
   {at('quotes',<AppointmentQuotes key={'quotes:'+requestId} requestId={requestId}/>)}
   {at('finances',<AppointmentFinances key={'finances:'+requestId} requestId={requestId}/>)}
   {at('payment-plan',<AppointmentPaymentPlan key={'payment-plan:'+requestId} requestId={requestId}/>)}
+  {/* Row 54: budget summary the professional shared explicitly (groups and sale totals only). */}
+  {at('budget',<AppointmentBudgetSummary key={'budget:'+requestId} requestId={requestId}/>)}
   <AppointmentAllowances key={'allowances:'+requestId} requestId={requestId}/>
   {at('selections',<AppointmentSelections key={'selections:'+requestId} requestId={requestId}/>)}
   <AppointmentMoodBoards key={'moodboards:'+requestId} requestId={requestId}/>

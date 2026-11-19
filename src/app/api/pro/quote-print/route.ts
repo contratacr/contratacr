@@ -25,7 +25,7 @@ export async function GET(req:Request){
   const detail=privateEstimateDetailSchema.parse(result.data);if(detail.estimate.id!==parsed.data.estimateId||detail.estimate.ownerId!==user.id)return fail(404,'Cotización no encontrada.');
   const nonce=printNonce(req);
   const html=quotePrintHtml(detail.estimate,nonce,parsed.data.lang==='en',parsed.data.preview==='1');
-  const branded=applyDocumentBranding(html,await loadPrintBranding(db,user.id));
+  const branded=applyDocumentBranding(html,await loadPrintBranding(db,user.id),'quote');
   return new Response(branded,{headers:{...headers,'Content-Type':'text/html; charset=utf-8','Content-Security-Policy':`default-src 'none'; ${printImgSrc}; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'`}});
  }catch{return fail(503,'No se pudo preparar el documento.');}
 }
