@@ -90,9 +90,10 @@ export async function hashClaimCode(pepper:string,claimId:string,code:string):Pr
 
 /** Spanish/English message body. No links: the claimant types the code in the open ContrataCR page. */
 export function claimCodeText(code:string,locale:'es'|'en'){
- return locale==='en'
-  ?`ContrataCR: your code to manage this business is ${code}. It expires in 10 minutes. If you did not request it, ignore this message.`
-  :`ContrataCR: su código para administrar este negocio es ${code}. Vence en 10 minutos. Si usted no lo solicitó, ignore este mensaje.`;
+ return {
+  en:`ContrataCR: your code to manage this business is ${code}. It expires in 10 minutes. If you did not request it, ignore this message.`,
+  es:`ContrataCR: su código para administrar este negocio es ${code}. Vence en 10 minutos. Si usted no lo solicitó, ignore este mensaje.`,
+ }[locale];
 }
 
 /**

@@ -1,4 +1,5 @@
 import {expenseMutationSchema,type ExpenseMutation,type ExpensePage} from './expenses';
+import {idiomaDe} from '@/lib/prefijo-de-idioma';
 
 export type ExpenseWriteStep={body:string;phase:'ready'|'uncertain'|'confirmed'|'rejected';rejection?:400|409;ack?:{id:string;revision:number}};
 export type SavedExpenseWrite={version:1;accountId:string;intentId:string;steps:ExpenseWriteStep[];index:number;fields:Record<string,string>;editing:boolean};
@@ -11,7 +12,7 @@ export function expenseRecoveryDay(value:string,locale:string):string{
  if(!/^\d{4}-\d{2}-\d{2}$/.test(value))return value;
  const day=new Date(value+'T12:00:00Z');
  if(!Number.isFinite(day.getTime())||day.toISOString().slice(0,10)!==value)return value;
- return new Intl.DateTimeFormat(locale==='en'?'en-US':'es-CR',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}).format(day);
+ return new Intl.DateTimeFormat(({en:'en-US',es:'es-CR'} as const)[idiomaDe(locale)],{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}).format(day);
 }
 export const expenseWriteRecoveryKey=(accountId:string)=>`ccr:pro:expense-write:v1:${encodeURIComponent(accountId)}`;
 export function expenseWriteInput(step:ExpenseWriteStep):ExpenseMutation{return expenseMutationSchema.parse(JSON.parse(step.body));}

@@ -15,7 +15,7 @@ import { AvatarFileInput } from "@/components/ui/avatar-file-input";
 
 import { rutaInternaSegura } from "@/lib/navigation/ruta-interna";
 import { useAppDialog } from "@/hooks/use-app-dialog";
-import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
+import { idiomaDe, prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { suspensionNoticeCopy } from "@/lib/pro/suspension-notice";
 import { irAlInicio, iniciarSeccionArriba } from "@/lib/ir-al-inicio";
 import { enlacePerfil } from "@/lib/profile-url";
@@ -580,9 +580,10 @@ export default function DashboardPage() {
   ) : null;
   const t = useTranslations("proPanel");
   const locale = useLocale();
+  const pc = useTranslations("ProPanelCopy");
   const proAccessPlaceholder = <div data-pro-access-placeholder>{proAccessReady
-    ? <p className="p-4">{locale === "en" ? "These tools aren't available for this account." : "Estas herramientas no están disponibles para esta cuenta."}</p>
-    : proAccessError ? <div role="alert" className="space-y-3 p-4"><p>{locale==="en"?"Could not check access to these tools. Try again.":"No se pudo comprobar el acceso a estas herramientas. Intente de nuevo."}</p><Button type="button" variant="secondary" onClick={retryProAccess}>{locale==="en"?"Retry":"Reintentar"}</Button></div>
+    ? <p className="p-4">{pc("toolsUnavailable")}</p>
+    : proAccessError ? <div role="alert" className="space-y-3 p-4"><p>{pc("accessCheckFailed")}</p><Button type="button" variant="secondary" onClick={retryProAccess}>{pc("retry")}</Button></div>
     : <PanelListSkeleton rows={3} compacto/>}</div>;
   // qué oficio pertenece, y de ahí sale a quién se le avisa.
   const rawRequestedTab = searchParams.get("tab")==="pro_quotes"?"quotes":searchParams.get("tab");
@@ -1787,7 +1788,7 @@ export default function DashboardPage() {
       subtitle={t("subtitles.guides")}
       size="lg"
       // Flecha, como las demás secciones del panel en el teléfono.
-      backLabel={locale === "en" ? "Back" : "Volver"}
+      backLabel={pc("back")}
       bodyClassName="px-5 py-5 sm:px-6"
     >
       <GuidesBody
@@ -1833,11 +1834,11 @@ export default function DashboardPage() {
     const labels:Partial<Record<Tab,string>>={home:"day",pro_agenda:"work",pro_tools:"tools",pro_inventory:"catalog",quotes:"quotes",pro_billing:"advanced",pro_payments:"payments"};
     // Tool titles stay stable while access loads; this grants no feature access.
     if(labels[tab]&&(proEnabled||tab.startsWith("pro_")))return simpleCopy(labels[tab]);
-    return PANEL_TAB_LABELS[tab]?.[locale === "en" ? "en" : "es"] ?? t(`tabs.${tab}`);
+    return PANEL_TAB_LABELS[tab]?.[idiomaDe(locale)] ?? t(`tabs.${tab}`);
   }
 
   function openPanelDestination(tab: Tab) {
-    if(tab==="pro_tools"&&proEnabled){pushProPath((locale==="en"?"/en":"")+"/dashboard/pro");return;}
+    if(tab==="pro_tools"&&proEnabled){pushProPath(prefijoDeIdioma(locale)+"/dashboard/pro");return;}
     if(tab===activeTab)return;
     setTab(tab);
   }
@@ -1923,7 +1924,7 @@ export default function DashboardPage() {
         {/* Siempre el mismo rótulo, esté el registro empezado o no: es la misma
             puerta y cambiarle el nombre la hacía parecer otra cosa. Lo que
             queda a medias se retoma donde quedó, sin anunciarlo. */}
-        <span className="min-w-0 flex-1 leading-tight">{locale === "en" ? "Offer my services" : "Ofrecer mis servicios"}</span>
+        <span className="min-w-0 flex-1 leading-tight">{pc("offerServices")}</span>
         <ChevronRight className="h-4 w-4 shrink-0 text-white/80" />
       </Link>
     );
@@ -2026,7 +2027,7 @@ export default function DashboardPage() {
                   disabled={headerPhotoUploading}
                   className={`relative block rounded-full outline-none transition focus-visible:ring-2 focus-visible:ring-[#009FD9] focus-visible:ring-offset-2 disabled:opacity-70 ${profileIdentityAvatarClass}`}
                   data-profile-identity-avatar
-                  aria-label={locale === "en" ? "Profile photo options" : "Opciones de foto de perfil"}
+                  aria-label={pc("photoOptions")}
                 >
                   <Avatar className={`bg-transparent ${profileIdentityAvatarClass}`}>
                     <AvatarImage src={headerAvatar ?? undefined} />
@@ -2045,7 +2046,7 @@ export default function DashboardPage() {
                     {headerAvatar && (
                       <button type="button" onClick={() => { setHeaderPhotoMenuOpen(false); setHeaderPhotoPreviewOpen(true); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-semibold text-[#162543] transition-colors hover:bg-[#f8fafc]">
                         <Eye className="h-4 w-4 text-[#009FD9]" />
-                        {locale === "en" ? "View photo" : "Ver foto"}
+                        {pc("viewPhoto")}
                       </button>
                     )}
                     <button
@@ -2054,7 +2055,7 @@ export default function DashboardPage() {
                       className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-semibold text-[#162543] transition-colors hover:bg-[#f8fafc]"
                     >
                       <Camera className="h-4 w-4 text-[#009FD9]" />
-                      {headerAvatar ? (locale === "en" ? "Change photo" : "Cambiar foto") : (locale === "en" ? "Add photo" : "Agregar foto")}
+                      {headerAvatar ? pc("changePhoto") : pc("addPhoto")}
                     </button>
                     {headerAvatar && (
                       <button
@@ -2063,7 +2064,7 @@ export default function DashboardPage() {
                         className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
                       >
                         <Trash2 className="h-4 w-4" />
-                        {locale === "en" ? "Remove photo" : "Eliminar foto"}
+                        {pc("removePhoto")}
                       </button>
                     )}
                   </div>
@@ -2086,8 +2087,8 @@ export default function DashboardPage() {
                 )}
                 <ImagePreviewDialog
                   src={headerAvatar}
-                  alt={locale === "en" ? "Profile photo" : "Foto de perfil"}
-                  closeLabel={locale === "en" ? "Close" : "Cerrar"}
+                  alt={pc("profilePhoto")}
+                  closeLabel={pc("close")}
                   open={headerPhotoPreviewOpen}
                   onOpenChange={setHeaderPhotoPreviewOpen}
                 />
@@ -2109,18 +2110,18 @@ export default function DashboardPage() {
                       <Link
                         href={`${publicProfileHref}?from=${encodeURIComponent("/dashboard/profesional")}`}
                         onClick={openInNewTabOnDesktop}
-                        aria-label={locale === "en" ? "View public profile" : "Ver perfil público"}
+                        aria-label={pc("viewPublicProfile")}
                         data-testid="panel-ver-perfil"
                         className={ENLACE_DE_CABECERA}
                       >
                         <ExternalLink className={ICONO_DE_CABECERA} />
-                        {locale === "en" ? "View profile" : "Ver perfil"}
+                        {pc("viewProfile")}
                       </Link>
                     )}
                     {publicProfileHref && (
                       <button type="button" data-testid="panel-compartir-perfil" onClick={() => setShareKitTab(activeTab)} className={ENLACE_DE_CABECERA}>
                         <Share2 className={ICONO_DE_CABECERA} />
-                        {locale === "en" ? "Share" : "Compartir"}
+                        {pc("share")}
                       </button>
                     )}
                     <button
@@ -2161,11 +2162,11 @@ export default function DashboardPage() {
                   <Link
                     href={`${publicProfileHref}?from=${encodeURIComponent("/dashboard/profesional")}`}
                     onClick={openInNewTabOnDesktop}
-                    aria-label={locale === "en" ? "View public profile" : "Ver perfil público"}
+                    aria-label={pc("viewPublicProfile")}
                     data-testid="dashboard-mobile-view-profile"
                     className="inline-flex h-11 w-full items-center justify-center rounded-full border border-[#d7e1ea] bg-white text-[13px] font-bold text-[#162543] transition active:bg-[#f6f9fb]"
                   >
-                    {locale === "en" ? "View profile" : "Ver perfil"}
+                    {pc("viewProfile")}
                   </Link>
                   <button
                     type="button"
@@ -2173,7 +2174,7 @@ export default function DashboardPage() {
                     onClick={() => setShareKitTab(activeTab)}
                     className="inline-flex h-11 !min-h-0 w-full items-center justify-center rounded-full border border-[#d7e1ea] bg-white text-[13px] font-bold text-[#162543] transition active:bg-[#f6f9fb]"
                   >
-                    {locale === "en" ? "Share" : "Compartir"}
+                    {pc("share")}
                   </button>
                 </div>
               )}
@@ -2203,15 +2204,13 @@ export default function DashboardPage() {
                   <AlertCircle className="h-7 w-7" />
                 </div>
                 <h2 className="text-xl font-bold text-[#162543] mb-2">
-                  {locale === "en" ? "We couldn't load your panel" : "No pudimos cargar su panel"}
+                  {pc("panelLoadFailed")}
                 </h2>
                 <p className="text-sm text-[#6b7280] max-w-md mb-6 leading-relaxed">
-                  {locale === "en"
-                    ? "Try again. If it continues, contact support so we can review your professional profile."
-                    : "Intente de nuevo. Si continúa, contacte soporte para revisar su perfil profesional."}
+                  {pc("panelLoadHint")}
                 </p>
                 <Button onClick={() => fetchPro()}>
-                  {locale === "en" ? "Try again" : "Intentar de nuevo"}
+                  {pc("tryAgain")}
                 </Button>
               </CardContent>
             </Card>
@@ -2385,7 +2384,7 @@ export default function DashboardPage() {
                                       <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#64748b]">
                                         <LogOut className="h-5 w-5" />
                                       </span>
-                                      <span className="min-w-0 flex-1 truncate">{locale === "en" ? "Sign out" : "Salir"}</span>
+                                      <span className="min-w-0 flex-1 truncate">{pc("signOut")}</span>
                                     </button>
                                   </div>
                                 </div>
@@ -2407,8 +2406,8 @@ export default function DashboardPage() {
                             resetKey={profileResetKey}
                             extraSections={[
                               ...(proFocused ? [
-                                {id: "profile-services-link", title: locale === "en" ? "Services" : "Servicios", footer: null, children: <ServicesEditor key={`servicios:${(pro.professions ?? []).length}:${(pro.services ?? []).length}`} professionalId={pro.id} primaryCategory={pro.category_id} initialProfessions={pro.professions ?? []} initialServices={pro.services ?? []} onSaved={(intent) => handleSaved(intent ?? "section")} focusField={serviceFocus?.field ?? null} focusKey={serviceFocus?.key} />},
-                                {id: "profile-photos-link", title: locale === "en" ? "Work photos" : "Fotos de trabajos", footer: null, children: <PhotoGallery key={`casos:${(pro.portfolio_items ?? []).length}:${(pro.portfolio_urls ?? []).length}`} professionalId={pro.id} initialUrls={pro.portfolio_urls ?? []} initialItems={pro.portfolio_items ?? undefined} professions={(pro.professions && pro.professions.length > 0) ? pro.professions : (pro.category_id ? [pro.category_id] : [])} services={pro.services ?? []} onSaved={(intent) => handleSaved(intent ?? "section")} />},
+                                {id: "profile-services-link", title: pc("services"), footer: null, children: <ServicesEditor key={`servicios:${(pro.professions ?? []).length}:${(pro.services ?? []).length}`} professionalId={pro.id} primaryCategory={pro.category_id} initialProfessions={pro.professions ?? []} initialServices={pro.services ?? []} onSaved={(intent) => handleSaved(intent ?? "section")} focusField={serviceFocus?.field ?? null} focusKey={serviceFocus?.key} />},
+                                {id: "profile-photos-link", title: pc("workPhotos"), footer: null, children: <PhotoGallery key={`casos:${(pro.portfolio_items ?? []).length}:${(pro.portfolio_urls ?? []).length}`} professionalId={pro.id} initialUrls={pro.portfolio_urls ?? []} initialItems={pro.portfolio_items ?? undefined} professions={(pro.professions && pro.professions.length > 0) ? pro.professions : (pro.category_id ? [pro.category_id] : [])} services={pro.services ?? []} onSaved={(intent) => handleSaved(intent ?? "section")} />},
                               ] : []),
                               {
                                 id: "verificacion",

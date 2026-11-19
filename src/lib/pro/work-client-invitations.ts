@@ -1,4 +1,5 @@
 import {z} from 'zod';
+import {prefijoDeIdioma} from "@/lib/prefijo-de-idioma";
 
 /**
  * Round 1 (2026-11-12): invite a customer account to a job (Houzz-style "add a client").
@@ -30,6 +31,6 @@ export type WorkInvitePreview={state:'valid'|'unknown'|'expired'|'revoked'|'used
 export type ProjectLinkConsent={publicationId:string;eligible:boolean;consented:boolean;consentedAt:string|null;jobReady:boolean;requestId:string|null;professionalName:string};
 export type ClientProjectLink={requestId:string;service:string;professionalName:string;origin:'booking'|'project_invite';linkedAt:string;stage:string;cancelled:boolean};
 /** Customer link for one invitation. The token travels in the fragment: never sent to a server log. */
-export const workInviteLink=(origin:string,locale:'es'|'en',token:string)=>`${origin}${locale==='en'?'/en':''}/dashboard/unirse-proyecto#codigo=${token}`;
+export const workInviteLink=(origin:string,locale:'es'|'en',token:string)=>`${origin}${prefijoDeIdioma(locale)}/dashboard/unirse-proyecto#codigo=${token}`;
 /** Where a linked customer opens the job (the customer side of the request). */
-export const clientProjectPath=(locale:'es'|'en',requestId:string)=>`${locale==='en'?'/en':''}/dashboard/profesional?tab=appointments&citaSolicitud=${requestId}`;
+export const clientProjectPath=(locale:'es'|'en',requestId:string)=>`${prefijoDeIdioma(locale)}/dashboard/profesional?tab=appointments&citaSolicitud=${requestId}`;

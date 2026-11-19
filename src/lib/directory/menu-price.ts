@@ -25,12 +25,13 @@ export function menuPriceBreakdown(priceMinor:number,pricing:Pick<MenuPricing,'p
 /** Effective service rate of a place: 0 when it does not charge service. */
 export const menuServiceBps=(p:Pick<MenuPricing,'serviceCharge'|'serviceRateBps'>)=>p.serviceCharge?p.serviceRateBps:0;
 
+const SEPARATORS={es:{group:'.',dec:','},en:{group:',',dec:'.'}} as const;
 /** Money in minor units → «₡4 500» (no decimals when whole) / «$12.50». */
 // Formatted by hand (not Intl): Node and Safari use different es-CR group separators («₡5.000» vs «₡5 000»),
 // which broke hydration. Output is identical on server and every browser.
 export function formatMenuMoney(minor:number,currency:string,locale:'es'|'en'){
  const neg=minor<0,abs=Math.abs(Math.round(minor)),whole=Math.floor(abs/100),cents=abs%100;
- const group=locale==='en'?',':'.',dec=locale==='en'?'.':',';
+ const {group,dec}=SEPARATORS[locale];
  const body=String(whole).replace(/\B(?=(\d{3})+(?!\d))/g,group)+(cents?dec+String(cents).padStart(2,'0'):'');
  const symbol=currency==='CRC'?'₡':currency==='USD'?'$':currency+' ';
  return (neg?'-':'')+symbol+body;

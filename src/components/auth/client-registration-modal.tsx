@@ -211,6 +211,7 @@ export function ClientRegistrationModal({
   const tRp = useTranslations("resetPassword");
   const tRc = useTranslations("registerClient");
   const locale = useLocale();
+  const cs = useTranslations("ClientSurfaceCopy");
   const [view, setView] = useState<ModalView>("register");
   const [step, setStep] = useState<RegisterStep>("identity");
 
@@ -346,7 +347,7 @@ export function ClientRegistrationModal({
         const json = await res.json().catch(() => ({}));
         if (!res.ok && json?.code === "cedula_taken") {
           setSubmitting(false);
-          setError(locale === "en" ? "That ID is already registered. Sign in." : "Esta identificacion ya esta registrada. Inicie sesion.");
+          setError(cs("idTaken"));
           setView("login");
           return;
         }
@@ -501,7 +502,7 @@ export function ClientRegistrationModal({
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder={locale === "en" ? "you@email.com" : "nombre@correo.com"}
+                  placeholder={cs("emailPlaceholder")}
                 />
                 <Input
                   label={t("passwordLabel")}
@@ -590,7 +591,7 @@ export function ClientRegistrationModal({
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder={locale === "en" ? "you@email.com" : "nombre@correo.com"}
+                      placeholder={cs("emailPlaceholder")}
                       autoFocus
                     />
                     <div>

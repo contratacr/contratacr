@@ -21,6 +21,7 @@ import {
 } from '@/lib/pro/private-estimate-publications';
 import {proCustomerReader,proRequestOrigin} from '@/lib/pro/route-common';
 import {sendTransactionalEmail,settleTransactionalEmail,transactionalAccount,transactionalEmailLocaleOf,transactionalPublicationOwner,type TransactionalEmailReport} from '@/lib/pro/transactional-email';
+import {prefijoDeIdioma} from '@/lib/prefijo-de-idioma';
 
 const headers = {
   'Cache-Control': 'no-store, private',
@@ -197,7 +198,7 @@ function validResult(input: PrivateEstimatePublicationMutation, result: PrivateE
 // an explicit flag). Never blocks or fails the action; the outcome travels in the X-Pro-Email header (no address,
 // no code), so the strict result schema is unchanged. The access code never goes into the e-mail.
 async function publicationEmail(req: Request, db: ReturnType<typeof createAdminClient>, actorId: string, input: PrivateEstimatePublicationMutation, data: PrivateEstimatePublicationResult): Promise<TransactionalEmailReport | null> {
-  const locale = transactionalEmailLocaleOf(req), prefix = proRequestOrigin(req) + (locale === 'en' ? '/en' : '');
+  const locale = transactionalEmailLocaleOf(req), prefix = proRequestOrigin(req) + prefijoDeIdioma(locale);
   const content = data.publication.content;
   if (input.action === 'publish') {
     const to = input.recipient.kind === 'claim' ? input.recipient.email : (await transactionalAccount(db, input.recipient.recipientId))?.email;

@@ -7,6 +7,7 @@ import {useAppDialog} from '@/hooks/use-app-dialog';
 import {LISTING_TTL_DAYS,PROPERTY_AMENITIES,PROPERTY_TYPES,canTransition,listingMutationSchema,type ListingStatus,type ListingVertical} from '@/lib/directory/listing-schemas';
 import {AMENITY_LABELS,CR_PROVINCES,DRIVETRAIN_LABELS,FUEL_LABELS,PROPERTY_TYPE_LABELS,TRANSMISSION_LABELS,formatDate,formatMoney,listingPath} from '@/lib/directory/listing-public';
 import {MIN_PHOTOS_TO_PUBLISH,inventoryErrorText,inventoryPageSchema,listingAssignAgentSchema,listingMutationResultSchema,type InventoryItem,type InventoryPage} from '@/lib/directory/listing-inventory';
+import {idiomaDe} from '@/lib/prefijo-de-idioma';
 
 /**
  * LOCAL PRO ONLY (multivertical V2 Pro Autos / R2 Pro Bienes raíces): generic inventory of vehicle or property
@@ -333,5 +334,5 @@ function TriSelect({value,onChange,t}:{value:Tri;onChange:(v:Tri)=>void;t:(es:st
  return <select className={field} value={value} onChange={e=>onChange(e.target.value as Tri)}><option value="">{t('No indicar','Not stated')}</option><option value="yes">{t('Sí','Yes')}</option><option value="no">{t('No','No')}</option></select>;
 }
 function Options({value,onChange,map,locale,t}:{value:string;onChange:(v:string)=>void;map:Record<string,{es:string;en:string}>;locale:string;t:(es:string,en:string)=>string}){
- return <select className={field} value={value} onChange={e=>onChange(e.target.value)}><option value="">{t('No indicar','Not stated')}</option>{Object.entries(map).map(([k,v])=><option key={k} value={k}>{v[locale==='en'?'en':'es']}</option>)}</select>;
+ return <select className={field} value={value} onChange={e=>onChange(e.target.value)}><option value="">{t('No indicar','Not stated')}</option>{Object.entries(map).map(([k,v])=><option key={k} value={k}>{v[idiomaDe(locale)]}</option>)}</select>;
 }

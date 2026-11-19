@@ -1,4 +1,5 @@
 import type {PROPERTY_AMENITIES,PROPERTY_TYPES,VEHICLE_TYPES} from './listing-schemas';
+import {idiomaDe,prefijoDeIdioma} from '../prefijo-de-idioma';
 import {proMoney} from '../pro/money';
 
 // LOCAL PRO ONLY (multivertical V4/R1 UI). Public shapes of a listing (camelCase) built from the rows of
@@ -106,24 +107,25 @@ export function listingSlug(title:string){
  return title.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60).replace(/-+$/,'')||'anuncio';
 }
 export function listingPath(listing:{vertical:'vehiculos'|'inmuebles';title:string;code:string},locale:string){
- const prefix=locale==='en'?'/en':'';
+ const prefix=prefijoDeIdioma(locale);
  return `${prefix}/${listing.vertical}/${listing.vertical==='vehiculos'?'v':'i'}/${listingSlug(listing.title)}-${listing.code}`;
 }
 /** Extracts the 6-char code from the last URL segment ("toyota-rav4-2019-ab3x9k" → "ab3x9k"). */
 export function codeFromSegment(segment:string){const m=/(?:^|-)([2-9a-hjkmnp-z]{6})$/.exec(segment);return m?m[1]:null;}
 
+const INTL_LOCALE={es:'es-CR',en:'en-US'} as const;
 /** Money in minor units → «₡12 500 000» / «US$18 900». Whole amounts drop decimals. */
 export function formatMoney(minor:number,currency:'CRC'|'USD',locale:string){
  const major=minor/100,whole=Number.isInteger(major);
  if(currency==='CRC')return proMoney(major,locale==='en');
- const num=new Intl.NumberFormat(locale==='en'?'en-US':'es-CR',{minimumFractionDigits:whole?0:2,maximumFractionDigits:2}).format(major);
+ const num=new Intl.NumberFormat(INTL_LOCALE[idiomaDe(locale)],{minimumFractionDigits:whole?0:2,maximumFractionDigits:2}).format(major);
  return (currency==='USD'?'US$':'₡')+num;
 }
 export function formatDate(iso:string,locale:string){
  const d=new Date(iso.length===10?iso+'T12:00:00Z':iso);
- return Number.isNaN(d.getTime())?iso:new Intl.DateTimeFormat(locale==='en'?'en-US':'es-CR',{day:'numeric',month:'long',year:'numeric',timeZone:'America/Costa_Rica'}).format(d);
+ return Number.isNaN(d.getTime())?iso:new Intl.DateTimeFormat(INTL_LOCALE[idiomaDe(locale)],{day:'numeric',month:'long',year:'numeric',timeZone:'America/Costa_Rica'}).format(d);
 }
-export const formatNumber=(v:number,locale:string)=>new Intl.NumberFormat(locale==='en'?'en-US':'es-CR',{maximumFractionDigits:1}).format(v);
+export const formatNumber=(v:number,locale:string)=>new Intl.NumberFormat(INTL_LOCALE[idiomaDe(locale)],{maximumFractionDigits:1}).format(v);
 
 /** Costa Rica provinces (admin_area_1). */
 export const CR_PROVINCES=['San José','Alajuela','Cartago','Heredia','Guanacaste','Puntarenas','Limón'] as const;
@@ -149,4 +151,4 @@ export const TRANSMISSION_LABELS:Record<string,L10n>={manual:{es:'Manual',en:'Ma
 export const FUEL_LABELS:Record<string,L10n>={gasoline:{es:'Gasolina',en:'Gasoline'},diesel:{es:'Diésel',en:'Diesel'},hybrid:{es:'Híbrido',en:'Hybrid'},
  plugin_hybrid:{es:'Híbrido enchufable',en:'Plug-in hybrid'},electric:{es:'Eléctrico',en:'Electric'},lpg:{es:'Gas LP',en:'LPG'},other:{es:'Otro',en:'Other'}};
 export const DRIVETRAIN_LABELS:Record<string,L10n>={'4x2':{es:'4x2',en:'2WD'},'4x4':{es:'4x4',en:'4WD'},awd:{es:'Tracción integral (AWD)',en:'AWD'}};
-export const label=(map:Record<string,L10n>,key:string|null|undefined,locale:string)=>key?(map[key]?.[locale==='en'?'en':'es']??key):null;
+export const label=(map:Record<string,L10n>,key:string|null|undefined,locale:string)=>key?(map[key]?.[idiomaDe(locale)]??key):null;

@@ -22,12 +22,13 @@ const querySchema=z.object({
  precioMin:colones.optional(),
  precioMax:colones.optional(),
  producto:slug.optional(),
+ categoria:z.string().regex(/^[a-z][a-z0-9_]{1,39}$/).optional(),
  provincia:z.string().trim().min(1).max(80).optional(),
  tipo:z.enum(['supermercados','farmacias']).optional(),
  orden:z.enum(COMPARE_SORTS).optional(),
 });
 export type PriceQuery={q:string|null;item:string|null;province:string|null;vertical:CompareVertical|null;verticalParam:CompareVerticalParam|null;sort:CompareSort;
- priceMin:number|null;priceMax:number|null};
+ priceMin:number|null;priceMax:number|null;category:string|null};
 
 /** Query string of /precios → validated query. Unknown keys are ignored; an invalid value gives {ok:false}. */
 export function parsePriceQuery(sp:Record<string,string|string[]|undefined>):{ok:true;query:PriceQuery}|{ok:false;field:string}{
@@ -37,7 +38,7 @@ export function parsePriceQuery(sp:Record<string,string|string[]|undefined>):{ok
  const v=parsed.data;
  if(v.precioMin!=null&&v.precioMax!=null&&v.precioMin>v.precioMax)return {ok:false,field:'precioMin'};
  return {ok:true,query:{q:v.q||null,item:v.producto??null,province:v.provincia??null,verticalParam:v.tipo??null,vertical:v.tipo?COMPARE_VERTICALS[v.tipo]:null,sort:v.orden??'unit_price',
-  priceMin:v.precioMin??null,priceMax:v.precioMax??null}};
+  priceMin:v.precioMin??null,priceMax:v.precioMax??null,category:v.categoria??null}};
 }
 
 export type PriceSearchItem={slug:string;kind:'grocery'|'medicine'|'generic';name:string;presentation:string|null;brand:string|null;category:string;gtin:string|null;
@@ -73,4 +74,29 @@ export function stalenessLine(o:PublicPriceObservation,en:boolean):string{
  const t=(es:string,english:string)=>en?english:es;
  if(o.stale)return o.staleReason==='expired'?t('Vencido: ya no está vigente','Expired: no longer valid'):t('Desactualizado: puede haber cambiado','Out of date: it may have changed');
  return `${t('Se considera vigente hasta el ','Considered current until ')}${crDay(o.validTo&&o.validTo<o.staleAfter?o.validTo:o.staleAfter,en)}`;
+}
+
+// ---------------------------------------------------------------- /precios landing and product history (2026-11-19)
+// public_price_overview / public_price_history (supabase/migrations/290_price_overview.sql).
+export type PriceOverviewItem=PriceSearchItem&{minPrice:number|null;minUnitPrice:number|null};
+export type PriceCategory={category:string;vertical:'grocery'|'pharmacy'|'mixed';items:number;priced:number};
+export type PriceOverview={asOf:string;vertical:CompareVertical|null;category:string|null;categories:PriceCategory[];items:PriceOverviewItem[];
+ totals:{items:number;priced:number;offers:number}};
+export type PricePoint={day:string;price:number;unitPrice:number};
+export type PriceHistory={item:string;asOf:string;days:number;points:PricePoint[];low30:PricePoint|null};
+
+/** Catalogue category slugs (price_catalog.category) → short labels; unknown slugs are humanized. */
+const CATEGORY_LABEL:Record<string,[string,string]>={
+ granos:['Granos','Grains and beans'],lacteos:['Lácteos','Dairy'],huevos:['Huevos','Eggs'],carnes:['Carnes','Meat'],pollo:['Pollo','Chicken'],
+ pescados:['Pescados y mariscos','Fish and seafood'],frutas_verduras:['Frutas y verduras','Fruit and vegetables'],panaderia:['Panadería','Bakery'],
+ abarrotes:['Abarrotes','Pantry'],aceites:['Aceites','Cooking oils'],cafe:['Café','Coffee'],bebidas:['Bebidas','Drinks'],snacks:['Snacks','Snacks'],
+ limpieza:['Limpieza','Cleaning'],higiene:['Higiene personal','Personal care'],cuidado_personal:['Cuidado personal','Personal care'],
+ bebes:['Bebés','Baby'],mascotas:['Mascotas','Pets'],congelados:['Congelados','Frozen'],enlatados:['Enlatados','Canned food'],
+ otc_dolor:['Dolor y fiebre','Pain and fever'],otc_gripe:['Gripe y tos','Cold and cough'],otc_digestivo:['Digestivos','Digestive'],
+ otc_alergia:['Alergias','Allergy'],vitaminas:['Vitaminas','Vitamins'],primeros_auxilios:['Primeros auxilios','First aid'],
+};
+export function categoryLabel(slug:string,en:boolean):string{
+ const known=CATEGORY_LABEL[slug];if(known)return known[en?1:0];
+ const words=slug.replace(/^otc_/,'').replace(/_/g,' ').trim();
+ return words.charAt(0).toUpperCase()+words.slice(1);
 }

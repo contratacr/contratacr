@@ -8,6 +8,7 @@ import {proBoundedJson,proDbError,proFail,proQuery,proRequestOrigin,proRouteHead
 import {PRO_WS_COOKIE} from '@/lib/pro/workspace-gate';
 import {companyTeamMutationSchema,companyTeamSchema,normalizeCompanyInviteCode} from '@/lib/pro/team-roles';
 import {sendTransactionalEmail,settleTransactionalEmail,transactionalBusinessName} from '@/lib/pro/transactional-email';
+import {prefijoDeIdioma} from '@/lib/prefijo-de-idioma';
 
 /**
  * Round 7C: company team roles. Always runs as the signed-in account (never substituted by the
@@ -81,7 +82,7 @@ export async function POST(req:Request){
   // through the Pro transactional module (mock outbox by default). Never blocks or fails the invitation.
   const owner=actor,target=input.email,locale=input.locale,eventId=input.actionId;
   const email=await settleTransactionalEmail(async()=>sendTransactionalEmail({kind:'team_invite',eventId,to:target,locale,actorId:a.user.id,revealRecipient:true,
-   data:{actorName:'',subjectName:await transactionalBusinessName(a.db,owner),link:proRequestOrigin(req)+(locale==='en'?'/en':'')+'/dashboard/pro/equipo'}}));
+   data:{actorName:'',subjectName:await transactionalBusinessName(a.db,owner),link:proRequestOrigin(req)+prefijoDeIdioma(locale)+'/dashboard/pro/equipo'}}));
   return Response.json({...(r.data as object),email},{headers});
  }
  return Response.json(r.data,{headers});

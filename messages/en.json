@@ -1,4 +1,10 @@
 {
+  "directoryRoutes": {
+    "listsTitle": "My lists",
+    "reservationsTitle": "My reservations",
+    "reservationTitle": "My reservation",
+    "reviewAuthorFallback": "ContrataCR user"
+  },
   "moderation": {
     "reportReview": "Report review",
     "reportMessage": "Report message and block",
@@ -79,6 +85,9 @@
     "searchProfessionals": "Find services"
   },
   "header": {
+    "searchServicesAndPlaces": "Services and places",
+    "searchServiceLabel": "Service",
+    "searchServicesLabel": "Services",
     "tools": "Tools",
     "freeTools": "Free tools",
     "createResume": "Create a resume",
@@ -354,6 +363,7 @@
     "useMyLocation": "Use my location"
   },
   "workplacesPicker": {
+    "mapUnavailableShort": "Your browser could not show the map. You can still add the place with province and canton.",
     "localPinRequired": "Mark where clients visit you.",
     "editPlace": "Edit location",
     "savePlace": "Update location",
@@ -2821,6 +2831,8 @@
   "landing": {
     "hero": {
       "searchPlaceholder": "What service are you looking for?",
+      "servicesLabel": "Services",
+      "serviceLabel": "Service",
       "searchPlaceholderShort": "What do you need?",
       "buscaPrefijo": "Find",
       "pidePrefijo": "Don't know who to call?",
@@ -3785,5 +3797,68 @@
     "hint": "You confirm each appointment. Pausing keeps existing appointments.",
     "retry": "Retry change",
     "refresh": "Refresh"
+  },
+  "ProRouteCopy": {
+    "estimatesTitle": "Estimates | ContrataCR",
+    "myProjectTitle": "My project | ContrataCR",
+    "subcontractorTitle": "My subcontractor jobs | ContrataCR",
+    "joinJobTitle": "Join a job | ContrataCR",
+    "electronicTicket": "Electronic ticket",
+    "electronicInvoice": "Electronic invoice",
+    "loadingPro": "Loading Pro…",
+    "closeDialog": "Close dialog"
+  },
+  "ProQuoteModalCopy": {
+    "numberAbbr": "No.",
+    "responseUnverified": "The response could not be verified. Check the same attempt before leaving.",
+    "checkSavedResult": "Check saved result",
+    "checkBeforeLeaving": "Check the saved result before leaving.",
+    "draftNotSaved": "Your draft could not be saved on this device. Retry before sending.",
+    "checkPreviousAttempt": "Check the previous attempt before editing. Retrying will not create another quote."
+  },
+  "ProCatalogCopy": {
+    "customerRecoveryBlocked": "Customer recovery could not be read. Reload to retry.",
+    "inventoryRecoveryBlocked": "Inventory recovery could not be read. Reload to retry.",
+    "customerNotSaved": "The customer was not saved. Review the information and retry.",
+    "customerSavedNewer": "Customer saved. A more recent version is shown.",
+    "customerSaved": "Customer saved.",
+    "checkBeforeContinuing": "Check the saved result before continuing.",
+    "inventoryNotSaved": "The inventory record was not saved. Review the information and retry.",
+    "itemSavedNewer": "Item saved. A more recent version is shown.",
+    "itemSaved": "Item saved."
+  },
+  "ClientSurfaceCopy": {
+    "idTaken": "That ID is already registered. Sign in.",
+    "emailPlaceholder": "you@email.com",
+    "activityError": "Something went wrong",
+    "receivedQuotes": "Received quotes",
+    "noPublicRequests": "You have not posted any public request. Need another professional?"
+  },
+  "ProRegistrationCopy": {
+    "backToLead": "Back to lead",
+    "businessNameOnly": "Show only business name"
+  },
+  "ProPanelCopy": {
+    "toolsUnavailable": "These tools aren't available for this account.",
+    "accessCheckFailed": "Could not check access to these tools. Try again.",
+    "retry": "Retry",
+    "back": "Back",
+    "offerServices": "Offer my services",
+    "photoOptions": "Profile photo options",
+    "viewPhoto": "View photo",
+    "changePhoto": "Change photo",
+    "addPhoto": "Add photo",
+    "removePhoto": "Remove photo",
+    "profilePhoto": "Profile photo",
+    "close": "Close",
+    "viewPublicProfile": "View public profile",
+    "viewProfile": "View profile",
+    "share": "Share",
+    "panelLoadFailed": "We couldn't load your panel",
+    "panelLoadHint": "Try again. If it continues, contact support so we can review your professional profile.",
+    "tryAgain": "Try again",
+    "signOut": "Sign out",
+    "services": "Services",
+    "workPhotos": "Success stories"
   }
 }

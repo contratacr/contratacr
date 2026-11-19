@@ -2291,7 +2291,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                                 placeholder={unifiedSearchPlaceholder(locale, directoryOn, true)}
                                 className="min-w-0 flex-1 bg-transparent text-[15px] text-[#162543] placeholder:text-[#8f9aaa] focus:outline-none"
                                 role="combobox"
-                                aria-label={directoryOn ? (locale === "en" ? "Services and places" : "Servicios y lugares") : (locale === "en" ? "Service" : "Servicio")}
+                                aria-label={directoryOn ? t("searchServicesAndPlaces") : t("searchServiceLabel")}
                                 aria-expanded={searchFocused && searchQuery.trim().length > 0}
                                 aria-autocomplete="list"
                                 aria-controls="navbar-service-suggestions"
@@ -2355,8 +2355,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                                   </button>
                                 )
                               ) : (
-                                <div role="group" aria-label={placeSuggestions.length > 0 ? (locale === "en" ? "Services" : "Servicios") : undefined}>
-                                  {placeSuggestions.length > 0 && <SuggestionGroupLabel>{locale === "en" ? "Services" : "Servicios"}</SuggestionGroupLabel>}
+                                <div role="group" aria-label={placeSuggestions.length > 0 ? t("searchServicesLabel") : undefined}>
+                                  {placeSuggestions.length > 0 && <SuggestionGroupLabel>{t("searchServicesLabel")}</SuggestionGroupLabel>}
                                   {compactSuggestions.map((s, i) => (
                                     <button
                                       key={s.id}
@@ -2607,7 +2607,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     onKeyDown={handleCompactSearchKeyDown}
                     placeholder={directoryOn ? unifiedSearchPlaceholder(locale, true, true) : (locale === "en" ? "Service" : "Servicio")}
                     className={SEARCH_SHEET_INPUT}
-                    aria-label={directoryOn ? (locale === "en" ? "Services and places" : "Servicios y lugares") : (locale === "en" ? "Service" : "Servicio")}
+                    aria-label={directoryOn ? t("searchServicesAndPlaces") : t("searchServiceLabel")}
                     role="combobox"
                     aria-autocomplete="list"
                     aria-controls="native-service-suggestions"

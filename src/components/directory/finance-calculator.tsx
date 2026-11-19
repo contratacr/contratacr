@@ -1,4 +1,5 @@
 'use client';
+import {idiomaDe} from '@/lib/prefijo-de-idioma';
 import {useId,useState} from 'react';
 import {FINANCE_DISCLAIMER,FINANCE_LIMITS,frenchAmortization} from '@/lib/directory/finance-calc';
 import {formatDate,formatMoney,type DeclaredFinancing} from '@/lib/directory/listing-public';
@@ -24,7 +25,7 @@ export function FinanceCalculator({priceMinor,currency,financing,locale}:{priceM
  return <section aria-labelledby={id+'h'} data-finance-calculator className="space-y-4 rounded-2xl border border-[#d7e1ea] p-5">
   <div>
    <h2 id={id+'h'} className="text-lg font-bold">{t('Calcule una cuota aproximada','Estimate a monthly payment')}</h2>
-   <p className="text-sm text-slate-700">{t('Tasa anual declarada por el vendedor','Annual rate declared by the seller')}: <strong>{financing.annualRatePct.toLocaleString(locale==='en'?'en-US':'es-CR')} %</strong> · {t('declarada el','declared on')} {formatDate(financing.declaredAt,locale)}</p>
+   <p className="text-sm text-slate-700">{t('Tasa anual declarada por el vendedor','Annual rate declared by the seller')}: <strong>{financing.annualRatePct.toLocaleString({es:'es-CR',en:'en-US'}[idiomaDe(locale)])} %</strong> · {t('declarada el','declared on')} {formatDate(financing.declaredAt,locale)}</p>
   </div>
   <div className="grid gap-3 sm:grid-cols-2">
    <label className="block text-sm font-medium" htmlFor={id+'d'}>{t('Prima','Down payment')} ({currency==='USD'?'US$':'₡'})
@@ -38,6 +39,6 @@ export function FinanceCalculator({priceMinor,currency,financing,locale}:{priceM
     <div className="rounded-xl bg-[#f6f9fc] px-3 py-2"><dt className="text-xs font-medium text-slate-700">{t('Monto financiado','Amount financed')}</dt><dd className="font-semibold">{formatMoney(result.value.principalMinor,currency,locale)}</dd></div>
     <div className="rounded-xl bg-[#f6f9fc] px-3 py-2"><dt className="text-xs font-medium text-slate-700">{t('Intereses totales aprox.','Approx. total interest')}</dt><dd className="font-semibold">{formatMoney(result.value.totalInterestMinor,currency,locale)}</dd></div>
    </dl>}
-  <p className="text-xs text-slate-700" data-finance-disclaimer>{FINANCE_DISCLAIMER[locale==='en'?'en':'es']}</p>
+  <p className="text-xs text-slate-700" data-finance-disclaimer>{FINANCE_DISCLAIMER[idiomaDe(locale)]}</p>
  </section>;
 }

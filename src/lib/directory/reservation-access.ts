@@ -1,3 +1,4 @@
+import {rutaConIdioma} from '../prefijo-de-idioma';
 import 'server-only';
 import {createHash} from 'node:crypto';
 import {dirPepper,hmacHex} from '@/lib/directory/public-route';
@@ -15,4 +16,4 @@ export async function reservationAccessToken(reservationId:string):Promise<strin
 export function reservationAccessHash(token:string):string|null{
  return RESERVATION_TOKEN_RE.test(token)?createHash('sha256').update(token,'utf8').digest('hex'):null;
 }
-export const reservationLink=(token:string,locale:string)=>`${locale==='en'?'/en':''}/reserva/${token}`;
+export const reservationLink=(token:string,locale:string)=>rutaConIdioma(locale,`/reserva/${token}`);

@@ -1,6 +1,7 @@
 import type {Metadata} from 'next';
 import {notFound,redirect} from 'next/navigation';
 import {headers} from 'next/headers';
+import {getTranslations} from 'next-intl/server';
 import {createAdminClient} from '@/lib/supabase/admin';
 import {createClient} from '@/lib/supabase/server';
 import {safeGetUser} from '@/lib/supabase/get-user';
@@ -13,7 +14,7 @@ import {DIR_ENABLED} from '@/lib/directory/feature-flags';
 // default; optional share link without any user id). Writes go through /api/listas.
 export const dynamic='force-dynamic';
 export async function generateMetadata({params}:{params:Promise<{locale:string}>}):Promise<Metadata>{
- const {locale}=await params;return {title:locale==='en'?'My lists':'Mis listas',robots:{index:false,follow:false}};
+ const {locale}=await params;return {title:(await getTranslations({locale,namespace:'directoryRoutes'}))('listsTitle'),robots:{index:false,follow:false}};
 }
 export default async function ListsRoute({params}:{params:Promise<{locale:string}>}){
  if(!DIR_ENABLED)notFound();

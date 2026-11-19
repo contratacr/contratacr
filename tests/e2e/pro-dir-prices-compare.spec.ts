@@ -23,6 +23,10 @@ for(const language of ['es','en'] as const)test(`P3: price comparison, neutral o
   const form=page.locator('[data-price-search-form]');await expect(form).toBeVisible();
   // 2026-11-19: the prescription notice moved to the Terms (13.1); prescription products stay unsearchable (below).
   await expect(page.locator('[data-price-rx-note]')).toHaveCount(0);
+  // 2026-11-19 redesign: the landing carries today's national ARESEP fuel prices (→ /gasolineras) and the invitations.
+  await expect(page.locator('[data-price-fuel]')).toContainText('ARESEP');
+  await expect(page.locator('[data-price-fuel] a[href$="/gasolineras"]')).toBeVisible();
+  await expect(page.locator('[data-price-invite-business]')).toHaveAttribute('href',`${prefix}/dashboard/negocio`);
   await form.getByLabel(t('Producto o código de barras','Product or barcode')).fill(`arroz ${seed.tag}`);
   await Promise.all([page.waitForURL(/\/precios\?q=/),form.getByRole('button',{name:t('Buscar','Search')}).click()]);
   const result=page.locator(`[data-price-search-item="${seed.rice}"]`);
@@ -40,9 +44,15 @@ for(const language of ['es','en'] as const)test(`P3: price comparison, neutral o
   await expect(first.locator('[data-price-unit]')).toContainText(t('por kg','per kg'));
   await expect(first.locator('[data-price-source]')).toContainText(t('Fuente: MEIC, estudio de precios','Source: MEIC price survey'));
   await expect(first.locator('[data-price-source]')).toContainText(`E2E-${seed.tag}`);
-  await expect(first.locator('[data-price-source]')).toContainText(t('dato del','as of'));
-  await expect(first.locator('[data-price-staleness]')).toContainText(t('Se considera vigente hasta el','Considered current until'));
-  await expect(first.locator('[data-price-staleness]')).toContainText(t('Confianza: Dato oficial','Confidence: Official data'));
+  // 2026-11-19 redesign: short labels — «Actualizado el», «Vigente hasta el» and the confidence badge; «Mejor precio» on the first.
+  await expect(first.locator('[data-price-updated]')).toContainText(t('Actualizado el','Updated on'));
+  await expect(first.locator('[data-price-staleness]')).toContainText(t('Vigente hasta el','Valid until'));
+  await expect(first.locator('[data-price-confidence]')).toHaveText(t('Dato oficial','Official data'));
+  await expect(first.locator('[data-price-best-label]')).toHaveText(t('Mejor precio','Best price'));
+  await expect(cmp.locator('[data-price-best-label]')).toHaveCount(1);
+  await expect(cmp.locator('[data-price-low30]')).toContainText(t('Precio más bajo en 30 días','Lowest price in 30 days'));
+  await expect(cmp.locator('[data-price-low30]')).toContainText(en?'₡1,190':'₡1.190');
+  await expect(cmp.locator('[data-price-history]')).toBeVisible();
   await expect(first.locator('[data-price-provenance] a')).toHaveAttribute('href',`https://example.invalid/e2e/${seed.tag}.csv`);
   const stale=cmp.locator(`[data-price-offer="${seed.places.viejo}"]`);
   await expect(stale).toHaveAttribute('data-price-stale','1');
@@ -59,11 +69,12 @@ for(const language of ['es','en'] as const)test(`P3: price comparison, neutral o
   expect(await page.locator('[data-price-offer]').evaluateAll(els=>els.map(e=>e.getAttribute('data-price-offer')))).toEqual([seed.places.centro,seed.places.norte,seed.places.viejo]);
   await gotoOK(page,`${prefix}/precios?producto=${seed.rice}&provincia=Heredia`);
   expect(await page.locator('[data-price-offer]').evaluateAll(els=>els.map(e=>e.getAttribute('data-price-offer')))).toEqual([seed.places.norte]);
-  // ₡ range through the comparison's own form: ≥ ₡1 200 keeps San José ₡1 250 only (the stale ₡900 is out too).
+  // ₡ range through the «Filtros» drawer of the comparison (2026-11-19): ≥ ₡1 200 keeps San José ₡1 250 only (the stale ₡900 is out too).
   await gotoOK(page,`${prefix}/precios?producto=${seed.rice}`);
   const range=page.locator('[data-price-range-form]');
+  await expect(async()=>{if(!(await range.isVisible()))await page.locator('[data-dir-filters-button]').first().click();await expect(range).toBeVisible({timeout:1500});}).toPass({timeout:30000});
   await range.getByLabel(t('Precio mínimo (₡)','Minimum price (₡)')).fill('1200');
-  await Promise.all([page.waitForURL(/precioMin=1200/),range.getByRole('button',{name:t('Filtrar por precio','Filter by price')}).click()]);
+  await Promise.all([page.waitForURL(/precioMin=1200/),range.getByRole('button',{name:t('Aplicar filtros','Apply filters')}).click()]);
   expect(await page.locator('[data-price-offer]').evaluateAll(els=>els.map(e=>e.getAttribute('data-price-offer')))).toEqual([seed.places.centro]);
   await expect(page.locator('[data-price-range-note]')).toContainText(t('Rango de precio del producto','Product price range'));
   await gotoOK(page,`${prefix}/precios?producto=${seed.rice}&precioMax=1190`);

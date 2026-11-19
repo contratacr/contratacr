@@ -1,14 +1,14 @@
 "use client";
 
 import type { ComponentProps } from "react";
-import { useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
 
 /** Local Pro opt-in: keep the shared modal design with usable touch targets. */
 export function ProModal({ className, ...props }: ComponentProps<typeof Modal>) {
-  const locale = useLocale();
-  return <Modal {...props} closeLabel={props.closeLabel === undefined ? (locale === "en" ? "Close dialog" : "Cerrar diálogo") : props.closeLabel} manageFocus ariaLabel={props.ariaLabel??(typeof props.title==='string'?props.title:undefined)}
+  const t = useTranslations("ProRouteCopy");
+  return <Modal {...props} closeLabel={props.closeLabel === undefined ? t("closeDialog") : props.closeLabel} manageFocus ariaLabel={props.ariaLabel??(typeof props.title==='string'?props.title:undefined)}
     // A visually hidden control (`sr-only` is position:absolute) used to take the
     // dialog itself as its containing block: it escaped the scrolling body, made
     // the overflow-hidden dialog taller than the screen, and focusing it (file

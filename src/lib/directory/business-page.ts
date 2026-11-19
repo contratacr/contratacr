@@ -1,3 +1,4 @@
+import {prefijoDeIdioma} from '../prefijo-de-idioma';
 import 'server-only';
 import {notFound,redirect} from 'next/navigation';
 import {createAdminClient} from '@/lib/supabase/admin';
@@ -10,7 +11,7 @@ import {businessPlaces,businessSections} from './business-access';
 // sign-in (back to the same page), and the claimed places the account manages as itself (no Pro workspace).
 export async function businessPage(locale:string,path:string){
  if(!DIR_ENABLED)notFound();
- const prefix=locale==='en'?'/en':'';
+ const prefix=prefijoDeIdioma(locale);
  const user=await safeGetUser(await createClient());
  if(!user)redirect(prefix+'/login?redirect='+encodeURIComponent(prefix+'/dashboard/negocio'+path));
  const db=createAdminClient(),places=await businessPlaces(db,user.id);

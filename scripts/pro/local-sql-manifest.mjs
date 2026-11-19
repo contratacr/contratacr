@@ -342,6 +342,7 @@ export const localSqlManifest=Object.freeze([
   {"file":"directory-events-local.sql"},
   {"file":"directory-brands-local.sql"},
   {"file":"directory-place-photos-local.sql"},
+  {"file":"price-overview-local.sql"},
   {"file":"rate-limit-buckets-local.sql"},
   {"file":"pro-work-activity-local.sql"}
 ].map(step=>Object.freeze(step)));
@@ -1038,6 +1039,8 @@ export const localSqlDependencies=Object.freeze([
   ["directory-reviews-local.sql", "directory-place-photos-local.sql"],
   ["directory-moderation-local.sql", "directory-place-photos-local.sql"],
   ["directory-place-tools-local.sql", "directory-place-photos-local.sql"],
+  ["price-observations-local.sql", "price-overview-local.sql"],
+  ["price-compare-local.sql", "price-overview-local.sql"],
   ["dir-business-roles-local.sql", "directory-place-photos-local.sql"],
   // Per-job activity history (read-only over the immutable history/event/receipt tables).
   ["team-local.sql", "pro-work-activity-local.sql"],

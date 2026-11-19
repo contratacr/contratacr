@@ -1,4 +1,5 @@
 import {z} from 'zod';
+import {getTranslations} from 'next-intl/server';
 import {createAdminClient} from '@/lib/supabase/admin';
 import {createClient} from '@/lib/supabase/server';
 import {safeGetUser} from '@/lib/supabase/get-user';
@@ -38,7 +39,7 @@ export async function POST(req:Request,{params}:{params:Promise<{slug:string}>})
   if(mine.error)return dirDbError(mine.error);
   const own=mine.data as {reviewId:string;revision:number}|null;
   const parsed=reviewSubmitSchema(locale).safeParse({actionId:body.data.actionId,reviewId:own?.reviewId??crypto.randomUUID(),slug,revision:own?.revision??0,
-   rating:body.data.rating,comment:body.data.comment,authorName:(profile.data?.full_name as string|null)?.trim()||(locale==='en'?'ContrataCR user':'Persona usuaria de ContrataCR')});
+   rating:body.data.rating,comment:body.data.comment,authorName:(profile.data?.full_name as string|null)?.trim()||(await getTranslations({locale,namespace:'directoryRoutes'}))('reviewAuthorFallback')});
   if(!parsed.success)return Response.json({error:parsed.error.issues[0]?.message??'Revise la reseña.',reason:'invalid'},{status:400,headers:{'Cache-Control':'no-store, private'}});
   const result=await db.rpc('dir_review_submit',{p_actor:user.id,p_input:parsed.data});
   return result.error?dirDbError(result.error):dirOk(result.data);

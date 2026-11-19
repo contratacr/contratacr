@@ -4,6 +4,7 @@ import {formatMenuMoney,menuPriceBreakdown,menuServiceBps,parseMenuMoney} from '
 import {MENU_AVAILABILITY,MENU_AVAILABILITY_LABELS,MENU_DIETARY_LABELS,MENU_DIETARY_TAGS,menuErrorText,menuItemFieldsSchema,
  type EditorMenu,type EditorMenuItem,type EditorMenuSection,type MenuAvailability,type MenuDietaryTag,type MenuImportDraft,type MenuMutation} from '@/lib/directory/menu-schemas';
 import {MENU_IMPORT_LABEL,MENU_IMPORT_MAX_BYTES,extractionToReview,menuImportImageTypes,reviewToApply,type MenuReviewSection} from '@/lib/directory/menu-import';
+import {idiomaDe} from '@/lib/prefijo-de-idioma';
 
 /**
  * LOCAL PRO ONLY (multivertical P2). Menu editor of a claimed restaurant (Pro «Menú» module). Not imported yet.
@@ -29,7 +30,7 @@ const majorText=(minor:number)=>minor%100===0?String(minor/100):(minor/100).toFi
 // administrator/manager (the SQL refuses them too: menu_price_role).
 // photoImport=false (2026-11-18, «Mi negocio» without Pro): hides the menu-from-photo card (an assistant feature of Pro).
 export function MenuEditor({initial,locale,endpoint='/api/pro/menu',expectedActor,canPublish=true,photoImport=true}:{initial:EditorMenu;locale:string;endpoint?:string;expectedActor?:string;canPublish?:boolean;photoImport?:boolean}){
- const lang:Lang=locale==='en'?'en':'es',en=lang==='en',t=(es:string,english:string)=>en?english:es;
+ const lang:Lang=idiomaDe(locale),en=lang==='en',t=(es:string,english:string)=>en?english:es;
  const [menu,setMenu]=useState(initial);
  const [busy,setBusy]=useState(false);
  const [message,setMessage]=useState<{kind:'error'|'ok';text:string}|null>(null);

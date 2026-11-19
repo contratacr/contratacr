@@ -1,4 +1,5 @@
 import type {Metadata} from 'next';
+import {getTranslations} from 'next-intl/server';
 import {notFound} from 'next/navigation';
 import {createAdminClient} from '@/lib/supabase/admin';
 import {createClient} from '@/lib/supabase/server';
@@ -14,7 +15,7 @@ import {DIR_ENABLED} from '@/lib/directory/feature-flags';
 // they are told so and offered to sign in.
 export const dynamic='force-dynamic';
 export async function generateMetadata({params}:{params:Promise<{locale:string}>}):Promise<Metadata>{
- const {locale}=await params;return {title:locale==='en'?'My reservations':'Mis reservas',robots:{index:false,follow:false},referrer:'no-referrer'};
+ const {locale}=await params;return {title:(await getTranslations({locale,namespace:'directoryRoutes'}))('reservationsTitle'),robots:{index:false,follow:false},referrer:'no-referrer'};
 }
 const ring='focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]';
 export default async function MyReservationsRoute({params}:{params:Promise<{locale:string}>}){

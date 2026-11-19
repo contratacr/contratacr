@@ -1,6 +1,7 @@
 import 'server-only';
 import {createAdminClient} from '@/lib/supabase/admin';
-import type {CompareSort,CompareVertical,PriceComparison,PriceSearchResult} from './price-compare';
+import type {CompareSort,CompareVertical,PriceComparison,PriceHistory,PriceOverview,PriceSearchResult} from './price-compare';
+import type {PublicPriceCurrent} from './price-schemas';
 
 // LOCAL PRO ONLY (multivertical P3): server readers of the price comparison (service role, like every directory
 // reader). Used by /precios and by the assistant tools (never through the HTTP API). Prescription medicines are
@@ -22,4 +23,26 @@ export async function comparePrices(item:string,{province=null,vertical=null,sor
   console.error('[precios] compare failed',code);return {ok:false,reason:'unavailable'};
  }
  return {ok:true,result:r.data as PriceComparison|null};
+}
+
+/** Landing of /precios: categories with product counts and the products of one category (or those with prices). */
+export async function priceOverview(vertical:CompareVertical|null,category:string|null,limit=12):Promise<{ok:true;result:PriceOverview|null}|PriceReadError>{
+ const r=await createAdminClient().rpc('public_price_overview',{p_vertical:vertical,p_category:category,p_limit:limit});
+ if(r.error){console.error('[precios] overview failed',(r.error as {code?:string}).code);return {ok:false,reason:'unavailable'};}
+ return {ok:true,result:r.data as PriceOverview|null};
+}
+
+/** Lowest published price per day of one product (last `days` days) and the lowest of the last 30 days. */
+export async function priceHistory(item:string,{province=null,vertical=null,days=90}:{province?:string|null;vertical?:CompareVertical|null;days?:number}={})
+ :Promise<{ok:true;result:PriceHistory|null}|PriceReadError>{
+ const r=await createAdminClient().rpc('public_price_history',{p_item_slug:item,p_province:province,p_vertical:vertical,p_days:days});
+ if(r.error){console.error('[precios] history failed',(r.error as {code?:string}).code);return {ok:false,reason:'unavailable'};}
+ return {ok:true,result:r.data as PriceHistory|null};
+}
+
+/** National regulated fuel prices (ARESEP), the same reader as /gasolineras. */
+export async function nationalFuelPrices():Promise<PublicPriceCurrent|null>{
+ const r=await createAdminClient().rpc('public_price_current',{p_place_slug:null,p_item_slug:null});
+ if(r.error){console.error('[precios] fuel failed',(r.error as {code?:string}).code);return null;}
+ return r.data as PublicPriceCurrent|null;
 }

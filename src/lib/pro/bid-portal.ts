@@ -1,5 +1,6 @@
 import {z} from 'zod';
 import {PRO_FILE_BODY_MAX,PRO_FILE_MAX_BYTES} from './file-limit';
+import {prefijoDeIdioma} from "@/lib/prefijo-de-idioma";
 
 /**
  * Vendor portal for bid packages (row 53, docs/pro/bids-local.md). The owner copies a
@@ -59,7 +60,7 @@ export const bidPortalPublicSchema=z.discriminatedUnion('action',[
 ]);
 export type BidPortalPublicInput=z.input<typeof bidPortalPublicSchema>;
 /** Path of the vendor page; the token travels in the fragment, never in a request URL. */
-export function bidPortalUrl(origin:string,locale:'es'|'en',token:string){return `${origin}${locale==='en'?'/en':''}/licitacion-proveedor#acceso=${token}`;}
+export function bidPortalUrl(origin:string,locale:'es'|'en',token:string){return `${origin}${prefijoDeIdioma(locale)}/licitacion-proveedor#acceso=${token}`;}
 
 /**
  * Round 4B: attachments the vendor sends with its offer (bid-portal-files-local.sql). Same file

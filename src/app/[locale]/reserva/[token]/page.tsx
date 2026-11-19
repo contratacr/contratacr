@@ -1,4 +1,5 @@
 import type {Metadata} from 'next';
+import {getTranslations} from 'next-intl/server';
 import {notFound} from 'next/navigation';
 import {createAdminClient} from '@/lib/supabase/admin';
 import {DirectoryShell} from '@/components/directory/directory-shell';
@@ -18,7 +19,7 @@ async function load(token:string){
 }
 export async function generateMetadata({params}:{params:Promise<{locale:string}>}):Promise<Metadata>{
  const {locale}=await params;
- return {title:locale==='en'?'My reservation':'Mi reserva',robots:{index:false,follow:false},referrer:'no-referrer'};
+ return {title:(await getTranslations({locale,namespace:'directoryRoutes'}))('reservationTitle'),robots:{index:false,follow:false},referrer:'no-referrer'};
 }
 export default async function ReservationRoute({params}:{params:Promise<{locale:string;token:string}>}){
  if(!DIR_ENABLED)notFound();

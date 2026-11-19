@@ -5,7 +5,7 @@ import {replaceProParams} from '@/lib/pro/navigation';
 import {createInventoryWrite,readInventoryWrite,saveInventoryWrite,mergeInventoryWrite,continueInventoryWrite,clearInventoryWrite,inventoryWriteInputSchema,InventoryWriteFailure,type InventoryWrite} from '@/lib/pro/inventory-write-recovery';
 import {useAuth} from '@/hooks/use-auth';
 import {createClientWrite,readClientWrite,saveClientWrite,mergeClientWrite,continueClientWrite,clearClientWrite,ClientWriteFailure,type ClientWrite} from '@/lib/pro/client-write-recovery';
-import {useLocale,useTranslations} from 'next-intl';
+import {useTranslations} from 'next-intl';
 import { BusinessPanel } from './business-panel';
 import { businessSchema, emptyBusiness, type Business } from '@/lib/pro/business';
 import type { CatalogKind } from '@/lib/pro/catalog-import';
@@ -32,7 +32,7 @@ export function CatalogWorkspace({kind}:{kind:CatalogKind}){
  return <CatalogWorkspaceSession key={user.id+':'+kind} kind={kind} actorId={user.id}/>;
 }
 function CatalogWorkspaceSession({ kind,actorId }: { kind: CatalogKind;actorId:string }) {
- const locale=useLocale();
+ const cw=useTranslations("ProCatalogCopy");
  const copy=useTranslations("ProControlsUX"),params=useProSearchParams();
   const [data, setData] = useState<Business>(emptyBusiness);
   const [accountId, setAccountId] = useState(''), [ready, setReady] = useState(false);
@@ -48,8 +48,8 @@ function CatalogWorkspaceSession({ kind,actorId }: { kind: CatalogKind;actorId:s
    try{const tab=readClientWrite(sessionStorage,actorId),global=readClientWrite(localStorage,actorId);let stored=tab?(global?.body===tab.body?mergeClientWrite(tab,global):tab):global;if(pending.current&&(!stored||stored.body===pending.current.body))stored=mergeClientWrite(pending.current,stored);
     if(stored){pending.current=stored;setClientAttempt(stored);setRecoveryBlocked(true);}
     setRecoveryReady(true);
-   }catch{setRecoveryBlocked(true);setError(locale==='en'?'Customer recovery could not be read. Reload to retry.':'No se pudo leer el guardado del cliente. Recargue para reintentar.');}
-  },[actorId,kind,locale]);
+   }catch{setRecoveryBlocked(true);setError(cw("customerRecoveryBlocked"));}
+  },[actorId,kind,cw]);
   const inventoryPending=useRef<InventoryWrite|null>(null);
   const [inventoryNotice,setInventoryNotice]=useState('');
   const [inventoryAttempt,setInventoryAttempt]=useState<InventoryWrite|null>(null),[inventoryBlocked,setInventoryBlocked]=useState(false),[inventoryReady,setInventoryReady]=useState(kind!=='products');
@@ -59,8 +59,8 @@ function CatalogWorkspaceSession({ kind,actorId }: { kind: CatalogKind;actorId:s
    try{const tab=readInventoryWrite(sessionStorage,actorId),global=readInventoryWrite(localStorage,actorId);let stored=tab?(global?.body===tab.body?mergeInventoryWrite(tab,global):tab):global;if(inventoryPending.current&&(!stored||stored.body===inventoryPending.current.body))stored=mergeInventoryWrite(inventoryPending.current,stored);
     if(stored){inventoryPending.current=stored;setInventoryAttempt(stored);setInventoryBlocked(true);const product=inventoryWriteInputSchema.parse(JSON.parse(stored.body)).rows[0];setData(old=>({...old,products:[...old.products.filter(row=>row.id!==product.id),product]}));}
     setInventoryReady(true);
-   }catch{setInventoryBlocked(true);setError(locale==='en'?'Inventory recovery could not be read. Reload to retry.':'No se pudo leer el guardado de inventario. Recargue para reintentar.');}
-  },[actorId,kind,locale]);
+   }catch{setInventoryBlocked(true);setError(cw("inventoryRecoveryBlocked"));}
+  },[actorId,kind,cw]);
   const search=params.get('q')||'',filter=(kind==='products'?['all','low','archived','products','services']:['all','archived']).includes(params.get('mostrar')||'')?params.get('mostrar')!:'all';
   const [ids, setIds] = useState<string[]>([]), [cursor, setCursor] = useState<string | null>(null);
   const [movementCursor, setMovementCursor] = useState<string | null>(null);
@@ -154,16 +154,16 @@ function CatalogWorkspaceSession({ kind,actorId }: { kind: CatalogKind;actorId:s
     }
     const result=await continueClientWrite({store:localStorage,attempt,request:(url,init)=>{if(init?.method==='PATCH')started=true;return fetch(url,init);},currentAccount:()=>active.current?actorId:undefined,onCheckpoint:value=>{pending.current=value;if(active.current){setClientAttempt(value);setRecoveryBlocked(true);}saveClientWrite(sessionStorage,value);}});
     if(!active.current)return false;
-    if(result.status==='rejected'){clearClientWrite(sessionStorage,result.attempt);pending.current=null;setClientAttempt(null);setRecoveryBlocked(false);setError(locale==='en'?'The customer was not saved. Review the information and retry.':'No se guardó el cliente. Revise los datos y reintente.');return false;}
+    if(result.status==='rejected'){clearClientWrite(sessionStorage,result.attempt);pending.current=null;setClientAttempt(null);setRecoveryBlocked(false);setError(cw("customerNotSaved"));return false;}
     setData(old=>({...old,clients:[...old.clients.filter(item=>item.id!==result.client.id),result.client]}));
     const rawOwner=sessionStorage.getItem(ownerKey);if(rawOwner){const marker=JSON.parse(rawOwner);if(marker.accountId===actorId&&marker.body===result.attempt.body){if(typeof marker.rawDraft==='string'&&sessionStorage.getItem(draftKey)===marker.rawDraft)sessionStorage.removeItem(draftKey);sessionStorage.removeItem(ownerKey);}}
-    clearClientWrite(localStorage,result.attempt);clearClientWrite(sessionStorage,result.attempt);pending.current=null;setClientAttempt(null);setRecoveryBlocked(false);setClientNotice(result.newer?(locale==='en'?'Customer saved. A more recent version is shown.':'Cliente guardado. Se muestra una versión más reciente.'):(locale==='en'?'Customer saved.':'Cliente guardado.'));void load();return true;
+    clearClientWrite(localStorage,result.attempt);clearClientWrite(sessionStorage,result.attempt);pending.current=null;setClientAttempt(null);setRecoveryBlocked(false);setClientNotice(result.newer?cw("customerSavedNewer"):cw("customerSaved"));void load();return true;
    }catch(error){
     if(!active.current)return false;
     if(fresh&&!started&&error instanceof ClientWriteFailure&&error.kind==='storage'&&error.attempt.phase!=='confirmed'){
      try{const other=readClientWrite(localStorage,actorId);if(other&&other.body!==error.attempt.body){clearClientWrite(sessionStorage,error.attempt);pending.current=other;setClientAttempt(other);setRecoveryBlocked(true);}}catch{/* Retain the original attempt if storage is unavailable. */}
     }
-    setError(locale==='en'?'Check the saved result before continuing.':'Compruebe el guardado antes de continuar.');return false;
+    setError(cw("checkBeforeContinuing"));return false;
    }finally{lock.current=false;if(active.current)setSaving(false);}
   }
   async function saveInventory(row?:Business['products'][number],mode?:'create'|'edit'|'movement',movements:Business['movements']=[]){
@@ -182,16 +182,16 @@ function CatalogWorkspaceSession({ kind,actorId }: { kind: CatalogKind;actorId:s
     }
     const result=await continueInventoryWrite({store:localStorage,attempt,request:(url,init)=>{if(init?.method==='PATCH')started=true;return fetch(url,init);},currentAccount:()=>active.current?actorId:undefined,onCheckpoint:value=>{inventoryPending.current=value;if(active.current){setInventoryAttempt(value);setInventoryBlocked(true);}saveInventoryWrite(sessionStorage,value);}});
     if(!active.current)return false;
-    if(result.status==='rejected'){clearInventoryWrite(sessionStorage,result.attempt);inventoryPending.current=null;setInventoryAttempt(null);setInventoryBlocked(false);setError(locale==='en'?'The inventory record was not saved. Review the information and retry.':'No se guardó el inventario. Revise los datos y reintente.');return false;}
+    if(result.status==='rejected'){clearInventoryWrite(sessionStorage,result.attempt);inventoryPending.current=null;setInventoryAttempt(null);setInventoryBlocked(false);setError(cw("inventoryNotSaved"));return false;}
     setData(old=>({...old,products:[...old.products.filter(item=>item.id!==result.product.id),result.product]}));
     const rawOwner=sessionStorage.getItem(inventoryOwnerKey);if(rawOwner){const marker=JSON.parse(rawOwner);if(marker.accountId===actorId&&marker.body===result.attempt.body){if(typeof marker.rawDraft==='string'&&sessionStorage.getItem(inventoryDraftKey)===marker.rawDraft)sessionStorage.removeItem(inventoryDraftKey);sessionStorage.removeItem(inventoryOwnerKey);}}
-    clearInventoryWrite(localStorage,result.attempt);clearInventoryWrite(sessionStorage,result.attempt);inventoryPending.current=null;setInventoryAttempt(null);setInventoryBlocked(false);setInventoryNotice(result.newer?(locale==='en'?'Item saved. A more recent version is shown.':'Artículo guardado. Se muestra una versión más reciente.'):(locale==='en'?'Item saved.':'Artículo guardado.'));void load();return true;
+    clearInventoryWrite(localStorage,result.attempt);clearInventoryWrite(sessionStorage,result.attempt);inventoryPending.current=null;setInventoryAttempt(null);setInventoryBlocked(false);setInventoryNotice(result.newer?cw("itemSavedNewer"):cw("itemSaved"));void load();return true;
    }catch(error){
     if(!active.current)return false;
     if(fresh&&!started&&error instanceof InventoryWriteFailure&&error.kind==='storage'&&error.attempt.phase!=='confirmed'){
      try{const other=readInventoryWrite(localStorage,actorId);if(other&&other.body!==error.attempt.body){clearInventoryWrite(sessionStorage,error.attempt);inventoryPending.current=other;setInventoryAttempt(other);setInventoryBlocked(true);}}catch{/* Retain the original attempt if storage is unavailable. */}
     }
-    setError(locale==='en'?'Check the saved result before continuing.':'Compruebe el guardado antes de continuar.');return false;
+    setError(cw("checkBeforeContinuing"));return false;
    }finally{lock.current=false;if(active.current)setSaving(false);}
   }
   async function reloadCatalog(){

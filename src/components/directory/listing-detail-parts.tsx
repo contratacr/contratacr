@@ -1,4 +1,5 @@
 'use client';
+import {idiomaDe,rutaConIdioma} from '@/lib/prefijo-de-idioma';
 import {useState,type KeyboardEvent,type ReactNode} from 'react';
 import {ChevronLeft,ChevronRight,ImageOff,MapPin,ShieldAlert,ShieldCheck,Store,User} from 'lucide-react';
 import {formatDate,formatMoney,type PublicListing,type PublicListingPhoto} from '@/lib/directory/listing-public';
@@ -7,7 +8,7 @@ import {formatDate,formatMoney,type PublicListing,type PublicListingPhoto} from 
  * LOCAL PRO ONLY (multivertical V4/R1): building blocks shared by vehicle-listing-page and property-listing-page.
  * ContrataCR look (navy #162543, cyan accent #009FD9 only on borders/backgrounds, never as text on white).
  */
-export const tr=(locale:string)=>(es:string,en:string)=>locale==='en'?en:es;
+export const tr=(locale:string)=>(es:string,en:string)=>({es,en})[idiomaDe(locale)];
 export const focusRing='focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]';
 export const primaryButton=`inline-flex min-h-11 w-full items-center justify-center rounded-full bg-[#162543] px-5 font-semibold text-white disabled:opacity-60 ${focusRing}`;
 export const secondaryButton=`inline-flex min-h-11 w-full items-center justify-center rounded-full border border-[#162543] bg-white px-5 font-semibold text-[#162543] disabled:opacity-60 ${focusRing}`;
@@ -17,7 +18,7 @@ export function ListingGallery({photos,title,locale}:{photos:PublicListingPhoto[
  if(!count)return <div data-listing-gallery="empty" className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-2 rounded-2xl bg-[#EBF5FB] text-[#162543]">
   <ImageOff aria-hidden className="size-8"/><p className="text-sm">{t('El vendedor aún no agregó fotos.','The seller has not added photos yet.')}</p></div>;
  const go=(i:number)=>setIndex((i+count)%count),photo=photos[index];
- const alt=(p:PublicListingPhoto,i:number)=>(locale==='en'?p.altEn:p.altEs)??`${title} — ${t('foto','photo')} ${i+1}`;
+ const alt=(p:PublicListingPhoto,i:number)=>({es:p.altEs,en:p.altEn})[idiomaDe(locale)]??`${title} — ${t('foto','photo')} ${i+1}`;
  const onKey=(e:KeyboardEvent)=>{if(e.key==='ArrowRight'){e.preventDefault();go(index+1);}else if(e.key==='ArrowLeft'){e.preventDefault();go(index-1);}};
  return <section aria-roledescription="carousel" aria-label={t('Fotos del anuncio','Listing photos')} data-listing-gallery={count} className="space-y-2" onKeyDown={onKey}>
   <div className="relative overflow-hidden rounded-2xl bg-slate-100">
@@ -68,7 +69,7 @@ export function LocationLine({listing,locale,approximateNote}:{listing:PublicLis
 
 export function SellerBlock({listing,locale}:{listing:PublicListing;locale:string}){
  const t=tr(locale),business=listing.sellerKind==='business';
- const href=listing.placeSlug?`${locale==='en'?'/en':''}/lugar/${listing.placeSlug}`:null;
+ const href=listing.placeSlug?rutaConIdioma(locale,`/lugar/${listing.placeSlug}`):null;
  return <section aria-labelledby="listing-seller" data-listing-seller={listing.sellerKind} className="space-y-2 rounded-2xl border border-[#d7e1ea] p-5">
   <h2 id="listing-seller" className="text-lg font-bold">{t('Quién vende','Seller')}</h2>
   <p className="flex items-center gap-2 font-semibold">{business?<Store aria-hidden className="size-5"/>:<User aria-hidden className="size-5"/>}
@@ -112,7 +113,7 @@ export function ListingFooter({listing,locale,reportHref}:{listing:PublicListing
  return <footer className="space-y-2 border-t border-[#d7e1ea] pt-6 text-sm text-slate-700">
   <p>{t('Código del anuncio','Listing code')}: <span className="font-mono font-semibold text-[#162543]">{listing.code.toUpperCase()}</span>
    {listing.publishedAt&&<> · {t('Publicado el','Published on')} {formatDate(listing.publishedAt,locale)}</>}</p>
-  <p>{t('El orden de los anuncios en ContrataCR no depende de pagos.','Listing order on ContrataCR never depends on payment.')} <a className={`underline underline-offset-2 ${focusRing}`} href={locale==='en'?'/en/como-ordenamos':'/como-ordenamos'}>{t('Cómo ordenamos','How we rank')}</a></p>
+  <p>{t('El orden de los anuncios en ContrataCR no depende de pagos.','Listing order on ContrataCR never depends on payment.')} <a className={`underline underline-offset-2 ${focusRing}`} href={rutaConIdioma(locale,'/como-ordenamos')}>{t('Cómo ordenamos','How we rank')}</a></p>
   <p><a className={`inline-flex min-h-11 items-center underline underline-offset-2 ${focusRing}`} href={reportHref} data-listing-report rel="nofollow">{t('Reportar este anuncio','Report this listing')}</a></p>
  </footer>;
 }

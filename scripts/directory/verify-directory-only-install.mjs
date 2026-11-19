@@ -32,6 +32,7 @@ export const DIRECTORY_ONLY_SQL=Object.freeze([
  'directory-events-local.sql',
  'directory-brands-local.sql',
  'directory-place-photos-local.sql',
+ 'price-overview-local.sql',
 ]);
 if(process.argv.includes('--print')){DIRECTORY_ONLY_SQL.forEach((f,i)=>console.log(String(i+1).padStart(2)+' '+f));process.exit(0);}
 

@@ -1,4 +1,10 @@
 {
+  "directoryRoutes": {
+    "listsTitle": "Mis listas",
+    "reservationsTitle": "Mis reservas",
+    "reservationTitle": "Mi reserva",
+    "reviewAuthorFallback": "Persona usuaria de ContrataCR"
+  },
   "moderation": {
     "reportReview": "Reportar reseña",
     "reportMessage": "Reportar mensaje y bloquear",
@@ -79,6 +85,9 @@
     "searchProfessionals": "Buscar profesionales"
   },
   "header": {
+    "searchServicesAndPlaces": "Servicios y lugares",
+    "searchServiceLabel": "Servicio",
+    "searchServicesLabel": "Servicios",
     "tools": "Herramientas",
     "freeTools": "Herramientas gratis",
     "createResume": "Crear currículum",
@@ -354,6 +363,7 @@
     "useMyLocation": "Usar mi ubicación"
   },
   "workplacesPicker": {
+    "mapUnavailableShort": "Su navegador no pudo mostrar el mapa. Puede agregar el lugar igual con provincia y cantón.",
     "localPinRequired": "Marque el lugar donde recibe clientes.",
     "editPlace": "Editar ubicación",
     "savePlace": "Actualizar ubicación",
@@ -2821,6 +2831,8 @@
   "landing": {
     "hero": {
       "searchPlaceholder": "¿Qué servicio está buscando?",
+      "servicesLabel": "Servicios",
+      "serviceLabel": "Servicio",
       "searchPlaceholderShort": "¿Qué necesita?",
       "buscaPrefijo": "Busque",
       "pidePrefijo": "¿No sabe a quién llamar?",
@@ -3785,5 +3797,68 @@
     "hint": "Usted confirma cada cita. Pausar no cambia las citas existentes.",
     "retry": "Reintentar cambio",
     "refresh": "Actualizar"
+  },
+  "ProRouteCopy": {
+    "estimatesTitle": "Cotizaciones | ContrataCR",
+    "myProjectTitle": "Mi proyecto | ContrataCR",
+    "subcontractorTitle": "Mis obras como subcontratista | ContrataCR",
+    "joinJobTitle": "Unirse a un proyecto | ContrataCR",
+    "electronicTicket": "Tiquete electrónico",
+    "electronicInvoice": "Factura electrónica",
+    "loadingPro": "Cargando Pro…",
+    "closeDialog": "Cerrar diálogo"
+  },
+  "ProQuoteModalCopy": {
+    "numberAbbr": "N.º",
+    "responseUnverified": "No se pudo comprobar la respuesta. Compruebe el mismo intento antes de salir.",
+    "checkSavedResult": "Comprobar guardado",
+    "checkBeforeLeaving": "Compruebe el guardado antes de salir.",
+    "draftNotSaved": "No se pudo guardar el borrador en este dispositivo. Reintente antes de enviar.",
+    "checkPreviousAttempt": "Compruebe el intento anterior antes de editar. Reintentar no creará otra cotización."
+  },
+  "ProCatalogCopy": {
+    "customerRecoveryBlocked": "No se pudo leer el guardado del cliente. Recargue para reintentar.",
+    "inventoryRecoveryBlocked": "No se pudo leer el guardado de inventario. Recargue para reintentar.",
+    "customerNotSaved": "No se guardó el cliente. Revise los datos y reintente.",
+    "customerSavedNewer": "Cliente guardado. Se muestra una versión más reciente.",
+    "customerSaved": "Cliente guardado.",
+    "checkBeforeContinuing": "Compruebe el guardado antes de continuar.",
+    "inventoryNotSaved": "No se guardó el inventario. Revise los datos y reintente.",
+    "itemSavedNewer": "Artículo guardado. Se muestra una versión más reciente.",
+    "itemSaved": "Artículo guardado."
+  },
+  "ClientSurfaceCopy": {
+    "idTaken": "Esta identificacion ya esta registrada. Inicie sesion.",
+    "emailPlaceholder": "nombre@correo.com",
+    "activityError": "No se pudo completar la acción",
+    "receivedQuotes": "Cotizaciones recibidas",
+    "noPublicRequests": "No ha publicado solicitudes. ¿Necesita otro profesional?"
+  },
+  "ProRegistrationCopy": {
+    "backToLead": "Volver a solicitud",
+    "businessNameOnly": "Mostrar solo nombre comercial"
+  },
+  "ProPanelCopy": {
+    "toolsUnavailable": "Estas herramientas no están disponibles para esta cuenta.",
+    "accessCheckFailed": "No se pudo comprobar el acceso a estas herramientas. Intente de nuevo.",
+    "retry": "Reintentar",
+    "back": "Volver",
+    "offerServices": "Ofrecer mis servicios",
+    "photoOptions": "Opciones de foto de perfil",
+    "viewPhoto": "Ver foto",
+    "changePhoto": "Cambiar foto",
+    "addPhoto": "Agregar foto",
+    "removePhoto": "Eliminar foto",
+    "profilePhoto": "Foto de perfil",
+    "close": "Cerrar",
+    "viewPublicProfile": "Ver perfil público",
+    "viewProfile": "Ver perfil",
+    "share": "Compartir",
+    "panelLoadFailed": "No pudimos cargar su panel",
+    "panelLoadHint": "Intente de nuevo. Si continúa, contacte soporte para revisar su perfil profesional.",
+    "tryAgain": "Intentar de nuevo",
+    "signOut": "Salir",
+    "services": "Servicios",
+    "workPhotos": "Casos de éxito"
   }
 }

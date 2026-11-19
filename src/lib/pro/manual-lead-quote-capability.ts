@@ -1,4 +1,5 @@
 import {z} from 'zod';
+import {prefijoDeIdioma} from '@/lib/prefijo-de-idioma';
 
 export const manualLeadQuoteCapabilitySchema=z.union([
  z.object({issuerKind:z.literal('professional'),canCreateLegacy:z.literal(true),reason:z.null()}).strict(),
@@ -18,6 +19,6 @@ export function parseQuoteProfileReturn(path:unknown,account:unknown):{path:stri
 }
 export function buildQuoteProfileSetupPath(locale:string,account:string,sourcePath:string):string|null{
  const target=parseQuoteProfileReturn(sourcePath,account);if(!target)return null;
- const prefix=locale==='en'?'/en':locale==='es'?'/es':'';
+ const prefix=locale==='es'?'/es':prefijoDeIdioma(locale);
  return prefix+'/registro/profesional?'+new URLSearchParams({quoteReturnTo:target.path,quoteReturnActor:target.account});
 }

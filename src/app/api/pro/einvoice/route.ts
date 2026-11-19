@@ -5,6 +5,8 @@ import {sendTransactionalEmail,settleTransactionalEmail,transactionalBusinessNam
 import {einvoiceMutationSchema,einvoiceReadSchema} from '@/lib/pro/integrations/hacienda/api';
 import {buildFromDraft,blankEmisor,type EmisorSettings} from '@/lib/pro/integrations/hacienda/document';
 import {EinvoiceError,creditNote,documentFull,emitFromDraft,haciendaMode,loadDraft,pollDocument,readForDraft,saveSettings} from '@/lib/pro/integrations/hacienda/service';
+import {prefijoDeIdioma} from '@/lib/prefijo-de-idioma';
+import {getTranslations} from 'next-intl/server';
 
 // Round 6A: Hacienda electronic invoices from a draft. GET ?draftId= (documents, validation per type, mode)
 // · GET ?view=settings (emisor data). POST emit | poll | credit_note | save_settings. Mock by default; the
@@ -60,8 +62,9 @@ export async function POST(req:Request){
    // Launch fix I5: tell the receiver (e-mail typed on the draft) that the invoice was issued — mock outbox by
    // default, idempotent per document, never blocks or fails the emission. No XML or attachment is sent.
    const issued=['enviado','recibido','aceptado'].includes(doc.status),locale=transactionalEmailLocaleOf(req);
+   const tx=await getTranslations({locale,namespace:'ProRouteCopy'});
    const email=issued?await settleTransactionalEmail(async()=>sendTransactionalEmail({kind:'invoice_issued',eventId:doc.id,to:doc.snapshot?.receptor?.email,locale,actorId:a.user.id,revealRecipient:true,
-    data:{actorName:await transactionalBusinessName(a.db,a.user.id),subjectName:(doc.docType==='04'?(locale==='en'?'Electronic ticket ':'Tiquete electrónico '):(locale==='en'?'Electronic invoice ':'Factura electrónica '))+doc.consecutivo,link:proRequestOrigin(req)+(locale==='en'?'/en':'')+'/dashboard/profesional?tab=sent_projects&mode=use'}})):null;
+    data:{actorName:await transactionalBusinessName(a.db,a.user.id),subjectName:(doc.docType==='04'?tx('electronicTicket'):tx('electronicInvoice'))+' '+doc.consecutivo,link:proRequestOrigin(req)+prefijoDeIdioma(locale)+'/dashboard/profesional?tab=sent_projects&mode=use'}})):null;
    return Response.json({document:light(doc),...(email?{email}:{})},{headers});
   }
   if(body.action==='poll')return Response.json({document:light(await pollDocument(a.db,a.user.id,body))},{headers});

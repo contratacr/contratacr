@@ -28,6 +28,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useCachedResource } from "@/hooks/use-cached-resource";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { PanelEmptyState, PanelFilterEmpty, PanelListSkeleton } from "@/components/ui/content-loading";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 
 /**
  * Shared "acting as a client" activity views — the user's PUBLISHED projects
@@ -89,9 +90,10 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
   const tSub = useTranslations("proPanel.subtitles");
   const tEtapas = useTranslations("statusTabs");
   const locale = useLocale();
+  const cs = useTranslations("ClientSurfaceCopy");
   const searchParams = useSearchParams();
   const { dialogNode, showMessage } = useAppDialog();
-  const errorTitle = locale === "en" ? "Something went wrong" : "No se pudo completar la acción";
+  const errorTitle = cs("activityError");
 
   // Rows come from the shared cache: a return to this tab paints what was here
   // before and refreshes quietly. Keys match the notification prefetch, so a
@@ -322,9 +324,9 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
             <div className="flex flex-wrap items-center gap-2">
             {process.env.NODE_ENV === "development" && ["http://127.0.0.1:54321", "http://127.0.0.1:54321/"].includes(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "") && user && <Button type="button" variant="outline" data-received-estimates-link disabled={showPublish || !!editandoProyecto || deleting || cancellingProject || !!deleteTarget || !!cancelProjectTarget} onClick={() => {
               if (showPublish || editandoProyecto || deleting || cancellingProject || deleteTarget || cancelProjectTarget) return;
-              const path = (locale === "en" ? "/en" : "") + "/dashboard/cotizaciones";
+              const path = prefijoDeIdioma(locale) + "/dashboard/cotizaciones";
               if (window.dispatchEvent(new CustomEvent(PRO_BEFORE_PATH_CHANGE, {cancelable: true, detail: {path}}))) window.location.assign(path);
-            }}>{locale === "en" ? "Received quotes" : "Cotizaciones recibidas"}</Button>}
+            }}>{cs("receivedQuotes")}</Button>}
             {projects.length > 0 && (
               <button
                 type="button"
@@ -342,7 +344,7 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
             // Round 7B: a customer who follows a job with a professional has not
             // «asked for no professional»; offer publishing without contradicting it.
             <div data-client-projects-none-published className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#e5e7eb] bg-white p-4">
-              <p className="text-sm text-[#52627a]">{locale === "en" ? "You have not posted any public request. Need another professional?" : "No ha publicado solicitudes. ¿Necesita otro profesional?"}</p>
+              <p className="text-sm text-[#52627a]">{cs("noPublicRequests")}</p>
               <Button type="button" variant="outline" onClick={() => setShowPublish(true)}>{t("publishProject")}</Button>
             </div>
           ) : projects.length === 0 ? (

@@ -240,6 +240,7 @@ function SuggestionsDropdown({
   onPickPlace?: (p: DirectorySectionSuggestion) => void;
   locale?: string;
 }) {
+  const t = useTranslations("landing.hero");
   const show = open && (suggestions.length > 0 || places.length > 0);
   const pos = useAnchoredRect(anchorRef, show, 240);
   if (!show || !pos || typeof document === "undefined") return null;
@@ -266,7 +267,7 @@ function SuggestionsDropdown({
       role="listbox"
     >
       {placeRows}
-      {placeRows && visibles.length > 0 && <SuggestionGroupLabel>{locale === "en" ? "Services" : "Servicios"}</SuggestionGroupLabel>}
+      {placeRows && visibles.length > 0 && <SuggestionGroupLabel>{t("servicesLabel")}</SuggestionGroupLabel>}
       {visibles.map((s, i) => (
         <button
           key={`c-${s.id}`}
@@ -287,7 +288,7 @@ function SuggestionsDropdown({
           </span>
           {!placeRows && (
             <span className="text-[10px] uppercase tracking-wide text-gray-300 shrink-0">
-              {locale === "en" ? "Service" : "Servicio"}
+              {t("serviceLabel")}
             </span>
           )}
         </button>

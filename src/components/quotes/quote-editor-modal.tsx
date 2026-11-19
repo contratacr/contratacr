@@ -71,6 +71,7 @@ export function QuoteEditorModal({ open, onClose, projectId, defaultTitle, clien
 }) {
   const t = useTranslations("quotes");
   const locale = useLocale();
+  const qc = useTranslations("ProQuoteModalCopy");
   const forms=useTranslations("ProForms"),proForm=proRemote||!!proData;
   const suelta = !projectId&&!sourceRequestId;
   const [clientActionId,setClientActionId]=useState(initialClientActionId??crypto.randomUUID());
@@ -107,7 +108,7 @@ export function QuoteEditorModal({ open, onClose, projectId, defaultTitle, clien
   const [error, setError] = useState<string | null>(null);
   const hasProCreate=!!onProCreate;
   const requestBlocked=(!!sourceRequestId&&(sending||requestPending))||(!!onProCreate&&(sending||proCreationPending));
-  const warnRequest=()=>setError(locale==='en'?'Check the saved result before leaving.':'Compruebe el guardado antes de salir.');
+  const warnRequest=()=>setError(qc("checkBeforeLeaving"));
   useEffect(()=>{
     if(!requestBlocked)return;
     const path=currentProPath(),state={...window.history.state};
@@ -191,7 +192,7 @@ export function QuoteEditorModal({ open, onClose, projectId, defaultTitle, clien
       if(!quote){
       if(sourceRequestId){
         const stored=onProDraftChange?.({cedula,clientName,clientPhone,clientEmail,title,rows:rows.map(({description,quantity,unit_price})=>({description,quantity,unit_price})),taxMode,notes,validDays,proClientId,clientActionId,requestPending:true});
-        if(stored===false){setError(locale==='en'?'Your draft could not be saved on this device. Retry before sending.':'No se pudo guardar el borrador en este dispositivo. Reintente antes de enviar.');return;}
+        if(stored===false){setError(qc("draftNotSaved"));return;}
         setRequestPending(true);
       }
       const res = await fetch("/api/quotes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ projectId, ...(sourceRequestId?{sourceRequestId,clientActionId}:{}), ...(proRemote&&projectId?{proProjectContext:true}:{}), clientName, clientPhone, clientEmail, clientCedula: cleanId(cedula), title, items, taxMode, notes, validDays }) });
@@ -232,12 +233,12 @@ export function QuoteEditorModal({ open, onClose, projectId, defaultTitle, clien
             {t("cancel")}
           </Button>
           <Button type="button" size="lg" className="w-full sm:w-auto sm:px-8" onClick={() => void enviar()} disabled={sending || !listo} loading={sending}>
-            {sending ? (suelta ? t("creating") : t("sending")) : (sourceRequestId&&requestPending||proCreationPending) ? (locale==='en'?'Check saved result':'Comprobar guardado') : (suelta ? t("create") : t("send"))}
+            {sending ? (suelta ? t("creating") : t("sending")) : (sourceRequestId&&requestPending||proCreationPending) ? qc("checkSavedResult") : (suelta ? t("create") : t("send"))}
           </Button>
         </>
       )}>
       {proNotice}
-      {(sourceRequestId&&requestPending||proCreationPending)&&!sending&&<p role="status" className="text-sm text-[#52627a]">{locale==='en'?'Check the previous attempt before editing. Retrying will not create another quote.':'Compruebe el intento anterior antes de editar. Reintentar no creará otra cotización.'}</p>}
+      {(sourceRequestId&&requestPending||proCreationPending)&&!sending&&<p role="status" className="text-sm text-[#52627a]">{qc("checkPreviousAttempt")}</p>}
       {archivedCustomer&&<p role="alert" className="text-sm text-red-700">{t("proArchivedCustomer")}</p>}
       <fieldset disabled={!!createdQuote||requestPending||proCreationPending||sending} className="flex min-w-0 flex-col gap-3.5 sm:gap-4">
         {/* 1 · Para quién. Desde una cita o un proyecto el cliente ya se sabe:

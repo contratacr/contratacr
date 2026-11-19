@@ -44,6 +44,7 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
 }) {
   const t = useTranslations("quotes");
   const locale = useLocale();
+  const qc = useTranslations("ProQuoteModalCopy");
   const projectCopy=useTranslations("ProProjectJourney"),responseLock=useRef(false);
   const { dialogNode, confirm, showMessage } = useAppDialog();
   const [busy, setBusy] = useState(false);
@@ -104,7 +105,7 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
   // Recién creada o reabierta, la cabecera dice lo mismo: el número, que es lo
   // que identifica el documento. «Lista para enviar» + dos renglones de
   // explicación eran tres líneas de cabecera, y hablaban de citas que ya no hay.
-  const titulo = <span className="block truncate">{quote.quote_number ? `${t("rowQuote")} ${locale === "en" ? "No." : "N.º"} ${numeroCotizacion(quote)}` : (quote.title || t("detailTitle"))}</span>;
+  const titulo = <span className="block truncate">{quote.quote_number ? `${t("rowQuote")} ${qc("numberAbbr")} ${numeroCotizacion(quote)}` : (quote.title || t("detailTitle"))}</span>;
   // La cabecera decía número + cliente + trabajo, y en el teléfono se comía tres
   // renglones. El profesional ya sabe de quién es (la abrió desde su lista) y el
   // trabajo se lee en las líneas; al cliente sí le hace falta de quién viene.
@@ -134,7 +135,7 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
         footer={role === "pro" && abierta ? (
           <BotonCompartirCotizacion quote={quote} proName={proName ?? quote.professional_name ?? ""} proSlug={proSlug} className="min-w-0 flex-1 sm:w-auto sm:flex-none" />
         ) : role === "client" && process.env.NODE_ENV==='development' && (quote.project_id||requestQuote) && (abierta||uncertain) ? (
-          <div className="flex w-full flex-wrap gap-2">{uncertain?<><p role="alert" className="w-full text-sm">{locale==='en'?'The response could not be verified. Check the same attempt before leaving.':'No se pudo comprobar la respuesta. Compruebe el mismo intento antes de salir.'}</p><Button disabled={busy} onClick={()=>void respond(pendingResponse.current?.action??'accept')}>{locale==='en'?'Check saved result':'Comprobar guardado'}</Button></>:<><Button disabled={busy} onClick={()=>void respond('accept')}>{t("accept")}</Button><Button variant="secondary" disabled={busy} onClick={()=>void respond('decline')}>{t("decline")}</Button></>}</div>
+          <div className="flex w-full flex-wrap gap-2">{uncertain?<><p role="alert" className="w-full text-sm">{qc("responseUnverified")}</p><Button disabled={busy} onClick={()=>void respond(pendingResponse.current?.action??'accept')}>{qc("checkSavedResult")}</Button></>:<><Button disabled={busy} onClick={()=>void respond('accept')}>{t("accept")}</Button><Button variant="secondary" disabled={busy} onClick={()=>void respond('decline')}>{t("decline")}</Button></>}</div>
         ) : role === "client" ? (
           <BotonDescargarCotizacion quote={quote} proName={quote.professional_name ?? ""} className="w-full sm:w-auto" />
         ) : undefined}

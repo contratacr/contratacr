@@ -559,9 +559,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
           )}
         </div>
       ) : (
-        (mode === "local" || !mode) && canton && <p className="text-xs text-[#68778d]">{locale === "en"
-          ? "Your browser could not show the map. You can still add the place with province and canton."
-          : "Su navegador no pudo mostrar el mapa. Puede agregar el lugar igual con provincia y cantón."}</p>
+        (mode === "local" || !mode) && canton && <p className="text-xs text-[#68778d]">{t("mapUnavailableShort")}</p>
       )}
 
       {/* 3 - Agregar ESTA zona: solo aparece con una provincia elegida. Sin

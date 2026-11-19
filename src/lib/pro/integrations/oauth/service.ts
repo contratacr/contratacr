@@ -5,6 +5,7 @@ import type {IntegrationMode} from '../registry';
 import {newState,open,pkceChallenge,pkcePair,seal,stateHash,VaultError,type VaultKeyId} from './vault';
 import {mockAuthorizeUrl,mockExchange,MockOAuthError,mockTokens} from './mock';
 import {oauthClient,oauthEndpoints,type OAuthProvider} from './providers';
+import {prefijoDeIdioma} from '@/lib/prefijo-de-idioma';
 
 /**
  * Round 6B: OAuth connection flow shared by Google, Microsoft and QuickBooks.
@@ -38,7 +39,7 @@ const jwtEmail=(idToken:unknown)=>{try{const part=String(idToken).split('.')[1];
 export async function finishConnection(db:Db,sessionUser:string|null,query:{state?:string;code?:string;error?:string;realmId?:string},origin:string){
  if(!query.state)throw new OAuthError(400,'pro_oauth_state','Falta el estado.');
  const s=await rpc<Consumed>(db,'pro_oauth_consume',{p_state_hash:stateHash(query.state)});
- const back=(result:string)=>`${origin}${s.locale==='en'?'/en':'/es'}/dashboard/pro?`+new URLSearchParams({tab:'pro_company',empresa:s.view,oauth:result,proveedor:s.provider});
+ const back=(result:string)=>`${origin}${prefijoDeIdioma(s.locale)||'/es'}/dashboard/pro?`+new URLSearchParams({tab:'pro_company',empresa:s.view,oauth:result,proveedor:s.provider});
  if(!sessionUser||sessionUser!==s.ownerId)throw new OAuthError(403,'pro_oauth_owner','La conexión pertenece a otra cuenta.');
  if(query.error||!query.code){await rpc(db,'pro_oauth_note',{p_actor:s.ownerId,p_provider:s.provider,p_mode:s.mode,p_action:'denied',p_detail:{reason:String(query.error||'no_code').slice(0,60)}});return back('denied');}
  const verifier=open(s.verifierBox),started=Date.now();

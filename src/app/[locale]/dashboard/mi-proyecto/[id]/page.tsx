@@ -5,8 +5,10 @@ import {safeGetUser} from '@/lib/supabase/get-user';
 import {createAdminClient} from '@/lib/supabase/admin';
 import {isClientProjectId} from '@/lib/pro/client-project-route';
 import {ClientProjectPage} from '@/components/pro/client-project-page';
+import {prefijoDeIdioma} from '@/lib/prefijo-de-idioma';
+import {getTranslations} from 'next-intl/server';
 export const dynamic='force-dynamic';
-export async function generateMetadata({params}:{params:Promise<{locale:string}>}):Promise<Metadata>{const {locale}=await params;return{title:locale==='en'?'My project | ContrataCR':'Mi proyecto | ContrataCR',robots:{index:false,follow:false},referrer:'no-referrer'};}
+export async function generateMetadata({params}:{params:Promise<{locale:string}>}):Promise<Metadata>{const {locale}=await params;const t=await getTranslations({locale,namespace:'ProRouteCopy'});return{title:t('myProjectTitle'),robots:{index:false,follow:false},referrer:'no-referrer'};}
 /**
  * Fix 14: «Mi proyecto» / «My project» — the linked customer's job as its own page (Back and deep links work).
  * Development only, like the Pro job page. The server checks with the appointment detail reader that the
@@ -15,7 +17,7 @@ export async function generateMetadata({params}:{params:Promise<{locale:string}>
  */
 export default async function ClientProject({params}:{params:Promise<{locale:string;id:string}>}){
  if(process.env.NODE_ENV!=='development')notFound();
- const {locale,id}=await params,prefix=locale==='en'?'/en':'';
+ const {locale,id}=await params,prefix=prefijoDeIdioma(locale);
  let requestId:string;try{requestId=decodeURIComponent(id);}catch{notFound();}
  if(!isClientProjectId(requestId))notFound();
  const user=await safeGetUser(await createClient());

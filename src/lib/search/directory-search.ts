@@ -1,4 +1,5 @@
 import { VERTICAL_VOCABULARY, matchVerticals, normalizeIntentText, type DirectoryVertical } from "@/lib/directory/vertical-vocabulary";
+import { idiomaDe } from "@/lib/prefijo-de-idioma";
 import { PROVINCES } from "@/lib/data/cr-geography";
 
 // ONE SEARCH FOR EVERYTHING (owner, 2026-11-19, Yelp style): the header/home
@@ -28,14 +29,18 @@ export const DIRECTORY_SECTION_LABELS: Record<string, { es: string; en: string }
 
 export function directorySectionLabel(section: string, locale: string): string {
   const label = DIRECTORY_SECTION_LABELS[section];
-  return label ? (locale === "en" ? label.en : label.es) : section;
+  return label ? label[idiomaDe(locale)] : section;
 }
+
+const PLACEHOLDER_CLASSIC = { es: "¿Qué servicio está buscando?", en: "What service are you looking for?" };
+const PLACEHOLDER_SHORT = { es: "Servicios, restaurantes...", en: "Services, restaurants..." };
+const PLACEHOLDER_FULL = { es: "Servicios, restaurantes, farmacias...", en: "Services, restaurants, pharmacies..." };
 
 /** Placeholder of the unified search field (directory on) or the classic one. */
 export function unifiedSearchPlaceholder(locale: string, directoryOn: boolean, short = false): string {
-  if (!directoryOn) return locale === "en" ? "What service are you looking for?" : "¿Qué servicio está buscando?";
-  if (short) return locale === "en" ? "Services, restaurants..." : "Servicios, restaurantes...";
-  return locale === "en" ? "Services, restaurants, pharmacies..." : "Servicios, restaurantes, farmacias...";
+  const l = idiomaDe(locale);
+  if (!directoryOn) return PLACEHOLDER_CLASSIC[l];
+  return (short ? PLACEHOLDER_SHORT : PLACEHOLDER_FULL)[l];
 }
 
 const termsBySection = new Map<string, string[]>();

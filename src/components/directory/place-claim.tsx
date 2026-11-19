@@ -1,4 +1,5 @@
 'use client';
+import {rutaConIdioma} from '@/lib/prefijo-de-idioma';
 import {useRef,useState,useSyncExternalStore} from 'react';
 import {ClaimReviewed} from './place-claim-reviewed';
 import {claimBenefits} from '@/lib/directory/place-verticals';
@@ -82,7 +83,7 @@ export function PlaceClaim({slug,locale,loginHref,choices={emailListed:null,webs
   <h2 id="place-claim" className="text-lg font-bold">{t('¿Es su negocio? Reclámelo gratis','Is this your business? Claim it for free')}</h2>
   {step.kind==='done'
    ?<div role="status" data-place-claim-done className="space-y-3"><p>{t('Listo: usted ya administra esta ficha. Desde "Mi negocio" puede actualizar sus datos, horario y más, gratis.','Done: you now manage this listing. From "My business" you can update your details, hours and more, for free.')}</p>
-    <a data-place-claim-manage href={(locale==='en'?'/en':'')+'/dashboard/negocio'} className={button}>{t('Abrir Mi negocio','Open My business')}</a></div>
+    <a data-place-claim-manage href={rutaConIdioma(locale,'/dashboard/negocio')} className={button}>{t('Abrir Mi negocio','Open My business')}</a></div>
    :<>
     {step.kind==='idle'&&<div className="space-y-2 rounded-xl border border-[#cfe3ee] bg-white p-4" data-claim-benefits>
      <h3 className="font-semibold">{t('¿Qué gana al reclamar su negocio?','What do you get by claiming your business?')}</h3>

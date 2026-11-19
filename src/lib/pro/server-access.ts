@@ -6,10 +6,11 @@ import { requireAdmin } from '@/lib/auth/admin';
 import { cookies } from 'next/headers';
 import { hasProAccess, proBannedFlag } from './access';
 import { PRO_WS_COOKIE } from './workspace-gate';
+import {prefijoDeIdioma} from '@/lib/prefijo-de-idioma';
 export async function requirePro(options?:{returnTo:string;locale:string}) {
  const user = await safeGetUser(await createClient());
- if (!user) redirect(options?(options.locale==='en'?'/en':'')+'/login?redirect='+encodeURIComponent(options.returnTo):'/login');
- const deniedTarget=options?(options.locale==='en'?'/en':'')+'/dashboard/profesional?tab=home':'/dashboard';
+ if (!user) redirect(options?prefijoDeIdioma(options.locale)+'/login?redirect='+encodeURIComponent(options.returnTo):'/login');
+ const deniedTarget=options?prefijoDeIdioma(options.locale)+'/dashboard/profesional?tab=home':'/dashboard';
  const db = createAdminClient();
  const [{ data: profile, error }, banned] = await Promise.all([db.from('profiles').select('role,is_disabled,is_provider').eq('id', user.id).maybeSingle(), proBannedFlag(db, user.id)]);
  // Mirrors SQL pro_entitled: a banned/suspended professional (or an unreadable ban flag) never enters Pro, admin included.

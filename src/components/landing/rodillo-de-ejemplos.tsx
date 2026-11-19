@@ -1,5 +1,6 @@
 "use client";
 
+import { idiomaDe } from "@/lib/prefijo-de-idioma";
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { getAllCategories, getCategoryLabel } from "@/lib/data/categories";
@@ -34,7 +35,7 @@ export function RodilloDeEjemplos({ quieto = false, className }: { quieto?: bool
   const [vuelta, setVuelta] = useState(0);
   const [lista, setLista] = useState<string[] | null>(null);
   const { directorySections } = useSiteFeatures();
-  const lugaresActivos = LUGARES_DE_EJEMPLO.filter((l) => directorySections.includes(l.section)).map((l) => (locale === "en" ? l.en : l.es)).join("|");
+  const lugaresActivos = LUGARES_DE_EJEMPLO.filter((l) => directorySections.includes(l.section)).map((l) => l[idiomaDe(locale)]).join("|");
   useEffect(() => {
     const vivos = new Set(getAllCategories().map((c) => c.id));
     const nombres = oficiosDeArranque().filter((id) => vivos.has(id)).slice(0, 8)

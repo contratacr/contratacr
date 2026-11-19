@@ -1,5 +1,6 @@
 import {z} from 'zod';
 import type {ProEdition} from './editions';
+import {prefijoDeIdioma} from "@/lib/prefijo-de-idioma";
 // Same list as PRO_EDITIONS (editions.ts); kept import-free so the node unit test can load this module directly.
 const PRO_EDITIONS=['servicios','autos','restaurantes','bienes_raices','comercio'] as const satisfies readonly ProEdition[];
 const isProEdition=(v:unknown):v is ProEdition=>typeof v==='string'&&(PRO_EDITIONS as readonly string[]).includes(v);
@@ -65,5 +66,5 @@ export const MODULE_COPY:Record<string,{es:string;en:string}>={
 };
 /** Pro space address of the edition picker, optionally preselecting an edition («Menú» → Restaurantes). */
 export function editionSettingsPath(locale:string,suggest?:ProChoosableEdition){
- return (locale==='en'?'/en':'')+'/dashboard/pro?'+new URLSearchParams({tab:'pro_editions',...(suggest?{edicion:suggest}:{})});
+ return prefijoDeIdioma(locale)+'/dashboard/pro?'+new URLSearchParams({tab:'pro_editions',...(suggest?{edicion:suggest}:{})});
 }
