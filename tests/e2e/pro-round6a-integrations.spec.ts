@@ -87,11 +87,14 @@ for(const language of ['es','en'] as const)test(`Round 6A: integrations page and
   // Gaps 2026-11-17: the receiver e-mail outcome the route returns is shown (mock: nothing delivered, PDF hand-off).
   const mail=panel.locator('[data-einvoice-email]');await expect(mail).toHaveAttribute('data-transactional-email',/^mock:(recorded|no_recipient)$/);
   await expect(mail).toContainText(en?'Print or PDF':'Imprimir o PDF');
+  // Ronda F2-A: Hacienda answers asynchronously — first query «procesando», the next one the final state.
+  await doc.locator('[data-einvoice-poll]').click();
+  await expect(doc.locator('[data-einvoice-status]')).toHaveAttribute('data-einvoice-status','procesando',{timeout:60000});
   await doc.locator('[data-einvoice-poll]').click();
   await expect(doc.locator('[data-einvoice-status]')).toHaveAttribute('data-einvoice-status','aceptado',{timeout:60000});
   const clave=(await doc.locator('[data-einvoice-clave]').textContent())!.trim();
   expect(clave).toMatch(/^506\d{6}003101123456001000010100000000011\d{8}$/);
-  await expect(doc.locator('[data-einvoice-events] li')).toHaveText(en?['Reserved (unsigned)','Signed','Sent to Hacienda','Received by Hacienda','Accepted']:['Reservado (sin firmar)','Firmado','Enviado a Hacienda','Recibido por Hacienda','Aceptado']);
+  await expect(doc.locator('[data-einvoice-events] [data-event-label]')).toHaveText(en?['Reserved (unsigned)','Signed','Sent to Hacienda','Received by Hacienda','Processing at Hacienda','Accepted']:['Reservado (sin firmar)','Firmado','Enviado a Hacienda','Recibido por Hacienda','En proceso en Hacienda','Aceptado']);
   await expectNoHorizontalOverflow(page);await doc.scrollIntoViewIfNeeded();await shot(page,`r6a-einvoice-accepted-${language}`,project);
   const docs=(await (await page.request.get(origin+'/api/pro/einvoice?draftId='+d.id)).json()).documents as {id:string;clave:string;totalCents:number}[];
   expect(docs[0]!.clave).toBe(clave);expect(docs[0]!.totalCents).toBe(113000000);
@@ -116,6 +119,7 @@ for(const language of ['es','en'] as const)test(`Round 6A: integrations page and
   await credit.locator('[data-einvoice-credit-submit]').click();
   const note=panel.locator('[data-einvoice-doc="00100001030000000001"]');
   await expect(note.locator('[data-einvoice-status]')).toHaveAttribute('data-einvoice-status','recibido',{timeout:60000});
+  await note.locator('[data-einvoice-poll]').click();await expect(note.locator('[data-einvoice-status]')).toHaveAttribute('data-einvoice-status','procesando',{timeout:60000});
   await note.locator('[data-einvoice-poll]').click();await expect(note.locator('[data-einvoice-status]')).toHaveAttribute('data-einvoice-status','aceptado',{timeout:60000});
   const noteId=((await (await page.request.get(origin+'/api/pro/einvoice?draftId='+d.id)).json()).documents as {id:string;docType:string}[]).find(row=>row.docType==='03')!.id;
   const noteXml=await (await page.request.get(origin+'/api/pro/einvoice-file?'+new URLSearchParams({id:noteId,kind:'xml'}))).text();
@@ -135,8 +139,9 @@ for(const language of ['es','en'] as const)test(`Round 6A: integrations page and
   const rejected=await draft(page,f,{receiverId:'999999999',linkWork:false,title:'Receptor no inscrito'});
   const emitted=await page.request.post(origin+'/api/pro/einvoice',{headers:headersFor(f.owner),data:{action:'emit',actionId:crypto.randomUUID(),draftId:rejected.id,docType:'01'}});
   expect(emitted.status(),await emitted.text()).toBe(200);const rejectedDoc=(await emitted.json()).document;expect(rejectedDoc.consecutivo).toBe('00100001010000000002');expect(rejectedDoc).not.toHaveProperty('signedXml');
-  const polled=await page.request.post(origin+'/api/pro/einvoice',{headers:headersFor(f.owner),data:{action:'poll',actionId:crypto.randomUUID(),documentId:rejectedDoc.id}});
-  expect((await polled.json()).document.status).toBe('rechazado');
+  const poll=()=>page.request.post(origin+'/api/pro/einvoice',{headers:headersFor(f.owner),data:{action:'poll',actionId:crypto.randomUUID(),documentId:rejectedDoc.id}});
+  expect((await (await poll()).json()).document.status).toBe('procesando');
+  expect((await (await poll()).json()).document.status).toBe('rechazado');
   const freed=await rejected.read();
   expect((await page.request.post(origin+'/api/pro/invoice-drafts',{headers:headersFor(f.owner),data:{action:'update',id:rejected.id,revision:freed.revision,title:'Receptor corregido',notes:freed.notes,receiver:freed.receiver,preparation:freed.preparation}})).status()).toBe(200);
   // Other owners never see these documents.

@@ -39,6 +39,10 @@ Equivalente funcional del constructor de contratos de Houzz Pro (bloqueado en el
 | `{{fecha.hoy}}` | Fecha | Hoy en America/Costa_Rica; al compartir queda la fecha del día en que se compartió. «11 de noviembre de 2026» / «November 11, 2026» según el idioma del contrato |
 | `{{anticipo.porcentaje}}` | `30 %` / `30%` | Anticipo del contrato |
 | `{{anticipo.monto}}` | Monto | `round(total × % / 100)` con la moneda de la cotización |
+| `{{cliente.telefono}}` | Teléfono del cliente | `pro_clients.phone` (Ronda F2-B) |
+| `{{cliente.correo}}` | Correo del cliente | `pro_clients.email` (Ronda F2-B) |
+| `{{trabajo.direccion}}` | Dirección del trabajo | Igual que `{{proyecto.direccion}}` (Ronda F2-B) |
+| `{{monto.total}}` | Monto total | Igual que `{{cotizacion.total}}` (Ronda F2-B) |
 
 Se aceptan espacios dentro de las llaves (`{{ cotizacion.total }}`). Llaves simples son texto normal.
 
@@ -76,6 +80,14 @@ Borradores de la fase 2 (scratchpad `contracts-draft/`):
 - Prueba psql en transacción con `rollback` (`contracts-draft/sql/contracts-test.sql`, salida en `contracts-test.out`): replay idéntico, reuso de `actionId` (22023), campo desconocido, claves extra, CAS (40001), cotización de otro proyecto o enviada (22023), trabajo ajeno (42501), numeración CTR-0001/0002 por cuenta y otra cuenta con su propio CTR-0001, contador sin avanzar tras fallos, aislamiento (lectura nula, escritura P0002), cliente como dueño (42501), vista previa con campos sin dato, bloqueo de compartir, instantánea con hash = `sha256(content::text)`, congelada ante cambios de la cotización, edición bloqueada al compartir, sección del cliente apagada, cliente ajeno, hash erróneo (40001), nombre corto, aceptación con hora CR, replay, doble respuesta (40001), rechazo, volver a borrador, versión 2, respuesta a versión vieja (40001), anulación, inmutabilidad (23514), RLS, cero privilegios para `anon/authenticated`, formatos de dinero, porcentaje y fecha. Tras el `rollback` las tablas quedan vacías.
 - `client-dashboard-local.sql` combinado (tableros + contratos, generado con `--out`) probado en transacción con `rollback`: llamador viejo sin `showContracts` → false; encender; omitirlo conserva el valor.
 - `tsc` del scratchpad (`tsconfig.check.json` con overlay) → 0 errores; ESLint con la configuración del repositorio sobre el overlay → 0 errores y 0 advertencias. `tsc` del repositorio: 0 errores en `pro-contracts.spec.ts` (los únicos errores actuales son de `pro-credits-retainers.spec.ts` y `pro-takeoffs.spec.ts`, que importan módulos aún no copiados).
+
+## Ronda F2-B (2026-11-19): versiones de cláusulas y campos nuevos
+
+- **Versiones de la biblioteca de cláusulas.** Cada creación o edición de una cláusula ya dejaba una fila inmutable en `pro_contract_history` con el texto exacto antes y después; las versiones se leen de ahí (`pro_contract_library_clause_states`, `pro_contract_library_clause_versions`), sin una segunda copia. Archivar o restaurar no crea versión. Una cláusula antigua sin entrada de creación empieza con el texto "antes" de su primera edición; una sin historial es la versión 1. La lectura de la biblioteca agrega `version` a cada cláusula (los resultados de escritura conservan su forma).
+- `GET /api/pro/contracts?clauseId=<uuid>` devuelve hasta 100 versiones (la más reciente primero, con `current`). Empresa › Plantillas › Biblioteca muestra «Versión N», «Ver versiones (N)» y «Restaurar esta versión», que es una edición normal (`library_clause_update` con la revisión: 409 si cambió, recibo idempotente) y queda como versión nueva; los contratos ya creados no cambian (tienen su propia copia de la cláusula y `sourceClauseId`).
+- **Campos nuevos** `{{cliente.telefono}}`, `{{cliente.correo}}`, `{{trabajo.direccion}}` y `{{monto.total}}`, agregados al final de `pro_contract_field_keys()` (el orden anterior no cambia). Se resuelven en la vista previa, quedan congelados en la versión compartida y el cliente los ve ya resueltos en «Mis proyectos». Sin cotización, `{{monto.total}}` aparece en «Campos sin dato» (no se inventa un monto).
+- Pruebas: `scripts/pro/verify-pro-contract-clauses-db.mjs` (PGlite, manifiesto completo) y `tests/e2e/pro-sales-contracts-quote.spec.ts`. `pro-contracts.spec.ts` usaba `{{cliente.telefono}}` como campo desconocido: ahora usa `{{cliente.celular}}` (cambio intencional; la aserción es la misma).
+- No se registra qué versión de la cláusula de biblioteca se insertó en un contrato (solo `sourceClauseId`).
 
 ## Límites y pendientes
 

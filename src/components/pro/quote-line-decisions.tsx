@@ -4,6 +4,7 @@ import {useLocale} from 'next-intl';
 import {Button} from '@/components/ui/button';
 import {quoteLineDecisionsSchema,type QuoteLine,type QuoteLineDecisions as View} from '@/lib/pro/quote-line-decisions';
 import {privateEstimateMoney} from './private-estimate-preview';
+import {ProposalClosing,ProposalGallery,useProposalPublication} from './estimate-proposal';
 
 const api='/api/pro/quote-line-decisions';
 /**
@@ -15,6 +16,7 @@ const api='/api/pro/quote-line-decisions';
  */
 export function QuoteLineDecisions({actor,publicationId}:{actor:string;publicationId:string}){
  const en=useLocale()==='en',t=(es:string,english:string)=>en?english:es;
+ const proposal=useProposalPublication(actor,publicationId)?.proposal??null,photosOf=(target:'section'|'line',key:string)=>proposal?.images.filter(i=>i.target===target&&i.targetKey===key)??[];
  const [view,setView]=useState<View|null>(null),[error,setError]=useState(''),[failed,setFailed]=useState(false),[busy,setBusy]=useState<string|null>(null),[notes,setNotes]=useState<Record<string,string>>({}),attempts=useRef<Record<string,{key:string;id:string}>>({}),seq=useRef(0);
  const load=useCallback(async()=>{const n=++seq.current;try{const r=await fetch(api+'?'+new URLSearchParams({publicationId}),{cache:'no-store',headers:{'X-Pro-Expected-Actor':actor}});if(!r.ok)throw Error();const body=quoteLineDecisionsSchema.parse(await r.json());if(n===seq.current){setView(body);setFailed(false);}}catch{if(n===seq.current)setFailed(true);}},[actor,publicationId]);
  useEffect(()=>{const timer=setTimeout(()=>void load(),0);return()=>clearTimeout(timer);},[load]);
@@ -39,11 +41,12 @@ export function QuoteLineDecisions({actor,publicationId}:{actor:string;publicati
    <p className="text-sm text-[#52627a]">{client?(view.canDecide?t('Apruebe o no cada partida. Su profesional verá su decisión; la respuesta a la cotización completa se da con los botones de la cotización.','Approve or not each item. Your professional will see your decision; the answer to the whole quote is given with the quote buttons.'):t('Esta versión ya no admite decisiones por partida.','This version no longer accepts item decisions.')):t('Lo que el cliente aprobó o no en cada partida de esta versión.','What the customer approved or not on each item of this version.')}</p></div>
   <p data-quote-line-summary role="status" className="rounded-xl bg-[#f3f8fb] p-2 text-sm text-[#162543]"><strong>{t('Aprobado: ','Approved: ')}{money(view.approvedCents)}</strong>{' · '}{t(`${view.approvedCount} aprobadas, ${view.declinedCount} no aprobadas, ${view.pendingCount} sin decidir`,`${view.approvedCount} approved, ${view.declinedCount} not approved, ${view.pendingCount} not decided`)}{view.totalCents!==null?' · '+t('Total de la versión: ','Version total: ')+money(view.totalCents):''}</p>
   {error&&<p role="alert" className="text-sm text-red-700">{error}</p>}
-  {sectionsOf(view.lines).map((section,sectionIndex)=><div key={sectionIndex} data-quote-line-section={section.name??''} className="min-w-0 space-y-2">{section.name&&<h5 className="pt-1 text-sm font-bold uppercase tracking-wide text-[#52627a]">{section.name}</h5>}
+  {sectionsOf(view.lines).map((section,sectionIndex)=><div key={sectionIndex} data-quote-line-section={section.name??''} className="min-w-0 space-y-2">{section.name&&<h5 className="pt-1 text-sm font-bold uppercase tracking-wide text-[#52627a]">{section.name}</h5>}{section.name&&photosOf('section',section.name).length>0&&<div data-proposal-section-photos={section.name} className="max-w-2xl"><ProposalGallery publicationId={publicationId} images={photosOf('section',section.name)}/></div>}
   <ul className="grid gap-3 @2xl:grid-cols-2">{section.lines.map(line=><li key={line.lineId} data-quote-line={line.lineId} data-decision={line.decision??'none'} className={'min-w-0 space-y-2 rounded-xl border p-3 '+(line.decision==='approved'?'border-[#b9e0c8]':line.decision==='declined'?'border-[#f3c4bd]':'border-[#d7e1ea]')}>
+   {photosOf('line',line.lineId).length>0&&<div data-proposal-line-photos={line.lineId}><ProposalGallery compact publicationId={publicationId} images={photosOf('line',line.lineId)}/></div>}
    <div className="flex min-w-0 gap-3">
     {/* eslint-disable-next-line @next/next/no-img-element -- authenticated same-origin JPEG of the line's catalog item. */}
-    {line.hasImage?<img data-quote-line-image src={api+'?'+new URLSearchParams({publicationId,image:line.lineId})} alt={line.description} loading="lazy" className="h-20 w-20 shrink-0 rounded-lg border border-[#e5e7eb] object-cover"/>:<span aria-hidden="true" className="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg bg-[#f3f8fb] text-xs text-[#68778d]">{t('Sin foto','No photo')}</span>}
+    {photosOf('line',line.lineId).length>0?null:line.hasImage?<img data-quote-line-image src={api+'?'+new URLSearchParams({publicationId,image:line.lineId})} alt={line.description} loading="lazy" className="h-20 w-20 shrink-0 rounded-lg border border-[#e5e7eb] object-cover"/>:<span aria-hidden="true" className="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg bg-[#f3f8fb] text-xs text-[#68778d]">{t('Sin foto','No photo')}</span>}
     <div className="min-w-0 flex-1 space-y-1"><p className="break-words font-semibold text-[#162543]">{line.description||t('Partida','Item')}</p><p className="text-xs text-[#52627a]">{qty(line)} · {money(line.unitPriceCents)} {t('c/u','each')}</p><p className="text-sm font-bold">{money(line.totalCents)}</p>{badge(line.decision)}</div>
    </div>
    {line.note&&!(client&&view.canDecide)&&<p className="break-words rounded-lg bg-[#f7f9fc] p-2 text-sm text-[#52627a]">{t('Nota del cliente: ','Customer note: ')}{line.note}</p>}
@@ -55,6 +58,7 @@ export function QuoteLineDecisions({actor,publicationId}:{actor:string;publicati
    </div>}
   </li>)}</ul>
   {section.name&&<p data-quote-line-section-subtotal={section.name} className="flex justify-between gap-3 rounded-xl bg-[#f3f8fb] px-3 py-2 text-sm font-semibold text-[#162543]"><span className="min-w-0 break-words">{t('Subtotal de la sección','Section subtotal')} · {section.name}</span><span>{money(section.totalCents)}{section.approvedCents>0&&section.approvedCents!==section.totalCents?' · '+t('aprobado ','approved ')+money(section.approvedCents):''}</span></p>}</div>)}
+ <ProposalClosing actor={actor} publicationId={publicationId}/>
  </section>;
 }
 /** Round F1-C: consecutive lines with the same section name, with the subtotal and the approved part. */

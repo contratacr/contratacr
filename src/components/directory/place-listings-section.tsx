@@ -11,7 +11,7 @@ export function PlaceListingsSection({listings,locale,moreHref,total}:{listings:
  if(!listings.length)return null;
  const vehicles=listings[0].vertical==='vehiculos';
  return <section aria-labelledby="place-listings" data-place-listings={listings.length} className="space-y-3">
-  <h2 id="place-listings" className="text-lg font-bold">{vehicles?t('Vehículos de este negocio','Vehicles from this business'):t('Inmuebles de este negocio','Properties from this business')}</h2>
+  <h2 id="place-listings" className="text-[22px] font-extrabold leading-7 text-[#162543]">{vehicles?t('Vehículos de este negocio','Vehicles from this business'):t('Inmuebles de este negocio','Properties from this business')}</h2>
   <ul className="divide-y divide-[#d7e1ea] rounded-2xl border border-[#d7e1ea]">
    {listings.map(l=><li key={l.code}>
     <a href={listingPath(l,locale)} className={`flex min-h-14 flex-col gap-1 px-4 py-3 hover:bg-[#f6f9fc] min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between ${ring}`}>

@@ -1872,9 +1872,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       runCompactSearch({ categoria: id, servicio: repairVisibleText(picked?.label ?? getCategoryLabel(id, locale)) });
       return;
     }
+    // Only move the cursor; the field's onFocus sets the list from its CURRENT
+    // text. Forcing it closed here raced with fast typing and hid the places.
     window.setTimeout(() => {
-      navLocationInputRef.current?.focus();
-      setNavLocOpen(false);
+      const input = navLocationInputRef.current;
+      if (input && document.activeElement !== input) input.focus();
     }, 0);
   }
 

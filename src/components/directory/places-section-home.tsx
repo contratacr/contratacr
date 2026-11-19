@@ -10,6 +10,7 @@ import {SearchResultsLayout} from '@/components/search/search-results-layout';
 import {PlacesMap} from '@/components/maps/places-map';
 import {hrefWith} from './listing-home-parts';
 import {PlaceCard} from './place-card';
+import {placeCardExtras} from '@/lib/directory/card-extras';
 import {SearchFilters,sortLabel} from './search-filters';
 import {PlacesFilterChips,PlacesFiltersDrawer,type ChipMenu,type ChipToggle} from './places-search-controls';
 
@@ -50,7 +51,7 @@ const COPY:Record<PlaceSection,Copy>={
 const fmt=(n:number,en:boolean)=>String(n).replace(/\B(?=(\d{3})+(?!\d))/g,en?',':'.');
 const NOT_FILTERS=['q','sort','cursor','page','lat','lng'];
 
-export function PlacesSectionHome({section,locale,page,basePath,banner}:{section:PlaceSection;locale:string;page:DirectorySearchPage;basePath:string;banner?:ReactNode}){
+export async function PlacesSectionHome({section,locale,page,basePath,banner}:{section:PlaceSection;locale:string;page:DirectorySearchPage;basePath:string;banner?:ReactNode}){
  const en=locale==='en',i=en?1:0,c=COPY[section],t=(es:string,english:string)=>en?english:es;
  const values=page.values,def=placeSection(section),kinds=def?.kinds??[],priceMode=placePriceMode(section);
  const link=(patch:Record<string,string|undefined>)=>hrefWith(basePath,{...values,cursor:undefined,...patch});
@@ -77,6 +78,8 @@ export function PlacesSectionHome({section,locale,page,basePath,banner}:{section
  const count=total==null?null:`${fmt(total,en)} ${t(total===1?'lugar':'lugares',total===1?'place':'places')} ${where?t(`en ${where}`,`in ${where}`):t('en Costa Rica','in Costa Rica')}`;
  const items=page.ok?page.result.items:[];
  const places=items.flatMap(it=>it.kind==='place'?[it]:[]);
+ // Yelp result-card model (2026-11-19): cover photo + newest review snippet for the places of this page.
+ const extras=await placeCardExtras(places.map(p=>p.slug));
  const points=places.flatMap((p,n)=>p.location?[{id:p.slug,lat:p.location.lat,lng:p.location.lng,label:`${n+1}. ${p.name}`,href:`${en?'/en':''}/lugar/${p.slug}`,rank:n+1}]:[]);
  const next=page.ok&&page.result.nextCursor?link({cursor:encodeCursor(page.result.nextCursor)}):null;
  const filtersLabel=t('Filtros','Filters');
@@ -121,7 +124,7 @@ export function PlacesSectionHome({section,locale,page,basePath,banner}:{section
           {activeFilters>0&&<a href={clear!.href} className="mt-4 inline-flex h-11 items-center justify-center rounded-full bg-[#009FD9] px-6 text-sm font-bold text-white hover:bg-[#0089bb]">{t('Limpiar filtros','Clear filters')}</a>}
          </div>
         :<ol className="ccr-search-results-list -mx-4 flex w-[calc(100%+2rem)] min-w-0 flex-col gap-1.5 bg-white lg:mx-0 lg:w-full lg:gap-3 lg:bg-transparent" aria-label={t('Resultados','Results')}>
-          {places.map((item,n)=><li key={item.key} className="min-w-0"><PlaceCard item={item} locale={locale} rank={n+1}/></li>)}
+          {places.map((item,n)=><li key={item.key} className="min-w-0"><PlaceCard item={item} locale={locale} rank={n+1} extra={extras[item.slug]??null}/></li>)}
          </ol>}
       {(next||values.cursor)&&<nav aria-label={t('Más resultados','More results')} className="flex items-center justify-between gap-3 py-4 lg:border-t lg:border-[#e5e7eb] lg:pt-4">
        {values.cursor?<a href={link({cursor:undefined})} className={`${nav} border border-[#d7e2ea] bg-white text-[#1A2744] hover:border-[#009FD9] hover:text-[#009FD9]`}><ChevronLeft className="h-4 w-4" aria-hidden="true"/>{t('Primeros resultados','First results')}</a>:<span/>}

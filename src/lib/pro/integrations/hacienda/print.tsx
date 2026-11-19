@@ -9,7 +9,7 @@ import type {EinvoiceModel} from './document';
  * in a band on every page; only an ACCEPTED production document is fiscal.
  */
 const escape=(value:unknown)=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'} as Record<string,string>)[char]!);
-type Doc={docType:'01'|'03'|'04';clave:string;consecutivo:string;issuedAt:string;status:string;mode:'mock'|'sandbox'|'production';responseMessage:string|null;snapshot:EinvoiceModel};
+type Doc={docType:'01'|'02'|'03'|'04';clave:string;consecutivo:string;issuedAt:string;status:string;mode:'mock'|'sandbox'|'production';responseMessage:string|null;snapshot:EinvoiceModel};
 export function einvoicePrintHtml(doc:Doc,nonce:string,en:boolean){
  const m=doc.snapshot,l=(es:string,english:string)=>escape(en?english:es);
  const num=(value:string)=>{const [whole,fraction='']=value.split('.');const grouped=whole!.replace(/\B(?=(\d{3})+(?!\d))/g,en?',':'.');return '₡'+grouped+(en?'.':',')+fraction.slice(0,2).padEnd(2,'0');};

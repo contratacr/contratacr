@@ -45,18 +45,18 @@ export type MessageFile=z.infer<typeof messageFileSchema>;
 
 export const organizerFileSchema=z.object({id:z.string().uuid(),name:z.string(),originalName:z.string(),mimeType:z.string(),sizeBytes:z.number(),folderId:z.string().uuid().nullable(),favorite:z.boolean(),
  trashedAt:z.string().nullable(),restoreUntil:z.string().nullable(),metaRevision:z.number().int(),createdAt:z.string(),publishedAt:z.string().nullable().optional()}).passthrough();
-export const organizerFolderSchema=z.object({id:z.string().uuid(),parentId:z.string().uuid().nullable(),name:z.string(),revision:z.number().int(),trashedAt:z.string().nullable(),restoreUntil:z.string().nullable(),items:z.number().int()}).passthrough();
+export const organizerFolderSchema=z.object({id:z.string().uuid(),parentId:z.string().uuid().nullable(),name:z.string(),revision:z.number().int(),trashedAt:z.string().nullable(),restoreUntil:z.string().nullable(),items:z.number().int(),clientVisible:z.boolean().optional()}).passthrough();
 export const organizerPageSchema=z.object({workId:z.string(),view:z.enum(['folder','favorites','trash','search']),folderId:z.string().uuid().nullable(),
  breadcrumb:z.array(z.object({id:z.string().uuid(),name:z.string()})),folders:z.array(organizerFolderSchema),files:z.array(organizerFileSchema),
- allFolders:z.array(z.object({id:z.string().uuid(),parentId:z.string().uuid().nullable(),name:z.string()})),trashCount:z.number().int()}).passthrough();
+ allFolders:z.array(z.object({id:z.string().uuid(),parentId:z.string().uuid().nullable(),name:z.string()})),trashCount:z.number().int(),quota:z.object({usedBytes:z.number().nonnegative(),limitBytes:z.number().positive()}).optional()}).passthrough();
 export type OrganizerPage=z.infer<typeof organizerPageSchema>;
 const name=z.string().trim().min(1).max(160);
 export const organizerInputSchema=z.discriminatedUnion('action',[
  z.object({action:z.literal('create_folder'),actionId:z.string().uuid(),workId:z.string().min(1).max(160),folderId:z.string().uuid(),parentId:z.string().uuid().nullable(),name:z.string().trim().min(1).max(80)}).strict(),
  z.object({action:z.enum(['rename_folder','rename_file']),actionId:z.string().uuid(),workId:z.string().min(1).max(160),subjectId:z.string().uuid(),revision:z.number().int().min(0),name}).strict(),
  z.object({action:z.enum(['move_folder','move_file']),actionId:z.string().uuid(),workId:z.string().min(1).max(160),subjectId:z.string().uuid(),revision:z.number().int().min(0),targetId:z.string().uuid().nullable()}).strict(),
- z.object({action:z.enum(['trash_folder','restore_folder','trash_file','restore_file']),actionId:z.string().uuid(),workId:z.string().min(1).max(160),subjectId:z.string().uuid(),revision:z.number().int().min(0)}).strict(),
- z.object({action:z.literal('favorite_file'),actionId:z.string().uuid(),workId:z.string().min(1).max(160),subjectId:z.string().uuid(),revision:z.number().int().min(0),on:z.boolean()}).strict(),
+ z.object({action:z.enum(['trash_folder','restore_folder','trash_file','restore_file','purge_folder','purge_file']),actionId:z.string().uuid(),workId:z.string().min(1).max(160),subjectId:z.string().uuid(),revision:z.number().int().min(0)}).strict(),
+ z.object({action:z.enum(['favorite_file','share_folder']),actionId:z.string().uuid(),workId:z.string().min(1).max(160),subjectId:z.string().uuid(),revision:z.number().int().min(0),on:z.boolean()}).strict(),
 ]);
 
 export const subOwnerInputSchema=z.discriminatedUnion('action',[

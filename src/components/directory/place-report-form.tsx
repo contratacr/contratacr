@@ -1,5 +1,5 @@
 'use client';
-import {useRef,useState,type FormEvent} from 'react';
+import {useEffect,useRef,useState,type FormEvent} from 'react';
 import {REPORT_KINDS,type ReportKind} from '@/lib/directory/types';
 
 /**
@@ -18,6 +18,10 @@ const LABELS:Record<ReportKind,[string,string]>={
 export function PlaceReportForm({slug,locale}:{slug:string;locale:string}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es;
  const reportId=useRef<string|null>(null),[state,setState]=useState<'idle'|'sending'|'sent'|'error'|'limit'>('idle');
+ const box=useRef<HTMLDetailsElement>(null);
+ // «Sugerir un cambio» (side card, 2026-11-19) links to #reportar: open the form and move focus to it.
+ useEffect(()=>{const open=()=>{if(window.location.hash!=='#reportar'||!box.current)return;box.current.open=true;box.current.querySelector('summary')?.focus();};
+  open();window.addEventListener('hashchange',open);return()=>window.removeEventListener('hashchange',open);},[]);
  async function submit(event:FormEvent<HTMLFormElement>){
   event.preventDefault();if(state==='sending')return;
   const form=new FormData(event.currentTarget);reportId.current??=crypto.randomUUID();setState('sending');
@@ -27,10 +31,10 @@ export function PlaceReportForm({slug,locale}:{slug:string;locale:string}){
    setState(response.ok?'sent':response.status===429?'limit':'error');
   }catch{setState('error');}
  }
- if(state==='sent')return <section aria-live="polite" data-place-report="sent" className="rounded-2xl bg-emerald-50 p-5 text-emerald-900">
+ if(state==='sent')return <section id="reportar" aria-live="polite" data-place-report="sent" className="rounded-2xl bg-emerald-50 p-5 text-emerald-900">
   {t('Gracias. Revisaremos su reporte. Si pidió el retiro, le escribiremos al correo indicado.','Thank you. We will review your report. If you requested removal, we will write to the e-mail you provided.')}</section>;
- return <details className="rounded-2xl border border-slate-200 p-5" data-place-report={state}>
-  <summary className="cursor-pointer font-semibold">{t('Reportar un problema o pedir el retiro','Report a problem or request removal')}</summary>
+ return <details ref={box} id="reportar" className="scroll-mt-24 rounded-2xl border border-[#e3e9ef] bg-white px-5 py-3 text-[#162543]" data-place-report={state}>
+  <summary className="flex min-h-11 cursor-pointer items-center font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]">{t('Reportar un problema o pedir el retiro','Report a problem or request removal')}</summary>
   <form onSubmit={submit} className="mt-4 space-y-3">
    <label className="block text-sm font-medium" htmlFor="place-report-kind">{t('Motivo','Reason')}</label>
    <select id="place-report-kind" name="kind" required className="min-h-11 w-full rounded-lg border border-slate-300 px-3" onChange={()=>{reportId.current=null;}}>

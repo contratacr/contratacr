@@ -14,7 +14,8 @@ const ring='focus-visible:outline focus-visible:outline-2 focus-visible:outline-
 const FLAG_TEXT:Record<string,[string,string]>={not_this_place:['No es de este lugar','Not this place'],offensive:['Ofensiva','Offensive'],private_info:['Muestra datos privados o personas','Shows private data or people'],
  copyright:['Es de otra persona (derechos)','Belongs to someone else (copyright)'],spam:['Publicidad o spam','Advertising or spam'],other:['Otro motivo','Other reason']};
 
-export function PlacePhotoGallery({photos,placeName,en}:{photos:GalleryPhoto[];placeName:string;en:boolean}){
+/** `mosaic` (2026-11-19, Yelp model): header strip — first photo large, up to four more, «Ver las N fotos» on top. */
+export function PlacePhotoGallery({photos,placeName,en,variant='grid'}:{photos:GalleryPhoto[];placeName:string;en:boolean;variant?:'grid'|'mosaic'}){
  const t=(es:string,english:string)=>en?english:es;
  const ready=useSyncExternalStore(noSubscribe,()=>true,()=>false);
  const [open,setOpen]=useState<number|null>(null);const opener=useRef<HTMLButtonElement|null>(null);const dialog=useRef<HTMLDivElement>(null);
@@ -32,6 +33,19 @@ export function PlacePhotoGallery({photos,placeName,en}:{photos:GalleryPhoto[];p
  const alt=(i:number)=>photoAlt(photos[i]?.caption,placeName,i+1,en);
  const cur=open===null?null:photos[open]!;
  return <>
+  {variant==='mosaic'?<div className="relative" data-place-gallery={photos.length} data-ready={ready||undefined}>
+   <ul className={`grid h-56 gap-1.5 overflow-hidden rounded-3xl sm:h-[360px] ${photos.length===1?'grid-cols-1':photos.length===2?'grid-cols-2':photos.length<5?'grid-cols-3 grid-rows-2':'grid-cols-4 grid-rows-2'}`}>
+    {photos.slice(0,5).map((p,i)=><li key={p.url} className={`min-h-0 ${i===0&&photos.length>2?'col-span-2 row-span-2':''} ${i>0&&photos.length>2?'hidden sm:block':''} ${i===0&&photos.length>2?'max-sm:col-span-full max-sm:row-span-full':''}`}>
+     <button type="button" onClick={e=>{opener.current=e.currentTarget;setOpen(i);}} data-place-photo-thumb={i}
+      aria-label={t(`Ver foto ${i+1} de ${photos.length}: ${alt(i)}`,`View photo ${i+1} of ${photos.length}: ${alt(i)}`)} className={`group block h-full w-full overflow-hidden bg-slate-100 ${ring}`}>
+      {/* eslint-disable-next-line @next/next/no-img-element -- same-origin photo route or validated https seed URL */}
+      <img src={placePhotoSrc(p.url,i===0?1600:800)} alt={alt(i)} loading={i===0?'eager':'lazy'} className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"/>
+     </button></li>)}
+   </ul>
+   <button type="button" data-place-photos-all onClick={e=>{opener.current=e.currentTarget;setOpen(0);}}
+    className={`absolute bottom-3 right-3 inline-flex min-h-11 items-center rounded-full bg-white/95 px-4 text-sm font-bold text-[#162543] shadow-md backdrop-blur hover:bg-white ${ring}`}>
+    {photos.length===1?t('Ver la foto','See the photo'):t(`Ver las ${photos.length} fotos`,`See all ${photos.length} photos`)}</button>
+  </div>:
   <ul className={`grid gap-2 ${photos.length===1?'grid-cols-1 sm:max-w-md':photos.length===2?'grid-cols-2 sm:max-w-2xl':'grid-cols-2 sm:grid-cols-4'}`} data-place-gallery={photos.length} data-ready={ready||undefined}>
    {photos.slice(0,photos.length>5?5:photos.length).map((p,i)=><li key={p.url} className={i===0&&photos.length>2?'col-span-2 row-span-2':''}>
     <button type="button" onClick={e=>{opener.current=e.currentTarget;setOpen(i);}} data-place-photo-thumb={i}
@@ -40,7 +54,7 @@ export function PlacePhotoGallery({photos,placeName,en}:{photos:GalleryPhoto[];p
      <img src={placePhotoSrc(p.url,i===0?800:320)} alt={alt(i)} loading={i===0?'eager':'lazy'} className={`w-full object-cover transition group-hover:scale-[1.02] ${i===0&&photos.length>2?'aspect-square sm:aspect-auto sm:h-full':'aspect-square'}`}/>
      {i===4&&photos.length>5&&<span className="absolute inset-0 grid place-items-center bg-[#162543]/60 text-lg font-bold text-white">+{photos.length-5}</span>}
     </button></li>)}
-  </ul>
+  </ul>}
   {cur&&open!==null&&<div ref={dialog} role="dialog" aria-modal="true" aria-label={t(`Foto ${open+1} de ${photos.length}`,`Photo ${open+1} of ${photos.length}`)} tabIndex={-1} data-place-lightbox
    className="fixed inset-0 z-[60] flex flex-col bg-[#0b1220] text-white outline-none" onClick={e=>{if(e.target===e.currentTarget)close();}}>
    <div className="flex items-center justify-between gap-2 p-3">

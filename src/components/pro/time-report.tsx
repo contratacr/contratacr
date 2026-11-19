@@ -8,6 +8,7 @@ import {formatMinutes} from '@/lib/pro/time-tracking';
 import {paymentToday} from '@/lib/pro/invoice-payments';
 import {openProSection} from '@/lib/pro/navigation';
 import {timeReportSchema,type TimeReport} from '@/lib/pro/round9';
+import {WeeklyTimesheets} from './time-clock';
 
 /**
  * Round 9: hours of every job in one place (Horas). Filters by period, job, person and billable;
@@ -36,6 +37,7 @@ export function TimeReportView(){
  const field='mt-1 min-h-11 w-full min-w-0 rounded-xl border border-[#d7e1ea] bg-white px-3 text-base';
  const totals=report?.totals;
  return <section data-time-report className="min-w-0 space-y-5">
+  <WeeklyTimesheets/>
   <p className="text-sm text-[#52627a]">{t('Las horas de todos sus trabajos. Se registran en cada trabajo (Horas o cronómetro) o en Costos y pagos; aquí solo se consultan y exportan.','Hours from all your jobs. They are recorded in each job (Time or timer) or in Costs & payments; here they are only reviewed and exported.')}</p>
   <form data-time-report-filters className="grid min-w-0 gap-3 rounded-2xl border border-[#e5e7eb] bg-white p-4 sm:grid-cols-2 lg:grid-cols-5" onSubmit={event=>event.preventDefault()}>
    <label className="min-w-0 text-sm font-semibold">{t('Desde','From')}<input type="date" aria-label={t('Desde','From')} className={field} value={filters.from} max={filters.to} onChange={e=>set({from:e.target.value})}/></label>

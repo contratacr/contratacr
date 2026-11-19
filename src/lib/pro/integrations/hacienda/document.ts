@@ -26,6 +26,9 @@ export const emisorShape=z.object({
  phone:z.union([z.literal(''),z.string().regex(/^\d{8,20}$/,'Teléfono: de 8 a 20 dígitos.')]),email:z.string().trim().email('Indique un correo válido.').max(160),
  branch:z.string().regex(/^\d{3}$/).refine(value=>value!=='000','Sucursal 001 o mayor.'),terminal:z.string().regex(/^\d{5}$/).refine(value=>value!=='00000','Terminal 00001 o mayor.'),
  providerSystems:z.string().regex(/^[A-Za-z0-9]{9,20}$/,'Proveedor de sistemas: la identificación (9 a 20 caracteres, sin guiones).'),
+ // Ronda F2-A: electronic-invoice provider chosen for this emisor (src/lib/pro/einvoice/provider.ts). Optional so older
+ // saved settings stay valid; the SQL default is 'mock'. The MODE is never stored here: the server resolves it.
+ provider:z.enum(['mock','hacienda-sandbox','gti']).optional(),
 }).strict();
 export const emisorSettingsSchema=emisorShape.superRefine((value,ctx)=>{if(!idNumberValid(value.idType,value.idNumber))ctx.addIssue({code:'custom',path:['idNumber'],message:'El número no coincide con el tipo de identificación (física 9 dígitos sin cero inicial, jurídica 10, DIMEX 11 o 12, NITE 10).'});});
 export type EmisorSettings=z.infer<typeof emisorSettingsSchema>;
@@ -43,7 +46,7 @@ export type EinvoiceModel={
  reference:{docType:string;number:string;issuedAt:string;code:string;reason:string}|null;
  notes:string;draftTitle:string;
 };
-export type EinvoiceSummary={currency:'CRC';exchangeRate:string;servTaxed:string;servExempt:string;servExonerated:string;servNotSubject:string;mercTaxed:string;mercExempt:string;mercExonerated:string;mercNotSubject:string;
+export type EinvoiceSummary={currency:'CRC'|'USD';exchangeRate:string;servTaxed:string;servExempt:string;servExonerated:string;servNotSubject:string;mercTaxed:string;mercExempt:string;mercExonerated:string;mercNotSubject:string;
  taxed:string;exempt:string;exonerated:string;notSubject:string;sale:string;discounts:string;netSale:string;breakdown:{code:string;vatCode:string;amount:string}[];tax:string;assumed:string;ivaReturned:string;otherCharges:string;
  paymentMethods:{code:string;other:string;amount:string}[];total:string};
 export type ValidationIssue={field:string;es:string;en:string};
@@ -77,7 +80,11 @@ function modelCharge(charge:InvoiceCharge):ModelCharge{
  return {code:charge.code,otherDetail:charge.otherDetail,thirdParty:charge.thirdParty,detail:charge.description.slice(0,160),percent:charge.mode==='percent'?money5(units(charge.value)):'',amount:money5(amount)};
 }
 /** Summary (ResumenFactura) recomputed from the model lines: the same function for FE, TE and NC. */
-export function summarize(lines:ModelLine[],charges:ModelCharge[],paymentMethod:string):EinvoiceSummary{
+export type SummaryCurrency={code:'CRC'|'USD';exchangeRate:string};
+/** CodigoTipoMoneda: CRC → TipoCambio 1.00000; USD needs the BCCR sell rate of the issue date (5 decimals). */
+export const CRC:SummaryCurrency={code:'CRC',exchangeRate:'1.00000'};
+export function summarize(lines:ModelLine[],charges:ModelCharge[],paymentMethod:string,currency:SummaryCurrency=CRC):EinvoiceSummary{
+ if(!/^\d{1,13}\.\d{5}$/.test(currency.exchangeRate)||parseMoney5(currency.exchangeRate)<=ZERO||currency.code==='CRC'&&currency.exchangeRate!=='1.00000')throw RangeError('exchangeRate');
  const sum={servTaxed:ZERO,servExempt:ZERO,servExonerated:ZERO,servNotSubject:ZERO,mercTaxed:ZERO,mercExempt:ZERO,mercExonerated:ZERO,mercNotSubject:ZERO,discounts:ZERO,tax:ZERO};
  const breakdown=new Map<string,bigint>();
  for(const line of lines){
@@ -94,7 +101,7 @@ export function summarize(lines:ModelLine[],charges:ModelCharge[],paymentMethod:
  }
  const taxed=sum.servTaxed+sum.mercTaxed,exempt=sum.servExempt+sum.mercExempt,exonerated=sum.servExonerated+sum.mercExonerated,notSubject=sum.servNotSubject+sum.mercNotSubject;
  const sale=taxed+exempt+exonerated+notSubject,netSale=sale-sum.discounts,otherCharges=charges.reduce((total,charge)=>total+parseMoney5(charge.amount),ZERO),total=netSale+sum.tax+otherCharges;
- return {currency:'CRC',exchangeRate:'1.00000',servTaxed:money5(sum.servTaxed),servExempt:money5(sum.servExempt),servExonerated:money5(sum.servExonerated),servNotSubject:money5(sum.servNotSubject),
+ return {currency:currency.code,exchangeRate:currency.exchangeRate,servTaxed:money5(sum.servTaxed),servExempt:money5(sum.servExempt),servExonerated:money5(sum.servExonerated),servNotSubject:money5(sum.servNotSubject),
   mercTaxed:money5(sum.mercTaxed),mercExempt:money5(sum.mercExempt),mercExonerated:money5(sum.mercExonerated),mercNotSubject:money5(sum.mercNotSubject),
   taxed:money5(taxed),exempt:money5(exempt),exonerated:money5(exonerated),notSubject:money5(notSubject),sale:money5(sale),discounts:money5(sum.discounts),netSale:money5(netSale),
   breakdown:[...breakdown.entries()].map(([key,amount])=>{const [code,vatCode]=key.split(':');return {code:code!,vatCode:vatCode??'',amount:money5(amount)};}),
@@ -148,7 +155,31 @@ export function buildCreditNote(original:EinvoiceModel,ref:{clave:string;issuedA
  const lines=input.code==='01'?original.lines:original.lines.filter(line=>input.lines.includes(line.number));
  if(!lines.length)return {ok:false,issues:[issue('lines','Elija al menos una línea para acreditar.','Choose at least one line to credit.')]};
  const renumbered=lines.map((line,index)=>({...line,number:index+1})),charges=input.code==='01'?original.charges:[];
- const summary=summarize(renumbered,charges,original.paymentMethod);
+ const summary=summarize(renumbered,charges,original.paymentMethod,{code:original.summary.currency,exchangeRate:original.summary.exchangeRate});
  return {ok:true,totalCents:centsOf(parseMoney5(summary.total)),taxCents:centsOf(parseMoney5(summary.tax)),model:{...original,docType:'03',lines:renumbered,charges,summary,
   reference:{docType:ref.docType,number:ref.clave,issuedAt:ref.issuedAt,code:input.code,reason}}};
+}
+
+/**
+ * Ronda F2-A: debit note (02) against an ACCEPTED FE/TE — an amount added after the fact (price difference, extra
+ * work, interest). One line that inherits CAByS, unit, kind and VAT code of the referenced original line; the tax is
+ * recomputed at that rate (half away from zero at 5 decimals). Reference code 02 «Corrige monto». The SQL never
+ * caps a debit note (it adds to what the customer owes).
+ */
+export function buildDebitNote(original:EinvoiceModel,ref:{clave:string;issuedAt:string;docType:'01'|'04'},input:{reason:string;lineNumber:number;amount:string;detail?:string}):BuildResult{
+ const reason=input.reason.trim();
+ if(reason.length<5||reason.length>180)return {ok:false,issues:[issue('reason','Explique el motivo de la nota (5 a 180 caracteres).','Explain the reason (5–180 characters).')]};
+ const source=original.lines.find(line=>line.number===input.lineNumber);
+ if(!source)return {ok:false,issues:[issue('lines','Elija la línea del original a la que corresponde el cargo.','Choose the original line the charge belongs to.')]};
+ if(!/^\d{1,13}(\.\d{1,5})?$/.test(input.amount.trim()))return {ok:false,issues:[issue('amount','Indique un monto mayor que cero (hasta 5 decimales).','Enter an amount greater than zero (up to 5 decimals).')]};
+ const amount=units(input.amount.trim());
+ if(amount<=ZERO)return {ok:false,issues:[issue('amount','Indique un monto mayor que cero (hasta 5 decimales).','Enter an amount greater than zero (up to 5 decimals).')]};
+ const vat=source.taxes.find(tax=>tax.code==='01');
+ const rate=vat?.rate?units(vat.rate):ZERO,tax=roundDivide(amount*rate,HUNDRED*SCALE);
+ const detail=(input.detail?.trim()||reason).slice(0,200);
+ const line:ModelLine={number:1,cabys:source.cabys,sku:source.sku,quantity:'1.000',unit:source.unit,detail:detail.length>=3?detail:reason,unitPrice:money5(amount),total:money5(amount),
+  subtotal:money5(amount),base:money5(amount),taxes:[{code:'01',vatCode:vat?.vatCode||'08',rate:vat?.rate??'0.00',amount:money5(tax)}],assumed:money5(ZERO),netTax:money5(tax),lineTotal:money5(amount+tax),service:source.service};
+ const summary=summarize([line],[],original.paymentMethod,{code:original.summary.currency,exchangeRate:original.summary.exchangeRate});
+ return {ok:true,totalCents:centsOf(parseMoney5(summary.total)),taxCents:centsOf(parseMoney5(summary.tax)),model:{...original,docType:'02',lines:[line],charges:[],summary,
+  reference:{docType:ref.docType,number:ref.clave,issuedAt:ref.issuedAt,code:'02',reason}}};
 }

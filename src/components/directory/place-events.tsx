@@ -22,8 +22,8 @@ export function EventCard({event,en,place}:{event:PlaceEvent;en:boolean;place?:{
 export function PlaceEvents({events,locale}:{events:PlaceEvent[];locale:string}){
  const en=locale==='en';
  if(!events.length)return null;
- return <section aria-labelledby="place-events" data-place-events={events.length} className="space-y-3">
-  <h2 id="place-events" className="text-lg font-bold">{en?'Upcoming events':'Próximos eventos'}</h2>
+ return <section id="eventos" aria-labelledby="place-events" data-place-events={events.length} className="scroll-mt-24 space-y-4">
+  <h2 id="place-events" className="text-[22px] font-extrabold leading-7 text-[#162543]">{en?'Upcoming events':'Próximos eventos'}</h2>
   <ul className="grid gap-3 sm:grid-cols-2">{events.slice(0,6).map(e=><li key={e.id}><EventCard event={e} en={en}/></li>)}</ul>
   <p className="text-sm"><a className="underline underline-offset-2" href={en?'/en/eventos':'/eventos'}>{en?'See all events':'Ver todos los eventos'}</a></p>
  </section>;

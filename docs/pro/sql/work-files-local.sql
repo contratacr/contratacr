@@ -209,7 +209,7 @@ grant execute on function public.pro_work_file_json(public.pro_work_files),publi
 do $$begin
  if to_regclass('storage.buckets') is not null then
   insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('pro-work-files','pro-work-files',false,20971520,array['image/jpeg','application/pdf']) on conflict(id) do update set file_size_limit=excluded.file_size_limit;
-  if not exists(select 1 from storage.buckets where id='pro-work-files' and not public and file_size_limit=20971520 and cardinality(allowed_mime_types)=2 and allowed_mime_types @> array['image/jpeg','application/pdf']) then raise exception 'Work files bucket configuration must match the private contract';end if;
+  if not exists(select 1 from storage.buckets where id='pro-work-files' and not public and file_size_limit=20971520 and allowed_mime_types @> array['image/jpeg','application/pdf'] /* Ronda F2-D: file-formats-library-local.sql widens the list */) then raise exception 'Work files bucket configuration must match the private contract';end if;
  end if;
  if to_regclass('storage.objects') is not null then
   execute 'drop policy if exists pro_work_files_no_direct on storage.objects';

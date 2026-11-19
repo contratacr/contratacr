@@ -1,4 +1,5 @@
 'use client';
+import {DailyLogCrewPicker} from './daily-log-crew';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {useLocale} from 'next-intl';
 import {Button} from '@/components/ui/button';
@@ -17,7 +18,7 @@ export function useWorkJournal(workId:string){
 
 /** «Visible al cliente» + crew/hours of one Daily Log entry (owner). */
 export function JournalEntryControls({workId,log,info,blocked,onSaved}:{workId:string;log:{id:string;revision:number;archived:boolean};info?:JournalMap[string];blocked:boolean;onSaved:()=>void}){
- const en=useLocale()==='en',[editing,setEditing]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[count,setCount]=useState(''),[hours,setHours]=useState(''),[pendingVisible,setPendingVisible]=useState<{value:boolean;base:boolean}|null>(null),[savedRevision,setSavedRevision]=useState(0);
+ const en=useLocale()==='en',[editing,setEditing]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[count,setCount]=useState(''),[hours,setHours]=useState(''),[pendingVisible,setPendingVisible]=useState<{value:boolean;base:boolean}|null>(null),[savedRevision,setSavedRevision]=useState(0),[team,setTeam]=useState(false);
  // The entry list reloads after each write; until then the revision returned by the last save is the current one.
  const revision=Math.max(log.revision,savedRevision);
  // The switch shows the requested value while it saves; once the saved value is read it wins again.
@@ -30,7 +31,9 @@ export function JournalEntryControls({workId,log,info,blocked,onSaved}:{workId:s
    {summary&&<span data-journal-crew className="rounded-lg bg-white px-2 py-1 text-xs font-semibold text-[#334155]">{(en?'Crew: ':'Personal: ')+summary}</span>}
    {info?.fromUpdate&&<span className="text-xs text-[#52627a]">{en?'From a previous update':'Venía de un avance anterior'}</span>}
    {!editing&&!log.archived&&<Button type="button" variant="ghost" data-pro-write="work.write" disabled={busy||blocked} onClick={()=>{setCount(info?.crewCount==null?'':String(info.crewCount));setHours(info?.crewMinutes==null?'':String(Math.round(info.crewMinutes/6)/10));setEditing(true);}}>{en?'Crew and hours':'Personal y horas'}</Button>}
+   {!editing&&!team&&!log.archived&&<Button type="button" variant="ghost" data-journal-team-crew data-pro-write="work.write" disabled={busy||blocked} onClick={()=>setTeam(true)}>{en?'Crew from the team':'Personal del equipo'}</Button>}
   </div>
+  {team&&<DailyLogCrewPicker workId={workId} logId={log.id} onCancel={()=>setTeam(false)} onSaved={next=>{setSavedRevision(next);setTeam(false);onSaved();}}/>}
   {editing&&<form data-journal-crew-form className="grid min-w-0 gap-2 sm:grid-cols-[1fr_1fr_auto_auto] sm:items-end" onSubmit={event=>{event.preventDefault();const crew=parseCrew();if(!crew){setError(en?'People: whole number 0–500. Hours: 0–10,000.':'Personas: número entero de 0 a 500. Horas: de 0 a 10 000.');return;}void save({clientVisible:visible,...crew});}}>
    <label className="block min-w-0 font-semibold">{en?'People on site':'Personas en obra'}<input aria-label={en?'People on site':'Personas en obra'} inputMode="numeric" className={field} value={count} onChange={event=>setCount(event.target.value)}/></label>
    <label className="block min-w-0 font-semibold">{en?'Total hours':'Horas totales'}<input aria-label={en?'Total crew hours':'Horas totales del personal'} inputMode="decimal" className={field} value={hours} onChange={event=>setHours(event.target.value)}/></label>

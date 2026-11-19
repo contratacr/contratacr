@@ -24,8 +24,12 @@ for(const language of ['es','en'] as const)test(`F3: claim by the e-mail on the 
  const errors=collectPageErrors(page);
  const shot=async(name:string)=>{if(!shotsDir)return;for(const width of [1440,390]){await page.setViewportSize({width,height:width>800?900:844});
   await page.locator('[data-place-claim]').screenshot({path:`${shotsDir}/${name}-${language}-${width}-${info.project.name}.png`});}};
- // Anonymous: the claim block explains what claiming gives, invites to sign in; the API refuses.
+ // Anonymous: the place page carries only the compact claim link (2026-11-19, Yelp model); the claim page explains
+ // what claiming gives and invites to sign in; the API refuses.
  await gotoOK(page,`${prefix}/lugar/${slug}`);
+ await expect(page.locator('[data-claim-benefits]')).toHaveCount(0);
+ await expect(page.locator('[data-place-claim-link] a')).toHaveAttribute('href',`${prefix}/lugar/${slug}/reclamar`);
+ await gotoOK(page,`${prefix}/lugar/${slug}/reclamar`);
  await expect(page.getByRole('heading',{name:t('¿Es su negocio? Reclámelo gratis','Is this your business? Claim it for free')})).toBeVisible();
  const benefits=page.locator('[data-claim-benefits]');
  await expect(benefits.getByRole('heading',{name:t('¿Qué gana al reclamar su negocio?','What do you get by claiming your business?')})).toBeVisible();
@@ -46,7 +50,7 @@ for(const language of ['es','en'] as const)test(`F3: claim by the e-mail on the 
   const smsOff=await postJson(context,`/api/lugar/${slug}/reclamo`,{actionId:uid(),claimId:uid(),method:'phone_listed'});
   expect(smsOff.status).toBe(400);expect(smsOff.body?.reason).toBe('claim_sms_disabled');
   expect((await postJson(context,`/api/lugar/${slug}/reclamo`,{actionId:uid(),claimId:uid(),method:'email_listed',email:'otra@gmail.com'})).status).toBe(400);
-  await gotoOK(page,`${prefix}/lugar/${slug}`);
+  await gotoOK(page,`${prefix}/lugar/${slug}/reclamar`);
   await expect(page.locator('[data-place-claim][data-ready]')).toBeVisible({timeout:45000});
   // Order: (a) code to the listed e-mail, (b) website-domain e-mail, then documents / cédula jurídica. No SMS choice.
   const choices=page.locator('[data-claim-choices] > li');
@@ -87,6 +91,8 @@ for(const language of ['es','en'] as const)test(`F3: claim by the e-mail on the 
   await gotoOK(page,`${prefix}/lugar/${slug}`);
   await expect(page.locator('[data-place-verification="claimed"]')).toBeVisible();
   await expect(page.locator('[data-place-claim]')).toHaveCount(0);
+  await expect(page.locator('[data-place-claim-link]')).toHaveCount(0);
+  await page.goto(`${origin}${prefix}/lugar/${slug}/reclamar`);await expect(page).toHaveURL(new RegExp(`/lugar/${slug}$`));// claimed: back to the place
   // The owner cannot review their own place.
   const own=await postJson(context,`/api/lugar/${slug}/resenas`,{actionId:uid(),rating:5,comment:'Excelente lugar'});
   expect(own.status).toBe(403);expect(own.body?.reason).toBe('review_own_place');
@@ -104,7 +110,7 @@ test('F3: without e-mail nor website only staff review is offered',async({page,c
  const user=await createDisposableAccount({prefix:'dir-claim-none'});
  try{
   await login(context,user);
-  await gotoOK(page,`/lugar/${slug}`);
+  await gotoOK(page,`/lugar/${slug}/reclamar`);
   await expect(page.locator('[data-place-claim][data-ready]')).toBeVisible({timeout:45000});
   await expect(page.locator('[data-claim-choices]')).toHaveCount(0);
   await expect(page.locator('[data-claim-reviewed]')).toContainText('Reclame con la cédula jurídica o con documentos');

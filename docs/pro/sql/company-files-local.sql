@@ -167,7 +167,7 @@ end $$;
 do $$begin
  if to_regclass('storage.buckets') is not null then
   insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('pro-company-files','pro-company-files',false,20971520,array['image/jpeg','application/pdf']) on conflict(id) do update set file_size_limit=excluded.file_size_limit;
-  if not exists(select 1 from storage.buckets where id='pro-company-files' and not public and file_size_limit=20971520 and cardinality(allowed_mime_types)=2 and allowed_mime_types @> array['image/jpeg','application/pdf']) then raise exception 'Company bucket private configuration mismatch';end if;
+  if not exists(select 1 from storage.buckets where id='pro-company-files' and not public and file_size_limit=20971520 and allowed_mime_types @> array['image/jpeg','application/pdf'] /* Ronda F2-D: file-formats-library-local.sql widens the list */) then raise exception 'Company bucket private configuration mismatch';end if;
  end if;
  if to_regclass('storage.objects') is not null then execute 'drop policy if exists pro_company_files_no_direct on storage.objects';execute 'create policy pro_company_files_no_direct on storage.objects as restrictive for all to anon,authenticated using(bucket_id <> ''pro-company-files'') with check(bucket_id <> ''pro-company-files'')';end if;
 end $$;

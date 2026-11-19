@@ -210,7 +210,7 @@ test.describe("@seeded search results", () => {
   test("search query can navigate from the header to filtered results", async ({ page }) => {
     await gotoOK(page, "/");
     await waitForInteractivePage(page);
-    const search = page.getByRole("combobox", { name: /Qu[eé] servicio|Qu[eé] necesita|What service|What do you need/i }).first();
+    const search = page.getByRole("combobox", { name: /Qu[eé] servicio|Qu[eé] necesita|What service|What do you need|Servicios y lugares|Services and places|Servicios, restaurantes|Services, restaurants/i }).filter({ visible: true }).first();
     // En el teléfono el campo de la portada abre el buscador a pantalla
     // completa y el cursor pasa ahí: se escribe donde quedó el foco.
     await search.click();
@@ -250,7 +250,7 @@ test.describe("@seeded search results", () => {
     await waitForInteractivePage(page);
 
     if (isMobileProject(testInfo)) {
-      await page.getByRole("button", { name: /Qu[eé] servicio|What service/i }).filter({ visible: true }).first().click();
+      await page.getByRole("button", { name: /Qu[eé] servicio|What service|Servicios y lugares|Services and places|Servicios, restaurantes|Services, restaurants/i }).filter({ visible: true }).first().click();
       const location = page.getByRole("combobox", { name: /Ubicaci[oó]n|Location/i }).filter({ visible: true }).first();
       await expect(location).toBeVisible();
       // La lista de lugares se vuelve a pintar con CADA letra: el renglón se
@@ -265,7 +265,7 @@ test.describe("@seeded search results", () => {
         await expect(location).toHaveValue(/Liberia/i, { timeout: 2_000 });
       }).toPass({ timeout: 25_000 });
 
-      const service = page.getByRole("combobox", { name: /^Servicio$|^Service$/i }).filter({ visible: true }).first();
+      const service = page.getByRole("combobox", { name: /^Servicio$|^Service$|^Servicios y lugares$|^Services and places$|^Servicios, restaurantes|^Services, restaurants/i }).filter({ visible: true }).first();
       await service.fill("plomeria");
       const plumbing = page.getByRole("option", { name: /Plomer[ií]a|Plumbing/i }).filter({ visible: true }).first();
       await expect(plumbing).toBeVisible();
@@ -281,7 +281,7 @@ test.describe("@seeded search results", () => {
         await opcion.click();
         await expect(location).toHaveValue(/Liberia/i, { timeout: 2_000 });
       }).toPass({ timeout: 25_000 });
-      const service = page.getByRole("combobox", { name: /^Servicio$|^Service$/i }).filter({ visible: true }).first();
+      const service = page.getByRole("combobox", { name: /^Servicio$|^Service$|^Servicios y lugares$|^Services and places$|^Servicios, restaurantes|^Services, restaurants/i }).filter({ visible: true }).first();
       await service.fill("plomeria");
       await page.getByRole("option", { name: /Plomer[ií]a|Plumbing/i }).filter({ visible: true }).first().click();
 

@@ -9,6 +9,7 @@ import {addDays,baselineMutationSchema,baselineResultSchema,clientScheduleSchema
 import {workScheduleMutationSchema,workScheduleResultSchema,workTimelineTaskCreateSchema,type WorkScheduleMutation,type WorkTimelineTaskCreate} from '@/lib/pro/work-schedule';
 import {daysFromPixels,dependencyIssues,keyEdit,matchesAssignee,shiftPeriod,undoState,UNASSIGNED,type GanttEditMode} from '@/lib/pro/gantt-edit';
 import {useProChildGuard} from './use-pro-child-guard';
+import {EstimateScheduleAction} from './estimate-schedule';
 
 // Families 13/79: project schedule (Gantt and chronological list) over the job plan,
 // with immutable baselines and deviation in days. Dates are civil (Costa Rica).
@@ -278,7 +279,8 @@ function ScheduleSession({accountId,workId,onStateChange}:{accountId:string;work
   <div data-gantt-toolbar className="flex min-w-0 flex-wrap items-end gap-2">
    {canEdit&&<><Button type="button" data-gantt-new="task" data-pro-write="work.write" className="min-h-11" disabled={!idle} onClick={()=>openCreate('task')}>{c.newTask}</Button>
     <Button type="button" data-gantt-new="phase" data-pro-write="work.write" variant="secondary" className="min-h-11" disabled={!idle} onClick={()=>openCreate('phase')}>{c.newPhase}</Button>
-    <Button type="button" data-gantt-undo data-pro-write="work.write" variant="secondary" className="min-h-11" disabled={!lastChange||!idle} aria-label={lastChange?c.undoLabel(undoText):c.undo} title={lastChange?c.undoLabel(undoText):undefined} onClick={undo}>{c.undo}</Button></>}
+    <Button type="button" data-gantt-undo data-pro-write="work.write" variant="secondary" className="min-h-11" disabled={!lastChange||!idle} aria-label={lastChange?c.undoLabel(undoText):c.undo} title={lastChange?c.undoLabel(undoText):undefined} onClick={undo}>{c.undo}</Button>
+    <EstimateScheduleAction workId={workId} accountId={accountId} disabled={!idle} onApplied={message=>{void load().then(()=>setNotice(message));}}/></>}
    {!!data.tasks.length&&<label className="block min-w-0 text-sm font-semibold sm:ml-auto">{c.filter}<select data-gantt-assignee-filter value={filter} onChange={event=>setFilter(event.target.value)} className={field+' sm:min-w-[12rem]'}><option value="">{c.everyone}</option><option value={UNASSIGNED}>{c.unassigned}</option>{filterOptions.map(o=><option key={o.id} value={o.id}>{o.name}</option>)}</select></label>}
   </div>
   <p data-schedule-share className="flex flex-wrap items-center gap-2 text-sm text-[#52627a]"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${data.showSchedule?'bg-[#eaf5fb] text-[#006e90]':'bg-[#eef2f6] text-[#52627a]'}`}>{data.showSchedule?c.shared:c.notShared}</span>{canEdit&&<button type="button" data-pro-write="work.write" disabled={dirty||busy} onClick={()=>pushProParams({vistaTrabajo:'client'})} className="min-h-11 font-semibold text-[#008bb5] underline-offset-2 hover:underline disabled:opacity-50">{c.configureShare}</button>}</p>

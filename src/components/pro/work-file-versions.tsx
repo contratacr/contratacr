@@ -10,6 +10,8 @@ import {WORK_FILE_UPLOAD_LIMIT,createWorkFileUpload,continueWorkFileWrite,type W
 import {FILE_COMMENT_MAX,FILE_VERSION_NOTE_MAX,clientFileCommentResultSchema,clientFileDiscussionSchema,compareFileVersions,fileCommentDetailSchema,fileCommentPageSchema,
  fileFamilySchema,fileVersionIndexSchema,fileVersionMutationResultSchema,type ClientFileDiscussion,type FileComment,type FileCommentDetail,type FileCommentPage,
  type FileFamily,type FileVersion,type FileVersionIndex} from '@/lib/pro/file-versions';
+import {fileMentionCommentResultSchema,mentionsInText,type FileMentionTarget} from '@/lib/pro/file-mentions';
+import {MentionTextarea,MentionedBody,fileMentionsApi,useFileCommentMentions,useFileMentionTargets} from './work-file-mention-picker';
 /* Fila 30: versions and per-file discussion inside Archivos del trabajo. Bytes keep using
    /api/pro/work-files (upload, download and explicit publish); this module only links files
    into versions and keeps the comment threads. Nothing is sent: no e-mail, push or message. */
@@ -19,8 +21,8 @@ const size=(value:number,en=false)=>proFileSize(value,en);
 const when=(value:string,en:boolean)=>new Intl.DateTimeFormat(en?'en-US':'es-CR',{dateStyle:'medium',timeStyle:'short',timeZone:'America/Costa_Rica'}).format(new Date(value));
 const field='mt-1 block w-full min-w-0 rounded-xl border border-[#d7e1ea] bg-white px-3 py-2 text-sm text-[#162543] focus:border-[#008bb5] focus:outline-none focus:ring-2 focus:ring-[#008bb5]/30';
 class HttpError extends Error{constructor(readonly status:number){super('http '+status);}}
-async function send(accountId:string,body:unknown){
- const response=await fetch(api,{method:'POST',headers:{'Content-Type':'application/json','X-Pro-Expected-Actor':accountId},body:JSON.stringify(body)});
+async function send(accountId:string,body:unknown,endpoint=api){
+ const response=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json','X-Pro-Expected-Actor':accountId},body:JSON.stringify(body)});
  if(!response.ok)throw new HttpError(response.status);return response.json() as Promise<unknown>;
 }
 async function read(accountId:string,params:Record<string,string>){
@@ -194,6 +196,9 @@ function Discussion({accountId,workId,family,onDirty,onChanged}:{accountId:strin
  const [thread,setThread]=useState<'team'|'client'>('team'),[archived,setArchived]=useState(false),[page,setPage]=useState<FileCommentPage|null>(null),[loadError,setLoadError]=useState(false);
  const [text,setText]=useState(''),[versionNo,setVersionNo]=useState<string>(''),[editing,setEditing]=useState<{id:string;text:string}|null>(null),[history,setHistory]=useState<FileCommentDetail|null>(null);
  const [busy,setBusy]=useState(false),[error,setError]=useState(''),pending=useRef<{key:string;actionId:string;commentId:string}|null>(null),alive=useRef(true);
+ // Fila 30: explicit @mentions of the job team (team thread only); recorded mentions show as chips.
+ const [mentioned,setMentioned]=useState<FileMentionTarget[]>([]),targets=useFileMentionTargets(accountId,workId);
+ const commentMentions=useFileCommentMentions(accountId,workId,thread==='team'&&page?page.items.map(item=>item.id):[]);
  useEffect(()=>{alive.current=true;return()=>{alive.current=false;};},[]);
  useEffect(()=>{onDirty(text.trim().length>0||!!editing);},[text,editing,onDirty]);
  const load=useCallback(async(after?:string)=>{
@@ -205,16 +210,21 @@ function Discussion({accountId,workId,family,onDirty,onChanged}:{accountId:strin
  const idsFor=(key:string)=>{if(pending.current?.key!==key)pending.current={key,actionId:crypto.randomUUID(),commentId:crypto.randomUUID()};return pending.current;};
  async function mutate(payload:Record<string,unknown>,after:()=>void){
   if(busy)return;setBusy(true);setError('');
-  try{const ids=idsFor(JSON.stringify(payload));const body=fileVersionMutationResultSchema.parse(await send(accountId,{...payload,actionId:ids.actionId,...payload.action==='comment_create'?{commentId:ids.commentId}:{}}));
+  const withMentions=Array.isArray(payload.mentions);
+  try{const ids=idsFor(JSON.stringify(payload)),input={...payload,actionId:ids.actionId,...payload.action==='comment_create'?{commentId:ids.commentId}:{}};
+   const body=withMentions?fileMentionCommentResultSchema.parse(await send(accountId,input,fileMentionsApi)):fileVersionMutationResultSchema.parse(await send(accountId,input));
    if(!('comment' in body))throw Error();pending.current=null;if(alive.current){after();await load();onChanged();}}
-  catch(cause){if(cause instanceof HttpError&&cause.status!==503)pending.current=null;if(alive.current){setError(failure(cause,en));if(cause instanceof HttpError&&cause.status===409)await load();}}
+  catch(cause){if(cause instanceof HttpError&&cause.status!==503)pending.current=null;if(alive.current){
+   if(withMentions&&cause instanceof HttpError&&cause.status===409){setError(t('Alguien mencionado ya no tiene acceso a este trabajo. Se actualizó el equipo; revise las menciones y vuelva a publicar.','Someone you mentioned no longer has access to this job. The team was refreshed; review the mentions and post again.'));await targets.load();return;}
+   setError(failure(cause,en));if(cause instanceof HttpError&&cause.status===409)await load();}}
   finally{if(alive.current)setBusy(false);}
  }
  function submit(event:FormEvent){
   event.preventDefault();const body=text.trim();if(!body||body.length>FILE_COMMENT_MAX)return;
   const chosen=thread==='client'?Number(versionNo||sharedVersions[0]?.versionNo):versionNo?Number(versionNo):null;
   if(thread==='client'&&!chosen)return;
-  void mutate({action:'comment_create',workId,fileId:family.familyId,thread,versionNo:chosen,body},()=>{setText('');});
+  const people=thread==='team'?mentionsInText(body,mentioned).map(person=>({userId:person.userId,grantId:person.grantId,sourceInviteId:person.sourceInviteId})):[];
+  void mutate({action:'comment_create',workId,fileId:family.familyId,thread,versionNo:chosen,body,...people.length?{mentions:people}:{}},()=>{setText('');setMentioned([]);});
  }
  async function archive(comment:FileComment){
   if(!comment.archived){const answer=await confirm({title:t('¿Archivar comentario?','Archive comment?'),description:comment.thread==='client'?t('Dejará de verse en la cuenta del cliente. Puede restaurarlo después.','It will no longer show in the customer account. You can restore it later.'):t('Puede restaurarlo después desde Archivados.','You can restore it later from Archived.'),confirmLabel:t('Archivar','Archive'),cancelLabel:t('Cancelar','Cancel')});if(!answer.confirmed)return;}
@@ -228,11 +238,12 @@ function Discussion({accountId,workId,family,onDirty,onChanged}:{accountId:strin
  return <div data-file-discussion className="min-w-0 space-y-3">
   <div role="group" aria-label={t('Comentarios del archivo','File comments')} className="flex flex-wrap gap-2">{tabs.map(([value,label])=><button key={value} type="button" aria-pressed={thread===value} disabled={busy||!!editing||text.trim().length>0}
    onClick={()=>{setThread(value);setArchived(false);setPage(null);setHistory(null);setVersionNo('');}} className={`min-h-11 rounded-xl border px-3 py-2 text-sm font-semibold disabled:opacity-50 ${thread===value?'border-[#008bb5] bg-white text-[#008bb5]':'border-[#d7e1ea] bg-white text-[#52627a] hover:text-[#162543]'}`}>{label}</button>)}</div>
-  <p className="text-xs text-[#52627a]">{thread==='team'?t('Solo usted ve estos comentarios. Nunca se muestran al cliente.','Only you see these comments. They are never shown to the customer.'):t('El cliente ve estos comentarios junto a la versión que usted compartió. No se envía ningún aviso.','The customer sees these comments next to the version you shared. No notice is sent.')}</p>
+  <p className="text-xs text-[#52627a]">{thread==='team'?t('Solo usted ve estos comentarios. Nunca se muestran al cliente. Quien usted mencione con @ recibe un aviso interno con un extracto.','Only you see these comments. They are never shown to the customer. People you mention with @ get an internal notice with an excerpt.'):t('El cliente ve estos comentarios junto a la versión que usted compartió. No se envía ningún aviso.','The customer sees these comments next to the version you shared. No notice is sent.')}</p>
   {error&&<p role="alert" className="text-sm text-red-700">{error}</p>}
   {!archived&&(thread==='team'||sharedVersions.length>0)&&<form data-file-comment-form onSubmit={submit} className="min-w-0 space-y-2">
    <label htmlFor={boxId} className="block text-sm font-semibold">{thread==='team'?t('Nuevo comentario del equipo','New team comment'):t('Nuevo comentario para el cliente','New comment for the customer')}</label>
-   <textarea id={boxId} value={text} rows={3} maxLength={FILE_COMMENT_MAX} disabled={busy} onChange={event=>setText(event.target.value)} className={field} aria-describedby={boxId+'-count'}/>
+   {thread==='team'?<MentionTextarea id={boxId} value={text} onChange={setText} chosen={mentioned} onChosenChange={setMentioned} disabled={busy} maxLength={FILE_COMMENT_MAX} describedBy={boxId+'-count'} targets={targets}/>
+   :<textarea id={boxId} value={text} rows={3} maxLength={FILE_COMMENT_MAX} disabled={busy} onChange={event=>setText(event.target.value)} className={field} aria-describedby={boxId+'-count'}/>}
    <div className="flex min-w-0 flex-wrap items-end justify-between gap-2"><span id={boxId+'-count'} className="text-xs text-[#52627a]">{text.trim().length}/{FILE_COMMENT_MAX}</span>
     <label className="block min-w-0 text-sm font-semibold">{t('Sobre la versión','About version')}<select value={thread==='client'?versionNo||String(sharedVersions[0]?.versionNo??''):versionNo} disabled={busy} onChange={event=>setVersionNo(event.target.value)} className={field}>
      {thread==='team'&&<option value="">{t('Archivo en general','File in general')}</option>}{(thread==='team'?family.versions:sharedVersions).map(version=><option key={version.versionNo} value={version.versionNo}>v{version.versionNo}</option>)}</select></label></div>
@@ -247,7 +258,7 @@ function Discussion({accountId,workId,family,onDirty,onChanged}:{accountId:strin
    {editing?.id===comment.id?<form onSubmit={event=>{event.preventDefault();const body=editing.text.trim();if(!body||body===comment.body)return;void mutate({action:'comment_edit',workId,commentId:comment.id,body,revision:comment.revision},()=>setEditing(null));}} className="space-y-2">
     <label className="block text-sm font-semibold">{t('Editar comentario','Edit comment')}<textarea value={editing.text} rows={3} maxLength={FILE_COMMENT_MAX} disabled={busy} onChange={event=>setEditing({id:comment.id,text:event.target.value})} className={field}/></label>
     <div className="flex flex-wrap gap-2"><Button type="button" variant="secondary" className="min-h-11" disabled={busy} onClick={()=>setEditing(null)}>{t('Cancelar','Cancel')}</Button><Button type="submit" className="min-h-11" disabled={busy||!editing.text.trim()||editing.text.trim()===comment.body}>{t('Guardar cambios','Save changes')}</Button></div>
-   </form>:<p className="whitespace-pre-wrap break-words text-sm text-[#162543]">{comment.body}</p>}
+   </form>:comment.thread==='team'?<MentionedBody body={comment.body} mentions={commentMentions.get(comment.id)}/>:<p className="whitespace-pre-wrap break-words text-sm text-[#162543]">{comment.body}</p>}
    {editing?.id!==comment.id&&<div className="flex flex-wrap gap-2">
     {comment.authorKind==='owner'&&!comment.archived&&<Button type="button" variant="secondary" className="min-h-11" disabled={busy||!!editing} onClick={()=>setEditing({id:comment.id,text:comment.body})}>{t('Editar','Edit')}</Button>}
     <Button type="button" variant="secondary" className="min-h-11" disabled={busy||!!editing} onClick={()=>void archive(comment)}>{comment.archived?t('Restaurar','Restore'):t('Archivar','Archive')}</Button>

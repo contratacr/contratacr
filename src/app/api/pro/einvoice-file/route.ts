@@ -1,18 +1,24 @@
 import {z} from 'zod';
 import {proActor,proQuery} from '@/lib/pro/route-common';
-import {EinvoiceError,documentFull} from '@/lib/pro/integrations/hacienda/service';
+import {EinvoiceError,documentFull,receiverFull} from '@/lib/pro/integrations/hacienda/service';
 import {einvoicePrintHtml} from '@/lib/pro/integrations/hacienda/print';
 
 // Round 6A: files of an emitted document (owner only): signed XML «clave.xml», Hacienda's answer
 // «clave_respuesta.xml» and the printable representation (print / save as PDF). Read-only.
 const headers={'Cache-Control':'private, no-store, max-age=0','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff','X-Robots-Tag':'noindex, nofollow'};
 const fail=(status:number,error:string)=>Response.json({error},{status,headers});
-const query=z.object({id:z.string().uuid(),kind:z.enum(['xml','response','print']),lang:z.enum(['es','en']).optional()}).strict();
+const query=z.object({id:z.string().uuid(),kind:z.enum(['xml','response','print','receiver_xml','receiver_response']),lang:z.enum(['es','en']).optional()}).strict();
 export async function GET(req:Request){
  if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;
   const raw=proQuery(req),parsed=raw?query.safeParse(raw):null;if(!parsed?.success)return fail(400,'Consulta inválida.');
+  // Ronda F2-A: signed MensajeReceptor and Hacienda's answer to it (same headers as the document files).
+  if(parsed.data.kind==='receiver_xml'||parsed.data.kind==='receiver_response'){
+   const message=await receiverFull(a.db,a.user.id,parsed.data.id),body=parsed.data.kind==='receiver_xml'?message.signedXml:message.responseXml;
+   if(!body)return fail(404,parsed.data.kind==='receiver_xml'?'Este mensaje todavía no está firmado.':'Hacienda todavía no ha respondido.');
+   return new Response(body,{headers:{...headers,'Content-Type':'application/xml; charset=utf-8','Content-Disposition':`attachment; filename="${message.receivedClave}_${message.consecutivo}${parsed.data.kind==='receiver_response'?'_respuesta':''}.xml"`,'Content-Security-Policy':"default-src 'none'"}});
+  }
   const doc=await documentFull(a.db,a.user.id,parsed.data.id);
   if(parsed.data.kind==='xml'){
    if(!doc.signedXml)return fail(404,'Este comprobante todavía no está firmado.');

@@ -5,6 +5,7 @@ import {Button} from '@/components/ui/button';
 import {Modal} from '@/components/ui/modal';
 import {proCount} from '@/lib/pro/plural';
 import {PRO_TIMER_CHANGED,timerPageSchema,type WorkTimer} from '@/lib/pro/round8';
+import {timeClockOptionsSchema} from '@/lib/pro/operations';
 
 /**
  * Round 8: person timer. `WorkTimerControl` starts/stops the timer of one job (activity, billable,
@@ -26,8 +27,8 @@ function useElapsed(timer:WorkTimer|null,offset:number){
  if(!timer)return 0;const end=timer.stoppedAt?Date.parse(timer.stoppedAt):now+offset;return Math.max(0,Math.floor((end-Date.parse(timer.startedAt))/1000));
 }
 const clock=(seconds:number)=>{const h=Math.floor(seconds/3600),m=Math.floor(seconds%3600/60),s=seconds%60;return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;};
-async function send(body:Record<string,unknown>){
- const r=await fetch('/api/pro/work-timers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const data=await r.json().catch(()=>({}));
+async function send(body:Record<string,unknown>,url='/api/pro/work-timers'){
+ const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const data=await r.json().catch(()=>({}));
  if(!r.ok)throw Object.assign(Error(typeof data?.error==='string'?data.error:''),{status:r.status});return data;
 }
 function ReviewForm({timer,activities,onDone,onClose}:{timer:WorkTimer;activities:Page['activities'];onDone:()=>void;onClose:()=>void}){
@@ -61,7 +62,17 @@ export function WorkTimerControl({workId,disabled}:{workId:string;disabled?:bool
  const {page,failed,load,offset}=useTimer(),timer=page?.timer??null,elapsed=useElapsed(timer,offset);
  const [activity,setActivity]=useState(''),[billable,setBillable]=useState(true),[note,setNote]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState(''),[review,setReview]=useState(false);
  const startId=useRef<string|null>(null);
- async function run(body:Record<string,unknown>){setBusy(true);setError('');try{await send(body);window.dispatchEvent(new Event(PRO_TIMER_CHANGED));await load();return true;}catch(failure){setError((failure as Error).message||t('No se pudo comprobar el cronómetro. Reintente: no se duplicará.','Could not confirm the timer. Retry: it will not be duplicated.'));await load();return false;}finally{setBusy(false);}}
+ // Ronda F2-C (row 22): clock in with an optional task of this job and, only when the company turned it on,
+ // an optional location (asked to the browser at that moment, never in the background).
+ const [options,setOptions]=useState<{gpsEnabled:boolean;tasks:{id:string;title:string}[]}|null>(null),[task,setTask]=useState(''),[locate,setLocate]=useState(false);
+ useEffect(()=>{let alive=true;fetch('/api/pro/time-clock?'+new URLSearchParams({workId}),{cache:'no-store'}).then(r=>r.ok?r.json():null).then(body=>{const parsed=timeClockOptionsSchema.safeParse(body);if(alive&&parsed.success)setOptions(parsed.data);}).catch(()=>{});return()=>{alive=false;};},[workId]);
+ async function position(){return await new Promise<{lat:number;lng:number;accuracy:number}>((resolve,reject)=>{if(!navigator.geolocation){reject(Error());return;}navigator.geolocation.getCurrentPosition(p=>resolve({lat:p.coords.latitude,lng:p.coords.longitude,accuracy:Math.min(100000,Math.round(p.coords.accuracy))}),()=>reject(Error()),{enableHighAccuracy:false,timeout:10000,maximumAge:60000});});}
+ async function clockIn(){
+  startId.current??=crypto.randomUUID();let gps=null;
+  if(locate&&options?.gpsEnabled){setBusy(true);setError('');try{gps=await position();}catch{setBusy(false);setError(t('No se pudo obtener su ubicación. Permita el acceso o desmarque "Registrar mi ubicación".','Could not get your location. Allow access or untick "Record my location".'));return;}}
+  if(await run({action:'clock_in',actionId:startId.current,workId,taskId:task||null,activityId:activity||null,billable,note:note.trim(),gps},'/api/pro/time-clock')){startId.current=null;setTask('');}
+ }
+ async function run(body:Record<string,unknown>,url?:string){setBusy(true);setError('');try{await send(body,url);window.dispatchEvent(new Event(PRO_TIMER_CHANGED));await load();return true;}catch(failure){setError((failure as Error).message||t('No se pudo comprobar el cronómetro. Reintente: no se duplicará.','Could not confirm the timer. Retry: it will not be duplicated.'));await load();return false;}finally{setBusy(false);}}
  if(!page)return <div data-work-timer className="space-y-2">{failed?<><p role="alert" className="text-sm">{t('No se pudo cargar el cronómetro.','Could not load the timer.')}</p><Button type="button" variant="secondary" onClick={()=>void load()}>{t('Reintentar','Retry')}</Button></>:<p role="status" className="text-sm text-[#68778d]">{t('Cargando cronómetro…','Loading timer…')}</p>}</div>;
  const here=timer?.workId===workId;
  return <div data-work-timer className="space-y-2">
@@ -71,10 +82,12 @@ export function WorkTimerControl({workId,disabled}:{workId:string;disabled?:bool
    <div className="mt-2 flex flex-wrap gap-2">{timer.status==='running'&&<Button type="button" disabled={busy||disabled} onClick={()=>void run({action:'stop',actionId:crypto.randomUUID(),timerId:timer.id,revision:timer.revision}).then(ok=>{if(ok)setReview(true);})}>{t('Detener','Stop')}</Button>}
     {timer.status==='stopped'&&<Button type="button" disabled={busy||disabled} onClick={()=>setReview(true)}>{t('Revisar y guardar','Review and save')}</Button>}</div>
   </div>}
-  {!timer&&<form className="space-y-2" onSubmit={event=>{event.preventDefault();startId.current??=crypto.randomUUID();void run({action:'start',actionId:startId.current,workId,activityId:activity||null,billable,note:note.trim()}).then(ok=>{if(ok)startId.current=null;});}}>
+  {!timer&&<form className="space-y-2" onSubmit={event=>{event.preventDefault();void clockIn();}}>
+   {!!options?.tasks.length&&<label className="block text-sm font-semibold">{t('Tarea (opcional)','Task (optional)')}<select aria-label={t('Tarea del cronómetro','Timer task')} data-work-timer-task value={task} disabled={busy||disabled} onChange={e=>setTask(e.target.value)} className="mt-1 min-h-11 w-full rounded-xl border border-[#d7e1ea] bg-white px-3"><option value="">{t('Sin tarea','No task')}</option>{options.tasks.map(x=><option key={x.id} value={x.id}>{x.title}</option>)}</select></label>}
    <label className="block text-sm font-semibold">{t('Actividad','Activity')}<select aria-label={t('Actividad del cronómetro','Timer activity')} value={activity} disabled={busy||disabled} onChange={e=>{setActivity(e.target.value);const found=page.activities.find(a=>a.id===e.target.value);if(found)setBillable(found.billable);}} className="mt-1 min-h-11 w-full rounded-xl border border-[#d7e1ea] bg-white px-3"><option value="">{t('Sin actividad','No activity')}</option>{page.activities.map(a=><option key={a.id} value={a.id}>{a.name}</option>)}</select></label>
    <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={billable} disabled={busy||disabled} onChange={e=>setBillable(e.target.checked)} className="h-5 w-5"/>{t('Facturable','Billable')}</label>
    <input aria-label={t('Nota del cronómetro (opcional)','Timer note (optional)')} placeholder={t('Nota (opcional)','Note (optional)')} maxLength={300} value={note} disabled={busy||disabled} onChange={e=>setNote(e.target.value)} className="min-h-11 w-full rounded-xl border border-[#d7e1ea] px-3 text-sm"/>
+   {options?.gpsEnabled&&<label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" data-work-timer-location checked={locate} disabled={busy||disabled} onChange={e=>setLocate(e.target.checked)} className="h-5 w-5"/>{t('Registrar mi ubicación al fichar','Record my location when clocking in')}</label>}
    <Button type="submit" disabled={busy||disabled} className="w-full">{busy?t('Iniciando…','Starting…'):t('Iniciar cronómetro','Start timer')}</Button>
   </form>}
   {error&&<p role="alert" className="text-sm text-red-700">{error}</p>}

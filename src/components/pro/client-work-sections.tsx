@@ -4,6 +4,7 @@ import {ClientJournal} from './work-journal';
 import {AppointmentDailyLogs} from './daily-logs';
 import {ClientMessages} from './work-messages';
 import {AppointmentFiles} from './work-files';
+import {AppointmentSharedFolders} from './client-shared-folders';
 import {AppointmentAllowances} from './work-allowances';
 import {AppointmentBudgetSummary} from './client-budget-summary';
 import {AppointmentSelections} from './work-selections';
@@ -32,7 +33,7 @@ export function ClientWorkSections({requestId,parentBlocked=false,onDailyState,o
  const at=(section:string,node:ReactNode)=><div id={clientSectionAnchor(requestId,section)} data-client-section={section} className="scroll-mt-24 min-w-0 space-y-4 empty:hidden">{node}</div>;
  return <>
   <ClientProjectOverview key={'overview:'+requestId} requestId={requestId}/>
-  <AppointmentClientDashboard key={'dashboard:'+requestId} requestId={requestId}>{view=><>{/* Round 7C: one Daily Log; only entries marked «Visible al cliente». */}{(view.showUpdates||view.showDailyLogs)&&<ClientJournal key={'journal:'+requestId} requestId={requestId} updates={view.showUpdates} dailyLogs={view.showDailyLogs}/>}{/* Formally shared daily logs keep their versions and conversation. */}{view.showDailyLogs&&<AppointmentDailyLogs key={'daily:'+requestId} requestId={requestId} parentBlocked={parentBlocked} onStateChange={onDailyState}/>}{view.showFiles&&at('files',<AppointmentFiles key={'files:'+requestId} requestId={requestId}/>)}</>}</AppointmentClientDashboard>
+  <AppointmentClientDashboard key={'dashboard:'+requestId} requestId={requestId}>{view=><>{/* Round 7C: one Daily Log; only entries marked «Visible al cliente». */}{(view.showUpdates||view.showDailyLogs)&&<ClientJournal key={'journal:'+requestId} requestId={requestId} updates={view.showUpdates} dailyLogs={view.showDailyLogs}/>}{/* Formally shared daily logs keep their versions and conversation. */}{view.showDailyLogs&&<AppointmentDailyLogs key={'daily:'+requestId} requestId={requestId} parentBlocked={parentBlocked} onStateChange={onDailyState}/>}{view.showFiles&&at('files',<><AppointmentFiles key={'files:'+requestId} requestId={requestId}/>{/* Ronda F2-D: folders shared with the customer. */}<AppointmentSharedFolders key={'folders:'+requestId} requestId={requestId}/></>)}</>}</AppointmentClientDashboard>
   {/* Round 7C: messages with the professional of this job (in-app only). */}
   {at('messages',<ClientMessages key={'messages:'+requestId} requestId={requestId}/>)}
   {at('quotes',<AppointmentQuotes key={'quotes:'+requestId} requestId={requestId}/>)}

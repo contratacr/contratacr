@@ -2478,3 +2478,135 @@ Filas 43 y 45 del registro. Referencia funcional: estimaciones de Houzz Pro con 
 - El PDF que descarga el cliente (`private-estimate-export.ts`, generado en el navegador) ya tenía secciones pero no usa la marca ni las plantillas; las plantillas aplican a las copias impresas del servidor.
 - Las condiciones/notas predeterminadas se imprimen como bloque del documento; no se copian a las notas propias de cada cotización/factura al crearlas.
 - "finance.read" sigue sin capacidad propia en la puerta de roles (regla por ruta y en la interfaz).
+
+## Ronda F2-D (2026-11-19)
+
+### Fila 45 (PDF del cliente con marca)
+
+- Antes: el PDF que el cliente descargaba de una cotización compartida se generaba en el navegador sin la marca de la empresa.
+- Ahora: en "Cotizaciones" (cliente) y en las versiones compartidas del dueño (también la cotización aceptada de la obra) hay "Imprimir o guardar en PDF" / "Imprimir con su marca", que abre `/api/pro/quote-print?publicationId=…&lang=` en una pestaña nueva. La ruta reautoriza la cuenta con `pro_private_estimate_publication_read` (dueño o cliente de esa versión; otra cuenta 404, sin sesión 401, ambos identificadores 400) y aplica "Documentos con su marca" del profesional que la publicó: color, nombre/línea, logo del almacenamiento privado (verificado por SHA-256), pie y opciones de plantilla (Ronda F1-C).
+- Solo se imprime el contenido inmutable publicado: sin costo interno, márgenes, correo/teléfono del cliente ni el identificador del borrador. Respuesta `no-store`, CSP estricta con nonce, sin URL pública. Sin SQL nuevo.
+- El PDF del navegador ("Descargar PDF") se conserva como alternativa sin marca. La cotización pública no Pro (`src/components/quotes/public-quote.tsx`, `window.print`) queda fuera de alcance y sin cambios.
+- Pruebas: `tests/e2e/pro-quote-publication-print.spec.ts` ES/EN en chromium-desktop y webkit-mobile (4/4); regresión `pro-quote-margin-templates.spec.ts` + `pro-round10-features.spec.ts` en chromium-desktop (11/11). Capturas `45-*` en `ux/pro-f2/files/`.
+
+### Filas 28, 29, 30, 31 y 33 (archivos, organizador, versiones/menciones, biblioteca, carpetas para el cliente)
+
+- **Fila 28 (formatos y carga múltiple):** Archivos del trabajo y biblioteca aceptan fotos (JPG/PNG/WebP a JPG; HEIC a JPG cuando se puede, si no se conserva), PDF, Word/Excel/PowerPoint sin macros, CSV, TXT, DWG/DXF (solo descarga) y MP4/MOV, hasta 20 MB (límite del stack local). Arrastrar y soltar o selector, hasta 20 por tanda, uno a la vez con progreso real (XHR), error por archivo con motivo y "Reintentar" con la misma identidad (no duplica); los rechazados en el navegador (macros, formato, tamaño) no ofrecen reintento. El servidor decide el tipo por los bytes (`src/lib/pro/file-sniff.ts`: OOXML con `[Content_Types].xml` y sin `vbaProject.bin`, ftyp para video/HEIC, firmas DWG/DXF, UTF-8 sin controles para CSV/TXT). Buckets privados; descarga solo por la API reautorizada (adjunto, `nosniff`, CSP sandbox). Cuota de 2 GiB por cuenta (trabajos + biblioteca) mostrada en Archivos. Vista previa en la app de fotos, PDF (iframe de blob) y video, verificada por tamaño y SHA-256; Office/CAD/texto solo descarga. El portal del subcontratista descarga también los nuevos formatos; el selector de la biblioteca en la Bitácora muestra solo fotos/PDF (lo único que la Bitácora acepta).
+- **Fila 29 (organizador):** ordenar (recientes, antiguos, nombre, tamaño), mover arrastrando un archivo a una carpeta o a "Inicio" en escritorio y con "Mover" en el menú del teléfono, opciones en "⋯", y "Eliminar definitivamente" desde la papelera con confirmación (archivo o carpeta con todo su contenido). Solo se borra lo que nunca se compartió con el cliente y no tiene versiones, comentarios ni otros usos (cualquier llave foránea, `pro_wfo_file_in_use`); se borran los bytes del bucket y queda el historial del organizador. Sin purga automática a los 30 días.
+- **Fila 30 (versiones y comentarios):** @menciones del equipo en los comentarios privados de un archivo del trabajo (selector @ por teclado y toque, chips, 1 a 10 integrantes activos de ese trabajo, comentario y menciones en una transacción) y buzón interno "Menciones en archivos" del integrante sin ids, rutas ni bytes; nada se envía (`work-file-mentions-local.sql`).
+- **Fila 31 (biblioteca):** mismos formatos, carga múltiple con arrastrar y soltar, vista previa PDF/video, etiquetas (Plantilla, Manual, Permiso y propias, hasta 6) con filtro, y "Usar en trabajo" copia también Office/video.
+- **Fila 33 (vista del cliente):** carpeta del trabajo "Visible para el cliente": el cliente vinculado (y la vista previa del dueño) ve y descarga sus archivos directos mientras "Archivos y fotos" esté activo; papelera u ocultar la carpeta lo retira; descarga reautorizada en cada pedido.
+- SQL nuevo `docs/pro/sql/file-formats-library-local.sql` (manifiesto, después de `work-file-mentions-local.sql`), sin `supabase/migrations`; aplicado solo a la base local. Ajuste mínimo en `work-files-local.sql` y `company-files-local.sql`: la verificación del bucket acepta la lista ampliada.
+
+#### Verificación
+- `node scripts/pro/verify-pro-file-formats-db.mjs`: 6/6 grupos PASS (PGlite + manifiesto completo, reaplicación idempotente). `node scripts/pro/verify-pro-file-mentions-db.mjs`: 5/5 PASS.
+- `verify-local-preparation-db.mjs` PASS (219 módulos); `verify-local-preparation-manifest.mjs` PASS; `local-sql-manifest.mjs --check` OK.
+- `tsc` limpio; eslint limpio en los archivos tocados; `verify-display-quotes`, `text:check`, `lint:i18n` (presupuesto ok), `lint:vocabulario`, `audit-browser-storage` (106), `test:surface-ownership` (128 páginas, 353 rutas) PASS.
+- E2E `tests/e2e/pro-files-library.spec.ts` ES/EN: chromium-desktop 2/2 y webkit-mobile 2/2 (puerto 3214, copia temporal). `pro-file-mentions.spec.ts` chromium-desktop y webkit-mobile PASS; regresión de archivos: ver abajo.
+- Capturas revisadas en `$S/ux/pro-f2/files/` (prefijos 28-, 29-, 30-, 31-, 33-, escritorio e iPhone). Corregido tras mirarlas: en teléfono las acciones de cada archivo pasan a una segunda línea (el nombre ya no se parte letra por letra) y el buscador ya no queda aplastado junto a "Ordenar".
+
+#### Pendiente (honesto)
+- Sin visor ni conversión de Office y sin transcodificación de video (un MOV con códec no compatible no se reproduce en Chrome; se descarga). Límite de 20 MB por archivo = límite global del stack local.
+- La biblioteca de la empresa no tiene borrado definitivo ni comentarios; no hay purga automática de la papelera.
+- El "Resumen de su proyecto" del cliente cuenta solo archivos compartidos uno por uno, no los de carpetas compartidas.
+
+## Ronda F2-C (2026-11-19)
+
+Operaciones: filas 13, 15, 17, 20, 22 y 24 del [registro](houzz-parity-register-local.md) y la nota "cotización a cronograma". Referencia funcional: cronograma, tareas, equipo, bitácora, fichaje y avisos de Houzz Pro (solo el modelo; sin copiar textos, íconos ni diseño). Pro sigue apagado en producción (`PRO_ENABLED=false` sin cambios); las rutas nuevas conservan el candado `NODE_ENV==='development'`. Nada se envía (ni correo, ni WhatsApp, ni push).
+
+### Qué se construyó
+- **Cronograma desde la cotización (fila 13 + nota):** botón "Generar cronograma desde la cotización" en el Gantt. Lee las cotizaciones del trabajo (mismo vínculo que Planificación › Cotizaciones); cada sección pasa a fase, cada línea a tarea (1 día, o la cantidad si la unidad es días; las líneas sin sección van a "Trabajos generales"). Antes de crear se editan nombres, días, días de espera e inclusión, y se ven las fechas resultantes. Crear usa en una sola transacción los escritores existentes (`pro_work_tasks_mutate`, `pro_work_schedule_mutate` phase_save/task_plan, `pro_schedule_mutate` link_set para el desfase): tareas encadenadas fin→inicio, CAS de la revisión del cronograma (409) y de la cotización, identidades derivadas y recibo idempotente; las fases nuevas van después de las existentes, sin reemplazar nada.
+- **Vistas guardadas del centro de tareas (fila 15):** por persona (dueño o integrante), estado/fecha/búsqueda/trabajo/responsable, hasta 20, aplicar y borrar, nombres únicos, CAS.
+- **Fichaje y hojas de horas (fila 22):** el cronómetro de la persona permite elegir una tarea del trabajo y, solo si un Administrador lo habilitó (apagado por defecto), registrar la ubicación aproximada en esa entrada (el navegador la pide en ese momento). La salida sigue el flujo existente (detener, revisar, guardar: una sola línea en Horas y Costos). En Horas: "Fichaje y hojas de horas" por semana con todas las horas existentes del equipo (cronómetros, entradas manuales y libro de Costos; sin costo interno), "En jornada ahora", aprobar/reabrir (dueño, Administrador y Gerente) ligado a una huella de los registros de la semana ("Cambió después de aprobarse" si algo cambia luego), exportar CSV (BOM, `;`); un Miembro o Solo lectura ve solo su semana.
+- **Bitácora, personal del equipo (fila 20):** "Personal del equipo" en cada entrada: dueño e integrantes activos con horas por persona; el resumen personas/horas de la entrada se escribe con el escritor existente (`pro_work_journal_mutate`, historial y revisión).
+- **Avisos por evento y canal (fila 24):** columna WhatsApp junto a En la app y Borrador de correo. Se guarda junto con las preferencias existentes (mismo escritor `pro_notifications_mutate` 'settings'); solo En la app se entrega; WhatsApp queda como preferencia (`delivery: stored_not_sent`).
+- **Roles personalizados (fila 17):** "Roles personalizados" en Equipo: copiar Gerente/Miembro/Solo lectura y quitar permisos ("Ver todo" obligatorio), asignar a integrantes del mismo rol base, archivar (solo sin uso) y restaurar. `pro_role_require` (la puerta única de `/api/pro/*`) interseca el rol base con el personalizado: nunca concede más. `pro_team_workspace_resolve` devuelve las capacidades reducidas, así la interfaz oculta los controles `data-pro-write` correspondientes.
+
+### Archivos
+- SQL `docs/pro/sql/operations-schedule-time-local.sql` (registrado en `scripts/pro/local-sql-manifest.mjs` con 14 dependencias; redefine `pro_role_require` y `pro_team_workspace_resolve` de `pro-editions-team-gate-local.sql` con la misma firma). Aplicado solo al Supabase local (repetido, exit 0). No va en `supabase/migrations`.
+- API (desarrollo): `src/app/api/pro/{estimate-schedule,task-views,time-clock,notification-channels,daily-log-crew}/route.ts` (puerta de roles: GET read, POST work.write) y `src/app/api/pro/team-roles/custom/route.ts` (identidad real, como `team-roles`; SQL exige team.manage). Contratos `src/lib/pro/operations.ts`.
+- UI nueva: `estimate-schedule.tsx`, `task-center-views.tsx`, `time-clock.tsx`, `daily-log-crew.tsx`, `custom-roles.tsx`. Inserciones puntuales: `project-schedule.tsx`, `task-center.tsx`, `work-timer.tsx`, `time-report.tsx`, `notification-center.tsx`, `work-journal.tsx`, `company-team.tsx`.
+- Pruebas: `scripts/pro/verify-pro-operations-db.mjs` (PGlite, manifiesto completo, lecturas parseadas con los esquemas estrictos), `tests/e2e/pro-operations-schedule.spec.ts`; dueño de regresión de las 6 rutas en `scripts/ci/verify-app-surface-ownership.mjs`.
+
+### Verificación
+- SQL `verify-pro-operations-db.mjs`: **8/8 grupos PASS** (propuesta y duraciones, aplicar con escritores/enlaces con desfase/CAS/recibo/validación/agregado, vistas, fichaje con ubicación apagada por defecto, tarea de otro trabajo, un cronómetro abierto por persona, hoja de horas, aprobar/huella/reabrir/roles/CSV, canales, personal, roles personalizados con intersección en la puerta y capacidades reducidas, cascada al borrar la cuenta, RLS/permisos solo service_role, reaplicación).
+- E2E `pro-operations-schedule` ES/EN: **chromium-desktop 2/2, webkit-mobile 2/2** (última pasada tras los ajustes de interfaz). Servidor `next dev` con Pro en una copia de trabajo (`$S/f2c/app`, puerto 3213). Cubre API (400/401/403/409, origen), crear cronograma desde la cotización con días/espera editados y una línea excluida (fechas y desfase comprobados en la base), vistas guardadas (guardar/aplicar/borrar), fichar con tarea, hoja de horas (aprobar, CSV), personal de la bitácora, WhatsApp guardado, rol personalizado asignado y aplicado por la puerta, y que no se crea ninguna fila en `notifications`. Primeras pasadas: la limpieza de la cuenta fallaba por la clave foránea de las asignaciones de roles (se agregó `on delete cascade`) y `mouse.wheel` no existe en WebKit móvil (la captura ahora desplaza el Gantt).
+- Regresión de las specs con superficies tocadas (chromium-desktop, servidor de la copia en 3185 porque `pro-security-roles` y `pro-schedule-time-fixture` lo fijan; liberado después): `pro-security-roles`, `pro-project-schedule`, `pro-round9-features`, `pro-round8-suite`, `pro-round10-features`, `pro-round7c-suite`: **25/25 PASS** (incluye la puerta de roles con `pro_role_require` redefinido).
+- Nombre del módulo: se llamaba `operations-f2c-local.sql`; `verify-local-preparation-manifest` exige `^[a-z][a-z-]+\.sql$` (sin dígitos), así que se renombró a `operations-schedule-time-local.sql` y se actualizó el manifiesto: PASS (219 módulos, 220 pasos, 712 dependencias); reaplicado al Supabase local con el nombre nuevo (exit 0).
+- `tsc` EXIT 0; ESLint `--max-warnings=0` en los archivos tocados: 0; `verify-display-quotes`, `text:check`, `lint:i18n` (398 en 60 archivos, sin ternarios nuevos `isEn ?`), `lint:vocabulario`, `audit-browser-storage` (106) PASS; `local-sql-manifest --check` 0; `verify-local-preparation-db` PASS (219 módulos).
+- Capturas revisadas (escritorio e iPhone, ES/EN): `$S/ux/pro-f2/operations/`. Ajustes tras revisarlas: horas por día con coma decimal en ES, días de la semana en forma corta en el teléfono (se cortaban), días y días de espera lado a lado en el diálogo móvil, captura del Gantt con las barras visibles.
+
+### Pendiente (honesto)
+- Fila 13: calendario laboral/feriados y arrastrar relaciones en el Gantt; la conversión es por partidas, sin IA.
+- Fila 16: comentarios/menciones desde el centro global y adjuntar archivos ya existentes del trabajo a una tarea no se hicieron.
+- Fila 17: los roles personalizados se limitan a las 12 capacidades de la puerta; las reglas finas por ruta (p. ej. finanzas internas) siguen por rol base.
+- Fila 20: clima real sin proveedor. Fila 22: la ubicación se toma solo al fichar entrada (no a la salida ni geocerca); una aprobación no bloquea ediciones posteriores, las marca. Sin nómina.
+- Filas 78/79 sin cambios: las plantillas de cronograma no guardan fin→inicio/inicio→inicio con desfase.
+- Las vistas guardadas y el fichaje usan `work.write` en la puerta: Solo lectura no guarda vistas.
+
+## Ronda F2-A (2026-11-19)
+
+Fila 58 (y notas en 42/44) del [registro](houzz-parity-register-local.md). Factura electrónica detrás de un adaptador de proveedor, **solo en modo de prueba**: nada se envía a Hacienda, GTI ni a ningún proveedor; ningún comprobante real; sin credenciales reales. `PRO_ENABLED` sin cambios. Diseño, datos de prueba y lista de lo que debe entregar el dueño: [einvoice-pipeline-local.md](einvoice-pipeline-local.md).
+
+### 1. Qué se construyó
+- **Adaptador** `src/lib/pro/einvoice/`: interfaz `issue` / `getStatus` / `cancel` / `receiverMessage` / `receiverStatus`; `mock` (simulador determinista del flujo asíncrono de Hacienda: recibido → en proceso → aceptado/rechazado, motivos de rechazo realistas, 503 transitorio, tiempo agotado con reintento que Hacienda responde "ya recibido", error de procesamiento, XML sin firma); `hacienda-sandbox` y `gti` como stubs que se niegan sin variables de entorno (GTI responde "no implementado" hasta tener contrato). Modo resuelto como el correo: live solo con `NODE_ENV=production` + `PRO_EINVOICE_LIVE_CONFIRMED=1`.
+- **Constructor v4.4**: se añadió la **nota de débito 02**, moneda/tipo de cambio (CRC 1.00000; USD con 5 decimales), y el **MensajeReceptor** (05/06/07). Firma: interfaz `EinvoiceSigner` con `MockSigner` (también firma el mensaje receptor).
+- **SQL** `einvoice-pipeline-local.sql` (manifiesto + 5 dependencias; aplicado solo al Supabase local): estado `procesando`, envío duplicado registrado como recibido, ND con reglas propias, respuestas del proveedor inmutables, proveedor por emisor y por comprobante, mensajes receptor con consecutivo propio y una respuesta vigente, reintentos vencidos, `credited` ya no suma débitos.
+- **Ruta** `/api/pro/invoice-einvoice` (dueño, Administrador y Gerente): emitir, consultar/reintentar, nota de crédito, nota de débito, mensaje receptor y su consulta. `/api/pro/einvoice-file` sirve también el XML del mensaje receptor.
+- **Pantallas**: el diálogo de emisión dice "Modo de prueba: no se envía a Hacienda"; insignias con "En proceso en Hacienda"; detalle con clave, consecutivo, fecha, historial con hora y "Respuestas del proveedor"; XML, respuesta e impreso con marca; nota de crédito y **nota de débito**; **Empresa › Facturación electrónica** (modo de solo lectura "Prueba", proveedores, configuración del servidor, datos del emisor con proveedor/sucursal/terminal/actividad, comprobantes recibidos de proveedores).
+- `pro-round6a-integrations.spec.ts` se actualizó al paso intermedio `procesando`.
+
+### 2. Verificación
+- `npx tsc --noEmit -p .` EXIT 0; ESLint `--max-warnings=0` en los archivos nuevos y tocados: 0.
+- `verify-display-quotes` PASS; `text:check` PASS; `lint:i18n` PASS (398 en 60 archivos, sin aumento: el texto nuevo está en registros `{es,en}`); `lint:vocabulario` PASS; `audit-browser-storage` PASS (106); `test:surface-ownership` "128 pages and 353 route handlers"; `local-sql-manifest.mjs --check` EXIT 0.
+- SQL: `verify-einvoice-db.mjs` **7/7 grupos PASS** (PGlite, manifiesto completo, lecturas parseadas con los esquemas de la API); `verify-local-preparation-db` PASS (218 módulos instalados y reaplicados).
+- Unidad: `pro-einvoice-unit.spec.ts` **8/8** + `pro-round6a-einvoice-unit.spec.ts` 8/8.
+- E2E `pro-einvoice.spec.ts` **4/4 PASS** (ES/EN × chromium-desktop y webkit-mobile), servidor `next dev` en copia temporal, puerto 3211.
+- Regresión `pro-round6a-integrations.spec.ts` (prueba de Hacienda, actualizada al paso `procesando`): 2/2 PASS en chromium-desktop.
+- Capturas escritorio + iPhone ES/EN: `$S/ux/pro-f2/einvoice/` (44 archivos).
+
+### Pendiente (honesto)
+- Emisión real: credenciales de pruebas/producción, validación con el XSD oficial (lista en el documento de diseño) y el OK del dueño. El adaptador real aún no envía el mensaje receptor al ATV; GTI sin contrato.
+- Los mensajes del simulador vienen en español también en la vista en inglés (como los de Hacienda).
+- El borrador sigue siendo solo CRC. Integrante y Solo lectura reciben 403 en la ruta nueva (`proInternalFinanceDenied`); no hay prueba E2E con un integrante de equipo (cubierto por la puerta y sus pruebas existentes).
+- `verify-local-preparation-manifest.mjs` falla hoy por módulos de otras rondas en curso (`operations-schedule-time-local.sql` no cumple el patrón de nombre); no depende de este módulo.
+
+## Ronda F2-B 2026-11-19
+
+Ventas: filas 05, 07, 08, 35, 39 y 40 del [registro](houzz-parity-register-local.md). Referencia funcional: embudo, informes de solicitudes, contactos, propuestas y contratos de Houzz Pro (solo el modelo; sin copiar textos, íconos ni diseño). Línea de prueba, `PRO_ENABLED=false` sin cambios; las rutas nuevas conservan `NODE_ENV==='development'` + Supabase local. Sin commits, envíos, correos ni mensajes. SQL solo en `docs/pro/sql` + manifiesto, aplicado dos veces al Supabase local (idempotente). Servidor `next dev` con Pro en una copia temporal (`$S/f2b/mirror`, puerto 3212, webpack).
+
+### 1. Embudo configurable (fila 07) — hecho
+- **Color y probabilidad por etapa** (`sales-pipeline-forecast-local.sql`, `/api/pro/lead-pipeline`, `sales-pipeline.tsx`): paleta fija de 12 colores (claves, nunca CSS libre) y probabilidad 0–100 %, también en etapas propias; valores sugeridos por etapa y «Usar valores sugeridos»; CAS 409, recibos idempotentes, historial inmutable con la persona que actuó; escribir = `lead.write` (Solo lectura 403 `pro_role`).
+- **Tablero**: franja de color, probabilidad y previsión ponderada por columna; «Previsión del embudo» arriba: abierto, ponderado y ganado por moneda, sin perdidas ni archivadas, y cuántas solicitudes no tienen valor estimado.
+- **Historial de etapas por solicitud** («Etapas» en cada tarjeta): tramos entrada/salida/tiempo. Fuente: disparadores `AFTER INSERT` en los historiales existentes (`pro_lead_center_history`, `pro_request_pipeline_history`) que solo agregan una marca (con excepción atrapada: nunca rompen al escritor), más la etapa efectiva observada al leer (cambios automáticos). Solicitudes anteriores: un tramo «registro anterior» desde el último cambio registrado. Tramos inmutables (solo se cierran una vez).
+- Crear/renombrar/ordenar/ocultar/archivar con reasignación ya existía (editor de etapas); se enlaza desde «Colores y probabilidad».
+
+### 2. Conversión por etapa (fila 08) — hecho
+- «Embudo por etapa»: período CR + canal (filtro existente); llegaron por etapa (máxima registrada, actual o conversión explícita a trabajo), % desde el inicio y desde la anterior, ahora en la etapa, tiempo promedio y mediano, recibidas/ganadas/perdidas/trabajos y CSV para Excel (`;`, BOM, nombres de etapa del idioma).
+
+### 3. Propuesta visual (fila 39) — hecho, parcial
+- `estimate-proposals-local.sql`, `/api/pro/quote-proposals` (`sales.write`), `estimate-proposal.tsx`, inserciones en `private-estimate-publications.tsx` (portada) y `quote-line-decisions.tsx` (fotos por sección/partida y cierre).
+- Diseño: título de portada, introducción, cierre, 1 foto de portada y hasta 6 por sección y por partida, de Archivos de la empresa o archivos de trabajos (JPEG listos y activos; nada se sube ni copia), pie de foto, orden y quitar; CAS, recibos, historial.
+- «Mostrar al cliente en la versión N»: instantánea inmutable por versión abierta; versiones cerradas congeladas; cambios posteriores no llegan al cliente hasta aplicarlos de nuevo. El cliente ve portada con foto, introducción, galerías y cierre junto a la aprobación por partida existente (sin cambios). Fotos solo para dueño/destinatario y solo si están en la instantánea, con tamaño y SHA-256 verificados; sin rutas ni huellas en el navegador.
+
+### 4. Contactos (fila 05) — hecho
+- Campos personalizados (texto/número/fecha/lista), varios teléfonos y correos, ficha del cliente, mapeo de importación y exportación (`contact-fields-local.sql`, `/api/pro/client-contacts/fields`, `client-contact-extras.tsx`). Detalle en la fila 05.
+
+### Verificación
+- SQL PGlite con el manifiesto completo y esquemas estrictos de la API: `verify-pro-sales-pipeline-db.mjs` **5/5**, `verify-pro-estimate-proposals-db.mjs` **3/3**, `verify-pro-contact-fields-db.mjs` **6/6**. `verify-local-preparation-db` PASS (219 módulos instalados y reaplicados). `local-sql-manifest --check` 0.
+- E2E (`playwright.pro-local.config.ts`, 3212): `pro-sales-pipeline` chromium-desktop 2/2, webkit-mobile 2/2; `pro-sales-proposal` chromium-desktop 2/2, webkit-mobile 2/2; `pro-sales-contact-fields` 2/2 + 2/2; regresión `pro-round10-features` (clientes) 2/2 + 2/2. Primeras pasadas fallidas por la prueba (P0002 = 400 en `proDbError`, restricción de moneda del fixture, costo de línea obligatorio, la vista compartida del dueño es un diálogo), no por el código.
+- `tsc`, ESLint `--max-warnings=0` en los archivos tocados, `verify-display-quotes`, `text:check`, `lint:vocabulario`, `audit-browser-storage` PASS (ver informe final para el estado de las rutas/archivos de otras rondas en curso).
+- Capturas revisadas (escritorio e iPhone, ES/EN): `$S/ux/pro-f2/sales/` (tablero con previsión, colores y probabilidad, historial de etapas, embudo, diseñador de propuesta, propuesta del cliente). Ajustes tras revisarlas: ancho del campo de probabilidad, «menos de 1 hora» en vez de «0 horas», «Ganadas» en el embudo, etiqueta del canal alineada, botones de orden de fotos más grandes, título corto del diálogo en el teléfono.
+
+### Pendiente (honesto)
+- Fila 07/08: el historial de etapas empieza en esta ronda (no se reconstruyen transiciones automáticas pasadas; los cambios automáticos se fechan al observarse si no hay marca); sin reglas automáticas por etapa ni métricas por persona.
+- Fila 39: convertir con un clic lo aprobado en versión nueva o acuerdo; la aprobación parcial no es la respuesta formal de la versión; si una foto archivada ya estaba en una instantánea, sigue sirviéndose mientras sus bytes coincidan.
+- Fila 05: combinar no traslada campos/canales; un canal adicional no se vuelve principal.
+
+### Ronda F2-B, complemento filas 40 y 35 (2026-11-19)
+
+- Fila 40: versiones de cláusulas leídas del historial inmutable `pro_contract_history`; lector `pro_contract_library_clause_versions`; badge, panel y restaurar en Empresa › Plantillas; campos nuevos `cliente.telefono`, `cliente.correo`, `trabajo.direccion`, `monto.total`.
+- Fila 35: `pro_lead_quick_quote_context`/`_match`, `LeadQuickQuoteButton` en lista, detalle y tablero; prefill de una sola línea en el editor existente atado al id del borrador (`lineaCatalogo`).
+- Ajuste intencional: `pro-contracts.spec.ts` usa `{{cliente.celular}}` como campo desconocido, porque `cliente.telefono` ya es real; las aserciones no cambian.
+- Verificación: tsc 0; ESLint 0 en 13 archivos; display-quotes, text, i18n (398/60), vocabulario y storage (106) PASS; manifiesto ok; surface-ownership PASS (129/353); SQL 8/8; E2E `pro-sales-contracts-quote` 2/2 + 2/2 (dos veces) y `pro-contracts` 2/2 + 2/2; 24 capturas revisadas.
+- Pendiente: versión de la cláusula insertada en el contrato; coincidencia de catálogo solo por nombre; sin creación de cliente desde «Cotizar».

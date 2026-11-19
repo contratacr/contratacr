@@ -24,6 +24,7 @@ const CatalogWorkspace=dynamic(()=>import('./catalog-workspace').then(m=>m.Catal
 const CompanyFiles=dynamic(()=>import('./company-files').then(m=>m.CompanyFiles),{loading:ViewLoading});
 const CompanyVendors=dynamic(()=>import('./company-vendors').then(m=>m.CompanyVendors),{loading:ViewLoading});
 const CompanyIntegrations=dynamic(()=>import('./company-integrations').then(m=>m.CompanyIntegrations),{loading:ViewLoading});
+const CompanyEinvoice=dynamic(()=>import('./company-einvoice').then(m=>m.CompanyEinvoice),{loading:ViewLoading});
 const CompanyConnectors=dynamic(()=>import('./company-connectors').then(m=>m.CompanyConnectors),{loading:ViewLoading});
 const CompanyAccounting=dynamic(()=>import('./company-accounting').then(m=>m.CompanyAccounting),{loading:ViewLoading});
 const CompanySite=dynamic(()=>import('./company-site').then(m=>m.CompanySite),{loading:ViewLoading});
@@ -31,7 +32,7 @@ const CompanyMarketing=dynamic(()=>import('./company-marketing').then(m=>m.Compa
 const CompanyAdsTracking=dynamic(()=>import('./company-ads-tracking').then(m=>m.CompanyAdsTracking),{loading:ViewLoading});
 const PaymentReconciliation=dynamic(()=>import('./payment-reconciliation').then(m=>m.PaymentReconciliation),{loading:ViewLoading});
 
-export const companyViews=['contactos','proveedores','archivos','plantillas','categorias','articulos','catalogos','perfil','formulario','sitio','correo','insights','integraciones','conectores','contabilidad','cobros','documentos'] as const;
+export const companyViews=['contactos','proveedores','archivos','plantillas','categorias','articulos','catalogos','perfil','formulario','sitio','correo','insights','integraciones','conectores','contabilidad','cobros','documentos','facturacion'] as const;
 export type CompanyView=typeof companyViews[number];
 type Copy={es:string;en:string};
 const views:Record<CompanyView,{label:Copy;title:Copy;description:Copy}>={
@@ -51,6 +52,8 @@ const views:Record<CompanyView,{label:Copy;title:Copy;description:Copy}>={
  conectores:{label:{es:'Correo y calendario',en:'Email and calendar'},title:{es:'Correo, calendario y archivos',en:'Email, calendar and files'},description:{es:'Conecte Google o Microsoft para enviar correos de proyecto desde su buzón, sincronizar la agenda y adjuntar archivos de Drive u OneDrive.',en:'Connect Google or Microsoft to send project emails from your mailbox, sync your agenda and attach Drive or OneDrive files.'}},
  contabilidad:{label:{es:'Contabilidad',en:'Accounting'},title:{es:'Contabilidad',en:'Accounting'},description:{es:'Sincronice clientes, facturas y pagos con QuickBooks o exporte un CSV para cualquier sistema contable.',en:'Sync customers, invoices and payments with QuickBooks or export a CSV for any accounting system.'}},
  documentos:{label:{es:'Documentos con su marca',en:'Branded documents'},title:{es:'Documentos con su marca',en:'Branded documents'},description:{es:'El color, el logo y los datos de su empresa en las facturas, contratos, estados de cuenta, planes de pagos, recibos y órdenes de compra que imprime.',en:'Your colour, logo and company details on the invoices, contracts, statements, payment plans, receipts and purchase orders you print.'}},
+ // Ronda F2-A: electronic invoicing (provider, mode, emisor, branch/terminal, received documents).
+ facturacion:{label:{es:'Facturación electrónica',en:'Electronic invoicing'},title:{es:'Facturación electrónica',en:'Electronic invoicing'},description:{es:'Proveedor y modo de la factura electrónica, datos del emisor, sucursal, terminal y actividad, y respuestas a los comprobantes que le envían sus proveedores.',en:'Electronic invoice provider and mode, issuer details, branch, terminal and activity, and answers to the documents your suppliers send you.'}},
  cobros:{label:{es:'Cobros en línea',en:'Online payments'},title:{es:'Cobros en línea',en:'Online payments'},description:{es:'Conciliación de los pagos recibidos por enlace con los estados de cuenta.',en:'Reconciliation of payments received by link against the customer ledgers.'}},
 };
 const groups:{label:Copy;items:CompanyView[]}[]=[
@@ -59,7 +62,7 @@ const groups:{label:Copy;items:CompanyView[]}[]=[
  // company-hub address ?empresa=archivos keeps working for old links.
  {label:{es:'Biblioteca',en:'Library'},items:['plantillas','categorias','articulos','catalogos']},
  {label:{es:'Marketing',en:'Marketing'},items:['perfil','formulario','sitio','correo','insights']},
- {label:{es:'Configuración',en:'Settings'},items:['integraciones','conectores','contabilidad','cobros','documentos']},
+ {label:{es:'Configuración',en:'Settings'},items:['facturacion','integraciones','conectores','contabilidad','cobros','documentos']},
 ];
 const card='min-w-0 space-y-3 rounded-2xl border border-[#d7e1ea] bg-white p-4 sm:p-5';
 const linkButton='inline-flex min-h-11 items-center justify-center rounded-full border border-[#d7e1ea] bg-white px-5 text-sm font-semibold text-[#007aa0] hover:bg-[#f3f8fb] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#008bb5]';
@@ -101,6 +104,7 @@ export function CompanyHub({profileSlug,disabled=false}:{profileSlug:string|null
    {view==='contabilidad'&&user&&<CompanyAccounting key={user.id}/>}
    {view==='cobros'&&user&&<PaymentReconciliation key={user.id}/>}
    {view==='documentos'&&user&&<DocumentBrandingSettings key={user.id}/>}
+   {view==='facturacion'&&user&&<CompanyEinvoice key={user.id}/>}
   </section>
  </div>;
 }

@@ -129,6 +129,7 @@ const handlerRules = [
   [/^\/api\/pro\/client-statement-print$/, "pro-round4a.spec.ts"],
   [/^\/api\/pro\/company-daily-log-files$/, "pro-company-daily-log-files-api.spec.ts"],
   [/^\/api\/pro\/company-file-versions$/, "pro-company-file-versions.spec.ts"],
+  [/^\/api\/pro\/company-file-tags$/, "pro-files-library.spec.ts"],
   [/^\/api\/pro\/company-files$/, "pro-company-files.spec.ts"],
   [/^\/api\/pro\/company-vendors$/, "pro-bid-portal.spec.ts"],
   [/^\/api\/pro\/connectors$/, "pro-round6b-connectors.spec.ts"],
@@ -143,12 +144,15 @@ const handlerRules = [
   [/^\/api\/pro\/discount-presets$/, "pro-discount-presets.spec.ts"],
   [/^\/api\/pro\/einvoice$/, "pro-round6a-integrations.spec.ts"],
   [/^\/api\/pro\/einvoice-file$/, "pro-round6a-integrations.spec.ts"],
+  [/^\/api\/pro\/invoice-einvoice$/, "pro-einvoice.spec.ts"],
   [/^\/api\/pro\/esign\/mock-sign$/, "pro-round6b-esign.spec.ts"],
   [/^\/api\/pro\/esign$/, "pro-round6b-esign.spec.ts"],
   [/^\/api\/pro\/esign-file$/, "pro-round6b-esign.spec.ts"],
   [/^\/api\/pro\/expense-receipts$/, "pro-round4b-billing.spec.ts"],
   [/^\/api\/pro\/expenses$/, "pro-expenses-english.spec.ts"],
   [/^\/api\/pro\/file-versions$/, "pro-file-versions.spec.ts"],
+  // Row 30 (Ronda F2): @mentions of the job team in file comments and the member inbox.
+  [/^\/api\/pro\/file-mentions$/, "pro-file-mentions.spec.ts"],
   [/^\/api\/pro\/identity-lookup$/, "pro-client-fiscal.spec.ts"],
   [/^\/api\/pro\/integrations$/, "pro-round6a-integrations.spec.ts"],
   [/^\/api\/pro\/integrations\/webhooks\/esign$/, "pro-round6b-esign.spec.ts"],
@@ -224,6 +228,12 @@ const handlerRules = [
   [/^\/api\/pro\/work-budget$/, "pro-purchase-orders.spec.ts"],
   // Row 54 (Ronda F1-B): company cost-code library, budget markup/VAT, forecast and the client summary.
   [/^\/api\/pro\/(?:cost-codes|work-budget-forecast)$/, "pro-cost-codes.spec.ts"],
+  // Ronda F2-B (row 05): customer custom fields and additional phones/e-mails.
+  [/^\/api\/pro\/client-contacts\/fields$/, "pro-sales-contact-fields.spec.ts"],
+  // Ronda F2-B (row 35): one-click quote context from a lead.
+  [/^\/api\/pro\/lead-quick-quote$/, "pro-sales-contracts-quote.spec.ts"],
+  [/^\/api\/pro\/lead-pipeline$/, "pro-sales-pipeline.spec.ts"],
+  [/^\/api\/pro\/quote-proposals$/, "pro-sales-proposal.spec.ts"],
   [/^\/api\/pro\/work-changes$/, "pro-work-changes.spec.ts"],
   [/^\/api\/pro\/work-client-invitations$/, "pro-round4a.spec.ts"],
   [/^\/api\/pro\/work-costs$/, "pro-purchase-orders.spec.ts"],
@@ -246,6 +256,8 @@ const handlerRules = [
   [/^\/api\/pro\/(?:finance-reports|purchase-order-sources|selections-visibility)$/, "pro-round11-features.spec.ts"],
   // Round F1-A (row 55): accounts payable, cash flow and income statement in Statistics › Reports.
   [/^\/api\/pro\/(?:payables|cash-flow|income-statement)$/, "pro-payables-cashflow.spec.ts"],
+  // Ronda F2-C (rows 13, 15, 17, 20, 22, 24): schedule from quote, saved task views, time clock, crew, channels, custom roles.
+  [/^\/api\/pro\/(?:estimate-schedule|task-views|time-clock|daily-log-crew|notification-channels|team-roles\/custom)$/, "pro-operations-schedule.spec.ts"],
   [/^\/api\/pro\/(?:client-project-overview|getting-started)$/, "pro-round12-features.spec.ts"],
   // Fix 14 (local Pro): per-item customer approval of a shared quote version (row 39).
   [/^\/api\/pro\/quote-line-decisions$/, "pro-fix14.spec.ts"],

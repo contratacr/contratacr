@@ -65,6 +65,7 @@ import type { AgendaControls } from "./agenda-workspace";
 import type { CatalogControls } from "./catalog-workspace";
 import { CatalogImport } from "./catalog-import";
 import { ContactsOrganizerDialog } from "./round10-sales";
+import { ClientContactExtras } from "./client-contact-extras";
 import { AgendaCalendar } from "./agenda-calendar";
 import { proMoney } from "@/lib/pro/money";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -1009,6 +1010,7 @@ export function BusinessPanel({
                   {customer.notes}
                 </p>
               )}
+              {catalog && <ClientContactExtras key={"extras:"+customer.id} clientId={customer.id} disabled={customer.archived||writeBlocked}/>}
               {!customer.archived && (
                 <div className="flex flex-wrap gap-2">
                   <Button

@@ -665,7 +665,15 @@
     "noRespondioBoton": "Post",
     "cerrar": "Close",
     "cedulaVerificada": "Verified",
-    "verificadoCorto": "Verified"
+    "verificadoCorto": "Verified",
+    "biz": {
+      "coverSeeAll": "{count, plural, one {See # success story} other {See all # success stories}}",
+      "experienceYears": "{count, plural, one {# year of experience} other {# years of experience}}",
+      "ratingOutOf": "{rating} out of 5",
+      "writeReview": "Leave a review",
+      "contactCardTitle": "Contact this professional",
+      "moreCategories": "{count, plural, one {+# more service} other {+# more services}}"
+    }
   },
   "auth": {
     "login": {
@@ -3518,6 +3526,11 @@
     "offerExplanation": "Request a service you offer. If approved, we’ll notify you to complete its details and publish it on your profile.",
     "catalogExplanation": "Request a service missing from the catalog. We’ll notify you of the decision.",
     "guestExplanation": "We’ll review your request. After registration, request it from your account to receive updates."
+  },
+  "proBrandedQuotePrint": {
+    "printOwner": "Print with your brand",
+    "printClient": "Print or save as PDF",
+    "clientHint": "Includes the brand of the company that sent you the quote. To keep it, choose \"Save as PDF\" when printing."
   },
   "proIdentityLookup": {
     "privacyTitle": "How this lookup is used",

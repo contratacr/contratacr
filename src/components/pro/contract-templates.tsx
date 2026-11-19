@@ -1,6 +1,6 @@
 'use client';
 
-import {useCallback,useEffect,useId,useLayoutEffect,useRef,useState} from 'react';
+import {useCallback,useEffect,useId,useLayoutEffect,useRef,useState,type ReactNode} from 'react';
 import {useLocale} from 'next-intl';
 import {useAuth} from '@/hooks/use-auth';
 import {useAppDialog} from '@/hooks/use-app-dialog';
@@ -8,6 +8,7 @@ import {Button} from '@/components/ui/button';
 import {
  CONTRACT_TITLE_MAX,contractLibrarySchema,contractTemplateDetailSchema,contractTemplateResultSchema,
  type ContractLibrary,type ContractMutation,type ContractTemplate,type LibraryClause,
+ libraryClauseVersionsSchema,type LibraryClauseVersions,
 } from '@/lib/pro/contracts';
 import {useProChildGuard} from './use-pro-child-guard';
 import {ClauseForm,ClauseListEditor,ContractText,card,contractsApi,field,label,postContract,type ContractState} from './contract-clauses';
@@ -122,19 +123,55 @@ function TemplatesSession({accountId,onStateChange,onChanged}:{accountId:string;
    {data.clauses.length?<ul className="space-y-2">{data.clauses.map(item=><LibraryRow key={item.id} item={item} editing={editingClause===item.id} locked={locked} blocked={blocked} c={c} onDirty={setFormDirty}
      onEdit={()=>setEditingClause(item.id)} onCancel={()=>{setEditingClause(null);setFormDirty(false);}}
      onSave={async value=>{if(await run([{action:'library_clause_update',actionId:crypto.randomUUID(),id:item.id,revision:item.revision,...value}])){setEditingClause(null);setFormDirty(false);}}}
-     onToggle={()=>void run([{action:item.archived?'library_clause_restore':'library_clause_archive',actionId:crypto.randomUUID(),id:item.id,revision:item.revision}])}/>)}</ul>
+     onToggle={()=>void run([{action:item.archived?'library_clause_restore':'library_clause_archive',actionId:crypto.randomUUID(),id:item.id,revision:item.revision}])}
+     versions={<ClauseVersions accountId={accountId} item={item} blocked={blocked} confirm={confirm}
+      onRestore={value=>run([{action:'library_clause_update',actionId:crypto.randomUUID(),id:item.id,revision:item.revision,...value}],VERSION_COPY[en?'en':'es'].restored)}/>}/>)}</ul>
     :<p data-contract-library-empty className="text-sm text-[#52627a]">{c.libraryEmpty}</p>}
   </div>}
  </section>;
 }
 
-function LibraryRow({item,editing,locked,blocked,c,onDirty,onEdit,onCancel,onSave,onToggle}:{item:LibraryClause;editing:boolean;locked:boolean;blocked:boolean;c:ReturnType<typeof copy>;onDirty:(d:boolean)=>void;onEdit:()=>void;onCancel:()=>void;onSave:(v:{title:string;body:string})=>void;onToggle:()=>void}){
+function LibraryRow({item,editing,locked,blocked,c,onDirty,onEdit,onCancel,onSave,onToggle,versions}:{item:LibraryClause;editing:boolean;locked:boolean;blocked:boolean;c:ReturnType<typeof copy>;onDirty:(d:boolean)=>void;onEdit:()=>void;onCancel:()=>void;onSave:(v:{title:string;body:string})=>void;onToggle:()=>void;versions?:ReactNode}){
+ const locale=useLocale()==='en'?'en':'es';
  if(editing)return <li><ClauseForm initial={{title:item.title,body:item.body}} saving={locked} onDirty={onDirty} onCancel={onCancel} onSubmit={onSave}/></li>;
  return <li data-contract-library-row={item.title} className="min-w-0 space-y-2 rounded-xl border border-[#d7e1ea] p-3">
-  <p className="break-words font-semibold">{item.title}{item.archived&&<span className="ml-2 text-xs font-normal text-[#52627a]">({c.archived})</span>}</p>
+  <div className="flex flex-wrap items-start justify-between gap-2"><p className="min-w-0 break-words font-semibold">{item.title}{item.archived&&<span className="ml-2 text-xs font-normal text-[#52627a]">({c.archived})</span>}</p>
+   {item.version!==undefined&&<span data-contract-library-version={item.version} className="shrink-0 rounded-full bg-[#eef4f8] px-2.5 py-0.5 text-xs font-semibold text-[#1c4e6b]">{VERSION_COPY[locale].badge(item.version)}</span>}</div>
   <ContractText text={item.body} className="text-sm text-[#162543]"/>
   <div className="flex flex-wrap gap-2">{!item.archived&&<Button type="button" variant="secondary" className="min-h-11" disabled={blocked} onClick={onEdit}>{c.edit}</Button>}<Button type="button" variant="secondary" className="min-h-11" disabled={blocked} onClick={onToggle}>{item.archived?c.restore:c.archive}</Button></div>
+  {versions}
  </li>;
+}
+
+/** Ronda F2-B: copy of the clause-version panel ({es,en} record, no inline ternaries). */
+const VERSION_COPY={
+ es:{badge:(n:number)=>`Versión ${n}`,show:(n:number)=>n===1?'Ver versiones (1)':`Ver versiones (${n})`,hide:'Ocultar versiones',loading:'Cargando versiones…',failed:'No se pudieron cargar las versiones. Reintente.',
+  current:'Versión actual',restore:'Restaurar esta versión',restoreTitle:(n:number)=>`¿Restaurar la versión ${n}?`,restoreBody:'El texto actual se conserva como una versión anterior. Los contratos ya creados no cambian.',
+  confirm:'Restaurar',cancel:'Cancelar',restored:'Versión restaurada. Se guardó como una versión nueva.',savedOn:'Guardada el',help:'Cada cambio del texto queda guardado como una versión que no se puede modificar.'},
+ en:{badge:(n:number)=>`Version ${n}`,show:(n:number)=>n===1?'Show versions (1)':`Show versions (${n})`,hide:'Hide versions',loading:'Loading versions…',failed:'Could not load the versions. Try again.',
+  current:'Current version',restore:'Restore this version',restoreTitle:(n:number)=>`Restore version ${n}?`,restoreBody:'The current text is kept as an earlier version. Contracts already created do not change.',
+  confirm:'Restore',cancel:'Cancel',restored:'Version restored. It was saved as a new version.',savedOn:'Saved on',help:'Every change to the text is kept as a version that cannot be modified.'},
+};
+function ClauseVersions({accountId,item,blocked,confirm,onRestore}:{accountId:string;item:LibraryClause;blocked:boolean;confirm:Confirm;onRestore:(v:{title:string;body:string})=>Promise<boolean>}){
+ const locale=useLocale()==='en'?'en':'es',v=VERSION_COPY[locale],[open,setOpen]=useState(false),[data,setData]=useState<LibraryClauseVersions|null>(null),[failed,setFailed]=useState(false),seq=useRef(0);
+ const load=useCallback(async()=>{const n=++seq.current;setFailed(false);try{const r=await fetch(contractsApi+'?'+new URLSearchParams({clauseId:item.id}),{cache:'no-store',headers:{'X-Pro-Expected-Actor':accountId}});if(!r.ok)throw Error();const body=libraryClauseVersionsSchema.parse(await r.json());if(n===seq.current)setData(body);}catch{if(n===seq.current)setFailed(true);}},[accountId,item.id]);
+ useEffect(()=>{if(!open)return;const timer=setTimeout(()=>void load(),0);return()=>clearTimeout(timer);},[open,load,item.revision]);
+ const when=(at:string)=>new Intl.DateTimeFormat({es:'es-CR',en:'en-US'}[locale],{dateStyle:'medium',timeStyle:'short',timeZone:'America/Costa_Rica'}).format(new Date(at));
+ if(item.version===undefined)return null;
+ return <div data-contract-library-versions={item.id} className="min-w-0 space-y-2">
+  <button type="button" className="min-h-11 text-sm font-semibold text-[#00617f] underline-offset-2 hover:underline" aria-expanded={open} onClick={()=>setOpen(o=>!o)}>{open?v.hide:v.show(item.version)}</button>
+  {open&&<div className="min-w-0 space-y-2 rounded-xl bg-[#f6f9fb] p-3">
+   <p className="text-xs text-[#52627a]">{v.help}</p>
+   {failed?<p role="alert" className="text-sm text-red-700">{v.failed}</p>:!data?<p role="status" className="text-sm text-[#52627a]">{v.loading}</p>:
+    <ol className="space-y-2">{data.versions.map(version=><li key={version.version} data-contract-library-version-item={version.version} data-current={version.current?'1':'0'} className={'min-w-0 space-y-1 rounded-lg border bg-white p-3 '+(version.current?'border-[#7cc4dc]':'border-[#d7e1ea]')}>
+     <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-semibold">{v.badge(version.version)}{version.current&&<span className="ml-2 rounded-full bg-[#e3f4ea] px-2 py-0.5 text-xs font-semibold text-[#1f6f43]">{v.current}</span>}</p><p className="text-xs text-[#52627a]">{v.savedOn} {when(version.at)}</p></div>
+     <p className="break-words text-sm font-medium">{version.title}</p>
+     <ContractText text={version.body} className="text-sm text-[#33445f]"/>
+     {!version.current&&!item.archived&&<Button type="button" variant="secondary" className="min-h-11" data-contract-library-restore={version.version} disabled={blocked}
+      onClick={async()=>{if(!(await confirm({title:v.restoreTitle(version.version),description:v.restoreBody,confirmLabel:v.confirm,cancelLabel:v.cancel})).confirmed)return;if(await onRestore({title:version.title,body:version.body}))void load();}}>{v.restore}</Button>}
+    </li>)}</ol>}
+  </div>}
+ </div>;
 }
 
 function TemplateCreateForm({library,saving,onDirty,onCancel,onSubmit}:{library:LibraryClause[];saving:boolean;onDirty:(d:boolean)=>void;onCancel:()=>void;onSubmit:(input:Extract<ContractMutation,{action:'template_create'}>)=>void}){

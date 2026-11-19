@@ -1,19 +1,20 @@
 import type {Metadata} from 'next';
+import {cn} from '@/lib/utils';
 import {notFound} from 'next/navigation';
 import {createAdminClient} from '@/lib/supabase/admin';
 import {createClient} from '@/lib/supabase/server';
 import {safeGetUser} from '@/lib/supabase/get-user';
 import {DirectoryShell} from '@/components/directory/directory-shell';
 import {PlacePage} from '@/components/directory/place-page';
-import {PlaceClaim} from '@/components/directory/place-claim';
+import {PlaceClaimLink} from '@/components/directory/place-claim-link';
+import {PlaceBranches,nearestBranches} from '@/components/directory/place-branches';
 import {PlacePrices} from '@/components/directory/place-prices';
 import {PlaceReviews} from '@/components/directory/place-reviews';
 import {PlaceListingsSection} from '@/components/directory/place-listings-section';
 import {placeSlugSchema} from '@/lib/directory/schemas';
-import {DIRECTORY_LISTINGS_ENABLED,DIR_CLAIM_SMS_ENABLED,DIR_HEALTH_ENABLED,DIR_ENABLED,placeIndexable} from '@/lib/directory/feature-flags';
+import {DIRECTORY_LISTINGS_ENABLED,DIR_HEALTH_ENABLED,DIR_ENABLED,placeIndexable} from '@/lib/directory/feature-flags';
 import {placeJsonLd} from '@/lib/directory/place-jsonld';
 import {DatosEstructurados} from '@/components/seo/datos-estructurados';
-import type {ClaimOptions} from '@/lib/directory/claim-schemas';
 import {mapPublicListing,type PublicListing} from '@/lib/directory/listing-public';
 import type {PublicPlace} from '@/lib/directory/types';
 import type {PublicPriceCurrent} from '@/lib/directory/price-schemas';
@@ -32,7 +33,8 @@ import {PlaceEvents} from '@/components/directory/place-events';
 import {SaveToList} from '@/components/directory/save-to-list';
 import {PlacePhotoUpload} from '@/components/directory/place-photo-upload';
 import {businessPlaces} from '@/lib/directory/business-access';
-import type {OrderLink,PlaceBrand,PlaceEvent,PublicQuestions,ReservationConfig} from '@/lib/directory/place-features';
+import type {OrderLink,PlaceBrand,PlaceEvent,PublicBrand,PublicQuestions,ReservationConfig} from '@/lib/directory/place-features';
+import {BIZ} from '@/components/directory/biz-ui';
 
 // LOCAL PRO ONLY (multivertical F1–F5/P1/P2/V4, development only like /sitio): canonical page of a place, /lugar/<slug>.
 // Only published (or permanently closed) places; every pharmacy since the owner decision of 2026-11-17 (its permit
@@ -62,6 +64,12 @@ async function replyTargets(db:ReturnType<typeof createAdminClient>,userId:strin
  const team=await db.rpc('dir_review_reply_targets',{p_actor:owner,p_slug:slug});
  return team.error?null:team.data as ReplyTarget[]|null;
 }
+/** 5→1 distribution of the published reviews (index 0 = 1 star): five head-only counts, half stars rounded up from .5. */
+async function reviewDistribution(db:ReturnType<typeof createAdminClient>,placeId:string):Promise<number[]|null>{
+ const bands:[number,number][]=[[0,1.5],[1.5,2.5],[2.5,3.5],[3.5,4.5],[4.5,6]];
+ const counts=await Promise.all(bands.map(([lo,hi])=>db.from('dir_reviews').select('id',{count:'exact',head:true}).eq('place_id',placeId).eq('moderation_status','published').gte('rating',lo).lt('rating',hi)));
+ return counts.some(c=>c.error)?null:counts.map(c=>c.count??0);
+}
 async function load(slug:string){
  if(!placeSlugSchema.safeParse(slug).success)return null;
  const result=await createAdminClient().rpc('dir_place_public',{p_slug:slug});
@@ -89,7 +97,7 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
  // Classified listings are OFF by owner decision: dealers/agencies show as places only (no listings block).
  const listingView=!DIRECTORY_LISTINGS_ENABLED?null:vertical==='vehicle_dealer'?'public_vehicle_listings':vertical==='real_estate'?'public_property_listings':null;
  const [claim,prices,reviews,menu,listings,user,hoursSource,questions,events,order,brand,reservation]=await Promise.all([
-  db.from('dir_places').select('claim_status').eq('slug',slug).maybeSingle(),
+  db.from('dir_places').select('id,claim_status').eq('slug',slug).maybeSingle(),
   db.rpc('public_price_current',{p_place_slug:slug,p_item_slug:null}),
   db.rpc('dir_place_reviews_public',{p_slug:slug,p_after:null}),
   vertical==='restaurant'||vertical==='cafe_bar'?db.rpc('dir_place_menu_public',{p_slug:slug}):Promise.resolve(null),
@@ -106,11 +114,7 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
  const orderLink=order.error?null:order.data as OrderLink|null,placeBrand=brand.error?null:brand.data as PlaceBrand|null;
  const reservationConfig=reservation&&!reservation.error?reservation.data as ReservationConfig|null:null;
  const unclaimed=claim.data?.claim_status==='unclaimed'&&place.status==='published';
- // Claim block (2026-11-17): code to the e-mail on the place first, then a website-domain e-mail, then staff review.
- // Only masks and booleans reach the browser; SMS appears only with DIR_CLAIM_SMS_ENABLED and the database switch on.
- const claimOptions=unclaimed?await db.rpc('dir_claim_options',{p_slug:slug}):null;
- const options=claimOptions&&!claimOptions.error&&claimOptions.data?claimOptions.data as ClaimOptions:null;
- const claimChoices={emailListed:options?.emailListed??null,websiteHost:options?.websiteHost??null,sms:DIR_CLAIM_SMS_ENABLED&&!!options?.smsEnabled&&!!options?.phoneListed};
+ // Claim (2026-11-19, Yelp model): a compact link in the side card; the flow and its benefits live in /lugar/<slug>/reclamar.
  const menuData=menu&&!menu.error?menu.data as PublicMenu|null:null;
  const placeListings=(listings?.data??[]).map(r=>mapPublicListing(r as Record<string,unknown>)).filter((l):l is PublicListing=>!!l);
  const loginHref=user?null:`${prefix}/login?redirect=${encodeURIComponent(`${prefix}/lugar/${slug}`)}`;
@@ -122,25 +126,44 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
  // «Mi negocio» (free, outside Pro): only the owner/managers of THIS claimed place see the shortcut (not Pro team members).
  const managesHere=!!user&&(await businessPlaces(db,user.id)).some(p=>p.slug===slug);
  const appUrl=(process.env.NEXT_PUBLIC_APP_URL||'https://contratacr.com').replace(/\/$/,'');
- return <DirectoryShell>{place.status==='published'&&<DatosEstructurados datos={placeJsonLd(place,`${appUrl}${prefix}/lugar/${slug}`)}/>}<PlacePage place={place} locale={locale} hoursSource={hoursSource&&!hoursSource.error?hoursSource.data as string|null:null}
-  orderLink={orderLink} brand={placeBrand} photoSlot={place.status==='published'?<PlacePhotoUpload slug={slug} locale={locale} signedIn={!!user} loginHref={loginHref} isManager={!!manage}/>:null} saveSlot={place.status==='published'?<SaveToList slug={slug} locale={locale} signedIn={!!user} loginHref={loginHref}/>:null}>
-  {managesHere&&<div data-place-manage className="flex flex-col gap-3 rounded-2xl border border-[#d7e1ea] bg-[#F7FAFC] p-4 text-[#162543] sm:flex-row sm:items-center sm:justify-between">
-   <p className="text-sm">{en?'You manage this page. Update contact details, hours, menu, reservations and events for free.':'Usted administra esta ficha. Actualice gratis el contacto, el horario, el menú, las reservas y los eventos.'}</p>
-   <a data-place-manage-link href={`${prefix}/dashboard/negocio`} className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full bg-[#162543] px-5 text-sm font-semibold text-white hover:bg-[#22355c] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]">{en?'Manage this page':'Administrar esta ficha'}</a>
-  </div>}
-  {reservationConfig&&<PlaceReservation slug={slug} locale={locale} config={reservationConfig}/>}
-  {menuData&&menuData.sections.length>0&&<p><a data-place-menu-link className="inline-flex min-h-11 items-center rounded-full border border-[#162543] px-5 font-semibold text-[#162543] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]" href={`${prefix}/lugar/${slug}/menu`}>{en?'See the menu':'Ver el menú'}</a></p>}
-  {prices.data&&!prices.error&&<PlacePrices prices={prices.data as PublicPriceCurrent} locale={locale}/>}
-  {reportPrices&&<PlacePriceReport slug={slug} locale={locale} loginHref={loginHref} today={crTodayISO()}/>}
-  {placeListings.length>0&&<PlaceListingsSection listings={placeListings} locale={locale} total={listings?.count??undefined}/>}
-  {reviews.data&&!reviews.error&&<PlaceReviews slug={slug} locale={locale} initial={reviews.data as PublicPlaceReviews} signedIn={!!user} manage={manage}
-   note={!isServiceReviewVertical(vertical)?undefined:vertical==='banking'
-    ?(en?'Reviews may only describe attention and service (punctuality, treatment, cleanliness, waiting time). They are not about rates, fees, financial products or credit decisions, and ContrataCR gives no financial advice.'
-     :'Las reseñas solo pueden describir la atención y el servicio (puntualidad, trato, limpieza, tiempo de espera). No tratan sobre tasas, comisiones, productos financieros ni decisiones de crédito, y ContrataCR no da asesoría financiera.')
-    :(en?'Reviews may only describe attention and service (punctuality, treatment, cleanliness, waiting time). They are not about diagnoses, treatments or results, and ContrataCR gives no medical advice.'
-     :'Las reseñas solo pueden describir la atención y el servicio (puntualidad, trato, limpieza, tiempo de espera). No tratan sobre diagnósticos, tratamientos ni resultados, y ContrataCR no da consejo médico.')}/>}
-  <PlaceEvents events={upcoming} locale={locale}/>
-  {qa&&<PlaceQuestions slug={slug} locale={locale} initial={qa} signedIn={!!user} loginHref={loginHref} isManager={isManager}/>}
-  {unclaimed&&<PlaceClaim slug={slug} locale={locale} loginHref={loginHref} choices={claimChoices} vertical={vertical} proEnabled={PRO_ENABLED}/>}
- </PlacePage></DirectoryShell>;
+ const reviewData=reviews.data&&!reviews.error?reviews.data as PublicPlaceReviews:null;
+ // Rating summary (Yelp model): counts per star, only when there are reviews; brand branches for «Otras sucursales».
+ const [distribution,brandFull]=await Promise.all([
+  reviewData&&reviewData.summary.count>0&&claim.data?.id?reviewDistribution(db,claim.data.id as string):Promise.resolve(null),
+  placeBrand&&placeBrand.branches>1?db.rpc('dir_brand_public',{p_slug:placeBrand.slug}):Promise.resolve(null),
+ ]);
+ const branches=brandFull&&!brandFull.error&&brandFull.data&&!('mergedInto' in (brandFull.data as object))?nearestBranches((brandFull.data as PublicBrand).branches,slug,place.location,4):[];
+ const reviewNote=!isServiceReviewVertical(vertical)?undefined:vertical==='banking'
+  ?(en?'Reviews may only describe attention and service (punctuality, treatment, cleanliness, waiting time). They are not about rates, fees, financial products or credit decisions, and ContrataCR gives no financial advice.'
+   :'Las reseñas solo pueden describir la atención y el servicio (puntualidad, trato, limpieza, tiempo de espera). No tratan sobre tasas, comisiones, productos financieros ni decisiones de crédito, y ContrataCR no da asesoría financiera.')
+  :(en?'Reviews may only describe attention and service (punctuality, treatment, cleanliness, waiting time). They are not about diagnoses, treatments or results, and ContrataCR gives no medical advice.'
+   :'Las reseñas solo pueden describir la atención y el servicio (puntualidad, trato, limpieza, tiempo de espera). No tratan sobre diagnósticos, tratamientos ni resultados, y ContrataCR no da consejo médico.');
+ const published=place.status==='published';
+ const hasOffer=!!(menuData&&menuData.sections.length>0)||!!(prices.data&&!prices.error)||reportPrices||placeListings.length>0;
+ return <DirectoryShell>{published&&<DatosEstructurados datos={placeJsonLd(place,`${appUrl}${prefix}/lugar/${slug}`)}/>}<PlacePage place={place} locale={locale} hoursSource={hoursSource&&!hoursSource.error?hoursSource.data as string|null:null}
+  orderLink={orderLink} brand={placeBrand}
+  photoSlot={published?<PlacePhotoUpload slug={slug} locale={locale} signedIn={!!user} loginHref={loginHref} isManager={!!manage} popover buttonClass={BIZ.secondary}/>:null}
+  saveSlot={published?<SaveToList slug={slug} locale={locale} signedIn={!!user} loginHref={loginHref}/>:null}
+  slots={{
+   top:(managesHere||reservationConfig)?<>
+    {managesHere&&<div data-place-manage className="flex flex-col gap-3 rounded-2xl border border-[#d7e1ea] bg-[#F7FAFC] p-4 text-[#162543] sm:flex-row sm:items-center sm:justify-between">
+     <p className="text-sm">{en?'You manage this page. Update contact details, hours, menu, reservations and events for free.':'Usted administra esta ficha. Actualice gratis el contacto, el horario, el menú, las reservas y los eventos.'}</p>
+     <a data-place-manage-link href={`${prefix}/dashboard/negocio`} className={cn(BIZ.primary,'shrink-0 text-sm')}>{en?'Manage this page':'Administrar esta ficha'}</a>
+    </div>}
+    {reservationConfig&&<PlaceReservation slug={slug} locale={locale} config={reservationConfig}/>}
+   </>:null,
+   offer:hasOffer?<>
+    {menuData&&menuData.sections.length>0&&<section aria-labelledby="place-menu-title" className="space-y-3">
+     <h2 id="place-menu-title" className={BIZ.h2}>{en?'Menu':'Menú'}</h2>
+     <p><a data-place-menu-link className={BIZ.secondary} href={`${prefix}/lugar/${slug}/menu`}>{en?'See the menu':'Ver el menú'}</a></p></section>}
+    {prices.data&&!prices.error&&<PlacePrices prices={prices.data as PublicPriceCurrent} locale={locale}/>}
+    {reportPrices&&<PlacePriceReport slug={slug} locale={locale} loginHref={loginHref} today={crTodayISO()}/>}
+    {placeListings.length>0&&<PlaceListingsSection listings={placeListings} locale={locale} total={listings?.count??undefined}/>}
+   </>:null,
+   events:upcoming.length?<PlaceEvents events={upcoming} locale={locale}/>:null,
+   questions:qa?<PlaceQuestions slug={slug} locale={locale} initial={qa} signedIn={!!user} loginHref={loginHref} isManager={isManager}/>:null,
+   reviews:reviewData?<PlaceReviews slug={slug} locale={locale} initial={reviewData} signedIn={!!user} manage={manage} note={reviewNote} distribution={distribution}/>:null,
+   claim:unclaimed?<PlaceClaimLink slug={slug} locale={locale}/>:null,
+   branches:branches.length&&placeBrand?<PlaceBranches brand={placeBrand} branches={branches} locale={locale}/>:null,
+  }}/></DirectoryShell>;
 }

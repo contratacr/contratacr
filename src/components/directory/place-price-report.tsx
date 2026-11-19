@@ -46,9 +46,8 @@ export function PlacePriceReport({slug,locale,loginHref,today}:{slug:string;loca
    action.current='';setState('idle');setError(msg(r.status===429&&j.reason!=='report_cap'?'limit':String(j.reason??'unavailable')));
   }catch{setState('idle');setError(msg('unavailable'));}
  };
- return <section aria-labelledby="place-price-report" className="space-y-3 rounded-2xl border border-[#d7e1ea] p-5" data-place-price-report={state} data-ready={ready||undefined}>
-  <h2 id="place-price-report" className="text-lg font-bold">{t('¿Vio un precio aquí? Repórtelo','Did you see a price here? Report it')}</h2>
-  <p className="text-sm text-slate-700">{t('Su reporte aparece como "Reportado por usuarios", con la fecha, cuando otra persona lo confirma o nuestro equipo lo revisa. No se aceptan medicamentos con receta.','Your report appears as "Reported by users", with its date, once another person confirms it or our team reviews it. Prescription medicines are not accepted.')}</p>
+ return <section aria-labelledby="place-price-report" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#e3e9ef] bg-[#f7fafc] px-5 py-4 [&>form]:w-full [&>p]:w-full" data-place-price-report={state} data-ready={ready||undefined}>
+  <h2 id="place-price-report" className="text-base font-bold">{t('¿Vio un precio aquí? Repórtelo','Did you see a price here? Report it')}</h2>
   {state==='sent'
    ?<p role="status" className="rounded-xl bg-emerald-50 p-3 text-emerald-900" data-price-report-sent>{t('Gracias. Su reporte queda pendiente de confirmación.','Thank you. Your report is pending confirmation.')}</p>
    :loginHref?<a href={loginHref} className={`inline-flex min-h-11 items-center rounded-full bg-[#162543] px-5 font-semibold text-white ${ring}`}>{t('Inicie sesión para reportar un precio','Sign in to report a price')}</a>

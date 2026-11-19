@@ -75,7 +75,7 @@ for(const language of ['es','en'] as const)test(`Contracts: templates, merge fie
   expect((await page.request.get(api+'?'+new URLSearchParams({workId}),{headers:{'X-Pro-Expected-Actor':client.id}})).status()).toBe(403);// account changed
   const clauseInput={action:'library_clause_create',actionId:uuid(),id:uuid(),title:en?'Scope':'Objeto',body:'{{empresa.nombre}} — {{proyecto.nombre}} ({{proyecto.direccion}}) — {{cliente.nombre}} — {{cotizacion.codigo}}: {{cotizacion.total}}'};
   expect((await page.request.post(api,{headers:{'X-Pro-Expected-Actor':owner.id},data:clauseInput})).status()).toBe(403);// no same-origin header
-  await post({...clauseInput,extra:1},400);await post({...clauseInput,title:'  '},400);await post({...clauseInput,body:'{{cliente.telefono}}'},400);// unknown field
+  await post({...clauseInput,extra:1},400);await post({...clauseInput,title:'  '},400);await post({...clauseInput,body:'{{cliente.celular}}'},400);// unknown field (Ronda F2-B: cliente.telefono is a real field now)
   const big=await page.request.post(api,{headers,data:{...clauseInput,body:'x'.repeat(17000)}});expect(big.status()).toBe(413);
   const clause=(await post(clauseInput))!;expect(clause.clause).toMatchObject({revision:1});
   expect(await post(clauseInput)).toEqual(clause);// idempotent replay
@@ -187,8 +187,8 @@ for(const language of ['es','en'] as const)test(`Contracts: templates, merge fie
   await clauseForm.getByRole('button',{name:en?'Save clause':'Guardar cláusula'}).click();await expect(clauseForm).toHaveCount(0);await expect(overview).toBeEnabled();
   // Add a blank clause with an unknown field: blocked in the browser.
   await editor.getByRole('button',{name:en?'Add clause':'Agregar cláusula'}).click();const newClause=editor.locator('[data-contract-clause-form]');
-  await newClause.locator('[data-contract-field="clause-title"]').fill(en?'Warranty':'Garantía');await newClause.locator('[data-contract-field="clause-body"]').fill('{{cliente.telefono}}');
-  await newClause.getByRole('button',{name:en?'Save clause':'Guardar cláusula'}).click();await expect(newClause.getByRole('alert')).toContainText('cliente.telefono');
+  await newClause.locator('[data-contract-field="clause-title"]').fill(en?'Warranty':'Garantía');await newClause.locator('[data-contract-field="clause-body"]').fill('{{cliente.celular}}');// Ronda F2-B: cliente.telefono is now a real field
+  await newClause.getByRole('button',{name:en?'Save clause':'Guardar cláusula'}).click();await expect(newClause.getByRole('alert')).toContainText('cliente.celular');
   await newClause.locator('[data-contract-field="clause-body"]').fill(en?'Twelve months on workmanship for {{proyecto.nombre}}.':'Doce meses sobre la mano de obra de {{proyecto.nombre}}.');
   await newClause.getByRole('button',{name:en?'Save clause':'Guardar cláusula'}).click();await expect(editor.locator('[data-contract-clause]')).toHaveCount(3);
   await editor.locator('[data-contract-clause="3"]').getByRole('button',{name:new RegExp(en?'^Move up':'^Subir')}).click();

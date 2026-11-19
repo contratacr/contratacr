@@ -89,7 +89,8 @@ function PaymentOptions({provider,busy,onSave}:{provider:Provider;busy:boolean;o
  </form>;
 }
 const PROVINCES=[['1','San José'],['2','Alajuela'],['3','Cartago'],['4','Heredia'],['5','Guanacaste'],['6','Puntarenas'],['7','Limón']];
-function EmisorSettingsForm(){
+/** Ronda F2-A: also rendered in Empresa › Facturación electrónica, with the provider choice. */
+export function EmisorSettingsForm({withProvider=false,onSaved}:{withProvider?:boolean;onSaved?:()=>void}={}){
  const en=useLocale()==='en',t=(es:string,english:string)=>en?english:es;
  const [value,setValue]=useState<EmisorSettings>(blankEmisor()),[revision,setRevision]=useState<number|null>(null),[saved,setSaved]=useState(false),[error,setError]=useState(''),[busy,setBusy]=useState(false),[failed,setFailed]=useState(false);
  const load=useCallback(async()=>{setFailed(false);try{const response=await fetch('/api/pro/einvoice?view=settings',{cache:'no-store'});if(!response.ok)throw Error();const body=einvoiceSettingsReadSchema.parse(await response.json());setRevision(body.settingsRevision);const blank=blankEmisor(),keys=Object.keys(blank);setValue(body.settings??{...blank,...Object.fromEntries(Object.entries(body.defaults).filter(([key,v])=>keys.includes(key)&&v!==''))} as EmisorSettings);setSaved(!!body.settings);}catch{setFailed(true);}},[]);
@@ -101,10 +102,10 @@ function EmisorSettingsForm(){
   setBusy(true);setError('');
   try{const response=await fetch('/api/pro/einvoice',{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'save_settings',actionId:crypto.randomUUID(),revision:revision??0,settings:parsed.data})});const body=await response.json().catch(()=>({}));
    if(!response.ok){setError(response.status===409?t('Los datos cambiaron en otra pestaña. Se recargaron.','The data changed in another tab. It was reloaded.'):body.error??t('No se pudo guardar.','Could not save.'));if(response.status===409)await load();return;}
-   setRevision(body.settingsRevision);setSaved(true);
+   setRevision(body.settingsRevision);setSaved(true);onSaved?.();
   }catch{setError(t('No se pudo comprobar el guardado. Reintente.','Could not confirm the save. Retry.'));}finally{setBusy(false);}
  }
- const input=(key:keyof EmisorSettings,label:string,props:Record<string,unknown>={})=><label className="block min-w-0 text-sm font-bold">{label}<input data-emisor-field={key} value={value[key]} onChange={event=>set(key,event.target.value)} className={field} {...props}/></label>;
+ const input=(key:keyof EmisorSettings,label:string,props:Record<string,unknown>={})=><label className="block min-w-0 text-sm font-bold">{label}<input data-emisor-field={key} value={value[key]??''} onChange={event=>set(key,event.target.value)} className={field} {...props}/></label>;
  return <section data-emisor-settings className={card} aria-labelledby="emisor-settings"><h3 id="emisor-settings" className="font-bold">{t('Datos del emisor para Hacienda','Issuer details for Hacienda')}</h3>
   <p className="text-sm text-[#52627a]">{t('Se usan en cada comprobante electrónico. Los códigos de ubicación y actividad son los del Registro Único Tributario.','Used on every electronic document. Location and activity codes are those of the tax registry (RUT).')}</p>
   {failed?<div role="alert" className="text-sm"><Button type="button" variant="secondary" onClick={()=>void load()}>{t('Reintentar','Retry')}</Button></div>:revision===null?<p role="status" className="text-sm">{t('Cargando…','Loading…')}</p>:
@@ -122,6 +123,7 @@ function EmisorSettingsForm(){
    <div className="sm:col-span-2">{input('otherSigns',t('Otras señas','Address details'),{required:true,maxLength:250})}</div>
    {input('email',t('Correo para comprobantes','Email for documents'),{type:'email',required:true,maxLength:160})}
    {input('phone',t('Teléfono (opcional, solo dígitos)','Phone (optional, digits only)'),{inputMode:'numeric',maxLength:20})}
+   {withProvider&&<label className="block min-w-0 text-sm font-bold sm:col-span-2">{t('Proveedor de facturación electrónica','Electronic invoicing provider')}<select data-emisor-field="provider" value={value.provider??'mock'} onChange={event=>set('provider',event.target.value)} className={field}><option value="mock">{t('Simulador local de Hacienda (modo de prueba)','Local Hacienda simulator (test mode)')}</option><option value="hacienda-sandbox">{t('Hacienda (ATV) directo — requiere credenciales','Hacienda (ATV) direct — needs credentials')}</option><option value="gti">{t('GTI — requiere contrato y credenciales','GTI — needs a contract and credentials')}</option></select></label>}
    {input('branch',t('Sucursal (3 dígitos)','Branch (3 digits)'),{inputMode:'numeric',required:true,maxLength:3})}
    {input('terminal',t('Terminal (5 dígitos)','Terminal (5 digits)'),{inputMode:'numeric',required:true,maxLength:5})}
    <div className="space-y-2 sm:col-span-2">{error&&<p role="alert" className="text-sm text-red-700">{error}</p>}{saved&&<p role="status" data-emisor-saved className="text-sm text-green-800">{t('Datos del emisor guardados.','Issuer details saved.')}</p>}<Button type="submit" data-emisor-save disabled={busy}>{busy?t('Guardando…','Saving…'):t('Guardar datos del emisor','Save issuer details')}</Button></div>

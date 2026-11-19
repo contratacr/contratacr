@@ -113,7 +113,9 @@ language sql immutable security invoker set search_path=public,pg_temp as $$ sel
 create or replace function public.pro_contract_field_keys() returns text[]
 language sql immutable security invoker set search_path=public,pg_temp as $$
  select array['cliente.nombre','cliente.identificacion','proyecto.nombre','proyecto.direccion','empresa.nombre','empresa.identificacion',
-  'cotizacion.codigo','cotizacion.total','contrato.codigo','fecha.hoy','anticipo.porcentaje','anticipo.monto'] $$;
+  'cotizacion.codigo','cotizacion.total','contrato.codigo','fecha.hoy','anticipo.porcentaje','anticipo.monto',
+  -- Ronda F2-B: aliases and contact data (appended: existing order is unchanged).
+  'cliente.telefono','cliente.correo','trabajo.direccion','monto.total'] $$;
 -- Exact key set (no optional keys): raises 22023 otherwise.
 create or replace function public.pro_contract_expect(p_input jsonb,p_keys text[]) returns void
 language plpgsql immutable security invoker set search_path=public,pg_temp as $$
@@ -256,11 +258,53 @@ begin
   'contrato.codigo',public.pro_contract_code(p_row.number),
   'fecha.hoy',public.pro_contract_day_text(p_today,p_row.language),
   'anticipo.porcentaje',public.pro_contract_percent_text(p_row.deposit_percent,p_row.language),
-  'anticipo.monto',case when est is not null and p_row.deposit_percent is not null then public.pro_contract_money(round(total*p_row.deposit_percent/100)::bigint,est->>'currency') end);
+  'anticipo.monto',case when est is not null and p_row.deposit_percent is not null then public.pro_contract_money(round(total*p_row.deposit_percent/100)::bigint,est->>'currency') end,
+  'cliente.telefono',nullif(btrim(c.phone),''),
+  'cliente.correo',nullif(btrim(c.email),''),
+  'trabajo.direccion',coalesce(loc,nullif(btrim(c.address),'')),
+  'monto.total',case when est is not null then public.pro_contract_money(total,est->>'currency') end);
 end $$;
 create or replace function public.pro_contract_library_clause_json(p_row public.pro_contract_library_clauses) returns jsonb
 language sql stable security invoker set search_path=public,pg_temp as $$
  select jsonb_build_object('id',p_row.id,'title',p_row.title,'body',p_row.body,'archived',p_row.archived,'revision',p_row.revision,'createdAt',p_row.created_at,'updatedAt',p_row.updated_at) $$;
+-- Ronda F2-B: library clause versions. Every create/update already writes an immutable history row with the
+-- exact before/after text; the versions are read from it (no second copy). A clause whose history lacks the create
+-- (older data) starts from the "before" of its first update; one without any history is version 1 = current text.
+create or replace function public.pro_contract_library_clause_states(p_owner uuid,p_clause uuid) returns jsonb
+language plpgsql stable security invoker set search_path=public,pg_temp as $$
+declare lc public.pro_contract_library_clauses;h record;states jsonb:='[]'::jsonb;last jsonb;n integer:=0;
+begin
+ select * into lc from public.pro_contract_library_clauses where owner_id=p_owner and id=p_clause;
+ if not found then return null;end if;
+ for h in select x.action,x.before_value,x.after_value,x.at from public.pro_contract_history x
+  where x.owner_id=p_owner and x.object_kind='library_clause' and x.object_id=p_clause and x.action in('library_clause_create','library_clause_update') order by x.at,x.action_id loop
+  if n=0 and h.action='library_clause_update' and h.before_value is not null then
+   n:=1;last:=jsonb_build_object('title',h.before_value->>'title','body',h.before_value->>'body');
+   states:=states||jsonb_build_object('version',1,'title',last->>'title','body',last->>'body','at',lc.created_at);
+  end if;
+  if last is null or last is distinct from jsonb_build_object('title',h.after_value->>'title','body',h.after_value->>'body') then
+   n:=n+1;last:=jsonb_build_object('title',h.after_value->>'title','body',h.after_value->>'body');
+   states:=states||jsonb_build_object('version',n,'title',last->>'title','body',last->>'body','at',h.at);
+  end if;
+ end loop;
+ if last is distinct from jsonb_build_object('title',lc.title,'body',lc.body) then
+  n:=n+1;states:=states||jsonb_build_object('version',n,'title',lc.title,'body',lc.body,'at',case when n=1 then lc.created_at else lc.updated_at end);
+ end if;
+ return states;
+end $$;
+create or replace function public.pro_contract_library_clause_versions(p_actor uuid,p_clause uuid) returns jsonb
+language plpgsql stable security invoker set search_path=public,pg_temp as $$
+declare lc public.pro_contract_library_clauses;states jsonb;
+begin
+ if not coalesce(public.pro_private_work_tools_enabled(p_actor),false) then raise exception 'Forbidden' using errcode='42501';end if;
+ select * into lc from public.pro_contract_library_clauses where owner_id=p_actor and id=p_clause;
+ if not found then raise exception 'Clause unavailable' using errcode='P0002';end if;
+ states:=public.pro_contract_library_clause_states(p_actor,p_clause);
+ return jsonb_build_object('clause',public.pro_contract_library_clause_json(lc)||jsonb_build_object('version',jsonb_array_length(states)),
+  'versions',coalesce((select jsonb_agg(s||jsonb_build_object('current',(s->>'version')::integer=jsonb_array_length(states)) order by (s->>'version')::integer desc)
+   from jsonb_array_elements(states) s where (s->>'version')::integer>jsonb_array_length(states)-100),'[]'::jsonb),
+  'versionCount',jsonb_array_length(states));
+end $$;
 create or replace function public.pro_contract_template_json(p_row public.pro_contract_templates,p_full boolean) returns jsonb
 language sql stable security invoker set search_path=public,pg_temp as $$
  select jsonb_build_object('id',p_row.id,'title',p_row.title,'description',p_row.description,'depositPercent',p_row.deposit_percent,
@@ -369,7 +413,7 @@ declare clauses jsonb;templates jsonb;counts jsonb;
 begin
  if not coalesce(public.pro_private_work_tools_enabled(p_actor),false) then raise exception 'Forbidden' using errcode='42501';end if;
  if p_archived is null then raise exception 'Invalid library query' using errcode='22023';end if;
- select coalesce(jsonb_agg(public.pro_contract_library_clause_json(x) order by lower(x.title),x.id),'[]'::jsonb) into clauses
+ select coalesce(jsonb_agg(public.pro_contract_library_clause_json(x)||jsonb_build_object('version',jsonb_array_length(public.pro_contract_library_clause_states(p_actor,x.id))) order by lower(x.title),x.id),'[]'::jsonb) into clauses
   from (select * from public.pro_contract_library_clauses where owner_id=p_actor and archived=p_archived order by lower(title),id limit 201) x;
  select coalesce(jsonb_agg(public.pro_contract_template_json(x,false) order by lower(x.title),x.id),'[]'::jsonb) into templates
   from (select * from public.pro_contract_templates where owner_id=p_actor and archived=p_archived order by lower(title),id limit 201) x;

@@ -92,7 +92,9 @@ for(const language of ['es','en'] as const)test(`cafés moved out of restaurants
  await expect(page.locator('[data-place-reviews]')).toBeVisible();// service reviews (2026-11-17)
  await expect(page.locator('[data-place-review-note]')).toContainText(en?'not about rates, fees, financial products':'No tratan sobre tasas, comisiones, productos financieros');
  await expect(page.locator('[data-place-price-report]')).toHaveCount(0);
- await expect(page.locator('[data-place-claim]')).toBeVisible();// the business can still claim and fix its listing
+ await expect(page.locator('[data-place-claim-link]')).toBeVisible();// the business can still claim and fix its listing
+ await gotoOK(page,`${prefix}/lugar/e2e-banco-${tag}/reclamar`);// 2026-11-19: the claim flow and its benefits have their own page
+ await expect(page.locator('[data-place-claim]')).toBeVisible();
  await expect(page.locator('[data-claim-benefits]')).not.toContainText(en?'prices':'precios');
  await expect(page.locator('[data-claim-benefits]')).not.toContainText(en?'menu':'menú');
  // Without an account a review still needs a contact from this device first (same rule as every place).

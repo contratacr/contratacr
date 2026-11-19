@@ -27,6 +27,12 @@ export async function GET(req:Request){
    if(q.view==='templates'){const body=result.data as {templates:Array<{title:string;clauseCount:number}>;moreTemplates:boolean};return Response.json({items:body.templates.map(t=>({name:t.title,recordCount:t.clauseCount})),nextCursor:body.moreTemplates?'more':null},{headers});}
    return Response.json(result.data,{headers});
   }
+  // Ronda F2-B: immutable text versions of one library clause (restoring one is a normal library_clause_update with CAS).
+  if(same(keys,['clauseId'])){
+   const clause=uuid.safeParse(q.clauseId);if(!clause.success)return proFail(400,'Consulta inválida.');
+   const result=await a.db.rpc('pro_contract_library_clause_versions',{p_actor:a.user.id,p_clause:clause.data});
+   if(result.error)return dbError(result.error);return Response.json(result.data,{headers});
+  }
   if(same(keys,['templateId'])){
    const template=uuid.safeParse(q.templateId);if(!template.success)return proFail(400,'Consulta inválida.');
    const result=await a.db.rpc('pro_contract_template_read',{p_actor:a.user.id,p_template:template.data});

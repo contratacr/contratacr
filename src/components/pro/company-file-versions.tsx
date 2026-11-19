@@ -1,4 +1,5 @@
 'use client';
+import {proDocKindLabel} from '@/lib/pro/file-formats';
 
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {Button} from '@/components/ui/button';
@@ -114,7 +115,7 @@ export function CompanyFileVersions({actor,file,en,onClose,onChanged}:{actor:str
     </section>
     <ol className="space-y-3" aria-label={c.title}>{family.versions.map(v=><li key={v.version} data-company-file-version={v.version} data-current={v.current?'true':'false'} className="min-w-0 space-y-2 rounded-xl border border-[#d7e1ea] p-3">
      <div className="flex flex-wrap items-center gap-2"><strong>{c.version(v.version)}</strong><span className="text-sm text-[#52627a]">{c.kind[v.kind]}{v.restoredFrom?' '+c.restoredFrom(v.restoredFrom):''}</span>{v.current&&<span className="inline-flex min-h-7 items-center rounded-full bg-[#e6f6fb] px-2.5 text-xs font-semibold text-[#006c8f]">{c.current}</span>}</div>
-     <p className="break-words text-sm">{v.file.name} · {v.file.mimeType==='application/pdf'?'PDF':(en?'Photo':'Foto')} · {c.size(Math.ceil(v.file.sizeBytes/1024))}</p>
+     <p className="break-words text-sm">{v.file.name} · {proDocKindLabel(v.file.mimeType,en)} · {c.size(Math.ceil(v.file.sizeBytes/1024))}</p>
      <p className="text-xs text-[#52627a]">{stamp(v.createdAt,en)}</p>
      {v.note&&<p className="whitespace-pre-wrap break-words text-sm">{v.note}</p>}
      <div className="flex flex-wrap gap-2"><Button type="button" variant="outline" className="min-h-11" disabled={busy} onClick={()=>void download(v)}>{c.download}</Button>

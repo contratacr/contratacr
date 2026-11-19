@@ -38,7 +38,13 @@ for(const language of ['es','en'] as const)test(`F2 extras: OSM hours note, webs
  const site=page.locator('[data-place-website]');await expect(site).toHaveAttribute('href','http://www.example.com');
  const rel=(await site.getAttribute('rel'))!.split(' ');for(const r of ['nofollow','ugc','noopener'])expect(rel).toContain(r);
  await expect(page.locator('[data-place-source="OpenStreetMap"]')).toBeVisible();
+ // Header open status (2026-11-19, Yelp model), computed from the same hours in Costa Rica time.
+ await expect(page.locator('[data-place-open-status="open24"]')).toContainText(t('Abierto 24 horas','Open 24 hours'));
  await expectNoHorizontalOverflow(page);
+ await gotoOK(page,`${prefix}/lugar/${openNow}`);
+ await expect(page.locator('[data-place-open-status="open"]')).toContainText(t('Abierto ahora · cierra a las ','Open now · closes at '));
+ await gotoOK(page,`${prefix}/lugar/${closed}`);
+ await expect(page.locator('[data-place-open-status="closed"]')).toContainText(en?/Closed · opens (today|tomorrow) at \d\d:\d\d/:/Cerrado · abre (hoy|mañana) a las \d\d:\d\d/);
  await gotoOK(page,`${prefix}/lugar/${owner}`);
  await expect(page.locator('section[aria-labelledby="place-hours"]')).not.toContainText(t('Confirme el horario','Please confirm the hours'));// 2026-11-19: moved to the Terms (13.1)
  await expect(page.locator('[data-place-hours-source]')).toHaveCount(0);

@@ -2,6 +2,7 @@
 import {useRef,useState,useSyncExternalStore} from 'react';
 import {featureReasonText,type PublicQuestions} from '@/lib/directory/place-features';
 import {REVIEW_FLAG_LABELS,REVIEW_FLAG_REASONS} from '@/lib/directory/moderation-schemas';
+import {BIZ} from './biz-ui';
 
 /**
  * LOCAL PRO ONLY (place features round, 2026-11-17): «Preguntas y respuestas» on every place page. Anyone signed in asks
@@ -43,8 +44,8 @@ export function PlaceQuestions({slug,locale,initial,signedIn,loginHref,isManager
   <label className="block text-sm font-semibold">{t('Motivo','Reason')}<select name="reason" className={`${field} min-h-11`} defaultValue="spam">{REVIEW_FLAG_REASONS.map(r=><option key={r} value={r}>{REVIEW_FLAG_LABELS[r][en?1:0]}</option>)}</select></label>
   <label className="block text-sm font-semibold">{t('Detalle (opcional)','Details (optional)')}<input name="message" className={`${field} min-h-11`} maxLength={500}/></label>
   <button type="submit" className={button} disabled={busy!==null}>{t('Enviar reporte','Send report')}</button></form>;
- return <section aria-labelledby="place-questions" data-place-questions={data.total} data-ready={ready||undefined} className="space-y-4 text-[#162543]">
-  <h2 id="place-questions" className="text-lg font-bold">{t('Preguntas y respuestas','Questions and answers')}</h2>
+ return <section id="preguntas" aria-labelledby="place-questions" data-place-questions={data.total} data-ready={ready||undefined} className="scroll-mt-24 space-y-4 text-[#162543]">
+  <h2 id="place-questions" className={BIZ.h2}>{t('Preguntas a la comunidad','Ask the community')}</h2>
   {signedIn&&!isManager?<form data-qa-ask className="space-y-2" onSubmit={async e=>{e.preventDefault();const el=e.currentTarget,body=String(new FormData(el).get('body')??'').trim();
     if(body.length<5){setNotice({ok:false,text:t('Escriba una pregunta de al menos 5 caracteres.','Write a question of at least 5 characters.'),at:'ask'});return;}
     if(await send('ask',{type:'question',body},'ask'))el.reset();}}>
@@ -53,7 +54,7 @@ export function PlaceQuestions({slug,locale,initial,signedIn,loginHref,isManager
    {note('ask')}
    <button type="submit" className={button} disabled={busy!==null||!ready} data-qa-ask-submit>{t('Publicar pregunta','Post question')}</button>
   </form>:!signedIn&&loginHref?<p className="text-sm"><a className={link} href={loginHref}>{t('Inicie sesión para preguntar o responder','Sign in to ask or answer')}</a></p>:null}
-  {data.items.length===0?<div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 text-center" data-qa-empty><p className="text-base font-semibold text-[#162543]"><span aria-hidden="true">? </span>{t('Todavía no hay preguntas.','No questions yet.')}</p><p className="mt-1 text-sm text-slate-700">{t('Pregunte lo que necesite saber; responden el negocio y otras personas.','Ask what you need to know; the business and other people can answer.')}</p></div>
+  {data.items.length===0?<div className="rounded-2xl bg-[#f7fafc] p-5" data-qa-empty><p className="text-base font-semibold text-[#162543]">{t('Todavía no hay preguntas.','No questions yet.')}</p></div>
    :<ul className="space-y-4">{data.items.map(q=><li key={q.id} data-qa-question={q.id} className="space-y-2 rounded-2xl border border-[#d7e1ea] p-4">
     <p className="font-semibold">{q.body}</p>
     <p className="text-xs text-slate-700">{q.name} · {date(q.createdAt)}</p>
@@ -74,6 +75,5 @@ export function PlaceQuestions({slug,locale,initial,signedIn,loginHref,isManager
      <button type="submit" className={button} disabled={busy!==null} data-qa-answer-submit>{t('Publicar respuesta','Post answer')}</button></form>}
     {note('item:'+q.id)}
    </li>)}</ul>}
-  <p className="text-xs text-slate-700">{t('Las preguntas y respuestas son de la comunidad y del negocio. ContrataCR no las verifica; puede reportar las que incumplan las reglas.','Questions and answers come from the community and the business. ContrataCR does not verify them; you can report those that break the rules.')}</p>
  </section>;
 }

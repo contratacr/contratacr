@@ -443,6 +443,8 @@ export function LandingHero() {
   const ubicacionInputRef = useRef<HTMLInputElement>(null);
   const ubicacionMobileRef = useRef<HTMLInputElement>(null);
   const locDesktopRef = useRef<HTMLDivElement>(null);
+  // A blur's delayed close must not hide the list after the field is focused again.
+  const locBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Location is a typeable autocomplete over provinces + cantones AND Google Places addresses.
   const [location, setLocation] = useState("");
   useLetraQueCabe(servicioInputRef, service, [foco, esTelefono]);
@@ -560,7 +562,15 @@ export function LandingHero() {
     setServiceSel(s);
     setOpenSug(false);
     if (location.trim()) { runSearch(s); return; }
-    setTimeout(() => { enfocarVisible(ubicacionInputRef, ubicacionMobileRef); setOpenLoc(false); }, 0);
+    // Only move the cursor: the location field's onFocus opens/closes its list
+    // from the CURRENT text. Forcing the list closed here raced with fast typing
+    // (the deferred call landed after the first letters) and left "Alajuela"
+    // typed with no suggestions until another key was pressed.
+    setTimeout(() => {
+      const active = typeof document !== "undefined" ? document.activeElement : null;
+      if (active && (active === ubicacionInputRef.current || active === ubicacionMobileRef.current)) return;
+      enfocarVisible(ubicacionInputRef, ubicacionMobileRef);
+    }, 0);
   }
 
   // A «Lugares» suggestion opens its directory section right away (with the location, if any).
@@ -862,8 +872,8 @@ export function LandingHero() {
                   ref={ubicacionInputRef}
                   enterKeyHint="search"
                   onKeyDown={handleLocKeyDown}
-                  onFocus={() => { if (abrirBuscadorCompleto("ubicacion")) return; setFoco("loc"); ensureMaps(); setOpenLoc(location.trim().length >= 2); }}
-                  onBlur={() => { setFoco((f) => (f === "loc" ? null : f)); setTimeout(() => setOpenLoc(false), 120); }}
+                  onFocus={() => { if (abrirBuscadorCompleto("ubicacion")) return; setFoco("loc"); ensureMaps(); if (locBlurTimer.current) clearTimeout(locBlurTimer.current); setOpenLoc(location.trim().length >= 2); }}
+                  onBlur={() => { setFoco((f) => (f === "loc" ? null : f)); locBlurTimer.current = setTimeout(() => setOpenLoc(false), 120); }}
                   placeholder={t("location")}
                   className="w-full min-w-0 flex-1 bg-transparent text-[16px] text-[#162543] placeholder:text-[#6b7686] focus:outline-none sm:text-lg"
                   role="combobox"

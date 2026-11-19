@@ -665,7 +665,15 @@
     "noRespondioBoton": "Publicar",
     "cerrar": "Cerrar",
     "cedulaVerificada": "Verificado",
-    "verificadoCorto": "Verificado"
+    "verificadoCorto": "Verificado",
+    "biz": {
+      "coverSeeAll": "{count, plural, one {Ver # caso de éxito} other {Ver los # casos de éxito}}",
+      "experienceYears": "{count, plural, one {# año de experiencia} other {# años de experiencia}}",
+      "ratingOutOf": "{rating} de 5",
+      "writeReview": "Dejar reseña",
+      "contactCardTitle": "Contacte a este profesional",
+      "moreCategories": "{count, plural, one {+# servicio más} other {+# servicios más}}"
+    }
   },
   "auth": {
     "login": {
@@ -3518,6 +3526,11 @@
     "offerExplanation": "Solicite el servicio que ofrece. Si lo aprobamos, le avisaremos para que complete la información y lo publique en su perfil.",
     "catalogExplanation": "Solicite un servicio que falta en el catálogo. Le avisaremos de la decisión.",
     "guestExplanation": "Revisaremos su solicitud. Después de registrarse, solicítelo desde su cuenta para recibir avisos."
+  },
+  "proBrandedQuotePrint": {
+    "printOwner": "Imprimir con su marca",
+    "printClient": "Imprimir o guardar en PDF",
+    "clientHint": "Incluye la marca de la empresa que le envió la cotización. Para guardarla, elija \"Guardar como PDF\" al imprimir."
   },
   "proIdentityLookup": {
     "privacyTitle": "Cómo se usa esta consulta",

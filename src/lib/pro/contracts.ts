@@ -10,24 +10,28 @@ import {z} from 'zod';
 export const CONTRACT_BODY_MAX=16384;
 export const CONTRACT_TITLE_MAX=160,CONTRACT_CLAUSE_MAX=4000,CONTRACT_CLAUSES_MAX=80,CONTRACT_REASON_MAX=300,CONTRACT_DECLINE_MAX=500;
 export const CONTRACT_FIELD_KEYS=['cliente.nombre','cliente.identificacion','proyecto.nombre','proyecto.direccion','empresa.nombre','empresa.identificacion',
- 'cotizacion.codigo','cotizacion.total','contrato.codigo','fecha.hoy','anticipo.porcentaje','anticipo.monto'] as const;
+ 'cotizacion.codigo','cotizacion.total','contrato.codigo','fecha.hoy','anticipo.porcentaje','anticipo.monto',
+ // Ronda F2-B: contact data and aliases (same sources as proyecto.direccion / cotizacion.total).
+ 'cliente.telefono','cliente.correo','trabajo.direccion','monto.total'] as const;
 export type ContractFieldKey=typeof CONTRACT_FIELD_KEYS[number];
 const fieldKey=z.enum(CONTRACT_FIELD_KEYS);
 
 export function contractFieldLabels(en:boolean):Record<ContractFieldKey,string>{
  return en?{'cliente.nombre':'Customer name','cliente.identificacion':'Customer ID number','proyecto.nombre':'Project name','proyecto.direccion':'Project address',
   'empresa.nombre':'Company name','empresa.identificacion':'Company ID number','cotizacion.codigo':'Quote reference','cotizacion.total':'Quote total',
-  'contrato.codigo':'Contract number','fecha.hoy':'Date shared','anticipo.porcentaje':'Deposit percentage','anticipo.monto':'Deposit amount'}
+  'contrato.codigo':'Contract number','fecha.hoy':'Date shared','anticipo.porcentaje':'Deposit percentage','anticipo.monto':'Deposit amount',
+  'cliente.telefono':'Customer phone','cliente.correo':'Customer email','trabajo.direccion':'Job address','monto.total':'Total amount'}
  :{'cliente.nombre':'Nombre del cliente','cliente.identificacion':'Identificación del cliente','proyecto.nombre':'Nombre del proyecto','proyecto.direccion':'Dirección del proyecto',
   'empresa.nombre':'Nombre de la empresa','empresa.identificacion':'Identificación de la empresa','cotizacion.codigo':'Referencia de la cotización','cotizacion.total':'Total de la cotización',
-  'contrato.codigo':'Número de contrato','fecha.hoy':'Fecha en que se comparte','anticipo.porcentaje':'Porcentaje de anticipo','anticipo.monto':'Monto del anticipo'};
+  'contrato.codigo':'Número de contrato','fecha.hoy':'Fecha en que se comparte','anticipo.porcentaje':'Porcentaje de anticipo','anticipo.monto':'Monto del anticipo',
+  'cliente.telefono':'Teléfono del cliente','cliente.correo':'Correo del cliente','trabajo.direccion':'Dirección del trabajo','monto.total':'Monto total'};
 }
 /** Where the owner fixes a field without data. */
 export function contractFieldHelp(key:ContractFieldKey,en:boolean){
  if(key.startsWith('cliente.'))return en?'Complete it in the customer record.':'Complételo en la ficha del cliente.';
  if(key.startsWith('empresa.'))return en?'Complete it in your issuer details (Finance › Invoicing).':'Complételo en sus datos de emisor (Finanzas › Facturación).';
- if(key==='proyecto.direccion')return en?'Add the address to the customer or the appointment location.':'Agregue la dirección al cliente o al lugar de la cita.';
- if(key.startsWith('cotizacion.'))return en?'Link an accepted or draft quote of this project.':'Vincule una cotización aceptada o en borrador de este proyecto.';
+ if(key==='proyecto.direccion'||key==='trabajo.direccion')return en?'Add the address to the customer or the appointment location.':'Agregue la dirección al cliente o al lugar de la cita.';
+ if(key.startsWith('cotizacion.')||key==='monto.total')return en?'Link an accepted or draft quote of this project.':'Vincule una cotización aceptada o en borrador de este proyecto.';
  if(key.startsWith('anticipo.'))return en?'Set the deposit percentage (and link a quote for the amount).':'Indique el porcentaje de anticipo (y vincule una cotización para el monto).';
  return '';
 }
@@ -50,8 +54,16 @@ export type ContractStatus=typeof contractStatuses[number];
 
 export const contractClauseSchema=z.object({id,title:z.string(),body:z.string(),sourceClauseId:id.nullable()}).strict();
 export type ContractClause=z.infer<typeof contractClauseSchema>;
-export const libraryClauseSchema=z.object({id,title:z.string(),body:z.string(),archived:z.boolean(),revision:z.number().int().positive(),createdAt:stamp,updatedAt:stamp}).strict();
+export const libraryClauseSchema=z.object({id,title:z.string(),body:z.string(),archived:z.boolean(),revision:z.number().int().positive(),createdAt:stamp,updatedAt:stamp,
+ /** Ronda F2-B: number of text versions (present in library reads, absent in write results). */
+ version:z.number().int().positive().optional()}).strict();
 export type LibraryClause=z.infer<typeof libraryClauseSchema>;
+/** Ronda F2-B: immutable text versions of a library clause (newest first, at most 100). */
+export const libraryClauseVersionSchema=z.object({version:z.number().int().positive(),title:z.string(),body:z.string(),at:stamp,current:z.boolean()}).strict();
+export type LibraryClauseVersion=z.infer<typeof libraryClauseVersionSchema>;
+export const libraryClauseVersionsSchema=z.object({clause:libraryClauseSchema.required({version:true}),versions:z.array(libraryClauseVersionSchema).min(1).max(100),versionCount:z.number().int().positive()}).strict()
+ .refine(v=>v.versionCount===v.clause.version&&v.versions[0].version===v.versionCount&&v.versions[0].current&&v.versions.filter(x=>x.current).length===1);
+export type LibraryClauseVersions=z.infer<typeof libraryClauseVersionsSchema>;
 const templateShape={id,title:z.string(),description:z.string().nullable(),depositPercent:z.number().nullable(),clauseCount:z.number().int().min(0),archived:z.boolean(),revision:z.number().int().positive(),createdAt:stamp,updatedAt:stamp};
 export const contractTemplateSummarySchema=z.object(templateShape).strict();
 export const contractTemplateSchema=z.object({...templateShape,clauses:z.array(contractClauseSchema).max(CONTRACT_CLAUSES_MAX)}).strict();

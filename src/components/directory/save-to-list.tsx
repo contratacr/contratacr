@@ -1,5 +1,6 @@
 'use client';
 import {useRef,useState,useSyncExternalStore} from 'react';
+import {Bookmark} from 'lucide-react';
 import {featureReasonText,type SavedList} from '@/lib/directory/place-features';
 
 /**
@@ -9,13 +10,15 @@ import {featureReasonText,type SavedList} from '@/lib/directory/place-features';
  */
 const ring='focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]';
 const noSubscribe=()=>()=>{};
-const button=`inline-flex min-h-11 items-center justify-center rounded-full px-5 font-semibold ${ring}`;
+const button=`inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 text-[15px] font-semibold ${ring}`;
+// Same look as the other secondary actions of the header bar (biz-ui BIZ.secondary).
+const secondary=`${button} border border-[#cfd9e3] text-[#162543] hover:border-[#162543]`;
 export function SaveToList({slug,locale,signedIn,loginHref}:{slug:string;locale:string;signedIn:boolean;loginHref:string|null}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es,prefix=en?'/en':'';
  const [open,setOpen]=useState(false),[lists,setLists]=useState<SavedList[]|null>(null),[msg,setMsg]=useState<{ok:boolean;text:string}|null>(null),[busy,setBusy]=useState(false);
  const actions=useRef(new Map<string,{id:string;body:string}>()),nameRef=useRef<HTMLInputElement>(null);
  const ready=useSyncExternalStore(noSubscribe,()=>true,()=>false);
- if(!signedIn)return loginHref?<a data-save-login className={`${button} border border-[#162543] bg-white`} href={loginHref}>{t('Guardar','Save')}</a>:null;
+ if(!signedIn)return loginHref?<a data-save-login className={`${secondary} bg-white`} href={loginHref}><Bookmark aria-hidden="true" className="h-4 w-4"/>{t('Guardar','Save')}</a>:null;
  const load=async()=>{const r=await fetch(`/api/listas?slug=${encodeURIComponent(slug)}`,{cache:'no-store'});const j=await r.json().catch(()=>({}));setLists(r.ok?(j.items as SavedList[]):[]);};
  const mutate=async(key:string,body:Record<string,unknown>)=>{
   const k=JSON.stringify(body);let a=actions.current.get(key);if(!a||a.body!==k){a={id:crypto.randomUUID(),body:k};actions.current.set(key,a);}
@@ -29,9 +32,9 @@ export function SaveToList({slug,locale,signedIn,loginHref}:{slug:string;locale:
  };
  const saved=(lists??[]).some(l=>l.hasPlace);
  return <div className="relative" data-save-to-list data-ready={ready||undefined}>
-  <button type="button" aria-expanded={open} aria-controls="save-panel" data-save-open className={`${button} border border-[#162543] ${saved?'bg-[#eaf6fb]':'bg-white'}`}
-   onClick={async()=>{const next=!open;setOpen(next);if(next&&lists===null)await load();}}>{saved?t('Guardado','Saved'):t('Guardar','Save')}</button>
-  {open&&<div id="save-panel" role="group" aria-label={t('Guardar en una lista','Save to a list')} className="absolute left-0 z-10 mt-2 w-72 max-w-[calc(100vw-2rem)] space-y-3 rounded-2xl border border-[#d7e1ea] bg-white p-4 text-[#162543] shadow-lg">
+  <button type="button" aria-expanded={open} aria-controls="save-panel" data-save-open className={`${secondary} ${saved?'bg-[#eaf6fb]':'bg-white'}`}
+   onClick={async()=>{const next=!open;setOpen(next);if(next&&lists===null)await load();}}><Bookmark aria-hidden="true" className={`h-4 w-4 ${saved?'fill-current':''}`}/>{saved?t('Guardado','Saved'):t('Guardar','Save')}</button>
+  {open&&<div id="save-panel" role="group" aria-label={t('Guardar en una lista','Save to a list')} className="absolute right-0 z-30 mt-2 w-72 sm:left-0 sm:right-auto max-w-[calc(100vw-2rem)] space-y-3 rounded-2xl border border-[#d7e1ea] bg-white p-4 text-[#162543] shadow-lg">
    {lists===null?<p role="status">{t('Cargando…','Loading…')}</p>:<>
     {lists.length===0&&<p className="text-sm text-slate-700">{t('Todavía no tiene listas.','You have no lists yet.')}</p>}
     <ul className="space-y-1">{lists.map(l=><li key={l.listId}><label className="flex min-h-11 items-center gap-3">

@@ -3,7 +3,8 @@ import type {z} from 'zod';
 import {ContrataCRLogo} from '@/components/brand/brand-logo';
 import {proMoney} from './money';
 import {proPhone} from './phone';
-import {calculatePrivateEstimate,privateEstimateGroups,type PrivateEstimate} from './private-estimates';
+import {calculatePrivateEstimate,privateEstimateGroups,type PrivateEstimate,type PrivateEstimateCustomerLine} from './private-estimates';
+import type {PrivateEstimatePublication} from './private-estimate-publications';
 import type {changePrintSchema,selectionPrintSchema} from './round10';
 import {trackingLabel} from './round10';
 /**
@@ -30,21 +31,36 @@ const cell=(label:string,value:string,numeric=false,field?:string)=>`<td${numeri
 const usd=(cents:number,en:boolean)=>escape(new Intl.NumberFormat(en?'en-US':'es-CR',{style:'currency',currency:'USD'}).format(cents/100));
 
 /** Quote (private estimate) as the customer sees it: no internal unit cost, no catalog links. */
-export function quotePrintHtml(estimate:PrivateEstimate,nonce:string,en:boolean,preview=false){
+/** Round F2-D: shared quote layout for the owner's draft and a shared (published) version. Only customer-facing fields. */
+type QuoteDoc=Pick<PrivateEstimate,'title'|'currency'|'validUntil'|'notes'|'subtotalCents'|'discountCents'|'taxCents'|'totalCents'>&{issuer:Pick<PrivateEstimate['issuer'],'issuerName'|'issuerId'|'issuerEmail'|'issuerPhone'>;client:{name:string;tradeName?:string|null;identification?:string|null;email?:string;phone?:string;address?:string|null};lines:PrivateEstimateCustomerLine[]};
+function quoteDocumentHtml(estimate:QuoteDoc,o:{nonce:string;en:boolean;preview:boolean;status:string;sub?:string;date:{label?:string;at:string};help?:string;extra?:string}){
+ const {nonce,en,preview}=o;
  const t=en?{doc:'Quote',client:'Customer',issuer:'From',valid:'Valid until',date:'Date',none:'Not specified',desc:'Description',qty:'Qty.',unit:'Unit',price:'Unit price',disc:'Discount',tax:'Tax',total:'Total',subtotal:'Subtotal',discounts:'Discounts',taxes:'Taxes',grand:'Quote total',notes:'Notes',group:'Section subtotal',print:'Print quote',help:'Only prints this copy. Nothing is sent to the customer.',footer:'Quote prepared in ContrataCR Pro. It is not an invoice or a tax document.',draft:'Draft',archived:'Archived',accept:'Customer acceptance',sign:'Signature and date'}
  :{doc:'Cotización',client:'Cliente',issuer:'De',valid:'Válida hasta',date:'Fecha',none:'Sin indicar',desc:'Descripción',qty:'Cant.',unit:'Unidad',price:'Precio unitario',disc:'Descuento',tax:'Impuesto',total:'Total',subtotal:'Subtotal',discounts:'Descuentos',taxes:'Impuestos',grand:'Total de la cotización',notes:'Notas',group:'Subtotal de la sección',print:'Imprimir cotización',help:'Solo imprime esta copia. No se envía nada al cliente.',footer:'Cotización preparada en ContrataCR Pro. No es una factura ni un comprobante fiscal.',draft:'Borrador',archived:'Archivada',accept:'Aceptación del cliente',sign:'Firma y fecha'};
  const money=(cents:number)=>estimate.currency==='USD'?usd(cents,en):escape(proMoney(cents/100,en));
  const num=(milli:number)=>escape(new Intl.NumberFormat(en?'en-US':'es-CR',{maximumFractionDigits:3}).format(milli/1000));
  const pct=(bps:number)=>bps?escape(new Intl.NumberFormat(en?'en-US':'es-CR',{maximumFractionDigits:2}).format(bps/100))+(en?'%':' %'):'—';
- const calc=calculatePrivateEstimate(estimate.lines),groups=privateEstimateGroups(estimate.lines,calc.rows);
+ const calc=calculatePrivateEstimate(estimate.lines.map(line=>({...line,catalogProductId:null}))),groups=privateEstimateGroups(estimate.lines,calc.rows);
  const rows=groups.map(g=>{const lines=estimate.lines.slice(g.start,g.end+1).map((l,i)=>{const r=calc.rows[g.start+i];return `<tr>${cell(t.desc,escape(l.description))}${cell(t.qty,num(l.qtyMilli),true)}${cell(t.unit,escape(l.unit))}${cell(t.price,money(l.unitPriceCents),true,'unitPrices')}${cell(t.disc,pct(l.discountBps),true)}${cell(t.tax,pct(l.taxBps),true,'taxes')}${cell(t.total,money(r.totalCents),true)}</tr>`;}).join('');
   return (g.name?`<tr class="group"><td colspan="7">${escape(g.name)}</td></tr>`:'')+lines+(g.name?`<tr data-quote-print-section-subtotal><td colspan="6" class="muted">${escape(t.group)}</td><td class="n"><strong>${money(g.totalCents)}</strong></td></tr>`:'');}).join('');
  const issuer=estimate.issuer,client=estimate.client;
- const body=`<div class="columns"><section><dl>${pair(t.client,escape(client.name||t.none))}${client.tradeName?pair('',escape(client.tradeName)):''}${client.email?pair('',escape(client.email)):''}${client.phone?pair('',escape(proPhone(client.phone))):''}${client.address?pair('',escape(client.address)):''}</dl></section><section><dl>${pair(t.issuer,escape(issuer.issuerName))}${issuer.issuerId?pair('',escape(issuer.issuerId)):''}${issuer.issuerEmail?pair('',escape(issuer.issuerEmail)):''}${issuer.issuerPhone?pair('',escape(proPhone(issuer.issuerPhone))):''}${pair(t.date,fmtStamp(estimate.updatedAt,en))}${pair(t.valid,fmtDay(estimate.validUntil,en))}</dl></section></div>`
+ const body=`<div class="columns"><section><dl>${pair(t.client,escape(client.name||t.none))}${client.tradeName?pair('',escape(client.tradeName)):''}${client.identification?pair('',escape(client.identification)):''}${client.email?pair('',escape(client.email)):''}${client.phone?pair('',escape(proPhone(client.phone))):''}${client.address?pair('',escape(client.address)):''}</dl></section><section><dl>${pair(t.issuer,escape(issuer.issuerName))}${issuer.issuerId?pair('',escape(issuer.issuerId)):''}${issuer.issuerEmail?pair('',escape(issuer.issuerEmail)):''}${issuer.issuerPhone?pair('',escape(proPhone(issuer.issuerPhone))):''}${pair(o.date.label??t.date,fmtStamp(o.date.at,en))}${pair(t.valid,fmtDay(estimate.validUntil,en))}</dl></section></div>`
   +`<div class="table"><table><thead><tr><th>${escape(t.desc)}</th><th class="n">${escape(t.qty)}</th><th>${escape(t.unit)}</th><th class="n" data-doc-field="unitPrices">${escape(t.price)}</th><th class="n">${escape(t.disc)}</th><th class="n" data-doc-field="taxes">${escape(t.tax)}</th><th class="n">${escape(t.total)}</th></tr></thead><tbody>${rows}</tbody></table></div>`
   +`<div class="totals" data-quote-print-total="${estimate.totalCents}"><div><span>${escape(t.subtotal)}</span><strong>${money(estimate.subtotalCents)}</strong></div><div><span>${escape(t.discounts)}</span><strong>${money(estimate.discountCents)}</strong></div><div data-doc-field="taxes"><span>${escape(t.taxes)}</span><strong>${money(estimate.taxCents)}</strong></div><div class="grand"><span>${escape(t.grand)}</span><span>${money(estimate.totalCents)}</span></div></div>`
   +(estimate.notes?`<section class="notes" data-doc-field="notes"><h2>${escape(t.notes)}</h2><p>${escape(estimate.notes)}</p></section>`:'')+`<div class="sign" data-doc-field="signature"><div>${escape(t.accept)}</div><div>${escape(t.sign)}</div></div>`;
- return shell({lang:en?'en':'es',title:`${estimate.title} · ${t.doc}`,attr:'data-quote-print',code:t.doc,status:estimate.status==='archived'?t.archived:'',heading:estimate.title,sub:t.doc,body,footer:t.footer,print:t.print,help:t.help,nonce,preview});
+ return shell({lang:en?'en':'es',title:`${estimate.title} · ${t.doc}`,attr:'data-quote-print'+(o.extra??''),code:t.doc,status:o.status,heading:estimate.title,sub:o.sub??t.doc,body,footer:t.footer,print:t.print,help:o.help??t.help,nonce,preview});
+}
+/** Quote (private estimate) as the customer sees it: no internal unit cost, no catalog links. */
+export function quotePrintHtml(estimate:PrivateEstimate,nonce:string,en:boolean,preview=false){
+ const lines=estimate.lines.map(({unitCostCents,catalogProductId,...line})=>{void unitCostCents;void catalogProductId;return line;});
+ return quoteDocumentHtml({...estimate,lines,client:{...estimate.client,identification:null}},{nonce,en,preview,status:estimate.status==='archived'?(en?'Archived':'Archivada'):'',date:{at:estimate.updatedAt}});
+}
+/** Round F2-D: a shared (published) version as its customer received it, for the customer and the owner.
+ * Only the immutable published content is printed (no internal cost, margins, private notes or decisions history). */
+export function quotePublicationPrintHtml(publication:PrivateEstimatePublication,nonce:string,en:boolean,preview=false){
+ const c=publication.content,status:Record<PrivateEstimatePublication['status'],string>=en?{awaiting_claim:'Shared',shared:'Shared',changes_requested:'Changes requested',accepted:'Accepted',declined:'Declined',withdrawn:'Withdrawn',superseded:'Replaced by a newer version'}:{awaiting_claim:'Compartida',shared:'Compartida',changes_requested:'Cambios solicitados',accepted:'Aceptada',declined:'Rechazada',withdrawn:'Retirada',superseded:'Reemplazada por una versión más reciente'};
+ const sub=(en?'Quote · Version ':'Cotización · Versión ')+publication.version+' · '+(en?'Reference ':'Referencia ')+publication.publicationId.slice(0,8).toUpperCase();
+ return quoteDocumentHtml({...c,client:c.customer},{nonce,en,preview,status:status[publication.status],sub,date:{label:en?'Shared on':'Compartida el',at:publication.createdAt},help:en?'To keep a copy, choose "Save as PDF" in the print dialog.':'Para conservar una copia, elija "Guardar como PDF" en el cuadro de impresión.',extra:` data-quote-publication-print="${escape(publication.publicationId)}"`});
 }
 
 /** Change order: customer lines (description and amount), agreement before/after, schedule days. */

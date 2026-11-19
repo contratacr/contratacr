@@ -50,26 +50,28 @@ export function PhotoPicker({files,onChange,en,label,max=PLACE_PHOTO_BATCH,disab
  </div>;
 }
 
-/** «Agregar fotos» block under the gallery. Owner/team: published at once; others: pending review. */
-export function PlacePhotoUpload({slug,locale,signedIn,loginHref,isManager}:{slug:string;locale:string;signedIn:boolean;loginHref:string|null;isManager:boolean}){
+/** «Agregar fotos» of a place. Owner/team: published at once; others: pending review. `popover` (2026-11-19, action bar
+ *  of the Yelp-model header): the button sits in the bar and the panel/result open as a floating card under it. */
+export function PlacePhotoUpload({slug,locale,signedIn,loginHref,isManager,popover=false,buttonClass}:{slug:string;locale:string;signedIn:boolean;loginHref:string|null;isManager:boolean;popover?:boolean;buttonClass?:string}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es;
  const [open,setOpen]=useState(false),[files,setFiles]=useState<File[]>([]),[caption,setCaption]=useState(''),[busy,setBusy]=useState(false);
  const ready=useSyncExternalStore(noSubscribe,()=>true,()=>false);
  const [result,setResult]=useState<UploadOutcome|null>(null);const captionId=useId();const panel=useRef<HTMLDivElement>(null);
  const btn=`inline-flex min-h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold ${ring}`;
- if(!signedIn)return <p data-place-photo-add><a href={loginHref??'/login'} className={`${btn} border border-[#162543] text-[#162543]`}><ImagePlus aria-hidden className="h-4 w-4"/>{t('Agregar fotos','Add photos')}</a>
-  <span className="ml-2 text-xs text-slate-600">{t('Inicie sesión para agregarlas.','Sign in to add them.')}</span></p>;
+ const openClass=buttonClass??`${btn} border border-[#162543] text-[#162543] hover:bg-[#F7FAFC]`;
+ const float=popover?'absolute left-0 top-full z-30 mt-2 w-[min(26rem,calc(100vw-2rem))] bg-white shadow-xl':'';
+ if(!signedIn)return <span data-place-photo-add className="inline-flex"><a href={loginHref??'/login'} className={openClass}><ImagePlus aria-hidden className="h-4 w-4"/>{t('Agregar fotos','Add photos')}</a></span>;
  let summary:ReactNode=null;
  if(result){
-  summary=<div role="status" data-place-photo-result className="space-y-1 rounded-xl bg-[#F7FAFC] p-3 text-sm">
+  summary=<div role="status" data-place-photo-result className={`space-y-1 rounded-xl bg-[#F7FAFC] p-3 text-sm`}>
    {result.ok>0&&<p className="font-semibold text-emerald-900">{t(`${result.ok===1?'Se publicó 1 foto':`Se publicaron ${result.ok} fotos`}. Recargue la página para verlas.`,`${result.ok===1?'1 photo was':`${result.ok} photos were`} published. Reload the page to see them.`)}</p>}
    {result.pending>0&&<p className="font-semibold text-[#162543]" data-place-photo-pending>{t(`Gracias. ${result.pending===1?'Su foto quedó':`Sus ${result.pending} fotos quedaron`} pendiente${result.pending===1?'':'s'} de revisión; aparecerá${result.pending===1?'':'n'} cuando el equipo de ContrataCR la${result.pending===1?'':'s'} apruebe.`,`Thank you. ${result.pending===1?'Your photo is':`Your ${result.pending} photos are`} awaiting review and will appear once the ContrataCR team approves ${result.pending===1?'it':'them'}.`)}</p>}
    {result.errors.map(e=><p key={e} className="text-red-800">{e}</p>)}
   </div>;
  }
- return <div className="space-y-3" data-place-photo-add>
-  {!open?<button type="button" data-place-photo-open data-ready={ready||undefined} onClick={()=>{setOpen(true);setResult(null);}} className={`${btn} border border-[#162543] text-[#162543] hover:bg-[#F7FAFC]`}><ImagePlus aria-hidden className="h-4 w-4"/>{t('Agregar fotos','Add photos')}</button>
-  :<div ref={panel} className="space-y-3 rounded-2xl border border-[#d7e1ea] p-4" data-place-photo-panel>
+ return <div className={popover?'relative inline-flex':'space-y-3'} data-place-photo-add>
+  {(!open||popover)&&<button type="button" data-place-photo-open data-ready={ready||undefined} aria-expanded={popover?open:undefined} onClick={()=>{setOpen(popover?!open:true);setResult(null);}} className={openClass}><ImagePlus aria-hidden className="h-4 w-4"/>{t('Agregar fotos','Add photos')}</button>}
+  {open&&<div ref={panel} className={`space-y-3 rounded-2xl border border-[#d7e1ea] p-4 ${float}`} data-place-photo-panel>
    <p className="text-sm text-slate-700">{isManager?t('Como administrador del negocio, sus fotos se publican de inmediato. Cualquier persona puede reportarlas.','As the business manager, your photos are published right away. Anyone can report them.')
     :t('Sus fotos se revisan antes de publicarse. Suba solo fotos tomadas por usted, sin personas reconocibles ni datos privados.','Your photos are reviewed before they are published. Only upload photos you took, without recognisable people or private data.')}</p>
    <PhotoPicker files={files} onChange={setFiles} en={en} disabled={busy}/>
@@ -81,7 +83,8 @@ export function PlacePhotoUpload({slug,locale,signedIn,loginHref,isManager}:{slu
      className={`${btn} bg-[#162543] text-white disabled:opacity-50`}>{busy?t('Subiendo…','Uploading…'):t('Subir fotos','Upload photos')}</button>
     <button type="button" disabled={busy} onClick={()=>{setOpen(false);setFiles([]);}} className={`${btn} text-[#162543] underline`}>{t('Cancelar','Cancel')}</button>
    </div>
+   {popover&&summary}
   </div>}
-  {summary}
+  {!popover&&summary}
  </div>;
 }

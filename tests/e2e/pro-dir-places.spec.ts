@@ -29,6 +29,15 @@ for(const language of ['es','en'] as const)test(`F1/F2: place page, attribution,
  await expect(page.locator('[data-place-verification="imported"]')).toHaveText(t('No reclamado','Unclaimed'));// 2026-11-19: quiet badge; the data sources are explained in the Terms (13.1)
  await expect(page.locator('[data-place-source="OpenStreetMap"]')).toContainText('OpenStreetMap');
  await expect(page.locator('section[aria-labelledby="place-hours"] dt',{hasText:t('Lunes','Monday')})).toBeVisible();
+ // 2026-11-19 (Yelp biz-page model): rating line, open status, action bar, side card with «Llamar» and the compact
+ // claim link, the section-colour hero instead of an empty photo box, and the phones' fixed action bar.
+ await expect(page.locator('[data-rating-line="none"]')).toHaveText(t('Sin reseñas todavía','No reviews yet'));
+ await expect(page.locator('[data-place-open-status]')).toHaveCount(1);
+ await expect(page.locator('[data-place-photo-placeholder="restaurant"]')).toBeVisible();
+ await expect(page.locator('[data-place-actions-bar] [data-share-button]')).toBeVisible();
+ await expect(page.locator('[data-place-side-card] [data-place-contact="call"]')).toHaveAttribute('href','tel:+50622000001');
+ await expect(page.locator('[data-place-side-card] [data-place-claim-link]')).toBeVisible();
+ await expect(page.locator('[data-place-mobile-bar]')).toBeVisible({visible:/mobile/.test(info.project.name)});
  await expectNoHorizontalOverflow(page);
  const robots=await page.locator('meta[name="robots"]').getAttribute('content');expect(robots).not.toContain('noindex');// indexing rule 2026-11-18 (DIR_INDEX_IMPORTED): an imported place with a phone/hours is indexable
  // pharmacy: published but not license_verified → public, with a neutral note (owner decision 2026-11-17)
@@ -39,7 +48,9 @@ for(const language of ['es','en'] as const)test(`F1/F2: place page, attribution,
  await expect(page.locator('[data-place-verification="unverified"]')).toBeVisible();
  await gotoOK(page,prefix+'/lugar/'+slug);
  // report through the real form; a second identical POST with the same reportId is accepted once
- await page.waitForLoadState('networkidle');await page.locator('[data-place-report] summary').click();
+ // «Sugerir un cambio» in the side card opens the report form (#reportar).
+ await page.waitForLoadState('networkidle');await page.locator('[data-place-suggest]').click();
+ await expect(page.locator('details[data-place-report]')).toHaveAttribute('open','');
  await page.getByLabel(t('Motivo','Reason')).selectOption('removal_request');
  await page.getByLabel(t('Detalle','Details')).fill(t('Soy el dueño y pido retirar la ficha.','I own it and request removal.'));
  await page.getByRole('button',{name:t('Enviar reporte','Send report')}).click();

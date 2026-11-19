@@ -1,8 +1,9 @@
 'use client';
-import {useRef,useState,useSyncExternalStore} from 'react';
+import {useEffect,useRef,useState,useSyncExternalStore} from 'react';
 import {PhotoPicker,uploadPlacePhotos,type UploadOutcome} from './place-photo-upload';
 import type {PublicPlaceReviews,ReplyTarget} from '@/lib/directory/review-schemas';
 import {FlagReview,OwnerReplyEditor} from './place-review-actions';
+import {BIZ,RatingSummary,Stars} from './biz-ui';
 
 /**
  * LOCAL PRO ONLY (multivertical F5): reviews of a place. Same rules as professional reviews (half stars, 300
@@ -19,13 +20,24 @@ const REASONS:Record<string,[string,string]>={
  reload:['La reseña cambió en otra pestaña. Recargue la página.','The review changed in another tab. Please reload the page.'],
  unavailable:['No se pudo enviar. Intente de nuevo.','Could not send. Please try again.'],
 };
-const stars=(n:number)=>'★'.repeat(Math.floor(n))+(n%1?'½':'');
 const noSubscribe=()=>()=>{};
 /** `note` (2026-11-17, health/vet places): visible scope note shown above the list and the form. */
-export function PlaceReviews({slug,locale,initial,signedIn,manage=null,note}:{slug:string;locale:string;initial:PublicPlaceReviews;signedIn:boolean;manage?:ReplyTarget[]|null;note?:string}){
+/** 2026-11-19 (Yelp model): rating summary with 5→1 bars (`distribution`, counted server-side), sort of the listed
+ *  reviews (newest / best / worst; offered when every review is on the page) and «Escribir reseña» opened from the
+ *  header action bar or the mobile bar through the #escribir-resena anchor. */
+type Sort='recent'|'best'|'worst';
+export function PlaceReviews({slug,locale,initial,signedIn,manage=null,note,distribution=null}:{slug:string;locale:string;initial:PublicPlaceReviews;signedIn:boolean;manage?:ReplyTarget[]|null;note?:string;distribution?:number[]|null}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es;
  const [state,setState]=useState<'idle'|'sending'|'sent'>('idle'),[error,setError]=useState<string|null>(null),[writing,setWriting]=useState(false);
- const [photos,setPhotos]=useState<File[]>([]),[photoResult,setPhotoResult]=useState<UploadOutcome|null>(null);
+ const [photos,setPhotos]=useState<File[]>([]),[photoResult,setPhotoResult]=useState<UploadOutcome|null>(null),[sort,setSort]=useState<Sort>('recent');
+ const sectionRef=useRef<HTMLElement>(null);
+ // «Escribir reseña» links (#escribir-resena) open the form here, on arrival and on later clicks.
+ useEffect(()=>{
+  const fromHash=()=>{if(window.location.hash!=='#escribir-resena')return;setWriting(true);
+   requestAnimationFrame(()=>{sectionRef.current?.scrollIntoView({block:'start'});(sectionRef.current?.querySelector('form select, form input, [data-place-review-manager], [data-place-review-sent]') as HTMLElement|null)?.focus?.();});};
+  fromHash();window.addEventListener('hashchange',fromHash);return()=>window.removeEventListener('hashchange',fromHash);
+ },[]);
+ const items=sort==='recent'?initial.items:[...initial.items].sort((a,b)=>sort==='best'?b.rating-a.rating||b.createdAt.localeCompare(a.createdAt):a.rating-b.rating||b.createdAt.localeCompare(a.createdAt));
  const action=useRef(''),form=useRef<HTMLFormElement>(null);
  // data-ready marks the form as interactive (true only after hydration); the action id is created on first submit.
  const ready=useSyncExternalStore(noSubscribe,()=>true,()=>false);
@@ -44,18 +56,27 @@ export function PlaceReviews({slug,locale,initial,signedIn,manage=null,note}:{sl
   }catch{setState('idle');setError(REASONS.unavailable![en?1:0]);}
  };
  const input='min-h-11 rounded-xl border border-slate-300 bg-white px-3 text-base text-[#162543]';
- return <section aria-labelledby="place-reviews" className="space-y-4" data-place-reviews={initial.summary.count}>
-  <h2 id="place-reviews" className="text-lg font-bold">{t('Reseñas','Reviews')}</h2>
+ return <section ref={sectionRef} id="resenas" aria-labelledby="place-reviews" className="scroll-mt-24 space-y-5" data-place-reviews={initial.summary.count}>
+  <span id="escribir-resena" className="block scroll-mt-24" aria-hidden="true"/>
+  <div className="flex flex-wrap items-end justify-between gap-3">
+   <h2 id="place-reviews" className={BIZ.h2}>{t('Reseñas','Reviews')}</h2>
+   {!initial.nextCursor&&initial.items.length>1&&<label className="flex items-center gap-2 text-sm font-semibold text-[#334155]">{t('Ordenar por','Sort by')}
+    <select data-place-review-sort value={sort} onChange={e=>setSort(e.target.value as Sort)} className="min-h-11 rounded-full border border-[#cfd9e3] bg-white px-4 text-sm font-semibold text-[#162543]">
+     <option value="recent">{t('Más recientes','Newest')}</option><option value="best">{t('Mejor calificación','Highest rated')}</option><option value="worst">{t('Peor calificación','Lowest rated')}</option></select></label>}
+  </div>
   {note&&<p role="note" data-place-review-note className="rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-800">{note}</p>}
   {initial.summary.count>0&&initial.summary.average!=null
-   ?<p className="text-sm">{new Intl.NumberFormat(en?'en-US':'es-CR',{minimumFractionDigits:1,maximumFractionDigits:1}).format(initial.summary.average)} / 5 · {initial.summary.count} {t(initial.summary.count===1?'reseña':'reseñas',initial.summary.count===1?'review':'reviews')}</p>
-   :<div data-place-reviews-empty className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 text-center"><p className="text-base font-semibold text-[#162543]"><span aria-hidden="true">☆ </span>{t('Todavía no hay reseñas.','No reviews yet.')}</p>
-    {!manage&&<p className="mt-1 text-sm text-slate-700">{t('Si conoce este negocio, cuente su experiencia a los demás.','If you know this business, share your experience with others.')}</p>}</div>}
-  {initial.items.length>0&&<ul className="space-y-3">{initial.items.map(r=><li key={r.id} data-place-review={r.id} className="rounded-2xl border border-[#d7e1ea] p-4">
-   <p className="font-semibold"><span aria-hidden>{stars(r.rating)}</span><span className="sr-only">{t(`${r.rating} de 5`,`${r.rating} out of 5`)}</span> · {r.name}{r.guest?<span className="font-normal text-slate-600"> · {t('sin cuenta, contactó al negocio','no account, contacted the business')}</span>:null}</p>
-   <p className="break-words">{r.comment}</p>
-   <p className="text-xs text-slate-600">{date(r.createdAt)}{r.edited?` · ${t('editada','edited')}`:''}</p>
-   {r.ownerReply&&<div className="mt-2 border-l-4 border-[#009FD9] pl-3 text-sm" data-owner-reply><p><span className="font-semibold">{t('Respuesta del negocio: ','Reply from the business: ')}</span><span className="break-words">{r.ownerReply.text}</span></p>
+   ?<RatingSummary average={initial.summary.average} count={initial.summary.count} distribution={distribution} en={en}/>
+   :<div data-place-reviews-empty className="flex items-center gap-4 rounded-2xl bg-[#f7fafc] p-5"><Stars value={0} size="lg"/><p className="text-base font-semibold text-[#162543]">{t('Todavía no hay reseñas.','No reviews yet.')}</p></div>}
+  {items.length>0&&<ul className="divide-y divide-[#e8edf2]">{items.map(r=><li key={r.id} data-place-review={r.id} className="space-y-2 py-5 first:pt-1">
+   <div className="flex items-center gap-3">
+    <span aria-hidden="true" className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#eaf6fb] text-base font-bold text-[#0b4f6c]">{r.name.trim().charAt(0).toUpperCase()}</span>
+    <div className="min-w-0"><p className="truncate font-bold text-[#162543]">{r.name}</p>
+     {r.guest&&<p className="text-xs text-slate-600">{t('sin cuenta, contactó al negocio','no account, contacted the business')}</p>}</div>
+   </div>
+   <p className="flex flex-wrap items-center gap-2 text-sm"><Stars value={r.rating} size="sm" label={t(`${String(r.rating).replace('.',',')} de 5`,`${r.rating} out of 5`)}/><span className="text-slate-600">{date(r.createdAt)}{r.edited?` · ${t('editada','edited')}`:''}</span></p>
+   <p className="break-words text-[15px] leading-6 text-[#1f2937]">{r.comment}</p>
+   {r.ownerReply&&<div className="mt-2 rounded-xl bg-[#f7fafc] p-3 text-sm" data-owner-reply><p><span className="font-semibold">{t('Respuesta del negocio: ','Reply from the business: ')}</span><span className="break-words">{r.ownerReply.text}</span></p>
     <p className="text-xs text-slate-600">{date(r.ownerReply.at)}{r.ownerReply.edited?` · ${t('editada','edited')}${r.ownerReply.editedAt?` ${date(r.ownerReply.editedAt)}`:''}`:''}</p></div>}
    {manage?(()=>{const target=manage.find(m=>m.reviewId===r.id);return target?<OwnerReplyEditor target={target} locale={locale}/>:null;})():<FlagReview slug={slug} reviewId={r.id} locale={locale}/>}
   </li>)}</ul>}
@@ -66,7 +87,7 @@ export function PlaceReviews({slug,locale,initial,signedIn,manage=null,note}:{sl
     {photoResult?.errors.map(e=><span key={e} className="mt-1 block text-sm text-red-800">{e}</span>)}</p>
    // Launch polish: the form opens from one «Escribir reseña» button instead of filling the page from the start.
    :!writing
-    ?<button type="button" data-place-review-open data-ready={ready||undefined} onClick={()=>setWriting(true)} className="inline-flex min-h-11 items-center rounded-xl bg-[#162543] px-5 font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b7fab]">{t('Escribir reseña','Write a review')}</button>
+    ?<button type="button" data-place-review-open data-ready={ready||undefined} onClick={()=>setWriting(true)} className={BIZ.primary}>{t('Escribir reseña','Write a review')}</button>
    :<form ref={form} onSubmit={e=>{e.preventDefault();void submit();}} className="space-y-3 rounded-2xl border border-[#d7e1ea] p-4" data-place-review-form data-ready={ready||undefined}>
     <h3 className="font-semibold">{t('Escribir una reseña','Write a review')}</h3>
     {!signedIn&&<label className="flex flex-col gap-1 text-sm font-medium">{t('Su nombre','Your name')}<input name="authorName" maxLength={80} autoComplete="name" className={input}/></label>}

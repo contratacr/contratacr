@@ -1,10 +1,12 @@
 import {z} from 'zod';
 import {PRO_FILE_MAX_BYTES} from './file-limit';
+import {PRO_DOC_MIMES,proDocExtension,type ProDocMime} from './file-formats';
 const workId=z.string().trim().min(1).max(160),stamp=z.string().datetime({offset:true});
 export const WORK_FILE_MAX_BYTES=PRO_FILE_MAX_BYTES;
 export const workFileNameSchema=z.string().trim().min(1).max(160).refine(value=>!/[\u0000-\u001f\u007f/\\]/u.test(value)&&Array.from(value).every(char=>char.length===2||char.charCodeAt(0)<0xd800||char.charCodeAt(0)>0xdfff),'Nombre inválido.');
-export function canonicalWorkFileName(source:string,mimeType:'image/jpeg'|'application/pdf'){
- const original=workFileNameSchema.parse(source).normalize('NFC'),extension=mimeType==='application/pdf'?'.pdf':'.jpg';
+/** Ronda F2-D: the extension follows the stored format (file-formats.ts); JPG and PDF names are unchanged. */
+export function canonicalWorkFileName(source:string,mimeType:ProDocMime){
+ const original=workFileNameSchema.parse(source).normalize('NFC'),extension=proDocExtension(mimeType);
  let stem=original.replace(/\.[^.]*$/u,'').replace(/[. ]+$/u,'')||'archivo';
  while(stem.length>160-extension.length)stem=Array.from(stem).slice(0,-1).join('');
  return stem+extension;
@@ -13,7 +15,7 @@ export const workFileUploadSchema=z.object({action:z.literal('upload'),workId,fi
 export const workFilePublishSchema=z.object({action:z.literal('publish'),workId,fileId:z.string().uuid(),actionId:z.string().uuid(),revision:z.literal(1),recipientId:z.string().uuid()}).strict();
 export const workFileMutationSchema=z.discriminatedUnion('action',[workFileUploadSchema,workFilePublishSchema]);
 export type WorkFileMutation=z.infer<typeof workFileMutationSchema>;
-const common={id:z.string().uuid(),name:workFileNameSchema,mimeType:z.enum(['image/jpeg','application/pdf']),sizeBytes:z.number().int().positive().max(WORK_FILE_MAX_BYTES),sha256:z.string().regex(/^[a-f0-9]{64}$/)};
+const common={id:z.string().uuid(),name:workFileNameSchema,mimeType:z.enum(PRO_DOC_MIMES),sizeBytes:z.number().int().positive().max(WORK_FILE_MAX_BYTES),sha256:z.string().regex(/^[a-f0-9]{64}$/)};
 export const workFileSchema=z.object({...common,workId,revision:z.union([z.literal(1),z.literal(2)]),ready:z.boolean(),createdAt:stamp,publishedAt:stamp.nullable()}).strict().superRefine((value,context)=>{
  if(value.mimeType==='image/jpeg'&&value.sizeBytes>PRO_FILE_MAX_BYTES||value.revision===2&&(!value.ready||value.publishedAt===null)||value.revision===1&&value.publishedAt!==null||canonicalWorkFileName(value.name,value.mimeType)!==value.name)context.addIssue({code:'custom',message:'Invalid file metadata.'});
 });
@@ -35,3 +37,7 @@ export function storedPhotoNotice(file:{name:string;type:string}|null,en:boolean
  let name:string;try{name=canonicalWorkFileName(file.name,'image/jpeg');}catch{return null;}
  return en?`PNG and WebP photos are saved as JPG: it will be stored as "${name}".`:`Las fotos PNG y WebP se guardan como JPG: quedará como "${name}".`;
 }
+/** Ronda F2-D (row 33): folders shared with the linked customer (direct files only). */
+export const sharedFolderFileSchema=z.object({id:z.string().uuid(),name:workFileNameSchema,mimeType:z.enum(PRO_DOC_MIMES),sizeBytes:z.number().int().positive().max(WORK_FILE_MAX_BYTES),sha256:z.string().regex(/^[a-f0-9]{64}$/),createdAt:stamp}).strict();
+export const sharedFoldersSchema=z.object({folders:z.array(z.object({id:z.string().uuid(),name:z.string().min(1).max(80),files:z.array(sharedFolderFileSchema).max(500)}).strict()).max(200)}).strict();
+export type SharedFolderFile=z.infer<typeof sharedFolderFileSchema>;

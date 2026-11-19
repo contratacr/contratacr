@@ -17,7 +17,9 @@ export const POLICY_URL='https://cdn.comprobanteselectronicos.go.cr/xml-schemas/
 /** SHA-256 of the policy PDF as published in Hacienda's v4.4 signature example (Anexo 2, p. 88). */
 export const POLICY_DIGEST='DWxin1xWOeI8OuWQXazh4VjLWAaCLAA954em7DMh0h8=';
 export type SignedDocument={signedXml:string;xmlSha256:string;signedSha256:string;signer:'mock'|'p12';documentDigest:string};
-export interface EinvoiceSigner{readonly kind:'mock'|'p12';sign(xml:string,docType:EinvoiceDocType,at:Date):Promise<SignedDocument>|SignedDocument;}
+/** Ronda F2-A: a receiver message (MensajeReceptor) is signed the same way as a comprobante. */
+export type SignableType=EinvoiceDocType|'MensajeReceptor';
+export interface EinvoiceSigner{readonly kind:'mock'|'p12';sign(xml:string,docType:SignableType,at:Date):Promise<SignedDocument>|SignedDocument;}
 const b64=(data:Buffer|string)=>createHash('sha256').update(data).digest('base64');
 export const sha256hex=(text:string)=>createHash('sha256').update(text,'utf8').digest('hex');
 type Cert={der:Buffer;issuer:string;serial:string};
@@ -37,8 +39,8 @@ function signedInfo(id:string,documentDigest:string,propertiesDigest:string){
   +`<ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#xades-${id}"><ds:Transforms><ds:Transform Algorithm="${EXC_C14N}"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="${SHA256}"></ds:DigestMethod><ds:DigestValue>${propertiesDigest}</ds:DigestValue></ds:Reference></ds:SignedInfo>`;
 }
 /** Builds the enveloped signature; `signInfo` returns base64 SignatureValue over the canonical SignedInfo. */
-export function envelop(xml:string,docType:EinvoiceDocType,at:Date,cert:Cert,signInfo:(canonical:string)=>string,id=randomUUID().replace(/-/g,'')):SignedDocument&{signedInfo:string;signedProperties:string}{
- const root=DOCUMENT_ROOTS[docType].root,closing=`</${root}>`;
+export function envelop(xml:string,docType:SignableType,at:Date,cert:Cert,signInfo:(canonical:string)=>string,id=randomUUID().replace(/-/g,'')):SignedDocument&{signedInfo:string;signedProperties:string}{
+ const root=docType==='MensajeReceptor'?docType:DOCUMENT_ROOTS[docType].root,closing=`</${root}>`;
  if(!xml.endsWith(closing))throw Error('unexpected root');
  const documentDigest=b64(Buffer.from(xml,'utf8'));
  const props=signedProperties(id,at,cert),info=signedInfo(id,documentDigest,b64(Buffer.from(props,'utf8')));
@@ -53,7 +55,7 @@ export function envelop(xml:string,docType:EinvoiceDocType,at:Date,cert:Cert,sig
 /** Local simulation: deterministic, never valid for Hacienda (the value says so). */
 export class MockSigner implements EinvoiceSigner{
  readonly kind='mock' as const;
- sign(xml:string,docType:EinvoiceDocType,at:Date){
+ sign(xml:string,docType:SignableType,at:Date){
   const cert={der:Buffer.from('CONTRATACR-SIMULACION-LOCAL-SIN-VALIDEZ','utf8'),issuer:'CN=Simulacion local ContrataCR,O=ContrataCR,C=CR',serial:'1'};
   const signed=envelop(xml,docType,at,cert,canonical=>Buffer.from('SIMULACION:'+createHash('sha256').update(canonical).digest('hex'),'utf8').toString('base64'),'simulacion-'+sha256hex(xml).slice(0,24));
   return {signedXml:signed.signedXml,xmlSha256:signed.xmlSha256,signedSha256:signed.signedSha256,signer:'mock' as const,documentDigest:signed.documentDigest};
@@ -64,7 +66,7 @@ export function issuerName(certificate:X509Certificate){return certificate.issue
 export class XadesSigner implements EinvoiceSigner{
  readonly kind='p12' as const;
  constructor(private readonly key:KeyObject,private readonly certificate:X509Certificate,private readonly der:Buffer){}
- sign(xml:string,docType:EinvoiceDocType,at:Date){
+ sign(xml:string,docType:SignableType,at:Date){
   const cert={der:this.der,issuer:issuerName(this.certificate),serial:BigInt('0x'+this.certificate.serialNumber).toString()};
   const signed=envelop(xml,docType,at,cert,canonical=>createSign('RSA-SHA256').update(canonical,'utf8').sign(this.key,'base64'));
   return {signedXml:signed.signedXml,xmlSha256:signed.xmlSha256,signedSha256:signed.signedSha256,signer:'p12' as const,documentDigest:signed.documentDigest};
