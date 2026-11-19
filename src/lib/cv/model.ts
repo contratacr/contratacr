@@ -1,5 +1,5 @@
 /** Only confirmed public profile fields. Never store the source CV or contact data. */
-export type CvEntry = { title: string; organization: string; period: string; description: string; /** Solo en los CV armados en el panel (ciudad o "Remoto"); el perfil no la guarda. */ location?: string };
+export type CvEntry = { title: string; organization: string; period: string; description: string; /** Solo en los CV armados en el panel (ciudad o "Remoto"); el perfil no la guarda. */ location?: string; /** Oculta en el documento sin borrarla (19-nov-2026). Solo en el panel. */ hidden?: boolean };
 export type CvProfile = { education: CvEntry[]; experience: CvEntry[]; skills: string[] };
 export const emptyCv = (): CvProfile => ({ education: [], experience: [], skills: [] });
 export const CV_LIMITS = { entries: 20, skills: 40, title: 160, organization: 160, period: 80, description: 1000 };

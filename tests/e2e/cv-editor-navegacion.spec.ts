@@ -8,6 +8,8 @@ import { loginAs, isMobileProject } from "./helpers";
  *  - En la lista, tocar la fila abre el documento y lo demás va en el «···».
  *  - «Más secciones» suma Proyectos, Referencias o una sección propia.
  *  - Ya no hay selector de diseño; el idioma del documento sí queda.
+ *  - (19-nov-2026) Logros con negrita, más secciones y orden de las secciones.
+ *    Los documentos se guardan en la cuenta: la prueba borra los que crea.
  */
 
 const EMAIL = "e2e.pro@contratacr.test";
@@ -22,6 +24,18 @@ async function abrirEditorNuevo(page: Page) {
   await page.reload();
   // Sin documentos, se abre uno nuevo directo.
   await expect(page.getByTestId("cv-builder")).toBeVisible({ timeout: 20_000 });
+}
+
+/** Lo que creó la prueba se borra: los documentos ahora se guardan en la cuenta. */
+async function borrarLosDeLaPrueba(page: Page) {
+  if (!(await page.getByTestId("cv-documentos").isVisible())) await flechaDeLaBarra(page).click();
+  await expect(page.getByTestId("cv-documentos")).toBeVisible();
+  for (let i = 0; i < 12 && (await page.getByTestId("cv-documento").count()); i++) {
+    const fila = page.getByTestId("cv-documento").first();
+    await fila.getByRole("button", { name: "Más opciones" }).click();
+    await page.getByRole("menuitem", { name: "Eliminar" }).or(page.getByRole("button", { name: "Eliminar", exact: true })).first().click();
+    await fila.getByRole("alert").getByRole("button", { name: "Eliminar" }).click();
+  }
 }
 
 test.describe("editor de currículum", () => {
@@ -43,6 +57,7 @@ test.describe("editor de currículum", () => {
     await page.goBack();
     await expect(page.getByTestId("cv-documentos")).toBeVisible();
     expect(new URL(page.url()).searchParams.get("tab")).toBe("cv");
+    await borrarLosDeLaPrueba(page);
   });
 
   test("lista con menú «···», más secciones y sin selector de diseño", async ({ page }) => {
@@ -53,6 +68,26 @@ test.describe("editor de currículum", () => {
     await page.getByRole("button", { name: "Proyectos", exact: true }).click();
     await expect(page.getByLabel("Nombre del proyecto")).toBeVisible();
     await page.getByLabel("Nombre del proyecto").fill("Tienda en línea");
+    // Logros con formato: la barrita pone negrita y la hoja la muestra.
+    const logros = page.getByLabel("Qué hiciste (uno por línea)");
+    await logros.fill("Ventas");
+    await logros.selectText();
+    await page.getByRole("button", { name: "Negrita" }).first().click();
+    // Se ve en negrita en el editor mismo, sin marcas.
+    await expect(logros.locator("b, strong")).toHaveText("Ventas");
+    await expect(logros).not.toContainText("**");
+    // Más secciones nuevas, como en FlowCV.
+    for (const nombre of ["Cursos", "Premios", "Voluntariado y organizaciones", "Publicaciones", "Intereses", "Declaración"]) {
+      await expect(page.getByRole("button", { name: nombre, exact: true })).toBeVisible();
+    }
+    // Orden de las secciones: ocultar Proyectos lo saca de la hoja sin borrarlo.
+    const orden = page.getByTestId("cv-orden-secciones");
+    await expect(orden.locator('[data-seccion="proyectos"]')).toBeVisible();
+    await orden.getByRole("button", { name: "Ocultar Proyectos" }).click();
+    await page.getByRole("button", { name: /Ver vista previa/ }).click();
+    await expect(page.getByTestId("cv-hoja").locator('[data-seccion="proyectos"]')).toHaveCount(0);
+    await orden.getByRole("button", { name: "Mostrar Proyectos" }).click();
+    await expect(page.getByTestId("cv-hoja").locator('[data-seccion="proyectos"] strong')).toHaveText("Ventas");
 
     await page.getByRole("button", { name: /Revisar y descargar/ }).click();
     await expect(page.getByRole("radiogroup", { name: "Idioma del documento" })).toBeVisible();
@@ -64,5 +99,7 @@ test.describe("editor de currículum", () => {
     await expect(fila.getByRole("button", { name: /Editar|Duplicar|Eliminar/ })).toHaveCount(0);
     await fila.getByRole("button", { name: "Más opciones" }).click();
     for (const opcion of ["Descargar PDF", "Duplicar", "Eliminar"]) await expect(page.getByRole("menuitem", { name: opcion }).or(page.getByRole("button", { name: opcion })).first()).toBeVisible();
+    await page.keyboard.press("Escape");
+    await borrarLosDeLaPrueba(page);
   });
 });
