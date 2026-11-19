@@ -4,7 +4,8 @@ import { useLocale } from 'next-intl';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { crTodayISO } from '@/lib/time-cr';
 /** Recovered from booking-modal at 5590123a^: Monday-first, circular days, cyan selection and availability dots. */
-export function ReservationCalendar({ selected, onSelect, marked = [], availableOnly = false, compact = false }: {
+export function ReservationCalendar({ selected, onSelect, marked = [], availableOnly = false, compact = false, monthValue, onMonth }: {
+    monthValue?:string;onMonth?:(month:string)=>void;
     selected: string;
     onSelect: (day: string) => void;
     marked?: string[];
@@ -12,10 +13,11 @@ export function ReservationCalendar({ selected, onSelect, marked = [], available
     compact?: boolean;
 }) {
     const en = useLocale() === 'en', today = crTodayISO();
-    const [month, setMonth] = useState((selected || today).slice(0, 7));
+    const [localMonth, setMonth] = useState((selected || today).slice(0, 7));
+    const month=monthValue??localMonth;
     const first = new Date(`${month}-01T12:00:00Z`), offset = (first.getUTCDay() + 6) % 7;
     const total = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 0)).getUTCDate();
-    function move(n: number) { const d = new Date(first); d.setUTCMonth(d.getUTCMonth() + n); setMonth(d.toISOString().slice(0, 7)); }
+    function move(n: number) { const d = new Date(first); d.setUTCMonth(d.getUTCMonth() + n); const value=d.toISOString().slice(0,7);setMonth(value);onMonth?.(value); }
     const weekdays = en ? ['M', 'T', 'W', 'T', 'F', 'S', 'S'] : ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
     return <div className="min-w-0" data-reservation-calendar>
   <div className="mb-3 flex items-center justify-between">

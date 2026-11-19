@@ -2,12 +2,28 @@ import { clientSchema, productSchema, saveClient, saveProduct, type Business, ty
 export type CatalogKind = 'clients' | 'products';
 export const catalogColumns = {
  clients: ['name','email','phone','identification','tradeName','group','address','notes'],
- products: ['sku','name','stock','minimum','cost','price','category','unit','cabys'],
+ products: ['sku','name','stock','minimum','cost','price','category','unit','cabys','itemType'],
 } as const;
 export type ImportIssue = { row: number; message: string };
 export type CatalogPreview = { kind: CatalogKind; clients: Client[]; products: Product[]; issues: ImportIssue[]; count: number };
+/**
+ * Field separator from the header record only: comma, or semicolon (Excel with es-CR
+ * regional settings). Quoted text is ignored. If only semicolons appear outside quotes,
+ * or they clearly outnumber commas, the file uses semicolons; otherwise comma.
+ */
+export function detectCsvDelimiter(text: string): ',' | ';' {
+ const input=text.replace(/^\uFEFF/,'');let quoted=false,commas=0,semicolons=0;
+ for(let i=0;i<input.length;i++){
+  const ch=input[i];
+  if(quoted){if(ch==='"'){if(input[i+1]==='"')i++;else quoted=false;}continue;}
+  if(ch==='"'){quoted=true;continue;}
+  if(ch==='\n'||ch==='\r')break;
+  if(ch===',')commas++;else if(ch===';')semicolons++;
+ }
+ return semicolons>commas?';':',';
+}
 /** CSV only: no macros, formulas, remote URLs or spreadsheet evaluation. */
-export function parseCatalogCsv(text: string): string[][] {
+export function parseCatalogCsv(text: string, delimiter: ',' | ';' = detectCsvDelimiter(text)): string[][] {
  if(new TextEncoder().encode(text).length>2_000_000)throw Error('El archivo supera 2 MB.');
  const rows:string[][]=[];let row:string[]=[],cell='',quoted=false,closed=false;
  const input=text.replace(/^\uFEFF/,'');
@@ -15,9 +31,9 @@ export function parseCatalogCsv(text: string): string[][] {
   const ch=input[i];
   if(quoted){if(ch==='"'){if(input[i+1]==='"'){cell+='"';i++;}else{quoted=false;closed=true;}}else cell+=ch;continue;}
   if(ch==='"'){if(cell||closed)throw Error('Comillas CSV inválidas.');quoted=true;continue;}
-  if(ch===','||ch==='\n'||ch==='\r'){
+  if(ch===delimiter||ch==='\n'||ch==='\r'){
    row.push(cell);cell='';closed=false;
-   if(ch!==','){if(ch==='\r'&&input[i+1]==='\n')i++;if(row.some(v=>v.trim()))rows.push(row);row=[];if(rows.length>501)throw Error('Importe como máximo 500 registros.');}
+   if(ch!==delimiter){if(ch==='\r'&&input[i+1]==='\n')i++;if(row.some(v=>v.trim()))rows.push(row);row=[];if(rows.length>501)throw Error('Importe como máximo 500 registros.');}
   }else{if(closed&&ch.trim())throw Error('Texto después de comillas CSV.');if(!closed)cell+=ch;}
  }
  if(quoted)throw Error('Comillas CSV sin cerrar.');
@@ -26,14 +42,15 @@ export function parseCatalogCsv(text: string): string[][] {
  return rows;
 }
 export function previewCatalogImport(text:string,kind:CatalogKind,data:Business,newId:()=>string):CatalogPreview{
- const rows=parseCatalogCsv(text);const columns=rows.shift()?.map(v=>v.trim())||[];
+ const delimiter=detectCsvDelimiter(text),rows=parseCatalogCsv(text,delimiter);const columns=rows.shift()?.map(v=>v.trim())||[];
  const allowed:readonly string[]=catalogColumns[kind];
  if(!columns.length||new Set(columns).size!==columns.length||columns.some(c=>!allowed.includes(c))||!columns.includes('name')||(kind==='products'&&!columns.includes('sku')))throw Error('Use las columnas de la plantilla de esta sección.');
  if(!rows.length)throw Error('El archivo no contiene registros.');
  const result:CatalogPreview={kind,clients:[],products:[],issues:[],count:rows.length};
  const skus=new Set(data.products.map(p=>p.sku.toLowerCase()));
  const ids=new Set(data.clients.map(c=>c.identification).filter(Boolean));
- const numeric=(value:string|undefined)=>{if(!value?.trim())return 0;if(!/^\d+(?:\.\d+)?$/.test(value.trim()))throw Error('Use números positivos sin separadores de miles y punto decimal.');return Number(value);};
+ // With ';' files (Excel es-CR) a single decimal comma is also accepted; thousands separators never are.
+ const numeric=(value:string|undefined)=>{const raw=value?.trim()??'';if(!raw)return 0;const normal=delimiter===';'&&/^\d+,\d+$/.test(raw)?raw.replace(',','.'):raw;if(!/^\d+(?:\.\d+)?$/.test(normal))throw Error('Use números positivos sin separadores de miles y punto decimal.');return Number(normal);};
  rows.forEach((cells,index)=>{
   try{
    if(cells.length!==columns.length)throw Error('La cantidad de columnas no coincide.');
@@ -47,8 +64,8 @@ export function previewCatalogImport(text:string,kind:CatalogKind,data:Business,
     if(parsed.data.identification)ids.add(parsed.data.identification);
     result.clients.push(parsed.data);
    }else{
-    const parsed=productSchema.safeParse({id:newId(),sku:row.sku,name:row.name,stock:numeric(row.stock),minimum:numeric(row.minimum),cost:numeric(row.cost),price:numeric(row.price),archived:false,category:row.category||'',unit:row.unit||'',cabys:row.cabys||''});
-    if(!parsed.success)throw Error('Revise código, nombre, cantidades y CABYS de 13 dígitos.');
+    const parsed=productSchema.safeParse({id:newId(),sku:row.sku,name:row.name,stock:numeric(row.stock),minimum:numeric(row.minimum),cost:numeric(row.cost),price:numeric(row.price),archived:false,category:row.category||'',unit:row.unit||'',cabys:row.cabys||'',...(row.itemType?{itemType:row.itemType}:{})});
+    if(!parsed.success)throw Error('Revise código, nombre, cantidades, tipo de artículo o servicio y CABYS de 13 dígitos. Los servicios deben tener existencias y mínimo en cero.');
     if(skus.has(parsed.data.sku.toLowerCase()))throw Error('Ese código ya existe en el catálogo o archivo.');
     skus.add(parsed.data.sku.toLowerCase());result.products.push(parsed.data);
    }

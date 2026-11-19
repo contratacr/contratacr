@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { FileText, ChevronRight } from "lucide-react";
 import { formatColones } from "@/lib/pricing";
 import { isQuoteExpired, type Quote } from "@/lib/quotes";
 import { actualizarCotizacion, agregarCotizacion, cargarCotizaciones, useCotizaciones } from "@/lib/quotes-store";
 import { QuoteEditorModal } from "@/components/quotes/quote-editor-modal";
+import { QuoteChoiceDetail } from "@/components/pro/quote-choices";
 import { QuoteDetailModal } from "@/components/quotes/quote-detail-modal";
 
 /**
@@ -40,9 +41,21 @@ export function QuoteBlock({ projectId, role, canCreate = false, defaultTitle, p
 }) {
   const t = useTranslations("quotes");
   const locale = useLocale();
+  const projectCopy=useTranslations("ProProjectJourney"),opening=useRef(false),detailSequence=useRef(0);
+  const [checking,setChecking]=useState(false),[detailError,setDetailError]=useState(false);
+  useEffect(()=>()=>{detailSequence.current++;},[]);
   const [editor, setEditor] = useState(false);
   const [detail, setDetail] = useState<Quote | null>(null);
+  const [choiceId,setChoiceId]=useState<string|null>(null);
   const key = projectId ?? "";
+  async function openQuote(quote:Quote){
+    if(role!=='client'||process.env.NODE_ENV!=='development'||!projectId){setDetail(quote);return;}
+    if(opening.current)return;opening.current=true;const sequence=++detailSequence.current;setChecking(true);setDetailError(false);
+    try{const response=await fetch('/api/quotes?'+new URLSearchParams({projectId}),{cache:'no-store'}),body=await response.json(),fresh=(body.quotes as Quote[]|undefined)?.find(row=>row.id===quote.id&&row.project_id===projectId);if(!response.ok||!fresh)throw Error();const choices=await fetch('/api/pro/quote-choices?'+new URLSearchParams({quoteId:fresh.id}),{cache:'no-store'});if(!choices.ok&&choices.status!==404)throw Error();const state=choices.ok?await choices.json():null;if(state&&(state.quoteId!==fresh.id||state.side!=='client'))throw Error();if(sequence===detailSequence.current){if(state?.configured)setChoiceId(fresh.id);else setDetail(fresh);}}
+    catch{if(sequence===detailSequence.current)setDetailError(true);}
+    finally{if(sequence===detailSequence.current){opening.current=false;setChecking(false);}}
+  }
+
 
   // Todas las cotizaciones se piden una sola vez para la pantalla entera; cada
   // bloque saca las suyas de ahí. Antes cada tarjeta hacía su propia consulta y
@@ -82,12 +95,17 @@ export function QuoteBlock({ projectId, role, canCreate = false, defaultTitle, p
   if (!ultima && role === "client") return null;
   if (!ultima && !canCreate) return null;
 
+  const resolvedStatus = conNombre && process.env.NODE_ENV === "development" && conNombre.project_id && ["accepted", "declined"].includes(conNombre.status)
+    ? `${t("blockTitle")} · ${projectCopy(conNombre.status === "accepted" ? "accepted" : "declined")}`
+    : null;
+
   const modales = (
     <>
       {editor && (
         <QuoteEditorModal open onClose={() => setEditor(false)} projectId={projectId} defaultTitle={defaultTitle} clientName={clientName}
           onSent={(q) => { agregarCotizacion(q); setEditor(false); }} />
       )}
+      {choiceId&&<QuoteChoiceDetail quoteId={choiceId} onClose={()=>setChoiceId(null)}/>}
       {detail && (
         <QuoteDetailModal quote={detail} role={role} open onClose={() => setDetail(null)}
           onChanged={(q) => { actualizarCotizacion(q); setDetail(null); }} />
@@ -104,12 +122,12 @@ export function QuoteBlock({ projectId, role, canCreate = false, defaultTitle, p
     return (
       <>
         {conNombre ? (
-          <button type="button" onClick={() => setDetail(conNombre)} className="flex w-full items-center gap-3 rounded-2xl border border-[#e5e7eb] bg-[#f8fbfd] px-3.5 py-2.5 text-left transition-colors hover:border-[#bfe3f5] hover:bg-[#f2f9fd]">
+          <button type="button" disabled={checking} aria-busy={checking} onClick={() => void openQuote(conNombre)} className="flex w-full items-center gap-3 rounded-2xl border border-[#e5e7eb] bg-[#f8fbfd] px-3.5 py-2.5 text-left transition-colors hover:border-[#bfe3f5] hover:bg-[#f2f9fd]">
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-[#009FD9]"><FileText className="h-4 w-4" /></span>
             <span className="min-w-0 flex-1">
               {/* Una línea: qué pasó y cuánto. El número y la fecha viven adentro. */}
               <span className="block truncate text-[13px] font-extrabold text-[#162543]">
-                {isQuoteExpired(conNombre) || conNombre.status === "withdrawn" ? `${t("rowQuote")} · ${estado(conNombre)}` : t("rowSentTitle")} · {formatColones(conNombre.total)}
+                {resolvedStatus ?? (isQuoteExpired(conNombre) || conNombre.status === "withdrawn" ? `${t("rowQuote")} · ${estado(conNombre)}` : t("rowSentTitle"))} · {formatColones(conNombre.total)}
               </span>
             </span>
             <span className="shrink-0 text-[13px] font-bold text-[#0089bb]">{t("view")}</span>
@@ -128,10 +146,10 @@ export function QuoteBlock({ projectId, role, canCreate = false, defaultTitle, p
   return (
     <div className="flex flex-col gap-2">
       {conNombre && (
-        <button type="button" onClick={() => setDetail(conNombre)} className="flex w-full items-center gap-3 rounded-2xl border border-[#e5e7eb] bg-white px-3.5 py-3 text-left transition-colors hover:border-[#bfe3f5] hover:bg-[#f8fcfe]">
+        <button type="button" disabled={checking} aria-busy={checking} onClick={() => void openQuote(conNombre)} className="flex w-full items-center gap-3 rounded-2xl border border-[#e5e7eb] bg-white px-3.5 py-3 text-left transition-colors hover:border-[#bfe3f5] hover:bg-[#f8fcfe]">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full ccr-caja-icono-plana"><FileText className="h-5 w-5" /></span>
           <span className="min-w-0 flex-1">
-            <span className="block text-[14px] font-extrabold text-[#162543]">{isQuoteExpired(conNombre) || conNombre.status === "withdrawn" ? `${t("blockTitle")} · ${estado(conNombre)}` : role === "client" ? t("rowReceivedTitle") : t("rowSentTitle")} · {formatColones(conNombre.total)}</span>
+            <span className="block text-[14px] font-extrabold text-[#162543]">{resolvedStatus ?? (isQuoteExpired(conNombre) || conNombre.status === "withdrawn" ? `${t("blockTitle")} · ${estado(conNombre)}` : role === "client" ? t("rowReceivedTitle") : t("rowSentTitle"))} · {formatColones(conNombre.total)}</span>
           </span>
           <ChevronRight className="h-4 w-4 shrink-0 text-[#9aa8ba]" />
         </button>
@@ -141,6 +159,7 @@ export function QuoteBlock({ projectId, role, canCreate = false, defaultTitle, p
           {ultima ? t("sendAnother") : t("send")}
         </button>
       )}
+      {detailError&&<p role="alert" className="text-sm text-red-700">{projectCopy("readError")}</p>}
       {modales}
     </div>
   );

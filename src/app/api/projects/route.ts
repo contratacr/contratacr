@@ -97,18 +97,18 @@ export async function POST(req: NextRequest) {
     const requestedBeneficiaryDob = typeof body.beneficiaryDob === "string" ? body.beneficiaryDob : "";
 
     if (!cleanDescription) {
-      return NextResponse.json({ error: mensajeDeError(req, { es: "Cuéntanos brevemente qué hay que hacer.", en: "Tell us briefly what needs doing." }) }, { status: 400 });
+      return NextResponse.json({ error: mensajeDeError(req, { es: "Cuéntenos brevemente qué hay que hacer.", en: "Tell us briefly what needs doing." }) }, { status: 400 });
     }
     // Category is required: it routes the project to matching professionals.
     if (!categoryId) {
-      return NextResponse.json({ error: "Elige una categoria para tu proyecto." }, { status: 400 });
+      return NextResponse.json({ error: "Elija una categoria para su proyecto." }, { status: 400 });
     }
     // The form no longer asks for a title: the service name plus the start of the
     // description reads better in every list than what people typed.
     const derivedTitle = deriveTitle(getCategoryLabel(categoryId), cleanDescription);
     const finalTitle = cleanTitle || derivedTitle;
     if (cedula && !isValidId(cedula)) {
-      return NextResponse.json({ error: "Ingresa un numero de identificacion valido." }, { status: 400 });
+      return NextResponse.json({ error: "Ingrese un numero de identificacion valido." }, { status: 400 });
     }
 
     const supabase = await createClient();
@@ -123,10 +123,10 @@ export async function POST(req: NextRequest) {
     const beneficiaryDob = forSomeoneElse ? requestedBeneficiaryDob : "";
 
     if (forSomeoneElse && !beneficiaryName) {
-      return NextResponse.json({ error: "Ingresa el nombre de la persona." }, { status: 400 });
+      return NextResponse.json({ error: "Ingrese el nombre de la persona." }, { status: 400 });
     }
     if (forSomeoneElse && !beneficiaryDob) {
-      return NextResponse.json({ error: "Ingresa la fecha de nacimiento de la persona." }, { status: 400 });
+      return NextResponse.json({ error: "Ingrese la fecha de nacimiento de la persona." }, { status: 400 });
     }
 
     if (cedula) {
@@ -149,7 +149,7 @@ export async function POST(req: NextRequest) {
 
     const requiredIdentity = projectIdentity(cedula, existingProfile);
     if (!requiredIdentity) {
-      return NextResponse.json({ error: mensajeDeError(req, { es: "Ingresá tu número de identificación para publicar el proyecto.", en: "Enter your identification number to publish the project." }) }, { status: 400 });
+      return NextResponse.json({ error: mensajeDeError(req, { es: "Ingrese su número de identificación para publicar el proyecto.", en: "Enter your identification number to publish the project." }) }, { status: 400 });
     }
     cedula = requiredIdentity;
 
@@ -162,10 +162,10 @@ export async function POST(req: NextRequest) {
     // de verdad. Antes ganaba el guardado y la corrección se perdía.
     const telefonoFinal = telefonoNuevo.replace(/\D/gu, "").length >= 8 ? telefonoNuevo : telefonoGuardado;
     if (telefonoFinal.replace(/\D/gu, "").length < 8) {
-      return NextResponse.json({ error: mensajeDeError(req, { es: "Necesitamos tu WhatsApp para que te puedan responder.", en: "We need your WhatsApp so they can answer you." }) }, { status: 400 });
+      return NextResponse.json({ error: mensajeDeError(req, { es: "Necesitamos su WhatsApp para que le puedan responder.", en: "We need your WhatsApp so they can answer you." }) }, { status: 400 });
     }
     if (pareceFijoDeCostaRica(telefonoFinal)) {
-      return NextResponse.json({ error: mensajeDeError(req, { es: "Ese número parece de teléfono fijo. Escribe un celular con WhatsApp para que te puedan escribir.", en: "That looks like a landline. Enter a mobile number with WhatsApp so professionals can reach you." }) }, { status: 400 });
+      return NextResponse.json({ error: mensajeDeError(req, { es: "Ese número parece de teléfono fijo. Escriba un celular con WhatsApp para que le puedan escribir.", en: "That looks like a landline. Enter a mobile number with WhatsApp so professionals can reach you." }) }, { status: 400 });
     }
     if (!telefonoGuardado && telefonoNuevo) {
       await admin.from("profiles").update({ phone: telefonoNuevo }).eq("id", uid);
@@ -374,7 +374,7 @@ export async function POST(req: NextRequest) {
             // PROPUESTAS: el profesional respondia y esperaba que el cliente lo
             // eligiera. Hoy le escribe directo por WhatsApp desde el tablero.
             // (Y «publico» iba sin tilde: el push muestra este texto tal cual.)
-            message: `Un cliente publicó "${finalTitle}" en ${label}. Escríbele por WhatsApp si te interesa.`,
+            message: `Un cliente publicó "${finalTitle}" en ${label}. Escríbale por WhatsApp si le interesa.`,
             data: {
               link: "/proyectos",
               project_id: projectId,
@@ -393,10 +393,10 @@ export async function POST(req: NextRequest) {
             titular: `Un cliente publicó un proyecto de ${label}${zona ? ` en ${zona}` : ""}: «${finalTitle}».`,
             parrafos: [
               cleanDescription.length > 280 ? `${cleanDescription.slice(0, 277).trimEnd()}…` : cleanDescription,
-              "Si te interesa, ábrelo y escríbele por WhatsApp. Responder rápido es lo que más pesa para que te elijan.",
+              "Si le interesa, ábralo y escríbale por WhatsApp. Responder rápido es lo que más pesa para que le elijan.",
             ],
             boton: { texto: "Ver el proyecto", ruta: rutaProyecto({ id: projectId, title: finalTitle }) },
-            porQue: `Te llega porque ofreces ${label} en ContrataCR.`,
+            porQue: `Le llega porque ofrece ${label} en ContrataCR.`,
             campana: "aviso-proyecto",
           }));
           // Con la migración 167 el INSERT de arriba ya cayó en el outbox durable y
@@ -537,8 +537,8 @@ async function autoCloseStale(admin: any, rows: any[]): Promise<any[]> {
   const notifications = stale.map((r) => ({
     user_id: r.client_id,
     type: "project_cancelled",
-    title: "Cerramos tu proyecto por inactividad",
-    message: `"${r.title}" llevaba ${AUTO_CLOSE_DAYS} días sin movimiento. Si todavía la necesitas, puedes volver a publicarla con un toque.`,
+    title: "Cerramos su proyecto por inactividad",
+    message: `"${r.title}" llevaba ${AUTO_CLOSE_DAYS} días sin movimiento. Si todavía la necesita, puede volver a publicarla con un toque.`,
     data: { link: "/dashboard/profesional?tab=sent_projects", project_id: r.id, project_title: r.title, project_action: "auto_closed" },
   }));
   try {
@@ -587,8 +587,8 @@ export async function PATCH(req: NextRequest) {
 
     const categoryId = typeof body.categoryId === "string" ? body.categoryId.trim() : "";
     const description = typeof body.description === "string" ? body.description.trim().slice(0, PROJECT_DESCRIPTION_MAX_LENGTH) : "";
-    if (!categoryId) return NextResponse.json({ error: "Elige el servicio que necesitas." }, { status: 400 });
-    if (!description) return NextResponse.json({ error: mensajeDeError(req, { es: "Cuéntanos qué hay que hacer.", en: "Tell us what needs doing." }) }, { status: 400 });
+    if (!categoryId) return NextResponse.json({ error: "Elija el servicio que necesita." }, { status: 400 });
+    if (!description) return NextResponse.json({ error: mensajeDeError(req, { es: "Cuéntenos qué hay que hacer.", en: "Tell us what needs doing." }) }, { status: 400 });
 
     const provinciaId = typeof body.provinciaId === "string" && body.provinciaId ? body.provinciaId : null;
     const cantonId = typeof body.cantonId === "string" && body.cantonId ? body.cantonId : null;
@@ -643,7 +643,7 @@ export async function PATCH(req: NextRequest) {
   if (action === "archive") {
     const { data: project } = await admin.from("projects").select("client_id, status, title").eq("id", id).maybeSingle();
     if (!project || project.client_id !== uid) return NextResponse.json({ error: "No autorizado." }, { status: 403 });
-    if (project.status !== "cancelled") return NextResponse.json({ error: "Solo puedes archivar proyectos cancelados." }, { status: 409 });
+    if (project.status !== "cancelled") return NextResponse.json({ error: "Solo puede archivar proyectos cancelados." }, { status: 409 });
     const { error } = await admin.from("projects").update({ archived_by_client: true }).eq("id", id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     await auditUserAction(admin, req, {

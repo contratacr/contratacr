@@ -1,4 +1,5 @@
 // Prepares only the native loopback stack; never links or writes a hosted project.
+import {localSqlManifest} from './local-sql-manifest.mjs';
 import {readFile,writeFile,chmod,readdir} from 'node:fs/promises';
 import {homedir} from 'node:os';
 import {join} from 'node:path';
@@ -18,7 +19,10 @@ const users=Number(sql(['-Atc','select count(*) from auth.users']));
 if(users===0){
  for(const [file,extra]of[['scripts/ci/grant-local-regression-service-role.sql',[]],['scripts/ci/seed-local-regression-auth.sql',['--set=regression_password='+password]]])sql(['--set=local_seed_guard=contratacr-local-only',...extra,'--file='+file]);
 }
-if(!sql(['-Atc',"select to_regclass('public.pro_memberships') is not null"]).trim().includes('t'))sql(['--file=docs/pro/sql/memberships-draft.sql']);
+for(const step of localSqlManifest){
+ if(step.ifMissing&&sql(['-Atc',"select to_regclass('"+step.ifMissing+"') is not null"]).trim()==='t')continue;
+ sql(['--file=docs/pro/sql/'+step.file]);
+}
 const env={NEXT_PUBLIC_SUPABASE_URL:local.API_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY:local.ANON_KEY,SUPABASE_SERVICE_ROLE_KEY:local.SERVICE_ROLE_KEY,SUPABASE_DB_URL:local.DB_URL,NEXT_PUBLIC_APP_URL:'http://127.0.0.1:3185',LOCAL_REGRESSION_SEED:'1',LOCAL_REGRESSION_PASSWORD:password,E2E_TEST_PASSWORD:password,REGRESSION_TEST_PASSWORD:password,E2E_ALLOW_NON_TEST_SUPABASE:'1',E2E_FIXTURES_READY:'1',E2E_LEGACY_SEED:'0'};
 await writeFile('.env.test',Object.entries(env).map(([k,v])=>`${k}=${v}\n`).join(''),{mode:0o600});await chmod('.env.test',0o600);
 if(users===0)for(const file of ['scripts/seed-local-regression-foundation.js','scripts/verify-local-regression-foundation.js']){const r=spawnSync('node',[file],{env:{...process.env,...env},encoding:'utf8'});if(r.status!==0)throw Error(r.stderr.slice(-1200));}

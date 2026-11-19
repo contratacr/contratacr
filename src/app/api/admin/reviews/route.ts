@@ -153,7 +153,7 @@ export async function PATCH(req: Request) {
 
   const { id, action, reason } = await parseModerationRequest(req);
   if (!id || (action !== "hide" && action !== "restore") || reason.length < 3) {
-    return NextResponse.json({ error: "Indica la reseña, la acción y un motivo." }, { status: 400 });
+    return NextResponse.json({ error: "Indique la reseña, la acción y un motivo." }, { status: 400 });
   }
 
   const db = createAdminClient();
@@ -193,7 +193,7 @@ export async function DELETE(req: Request) {
 
   const { id, reason } = await parseModerationRequest(req);
   if (!id || reason.length < 3) {
-    return NextResponse.json({ error: "Indica la reseña y el motivo de eliminación." }, { status: 400 });
+    return NextResponse.json({ error: "Indique la reseña y el motivo de eliminación." }, { status: 400 });
   }
 
   const db = createAdminClient();

@@ -320,7 +320,7 @@ test.describe("@seeded contextual direct chat", () => {
     // Reopening an existing contact keeps the suggested text in the composer.
     const draftParams = new URLSearchParams({ draftChat: "1", professionalId: seed.professionalId, professionalName: "Profesional de prueba", projectId, contextTitle: "E2E proyecto con chat", draftMessage: "E2E mensaje sobre el proyecto" });
     await gotoOK(page, `/mensajes?${draftParams}`);
-    await expect(page.getByPlaceholder(/Escribe un mensaje|Write a message/)).toHaveValue("E2E mensaje sobre el proyecto");
+    await expect(page.getByPlaceholder(/Escriba un mensaje|Write a message/)).toHaveValue("E2E mensaje sobre el proyecto");
     await expect(page).toHaveURL(new RegExp(`conversation=${created.body.conversationId}`));
     const unsent = await apiJson<ThreadResponse>(page, `/api/direct-chat?id=${created.body.conversationId}`);
     expect(unsent.body.messages).toEqual([]);

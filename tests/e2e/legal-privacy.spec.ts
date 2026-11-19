@@ -94,7 +94,7 @@ test("native assistant asks permission before sending the first prompt",async({p
 for(const locale of ["es","en"]) test(`login keeps the existing legal disclosure before continuing (${locale})`,async({page})=>{
  await gotoOK(page,locale === "en" ? "/en/login" : "/login");
  const main=page.locator("main");
- await expect(main).toContainText(locale === "en" ? "By continuing, you accept" : "Al continuar, aceptas");
+ await expect(main).toContainText(locale === "en" ? "By continuing, you accept" : "Al continuar, acepta");
  await expect(main.getByRole("link",{name:locale === "en" ? "Terms" : "Términos",exact:true})).toHaveAttribute("href",/terminos/);
  await expect(main.getByRole("link",{name:locale === "en" ? "Privacy Policy" : "Política de Privacidad",exact:true})).toHaveAttribute("href",/privacidad/);
 });

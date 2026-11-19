@@ -204,8 +204,8 @@ export function ordenFinal(results: SearchResult[], filters: SearchFiltersResolv
     const criterion = filters.sortBy === "experience"
       ? experienceMonths(b) - experienceMonths(a) || compareByRating(a, b)
       : compareByRating(a, b);
-    return criterion || (tier.get(b) ?? 0) - (tier.get(a) ?? 0) ||
-      Number(!!b.isFeatured) - Number(!!a.isFeatured) || (venia.get(a) ?? 0) - (venia.get(b) ?? 0);
+    // Ranking neutrality (F0, /como-ordenamos): no paid or featured signal ever changes the order.
+    return criterion || (tier.get(b) ?? 0) - (tier.get(a) ?? 0) || (venia.get(a) ?? 0) - (venia.get(b) ?? 0);
   });
 }
 

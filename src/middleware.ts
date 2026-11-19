@@ -1,5 +1,8 @@
 import { iosAppStoreFallback } from "@/lib/mobile/ios-app-entry";
 import { enforceApiMfa } from "@/lib/auth/api-mfa";
+import { proWorkspaceGate, PRO_WS_HEADERS } from "@/lib/pro/workspace-gate";
+import { PRO_ENABLED, isProOnlyPath } from "@/lib/pro/enabled";
+import { MIDDLEWARE_PRINT_ROUTES, PRINT_NONCE_HEADER, newPrintNonce, printContentPolicy } from "@/lib/pro/print-csp";
 import { pendingRegistrationPath, registrationComplete } from "@/lib/auth/registration-state";
 import { createServerClient } from "@supabase/ssr";
 import { categorySlug, idDesdeDireccion } from "@/lib/data/category-slug";
@@ -34,6 +37,18 @@ const PUBLIC_PREFIXES = [
   "/como-funciona",
   "/terminos",
   "/privacidad",
+  // Pro local: public vendor page of a bid invitation (development-only route).
+  "/licitacion-proveedor",
+  // Pro local (Round 6A): public hosted page of a payment link (development-only route).
+  "/pagar",
+  // Pro local (Round 6D): professional website and campaign unsubscribe page (development-only routes).
+  "/sitio",
+  "/baja-pro",
+  // Pro local (post-security fixes): confirmation of a site-form email subscription (double opt-in, development-only).
+  "/confirmar-pro",
+  // Pro local (Round 7A): job invitation page; it keeps the #codigo fragment through sign-in itself
+  // (a middleware redirect would drop it after login). The page checks the session (development-only).
+  "/dashboard/unirse-proyecto",
 ];
 
 // Cloudflare's OpenNext adapter does not yet support the Node.js-only `proxy.ts`
@@ -90,11 +105,28 @@ async function esServicioPublicado(id: string): Promise<boolean> {
 // solo con migraciones —la del CI— no los tenía.
 const CATALOGO_DEL_CODIGO = new Set(ALL_CATEGORIES.map((c) => c.id));
 
+
+// Ronda 7B: una dirección con /es explícito es una elección de idioma. Saltaba
+// a la raíz y, con la cookie de inglés de la visita, de ahí a /en: el /es de la
+// URL perdía. La navegación de verdad (no una precarga) deja la cookie en
+// español en ese mismo salto, y el salto no se guarda en caché para que la
+// elección se vuelva a leer cada vez.
+function idiomaExplicitoEs(request: NextRequest, response: NextResponse) {
+  const destino = request.headers.get("sec-fetch-dest");
+  const esPrecarga = (destino !== null && destino !== "document") || (request.headers.get("accept") ?? "").includes("text/x-component");
+  response.headers.set("Cache-Control", "no-store");
+  if (!esPrecarga && request.cookies.get("NEXT_LOCALE")?.value === "en") response.cookies.set("NEXT_LOCALE", "es", { path: "/", sameSite: "lax" });
+  return response;
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   // Overwrite any client-supplied value before locale/profile rewrites.
   request.headers.set("x-ccr-app-path", pathname + request.nextUrl.search);
   request.headers.set("x-ccr-app-host", request.nextUrl.hostname);
+  // Final verification 2026-11-14: the company-workspace headers are server-only on every path
+  // (pages, RSC and every API), not just /api/pro; routes also require the gate's signature.
+  for (const name of Object.values(PRO_WS_HEADERS)) request.headers.delete(name);
 
   // A user-tapped cross-host Universal Link reaches the server only when iOS
   // did not hand it to the app. Keep this ahead of locale/auth/catalogue work.
@@ -112,10 +144,35 @@ export async function middleware(request: NextRequest) {
   // choose the store before any session/onboarding or vanity routing.
   if (pathname === "/descargar" || pathname === "/abrir-app") return conCabecerasDeSeguridad(NextResponse.next());
 
+  // Launch flag PRO_ENABLED (src/lib/pro/enabled.ts, server-only, OFF by default in production): with Pro off every
+  // Pro-only page and /api/pro/* answers 404 here, before any session, workspace or locale rule. The page variant is
+  // rewritten to a path with no route so the visitor gets the normal «not found» page in their language.
+  if (!PRO_ENABLED && isProOnlyPath(sinPrefijoDeIdioma(pathname))) {
+    if (pathname.startsWith("/api/")) return conCabecerasDeSeguridad(NextResponse.json({ error: "No disponible" }, { status: 404, headers: { "Cache-Control": "no-store" } }));
+    return conCabecerasDeSeguridad(reescribirConIdioma(request, new URL(`/${idiomaDeRuta(pathname)}/pro-no-disponible`, request.url)));
+  }
+
   if (pathname.startsWith("/api/")) {
     if (isUnsafeLocalProductionWrite(request)) return unsafeLocalProductionWriteResponse();
     const mfaResponse = await enforceApiMfa(request);
-    return conCabecerasDeSeguridad(mfaResponse ?? NextResponse.next());
+    // Round 7C: company team roles. One gate for every /api/pro request (role → capability →
+    // SQL helper); it also strips forged workspace headers. API requests forward the
+    // (cleaned) request headers so the route sees only what the gate set.
+    const roleResponse = mfaResponse ? null : await proWorkspaceGate(request);
+    // Fix 13: newer print routes get their nonce and strict policy from here (see src/lib/pro/print-csp.ts);
+    // a client-supplied nonce header is always dropped.
+    request.headers.delete(PRINT_NONCE_HEADER);
+    const printRoute = MIDDLEWARE_PRINT_ROUTES.test(pathname), printNonceValue = printRoute ? newPrintNonce() : "";
+    if (printRoute) request.headers.set(PRINT_NONCE_HEADER, printNonceValue);
+    // Every API request forwards the cleaned headers (a bare next() would pass the client's copies).
+    const forward = NextResponse.next({ request: { headers: request.headers } });
+    if (printRoute && !mfaResponse && !roleResponse) {
+      forward.headers.set("Content-Security-Policy", printContentPolicy(printNonceValue));
+      forward.headers.set("Referrer-Policy", "no-referrer");
+    }
+    // Private print/file routes own their stricter per-response content policy (Fix 13: every *-print route).
+    // MFA errors still receive the ordinary API defaults.
+    return conCabecerasDeSeguridad(mfaResponse ?? roleResponse ?? forward, !mfaResponse && !roleResponse && /^\/api\/pro\/(?:invoice-print|payment-receipt-print|quote-print|work-changes-print|selections-print|contract-print|payment-plan-print|purchase-order-print|client-statement-print|work-files|team-task-discussion|company-files|daily-log-files)\/?$/.test(pathname));
   }
 
   // www.contratacr.com NO SE REDIRIGE (probado y deshecho el 1-oct-2026).
@@ -167,9 +224,9 @@ export async function middleware(request: NextRequest) {
     destino.pathname = (pathname.slice(3) || "/").replace(/^\/ofertas(?=\/|$)/i, "/promociones").replace(/^\/promociones\/mis-ofertas(?=\/|$)/i, "/promociones/mis-promociones").replace(/^\/buscar(?=\/|$)/i, RAIZ_DE_BUSQUEDA);
     // /es/buscar?categoria=…: la búsqueda con parámetros va directo a la bonita.
     if (/^\/profesionales\/?$/.test(destino.pathname) && (destino.searchParams.has("categoria") || destino.searchParams.has("provincia"))) {
-      return NextResponse.redirect(new URL(rutaDeBusqueda(destino.searchParams), request.url), 308);
+      return idiomaExplicitoEs(request, NextResponse.redirect(new URL(rutaDeBusqueda(destino.searchParams), request.url), 308));
     }
-    return NextResponse.redirect(destino, 308);
+    return idiomaExplicitoEs(request, NextResponse.redirect(destino, 308));
   }
   // La sección del panel admin también se llamaba «ofertas».
   const adminViejo = /^(?:\/en)?\/admin\/ofertas\/?$/i.exec(pathname);
@@ -214,13 +271,13 @@ export async function middleware(request: NextRequest) {
     return reescribirConIdioma(request, new URL("/es/pro-preview", request.url));
   }
 
-  const perfilCorto = /^\/@?([a-z0-9][a-z0-9-]{2,80})$/.exec(pathname.toLowerCase());
-  if (perfilCorto && !RUTAS_DEL_SITIO.has(perfilCorto[1])) {
-    const locale = "es";
+  const perfilCorto = /^\/(?:(en)\/)?@?([a-z0-9][a-z0-9-]{2,80})$/.exec(pathname.toLowerCase());
+  if (perfilCorto && !RUTAS_DEL_SITIO.has(perfilCorto[2])) {
+    const locale = perfilCorto[1] || "es";
     // SE REESCRIBE, NO SE REDIRIGE (4-oct-2026): la ficha se sirve en la misma
     // dirección corta, así lo que se copia de la barra es contratacr.com/nombre,
     // igual que «Copiar enlace».
-    const destino = new URL(`/${locale}/profesionales/${perfilCorto[1]}`, request.url);
+    const destino = new URL(`/${locale}/profesionales/${perfilCorto[2]}`, request.url);
     destino.search = request.nextUrl.search;
     return reescribirConIdioma(request, destino);
   }
@@ -303,18 +360,9 @@ export async function middleware(request: NextRequest) {
     // con /buscar): con la app en inglés salía «3 profesionales en Santa
     // Bárbara». Una página pedida sin /en por quien eligió inglés salta a /en;
     // las cargas internas del router se arman en su idioma sin saltar.
-    const eligioIngles = request.cookies.get("NEXT_LOCALE")?.value === "en";
-    if (!busqueda[1] && eligioIngles) {
-      const destinoDePagina = request.headers.get("sec-fetch-dest");
-      const esCargaInterna = (destinoDePagina !== null && destinoDePagina !== "document")
-        || (request.headers.get("accept") ?? "").includes("text/x-component");
-      if (!esCargaInterna) {
-        const url = request.nextUrl.clone();
-        url.pathname = rutaConIdioma("en", pathname);
-        return NextResponse.redirect(url, 307);
-      }
-    }
-    const idioma = busqueda[1] ?? (eligioIngles ? "en" : "es");
+    // Lanzamiento (2026-11-17): EL IDIOMA DE LA URL MANDA. Sin /en = español,
+    // aunque la cookie diga inglés (ver el bloque «Sin prefijo = español» abajo).
+    const idioma = busqueda[1] ?? "es";
     const [, , primero, segundo] = busqueda;
     if (!primero && conFiltrosEnParametros) {
       const bonita = rutaDeBusqueda(request.nextUrl.searchParams);
@@ -347,31 +395,28 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(destino, 308);
   }
 
-  // Sin prefijo = español. Solo quien ya está leyendo en inglés (cookie de esta
-  // visita o elección guardada) salta a /en/…; a propósito NO se mira el
-  // Accept-Language aquí: un rastreador que dice preferir inglés se llevaría un
-  // redirect en vez de la página española, que es la canónica.
+  // Sin prefijo = español, siempre (ni la cookie ni el Accept-Language lo
+  // cambian: un rastreador que dice preferir inglés recibe la página española,
+  // que es la canónica).
   // Una PRECARGA no es una lectura: el selector de idioma precarga /en/… para
   // que el cambio sea instantáneo, y el navegador precarga cada enlace del
   // menú. Si esas peticiones contaran como «está leyendo en inglés», la cookie
   // quedaba en inglés después de precargar /en y desde ahí TODO enlace español
   // saltaba a inglés (pasó en producción el 28-sep-2026). Solo la navegación
-  // de verdad —el documento— escribe la cookie o se redirige por ella.
+  // de verdad —el documento— escribe la cookie.
   // Next le quita al middleware la cabecera RSC y el `_rsc`, así que la señal
   // es la del navegador: una navegación pide un documento; una precarga o una
   // carga de datos del router piden «text/x-component» o un destino vacío.
   const destino = request.headers.get("sec-fetch-dest");
   const esPrecarga = (destino !== null && destino !== "document")
     || (request.headers.get("accept") ?? "").includes("text/x-component");
+  // Lanzamiento (2026-11-17): EL IDIOMA DE LA URL MANDA. Una dirección sin /en
+  // es española aunque la visita venga del inglés: antes la cookie de la visita
+  // la mandaba a /en/… con un 307 y /dashboard/pro o /trabajo/<id>/bids salían
+  // en inglés. Los enlaces del app ya llevan su prefijo (Link de next-intl) y el
+  // selector de idioma navega a la dirección del otro idioma, así que la cookie
+  // ya no decide qué idioma se ve; solo se actualiza abajo con el de la URL.
   const locale = idiomaDeRuta(pathname);
-  if (locale === "es" && !esPrecarga) {
-    const guardado = request.cookies.get("NEXT_LOCALE")?.value;
-    if (guardado === "en") {
-      const url = request.nextUrl.clone();
-      url.pathname = rutaConIdioma("en", pathname);
-      return NextResponse.redirect(url, 307);
-    }
-  }
 
   // Sin el prefijo de idioma, para comparar con las listas de rutas
   const withoutLocale = sinPrefijoDeIdioma(pathname);
@@ -562,6 +607,20 @@ export const config = {
 // producción las estaban mandando (comprobado con curl -I). El middleware
 // sí corre en cada respuesta de página y de API, así que este es el único
 // lugar donde de verdad llegan al navegador.
+// Mapas: MapLibre dibuja con OpenFreeMap (estilo, teselas, fuentes y sprites en
+// un solo host). Si NEXT_PUBLIC_MAP_STYLE_URL apunta a otro proveedor, su origen
+// se agrega aquí; los hosts extra que ese estilo use (teselas en otro dominio)
+// se documentan en docs/maps-maplibre.md. Google queda solo para el
+// autocompletado de direcciones y la geocodificación.
+const ORIGENES_DE_MAPA = (() => {
+  const origenes = new Set(["https://tiles.openfreemap.org"]);
+  try {
+    const estilo = process.env.NEXT_PUBLIC_MAP_STYLE_URL?.trim();
+    if (estilo && /^https:\/\//.test(estilo)) origenes.add(new URL(estilo).origin);
+  } catch { /* URL inválida: el mapa cae al estilo por defecto */ }
+  return Array.from(origenes).join(" ");
+})();
+
 const CABECERAS_DE_SEGURIDAD: Record<string, string> = {
   "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
   "X-Content-Type-Options": "nosniff",
@@ -586,18 +645,19 @@ const CABECERAS_DE_SEGURIDAD: Record<string, string> = {
     "object-src 'none'",
     "form-action 'self'",
     "frame-ancestors 'self'",
-    "img-src 'self' data: blob: https://res.cloudinary.com https://assets.contratacr.com https://*.supabase.co https://maps.googleapis.com https://maps.gstatic.com https://*.googleusercontent.com https://www.facebook.com",
+    `img-src 'self' data: blob: https://res.cloudinary.com https://assets.contratacr.com https://*.supabase.co https://maps.googleapis.com https://maps.gstatic.com https://*.googleusercontent.com https://www.facebook.com ${ORIGENES_DE_MAPA}`,
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com https://accounts.google.com https://connect.facebook.net",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' data: https://fonts.gstatic.com",
-    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://maps.googleapis.com https://translation.googleapis.com https://api.cloudinary.com https://www.facebook.com",
+    `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://maps.googleapis.com https://places.googleapis.com https://translation.googleapis.com https://api.cloudinary.com https://www.facebook.com ${ORIGENES_DE_MAPA}`,
     "frame-src 'self' https://accounts.google.com https://www.facebook.com",
     "worker-src 'self' blob:",
   ].join("; "),
 };
 
-function conCabecerasDeSeguridad<T extends NextResponse>(response: T): T {
+function conCabecerasDeSeguridad<T extends NextResponse>(response: T, routeOwnsContentPolicy = false): T {
   for (const [nombre, valor] of Object.entries(CABECERAS_DE_SEGURIDAD)) {
+    if (routeOwnsContentPolicy && (nombre === "Content-Security-Policy" || nombre === "Referrer-Policy")) continue;
     if (!response.headers.has(nombre)) response.headers.set(nombre, valor);
   }
   return response;

@@ -133,7 +133,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
     : null;
   const servicesTitle = locale === "en" ? "Services" : "Servicios";
   const allCategoriesTitle = locale === "en" ? "All services" : "Todos los servicios";
-  const serviceSearchPlaceholder = locale === "en" ? "What service are you looking for?" : "¿Qué servicio estás buscando?";
+  const serviceSearchPlaceholder = locale === "en" ? "What service are you looking for?" : "¿Qué servicio está buscando?";
   const serviceResultsTitle = locale === "en" ? "Matching services" : "Servicios encontrados";
 
   function submitSearch(e: React.FormEvent<HTMLFormElement>) {

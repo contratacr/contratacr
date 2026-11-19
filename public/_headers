@@ -11,3 +11,8 @@
 
 /.well-known/assetlinks.json
   Content-Type: application/json
+
+# Self-hosted map label glyphs (Noto Sans, OFL — see /map-fonts/OFL.txt).
+/map-fonts/*
+  Content-Type: application/x-protobuf
+  Cache-Control: public, max-age=2592000, stale-while-revalidate=604800

@@ -2,8 +2,13 @@ import fs from "node:fs";
 import path from "node:path";
 import { expect, test, type Page } from "playwright/test";
 import { gotoOK, loginAs, waitForInteractivePage } from "./helpers";
-import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed } from "./seed";
+import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionProfessionalWithoutPro } from "./seed";
 import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccount } from "./disposable-account";
+
+// The professional panel asserted here is the one WITHOUT Pro; park a local Pro grant (loopback only) for this file.
+const withoutPro = regressionProfessionalWithoutPro();
+test.beforeAll(withoutPro.park);
+test.afterAll(withoutPro.restore);
 
 // CALIDAD GENERAL (5-oct-2026, pedido de Isaac): textos, inglés, seguridad,
 // tiempos de carga y esqueletos. Cada bloque es una REGLA del producto, no un
@@ -68,7 +73,7 @@ test.describe("textos", () => {
   test("el inglés no arrastra signos ni frases del español", () => {
     const en = plano(leer("en"));
     expect(Object.keys(en).filter((k) => /[¿¡]/.test(en[k])), "signos de apertura en inglés").toEqual([]);
-    const frases = /\b(Publicar|Guardar cambios|Iniciar sesión|Contraseña|Cuéntanos|Reseñas|Proyectos publicados|Notificaciones)\b/;
+    const frases = /\b(Publicar|Guardar cambios|Iniciar sesión|Contraseña|Cuéntenos|Reseñas|Proyectos publicados|Notificaciones)\b/;
     expect(Object.keys(en).filter((k) => frases.test(en[k])), "frases en español dentro del inglés").toEqual([]);
   });
 
@@ -94,11 +99,11 @@ test.describe("inglés", () => {
     await expect(page.locator("html")).toHaveAttribute("lang", /^en/);
     await expect(page.getByText("Don't know who to call?")).toBeVisible();
     await expect(page.getByRole("main").getByRole("link", { name: "Post a project" })).toBeVisible();
-    await expect(page.getByText(/No sabes a quién llamar|Crea un proyecto/)).toHaveCount(0);
+    await expect(page.getByText(/No sabe a quién llamar|Crea un proyecto/)).toHaveCount(0);
 
     await gotoOK(page, "/en/publicar-proyecto?categoria=desarrollo_web");
     await page.locator("#publish-project-title").waitFor({ timeout: 30_000 });
-    await expect(page.getByText(/Cuéntanos|¿Qué necesitas|¿Dónde\?|recibirán tu proyecto/)).toHaveCount(0);
+    await expect(page.getByText(/Cuéntenos|¿Qué necesita|¿Dónde\?|recibirán su proyecto/)).toHaveCount(0);
 
     await gotoOK(page, "/en/cotizar");
     await page.getByRole("dialog").waitFor({ timeout: 30_000 });
@@ -107,7 +112,7 @@ test.describe("inglés", () => {
     await gotoOK(page, "/en/registro/profesional");
     await waitForInteractivePage(page);
     await expect(page.getByPlaceholder("Repeat your password")).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByText(/Confirmar contraseña|Repite tu contraseña/)).toHaveCount(0);
+    await expect(page.getByText(/Confirmar contraseña|Repita su contraseña/)).toHaveCount(0);
 
     await gotoOK(page, "/en/profesionales?q=zzqqxxyy-no-existe-123");
     await expect(page.getByText("Free · Your number is never published")).toHaveCount(0);
@@ -266,6 +271,12 @@ test.describe("esqueletos", () => {
           // This request-dependent route has its own loading boundary while the
           // server resolves the return destination. Its form mounts in a portal;
           // a first loading frame is valid, but it must be gone when ready.
+          // Ready = the intent step («¿Qué necesita hacer?»); choosing it shows
+          // the form, also without a skeleton.
+          const necesito = page.getByRole("button", { name: "Necesito un profesional", exact: true });
+          await expect(necesito).toBeVisible();
+          await expect(page.locator(".animate-pulse, [data-skeleton]").filter({ visible: true })).toHaveCount(0);
+          await necesito.click();
           await expect(page.locator("textarea").filter({ visible: true }).first()).toBeVisible();
           await expect(page.locator(".animate-pulse, [data-skeleton]").filter({ visible: true })).toHaveCount(0);
         } else if (m.cuadros > 0) conEsqueleto.push(`${ruta} (${nombre}): ${m.cuadros} de ${m.total} cuadros`);

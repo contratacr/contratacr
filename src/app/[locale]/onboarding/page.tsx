@@ -91,7 +91,10 @@ export default function OnboardingPage() {
             await supabase.auth.updateUser({ data: { onboarding_completed: true, ...(role ? { role } : {}) } });
           } catch { /* best-effort */ }
         }
-        window.location.assign(`${prefijoDeIdioma(locale)}/dashboard/${role === "professional" ? "profesional" : "cliente"}`);
+        // Directo al panel único: /dashboard/cliente solo redirige (otra carga
+        // de documento y un salto más en JS) y la cuenta existente miraba el
+        // lienzo en blanco todo ese tiempo. Misma pestaña que elige esa ruta.
+        window.location.assign(`${prefijoDeIdioma(locale)}/dashboard/profesional${role === "professional" ? "" : "?tab=sent_projects"}`);
         return;
       }
       const pendingPath = pendingRegistrationPath(user.user_metadata);

@@ -5,7 +5,7 @@ for (const native of [false, true]) {
     if (native) await context.addCookies([{ name: "ccr_platform", value: "native", url: baseURL! }]);
     if (native) await page.addInitScript(() => localStorage.setItem("ccr:native-first-run-onboarding:v12", "1"));
     await page.goto("/login");
-    await expect(page.getByRole("heading", { name: /Ingresa a tu cuenta/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Ingrese a su cuenta/ })).toBeVisible();
     await expect(page.locator("[data-last-used]")).toHaveCount(0);
     for (const method of ["google", "apple", "email"]) {
       await context.addCookies([{ name: "ccr_last_sign_in", value: method, url: baseURL! }]);

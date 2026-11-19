@@ -88,7 +88,7 @@ test.describe("@smoke public routes", () => {
       await expect(navigation.getByRole("button", { name: /^Servicios$/i }).first()).toBeVisible();
       await expect(navigation.getByRole("button", { name: /^Explorar$/i }).first()).toBeVisible();
       await expect(navigation.getByRole("link", { name: /Ingresar/i }).first()).toBeVisible();
-      const app = navigation.getByRole("button", { name: /^(Usar app|Use app)$/ }).first();
+      const app = navigation.getByRole("button", { name: /^(Descargar app|Download app)$/ }).first();
       await expect(app).toBeVisible();
       await expect(navigation.getByRole("link", { name: /^Registrarme$|^Sign up$/i })).toHaveCount(0);
       await app.click();
@@ -166,7 +166,7 @@ test.describe("@smoke public routes", () => {
     test.skip((page.viewportSize()?.width ?? 1280) >= 640, "El buscador a pantalla completa es del teléfono.");
     await gotoOK(page, "/");
     await waitForInteractivePage(page);
-    await page.getByLabel(/Qu[eé] necesitas|What do you need/i).filter({ visible: true }).first().click();
+    await page.getByLabel(/Qu[eé] necesita|What do you need/i).filter({ visible: true }).first().click();
     const ubicacion = page.locator(".ccr-native-search-panel").getByPlaceholder(/Ubicaci[oó]n|Location/i).filter({ visible: true }).first();
     await ubicacion.click({ timeout: 2_000 });
     await page.waitForTimeout(600);
@@ -190,7 +190,7 @@ test.describe("@smoke public routes", () => {
     if ((page.viewportSize()?.width ?? 1280) < 640) {
       // En el teléfono la portada tiene UNA línea (¿Qué necesitas?); la
       // ubicación se elige dentro del buscador completo que abre.
-      await page.getByLabel(/Qu[eé] necesitas|What do you need/i).filter({ visible: true }).first().click();
+      await page.getByLabel(/Qu[eé] necesita|What do you need/i).filter({ visible: true }).first().click();
       await page.locator(".ccr-native-search-panel").getByPlaceholder(/Ubicaci[oó]n|Location|Barrio|Neighborhood/i).filter({ visible: true }).first().click();
       const cercaEnHoja = page.locator(".ccr-native-search-panel").getByRole("button", { name: /Buscar cerca de m[ií]|Search near me/i }).filter({ visible: true }).first();
       await expect(cercaEnHoja).toBeVisible();
@@ -401,7 +401,7 @@ test.describe("@smoke public routes", () => {
     test.skip(!testInfo.project.name.includes("mobile"), "El panel a pantalla completa es del teléfono.");
     await gotoOK(page, "/profesionales?regression=1");
     await waitForInteractivePage(page);
-    await page.getByRole("button", { name: "¿Qué servicio estás buscando?" }).click();
+    await page.getByRole("button", { name: "¿Qué servicio está buscando?" }).click();
     await expect(page.getByRole("combobox", { name: "Servicio" })).toBeVisible();
     const panel = page.locator("#native-location-suggestions");
     await expect(panel).toBeVisible();

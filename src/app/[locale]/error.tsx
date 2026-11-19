@@ -20,9 +20,9 @@ import { reportClientError } from "@/lib/report-client-error";
 const COPY = {
   es: {
     offlineTitle: "Sin conexión a internet",
-    offlineMessage: "Parece que perdiste la conexión. Revisa tu internet y vuelve a intentarlo; tus datos están a salvo.",
+    offlineMessage: "Parece que perdió la conexión. Revise su internet y vuelva a intentarlo; sus datos están a salvo.",
     errorTitle: "Algo salió mal",
-    errorMessage: "Tuvimos un problema temporal al mostrar esta página. Prueba recargar; si continúa, intenta de nuevo en unos minutos.",
+    errorMessage: "Tuvimos un problema temporal al mostrar esta página. Pruebe recargar; si continúa, intente de nuevo en unos minutos.",
     retry: "Reintentar",
     home: "Ir al inicio",
   },

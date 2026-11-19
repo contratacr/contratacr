@@ -220,54 +220,140 @@ export function NativeBottomNav() {
     return () => document.documentElement.classList.remove("ccr-nav-montada");
   }, [visible]);
 
-  // Al desplazar hacia abajo la pastilla se retira; hacia arriba, vuelve. Así
-  // solo ocupa pantalla cuando se la busca: quien baja está leyendo, quien
-  // sube está por irse a otro lado. Con histéresis (8px) para que un dedo
-  // tembloroso no la haga titilar, y siempre visible cerca del tope.
-  // Retirarse al desplazar donde hay una lista larga que se recorre sin fin:
-  // portada, Ofertas, Empleos y los resultados de /buscar. En Panel o Mensajes
-  // la lista es corta y la barra yéndose y viniendo sería ruido.
+  // Al bajar, la barra acompaña cada píxel del contenido. Para recuperarla
+  // fuera del inicio hace falta subir con intención: al menos 12px a 0,4px/ms
+  // en una ventana de 100ms. Desde ahí sube ligada al scroll, a 1,5 veces su
+  // recorrido. Un regreso lento o el rebote inferior no inicia la entrada.
   const permiteRetirarse = /^\/(?:promociones|empleos|proyectos)?\/?$/.test(pathname ?? "/") || esRutaDeBusqueda(pathname, esServicioDelCatalogo);
 
-  const [escondida, setEscondida] = useState(false);
   useEffect(() => {
-    if (!permiteRetirarse) { setEscondida(false); return; }
-    const posiciones = new WeakMap<Element, number>();
-    // Solo avisa a React cuando CAMBIA: en cada evento de desplazamiento volvía a pedir render.
-    let ultima: boolean | null = null;
-    const poner = (v: boolean) => { if (v !== ultima) { ultima = v; setEscondida(v); } };
+    const nav = navRef.current;
+    if (!visible || !nav) return;
+    const roots = [document.documentElement, document.body];
+    let retirada = 0;
+    let entrada: Animation | undefined;
+    let direccion = 0;
+    let finDelDesplazamiento: number | undefined;
+    let tocando = false;
+    let ultimaDireccionBaja = false;
+    const cancelarSalida = () => { window.clearTimeout(finDelDesplazamiento); finDelDesplazamiento = undefined; };
+    const reducirMovimiento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const pintar = (valor: number, animar = false, inmediato = false) => {
+      const limite = nav.getBoundingClientRect().height + 16;
+      const destino = Math.max(0, Math.min(limite, valor));
+      // Más eventos de subida no reinician ni completan de golpe la entrada.
+      if (destino === retirada && !inmediato) return;
+      const desde = new DOMMatrixReadOnly(getComputedStyle(nav).transform).m42;
+      entrada?.cancel();
+      entrada = undefined;
+      retirada = destino;
+      nav.style.transition = "none";
+      nav.style.transform = `translate3d(0, ${retirada}px, 0)`;
+      if (!inmediato && !reducirMovimiento && desde !== retirada) {
+        entrada = nav.animate([
+          { transform: `translate3d(0, ${desde}px, 0)` },
+          { transform: `translate3d(0, ${retirada}px, 0)` },
+        ], {
+          // Una subida fuerte puede pedir todo el recorrido en un solo evento.
+          // Mantener una entrada pausada al inicio, independiente de ese delta.
+          duration: animar ? 240 : retirada < desde ? 160 : 60,
+          easing: retirada < desde ? "cubic-bezier(0.42,0,0.58,1)" : "linear",
+        });
+      }
+      const oculta = retirada >= limite;
+      nav.inert = oculta;
+      roots.forEach(root => root.classList.toggle("ccr-native-bottom-nav-hidden", oculta));
+    };
+    const completarSalida = () => {
+      cancelarSalida();
+      if (tocando || !permiteRetirarse || !ultimaDireccionBaja || nav.querySelector(":focus-visible")) return;
+      if (retirada <= 0 || retirada >= nav.getBoundingClientRect().height + 16) return;
+      finDelDesplazamiento = window.setTimeout(() => {
+        finDelDesplazamiento = undefined;
+        if (!tocando && ultimaDireccionBaja && !nav.querySelector(":focus-visible")) pintar(nav.getBoundingClientRect().height + 16, true);
+      }, 150);
+    };
+    const alTocar = () => { tocando = true; cancelarSalida(); };
+    const alSoltar = () => { tocando = false; completarSalida(); };
+    pintar(0, false, true);
+    const selector = "main, .ccr-tablero-marco > section, .ccr-tablero-ficha, [data-messages-page-main], .ccr-direct-chat-list, .ccr-direct-chat-thread-scroll, .ccr-search-bottom-sheet, .ccr-search-bottom-sheet *";
+    type Posicion = { anterior: number; instante: number; desde: number; subida: number; revelando: boolean };
+    const posiciones = new WeakMap<Element, Posicion>();
+    document.querySelectorAll(selector).forEach(elemento => posiciones.set(elemento, { anterior: elemento.scrollTop, instante: performance.now(), desde: 0, subida: 0, revelando: false }));
     const alDesplazar = (event: Event) => {
       const objetivo = event.target;
-      if (!(objetivo instanceof Element) || !objetivo.matches("main, .ccr-tablero-marco > section, .ccr-tablero-ficha, [data-messages-page-main], .ccr-direct-chat-list, .ccr-direct-chat-thread-scroll, .ccr-search-bottom-sheet, .ccr-search-bottom-sheet *")) return;
-      const actual = objetivo.scrollTop;
-      const previa = posiciones.get(objetivo) ?? actual;
-      posiciones.set(objetivo, actual);
-      if (actual < 48) { poner(false); return; }
-      // Al llegar al fondo, iOS estira la lista y la devuelve sola. Ese regreso
-      // se leía como "va subiendo" y sacaba la barra sin que nadie deslizara.
-      // En el borde —y más allá, mientras dura el rebote— no se decide nada;
-      // se vuelve a decidir en cuanto la lista se despega del final.
-      const maximo = objetivo.scrollHeight - objetivo.clientHeight;
-      if (maximo > 0 && actual >= maximo - 2) return;
-      const delta = actual - previa;
-      if (delta > 8) poner(true);
-      else if (delta < -8) poner(false);
+      if (!permiteRetirarse || !(objetivo instanceof Element) || !objetivo.matches(selector)) return;
+      const maximo = Math.max(0, objetivo.scrollHeight - objetivo.clientHeight);
+      const actual = Math.max(0, Math.min(maximo, objetivo.scrollTop));
+      const ahora = performance.now();
+      const posicion = posiciones.get(objetivo) ?? { anterior: 0, instante: ahora, desde: ahora, subida: 0, revelando: false };
+      posiciones.set(objetivo, posicion);
+      const delta = actual - posicion.anterior;
+      const transcurrido = ahora - posicion.instante;
+      posicion.anterior = actual;
+      if (actual <= 0) { cancelarSalida(); ultimaDireccionBaja = false; direccion = 0; posicion.subida = 0; posicion.revelando = false; posicion.instante = ahora; pintar(0, true); return; }
+      if (delta === 0) return;
+      ultimaDireccionBaja = delta > 0;
+      cancelarSalida();
+      const anteriorInstante = posicion.instante;
+      posicion.instante = ahora;
+      // Clamping descarta el tramo elástico. En el borde no acumulamos una
+      // subida: la devolución automática de iOS no expresa intención.
+      if (actual >= maximo - 2) {
+        posicion.subida = 0;
+        posicion.revelando = false;
+        if (delta > 0) { pintar(retirada + delta); direccion = 1; completarSalida(); }
+        return;
+      }
+      if (nav.querySelector(":focus-visible")) { pintar(0); return; }
+      if (delta > 0) {
+        posicion.subida = 0;
+        posicion.revelando = false;
+        // Si se interrumpe la animación de regreso, continuar desde la
+        // posición pintada, sin saltar a su destino antes de seguir al dedo.
+        const pintada = new DOMMatrixReadOnly(getComputedStyle(nav).transform).m42;
+        pintar((direccion < 0 ? pintada : retirada) + delta);
+        direccion = 1;
+        completarSalida();
+        return;
+      }
+      if (transcurrido > 100) posicion.revelando = false;
+      if (posicion.revelando) {
+        pintar(retirada + delta * 1.5);
+        return;
+      }
+      if (!posicion.subida || transcurrido > 100 || ahora - posicion.desde > 100) {
+        posicion.desde = transcurrido > 100 ? ahora : anteriorInstante;
+        posicion.subida = 0;
+      }
+      posicion.subida += -delta;
+      if (posicion.subida >= 12 && posicion.subida / Math.max(16, ahora - posicion.desde) >= 0.4) {
+        if (direccion > 0) retirada = new DOMMatrixReadOnly(getComputedStyle(nav).transform).m42;
+        direccion = -1;
+        posicion.revelando = true;
+        pintar(retirada - posicion.subida * 1.5);
+      }
     };
+    const alEnfocar = () => { cancelarSalida(); ultimaDireccionBaja = false; direccion = 0; pintar(0, true); };
+    nav.addEventListener("focusin", alEnfocar);
     window.addEventListener("scroll", alDesplazar, { capture: true, passive: true });
-    return () => window.removeEventListener("scroll", alDesplazar, { capture: true });
-  }, [permiteRetirarse, pathname]); // con la pantalla nueva vuelve a empezar (la barra se muestra)
-
-  // Cambiar de sección la trae de vuelta: la pantalla nueva empieza arriba.
-  useEffect(() => { setEscondida(false); }, [pathname]);
-
-  // Mientras está retirada, el hueco que reservaba también se cierra: si no,
-  // quedaba una franja vacía abajo con la barra ya invisible.
-  useEffect(() => {
-    const roots = [document.documentElement, document.body];
-    const retirada = visible && escondida;
-    roots.forEach((root) => root.classList.toggle("ccr-native-bottom-nav-hidden", retirada));
-    return () => roots.forEach((root) => root.classList.remove("ccr-native-bottom-nav-hidden"));
-  }, [escondida, visible]);
+    window.addEventListener("touchstart", alTocar, { passive: true });
+    window.addEventListener("touchend", alSoltar, { passive: true });
+    window.addEventListener("touchcancel", alSoltar, { passive: true });
+    return () => {
+      cancelarSalida();
+      window.removeEventListener("touchstart", alTocar);
+      window.removeEventListener("touchend", alSoltar);
+      window.removeEventListener("touchcancel", alSoltar);
+      entrada?.cancel();
+      nav.removeEventListener("focusin", alEnfocar);
+      window.removeEventListener("scroll", alDesplazar, { capture: true });
+      nav.style.removeProperty("transform");
+      nav.style.removeProperty("transition");
+      nav.inert = false;
+      roots.forEach(root => root.classList.remove("ccr-native-bottom-nav-hidden"));
+    };
+  }, [permiteRetirarse, pathname, visible]);
 
   if (!visible) return null;
 
@@ -300,8 +386,7 @@ export function NativeBottomNav() {
         // FLOTANTE, como la de Facebook: una pastilla despegada de los bordes,
         // translúcida y con desenfoque, así lo que se desplaza debajo se ve
         // pasar a través de ella.
-        "ccr-native-bottom-nav ccr-barra-flotante pointer-events-none fixed inset-x-0 bottom-0 z-[90] px-4 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] lg:hidden",
-        escondida && "translate-y-[calc(100%+1rem)]",
+        "ccr-native-bottom-nav ccr-barra-flotante pointer-events-none fixed inset-x-0 bottom-0 z-[90] px-4 lg:hidden",
       )}
     >
       <div

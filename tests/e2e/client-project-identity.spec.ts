@@ -1,5 +1,5 @@
 import { test, expect } from "playwright/test";
-import { gotoOK, loginAs, expectNoHorizontalOverflow } from "./helpers";
+import { gotoOK, loginAs, expectNoHorizontalOverflow, waitForInteractivePage } from "./helpers";
 import { createDisposableAccount, cleanupDisposableAccount } from "./disposable-account";
 import { canRunSeededRegression, regressionAdminClient } from "./seed";
 
@@ -19,13 +19,15 @@ test.describe("client and professional identity", () => {
         expect(missing.status()).toBe(400);
         expect((await missing.json()).error).toContain("identificación");
         await gotoOK(page, `/publicar-proyecto?categoria=${category!.id}`);
+        await waitForInteractivePage(page);
+        await page.getByRole("button", { name: "Necesito un profesional", exact: true }).click();
         const identification = page.locator("#cedula-del-proyecto");
         await expect(identification).toBeVisible();
         await expect(page.locator('label[for="cedula-del-proyecto"]')).toContainText("*");
         await page.locator("textarea").fill("Necesito reparar una puerta");
         await page.locator('button[type="submit"]').click();
         await expect(identification).toHaveAttribute("aria-invalid", "true");
-        await expect(page.getByTestId("project-form-error")).toContainText("Ingresá un número de identificación válido.");
+        await expect(page.getByTestId("project-form-error")).toContainText("Ingrese un número de identificación válido.");
         await expectNoHorizontalOverflow(page);
         await page.screenshot({ path: test.info().outputPath("project-identification-required.png"), fullPage: true });
         // All supported types show the client badge without a professional record.
@@ -45,6 +47,8 @@ test.describe("client and professional identity", () => {
           await dialog.getByRole("button", { name: "Entendido", exact: true }).click();
         }
         await gotoOK(page, `/publicar-proyecto?categoria=${category!.id}`);
+        await waitForInteractivePage(page);
+        await page.getByRole("button", { name: "Necesito un profesional", exact: true }).click();
         await expect(page.locator('input[type="tel"]').first()).toHaveValue(/7000/);
         await expect(page.locator("#cedula-del-proyecto")).toHaveCount(0);
         await page.locator("textarea").fill("Necesito reparar una puerta — prueba aislada");

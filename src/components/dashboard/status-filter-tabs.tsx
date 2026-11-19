@@ -73,6 +73,7 @@ export function StatusFilterTabs({
   limpiable = true,
   masculino = false,
   siempreCarril = false,
+  currentAsPage = false,
 }: {
   tabs: readonly FilterTab[];
   value: string;
@@ -115,6 +116,8 @@ export function StatusFilterTabs({
    * dejaría «Reparación de comput…».
    */
   siempreCarril?: boolean;
+  /** Mark the selected destination when these controls navigate between pages. */
+  currentAsPage?: boolean;
 }) {
   const tr = useTranslations("statusTabs");
   const pocos = totalElementos != null && sinFiltros(totalElementos);
@@ -305,6 +308,8 @@ export function StatusFilterTabs({
               <button
                 key={tab.id}
                 type="button"
+                aria-current={currentAsPage && active ? "page" : undefined}
+                aria-pressed={active}
                 onClick={() => onChange(tab.id)}
                 className={cn(
                   "inline-flex min-h-10 max-w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-center text-[13px] font-semibold leading-tight transition-all",

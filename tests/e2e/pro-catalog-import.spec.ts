@@ -29,19 +29,21 @@ test('catalog imports validate quoted CSV, identifiers, duplicates and atomic up
  const legacy=saveClient(emptyBusiness(),{id:'old',name:'Anterior',email:'',phone:'',notes:'',archived:false});
  expect(businessSchema.parse(legacy)).toEqual(legacy);
 });
-test('catalog import reviews rows, blocks partial writes and saves through the panel commit',async({page})=>{
- const bundle=await build({stdin:{contents:`import React from 'react';import{createRoot}from'react-dom/client';import{NextIntlClientProvider}from'next-intl';import{CatalogImport}from'./src/components/pro/catalog-import';import{emptyBusiness}from'./src/lib/pro/business';function App(){const[data,setData]=React.useState(emptyBusiness());return <NextIntlClientProvider locale="es" messages={{}}><CatalogImport kind="clients" data={data} saving={false} commit={async next=>{setData(next);localStorage.setItem('catalog-import-test',JSON.stringify(next));return true}}/><p data-testid="count">{data.clients.length}</p></NextIntlClientProvider>}createRoot(document.getElementById('root')).render(<App/>);`,resolveDir:process.cwd(),loader:'tsx'},bundle:true,write:false,format:'iife',define:{'process.env':JSON.stringify({NODE_ENV:'test'})},platform:'browser',jsx:'automatic'});
+for(const locale of ['es','en'] as const)test('catalog import reviews rows, blocks partial writes and saves through the panel commit ['+locale+']',async({page})=>{
+ const en=locale==='en';
+ const bundle=await build({stdin:{contents:`import React from 'react';import{createRoot}from'react-dom/client';import{NextIntlClientProvider}from'next-intl';import{CatalogImport}from'./src/components/pro/catalog-import';import{emptyBusiness}from'./src/lib/pro/business';function App(){const[data,setData]=React.useState(emptyBusiness());return <NextIntlClientProvider locale="${locale}" messages={{}}><CatalogImport kind="clients" data={data} saving={false} commit={async next=>{setData(next);localStorage.setItem('catalog-import-test',JSON.stringify(next));return true}}/><p data-testid="count">{data.clients.length}</p></NextIntlClientProvider>}createRoot(document.getElementById('root')).render(<App/>);`,resolveDir:process.cwd(),loader:'tsx'},bundle:true,write:false,format:'iife',define:{'process.env':JSON.stringify({NODE_ENV:'test'})},platform:'browser',jsx:'automatic'});
  await page.route('**/catalog-harness',r=>r.fulfill({contentType:'text/html',body:'<div id="root"></div>'}));
  await page.goto('/catalog-harness');await page.addScriptTag({content:bundle.outputFiles[0].text});
- await page.getByRole('button',{name:'Importar CSV'}).click();
- const upload=page.getByLabel('Archivo CSV');
+ await page.getByRole('button',{name:en?'Import CSV':'Importar CSV'}).click();
+ const upload=page.getByLabel(en?'CSV file':'Archivo CSV');
  await upload.setInputFiles({name:'clientes.csv',mimeType:'text/csv',buffer:Buffer.from('name,email\nAna,invalid\nLuis,luis@example.test')});
- await expect(page.getByRole('status')).toContainText('1 errores');
- await expect(page.getByRole('button',{name:'Guardar importación'})).toBeDisabled();
+ await expect(page.getByRole('status')).toContainText(en?'1 error':'1 error');
+ await expect(page.getByRole('button',{name:en?'Import':'Importar',exact:true})).toBeDisabled();
  await expect(page.getByTestId('count')).toHaveText('0');
+ await page.getByRole('button',{name:en?'Cancel':'Cancelar',exact:true}).click();await expect(page.getByRole('dialog')).toHaveCount(0);await expect(page.getByTestId('count')).toHaveText('0');await page.getByRole('button',{name:en?'Import CSV':'Importar CSV'}).click();
  await upload.setInputFiles({name:'clientes.csv',mimeType:'text/csv',buffer:Buffer.from('name,email,group\nAna,ana@example.test,Frecuentes\nLuis,luis@example.test,Empresas')});
- await expect(page.getByRole('status')).toContainText('0 errores');
- await page.getByRole('button',{name:'Guardar importación'}).click();
+ await expect(page.getByRole('status')).toContainText(en?'0 errors':'0 errores');
+ await page.getByRole('button',{name:en?'Import':'Importar',exact:true}).click();
  await expect(page.getByTestId('count')).toHaveText('2');
  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('catalog-import-test')!).clients[1].group)).toBe('Empresas');
 });

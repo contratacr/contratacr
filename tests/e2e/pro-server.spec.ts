@@ -15,8 +15,8 @@ test('server rejects rewritten history, stock changes and duplicate IDs',()=>{
 });
 test('API access refuses anonymous, expired Pro, invalid origin and admin without MFA',async()=>{
  const bundle=await build({stdin:{contents:`export {proApiAccess} from './src/lib/pro/api-access';`,resolveDir:process.cwd(),loader:'ts'},bundle:true,write:false,platform:'node',format:'cjs',plugins:[{name:'auth-fixtures',setup(b){
- b.onResolve({filter:/^@\/lib\/(supabase\/(server|admin|get-user)|auth\/admin)$/},args=>({path:args.path,namespace:'fixture'}));
- b.onLoad({filter:/.*/,namespace:'fixture'},args=>({contents:args.path.endsWith('get-user')?'exports.safeGetUser=async()=>globalThis.proFixture.user;':args.path.endsWith('auth/admin')?'exports.getApiAdmin=async()=>globalThis.proFixture.mfa?{id:"u"}:null;':args.path.endsWith('/server')?'exports.createClient=async()=>({});':`exports.createAdminClient=()=>({from:table=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:table==='profiles'?globalThis.proFixture.profile:globalThis.proFixture.grant})})})})});`,loader:'js'}));
+ b.onResolve({filter:/^@\/lib\/(supabase\/(server|admin|get-user)|auth\/admin|pro\/workspace-user)$/},args=>({path:args.path,namespace:'fixture'}));// Round 7C: api-access reads the account through workspace-user (same fixture user)
+ b.onLoad({filter:/.*/,namespace:'fixture'},args=>({contents:args.path.endsWith('get-user')||args.path.endsWith('workspace-user')?'exports.safeGetUser=async()=>globalThis.proFixture.user;':args.path.endsWith('auth/admin')?'exports.getApiAdmin=async()=>globalThis.proFixture.mfa?{id:"u"}:null;':args.path.endsWith('/server')?'exports.createClient=async()=>({});':`exports.createAdminClient=()=>({from:table=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:table==='profiles'?globalThis.proFixture.profile:globalThis.proFixture.grant}),limit:async()=>({data:table==='professionals'?[{is_banned:false}]:[],error:null})})})})});`,loader:'js'}));
  }}]});
  // Isolated compiled module; no credentials or network.
  const fixture={user:null as null|{id:string},profile:{role:'professional',is_disabled:false},grant:null as null|{status:string,expires_at:null},mfa:false};

@@ -1,7 +1,11 @@
 import { test, expect } from "playwright/test";
 import { gotoOK, waitForInteractivePage } from "./helpers";
+import { stabilizeLocalProRuntime } from "./pro-local-stable-runtime";
 
-test("navbar logo stays identical without web fonts across public routes", async ({ page }) => {
+test("navbar logo stays identical without web fonts across public routes", async ({ page, baseURL }) => {
+  if (baseURL === "http://127.0.0.1:3185" && process.env.NEXT_PUBLIC_SUPABASE_URL === "http://127.0.0.1:54321") {
+    await stabilizeLocalProRuntime(page.context(), baseURL);
+  }
   // Reproduce a cold/slow font request: the logo must not fall back to Arial.
   await page.route(/\.woff2(?:\?.*)?$/, route => route.abort());
   for (const path of ["/", "/registro", "/login", "/proyectos", "/promociones", "/empleos"]) {

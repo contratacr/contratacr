@@ -1,4 +1,6 @@
 "use client";
+import { CABECERA_TITULO } from "@/components/layout/cabecera";
+import { resolveSearchSort } from "@/lib/search/sort";
 
 import { useRouter, usePathname } from "@/i18n/navigation";
 import { Carril } from "@/components/ui/carril";
@@ -11,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { matchProvinceCanton, PROVINCES } from "@/lib/data/cr-geography";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { getCategoryGroupLabel, getCategoryLabel, isHealthCategory, searchCategories, supportsVideoConsultCategory } from "@/lib/data/categories";
-import { resolveLocation, searchLocations, type LocationSuggestion } from "@/lib/data/location-search";
+import { resolveLocation, searchLocations, locationSuggestionKey, locationSuggestionContext, type LocationSuggestion } from "@/lib/data/location-search";
 import { INSURERS } from "@/lib/data/insurers";
 import { LANGUAGES, languageLabel } from "@/lib/data/languages";
 import { createClient } from "@/lib/supabase/client";
@@ -40,8 +42,6 @@ const SORT_OPTIONS = ["rating", "cercania", "experience"] as const;
 const PRICE_AVAILABILITY_OPTIONS = ["quote"] as const;
 const PRICE_UNIT_OPTIONS = ["por_hora", "por_consulta", "por_proyecto"] as const;
 const PRICE_CHOICES = [ANY_PRICE, "quote", ...PRICE_UNIT_OPTIONS] as const;
-const normalizeSort = (value: string) =>
-  SORT_OPTIONS.includes(value as (typeof SORT_OPTIONS)[number]) ? value : "rating";
 const normalizePriceFilter = (value: string) =>
   PRICE_AVAILABILITY_OPTIONS.includes(value as (typeof PRICE_AVAILABILITY_OPTIONS)[number]) ? value : "";
 const normalizePriceUnit = (value: string) =>
@@ -131,7 +131,7 @@ function FilterSheet({
         className={cn("relative z-10 w-full max-w-xl overflow-hidden rounded-t-[22px] bg-white shadow-2xl lg:rounded-[18px]", ancla && "ccr-filtro-anclado")}
       >
         <div className="flex items-center justify-between border-b border-[#eef2f6] px-5 py-4">
-          <h2 className="text-[20px] font-extrabold text-[#162543]">{title}</h2>
+          <h2 className={CABECERA_TITULO}>{title}</h2>
           <button
             type="button"
             onClick={onClose}
@@ -232,7 +232,7 @@ function MultiFilterSheetContent({
         className={cn("relative z-10 w-full max-w-xl overflow-hidden rounded-t-[22px] bg-white shadow-2xl lg:rounded-[18px]", ancla && "ccr-filtro-anclado")}>
         <div className="flex items-center justify-between border-b border-[#eef2f6] px-5 py-4">
           <div>
-            <h2 className="text-[20px] font-extrabold text-[#162543]">{title}</h2>
+            <h2 className={CABECERA_TITULO}>{title}</h2>
             {draftValues.length > 0 && <p className="mt-0.5 text-xs font-semibold text-[#64748b]">{draftValues.length} seleccionadas</p>}
           </div>
           <button type="button" onClick={onClose} aria-label="Cerrar" className="inline-flex h-9 w-9 items-center justify-center text-[#162543]">
@@ -419,7 +419,7 @@ function PriceFilterSheetContent({
       <section role="dialog" aria-modal="true" aria-label={t("filters.price")} style={ancla ? ({ "--ccr-anc-x": `${Math.round(Math.min(ancla.left, (typeof window === "undefined" ? 1440 : window.innerWidth) - 368))}px`, "--ccr-anc-y": `${Math.round(ancla.bottom + 8)}px` } as React.CSSProperties) : undefined}
         className={cn("relative z-10 w-full max-w-xl overflow-hidden rounded-t-[22px] bg-white shadow-2xl lg:rounded-[18px]", ancla && "ccr-filtro-anclado")}>
         <div className="flex items-center justify-between border-b border-[#eef2f6] px-5 py-4">
-          <h2 className="text-[20px] font-extrabold text-[#162543]">{t("filters.price")}</h2>
+          <h2 className={CABECERA_TITULO}>{t("filters.price")}</h2>
           <button type="button" onClick={onClose} aria-label="Cerrar" className="inline-flex h-9 w-9 items-center justify-center text-[#162543]">
             <X className="h-6 w-6" />
           </button>
@@ -554,7 +554,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sessionTokenRef = useRef<any>(null);
   const initialSort = initialParam("sortBy");
-  const [sortBy, setSortBy] = useState(normalizeSort(initialSort));
+  const [sortBy, setSortBy] = useState<string>(resolveSearchSort({sortBy:initialSort,lat:initialParam("lat"),lng:initialParam("lng"),provincia:initialParam("provincia"),canton:initialParam("canton")}));
   const sortLabel = t(`sort.${SORT_OPTIONS.includes(sortBy as (typeof SORT_OPTIONS)[number]) ? sortBy : "rating"}`);
   // UNA SOLA MODALIDAD. Solo hay dos —presencial y videoconsulta— y la
   // consulta filtra únicamente cuando hay UNA marcada: con las dos no filtraba
@@ -631,8 +631,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     );
     setProvince(nextProvince);
     setCanton(nextCanton);
-    const normalizedNextSort = normalizeSort(nextSort);
-    setSortBy(nextLat && nextLng && normalizedNextSort === "cercania" ? "rating" : normalizedNextSort);
+    setSortBy(resolveSearchSort({sortBy:nextSort,lat:nextLat,lng:nextLng,provincia:nextProvince,canton:nextCanton}));
     setModalities(supportsVideoConsultCategory(nextCategory) ? nextModalities : []);
     setInsurers(isHealthCategory(nextCategory) ? nextInsurers : []);
     setLanguages(nextLanguages);
@@ -685,16 +684,26 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     })();
   }, []);
 
-  useEffect(() => {
-    if (!GMAPS_KEY) return;
-    loadGoogleMaps(GMAPS_KEY).then(() => { mapsReadyRef.current = true; }).catch(() => {});
-  }, []);
+  // Google Places is only for ADDRESS autocomplete: it loads the first time the
+  // location field gets focus (like the home hero), never with the results map,
+  // which now draws with MapLibre/OpenFreeMap.
+  const mapsRequestRef = useRef<Promise<void> | null>(null);
+  const ensureMaps = () => {
+    if (!GMAPS_KEY) return Promise.resolve();
+    if (!mapsRequestRef.current) {
+      mapsRequestRef.current = loadGoogleMaps(GMAPS_KEY)
+        .then(() => { mapsReadyRef.current = true; })
+        .catch(() => { mapsRequestRef.current = null; });
+    }
+    return mapsRequestRef.current;
+  };
 
   useEffect(() => {
     const q = locationQuery.trim();
     if (q.length < 3) return;
     const id = setTimeout(async () => {
       try {
+        await ensureMaps();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const maps = (window as any).google?.maps;
         if (!mapsReadyRef.current || !maps?.places?.AutocompleteSuggestion) {
@@ -938,6 +947,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     setLocationActiveIndex(-1);
     setAddressSuggestions([]);
     try {
+      await ensureMaps();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const maps = (window as any).google?.maps;
       if (!mapsReadyRef.current || !maps?.places?.Place) throw new Error("Google Places unavailable");
@@ -1325,7 +1335,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                   applyFilters({ provincia: "", canton: "", lat: "", lng: "", ubicacion: "" });
                 }
               }}
-              onFocus={() => setLocationOpen(locationQuery.trim().length >= 2)}
+              onFocus={() => { void ensureMaps(); setLocationOpen(locationQuery.trim().length >= 2); }}
               onBlur={() => { locationBlurRef.current = setTimeout(() => setLocationOpen(false), 150); }}
               ref={locationInputRef}
               enterKeyHint={pistaUbicacion}
@@ -1371,7 +1381,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                   </li>
                 )}
                 {locationSug.map((suggestion, i) => (
-                  <li key={suggestion.type === "address" ? `address-${suggestion.placeId}` : `${suggestion.type}-${suggestion.type === "province" ? suggestion.id : `${suggestion.provinceId}-${suggestion.id}`}`}>
+                  <li key={suggestion.type === "address" ? `address-${suggestion.placeId}` : locationSuggestionKey(suggestion)}>
                     <button
                       type="button"
                       role="option"
@@ -1381,7 +1391,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                       className={`flex w-full flex-col px-3.5 py-2.5 text-left text-sm transition-colors ${i === locationActiveIndex ? "bg-[#EBF5FB]" : "hover:bg-[#f9fafb]"}`}
                     >
                       <span className="font-semibold text-[#162543]">{suggestion.label}</span>
-                      {suggestion.type !== "province" && suggestion.sublabel && <span className="text-xs text-[#6b7280]">{suggestion.sublabel}</span>}
+                      {(suggestion.type === "address" ? suggestion.sublabel : locationSuggestionContext(suggestion)) && <span className="text-xs text-[#6b7280]">{suggestion.type === "address" ? suggestion.sublabel : locationSuggestionContext(suggestion)}</span>}
                     </button>
                   </li>
                 ))}

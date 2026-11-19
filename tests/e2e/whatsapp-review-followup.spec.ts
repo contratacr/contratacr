@@ -38,8 +38,8 @@ test("contact follow-up is readable and dismissible without blocking the page", 
   await page.goto("/");
   const dialog = page.getByRole("dialog", { name: "Seguimiento del servicio" });
   await expect(dialog).toBeVisible(ESPERA);
-  await expect(dialog).toContainText("Contactaste a Redes Bahía por WhatsApp");
-  await expect(dialog).toContainText("¿Llegaste a contratarlo?");
+  await expect(dialog).toContainText("Contactó a Redes Bahía por WhatsApp");
+  await expect(dialog).toContainText("¿Llegó a contratarlo?");
   await expect(dialog).toContainText("Reparación de computadoras");
   await expect(dialog.getByRole("button", { name: "Sí, dejar una reseña" })).toBeVisible();
   await expect(dialog.getByRole("button", { name: "Aún no" })).toBeVisible();
@@ -74,7 +74,7 @@ test("a review with only stars asks before closing the follow-up form", async ({
   await expect(page.getByRole("heading", { name: "Dejar una reseña" })).toBeVisible();
   await page.getByRole("button", { name: "5 estrellas", exact: true }).click();
   await page.getByRole("button", { name: "Omitir por ahora" }).click();
-  const warning = page.getByRole("dialog").filter({ hasText: "Tienes cambios sin guardar" });
+  const warning = page.getByRole("dialog").filter({ hasText: "Tiene cambios sin guardar" });
   await expect(warning).toBeVisible();
   await warning.getByRole("button", { name: "Seguir editando" }).click();
   await expect(page.getByRole("heading", { name: "Dejar una reseña" })).toBeVisible();

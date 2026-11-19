@@ -5,14 +5,16 @@ import {
 } from "./disposable-account";
 import { regressionAdminClient } from "./seed";
 import { completeAdminMfa } from "./admin-mfa-helper";
-import { expectNoHorizontalOverflow } from "./helpers";
+import { expectNoHorizontalOverflow, gotoOK, PRO_SPACE_HOME_URL, retryInterruptedNavigation} from "./helpers";
 import { createServerClient } from "@supabase/ssr";
 import { emptyBusiness } from "../../src/lib/pro/business";
+import { crTodayISO } from "../../src/lib/time-cr";
 test("real local Supabase: admin MFA, Pro memberships, account isolation and recorded promotion", async ({
   page,
   browser,
   baseURL,
 }, testInfo) => {
+  retryInterruptedNavigation(page);
   test.setTimeout(240000);
   expect(new URL(process.env.NEXT_PUBLIC_SUPABASE_URL!).hostname).toMatch(
     /^(localhost|127\.0\.0\.1)$/,
@@ -24,6 +26,10 @@ test("real local Supabase: admin MFA, Pro memberships, account isolation and rec
   const owner = await createDisposableAccount({ prefix: "pro-owner" });
   const other = await createDisposableAccount({ prefix: "pro-other" });
   const db = regressionAdminClient();
+  // This journey ends in Upcoming: its fixture must remain in the future
+  // regardless of when the local regression is run (Costa Rica calendar).
+  const fixtureDay = (offset: number) => new Date(Date.parse(crTodayISO() + "T12:00:00Z") + offset * 86400000).toISOString().slice(0, 10);
+  const appointmentDay = fixtureDay(2);
   const contexts: BrowserContext[] = [];
   try {
     for (const actor of [admin, owner]) {
@@ -59,6 +65,9 @@ test("real local Supabase: admin MFA, Pro memberships, account isolation and rec
       timeout: 30000,
     });
     expect((await page.request.get("/api/admin/pro")).status()).toBe(403);
+    for (const endpoint of ["/api/pro/visit-preparation?settings=1", "/api/pro/work-delivery?workId=not-authorized", "/api/pro/work-changes?workId=not-authorized", "/api/pro/quote-choices?view=client", "/api/pro/appointment-reschedule?requestId=00000000-0000-4000-8000-000000000001"]) {
+      expect((await page.request.get(endpoint)).status()).toBe(403);
+    }
     await completeAdminMfa(page, admin.email);
     await expect(
       page.getByRole("heading", { name: "Resumen", exact: true }),
@@ -132,7 +141,7 @@ test("real local Supabase: admin MFA, Pro memberships, account isolation and rec
       title: "Servicio de prueba",
       lines: [{ description: "Servicio", quantity: 1, price: 1000, tax: 13 }],
       status: "accepted",
-      validUntil: "2026-11-30",
+      validUntil: fixtureDay(30),
     };
     expect(
       (
@@ -174,7 +183,7 @@ test("real local Supabase: admin MFA, Pro memberships, account isolation and rec
       .getByLabel("Título", { exact: false })
       .fill("Cotización unificada nueva");
     await page
-      .getByLabel("Agregar desde inventario", { exact: true })
+      .getByLabel("Agregar producto o servicio", { exact: true })
       .selectOption({ label: "Producto del editor" });
     await expect(
       page.getByPlaceholder("Descripción", { exact: true }),
@@ -182,14 +191,24 @@ test("real local Supabase: admin MFA, Pro memberships, account isolation and rec
     await expect(page.getByLabel("Precio (₡)", { exact: true })).toHaveValue(
       "1130",
     );
-    let failedLink = false;
-    await page.route("**/api/pro/quote-link", async (route) => {
-      if (!failedLink) {
-        failedLink = true;
+    // Pro creates the quote, its consecutive and the client link atomically in
+    // /api/pro/quote-create (quote-link is no longer used here). Lose the ACK
+    // of a committed create: the editor must require «Comprobar guardado» and
+    // the retry must not create a second quote.
+    let lostCreate = false;
+    let createPosts = 0;
+    await page.route("**/api/pro/quote-create", async (route) => {
+      if (route.request().method() !== "POST") return route.continue();
+      createPosts++;
+      if (!lostCreate) {
+        lostCreate = true;
+        // First call compiles the route on the dev server (cold webpack build).
+        const response = await route.fetch({ timeout: 90000 });
+        expect(response.status()).toBe(200);
         await route.fulfill({
-          status: 409,
+          status: 503,
           contentType: "application/json",
-          body: JSON.stringify({ error: "Conflicto de prueba" }),
+          body: JSON.stringify({ error: "ACK perdido de prueba" }),
         });
       } else await route.continue();
     });
@@ -198,12 +217,12 @@ test("real local Supabase: admin MFA, Pro memberships, account isolation and rec
       .click();
     await expect(
       page.getByText(
-        "La cotización se guardó. Reintente para vincularla al cliente; no se creará dos veces.",
+        "Compruebe el intento anterior antes de editar. Reintentar no creará otra cotización.",
         { exact: true },
       ),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 45000 });
     await page
-      .getByRole("button", { name: "Crear cotización", exact: true })
+      .getByRole("button", { name: "Comprobar guardado", exact: true })
       .click();
     await expect(
       page.getByLabel("Cliente guardado", { exact: true }),
@@ -211,11 +230,12 @@ test("real local Supabase: admin MFA, Pro memberships, account isolation and rec
     await expect
       .poll(async () => {
         const r = await page.request.get("/api/quotes");
-        return (await r.json()).quotes?.some(
+        return (await r.json()).quotes?.filter(
           (q: { title: string }) => q.title === "Cotización unificada nueva",
-        );
+        ).length;
       })
-      .toBe(true);
+      .toBe(1);
+    expect(createPosts).toBeLessThanOrEqual(2);
     await page.goto("/dashboard/profesional?tab=quotes");
     await expect(
       page.getByText("Servicio de prueba", { exact: true }),
@@ -246,8 +266,8 @@ test("real local Supabase: admin MFA, Pro memberships, account isolation and rec
       clientId: workspace.document.clients[0].id,
       client: "Cliente",
       service: "Sin aceptar",
-      start: "2026-11-03T09:00:00-06:00",
-      end: "2026-11-03T10:00:00-06:00",
+      start: appointmentDay + "T09:00:00-06:00",
+      end: appointmentDay + "T10:00:00-06:00",
       stage: "scheduled",
       cancelled: false,
       externalQuoteId: canonical.id,
@@ -287,19 +307,32 @@ test("real local Supabase: admin MFA, Pro memberships, account isolation and rec
     await page
       .getByLabel("Trabajo", { exact: true })
       .fill("Trabajo desde cotización");
-    await page.getByLabel("Inicio · Costa Rica").fill("2026-11-03T09:00");
-    await page.getByLabel("Final · Costa Rica").fill("2026-11-03T10:00");
+    await page.getByLabel("Inicio · Costa Rica").fill(appointmentDay + "T09:00");
+    await page.getByLabel("Final · Costa Rica").fill(appointmentDay + "T10:00");
     // Draft survives reload without clearing the real authenticated session.
     await page.reload();
     await expect(page.getByLabel("Trabajo", { exact: true })).toHaveValue(
       "Trabajo desde cotización",
     );
     await page.getByRole("button", { name: "Guardar", exact: true }).click();
-    await expect(
-      page.getByRole("heading", {
-        name: "Cliente del administrador · Trabajo desde cotización",
-      }),
-    ).toBeVisible();
+    // Saving a new appointment from a quote opens the saved job directly
+    // (docs/pro/autonomous-pro-plan.md:324). The job keeps its link back to the
+    // originating quote («Ver cotización»), then the Agenda list check follows.
+    const savedJob = page.getByRole("dialog", { name: "Trabajo desde cotización", exact: true });
+    await expect(savedJob).toBeVisible();
+    await expect(page).toHaveURL(/[?&]tab=pro_agenda(?:&|$).*[?&]?cita=/);
+    await savedJob.getByRole("button", { name: "Ver cotización", exact: true }).click();
+    await expect(page.getByRole("dialog")).toContainText("Cotización unificada nueva");
+    await expect(page).toHaveURL(new RegExp("tab=quotes&cotizacion=" + canonical.id));
+    // The agenda list now filters by status (default «Pendientes»); a saved job is «Agendada» → estadoCitas=confirmed (former vista=upcoming).
+    await gotoOK(page,"/dashboard/profesional?tab=pro_agenda&estadoCitas=confirmed&q=Trabajo+desde+cotizaci%C3%B3n");
+    // Record cards now title the job and show the customer as subtitle
+    // (ProRecordCard) instead of a «Cliente · Trabajo» heading.
+    const agendaCard = page.locator("article").filter({
+      has: page.getByRole("heading", { name: "Trabajo desde cotización", exact: true }),
+    });
+    await expect(agendaCard).toHaveCount(1);
+    await expect(agendaCard).toContainText("Cliente del administrador");
     await page.goto(
       "/dashboard/profesional?tab=pro_clients&cliente=" +
         workspace.document.clients[0].id,
@@ -321,22 +354,26 @@ test("real local Supabase: admin MFA, Pro memberships, account isolation and rec
       .getByLabel("Cliente", { exact: true })
       .selectOption({ label: "Cliente del administrador" });
     await page.getByLabel("Trabajo", { exact: true }).fill("Reparación");
-    await page.getByLabel("Inicio · Costa Rica").fill("2026-11-01T09:00");
-    await page.getByLabel("Final · Costa Rica").fill("2026-11-01T10:00");
+    const repairDay = new Date(Date.parse(crTodayISO() + "T12:00:00Z") + 4 * 86400000).toISOString().slice(0, 10);
+    await page.getByLabel("Inicio · Costa Rica").fill(repairDay + "T09:00");
+    await page.getByLabel("Final · Costa Rica").fill(repairDay + "T10:00");
     await page
       .getByLabel("Cotización aceptada (opcional)")
       .selectOption({ label: "Servicio de prueba" });
     await page.getByRole("button", { name: "Guardar", exact: true }).click();
-    await expect(
-      page.getByRole("heading", {
-        name: "Cliente del administrador · Reparación",
-      }),
-    ).toBeVisible();
+    await expect(page).toHaveURL(/tab=pro_agenda|\/dashboard\/pro\/trabajo\//);
+    await expect(page.getByRole('dialog',{name:'Reparación',exact:true})).toBeVisible();
+    await expect(page).toHaveURL(/estadoCitas=confirmed/);
     await page.goto("/dashboard/profesional?tab=pro_inventory");
-    await page.getByRole("button", { name: "Nuevo producto" }).click();
+    await page.getByRole("button", { name: "Nuevo producto o servicio" }).click();
+    // The code now lives in the collapsed «Datos del catálogo (opcionales)».
+    await page
+      .getByRole("dialog", { name: "Nuevo producto o servicio", exact: true })
+      .locator("summary", { hasText: "Datos del catálogo (opcionales)" })
+      .click();
     for (const [label, value] of [
       ["Código", "A-1"],
-      ["Producto", "Cable de prueba"],
+      ["Nombre", "Cable de prueba"],
       ["Existencias iniciales", "5"],
       ["Mínimo", "2"],
       ["Costo unitario ₡", "100"],
@@ -360,10 +397,11 @@ test("real local Supabase: admin MFA, Pro memberships, account isolation and rec
     await page.getByLabel("Tipo de movimiento").selectOption("out");
     await page.getByLabel("Cantidad", { exact: true }).fill("3");
     await page.getByLabel("Motivo del movimiento").fill("Servicio de prueba");
-    await page.getByRole("button", { name: "Guardar movimiento" }).click();
-    await expect(page.getByText(/2 unidades/)).toBeVisible();
+    await page.getByRole("button", { name: "Guardar" }).click();
+    await expect(page.getByRole("dialog").getByText(/2 unidades/)).toBeVisible();
+    await expect(page).toHaveURL(/producto=/);
     await page.reload();
-    await expect(page.getByText(/2 unidades/)).toBeVisible();
+    await expect(page.getByRole("dialog").getByText(/2 unidades/)).toBeVisible();
     await expectNoHorizontalOverflow(page);
     await page.screenshot({
       path: testInfo.outputPath("pro-admin.png"),
@@ -497,7 +535,7 @@ test("real local Supabase: admin MFA, Pro memberships, account isolation and rec
     expect((await (await a.request.get(historyUrl)).json()).records).toHaveLength(1);
     expect((await page.request.post("/api/admin/pro/promotions",{headers:{origin:baseURL!},data:{...retry,requestId:crypto.randomUUID(),publishedUrl:"https://example.com/fake"}})).status()).toBe(400);
     expect((await page.request.post("/api/admin/pro/promotions",{headers:{origin:baseURL!},data:{...retry,requestId:crypto.randomUUID(),userId:admin.id}})).status()).toBe(400);
-    const historyPage=await a.newPage();await historyPage.goto("/"+provider!.slug);
+    const historyPage=retryInterruptedNavigation(await a.newPage());await historyPage.goto("/"+provider!.slug);
     await expect(historyPage.locator("[data-promotion-history]")).toContainText("Anuncio pagado");
     await expect(historyPage.locator("[data-promotion-history] a")).toHaveAttribute("href","https://www.instagram.com/p/local-test/");
     await historyPage.screenshot({path:testInfo.outputPath("promotion-history.png"),fullPage:true});
@@ -505,7 +543,8 @@ test("real local Supabase: admin MFA, Pro memberships, account isolation and rec
     const offerPayload={...retry,requestId:crypto.randomUUID(),contentType:"offer",contentId:offer.data!.id,paid:false};
     expect((await page.request.post("/api/admin/pro/promotions",{headers:{origin:baseURL!},data:offerPayload})).status()).toBe(200);
     await historyPage.goto("about:blank");
-    await historyPage.goto("/es/promociones/"+offer.data!.id);
+    // Cold dev compile of the public promotion route can exceed the default 30 s.
+    await historyPage.goto("/es/promociones/"+offer.data!.id,{timeout:90000});
     await expect(historyPage.locator("[data-promotion-history]")).toContainText("Compartida en redes");
     await expectNoHorizontalOverflow(historyPage);
     await historyPage.screenshot({path:testInfo.outputPath("offer-promotion-history.png"),fullPage:true});
@@ -515,9 +554,13 @@ test("real local Supabase: admin MFA, Pro memberships, account isolation and rec
     await expectNoHorizontalOverflow(historyPage);
     await historyPage.screenshot({path:testInfo.outputPath("promotion-in-my-panel.png"),fullPage:true});
     await historyPage.close();
-    const ownerPage = await a.newPage();
+    const ownerPage = retryInterruptedNavigation(await a.newPage());
     await ownerPage.bringToFront();
+    // /dashboard/pro is now the independent Pro space (houzz-quality-roadmap-local.md:565), not a redirect to the agenda.
     await ownerPage.goto("/dashboard/pro");
+    await expect(ownerPage).toHaveURL(PRO_SPACE_HOME_URL);
+    await expect(ownerPage.locator("[data-pro-tools]")).toBeVisible({timeout:30000});
+    await ownerPage.goto("/dashboard/pro?tab=pro_agenda");
     await expect(ownerPage.locator("[data-pro-workspace]")).toBeVisible();
     await ownerPage.goto("/dashboard/profesional?tab=pro_clients");
     await expect(
@@ -547,10 +590,10 @@ test("real local Supabase: admin MFA, Pro memberships, account isolation and rec
     });
     await ownerPage.goto("/en/dashboard/profesional?tab=pro_inventory");
     await expect(
-      ownerPage.getByRole("button", { name: "New product", exact: true }),
+      ownerPage.getByRole("button", { name: "New product or service", exact: true }),
     ).toBeVisible();
     await ownerPage
-      .getByRole("button", { name: "New product", exact: true })
+      .getByRole("button", { name: "New product or service", exact: true })
       .click();
     await expect(ownerPage.getByRole("dialog")).toContainText("Initial stock");
     await expectNoHorizontalOverflow(ownerPage);

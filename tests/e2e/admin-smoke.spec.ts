@@ -107,7 +107,7 @@ test.describe("@admin surfaces", () => {
           { path: `/admin/usuarios/${account.id}` }, { path: `/admin/proveedores/${account.id}` }]) {
           await gotoOK(page, route.path);
           await expect(page.getByRole("heading", { name: "Acceso restringido" })).toBeVisible();
-          await expect(page.getByText("No tienes permisos para acceder a esta sección.", { exact: false })).toBeVisible();
+          await expect(page.getByText("No tiene permisos para acceder a esta sección.", { exact: false })).toBeVisible();
           await expect(page.getByPlaceholder(/Correo de administrador/i)).toHaveCount(0);
         }
         for (const path of ["/api/admin/users", "/api/admin/projects", "/api/admin/pending-counts"]) {
@@ -283,14 +283,14 @@ test.describe("@admin surfaces", () => {
       await expectVisibleText(page.locator("body"), /Esta semana/);
       await expectVisibleText(page.locator("body"), /7 días anteriores/);
       await expectVisibleText(page.locator("body"), /De dónde vienen los registros/);
-      await expectVisibleText(page.locator("body"), /Del interés a la contratación/);
+      await expectVisibleText(page.locator("body"), /Actividad de servicios/);
       await expectVisibleText(page.locator("body"), /Qué buscan vs\. qué ofrecemos/);
       await expectVisibleText(page.locator("body"), /Uso de web y apps/);
       await expectHealthyPage(page);
 
       // Resumen: what needs attention today, new accounts and recent activity, in words.
       await gotoOK(page, "/admin");
-      await expectVisibleText(page.locator("body"), /Qué necesita tu atención|Nada pendiente hoy/);
+      await expectVisibleText(page.locator("body"), /Qué necesita su atención|Nada pendiente hoy/);
       await expectVisibleText(page.locator("body"), /Verificaciones por revisar/);
       await expectVisibleText(page.locator("body"), /Cuentas nuevas/);
       await expectVisibleText(page.locator("body"), /Actividad reciente/);

@@ -1,4 +1,6 @@
 "use client";
+import { CABECERA_TITULO } from "@/components/layout/cabecera";
+import { SectionBrand } from "@/components/layout/section-brand";
 import { useMarketplaceFeed } from "@/hooks/use-marketplace-feed";
 import { MarketplaceFeedFeedback, MarketplaceContactBoundary } from "@/components/marketplace/feed-loading";
 import type { FeedPage } from "@/lib/marketplace/feed";
@@ -19,7 +21,7 @@ import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { OfferThumbnail } from "@/components/offers/offer-thumbnail";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CalendarDays, MapPin, Menu, Store } from "lucide-react";
-import { ContrataCRMark, HeaderAccountLink } from "@/components/landing/landing-navbar";
+import { HeaderAccountLink } from "@/components/landing/landing-navbar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { Link } from "@/i18n/navigation";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
@@ -49,7 +51,7 @@ import {
   offerTypeLabel,
   type MarketplaceLocale,
 } from "@/lib/marketplace-copy";
-import { CABECERA_BOTON, CABECERA_FILA, CABECERA_GLIFO, CABECERA_TITULO } from "@/components/layout/cabecera";
+import { CABECERA_BOTON, CABECERA_FILA, CABECERA_GLIFO } from "@/components/layout/cabecera";
 import { useAvisoPerfilProfesional } from "@/components/marketplace/use-aviso-perfil-profesional";
 import { cuandoSePublico } from "@/lib/cuando-se-publico";
 import { reemplazarDireccionSiCambia } from "@/lib/reemplazar-direccion";
@@ -72,7 +74,7 @@ const MARKETPLACE_LIST_CLASS =
 const OFFERS_COPY = {
   es: {
     location: "Ubicación",
-    searchPlaceholder: "¿Qué promoción buscas?",
+    searchPlaceholder: "¿Qué promoción busca?",
     service: "Servicio",
     servicePlaceholder: "Servicio",
     date: "Fecha",
@@ -93,13 +95,13 @@ const OFFERS_COPY = {
     country: "Costa Rica",
     noResults: "No encontramos promociones",
     noOffers: "Todavía no hay promociones",
-    tryAgain: "Prueba otra búsqueda o cambia los filtros.",
+    tryAgain: "Prueba otra búsqueda o cambie los filtros.",
     futureOffers: "Las nuevas promociones de profesionales aparecerán aquí.",
     viewAll: "Ver todas las promociones",
     publishFirst: "Publicar la primera promoción",
-    publishSubtitle: "Publica una promoción clara y fácil de comparar.",
+    publishSubtitle: "Publique una promoción clara y fácil de comparar.",
     editOffer: "Editar promoción",
-    editSubtitle: "Actualiza la información de esta publicación.",
+    editSubtitle: "Actualice la información de esta publicación.",
     manageOffer: "Administrar promoción",
     professional: "Profesional",
     profile: "Ver perfil",
@@ -379,10 +381,7 @@ export function OffersBoard({
             >
               <Menu className={CABECERA_GLIFO} strokeWidth={2.5} />
             </button>
-            <Link href="/" aria-label="ContrataCR" className="shrink-0">
-              <ContrataCRMark />
-            </Link>
-            <h1 className={CABECERA_TITULO}>{copy.offers}</h1>
+            <SectionBrand title={copy.offers} />
             {/* El icono de Mensajes es de la barra de la APP: en la web se llega
                 desde el menú y desde el panel. */}
             <div className="ml-auto flex shrink-0 items-center gap-0.5">
@@ -430,7 +429,7 @@ export function OffersBoard({
                 sirve a nadie y que le compite al título; en el teléfono ya se
                 hacía así y en computadora no. Y la raya divisoria solo si hay
                 filtros al otro lado: sin ellos separaba el título de la nada. */}
-            <h1 className="text-[17px] font-extrabold text-[#162543]">{copy.offers}</h1>
+            <h1 className={CABECERA_TITULO}>{copy.offers}</h1>
             {hasActiveFilters && filtered.length > 0 && (
               <span className="text-[13px] font-semibold text-[#68778d]">
                 <span className="tabular-nums">{resultTotal??filtered.length}</span> {(resultTotal??filtered.length) === 1 ? copy.offer : copy.offerPlural}{locationFilter.trim() ? ` · ${locationFilter.trim()}` : ""}

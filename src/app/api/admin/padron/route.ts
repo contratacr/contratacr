@@ -8,13 +8,13 @@ const headers = { "Cache-Control": "no-store" };
 
 export async function POST(req: Request) {
   if (!await getApiAdmin()) return NextResponse.json({ error: "No autorizado" }, { status: 403, headers });
-  const limited = enforceRateLimit(req, "admin-padron", 20, 60_000);
+  const limited = await enforceRateLimit(req, "admin-padron", 20, 60_000);
   if (limited) { limited.headers.set("Cache-Control", "no-store"); return limited; }
   const body = await req.json().catch(() => null);
   const raw = typeof body?.cedula === "string" ? body.cedula.trim() : "";
   const cedula = raw.replace(/[\s-]/g, "");
   if (!/^[\d\s-]+$/.test(raw) || !isValidId(cedula)) {
-    return NextResponse.json({ error: "Ingresá una identificación válida: nacional (9 dígitos), jurídica o NITE (10), DIMEX (11-12)." }, { status: 400, headers });
+    return NextResponse.json({ error: "Ingrese una identificación válida: nacional (9 dígitos), jurídica o NITE (10), DIMEX (11-12)." }, { status: 400, headers });
   }
   try {
     const result = await getIdentityVerifier().lookup(cedula);
@@ -24,6 +24,6 @@ export async function POST(req: Request) {
     }
     return NextResponse.json({ found: true, cedula, fullName: result.fullName, idType: result.idType }, { headers });
   } catch {
-    return NextResponse.json({ error: "No pudimos consultar Hacienda en este momento. Intentá nuevamente más tarde." }, { status: 503, headers });
+    return NextResponse.json({ error: "No pudimos consultar Hacienda en este momento. Intente nuevamente más tarde." }, { status: 503, headers });
   }
 }

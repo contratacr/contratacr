@@ -1,0 +1,178 @@
+'use client';
+
+import {useCallback,useEffect,useLayoutEffect,useRef,useState,type FormEvent} from 'react';
+import {useLocale} from 'next-intl';
+import {useAuth} from '@/hooks/use-auth';
+import {Button} from '@/components/ui/button';
+import {proMoney} from '@/lib/pro/money';
+import {crTodayISO} from '@/lib/time-cr';
+import {centsToInput,colonesToCents} from '@/lib/pro/allowances';
+import {formatElapsed,formatMinutes,hoursToMinutes,timeMutationSchema,timeReadSchema,timeResultSchema,type TimeActivity,type TimeEntry,type TimeMutation,type TimeRead} from '@/lib/pro/time-tracking';
+import {useProChildGuard} from './use-pro-child-guard';
+import {useProSearchParams} from './use-pro-search-params';
+import {pushProParams} from '@/lib/pro/navigation';
+
+// Families 21/22: the professional's own timer (one at a time, kept on the server)
+// and manual hours. Every stopped or manual entry is one Costs time line.
+const api='/api/pro/time-tracking',channelName='contratacr:pro-time';
+const field='mt-1 block min-h-11 w-full min-w-0 max-w-full appearance-none rounded-xl border border-[#d7e1ea] bg-white px-3 py-2 text-base font-normal';
+type StateCallback={onStateChange?:(state:{dirty:boolean;busy:boolean})=>void};
+type Period={from:string;to:string};
+type ActivityDraft={activity:TimeActivity|null;name:string;rate:string;cost:string;billable:boolean};
+type ManualDraft={date:string;hours:string;activityId:string;billable:boolean;note:string;person:string};
+const money=(cents:number)=>proMoney(cents/100);
+const monthStart=(day:string)=>day.slice(0,8)+'01';
+function previousMonth(day:string){const d=new Date(monthStart(day)+'T12:00:00Z');d.setUTCDate(0);const last=d.toISOString().slice(0,10);return{from:monthStart(last),to:last};}
+const fmtDay=(value:string,en:boolean)=>new Intl.DateTimeFormat(en?'en-US':'es-CR',{dateStyle:'medium',timeZone:'UTC'}).format(new Date(value+'T12:00:00Z'));
+const fmtTime=(value:string,en:boolean)=>new Intl.DateTimeFormat(en?'en-US':'es-CR',{timeStyle:'short',dateStyle:'short',timeZone:'America/Costa_Rica'}).format(new Date(value));
+
+function copy(en:boolean){
+ return en?{
+  title:'Time',intro:'Your own hours on this job. A stopped timer or a manual entry becomes one time line in Costs & payments, so it is never counted twice. This is not payroll.',
+  timer:'Timer',start:'Start timer',stop:'Stop and record',discard:'Discard',activity:'Activity',noActivity:'No activity',billable:'Billable',note:'Description (optional)',
+  running:'Running',startedAt:(t:string)=>`Started ${t}`,otherJob:(j:string)=>`A timer is running on “${j}”. Stop it before starting another.`,stopOther:'Stop that timer',
+  longSession:'The timer has been running for more than a day. Enter the minutes worked to record it.',minutes:'Minutes worked',
+  manual:'Record time',manualTitle:'Record time',date:'Date',hours:'Hours (e.g. 1.5)',invalidHours:'Enter between 0.02 and 24 hours.',save:'Save',saving:'Saving…',cancel:'Cancel',
+  period:'Period',thisMonth:'This month',lastMonth:'Last month',from:'From',to:'To',apply:'Show',
+  total:'Total hours',billableHours:'Billable hours',billableAmount:'Billable amount',cost:'Internal cost',uncosted:(m:string)=>`${m} without internal cost`,byActivity:'By activity',
+  entries:'Entries',colNote:'Description',colHours:'Hours',empty:'No hours in this period.',source:{timer:'Timer',manual:'Manual',ledger:'Costs & payments'} as Record<string,string>,rate:'Rate',amount:'Amount',voided:'Voided',adjusted:'Adjusted in Costs',yes:'Yes',no:'No',voidAction:'Void',
+  voidTitle:'Void this entry?',reason:'Reason',voidSave:'Void entry',voidHelp:'The time line is reversed in Costs & payments; nothing is deleted.',
+  activities:'Activities and rates',newActivity:'New activity',name:'Name',rateField:'Hourly rate to the customer (₡)',costField:'Internal cost per hour (₡, optional)',costHelp:'Used for the job cost. Without it, the hours count as uncosted.',billableDefault:'Billable by default',
+  edit:'Edit',archive:'Archive',restore:'Restore',archived:'Archived',perHour:(m:string)=>`${m}/h`,
+  loading:'Loading hours…',loadError:'Could not load the hours.',retry:'Retry',conflict:'This changed in another tab or window. We reloaded the latest data.',
+  uncertain:'We could not confirm whether it was saved. Retry the same operation; it will not be applied twice.',retrySame:'Retry the same save',failed:'It was not saved. Review the data.',
+  leave:'Save or cancel the hours before leaving.',saved:'Saved.',stopped:'Time recorded in Costs & payments.',alreadyStopped:'That timer had already been stopped in another tab; nothing was recorded twice.',
+  discarded:'Timer discarded; nothing was recorded.',inactiveStop:'The hours were not recorded: this job is cancelled or its customer is archived. If the customer is archived, restore them to record the hours; otherwise, discard the timer.',inactiveJob:'Hours cannot be added: this job is cancelled or its customer is archived. If the customer is archived, restore them first.',started:'Timer started.',voidedNotice:'Entry voided.',invalidMoney:'Review the amounts.',
+ }:{
+  title:'Horas',intro:'Sus propias horas en este trabajo. Un cronómetro detenido o una entrada manual se convierte en una línea de horas en Costos y pagos, así que nunca se cuentan dos veces. No es una planilla.',
+  timer:'Cronómetro',start:'Iniciar cronómetro',stop:'Detener y registrar',discard:'Descartar',activity:'Actividad',noActivity:'Sin actividad',billable:'Facturable',note:'Descripción (opcional)',
+  running:'En marcha',startedAt:(t:string)=>`Iniciado ${t}`,otherJob:(j:string)=>`Hay un cronómetro en marcha en «${j}». Deténgalo antes de iniciar otro.`,stopOther:'Detener ese cronómetro',
+  longSession:'El cronómetro lleva más de un día en marcha. Indique los minutos trabajados para registrarlo.',minutes:'Minutos trabajados',
+  manual:'Registrar tiempo',manualTitle:'Registrar tiempo',date:'Fecha',hours:'Horas (ej. 1,5)',invalidHours:'Indique entre 0,02 y 24 horas.',save:'Guardar',saving:'Guardando…',cancel:'Cancelar',
+  period:'Período',thisMonth:'Este mes',lastMonth:'Mes anterior',from:'Desde',to:'Hasta',apply:'Mostrar',
+  total:'Horas totales',billableHours:'Horas facturables',billableAmount:'Monto facturable',cost:'Costo interno',uncosted:(m:string)=>`${m} sin costo interno`,byActivity:'Por actividad',
+  entries:'Entradas',colNote:'Descripción',colHours:'Horas',empty:'No hay horas en este período.',source:{timer:'Cronómetro',manual:'Manual',ledger:'Costos y pagos'} as Record<string,string>,rate:'Tarifa',amount:'Monto',voided:'Anulada',adjusted:'Corregida en Costos',yes:'Sí',no:'No',voidAction:'Anular',
+  voidTitle:'¿Anular esta entrada?',reason:'Motivo',voidSave:'Anular entrada',voidHelp:'La línea de horas se revierte en Costos y pagos; no se borra nada.',
+  activities:'Actividades y tarifas',newActivity:'Nueva actividad',name:'Nombre',rateField:'Tarifa por hora al cliente (₡)',costField:'Costo interno por hora (₡, opcional)',costHelp:'Se usa para el costo del trabajo. Sin él, las horas cuentan como sin costo.',billableDefault:'Facturable por defecto',
+  edit:'Editar',archive:'Archivar',restore:'Restaurar',archived:'Archivada',perHour:(m:string)=>`${m}/h`,
+  loading:'Cargando horas…',loadError:'No se pudieron cargar las horas.',retry:'Reintentar',conflict:'Esto cambió en otra pestaña o ventana. Cargamos los datos más recientes.',
+  uncertain:'No pudimos confirmar si se guardó. Reintente la misma operación; no se aplicará dos veces.',retrySame:'Reintentar el mismo guardado',failed:'No se guardó. Revise los datos.',
+  leave:'Guarde o cancele las horas antes de salir.',saved:'Guardado.',stopped:'Tiempo registrado en Costos y pagos.',alreadyStopped:'Ese cronómetro ya se había detenido en otra pestaña; no se registró dos veces.',
+  discarded:'Cronómetro descartado; no se registró nada.',inactiveStop:'No se registraron las horas: este trabajo está cancelado o su cliente está archivado. Si el cliente está archivado, restáurelo para registrarlas; si no, descarte el cronómetro.',inactiveJob:'No se pueden agregar horas: este trabajo está cancelado o su cliente está archivado. Si el cliente está archivado, restáurelo primero.',started:'Cronómetro iniciado.',voidedNotice:'Entrada anulada.',invalidMoney:'Revise los montos.',
+ };
+}
+
+export function TimeTracking({workId,onStateChange}:{workId:string}&StateCallback){const {user,loading}=useAuth();if(loading||!user)return null;return <TimeSession key={user.id+':'+workId} accountId={user.id} workId={workId} onStateChange={onStateChange}/>;}
+
+function TimeSession({accountId,workId,onStateChange}:{accountId:string;workId:string}&StateCallback){
+ const en=useLocale()==='en',c=copy(en),today=crTodayISO();
+ const [period,setPeriod]=useState<Period>({from:monthStart(today),to:today}),[periodDraft,setPeriodDraft]=useState<Period>({from:monthStart(today),to:today});
+ const [data,setData]=useState<TimeRead|null>(null),[loading,setLoading]=useState(true),[loadError,setLoadError]=useState(false),[offset,setOffset]=useState(0),[now,setNow]=useState(()=>Date.now());
+ const [startDraft,setStartDraft]=useState({activityId:'',billable:true,note:'',person:''}),[stopMinutes,setStopMinutes]=useState('');
+ const params=useProSearchParams(),openRecord=params.get('registrarTiempo')==='1';
+ const [manual,setManual]=useState<ManualDraft|null>(null),[activity,setActivity]=useState<ActivityDraft|null>(null),[voiding,setVoiding]=useState<{entry:TimeEntry;reason:string}|null>(null);
+ // Round 7C: «Registrar tiempo» in Costs & payments opens this same form (one time form everywhere).
+ useEffect(()=>{if(!openRecord)return;const timer=setTimeout(()=>{setManual(old=>old??{date:today,hours:'',activityId:'',billable:true,note:'',person:''});pushProParams({registrarTiempo:null});},0);return()=>clearTimeout(timer);},[openRecord,today]);
+ const [saving,setSaving]=useState(false),[uncertain,setUncertain]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
+ const active=useRef(true),sequence=useRef(0),pending=useRef<TimeMutation|null>(null),lock=useRef(false),channel=useRef<BroadcastChannel|null>(null);
+ const dirty=!!manual||!!activity||!!voiding||!!startDraft.note.trim(),busy=saving||uncertain;
+ useProChildGuard(!onStateChange&&(dirty||busy),useCallback(()=>setError(c.leave),[c.leave]));
+ useLayoutEffect(()=>{onStateChange?.({dirty,busy});},[dirty,busy,onStateChange]);
+ useEffect(()=>()=>onStateChange?.({dirty:false,busy:false}),[onStateChange]);
+ const load=useCallback(async()=>{const id=++sequence.current;setLoading(true);setLoadError(false);try{const sent=Date.now(),response=await fetch(api+'?'+new URLSearchParams({workId,from:period.from,to:period.to}),{cache:'no-store',headers:{'X-Pro-Expected-Actor':accountId}});if(!response.ok)throw Error();const body=timeReadSchema.parse(await response.json());if(body.workId!==workId)throw Error();if(active.current&&id===sequence.current){setData(body);setOffset(Date.parse(body.serverNow)-(sent+Date.now())/2);}}catch{if(active.current&&id===sequence.current)setLoadError(true);}finally{if(active.current&&id===sequence.current)setLoading(false);}},[accountId,workId,period]);
+ const invalidate=useCallback(()=>{sequence.current++;},[]);
+ useEffect(()=>{active.current=true;const timer=setTimeout(()=>void load(),0),refresh=()=>{if(document.visibilityState==='visible')void load();};window.addEventListener('focus',refresh);document.addEventListener('visibilitychange',refresh);
+  let bc:BroadcastChannel|null=null;try{bc=new BroadcastChannel(channelName);bc.onmessage=()=>void load();channel.current=bc;}catch{channel.current=null;}
+  return()=>{active.current=false;invalidate();clearTimeout(timer);window.removeEventListener('focus',refresh);document.removeEventListener('visibilitychange',refresh);bc?.close();channel.current=null;};},[load,invalidate]);
+ const running=data?.running??null;
+ useEffect(()=>{if(!running)return;const tick=setInterval(()=>setNow(Date.now()),1000);return()=>clearInterval(tick);},[running]);
+
+ async function send(next?:TimeMutation,done?:(result:unknown)=>void){
+  if(lock.current)return;const input=next??pending.current;if(!input)return;lock.current=true;pending.current=input;setSaving(true);setError('');setNotice('');
+  try{
+   const response=await fetch(api,{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json','X-Pro-Expected-Actor':accountId},body:JSON.stringify(input)});
+   if(response.status===409){pending.current=null;setUncertain(false);setError(c.conflict);await load();return;}
+   if(response.status>=400&&response.status<500){pending.current=null;setUncertain(false);const reason=await response.json().then((body:{code?:unknown})=>body?.code,()=>null);setError(reason==='inactive_job'?(input.action==='stop'?c.inactiveStop:c.inactiveJob):c.failed);return;}
+   if(!response.ok)throw Error();const result=timeResultSchema.parse(await response.json());
+   pending.current=null;setUncertain(false);
+   setNotice(input.action==='stop'?('alreadyStopped'in result&&result.alreadyStopped?c.alreadyStopped:c.stopped):input.action==='discard'?c.discarded:input.action==='start'?c.started:input.action==='void'?c.voidedNotice:c.saved);
+   done?.(result);channel.current?.postMessage('changed');await load();
+  }catch{if(active.current){setUncertain(true);setError(c.uncertain);}}
+  finally{lock.current=false;if(active.current)setSaving(false);}
+ }
+ const activities=data?.activities??[],activeActivities=activities.filter(a=>!a.archived),byId=new Map(activities.map(a=>[a.id,a]));
+ /** Round 4B: '' = not stated (older behaviour), 'self' = the owner, otherwise a team grant of this job. */
+ function personInput(value:string){return value===''?{}:{personGrantId:value==='self'?null:value};}
+ const people=data?.people??[];
+ function personField(value:string,set:(person:string)=>void){return people.length>0&&<label className="block min-w-0 text-sm font-semibold">{en?'Person':'Persona'}<select data-time-field="person" aria-label={en?'Person':'Persona'} value={value} onChange={e=>set(e.target.value)} className={field}><option value="">{en?'Not stated':'Sin indicar'}</option>{people.map(p=><option key={p.grantId??'self'} value={p.grantId??'self'}>{p.self?(en?'Me — ':'Yo — ')+p.name:p.name}</option>)}</select><span className="mt-1 block text-xs font-normal text-[#52627a]">{en?'Team members of this job (Team).':'Miembros del equipo de este trabajo (Equipo).'}</span></label>;}
+ function chooseActivity(id:string,set:(v:{activityId:string;billable:boolean})=>void){const a=byId.get(id);set({activityId:id,billable:a?a.billable:true});}
+ function start(event:FormEvent){event.preventDefault();if(busy||!data)return;const input=timeMutationSchema.parse({action:'start',actionId:crypto.randomUUID(),entryId:crypto.randomUUID(),workId,activityId:startDraft.activityId||null,billable:startDraft.billable,note:startDraft.note,...personInput(startDraft.person)});void send(input,()=>setStartDraft(old=>({...old,note:''})));}
+ function stop(entry:TimeEntry){if(busy)return;const long=!!entry.startedAt&&now+offset-Date.parse(entry.startedAt)>86400000;let minutes:number|null=null;if(long){const parsed=Number(stopMinutes);if(!Number.isInteger(parsed)||parsed<1||parsed>1440){setError(c.longSession);return;}minutes=parsed;}void send(timeMutationSchema.parse({action:'stop',actionId:crypto.randomUUID(),entryId:entry.id,minutes,note:''}),()=>setStopMinutes(''));}
+ function discard(entry:TimeEntry){if(busy)return;void send(timeMutationSchema.parse({action:'discard',actionId:crypto.randomUUID(),entryId:entry.id}));}
+ function saveManual(event:FormEvent){event.preventDefault();if(!manual||busy)return;const minutes=hoursToMinutes(manual.hours);if(minutes===null){setError(c.invalidHours);return;}const parsed=timeMutationSchema.safeParse({action:'manual',actionId:crypto.randomUUID(),entryId:crypto.randomUUID(),workId,activityId:manual.activityId||null,billable:manual.billable,date:manual.date,minutes,note:manual.note,...personInput(manual.person)});if(!parsed.success){setError(c.failed);return;}void send(parsed.data,()=>setManual(null));}
+ function saveActivity(event:FormEvent){event.preventDefault();if(!activity||busy)return;const rate=colonesToCents(activity.rate||'0'),cost=activity.cost.trim()?colonesToCents(activity.cost):null;if(rate===null||activity.cost.trim()&&cost===null){setError(c.invalidMoney);return;}const parsed=timeMutationSchema.safeParse({action:'activity_save',actionId:crypto.randomUUID(),activityId:activity.activity?.id??crypto.randomUUID(),revision:activity.activity?.revision??0,name:activity.name,rateCents:rate,costCents:cost,billable:activity.billable});if(!parsed.success){setError(c.failed);return;}void send(parsed.data,()=>setActivity(null));}
+ function saveVoid(event:FormEvent){event.preventDefault();if(!voiding||busy)return;const parsed=timeMutationSchema.safeParse({action:'void',actionId:crypto.randomUUID(),entryId:voiding.entry.id,revision:voiding.entry.revision,reason:voiding.reason});if(!parsed.success){setError(c.failed);return;}void send(parsed.data,()=>setVoiding(null));}
+
+ if(loading&&!data)return <p role="status" className="text-sm text-[#52627a]">{c.loading}</p>;
+ if(loadError&&!data)return <div role="alert" data-time-error className="space-y-2 rounded-2xl border border-[#d7e1ea] bg-white p-4"><p className="text-sm">{c.loadError}</p><Button type="button" variant="secondary" disabled={loading} onClick={()=>void load()}>{c.retry}</Button></div>;
+ if(!data)return null;
+ const here=running&&running.workId===workId,long=!!running?.startedAt&&now+offset-Date.parse(running.startedAt)>86400000,t=data.totals;
+ return <section data-time-tracking className="min-w-0 space-y-4">
+  <header className="space-y-1"><h3 className="text-lg font-bold text-[#162543]">{c.title}</h3><p className="text-sm text-[#52627a]">{c.intro}</p></header>
+  {notice&&<p role="status" data-time-notice className="text-sm text-[#175b42]">{notice}</p>}
+  {error&&<div role="alert" className="space-y-2 rounded-xl border border-[#f1c9bd] bg-[#fff7f4] p-3 text-sm text-[#7a2e16]"><p>{error}</p>{uncertain&&<Button type="button" disabled={saving} onClick={()=>void send()}>{c.retrySame}</Button>}</div>}
+  <section data-time-timer={running?(here?'running':'elsewhere'):'idle'} aria-label={c.timer} className={`space-y-3 rounded-2xl border p-4 ${here?'border-[#0089bb] bg-[#f3fafd]':'border-[#d7e1ea] bg-white'}`}>
+   <h4 className="font-semibold text-[#162543]">{c.timer}</h4>
+   {running?here?<>
+    <div className="flex min-w-0 flex-wrap items-end justify-between gap-3"><div className="min-w-0"><p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[#006e90]"><span aria-hidden="true" className="h-2 w-2 animate-pulse rounded-full bg-[#ff7c0a]"/>{c.running}</p><p data-time-elapsed role="timer" aria-live="off" className="font-mono text-4xl font-bold tabular-nums text-[#162543]">{formatElapsed(running.startedAt!,now+offset)}</p><p className="break-words text-sm text-[#52627a]">{running.activityName??c.noActivity}{running.note?' · '+running.note:''} · {c.startedAt(fmtTime(running.startedAt!,en))}</p></div></div>
+    {long&&<label className="block text-sm font-semibold">{c.minutes}<input inputMode="numeric" value={stopMinutes} onChange={e=>setStopMinutes(e.target.value.replace(/\D/g,''))} className={field+' sm:max-w-xs'}/><span className="mt-1 block text-xs font-normal text-[#52627a]">{c.longSession}</span></label>}
+    <div className="flex flex-wrap gap-2"><Button type="button" data-time-stop disabled={busy} onClick={()=>stop(running)}>{saving?c.saving:c.stop}</Button><Button type="button" variant="secondary" data-time-discard disabled={busy} onClick={()=>discard(running)}>{c.discard}</Button></div>
+   </>:<><p className="break-words text-sm text-[#52627a]">{c.otherJob(running.workTitle??'—')}</p><p data-time-elapsed className="font-mono text-2xl font-bold tabular-nums text-[#162543]">{formatElapsed(running.startedAt!,now+offset)}</p><Button type="button" variant="secondary" disabled={busy} onClick={()=>stop(running)}>{c.stopOther}</Button></>
+   :<form data-time-start onSubmit={start} className="space-y-3"><fieldset disabled={busy} className="grid min-w-0 gap-3 sm:grid-cols-2">
+    <label className="block min-w-0 text-sm font-semibold">{c.activity}<select data-time-field="activity" value={startDraft.activityId} onChange={e=>chooseActivity(e.target.value,v=>setStartDraft(old=>({...old,...v})))} className={field}><option value="">{c.noActivity}</option>{activeActivities.map(a=><option key={a.id} value={a.id}>{a.name} · {c.perHour(money(a.rateCents))}</option>)}</select></label>
+    <label className="block min-w-0 text-sm font-semibold">{c.note}<input data-time-field="note" maxLength={300} value={startDraft.note} onChange={e=>setStartDraft(old=>({...old,note:e.target.value}))} className={field}/></label>
+    {personField(startDraft.person,person=>setStartDraft(old=>({...old,person})))}
+    <label className="flex min-h-11 items-center gap-3 text-sm font-semibold sm:col-span-2"><input type="checkbox" checked={startDraft.billable} onChange={e=>setStartDraft(old=>({...old,billable:e.target.checked}))} className="h-5 w-5 shrink-0 accent-[#0089bb]"/>{c.billable}</label>
+   </fieldset><Button type="submit" data-time-start-button disabled={busy}>{saving?c.saving:c.start}</Button></form>}
+  </section>
+  <div className="flex flex-wrap gap-2"><Button type="button" variant="secondary" data-time-manual-open disabled={busy||!!manual} onClick={()=>{setManual({date:today,hours:'',activityId:'',billable:true,note:'',person:''});setError('');setNotice('');}}>{c.manual}</Button></div>
+  {manual&&<form data-time-manual onSubmit={saveManual} className="space-y-3 rounded-2xl border border-[#0089bb] bg-[#f7fbfd] p-4"><h4 className="font-semibold">{c.manualTitle}</h4><fieldset disabled={busy} className="grid min-w-0 gap-3 sm:grid-cols-2">
+   <label className="block min-w-0 text-sm font-semibold">{c.date}<input type="date" required min="1900-01-01" max={today} value={manual.date} onChange={e=>setManual({...manual,date:e.target.value})} className={field}/></label>
+   <label className="block min-w-0 text-sm font-semibold">{c.hours}<input data-time-field="hours" required inputMode="decimal" value={manual.hours} onChange={e=>setManual({...manual,hours:e.target.value})} className={field}/></label>
+   <label className="block min-w-0 text-sm font-semibold">{c.activity}<select value={manual.activityId} onChange={e=>chooseActivity(e.target.value,v=>setManual({...manual,...v}))} className={field}><option value="">{c.noActivity}</option>{activeActivities.map(a=><option key={a.id} value={a.id}>{a.name}</option>)}</select></label>
+   <label className="block min-w-0 text-sm font-semibold">{c.note}<input maxLength={300} value={manual.note} onChange={e=>setManual({...manual,note:e.target.value})} className={field}/></label>
+   {personField(manual.person,person=>setManual({...manual,person}))}
+   <label className="flex min-h-11 items-center gap-3 text-sm font-semibold"><input type="checkbox" checked={manual.billable} onChange={e=>setManual({...manual,billable:e.target.checked})} className="h-5 w-5 shrink-0 accent-[#0089bb]"/>{c.billable}</label>
+  </fieldset><div className="flex flex-wrap justify-end gap-2"><Button type="button" variant="secondary" disabled={busy} onClick={()=>setManual(null)}>{c.cancel}</Button><Button type="submit" disabled={busy||!manual.hours.trim()}>{saving?c.saving:c.save}</Button></div></form>}
+  <section aria-label={c.period} className="space-y-3 rounded-2xl border border-[#d7e1ea] bg-white p-4">
+   <div className="flex min-w-0 flex-wrap items-center gap-2"><h4 className="mr-auto font-semibold text-[#162543]">{c.period}</h4><Button type="button" size="sm" className="min-h-11" variant={period.from===monthStart(today)&&period.to===today?'default':'secondary'} onClick={()=>{const p={from:monthStart(today),to:today};setPeriod(p);setPeriodDraft(p);}}>{c.thisMonth}</Button><Button type="button" size="sm" className="min-h-11" variant="secondary" data-time-last-month onClick={()=>{const p=previousMonth(today);setPeriod(p);setPeriodDraft(p);}}>{c.lastMonth}</Button></div>
+   <form onSubmit={e=>{e.preventDefault();if(periodDraft.from&&periodDraft.to&&periodDraft.from<=periodDraft.to)setPeriod({...periodDraft});}} className="grid min-w-0 grid-cols-2 gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end"><label className="block min-w-0 text-sm font-semibold">{c.from}<input type="date" value={periodDraft.from} onChange={e=>setPeriodDraft(old=>({...old,from:e.target.value}))} className={field}/></label><label className="block min-w-0 text-sm font-semibold">{c.to}<input type="date" value={periodDraft.to} onChange={e=>setPeriodDraft(old=>({...old,to:e.target.value}))} className={field}/></label><Button type="submit" variant="secondary" className="col-span-2 min-h-11 sm:col-span-1">{c.apply}</Button></form>
+   <dl data-time-totals className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+    <Stat label={c.total} value={formatMinutes(t.minutes)} id="minutes" raw={t.minutes}/><Stat label={c.billableHours} value={formatMinutes(t.billableMinutes)} id="billableMinutes" raw={t.billableMinutes}/>
+    <Stat label={c.billableAmount} value={money(t.billableCents)} id="billableCents" raw={t.billableCents}/>{t.costCents!==null&&<Stat label={c.cost} value={money(t.costCents)} id="costCents" raw={t.costCents} hint={t.uncostedMinutes?c.uncosted(formatMinutes(t.uncostedMinutes)):undefined}/>}
+   </dl>
+   {!!t.byActivity.length&&<div className="space-y-1"><h5 className="text-sm font-semibold text-[#162543]">{c.byActivity}</h5><ul className="divide-y divide-[#eef2f6] text-sm">{t.byActivity.map(row=><li key={row.activityId??'none'} data-time-activity-total={row.activityId??'none'} className="flex flex-wrap justify-between gap-2 py-2"><span className="min-w-0 break-words">{row.name??c.noActivity}</span><span className="text-[#52627a]">{formatMinutes(row.minutes)} · {money(row.billableCents)}</span></li>)}</ul></div>}
+  </section>
+  {voiding&&<form data-time-void onSubmit={saveVoid} className="space-y-3 rounded-2xl border border-[#f1c9bd] bg-[#fff7f4] p-4"><h4 className="font-semibold">{c.voidTitle}</h4><p className="text-sm text-[#52627a]">{fmtDay(voiding.entry.recordedOn!,en)} · {formatMinutes(voiding.entry.minutes??0)} · {voiding.entry.activityName??c.noActivity}</p><label className="block text-sm font-semibold">{c.reason}<input autoFocus required maxLength={300} value={voiding.reason} disabled={busy} onChange={e=>setVoiding({...voiding,reason:e.target.value})} className={field}/></label><p className="text-xs text-[#52627a]">{c.voidHelp}</p><div className="flex flex-wrap justify-end gap-2"><Button type="button" variant="secondary" disabled={busy} onClick={()=>setVoiding(null)}>{c.cancel}</Button><Button type="submit" variant="destructive" disabled={busy||!voiding.reason.trim()}>{saving?c.saving:c.voidSave}</Button></div></form>}
+  <section aria-label={c.entries} className="space-y-2"><h4 className="font-semibold text-[#162543]">{c.entries}</h4>
+   {!data.entries.length?<p data-time-empty className="rounded-2xl border border-dashed border-[#c9d6e2] bg-[#f7f9fc] p-4 text-sm text-[#52627a]">{c.empty}</p>:<>
+    <div className="hidden overflow-x-auto rounded-2xl border border-[#d7e1ea] bg-white md:block"><table className="w-full min-w-[44rem] text-left text-sm"><thead className="bg-[#f7f9fc] text-xs uppercase tracking-wide text-[#52627a]"><tr><th className="px-3 py-2">{c.date}</th><th className="px-3 py-2">{c.activity}</th><th className="px-3 py-2">{c.colNote}</th><th className="px-3 py-2 text-right">{c.colHours}</th><th className="px-3 py-2 text-right">{c.rate}</th><th className="px-3 py-2">{c.billable}</th><th className="px-3 py-2 text-right">{c.amount}</th><th className="px-3 py-2"><span className="sr-only">{c.voidAction}</span></th></tr></thead>
+     <tbody>{data.entries.map(e=><tr key={e.id} data-time-entry={e.id} data-time-voided={e.voided?'1':'0'} className={`border-t border-[#eef2f6] ${e.voided?'text-[#8a96a8]':''}`}><td className="whitespace-nowrap px-3 py-2">{fmtDay(e.recordedOn!,en)}<span className="block text-xs text-[#52627a]">{c.source[e.source]}</span></td><td className="px-3 py-2">{e.activityName??c.noActivity}{e.personName&&<span data-time-person className="block text-xs text-[#52627a]">{e.personName}</span>}</td><td className="max-w-[16rem] break-words px-3 py-2">{e.note}{e.voided&&<span className="ml-1 inline-block whitespace-nowrap rounded-full bg-[#eef2f6] px-2 py-0.5 text-xs font-semibold text-[#52627a]">{c.voided}</span>}{e.invoicedDraftId&&<span data-time-invoiced className="ml-1 inline-block whitespace-nowrap rounded-full bg-[#fff4e5] px-2 py-0.5 text-xs font-semibold text-[#8a4b00]">{en?'Billed in a draft':'En borrador de factura'}</span>}{e.adjusted&&<span data-time-adjusted className="ml-1 inline-block whitespace-nowrap rounded-full bg-[#e8f4fa] px-2 py-0.5 text-xs font-semibold text-[#006e90]">{c.adjusted}</span>}</td><td className="whitespace-nowrap px-3 py-2 text-right tabular-nums">{formatMinutes(e.minutes??0)}</td><td className="whitespace-nowrap px-3 py-2 text-right tabular-nums">{e.rateCents!==null?c.perHour(money(e.rateCents)):'—'}</td><td className="px-3 py-2">{e.billable?c.yes:c.no}</td><td className="whitespace-nowrap px-3 py-2 text-right tabular-nums">{e.billableCents!==null?money(e.billableCents):'—'}</td><td className="px-3 py-2 text-right">{!e.voided&&e.source!=='ledger'&&!e.invoicedDraftId&&<Button type="button" size="sm" variant="ghost" className="min-h-11" disabled={busy||!!voiding} onClick={()=>setVoiding({entry:e,reason:''})}>{c.voidAction}</Button>}</td></tr>)}</tbody></table></div>
+    <ul className="space-y-2 md:hidden">{data.entries.map(e=><li key={e.id} data-time-entry-card={e.id} className={`min-w-0 space-y-1 rounded-2xl border border-[#d7e1ea] bg-white p-3 text-sm ${e.voided?'text-[#8a96a8]':''}`}><div className="flex flex-wrap items-start justify-between gap-2"><p className="min-w-0 break-words font-semibold">{e.activityName??c.noActivity}{e.personName&&<span data-time-person className="block text-xs font-normal text-[#52627a]">{e.personName}</span>}</p><p className="font-semibold tabular-nums">{formatMinutes(e.minutes??0)}</p></div><p className="text-[#52627a]">{fmtDay(e.recordedOn!,en)} · {c.source[e.source]} · {c.billable}: {e.billable?c.yes:c.no}{e.billableCents!==null?' · '+money(e.billableCents):''}</p>{e.note&&<p className="break-words">{e.note}</p>}{e.adjusted&&<span data-time-adjusted className="inline-flex rounded-full bg-[#e8f4fa] px-2 py-0.5 text-xs font-semibold text-[#006e90]">{c.adjusted}</span>}{e.invoicedDraftId&&<span data-time-invoiced className="inline-flex rounded-full bg-[#fff4e5] px-2 py-0.5 text-xs font-semibold text-[#8a4b00]">{en?'Billed in a draft':'En borrador de factura'}</span>}{e.voided?<span className="inline-flex rounded-full bg-[#eef2f6] px-2 py-0.5 text-xs font-semibold text-[#52627a]">{c.voided}</span>:e.source==='ledger'||e.invoicedDraftId?null:<Button type="button" size="sm" variant="ghost" className="min-h-11" disabled={busy||!!voiding} onClick={()=>setVoiding({entry:e,reason:''})}>{c.voidAction}</Button>}</li>)}</ul>
+   </>}
+  </section>
+  <details data-time-activities hidden={!!data.costsHidden} className="rounded-2xl border border-[#d7e1ea] bg-white p-3"><summary className="min-h-11 cursor-pointer py-2 font-semibold text-[#162543]">{c.activities} ({activeActivities.length})</summary>
+   <div className="mt-2 space-y-3">
+    <ul className="divide-y divide-[#eef2f6]">{activities.map(a=><li key={a.id} data-time-activity={a.id} className="flex min-w-0 flex-wrap items-center justify-between gap-2 py-2 text-sm"><span className="min-w-0 break-words"><span className="font-semibold">{a.name}</span> · {c.perHour(money(a.rateCents))}{a.costCents!==null?` · ${c.cost}: ${c.perHour(money(a.costCents))}`:''}{a.billable?'':` · ${c.billable}: ${c.no}`}{a.archived&&<span className="ml-2 text-xs text-[#52627a]">{c.archived}</span>}</span><span className="flex gap-1">{!a.archived&&<Button type="button" size="sm" variant="secondary" className="min-h-11" disabled={busy||!!activity} onClick={()=>setActivity({activity:a,name:a.name,rate:centsToInput(a.rateCents),cost:a.costCents===null?'':centsToInput(a.costCents),billable:a.billable})}>{c.edit}</Button>}<Button type="button" size="sm" variant="ghost" className="min-h-11" disabled={busy||!!activity} onClick={()=>void send({action:a.archived?'activity_restore':'activity_archive',actionId:crypto.randomUUID(),activityId:a.id,revision:a.revision})}>{a.archived?c.restore:c.archive}</Button></span></li>)}</ul>
+    {activity?<form data-time-activity-form onSubmit={saveActivity} className="space-y-3 rounded-2xl border border-[#0089bb] bg-[#f7fbfd] p-4"><fieldset disabled={busy} className="grid min-w-0 gap-3 sm:grid-cols-3">
+     <label className="block min-w-0 text-sm font-semibold">{c.name}<input data-time-field="activity-name" autoFocus required maxLength={80} value={activity.name} onChange={e=>setActivity({...activity,name:e.target.value})} className={field}/></label>
+     <label className="block min-w-0 text-sm font-semibold">{c.rateField}<input data-time-field="activity-rate" inputMode="decimal" value={activity.rate} onChange={e=>setActivity({...activity,rate:e.target.value})} className={field}/></label>
+     <label className="block min-w-0 text-sm font-semibold">{c.costField}<input data-time-field="activity-cost" inputMode="decimal" value={activity.cost} onChange={e=>setActivity({...activity,cost:e.target.value})} className={field}/><span className="mt-1 block text-xs font-normal text-[#52627a]">{c.costHelp}</span></label>
+     <label className="flex min-h-11 items-center gap-3 text-sm font-semibold sm:col-span-3"><input type="checkbox" checked={activity.billable} onChange={e=>setActivity({...activity,billable:e.target.checked})} className="h-5 w-5 shrink-0 accent-[#0089bb]"/>{c.billableDefault}</label>
+    </fieldset><div className="flex flex-wrap justify-end gap-2"><Button type="button" variant="secondary" disabled={busy} onClick={()=>setActivity(null)}>{c.cancel}</Button><Button type="submit" disabled={busy||!activity.name.trim()}>{saving?c.saving:c.save}</Button></div></form>
+    :<Button type="button" variant="secondary" data-time-activity-new disabled={busy} onClick={()=>setActivity({activity:null,name:'',rate:'',cost:'',billable:true})}>{c.newActivity}</Button>}
+   </div>
+  </details>
+ </section>;
+}
+function Stat({label,value,id,raw,hint}:{label:string;value:string;id:string;raw:number;hint?:string}){return <div data-time-stat={id} data-value={raw} className="flex min-w-0 flex-col rounded-xl bg-[#f7f9fc] p-3"><dt className="text-xs font-semibold text-[#52627a]">{label}</dt><dd className="mt-1 break-words text-lg font-bold tabular-nums text-[#162543]">{value}{hint&&<span className="block text-xs font-normal text-[#52627a]">{hint}</span>}</dd></div>;}

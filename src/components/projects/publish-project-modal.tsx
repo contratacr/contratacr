@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { CategorySearch } from "@/components/ui/category-search";
 import { SugerenciaDeServicio } from "@/components/ui/sugerencia-de-servicio";
 import { SelectMenu } from "@/components/ui/select-menu";
-import { AlertCircle, ArrowLeft, X } from "lucide-react";
+import { AlertCircle, ArrowLeft, ArrowRight, BriefcaseBusiness, UserRoundSearch, X } from "lucide-react";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
 import { CedulaInput } from "@/components/ui/cedula-input";
@@ -29,6 +29,9 @@ import { pareceFijoDeCostaRica } from "@/lib/telefono-movil";
 import { AvisoDeBorrador } from "@/components/ui/aviso-de-borrador";
 import { borrarBorrador, guardarBorrador, leerBorrador, rutaParaEntrar } from "@/lib/borrador-sin-sesion";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
+
+import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
+import { canOffer } from "@/lib/auth/capabilities";
 
 const PROJECT_DESCRIPTION_MAX_LENGTH = 300;
 const LAST_ZONE_KEY = "ccr:last-request-zone";
@@ -83,7 +86,8 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
   const locale = useLocale();
   const searchParams = useSearchParams();
   const { user } = useAuth();
-  const yaEsProfesional = user?.user_metadata?.is_provider === true;
+  const yaEsProfesional = canOffer(user);
+  const [solicitudElegida, setSolicitudElegida] = useState(() => !!editar || searchParams.get("borrador") === "1");
   const initialCategoryId = searchParams.get("categoria") || "";
 
   const [form, setForm] = useState({
@@ -150,7 +154,9 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
     if (editar || searchParams.get("borrador") !== "1") return;
     let vivo = true;
     void leerBorrador<{ form: typeof form; telefono: string }>("proyecto").then((b) => {
-      if (!vivo || !b) return;
+      if (!vivo) return;
+      if (!b) { setSolicitudElegida(false); return; }
+      setSolicitudElegida(true);
       setForm(b.datos.form);
       if (b.datos.telefono) { telefonoDelBorrador.current = true; setTelefono(b.datos.telefono); }
       setDesdeBorrador(true);
@@ -204,6 +210,7 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!solicitudElegida && !editar) return;
     if (published) { onClose(); return; }
     setError(null);
     setErrorField(null);
@@ -301,6 +308,8 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
   // obligatorio, «(opcional)» en lo que no lo es. Aquí no había ninguna de las
   // dos y había que adivinar.
   const obligatorio = <span className="text-red-500"> *</span>;
+  const eligiendoIntencion = !editar && !solicitudElegida;
+  const puedeVolverAEleccion = !editar && solicitudElegida && !desdeBorrador && !published;
 
   return (
     <div className="app-modal-screen fixed inset-0 z-[100] flex items-stretch justify-center sm:items-center sm:p-4">
@@ -317,18 +326,17 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
         <div className={cn("relative flex shrink-0 items-center justify-center gap-3 border-b border-[#e5e7eb] px-14 py-4 transition-shadow sm:items-start sm:justify-between sm:px-6")}>
           {/* Solo el título. Lo de «quedó guardado» va en la franja de arriba. */}
           <div className="min-w-0 text-center sm:text-left">
-            <h2 id="publish-project-title" className="text-lg font-bold text-[#162543]">{editar ? t("editTitle") : t("title")}</h2>
+            <h2 id="publish-project-title" className="text-lg font-bold text-[#162543]">{editar ? t("editTitle") : eligiendoIntencion ? t("intentHeader") : t("title")}</h2>
             {desdeBorrador && <AvisoDeBorrador texto={t("borradorListo")} />}
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={() => { if (puedeVolverAEleccion) setSolicitudElegida(false); else onClose(); }}
             data-native-back="publish-project"
-            aria-label={t("dismiss")}
+            aria-label={puedeVolverAEleccion ? t("intentBack") : t("dismiss")}
             className="absolute left-4 top-1/2 flex h-10 w-10 -translate-y-1/2 shrink-0 items-center justify-center rounded-xl text-[#162543] transition-colors hover:bg-[#eef5f9] sm:static sm:h-8 sm:w-8 sm:translate-y-0 sm:rounded-lg"
           >
-            <ArrowLeft className="h-5 w-5 sm:hidden" />
-            <X className="hidden h-5 w-5 sm:block" />
+            {puedeVolverAEleccion ? <ArrowLeft className="h-5 w-5" /> : <><ArrowLeft className="h-5 w-5 sm:hidden" /><X className="hidden h-5 w-5 sm:block" /></>}
           </button>
         </div>
 
@@ -341,6 +349,22 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
               <p className="max-w-[22rem] text-sm leading-relaxed text-[#6b7280]">{t("successNext")}</p>
               {avisoDeIdentidad && <p data-aviso-identidad className="max-w-[22rem] text-sm leading-relaxed text-[#4b5b70]">{avisoDeIdentidad}</p>}
             </PantallaDeExito>
+          ) : eligiendoIntencion ? (
+            <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-5 py-6 sm:px-6" data-testid="project-intent-choice">
+              <h3 className="text-[23px] font-extrabold leading-tight tracking-tight text-[#162543]">{t("intentQuestion")}</h3>
+              <div className="grid gap-3">
+                <button type="button" onClick={() => setSolicitudElegida(true)} className="flex min-h-28 w-full items-center gap-4 rounded-2xl border border-[#d7e5ef] bg-white p-4 text-left transition-colors hover:border-[#009fd9] hover:bg-[#f3fbfe] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]" aria-label={t("intentNeed")}>
+                  <BrandIconBadge icon={UserRoundSearch} size={64} />
+                  <span className="min-w-0 flex-1"><span className="block text-base font-bold leading-snug text-[#162543]">{t("intentNeed")}</span><span className="mt-1 block text-[13px] leading-relaxed text-[#526277]">{t("intentNeedHint")}</span></span>
+                  <ArrowRight className="h-4 w-4 shrink-0 text-[#162543]" aria-hidden />
+                </button>
+                <Link href={yaEsProfesional ? "/dashboard/profesional?tab=profile&mode=offer" : "/registro/profesional"} prefetch={false} className="flex min-h-28 w-full items-center gap-4 rounded-2xl border border-[#d7e5ef] bg-white p-4 text-left transition-colors hover:border-[#009fd9] hover:bg-[#f3fbfe] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]" aria-label={t("intentOffer")}>
+                  <BrandIconBadge icon={BriefcaseBusiness} size={64} />
+                  <span className="min-w-0 flex-1"><span className="block text-base font-bold leading-snug text-[#162543]">{t("intentOffer")}</span><span className="mt-1 block text-[13px] leading-relaxed text-[#526277]">{t("intentOfferHint")}</span></span>
+                  <ArrowRight className="h-4 w-4 shrink-0 text-[#162543]" aria-hidden />
+                </Link>
+              </div>
+            </div>
           ) : (
             <div ref={cuerpo} className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain bg-white px-4 py-5 sm:max-h-[calc(90vh-145px)] sm:flex-none">
               <div className="flex flex-col gap-6 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
@@ -380,7 +404,7 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
                     <div role="status" className="mt-2.5 flex flex-col gap-2 rounded-xl border border-[#fde68a] bg-[#fffbeb] px-3.5 py-3 text-[13px] leading-relaxed text-[#92400e]">
                       <p className="font-medium">{t("avisoAnuncio")}</p>
                       <Link
-                        href={yaEsProfesional ? "/promociones/publicar" : "/registro/profesional"}
+                        href={yaEsProfesional ? "/dashboard/profesional?tab=profile&mode=offer" : "/registro/profesional"}
                         className="inline-flex h-9 w-fit items-center rounded-full bg-[#b45309] px-3.5 text-[13px] font-bold text-white transition-colors hover:bg-[#92400e]"
                       >
                         {yaEsProfesional ? t("avisoAnuncioCta") : t("avisoAnuncioCtaNew")}
@@ -459,7 +483,7 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
           {/* La MISMA franja que el resto del app: la medida vive en
               BARRA_ACCION_BASE, no escrita otra vez aquí. Esta pantalla es la
               referencia, así que si cambia, cambian todas juntas. */}
-          <div className={cn(BARRA_ACCION_BASE, "flex shrink-0 gap-3 sm:justify-end sm:px-6 sm:pb-4", error && !published && "ccr-sin-linea border-t-0")}>
+          {!eligiendoIntencion && <div className={cn(BARRA_ACCION_BASE, "flex shrink-0 gap-3 sm:justify-end sm:px-6 sm:pb-4", error && !published && "ccr-sin-linea border-t-0")}>
             {!published && (
               <Button type="button" variant="outline" size="lg" onClick={onClose} className="hidden sm:inline-flex sm:px-6">
                 {t("cancel")}
@@ -494,7 +518,7 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
                   : (submitting ? t("publishing") : t("publish"))}
               </Button>
             )}
-          </div>
+          </div>}
         </form>
       </div>
     </div>

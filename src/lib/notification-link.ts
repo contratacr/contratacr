@@ -1,3 +1,7 @@
+import {appointmentNotificationData, isAppointmentNotification} from './pro/appointment-notification';
+import {appointmentReminderData, isAppointmentReminder} from './pro/appointment-reminder-notification';
+import {isPaymentPlanClientNotification, paymentPlanClientData} from './pro/payment-plan-client-notification';
+import { serviceSuggestionEditorLink } from "@/lib/service-suggestion-request";
 // Maps each notification to the role context and dashboard target it belongs to.
 // One account can receive client, professional, support, and account notifications
 // in the same stream, so routing and per-panel filtering must stay explicit.
@@ -5,7 +9,11 @@ export type NotificationLinkInput = {
   type: string;
   data?: {
     link?: string;
+    version?: unknown;
+    request_id?: unknown;
+    action?: unknown;
     suggestion_decision?: string | null;
+    category_id?: string | null;
     project_id?: string | null;
     activity_id?: string | null;
     job_id?: string | null;
@@ -20,14 +28,20 @@ export type NotificationContext = "professional" | "client" | "support" | null;
 
 // Solo tipos que el app genera hoy. `new_project` le llega al PROFESIONAL de
 // la categoria; `project_cancelled` (autocierre) y las respuestas de soporte, a
-// quien publico. Lo de citas, propuestas, postulaciones y seguir se retiro.
+// quien publico. Las citas de Pro usan tipos propios por destinatario; los
+// tipos antiguos de citas, propuestas, postulaciones y seguir se retiraron.
 const PRO_TYPES = new Set([
+  "pro_appointment_provider",
+  "pro_appointment_reminder_provider",
   "review_received",
   "new_project",
   "new_job",
 ]);
 
 const CLIENT_TYPES = new Set([
+  "pro_appointment_client",
+  "pro_appointment_reminder_client",
+  "pro_payment_plan_client",
   "project_cancelled",
 ]);
 
@@ -90,9 +104,26 @@ function withReviewTarget(link: string): string {
 export const APPROVED_SUGGESTION_LINK = "/dashboard/profesional?mode=offer&tab=services&focus=services";
 
 export function notificationHref(n: NotificationLinkInput, _role?: string, locale = "es"): string {
+  if (isAppointmentReminder(n.type)) {
+    const data = appointmentReminderData(n.data);
+    if (!data) return notificationsCenterHref(locale);
+    const tab = n.type === 'pro_appointment_reminder_provider' ? 'pro_agenda' : 'appointments';
+    return withLocale(`/dashboard/profesional?tab=${tab}&citaSolicitud=${encodeURIComponent(data.request_id)}`, locale);
+  }
+  if (isPaymentPlanClientNotification(n.type)) {
+    const data = paymentPlanClientData(n.data);
+    if (!data) return notificationsCenterHref(locale);
+    return withLocale(`/dashboard/profesional?tab=appointments&citaSolicitud=${encodeURIComponent(data.request_id)}`, locale);
+  }
+  if (isAppointmentNotification(n.type)) {
+    const data = appointmentNotificationData(n.data);
+    if (!data) return notificationsCenterHref(locale);
+    const tab = n.type === 'pro_appointment_provider' ? 'pro_agenda' : 'appointments';
+    return withLocale(`/dashboard/profesional?tab=${tab}&citaSolicitud=${encodeURIComponent(data.request_id)}`, locale);
+  }
   // Also repair stored approvals that still point to the notifications panel.
   if (n.type === "suggestion_approved" || (n.type === "support_reply" && n.data?.suggestion_decision === "approved")) {
-    return withLocale(APPROVED_SUGGESTION_LINK, locale);
+    return withLocale(n.data?.category_id ? serviceSuggestionEditorLink(n.data.category_id) : APPROVED_SUGGESTION_LINK, locale);
   }
   if (n.data?.link && n.data.link.startsWith("/")) {
     const link = n.type === "review_received" ? withReviewTarget(n.data.link) : n.data.link;
@@ -111,6 +142,7 @@ export function notificationHref(n: NotificationLinkInput, _role?: string, local
       href = "/proyectos";
       break;
 
+    case "counterparty_account_deleted":
     case "support_reply":
       href = "/dashboard/profesional?tab=soporte";
       break;
@@ -138,10 +170,40 @@ const NON_NAVIGABLE_TYPES = new Set([
 ]);
 
 export function notificationActionHref(n: NotificationLinkInput, role?: string, locale = "es"): string | null {
+  if (isAppointmentReminder(n.type) && !appointmentReminderData(n.data)) return null;
+  if (isAppointmentNotification(n.type) && !appointmentNotificationData(n.data)) return null;
   if (NON_NAVIGABLE_TYPES.has(n.type)) return null;
   return notificationHref(n, role, locale);
 }
 
 export function notificationsCenterHref(locale = "es"): string {
   return withLocale("/notificaciones", locale);
+}
+
+/** Name the actual destination, including historical notifications. */
+export function notificationActionLabel(n: NotificationLinkInput, role?: string, locale = "es"): string | null {
+  const href = notificationActionHref(n, role, locale);
+  if (!href) return null;
+  const url = new URL(href, "https://contratacr.com");
+  const tab = url.searchParams.get("tab");
+  if (tab === "notifications" || /\/notificaciones$/.test(url.pathname)) return null;
+  const en = locale === "en";
+  const label = (es: string, english: string) => en ? english : es;
+  if (isAppointmentNotification(n.type) || isAppointmentReminder(n.type)) return label("Ver cita", "View appointment");
+  if (n.type === "counterparty_account_deleted") return label("Contactar soporte", "Contact support");
+  if (n.type === "agrega_precio") return label("Agregar un precio", "Add a price");
+  if (n.type === "pide_resenas") return label("Pedir reseñas", "Ask for reviews");
+  if (n.type === "completa_perfil") return label("Completar mi perfil", "Complete my profile");
+  if (n.type === "invita_proyecto") return label("Publicar un proyecto", "Post a project");
+  if (n.type === "review_received") return label("Ver reseña", "View review");
+  if (n.type.startsWith("verification")) return label("Revisar verificación", "Review verification");
+  if (n.type === "suggestion_approved" || n.data?.suggestion_decision === "approved") return n.data?.category_id ? label("Completar servicio", "Complete service") : label("Ver servicios", "View services");
+  if (tab === "soporte" || /\/soporte(?:\/|$)/.test(url.pathname)) return label("Abrir soporte", "Open support");
+  if (n.type === "direct_message" || /\/mensajes(?:\/|$)/.test(url.pathname)) return label("Abrir conversación", "Open conversation");
+  if (/\/proyectos(?:\/|$)/.test(url.pathname)) return label("Ver proyecto", "View project");
+  if (/\/empleos(?:\/|$)/.test(url.pathname)) return label("Ver empleo", "View job");
+  if (/\/promociones(?:\/|$)/.test(url.pathname)) return label("Ver promoción", "View promotion");
+  if (/\/profesionales\//.test(url.pathname)) return label("Ver perfil", "View profile");
+  if (tab === "notifications" || /\/notificaciones$/.test(url.pathname)) return null;
+  return label("Abrir mi panel", "Open my dashboard");
 }

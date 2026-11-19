@@ -22,7 +22,7 @@ import { TABLERO_PUBLICO_DESDE } from "@/lib/queries/proyectos-publicos";
  * tope por hora.
  */
 export async function POST(req: Request) {
-  const limited = enforceRateLimit(req, "contacto-proyecto", 15, 3_600_000);
+  const limited = await enforceRateLimit(req, "contacto-proyecto", 15, 3_600_000);
   if (limited) return limited;
 
   const { projectId, channel } = (await req.json().catch(() => ({}))) as { projectId?: string; channel?: string };
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Necesitas una cuenta profesional." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Necesita una cuenta profesional." }, { status: 401 });
 
   const db = createAdminClient();
   const { data: pro } = await db
@@ -41,7 +41,7 @@ export async function POST(req: Request) {
     .eq("profile_id", user.id)
     .maybeSingle();
   if (!pro || (pro as { is_banned?: boolean | null }).is_banned) {
-    return NextResponse.json({ error: "Necesitas una cuenta profesional." }, { status: 403 });
+    return NextResponse.json({ error: "Necesita una cuenta profesional." }, { status: 403 });
   }
 
   // Las mismas dos condiciones que el tablero: publicado después de que el
@@ -79,7 +79,7 @@ export async function POST(req: Request) {
   }
   // Nadie se escribe a sí mismo: un profesional también puede publicar proyectos.
   if (fila.client_id === user.id) {
-    return NextResponse.json({ error: "Este proyecto es tuyo." }, { status: 409 });
+    return NextResponse.json({ error: "Este proyecto es suyo." }, { status: 409 });
   }
   // El proyecto guarda el teléfono del momento de publicarlo; si cambió después,
   // manda el del perfil, que es el que la persona mantiene al día.
@@ -103,7 +103,7 @@ export async function POST(req: Request) {
   // padrón y en mayúsculas.
   const { data: cliente } = await db.from("profiles").select("full_name").eq("id", fila.client_id ?? "").maybeSingle();
   const saludo = nombreDeSaludo((cliente as { full_name?: string | null } | null)?.full_name);
-  const texto = `Hola${saludo ? ` ${saludo}` : ""}, soy ${quien}. Vi tu proyecto "${(fila.title ?? "").slice(0, 60)}" en ContrataCR y puedo ayudarte. ¿Lo conversamos?`;
+  const texto = `Hola${saludo ? ` ${saludo}` : ""}, soy ${quien}. Vi su proyecto "${(fila.title ?? "").slice(0, 60)}" en ContrataCR y puedo ayudarle. ¿Lo conversamos?`;
   // LA ÚNICA MEDIDA DE SI EL TABLERO SIRVE. Se publican proyectos y se
   // notifica a toda la categoría, pero no había forma de saber cuántos
   // profesionales llegan a escribirle al cliente: el tablero podía estar

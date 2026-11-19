@@ -33,7 +33,18 @@ test.describe("check de identidad en las listas", () => {
           const r = el.getBoundingClientRect();
           if (!r.width) continue;
           if (r.height > 26) fallos.push(`partida en dos renglones (${Math.round(r.height)}px)`);
-          if (el.scrollWidth > el.clientWidth + 1) fallos.push("recortada");
+          // «Recortada» = el check no se ve entero. No se mide con scrollWidth:
+          // el área táctil ampliada (::before con -inset-1) lo agranda 4 px sin
+          // recortar nada. Se mide el dibujo del check contra la insignia y
+          // contra cualquier contenedor que corte en horizontal (el nombre
+          // truncado, la tarjeta); el scroll vertical de la lista no recorta.
+          const icono = (el.querySelector("svg") ?? el).getBoundingClientRect();
+          if (!icono.width || icono.left < r.left - 0.5 || icono.right > r.right + 0.5) fallos.push("recortada");
+          for (let a = el.parentElement; a; a = a.parentElement) {
+            if (getComputedStyle(a).overflowX === "visible") continue;
+            const caja = a.getBoundingClientRect();
+            if (icono.left < caja.left - 0.5 || icono.right > caja.right + 0.5) { fallos.push("recortada"); break; }
+          }
           if (r.right > window.innerWidth + 1) fallos.push("se sale de la pantalla");
           if (el.textContent?.trim() !== "") fallos.push(`dice «${el.textContent?.trim()}»`);
         }
@@ -49,10 +60,10 @@ test.describe("bienvenida de la app", () => {
 
   test("la pantalla de espera coincide y se oculta al abrir el registro profesional", async ({ page }) => {
     await gotoOK(page, "/?nativePreview=1&resetNativeOnboarding=1");
-    const titulo = page.getByRole("heading", { name: "¿Cómo quieres empezar?" });
+    const titulo = page.getByRole("heading", { name: "¿Cómo quiere empezar?" });
     await expect(titulo).toBeVisible({ timeout: 30_000 });
     const espera = page.locator("#ccr-native-first-run-prepaint h1").first();
-    await expect(espera, "la pantalla de espera del arranque usa el mismo título").toHaveText("¿Cómo quieres empezar?");
+    await expect(espera, "la pantalla de espera del arranque usa el mismo título").toHaveText("¿Cómo quiere empezar?");
 
     await page.getByRole("button", { name: /Ofrezco servicios/ }).tap();
     await expect(page).toHaveURL(/\/registro\/profesional/);

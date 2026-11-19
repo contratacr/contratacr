@@ -58,7 +58,7 @@ function defaultMessage(locale: string, recipientName?: string | null, contextTi
   if (intent === "job" && context) {
     return locale === "en"
       ? `Hi${name ? ` ${name}` : ""}, I am interested in the "${context}" opening you posted on ContrataCR. Is it still available? I can send you my résumé.`
-      : `Hola${name ? ` ${name}` : ""}, me interesa la vacante de "${context}" que publicaste en ContrataCR. ¿Sigue disponible? Le puedo enviar mi currículum.`;
+      : `Hola${name ? ` ${name}` : ""}, me interesa la vacante de "${context}" que publicó en ContrataCR. ¿Sigue disponible? Le puedo enviar mi currículum.`;
   }
   // Un mensaje que la persona podría haber escrito: saluda, dice de dónde
   // viene y pide algo concreto. El anterior decía «vi tu información», que no
@@ -69,8 +69,8 @@ function defaultMessage(locale: string, recipientName?: string | null, contextTi
       : `Hi${name ? ` ${name}` : ""}, I saw your service on ContrataCR. Could you tell me more?`;
   }
   return context
-    ? `Hola${name ? ` ${name}` : ""}, vi "${context}" en ContrataCR y me gustaría coordinar. ¿Me puedes dar más información?`
-    : `Hola${name ? ` ${name}` : ""}, vi tu servicio en ContrataCR y me gustaría coordinar. ¿Me puedes dar más información?`;
+    ? `Hola${name ? ` ${name}` : ""}, vi "${context}" en ContrataCR y me gustaría coordinar. ¿Me puede dar más información?`
+    : `Hola${name ? ` ${name}` : ""}, vi su servicio en ContrataCR y me gustaría coordinar. ¿Me puede dar más información?`;
 }
 
 async function currentUserId() {
@@ -84,7 +84,7 @@ async function currentUserId() {
 export async function POST(req: NextRequest) {
   // Mismo tope que la revelación de contacto: suficiente para una casa o una
   // oficina, insuficiente para llevarse la lista.
-  const limitado = enforceRateLimit(req, "contacto-whatsapp", 15, 3_600_000);
+  const limitado = await enforceRateLimit(req, "contacto-whatsapp", 15, 3_600_000);
   if (limitado) return limitado;
   const body = await req.json().catch(() => ({}));
   const professionalId = String(body.professionalId ?? "");

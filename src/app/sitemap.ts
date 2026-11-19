@@ -4,6 +4,7 @@ import { tramoFicha } from "@/lib/marketplace-url";
 import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { cargarProyectosPublicos } from "@/lib/queries/proyectos-publicos";
 import { sinOcultos } from "@/lib/queries/sin-ocultos";
+import { sitemapSections } from "@/lib/directory/sitemap-sections";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com";
 // El sitio es bilingüe con hreflang: el mapa tiene que decir las dos direcciones
@@ -50,6 +51,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   } catch { /* sin fecha es mejor que una fecha falsa */ }
   const fijos = ["", "/profesionales", "/servicios", "/promociones", "/empleos", "/proyectos", "/como-funciona", "/ayuda", "/mejorar-mi-perfil", "/verificacion-de-identidad", "/terminos", "/privacidad"];
   for (const p of fijos) for (const l of IDIOMAS) out.push({ url: `${APP_URL}${rutaConIdioma(l, `${p}` || "/")}`, lastModified: ultimoCambio, changeFrequency: "daily", priority: p === "" ? 1 : 0.8 });
+
+  // Directorio (2026-11-18): las páginas de sección (/restaurantes, /cafes…) mientras DIR_ENABLED esté encendido, sin
+  // Salud con DIR_HEALTH_ENABLED apagado. Las fichas van en /sitemap-directorio/sitemap/<sección>.xml (robots.ts las
+  // lista). Sin fecha: la lista cambia con cada importación y no hay una fecha honesta por sección.
+  for (const s of sitemapSections()) for (const l of IDIOMAS) out.push({ url: `${APP_URL}${rutaConIdioma(l, `/${s.section}`)}`, changeFrequency: "daily", priority: 0.7 });
 
   try {
     const supabase = createAdminClient();

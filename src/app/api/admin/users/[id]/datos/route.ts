@@ -129,7 +129,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     waNuevo = whatsappDigits(pedidos.whatsapp);
     // Un profesional sin WhatsApp no puede recibir contactos: no se deja vacío.
     if (waNuevo ? !telefonoValido(waNuevo) : !!pro) {
-      return NextResponse.json({ error: "Escribe un número de WhatsApp completo." }, { status: 400 });
+      return NextResponse.json({ error: "Escriba un número de WhatsApp completo." }, { status: 400 });
     }
     if (!anotar("whatsapp", waViejo, waNuevo)) waNuevo = undefined;
   }
@@ -138,14 +138,14 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (pedidos.call_phone !== undefined && pro) {
     llamadasNuevo = whatsappDigits(pedidos.call_phone);
     if (llamadasNuevo && !telefonoValido(llamadasNuevo)) {
-      return NextResponse.json({ error: "Escribe un teléfono de llamadas completo." }, { status: 400 });
+      return NextResponse.json({ error: "Escriba un teléfono de llamadas completo." }, { status: 400 });
     }
     if (!anotar("telefono_llamadas", whatsappDigits(pro.call_phone), llamadasNuevo)) llamadasNuevo = undefined;
   }
 
   let correoNuevo: string | undefined;
   if (pedidos.email !== undefined) {
-    if (!CORREO_VALIDO.test(pedidos.email)) return NextResponse.json({ error: "Escribe un correo válido." }, { status: 400 });
+    if (!CORREO_VALIDO.test(pedidos.email)) return NextResponse.json({ error: "Escriba un correo válido." }, { status: 400 });
     if (anotar("correo", perfil.email?.toLowerCase(), pedidos.email)) {
       const { data: otro } = await db.from("profiles").select("id").ilike("email", pedidos.email).neq("id", id).limit(1);
       if ((otro ?? []).length) return NextResponse.json({ error: "Ese correo ya lo usa otra cuenta." }, { status: 409 });
@@ -212,11 +212,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       // a propósito (la de un encargado, por ejemplo) se respeta.
       for (const [tabla, dueno] of [["job_posts", "employer_id"], ["professional_offers", "professional_id"]] as const) {
         const { data: filas, error: readError } = await db.from(tabla).select("id, contact_whatsapp").eq(dueno, p.id);
-        if (readError) return NextResponse.json({ error: "No se pudieron consultar los contactos de sus publicaciones. Intenta guardar nuevamente." }, { status: 503 });
+        if (readError) return NextResponse.json({ error: "No se pudieron consultar los contactos de sus publicaciones. Intente guardar nuevamente." }, { status: 503 });
         const ids = (filas ?? []).filter((f) => whatsappDigits(f.contact_whatsapp) === waViejo).map((f) => f.id);
         if (!ids.length) continue;
         const { error } = await db.from(tabla).update({ contact_whatsapp: waNuevo }).in("id", ids);
-        if (error) return NextResponse.json({ error: "No se pudo actualizar el WhatsApp de sus publicaciones. Intenta guardar nuevamente." }, { status: 503 });
+        if (error) return NextResponse.json({ error: "No se pudo actualizar el WhatsApp de sus publicaciones. Intente guardar nuevamente." }, { status: 503 });
         if (tabla === "job_posts") empleos += ids.length;
         else promociones += ids.length;
       }
@@ -264,7 +264,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const resultado = await enviarEnlaceDeContrasena({ email: perfil.email, origin: requestOrigin(req), resetPath: "/reset-password" });
   if (resultado !== "ok" && resultado !== "en_cola") {
     console.error("[admin/user-datos] enlace de contraseña:", resultado);
-    return NextResponse.json({ error: "No se pudo mandar el enlace. Intenta de nuevo en un momento." }, { status: 502 });
+    return NextResponse.json({ error: "No se pudo mandar el enlace. Intente de nuevo en un momento." }, { status: 502 });
   }
 
   await auditUserAction(db, req, {

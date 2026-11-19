@@ -1,0 +1,12 @@
+{"type":"FeatureCollection","note":"Synthetic test data invented for the local verification; not copied from OpenStreetMap.","features":[
+{"type":"Feature","id":"node/9000000001","properties":{"amenity":"restaurant","name":"Soda La Prueba","addr:street":"Avenida Central","addr:housenumber":"10","addr:city":"San José","addr:province":"San José","phone":"+506 2200 0001","email":"no-copiar@example.com","opening_hours":"Mo-Fr 08:00-17:00","operator":"Persona Privada"},"geometry":{"type":"Point","coordinates":[-84.0800,9.9330]}},
+{"type":"Feature","id":"node/9000000002","properties":{"amenity":"restaurant","name":"Soda la Prueba","phone":"+506 2200 0002"},"geometry":{"type":"Point","coordinates":[-84.0803,9.9332]}},
+{"type":"Feature","id":"node/9000000003","properties":{"amenity":"fuel","name":"Estación de Ensayo","brand":"Marca"},"geometry":{"type":"Point","coordinates":[-84.1000,9.9500]}},
+{"type":"Feature","id":"way/9000000004","properties":{"shop":"supermarket","name":"Súper Ficticio","addr:city":"Heredia"},"geometry":{"type":"Polygon","coordinates":[[[-84.1170,9.9980],[-84.1168,9.9980],[-84.1168,9.9982],[-84.1170,9.9982],[-84.1170,9.9980]]]}},
+{"type":"Feature","id":"node/9000000005","properties":{"amenity":"pharmacy","name":"Farmacia Inventada","phone":"no es un teléfono"},"geometry":{"type":"Point","coordinates":[-84.0500,9.9300]}},
+{"type":"Feature","id":"node/9000000006","properties":{"amenity":"restaurant","name":"Fuera del País"},"geometry":{"type":"Point","coordinates":[-79.5,8.98]}},
+{"type":"Feature","id":"node/9000000007","properties":{"amenity":"restaurant","name":"X"},"geometry":{"type":"Point","coordinates":[-84.0,9.9]}},
+{"type":"Feature","id":"node/9000000008","properties":{"amenity":"bench"},"geometry":{"type":"Point","coordinates":[-84.0,9.9]}},
+{"type":"Feature","id":"node/9000000001","properties":{"amenity":"restaurant","name":"Soda La Prueba repetida"},"geometry":{"type":"Point","coordinates":[-84.2,9.95]}},
+{"type":"Feature","id":"node/9000000009","properties":{"amenity":"restaurant","name":"Soda La Prueba"},"geometry":{"type":"Point","coordinates":[-84.0900,9.9330]}}
+]}

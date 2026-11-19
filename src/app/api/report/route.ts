@@ -12,7 +12,7 @@ const SUPPORT_TO = "soporte@contratacr.com";
 
 export async function POST(req: NextRequest) {
   // Public endpoint: bound abuse and enumeration per client IP.
-  const limited = enforceRateLimit(req, "report-public", 10, 600000);
+  const limited = await enforceRateLimit(req, "report-public", 10, 600000);
   if (limited) return limited;
   try {
     const { professionalName, professionalSlug, reason, reporterEmail } = await req.json();

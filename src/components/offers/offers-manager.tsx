@@ -38,11 +38,11 @@ const OFFERS_MANAGER_COPY = {
     more: "Más opciones",
     close: "Cerrar promoción", republish: "Volver a publicar", remove: "Eliminar", removeTitle: "¿Eliminar esta promoción?", removeBody: "Se borra del todo y no se puede recuperar.", removeCancel: "Cancelar",
     emptyTitle: "Todavía no has publicado promociones",
-    emptyBody: "Crea una promoción para impulsar tus ventas.",
+    emptyBody: "Cree una promoción para impulsar sus ventas.",
     publishTitle: "Publicar promoción",
-    publishSubtitle: "Publica una promoción clara y fácil de comparar.",
+    publishSubtitle: "Publique una promoción clara y fácil de comparar.",
     editTitle: "Editar promoción",
-    editSubtitle: "Actualiza la información de esta publicación.",
+    editSubtitle: "Actualice la información de esta publicación.",
   },
   en: {
     back: "Back to dashboard",
@@ -233,7 +233,7 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
                   </div>
                 </button>
                 {isOpen && (
-                  <div className="border-t border-[#e5e7eb] px-4 pb-5 pt-3 sm:px-5">
+                  <div className="px-4 pb-5 pt-3 sm:px-5">
                     {offer.description && <p className="mb-4 whitespace-pre-line break-words text-sm leading-6 text-[#52627a] [overflow-wrap:anywhere]">{offer.description}</p>}
                     {process.env.NODE_ENV === "development" && <PromotionHistory key={offer.id} contentType="offer" contentId={offer.id}/>}
                                         {/* EDITAR ES LA ACCIÓN DE ESTA FILA, y va en azul lleno:

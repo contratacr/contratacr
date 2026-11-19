@@ -1,6 +1,11 @@
 import { expect, test } from "playwright/test";
 import { expectHealthyPage, expectNoHorizontalOverflow, expectPageShell, expectVisibleText, gotoOK, isMobileProject, loginAs, resetAuth } from "./helpers";
-import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, type RegressionSeedState } from "./seed";
+import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, type RegressionSeedState, regressionProfessionalWithoutPro } from "./seed";
+
+// The professional panel asserted here is the one WITHOUT Pro; park a local Pro grant (loopback only) for this file.
+const withoutPro = regressionProfessionalWithoutPro();
+test.beforeAll(withoutPro.park);
+test.afterAll(withoutPro.restore);
 
 const professionalTabs = [
   // En escritorio «home» cae en la sección de arranque del panel profesional
@@ -41,7 +46,7 @@ async function exerciseVisibleFilters(page: import("playwright/test").Page) {
   const filters = page.locator("[data-status-filter-tabs]:visible");
   const visibleFilterEmptyState = page
     .getByText(
-      /^(?:No tienes (?:citas|proyectos) activ[oa]s|Todav[ií]a no (?:hay|tienes) (?:citas|proyectos|tiquetes) finalizad[oa]s|No hay proyectos nuevos por ahora|No tienes tiquetes pendientes|No hay tiquetes en proceso|No tienes (?:profesionales favoritos|ofertas favoritas|promociones favoritas|empleos favoritos)\.)$/i,
+      /^(?:No tiene (?:citas|proyectos) activ[oa]s|Todav[ií]a no (?:hay|tiene) (?:citas|proyectos|tiquetes) finalizad[oa]s|No hay proyectos nuevos por ahora|No tiene tiquetes pendientes|No hay tiquetes en proceso|No tiene (?:profesionales favoritos|ofertas favoritas|promociones favoritas|empleos favoritos)\.)$/i,
       { exact: true },
     )
     .filter({ visible: true });
@@ -419,15 +424,15 @@ test.describe("@seeded dashboard surfaces", () => {
         locale: "es",
         guideButton: /^Guías$/i,
         expected: [/^Proyectos$/i, /Favoritos/i, /^Empleos$/i, /^Promociones$/i, /Publicar empleos/i, /Publicar una promoción/i],
-        expandable: /tablero p.blico de lo que publican/i,
+        expandable: /tablero p.blico de necesidades que publican/i,
         profileGuide: /^Perfil profesional$/i,
-        profileLastStep: /Usa Ver mi perfil para ver la versi.n p.blica/i,
+        profileLastStep: /Use Ver mi perfil para ver la versi.n p.blica/i,
       },
       {
         locale: "en",
         guideButton: /^Guides$/i,
         expected: [/^Projects$/i, /Favorites/i, /^Jobs$/i, /^Promotions$/i, /Post jobs/i, /Publish promotions/i],
-        expandable: /board of what clients post/i,
+        expandable: /public board of needs posted by clients/i,
         profileGuide: /^Professional profile$/i,
         profileLastStep: /Use View my profile to see the public version/i,
       },

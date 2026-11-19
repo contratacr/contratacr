@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { ArrowLeft, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PIE_VENTANA_BASE } from "@/components/ui/acciones-al-pie";
+import {manageModalFocus} from "@/lib/modal-focus";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { useNativeFullscreenLayer } from "@/hooks/use-native-app";
 
@@ -20,13 +21,21 @@ const SIZES = {
   md: "sm:max-w-lg",
   lg: "sm:max-w-2xl",
   xl: "sm:max-w-5xl",
+  // Round 8 (Pro job page): the whole viewport on every size, like a page with its own back arrow.
+  page: "sm:max-w-none sm:h-[var(--app-visual-viewport-height)] sm:max-h-none sm:rounded-none",
 } as const;
 
 interface ModalProps {
+  /** Opt-in keyboard ownership; conventional presentation stays unchanged. */
+  manageFocus?: boolean;
+  /** Optional classes on this portal only; shared presentation is unchanged by default. */
+  className?: string;
   /** Render-when-mounted is fine; defaults to open. */
   open?: boolean;
   onClose: () => void;
   title: ReactNode;
+  /** Optional accessible name for callers whose title is also shown by the native header. */
+  ariaLabel?: string;
   subtitle?: ReactNode;
   size?: keyof typeof SIZES;
   children: ReactNode;
@@ -94,9 +103,12 @@ interface ModalProps {
 const subscribeMounted = () => () => {};
 
 export function Modal({
+  manageFocus = false,
+  className,
   open = true,
   onClose,
   title,
+  ariaLabel,
   subtitle,
   size = "md",
   children,
@@ -113,20 +125,42 @@ export function Modal({
   cabeceraCentrada = false,
 }: ModalProps) {
   // El <body> no existe al renderizar en el servidor.
+  const effectiveManaged=useRef(false);
   const montado = useSyncExternalStore(subscribeMounted, () => true, () => false);
   useLayoutEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const onKey = (e: KeyboardEvent) => { if (!manageFocus && !effectiveManaged.current && e.key === "Escape") onClose(); };
     document.addEventListener("keydown", onKey);
     const releaseBodyScroll = lockBodyScroll();
     return () => { document.removeEventListener("keydown", onKey); releaseBodyScroll(); };
-  }, [open, onClose]);
+  }, [open, onClose, manageFocus]);
 
   // In the app every non-centered modal stretches to the full viewport (see the
   // shell CSS), so the app chrome must not float above it.
   useNativeFullscreenLayer(Boolean(open) && (mobilePresentation === "sheet" || mobilePresentation === "fullscreen"));
 
   const cuerpo = useRef<HTMLDivElement>(null);
+  const dialogRef=useRef<HTMLDivElement>(null);
+  const closeRef=useRef(onClose);
+  useLayoutEffect(()=>{closeRef.current=onClose;},[onClose]);
+  useLayoutEffect(()=>{
+    if(!open||!montado||!dialogRef.current)return;
+    const dialog=dialogRef.current;
+    const previous=Array.from(document.querySelectorAll<HTMLElement>('[role="dialog"]')).filter(node=>node!==dialog&&node.isConnected&&node.getClientRects().length>0&&!node.closest('[inert],[aria-hidden="true"]')&&getComputedStyle(node).visibility!=='hidden').at(-1);
+    if(!manageFocus&&!previous?.hasAttribute('data-managed-modal-focus'))return;
+    effectiveManaged.current=true;
+    const oldTabIndex=dialog.getAttribute('tabindex');
+    dialog.tabIndex=-1;dialog.setAttribute('data-managed-modal-focus','');
+    const restore=manageModalFocus(dialog,()=>closeRef.current());
+    return()=>{restore();effectiveManaged.current=false;dialog.removeAttribute('data-managed-modal-focus');if(oldTabIndex===null)dialog.removeAttribute('tabindex');else dialog.setAttribute('tabindex',oldTabIndex);};
+  },[open,montado,manageFocus]);
+  useLayoutEffect(()=>{
+    const dialog=dialogRef.current;
+    if(!open||!montado||!effectiveManaged.current||!dialog||ariaLabel!==undefined||typeof title!=='string')return;
+    const previous=dialog.getAttribute('aria-label');
+    dialog.setAttribute('aria-label',title);
+    return()=>{if(previous===null)dialog.removeAttribute('aria-label');else dialog.setAttribute('aria-label',previous);};
+  },[open,montado,manageFocus,ariaLabel,title]);
 
   if (!open) return null;
 
@@ -179,7 +213,8 @@ export function Modal({
         "app-modal-screen fixed inset-0 z-[100] flex justify-center",
         centeredMobile && "app-centered-modal-screen",
         compactSheet && "app-sheet-compact-screen",
-        fullscreenMobile ? "items-stretch sm:items-center sm:p-4" : centeredMobile ? "items-center p-4" : "items-end sm:items-center sm:p-4"
+        className,
+        size === "page" ? "items-stretch" : fullscreenMobile ? "items-stretch sm:items-center sm:p-4" : centeredMobile ? "items-center p-4" : "items-end sm:items-center sm:p-4"
       )}
     >
       {/* Dimmed backdrop — click to close */}
@@ -187,7 +222,10 @@ export function Modal({
 
       {/* Dialog: full-width bottom-sheet on mobile, centered card on desktop. */}
       <div
+        ref={dialogRef}
+        tabIndex={manageFocus?-1:undefined}
         role="dialog"
+        aria-label={ariaLabel}
         aria-modal="true"
         // Hay contenido escondido debajo. Muchos formularios dibujan su propio
         // pie DENTRO del cuerpo (soporte, publicar empleo): la regla

@@ -28,6 +28,7 @@ const ICONOS = { profesionales: Search, proyectos: ClipboardList, empleos: Brief
 // paso no espera a que baje una imagen.
 export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
   const [activo, setActivo] = useState(0);
+  const [cerca, setCerca] = useState(false);
   // La barra no se mueve con «timeupdate» (salta ~4 veces por segundo): es una
   // animación lineal de CSS que dura lo mismo que el video, como las historias
   // de Instagram. Se pausa si el video se pausa.
@@ -58,9 +59,9 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
       // pausa por su cuenta un video silenciado que está fuera de pantalla y lo
       // reanuda solo al aparecer. Antes lo pausábamos nosotros al salir y en el
       // iPhone el aviso de «ya se ve» llegaba tarde: no arrancaba hasta centrarlo.
-      else if (!quieto) v.play().catch(() => {});
+      else if (!quieto && document.visibilityState === "visible") v.play().catch(() => {});
     });
-  }, [activo]);
+  }, [activo, cerca]);
 
   // SIEMPRE CORRIENDO: si el navegador lo pausa por su cuenta (al volver a la
   // pestaña, al ahorrar batería, al terminar de cargar), se reanuda.
@@ -69,7 +70,7 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
       const v = videos.current[activo];
       const r = caja.current?.getBoundingClientRect();
       const aLaVista = !!r && r.bottom > 0 && r.top < window.innerHeight;
-      if (aLaVista && v && v.paused && !v.ended && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) v.play().catch(() => {});
+      if (document.visibilityState === "visible" && aLaVista && v && v.paused && !v.ended && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) v.play().catch(() => {});
     }, 1000);
     return () => window.clearInterval(id);
   }, [activo]);
@@ -84,45 +85,34 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
     const reproducir = () => {
       const v = videos.current[activo];
       const r = el.getBoundingClientRect();
-      if (v && v.paused && !v.ended && r.bottom > 0 && r.top < window.innerHeight) v.play().catch(() => {});
+      if (document.visibilityState === "visible" && v && v.paused && !v.ended && r.bottom > 0 && r.top < window.innerHeight) v.play().catch(() => {});
     };
     const io = new IntersectionObserver((entradas) => { if (entradas.some((e) => e.isIntersecting)) reproducir(); }, { threshold: [0, 0.15] });
     io.observe(el);
     const opciones = { capture: true, passive: true } as const;
+    const pausar = () => videos.current.forEach((v) => v?.pause());
+    const visibilidad = () => {
+      if (document.visibilityState === "hidden") pausar();
+      else reproducir();
+    };
+    document.addEventListener("visibilitychange", visibilidad);
+    window.addEventListener("pagehide", pausar);
+    window.addEventListener("pageshow", reproducir);
     window.addEventListener("scrollend", reproducir, opciones);
     window.addEventListener("touchend", reproducir, opciones);
     return () => {
       io.disconnect();
+      document.removeEventListener("visibilitychange", visibilidad);
+      window.removeEventListener("pagehide", pausar);
+      window.removeEventListener("pageshow", reproducir);
       window.removeEventListener("scrollend", reproducir, opciones);
       window.removeEventListener("touchend", reproducir, opciones);
     };
   }, [activo]);
 
-  // EN SAFARI (iPhone, iPad, Mac) EL VIDEO VA COMO IMAGEN ANIMADA. WebKit no
-  // arranca ni repinta un <video> mientras el dedo sigue deslizando la página:
-  // la guía se quedaba en el primer cuadro hasta soltar. Un .mp4 dentro de <img>
-  // (Safari lo acepta desde 2018) se anima como un GIF, en el compositor, aun
-  // durante el scroll. Cada vuelta usa una dirección blob: nueva para que la
-  // animación empiece desde el principio sin volver a descargar nada. El paso
-  // siguiente se programa con la duración real del video (de sus metadatos).
-  const [comoImagen, setComoImagen] = useState(false);
-  const [duraciones, setDuraciones] = useState<number[]>([]);
-  const [srcImagen, setSrcImagen] = useState<string | null>(null);
-  const blobs = useRef<(Blob | null)[]>([]);
-
-  // LOS VIDEOS SE PIDEN SOLO CUANDO LA GUÍA ESTÁ CERCA (7-oct-2026). Antes se
-  // bajaban los cuatro al abrir la portada, y en el iPhone hasta tres veces
-  // cada uno (el <video>, una lectura de metadatos y la copia en blob): 12,7 MB
-  // en la primera visita aunque la persona nunca bajara hasta aquí. Mientras
-  // tanto se ve la imagen fija de cada paso.
-  const [motor, setMotor] = useState<"imagen" | "video" | null>(null);
-  const [cerca, setCerca] = useState(false);
-  useEffect(() => {
-    const ua = navigator.userAgent;
-    const webkit = /iP(hone|ad|od)/.test(ua) || (/Version\/[\d.]+.*Safari/.test(ua) && !/Chrome|Chromium|Edg|Android/.test(ua));
-    const quieto = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    queueMicrotask(() => setMotor(webkit && !quieto ? "imagen" : "video"));
-  }, []);
+  // Use the media element on every engine. MP4-in-img reached WebKit's
+  // synchronous RemoteImageDecoderAVF path during a physical iOS freeze.
+  // Keep the poster visible until video playback paints its first frame.
   useEffect(() => {
     const el = caja.current;
     if (!el || cerca) return;
@@ -130,49 +120,6 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
     io.observe(el);
     return () => io.disconnect();
   }, [cerca]);
-  // En Safari: cada video se baja UNA vez, de a uno, empezando por el que se
-  // ve. La duración se lee del mismo archivo ya bajado, sin pedirlo otra vez.
-  useEffect(() => {
-    if (motor !== "imagen" || !cerca) return;
-    let vivo = true;
-    const orden = pasos.map((_, i) => (i + activoAnterior.current) % pasos.length);
-    (async () => {
-      for (const i of orden) {
-        if (!vivo) return;
-        if (blobs.current[i]) continue;
-        try {
-          const b = await (await fetch(pasos[i].video)).blob();
-          if (!vivo) return;
-          blobs.current[i] = b;
-          const url = URL.createObjectURL(b);
-          const v = document.createElement("video");
-          v.preload = "metadata"; v.muted = true;
-          v.onloadedmetadata = () => { URL.revokeObjectURL(url); if (vivo) setDuraciones((d) => { const n = [...d]; n[i] = v.duration; return n; }); };
-          v.src = url;
-          if (i === activoAnterior.current) setComoImagen(true);
-        } catch { /* sin red: se queda la imagen fija */ }
-      }
-    })();
-    return () => { vivo = false; };
-  }, [motor, cerca, pasos]);
-  // Solo la duración DEL PASO ACTIVO: si dependiera de la lista entera, cada
-  // duración que llega de otro video reiniciaba la animación en curso.
-  const duracionActiva = duraciones[activo];
-  useEffect(() => {
-    if (!comoImagen) return;
-    const b = blobs.current[activo];
-    if (!b) return;
-    const url = URL.createObjectURL(b);
-    queueMicrotask(() => setSrcImagen(url));
-    const d = duracionActiva;
-    let id = 0;
-    if (d) {
-      queueMicrotask(() => { setDuracion(d); setCorriendo(true); });
-      id = window.setTimeout(() => setActivo((a) => (a + 1) % pasos.length), d * 1000);
-    }
-    return () => { window.clearTimeout(id); URL.revokeObjectURL(url); };
-  }, [comoImagen, activo, duracionActiva, pasos.length]);
-
   // Al terminar un video pasa al siguiente paso; si la persona eligió uno, se repite ese.
   const alTerminar = (i: number) => {
     if (i !== activo) return;
@@ -291,11 +238,7 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
           >
             <div className="relative" style={{ background: "#141418", borderRadius: 51, padding: 8 }}>
               <div className="relative overflow-hidden bg-white" style={{ borderRadius: 44, aspectRatio: "588 / 1280" }}>
-                {comoImagen && srcImagen && (
-                  // eslint-disable-next-line @next/next/no-img-element -- .mp4 animado (ver comoImagen)
-                  <img key={srcImagen} src={srcImagen} alt={pasos[activo].alt} onLoad={() => setPintando(activo)} className="ccr-guia-video absolute inset-0 z-[2] h-full w-full object-cover object-top" />
-                )}
-                {motor === "video" && cerca && pasos.map((p, i) => (
+                {cerca && pasos.map((p, i) => (
                   <video
                     key={p.clave}
                     ref={(el) => {
@@ -308,7 +251,6 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
                     src={p.video}
                     muted
                     playsInline
-                    autoPlay={i === activo}
                     // Solo el que se ve se baja entero; los demás, lo mínimo para estar
                     // listos. Mientras carga, la imagen fija del paso lo tapa.
                     preload={i === activo ? "auto" : "metadata"}

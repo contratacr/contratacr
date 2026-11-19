@@ -1,5 +1,6 @@
 "use client";
 
+import {followUpLifecycle} from "@/lib/follow-up-lifecycle";
 import { trackMetaConversion } from "@/lib/analytics/meta-pixel";
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
@@ -49,8 +50,8 @@ export function WhatsAppReviewFollowUp() {
   const handledFollowUpId = useRef<string | null>(null);
   // La persona dijo «Aún no» en esta visita: no se le pregunta nada más hasta la próxima.
   const enPausa = useRef(false);
-  const followUpRequestInFlight = useRef(false);
-  const lastFollowUpCheckAt = useRef(0);
+  const lifecycleRef=useRef<ReturnType<typeof followUpLifecycle>|null>(null);
+  const lastFollowUpCheckAt=useRef(0);
   const userId = user?.id ?? null;
 
   const act = useCallback(async (item: FollowUp, action: "hired" | "not_now" | "not_hired" | "no_response") => {
@@ -69,14 +70,13 @@ export function WhatsAppReviewFollowUp() {
     return payload as { review?: ReviewTarget };
   }, [locale]);
 
-  const checkFollowUp = useCallback(async (active = true) => {
-    if (followUpRequestInFlight.current || enPausa.current) return;
-    followUpRequestInFlight.current = true;
+  const checkFollowUp = useCallback(async (isActive:()=>boolean, signal:AbortSignal) => {
+    if (!isActive() || enPausa.current) return;
     try {
-      const response = await fetch("/api/contact/follow-up", { cache: "no-store" });
+      const response = await fetch("/api/contact/follow-up", { cache: "no-store", signal });
       const payload = await response.json();
       const item = payload.followUp as FollowUp | null;
-      if (!active) return;
+      if (!isActive()) return;
       setPendingCount(Number(payload.pendingCount ?? (item ? 1 : 0)));
       if (!item) {
         setFollowUp(null);
@@ -89,54 +89,23 @@ export function WhatsAppReviewFollowUp() {
 
       if (item.status === "hire_intent" && userId) {
         const result = await act(item, "hired");
-        if (active && result?.review) setReviewTarget(result.review);
+        if (isActive() && result?.review) setReviewTarget(result.review);
         return;
       }
       setFollowUp(item);
     } catch {
       // Follow-up is optional and must never interrupt the page being used.
-    } finally {
-      lastFollowUpCheckAt.current = Date.now();
-      followUpRequestInFlight.current = false;
-    }
+    } finally {if(isActive())lastFollowUpCheckAt.current=Date.now();}
   }, [act, userId]);
 
   useEffect(() => {
     if (authLoading) return;
-    let active = true;
     if (!pantallaTranquila) return;
-    // Antes se filtraba por «hay sesión o el navegador ve la cookie de
-    // contacto». La cookie es httpOnly: el navegador NUNCA la ve, así que a
-    // quien no tenía sesión no se le preguntaba jamás al cargar. Decide el
-    // servidor, que es quien tiene la cookie; y como ahora solo se consulta en
-    // cuatro pantallas, deja de ser una petición en cada carga de cada ruta.
-    //
-    // Unos segundos de espera, no cero: la tarjeta no debe ser lo primero que
-    // aparece al entrar. Se deja llegar a la pantalla y después se pregunta.
-    const initialTimer = window.setTimeout(() => {
-      if (active) void checkFollowUp(active);
-    }, 4000);
-
-    const onWhatsAppContacted = () => {
-      window.setTimeout(() => {
-        if (active) void checkFollowUp(active);
-      }, 65 * 1000);
-    };
-    const onVisibilityChange = () => {
-      const checkIsStale = Date.now() - lastFollowUpCheckAt.current >= 60 * 1000;
-      if (document.visibilityState === "visible" && active && checkIsStale) {
-        void checkFollowUp(active);
-      }
-    };
-    window.addEventListener("contratacr:whatsapp-contacted", onWhatsAppContacted);
-    document.addEventListener("visibilitychange", onVisibilityChange);
-
-    return () => {
-      active = false;
-      window.clearTimeout(initialTimer);
-      window.removeEventListener("contratacr:whatsapp-contacted", onWhatsAppContacted);
-      document.removeEventListener("visibilitychange", onVisibilityChange);
-    };
+    const lifecycle=followUpLifecycle(checkFollowUp,window,document,()=>Date.now()-lastFollowUpCheckAt.current>=60*1000);
+    lifecycleRef.current=lifecycle;
+    const onWhatsAppContacted=()=>lifecycle.schedule(65*1000);
+    window.addEventListener('contratacr:whatsapp-contacted',onWhatsAppContacted);
+    return()=>{lifecycle.dispose();if(lifecycleRef.current===lifecycle)lifecycleRef.current=null;window.removeEventListener('contratacr:whatsapp-contacted',onWhatsAppContacted);};
   }, [authLoading, checkFollowUp, pantallaTranquila]);
 
   async function handle(action: "hired" | "not_now" | "not_hired" | "no_response") {
@@ -152,7 +121,7 @@ export function WhatsAppReviewFollowUp() {
         // pasa a la siguiente pendiente en esta visita. Con un «No» sí: ahí la
         // persona está contestando y terminar la lista le toma un toque más.
         if (action === "not_now") enPausa.current = true;
-        else window.setTimeout(() => void checkFollowUp(true), 500);
+        else lifecycleRef.current?.schedule(500);
       }
       setFollowUp(null);
     } catch {

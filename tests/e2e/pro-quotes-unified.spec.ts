@@ -14,7 +14,7 @@ test('ordinary professional keeps one quotes section and standard creation witho
   expect((await auth.auth.signInWithPassword({email:actor.email,password:actor.password})).error).toBeNull();
   expect((await page.request.get('/api/pro/access')).status()).toBe(403);
   await page.goto('/dashboard/profesional?tab=quotes');await page.getByRole('button',{name:'Crear cotización',exact:true}).click();
-  await expect(page.getByLabel('Cliente guardado',{exact:true})).toHaveCount(0);await expect(page.getByLabel('Agregar desde inventario',{exact:true})).toHaveCount(0);
+  await expect(page.getByLabel('Cliente guardado',{exact:true})).toHaveCount(0);await expect(page.getByLabel('Agregar producto o servicio',{exact:true})).toHaveCount(0);
   await page.getByRole('textbox',{name:'Nombre',exact:true}).fill('Cliente sin Pro');await page.getByLabel('Título',{exact:false}).fill('Cotización básica conservada');await page.getByPlaceholder('Descripción',{exact:true}).fill('Servicio básico');await page.getByLabel('Precio (₡)',{exact:true}).fill('1000');await page.getByRole('dialog').getByRole('button',{name:'Crear cotización',exact:true}).click();
   await expect.poll(async()=>{const r=await page.request.get('/api/quotes');const b=await r.json();return b.quotes?.find((q:{title:string})=>q.title==='Cotización básica conservada')?.total;}).toBe(1000);
   await page.goto('/dashboard/profesional?tab=quotes');await expect(page.getByText('Cotización básica conservada',{exact:true})).toBeVisible();

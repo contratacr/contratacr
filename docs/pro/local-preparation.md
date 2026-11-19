@@ -1,3 +1,5 @@
+> Actualización del 9 de noviembre: este documento conserva el historial de preparación. Para el alcance vigente consulte el [registro Houzz](houzz-parity-register-local.md), el [roadmap de evidencia](houzz-quality-roadmap-local.md) y el [manifiesto de instalación local](local-sql-manifest.md). El manifiesto incluye los módulos recientes; su prueba en memoria no acredita una instalación completa de Supabase ni autoriza reinstalar la base actual.
+
 > Actualización del 23 de octubre: las referencias siguientes a solicitudes o cupo mensual de redes quedaron sustituidas por la [revisión de agenda y difusión](agenda-and-promotion-revision-local.md). No forman parte del beneficio actual de Pro.
 
 # Preparación local de ContrataCR Pro — 23 de octubre de 2026
@@ -126,6 +128,20 @@ Inicio reproducible en contratacr-pro:
 2. `node scripts/pro/prepare-supabase-local.mjs`
 3. `node scripts/dev-local-test-env.js --webpack --hostname 127.0.0.1 --port 3185`
 4. `PLAYWRIGHT_BASE_URL=http://127.0.0.1:3185 PLAYWRIGHT_WEBKIT=1 npx playwright test --config=playwright.pro-local.config.ts --reporter=line`
+
+El preparador también instala al final `client-write-recovery-local.sql` e
+`inventory-write-recovery-local.sql`, después del contrato normalizado de catálogo.
+Son módulos aditivos: crean recibos durables de crear/editar clientes y de
+crear/editar productos o registrar movimientos, sin borrar acciones ni datos
+existentes. Una instancia local nueva necesita ambos para los formularios
+actuales; no basta con instalar únicamente el catálogo legacy. La instalación
+local revisada de esta ronda ya los tiene: no requiere reiniciar ni reinstalar
+la base para aplicar este cambio al preparador.
+
+`node scripts/pro/verify-local-preparation-manifest.mjs` comprueba sin conectarse
+a servicios que esos módulos están incluidos y que sus dependencias se cargan
+antes. Esta verificación estática no acredita una reconstrucción completa de la
+pila ni reemplaza las pruebas aisladas de SQL/RLS y reinstalación de cada módulo.
 
 La preparación rechaza destinos fuera de loopback y archivos .env.test de otro
 entorno. Aplica grants/fixtures fundacionales solo en una instancia vacía; no

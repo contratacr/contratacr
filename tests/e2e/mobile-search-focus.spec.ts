@@ -13,7 +13,7 @@ async function openSearch(page: Page, path: string) {
  await waitForInteractivePage(page);
  if(path==='/profesionales') {
   await page.evaluate(()=>window.dispatchEvent(new CustomEvent('ccr:open-native-search')));
- } else await page.getByPlaceholder(/Qué .* buscas/).filter({visible:true}).tap();
+ } else await page.getByPlaceholder(/Qué .* busca/).filter({visible:true}).tap();
  const panel=page.locator(path==='/profesionales'?'.ccr-native-search-panel':'.ccr-hoja-buscador');
  await expect(panel).toBeVisible();
  await expect(panel.locator('input').first()).toBeFocused();

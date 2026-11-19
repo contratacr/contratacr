@@ -60,9 +60,9 @@ function emailHtml({ origin, senderName, preview, threadUrl }: { origin: string;
       <tr><td style="padding:6px 28px 0 28px;font-family:Arial,Helvetica,sans-serif;">
         <h1 style="font-size:19px;font-weight:bold;margin:14px 0 10px 0;color:#162543;">${escapeHtml(senderName)} te escribió en ContrataCR</h1>
         <div class="ccr-email-body" style="font-size:14px;line-height:1.6;color:#374151;">
-          <p style="margin:0 0 12px;">Tienes un mensaje nuevo en ContrataCR.</p>
+          <p style="margin:0 0 12px;">Tiene un mensaje nuevo en ContrataCR.</p>
           <blockquote style="margin:0 0 12px;padding:12px 16px;border-left:3px solid #009FD9;background:#f8fcff;color:#173052;border-radius:8px;">${escapeHtml(preview)}</blockquote>
-          <p style="margin:0;">Puedes leerlo y responder desde la web o la app ContrataCR.</p>
+          <p style="margin:0;">Puede leerlo y responder desde la web o la app ContrataCR.</p>
         </div>
       </td></tr>
       <tr><td align="center" style="padding:22px 28px 4px 28px;"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" bgcolor="#008ce0" style="border-radius:10px;"><a href="${threadUrl}" target="_blank" style="display:inline-block;padding:13px 30px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:10px;">Abrir la conversación</a></td></tr></table></td></tr>
@@ -108,7 +108,7 @@ export async function notifyRecipientOutsideApp({
     tasks.push(sendBrevoEmail({
       nivel: "normal", purpose: "activity", eventKey: `chat:${conversationId}:${messageId}:${recipientId}`,
       to: email,
-      subject: `${senderName} te escribió en ContrataCR`,
+      subject: `${senderName} le escribió en ContrataCR`,
       html: emailHtml({ origin, senderName, preview, threadUrl }),
     }));
   }
@@ -116,7 +116,7 @@ export async function notifyRecipientOutsideApp({
   if (whatsapp) {
     tasks.push(sendWhatsAppText(
       whatsapp,
-      `Hola, ${senderName} te escribió en ContrataCR. Lee el mensaje y responde aquí: ${threadUrl}`,
+      `Hola, ${senderName} le escribió en ContrataCR. Lea el mensaje y responda aquí: ${threadUrl}`,
     ));
   }
   const results = await Promise.allSettled(tasks);

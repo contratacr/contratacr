@@ -34,11 +34,11 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: mensajeDeError(req, { es: "Tu sesión expiró. Inicia sesión nuevamente.", en: "Your session expired. Sign in again." }) }, { status: 401 });
+    if (!user) return NextResponse.json({ error: mensajeDeError(req, { es: "Su sesión expiró. Inicie sesión nuevamente.", en: "Your session expired. Sign in again." }) }, { status: 401 });
 
     const professionalId = typeof body.professional_id === "string" ? body.professional_id : "";
     const { data: professional } = await supabase.from("professionals").select("id").eq("id", professionalId).eq("profile_id", user.id).maybeSingle();
-    if (!professional) return NextResponse.json({ error: "No tienes permiso para publicar esta oferta." }, { status: 403 });
+    if (!professional) return NextResponse.json({ error: "No tiene permiso para publicar esta oferta." }, { status: 403 });
 
     const title = typeof body.title === "string" ? body.title.trim() : "";
     const description = typeof body.description === "string" ? body.description.trim() : "";
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     const editingId = typeof body.id === "string" ? body.id : null;
 
     if (title.length < 3 || title.length > 120 || description.length < 20 || description.length > 3000 || images.length < 1 || priceNow === undefined || priceBefore === undefined || quantity === undefined || validUntil === undefined || (validUntil && validUntil < crTodayISO())) {
-      return NextResponse.json({ error: mensajeDeError(req, { es: "Revisa la información de la oferta e inténtalo nuevamente.", en: "Check the promotion details and try again." }) }, { status: 400 });
+      return NextResponse.json({ error: mensajeDeError(req, { es: "Revise la información de la oferta e inténtelo nuevamente.", en: "Check the promotion details and try again." }) }, { status: 400 });
     }
     if (priceBefore !== null && priceNow !== null && priceBefore < priceNow) return NextResponse.json({ error: "El precio anterior debe ser mayor o igual al actual." }, { status: 400 });
     if (!Object.hasOwn(OFFER_TYPES, body.offer_type) || !Object.hasOwn(OFFER_PRICE_UNITS, body.price_unit) || !CURRENCIES.has(body.currency) || !STATUSES.has(body.status)) {
@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
     }
     if (error || !data?.id) {
       console.error("[POST /api/offers] save failed", error);
-      return NextResponse.json({ error: mensajeDeError(req, { es: "No pudimos guardar la oferta. Inténtalo nuevamente.", en: "We could not save the promotion. Try again." }) }, { status: 500 });
+      return NextResponse.json({ error: mensajeDeError(req, { es: "No pudimos guardar la oferta. Inténtelo nuevamente.", en: "We could not save the promotion. Try again." }) }, { status: 500 });
     }
     revalidateOfferViews(data.id);
     const metaConversion = payload.status === "published" && payload.offer_type === "service_offer" ? await recordGrowthConversion(req,"service_offer_published",data.id,user.id) : null;
@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ id: data.id, metaConversion });
   } catch (error) {
     console.error("[POST /api/offers] unexpected failure", error);
-    return NextResponse.json({ error: mensajeDeError(req, { es: "No pudimos publicar la oferta. Inténtalo nuevamente.", en: "We could not publish the promotion. Try again." }) }, { status: 500 });
+    return NextResponse.json({ error: mensajeDeError(req, { es: "No pudimos publicar la oferta. Inténtelo nuevamente.", en: "We could not publish the promotion. Try again." }) }, { status: 500 });
   }
 }
 
@@ -121,7 +121,7 @@ export async function PATCH(req: NextRequest) {
     if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     const { data: offer } = await supabase.from("professional_offers").select("professional_id, offer_type, valid_until, professionals!inner(profile_id)").eq("id", id).maybeSingle();
     const owner = offer?.professionals as unknown as { profile_id?: string } | null;
-    if (!offer || owner?.profile_id !== user.id) return NextResponse.json({ error: "No tienes permiso para modificar esta oferta." }, { status: 403 });
+    if (!offer || owner?.profile_id !== user.id) return NextResponse.json({ error: "No tiene permiso para modificar esta oferta." }, { status: 403 });
     // Volver a publicar una promoción con la vigencia ya pasada la dejaba
     // «publicada» y aun así fuera del tablero, que filtra por fecha: el botón
     // decía una cosa y pasaba otra. Al republicar se le quita la fecha de
@@ -158,8 +158,8 @@ export async function DELETE(req: NextRequest) {
     const { data: fila } = await admin.from("professional_offers").select("id, status, title, professionals!inner(profile_id)").eq("id", id).maybeSingle();
     if (!fila) return NextResponse.json({ ok: true });
     const owner = fila.professionals as unknown as { profile_id?: string } | null;
-    if (owner?.profile_id !== user.id) return NextResponse.json({ error: mensajeDeError(req, { es: "No tienes permiso para eliminar esta promoción.", en: "You do not have permission to delete this promotion." }) }, { status: 403 });
-    if (fila.status === "published") return NextResponse.json({ error: mensajeDeError(req, { es: "Primero detén la publicación; después la puedes eliminar.", en: "Stop publishing it first; then you can delete it." }) }, { status: 409 });
+    if (owner?.profile_id !== user.id) return NextResponse.json({ error: mensajeDeError(req, { es: "No tiene permiso para eliminar esta promoción.", en: "You do not have permission to delete this promotion." }) }, { status: 403 });
+    if (fila.status === "published") return NextResponse.json({ error: mensajeDeError(req, { es: "Primero detén la publicación; después la puede eliminar.", en: "Stop publishing it first; then you can delete it." }) }, { status: 409 });
     const { error } = await admin.from("professional_offers").delete().eq("id", id);
     if (error) throw error;
     await auditUserAction(admin, req, {
@@ -176,6 +176,6 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("[DELETE professional_offers] failed", error);
-    return NextResponse.json({ error: mensajeDeError(req, { es: "No pudimos eliminar esta promoción. Inténtalo nuevamente.", en: "We could not delete this promotion. Try again." }) }, { status: 500 });
+    return NextResponse.json({ error: mensajeDeError(req, { es: "No pudimos eliminar esta promoción. Inténtelo nuevamente.", en: "We could not delete this promotion. Try again." }) }, { status: 500 });
   }
 }

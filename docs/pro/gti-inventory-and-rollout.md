@@ -1,5 +1,7 @@
 # GTI → ContrataCR Pro: inventario y ejecución
 
+> Estado actualizado al 27 octubre 2026: consultar [registro de equivalencia GTI → Pro](gti-parity-ledger-local.md). Este documento conserva evidencia histórica; sus pendientes o autorizaciones de despliegue antiguas no sustituyen el estado actual ni la restricción vigente de trabajar solo en Pro, sin push.
+
 Revisión: 23 de octubre de 2026. Fuente principal: sesión que Isaac tenía abierta en Safari, navegación de lectura. No se emitieron documentos, guardaron clientes/productos, modificaron credenciales ni exportaron clientes de SG Solutions. Este documento no incluye sus datos privados.
 
 ## Alcance confirmado y límites

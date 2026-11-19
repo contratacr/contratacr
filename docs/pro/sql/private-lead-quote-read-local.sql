@@ -1,0 +1,32 @@
+-- LOCAL Pro only: private read gateway. No issuer fabrication, quote writes or old function replacement.
+begin;
+create or replace function public.pro_private_lead_quote_context(p_actor uuid,p_lead uuid) returns jsonb language plpgsql stable security invoker set search_path=public,pg_temp as $$declare l pro_lead_center_records;c pro_clients;begin
+ if not coalesce(pro_private_work_tools_enabled(p_actor),false) then raise exception 'Forbidden' using errcode='42501';end if;select * into l from pro_lead_center_records where owner_id=p_actor and kind='manual' and id=p_lead;if not found then raise exception 'Opportunity unavailable' using errcode='P0002';end if;if l.archived then raise exception 'Restore the opportunity before creating a quote' using errcode='40001';end if;
+ select * into c from pro_clients where user_id=p_actor and id=l.client_id;if not found or c.archived then raise exception 'Choose an active private customer' using errcode='40001';end if;
+ return jsonb_build_object('source',jsonb_build_object('leadId',l.id,'leadRevision',l.revision,'clientId',l.client_id),'client',jsonb_build_object('id',c.id,'name',c.name,'email',c.email,'phone',c.phone,'identification',c.identification,'address',c.address,'tradeName',c."tradeName"),'title',l.title,'currency','CRC');end $$;
+create or replace function public.pro_private_lead_quote_authorize(p_actor uuid,p_action uuid) returns void language plpgsql security invoker set search_path=public,pg_temp as $$declare r pro_manual_lead_quotes;begin
+ if not coalesce(pro_private_work_tools_enabled(p_actor),false) then raise exception 'Forbidden' using errcode='42501';end if;select * into r from pro_manual_lead_quotes where owner_id=p_actor and action_id=p_action;if not found then raise exception 'Origin receipt unavailable' using errcode='42501';end if;
+ if not exists(select 1 from pro_lead_center_records where owner_id=p_actor and kind='manual' and id=r.lead_id) or not exists(select 1 from quotes q join professionals p on p.id=q.professional_id and p.profile_id=p_actor join pro_quote_links l on l.user_id=p_actor and l."quoteId"=q.id::text and l."clientId"=r.source_client_id where q.id=r.quote_id and q.client_id is null and q.project_id is null and q.proposal_id is null) then raise exception 'Origin ownership unavailable' using errcode='42501';end if;end $$;
+create or replace function public.pro_private_lead_quote_action_read(p_actor uuid,p_action uuid) returns jsonb language plpgsql security invoker set search_path=public,pg_temp as $$declare r pro_manual_lead_quotes;begin
+ if not coalesce(pro_private_work_tools_enabled(p_actor),false) then raise exception 'Forbidden' using errcode='42501';end if;select * into r from pro_manual_lead_quotes where owner_id=p_actor and action_id=p_action;if not found then return jsonb_build_object('receipt',null);end if;perform pro_private_lead_quote_authorize(p_actor,p_action);return jsonb_build_object('receipt',jsonb_build_object('input',r.input,'result',r.result));end $$;
+create or replace function public.pro_private_lead_quote_list(p_actor uuid,p_lead uuid,p_after uuid default null) returns jsonb language plpgsql stable security invoker set search_path=public,pg_temp as $$declare anchor_time timestamptz;items jsonb;cursor_id uuid;begin
+ if not coalesce(pro_private_work_tools_enabled(p_actor),false) then raise exception 'Forbidden' using errcode='42501';end if;if not exists(select 1 from pro_lead_center_records where owner_id=p_actor and kind='manual' and id=p_lead) then raise exception 'Opportunity unavailable' using errcode='P0002';end if;
+ if p_after is not null then select r.created_at into anchor_time from pro_manual_lead_quotes r join quotes q on q.id=r.quote_id and q.deleted_at is null join professionals p on p.id=q.professional_id and p.profile_id=p_actor where r.owner_id=p_actor and r.lead_id=p_lead and r.quote_id=p_after;if not found then raise exception 'Quotation cursor changed' using errcode='40001';end if;end if;
+ select coalesce(jsonb_agg(jsonb_build_object('link',r.result->'link','quote',pro_manual_lead_quote_dto(to_jsonb(q)||jsonb_build_object('professional_name',r.result->'quote'->'professional_name','professional_full_name',r.result->'quote'->'professional_full_name')))order by r.created_at desc,r.quote_id desc),'[]'::jsonb)into items from(select l.* from pro_manual_lead_quotes l join quotes d on d.id=l.quote_id and d.deleted_at is null join professionals p on p.id=d.professional_id and p.profile_id=p_actor where l.owner_id=p_actor and l.lead_id=p_lead and(p_after is null or(l.created_at,l.quote_id)<(anchor_time,p_after))order by l.created_at desc,l.quote_id desc limit 21)r join quotes q on q.id=r.quote_id;
+ if jsonb_array_length(items)>20 then cursor_id:=(items->19->'quote'->>'id')::uuid;items:=items-20;end if;return jsonb_build_object('items',items,'nextCursor',cursor_id);end $$;
+create or replace function public.pro_private_lead_quote_capability(p_actor uuid) returns jsonb language plpgsql stable security invoker set search_path=public,pg_temp as $$begin
+ if not coalesce(pro_private_work_tools_enabled(p_actor),false) then raise exception 'Forbidden' using errcode='42501';end if;
+ if exists(select 1 from professionals where profile_id=p_actor and not coalesce(is_banned,false)) then return jsonb_build_object('issuerKind','professional','canCreateLegacy',true,'reason',null);end if;
+ return jsonb_build_object('issuerKind',null,'canCreateLegacy',false,'reason','issuer_required');end $$;
+revoke all on function public.pro_private_lead_quote_context(uuid,uuid) from public,anon,authenticated;
+grant execute on function public.pro_private_lead_quote_context(uuid,uuid) to service_role;
+revoke all on function public.pro_private_lead_quote_authorize(uuid,uuid) from public,anon,authenticated;
+grant execute on function public.pro_private_lead_quote_authorize(uuid,uuid) to service_role;
+revoke all on function public.pro_private_lead_quote_action_read(uuid,uuid) from public,anon,authenticated;
+grant execute on function public.pro_private_lead_quote_action_read(uuid,uuid) to service_role;
+revoke all on function public.pro_private_lead_quote_list(uuid,uuid,uuid) from public,anon,authenticated;
+grant execute on function public.pro_private_lead_quote_list(uuid,uuid,uuid) to service_role;
+revoke all on function public.pro_private_lead_quote_capability(uuid) from public,anon,authenticated;
+grant execute on function public.pro_private_lead_quote_capability(uuid) to service_role;
+commit;
+notify pgrst, 'reload schema';

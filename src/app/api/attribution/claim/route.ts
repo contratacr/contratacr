@@ -11,7 +11,7 @@ import { attributionColumnsFromBody } from "@/lib/analytics/attribution-server";
 // Only fills empty columns, and only on accounts younger than 3 days — an old
 // account logging in from a fresh device must not be re-attributed.
 export async function POST(req: Request) {
-  const limited = enforceRateLimit(req, "attribution-claim", 20, 600000);
+  const limited = await enforceRateLimit(req, "attribution-claim", 20, 600000);
   if (limited) return limited;
   try {
     const body = await req.json().catch(() => ({}));

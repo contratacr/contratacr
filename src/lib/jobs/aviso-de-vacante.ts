@@ -78,7 +78,7 @@ export async function avisarVacanteAProfesionales({
     user_id: profileId,
     type: "new_job",
     title: "Nueva vacante",
-    message: `Publicaron "${title}" en ${oficio}. Abre el empleo y escríbele por WhatsApp a quien lo publicó.`,
+    message: `Publicaron "${title}" en ${oficio}. Abre el empleo y escríbale por WhatsApp a quien lo publicó.`,
     data: { link: `/empleos?job=${jobId}`, job_id: jobId, job_title: title, category_id: serviceCategoryId },
   }));
   await db.from("notifications").insert(filas);
@@ -87,9 +87,9 @@ export async function avisarVacanteAProfesionales({
     destinatarios, eventId: jobId,
     asunto: `Nueva vacante de ${oficio}: ${title}`,
     titular: `Publicaron una vacante de ${oficio}: «${title}».`,
-    parrafos: ["Si te interesa, ábrela y escríbele por WhatsApp a quien la publicó."],
+    parrafos: ["Si le interesa, ábrala y escríbale por WhatsApp a quien la publicó."],
     boton: { texto: "Ver la vacante", ruta: rutaEmpleo({ id: jobId, title }) },
-    porQue: `Te llega porque ofreces ${oficio} en ContrataCR.`,
+    porQue: `Le llega porque ofrece ${oficio} en ContrataCR.`,
     campana: "aviso-empleo",
   }));
 

@@ -16,7 +16,7 @@ export function DesktopAppMenu({ open, onOpenChange }: { open: boolean; onOpenCh
   }}>
     <button ref={trigger} type="button" aria-expanded={open} aria-controls={id} aria-haspopup="dialog" onClick={() => onOpenChange(!open)}
       className="inline-flex h-10 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#d6dde5] bg-white px-3 text-sm font-semibold text-[#162543] transition-colors hover:border-[#9cd4e4] hover:bg-[#eef9fc] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]">
-      <Smartphone className="h-4 w-4" aria-hidden="true" />{en ? "Use app" : "Usar app"}
+      <Smartphone className="h-4 w-4" aria-hidden="true" />{en ? "Download app" : "Descargar app"}
     </button>
     {open && <div id={id} role="dialog" aria-labelledby={`${id}-title`} className="absolute right-0 top-full z-[80] mt-2 w-[280px] rounded-2xl border border-[#e3e8ec] bg-white p-6 text-center shadow-[0_10px_35px_rgba(22,37,67,0.12)]">
       <button type="button" onClick={close} aria-label={en ? "Close app code" : "Cerrar código de la app"} className="absolute right-1.5 top-1.5 grid h-8 w-8 place-items-center rounded-full text-[#687386] hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-[#009fd9]"><X className="h-4 w-4" aria-hidden="true" /></button>

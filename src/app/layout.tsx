@@ -463,7 +463,7 @@ body:has(.ccr-error-screen) .ccr-navbar-spacer{display:none}
             componentes de cliente: sin esto sus nombres los pintaba el servidor
             con el texto fijo del código y el navegador con el de la base. */}
         <CatalogoDelServidor texto={catalogoEnTexto} oficios={oficiosDeArranque} />
-        <StaticNativeFirstRunPrepaint />
+        <StaticNativeFirstRunPrepaint english={idioma === "en"} />
         <NativeDebugLogger />
         {/* SIN frontera de espera aquí. Con un <Suspense> encima de todas las
             páginas la respuesta salía con estado 200 antes de que la página
@@ -482,14 +482,14 @@ body:has(.ccr-error-screen) .ccr-navbar-spacer{display:none}
   );
 }
 
-function StaticNativeFirstRunPrepaint() {
+function StaticNativeFirstRunPrepaint({ english }: { english: boolean }) {
   return <div id="ccr-native-first-run-prepaint" aria-hidden="true" inert>
     <div className="flex min-h-dvh flex-col">
       <div className="flex h-16 shrink-0 items-center justify-between border-b border-[#e5e7eb] bg-white px-4">
         <div className="ccr-native-first-run-prepaint-logo"><span className="ccr-native-first-run-prepaint-marca"/><span className="ccr-native-first-run-prepaint-wordmark"/></div>
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
       </div>
-      <div className="ccr-welcome-choice-main"><WelcomeChoiceContent/></div>
+      <div className="ccr-welcome-choice-main"><WelcomeChoiceContent english={english}/></div>
     </div>
   </div>;
 }

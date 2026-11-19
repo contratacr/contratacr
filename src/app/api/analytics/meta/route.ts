@@ -4,12 +4,13 @@ import { growthContext } from "@/lib/analytics/growth-server";
 import { META_MEASUREMENT_VERSION } from "@/lib/analytics/meta-minimal";
 import { sendMetaConversion, metaTestEventCode } from "@/lib/analytics/meta-delivery";
 import { enforceRateLimit } from "@/lib/rate-limit";
+import { isSameOriginRequest } from "@/lib/security/write-guard";
 
 export async function POST(req: Request) {
   const headers = { "Cache-Control": "private, no-store" };
   const reply = (body: object, status = 200) => NextResponse.json(body, { status, headers });
-  if (req.headers.get("origin") !== new URL(req.url).origin) return reply({ error: "INVALID_ORIGIN" }, 403);
-  const limited = enforceRateLimit(req, "minimal-meta", 15, 60_000);
+  if (!isSameOriginRequest(req)) return reply({ error: "INVALID_ORIGIN" }, 403);
+  const limited = await enforceRateLimit(req, "minimal-meta", 15, 60_000);
   if (limited) return limited;
   const context = growthContext(req);
   if (!context.allowed) return reply({ skipped: true });

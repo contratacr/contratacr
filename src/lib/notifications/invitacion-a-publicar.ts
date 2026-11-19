@@ -10,9 +10,9 @@ type Admin = ReturnType<typeof createAdminClient>;
  * formulario; la aclaración «es para pedir, no para ofrecer» sobraba (6-oct).
  * Una sola vez por cuenta, mediante un recibo permanente en la base.
  */
-const TITULO = { es: "¿Necesitas a alguien?", en: "Need someone?" };
+const TITULO = { es: "¿Necesita a alguien?", en: "Need someone?" };
 const CUERPO = {
-  es: "Publica lo que necesitas y los profesionales te contactan por WhatsApp.",
+  es: "Publique lo que necesita y los profesionales le contactan por WhatsApp.",
   en: "Post what you need and professionals contact you on WhatsApp.",
 };
 
@@ -70,10 +70,10 @@ export async function avisarCompletarPerfil(admin: Admin, profileId: string, idi
     await insertOnceNotifications(admin, [{
       user_id: profileId,
       type: "completa_perfil",
-      title: idioma === "en" ? "Complete your profile" : "Completa tu perfil",
+      title: idioma === "en" ? "Complete your profile" : "Complete su perfil",
       message: idioma === "en"
         ? "Add your photo, description and services so clients can learn what you offer."
-        : "Agrega tu foto, descripción y servicios para que los clientes conozcan lo que ofreces.",
+        : "Agregue su foto, descripción y servicios para que los clientes conozcan lo que ofrece.",
       data: { link: "/dashboard/profesional?mode=offer&tab=completion" },
       read: false,
     }]);

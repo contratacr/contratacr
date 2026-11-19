@@ -4,7 +4,9 @@ import { createDisposableAccount, cleanupDisposableAccount } from './disposable-
 import { regressionAdminClient } from './seed';
 import { emptyBusiness } from '../../src/lib/pro/business';
 import { expectNoHorizontalOverflow } from './helpers';
-test('Pro calendar: free client books, concurrent reservations do not overlap and owner sees the real booking', async ({ page, browser, baseURL }, testInfo) => {
+// PRO_ENABLED off (E2E_PRO_OFF=1): Pro agenda reservations (/api/pro/reservations) answers 404 by design; the free owner tools are covered by pro-dir-business-tools.
+test.skip(process.env.E2E_PRO_OFF==='1','Pro surface closed while PRO_ENABLED is off');
+test('Pro calendar compatibility: free client legacy API books atomically, new UI requests confirmation and owner sees the booking', async ({ page, browser, baseURL }, testInfo) => {
     test.setTimeout(150000);
     expect(process.env.NEXT_PUBLIC_SUPABASE_URL).toBe('http://127.0.0.1:54321');
     const owner = await createDisposableAccount({ prefix: 'calendar-owner' }), client = await createDisposableAccount({ prefix: 'calendar-client' }), other = await createDisposableAccount({ prefix: 'calendar-other' });
@@ -16,6 +18,7 @@ test('Pro calendar: free client books, concurrent reservations do not overlap an
         expect(p.error).toBeNull();
         await db.from('profiles').update({ is_provider: true }).eq('id', owner.id);
         await db.from('pro_memberships').insert({ user_id: owner.id, status: 'active' });
+        await db.from('pro_appointment_preferences').insert({owner_id:owner.id,enabled:true,revision:1}).throwOnError();
         const day = new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10), start = `${day}T09:00:00-06:00`, second = `${day}T11:00:00-06:00`;
         const document = emptyBusiness();
         document.availability = [{ start, end: `${day}T10:00:00-06:00` }, { start: second, end: `${day}T12:00:00-06:00` }];
@@ -31,15 +34,18 @@ test('Pro calendar: free client books, concurrent reservations do not overlap an
         await auth(page.context(), client);
         expect((await page.request.get('/api/pro/workspace')).status()).toBe(403); // The booking customer has no Pro.
         await page.goto('/profesionales/' + slug);
-        const availability = page.getByRole('button', { name: 'Ver disponibilidad', exact: true });
+        const availability = page.getByRole('button', { name: 'Ver disponibilidad', exact: true }).filter({visible:true}).first();
         await availability.scrollIntoViewIfNeeded();
         await availability.click();
-        await expect(page.getByRole('dialog')).toContainText('Reservar es gratis');
-        await page.getByRole('dialog').getByRole('button', { name: '09:00', exact: true }).click();
-        await page.getByRole('button', { name: 'Confirmar cita', exact: true }).click();
-        await expect(page.getByRole('dialog')).toContainText('Cita confirmada');
+        await expect(page.getByRole('dialog',{name:'Solicitar una cita',exact:true})).toContainText('El profesional debe confirmar la cita');
+        await expect(page.getByRole('dialog').getByRole('button',{name:'Confirmar cita',exact:true})).toHaveCount(0);
         await expectNoHorizontalOverflow(page);
         await page.screenshot({ path: testInfo.outputPath('client-booking.png'), fullPage: true });
+        await page.getByRole('dialog').getByRole('button',{name:'Cerrar',exact:true}).click();
+        // The retained API contract still supports old authenticated clients;
+        // the current public UI follows the request/confirmation flow tested separately.
+        const legacyBooking=await page.request.post('/api/pro/reservations',{headers:{origin:baseURL!},data:payload});
+        expect(legacyBooking.status()).toBe(200);expect((await legacyBooking.json()).id).toBe(payload.requestId);
         let stored = (await db.from('pro_workspaces').select('document').eq('user_id', owner.id).single()).data!.document;
         expect(stored.work).toHaveLength(1);
         expect(stored.work[0].bookingClientId).toBe(client.id);
@@ -61,16 +67,20 @@ test('Pro calendar: free client books, concurrent reservations do not overlap an
         expect((await ownerContext.request.post('/api/pro/reservations', { headers: { origin: baseURL! }, data: payload })).status()).toBe(403);
         const ownerPage = await ownerContext.newPage();
         await ownerPage.goto('/dashboard/profesional?tab=pro_agenda');
+        // The calendar only appears when configuring availability (docs/pro/unified-appointments-local.md): open the collapsed section.
+        await ownerPage.locator('[data-availability-secondary] summary').click();
         await expect(ownerPage.locator('[data-reservation-calendar]')).toBeVisible();
         await expect(ownerPage.getByRole('button',{name:'Lista',exact:true})).toHaveCount(0);
         await expect(ownerPage.getByRole('button',{name:'Semana',exact:true})).toHaveCount(0);
         await expect(ownerPage.getByLabel('Buscar registros')).toHaveCount(0);
         await ownerPage.getByRole('button',{name:day,exact:true}).click();
-        await expect(ownerPage.getByRole('heading', { name: / · Desarrollo web$/ }).first()).toBeVisible();
+        // Unified appointments: the booking is a card of the single list (title = service, subtitle = customer), not a day heading of the calendar.
+        await ownerPage.getByLabel('Mostrar citas',{exact:true}).selectOption({label:'Todas'});
+        await expect(ownerPage.locator('[data-pro-record-card]').filter({has:ownerPage.getByRole('heading',{name:'Desarrollo web',exact:true})}).first()).toBeVisible();
         await ownerPage.getByRole('button',{name:'Nueva cita',exact:true}).click();
         await expect(ownerPage.getByLabel('Inicio · Costa Rica')).toHaveValue(day+'T09:00');
         await ownerPage.getByRole('dialog').getByRole('button',{name:'Cerrar',exact:true}).click();
-        await ownerPage.getByRole('button', { name: 'Editar disponibilidad', exact: true }).click();
+        await ownerPage.getByRole('button', { name: 'Editar disponibilidad del día', exact: true }).click();
         await ownerPage.getByLabel('Fecha disponible').fill(day);
         await ownerPage.getByLabel('Hora disponible').fill('14:00');
         await expectNoHorizontalOverflow(ownerPage);

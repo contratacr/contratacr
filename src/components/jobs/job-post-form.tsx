@@ -58,22 +58,22 @@ const JOB_POST_COPY = {
     selectService: "Ej.: plomería, electricista, pintura…",
     searchService: "Buscar servicio",
     noService: "Ningún servicio coincide",
-    serviceError: "Elige el servicio al que pertenece la vacante.",
+    serviceError: "Elija el servicio al que pertenece la vacante.",
     positionPlaceholder: "Ej. Asistente contable",
     remove: "Quitar",
-    titleShort: "Escribe un puesto de al menos 3 caracteres.",
-    locationRequired: "Indica dónde se encuentra el empleo.",
+    titleShort: "Escriba un puesto de al menos 3 caracteres.",
+    locationRequired: "Indique dónde se encuentra el empleo.",
     descriptionShort: "Describe el empleo con al menos 30 caracteres.",
-    responsibilityRequired: "Agrega al menos una responsabilidad.",
-    requirementRequired: "Agrega al menos un requisito.",
+    responsibilityRequired: "Agregue al menos una responsabilidad.",
+    requirementRequired: "Agregue al menos un requisito.",
     salaryOrder: "El salario máximo debe ser mayor o igual al mínimo.",
     deadlinePast: "La fecha límite no puede estar en el pasado.",
-    salaryRange: (maximum: string) => `Ingresa un salario entre 0 y ${maximum}.`,
-    openingsRange: "Ingresa entre 1 y 100 vacantes.",
-    reviewFields: "Revisa los campos marcados antes de publicar.",
-    schemaCache: "La base de datos de empleos necesita actualizarse con la última migración. Inténtalo nuevamente después de recargar el esquema.",
-    numericTooHigh: "Uno de los montos o cantidades es demasiado alto. Revisa el salario y las vacantes.",
-    saveFailed: "No pudimos guardar el empleo. Revisa la información e inténtalo nuevamente.",
+    salaryRange: (maximum: string) => `Ingrese un salario entre 0 y ${maximum}.`,
+    openingsRange: "Ingrese entre 1 y 100 vacantes.",
+    reviewFields: "Revise los campos marcados antes de publicar.",
+    schemaCache: "La base de datos de empleos necesita actualizarse con la última migración. Inténtelo nuevamente después de recargar el esquema.",
+    numericTooHigh: "Uno de los montos o cantidades es demasiado alto. Revise el salario y las vacantes.",
+    saveFailed: "No pudimos guardar el empleo. Revise la información e inténtelo nuevamente.",
     back: "Volver",
     backToJobs: "Volver a empleos",
     editJob: "Editar empleo",
@@ -89,7 +89,7 @@ const JOB_POST_COPY = {
     province: "Provincia",
     canton: "Cantón",
     description: "Descripción",
-    descriptionPlaceholder: "Explica el puesto, el equipo y qué hará la persona.",
+    descriptionPlaceholder: "Explique el puesto, el equipo y qué hará la persona.",
     responsibilities: "Responsabilidades",
     responsibilityPlaceholder: "Ej. Atender clientes",
     addResponsibility: "Agregar responsabilidad",
@@ -115,7 +115,7 @@ const JOB_POST_COPY = {
     publishing: "Publicando...",
     saveChanges: "Guardar cambios",
     cancel: "Cancelar",
-    whatsapp: "WhatsApp", whatsappRequired: "Escribe un número de WhatsApp válido.",
+    whatsapp: "WhatsApp", whatsappRequired: "Escriba un número de WhatsApp válido.",
   },
   en: {
     optional: "optional",
@@ -601,7 +601,7 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
             <EditableList title={copy.responsibilities} optional values={responsibilities} onChange={setResponsibilities} placeholder={copy.responsibilityPlaceholder} addLabel={copy.addResponsibility} optionalLabel={copy.optional} removeLabel={copy.remove} error={fieldErrors.responsibilities} />
             <EditableList title={copy.requirements} optional values={requirements} onChange={setRequirements} placeholder={copy.requirementPlaceholder} addLabel={copy.addRequirement} optionalLabel={copy.optional} removeLabel={copy.remove} error={fieldErrors.requirements} />
             <EditableList title={copy.benefits} optional values={benefits} onChange={setBenefits} placeholder={copy.benefitPlaceholder} addLabel={copy.addBenefit} optionalLabel={copy.optional} removeLabel={copy.remove} />
-          <div className="my-6 border-t border-[#e5e7eb] pt-6"><h2 className="font-bold">{copy.salaryAndValidity}</h2><p className="mt-1 text-xs text-[#68778d]">{copy.optionalInformation}</p></div>
+          <div className="my-6 pt-6"><h2 className="font-bold">{copy.salaryAndValidity}</h2><p className="mt-1 text-xs text-[#68778d]">{copy.optionalInformation}</p></div>
           <div className="grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2">
             <label className="text-sm font-medium text-[#374151]">{copy.salaryFrom} <span className="font-normal text-[#68778d]">({copy.optional})</span><input name="salary_min" inputMode="numeric" maxLength={String(MAX_MONEY_AMOUNT).length} defaultValue={initialJob?.salary_min ?? ""} placeholder="450000" className={FIELD_CLASS} /></label>
             <label className="text-sm font-medium text-[#374151]">{copy.salaryTo} <span className="font-normal text-[#68778d]">({copy.optional})</span><input name="salary_max" inputMode="numeric" maxLength={String(MAX_MONEY_AMOUNT).length} defaultValue={initialJob?.salary_max ?? ""} placeholder="650000" className={FIELD_CLASS} /><FieldError>{fieldErrors.salary}</FieldError></label>

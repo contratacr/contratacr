@@ -1,5 +1,7 @@
 "use client";
+import { ProjectQuoteAction } from "./project-quote-action";
 import { PromotionHistory } from "@/components/pro/promotion-history";
+import { SectionBrand } from "@/components/layout/section-brand";
 import { useMarketplaceFeed } from "@/hooks/use-marketplace-feed";
 import { MarketplaceFeedFeedback } from "@/components/marketplace/feed-loading";
 import type { FeedPage } from "@/lib/marketplace/feed";
@@ -20,7 +22,7 @@ import { useLocale } from "next-intl";
 import { ArrowLeft, ClipboardList, Loader2, Menu, Phone, X } from "lucide-react";
 import { createPortal } from "react-dom";
 import { Link, useRouter } from "@/i18n/navigation";
-import { ContrataCRMark, HeaderAccountLink } from "@/components/landing/landing-navbar";
+import { HeaderAccountLink } from "@/components/landing/landing-navbar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { MarketplaceFilterChip, MarketplaceNavbarPortal, MarketplaceSearch } from "@/components/marketplace/marketplace-controls";
@@ -49,7 +51,7 @@ const COPY = {
     // Cada tablero pregunta por lo suyo: aquí se buscan PROYECTOS, no
     // profesionales. «¿Qué servicio estás buscando?» es la frase de /buscar, y
     // repetida aquí parecía que la pantalla buscaba a quién contratar.
-    buscar: "¿Qué proyecto buscas?",
+    buscar: "¿Qué proyecto busca?",
     abrirMenu: "Abrir menú",
     notificaciones: "Notificaciones",
     publicar: "Publicar un proyecto",
@@ -75,20 +77,20 @@ const COPY = {
     vacio: "Todavía no hay proyectos",
     vacioSub: "Cuando alguien publique lo que necesita, aparecerá aquí.",
     sinResultados: "No encontramos proyectos",
-    sinResultadosSub: "Prueba otra búsqueda o cambia los filtros.",
+    sinResultadosSub: "Prueba otra búsqueda o cambie los filtros.",
     verTodos: "Ver todos los proyectos",
     sinContacto: "Este cliente no dejó un WhatsApp.",
     noPublicado: "Este proyecto ya no recibe mensajes.",
-    fallo: "No pudimos abrir WhatsApp. Intentá de nuevo en un momento.",
-    necesitaCuenta: "Entra con tu cuenta profesional para escribirle por WhatsApp o llamarle.",
+    fallo: "No pudimos abrir WhatsApp. Intente de nuevo en un momento.",
+    necesitaCuenta: "Entre con su cuenta profesional para escribirle por WhatsApp o llamarle.",
     ingresar: "Ingresar",
     crearCuenta: "Crear cuenta profesional",
     cerrar: "Cerrar",
-    pideCuentaTitulo: "Contacta a este cliente",
+    pideCuentaTitulo: "Contacte a este cliente",
     // La llamada solo existe si el cliente la habilitó al publicar.
-    necesitaCuentaConLlamada: "Entra con tu cuenta profesional para escribirle por WhatsApp o llamarle.",
-    necesitaCuentaSoloWhatsapp: "Entra con tu cuenta profesional para escribirle por WhatsApp.",
-    esTuyo: "Este proyecto es tuyo.",
+    necesitaCuentaConLlamada: "Entre con su cuenta profesional para escribirle por WhatsApp o llamarle.",
+    necesitaCuentaSoloWhatsapp: "Entre con su cuenta profesional para escribirle por WhatsApp.",
+    esTuyo: "Este proyecto es suyo.",
     todoElPais: "Todo Costa Rica",
     cuenta: (n: number) => `${n} ${n === 1 ? "proyecto" : "proyectos"}`,
   },
@@ -305,7 +307,7 @@ function retrato(proyecto: ProyectoPublico) {
 // comía la pantalla entero. Y escribirle a alguien por WhatsApp no es un gesto
 // que uno quiera ofrecer sobre algo que apenas se ojeó: cuesta un mensaje y la
 // primera impresión. Se decide adentro, con el proyecto leído.
-function Tarjeta({ proyecto, en, elegida = false, onElegir }: { proyecto: ProyectoPublico; en: boolean; elegida?: boolean; onElegir?: () => void }) {
+function Tarjeta({ proyecto, en, ahora, elegida = false, onElegir }: { proyecto: ProyectoPublico; en: boolean; ahora: number; elegida?: boolean; onElegir?: () => void }) {
   const copy = COPY[en ? "en" : "es"];
   return (
     <article data-marketplace-row="proyectos"
@@ -338,7 +340,7 @@ function Tarjeta({ proyecto, en, elegida = false, onElegir }: { proyecto: Proyec
           </p>
           <div className="mt-1 flex items-baseline justify-between gap-3 text-xs text-[#8794a7]">
             <InlineIdentityName className="text-xs text-[#8794a7]" name={formatPersonDisplayName(proyecto.client_name || "", "mobile")} badge={proyecto.client_verified ? <VerificationInfo audience="client" /> : null} />
-            <span className="shrink-0">{cuandoSePublico(proyecto.created_at, en)}</span>
+            <span className="shrink-0">{cuandoSePublico(proyecto.created_at, en, ahora)}</span>
           </div>
         </div>
       </div>
@@ -408,7 +410,9 @@ export function ProjectsBoard({
   }
 
   const [publicado, setPublicado] = useState("all");
-  const [ahora, setAhora] = useState(0);
+  // Reuse the server feed clock on the first render: a minute boundary
+  // between SSR and hydration must not change the initial text.
+  const [ahora, setAhora] = useState(() => Date.parse(initialFeed?.asOf ?? "") || 0);
   useEffect(() => { queueMicrotask(() => setAhora(Date.now())); }, []);
   const feed=useMarketplaceFeed("proyectos",detalle?undefined:initialFeed,{q:query,location:lugar,published:publicado},locale);
   const proyectos=useMemo(()=>feed.enabled?feed.items??[]:initialProjects,[feed.enabled,feed.items,initialProjects]);
@@ -571,10 +575,7 @@ export function ProjectsBoard({
           >
             <Menu className="h-5 w-5" strokeWidth={2.5} />
           </button>
-          <Link href="/" aria-label="ContrataCR" className="shrink-0">
-            <ContrataCRMark />
-          </Link>
-          <h1 className={CABECERA_TITULO}>{copy.titulo}</h1>
+          <SectionBrand title={copy.titulo} />
           <div className="ml-auto flex shrink-0 items-center gap-0.5">
             {/* Sin sesión va la cuenta; la campana queda para quien ya entró. */}
             {/* En la app Notificaciones vive en el menú de abajo. */}
@@ -613,7 +614,7 @@ export function ProjectsBoard({
                 sirve a nadie y que le compite al título; en el teléfono ya se
                 hacía así y en computadora no. Y la raya divisoria solo si hay
                 filtros al otro lado: sin ellos separaba el título de la nada. */}
-            <div><h1 className="text-[17px] font-extrabold text-[#162543]">{copy.titulo}</h1></div>
+            <div><h1 className={CABECERA_TITULO}>{copy.titulo}</h1></div>
             {(query.trim() || lugar.trim()) && filtrados.length > 0 && (
               <span className="text-[13px] font-semibold text-[#68778d]">
                 {copy.cuenta(resultTotal??filtrados.length)}{lugar.trim() ? ` · ${lugar.trim()}` : ""}
@@ -710,7 +711,7 @@ export function ProjectsBoard({
                 ) : (
                   <div>
                     {filtrados.map((proyecto) => (
-                      <Tarjeta key={proyecto.id} proyecto={proyecto} en={en} elegida={elegido?.id === proyecto.id} onElegir={() => elegir(proyecto.id)} />
+                      <Tarjeta key={proyecto.id} proyecto={proyecto} en={en} ahora={ahora} elegida={elegido?.id === proyecto.id} onElegir={() => elegir(proyecto.id)} />
                     ))}
                     <MarketplaceFeedFeedback feed={feed}/>
                   </div>
@@ -819,7 +820,7 @@ export function ProjectsBoard({
                         {([
                           [copy.filaServicio, ficha.category_name] as [string, string | null],
                           [copy.filaUbicacion, ficha.location_label || copy.todoElPais] as [string, string | null],
-                          [copy.filaPublicado, cuandoSePublico(ficha.created_at, en)] as [string, string | null],
+                          [copy.filaPublicado, cuandoSePublico(ficha.created_at, en, ahora)] as [string, string | null],
                         ].filter(([, valor]) => Boolean(valor)) as Array<[string, string]>).map(([etiqueta, valor]) => (
                           // En COMPUTADORA, en la página, el servicio es el
                           // titular de la tarjeta de la derecha: repetirlo aquí
@@ -837,6 +838,7 @@ export function ProjectsBoard({
                           renglón; LinkedIn e Indeed usan entre 90 y 100. La
                           tarjeta se queda grande y el párrafo se lee. */}
                       <p className="mt-3 whitespace-pre-line break-words text-sm leading-7 text-[#43536b] [overflow-wrap:anywhere]">{ficha.description}</p>
+                      {ficha.allow_direct_contact&&!misProyectos.includes(ficha.id)&&<ProjectQuoteAction projectId={ficha.id}/>}
                       {process.env.NODE_ENV === "development" && misProyectos.includes(ficha.id) && <PromotionHistory key={ficha.id} contentType="project" contentId={ficha.id}/>}
                       {/* TELÉFONO: lo que contacta, en la franja de abajo; guardar
                           y compartir viven en el «···» de la barra de arriba. */}

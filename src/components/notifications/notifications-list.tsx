@@ -11,7 +11,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useActorPhotos } from "@/lib/notifications/use-actor-photos";
 import { useAuth } from "@/hooks/use-auth";
 import { cn, formatRelativeOrDate } from "@/lib/utils";
-import { notificationActionHref, notificationInMode } from "@/lib/notification-link";
+import { notificationActionHref, notificationActionLabel, notificationInMode } from "@/lib/notification-link";
 import { localizedNotificationCopy } from "@/lib/localized-notification";
 import { useMode } from "@/hooks/use-mode";
 import { canOffer } from "@/lib/auth/capabilities";
@@ -36,6 +36,7 @@ import { PanelEmptyState, PanelListSkeleton } from "@/components/ui/content-load
 import { FilaDeslizable, iconoDeAccion } from "@/components/ui/fila-deslizable";
 import { AppTooltip } from "@/components/ui/app-tooltip";
 import { cacheNotifications, readCachedNotifications, subscribeNotificationsCache, uniqueNotifications } from "@/lib/notifications-cache";
+import { useNotificationRead } from "@/lib/notifications/use-notification-read";
 
 type Notification = {
   id: string;
@@ -99,6 +100,8 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
   const [pending, setBusy] = useState(true);
   const busy = pending && cachedNotifications === null;
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deletingAll, setDeletingAll] = useState(false);
+  const [deleteAllError, setDeleteAllError] = useState(false);
   const [globalMenuOpen, setGlobalMenuOpen] = useState(false);
   // De a 15, con «Ver notificaciones anteriores» al pie, como Facebook: con
   // las cien que se cargan de una vez la lista era una sábana sin final.
@@ -109,14 +112,14 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
   // a cero en el acto; pero los puntos azules se quedan en pantalla durante esta
   // visita, para que se vea qué era nuevo. En la siguiente ya salen leídas.
   // Antes se esperaba 1,5 s y el punto se borraba delante de la persona.
-  const marcadoEnEstaVisita = useRef(false);
+  const marcadoEnEstaVisita = useRef<string | null>(null);
   // Se marca DESPUÉS de traer la lista: si no, el servidor ya la devolvía leída
   // y no quedaba ningún punto que mostrar.
-  const [listaDelServidor, setListaDelServidor] = useState(false);
+  const [listaDelServidor, setListaDelServidor] = useState<string | null>(null);
   const [nuevasDeEstaVisita, setNuevasDeEstaVisita] = useState<Set<string>>(() => new Set());
   useEffect(() => {
-    if (scope !== "all" || !user || !listaDelServidor || marcadoEnEstaVisita.current) return;
-    marcadoEnEstaVisita.current = true;
+    if (scope !== "all" || !user || listaDelServidor !== user.id || marcadoEnEstaVisita.current === user.id) return;
+    marcadoEnEstaVisita.current = user.id;
     void markAllRead(true);
   });
 
@@ -185,7 +188,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
     setNotificationState({ userId: user.id, items: next });
     cacheNotifications(user.id, next);
     setBusy(false);
-    setListaDelServidor(true);
+    setListaDelServidor(user.id);
   }, [user]);
 
   useEffect(() => {
@@ -320,47 +323,36 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
   // activo, y para vaciarla ya está «Marcar todas como leídas». Filtrar a «no
   // leídas» dejaba además una lista que se vaciaba sola al ir leyendo.
 
-  async function markAllRead(dejarPuntosEnPantalla = false) {
+  const { markRead, readError, retryRead, retrying } = useNotificationRead(user?.id, (operation) => {
     if (!user) return;
-    const supabase = createClient();
-    const ids = visible.filter((n) => !n.read).map((n) => n.id);
-    if (scope === "all") {
-      // Toda la cuenta, no solo lo cargado: las no leídas más viejas que el
-      // límite de la lista también cuentan en el globo.
-      await supabase.from("notifications").update({ read: true }).eq("user_id", user.id).eq("read", false);
-    } else {
-      if (ids.length === 0) return;
-      await supabase.from("notifications").update({ read: true }).in("id", ids);
-    }
-    const leidas = (lista: Notification[]) => lista.map((n) => (scope === "all" || ids.includes(n.id) ? { ...n, read: true } : n));
-    if (dejarPuntosEnPantalla) {
-      setNuevasDeEstaVisita(new Set(items.filter((n) => !n.read).map((n) => n.id)));
-      // La memoria ya las guarda leídas (así vuelven la próxima vez); la
-      // pantalla de ahora conserva sus puntos.
+    const ids = operation.ids ?? operation.snapshotIds;
+    const leidas = (lista: Notification[]) => lista.map((n) => (ids.includes(n.id) ? { ...n, read: true } : n));
+    if (operation.keepNew) {
+      setNuevasDeEstaVisita(new Set(items.filter((n) => !n.read && ids.includes(n.id)).map((n) => n.id)));
       cacheNotifications(user.id, leidas(items));
     } else {
       setNotificationState((prev) => {
-        const next = leidas(prev.items);
+        const base = prev.userId === user.id ? prev.items : items;
+        const next = leidas(base);
         cacheNotifications(user.id, next);
         return { userId: user.id, items: next };
       });
     }
-    // Con «todas» el total pasa a cero seguro: la barra de abajo lo recuerda
-    // aunque no esté montada en esta pantalla.
-    window.dispatchEvent(new CustomEvent("notificationsChanged", { detail: scope === "all" ? { sinLeer: 0, userId: user.id } : undefined }));
+    // A notification may arrive while the write is in flight. Refresh the real
+    // count instead of claiming that the whole account still has zero unread.
+    window.dispatchEvent(new CustomEvent("notificationsChanged"));
+  });
+
+  function markAllRead(dejarPuntosEnPantalla = false) {
+    return markRead(scope === "all"
+      ? { ids: null, snapshotIds: items.map((n) => n.id), keepNew: dejarPuntosEnPantalla }
+      : { ids: visible.filter((n) => !n.read).map((n) => n.id), keepNew: dejarPuntosEnPantalla });
   }
 
-  async function markOneRead(e: React.MouseEvent, id: string) {
+  function markOneRead(e: React.MouseEvent, id: string) {
     e.stopPropagation();
     setItemMenuOpenId(null);
-    setNotificationState((prev) => {
-      const next = prev.items.map((n) => (n.id === id ? { ...n, read: true } : n));
-      cacheNotifications(user?.id, next);
-      return { userId: user?.id, items: next };
-    });
-    const supabase = createClient();
-    await supabase.from("notifications").update({ read: true }).eq("id", id);
-    window.dispatchEvent(new CustomEvent("notificationsChanged"));
+    return markRead({ ids: [id] });
   }
 
   const role = user?.user_metadata?.role as string | undefined;
@@ -388,17 +380,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
 
   function open(n: Notification) {
     const href = notificationActionHref(n, role, locale);
-    if (!n.read) {
-      setNotificationState((prev) => {
-        const next = prev.items.map((item) => (item.id === n.id ? { ...item, read: true } : item));
-        cacheNotifications(user?.id, next);
-        return { userId: user?.id, items: next };
-      });
-      const supabase = createClient();
-      supabase.from("notifications").update({ read: true }).eq("id", n.id).then(() => {
-        window.dispatchEvent(new CustomEvent("notificationsChanged"));
-      });
-    }
+    if (!n.read) void markRead({ ids: [n.id] });
     if (AVISOS_EN_TARJETA.has(n.type)) {
       setEnTarjeta(n);
       return;
@@ -463,19 +445,32 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
   }
 
   async function doDeleteAll() {
-    setConfirmDelete(false);
-    setGlobalMenuOpen(false);
-    if (!user || visible.length === 0) return;
-    // Delete only the CURRENT mode's notifications (the list is per-mode).
-    const ids = visible.map((n) => n.id);
-    setNotificationState((prev) => {
-      const next = prev.items.filter((n) => !ids.includes(n.id));
-      cacheNotifications(user.id, next);
-      return { userId: user.id, items: next };
-    });
-    const supabase = createClient();
-    await supabase.from("notifications").delete().in("id", ids);
-    window.dispatchEvent(new CustomEvent("notificationsChanged"));
+    if (!user || deletingAll || visible.length === 0) return;
+    setDeletingAll(true);
+    setDeleteAllError(false);
+    try {
+      const supabase = createClient();
+      // The full inbox can contain more than the 100 fetched rows. Keep chat
+      // delivery records and permanent campaign receipts untouched.
+      const query = supabase.from("notifications").delete().eq("user_id", user.id);
+      const { error } = await (scope === "all"
+        ? query.neq("type", "direct_message")
+        : query.in("id", visible.map((notification) => notification.id)));
+      if (error) throw error;
+      const ids = new Set(visible.map((notification) => notification.id));
+      setNotificationState((prev) => {
+        const next = scope === "all" ? [] : prev.items.filter((notification) => !ids.has(notification.id));
+        cacheNotifications(user.id, next);
+        return { userId: user.id, items: next };
+      });
+      setConfirmDelete(false);
+      setGlobalMenuOpen(false);
+      window.dispatchEvent(new CustomEvent("notificationsChanged"));
+    } catch {
+      setDeleteAllError(true);
+    } finally {
+      setDeletingAll(false);
+    }
   }
 
   const headingTitle = locale === "en" ? "Notifications" : "Notificaciones";
@@ -508,7 +503,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
   // la lista: suelto arriba quedaba a otra altura y parecía de otra cosa.
 
   const menuGeneral = hasVisibleNotifications ? (
-        <div ref={globalMenuRef} data-menu-general-notificaciones="" className={cn("relative shrink-0", nativeApp && scope === "all" && "[&>button]:sr-only")}>
+        <div ref={globalMenuRef} data-menu-general-notificaciones="" className="relative shrink-0">
           <button
             type="button"
             aria-label={locale === "en" ? "Notification options" : "Opciones de notificaciones"}
@@ -528,9 +523,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
               // relleno y sombra. Aqui era rounded-2xl con shadow-xl y la letra
               // mas palida, asi que dos menus del mismo panel no se parecian.
               "min-w-[220px] overflow-hidden rounded-xl border border-[#e5e7eb] bg-white p-1.5 shadow-[0_18px_45px_-22px_rgba(15,23,42,0.55)]",
-              nativeApp && scope === "all"
-                ? "fixed right-3 top-[calc(var(--ccr-native-header-height,64px)+6px)] z-[240] shadow-xl"
-                : "absolute right-0 top-full z-30 mt-1",
+              "absolute right-0 top-full z-30 mt-1",
             )}>
               {unread > 0 && (
                 <button
@@ -546,12 +539,12 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
                   {t("markAllRead")}
                 </button>
               )}
-              {!nativeApp && (
               <button
                 type="button"
                 role="menuitem"
                 onClick={() => {
                   setGlobalMenuOpen(false);
+                  setDeleteAllError(false);
                   setConfirmDelete(true);
                 }}
                 className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-bold text-red-700 transition-colors hover:bg-red-50"
@@ -559,7 +552,6 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
                 <Trash2 className="h-4 w-4" />
                 {t("deleteAll")}
               </button>
-              )}
             </div>
           )}
         </div>
@@ -596,7 +588,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
 
       {confirmDelete && (
         <div className="app-modal-screen app-centered-modal-screen fixed inset-0 z-[200] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setConfirmDelete(false)} />
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => { if (!deletingAll) setConfirmDelete(false); }} />
           <div
             role="alertdialog"
             aria-modal="true"
@@ -607,9 +599,10 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
             <BrandIconBadge icon={AlertTriangle} tone="danger" size={56} className="mx-auto mb-4" />
             <h3 id="delete-notifications-title" className="mb-1.5 text-lg font-bold text-[#162543]">{t("deleteAllConfirm")}</h3>
             <p id="delete-notifications-description" className="mb-5 text-sm text-[#6b7280]">{t("deleteAllBody")}</p>
+            {deleteAllError && <p role="alert" className="mb-4 text-sm text-red-700">{t("deleteAllError")}</p>}
             <div className="flex gap-3">
-              <button onClick={() => setConfirmDelete(false)} className="flex-1 rounded-xl border border-[#e5e7eb] px-4 py-2.5 text-sm font-semibold text-[#374151] hover:bg-[#f9fafb] transition-colors">{t("cancel")}</button>
-              <button onClick={doDeleteAll} className="flex-1 rounded-xl bg-red-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-600 transition-colors">{t("deleteAll")}</button>
+              <button disabled={deletingAll} onClick={() => { if (!deletingAll) setConfirmDelete(false); }} className="flex-1 rounded-xl border border-[#e5e7eb] px-4 py-2.5 text-sm font-semibold text-[#374151] hover:bg-[#f9fafb] transition-colors">{t("cancel")}</button>
+              <button disabled={deletingAll} aria-busy={deletingAll} onClick={doDeleteAll} className="flex-1 rounded-xl bg-red-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-600 transition-colors">{t("deleteAll")}</button>
             </div>
           </div>
         </div>
@@ -636,6 +629,10 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
             {menuGeneral}
           </div>
         )}
+        {!enTarjeta && readError && <div role="alert" className="px-4 py-3 text-sm text-red-700">
+          <p>{t("markReadError")}</p>
+          <button type="button" disabled={retrying} onClick={retryRead} className="mt-1 font-semibold underline disabled:opacity-50">{t("markReadRetry")}</button>
+        </div>}
         {busy ? (
           <PanelListSkeleton
             rows={4}
@@ -887,6 +884,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
       {enTarjeta && (() => {
         const copia = localizedNotificationCopy(enTarjeta, locale);
         const destino = notificationActionHref(enTarjeta, role, locale);
+        const actionLabel = notificationActionLabel(enTarjeta, role, locale);
         const esGoogle = enTarjeta.type === "resena_google";
         const enIngles = locale === "en";
         const boton = "inline-flex h-11 w-full items-center justify-center rounded-full text-[15px] font-bold transition-colors";
@@ -903,9 +901,9 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
                   <a href={ENLACE_RESENA_GOOGLE} target="_blank" rel="noopener noreferrer" onClick={() => setEnTarjeta(null)} className={cn(boton, "bg-[#009FD9] text-white hover:bg-[#0089bb]")}>
                     {enIngles ? "Leave a Google review" : "Dejar reseña en Google"}
                   </a>
-                ) : destino && enTarjeta.type !== "suggestion_rejected" ? (
+                ) : destino && actionLabel ? (
                   <button type="button" onClick={() => { setEnTarjeta(null); router.push(conRegresoANotificaciones(destino)); }} className={cn(boton, "bg-[#009FD9] text-white hover:bg-[#0089bb]")}>
-                    {enIngles ? "View" : "Ver"}
+                    {actionLabel}
                   </button>
                 ) : null}
                 <button type="button" onClick={() => setEnTarjeta(null)} className={cn(boton, "bg-[#f1f5f9] text-[#162543] hover:bg-[#e6edf4]")}>
@@ -919,6 +917,10 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
                 <NotificationSourceIcon type={enTarjeta.type} className="h-5 w-5" />
               </span>
               <p className="text-[15px] leading-6 text-[#4b5b70]">{copia.message}</p>
+              {readError && <div role="alert" className="text-sm text-red-700">
+                <p>{t("markReadError")}</p>
+                <button type="button" disabled={retrying} onClick={retryRead} className="mt-1 font-semibold underline disabled:opacity-50">{t("markReadRetry")}</button>
+              </div>}
             </div>
           </Modal>
         );

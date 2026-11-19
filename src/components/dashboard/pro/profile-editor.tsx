@@ -428,26 +428,26 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
     if (sectionId === "certs" && certDraft) {
       return locale === "en"
         ? "Save or cancel the certification you are editing."
-        : "Guarda o cancela la certificación que estás editando.";
+        : "Guarde o cancele la certificación que está editando.";
     }
     if (sectionId === "location" && !hasWorkplace) {
       return locale === "en"
         ? "Your workplace is missing: choose the province and the canton, or the whole province."
-        : "Falta tu lugar de trabajo: elige la provincia y el cantón, o toda la provincia.";
+        : "Falta su lugar de trabajo: elija la provincia y el cantón, o toda la provincia.";
     }
     if (sectionId === "contact") {
       if (!isPhoneComplete(whatsapp)) {
-        return locale === "en" ? "Enter a complete contact number." : "Ingresa un número de contacto completo.";
+        return locale === "en" ? "Enter a complete contact number." : "Ingrese un número de contacto completo.";
       }
       // Un fijo nunca tiene WhatsApp: el botón del perfil llevaría a
       // «este número no está en WhatsApp».
       if (pareceFijoDeCostaRica(whatsapp)) return t("whatsappFijo");
       if (!callPhoneIsValid) {
-        return locale === "en" ? "Enter a complete call number." : "Ingresa un número para llamadas completo.";
+        return locale === "en" ? "Enter a complete call number." : "Ingrese un número para llamadas completo.";
       }
     }
     if (sectionId === "social" && !socialIsValid) {
-      return locale === "en" ? "Check the website and social links." : "Revisa el sitio web y los enlaces públicos.";
+      return locale === "en" ? "Check the website and social links." : "Revise el sitio web y los enlaces públicos.";
     }
     return null;
   }
@@ -1126,7 +1126,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
           />
           {dirty && activeDirtySection === "location" && !hasWorkplace ? (
             <p className="mt-2 text-xs text-red-500">
-              {locale === "en" ? "Your workplace is missing: choose the province and the canton, or the whole province." : "Falta tu lugar de trabajo: elige la provincia y el cantón, o toda la provincia."}
+              {locale === "en" ? "Your workplace is missing: choose the province and the canton, or the whole province." : "Falta su lugar de trabajo: elija la provincia y el cantón, o toda la provincia."}
             </p>
           ) : null}
         </div>
@@ -1141,7 +1141,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
             required
             value={whatsapp}
             error={dirty && activeDirtySection === "contact" && !isPhoneComplete(whatsapp)
-              ? (locale === "en" ? "Enter a complete contact number." : "Ingresa un número de contacto completo.")
+              ? (locale === "en" ? "Enter a complete contact number." : "Ingrese un número de contacto completo.")
               : dirty && activeDirtySection === "contact" && pareceFijoDeCostaRica(whatsapp) ? t("whatsappFijo") : undefined}
             onChange={(digits) => { setWhatsapp(digits); touch("contact"); }}
             
@@ -1168,7 +1168,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
                 label={<>{t("callNumber")} <span className="text-[#68778d] font-normal">{t("optional")}</span></>}
                 value={callPhone}
                 error={dirty && activeDirtySection === "contact" && !callPhoneIsValid
-                  ? (locale === "en" ? "Enter a complete call number." : "Ingresa un número para llamadas completo.")
+                  ? (locale === "en" ? "Enter a complete call number." : "Ingrese un número para llamadas completo.")
                   : undefined}
                 onChange={(digits) => { setCallPhone(digits); touch("contact"); }}
 

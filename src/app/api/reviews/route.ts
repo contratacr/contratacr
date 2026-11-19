@@ -58,7 +58,7 @@ async function reseñaSinCuenta(
 
   const nombre = (datos.clientName ?? "").trim().replace(/\s+/gu, " ").slice(0, NAME_MAX_LENGTH);
   if (nombre.length < 2) {
-    return NextResponse.json({ error: mensajeDeError(req, { es: "Escribe tu nombre para publicar la reseña.", en: "Enter your name to post the review." }) }, { status: 400 });
+    return NextResponse.json({ error: mensajeDeError(req, { es: "Escriba su nombre para publicar la reseña.", en: "Enter your name to post the review." }) }, { status: 400 });
   }
 
   const { data: pro } = await admin
@@ -86,7 +86,7 @@ async function reseñaSinCuenta(
   if (error) {
     const yaEstaba = /duplicate key|reviews_whatsapp_contact_uidx/i.test(error.message);
     return NextResponse.json(
-      { error: yaEstaba ? "Ya dejaste tu reseña para este contacto." : error.message },
+      { error: yaEstaba ? "Ya dejaste su reseña para este contacto." : error.message },
       { status: yaEstaba ? 409 : 500 },
     );
   }
@@ -102,7 +102,7 @@ async function reseñaSinCuenta(
       user_id: (pro as { profile_id: string }).profile_id,
       type: "review_received",
       title: "Nueva reseña recibida",
-      message: `${nombreDeSaludo(nombre)} te dejó una reseña de ${estrellas} estrellas.`,
+      message: `${nombreDeSaludo(nombre)} le dejó una reseña de ${estrellas} estrellas.`,
       data: {
         link: `/profesionales/${(pro as { slug?: string }).slug ?? ""}?tab=resenas#resenas`,
         professional_id: professionalId,
@@ -131,7 +131,7 @@ async function reseñaSinCuenta(
 // that context, but a completed item is no longer required.
 export async function POST(req: NextRequest) {
   // Una reseña por minuto de sobra; sin esto no había ningún tope.
-  const limitado = enforceRateLimit(req, "reviews", 10, 60_000);
+  const limitado = await enforceRateLimit(req, "reviews", 10, 60_000);
   if (limitado) return limitado;
   const { professionalId, rating, comment, contactId, clientName } = await req.json();
 
@@ -173,7 +173,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (targetPro.profile_id === user.id) {
-    return NextResponse.json({ error: mensajeDeError(req, { es: "No puedes dejarte una reseña a ti mismo.", en: "You cannot review yourself." }) }, { status: 400 });
+    return NextResponse.json({ error: mensajeDeError(req, { es: "No puede dejarse una reseña a sí mismo.", en: "You cannot review yourself." }) }, { status: 400 });
   }
 
   let jobTitle: string | null = null;
@@ -299,7 +299,7 @@ export async function POST(req: NextRequest) {
       user_id: targetPro.profile_id,
       type: "review_received",
       title: "Nueva reseña recibida",
-      message: `${clientName} te dejó una reseña de ${stars} estrellas.`,
+      message: `${clientName} le dejó una reseña de ${stars} estrellas.`,
       data: {
         link: `/profesionales/${targetPro.slug}?tab=resenas#resenas`,
         professional_id: professionalId,

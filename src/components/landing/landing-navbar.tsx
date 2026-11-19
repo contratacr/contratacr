@@ -1,10 +1,15 @@
 "use client";
+import { SEARCH_SHEET_ROW, SEARCH_SHEET_LEADING, SEARCH_SHEET_INPUT } from "@/components/search/search-field-layout";
+
+import { SectionBrand } from "@/components/layout/section-brand";
 import { ContrataCRLogo, ContrataCRMark } from "@/components/brand/brand-logo";
 import { DesktopAppMenu } from "./desktop-app-menu";
 import { MobileAppStoreMenuLink } from "@/components/mobile/mobile-app-store-menu-link";
 import { SocialLinks } from "./social-links";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
-import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
+import { DirectoryExploreMenu, DirectoryDrawerGroup } from "./directory-nav";
+import { prefijoDeIdioma, rutaConIdioma } from "@/lib/prefijo-de-idioma";
+import { useRouter as useRouterDeNext } from "next/navigation";
 
 import { useContext, useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback, useTransition, type ReactNode } from "react";
 import { soltarFoco } from "@/lib/soltar-foco";
@@ -19,6 +24,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { signOutToHome } from "@/lib/auth/sign-out";
 import { useAuth } from "@/hooks/use-auth";
+import { useManagesBusiness } from "@/hooks/use-manages-business";
+import { Store } from "lucide-react";
 import { canOffer } from "@/lib/auth/capabilities";
 import { useMode } from "@/hooks/use-mode";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
@@ -36,9 +43,10 @@ import { getCategoryGroupIcon } from "@/lib/data/category-group-visuals";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { oficiosDeArranque } from "@/lib/data/oficios-de-arranque";
 
-import { allLocationSuggestions, searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
+import { allLocationSuggestions, searchLocations, resolveLocation, locationSuggestionKey, locationSuggestionContext, type LocationSuggestion } from "@/lib/data/location-search";
 import { lockBodyScroll, olvidarDesplazamientoGuardado } from "@/lib/body-scroll-lock";
 import { useContainedTouchScroll } from "@/hooks/use-contained-touch-scroll";
+import { PersistentScrollIndicator } from "@/components/ui/persistent-scroll-indicator";
 import { createClient } from "@/lib/supabase/client";
 import { repairVisibleText } from "@/lib/text/repair-visible-text";
 import { OfferTagPercentIcon } from "@/components/icons/offer-tag-percent-icon";
@@ -61,7 +69,14 @@ import { getProfessionalDisplayName } from "@/lib/display-name";
 export { ContrataCRLogo, ContrataCRMark } from "@/components/brand/brand-logo";
 
 export function useSwitchLang() {
-  const router = useRouter();
+  // El router de Next, no el de next-intl: con `{ locale }` next-intl fuerza el
+  // prefijo también para el español (/es/servicios) y el middleware responde
+  // 308 a / —también a la petición RSC del cambio—. Next revalida esa respuesta
+  // contra su `_rsc` y vuelve a saltar a /es/…: un bucle de redirecciones hasta
+  // que el navegador se rinde y Next recarga la página entera, segundos
+  // después y con <html lang="en"> mientras tanto. La dirección de cada idioma
+  // se arma aquí con la misma regla que el resto del app: español sin prefijo.
+  const router = useRouterDeNext();
   const pathname = usePathname();
   const locale = useLocale();
   const [, startTransition] = useTransition();
@@ -70,7 +85,7 @@ export function useSwitchLang() {
   // La otra versión se precarga recién cuando el dedo o el ratón llegan al
   // botón (ver `precargar`). Antes se bajaba en TODAS las páginas, por si
   // acaso: ~200 KB por pantalla para algo que casi nadie usa (7-oct-2026).
-  const precargar = () => router.prefetch(pathname, { locale: otroIdioma });
+  const precargar = () => router.prefetch(rutaConIdioma(otroIdioma, pathname));
 
   useEffect(() => {
     document.documentElement.removeAttribute("data-locale-switch");
@@ -95,7 +110,7 @@ export function useSwitchLang() {
       window.setTimeout(() => document.documentElement.removeAttribute("data-locale-switch"), 2500);
     }
     startTransition(() => {
-      router.replace(`${pathname}${currentState}`, { locale: lang, scroll: false });
+      router.replace(`${rutaConIdioma(lang, pathname)}${currentState}`, { scroll: false });
     });
   };
   return Object.assign(cambiar, { precargar });
@@ -584,6 +599,7 @@ function AccountMenu({
   const locale = useLocale();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const managesBusiness = useManagesBusiness(true);
   const menuItemClass = "flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]";
 
   useEffect(() => {
@@ -605,6 +621,7 @@ function AccountMenu({
   return (
     <div ref={ref} className="relative">
       <button
+        data-account-menu-button
         onClick={toggle}
         className="grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"
         aria-label={displayName || t("myPanel")}
@@ -648,6 +665,12 @@ function AccountMenu({
               <Mail className="h-4 w-4 text-[#009FD9]" />
               {locale === "en" ? "Messages" : "Mensajes"}
             </Link>
+            {managesBusiness && (
+              <Link href="/dashboard/negocio" prefetch={false} data-account-business onClick={() => setOpen(false)} className={menuItemClass}>
+                <Store className="h-4 w-4 text-[#009FD9]" />
+                {locale === "en" ? "My business" : "Mi negocio"}
+              </Link>
+            )}
             <Link href={savedHref} onClick={() => setOpen(false)} className={menuItemClass}>
               <Bookmark className="h-4 w-4 text-[#009FD9]" />
               {t("favorites")}
@@ -867,7 +890,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // Una provincia ES «toda la provincia», pero eso no se veía: al escribir
   // «alajuela» salían «Alajuela» (provincia) y «Alajuela» (cantón) una debajo
   // de otra diciendo casi lo mismo, y nada indicaba que la primera cubre todo.
-  const tWholeProvince = useTranslations("search")("wholeProvince");
   const switchLang = useSwitchLang();
   const alternateLocale = locale === "en" ? "es" : "en";
   const alternateLanguageLabel = locale === "en" ? "Español" : "English";
@@ -1174,6 +1196,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const clientPanelHref = `${panelHref}?mode=use`;
   const primaryPanelHref = isPro ? (mode === "offer" ? professionalPanelHref : clientPanelHref) : clientPanelHref;
   const savedHref = "/dashboard/profesional?tab=saved";
+  const drawerManagesBusiness = useManagesBusiness(!!user);
   const profilePanelHref = `${panelHref}?mode=${isPro && mode === "offer" ? "offer" : "use"}&tab=profile`;
   // El nombre del negocio vive en otra tabla, así que pedirlo desde el navegador
   // hacía pintar el nombre de la persona y cambiarlo medio segundo después. Ahora
@@ -1326,9 +1349,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     router.push("/");
   }, [locale, nativeApp, router]);
 
-  // Filas como las de Angi: texto grande, línea debajo y flecha a la derecha.
+  // Navigation uses the same semibold weight as the panel, with a modest size hierarchy.
   const mobileDrawerItemClass =
-    "ccr-menu-fila flex w-full items-center gap-3 border-b border-[#e5e9ee] py-[18px] text-left text-[18px] font-semibold leading-snug text-[#162543] transition-colors hover:text-[#009FD9]";
+    "ccr-menu-fila flex w-full items-center gap-3 border-b border-[#e5e9ee] min-h-[62px] py-[18px] text-left text-[16px] font-semibold leading-snug text-[#162543] transition-colors hover:text-[#009FD9]";
   const mobileDrawerTextClass = "min-w-0 flex-1 whitespace-normal break-words";
 
   // Una sola barra superior: si la pantalla actual publica un título de sección
@@ -1457,7 +1480,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const navLocSug = useMemo(() => searchLocations(navLocation), [navLocation]);
   const nativeLocationSuggestions = useMemo(() => {
     const typed = searchLocations(navLocation).filter((suggestion) => suggestion.type === "province" || suggestion.type === "canton");
-    if (typed.length > 0) return typed;
+    if (navLocation.trim()) return typed;
     return currentLocationSuggestions?.length ? currentLocationSuggestions : provinceSuggestions();
   }, [currentLocationSuggestions, navLocation]);
 
@@ -1921,20 +1944,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
             )}>
               <div className={cn(
                 "absolute left-0 right-0 top-0 flex h-16 items-center lg:hidden",
-                // gap-2 en la app también: la marca a 64 y el título a 104,
-                // como en los tableros (cabecera.ts). Con gap-1.5 quedaban 2 px
-                // corridos al pasar de Empleos a Notificaciones.
+                // Control spacing stays outside the shared mark/title lockup.
                 "justify-start gap-2",
               )}>
                 {sectionActive && sectionRoot ? (
                   <>
-                    <Link href="/" aria-label="ContrataCR" onClick={irAlInicio} className="shrink-0">
-                      <ContrataCRMark />
-                    </Link>
-                    {/* <p>, no <h1>: la página ya tiene su único h1 (el nombre del
-                        profesional, el título de la sección…). Este rótulo es de la
-                        barra, y como h1 quedaba un h1 oculto por delante del real. */}
-                    <p data-ccr-section-title="" className={cn(CABECERA_TITULO, "mr-auto")}>{sectionTitle}</p>
+                    <SectionBrand title={sectionTitle ?? ""} as="p" onHomeClick={irAlInicio} className="mr-auto" />
                   </>
                 ) : sectionActive ? (
                   <>
@@ -1980,7 +1995,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           menú de abajo (30-sep y 1-oct-2026). */}
                     </div>
                   ) : (
-                    <span className="h-10 w-10 shrink-0" aria-hidden />
+                    <div data-pro-section-actions-slot className="flex h-10 w-10 shrink-0 items-center justify-end" />
                   )
                 ) : (
                 <div className="ccr-cabecera-acciones-web ml-auto flex shrink-0 items-center gap-0.5">
@@ -1988,9 +2003,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       se vuelve y el «···» de la publicación. La campana es de la
                       cuenta, no de lo que se está mirando, y ahí solo compite
                       con el «···» —que es el que cierra la fila por la derecha,
-                      como en todas las apps—. En las secciones sí va. */}
-                  {user && !sectionPaso && !sectionMenu && <NotificationBell scope="all" />}
-                  {user && sectionPaso && !sectionMenu && <span className="h-10 w-10" aria-hidden />}
+                      como en todas las apps—. En móvil queda en las pantallas raíz;
+                      las secciones internas respetan la misma regla que la app. */}
+                  {user && (!sectionActive || sectionRoot) && !sectionPaso && !sectionMenu && <NotificationBell scope="all" />}
+                  {user && (sectionPaso || (sectionActive && !sectionRoot)) && !sectionMenu && <div data-pro-section-actions-slot className="flex h-10 w-10 items-center justify-end" />}
                   {!user && !sectionShare && !sectionMenu && <HeaderAccountLink />}
                 </div>
                 )}
@@ -2044,7 +2060,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       type="button"
                       onClick={openNativeSearch}
                       className="flex min-w-0 flex-1 items-center gap-3 text-left"
-                      aria-label={locale === "en" ? "What service are you looking for?" : "¿Qué servicio estás buscando?"}
+                      aria-label={locale === "en" ? "What service are you looking for?" : "¿Qué servicio está buscando?"}
                     >
                       <Search className="h-5 w-5 shrink-0 text-[#162543]" />
                       {searchRouteHasContext ? (
@@ -2054,7 +2070,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         />
                       ) : (
                         <span className="min-w-0 flex-1 truncate text-[15px] font-semibold text-[#8f9aaa]">
-                          {locale === "en" ? "What service are you looking for?" : "¿Qué servicio estás buscando?"}
+                          {locale === "en" ? "What service are you looking for?" : "¿Qué servicio está buscando?"}
                         </span>
                       )}
                     </button>
@@ -2170,6 +2186,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           <ClipboardList className="h-5 w-5 shrink-0" />
                           {locale === "en" ? "Projects" : "Proyectos"}
                         </Link>
+                        {/* Directorio de lugares (2026-11-18): solo las secciones encendidas (DIR_ENABLED). */}
+                        <DirectoryExploreMenu locale={locale} onNavigate={() => setOpenMenu(null)} />
                       </div>
                     )}
                   </div>
@@ -2223,7 +2241,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                                 onKeyDown={handleCompactSearchKeyDown}
                                 onFocus={() => { if (searchBlurTimer.current) clearTimeout(searchBlurTimer.current); setSearchFocused(true); }}
                                 onBlur={() => { searchBlurTimer.current = setTimeout(() => setSearchFocused(false), 150); }}
-                                placeholder={locale === "en" ? "What service are you looking for?" : "¿Qué servicio estás buscando?"}
+                                placeholder={locale === "en" ? "What service are you looking for?" : "¿Qué servicio está buscando?"}
                                 className="min-w-0 flex-1 bg-transparent text-[15px] text-[#162543] placeholder:text-[#8f9aaa] focus:outline-none"
                                 role="combobox"
                                 aria-label={locale === "en" ? "Service" : "Servicio"}
@@ -2314,7 +2332,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                               </button>
                               {navLocSug.map((s, i) => (
                                 <button
-                                  key={`${s.type}-${s.id}`}
+                                  key={locationSuggestionKey(s)}
                                   type="button"
                                   onMouseDown={(e) => { e.preventDefault(); selectNavLocation(s); }}
                                   role="option"
@@ -2327,9 +2345,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                                   <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
                                   <span className="flex-1 min-w-0">
                                     <span className="block text-sm font-medium text-[#1a2744] truncate">{s.label}</span>
-                                    {s.type === "canton" && <span className="block text-[11px] text-gray-400 truncate">{s.sublabel}</span>}
+                                    {locationSuggestionContext(s) && <span className="block text-[11px] text-gray-400 truncate">{locationSuggestionContext(s)}</span>}
                                   </span>
-                                  <span className="text-[10px] uppercase tracking-wide text-gray-300 shrink-0">{s.type === "province" ? tWholeProvince : t("canton")}</span>
                                 </button>
                               ))}
                             </div>
@@ -2504,12 +2521,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     de arriba —el del tablero— va con 10 px, #e5e7eb y sin
                     sombra: uno encima del otro se leían como piezas de dos
                     pantallas distintas. Y sombra, ninguna. */}
-                <div className="flex h-13 min-w-0 items-center rounded-[10px] border border-[#e5e7eb] bg-white px-3">
+                <div className={SEARCH_SHEET_ROW}>
                   <button
                     type="button"
                     onClick={closeNativeSearch}
                     aria-label={t("back")}
-                    className="grid h-10 w-10 shrink-0 place-items-center text-[#1A2744]"
+                    className={SEARCH_SHEET_LEADING}
                   >
                     <ChevronRight className="h-6 w-6 rotate-180" />
                   </button>
@@ -2527,7 +2544,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     onFocus={() => setSearchFocused(true)}
                     onKeyDown={handleCompactSearchKeyDown}
                     placeholder={locale === "en" ? "Service" : "Servicio"}
-                    className="min-w-0 flex-1 bg-transparent px-2 text-[17px] font-semibold text-[#1A2744] placeholder:text-[#a5afbd] focus:outline-none"
+                    className={SEARCH_SHEET_INPUT}
                     aria-label={locale === "en" ? "Service" : "Servicio"}
                     role="combobox"
                     aria-autocomplete="list"
@@ -2556,8 +2573,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     </button>
                   )}
                 </div>
-                <div className="flex h-13 min-w-0 items-center rounded-[10px] border border-[#e5e7eb] bg-white px-3">
-                  <MapPin className="ml-2 h-6 w-6 shrink-0 text-[#1A2744]" />
+                <div className={SEARCH_SHEET_ROW}>
+                  <span className={SEARCH_SHEET_LEADING} aria-hidden="true"><MapPin className="h-6 w-6" /></span>
                   <input
                     ref={nativeLocationInputRef}
                     enterKeyHint="search"
@@ -2578,7 +2595,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     }}
                     onKeyDown={handleNavLocKeyDown}
                             placeholder={locale === "en" ? "Location" : "Ubicación"}
-                    className="min-w-0 flex-1 bg-transparent px-3 text-[17px] font-semibold text-[#1A2744] placeholder:text-[#a5afbd] focus:outline-none"
+                    className={SEARCH_SHEET_INPUT}
                             aria-label={locale === "en" ? "Location" : "Ubicación"}
                             role="combobox"
                             aria-autocomplete="list"
@@ -2603,7 +2620,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 </div>
               </div>
 
-              <div ref={listaBuscadorRef} className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-6">
+              <div className="relative mt-4 min-h-0 flex-1">
+              <div ref={listaBuscadorRef} className="ccr-search-suggestions-scroll h-full overflow-y-auto overscroll-contain pb-3 pr-2">
                 {showNativeServiceSuggestions ? (
                   <div id="native-service-suggestions" className="space-y-1" role="listbox" aria-label={locale === "en" ? "Suggested services" : "Servicios sugeridos"}>
                     <p className="px-2 pb-1 pt-1 text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#7a8797]">
@@ -2809,12 +2827,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         <span>{locale === "en" ? "Search near me" : "Buscar cerca de mí"}</span>
                   </button>
                   )}
-                  {!searchFocused && nativeLocationSuggestions.slice(0, 7).map((suggestion) => (
+                  {!searchFocused && nativeLocationSuggestions.map((suggestion) => (
                     <button
-                      key={`${suggestion.type}-${suggestion.id}-${suggestion.label}`}
+                      key={locationSuggestionKey(suggestion)}
                       type="button"
                       role="option"
-                      aria-selected={suggestion.id === navLocationSel?.id}
+                      aria-selected={navLocationSel !== null && locationSuggestionKey(suggestion) === locationSuggestionKey(navLocationSel)}
                       onClick={() => {
                         selectNavLocation(suggestion);
                       }}
@@ -2825,14 +2843,17 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       </span>
                       <span>
                         {suggestion.label}
-                        {suggestion.type === "canton" && <span className="block text-[12px] font-semibold text-[#6b7280]">{suggestion.sublabel}</span>}
+                        {locationSuggestionContext(suggestion) && <span className="block text-[12px] font-semibold text-[#6b7280]">{locationSuggestionContext(suggestion)}</span>}
                       </span>
                     </button>
                   ))}
+                  {!searchFocused && navLocation.trim() && nativeLocationSuggestions.length === 0 && <p role="status" className="px-2 py-3 text-sm text-[#6b7280]">{t("locationNotFound")}</p>}
                 </div>
                 )}
               </div>
 
+              <PersistentScrollIndicator scrollRef={listaBuscadorRef} />
+              </div>
             </form>
           </div>
         )}
@@ -2957,6 +2978,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Jobs" : "Empleos"}</span>
                   </Link>
                 )}
+                {/* Directorio de lugares (2026-11-18): se despliega con las secciones encendidas (DIR_ENABLED). */}
+                <DirectoryDrawerGroup locale={locale} itemClass={mobileDrawerItemClass} textClass={mobileDrawerTextClass} icon={<DrawerIcon><MapPin /></DrawerIcon>} onNavigate={() => cerrarCajon()} />
                 <Link href="/servicios" prefetch={true} onClick={cerrarCajon} className={claseCajon("/servicios")}>
                   <DrawerIcon><Wrench /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{t("categories")}</span>
@@ -2981,6 +3004,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 {/* PRIMERO LO QUE SE HACE, DESPUÉS LO QUE AYUDA. Cotizaciones
                     es trabajo del profesional y va arriba del Asistente, que es
                     una ayuda que se abre encima y se cierra. */}
+                {user && drawerManagesBusiness && (
+                  <Link href="/dashboard/negocio" prefetch={false} data-drawer-business onClick={cerrarCajon} className={claseCajon("/dashboard/negocio")}>
+                    <DrawerIcon><Store /></DrawerIcon>
+                    <span className={mobileDrawerTextClass}>{locale === "en" ? "My business" : "Mi negocio"}</span>
+                  </Link>
+                )}
                 {isPro && (
                   <Link href="/dashboard/profesional?tab=quotes" prefetch={false} onClick={cerrarCajon} className={claseCajon("/dashboard/profesional?tab=quotes")}>
                     <DrawerIcon><FileText /></DrawerIcon>

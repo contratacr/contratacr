@@ -1,9 +1,11 @@
+import { usesLocalProNodeCache } from "@/lib/cache/local-pro-runtime";
 import { cache } from "react";
 import { revalidateTag } from "next/cache";
 import { withPromiseTimeout } from "@/lib/promise-timeout";
 
 type Bucket = { get(key: string): Promise<{ text(): Promise<string> } | null>; put(key: string, value: string): Promise<unknown> };
 async function bucket(): Promise<Bucket | null> {
+  if (usesLocalProNodeCache(process.env.NODE_ENV, process.env.NEXT_PUBLIC_SUPABASE_URL)) return null;
   try {
     const { getCloudflareContext } = await import("@opennextjs/cloudflare");
     const context = await getCloudflareContext({ async: true });

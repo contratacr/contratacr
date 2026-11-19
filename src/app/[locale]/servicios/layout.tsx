@@ -14,6 +14,6 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     locale,
     ruta: "/servicios",
     titulo: en ? 'All services | ContrataCR' : 'Todos los servicios | ContrataCR',
-    descripcion: en ? 'Browse every trade and service available in Costa Rica: plumbing, electrical, health, beauty, construction and more.' : 'Explora todos los oficios y servicios disponibles en Costa Rica: plomería, electricidad, salud, belleza, construcción y más.',
+    descripcion: en ? 'Browse every trade and service available in Costa Rica: plumbing, electrical, health, beauty, construction and more.' : 'Explore todos los oficios y servicios disponibles en Costa Rica: plomería, electricidad, salud, belleza, construcción y más.',
   });
 }

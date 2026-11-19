@@ -18,7 +18,7 @@ const schema = z.object({
 export async function POST(req: NextRequest) {
   if (req.cookies.get(COOKIE_ADMIN_EXCLUDED)?.value === "1") return new NextResponse(null, { status: 204, headers: { "x-analytics-excluded": "1" } });
   if (peticionAutomatizada(req)) return new NextResponse(null, { status: 204 });
-  const limited = enforceRateLimit(req, "analytics-usage", 90, 60_000);
+  const limited = await enforceRateLimit(req, "analytics-usage", 90, 60_000);
   if (limited) return limited;
   const input = schema.safeParse(await req.json().catch(() => null));
   if (!input.success) return NextResponse.json({ error: "Invalid usage event" }, { status: 400 });

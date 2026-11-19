@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: ProfileLayoutProps): Promise<
     const title = isEn ? "Professional profile | ContrataCR" : "Perfil profesional | ContrataCR";
     const description = isEn
       ? "Find and hire service professionals in Costa Rica."
-      : "Encuentra y contrata profesionales de servicios en Costa Rica.";
+      : "Encuentre y contrate profesionales de servicios en Costa Rica.";
     // NO se llama a `notFound()` a propósito. Esta consulta devuelve lo mismo
     // —nada— cuando la ficha no existe y cuando la base no contestó, y la
     // página se guarda cinco minutos: un fallo pasajero dejaría a un
@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: ProfileLayoutProps): Promise<
   const title = serviceText ? `${displayName} | ${serviceText}` : `${displayName} | ContrataCR`;
   const fallbackDescription = isEn
     ? `View ${displayName}'s professional profile on ContrataCR${location ? ` in ${location}` : ""}.`
-    : `Conoce el perfil profesional de ${displayName} en ContrataCR${location ? ` en ${location}` : ""}.`;
+    : `Conozca el perfil profesional de ${displayName} en ContrataCR${location ? ` en ${location}` : ""}.`;
   const description = cleanDescription(pro.bio) || fallbackDescription;
   const path = `${prefijoDeIdioma(locale)}/profesionales/${slug}`;
   const absoluteUrl = `${APP_URL}${path}`;

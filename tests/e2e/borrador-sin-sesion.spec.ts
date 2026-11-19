@@ -75,6 +75,7 @@ async function llenarSinSesion(page: Page, tipo: Tipo): Promise<string> {
     await gotoOK(page, "/publicar-proyecto?categoria=electricidad");
     await waitForInteractivePage(page);
     await page.locator("#publish-project-title").waitFor();
+    await page.getByRole("button", { name: "Necesito un profesional", exact: true }).click();
     await escribirFirme(page.locator("textarea").first(), `${marca}: instalar tres tomacorrientes en la cocina.`);
     await page.locator('input[type="tel"]').first().fill("88887777");
     await page.getByRole("button", { name: /^Publicar proyecto$/ }).last().click();
@@ -100,7 +101,7 @@ async function llenarSinSesion(page: Page, tipo: Tipo): Promise<string> {
     await escribirFirme(page.locator('input[name="title"]'), marca);
     const buscadorPromo = page.getByPlaceholder(/Ejemplo: Redes e internet/);
     await expect(async () => {
-      await page.getByText("Selecciona un servicio", { exact: true }).first().click();
+      await page.getByText("Seleccione un servicio", { exact: true }).first().click();
       await expect(buscadorPromo).toBeVisible({ timeout: 2_000 });
     }).toPass({ timeout: 30_000 });
     await buscadorPromo.fill("Desarrollo");
@@ -231,15 +232,15 @@ const CLAVE = `Borrador!${randomUUID().slice(0, 8)}aA1`;
 
 async function registrarCliente(page: Page, tipo: Tipo) {
   const alta = await interceptarAlta(page);
-  await page.locator("main").getByRole("link", { name: /Regístrate|Crear cuenta|Sign up/i }).first().click();
+  await page.locator("main").getByRole("link", { name: /Regístrese|Crear cuenta|Sign up/i }).first().click();
   await page.waitForURL(/\/registro\?/, { timeout: 30_000 });
   await page.locator('a[href*="/registro/cliente"]').first().click();
   await page.waitForURL(/\/registro\/cliente/, { timeout: 30_000 });
   const main = page.locator("main");
-  await main.getByPlaceholder("Tu nombre y apellidos").fill("Cliente Borrador");
+  await main.getByPlaceholder("Su nombre y apellidos").fill("Cliente Borrador");
   await main.locator('input[type="email"]').fill(correoNuevo(tipo));
   await main.getByPlaceholder("Mínimo 8 caracteres").fill(CLAVE);
-  await main.getByPlaceholder("Repite tu contraseña").fill(CLAVE);
+  await main.getByPlaceholder("Repita su contraseña").fill(CLAVE);
   const tel = main.locator('input[type="tel"]');
   if (await tel.count()) await tel.first().fill("88886666");
   await aceptarTerminos(main);
@@ -270,7 +271,7 @@ async function ocultarDelBuscador() {
 /** Pasos 2 y 3 del registro de profesional: servicio, lugar, WhatsApp y publicar. */
 async function completarPerfilProfesional(page: Page) {
   const main = page.locator("main");
-  await main.getByRole("button", { name: "Busca tu servicio" }).click();
+  await main.getByRole("button", { name: "Busque su servicio" }).click();
   await page.getByPlaceholder("Buscar servicio...").fill("Desarrollo web");
   await page.getByRole("button", { name: /^Desarrollo web/ }).or(page.getByRole("option", { name: /^Desarrollo web/ })).first().click();
   await main.getByRole("button", { name: /^Provincia$/ }).first().click();
@@ -286,16 +287,16 @@ async function completarPerfilProfesional(page: Page) {
 /** Crea la cuenta de profesional desde cero (sin identificación) y llena el perfil. */
 async function registrarProfesional(page: Page, tipo: Tipo) {
   const alta = await interceptarAlta(page);
-  await page.locator("main").getByRole("link", { name: /Regístrate|Crear cuenta|Sign up/i }).first().click();
+  await page.locator("main").getByRole("link", { name: /Regístrese|Crear cuenta|Sign up/i }).first().click();
   await page.waitForURL(/\/registro\?/, { timeout: 30_000 });
   await page.locator('a[href*="/registro/profesional"]').first().click();
   await page.waitForURL(/\/registro\/profesional/, { timeout: 30_000 });
   const main = page.locator("main");
   await main.getByRole("button", { name: "Registrarme sin identificación por ahora" }).click();
-  await main.getByPlaceholder("Tu nombre completo").fill("Pro Borrador Prueba");
+  await main.getByPlaceholder("Su nombre completo").fill("Pro Borrador Prueba");
   await main.locator('input[type="email"]').fill(correoNuevo(tipo));
   await main.getByPlaceholder("Mínimo 8 caracteres").fill(CLAVE);
-  await main.getByPlaceholder("Repite tu contraseña").fill(CLAVE);
+  await main.getByPlaceholder("Repita su contraseña").fill(CLAVE);
   await aceptarTerminos(main);
   await main.getByRole("button", { name: /^Continuar$/ }).click();
   await expect.poll(() => alta.codigo, { timeout: 30_000 }).toBeTruthy();
@@ -330,9 +331,9 @@ for (const tipo of ["proyecto", "empleo", "promocion", "cotizacion"] as Tipo[]) 
       await continuar.waitFor({ timeout: 30_000 });
       const sinId = main.getByRole("button", { name: "Registrarme sin identificación por ahora" });
       if (await sinId.isVisible().catch(() => false)) await sinId.click();
-      const nombre = main.getByPlaceholder("Tu nombre completo");
+      const nombre = main.getByPlaceholder("Su nombre completo");
       if (await nombre.isVisible().catch(() => false) && !(await nombre.inputValue())) await nombre.fill("Cliente Borrador");
-      if (await main.getByText(/^Al registrarte aceptas/).first().isVisible().catch(() => false)) await aceptarTerminos(main);
+      if (await main.getByText(/^Al registrarse acepta/).first().isVisible().catch(() => false)) await aceptarTerminos(main);
       await continuar.click();
       await completarPerfilProfesional(page);
     }
@@ -360,18 +361,18 @@ test("registro de profesional: contraseña, provincia, tarifa, fijo, abre arriba
   const alta = await interceptarAlta(page);
   const main = page.locator("main");
   await main.getByRole("button", { name: "Registrarme sin identificación por ahora" }).click();
-  await escribirFirme(main.getByPlaceholder("Tu nombre completo"), "Pro Ajustes Octubre");
+  await escribirFirme(main.getByPlaceholder("Su nombre completo"), "Pro Ajustes Octubre");
   const correo = correoNuevo("ajustes");
   await main.locator('input[type="email"]').fill(correo);
   await main.getByPlaceholder("Mínimo 8 caracteres").fill(CLAVE);
 
   // 1. «Confirmar contraseña» existe y frena cuando no coincide.
-  await main.getByPlaceholder("Repite tu contraseña").fill(`${CLAVE}x`);
+  await main.getByPlaceholder("Repita su contraseña").fill(`${CLAVE}x`);
   await aceptarTerminos(main);
   await main.getByRole("button", { name: /^Continuar$/ }).click();
   await expect(main.getByText("Las contraseñas no coinciden")).toBeVisible();
   expect(alta.codigo, "con contraseñas distintas no se crea la cuenta").toBeUndefined();
-  await main.getByPlaceholder("Repite tu contraseña").fill(CLAVE);
+  await main.getByPlaceholder("Repita su contraseña").fill(CLAVE);
   await main.getByRole("button", { name: /^Continuar$/ }).click();
   await expect.poll(() => alta.codigo, { timeout: 30_000 }).toBeTruthy();
 
@@ -381,14 +382,14 @@ test("registro de profesional: contraseña, provincia, tarifa, fijo, abre arriba
   await escribirCodigo(page, alta.codigo!);
 
   // 3. Paso 2: la tarifa va junto al servicio, con su texto corto.
-  await main.getByRole("button", { name: "Busca tu servicio" }).waitFor({ timeout: 30_000 });
-  await expect(main.getByText("¿Desde cuánto cobras por hora?")).toBeVisible();
-  await expect(main.getByText(/tu perfil dirá «Consultar precio»/)).toBeVisible();
+  await main.getByRole("button", { name: "Busque su servicio" }).waitFor({ timeout: 30_000 });
+  await expect(main.getByText("¿Desde cuánto cobra por hora?")).toBeVisible();
+  await expect(main.getByText(/su perfil dirá "Consultar precio"/)).toBeVisible();
 
   // 4. «Agregar toda la provincia» no existe hasta elegir una provincia.
   const agregarProvincia = main.getByRole("button", { name: /Agregar toda la provincia/ });
   await expect(agregarProvincia).toHaveCount(0);
-  await main.getByRole("button", { name: "Busca tu servicio" }).click();
+  await main.getByRole("button", { name: "Busque su servicio" }).click();
   await page.getByPlaceholder("Buscar servicio...").fill("Desarrollo web");
   await page.getByRole("button", { name: /^Desarrollo web/ }).or(page.getByRole("option", { name: /^Desarrollo web/ })).first().click();
 
@@ -396,7 +397,7 @@ test("registro de profesional: contraseña, provincia, tarifa, fijo, abre arriba
   await main.getByRole("switch", { name: /todo el país/ }).or(main.getByText("Trabajo a domicilio en todo el país")).first().click();
   await main.locator('input[type="tel"]').fill("88885555");
   await main.getByRole("button", { name: /^Continuar$/ }).click();
-  await expect(main.getByText(/Además de todo el país, elige de dónde sales/)).toBeVisible();
+  await expect(main.getByText(/Además de la cobertura nacional, elija su provincia y cantón de base/)).toBeVisible();
   await expect(main.getByText("Todo Costa Rica")).toHaveCount(0);
 
   await main.getByRole("button", { name: /^Provincia$/ }).first().click();
@@ -414,7 +415,7 @@ test("registro de profesional: contraseña, provincia, tarifa, fijo, abre arriba
   // 7. Paso 3: solo la foto; la tarifa ya no está ahí.
   const publicarPerfil = main.getByRole("button", { name: /^Publicar mi perfil$/ });
   await publicarPerfil.waitFor({ timeout: 30_000 });
-  await expect(main.getByText("¿Desde cuánto cobras por hora?")).toHaveCount(0);
+  await expect(main.getByText("¿Desde cuánto cobra por hora?")).toHaveCount(0);
   await publicarPerfil.click();
 
   // 8. Cae en «Completa tu perfil», con los opcionales en su propio grupo.
@@ -437,7 +438,7 @@ test("registro de profesional: contraseña, provincia, tarifa, fijo, abre arriba
 
   // 10. Notificaciones: el texto se lee COMPLETO y cada aviso lleva su raya.
   await gotoOK(page, "/notificaciones");
-  const largo = page.getByText("Agrega tu foto, descripción y servicios para que los clientes conozcan lo que ofreces.");
+  const largo = page.getByText("Agregue su foto, descripción y servicios para que los clientes conozcan lo que ofrece.");
   await expect(largo).toBeVisible({ timeout: 30_000 });
   const medidas = await largo.evaluate((el) => {
     const fila = el.closest('[role="button"]') as HTMLElement;
@@ -446,5 +447,5 @@ test("registro de profesional: contraseña, provincia, tarifa, fijo, abre arriba
   expect(medidas.cortado, "el aviso no se corta").toBe(false);
   expect(medidas.raya).toBe("1px");
   expect(medidas.derecha, "sin hueco grande a la derecha en el teléfono").toBeLessThanOrEqual(48);
-  await expect(page.getByText(/Publica lo que necesitas y los profesionales te contactan por WhatsApp/)).toHaveCount(0);
+  await expect(page.getByText(/Publique lo que necesita y los profesionales le contactan por WhatsApp/)).toHaveCount(0);
 });

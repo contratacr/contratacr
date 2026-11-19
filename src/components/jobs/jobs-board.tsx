@@ -1,5 +1,6 @@
 "use client";
 import { PromotionHistory } from "@/components/pro/promotion-history";
+import { SectionBrand } from "@/components/layout/section-brand";
 import { useMarketplaceFeed } from "@/hooks/use-marketplace-feed";
 import { MarketplaceFeedFeedback, MarketplaceContactBoundary } from "@/components/marketplace/feed-loading";
 import type { FeedPage } from "@/lib/marketplace/feed";
@@ -21,7 +22,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { ArrowLeft, BriefcaseBusiness, Building2, Menu } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { recordRecentVisit } from "@/lib/recent-visits";
-import { ContrataCRMark, HeaderAccountLink } from "@/components/landing/landing-navbar";
+import { HeaderAccountLink } from "@/components/landing/landing-navbar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { MarketplaceClearFilters, MarketplaceFilterChip, MarketplaceNavbarPortal, MarketplaceSearch } from "@/components/marketplace/marketplace-controls";
 import { ScrollRail } from "@/components/ui/scroll-rail";
@@ -60,11 +61,11 @@ const MARKETPLACE_LIST_CLASS = "ccr-marketplace-card-list ccr-lista-tablero min-
 const JOBS_COPY = {
   es: {
     view: "Ver", remoteCountry: "Todo Costa Rica", country: "Costa Rica", noApplicants: "Sin postulantes", applicant: "postulante", applicants: "postulantes",
-    searchPlaceholder: "¿Qué empleo buscas?", published: "Fecha", anyDate: "Cualquier fecha", last24Hours: "Últimas 24 horas", lastWeek: "Última semana", lastMonth: "Último mes",
+    searchPlaceholder: "¿Qué empleo busca?", published: "Fecha", anyDate: "Cualquier fecha", last24Hours: "Últimas 24 horas", lastWeek: "Última semana", lastMonth: "Último mes",
     workplace: "Modalidad", anyWorkplace: "Cualquier modalidad", experience: "Experiencia", anyExperience: "Cualquier experiencia", employmentType: "Tipo de empleo", anyEmploymentType: "Cualquier tipo",
     notifications: "Notificaciones",
     myJobs: "Mis empleos", publishJob: "Publicar empleo", jobs: "Empleos", opportunities: "Oportunidades en Costa Rica", job: "Empleo", openMenu: "Abrir menú", salary: "Salario", publishedBy: "Publicado por", editJob: "Editar empleo", editShort: "Editar", manageJob: "Administrar empleo", manageShort: "Administrar", applicationSent: "Postulación enviada", apply: "Postularme",
-    noResults: "No encontramos empleos", noJobs: "Todavía no hay empleos", emptyHelp: "Prueba otra búsqueda o cambia los filtros.", futureJobs: "Las nuevas oportunidades laborales aparecerán aquí.", viewAll: "Ver todos los empleos", publishFirst: "Publicar el primer empleo", publishSubtitle: "Describe la oportunidad con información clara y verificable.", editSubtitle: "Actualiza la información de esta publicación.", sendApplication: "Enviar postulación",
+    noResults: "No encontramos empleos", noJobs: "Todavía no hay empleos", emptyHelp: "Prueba otra búsqueda o cambie los filtros.", futureJobs: "Las nuevas oportunidades laborales aparecerán aquí.", viewAll: "Ver todos los empleos", publishFirst: "Publicar el primer empleo", publishSubtitle: "Describe la oportunidad con información clara y verificable.", editSubtitle: "Actualice la información de esta publicación.", sendApplication: "Enviar postulación",
     location: "Ubicación", wholeCountry: "Todo Costa Rica", openings: "Vacantes", opening: "vacante", openingPlural: "vacantes", duration: "Duración", about: "Sobre el empleo", responsibilities: "Responsabilidades", requirements: "Requisitos", benefits: "Beneficios",
     professionalFallback: "Profesional en ContrataCR", professionalPhoto: "Foto de profesional",
     call: "Llamar",
@@ -171,9 +172,13 @@ export function JobsBoard({ jobs:initialJobs, initialFeed, canPost, initialSelec
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const cleanQuery = query.trim();
+    const cleanLocation = locationFilter.trim();
+    // Hydration already receives these filters from the URL. Serializing an
+    // equivalent query (%20 versus +, for example) would still notify Next and
+    // can cancel a detail navigation that the visitor has just started.
+    if ((params.get("q") ?? "") === cleanQuery && (params.get("location") ?? "") === cleanLocation) return;
     if (cleanQuery) params.set("q", cleanQuery);
     else params.delete("q");
-    const cleanLocation = locationFilter.trim();
     if (cleanLocation) params.set("location", cleanLocation);
     else params.delete("location");
     const nextUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}${window.location.hash}`;
@@ -368,10 +373,7 @@ export function JobsBoard({ jobs:initialJobs, initialFeed, canPost, initialSelec
           <button type="button" onClick={() => window.dispatchEvent(new Event("ccr:open-mobile-menu"))} aria-label={copy.openMenu} className={cn(CABECERA_BOTON, "order-last")}>
             <Menu className={CABECERA_GLIFO} strokeWidth={2.5} />
           </button>
-          <Link href="/" aria-label="ContrataCR" className="shrink-0">
-            <ContrataCRMark />
-          </Link>
-          <h1 className={CABECERA_TITULO}>{copy.jobs}</h1>
+          <SectionBrand title={copy.jobs} />
           {/* El icono de Mensajes es de la barra de la APP: en la web, Mensajes
               se llega desde el menú y desde el panel, y ninguna otra pantalla
               del sitio lo lleva arriba. Aquí se colaba y era la única pantalla
@@ -420,7 +422,7 @@ export function JobsBoard({ jobs:initialJobs, initialFeed, canPost, initialSelec
                 sirve a nadie y que le compite al título; en el teléfono ya se
                 hacía así y en computadora no. Y la raya divisoria solo si hay
                 filtros al otro lado: sin ellos separaba el título de la nada. */}
-            <h1 className="text-[17px] font-extrabold text-[#162543]">{copy.jobs}</h1>
+            <h1 className={CABECERA_TITULO}>{copy.jobs}</h1>
             {hasActiveFilters && filtered.length > 0 && (
               <span className="text-[13px] font-semibold text-[#68778d]">
                 <span className="tabular-nums">{resultTotal??filtered.length}</span> {(resultTotal??filtered.length) === 1 ? copy.job.toLocaleLowerCase(locale) : copy.jobs.toLocaleLowerCase(locale)}{locationFilter.trim() ? ` · ${locationFilter.trim()}` : ""}

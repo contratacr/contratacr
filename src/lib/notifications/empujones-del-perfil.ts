@@ -91,10 +91,10 @@ export async function empujarResenasYPrecio(admin: Admin, { simular = false, aho
     return insertOnceNotifications(admin, [...new Set(userIds)].map((userId) => ({
       user_id: userId,
       type,
-      title: type === "pide_resenas" ? "Pide tus primeras reseñas" : "Agrega un precio de referencia",
+      title: type === "pide_resenas" ? "Pida sus primeras reseñas" : "Agregue un precio de referencia",
       message: type === "pide_resenas"
-        ? "Pide una reseña a clientes con los que ya trabajaste. En tu panel tienes un mensaje listo para compartir por WhatsApp."
-        : "Agrega un precio de referencia para orientar al cliente. El precio final lo acuerdas según el trabajo.",
+        ? "Pide una reseña a clientes con los que ya trabajó. En su panel tiene un mensaje listo para compartir por WhatsApp."
+        : "Agregue un precio de referencia para orientar al cliente. El precio final lo acuerda según el trabajo.",
       data: { link: "/dashboard/profesional?mode=offer&tab=completion" },
       read: false,
     })));

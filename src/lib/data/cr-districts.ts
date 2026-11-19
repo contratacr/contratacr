@@ -1,5 +1,11 @@
-// Los 484 distritos de Costa Rica, generados desde el catálogo oficial
-// (ubicaciones.paginasweb.cr, basado en la división territorial administrativa).
+// Nombres de distritos para búsqueda por cantón. Base histórica del catálogo
+// ubicaciones.paginasweb.cr, revisada con las DTA 2025 y 2026 (SNIT/IGN).
+// Se omiten cabeceras homónimas; no es un conteo de distritos oficiales.
+// Referencia: decreto 44882-MGP, DTA 2025, tabla SNIT/IGN.
+// https://www.pgrweb.go.cr/DOCS/NORMAS/1/VIGENTE/D/2020-2029/2025-2029/2025/1953C/17275C.HTML
+// https://www.snitcr.go.cr/pdfs/ign_repositorio/DTA-TABLA%20POR%20PROVINCIA-CANT%C3%93N-DISTRITO%202026.pdf
+// La tabla de áreas 2026 enumera 493 códigos aunque su resumen indica 494:
+// omite Duacarí, que se conserva desde la DTA anterior; no inferir su supresión.
 //
 // POR QUÉ EXISTE ESTE ARCHIVO: la gente busca por el nombre del lugar donde
 // vive —San Pedro, Jacó, Tres Ríos, Tamarindo—, no por el cantón. Con solo
@@ -8,7 +14,7 @@
 // NO es un nivel más de filtro: los profesionales se ubican por CANTÓN, así que
 // cada distrito apunta al suyo y buscar "San Pedro" filtra por Montes de Oca.
 // No se repite el distrito cabecera, que lleva el mismo nombre del cantón.
-export type District = { name: string; cantonId: string };
+export type District = { name: string; cantonId: string; searchAliases?: string[] };
 
 export const DISTRICTS: District[] = [
   { name: "Carmen", cantonId: "sj-sj" },
@@ -54,7 +60,8 @@ export const DISTRICTS: District[] = [
   { name: "Legua", cantonId: "sj-as" },
   { name: "Monterrey", cantonId: "sj-as" },
   { name: "Salitrillos", cantonId: "sj-as" },
-  { name: "Colón", cantonId: "sj-mo" },
+  { name: "Ciudad Colón", cantonId: "sj-mo", searchAliases: ["Colón", "Villa Colón"] },
+  { name: "Quitirrisí", cantonId: "sj-mo" },
   { name: "Guayabo", cantonId: "sj-mo" },
   { name: "Tabarcia", cantonId: "sj-mo" },
   { name: "Piedras Negras", cantonId: "sj-mo" },
@@ -110,12 +117,13 @@ export const DISTRICTS: District[] = [
   { name: "Sanchez", cantonId: "sj-cu" },
   { name: "Tirrases", cantonId: "sj-cu" },
   { name: "San Isidro de el General", cantonId: "sj-pm" },
+  { name: "La Amistad", cantonId: "sj-pm" },
   { name: "El General", cantonId: "sj-pm" },
   { name: "Daniel Flores", cantonId: "sj-pm" },
   { name: "Rivas", cantonId: "sj-pm" },
   { name: "San Pedro", cantonId: "sj-pm" },
   { name: "Platanares", cantonId: "sj-pm" },
-  { name: "Pejibaye", cantonId: "sj-pm" },
+  { name: "Pejibaye", cantonId: "sj-pm", searchAliases: ["Pejivalle"] },
   { name: "Cajon", cantonId: "sj-pm" },
   { name: "Baru", cantonId: "sj-pm" },
   { name: "Rio Nuevo", cantonId: "sj-pm" },
@@ -157,7 +165,7 @@ export const DISTRICTS: District[] = [
   { name: "San José", cantonId: "al-gr" },
   { name: "San Roque", cantonId: "al-gr" },
   { name: "Tacares", cantonId: "al-gr" },
-  { name: "Rio Cuarto", cantonId: "al-gr" },
+  { name: "Río Cuarto", cantonId: "al-rc" },
   { name: "Puente de Piedra", cantonId: "al-gr" },
   { name: "Bolivar", cantonId: "al-gr" },
   { name: "Desmonte", cantonId: "al-sm" },
@@ -244,6 +252,7 @@ export const DISTRICTS: District[] = [
   { name: "Llano Grande", cantonId: "ca-ca" },
   { name: "Quebradilla", cantonId: "ca-ca" },
   { name: "Santiago", cantonId: "ca-pa" },
+  { name: "Birrisito", cantonId: "ca-pa" },
   { name: "Orosi", cantonId: "ca-pa" },
   { name: "Cachí", cantonId: "ca-pa" },
   { name: "Llanos de Santa Lucía", cantonId: "ca-pa" },
@@ -256,6 +265,7 @@ export const DISTRICTS: District[] = [
   { name: "San Ramón", cantonId: "ca-lu" },
   { name: "Rio Azul", cantonId: "ca-lu" },
   { name: "Juan Viñas", cantonId: "ca-ji" },
+  { name: "La Victoria", cantonId: "ca-ji" },
   { name: "Tucurrique", cantonId: "ca-ji" },
   { name: "Pejibaye", cantonId: "ca-ji" },
   { name: "La Suiza", cantonId: "ca-tu" },
@@ -287,6 +297,7 @@ export const DISTRICTS: District[] = [
   { name: "Ulloa", cantonId: "he-he" },
   { name: "Varablanca", cantonId: "he-he" },
   { name: "San Pedro", cantonId: "he-ba" },
+  { name: "Puente Salas", cantonId: "he-ba" },
   { name: "San Pablo", cantonId: "he-ba" },
   { name: "San Roque", cantonId: "he-ba" },
   { name: "Santa Lucía", cantonId: "he-ba" },
@@ -305,7 +316,7 @@ export const DISTRICTS: District[] = [
   { name: "Puraba", cantonId: "he-sa" },
   { name: "San Josecito", cantonId: "he-sr" },
   { name: "Santiago", cantonId: "he-sr" },
-  { name: "Los Ángeles", cantonId: "he-sr" },
+  { name: "Ángeles", cantonId: "he-sr", searchAliases: ["Los Ángeles"] },
   { name: "Concepción", cantonId: "he-sr" },
   { name: "San José", cantonId: "he-si" },
   { name: "Concepción", cantonId: "he-si" },
@@ -343,6 +354,7 @@ export const DISTRICTS: District[] = [
   { name: "La Fortuna", cantonId: "gu-ba" },
   { name: "Mogote", cantonId: "gu-ba" },
   { name: "Rio Naranjo", cantonId: "gu-ba" },
+  { name: "Pijije", cantonId: "gu-ba" },
   { name: "Filadelfia", cantonId: "gu-ca" },
   { name: "Palmira", cantonId: "gu-ca" },
   { name: "Sardinal", cantonId: "gu-ca" },
@@ -372,6 +384,7 @@ export const DISTRICTS: District[] = [
   { name: "La Garita", cantonId: "gu-lc" },
   { name: "Santa Elena", cantonId: "gu-lc" },
   { name: "Monte Romo", cantonId: "gu-ho" },
+  { name: "Matambú", cantonId: "gu-ho" },
   { name: "Puerto Carrillo", cantonId: "gu-ho" },
   { name: "Huacas", cantonId: "gu-ho" },
   { name: "Puntarenas", cantonId: "pu-pu" },
@@ -382,7 +395,7 @@ export const DISTRICTS: District[] = [
   { name: "Manzanillo", cantonId: "pu-pu" },
   { name: "Guacimal", cantonId: "pu-pu" },
   { name: "Barranca", cantonId: "pu-pu" },
-  { name: "Monte Verde", cantonId: "pu-pu" },
+  { name: "Monteverde", cantonId: "pu-mv", searchAliases: ["Monte Verde"] },
   { name: "Isla del Coco", cantonId: "pu-pu" },
   { name: "Cóbano", cantonId: "pu-pu" },
   { name: "Chacarita", cantonId: "pu-pu" },
@@ -404,6 +417,7 @@ export const DISTRICTS: District[] = [
   { name: "Changuena", cantonId: "pu-bv" },
   { name: "Biolley", cantonId: "pu-bv" },
   { name: "Brunka", cantonId: "pu-bv" },
+  { name: "Cabagra", cantonId: "pu-bv" },
   { name: "Miramar", cantonId: "pu-mo" },
   { name: "La Unión", cantonId: "pu-mo" },
   { name: "San Isidro", cantonId: "pu-mo" },
@@ -415,10 +429,11 @@ export const DISTRICTS: District[] = [
   { name: "Bahía Drake", cantonId: "pu-os" },
   { name: "Savegre", cantonId: "pu-ag" },
   { name: "Naranjito", cantonId: "pu-ag" },
-  { name: "Puerto Jiménez", cantonId: "pu-ga" },
+  { name: "Puerto Jiménez", cantonId: "pu-pj" },
   { name: "Guaycara", cantonId: "pu-ga" },
   { name: "Pavón", cantonId: "pu-ga" },
   { name: "San Vito", cantonId: "pu-cc" },
+  { name: "Gutiérrez Braun", cantonId: "pu-cc" },
   { name: "Sabalito", cantonId: "pu-cc" },
   { name: "Aguabuena", cantonId: "pu-cc" },
   { name: "Limoncito", cantonId: "pu-cc" },
@@ -428,6 +443,7 @@ export const DISTRICTS: District[] = [
   { name: "Canoas", cantonId: "pu-co" },
   { name: "Laurel", cantonId: "pu-co" },
   { name: "Jacó", cantonId: "pu-ga2" },
+  { name: "Lagunillas", cantonId: "pu-ga2" },
   { name: "Tárcoles", cantonId: "pu-ga2" },
   { name: "Limón", cantonId: "li-li" },
   { name: "Valle la Estrella", cantonId: "li-li" },
@@ -441,6 +457,7 @@ export const DISTRICTS: District[] = [
   { name: "Colorado", cantonId: "li-po" },
   { name: "La Colonia", cantonId: "li-po" },
   { name: "Pacuarito", cantonId: "li-si" },
+  { name: "Reventazón", cantonId: "li-si" },
   { name: "Florida", cantonId: "li-si" },
   { name: "Germania", cantonId: "li-si" },
   { name: "El Cairo", cantonId: "li-si" },

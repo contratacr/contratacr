@@ -24,7 +24,7 @@ function isValidUuid(value: unknown): value is string {
 // "Amor bueno" —> "amor_bueno" — with NO prefix (the old `sg_` suggestion tag is gone).
 export async function POST(req: NextRequest) {
   // Public endpoint: bound abuse and enumeration per client IP.
-  const limited = enforceRateLimit(req, "categories-suggest", 10, 600000);
+  const limited = await enforceRateLimit(req, "categories-suggest", 10, 600000);
   if (limited) return limited;
   try {
     const body = await req.json();

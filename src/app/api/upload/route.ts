@@ -20,11 +20,11 @@ const EXTENSION_FOR: Record<FileKind, string> = {
 };
 
 export async function POST(req: NextRequest) {
-  const rl = enforceRateLimit(req, "upload", 12, 60_000);
+  const rl = await enforceRateLimit(req, "upload", 12, 60_000);
   if (rl) return rl;
 
   const user = await safeGetUser(await createClient());
-  if (!user) return NextResponse.json({ error: "Inicia sesión para subir imágenes." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Inicie sesión para subir imágenes." }, { status: 401 });
 
   try {
     const formData = await req.formData();
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
     const apiSecret = process.env.CLOUDINARY_API_SECRET;
     if (!cloudName || !apiKey || !apiSecret) {
       return NextResponse.json(
-        { error: "Cloudinary no está configurado. Revisa las variables de entorno en Vercel." },
+        { error: "Cloudinary no está configurado. Revise las variables de entorno en Vercel." },
         { status: 503 }
       );
     }

@@ -1,0 +1,11 @@
+{
+ "_note": "FIXTURE SINTÉTICO de catálogo curado por el dueño (GTIN de circulación restringida 200…, no son productos reales).",
+ "items": [
+  {"code":"CBA-ARROZ-1KG","gtin":"2000000000015","slug":"fixture-arroz-1kg","kind":"grocery","name":"Arroz sintético 99% grano entero","category":"granos","presentation":"1 kg","unitBase":"kg","unitQty":1,"aliases":["arroz"]},
+  {"code":"CBA-FRIJOL-900G","gtin":"2000000000022","slug":"fixture-frijol-900g","kind":"grocery","name":"Frijol sintético negro","category":"granos","presentation":"900 g","unitBase":"g","unitQty":900,"aliases":["frijoles","beans"]},
+  {"code":"OTC-ACETA-10","gtin":"2000000000039","slug":"fixture-acetaminofen-10","kind":"medicine","rxRequired":false,"name":"Acetaminofén sintético 500 mg","category":"otc_dolor","presentation":"10 tabletas","unitBase":"unit","unitQty":10,"aliases":["paracetamol"]},
+  {"code":"RX-AMOX-12","gtin":"2000000000046","slug":"fixture-antibiotico-rx","kind":"medicine","name":"Antibiótico sintético con receta","category":"rx","presentation":"12 cápsulas","unitBase":"unit","unitQty":12},
+  {"code":"CBA-LECHE-1L","gtin":"2000000000053","slug":"fixture-leche-1l","kind":"grocery","name":"Leche sintética","category":"lacteos","presentation":"1 L","unitBase":"l","unitQty":1},
+  {"code":"CBA-SAL-500G","slug":"fixture-sal-500g","kind":"grocery","name":"Sal sintética","category":"condimentos","presentation":"500 g","unitBase":"g","unitQty":500}
+ ]
+}

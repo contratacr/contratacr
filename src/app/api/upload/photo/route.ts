@@ -7,6 +7,8 @@ import { createClient } from "@/lib/supabase/server";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import { recordCloudinaryAsset, recordMediaAsset } from "@/lib/cloudinary-ownership";
 import { isR2Configured, uploadR2Object } from "@/lib/r2-storage";
+import { stripFailureText, stripImageMetadata, verifyStripped } from "@/lib/media/strip-image-metadata";
+import { scanMetadata } from "@/lib/directory/photo-pipeline";
 
 export const runtime = "nodejs";
 
@@ -22,11 +24,11 @@ const EXTENSION_FOR: Record<FileKind, string> = {
 };
 
 export async function POST(req: Request) {
-  const rl = enforceRateLimit(req, "upload-photo", 12, 60_000);
+  const rl = await enforceRateLimit(req, "upload-photo", 12, 60_000);
   if (rl) return rl;
 
   const user = await safeGetUser(await createClient());
-  if (!user) return NextResponse.json({ error: mensajeDeError(req, { es: "Inicia sesión para subir imágenes.", en: "Sign in to upload images." }) }, { status: 401 });
+  if (!user) return NextResponse.json({ error: mensajeDeError(req, { es: "Inicie sesión para subir imágenes.", en: "Sign in to upload images." }) }, { status: 401 });
 
   try {
     const formData = await req.formData();
@@ -49,8 +51,28 @@ export async function POST(req: Request) {
     });
     if (!check.ok) return NextResponse.json({ error: check.error, code: check.motivo }, { status: 400 });
 
+    // Privacy: remove EXIF (GPS = e.g. the location of a client's house), XMP, IPTC, comments and trailing
+    // data BEFORE the bytes reach R2 or Cloudinary (both keep what they receive). Lossless and pure TS (no
+    // sharp in the Worker). AVIF/HEIC/HEIF cannot be stripped safely and are refused; the browser client
+    // already converts them to JPG. Fail closed: any metadata the independent scanner still sees → refused.
+    const stripped = stripImageMetadata(buffer);
+    if (!stripped.ok) {
+      return NextResponse.json(
+        { error: mensajeDeError(req, stripFailureText(stripped.reason)), code: stripped.reason === "iso_bmff" ? "formato" : "metadatos" },
+        { status: 400 },
+      );
+    }
+    if (!verifyStripped(stripped, scanMetadata)) {
+      console.error("[POST /api/upload/photo] metadata remained after stripping", { format: stripped.format });
+      return NextResponse.json(
+        { error: mensajeDeError(req, stripFailureText("metadata_remains")), code: "metadatos" },
+        { status: 400 },
+      );
+    }
+    const clean = Buffer.from(stripped.bytes.buffer, stripped.bytes.byteOffset, stripped.bytes.byteLength);
+
     // Correct MIME from the DETECTED kind (never the uploaded file.type).
-    const dataUri = `data:${MIME_FOR[check.kind]};base64,${buffer.toString("base64")}`;
+    const dataUri = `data:${MIME_FOR[check.kind]};base64,${clean.toString("base64")}`;
 
     // "avatar" → square image (profile photo), framed by the client. "portfolio" (default) →
     // store ONE optimized original (max 1600px, auto format/quality); thumbnails
@@ -60,7 +82,7 @@ export async function POST(req: Request) {
 
     if (isR2Configured()) {
       const result = await uploadR2Object({
-        buffer,
+        buffer: clean,
         contentType: MIME_FOR[check.kind],
         folder: isAvatar ? "contratacr/profiles" : "contratacr/portfolio",
         extension: EXTENSION_FOR[check.kind],
@@ -81,7 +103,7 @@ export async function POST(req: Request) {
     const apiSecret = process.env.CLOUDINARY_API_SECRET;
     if (!cloudName || !apiKey || !apiSecret) {
       return NextResponse.json(
-        { error: mensajeDeError(req, { es: "Cloudinary no está configurado. Revisa las variables de entorno en Vercel.", en: "Cloudinary is not configured. Check the environment variables." }) },
+        { error: mensajeDeError(req, { es: "Cloudinary no está configurado. Revise las variables de entorno en Vercel.", en: "Cloudinary is not configured. Check the environment variables." }) },
         { status: 503 }
       );
     }

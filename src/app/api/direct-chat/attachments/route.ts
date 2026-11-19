@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { DOC_KINDS, IMAGE_KINDS, MIME_FOR, validateUpload } from "@/lib/upload-validation";
+import { cleanImageUpload } from "@/lib/media/clean-image-upload";
+import { mensajeDeError } from "@/lib/api-errors";
 
 export const runtime = "nodejs";
 
@@ -32,12 +34,12 @@ function safeFileName(name: string) {
 }
 
 export async function POST(req: Request) {
-  const rl = enforceRateLimit(req, "direct-chat-attachment", 18, 60_000);
+  const rl = await enforceRateLimit(req, "direct-chat-attachment", 18, 60_000);
   if (rl) return rl;
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Inicia sesion para adjuntar archivos." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Inicie sesion para adjuntar archivos." }, { status: 401 });
 
   const formData = await req.formData().catch(() => null);
   const file = formData?.get("file") as File | null;
@@ -69,10 +71,14 @@ export async function POST(req: Request) {
   });
   if (!check.ok) return NextResponse.json({ error: check.error }, { status: 400 });
   const mime = MIME_FOR[check.kind];
+  // Privacy: strip EXIF/GPS/XMP from images before storing (fail closed). PDFs untouched.
+  const cleaned = cleanImageUpload(check.kind, buffer);
+  if (!cleaned.ok) return NextResponse.json({ error: mensajeDeError(req, cleaned.text), code: cleaned.code }, { status: 400 });
+  const clean = cleaned.bytes;
 
   const name = safeFileName(file.name);
   const path = `${conversationId}/${user.id}/${Date.now()}-${crypto.randomUUID()}-${name}`;
-  const { error: uploadError } = await db.storage.from(BUCKET).upload(path, buffer, {
+  const { error: uploadError } = await db.storage.from(BUCKET).upload(path, clean, {
     contentType: mime,
     upsert: false,
   });

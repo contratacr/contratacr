@@ -97,8 +97,8 @@ function bodyToHtml(body: string, ctaLabel: string, ctaHref: string, bajaHref: s
   // Invitar a responder no es cortesía: cuando alguien contesta, su buzón
   // aprende que este remitente es legítimo. Una respuesta limpia más
   // reputación que cien entregas.
-  const responder = `<p style="margin:14px 0 0;font-size:14px;line-height:1.6;color:#52627a">¿Necesitas ayuda? <a href="${escapeHtml(APP_URL)}/soporte" style="color:#009FD9">Abre un caso en Soporte</a>.</p>`;
-  const pie = `<p style="margin:18px 0 0;font-size:12px;line-height:1.5;color:#68778d">Recibes este correo porque tienes una cuenta en ContrataCR. <a href="${escapeHtml(bajaHref)}" style="color:#68778d;text-decoration:underline">No quiero recibir novedades</a>.</p>`;
+  const responder = `<p style="margin:14px 0 0;font-size:14px;line-height:1.6;color:#52627a">¿Necesita ayuda? <a href="${escapeHtml(APP_URL)}/soporte" style="color:#009FD9">Abra un caso en Soporte</a>.</p>`;
+  const pie = `<p style="margin:18px 0 0;font-size:12px;line-height:1.5;color:#68778d">Recibe este correo porque tiene una cuenta en ContrataCR. <a href="${escapeHtml(bajaHref)}" style="color:#68778d;text-decoration:underline">No quiero recibir novedades</a>.</p>`;
   return parrafos + cta + responder + firma + pie;
 }
 
@@ -197,6 +197,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ mode: "all", total: state.clients.length, sent, failed, skipped, queued,
       restantes: updated.pendientes.length, sinConfirmar: updated.sinConfirmar, completa: updated.pendientes.length === 0 && updated.sinConfirmar === 0 });
   } catch {
-    return NextResponse.json({ error: "No se pudo completar la tanda. Actualiza el estado: los envíos reservados quedan bloqueados para evitar repetirlos." }, { status: 503 });
+    return NextResponse.json({ error: "No se pudo completar la tanda. Actualice el estado: los envíos reservados quedan bloqueados para evitar repetirlos." }, { status: 503 });
   }
 }

@@ -34,6 +34,8 @@ import { CampaignAppLinks } from "@/components/mobile/campaign-app-links";
 import { MobileAppBridge } from "@/components/mobile/mobile-app-bridge";
 import { NativeFirstRunOnboarding } from "@/components/mobile/native-first-run-onboarding";
 import { AppIntlProvider } from "@/components/app-intl-provider";
+import { SiteFeaturesProvider } from "@/components/site-features";
+import { sitemapSections } from "@/lib/directory/sitemap-sections";
 import { SombrasAlDesplazar } from "@/components/util/sombras-al-desplazar";
 import { GlobalActionLoading } from "@/components/global-action-loading";
 import { OptionalChoiceRecorder } from "@/components/privacy/optional-choice-recorder";
@@ -57,10 +59,10 @@ function buildMetadata(locale: string): Metadata {
     : "ContrataCR: Profesionales de servicios en Costa Rica";
   const description = isEn
     ? "Find electricians, plumbers, painters, tutors and more verified professionals in your canton."
-    : "Encuentra electricistas, plomeros, pintores, tutores y más profesionales verificados en tu cantón.";
+    : "Encuentre electricistas, plomeros, pintores, tutores y más profesionales verificados en su cantón.";
   const socialDescription = isEn
     ? "Offer and find services in Costa Rica"
-    : "Ofrece y encuentra servicios en Costa Rica";
+    : "Ofrezca y encuentre servicios en Costa Rica";
   // Con `prefijoDeIdioma` quedaba /opengraph-image a secas, que no era una imagen.
   const socialImage = rutaImagenSocial(locale);
 
@@ -196,6 +198,8 @@ export default async function LocaleLayout({
   const initialDownloadDismissed = Number((await cookies()).get(DOWNLOAD_DISMISS_COOKIE)?.value ?? 0) > Date.now();
   return (
     <AppIntlProvider messages={messages} locale={locale}>
+      {/* Launch flags (server) for client navigation: directory sections that are on (DIR_ENABLED / DIR_HEALTH_ENABLED). */}
+      <SiteFeaturesProvider value={{ directorySections: sitemapSections().map((s) => s.section) }}>
       <GlobalActionLoading />
       <GlobalDataRefresh />
       <RouteScrollReset />
@@ -228,6 +232,7 @@ export default async function LocaleLayout({
           <FreezeMonitor />
         </SessionMfaGate>
       </AuthProvider>
+      </SiteFeaturesProvider>
     </AppIntlProvider>
   );
 }

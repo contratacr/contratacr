@@ -18,7 +18,7 @@ const ALLOWED = new Set<keyof SearchPageParams>([
 
 export async function GET(request: Request) {
   // Entrega los resultados paginados; sin tope se puede recorrer el catálogo entero.
-  const limitado = enforceRateLimit(request, "buscar-results", 60, 60_000);
+  const limitado = await enforceRateLimit(request, "buscar-results", 60, 60_000);
   if (limitado) return limitado;
   const url = new URL(request.url);
   const offset = Math.max(0, Number.parseInt(url.searchParams.get("offset") ?? "0", 10) || 0);

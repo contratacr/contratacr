@@ -6,7 +6,7 @@ import {
 } from "./disposable-account";
 import { regressionAdminClient } from "./seed";
 import { emptyBusiness } from "../../src/lib/pro/business";
-import { expectNoHorizontalOverflow } from "./helpers";
+import { expectNoHorizontalOverflow, gotoOK } from "./helpers";
 test("connected panel lists reveal next twenty, search, translate and retire social requests", async ({
   page,
   baseURL,
@@ -94,7 +94,7 @@ test("connected panel lists reveal next twenty, search, translate and retire soc
       ).error,
     ).toBeNull();
     await page.bringToFront();
-    await page.goto("/dashboard/profesional?tab=pro_clients");
+    await gotoOK(page,"/dashboard/profesional?tab=pro_clients");
     const cards = page.locator("[data-business-panel] article");
     await expect(cards).toHaveCount(20);
     await page
@@ -114,11 +114,13 @@ test("connected panel lists reveal next twenty, search, translate and retire soc
       path: testInfo.outputPath("customer-detail.png"),
       fullPage: true,
     });
-    await page.goto("/es/dashboard/profesional?tab=pro_clients");
+    await gotoOK(page,"/es/dashboard/profesional?tab=pro_clients");
+    // Identification moved to the top of the form (docs/pro/client-identification-local.md). Its public lookup is simulated locally.
+    await page.route("**/api/pro/identity-lookup",route=>route.fulfill({status:200,json:{found:false}}));
     await page.getByRole("button",{name:"Nuevo cliente",exact:true}).click();
+    await page.getByLabel("Identificación",{exact:true}).fill("9-9999-9999");
     await page.getByLabel("Nombre",{exact:true}).fill("Empresa ficticia GTI");
     await page.getByText("Datos del negocio (opcionales)",{exact:true}).click();
-    await page.getByLabel("Cédula, DIMEX o NITE",{exact:true}).fill("9-9999-9999");
     await page.getByLabel("Nombre comercial",{exact:true}).fill("Negocio de prueba");
     await page.getByLabel("Grupo de clientes",{exact:true}).fill("Empresas");
     await page.getByLabel("Dirección",{exact:true}).fill("Dirección ficticia");
@@ -130,27 +132,29 @@ test("connected panel lists reveal next twenty, search, translate and retire soc
     await expect(cards).toContainText("Empresa ficticia GTI");
     const stored=await db.from("pro_workspaces").select("document").eq("user_id",actor.id).single();
     expect(stored.data?.document.clients.find((c:{name:string})=>c.name==="Empresa ficticia GTI")).toMatchObject({identification:"999999999",tradeName:"Negocio de prueba",group:"Empresas",address:"Dirección ficticia"});
-    await page.goto("/en/dashboard/profesional?tab=pro_inventory");
+    await gotoOK(page,"/en/dashboard/profesional?tab=pro_tools");
+    await page.locator("[data-pro-tools]").getByRole("button",{name:"Products and services",exact:true}).click();
+    await expect(page).toHaveURL(/tab=pro_inventory/);
     await page
-      .getByRole("button", { name: "New product", exact: true })
+      .getByRole("button", { name: "New product or service", exact: true })
       .click();
     await expect(page.getByRole("dialog")).toContainText("Initial stock");
     await page.getByText("Catalog details (optional)",{exact:true}).click();
     await page.getByLabel("Code",{exact:true}).fill("GTI-FICTICIO");
-    await page.getByLabel("Product",{exact:true}).fill("Material ficticio");
+    await page.getByLabel("Name",{exact:true}).fill("Material ficticio");
     await page.getByLabel("Initial stock",{exact:true}).fill("5");
     await page.getByLabel("Minimum",{exact:true}).fill("1");
     await page.getByLabel("Unit cost ₡",{exact:true}).fill("100");
     await page.getByLabel("Unit price ₡",{exact:true}).fill("200");
     await page.getByLabel("Category",{exact:true}).fill("Materiales");
     await page.getByLabel("Unit of measure",{exact:true}).fill("m");
-    await page.getByLabel("CABYS code",{exact:true}).fill("1234567890123");
+    await page.getByText("Tax reference (optional)",{exact:true}).click();await page.getByLabel("CABYS code",{exact:true}).fill("1234567890123");
     await page.getByRole("button",{name:"Save",exact:true}).click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await page.reload();
     await page.getByLabel("Search records").fill("1234567890123");
     await expect(cards).toContainText("Material ficticio");
-    await page.getByRole("button", {name:"New product",exact:true}).click();
+    await page.getByRole("button", {name:"New product or service",exact:true}).click();
     await expectNoHorizontalOverflow(page);
     await page
       .getByRole("dialog")
@@ -159,7 +163,7 @@ test("connected panel lists reveal next twenty, search, translate and retire soc
     await page
       .context()
       .addCookies([{ name: "NEXT_LOCALE", value: "es", url: baseURL! }]);
-    await page.goto("/es/dashboard/profesional?tab=pro_social");
+    await gotoOK(page,"/es/dashboard/profesional?tab=pro_social");
     await expect(page.getByRole("button",{name:"Solicitar difusión",exact:true})).toHaveCount(0);
     await expect(page.getByText("Destaca en nuestras redes",{exact:true})).toHaveCount(0);
     await expectNoHorizontalOverflow(page);

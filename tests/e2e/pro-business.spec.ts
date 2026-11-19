@@ -33,7 +33,8 @@ test('local workspace keeps clients after reload and links agenda and quotations
  await page.getByRole('button',{name:'Cotizaciones',exact:true}).click();await page.getByRole('button',{name:'Nueva cotización',exact:true}).click();
  await page.getByLabel('Cliente',{exact:true}).selectOption({label:'Cliente de prueba'});await page.getByLabel('Título',{exact:true}).fill('Reparación');await page.getByLabel('Válida hasta').fill('2026-11-30');await page.getByLabel('Descripción',{exact:true}).fill('Servicio');await page.getByLabel('Precio ₡',{exact:true}).fill('1000');await page.getByRole('button',{name:'Guardar',exact:true}).click();
  await page.getByRole('button',{name:'Registrar aceptación'}).click();await expect(page.getByText(/Aceptada/)).toBeVisible();
- await page.getByRole('button',{name:'Inventario',exact:true}).click();await page.getByRole('button',{name:'Nuevo producto'}).click();
+ await page.getByRole('button',{name:'Inventario',exact:true}).click();await page.getByRole('button',{name:'Nuevo producto',exact:true}).click();
+ // The local preview retains its legacy Product label; account-backed Pro has its own form coverage.
  await page.getByLabel('Código',{exact:true}).fill('CAB-1');await page.getByLabel('Producto',{exact:true}).fill('Cable');
  for(const [label,value] of [['Existencias iniciales','5'],['Mínimo','2'],['Costo unitario ₡','100'],['Precio unitario ₡','200']])await page.getByLabel(label,{exact:true}).fill(value);
  await page.getByRole('button',{name:'Guardar',exact:true}).click();await page.getByLabel('Cantidad del movimiento').fill('-6');await page.getByLabel('Motivo del movimiento').fill('Trabajo');await page.getByRole('button',{name:'Registrar movimiento'}).click();await expect(page.getByRole('alert')).toContainText('negativas');

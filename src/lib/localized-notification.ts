@@ -1,10 +1,19 @@
+import {appointmentNotificationCopy, isAppointmentNotification} from './pro/appointment-notification';
+import {appointmentReminderCopy, isAppointmentReminder} from './pro/appointment-reminder-notification';
+import {isPaymentPlanClientNotification, paymentPlanClientCopy} from './pro/payment-plan-client-notification';
 import { getAllCategories, getCategoryLabel } from "./data/categories";
 
-// SOLO LO QUE EL APP GENERA HOY. Las citas, las propuestas, las postulaciones,
+// Los avisos nuevos de citas de Pro tienen tipos propios. Las citas antiguas,
+// las propuestas, las postulaciones,
 // seguir y las cotizaciones enviadas dentro del app salieron del producto: sus
 // tipos se retiran de aqui y los avisos viejos que queden en la base se pintan
 // con el texto guardado en la fila (la rama por defecto).
 export const TRANSLATED_NOTIFICATION_TYPES = new Set([
+  "pro_appointment_provider",
+  "pro_appointment_client",
+  "pro_appointment_reminder_provider",
+  "pro_appointment_reminder_client",
+  "pro_payment_plan_client",
   "review_received",
   "new_project",
   "new_job",
@@ -45,20 +54,20 @@ const TITLES: Record<string, Record<NotificationLocale, string>> = {
   project_cancelled: { es: "Proyecto cancelado", en: "Project cancelled" },
   support_reply: { es: "Respuesta de soporte", en: "Support reply" },
   verification: { es: "Actualización de verificación", en: "Verification update" },
-  verification_approved: { es: "¡Tu identidad fue verificada!", en: "Your identity was verified!" },
-  verification_pending: { es: "Tu verificación está en revisión", en: "Your verification is under review" },
-  verification_rejected: { es: "Tu verificación no fue aprobada", en: "Your verification was not approved" },
-  verification_reverted: { es: "Tu verificación fue actualizada", en: "Your verification was updated" },
+  verification_approved: { es: "¡Su identidad fue verificada!", en: "Your identity was verified!" },
+  verification_pending: { es: "Su verificación está en revisión", en: "Your verification is under review" },
+  verification_rejected: { es: "Su verificación no fue aprobada", en: "Your verification was not approved" },
+  verification_reverted: { es: "Su verificación fue actualizada", en: "Your verification was updated" },
   verification_appeal_received: { es: "Nueva apelación de verificación", en: "New verification appeal" },
-  suggestion_approved: { es: "Sugerencia aprobada", en: "Suggestion approved" },
+  suggestion_approved: { es: "El servicio que sugirió ya está disponible", en: "The service you suggested is now available" },
   suggestion_rejected: { es: "Sugerencia rechazada", en: "Suggestion rejected" },
   direct_message: { es: "Nuevo mensaje", en: "New message" },
-  verification_outreach: { es: "Terminemos tu verificación", en: "Let's finish your verification" },
-  counterparty_account_deleted: { es: "Una cuenta con la que coordinabas se cerró", en: "An account you were coordinating with was closed" },
-  invita_proyecto: { es: "¿Necesitas a alguien?", en: "Need someone?" },
-  completa_perfil: { es: "Completa tu perfil", en: "Complete your profile" },
-  pide_resenas: { es: "Pide tus primeras reseñas", en: "Ask for your first reviews" },
-  agrega_precio: { es: "Agrega un precio de referencia", en: "Add a reference price" },
+  verification_outreach: { es: "Terminemos su verificación", en: "Let's finish your verification" },
+  counterparty_account_deleted: { es: "Cuenta eliminada", en: "Account deleted" },
+  invita_proyecto: { es: "¿Necesita a alguien?", en: "Need someone?" },
+  completa_perfil: { es: "Complete su perfil", en: "Complete your profile" },
+  pide_resenas: { es: "Pida sus primeras reseñas", en: "Ask for your first reviews" },
+  agrega_precio: { es: "Agregue un precio de referencia", en: "Add a reference price" },
 };
 
 function normalizeLegacyNotificationText(value: string): string {
@@ -112,7 +121,7 @@ function splitReason(message: string, data?: Record<string, unknown> | null) {
   const match = message.match(/\s+(?:Motivo|Reason):\s*([\s\S]+)$/i);
   const legacyReason = (match?.[1] ?? "")
     .trim()
-    .replace(/\s*\.?\s*(?:Puedes apelar desde tu panel|You can appeal from your panel|Revisa tu panel para ver el detalle|Check your panel for details)\.?\s*$/i, "")
+    .replace(/\s*\.?\s*(?:Puedes apelar desde tu panel|Puede apelar desde su panel|You can appeal from your panel|Revisa tu panel para ver el detalle|Revise su panel para ver el detalle|Revisa su panel para ver el detalle|Check your panel for details)\.?\s*$/i, "")
     .trim()
     .replace(/\.$/, "");
   return {
@@ -135,31 +144,42 @@ function legacyOr(message: string, fallback: string) {
 }
 
 export function localizedNotificationCopy(notification: NotificationCopyInput, locale: string) {
+  if (isAppointmentReminder(notification.type)) return appointmentReminderCopy(notification.data, locale);
+  if (isAppointmentNotification(notification.type)) return appointmentNotificationCopy(notification.data, locale);
+  if (isPaymentPlanClientNotification(notification.type)) return paymentPlanClientCopy(notification.data, locale);
   const language: NotificationLocale = locale === "en" ? "en" : "es";
   const en = language === "en";
   const data = notification.data;
   const normalizedMessage = normalizeLegacyNotificationText(notification.message);
   const title = localizedTitle(notification.type, language, notification.title);
 
+  if (notification.type === "counterparty_account_deleted") {
+    const person = normalizedMessage.match(/^(.+?) eliminó su cuenta de ContrataCR\./)?.[1]
+      || normalizedMessage.match(/^(.+?) deleted their ContrataCR account\./)?.[1];
+    return { title, message: en
+      ? `${person || "This person"} deleted their ContrataCR account. Your conversation is no longer available. You do not need to do anything. If you need help, contact support.`
+      : `${person || "Esta persona"} eliminó su cuenta de ContrataCR. La conversación ya no está disponible. No necesita hacer nada. Si necesita ayuda, contacte a soporte.` };
+  }
+
   if (notification.type === "invita_proyecto") {
     return { title, message: en
       ? "Post what you need and professionals contact you on WhatsApp."
-      : "Publica lo que necesitas y los profesionales te contactan por WhatsApp." };
+      : "Publique lo que necesita y los profesionales le contactan por WhatsApp." };
   }
   if (notification.type === "pide_resenas") {
     return { title, message: en
       ? "Ask clients you have worked with for a review. Your dashboard has a message ready to share on WhatsApp."
-      : "Pide una reseña a clientes con los que ya trabajaste. En tu panel tienes un mensaje listo para compartir por WhatsApp." };
+      : "Pide una reseña a clientes con los que ya trabajó. En su panel tiene un mensaje listo para compartir por WhatsApp." };
   }
   if (notification.type === "agrega_precio") {
     return { title, message: en
-      ? "Add a reference price to guide clients. Agree the final price according to the job."
-      : "Agrega un precio de referencia para orientar al cliente. El precio final lo acuerdas según el trabajo." };
+      ? "It will appear as \"From ₡…\" to guide clients. The final price may vary depending on the job."
+      : "Se mostrará como \"Desde ₡…\" para orientar a los clientes. El precio final puede variar según el trabajo." };
   }
   if (notification.type === "completa_perfil") {
     return { title, message: en
       ? "Add your photo, description and services so clients can learn what you offer."
-      : "Agrega tu foto, descripción y servicios para que los clientes conozcan lo que ofreces." };
+      : "Agregue su foto, descripción y servicios para que los clientes conozcan lo que ofrece." };
   }
 
   if (notification.type === "review_received") {
@@ -172,7 +192,7 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
     const rating = typeof rawRating === "number" && Number.isFinite(rawRating)
       ? new Intl.NumberFormat(en ? "en-US" : "es-CR", { maximumFractionDigits: 1 }).format(rawRating)
       : stringData(data, "rating") || legacy?.[2] || "";
-    return { title, message: en ? `${client} left you a ${rating || "new"}-star review.` : `${client} te dejó una reseña de ${rating || "nuevas"} estrellas.` };
+    return { title, message: en ? `${client} left you a ${rating || "new"}-star review.` : `${client} le dejó una reseña de ${rating || "nuevas"} estrellas.` };
   }
 
   if (["proposal_updated", "proposal_withdrawn", "proposal_accepted", "project_proposal_accepted", "project_proposal_declined"].includes(notification.type)) {
@@ -181,13 +201,13 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
     if (notification.type === "proposal_withdrawn") return { title, message: en ? `A professional withdrew their reply${project ? ` to "${project}"` : ""}.` : `Un profesional retiró su respuesta${project ? ` a "${project}"` : ""}.` };
     if (notification.type === "project_proposal_declined") {
       const another = stringData(data, "proposal_outcome") === "another_selected" || /eligi[oó] otra|selected another/i.test(normalizedMessage);
-      return { title, message: en ? `The client ${another ? "chose another professional" : "did not choose you"}${project ? ` for "${project}"` : ""}.` : `El cliente ${another ? "eligió a otro profesional" : "no te eligió"}${project ? ` para "${project}"` : ""}.` };
+      return { title, message: en ? `The client ${another ? "chose another professional" : "did not choose you"}${project ? ` for "${project}"` : ""}.` : `El cliente ${another ? "eligió a otro profesional" : "no le eligió"}${project ? ` para "${project}"` : ""}.` };
     }
     return {
       title,
       message: en
         ? `The client chose you${project ? ` for "${project}"` : ""}. Coordinate the details by message.`
-        : `El cliente te eligió${project ? ` para "${project}"` : ""}. Coordinen los detalles por mensaje.`,
+        : `El cliente le eligió${project ? ` para "${project}"` : ""}. Coordinen los detalles por mensaje.`,
     };
   }
 
@@ -199,7 +219,7 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
       title,
       message: en
         ? `A job was posted: "${job}"${category ? ` in ${category}` : ""}. Open it and message whoever published it on WhatsApp.`
-        : `Publicaron "${job}"${category ? ` en ${category}` : ""}. Abre el empleo y escríbele por WhatsApp a quien lo publicó.`,
+        : `Publicaron "${job}"${category ? ` en ${category}` : ""}. Abre el empleo y escríbale por WhatsApp a quien lo publicó.`,
     };
   }
 
@@ -226,24 +246,24 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
   if (notification.type === "support_reply") {
     const suggestionDecision = stringData(data, "suggestion_decision");
     if (suggestionDecision) {
-      const service = stringData(data, "service_name") || (en ? "your suggestion" : "tu sugerencia");
+      const service = stringData(data, "service_name") || (en ? "your suggestion" : "su sugerencia");
       const reason = stringData(data, "review_reason");
       const approved = suggestionDecision === "approved";
       const body = approved
-        ? (en ? `Your suggestion "${service}" was approved and is now available in search.` : `Tu sugerencia "${service}" fue aprobada y ya está disponible para la búsqueda.`)
-        : (en ? `Your suggestion "${service}" was not approved.` : `Tu sugerencia "${service}" no fue aprobada.`);
+        ? (en ? `“${service}” is now on ContrataCR. You can complete its details and add it to your profile.` : `“${service}” ya está en ContrataCR. Puede completar sus datos y agregarlo a su perfil.`)
+        : (en ? `Your suggestion "${service}" was not approved.` : `Su sugerencia "${service}" no fue aprobada.`);
       return { title: localizedTitle(approved ? "suggestion_approved" : "suggestion_rejected", language, notification.title), message: appendReason(body, reason, language) };
     }
     const subject = stringData(data, "ticket_subject") || quotedValue(normalizedMessage);
-    return { title, message: en ? `Support replied to your ticket${subject ? ` "${subject}"` : ""}.` : `Soporte respondió a tu ticket${subject ? ` "${subject}"` : ""}.` };
+    return { title, message: en ? `Support replied to your ticket${subject ? ` "${subject}"` : ""}.` : `Soporte respondió a su ticket${subject ? ` "${subject}"` : ""}.` };
   }
 
   if (notification.type === "verification_approved") {
-    return { title, message: en ? "We confirmed that your ID is valid and matches the official records. The Verified badge now appears on your profile and in search results." : "Confirmamos que tu cédula es real y coincide con los registros oficiales. La insignia \"Verificado\" ya aparece en tu perfil y en los resultados de búsqueda." };
+    return { title, message: en ? "We confirmed that your ID is valid and matches the official records. The Verified badge now appears on your profile and in search results." : "Confirmamos que su cédula es real y coincide con los registros oficiales. La insignia \"Verificado\" ya aparece en su perfil y en los resultados de búsqueda." };
   }
 
   if (notification.type === "verification_pending") {
-    return { title, message: en ? "We could not automatically confirm your identity. Your case is under review and your account remains active." : "No pudimos confirmar automáticamente tu identidad. Tu caso quedó en revisión y tu cuenta sigue activa." };
+    return { title, message: en ? "We could not automatically confirm your identity. Your case is under review and your account remains active." : "No pudimos confirmar automáticamente su identidad. Su caso quedó en revisión y su cuenta sigue activa." };
   }
 
   // LEGADO, y se queda: el tipo generico «verification» ya no se emite, pero
@@ -256,13 +276,13 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
     if (/rejected|not approved|no fue aprobada/i.test(stateText)) {
       const body = en
         ? "Your identity verification was not approved. You can appeal from your panel."
-        : "Tu verificación de identidad no fue aprobada. Puedes apelar desde tu panel.";
+        : "Su verificación de identidad no fue aprobada. Puede apelar desde su panel.";
       return { title, message: appendReason(body, withReason.reason, language) };
     }
     if (/reverted|removed|quitada|retirada/i.test(stateText)) {
       const body = en
         ? "Your verification badge was removed. Check your panel for details."
-        : "Tu insignia de verificación fue retirada. Revisa tu panel para ver el detalle.";
+        : "Su insignia de verificación fue retirada. Revise su panel para ver el detalle.";
       return { title, message: appendReason(body, withReason.reason, language) };
     }
     if (/approved|verified|verificada|verificado/i.test(stateText)) {
@@ -270,7 +290,7 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
         title,
         message: en
           ? "We confirmed that your ID is valid and matches the official records. The Verified badge now appears on your profile and in search results."
-          : "Confirmamos que tu cédula es real y coincide con los registros oficiales. La insignia \"Verificado\" ya aparece en tu perfil y en los resultados de búsqueda.",
+          : "Confirmamos que su cédula es real y coincide con los registros oficiales. La insignia \"Verificado\" ya aparece en su perfil y en los resultados de búsqueda.",
       };
     }
     if (/pending|under review|en revisi[oó]n/i.test(stateText)) {
@@ -278,14 +298,14 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
         title,
         message: en
           ? "We could not automatically confirm your identity. Your case is under review and your account remains active."
-          : "No pudimos confirmar automáticamente tu identidad. Tu caso quedó en revisión y tu cuenta sigue activa.",
+          : "No pudimos confirmar automáticamente su identidad. Su caso quedó en revisión y su cuenta sigue activa.",
       };
     }
     return {
       title,
       message: en
         ? "Your verification status was updated. Check your panel for details."
-        : "El estado de tu verificación fue actualizado. Revisa tu panel para ver el detalle.",
+        : "El estado de su verificación fue actualizado. Revise su panel para ver el detalle.",
     };
   }
 
@@ -293,8 +313,8 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
     const withReason = splitReason(normalizedMessage, data);
     const rejected = notification.type === "verification_rejected";
     const body = rejected
-      ? (en ? "Your identity verification was not approved. You can appeal from your panel." : "Tu verificación de identidad no fue aprobada. Puedes apelar desde tu panel.")
-      : (en ? "Your verification badge was removed. Check your panel for details." : "Tu insignia de verificación fue retirada. Revisa tu panel para ver el detalle.");
+      ? (en ? "Your identity verification was not approved. You can appeal from your panel." : "Su verificación de identidad no fue aprobada. Puede apelar desde su panel.")
+      : (en ? "Your verification badge was removed. Check your panel for details." : "Su insignia de verificación fue retirada. Revise su panel para ver el detalle.");
     return { title, message: appendReason(body, withReason.reason, language) };
   }
 
@@ -309,12 +329,12 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
   }
 
   if (notification.type === "suggestion_approved" || notification.type === "suggestion_rejected") {
-    const service = stringData(data, "service_name") || quotedValue(normalizedMessage) || (en ? "your suggestion" : "tu sugerencia");
+    const service = stringData(data, "service_name") || quotedValue(normalizedMessage) || (en ? "your suggestion" : "su sugerencia");
     const reason = stringData(data, "review_reason");
     const approved = notification.type === "suggestion_approved";
     const body = approved
-      ? (en ? `Your suggestion "${service}" was approved and is now available in search.` : `Tu sugerencia "${service}" fue aprobada y ya está disponible para la búsqueda.`)
-      : (en ? `Your suggestion "${service}" was not approved.` : `Tu sugerencia "${service}" no fue aprobada.`);
+      ? (en ? `“${service}” is now on ContrataCR. You can complete its details and add it to your profile.` : `“${service}” ya está en ContrataCR. Puede completar sus datos y agregarlo a su perfil.`)
+      : (en ? `Your suggestion "${service}" was not approved.` : `Su sugerencia "${service}" no fue aprobada.`);
     return { title, message: appendReason(body, reason, language) };
   }
 
@@ -355,5 +375,5 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
     }
   }
 
-  return { title, message: legacyOr(normalizedMessage, en ? "Open the notification to see the details." : "Abre la notificación para ver los detalles.") };
+  return { title, message: legacyOr(normalizedMessage, en ? "Open the notification to see the details." : "Abra la notificación para ver los detalles.") };
 }
