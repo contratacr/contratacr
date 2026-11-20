@@ -21,7 +21,7 @@ test("el codigo de verificacion queda bajo el encabezado y sin scroll en el tele
   await page.getByLabel(/Contras/i).first().fill("Clave-de-prueba-1");
   await page.getByRole("button", { name: /Ingresar/i }).last().click();
 
-  const titulo = page.getByRole("heading", { name: "Verifica tu correo" });
+  const titulo = page.getByRole("heading", { name: "Verifique su correo" });
   await expect(titulo).toBeVisible();
   const tarjeta = page.locator(".ccr-paso-codigo main > div").first();
   const encabezado = await page.locator(".ccr-paso-codigo header, .ccr-paso-codigo nav").first().boundingBox();

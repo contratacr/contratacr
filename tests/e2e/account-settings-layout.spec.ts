@@ -94,7 +94,7 @@ for (const professional of [false, true]) {
         });
         await page.locator("#sec-privacidad > button").click();
         await expect(unblock).toBeVisible();
-        await expect(privacy.getByText("No has bloqueado a nadie.", { exact: true })).toHaveCount(0);
+        await expect(privacy.getByText("No ha bloqueado a nadie.", { exact: true })).toHaveCount(0);
         await expect(privacy.locator("[data-blocked-users] [aria-busy]")).toHaveCount(0);
         if (native) await expect(privacy.getByRole("switch", { name: /^Confirmaciones de lectura/ })).toBeVisible();
         else await expect(privacy.getByRole("switch", { name: /^Confirmaciones de lectura/ })).toHaveCount(0);
@@ -102,7 +102,7 @@ for (const professional of [false, true]) {
         await expect(unblock).toHaveCount(0);
         await closePrivacy();
         await page.locator("#sec-privacidad > button").click();
-        await expect(privacy.getByText("No has bloqueado a nadie.", { exact: true })).toBeVisible();
+        await expect(privacy.getByText("No ha bloqueado a nadie.", { exact: true })).toBeVisible();
         await expect(privacy.locator("[data-blocked-users] [aria-busy]")).toHaveCount(0);
         const remaining = await page.request.get("/api/block");
         expect(remaining.ok()).toBe(true);

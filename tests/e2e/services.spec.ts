@@ -33,8 +33,8 @@ test.describe("@smoke services catalog", () => {
     await search.fill(`Servicio inexistente ${Date.now()}`);
 
     await expect(page.locator("main").getByText(/No ve su servicio|No encontramos ese servicio/i).filter({ visible: true }).first()).toBeVisible();
-    await expect(page.locator("main").getByText(/Cu.ntenos qu. servicio|Tell us wh(?:at|ich) service/i).filter({ visible: true }).first()).toBeVisible();
-    await expect(page.getByRole("button", { name: /Solicitar servicio|Request service/i }).first()).toBeVisible();
+    await expect(page.locator("main").getByText(/Cu.ntenos qu. servicio|Cu.ntanos qu. servicio|Cuentanos que servicio|Tell us wh(?:at|ich) service/i).filter({ visible: true }).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: /Solicitar servicio|Sugerir servicio|Request service|Suggest a service/i }).first()).toBeVisible();
     await expect(page.locator("body")).not.toContainText(/servicesPage\./i);
     await expectHealthyPage(page);
   });

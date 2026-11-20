@@ -6,7 +6,7 @@ import { canRunSeededRegression, regressionAdminClient } from "./seed";
 import { cleanupDisposableAccount } from "./disposable-account";
 
 // DESPUÉS DE CREAR LA CUENTA (9-oct-2026). Isaac creó una cuenta de cliente,
-// tocó «Ir a mi panel» y cayó en «Ingresa a tu cuenta»: la cuenta recién hecha
+// tocó «Ir a mi panel» y cayó en «Ingrese a su cuenta»: la cuenta recién hecha
 // no llegaba con sesión al panel. Aquí se recorre cada salida de la pantalla
 // final, para cliente y para profesional, y se exige que lleve a donde dice y
 // con la sesión puesta.

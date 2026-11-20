@@ -9,7 +9,7 @@ import { expect, test } from "playwright/test";
 // el bucket privado en PostgreSQL), pero ningún flujo la corría. Aquí se
 // ejecuta tal cual, sin servidor ni base real: falla si falla cualquiera.
 test("CV compartido: la ruta /api/professional-cv cumple su contrato", () => {
-  const result = spawnSync(process.execPath, ["--test", resolve(process.cwd(), "tests/cv/sharing.test.mjs")], {
+  const result = spawnSync(process.execPath, ["--test", "--test-reporter=spec", resolve(process.cwd(), "tests/cv/sharing.test.mjs")], {
     cwd: process.cwd(),
     encoding: "utf8",
     timeout: 120_000,

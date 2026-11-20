@@ -28,7 +28,7 @@ test("privacy keeps read receipts and blocked users warm through repeated entrie
     await page.locator("#sec-privacidad > button").click();
     const privacy = page.locator("[data-account-privacy]");
     await expect(privacy.getByRole("switch")).toBeVisible();
-    await expect(privacy.getByText("No has bloqueado a nadie.", { exact: true })).toBeVisible();
+    await expect(privacy.getByText("No ha bloqueado a nadie.", { exact: true })).toBeVisible();
     await page.route("**/rest/v1/rpc/get_my_profile", async (route) => {
       await new Promise((resolve) => setTimeout(resolve, 500)); await route.continue();
     });
@@ -53,7 +53,7 @@ test("privacy keeps read receipts and blocked users warm through repeated entrie
       await page.locator("#sec-privacidad > button").click();
       await expect(privacy.locator("[aria-busy=true]")).toHaveCount(0);
       await expect(privacy.getByRole("switch")).toBeVisible();
-      await expect(privacy.getByText("No has bloqueado a nadie.", { exact: true })).toBeVisible();
+      await expect(privacy.getByText("No ha bloqueado a nadie.", { exact: true })).toBeVisible();
     }
     expect(await page.evaluate(() => {
       const state = (window as unknown as { __privacyPaint: { stopped: boolean; flashes: number } }).__privacyPaint;
