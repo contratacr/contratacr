@@ -40,6 +40,13 @@ for (const path of ['/dashboard/pro?tab=pro_social', '/dashboard/pro/trabajo/000
   test(`unprefixed ${path} stays Spanish after an English visit`, async () => {
     const request = new NextRequest(`https://contratacr.com${path}`, { headers: { 'accept-language':'en-US,en;q=0.9', 'sec-fetch-dest':'document', cookie:'NEXT_LOCALE=en' } });
     const response = await middleware(request);
+    // With PRO_ENABLED off (the launch default) Pro pages are rewritten to the Spanish
+    // "not available" page before any locale rule, so no cookie is written.
+    const proOff = response.headers.get('x-middleware-rewrite');
+    if (path.startsWith('/dashboard/pro') && proOff && new URL(proOff).pathname.endsWith('/pro-no-disponible')) {
+      expect(new URL(proOff).pathname).toBe('/es/pro-no-disponible');
+      return;
+    }
     const location = response.headers.get('location');
     if (location) expect(new URL(location).pathname).not.toMatch(/^\/en(\/|$)/);
     else {
