@@ -727,7 +727,7 @@ function Documentos({ pro, uid, tipo, nombreCuenta, correo, alCambiarEditor }: {
 
   const fecha = (t: number) => new Date(t).toLocaleDateString(en ? "en-US" : "es-CR", { day: "numeric", month: "short", year: "numeric" });
   return (
-    <div className="grid min-w-0 gap-4" data-testid="cv-documentos">
+    <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4" data-testid="cv-documentos">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
           <h2 className="text-lg font-black text-[#162543]">{tipo === "cv" ? (en ? "My resumes" : "Mis currículums") : (en ? "My cover letters" : "Mis cartas")}</h2>
@@ -766,7 +766,7 @@ function Documentos({ pro, uid, tipo, nombreCuenta, correo, alCambiarEditor }: {
           {tipo === "cv" ? (en ? "You have no resumes yet." : "Todavía no tiene currículums.") : (en ? "You have no letters yet." : "Todavía no tiene cartas.")}
         </p>
       ) : (
-        <ul className="grid gap-3">
+        <ul className="grid grid-cols-[minmax(0,1fr)] gap-3">
           {propios.map((d) => (
             <li key={d.id} className="flex flex-wrap items-center gap-2 rounded-2xl border border-[#e5e7eb] bg-white p-3 sm:p-4" data-testid="cv-documento">
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#e6f6fc] text-[#007fae]">{tipo === "cv" ? <FileText className="h-5 w-5" /> : <Mail className="h-5 w-5" />}</span>
