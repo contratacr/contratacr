@@ -240,7 +240,10 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
     );
   })();
 
-  const contactos = professional.contactsThisMonth ?? 0;
+  // "N contactos este mes" oculto por ahora (20-nov-2026, decisión de Isaac): el dato
+  // sigue llegando; para volver a mostrarlo basta cambiar este interruptor.
+  const MOSTRAR_CONTACTOS_DEL_MES = false;
+  const contactos = MOSTRAR_CONTACTOS_DEL_MES ? professional.contactsThisMonth ?? 0 : 0;
   const contactosDelMes = (clase: string) => contactos > 0 ? (
     <span className={clase} data-testid="professional-card-contacts-month">
       <span className="font-bold tabular-nums text-[#162543]">{contactos}</span>
