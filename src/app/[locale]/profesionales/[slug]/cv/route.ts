@@ -1,6 +1,8 @@
 import { getProfessionalBySlug } from '@/lib/queries/professionals';
 import { context, fail, headers, servirCv } from '@/lib/cv/servir-cv';
-import { cvPublico } from '@/lib/cv/cv-publico';
+import { cvDelPanelParaPublicar, cvPublico } from '@/lib/cv/cv-publico';
+import { enlacePerfil } from '@/lib/profile-url';
+import type { CvDocumento } from '@/lib/cv/documento';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
@@ -22,12 +24,26 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
   const corto = String(pro.slug ?? slug).replace(/-[a-z0-9]{8}$/, '');
   const descargar = new URL(req.url).searchParams.has('descargar');
   const c = await context(req, false, pro.id); if ('error' in c) return c.error;
-  if (c.row?.visible) return servirCv(req, { id: pro.id, descargar, nombre: `CV-${corto}` });
-  const cv = cvPublico(pro, locale?.startsWith('en') ? 'en' : 'es');
+  // EL CV ELEGIDO EN EL PANEL (20-nov-2026) va primero: es la última decisión
+  // explícita de la persona. Después, el archivo que subió; si no, el del perfil.
+  const delPanel = await cvElegidoEnElPanel(c.db, pro.id, enlacePerfil(String(pro.slug ?? slug)).replace(/^https?:\/\//, ''));
+  if (!delPanel && c.row?.visible) return servirCv(req, { id: pro.id, descargar, nombre: `CV-${corto}` });
+  const cv = delPanel ?? cvPublico(pro, locale?.startsWith('en') ? 'en' : 'es');
   if (!cv) return fail('CV no disponible.', 404);
   try {
     const { pdfDelCvEnBytes } = await import('@/lib/cv/pdf-documento');
     const bytes = await pdfDelCvEnBytes(cv);
     return new Response(bytes, { headers: { ...headers, 'Content-Type': 'application/pdf', 'Content-Length': String(bytes.byteLength), 'Content-Disposition': `${descargar ? 'attachment' : 'inline'}; filename="CV-${corto}.pdf"`, 'Content-Security-Policy': "sandbox; default-src 'none'; frame-ancestors 'none'", 'Referrer-Policy': 'no-referrer' } });
   } catch { return fail('No se pudo abrir el CV.', 503); }
+}
+
+type Admin = Extract<Awaited<ReturnType<typeof context>>, { db: unknown }>['db'];
+async function cvElegidoEnElPanel(db: Admin, professionalId: string, enlace: string): Promise<CvDocumento | null> {
+  try {
+    const { data: pro } = await db.from('professionals').select('profile_id').eq('id', professionalId).maybeSingle();
+    if (!pro?.profile_id) return null;
+    const { data, error } = await db.from('cv_documents').select('datos').eq('user_id', pro.profile_id).eq('publico', true).eq('tipo', 'cv').maybeSingle();
+    if (error || !data) return null;
+    return cvDelPanelParaPublicar(data.datos, enlace);
+  } catch { return null; }
 }

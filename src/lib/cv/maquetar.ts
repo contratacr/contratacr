@@ -1,5 +1,5 @@
 import type { jsPDF as JsPdf } from "jspdf";
-import { bloquesDelCv, cuerpoDeLaCarta, encabezadoDeEntrada, fechasAts, lineasDeReferencia, type Bloque, type Carta, type CvDocumento } from "./documento";
+import { bloquesDelCv, encabezadoDeEntrada, partesDeLaCarta, fechasAts, lineasDeReferencia, type Bloque, type Carta, type CvDocumento } from "./documento";
 import { aclarar, disenoDe, ESPACIOS, INTERLINEADOS, MARGENES, PAGINA, rgb, TAMANOS, TINTA, type Diseno, type Fuente, type Rgb } from "./diseno";
 import { lineasRicas, type Trozo } from "./texto-rico";
 import type { CvEntry } from "./model";
@@ -17,6 +17,8 @@ export type Op = { seccion?: string } & (
   | { t: "linea"; x1: number; y1: number; x2: number; y2: number; color: Rgb; grosor: number }
   | { t: "caja"; x: number; y: number; w: number; h: number; color: Rgb; radio: number }
   | { t: "punto"; x: number; y: number; r: number; color: Rgb }
+  // La firma dibujada a mano (PNG): 3 de ancho por 1 de alto.
+  | { t: "imagen"; x: number; y: number; w: number; h: number; src: string }
 );
 export type Maqueta = { ancho: number; alto: number; paginas: Op[][] };
 
@@ -96,11 +98,11 @@ class Maquetador {
    * Un párrafo con negrita o enlaces, armado palabra por palabra con la medida
    * de cada letra. Las palabras seguidas con el mismo formato van juntas.
    */
-  parrafoRico(col: Columna, partes: Trozo[], e: { tam?: number; sangria?: number } = {}) {
+  parrafoRico(col: Columna, partes: Trozo[], e: { tam?: number; sangria?: number; interlineado?: number } = {}) {
     if (!partes.some((t) => t.negrita || t.url)) { this.parrafo(col, partes.map((t) => t.texto).join(""), e); return; }
     const tam = e.tam ?? this.base;
     const sangria = e.sangria ?? 0;
-    const alto = tam * this.lh;
+    const alto = tam * (e.interlineado ?? this.lh);
     const ancho = col.ancho - sangria;
     type Palabra = { s: string; negrita?: boolean; url?: string; espacio: boolean; w: number };
     const palabras: Palabra[] = [];
@@ -139,13 +141,20 @@ class Maquetador {
     if (linea.length) dibujar();
   }
 
-  vineta(col: Columna, partes: Trozo[]) {
-    this.asegurar(col, this.base * this.lh);
-    this.texto(col, "•", col.x + 2, col.y + this.base);
-    this.parrafoRico(col, partes, { sangria: 12 });
+  vineta(col: Columna, partes: Trozo[], e: { tam?: number; interlineado?: number } = {}) {
+    const tam = e.tam ?? this.base;
+    this.asegurar(col, tam * (e.interlineado ?? this.lh));
+    this.texto(col, "•", col.x + 2, col.y + tam, { tam });
+    this.parrafoRico(col, partes, { ...e, sangria: 12 });
   }
-  textoRico(col: Columna, s: string) {
-    lineasRicas(s).forEach((x) => (x.vineta ? this.vineta(col, x.trozos) : this.parrafoRico(col, x.trozos)));
+  textoRico(col: Columna, s: string, e: { tam?: number; interlineado?: number } = {}) {
+    lineasRicas(s).forEach((x) => (x.vineta ? this.vineta(col, x.trozos, e) : this.parrafoRico(col, x.trozos, e)));
+  }
+  /** La firma a mano, 3:1, pegada a la izquierda de la columna. */
+  firma(col: Columna, src: string, alto = 40) {
+    this.asegurar(col, alto + 4);
+    this.poner(col, { t: "imagen", x: col.x, y: col.y, w: alto * 3, h: alto, src });
+    col.y += alto + 2;
   }
 
   titulo(col: Columna, s: string) {
@@ -275,6 +284,7 @@ class Maquetador {
         this.textoRico(col, b.texto);
         col.y += 10;
         if (b.lugarFecha) this.parrafo(col, b.lugarFecha, { tam: this.base - 1, color: GRIS });
+        if (b.firma) this.firma(col, b.firma, 34);
         if (cv.nombre.trim()) this.parrafo(col, cv.nombre, { negrita: true });
         break;
     }
@@ -350,12 +360,18 @@ function maquetarCarta(doc: JsPdf, cv: CvDocumento, carta: Carta): Maqueta {
   const m = new Maquetador(doc, { ...d, columnas: "una" });
   const col = m.encabezado(cv, false);
   col.y += 18;
-  const tam = m.base + 0.5;
-  // El cuerpo es exactamente el texto que se copia: una sola fuente de verdad.
-  for (const bloque of cuerpoDeLaCarta(cv, carta).split("\n")) {
-    if (!bloque.trim()) { col.y += 8; continue; }
-    m.parrafo(col, bloque, { tam, interlineado: m.lh + 0.1 });
-  }
+  const e = { tam: m.base + 0.5, interlineado: m.lh + 0.1 };
+  const hueco = () => { col.y += 8; };
+  // Lo mismo que el texto copiado (cuerpoDeLaCarta), pero con formato y firma.
+  const p = partesDeLaCarta(cv, carta);
+  m.parrafo(col, p.fecha, e); hueco();
+  if (p.destinatario.length) { p.destinatario.forEach((l) => m.parrafo(col, l, e)); hueco(); }
+  if (p.asunto) { m.parrafo(col, p.asunto, { ...e, negrita: true }); hueco(); }
+  m.parrafo(col, p.saludo, e); hueco();
+  p.parrafos.forEach((x) => { m.textoRico(col, x, e); hueco(); });
+  m.parrafo(col, p.despedida, e);
+  if (p.firma) { col.y += 4; m.firma(col, p.firma); }
+  if (p.nombre.trim()) m.parrafo(col, p.nombre, e);
   return { ancho: m.ancho, alto: m.alto, paginas: m.paginas };
 }
 

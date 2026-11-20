@@ -54,6 +54,7 @@ function Dibujo({ op }: { op: Op }) {
     case "caja": return <rect x={op.x} y={op.y} width={op.w} height={op.h} rx={op.radio} fill={color(op.color)} />;
     case "linea": return <line x1={op.x1} y1={op.y1} x2={op.x2} y2={op.y2} stroke={color(op.color)} strokeWidth={op.grosor} />;
     case "punto": return <circle cx={op.x} cy={op.y} r={op.r} fill={color(op.color)} />;
+    case "imagen": return <image href={op.src} x={op.x} y={op.y} width={op.w} height={op.h} preserveAspectRatio="xMinYMid meet" />;
     case "texto": {
       const texto = (
         <text

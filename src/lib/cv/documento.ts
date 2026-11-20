@@ -29,7 +29,8 @@ export type Referencia = { nombre: string; cargo: string; contacto: string };
 /** Una sección con nombre propio (Voluntariado, Publicaciones…), como en FlowCV. */
 export type SeccionLibre = { titulo: string; texto: string };
 /** «Declaro que los datos son verdaderos», con lugar y fecha, como en FlowCV. */
-export type Declaracion = { texto: string; lugarFecha: string };
+/** `firma`: la firma dibujada a mano (PNG en data URL, opcional; 20-nov-2026). */
+export type Declaracion = { texto: string; lugarFecha: string; firma?: string };
 
 /**
  * LAS SECCIONES, EN EL ORDEN QUE ELIJA LA PERSONA (19-nov-2026). Cada una se
@@ -87,7 +88,27 @@ export type Carta = {
   porQueEncajo: string;
   porQueLaEmpresa: string;
   cierre: string;
+  // La carta completa, como la de FlowCV (20-nov-2026). Todo opcional: las
+  // cartas guardadas antes no lo traen y se ven igual que siempre.
+  /** Cargo de quien la recibe («Jefa de Recursos Humanos»). */
+  cargo?: string;
+  /** Dirección de la empresa, si la piden. */
+  direccion?: string;
+  /** AAAA-MM-DD. Vacía: la fecha del día en que se descarga. */
+  fecha?: string;
+  /** Vacío: «Postulación al puesto de …». */
+  asunto?: string;
+  /** Vacío: «Estimado equipo de selección» o el nombre de quien la recibe. */
+  saludo?: string;
+  /** Vacía: «Saludos cordiales,». */
+  despedida?: string;
+  /** La firma dibujada a mano (PNG en data URL). */
+  firma?: string;
 };
+
+/** Tope de una firma dibujada (data URL): unos 60 KB. */
+export const MAX_FIRMA = 60_000;
+export const esFirmaValida = (v: unknown): v is string => typeof v === "string" && v.length <= MAX_FIRMA && /^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(v);
 
 export const LIMITES = { resumen: 600, carta: 2200, entradas: 12, habilidades: 10, porDefecto: 8, sugeridas: 30 };
 
@@ -118,7 +139,7 @@ export type Bloque = { id: SeccionId; clave: string; titulo: string } & (
   | { tipo: "lineas"; lineas: string[] }
   | { tipo: "comas"; items: string[] }
   | { tipo: "referencias"; referencias: Referencia[] }
-  | { tipo: "declaracion"; texto: string; lugarFecha: string }
+  | { tipo: "declaracion"; texto: string; lugarFecha: string; firma?: string }
 );
 const visibles = (lista: CvEntry[] | undefined) => (lista ?? []).filter((e) => !e.hidden && (e.title.trim() || e.organization.trim()));
 
@@ -147,7 +168,7 @@ export function bloquesDelCv(cv: CvDocumento): Bloque[] {
     if (id === "referencias") { if (extra.referencias.length) salida.push({ ...base, tipo: "referencias", referencias: extra.referencias }); continue; }
     if (id === "declaracion") {
       const d = cv.declaracion;
-      if (d?.texto.trim()) salida.push({ ...base, tipo: "declaracion", texto: d.texto.trim(), lugarFecha: d.lugarFecha.trim() });
+      if (d?.texto.trim()) salida.push({ ...base, tipo: "declaracion", texto: d.texto.trim(), lugarFecha: d.lugarFecha.trim(), ...(esFirmaValida(d.firma) ? { firma: d.firma } : {}) });
       continue;
     }
     const entradas = visibles(cv[id]);
@@ -274,10 +295,10 @@ export function prellenar(datos: DatosDelPerfil, idioma: Idioma): CvDocumento {
   const servicios = (datos.servicios ?? []).map((s) => s.trim()).filter(Boolean);
   const certs = (datos.certificaciones ?? []).filter((c) => c.name?.trim());
   const comoEstudio = certs.filter((c) => !esCertificacion(c.name, c.institution))
-    .map((c): CvEntry => ({ title: c.name.trim(), organization: c.institution?.trim() ?? "", period: c.year?.trim() ?? "", description: "" }));
+    .map((c): CvEntry => ({ title: c.name.trim(), organization: c.institution?.trim() ?? "", period: String(c.year ?? "").trim(), description: "" }));
   const educacion = [...cv.education, ...comoEstudio.filter((e, i) => !cv.education.some((x) => sameCvEntry(x, e)) && !comoEstudio.slice(0, i).some((x) => sameCvEntry(x, e)))];
   const certificaciones = certs.filter((c) => esCertificacion(c.name, c.institution))
-    .map((c) => [c.name.trim(), c.institution?.trim(), c.year?.trim()].filter(Boolean).join(" · "));
+    .map((c) => [c.name.trim(), c.institution?.trim(), String(c.year ?? "").trim()].filter(Boolean).join(" · "));
   // Habilidades: de 6 a 10, las primeras de su propio CV. Los nombres de los
   // servicios («Desarrollo web») no son habilidades: quedan como sugerencia.
   const propias = unicas(cv.skills);
@@ -336,12 +357,12 @@ export function cartaInicial(cv: CvDocumento, vacante: { puesto?: string; empres
       : `Les escribo para postularme al puesto de ${puesto || "[puesto]"}${empresa ? ` en ${empresa}` : ""}.`,
     porQueEncajo: logro
       ? (en
-        ? `In my role as ${logro.title}${logro.organization ? ` at ${logro.organization}` : ""}, I [main achievement, ideally with a number]. ${cv.habilidades.slice(0, 3).length ? `My strengths include ${cv.habilidades.slice(0, 3).join(", ")}.` : ""}`
-        : `Como ${logro.title}${logro.organization ? ` en ${logro.organization}` : ""}, [tu logro principal, idealmente con un número]. ${cv.habilidades.slice(0, 3).length ? `Mis fortalezas incluyen ${cv.habilidades.slice(0, 3).join(", ")}.` : ""}`).trim()
-      : (en ? "[Two or three achievements that show you can do this job, ideally with numbers.]" : "[Dos o tres logros que muestren que podés hacer este trabajo, idealmente con números.]"),
+        ? `In my role as ${logro.title}${logro.organization ? (porCuentaPropia(logro.organization) ? " (self-employed)" : ` at ${logro.organization}`) : ""}, I [main achievement, ideally with a number]. ${cv.habilidades.slice(0, 3).length ? `My strengths include ${cv.habilidades.slice(0, 3).join(", ")}.` : ""}`
+        : `Como ${aMediaFrase(logro.title)}${logro.organization ? (porCuentaPropia(logro.organization) ? " por cuenta propia" : ` en ${logro.organization}`) : ""}, [su logro principal, idealmente con un número]. ${cv.habilidades.slice(0, 3).length ? `Mis fortalezas incluyen ${cv.habilidades.slice(0, 3).map(aMediaFrase).join(", ")}.` : ""}`).trim()
+      : (en ? "[Two or three achievements that show you can do this job, ideally with numbers.]" : "[Dos o tres logros que muestren que puede hacer este trabajo, idealmente con números.]"),
     porQueLaEmpresa: en
       ? `[Why this company: something specific about what they do and how you would contribute.]`
-      : `[Por qué esta empresa: algo concreto de lo que hacen y cómo aportarías.]`,
+      : `[Por qué esta empresa: algo concreto de lo que hacen y cómo aportaría.]`,
     cierre: en
       ? "I would welcome the chance to talk about how I can help your team. Thank you for your time."
       : "Me encantaría conversar sobre cómo puedo aportar a su equipo. Muchas gracias por su tiempo.",
@@ -357,25 +378,25 @@ const PLACEHOLDER = /\[[^\]]+\]/;
 export function revisarCv(cv: CvDocumento): Aviso[] {
   const avisos: Aviso[] = [];
   const add = (id: string, nivel: Aviso["nivel"], es: string, en: string) => avisos.push({ id, nivel, texto: { es, en } });
-  if (!cv.nombre.trim()) add("nombre", "falta", "Falta tu nombre completo.", "Your full name is missing.");
-  if (!cv.correo.trim() && !cv.telefono.trim()) add("contacto", "falta", "Agregá un correo o un teléfono para que te puedan llamar.", "Add an email or phone so they can reach you.");
+  if (!cv.nombre.trim()) add("nombre", "falta", "Falta su nombre completo.", "Your full name is missing.");
+  if (!cv.correo.trim() && !cv.telefono.trim()) add("contacto", "falta", "Agregue un correo o un teléfono para que puedan comunicarse con usted.", "Add an email or phone so they can reach you.");
   if (cv.correo && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cv.correo.trim())) add("correo", "falta", "El correo no parece válido.", "The email doesn't look valid.");
-  if (!cv.titular.trim()) add("titular", "mejora", "Poné un título corto arriba (por ejemplo \"Electricista residencial\"): es lo primero que lee el reclutador.", "Add a short headline (for example \"Residential electrician\"): it is the first thing a recruiter reads.");
-  if (cv.resumen.trim().length < 80) add("resumen", "mejora", "Escribí un perfil profesional de 2 o 3 líneas: qué hacés, cuánta experiencia tenés y en qué sos fuerte.", "Write a 2–3 line summary: what you do, how much experience you have and what you're strong at.");
-  if (!cv.experiencia.length) add("experiencia", "falta", "Agregá al menos una experiencia, aunque sea por cuenta propia.", "Add at least one job, even if self-employed.");
+  if (!cv.titular.trim()) add("titular", "mejora", "Ponga un título corto arriba (por ejemplo \"Electricista residencial\"): es lo primero que lee el reclutador.", "Add a short headline (for example \"Residential electrician\"): it is the first thing a recruiter reads.");
+  if (cv.resumen.trim().length < 80) add("resumen", "mejora", "Escriba un perfil profesional de 2 o 3 líneas: qué hace, cuánta experiencia tiene y en qué es fuerte.", "Write a 2–3 line summary: what you do, how much experience you have and what you're strong at.");
+  if (!cv.experiencia.length) add("experiencia", "falta", "Agregue al menos una experiencia, aunque sea por cuenta propia.", "Add at least one job, even if self-employed.");
   const sinDescripcion = cv.experiencia.filter((e) => !e.description.trim());
-  if (sinDescripcion.length) add("logros", "mejora", `${sinDescripcion.length === 1 ? "Una experiencia no tiene" : `${sinDescripcion.length} experiencias no tienen`} logros: contá en 2 o 3 viñetas qué hiciste.`, `${sinDescripcion.length === 1 ? "One job has" : `${sinDescripcion.length} jobs have`} no achievements: add 2–3 bullet points.`);
+  if (sinDescripcion.length) add("logros", "mejora", `${sinDescripcion.length === 1 ? "Una experiencia no tiene" : `${sinDescripcion.length} experiencias no tienen`} logros: cuente en 2 o 3 viñetas qué hizo.`, `${sinDescripcion.length === 1 ? "One job has" : `${sinDescripcion.length} jobs have`} no achievements: add 2–3 bullet points.`);
   const descripciones = cv.experiencia.map((e) => e.description).join("\n");
   // «Liderazgo: Definí…» también empieza con un verbo: la etiqueta corta del
   // principio no cuenta.
   const sinEtiqueta = (l: string) => textoPlano(l.trim().replace(/^[•\-–]\s*/, "")).replace(/^[^:]{1,40}:\s*/, "");
-  if (descripciones.trim() && !descripciones.split("\n").some((l) => VERBOS.test(sinEtiqueta(l)))) add("verbos", "mejora", "Empezá cada logro con un verbo de acción: Instalé, Lideré, Reduje…", "Start each achievement with an action verb: Installed, Led, Reduced…");
-  if (descripciones.trim() && !/\d/.test(descripciones)) add("numeros", "mejora", "Agregá números a tus logros (30 clientes, 15 %, 2 años): hacen el CV más creíble.", "Add numbers to your achievements (30 clients, 15%, 2 years): they make your CV more credible.");
-  if (cv.experiencia.some((e) => !parseCvDates(e.period)?.startYear)) add("fechas", "mejora", "Poné fecha de inicio (mes y año) en cada experiencia.", "Add a start date (month and year) to every job.");
-  if (cv.habilidades.length < 4) add("habilidades", "mejora", "Agregá al menos 4 habilidades: los filtros buscan esas palabras.", "Add at least 4 skills: screening filters look for those words.");
-  if (cv.habilidades.length > LIMITES.habilidades) add("demasiadas", "mejora", `Dejá ${LIMITES.habilidades} habilidades como máximo, las que más pide el puesto: una lista larga se lee como relleno.`, `Keep ${LIMITES.habilidades} skills at most, the ones the job asks for: a long list reads as filler.`);
+  if (descripciones.trim() && !descripciones.split("\n").some((l) => VERBOS.test(sinEtiqueta(l)))) add("verbos", "mejora", "Empiece cada logro con un verbo de acción: Instalé, Lideré, Reduje…", "Start each achievement with an action verb: Installed, Led, Reduced…");
+  if (descripciones.trim() && !/\d/.test(descripciones)) add("numeros", "mejora", "Agregue números a sus logros (30 clientes, 15 %, 2 años): hacen el CV más creíble.", "Add numbers to your achievements (30 clients, 15%, 2 years): they make your CV more credible.");
+  if (cv.experiencia.some((e) => !parseCvDates(e.period)?.startYear)) add("fechas", "mejora", "Ponga fecha de inicio (mes y año) en cada experiencia.", "Add a start date (month and year) to every job.");
+  if (cv.habilidades.length < 4) add("habilidades", "mejora", "Agregue al menos 4 habilidades: los filtros buscan esas palabras.", "Add at least 4 skills: screening filters look for those words.");
+  if (cv.habilidades.length > LIMITES.habilidades) add("demasiadas", "mejora", `Deje ${LIMITES.habilidades} habilidades como máximo, las que más pide el puesto: una lista larga se lee como relleno.`, `Keep ${LIMITES.habilidades} skills at most, the ones the job asks for: a long list reads as filler.`);
   // Unos 2.900 caracteres por página carta con esta plantilla.
-  if (cvComoTexto(cv).length > 5800) add("largo", "mejora", "Pasa de unas 2 páginas: dejá solo lo más relevante para el puesto.", "It runs past about 2 pages: keep only what matters most for the job.");
+  if (cvComoTexto(cv).length > 5800) add("largo", "mejora", "Pasa de unas 2 páginas: deje solo lo más relevante para el puesto.", "It runs past about 2 pages: keep only what matters most for the job.");
   if ([cv.resumen, ...cv.experiencia.map((e) => e.description), ...(cv.proyectos ?? []).map((e) => e.description), ...(cv.secciones ?? []).map((x) => x.texto), ...[cv.cursos, cv.premios, cv.voluntariado, cv.publicaciones].flatMap((l) => (l ?? []).map((e) => e.description)), cv.declaracion?.texto ?? ""].some((t) => PLACEHOLDER.test(t))) add("corchetes", "falta", "Quedó texto entre [corchetes] por completar.", "There is [bracketed] text left to fill in.");
   return avisos;
 }
@@ -383,24 +404,33 @@ export function revisarCv(cv: CvDocumento): Aviso[] {
 export function revisarCarta(carta: Carta): Aviso[] {
   const avisos: Aviso[] = [];
   const cuerpo = [carta.apertura, carta.porQueEncajo, carta.porQueLaEmpresa, carta.cierre].join(" ");
-  if (PLACEHOLDER.test(cuerpo)) avisos.push({ id: "corchetes", nivel: "falta", texto: { es: "Completá lo que está entre [corchetes] antes de enviarla.", en: "Fill in the [bracketed] text before sending it." } });
-  if (!carta.puesto.trim()) avisos.push({ id: "puesto", nivel: "falta", texto: { es: "Indicá a qué puesto te postulás.", en: "Say which position you are applying for." } });
+  if (PLACEHOLDER.test(cuerpo)) avisos.push({ id: "corchetes", nivel: "falta", texto: { es: "Complete lo que está entre [corchetes] antes de enviarla.", en: "Fill in the [bracketed] text before sending it." } });
+  if (!carta.puesto.trim()) avisos.push({ id: "puesto", nivel: "falta", texto: { es: "Indique a qué puesto se postula.", en: "Say which position you are applying for." } });
   const palabras = cuerpo.trim().split(/\s+/).filter(Boolean).length;
   if (palabras > 400) avisos.push({ id: "larga", nivel: "mejora", texto: { es: "Está larga: una carta de presentación se lee mejor con menos de 400 palabras.", en: "It's long: a cover letter reads best under 400 words." } });
   return avisos;
 }
 
 /** Palabras de la vacante que aparecen (o no) en el CV: lo que miran los filtros. */
-const VACIAS = new Set("para con por los las una unos unas del que como sus este esta entre sobre desde hasta tener experiencia trabajo puesto empresa and the for with you your our are will have from this that years work job buscamos ofrecemos persona personas equipo requisitos requisito deseable indispensable conocimientos conocimiento disponibilidad horario salario beneficios incorporacion tiempo completo jornada nuestra nuestro nuestros nuestras estamos buscando responsabilidades funciones principales area areas dentro cada todas todos tambien ademas manejo capacidad habilidades excelente buen buena bueno nivel minimo minima mas menos mayor menor anos seras ser estar hacer realizar apoyo apoyar gran grandes importante importantes junto cargo vacante oferta empleo contrato contratar contratamos position role company team looking seeking candidate candidates ability strong excellent good must should including etc about their they them who what when where which while within across also more than into other such being been were over under join opportunity benefits salary full time part time required requirements preferred knowledge skills responsibilities".split(" "));
+const VACIAS = new Set("para con por los las una unos unas del que como sus este esta entre sobre desde hasta tener experiencia trabajo puesto empresa and the for with you your our are will have from this that years work job buscamos ofrecemos persona personas equipo requisitos requisito deseable indispensable conocimientos conocimiento disponibilidad horario salario beneficios incorporacion tiempo completo jornada nuestra nuestro nuestros nuestras estamos buscando responsabilidades funciones principales area areas dentro cada todas todos tambien ademas manejo capacidad habilidades excelente buen buena bueno nivel minimo minima mas menos mayor menor anos seras ser estar hacer realizar apoyo apoyar gran grandes importante importantes junto cargo vacante oferta empleo contrato contratar contratamos busca buscan contrata requiere necesita solicita estabilidad alimentacion transporte uniforme crecimiento oportunidad hiring seeks position role company team looking seeking candidate candidates ability strong excellent good must should including etc about their they them who what when where which while within across also more than into other such being been were over under join opportunity benefits salary full time part time required requirements preferred knowledge skills responsibilities".split(" "));
 const norm = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
-/** Palabras que pide la vacante, sin relleno, las más repetidas primero. */
+/** «Hotel Atenas busca…» → «Hotel Atenas». Vacío si el anuncio no lo dice. */
+export function empresaDeLaVacante(vacante: string): string {
+  const primera = vacante.trim().split(/\n|(?<=\.)\s/)[0] ?? "";
+  const m = /^(.{2,60}?)\s+(?:busca|contrata|requiere|necesita|solicita|is hiring|is looking|seeks)\b/i.exec(primera);
+  const empresa = m ? m[1].replace(/^(?:la|el|en)\s+/i, "").trim() : "";
+  // «Se busca…», «Empresa de logística busca…», «We are hiring…»: no dicen el nombre.
+  return /^(?:se|empresa|compañía|importante|we|our|company)\b/i.test(empresa) ? "" : empresa;
+}
+/** Palabras que pide la vacante, sin relleno, las más repetidas primero. El nombre de la empresa no es una palabra clave. */
 export function terminosDeVacante(vacante: string): Map<string, string> {
   const vistas = new Map<string, string>();
   const veces = new Map<string, number>();
+  const deLaEmpresa = new Set(norm(empresaDeLaVacante(vacante)).split(/[^\p{L}\p{N}]+/u).filter(Boolean));
   for (const palabra of vacante.split(/[^\p{L}\p{N}+#.]+/u)) {
     const limpia = palabra.replace(/^[.]+|[.]+$/g, "");
     const n = norm(limpia);
-    if (n.length < 4 || VACIAS.has(n) || /^\d+$/.test(n)) continue;
+    if (n.length < 4 || VACIAS.has(n) || deLaEmpresa.has(n) || /^\d+$/.test(n)) continue;
     if (!vistas.has(n)) vistas.set(n, limpia);
     veces.set(n, (veces.get(n) ?? 0) + 1);
   }
@@ -408,7 +438,7 @@ export function terminosDeVacante(vacante: string): Map<string, string> {
   return new Map(orden);
 }
 export function palabrasClave(vacante: string, cv: CvDocumento): { estan: string[]; faltan: string[]; puntaje: number } {
-  const texto = norm([cv.titular, cv.resumen, ...cv.habilidades, ...cv.experiencia.flatMap((e) => [e.title, e.description]), ...(cv.proyectos ?? []).flatMap((e) => [e.title, e.description]), ...cv.certificaciones, ...(cv.secciones ?? []).map((x) => x.texto), ...[cv.cursos, cv.premios, cv.voluntariado, cv.publicaciones].flatMap((l) => (l ?? []).flatMap((e) => [e.title, e.description])), ...(cv.intereses ?? [])].join(" "));
+  const texto = norm([cv.titular, cv.resumen, ...cv.habilidades, ...cv.idiomas, ...cv.educacion.flatMap((e) => [e.title, e.organization, e.description]), ...cv.experiencia.flatMap((e) => [e.title, e.description]), ...(cv.proyectos ?? []).flatMap((e) => [e.title, e.description]), ...cv.certificaciones, ...(cv.secciones ?? []).map((x) => x.texto), ...[cv.cursos, cv.premios, cv.voluntariado, cv.publicaciones].flatMap((l) => (l ?? []).flatMap((e) => [e.title, e.description])), ...(cv.intereses ?? [])].join(" "));
   const estan: string[] = [], faltan: string[] = [];
   for (const [n, original] of terminosDeVacante(vacante)) (texto.includes(n) ? estan : faltan).push(original);
   const total = estan.length + faltan.length;
@@ -439,26 +469,94 @@ export function cvComoTexto(cv: CvDocumento): string {
   ].filter((l, i, a) => !(l === "" && a[i - 1] === "")).join("\n").trim();
 }
 
+/** «Por cuenta propia», «Independiente», «Freelance»: no es el nombre de una empresa. */
+const porCuentaPropia = (org: string) => /^(por cuenta propia|cuenta propia|independiente|freelance|aut[oó]nomo|self[- ]employed)$/i.test(org.trim());
+/** «Electricista» → «electricista» a media frase; siglas y nombres propios («INA», «AutoCAD») quedan igual. */
+const aMediaFrase = (t: string) => {
+  const x = t.trim();
+  return /^\p{Lu}\p{Ll}/u.test(x) && !/\p{Lu}/u.test(x.slice(1)) ? x.charAt(0).toLowerCase() + x.slice(1) : x;
+};
+
 // «Estimado equipo de selección», en minúscula a media frase; un nombre propio queda igual.
 function saludo(destinatario: string, en: boolean) {
   const d = destinatario.trim() || (en ? "Hiring team" : "Equipo de selección");
   return /^(equipo de selecci[oó]n|hiring team)$/i.test(d) ? d.charAt(0).toLowerCase() + d.slice(1) : d;
 }
 
-/** Desde la fecha hasta la firma: lo mismo en el PDF y en el texto copiado. */
-export function cuerpoDeLaCarta(cv: CvDocumento, carta: Carta, hoy = new Date()): string {
-  const en = cv.idioma === "en";
-  const fecha = hoy.toLocaleDateString(en ? "en-US" : "es-CR", { day: "numeric", month: "long", year: "numeric" });
-  return [
-    fecha, "",
-    // El bloque del destinatario solo cuando hay empresa: sin ella repetía el saludo.
-    carta.empresa.trim() ? [carta.destinatario, carta.empresa].filter((v) => v.trim()).join("\n") : "", "",
+/** La fecha de la carta en el idioma del documento: la elegida o la de hoy. */
+export function fechaDeLaCarta(carta: Pick<Carta, "fecha">, idioma: Idioma, hoy = new Date()): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(carta.fecha?.trim() ?? "");
+  const dia = m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : hoy;
+  return dia.toLocaleDateString(idioma === "en" ? "en-US" : "es-CR", { day: "numeric", month: "long", year: "numeric" });
+}
+/**
+ * Saludo de siempre: «Estimado equipo de selección» o, con un nombre, «Buen
+ * día, <nombre>»: el género no se adivina por el nombre (19-nov-2026);
+ * «Estimada» y «Estimado» quedan a un toque en las sugerencias.
+ */
+export function saludoPorDefecto(carta: Pick<Carta, "destinatario">, idioma: Idioma): string {
+  const en = idioma === "en";
+  const d = saludo(carta.destinatario, en);
+  if (en) return `Dear ${d}:`;
+  return /^equipo de selecci[oó]n$/i.test(d) ? `Estimado ${d}:` : `Buen día, ${d}:`;
+}
+/** Otras formas de saludar, para elegir con un toque. */
+export function saludosSugeridos(carta: Pick<Carta, "destinatario" | "empresa">, idioma: Idioma): string[] {
+  const en = idioma === "en";
+  const d = carta.destinatario.trim();
+  const generico = !d || /^(equipo de selecci[oó]n|hiring team)$/i.test(d);
+  const empresa = carta.empresa.trim();
+  const lista = en
+    ? [saludoPorDefecto(carta, idioma), ...(empresa ? [`Dear ${empresa} team:`] : []), ...(!generico ? [`Hello ${d},`] : []), "Dear Hiring Manager:"]
+    : [saludoPorDefecto(carta, idioma), ...(!generico ? [`Estimada ${d}:`, `Estimado ${d}:`] : []), ...(empresa ? [`Estimado equipo de ${empresa}:`] : []), "Estimados señores:"];
+  return [...new Set(lista)];
+}
+export const asuntoPorDefecto = (carta: Pick<Carta, "puesto">, idioma: Idioma) =>
+  carta.puesto.trim() ? `${idioma === "en" ? "Application for" : "Postulación al puesto de"} ${carta.puesto.trim()}` : "";
+export const despedidaPorDefecto = (idioma: Idioma) => (idioma === "en" ? "Sincerely," : "Saludos cordiales,");
+
+export type PartesDeLaCarta = {
+  fecha: string;
+  /** Quien la recibe, línea por línea. Vacío si no hay más que el genérico. */
+  destinatario: string[];
+  asunto: string;
+  saludo: string;
+  /** Con formato (**negrita**, [enlace](url)). */
+  parrafos: string[];
+  despedida: string;
+  nombre: string;
+  firma?: string;
+};
+/** Las partes de la carta en orden: de aquí salen el PDF, la vista previa y el texto. */
+export function partesDeLaCarta(cv: CvDocumento, carta: Carta, hoy = new Date()): PartesDeLaCarta {
+  // El bloque del destinatario solo cuando hay empresa, cargo o dirección: sin
+  // ellos repetía el saludo.
+  const datos = [carta.cargo ?? "", carta.empresa, carta.direccion ?? ""].map((v) => v.trim());
+  return {
+    fecha: fechaDeLaCarta(carta, cv.idioma, hoy),
+    destinatario: datos.some(Boolean) ? [carta.destinatario.trim(), ...datos].filter(Boolean) : [],
     // La línea de asunto, como en FlowCV y en una carta formal (18-nov-2026):
     // quien la recibe sabe a qué puesto va antes de leer el saludo.
-    carta.puesto.trim() ? `${en ? "Application for" : "Postulación al puesto de"} ${carta.puesto.trim()}` : "", "",
-    `${en ? "Dear" : "Estimado"} ${saludo(carta.destinatario, en)}:`, "",
-    carta.apertura.trim(), "", carta.porQueEncajo.trim(), "", carta.porQueLaEmpresa.trim(), "", carta.cierre.trim(), "",
-    en ? "Sincerely," : "Saludos cordiales,", cv.nombre,
+    asunto: carta.asunto?.trim() || asuntoPorDefecto(carta, cv.idioma),
+    saludo: carta.saludo?.trim() || saludoPorDefecto(carta, cv.idioma),
+    parrafos: [carta.apertura, carta.porQueEncajo, carta.porQueLaEmpresa, carta.cierre].map((p) => p.trim()).filter(Boolean),
+    despedida: carta.despedida?.trim() || despedidaPorDefecto(cv.idioma),
+    nombre: cv.nombre,
+    ...(esFirmaValida(carta.firma) ? { firma: carta.firma } : {}),
+  };
+}
+
+/** Desde la fecha hasta la firma: lo mismo en el PDF y en el texto copiado. */
+export function cuerpoDeLaCarta(cv: CvDocumento, carta: Carta, hoy = new Date()): string {
+  const p = partesDeLaCarta(cv, carta, hoy);
+  const plano = (t: string) => t.split("\n").map((l) => textoPlano(l)).join("\n");
+  return [
+    p.fecha, "",
+    p.destinatario.join("\n"), "",
+    p.asunto, "",
+    p.saludo, "",
+    ...p.parrafos.flatMap((x) => [plano(x), ""]),
+    p.despedida, p.nombre,
   ].filter((l, i, a) => !(l === "" && (i === 0 || a[i - 1] === ""))).join("\n").trim();
 }
 

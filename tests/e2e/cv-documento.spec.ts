@@ -1,14 +1,17 @@
 import { expect, test } from "playwright/test";
 import {
-  ajustarAVacante, cartaComoTexto, cartaInicial, cvComoTexto, esCertificacion, fechasAts, nombreDeArchivo, palabrasClave, prellenar, revisarCarta, revisarCv, sumarDesdeArchivo,
+  ajustarAVacante, cartaComoTexto, cartaInicial, cvComoTexto, esCertificacion, fechasAts, nombreDeArchivo, palabrasClave, prellenar, revisarCarta, revisarCv, saludoPorDefecto, saludosSugeridos, sumarDesdeArchivo,
 } from "../../src/lib/cv/documento";
 import { pdfDelCv, pdfDelCvEnBytes, pdfDeLaCarta } from "../../src/lib/cv/pdf-documento";
 import { textoPlano, trozos } from "../../src/lib/cv/texto-rico";
 import { htmlDeTexto, textoDeHtml } from "../../src/lib/cv/editor-formato";
-import { cvPublico } from "../../src/lib/cv/cv-publico";
+import { cvDelPanelParaPublicar, cvPublico } from "../../src/lib/cv/cv-publico";
+import { moverEnLista } from "../../src/components/dashboard/cv-arrastrar";
 import { aplicarPlantilla, DISENO_BASE, disenoDe, esAptaAts, PLANTILLAS } from "../../src/lib/cv/diseno";
 import { maquetar, nuevoDocumento, type Op } from "../../src/lib/cv/maquetar";
 import { empresaProbable, imagenValida, limpiarTextoLeido, puestoProbable } from "../../src/lib/cv/leer-imagen";
+import { aplicarSugerencias, cifras, cvParaIa, enPrimeraPersona, hechosNuevos, leerJson, nombresPropios, preguntaDeUsted, promptAdaptar, sinOracionesInventadas, validarAdaptacion, validarCarta, validarMejora } from "../../src/lib/cv/ia";
+import { empresaDeLaOferta } from "../../src/components/dashboard/cv-ia";
 
 // El generador de CV del panel: se prellena con el perfil, señala lo que suele
 // hacer que un CV se descarte y saca un PDF con texto de verdad, en una columna.
@@ -116,7 +119,8 @@ test("la carta arranca con el puesto y avisa de lo que queda por completar", () 
   const cv = prellenar(perfil, "es");
   const carta = cartaInicial(cv, { puesto: "Electricista de mantenimiento", empresa: "Hotel Atenas" });
   expect(carta.apertura).toBe("Les escribo para postularme al puesto de Electricista de mantenimiento en Hotel Atenas.");
-  expect(carta.porQueEncajo).toContain("Como Electricista en Por cuenta propia");
+  expect(carta.porQueEncajo).toContain("Como electricista por cuenta propia,");
+  expect(carta.porQueEncajo).not.toContain("en Por cuenta propia");
   expect(revisarCarta(carta).map((a) => a.id)).toEqual(["corchetes"]);
   const texto = cartaComoTexto(cv, carta, new Date(2026, 10, 13));
   expect(texto.split("\n").slice(0, 2)).toEqual(["Ana Mora", "ana@example.com | 8888-5555 | Atenas, Alajuela, Costa Rica"]);
@@ -414,4 +418,204 @@ test("diseño: fechas a la derecha, habilidades en etiquetas o con nivel, y la c
   expect(nombre.color.join()).toBe("31,58,95");
   const pdfCarta = Buffer.from(await (await pdfDeLaCarta(conDiseno, cartaInicial(conDiseno, { puesto: "Electricista" }))).arrayBuffer()).toString("latin1");
   expect(pdfCarta).toContain("(Saludos cordiales,) Tj");
+});
+
+// ── FASE 3 (20-nov-2026): la carta completa, la firma a mano y el CV público ──
+const PNG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+
+test("carta completa: destinatario, fecha, asunto, saludo y despedida propios; sin ellos queda como antes", () => {
+  const cv = prellenar(perfil, "es");
+  const carta = cartaInicial(cv, { puesto: "Electricista de mantenimiento", empresa: "Hotel Atenas" });
+  const completa = {
+    ...carta, destinatario: "Laura Solís", cargo: "Jefa de Recursos Humanos", direccion: "Atenas, Alajuela",
+    fecha: "2026-12-01", asunto: "Asunto: Postulación a Electricista", saludo: "Estimada Laura Solís:", despedida: "Atentamente,",
+    porQueLaEmpresa: "Me interesa **su hotel** por sus [obras recientes](https://hotel.cr).",
+  };
+  const texto = cartaComoTexto(cv, completa);
+  expect(texto).toContain("1 de diciembre de 2026\n\nLaura Solís\nJefa de Recursos Humanos\nHotel Atenas\nAtenas, Alajuela\n\nAsunto: Postulación a Electricista\n\nEstimada Laura Solís:");
+  // El texto para pegar va sin marcas de formato.
+  expect(texto).toContain("Me interesa su hotel por sus obras recientes (https://hotel.cr).");
+  expect(texto.trim().endsWith("Atentamente,\nAna Mora")).toBe(true);
+  // Una fecha mal escrita no rompe: sale la de hoy.
+  expect(cartaComoTexto(cv, { ...carta, fecha: "mañana" }, new Date(2026, 10, 13))).toContain("13 de noviembre de 2026");
+  // Sin los campos nuevos, el mismo texto de siempre.
+  expect(cartaComoTexto(cv, carta, new Date(2026, 10, 13))).toContain("Hotel Atenas\n\nPostulación al puesto de Electricista de mantenimiento\n\nEstimado equipo de selección:");
+  expect(saludosSugeridos(completa, "es")).toEqual(expect.arrayContaining(["Estimado Laura Solís:", "Estimada Laura Solís:", "Estimado equipo de Hotel Atenas:"]));
+  expect(saludoPorDefecto(carta, "es")).toBe("Estimado equipo de selección:");
+  // Con un nombre, el saludo por defecto no supone el género (19-nov-2026).
+  expect(saludoPorDefecto(completa, "es")).toBe("Buen día, Laura Solís:");
+});
+
+test("firma a mano: sale en la carta y en la declaración, en la vista previa y en el PDF; una inválida no", async () => {
+  const cv = prellenar(perfil, "es");
+  const doc = await nuevoDocumento(cv);
+  const carta = { ...cartaInicial(cv, { puesto: "Electricista" }), firma: PNG };
+  const ops = maquetar(doc, cv, carta).paginas.flat();
+  const firma = ops.find((o) => o.t === "imagen") as Extract<Op, { t: "imagen" }>;
+  expect(firma.w / firma.h).toBe(3);
+  // Va entre la despedida y el nombre.
+  const despedida = ops.find((o) => o.t === "texto" && o.s === "Saludos cordiales,") as Extract<Op, { t: "texto" }>;
+  const nombre = ops.filter((o) => o.t === "texto" && o.s === "Ana Mora").at(-1) as Extract<Op, { t: "texto" }>;
+  expect(firma.y).toBeGreaterThan(despedida.y);
+  expect(nombre.y).toBeGreaterThan(firma.y + firma.h);
+  const pdf = Buffer.from(await (await pdfDeLaCarta(cv, carta)).arrayBuffer()).toString("latin1");
+  expect(pdf).toContain("/Subtype /Image");
+  // Algo que no es un PNG en data URL no se dibuja.
+  expect(maquetar(doc, cv, { ...carta, firma: "javascript:alert(1)" }).paginas.flat().some((o) => o.t === "imagen")).toBe(false);
+  const conDeclaracion = { ...cv, declaracion: { texto: "Declaro que es verdad.", lugarFecha: "Atenas", firma: PNG } };
+  expect(maquetar(doc, conDeclaracion).paginas.flat().filter((o) => o.t === "imagen")).toHaveLength(1);
+  // El texto para pegar no cambia con la firma.
+  expect(cvComoTexto(conDeclaracion)).toBe(cvComoTexto({ ...conDeclaracion, declaracion: { ...conDeclaracion.declaracion, firma: undefined } }));
+});
+
+test("CV público elegido en el panel: sin correo, teléfono ni firma; datos raros no se publican", () => {
+  const cv = { ...prellenar(perfil, "es"), declaracion: { texto: "Declaro.", lugarFecha: "Atenas", firma: PNG } };
+  const publico = cvDelPanelParaPublicar({ cv, carta: {} }, "contratacr.com/ana-mora");
+  expect(publico).not.toBeNull();
+  expect(publico!.correo).toBe("");
+  expect(publico!.telefono).toBe("");
+  expect(publico!.declaracion?.firma).toBeUndefined();
+  expect(publico!.experiencia).toEqual(cv.experiencia);
+  expect(cvComoTexto(publico!)).not.toContain("ana@example.com");
+  expect(cvDelPanelParaPublicar({ cv: { nombre: "" } }, "x")).toBeNull();
+  expect(cvDelPanelParaPublicar({ cv: { nombre: "Ana", experiencia: "no" } }, "x")).toBeNull();
+  expect(cvDelPanelParaPublicar(null, "x")).toBeNull();
+});
+
+test("arrastrar para ordenar mueve el elemento a donde se soltó", () => {
+  expect(moverEnLista(["a", "b", "c", "d"], 0, 2)).toEqual(["b", "c", "a", "d"]);
+  expect(moverEnLista(["a", "b", "c", "d"], 3, 0)).toEqual(["d", "a", "b", "c"]);
+});
+
+// ── FASE 4 (20-nov-2026): la IA reescribe, no inventa ──
+test("IA: al modelo no va el contacto, y lo que inventa se descarta", () => {
+  const cv = prellenar(perfil, "es");
+  const f = cvParaIa(cv);
+  const enviado = JSON.stringify(promptAdaptar(f, "Hotel Atenas busca Electricista de mantenimiento con lectura de planos y licencia B1."));
+  for (const dato of ["ana@example.com", "8888-5555", "Ana Mora", "Atenas, Alajuela"]) expect(enviado).not.toContain(dato);
+
+  // Cifras y nombres nuevos, en dígitos o en palabras.
+  expect([...cifras("Atendí cinco clientes y 1.200 llamadas")]).toEqual(expect.arrayContaining(["5", "1200"]));
+  expect(nombresPropios("Instalé tableros en Walmart con AutoCAD. Reparé breakers")).toEqual(["Walmart", "AutoCAD"]);
+  expect(nombresPropios("Atendí clientes del INA")).toEqual(["INA"]);
+  const fuente = "Instalé el sistema eléctrico de 40 casas\nTécnico en Electricidad, INA";
+  expect(hechosNuevos("Instalé y mantuve el sistema eléctrico de 40 viviendas", fuente)).toEqual([]);
+  expect(hechosNuevos("Instalé el sistema eléctrico de 45 casas", fuente)).toEqual(["45"]);
+  expect(hechosNuevos("Mantuve sistemas eléctricos en Hotel Atenas", fuente)).toEqual(expect.arrayContaining(["Hotel", "Atenas"]));
+  expect(hechosNuevos("Certificado por el INA en electricidad", fuente)).toEqual([]);
+
+  const exp = f.entradas.find((e) => e.titulo === "Electricista")!;
+  const r = validarAdaptacion({
+    titular: "Electricista de mantenimiento",
+    resumen: "Electricista con 8 años de experiencia en instalaciones y reparaciones para hogares y comercios.",
+    entradas: [
+      { id: exp.id, logros: ["Instalé y puse en marcha el sistema eléctrico de 40 casas", "Reduje 20 % el tiempo de reparación", "Lideré un equipo de 6 técnicos en Hotel Atenas"] },
+      { id: "experiencia:99", logros: ["Entrada que no existe"] },
+    ],
+    habilidades: ["Lectura de planos", "Tableros eléctricos", "Licencia B1", "Electricidad"],
+    preguntas: ["¿Tienes licencia B1?"],
+  }, f)!;
+  expect(r).not.toBeNull();
+  const logros = r.sugerencias.find((s) => s.tipo === "logros");
+  expect(logros && logros.tipo === "logros" && logros.despues).toEqual(["Instalé y puse en marcha el sistema eléctrico de 40 casas", "Reduje 20 % el tiempo de reparación"]);
+  // "Licencia B1" y "Lectura de planos" no son de la persona: no se eligen.
+  const hab = r.sugerencias.find((s) => s.tipo === "habilidades");
+  expect(hab && hab.tipo === "habilidades" && hab.despues.includes("Licencia B1")).toBeFalsy();
+  expect(r.descartadas).toBeGreaterThanOrEqual(2);
+  expect(r.preguntas).toEqual(["¿Tiene licencia B1?"]); // el modelo preguntó de tú; sale de usted
+
+  // Aplicar solo cambia lo aceptado y en una copia; la que sale de las habilidades vuelve a las sugeridas.
+  const aplicado = aplicarSugerencias(cv, r.sugerencias);
+  expect(cv.titular).not.toBe("Electricista de mantenimiento");
+  expect(aplicado.titular).toBe("Electricista de mantenimiento");
+  expect(aplicado.experiencia.find((e) => e.title === "Electricista")!.description).toContain("puse en marcha");
+  expect(aplicado.experiencia.map((e) => [e.title, e.organization, e.period])).toEqual(cv.experiencia.map((e) => [e.title, e.organization, e.period]));
+});
+
+test("IA: forma de la respuesta, mejoras y carta sin datos ajenos", () => {
+  expect(leerJson("```json\n{\"opciones\": [\"a\"]}\n```")).toEqual({ opciones: ["a"] });
+  expect(leerJson("no es json")).toBeNull();
+  const cv = prellenar(perfil, "es");
+  const f = cvParaIa(cv);
+  expect(validarAdaptacion({ titular: 5 }, f)).toBeNull();
+  // Lo que no cambia nada no se muestra como sugerencia.
+  expect(validarAdaptacion({ resumen: `${f.resumen} ` }, f)!.sugerencias).toEqual([]);
+
+  const m = validarMejora({ opciones: ["Instalé el sistema eléctrico de 40 casas", "Instalé el sistema eléctrico de 400 casas", "- Instalé redes en 40 casas\n- Reduje tiempos"] }, "Instalé el sistema eléctrico de 40 casas.", "Electricista", "logros")!;
+  expect(m.opciones).toEqual(["Instalé redes en 40 casas\nReduje tiempos"]);
+  expect(m.descartadas).toBe(1);
+
+  const oferta = "Hotel Atenas busca Electricista de mantenimiento. Requisitos: 5 años de experiencia y licencia B1.";
+  const d = { puesto: "Electricista de mantenimiento", empresa: "Hotel Atenas", destinatario: "" };
+  const c = validarCarta({
+    apertura: "Postulo al puesto de Electricista de mantenimiento en Hotel Atenas.",
+    porQueEncajo: "Tengo 5 años de experiencia en hoteles.",
+    porQueLaEmpresa: "Me atrae que Hotel Atenas ofrezca estabilidad a su equipo.",
+    cierre: "Quedo atento a una entrevista.",
+  }, f, oferta, d)!;
+  expect(c.carta.apertura).toContain("Hotel Atenas");
+  // "5 años" sale de la oferta, no del CV: ese párrafo se cambia por uno a completar.
+  expect(c.carta.porQueEncajo).toMatch(/^\[/);
+  expect(c.carta.porQueLaEmpresa).toContain("estabilidad");
+  expect(c.descartadas).toBe(1);
+
+  // Lo que salió de una corrida real (20-nov-2026): una pregunta metida en la
+  // carta y "B1" leído como la cifra 1. La pregunta se quita; lo demás queda.
+  const real = validarCarta({
+    apertura: "Postulo al puesto de Electricista de mantenimiento en Hotel Atenas.",
+    porQueEncajo: "Instalé sistemas eléctricos en 40 viviendas. ¿Poseo licencia B1 y disponibilidad para turnos rotativos?",
+    porQueLaEmpresa: "Valoro la estabilidad que brinda Hotel Atenas.",
+    cierre: "Quedo a la espera de coordinar una entrevista.",
+  }, f, oferta, d)!;
+  expect(real.carta.porQueEncajo).toBe("Instalé sistemas eléctricos en 40 viviendas.");
+  // Del puesto sí se pueden repetir las cifras de la oferta; de la persona, no.
+  const puesto = validarCarta({ apertura: "Postulo a Electricista en un hotel con 5 años de trayectoria.", porQueEncajo: "Tengo 5 años en hoteles.", porQueLaEmpresa: "Me atrae su equipo.", cierre: "Quedo atento." }, f, oferta, d)!;
+  expect(puesto.carta.apertura).toContain("5 años");
+  expect(puesto.carta.porQueEncajo).toMatch(/^\[/);
+  expect(real.descartadas).toBe(1);
+  expect([...cifras("Licencia B1 y C1, 4x4")]).toEqual([]);
+  expect(hechosNuevos("Tengo licencia B1", "Licencia C1")).toEqual(["B1"]);
+  expect(sinOracionesInventadas("Atendí 12 mesas. Atendí 30 mesas.", (o) => o.includes("30"))).toEqual({ texto: "Atendí 12 mesas.", quitadas: 1 });
+  expect(validarMejora({ opciones: ["Instalé sistemas en 40 casas (¿con qué resultado?)"] }, "Instalé el sistema eléctrico de 40 casas", "", "logros")!.opciones).toEqual([]);
+
+  // Tercera persona en el primer verbo de un logro (corrida real): se corrige.
+  expect(enPrimeraPersona("Instaló tableros eléctricos", "es")).toBe("Instalé tableros eléctricos");
+  expect(enPrimeraPersona("Atendió emergencias", "es")).toBe("Atendí emergencias");
+  expect(enPrimeraPersona("Leyó planos", "es")).toBe("Leí planos");
+  expect(enPrimeraPersona("Instalé tableros", "es")).toBe("Instalé tableros");
+  expect(enPrimeraPersona("Installed panels", "en")).toBe("Installed panels");
+  // Las palabras clave no cuentan el nombre de la empresa ni verbos del anuncio, y la educación sí cuenta.
+  const pc = palabrasClave("Hotel Atenas busca Electricista con título técnico del INA y lectura de planos.", prellenar(perfil, "es"));
+  const todas = [...pc.estan, ...pc.faltan].map((p) => p.toLowerCase());
+  expect(todas).not.toContain("hotel");
+  expect(todas).not.toContain("busca");
+  expect(pc.estan.map((p) => p.toLowerCase())).toContain("técnico");
+
+  expect(empresaDeLaOferta("Hotel Atenas busca Electricista de mantenimiento.")).toBe("Hotel Atenas");
+  expect(empresaDeLaOferta("Se necesita soldador")).toBe("");
+  expect(empresaDeLaOferta("Empresa de logística busca Chofer")).toBe("");
+  expect(empresaDeLaOferta("Gorilla Logic is hiring a Mid Frontend Engineer")).toBe("Gorilla Logic");
+});
+
+// La app trata de usted (19-nov-2026): si el modelo pregunta de tú o de vos,
+// se corrige; los sustantivos parecidos («cuentas por cobrar», «programas») no.
+test("las preguntas de la IA a la persona salen de usted", () => {
+  const casos: [string, string][] = [
+    ["¿Tienes licencia B1 vigente?", "¿Tiene licencia B1 vigente?"],
+    ["¿Cuántos clientes atendiste por día?", "¿Cuántos clientes atendió por día?"],
+    ["¿Cuentas con disponibilidad para turnos rotativos?", "¿Cuenta con disponibilidad para turnos rotativos?"],
+    ["¿Has trabajado en hoteles?", "¿Ha trabajado en hoteles?"],
+    ["¿Tenés curso de manipulación de alimentos?", "¿Tiene curso de manipulación de alimentos?"],
+    ["¿Hablás inglés con huéspedes?", "¿Habla inglés con huéspedes?"],
+    ["¿Hiciste mantenimiento preventivo en tus trabajos?", "¿Hizo mantenimiento preventivo en sus trabajos?"],
+    ["¿Cuántos tableros instalabas por mes?", "¿Cuántos tableros instalaba por mes?"],
+    ["¿Te interesa trabajar fines de semana?", "¿Le interesa trabajar fines de semana?"],
+    ["¿Cuántas cuentas por cobrar manejabas?", "¿Cuántas cuentas por cobrar manejaba?"],
+    ["¿Qué programas de contabilidad usas?", "¿Qué programas de contabilidad usa?"],
+    ["¿Existe un proyecto que lideraste?", "¿Existe un proyecto que lideró?"],
+    ["¿Tiene licencia B1?", "¿Tiene licencia B1?"],
+  ];
+  for (const [antes, despues] of casos) expect(preguntaDeUsted(antes, "es")).toBe(despues);
+  expect(preguntaDeUsted("Do you have a B1 license?", "en")).toBe("Do you have a B1 license?");
+  expect(promptAdaptar(cvParaIa(prellenar(perfil, "es")), "Se busca electricista").system).toContain("tratándola de usted");
 });
