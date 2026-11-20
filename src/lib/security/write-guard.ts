@@ -53,7 +53,7 @@ export function unsafeLocalProductionWriteResponse() {
   return NextResponse.json(
     {
       error:
-        "Escritura bloqueada: este entorno esta apuntando a la base de produccion. Usa .env.test para desarrollo/test.",
+        "Escritura bloqueada: este entorno esta apuntando a la base de produccion. Use .env.test para desarrollo/test.",
     },
     { status: 403 }
   );

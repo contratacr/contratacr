@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     const { data: pro, error } = await db.from("professionals").select("id, verification_status, is_verified, verification_provider, verification_reason, profiles(id, cedula, full_name, email)")
       .eq("profile_id", user.id).maybeSingle();
     if (error) throw error;
-    if (!pro) return NextResponse.json({ error: "No se encontró tu perfil." }, { status: 404 });
+    if (!pro) return NextResponse.json({ error: "No se encontró su perfil." }, { status: 404 });
     if (pro.verification_status === "verified" || pro.is_verified) return NextResponse.json({ ok: true, outcome: "verified" });
     const profile = pro.profiles as unknown as { id: string; cedula: string | null; full_name: string | null; email: string | null };
     if (!profile || profile.id !== user.id) throw new Error("Profile mismatch");
@@ -29,6 +29,6 @@ export async function POST(req: Request) {
     const ticketId = await requestManualVerification(db, profile, pro.id, message);
     return NextResponse.json({ ok: true, outcome: "ticket", ticketId }, { headers: { "Cache-Control": "no-store" } });
   } catch {
-    return NextResponse.json({ error: "No se pudo solicitar la revisión. Intenta nuevamente." }, { status: 503 });
+    return NextResponse.json({ error: "No se pudo solicitar la revisión. Intente nuevamente." }, { status: 503 });
   }
 }

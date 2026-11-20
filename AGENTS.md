@@ -69,6 +69,10 @@ Reuse `ContrataCRLogo` / `ContrataCRMark` from `src/components/landing/landing-n
 
 For changes touching shared headers, branding or font loading, run `node scripts/ci/verify-brand-wordmark.mjs` and `tests/e2e/navbar-brand-consistency.spec.ts` in desktop Chromium, mobile Chromium and mobile WebKit. Keep this regression in push smoke and Safari runs; do not remove or weaken it to accommodate a font-dependent logo. The cold-load test intentionally blocks WOFF2 requests.
 
+## Trato en español
+
+Spanish UI copy (screens, notices, notifications, e-mails and questions the AI asks the person) addresses people with "usted", never vos or tú. Text the person writes in their own voice (CV, cover letter) stays in first person. Decided by Isaac on 2026-11-19.
+
 ## Client-facing quotation style
 
 Use straight ASCII double quotes (") around names and quoted text shown to people, in both languages. Do not use guillemets, smart double quotes or double angle brackets. Keep interpolation syntax intact. Apply this to new notifications, support questions and their historical display; never rewrite an already-applied migration to change copy. Run `node scripts/verify-display-quotes.mjs` after copy changes.

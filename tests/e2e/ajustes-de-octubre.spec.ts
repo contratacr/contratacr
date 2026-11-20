@@ -21,7 +21,7 @@ test.describe("invitación a publicar un proyecto", () => {
     await gotoOK(page, "/");
     await waitForInteractivePage(page);
     await expect(page.getByText("¿No sabes a quién llamar?")).toBeVisible();
-    await page.getByRole("link", { name: "Crea una solicitud" }).click();
+    await page.getByRole("link", { name: "Cree una solicitud" }).click();
     const titulo = page.locator("#publish-project-title");
     await titulo.waitFor({ timeout: 30_000 });
     // El formulario ya no lleva frases debajo del título ni de los campos.
@@ -35,7 +35,7 @@ test.describe("invitación a publicar un proyecto", () => {
     const publicar = page.locator('a[href*="/publicar-solicitud"]').filter({ visible: true }).first();
     await expect(publicar).toBeVisible({ timeout: 30_000 });
     await expect(page.getByText("Gratis · Tu número no se publica")).toHaveCount(0);
-    await expect(page.getByText(/Publica tu solicitud y los profesionales te escriben por WhatsApp/).first()).toBeVisible();
+    await expect(page.getByText(/Publique su solicitud y los profesionales le escriben por WhatsApp/).first()).toBeVisible();
   });
 
   test("el final de los resultados ofrece publicar, con el servicio de la búsqueda", async ({ page }) => {
@@ -71,17 +71,17 @@ test.describe("invitación a publicar un proyecto", () => {
     await ensureRegressionSeed();
     await gotoOK(page, `/profesionales/${E2E_USERS.professional.slug}`);
     await waitForInteractivePage(page);
-    await expect(page.getByText("¿No te respondió?")).toHaveCount(0);
+    await expect(page.getByText("¿No le respondió?")).toHaveCount(0);
     await page.evaluate(() => {
       window.dispatchEvent(new CustomEvent("ccr:whatsapp-abierto"));
       window.dispatchEvent(new Event("focus"));
     });
-    await expect(page.getByText("¿No te respondió?")).toBeVisible();
+    await expect(page.getByText("¿No le respondió?")).toBeVisible();
     const publicar = page.getByRole("link", { name: "Publicar", exact: true });
     await expect(publicar).toBeVisible();
     expect(await publicar.getAttribute("href")).toContain("/publicar-solicitud");
     await page.getByRole("button", { name: "Cerrar" }).last().click();
-    await expect(page.getByText("¿No te respondió?")).toHaveCount(0);
+    await expect(page.getByText("¿No le respondió?")).toHaveCount(0);
   });
 });
 

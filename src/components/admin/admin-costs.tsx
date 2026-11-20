@@ -160,7 +160,7 @@ function Summary({ data }: { data: Payload }) {
 
       <section className="mb-4 overflow-x-auto rounded-2xl border border-[#e5e7eb] bg-white p-4">
         <h2 className="mb-2 text-sm font-bold text-[#0f172a]">Gasto mensual y acumulado</h2>
-        <p className="mb-3 text-xs text-[#64748b]">Anotá cada suscripción pagada en Movimientos. Cambiar el presupuesto no modifica pagos anteriores. Un mes sin movimientos no confirma que no hubo gastos.</p>
+        <p className="mb-3 text-xs text-[#64748b]">Anote cada suscripción pagada en Movimientos. Cambiar el presupuesto no modifica pagos anteriores. Un mes sin movimientos no confirma que no hubo gastos.</p>
         <table className="w-full text-left text-sm">
           <thead><tr><th className="py-2">Mes</th><th className="py-2">Pagos del mes</th><th className="py-2">Acumulado</th></tr></thead>
           <tbody>{summary.byMonth.map((month) => (

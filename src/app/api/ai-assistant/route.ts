@@ -208,7 +208,7 @@ function uncertainSearchPayload(message: string, locale: Locale): AssistantPaylo
     confidence: 0,
     answer: locale === "en"
       ? `I have not identified a specific service for "${message}" yet. You can search ContrataCR using those exact words. What needs fixing or what would you like someone to do?`
-      : `Todavía no identifiqué un servicio concreto para "${message}". Podés buscar esas mismas palabras en ContrataCR. ¿Qué necesitás arreglar o qué trabajo querés que haga la persona?`,
+      : `Todavía no identifiqué un servicio concreto para "${message}". Puede buscar esas mismas palabras en ContrataCR. ¿Qué necesita arreglar o qué trabajo quiere que haga la persona?`,
     ctaLabel: locale === "en" ? `Search "${message}"` : `Buscar "${message}"`,
   };
 }
@@ -642,7 +642,7 @@ function categoryClarification(text: string, locale: Locale, labels: Map<string,
   const formatted = options.map((option) => `"${option}"`).join(", ");
   return locale === "en"
     ? `To search correctly, which service do you mean: ${formatted}?`
-    : `Para buscar correctamente, ¿te refieres a ${formatted}?`;
+    : `Para buscar correctamente, ¿se refiere a ${formatted}?`;
 }
 
 function ambiguousClarificationOptions(text: string, labels: Map<string, string>) {
@@ -760,13 +760,13 @@ type ProductIntent = {
 // calidad, garantías o problemas: la plataforma da con qué comparar; la
 // contratación es un acuerdo directo entre cliente y profesional.
 const PARA_COMPARAR = {
-  es: "En cada perfil de ContrataCR puedes comparar antes de decidir: reseñas de otros clientes, casos de éxito con trabajos reales, formación y certificaciones, idiomas, años de experiencia, zonas donde trabaja y precio de referencia, además de la insignia \"Verificado\" cuando confirmó su identidad.",
+  es: "En cada perfil de ContrataCR puede comparar antes de decidir: reseñas de otros clientes, casos de éxito con trabajos reales, formación y certificaciones, idiomas, años de experiencia, zonas donde trabaja y precio de referencia, además de la insignia \"Verificado\" cuando confirmó su identidad.",
   en: "Every ContrataCR profile lets you compare before you decide: reviews from other clients, success stories with real work, training and certifications, languages, years of experience, the areas they cover and a reference price, plus the \"Verified\" badge when they confirmed their identity.",
 };
 const ACUERDO_DIRECTO = {
   // Consejo, no descargo: lo legal («no presta ni garantiza») vive en los
   // Términos; aquí se dice lo mismo como algo práctico.
-  es: "El precio, los plazos y la garantía del trabajo los acuerdas directamente con el profesional; te recomendamos dejarlo por escrito antes de empezar.",
+  es: "El precio, los plazos y la garantía del trabajo los acuerda directamente con el profesional; le recomendamos dejarlo por escrito antes de empezar.",
   en: "You agree on price, timing and any warranty on the work directly with the professional; we recommend putting it in writing before starting.",
 };
 const PRODUCT_INTENTS: ProductIntent[] = [
@@ -818,7 +818,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
   {
     test: (n) => /(empleos?|trabajos?|jobs?).{0,25}(promociones?|ofertas?|descuentos?|deals?|promotions?)|(promociones?|ofertas?|deals?|promotions?).{0,25}(empleos?|trabajos?|jobs?)/.test(n),
     answer: {
-      es: "Los empleos y las promociones están en el menú (las tres rayas de arriba). En Empleos abres un puesto y le escribes a quien lo publicó por WhatsApp o por Mensajes; ahí mismo le mandas tu currículum. En Promociones ves los descuentos de los profesionales y les escribes igual, desde cada promoción.",
+      es: "Los empleos y las promociones están en el menú (las tres rayas de arriba). En Empleos abre un puesto y le escribe a quien lo publicó por WhatsApp o por Mensajes; ahí mismo le manda su currículum. En Promociones ve los descuentos de los profesionales y les escribe igual, desde cada promoción.",
       en: "Jobs and promotions are in the menu (the three lines at the top). In Jobs you open a position and write to whoever posted it on WhatsApp or through Messages, sending your résumé there. In Promotions you see professionals' discounts and write to them the same way, from each promotion.",
     },
     cta: { es: "Ver promociones", en: "See promotions" },
@@ -835,12 +835,12 @@ const PRODUCT_INTENTS: ProductIntent[] = [
   },
   {
     test: (n) => /^(muchas gracias|mil gracias|gracias|thank you|thanks|ok gracias|perfecto gracias)[\s!.]*$/.test(n),
-    answer: { es: "Con gusto. Si necesitas otro profesional o tienes otra duda, aquí estoy.", en: "You're welcome. If you need another professional or have another question, I'm here." },
+    answer: { es: "Con gusto. Si necesita otro profesional o tiene otra duda, aquí estoy.", en: "You're welcome. If you need another professional or have another question, I'm here." },
   },
   {
     test: (n) => /^(ayuda|help|\?+|necesito algo|no se|que puedes hacer|que haces|what can you do|menu)[\s?!.]*$/.test(n),
     answer: {
-      es: "Puedo hacer tres cosas: buscar profesionales por servicio y zona (escribe, por ejemplo, \"ocupo un plomero en Cartago\"), explicarte cómo escribirle a un profesional, publicar lo que necesitas o dejar una reseña, y ayudarte con tu cuenta (contraseña, cédula, notificaciones). ¿Por dónde empezamos?",
+      es: "Puedo hacer tres cosas: buscar profesionales por servicio y zona (escriba, por ejemplo, \"ocupo un plomero en Cartago\"), explicarle cómo escribirle a un profesional, publicar lo que necesita o dejar una reseña, y ayudarle con su cuenta (contraseña, cédula, notificaciones). ¿Por dónde empezamos?",
       en: "I can do three things: find professionals by service and area (for example \"I need a plumber in Cartago\"), explain how to message a professional, post what you need or leave a review, and help with your account (password, ID, notifications). Where do we start?",
     },
   },
@@ -855,7 +855,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(olvide|olvido|no recuerdo|no me acuerdo|perdi|recuperar|restablecer|forgot|reset|recover).{0,25}(contrasena|clave|password)/.test(n) || /(contrasena|clave|password).{0,25}(olvide|olvidada|no la recuerdo|forgot|reset)/.test(n),
     action: "reset_password",
     answer: {
-      es: "Toca \"¿Olvidaste tu contraseña?\" en la pantalla de inicio de sesión: te enviamos un correo con un enlace para crear una nueva.",
+      es: "Toque \"¿Olvidó su contraseña?\" en la pantalla de inicio de sesión: le enviamos un correo con un enlace para crear una nueva.",
       en: "Tap \"Forgot your password?\" on the sign-in screen: we email you a link to create a new one.",
     },
     cta: { es: "Restablecer contraseña", en: "Reset password" },
@@ -906,7 +906,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
   {
     test: (n) => /(notificacion|notificaciones|avisos|alertas|notification|notifications)/.test(n) && /(no me llegan|no llegan|no recibo|no salen|no suenan|activar|desactivar|apagar|prender|configurar|not (getting|receiving)|turn (on|off)|enable|disable)/.test(n),
     answer: {
-      es: "Dentro de la app, la campana muestra todas tus notificaciones. Para que lleguen al teléfono, revisa que ContrataCR tenga permiso: en el teléfono, Ajustes → Notificaciones → ContrataCR → Permitir. Si sigue sin llegar, cierra la app y vuelve a abrirla.",
+      es: "Dentro de la app, la campana muestra todas sus notificaciones. Para que lleguen al teléfono, revise que ContrataCR tenga permiso: en el teléfono, Ajustes → Notificaciones → ContrataCR → Permitir. Si sigue sin llegar, cierre la app y vuelva a abrirla.",
       en: "In the app, the bell shows all your notifications. To get them on your phone, check that ContrataCR is allowed: on the phone, Settings → Notifications → ContrataCR → Allow. If they still don't arrive, close and reopen the app.",
     },
     cta: { es: "Ver notificaciones", en: "See notifications" },
@@ -919,7 +919,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(contratar|contrato|busco|necesito|quiero|publicar|publico).{0,20}(empleado|empleada|trabajador|trabajadora|personal|colaborador|employee|worker|staff)/.test(n),
     action: "open_dashboard",
     answer: {
-      es: "Para contratar a alguien publicas un empleo: en tu panel abre la pestaña Empleos y toca \"Publicar empleo\" (puesto, modalidad, zona y salario si querés). Los interesados te escriben por Mensajes.",
+      es: "Para contratar a alguien publica un empleo: en su panel abra la pestaña Empleos y toque \"Publicar empleo\" (puesto, modalidad, zona y salario si quiere). Los interesados le escriben por Mensajes.",
       en: "To hire someone you publish a job: in your panel open the Jobs tab and tap \"Publish job\" (position, type, area and salary if you want). Interested people message you.",
     },
     cta: { es: "Ir a Empleos", en: "Open Jobs" },
@@ -930,7 +930,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(cotizacion|cotizaciones|cotizar|presupuesto|presupuestos|quote|quotes|estimate)/.test(n),
     action: "open_dashboard",
     answer: {
-      es: "Las cotizaciones viven en tu panel, en la pestaña Cotizaciones: ahí armas el detalle con precios y se la envías al cliente por el chat. También ves las que ya mandaste y su estado.",
+      es: "Las cotizaciones viven en su panel, en la pestaña Cotizaciones: ahí arma el detalle con precios y se la envía al cliente por el chat. También ve las que ya mandó y su estado.",
       en: "Quotes live in your panel, in the Quotes tab: there you build the detail with prices and send it to the client through the chat. You also see the ones you already sent and their status.",
     },
     cta: { es: "Ir a Cotizaciones", en: "Open Quotes" },
@@ -941,7 +941,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(mensaje|mensajes|chat|chats|conversacion|conversaciones|escrib|hablar con|contact|message|messages|conversation|write to)/.test(n) && !/(soporte|support|ticket)/.test(n),
     action: "help",
     answer: {
-      es: "Todos tus chats están en Mensajes. Para empezar uno, abre el perfil del profesional (o su promoción o empleo) y toca \"Enviar mensaje\": el chat se abre dentro de la app y le llega el aviso. No hace falta salir a WhatsApp.",
+      es: "Todos sus chats están en Mensajes. Para empezar uno, abra el perfil del profesional (o su promoción o empleo) y toque \"Enviar mensaje\": el chat se abre dentro de la app y le llega el aviso. No hace falta salir a WhatsApp.",
       en: "All your chats are in Messages. To start one, open the professional's profile (or their promotion or job) and tap \"Send message\": the chat opens inside the app and they get notified. No need to go out to WhatsApp.",
     },
     cta: { es: "Abrir mensajes", en: "Open messages" },
@@ -963,7 +963,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(public|cre[oa]|sub[oi]|pon[eg]|hac[eo]|publish|create|post).{0,15}(una oferta|oferta|ofertas|promocion|descuento|an offer|offer|deal)/.test(n),
     action: "open_dashboard",
     answer: {
-      es: "Las promociones las publican los profesionales: en tu panel abre la pestaña Promociones y toca \"Publicar promoción\" (título, precio con descuento, foto y vigencia). Los clientes las ven en la sección Promociones de la app.",
+      es: "Las promociones las publican los profesionales: en su panel abra la pestaña Promociones y toque \"Publicar promoción\" (título, precio con descuento, foto y vigencia). Los clientes las ven en la sección Promociones de la app.",
       en: "Promotions are published by professionals: in your panel open the Promotions tab and tap \"Publish promotion\" (title, discounted price, photo and validity). Clients see them in the app's Promotions section.",
     },
     cta: { es: "Ir a Promociones", en: "Open Promotions" },
@@ -972,7 +972,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
   {
     test: (n) => EMPLEOS_VISIBLE && (/(public|cre[oa]|sub[oi]|pon[eg]|hac[eo]|busco|necesito|ocupo|publish|create|post|hire).{0,15}(un empleo|empleo|empleos|vacante|puesto|plaza|un trabajo para|personal|empleado|empleada|a job|job post|vacancy)/.test(n) && !/(postul|aplic|apply)/.test(n)),    action: "open_dashboard",
     answer: {
-      es: "Para contratar personal, publica un empleo desde tu panel: pestaña Empleos → \"Publicar empleo\" (puesto, tipo de contrato, lugar, salario si quieres mostrarlo). Quienes quieran el puesto te escriben por WhatsApp o, en la app, por Mensajes, y por ahí mismo te envían su currículum.",
+      es: "Para contratar personal, publique un empleo desde su panel: pestaña Empleos → \"Publicar empleo\" (puesto, tipo de contrato, lugar, salario si quiere mostrarlo). Quienes quieran el puesto le escriben por WhatsApp o, en la app, por Mensajes, y por ahí mismo le envían su currículum.",
       en: "To hire staff, publish a job from your panel: Jobs tab → \"Publish job\" (position, contract type, place, salary if you want to show it). Candidates write to you on WhatsApp or, in the app, through Messages, and send their résumé right there.",
     },
     cta: { es: "Ir a Empleos", en: "Open Jobs" },
@@ -981,7 +981,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
   {
     test: (n) => EMPLEOS_VISIBLE && (/(postular|postulo|postularme|aplicar|aplico|apply|applying).{0,20}(trabajo|empleo|puesto|vacante|job|position)/.test(n) || /(trabajo|empleo|job).{0,20}(postular|aplicar|apply)/.test(n)),    action: "help",
     answer: {
-      es: "Entra a Empleos y abre el puesto que te interesa. Desde ahí le escribes a quien lo publicó por WhatsApp o, en la app, por Mensajes, y por ese mismo chat le envías tu currículum.",
+      es: "Entre a Empleos y abra el puesto que le interesa. Desde ahí le escribe a quien lo publicó por WhatsApp o, en la app, por Mensajes, y por ese mismo chat le envía su currículum.",
       en: "Go to Jobs and open the position you like. From there you write to whoever posted it on WhatsApp or, in the app, through Messages, and send your résumé in that same chat.",
     },
     cta: { es: "Ver empleos", en: "See jobs" },
@@ -990,7 +990,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
   {
     test: (n) => EMPLEOS_VISIBLE && (/(ver|buscar|hay|busco|donde|where|see|find|show).{0,15}(ofertas de trabajo|ofertas de empleo|empleos|trabajos|vacantes|puestos|jobs|job offers|vacancies)/.test(n) || /^(empleos|trabajos|vacantes|jobs)[\s?!.]*$/.test(n)),    action: "help",
     answer: {
-      es: "Los empleos disponibles están en la sección Empleos: puedes filtrar por lugar y tipo de contrato, y desde cada puesto le escribes a quien lo publicó.",
+      es: "Los empleos disponibles están en la sección Empleos: puede filtrar por lugar y tipo de contrato, y desde cada puesto le escribe a quien lo publicó.",
       en: "Open jobs are in the Jobs section: filter by place and contract type, and from each position write to whoever posted it.",
     },
     cta: { es: "Ver empleos", en: "See jobs" },
@@ -1010,7 +1010,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(instal|descarg|baj[oa]|install|download).{0,15}(la app|app|aplicacion|contratacr)/.test(n) || /(app|aplicacion).{0,15}(instal|descarg|install|download)/.test(n),
     action: "help",
     answer: {
-      es: "Ya estás dentro de la app 🙂. Para instalarla en otro teléfono, entra a contratacr.com/ayuda desde ese teléfono: ahí está la guía para App Store y Google Play.",
+      es: "Ya está dentro de la app 🙂. Para instalarla en otro teléfono, entre a contratacr.com/ayuda desde ese teléfono: ahí está la guía para App Store y Google Play.",
       en: "You are already in the app 🙂. To install it on another phone, open contratacr.com/ayuda from that phone: the guide for the App Store and Google Play is there.",
     },
     cta: { es: "Ver la guía", en: "See the guide" },
@@ -1022,7 +1022,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     answer: {
       // En el app no se agenda: se contacta. La respuesta anterior explicaba
       // paso a paso cómo elegir día y hora en un calendario que ya no existe.
-      es: "Busca el servicio, abre el perfil del profesional y toca \"Enviar mensaje\": le escribes por aquí mismo y coordinan el día y la hora entre ustedes. Si prefiere el teléfono, verás \"Llamar\". Dime el servicio y la zona y te muestro opciones.",
+      es: "Busque el servicio, abra el perfil del profesional y toque \"Enviar mensaje\": le escribe por aquí mismo y coordinan el día y la hora entre ustedes. Si prefiere el teléfono, verá \"Llamar\". Indíqueme el servicio y la zona y le muestro opciones.",
       en: "Search the service, open the professional's profile and tap \"Send message\": you write to them right here and the two of you agree on the day and time. If they prefer the phone, you will see \"Call\". Tell me the service and the area and I'll show you options.",
     },
   },
@@ -1030,7 +1030,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(como|how|puedo|can i).{0,12}(chate|habl|escrib|contact|mensaje|mand|chat|message|talk|write).{0,25}(profesional|professional|alguien|cliente|persona)/.test(n),
     unlessService: true,
     answer: {
-      es: "Abre el perfil del profesional y toca \"Enviar mensaje\": la conversación queda en Mensajes y te avisamos cuando responda. Necesitas una cuenta (es gratis).",
+      es: "Abra el perfil del profesional y toque \"Enviar mensaje\": la conversación queda en Mensajes y le avisamos cuando responda. Necesita una cuenta (es gratis).",
       en: "Open the professional's profile and tap \"Send message\": the conversation stays in Messages and we notify you when they reply. You need an account (it's free).",
     },
     cta: { es: "Ir a Mensajes", en: "Open Messages" },
@@ -1041,7 +1041,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(dej|pon|escrib|hac|dar|doy|leave|write|give).{0,15}(una resena|resena|calificacion|opinion|review|rating)/.test(n) || /(calific|resen|rate|review).{0,15}(profesional|servicio|professional|service)/.test(n),
     action: "open_dashboard",
     answer: {
-      es: "Cuando el servicio termina, en tu panel → Mis solicitudes aparece \"Dejar reseña\" junto a ese servicio: pones estrellas y un comentario, y se muestra en el perfil del profesional.",
+      es: "Cuando el servicio termina, en su panel → Mis solicitudes aparece \"Dejar reseña\" junto a ese servicio: pone estrellas y un comentario, y se muestra en el perfil del profesional.",
       en: "When the service is done, in your panel → My requests you'll see \"Leave a review\" next to that service: give stars and a comment, and it shows on the professional's profile.",
     },
     cta: { es: "Ver mis solicitudes", en: "See my requests" },
@@ -1051,7 +1051,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(videoconsulta|video consulta|videollamada|consulta virtual|en linea|online|video call|video consultation)/.test(n) && /(como|funciona|hay|puedo|how|work)/.test(n),
     unlessService: true,
     answer: {
-      es: "Algunos profesionales atienden por videoconsulta: en tu perfil aparece \"Videoconsulta\" junto a la ubicación, y al escribirle acuerdan esa modalidad. En la búsqueda puedes filtrar \"Videoconsulta\" en la ubicación para ver solo esos profesionales.",
+      es: "Algunos profesionales atienden por videoconsulta: en su perfil aparece \"Videoconsulta\" junto a la ubicación, y al escribirle acuerdan esa modalidad. En la búsqueda puede filtrar \"Videoconsulta\" en la ubicación para ver solo esos profesionales.",
       en: "Some professionals attend by video consultation: their profile shows \"Video consultation\" next to the location, and you agree on that modality when you message them. In search, filter \"Video consultation\" under location to see only those professionals.",
     },
     cta: { es: "Buscar por videoconsulta", en: "Search video consultations" },
@@ -1145,7 +1145,7 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
       documented: true,
       answer: locale === "en"
         ? "Create a professional profile, add your services, work areas, prices and availability, then keep your profile updated so clients can find you."
-        : "Crea tu perfil profesional, agrega tus servicios, zonas de trabajo, precios y disponibilidad, y mantenlo actualizado para que los clientes te encuentren.",
+        : "Cree su perfil profesional, agregue sus servicios, zonas de trabajo, precios y disponibilidad, y manténgalo actualizado para que los clientes le encuentren.",
       ctaLabel: locale === "en" ? "Offer my services" : "Ofrecer mis servicios",
     };
   }
@@ -1157,7 +1157,7 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
       documented: true,
       answer: locale === "en"
         ? "Create a client account to save professionals, message them, post what you need and read the replies from your panel."
-        : "Crea una cuenta de cliente para guardar profesionales, escribirles, publicar lo que necesitas y leer las respuestas desde tu panel.",
+        : "Cree una cuenta de cliente para guardar profesionales, escribirles, publicar lo que necesita y leer las respuestas desde su panel.",
       ctaLabel: locale === "en" ? "Create client account" : "Crear cuenta de cliente",
     };
   }
@@ -1169,7 +1169,7 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
       documented: true,
       answer: locale === "en"
         ? "Open sign in to access your panel, messages, saved professionals and projects."
-        : "Abre inicio de sesión para entrar a tu panel, mensajes, favoritos y solicitudes.",
+        : "Abra inicio de sesión para entrar a su panel, mensajes, favoritos y solicitudes.",
       ctaLabel: locale === "en" ? "Sign in" : "Iniciar sesión",
     };
   }
@@ -1203,7 +1203,7 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
       confidence: 1,
       answer: locale === "en"
         ? "Create a request with what you need, the area and the details. ContrataCR notifies every professional of that service, and whoever is interested messages you on WhatsApp."
-        : "Crea una solicitud con lo que necesitas, la zona y los detalles. ContrataCR avisa a todos los profesionales de ese servicio, y quien se interese te escribe por WhatsApp.",
+        : "Cree una solicitud con lo que necesita, la zona y los detalles. ContrataCR avisa a todos los profesionales de ese servicio, y quien se interese le escribe por WhatsApp.",
       ctaLabel: locale === "en" ? "Post a request" : "Publicar solicitud",
     };
   }
@@ -1229,7 +1229,7 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
     confidence: 0,
     answer: locale === "en"
       ? "I do not have that answer. Tell me the service and area and I will find a professional, or check the guides in your panel; if it is about your account, open a support case and a person will reply."
-      : "No tengo esa respuesta. Dime qué servicio necesitas y en qué zona y te busco un profesional, o mira las guías en tu panel; si es algo de tu cuenta, abre un caso de soporte y te contesta una persona.",
+      : "No tengo esa respuesta. Indíqueme qué servicio necesita y en qué zona y le busco un profesional, o mire las guías en su panel; si es algo de su cuenta, abra un caso de soporte y le contesta una persona.",
     ctaLabel: locale === "en" ? "Open support" : "Ir a soporte",
   };
 }
@@ -1610,7 +1610,7 @@ function normalizePayload(
       action: "answer",
       answer: locale === "en"
         ? `The "Verified" badge confirms their identity, not the quality of their work. To see that, their profile shows reviews from other clients, success stories with real work, training and certifications, languages and years of experience. ${ACUERDO_DIRECTO.en}`
-        : `La insignia "Verificado" confirma su identidad, no la calidad de su trabajo. Para conocer eso, en su perfil tienes reseñas de otros clientes, casos de éxito con trabajos reales, formación y certificaciones, idiomas y años de experiencia. ${ACUERDO_DIRECTO.es}`,
+        : `La insignia "Verificado" confirma su identidad, no la calidad de su trabajo. Para conocer eso, en su perfil tiene reseñas de otros clientes, casos de éxito con trabajos reales, formación y certificaciones, idiomas y años de experiencia. ${ACUERDO_DIRECTO.es}`,
       ctaLabel: null,
     };
   }
@@ -1651,7 +1651,7 @@ function normalizePayload(
       action: "login",
       answer: locale === "en"
         ? "You need to sign in to create a request so it stays linked to your account. If you do not have an account yet, you can create one from the sign-in screen."
-        : "Necesitas iniciar sesión para crear una solicitud, así queda vinculada a tu cuenta. Si todavía no tienes una, puede crearla desde la pantalla de ingreso.",
+        : "Necesita iniciar sesión para crear una solicitud, así queda vinculada a su cuenta. Si todavía no tiene una, puede crearla desde la pantalla de ingreso.",
       ctaLabel: locale === "en" ? "Sign in" : "Iniciar sesión",
     };
   }
@@ -1661,7 +1661,7 @@ function normalizePayload(
       action: "open_dashboard",
       answer: locale === "en"
         ? "If your account can offer services, use the Client / Professional selector in My dashboard. If professional mode is not enabled yet, start the professional registration to complete your profile."
-        : "Si tu cuenta ya puede ofrecer servicios, usa el selector Cliente / Profesional dentro de Mi panel. Si todavía no tienes habilitado el modo profesional, inicie el registro profesional para completar tu perfil.",
+        : "Si su cuenta ya puede ofrecer servicios, use el selector Cliente / Profesional dentro de Mi panel. Si todavía no tiene habilitado el modo profesional, inicie el registro profesional para completar su perfil.",
       ctaLabel: locale === "en" ? "Open my dashboard" : "Ir a mi panel",
     };
   }
@@ -1671,7 +1671,7 @@ function normalizePayload(
       action: "open_dashboard",
       answer: locale === "en"
         ? "Open Requests in your professional dashboard to see the requests related to your services and message the client on WhatsApp."
-        : "Abre Solicitudes en tu panel profesional para ver las solicitudes relacionadas con tus servicios y escribirle al cliente por WhatsApp.",
+        : "Abra Solicitudes en su panel profesional para ver las solicitudes relacionadas con sus servicios y escribirle al cliente por WhatsApp.",
       ctaLabel: locale === "en" ? "Open requests" : "Ver solicitudes",
     };
   }
@@ -1818,7 +1818,7 @@ function normalizePayload(
       locationText: publishPlaceLabel,
       answer: locale === "en"
         ? `Done — I added ${serviceLabel} in ${publishPlaceLabel} to your request. Tap "Create request" to complete the details and publish it.`
-        : `Listo: agregué ${serviceLabel} en ${publishPlaceLabel} a tu solicitud. Toca "Publicar" para revisarla y publicarla.`,
+        : `Listo: agregué ${serviceLabel} en ${publishPlaceLabel} a su solicitud. Toque "Publicar" para revisarla y publicarla.`,
       ctaLabel: locale === "en" ? "Post a request" : "Publicar solicitud",
     };
   }
@@ -1900,7 +1900,7 @@ function sensitiveOrUnsafeAnswer(message: string, locale: Locale): AssistantPayl
       action: "answer",
       answer: locale === "en"
         ? "I cannot help with that. Accessing someone else's account is illegal; if you lost access to your own account, use \"Forgot your password?\" or Support."
-        : "No puedo ayudar con eso. Entrar a la cuenta de otra persona es ilegal; si perdiste el acceso a tu propia cuenta, usa \"¿Olvidaste tu contraseña?\" o Soporte.",
+        : "No puedo ayudar con eso. Entrar a la cuenta de otra persona es ilegal; si perdió el acceso a su propia cuenta, use \"¿Olvidó su contraseña?\" o Soporte.",
     };
   }
   const asksForInternalData = includesAny(normalized, [
@@ -1953,7 +1953,7 @@ function sensitiveOrUnsafeAnswer(message: string, locale: Locale): AssistantPayl
       action: "answer",
       answer: locale === "en"
         ? "I cannot reveal private user data. Please use the public profile, request form or official support channel for legitimate coordination."
-        : "No puedo revelar datos privados de usuarios. Usa el perfil público, el formulario de publicación o Soporte para una coordinación legítima.",
+        : "No puedo revelar datos privados de usuarios. Use el perfil público, el formulario de publicación o Soporte para una coordinación legítima.",
     };
   }
 
@@ -2088,7 +2088,7 @@ export async function POST(req: Request) {
     const history = sanitizeHistory(body.history);
     if (!rawMessage) {
       return NextResponse.json({
-        answer: locale === "en" ? "Tell me what you need and I will help." : "Dime qué necesitas y te ayudo.",
+        answer: locale === "en" ? "Tell me what you need and I will help." : "Indíqueme qué necesita y le ayudo.",
         action: "answer",
       });
     }
@@ -2107,7 +2107,7 @@ export async function POST(req: Request) {
         // servía a quien todavía no sabe cómo funciona.
         answer: locale === "en"
           ? "Posting a request means describing what you need so several professionals in that category write to you. What service is it? For example: plumbing, electrical or cleaning."
-          : "Publicar una solicitud es contar qué necesitas para que te escriban varios profesionales de esa categoría. ¿De qué servicio se trata? Por ejemplo: plomería, electricidad o limpieza.",
+          : "Publicar una solicitud es contar qué necesita para que le escriban varios profesionales de esa categoría. ¿De qué servicio se trata? Por ejemplo: plomería, electricidad o limpieza.",
         action: "publish_request",
         searchHref: `${prefijoDeIdioma(locale)}/publicar-solicitud`,
         ctaLabel: locale === "en" ? "Post request" : "Publicar solicitud",
@@ -2207,7 +2207,7 @@ export async function POST(req: Request) {
         payload.action = "open_dashboard";
         payload.answer = locale === "en"
           ? "Your professional profile is already active. I'll take you to your panel, where you manage your services, prices and availability."
-          : "Tu perfil profesional ya está activo. Te llevo a tu panel, donde administras tus servicios, precios y disponibilidad.";
+          : "Su perfil profesional ya está activo. Le llevo a su panel, donde administra sus servicios, precios y disponibilidad.";
         payload.ctaLabel = locale === "en" ? "Open my panel" : "Ir a mi panel";
       }
     }

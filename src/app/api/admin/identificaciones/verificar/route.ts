@@ -18,5 +18,5 @@ export async function POST(req: Request) {
     const result = await verifyPendingIdentity(db, body.accountId, body.cedula);
     if (result.outcome === "verified") await auditUserAction(db, req, { actorUserId: admin.id, actorRole: "admin", action: "admin.verify_identity_hacienda", entityTable: "profiles", entityId: body.accountId, entityOwnerUserId: body.accountId, afterData: { identity_status: "verified", source: "hacienda_api" } });
     return NextResponse.json(result, { headers });
-  } catch { return NextResponse.json({ error: "No se pudo completar la verificación. Recarga antes de reintentar." }, { status: 503, headers }); }
+  } catch { return NextResponse.json({ error: "No se pudo completar la verificación. Recargue antes de reintentar." }, { status: 503, headers }); }
 }

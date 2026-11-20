@@ -40,7 +40,7 @@ const JOBS_MANAGER_COPY = {
     application: "postulación", applications: "postulaciones", view: "Ver empleo", edit: "Editar", more: "Más opciones",
     close: "Cerrar vacante", republish: "Volver a publicar", remove: "Eliminar", removeTitle: "¿Eliminar este empleo?", removeBody: "Se borra del todo y no se puede recuperar.", removeCancel: "Cancelar", applicationsTitle: "Postulaciones",
     received: "Postulación recibida", message: "Mensaje", viewCv: "Ver CV", viewPortfolio: "Ver su sitio o portafolio",
-    noApplications: "Aún no hay postulaciones.", emptyTitle: "Todavía no has publicado empleos", emptyBody: "Publica tu primera oportunidad laboral.",
+    noApplications: "Aún no hay postulaciones.", emptyTitle: "Todavía no ha publicado empleos", emptyBody: "Publique su primera oportunidad laboral.",
     publishTitle: "Publicar empleo", publishSubtitle: "Describe la oportunidad con información clara y verificable.",
     editTitle: "Editar empleo", editSubtitle: "Actualiza la información de esta publicación.",
   },

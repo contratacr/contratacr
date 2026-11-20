@@ -18,7 +18,7 @@ export function CvFileEditor({ professionalId, selectedFile, english, onChoose, 
     fetch(`${endpoint}&metadata=1`, { cache: 'no-store', signal: abort.signal }).then(async response => {
       if (!response.ok) throw new Error('load');
       const data = await response.json(); setFile(data.file); setLoading(false);
-    }).catch(() => { if (!abort.signal.aborted) { setError(english ? 'Could not check your shared CV. Reopen this section to retry.' : 'No pudimos consultar tu CV compartido. Volvé a abrir esta sección.'); setLoading(false); } });
+    }).catch(() => { if (!abort.signal.aborted) { setError(english ? 'Could not check your shared CV. Reopen this section to retry.' : 'No pudimos consultar su CV compartido. Vuelva a abrir esta sección.'); setLoading(false); } });
     return () => abort.abort();
   }, [endpoint, english]);
   async function save(method: 'POST' | 'PATCH' | 'DELETE', visible?: boolean) {

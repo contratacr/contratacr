@@ -103,7 +103,7 @@ export async function POST(req: Request) {
   // padrón y en mayúsculas.
   const { data: cliente } = await db.from("profiles").select("full_name").eq("id", fila.client_id ?? "").maybeSingle();
   const saludo = nombreDeSaludo((cliente as { full_name?: string | null } | null)?.full_name);
-  const texto = `Hola${saludo ? ` ${saludo}` : ""}, soy ${quien}. Vi tu solicitud "${(fila.title ?? "").slice(0, 60)}" en ContrataCR y puedo ayudarte. ¿Lo conversamos?`;
+  const texto = `Hola${saludo ? ` ${saludo}` : ""}, soy ${quien}. Vi su solicitud "${(fila.title ?? "").slice(0, 60)}" en ContrataCR y puedo ayudarle. ¿Lo conversamos?`;
   // LA ÚNICA MEDIDA DE SI EL TABLERO SIRVE. Se publican proyectos y se
   // notifica a toda la categoría, pero no había forma de saber cuántos
   // profesionales llegan a escribirle al cliente: el tablero podía estar

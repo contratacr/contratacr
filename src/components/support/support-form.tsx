@@ -163,7 +163,7 @@ export function SupportForm({ onSuccess, onCancel }: { onSuccess?: (email: strin
           ? t("errOversized", { mb: MAX_FILE_MB })
           : locale === "en"
             ? "The combined attachments are too large. Use fewer or lighter files."
-            : "Los archivos juntos son muy pesados. Usa menos archivos o archivos más livianos.");
+            : "Los archivos juntos son muy pesados. Use menos archivos o archivos más livianos.");
     } finally {
       setPreparingAttachments(false);
       if (fileInputRef.current) fileInputRef.current.value = "";

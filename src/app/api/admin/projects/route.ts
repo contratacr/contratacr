@@ -269,4 +269,4 @@ export async function PATCH(req: Request) {
   return NextResponse.json({ ok: true, id });
 }
 
-export async function DELETE(){if(!(await getApiAdmin()))return NextResponse.json({error:"No autorizado"},{status:403});return NextResponse.json({error:"Usa el retiro reversible desde Reportes y moderación."},{status:405});}
+export async function DELETE(){if(!(await getApiAdmin()))return NextResponse.json({error:"No autorizado"},{status:403});return NextResponse.json({error:"Use el retiro reversible desde Reportes y moderación."},{status:405});}

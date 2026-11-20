@@ -72,7 +72,7 @@ export function AdminIdentifications() {
         setProgress({ done: index + 1, total: targets.length });
       }
       setNote(`${verified} ${verified === 1 ? "cuenta verificada" : "cuentas verificadas"}. Las demás mantienen su revisión. No se enviaron correos.`);
-    } catch (cause) { setError(`${verified} verificadas. ${cause instanceof Error ? cause.message : "Recarga para comprobar el resultado."}`); }
+    } catch (cause) { setError(`${verified} verificadas. ${cause instanceof Error ? cause.message : "Recargue para comprobar el resultado."}`); }
     finally { setOperation(null); olvidarDashboardCachePrefix("admin:users:"); window.dispatchEvent(new Event(ADMIN_REFRESH_EVENT)); window.dispatchEvent(new Event(ADMIN_COUNTS_REFRESH_EVENT)); }
   }
   const eligible = rows.filter(row => reviews[row.accountId]?.canVerify);

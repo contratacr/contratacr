@@ -228,7 +228,7 @@ export async function POST(req: NextRequest) {
 
     const totalAttachmentBytes = fileAttachments.reduce((total, file) => total + file.content.length, 0);
     if (totalAttachmentBytes > 3.7 * 1024 * 1024) {
-      return NextResponse.json({ ok: false, error: mensajeDeError(req, { es: "Los archivos juntos son muy pesados. Usa menos archivos o archivos más livianos.", en: "The files are too large together. Use fewer or lighter files." }) }, { status: 400 });
+      return NextResponse.json({ ok: false, error: mensajeDeError(req, { es: "Los archivos juntos son muy pesados. Use menos archivos o archivos más livianos.", en: "The files are too large together. Use fewer or lighter files." }) }, { status: 400 });
     }
 
     // Validate EVERY attachment by magic bytes — safe images OR PDF only (no SVG /
@@ -266,7 +266,7 @@ export async function POST(req: NextRequest) {
     if (!ticketSaved && !sent) {
       return NextResponse.json({
         ok: false,
-        error: "No pudimos registrar tu mensaje. Intenta de nuevo en unos minutos.",
+        error: "No pudimos registrar su mensaje. Intente de nuevo en unos minutos.",
       }, { status: 503 });
     }
 
@@ -275,7 +275,7 @@ export async function POST(req: NextRequest) {
     console.error("[contact] error:", err);
     return NextResponse.json({
       ok: false,
-      error: "Error al enviar el mensaje. Intenta de nuevo en unos minutos.",
+      error: "Error al enviar el mensaje. Intente de nuevo en unos minutos.",
     }, { status: 500 });
   }
 }

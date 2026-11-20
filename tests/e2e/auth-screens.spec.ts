@@ -73,11 +73,11 @@ test.describe("@account screens through the real pages", () => {
       // nombre, que es lo que esta prueba comprueba.
       await page.locator('input[type="tel"]').first().fill("88887777");
       await page.getByPlaceholder("1-0000-0000").fill(randomCedula());
-      await page.getByPlaceholder(/Tu nombre como aparece en tu identificación/).fill("");
+      await page.getByPlaceholder(/Su nombre como aparece en su identificación/).fill("");
       await page.getByRole("button", { name: /Guardar y continuar/ }).click();
-      await expectVisibleText(page.locator("body"), /Ingresa tu nombre completo/);
+      await expectVisibleText(page.locator("body"), /Ingrese su nombre completo/);
 
-      await page.getByPlaceholder(/Tu nombre como aparece en tu identificación/).fill("Cliente Regresión Pantallas");
+      await page.getByPlaceholder(/Su nombre como aparece en su identificación/).fill("Cliente Regresión Pantallas");
       await page.getByRole("button", { name: /Guardar y continuar/ }).click();
       await page.waitForURL(/\/dashboard\//, { timeout: 30_000, waitUntil: "domcontentloaded" });
       await expectHealthyPage(page);

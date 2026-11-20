@@ -20,7 +20,7 @@ export function createClient() {
     isLocalBrowser() &&
     supabaseProjectRefFromUrl() === PROD_SUPABASE_REF
   ) {
-    throw new Error("Localhost esta bloqueado contra Supabase produccion. Usa .env.test para desarrollo local.");
+    throw new Error("Localhost esta bloqueado contra Supabase produccion. Use .env.test para desarrollo local.");
   }
 
   return createBrowserClient(

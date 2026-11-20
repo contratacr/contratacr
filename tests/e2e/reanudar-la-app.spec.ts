@@ -117,7 +117,7 @@ for (const native of [false, true]) {
       await loginAs(page, account.email, account.password);
       const params = new URLSearchParams({ draftChat: "1", professionalId: seed!.professionalId, professionalName: "Profesional de regresión" });
       await gotoOK(page, `/mensajes?${params}`);
-      const composer = page.getByPlaceholder("Escribe un mensaje");
+      const composer = page.getByPlaceholder("Escriba un mensaje");
       await expect(composer).toBeVisible();
       const text = "Borrador de regresión: no enviar este mensaje.";
       await composer.fill(text);

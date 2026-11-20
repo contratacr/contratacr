@@ -88,10 +88,10 @@ async function crearCliente(page: Page) {
   await gotoOK(page, "/registro/cliente");
   await waitForInteractivePage(page);
   const main = page.locator("main");
-  await main.getByPlaceholder("Tu nombre y apellidos").fill("Cliente Recién Creado");
+  await main.getByPlaceholder("Su nombre y apellidos").fill("Cliente Recién Creado");
   await main.locator('input[type="email"]').fill(correoNuevo("cliente"));
   await main.getByPlaceholder("Mínimo 8 caracteres").fill(CLAVE);
-  await main.getByPlaceholder("Repite tu contraseña").fill(CLAVE);
+  await main.getByPlaceholder("Repita su contraseña").fill(CLAVE);
   const tel = main.locator('input[type="tel"]');
   if (await tel.count()) await tel.first().fill("88886666");
   await aceptarTerminos(page);
@@ -107,7 +107,7 @@ async function exigirPanelConSesion(page: Page) {
   // El salto a /login llega después de que el panel monta y mira la sesión.
   await page.waitForTimeout(3_000);
   expect(new URL(page.url()).pathname, "el panel no puede mandar a entrar a una cuenta recién creada").not.toMatch(/\/login/);
-  await expect(page.getByText(/Ingresa a tu cuenta/)).toHaveCount(0);
+  await expect(page.getByText(/Ingrese a su cuenta/)).toHaveCount(0);
 }
 
 /** En la app (rama nativa, ?nativePreview=1) la bienvenida ya se vio. */
@@ -171,23 +171,23 @@ for (const ambiente of ["web", "app"] as const) {
     await waitForInteractivePage(page);
     const main = page.locator("main");
     await main.getByRole("button", { name: "Registrarme sin identificación por ahora" }).click();
-    await main.getByPlaceholder("Tu nombre completo").fill("Pro Recién Creado");
+    await main.getByPlaceholder("Su nombre completo").fill("Pro Recién Creado");
     await main.locator('input[type="email"]').fill(correoNuevo("pro"));
     await main.getByPlaceholder("Mínimo 8 caracteres").fill(CLAVE);
-    await main.getByPlaceholder("Repite tu contraseña").fill(CLAVE);
+    await main.getByPlaceholder("Repita su contraseña").fill(CLAVE);
     await aceptarTerminos(page);
     await main.getByRole("button", { name: /^Continuar$/ }).click();
     await expect.poll(() => alta.codigo, { timeout: 30_000 }).toBeTruthy();
     await escribirCodigo(page, alta.codigo!);
-    await main.getByRole("button", { name: "Busca tu servicio" }).click();
+    await main.getByRole("button", { name: "Busque su servicio" }).click();
     await page.getByRole("dialog").getByRole("textbox", { name: "Buscar servicio...", exact: true }).fill("Desarrollo web");
     await page.getByRole("button", { name: /^Desarrollo web/ }).or(page.getByRole("option", { name: /^Desarrollo web/ })).first().click();
     // «Ubicación del servicio»: la misma pieza del panel (AttentionModalities).
     const ubicacion = main.locator('[data-field="location"]');
     await ubicacion.getByRole("switch", { name: /Atiendo a domicilio/ }).click();
-    await ubicacion.getByRole("button", { name: "Elegí una provincia", exact: true }).click();
+    await ubicacion.getByRole("button", { name: "Elija una provincia", exact: true }).click();
     await page.getByRole("option", { name: /^Alajuela$/ }).first().click();
-    await ubicacion.getByRole("button", { name: "Elegí un cantón", exact: true }).click();
+    await ubicacion.getByRole("button", { name: "Elija un cantón", exact: true }).click();
     await page.getByRole("option", { name: /^Atenas$/ }).first().click();
     await ubicacion.getByRole("button", { name: "Agregar zona", exact: true }).click();
     await expect(ubicacion.getByText("Atenas, Alajuela", { exact: true })).toBeVisible();

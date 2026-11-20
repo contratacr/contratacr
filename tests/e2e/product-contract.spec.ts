@@ -147,13 +147,13 @@ test.describe("@contract product safety contracts", () => {
     };
     const verificationEs = localizedNotificationCopy(legacyVerification, "es").message;
     const verificationEn = localizedNotificationCopy(legacyVerification, "en").message;
-    expect(verificationEs).toBe("Tu verificación de identidad no fue aprobada. Puedes apelar desde tu panel. Motivo: Documento borroso");
+    expect(verificationEs).toBe("Su verificación de identidad no fue aprobada. Puede apelar desde su panel. Motivo: Documento borroso");
     expect(verificationEn).toBe("Your identity verification was not approved. You can appeal from your panel. Reason: Documento borroso");
     expect(verificationEn).not.toContain("Puedes apelar");
 
     const legacyReverted = localizedNotificationCopy({
       type: "verification_reverted",
-      title: "Tu verificación fue actualizada",
+      title: "Su verificación fue actualizada",
       message: "Tu verificación fue quitada. Motivo: Documento vencido. Revisa tu panel para ver el detalle.",
     }, "en").message;
     expect(legacyReverted).toBe("Your verification badge was removed. Check your panel for details. Reason: Documento vencido");

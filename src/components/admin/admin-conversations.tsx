@@ -35,7 +35,7 @@ export function AdminConversations() {
   useEffect(() => {
     const abort = new AbortController();
     fetch(`/api/admin/conversaciones?offset=${offset}&side=${side}&hours=${hours}`, { cache: "no-store", signal: abort.signal })
-      .then(async r => { if (!r.ok) throw new Error("No se pudo cargar el seguimiento. Intenta de nuevo."); return r.json(); })
+      .then(async r => { if (!r.ok) throw new Error("No se pudo cargar el seguimiento. Intente de nuevo."); return r.json(); })
       .then(d => { setRows(d.rows); setTotal(d.total); setCanReview(d.canReview);setCheckedAt(Date.now());setError(""); })
       .catch(e => { if (!abort.signal.aborted) setError(e.message); })
       .finally(() => { if (!abort.signal.aborted) setLoading(false); });
@@ -95,7 +95,7 @@ export function AdminConversations() {
     {!canReview && <p className="text-sm text-slate-600">El contenido requiere un permiso de revisión adicional al rol administrador.</p>}
     {selected && <section role="region" aria-label="Revisión restringida" className="space-y-3 rounded-xl border-2 border-slate-400 p-4">
       <h2 className="font-bold">Revisión restringida · {formatFullPersonName(selected.professional_name)} / {formatFullPersonName(selected.client_name)}</h2>
-      <p className="text-sm">Solo para atender soporte abierto de un participante o un reporte vinculado a esta conversación. Limita la consulta a lo necesario para ese caso. Cada página queda registrada con tu cuenta, fecha, caso y motivo. Los adjuntos quedan excluidos.</p>
+      <p className="text-sm">Solo para atender soporte abierto de un participante o un reporte vinculado a esta conversación. Limite la consulta a lo necesario para ese caso. Cada página queda registrada con su cuenta, fecha, caso y motivo. Los adjuntos quedan excluidos.</p>
       <label className="block text-sm">Tipo de caso <select className={control} disabled={busy} value={caseType} onChange={e=>{setCaseType(e.target.value);setMessages(null);}}><option value="support">Soporte de un participante</option><option value="report">Reporte de esta conversación</option></select></label>
       <label className="block text-sm">ID del caso <input className={`${control} block w-full`} disabled={busy} value={ticket} onChange={e => { setTicket(e.target.value); setMessages(null); }} autoComplete="off" /></label>
       <label className="block text-sm">Motivo de consulta <textarea className={`${control} block w-full`} disabled={busy} value={reason} minLength={15} maxLength={500} onChange={e => { setReason(e.target.value); setMessages(null); }} /></label>

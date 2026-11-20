@@ -28,7 +28,7 @@ export async function syncOfficialProfileName(
   const { data: saved, error } = await db.from("profiles").update({ full_name: result.fullName })
     .eq("id", profileId).eq("cedula", profile.cedula).select("id").maybeSingle();
   if (error) throw error;
-  if (!saved) throw new Error("La identificación cambió. Recarga antes de verificar.");
+  if (!saved) throw new Error("La identificación cambió. Recargue la página antes de verificar.");
   const { data: account, error: accountError } = await db.auth.admin.getUserById(profileId);
   if (accountError) throw accountError;
   if (account.user) {

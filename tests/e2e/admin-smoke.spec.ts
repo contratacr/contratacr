@@ -113,7 +113,7 @@ test.describe("@admin surfaces", () => {
           { path: `/admin/usuarios/${account.id}` }, { path: `/admin/proveedores/${account.id}` }]) {
           await gotoOK(page, route.path);
           await expect(page.getByRole("heading", { name: "Acceso restringido" })).toBeVisible();
-          await expect(page.getByText("No tienes permisos para acceder a esta sección.", { exact: false })).toBeVisible();
+          await expect(page.getByText("No tiene permisos para acceder a esta sección.", { exact: false })).toBeVisible();
           await expect(page.getByPlaceholder(/Correo de administrador/i)).toHaveCount(0);
         }
         for (const path of ["/api/admin/users", "/api/admin/projects", "/api/admin/pending-counts"]) {

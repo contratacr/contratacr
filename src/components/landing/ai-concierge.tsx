@@ -154,8 +154,8 @@ const COPY = {
     notice: "Respuestas guiadas con datos de ContrataCR.",
     reset: "Nuevo chat",
     resetHint: "Limpia esta conversacion y empieza de cero.",
-    emptyTitle: "¿En qué te ayudo?",
-    emptySubtitle: "Te guío dentro de ContrataCR con información de la app: profesionales, solicitudes, empleos, promociones y tu cuenta.",
+    emptyTitle: "¿En qué le ayudo?",
+    emptySubtitle: "Le guío dentro de ContrataCR con información de la app: profesionales, solicitudes, empleos, promociones y su cuenta.",
     // Quien NO es profesional: buscar, mirar, pedir y la puerta para ofrecer.
     topics: [
       { label: "Buscar un profesional", example: "Necesito un profesional", prompt: "Quiero buscar un profesional", icon: "search" },
@@ -799,7 +799,7 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
             <input
               value={draft}
               onChange={(event) => setDraft(event.target.value.slice(0, 240))}
-              placeholder={lang === "en" ? "Ask anything..." : "Escribe una pregunta..."}
+              placeholder={lang === "en" ? "Ask anything..." : "Escriba una pregunta..."}
               className="h-12 min-w-0 flex-1 rounded-2xl border-2 border-[#0585a0] bg-white px-4 text-[15px] font-medium text-[#173052] outline-none placeholder:text-[#8b96a6] focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/10"
             />
             <button

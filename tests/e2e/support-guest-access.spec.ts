@@ -92,7 +92,7 @@ test.describe("private support case in regression", () => {
       } else await route.continue();
     });
     await gotoOK(page, `/soporte/caso/${id}#${guestAccessToken(id, email)}`);
-    await expect(page.locator("main").getByRole("alert")).toContainText("Intenta de nuevo");
+    await expect(page.locator("main").getByRole("alert")).toContainText("Intente de nuevo");
     expect(new URL(page.url()).hash).toBe("");
     unavailable = false;
     await page.getByRole("button", { name: "Intentar de nuevo" }).click();

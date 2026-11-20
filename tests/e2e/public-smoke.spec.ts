@@ -403,7 +403,7 @@ test.describe("@smoke public routes", () => {
     test.skip(!testInfo.project.name.includes("mobile"), "El panel a pantalla completa es del teléfono.");
     await gotoOK(page, "/profesionales?regression=1");
     await waitForInteractivePage(page);
-    await page.getByRole("button", { name: "¿Qué servicio estás buscando?" }).click();
+    await page.getByRole("button", { name: "¿Qué servicio está buscando?" }).click();
     await expect(page.getByRole("combobox", { name: "Servicio" })).toBeVisible();
     const panel = page.locator("#native-location-suggestions");
     await expect(panel).toBeVisible();

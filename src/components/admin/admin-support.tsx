@@ -294,7 +294,7 @@ export function AdminSupport() {
             <CompositorDeSoporte
               key={openId}
               ticketId={openId}
-              placeholder="Escribe tu respuesta… (se envía por correo al usuario)"
+              placeholder="Escriba su respuesta… (se envía por correo al usuario)"
               onEnviar={sendReply}
             />
           </div>

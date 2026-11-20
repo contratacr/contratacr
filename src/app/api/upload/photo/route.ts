@@ -27,7 +27,7 @@ export async function POST(req: Request) {
   if (rl) return rl;
 
   const user = await safeGetUser(await createClient());
-  if (!user) return NextResponse.json({ error: mensajeDeError(req, { es: "Inicia sesión para subir imágenes.", en: "Sign in to upload images." }) }, { status: 401 });
+  if (!user) return NextResponse.json({ error: mensajeDeError(req, { es: "Inicie sesión para subir imágenes.", en: "Sign in to upload images." }) }, { status: 401 });
 
   try {
     const formData = await req.formData();
@@ -83,7 +83,7 @@ export async function POST(req: Request) {
     const apiSecret = process.env.CLOUDINARY_API_SECRET;
     if (!cloudName || !apiKey || !apiSecret) {
       return NextResponse.json(
-        { error: mensajeDeError(req, { es: "Cloudinary no está configurado. Revisa las variables de entorno en Vercel.", en: "Cloudinary is not configured. Check the environment variables." }) },
+        { error: mensajeDeError(req, { es: "Cloudinary no está configurado. Revise las variables de entorno en Vercel.", en: "Cloudinary is not configured. Check the environment variables." }) },
         { status: 503 }
       );
     }

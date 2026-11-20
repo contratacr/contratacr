@@ -565,7 +565,7 @@ export function AdminCategories() {
         const data = await res.json().catch(() => ({} as { error?: string }));
         showNotice(
           next === "approved" ? "No se pudo aprobar la sugerencia" : "No se pudo rechazar la sugerencia",
-          data.error || "Intenta de nuevo."
+          data.error || "Intente de nuevo."
         );
         return;
       }
@@ -579,7 +579,7 @@ export function AdminCategories() {
   }
 
   function requestClarification(i: Suggestion) {
-    let question = `¡Hola! Estamos revisando el servicio que solicitaste: "${nameOf(i)}". ¿Nos contás qué trabajos realizás? Podés responder aquí mismo para ayudarnos a ubicarlo con el nombre correcto.`;
+    let question = `¡Hola! Estamos revisando el servicio que solicitó: "${nameOf(i)}". ¿Nos cuenta qué trabajos realiza? Puede responder aquí mismo para ayudarnos a ubicarlo con el nombre correcto.`;
     const requestKey = crypto.randomUUID();
     setDialog({ title: "Solicitar aclaración", description: "Se abrirá un caso privado para cada solicitante. Podrán responder directamente; si ya existe un caso, se reutilizará. La sugerencia seguirá pendiente.",
       input: { value: question, label: "Pregunta", maxLength: 2000, onChange: value => { question = value; setDialog(current => current?.input ? { ...current, input: { ...current.input, value } } : current); } }, confirmLabel: "Enviar pregunta",
@@ -588,7 +588,7 @@ export function AdminCategories() {
         try {
           const response = await fetch("/api/admin/categories/clarification", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: i.id, question, requestKey }) });
           const data = await response.json();
-          if (!response.ok) { showNotice("No se pudo enviar la pregunta", data.error || "Intentá nuevamente."); return; }
+          if (!response.ok) { showNotice("No se pudo enviar la pregunta", data.error || "Intente nuevamente."); return; }
           const updated = await fetch(`/api/admin/categories?status=${status}`).then(r => r.json());
           setItems(updated.categories ?? []);
         } finally { setBusy(null); }
@@ -604,7 +604,7 @@ export function AdminCategories() {
     if (next === "approved") {
       label = nameOf(i).trim();
       if (!label) {
-        showNotice("Falta el nombre del servicio", "Agrega el nombre antes de aprobar esta sugerencia.");
+        showNotice("Falta el nombre del servicio", "Agregue el nombre antes de aprobar esta sugerencia.");
         return;
       }
       const similar = findSimilarCategory(label);
@@ -612,7 +612,7 @@ export function AdminCategories() {
         setDialog({
           title: "Servicio parecido encontrado",
           description: `Ya existe un servicio parecido: "${similar}".`,
-          detail: `Puedes revisar la sugerencia o aprobar "${label}" de todos modos si realmente es un servicio distinto.`,
+          detail: `Puede revisar la sugerencia o aprobar "${label}" de todos modos si realmente es un servicio distinto.`,
           confirmLabel: "Aprobar de todos modos",
           cancelLabel: "Revisar",
           onConfirm: () => applySuggestionDecision(i, next, label, labelEn, groupId, flags),
@@ -626,7 +626,7 @@ export function AdminCategories() {
       rejectReasonRefs.current[i.id] = existing;
       setDialog({
         title: "Rechazar sugerencia",
-        description: `Si quieres, agrega un motivo para ayudar a quien sugirió el servicio.`,
+        description: `Si quiere, agregue un motivo para ayudar a quien sugirió el servicio.`,
         detail: `Sugerencia: "${nameOf(i)}".`,
         confirmLabel: "Rechazar",
         cancelLabel: "Cancelar",
@@ -663,7 +663,7 @@ export function AdminCategories() {
     const draft = draftOf(item);
     const label = draft.label.trim();
     const labelEn = draft.labelEn.trim() || autoEnglishCategoryLabel(label);
-    if (!label) { showNotice("Falta el nombre del servicio", "Agrega el nombre antes de guardar los cambios."); return; }
+    if (!label) { showNotice("Falta el nombre del servicio", "Agregue el nombre antes de guardar los cambios."); return; }
     setBusy(item.id);
     try {
       const res = await fetch("/api/admin/categories", {
@@ -681,7 +681,7 @@ export function AdminCategories() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        showNotice("No se pudo guardar el servicio", data.error || "Inténtalo de nuevo.");
+        showNotice("No se pudo guardar el servicio", data.error || "Inténtelo de nuevo.");
         return;
       }
       setCatalog((prev) => prev.map((row) => row.id === item.id ? {
@@ -715,7 +715,7 @@ export function AdminCategories() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        showNotice("No se pudo guardar la categoría", data.error || "Inténtalo de nuevo.");
+        showNotice("No se pudo guardar la categoría", data.error || "Inténtelo de nuevo.");
         return;
       }
       await loadCatalog();
@@ -768,7 +768,7 @@ export function AdminCategories() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        showNotice("No se pudo agregar el servicio", data.error || "Inténtalo de nuevo.");
+        showNotice("No se pudo agregar el servicio", data.error || "Inténtelo de nuevo.");
         return;
       }
       setNewServiceName("");
@@ -797,7 +797,7 @@ export function AdminCategories() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        showNotice("No se pudo agregar la categoría", data.error || "Inténtalo de nuevo.");
+        showNotice("No se pudo agregar la categoría", data.error || "Inténtelo de nuevo.");
         return;
       }
       setNewGroupName("");
@@ -817,8 +817,8 @@ export function AdminCategories() {
     if (inUse > 0) {
       showNotice(
         isBase ? "No se puede ocultar todavía" : "No se puede eliminar todavía",
-        `${inUse} ${inUse === 1 ? "profesional ofrece" : "profesionales ofrecen"} "${item.label}". Si lo quitas, quedarían con un servicio que ya no existe.`,
-        "Reasígnalos a otro servicio desde sus perfiles y vuelve a intentarlo.",
+        `${inUse} ${inUse === 1 ? "profesional ofrece" : "profesionales ofrecen"} "${item.label}". Si lo quita, quedarían con un servicio que ya no existe.`,
+        "Reasígnalos a otro servicio desde sus perfiles y vuelva a intentarlo.",
         "danger"
       );
       return;
@@ -842,7 +842,7 @@ export function AdminCategories() {
       const res = await fetch(`/api/admin/categories?id=${encodeURIComponent(item.id)}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        showNotice("No se pudo eliminar el servicio", data.error || "Inténtalo de nuevo.", undefined, "danger");
+        showNotice("No se pudo eliminar el servicio", data.error || "Inténtelo de nuevo.", undefined, "danger");
         return;
       }
       setCatalog((prev) => prev.filter((row) => row.id !== item.id));
@@ -858,7 +858,7 @@ export function AdminCategories() {
       showNotice(
         "Esta categoría todavía tiene servicios",
         `Tiene ${inUse} servicio${inUse === 1 ? "" : "s"} asociado${inUse === 1 ? "" : "s"}.`,
-        "Mueve esos servicios a otra categoría y vuelve a intentarlo."
+        "Mueve esos servicios a otra categoría y vuelva a intentarlo."
       );
       return;
     }
@@ -879,7 +879,7 @@ export function AdminCategories() {
       const res = await fetch(`/api/admin/categories?groupId=${encodeURIComponent(group.id)}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        showNotice("No se pudo eliminar la categoría", data.error || "Inténtalo de nuevo.", undefined, "danger");
+        showNotice("No se pudo eliminar la categoría", data.error || "Inténtelo de nuevo.", undefined, "danger");
         return;
       }
       await loadCatalog();
@@ -1019,7 +1019,7 @@ export function AdminCategories() {
                         {sender && <span className="text-[#64748b]">Sugerida por {sender}</span>}
                       </div>
                       {status === "pending" && !!i.clarifications?.length && <div className="mt-3 space-y-2">
-                        <p className="text-sm font-bold text-[#007a9f]">{i.clarifications.some(c => c.state === "review") ? "Por revisar: recibiste una respuesta" : "Esperando respuesta"}</p>
+                        <p className="text-sm font-bold text-[#007a9f]">{i.clarifications.some(c => c.state === "review") ? "Por revisar: recibió una respuesta" : "Esperando respuesta"}</p>
                         {i.clarifications.map(c => <div key={c.ticketId} className="rounded-lg border border-[#d7e3ee] p-3 text-sm">
                           {c.reply && <p className="mb-2 whitespace-pre-wrap break-words">{c.reply}</p>}
                           <a href={`/admin/soporte?ticket=${c.ticketId}`} className="font-semibold text-[#009FD9]">Ver conversación</a>

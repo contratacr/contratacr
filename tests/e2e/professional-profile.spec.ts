@@ -141,11 +141,11 @@ test.describe("@seeded professional profile", () => {
       await loginAs(page, account.email, account.password);
       await gotoOK(page, `/profesionales/${seed!.professionalSlug}?tab=resenas#resenas`);
 
-      await expect(page.getByText("¿Ya trabajaste con este profesional?")).toBeVisible();
+      await expect(page.getByText("¿Ya trabajó con este profesional?")).toBeVisible();
       await expect(page.getByRole("button", { name: "Escribir reseña" })).toHaveCount(0);
-      await expect(page.getByPlaceholder(/Cuéntanos sobre tu experiencia/i)).toHaveCount(0);
+      await expect(page.getByPlaceholder(/Cuéntenos sobre su experiencia/i)).toHaveCount(0);
       await page.getByRole("button", { name: "5 estrellas", exact: true }).click();
-      await expect(page.getByPlaceholder(/Cuéntanos sobre tu experiencia/i)).toBeVisible();
+      await expect(page.getByPlaceholder(/Cuéntenos sobre su experiencia/i)).toBeVisible();
       await expect(page.getByRole("button", { name: /Enviar reseña|Actualizar reseña/i })).toBeVisible();
       await expect(page.getByRole("dialog")).toHaveCount(0);
 

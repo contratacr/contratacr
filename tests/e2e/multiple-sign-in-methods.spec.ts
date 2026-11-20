@@ -8,7 +8,7 @@ test("Apple and Google remain available and last-used does not display an obsole
   await resetAuth(page);
   await gotoOK(page, "/login");
   await expect(page.getByRole("button", { name: "Continuar con Apple", exact: true })).toBeVisible();
-  await expect(page.getByText("Usaste la última vez:")).toHaveCount(0);
+  await expect(page.getByText("Usó la última vez:")).toHaveCount(0);
   const url = new URL(page.url());
   await context.addCookies([{ name: "ccr_last_sign_in", value: "apple", domain: url.hostname, path: "/" }]);
   await page.reload();

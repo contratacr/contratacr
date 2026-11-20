@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     const { fullName, phone, cedula, userId: bodyUserId } = body;
     const attribution = requestStatisticsAllowed(req) ? attributionColumnsFromBody(body.attribution) : null;
     if (typeof fullName !== "string" || !fullName.trim() || typeof phone !== "string" || !/^\d{8,15}$/.test(phone.replace(/\D/g, ""))) {
-      return NextResponse.json({ error: mensajeDeError(req, { es: "Completa tu nombre y WhatsApp para continuar.", en: "Enter your name and WhatsApp number to continue." }) }, { status: 400 });
+      return NextResponse.json({ error: mensajeDeError(req, { es: "Complete su nombre y WhatsApp para continuar.", en: "Enter your name and WhatsApp number to continue." }) }, { status: 400 });
     }
 
     const sessionClient = await createServerClient();
@@ -104,18 +104,18 @@ export async function POST(req: Request) {
       }
 
       if (isDupEmail(profileError.message)) {
-        return NextResponse.json({ error: mensajeDeError(req, { es: "Este correo ya está registrado. Inicia sesión.", en: "That email is already registered. Sign in." }), code: "email_taken" }, { status: 409 });
+        return NextResponse.json({ error: mensajeDeError(req, { es: "Este correo ya está registrado. Inicie sesión.", en: "That email is already registered. Sign in." }), code: "email_taken" }, { status: 409 });
       }
       if (isDupCedula(profileError.message)) {
         return NextResponse.json({ error: mensajeDeError(req, { es: "Esta cédula ya está registrada.", en: "That ID is already registered." }), code: "cedula_taken" }, { status: 409 });
       }
-      return NextResponse.json({ error: "No pudimos crear tu cuenta. Intenta de nuevo en unos minutos." }, { status: 500 });
+      return NextResponse.json({ error: "No pudimos crear su cuenta. Intente de nuevo en unos minutos." }, { status: 500 });
     }
 
     const { error: completionError } = await supabase.auth.admin.updateUserById(userId, {
       user_metadata: { ...(sessionUser?.user_metadata ?? {}), role: "client", onboarding_completed: true, intended_role: null },
     });
-    if (completionError) return NextResponse.json({ error: "No pudimos completar tu cuenta. Intenta de nuevo." }, { status: 500 });
+    if (completionError) return NextResponse.json({ error: "No pudimos completar su cuenta. Intente de nuevo." }, { status: 500 });
 
     await auditUserAction(supabase, req, {
       actorUserId: userId,
@@ -146,7 +146,7 @@ export async function POST(req: Request) {
     const message = err instanceof Error ? err.message : "Error interno del servidor";
     const friendly = /profiles_cedula_key|duplicate key/i.test(message)
       ? "Esta cédula ya está registrada."
-      : "Ocurrió un error. Intenta de nuevo.";
+      : "Ocurrió un error. Intente de nuevo.";
     return NextResponse.json({ error: friendly }, { status: 500 });
   }
 }

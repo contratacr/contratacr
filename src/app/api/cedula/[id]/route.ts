@@ -36,7 +36,7 @@ export async function GET(
       {
         found: false,
         unavailable: true,
-        error: "No pudimos verificar la identificación en este momento. Intenta nuevamente más tarde.",
+        error: "No pudimos verificar la identificación en este momento. Intente nuevamente más tarde.",
       },
       { status: 503, headers: { "Cache-Control": "no-store" } }
     );

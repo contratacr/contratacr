@@ -24,7 +24,7 @@ test("native home shows nearby professionals even if scroll observers never fire
   await gotoOK(page, "/");
   const zones = page.locator(".ccr-fin-de-portada");
   await zones.scrollIntoViewIfNeeded();
-  const heading = zones.getByRole("heading", { name: "Encuentra profesionales cerca de ti", exact: true });
+  const heading = zones.getByRole("heading", { name: "Encuentre profesionales cerca de usted", exact: true });
   await expect(heading).toBeVisible();
   const invisibleAncestors = await heading.evaluate((el) => {
     for (let node: Element | null = el; node; node = node.parentElement) {

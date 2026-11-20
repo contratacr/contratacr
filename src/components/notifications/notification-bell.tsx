@@ -304,7 +304,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
               plano
               tamano="compacto"
               icon={Bell}
-              title={locale === "en" ? "No notifications yet" : "Aún no tienes notificaciones"}
+              title={locale === "en" ? "No notifications yet" : "Aún no tiene notificaciones"}
               className="min-h-0 px-4 pb-5 pt-2"
             />
           )}

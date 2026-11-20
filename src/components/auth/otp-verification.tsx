@@ -147,9 +147,9 @@ export function OtpVerification({ email, onVerified, autoResendOnMount = false }
 
   return (
     <div ref={containerRef} className="scroll-mt-24 text-center">
-      <h1 className="text-xl font-bold text-[#162543]">{isEn ? "Verify your email" : "Verifica tu correo"}</h1>
+      <h1 className="text-xl font-bold text-[#162543]">{isEn ? "Verify your email" : "Verifique su correo"}</h1>
       <p className="text-sm text-[#6b7280] mt-1.5 mb-6">
-        {isEn ? "Enter the 6-digit code we sent to" : "Ingresa el código de 6 dígitos que enviamos a"}{" "}
+        {isEn ? "Enter the 6-digit code we sent to" : "Ingrese el código de 6 dígitos que enviamos a"}{" "}
         <strong className="text-[#162543]">{email}</strong>.
       </p>
 

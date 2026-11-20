@@ -4,7 +4,7 @@
     "file": "confirm-signup.html",
     "subjectKey": "mailer_subjects_confirmation",
     "contentKey": "mailer_templates_confirmation_content",
-    "subject": "Tu codigo de confirmacion - ContrataCR",
+    "subject": "Su codigo de confirmacion - ContrataCR",
     "requiredTokens": ["{{ .Token }}"]
   },
   {
@@ -12,7 +12,7 @@
     "file": "invite-user.html",
     "subjectKey": "mailer_subjects_invite",
     "contentKey": "mailer_templates_invite_content",
-    "subject": "Te invitaron a ContrataCR",
+    "subject": "Invitación a ContrataCR",
     "requiredTokens": ["{{ .ConfirmationURL }}"]
   },
   {
@@ -20,7 +20,7 @@
     "file": "magic-link.html",
     "subjectKey": "mailer_subjects_magic_link",
     "contentKey": "mailer_templates_magic_link_content",
-    "subject": "Tu enlace de acceso - ContrataCR",
+    "subject": "Su enlace de acceso - ContrataCR",
     "requiredTokens": ["{{ .ConfirmationURL }}"]
   },
   {
@@ -28,7 +28,7 @@
     "file": "change-email.html",
     "subjectKey": "mailer_subjects_email_change",
     "contentKey": "mailer_templates_email_change_content",
-    "subject": "Confirma tu nuevo correo - ContrataCR",
+    "subject": "Confirme su nuevo correo - ContrataCR",
     "requiredTokens": ["{{ .SiteURL }}", "{{ .TokenHash }}", "{{ .Email }}", "{{ .NewEmail }}"]
   },
   {
@@ -36,7 +36,7 @@
     "file": "reset-password.html",
     "subjectKey": "mailer_subjects_recovery",
     "contentKey": "mailer_templates_recovery_content",
-    "subject": "Restablece tu contrasena - ContrataCR",
+    "subject": "Restablezca su contrasena - ContrataCR",
     "requiredTokens": ["{{ .SiteURL }}", "{{ .TokenHash }}"]
   },
   {
@@ -44,7 +44,7 @@
     "file": "reauthentication.html",
     "subjectKey": "mailer_subjects_reauthentication",
     "contentKey": "mailer_templates_reauthentication_content",
-    "subject": "Tu codigo de verificacion - ContrataCR",
+    "subject": "Su codigo de verificacion - ContrataCR",
     "requiredTokens": ["{{ .Token }}"]
   }
 ]

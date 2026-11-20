@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     .select("id, verification_status")
     .eq("profile_id", user.id)
     .maybeSingle();
-  if (!pro) return NextResponse.json({ error: mensajeDeError(req, { es: "No se encontró tu perfil profesional.", en: "We could not find your professional profile." }) }, { status: 404 });
+  if (!pro) return NextResponse.json({ error: mensajeDeError(req, { es: "No se encontró su perfil profesional.", en: "We could not find your professional profile." }) }, { status: 404 });
 
   // Already verified → no-op (don't re-run unnecessarily).
   if (pro.verification_status === "verified") {

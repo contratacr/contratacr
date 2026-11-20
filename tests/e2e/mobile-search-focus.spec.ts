@@ -120,7 +120,7 @@ test.describe('viewport sizing',()=>{
   await expect(indicator).toHaveCount(0);
   if(path==='/profesionales') {
    await location.fill('Lugar que no existe 987654');
-   await expect(panel.getByRole('status')).toHaveText('No encontramos ese lugar. Probá con su cantón o provincia.');
+   await expect(panel.getByRole('status')).toHaveText('No encontramos ese lugar. Pruebe con su cantón o provincia.');
    await expect(panel.getByRole('option')).toHaveCount(0);
   }
  }

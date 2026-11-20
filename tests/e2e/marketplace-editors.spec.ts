@@ -191,7 +191,7 @@ test.describe("@seeded marketplace editors through the real screens", () => {
       await expectVisibleText(page.locator("body"), /Publicar promoción/);
       await page.locator('input[name="title"]').fill(offerTitle);
       // The service picker is a trigger button that reveals a search box.
-      await page.getByText("Selecciona un servicio", { exact: true }).first().click();
+      await page.getByText("Seleccione un servicio", { exact: true }).first().click();
       const service = page.getByPlaceholder(/Ejemplo: Redes e internet/);
       await service.fill("Desarrollo");
       await page.locator("#offer-service-options").getByRole("option").first().click();

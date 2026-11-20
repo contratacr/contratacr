@@ -22,6 +22,6 @@ export async function POST(req: Request) {
  const target=await resolveReportTarget(db,kind,id);if(!target)return NextResponse.json({error:"Contenido no encontrado."},{status:404});
  const priority=/suplantaci[oó]n|estafa|fraude/i.test(p.reason)?"high":"normal";
  const {error}=await db.from("reports").insert({...target,reason:p.reason,reporter_id:user?.id??null,reporter_email:user?.email??null,priority,status:"open"});
- if(error)return NextResponse.json({error:"No se pudo guardar el reporte. Intenta de nuevo o contacta soporte."},{status:503});
+ if(error)return NextResponse.json({error:"No se pudo guardar el reporte. Intente de nuevo o contacte soporte."},{status:503});
  return NextResponse.json({ok:true});
 }

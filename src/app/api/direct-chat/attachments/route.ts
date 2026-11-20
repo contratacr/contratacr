@@ -38,7 +38,7 @@ export async function POST(req: Request) {
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Inicia sesion para adjuntar archivos." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Inicie sesion para adjuntar archivos." }, { status: 401 });
 
   const formData = await req.formData().catch(() => null);
   const file = formData?.get("file") as File | null;

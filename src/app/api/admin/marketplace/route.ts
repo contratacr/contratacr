@@ -217,4 +217,4 @@ export async function PATCH(request: Request) {
  if(error)return NextResponse.json({error:"No se guardó el estado y su auditoría; comprueba si existe un retiro de moderación."},{status:409});
  return NextResponse.json({id:p.id,status:p.status});
 }
-export async function DELETE(){if(!(await moderationAccess()))return NextResponse.json({error:"No autorizado"},{status:403});return NextResponse.json({error:"Usa el retiro reversible desde Reportes y moderación."},{status:405});}
+export async function DELETE(){if(!(await moderationAccess()))return NextResponse.json({error:"No autorizado"},{status:403});return NextResponse.json({error:"Use el retiro reversible desde Reportes y moderación."},{status:405});}

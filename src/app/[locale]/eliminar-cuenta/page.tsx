@@ -52,7 +52,7 @@ export default async function DeleteAccountPage({
               <p className="font-bold text-[#166534]">
                 {status === "completed"
                   ? (en ? "Your account was deleted" : "Tu cuenta fue eliminada")
-                  : (en ? "Your account deletion has started" : "La eliminación de tu cuenta fue iniciada")}
+                  : (en ? "Your account deletion has started" : "La eliminación de su cuenta fue iniciada")}
               </p>
               <p className="mt-1 text-sm leading-6 text-[#3f6f55]">
                 {status === "completed"
@@ -66,7 +66,7 @@ export default async function DeleteAccountPage({
               <Trash2 className="h-6 w-6" />
             </span>
             <h1 className="mt-5 text-3xl font-black text-[#162543] sm:text-4xl">
-              {en ? "Delete or disable your account" : "Eliminar o deshabilitar tu cuenta"}
+              {en ? "Delete or disable your account" : "Eliminar o deshabilitar su cuenta"}
             </h1>
             <p className="mx-auto mt-3 max-w-xl leading-7 text-[#6b7280]">
               {en
@@ -86,7 +86,7 @@ export default async function DeleteAccountPage({
                   <p className="mt-1 text-sm leading-6 text-[#526277]">
                     {en
                       ? "There you can disable your account if you may return later, or permanently delete it automatically if you want to close it for good."
-                      : "Ahí puedes deshabilitar tu cuenta si podrías volver después, o eliminarla permanentemente de forma automática si quieres cerrarla por completo."}
+                      : "Ahí puede deshabilitar su cuenta si podría volver después, o eliminarla permanentemente de forma automática si quiere cerrarla por completo."}
                   </p>
                 </div>
               </div>
@@ -94,9 +94,9 @@ export default async function DeleteAccountPage({
 
             <ol className="mt-6 space-y-3 text-sm text-[#4b5563]">
               {[
-                en ? "Sign in to your ContrataCR account." : "Inicia sesión en tu cuenta de ContrataCR.",
+                en ? "Sign in to your ContrataCR account." : "Inicie sesión en su cuenta de ContrataCR.",
                 en ? "Open Account and security." : "Abre Cuenta y seguridad.",
-                en ? "Choose Disable account or Delete account." : "Elige Deshabilitar cuenta o Eliminar cuenta.",
+                en ? "Choose Disable account or Delete account." : "Elija Deshabilitar cuenta o Eliminar cuenta.",
               ].map((item) => (
                 <li key={item} className="flex gap-3">
                   <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-[#009FD9]" />
@@ -118,12 +118,12 @@ export default async function DeleteAccountPage({
                 <Headset className="mt-0.5 h-5 w-5 shrink-0 text-[#0089bb]" />
                 <div>
                   <h2 className="text-sm font-bold text-[#162543]">
-                    {en ? "Can't sign in?" : "¿No puedes iniciar sesión?"}
+                    {en ? "Can't sign in?" : "¿No puede iniciar sesión?"}
                   </h2>
                   <p className="mt-1 text-sm leading-6 text-[#526277]">
                     {en
                       ? "Open a support case only if you cannot access your panel. We'll help verify your identity first."
-                      : "Abre un caso de soporte solo si no puedes entrar al panel. Primero te ayudamos a confirmar tu identidad."}
+                      : "Abra un caso de soporte solo si no puede entrar al panel. Primero le ayudamos a confirmar su identidad."}
                   </p>
                 </div>
               </div>

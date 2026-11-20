@@ -59,7 +59,7 @@ function buildMetadata(locale: string): Metadata {
     : "ContrataCR: Profesionales de servicios en Costa Rica";
   const description = isEn
     ? "Find electricians, plumbers, painters, tutors and more verified professionals in your canton."
-    : "Encuentra electricistas, plomeros, pintores, tutores y más profesionales verificados en tu cantón.";
+    : "Encuentre electricistas, plomeros, pintores, tutores y más profesionales verificados en su cantón.";
   const socialDescription = isEn
     ? "Offer and find services in Costa Rica"
     : "Ofrece y encuentra servicios en Costa Rica";

@@ -356,7 +356,7 @@ export default function LoginPage() {
         provider === "apple" && providerUnavailable
           ? locale === "en"
             ? "Sign in with Apple is temporarily unavailable. Please use Google or your email while we finish configuring it."
-            : "Iniciar sesión con Apple no está disponible temporalmente. Usa Google o tu correo mientras terminamos de configurarlo."
+            : "Iniciar sesión con Apple no está disponible temporalmente. Use Google o su correo mientras terminamos de configurarlo."
           : oauthError.message
       );
     }

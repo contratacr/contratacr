@@ -41,7 +41,7 @@ test("contact follow-up is readable and dismissible without blocking the page", 
   await expect(dialog).toContainText("¿Contrataste a Redes Bahía?");
   await expect(dialog).toContainText("Lo contactaste por WhatsApp · Reparación de computadoras");
   await expect(dialog.getByRole("button", { name: "Sí, dejar una reseña" })).toBeVisible();
-  await expect(dialog.getByRole("button", { name: "Preguntame después" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Pregúnteme después" })).toBeVisible();
   await expect(dialog.getByRole("button", { name: "No lo contraté" })).toBeVisible();
   await expect(dialog.getByRole("button", { name: "No me respondió" })).toBeVisible();
 
@@ -60,7 +60,7 @@ test("contact follow-up is readable and dismissible without blocking the page", 
   expect(alturas).toHaveLength(4);
   for (const alto of alturas) expect(alto).toBe(44);
 
-  await dialog.getByRole("button", { name: "Preguntame después" }).click();
+  await dialog.getByRole("button", { name: "Pregúnteme después" }).click();
   await expect(dialog).toBeHidden();
   expect(action).toBe("not_now");
 });
@@ -174,7 +174,7 @@ test("«Preguntame después» deja de preguntar en esa visita aunque queden pend
   await page.goto("/");
   const dialog = page.getByRole("dialog", { name: "Seguimiento del servicio" });
   await expect(dialog).toContainText("Redes Bahía");
-  await dialog.getByRole("button", { name: "Preguntame después" }).click();
+  await dialog.getByRole("button", { name: "Pregúnteme después" }).click();
   await expect(dialog).toBeHidden();
   // «Preguntame después» también es «ahora no me pregunten»: la segunda no salta.
   await page.waitForTimeout(1500);

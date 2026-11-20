@@ -47,7 +47,7 @@ async function whoAmI() {
 
 export async function GET(req: NextRequest) {
   const me = await whoAmI();
-  if (!me) return NextResponse.json({ error: mensajeDeError(req, { es: "Inicia sesión.", en: "Sign in." }) }, { status: 401 });
+  if (!me) return NextResponse.json({ error: mensajeDeError(req, { es: "Inicie sesión.", en: "Sign in." }) }, { status: 401 });
   const url = new URL(req.url);
   const projectId = url.searchParams.get("projectId");
   // Con el nombre de quien cotiza: el cliente lo ve en "De X" y el profesional
@@ -105,11 +105,11 @@ function rangoDeMonto(total: number): string {
 
 export async function POST(req: NextRequest) {
   const me = await whoAmI();
-  if (!me) return NextResponse.json({ error: mensajeDeError(req, { es: "Inicia sesión.", en: "Sign in." }) }, { status: 401 });
+  if (!me) return NextResponse.json({ error: mensajeDeError(req, { es: "Inicie sesión.", en: "Sign in." }) }, { status: 401 });
   if (!me.proId) return NextResponse.json({ error: mensajeDeError(req, { es: "Solo los profesionales envían cotizaciones.", en: "Only professionals send quotes." }) }, { status: 403 });
   const body = await req.json().catch(() => ({})) as Record<string, unknown>;
   const items = sanitizeQuoteItems(body.items);
-  if (items.length === 0) return NextResponse.json({ error: mensajeDeError(req, { es: "Agrega al menos un renglón con descripción y precio.", en: "Add at least one line with a description and a price." }) }, { status: 400 });
+  if (items.length === 0) return NextResponse.json({ error: mensajeDeError(req, { es: "Agregue al menos un renglón con descripción y precio.", en: "Add at least one line with a description and a price." }) }, { status: 400 });
   const taxMode = TAX_MODES.has(body.taxMode as QuoteTaxMode) ? (body.taxMode as QuoteTaxMode) : "incluido";
   const title = String(body.title ?? "").replace(/\s+/g, " ").trim().slice(0, 120) || null;
   const notes = String(body.notes ?? "").trim().slice(0, 1000) || null;
@@ -187,7 +187,7 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   const me = await whoAmI();
-  if (!me) return NextResponse.json({ error: mensajeDeError(req, { es: "Inicia sesión.", en: "Sign in." }) }, { status: 401 });
+  if (!me) return NextResponse.json({ error: mensajeDeError(req, { es: "Inicie sesión.", en: "Sign in." }) }, { status: 401 });
   const body = await req.json().catch(() => ({})) as { id?: string; action?: string; projectId?: string };
   const id = String(body.id ?? ""); const action = String(body.action ?? "");
   if (!id || !["accept", "decline", "withdraw", "attach", "detach", "delete"].includes(action)) return NextResponse.json({ error: "Acción no válida." }, { status: 400 });
@@ -224,7 +224,7 @@ export async function PATCH(req: NextRequest) {
   if (action === "attach") {
     if (q.professional_id !== me.proId) return NextResponse.json({ error: "Solo quien la hizo puede enviarla." }, { status: 403 });
     const projectId = typeof body.projectId === "string" ? body.projectId : null;
-    if (!projectId) return NextResponse.json({ error: "Elige una solicitud." }, { status: 400 });
+    if (!projectId) return NextResponse.json({ error: "Elija una solicitud." }, { status: 400 });
     const { data: p } = await me.admin.from("projects").select("id, client_id, title").eq("id", projectId).maybeSingle();
     if (!p) return NextResponse.json({ error: "Solicitud no encontrada." }, { status: 404 });
     const clientId: string | null = p.client_id ?? null;

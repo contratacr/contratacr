@@ -13063,7 +13063,7 @@
         {
           "line": 2018,
           "tag": "textarea",
-          "label": "{isEn ? \"Write a message\" : \"Escribe un mensaje\"}",
+          "label": "{isEn ? \"Write a message\" : \"Escriba un mensaje\"}",
           "handler": "{(e) => {\n                setDraft(e.target.value.slice(0, 2000));\n                resizeMessageTextarea(e.currentTarget);\n                keepComposerVisible();\n              }}",
           "destination": "",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
@@ -13413,7 +13413,7 @@
         {
           "line": 69,
           "tag": "SelectMenu",
-          "label": "{english ? 'Choose a province' : 'Elegí una provincia'}",
+          "label": "{english ? 'Choose a province' : 'Elija una provincia'}",
           "handler": "{next => { setProvince(next); setCanton(''); }}",
           "destination": "",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
@@ -13421,7 +13421,7 @@
         {
           "line": 70,
           "tag": "SelectMenu",
-          "label": "{english ? 'Choose a canton' : 'Elegí un cantón'}",
+          "label": "{english ? 'Choose a canton' : 'Elija un cantón'}",
           "handler": "{setCanton}",
           "destination": "",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
@@ -15903,7 +15903,7 @@
         {
           "line": 799,
           "tag": "input",
-          "label": "{lang === \"en\" ? \"Ask anything...\" : \"Escribe una pregunta...\"}",
+          "label": "{lang === \"en\" ? \"Ask anything...\" : \"Escriba una pregunta...\"}",
           "handler": "{(event) => setDraft(event.target.value.slice(0, 240))}",
           "destination": "",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"

@@ -229,7 +229,7 @@ export function AdminUserProfile({
   async function deleteAccount() {
     const name = formatFullPersonName(data?.profile?.full_name) || data?.profile?.email || "esta cuenta";
     if (!window.confirm(`Vas a eliminar al 100% la cuenta de ${name}. Se borra todo lo que creó y no se puede deshacer. ¿Continuar?`)) return;
-    if (window.prompt("Escribe ELIMINAR para confirmar") !== "ELIMINAR") return;
+    if (window.prompt("Escriba ELIMINAR para confirmar") !== "ELIMINAR") return;
     setDeleting(true);
     setDeleteError(null);
     try {

@@ -63,7 +63,7 @@ export function VerificationDocuments({ legal, preview = false, onVerified }: { 
         if (state.outcome === "skipped") setRetryNote(t("unavailable"));
       }
       setLoaded(true);
-    }).catch(() => { if (active) setError(en ? "Could not load your review. Reload to try again." : "No se pudo cargar tu revisión. Recarga para intentarlo de nuevo."); });
+    }).catch(() => { if (active) setError(en ? "Could not load your review. Reload to try again." : "No se pudo cargar su revisión. Recargue la página para intentarlo de nuevo."); });
     return () => { active = false; };
   }, [preview, en, t]);
   async function submit() {
@@ -77,12 +77,12 @@ export function VerificationDocuments({ legal, preview = false, onVerified }: { 
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
       setSubmitted(true); setReviewOpen(false); setFiles({});
-    } catch (error) { setError(error instanceof Error ? error.message : (en ? "Please try again." : "Intenta nuevamente.")); }
+    } catch (error) { setError(error instanceof Error ? error.message : (en ? "Please try again." : "Intente nuevamente.")); }
     finally { setBusy(false); }
   }
   const refs = useRef<Record<string, HTMLInputElement | null>>({});
   const documents = [
-    { id: "identity", title: isLegal ? (en ? "Authorized person" : "Persona autorizada") : (en ? "Photo with your ID" : "Foto con tu identificación"), description: en ? "Hold your ID next to your face, with the details clearly visible." : "Tu rostro junto a la identificación, con los datos legibles." },
+    { id: "identity", title: isLegal ? (en ? "Authorized person" : "Persona autorizada") : (en ? "Photo with your ID" : "Foto con su identificación"), description: en ? "Hold your ID next to your face, with the details clearly visible." : "Su rostro junto a la identificación, con los datos legibles." },
     ...(isLegal ? [{ id: "company", title: en ? "Legal representation" : "Personería o autorización", description: en ? "A current document confirming your authorization to represent the company." : "Documento vigente que confirme la representación de la empresa." }] : []),
   ];
   const ready = documents.every(doc => files[doc.id]);

@@ -158,7 +158,7 @@ export async function POST(req: Request) {
 
   // Otherwise: a normal reply message (texto, adjuntos o ambos).
   const adjuntos = adjuntosValidos(attachments, ticketId);
-  if (!safeBody && !adjuntos.length) return NextResponse.json({ error: "Escribe un mensaje." }, { status: 400 });
+  if (!safeBody && !adjuntos.length) return NextResponse.json({ error: "Escriba un mensaje." }, { status: 400 });
   const { data: filaGuardada, error: msgErr } = await db.from("support_ticket_messages").insert({
     ticket_id: ticketId, sender_role: "user", sender_id: user.id, sender_name: senderName, body: safeBody,
     ...(adjuntos.length ? { attachments: adjuntos } : {}),

@@ -44,10 +44,10 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: mensajeDeError(req, { es: "Tu sesión expiró. Inicia sesión nuevamente.", en: "Your session expired. Sign in again." }) }, { status: 401 });
+    if (!user) return NextResponse.json({ error: mensajeDeError(req, { es: "Su sesión expiró. Inicie sesión nuevamente.", en: "Your session expired. Sign in again." }) }, { status: 401 });
     const employerId = typeof body.employer_id === "string" ? body.employer_id : "";
     const { data: professional } = await supabase.from("professionals").select("id").eq("id", employerId).eq("profile_id", user.id).maybeSingle();
-    if (!professional) return NextResponse.json({ error: "No tienes permiso para publicar este empleo." }, { status: 403 });
+    if (!professional) return NextResponse.json({ error: "No tiene permiso para publicar este empleo." }, { status: 403 });
 
     const title = typeof body.title === "string" ? body.title.trim() : "";
     const description = typeof body.description === "string" ? body.description.trim() : "";
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
     // permite la base. Exigirlos aquí devolvía 400 a todo empleo publicado sin
     // ellos («No pudimos guardar el empleo»): pasó en producción el 18-sep.
     if (title.length < 3 || title.length > 120 || description.length < 30 || description.length > 5000 || salaryMin === undefined || salaryMax === undefined || !Number.isInteger(openings) || openings < 1 || openings > 100 || deadline === undefined || (deadline && deadline < crTodayISO())) {
-      return NextResponse.json({ error: mensajeDeError(req, { es: "Revisa la información del empleo e inténtalo nuevamente.", en: "Check the job details and try again." }) }, { status: 400 });
+      return NextResponse.json({ error: mensajeDeError(req, { es: "Revise la información del empleo e inténtelo nuevamente.", en: "Check the job details and try again." }) }, { status: 400 });
     }
     if (salaryMin !== null && salaryMax !== null && salaryMax < salaryMin) return NextResponse.json({ error: mensajeDeError(req, { es: "El salario máximo debe ser mayor o igual al mínimo.", en: "The maximum salary must be greater than or equal to the minimum." }) }, { status: 400 });
     if (!Object.hasOwn(EMPLOYMENT_TYPES, body.employment_type) || !Object.hasOwn(EXPERIENCE_LEVELS, body.experience_level) || !Object.hasOwn(WORKPLACE_TYPES, body.workplace_type) || !Object.hasOwn(SALARY_PERIODS, body.salary_period) || !CURRENCIES.has(body.currency) || !STATUSES.has(body.status)) {
@@ -155,7 +155,7 @@ export async function PATCH(req: NextRequest) {
     if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     const { data: job } = await supabase.from("job_posts").select("employer_id, professionals!inner(profile_id)").eq("id", id).maybeSingle();
     const owner = job?.professionals as unknown as { profile_id?: string } | null;
-    if (!job || owner?.profile_id !== user.id) return NextResponse.json({ error: "No tienes permiso para modificar este empleo." }, { status: 403 });
+    if (!job || owner?.profile_id !== user.id) return NextResponse.json({ error: "No tiene permiso para modificar este empleo." }, { status: 403 });
     const { error } = await supabase.from("job_posts").update({ status }).eq("id", id).eq("employer_id", job.employer_id);
     if (error) throw error;
     revalidateJobViews(id);
@@ -184,8 +184,8 @@ export async function DELETE(req: NextRequest) {
     const { data: fila } = await admin.from("job_posts").select("id, status, title, professionals!inner(profile_id)").eq("id", id).maybeSingle();
     if (!fila) return NextResponse.json({ ok: true });
     const owner = fila.professionals as unknown as { profile_id?: string } | null;
-    if (owner?.profile_id !== user.id) return NextResponse.json({ error: "No tienes permiso para eliminar este empleo." }, { status: 403 });
-    if (fila.status === "published") return NextResponse.json({ error: mensajeDeError(req, { es: "Primero detén la publicación; después la puedes eliminar.", en: "Stop publishing it first; then you can delete it." }) }, { status: 409 });
+    if (owner?.profile_id !== user.id) return NextResponse.json({ error: "No tiene permiso para eliminar este empleo." }, { status: 403 });
+    if (fila.status === "published") return NextResponse.json({ error: mensajeDeError(req, { es: "Primero detén la publicación; después la puede eliminar.", en: "Stop publishing it first; then you can delete it." }) }, { status: 409 });
     const { error } = await admin.from("job_posts").delete().eq("id", id);
     if (error) throw error;
     await auditUserAction(admin, req, {

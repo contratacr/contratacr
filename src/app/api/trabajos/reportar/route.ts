@@ -41,14 +41,14 @@ const etiqueta = (n: number) => (n === 3 ? "3 o más" : String(n));
 
 export async function GET(request: Request) {
   const { p, s, n, f, ok } = leer(new URL(request.url).searchParams);
-  if (!ok) return pagina("Este enlace no es válido", texto("Puede que haya cambiado. Si quieres contarnos, escríbenos a soporte@contratacr.com."), 400);
+  if (!ok) return pagina("Este enlace no es válido", texto("Puede que haya cambiado. Si quiere contarnos, escríbanos a soporte@contratacr.com."), 400);
   const accion = `/api/trabajos/reportar?${new URLSearchParams({ p, s, n: String(n), f }).toString()}`;
   return pagina(
-    "¿Cuántos trabajos conseguiste a través de ContrataCR?",
+    "¿Cuántos trabajos consiguió a través de ContrataCR?",
     `${texto(`Semana del <strong>${escaparHtml(s)}</strong> (lunes a domingo).`)}
-     ${texto("Nos referimos a trabajos que acordaste realizar con clientes que te encontraron en ContrataCR. No cuentes mensajes ni consultas que no terminaron en un trabajo.")}
-     ${texto(`Tu respuesta: <strong>${etiqueta(n)} ${n === 1 ? "trabajo" : "trabajos"}</strong>. Todavía no se ha guardado.`)}
-     ${texto("Si esta no es tu respuesta, vuelve al correo y elige otra opción. Confirmar es opcional; tu respuesta no se publica en tu perfil.")}
+     ${texto("Nos referimos a trabajos que acordó realizar con clientes que lo encontraron en ContrataCR. No cuente mensajes ni consultas que no terminaron en un trabajo.")}
+     ${texto(`Su respuesta: <strong>${etiqueta(n)} ${n === 1 ? "trabajo" : "trabajos"}</strong>. Todavía no se ha guardado.`)}
+     ${texto("Si esta no es su respuesta, vuelva al correo y elija otra opción. Confirmar es opcional; su respuesta no se publica en su perfil.")}
      <form method="post" action="${escaparHtml(accion)}" style="margin:18px 0 0">
        <button type="submit" style="display:inline-block;padding:13px 26px;border:0;border-radius:999px;background:#009FD9;color:#fff;font-size:15px;font-weight:700;cursor:pointer">Confirmar respuesta</button>
      </form>`,
@@ -57,17 +57,17 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const { p, s, n, ok } = leer(new URL(request.url).searchParams);
-  if (!ok) return pagina("Este enlace no es válido", texto("Puede que haya cambiado. Si quieres contarnos, escríbenos a soporte@contratacr.com."), 400);
+  if (!ok) return pagina("Este enlace no es válido", texto("Puede que haya cambiado. Si quiere contarnos, escríbanos a soporte@contratacr.com."), 400);
   try {
     const anotado = await anotarReporte(createAdminClient(), p, s, n);
     if (!anotado) return pagina("No encontramos ese resumen", texto("Puede que sea de una semana vieja. Gracias igual por contarnos."), 404);
   } catch (err) {
     console.error("[trabajos/reportar]", err);
-    return pagina("No pudimos guardarlo", texto("Intenta de nuevo en un momento."), 500);
+    return pagina("No pudimos guardarlo", texto("Intente de nuevo en un momento."), 500);
   }
   return pagina(
     "¡Gracias!",
-    `${texto(`Guardamos tu respuesta: <strong>${etiqueta(n)} ${n === 1 ? "trabajo" : "trabajos"}</strong>. Gracias por ayudarnos a evaluar ContrataCR.`)}
+    `${texto(`Guardamos su respuesta: <strong>${etiqueta(n)} ${n === 1 ? "trabajo" : "trabajos"}</strong>. Gracias por ayudarnos a evaluar ContrataCR.`)}
      <p style="margin:18px 0 0"><a href="${APP_URL}/dashboard/profesional" style="display:inline-block;padding:12px 22px;border-radius:999px;background:#009FD9;color:#fff;text-decoration:none;font-weight:700;font-size:15px">Ir a mi panel</a></p>`,
   );
 }

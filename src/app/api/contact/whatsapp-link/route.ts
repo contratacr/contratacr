@@ -70,8 +70,8 @@ function defaultMessage(locale: string, recipientName?: string | null, contextTi
       : `Hi${name ? ` ${name}` : ""}, I saw your service on ContrataCR. Could you tell me more?`;
   }
   return context
-    ? `Hola${name ? ` ${name}` : ""}, vi "${context}" en ContrataCR y me gustaría coordinar. ¿Me puedes dar más información?`
-    : `Hola${name ? ` ${name}` : ""}, vi tu servicio en ContrataCR y me gustaría coordinar. ¿Me puedes dar más información?`;
+    ? `Hola${name ? ` ${name}` : ""}, vi "${context}" en ContrataCR y me gustaría coordinar. ¿Me puede dar más información?`
+    : `Hola${name ? ` ${name}` : ""}, vi su servicio en ContrataCR y me gustaría coordinar. ¿Me puede dar más información?`;
 }
 
 async function currentUserId() {

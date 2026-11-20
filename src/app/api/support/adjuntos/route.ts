@@ -30,7 +30,7 @@ export async function POST(req: Request) {
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Inicia sesión para adjuntar archivos." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Inicie sesión para adjuntar archivos." }, { status: 401 });
 
   const formData = await req.formData().catch(() => null);
   const file = formData?.get("file") as File | null;
@@ -64,7 +64,7 @@ export async function POST(req: Request) {
     // El detalle técnico (p. ej. «Bucket not found» si falta la migración 227)
     // va al registro; a la persona, un mensaje que entienda.
     console.error("[support/adjuntos] no se pudo subir", error.message);
-    return NextResponse.json({ error: "No se pudo subir el archivo. Intenta de nuevo en un momento." }, { status: 500 });
+    return NextResponse.json({ error: "No se pudo subir el archivo. Intente de nuevo en un momento." }, { status: 500 });
   }
 
   const { data: firmado } = await db.storage.from(BUCKET_SOPORTE).createSignedUrl(path, 60 * 60);

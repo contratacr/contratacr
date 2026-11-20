@@ -131,7 +131,7 @@ export async function avisarPromocionNueva({
   const filas = ids.map((userId) => ({
     user_id: userId,
     type: TIPO,
-    title: "Nueva promoción cerca de ti",
+    title: "Nueva promoción cerca de usted",
     message: `${nombre} publicó una nueva promoción: ${titulo}.`,
     data: {
       link: `/promociones/${offerId}`,

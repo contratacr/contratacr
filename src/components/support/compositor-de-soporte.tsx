@@ -77,7 +77,7 @@ export function CompositorDeSoporte({
           siguientes.push({ id: `${Date.now()}-${crypto.randomUUID()}`, file: listo, vista: pdf ? undefined : URL.createObjectURL(listo) });
         } catch (fallo) {
           setError(getImageUploadPreparationErrorCode(fallo) === "too_large"
-            ? (en ? "That image is too large. Choose a lighter image." : "La imagen es muy pesada. Elige una más liviana.")
+            ? (en ? "That image is too large. Choose a lighter image." : "La imagen es muy pesada. Elija una más liviana.")
             : (en ? "Attach JPG, PNG, WEBP, HEIC, GIF or PDF files only." : "Adjunta solo archivos JPG, PNG, WEBP, HEIC, GIF o PDF."));
         }
       }

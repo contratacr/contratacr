@@ -21,7 +21,7 @@ test.describe("@smoke auth and support", () => {
   test("support form opens the reason dropdown and keeps required fields visible", async ({ page }) => {
     await gotoOK(page, "/soporte");
 
-    await expect(page.getByRole("textbox", { name: /Tu nombre/i })).toBeVisible();
+    await expect(page.getByRole("textbox", { name: /Su nombre/i })).toBeVisible();
     await expect(page.getByRole("textbox", { name: /tucorreo/i })).toBeVisible();
     await expect(page.getByRole("textbox", { name: /^Mensaje/i })).toBeVisible();
 

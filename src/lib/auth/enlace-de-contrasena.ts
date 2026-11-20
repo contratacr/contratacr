@@ -11,7 +11,7 @@ export function requestOrigin(req: Request) {
 export type ResultadoEnlace = "ok" | "en_cola" | "sin_enlace" | "sin_envio";
 
 /**
- * Manda el correo «Restablece tu contraseña». Lo usan «olvidé mi contraseña» y
+ * Manda el correo «Restablezca su contraseña». Lo usan «olvidé mi contraseña» y
  * el admin («Editar datos» → mandar enlace): el admin nunca escribe la contraseña
  * de nadie, solo dispara este mismo correo.
  */
@@ -44,7 +44,7 @@ export async function enviarEnlaceDeContrasena({
 
   const sent = await sendBrevoEmail({
     to: email,
-    subject: "Restablece tu contraseña - ContrataCR",
+    subject: "Restablezca su contraseña - ContrataCR",
     html: `
       <!doctype html>
       <html lang="es">
@@ -58,12 +58,12 @@ export async function enviarEnlaceDeContrasena({
         <div class="ccr-email-background" style="padding:0;color:#162543">
         <div class="ccr-email-card ccr-email-content" style="box-sizing:border-box;width:100%;max-width:600px;margin:0 auto;padding:44px 28px 36px">
           <div style="margin:0 0 36px">${emailLogoMarkup(origin)}</div>
-          <h1 style="font-size:21px;line-height:1.25;margin:0 0 10px">Restablece tu contrase&ntilde;a</h1>
-          <p style="font-size:15px;line-height:1.65;color:#374151;margin:0 0 24px">Recibimos una solicitud para restablecer la contrase&ntilde;a de tu cuenta. Usa este bot&oacute;n para crear una nueva.</p>
+          <h1 style="font-size:21px;line-height:1.25;margin:0 0 10px">Restablezca su contrase&ntilde;a</h1>
+          <p style="font-size:15px;line-height:1.65;color:#374151;margin:0 0 24px">Recibimos una solicitud para restablecer la contrase&ntilde;a de su cuenta. Use este bot&oacute;n para crear una nueva.</p>
           <div style="text-align:center">
             <a href="${recoveryUrl.toString()}" style="display:inline-block;padding:14px 28px;background:#009fd9;border-radius:12px;color:#fff;font-size:15px;font-weight:700;text-decoration:none">Crear nueva contrase&ntilde;a</a>
           </div>
-          <p class="ccr-email-muted" style="font-size:12px;line-height:1.6;color:#8b97a6;margin:20px 0 0">Si no solicitaste este cambio, ignora el correo y tu contrase&ntilde;a seguir&aacute; igual.</p>
+          <p class="ccr-email-muted" style="font-size:12px;line-height:1.6;color:#8b97a6;margin:20px 0 0">Si no solicitó este cambio, ignore el correo y su contrase&ntilde;a seguir&aacute; igual.</p>
         </div>
         </div>
       </body>

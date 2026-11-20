@@ -11,7 +11,7 @@ export async function DELETE(req: Request) {
   if (rateLimited) return rateLimited;
 
   const user = await safeGetUser(await createClient());
-  if (!user) return NextResponse.json({ error: "Inicia sesión para eliminar archivos." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Inicie sesión para eliminar archivos." }, { status: 401 });
 
   try {
     const body = await req.json().catch(() => null) as { url?: unknown } | null;

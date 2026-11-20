@@ -59,7 +59,7 @@ export async function POST(req: Request) {
     profileId = (data as { client_id?: string } | null)?.client_id ?? null;
   }
   if (!profileId) return NextResponse.json({ error: "Usuario no encontrado." }, { status: 404 });
-  if (profileId === user.id) return NextResponse.json({ error: "No puedes bloquearte a ti mismo." }, { status: 400 });
+  if (profileId === user.id) return NextResponse.json({ error: "No puede bloquearse a sí mismo." }, { status: 400 });
   const reason = typeof body.reason === "string" ? body.reason.trim().slice(0, 500) : "";
 
   const { error } = await admin.from("user_blocks").upsert({ blocker_id: user.id, blocked_id: profileId, reason: reason || null }, { onConflict: "blocker_id,blocked_id" });

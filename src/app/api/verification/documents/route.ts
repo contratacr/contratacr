@@ -34,7 +34,7 @@ async function context() {
   if (decisionError) throw decisionError;
   return { db, user, pro, profile, cedula, hasAdminDecision: !!decision, legal: pro.verification_provider === "hacienda_api_juridica" || detectIdType(cedula) === "juridica", ticketId: documentCaseId(user.id, cedula, decision?.id ?? null) };
 }
-const unavailable = () => NextResponse.json({ error: "No se pudo guardar. Intenta nuevamente." }, { status: 503 });
+const unavailable = () => NextResponse.json({ error: "No se pudo guardar. Intente nuevamente." }, { status: 503 });
 
 export async function GET() {
   try {
