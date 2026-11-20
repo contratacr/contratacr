@@ -8,6 +8,7 @@ import { AccionesAlPie } from "@/components/ui/acciones-al-pie";
 import { Skeleton } from "@/components/ui/content-loading";
 import { Link } from "@/i18n/navigation";
 import { VACANTE_PARA_CURRICULUM } from "@/components/jobs/preparar-curriculum";
+import { alLlegarDesdeUnEmpleo, leerVacanteGuardada, type VacanteParaCurriculum } from "@/lib/cv/vacante-empleo";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
 import { getCantonById, getProvinceById } from "@/lib/data/cr-geography";
@@ -449,11 +450,13 @@ function leerBorrador(clave: string): Borrador | null {
   } catch { return null; /* sin almacenamiento: se trabaja con el perfil */ }
 }
 
-/** La vacante desde la que se llegó («Preparar mi currículum para este puesto»). */
+/** La vacante desde la que se llegó («Prepare su postulación a este empleo»). */
 const VACANTE = VACANTE_PARA_CURRICULUM;
-type VacanteRecibida = { puesto?: string; empresa?: string };
+type VacanteRecibida = VacanteParaCurriculum;
+/** El anuncio que llega a un documento recién abierto desde un empleo (20-nov-2026). */
+type OfertaDeEmpleo = { puesto?: string; empresa?: string; texto?: string };
 function leerVacante(): VacanteRecibida | null {
-  try { return JSON.parse(window.sessionStorage.getItem(VACANTE) ?? "null") as VacanteRecibida | null; } catch { return null; }
+  try { return leerVacanteGuardada(JSON.parse(window.sessionStorage.getItem(VACANTE) ?? "null")); } catch { return null; }
 }
 
 // v3: varios currículums y cartas por cuenta. El borrador único (v2) se pasa
@@ -563,11 +566,25 @@ function Documentos({ pro, uid, tipo, nombreCuenta, correo, alCambiarEditor }: {
     return { id: nuevoId(), tipo, actualizado: Date.now(), borrador: { cv, carta: cartaInicial(cv, vacante ?? {}) } };
   };
   // Si no hay ninguno, o se llegó desde una vacante, se abre uno nuevo directo.
-  const [estado, setEstado] = useState<{ docs: Documento[]; abierto: string | null }>(() => {
+  const [estado, setEstado] = useState<{ docs: Documento[]; abierto: string | null; oferta?: OfertaDeEmpleo & { id: string } }>(() => {
     const docs = leerDocumentos(uid);
-    const v = tipo === "carta" ? leerVacante() : null;
-    if (!v?.puesto && !v?.empresa && docs.some((d) => d.tipo === tipo)) return { docs, abierto: null };
-    const doc = nuevo(docs, v ?? undefined);
+    const v = leerVacante();
+    const datos: OfertaDeEmpleo = { puesto: v?.puesto, empresa: v?.empresa, texto: v?.texto };
+    // Desde un empleo cada botón lleva a lo suyo: la carta abre una carta nueva y
+    // el currículum abre el currículum más reciente con «Adaptar a una oferta»
+    // listo (sin correr nada). Un aviso viejo, sin destino, solo sirve a la carta.
+    const llegada = alLlegarDesdeUnEmpleo(tipo, v, docs.filter((d) => d.tipo === "cv"));
+    if (llegada?.accion === "carta-nueva") {
+      const doc = nuevo(docs, v ?? undefined);
+      return { docs: [doc, ...docs], abierto: doc.id, oferta: { id: doc.id, ...datos } };
+    }
+    if (llegada?.accion === "cv-existente") return { docs, abierto: llegada.id, oferta: { id: llegada.id, ...datos } };
+    if (llegada?.accion === "cv-nuevo") {
+      const doc = nuevo(docs);
+      return { docs: [doc, ...docs], abierto: doc.id, oferta: { id: doc.id, ...datos } };
+    }
+    if (docs.some((d) => d.tipo === tipo)) return { docs, abierto: null };
+    const doc = nuevo(docs);
     return { docs: [doc, ...docs], abierto: doc.id };
   });
   const [borrar, setBorrar] = useState<string | null>(null);
@@ -683,7 +700,7 @@ function Documentos({ pro, uid, tipo, nombreCuenta, correo, alCambiarEditor }: {
   useEffect(() => {
     avisarEditor.current?.(hayAbierto);
     if (!hayAbierto) return;
-    const cerrar = () => setEstado((s) => ({ ...s, abierto: null }));
+    const cerrar = () => setEstado((s) => ({ ...s, abierto: null, oferta: undefined }));
     window.addEventListener(CERRAR_EDITOR_CV, cerrar);
     return () => window.removeEventListener(CERRAR_EDITOR_CV, cerrar);
   }, [hayAbierto]);
@@ -721,7 +738,7 @@ function Documentos({ pro, uid, tipo, nombreCuenta, correo, alCambiarEditor }: {
       const doc: Documento = { id: nuevoId(), tipo, actualizado: Date.now(), borrador: b };
       return { docs: [doc, ...s.docs], abierto: doc.id };
     });
-    return <Editor key={abierto.id} pro={pro} documento={tipo} borrador={abierto.borrador} setBorrador={setBorrador} desdeElPerfil={desdeElPerfil} nube={nube} alVolver={() => setEstado((s) => ({ ...s, abierto: null }))} alCrearCopia={alCrearCopia}
+    return <Editor key={abierto.id} pro={pro} documento={tipo} borrador={abierto.borrador} setBorrador={setBorrador} desdeElPerfil={desdeElPerfil} nube={nube} alVolver={() => setEstado((s) => ({ ...s, abierto: null, oferta: undefined }))} alCrearCopia={alCrearCopia} ofertaInicial={estado.oferta?.id === abierto.id ? estado.oferta : undefined}
       disenoDelCv={tipo === "carta" ? estado.docs.filter((d) => d.tipo === "cv").sort((x, y) => y.actualizado - x.actualizado)[0]?.borrador.cv.diseno : undefined} />;
   }
 
@@ -770,7 +787,7 @@ function Documentos({ pro, uid, tipo, nombreCuenta, correo, alCambiarEditor }: {
           {propios.map((d) => (
             <li key={d.id} className="flex flex-wrap items-center gap-2 rounded-2xl border border-[#e5e7eb] bg-white p-3 sm:p-4" data-testid="cv-documento">
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#e6f6fc] text-[#007fae]">{tipo === "cv" ? <FileText className="h-5 w-5" /> : <Mail className="h-5 w-5" />}</span>
-              <button type="button" onClick={() => setEstado((s) => ({ ...s, abierto: d.id }))} className="min-h-11 min-w-0 flex-1 text-left">
+              <button type="button" onClick={() => setEstado((s) => ({ ...s, abierto: d.id, oferta: undefined }))} className="min-h-11 min-w-0 flex-1 text-left">
                 <span className="block truncate text-[15px] font-black text-[#162543]">{tituloDe(d, en)}</span>
                 <span className="block text-[13px] text-[#667085]">{d.borrador.cv.idioma === "en" ? "English" : "Español"} · {en ? "Edited" : "Editado"} {fecha(d.actualizado)}</span>
                 {publico === d.id && <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-[#e6f6fc] px-2 py-0.5 text-[12px] font-bold text-[#006f9c]"><Globe className="h-3.5 w-3.5" />{en ? "On your profile" : "En su perfil"}</span>}
@@ -1182,8 +1199,8 @@ function LlenarDesdeCv({ professionalId, vacio, en, alLeer }: { professionalId: 
  * qué palabras clave ya tiene el currículum y cuáles no. Solo informa: no
  * reescribe ni agrega nada, para no meter en el CV algo que la persona no tiene.
  */
-function RevisarVacante({ cv, en }: { cv: CvDocumento; en: boolean }) {
-  const [texto, setTexto] = useState("");
+function RevisarVacante({ cv, en, textoInicial }: { cv: CvDocumento; en: boolean; textoInicial?: string }) {
+  const [texto, setTexto] = useState(() => (textoInicial ?? "").slice(0, 6000));
   const resultado = useMemo(() => (texto.trim().length >= 40 ? palabrasClave(texto, cv) : null), [texto, cv]);
   const chips = (lista: string[], clase: string) => (
     <ul className="mt-1.5 flex flex-wrap gap-1.5">{lista.map((p) => <li key={p} className={cn("rounded-full px-2.5 py-1 text-[12px] font-semibold", clase)}>{p}</li>)}</ul>
@@ -1263,7 +1280,7 @@ function UsarEnMiPerfil({ professionalId, cv, en, avisar }: { professionalId: st
 type Vista = "editar" | "diseno" | "vista";
 const VISTAS = [["editar", Pencil, "Editar", "Edit"], ["diseno", Palette, "Diseño", "Design"], ["vista", Eye, "Vista previa", "Preview"]] as const;
 
-function Editor({ pro, documento, borrador, setBorrador, desdeElPerfil, nube, alVolver, disenoDelCv, alCrearCopia }: { pro: ProData; documento: Tipo; borrador: Borrador; setBorrador: Dispatch<SetStateAction<Borrador>>; desdeElPerfil: (idioma: Idioma) => Borrador; nube: EstadoNube; alVolver: () => void; disenoDelCv?: Partial<Diseno>; alCrearCopia?: (b: Borrador) => void }) {
+function Editor({ pro, documento, borrador, setBorrador, desdeElPerfil, nube, alVolver, disenoDelCv, alCrearCopia, ofertaInicial }: { pro: ProData; documento: Tipo; borrador: Borrador; setBorrador: Dispatch<SetStateAction<Borrador>>; desdeElPerfil: (idioma: Idioma) => Borrador; nube: EstadoNube; alVolver: () => void; disenoDelCv?: Partial<Diseno>; alCrearCopia?: (b: Borrador) => void; ofertaInicial?: OfertaDeEmpleo }) {
   const idiomaApp: Idioma = useLocale() === "en" ? "en" : "es";
   const en = idiomaApp === "en";
   const pestana = documento;
@@ -1476,7 +1493,7 @@ function Editor({ pro, documento, borrador, setBorrador, desdeElPerfil, nube, al
           <div className="@[560px]:col-span-2"><Input label={en ? "Company address (optional)" : "Dirección de la empresa (opcional)"} placeholder={en ? "E.g. Escazú, San José" : "Ej.: Escazú, San José"} value={carta.direccion ?? ""} maxLength={160} onChange={(e) => setCarta({ direccion: e.target.value })} /></div>
         </div>
       </Tarjeta>
-      <CartaConIa cv={cv} carta={carta} en={en} alEscribir={(p) => setCarta(p)} />
+      <CartaConIa cv={cv} carta={carta} en={en} ofertaInicial={ofertaInicial} alEscribir={(p) => setCarta(p)} />
       <Tarjeta titulo={en ? "Date and subject" : "Fecha y asunto"}>
         <div className="grid gap-3 @[560px]:grid-cols-2">
           <div className="grid gap-1.5">
@@ -1530,7 +1547,7 @@ function Editor({ pro, documento, borrador, setBorrador, desdeElPerfil, nube, al
         <p className="mb-2 text-[13px] font-black text-[#162543]">{en ? "Review before sending" : "Revisión antes de enviar"}</p>
         <Revision avisos={avisos} idiomaApp={idiomaApp} />
       </div>
-      {pestana === "cv" && <RevisarVacante cv={cv} en={en} />}
+      {pestana === "cv" && <RevisarVacante cv={cv} en={en} textoInicial={ofertaInicial?.texto} />}
       <div className="grid gap-2 @[560px]:grid-cols-2">
         <button type="button" disabled={generando} onClick={() => void descargar()} className={cn(pastilla, "w-full bg-[#009FD9] text-white hover:bg-[#0089bb]")}>
           <Download className="h-4 w-4" />{pestana === "cv" ? (en ? "Download resume (PDF)" : "Descargar currículum (PDF)") : (en ? "Download letter (PDF)" : "Descargar carta (PDF)")}
@@ -1579,7 +1596,7 @@ function Editor({ pro, documento, borrador, setBorrador, desdeElPerfil, nube, al
       </div>
       {pestana === "cv" && !enDiseno && (
         <div className={cn("min-w-0", vista === "vista" && "hidden @[980px]:block")}>
-          <AdaptarConIa cv={cv} en={en} puedeCrear={!!alCrearCopia} alAplicar={(nuevo, como) => {
+          <AdaptarConIa cv={cv} en={en} puedeCrear={!!alCrearCopia} ofertaInicial={ofertaInicial} alAplicar={(nuevo, como) => {
             if (como.nuevo && alCrearCopia) alCrearCopia({ cv: nuevo, carta, etiqueta: como.nombre });
             else { setCv(nuevo); avisar(en ? "Changes applied." : "Cambios aplicados."); }
           }} />
