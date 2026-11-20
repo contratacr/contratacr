@@ -295,10 +295,10 @@ export function prellenar(datos: DatosDelPerfil, idioma: Idioma): CvDocumento {
   const servicios = (datos.servicios ?? []).map((s) => s.trim()).filter(Boolean);
   const certs = (datos.certificaciones ?? []).filter((c) => c.name?.trim());
   const comoEstudio = certs.filter((c) => !esCertificacion(c.name, c.institution))
-    .map((c): CvEntry => ({ title: c.name.trim(), organization: c.institution?.trim() ?? "", period: c.year?.trim() ?? "", description: "" }));
+    .map((c): CvEntry => ({ title: c.name.trim(), organization: c.institution?.trim() ?? "", period: String(c.year ?? "").trim(), description: "" }));
   const educacion = [...cv.education, ...comoEstudio.filter((e, i) => !cv.education.some((x) => sameCvEntry(x, e)) && !comoEstudio.slice(0, i).some((x) => sameCvEntry(x, e)))];
   const certificaciones = certs.filter((c) => esCertificacion(c.name, c.institution))
-    .map((c) => [c.name.trim(), c.institution?.trim(), c.year?.trim()].filter(Boolean).join(" · "));
+    .map((c) => [c.name.trim(), c.institution?.trim(), String(c.year ?? "").trim()].filter(Boolean).join(" · "));
   // Habilidades: de 6 a 10, las primeras de su propio CV. Los nombres de los
   // servicios («Desarrollo web») no son habilidades: quedan como sugerencia.
   const propias = unicas(cv.skills);
