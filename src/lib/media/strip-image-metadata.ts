@@ -428,7 +428,7 @@ export function stripFailureText(reason: StripFailure): { es: string; en: string
       };
     case "metadata_remains":
       return {
-        es: "No se pudo quitar la información oculta de la foto (como la ubicación). Prueba con otra imagen o guárdala como JPG.",
+        es: "No se pudo quitar la información oculta de la foto (como la ubicación). Pruebe con otra imagen o guárdela como JPG.",
         en: "The photo's hidden information (such as location) could not be removed. Try another image or save it as JPG.",
       };
     case "unsupported_format":

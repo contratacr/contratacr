@@ -5,9 +5,9 @@ import { useLocale } from "next-intl";
 type Destino = "quotes" | "cv" | "carta";
 
 const HERRAMIENTAS: { id: Destino; titulo: { es: string; en: string }; texto: { es: string; en: string }; soloProfesional?: boolean }[] = [
-  { id: "quotes", soloProfesional: true, titulo: { es: "Cotizaciones", en: "Quotes" }, texto: { es: "Armá un presupuesto y envialo a tu cliente.", en: "Build a quote and send it to your client." } },
-  { id: "cv", titulo: { es: "Crear currículum", en: "Create a resume" }, texto: { es: "Llená tus datos y descargá un PDF ordenado.", en: "Fill in your details and download a tidy PDF." } },
-  { id: "carta", titulo: { es: "Crear carta de presentación", en: "Create a cover letter" }, texto: { es: "Respondé unas preguntas y la carta queda lista.", en: "Answer a few questions and your letter is ready." } },
+  { id: "quotes", soloProfesional: true, titulo: { es: "Cotizaciones", en: "Quotes" }, texto: { es: "Arme un presupuesto y envíelo a su cliente.", en: "Build a quote and send it to your client." } },
+  { id: "cv", titulo: { es: "Crear currículum", en: "Create a resume" }, texto: { es: "Llene sus datos y descargue un PDF ordenado.", en: "Fill in your details and download a tidy PDF." } },
+  { id: "carta", titulo: { es: "Crear carta de presentación", en: "Create a cover letter" }, texto: { es: "Responda unas preguntas y la carta queda lista.", en: "Answer a few questions and your letter is ready." } },
 ];
 
 /**

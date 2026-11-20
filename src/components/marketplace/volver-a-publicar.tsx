@@ -31,7 +31,7 @@ const COPIA = {
     promocion: "Esta promoción no está publicada: ya no sale en Promociones.",
     boton: "Volver a publicar",
     publicando: "Publicando…",
-    error: "No se pudo volver a publicar. Probá de nuevo.",
+    error: "No se pudo volver a publicar. Intente de nuevo.",
   },
   en: {
     proyecto: "This request is closed: it no longer shows on the board and professionals can't see it.",

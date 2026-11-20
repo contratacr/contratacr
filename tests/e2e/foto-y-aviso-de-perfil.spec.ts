@@ -5,8 +5,8 @@ import { avatarGeometry } from "../../src/components/ui/avatar-file-input";
 // 18-nov-2026: el aviso "Completa tu perfil" nombra solo lo que falta, y la
 // foto de perfil siempre llena el círculo (sin franjas blancas a los lados).
 test("@contract the profile reminder names only what is missing", () => {
-  expect(textoCompletarPerfil(["descripcion"], "es")).toBe("Agrega una descripción para que los clientes conozcan lo que ofreces.");
-  expect(textoCompletarPerfil(["foto", "servicios"], "es")).toBe("Agrega tu foto y tus servicios para que los clientes conozcan lo que ofreces.");
+  expect(textoCompletarPerfil(["descripcion"], "es")).toBe("Agregue una descripción para que los clientes conozcan lo que ofrece.");
+  expect(textoCompletarPerfil(["foto", "servicios"], "es")).toBe("Agregue su foto y sus servicios para que los clientes conozcan lo que ofrece.");
   expect(textoCompletarPerfil(["foto", "descripcion", "servicios"], "en")).toBe("Add your photo, a description and your services so clients can learn what you offer.");
 });
 

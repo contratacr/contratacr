@@ -185,9 +185,9 @@ for (const ambiente of ["web", "app"] as const) {
     // «Ubicación del servicio»: la misma pieza del panel (AttentionModalities).
     const ubicacion = main.locator('[data-field="location"]');
     await ubicacion.getByRole("switch", { name: /Atiendo a domicilio/ }).click();
-    await ubicacion.getByRole("button", { name: "Elegí una provincia", exact: true }).click();
+    await ubicacion.getByRole("button", { name: "Elija una provincia", exact: true }).click();
     await page.getByRole("option", { name: /^Alajuela$/ }).first().click();
-    await ubicacion.getByRole("button", { name: "Elegí un cantón", exact: true }).click();
+    await ubicacion.getByRole("button", { name: "Elija un cantón", exact: true }).click();
     await page.getByRole("option", { name: /^Atenas$/ }).first().click();
     await ubicacion.getByRole("button", { name: "Agregar zona", exact: true }).click();
     await expect(ubicacion.getByText("Atenas, Alajuela", { exact: true })).toBeVisible();

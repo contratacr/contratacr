@@ -69,7 +69,7 @@ test.describe("editor de currículum", () => {
     await expect(page.getByLabel("Nombre del proyecto")).toBeVisible();
     await page.getByLabel("Nombre del proyecto").fill("Tienda en línea");
     // Logros con formato: la barrita pone negrita y la hoja la muestra.
-    const logros = page.getByLabel("Qué hiciste (uno por línea)");
+    const logros = page.getByLabel("Qué hizo (uno por línea)");
     await logros.fill("Ventas");
     await logros.selectText();
     await page.getByRole("button", { name: "Negrita" }).first().click();
@@ -118,6 +118,42 @@ test.describe("editor de currículum", () => {
     await fila.getByRole("button", { name: "Más opciones" }).click();
     for (const opcion of ["Descargar PDF", "Duplicar", "Eliminar"]) await expect(page.getByRole("menuitem", { name: opcion }).or(page.getByRole("button", { name: opcion })).first()).toBeVisible();
     await page.keyboard.press("Escape");
+    await borrarLosDeLaPrueba(page);
+  });
+
+  test("carta completa con firma a mano, y el CV se llena pegando el texto", async ({ page }) => {
+    // (20-nov-2026) Para quién, fecha, asunto, saludo, despedida y firma, como en FlowCV.
+    await page.goto("/dashboard/profesional?tab=carta");
+    await page.evaluate(() => { for (const k of Object.keys(localStorage)) if (k.startsWith("ccr:cv-documentos")) localStorage.removeItem(k); });
+    await page.reload();
+    await expect(page.getByTestId("cv-builder")).toBeVisible({ timeout: 20_000 });
+    await page.getByLabel("Puesto").fill("Electricista de mantenimiento");
+    await page.getByLabel("Cargo (opcional)").fill("Jefa de Recursos Humanos");
+    await expect(page.getByLabel("Asunto")).toHaveAttribute("placeholder", "Postulación al puesto de Electricista de mantenimiento");
+    await page.getByLabel("Dirigida a").fill("Laura Solís");
+    await page.getByRole("button", { name: "Estimada Laura Solís:" }).click();
+    await expect(page.getByLabel("Saludo", { exact: true })).toHaveValue("Estimada Laura Solís:");
+    await page.getByRole("button", { name: "Dibujar mi firma" }).click();
+    const lienzo = page.getByRole("img", { name: "Espacio para firmar" });
+    const caja = (await lienzo.boundingBox())!;
+    await page.mouse.move(caja.x + 20, caja.y + caja.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(caja.x + caja.width / 2, caja.y + 15, { steps: 8 });
+    await page.mouse.move(caja.x + caja.width - 20, caja.y + caja.height - 15, { steps: 8 });
+    await page.mouse.up();
+    await page.getByRole("button", { name: "Usar esta firma" }).click();
+    await expect(page.getByRole("img", { name: "Su firma" })).toBeVisible();
+    await page.getByRole("tab", { name: "Vista previa" }).or(page.getByRole("button", { name: "Vista previa" })).first().click();
+    const hoja = page.getByTestId("cv-hoja").filter({ visible: true }).first();
+    await expect(hoja.locator("image")).toHaveCount(1);
+    await expect(hoja.getByText("Estimada Laura Solís:")).toBeVisible();
+    await borrarLosDeLaPrueba(page);
+
+    await abrirEditorNuevo(page);
+    await page.getByTestId("cv-pegar-texto").click();
+    await page.getByLabel("El texto de su CV").fill("Ana Prueba\nEXPERIENCIA\nElectricista - Eléctrica Sur\n01/2019 - Actualidad\nInstalé tableros en 40 casas\nHABILIDADES\nDomótica, Cableado estructurado");
+    await page.getByRole("button", { name: "Llenar con este texto" }).click();
+    await expect(page.getByText(/Agregamos \d+ dato|Todo lo de ese CV ya estaba aquí/)).toBeVisible();
     await borrarLosDeLaPrueba(page);
   });
 });

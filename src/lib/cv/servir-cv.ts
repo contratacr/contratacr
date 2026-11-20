@@ -20,14 +20,14 @@ export async function context(req: Request, writing: boolean, idDado?: string) {
   if (writing && (req.headers.get('origin') !== url.origin || req.headers.get('sec-fetch-site') === 'cross-site')) return { error: fail('Solicitud no permitida.', 403) } as const;
   const client = await createClient();
   const { data: { user } } = await client.auth.getUser();
-  if (writing && !user) return { error: fail('Iniciá sesión.', 401) } as const;
+  if (writing && !user) return { error: fail('Inicie sesión.', 401) } as const;
   const db = createAdminClient();
   const { data: pro, error } = await db.from('professionals').select('id, profile_id, is_banned, oculto_del_buscador, profiles(is_disabled)').eq('id', id).maybeSingle();
   if (error) return { error: fail('No se pudo consultar el perfil.', 503) } as const;
   const owner = !!pro && user?.id === pro.profile_id;
   const profile = Array.isArray(pro?.profiles) ? pro.profiles[0] : pro?.profiles;
   if (!pro || pro.is_banned || profile?.is_disabled || (!owner && pro.oculto_del_buscador)) return { error: fail('CV no disponible.', 404) } as const;
-  if (writing && !owner) return { error: fail('No podés modificar este CV.', 403) } as const;
+  if (writing && !owner) return { error: fail('No puede modificar este CV.', 403) } as const;
   const result = await db.from('professional_cv_files').select('*').eq('professional_id', id).maybeSingle();
   if (result.error) return { error: fail('El servicio de CV no está disponible.', 503) } as const;
   return { db, id, owner, user, row: result.data as CvFile | null } as const;

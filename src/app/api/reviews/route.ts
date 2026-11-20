@@ -86,7 +86,7 @@ async function reseñaSinCuenta(
   if (error) {
     const yaEstaba = /duplicate key|reviews_whatsapp_contact_uidx/i.test(error.message);
     return NextResponse.json(
-      { error: yaEstaba ? "Ya dejaste su reseña para este contacto." : error.message },
+      { error: yaEstaba ? "Ya dejó su reseña para este contacto." : error.message },
       { status: yaEstaba ? 409 : 500 },
     );
   }

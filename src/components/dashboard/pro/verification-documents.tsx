@@ -64,7 +64,7 @@ export function VerificationDocuments({ legal, preview = false, onVerified }: { 
         if (state.outcome === "skipped") setRetryNote(t("unavailable"));
       }
       setLoaded(true);
-    }).catch(() => { if (active) setError(en ? "Could not load your review. Reload to try again." : "No se pudo cargar su revisión. Recarga para intentarlo de nuevo."); });
+    }).catch(() => { if (active) setError(en ? "Could not load your review. Reload to try again." : "No se pudo cargar su revisión. Recargue la página para intentarlo de nuevo."); });
     return () => { active = false; };
   }, [preview, en, t]);
   async function submit() {

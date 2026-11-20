@@ -95,7 +95,7 @@ const OFFERS_COPY = {
     country: "Costa Rica",
     noResults: "No encontramos promociones",
     noOffers: "Todavía no hay promociones",
-    tryAgain: "Prueba otra búsqueda o cambie los filtros.",
+    tryAgain: "Pruebe otra búsqueda o cambie los filtros.",
     futureOffers: "Las nuevas promociones de profesionales aparecerán aquí.",
     viewAll: "Ver todas las promociones",
     publishFirst: "Publicar la primera promoción",

@@ -30,6 +30,10 @@ function dibujar(doc: JsPdf, m: Maqueta) {
           doc.setFillColor(...op.color);
           doc.circle(op.x, op.y, op.r, "F");
           break;
+        case "imagen":
+          // La firma: PNG con fondo transparente, del mismo tamaño que en pantalla.
+          doc.addImage(op.src, "PNG", op.x, op.y, op.w, op.h, undefined, "FAST");
+          break;
         case "texto":
           doc.setFont(op.fuente, op.negrita ? "bold" : "normal");
           doc.setFontSize(op.tam);

@@ -171,7 +171,7 @@ function notificationCopy(notification: NotificationCopyInput, locale: string) {
   if (notification.type === "pide_resenas") {
     return { title, message: en
       ? "Ask clients you have worked with for a review. Your dashboard has a message ready to share on WhatsApp."
-      : "Pide una reseña a clientes con los que ya trabajó. En su panel tiene un mensaje listo para compartir por WhatsApp." };
+      : "Pida una reseña a clientes con los que ya trabajó. En su panel tiene un mensaje listo para compartir por WhatsApp." };
   }
   if (notification.type === "agrega_precio") {
     return { title, message: en
@@ -185,6 +185,12 @@ function notificationCopy(notification: NotificationCopyInput, locale: string) {
     return { title, message: textoCompletarPerfil(faltan.length > 0 ? faltan : ["foto", "descripcion", "servicios"], en ? "en" : "es") };
   }
 
+  if (notification.type === "verification_outreach") {
+    // La base guarda el texto en tú ("Te enviamos..."); la app habla de usted (19-nov-2026).
+    return { title, message: en
+      ? "We emailed you the steps to verify your identity."
+      : "Le enviamos al correo los pasos para verificar su identidad." };
+  }
   if (notification.type === "review_received") {
     const legacy = firstMatch(normalizedMessage, [
       /^(.+?) te dej[oó] una rese[nñ]a de ([\d.,]+) estrellas\.$/i,

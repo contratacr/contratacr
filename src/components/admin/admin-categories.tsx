@@ -579,7 +579,7 @@ export function AdminCategories() {
   }
 
   function requestClarification(i: Suggestion) {
-    let question = `¡Hola! Estamos revisando el servicio que solicitaste: "${nameOf(i)}". ¿Nos contás qué trabajos realizás? Podés responder aquí mismo para ayudarnos a ubicarlo con el nombre correcto.`;
+    let question = `¡Hola! Estamos revisando el servicio que solicitó: "${nameOf(i)}". ¿Nos cuenta qué trabajos realiza? Puede responder aquí mismo para ayudarnos a ubicarlo con el nombre correcto.`;
     const requestKey = crypto.randomUUID();
     setDialog({ title: "Solicitar aclaración", description: "Se abrirá un caso privado para cada solicitante. Podrán responder directamente; si ya existe un caso, se reutilizará. La sugerencia seguirá pendiente.",
       input: { value: question, label: "Pregunta", maxLength: 2000, onChange: value => { question = value; setDialog(current => current?.input ? { ...current, input: { ...current.input, value } } : current); } }, confirmLabel: "Enviar pregunta",
@@ -588,7 +588,7 @@ export function AdminCategories() {
         try {
           const response = await fetch("/api/admin/categories/clarification", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: i.id, question, requestKey }) });
           const data = await response.json();
-          if (!response.ok) { showNotice("No se pudo enviar la pregunta", data.error || "Intentá nuevamente."); return; }
+          if (!response.ok) { showNotice("No se pudo enviar la pregunta", data.error || "Intente nuevamente."); return; }
           const updated = await fetch(`/api/admin/categories?status=${status}`).then(r => r.json());
           setItems(updated.categories ?? []);
         } finally { setBusy(null); }
@@ -1019,7 +1019,7 @@ export function AdminCategories() {
                         {sender && <span className="text-[#64748b]">Sugerida por {sender}</span>}
                       </div>
                       {status === "pending" && !!i.clarifications?.length && <div className="mt-3 space-y-2">
-                        <p className="text-sm font-bold text-[#007a9f]">{i.clarifications.some(c => c.state === "review") ? "Por revisar: recibiste una respuesta" : "Esperando respuesta"}</p>
+                        <p className="text-sm font-bold text-[#007a9f]">{i.clarifications.some(c => c.state === "review") ? "Por revisar: recibió una respuesta" : "Esperando respuesta"}</p>
                         {i.clarifications.map(c => <div key={c.ticketId} className="rounded-lg border border-[#d7e3ee] p-3 text-sm">
                           {c.reply && <p className="mb-2 whitespace-pre-wrap break-words">{c.reply}</p>}
                           <a href={`/admin/soporte?ticket=${c.ticketId}`} className="font-semibold text-[#009FD9]">Ver conversación</a>

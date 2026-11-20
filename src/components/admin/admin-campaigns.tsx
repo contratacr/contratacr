@@ -128,7 +128,7 @@ export function AdminCampaigns() {
       const res = await fetch("/api/admin/campanas", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ subject, body, ctaLabel, ctaPath, mode, audiencia: plantilla.audiencia, campaignId: plantilla.id, confirm: mode === "all" ? "ENVIAR" : undefined }) });
       const d = await res.json();
       if (!res.ok) { await showMessage({ title: "No se pudo enviar", description: d.error ?? "Intente de nuevo.", tone: "danger" }); return; }
-      if (mode === "test") await showMessage({ title: d.ok ? "Prueba enviada" : "La prueba no salió", description: d.ok ? `Revisa ${d.to}.` : String(d.detail ?? ""), tone: d.ok ? "success" : "danger" });
+      if (mode === "test") await showMessage({ title: d.ok ? "Prueba enviada" : "La prueba no salió", description: d.ok ? `Revise ${d.to}.` : String(d.detail ?? ""), tone: d.ok ? "success" : "danger" });
       else {
         await showMessage({
           title: d.sinConfirmar > 0 ? "Tanda pendiente de confirmación" : d.completa ? "Campaña completa" : "Tanda enviada",

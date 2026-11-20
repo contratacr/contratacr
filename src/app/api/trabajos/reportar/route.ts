@@ -44,7 +44,7 @@ export async function GET(request: Request) {
   if (!ok) return pagina("Este enlace no es válido", texto("Puede que haya cambiado. Si quiere contarnos, escríbanos a soporte@contratacr.com."), 400);
   const accion = `/api/trabajos/reportar?${new URLSearchParams({ p, s, n: String(n), f }).toString()}`;
   return pagina(
-    "¿Cuántos trabajos conseguiste a través de ContrataCR?",
+    "¿Cuántos trabajos consiguió a través de ContrataCR?",
     `${texto(`Semana del <strong>${escaparHtml(s)}</strong> (lunes a domingo).`)}
      ${texto("Nos referimos a trabajos que acordó realizar con clientes que lo encontraron en ContrataCR. No cuente mensajes ni consultas que no terminaron en un trabajo.")}
      ${texto(`Su respuesta: <strong>${etiqueta(n)} ${n === 1 ? "trabajo" : "trabajos"}</strong>. Todavía no se ha guardado.`)}
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
   }
   return pagina(
     "¡Gracias!",
-    `${texto(`Guardamos tu respuesta: <strong>${etiqueta(n)} ${n === 1 ? "trabajo" : "trabajos"}</strong>. Gracias por ayudarnos a evaluar ContrataCR.`)}
+    `${texto(`Guardamos su respuesta: <strong>${etiqueta(n)} ${n === 1 ? "trabajo" : "trabajos"}</strong>. Gracias por ayudarnos a evaluar ContrataCR.`)}
      <p style="margin:18px 0 0"><a href="${APP_URL}/dashboard/profesional" style="display:inline-block;padding:12px 22px;border-radius:999px;background:#009FD9;color:#fff;text-decoration:none;font-weight:700;font-size:15px">Ir a mi panel</a></p>`,
   );
 }

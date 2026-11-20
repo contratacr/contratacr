@@ -37,7 +37,7 @@ const OFFERS_MANAGER_COPY = {
     edit: "Editar",
     more: "Más opciones",
     close: "Cerrar promoción", republish: "Volver a publicar", remove: "Eliminar", removeTitle: "¿Eliminar esta promoción?", removeBody: "Se borra del todo y no se puede recuperar.", removeCancel: "Cancelar",
-    emptyTitle: "Todavía no has publicado promociones",
+    emptyTitle: "Todavía no ha publicado promociones",
     emptyBody: "Cree una promoción para impulsar sus ventas.",
     publishTitle: "Publicar promoción",
     publishSubtitle: "Publique una promoción clara y fácil de comparar.",

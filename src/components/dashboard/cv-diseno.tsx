@@ -148,7 +148,7 @@ export function PanelDiseno({ cv, carta, setCv, en, disenoDelCv }: {
     <div className="grid min-w-0 gap-4" data-testid="cv-panel-diseno">
       <Grupo
         titulo={t("Plantillas", "Templates")}
-        ayuda={esCarta ? t("Cambian el aspecto; lo que escribiste queda igual.", "They change the look; what you wrote stays the same.") : t("Cambian el aspecto; lo que escribiste queda igual. Para postular en línea, mejor una apta para ATS.", "They change the look; what you wrote stays the same. To apply online, prefer an ATS-friendly one.")}
+        ayuda={esCarta ? t("Cambian el aspecto; lo que escribió queda igual.", "They change the look; what you wrote stays the same.") : t("Cambian el aspecto; lo que escribió queda igual. Para postular en línea, mejor una apta para ATS.", "They change the look; what you wrote stays the same. To apply online, prefer an ATS-friendly one.")}
         accion={retocada ? (
           <button type="button" onClick={() => setCv({ diseno: aplicarPlantilla(d.plantilla) })} className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-[13px] font-semibold text-[#007fae] hover:bg-[#eef6fb]">
             <RotateCcw className="h-4 w-4" />{t("Deshacer retoques", "Reset tweaks")}
@@ -162,7 +162,7 @@ export function PanelDiseno({ cv, carta, setCv, en, disenoDelCv }: {
             onClick={() => setCv({ diseno: { ...delCv } })}
             className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-4 text-sm font-bold text-[#162543] hover:bg-[#f6f9fb] disabled:opacity-60 sm:w-fit"
           >
-            {igualAlCv ? <><Check className="h-4 w-4 text-[#067647]" />{t("Hace juego con tu currículum", "Matches your resume")}</> : t("Usar el diseño de mi currículum", "Use my resume's design")}
+            {igualAlCv ? <><Check className="h-4 w-4 text-[#067647]" />{t("Hace juego con su currículum", "Matches your resume")}</> : t("Usar el diseño de mi currículum", "Use my resume's design")}
           </button>
         )}
         <Plantillas cv={cv} carta={carta} d={d} en={en} alElegir={(id) => setCv({ diseno: aplicarPlantilla(id) })} />
@@ -197,7 +197,7 @@ export function PanelDiseno({ cv, carta, setCv, en, disenoDelCv }: {
               })}
             </ul>
             <p className="rounded-xl bg-[#fffaeb] px-3 py-2 text-[12.5px] leading-5 text-[#93370d]">
-              {t("Dos columnas se ven bien impresas, pero algunos filtros automáticos (ATS) leen mejor una sola. Si vas a postular en línea, usá una columna.", "Two columns look good printed, but some screening systems (ATS) read a single column better. If you're applying online, use one column.")}
+              {t("Dos columnas se ven bien impresas, pero algunos filtros automáticos (ATS) leen mejor una sola. Si va a postular en línea, use una columna.", "Two columns look good printed, but some screening systems (ATS) read a single column better. If you're applying online, use one column.")}
             </p>
           </div>
         )}
@@ -312,7 +312,7 @@ export function PanelDiseno({ cv, carta, setCv, en, disenoDelCv }: {
                   );
                 })}
               </ul>
-            ) : <p className="text-[13px] text-[#667085]">{t("Agregá habilidades en el paso Habilidades.", "Add skills in the Skills step.")}</p>
+            ) : <p className="text-[13px] text-[#667085]">{t("Agregue habilidades en el paso Habilidades.", "Add skills in the Skills step.")}</p>
           )}
         </Grupo>
       )}

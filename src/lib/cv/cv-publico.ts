@@ -49,3 +49,21 @@ export function cvPublico(perfil: PerfilParaCv, idioma: Idioma): CvDocumento | n
   }, idioma);
   return { ...cv, sugeridas: [] };
 }
+
+/**
+ * EL CV DEL PANEL COMO CV PÚBLICO (20-nov-2026). La persona elige uno de los
+ * currículums que armó en el panel y contratacr.com/<perfil>/cv sale con su
+ * diseño. Como el resto del perfil, sin correo, teléfono ni firma dibujada: al
+ * profesional se le escribe por ContrataCR. Devuelve null si los datos no
+ * tienen forma de currículum (se usa entonces el que se arma con el perfil).
+ */
+export function cvDelPanelParaPublicar(datos: unknown, enlace: string): CvDocumento | null {
+  const cv = (datos as { cv?: unknown } | null)?.cv as Partial<CvDocumento> | undefined;
+  if (!cv || typeof cv !== "object" || typeof cv.nombre !== "string" || !cv.nombre.trim()) return null;
+  const textos = ["titular", "ubicacion", "enlace", "resumen"] as const;
+  const listas = ["experiencia", "educacion", "habilidades", "idiomas", "certificaciones"] as const;
+  if (textos.some((k) => typeof cv[k] !== "string") || listas.some((k) => !Array.isArray(cv[k]))) return null;
+  const base: CvDocumento = { ...(cv as CvDocumento), idioma: cv.idioma === "en" ? "en" : "es", correo: "", telefono: "", sugeridas: [], enlace: cv.enlace?.trim() || enlace };
+  if (base.declaracion) base.declaracion = { texto: String(base.declaracion.texto ?? ""), lugarFecha: String(base.declaracion.lugarFecha ?? "") };
+  return base;
+}

@@ -424,7 +424,7 @@
     "submitUpdate": "Actualizar reseña",
     "submitNew": "Enviar reseña",
     "skip": "Omitir por ahora",
-    "errRating": "Por favor selecciona una calificación.",
+    "errRating": "Por favor, seleccione una calificación.",
     "errComment": "Por favor escribe un comentario.",
     "errName": "Escriba su nombre para publicar la reseña.",
     "nameLabel": "Su nombre",
@@ -1290,7 +1290,7 @@
           "short": "Gestione su presencia profesional",
           "body": "El panel reúne sus publicaciones, cotizaciones, casos de éxito, servicios, soporte, perfil y guías.",
           "steps": [
-            "Empiece por Completa su perfil si tiene pasos pendientes.",
+            "Empiece por \"Complete su perfil\" si tiene pasos pendientes.",
             "Mantenga servicios, cobertura, contacto y disponibilidad actualizados.",
             "Publique empleos o promociones si aplican a su negocio.",
             "Use Ver mi perfil para revisar cómo le ven los clientes."
@@ -1859,7 +1859,7 @@
     "emailStep1": "Cambie el correo principal de su cuenta de {provider}.",
     "emailStep2": "Vuelva a iniciar sesión en ContrataCR con el correo actualizado.",
     "manageAccount": "Administrar mi cuenta de {provider}",
-    "emailSent": "✓ Revisa su correo nuevo y abra el enlace para confirmar el cambio.",
+    "emailSent": "✓ Revise su correo nuevo y abra el enlace para confirmar el cambio.",
     "emailSentTitle": "Revise su correo nuevo",
     "emailSentBody": "Abra el enlace que le enviamos para confirmar el cambio.",
     "emailApplied": "✓ Su correo se actualizó correctamente.",
@@ -2156,7 +2156,7 @@
     "ctaVerified": "Ver profesionales"
   },
   "contacto": {
-    "sendError": "Hubo un error al enviar el mensaje. Por favor intenta de nuevo.",
+    "sendError": "Hubo un error al enviar el mensaje. Por favor, intente de nuevo.",
     "goToPanel": "Ir a mi panel",
     "login": "Inicie sesión",
     "name": "Nombre",

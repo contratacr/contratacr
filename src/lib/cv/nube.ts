@@ -10,7 +10,7 @@ import { createClient } from "@/lib/supabase/client";
  * el dispositivo y se avisa que no se guardó en la cuenta.
  */
 
-export type FilaNube = { id: string; tipo: "cv" | "carta"; titulo: string; datos: unknown; actualizado: number };
+export type FilaNube = { id: string; tipo: "cv" | "carta"; titulo: string; datos: unknown; actualizado: number; publico?: boolean };
 
 const TABLA = "cv_documents";
 export const esUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
@@ -23,11 +23,14 @@ function cliente() {
 export async function leerDeLaNube(): Promise<FilaNube[] | null> {
   const supabase = cliente();
   if (!supabase) return null;
-  const { data, error } = await supabase.from(TABLA).select("id, tipo, titulo, datos, updated_at").order("updated_at", { ascending: false }).limit(40);
+  const leer = (columnas: string) => supabase.from(TABLA).select(columnas).order("updated_at", { ascending: false }).limit(40);
+  // «publico» llegó con la migración 291 (20-nov-2026): sin ella se lee igual.
+  let { data, error } = await leer("id, tipo, titulo, datos, updated_at, publico");
+  if (error) ({ data, error } = await leer("id, tipo, titulo, datos, updated_at"));
   if (error || !Array.isArray(data)) return null;
-  return data
+  return (data as unknown as Record<string, unknown>[])
     .filter((f) => f && (f.tipo === "cv" || f.tipo === "carta"))
-    .map((f) => ({ id: String(f.id), tipo: f.tipo as "cv" | "carta", titulo: String(f.titulo ?? ""), datos: f.datos, actualizado: Date.parse(String(f.updated_at)) || 0 }));
+    .map((f) => ({ id: String(f.id), tipo: f.tipo as "cv" | "carta", titulo: String(f.titulo ?? ""), datos: f.datos, actualizado: Date.parse(String(f.updated_at)) || 0, ...(typeof f.publico === "boolean" ? { publico: f.publico } : {}) }));
 }
 
 /** Crea o actualiza varios a la vez. Devuelve false si no se pudo. */
@@ -44,4 +47,16 @@ export async function borrarDeLaNube(id: string): Promise<boolean> {
   if (!supabase) return false;
   const { error } = await supabase.from(TABLA).delete().eq("id", id);
   return !error;
+}
+
+/**
+ * Elige el CV que se abre en contratacr.com/<perfil>/cv (o ninguno, con null).
+ * Solo un currículum guardado en la cuenta; se publica sin correo, teléfono
+ * ni firma. Devuelve false si no se pudo.
+ */
+export async function elegirCvPublico(id: string | null): Promise<boolean> {
+  const supabase = cliente();
+  if (!supabase) return false;
+  const { data, error } = await supabase.rpc("set_public_cv_document", { p_id: id });
+  return !error && data === true;
 }
