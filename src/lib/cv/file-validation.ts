@@ -4,10 +4,10 @@ export const CV_FILE_MAX = 5 * 1024 * 1024;
 export const CV_DOCX_MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 /** Validate content, not user-supplied MIME. Never render Office HTML or follow relationships. */
 export function cvFileType(bytes: Uint8Array, filename: string): { extension: 'pdf' | 'docx'; mime: string } {
-  if (!bytes.length || bytes.length > CV_FILE_MAX) throw new Error('Usá un CV de hasta 5 MB.');
+  if (!bytes.length || bytes.length > CV_FILE_MAX) throw new Error('Use un CV de hasta 5 MB.');
   const extension = filename.split('.').pop()?.toLowerCase();
   if (extension === 'pdf' && new TextDecoder().decode(bytes.slice(0, 5)) === '%PDF-') return { extension, mime: 'application/pdf' };
-  if (extension !== 'docx' || bytes[0] !== 0x50 || bytes[1] !== 0x4b) throw new Error('Elegí un PDF o DOCX válido.');
+  if (extension !== 'docx' || bytes[0] !== 0x50 || bytes[1] !== 0x4b) throw new Error('Elija un PDF o DOCX válido.');
   let document = false, contentTypes = false, entries = 0, total = 0;
   const zip = new Unzip(entry => {
     if (++entries > 500 || /(?:^|\/)(?:vbaProject|embeddings|activeX)(?:[/.]|$)/i.test(entry.name)) throw new Error('Este documento contiene elementos no admitidos. Exportalo como PDF.');

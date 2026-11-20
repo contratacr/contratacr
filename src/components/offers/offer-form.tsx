@@ -94,7 +94,7 @@ const OFFER_FORM_COPY = {
     availabilityHelp: "La promoción se ocultará automáticamente después de esta fecha.",
     untilSoldOut: "Hasta agotar existencias",
     untilSoldOutHelp: "Sin fecha de cierre: la pausas o la marcas agotada cuando se termine.",
-    dateRequired: "Elige hasta qué fecha vale la promoción o activa Hasta agotar existencias.",
+    dateRequired: "Elija hasta qué fecha vale la promoción o active Hasta agotar existencias.",
     location: "Ubicación",
     province: "Provincia",
     allCostaRica: "Todo Costa Rica",

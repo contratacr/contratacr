@@ -267,14 +267,14 @@ test.describe("@mobile native shell contracts", () => {
     await expect(page).toHaveURL(/^https?:\/\/[^/]+\/?$/);
     await expect(onboarding).toBeVisible();
 
-    await onboarding.getByRole("button", { name: /Inicie sesión/i }).click();
+    await onboarding.getByRole("button", { name: /Inicia sesión/i }).click();
     await expect(page).toHaveURL(/\/login/);
     await expect(page.getByRole("heading", { name: "Ingrese a su cuenta", exact: true })).toBeVisible();
     await page.goBack({ waitUntil: "domcontentloaded" });
     await expect(page).toHaveURL(/^https?:\/\/[^/]+\/?$/);
     await expect(onboarding).toBeVisible();
 
-    await onboarding.getByRole("button", { name: /Inicie sesión/i }).click();
+    await onboarding.getByRole("button", { name: /Inicia sesión/i }).click();
     await expect(page).toHaveURL(/\/login/);
     await expect(page.getByRole("heading", { name: "Ingrese a su cuenta", exact: true })).toBeVisible();
     await expect.poll(() => page.evaluate(() => window.localStorage.getItem("ccr:native-first-run-onboarding:v12"))).toBeNull();
@@ -422,8 +422,8 @@ test.describe("@mobile native shell contracts", () => {
     expect(sheetGeometry.top).toBeGreaterThanOrEqual(sheetGeometry.headerHeight + 57);
     expect(sheetGeometry.bottom).toBeLessThanOrEqual(sheetGeometry.viewportHeight + 1);
 
-    await page.getByRole("button", { name: /^(¿Qué servicio está buscando\?|Servicios, restaurantes, farmacias\.\.\.)$/ }).click();
-    const serviceInput = page.getByRole("combobox", { name: /^(Servicio|Servicios y lugares)$/ });
+    await page.getByRole("button", { name: "¿Qué servicio estás buscando?" }).click();
+    const serviceInput = page.getByRole("combobox", { name: "Servicio" });
     await expect(serviceInput).toBeVisible();
     const overlayGeometry = await serviceInput.evaluate((element) => {
       const overlay = element.closest<HTMLElement>(".fixed.z-\\[220\\]");

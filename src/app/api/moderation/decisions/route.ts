@@ -13,5 +13,5 @@ export async function POST(req:Request){
  if(req.headers.get("origin")!==new URL(req.url).origin)return NextResponse.json({error:"Origen inválido"},{status:403,headers});
  const p=schema.safeParse(await req.json().catch(()=>null));if(!p.success)return NextResponse.json({error:"Explica el motivo (15–1000 caracteres)."},{status:400,headers});
  const {error}=await db.rpc("request_moderation_appeal",{p_report:p.data.report,p_reason:p.data.reason});
- return error?NextResponse.json({error:"No se pudo solicitar la revisión; comprueba que sea una decisión tuya y que no esté pendiente."},{status:409,headers}):NextResponse.json({ok:true},{headers});
+ return error?NextResponse.json({error:"No se pudo solicitar la revisión; compruebe que sea una decisión suya y que no esté pendiente."},{status:409,headers}):NextResponse.json({ok:true},{headers});
 }

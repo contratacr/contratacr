@@ -80,8 +80,8 @@ export async function notifyVerificationDecision({
         firstName,
         "Su verificación está en revisión",
         "#b45309",
-        `No pudimos verificar tu identificación.
-         Puedes <strong>solicitar revisión manual</strong> y adjuntar los documentos desde su panel. Su cuenta sigue activa mientras tanto.`,
+        `No pudimos verificar su identificación.
+         Puede <strong>solicitar revisión manual</strong> y adjuntar los documentos desde su panel. Su cuenta sigue activa mientras tanto.`,
         "Ver mi verificación"
       );
     } else if (kind === "rejected") {
@@ -93,9 +93,9 @@ export async function notifyVerificationDecision({
         firstName,
         "Su verificación no fue aprobada",
         "#dc2626",
-        `Revisamos tu verificación de identidad y por ahora no fue aprobada.
+        `Revisamos su verificación de identidad y por ahora no fue aprobada.
          <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:14px;margin:16px 0;font-size:14px;color:#991b1b;"><strong>Motivo:</strong> ${escapeHtml(safeReason)}</div>
-         Tu cuenta sigue activa. Entra a <strong>Mi perfil → Verificación</strong> para corregir los datos o pedir ayuda a soporte.`,
+         Su cuenta sigue activa. Entre a <strong>Mi perfil → Verificación</strong> para corregir los datos o pedir ayuda a soporte.`,
         "Revisar mi verificación"
       );
     } else {
@@ -109,7 +109,7 @@ export async function notifyVerificationDecision({
         "#b45309",
         `Quitamos el <strong>check azul</strong> de su perfil después de revisar su verificación.
          <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:14px;margin:16px 0;font-size:14px;color:#92400e;"><strong>Motivo:</strong> ${escapeHtml(safeReason)}</div>
-         Tu cuenta sigue activa. Entra a <strong>Mi perfil → Verificación</strong> para ver el motivo y pedir ayuda a soporte.`,
+         Su cuenta sigue activa. Entre a <strong>Mi perfil → Verificación</strong> para ver el motivo y pedir ayuda a soporte.`,
         "Ver mi verificación"
       );
     }

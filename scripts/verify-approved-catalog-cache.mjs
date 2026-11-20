@@ -1,4 +1,3 @@
-import { usesLocalProNodeCache } from "../src/lib/cache/local-pro-runtime.ts";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
 import assert from "node:assert/strict";
@@ -28,7 +27,6 @@ function setup({ r2 = true } = {}) {
       process: { env: { NEXT_PUBLIC_SUPABASE_URL: 'https://test-project.supabase.co' } },
       console: { error() {} },
       require(name) {
-        if (name === '@/lib/cache/local-pro-runtime') return { usesLocalProNodeCache };
         if (name === 'server-only') return {};
         if (name === 'next/cache') return {
           unstable_cache: fn => async (...args) => {

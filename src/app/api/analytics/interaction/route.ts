@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
   // Pruebas automáticas: se acepta en silencio y no se guarda.
   if (peticionAutomatizada(req)) return new NextResponse(null, { status: 204 });
   // Cualquiera podía inflar las vistas y los contactos de un profesional en bucle.
-  const limitado = await enforceRateLimit(req, "analytics", 60, 60_000);
+  const limitado = enforceRateLimit(req, "analytics", 60, 60_000);
   if (limitado) return limitado;
   const body = await req.json().catch(() => null);
   if (!body || !VALID_EVENTS.has(String(body.type ?? ""))) {

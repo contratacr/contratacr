@@ -1223,29 +1223,23 @@ html[data-self-action-modal-open="true"] [data-save-button] {
     );
   }
 
-  /* Safari's accessory bar also shrinks the visual viewport with a hardware
-     keyboard, below the software-keyboard detection threshold. Clamp every
-     modal wrapper too, not only its white dialog: otherwise a sliver of its
-     dark backdrop remains visible below the footer. */
-  .app-modal-screen.app-modal-screen,
+  html[data-keyboard-open] .app-modal-screen.app-modal-screen,
   html[data-keyboard-open] [data-ai-concierge-dialog] {
     top: var(--app-visual-viewport-top) !important;
     bottom: auto !important;
     height: var(--app-visual-viewport-height) !important;
     max-height: var(--app-visual-viewport-height) !important;
-    /* The existing inset backdrop dims the visible page. Do not paint a
-       viewport-sized spread shadow outside it: iOS Safari samples that paint
-       at its toolbar boundary and draws a dark line below the form actions
-       while a field is focused (also with a hardware keyboard). */
+    /* The wrapper is clamped to the visible viewport, but the page must stay
+       dimmed everywhere around it (the strip between the sheet and the
+       keyboard included): a spread shadow dims what the backdrop no longer
+       reaches. */
+    box-shadow: 0 0 0 100lvh rgba(0, 0, 0, 0.5);
   }
 
   /* With the keyboard up the sheet may take the whole clamped wrapper, so the
      page never peeks out between the sheet and the keyboard. */
   html[data-keyboard-open] .app-bottom-sheet.app-bottom-sheet {
     max-height: 100%;
-    /* A sheet can also touch Safari's toolbar while typing. Its backdrop
-       already separates it from the page; an exterior shadow adds a seam. */
-    box-shadow: none;
   }
 
   .app-bottom-sheet.app-bottom-sheet {
@@ -1256,7 +1250,6 @@ html[data-self-action-modal-open="true"] [data-save-button] {
     height: var(--app-visual-viewport-height);
     max-height: var(--app-visual-viewport-height);
     border-radius: 0;
-    box-shadow: none;
   }
 
   .app-centered-modal.app-centered-modal {
@@ -2439,41 +2432,3 @@ body.ccr-native-app main.ccr-authentication-screen[data-authentication-screen]:h
   top: var(--app-visual-viewport-top, 0px);
   bottom: auto;
 }
-
-/* Pro owns its mobile navigation while mounted; marketplace chrome stays on
-   other routes. No shared fullscreen flag, so nested dialogs cannot clear it. */
-@media (max-width: 1023px) {
- body.ccr-native-app:has([data-independent-pro]) .ccr-app-header,
- body.ccr-native-app:has([data-independent-pro]) nav.ccr-native-bottom-nav { display:none !important; }
- body.ccr-native-app:has([data-independent-pro]) [data-independent-pro] > main {
-  min-height:0 !important;
-  padding-bottom:max(1.25rem, env(safe-area-inset-bottom)) !important;
- }
- /* The marketplace shell pins every <main> below its (hidden) app header and
-    locks body scrolling. Pro has its own header above <main>: keep the page in
-    normal flow so «Volver a Mi panel» stays visible and clickable. */
- body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route):has([data-independent-pro]) {
-  height:auto;
-  overflow:visible;
- }
- body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route):has([data-independent-pro]) [data-independent-pro] main {
-  position:static;
-  inset:auto;
-  height:auto;
-  overflow:visible;
-  overscroll-behavior:auto;
-  transition:none;
- }
-}
-
-/* Round 7C: company team roles. While a member works in another company the Pro space marks the
-   document with its role; write controls tagged with data-pro-write="<capability>" are hidden for
-   roles that cannot use them (the server refuses those writes anyway: 403). */
-html[data-pro-role="read_only"] [data-pro-write],
-html[data-pro-role="member"] [data-pro-write="sales.write"],
-html[data-pro-role="member"] [data-pro-write="finance.write"],
-html[data-pro-role="member"] [data-pro-write="company.write"],
-html[data-pro-role="member"] [data-pro-write="settings.write"],
-html[data-pro-role="member"] [data-pro-write="team.manage"],
-html[data-pro-role="manager"] [data-pro-write="settings.write"],
-html[data-pro-role="manager"] [data-pro-write="team.manage"] { display: none !important; }

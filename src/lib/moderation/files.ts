@@ -8,7 +8,7 @@ export async function scanUpload(buffer: Uint8Array): Promise<void> {
   if(url.protocol!=="https:" || !process.env.FILE_SCAN_SECRET) throw new Error("Análisis de archivos no disponible.");
   const response=await fetch(url,{method:"POST",headers:{"Content-Type":"application/octet-stream",Authorization:`Bearer ${process.env.FILE_SCAN_SECRET}`},
     body:new Uint8Array(buffer),signal:AbortSignal.timeout(15000),cache:"no-store"});
-  if(!response.ok) throw new Error("No se pudo analizar el archivo; intenta más tarde.");
+  if(!response.ok) throw new Error("No se pudo analizar el archivo; intente más tarde.");
   const result=await response.json();
   if(result.clean!==true) throw new Error("El archivo no superó el análisis de seguridad.");
 }

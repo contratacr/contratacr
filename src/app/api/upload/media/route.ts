@@ -7,7 +7,7 @@ import { deleteOwnedMediaAsset } from "@/lib/cloudinary-ownership";
 export const runtime = "nodejs";
 
 export async function DELETE(req: Request) {
-  const rateLimited = await enforceRateLimit(req, "delete-owned-media", 30, 60_000);
+  const rateLimited = enforceRateLimit(req, "delete-owned-media", 30, 60_000);
   if (rateLimited) return rateLimited;
 
   const user = await safeGetUser(await createClient());

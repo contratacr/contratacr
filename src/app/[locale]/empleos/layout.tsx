@@ -14,6 +14,6 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     tarjetaPropia: true,
     ruta: "/empleos",
     titulo: en ? 'Jobs and vacancies | ContrataCR' : 'Empleos y vacantes | ContrataCR',
-    descripcion: en ? 'Browse job openings in Costa Rica and contact the person who posted them on WhatsApp.' : 'Explore vacantes en Costa Rica y contacte por WhatsApp a quien las publica.',
+    descripcion: en ? 'Browse job openings in Costa Rica and contact the person who posted them on WhatsApp.' : 'Explora vacantes en Costa Rica y contacta por WhatsApp a quien las publica.',
   });
 }

@@ -276,9 +276,9 @@ async function completarPerfilProfesional(page: Page) {
   // «Ubicación del servicio»: la misma pieza del panel (AttentionModalities).
   const ubicacion = main.locator('[data-field="location"]');
   await ubicacion.getByRole("switch", { name: /Atiendo a domicilio/ }).click();
-  await ubicacion.getByRole("button", { name: "Elegí una provincia", exact: true }).click();
+  await ubicacion.getByRole("button", { name: "Elija una provincia", exact: true }).click();
   await page.getByRole("option", { name: /^Alajuela$/ }).first().click();
-  await ubicacion.getByRole("button", { name: "Elegí un cantón", exact: true }).click();
+  await ubicacion.getByRole("button", { name: "Elija un cantón", exact: true }).click();
   await page.getByRole("option", { name: /^Atenas$/ }).first().click();
   await ubicacion.getByRole("button", { name: "Agregar zona", exact: true }).click();
   await expect(ubicacion.getByText("Atenas, Alajuela", { exact: true })).toBeVisible();
@@ -408,10 +408,10 @@ test("registro de profesional: contraseña, provincia, tarifa, fijo, abre arriba
 
   await ubicacion.getByRole("switch", { name: /Atiendo a domicilio/ }).click();
   await expect(agregarZona).toBeDisabled();
-  await ubicacion.getByRole("button", { name: "Elegí una provincia", exact: true }).click();
+  await ubicacion.getByRole("button", { name: "Elija una provincia", exact: true }).click();
   await page.getByRole("option", { name: /^Alajuela$/ }).first().click();
   await expect(agregarZona).toBeDisabled();
-  await ubicacion.getByRole("button", { name: "Elegí un cantón", exact: true }).click();
+  await ubicacion.getByRole("button", { name: "Elija un cantón", exact: true }).click();
   await page.getByRole("option", { name: /^Atenas$/ }).first().click();
   await agregarZona.click();
   await expect(ubicacion.getByText("Atenas, Alajuela", { exact: true })).toBeVisible();
@@ -458,7 +458,7 @@ test("registro de profesional: contraseña, provincia, tarifa, fijo, abre arriba
   // 10. Notificaciones: el texto se lee COMPLETO y cada aviso lleva su raya.
   await gotoOK(page, "/notificaciones");
   // Nombra solo lo que falta (18-nov-2026): esta cuenta no subió foto.
-  const largo = page.getByText(/^Agrega tu foto.* para que los clientes conozcan lo que ofreces\.$/);
+  const largo = page.getByText(/^Agregue su foto.* para que los clientes conozcan lo que ofrece\.$/);
   await expect(largo).toBeVisible({ timeout: 30_000 });
   const medidas = await largo.evaluate((el) => {
     const fila = el.closest('[role="button"]') as HTMLElement;

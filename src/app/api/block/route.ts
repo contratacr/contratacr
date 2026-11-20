@@ -36,7 +36,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const limitado = await enforceRateLimit(req, "bloquear", 20, 60 * 60 * 1000);
+  const limitado = enforceRateLimit(req, "bloquear", 20, 60 * 60 * 1000);
   if (limitado) return limitado;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

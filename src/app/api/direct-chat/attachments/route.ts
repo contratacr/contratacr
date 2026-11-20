@@ -4,8 +4,6 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { DOC_KINDS, IMAGE_KINDS, MIME_FOR, validateUpload } from "@/lib/upload-validation";
-import { cleanImageUpload } from "@/lib/media/clean-image-upload";
-import { mensajeDeError } from "@/lib/api-errors";
 
 export const runtime = "nodejs";
 
@@ -35,7 +33,7 @@ function safeFileName(name: string) {
 }
 
 export async function POST(req: Request) {
-  const rl = await enforceRateLimit(req, "direct-chat-attachment", 18, 60_000);
+  const rl = enforceRateLimit(req, "direct-chat-attachment", 18, 60_000);
   if (rl) return rl;
 
   const supabase = await createClient();
@@ -73,14 +71,10 @@ export async function POST(req: Request) {
   if (!check.ok) return NextResponse.json({ error: check.error }, { status: 400 });
   try { await scanUpload(buffer); } catch(e) { return NextResponse.json({error:e instanceof Error?e.message:"Análisis no disponible."},{status:422}); }
   const mime = MIME_FOR[check.kind];
-  // Privacy: strip EXIF/GPS/XMP from images before storing (fail closed). PDFs untouched.
-  const cleaned = cleanImageUpload(check.kind, buffer);
-  if (!cleaned.ok) return NextResponse.json({ error: mensajeDeError(req, cleaned.text), code: cleaned.code }, { status: 400 });
-  const clean = cleaned.bytes;
 
   const name = safeFileName(file.name);
   const path = `${conversationId}/${user.id}/${Date.now()}-${crypto.randomUUID()}-${name}`;
-  const { error: uploadError } = await db.storage.from(BUCKET).upload(path, clean, {
+  const { error: uploadError } = await db.storage.from(BUCKET).upload(path, buffer, {
     contentType: mime,
     upsert: false,
   });

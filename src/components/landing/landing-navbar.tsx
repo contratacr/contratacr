@@ -7,12 +7,7 @@ import { DesktopAppMenu } from "./desktop-app-menu";
 import { MobileAppStoreMenuLink } from "@/components/mobile/mobile-app-store-menu-link";
 import { SocialLinks } from "./social-links";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
-import { DirectoryExploreMenu, DirectoryDrawerGroup } from "./directory-nav";
-import { useSiteFeatures } from "@/components/site-features";
-import { DirectorySuggestionRows, SuggestionGroupLabel } from "@/components/search/directory-suggestions";
-import { directorySectionForQuery, directorySectionHref, suggestDirectorySections, unifiedSearchPlaceholder, withoutPlaceDuplicates, type DirectorySectionSuggestion } from "@/lib/search/directory-search";
-import { prefijoDeIdioma, rutaConIdioma } from "@/lib/prefijo-de-idioma";
-import { useRouter as useRouterDeNext } from "next/navigation";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 
 import { useContext, useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback, useTransition, type ReactNode } from "react";
 import { soltarFoco } from "@/lib/soltar-foco";
@@ -27,8 +22,6 @@ import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { signOutToHome } from "@/lib/auth/sign-out";
 import { useAuth } from "@/hooks/use-auth";
-import { useManagesBusiness } from "@/hooks/use-manages-business";
-import { Store } from "lucide-react";
 import { canOffer } from "@/lib/auth/capabilities";
 import { useMode } from "@/hooks/use-mode";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
@@ -72,14 +65,7 @@ import { getProfessionalDisplayName } from "@/lib/display-name";
 export { ContrataCRLogo, ContrataCRMark } from "@/components/brand/brand-logo";
 
 export function useSwitchLang() {
-  // El router de Next, no el de next-intl: con `{ locale }` next-intl fuerza el
-  // prefijo también para el español (/es/servicios) y el middleware responde
-  // 308 a / —también a la petición RSC del cambio—. Next revalida esa respuesta
-  // contra su `_rsc` y vuelve a saltar a /es/…: un bucle de redirecciones hasta
-  // que el navegador se rinde y Next recarga la página entera, segundos
-  // después y con <html lang="en"> mientras tanto. La dirección de cada idioma
-  // se arma aquí con la misma regla que el resto del app: español sin prefijo.
-  const router = useRouterDeNext();
+  const router = useRouter();
   const pathname = usePathname();
   const locale = useLocale();
   const [, startTransition] = useTransition();
@@ -88,7 +74,7 @@ export function useSwitchLang() {
   // La otra versión se precarga recién cuando el dedo o el ratón llegan al
   // botón (ver `precargar`). Antes se bajaba en TODAS las páginas, por si
   // acaso: ~200 KB por pantalla para algo que casi nadie usa (7-oct-2026).
-  const precargar = () => router.prefetch(rutaConIdioma(otroIdioma, pathname));
+  const precargar = () => router.prefetch(pathname, { locale: otroIdioma });
 
   useEffect(() => {
     document.documentElement.removeAttribute("data-locale-switch");
@@ -113,7 +99,7 @@ export function useSwitchLang() {
       window.setTimeout(() => document.documentElement.removeAttribute("data-locale-switch"), 2500);
     }
     startTransition(() => {
-      router.replace(`${rutaConIdioma(lang, pathname)}${currentState}`, { scroll: false });
+      router.replace(`${pathname}${currentState}`, { locale: lang, scroll: false });
     });
   };
   return Object.assign(cambiar, { precargar });
@@ -602,7 +588,6 @@ function AccountMenu({
   const locale = useLocale();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const managesBusiness = useManagesBusiness(true);
   const menuItemClass = "flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]";
 
   useEffect(() => {
@@ -624,7 +609,6 @@ function AccountMenu({
   return (
     <div ref={ref} className="relative">
       <button
-        data-account-menu-button
         onClick={toggle}
         className="grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"
         aria-label={displayName || t("myPanel")}
@@ -668,12 +652,6 @@ function AccountMenu({
               <Mail className="h-4 w-4 text-[#009FD9]" />
               {locale === "en" ? "Messages" : "Mensajes"}
             </Link>
-            {managesBusiness && (
-              <Link href="/dashboard/negocio" prefetch={false} data-account-business onClick={() => setOpen(false)} className={menuItemClass}>
-                <Store className="h-4 w-4 text-[#009FD9]" />
-                {locale === "en" ? "My business" : "Mi negocio"}
-              </Link>
-            )}
             <Link href={savedHref} onClick={() => setOpen(false)} className={menuItemClass}>
               <Bookmark className="h-4 w-4 text-[#009FD9]" />
               {t("favorites")}
@@ -1199,7 +1177,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const clientPanelHref = `${panelHref}?mode=use`;
   const primaryPanelHref = isPro ? (mode === "offer" ? professionalPanelHref : clientPanelHref) : clientPanelHref;
   const savedHref = "/dashboard/profesional?tab=saved";
-  const drawerManagesBusiness = useManagesBusiness(!!user);
   const profilePanelHref = `${panelHref}?mode=${isPro && mode === "offer" ? "offer" : "use"}&tab=profile`;
   // El nombre del negocio vive en otra tabla, así que pedirlo desde el navegador
   // hacía pintar el nombre de la persona y cambiarlo medio segundo después. Ahora
@@ -1477,20 +1454,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     const vivos = new Set(getAllCategories().map((c) => c.id));
     return oficiosDeArranque().filter((id) => vivos.has(id)).slice(0, 8);
   })();
-  const serviceMatches = matchCategories(searchQuery, 8, locale);
-  // ONE SEARCH (2026-11-19, Yelp style): with the directory on, the same field
-  // also offers the place sections («farm» → Farmacias). The group that Enter
-  // would open goes first, so the list and the keyboard agree.
-  const { directorySections } = useSiteFeatures();
-  const directoryOn = directorySections.length > 0;
-  const placeSuggestions = suggestDirectorySections(searchQuery, directorySections, locale);
-  const compactSuggestions = withoutPlaceDuplicates(serviceMatches, (c) => getCategoryLabel(c.id, locale), placeSuggestions);
-  const placesFirst = placeSuggestions.length > 0 && !!directorySectionForQuery(searchQuery, directorySections);
-  const serviceRowIndex = (i: number) => (placesFirst ? i + placeSuggestions.length : i);
-  const placeRowIndex = (i: number) => (placesFirst ? i : compactSuggestions.length + i);
-  const activePlace = placeSuggestions.find((_, i) => placeRowIndex(i) === searchActiveIdx) ?? null;
+  const compactSuggestions = matchCategories(searchQuery, 8, locale);
   const showNativeServiceSuggestions =
-    nativeSearchOpen && searchFocused && searchQuery.trim().length >= 2 && (compactSuggestions.length > 0 || placeSuggestions.length > 0);
+    nativeSearchOpen && searchFocused && searchQuery.trim().length >= 2 && compactSuggestions.length > 0;
   const navLocSug = useMemo(() => searchLocations(navLocation), [navLocation]);
   const nativeLocationSuggestions = useMemo(() => {
     const typed = searchLocations(navLocation).filter((suggestion) => suggestion.type === "province" || suggestion.type === "canton");
@@ -1612,8 +1578,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
        *  partir del texto escrito —y podía adivinar otro—. */
       categoria?: string | null;
       servicio?: string;
-      /** A «Lugares» suggestion: open that directory section. */
-      directorySection?: string;
     } = {},
   ) {
     const svc = repairVisibleText(overrides.servicio ?? searchQuery).trim();
@@ -1621,13 +1585,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     const params = new URLSearchParams();
     const categoriaElegida = "categoria" in overrides ? overrides.categoria : searchCategoryId;
     const picked = compactSuggestions.find((c) => c.id === categoriaElegida);
-    const servicioElegido = !!(svc && categoriaElegida && (!picked || normalizeText(repairVisibleText(picked.label)) === normalizeText(svc)));
-    // Free text that clearly names a place («farmacia», «gasolina en Heredia»)
-    // opens that directory section; anything else stays a professionals search.
-    const directorySection = overrides.directorySection ?? (!servicioElegido && svc ? directorySectionForQuery(svc, directorySections) : null);
-    if (servicioElegido && categoriaElegida) {
+    if (svc && categoriaElegida && (!picked || normalizeText(repairVisibleText(picked.label)) === normalizeText(svc))) {
       params.set("categoria", categoriaElegida);
-    } else if (svc && !directorySection) {
+    } else if (svc) {
       const inferred = resolveCategoryIntent(svc, locale);
       if (inferred) params.set("categoria", inferred.id);
       else params.set("q", svc);
@@ -1662,19 +1622,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       setBusquedasRecientes(leerBusquedasRecientesConFecha());
     }
     trackMetaEvent("Search", {
-      content_type: directorySection ? "place_directory" : "professional_service",
-      search_string: directorySection ? "section" : params.get("categoria") ? "category" : params.get("q") ? "text" : "general",
+      content_type: "professional_service",
+      search_string: params.get("categoria") ? "category" : params.get("q") ? "text" : "general",
       has_location: params.has("provincia") || params.has("canton") || params.has("lat") || params.has("lng"),
       source: "navbar",
     });
-    const destination = directorySection
-      ? directorySectionHref(directorySection, svc, {
-        provinceId: params.get("provincia"),
-        cantonId: params.get("canton"),
-        lat: params.has("lat") ? Number(params.get("lat")) : null,
-        lng: params.has("lng") ? Number(params.get("lng")) : null,
-      })
-      : rutaDeBusqueda(params);
+    const destination = rutaDeBusqueda(params);
     const target = new URL(destination, window.location.origin);
     const currentQuery = new URLSearchParams(window.location.search);
     target.searchParams.sort(); currentQuery.sort();
@@ -1878,12 +1831,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     }, 0);
   }
 
-  function selectDirectorySuggestion(item: DirectorySectionSuggestion) {
-    setSearchActiveIdx(-1);
-    setSearchFocused(false);
-    runCompactSearch({ directorySection: item.section });
-  }
-
   function selectNativeCompactSuggestion(id: string) {
     const picked = compactSuggestions.find((c) => c.id === id);
     setSearchQuery(repairVisibleText(picked?.label ?? getCategoryLabel(id, locale)));
@@ -1910,9 +1857,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
 
   function handleCompactSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.nativeEvent.isComposing) return;
-    if (e.key === "Enter") { e.preventDefault(); if (activePlace) selectDirectorySuggestion(activePlace); else runCompactSearch(); return; }
-    if (searchFocused && compactSuggestions.length + placeSuggestions.length > 0) {
-      if (e.key === "ArrowDown") { e.preventDefault(); setSearchActiveIdx(i => Math.min(i + 1, compactSuggestions.length + placeSuggestions.length - 1)); }
+    if (e.key === "Enter") { e.preventDefault(); runCompactSearch(); return; }
+    if (searchFocused && compactSuggestions.length > 0) {
+      if (e.key === "ArrowDown") { e.preventDefault(); setSearchActiveIdx(i => Math.min(i + 1, compactSuggestions.length - 1)); }
       else if (e.key === "ArrowUp") { e.preventDefault(); setSearchActiveIdx(i => Math.max(i - 1, 0)); }
       else if (e.key === "Escape") setSearchFocused(false);
     }
@@ -2028,7 +1975,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           menú de abajo (30-sep y 1-oct-2026). */}
                     </div>
                   ) : (
-                    <div data-pro-section-actions-slot className="flex h-10 w-10 shrink-0 items-center justify-end" />
+                    <span className="h-10 w-10 shrink-0" aria-hidden />
                   )
                 ) : (
                 <div className="ccr-cabecera-acciones-web ml-auto flex shrink-0 items-center gap-0.5">
@@ -2036,10 +1983,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       se vuelve y el «···» de la publicación. La campana es de la
                       cuenta, no de lo que se está mirando, y ahí solo compite
                       con el «···» —que es el que cierra la fila por la derecha,
-                      como en todas las apps—. En móvil queda en las pantallas raíz;
-                      las secciones internas respetan la misma regla que la app. */}
-                  {user && (!sectionActive || sectionRoot) && !sectionPaso && !sectionMenu && <NotificationBell scope="all" />}
-                  {user && (sectionPaso || (sectionActive && !sectionRoot)) && !sectionMenu && <div data-pro-section-actions-slot className="flex h-10 w-10 items-center justify-end" />}
+                      como en todas las apps—. En las secciones sí va. */}
+                  {user && !sectionPaso && !sectionMenu && <NotificationBell scope="all" />}
+                  {user && sectionPaso && !sectionMenu && <span className="h-10 w-10" aria-hidden />}
                   {!user && !sectionShare && !sectionMenu && <HeaderAccountLink />}
                 </div>
                 )}
@@ -2093,7 +2039,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       type="button"
                       onClick={openNativeSearch}
                       className="flex min-w-0 flex-1 items-center gap-3 text-left"
-                      aria-label={unifiedSearchPlaceholder(locale, directoryOn)}
+                      aria-label={locale === "en" ? "What service are you looking for?" : "¿Qué servicio estás buscando?"}
                     >
                       <Search className="h-5 w-5 shrink-0 text-[#162543]" />
                       {searchRouteHasContext ? (
@@ -2103,7 +2049,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         />
                       ) : (
                         <span className="min-w-0 flex-1 truncate text-[15px] font-semibold text-[#8f9aaa]">
-                          {unifiedSearchPlaceholder(locale, directoryOn)}
+                          {locale === "en" ? "What service are you looking for?" : "¿Qué servicio estás buscando?"}
                         </span>
                       )}
                     </button>
@@ -2233,8 +2179,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           <Mail className="h-5 w-5 shrink-0" />
                           {t("coverLetter")}
                         </Link>
-                        {/* Directorio de lugares (2026-11-18): solo las secciones encendidas (DIR_ENABLED). */}
-                        <DirectoryExploreMenu locale={locale} onNavigate={() => setOpenMenu(null)} />
                       </div>
                     )}
                   </div>
@@ -2288,10 +2232,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                                 onKeyDown={handleCompactSearchKeyDown}
                                 onFocus={() => { if (searchBlurTimer.current) clearTimeout(searchBlurTimer.current); setSearchFocused(true); }}
                                 onBlur={() => { searchBlurTimer.current = setTimeout(() => setSearchFocused(false), 150); }}
-                                placeholder={unifiedSearchPlaceholder(locale, directoryOn, true)}
+                                placeholder={locale === "en" ? "What service are you looking for?" : "¿Qué servicio estás buscando?"}
                                 className="min-w-0 flex-1 bg-transparent text-[15px] text-[#162543] placeholder:text-[#8f9aaa] focus:outline-none"
                                 role="combobox"
-                                aria-label={directoryOn ? t("searchServicesAndPlaces") : t("searchServiceLabel")}
+                                aria-label={locale === "en" ? "Service" : "Servicio"}
                                 aria-expanded={searchFocused && searchQuery.trim().length > 0}
                                 aria-autocomplete="list"
                                 aria-controls="navbar-service-suggestions"
@@ -2333,47 +2277,32 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           {/* Service autocomplete - selecting FILLS the field; search
                               runs only on Buscar/Enter. */}
                           <AnchoredDropdown anchorRef={compactSvcRef} open={searchFocused && searchQuery.trim().length > 0} maxHeight={320} className="rounded-xl border-gray-100 shadow-2xl">
-                            <div id="navbar-service-suggestions" role="listbox" className="flex flex-col py-1.5">
-                              {placeSuggestions.length > 0 && (
-                                <div className={placesFirst ? "order-first" : "order-last"}>
-                                  <DirectorySuggestionRows
-                                    items={placeSuggestions}
-                                    locale={locale}
-                                    activeIndex={placeSuggestions.findIndex((_, i) => placeRowIndex(i) === searchActiveIdx)}
-                                    onPick={selectDirectorySuggestion}
-                                  />
-                                </div>
-                              )}
+                            <div id="navbar-service-suggestions" role="listbox" className="py-1.5">
                               {compactSuggestions.length === 0 ? (
-                                placeSuggestions.length === 0 && (
-                                  <button
-                                    type="button"
-                                    onMouseDown={(e) => { e.preventDefault(); runCompactSearch(); }}
-                                    className="w-full text-left px-4 py-2.5 text-sm text-gray-500 hover:bg-gray-50"
-                                  >
-                                    {t("searchAll", { q: searchQuery.trim() })}
-                                  </button>
-                                )
+                                <button
+                                  type="button"
+                                  onMouseDown={(e) => { e.preventDefault(); runCompactSearch(); }}
+                                  className="w-full text-left px-4 py-2.5 text-sm text-gray-500 hover:bg-gray-50"
+                                >
+                                  {t("searchAll", { q: searchQuery.trim() })}
+                                </button>
                               ) : (
-                                <div role="group" aria-label={placeSuggestions.length > 0 ? t("searchServicesLabel") : undefined}>
-                                  {placeSuggestions.length > 0 && <SuggestionGroupLabel>{t("searchServicesLabel")}</SuggestionGroupLabel>}
-                                  {compactSuggestions.map((s, i) => (
-                                    <button
-                                      key={s.id}
-                                      type="button"
-                                      onMouseDown={(e) => { e.preventDefault(); selectCompactSuggestion(s.id); }}
-                                      role="option"
-                                      aria-selected={serviceRowIndex(i) === searchActiveIdx}
-                                      className={cn(
-                                        "w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left transition-colors",
-                                        serviceRowIndex(i) === searchActiveIdx ? "bg-[#EBF5FB]" : "hover:bg-[#EBF5FB]"
-                                      )}
-                                    >
-                                      <span className="text-sm font-medium text-[#1a2744]">{getCategoryLabel(s.id, locale)}</span>
-                                      <span className="text-[11px] text-gray-400 shrink-0">{getCategoryGroupLabel(s.groupId, locale)}</span>
-                                    </button>
-                                  ))}
-                                </div>
+                                compactSuggestions.map((s, i) => (
+                                  <button
+                                    key={s.id}
+                                    type="button"
+                                    onMouseDown={(e) => { e.preventDefault(); selectCompactSuggestion(s.id); }}
+                                    role="option"
+                                    aria-selected={i === searchActiveIdx}
+                                    className={cn(
+                                      "w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left transition-colors",
+                                      i === searchActiveIdx ? "bg-[#EBF5FB]" : "hover:bg-[#EBF5FB]"
+                                    )}
+                                  >
+                                    <span className="text-sm font-medium text-[#1a2744]">{getCategoryLabel(s.id, locale)}</span>
+                                    <span className="text-[11px] text-gray-400 shrink-0">{getCategoryGroupLabel(s.groupId, locale)}</span>
+                                  </button>
+                                ))
                               )}
                             </div>
                           </AnchoredDropdown>
@@ -2605,9 +2534,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     }}
                     onFocus={() => setSearchFocused(true)}
                     onKeyDown={handleCompactSearchKeyDown}
-                    placeholder={directoryOn ? unifiedSearchPlaceholder(locale, true, true) : (locale === "en" ? "Service" : "Servicio")}
+                    placeholder={locale === "en" ? "Service" : "Servicio"}
                     className={SEARCH_SHEET_INPUT}
-                    aria-label={directoryOn ? t("searchServicesAndPlaces") : t("searchServiceLabel")}
+                    aria-label={locale === "en" ? "Service" : "Servicio"}
                     role="combobox"
                     aria-autocomplete="list"
                     aria-controls="native-service-suggestions"
@@ -2685,33 +2614,20 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
               <div className="relative mt-4 min-h-0 flex-1">
               <div ref={listaBuscadorRef} className="ccr-search-suggestions-scroll h-full overflow-y-auto overscroll-contain pb-3 pr-2">
                 {showNativeServiceSuggestions ? (
-                  <div id="native-service-suggestions" className="flex flex-col gap-1" role="listbox" aria-label={directoryOn ? (locale === "en" ? "Suggestions" : "Sugerencias") : (locale === "en" ? "Suggested services" : "Servicios sugeridos")}>
-                    {placeSuggestions.length > 0 && (
-                      <div className={cn("space-y-1", placesFirst ? "order-first mb-2" : "order-last mt-2")}>
-                        <DirectorySuggestionRows
-                          variant="sheet"
-                          items={placeSuggestions}
-                          locale={locale}
-                          activeIndex={placeSuggestions.findIndex((_, i) => placeRowIndex(i) === searchActiveIdx)}
-                          onPick={selectDirectorySuggestion}
-                        />
-                      </div>
-                    )}
-                    {compactSuggestions.length > 0 && (
-                    <div className="space-y-1">
+                  <div id="native-service-suggestions" className="space-y-1" role="listbox" aria-label={locale === "en" ? "Suggested services" : "Servicios sugeridos"}>
                     <p className="px-2 pb-1 pt-1 text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#7a8797]">
-                      {placeSuggestions.length > 0 ? (locale === "en" ? "Services" : "Servicios") : (locale === "en" ? "Suggested services" : "Servicios sugeridos")}
+                      {locale === "en" ? "Suggested services" : "Servicios sugeridos"}
                     </p>
                     {compactSuggestions.map((suggestion, index) => (
                       <button
                         key={suggestion.id}
                         type="button"
                         role="option"
-                        aria-selected={serviceRowIndex(index) === searchActiveIdx}
+                        aria-selected={index === searchActiveIdx}
                         onClick={() => selectNativeCompactSuggestion(suggestion.id)}
                         className={cn(
                           "flex w-full items-center gap-3 rounded-xl px-2 py-2.5 text-left active:bg-[#eef9fd]",
-                          serviceRowIndex(index) === searchActiveIdx && "bg-[#eef9fd]",
+                          index === searchActiveIdx && "bg-[#eef9fd]",
                         )}
                       >
                         <span className="grid h-9 w-9 shrink-0 place-items-center">
@@ -2727,8 +2643,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         </span>
                       </button>
                     ))}
-                    </div>
-                    )}
                   </div>
                 ) : (
                 <div id="native-location-suggestions" className="space-y-1" role="listbox" aria-label={locale === "en" ? "Suggested locations" : "Ubicaciones sugeridas"}>
@@ -3084,8 +2998,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     </div>
                   )}
                 </div>
-                {/* Directorio de lugares (2026-11-18): se despliega con las secciones encendidas (DIR_ENABLED). */}
-                <DirectoryDrawerGroup locale={locale} itemClass={mobileDrawerItemClass} textClass={mobileDrawerTextClass} icon={<DrawerIcon><MapPin /></DrawerIcon>} onNavigate={() => cerrarCajon()} />
                 <Link href="/servicios" prefetch={true} onClick={cerrarCajon} className={claseCajon("/servicios")}>
                   <DrawerIcon><Compass /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{t("categories")}</span>
@@ -3105,12 +3017,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   <Link href="/mensajes" onClick={cerrarCajon} className={claseCajon("/mensajes")}>
                     <DrawerIcon><Mail /></DrawerIcon>
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Messages" : "Mensajes"}</span>
-                  </Link>
-                )}
-                {user && drawerManagesBusiness && (
-                  <Link href="/dashboard/negocio" prefetch={false} data-drawer-business onClick={cerrarCajon} className={claseCajon("/dashboard/negocio")}>
-                    <DrawerIcon><Store /></DrawerIcon>
-                    <span className={mobileDrawerTextClass}>{locale === "en" ? "My business" : "Mi negocio"}</span>
                   </Link>
                 )}
                 {/* El Asistente es lo único que el cajón aporta de nuevo en la

@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { LEGAL_VERSION, privacyChoiceVersion } from "@/lib/privacy/legal-version";
-import { isSameOriginRequest } from "@/lib/security/write-guard";
 const headers = { "Cache-Control": "private, no-store" };
 const unavailable = () => NextResponse.json({ error: "No se pudo guardar o consultar su elección. Inténtelo nuevamente." }, { status: 503, headers });
 export async function GET() {
@@ -18,10 +17,10 @@ export async function GET() {
   } catch { return unavailable(); }
 }
 export async function POST(req: Request) {
-  const limited = await enforceRateLimit(req, "privacy-choice", 30, 60_000);
+  const limited = enforceRateLimit(req, "privacy-choice", 30, 60_000);
   if (limited) return limited;
   const origin = req.headers.get("origin");
-  if (origin && !isSameOriginRequest(req)) return NextResponse.json({ error: "INVALID_ORIGIN" }, { status: 403, headers });
+  if (origin && origin !== new URL(req.url).origin) return NextResponse.json({ error: "INVALID_ORIGIN" }, { status: 403, headers });
   try {
     const body = await req.json();
     if (!["terms","marketing","advertising","ai","analytics"].includes(body.purpose) || typeof body.accepted !== "boolean" || body.version !== privacyChoiceVersion(body.purpose) || !["es","en"].includes(body.locale) || !["web","native"].includes(body.channel))

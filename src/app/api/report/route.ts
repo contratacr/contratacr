@@ -6,8 +6,8 @@ import { enforceRateLimit } from "@/lib/rate-limit";
 import { resolveReportTarget,type ReportKind } from "@/lib/moderation/report-target";
 const schema=z.object({professionalSlug:z.string().min(1).max(200),professionalName:z.string().max(200).optional(),reason:z.string().trim().min(5).max(2000),reporterEmail:z.unknown().optional(),targetType:z.enum(["professional","project","job","offer","review"]).optional(),targetId:z.string().uuid().optional()});
 export async function POST(req: Request) {
- const limited=await enforceRateLimit(req,"report-public",10,600000);if(limited)return limited;
- const parsed=schema.safeParse(await req.json().catch(()=>null));if(!parsed.success)return NextResponse.json({error:"Indique el contenido y un motivo de 5–2000 caracteres."},{status:400});
+ const limited=enforceRateLimit(req,"report-public",10,600000);if(limited)return limited;
+ const parsed=schema.safeParse(await req.json().catch(()=>null));if(!parsed.success)return NextResponse.json({error:"Indica el contenido y un motivo de 5–2000 caracteres."},{status:400});
  const p=parsed.data,db=createAdminClient();
  const {data:{user}}=await (await createClient()).auth.getUser();
  let kind:ReportKind=p.targetType??"professional",id=p.targetId;

@@ -1,21 +1,12 @@
 import { straightDoubleQuotes } from "@/lib/display-quotes";
 import { textoCompletarPerfil, type FaltaDelPerfil } from "@/lib/notifications/completar-perfil-texto";
-import {appointmentNotificationCopy, isAppointmentNotification} from './pro/appointment-notification';
-import {appointmentReminderCopy, isAppointmentReminder} from './pro/appointment-reminder-notification';
-import {isPaymentPlanClientNotification, paymentPlanClientCopy} from './pro/payment-plan-client-notification';
 import { getAllCategories, getCategoryLabel } from "./data/categories";
 
-// Los avisos nuevos de citas de Pro tienen tipos propios. Las citas antiguas,
-// las propuestas, las postulaciones,
+// SOLO LO QUE EL APP GENERA HOY. Las citas, las propuestas, las postulaciones,
 // seguir y las cotizaciones enviadas dentro del app salieron del producto: sus
 // tipos se retiran de aqui y los avisos viejos que queden en la base se pintan
 // con el texto guardado en la fila (la rama por defecto).
 export const TRANSLATED_NOTIFICATION_TYPES = new Set([
-  "pro_appointment_provider",
-  "pro_appointment_client",
-  "pro_appointment_reminder_provider",
-  "pro_appointment_reminder_client",
-  "pro_payment_plan_client",
   "review_received",
   "new_project",
   "new_job",
@@ -146,9 +137,6 @@ function legacyOr(message: string, fallback: string) {
 }
 
 function notificationCopy(notification: NotificationCopyInput, locale: string) {
-  if (isAppointmentReminder(notification.type)) return appointmentReminderCopy(notification.data, locale);
-  if (isAppointmentNotification(notification.type)) return appointmentNotificationCopy(notification.data, locale);
-  if (isPaymentPlanClientNotification(notification.type)) return paymentPlanClientCopy(notification.data, locale);
   const language: NotificationLocale = locale === "en" ? "en" : "es";
   const en = language === "en";
   const data = notification.data;
@@ -171,7 +159,7 @@ function notificationCopy(notification: NotificationCopyInput, locale: string) {
   if (notification.type === "pide_resenas") {
     return { title, message: en
       ? "Ask clients you have worked with for a review. Your dashboard has a message ready to share on WhatsApp."
-      : "Pide una reseña a clientes con los que ya trabajó. En su panel tiene un mensaje listo para compartir por WhatsApp." };
+      : "Pida una reseña a clientes con los que ya trabajó. En su panel tiene un mensaje listo para compartir por WhatsApp." };
   }
   if (notification.type === "agrega_precio") {
     return { title, message: en

@@ -7,7 +7,7 @@ import { enforceRateLimit } from "@/lib/rate-limit";
 // of a vague "wrong password" or creating a duplicate. Rate-limited to curb
 // account-enumeration; returns ONLY method info (no names/ids/other data).
 export async function POST(req: NextRequest) {
-  const rl = await enforceRateLimit(req, "auth-method", 12, 60_000);
+  const rl = enforceRateLimit(req, "auth-method", 12, 60_000);
   if (rl) return rl;
 
   let email = "";

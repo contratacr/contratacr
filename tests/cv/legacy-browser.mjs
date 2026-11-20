@@ -21,8 +21,8 @@ for (const [name, engine, viewport] of [['chromium-mobile', chromium, { width: 3
     await (await chooser).setFiles({ name: 'cv.docx', mimeType: 'application/octet-stream', buffer: docx });
     const review = page.getByLabel('Revisar información importada', { exact: true });
     await expect(review).toBeVisible();
-    await expect(review.getByText('Ya está en tu perfil', { exact: true })).toHaveCount(1);
-    await expect(review).toContainText('1 ya está en tu perfil (no se agrega de nuevo)');
+    await expect(review.getByText('Ya está en su perfil', { exact: true })).toHaveCount(1);
+    await expect(review).toContainText('1 ya está en su perfil (no se agrega de nuevo)');
     await page.screenshot({ path: `/tmp/ccr-cv-ui/${name}-legacy-review.png`, fullPage: true });
     await review.getByRole('button', { name: 'Agregar al formulario', exact: true }).click();
     await page.getByTestId('profile-save-certs').click();

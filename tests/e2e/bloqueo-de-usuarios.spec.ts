@@ -37,10 +37,10 @@ test("bloquear desde la ficha: desaparece, avisa al equipo y se puede desbloquea
     await ventana.getByRole("button", { name: "Entendido" }).click();
 
     // 2. La ficha ya no se muestra.
-    await expect(page.getByText("Bloqueó a este usuario")).toBeVisible();
+    await expect(page.getByText("Bloqueaste a este usuario")).toBeVisible();
     if (process.env.CAPTURAS) await page.screenshot({ path: "test-results/bloqueo-2-pantalla.png" });
     await gotoOK(page, `/profesionales/${E2E_USERS.professional.slug}`);
-    await expect(page.getByText("Bloqueó a este usuario")).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText("Bloqueaste a este usuario")).toBeVisible({ timeout: 20_000 });
 
     // 3. Ni en la búsqueda ni en los tableros.
     await gotoOK(page, "/profesionales");
@@ -76,7 +76,7 @@ test("bloquear desde la ficha: desaparece, avisa al equipo y se puede desbloquea
     await page.getByRole("button", { name: /Enviar reporte/ }).click();
     await expect(page.getByText("Reporte enviado")).toBeVisible({ timeout: 20_000 });
     await page.getByRole("button", { name: /^(OK|Entendido|Listo)$/ }).click();
-    await expect(page.getByText("Bloqueó a este usuario")).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText("Bloqueaste a este usuario")).toBeVisible({ timeout: 20_000 });
     await expect.poll(async () => (await admin.from("user_blocks").select("blocked_id").eq("blocker_id", cuenta!.id)).data?.length ?? 0).toBe(1);
     await admin.from("user_blocks").delete().eq("blocker_id", cuenta.id);
     void proId;

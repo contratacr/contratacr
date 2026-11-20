@@ -20,11 +20,6 @@ on:
         required: false
         type: boolean
         default: false
-      seed_directory:
-        description: "Después de migrar, cargar el directorio (paquete cifrado en supabase/seed). Repetirlo es seguro."
-        required: false
-        type: boolean
-        default: false
 
 concurrency:
   # Test migrations, mirroring/seeding and regression all mutate the same
@@ -37,13 +32,12 @@ jobs:
   deploy:
     name: Migrate ${{ inputs.target }}
     runs-on: ubuntu-latest
-    timeout-minutes: ${{ inputs.seed_directory && 60 || 15 }}
+    timeout-minutes: 15
     environment: ${{ inputs.target }}
     permissions:
       contents: read
     env:
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-      SEED_PACKAGE_KEY: ${{ secrets.SEED_PACKAGE_KEY }}
       TARGET_ENV: ${{ inputs.target }}
       TEST_SUPABASE_PROJECT_REF: oqheayqqprpciqdvdaqo
       PRODUCTION_SUPABASE_PROJECT_REF: kskueodxaksxvjrysouw
@@ -131,30 +125,3 @@ jobs:
             exit 1
           fi
           npx supabase@2.109.0 db push --db-url "$SUPABASE_DB_URL" --include-all --yes
-
-      # Directory seed (OSM places, extras, health cleanup, brands, ARESEP fuel prices).
-      # The SQL package is committed encrypted because the repository is public;
-      # SEED_PACKAGE_KEY lives only in the GitHub Environments. Idempotent.
-      - name: Decrypt directory seed
-        if: ${{ inputs.seed_directory == true && inputs.dry_run == false }}
-        run: |
-          set -euo pipefail
-          if [ -z "$SEED_PACKAGE_KEY" ]; then
-            echo "::error::Missing SEED_PACKAGE_KEY in the $TARGET_ENV GitHub Environment."
-            exit 1
-          fi
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq zsh postgresql-client >/dev/null
-          psql --version
-          mkdir -p "$RUNNER_TEMP/seed/sql"
-          node scripts/directory/seed/package-crypt.mjs decrypt supabase/seed/directorio-seed.enc "$RUNNER_TEMP/seed/pkg.tar.gz"
-          tar -xzf "$RUNNER_TEMP/seed/pkg.tar.gz" -C "$RUNNER_TEMP/seed/sql"
-          ls "$RUNNER_TEMP/seed/sql"
-
-      - name: Seed directory
-        if: ${{ inputs.seed_directory == true && inputs.dry_run == false }}
-        env:
-          SEED_SQL_DIR: ${{ runner.temp }}/seed/sql
-          SEED_LOG_DIR: ${{ runner.temp }}/seed/logs
-          SEED_SESSION_POOLER: "1"
-        run: SEED_DB_URL="$SUPABASE_DB_URL" zsh scripts/directory/seed/run-seed.zsh "$TARGET_ENV"

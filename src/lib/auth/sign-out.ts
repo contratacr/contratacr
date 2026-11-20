@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/client";
 import { clearStoredMode } from "@/hooks/use-mode";
 import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
-import { clearProBrowserStorage } from "@/lib/pro/browser-storage-cleanup";
 
 /** Marca de UNA recarga: la página de destino sigue diciendo "Cerrando sesión…". */
 export const MARCA_CERRANDO_SESION = "ccr:cerrando-sesion";
@@ -54,9 +53,6 @@ export async function prepareForAccountSignOut() {
 export async function signOutToHome(locale: string, options?: { accountDeletion?: "completed" | "pending" }) {
   _signingOut = true;
   clearStoredMode();
-  // Pro drafts, unconfirmed-write journals and unsent upload bytes never outlive
-  // the session on this device (bounded wait for the recovery databases).
-  await clearProBrowserStorage();
   await prepareForAccountSignOut();
   try {
     await createClient().auth.signOut({ scope: "local" });

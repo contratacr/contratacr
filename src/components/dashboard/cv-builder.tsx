@@ -2,7 +2,7 @@
 
 import { Fragment, useEffect, useId, useMemo, useRef, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
 import { useLocale } from "next-intl";
-import { AlertCircle, ArrowDown, ArrowUp, Bold, Check, CheckCircle2, ChevronLeft, ChevronRight, Cloud, CloudOff, Copy, CopyPlus, Download, Eye, EyeOff, FileText, FileUp, Lightbulb, Link2, List, Mail, Pencil, Plus, RefreshCw, RotateCcw, Search, Trash2, UserRound } from "lucide-react";
+import { AlertCircle, ArrowDown, ArrowUp, Bold, Palette, Check, CheckCircle2, ChevronLeft, ChevronRight, ClipboardPaste, Cloud, CloudOff, Copy, CopyPlus, Download, Eye, EyeOff, FileText, FileUp, Globe, Lightbulb, Link2, List, Mail, Pencil, Plus, RefreshCw, RotateCcw, Search, Trash2, UserRound } from "lucide-react";
 import { MenuFicha } from "@/components/ui/menu-ficha";
 import { AccionesAlPie } from "@/components/ui/acciones-al-pie";
 import { Skeleton } from "@/components/ui/content-loading";
@@ -16,14 +16,20 @@ import { languageLabel } from "@/lib/data/languages";
 import { blankDates, parseCvDates, serializeCvDates, type CvDates } from "@/lib/cv/dates";
 import type { CvEntry } from "@/lib/cv/model";
 import {
-  LIMITES, TITULOS, bloquesDelCv, cartaComoTexto, cartaInicial, cuerpoDeLaCarta, cvComoTexto, encabezadoDeEntrada, fechasAts, lineasDeReferencia, nombreDeArchivo, ordenDeSecciones, palabrasClave, prellenar, revisarCarta, revisarCv, seccionConContenido, sumarDesdeArchivo,
-  type Aviso, type Bloque, type Carta, type CvDocumento, type DatosDelPerfil, type Idioma, type Referencia, type SeccionId, type SeccionLibre,
+  LIMITES, TITULOS, asuntoPorDefecto, cartaComoTexto, cartaInicial, despedidaPorDefecto, fechaDeLaCarta, saludoPorDefecto, saludosSugeridos, cvComoTexto, encabezadoDeEntrada, nombreDeArchivo, ordenDeSecciones, palabrasClave, prellenar, revisarCarta, revisarCv, seccionConContenido, sumarDesdeArchivo,
+  type Aviso, type Carta, type CvDocumento, type DatosDelPerfil, type Idioma, type Referencia, type SeccionId, type SeccionLibre,
 } from "@/lib/cv/documento";
-import { lineasRicas, type Trozo } from "@/lib/cv/texto-rico";
+import { VistaPrevia } from "./cv-hoja";
+import { FirmaDibujada } from "./cv-firma";
+import { Manija, moverEnLista, useArrastrar } from "./cv-arrastrar";
+import { PanelDiseno } from "./cv-diseno";
+import { AdaptarConIa, CartaConIa, MejorarConIa } from "./cv-ia";
+import type { Diseno } from "@/lib/cv/diseno";
 import { htmlDeTexto, textoDeHtml } from "@/lib/cv/editor-formato";
 import { cn } from "@/lib/utils";
 import { formatFullPersonName } from "@/lib/display-name";
-import { borrarDeLaNube, esUuid, guardarEnLaNube, leerDeLaNube } from "@/lib/cv/nube";
+import { borrarDeLaNube, elegirCvPublico, esUuid, guardarEnLaNube, leerDeLaNube } from "@/lib/cv/nube";
+import { enlacePerfil } from "@/lib/profile-url";
 
 /**
  * «MI CV» EN EL PANEL: CV y carta de presentación listos para descargar.
@@ -42,7 +48,8 @@ type ProData = Record<string, any> | null;
 
 // v2: el prellenado separa títulos de certificaciones y limita las habilidades.
 const CLAVE = "ccr:cv-borrador:v2";
-type Borrador = { cv: CvDocumento; carta: Carta };
+/** `etiqueta`: el nombre del documento en la lista (p. ej. el CV adaptado a una oferta). */
+type Borrador = { cv: CvDocumento; carta: Carta; etiqueta?: string };
 
 function datosDelPerfil(pro: ProData, nombreCuenta: string, correo: string, idioma: Idioma): DatosDelPerfil {
   const servicios = Array.isArray(pro?.services)
@@ -140,7 +147,7 @@ function Fechas({ periodo, alCambiar, en }: { periodo: string; alCambiar: (p: st
           se elijan mes y año (19-nov-2026). */}
       {!leido && periodo.trim() && (
         <p className="text-xs leading-5 text-[#93370d] @[560px]:col-span-2">
-          {en ? `Written by hand: "${periodo.trim()}". Pick month and year so it looks the same across your resume.` : `Escrita a mano: "${periodo.trim()}". Elegí mes y año para que quede igual en todo el CV.`}
+          {en ? `Written by hand: "${periodo.trim()}". Pick month and year so it looks the same across your resume.` : `Escrita a mano: "${periodo.trim()}". Elija mes y año para que quede igual en todo el CV.`}
         </p>
       )}
     </div>
@@ -152,10 +159,10 @@ type Par = readonly [string, string];
 const CAMPOS: Record<TipoEntrada, { titulo: Par; org: Par; desc: Par | null; agregar: Par; ubicacion: boolean; ejemplo?: Par }> = {
   experiencia: { titulo: ["Cargo", "Role"], org: ["Empresa o cliente", "Company or client"], desc: ["Logros (uno por línea)", "Achievements (one per line)"], agregar: ["Agregar experiencia", "Add experience"], ubicacion: true, ejemplo: ["Instalé el sistema eléctrico de más de 40 casas\nReduje el tiempo de reparación un 20 %", "Installed electrical systems in 40+ homes\nReduced repair times by 20%"] },
   educacion: { titulo: ["Título o curso", "Degree or course"], org: ["Institución", "Institution"], desc: null, agregar: ["Agregar estudio", "Add education"], ubicacion: true },
-  proyecto: { titulo: ["Nombre del proyecto", "Project name"], org: ["Cliente o empresa (opcional)", "Client or company (optional)"], desc: ["Qué hiciste (uno por línea)", "What you did (one per line)"], agregar: ["Agregar proyecto", "Add project"], ubicacion: false, ejemplo: ["Hice la tienda en línea de una panadería\nLas ventas subieron un 30 % en 3 meses", "Built the online store for a local bakery\nSales grew 30% in 3 months"] },
+  proyecto: { titulo: ["Nombre del proyecto", "Project name"], org: ["Cliente o empresa (opcional)", "Client or company (optional)"], desc: ["Qué hizo (uno por línea)", "What you did (one per line)"], agregar: ["Agregar proyecto", "Add project"], ubicacion: false, ejemplo: ["Hice la tienda en línea de una panadería\nLas ventas subieron un 30 % en 3 meses", "Built the online store for a local bakery\nSales grew 30% in 3 months"] },
   curso: { titulo: ["Nombre del curso", "Course name"], org: ["Institución", "Institution"], desc: null, agregar: ["Agregar curso", "Add course"], ubicacion: false },
   premio: { titulo: ["Premio o reconocimiento", "Award"], org: ["Otorgado por", "Awarded by"], desc: ["Por qué (opcional)", "What for (optional)"], agregar: ["Agregar premio", "Add award"], ubicacion: false },
-  voluntariado: { titulo: ["Rol", "Role"], org: ["Organización", "Organization"], desc: ["Qué hiciste (uno por línea)", "What you did (one per line)"], agregar: ["Agregar voluntariado", "Add volunteering"], ubicacion: true },
+  voluntariado: { titulo: ["Rol", "Role"], org: ["Organización", "Organization"], desc: ["Qué hizo (uno por línea)", "What you did (one per line)"], agregar: ["Agregar voluntariado", "Add volunteering"], ubicacion: true },
   publicacion: { titulo: ["Título", "Title"], org: ["Editorial o medio", "Publisher or outlet"], desc: ["Descripción o enlace (opcional)", "Description or link (optional)"], agregar: ["Agregar publicación", "Add publication"], ubicacion: false },
 };
 const vacia = (): CvEntry => ({ title: "", organization: "", period: "", description: "" });
@@ -314,7 +321,20 @@ function TextoConFormato({ etiqueta, valor, alCambiar, en, filas = 4, max = 1000
  * Cada entrada con su «···» (19-nov-2026): subir, bajar, duplicar, ocultar del
  * CV sin borrarla, o eliminarla. Lo oculto se sigue editando aquí.
  */
-function Entradas({ lista, alCambiar, en, tipo }: { lista: CvEntry[]; alCambiar: (l: CvEntry[]) => void; en: boolean; tipo: TipoEntrada }) {
+/** Confirmar antes de borrar, en la misma ficha (nunca un cuadro del navegador). */
+function ConfirmarBorrado({ texto, en, alConfirmar, alCancelar }: { texto: string; en: boolean; alConfirmar: () => void; alCancelar: () => void }) {
+  return (
+    <div role="alert" className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-[#fef3f2] px-3 py-2.5 text-[13px] text-[#912018]" data-testid="cv-confirmar-borrado">
+      <span>{texto}</span>
+      <span className="flex gap-2">
+        <button type="button" onClick={alCancelar} className="h-10 rounded-full px-3 font-semibold text-[#52627a] hover:bg-white">{en ? "Cancel" : "Cancelar"}</button>
+        <button type="button" onClick={alConfirmar} className="h-10 rounded-full bg-[#b42318] px-4 font-bold text-white">{en ? "Delete" : "Eliminar"}</button>
+      </span>
+    </div>
+  );
+}
+
+function Entradas({ lista, alCambiar, en, tipo, ia }: { lista: CvEntry[]; alCambiar: (l: CvEntry[]) => void; en: boolean; tipo: TipoEntrada; ia?: { idioma: Idioma; titular: string } }) {
   const c = CAMPOS[tipo];
   const k = en ? 1 : 0;
   const cambiar = (i: number, cambio: Partial<CvEntry>) => alCambiar(lista.map((e, j) => (j === i ? { ...e, ...cambio } : e)));
@@ -325,11 +345,20 @@ function Entradas({ lista, alCambiar, en, tipo }: { lista: CvEntry[]; alCambiar:
     [nueva[i], nueva[j]] = [nueva[j], nueva[i]];
     alCambiar(nueva);
   };
+  const [borrando, setBorrando] = useState<number | null>(null);
+  const arrastre = useArrastrar(lista.length, (desde, hasta) => { setBorrando(null); alCambiar(moverEnLista(lista, desde, hasta)); });
+  // Una entrada vacía se borra sin preguntar: no hay nada que perder.
+  const pedirBorrar = (i: number) => {
+    const e = lista[i];
+    if (!e.title.trim() && !e.organization.trim() && !e.description.trim() && !e.period.trim()) alCambiar(lista.filter((_, j) => j !== i));
+    else setBorrando(i);
+  };
   return (
-    <div className="grid gap-3">
+    <div className="grid gap-3" {...arrastre.lista}>
       {lista.map((e, i) => (
-        <div key={i} className={cn("grid gap-3 rounded-xl border border-[#eef2f6] bg-[#fbfcfd] p-3", e.hidden && "border-dashed")} data-testid="cv-entrada">
+        <div key={i} {...arrastre.elemento(i)} className={cn("grid gap-3 rounded-xl border border-[#eef2f6] bg-[#fbfcfd] p-3 transition-shadow", e.hidden && "border-dashed", arrastre.elemento(i).className)} data-testid="cv-entrada">
           <div className="-mb-1 flex min-w-0 items-center gap-2">
+            {lista.length > 1 && <Manija etiqueta={en ? "Drag to reorder" : "Arrastre para ordenar"} {...arrastre.manija(i)} />}
             <span className={cn("min-w-0 flex-1 truncate text-[13px] font-bold", e.hidden ? "text-[#98a2b3]" : "text-[#52627a]")}>
               {i + 1}. {encabezadoDeEntrada(e) || (en ? "New entry" : "Entrada nueva")}
             </span>
@@ -341,9 +370,13 @@ function Entradas({ lista, alCambiar, en, tipo }: { lista: CvEntry[]; alCambiar:
               e.hidden
                 ? { id: "mostrar", icono: <Eye className="h-[18px] w-[18px]" />, texto: en ? "Show on resume" : "Mostrar en el CV", onSelect: () => cambiar(i, { hidden: false }) }
                 : { id: "ocultar", icono: <EyeOff className="h-[18px] w-[18px]" />, texto: en ? "Hide from resume" : "Ocultar del CV", onSelect: () => cambiar(i, { hidden: true }) },
-              { id: "eliminar", icono: <Trash2 className="h-[18px] w-[18px]" />, texto: en ? "Delete" : "Eliminar", onSelect: () => alCambiar(lista.filter((_, j) => j !== i)), peligro: true },
+              { id: "eliminar", icono: <Trash2 className="h-[18px] w-[18px]" />, texto: en ? "Delete" : "Eliminar", onSelect: () => pedirBorrar(i), peligro: true },
             ]} />
           </div>
+          {borrando === i && (
+            <ConfirmarBorrado en={en} alCancelar={() => setBorrando(null)} alConfirmar={() => { setBorrando(null); alCambiar(lista.filter((_, j) => j !== i)); }}
+              texto={en ? `Delete "${encabezadoDeEntrada(e) || "this entry"}"?` : `¿Eliminar "${encabezadoDeEntrada(e) || "esta entrada"}"?`} />
+          )}
           <div className="grid gap-3 @[560px]:grid-cols-2">
             <Input label={c.titulo[k]} value={e.title} maxLength={160} onChange={(ev) => cambiar(i, { title: ev.target.value })} />
             <Input label={c.org[k]} value={e.organization} maxLength={160} onChange={(ev) => cambiar(i, { organization: ev.target.value })} />
@@ -352,6 +385,7 @@ function Entradas({ lista, alCambiar, en, tipo }: { lista: CvEntry[]; alCambiar:
           </div>
           <Fechas periodo={e.period} en={en} alCambiar={(period) => cambiar(i, { period })} />
           {c.desc && <TextoConFormato etiqueta={c.desc[k]} vinetas={false} en={en} valor={e.description} alCambiar={(description) => cambiar(i, { description })} placeholder={c.ejemplo?.[k]} />}
+          {c.desc && ia && <MejorarConIa tipo="logros" en={en} idioma={ia.idioma} texto={e.description} contexto={[ia.titular, e.title, e.organization].filter((x) => x.trim()).join(" — ")} alElegir={(description) => cambiar(i, { description })} />}
         </div>
       ))}
       {lista.length < LIMITES.entradas && (
@@ -404,100 +438,6 @@ function Revision({ avisos, idiomaApp }: { avisos: Aviso[]; idiomaApp: Idioma })
         </li>
       ))}
     </ul>
-  );
-}
-
-function TituloHoja({ children }: { children: ReactNode }) {
-  return <h4 className="mt-4 border-b border-[#52627a]/40 pb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-[#162543]">{children}</h4>;
-}
-
-/** Negrita y enlaces dentro de una línea, igual que en el PDF. */
-function Rico({ partes }: { partes: Trozo[] }) {
-  return (
-    <>
-      {partes.map((t, i) => t.url
-        ? <a key={i} href={t.url} target="_blank" rel="noopener noreferrer" className={cn("text-[#006f9c] underline underline-offset-2", t.negrita && "font-bold")}>{t.texto}</a>
-        : t.negrita ? <strong key={i} className="font-bold">{t.texto}</strong> : <Fragment key={i}>{t.texto}</Fragment>)}
-    </>
-  );
-}
-/** Párrafos y viñetas: las líneas con «- » seguidas forman una lista. */
-function TextoHoja({ texto, todoVinetas = false, className }: { texto: string; todoVinetas?: boolean; className?: string }) {
-  const grupos: { vineta: boolean; lineas: Trozo[][] }[] = [];
-  for (const l of lineasRicas(texto, todoVinetas)) {
-    const ultimo = grupos[grupos.length - 1];
-    if (ultimo && ultimo.vineta && l.vineta) ultimo.lineas.push(l.trozos);
-    else grupos.push({ vineta: l.vineta, lineas: [l.trozos] });
-  }
-  return (
-    <div className={cn("text-[10.5px] leading-[1.45] text-[#162543]", className)}>
-      {grupos.map((g, i) => g.vineta
-        ? <ul key={i} className="list-disc pl-4">{g.lineas.map((t, j) => <li key={j}><Rico partes={t} /></li>)}</ul>
-        : g.lineas.map((t, j) => <p key={`${i}-${j}`}><Rico partes={t} /></p>))}
-    </div>
-  );
-}
-
-function EntradasHoja({ lista, idioma }: { lista: CvEntry[]; idioma: Idioma }) {
-  return (
-    <div className="mt-1.5 grid gap-2">
-      {lista.map((e, i) => (
-        <div key={i}>
-          <p className="text-[11px] font-bold text-[#162543]">{encabezadoDeEntrada(e)}</p>
-          {e.period && <p className="text-[10px] text-[#52627a]">{fechasAts(e.period, idioma)}</p>}
-          {e.description.trim() && <TextoHoja texto={e.description} todoVinetas className="mt-0.5" />}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/** Un bloque del CV en la hoja: lo mismo, en el mismo orden, que el PDF. */
-function BloqueHoja({ b, cv }: { b: Bloque; cv: CvDocumento }) {
-  const cuerpo = (() => {
-    switch (b.tipo) {
-      case "texto": return <TextoHoja texto={b.texto} className="mt-1.5" />;
-      case "entradas": return <EntradasHoja lista={b.entradas} idioma={cv.idioma} />;
-      case "lineas": return b.lineas.map((c) => <p key={c} className="mt-1 text-[10.5px] text-[#162543]">{c}</p>);
-      case "comas": return <p className="mt-1.5 text-[10.5px] leading-[1.45] text-[#162543]">{b.items.join(", ")}</p>;
-      case "referencias": return b.referencias.map((r, i) => {
-        const [primera, ...resto] = lineasDeReferencia(r);
-        return <div key={i} className="mt-1.5"><p className="text-[11px] font-bold text-[#162543]">{primera}</p>{resto.map((x) => <p key={x} className="text-[10px] text-[#52627a]">{x}</p>)}</div>;
-      });
-      case "declaracion": return (
-        <div className="mt-1.5">
-          <TextoHoja texto={b.texto} />
-          {b.lugarFecha && <p className="mt-3 text-[10px] text-[#52627a]">{b.lugarFecha}</p>}
-          {cv.nombre.trim() && <p className="text-[11px] font-bold text-[#162543]">{cv.nombre}</p>}
-        </div>
-      );
-    }
-  })();
-  return <div data-seccion={b.id}><TituloHoja>{b.titulo}</TituloHoja>{cuerpo}</div>;
-}
-
-/** La vista previa dibuja lo MISMO que el PDF: una columna, mismos títulos y fechas. */
-function HojaCv({ cv }: { cv: CvDocumento }) {
-  const contacto = [cv.correo, cv.telefono, cv.ubicacion, cv.enlace].filter((v) => v.trim()).join("  |  ");
-  return (
-    <div className="text-left">
-      <p className="text-[20px] font-black leading-tight text-[#162543]">{cv.nombre || "—"}</p>
-      {cv.titular && <p className="text-[12px] text-[#52627a]">{cv.titular}</p>}
-      {contacto && <p className="mt-1 break-words text-[10px] text-[#52627a]">{contacto}</p>}
-      {bloquesDelCv(cv).map((b) => <BloqueHoja key={b.clave} b={b} cv={cv} />)}
-    </div>
-  );
-}
-
-function HojaCarta({ cv, carta }: { cv: CvDocumento; carta: Carta }) {
-  const contacto = [cv.correo, cv.telefono, cv.ubicacion].filter((v) => v.trim()).join("  |  ");
-  return (
-    <div className="text-left">
-      <p className="text-[20px] font-black leading-tight text-[#162543]">{cv.nombre || "—"}</p>
-      {cv.titular && <p className="text-[12px] text-[#52627a]">{cv.titular}</p>}
-      {contacto && <p className="mt-1 break-words text-[10px] text-[#52627a]">{contacto}</p>}
-      <div className="mt-5 whitespace-pre-line text-[11px] leading-[1.55] text-[#162543]">{cuerpoDeLaCarta(cv, carta)}</div>
-    </div>
   );
 }
 
@@ -567,7 +507,7 @@ function EstadoGuardado({ estado, en, className }: { estado: EstadoNube; en: boo
   if (estado === "cargando") return <p className={cn("min-h-5 text-xs text-transparent", className)} aria-hidden>.</p>;
   const texto = {
     guardando: en ? "Saving…" : "Guardando…",
-    guardado: en ? "Saved to your account" : "Guardado en tu cuenta",
+    guardado: en ? "Saved to your account" : "Guardado en su cuenta",
     local: en ? "Saved on this device only" : "Guardado solo en este dispositivo",
     error: en ? "No connection: saved on this device, it will upload later" : "Sin conexión: se guarda en este dispositivo y se sube después",
   }[estado];
@@ -580,7 +520,7 @@ function EstadoGuardado({ estado, en, className }: { estado: EstadoNube; en: boo
 }
 
 const tituloDe = (d: Documento, en: boolean) => d.tipo === "cv"
-  ? d.borrador.cv.titular.trim() || d.borrador.cv.nombre.trim() || (en ? "Resume" : "Currículum")
+  ? d.borrador.etiqueta?.trim() || d.borrador.cv.titular.trim() || d.borrador.cv.nombre.trim() || (en ? "Resume" : "Currículum")
   : [d.borrador.carta.puesto.trim(), d.borrador.carta.empresa.trim()].filter(Boolean).join(" · ") || (en ? "Letter without a position" : "Carta sin puesto");
 
 /** El PDF de un currículum o carta, entregado al sistema (guardar o compartir). */
@@ -645,6 +585,22 @@ function Documentos({ pro, uid, tipo, nombreCuenta, correo, alCambiarEditor }: {
   // este dispositivo: gana lo editado más reciente. Lo que solo estaba aquí
   // (incluidos los de antes de guardar en la cuenta) se sube una vez.
   const [nube, setNube] = useState<EstadoNube>("cargando");
+  // El CV que se abre en contratacr.com/<perfil>/cv (20-nov-2026).
+  const [publico, setPublico] = useState<string | null | undefined>(undefined);
+  const [cambiandoPublico, setCambiandoPublico] = useState(false);
+  const [avisoPublico, setAvisoPublico] = useState<string | null>(null);
+  const enlaceCvPublico = pro?.slug ? `${enlacePerfil(pro.slug)}/cv` : "";
+  const hacerPublico = async (id: string | null) => {
+    setCambiandoPublico(true); setAvisoPublico(null);
+    const ok = await elegirCvPublico(id);
+    setCambiandoPublico(false);
+    if (ok) setPublico(id);
+    else setAvisoPublico(en ? "That couldn't be changed. Try again." : "No se pudo cambiar. Pruebe de nuevo.");
+  };
+  const copiarEnlace = async () => {
+    try { await navigator.clipboard.writeText(enlaceCvPublico); setAvisoPublico(en ? "Link copied." : "Enlace copiado."); }
+    catch { setAvisoPublico(enlaceCvPublico); }
+  };
   const subido = useRef(new Map<string, string>());
   const [reintento, setReintento] = useState(0);
   useEffect(() => {
@@ -652,6 +608,8 @@ function Documentos({ pro, uid, tipo, nombreCuenta, correo, alCambiarEditor }: {
     void leerDeLaNube().then((filas) => {
       if (!vivo) return;
       if (!filas) { setNube("local"); return; }
+      // undefined: la base todavía no sabe de CV públicos (antes de la 291).
+      setPublico(filas.some((f) => "publico" in f) || !filas.length ? (filas.find((f) => f.publico)?.id ?? null) : undefined);
       setEstado((s) => {
         const remotos = new Map(filas.map((f) => [f.id, f]));
         const docs: Documento[] = [];
@@ -748,6 +706,7 @@ function Documentos({ pro, uid, tipo, nombreCuenta, correo, alCambiarEditor }: {
     const enLaCuenta = estado.docs.find((d) => d.id === id)?.nube;
     setEstado((s) => ({ ...s, docs: s.docs.filter((d) => d.id !== id) }));
     setBorrar(null);
+    if (publico === id) setPublico(null);
     subido.current.delete(id);
     if (enLaCuenta && conectada) void borrarDeLaNube(id).then((ok) => setNube(ok ? "guardado" : "error"));
   };
@@ -757,7 +716,13 @@ function Documentos({ pro, uid, tipo, nombreCuenta, correo, alCambiarEditor }: {
       ...s,
       docs: s.docs.map((d) => (d.id === abierto.id ? { ...d, actualizado: Date.now(), borrador: typeof cambio === "function" ? cambio(d.borrador) : cambio } : d)),
     }));
-    return <Editor key={abierto.id} pro={pro} documento={tipo} borrador={abierto.borrador} setBorrador={setBorrador} desdeElPerfil={desdeElPerfil} nube={nube} alVolver={() => setEstado((s) => ({ ...s, abierto: null }))} />;
+    // El CV adaptado a una oferta se guarda como uno nuevo y se abre; el original queda igual.
+    const alCrearCopia = lleno ? undefined : (b: Borrador) => setEstado((s) => {
+      const doc: Documento = { id: nuevoId(), tipo, actualizado: Date.now(), borrador: b };
+      return { docs: [doc, ...s.docs], abierto: doc.id };
+    });
+    return <Editor key={abierto.id} pro={pro} documento={tipo} borrador={abierto.borrador} setBorrador={setBorrador} desdeElPerfil={desdeElPerfil} nube={nube} alVolver={() => setEstado((s) => ({ ...s, abierto: null }))} alCrearCopia={alCrearCopia}
+      disenoDelCv={tipo === "carta" ? estado.docs.filter((d) => d.tipo === "cv").sort((x, y) => y.actualizado - x.actualizado)[0]?.borrador.cv.diseno : undefined} />;
   }
 
   const fecha = (t: number) => new Date(t).toLocaleDateString(en ? "en-US" : "es-CR", { day: "numeric", month: "short", year: "numeric" });
@@ -766,18 +731,39 @@ function Documentos({ pro, uid, tipo, nombreCuenta, correo, alCambiarEditor }: {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
           <h2 className="text-lg font-black text-[#162543]">{tipo === "cv" ? (en ? "My resumes" : "Mis currículums") : (en ? "My cover letters" : "Mis cartas")}</h2>
-          <p className="text-[13px] leading-5 text-[#667085]">{en ? "One per job type, if you like." : "Puedes tener uno para cada tipo de puesto."}</p>
+          <p className="text-[13px] leading-5 text-[#667085]">{en ? "One per job type, if you like." : "Puede tener uno para cada tipo de puesto."}</p>
           <EstadoGuardado estado={nube} en={en} className="mt-1" />
         </div>
         <button type="button" disabled={lleno} onClick={crear} className={cn(pastilla, "bg-[#009FD9] text-white hover:bg-[#0089bb]")} data-testid="cv-nuevo">
           <Plus className="h-4 w-4" />{tipo === "cv" ? (en ? "New resume" : "Nuevo currículum") : (en ? "New letter" : "Nueva carta")}
         </button>
       </div>
-      {errorPdf && <p role="alert" className="rounded-xl bg-[#fef3f2] px-3 py-2.5 text-[13px] text-[#912018]">{en ? "The PDF couldn't be created. Try again." : "No se pudo crear el PDF. Probá de nuevo."}</p>}
-      {lleno && <p className="text-[13px] text-[#667085]">{en ? `You can keep up to ${MAX_DOCUMENTOS}. Delete one to create another.` : `Puedes guardar hasta ${MAX_DOCUMENTOS}. Elimina uno para crear otro.`}</p>}
+      {errorPdf && <p role="alert" className="rounded-xl bg-[#fef3f2] px-3 py-2.5 text-[13px] text-[#912018]">{en ? "The PDF couldn't be created. Try again." : "No se pudo crear el PDF. Pruebe de nuevo."}</p>}
+      {lleno && <p className="text-[13px] text-[#667085]">{en ? `You can keep up to ${MAX_DOCUMENTOS}. Delete one to create another.` : `Puede guardar hasta ${MAX_DOCUMENTOS}. Elimine uno para crear otro.`}</p>}
+      {tipo === "cv" && publico !== undefined && enlaceCvPublico && conectada && (
+        <div className="grid gap-2 rounded-2xl border border-[#d7e1ea] bg-[#f7fafc] p-3 sm:p-4" data-testid="cv-publico">
+          <div className="flex items-start gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-[#007fae]"><Globe className="h-5 w-5" /></span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[14px] font-black text-[#162543]">{en ? "Resume on your profile" : "Currículum de su perfil"}</p>
+              <p className="text-[13px] leading-5 text-[#667085]">
+                {publico
+                  ? (en ? `"${tituloDe(estado.docs.find((d) => d.id === publico) ?? propios[0], en)}" opens at your link, without your email, phone or signature.` : `"${tituloDe(estado.docs.find((d) => d.id === publico) ?? propios[0], en)}" se abre en su enlace, sin su correo, teléfono ni firma.`)
+                  : (en ? 'Pick one with "···" > "Show on my profile". Until then, your link shows the resume built from your profile.' : 'Elija uno en "···" > "Mostrar en mi perfil". Mientras tanto, su enlace muestra el que se arma con su perfil.')}
+              </p>
+              <p className="mt-1 truncate text-[13px] font-semibold text-[#007fae]">{enlaceCvPublico.replace(/^https?:\/\//, "")}</p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2 pl-[52px]">
+            <button type="button" onClick={() => void copiarEnlace()} className="inline-flex h-10 items-center gap-1.5 rounded-full border border-[#d7e1ea] bg-white px-4 text-[13px] font-bold text-[#162543] hover:bg-[#f5f8fb]"><Copy className="h-4 w-4" />{en ? "Copy link" : "Copiar enlace"}</button>
+            {publico && <button type="button" disabled={cambiandoPublico} onClick={() => void hacerPublico(null)} className="inline-flex h-10 items-center gap-1.5 rounded-full px-4 text-[13px] font-bold text-[#475467] hover:bg-white disabled:opacity-60"><EyeOff className="h-4 w-4" />{en ? "Stop showing" : "Dejar de mostrar"}</button>}
+          </div>
+          {avisoPublico && <p role="status" className="pl-[52px] text-[13px] font-semibold text-[#344054]">{avisoPublico}</p>}
+        </div>
+      )}
       {propios.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-[#d7e1ea] bg-white px-4 py-8 text-center text-sm text-[#667085]">
-          {tipo === "cv" ? (en ? "You have no resumes yet." : "Todavía no tienes currículums.") : (en ? "You have no letters yet." : "Todavía no tienes cartas.")}
+          {tipo === "cv" ? (en ? "You have no resumes yet." : "Todavía no tiene currículums.") : (en ? "You have no letters yet." : "Todavía no tiene cartas.")}
         </p>
       ) : (
         <ul className="grid gap-3">
@@ -787,6 +773,7 @@ function Documentos({ pro, uid, tipo, nombreCuenta, correo, alCambiarEditor }: {
               <button type="button" onClick={() => setEstado((s) => ({ ...s, abierto: d.id }))} className="min-h-11 min-w-0 flex-1 text-left">
                 <span className="block truncate text-[15px] font-black text-[#162543]">{tituloDe(d, en)}</span>
                 <span className="block text-[13px] text-[#667085]">{d.borrador.cv.idioma === "en" ? "English" : "Español"} · {en ? "Edited" : "Editado"} {fecha(d.actualizado)}</span>
+                {publico === d.id && <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-[#e6f6fc] px-2 py-0.5 text-[12px] font-bold text-[#006f9c]"><Globe className="h-3.5 w-3.5" />{en ? "On your profile" : "En su perfil"}</span>}
               </button>
               {/* Tocar la fila abre el editor; lo demás va en el «···», como en
                   Google Docs y FlowCV (18-nov-2026). Antes eran tres íconos
@@ -795,6 +782,9 @@ function Documentos({ pro, uid, tipo, nombreCuenta, correo, alCambiarEditor }: {
                 ? <span className="grid h-10 w-10 shrink-0 place-items-center" role="status" aria-label={en ? "Creating PDF" : "Creando PDF"}><span className="h-5 w-5 animate-spin rounded-full border-2 border-[#d7e1ea] border-t-[#009FD9]" /></span>
                 : <MenuFicha className="shrink-0" opciones={[
                   { id: "descargar", icono: <Download className="h-[18px] w-[18px]" />, texto: en ? "Download PDF" : "Descargar PDF", onSelect: () => void descargar(d) },
+                  ...(tipo === "cv" && publico !== undefined && d.nube && conectada && !cambiandoPublico ? [publico === d.id
+                    ? { id: "publico", icono: <EyeOff className="h-[18px] w-[18px]" />, texto: en ? "Remove from my profile" : "Quitar de mi perfil", onSelect: () => void hacerPublico(null) }
+                    : { id: "publico", icono: <Globe className="h-[18px] w-[18px]" />, texto: en ? "Show on my profile" : "Mostrar en mi perfil", onSelect: () => void hacerPublico(d.id) }] : []),
                   ...(lleno ? [] : [{ id: "duplicar", icono: <CopyPlus className="h-[18px] w-[18px]" />, texto: en ? "Duplicate" : "Duplicar", onSelect: () => duplicar(d.id) }]),
                   { id: "eliminar", icono: <Trash2 className="h-[18px] w-[18px]" />, texto: en ? "Delete" : "Eliminar", onSelect: () => setBorrar(d.id), peligro: true },
                 ]} />}
@@ -843,6 +833,13 @@ function OrganizarSecciones({ cv, setCv, en }: { cv: CvDocumento; setCv: (cambio
   const orden = ordenDeSecciones(cv);
   const ocultas = new Set(cv.ocultas ?? []);
   const presentes = orden.filter((id) => seccionConContenido(cv, id));
+  // Arrastrar entre las presentes: la sección queda delante (o detrás) de la que estaba ahí.
+  const arrastre = useArrastrar(presentes.length, (desde, hasta) => {
+    const id = presentes[desde], ancla = presentes[hasta];
+    const nuevo = orden.filter((x) => x !== id);
+    nuevo.splice(nuevo.indexOf(ancla) + (hasta > desde ? 1 : 0), 0, id);
+    setCv({ orden: nuevo });
+  });
   if (!presentes.length) return null;
   const nombre = (id: SeccionId) => (id === "libres" ? (en ? "Custom sections" : "Secciones propias") : cv.titulosPropios?.[id]?.trim() || TITULOS[cv.idioma][id]);
   const mover = (id: SeccionId, d: number) => {
@@ -856,13 +853,14 @@ function OrganizarSecciones({ cv, setCv, en }: { cv: CvDocumento; setCv: (cambio
   const alternar = (id: SeccionId) => setCv({ ocultas: ocultas.has(id) ? [...ocultas].filter((x) => x !== id) : [...ocultas, id] });
   const icono = "grid h-9 w-9 shrink-0 place-items-center rounded-full text-[#52627a] hover:bg-[#eef3f7] hover:text-[#162543] disabled:opacity-30 disabled:hover:bg-transparent";
   return (
-    <Tarjeta titulo={en ? "Section order" : "Orden de las secciones"} ayuda={en ? "Move, hide or rename the sections of your resume." : "Subí, bajá, ocultá o cambiale el nombre a cada sección del CV."}>
-      <ol className="grid gap-1.5" data-testid="cv-orden-secciones">
+    <Tarjeta titulo={en ? "Section order" : "Orden de las secciones"} ayuda={en ? "Move, hide or rename the sections of your resume." : "Suba, baje, oculte o cámbiele el nombre a cada sección del CV."}>
+      <ol className="grid gap-1.5" data-testid="cv-orden-secciones" {...arrastre.lista}>
         {presentes.map((id, i) => {
           const oculta = ocultas.has(id);
           return (
-            <li key={id} className="grid gap-2 rounded-xl border border-[#eef2f6] bg-[#fbfcfd] px-2 py-1.5" data-seccion={id}>
+            <li key={id} {...arrastre.elemento(i)} className={cn("grid gap-2 rounded-xl border border-[#eef2f6] bg-[#fbfcfd] px-2 py-1.5 transition-shadow", arrastre.elemento(i).className)} data-seccion={id}>
               <div className="flex min-w-0 items-center gap-1">
+                {presentes.length > 1 && <Manija etiqueta={en ? "Drag to reorder" : "Arrastre para ordenar"} {...arrastre.manija(i)} />}
                 <span className={cn("min-w-0 flex-1 truncate pl-1 text-[14px] font-bold", oculta ? "text-[#98a2b3] line-through" : "text-[#162543]")}>{nombre(id)}</span>
                 <button type="button" disabled={i === 0} onClick={() => mover(id, -1)} aria-label={`${en ? "Move up" : "Subir"} ${nombre(id)}`} className={icono}><ArrowUp className="h-4 w-4" /></button>
                 <button type="button" disabled={i === presentes.length - 1} onClick={() => mover(id, 1)} aria-label={`${en ? "Move down" : "Bajar"} ${nombre(id)}`} className={icono}><ArrowDown className="h-4 w-4" /></button>
@@ -917,23 +915,28 @@ function MasSecciones({ cv, setCv, en }: { cv: CvDocumento; setCv: (cambio: Part
   const cambiarSec = (i: number, cambio: Partial<SeccionLibre>) => setCv({ secciones: secciones.map((x, j) => (j === i ? { ...x, ...cambio } : x)) });
   const quitar = "inline-flex h-9 items-center gap-1.5 justify-self-start rounded-full px-2 text-[13px] font-semibold text-[#b42318] hover:bg-[#fef3f2]";
   const sumar = cn(pastilla, "border border-dashed border-[#b9c8d6] bg-white text-[#162543] hover:border-[#009FD9] hover:text-[#007fae]");
-  const quitarSeccion = (clave: string, cambio: Partial<CvDocumento>) => (
-    <button type="button" onClick={() => { setCv(cambio); cerrar(clave); }} className={quitar}><Trash2 className="h-4 w-4" /> {en ? "Remove section" : "Quitar sección"}</button>
-  );
+  // Quitar una sección pide confirmación si tiene algo escrito (20-nov-2026).
+  const [quitando, setQuitando] = useState<string | null>(null);
+  const quitarSeccion = (clave: string, cambio: Partial<CvDocumento>) => {
+    const hacer = () => { setQuitando(null); setCv(cambio); cerrar(clave); };
+    const conAlgo = clave === "intereses" ? !!cv.intereses?.length : clave === "referencias" ? !!cv.referencias?.some((r) => r.nombre.trim()) : clave === "declaracion" ? !!cv.declaracion?.texto.trim() : clave.startsWith("libre") ? true : seccionConContenido(cv, clave as SeccionId);
+    if (quitando === clave) return <ConfirmarBorrado en={en} alCancelar={() => setQuitando(null)} alConfirmar={hacer} texto={en ? "Remove this section and what you wrote in it?" : "¿Quitar esta sección y lo que escribió en ella?"} />;
+    return <button type="button" onClick={() => (conAlgo ? setQuitando(clave) : hacer())} className={quitar}><Trash2 className="h-4 w-4" /> {en ? "Remove section" : "Quitar sección"}</button>;
+  };
   return (
     <div className="grid gap-4">
       <OrganizarSecciones cv={cv} setCv={setCv} en={en} />
-      <p className="text-[13px] leading-5 text-[#667085]">{en ? "Optional. Add only what helps for the job you want; empty sections don't appear." : "Opcional. Sumá solo lo que ayude para el puesto que buscás; lo que quede vacío no sale en el CV."}</p>
+      <p className="text-[13px] leading-5 text-[#667085]">{en ? "Optional. Add only what helps for the job you want; empty sections don't appear." : "Opcional. Agregue solo lo que ayude para el puesto que busca; lo que quede vacío no sale en el CV."}</p>
       {EXTRAS.filter((x) => abiertas.has(x.id)).map((x) => (
         <Tarjeta key={x.id} titulo={cv.titulosPropios?.[x.id]?.trim() || t[x.id]} ayuda={x.ayuda[k]}>
           <div className="grid gap-3">
-            <Entradas tipo={x.tipo} en={en} lista={cv[x.id] ?? []} alCambiar={(lista) => setCv({ [x.id]: lista } as Partial<CvDocumento>)} />
+            <Entradas tipo={x.tipo} en={en} lista={cv[x.id] ?? []} alCambiar={(lista) => setCv({ [x.id]: lista } as Partial<CvDocumento>)} ia={x.tipo === "proyecto" || x.tipo === "voluntariado" ? { idioma: cv.idioma, titular: cv.titular } : undefined} />
             {quitarSeccion(x.id, { [x.id]: [] } as Partial<CvDocumento>)}
           </div>
         </Tarjeta>
       ))}
       {abiertas.has("intereses") && (
-        <Tarjeta titulo={cv.titulosPropios?.intereses?.trim() || t.intereses} ayuda={en ? "A few, and only if they say something about you." : "Pocos, y solo si dicen algo de vos."}>
+        <Tarjeta titulo={cv.titulosPropios?.intereses?.trim() || t.intereses} ayuda={en ? "A few, and only if they say something about you." : "Pocos, y solo si dicen algo de usted."}>
           <div className="grid gap-3">
             <Etiquetas en={en} lista={intereses} alCambiar={(lista) => setCv({ intereses: lista })} ejemplo={en ? "Cycling, photography…" : "Ciclismo, fotografía…"} />
             {quitarSeccion("intereses", { intereses: [] })}
@@ -945,7 +948,9 @@ function MasSecciones({ cv, setCv, en }: { cv: CvDocumento; setCv: (cambio: Part
           <div className="grid gap-3">
             <Input label={en ? "Section name" : "Nombre de la sección"} placeholder={en ? "E.g. Volunteering" : "Ej.: Voluntariado"} value={x.titulo} maxLength={60} onChange={(e) => cambiarSec(i, { titulo: e.target.value })} />
             <TextoConFormato etiqueta={en ? "Content" : "Contenido"} en={en} valor={x.texto} alCambiar={(texto) => cambiarSec(i, { texto })} />
-            <button type="button" onClick={() => setCv({ secciones: secciones.filter((_, j) => j !== i) })} className={quitar}><Trash2 className="h-4 w-4" /> {en ? "Remove section" : "Quitar sección"}</button>
+            {quitando === `libre-${i}`
+              ? <ConfirmarBorrado en={en} alCancelar={() => setQuitando(null)} alConfirmar={() => { setQuitando(null); setCv({ secciones: secciones.filter((_, j) => j !== i) }); }} texto={en ? "Remove this section and what you wrote in it?" : "¿Quitar esta sección y lo que escribió en ella?"} />
+              : <button type="button" onClick={() => (x.titulo.trim() || x.texto.trim() ? setQuitando(`libre-${i}`) : setCv({ secciones: secciones.filter((_, j) => j !== i) }))} className={quitar}><Trash2 className="h-4 w-4" /> {en ? "Remove section" : "Quitar sección"}</button>}
           </div>
         </Tarjeta>
       ))}
@@ -959,7 +964,9 @@ function MasSecciones({ cv, setCv, en }: { cv: CvDocumento; setCv: (cambio: Part
                   <Input label={en ? "Role and company" : "Cargo y empresa"} placeholder={en ? "E.g. Manager, Hotel Atenas" : "Ej.: Gerente, Hotel Atenas"} value={r.cargo} maxLength={160} onChange={(e) => cambiarRef(i, { cargo: e.target.value })} />
                   <div className="@[560px]:col-span-2"><Input label={en ? "Phone or email" : "Teléfono o correo"} value={r.contacto} maxLength={160} onChange={(e) => cambiarRef(i, { contacto: e.target.value })} /></div>
                 </div>
-                <button type="button" onClick={() => setCv({ referencias: referencias.filter((_, j) => j !== i) })} className={quitar}><Trash2 className="h-4 w-4" /> {en ? "Remove" : "Quitar"}</button>
+                {quitando === `ref-${i}`
+                  ? <ConfirmarBorrado en={en} alCancelar={() => setQuitando(null)} alConfirmar={() => { setQuitando(null); setCv({ referencias: referencias.filter((_, j) => j !== i) }); }} texto={en ? `Remove ${r.nombre.trim() || "this reference"}?` : `¿Quitar a ${r.nombre.trim() || "esta referencia"}?`} />
+                  : <button type="button" onClick={() => (r.nombre.trim() || r.cargo.trim() || r.contacto.trim() ? setQuitando(`ref-${i}`) : setCv({ referencias: referencias.filter((_, j) => j !== i) }))} className={quitar}><Trash2 className="h-4 w-4" /> {en ? "Remove" : "Quitar"}</button>}
               </div>
             ))}
             <button type="button" onClick={() => setCv({ referencias: [...referencias, { nombre: "", cargo: "", contacto: "" }] })} className={cn(pastilla, "justify-self-start border border-[#d7e1ea] bg-white text-[#162543] hover:bg-[#f6f9fb]")}>
@@ -969,10 +976,11 @@ function MasSecciones({ cv, setCv, en }: { cv: CvDocumento; setCv: (cambio: Part
         </Tarjeta>
       )}
       {abiertas.has("declaracion") && (
-        <Tarjeta titulo={cv.titulosPropios?.declaracion?.trim() || t.declaracion} ayuda={en ? "Some employers and public institutions ask for it. It goes at the end, with your name." : "Algunas empresas e instituciones públicas la piden. Va al final, con tu nombre."}>
+        <Tarjeta titulo={cv.titulosPropios?.declaracion?.trim() || t.declaracion} ayuda={en ? "Some employers and public institutions ask for it. It goes at the end, with your name." : "Algunas empresas e instituciones públicas la piden. Va al final, con su nombre."}>
           <div className="grid gap-3">
-            <TextoConFormato etiqueta={en ? "Text" : "Texto"} en={en} vinetas={false} filas={3} max={600} valor={cv.declaracion?.texto ?? ""} alCambiar={(texto) => setCv({ declaracion: { lugarFecha: cv.declaracion?.lugarFecha ?? "", texto } })} />
-            <Input label={en ? "Place and date" : "Lugar y fecha"} placeholder={en ? "E.g. San José, November 19, 2026" : "Ej.: San José, 19 de noviembre de 2026"} value={cv.declaracion?.lugarFecha ?? ""} maxLength={120} onChange={(e) => setCv({ declaracion: { texto: cv.declaracion?.texto ?? "", lugarFecha: e.target.value } })} />
+            <TextoConFormato etiqueta={en ? "Text" : "Texto"} en={en} vinetas={false} filas={3} max={600} valor={cv.declaracion?.texto ?? ""} alCambiar={(texto) => setCv({ declaracion: { ...cv.declaracion, lugarFecha: cv.declaracion?.lugarFecha ?? "", texto } })} />
+            <Input label={en ? "Place and date" : "Lugar y fecha"} placeholder={en ? "E.g. San José, November 19, 2026" : "Ej.: San José, 19 de noviembre de 2026"} value={cv.declaracion?.lugarFecha ?? ""} maxLength={120} onChange={(e) => setCv({ declaracion: { ...cv.declaracion, texto: cv.declaracion?.texto ?? "", lugarFecha: e.target.value } })} />
+            <FirmaDibujada en={en} valor={cv.declaracion?.firma} alCambiar={(firma) => setCv({ declaracion: { texto: cv.declaracion?.texto ?? "", lugarFecha: cv.declaracion?.lugarFecha ?? "", ...(firma ? { firma } : {}) } })} />
             {quitarSeccion("declaracion", { declaracion: undefined })}
           </div>
         </Tarjeta>
@@ -1042,7 +1050,7 @@ function LlenarDesdeCv({ professionalId, vacio, en, alLeer }: { professionalId: 
   const endpoint = professionalId ? `/api/professional-cv?professionalId=${encodeURIComponent(professionalId)}` : "";
   const [adjunto, setAdjunto] = useState<{ name: string } | null>(null);
   // Hasta saber si hay CV en el perfil se muestra el esqueleto: antes salía
-  // "¿Ya tenés un CV?" y al rato cambiaba a "Tenés un CV en tu perfil" (parpadeo).
+  // "¿Ya tiene un CV?" y al rato cambiaba a "Tiene un CV en su perfil" (parpadeo).
   const [listo, setListo] = useState(!endpoint);
   const [leyendo, setLeyendo] = useState(false);
   const [mensaje, setMensaje] = useState<{ tipo: "ok" | "error"; texto: string } | null>(null);
@@ -1068,24 +1076,39 @@ function LlenarDesdeCv({ professionalId, vacio, en, alLeer }: { professionalId: 
       try { texto = await readCvFile(archivo); } catch (err) {
         const codigo = err instanceof CvReadError ? err.code : "unreadable";
         const textos: Record<string, [string, string]> = {
-          format: ["Elegí un PDF o un Word (.docx).", "Choose a PDF or a Word file (.docx)."],
+          format: ["Elija un PDF o un Word (.docx).", "Choose a PDF or a Word file (.docx)."],
           size: ["El archivo está vacío o pesa más de 5 MB.", "The file is empty or larger than 5 MB."],
-          protected: ["El archivo tiene contraseña. Exportá una copia sin contraseña.", "The file is password-protected. Export an unprotected copy."],
+          protected: ["El archivo tiene contraseña. Exporte una copia sin contraseña.", "The file is password-protected. Export an unprotected copy."],
         };
-        const [es, eng] = textos[codigo] ?? ["No pudimos leerlo. Usá un PDF con texto seleccionable o un Word.", "We couldn't read it. Use a PDF with selectable text or a Word file."];
+        const [es, eng] = textos[codigo] ?? ["No pudimos leerlo. Use un PDF con texto seleccionable o un Word.", "We couldn't read it. Use a PDF with selectable text or a Word file."];
         throw new Error(en ? eng : es);
       }
-      const n = alLeer(reviewCv(texto).profile);
-      setMensaje(n
-        ? { tipo: "ok", texto: en ? `Added ${n} item${n === 1 ? "" : "s"}. Review them in each step.` : `Agregamos ${n} dato${n === 1 ? "" : "s"}. Revisalos en cada paso.` }
-        : { tipo: "ok", texto: en ? "Everything in that CV is already here." : "Todo lo de ese CV ya estaba aquí." });
+      setMensaje(resultado(alLeer(reviewCv(texto).profile)));
     } catch (err) {
       setMensaje({ tipo: "error", texto: err instanceof Error && err.message ? err.message : (en ? "We couldn't read it." : "No pudimos leerlo.") });
     } finally { setLeyendo(false); }
   };
+  const resultado = (n: number) => (n
+    ? { tipo: "ok" as const, texto: en ? `Added ${n} item${n === 1 ? "" : "s"}. Review them in each step.` : `Agregamos ${n} dato${n === 1 ? "" : "s"}. Revisalos en cada paso.` }
+    : { tipo: "ok" as const, texto: en ? "Everything in that CV is already here." : "Todo lo de ese CV ya estaba aquí." });
+  // PEGAR EL TEXTO (20-nov-2026): para quien tiene el CV en un correo, en
+  // LinkedIn o en un documento que no es PDF ni Word. Pasa por la misma lectura.
+  const [pegando, setPegando] = useState(false);
+  const [pegado, setPegado] = useState("");
+  const usarPegado = async () => {
+    const texto = pegado.trim();
+    if (texto.length < 40) { setMensaje({ tipo: "error", texto: en ? "Paste a bit more of your CV: at least a few lines." : "Pegue un poco más de su CV: al menos unas líneas." }); return; }
+    setLeyendo(true); setMensaje(null);
+    try {
+      const { reviewCv } = await import("@/lib/cv/model");
+      setMensaje(resultado(alLeer(reviewCv(texto.slice(0, 30000)).profile)));
+      setPegando(false); setPegado("");
+    } catch { setMensaje({ tipo: "error", texto: en ? "We couldn't read it." : "No pudimos leerlo." }); }
+    finally { setLeyendo(false); }
+  };
   const usarAdjunto = () => leer(async () => {
     const r = await fetch(endpoint, { cache: "no-store" });
-    if (!r.ok) throw new Error(en ? "We couldn't open the CV on your profile." : "No pudimos abrir el CV de tu perfil.");
+    if (!r.ok) throw new Error(en ? "We couldn't open the CV on your profile." : "No pudimos abrir el CV de su perfil.");
     const blob = await r.blob();
     return new File([blob], adjunto?.name || "cv", { type: blob.type });
   });
@@ -1112,12 +1135,12 @@ function LlenarDesdeCv({ professionalId, vacio, en, alLeer }: { professionalId: 
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#e6f6fc] text-[#007fae]"><FileUp className="h-5 w-5" /></span>
         <div className="min-w-0 flex-1">
           <h3 className="text-[15px] font-black text-[#162543]">
-            {destacado ? (en ? "You have a CV on your profile" : "Tenés un CV en tu perfil") : (en ? "Already have a CV?" : "¿Ya tenés un CV?")}
+            {destacado ? (en ? "You have a CV on your profile" : "Tiene un CV en su perfil") : (en ? "Already have a CV?" : "¿Ya tiene un CV?")}
           </h3>
           <p className="mt-0.5 text-[13px] leading-5 text-[#667085]">
             {destacado
-              ? (en ? "Shall we use it to fill this in? Nothing you wrote is deleted." : "¿Lo usamos para llenar esto? No se borra nada de lo que ya tenés.")
-              : (en ? "Fill this in from your file (PDF or Word). Nothing you wrote is deleted." : "Llenalo desde tu archivo (PDF o Word). No se borra nada de lo que ya tenés.")}
+              ? (en ? "Shall we use it to fill this in? Nothing you wrote is deleted." : "¿Lo usamos para llenar esto? No se borra nada de lo que ya tiene.")
+              : (en ? "Fill this in from your file (PDF or Word). Nothing you wrote is deleted." : "Llénelo desde su archivo (PDF o Word). No se borra nada de lo que ya tiene.")}
           </p>
         </div>
       </div>
@@ -1131,8 +1154,24 @@ function LlenarDesdeCv({ professionalId, vacio, en, alLeer }: { professionalId: 
         <button type="button" disabled={leyendo} onClick={() => input.current?.click()} className={cn(pastilla, "border border-[#d7e1ea] bg-white text-[#162543] hover:bg-[#f8fafc]")}>
           <FileUp className="h-4 w-4" />{adjunto ? (en ? "Choose another file" : "Elegir otro archivo") : (en ? "Choose file" : "Elegir archivo")}
         </button>
+        {!pegando && (
+          <button type="button" disabled={leyendo} onClick={() => { setPegando(true); setMensaje(null); }} className={cn(pastilla, "text-[#007fae] hover:bg-[#eef6fb] @[560px]:col-span-2")} data-testid="cv-pegar-texto">
+            <ClipboardPaste className="h-4 w-4" />{en ? "Paste your CV text" : "Pegar texto de su CV"}
+          </button>
+        )}
       </div>
-      {leyendo && <p role="status" className="mt-2 text-[13px] text-[#667085]">{en ? "Reading your CV…" : "Leyendo tu CV…"}</p>}
+      {pegando && (
+        <div className="mt-3 grid gap-2">
+          <label className="text-sm font-semibold text-[#344054]" htmlFor="cv-texto-pegado">{en ? "Your CV text" : "El texto de su CV"}</label>
+          <textarea id="cv-texto-pegado" rows={7} maxLength={30000} value={pegado} onChange={(e) => setPegado(e.target.value)} className={campo}
+            placeholder={en ? "Copy everything from your CV (Word, Google Docs, LinkedIn…) and paste it here." : "Copie todo su CV (Word, Google Docs, LinkedIn…) y péguelo aquí."} />
+          <div className="flex flex-wrap gap-2">
+            <button type="button" disabled={leyendo || !pegado.trim()} onClick={() => void usarPegado()} className={cn(pastilla, "bg-[#009FD9] text-white hover:bg-[#0089bb]")}>{en ? "Fill in with this text" : "Llenar con este texto"}</button>
+            <button type="button" onClick={() => { setPegando(false); setPegado(""); }} className={cn(pastilla, "text-[#475467] hover:bg-[#f2f4f7]")}>{en ? "Cancel" : "Cancelar"}</button>
+          </div>
+        </div>
+      )}
+      {leyendo && <p role="status" className="mt-2 text-[13px] text-[#667085]">{en ? "Reading your CV…" : "Leyendo su CV…"}</p>}
       {mensaje && <p role={mensaje.tipo === "error" ? "alert" : "status"} className={cn("mt-2 text-[13px] font-semibold", mensaje.tipo === "error" ? "text-[#b42318]" : "text-[#067647]")}>{mensaje.texto}</p>}
     </section>
   );
@@ -1156,17 +1195,17 @@ function RevisarVacante({ cv, en }: { cv: CvDocumento; en: boolean }) {
         <ChevronRight className="ml-auto h-4 w-4 text-[#98a2b3] transition-transform group-open:rotate-90" />
       </summary>
       <div className="grid gap-2 pb-3">
-        <p className="text-[13px] leading-5 text-[#667085]">{en ? "Paste the job post. We show which keywords your resume already has and which are missing. Nothing is changed." : "Pega el anuncio. Te mostramos qué palabras clave ya tiene tu currículum y cuáles faltan. No cambiamos nada."}</p>
-        <textarea rows={5} maxLength={6000} value={texto} onChange={(e) => setTexto(e.target.value)} aria-label={en ? "Job post" : "Anuncio de la vacante"} placeholder={en ? "Paste the job post here" : "Pega aquí el anuncio"} className={campo} />
+        <p className="text-[13px] leading-5 text-[#667085]">{en ? "Paste the job post. We show which keywords your resume already has and which are missing. Nothing is changed." : "Pegue el anuncio. Le mostramos qué palabras clave ya tiene su currículum y cuáles faltan. No cambiamos nada."}</p>
+        <textarea rows={5} maxLength={6000} value={texto} onChange={(e) => setTexto(e.target.value)} aria-label={en ? "Job post" : "Anuncio de la vacante"} placeholder={en ? "Paste the job post here" : "Pegue aquí el anuncio"} className={campo} />
         {resultado && (
           <div className="grid gap-2" role="status">
             <p className="text-[13px] font-black text-[#162543]">{en ? `${resultado.puntaje}% of the keywords match` : `Coincide el ${resultado.puntaje} % de las palabras clave`}</p>
-            {resultado.estan.length > 0 && <div><p className="text-xs font-semibold text-[#067647]">{en ? "Already in your resume" : "Ya están en tu currículum"}</p>{chips(resultado.estan, "bg-[#ecfdf3] text-[#067647]")}</div>}
+            {resultado.estan.length > 0 && <div><p className="text-xs font-semibold text-[#067647]">{en ? "Already in your resume" : "Ya están en su currículum"}</p>{chips(resultado.estan, "bg-[#ecfdf3] text-[#067647]")}</div>}
             {resultado.faltan.length > 0 && (
               <div>
                 <p className="text-xs font-semibold text-[#93370d]">{en ? "Not in your resume" : "No aparecen"}</p>
                 {chips(resultado.faltan, "bg-[#fffaeb] text-[#93370d]")}
-                <p className="mt-1.5 text-[12px] leading-4 text-[#667085]">{en ? "Add them only if they are true for you, in your own words, in skills or achievements." : "Agrégalas solo si de verdad las tienes, con tus palabras, en habilidades o en tus logros."}</p>
+                <p className="mt-1.5 text-[12px] leading-4 text-[#667085]">{en ? "Add them only if they are true for you, in your own words, in skills or achievements." : "Agréguelas solo si de verdad las tiene, con sus palabras, en habilidades o en sus logros."}</p>
               </div>
             )}
           </div>
@@ -1196,10 +1235,10 @@ function UsarEnMiPerfil({ professionalId, cv, en, avisar }: { professionalId: st
       form.append("version", meta?.file?.version ?? "");
       const r = await fetch(endpoint, { method: "POST", body: form });
       if (!r.ok) throw new Error(String(r.status));
-      avisar(en ? "Done: it's on your profile" : "Listo: ya está en tu perfil");
+      avisar(en ? "Done: it's on your profile" : "Listo: ya está en su perfil");
       setPaso("inicio");
     } catch {
-      avisar(en ? "It couldn't be added to your profile. Try again." : "No se pudo poner en tu perfil. Prueba de nuevo.");
+      avisar(en ? "It couldn't be added to your profile. Try again." : "No se pudo poner en su perfil. Pruebe de nuevo.");
       setPaso("confirmar");
     }
   };
@@ -1212,7 +1251,7 @@ function UsarEnMiPerfil({ professionalId, cv, en, avisar }: { professionalId: st
   }
   return (
     <div role="alert" className="grid gap-2 rounded-xl bg-[#f1faff] px-3 py-2.5 text-[13px] leading-5 text-[#162543]">
-      <span>{en ? "Clients will see this resume when they tap \"View PDF\" on your profile. It goes without your email or phone, and replaces the file you had." : "Los clientes verán este currículum al tocar \"Ver PDF\" en tu perfil. Va sin tu correo ni tu teléfono y reemplaza el archivo que tenías."}</span>
+      <span>{en ? "Clients will see this resume when they tap \"View PDF\" on your profile. It goes without your email or phone, and replaces the file you had." : "Los clientes verán este currículum al tocar \"Ver PDF\" en su perfil. Va sin su correo ni su teléfono y reemplaza el archivo que tenía."}</span>
       <span className="flex flex-wrap justify-end gap-2">
         <button type="button" disabled={paso === "subiendo"} onClick={() => setPaso("inicio")} className="h-11 rounded-full px-3 font-semibold text-[#52627a] hover:bg-white">{en ? "Cancel" : "Cancelar"}</button>
         <button type="button" disabled={paso === "subiendo"} onClick={() => void subir()} className="h-11 rounded-full bg-[#009FD9] px-4 font-bold text-white disabled:opacity-60">{paso === "subiendo" ? (en ? "Uploading…" : "Subiendo…") : (en ? "Put it on my profile" : "Ponerlo en mi perfil")}</button>
@@ -1221,7 +1260,10 @@ function UsarEnMiPerfil({ professionalId, cv, en, avisar }: { professionalId: st
   );
 }
 
-function Editor({ pro, documento, borrador, setBorrador, desdeElPerfil, nube, alVolver }: { pro: ProData; documento: Tipo; borrador: Borrador; setBorrador: Dispatch<SetStateAction<Borrador>>; desdeElPerfil: (idioma: Idioma) => Borrador; nube: EstadoNube; alVolver: () => void }) {
+type Vista = "editar" | "diseno" | "vista";
+const VISTAS = [["editar", Pencil, "Editar", "Edit"], ["diseno", Palette, "Diseño", "Design"], ["vista", Eye, "Vista previa", "Preview"]] as const;
+
+function Editor({ pro, documento, borrador, setBorrador, desdeElPerfil, nube, alVolver, disenoDelCv, alCrearCopia }: { pro: ProData; documento: Tipo; borrador: Borrador; setBorrador: Dispatch<SetStateAction<Borrador>>; desdeElPerfil: (idioma: Idioma) => Borrador; nube: EstadoNube; alVolver: () => void; disenoDelCv?: Partial<Diseno>; alCrearCopia?: (b: Borrador) => void }) {
   const idiomaApp: Idioma = useLocale() === "en" ? "en" : "es";
   const en = idiomaApp === "en";
   const pestana = documento;
@@ -1233,7 +1275,9 @@ function Editor({ pro, documento, borrador, setBorrador, desdeElPerfil, nube, al
   // deja al moverse.
   const [visitados, setVisitados] = useState<Set<string>>(() => new Set());
   const dejar = (p: string) => setVisitados((v) => (v.has(p) ? v : new Set(v).add(p)));
-  const [verHoja, setVerHoja] = useState(false);
+  // EDITAR / DISEÑO / VISTA PREVIA (19-nov-2026), como FlowCV en el teléfono.
+  // En la computadora la vista previa está siempre a la derecha.
+  const [vista, setVista] = useState<Vista>("editar");
   const [aviso, setAviso] = useState("");
   const [generando, setGenerando] = useState(false);
   const arriba = useRef<HTMLDivElement>(null);
@@ -1288,7 +1332,7 @@ function Editor({ pro, documento, borrador, setBorrador, desdeElPerfil, nube, al
     } catch (error) {
       // Cerrar la hoja de compartir sin elegir nada no es un error.
       if (esCancelacion(error)) return;
-      avisar(en ? "The PDF couldn't be created. Try again." : "No se pudo crear el PDF. Probá de nuevo.");
+      avisar(en ? "The PDF couldn't be created. Try again." : "No se pudo crear el PDF. Pruebe de nuevo.");
     } finally {
       setGenerando(false);
     }
@@ -1300,10 +1344,10 @@ function Editor({ pro, documento, borrador, setBorrador, desdeElPerfil, nube, al
     } catch { avisar(en ? "Couldn't copy" : "No se pudo copiar"); }
   };
 
-  const hoja = (
-    <div className="mx-auto min-h-[520px] w-full max-w-[430px] rounded-lg bg-white p-6 shadow-[0_12px_40px_-18px_rgba(22,37,67,0.45)] ring-1 ring-[#e5e7eb]" data-testid="cv-hoja">
-      {pestana === "cv" ? <HojaCv cv={cv} /> : <HojaCarta cv={cv} carta={carta} />}
-    </div>
+  const botonDescargar = (
+    <button type="button" disabled={generando} onClick={() => void descargar()} className={cn(pastilla, "w-full bg-[#009FD9] text-white hover:bg-[#0089bb]")}>
+      <Download className="h-4 w-4" />{en ? "Download PDF" : "Descargar PDF"}
+    </button>
   );
   const tituloCv = TITULOS[cv.idioma];
   const lleno = cv.habilidades.length >= LIMITES.habilidades;
@@ -1311,7 +1355,7 @@ function Editor({ pro, documento, borrador, setBorrador, desdeElPerfil, nube, al
     const h = cv.habilidades.slice(0, 3).join(", ");
     return cv.idioma === "en"
       ? `${cv.titular || "[Your role]"}${h ? ` experienced in ${h}` : ""}. [Your main achievement or strength, ideally with a number.] [What you are looking for.]`
-      : `${cv.titular || "[Tu oficio o cargo]"}${h ? ` con experiencia en ${h}` : ""}. [Tu logro o fortaleza principal, idealmente con un número.] [Qué buscás.]`;
+      : `${cv.titular || "[Su oficio o cargo]"}${h ? ` con experiencia en ${h}` : ""}. [Su logro o fortaleza principal, idealmente con un número.] [Qué busca.]`;
   };
 
   // ── LOS PASOS ──
@@ -1320,7 +1364,7 @@ function Editor({ pro, documento, borrador, setBorrador, desdeElPerfil, nube, al
       <div className="grid gap-4">
       <LlenarDesdeCv professionalId={String(pro?.id ?? "")} vacio={!cv.experiencia.length && !cv.educacion.length} en={en} alLeer={sumarArchivo} />
       <Tarjeta
-        titulo={en ? "Your details" : "Tus datos"}
+        titulo={en ? "Your details" : "Sus datos"}
         ayuda={en ? "They go in the body of the document, where screening systems read them." : "Van en el cuerpo del documento, donde los filtros automáticos sí los leen."}
         accion={<button type="button" onClick={() => setConfirmarRecarga(true)} className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-[13px] font-semibold text-[#007fae] hover:bg-[#eef6fb]"><RotateCcw className="h-4 w-4" />{en ? "Reload from profile" : "Cargar de mi perfil"}</button>}
       >
@@ -1345,8 +1389,8 @@ function Editor({ pro, documento, borrador, setBorrador, desdeElPerfil, nube, al
       </div>
     ),
     experiencia: (
-      <Tarjeta titulo={tituloCv.experiencia} ayuda={en ? "Most recent first. Start each achievement with a verb and add numbers." : "Lo más reciente primero. Empezá cada logro con un verbo y agregá números."}>
-        <Entradas tipo="experiencia" en={en} lista={cv.experiencia} alCambiar={(experiencia) => setCv({ experiencia })} />
+      <Tarjeta titulo={tituloCv.experiencia} ayuda={en ? "Most recent first. Start each achievement with a verb and add numbers." : "Lo más reciente primero. Empiece cada logro con un verbo y agregue números."}>
+        <Entradas tipo="experiencia" en={en} lista={cv.experiencia} alCambiar={(experiencia) => setCv({ experiencia })} ia={{ idioma: cv.idioma, titular: cv.titular }} />
       </Tarjeta>
     ),
     educacion: (
@@ -1366,7 +1410,7 @@ function Editor({ pro, documento, borrador, setBorrador, desdeElPerfil, nube, al
       <>
         <Tarjeta
           titulo={tituloCv.habilidades}
-          ayuda={en ? `Choose 6 to ${LIMITES.habilidades}: the ones the job asks for. A long list reads as filler.` : `Elegí de 6 a ${LIMITES.habilidades}: las que pide el puesto. Una lista larga se lee como relleno.`}
+          ayuda={en ? `Choose 6 to ${LIMITES.habilidades}: the ones the job asks for. A long list reads as filler.` : `Elija de 6 a ${LIMITES.habilidades}: las que pide el puesto. Una lista larga se lee como relleno.`}
           accion={<span className={cn("shrink-0 rounded-full px-2.5 py-1 text-xs font-bold", lleno ? "bg-[#eef8fd] text-[#007fae]" : "bg-[#f2f4f7] text-[#52627a]")}>{cv.habilidades.length}/{LIMITES.habilidades}</span>}
         >
           <Etiquetas en={en} lista={cv.habilidades} alCambiar={(habilidades) => setCv({
@@ -1376,7 +1420,7 @@ function Editor({ pro, documento, borrador, setBorrador, desdeElPerfil, nube, al
           })} ejemplo={en ? "Excel, customer service…" : "Excel, servicio al cliente…"} />
           {cv.sugeridas.length > 0 && (
             <div className="mt-4">
-              <p className="mb-2 text-xs font-semibold text-[#52627a]">{en ? "From your profile — tap to add" : "De tu perfil: tocá para sumar"}</p>
+              <p className="mb-2 text-xs font-semibold text-[#52627a]">{en ? "From your profile — tap to add" : "De su perfil: toque para agregar"}</p>
               <ul className="flex flex-wrap gap-2">
                 {cv.sugeridas.map((h) => (
                   <li key={h}>
@@ -1397,7 +1441,7 @@ function Editor({ pro, documento, borrador, setBorrador, desdeElPerfil, nube, al
       </>
     ),
     perfil: (
-      <Tarjeta titulo={tituloCv.resumen} ayuda={en ? "2–3 lines at the top of your CV: what you do, your experience and your strengths." : "2 o 3 líneas que van arriba en tu CV: qué hacés, tu experiencia y en qué sos fuerte."}>
+      <Tarjeta titulo={tituloCv.resumen} ayuda={en ? "2–3 lines at the top of your CV: what you do, your experience and your strengths." : "2 o 3 líneas que van arriba en su CV: qué hace, su experiencia y en qué es fuerte."}>
         <TextoConFormato etiqueta={en ? "Summary" : "Resumen"} en={en} filas={5} max={600} valor={cv.resumen} alCambiar={(resumen) => setCv({ resumen })} />
         <div className="mt-1 flex items-center justify-between gap-2">
           <button type="button" onClick={() => setCv({ resumen: baseDelPerfil() })} className="inline-flex h-9 items-center gap-1.5 rounded-full px-2 text-[13px] font-semibold text-[#007fae] hover:bg-[#eef6fb]">
@@ -1405,6 +1449,7 @@ function Editor({ pro, documento, borrador, setBorrador, desdeElPerfil, nube, al
           </button>
           <span className="text-xs text-[#98a2b3]">{cv.resumen.length}/600</span>
         </div>
+        <MejorarConIa tipo="resumen" en={en} idioma={cv.idioma} texto={cv.resumen} contexto={cv.titular} alElegir={(resumen) => setCv({ resumen })} />
       </Tarjeta>
     ),
     extras: <MasSecciones cv={cv} setCv={setCv} en={en} />,
@@ -1415,26 +1460,62 @@ function Editor({ pro, documento, borrador, setBorrador, desdeElPerfil, nube, al
     // aparte al inicio; va arriba, como un dato más de la carta.
     contenido: (
       <>
-      <Tarjeta titulo={en ? "The position" : "El puesto"} ayuda={en ? "A cover letter goes with your resume: one page, about 300 words." : "La carta acompaña tu currículum: una página, unas 300 palabras."}>
+      <Tarjeta titulo={en ? "The position" : "El puesto"} ayuda={en ? "A cover letter goes with your resume: one page, about 300 words." : "La carta acompaña su currículum: una página, unas 300 palabras."}>
         <div className="grid gap-3 @[560px]:grid-cols-2">
           <Input label={en ? "Position" : "Puesto"} value={carta.puesto} maxLength={120} onChange={(e) => setCarta({ puesto: e.target.value })} />
           <Input label={en ? "Company" : "Empresa"} value={carta.empresa} maxLength={120} onChange={(e) => setCarta({ empresa: e.target.value })} />
-          <div className="@[560px]:col-span-2"><Input label={en ? "Addressed to" : "Dirigida a"} value={carta.destinatario} maxLength={120} onChange={(e) => setCarta({ destinatario: e.target.value })} /></div>
         </div>
         <button type="button" onClick={() => setCarta(cartaInicial(cv, { puesto: carta.puesto, empresa: carta.empresa }))} className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-[13px] font-semibold text-[#007fae] hover:bg-[#eef6fb]">
           <RotateCcw className="h-4 w-4" />{en ? "Rewrite with this position" : "Rehacer con este puesto"}
         </button>
       </Tarjeta>
+      <Tarjeta titulo={en ? "Who it is for" : "Para quién es"} ayuda={en ? "Only the name is needed; the rest appears above the greeting if you fill it in." : "Basta con el nombre; lo demás sale arriba del saludo si lo completa."}>
+        <div className="grid gap-3 @[560px]:grid-cols-2">
+          <Input label={en ? "Addressed to" : "Dirigida a"} value={carta.destinatario} maxLength={120} onChange={(e) => setCarta({ destinatario: e.target.value })} />
+          <Input label={en ? "Their role (optional)" : "Cargo (opcional)"} placeholder={en ? "E.g. HR Manager" : "Ej.: Jefa de Recursos Humanos"} value={carta.cargo ?? ""} maxLength={120} onChange={(e) => setCarta({ cargo: e.target.value })} />
+          <div className="@[560px]:col-span-2"><Input label={en ? "Company address (optional)" : "Dirección de la empresa (opcional)"} placeholder={en ? "E.g. Escazú, San José" : "Ej.: Escazú, San José"} value={carta.direccion ?? ""} maxLength={160} onChange={(e) => setCarta({ direccion: e.target.value })} /></div>
+        </div>
+      </Tarjeta>
+      <CartaConIa cv={cv} carta={carta} en={en} alEscribir={(p) => setCarta(p)} />
+      <Tarjeta titulo={en ? "Date and subject" : "Fecha y asunto"}>
+        <div className="grid gap-3 @[560px]:grid-cols-2">
+          <div className="grid gap-1.5">
+            <Input type="date" label={en ? "Date" : "Fecha"} value={carta.fecha ?? ""} onChange={(e) => setCarta({ fecha: e.target.value })} />
+            <p className="text-[12px] text-[#667085]">{carta.fecha ? fechaDeLaCarta(carta, cv.idioma) : (en ? `Empty: the day you download it (${fechaDeLaCarta({}, cv.idioma)}).` : `Vacía: el día que la descargues (${fechaDeLaCarta({}, cv.idioma)}).`)}</p>
+          </div>
+          <Input label={en ? "Subject" : "Asunto"} placeholder={asuntoPorDefecto(carta, cv.idioma) || (en ? "Application for…" : "Postulación al puesto de…")} value={carta.asunto ?? ""} maxLength={160} onChange={(e) => setCarta({ asunto: e.target.value })} />
+        </div>
+      </Tarjeta>
+      <Tarjeta titulo={en ? "How you greet them" : "Cómo saluda"} ayuda={en ? "Tap one or write your own." : "Toque uno o escriba el suyo."}>
+        <Input label={en ? "Greeting" : "Saludo"} placeholder={saludoPorDefecto(carta, cv.idioma)} value={carta.saludo ?? ""} maxLength={120} onChange={(e) => setCarta({ saludo: e.target.value })} />
+        <div className="mt-2 flex flex-wrap gap-1.5" aria-label={en ? "Suggested greetings" : "Saludos sugeridos"}>
+          {saludosSugeridos(carta, cv.idioma).map((x) => {
+            const activo = (carta.saludo?.trim() || saludoPorDefecto(carta, cv.idioma)) === x;
+            return (
+              <button key={x} type="button" aria-pressed={activo} onClick={() => setCarta({ saludo: x === saludoPorDefecto(carta, cv.idioma) ? "" : x })}
+                className={cn("rounded-full border px-3 py-1.5 text-[13px] font-semibold transition-colors", activo ? "border-[#009FD9] bg-[#eef8fc] text-[#006f9c]" : "border-[#d7e1ea] bg-white text-[#344054] hover:bg-[#f5f8fb]")}>
+                {x}
+              </button>
+            );
+          })}
+        </div>
+      </Tarjeta>
         {([
-          ["apertura", en ? "Which job are you applying for?" : "¿A qué puesto te postulás?", en ? "Say the position and how you found it." : "Decilo y contá cómo lo encontraste."],
-          ["porQueEncajo", en ? "What shows you can do this job?" : "¿Qué muestra que podés hacer este trabajo?", en ? "2–3 achievements from your resume, with numbers." : "2 o 3 logros de tu currículum, con números."],
+          ["apertura", en ? "Which job are you applying for?" : "¿A qué puesto se postula?", en ? "Say the position and how you found it." : "Dígalo y cuente cómo lo encontró."],
+          ["porQueEncajo", en ? "What shows you can do this job?" : "¿Qué muestra que puede hacer este trabajo?", en ? "2–3 achievements from your resume, with numbers." : "2 o 3 logros de su currículum, con números."],
           ["porQueLaEmpresa", en ? "Why this company?" : "¿Por qué esta empresa?", en ? "Something specific about them." : "Algo concreto de ellos."],
-          ["cierre", en ? "How do you want to close?" : "¿Cómo querés cerrar?", en ? "Invite them to talk and say thanks." : "Invitá a conversar y agradecé."],
+          ["cierre", en ? "How do you want to close?" : "¿Cómo quiere cerrar?", en ? "Invite them to talk and say thanks." : "Invite a conversar y agradezca."],
         ] as const).map(([k, titulo, ayuda]) => (
           <Tarjeta key={k} titulo={titulo} ayuda={ayuda}>
-            <textarea rows={k === "porQueEncajo" ? 5 : 3} maxLength={900} value={carta[k]} onChange={(e) => setCarta({ [k]: e.target.value } as Partial<Carta>)} className={campo} />
+            <TextoConFormato etiqueta={titulo} en={en} filas={k === "porQueEncajo" ? 5 : 3} max={900} valor={carta[k]} alCambiar={(v) => setCarta({ [k]: v } as Partial<Carta>)} />
           </Tarjeta>
         ))}
+      <Tarjeta titulo={en ? "Sign-off and signature" : "Despedida y firma"}>
+        <div className="grid gap-4">
+          <Input label={en ? "Sign-off" : "Despedida"} placeholder={despedidaPorDefecto(cv.idioma)} value={carta.despedida ?? ""} maxLength={80} onChange={(e) => setCarta({ despedida: e.target.value })} />
+          <FirmaDibujada en={en} valor={carta.firma} alCambiar={(firma) => setCarta({ firma })} />
+        </div>
+      </Tarjeta>
       </>
     ),
     revisar: null,
@@ -1461,60 +1542,93 @@ function Editor({ pro, documento, borrador, setBorrador, desdeElPerfil, nube, al
       {pestana === "cv" && pro?.id && <UsarEnMiPerfil professionalId={String(pro.id)} cv={cv} en={en} avisar={avisar} />}
       <p role="status" aria-live="polite" className="-mt-2 min-h-4 text-center text-xs font-semibold text-[#067647]">{aviso}</p>
       <Link href={pestana === "cv" ? "/dashboard/profesional?tab=carta" : "/dashboard/profesional?tab=cv"} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full px-3 text-sm font-bold text-[#007fae] hover:bg-[#eef6fb]">
-        {pestana === "cv" ? (en ? "Next: your cover letter" : "Siguiente: tu carta de presentación") : (en ? "See my resume" : "Ver mi currículum")}<ChevronRight className="h-4 w-4" />
+        {pestana === "cv" ? (en ? "Next: your cover letter" : "Siguiente: su carta de presentación") : (en ? "See my resume" : "Ver mi currículum")}<ChevronRight className="h-4 w-4" />
       </Link>
       <EstadoGuardado estado={nube} en={en} className="-mt-2 justify-self-center" />
     </div>
   );
 
+  const contenido = enRevision ? revision : (pestana === "cv" ? pasoDelCv[pasoCv] : pasoDeLaCarta[pasoCarta]);
+  const enDiseno = vista === "diseno";
   return (
     // El ancho que manda es el del panel, no el de la pantalla: lado a lado
-    // solo cuando el panel mide 980 px o más; si no, la hoja va abajo.
+    // solo cuando el panel mide 980 px o más; si no, la hoja va en su pestaña.
     <div ref={arriba} className="@container grid min-w-0 max-w-full grid-cols-[minmax(0,1fr)] scroll-mt-24 gap-4 overflow-x-clip" data-testid="cv-builder">
       {/* Debajo de lg la barra ya tiene la flecha que vuelve a la lista. */}
       <button type="button" onClick={alVolver} className="hidden min-h-11 items-center gap-1 justify-self-start rounded-full pr-3 text-sm font-bold text-[#007fae] hover:bg-[#eef6fb] lg:inline-flex" data-testid="cv-volver-lista">
         <ChevronLeft className="h-4 w-4" />{pestana === "cv" ? (en ? "My resumes" : "Mis currículums") : (en ? "My cover letters" : "Mis cartas")}
       </button>
-      <EstadoGuardado estado={nube} en={en} className="-mb-2 justify-self-end" />
-      {pestana === "cv"
-        ? <Pasos en={en} pasos={PASOS_CV} actual={pasoCv} hechos={hechosCv} alElegir={(p) => irA(() => { dejar(`cv:${pasoCv}`); setPasoCv(p); })} />
-        : <Pasos en={en} pasos={PASOS_CARTA} actual={pasoCarta} hechos={hechosCarta} alElegir={(p) => irA(() => { dejar(`carta:${pasoCarta}`); setPasoCarta(p); })} />}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div role="tablist" aria-label={en ? "Editor" : "Editor"} className="grid w-full grid-cols-3 gap-1 rounded-2xl bg-[#eef3f7] p-1 @[980px]:w-fit @[980px]:grid-cols-2">
+          {VISTAS.map(([id, Icono, es, eng]) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={vista === id}
+              onClick={() => irA(() => setVista(id))}
+              className={cn("inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl px-3 text-[13px] font-bold transition-colors @[980px]:px-5", vista === id ? "bg-white text-[#162543] shadow-sm" : "text-[#52627a] hover:text-[#162543]", id === "vista" && "@[980px]:hidden")}
+              data-testid={`cv-vista-${id}`}
+            >
+              {/* En un teléfono angosto sin ícono: «Vista previa» cabe en una línea. */}
+              <Icono className="hidden h-4 w-4 shrink-0 @[440px]:block" /><span className="whitespace-nowrap">{en ? eng : es}</span>
+            </button>
+          ))}
+        </div>
+        <EstadoGuardado estado={nube} en={en} className="ml-auto" />
+      </div>
+      {pestana === "cv" && !enDiseno && (
+        <div className={cn("min-w-0", vista === "vista" && "hidden @[980px]:block")}>
+          <AdaptarConIa cv={cv} en={en} puedeCrear={!!alCrearCopia} alAplicar={(nuevo, como) => {
+            if (como.nuevo && alCrearCopia) alCrearCopia({ cv: nuevo, carta, etiqueta: como.nombre });
+            else { setCv(nuevo); avisar(en ? "Changes applied." : "Cambios aplicados."); }
+          }} />
+        </div>
+      )}
+      {!enDiseno && (
+        <div className={cn(vista === "vista" && "hidden @[980px]:block")}>
+          {pestana === "cv"
+            ? <Pasos en={en} pasos={PASOS_CV} actual={pasoCv} hechos={hechosCv} alElegir={(p) => irA(() => { dejar(`cv:${pasoCv}`); setPasoCv(p); })} />
+            : <Pasos en={en} pasos={PASOS_CARTA} actual={pasoCarta} hechos={hechosCarta} alElegir={(p) => irA(() => { dejar(`carta:${pasoCarta}`); setPasoCarta(p); })} />}
+        </div>
+      )}
 
-      <div className="grid items-start gap-4 @[980px]:grid-cols-[minmax(0,1fr)_400px]">
-        <div className="grid min-w-0 gap-4" data-testid={`cv-paso-${paso}`}>
-          {enRevision ? (
-            <>
-              {revision}
-              <div className="@[980px]:hidden">{hoja}</div>
-            </>
-          ) : (
-            <>
-              {pestana === "cv" ? pasoDelCv[pasoCv] : pasoDeLaCarta[pasoCarta]}
-              <button type="button" onClick={() => setVerHoja((v) => !v)} className={cn(pastilla, "justify-self-start px-3 text-[#007fae] hover:bg-[#eef6fb] @[980px]:hidden")}>
-                <FileText className="h-4 w-4" />{verHoja ? (en ? "Hide preview" : "Ocultar vista previa") : (en ? "See preview" : "Ver vista previa")}
-              </button>
-              {verHoja && <div className="@[980px]:hidden">{hoja}</div>}
-            </>
-          )}
+      <div className="grid items-start gap-4 @[980px]:grid-cols-[minmax(0,1fr)_minmax(360px,0.9fr)]">
+        <div className={cn("grid min-w-0 gap-4", vista === "vista" && "hidden @[980px]:grid")} data-testid={enDiseno ? "cv-paso-diseno" : `cv-paso-${paso}`}>
+          {enDiseno
+            ? <PanelDiseno cv={cv} carta={pestana === "carta" ? carta : undefined} setCv={setCv} en={en} disenoDelCv={pestana === "carta" ? disenoDelCv : undefined} />
+            : contenido}
           {/* Atrás / Siguiente pegados al fondo en el teléfono, ENCIMA de la
               barra del app (antes la barra tapaba descargar). */}
           <AccionesAlPie className="grid grid-cols-2 gap-3">
-            <button type="button" disabled={indice === 0} onClick={() => mover(-1)} className={cn(pastilla, "w-full border border-[#d7e1ea] bg-white text-[#162543] hover:bg-[#f6f9fb] disabled:opacity-40")}>
-              <ChevronLeft className="h-4 w-4" />{en ? "Back" : "Atrás"}
-            </button>
-            {enRevision ? (
-              <button type="button" disabled={generando} onClick={() => void descargar()} className={cn(pastilla, "w-full bg-[#009FD9] text-white hover:bg-[#0089bb]")}>
-                <Download className="h-4 w-4" />{en ? "Download PDF" : "Descargar PDF"}
-              </button>
+            {enDiseno ? (
+              <>
+                <button type="button" onClick={() => irA(() => setVista("editar"))} className={cn(pastilla, "w-full border border-[#d7e1ea] bg-white text-[#162543] hover:bg-[#f6f9fb]")}>
+                  <Pencil className="h-4 w-4" />{en ? "Edit" : "Editar"}
+                </button>
+                {botonDescargar}
+              </>
             ) : (
-              <button type="button" onClick={() => mover(1)} className={cn(pastilla, "w-full bg-[#009FD9] text-white hover:bg-[#0089bb]")}>
-                {indice === pasos.length - 2 ? (en ? "Review" : "Revisar") : (en ? "Next" : "Siguiente")}<ChevronRight className="h-4 w-4" />
-              </button>
+              <>
+                <button type="button" disabled={indice === 0} onClick={() => mover(-1)} className={cn(pastilla, "w-full border border-[#d7e1ea] bg-white text-[#162543] hover:bg-[#f6f9fb] disabled:opacity-40")}>
+                  <ChevronLeft className="h-4 w-4" />{en ? "Back" : "Atrás"}
+                </button>
+                {enRevision ? botonDescargar : (
+                  <button type="button" onClick={() => mover(1)} className={cn(pastilla, "w-full bg-[#009FD9] text-white hover:bg-[#0089bb]")}>
+                    {indice === pasos.length - 2 ? (en ? "Review" : "Revisar") : (en ? "Next" : "Siguiente")}<ChevronRight className="h-4 w-4" />
+                  </button>
+                )}
+              </>
             )}
           </AccionesAlPie>
         </div>
-        <aside className="hidden @[980px]:sticky @[980px]:top-24 @[980px]:block">{hoja}</aside>
+        {/* Una sola vista previa: a la derecha en la computadora, y en su
+            pestaña en el teléfono. */}
+        <aside className={cn("min-w-0", vista === "vista" ? "block" : "hidden", "@[980px]:sticky @[980px]:top-24 @[980px]:block @[980px]:max-h-[calc(100dvh-7rem)] @[980px]:overflow-y-auto")}>
+          <VistaPrevia cv={cv} carta={pestana === "carta" ? carta : undefined} en={en} pie={<div className="@[980px]:hidden">{botonDescargar}</div>} />
+        </aside>
       </div>
     </div>
   );
 }
+

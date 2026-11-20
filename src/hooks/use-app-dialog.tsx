@@ -93,9 +93,6 @@ export function useAppDialog() {
         open
         onClose={() => close({ confirmed: false })}
         title={dialog.title}
-        // Closing round: the header is hidden, so name the dialog by its title on every page (the Modal only did it
-        // when it managed focus; on the customer's «Mi proyecto» page confirmations had no accessible name).
-        ariaLabel={dialog.title}
         hideHeader
         size="sm"
         mobilePresentation="center"

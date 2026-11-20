@@ -11,7 +11,7 @@ export async function GET() {
 }
 export async function POST(req: Request) {
   if (!await getApiAdmin()) return NextResponse.json({ error: "No autorizado" }, { status: 403, headers });
-  const limited = await enforceRateLimit(req, "admin-identity-review", 12, 60_000);
+  const limited = enforceRateLimit(req, "admin-identity-review", 12, 60_000);
   if (limited) { limited.headers.set("Cache-Control", "no-store"); return limited; }
   const body = await req.json().catch(() => null);
   if (!Array.isArray(body?.ids) || !body.ids.length || body.ids.length > 3 || body.ids.some((id: unknown) => typeof id !== "string" || !/^[\da-f]{8}-(?:[\da-f]{4}-){3}[\da-f]{12}$/i.test(id)))

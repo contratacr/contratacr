@@ -1,5 +1,5 @@
 import { test, expect } from "playwright/test";
-import { gotoOK, loginAs, expectNoHorizontalOverflow, waitForInteractivePage } from "./helpers";
+import { gotoOK, loginAs, expectNoHorizontalOverflow } from "./helpers";
 import { createDisposableAccount, cleanupDisposableAccount } from "./disposable-account";
 import { canRunSeededRegression, regressionAdminClient } from "./seed";
 

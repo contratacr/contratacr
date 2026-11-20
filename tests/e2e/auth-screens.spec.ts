@@ -58,16 +58,14 @@ test.describe("@account screens through the real pages", () => {
       // The page resolves the account before rendering the cards and hands off
       // to the panel; the role question must not flash for someone who already chose.
       await page.waitForURL(/\/dashboard\//, { timeout: 30_000, waitUntil: "domcontentloaded" });
-      // The native first-run prepaint keeps the same title hidden in every
-      // document; what must never appear is the visible role question.
-      await expect(page.getByText(/¿Cómo quiere empezar\?/).filter({ visible: true })).toHaveCount(0);
+      await expect(page.getByText(/¿Para qué usarás ContrataCR\?/)).toHaveCount(0);
       await expectHealthyPage(page);
     });
 
     test("profile completion validates and saves name, phone and identification", async ({ page }) => {
       await loginAs(page, account!.email, account!.password);
       await gotoOK(page, "/completar-perfil");
-      await expectVisibleText(page.locator("body"), /Complete su perfil/);
+      await expectVisibleText(page.locator("body"), /Completa tu perfil/);
 
       // Sin nombre no se guarda. El teléfono y la identificación se llenan
       // primero porque son campos `required`: si quedan vacíos, el navegador

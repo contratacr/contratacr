@@ -8,7 +8,7 @@ const headers = { "Cache-Control": "no-store" };
 export async function POST(req: Request) {
   const admin = await getApiAdmin();
   if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403, headers });
-  const limited = await enforceRateLimit(req, "admin-identity-verify", 20, 60_000);
+  const limited = enforceRateLimit(req, "admin-identity-verify", 20, 60_000);
   if (limited) { limited.headers.set("Cache-Control", "no-store"); return limited; }
   const body = await req.json().catch(() => null);
   if (typeof body?.accountId !== "string" || !/^[\da-f]{8}-(?:[\da-f]{4}-){3}[\da-f]{12}$/i.test(body.accountId) || typeof body?.cedula !== "string" || !/^\d{9,12}$/.test(body.cedula))

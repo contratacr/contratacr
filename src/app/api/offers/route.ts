@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
     }
     if (error || !data?.id) {
       console.error("[POST /api/offers] save failed", error);
-      return NextResponse.json({ error: mensajeDeError(req, { es: "No pudimos guardar la oferta. Inténtelo nuevamente.", en: "We could not save the promotion. Try again." }) }, { status: 500 });
+      return NextResponse.json({ error: mensajeDeError(req, { es: "No pudimos guardar la oferta. Inténtalo nuevamente.", en: "We could not save the promotion. Try again." }) }, { status: 500 });
     }
     revalidateOfferViews(data.id);
     const metaConversion = payload.status === "published" && payload.offer_type === "service_offer" ? await recordGrowthConversion(req,"service_offer_published",data.id,user.id) : null;
@@ -112,7 +112,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ id: data.id, metaConversion });
   } catch (error) {
     console.error("[POST /api/offers] unexpected failure", error);
-    return NextResponse.json({ error: mensajeDeError(req, { es: "No pudimos publicar la oferta. Inténtelo nuevamente.", en: "We could not publish the promotion. Try again." }) }, { status: 500 });
+    return NextResponse.json({ error: mensajeDeError(req, { es: "No pudimos publicar la oferta. Inténtalo nuevamente.", en: "We could not publish the promotion. Try again." }) }, { status: 500 });
   }
 }
 
@@ -187,6 +187,6 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("[DELETE professional_offers] failed", error);
-    return NextResponse.json({ error: mensajeDeError(req, { es: "No pudimos eliminar esta promoción. Inténtelo nuevamente.", en: "We could not delete this promotion. Try again." }) }, { status: 500 });
+    return NextResponse.json({ error: mensajeDeError(req, { es: "No pudimos eliminar esta promoción. Inténtalo nuevamente.", en: "We could not delete this promotion. Try again." }) }, { status: 500 });
   }
 }

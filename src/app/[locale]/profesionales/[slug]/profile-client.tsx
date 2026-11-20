@@ -5,7 +5,6 @@ import type { CoverageArea } from "@/lib/public-workplaces";
 
 import { CvProfileDetails } from "@/components/professionals/cv-profile";
 import { hasCv, normalizeCv } from "@/lib/cv/model";
-import { PromotionHistory } from "@/components/pro/promotion-history";
 
 import { nombreDeSaludo } from "@/lib/nombres";
 import { ProfileIdentityName, profileIdentityAvatarClass } from "@/components/professionals/profile-identity-name";
@@ -1486,7 +1485,6 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
 
       {/* Room for the pinned action bar on phones, so the footer stays reachable. */}
       {avisoCompartir}
-      {process.env.NODE_ENV === "development" && isOwn && <div className="mx-auto w-full max-w-6xl px-4"><PromotionHistory key={professional.id} contentType="profile" contentId={professional.id}/></div>}
       {ofrecerProyecto && !isOwn && (
         <div className="fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+88px)] z-40 mx-auto flex max-w-md items-center gap-3 rounded-2xl border border-[#e5e7eb] bg-white p-3 shadow-lg lg:bottom-6">
           <div className="min-w-0 flex-1">

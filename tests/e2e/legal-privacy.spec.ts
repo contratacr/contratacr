@@ -93,7 +93,7 @@ test("native assistant sends a prompt without an extra permission step",async({p
 for(const locale of ["es","en"]) test(`login keeps the existing legal disclosure before continuing (${locale})`,async({page})=>{
  await gotoOK(page,locale === "en" ? "/en/login" : "/login");
  const main=page.locator("main");
- await expect(main).toContainText(locale === "en" ? "Consult our" : "Consulte nuestros");
+ await expect(main).toContainText(locale === "en" ? "Consult our" : "Consulta nuestros");
  await expect(main.getByRole("link",{name:locale === "en" ? "Terms" : "Términos",exact:true})).toHaveAttribute("href",/terminos/);
  await expect(main.getByRole("link",{name:locale === "en" ? "Privacy Policy" : "Política de Privacidad",exact:true})).toHaveAttribute("href",/privacidad/);
 });
@@ -123,10 +123,7 @@ test("advertising withdrawal rejects cross-origin and invalid choices", async ()
  const ts = await import("typescript");
  const code = ts.transpileModule(readFileSync("src/app/api/privacy/advertising/route.ts","utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText;
  const box = {exports:{} as {POST:(req:Request)=>Promise<Response>}};
- // The origin check lives in the shared write guard: load the real module, not a stand-in.
- const guard = {exports:{} as Record<string,unknown>};
- runInNewContext(ts.transpileModule(readFileSync("src/lib/security/write-guard.ts","utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText,{module:guard,exports:guard.exports,require:(name:string)=>({"next/server":{NextResponse},"@/lib/security/supabase-target":{}} as Record<string,unknown>)[name],URL,process});
- const mocks:Record<string,unknown> = {"next/server":{NextResponse},"@/lib/rate-limit":{enforceRateLimit:()=>null},"@/lib/privacy/optional-consent":{OPTIONAL_CONSENT_VERSION},"@/lib/security/write-guard":guard.exports,"node:crypto":{},"@/lib/supabase/server":{},"@/lib/supabase/admin":{},"@/lib/supabase/get-user":{}};
+ const mocks:Record<string,unknown> = {"next/server":{NextResponse},"@/lib/rate-limit":{enforceRateLimit:()=>null},"@/lib/privacy/optional-consent":{OPTIONAL_CONSENT_VERSION},"node:crypto":{},"@/lib/supabase/server":{},"@/lib/supabase/admin":{},"@/lib/supabase/get-user":{}};
  runInNewContext(code,{module:box,exports:box.exports,require:(name:string)=>mocks[name],URL});
  const { POST } = box.exports;
  const url = "https://contratacr.com/api/privacy/advertising";

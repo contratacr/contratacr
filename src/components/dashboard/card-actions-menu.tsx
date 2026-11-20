@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -25,21 +25,11 @@ export type CardAction = {
   icon?: ReactNode;
 };
 
-export function CardActionsMenu({ actions, label, placement = "up", triggerClassName, menuClassName, itemClassName, keyboardNavigation = false }: { actions: CardAction[]; label: string; placement?: "up" | "down"; triggerClassName?: string; menuClassName?: string; itemClassName?: string; keyboardNavigation?: boolean }) {
+export function CardActionsMenu({ actions, label, placement = "up", triggerClassName, menuClassName, itemClassName }: { actions: CardAction[]; label: string; placement?: "up" | "down"; triggerClassName?: string; menuClassName?: string; itemClassName?: string }) {
   const [open, setOpen] = useState(false);
-  const menuId = useId();
   const ref = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const focusTrigger = useCallback(() => {
-    const trigger = triggerRef.current;
-    if (trigger?.isConnected && !trigger.disabled) trigger.focus({ preventScroll: true });
-  }, []);
-
-  useLayoutEffect(() => {
-    if (!open || !keyboardNavigation || actions.length === 0) return;
-    menuRef.current?.querySelector<HTMLButtonElement>('[role="menuitem"]:not(:disabled)')?.focus({ preventScroll: true });
-  }, [open, keyboardNavigation, actions.length]);
 
   useLayoutEffect(() => {
     if (!open) return;
@@ -89,33 +79,15 @@ export function CardActionsMenu({ actions, label, placement = "up", triggerClass
       if (!ref.current?.contains(target) && !menuRef.current?.contains(target)) setOpen(false);
     }
     function onKey(e: KeyboardEvent) {
-      if (!keyboardNavigation) {
-        if (e.key === "Escape") { setOpen(false); triggerRef.current?.focus(); }
-        return;
-      }
-      if (e.key === "Escape" || e.key === "Tab") {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        setOpen(false);
-        focusTrigger();
-        return;
-      }
-      if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) return;
-      const items = Array.from(menuRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]:not(:disabled)') ?? []);
-      if (!items.length) return;
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      const current = items.findIndex(item => item === document.activeElement);
-      const next = e.key === "Home" ? 0 : e.key === "End" ? items.length - 1 : e.key === "ArrowDown" ? (current + 1) % items.length : (current <= 0 ? items.length - 1 : current - 1);
-      items[next].focus({ preventScroll: true });
+      if (e.key === "Escape") { setOpen(false); triggerRef.current?.focus(); }
     }
     document.addEventListener("pointerdown", onDown);
-    document.addEventListener("keydown", onKey, keyboardNavigation);
+    document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("pointerdown", onDown);
-      document.removeEventListener("keydown", onKey, keyboardNavigation);
+      document.removeEventListener("keydown", onKey);
     };
-  }, [open, keyboardNavigation, focusTrigger]);
+  }, [open]);
 
   if (actions.length === 0) return null;
 
@@ -128,7 +100,6 @@ export function CardActionsMenu({ actions, label, placement = "up", triggerClass
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-controls={keyboardNavigation && open ? menuId : undefined}
         aria-label={label}
         className={cn(
           "inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#e5e7eb] text-[#718096] transition-colors hover:border-[#b9c8d6] hover:bg-[#f3f4f6] hover:text-[#162543]",
@@ -141,7 +112,6 @@ export function CardActionsMenu({ actions, label, placement = "up", triggerClass
         <div
           ref={menuRef}
           role="menu"
-          id={keyboardNavigation ? menuId : undefined}
           className={cn(
             // UNA SOLA MEDIDA PARA TODOS LOS «···» DEL PANEL. Empleos y
             // Promociones pintaban el suyo a mano, con otro relleno, otra
@@ -158,7 +128,7 @@ export function CardActionsMenu({ actions, label, placement = "up", triggerClass
               key={i}
               role="menuitem"
               type="button"
-              onClick={() => { setOpen(false); if (keyboardNavigation) focusTrigger(); a.onClick(); }}
+              onClick={() => { setOpen(false); a.onClick(); }}
               className={cn(
                 "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-bold transition-colors",
                 a.destructive

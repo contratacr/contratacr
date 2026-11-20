@@ -153,7 +153,7 @@ const COPY = {
     error: "No pude responder en este momento. Inténtelo nuevamente.",
     notice: "Respuestas guiadas con datos de ContrataCR.",
     reset: "Nuevo chat",
-    resetHint: "Limpia esta conversacion y empiece de cero.",
+    resetHint: "Limpia esta conversacion y empieza de cero.",
     emptyTitle: "¿En qué le ayudo?",
     emptySubtitle: "Le guío dentro de ContrataCR con información de la app: profesionales, solicitudes, empleos, promociones y su cuenta.",
     // Quien NO es profesional: buscar, mirar, pedir y la puerta para ofrecer.

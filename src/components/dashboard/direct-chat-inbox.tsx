@@ -1087,7 +1087,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
     setAttachmentError("");
     if (!files?.length) return;
     if (activeId === DRAFT_CONVERSATION_ID) {
-      setAttachmentError(isEn ? "Send the first message before attaching files." : "Envíe el primer mensaje antes de adjuntar archivos.");
+      setAttachmentError(isEn ? "Send the first message before attaching files." : "Envia el primer mensaje antes de adjuntar archivos.");
       return;
     }
     setPreparingAttachments(true);
@@ -1095,7 +1095,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
     try {
       for (const file of Array.from(files)) {
         if (next.length >= MAX_ATTACHMENTS) {
-          setAttachmentError(isEn ? "You can attach up to 3 files per message." : "Puede adjuntar hasta 3 archivos por mensaje.");
+          setAttachmentError(isEn ? "You can attach up to 3 files per message." : "Puedes adjuntar hasta 3 archivos por mensaje.");
           break;
         }
         const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
@@ -1116,7 +1116,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
           const code = getImageUploadPreparationErrorCode(attachmentError);
           setAttachmentError(code === "too_large"
             ? (isEn ? "That image is too large. Choose a lighter image." : "La imagen es muy pesada. Elija una imagen más liviana.")
-            : (isEn ? "Attach JPG, PNG, WEBP, AVIF, HEIC, HEIF, GIF, or PDF files only." : "Adjunte solo archivos JPG, PNG, WEBP, AVIF, HEIC, HEIF, GIF o PDF."));
+            : (isEn ? "Attach JPG, PNG, WEBP, AVIF, HEIC, HEIF, GIF, or PDF files only." : "Adjunta solo archivos JPG, PNG, WEBP, AVIF, HEIC, HEIF, GIF o PDF."));
         }
       }
       setSelectedAttachments(next);

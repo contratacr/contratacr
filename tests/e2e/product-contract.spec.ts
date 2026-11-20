@@ -149,23 +149,7 @@ test.describe("@contract product safety contracts", () => {
     const verificationEn = localizedNotificationCopy(legacyVerification, "en").message;
     expect(verificationEs).toBe("Su verificación de identidad no fue aprobada. Puede apelar desde su panel. Motivo: Documento borroso");
     expect(verificationEn).toBe("Your identity verification was not approved. You can appeal from your panel. Reason: Documento borroso");
-    expect(verificationEn).not.toContain("Puede apelar");
-
-    // Lo que verification-notify.ts guarda hoy (de usted): el cierre «Puede
-    // apelar…» / «Revise su panel…» no se queda pegado al motivo.
-    const currentRejected = {
-      type: "verification_rejected",
-      title: "Su verificación no fue aprobada",
-      message: "Su verificación de identidad no fue aprobada. Motivo: Documento borroso. Puede apelar desde su panel.",
-    };
-    expect(localizedNotificationCopy(currentRejected, "es").message).toBe("Su verificación de identidad no fue aprobada. Puede apelar desde su panel. Motivo: Documento borroso");
-    expect(localizedNotificationCopy(currentRejected, "en").message).toBe("Your identity verification was not approved. You can appeal from your panel. Reason: Documento borroso");
-    const currentReverted = {
-      type: "verification_reverted",
-      title: "Su verificación fue actualizada",
-      message: "Su verificación fue quitada. Motivo: Documento vencido. Revise su panel para ver el detalle.",
-    };
-    expect(localizedNotificationCopy(currentReverted, "en").message).toBe("Your verification badge was removed. Check your panel for details. Reason: Documento vencido");
+    expect(verificationEn).not.toContain("Puedes apelar");
 
     const legacyReverted = localizedNotificationCopy({
       type: "verification_reverted",

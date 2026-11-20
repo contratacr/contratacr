@@ -138,7 +138,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
     } catch {
       void showMessage({
         title: errorTitle,
-        description: locale === "en" ? "We couldn't save your success stories. Try again." : "No pudimos guardar sus casos de éxito. Intente de nuevo.",
+        description: locale === "en" ? "We couldn't save your success stories. Try again." : "No pudimos guardar tus casos de éxito. Intenta de nuevo.",
         tone: "danger",
       });
       return false;

@@ -13,7 +13,7 @@ test("shows only the profile when the account has no publications", async ({ pag
   await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
   await page.goto("/dashboard/profesional?tab=statistics");
   const panel = page.getByTestId("statistics-panel");
-  await expect(panel.getByRole("heading", { name: "Su perfil" })).toBeVisible();
+  await expect(panel.getByRole("heading", { name: "Tu perfil" })).toBeVisible();
   await expect(panel.getByText("Visitas al perfil")).toBeVisible();
   await expect(panel.getByText("128", { exact: true })).toBeVisible();
   await expect(panel.locator("[data-status-filter-tabs]")).toHaveCount(0);

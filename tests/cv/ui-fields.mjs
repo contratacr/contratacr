@@ -15,7 +15,7 @@ for(const [name,engine] of [['chromium',chromium],['webkit',webkit]]) {
  await editor.getByLabel('Nueva habilidad',{exact:true}).press('Enter');
  await expect(editor.getByRole('button',{name:'Quitar Comunicación',exact:true})).toBeVisible();
  await editor.getByLabel('Nueva habilidad',{exact:true}).fill('comunicacion');await editor.getByLabel('Nueva habilidad',{exact:true}).press('Enter');
- await expect(editor.getByText('Ya agregaste esta habilidad.')).toBeVisible();
+ await expect(editor.getByText('Ya agregó esta habilidad.')).toBeVisible();
  await editor.getByLabel('Nueva habilidad',{exact:true}).fill('');
  await editor.getByRole('button',{name:'Quitar TypeScript',exact:true}).click();
  // Entries are closed cards; the pencil opens the form.
@@ -28,7 +28,7 @@ for(const [name,engine] of [['chromium',chromium],['webkit',webkit]]) {
  await expect(editor.getByRole('combobox',{name:'Inicio: mes',exact:true}).nth(0)).toHaveValue('4');
  await editor.getByRole('combobox',{name:'Fin: año',exact:true}).nth(0).selectOption('2023');
  await page.getByTestId('profile-save-certs').click();
- await expect(page.getByRole('alert').filter({hasText:'Revisá los títulos, las fechas'})).toBeVisible();
+ await expect(page.getByRole('alert').filter({hasText:'Revise los títulos, las fechas'})).toBeVisible();
  expect(await page.evaluate(()=>JSON.parse(sessionStorage.getItem('cv-saved')).experience[0].period)).toBe('04/2024 – 12/2024');
  await editor.getByLabel('Actualmente trabajo aquí',{exact:true}).check();
  await expect(editor.getByRole('combobox',{name:'Fin: año',exact:true})).toHaveCount(0);

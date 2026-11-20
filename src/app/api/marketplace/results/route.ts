@@ -6,7 +6,7 @@ import { marketplacePage } from "@/lib/marketplace/feed-server";
 import type { FeedFilters, FeedSection } from "@/lib/marketplace/feed";
 export const dynamic="force-dynamic";
 export async function GET(request:Request){
-  const limited=await enforceRateLimit(request,"marketplace-results",90,60000);if(limited)return limited;
+  const limited=enforceRateLimit(request,"marketplace-results",90,60000);if(limited)return limited;
   const params=new URL(request.url).searchParams;
   const section=params.get("section") as FeedSection;
   if(!["proyectos","promociones","empleos"].includes(section))return NextResponse.json({error:"Invalid section"},{status:400});

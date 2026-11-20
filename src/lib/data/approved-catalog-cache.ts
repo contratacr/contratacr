@@ -1,4 +1,3 @@
-import { usesLocalProNodeCache } from "@/lib/cache/local-pro-runtime";
 import "server-only";
 import { revalidateTag, unstable_cache } from "next/cache";
 import { buildApprovedCatalog, type ApprovedCatalog } from "./approved-catalog";
@@ -22,7 +21,6 @@ const localCatalog = unstable_cache(async (project: string) => {
 }, ["approved-public-catalog-v1"], { revalidate: TTL_MS / 1000, tags: [LOCAL_TAG] });
 
 async function bucket(): Promise<Bucket | null> {
-  if (usesLocalProNodeCache(process.env.NODE_ENV, process.env.NEXT_PUBLIC_SUPABASE_URL)) return null;
   try {
     const { getCloudflareContext } = await import("@opennextjs/cloudflare");
     const context = await getCloudflareContext({ async: true });

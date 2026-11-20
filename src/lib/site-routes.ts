@@ -17,33 +17,9 @@ export const RUTAS_DEL_SITIO = new Set([
   // La invitación a reseñar en Google, a la que lleva el aviso de la campanita.
   "resena-google", "reset-password", "verificacion-de-identidad", "baja-correos",
   "servicio-no-disponible", "servicios", "soporte", "terminos",
-  // Pro local: página pública del proveedor invitado a una licitación (solo desarrollo).
-  "licitacion-proveedor",
-  // Pro local (Ronda 6A): página pública de un enlace de pago (solo desarrollo).
-  "pagar",
-  // Pro local (Ronda 6D): sitio web del profesional (/sitio/<slug>) y baja de sus campañas de correo (solo desarrollo).
-  "sitio", "baja-pro",
-  // Pro local (correcciones post-seguridad): confirmación de la suscripción del formulario del sitio (doble confirmación, solo desarrollo).
-  "confirmar-pro",
-  // Pro local: vista previa del espacio Pro (solo desarrollo; el middleware ya la reescribe a /es/pro-preview).
-  "pro-preview",
-  // Pro local (directorio multivertical, solo desarrollo): ficha de un lugar (/lugar/<slug>), secciones con búsqueda,
-  // anuncios de vehículos e inmuebles. «Cómo ordenamos» (F0) explica la neutralidad del orden.
-  "lugar", "restaurantes", "farmacias", "supermercados", "gasolineras", "vehiculos", "inmuebles", "como-ordenamos",
-  // Secciones nuevas del directorio (aprobadas el 2026-11-17, solo desarrollo).
-  "cafes", "pulperias", "ferreterias", "hospedaje", "salud", "veterinarias", "talleres", "belleza", "gimnasios", "tours", "bancos",
-  // P3 (solo desarrollo): comparador de precios de supermercados y farmacias (solo venta libre).
-  "precios",
-  // Ronda de funciones del directorio (2026-11-17, solo desarrollo): agenda de eventos, páginas de marca, mis listas y
-  // listas compartidas (/lista/<token>).
-  "eventos", "marca", "listas", "lista",
-  // Arreglos pendientes (2026-11-17, solo desarrollo): enlace privado de una reserva (/reserva/<token>) y «Mis reservas».
-  "reserva", "mis-reservas",
   // enlaces cortos de campañas y archivos servidos desde la raíz
   "ig", "tt", "fb", "wa", "pro",
   // enlaces cortos de ficha: /o/<oferta>, /e/<empleo>, /c/<cotización>
   "o", "e", "c", "p",
   "sitemap.xml", "robots.txt", "favicon.ico", "manifest.json",
-  // Sitemap del directorio (/sitemap-directorio/sitemap/<n>.xml).
-  "sitemap-directorio",
 ]);

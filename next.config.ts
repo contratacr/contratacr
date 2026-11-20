@@ -21,15 +21,6 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  // Local Pro QA traverses more than the default five development entries.
-  // Keep compiled modules between flows; never relax authentication timeouts
-  // or change the production cache/data policy to accommodate compilation.
-  ...(process.env.NODE_ENV === "development"
-    && process.env.NEXT_PUBLIC_SUPABASE_URL === "http://127.0.0.1:54321"
-    ? { onDemandEntries: { maxInactiveAge: 15 * 60 * 1000, pagesBufferLength: 20 } }
-    : {}),
-  ...(process.env.NODE_ENV === "development" && process.env.NEXT_PUBLIC_PRO_LAN_ORIGIN
-    ? { allowedDevOrigins: [new URL(process.env.NEXT_PUBLIC_PRO_LAN_ORIGIN).hostname] } : {}),
   // Sin el círculo «N» de desarrollo: caía justo encima de la pestaña
   // Profesionales del menú de abajo y el toque le llegaba a él, no a la pestaña
   // (parecía que el botón no respondía). Los errores de compilación y de
@@ -43,9 +34,6 @@ const nextConfig: NextConfig = {
   experimental: {
     // 177 importaciones de `lucide-react`: que cada una traiga su icono y no el barril.
     optimizePackageImports: ["lucide-react"],
-    // Ronda 7C (Pro local): los archivos privados Pro admiten 20 MiB; el cuerpo JSON en base64 llega a
-    // ~28 MB y el middleware (proxy) lo recorta a 10 MB por defecto. 30 MB cubre ese máximo.
-    proxyClientMaxBodySize: "30mb",
     staleTimes: {
       dynamic: 300,
       static: 1800,
@@ -62,10 +50,7 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
-      { source: "/:path*", headers: securityHeaders.filter(header => !["Content-Security-Policy", "Referrer-Policy"].includes(header.key)) },
-      // Private print and file handlers own their stricter response CSP and referrer policy.
-      // Global response headers would replace those dynamic route headers.
-      { source: "/:path((?!api/pro/(?:invoice-print|payment-receipt-print|work-files|team-task-discussion|company-files|daily-log-files)/?$).*)", headers: securityHeaders.filter(header => ["Content-Security-Policy", "Referrer-Policy"].includes(header.key)) },
+      { source: "/:path*", headers: securityHeaders },
       // Next's global defaults also override route headers locally. Keep the
       // native handoff stricter; Cloudflare receives the same headers directly
       // from its route handler (it does not apply this Next header table).

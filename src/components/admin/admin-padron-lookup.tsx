@@ -41,7 +41,7 @@ export function AdminPadronLookup({ standalone = false }: { standalone?: boolean
     </button>}
     {standalone && <h2 className="px-5 pt-5 text-lg font-bold text-[#162543]">Consultar identificación</h2>}
     {open && <form id="admin-padron-form" onSubmit={consult} aria-busy={loading} className={`${standalone ? "" : "border-t border-[#eef2f6]"} p-5`}>
-      <p className="mb-3 text-xs leading-5 text-[#68778d]">Consultá el nombre o razón social en Hacienda. Admite identificación nacional, jurídica, DIMEX y NITE. No muestra información tributaria.</p>
+      <p className="mb-3 text-xs leading-5 text-[#68778d]">Consulte el nombre o razón social en Hacienda. Admite identificación nacional, jurídica, DIMEX y NITE. No muestra información tributaria.</p>
       <label htmlFor="admin-padron-cedula" className="text-xs font-semibold text-[#526277]">Número de identificación</label>
       <div className="mt-2 flex flex-col gap-2 sm:flex-row">
         <input id="admin-padron-cedula" value={cedula} onChange={event => { setCedula(event.target.value); setResult(null); setError(""); }}

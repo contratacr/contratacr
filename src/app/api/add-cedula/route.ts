@@ -13,7 +13,7 @@ import { runIdentityVerification } from "@/lib/verification/run-verification";
 // the normal Hacienda verification automatically.
 export async function POST(req: Request) {
   // Public endpoint: bound abuse and enumeration per client IP.
-  const limited = await enforceRateLimit(req, "add-cedula", 10, 600000);
+  const limited = enforceRateLimit(req, "add-cedula", 10, 600000);
   if (limited) return limited;
   const session = await createServerClient();
   const { data: { user } } = await session.auth.getUser();

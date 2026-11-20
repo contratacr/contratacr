@@ -20,7 +20,7 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
     await page.getByRole('button', { name: 'Agregar otra zona' }).click();
     await page.getByRole('button', { name: 'Un cantón', exact: true }).click();
     await page.getByRole('option', { name: 'Toda una provincia' }).click();
-    await page.getByRole('button', { name: 'Elegí una provincia' }).click();
+    await page.getByRole('button', { name: 'Elija una provincia' }).click();
     await page.getByRole('option', { name: 'Heredia' }).click();
     await page.getByRole('button', { name: 'Agregar zona', exact: true }).click();
     await expect(page.getByText('Heredia', { exact: true })).toBeVisible();

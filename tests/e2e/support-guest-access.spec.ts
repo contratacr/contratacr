@@ -60,7 +60,7 @@ test.describe("private support case in regression", () => {
     const cookie = (await page.context().cookies()).find(c => c.name === `support_guest_${id}`);
     expect(cookie?.httpOnly).toBe(true);
     expect(cookie?.sameSite).toBe("Strict");
-    await page.getByLabel("Su respuesta", { exact: true }).fill("Todavía no puedo entrar <script>no ejecutar</script>");
+    await page.getByLabel("Tu respuesta", { exact: true }).fill("Todavía no puedo entrar <script>no ejecutar</script>");
     await page.getByRole("button", { name: "Enviar respuesta", exact: true }).click();
     await expect(page.getByRole("status")).toContainText("Respuesta enviada");
     await expect(page.getByText("Todavía no puedo entrar <script>no ejecutar</script>", { exact: true })).toBeVisible();

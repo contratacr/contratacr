@@ -14,7 +14,7 @@ import { invitarAPublicarProyecto } from "@/lib/notifications/invitacion-a-publi
 
 export async function POST(req: Request) {
   // Public endpoint: bound abuse and enumeration per client IP.
-  const limited = await enforceRateLimit(req, "register", 10, 600000);
+  const limited = enforceRateLimit(req, "register", 10, 600000);
   if (limited) return limited;
   try {
     const body = await req.json();

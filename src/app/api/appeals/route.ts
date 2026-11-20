@@ -11,7 +11,7 @@ export async function POST(req: Request) {
   const session = await createServerClient();
   const { data: { user } } = await session.auth.getUser();
   if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-  const limited = await enforceRateLimit(req, "verification-appeal", 6, 60_000);
+  const limited = enforceRateLimit(req, "verification-appeal", 6, 60_000);
   if (limited) return limited;
   const body = await req.json().catch(() => ({}));
   const message = typeof body.message === "string" ? body.message.trim() : "";

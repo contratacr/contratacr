@@ -1,6 +1,4 @@
 "use client";
-import { ProjectQuoteAction } from "./project-quote-action";
-import { PromotionHistory } from "@/components/pro/promotion-history";
 import { SectionBrand } from "@/components/layout/section-brand";
 import { useMarketplaceFeed } from "@/hooks/use-marketplace-feed";
 import { MarketplaceFeedFeedback } from "@/components/marketplace/feed-loading";
@@ -52,7 +50,7 @@ const COPY = {
     // Cada tablero pregunta por lo suyo: aquí se buscan PROYECTOS, no
     // profesionales. «¿Qué servicio estás buscando?» es la frase de /buscar, y
     // repetida aquí parecía que la pantalla buscaba a quién contratar.
-    buscar: "¿Qué solicitud busca?",
+    buscar: "¿Qué solicitud buscas?",
     abrirMenu: "Abrir menú",
     notificaciones: "Notificaciones",
     publicar: "Publicar una solicitud",
@@ -91,7 +89,7 @@ const COPY = {
     // La llamada solo existe si el cliente la habilitó al publicar.
     necesitaCuentaConLlamada: "Entre con su cuenta profesional para escribirle por WhatsApp o llamarle.",
     necesitaCuentaSoloWhatsapp: "Entre con su cuenta profesional para escribirle por WhatsApp.",
-    esTuyo: "Esta solicitud es suya.",
+    esTuyo: "Esta solicitud es tuya.",
     todoElPais: "Todo Costa Rica",
     cuenta: (n: number) => `${n} ${n === 1 ? "solicitud" : "solicitudes"}`,
   },
@@ -844,8 +842,6 @@ export function ProjectsBoard({
                           renglón; LinkedIn e Indeed usan entre 90 y 100. La
                           tarjeta se queda grande y el párrafo se lee. */}
                       <p className="mt-3 whitespace-pre-line break-words text-sm leading-7 text-[#43536b] [overflow-wrap:anywhere]">{ficha.description}</p>
-                      {ficha.allow_direct_contact&&!misProyectos.includes(ficha.id)&&<ProjectQuoteAction projectId={ficha.id}/>}
-                      {process.env.NODE_ENV === "development" && misProyectos.includes(ficha.id) && <PromotionHistory key={ficha.id} contentType="project" contentId={ficha.id}/>}
                       {/* TELÉFONO: lo que contacta, en la franja de abajo; guardar
                           y compartir viven en el «···» de la barra de arriba. */}
                       {/* En la franja de abajo va lo que se hace con esta

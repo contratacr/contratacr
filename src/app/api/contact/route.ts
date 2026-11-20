@@ -7,7 +7,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import { validateUpload, IMAGE_KINDS, DOC_KINDS } from "@/lib/upload-validation";
-import { cleanImageUpload } from "@/lib/media/clean-image-upload";
 import { brandedEmailDocument, sendBrevoEmail } from "@/lib/email/send";
 import { notifyUserTicketCreated, supportTicketCreatedAutoMessage } from "@/lib/support-notify";
 import { supportTicketRef } from "@/lib/support-ticket";
@@ -103,7 +102,7 @@ function buildHtml(name: string, email: string, subject: string, message: string
         <hr style="border:none;border-top:1px solid #f3f4f6;margin:16px 0;"/>
         <div style="font-size:14px;color:#374151;line-height:1.7;white-space:pre-wrap;">${message.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
         <hr style="border:none;border-top:1px solid #f3f4f6;margin:24px 0 16px;"/>
-        <p style="font-size:12px;color:#9ca3af;margin:0;">Responda directamente a este correo para contestar al usuario.</p>`,
+        <p style="font-size:12px;color:#9ca3af;margin:0;">Responde directamente a este correo para contestar al usuario.</p>`,
   });
 }
 
@@ -215,7 +214,7 @@ async function resolveRequester(input: { name: string; email: string }) {
 }
 
 export async function POST(req: NextRequest) {
-  const rl = await enforceRateLimit(req, "contact", 5, 60_000);
+  const rl = enforceRateLimit(req, "contact", 5, 60_000);
   if (rl) return rl;
   try {
     const parsed = await parseRequest(req);
@@ -243,12 +242,6 @@ export async function POST(req: NextRequest) {
       if (!check.ok) {
         return NextResponse.json({ ok: false, error: check.error }, { status: 400 });
       }
-      // Privacy: strip EXIF/GPS/XMP from image attachments before they are emailed (fail closed). PDFs untouched.
-      const cleaned = cleanImageUpload(check.kind, f.content);
-      if (!cleaned.ok) {
-        return NextResponse.json({ ok: false, error: mensajeDeError(req, cleaned.text), code: cleaned.code }, { status: 400 });
-      }
-      f.content = cleaned.bytes;
     }
 
     // Record the ticket in the admin panel (primary record), then notify the support

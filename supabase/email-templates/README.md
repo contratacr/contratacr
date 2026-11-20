@@ -53,9 +53,9 @@ Production should be applied through GitHub Actions with environment approval:
 - Layout uses tables and inline fallback CSS.
 - Spanish neutral. Do not alter `{{ .Variable }}` tokens because they generate real links and codes.
 - Suggested subjects:
-  - Confirm signup: `Tu codigo de confirmacion - ContrataCR`
-  - Invite user: `Te invitaron a ContrataCR`
-  - Magic Link: `Tu enlace de acceso - ContrataCR`
-  - Change Email: `Confirma tu nuevo correo - ContrataCR`
-  - Reset Password: `Restablece tu contrasena - ContrataCR`
-  - Reauthentication: `Tu codigo de verificacion - ContrataCR`
+  - Confirm signup: `Su codigo de confirmacion - ContrataCR`
+  - Invite user: `Invitación a ContrataCR`
+  - Magic Link: `Su enlace de acceso - ContrataCR`
+  - Change Email: `Confirme su nuevo correo - ContrataCR`
+  - Reset Password: `Restablezca su contrasena - ContrataCR`
+  - Reauthentication: `Su codigo de verificacion - ContrataCR`

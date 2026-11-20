@@ -453,7 +453,7 @@ test.describe("@seeded ContrataCR AI", () => {
     });
     expect(empty.status).toBe(200);
     expect(empty.body.action).toBe("answer");
-    expect(empty.body.answer).toMatch(/Ind[ií]queme qu[eé] necesita|Dime qu./i);
+    expect(empty.body.answer).toMatch(/Dime que necesitas|Dime qu./i);
   });
 
   test("product manual contains every current business area the AI must explain", async () => {

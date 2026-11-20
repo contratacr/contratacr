@@ -16,7 +16,7 @@ export async function POST(req: Request) {
   } = await session.auth.getUser();
   if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-  const limited = await enforceRateLimit(req, "verify-identity", 6, 60_000);
+  const limited = enforceRateLimit(req, "verify-identity", 6, 60_000);
   if (limited) return limited;
   const admin = createAdminClient();
   const { data: pro } = await admin

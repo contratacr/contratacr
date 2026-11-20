@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { MoreHorizontal } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -27,12 +27,6 @@ export type OpcionFicha = {
  * En el teléfono abre una hoja desde abajo; en computadora, un panel junto al
  * botón. La misma marcación en los dos casos: solo cambian las clases.
  */
-// Hidratado o no: el «···» llega pintado del servidor y un toque antes de
-// hidratar no abría nada (pasaba al abrir la ficha propia: «no puedo
-// guardarme a mí mismo aunque pulse apenas abre»). Mismo patrón que la
-// insignia de verificado: deshabilitado hasta que puede responder.
-const suscribirNada = () => () => {};
-
 export function MenuFicha({
   opciones,
   grande = false,
@@ -53,7 +47,6 @@ export function MenuFicha({
 }) {
   const t = useTranslations("menuFicha");
   const [abiertoPropio, setAbiertoPropio] = useState(false);
-  const listo = useSyncExternalStore(suscribirNada, () => true, () => false);
   const abierto = controlado ? controlado.abierto : abiertoPropio;
   const setAbierto = (valor: boolean | ((v: boolean) => boolean)) => {
     const siguiente = typeof valor === "function" ? valor(abierto) : valor;
@@ -143,7 +136,6 @@ export function MenuFicha({
       <button
         type="button"
         hidden={!!controlado}
-        disabled={!listo}
         aria-label={t("more")}
         aria-haspopup="menu"
         aria-expanded={abierto}

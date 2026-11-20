@@ -41,11 +41,11 @@ const SESION = "ccr:resena-invitacion-sesion:v1";
 
 const COPIA = {
   cliente: {
-    es: { titulo: "Tu reseña ayuda a otros a encontrar ayuda", cuerpo: "Cuanta más gente conoce ContrataCR, más fácil es para todos encontrar un buen profesional cerca. Una reseña tuya ayuda a que eso pase." },
+    es: { titulo: "Su reseña ayuda a otros a encontrar ayuda", cuerpo: "Cuanta más gente conoce ContrataCR, más fácil es para todos encontrar un buen profesional cerca. Una reseña suya ayuda a que eso pase." },
     en: { titulo: "Your review helps others find help", cuerpo: "The more people know ContrataCR, the easier it is for everyone to find a good professional nearby. A review from you helps make that happen." },
   },
   profesional: {
-    es: { titulo: "Tu reseña nos ayuda a traerte más clientes", cuerpo: "Cuanta más gente conoce ContrataCR, más clientes encuentran tu perfil. Una reseña tuya ayuda a que eso pase." },
+    es: { titulo: "Su reseña nos ayuda a traerle más clientes", cuerpo: "Cuanta más gente conoce ContrataCR, más clientes encuentran su perfil. Una reseña suya ayuda a que eso pase." },
     en: { titulo: "Your review helps us bring you more clients", cuerpo: "The more people know ContrataCR, the more clients find your profile. A review from you helps make that happen." },
   },
 } as const;

@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: mensajeDeError(req, { es: "El empleo contiene una opción no válida.", en: "The job contains an invalid option." }) }, { status: 400 });
     }
     const location = typeof body.location_label === "string" ? body.location_label.trim().slice(0, 200) : "";
-    if (body.workplace_type !== "remote" && !location) return NextResponse.json({ error: mensajeDeError(req, { es: "Indique la ubicación del empleo.", en: "Enter the job location." }) }, { status: 400 });
+    if (body.workplace_type !== "remote" && !location) return NextResponse.json({ error: mensajeDeError(req, { es: "Indica la ubicación del empleo.", en: "Enter the job location." }) }, { status: 400 });
 
     const payload = {
       employer_id: employerId,
@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
     }
     if (error || !data?.id) {
       console.error("[POST /api/jobs/posts] save failed", error);
-      return NextResponse.json({ error: mensajeDeError(req, { es: "No pudimos guardar el empleo. Inténtelo nuevamente.", en: "We could not save the job. Try again." }) }, { status: 500 });
+      return NextResponse.json({ error: mensajeDeError(req, { es: "No pudimos guardar el empleo. Inténtalo nuevamente.", en: "We could not save the job. Try again." }) }, { status: 500 });
     }
     revalidateJobViews(data.id);
     // Una vacante publicada le suena a quien hace ese oficio. Si falla el
@@ -140,7 +140,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ id: data.id, metaConversion });
   } catch (error) {
     console.error("[POST /api/jobs/posts] unexpected failure", error);
-    return NextResponse.json({ error: mensajeDeError(req, { es: "No pudimos publicar el empleo. Inténtelo nuevamente.", en: "We could not publish the job. Try again." }) }, { status: 500 });
+    return NextResponse.json({ error: mensajeDeError(req, { es: "No pudimos publicar el empleo. Inténtalo nuevamente.", en: "We could not publish the job. Try again." }) }, { status: 500 });
   }
 }
 
@@ -203,6 +203,6 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ ok: true, metaConversion });
   } catch (error) {
     console.error("[DELETE job_posts] failed", error);
-    return NextResponse.json({ error: mensajeDeError(req, { es: "No pudimos eliminar este empleo. Inténtelo nuevamente.", en: "We could not delete this job. Try again." }) }, { status: 500 });
+    return NextResponse.json({ error: mensajeDeError(req, { es: "No pudimos eliminar este empleo. Inténtalo nuevamente.", en: "We could not delete this job. Try again." }) }, { status: 500 });
   }
 }

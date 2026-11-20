@@ -1,11 +1,7 @@
 import { test, expect } from "playwright/test";
 import { gotoOK, waitForInteractivePage } from "./helpers";
-import { stabilizeLocalProRuntime } from "./pro-local-stable-runtime";
 
-test("navbar logo stays identical without web fonts across public routes", async ({ page, baseURL }) => {
-  if (baseURL === "http://127.0.0.1:3185" && process.env.NEXT_PUBLIC_SUPABASE_URL === "http://127.0.0.1:54321") {
-    await stabilizeLocalProRuntime(page.context(), baseURL);
-  }
+test("navbar logo stays identical without web fonts across public routes", async ({ page }) => {
   // Reproduce a cold/slow font request: the logo must not fall back to Arial.
   await page.route(/\.woff2(?:\?.*)?$/, route => route.abort());
   for (const path of ["/", "/registro", "/login", "/solicitudes", "/promociones", "/empleos"]) {
@@ -81,7 +77,7 @@ test("mobile search text aligns across both fields and all four search surfaces"
   await page.setViewportSize({ width: 390, height: 844 });
   for (const path of ["/buscar", "/solicitudes", "/empleos", "/promociones", "/en/buscar"]) {
     await gotoOK(page, path);
-    const entry = path.includes("buscar") ? page.locator("header").getByRole("button", { name: /What service are you looking for|Qué servicio está buscando|Services, restaurants, pharmacies|Servicios, restaurantes, farmacias/i }).filter({ visible: true }).first() : page.locator(".ccr-marketplace-sticky input").filter({ visible: true }).first();
+    const entry = path.includes("buscar") ? page.locator("header").getByRole("button", { name: /What service are you looking for|Qué servicio estás buscando/i }).filter({ visible: true }).first() : page.locator(".ccr-marketplace-sticky input").filter({ visible: true }).first();
     await expect(entry).toBeVisible();
     await entry.click();
     const sheet = page.locator(".ccr-native-search-panel, .ccr-hoja-buscador").filter({ visible: true });

@@ -21,7 +21,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { LONG_TEXT_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
 import { primaryPricingLabel } from "@/lib/pricing";
-import { directoryAssistantAnswer } from "@/lib/directory/assistant-tools-server";
 
 type Locale = "es" | "en";
 type Role = "assistant" | "user";
@@ -638,7 +637,7 @@ function categoryClarification(text: string, locale: Locale, labels: Map<string,
   if (options.length === 0) {
     return locale === "en"
       ? "Which service do you need? Please write the service name so I can search correctly."
-      : "¿Qué servicio necesita? Escríbame el nombre del servicio para buscar correctamente.";
+      : "¿Qué servicio necesitas? Escríbame el nombre del servicio para buscar correctamente.";
   }
   const formatted = options.map((option) => `"${option}"`).join(", ");
   return locale === "en"
@@ -774,7 +773,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
   {
     test: (n) => /^(hola|holi|buenas|buenos dias|buenas tardes|buenas noches|hello|hi|hey|saludos)[\s!.,]*(\w+[\s!.,]*){0,3}$/.test(n) && n.split(/\s+/).length <= 4,
     answer: {
-      es: "¡Hola! Puedo ayudarle a encontrar un profesional (indíqueme el servicio y la zona, por ejemplo \"un electricista en Heredia\") o explicarle cómo funciona ContrataCR. ¿Qué necesita?",
+      es: "¡Hola! Puedo ayudarte a encontrar un profesional (dime el servicio y la zona, por ejemplo \"un electricista en Heredia\") o explicarte cómo funciona ContrataCR. ¿Qué necesitas?",
       en: "Hi! I can help you find a professional (tell me the service and the area, for example \"an electrician in Heredia\") or explain how ContrataCR works. What do you need?",
     },
   },
@@ -782,7 +781,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(agreg|anad|sum|add).{0,12}(un |otro |mas |another |a )?(servicio|servicios|service|services)/.test(n),
     action: "open_dashboard",
     answer: {
-      es: "Para agregar un servicio abra su panel, entre a Servicios y toque \"Agregar servicio\": elija el servicio, sus zonas y el precio de referencia. Aparece en su perfil y en las búsquedas de ese servicio.",
+      es: "Para agregar un servicio abre tu panel, entra a Servicios y toca \"Agregar servicio\": eliges el servicio, tus zonas y el precio de referencia. Aparece en tu perfil y en las búsquedas de ese servicio.",
       en: "To add a service open your panel, go to Services and tap \"Add service\": pick the service, your areas and a reference price. It shows on your profile and in searches for that service.",
     },
     cta: { es: "Ir a Servicios", en: "Open Services" },
@@ -794,14 +793,14 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(como|cómo).{0,6}(se|saber|sabre|elijo|escojo|escoger|elegir|reviso|confio|confiar).{0,40}(bueno|buena|confiable|confiar|elegir|escoger|mejor|calidad|serio)/.test(n)
       || /(en quien|en quien) confiar|profesional (bueno|confiable|serio)|how (do i|can i|to) (know|choose|pick|trust).{0,30}(good|reliable|trust|best|quality)/.test(n),
     answer: {
-      es: `${PARA_COMPARAR.es} Lea sobre todo las reseñas y mire sus casos de éxito en trabajos parecidos al suyo; escriba a dos o tres profesionales y compare. ${ACUERDO_DIRECTO.es}`,
+      es: `${PARA_COMPARAR.es} Lee sobre todo las reseñas y mira sus casos de éxito en trabajos parecidos al tuyo; escribe a dos o tres profesionales y compara. ${ACUERDO_DIRECTO.es}`,
       en: `${PARA_COMPARAR.en} Read the reviews above all and look at their success stories on jobs like yours; message two or three professionals and compare. ${ACUERDO_DIRECTO.en}`,
     },
   },
   {
     test: (n) => !/verific/.test(n) && (/(garantiz|garantia|se hacen responsables|son responsables|responden por|responsabilidad)/.test(n) || /(guarantee|warranty|are you responsible|liable|liability)/.test(n)),
     answer: {
-      es: `El trabajo lo realiza el profesional, y la garantía la acuerda directamente con él: pídasela por escrito junto con el precio y los plazos. Para elegir con confianza, ${PARA_COMPARAR.es.charAt(0).toLowerCase()}${PARA_COMPARAR.es.slice(1)}`,
+      es: `El trabajo lo realiza el profesional, y la garantía la acuerdas directamente con él: pídesela por escrito junto con el precio y los plazos. Para elegir con confianza, ${PARA_COMPARAR.es.charAt(0).toLowerCase()}${PARA_COMPARAR.es.slice(1)}`,
       en: `The work is done by the professional, and you agree on any warranty directly with them: ask for it in writing along with price and timing. To choose with confidence, ${PARA_COMPARAR.en.charAt(0).toLowerCase()}${PARA_COMPARAR.en.slice(1)}`,
     },
   },
@@ -809,7 +808,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(mal trabajo|trabajo mal hecho|me estafo|me estafaron|estafa|no termino|no cumplio|no llego|no vino|problema con (un|el|mi) profesional|queja|quejarme|reclamo|bad job|scam|scammed|didn.?t (finish|show)|complaint)/.test(n),
     action: "support",
     answer: {
-      es: "Lo sentimos. Primero háblelo con el profesional por escrito: el acuerdo lo hicieron entre ustedes. Luego deje una reseña honesta en su perfil: es lo que ayuda a los demás a elegir. Si hubo engaño, trato abusivo o algo inseguro, repórtelo desde su perfil (menú ··· → Reportar perfil) o abra un caso de soporte: lo revisamos en 24 horas y podemos limitar o suspender la cuenta. Si necesita reclamar el dinero o el trabajo, eso se hace ante la oficina de protección al consumidor (MEIC) o las autoridades.",
+      es: "Lo sentimos. Primero háblalo con el profesional por escrito: el acuerdo lo hicieron entre ustedes. Luego deja una reseña honesta en su perfil: es lo que ayuda a los demás a elegir. Si hubo engaño, trato abusivo o algo inseguro, repórtalo desde su perfil (menú ··· → Reportar perfil) o abre un caso de soporte: lo revisamos en 24 horas y podemos limitar o suspender la cuenta. Si necesitas reclamar el dinero o el trabajo, eso se hace ante la oficina de protección al consumidor (MEIC) o las autoridades.",
       en: "We're sorry. First raise it with the professional in writing: the agreement was between the two of you. Then leave an honest review on their profile: it's what helps others choose. If there was deceit, abuse or something unsafe, report it from their profile (··· menu → Report profile) or open a support case: we review it within 24 hours and can limit or suspend the account. To claim money or the work back, that goes through the consumer protection office (MEIC) or the authorities.",
     },
     cta: { es: "Abrir un caso de soporte", en: "Open a support case" },
@@ -828,7 +827,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
   {
     test: (n) => /(crear|creo|publicar|publico|create|post).{0,10}(o|or).{0,10}(buscar|busco|ver|find|see).{0,15}(proyectos?|projects?)/.test(n),
     answer: {
-      es: "Para pedir un trabajo, toque el \"+\" de abajo y elija \"Publicar una solicitud\": cuenta qué necesita y los profesionales de ese servicio le escriben. Las solicitudes que ya publicó la gente están en Solicitudes, en el menú de arriba.",
+      es: "Para pedir un trabajo, toca el \"+\" de abajo y elige \"Publicar una solicitud\": cuentas qué necesitas y los profesionales de ese servicio te escriben. Las solicitudes que ya publicó la gente están en Solicitudes, en el menú de arriba.",
       en: "To request a job, tap the \"+\" at the bottom and choose \"Post a request\": you describe what you need and professionals in that service write to you. Requests other people posted are in Requests, in the top menu.",
     },
     cta: { es: "Publicar solicitud", en: "Post request" },
@@ -848,7 +847,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
   {
     test: (n) => /(comision|comisiones|commission|porcentaje)/.test(n) || (/(pagar|pago|pagos|cobra|cobran|tarjeta|suscripcion|mensualidad|premium|pay|payment|subscription)/.test(n) && /(app|aplicacion|contratacr|plataforma|cuenta|usar|por usar|premium|suscripcion|subscription)/.test(n)),
     answer: {
-      es: "No hay nada que pagar: ContrataCR es gratis, no tiene suscripciones ni pagos dentro de la app y no cobra comisión. Lo que cueste un servicio lo acuerda directamente con el profesional.",
+      es: "No hay nada que pagar: ContrataCR es gratis, no tiene suscripciones ni pagos dentro de la app y no cobra comisión. Lo que cueste un servicio lo acuerdas directamente con el profesional.",
       en: "There is nothing to pay: ContrataCR is free, has no subscriptions or in-app payments and charges no commission. Whatever a service costs is agreed directly with the professional.",
     },
   },
@@ -866,7 +865,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(cambi|actualiz|modific|poner|nueva|change|update|new).{0,20}(contrasena|clave|password)/.test(n) || /(contrasena|clave|password).{0,20}(cambi|nueva|new)/.test(n),
     action: "open_dashboard",
     answer: {
-      es: "En su panel, abra Cuenta y seguridad: ahí escribe la contraseña actual y la nueva. Si no la recuerda, use \"¿Olvidó su contraseña?\" al iniciar sesión.",
+      es: "En tu panel, abre Cuenta y seguridad: ahí escribes la contraseña actual y la nueva. Si no la recuerdas, usa \"¿Olvidaste tu contraseña?\" al iniciar sesión.",
       en: "In your panel, open Account & security: enter your current password and the new one. If you don't remember it, use \"Forgot your password?\" when signing in.",
     },
     cta: { es: "Ir a Cuenta y seguridad", en: "Open Account & security" },
@@ -876,7 +875,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(elimin|borr|cerr|dar de baja|desactiv|delete|close|deactivate|remove).{0,20}(mi cuenta|la cuenta|cuenta|my account|account)/.test(n),
     action: "open_dashboard",
     answer: {
-      es: "En su panel, abra Cuenta y seguridad y baje hasta \"Eliminar cuenta\". Se borran su perfil, sus solicitudes y sus mensajes; no se puede deshacer.",
+      es: "En tu panel, abre Cuenta y seguridad y baja hasta \"Eliminar cuenta\". Se borran tu perfil, tus solicitudes y tus mensajes; no se puede deshacer.",
       en: "In your panel, open Account & security and scroll to \"Delete account\". Your profile, requests and messages are removed; it cannot be undone.",
     },
     cta: { es: "Ir a Cuenta y seguridad", en: "Open Account & security" },
@@ -888,7 +887,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => !/garantiz|guarantee/.test(n) && (/(verific|validar|confirmar|verify|validate).{0,25}(cedula|identidad|identity|id\b)/.test(n) || /(cedula|identidad).{0,20}(verific|validar)/.test(n) || /(verificacion|verificado|verificarme|verification|verified)/.test(n)),
     action: "open_dashboard",
     answer: {
-      es: "En su panel, abra Cuenta y seguridad → Datos básicos y escriba su número de cédula: se comprueba contra el padrón y su nombre queda verificado. Los profesionales además pasan por la verificación del equipo, que aparece como \"Verificado\" en el perfil.",
+      es: "En tu panel, abre Cuenta y seguridad → Datos básicos y escribe tu número de cédula: se comprueba contra el padrón y tu nombre queda verificado. Los profesionales además pasan por la verificación del equipo, que aparece como \"Verificado\" en el perfil.",
       en: "In your panel, open Account & security → Basic details and enter your ID number: it is checked against the national registry and your name gets verified. Professionals also go through the team's verification, shown as \"Verified\" on the profile.",
     },
     cta: { es: "Ir a Cuenta y seguridad", en: "Open Account & security" },
@@ -898,7 +897,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(cambi|subir|poner|actualiz|change|upload|update).{0,20}(foto|imagen|photo|picture|avatar)/.test(n) || /(foto|photo).{0,20}(perfil|profile)/.test(n),
     action: "open_dashboard",
     answer: {
-      es: "Si es profesional: en su panel abra Mi perfil y toque la foto para cambiarla. Si es cliente: en Cuenta y seguridad → Datos básicos.",
+      es: "Si eres profesional: en tu panel abre Mi perfil y toca la foto para cambiarla. Si eres cliente: en Cuenta y seguridad → Datos básicos.",
       en: "Professionals: in your panel open My profile and tap the photo to change it. Clients: Account & security → Basic details.",
     },
     cta: { es: "Ir a mi panel", en: "Open my panel" },
@@ -954,7 +953,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => !/sin cuenta|without (an )?account/.test(n) && (/(publicar|publico|crear|creo|hacer|hago|abrir|abro|publish|create|post).{0,18}(proyecto|project|solicitud|lo que necesito|what i need)/.test(n) || /^(publicar proyecto|publish project|proyecto nuevo|new project)$/.test(n)),
     action: "publish_request",
     answer: {
-      es: "Publicar una solicitud es contar qué necesita para que le escriban varios profesionales de esa categoría. Toque \"Publicar solicitud\", elija el servicio, describa el trabajo y agregue la zona; los profesionales interesados le escriben por Mensajes y usted compara.",
+      es: "Publicar una solicitud es contar qué necesitas para que te escriban varios profesionales de esa categoría. Toca \"Publicar solicitud\", elige el servicio, describe el trabajo y agrega la zona; los profesionales interesados te escriben por Mensajes y comparas.",
       en: "Posting a request means describing what you need so several professionals in that category write to you. Tap \"Post request\", pick the service, describe the job and add the area; interested professionals message you and you compare.",
     },
     cta: { es: "Publicar solicitud", en: "Post request" },
@@ -1001,7 +1000,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(editar|modificar|cambiar|corregir|retirar|borrar|edit|change|withdraw).{0,15}(mi propuesta|una propuesta|la propuesta|propuesta|mi respuesta|la respuesta|respuesta|proposal|reply)/.test(n),
     action: "open_dashboard",
     answer: {
-      es: "Ya no hay propuestas ni respuestas dentro del app: abra la solicitud en Solicitudes y escríbale al cliente por WhatsApp. Lo que acuerden pasa ahí.",
+      es: "Ya no hay propuestas ni respuestas dentro del app: abre la solicitud en Solicitudes y escríbele al cliente por WhatsApp. Lo que acuerden pasa ahí.",
       en: "There are no proposals or replies inside the app any more: open the request in Requests and message the client on WhatsApp. Whatever you agree happens there.",
     },
     cta: { es: "Ver solicitudes", en: "See requests" },
@@ -1079,7 +1078,7 @@ function productAnswer(message: string, locale: Locale): AssistantPayload | null
       locationText: null,
       answer: locale === "en"
         ? "What service do you need? For example: plumbing, electrical or cleaning."
-        : "¿Qué servicio necesita? Por ejemplo: plomería, electricidad o limpieza.",
+        : "¿Qué servicio necesitas? Por ejemplo: plomería, electricidad o limpieza.",
       ctaLabel: null,
     };
   }
@@ -1117,7 +1116,7 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
       documented: true,
       answer: locale === "en"
         ? "ContrataCR helps you find professionals, compare profiles, post what you need and coordinate directly on WhatsApp."
-        : "ContrataCR permite buscar profesionales, comparar perfiles, publicar lo que necesita y coordinar directamente por WhatsApp.",
+        : "ContrataCR permite buscar profesionales, comparar perfiles, publicar lo que necesitas y coordinar directamente por WhatsApp.",
       ctaLabel: locale === "en" ? "See how it works" : "Ver cómo funciona",
     };
   }
@@ -1131,7 +1130,7 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
       documented: true,
       answer: locale === "en"
         ? "You can open Support to create a ticket or continue an existing conversation with the ContrataCR team."
-        : "Abra Soporte para crear un caso o seguir una conversación con el equipo de ContrataCR.",
+        : "Abre Soporte para crear un caso o seguir una conversación con el equipo de ContrataCR.",
       ctaLabel: locale === "en" ? "Open support" : "Ir a soporte",
     };
   }
@@ -1182,7 +1181,7 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
       documented: true,
       answer: locale === "en"
         ? "The service catalog shows the approved categories available in ContrataCR. From there you can open search with the service already selected."
-        : "El catálogo muestra todos los servicios de ContrataCR. Desde ahí abre la búsqueda con el servicio ya seleccionado.",
+        : "El catálogo muestra todos los servicios de ContrataCR. Desde ahí abres la búsqueda con el servicio ya seleccionado.",
       ctaLabel: locale === "en" ? "Browse services" : "Ver servicios",
     };
   }
@@ -1236,7 +1235,7 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
 }
 
 function systemPrompt(locale: Locale, catalogPrompt: string, pageContext: string) {
-  const language = locale === "en" ? "English" : "natural Costa Rican Spanish addressing the person as usted (the app's own voice: \"Escriba\", \"Cree\", \"su panel\"); never use tú, te, tu, vos or voseo";
+  const language = locale === "en" ? "English" : "natural Costa Rican Spanish addressing the person as tú (the app's own voice: \"Escribe\", \"Crea\", \"tu panel\"); never use usted, te, tu, vos or voseo";
   return `
 You are ContrataCR AI, the official assistant for ContrataCR, Costa Rica's service marketplace.
 Answer in ${language}. Be concise, warm and practical.
@@ -1580,10 +1579,10 @@ function normalizePayload(
             ? "Open Account & security in your dashboard to change your account email."
             : "Open Account & security in your dashboard to disable or permanently delete your account."
         : passwordIntent
-          ? "Abra Cuenta y seguridad en su panel para cambiar su contraseña de forma segura."
+          ? "Abre Cuenta y seguridad en tu panel para cambiar tu contraseña de forma segura."
           : emailIntent
-            ? "Abra Cuenta y seguridad en su panel para cambiar el correo de su cuenta."
-            : "Abra Cuenta y seguridad en su panel para deshabilitar o eliminar permanentemente su cuenta.",
+            ? "Abre Cuenta y seguridad en tu panel para cambiar el correo de tu cuenta."
+            : "Abre Cuenta y seguridad en tu panel para deshabilitar o eliminar permanentemente tu cuenta.",
       ctaLabel: locale === "en" ? "Open account settings" : "Ir a cuenta y seguridad",
     };
   }
@@ -1601,7 +1600,7 @@ function normalizePayload(
       action: "answer",
       answer: locale === "en"
         ? "Open the professional's public profile and use the WhatsApp contact button. ContrataCR opens WhatsApp with the public contact method enabled by that professional."
-        : "Abra el perfil público del profesional y use el botón de contacto por WhatsApp. ContrataCR abrirá WhatsApp con el medio público habilitado por ese profesional.",
+        : "Abre el perfil público del profesional y use el botón de contacto por WhatsApp. ContrataCR abrirá WhatsApp con el medio público habilitado por ese profesional.",
       ctaLabel: null,
     };
   }
@@ -1621,7 +1620,7 @@ function normalizePayload(
       action: "open_dashboard",
       answer: locale === "en"
         ? "There are no proposals any more: open the request in Requests and message the client on WhatsApp. Whatever you agree happens there."
-        : "Ya no hay propuestas: abra la solicitud en Solicitudes y escríbale al cliente por WhatsApp. Lo que acuerden pasa ahí.",
+        : "Ya no hay propuestas: abre la solicitud en Solicitudes y escríbele al cliente por WhatsApp. Lo que acuerden pasa ahí.",
       ctaLabel: locale === "en" ? "See requests" : "Ver solicitudes",
     };
   }
@@ -1642,7 +1641,7 @@ function normalizePayload(
       action: "answer",
       answer: locale === "en"
         ? "There are no in-app appointments any more. If the professional can no longer come, write to them in the chat and agree on another time, or look for another professional."
-        : "Ya no se agendan citas dentro del app. Si el profesional ya no puede llegar, escríbale por el chat y acuerdan otro momento, o busque a otro profesional.",
+        : "Ya no se agendan citas dentro del app. Si el profesional ya no puede llegar, escríbele por el chat y acuerdan otro momento, o busca a otro profesional.",
       ctaLabel: null,
     };
   }
@@ -1747,7 +1746,7 @@ function normalizePayload(
       action: "answer",
       answer: locale === "en"
         ? "What service do you need? For example: plumbing, electrical or cleaning."
-        : "¿Qué servicio necesita? Por ejemplo: plomería, electricidad o limpieza.",
+        : "¿Qué servicio necesitas? Por ejemplo: plomería, electricidad o limpieza.",
       ctaLabel: null,
     };
   }
@@ -1760,7 +1759,7 @@ function normalizePayload(
       locationText: null,
       answer: locale === "en"
         ? `I can help you find professionals for ${serviceLabel}. In which Costa Rica province or canton do you need the service?`
-        : `Puedo ayudarle a buscar profesionales de ${serviceLabel}. ¿En qué provincia o cantón de Costa Rica necesita el servicio?`,
+        : `Puedo ayudarte a buscar profesionales de ${serviceLabel}. ¿En qué provincia o cantón de Costa Rica necesitás el servicio?`,
       ctaLabel: null,
     };
   }
@@ -1784,7 +1783,7 @@ function normalizePayload(
         action: "answer",
         answer: locale === "en"
           ? "What service do you need? For example: plumbing, electrical or cleaning."
-          : "¿Qué servicio necesita? Por ejemplo: plomería, electricidad o limpieza.",
+          : "¿Qué servicio necesitas? Por ejemplo: plomería, electricidad o limpieza.",
         ctaLabel: null,
       };
     }
@@ -1890,7 +1889,7 @@ function urgentSafetyAnswer(message: string, locale: Locale): AssistantPayload |
     action: "answer",
     answer: locale === "en"
       ? "This may be an emergency. Call Costa Rica emergency services at 9-1-1 now. Do not wait for a marketplace professional or an AI response."
-      : "Esto puede ser una emergencia. Llame ahora al 9-1-1 de Costa Rica. No espere a un profesional de la plataforma ni a una respuesta de la IA.",
+      : "Esto puede ser una emergencia. Llama ahora al 9-1-1 de Costa Rica. No esperes a un profesional de la plataforma ni a una respuesta de la IA.",
   };
 }
 
@@ -1921,7 +1920,7 @@ function sensitiveOrUnsafeAnswer(message: string, locale: Locale): AssistantPayl
       action: "answer",
       answer: locale === "en"
         ? "I cannot share internal instructions, secrets or implementation details. I can help you search for services, create a request or answer questions about ContrataCR."
-        : "No puedo compartir instrucciones internas, secretos ni detalles de implementación. Puedo ayudarle a buscar servicios, crear una solicitud o resolver dudas sobre ContrataCR.",
+        : "No puedo compartir instrucciones internas, secretos ni detalles de implementación. Puedo ayudarte a buscar servicios, crear una solicitud o resolver dudas sobre ContrataCR.",
     };
   }
 
@@ -2073,7 +2072,7 @@ async function realProfessionalMatches(payload: AssistantPayload, originalMessag
 export async function POST(req: Request) {
   // A normal guided conversation can legitimately use several short turns.
   // Keep abuse protection without cutting off regression or real users mid-flow.
-  const limited = await enforceRateLimit(req, "ai-assistant", 20, 60_000);
+  const limited = enforceRateLimit(req, "ai-assistant", 20, 60_000);
   if (limited) return limited;
 
   try {
@@ -2083,9 +2082,7 @@ export async function POST(req: Request) {
     if (!nativeApp) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-    // The directory tools read the user's own words (product names and "abiertas" must not be spell-repaired to catalog services).
-    const typedMessage = limitTrimmedText(body.message, Math.min(LONG_TEXT_MAX_LENGTH, 1200));
-    const rawMessage = canonicalizeMessage(typedMessage);
+    const rawMessage = canonicalizeMessage(limitTrimmedText(body.message, Math.min(LONG_TEXT_MAX_LENGTH, 1200)));
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     const history = sanitizeHistory(body.history);
@@ -2120,36 +2117,11 @@ export async function POST(req: Request) {
     const catalog = await liveCatalog(locale);
     const safetyPayload = urgentSafetyAnswer(rawMessage, locale) ?? sensitiveOrUnsafeAnswer(rawMessage, locale);
     // Prepared answers and the catalogue take priority over metered AI inference.
-    // LOCAL PRO ONLY (multivertical A1/A2): directory questions (places by section/province/open now, place details,
-    // price comparison) are answered with the directory tools over the same server functions as the public pages.
-    // Neutral order, never prescription medicines, sources and dates in the answer. Safety guidance always wins.
-    const directoryResult = safetyPayload ? null : await directoryAssistantAnswer(typedMessage, locale);
-    if (directoryResult) {
-      void recordServerInteraction({
-        type: "assistant_question",
-        source: "assistant",
-        locale,
-        categoryId: null,
-        metadata: { provider: "local", action: "directory", tool: directoryResult.tool, results: directoryResult.citations.length, confidence: 1 },
-      });
-      return NextResponse.json({
-        answer: directoryResult.answer,
-        action: "answer",
-        serviceId: null,
-        searchHref: directoryResult.href,
-        ctaLabel: directoryResult.ctaLabel,
-        professionals: [],
-        suggestedService: null,
-        selectedResultIndex: null,
-        aiProvider: "local",
-        directory: { tool: directoryResult.tool, citations: directoryResult.citations },
-      });
-    }
     const documentedPayload = localAnswer(rawMessage, locale);
     const publicTopics = assistantExternalTopics(rawMessage);
     const needsExternalFallback = documentedPayload.confidence === 0 && publicTopics !== null;
     const externalRateLimited = needsExternalFallback
-      ? await enforceRateLimit(req, "ai-assistant-external", 3, 60_000)
+      ? enforceRateLimit(req, "ai-assistant-external", 3, 60_000)
       : null;
     // External inference receives fixed public-help topics only, never raw input or history.
     const workersPayload = safetyPayload || !needsExternalFallback || externalRateLimited
@@ -2176,7 +2148,7 @@ export async function POST(req: Request) {
           : `Encontré profesionales de ${serviceLabel} en ${placeLabel}.`
         : locale === "en"
           ? `In which Costa Rica area would you like to search for ${serviceLabel}?`
-          : `¿En qué zona de Costa Rica busca ${serviceLabel}?`;
+          : `¿En qué zona de Costa Rica buscas ${serviceLabel}?`;
       payload.searchQuery = serviceLabel;
       payload.serviceId = resolvedCategory.id;
       payload.locationText = placeLabel;
@@ -2195,7 +2167,7 @@ export async function POST(req: Request) {
       payload.action = "suggest_service";
       payload.answer = locale === "en"
         ? "That service is not in the current catalog yet. You can suggest it for the ContrataCR team to review."
-        : "Ese servicio todavía no está en el catálogo. Puede sugerirlo para que el equipo de ContrataCR lo revise.";
+        : "Ese servicio todavía no está en el catálogo. Puedes sugerirlo para que el equipo de ContrataCR lo revise.";
       payload.searchQuery = missingServiceName;
       payload.serviceId = null;
       payload.locationText = null;
@@ -2205,7 +2177,7 @@ export async function POST(req: Request) {
       payload.action = "answer";
       payload.answer = locale === "en"
         ? "Which service do you need? For example: plumbing, electricity, cleaning, repair or consulting."
-        : "¿Qué tipo de servicio necesita? Por ejemplo: plomería, electricidad, limpieza, reparación o asesoría.";
+        : "¿Qué tipo de servicio necesitas? Por ejemplo: plomería, electricidad, limpieza, reparación o asesoría.";
       payload.searchQuery = null;
       payload.serviceId = null;
       payload.locationText = null;
@@ -2267,7 +2239,7 @@ export async function POST(req: Request) {
     const rawAssistantAnswer = noResults
       ? locale === "en"
         ? `I could not find professionals for ${servicePhrase} in ${placePhrase} yet. You can create a request so related professionals are notified.`
-        : `Todavía no encontré profesionales de ${servicePhrase} en ${placePhrase}. Puede crear una solicitud para avisar a los profesionales de ese servicio.`
+        : `Todavía no encontré profesionales de ${servicePhrase} en ${placePhrase}. Puedes crear una solicitud para avisar a los profesionales de ese servicio.`
       : hasResults
         ? resultCount === 1
           ? locale === "en"
@@ -2279,7 +2251,7 @@ export async function POST(req: Request) {
         : suggestedService
           ? locale === "en"
             ? "That service is not in the current catalog yet. You can suggest it for the ContrataCR team to review."
-            : "Ese servicio todavía no está en el catálogo. Puede sugerirlo para que el equipo de ContrataCR lo revise."
+            : "Ese servicio todavía no está en el catálogo. Puedes sugerirlo para que el equipo de ContrataCR lo revise."
           : payload.answer;
     // En la app, una respuesta que solo nombra WhatsApp se dice «mensaje». La
     // que ya nombra las DOS vías (WhatsApp o Mensajes, como empleos) se deja:

@@ -10,7 +10,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 // is returned — no account details are ever leaked.
 export async function GET(req: Request) {
   // Public endpoint: bound abuse and enumeration per client IP.
-  const limited = await enforceRateLimit(req, "cedula-available", 30, 60000);
+  const limited = enforceRateLimit(req, "cedula-available", 30, 60000);
   if (limited) return limited;
   const { searchParams } = new URL(req.url);
   const cedula = (searchParams.get("cedula") ?? "").replace(/\D/g, "");

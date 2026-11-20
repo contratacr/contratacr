@@ -5,12 +5,11 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { OPTIONAL_CONSENT_VERSION } from "@/lib/privacy/optional-consent";
-import { isSameOriginRequest } from "@/lib/security/write-guard";
 /** Withdrawal also cancels this browser/account's unsent CAPI envelopes. */
 export async function POST(req: Request) {
   const headers = { "Cache-Control": "private, no-store" };
-  if (!isSameOriginRequest(req)) return NextResponse.json({ error: "INVALID_ORIGIN" }, { status: 403, headers });
-  const limited = await enforceRateLimit(req, "advertising-withdrawal", 20, 60_000);
+  if (req.headers.get("origin") !== new URL(req.url).origin) return NextResponse.json({ error: "INVALID_ORIGIN" }, { status: 403, headers });
+  const limited = enforceRateLimit(req, "advertising-withdrawal", 20, 60_000);
   if (limited) return limited;
   try {
     const body = await req.json();

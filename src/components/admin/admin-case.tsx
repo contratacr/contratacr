@@ -391,7 +391,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
                   </button>
                 )}
                 <p className="text-[11px] text-[#68778d] pt-1">
-                  Las decisiones nunca quedan bloqueadas: puede cambiarlas en cualquier momento.
+                  Las decisiones nunca quedan bloqueadas: puedes cambiarlas en cualquier momento.
                 </p>
               </div>
             ) : (
@@ -405,8 +405,8 @@ export function AdminCase({ providerId }: { providerId: string }) {
                   rows={4}
                   placeholder={
                     reasonAction === "reject"
-                      ? "Explique por qué no pasa la verificación. El proveedor verá este motivo y podrá apelar."
-                      : "Explique por qué se quita la verificación. El profesional verá este motivo en su panel."
+                      ? "Explica por qué no pasa la verificación. El proveedor verá este motivo y podrá apelar."
+                      : "Explica por qué se quita la verificación. El profesional verá este motivo en su panel."
                   }
                   className="w-full rounded-lg border border-[#e5e7eb] p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#dc2626]"
                 />

@@ -96,7 +96,7 @@ async function rollbackFreshSignup(supabase: ReturnType<typeof createAdminClient
 
 export async function POST(req: Request) {
   // Public endpoint: bound abuse and enumeration per client IP.
-  const limited = await enforceRateLimit(req, "register", 10, 600000);
+  const limited = enforceRateLimit(req, "register", 10, 600000);
   if (limited) return limited;
   try {
     const body = await req.json();
@@ -145,7 +145,7 @@ export async function POST(req: Request) {
     // — fixed-location pins (single source of truth). Coverage = travel areas.
     const workplaces = Array.isArray(bodyWorkplaces) ? bodyWorkplaces : [];
     if (!hasBaseCanton(workplaces)) {
-      return NextResponse.json({ error: "Elige una provincia y un cantón de base.", code: "base_canton_required" }, { status: 400 });
+      return NextResponse.json({ error: "Elija una provincia y un cantón de base.", code: "base_canton_required" }, { status: 400 });
     }
     const rawCoverageAreas = Array.isArray(bodyCoverage) ? bodyCoverage : [];
     const searchProvincias = Array.isArray(bodySearchProv) ? bodySearchProv : [];

@@ -6,8 +6,6 @@ import { getSupportAdmin as getApiAdmin } from "@/lib/moderation/admin";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { DOC_KINDS, IMAGE_KINDS, MIME_FOR, validateUpload } from "@/lib/upload-validation";
 import { BUCKET_SOPORTE } from "@/lib/support/adjuntos";
-import { cleanImageUpload } from "@/lib/media/clean-image-upload";
-import { mensajeDeError } from "@/lib/api-errors";
 
 export const runtime = "nodejs";
 
@@ -27,7 +25,7 @@ function nombreSeguro(name: string) {
 // quien abrió el ticket o el equipo (admin). El archivo queda privado; el
 // mensaje lo referencia por su ruta al enviarse.
 export async function POST(req: Request) {
-  const rl = await enforceRateLimit(req, "support-attachment", 18, 60_000);
+  const rl = enforceRateLimit(req, "support-attachment", 18, 60_000);
   if (rl) return rl;
 
   const supabase = await createClient();
@@ -58,14 +56,10 @@ export async function POST(req: Request) {
   if (!check.ok) return NextResponse.json({ error: check.error }, { status: 400 });
   try { await scanUpload(buffer); } catch(e) { return NextResponse.json({error:e instanceof Error?e.message:"Análisis no disponible."},{status:422}); }
   const mime = MIME_FOR[check.kind];
-  // Privacy: strip EXIF/GPS/XMP from images before storing (fail closed). PDFs untouched.
-  const cleaned = cleanImageUpload(check.kind, buffer);
-  if (!cleaned.ok) return NextResponse.json({ error: mensajeDeError(req, cleaned.text), code: cleaned.code }, { status: 400 });
-  const clean = cleaned.bytes;
 
   const name = nombreSeguro(file.name);
   const path = `${ticketId}/${user.id}/${Date.now()}-${crypto.randomUUID()}-${name}`;
-  const { error } = await db.storage.from(BUCKET_SOPORTE).upload(path, clean, { contentType: mime, upsert: false });
+  const { error } = await db.storage.from(BUCKET_SOPORTE).upload(path, buffer, { contentType: mime, upsert: false });
   if (error) {
     // El detalle técnico (p. ej. «Bucket not found» si falta la migración 227)
     // va al registro; a la persona, un mensaje que entienda.

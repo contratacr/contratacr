@@ -22,7 +22,7 @@ import { TABLERO_PUBLICO_DESDE } from "@/lib/queries/proyectos-publicos";
  * tope por hora.
  */
 export async function POST(req: Request) {
-  const limited = await enforceRateLimit(req, "contacto-proyecto", 15, 3_600_000);
+  const limited = enforceRateLimit(req, "contacto-proyecto", 15, 3_600_000);
   if (limited) return limited;
 
   const { projectId, channel } = (await req.json().catch(() => ({}))) as { projectId?: string; channel?: string };
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Necesita una cuenta profesional." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Necesitas una cuenta profesional." }, { status: 401 });
 
   const db = createAdminClient();
   const { data: pro } = await db
@@ -41,7 +41,7 @@ export async function POST(req: Request) {
     .eq("profile_id", user.id)
     .maybeSingle();
   if (!pro || (pro as { is_banned?: boolean | null }).is_banned) {
-    return NextResponse.json({ error: "Necesita una cuenta profesional." }, { status: 403 });
+    return NextResponse.json({ error: "Necesitas una cuenta profesional." }, { status: 403 });
   }
 
   // Las mismas dos condiciones que el tablero: publicado después de que el
@@ -79,7 +79,7 @@ export async function POST(req: Request) {
   }
   // Nadie se escribe a sí mismo: un profesional también puede publicar proyectos.
   if (fila.client_id === user.id) {
-    return NextResponse.json({ error: "Esta solicitud es suya." }, { status: 409 });
+    return NextResponse.json({ error: "Esta solicitud es tuya." }, { status: 409 });
   }
   // El proyecto guarda el teléfono del momento de publicarlo; si cambió después,
   // manda el del perfil, que es el que la persona mantiene al día.

@@ -86,7 +86,7 @@ async function reseñaSinCuenta(
   if (error) {
     const yaEstaba = /duplicate key|reviews_whatsapp_contact_uidx/i.test(error.message);
     return NextResponse.json(
-      { error: yaEstaba ? "Ya dejaste su reseña para este contacto." : error.message },
+      { error: yaEstaba ? "Ya dejó su reseña para este contacto." : error.message },
       { status: yaEstaba ? 409 : 500 },
     );
   }
@@ -132,7 +132,7 @@ async function reseñaSinCuenta(
 // that context, but a completed item is no longer required.
 export async function POST(req: NextRequest) {
   // Una reseña por minuto de sobra; sin esto no había ningún tope.
-  const limitado = await enforceRateLimit(req, "reviews", 10, 60_000);
+  const limitado = enforceRateLimit(req, "reviews", 10, 60_000);
   if (limitado) return limitado;
   const { professionalId, rating, comment, contactId, clientName } = await req.json();
 

@@ -8,7 +8,7 @@ const headers = { "Cache-Control": "no-store" };
 
 export async function POST(req: Request) {
   if (!await getApiAdmin()) return NextResponse.json({ error: "No autorizado" }, { status: 403, headers });
-  const limited = await enforceRateLimit(req, "admin-padron", 20, 60_000);
+  const limited = enforceRateLimit(req, "admin-padron", 20, 60_000);
   if (limited) { limited.headers.set("Cache-Control", "no-store"); return limited; }
   const body = await req.json().catch(() => null);
   const raw = typeof body?.cedula === "string" ? body.cedula.trim() : "";

@@ -62,7 +62,7 @@ export const AvatarFileInput = forwardRef<HTMLInputElement, Props>(function Avat
       const file = new File([blob], "perfil.jpg", { type: "image/jpeg" });
       onFile(file);
       setSelection(null); setSource("");
-    } catch { setError(en ? "Could not adjust the photo. Try again." : "No se pudo ajustar la foto. Inténtelo de nuevo."); }
+    } catch { setError(en ? "Could not adjust the photo. Try again." : "No se pudo ajustar la foto. Inténtalo de nuevo."); }
     finally { setBusy(false); }
   }
   const g = size.width ? avatarGeometry(size.width, size.height, zoom, position.x, position.y) : null;

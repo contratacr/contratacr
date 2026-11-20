@@ -36,9 +36,6 @@ async function publicarYAbrirFicha(page: Page, seccion: "promociones" | "empleos
 }
 
 async function openOwnerEditor(page: Page, label: string, editPath: RegExp, boton: string | RegExp = label) {
-  // «Editar» llega pintado del servidor: un clic antes de hidratar no abre
-  // nada (en un servidor de desarrollo lento se pulsaba a los 0,5 s).
-  await waitForInteractivePage(page);
   await page.getByRole("button", { name: boton }).or(page.getByRole("link", { name: boton })).filter({ visible: true }).first().click();
   const dialog = page.getByRole("dialog").filter({ hasText: label });
   // `isVisible()` NO espera: la opción `timeout` que llevaba aquí se ignora y
@@ -231,8 +228,6 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     // las dos se deshacían con «Volver a publicar». Y en la tarjeta ya no se
     // escribe el estado: la pestaña lo dice.
     await gotoOK(page, "/promociones/mis-promociones");
-    // The card toggle is a client button: a click before hydration is lost (dev compiles slowly).
-    await waitForInteractivePage(page);
     const card = page.locator("article").filter({ hasText: `${offerTitle} editada` }).first();
     await expect(card).toBeVisible();
     await card.getByRole("button", { name: new RegExp(`${offerTitle} editada`) }).first().click();
@@ -265,9 +260,6 @@ test.describe("@seeded marketplace editors through the real screens", () => {
 
     await gotoOK(page, "/empleos/publicar");
     await expectVisibleText(page.locator("body"), /Publicar empleo/);
-    // El selector de servicio es un botón pintado del servidor: se espera a
-    // que la página hidrate antes de abrirlo.
-    await waitForInteractivePage(page);
     await page.locator('input[name="title"]').fill(jobTitle);
     // El empleo dice a qué oficio pertenece: de ahí sale a quién se le avisa.
     // Mismo buscador que «Servicio que necesitas» al publicar un proyecto.
@@ -300,8 +292,6 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     await expectHealthyPage(page);
 
     await gotoOK(page, "/empleos/mis-empleos");
-    // The card toggle is a client button: a click before hydration is lost (dev compiles slowly).
-    await waitForInteractivePage(page);
     const card = page.locator("article").filter({ hasText: `${jobTitle} editado` }).first();
     await expect(card).toBeVisible();
     await card.getByRole("button", { name: new RegExp(`${jobTitle} editado`) }).first().click();

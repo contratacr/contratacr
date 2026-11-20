@@ -210,7 +210,7 @@ test.describe("@seeded search results", () => {
   test("search query can navigate from the header to filtered results", async ({ page }) => {
     await gotoOK(page, "/");
     await waitForInteractivePage(page);
-    const search = page.getByRole("combobox", { name: /Qu[eé] servicio|Qu[eé] necesita|What service|What do you need/i }).first();
+    const search = page.getByRole("combobox", { name: /Qu[eé] servicio|Qu[eé] necesitas|What service|What do you need/i }).first();
     // En el teléfono el campo de la portada abre el buscador a pantalla
     // completa y el cursor pasa ahí: se escribe donde quedó el foco.
     await search.click();
@@ -329,7 +329,7 @@ test.describe("@seeded search results", () => {
     await expect(summary).toBeVisible();
     await expect(summary).toContainText(/Aire acondicionado/i);
     await expect(summary).toContainText(/Alajuela/i);
-    await expect(summary).not.toContainText(/Qué servicio está buscando/i);
+    await expect(summary).not.toContainText(/Qué servicio estás buscando/i);
   });
 
   test("mobile search uses spare width for the full province before shortening location", async ({ page }, testInfo) => {

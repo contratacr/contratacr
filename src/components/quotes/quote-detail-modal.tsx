@@ -1,7 +1,6 @@
 "use client";
 
-import {QuoteChangeRequests} from "@/components/pro/quote-change-requests";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Trash2, Undo2 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
@@ -9,7 +8,6 @@ import { useAppDialog } from "@/hooks/use-app-dialog";
 import { formatColones } from "@/lib/pricing";
 import { formatFullPersonName } from "@/lib/display-name";
 import { desgloseQuote, isQuoteExpired, numeroCotizacion, type Quote } from "@/lib/quotes";
-import { Button } from "@/components/ui/button";
 import { MenuFicha } from "@/components/ui/menu-ficha";
 import { BotonCompartirCotizacion, BotonDescargarCotizacion, QuoteShare } from "@/components/quotes/quote-share";
 
@@ -37,27 +35,17 @@ export function Totales({ quote }: { quote: Pick<Quote, "subtotal" | "tax_amount
   );
 }
 
-export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proName, proSlug, recienCreada = false, proActions, onResponseStateChange }: {
-  onResponseStateChange?:(state:{dirty:boolean;busy:boolean})=>void;
-  proActions?: import("react").ReactNode;
+export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proName, proSlug, recienCreada = false }: {
   quote: Quote; role: "client" | "pro"; open: boolean; onClose: () => void; onChanged: (q: Quote) => void; proName?: string; proSlug?: string | null; recienCreada?: boolean;
 }) {
   const t = useTranslations("quotes");
   const locale = useLocale();
-  const qc = useTranslations("ProQuoteModalCopy");
-  const projectCopy=useTranslations("ProProjectJourney"),responseLock=useRef(false);
   const { dialogNode, confirm, showMessage } = useAppDialog();
   const [busy, setBusy] = useState(false);
-  const [uncertain,setUncertain]=useState(false);
-  const pendingResponse=useRef<{id:string;action:'accept'|'decline';clientActionId:string;expectedUpdatedAt:string}|null>(null);
-  const responseListener=useRef(onResponseStateChange);
-  useEffect(()=>{responseListener.current=onResponseStateChange;},[onResponseStateChange]);
-  useEffect(()=>{responseListener.current?.({dirty:false,busy:busy||uncertain});return()=>responseListener.current?.({dirty:false,busy:false});},[busy,uncertain]);
-  const requestQuote=process.env.NODE_ENV==='development'&&!!quote.source_request_id&&!!quote.updated_at;
   const expirada = isQuoteExpired(quote);
   // La cotización es un documento: no hay nada que "esperar". Solo se avisa
   // cuando ya no sirve (vencida) o cuando el profesional la retiró.
-  const estado = expirada ? t("statusExpired") : quote.status === "withdrawn" ? t("statusWithdrawn") : process.env.NODE_ENV==='development'&&["accepted","declined"].includes(quote.status)?projectCopy(quote.status==='accepted'?'accepted':'declined'):null;
+  const estado = expirada ? t("statusExpired") : quote.status === "withdrawn" ? t("statusWithdrawn") : null;
   const fecha = quote.valid_until ? new Date(`${quote.valid_until}T12:00:00`).toLocaleDateString(DATE_LOCALE[locale] ?? "es-CR", { day: "numeric", month: "long" }) : null;
 
   async function actuar(action: "withdraw" | "delete") {
@@ -70,31 +58,10 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
     try {
       const res = await fetch("/api/quotes", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: quote.id, action }) });
       const d = await res.json().catch(() => ({}));
-      if (!res.ok) { await showMessage({ title: t("errorTitle"), description: d.error ?? "", confirmLabel: t("close"), tone: "danger" }); return; }
+      if (!res.ok) { await showMessage({ title: t("errorTitle"), description: d.error ?? "", tone: "danger" }); return; }
       onChanged(action === "delete" ? { ...quote, deleted_at: new Date().toISOString() } : (d.quote as Quote));
       onClose();
     } finally { setBusy(false); }
-  }
-
-  async function respond(action:'accept'|'decline'){
-    if(responseLock.current||busy)return;responseLock.current=true;setBusy(true);
-    try{
-      if(!pendingResponse.current){
-        const answer=await confirm({title:projectCopy(action==='accept'?'acceptTitle':'declineTitle'),description:action==='accept'?projectCopy('acceptHint',{total:formatColones(quote.total)}):projectCopy('declineHint'),confirmLabel:t(action),cancelLabel:projectCopy('cancel')});
-        if(!answer.confirmed)return;
-        if(requestQuote)pendingResponse.current={id:quote.id,action,clientActionId:crypto.randomUUID(),expectedUpdatedAt:quote.updated_at!};
-      }
-      const response=await fetch('/api/quotes',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(pendingResponse.current??{id:quote.id,action})});
-      const body=await response.json();
-      if(!response.ok){
-        if(!uncertain&&[400,404,409,422].includes(response.status)){pendingResponse.current=null;setUncertain(false);}
-        else if(requestQuote)setUncertain(true);
-        await showMessage({title:t('errorTitle'),description:projectCopy('responseError'),confirmLabel:t('close'),tone:'danger'});return;
-      }
-      if(body.quote?.id!==quote.id)throw Error();
-      pendingResponse.current=null;setUncertain(false);onChanged(body.quote);onClose();
-    }catch{if(requestQuote)setUncertain(true);await showMessage({title:t('errorTitle'),description:projectCopy('responseError'),confirmLabel:t('close'),tone:'danger'});}
-    finally{responseLock.current=false;setBusy(false);}
   }
 
   const puedeRetirar = role === "pro" && quote.status === "sent" && !!quote.project_id;
@@ -105,7 +72,7 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
   // Recién creada o reabierta, la cabecera dice lo mismo: el número, que es lo
   // que identifica el documento. «Lista para enviar» + dos renglones de
   // explicación eran tres líneas de cabecera, y hablaban de citas que ya no hay.
-  const titulo = <span className="block truncate">{quote.quote_number ? `${t("rowQuote")} ${qc("numberAbbr")} ${numeroCotizacion(quote)}` : (quote.title || t("detailTitle"))}</span>;
+  const titulo = <span className="block truncate">{quote.quote_number ? `${t("rowQuote")} N.º ${numeroCotizacion(quote)}` : (quote.title || t("detailTitle"))}</span>;
   // La cabecera decía número + cliente + trabajo, y en el teléfono se comía tres
   // renglones. El profesional ya sabe de quién es (la abrió desde su lista) y el
   // trabajo se lee en las líneas; al cliente sí le hace falta de quién viene.
@@ -115,7 +82,7 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
 
   return (
     <>
-      <Modal open={open} onClose={()=>{if(!busy&&!uncertain)onClose();}} title={titulo} subtitle={subtitulo} size="sm" mobilePresentation="fullscreen" closeLabel={t("close")} cabeceraCentrada
+      <Modal open={open} onClose={onClose} title={titulo} subtitle={subtitulo} size="sm" mobilePresentation="fullscreen" closeLabel={t("close")} cabeceraCentrada
         // EL «···» ARRIBA Y LAS ACCIONES ABAJO. El pie lleva lo que la pantalla
         // viene a hacer —mandar la cotización y guardarla—; retirarla o borrarla
         // son cosas DEL REGISTRO y viven en el «···» de la cabecera, que es
@@ -134,12 +101,9 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
         // mientras la franja blanca de abajo se quedaba vacia.
         footer={role === "pro" && abierta ? (
           <BotonCompartirCotizacion quote={quote} proName={proName ?? quote.professional_name ?? ""} proSlug={proSlug} className="min-w-0 flex-1 sm:w-auto sm:flex-none" />
-        ) : role === "client" && process.env.NODE_ENV==='development' && (quote.project_id||requestQuote) && (abierta||uncertain) ? (
-          <div className="flex w-full flex-wrap gap-2">{uncertain?<><p role="alert" className="w-full text-sm">{qc("responseUnverified")}</p><Button disabled={busy} onClick={()=>void respond(pendingResponse.current?.action??'accept')}>{qc("checkSavedResult")}</Button></>:<><Button disabled={busy} onClick={()=>void respond('accept')}>{t("accept")}</Button><Button variant="secondary" disabled={busy} onClick={()=>void respond('decline')}>{t("decline")}</Button></>}</div>
         ) : role === "client" ? (
           <BotonDescargarCotizacion quote={quote} proName={quote.professional_name ?? ""} className="w-full sm:w-auto" />
         ) : undefined}
-        footerNotice={proActions}
         footerClassName="flex-row flex-wrap items-center gap-2 sm:justify-end">
         <div className="flex flex-col gap-4">
           {/* Para el profesional, primero cómo mandarla: es a lo que viene. */}
@@ -173,7 +137,6 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
               <p className="mt-0.5 whitespace-pre-line text-[14px] leading-6 text-[#52627a]">{quote.notes}</p>
             </div>
           )}
-          {process.env.NODE_ENV==='development'&&<fieldset disabled={busy||uncertain}><QuoteChangeRequests key={quote.id} quoteId={quote.id}/></fieldset>}
           {/* Mandarla vive en el pie. Aquí solo queda el aviso de a qué cita o
               proyecto está pegada, si lo está. */}
           {role === "pro" && abierta && <QuoteShare quote={quote} onChanged={onChanged} />}

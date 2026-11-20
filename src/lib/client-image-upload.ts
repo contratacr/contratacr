@@ -137,9 +137,7 @@ export async function prepareImageForUpload(file: File, options: PrepareImageOpt
   // servidor al dibujar la imagen para compartir el perfil (6-oct-2026).
   // HEIC/HEIF (las fotos del iPhone) siempre se convierten: Chrome y Android
   // no las muestran, y quedaban rotas para quien no usa iPhone (7-oct-2026).
-  // AVIF también se convierte siempre: /api/upload/photo rechaza AVIF/HEIC porque
-  // no puede quitarles los metadatos (GPS) sin un códec (16-nov-2026).
-  const esHeic = detectedKind === "heic" || detectedKind === "heif" || detectedKind === "avif";
+  const esHeic = detectedKind === "heic" || detectedKind === "heif";
   if (file.size <= targetBytes && !options.maxDimension && !esHeic) return file;
 
   if (detectedKind === "gif") {

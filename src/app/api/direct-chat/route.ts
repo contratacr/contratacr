@@ -632,7 +632,7 @@ export async function PATCH(req: Request) {
     const { data } = await db.from("direct_conversations").select("*").eq("id", conversationId).maybeSingle();
     const conversation = data as ConversationRow | null;
     if (!conversation || !participant(conversation, user.id)) return NextResponse.json({ error: mensajeDeError(req, { es: "Conversación no encontrada", en: "Conversation not found" }) }, { status: 404 });
-    if (reportReason.length < 3) return NextResponse.json({ error: "Explique brevemente el motivo del reporte." }, { status: 400 });
+    if (reportReason.length < 3) return NextResponse.json({ error: "Explica brevemente el motivo del reporte." }, { status: 400 });
 
     const reportingAsClient = conversation.client_id === user.id;
     let reportedMessageId:string|null=null;

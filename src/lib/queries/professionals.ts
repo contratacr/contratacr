@@ -659,8 +659,7 @@ async function searchProfessionalsUncached(
       }
 
       if (!filters.sortBy || filters.sortBy === "rating") {
-        // Ranking neutrality (F0, /como-ordenamos): ties keep the query order; no paid or featured boost.
-        mapped.sort((a, b) => compareByRating(a, b));
+        mapped.sort((a, b) => compareByRating(a, b) || Number(b.isFeatured) - Number(a.isFeatured));
       }
 
       if (filters.sortBy === "priceAsc" || filters.sortBy === "priceDesc") {
@@ -928,8 +927,13 @@ async function getProfessionalBySlugEnVivo(slug: string): Promise<ProfessionalDe
     try {
       const { createPublicClient } = await import("@/lib/supabase/server");
       const publico = await createPublicClient();
-      const { data, error } = await publico.from("professional_cv_files").select("professional_id").eq("professional_id", pro.id).eq("visible", true).maybeSingle();
-      return !error && !!data;
+      const [archivo, delPanel] = await Promise.all([
+        publico.from("professional_cv_files").select("professional_id").eq("professional_id", pro.id).eq("visible", true).maybeSingle(),
+        // Un CV del panel elegido como público (20-nov-2026); sin la función
+        // (antes de la migración 291) simplemente no cuenta.
+        publico.rpc("has_public_cv_document", { p_professional: pro.id }),
+      ]);
+      return (!archivo.error && !!archivo.data) || (!delPanel.error && delPanel.data === true);
     } catch { return false; }
   })();
   const formacionActual = (async () => {

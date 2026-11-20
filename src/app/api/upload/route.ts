@@ -21,7 +21,7 @@ const EXTENSION_FOR: Record<FileKind, string> = {
 };
 
 export async function POST(req: NextRequest) {
-  const rl = await enforceRateLimit(req, "upload", 12, 60_000);
+  const rl = enforceRateLimit(req, "upload", 12, 60_000);
   if (rl) return rl;
 
   const user = await safeGetUser(await createClient());

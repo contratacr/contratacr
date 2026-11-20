@@ -14,9 +14,6 @@ import { resolveCategoryIntent } from "@/lib/data/categories";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { rutaDeBusqueda } from "@/lib/buscar-url";
 import { RodilloDeEjemplos } from "@/components/landing/rodillo-de-ejemplos";
-import { useSiteFeatures } from "@/components/site-features";
-import { DirectorySuggestionRows, SuggestionGroupLabel } from "@/components/search/directory-suggestions";
-import { directorySectionForQuery, directorySectionHref, suggestDirectorySections, unifiedSearchPlaceholder, withoutPlaceDuplicates, type DirectorySectionSuggestion } from "@/lib/search/directory-search";
 
 // A Google Places ADDRESS prediction shown alongside our province/cantón suggestions, so the
 // location field autocompletes real addresses (not just province/cantón names).
@@ -224,73 +221,48 @@ function SuggestionsDropdown({
   suggestions,
   activeIdx,
   onPick,
-  places = [],
-  placesFirst = false,
-  onPickPlace,
-  locale = "es",
 }: {
   anchorRef: RefObject<HTMLElement | null>;
   open: boolean;
   suggestions: SearchSuggestion[];
   activeIdx: number;
   onPick: (s: SearchSuggestion) => void;
-  /** «Lugares» group (directory sections), only while the directory is on. */
-  places?: DirectorySectionSuggestion[];
-  placesFirst?: boolean;
-  onPickPlace?: (p: DirectorySectionSuggestion) => void;
-  locale?: string;
 }) {
-  const t = useTranslations("landing.hero");
-  const show = open && (suggestions.length > 0 || places.length > 0);
+  const show = open && suggestions.length > 0;
   const pos = useAnchoredRect(anchorRef, show, 240);
   if (!show || !pos || typeof document === "undefined") return null;
   // Con el teclado abierto, iOS no deja desplazar bien una lista que flota sobre
   // la página (el gesto mueve la vista, no la lista). Se muestran solo las que
   // CABEN, ya ordenadas por relevancia: nada que desplazar. Cada fila mide ~40 px.
-  // Group titles take about one row each.
-  const titles = places.length > 0 ? 2 : 0;
-  const caben = Math.max(2, Math.floor((pos.maxH - 8) / 40) - titles);
-  const lugares = places.slice(0, Math.min(places.length, Math.max(1, caben - Math.min(suggestions.length, 2))));
-  const visibles = suggestions.slice(0, Math.max(0, caben - lugares.length));
-  // Keyboard index runs over the whole lists, in the order shown.
-  const placeOffset = placesFirst ? 0 : suggestions.length;
-  const serviceOffset = placesFirst ? places.length : 0;
-  const placeRows = lugares.length > 0 && onPickPlace ? (
-    <div className={placesFirst ? "order-first" : "order-last"}>
-      <DirectorySuggestionRows items={lugares} locale={locale} activeIndex={activeIdx - placeOffset} onPick={onPickPlace} />
-    </div>
-  ) : null;
+  const caben = Math.max(2, Math.floor((pos.maxH - 8) / 40));
+  const visibles = suggestions.slice(0, caben);
   return createPortal(
     <div
       style={{ position: "absolute", left: pos.left, top: pos.top, width: pos.width, maxHeight: pos.maxH, zIndex: 9999 }}
-      className="flex flex-col bg-white border border-gray-200 rounded-xl shadow-xl overflow-y-auto overscroll-contain py-1 text-left"
+      className="bg-white border border-gray-200 rounded-xl shadow-xl overflow-y-auto overscroll-contain py-1 text-left"
       role="listbox"
     >
-      {placeRows}
-      {placeRows && visibles.length > 0 && <SuggestionGroupLabel>{t("servicesLabel")}</SuggestionGroupLabel>}
       {visibles.map((s, i) => (
         <button
           key={`c-${s.id}`}
           type="button"
           role="option"
-          aria-selected={i + serviceOffset === activeIdx}
+          aria-selected={i === activeIdx}
           // Prevent the input's blur from firing before the click is handled
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => onPick(s)}
           className={cn(
             "w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors",
-            i + serviceOffset === activeIdx ? "bg-[#EBF5FB]" : "hover:bg-gray-50"
+            i === activeIdx ? "bg-[#EBF5FB]" : "hover:bg-gray-50"
           )}
         >
           <Search className="h-4 w-4 text-[#009FD9] shrink-0" />
           <span className="flex-1 min-w-0">
             <span className="block text-sm leading-snug text-[#162543] break-words">{s.label}</span>
           </span>
-          {!placeRows && (
-            <span className="text-[10px] uppercase tracking-wide text-gray-300 shrink-0">
-              {t("serviceLabel")}
-            </span>
-          )}
+          <span className="text-[10px] uppercase tracking-wide text-gray-300 shrink-0">
+            Servicio
+          </span>
         </button>
       ))}
     </div>,
@@ -418,7 +390,7 @@ export function LandingHero() {
   }, []);
   // The chosen service suggestion (so a category filters by id, not free text).
   const [serviceSel, setServiceSel] = useState<SearchSuggestion | null>(null);
-  const [serviceMatches, setSuggestions] = useState<SearchSuggestion[]>([]);
+  const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [openSug, setOpenSug] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
   // Anchor refs for the PORTALED dropdowns — one per field per breakpoint (desktop +
@@ -465,13 +437,6 @@ export function LandingHero() {
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("landing.hero");
-  // ONE SEARCH (2026-11-19): with the directory on, the field also offers the
-  // place sections; the group Enter would open goes first.
-  const { directorySections } = useSiteFeatures();
-  const placeSuggestions = suggestDirectorySections(service, directorySections, locale);
-  const suggestions = withoutPlaceDuplicates(serviceMatches, (s) => s.label, placeSuggestions);
-  const placesFirst = placeSuggestions.length > 0 && !!directorySectionForQuery(service, directorySections);
-  const activePlace = placeSuggestions[placesFirst ? activeIdx : activeIdx - suggestions.length] ?? null;
   // BUSCAR RESPONDE AL TOQUE. La búsqueda general (Buscar sin escribir nada)
   // es lo que más se toca de la portada, y su página trae a todos los
   // profesionales: la primera vez de la sesión tardaba hasta 3 s y el botón no
@@ -563,12 +528,6 @@ export function LandingHero() {
     setTimeout(() => { enfocarVisible(ubicacionInputRef, ubicacionMobileRef); setOpenLoc(false); }, 0);
   }
 
-  // A «Lugares» suggestion opens its directory section right away (with the location, if any).
-  function selectPlace(p: DirectorySectionSuggestion) {
-    setOpenSug(false);
-    runSearch(undefined, undefined, p.section);
-  }
-
   function selectLocation(s: LocationSuggestion) {
     setLocation(s.label);
     setLocationSel(s);
@@ -625,17 +584,14 @@ export function LandingHero() {
     | { kind: "taxonomy"; sug: LocationSuggestion }
     | { kind: "address"; provinceId?: string; cantonId?: string; lat?: number; lng?: number }
     | { kind: "nearMe"; lat: number; lng: number };
-  function runSearch(serviceOverride?: SearchSuggestion, locationOverride?: LocOverride, placeSection?: string) {
+  function runSearch(serviceOverride?: SearchSuggestion, locationOverride?: LocOverride) {
     const params = new URLSearchParams();
     // `serviceOverride` (from Enter) resolves a partial term to the best service
     // suggestion. Otherwise we infer the service from the typed text or send q.
-    const chosen = placeSection ? null : serviceOverride ?? (serviceSel && serviceSel.label === service ? serviceSel : null);
-    // Free text that clearly names a place («farmacia», «gasolina») opens that
-    // directory section; anything else stays a professionals search.
-    const directorySection = placeSection ?? (!chosen && service.trim() ? directorySectionForQuery(service, directorySections) : null);
+    const chosen = serviceOverride ?? (serviceSel && serviceSel.label === service ? serviceSel : null);
     if (chosen) {
       params.set("categoria", chosen.id);
-    } else if (!directorySection) {
+    } else {
       const svc = service.trim();
       if (svc) {
         const inferred = resolveCategoryIntent(svc, locale);
@@ -691,26 +647,18 @@ export function LandingHero() {
     setOpenSug(false);
     setOpenLoc(false);
     trackMetaEvent("Search", {
-      content_type: directorySection ? "place_directory" : "professional_service",
-      search_string: directorySection ? "section" : params.get("categoria") ? "category" : params.get("q") ? "text" : "general",
+      content_type: "professional_service",
+      search_string: params.get("categoria") ? "category" : params.get("q") ? "text" : "general",
       has_location: params.has("provincia") || params.has("canton") || params.has("lat"),
     });
-    const destination = directorySection
-      ? directorySectionHref(directorySection, service, {
-        provinceId: params.get("provincia"),
-        cantonId: params.get("canton"),
-        lat: params.has("lat") ? Number(params.get("lat")) : null,
-        lng: params.has("lng") ? Number(params.get("lng")) : null,
-      })
-      : rutaDeBusqueda(params);
-    startBusqueda(() => router.push(destination));
+    startBusqueda(() => router.push(rutaDeBusqueda(params)));
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.nativeEvent.isComposing) return;
-    if (e.key === "Enter") { e.preventDefault(); if (openSug && activePlace) selectPlace(activePlace); else runSearch(); return; }
-    if (openSug && suggestions.length + placeSuggestions.length > 0) {
-      if (e.key === "ArrowDown") { e.preventDefault(); setActiveIdx(i => Math.min(i + 1, suggestions.length + placeSuggestions.length - 1)); }
+    if (e.key === "Enter") { e.preventDefault(); runSearch(); return; }
+    if (openSug && suggestions.length > 0) {
+      if (e.key === "ArrowDown") { e.preventDefault(); setActiveIdx(i => Math.min(i + 1, suggestions.length - 1)); }
       else if (e.key === "ArrowUp") { e.preventDefault(); setActiveIdx(i => Math.max(i - 1, 0)); }
       else if (e.key === "Escape") setOpenSug(false);
     }
@@ -829,10 +777,10 @@ export function LandingHero() {
                   ref={servicioInputRef}
                   enterKeyHint="search"
                   onKeyDown={handleKeyDown}
-                  onFocus={() => { if (abrirBuscadorCompleto("servicio")) return; setFoco("svc"); if (suggestions.length > 0 || placeSuggestions.length > 0) setOpenSug(true); }}
+                  onFocus={() => { if (abrirBuscadorCompleto("servicio")) return; setFoco("svc"); if (suggestions.length > 0) setOpenSug(true); }}
                   onBlur={() => { setFoco((f) => (f === "svc" ? null : f)); setTimeout(() => setOpenSug(false), 120); }}
                   placeholder=""
-                  aria-label={directorySections.length ? unifiedSearchPlaceholder(locale, true) : t("searchPlaceholderShort")}
+                  aria-label={t("searchPlaceholderShort")}
                   className="min-w-0 flex-1 bg-transparent text-[16px] text-[#162543] placeholder:text-[#6b7686] focus:outline-none sm:text-lg"
                   role="combobox"
                   aria-expanded={openSug}
@@ -846,7 +794,7 @@ export function LandingHero() {
                 {/* «Busca» fijo y el servicio que rueda (ver RodilloDeEjemplos): encima
                     del campo vacío y sin tocar nada, el toque llega al campo. */}
                 {!service && <RodilloDeEjemplos quieto={!!service} className="pointer-events-none absolute inset-y-0 left-8 right-2 text-[16px] text-[#6b7686] sm:left-0 sm:text-lg" />}
-                <SuggestionsDropdown anchorRef={pildoraRef} open={openSug} suggestions={suggestions} activeIdx={activeIdx} onPick={(s) => selectSuggestion(s)} places={placeSuggestions} placesFirst={placesFirst} onPickPlace={selectPlace} locale={locale} />
+                <SuggestionsDropdown anchorRef={pildoraRef} open={openSug} suggestions={suggestions} activeIdx={activeIdx} onPick={(s) => selectSuggestion(s)} />
               </div>
               {/* Divider + location autocomplete */}
               {/* EN EL TELÉFONO, UNA SOLA LÍNEA (3-oct-2026): tocarla abre el

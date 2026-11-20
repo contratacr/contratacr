@@ -10,8 +10,6 @@ import { DOC_KINDS, IMAGE_KINDS, MIME_FOR, validateUpload } from "@/lib/upload-v
 import { BUCKET_SOPORTE, type AdjuntoDeSoporte } from "@/lib/support/adjuntos";
 import { documentCaseId } from "@/lib/verification/documents";
 import { scanUpload } from "@/lib/moderation/files";
-import { cleanImageUpload } from "@/lib/media/clean-image-upload";
-import { mensajeDeError } from "@/lib/api-errors";
 
 export const runtime = "nodejs";
 
@@ -60,13 +58,13 @@ export async function GET() {
 
 // Files remain in the existing private support bucket. No email or push is sent.
 export async function POST(req: Request) {
-  const limit = await enforceRateLimit(req, "verification-documents", 6, 60_000);
+  const limit = enforceRateLimit(req, "verification-documents", 6, 60_000);
   if (limit) return limit;
   try {
     const ctx = await context();
     if (!ctx) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     const { db, user, pro, profile, ticketId } = ctx;
-    if (pro.is_verified || pro.verification_status === "verified") return NextResponse.json({ error: "Su identidad ya está verificada." }, { status: 409 });
+    if (pro.is_verified || pro.verification_status === "verified") return NextResponse.json({ error: "Tu identidad ya está verificada." }, { status: 409 });
     if (!canRequestIdentityReview(pro, ctx.cedula)) return NextResponse.json({ error: "La revisión manual está disponible para identificaciones no encontradas." }, { status: 409 });
     const { data: saved, error: readError } = await db.from("support_ticket_messages").select("id").eq("id", ticketId).maybeSingle();
     if (readError) return unavailable();
@@ -84,16 +82,12 @@ export async function POST(req: Request) {
     for (const key of required) {
       const file = form.get(key);
       if (!(file instanceof File) || !file.size || file.size > 4 * 1024 * 1024)
-        return NextResponse.json({ error: "Adjunte los documentos requeridos, de hasta 4 MB cada uno." }, { status: 400 });
+        return NextResponse.json({ error: "Adjunta los documentos requeridos, de hasta 4 MB cada uno." }, { status: 400 });
       const bytes = Buffer.from(await file.arrayBuffer());
       const validation = validateUpload(bytes, { allow: [...IMAGE_KINDS, ...DOC_KINDS], maxBytes: 4 * 1024 * 1024, allowLabel: "Foto o PDF" });
       if (!validation.ok) return NextResponse.json({ error: validation.error }, { status: 400 });
       await scanUpload(bytes);
-      // Privacy: strip EXIF/GPS/XMP from image documents (fail closed). PDFs untouched. The hash/path below
-      // is computed on the cleaned bytes (still deterministic per file, so retries stay idempotent).
-      const cleaned = cleanImageUpload(validation.kind, bytes);
-      if (!cleaned.ok) return NextResponse.json({ error: mensajeDeError(req, cleaned.text), code: cleaned.code }, { status: 400 });
-      checked.push({ key, file, bytes: cleaned.bytes, mime: MIME_FOR[validation.kind] });
+      checked.push({ key, file, bytes, mime: MIME_FOR[validation.kind] });
     }
     // Reserve once without overwriting an administrator's handling on a retry.
     const { error: ticketError } = await db.from("support_tickets").upsert({

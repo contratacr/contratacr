@@ -1,5 +1,4 @@
 import type { MetadataRoute } from "next";
-import { sitemapSections } from "@/lib/directory/sitemap-sections";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com";
 // Solo el sitio de producción se deja indexar. En test (u otra copia) los
@@ -52,7 +51,6 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       { userAgent: "*", allow: "/", disallow: CERRADAS },
     ],
-    // Directorio (2026-11-18): un mapa por sección (src/app/sitemap-directorio/sitemap.ts), solo con DIR_ENABLED.
-    sitemap: [`${APP_URL}/sitemap.xml`, ...sitemapSections().map((s) => `${APP_URL}/sitemap-directorio/sitemap/${s.section}.xml`)],
+    sitemap: `${APP_URL}/sitemap.xml`,
   };
 }

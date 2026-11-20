@@ -1,5 +1,4 @@
 "use client";
-import { PromotionHistory } from "@/components/pro/promotion-history";
 
 import { trackMetaConversion } from "@/lib/analytics/meta-pixel";
 import { rutaPromocion } from "@/lib/marketplace-url";
@@ -37,7 +36,7 @@ const OFFERS_MANAGER_COPY = {
     edit: "Editar",
     more: "Más opciones",
     close: "Cerrar promoción", republish: "Volver a publicar", remove: "Eliminar", removeTitle: "¿Eliminar esta promoción?", removeBody: "Se borra del todo y no se puede recuperar.", removeCancel: "Cancelar",
-    emptyTitle: "Todavía no has publicado promociones",
+    emptyTitle: "Todavía no ha publicado promociones",
     emptyBody: "Cree una promoción para impulsar sus ventas.",
     publishTitle: "Publicar promoción",
     publishSubtitle: "Publique una promoción clara y fácil de comparar.",
@@ -235,7 +234,6 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
                 {isOpen && (
                   <div className="px-4 pb-5 pt-3 sm:px-5">
                     {offer.description && <p className="mb-4 whitespace-pre-line break-words text-sm leading-6 text-[#52627a] [overflow-wrap:anywhere]">{offer.description}</p>}
-                    {process.env.NODE_ENV === "development" && <PromotionHistory key={offer.id} contentType="offer" contentId={offer.id}/>}
                                         {/* EDITAR ES LA ACCIÓN DE ESTA FILA, y va en azul lleno:
                         «Ver» solo mira, el «···» guarda lo de cambiar de estado,
                         y editar es a lo que se viene cuando se abre una

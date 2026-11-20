@@ -36,7 +36,6 @@ import { PanelEmptyState, PanelListSkeleton } from "@/components/ui/content-load
 import { FilaDeslizable, iconoDeAccion } from "@/components/ui/fila-deslizable";
 import { AppTooltip } from "@/components/ui/app-tooltip";
 import { cacheNotifications, readCachedNotifications, subscribeNotificationsCache, uniqueNotifications } from "@/lib/notifications-cache";
-import { useNotificationRead } from "@/lib/notifications/use-notification-read";
 
 type Notification = {
   id: string;
@@ -112,14 +111,14 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
   // a cero en el acto; pero los puntos azules se quedan en pantalla durante esta
   // visita, para que se vea qué era nuevo. En la siguiente ya salen leídas.
   // Antes se esperaba 1,5 s y el punto se borraba delante de la persona.
-  const marcadoEnEstaVisita = useRef<string | null>(null);
+  const marcadoEnEstaVisita = useRef(false);
   // Se marca DESPUÉS de traer la lista: si no, el servidor ya la devolvía leída
   // y no quedaba ningún punto que mostrar.
-  const [listaDelServidor, setListaDelServidor] = useState<string | null>(null);
+  const [listaDelServidor, setListaDelServidor] = useState(false);
   const [nuevasDeEstaVisita, setNuevasDeEstaVisita] = useState<Set<string>>(() => new Set());
   useEffect(() => {
-    if (scope !== "all" || !user || listaDelServidor !== user.id || marcadoEnEstaVisita.current === user.id) return;
-    marcadoEnEstaVisita.current = user.id;
+    if (scope !== "all" || !user || !listaDelServidor || marcadoEnEstaVisita.current) return;
+    marcadoEnEstaVisita.current = true;
     void markAllRead(true);
   });
 
@@ -188,7 +187,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
     setNotificationState({ userId: user.id, items: next });
     cacheNotifications(user.id, next);
     setBusy(false);
-    setListaDelServidor(user.id);
+    setListaDelServidor(true);
   }, [user]);
 
   useEffect(() => {
@@ -323,36 +322,47 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
   // activo, y para vaciarla ya está «Marcar todas como leídas». Filtrar a «no
   // leídas» dejaba además una lista que se vaciaba sola al ir leyendo.
 
-  const { markRead, readError, retryRead, retrying } = useNotificationRead(user?.id, (operation) => {
+  async function markAllRead(dejarPuntosEnPantalla = false) {
     if (!user) return;
-    const ids = operation.ids ?? operation.snapshotIds;
-    const leidas = (lista: Notification[]) => lista.map((n) => (ids.includes(n.id) ? { ...n, read: true } : n));
-    if (operation.keepNew) {
-      setNuevasDeEstaVisita(new Set(items.filter((n) => !n.read && ids.includes(n.id)).map((n) => n.id)));
+    const supabase = createClient();
+    const ids = visible.filter((n) => !n.read).map((n) => n.id);
+    if (scope === "all") {
+      // Toda la cuenta, no solo lo cargado: las no leídas más viejas que el
+      // límite de la lista también cuentan en el globo.
+      await supabase.from("notifications").update({ read: true }).eq("user_id", user.id).eq("read", false);
+    } else {
+      if (ids.length === 0) return;
+      await supabase.from("notifications").update({ read: true }).in("id", ids);
+    }
+    const leidas = (lista: Notification[]) => lista.map((n) => (scope === "all" || ids.includes(n.id) ? { ...n, read: true } : n));
+    if (dejarPuntosEnPantalla) {
+      setNuevasDeEstaVisita(new Set(items.filter((n) => !n.read).map((n) => n.id)));
+      // La memoria ya las guarda leídas (así vuelven la próxima vez); la
+      // pantalla de ahora conserva sus puntos.
       cacheNotifications(user.id, leidas(items));
     } else {
       setNotificationState((prev) => {
-        const base = prev.userId === user.id ? prev.items : items;
-        const next = leidas(base);
+        const next = leidas(prev.items);
         cacheNotifications(user.id, next);
         return { userId: user.id, items: next };
       });
     }
-    // A notification may arrive while the write is in flight. Refresh the real
-    // count instead of claiming that the whole account still has zero unread.
-    window.dispatchEvent(new CustomEvent("notificationsChanged"));
-  });
-
-  function markAllRead(dejarPuntosEnPantalla = false) {
-    return markRead(scope === "all"
-      ? { ids: null, snapshotIds: items.map((n) => n.id), keepNew: dejarPuntosEnPantalla }
-      : { ids: visible.filter((n) => !n.read).map((n) => n.id), keepNew: dejarPuntosEnPantalla });
+    // Con «todas» el total pasa a cero seguro: la barra de abajo lo recuerda
+    // aunque no esté montada en esta pantalla.
+    window.dispatchEvent(new CustomEvent("notificationsChanged", { detail: scope === "all" ? { sinLeer: 0, userId: user.id } : undefined }));
   }
 
-  function markOneRead(e: React.MouseEvent, id: string) {
+  async function markOneRead(e: React.MouseEvent, id: string) {
     e.stopPropagation();
     setItemMenuOpenId(null);
-    return markRead({ ids: [id] });
+    setNotificationState((prev) => {
+      const next = prev.items.map((n) => (n.id === id ? { ...n, read: true } : n));
+      cacheNotifications(user?.id, next);
+      return { userId: user?.id, items: next };
+    });
+    const supabase = createClient();
+    await supabase.from("notifications").update({ read: true }).eq("id", id);
+    window.dispatchEvent(new CustomEvent("notificationsChanged"));
   }
 
   const role = user?.user_metadata?.role as string | undefined;
@@ -380,7 +390,17 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
 
   function open(n: Notification) {
     const href = notificationActionHref(n, role, locale);
-    if (!n.read) void markRead({ ids: [n.id] });
+    if (!n.read) {
+      setNotificationState((prev) => {
+        const next = prev.items.map((item) => (item.id === n.id ? { ...item, read: true } : item));
+        cacheNotifications(user?.id, next);
+        return { userId: user?.id, items: next };
+      });
+      const supabase = createClient();
+      supabase.from("notifications").update({ read: true }).eq("id", n.id).then(() => {
+        window.dispatchEvent(new CustomEvent("notificationsChanged"));
+      });
+    }
     if (AVISOS_EN_TARJETA.has(n.type)) {
       setEnTarjeta(n);
       return;
@@ -629,10 +649,6 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
             {menuGeneral}
           </div>
         )}
-        {!enTarjeta && readError && <div role="alert" className="px-4 py-3 text-sm text-red-700">
-          <p>{t("markReadError")}</p>
-          <button type="button" disabled={retrying} onClick={retryRead} className="mt-1 font-semibold underline disabled:opacity-50">{t("markReadRetry")}</button>
-        </div>}
         {busy ? (
           <PanelListSkeleton
             rows={4}
@@ -917,10 +933,6 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
                 <NotificationSourceIcon type={enTarjeta.type} className="h-5 w-5" />
               </span>
               <p className="text-[15px] leading-6 text-[#4b5b70]">{copia.message}</p>
-              {readError && <div role="alert" className="text-sm text-red-700">
-                <p>{t("markReadError")}</p>
-                <button type="button" disabled={retrying} onClick={retryRead} className="mt-1 font-semibold underline disabled:opacity-50">{t("markReadRetry")}</button>
-              </div>}
             </div>
           </Modal>
         );

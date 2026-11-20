@@ -71,13 +71,7 @@ for (const locale of ["es", "en"] as const) {
         // A real browser Back can restore the old completed panel from history.
         await page.goBack({ waitUntil: "load" });
         await page.goBack({ waitUntil: "commit" });
-        // The second Back lands on the panel loginAs opened without a prefix. Since the
-        // 2026-11-17 launch rule "the URL's language wins" (src/middleware.ts), that entry
-        // stays Spanish even after an English visit, so the guard sends it to the Spanish
-        // form. What must hold is that Back never escapes the registration form.
-        const formAnyLocale = `(?:/en)?/registro/${role === "client" ? "cliente" : "profesional"}`;
-        await expect(page).toHaveURL(new RegExp(`${formAnyLocale}$`), { timeout: 30_000 });
-        await expect(page.getByRole("button", { name: /Guardar y continuar|Save and continue|Continuar|Continue/, exact: true }).first()).toBeVisible();
+        await expect(page).toHaveURL(new RegExp(`${formPath}$`), { timeout: 30_000 });
         await visitWhilePending(page, `${prefix}/dashboard/profesional?tab=cuenta`, formPath);
         await expect(page).toHaveURL(new RegExp(`${formPath}$`));
         await visitWhilePending(page, `/auth/callback?flow=native&locale=${locale}`, formPath);

@@ -27,7 +27,7 @@ for (const platform of ["android", "ios"] as const) {
       Object.assign(window, { Capacitor: runtime });
     }, { platform });
     await gotoOK(page, "/login");
-    await expect(page.getByText(/Usó la última vez|Last used/)).toHaveCount(0);
+    await expect(page.getByText(/Usaste la última vez|Last used/)).toHaveCount(0);
     const google = page.getByRole("button", { name: "Continuar con Google", exact: true });
     for (let attempt = 1; attempt <= 2; attempt++) {
       await google.click();

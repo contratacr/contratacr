@@ -180,7 +180,7 @@ export async function POST(req: Request) {
   if (ticket.email) {
     // `user_id` set → the requester has an account → deep-link to the exact ticket in
     // their panel; null → a guest (no panel) → "create account / sign in" path instead.
-    await notifyUserOfReply({ toEmail: ticket.email, toName: ticket.name, subject: ticket.subject, body: safeBody || "Le enviamos un archivo adjunto.", eventKey: `support-reply:${replyMessage!.id}`, hasAccount: !!ticket.user_id, panel, ticketId: id, topic: ticket.topic });
+    await notifyUserOfReply({ toEmail: ticket.email, toName: ticket.name, subject: ticket.subject, body: safeBody || "Te enviamos un archivo adjunto.", eventKey: `support-reply:${replyMessage!.id}`, hasAccount: !!ticket.user_id, panel, ticketId: id, topic: ticket.topic });
   }
   if (ticket.user_id) {
     const notification = {

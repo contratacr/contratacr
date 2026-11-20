@@ -91,7 +91,7 @@ export async function GET(req: Request) {
 
 // POST /api/support — the user replies in one of THEIR ticket threads.
 export async function POST(req: Request) {
-  const rl = await enforceRateLimit(req, "support-reply", 10, 60_000);
+  const rl = enforceRateLimit(req, "support-reply", 10, 60_000);
   if (rl) return rl;
 
   const supa = await createClient();

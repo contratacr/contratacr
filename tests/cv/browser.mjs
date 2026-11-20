@@ -14,7 +14,7 @@ for(const [name,engine,viewport] of [['chromium-mobile',chromium,{width:390,heig
  await page.route('**/*',route=>{const req=route.request();requests.push({url:req.url(),method:req.method(),body:req.postData()});return req.url().startsWith('http://127.0.0.1:3194/') ? route.continue():route.abort();});
  try {
  await page.goto('http://127.0.0.1:3194');
- await expect(page.getByRole('heading',{name:'Tu CV'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Su CV'})).toBeVisible();
  const input=page.locator('input[type=file][accept*=".docx"]');
  await page.screenshot({path:`${directory}/${name}-start.png`,fullPage:true});
  await input.setInputFiles({name:'curriculum.docx',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',buffer:docx});
@@ -38,7 +38,7 @@ for(const [name,engine,viewport] of [['chromium-mobile',chromium,{width:390,heig
  await input.setInputFiles({name:'curriculum.pdf',mimeType:'application/pdf',buffer:pdfBytes});
  await expect(review).toBeVisible({timeout:25000});
  // Same title and institution with the same CV: marked, and never added twice.
- await expect(review.getByText('Ya está en tu perfil',{exact:true})).toHaveCount(1);
+ await expect(review.getByText('Ya está en su perfil',{exact:true})).toHaveCount(1);
  await review.getByRole('button',{name:'Descartar importación'}).click();
  await page.getByRole('button',{name:'Editar Experiencia laboral 1',exact:true}).click();
  await expect(page.getByLabel('Empresa (opcional)',{exact:true})).toHaveValue('Empresa corregida');
@@ -52,7 +52,7 @@ for(const [name,engine,viewport] of [['chromium-mobile',chromium,{width:390,heig
  await page.getByTestId('profile-save-certs').click();
  await expect.poll(()=>page.evaluate(()=>JSON.parse(sessionStorage.getItem('cv-saved')).experience[0].title)).toBe('Puesto corregido');
  await page.reload();
- for(const [filename,buffer,expected] of [['bad.pdf',Buffer.from('not a pdf'),'Elegí un archivo'],['huge.pdf',Buffer.from(oversized),'demasiado grande'],['image.pdf',Buffer.from(new jsPDF().output('arraybuffer')),'No pudimos leer'],['old.doc',Buffer.from('word'),'Elegí un archivo']]) {
+ for(const [filename,buffer,expected] of [['bad.pdf',Buffer.from('not a pdf'),'Elija un archivo'],['huge.pdf',Buffer.from(oversized),'demasiado grande'],['image.pdf',Buffer.from(new jsPDF().output('arraybuffer')),'No pudimos leer'],['old.doc',Buffer.from('word'),'Elija un archivo']]) {
   await input.setInputFiles({name:filename,mimeType:'application/octet-stream',buffer});
   await expect(page.getByRole('alert')).toContainText(expected,{timeout:25000});
  }

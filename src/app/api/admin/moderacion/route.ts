@@ -16,13 +16,13 @@ const action = z.object({
 export async function POST(req: Request) {
   const access = await moderationAccess();
   if (!access) return NextResponse.json({error:"No autorizado para moderar."},{status:403,headers});
-  const limited = await enforceRateLimit(req,"admin-moderation",30,60000); if(limited) return limited;
+  const limited = enforceRateLimit(req,"admin-moderation",30,60000); if(limited) return limited;
   if(req.headers.get("origin") !== new URL(req.url).origin) return NextResponse.json({error:"Origen inválido"},{status:403,headers});
   const parsed = action.safeParse(await req.json().catch(()=>null));
   if(!parsed.success) return NextResponse.json({error:"Indica contenido, acción y motivo (5–1000 caracteres)."},{status:400,headers});
   const p=parsed.data;
   const {data,error}=await access.db.rpc("moderate_content",{p_kind:p.kind,p_id:p.id,p_action:p.action,p_reason:p.reason,p_report:p.report,p_days:p.days});
-  if(error) return NextResponse.json({error:"No se pudo guardar la decisión y su auditoría. Revisa el contenido y los permisos."},{status:409,headers});
+  if(error) return NextResponse.json({error:"No se pudo guardar la decisión y su auditoría. Revise el contenido y los permisos."},{status:409,headers});
   if(p.kind === "professional" || p.kind === "review") await invalidateProfessionalCache();
   for(const path of ["/solicitudes","/empleos","/promociones","/profesionales","/buscar"]) {
     revalidatePath(path,"layout"); revalidatePath(`/en${path}`,"layout");

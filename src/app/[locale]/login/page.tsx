@@ -70,8 +70,6 @@ function meaningfulRedirect(raw: string | null): string | null {
   ) return raw;
   const params = new URLSearchParams(query);
   if (pathname.startsWith("/profesionales/") && params.get("pendingReview") === "1") return raw;
-  // Appointment drafts return through the existing professional route.
-  if (/^\/profesionales\/[a-z0-9][a-z0-9-]*$/.test(pathname) && params.get("pendingAppointment") === "1") return raw;
   // Quien quiso escribirle al cliente de un proyecto vuelve a ese proyecto.
   if (/^\/solicitudes\/[^/]+$/.test(pathname)) return raw;
   return null;
@@ -515,15 +513,14 @@ export default function LoginPage() {
             </div>
           )}
 
-          <form method="post" onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
             <Input
               label={t("email")}
               type="email"
-              disabled={runtime === "unknown"}
               // Con estos dos el llavero de iPhone/Android ofrece rellenar y
               // guardar la cuenta (en la app, además, con webcredentials).
               autoComplete="username"
-              placeholder={t("emailPlaceholder")}
+              placeholder="tu@email.com"
               error={errors.email?.message}
               {...register("email")}
             />
@@ -531,7 +528,6 @@ export default function LoginPage() {
               <Input
                 label={t("password")}
                 type="password"
-                disabled={runtime === "unknown"}
                 autoComplete="current-password"
                 // Sin «••••••••»: parecía una contraseña ya escrita.
                 placeholder={t("passwordPlaceholder")}
@@ -546,7 +542,7 @@ export default function LoginPage() {
             </div>
             <div className="relative mt-2 rounded-xl">
             {lastUsed("email")}
-            <Button type="submit" size="lg" loading={submitting} disabled={submitting || runtime === "unknown"} className="w-full">
+            <Button type="submit" size="lg" loading={submitting} disabled={submitting} className="w-full">
               {/* Solo «Ingresar», centrado y sin flecha, como el resto de los
                   botones del app y las apps grandes: la flecha sugería «ir a
                   otra pantalla» y no «entrar» (9-oct-2026). */}
@@ -606,12 +602,10 @@ export default function LoginPage() {
                 }
               />
             ) : (
-                // Hasta hidratar, el servidor pinta esta rama («unknown»): sin
-                // el disabled, un toque antes de hidratar no hacía nada.
                 <button
                   type="button"
                   onClick={handleGoogle}
-                  disabled={runtime === "unknown" || googleLoading || appleLoading}
+                  disabled={googleLoading || appleLoading}
                   className={`w-full flex items-center justify-center gap-3 px-4 py-2.5 bg-white border rounded-xl text-sm font-medium text-[#374151] hover:bg-[#f9fafb] transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${socialHint === "google" ? "border-[#009FD9] ring-2 ring-[#009FD9]/30" : "border-[#e5e7eb]"}`}
                 >
                   <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -628,7 +622,7 @@ export default function LoginPage() {
 
           {/* Links inform returning users; signing in is not a fresh legal acceptance. */}
           <p className="mt-4 text-center text-xs leading-relaxed text-[#8a9aab]">
-            {locale === "en" ? "Consult our " : "Consulte nuestros "}
+            {locale === "en" ? "Consult our " : "Consulta nuestros "}
             <Link href="/terminos" className="font-semibold text-[#009FD9]">{locale === "en" ? "Terms" : "Términos"}</Link>
             {locale === "en" ? " and the " : " y la "}
             <Link href="/privacidad" className="font-semibold text-[#009FD9]">{locale === "en" ? "Privacy Policy" : "Política de Privacidad"}</Link>

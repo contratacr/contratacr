@@ -25,7 +25,7 @@ const MARKETPLACE_CONTROL_COPY = {
     country: "Costa Rica",
     searchInCountry: "Buscar en Costa Rica",
     deleteRecent: "Borrar búsqueda reciente",
-    emptyRecents: "Sus búsquedas recientes aparecerán aquí.",
+    emptyRecents: "Tus búsquedas recientes aparecerán aquí.",
     closeFilter: "Cerrar filtro",
     close: "Cerrar",
     showResults: "Ver resultados",

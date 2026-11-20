@@ -124,7 +124,7 @@ export function AdminSupport() {
       body: JSON.stringify({ id: openId, body: texto, attachments: adjuntos.map((a) => ({ path: a.path, name: a.name, type: a.type, size: a.size })) }),
     }).catch(() => null);
     if (res?.ok) { openTicket(openId); return true; }
-    void showMessage({ title: "No se pudo enviar la respuesta", description: "Inténtelo de nuevo en unos segundos.", tone: "danger" });
+    void showMessage({ title: "No se pudo enviar la respuesta", description: "Inténtalo de nuevo en unos segundos.", tone: "danger" });
     return false;
   }
 
@@ -138,7 +138,7 @@ export function AdminSupport() {
     if (!openId || !window.confirm("Esta eliminación es permanente: el caso y todos sus mensajes desaparecen. ¿Deseas continuar?")) return;
     const res = await fetch(`/api/admin/support?id=${encodeURIComponent(openId)}`, { method: "DELETE" });
     if (!res.ok) {
-      void showMessage({ title: "No se pudo eliminar el caso", description: "Inténtelo de nuevo en unos segundos.", tone: "danger" });
+      void showMessage({ title: "No se pudo eliminar el caso", description: "Inténtalo de nuevo en unos segundos.", tone: "danger" });
       return;
     }
     setOpenId(null); setTicket(null); setMessages([]);

@@ -2,7 +2,6 @@
 
 import { useEffect, type ReactNode } from "react";
 import { usePathname, useRouter } from "@/i18n/navigation";
-import {useTranslations} from "next-intl";
 import { useAuth } from "@/hooks/use-auth";
 import { pendingRegistrationPath, registrationComplete } from "@/lib/auth/registration-state";
 import { LienzoNeutro } from "@/components/ui/section-skeletons";
@@ -11,7 +10,6 @@ import { LienzoNeutro } from "@/components/ui/section-skeletons";
 // check mounted in the panel so a connected identity is not a completed account.
 export function RegistrationGuard({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
-  const t=useTranslations("ProRouteCopy");
   const router = useRouter();
   const pathname = usePathname();
   const pending = !!user && !registrationComplete(user.user_metadata);
@@ -27,6 +25,6 @@ export function RegistrationGuard({ children }: { children: ReactNode }) {
       window.removeEventListener("popstate", resume);
     };
   }, [loading, pending, destination, pathname, router]);
-  if (loading || pending) return pathname==="/dashboard/pro"?<main role="status" aria-busy="true" className="min-h-screen bg-white p-6 text-[#162543]">{t("loadingPro")}</main>:<LienzoNeutro />;
+  if (loading || pending) return <LienzoNeutro />;
   return children;
 }
