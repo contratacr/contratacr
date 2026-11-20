@@ -64,7 +64,7 @@ export function CompositorDeSoporte({
     try {
       for (const file of Array.from(files)) {
         if (siguientes.length >= MAX_ADJUNTOS_SOPORTE) {
-          setError(en ? "You can attach up to 3 files per message." : "Puedes adjuntar hasta 3 archivos por mensaje.");
+          setError(en ? "You can attach up to 3 files per message." : "Puede adjuntar hasta 3 archivos por mensaje.");
           break;
         }
         const pdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);

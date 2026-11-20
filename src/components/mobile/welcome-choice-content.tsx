@@ -8,7 +8,7 @@ export type WelcomeRole = "client" | "professional";
 export function WelcomeChoiceContent({english=false,onChoose,onLogin,titleId}:{english?:boolean;onChoose?:(role:WelcomeRole)=>void;onLogin?:()=>void;titleId?:string}) {
   return <div className="w-full max-w-2xl">
     <div className="mb-8 text-center">
-      <p className="mb-1.5 text-[15px] font-semibold text-[#009FD9]">{english?"Welcome to ContrataCR":"Te damos la bienvenida a ContrataCR"}</p>
+      <p className="mb-1.5 text-[15px] font-semibold text-[#009FD9]">{english?"Welcome to ContrataCR":"Le damos la bienvenida a ContrataCR"}</p>
       <h1 id={titleId} className="text-[1.75rem] font-extrabold leading-tight tracking-tight text-[#162543] sm:text-4xl">{english?"How do you want to start?":"¿Cómo quiere empezar?"}</h1>
     </div>
     <div className="grid grid-cols-2 gap-3 sm:gap-6">

@@ -20,7 +20,7 @@ test.describe("invitación a publicar un proyecto", () => {
   test("la portada invita a crear un proyecto y la flecha del formulario vuelve a la portada", async ({ page }) => {
     await gotoOK(page, "/");
     await waitForInteractivePage(page);
-    await expect(page.getByText("¿No sabes a quién llamar?")).toBeVisible();
+    await expect(page.getByText("¿No sabe a quién llamar?")).toBeVisible();
     await page.getByRole("link", { name: "Cree una solicitud" }).click();
     const titulo = page.locator("#publish-project-title");
     await titulo.waitFor({ timeout: 30_000 });
@@ -56,7 +56,7 @@ test.describe("invitación a publicar un proyecto", () => {
     expect((await raro.json() as { total: number }).total).toBe(0);
     if (total > 0) {
       await gotoOK(page, "/publicar-solicitud?categoria=desarrollo_web");
-      await expect(page.getByText(/recibirán? tu solicitud/)).toBeVisible({ timeout: 30_000 });
+      await expect(page.getByText(/recibirán? su solicitud/)).toBeVisible({ timeout: 30_000 });
     }
   });
 

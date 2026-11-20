@@ -11,7 +11,7 @@ type Admin = ReturnType<typeof createAdminClient>;
  * formulario; la aclaración «es para pedir, no para ofrecer» sobraba (6-oct).
  * Una sola vez por cuenta, mediante un recibo permanente en la base.
  */
-const TITULO = { es: "¿Necesitas a alguien?", en: "Need someone?" };
+const TITULO = { es: "¿Necesita a alguien?", en: "Need someone?" };
 const CUERPO = {
   es: "Publique lo que necesita y los profesionales le contactan por WhatsApp.",
   en: "Post what you need and professionals contact you on WhatsApp.",

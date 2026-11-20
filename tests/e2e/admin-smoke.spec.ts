@@ -305,7 +305,7 @@ test.describe("@admin surfaces", () => {
 
       // Resumen: what needs attention today, new accounts and recent activity, in words.
       await gotoOK(page, "/admin");
-      await expectVisibleText(page.locator("body"), /Qué necesita tu atención|Nada pendiente hoy/);
+      await expectVisibleText(page.locator("body"), /Qué necesita su atención|Nada pendiente hoy/);
       await expectVisibleText(page.locator("body"), /Verificaciones por revisar/);
       await expectVisibleText(page.locator("body"), /Cuentas nuevas/);
       await expectVisibleText(page.locator("body"), /Actividad reciente/);

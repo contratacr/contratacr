@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       }
     : {
         title: "Eliminar cuenta - ContrataCR",
-        description: "Elimina o deshabilita tu cuenta de ContrataCR desde Cuenta y seguridad.",
+        description: "Elimine o deshabilite su cuenta de ContrataCR desde Cuenta y seguridad.",
       };
   return { ...base, ...imagenSocial(locale) };
 }
@@ -51,7 +51,7 @@ export default async function DeleteAccountPage({
             <div className="mb-6 rounded-xl border border-[#bde7d1] bg-[#f0fbf5] p-4 text-center">
               <p className="font-bold text-[#166534]">
                 {status === "completed"
-                  ? (en ? "Your account was deleted" : "Tu cuenta fue eliminada")
+                  ? (en ? "Your account was deleted" : "Su cuenta fue eliminada")
                   : (en ? "Your account deletion has started" : "La eliminación de su cuenta fue iniciada")}
               </p>
               <p className="mt-1 text-sm leading-6 text-[#3f6f55]">
@@ -71,7 +71,7 @@ export default async function DeleteAccountPage({
             <p className="mx-auto mt-3 max-w-xl leading-7 text-[#6b7280]">
               {en
                 ? "If you can sign in, manage this directly from Account and security. Support is only for people who cannot access their account."
-                : "Si puedes iniciar sesión, hazlo directamente desde Cuenta y seguridad. Soporte queda solo para quienes no pueden entrar a su cuenta."}
+                : "Si puede iniciar sesión, hazlo directamente desde Cuenta y seguridad. Soporte queda solo para quienes no pueden entrar a su cuenta."}
             </p>
           </header>
 

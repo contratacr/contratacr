@@ -57,7 +57,7 @@ export async function GET(
   // Not in the Hacienda (DIMEX/NITE/foreigners, newly issued, stale roll) → manual
   // entry + pendiente de revisión downstream. Never invent a name.
   return NextResponse.json(
-    { found: false, error: "No encontramos esta identificación. Puedes solicitar revisión manual desde Verificación." },
+    { found: false, error: "No encontramos esta identificación. Puede solicitar revisión manual desde Verificación." },
     { status: 404, headers: { "Cache-Control": "no-store" } }
   );
 }

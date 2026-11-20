@@ -77,7 +77,7 @@ test("mobile search text aligns across both fields and all four search surfaces"
   await page.setViewportSize({ width: 390, height: 844 });
   for (const path of ["/buscar", "/solicitudes", "/empleos", "/promociones", "/en/buscar"]) {
     await gotoOK(page, path);
-    const entry = path.includes("buscar") ? page.locator("header").getByRole("button", { name: /What service are you looking for|Qué servicio estás buscando/i }).filter({ visible: true }).first() : page.locator(".ccr-marketplace-sticky input").filter({ visible: true }).first();
+    const entry = path.includes("buscar") ? page.locator("header").getByRole("button", { name: /What service are you looking for|Qué servicio está buscando/i }).filter({ visible: true }).first() : page.locator(".ccr-marketplace-sticky input").filter({ visible: true }).first();
     await expect(entry).toBeVisible();
     await entry.click();
     const sheet = page.locator(".ccr-native-search-panel, .ccr-hoja-buscador").filter({ visible: true });

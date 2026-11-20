@@ -32,7 +32,7 @@ export async function POST(req: Request) {
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Necesitas una cuenta profesional." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Necesita una cuenta profesional." }, { status: 401 });
 
   const db = createAdminClient();
   const { data: pro } = await db
@@ -41,7 +41,7 @@ export async function POST(req: Request) {
     .eq("profile_id", user.id)
     .maybeSingle();
   if (!pro || (pro as { is_banned?: boolean | null }).is_banned) {
-    return NextResponse.json({ error: "Necesitas una cuenta profesional." }, { status: 403 });
+    return NextResponse.json({ error: "Necesita una cuenta profesional." }, { status: 403 });
   }
 
   // Las mismas dos condiciones que el tablero: publicado después de que el

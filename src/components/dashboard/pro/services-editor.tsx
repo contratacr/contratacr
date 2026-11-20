@@ -336,7 +336,7 @@ export function ServicesEditor({
       setSaved(false);
       setFormError(locale === "en"
         ? "Could not save the service changes. Try again."
-        : "No se pudieron guardar los cambios del servicio. Intenta de nuevo.");
+        : "No se pudieron guardar los cambios del servicio. Intente de nuevo.");
       return false;
     } finally {
       setSaving(false);
@@ -567,10 +567,10 @@ export function ServicesEditor({
       console.error("[services-editor] service image upload failed", error);
       const code = getImageUploadPreparationErrorCode(error);
       setFormError(code === "too_large"
-        ? (locale === "en" ? "That photo is too large. Choose a lighter photo or take a new one." : "La foto es muy pesada. Elige una foto más liviana o toma una nueva.")
+        ? (locale === "en" ? "That photo is too large. Choose a lighter photo or take a new one." : "La foto es muy pesada. Elija una foto más liviana o toma una nueva.")
         : code === "unsupported"
-          ? (locale === "en" ? "Use a JPG, PNG, WEBP, AVIF, HEIC, HEIF, or GIF image." : "Usa una imagen JPG, PNG, WEBP, AVIF, HEIC, HEIF o GIF.")
-          : (locale === "en" ? "Could not upload the service image. Try again." : "No se pudo subir la imagen del servicio. Intenta de nuevo."));
+          ? (locale === "en" ? "Use a JPG, PNG, WEBP, AVIF, HEIC, HEIF, or GIF image." : "Use una imagen JPG, PNG, WEBP, AVIF, HEIC, HEIF o GIF.")
+          : (locale === "en" ? "Could not upload the service image. Try again." : "No se pudo subir la imagen del servicio. Intente de nuevo."));
     } finally {
       setImageUploading(false);
     }
@@ -1018,7 +1018,7 @@ export function ServicesEditor({
                     <p className="mt-0.5 text-xs text-[#64748b]">
                       {locale === "en"
                         ? "Helps clients verify your professional authorization."
-                        : "Ayuda a los clientes a verificar tu autorización profesional."}
+                        : "Ayuda a los clientes a verificar su autorización profesional."}
                     </p>
                   </div>
                 </div>
@@ -1029,7 +1029,7 @@ export function ServicesEditor({
                       value={form.professionalCredentialNumber}
                       maxLength={PROFESSIONAL_CREDENTIAL_MAX_LENGTH}
                       onChange={(event) => setForm((current) => ({ ...current, professionalCredentialNumber: event.target.value }))}
-                      placeholder={locale === "en" ? "Enter the number" : "Ingresa el número"}
+                      placeholder={locale === "en" ? "Enter the number" : "Ingrese el número"}
                       className="mt-1.5 h-11 w-full rounded-xl border border-[#dbe7ef] bg-white px-3 text-sm text-[#162543] outline-none transition-colors focus:border-[#009FD9]"
                     />
                   </label>

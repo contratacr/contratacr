@@ -96,7 +96,7 @@ test.describe("@smoke reanudar la app", () => {
     await irYVolver(page);
     await sigueRespondiendo(page);
     // La sesión no se perdió en el camino.
-    await expect(page.locator("body")).not.toContainText(/Ingresa a tu cuenta|Log in to your account/);
+    await expect(page.locator("body")).not.toContainText(/Ingrese a su cuenta|Log in to your account/);
   });
 });
 

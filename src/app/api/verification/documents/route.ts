@@ -64,7 +64,7 @@ export async function POST(req: Request) {
     const ctx = await context();
     if (!ctx) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     const { db, user, pro, profile, ticketId } = ctx;
-    if (pro.is_verified || pro.verification_status === "verified") return NextResponse.json({ error: "Tu identidad ya está verificada." }, { status: 409 });
+    if (pro.is_verified || pro.verification_status === "verified") return NextResponse.json({ error: "Su identidad ya está verificada." }, { status: 409 });
     if (!canRequestIdentityReview(pro, ctx.cedula)) return NextResponse.json({ error: "La revisión manual está disponible para identificaciones no encontradas." }, { status: 409 });
     const { data: saved, error: readError } = await db.from("support_ticket_messages").select("id").eq("id", ticketId).maybeSingle();
     if (readError) return unavailable();

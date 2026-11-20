@@ -637,7 +637,7 @@ function categoryClarification(text: string, locale: Locale, labels: Map<string,
   if (options.length === 0) {
     return locale === "en"
       ? "Which service do you need? Please write the service name so I can search correctly."
-      : "¿Qué servicio necesitas? Escríbame el nombre del servicio para buscar correctamente.";
+      : "¿Qué servicio necesita? Escríbame el nombre del servicio para buscar correctamente.";
   }
   const formatted = options.map((option) => `"${option}"`).join(", ");
   return locale === "en"
@@ -773,7 +773,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
   {
     test: (n) => /^(hola|holi|buenas|buenos dias|buenas tardes|buenas noches|hello|hi|hey|saludos)[\s!.,]*(\w+[\s!.,]*){0,3}$/.test(n) && n.split(/\s+/).length <= 4,
     answer: {
-      es: "¡Hola! Puedo ayudarte a encontrar un profesional (dime el servicio y la zona, por ejemplo \"un electricista en Heredia\") o explicarte cómo funciona ContrataCR. ¿Qué necesitas?",
+      es: "¡Hola! Puedo ayudarle a encontrar un profesional (indíqueme el servicio y la zona, por ejemplo \"un electricista en Heredia\") o explicarle cómo funciona ContrataCR. ¿Qué necesita?",
       en: "Hi! I can help you find a professional (tell me the service and the area, for example \"an electrician in Heredia\") or explain how ContrataCR works. What do you need?",
     },
   },
@@ -793,7 +793,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(como|cómo).{0,6}(se|saber|sabre|elijo|escojo|escoger|elegir|reviso|confio|confiar).{0,40}(bueno|buena|confiable|confiar|elegir|escoger|mejor|calidad|serio)/.test(n)
       || /(en quien|en quien) confiar|profesional (bueno|confiable|serio)|how (do i|can i|to) (know|choose|pick|trust).{0,30}(good|reliable|trust|best|quality)/.test(n),
     answer: {
-      es: `${PARA_COMPARAR.es} Lee sobre todo las reseñas y mira sus casos de éxito en trabajos parecidos al tuyo; escribe a dos o tres profesionales y compara. ${ACUERDO_DIRECTO.es}`,
+      es: `${PARA_COMPARAR.es} Lea sobre todo las reseñas y mire sus casos de éxito en trabajos parecidos al suyo; escriba a dos o tres profesionales y compare. ${ACUERDO_DIRECTO.es}`,
       en: `${PARA_COMPARAR.en} Read the reviews above all and look at their success stories on jobs like yours; message two or three professionals and compare. ${ACUERDO_DIRECTO.en}`,
     },
   },
@@ -808,7 +808,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(mal trabajo|trabajo mal hecho|me estafo|me estafaron|estafa|no termino|no cumplio|no llego|no vino|problema con (un|el|mi) profesional|queja|quejarme|reclamo|bad job|scam|scammed|didn.?t (finish|show)|complaint)/.test(n),
     action: "support",
     answer: {
-      es: "Lo sentimos. Primero háblalo con el profesional por escrito: el acuerdo lo hicieron entre ustedes. Luego deja una reseña honesta en su perfil: es lo que ayuda a los demás a elegir. Si hubo engaño, trato abusivo o algo inseguro, repórtalo desde su perfil (menú ··· → Reportar perfil) o abre un caso de soporte: lo revisamos en 24 horas y podemos limitar o suspender la cuenta. Si necesitas reclamar el dinero o el trabajo, eso se hace ante la oficina de protección al consumidor (MEIC) o las autoridades.",
+      es: "Lo sentimos. Primero háblelo con el profesional por escrito: el acuerdo lo hicieron entre ustedes. Luego deje una reseña honesta en su perfil: es lo que ayuda a los demás a elegir. Si hubo engaño, trato abusivo o algo inseguro, repórtelo desde su perfil (menú ··· → Reportar perfil) o abra un caso de soporte: lo revisamos en 24 horas y podemos limitar o suspender la cuenta. Si necesita reclamar el dinero o el trabajo, eso se hace ante la oficina de protección al consumidor (MEIC) o las autoridades.",
       en: "We're sorry. First raise it with the professional in writing: the agreement was between the two of you. Then leave an honest review on their profile: it's what helps others choose. If there was deceit, abuse or something unsafe, report it from their profile (··· menu → Report profile) or open a support case: we review it within 24 hours and can limit or suspend the account. To claim money or the work back, that goes through the consumer protection office (MEIC) or the authorities.",
     },
     cta: { es: "Abrir un caso de soporte", en: "Open a support case" },
@@ -875,7 +875,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(elimin|borr|cerr|dar de baja|desactiv|delete|close|deactivate|remove).{0,20}(mi cuenta|la cuenta|cuenta|my account|account)/.test(n),
     action: "open_dashboard",
     answer: {
-      es: "En tu panel, abre Cuenta y seguridad y baja hasta \"Eliminar cuenta\". Se borran tu perfil, tus solicitudes y tus mensajes; no se puede deshacer.",
+      es: "En su panel, abra Cuenta y seguridad y baje hasta \"Eliminar cuenta\". Se borran su perfil, sus solicitudes y sus mensajes; no se puede deshacer.",
       en: "In your panel, open Account & security and scroll to \"Delete account\". Your profile, requests and messages are removed; it cannot be undone.",
     },
     cta: { es: "Ir a Cuenta y seguridad", en: "Open Account & security" },
@@ -897,7 +897,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(cambi|subir|poner|actualiz|change|upload|update).{0,20}(foto|imagen|photo|picture|avatar)/.test(n) || /(foto|photo).{0,20}(perfil|profile)/.test(n),
     action: "open_dashboard",
     answer: {
-      es: "Si eres profesional: en tu panel abre Mi perfil y toca la foto para cambiarla. Si eres cliente: en Cuenta y seguridad → Datos básicos.",
+      es: "Si es profesional: en su panel abra Mi perfil y toque la foto para cambiarla. Si es cliente: en Cuenta y seguridad → Datos básicos.",
       en: "Professionals: in your panel open My profile and tap the photo to change it. Clients: Account & security → Basic details.",
     },
     cta: { es: "Ir a mi panel", en: "Open my panel" },
@@ -1078,7 +1078,7 @@ function productAnswer(message: string, locale: Locale): AssistantPayload | null
       locationText: null,
       answer: locale === "en"
         ? "What service do you need? For example: plumbing, electrical or cleaning."
-        : "¿Qué servicio necesitas? Por ejemplo: plomería, electricidad o limpieza.",
+        : "¿Qué servicio necesita? Por ejemplo: plomería, electricidad o limpieza.",
       ctaLabel: null,
     };
   }
@@ -1116,7 +1116,7 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
       documented: true,
       answer: locale === "en"
         ? "ContrataCR helps you find professionals, compare profiles, post what you need and coordinate directly on WhatsApp."
-        : "ContrataCR permite buscar profesionales, comparar perfiles, publicar lo que necesitas y coordinar directamente por WhatsApp.",
+        : "ContrataCR permite buscar profesionales, comparar perfiles, publicar lo que necesita y coordinar directamente por WhatsApp.",
       ctaLabel: locale === "en" ? "See how it works" : "Ver cómo funciona",
     };
   }
@@ -1579,10 +1579,10 @@ function normalizePayload(
             ? "Open Account & security in your dashboard to change your account email."
             : "Open Account & security in your dashboard to disable or permanently delete your account."
         : passwordIntent
-          ? "Abre Cuenta y seguridad en tu panel para cambiar tu contraseña de forma segura."
+          ? "Abra Cuenta y seguridad en su panel para cambiar su contraseña de forma segura."
           : emailIntent
-            ? "Abre Cuenta y seguridad en tu panel para cambiar el correo de tu cuenta."
-            : "Abre Cuenta y seguridad en tu panel para deshabilitar o eliminar permanentemente tu cuenta.",
+            ? "Abra Cuenta y seguridad en su panel para cambiar el correo de su cuenta."
+            : "Abra Cuenta y seguridad en su panel para deshabilitar o eliminar permanentemente su cuenta.",
       ctaLabel: locale === "en" ? "Open account settings" : "Ir a cuenta y seguridad",
     };
   }
@@ -1746,7 +1746,7 @@ function normalizePayload(
       action: "answer",
       answer: locale === "en"
         ? "What service do you need? For example: plumbing, electrical or cleaning."
-        : "¿Qué servicio necesitas? Por ejemplo: plomería, electricidad o limpieza.",
+        : "¿Qué servicio necesita? Por ejemplo: plomería, electricidad o limpieza.",
       ctaLabel: null,
     };
   }
@@ -1759,7 +1759,7 @@ function normalizePayload(
       locationText: null,
       answer: locale === "en"
         ? `I can help you find professionals for ${serviceLabel}. In which Costa Rica province or canton do you need the service?`
-        : `Puedo ayudarte a buscar profesionales de ${serviceLabel}. ¿En qué provincia o cantón de Costa Rica necesitás el servicio?`,
+        : `Puedo ayudarle a buscar profesionales de ${serviceLabel}. ¿En qué provincia o cantón de Costa Rica necesita el servicio?`,
       ctaLabel: null,
     };
   }
@@ -1783,7 +1783,7 @@ function normalizePayload(
         action: "answer",
         answer: locale === "en"
           ? "What service do you need? For example: plumbing, electrical or cleaning."
-          : "¿Qué servicio necesitas? Por ejemplo: plomería, electricidad o limpieza.",
+          : "¿Qué servicio necesita? Por ejemplo: plomería, electricidad o limpieza.",
         ctaLabel: null,
       };
     }
@@ -1889,7 +1889,7 @@ function urgentSafetyAnswer(message: string, locale: Locale): AssistantPayload |
     action: "answer",
     answer: locale === "en"
       ? "This may be an emergency. Call Costa Rica emergency services at 9-1-1 now. Do not wait for a marketplace professional or an AI response."
-      : "Esto puede ser una emergencia. Llama ahora al 9-1-1 de Costa Rica. No esperes a un profesional de la plataforma ni a una respuesta de la IA.",
+      : "Esto puede ser una emergencia. Llame ahora al 9-1-1 de Costa Rica. No espere a un profesional de la plataforma ni a una respuesta de la IA.",
   };
 }
 
@@ -2148,7 +2148,7 @@ export async function POST(req: Request) {
           : `Encontré profesionales de ${serviceLabel} en ${placeLabel}.`
         : locale === "en"
           ? `In which Costa Rica area would you like to search for ${serviceLabel}?`
-          : `¿En qué zona de Costa Rica buscas ${serviceLabel}?`;
+          : `¿En qué zona de Costa Rica busca ${serviceLabel}?`;
       payload.searchQuery = serviceLabel;
       payload.serviceId = resolvedCategory.id;
       payload.locationText = placeLabel;
@@ -2167,7 +2167,7 @@ export async function POST(req: Request) {
       payload.action = "suggest_service";
       payload.answer = locale === "en"
         ? "That service is not in the current catalog yet. You can suggest it for the ContrataCR team to review."
-        : "Ese servicio todavía no está en el catálogo. Puedes sugerirlo para que el equipo de ContrataCR lo revise.";
+        : "Ese servicio todavía no está en el catálogo. Puede sugerirlo para que el equipo de ContrataCR lo revise.";
       payload.searchQuery = missingServiceName;
       payload.serviceId = null;
       payload.locationText = null;
@@ -2177,7 +2177,7 @@ export async function POST(req: Request) {
       payload.action = "answer";
       payload.answer = locale === "en"
         ? "Which service do you need? For example: plumbing, electricity, cleaning, repair or consulting."
-        : "¿Qué tipo de servicio necesitas? Por ejemplo: plomería, electricidad, limpieza, reparación o asesoría.";
+        : "¿Qué tipo de servicio necesita? Por ejemplo: plomería, electricidad, limpieza, reparación o asesoría.";
       payload.searchQuery = null;
       payload.serviceId = null;
       payload.locationText = null;
@@ -2239,7 +2239,7 @@ export async function POST(req: Request) {
     const rawAssistantAnswer = noResults
       ? locale === "en"
         ? `I could not find professionals for ${servicePhrase} in ${placePhrase} yet. You can create a request so related professionals are notified.`
-        : `Todavía no encontré profesionales de ${servicePhrase} en ${placePhrase}. Puedes crear una solicitud para avisar a los profesionales de ese servicio.`
+        : `Todavía no encontré profesionales de ${servicePhrase} en ${placePhrase}. Puede crear una solicitud para avisar a los profesionales de ese servicio.`
       : hasResults
         ? resultCount === 1
           ? locale === "en"
@@ -2251,7 +2251,7 @@ export async function POST(req: Request) {
         : suggestedService
           ? locale === "en"
             ? "That service is not in the current catalog yet. You can suggest it for the ContrataCR team to review."
-            : "Ese servicio todavía no está en el catálogo. Puedes sugerirlo para que el equipo de ContrataCR lo revise."
+            : "Ese servicio todavía no está en el catálogo. Puede sugerirlo para que el equipo de ContrataCR lo revise."
           : payload.answer;
     // En la app, una respuesta que solo nombra WhatsApp se dice «mensaje». La
     // que ya nombra las DOS vías (WhatsApp o Mensajes, como empleos) se deja:

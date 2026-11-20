@@ -227,7 +227,7 @@ const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
   publicaciones: { es: "Mis publicaciones", en: "My posts" },
   jobs: { es: "Empleos", en: "Jobs" },
   offers: { es: "Promociones", en: "Promotions" },
-  completion: { es: "Completa tu perfil", en: "Complete your profile" },
+  completion: { es: "Complete su perfil", en: "Complete your profile" },
   guides: { es: "Guías", en: "Guides" },
   // El CV y la carta de presentación: para postularse a un empleo, con o sin ficha.
   cv: { es: "Currículum", en: "Resume" },

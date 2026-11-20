@@ -50,7 +50,7 @@ const COPY = {
     // Cada tablero pregunta por lo suyo: aquí se buscan PROYECTOS, no
     // profesionales. «¿Qué servicio estás buscando?» es la frase de /buscar, y
     // repetida aquí parecía que la pantalla buscaba a quién contratar.
-    buscar: "¿Qué solicitud buscas?",
+    buscar: "¿Qué solicitud busca?",
     abrirMenu: "Abrir menú",
     notificaciones: "Notificaciones",
     publicar: "Publicar una solicitud",

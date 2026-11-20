@@ -275,7 +275,7 @@ export async function expectNoHorizontalOverflow(page: Page) {
 export async function openLoginForm(page: Page) {
   const portada = page.locator(".ccr-login-portada");
   if (!(await portada.isVisible().catch(() => false))) return;
-  await portada.getByRole("button", { name: /Inicia sesión|Log in/i }).first().click();
+  await portada.getByRole("button", { name: /Inicie sesión|Log in/i }).first().click();
   await page.locator("main form").first().waitFor({ state: "visible", timeout: 10_000 });
 }
 
@@ -288,7 +288,7 @@ export async function loginAs(page: Page, email: string, password: string, optio
     await openLoginForm(page);
 
     const main = page.locator("main");
-    await expectVisibleText(main, /Ingresa a tu cuenta|Log in to your account|Bienvenido de vuelta|Welcome back/i);
+    await expectVisibleText(main, /Ingrese a su cuenta|Log in to your account|Bienvenido de vuelta|Welcome back/i);
     await main.locator('input[type="email"]').fill(email);
     await main.locator('input[type="password"]').fill(password);
     const terms = main.getByRole("checkbox");

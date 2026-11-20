@@ -62,7 +62,7 @@ function buildMetadata(locale: string): Metadata {
     : "Encuentre electricistas, plomeros, pintores, tutores y más profesionales verificados en su cantón.";
   const socialDescription = isEn
     ? "Offer and find services in Costa Rica"
-    : "Ofrece y encuentra servicios en Costa Rica";
+    : "Ofrezca y encuentre servicios en Costa Rica";
   // Con `prefijoDeIdioma` quedaba /opengraph-image a secas, que no era una imagen.
   const socialImage = rutaImagenSocial(locale);
 

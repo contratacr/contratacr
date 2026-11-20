@@ -59,7 +59,7 @@ export function SignInMethods() {
       const { error } = await supabase.auth.linkIdentity({ provider, options: { redirectTo } });
       if (error) throw error;
     } catch {
-      setMessage(english ? "We couldn't connect this method. Your existing sign-in methods still work." : "No pudimos conectar este método. Tus accesos actuales siguen funcionando.");
+      setMessage(english ? "We couldn't connect this method. Your existing sign-in methods still work." : "No pudimos conectar este método. Sus accesos actuales siguen funcionando.");
       setBusy(null);
     }
   }
@@ -79,7 +79,7 @@ export function SignInMethods() {
       if (error) throw error;
       window.dispatchEvent(new Event("ccr:profile-updated"));
     } catch {
-      setMessage(english ? "We couldn't connect this method. Your existing sign-in methods still work." : "No pudimos conectar este método. Tus accesos actuales siguen funcionando.");
+      setMessage(english ? "We couldn't connect this method. Your existing sign-in methods still work." : "No pudimos conectar este método. Sus accesos actuales siguen funcionando.");
     } finally {
       setBusy(null);
     }

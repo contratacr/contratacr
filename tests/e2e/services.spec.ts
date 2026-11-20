@@ -32,7 +32,7 @@ test.describe("@smoke services catalog", () => {
     const search = servicesSearch(page, isMobileProject(testInfo));
     await search.fill(`Servicio inexistente ${Date.now()}`);
 
-    await expect(page.locator("main").getByText(/No ves tu servicio|No encontramos ese servicio/i).filter({ visible: true }).first()).toBeVisible();
+    await expect(page.locator("main").getByText(/No ve su servicio|No encontramos ese servicio/i).filter({ visible: true }).first()).toBeVisible();
     await expect(page.locator("main").getByText(/Cuentanos que servicio|Cu.ntanos qu. servicio|Tell us what service/i).filter({ visible: true }).first()).toBeVisible();
     await expect(page.getByRole("button", { name: /Sugerir servicio|Suggest a service/i }).first()).toBeVisible();
     await expect(page.locator("body")).not.toContainText(/servicesPage\./i);

@@ -155,7 +155,7 @@ export function OtpVerification({ email, onVerified, autoResendOnMount = false }
 
       {resentOnOpen && (
         <div className="rounded-xl border border-[#bae6fd] bg-[#f0f9ff] px-3 py-2.5 text-left text-sm text-[#075985] mb-4">
-          {isEn ? "We sent you a new code." : "Te enviamos un código nuevo."}
+          {isEn ? "We sent you a new code." : "Le enviamos un código nuevo."}
         </div>
       )}
 

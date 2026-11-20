@@ -36,7 +36,7 @@ const JOBS_MANAGER_COPY = {
     // formulario publica SIEMPRE (nunca manda `draft`), así que era una
     // palabra para un estado que nadie podía crear. Si alguna fila vieja lo
     // trae, se lee como cerrada, que es lo que es: no se ve en público.
-    back: "Volver al panel", title: "Mis empleos", subtitle: "Vacantes para cuando necesitas contratar.", publish: "Publicar empleo",
+    back: "Volver al panel", title: "Mis empleos", subtitle: "Vacantes para cuando necesita contratar.", publish: "Publicar empleo",
     application: "postulación", applications: "postulaciones", view: "Ver empleo", edit: "Editar", more: "Más opciones",
     close: "Cerrar vacante", republish: "Volver a publicar", remove: "Eliminar", removeTitle: "¿Eliminar este empleo?", removeBody: "Se borra del todo y no se puede recuperar.", removeCancel: "Cancelar", applicationsTitle: "Postulaciones",
     received: "Postulación recibida", message: "Mensaje", viewCv: "Ver CV", viewPortfolio: "Ver su sitio o portafolio",

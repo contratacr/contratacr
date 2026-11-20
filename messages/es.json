@@ -1508,7 +1508,7 @@
     "headerReviews": "{count, plural, one {# reseña} other {# reseñas}}",
     "toolsHeading": "Herramientas",
     "sectionErrorTitle": "No se pudo mostrar esta sección",
-    "sectionErrorBody": "Fue un problema al dibujar la pantalla, no de tus datos. Vuelve a intentarlo; ya nos llegó el aviso para arreglarlo.",
+    "sectionErrorBody": "Fue un problema al dibujar la pantalla, no de sus datos. Vuelva a intentarlo; ya nos llegó el aviso para arreglarlo.",
     "sectionErrorRetry": "Volver a intentar"
   },
   "photoGallery": {
@@ -1559,7 +1559,7 @@
   },
   "servicesEditor": {
     "priceUnits": {"por_hora": "Por hora", "por_consulta": "Por consulta", "por_proyecto": "Por trabajo", "por_dia": "Por día", "paquete": "Paquete", "a_convenir": "Consultar precio"},
-    "step1Title": "Tus servicios",
+    "step1Title": "Sus servicios",
     "addProfession": "Agregar servicio",
     "alreadyAdded": "Ya agregó ese servicio.",
     "principal": "Principal",
@@ -2202,10 +2202,10 @@
     "destinatarios": "{n, plural, one {# profesional de este servicio recibirá su solicitud} other {# profesionales de este servicio recibirán su solicitud}}",
     "borradorListo": "Quedó guardado. Revíselo y toque Publicar.",
     "cedulaYaVerificada": "Verificado",
-    "cedulaYaVerificadaAyuda": "Tu solicitud sale con \"Verificado\". El número no se muestra.",
-    "identidadNoEncontrada": "No encontramos esta identificación. Puedes solicitar una revisión manual.",
-    "identidadPadronCaido": "La verificación no está disponible en este momento. Puedes continuar e intentarlo más tarde.",
-    "identidadEnRevision": "Vamos a revisar tu identificación; mientras tanto tu solicitud sale sin \"Verificado\"."
+    "cedulaYaVerificadaAyuda": "Su solicitud sale con \"Verificado\". El número no se muestra.",
+    "identidadNoEncontrada": "No encontramos esta identificación. Puede solicitar una revisión manual.",
+    "identidadPadronCaido": "La verificación no está disponible en este momento. Puede continuar e intentarlo más tarde.",
+    "identidadEnRevision": "Vamos a revisar su identificación; mientras tanto su solicitud sale sin \"Verificado\"."
   },
   "notifications": {
     "title": "Notificaciones",
@@ -2800,11 +2800,11 @@
   },
   "landing": {
     "hero": {
-      "searchPlaceholder": "¿Qué servicio estás buscando?",
-      "searchPlaceholderShort": "¿Qué necesitas?",
+      "searchPlaceholder": "¿Qué servicio está buscando?",
+      "searchPlaceholderShort": "¿Qué necesita?",
       "buscaPrefijo": "Busca",
-      "pidePrefijo": "¿No sabes a quién llamar?",
-      "pideEnlace": "Crea una solicitud",
+      "pidePrefijo": "¿No sabe a quién llamar?",
+      "pideEnlace": "Cree una solicitud",
       "ejemplosBusqueda": [
         "electricidad",
         "plomería",
@@ -3174,7 +3174,7 @@
     "notesHeading": "Nota",
     "errorNeedsPrices": "Hay líneas sin precio. Póngales su monto o quítelas: una cotización en ₡0 no le sirve a nadie.",
     "validUntilShort": "hasta el {date}",
-    "clientCedulaLookupNotice": "Ingresa únicamente datos que estés autorizado a usar."
+    "clientCedulaLookupNotice": "Ingrese únicamente datos que esté autorizado a usar."
   },
   "menuFicha": {
     "more": "Más opciones",
@@ -3469,8 +3469,8 @@
     "error": "No se pudo guardar. Intente nuevamente.",
     "alreadyAvailable": "Este servicio ya está disponible.",
     "request": "Solicitar servicio",
-    "offerExplanation": "Solicitá el servicio que ofrecés. Si lo aprobamos, te avisaremos para que completes la información y lo publiques en tu perfil.",
-    "catalogExplanation": "Solicitá un servicio que falta en el catálogo. Te avisaremos de la decisión.",
-    "guestExplanation": "Revisaremos tu solicitud. Después de registrarte, solicitalo desde tu cuenta para recibir avisos."
+    "offerExplanation": "Solicite el servicio que ofrece. Si lo aprobamos, le avisaremos para que complete la información y lo publique en su perfil.",
+    "catalogExplanation": "Solicite un servicio que falta en el catálogo. Le avisaremos de la decisión.",
+    "guestExplanation": "Revisaremos su solicitud. Después de registrarse, solicítelo desde su cuenta para recibir avisos."
   }
 }

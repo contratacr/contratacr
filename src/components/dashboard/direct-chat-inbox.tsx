@@ -1095,7 +1095,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
     try {
       for (const file of Array.from(files)) {
         if (next.length >= MAX_ATTACHMENTS) {
-          setAttachmentError(isEn ? "You can attach up to 3 files per message." : "Puedes adjuntar hasta 3 archivos por mensaje.");
+          setAttachmentError(isEn ? "You can attach up to 3 files per message." : "Puede adjuntar hasta 3 archivos por mensaje.");
           break;
         }
         const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);

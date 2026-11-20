@@ -65,7 +65,7 @@ test.describe("@account screens through the real pages", () => {
     test("profile completion validates and saves name, phone and identification", async ({ page }) => {
       await loginAs(page, account!.email, account!.password);
       await gotoOK(page, "/completar-perfil");
-      await expectVisibleText(page.locator("body"), /Completa tu perfil/);
+      await expectVisibleText(page.locator("body"), /Complete su perfil/);
 
       // Sin nombre no se guarda. El teléfono y la identificación se llenan
       // primero porque son campos `required`: si quedan vacíos, el navegador

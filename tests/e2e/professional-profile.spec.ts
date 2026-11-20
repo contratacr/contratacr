@@ -152,11 +152,11 @@ test.describe("@seeded professional profile", () => {
       // Selecting stars already changes the draft, even before writing text.
       // Back and tab changes must ask before dropping that rating.
       await page.evaluate(() => window.history.back());
-      await expect(page.getByRole("dialog").getByText("Tienes cambios sin guardar")).toBeVisible();
+      await expect(page.getByRole("dialog").getByText("Tiene cambios sin guardar")).toBeVisible();
       await page.getByRole("dialog").getByRole("button", { name: "Seguir editando" }).click();
       await expect(page.getByRole("button", { name: "5 estrellas", exact: true })).toBeVisible();
       await page.getByRole("tab", { name: "Servicios" }).click();
-      await expect(page.getByRole("dialog").getByText("Tienes cambios sin guardar")).toBeVisible();
+      await expect(page.getByRole("dialog").getByText("Tiene cambios sin guardar")).toBeVisible();
       await page.getByRole("dialog").getByRole("button", { name: "Salir sin guardar" }).click();
       await expect(page.getByRole("tab", { name: "Servicios" })).toHaveAttribute("aria-selected", "true");
       await expectNoHorizontalOverflow(page);
@@ -240,6 +240,6 @@ test.describe("@seeded professional profile", () => {
       .eq("client_id", seed.professionalUserId)
       .eq("professional_id", seed.professionalId);
     expect(count ?? 0).toBe(0);
-    if (conBoton) await expect(page.getByText(/tus propios favoritos|your own favorites/i).first()).toBeVisible();
+    if (conBoton) await expect(page.getByText(/sus propios favoritos|your own favorites/i).first()).toBeVisible();
   });
 });

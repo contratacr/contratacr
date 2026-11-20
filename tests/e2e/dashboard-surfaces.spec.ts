@@ -41,7 +41,7 @@ async function exerciseVisibleFilters(page: import("playwright/test").Page) {
   const filters = page.locator("[data-status-filter-tabs]:visible");
   const visibleFilterEmptyState = page
     .getByText(
-      /^(?:No tienes (?:citas|proyectos) activ[oa]s|Todav[ií]a no (?:hay|tienes) (?:citas|proyectos|tiquetes) finalizad[oa]s|No hay proyectos nuevos por ahora|No tienes tiquetes pendientes|No hay tiquetes en proceso|No tienes (?:profesionales favoritos|ofertas favoritas|promociones favoritas|empleos favoritos)\.)$/i,
+      /^(?:No tiene (?:citas|proyectos) activ[oa]s|Todav[ií]a no (?:hay|tiene) (?:citas|proyectos|tiquetes) finalizad[oa]s|No hay proyectos nuevos por ahora|No tiene tiquetes pendientes|No hay tiquetes en proceso|No tiene (?:profesionales favoritos|ofertas favoritas|promociones favoritas|empleos favoritos)\.)$/i,
       { exact: true },
     )
     .filter({ visible: true });
@@ -426,7 +426,7 @@ test.describe("@seeded dashboard surfaces", () => {
         visualGuide: /^Servicios$/i,
         nextStep: "Siguiente", enlarge: "Ampliar captura", reduce: "Reducir captura",
         profileGuide: /^Perfil profesional$/i,
-        profileLastStep: /Usa Ver mi perfil para ver la versi.n p.blica/i,
+        profileLastStep: /Use Ver mi perfil para ver la versi.n p.blica/i,
       },
       {
         locale: "en",

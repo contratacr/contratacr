@@ -89,7 +89,7 @@ export async function avisarVacanteAProfesionales({
     titular: `Publicaron una vacante de ${oficio}: "${title}".`,
     parrafos: ["Si le interesa, ábrala y escríbale por WhatsApp a quien la publicó."],
     boton: { texto: "Ver la vacante", ruta: rutaEmpleo({ id: jobId, title }) },
-    porQue: `Te llega porque ofreces ${oficio} en ContrataCR.`,
+    porQue: `Le llega porque ofrece ${oficio} en ContrataCR.`,
     campana: "aviso-empleo",
   }));
 

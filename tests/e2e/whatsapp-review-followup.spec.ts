@@ -38,8 +38,8 @@ test("contact follow-up is readable and dismissible without blocking the page", 
   await page.goto("/");
   const dialog = page.getByRole("dialog", { name: "Seguimiento del servicio" });
   await expect(dialog).toBeVisible(ESPERA);
-  await expect(dialog).toContainText("¿Contrataste a Redes Bahía?");
-  await expect(dialog).toContainText("Lo contactaste por WhatsApp · Reparación de computadoras");
+  await expect(dialog).toContainText("¿Contrató a Redes Bahía?");
+  await expect(dialog).toContainText("Lo contactó por WhatsApp · Reparación de computadoras");
   await expect(dialog.getByRole("button", { name: "Sí, dejar una reseña" })).toBeVisible();
   await expect(dialog.getByRole("button", { name: "Pregúnteme después" })).toBeVisible();
   await expect(dialog.getByRole("button", { name: "No lo contraté" })).toBeVisible();
@@ -80,7 +80,7 @@ test("a review with only stars asks before closing the follow-up form", async ({
   await expect(page.getByRole("heading", { name: "Dejar una reseña" })).toBeVisible();
   await page.getByRole("button", { name: "5 estrellas", exact: true }).click();
   await page.getByRole("button", { name: "Omitir por ahora" }).click();
-  const warning = page.getByRole("dialog").filter({ hasText: "Tienes cambios sin guardar" });
+  const warning = page.getByRole("dialog").filter({ hasText: "Tiene cambios sin guardar" });
   await expect(warning).toBeVisible();
   await warning.getByRole("button", { name: "Seguir editando" }).click();
   await expect(page.getByRole("heading", { name: "Dejar una reseña" })).toBeVisible();
@@ -154,7 +154,7 @@ test("closing the review form without publishing asks the server for the single 
   await expect.poll(() => actions).toEqual(["hired", "review_later"]);
 });
 
-test("«Preguntame después» deja de preguntar en esa visita aunque queden pendientes", async ({ page }) => {
+test("«Pregúnteme después» deja de preguntar en esa visita aunque queden pendientes", async ({ page }) => {
   const queue = [
     { ...followUp, id: "00000000-0000-4000-8000-000000000301", professional_name: "Redes Bahía" },
     { ...followUp, id: "00000000-0000-4000-8000-000000000302", professional_name: "Juan Electricidad" },
@@ -176,7 +176,7 @@ test("«Preguntame después» deja de preguntar en esa visita aunque queden pend
   await expect(dialog).toContainText("Redes Bahía");
   await dialog.getByRole("button", { name: "Pregúnteme después" }).click();
   await expect(dialog).toBeHidden();
-  // «Preguntame después» también es «ahora no me pregunten»: la segunda no salta.
+  // «Pregúnteme después» también es «ahora no me pregunten»: la segunda no salta.
   await page.waitForTimeout(1500);
   await expect(dialog).toBeHidden();
 });

@@ -166,7 +166,7 @@ test.describe("@smoke public routes", () => {
     test.skip((page.viewportSize()?.width ?? 1280) >= 640, "El buscador a pantalla completa es del teléfono.");
     await gotoOK(page, "/");
     await waitForInteractivePage(page);
-    await page.getByLabel(/Qu[eé] necesitas|What do you need/i).filter({ visible: true }).first().click();
+    await page.getByLabel(/Qu[eé] necesita|What do you need/i).filter({ visible: true }).first().click();
     const ubicacion = page.locator(".ccr-native-search-panel").getByPlaceholder(/Ubicaci[oó]n|Location/i).filter({ visible: true }).first();
     await ubicacion.click({ timeout: 2_000 });
     await page.waitForTimeout(600);
@@ -190,7 +190,7 @@ test.describe("@smoke public routes", () => {
     if ((page.viewportSize()?.width ?? 1280) < 640) {
       // En el teléfono la portada tiene UNA línea (¿Qué necesitas?); la
       // ubicación se elige dentro del buscador completo que abre.
-      await page.getByLabel(/Qu[eé] necesitas|What do you need/i).filter({ visible: true }).first().click();
+      await page.getByLabel(/Qu[eé] necesita|What do you need/i).filter({ visible: true }).first().click();
       await page.locator(".ccr-native-search-panel").getByPlaceholder(/Ubicaci[oó]n|Location|Barrio|Neighborhood/i).filter({ visible: true }).first().click();
       const cercaEnHoja = page.locator(".ccr-native-search-panel").getByRole("button", { name: /Buscar cerca de m[ií]|Search near me/i }).filter({ visible: true }).first();
       await expect(cercaEnHoja).toBeVisible();
