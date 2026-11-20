@@ -87,15 +87,19 @@ const nombreDeSugerencia = (s: Sugerencia, en: boolean) =>
       : s.tipo === "habilidades" ? (en ? "Skills (order and choice)" : "Habilidades (cuáles y en qué orden)")
         : s.titulo;
 
-export function AdaptarConIa({ cv, en, puedeCrear, alAplicar }: {
+/** El empleo desde el que se llegó: su anuncio llega listo, pero nada corre hasta que la persona toque el botón. */
+export type OfertaInicial = { puesto?: string; empresa?: string; texto?: string };
+
+export function AdaptarConIa({ cv, en, puedeCrear, alAplicar, ofertaInicial }: {
   cv: CvDocumento;
   en: boolean;
+  ofertaInicial?: OfertaInicial;
   /** false cuando ya hay el máximo de documentos: solo se puede cambiar este. */
   puedeCrear: boolean;
   alAplicar: (nuevo: CvDocumento, como: { nuevo: boolean; nombre: string }) => void;
 }) {
-  const [abierto, setAbierto] = useState(false);
-  const [oferta, setOferta] = useState("");
+  const [abierto, setAbierto] = useState(() => !!ofertaInicial?.texto?.trim());
+  const [oferta, setOferta] = useState(() => (ofertaInicial?.texto ?? "").slice(0, MAX_OFERTA));
   const [cargando, setCargando] = useState(false);
   const [fallo, setFallo] = useState<Fallo | null>(null);
   const [resultado, setResultado] = useState<Adaptacion | null>(null);
@@ -114,7 +118,9 @@ export function AdaptarConIa({ cv, en, puedeCrear, alAplicar }: {
     if (!r.ok) { setFallo(r.fallo); return; }
     setResultado(r.datos);
     setEstados(r.datos.sugerencias.map(() => "pendiente"));
-    const empresa = empresaDeLaOferta(oferta);
+    // La empresa del empleo manda mientras el anuncio sea el que llegó de allí.
+    const delEmpleo = !!ofertaInicial?.texto && oferta === ofertaInicial.texto.slice(0, MAX_OFERTA);
+    const empresa = (delEmpleo ? ofertaInicial?.empresa?.trim() : "") || empresaDeLaOferta(oferta);
     setNombre([cv.titular.trim() || (en ? "Resume" : "Currículum"), empresa].filter(Boolean).join(" — ") + (empresa ? "" : en ? " (tailored)" : " (adaptado)"));
     setComoNuevo(puedeCrear);
   };
@@ -152,6 +158,13 @@ export function AdaptarConIa({ cv, en, puedeCrear, alAplicar }: {
 
       {!resultado && (
         <>
+          {ofertaInicial?.texto && ofertaInicial.texto === oferta && (
+            <p className="min-w-0 rounded-xl bg-[#f2fafe] px-3 py-2 text-[13px] leading-5 text-[#334155]" data-testid="cv-ia-del-empleo">
+              <span className="font-bold text-[#162543]">{en ? "From the job you were reading" : "Del empleo que estaba mirando"}</span>
+              {[ofertaInicial.puesto, ofertaInicial.empresa].map((x) => x?.trim()).filter(Boolean).length > 0 && <span className="block truncate">{[ofertaInicial.puesto, ofertaInicial.empresa].map((x) => x?.trim()).filter(Boolean).join(" · ")}</span>}
+              <span className="block">{en ? "Read the post, fix anything that looks off and tap Tailor my resume. Nothing changes until you accept it." : "Lea el anuncio, corrija lo que no calce y toque Adaptar mi CV. Nada cambia hasta que usted lo acepte."}</span>
+            </p>
+          )}
           <textarea rows={6} maxLength={MAX_OFERTA} value={oferta} onChange={(e) => setOferta(e.target.value)} disabled={cargando}
             aria-label={en ? "Job post" : "Anuncio de la oferta"} placeholder={en ? "Paste the full job post here: position, requirements and company." : "Pegue aquí el anuncio completo: puesto, requisitos y empresa."} className={campo} />
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -300,8 +313,8 @@ export function MejorarConIa({ texto, tipo, idioma, contexto, en, alElegir }: {
 }
 
 // ── LA CARTA ──────────────────────────────────────────────────────────────
-export function CartaConIa({ cv, carta, en, alEscribir }: { cv: CvDocumento; carta: Carta; en: boolean; alEscribir: (p: CartaIa) => void }) {
-  const [oferta, setOferta] = useState("");
+export function CartaConIa({ cv, carta, en, alEscribir, ofertaInicial }: { cv: CvDocumento; carta: Carta; en: boolean; alEscribir: (p: CartaIa) => void; ofertaInicial?: OfertaInicial }) {
+  const [oferta, setOferta] = useState(() => (ofertaInicial?.texto ?? "").slice(0, MAX_OFERTA));
   const [cargando, setCargando] = useState(false);
   const [fallo, setFallo] = useState<Fallo | null>(null);
   const [anterior, setAnterior] = useState<CartaIa | null>(null);
