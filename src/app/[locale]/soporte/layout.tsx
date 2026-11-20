@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       locale,
       ruta: "/soporte",
       titulo: en ? "Support | ContrataCR" : "Soporte | ContrataCR",
-      descripcion: en ? "Write to us and we reply in your panel or by email." : "Escríbanos y le respondemos desde su panel o por correo.",
+      descripcion: en ? "Write to us and we reply in your panel or by email." : "Escríbenos y te respondemos desde tu panel o por correo.",
     }),
   };
 }

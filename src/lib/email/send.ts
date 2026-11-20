@@ -127,12 +127,6 @@ export async function sendBrevoEmail(opts: {
    * cabecera a todo correo así.
    */
   conBaja?: boolean;
-  /**
-   * Modo sandbox de Brevo (cabecera `X-Sib-Sandbox: drop`): Brevo valida la
-   * solicitud y NO entrega nada. Lo usa el código de reclamo de negocios del
-   * directorio en desarrollo local (src/lib/directory/claim-code-sender.ts).
-   */
-  sandbox?: boolean;
 }): Promise<EmailResult> {
   const key = process.env.BREVO_API_KEY;
   if (!key) return { ok: false, status: "skipped", detail: "Brevo not configured (BREVO_API_KEY missing)" };
@@ -172,7 +166,6 @@ export async function sendBrevoEmail(opts: {
         }
       : {}),
   };
-  if (opts.sandbox) body.headers = { ...(body.headers as Record<string, string> | undefined), "X-Sib-Sandbox": "drop" };
 
   return deliverRecordedEmail({
     recipient: opts.to, subject: opts.subject, payload: body,

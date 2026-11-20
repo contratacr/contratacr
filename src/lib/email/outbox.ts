@@ -52,7 +52,7 @@ export async function processEmailDelivery(id: string): Promise<EmailResult> {
     if (readError) return { ok: false, status: "failed", detail: "No se pudo consultar el envío" };
     if (receipt.status === "accepted") return { ok: true, status: "sent", detail: "already_accepted" };
     if (receipt.status === "uncertain") return { ok: false, status: "uncertain", detail: "Esperando confirmación del proveedor" };
-    if (["failed", "cancelled"].includes(receipt.status)) return { ok: false, status: "skipped", detail: "Envío detenido; revise su registro" };
+    if (["failed", "cancelled"].includes(receipt.status)) return { ok: false, status: "skipped", detail: "Envío detenido; revisa su registro" };
     return queued;
   }
   const mail = data as Envelope;

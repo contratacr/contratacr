@@ -59,10 +59,10 @@ test.describe("bienvenida de la app", () => {
 
   test("la pantalla de espera coincide y se oculta al abrir el registro profesional", async ({ page }) => {
     await gotoOK(page, "/?nativePreview=1&resetNativeOnboarding=1");
-    const titulo = page.getByRole("heading", { name: "¿Cómo quiere empezar?" });
+    const titulo = page.getByRole("heading", { name: "¿Cómo quieres empezar?" });
     await expect(titulo).toBeVisible({ timeout: 30_000 });
     const espera = page.locator("#ccr-native-first-run-prepaint h1").first();
-    await expect(espera, "la pantalla de espera del arranque usa el mismo título").toHaveText("¿Cómo quiere empezar?");
+    await expect(espera, "la pantalla de espera del arranque usa el mismo título").toHaveText("¿Cómo quieres empezar?");
 
     await page.getByRole("button", { name: /Ofrezco servicios/ }).tap();
     await expect(page).toHaveURL(/\/registro\/profesional/);

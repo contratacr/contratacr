@@ -14,6 +14,6 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     locale,
     ruta: "/ayuda",
     titulo: en ? 'FAQ | ContrataCR' : 'Preguntas frecuentes | ContrataCR',
-    descripcion: en ? 'Answers about finding professionals, posting requests, requesting quotes and getting paid for your services in Costa Rica.' : 'Respuestas a las dudas más comunes sobre buscar profesionales, publicar solicitudes, pedir cotizaciones y cobrar por sus servicios en Costa Rica.',
+    descripcion: en ? 'Answers about finding professionals, posting requests, requesting quotes and getting paid for your services in Costa Rica.' : 'Respuestas a las dudas más comunes sobre buscar profesionales, publicar solicitudes, pedir cotizaciones y cobrar por tus servicios en Costa Rica.',
   });
 }

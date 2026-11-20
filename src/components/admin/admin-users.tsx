@@ -197,7 +197,7 @@ export function AdminUsers() {
             <option value="banned">Profesionales bloqueados</option>
           </select>
         </div>
-        <p className="mt-2 text-xs text-[#68778d]">Los resultados están paginados; puede consultar todas las cuentas, no solo las primeras 100.</p>
+        <p className="mt-2 text-xs text-[#68778d]">Los resultados están paginados; puedes consultar todas las cuentas, no solo las primeras 100.</p>
       </div>
 
       <AdminFilterTabs tabs={FILTERS} value={filter} onChange={changeFilter} counts={filterCounts} />

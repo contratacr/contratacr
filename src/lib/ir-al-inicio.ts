@@ -133,10 +133,3 @@ export function irAlInicio() {
   };
   cuadro = requestAnimationFrame(paso);
 }
-
-/** A newly selected section is a new navigation, even immediately after a drag.
- * Delayed calls still use irAlInicio(), so subsequent user scrolling wins. */
-export function iniciarSeccionArriba() {
-  ultimaLlamada = -Infinity;
-  irAlInicio();
-}

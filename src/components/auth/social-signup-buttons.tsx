@@ -46,7 +46,7 @@ export function SocialSignupButtons({ nextPath }: { nextPath?: string }) {
     if (!hasSupabaseBrowserConfig()) {
       setError(locale === "en"
         ? "Sign-in is temporarily unavailable. Please try again in a few minutes."
-        : "El acceso no está disponible temporalmente. Intente de nuevo en unos minutos.");
+        : "El acceso no está disponible temporalmente. Intenta de nuevo en unos minutos.");
       setLoading(null);
       return;
     }

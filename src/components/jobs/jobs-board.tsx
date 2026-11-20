@@ -1,5 +1,4 @@
 "use client";
-import { PromotionHistory } from "@/components/pro/promotion-history";
 import { SectionBrand } from "@/components/layout/section-brand";
 import { useMarketplaceFeed } from "@/hooks/use-marketplace-feed";
 import { MarketplaceFeedFeedback, MarketplaceContactBoundary } from "@/components/marketplace/feed-loading";
@@ -62,11 +61,11 @@ const MARKETPLACE_LIST_CLASS = "ccr-marketplace-card-list ccr-lista-tablero min-
 const JOBS_COPY = {
   es: {
     view: "Ver", remoteCountry: "Todo Costa Rica", country: "Costa Rica", noApplicants: "Sin postulantes", applicant: "postulante", applicants: "postulantes",
-    searchPlaceholder: "¿Qué empleo busca?", published: "Fecha", anyDate: "Cualquier fecha", last24Hours: "Últimas 24 horas", lastWeek: "Última semana", lastMonth: "Último mes",
+    searchPlaceholder: "¿Qué empleo buscas?", published: "Fecha", anyDate: "Cualquier fecha", last24Hours: "Últimas 24 horas", lastWeek: "Última semana", lastMonth: "Último mes",
     workplace: "Modalidad", anyWorkplace: "Cualquier modalidad", experience: "Experiencia", anyExperience: "Cualquier experiencia", employmentType: "Tipo de empleo", anyEmploymentType: "Cualquier tipo",
     notifications: "Notificaciones",
     myJobs: "Mis empleos", publishJob: "Publicar empleo", jobs: "Empleos", opportunities: "Oportunidades en Costa Rica", job: "Empleo", openMenu: "Abrir menú", salary: "Salario", publishedBy: "Publicado por", editJob: "Editar empleo", editShort: "Editar", manageJob: "Administrar empleo", manageShort: "Administrar", applicationSent: "Postulación enviada", apply: "Postularme",
-    noResults: "No encontramos empleos", noJobs: "Todavía no hay empleos", emptyHelp: "Prueba otra búsqueda o cambie los filtros.", futureJobs: "Las nuevas oportunidades laborales aparecerán aquí.", viewAll: "Ver todos los empleos", publishFirst: "Publicar el primer empleo", publishSubtitle: "Describe la oportunidad con información clara y verificable.", editSubtitle: "Actualice la información de esta publicación.", sendApplication: "Enviar postulación",
+    noResults: "No encontramos empleos", noJobs: "Todavía no hay empleos", emptyHelp: "Prueba otra búsqueda o cambia los filtros.", futureJobs: "Las nuevas oportunidades laborales aparecerán aquí.", viewAll: "Ver todos los empleos", publishFirst: "Publicar el primer empleo", publishSubtitle: "Describe la oportunidad con información clara y verificable.", editSubtitle: "Actualiza la información de esta publicación.", sendApplication: "Enviar postulación",
     location: "Ubicación", wholeCountry: "Todo Costa Rica", openings: "Vacantes", opening: "vacante", openingPlural: "vacantes", duration: "Duración", about: "Sobre el empleo", responsibilities: "Responsabilidades", requirements: "Requisitos", benefits: "Beneficios",
     professionalFallback: "Profesional en ContrataCR", professionalPhoto: "Foto de profesional",
     call: "Llamar",
@@ -173,13 +172,9 @@ export function JobsBoard({ jobs:initialJobs, initialFeed, canPost, initialSelec
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const cleanQuery = query.trim();
-    const cleanLocation = locationFilter.trim();
-    // Hydration already receives these filters from the URL. Serializing an
-    // equivalent query (%20 versus +, for example) would still notify Next and
-    // can cancel a detail navigation that the visitor has just started.
-    if ((params.get("q") ?? "") === cleanQuery && (params.get("location") ?? "") === cleanLocation) return;
     if (cleanQuery) params.set("q", cleanQuery);
     else params.delete("q");
+    const cleanLocation = locationFilter.trim();
     if (cleanLocation) params.set("location", cleanLocation);
     else params.delete("location");
     const nextUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}${window.location.hash}`;
@@ -720,7 +715,7 @@ function JobPreview({ job, isOwner, userId, onEdit, mobile = false, hideActions 
       </AccionesAlPie>
     ))}
     <dl className={`grid gap-3 border-[#e5e7eb] text-sm sm:grid-cols-2 ${!mobile && !hideActions ? "mt-0 border-b pb-5 pt-5" : "mt-6 border-y py-5"}`}>{detailRows.map(([label, value]) => <div key={label} className="min-w-0"><dt className="text-xs font-bold uppercase tracking-wide text-[#7a899d]">{label}</dt><dd className="mt-0.5 break-words font-bold text-[#162543] [overflow-wrap:anywhere]">{value}</dd></div>)}</dl>
-    <section className="mt-7"><h3 className="text-lg font-bold">{copy.about}</h3><p className="mt-3 whitespace-pre-line break-words text-sm leading-7 text-[#43536b] [overflow-wrap:anywhere]">{job.description}</p>{process.env.NODE_ENV === "development" && isOwner && <PromotionHistory key={job.id} contentType="job" contentId={job.id}/>}</section>
+    <section className="mt-7"><h3 className="text-lg font-bold">{copy.about}</h3><p className="mt-3 whitespace-pre-line break-words text-sm leading-7 text-[#43536b] [overflow-wrap:anywhere]">{job.description}</p></section>
     {[ [copy.responsibilities, job.responsibilities], [copy.requirements, job.requirements], [copy.benefits, job.benefits] ].map(([title, items]) => Array.isArray(items) && items.length > 0 ? <section key={String(title)} className="mt-7"><h3 className="text-lg font-bold">{String(title)}</h3><ol className="mt-3 space-y-2.5 text-sm text-[#43536b]">{items.map((item, index) => <li key={`${title}-${item}-${index}`} className="flex min-w-0 gap-3"><span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#eef7fb] text-[11px] font-extrabold leading-none text-[#008fc3]">{index + 1}</span><span className="min-w-0 break-words [overflow-wrap:anywhere]">{item}</span></li>)}</ol></section> : null)}
     {!isOwner && <PrepararCurriculum job={job} />}
   </article>;

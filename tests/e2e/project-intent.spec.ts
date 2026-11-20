@@ -31,7 +31,7 @@ const anuncio='Ofrezco mis servicios de pintura a domicilio, contáctame por Wha
 for(const locale of ['es','en'])for(const account of ['','client','pro'])test(`project request opens the form directly and redirects service ads ${locale} ${account||'guest'}`,async({page})=>{
  await mount(page,locale,account?'?account='+account:'');
  await expect(page.getByTestId('project-intent-choice')).toHaveCount(0);
- await expect(page.locator('#publish-project-title')).toHaveText(locale==='es'?'Cuéntenos qué necesita':'Tell us what you need');
+ await expect(page.locator('#publish-project-title')).toHaveText(locale==='es'?'Cuéntanos qué necesitas':'Tell us what you need');
  await expect(page.locator('button[type=submit]')).toBeVisible();
  const text=page.locator('textarea');
  await text.fill('Necesito pintar una casa de dos pisos en Heredia');

@@ -404,21 +404,21 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
     if (sectionId === "location" && !hasWorkplace) {
       return locale === "en"
         ? "Add a location or enable video calls."
-        : "Agregue una zona, un lugar o active las videollamadas.";
+        : "Agregá una zona, un lugar o activá las videollamadas.";
     }
     if (sectionId === "contact") {
       if (!isPhoneComplete(whatsapp)) {
-        return locale === "en" ? "Enter a complete contact number." : "Ingrese un número de contacto completo.";
+        return locale === "en" ? "Enter a complete contact number." : "Ingresa un número de contacto completo.";
       }
       // Un fijo nunca tiene WhatsApp: el botón del perfil llevaría a
       // «este número no está en WhatsApp».
       if (pareceFijoDeCostaRica(whatsapp)) return t("whatsappFijo");
       if (!callPhoneIsValid) {
-        return locale === "en" ? "Enter a complete call number." : "Ingrese un número para llamadas completo.";
+        return locale === "en" ? "Enter a complete call number." : "Ingresa un número para llamadas completo.";
       }
     }
     if (sectionId === "social" && !socialIsValid) {
-      return locale === "en" ? "Check the website and social links." : "Revise el sitio web y los enlaces públicos.";
+      return locale === "en" ? "Check the website and social links." : "Revisa el sitio web y los enlaces públicos.";
     }
     return null;
   }
@@ -1032,7 +1032,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
           <AttentionModalities value={workplaces} onChange={next => { setWorkplaces(next); touch("location"); }} english={locale === "en"} canVideo={canOfferVideoConsult} video={videoConsult && videoCoverageCountry} onVideoChange={next => { setVideoConsult(next); setVideoCoverageCountry(next); touch("location"); }}/>
           {dirty && activeDirtySection === "location" && !hasWorkplace ? (
             <p className="mt-2 text-xs text-red-500">
-              {locale === "en" ? "Add a location or enable video calls." : "Agregue una zona, un lugar o active las videollamadas."}
+              {locale === "en" ? "Add a location or enable video calls." : "Agregá una zona, un lugar o activá las videollamadas."}
             </p>
           ) : null}
         </div>
@@ -1047,7 +1047,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
             required
             value={whatsapp}
             error={dirty && activeDirtySection === "contact" && !isPhoneComplete(whatsapp)
-              ? (locale === "en" ? "Enter a complete contact number." : "Ingrese un número de contacto completo.")
+              ? (locale === "en" ? "Enter a complete contact number." : "Ingresa un número de contacto completo.")
               : dirty && activeDirtySection === "contact" && pareceFijoDeCostaRica(whatsapp) ? t("whatsappFijo") : undefined}
             onChange={(digits) => { setWhatsapp(digits); touch("contact"); }}
             
@@ -1074,7 +1074,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
                 label={<>{t("callNumber")} <span className="text-[#68778d] font-normal">{t("optional")}</span></>}
                 value={callPhone}
                 error={dirty && activeDirtySection === "contact" && !callPhoneIsValid
-                  ? (locale === "en" ? "Enter a complete call number." : "Ingrese un número para llamadas completo.")
+                  ? (locale === "en" ? "Enter a complete call number." : "Ingresa un número para llamadas completo.")
                   : undefined}
                 onChange={(digits) => { setCallPhone(digits); touch("contact"); }}
 

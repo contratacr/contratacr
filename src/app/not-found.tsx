@@ -31,7 +31,7 @@ export default async function NotFound() {
       message={
         en
           ? "The address may have changed or no longer exists. You can go back home or search for a professional."
-          : "La dirección puede haber cambiado o ya no existe. Puede volver al inicio o buscar un profesional."
+          : "La dirección puede haber cambiado o ya no existe. Podés volver al inicio o buscar un profesional."
       }
     >
       <HomeRecoveryLink href={en ? "/en" : "/"} className={errorPrimaryBtn} documentNavigation>

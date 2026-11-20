@@ -1,4 +1,3 @@
-import {quoteValidUntil} from './quote-validity';
 /** Cotizaciones: tipos y cálculo compartidos entre la API y la interfaz. */
 export type QuoteItem = { description: string; quantity: number; unit_price: number };
 export type QuoteTaxMode = "incluido" | "mas_iva" | "exento";
@@ -19,9 +18,6 @@ export type Quote = {
   quote_number: number | null;
   project_id: string | null;
   proposal_id: string | null;
-  /** Local Pro request context, returned only after recipient/owner authorization. */
-  source_request_id?: string;
-  updated_at?: string;
   title: string | null;
   items: QuoteItem[];
   tax_mode: QuoteTaxMode;
@@ -113,7 +109,9 @@ export function sanitizeQuoteItems(raw: unknown): QuoteItem[] {
   return out;
 }
 
-export function isQuoteExpired(q: Pick<Quote, "valid_until" | "status">, now = Date.now()) {
+export function isQuoteExpired(q: Pick<Quote, "valid_until" | "status">) {
   if (q.status !== "sent" || !q.valid_until) return false;
-  return q.valid_until < quoteValidUntil(0, now);
+  const [y, m, d] = q.valid_until.split("-").map(Number);
+  const limite = new Date(y, m - 1, d, 23, 59, 59);
+  return limite.getTime() < Date.now();
 }

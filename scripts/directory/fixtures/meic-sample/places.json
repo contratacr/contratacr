@@ -1,8 +1,0 @@
-{
- "_note": "FIXTURE SINTÉTICO: correspondencia comercio del archivo → ficha /lugar (curada por el dueño).",
- "places": [
-  {"establishment":"Súper Ejemplo Centro","canton":"San José","placeSlug":"fixture-super-ejemplo-centro"},
-  {"establishment":"Mercado Prueba Norte","canton":"Heredia","placeSlug":"fixture-mercado-prueba-norte"},
-  {"establishment":"Farmacia Ejemplo","canton":"San José","placeSlug":"fixture-farmacia-ejemplo"}
- ]
-}

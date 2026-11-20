@@ -111,7 +111,7 @@ test("Completion opens the profile subsection without painting its menu first", 
   });
   await gotoOK(page, "/dashboard/profesional?mode=offer&tab=completion");
   await waitForInteractivePage(page);
-  const step = page.getByRole("button", { name: /Escriba una descripción/ });
+  const step = page.getByRole("button", { name: /Escribe una descripción/ });
   await expect(step).toBeVisible();
   await page.evaluate(() => {
     const state = window as typeof window & { completionFrames?: boolean[]; stopCompletionFrames?: boolean };

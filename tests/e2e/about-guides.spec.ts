@@ -10,10 +10,10 @@ test('about pages explain the four sections and help topics open their answers',
   await expect(main).toContainText('cuenta de cliente o profesional');
   await gotoOK(page, '/ayuda');
   await waitForInteractivePage(page);
-  await page.getByRole('navigation', {name:'Elija un tema'}).getByRole('button', {name:'Solicitudes',exact:true}).click();
+  await page.getByRole('navigation', {name:'Elige un tema'}).getByRole('button', {name:'Solicitudes',exact:true}).click();
   await expect(page.locator('#faq-answer-6')).toBeVisible();
   await expect(page.locator('#faq-answer-6')).toContainText('cuenta de cliente o profesional');
-  await page.getByRole('navigation', {name:'Elija un tema'}).getByRole('button', {name:'Descargar la app',exact:true}).click();
+  await page.getByRole('navigation', {name:'Elige un tema'}).getByRole('button', {name:'Descargar la app',exact:true}).click();
   await page.getByRole('button', {name:'Ver opciones de descarga',exact:true}).click();
   await expect(page.locator('#descargar-app')).toBeInViewport();
   for (const route of ['/mejorar-mi-perfil','/soporte','/en/como-funciona','/en/ayuda']) {

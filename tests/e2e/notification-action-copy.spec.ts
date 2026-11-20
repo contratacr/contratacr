@@ -28,8 +28,8 @@ for (const locale of ["es", "en"]) {
       expect(notificationActionHref(n, undefined, locale)).toBe(`${locale === "en" ? "/en" : ""}/dashboard/profesional?mode=offer&tab=services&serviceRequest=clases_de_doblaje`);
       expect(notificationActionLabel(n, undefined, locale)).toBe(locale === "en" ? "Complete service" : "Completar servicio");
       expect(localizedNotificationCopy(n, locale)).toEqual({
-        title: locale === "en" ? "The service you suggested is now available" : "El servicio que sugirió ya está disponible",
-        message: locale === "en" ? "\"Clases de doblaje\" is now on ContrataCR. You can complete its details and add it to your profile." : "\"Clases de doblaje\" ya está en ContrataCR. Puede completar sus datos y agregarlo a su perfil.",
+        title: locale === "en" ? "The service you suggested is now available" : "El servicio que sugeriste ya está disponible",
+        message: locale === "en" ? "\"Clases de doblaje\" is now on ContrataCR. You can complete its details and add it to your profile." : "\"Clases de doblaje\" ya está en ContrataCR. Podés completar sus datos y agregarlo a tu perfil.",
       });
     }
   });

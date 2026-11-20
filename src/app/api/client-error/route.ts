@@ -10,7 +10,7 @@ import { enforceRateLimit } from "@/lib/rate-limit";
  * en la app. No guarda nada que el usuario haya escrito.
  */
 export async function POST(req: NextRequest) {
-  const rl = await enforceRateLimit(req, "client-error", 20, 60_000);
+  const rl = enforceRateLimit(req, "client-error", 20, 60_000);
   if (rl) return rl;
 
   const body = await req.json().catch(() => ({})) as Record<string, unknown>;

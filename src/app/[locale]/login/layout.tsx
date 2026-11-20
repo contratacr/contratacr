@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       locale,
       ruta: "/login",
       titulo: en ? "Sign in | ContrataCR" : "Ingresar | ContrataCR",
-      descripcion: en ? "Sign in to your ContrataCR account." : "Entre a su cuenta de ContrataCR.",
+      descripcion: en ? "Sign in to your ContrataCR account." : "Entra a tu cuenta de ContrataCR.",
     }),
     robots: { index: false, follow: true },
   };

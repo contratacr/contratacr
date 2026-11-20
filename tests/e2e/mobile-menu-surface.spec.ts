@@ -29,7 +29,7 @@ for (const native of [false, true]) {
     await body.evaluate(el=>{el.scrollTop=el.scrollHeight});
     expect((await header.boundingBox())!.y).toBe(top);
     const socials=menu.getByTestId('mobile-menu-social-links');
-    await expect(socials).toHaveAccessibleName('Síganos');
+    await expect(socials).toHaveAccessibleName('Síguenos');
     const footer=menu.locator('[data-mobile-menu-footer]');
     const language=footer.getByRole('button',{name:'English',exact:true});
     const languageBox=(await language.boundingBox())!,socialBox=(await socials.boundingBox())!;
@@ -85,8 +85,8 @@ for (const native of [false, true]) {
       const social=footer.getByTestId('mobile-menu-social-links');
       await expect(actions.getByRole('button',{name:'English',exact:true})).toBeVisible();
       await expect(actions.getByRole('button',{name:'Cerrar sesión',exact:true})).toBeVisible();
-      await expect(social).toHaveAccessibleName('Síganos');
-      await expect(social.getByText('Síganos',{exact:true})).toHaveCount(0);
+      await expect(social).toHaveAccessibleName('Síguenos');
+      await expect(social.getByText('Síguenos',{exact:true})).toHaveCount(0);
       const geometry=await footer.evaluate(el=>{
         const actions=el.querySelector('[data-mobile-menu-account-actions]')!;
         const social=el.querySelector('nav')!;

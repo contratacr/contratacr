@@ -95,7 +95,7 @@ for (const kind of ["company", "person", "dimex"] as const) test(`private verifi
     await page.route(lookupUrl, route => route.fulfill({ json: { found: true, fullName: "María Elena Prueba Ejemplo", dob: null } }));
     await page.getByRole("button", { name: "Cambiar identificación", exact: true }).click();
     await page.locator("#identificacion").fill(originalId);
-    const lookupNote = page.getByText("Identificación encontrada. Guárdela para completar el proceso.", { exact: true });
+    const lookupNote = page.getByText("Identificación encontrada. Guardala para completar el proceso.", { exact: true });
     await expect(lookupNote).toBeVisible();
     await expect(lookupNote.locator("..").locator("[data-verification-badge]")).toHaveCount(0);
     const [saveIdentity] = await Promise.all([
@@ -133,7 +133,7 @@ for (const kind of ["company", "person", "dimex"] as const) test(`private verifi
     await expect(panel.getByRole("textbox")).toHaveCount(0);
     await expect(panel.getByRole("button", { name: "Enviar a revisión", exact: true })).toBeDisabled();
     await expect(panel).not.toContainText(/Hacienda|API|padrón/);
-    await expect(panel.getByText(kind === "company" ? "Personería o autorización" : "Foto con su identificación", {exact: true})).toBeVisible();
+    await expect(panel.getByText(kind === "company" ? "Personería o autorización" : "Foto con tu identificación", {exact: true})).toBeVisible();
     await panel.getByRole("button", {name: "Enviar a revisión"}).waitFor();
     await expect(panel.getByText("1", {exact: true})).toHaveCount(0);
     await expect(panel.getByText("2", {exact: true})).toHaveCount(0);
@@ -193,7 +193,7 @@ for (const kind of ["company", "person", "dimex"] as const) test(`private verifi
     const publicUrl = db.storage.from("support-attachments").getPublicUrl(attachment.path).data.publicUrl;
     expect((await request.get(publicUrl)).ok()).toBe(false);
     await page.goto("/dashboard/profesional?tab=verificacion");
-    await expect(page.getByText("Su solicitud está en revisión.", {exact: true})).toBeVisible();
+    await expect(page.getByText("Tu solicitud está en revisión.", {exact: true})).toBeVisible();
     await page.screenshot({path: capturePath(`${kind}-submitted-live-${test.info().project.name}.png`), fullPage: true});
     const {error: roleError} = await db.from("profiles").update({role: "admin"}).eq("id", pro.profile_id);
     if (roleError) throw roleError;

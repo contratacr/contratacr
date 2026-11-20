@@ -173,7 +173,7 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
 
   test("las secciones de abajo de la portada se ven al bajar", async ({ page }) => {
     await gotoOK(page, "/");
-    const zona = page.locator("h2", { hasText: /Encuentre profesionales cerca de usted|Find professionals near you/ });
+    const zona = page.locator("h2", { hasText: /Encuentra profesionales cerca de ti|Find professionals near you/ });
     await zona.scrollIntoViewIfNeeded();
     await expect.poll(() => zona.evaluate((e) => Number(getComputedStyle(e.closest("section") ?? e).opacity))).toBe(1);
   });

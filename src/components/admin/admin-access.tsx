@@ -22,7 +22,7 @@ export async function AdminAccess() {
         <p className="mt-3 text-slate-600">
           {en
             ? "You do not have permission to access this section. It is available only to ContrataCR administrators."
-            : "No tiene permisos para acceder a esta sección. Está disponible solo para administradores de ContrataCR."}
+            : "No tienes permisos para acceder a esta sección. Está disponible solo para administradores de ContrataCR."}
         </p>
         <HomeRecoveryLink href={en ? "/en" : "/"} className="mt-6 inline-flex min-h-11 items-center justify-center rounded-full bg-[#009FD9] px-6 font-semibold text-white hover:bg-[#0089bb]">
           {en ? "Back to home" : "Volver al inicio"}

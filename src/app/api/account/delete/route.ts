@@ -32,7 +32,7 @@ export async function POST() {
     });
     const reserved = /Regression accounts cannot be deleted/i.test(requestError?.message ?? "");
     return NextResponse.json(
-      { error: reserved ? "Esta cuenta está reservada para las pruebas de regresión." : "La eliminación no está disponible todavía. Intente más tarde." },
+      { error: reserved ? "Esta cuenta está reservada para las pruebas de regresión." : "La eliminación no está disponible todavía. Intenta más tarde." },
       { status: reserved ? 409 : 503 },
     );
   }
@@ -62,7 +62,7 @@ export async function POST() {
     // request failed just because provider cleanup needs an administrative retry.
     if (banError) {
       return NextResponse.json(
-        { error: "No pudimos bloquear la cuenta de forma segura. Intente nuevamente." },
+        { error: "No pudimos bloquear la cuenta de forma segura. Intenta nuevamente." },
         { status: 503 },
       );
     }

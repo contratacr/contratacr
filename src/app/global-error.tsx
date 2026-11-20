@@ -27,10 +27,10 @@ export default function GlobalError({
         : "Servicio temporalmente fuera de línea";
   const message =
     kind === "offline"
-      ? "Revise su conexión y vuelva a intentarlo; sus datos están a salvo."
+      ? "Revisa tu conexión y vuelve a intentarlo; tus datos están a salvo."
       : kind === "unavailable"
-        ? "Hay un problema temporal de conexión o proveedor. Intente de nuevo en unos minutos; si estaba guardando algo, espere antes de enviarlo otra vez."
-        : "Estamos trabajando para restablecerlo. Intente de nuevo en unos minutos; sus datos están a salvo.";
+        ? "Hay un problema temporal de conexión o proveedor. Intenta de nuevo en unos minutos; si estabas guardando algo, espera antes de enviarlo otra vez."
+        : "Estamos trabajando para restablecerlo. Intenta de nuevo en unos minutos; tus datos están a salvo.";
 
   useEffect(() => {
     console.error("[global error boundary]", error);

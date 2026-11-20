@@ -57,12 +57,12 @@ export function AppDownloadSection() {
     <div className="relative mx-auto w-full max-w-7xl px-5 pb-5 pt-8 sm:px-8 sm:py-6 lg:px-14 lg:py-7">
       <div className="mx-auto max-w-md text-center text-white [text-shadow:0_2px_14px_rgba(0,0,0,0.6)] sm:mx-0 sm:max-w-[49%] sm:text-left">
         <p className="mb-3 hidden text-[11px] font-semibold tracking-[0.14em] text-white/90 sm:block lg:mb-4 lg:text-sm">{en ? "AVAILABLE FOR iOS AND ANDROID" : "DISPONIBLE PARA iOS Y ANDROID"}</p>
-        <h2 className="text-[25px] font-extrabold leading-[1.08] tracking-tight md:text-4xl lg:text-[clamp(2rem,2.8vw,2.75rem)]">{en ? "Download the ContrataCR app" : "Descargue la app de ContrataCR"}</h2>
-        <p className="mx-auto mb-4 mt-3 max-w-md text-sm leading-relaxed text-white/90 sm:mx-0 sm:mt-4 sm:text-base lg:mb-4 lg:mt-3 lg:text-base">{en ? "Find professionals and promote your services." : "Busque profesionales y dé a conocer sus servicios."}</p>
+        <h2 className="text-[25px] font-extrabold leading-[1.08] tracking-tight md:text-4xl lg:text-[clamp(2rem,2.8vw,2.75rem)]">{en ? "Download the ContrataCR app" : "Descarga la app de ContrataCR"}</h2>
+        <p className="mx-auto mb-4 mt-3 max-w-md text-sm leading-relaxed text-white/90 sm:mx-0 sm:mt-4 sm:text-base lg:mb-4 lg:mt-3 lg:text-base">{en ? "Find professionals and promote your services." : "Busca profesionales y da a conocer tus servicios."}</p>
         <AppStoreLinks />
         <div className="mt-4 hidden items-center gap-4 lg:flex">
-          <Image src="/stores/download-app-qr.svg?v=20261013-store-redirect" width={104} height={104} alt={en ? "Scan to download ContrataCR" : "Escanee para descargar ContrataCR"} className="shrink-0 rounded-lg bg-white" />
-          <div className="max-w-[240px]"><p className="text-sm font-semibold">{en ? "Scan with your phone" : "Escanee con su celular"}</p><p className="mt-2 text-sm leading-relaxed text-white/90">{en ? "Sign in with your existing account." : "Ingrese con su cuenta de siempre."}</p></div>
+          <Image src="/stores/download-app-qr.svg?v=20261013-store-redirect" width={104} height={104} alt={en ? "Scan to download ContrataCR" : "Escanea para descargar ContrataCR"} className="shrink-0 rounded-lg bg-white" />
+          <div className="max-w-[240px]"><p className="text-sm font-semibold">{en ? "Scan with your phone" : "Escanea con tu celular"}</p><p className="mt-2 text-sm leading-relaxed text-white/90">{en ? "Sign in with your existing account." : "Ingresa con tu cuenta de siempre."}</p></div>
         </div>
       </div>
     </div>

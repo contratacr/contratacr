@@ -230,7 +230,7 @@ export function AdminCoverage() {
               <label className="block text-xs font-semibold text-[#374151]">
                 Cantón
                 <select aria-label="Cantón" value={cantonFilter} disabled={!provinceFilter} onChange={(event) => setCantonFilter(event.target.value)} className="mt-1 h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-medium text-[#162543] outline-none focus:border-[#009FD9] disabled:bg-[#f8fafc] disabled:text-[#94a3b8]">
-                  <option value="">{provinceFilter ? "Todos los cantones" : "Elija una provincia"}</option>
+                  <option value="">{provinceFilter ? "Todos los cantones" : "Elige una provincia"}</option>
                   {cantonOptions.map((canton) => <option key={canton.id} value={canton.id}>{canton.name}</option>)}
                 </select>
               </label>

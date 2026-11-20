@@ -83,7 +83,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
         score: 0,
         matched: false,
         unavailable: true,
-        reason: "No pudimos consultar Hacienda en este momento. Intente nuevamente o revise la documentación manualmente.",
+        reason: "No pudimos consultar Hacienda en este momento. Intenta nuevamente o revisa la documentación manualmente.",
         source: lookup.provider,
       };
     } else if (lookup.found && lookup.fullName) {

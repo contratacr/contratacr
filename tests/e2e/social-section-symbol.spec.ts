@@ -34,6 +34,6 @@ test("section links describe their content and preserve individual cards", async
   const sectionPage = await request.get("/empleos", { headers: { "User-Agent": "facebookexternalhit/1.1" } });
   const html = await sectionPage.text();
   expect(html).toContain("/empleos/opengraph-image");
-  expect(html).toContain("Explore vacantes en Costa Rica");
+  expect(html).toContain("Explora vacantes en Costa Rica");
   expect(html).toMatch(/property="og:image"/);
 });

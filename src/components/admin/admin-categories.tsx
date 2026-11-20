@@ -565,7 +565,7 @@ export function AdminCategories() {
         const data = await res.json().catch(() => ({} as { error?: string }));
         showNotice(
           next === "approved" ? "No se pudo aprobar la sugerencia" : "No se pudo rechazar la sugerencia",
-          data.error || "Intente de nuevo."
+          data.error || "Intenta de nuevo."
         );
         return;
       }
@@ -604,7 +604,7 @@ export function AdminCategories() {
     if (next === "approved") {
       label = nameOf(i).trim();
       if (!label) {
-        showNotice("Falta el nombre del servicio", "Agregue el nombre antes de aprobar esta sugerencia.");
+        showNotice("Falta el nombre del servicio", "Agrega el nombre antes de aprobar esta sugerencia.");
         return;
       }
       const similar = findSimilarCategory(label);
@@ -612,7 +612,7 @@ export function AdminCategories() {
         setDialog({
           title: "Servicio parecido encontrado",
           description: `Ya existe un servicio parecido: "${similar}".`,
-          detail: `Puede revisar la sugerencia o aprobar "${label}" de todos modos si realmente es un servicio distinto.`,
+          detail: `Puedes revisar la sugerencia o aprobar "${label}" de todos modos si realmente es un servicio distinto.`,
           confirmLabel: "Aprobar de todos modos",
           cancelLabel: "Revisar",
           onConfirm: () => applySuggestionDecision(i, next, label, labelEn, groupId, flags),
@@ -626,7 +626,7 @@ export function AdminCategories() {
       rejectReasonRefs.current[i.id] = existing;
       setDialog({
         title: "Rechazar sugerencia",
-        description: `Si quiere, agregue un motivo para ayudar a quien sugirió el servicio.`,
+        description: `Si quieres, agrega un motivo para ayudar a quien sugirió el servicio.`,
         detail: `Sugerencia: "${nameOf(i)}".`,
         confirmLabel: "Rechazar",
         cancelLabel: "Cancelar",
@@ -663,7 +663,7 @@ export function AdminCategories() {
     const draft = draftOf(item);
     const label = draft.label.trim();
     const labelEn = draft.labelEn.trim() || autoEnglishCategoryLabel(label);
-    if (!label) { showNotice("Falta el nombre del servicio", "Agregue el nombre antes de guardar los cambios."); return; }
+    if (!label) { showNotice("Falta el nombre del servicio", "Agrega el nombre antes de guardar los cambios."); return; }
     setBusy(item.id);
     try {
       const res = await fetch("/api/admin/categories", {
@@ -681,7 +681,7 @@ export function AdminCategories() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        showNotice("No se pudo guardar el servicio", data.error || "Inténtelo de nuevo.");
+        showNotice("No se pudo guardar el servicio", data.error || "Inténtalo de nuevo.");
         return;
       }
       setCatalog((prev) => prev.map((row) => row.id === item.id ? {
@@ -715,7 +715,7 @@ export function AdminCategories() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        showNotice("No se pudo guardar la categoría", data.error || "Inténtelo de nuevo.");
+        showNotice("No se pudo guardar la categoría", data.error || "Inténtalo de nuevo.");
         return;
       }
       await loadCatalog();
@@ -768,7 +768,7 @@ export function AdminCategories() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        showNotice("No se pudo agregar el servicio", data.error || "Inténtelo de nuevo.");
+        showNotice("No se pudo agregar el servicio", data.error || "Inténtalo de nuevo.");
         return;
       }
       setNewServiceName("");
@@ -797,7 +797,7 @@ export function AdminCategories() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        showNotice("No se pudo agregar la categoría", data.error || "Inténtelo de nuevo.");
+        showNotice("No se pudo agregar la categoría", data.error || "Inténtalo de nuevo.");
         return;
       }
       setNewGroupName("");
@@ -817,8 +817,8 @@ export function AdminCategories() {
     if (inUse > 0) {
       showNotice(
         isBase ? "No se puede ocultar todavía" : "No se puede eliminar todavía",
-        `${inUse} ${inUse === 1 ? "profesional ofrece" : "profesionales ofrecen"} "${item.label}". Si lo quita, quedarían con un servicio que ya no existe.`,
-        "Reasígnalos a otro servicio desde sus perfiles y vuelva a intentarlo.",
+        `${inUse} ${inUse === 1 ? "profesional ofrece" : "profesionales ofrecen"} "${item.label}". Si lo quitas, quedarían con un servicio que ya no existe.`,
+        "Reasígnalos a otro servicio desde sus perfiles y vuelve a intentarlo.",
         "danger"
       );
       return;
@@ -842,7 +842,7 @@ export function AdminCategories() {
       const res = await fetch(`/api/admin/categories?id=${encodeURIComponent(item.id)}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        showNotice("No se pudo eliminar el servicio", data.error || "Inténtelo de nuevo.", undefined, "danger");
+        showNotice("No se pudo eliminar el servicio", data.error || "Inténtalo de nuevo.", undefined, "danger");
         return;
       }
       setCatalog((prev) => prev.filter((row) => row.id !== item.id));
@@ -858,7 +858,7 @@ export function AdminCategories() {
       showNotice(
         "Esta categoría todavía tiene servicios",
         `Tiene ${inUse} servicio${inUse === 1 ? "" : "s"} asociado${inUse === 1 ? "" : "s"}.`,
-        "Mueve esos servicios a otra categoría y vuelva a intentarlo."
+        "Mueve esos servicios a otra categoría y vuelve a intentarlo."
       );
       return;
     }
@@ -879,7 +879,7 @@ export function AdminCategories() {
       const res = await fetch(`/api/admin/categories?groupId=${encodeURIComponent(group.id)}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        showNotice("No se pudo eliminar la categoría", data.error || "Inténtelo de nuevo.", undefined, "danger");
+        showNotice("No se pudo eliminar la categoría", data.error || "Inténtalo de nuevo.", undefined, "danger");
         return;
       }
       await loadCatalog();

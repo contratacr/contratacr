@@ -24,7 +24,7 @@ for (const locale of ['es', 'en']) test(`notification cards have full titles and
       await page.setViewportSize({ width, height: 844 });
       for (const item of [
         { text: /Persona de prueba/, title: en ? 'Account deleted' : 'Cuenta eliminada', action: en ? 'Contact support' : 'Contactar soporte' },
-        { text: en ? /could not automatically confirm/ : /No pudimos confirmar automáticamente/, title: en ? 'Your verification is under review' : 'Su verificación está en revisión', action: en ? 'Review verification' : 'Revisar verificación' },
+        { text: en ? /could not automatically confirm/ : /No pudimos confirmar automáticamente/, title: en ? 'Your verification is under review' : 'Tu verificación está en revisión', action: en ? 'Review verification' : 'Revisar verificación' },
       ]) {
         await page.getByRole('button').filter({ hasText: item.text }).first().click();
         const dialog = page.getByRole('dialog');

@@ -154,7 +154,6 @@ export function LandingFooter() {
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
             <Link href="/terminos" className="text-xs text-[#162543] hover:text-[#0083b0] transition-colors">{t("terms")}</Link>
             <Link href="/privacidad" className="text-xs text-[#162543] hover:text-[#0083b0] transition-colors">{t("privacy")}</Link>
-            <Link href="/como-ordenamos" className="text-xs text-[#162543] hover:text-[#0083b0] transition-colors">{t("howWeRank")}</Link>
             <AdvertisingPreferences />
           </div>
         </div>

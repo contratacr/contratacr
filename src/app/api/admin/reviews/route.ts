@@ -146,7 +146,7 @@ export async function PATCH(req:Request){
  const access=await moderationAccess();if(!access)return NextResponse.json({error:"No autorizado"},{status:403});
  if(req.headers.get("origin")!==new URL(req.url).origin)return NextResponse.json({error:"Origen inválido"},{status:403});
  const p=await req.json().catch(()=>({}));
- if(!["hide","restore"].includes(p.action)||typeof p.reason!=="string"||p.reason.trim().length<5)return NextResponse.json({error:"Indique la reseña, la acción y el motivo."},{status:400});
+ if(!["hide","restore"].includes(p.action)||typeof p.reason!=="string"||p.reason.trim().length<5)return NextResponse.json({error:"Indica la reseña, acción y motivo."},{status:400});
  const {error}=await access.db.rpc("moderate_content",{p_kind:"review",p_id:p.id,p_action:p.action,p_reason:p.reason,p_report:null,p_days:7});
  if(error)return NextResponse.json({error:"No se guardó la moderación y su auditoría."},{status:409});
  await invalidateProfessionalCache();

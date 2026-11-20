@@ -5,7 +5,7 @@ import { PantallaFija } from "@/components/util/pantalla-fija";
 import { Link } from "@/i18n/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2, RefreshCw } from "lucide-react";
-import { SearchMapPanel, type MapFocusTarget, type MapProfessional } from "@/components/maps/search-map-panel";
+import { GoogleMapPanel, type MapFocusTarget, type MapProfessional } from "@/components/maps/google-map-panel";
 import { APP_RESUME_EVENT } from "@/lib/app-events";
 
 interface SearchResultsLayoutProps {
@@ -19,11 +19,8 @@ interface SearchResultsLayoutProps {
   countLabel?: string;
   /** La salida de los filtros, junto al conteo. */
   limpiar?: { href: string; label: string };
-  mapData?: MapProfessional[];
-  apiKey?: string;
-  /** Another map for the same slot (the directory places map). When set, the
-   *  professionals map is not rendered; the layout, sheet and drawer stay the same. */
-  map?: React.ReactNode;
+  mapData: MapProfessional[];
+  apiKey: string;
   locale: string;
   /** proId → card number (1..N) for THIS page, mirrored on the map pins. */
   numbering?: Record<string, number>;
@@ -114,7 +111,7 @@ function snapIndex(value: number, points = mobileSheetSnapPoints()) {
  *  DESKTOP is unchanged (same `lg:` classes). The bottom-sheet wrapper is `lg:contents`, so on
  *  desktop it dissolves and the card column (`lg:order-2`) drops into the 3-column flex shell.
  */
-export function SearchResultsLayout({ children, filters, quickFilters, drawerFilters, countLabel, limpiar, mapData = [], apiKey = "", map, locale, numbering, mapFocusTarget = null, resetKey, sinResultados = false, hojaAbiertaAlInicio = false }: SearchResultsLayoutProps) {
+export function SearchResultsLayout({ children, filters, quickFilters, drawerFilters, countLabel, limpiar, mapData, apiKey, locale, numbering, mapFocusTarget = null, resetKey, sinResultados = false, hojaAbiertaAlInicio = false }: SearchResultsLayoutProps) {
   const [showFilters, setShowFilters] = useState(false); // full-filter drawer (mobile + lg-xl)
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
@@ -547,7 +544,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
             nombre a un lado y los botones al otro con un desierto en medio. */}
         <aside className="min-h-0 min-w-0 flex-1 lg:order-3 lg:flex-[2]">
           <div className="relative isolate h-full w-full overflow-hidden bg-[#eef2f6] lg:sticky lg:top-20 lg:h-[calc(100vh-104px)] lg:rounded-2xl lg:border lg:border-[#e5e7eb] lg:bg-transparent">
-            {map ?? <SearchMapPanel apiKey={apiKey} professionals={mapData} locale={locale} numbering={numbering} focusTarget={mapFocusTarget} />}
+            <GoogleMapPanel apiKey={apiKey} professionals={mapData} locale={locale} numbering={numbering} focusTarget={mapFocusTarget} />
           </div>
         </aside>
 

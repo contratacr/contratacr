@@ -243,33 +243,3 @@ export async function ensureRegressionSeed(): Promise<RegressionSeedState> {
   }
   return state;
 }
-
-/**
- * These base specs describe the professional panel WITHOUT Pro (quotes and projects in «Mi panel», verification
- * card, …). On the local Pro branch the shared regression professional may hold an active local Pro grant, which
- * replaces those panel sections. On the loopback stack only, park that grant for the duration of the spec file and
- * put back exactly what was there. Remote test projects are never touched (their professional has no Pro).
- * Usage: `const pro = regressionProfessionalWithoutPro(); test.beforeAll(pro.park); test.afterAll(pro.restore);`
- */
-export function regressionProfessionalWithoutPro() {
-  let saved: { status: string; expires_at: string | null } | null = null;
-  const local = () => /^http:\/\/127\.0\.0\.1:54321\/?$/.test(envUrl());
-  return {
-    async park() {
-      if (!canRunSeededRegression() || !local()) return;
-      const admin = adminClient();
-      const { data, error } = await admin.from("pro_memberships").select("status,expires_at").eq("user_id", ACTORES.profesional.profileId).maybeSingle();
-      if (error) throw error;
-      if (!data || data.status !== "active") return;
-      saved = data;
-      const parked = await admin.from("pro_memberships").update({ status: "inactive" }).eq("user_id", ACTORES.profesional.profileId);
-      if (parked.error) throw parked.error;
-    },
-    async restore() {
-      if (!saved) return;
-      const restored = await adminClient().from("pro_memberships").update(saved).eq("user_id", ACTORES.profesional.profileId);
-      if (restored.error) throw restored.error;
-      saved = null;
-    },
-  };
-}

@@ -40,7 +40,7 @@ test("signed-out mobile drawer keeps language left and social links right on whi
   expect(geometry.background).toBe("rgb(255, 255, 255)");
   expect(geometry.socialLeft).toBeGreaterThanOrEqual(geometry.actionRight);
   expect(geometry.centerDifference).toBeLessThan(1);
-  await expect(social.getByText("Síganos", { exact: true })).toHaveCount(0);
+  await expect(social.getByText("Síguenos", { exact: true })).toHaveCount(0);
   expect(geometry.overflow).toBe(false);
   await footer.screenshot({ path: test.info().outputPath("menu-compacto-blanco.png") });
 });

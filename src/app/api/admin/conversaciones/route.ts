@@ -44,7 +44,7 @@ const reviewSchema = z.object({
 
 export async function POST(request: Request) {
   if (!(await getApiAdmin())) return NextResponse.json({ error: "No autorizado" }, { status: 403, headers });
-  const limited = await enforceRateLimit(request, "admin-chat-review", 20, 60_000);
+  const limited = enforceRateLimit(request, "admin-chat-review", 20, 60_000);
   if (limited) return limited;
   // A review is a logged action; reject cross-origin requests even with cookies.
   if (request.headers.get("origin") !== new URL(request.url).origin) {

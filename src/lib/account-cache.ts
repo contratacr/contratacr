@@ -1,5 +1,3 @@
-import { clearProBrowserStorage } from "@/lib/pro/browser-storage-cleanup";
-
 /** Remove browser data owned by one account without touching another user's
  * cache on a shared device. Authentication storage is handled by signOut(). */
 export function clearAccountLocalCache(userId: string) {
@@ -14,7 +12,4 @@ export function clearAccountLocalCache(userId: string) {
     `contratacr:seen-opportunity-modal:${userId}`,
   ]);
   for (const key of exactKeys) window.localStorage.removeItem(key);
-  // Disable/deletion: also drop every Pro draft, retry journal and recovery
-  // database; signOutToHome() repeats it and waits for the databases.
-  void clearProBrowserStorage();
 }

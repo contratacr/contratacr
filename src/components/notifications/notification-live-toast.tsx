@@ -342,7 +342,7 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
     const title = locale === "en" ? `${unreadCount} new notifications` : `${unreadCount} notificaciones nuevas`;
     const postLoginMessage = locale === "en"
       ? `While you were away, ${unreadCount === 1 ? "1 notification arrived" : `${unreadCount} notifications arrived`}.`
-      : `Mientras no estaba en la app ${unreadCount === 1 ? "llegó 1 notificación" : `llegaron ${unreadCount} notificaciones`}.`;
+      : `Mientras no estabas en la app ${unreadCount === 1 ? "llegó 1 notificación" : `llegaron ${unreadCount} notificaciones`}.`;
     const targetHref = notificationsCenterHref(locale);
     return (
       <div className="fixed left-3 right-3 top-[calc(var(--ccr-native-header-height,4rem)+0.75rem)] z-[180] sm:left-auto sm:right-5 sm:top-20 sm:w-[360px]">

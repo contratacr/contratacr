@@ -58,7 +58,7 @@ test.describe("@seeded contact gate", () => {
     await page.waitForTimeout(1500);
 
     await expect(page.getByRole("dialog").filter({ visible: true })).toHaveCount(0);
-    await expect(page.getByText(/Cree su cuenta|Create your free account|Nombre completo/i)).toHaveCount(0);
+    await expect(page.getByText(/Crea tu cuenta|Create your free account|Nombre completo/i)).toHaveCount(0);
     expect(page.url()).toBe(urlAntes);
   });
 });

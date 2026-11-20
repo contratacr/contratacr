@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       locale,
       ruta: "/registro",
       titulo: en ? "Create account | ContrataCR" : "Crear cuenta | ContrataCR",
-      descripcion: en ? "Create your client or professional account on ContrataCR." : "Cree su cuenta de cliente o profesional en ContrataCR.",
+      descripcion: en ? "Create your client or professional account on ContrataCR." : "Crea tu cuenta de cliente o profesional en ContrataCR.",
     }),
     robots: { index: false, follow: true },
   };

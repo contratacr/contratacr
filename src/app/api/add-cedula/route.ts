@@ -13,7 +13,7 @@ import { runIdentityVerification } from "@/lib/verification/run-verification";
 // the normal Hacienda verification automatically.
 export async function POST(req: Request) {
   // Public endpoint: bound abuse and enumeration per client IP.
-  const limited = await enforceRateLimit(req, "add-cedula", 10, 600000);
+  const limited = enforceRateLimit(req, "add-cedula", 10, 600000);
   if (limited) return limited;
   const session = await createServerClient();
   const { data: { user } } = await session.auth.getUser();
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     .eq("cedula", cedula)
     .neq("id", user.id)
     .maybeSingle();
-  if (dupeError) return NextResponse.json({ error: "No se pudo comprobar la identificación. Intente nuevamente." }, { status: 503 });
+  if (dupeError) return NextResponse.json({ error: "No se pudo comprobar la identificación. Intenta nuevamente." }, { status: 503 });
   if (dupe) {
     return NextResponse.json({ error: mensajeDeError(req, { es: "Esta identificación ya está registrada en ContrataCR.", en: "That ID is already registered with ContrataCR." }) }, { status: 409 });
   }
@@ -52,9 +52,9 @@ export async function POST(req: Request) {
   // verificada sí se deja pasar: reintentar con el mismo número es legítimo.)
   const { data: propio } = await db.from("profiles").select("cedula").eq("id", user.id).maybeSingle();
   if ((propio?.cedula ?? "").replace(/\D/g, "") === cedula && (pro as { verification_status?: string } | null)?.verification_status === "verified") {
-    return NextResponse.json({ error: mensajeDeError(req, { es: "Esta ya es su identificación verificada.", en: "That is already your verified ID." }) }, { status: 409 });
+    return NextResponse.json({ error: mensajeDeError(req, { es: "Esta ya es tu identificación verificada.", en: "That is already your verified ID." }) }, { status: 409 });
   }
-  if (!pro) return NextResponse.json({ error: mensajeDeError(req, { es: "No se encontró su perfil.", en: "We could not find your profile." }) }, { status: 404 });
+  if (!pro) return NextResponse.json({ error: mensajeDeError(req, { es: "No se encontró tu perfil.", en: "We could not find your profile." }) }, { status: 404 });
 
   const changed = (propio?.cedula ?? "").replace(/\D/g, "") !== cedula;
   // Remove the old badge BEFORE changing the document. A failed save can never
@@ -63,20 +63,20 @@ export async function POST(req: Request) {
     ...(changed ? { verification_status: "pending", is_verified: false, verified_at: null,
       verification_provider: null, verification_reason: null, verification_updated_at: new Date().toISOString() } : {}),
   }).eq("id", pro.id);
-  if (resetError) return NextResponse.json({ error: "No se pudo guardar. Intente nuevamente." }, { status: 503 });
+  if (resetError) return NextResponse.json({ error: "No se pudo guardar. Intenta nuevamente." }, { status: 503 });
   if (changed) {
     const { error: scopeError } = await db.from("provider_verification_log").insert({
       professional_id: pro.id, admin_id: null, admin_name: "Cambio de identificación",
       action: "identity_document_changed", from_status: pro.verification_status, to_status: "pending",
       reason: identityReviewScope(user.id, cedula),
     });
-    if (scopeError) return NextResponse.json({ error: "No se pudo guardar. Intente nuevamente." }, { status: 503 });
+    if (scopeError) return NextResponse.json({ error: "No se pudo guardar. Intenta nuevamente." }, { status: 503 });
     await invalidateProfessionalCache();
   }
   const { error: saveError } = await db.from("profiles").update({ cedula,
     ...(changed ? { client_identity_status: "pending", client_identity_verified_at: null, client_identity_provider: null } : {}),
   }).eq("id", user.id);
-  if (saveError) return NextResponse.json({ error: "No se pudo guardar. Intente nuevamente." }, { status: 503 });
+  if (saveError) return NextResponse.json({ error: "No se pudo guardar. Intenta nuevamente." }, { status: 503 });
 
   const outcome = await runIdentityVerification(pro.id, { expectedCedula: cedula });
 

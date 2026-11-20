@@ -1,7 +1,4 @@
 "use client";
-import { ClientProjectLinks } from "@/components/pro/project-link-consent";
-import { PRO_BEFORE_PATH_CHANGE } from "@/lib/pro/navigation";
-import { PromotionHistory } from "@/components/pro/promotion-history";
 
 import { rutaProyecto } from "@/lib/marketplace-url";
 import { QuoteBlock } from "@/components/quotes/quote-block";
@@ -28,7 +25,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { useCachedResource } from "@/hooks/use-cached-resource";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { PanelEmptyState, PanelFilterEmpty, PanelListSkeleton } from "@/components/ui/content-loading";
-import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 
 /**
  * Shared "acting as a client" activity views — the user's PUBLISHED projects
@@ -68,8 +64,8 @@ type Project = {
 
 const NO_PROJECTS: Project[] = [];
 
-export async function fetchClientProjects(signal?: AbortSignal): Promise<Project[]> {
-  const res = await fetch("/api/projects?role=client", { cache: "no-store", signal });
+export async function fetchClientProjects(): Promise<Project[]> {
+  const res = await fetch("/api/projects?role=client", { cache: "no-store" });
   const { projects } = await res.json();
   return projects ?? [];
 }
@@ -90,10 +86,9 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
   const tSub = useTranslations("proPanel.subtitles");
   const tEtapas = useTranslations("statusTabs");
   const locale = useLocale();
-  const cs = useTranslations("ClientSurfaceCopy");
   const searchParams = useSearchParams();
   const { dialogNode, showMessage } = useAppDialog();
-  const errorTitle = cs("activityError");
+  const errorTitle = locale === "en" ? "Something went wrong" : "No se pudo completar la acción";
 
   // Rows come from the shared cache: a return to this tab paints what was here
   // before and refreshes quietly. Keys match the notification prefetch, so a
@@ -102,7 +97,7 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
     user && section === "projects" ? `dashboard:client-projects:${user.id}` : null,
     fetchClientProjects,
     NO_PROJECTS,
-    { invalidationDomain: "projects", cancelOnDocumentLeave: true },
+    { invalidationDomain: "projects" },
   );
   const { data: projects, setData: setProjects } = projectsResource;
   // El conteo sube al cambiador de «Mis publicaciones»: tiene que estar arriba
@@ -121,7 +116,6 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
   })();
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
   const [showPublish, setShowPublish] = useState(false);
-  const [linkedProjects, setLinkedProjects] = useState(0);
   // Corregir lo que se pidió, desde el panel: es donde el cliente llega a ver
   // sus proyectos, igual que edita sus empleos y sus promociones desde el suyo.
   const [editandoProyecto, setEditandoProyecto] = useState<Project | null>(null);
@@ -190,16 +184,13 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
       return () => window.clearTimeout(id);
     }
     targetProjectRetryRef.current = 0;
-    let scrollTimer: number | undefined;
+    targetProjectHandledRef.current = true;
     const id = window.setTimeout(() => {
-      // A cancelled effect has not handled the link. Cached rows can trigger
-      // cleanup before this callback runs; the next effect must still expand.
-      targetProjectHandledRef.current = true;
       setProjectFilter(proyectoPublicacionBucket(project.status));
       setExpandedProject(projectId);
-      scrollTimer = window.setTimeout(() => { noInsistirArriba(); return document.getElementById(`project-${projectId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }); }, 80);
+      window.setTimeout(() => { noInsistirArriba(); return document.getElementById(`project-${projectId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }); }, 80);
     }, 0);
-    return () => { window.clearTimeout(id); if (scrollTimer !== undefined) window.clearTimeout(scrollTimer); };
+    return () => window.clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchSection, projects, searchParams, section]);
 
@@ -321,12 +312,6 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
               quedar pegado a la lista que filtra. En medio, el botón cortaba esa
               relación. */}
           <SectionHeadline className="mb-3.5" subtitulo={tSub("sent_projects")}>
-            <div className="flex flex-wrap items-center gap-2">
-            {process.env.NODE_ENV === "development" && ["http://127.0.0.1:54321", "http://127.0.0.1:54321/"].includes(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "") && user && <Button type="button" variant="outline" data-received-estimates-link disabled={showPublish || !!editandoProyecto || deleting || cancellingProject || !!deleteTarget || !!cancelProjectTarget} onClick={() => {
-              if (showPublish || editandoProyecto || deleting || cancellingProject || deleteTarget || cancelProjectTarget) return;
-              const path = prefijoDeIdioma(locale) + "/dashboard/cotizaciones";
-              if (window.dispatchEvent(new CustomEvent(PRO_BEFORE_PATH_CHANGE, {cancelable: true, detail: {path}}))) window.location.assign(path);
-            }}>{cs("receivedQuotes")}</Button>}
             {projects.length > 0 && (
               <button
                 type="button"
@@ -337,17 +322,8 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
                 {t("publishProject")}
               </button>
             )}
-            </div>
           </SectionHeadline>
-          {process.env.NODE_ENV === "development" && ["http://127.0.0.1:54321", "http://127.0.0.1:54321/"].includes(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "") && user && <ClientProjectLinks onCount={setLinkedProjects} />}
-          {projects.length === 0 && linkedProjects > 0 ? (
-            // Round 7B: a customer who follows a job with a professional has not
-            // «asked for no professional»; offer publishing without contradicting it.
-            <div data-client-projects-none-published className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#e5e7eb] bg-white p-4">
-              <p className="text-sm text-[#52627a]">{cs("noPublicRequests")}</p>
-              <Button type="button" variant="outline" onClick={() => setShowPublish(true)}>{t("publishProject")}</Button>
-            </div>
-          ) : projects.length === 0 ? (
+          {projects.length === 0 ? (
             <PanelEmptyState
               icon={FolderOpen}
               title={t("pEmpty")}
@@ -443,7 +419,6 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
                             </div>
                           )}
 
-                          {process.env.NODE_ENV === "development" && <PromotionHistory key={project.id} contentType="project" contentId={project.id}/>}
                           <QuoteBlock projectId={project.id} role="client" />
                           {/* Respuestas: quién escribió, qué dijo, y WhatsApp directo. */}
                           {/* SIN LA LISTA DE PROPUESTAS. Desde que se contesta

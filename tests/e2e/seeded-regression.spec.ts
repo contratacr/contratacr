@@ -73,13 +73,13 @@ test.describe("@seeded core regression", () => {
     await gotoOK(page, "/login?emailChanged=1");
     await openLoginForm(page);
     await expect(page.getByText("Correo actualizado").first()).toBeVisible();
-    await expect(page.getByText("Inicie sesión con su correo nuevo.").first()).toBeVisible();
+    await expect(page.getByText("Inicia sesión con tu correo nuevo.").first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
 
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
     await gotoOK(page, "/dashboard/profesional?tab=cuenta&emailChanged=1");
     await expect(page.getByText("Correo actualizado").first()).toBeVisible();
-    await expect(page.getByText("Revise su correo nuevo").first()).toBeHidden();
+    await expect(page.getByText("Revisa tu correo nuevo").first()).toBeHidden();
 
     await gotoOK(page, "/dashboard/profesional?tab=cuenta&emailChangePending=1");
     await expect(page.getByText("Cambio pendiente").first()).toBeVisible();

@@ -13,7 +13,7 @@ const labels: Record<IdentityReview["kind"], string> = {
   unavailable: "Consulta no disponible", manual: "Revisión manual",
 };
 const explanations: Record<IdentityReview["kind"], string> = {
-  match: "Hacienda encontró el número, tipo y nombre oficial. Puede verificar el cotejo de datos.",
+  match: "Hacienda encontró el número, tipo y nombre oficial. Puedes verificar el cotejo de datos.",
   not_found: "No significa que sea inválida. La cuenta puede apelar y adjuntar documentos.",
   unavailable: "No hubo una respuesta válida. Reintenta más tarde; no se rechazó la identificación.",
   manual: "Revisar los documentos o la decisión previa antes de aprobar.",
@@ -48,7 +48,7 @@ export function AdminIdentifications() {
       for (let index = 0; index < targets.length && !stop.current; index += 3) {
         const response = await fetch("/api/admin/identificaciones", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ids: targets.slice(index, index + 3).map(row => row.accountId) }) });
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "No se pudo continuar. Puede retomar la consulta.");
+        if (!response.ok) throw new Error(data.error || "No se pudo continuar. Puedes retomar la consulta.");
         setReviews(previous => ({ ...previous, ...Object.fromEntries((data.reviews as IdentityReview[]).map(review => [review.accountId, review])) }));
         setProgress({ done: Math.min(index + 3, targets.length), total: targets.length });
         if (index + 3 < targets.length) await new Promise(resolve => setTimeout(resolve, 1200));
@@ -72,7 +72,7 @@ export function AdminIdentifications() {
         setProgress({ done: index + 1, total: targets.length });
       }
       setNote(`${verified} ${verified === 1 ? "cuenta verificada" : "cuentas verificadas"}. Las demás mantienen su revisión. No se enviaron correos.`);
-    } catch (cause) { setError(`${verified} verificadas. ${cause instanceof Error ? cause.message : "Recargue para comprobar el resultado."}`); }
+    } catch (cause) { setError(`${verified} verificadas. ${cause instanceof Error ? cause.message : "Recarga para comprobar el resultado."}`); }
     finally { setOperation(null); olvidarDashboardCachePrefix("admin:users:"); window.dispatchEvent(new Event(ADMIN_REFRESH_EVENT)); window.dispatchEvent(new Event(ADMIN_COUNTS_REFRESH_EVENT)); }
   }
   const eligible = rows.filter(row => reviews[row.accountId]?.canVerify);

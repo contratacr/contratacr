@@ -6,7 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 // and cedula fields during registration / booking.
 export async function GET(req: NextRequest) {
   // Public endpoint: bound abuse and enumeration per client IP.
-  const limited = await enforceRateLimit(req, "check-availability", 30, 60000);
+  const limited = enforceRateLimit(req, "check-availability", 30, 60000);
   if (limited) return limited;
   const { searchParams } = new URL(req.url);
   const email = searchParams.get("email")?.trim();

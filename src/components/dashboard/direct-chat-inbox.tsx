@@ -1087,7 +1087,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
     setAttachmentError("");
     if (!files?.length) return;
     if (activeId === DRAFT_CONVERSATION_ID) {
-      setAttachmentError(isEn ? "Send the first message before attaching files." : "Envíe el primer mensaje antes de adjuntar archivos.");
+      setAttachmentError(isEn ? "Send the first message before attaching files." : "Envia el primer mensaje antes de adjuntar archivos.");
       return;
     }
     setPreparingAttachments(true);
@@ -1095,7 +1095,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
     try {
       for (const file of Array.from(files)) {
         if (next.length >= MAX_ATTACHMENTS) {
-          setAttachmentError(isEn ? "You can attach up to 3 files per message." : "Puede adjuntar hasta 3 archivos por mensaje.");
+          setAttachmentError(isEn ? "You can attach up to 3 files per message." : "Puedes adjuntar hasta 3 archivos por mensaje.");
           break;
         }
         const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
@@ -1115,8 +1115,8 @@ export function DirectChatInbox({ alCambiarSubvista }: {
         } catch (attachmentError) {
           const code = getImageUploadPreparationErrorCode(attachmentError);
           setAttachmentError(code === "too_large"
-            ? (isEn ? "That image is too large. Choose a lighter image." : "La imagen es muy pesada. Elija una imagen más liviana.")
-            : (isEn ? "Attach JPG, PNG, WEBP, AVIF, HEIC, HEIF, GIF, or PDF files only." : "Adjunte solo archivos JPG, PNG, WEBP, AVIF, HEIC, HEIF, GIF o PDF."));
+            ? (isEn ? "That image is too large. Choose a lighter image." : "La imagen es muy pesada. Elige una imagen más liviana.")
+            : (isEn ? "Attach JPG, PNG, WEBP, AVIF, HEIC, HEIF, GIF, or PDF files only." : "Adjunta solo archivos JPG, PNG, WEBP, AVIF, HEIC, HEIF, GIF o PDF."));
         }
       }
       setSelectedAttachments(next);
@@ -1343,10 +1343,10 @@ export function DirectChatInbox({ alCambiarSubvista }: {
     <PanelEmptyState
       plano
       icon={MessageSquareMore}
-      title={isEn ? "We could not load your messages" : "No pudimos cargar sus mensajes"}
+      title={isEn ? "We could not load your messages" : "No pudimos cargar tus mensajes"}
       description={isEn
         ? "Check your connection and try again. Your conversations are safe."
-        : "Revise su conexión y vuelva a intentarlo. Sus conversaciones están a salvo."}
+        : "Revisa tu conexión y vuelve a intentarlo. Tus conversaciones están a salvo."}
       action={(
         <button type="button" onClick={() => window.location.reload()} className="inline-flex items-center justify-center gap-1.5 text-sm font-bold text-[#008fc4] hover:underline">
           {isEn ? "Try again" : "Reintentar"}
@@ -1501,7 +1501,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
     const number = digits.length === 8 ? `506${digits}` : digits;
     const text = isEn
       ? "Hi, I wrote to you on ContrataCR and wanted to follow up."
-      : "Hola, le escribí por ContrataCR y quería dar seguimiento.";
+      : "Hola, te escribí por ContrataCR y quería dar seguimiento.";
     return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
   })();
   return (
@@ -2031,7 +2031,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
                   e.currentTarget.form?.requestSubmit();
                 }
               }}
-              placeholder={isEn ? "Write a message" : "Escriba un mensaje"}
+              placeholder={isEn ? "Write a message" : "Escribe un mensaje"}
               className="max-h-36 min-h-12 min-w-0 flex-1 resize-none overflow-hidden rounded-[20px] border border-[#d8e5ee] px-4 py-2.5 text-[15px] leading-6 outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/10"
             />
             <button

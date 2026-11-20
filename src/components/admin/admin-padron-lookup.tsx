@@ -27,7 +27,7 @@ export function AdminPadronLookup({ standalone = false }: { standalone?: boolean
       if (!response.ok && response.status !== 404) throw new Error(data.error || "No pudimos realizar la consulta.");
       setResult(data as Result);
     } catch (cause) {
-      setError(cause instanceof Error && !(cause instanceof TypeError) ? cause.message : "No pudimos realizar la consulta. Revise su conexión e intente de nuevo.");
+      setError(cause instanceof Error && !(cause instanceof TypeError) ? cause.message : "No pudimos realizar la consulta. Revisá tu conexión e intentá de nuevo.");
     } finally { setLoading(false); }
   }
 

@@ -41,7 +41,7 @@ export const AvatarFileInput = forwardRef<HTMLInputElement, Props>(function Avat
       if (!active) return;
       url = URL.createObjectURL(file);
       setSource(url);
-    }).catch(() => { if (active) setError(en ? "This photo could not be opened. Choose JPG, PNG or WebP." : "No se pudo abrir la foto. Elija JPG, PNG o WebP."); });
+    }).catch(() => { if (active) setError(en ? "This photo could not be opened. Choose JPG, PNG or WebP." : "No se pudo abrir la foto. Elige JPG, PNG o WebP."); });
     return () => { active = false; if (url) URL.revokeObjectURL(url); };
   }, [selection, en]);
   function close() { if (!busy) { setSelection(null); setSource(""); setError(""); } }
@@ -62,7 +62,7 @@ export const AvatarFileInput = forwardRef<HTMLInputElement, Props>(function Avat
       const file = new File([blob], "perfil.jpg", { type: "image/jpeg" });
       onFile(file);
       setSelection(null); setSource("");
-    } catch { setError(en ? "Could not adjust the photo. Try again." : "No se pudo ajustar la foto. Inténtelo de nuevo."); }
+    } catch { setError(en ? "Could not adjust the photo. Try again." : "No se pudo ajustar la foto. Inténtalo de nuevo."); }
     finally { setBusy(false); }
   }
   const g = size.width ? avatarGeometry(size.width, size.height, zoom, position.x, position.y) : null;
@@ -72,12 +72,12 @@ export const AvatarFileInput = forwardRef<HTMLInputElement, Props>(function Avat
       if (file) { setSource(""); setError(""); setSize({ width: 0, height: 0 }); setZoom(1); setPosition({ x: 0, y: 0 }); setSelection(file); }
     }} />
     {selection && <Modal title={en ? "Adjust photo" : "Ajustar foto"} closeLabel={en ? "Close" : "Cerrar"} onClose={close} size="sm" mobilePresentation="center" footer={<div className="flex justify-end gap-2"><Button type="button" variant="outline" onClick={close} disabled={busy}>{en ? "Cancel" : "Cancelar"}</Button><Button type="button" onClick={() => void apply()} disabled={!g || busy} loading={busy}>{en ? "Use photo" : "Usar foto"}</Button></div>}>
-      <p className="mb-4 text-sm text-[#68778d]">{en ? "Drag to centre your photo or logo." : "Arrastra para centrar su foto o logo."}</p>
+      <p className="mb-4 text-sm text-[#68778d]">{en ? "Drag to centre your photo or logo." : "Arrastra para centrar tu foto o logo."}</p>
       <div role="img" aria-label={en ? "Circular photo preview" : "Vista previa circular"} className="relative mx-auto aspect-square w-full max-w-72 overflow-hidden rounded-full bg-white ring-1 ring-[#d7e1ea]" style={{ touchAction: "none", cursor: "grab" }}
         onPointerDown={e => { if (!g || busy) return; e.currentTarget.setPointerCapture(e.pointerId); drag.current = { id: e.pointerId, x: e.clientX, y: e.clientY }; }}
         onPointerMove={e => { const d = drag.current; if (!d || d.id !== e.pointerId || !g) return; const width = e.currentTarget.getBoundingClientRect().width; const dx = (e.clientX - d.x) / width, dy = (e.clientY - d.y) / width; drag.current = { id: d.id, x: e.clientX, y: e.clientY }; setPosition(p => { const next = avatarGeometry(size.width, size.height, zoom, p.x + dx, p.y + dy); return { x: next.x, y: next.y }; }); }}
         onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }}>
-        {source && <img ref={image} src={source} alt="" draggable={false} onLoad={e => setSize({ width: e.currentTarget.naturalWidth, height: e.currentTarget.naturalHeight })} onError={() => setError(en ? "Choose another photo." : "Elija otra foto.")} style={g ? { position: "absolute", maxWidth: "none", width: `${g.w * 100}%`, height: `${g.h * 100}%`, left: `${(0.5 - g.w / 2 + g.x) * 100}%`, top: `${(0.5 - g.h / 2 + g.y) * 100}%` } : { visibility: "hidden" }} />}
+        {source && <img ref={image} src={source} alt="" draggable={false} onLoad={e => setSize({ width: e.currentTarget.naturalWidth, height: e.currentTarget.naturalHeight })} onError={() => setError(en ? "Choose another photo." : "Elige otra foto.")} style={g ? { position: "absolute", maxWidth: "none", width: `${g.w * 100}%`, height: `${g.h * 100}%`, left: `${(0.5 - g.w / 2 + g.x) * 100}%`, top: `${(0.5 - g.h / 2 + g.y) * 100}%` } : { visibility: "hidden" }} />}
       </div>
       <label className="mt-5 block text-sm font-medium">Zoom<input aria-label="Zoom" type="range" min={Math.min(1, zoom)} max="3" step="0.01" value={zoom} disabled={!g || busy} className="mt-2 block min-h-11 w-full accent-[#009FD9]" onChange={e => setZoom(Number(e.target.value))} /></label>
       <div className="flex flex-wrap gap-2"><Button type="button" variant="outline" size="sm" disabled={!g || busy} onClick={() => { setZoom(Math.min(size.width, size.height) / Math.hypot(size.width, size.height)); setPosition({ x: 0, y: 0 }); }}>{en ? "Fit logo" : "Mostrar logo completo"}</Button><Button type="button" variant="ghost" size="sm" disabled={busy} onClick={() => { setZoom(1); setPosition({ x: 0, y: 0 }); }}>{en ? "Centre" : "Centrar"}</Button></div>

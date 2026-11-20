@@ -85,7 +85,7 @@ export async function generateMetadata({ params }: Props) {
   const lugar = (data as { location_label?: string | null }).location_label;
   const titulo = `${(data as { title: string }).title}${lugar ? ` · ${lugar}` : ""} | ContrataCR`;
   const cuerpo = String((data as { description?: string | null }).description ?? "").replace(/\s+/g, " ").trim();
-  const descripcion = cuerpo ? cuerpo.slice(0, 155) : (en ? "Job opening in Costa Rica. Open the posting and message whoever published it on WhatsApp." : "Vacante en Costa Rica. Abra la publicación y escríbale por WhatsApp a quien la publicó.");
+  const descripcion = cuerpo ? cuerpo.slice(0, 155) : (en ? "Job opening in Costa Rica. Open the posting and message whoever published it on WhatsApp." : "Vacante en Costa Rica. Abre la publicación y escríbele por WhatsApp a quien la publicó.");
   // La canónica es el enlace que se lee y se comparte (título + 8), no el id.
   return metadatosDePantalla({ locale, ruta: `/empleos/${tramoFicha((data as { title: string }).title, id)}`, titulo, descripcion, tarjetaPropia: true });
 }

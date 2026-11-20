@@ -14,6 +14,6 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     tarjetaPropia: true,
     ruta: "/promociones",
     titulo: en ? 'Promotions from professionals | ContrataCR' : 'Promociones de profesionales | ContrataCR',
-    descripcion: en ? 'Explore service offers in Costa Rica and contact the professional on WhatsApp.' : 'Descubra ofertas de servicios en Costa Rica y contacte al profesional por WhatsApp.',
+    descripcion: en ? 'Explore service offers in Costa Rica and contact the professional on WhatsApp.' : 'Descubre ofertas de servicios en Costa Rica y contacta al profesional por WhatsApp.',
   });
 }

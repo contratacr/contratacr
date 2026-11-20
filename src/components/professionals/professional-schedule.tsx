@@ -1,6 +1,5 @@
 "use client";
 
-import { PublicReservations } from "@/components/pro/public-reservations";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 
 import { useMemo, useState, type ReactNode } from "react";
@@ -484,14 +483,15 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
       <>
         <div className="flex flex-col gap-3">
           {locationControl}
-
           {/* En el teléfono, contactar vive en su propia franja pegada al
               fondo, igual que en Crear proyecto: la ficha es larga —servicios,
               reseñas, casos— y el botón que trajo a la persona quedaba a mitad
               de camino, arriba, y desaparecía apenas bajaba a leer. En
               computadora se queda donde estaba: ahí la columna de contacto ya
               está siempre a la vista. */}
-          {process.env.NODE_ENV === "development" ? <PublicReservations professional={professional.id} professionalName={getProfessionalDisplayName(professional.fullName, professional.businessName).primaryDesktop} service={categoryName} isOwn={isOwn} pinned fallback={profileContactButtons}/> : <AccionesAlPie className="flex flex-col gap-2">{profileContactButtons}</AccionesAlPie>}
+          <AccionesAlPie className="flex flex-col gap-2">
+            {profileContactButtons}
+          </AccionesAlPie>
         </div>
         {selfModal}
       </>
@@ -514,7 +514,7 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
         {/* `lg:pt-6` reserves a small TOP band so the favorites bookmark (top-right of
             the card) sits cleanly in the corner ABOVE the buttons. */}
         <div className="relative z-10 flex min-w-0 flex-col gap-3 lg:justify-center lg:border-l lg:border-[#e5e7eb] lg:pt-6 lg:pl-4">
-          {process.env.NODE_ENV === "development" ? <PublicReservations professional={professional.id} professionalName={getProfessionalDisplayName(professional.fullName, professional.businessName).primaryDesktop} service={categoryName} isOwn={isOwn} fallback={contactButtons}/> : contactButtons}
+          {contactButtons}
         </div>
       </div>
       {selfModal}

@@ -20,22 +20,6 @@ export function requestHost(req: RequestLike) {
   }
 }
 
-/**
- * Same-origin check for browser writes. Next can rewrite `req.url` to its
- * internal hostname (a dev server bound to 127.0.0.1 reports localhost), so
- * comparing Origin with `new URL(req.url).origin` rejected the page's own
- * requests. The Host header keeps the origin the browser used — the same rule
- * `proApiAccess` and the Pro routes already apply. A cross-site page still
- * sends its own Origin and is rejected.
- */
-export function isSameOriginRequest(req: RequestLike) {
-  const origin = req.headers.get("origin");
-  if (!origin) return false;
-  let url: URL;
-  try { url = new URL(req.url); } catch { return false; }
-  return origin === url.origin || origin === `${url.protocol}//${req.headers.get("host") || url.host}`;
-}
-
 export function isLocalRequest(req: RequestLike) {
   const host = requestHost(req);
   return (
@@ -69,7 +53,7 @@ export function unsafeLocalProductionWriteResponse() {
   return NextResponse.json(
     {
       error:
-        "Escritura bloqueada: este entorno esta apuntando a la base de produccion. Use .env.test para desarrollo/test.",
+        "Escritura bloqueada: este entorno esta apuntando a la base de produccion. Usa .env.test para desarrollo/test.",
     },
     { status: 403 }
   );

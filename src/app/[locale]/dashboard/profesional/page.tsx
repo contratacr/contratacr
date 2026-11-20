@@ -1,32 +1,22 @@
 "use client";
 import { GuideVisualWalkthrough, hasVisualGuide } from "@/components/dashboard/guide-visual-walkthrough";
-import {useLocalProAccess} from "@/components/pro/use-local-pro-access";
-import {BusinessDashboardEntry} from "@/components/directory/business-dashboard-entry";
-import { PanelListSkeleton } from "@/components/ui/content-loading";
-import {backPro,navigatePro,pushProPath,replaceProPath,setProNavigationAccount} from "@/lib/pro/navigation";
-import {ProWorkspace} from "@/components/pro/pro-workspace";
-import {ProManagementShell} from "@/components/pro/management-shell";
-import {ProTools} from "@/components/pro/simple-workspace";
-import {SalesWorkspace} from "@/components/pro/sales-workspace";
-import {AppointmentRequestsWorkspace} from "@/components/pro/appointment-requests-workspace";
 import { ProfileIdentityName, profileIdentityAvatarClass } from "@/components/professionals/profile-identity-name";
 
 import { AvatarFileInput } from "@/components/ui/avatar-file-input";
 
 import { rutaInternaSegura } from "@/lib/navigation/ruta-interna";
 import { useAppDialog } from "@/hooks/use-app-dialog";
-import { idiomaDe, prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
-import { suspensionNoticeCopy } from "@/lib/pro/suspension-notice";
-import { irAlInicio, iniciarSeccionArriba } from "@/lib/ir-al-inicio";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
+import { irAlInicio } from "@/lib/ir-al-inicio";
 import { enlacePerfil } from "@/lib/profile-url";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 
-import { useEffect, useState, useCallback, useMemo, useRef, useLayoutEffect, useSyncExternalStore } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef, useLayoutEffect } from "react";
 import { flushSync } from "react-dom";
 import { useLocale, useTranslations } from "next-intl";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 import { isSigningOut, signOutToHome } from "@/lib/auth/sign-out";
-import {useProSearchParams} from "@/components/pro/use-pro-search-params";
+import { useSearchParams } from "next/navigation";
 import {
   User, Award, Wrench,
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, ArrowLeft, ArrowRight, ChevronDown, ChevronRight, Sparkles, AlertCircle, MessageSquareMore, Home, LogOut, Users, CheckCircle2, FileText, Search, Camera, Eye, Trash2, Loader2,
@@ -64,6 +54,7 @@ import { isValidId } from "@/lib/cedula";
 import { NotificationsList } from "@/components/notifications/notifications-list";
 import { AccountSecuritySection } from "@/components/account/account-security";
 import { AccountPrivacySection } from "@/components/account/account-privacy";
+import { useNativeApp } from "@/hooks/use-native-app";
 import { CloseAccountSection } from "@/components/account/close-account-section";
 import { SupportTickets } from "@/components/support/support-tickets";
 import { createClient } from "@/lib/supabase/client";
@@ -75,7 +66,6 @@ import { notificationContext } from "@/lib/notification-link";
 import { Link, useRouter } from "@/i18n/navigation";
 import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
 import { useAuth } from "@/hooks/use-auth";
-import { scheduleVisibleIdlePrefetch } from "@/lib/visible-idle-prefetch";
 import { useAvisosSinLeer } from "@/hooks/use-avisos-sin-leer";
 import { useDirectMessageUnread } from "@/hooks/use-direct-message-unread";
 import { cn } from "@/lib/utils";
@@ -83,7 +73,7 @@ import { SupportThreadSkeleton } from "@/components/support/support-thread-skele
 import { PanelSkeleton } from "@/components/ui/section-skeletons";
 import { PublishProjectModal } from "@/components/projects/publish-project-modal";
 import { withPromiseTimeout } from "@/lib/promise-timeout";
-import { getDashboardCache, setDashboardCache, subscribeDashboardCache } from "@/lib/dashboard-prefetch-cache";
+import { getDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
 import {
   dashboardBootstrapKey,
   type DashboardBootstrap,
@@ -102,9 +92,9 @@ import { Modal } from "@/components/ui/modal";
 // (the offer capability, unlocked by completing the professional profile). There
 // is no separate client panel; everyone lives here.
 type Tab =
-  | "pro_tools" | "pro_payments" | "pro_billing" | "pro_expenses" | "pro_agenda" | "pro_clients" | "pro_quotes" | "pro_inventory" | "pro_social" | "pro" | "home" | "profile" | "services" | "photos" | "quotes" | "verificacion"
+  | "home" | "profile" | "services" | "photos" | "quotes" | "verificacion"
   | "jobs" | "offers" | "publicaciones" | "completion"
-  | "sent_projects" | "applications" | "saved" | "connections" | "appointments"
+  | "sent_projects" | "applications" | "saved" | "connections"
   | "chat" | "notifications" | "soporte" | "cuenta" | "guides" | "statistics" | "cv" | "carta" | "tools";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -112,28 +102,14 @@ type ProData = Record<string, any>;
 
 // Las citas se borraron el 8-oct-2026 (cero en toda la historia). Un enlace
 // viejo con ?tab=availability, bookings o sent_bookings no está en este
-// conjunto y cae en el inicio del panel. El nuevo recorrido local de solicitudes
-// usa appointments, sin reinterpretar ni reactivar las reservas históricas.
+// conjunto y cae en el inicio del panel.
 const ALL_TABS = new Set<Tab>([
-  "pro_tools", "pro_payments", "pro_expenses", "pro_billing", "pro_agenda", "pro_clients", "pro_inventory", "pro_social", "pro", "home", "profile", "services", "photos", "quotes", "verificacion",
-  "jobs", "offers", "publicaciones", "completion", "sent_projects", "applications", "saved", "connections", "appointments",
+  "home", "profile", "services", "photos", "quotes", "verificacion",
+  "jobs", "offers", "publicaciones", "completion", "sent_projects", "applications", "saved", "connections",
   "chat", "notifications", "soporte", "cuenta", "guides", "statistics", "cv", "carta", "tools",
 ]);
 
-const PRO_SALES_TABS = new Set<Tab>(["quotes","pro_billing","pro_payments"]);
-const LOCAL_APPOINTMENT_TABS=process.env.NODE_ENV==='development'?['appointments']:[];
-
 const TAB_ICONS: Record<Tab, React.ReactNode> = {
-  pro_tools: <Wrench className="h-4 w-4" />,
-  pro_payments: <ReceiptText className="h-4 w-4" />,
-  pro_agenda: <ClipboardList className="h-4 w-4" />,
-  pro_expenses: <ReceiptText className="h-4 w-4" />,
-  pro_billing: <ReceiptText className="h-4 w-4" />,
-  pro_clients: <Users className="h-4 w-4" />,
-  pro_quotes: <ReceiptText className="h-4 w-4" />,
-  pro_inventory: <BriefcaseBusiness className="h-4 w-4" />,
-  pro_social: <Sparkles className="h-4 w-4" />,
-  pro: <Sparkles className="h-4 w-4" />,
   statistics: <ChartNoAxesColumn className="h-4 w-4" />,
   home: <Home className="h-4 w-4" />,
   profile: <User className="h-4 w-4" />,
@@ -142,7 +118,6 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   quotes: <ReceiptText className="h-4 w-4" />,
   verificacion: <ShieldCheck className="h-4 w-4" />,
   sent_projects: <ClipboardList className="h-4 w-4" />,
-  appointments: <ClipboardList className="h-4 w-4" />,
   applications: <BriefcaseBusiness className="h-4 w-4" />,
   saved: <Bookmark className="h-4 w-4" />,
   connections: <Users className="h-4 w-4" />,
@@ -222,7 +197,7 @@ const PANEL_GROUPS: { grupo: "work" | "business" | "tools" | "saved" | "account"
   // Tres entradas, no un interruptor: «Mis publicaciones» juntaba proyectos,
   // empleos y promociones en una sola puerta, y una puerta con un interruptor
   // adentro hay que descubrirla. En el menú se leen de una.
-  { grupo: "business", tabs: ["sent_projects", "appointments", "jobs", "offers", "pro_agenda", "pro_clients", "pro_inventory", "pro_billing", "pro_expenses"] },
+  { grupo: "business", tabs: ["sent_projects", "jobs", "offers"] },
   // Herramientas: documentos que uno arma y descarga, cada una en su pantalla.
   { grupo: "tools", tabs: ["tools"] },
   { grupo: "work", tabs: ["photos", "services", "statistics", "profile", "completion"] },
@@ -239,19 +214,9 @@ function agruparPestanas(tabs: Tab[]): Tab[][] {
 }
 
 const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
-  pro_agenda:{es:"Citas",en:"Appointments"},
-  pro_expenses:{es:"Gastos",en:"Expenses"},
-  pro_billing:{es:"Facturación",en:"Billing"},
-  pro_payments:{es:"Pagos",en:"Payments"},
-  pro_clients:{es:"Clientes",en:"Customers"},
-  pro_quotes:{es:"Cotizaciones",en:"Quotes"},
-  pro_inventory:{es:"Inventario",en:"Inventory"},
-  pro_social:{es:"Difusión",en:"Promotion history"},
-  pro: {es:"ContrataCR Pro",en:"ContrataCR Pro"},
   statistics: { es: "Estadísticas", en: "Statistics" },
   quotes: { es: "Cotizaciones", en: "Quotes" },
   sent_projects: { es: "Mis solicitudes", en: "My requests" },
-  appointments: {es:"Mis citas",en:"My appointments"},
   applications: { es: "Mis postulaciones", en: "My applications" },
   connections: { es: "Volver a contratar", en: "Hire again" },
   photos: { es: "Casos de éxito", en: "Success stories" },
@@ -262,7 +227,7 @@ const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
   publicaciones: { es: "Mis publicaciones", en: "My posts" },
   jobs: { es: "Empleos", en: "Jobs" },
   offers: { es: "Promociones", en: "Promotions" },
-  completion: { es: "Complete su perfil", en: "Complete your profile" },
+  completion: { es: "Completa tu perfil", en: "Complete your profile" },
   guides: { es: "Guías", en: "Guides" },
   // El CV y la carta de presentación: para postularse a un empleo, con o sin ficha.
   cv: { es: "Currículum", en: "Resume" },
@@ -365,6 +330,7 @@ function GuidesBody({
   onClose?: () => void;
 }) {
   const t = useTranslations("proPanel.guides");
+  const router = useRouter();
   const [busqueda, setBusqueda] = useState("");
   const [selectedGuideId, setSelectedGuideId] = useState<string | null>(null);
 
@@ -384,8 +350,15 @@ function GuidesBody({
 
   const go = (guide: GuideItem) => {
     onClose?.();
-    // El destino real (registro, enlace o sección) lo resuelve el panel en onGo.
-    if ((!isProvider && guide.section === "professional") || guide.href || guide.actionTab) onGo(guide);
+    if (!isProvider && guide.section === "professional") {
+      router.push("/registro/profesional");
+      return;
+    }
+    if (guide.href) {
+      router.push(guide.href);
+      return;
+    }
+    if (guide.actionTab) onGo(guide);
   };
 
   return (
@@ -503,52 +476,28 @@ const ENLACE_DE_CABECERA = "group/enlace inline-flex shrink-0 items-center gap-1
 // botones con icono en vez de tres enlaces de texto.
 const ICONO_DE_CABECERA = "h-3 w-3 shrink-0 stroke-[1.9] text-[#9aa7b6] transition-colors group-hover/enlace:text-[#009FD9]";
 
-// The navbar already publishes its acknowledgement on this external contract.
-// Subscribe instead of mirroring/resetting it in a layout effect.
-function subscribeNavbarHeader(update: () => void) {
-  window.addEventListener("ccr:section-header", update);
-  window.addEventListener("ccr:section-header-ack", update);
-  return () => {
-    window.removeEventListener("ccr:section-header", update);
-    window.removeEventListener("ccr:section-header-ack", update);
-  };
-}
-function acknowledgedNavbarHeader() {
-  const header = window as unknown as { __ccrSectionHeader?: string | null; __ccrSectionAck?: boolean };
-  return header.__ccrSectionAck ? header.__ccrSectionHeader ?? null : null;
-}
-const emptyExternalSnapshot = () => null;
-
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
-  useEffect(()=>{setProNavigationAccount(user?.id??null);return()=>setProNavigationAccount(null);},[user?.id]);
-  const {enabled:proEnabled,ready:proAccessReady,error:proAccessError,retry:retryProAccess}=useLocalProAccess(user?.id);
-  const simpleCopy=useTranslations("ProSimple");
   const { cabeceraRef, conLinea } = useHairlineOnScroll();
   const router = useRouter();
-  // Query-only Pro history can outlive Next's cached router tree across reloads.
-  // Keep the browser URL authoritative while access is being resolved as well;
-  // this changes no permission decision and preserves the basic panel afterward.
-  const searchParams = useProSearchParams(proEnabled || !proAccessReady,LOCAL_APPOINTMENT_TABS);
+  const searchParams = useSearchParams();
   // Publicar una solicitud desde el inicio abre el formulario DE UNA VEZ, encima
   // de lo que esté cargando: antes se veía medio segundo del panel antes del modal.
   const [publicarDirecto, setPublicarDirecto] = useState(() => searchParams.get("openPublish") === "1");
   // Guías es una ventana, no una sección. `?tab=guides` sigue funcionando —hay
   // enlaces viejos y correos que apuntan ahí— y ahora abre la ventana.
-  const [guiasAbiertasManualmente, setGuiasAbiertas] = useState(false);
-  const guiasPorDireccion = searchParams.get("tab") === "guides";
-  const guiasAbiertas = guiasAbiertasManualmente || guiasPorDireccion;
-  function cerrarGuias() {
-    setGuiasAbiertas(false);
-    if (guiasPorDireccion) {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("tab", "home");
-      replaceProPath(window.location.pathname + "?" + params.toString());
-    }
-  }
+  const [guiasAbiertas, setGuiasAbiertas] = useState(false);
   // De dónde llegó quien tocó «Publicar proyecto». Se guarda al llegar porque
   // el panel reescribe su dirección: al cerrar el formulario SIN publicar se
   // vuelve ahí, en vez de dejar a la persona en una lista que no fue a buscar.
+  const guiasPorDireccionRef = useRef(false);
+  useEffect(() => {
+    if (guiasPorDireccionRef.current) return;
+    if (searchParams.get("tab") !== "guides") return;
+    guiasPorDireccionRef.current = true;
+    setGuiasAbiertas(true);
+    setTab("home", true);
+  }, [searchParams]);
   // A dónde vuelve la flecha del formulario abierto por /publicar-solicitud:
   // la página de la que vino (inicio, búsqueda, Proyectos…), si es interna.
   const [publicarVolverA] = useState(() => (publicarDirecto ? rutaInternaSegura(searchParams.get("returnTo")) : null));
@@ -579,23 +528,17 @@ export default function DashboardPage() {
     />
   ) : null;
   const t = useTranslations("proPanel");
+  const nativeApp = useNativeApp();
   const locale = useLocale();
-  const pc = useTranslations("ProPanelCopy");
-  const proAccessPlaceholder = <div data-pro-access-placeholder>{proAccessReady
-    ? <p className="p-4">{pc("toolsUnavailable")}</p>
-    : proAccessError ? <div role="alert" className="space-y-3 p-4"><p>{pc("accessCheckFailed")}</p><Button type="button" variant="secondary" onClick={retryProAccess}>{pc("retry")}</Button></div>
-    : <PanelListSkeleton rows={3} compacto/>}</div>;
   // qué oficio pertenece, y de ahí sale a quién se le avisa.
-  const rawRequestedTab = searchParams.get("tab")==="pro_quotes"?"quotes":searchParams.get("tab");
+  const rawRequestedTab = searchParams.get("tab");
   const legacyVerificationTab = rawRequestedTab === "verificacion";
   // `?tab=proposals` es una direccion VIEJA: Oportunidades ya no existe, pero
   // sigue llegando desde avisos guardados, push y enlaces de cotizaciones. Cae
   // en «Mis proyectos», que es donde esta ahora lo que esa pantalla mostraba,
   // en vez de dejar a la persona en una seccion que no existe.
-  // Guides is an overlay, not the desktop's mobile-only home destination.
-  // Leave the normal panel underneath without rewriting the overlay's URL.
   // Antes el currículum y la carta eran una sola sección: ?tab=cv&doc=carta abre la carta.
-  const normalizedTab = rawRequestedTab === "guides" ? null : rawRequestedTab === "appointments"&&!LOCAL_APPOINTMENT_TABS.length?"sent_projects":rawRequestedTab === "pro_social" ? "home" : legacyVerificationTab ? "profile" : rawRequestedTab === "proposals" ? "sent_projects" : rawRequestedTab === "cv" && searchParams.get("doc") === "carta" ? "carta" : rawRequestedTab;
+  const normalizedTab = legacyVerificationTab ? "profile" : rawRequestedTab === "proposals" ? "sent_projects" : rawRequestedTab === "cv" && searchParams.get("doc") === "carta" ? "carta" : rawRequestedTab;
   // Un ?tab= desconocido mostraba una sección vacía titulada con el id crudo:
   // se ignora y cae al inicio del panel.
   const requestedTab = (normalizedTab && ALL_TABS.has(normalizedTab as Tab) ? normalizedTab : null) as Tab | null;
@@ -620,24 +563,7 @@ export default function DashboardPage() {
     if (externalReturnTo.startsWith("/mensajes")) chatReturnRef.current = externalReturnTo;
   }, [externalReturnTo]);
 
-  const accountId = user?.id ?? null;
-  const subscribeBootstrap = useCallback((update: () => void) => accountId
-    ? subscribeDashboardCache(dashboardBootstrapKey(accountId), update)
-    : () => {}, [accountId]);
-  const readBootstrap = useCallback(() => accountId
-    ? getDashboardCache<DashboardBootstrap>(dashboardBootstrapKey(accountId))
-    : null, [accountId]);
-  const cachedBootstrap = useSyncExternalStore(subscribeBootstrap, readBootstrap, emptyExternalSnapshot);
-  const [loadedPro, setPro] = useState<ProData | null>(null);
-  const [loadedProfile, setProfile] = useState<DashboardProfileData | null>(null);
-  const [networkLoading, setLoading] = useState(true);
-  // SSR and hydration both start with null. React then reads the account's
-  // cache synchronously; no effect copies it just to reveal the first frame.
-  // Missing professional data never resolves a provider's loading guard.
-  const usableBootstrap = cachedBootstrap && user && (!canOffer(user) || cachedBootstrap.pro) ? cachedBootstrap : null;
-  const pro = networkLoading && usableBootstrap ? usableBootstrap.pro as ProData | null : loadedPro;
-  const profile = networkLoading && usableBootstrap ? usableBootstrap.profile : loadedProfile;
-  const loading = networkLoading && !usableBootstrap;
+  const [pro, setPro] = useState<ProData | null>(null);
   // PRECARGA de Mis proyectos y Cotizaciones (5-oct-2026): eran las únicas
   // secciones que la primera vez mostraban esqueleto (1-1,3 s). Al abrir el
   // panel, en un rato libre, se llenan las MISMAS claves de caché que usan
@@ -646,15 +572,48 @@ export default function DashboardPage() {
     if (!user?.id) return;
     const uid = user.id;
     const proId = typeof pro?.id === "string" ? pro.id : null;
-    return scheduleVisibleIdlePrefetch((isActive) => {
+    const enRatoLibre = (fn: () => void) => {
+      if (typeof window.requestIdleCallback === "function") window.requestIdleCallback(fn, { timeout: 4000 });
+      else globalThis.setTimeout(fn, 1500);
+    };
+    enRatoLibre(() => {
       const claveProyectos = `dashboard:client-projects:${uid}`;
-      if (!getDashboardCache(claveProyectos)) void fetchClientProjects().then((d) => { if (isActive() && !getDashboardCache(claveProyectos)) setDashboardCache(claveProyectos, d); }).catch(() => {});
-      if (proId && proAccessReady && !proEnabled) {
+      if (!getDashboardCache(claveProyectos)) void fetchClientProjects().then((d) => { if (!getDashboardCache(claveProyectos)) setDashboardCache(claveProyectos, d); }).catch(() => {});
+      if (proId) {
         const claveCotizaciones = `quotes:${proId}`;
-        if (!getDashboardCache(claveCotizaciones)) void cargarCotizaciones().then((d) => { if (isActive() && !getDashboardCache(claveCotizaciones)) setDashboardCache(claveCotizaciones, d); }).catch(() => {});
+        if (!getDashboardCache(claveCotizaciones)) void cargarCotizaciones().then((d) => { if (!getDashboardCache(claveCotizaciones)) setDashboardCache(claveCotizaciones, d); }).catch(() => {});
       }
     });
-  }, [user?.id, pro?.id,proAccessReady,proEnabled]);
+  }, [user?.id, pro?.id]);
+  const [profile, setProfile] = useState<DashboardProfileData | null>(null);
+  const [loading, setLoading] = useState(true);
+  // Con caché caliente el panel se pinta ANTES del primer cuadro, sin pasar
+  // por el esqueleto. Antes la caché se leía en un efecto normal y se aplicaba
+  // en una microtarea: cada entrada a la ruta enseñaba el esqueleto al menos un
+  // cuadro aunque el dato ya estuviera aquí, y con el retardo de revelado ese
+  // cuadro se veía como un parpadeo.
+  //
+  // Va en un efecto de DISEÑO y no en el render: el servidor siempre pinta el
+  // esqueleto (no conoce la sesión), y si el cliente pintara el panel en su
+  // primer render, React descartaría el árbol entero por no coincidir con el
+  // HTML del servidor y lo volvería a armar desde cero, con el esqueleto puesto
+  // casi medio segundo (medido en escritorio). El efecto de diseño corre tras
+  // la hidratación y antes de pintar: el cambio de estado se aplica en el mismo
+  // cuadro y el esqueleto nunca llega a verse.
+  const sembradoDeCachePara = useRef<string | null>(null);
+  useLayoutEffect(() => {
+    if (!user) { sembradoDeCachePara.current = null; return; }
+    if (sembradoDeCachePara.current === user.id) return;
+    sembradoDeCachePara.current = user.id;
+    const cached = getDashboardCache<DashboardBootstrap>(dashboardBootstrapKey(user.id));
+    // Una caché sin ficha en una cuenta que dice ser profesional NO es respuesta
+    // (ver el efecto de arranque): ahí sí se espera a la red.
+    if (cached && !(!cached.pro && canOffer(user))) {
+      setPro(cached.pro as ProData | null);
+      setProfile(cached.profile);
+      setLoading(false);
+    }
+  }, [user]);
   const [refreshKey] = useState(0);
   const chatUnread = useDirectMessageUnread(!!user);
   const [profileFocus, setProfileFocus] = useState<{ field: string; key: number } | null>(null);
@@ -750,8 +709,7 @@ export default function DashboardPage() {
   const mode: Mode = esProfesional ? "offer" : "use";
   // Citas salieron del menú: el panel abre en lo que sí se usa —Oportunidades
   // para el profesional, Mis proyectos para el cliente.
-  const proFocused = proEnabled && mode === "offer";
-  const defaultTab: Tab = proEnabled ? "home" : "sent_projects";
+  const defaultTab: Tab = "sent_projects";
   const activeTab: Tab = allowedRequestedTab ?? (preferMobileMenuDefault ? "home" : defaultTab);
   useEffect(() => {
     if (reviewShareLinkHandled.current || searchParams.get("share") !== "reviews" || !pro?.slug || mode !== "offer") return;
@@ -783,22 +741,15 @@ export default function DashboardPage() {
 
   // Security guard: a client can use this unified dashboard route, but must never
   // enter professional-only sections by editing the URL or reusing stale links.
-  // Round 4B (race «?tab=jobs» → otra sección): una cuenta que SE DECLARA profesional
-  // (canOffer) y cuya ficha todavía no llegó —la consulta devolvió vacío y fetchPro reintenta,
-  // ver el efecto de noProTries— no es un cliente. La pantalla ya espera con el esqueleto
-  // (professionalRecordResolving), pero estos efectos la trataban como cliente: reescribían la
-  // URL a ?tab=sent_projects&mode=use y fijaban el modo cliente, y cuando la ficha llegaba
-  // 700 ms después el enlace directo ya se había perdido. Ahora esperan a que se resuelva.
-  const providerRecordPending = !!user && canOffer(user) && !pro && !proLoadError;
   useEffect(() => {
-    if (authLoading || loading || !user || isProvider || providerRecordPending || !requestedOfferOnlyTab) return;
+    if (authLoading || loading || !user || isProvider || !requestedOfferOnlyTab) return;
     const params = new URLSearchParams(searchParams.toString());
     params.set("mode", "use");
     params.set("tab", "sent_projects");
     params.delete("focus");
     params.delete("flow");
     router.replace('/dashboard/profesional?' + params.toString(), { scroll: false });
-  }, [authLoading, isProvider, loading, providerRecordPending, requestedOfferOnlyTab, router, searchParams, user]);
+  }, [authLoading, isProvider, loading, requestedOfferOnlyTab, router, searchParams, user]);
 
   useEffect(() => {
     const handler = (event: Event) => {
@@ -894,20 +845,20 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (!legacyVerificationTab || authLoading || loading || !user || providerRecordPending) return;
+    if (!legacyVerificationTab || authLoading || loading || !user) return;
     const params = new URLSearchParams(searchParams.toString());
     if (!isProvider) {
       params.set("tab", "sent_projects");
       params.set("mode", "use");
       params.delete("focus");
-      if(proEnabled)replaceProPath(`${window.location.pathname}?${params.toString()}`);else window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
+      window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
       return;
     }
     params.set("tab", "profile");
     params.set("mode", "offer");
     params.set("focus", "verification");
-    if(proEnabled)replaceProPath(`${window.location.pathname}?${params.toString()}`);else window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
-  }, [authLoading, isProvider, legacyVerificationTab, loading, searchParams, user, proEnabled, providerRecordPending]);
+    window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
+  }, [authLoading, isProvider, legacyVerificationTab, loading, searchParams, user]);
 
   useEffect(() => {
     if (requestedTab !== "chat") return;
@@ -923,22 +874,20 @@ export default function DashboardPage() {
       const frame = requestAnimationFrame(() => setMobilePanelOpen(false));
       return () => cancelAnimationFrame(frame);
     }
-    if (!proAccessReady || defaultTab === "home") return;
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", defaultTab);
     const qs = params.toString();
-    if(proEnabled)replaceProPath(`${window.location.pathname}?${qs}`);else router.replace(`/dashboard/profesional?${qs}`, { scroll: false });
-  }, [defaultTab, requestedTab, router, searchParams, proAccessReady, proEnabled]);
+    router.replace(`/dashboard/profesional?${qs}`, { scroll: false });
+  }, [defaultTab, requestedTab, router, searchParams]);
 
   useEffect(() => {
     if (requestedTab || activeTab !== "home") return;
     if (typeof window === "undefined" || window.innerWidth < 1024) return;
-    if (!proAccessReady || defaultTab === "home") return;
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", defaultTab);
     const qs = params.toString();
-    if(proEnabled)replaceProPath(`${window.location.pathname}?${qs}`);else router.replace(`/dashboard/profesional?${qs}`, { scroll: false });
-  }, [activeTab, defaultTab, requestedTab, router, searchParams, proAccessReady, proEnabled]);
+    router.replace(`/dashboard/profesional?${qs}`, { scroll: false });
+  }, [activeTab, defaultTab, requestedTab, router, searchParams]);
 
   // Suppress the login-redirect while signing out (from the navbar menu) straight
   // to main, no /login flash. Logout lives only in the navbar profile menu now.
@@ -971,28 +920,15 @@ export default function DashboardPage() {
       const params = new URLSearchParams(searchParams.toString());
       params.delete("focus");
       const qs = params.toString();
-      if(proEnabled)replaceProPath(`${window.location.pathname}${qs ? `?${qs}` : ""}`);else window.history.replaceState(null, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`);
+      window.history.replaceState(null, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`);
     });
-  }, [searchParams, nextFocusKey, authLoading, loading, user, requestedTab, isProvider, proEnabled]);
+  }, [searchParams, nextFocusKey, authLoading, loading, user, requestedTab, isProvider]);
 
-  // Una foto de arranque sin ficha solo vale si la ficha se CONSULTÓ. Si el
-  // perfil llegaba antes que `professionals`, se guardaba `{ pro: null }` como
-  // si la cuenta no tuviera ficha; con metadatos atrasados (sin `is_provider`)
-  // esa foto apagaba el cargador y el guardia de seguridad mandaba al
-  // profesional a «Mis proyectos». El perfil adelantado espera aquí hasta que
-  // la ficha se confirme.
-  const pendingBootstrapProfileRef = useRef<{ userId: string; profile: DashboardProfileData | null } | null>(null);
   const cacheDashboardBootstrap = useCallback((next: Partial<DashboardBootstrap>) => {
     if (!user) return;
     const key = dashboardBootstrapKey(user.id);
-    const current = getDashboardCache<DashboardBootstrap>(key);
-    const pending = pendingBootstrapProfileRef.current?.userId === user.id ? pendingBootstrapProfileRef.current.profile : null;
-    if (!current && !("pro" in next)) {
-      pendingBootstrapProfileRef.current = { userId: user.id, profile: next.profile ?? pending };
-      return;
-    }
-    pendingBootstrapProfileRef.current = null;
-    setDashboardCache(key, { ...(current ?? { pro: null, profile: pending }), ...next });
+    const current = getDashboardCache<DashboardBootstrap>(key) ?? { pro: null, profile: null };
+    setDashboardCache(key, { ...current, ...next });
   }, [user]);
 
   // El conteo de mensajes sin leer lo lleva `useDirectMessageUnread`, que hace
@@ -1114,8 +1050,8 @@ export default function DashboardPage() {
     const cached = getDashboardCache<DashboardBootstrap>(dashboardBootstrapKey(user.id));
     if (cached) {
       // Una ficha profesional en la caché sí es respuesta: se pinta el panel de
-      // una vez (la suscripción de caché ya la muestra) y la consulta
-      // silenciosa lo confirma por detrás.
+      // una vez (ya ocurrió en el render, ver `sembradoDeCachePara`) y la
+      // consulta silenciosa lo confirma por detrás.
       //
       // Una caché SIN ficha no lo es. "Todavía no cargó" y "no tiene ficha" se
       // ven igual, y darla por buena apagaba el cargador y pintaba el panel de
@@ -1257,7 +1193,7 @@ export default function DashboardPage() {
   // dibujar la sección nueva en la altura de la anterior y el salto se veía.
   // Con `useLayoutEffect` la sección ya nace arriba.
   useLayoutEffect(() => {
-    iniciarSeccionArriba();
+    scrollDashboardToPageTop();
   }, [activeTab, mode]);
 
   useEffect(() => {
@@ -1265,7 +1201,7 @@ export default function DashboardPage() {
     // navegador puede restaurar el desplazamiento anterior.
     const tardio = window.setTimeout(scrollDashboardToPageTop, 160);
     return () => window.clearTimeout(tardio);
-  }, [activeTab, mode, scrollDashboardToPageTop]);
+  }, [activeTab, mode]);
 
   const requestUnsavedAction = useCallback((action: () => void) => {
     if (typeof window === "undefined") {
@@ -1323,7 +1259,7 @@ export default function DashboardPage() {
     if (!isProvider && OFFER_ONLY.has(tab)) {
       setMobilePanelOpen(false);
       setMode("use");
-      if(proEnabled)replaceProPath(`${window.location.pathname}?tab=sent_projects&mode=use`);else window.history.replaceState(null, "", `${window.location.pathname}?tab=sent_projects&mode=use`);
+      window.history.replaceState(null, "", `${window.location.pathname}?tab=sent_projects&mode=use`);
       scrollDashboardToPageTop();
       return;
     }
@@ -1363,8 +1299,7 @@ export default function DashboardPage() {
     // Commit the destination content before updating history or scrolling.
     // Flushing pushState alone does not flush Next's internal transition.
     flushSync(() => setPendingPanelTab({ from: rawRequestedTab, tab }));
-    if(proEnabled||tab==='appointments'||activeTab==='appointments')navigatePro(tab);
-    else window.history.pushState(null, "", `${window.location.pathname}?tab=${tab}`);
+    window.history.pushState(null, "", `${window.location.pathname}?tab=${tab}`);
     // Reset to the top of the new section INSTANTLY via the window. A smooth scrollIntoView
     // fought the fixed mobile bottom bar (its backdrop-blur made "Más" flicker / feel covered
     // during the animated scroll); an instant window scroll never interferes with it.
@@ -1398,7 +1333,7 @@ export default function DashboardPage() {
     }
     if (isProvider && mode !== "offer") setMode("offer");
     flushSync(() => setProfileFocus({ field: "verification", key: nextFocusKey() }));
-    if(proEnabled)pushProPath(`${window.location.pathname}?tab=profile&mode=offer`);else window.history.pushState(null, "", `${window.location.pathname}?tab=profile&mode=offer`);
+    window.history.pushState(null, "", `${window.location.pathname}?tab=profile&mode=offer`);
     scrollDashboardToPageTop();
   }
 
@@ -1416,7 +1351,7 @@ export default function DashboardPage() {
       if (isProvider && mode !== "offer") setMode("offer");
       setMobilePanelOpen(false);
       if (field) flushSync(() => setProfileFocus({ field, key: nextFocusKey() }));
-      if(proEnabled)pushProPath(`${window.location.pathname}?tab=profile&mode=offer`);else window.history.pushState(null, "", `${window.location.pathname}?tab=profile&mode=offer`);
+      window.history.pushState(null, "", `${window.location.pathname}?tab=profile&mode=offer`);
       scrollDashboardToPageTop();
       return;
     }
@@ -1448,7 +1383,7 @@ export default function DashboardPage() {
       setMode("offer");
     });
     if (typeof window !== "undefined") {
-      if(proEnabled)pushProPath(`${window.location.pathname}?tab=completion&mode=offer`);else window.history.pushState(null, "", `${window.location.pathname}?tab=completion&mode=offer`);
+      window.history.pushState(null, "", `${window.location.pathname}?tab=completion&mode=offer`);
     }
     scrollDashboardToPageTop();
   }
@@ -1626,7 +1561,7 @@ export default function DashboardPage() {
   // misma barra que en Proyectos, Empleos o Notificaciones lleva el nombre de
   // la sección al lado de la marca, y aquí se quedaba sin él.
   const mobileSectionHeaderTitle = activeTab === "home"
-    ? (proEnabled ? simpleCopy("day") : t("panelHeading"))
+    ? t("panelHeading")
     : (supportThreadTitle ?? mobileProfileSectionTitle ?? (activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab)));
   const sectionBackRef = useRef<(() => void) | null>(null);
   // EL GESTO DE VOLVER (deslizar en iOS, el botón físico de Android, el atrás
@@ -1664,17 +1599,20 @@ export default function DashboardPage() {
       if (window.history.state?.ccrPasoInterno) window.history.back();
     };
   }, [pasoInternoAbierto, activeTab]);
-  const navbarHeader = useSyncExternalStore(subscribeNavbarHeader, acknowledgedNavbarHeader, emptyExternalSnapshot);
-  const navbarOwnsHeader = navbarHeader !== null && navbarHeader === mobileSectionHeaderTitle;
+  const [navbarOwnsHeader, setNavbarOwnsHeader] = useState(false);
   useLayoutEffect(() => {
     const onBack = () => sectionBackRef.current?.();
+    const onAck = () => setNavbarOwnsHeader(true);
     window.addEventListener("ccr:section-back", onBack);
+    window.addEventListener("ccr:section-header-ack", onAck);
     return () => {
       window.removeEventListener("ccr:section-back", onBack);
+      window.removeEventListener("ccr:section-header-ack", onAck);
     };
   }, []);
   // De capa: la barra cambia en el mismo cuadro que la sección.
   useLayoutEffect(() => {
+    if (!mobileSectionHeaderTitle) setNavbarOwnsHeader(false);
     // `root` distingue la RAÍZ del panel de una sección abierta: en la raíz la
     // barra lleva el menú y la marca (no hay a dónde volver), dentro de una
     // sección lleva la flecha.
@@ -1683,14 +1621,13 @@ export default function DashboardPage() {
     // campana ahí sobra —nadie revisa avisos a medio formulario— y dejaba a
     // «Contactar soporte» distinta de las demás pantallas de formulario.
     const publicar = (title: string | null, root = false, paso = false) => {
-      const global = window as unknown as { __ccrSectionHeader?: string | null; __ccrSectionRoot?: boolean; __ccrSectionPaso?: boolean; __ccrSectionAck?: boolean };
-      global.__ccrSectionAck = false;
+      const global = window as unknown as { __ccrSectionHeader?: string | null; __ccrSectionRoot?: boolean; __ccrSectionPaso?: boolean };
       global.__ccrSectionHeader = title;
       global.__ccrSectionRoot = root;
       global.__ccrSectionPaso = paso;
       window.dispatchEvent(new CustomEvent("ccr:section-header", { detail: title ? { title, root, paso } : null }));
     };
-    publicar(mobileSectionHeaderTitle, activeTab === "home", pasoInternoAbierto || activeTab.startsWith("pro_") || activeTab === "appointments");
+    publicar(mobileSectionHeaderTitle, activeTab === "home", pasoInternoAbierto);
     return () => publicar(null);
   }, [activeTab, mobileSectionHeaderTitle, pasoInternoAbierto]);
 
@@ -1767,11 +1704,7 @@ export default function DashboardPage() {
   // notifications and support stay routable from the navbar or direct links
   // instead of competing with the core panel tasks.
   const modeTabs = mode === "offer" ? OFFER_TABS : USE_TABS;
-  const proCoreTabs:Tab[]=["home","pro_agenda"];
-  // Keep the existing publication order and place tools immediately before profile.
-  const proRemainingTabs=modeTabs.filter(tab=>!["quotes","statistics","photos","services"].includes(tab)&&!proCoreTabs.includes(tab));
-  const businessTabs:Tab[] = proFocused?[...proCoreTabs,...proRemainingTabs.flatMap(tab=>tab==="profile"?["pro_tools" as Tab,tab]:[tab])]:modeTabs;
-  const sidebarTabs:Tab[] = LOCAL_APPOINTMENT_TABS.length&&!proFocused?[...businessTabs.slice(0,1),'appointments',...businessTabs.slice(1)]:businessTabs;
+  const sidebarTabs = modeTabs;
   // Guías también en escritorio. Estaba fuera de la columna y no había ningún
   // otro sitio donde entrar: en computadora la sección solo se alcanzaba
   // escribiendo ?tab=guides a mano. Va en el bloque de cuenta, junto a Perfil y
@@ -1783,27 +1716,19 @@ export default function DashboardPage() {
   const ventanaGuias = guiasAbiertas ? (
     <Modal
       open
-      onClose={cerrarGuias}
+      onClose={() => setGuiasAbiertas(false)}
       title={panelTabLabel("guides")}
       subtitle={t("subtitles.guides")}
       size="lg"
       // Flecha, como las demás secciones del panel en el teléfono.
-      backLabel={pc("back")}
+      backLabel={locale === "en" ? "Back" : "Volver"}
       bodyClassName="px-5 py-5 sm:px-6"
     >
       <GuidesBody
         isProvider={isProvider}
-        onClose={cerrarGuias}
+        onClose={() => setGuiasAbiertas(false)}
         onGo={(guide) => {
           requestUnsavedAction(() => {
-            if (!isProvider && guide.section === "professional") {
-              router.push("/registro/profesional");
-              return;
-            }
-            if (guide.href) {
-              router.push(guide.href);
-              return;
-            }
             if (guide.targetMode) setMode(guide.targetMode);
             if (guide.targetField) {
               clearCompletionFlow();
@@ -1818,7 +1743,7 @@ export default function DashboardPage() {
   // En el teléfono Guías vuelve a la lista de opciones, al final, junto a
   // Soporte: arriba, como texto bajo el nombre, no se encontraba. En computadora
   // sigue en el renglón del nombre.
-  const mobileSectionTabs: Tab[] = [...sidebarTabs.filter((tab) => tab !== "guides" && tab !== "home"), "guides"];
+  const mobileSectionTabs: Tab[] = [...sidebarTabs.filter((tab) => tab !== "guides"), "guides"];
   const mobileFullScreenTab = activeTab !== "home";
   const mobileSectionOpen = activeTab !== "home" || mobilePanelOpen;
   const singleSurfaceTab = activeTab === "profile";
@@ -1831,15 +1756,10 @@ export default function DashboardPage() {
     ((profileCompletionPercent ?? 0) < 100 || proForCompletion.verification_status !== "verified");
 
   function panelTabLabel(tab: Tab) {
-    const labels:Partial<Record<Tab,string>>={home:"day",pro_agenda:"work",pro_tools:"tools",pro_inventory:"catalog",quotes:"quotes",pro_billing:"advanced",pro_payments:"payments"};
-    // Tool titles stay stable while access loads; this grants no feature access.
-    if(labels[tab]&&(proEnabled||tab.startsWith("pro_")))return simpleCopy(labels[tab]);
-    return PANEL_TAB_LABELS[tab]?.[idiomaDe(locale)] ?? t(`tabs.${tab}`);
+    return PANEL_TAB_LABELS[tab]?.[locale === "en" ? "en" : "es"] ?? t(`tabs.${tab}`);
   }
 
   function openPanelDestination(tab: Tab) {
-    if(tab==="pro_tools"&&proEnabled){pushProPath(prefijoDeIdioma(locale)+"/dashboard/pro");return;}
-    if(tab===activeTab)return;
     setTab(tab);
   }
 
@@ -1848,7 +1768,7 @@ export default function DashboardPage() {
 
   function desktopSidebarButton(tab: Tab) {
     const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : tab === "chat" ? chatUnread : 0;
-    const label = tab==="pro_tools"&&proEnabled?"ContrataCR Pro":panelTabLabel(tab);
+    const label = panelTabLabel(tab);
     return (
       <button
         key={tab}
@@ -1887,7 +1807,7 @@ export default function DashboardPage() {
           <div className="overflow-hidden rounded-[22px] border border-[#e5e7eb] bg-white shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)]">
             <div className="flex flex-col">
               <nav className="flex flex-col divide-y divide-[#eef2f6]">
-                {(proFocused?[desktopSidebarTabs.slice(0,5),desktopSidebarTabs.slice(5)]:agruparPestanas(desktopSidebarTabs)).map((grupo, i) => (
+                {agruparPestanas(desktopSidebarTabs).map((grupo, i) => (
                   <div key={grupo[0] ?? i} className="flex flex-col divide-y divide-[#eef2f6]">
                     {grupo.map(desktopSidebarButton)}
                   </div>
@@ -1924,14 +1844,14 @@ export default function DashboardPage() {
         {/* Siempre el mismo rótulo, esté el registro empezado o no: es la misma
             puerta y cambiarle el nombre la hacía parecer otra cosa. Lo que
             queda a medias se retoma donde quedó, sin anunciarlo. */}
-        <span className="min-w-0 flex-1 leading-tight">{pc("offerServices")}</span>
+        <span className="min-w-0 flex-1 leading-tight">{locale === "en" ? "Offer my services" : "Ofrecer mis servicios"}</span>
         <ChevronRight className="h-4 w-4 shrink-0 text-white/80" />
       </Link>
     );
   }
 
   function mobileSectionButton(tab: Tab) {
-    const label = tab==="pro_tools"&&proEnabled?"ContrataCR Pro":panelTabLabel(tab);
+    const label = panelTabLabel(tab);
     return (
       <button
         key={tab}
@@ -2005,7 +1925,7 @@ export default function DashboardPage() {
               column is capped at 54rem, that row measures 260px (nav) + 1.25rem
               (gap-5) + 54rem = 71.5rem; on chat/home nothing caps it, so the card
               keeps the full width. */}
-          <div data-dashboard-identity-card className={cn(
+          <div className={cn(
             "mx-auto mb-6 w-full",
             "max-w-[79.5rem]",
             // Topada al ancho de la fila Y pegada a su izquierda: centrada,
@@ -2027,7 +1947,7 @@ export default function DashboardPage() {
                   disabled={headerPhotoUploading}
                   className={`relative block rounded-full outline-none transition focus-visible:ring-2 focus-visible:ring-[#009FD9] focus-visible:ring-offset-2 disabled:opacity-70 ${profileIdentityAvatarClass}`}
                   data-profile-identity-avatar
-                  aria-label={pc("photoOptions")}
+                  aria-label={locale === "en" ? "Profile photo options" : "Opciones de foto de perfil"}
                 >
                   <Avatar className={`bg-transparent ${profileIdentityAvatarClass}`}>
                     <AvatarImage src={headerAvatar ?? undefined} />
@@ -2046,7 +1966,7 @@ export default function DashboardPage() {
                     {headerAvatar && (
                       <button type="button" onClick={() => { setHeaderPhotoMenuOpen(false); setHeaderPhotoPreviewOpen(true); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-semibold text-[#162543] transition-colors hover:bg-[#f8fafc]">
                         <Eye className="h-4 w-4 text-[#009FD9]" />
-                        {pc("viewPhoto")}
+                        {locale === "en" ? "View photo" : "Ver foto"}
                       </button>
                     )}
                     <button
@@ -2055,7 +1975,7 @@ export default function DashboardPage() {
                       className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-semibold text-[#162543] transition-colors hover:bg-[#f8fafc]"
                     >
                       <Camera className="h-4 w-4 text-[#009FD9]" />
-                      {headerAvatar ? pc("changePhoto") : pc("addPhoto")}
+                      {headerAvatar ? (locale === "en" ? "Change photo" : "Cambiar foto") : (locale === "en" ? "Add photo" : "Agregar foto")}
                     </button>
                     {headerAvatar && (
                       <button
@@ -2064,7 +1984,7 @@ export default function DashboardPage() {
                         className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
                       >
                         <Trash2 className="h-4 w-4" />
-                        {pc("removePhoto")}
+                        {locale === "en" ? "Remove photo" : "Eliminar foto"}
                       </button>
                     )}
                   </div>
@@ -2087,8 +2007,8 @@ export default function DashboardPage() {
                 )}
                 <ImagePreviewDialog
                   src={headerAvatar}
-                  alt={pc("profilePhoto")}
-                  closeLabel={pc("close")}
+                  alt={locale === "en" ? "Profile photo" : "Foto de perfil"}
+                  closeLabel={locale === "en" ? "Close" : "Cerrar"}
                   open={headerPhotoPreviewOpen}
                   onOpenChange={setHeaderPhotoPreviewOpen}
                 />
@@ -2110,18 +2030,18 @@ export default function DashboardPage() {
                       <Link
                         href={`${publicProfileHref}?from=${encodeURIComponent("/dashboard/profesional")}`}
                         onClick={openInNewTabOnDesktop}
-                        aria-label={pc("viewPublicProfile")}
+                        aria-label={locale === "en" ? "View public profile" : "Ver perfil público"}
                         data-testid="panel-ver-perfil"
                         className={ENLACE_DE_CABECERA}
                       >
                         <ExternalLink className={ICONO_DE_CABECERA} />
-                        {pc("viewProfile")}
+                        {locale === "en" ? "View profile" : "Ver perfil"}
                       </Link>
                     )}
                     {publicProfileHref && (
                       <button type="button" data-testid="panel-compartir-perfil" onClick={() => setShareKitTab(activeTab)} className={ENLACE_DE_CABECERA}>
                         <Share2 className={ICONO_DE_CABECERA} />
-                        {pc("share")}
+                        {locale === "en" ? "Share" : "Compartir"}
                       </button>
                     )}
                     <button
@@ -2162,11 +2082,11 @@ export default function DashboardPage() {
                   <Link
                     href={`${publicProfileHref}?from=${encodeURIComponent("/dashboard/profesional")}`}
                     onClick={openInNewTabOnDesktop}
-                    aria-label={pc("viewPublicProfile")}
+                    aria-label={locale === "en" ? "View public profile" : "Ver perfil público"}
                     data-testid="dashboard-mobile-view-profile"
                     className="inline-flex h-11 w-full items-center justify-center rounded-full border border-[#d7e1ea] bg-white text-[13px] font-bold text-[#162543] transition active:bg-[#f6f9fb]"
                   >
-                    {pc("viewProfile")}
+                    {locale === "en" ? "View profile" : "Ver perfil"}
                   </Link>
                   <button
                     type="button"
@@ -2174,7 +2094,7 @@ export default function DashboardPage() {
                     onClick={() => setShareKitTab(activeTab)}
                     className="inline-flex h-11 !min-h-0 w-full items-center justify-center rounded-full border border-[#d7e1ea] bg-white text-[13px] font-bold text-[#162543] transition active:bg-[#f6f9fb]"
                   >
-                    {pc("share")}
+                    {locale === "en" ? "Share" : "Compartir"}
                   </button>
                 </div>
               )}
@@ -2189,8 +2109,6 @@ export default function DashboardPage() {
                   />
                 </div>
               )}
-              {/* Launch without Pro (2026-11-18): «Mi negocio» for accounts that manage a claimed place. */}
-              <div style={{ gridColumn: "1 / -1" }} className="w-full empty:hidden"><BusinessDashboardEntry locale={locale} /></div>
             </div>
             </div>
           </div>
@@ -2204,13 +2122,15 @@ export default function DashboardPage() {
                   <AlertCircle className="h-7 w-7" />
                 </div>
                 <h2 className="text-xl font-bold text-[#162543] mb-2">
-                  {pc("panelLoadFailed")}
+                  {locale === "en" ? "We couldn't load your panel" : "No pudimos cargar tu panel"}
                 </h2>
                 <p className="text-sm text-[#6b7280] max-w-md mb-6 leading-relaxed">
-                  {pc("panelLoadHint")}
+                  {locale === "en"
+                    ? "Try again. If it continues, contact support so we can review your professional profile."
+                    : "Intenta de nuevo. Si continúa, contacta soporte para revisar tu perfil profesional."}
                 </p>
                 <Button onClick={() => fetchPro()}>
-                  {pc("tryAgain")}
+                  {locale === "en" ? "Try again" : "Intentar de nuevo"}
                 </Button>
               </CardContent>
             </Card>
@@ -2257,7 +2177,6 @@ export default function DashboardPage() {
                           window.dispatchEvent(new Event("ccr:support-close-thread"));
                           return;
                         }
-                        if((activeTab==='appointments'&&LOCAL_APPOINTMENT_TABS.length||proEnabled&&["pro_agenda","pro_clients","pro_inventory","pro_billing","pro_payments","pro_expenses","pro_tools","quotes","statistics","services","photos"].includes(activeTab))&&backPro())return;
                         const volverA = externalReturnTo ?? returnToRef.current;
                         if (volverA && (activeTab === "offers" || activeTab === "jobs" || activeTab === "sent_projects" || volverA.startsWith("/mensajes") || volverA === "/notificaciones")) {
                           router.push(volverA);
@@ -2291,7 +2210,7 @@ export default function DashboardPage() {
                   ) : (
                     <h2 className={cn(CABECERA_TITULO, "px-2 text-center")}>{mobileProfileSectionTitle ?? (activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab))}</h2>
                   )}
-                  <div data-pro-section-actions-slot className="flex shrink-0 justify-self-end" />
+                  <div className="flex shrink-0 justify-self-end" />
                 </div>
                 </>
               )}
@@ -2300,35 +2219,14 @@ export default function DashboardPage() {
                   que el menú de la izquierda. El menú no cambia —su tarjeta va
                   dentro de un contenedor pegajoso—; la sección llega al menos a
                   su altura. */}
-              {/* Una suspensión no se avisa por correo: se avisa acá, que es donde
-                  el profesional se entera cuando importa (requirePro lo manda acá
-                  al bloquearle Pro) y tiene el botón de reclamo al lado. Va FUERA
-                  de la tarjeta de la sección: en Inicio esa tarjeta es `lg:hidden`
-                  y en escritorio el aviso no se veía. */}
-              {pro?.is_banned === true && (() => {
-                const copy = suspensionNoticeCopy(locale, pro.banned_reason);
-                return (
-                  <div role="alert" data-pro-suspended-notice className="mx-4 mb-4 mt-4 rounded-xl border border-[#fecaca] bg-[#fef2f2] px-4 py-3 lg:mx-0 lg:mt-0">
-                    <p className="text-sm font-bold text-[#991b1b]">{copy.title}</p>
-                    <p className="mt-1 text-sm text-[#7f1d1d]">{copy.body}</p>
-                    <button
-                      type="button"
-                      onClick={() => router.push(`${prefijoDeIdioma(locale)}/dashboard/profesional?tab=soporte`)}
-                      className="mt-2 inline-flex h-9 items-center rounded-lg bg-[#b91c1c] px-3 text-xs font-bold text-white hover:bg-[#991b1b]"
-                    >
-                      {copy.cta}
-                    </button>
-                  </div>
-                );
-              })()}
               <div className="flex flex-col gap-5 lg:flex-row lg:items-stretch">
-                {activeTab !== "home" || proFocused ? desktopPanelNav() : null}
+                {activeTab !== "home" ? desktopPanelNav() : null}
                 {/* Main content, min-w-0 so a long unbroken string inside a card can't
                     grow this flex column past the available width and break the page. */}
                 <div ref={contentRef} className="flex-1 min-w-0 scroll-mt-20 lg:flex lg:scroll-mt-0 lg:flex-col">
                   <SaveStatusProvider>
                     <Card className={cn(
-                      activeTab === "home" && (proFocused ? "border-0 bg-transparent shadow-none" : "rounded-none border-0 bg-transparent shadow-none lg:hidden"),
+                      activeTab === "home" && "rounded-none border-0 bg-transparent shadow-none lg:hidden",
                       activeTab === "chat" && "overflow-hidden",
                       // En pantalla grande la columna se queda en 54rem: a 62rem las
                       // tarjetas de un proyecto quedaban como cintas de
@@ -2342,7 +2240,6 @@ export default function DashboardPage() {
                           <div className="flex min-w-0 items-center gap-2 pr-28">
                             <h2 className={CABECERA_TITULO}>{activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab)}</h2>
                           </div>
-                          <div data-pro-section-actions-slot className="absolute right-0 top-1/2 flex -translate-y-1/2 items-center" />
                         </div>
                       </CardHeader>}
                       <CardContent data-dashboard-current={activeTab} className={mobileSectionOpen ? cn(
@@ -2357,19 +2254,41 @@ export default function DashboardPage() {
                         {/* Cada sección dentro de su propio límite: si una revienta,
                             cae ella sola con su aviso y su reintento, y el error queda
                             registrado. Antes se llevaba la pantalla entera. */}
+                        {/* Una suspensión no se avisa por correo: se avisa acá, que
+                            es donde el profesional se entera cuando importa y tiene
+                            el botón de reclamo al lado. La cuenta sigue viva —puede
+                            entrar, leer sus mensajes y apelar—; lo que está apagado
+                            es la ficha. */}
+                        {pro?.is_banned === true && (
+                          <div className="mb-4 rounded-xl border border-[#fecaca] bg-[#fef2f2] px-4 py-3">
+                            <p className="text-sm font-bold text-[#991b1b]">Tu perfil está suspendido</p>
+                            <p className="mt-1 text-sm text-[#7f1d1d]">
+                              No aparece en las búsquedas ni en el mapa, y nadie puede ver tus datos de contacto.
+                              {pro.banned_reason ? ` Motivo: ${pro.banned_reason}` : ""}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => router.push(`${prefijoDeIdioma(locale)}/dashboard/profesional?tab=soporte`)}
+                              className="mt-2 inline-flex h-9 items-center rounded-lg bg-[#b91c1c] px-3 text-xs font-bold text-white hover:bg-[#991b1b]"
+                            >
+                              Si creés que es un error, escribinos
+                            </button>
+                          </div>
+                        )}
                         {pro && mode === "offer" && activeTab === "services" && <ServiceRequestInvitations onComplete={openRequestedService} />}
                         <SectionBoundary titulo={t("sectionErrorTitle")} cuerpo={t("sectionErrorBody")} reintentar={t("sectionErrorRetry")}>
                         {TABS_WITH_SUBTITLE.has(activeTab) && (
                           <SectionHeadline subtitulo={t(`subtitles.${activeTab}`)} className="mb-4" />
                         )}
+                        {activeTab === "statistics" && <StatisticsPanel professional={!!pro} callsEnabled={!!pro?.allow_phone_call && !!(pro?.call_phone || pro?.whatsapp)} />}
                         {activeTab === "home" && (
                           <>
-                            <div className={proFocused?"space-y-5":"lg:hidden"}>
-                              <div className={proFocused?"lg:hidden":undefined}>
+                            <div className="lg:hidden">
+                              <div>
                                 <div>
                                   <div className="flex flex-col gap-2.5">
                                     {ofrecerServiciosCard()}
-                                    {(proFocused?[mobileSectionTabs.slice(0,5),mobileSectionTabs.slice(5)]:agruparPestanas(mobileSectionTabs)).map((grupo, i) => (
+                                    {agruparPestanas(mobileSectionTabs).map((grupo, i) => (
                                       <div key={grupo[0] ?? i} className="flex flex-col gap-2.5">
                                         {grupo.map(mobileSectionButton)}
                                       </div>
@@ -2384,7 +2303,7 @@ export default function DashboardPage() {
                                       <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#64748b]">
                                         <LogOut className="h-5 w-5" />
                                       </span>
-                                      <span className="min-w-0 flex-1 truncate">{pc("signOut")}</span>
+                                      <span className="min-w-0 flex-1 truncate">{locale === "en" ? "Sign out" : "Salir"}</span>
                                     </button>
                                   </div>
                                 </div>
@@ -2405,10 +2324,6 @@ export default function DashboardPage() {
                             focusKey={profileFocus?.key}
                             resetKey={profileResetKey}
                             extraSections={[
-                              ...(proFocused ? [
-                                {id: "profile-services-link", title: pc("services"), footer: null, children: <ServicesEditor key={`servicios:${(pro.professions ?? []).length}:${(pro.services ?? []).length}`} professionalId={pro.id} primaryCategory={pro.category_id} initialProfessions={pro.professions ?? []} initialServices={pro.services ?? []} onSaved={(intent) => handleSaved(intent ?? "section")} focusField={serviceFocus?.field ?? null} focusKey={serviceFocus?.key} />},
-                                {id: "profile-photos-link", title: pc("workPhotos"), footer: null, children: <PhotoGallery key={`casos:${(pro.portfolio_items ?? []).length}:${(pro.portfolio_urls ?? []).length}`} professionalId={pro.id} initialUrls={pro.portfolio_urls ?? []} initialItems={pro.portfolio_items ?? undefined} professions={(pro.professions && pro.professions.length > 0) ? pro.professions : (pro.category_id ? [pro.category_id] : [])} services={pro.services ?? []} onSaved={(intent) => handleSaved(intent ?? "section")} />},
-                              ] : []),
                               {
                                 id: "verificacion",
                                 footer: null,
@@ -2511,24 +2426,16 @@ export default function DashboardPage() {
                             onSaved={(intent) => handleSaved(intent ?? "section")}
                           />
                         )}
-                        <ProManagementShell enabled={proEnabled} activeTab={activeTab}>
-                        {activeTab === "statistics" && <StatisticsPanel professional={!!pro} callsEnabled={!!pro?.allow_phone_call && !!(pro?.call_phone || pro?.whatsapp)} />}
-                        {activeTab === "pro_tools" && (proEnabled ? <ProTools/> : proAccessPlaceholder)}
-                        {(["pro_agenda","pro_clients","pro_inventory","pro_social","pro_expenses"] as Tab[]).includes(activeTab) && (proEnabled?<ProWorkspace key={`${user?.id??"anonymous"}:${activeTab}`} server embedded section={activeTab==="pro_expenses"?"Gastos":activeTab==="pro_agenda"?"Agenda":activeTab==="pro_clients"?"Clientes":activeTab==="pro_inventory"?"Inventario":"Redes"}/>:proAccessPlaceholder)}
-                        {activeTab === "pro" && (proEnabled?<ProWorkspace server embedded/>:proAccessPlaceholder)}
-                        {PRO_SALES_TABS.has(activeTab) && (proAccessReady?
-                          proEnabled?<SalesWorkspace key={user?.id??"anonymous"} proName={professionalDisplayName} proSlug={typeof pro?.slug === "string" ? pro.slug : null} puedeCrear={!!pro?.id}/>:activeTab==="quotes"?<QuotesSection
-                            proEnabled={false}
+                        {activeTab === "quotes" && (
+                          <QuotesSection
                             proName={professionalDisplayName}
                             proSlug={typeof pro?.slug === "string" ? pro.slug : null}
                             proId={typeof pro?.id === "string" ? pro.id : null}
                             puedeCrear={!!pro?.id}
-                          />:<p className="p-4">{t("salesProRequired")}</p>:<PanelListSkeleton rows={3} compacto/>
+                          />
                         )}
-                        </ProManagementShell>
                         {/* "Usar servicios", the seek capability. */}
                         {activeTab === "sent_projects" && <ClientActivity section="projects" />}
-                        {activeTab === "appointments" && LOCAL_APPOINTMENT_TABS.length>0 && <AppointmentRequestsWorkspace side="client"/>}
                         {/* «Mis postulaciones» se retiró con el formulario: se
                             aplica por WhatsApp y no hay nada que seguir aquí.
                             La dirección sigue existiendo y muestra el aviso de

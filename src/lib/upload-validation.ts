@@ -81,7 +81,7 @@ export function validateUpload(
   }
   const kind = sniffFileType(buf);
   if (!kind || !opts.allow.includes(kind)) {
-    return { ok: false, error: `Formato no permitido. Use ${opts.allowLabel}.`, motivo: "formato" };
+    return { ok: false, error: `Formato no permitido. Usa ${opts.allowLabel}.`, motivo: "formato" };
   }
   return { ok: true, kind };
 }

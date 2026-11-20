@@ -33,6 +33,8 @@ Do not use the default repository folder `C:\Users\isaac\OneDrive\Desktop\contra
 
 On macOS, the exact parent directory may differ. The canonical layout is one checkout for `main` plus sibling worktrees named `contratacr-test` and `contratacr-mobile`; record their absolute paths in the local Codex workspace instructions. Do not recreate the detached Windows preservation worktree. See `docs/mac-migration-handoff.md` for the bootstrap commands.
 
+Owner decision 2026-11-19: production (`main`) was rolled back to before the directory launch plus CV; `test` keeps the directory and the Pro suite; `main` intentionally differs from `test` until the owner re-launches (re-launch by reverting the commit that introduced this paragraph, "Roll production back to before the directory launch"). The `main`/`test` equality rules above and below are suspended for source code until then; `supabase/migrations` stays a superset in `main` because the production database already has those versions applied.
+
 Before pushing:
 
 - Run `git status --short --branch` in the target canonical worktree and confirm the branch is the intended one.

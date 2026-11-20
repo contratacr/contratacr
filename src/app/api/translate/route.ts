@@ -4,7 +4,7 @@ import { translatePlainTexts } from "@/lib/translation/service-labels";
 
 export async function POST(req: Request) {
   // Public endpoint: bound abuse and enumeration per client IP.
-  const limited = await enforceRateLimit(req, "translate", 20, 60000);
+  const limited = enforceRateLimit(req, "translate", 20, 60000);
   if (limited) return limited;
   const body = await req.json().catch(() => ({}));
   const target = body.target === "es" ? "es" : "en";

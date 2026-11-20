@@ -1,6 +1,5 @@
 "use client";
 
-import {ConnectedQuotes} from "@/components/pro/connected-quotes";
 import { NombreQueCabe } from "@/components/ui/nombre-que-cabe";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -32,7 +31,7 @@ export async function cargarCotizaciones(): Promise<Quote[]> {
   return filas.map((q: Quote) => ({ ...q, items: Array.isArray(q.items) ? q.items : [] }));
 }
 
-function BasicQuotesSection({ proName, proSlug, proId, puedeCrear = true }: { proName: string; proSlug?: string | null; proId?: string | null; puedeCrear?: boolean; proEnabled?: boolean }) {
+export function QuotesSection({ proName, proSlug, proId, puedeCrear = true }: { proName: string; proSlug?: string | null; proId?: string | null; puedeCrear?: boolean }) {
   const t = useTranslations("quotes");
   const tBorrador = useTranslations("borradorGuardado");
   const tSub = useTranslations("proPanel.subtitles");
@@ -171,5 +170,3 @@ function BasicQuotesSection({ proName, proSlug, proId, puedeCrear = true }: { pr
     </div>
   );
 }
-
-export function QuotesSection(props:Parameters<typeof BasicQuotesSection>[0]){return props.proEnabled?<ConnectedQuotes {...props}/>:<BasicQuotesSection {...props}/>;}

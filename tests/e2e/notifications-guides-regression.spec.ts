@@ -94,7 +94,7 @@ async function seedNotifications(userId: string, locale: Locale) {
       user_id: userId,
       type: "review_received",
       title: "Nueva reseña recibida",
-      message: `${reviewerName} le dejó una reseña de 5 estrellas.`,
+      message: `${reviewerName} te dejó una reseña de 5 estrellas.`,
       data: { regression_run: runId, push_suppressed: true, client_name: reviewerName, rating: 5 },
       read: false,
     },
@@ -102,7 +102,7 @@ async function seedNotifications(userId: string, locale: Locale) {
       user_id: userId,
       type: "support_reply",
       title: "Respuesta de soporte",
-      message: `Soporte respondió a su ticket "${ticketSubject}".`,
+      message: `Soporte respondió a tu ticket "${ticketSubject}".`,
       data: { regression_run: runId, push_suppressed: true, ticket_subject: ticketSubject },
       read: false,
     },
@@ -183,13 +183,13 @@ test.describe("@notifications-guides disposable bilingual UI regression", () => 
           }
         : {
             heading: "Notificaciones",
-            supportMessage: `Soporte respondió a su ticket "${seeded.ticketSubject}".`,
+            supportMessage: `Soporte respondió a tu ticket "${seeded.ticketSubject}".`,
             globalOptions: "Opciones de notificaciones",
             markAll: "Marcar todas como leídas",
             rowOptions: "Opciones",
             deleteOne: "Eliminar",
             deleteAll: "Eliminar todas",
-            empty: "No tiene notificaciones.",
+            empty: "No tienes notificaciones.",
           };
 
       try {

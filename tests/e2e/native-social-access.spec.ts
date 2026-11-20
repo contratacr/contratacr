@@ -27,11 +27,11 @@ for (const platform of ["android", "ios"] as const) {
       Object.assign(window, { Capacitor: runtime });
     }, { platform });
     await gotoOK(page, "/login");
-    await expect(page.getByText(/Usó la última vez|Last used/)).toHaveCount(0);
+    await expect(page.getByText(/Usaste la última vez|Last used/)).toHaveCount(0);
     const google = page.getByRole("button", { name: "Continuar con Google", exact: true });
     for (let attempt = 1; attempt <= 2; attempt++) {
       await google.click();
-      await expect(page.getByText("No pudimos iniciar sesión con Google en la app. Intente de nuevo o use su correo.")).toBeVisible();
+      await expect(page.getByText("No pudimos iniciar sesión con Google en la app. Intenta de nuevo o usa tu correo.")).toBeVisible();
       await expect(google).toBeEnabled();
       await expect(page).toHaveURL(/\/login$/);
       if (process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (platform === "android" || process.env.NEXT_PUBLIC_GOOGLE_IOS_CLIENT_ID)) {
@@ -113,7 +113,7 @@ test("Play build 14 explains the Apple update requirement without leaving the ap
   await gotoOK(page, "/login");
   await expect(page.locator("#ccr-app-link-cover")).toBeHidden();
   await page.getByRole("button", { name: "Continuar con Apple", exact: true }).click();
-  await expect(page.getByText("El acceso con Apple no está disponible en esta versión de la app. Puede usarlo desde contratacr.com en su navegador.")).toBeVisible();
+  await expect(page.getByText("El acceso con Apple no está disponible en esta versión de la app. Puedes usarlo desde contratacr.com en tu navegador.")).toBeVisible();
   await expect(page).toHaveURL(/\/login$/);
   expect(browserOAuth).toBe(0);
 });

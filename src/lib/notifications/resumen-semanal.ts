@@ -58,11 +58,11 @@ export function cuerpoDelResumen({ nombre, contactos, semana, profesional, baja 
   const actividad = contactos === 1 ? "1 registro de intento de contacto" : `${contactos} registros de intentos de contacto`;
   const botones = RESPUESTAS.map((n) => `<a href="${escaparHtml(enlaceDeReporte(profesional, semana, n))}" style="display:inline-block;min-width:44px;margin:0 4px 8px 0;padding:10px 13px;border:1px solid #009FD9;border-radius:999px;color:#0089bb;text-decoration:none;font-weight:700;font-size:15px;text-align:center">${n === 3 ? "3 o más" : n}</a>`).join("");
   return `${nombre ? p(`Hola ${escaparHtml(nombre)},`) : ""}
-    ${p(`Entre el ${fechaCorta(semana)} y el ${fechaCorta(domingo)}, ContrataCR guardó <strong>${actividad}</strong> con sus servicios.`)}
+    ${p(`Entre el ${fechaCorta(semana)} y el ${fechaCorta(domingo)}, ContrataCR guardó <strong>${actividad}</strong> con tus servicios.`)}
     ${p("Esto indica que se abrió una opción de contacto. No confirma que se enviara un mensaje ni que cada registro corresponda a una persona distinta.")}
-    ${p("<strong>¿Cuántos trabajos conseguiste a través de ContrataCR durante esa semana?</strong> Puede incluir contactos de semanas anteriores. Elige una opción y confírmala en la página siguiente:")}
+    ${p("<strong>¿Cuántos trabajos conseguiste a través de ContrataCR durante esa semana?</strong> Puedes incluir contactos de semanas anteriores. Elige una opción y confírmala en la página siguiente:")}
     <div style="margin:4px 0 14px">${botones}</div>
-    ${p("Su respuesta es opcional. El equipo de ContrataCR la utiliza para evaluar el servicio; no se publica en su perfil.")}
+    ${p("Tu respuesta es opcional. El equipo de ContrataCR la utiliza para evaluar el servicio; no se publica en tu perfil.")}
     <p style="margin:24px 0 0;border-top:1px solid #eef1f5;padding-top:14px;font-size:12px;line-height:1.6;color:#8b97a6">
       Te llega porque tienes un perfil en ContrataCR. <a href="${escaparHtml(baja)}" style="color:#8b97a6">Dejar de recibir estos correos</a>.
     </p>`;
@@ -119,7 +119,7 @@ export async function enviarResumenSemanal(admin: Admin, { simular = false, ahor
       .select("id");
     if (error) { console.error("[resumen-semanal] candado:", error.message); continue; }
     if (!nueva?.length) { yaEnviados += 1; continue; }
-    const asunto = "Su actividad semanal en ContrataCR";
+    const asunto = "Tu actividad semanal en ContrataCR";
     const html = brandedEmailDocument({
       title: asunto,
       origin: APP_URL,

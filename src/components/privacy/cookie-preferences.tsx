@@ -49,7 +49,7 @@ export function CookiePreferences() {
   }
   const notice = en
     ? 'We use necessary cookies to keep ContrataCR working securely. By choosing "Agree", you accept optional usage statistics and advertising measurement with Meta. In "Settings" you can accept or reject each purpose. You can change your choice at any time.'
-    : 'Usamos cookies necesarias para que ContrataCR funcione de forma segura. Al elegir "De acuerdo", acepta las estadísticas de uso y la medición publicitaria con Meta. En "Configuración" puede aceptar o rechazar cada fin opcional. Puede cambiar su decisión cuando quiera.';
+    : 'Usamos cookies necesarias para que ContrataCR funcione de forma segura. Al elegir "De acuerdo", aceptás las estadísticas de uso y la medición publicitaria con Meta. En "Configuración" podés aceptar o rechazar cada fin opcional. Podés cambiar tu decisión cuando quieras.';
   const categorySummaries: Record<string, string> = {
     necessary: en ? "Sign-in, security and essential preferences." : "Inicio de sesión, seguridad y preferencias esenciales.",
     analytics: en ? "Visits and actions to improve ContrataCR." : "Visitas y acciones para mejorar ContrataCR.",
@@ -57,7 +57,7 @@ export function CookiePreferences() {
   };
   const categories = [
     { key: "necessary", title: en ? "Necessary" : "Necesarias", description: en ? "Sign-in, security, language, privacy choices and essential service records. These functions are always active and cannot be disabled here." : "Inicio de sesión, seguridad, idioma, preferencias y registros indispensables del servicio. Estas funciones están siempre activas y no se pueden desactivar aquí." },
-    { key: "analytics", title: en ? "Statistics" : "Estadísticas", value: analytics, change: setAnalytics, description: en ? "Visits and actions to improve the app, linked to your account or a visitor identifier. These records are not necessarily anonymous. Optional statistics stay off unless you accept them." : "Visitas y acciones para mejorar la app, vinculadas a su cuenta o a un identificador de visitante. Estos registros no son necesariamente anónimos. Las estadísticas opcionales permanecen desactivadas hasta que usted las acepte." },
+    { key: "analytics", title: en ? "Statistics" : "Estadísticas", value: analytics, change: setAnalytics, description: en ? "Visits and actions to improve the app, linked to your account or a visitor identifier. These records are not necessarily anonymous. Optional statistics stay off unless you accept them." : "Visitas y acciones para mejorar la app, vinculadas a tu cuenta o a un identificador de visitante. Estos registros no son necesariamente anónimos. Las estadísticas opcionales permanecen desactivadas hasta que las aceptés." },
     { key: "advertising", title: en ? "Marketing" : "Marketing", value: advertising, change: setAdvertising, description: en ? "Campaign measurement with Meta using events and technical identifiers. No private messages, documents or contact details. Advertising identifiers are not anonymous; processing may take place abroad. This permission is separate from promotional emails and operating system permissions." : "Medición de campañas con Meta mediante eventos e identificadores técnicos. Sin mensajes privados, documentos ni datos de contacto. Los identificadores publicitarios no son anónimos y puede haber tratamiento internacional. Este permiso es independiente de los correos promocionales y los permisos del sistema operativo." },
   ];
   return <>
@@ -69,12 +69,12 @@ export function CookiePreferences() {
         <button className={button} onClick={() => save(true, true)}>{en ? "Agree" : "De acuerdo"}</button>
       </div>
       <Link href="/privacidad#cookies" className="mx-auto mt-2 flex min-h-11 w-fit items-center rounded-lg text-xs font-semibold text-[#007fae] underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-[#009fd9]">{en ? "Privacy policy" : "Política de privacidad"}</Link>
-      {error && <p role="alert" className="mt-3 text-sm text-red-700">{en ? "Could not save your preferences. Please try again." : "No pudimos guardar sus preferencias. Inténtelo de nuevo."}</p>}
+      {error && <p role="alert" className="mt-3 text-sm text-red-700">{en ? "Could not save your preferences. Please try again." : "No pudimos guardar tus preferencias. Inténtalo de nuevo."}</p>}
     </section>}
     <dialog ref={dialog} onCancel={() => setSettings(false)} onClose={() => setSettings(false)} aria-labelledby="privacy-settings-title" className="fixed inset-x-0 bottom-0 top-auto m-0 max-h-[95dvh] w-full max-w-none overflow-hidden rounded-t-[24px] border border-b-0 border-[#dce6ec] bg-white p-0 text-[#162543] shadow-2xl backdrop:bg-[#162543]/30 open:flex open:flex-col sm:inset-0 sm:m-auto sm:max-h-[90dvh] sm:max-w-lg sm:rounded-[24px] sm:border-b">
       <header className="shrink-0 px-5 pb-4 pt-5 sm:px-6 sm:pt-6">
         <h2 id="privacy-settings-title" tabIndex={-1} className="text-lg font-extrabold leading-6 outline-none!">{en ? "Data privacy settings" : "Configuración de privacidad"}</h2>
-        <p className="mt-2 text-sm leading-5 text-[#526176]">{en ? "Choose what to allow. Optional categories can be turned off; your changes apply when you save." : "Elija qué permite. Puede desactivar las categorías opcionales; los cambios se aplican al guardar."}</p>
+        <p className="mt-2 text-sm leading-5 text-[#526176]">{en ? "Choose what to allow. Optional categories can be turned off; your changes apply when you save." : "Elegí qué permitís. Podés desactivar las categorías opcionales; los cambios se aplican al guardar."}</p>
       </header>
       <div className="min-h-0 overflow-y-auto overscroll-contain px-5 pb-5 sm:px-6">
       <div className="grid gap-3">
@@ -105,7 +105,7 @@ export function CookiePreferences() {
           <button onClick={() => setSettings(false)} className="flex min-h-11 items-center justify-center rounded px-1 text-sm font-semibold text-[#162543] underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]">{en ? "Back" : "Volver"}</button>
           <Link href="/privacidad#cookies" onClick={() => setSettings(false)} className="flex min-h-11 items-center rounded text-sm font-semibold text-[#007fae] underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]">{en ? "Privacy policy" : "Política de privacidad"}</Link>
         </div>
-        {error && <p role="alert" className="mt-2 text-sm text-red-700">{en ? "Could not save your preferences." : "No pudimos guardar sus preferencias."}</p>}
+        {error && <p role="alert" className="mt-2 text-sm text-red-700">{en ? "Could not save your preferences." : "No pudimos guardar tus preferencias."}</p>}
       </footer>
     </dialog>
   </>;

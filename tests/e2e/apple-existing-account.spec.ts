@@ -35,7 +35,7 @@ test("existing email login keeps its profile and opens Apple linking", async ({ 
     await page.getByRole("button", { name: "Ingresar", exact: true }).last().click();
     await expect(page).toHaveURL(/dashboard\/profesional\?tab=cuenta&connect=apple/);
     await expect(page.getByRole("heading", { name: "Métodos de acceso", exact: true })).toBeVisible();
-    await expect(page.getByText(/Conecte Apple aquí para conservar este perfil/)).toBeVisible();
+    await expect(page.getByText(/Conecta Apple aquí para conservar este perfil/)).toBeVisible();
     const admin = regressionAdminClient();
     const { data: profiles, error } = await admin.from("profiles").select("id").eq("email", account.email);
     expect(error).toBeNull();

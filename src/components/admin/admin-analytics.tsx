@@ -341,7 +341,7 @@ export function AdminAnalytics({ data, measurement }: { data: AdminReports; meas
 
       {(active === 'overview' || active === 'platforms') && <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <Section icon={Smartphone} group="platforms" title="Uso de web y apps" sub={periodLabel} className="lg:col-span-3">
-          {!data.runtimeUsage ? <p className="text-sm text-[#64748b]">La medición de uso no está disponible. Intente de nuevo más tarde.</p> : <>
+          {!data.runtimeUsage ? <p className="text-sm text-[#64748b]">La medición de uso no está disponible. Intenta de nuevo más tarde.</p> : <>
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {data.runtimeUsage.rows.filter(row => ["web_desktop", "web_mobile", "android", "ios"].includes(row.runtime) || row.sessions > 0 || row.visitors > 0 || row.registrations > 0 || Object.keys(row.actions).length > 0).map(row => (
                 <div key={row.runtime} className="rounded-xl border border-[#e5e7eb] p-4" data-testid={`analytics-runtime-${row.runtime}`}>

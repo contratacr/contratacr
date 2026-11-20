@@ -67,14 +67,6 @@ test("429 pauses lookups without turning an outage into a negative decision", as
   expect((await p.verifier.lookup("101053317")).unavailable).toBe(true); expect(p.calls).toHaveLength(1);
   p.advance(120001); expect((await p.verifier.lookup("101053316")).found).toBe(true); expect(p.calls).toHaveLength(2);
 });
-test("private Pro lookups bypass registration cache reads and writes for matches and missing IDs", async () => {
-  const p=provider([json({nombre:'Nombre oficial',tipoIdentificacion:'01'}),json({code:404},404)]);
-  p.cache.set('101053316',{...found(),fullName:'Stale cached name'});
-  expect(await p.verifier.lookup('101053316',{cache:false})).toEqual(found());
-  expect(p.cache.get('101053316').fullName).toBe('Stale cached name');
-  expect(await p.verifier.lookup('101053317',{cache:false})).toMatchObject({found:false});
-  expect(p.cache.has('101053317')).toBe(false);expect(p.calls).toHaveLength(2);
-});
 test("shared cache TTL is ten minutes for matches and one minute for missing records; failures are not cached", async () => {
   let now = 100000; const objects = new Map<string, string>();
   const cache = load("src/lib/verification/hacienda-cache.ts", {

@@ -92,7 +92,7 @@ export async function PATCH(req: Request) {
   const idioma = idiomaDeLaPeticion(req);
 
   if (mensaje.sender_id !== userId || mensaje.deleted_at) {
-    return NextResponse.json({ error: mensajeDeError(req, { es: "Solo puede editar sus propios mensajes.", en: "You can only edit your own messages." }) }, { status: 403 });
+    return NextResponse.json({ error: mensajeDeError(req, { es: "Solo puedes editar tus propios mensajes.", en: "You can only edit your own messages." }) }, { status: 403 });
   }
   if (conversacion.status === "blocked") {
     return NextResponse.json({ error: mensajeDeError(req, { es: "Esta conversación está bloqueada.", en: "This conversation is blocked." }) }, { status: 403 });
@@ -135,7 +135,7 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: mensajeDeError(req, { es: "Acción inválida.", en: "Invalid action." }) }, { status: 400 });
   }
   if (mensaje.sender_id !== userId) {
-    return NextResponse.json({ error: mensajeDeError(req, { es: "Solo puede eliminar para todos sus propios mensajes.", en: "You can only delete your own messages for everyone." }) }, { status: 403 });
+    return NextResponse.json({ error: mensajeDeError(req, { es: "Solo puedes eliminar para todos tus propios mensajes.", en: "You can only delete your own messages for everyone." }) }, { status: 403 });
   }
   if (mensaje.deleted_at) return NextResponse.json({ ok: true, scope: "everyone" });
   if (!dentroDeLaVentana(mensaje)) {

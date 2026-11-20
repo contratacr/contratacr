@@ -6,11 +6,6 @@
  */
 export type Idioma = "es" | "en";
 
-/** Clave de idioma para tablas es/en: todo lo que no sea inglés es español. */
-export function idiomaDe(locale: string | null | undefined): Idioma {
-  return locale !== "en" ? "es" : "en";
-}
-
 /** "" para español, "/en" para inglés. */
 export function prefijoDeIdioma(locale: string | null | undefined): "" | "/en" {
   if (locale === "en") return "/en";

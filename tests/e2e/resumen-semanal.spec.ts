@@ -39,7 +39,7 @@ test.describe("resumen semanal a profesionales", () => {
     const link = new URL(enlaceDeReporte("00000000-0000-4000-8000-000000000001", "2026-10-05", 2));
     await page.goto(link.pathname + link.search);
     await expect(page.getByRole("heading", { name: "¿Cuántos trabajos conseguiste a través de ContrataCR?" })).toBeVisible();
-    await expect(page.getByText("Su respuesta: 2 trabajos. Todavía no se ha guardado.")).toBeVisible();
+    await expect(page.getByText("Tu respuesta: 2 trabajos. Todavía no se ha guardado.")).toBeVisible();
     await expect(page.getByText(/2026-10-05/)).toBeVisible();
     await page.emulateMedia({ colorScheme: "dark" });
     await expect(page.locator(".ccr-light-logo")).toBeVisible();
@@ -67,7 +67,7 @@ test.describe("resumen semanal a profesionales", () => {
       const enlace = new URL(enlaceDeReporte(pro.professionalId!, semana, 2));
       await page.goto(`${enlace.pathname}${enlace.search}`);
       await expect(page.getByRole("heading", { name: "¿Cuántos trabajos conseguiste a través de ContrataCR?" })).toBeVisible();
-      await expect(page.getByText("Su respuesta: 2 trabajos. Todavía no se ha guardado.")).toBeVisible();
+      await expect(page.getByText("Tu respuesta: 2 trabajos. Todavía no se ha guardado.")).toBeVisible();
       const { data: antes } = await db.from("trabajos_reportados").select("cerrados").eq("professional_id", pro.professionalId!).eq("semana", semana).single();
       expect(antes?.cerrados).toBeNull();
 

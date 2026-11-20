@@ -23,8 +23,7 @@ for (const file of [
   const source = readFileSync(new URL(`../../${file}`, import.meta.url), 'utf8');
   assert.doesNotMatch(source, /logo-mark-dark\.png|wordmark-dark\.svg|email-logo-dark\.png|tone="dark"/, `${file}: secondary logo reintroduced`);
 }
-// The admin shell markup lives in admin-shell-client.tsx (admin-shell.tsx is the server wrapper with the launch flags).
-const admin = readFileSync(new URL('../../src/components/admin/admin-shell-client.tsx', import.meta.url), 'utf8');
+const admin = readFileSync(new URL('../../src/components/admin/admin-shell.tsx', import.meta.url), 'utf8');
 assert.equal((admin.match(/<ContrataCRLogo tone="dark" \/>/g) ?? []).length, 2, 'Both admin headers retain the approved dark variant');
 console.log('Public logos use principal artwork; admin headers use the dark variant.');
 const emailSource = readFileSync(new URL('../../src/lib/email/send.ts', import.meta.url), 'utf8');

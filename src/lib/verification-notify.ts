@@ -61,37 +61,37 @@ export async function notifyVerificationDecision({
 
     if (kind === "verified") {
       type = "verification_approved";
-      title = "¡Su identidad fue verificada!";
+      title = "¡Tu identidad fue verificada!";
       message =
-        "Verificamos su identidad. El check azul ya aparece junto a su nombre.";
+        "Verificamos tu identidad. El check azul ya aparece junto a tu nombre.";
       html = emailShell(
         firstName,
-        "¡Su identidad fue verificada!",
+        "¡Tu identidad fue verificada!",
         "#16a34a",
-        `Verificamos su identidad. El <strong>check azul</strong> ya aparece junto a su nombre.`,
+        `Verificamos tu identidad. El <strong>check azul</strong> ya aparece junto a tu nombre.`,
         "Ver mi verificación"
       );
     } else if (kind === "pending") {
       type = "verification_pending";
-      title = "Su verificación está en revisión";
+      title = "Tu verificación está en revisión";
       message =
-        "No pudimos verificar su identificación. Puede solicitar revisión manual desde su panel; su cuenta sigue activa.";
+        "No pudimos verificar tu identificación. Puedes solicitar revisión manual desde tu panel; tu cuenta sigue activa.";
       html = emailShell(
         firstName,
-        "Su verificación está en revisión",
+        "Tu verificación está en revisión",
         "#b45309",
         `No pudimos verificar tu identificación.
-         Puedes <strong>solicitar revisión manual</strong> y adjuntar los documentos desde su panel. Su cuenta sigue activa mientras tanto.`,
+         Puedes <strong>solicitar revisión manual</strong> y adjuntar los documentos desde tu panel. Tu cuenta sigue activa mientras tanto.`,
         "Ver mi verificación"
       );
     } else if (kind === "rejected") {
       type = "verification_rejected";
-      title = "Su verificación no fue aprobada";
+      title = "Tu verificación no fue aprobada";
       const safeReason = reason?.trim() || "No se especificó un motivo.";
-      message = `Su verificación de identidad no fue aprobada. Motivo: ${safeReason}. Puede apelar desde su panel.`;
+      message = `Tu verificación de identidad no fue aprobada. Motivo: ${safeReason}. Puedes apelar desde tu panel.`;
       html = emailShell(
         firstName,
-        "Su verificación no fue aprobada",
+        "Tu verificación no fue aprobada",
         "#dc2626",
         `Revisamos tu verificación de identidad y por ahora no fue aprobada.
          <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:14px;margin:16px 0;font-size:14px;color:#991b1b;"><strong>Motivo:</strong> ${escapeHtml(safeReason)}</div>
@@ -100,14 +100,14 @@ export async function notifyVerificationDecision({
       );
     } else {
       type = "verification_reverted";
-      title = "Su verificación fue actualizada";
+      title = "Tu verificación fue actualizada";
       const safeReason = reason?.trim() || "No se especificó un motivo.";
-      message = `Su verificación fue quitada. Motivo: ${compactReason(safeReason)}. Revise su panel para ver el detalle.`;
+      message = `Tu verificación fue quitada. Motivo: ${compactReason(safeReason)}. Revisa tu panel para ver el detalle.`;
       html = emailShell(
         firstName,
-        "Su verificación fue actualizada",
+        "Tu verificación fue actualizada",
         "#b45309",
-        `Quitamos el <strong>check azul</strong> de su perfil después de revisar su verificación.
+        `Quitamos el <strong>check azul</strong> de tu perfil después de revisar tu verificación.
          <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:14px;margin:16px 0;font-size:14px;color:#92400e;"><strong>Motivo:</strong> ${escapeHtml(safeReason)}</div>
          Tu cuenta sigue activa. Entra a <strong>Mi perfil → Verificación</strong> para ver el motivo y pedir ayuda a soporte.`,
         "Ver mi verificación"
@@ -242,13 +242,13 @@ export async function notifyVerificationOutreach(professionalId: string): Promis
     ? "Para revisar el perfil de la empresa, necesitamos confirmar quién la representa:<br/><br/>" +
       "1. Una personería jurídica vigente o una autorización que podamos validar.<br/>" +
       "2. Una foto de la persona autorizada junto a su documento de identidad, con los datos legibles."
-    : "Para confirmar su identidad, adjunte una foto suya junto a su cédula, DIMEX o pasaporte, donde se vea su rostro y se lean los datos.";
+    : "Para confirmar tu identidad, adjunta una foto tuya junto a tu cédula, DIMEX o pasaporte, donde se vea tu rostro y se lean los datos.";
   const result = await sendBrevoEmail({
-    to: profile.email, subject: reminder ? "Su perfil sigue sin verificar" : "Falta poco para verificar su perfil en ContrataCR",
-    html: emailShell(firstName, reminder ? "Todavía puede verificar su perfil" : "Verificación de su perfil", "#009FD9",
-      `${reminder ? "Hace al menos un mes le enviamos los pasos para verificarle. " : ""}` +
-      "Su perfil todavía no está verificado.<br/><br/>" +
-      instructions + "<br/><br/>Adjunte los documentos desde su panel. Los revisamos y le avisamos en la app.", "Completar verificación"),
+    to: profile.email, subject: reminder ? "Tu perfil sigue sin verificar" : "Falta poco para verificar tu perfil en ContrataCR",
+    html: emailShell(firstName, reminder ? "Todavía puedes verificar tu perfil" : "Verificación de tu perfil", "#009FD9",
+      `${reminder ? "Hace al menos un mes te enviamos los pasos para verificarte. " : ""}` +
+      "Tu perfil todavía no está verificado.<br/><br/>" +
+      instructions + "<br/><br/>Adjunta los documentos desde tu panel. Los revisamos y te avisamos en la app.", "Completar verificación"),
     replyTo: "soporte@contratacr.com", nivel: "masivo", purpose: "verification",
     eventKey: `verification:${pro.profile_id}:${candidate.sequence}`, professionalId,
     verificationSequence: candidate.sequence,

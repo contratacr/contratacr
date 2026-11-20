@@ -4,7 +4,6 @@ import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { prefijoDeIdioma, rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { LandingHero } from "@/components/landing/landing-hero";
 import { FeaturedBrands } from "@/components/landing/featured-brands";
-import { DirectoryHomeSection } from "@/components/landing/directory-nav";
 import { ProsSection } from "@/components/landing/pros-section";
 import { WhyContratacr } from "@/components/landing/why-contratacr";
 import { FindByZone } from "@/components/landing/find-by-zone";
@@ -113,9 +112,6 @@ export default async function HomePage({
         {/* Negocios reales justo bajo el hero, antes de los servicios: la
             prueba de que ContrataCR ya tiene negocios de verdad. */}
         <FeaturedBrands />
-
-        {/* Directorio de lugares (solo con DIR_ENABLED; las secciones apagadas no aparecen). */}
-        <DirectoryHomeSection locale={locale} />
 
         {/* Services carousel. */}
         <FadeInUp>
