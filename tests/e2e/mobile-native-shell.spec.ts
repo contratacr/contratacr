@@ -423,7 +423,7 @@ test.describe("@mobile native shell contracts", () => {
     expect(sheetGeometry.bottom).toBeLessThanOrEqual(sheetGeometry.viewportHeight + 1);
 
     await page.getByRole("button", { name: /^(¿Qué servicio está buscando\?|Servicios, restaurantes, farmacias\.\.\.)$/ }).click();
-    const serviceInput = page.getByRole("combobox", { name: /^(Servicio|Servicios y lugares)$/ });
+    const serviceInput = page.getByRole("combobox", { name: /^(Servicio|Servicios y negocios)$/ });
     await expect(serviceInput).toBeVisible();
     const overlayGeometry = await serviceInput.evaluate((element) => {
       const overlay = element.closest<HTMLElement>(".fixed.z-\\[220\\]");

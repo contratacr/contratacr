@@ -14,7 +14,6 @@ import { resolveCategoryIntent } from "@/lib/data/categories";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { rutaDeBusqueda } from "@/lib/buscar-url";
 import { RodilloDeEjemplos } from "@/components/landing/rodillo-de-ejemplos";
-import { HomeIntentDoors } from "@/components/landing/home-intent-doors";
 import { useSiteFeatures } from "@/components/site-features";
 import { DirectorySuggestionRows, SuggestionGroupLabel } from "@/components/search/directory-suggestions";
 import { directorySectionForQuery, directorySectionHref, suggestDirectorySections, unifiedSearchPlaceholder, withoutPlaceDuplicates, type DirectorySectionSuggestion } from "@/lib/search/directory-search";
@@ -898,8 +897,6 @@ export function LandingHero() {
           </div>
 
         </form>
-        {/* Dos puertas (solo con el directorio activo): contratar un servicio / encontrar un lugar. */}
-        <HomeIntentDoors />
         {/* La otra forma de conseguir quien te ayude, en una línea: pedirlo y que te escriban. */}
         <p className="mt-3 text-center whitespace-nowrap text-[12.5px] font-semibold sm:text-[14px] text-white/90 drop-shadow lg:text-left">
           {t("pidePrefijo")}{" "}

@@ -22,7 +22,7 @@ async function elegirServicio(page: Page, texto: string) {
   // eso fallaba solo con `?provincia=sj` y no con la búsqueda que ya traía cantón.
   const abrir = page.getByRole("button", { name: /Qué servicio|What service|Servicios, restaurantes|Services, restaurants|Atenas|Profesionales/i }).filter({ visible: true }).first();
   await expect(abrir).toBeVisible();
-  const campo = page.getByRole("combobox", { name: /^Servicio$|^Service$|^Servicios y lugares$|^Services and places$/i }).filter({ visible: true }).first();
+  const campo = page.getByRole("combobox", { name: /^Servicio$|^Service$|^Servicios y negocios$|^Services and businesses$/i }).filter({ visible: true }).first();
   // El botón se pinta desde el servidor y durante unos milisegundos todavía no
   // tiene quién le escuche el toque: ese primer clic se pierde. Se reintenta
   // hasta que el buscador abra de verdad.

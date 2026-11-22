@@ -85,7 +85,7 @@
     "searchProfessionals": "Find services"
   },
   "header": {
-    "searchServicesAndPlaces": "Services and places",
+    "searchServicesAndPlaces": "Services and businesses",
     "searchServiceLabel": "Service",
     "searchServicesLabel": "Services",
     "tools": "Tools",
@@ -2877,22 +2877,22 @@
       "search": "Search",
       "titular": "Find *verified*|professionals in Costa Rica.",
       "titularPc": "Find *verified* professionals|in Costa Rica.",
-      "titularLugares": "Find professionals|and *places* in Costa Rica.",
-      "titularLugaresPc": "Find professionals and *places*|in Costa Rica.",
+      "titularLugares": "Find professionals|and *businesses* in Costa Rica.",
+      "titularLugaresPc": "Find professionals and *businesses*|in Costa Rica.",
       "puertasAria": "What would you like to do",
       "puertaServicio": "Hire a service",
       "puertaLugar": "Explore categories",
       "intentServicio": "Hire a service",
-      "intentLugar": "See places"
+      "intentLugar": "See businesses"
     },
     "inicio": {
       "lugaresTitulo": "Popular categories",
       "lugaresSub": "Restaurants, pharmacies, plumbing, auto repair and more, with hours and contact details.",
-      "verTodos": "See all places",
+      "verTodos": "See all businesses",
       "verCategorias": "See all categories",
       "compararPrecios": "Compare prices",
       "eventos": "Events",
-      "destacadosTitulo": "Places to start with",
+      "destacadosTitulo": "Businesses to start with",
       "destacadosVer": "See {seccion}",
       "promoTitulo": "Promotions",
       "promoTexto": "Offers from professionals and businesses in Costa Rica, in one place.",
@@ -3920,15 +3920,15 @@
   },
   "resultTabs": {
     "aria": "Result type",
-    "services": "Services",
-    "places": "Places"
+    "services": "Professionals",
+    "places": "Businesses"
   },
   "placesHub": {
-    "metaTitle": "Places in Costa Rica",
+    "metaTitle": "Businesses in Costa Rica",
     "metaDescription": "Restaurants, shops, clinics, fuel stations and more: hours, photos, reviews and contact details across Costa Rica.",
     "breadcrumbLabel": "Breadcrumb",
     "home": "Home",
-    "title": "Places",
+    "title": "Businesses",
     "intro": "Find restaurants, shops, clinics and more across Costa Rica, with hours, photos, reviews and contact details.",
     "moreTitle": "More to explore",
     "prices": "Compare prices",

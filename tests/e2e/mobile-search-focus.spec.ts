@@ -46,7 +46,7 @@ test('professional search stays over old results while navigation is pending, in
  test.skip((page.viewportSize()?.width??1280)>=1024,'Mobile search sheet');
  const panel=await openSearch(page,'/profesionales');
  await panel.locator('input').nth(1).fill('Alajuela');await panel.getByRole('option').filter({hasText:'Alajuela'}).first().tap();
- await panel.getByLabel(/^(Servicio|Servicios y lugares)$/).fill('Cámaras');
+ await panel.getByLabel(/^(Servicio|Servicios y negocios)$/).fill('Cámaras');
  let release!:()=>void;const gate=new Promise<void>(resolve=>{release=resolve;});
  await page.route('**/*',async route=>{if(route.request().headers().rsc==='1')await gate;await route.continue();});
  const initial=page.url();await panel.getByRole('option').filter({hasText:'Cámaras de seguridad'}).first().tap();
@@ -60,7 +60,7 @@ test('professional search stays over old results while navigation is pending, in
  expect(await page.evaluate(()=>(window as unknown as {__searchPaints:{fixed:boolean;overlay:boolean}[]}).__searchPaints.some(frame=>frame.fixed||frame.overlay))).toBe(false);
  await page.unrouteAll({behavior:'wait'});
  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('ccr:open-native-search')));await expect(panel).toBeVisible();
- await panel.getByLabel(/^(Servicio|Servicios y lugares)$/).fill('Cámaras');await panel.getByRole('option').filter({hasText:'Cámaras de seguridad'}).first().tap();
+ await panel.getByLabel(/^(Servicio|Servicios y negocios)$/).fill('Cámaras');await panel.getByRole('option').filter({hasText:'Cámaras de seguridad'}).first().tap();
  // Selecting the same completed search dismisses it without another Enter.
  await expect(panel).toHaveCount(0);
 });

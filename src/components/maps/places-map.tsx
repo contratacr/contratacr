@@ -173,7 +173,7 @@ function addClusteredMarkers(ctx: Ctx, points: PlacesMapPoint[]) {
       if (!marker) {
         if (props.cluster) {
           const count = props.point_count ?? 0;
-          const btn = teardropEl(count, en ? `${count} places here: zoom in` : `${count} lugares aquí: acercar`);
+          const btn = teardropEl(count, en ? `${count} businesses here: zoom in` : `${count} negocios aquí: acercar`);
           btn.addEventListener("click", async (e) => {
             e.stopPropagation();
             const source = map.getSource(SOURCE) as GeoJSONSource | undefined;
