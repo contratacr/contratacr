@@ -29,14 +29,15 @@ test.describe("directory app tabs", () => {
     await expect(nav).toBeVisible();
     if (!on) { await expect(page.locator("[data-directory-tabs]")).toHaveCount(0); return; }
     const tabs = nav.locator("[data-native-tab]");
-    await expect(tabs).toHaveCount(5);
+    await expect(tabs).toHaveCount(6);
     await expect(tabs.nth(0)).toHaveAttribute("href", "/");
     await expect(tabs.nth(1)).toHaveAttribute("href", "/profesionales");
     await expect(tabs.nth(2)).toHaveAttribute("href", "/lugares");
     await expect(tabs.nth(3)).toHaveAttribute("href", "/solicitudes");
     await expect(tabs.nth(4)).toHaveAttribute("href", /\/login/);
+    await expect(tabs.nth(5)).toHaveAttribute("href", /\/login/);
     await expect(tabs.nth(0)).toHaveAttribute("aria-current", "page");
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 6; i++) {
       const box = await tabs.nth(i).boundingBox();
       expect(box!.height).toBeGreaterThanOrEqual(44);
       expect(box!.width).toBeGreaterThanOrEqual(44);

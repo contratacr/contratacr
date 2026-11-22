@@ -373,9 +373,10 @@ export function NativeBottomNav() {
       : esRutaDeBusqueda(ruta, esServicioDelCatalogo) ? 1
       : enLugares ? 2
       : ruta === "/solicitudes" || ruta.startsWith("/solicitudes/") ? 3
-      : user && ruta.startsWith(panelHref) ? 4
+      : ruta === "/mensajes" || ruta.startsWith("/mensajes/") ? 4
+      : user && ruta.startsWith(panelHref) ? 5
       : -1;
-    const tab = (i: number, href: string, label: string, Icon: typeof House, extra?: { loginHref?: string }) => (
+    const tab = (i: number, href: string, label: string, Icon: typeof House, extra?: { loginHref?: string; badge?: number }) => (
       <Link
         key={href}
         href={extra?.loginHref ?? href}
@@ -385,7 +386,12 @@ export function NativeBottomNav() {
         onClick={(event) => { if (!extra?.loginHref) irA(event, href); }}
         className={cn("relative z-10 flex h-full min-w-[44px] min-h-[44px] flex-1 basis-0 flex-col items-center justify-center gap-0.5 rounded-full text-[#1A2744] transition-colors duration-200 ccr-toque-barra", activo === i && "bg-[#009FD9]/12 text-[#009FD9]")}
       >
-        <Icon className="h-[22px] w-[22px]" strokeWidth={activo === i ? 2.4 : 2} aria-hidden />
+        <span className="relative">
+          <Icon className="h-[22px] w-[22px]" strokeWidth={activo === i ? 2.4 : 2} aria-hidden />
+          {!!extra?.badge && extra.badge > 0 && (
+            <span className="absolute -right-2 -top-1.5 flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">{extra.badge > 9 ? "9+" : extra.badge}</span>
+          )}
+        </span>
         <span className="max-w-full truncate text-[10px] font-bold leading-none">{label}</span>
       </Link>
     );
@@ -397,8 +403,11 @@ export function NativeBottomNav() {
           {tab(2, "/lugares", tNav("tabPlaces"), MapPinned)}
           {tab(3, "/solicitudes", tNav("projects"), ClipboardList)}
           {user
-            ? tab(4, nativePanelHref, tNav("tabAccount"), UserRound)
-            : tab(4, "/login", tNav("tabAccount"), UserRound, { loginHref: "/login" })}
+            ? tab(4, "/mensajes", tNav("messages"), MessageSquareText, { badge: mensajesPorLeer })
+            : tab(4, "/mensajes", tNav("messages"), MessageSquareText, { loginHref: "/login?redirect=%2Fmensajes" })}
+          {user
+            ? tab(5, nativePanelHref, tNav("tabAccount"), UserRound, { badge: avisosPorVer })
+            : tab(5, "/login", tNav("tabAccount"), UserRound, { loginHref: "/login" })}
         </div>
       </nav>
     );
