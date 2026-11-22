@@ -875,7 +875,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 671,
+          "line": 672,
           "tag": "Link",
           "label": "{t(\"pagination.prev\")}",
           "handler": "",
@@ -883,7 +883,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 685,
+          "line": 686,
           "tag": "Link",
           "label": "{t(\"pagination.next\")}",
           "handler": "",
@@ -891,7 +891,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 701,
+          "line": 702,
           "tag": "Link",
           "label": "{t(\"pagination.prev\")}",
           "handler": "",
@@ -899,7 +899,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 713,
+          "line": 714,
           "tag": "Link",
           "label": "{t(\"pagination.status\", { page, total: totalPages })}",
           "handler": "",
@@ -907,7 +907,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 719,
+          "line": 720,
           "tag": "Link",
           "label": "{t(\"pagination.next\")}",
           "handler": "",
@@ -915,7 +915,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 729,
+          "line": 730,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
