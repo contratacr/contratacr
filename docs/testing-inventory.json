@@ -8,7 +8,7 @@
     "handlers": 356,
     "components": 602,
     "hooks": 29,
-    "specs": 532
+    "specs": 533
   },
   "dashboardTabs": [
     "pro_tools",
@@ -875,7 +875,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 674,
+          "line": 671,
           "tag": "Link",
           "label": "{t(\"pagination.prev\")}",
           "handler": "",
@@ -883,7 +883,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 688,
+          "line": 685,
           "tag": "Link",
           "label": "{t(\"pagination.next\")}",
           "handler": "",
@@ -891,7 +891,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 704,
+          "line": 701,
           "tag": "Link",
           "label": "{t(\"pagination.prev\")}",
           "handler": "",
@@ -899,7 +899,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 716,
+          "line": 713,
           "tag": "Link",
           "label": "{t(\"pagination.status\", { page, total: totalPages })}",
           "handler": "",
@@ -907,7 +907,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 722,
+          "line": 719,
           "tag": "Link",
           "label": "{t(\"pagination.next\")}",
           "handler": "",
@@ -915,7 +915,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 732,
+          "line": 729,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -24746,6 +24746,14 @@
       ],
       "methods": [],
       "controls": [
+        {
+          "line": 110,
+          "tag": "a",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "",
+          "destination": "{`${en?'/en':''}/profesionales?q=${encodeURIComponent(DIRECTORY_SECTION_LABELS[section]?.[en?'en':'es']??'')}`}",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
         {
           "line": 120,
           "tag": "a",
@@ -66968,30 +66976,22 @@
       "priority": "P1"
     },
     {
-      "file": "src/components/search/cross-result-tabs.tsx",
+      "file": "src/components/search/businesses-block.tsx",
       "kind": "Componente",
       "group": "Búsqueda y profesionales",
       "route": null,
       "exports": [
-        "ResultTabsBar",
-        "CrossResultTabs"
+        "matchedBusinessSections",
+        "BusinessesBlock"
       ],
       "methods": [],
       "controls": [
         {
-          "line": 22,
+          "line": 47,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
-          "destination": "{services.href}",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 25,
-          "tag": "Link",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "",
-          "destination": "{places.href}",
+          "destination": "{href}",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         }
       ],
@@ -79521,6 +79521,15 @@
         {
           "line": 175,
           "title": "\"only native runtimes can produce first app uses\""
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/search-mixed-results.spec.ts",
+      "cases": [
+        {
+          "line": 6,
+          "title": "\"la búsqueda no separa profesionales y negocios en pestañas\""
         }
       ]
     },
