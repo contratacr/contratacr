@@ -617,8 +617,9 @@ async function searchProfessionalsUncached(
         lng: row.lng ?? null,
         serviceType: row.service_type ?? null,
         videoconsulta: !!row.videoconsulta,
-        portfolioCount: Array.isArray(row.portfolio_urls) ? row.portfolio_urls.length : 0,
-        casePhotos: Array.isArray(row.portfolio_urls) ? (row.portfolio_urls as unknown[]).filter((u): u is string => typeof u === "string" && !!u).slice(0, 3).map((u) => cldThumb(u, 240)) : undefined,
+        portfolioCount: Array.isArray(row.portfolio_urls) ? (row.portfolio_urls as unknown[]).filter((u) => typeof u === "string" && !!u && u !== row.profiles?.avatar_url).length : 0,
+        // Case photos only: the profile photo is never repeated in the strip (owner 2026-11-22).
+        casePhotos: Array.isArray(row.portfolio_urls) ? (row.portfolio_urls as unknown[]).filter((u): u is string => typeof u === "string" && !!u && u !== row.profiles?.avatar_url).slice(0, 3).map((u) => cldThumb(u, 360)) : undefined,
         certificationCount: Array.isArray(row.certifications) ? row.certifications.length : 0,
         insuranceNetworks: (row.insurance_networks as string[]) ?? [],
         coverage: buildCoverage(row),

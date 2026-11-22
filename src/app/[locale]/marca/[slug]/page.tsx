@@ -11,6 +11,7 @@ import type {PublicBrand} from '@/lib/directory/place-features';
 import {PlacesMap} from '@/components/maps/places-map';
 import {DIR_ENABLED} from '@/lib/directory/feature-flags';
 import {BIZ,HeroTile,RatingLine,ring} from '@/components/directory/biz-ui';
+import {placeCardExtras} from '@/lib/directory/card-extras';
 import {BranchCard} from '@/components/directory/place-branches';
 import {ShareButton} from '@/components/directory/share-button';
 import {BadgeCheck,ChevronRight,ExternalLink} from 'lucide-react';
@@ -51,6 +52,7 @@ export default async function BrandRoute({params,searchParams}:{params:Promise<{
  const provinces=[...new Set(b.branches.map(x=>x.province).filter((p):p is string=>!!p))];
  const province=wanted&&provinces.includes(wanted)?wanted:null;
  const shown=province?b.branches.filter(x=>x.province===province):b.branches;
+ const extras=await placeCardExtras(shown.slice(0,40).map(x=>x.slug));
  const pts=shown.flatMap((x,n)=>x.lat!=null&&x.lng!=null?[{id:x.slug,lat:x.lat,lng:x.lng,label:`${n+1}. ${x.name}${x.area?` · ${x.area}`:''}`,href:`${prefix}/lugar/${x.slug}`,rank:n+1,name:x.name,sub:x.area||undefined,rating:x.rating,ratingCount:x.ratingCount}]:[]);
  const sections=[...new Set(b.branches.map(x=>x.vertical))].map(v=>placeSectionById(v)).filter(Boolean).map(s=>en?s!.nameEn:s!.nameEs);
  const desc=en?b.descriptionEn:b.descriptionEs,base=`${prefix}/marca/${b.slug}`;
@@ -98,7 +100,7 @@ export default async function BrandRoute({params,searchParams}:{params:Promise<{
       </ul></nav>}
      <section id="sucursales" aria-labelledby="brand-list" className="scroll-mt-24 space-y-4">
       <h2 id="brand-list" className={BIZ.h2}>{province?t(`Sucursales en ${province}`,`Branches in ${province}`):t('Sucursales','Branches')} <span className="text-base font-semibold text-[#526277]">({shown.length})</span></h2>
-      <ol className="grid gap-3">{shown.map((x,n)=><li key={x.slug}><BranchCard branch={x} locale={locale} rank={n+1}/></li>)}</ol>
+      <ol className="grid gap-3">{shown.map((x,n)=><li key={x.slug}><BranchCard branch={x} locale={locale} rank={n+1} extra={extras[x.slug]}/></li>)}</ol>
      </section></>}]}/>
    </div>
   </div>

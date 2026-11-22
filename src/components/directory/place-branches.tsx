@@ -1,10 +1,12 @@
 import {MapPin,Navigation} from 'lucide-react';
-import {cn} from '@/lib/utils';
 import type {BrandBranch,PlaceBrand} from '@/lib/directory/place-features';
 import {directionsLinks} from '@/lib/maps/maplibre';
-import {BIZ,HeroTile,RatingLine,ring} from './biz-ui';
+import {BIZ,HeroTile,RatingLine} from './biz-ui';
 import {formatDistance} from './place-card';
-import {ResultThumb} from '@/components/search/result-card-parts';
+import {RESULT_CARD,ResultPhotoStrip,ResultThumb} from '@/components/search/result-card-parts';
+import {placePhotoSrc} from '@/lib/directory/place-photos';
+import {placeSectionById} from '@/lib/directory/place-verticals';
+import type {CardExtra} from '@/lib/directory/card-extras';
 
 /**
  * Branch cards (2026-11-19, Yelp model) shared by «Otras sucursales» on a branch page and the list of /marca/<slug>:
@@ -19,33 +21,39 @@ export function nearestBranches(branches:BrandBranch[],slug:string,here:{lat:num
  const others=branches.filter(b=>b.slug!==slug).map(b=>({...b,distanceKm:here&&b.lat!=null&&b.lng!=null?km(here,{lat:b.lat,lng:b.lng}):null}));
  return (here?others.sort((a,b)=>(a.distanceKm??1e9)-(b.distanceKm??1e9)):others).slice(0,n);
 }
-export function BranchCard({branch,locale,rank,distanceKm}:{branch:BrandBranch;locale:string;rank?:number;distanceKm?:number|null}){
+export function BranchCard({branch,locale,rank,distanceKm,extra}:{branch:BrandBranch;locale:string;rank?:number;distanceKm?:number|null;extra?:CardExtra|null}){
  const en=locale==='en',href=`${en?'/en':''}/lugar/${branch.slug}`;
  const directions=branch.lat!=null&&branch.lng!=null?directionsLinks(branch.lat,branch.lng):null;
  const distance=formatDistance(distanceKm??null,en);
- return <article data-brand-branch={branch.slug} className="group relative flex items-start gap-3 rounded-2xl border border-[#e5e7eb] bg-white p-3 transition-shadow hover:border-[#d7e1ea] hover:shadow-md sm:p-4">
-  <span aria-hidden="true" className="shrink-0">
-   <ResultThumb rank={rank} fallback={<HeroTile verticalId={branch.vertical} className="h-full w-full" iconClass="h-6 w-6 lg:h-8 lg:w-8"/>}/>
-  </span>
-  <div className="flex min-w-0 flex-1 flex-col gap-1">
-   <h3 className="text-[15px] font-bold leading-[1.15] text-[#111827]">
-    <a href={href} className={`relative z-10 break-words hover:text-[#009FD9] ${ring} rounded`}>{branch.name}</a></h3>
-   <RatingLine average={branch.rating} count={branch.ratingCount} en={en} compact/>
-   <p data-brand-branch-area className="flex min-w-0 items-center gap-1 text-[12.5px] font-medium text-[#68778d]"><MapPin aria-hidden="true" className="h-3.5 w-3.5 shrink-0"/><span className="truncate">{branch.area}</span></p>
-   {distance&&<p className="text-xs font-semibold text-[#68778d]" data-branch-distance>{distance}</p>}
+ const section=placeSectionById(branch.vertical),tag=section?(en?section.nameEn:section.nameEs):null;
+ // Same anatomy and spacing as PlaceCard / ProfessionalCard: shell, round thumb (first photo or tile), info, photo strip, action column.
+ return <article data-brand-branch={branch.slug} className={`${RESULT_CARD} flex flex-col gap-3 text-[#162543] lg:flex-row lg:gap-0`}>
+  <div className="flex min-w-0 flex-1 items-start gap-2.5 lg:gap-3">
+   <span aria-hidden="true" className="shrink-0" data-place-thumb={extra?.photo?'photo':'tile'}>
+    <ResultThumb src={extra?.photo?placePhotoSrc(extra.photo,320):null} rank={rank}
+     fallback={<HeroTile verticalId={branch.vertical} className="h-full w-full" iconClass="h-6 w-6 lg:h-8 lg:w-8"/>}/>
+   </span>
+   <div className="flex min-w-0 flex-1 flex-col gap-1">
+    <h3 className="min-w-0 text-[15px] font-bold leading-[1.15] text-[#111827]">
+     <a href={href} className="relative z-10 break-words transition-colors hover:text-[#009FD9] focus-visible:underline">{branch.name}</a></h3>
+    {tag&&<p className="truncate text-[12px] font-semibold leading-snug text-[#6b7280]">{tag}</p>}
+    {branch.ratingCount>0&&branch.rating!=null&&<div className="mt-0.5"><RatingLine average={branch.rating} count={branch.ratingCount} en={en} compact/></div>}
+    {(branch.area||distance)&&<p data-brand-branch-area className="flex min-w-0 items-center gap-1 text-[12.5px] font-medium text-[#68778d]"><MapPin aria-hidden="true" className="h-3.5 w-3.5 shrink-0"/><span className="truncate">{branch.area}{branch.area&&distance?' · ':''}{distance&&<span data-branch-distance>{distance}</span>}</span></p>}
+    <ResultPhotoStrip className="mt-1" photos={(extra?.photos??[]).slice(1,4).map(u=>placePhotoSrc(u,320))}/>
+   </div>
   </div>
-  {directions&&<div className="relative z-10 hidden shrink-0 items-center self-center sm:flex">
-   <a className={cn(BIZ.secondary,'px-4')} href={directions.google} rel="noopener noreferrer" target="_blank"><Navigation aria-hidden="true" className="h-4 w-4"/>{en?'Directions':'Cómo llegar'}</a></div>}
-  <a href={href} className="absolute inset-0 z-0 rounded-2xl" tabIndex={-1} aria-hidden="true"/>
+  {directions&&<div className="flex min-w-0 flex-col gap-2 lg:ml-5 lg:w-[240px] lg:shrink-0 lg:justify-center lg:border-l lg:border-[#eef2f6] lg:pl-5">
+   <a className="relative z-10 inline-flex h-11 w-full min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-[#009FD9] px-4 text-[13px] font-bold text-white transition-colors hover:bg-[#0089bb] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]" href={directions.google} rel="noopener noreferrer" target="_blank"><Navigation aria-hidden="true" className="h-4 w-4 shrink-0"/>{en?'Directions':'Cómo llegar'}</a></div>}
+  <a href={href} className="absolute inset-0 z-0" tabIndex={-1} aria-hidden="true"/>
  </article>;
 }
-export function PlaceBranches({brand,branches,locale}:{brand:PlaceBrand;branches:BranchWithDistance[];locale:string}){
+export function PlaceBranches({brand,branches,locale,extras}:{brand:PlaceBrand;branches:BranchWithDistance[];locale:string;extras?:Record<string,CardExtra>}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es;
  return <section id="sucursales" aria-labelledby="place-branches" data-place-branches={branches.length} className="scroll-mt-24 space-y-4">
   <div className="flex flex-wrap items-end justify-between gap-3">
    <h2 id="place-branches" className={BIZ.h2}>{t('Otras sucursales','Other branches')}</h2>
    <a className={`text-sm ${BIZ.link}`} href={`${en?'/en':''}/marca/${brand.slug}`}>{t(`Ver las ${brand.branches} sucursales de ${brand.name}`,`See all ${brand.branches} ${brand.name} branches`)}</a>
   </div>
-  <ul className="grid gap-3">{branches.map(b=><li key={b.slug}><BranchCard branch={b} locale={locale} distanceKm={b.distanceKm}/></li>)}</ul>
+  <ul className="grid gap-3">{branches.map(b=><li key={b.slug}><BranchCard branch={b} locale={locale} distanceKm={b.distanceKm} extra={extras?.[b.slug]}/></li>)}</ul>
  </section>;
 }

@@ -7,6 +7,7 @@ import {safeGetUser} from '@/lib/supabase/get-user';
 import {DirectoryShell} from '@/components/directory/directory-shell';
 import {PlacePage} from '@/components/directory/place-page';
 import {PlaceClaimLink} from '@/components/directory/place-claim-link';
+import {placeCardExtras} from '@/lib/directory/card-extras';
 import {PlaceBranches,nearestBranches} from '@/components/directory/place-branches';
 import {PlacePrices} from '@/components/directory/place-prices';
 import {PlaceReviews} from '@/components/directory/place-reviews';
@@ -134,6 +135,7 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
   placeBrand&&placeBrand.branches>1?db.rpc('dir_brand_public',{p_slug:placeBrand.slug}):Promise.resolve(null),
  ]);
  const branches=brandFull&&!brandFull.error&&brandFull.data&&!('mergedInto' in (brandFull.data as object))?nearestBranches((brandFull.data as PublicBrand).branches,slug,place.location,4):[];
+ const branchExtras=branches.length?await placeCardExtras(branches.map(b=>b.slug)):{};
  const reviewNote=!isServiceReviewVertical(vertical)?undefined:vertical==='banking'
   ?(en?'Reviews may only describe attention and service (punctuality, treatment, cleanliness, waiting time). They are not about rates, fees, financial products or credit decisions, and ContrataCR gives no financial advice.'
    :'Las reseñas solo pueden describir la atención y el servicio (puntualidad, trato, limpieza, tiempo de espera). No tratan sobre tasas, comisiones, productos financieros ni decisiones de crédito, y ContrataCR no da asesoría financiera.')
@@ -168,6 +170,6 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
    questions:qa?<PlaceQuestions slug={slug} locale={locale} initial={qa} signedIn={!!user} loginHref={loginHref} isManager={isManager}/>:null,
    reviews:reviewData?<PlaceReviews slug={slug} locale={locale} initial={reviewData} signedIn={!!user} manage={manage} note={reviewNote} distribution={distribution}/>:null,
    claim:unclaimed?<PlaceClaimLink slug={slug} locale={locale}/>:null,
-   branches:branches.length&&placeBrand?<PlaceBranches brand={placeBrand} branches={branches} locale={locale}/>:null,
+   branches:branches.length&&placeBrand?<PlaceBranches brand={placeBrand} branches={branches} locale={locale} extras={branchExtras}/>:null,
   }}/></DirectoryShell>;
 }

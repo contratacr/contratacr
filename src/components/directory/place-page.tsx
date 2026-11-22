@@ -174,7 +174,7 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
    <div className="min-w-0 lg:col-start-1 lg:row-start-1">
     <div className="relative rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:p-6">
      {photos.length>0&&<div className="mb-4 sm:mb-5"><PlacePhotoGallery variant="strip" en={en} placeName={place.name} photos={photos}/></div>}
-     <div className="flex min-w-0 items-center gap-3 sm:gap-5">
+     <div className="flex min-w-0 items-start gap-3 sm:gap-5">
       {photos.length>0
        ?<span data-place-avatar="photo" className={avatarClass}>{/* eslint-disable-next-line @next/next/no-img-element -- same-origin photo route */}
         <img src={placePhotoSrc(photos[0]!.url,320)} alt="" loading="eager" className="absolute inset-0 h-full w-full bg-white object-cover"/></span>

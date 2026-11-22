@@ -45,10 +45,10 @@ export function ResultThumb({src,alt='',fallback,rank,priority=false,kind}:{src?
 export function ResultPhotoStrip({photos,more=0,className=''}:{photos:string[];more?:number;className?:string}){
  const list=photos.filter(Boolean).slice(0,3);
  if(!list.length)return null;
- return <div aria-hidden="true" data-result-photo-strip={list.length} className={`flex items-center gap-1.5 ${className}`}>
-  {list.map((src,i)=><span key={`${i}-${src}`} className="relative block h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-[#EBF5FB] lg:h-[72px] lg:w-[72px]">
+ return <div aria-hidden="true" data-result-photo-strip={list.length} className={`flex items-center gap-2 ${className}`}>
+  {list.map((src,i)=><span key={`${i}-${src}`} className="relative block h-[88px] w-[88px] shrink-0 overflow-hidden rounded-xl bg-[#EBF5FB] sm:h-[112px] sm:w-[112px] lg:h-[132px] lg:w-[132px]">
    {/* eslint-disable-next-line @next/next/no-img-element -- approved photo via the Cloudinary / same-origin helpers */}
-   <img src={src} alt="" width={72} height={72} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover"/>
+   <img src={src} alt="" width={132} height={132} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover"/>
    {i===list.length-1&&more>0&&<span data-result-thumb-more className="absolute inset-0 flex items-center justify-center bg-[#162543]/60 text-[13px] font-bold text-white">+{more}</span>}
   </span>)}
  </div>;
