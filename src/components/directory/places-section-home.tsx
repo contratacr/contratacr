@@ -13,8 +13,7 @@ import {PlaceCard} from './place-card';
 import {kindLabel} from '@/lib/directory/place-verticals';
 import {placeCardExtras} from '@/lib/directory/card-extras';
 import {SearchFilters,sortLabel} from './search-filters';
-import {ResultTabsBar} from '@/components/search/cross-result-tabs';
-import {sitemapSections} from '@/lib/directory/sitemap-sections';
+import {AMBIGUOUS_SECTIONS,DIRECTORY_SECTION_LABELS} from '@/lib/search/directory-search';
 import {PlacesFilterChips,PlacesFiltersDrawer,type ChipMenu,type ChipToggle} from './places-search-controls';
 
 /**
@@ -106,8 +105,9 @@ export async function PlacesSectionHome({section,locale,page,basePath,banner}:{s
     </div>
    </div>
   </div>
-  {/* Servicios | Lugares when a text query is present and the directory is on (the professionals side has no cheap count here). */}
-  {!!values.q&&sitemapSections().length>0&&<ResultTabsBar services={{href:`/profesionales?q=${encodeURIComponent(values.q)}`,count:null,active:false}} places={{href:link({}),count:total,active:true}}/>}
+  {/* One experience (owner 2026-11-22): the section is a business filter of the same results; professionals of the same trade are one tap away. */}
+  {AMBIGUOUS_SECTIONS.has(section)&&<nav aria-label={t('Profesionales relacionados','Related professionals')} data-related-professionals="" className="hidden bg-white lg:block"><div className="mx-auto max-w-[1920px] px-4 pb-2 sm:px-6 lg:px-8">
+   <a href={`${en?'/en':''}/profesionales?q=${encodeURIComponent(DIRECTORY_SECTION_LABELS[section]?.[en?'en':'es']??'')}`} className="inline-flex h-8 items-center rounded-full bg-[#f1f5f9] px-3.5 text-[13px] font-bold text-[#007fae] hover:bg-[#eaf7fd]">{t('Ver también profesionales de este rubro','Also see professionals in this field')}</a></div></nav>}
   <main id="contenido" className="flex-1 bg-white">
    <div className="mx-auto max-w-[1920px] px-0 py-0 lg:px-8 lg:pb-0 lg:pt-0">
     <SearchResultsLayout locale={locale} filters={null} map={map} countLabel={count??undefined}

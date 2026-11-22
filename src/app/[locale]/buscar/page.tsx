@@ -32,7 +32,7 @@ import { safeGetUser } from "@/lib/supabase/get-user";
 import { recordServerInteraction } from "@/lib/analytics/server-events";
 import { rutaDeBusqueda } from "@/lib/buscar-url";
 import { perfilesBloqueadosPor } from "@/lib/queries/bloqueos";
-import { CrossResultTabs } from "@/components/search/cross-result-tabs";
+import { BusinessesBlock } from "@/components/search/businesses-block";
 import { sitemapSections } from "@/lib/directory/sitemap-sections";
 
 interface SearchPageProps {
@@ -544,17 +544,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </div>
       </div>
 
-      {/* Servicios | Lugares: only with the directory on and a q that names a section with places (renders nothing otherwise). */}
-      <Suspense fallback={null}>
-        <CrossResultTabs
-          q={params.q}
-          sections={sitemapSections().map((s) => s.section)}
-          locale={locale}
-          servicesHref={pageHref(1)}
-          servicesCount={orderedResults.length}
-          location={{ provinceId: selectedProvinceId, cantonId: selectedCantonId, lat: nearLat, lng: nearLng }}
-        />
-      </Suspense>
 
       {/* Main content - 3-column shell (filters / results / map). On mobile the padding is
           zeroed so the Yelp map + bottom sheet go edge-to-edge; desktop keeps its gutters. */}
@@ -579,6 +568,14 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
             {/* Results list */}
             <div className="min-w-0">
+              <Suspense fallback={null}>
+                <BusinessesBlock
+                  q={params.q}
+                  sections={sitemapSections().map((s) => s.section)}
+                  locale={locale}
+                  location={{ provinceId: selectedProvinceId, cantonId: selectedCantonId, lat: nearLat, lng: nearLng }}
+                />
+              </Suspense>
               {allResults.length === 0 ? (
                 // Tres cosas y en este orden: qué pasó, qué hacer, y la salida,
                 // con el MISMO dibujo que el resto del app en su tamaño
