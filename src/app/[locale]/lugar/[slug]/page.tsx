@@ -35,6 +35,7 @@ import {PlacePhotoUpload} from '@/components/directory/place-photo-upload';
 import {businessPlaces} from '@/lib/directory/business-access';
 import type {OrderLink,PlaceBrand,PlaceEvent,PublicBrand,PublicQuestions,ReservationConfig} from '@/lib/directory/place-features';
 import {BIZ} from '@/components/directory/biz-ui';
+import {proMoney} from '@/lib/pro/money';
 
 // LOCAL PRO ONLY (multivertical F1–F5/P1/P2/V4, development only like /sitio): canonical page of a place, /lugar/<slug>.
 // Only published (or permanently closed) places; every pharmacy since the owner decision of 2026-11-17 (its permit
@@ -139,9 +140,12 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
   :(en?'Reviews may only describe attention and service (punctuality, treatment, cleanliness, waiting time). They are not about diagnoses, treatments or results, and ContrataCR gives no medical advice.'
    :'Las reseñas solo pueden describir la atención y el servicio (puntualidad, trato, limpieza, tiempo de espera). No tratan sobre diagnósticos, tratamientos ni resultados, y ContrataCR no da consejo médico.');
  const published=place.status==='published';
+ // «Desde» slot of the contact card: the lowest current fuel price per litre of a gas station (price data only, never invented).
+ const fuelPrices=vertical==='fuel'&&prices.data&&!prices.error?(prices.data as PublicPriceCurrent).items.filter(i=>i.current&&i.item.unitBase==='l').map(i=>i.current!):[];
+ const priceNote=fuelPrices.length?`${en?'From':'Desde'} ${proMoney(Math.min(...fuelPrices.map(o=>o.price)),en)} /${en?'liter':'litro'}`:null;
  const hasOffer=!!(menuData&&menuData.sections.length>0)||!!(prices.data&&!prices.error)||reportPrices||placeListings.length>0;
  return <DirectoryShell>{published&&<DatosEstructurados datos={placeJsonLd(place,`${appUrl}${prefix}/lugar/${slug}`)}/>}<PlacePage place={place} locale={locale} hoursSource={hoursSource&&!hoursSource.error?hoursSource.data as string|null:null}
-  orderLink={orderLink} brand={placeBrand}
+  orderLink={orderLink} brand={placeBrand} priceNote={priceNote}
   photoSlot={published?<PlacePhotoUpload slug={slug} locale={locale} signedIn={!!user} loginHref={loginHref} isManager={!!manage} popover buttonClass={BIZ.secondary}/>:null}
   saveSlot={published?<SaveToList slug={slug} locale={locale} signedIn={!!user} loginHref={loginHref}/>:null}
   slots={{

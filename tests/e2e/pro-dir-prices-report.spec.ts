@@ -2,7 +2,7 @@ import {test,expect} from 'playwright/test';
 import {collectPageErrors,expectNoHorizontalOverflow,gotoOK} from './helpers';
 import {local,login,origin} from './pro-round2-fixture';
 import {createDisposableAccount,cleanupDisposableAccount,type DisposableAccount} from './disposable-account';
-import {dirDb,hideSeededPlaces,label,postJson,seedPlace,uid} from './pro-dir-fixture';
+import {openPlaceTab, dirDb,hideSeededPlaces,label,postJson,seedPlace,uid} from './pro-dir-fixture';
 import {opsShot,retireItems,seedItem} from './pro-dir-ops-fixture';
 
 // Multivertical M1 (LOCAL Pro): «Reportar un precio» on a place page. Signed in only; catalogue items allowed for the
@@ -23,13 +23,13 @@ for(const language of ['es','en'] as const)test(`M1: user price report, Rx refus
  let a:DisposableAccount|undefined,b:DisposableAccount|undefined;
  try{
   // Anonymous: invitation to sign in; the API refuses.
-  await gotoOK(page,`${prefix}/lugar/${slug}`);
+  await gotoOK(page,`${prefix}/lugar/${slug}`);await openPlaceTab(page,'offer');
   await expect(page.getByRole('link',{name:t('Inicie sesión para reportar un precio','Sign in to report a price')})).toBeVisible();
   expect((await postJson(page,`/api/lugar/${slug}/precios/reporte`,{actionId:uid(),itemSlug:otc,price:1500,observedOn:crDay()})).status).toBe(401);
   // Let the anonymous page finish hydrating before the signed-in navigation (WebKit reports an aborted chunk load as a page error).
   await expect(page.locator('[data-place-price-report][data-ready]')).toBeVisible({timeout:45000});
   a=await createDisposableAccount({prefix:'dir-price-a'});await login(context,a);
-  await gotoOK(page,`${prefix}/lugar/${slug}`);
+  await gotoOK(page,`${prefix}/lugar/${slug}`);await openPlaceTab(page,'offer');
   const section=page.locator('[data-place-price-report][data-ready]');await expect(section).toBeVisible({timeout:45000});
   await section.getByRole('button',{name:t('Reportar un precio','Report a price')}).click();
   const form=section.locator('[data-price-report-form]');await expect(form).toBeVisible({timeout:30000});

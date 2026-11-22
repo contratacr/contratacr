@@ -1,7 +1,7 @@
 import {test,expect} from 'playwright/test';
 import {collectPageErrors,expectNoHorizontalOverflow,gotoOK} from './helpers';
 import {local,origin} from './pro-round2-fixture';
-import {dirDb,hideSeededPlaces,label,seedPlace} from './pro-dir-fixture';
+import {openPlaceTab, dirDb,hideSeededPlaces,label,seedPlace} from './pro-dir-fixture';
 import {PLACE_SECTIONS} from '@/lib/directory/place-verticals';
 
 // 2026-11-19: the places sections use the /profesionales layout; the complete GET form lives in the «Filtros» drawer
@@ -87,7 +87,7 @@ for(const language of ['es','en'] as const)test(`cafés moved out of restaurants
  await gotoOK(page,`${prefix}/bancos`);
  // 2026-11-19: the policy notes are not on the results screen or the place page; they live in the Terms (13.1).
  await expect(page.locator('[data-places-home="bancos"]')).not.toContainText(en?'does not compare rates':'no compara tasas');
- await gotoOK(page,`${prefix}/lugar/e2e-banco-${tag}`);
+ await gotoOK(page,`${prefix}/lugar/e2e-banco-${tag}`);await openPlaceTab(page,'reviews');
  await expect(page.locator('[data-place-map-only]')).toHaveCount(0);
  await expect(page.locator('[data-place-reviews]')).toBeVisible();// service reviews (2026-11-17)
  await expect(page.locator('[data-place-review-note]')).toContainText(en?'not about rates, fees, financial products':'No tratan sobre tasas, comisiones, productos financieros');
@@ -111,7 +111,7 @@ for(const language of ['es','en'] as const)test(`cafés moved out of restaurants
  await expect(page.locator('[data-places-home="salud"]')).not.toContainText(en?'medical or veterinary advice':'no da consejo médico');
  await gotoOK(page,`${prefix}/lugar/e2e-clinica-${tag}`);
  await expect(page.locator('[data-health-permit="unverified"]')).toContainText(en?'Permit not verified by ContrataCR.':'Habilitación sin verificar por ContrataCR.');
- await expect(page.locator('[data-place-review-note]')).toContainText(en?'attention and service':'la atención y el servicio');
+ await openPlaceTab(page,'reviews');await expect(page.locator('[data-place-review-note]')).toContainText(en?'attention and service':'la atención y el servicio');
  await expect(page.locator('[data-place-price-report]')).toHaveCount(0);
  }
  // Lodging: no ICT declaratoria claimed.

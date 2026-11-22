@@ -14,6 +14,10 @@ import {BIZ,HeroTile,RatingLine,ring} from '@/components/directory/biz-ui';
 import {BranchCard} from '@/components/directory/place-branches';
 import {ShareButton} from '@/components/directory/share-button';
 import {BadgeCheck,ChevronRight,ExternalLink} from 'lucide-react';
+import {cn} from '@/lib/utils';
+import {PlaceTabs} from '@/components/directory/place-tabs';
+import {ProfileIdentityName} from '@/components/professionals/profile-identity-name';
+import {VerifiedSeal} from '@/components/ui/verified-seal';
 
 // LOCAL PRO ONLY (place features round, development only like /lugar): /marca/<slug> — every public branch of a chain
 // (brands built from OpenStreetMap brand/brand:wikidata and normalized names; staff merge/split them). Branches ordered
@@ -47,51 +51,56 @@ export default async function BrandRoute({params,searchParams}:{params:Promise<{
  const provinces=[...new Set(b.branches.map(x=>x.province).filter((p):p is string=>!!p))];
  const province=wanted&&provinces.includes(wanted)?wanted:null;
  const shown=province?b.branches.filter(x=>x.province===province):b.branches;
- const pts=shown.flatMap((x,n)=>x.lat!=null&&x.lng!=null?[{id:x.slug,lat:x.lat,lng:x.lng,label:`${n+1}. ${x.name}${x.area?` · ${x.area}`:''}`,href:`${prefix}/lugar/${x.slug}`,rank:n+1}]:[]);
+ const pts=shown.flatMap((x,n)=>x.lat!=null&&x.lng!=null?[{id:x.slug,lat:x.lat,lng:x.lng,label:`${n+1}. ${x.name}${x.area?` · ${x.area}`:''}`,href:`${prefix}/lugar/${x.slug}`,rank:n+1,name:x.name,sub:x.area||undefined,rating:x.rating,ratingCount:x.ratingCount}]:[]);
  const sections=[...new Set(b.branches.map(x=>x.vertical))].map(v=>placeSectionById(v)).filter(Boolean).map(s=>en?s!.nameEn:s!.nameEs);
  const desc=en?b.descriptionEn:b.descriptionEs,base=`${prefix}/marca/${b.slug}`;
  const firstVertical=b.branches[0]?.vertical??'grocery';
  const pill=(active:boolean)=>`inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-full border px-4 text-sm font-semibold transition-colors ${ring} ${active?'border-[#162543] bg-[#162543] text-white':'border-[#cfd9e3] bg-white text-[#162543] hover:border-[#162543]'}`;
- return <DirectoryShell><main id="contenido" data-brand-page={b.slug} className="mx-auto max-w-6xl px-4 pb-14 pt-5 text-[#162543] sm:pt-8">
+ return <DirectoryShell><main id="contenido" data-brand-page={b.slug} className="mx-auto max-w-7xl px-4 pb-14 pt-4 text-[#162543] sm:px-6 lg:px-8 lg:pt-8">
   <nav aria-label={t('Ruta de navegación','Breadcrumb')} className="mb-5 text-sm text-[#526277]"><ol className="flex flex-wrap items-center gap-1">
    <li><a className={`hover:underline ${ring}`} href={en?'/en':'/'}>{t('Inicio','Home')}</a></li><li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5"/></li><li>{t('Marcas','Brands')}</li><li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5"/></li><li aria-current="page" className="text-[#162543]">{b.name}</li></ol></nav>
-  <header className="flex items-start gap-4 border-b border-[#e8edf2] pb-7 sm:gap-5">
-   <HeroTile verticalId={firstVertical} className="h-16 w-16 shrink-0 rounded-2xl sm:h-28 sm:w-28" iconClass="h-8 w-8 sm:h-12 sm:w-12"/>
-   <div className="min-w-0 flex-1 space-y-3">
-    <h1 className="break-words text-[30px] font-extrabold leading-[1.1] tracking-[-0.02em] sm:text-[40px]">{b.name}</h1>
-    <RatingLine average={b.rating.average} count={b.rating.count} en={en}/>
-    {b.rating.count>0&&b.rating.average!=null&&<p data-brand-rating className="-mt-2 text-sm text-[#526277]">{t('Promedio de las reseñas de sus sucursales','Average of the reviews of its branches')}</p>}
-    <ul className="flex flex-wrap items-center gap-2">
-     <li data-brand-branches={b.branchCount} className="rounded-full bg-[#162543] px-3 py-1 text-[13px] font-bold text-white">{b.branchCount} {t(b.branchCount===1?'sucursal':'sucursales',b.branchCount===1?'branch':'branches')}</li>
-     {sections.map(s=><li key={s} className={BIZ.chip}>{s}</li>)}
-     {b.claimed&&<li data-brand-claimed className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-[13px] font-semibold text-emerald-900"><BadgeCheck aria-hidden="true" className="h-4 w-4"/>{t('Información administrada por la marca','Information managed by the brand')}</li>}
-    </ul>
-    {desc&&<p className="max-w-2xl text-[15px] leading-7 text-[#334155]">{desc}</p>}
-    <div className="flex flex-wrap gap-2.5 pt-1">
+  <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_440px]">
+   <header className="min-w-0 rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:p-6 lg:col-start-1 lg:row-start-1">
+    <div className="flex min-w-0 items-center gap-3 sm:gap-5">
+     <span className={cn(BIZ.avatar,'relative grid shrink-0 place-items-center overflow-hidden rounded-full')}><HeroTile verticalId={firstVertical} className="h-full w-full" iconClass="h-8 w-8 sm:h-10 sm:w-10"/></span>
+     <div className="min-w-0 flex-1">
+      <ProfileIdentityName testId="brand-name" name={b.name} badge={b.claimed?<VerifiedSeal className="h-4 w-4" label={t('Información administrada por la marca','Information managed by the brand')}/>:null}/>
+      <div className="mt-1.5 sm:mt-2"><RatingLine average={b.rating.average} count={b.rating.count} en={en}/></div>
+      {b.rating.count>0&&b.rating.average!=null&&<p data-brand-rating className="mt-1 text-[12.5px] text-[#68778d]">{t('Promedio de las reseñas de sus sucursales','Average of the reviews of its branches')}</p>}
+      <ul className="mt-2 flex flex-wrap items-center gap-1.5">
+       <li data-brand-branches={b.branchCount} className="rounded-full bg-[#162543] px-2.5 py-1 text-[12px] font-bold text-white">{b.branchCount} {t(b.branchCount===1?'sucursal':'sucursales',b.branchCount===1?'branch':'branches')}</li>
+       {sections.map(s=><li key={s} className={BIZ.chip}>{s}</li>)}
+       {b.claimed&&<li data-brand-claimed className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[12px] font-semibold text-emerald-900"><BadgeCheck aria-hidden="true" className="h-3.5 w-3.5"/>{t('Información administrada por la marca','Information managed by the brand')}</li>}
+      </ul>
+     </div>
+    </div>
+    {desc&&<p className="mt-4 max-w-2xl text-[15px] leading-7 text-[#334155]">{desc}</p>}
+    <div className="mt-4 flex flex-wrap items-center gap-2.5 border-t border-[#eef2f6] pt-4">
      {b.website&&<a data-brand-website className={BIZ.secondary} href={b.website} rel="nofollow noopener noreferrer" target="_blank"><ExternalLink aria-hidden="true" className="h-4 w-4"/>{t('Sitio web de la marca','Brand website')}</a>}
      <ShareButton title={b.name} locale={locale} className={BIZ.secondary}/>
     </div>
-   </div>
-  </header>
+   </header>
 
-  {provinces.length>1&&<nav aria-label={t('Filtrar por provincia','Filter by province')} className="-mx-4 mt-6 overflow-x-auto px-4" data-brand-provinces>
-   <ul className="flex gap-2 pb-1">
-    <li><a href={`${base}#sucursales`} aria-current={!province?'page':undefined} className={pill(!province)}>{t('Todo el país','Whole country')} <span className="ml-1 opacity-70">{b.branches.length}</span></a></li>
-    {provinces.map(p=>{const n=b.branches.filter(x=>x.province===p).length;return <li key={p}><a href={`${base}?provincia=${encodeURIComponent(p)}#sucursales`} aria-current={province===p?'page':undefined} data-brand-province={p} className={pill(province===p)}>{p} <span className="ml-1 opacity-70">{n}</span></a></li>;})}
-   </ul></nav>}
-
-  <div className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_440px]">
-   <section id="sucursales" aria-labelledby="brand-list" className="min-w-0 scroll-mt-24 space-y-4">
-    <h2 id="brand-list" className={BIZ.h2}>{province?t(`Sucursales en ${province}`,`Branches in ${province}`):t('Sucursales','Branches')} <span className="text-base font-semibold text-[#526277]">({shown.length})</span></h2>
-    <ol className="grid gap-3">{shown.map((x,n)=><li key={x.slug}><BranchCard branch={x} locale={locale} rank={n+1}/></li>)}</ol>
-   </section>
-   {pts.length>0&&<section aria-labelledby="brand-map" className="order-first lg:order-none">
+   {pts.length>0&&<aside aria-labelledby="brand-map" className="min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1">
     <h2 id="brand-map" className="sr-only">{t('Mapa de sucursales','Branch map')}</h2>
-    <div data-brand-map={pts.length} className="overflow-hidden rounded-2xl border border-[#e3e9ef] lg:sticky lg:top-24">
-     <PlacesMap cluster locale={locale} className="h-64 sm:h-80 lg:h-[calc(100vh-8rem)] lg:max-h-[720px]"
+    <div data-brand-map={pts.length} className="overflow-hidden rounded-2xl border border-[#e5e7eb] shadow-sm lg:sticky lg:top-20">
+     <PlacesMap cluster locale={locale} className="h-64 sm:h-80 lg:h-[calc(100vh-8rem)] lg:max-h-[720px]" bare
       label={t(`Mapa de ${pts.length} sucursales de ${b.name}`,`Map of ${pts.length} ${b.name} branches`)} points={pts}/>
     </div>
-   </section>}
+   </aside>}
+
+   <div className="min-w-0 lg:col-start-1 lg:row-start-2">
+    <PlaceTabs label={t('Secciones de la marca','Brand sections')} tabs={[{id:'branches',label:`${t('Sucursales','Branches')} (${b.branches.length})`,anchors:['sucursales'],content:<>
+     {provinces.length>1&&<nav aria-label={t('Filtrar por provincia','Filter by province')} className="-mx-4 overflow-x-auto px-4 sm:-mx-6 sm:px-6" data-brand-provinces>
+      <ul className="flex gap-2 pb-1">
+       <li><a href={`${base}#sucursales`} aria-current={!province?'page':undefined} className={pill(!province)}>{t('Todo el país','Whole country')} <span className="ml-1 opacity-70">{b.branches.length}</span></a></li>
+       {provinces.map(p=>{const n=b.branches.filter(x=>x.province===p).length;return <li key={p}><a href={`${base}?provincia=${encodeURIComponent(p)}#sucursales`} aria-current={province===p?'page':undefined} data-brand-province={p} className={pill(province===p)}>{p} <span className="ml-1 opacity-70">{n}</span></a></li>;})}
+      </ul></nav>}
+     <section id="sucursales" aria-labelledby="brand-list" className="scroll-mt-24 space-y-4">
+      <h2 id="brand-list" className={BIZ.h2}>{province?t(`Sucursales en ${province}`,`Branches in ${province}`):t('Sucursales','Branches')} <span className="text-base font-semibold text-[#526277]">({shown.length})</span></h2>
+      <ol className="grid gap-3">{shown.map((x,n)=><li key={x.slug}><BranchCard branch={x} locale={locale} rank={n+1}/></li>)}</ol>
+     </section></>}]}/>
+   </div>
   </div>
 
   {!b.claimed&&<div className="mt-10"><BrandClaim slug={b.slug} locale={locale} loginHref={loginHref} pending={b.claimPending}/></div>}

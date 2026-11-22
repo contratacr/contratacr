@@ -4,8 +4,9 @@ import {crDay,money,sourceLine} from '@/lib/directory/price-compare';
 import {isHealthVertical,kindLabel} from '@/lib/directory/place-verticals';
 import {checkPlacePhone} from '@/lib/directory/phone';
 import {directionsLinks} from '@/lib/maps/maplibre';
-import {BadgeCheck,MapPin,Navigation,Phone} from 'lucide-react';
-import {HeroTile,Stars,ratingNumber,reviewsWord} from './biz-ui';
+import {MapPin,Navigation,Phone} from 'lucide-react';
+import {VerifiedSeal} from '@/components/ui/verified-seal';
+import {HeroTile,RatingLine} from './biz-ui';
 import {placePriceLevel} from '@/lib/directory/place-amenities';
 import {placePhotoSrc} from '@/lib/directory/place-photos';
 import type {CardExtra} from '@/lib/directory/card-extras';
@@ -76,16 +77,18 @@ export function PlacePriceLine({price,en}:{price:PlaceSearchPrice;en:boolean}){
 }
 
 const VERIFIED=new Set(['verified','license_verified']);
-const actionBase='relative z-10 inline-flex h-10 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-4 text-[13px] font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#162543]';
-const actionSecondary=`${actionBase} border border-[#d7e1ea] bg-white text-[#162543] hover:border-[#162543]`;
+// Buttons: same pills as the professional card (ProfessionalSchedule: h-11, full width, 13px bold) in the places' brand colours.
+const actionBase='relative z-10 inline-flex h-11 min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-4 text-[13px] font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9] lg:w-full lg:flex-none';
+const actionPrimary=`${actionBase} bg-[#009FD9] text-white hover:bg-[#0089bb]`;
+const actionSecondary=`${actionBase} border border-[#d7e1ea] bg-white text-[#162543] hover:border-[#b9c8d6] hover:bg-[#f6f9fb]`;
 
 /**
- * Result card of a place — Yelp result-card MODEL in the ContrataCR look (2026-11-19): square thumbnail on the left
- * (the first approved photo, else the section-colour tile; never stock photos), numbered name (the number matches the
- * map pin) + verified check, stars + count, price level, section · kind · brand, location and distance, open status
- * and permit chips, a one-line snippet of the newest review when one exists, and compact «Llamar» / «Cómo llegar».
- * The whole card opens the place page (stretched low-z link, like ProfessionalCard); the name link is the one tab stop.
- * Ranking reasons stay machine-readable in `data-ranking-reasons` (explained in /como-ordenamos and the Terms).
+ * Result card of a place, same anatomy as ProfessionalCard (one visual system, owner decision 2026-11-21): round logo or
+ * section tile on the left carrying the navy rank badge that mirrors its map pin, name + verified seal with the price
+ * level on the right of the name line, tags, rating («5.0 7 reseñas»), location, status chips, and in the right column
+ * (below the info on phones) the action pills: «Llamar» takes the place WhatsApp has for professionals, «Cómo llegar»
+ * the place of «Contactar por llamada». The whole card opens the place page (stretched low-z link); the name link is the
+ * one tab stop. Ranking reasons stay machine-readable in `data-ranking-reasons` (/como-ordenamos and the Terms).
  */
 export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSearchItem;locale:string;headingLevel?:2|3;rank?:number;extra?:CardExtra|null}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es;
@@ -103,44 +106,48 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
  const chip='inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold leading-4';
  const permit=item.vertical.id==='pharmacy'?{...pharmacyLicence(item.verificationLevel,en),attr:'data-pharmacy-license'}:health?{...healthPermit(item.verificationLevel,en),attr:'data-health-permit'}:null;
  const rated=item.rating.count>0&&item.rating.average!=null;
+ const tags=[en?item.vertical.nameEn:item.vertical.nameEs,kind,brand].filter(Boolean) as string[];
  return <article data-search-item={item.key} data-ranking-reasons={item.ranking_reason.join(' ')}
-  className="group relative flex min-w-0 gap-3 bg-white px-4 py-3.5 text-[#162543] shadow-[0_8px_14px_-14px_rgba(15,23,42,0.55)] transition-shadow duration-200 sm:gap-4 lg:rounded-2xl lg:border lg:border-[#e5e7eb] lg:p-4 lg:shadow-none lg:hover:border-[#d7e1ea] lg:hover:shadow-md">
-  <span className="relative h-[84px] w-[84px] shrink-0 overflow-hidden rounded-xl sm:h-28 sm:w-28 lg:h-32 lg:w-32" aria-hidden="true" data-place-thumb={extra?.photo?'photo':'tile'}>
-   {extra?.photo
-    // eslint-disable-next-line @next/next/no-img-element -- same-origin photo route (approved uploads only)
-    ?<img src={placePhotoSrc(extra.photo,320)} alt="" loading="lazy" className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]"/>
-    :<HeroTile verticalId={item.vertical.id} className="h-full w-full" iconClass="h-8 w-8 lg:h-10 lg:w-10"/>}
-  </span>
-  <div className="flex min-w-0 flex-1 flex-col gap-1">
-   <H className="min-w-0 text-[16px] font-bold leading-[1.2] text-[#111827] lg:text-[17px]">
-    {rank!=null&&<span className="text-[#526277]">{rank}. </span>}
-    <a className="relative z-10 break-words transition-colors hover:text-[#007fae] focus-visible:underline" href={href}>{item.name}</a>
-    {verified&&<BadgeCheck className="ml-1 inline h-4 w-4 -translate-y-px fill-[#009FD9] text-white" aria-label={VERIFICATION_LABELS[level][en?'en':'es']}/>}
-   </H>
-   {rated
-    ?<p className="flex flex-wrap items-center gap-1.5 text-[13px] text-[#526277]" data-place-rating>
-     <Stars value={Number(item.rating.average)} size="sm" label={t(`${ratingNumber(Number(item.rating.average),en)} de 5`,`${ratingNumber(Number(item.rating.average),en)} out of 5`)}/>
-     <span className="font-bold tabular-nums text-[#162543]">{ratingNumber(Number(item.rating.average),en)}</span>
-     <span>({item.rating.count} {reviewsWord(item.rating.count,en)})</span>{priceLevel&&<span className="font-semibold text-[#334155]"> · {priceLevel}</span>}</p>
-    :priceLevel?<p className="text-[13px] font-semibold text-[#334155]">{priceLevel}</p>:null}
-   <p className="truncate text-[13px] font-semibold text-[#526277]">{en?item.vertical.nameEn:item.vertical.nameEs}{kind?<span data-place-kind={String(item.attributes.kind)}> · {kind}</span>:null}{brand?` · ${brand}`:''}</p>
-   {(area||distance)&&<p className="flex min-w-0 items-center gap-1 text-[13px] text-[#526277]"><MapPin className="h-3.5 w-3.5 shrink-0 text-[#94a3b8]" aria-hidden="true"/>
-    <span className="truncate">{area}{area&&distance?' · ':''}{distance}</span></p>}
-   <ul className="mt-0.5 flex flex-wrap items-center gap-1.5" aria-label={t('Datos del lugar','Place details')}>
-    {item.open24h?<li className={`${chip} bg-emerald-50 text-emerald-800`} data-open="24h">{t('Abierto 24 horas','Open 24 hours')}</li>
-     :item.openNow===true?<li className={`${chip} bg-emerald-50 text-emerald-800`} data-open="now">{t('Abierto ahora','Open now')}</li>
-     :item.openNow===false?<li className={`${chip} bg-red-50 text-red-800`} data-open="closed">{t('Cerrado ahora','Closed now')}</li>:null}
-    {permit&&<li {...{[permit.attr]:permit.state}} className={`${chip} ${permit.state==='verified'?'bg-emerald-50 text-emerald-900':'bg-slate-100 text-slate-700'}`}>{permit.text}</li>}
-    {item.attributes.publicService===true&&<li className={`${chip} bg-slate-100 text-slate-700`} data-public-service>{t('Servicio público','Public service')}</li>}
-    {level==='claimed'&&<li className={`${chip} bg-[#EBF5FB] text-[#00739e]`} data-place-claimed>{VERIFICATION_LABELS.claimed[en?'en':'es']}</li>}
-   </ul>
-   {item.price&&<PlacePriceLine price={item.price} en={en}/>}
-   {extra?.snippet&&<p className="line-clamp-1 text-[13px] italic text-[#334155]" data-place-snippet>"{extra.snippet}"</p>}
-   {(phone?.kind==='cr'||directions)&&<div className="mt-1.5 flex min-w-0 flex-wrap gap-2" data-place-actions>
-    {phone?.kind==='cr'&&<a className={actionSecondary} href={`tel:${phone.tel}`} data-place-phone aria-label={`${t('Llamar','Call')} ${phone.display}`}><Phone className="h-4 w-4 shrink-0" aria-hidden="true"/>{t('Llamar','Call')}</a>}
-    {directions&&<a className={actionSecondary} href={directions.google} rel="noopener noreferrer" target="_blank"><Navigation className="h-4 w-4 shrink-0" aria-hidden="true"/>{t('Cómo llegar','Directions')}</a>}
-   </div>}
+  className="group relative flex min-w-0 flex-col gap-3 bg-white px-4 py-3 text-[#162543] shadow-[0_8px_14px_-14px_rgba(15,23,42,0.55)] transition-shadow duration-200 lg:flex-row lg:gap-0 lg:rounded-2xl lg:border lg:border-[#e5e7eb] lg:p-4 lg:shadow-none lg:hover:border-[#d7e1ea] lg:hover:shadow-md">
+  <div className="flex min-w-0 flex-1 items-start gap-2.5 lg:gap-3">
+   <span className="relative z-10 shrink-0" aria-hidden="true" data-place-thumb={extra?.photo?'photo':'tile'}>
+    <span className="relative block h-[52px] w-[52px] overflow-hidden rounded-full bg-[#EBF5FB] lg:h-16 lg:w-16">
+     {extra?.photo
+      // eslint-disable-next-line @next/next/no-img-element -- same-origin photo route (approved uploads only)
+      ?<img src={placePhotoSrc(extra.photo,320)} alt="" loading="lazy" className="h-full w-full bg-white object-cover"/>
+      :<HeroTile verticalId={item.vertical.id} className="h-full w-full" iconClass="h-6 w-6 lg:h-7 lg:w-7"/>}
+    </span>
+    {rank!=null&&<span className="absolute -left-1.5 -top-1.5 hidden h-[22px] w-[22px] items-center justify-center rounded-full bg-[#162543] text-[10px] font-bold text-white ring-2 ring-white lg:flex">{rank}</span>}
+   </span>
+   <div className="flex min-w-0 flex-1 flex-col gap-1">
+    <div className="flex min-w-0 items-start gap-3 lg:items-center">
+     <H className="min-w-0 flex-1 text-[15px] font-bold leading-[1.15] text-[#111827]">
+      {rank!=null&&<span className="text-[#68778d] lg:hidden">{rank}. </span>}
+      <a className="relative z-10 break-words transition-colors hover:text-[#009FD9] focus-visible:underline" href={href}>{item.name}</a>
+      {verified&&<VerifiedSeal className="ml-1 inline h-4 w-4 -translate-y-px align-middle" label={VERIFICATION_LABELS[level][en?'en':'es']}/>}
+     </H>
+     {priceLevel&&<span className="shrink-0 text-[13px] font-bold text-[#009FD9]" aria-label={t(`Nivel de precio ${priceLevel.length} de 4`,`Price level ${priceLevel.length} of 4`)}>{priceLevel}</span>}
+    </div>
+    <p className="truncate text-[12px] font-semibold leading-snug text-[#6b7280]" data-place-tags>{tags.map((x,i)=>i===1&&kind?<span key={x} data-place-kind={String(item.attributes.kind)}>{i?' · ':''}{x}</span>:<span key={x}>{i?' · ':''}{x}</span>)}</p>
+    {rated&&<div className="mt-0.5" data-place-rating><RatingLine average={Number(item.rating.average)} count={item.rating.count} en={en} compact/></div>}
+    {(area||distance)&&<p className="flex min-w-0 items-center gap-1 text-[12.5px] font-medium text-[#68778d]"><MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true"/>
+     <span className="truncate">{area}{area&&distance?' · ':''}{distance}</span></p>}
+    <ul className="mt-0.5 flex flex-wrap items-center gap-1.5" aria-label={t('Datos del lugar','Place details')}>
+     {item.open24h?<li className={`${chip} bg-emerald-50 text-emerald-800`} data-open="24h">{t('Abierto 24 horas','Open 24 hours')}</li>
+      :item.openNow===true?<li className={`${chip} bg-emerald-50 text-emerald-800`} data-open="now">{t('Abierto ahora','Open now')}</li>
+      :item.openNow===false?<li className={`${chip} bg-red-50 text-red-800`} data-open="closed">{t('Cerrado ahora','Closed now')}</li>:null}
+     {permit&&<li {...{[permit.attr]:permit.state}} className={`${chip} ${permit.state==='verified'?'bg-emerald-50 text-emerald-900':'bg-slate-100 text-slate-700'}`}>{permit.text}</li>}
+     {item.attributes.publicService===true&&<li className={`${chip} bg-slate-100 text-slate-700`} data-public-service>{t('Servicio público','Public service')}</li>}
+     {level==='claimed'&&<li className={`${chip} bg-[#EBF5FB] text-[#00739e]`} data-place-claimed>{VERIFICATION_LABELS.claimed[en?'en':'es']}</li>}
+    </ul>
+    {item.price&&<PlacePriceLine price={item.price} en={en}/>}
+    {extra?.snippet&&<p className="line-clamp-1 text-[12.5px] italic text-[#334155]" data-place-snippet>{'"'}{extra.snippet}{'"'}</p>}
+   </div>
   </div>
+  {(phone?.kind==='cr'||directions)&&<div className="flex min-w-0 gap-2 lg:ml-5 lg:w-[240px] lg:shrink-0 lg:flex-col lg:justify-center lg:border-l lg:border-[#eef2f6] lg:pl-5" data-place-actions>
+   {phone?.kind==='cr'&&<a className={actionPrimary} href={`tel:${phone.tel}`} data-place-phone aria-label={`${t('Llamar','Call')} ${phone.display}`}><Phone className="h-4 w-4 shrink-0" aria-hidden="true"/>{t('Llamar','Call')}</a>}
+   {directions&&<a className={phone?.kind==='cr'?actionSecondary:actionPrimary} href={directions.google} rel="noopener noreferrer" target="_blank"><Navigation className="h-4 w-4 shrink-0" aria-hidden="true"/>{t('Cómo llegar','Directions')}</a>}
+  </div>}
   {/* Whole card → the place page (stretched low-z overlay, like ProfessionalCard); the name link is the focusable one. */}
   <a href={href} className="absolute inset-0 z-0" tabIndex={-1} aria-hidden="true"/>
  </article>;

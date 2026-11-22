@@ -1,12 +1,14 @@
 import type {Metadata} from 'next';
 import {notFound,redirect} from 'next/navigation';
-import {ChevronLeft} from 'lucide-react';
+import {ChevronLeft,MapPin} from 'lucide-react';
+import {cn} from '@/lib/utils';
+import {ProfileIdentityName} from '@/components/professionals/profile-identity-name';
 import {createAdminClient} from '@/lib/supabase/admin';
 import {createClient} from '@/lib/supabase/server';
 import {safeGetUser} from '@/lib/supabase/get-user';
 import {DirectoryShell} from '@/components/directory/directory-shell';
 import {PlaceClaim} from '@/components/directory/place-claim';
-import {HeroTile,ring} from '@/components/directory/biz-ui';
+import {BIZ,HeroTile,ring} from '@/components/directory/biz-ui';
 import {placeSlugSchema} from '@/lib/directory/schemas';
 import {DIR_CLAIM_SMS_ENABLED,DIR_HEALTH_ENABLED,DIR_ENABLED} from '@/lib/directory/feature-flags';
 import type {ClaimOptions} from '@/lib/directory/claim-schemas';
@@ -42,12 +44,12 @@ export default async function PlaceClaimRoute({params}:{params:Promise<{locale:s
  const choices={emailListed:o?.emailListed??null,websiteHost:o?.websiteHost??null,sms:DIR_CLAIM_SMS_ENABLED&&!!o?.smsEnabled&&!!o?.phoneListed};
  const loginHref=user?null:`${prefix}/login?redirect=${encodeURIComponent(`${prefix}/lugar/${slug}/reclamar`)}`;
  const area=[place.address.locality??place.address.adminArea2,place.address.adminArea1].filter(Boolean).join(', ');
- return <DirectoryShell><main id="contenido" data-place-claim-page={slug} className="mx-auto max-w-2xl space-y-6 px-4 py-8 text-[#162543] sm:py-12">
+ return <DirectoryShell><main id="contenido" data-place-claim-page={slug} className="mx-auto max-w-3xl space-y-6 px-4 pb-12 pt-4 text-[#162543] sm:px-6 lg:pt-8">
   <a href={back} className={`inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-[#007fae] hover:underline ${ring}`}><ChevronLeft aria-hidden="true" className="h-4 w-4"/>{t('Volver a la ficha','Back to the listing')}</a>
-  <header className="flex items-center gap-4">
-   <HeroTile verticalId={place.vertical.id} className="h-16 w-16 shrink-0 rounded-2xl" iconClass="h-7 w-7"/>
-   <div className="min-w-0"><h1 className="break-words text-[28px] font-extrabold leading-tight sm:text-[32px]">{t(`Reclamar "${place.name}"`,`Claim "${place.name}"`)}</h1>
-    {area&&<p className="text-[15px] text-[#526277]">{area}</p>}</div>
+  <header className={cn(BIZ.card,'flex items-center gap-3 p-4 sm:gap-5 sm:p-6')}>
+   <span className={cn(BIZ.avatar,'relative grid shrink-0 place-items-center overflow-hidden rounded-full')}><HeroTile verticalId={place.vertical.id} className="h-full w-full" iconClass="h-8 w-8 sm:h-10 sm:w-10"/></span>
+   <div className="min-w-0 flex-1"><ProfileIdentityName name={t(`Reclamar "${place.name}"`,`Claim "${place.name}"`)}/>
+    {area&&<p className="mt-1.5 flex items-center gap-1 text-[12.5px] text-[#68778d]"><MapPin aria-hidden="true" className="h-3.5 w-3.5 shrink-0"/>{area}</p>}</div>
   </header>
   <PlaceClaim slug={slug} locale={locale} loginHref={loginHref} choices={choices} vertical={place.vertical.id} proEnabled={PRO_ENABLED}/>
  </main></DirectoryShell>;

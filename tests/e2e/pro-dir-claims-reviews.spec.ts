@@ -2,7 +2,7 @@ import {test,expect} from 'playwright/test';
 import {collectPageErrors,expectNoHorizontalOverflow,gotoOK} from './helpers';
 import {local,login,origin} from './pro-round2-fixture';
 import {createDisposableAccount,cleanupDisposableAccount} from './disposable-account';
-import {dirDb,hideSeededPlaces,label,postJson,readClaimMailbox,seedPlace,uid,visibleHtml} from './pro-dir-fixture';
+import {openPlaceTab, dirDb,hideSeededPlaces,label,postJson,readClaimMailbox,seedPlace,uid,visibleHtml} from './pro-dir-fixture';
 
 // Multivertical F3/F5 + P1 (LOCAL Pro): claim of a place by the e-mail already on it (email_listed, owner decision
 // 2026-11-17: e-mail instead of SMS; mock sender, the code is read from the local test mailbox, never shown on the page),
@@ -127,15 +127,15 @@ for(const language of ['es','en'] as const)test(`F5: reviews with account, and g
  const user=await createDisposableAccount({prefix:'dir-review'});
  try{
   await login(context,user);
-  await gotoOK(page,`${prefix}/lugar/${slug}`);
+  await gotoOK(page,`${prefix}/lugar/${slug}`);await openPlaceTab(page,'reviews');
   await expect(page.getByText(t('Todavía no hay reseñas.','No reviews yet.'))).toBeVisible();
-  /* Launch polish: the review form opens from «Escribir reseña». */await page.locator('[data-place-review-open][data-ready]').click({timeout:45000});
+  /* Launch polish: the review form opens from «Dejar una reseña». */await page.locator('[data-place-review-open][data-ready]').click({timeout:45000});
   await expect(page.locator('[data-place-review-form][data-ready]')).toBeVisible({timeout:45000});
   await page.getByLabel(t('Calificación','Rating')).selectOption('4.5');
   await page.getByLabel(t('Comentario (máximo 300 caracteres)','Comment (up to 300 characters)')).fill(t('Muy buena comida y atención rápida.','Great food and quick service.'));
-  await page.getByRole('button',{name:t('Publicar reseña','Post review')}).click();
+  await page.getByRole('button',{name:t('Enviar reseña','Submit review')}).click();
   await expect(page.locator('[data-place-review-sent]')).toBeVisible();
-  await page.reload();
+  await page.reload();await openPlaceTab(page,'reviews');
   await expect(page.locator('[data-place-review]')).toHaveCount(1);
   await expect(page.locator('[data-place-reviews]')).toContainText(en?'4.5 / 5':'4,5 / 5');
   // Links are refused by the shared review rules.
@@ -144,17 +144,17 @@ for(const language of ['es','en'] as const)test(`F5: reviews with account, and g
  // Guest: refused until this device contacted the business through ContrataCR.
  const guest=await browser.newContext({baseURL:origin});const g=await guest.newPage();
  try{
-  await gotoOK(g,`${prefix}/lugar/${slug}`);
+  await gotoOK(g,`${prefix}/lugar/${slug}`);await openPlaceTab(g,'reviews');
   await g.locator('[data-place-review-open][data-ready]').click({timeout:45000});
   await expect(g.locator('[data-place-review-form][data-ready]')).toBeVisible({timeout:45000});
   await g.getByLabel(t('Su nombre','Your name')).fill('Lucía Mora');
   await g.getByLabel(t('Comentario (máximo 300 caracteres)','Comment (up to 300 characters)')).fill(t('Buen servicio.','Good service.'));
-  await g.getByRole('button',{name:t('Publicar reseña','Post review')}).click();
+  await g.getByRole('button',{name:t('Enviar reseña','Submit review')}).click();
   await expect(g.locator('[data-place-review-error]')).toContainText(t('contacte primero al negocio','first contact the business'));
   const contact=await postJson(g,`/api/lugar/${slug}/contacto`,{channel:'call'});expect(contact.status).toBe(200);
-  await g.getByRole('button',{name:t('Publicar reseña','Post review')}).click();
+  await g.getByRole('button',{name:t('Enviar reseña','Submit review')}).click();
   await expect(g.locator('[data-place-review-sent]')).toBeVisible();
-  await g.reload();
+  await g.reload();await openPlaceTab(g,'reviews');
   await expect(g.locator('[data-place-review]')).toHaveCount(2);
   await expect(g.locator('[data-place-reviews]')).toContainText(t('sin cuenta, contactó al negocio','no account, contacted the business'));
  }finally{await guest.close();}
@@ -179,7 +179,7 @@ for(const language of ['es','en'] as const)test(`P1: prices with source and date
  expect((await obs({itemSlug:`acetaminofen-${tag}`,placeSlug:pharmacySlug,price:950})).error).toBeNull();
  const rx=await obs({itemSlug:`amoxicilina-${tag}`,placeSlug:pharmacySlug,price:3200});
  expect(rx.error?.code).toBeTruthy();// Decreto 36868-S: prescription medicines never get observations
- await gotoOK(page,`${prefix}/lugar/${superSlug}`);
+ await gotoOK(page,`${prefix}/lugar/${superSlug}`);await openPlaceTab(page,'offer');
  const prices=page.locator('[data-place-prices]');
  await expect(prices.getByRole('heading',{name:t('Precios','Prices')})).toBeVisible();
  const rice=prices.locator(`[data-price-item="arroz-${tag}"]`);
@@ -187,7 +187,7 @@ for(const language of ['es','en'] as const)test(`P1: prices with source and date
  await expect(rice.locator('[data-price-stale]')).toHaveCount(0);
  await expect(prices.locator(`[data-price-item="frijol-${tag}"] [data-price-stale]`)).toHaveText(t('desactualizado','out of date'));
  await expectNoHorizontalOverflow(page);
- await gotoOK(page,`${prefix}/lugar/${pharmacySlug}`);
+ await gotoOK(page,`${prefix}/lugar/${pharmacySlug}`);await openPlaceTab(page,'offer');
  await expect(page.locator(`[data-price-item="acetaminofen-${tag}"]`)).toBeVisible();
  const text=await visibleHtml(page);expect(text).not.toContain(`Amoxicilina E2E ${tag}`);
  await expect(page.locator(`[data-price-item="amoxicilina-${tag}"]`)).toHaveCount(0);

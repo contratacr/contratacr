@@ -37,8 +37,8 @@ const REASONS:Record<string,[string,string]>={
 // products, nothing price-related for banks, health, lodging, tours… (place-verticals.ts claimBenefits).
 const noSubscribe=()=>()=>{};
 const ring='focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]';
-const button=`inline-flex min-h-11 items-center justify-center rounded-full bg-[#162543] px-5 font-semibold text-white disabled:opacity-60 ${ring}`;
-const secondary=`inline-flex min-h-11 items-center justify-center rounded-full border border-[#162543] px-5 font-semibold disabled:opacity-60 ${ring}`;
+const button=`inline-flex min-h-11 items-center justify-center rounded-full bg-[#009FD9] px-5 text-[13px] font-bold text-white hover:bg-[#0089bb] disabled:opacity-60 ${ring}`;
+const secondary=`inline-flex min-h-11 items-center justify-center rounded-full border border-[#d7e1ea] px-5 text-[13px] font-bold hover:border-[#b9c8d6] disabled:opacity-60 ${ring}`;
 const field='min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-base text-[#162543]';
 const card='space-y-2 rounded-xl border border-slate-200 bg-white p-3';
 
@@ -79,7 +79,7 @@ export function PlaceClaim({slug,locale,loginHref,choices={emailListed:null,webs
   }catch{setError(msg('unavailable'));}finally{setBusy(false);}
  };
  const resend=async(claimId:string,method:Method)=>{setBusy(true);setError(null);try{await sendCode(claimId,method);}catch{setError(msg('unavailable'));}finally{setBusy(false);}};
- return <section aria-labelledby="place-claim" data-place-claim={step.kind} data-ready={ready||undefined} className="space-y-4 rounded-2xl border border-[#d7e1ea] bg-[#F7FAFC] p-5 text-[#162543]">
+ return <section aria-labelledby="place-claim" data-place-claim={step.kind} data-ready={ready||undefined} className="space-y-4 rounded-2xl border border-[#e5e7eb] shadow-sm bg-[#F7FAFC] p-5 text-[#162543]">
   <h2 id="place-claim" className="text-lg font-bold">{t('¿Es su negocio? Reclámelo gratis','Is this your business? Claim it for free')}</h2>
   {step.kind==='done'
    ?<div role="status" data-place-claim-done className="space-y-3"><p>{t('Listo: usted ya administra esta ficha. Desde "Mi negocio" puede actualizar sus datos, horario y más, gratis.','Done: you now manage this listing. From "My business" you can update your details, hours and more, for free.')}</p>

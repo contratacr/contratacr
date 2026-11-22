@@ -9,16 +9,23 @@ import {placeVerticalIcon} from './place-photo-placeholder';
  * the professional profile. Server-safe (no hooks).
  */
 export const ring='focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]';
-const pill=`inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-full px-5 text-[15px] font-semibold transition-colors ${ring}`;
+// One visual system with the professional profile (profile-client.tsx / professional-schedule.tsx): same card, border,
+// shadow, section heading, pill height and button colours. Places and professionals must not drift apart.
+const pill=`inline-flex h-11 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-5 text-[13px] font-bold transition-colors ${ring}`;
 export const BIZ={
- primary:`${pill} bg-[#162543] text-white hover:bg-[#22355c]`,
+ primary:`${pill} bg-[#009FD9] text-white hover:bg-[#0089bb]`,
  accent:`${pill} bg-[#009FD9] text-white hover:bg-[#0089bb]`,
- secondary:`${pill} border border-[#cfd9e3] bg-white text-[#162543] hover:border-[#162543]`,
- card:'rounded-2xl border border-[#e3e9ef] bg-white',
- section:'scroll-mt-24 space-y-4 border-t border-[#e8edf2] pt-8 first:border-t-0 first:pt-0',
- h2:'text-[22px] font-extrabold leading-7 tracking-[-0.01em] text-[#162543]',
+ secondary:`${pill} border border-[#d7e1ea] bg-white text-[#162543] hover:border-[#b9c8d6] hover:bg-[#f6f9fb]`,
+ card:'rounded-2xl border border-[#e5e7eb] bg-white shadow-sm',
+ section:'scroll-mt-24 space-y-4',
+ h2:'text-lg font-semibold text-[#162543]',
+ sub:'text-sm text-[#68778d]',
  link:`font-semibold text-[#007fae] underline-offset-2 hover:underline ${ring}`,
- chip:'inline-flex items-center rounded-full bg-[#f1f5f9] px-3 py-1 text-[13px] font-semibold text-[#334155]',
+ chip:'inline-flex items-center rounded-full bg-[#f3f4f6] px-2.5 py-1 text-[12px] font-semibold text-[#4b5563]',
+ /** Contact-card heading, same as «Consultar precio» in the professional contact card. */
+ cardTitle:'text-xl font-bold leading-tight text-[#009FD9]',
+ /** Avatar slot of the identity header (same size as the professional avatar). */
+ avatar:'h-[72px] w-[72px] sm:h-[88px] sm:w-[88px]',
 };
 
 /** Soft section colours of the hero tile / thumbnail when there are no photos (never stock photos). */
@@ -51,16 +58,19 @@ export function Stars({value,size='md',label}:{value:number;size?:'sm'|'md'|'lg'
  </span>;
 }
 
-export const ratingNumber=(n:number,en:boolean)=>new Intl.NumberFormat(en?'en-US':'es-CR',{minimumFractionDigits:1,maximumFractionDigits:1}).format(n);
+/** Same format as the professional profile and cards: «5.0» (toFixed(1)) in both languages. */
+export const ratingNumber=(n:number,_en?:boolean)=>n.toFixed(1);
 export const reviewsWord=(n:number,en:boolean)=>en?(n===1?'review':'reviews'):(n===1?'reseña':'reseñas');
+export const reviewsLabel=(n:number,en:boolean)=>`${n} ${reviewsWord(n,en)}`;
 
-/** Header rating line: stars + average + count, or the quiet «Sin reseñas todavía». */
-export function RatingLine({average,count,en,href}:{average:number|null;count:number;en:boolean;href?:string}){
- if(!count||average==null)return <p className="text-[15px] text-[#526277]" data-rating-line="none">{en?'No reviews yet':'Sin reseñas todavía'}</p>;
- const label=en?`${ratingNumber(average,en)} out of 5`:`${ratingNumber(average,en)} de 5`;
- const body=<><Stars value={average} label={label}/><span className="font-bold text-[#162543]">{ratingNumber(average,en)}</span>
-  <span className="text-[#526277]">({count} {reviewsWord(count,en)})</span></>;
- return <p className="flex flex-wrap items-center gap-2 text-[15px]" data-rating-line={count}>{href?<a href={href} className={`inline-flex items-center gap-2 ${ring} rounded`}>{body}</a>:body}</p>;
+/** Rating line, same anatomy as the professional profile: orange star, «5.0», «N reseñas» (no stars row, no parentheses). */
+export function RatingLine({average,count,en,href,compact}:{average:number|null;count:number;en:boolean;href?:string;compact?:boolean}){
+ if(!count||average==null)return <p className="text-[13px] text-[#68778d]" data-rating-line="none">{en?'No reviews yet':'Sin reseñas todavía'}</p>;
+ const label=en?`${ratingNumber(average)} out of 5, ${reviewsLabel(count,en)}`:`${ratingNumber(average)} de 5, ${reviewsLabel(count,en)}`;
+ const body=<><Star aria-hidden="true" className="h-3.5 w-3.5 shrink-0 fill-[#ff9b32] text-[#ff9b32]"/>
+  <span className={`font-bold text-[#162543] ${compact?'text-[13px]':'text-[14px] sm:text-[15px]'}`}>{ratingNumber(average)}</span>
+  <span className={`whitespace-nowrap ${compact?'text-[12px] text-[#5f6f86]':'text-[12.5px] text-[#68778d] sm:text-[13px]'}`}>{reviewsLabel(count,en)}</span></>;
+ return <p className="flex items-center gap-1" data-rating-line={count}>{href?<a href={href} aria-label={label} className={`inline-flex items-center gap-1 ${ring} rounded`}>{body}</a>:<span className="inline-flex items-center gap-1" aria-label={label}>{body}</span>}</p>;
 }
 
 /** Yelp-model rating summary: big average + stars + count on the left, 5→1 distribution bars on the right. */

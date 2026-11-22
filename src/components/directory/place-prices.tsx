@@ -1,3 +1,4 @@
+import {BIZ} from './biz-ui';
 import type {PublicPriceCurrent,PublicPriceItem,PublicPriceObservation} from '@/lib/directory/price-schemas';
 import {proMoney} from '@/lib/pro/money';
 
@@ -32,7 +33,7 @@ export function PlacePrices({prices,locale}:{prices:PublicPriceCurrent;locale:st
  const items=prices.items.filter((i:PublicPriceItem)=>i.current||i.lastKnown);
  if(!items.length)return null;
  return <section aria-labelledby="place-prices" className="space-y-3" data-place-prices>
-  <h2 id="place-prices" className="text-[22px] font-extrabold leading-7 text-[#162543]">{t('Precios','Prices')}</h2>
+  <h2 id="place-prices" className={BIZ.h2}>{t('Precios','Prices')}</h2>
   <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">{items.map(i=><li key={i.item.slug} data-price-item={i.item.slug} className="rounded-2xl border border-[#d7e1ea] p-4">
    <h3 className="font-semibold">{i.item.name}{i.item.presentation?<span className="font-normal text-slate-600"> · {i.item.presentation}</span>:null}</h3>
    {i.current?<Observation o={i.current} en={en} stale={false}/>:i.lastKnown?<Observation o={i.lastKnown} en={en} stale/>:null}

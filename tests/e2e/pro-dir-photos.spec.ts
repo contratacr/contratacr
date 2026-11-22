@@ -3,7 +3,7 @@ import sharp from 'sharp';
 import {collectPageErrors,expectNoHorizontalOverflow,gotoOK} from './helpers';
 import {local,login,origin,ownerFixture} from './pro-round2-fixture';
 import {createDisposableAccount,cleanupDisposableAccount,type DisposableAccount} from './disposable-account';
-import {claimByEmail,hideSeededPlaces,label,seedPlace,uid} from './pro-dir-fixture';
+import {openPlaceTab, claimByEmail,hideSeededPlaces,label,seedPlace,uid} from './pro-dir-fixture';
 import {featureShots,randomIp} from './pro-dir-features-fixture';
 
 // Launch round (LOCAL, 2026-11-18): place photo uploads. The owner of a claimed place uploads a photo with «Agregar fotos»
@@ -73,7 +73,7 @@ test('place photos: owner publishes, customer pending → staff approves → vis
 
    for(const language of ['es','en'] as const){
     const prefix=language==='en'?'/en':'';
-    await gotoOK(a,`${prefix}/lugar/${slug}`);
+    await gotoOK(a,`${prefix}/lugar/${slug}`);await openPlaceTab(a,'photos');
     const thumbs=a.locator('[data-place-photo-thumb]');await expect(thumbs).toHaveCount(2);
     await expect(a.locator('[data-place-photo-placeholder]')).toHaveCount(0);
     const alts=await a.locator('[data-place-gallery] img').evaluateAll(n=>n.map(i=>(i as HTMLImageElement).alt));

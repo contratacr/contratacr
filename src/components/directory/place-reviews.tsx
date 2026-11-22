@@ -87,9 +87,9 @@ export function PlaceReviews({slug,locale,initial,signedIn,manage=null,note,dist
     {photoResult?.errors.map(e=><span key={e} className="mt-1 block text-sm text-red-800">{e}</span>)}</p>
    // Launch polish: the form opens from one «Escribir reseña» button instead of filling the page from the start.
    :!writing
-    ?<button type="button" data-place-review-open data-ready={ready||undefined} onClick={()=>setWriting(true)} className={BIZ.primary}>{t('Escribir reseña','Write a review')}</button>
+    ?<button type="button" data-place-review-open data-ready={ready||undefined} onClick={()=>setWriting(true)} className={BIZ.primary}>{t('Dejar una reseña','Leave a review')}</button>
    :<form ref={form} onSubmit={e=>{e.preventDefault();void submit();}} className="space-y-3 rounded-2xl border border-[#d7e1ea] p-4" data-place-review-form data-ready={ready||undefined}>
-    <h3 className="font-semibold">{t('Escribir una reseña','Write a review')}</h3>
+    <h3 className="font-semibold">{t('Dejar una reseña','Leave a review')}</h3>
     {!signedIn&&<label className="flex flex-col gap-1 text-sm font-medium">{t('Su nombre','Your name')}<input name="authorName" maxLength={80} autoComplete="name" className={input}/></label>}
     <label className="flex flex-col gap-1 text-sm font-medium">{t('Calificación','Rating')}
      <select name="rating" defaultValue="5" className={input}>{[5,4.5,4,3.5,3,2.5,2,1.5,1,0.5].map(v=><option key={v} value={v}>{t(`${String(v).replace('.',',')} de 5`,`${v} out of 5`)}</option>)}</select></label>
@@ -97,7 +97,7 @@ export function PlaceReviews({slug,locale,initial,signedIn,manage=null,note,dist
     {signedIn&&<fieldset className="space-y-1 text-sm"><legend className="font-medium">{t('Fotos (opcional, hasta 5)','Photos (optional, up to 5)')}</legend>
      <PhotoPicker files={photos} onChange={setPhotos} en={en} label={t('Agregar fotos a la reseña','Add photos to the review')} disabled={state==='sending'}/>
      <p className="text-xs text-slate-600">{t('Se revisan antes de publicarse.','They are reviewed before they are published.')}</p></fieldset>}
-    <button type="submit" disabled={state==='sending'} className="inline-flex min-h-11 items-center rounded-full bg-[#162543] px-5 font-semibold text-white disabled:opacity-60">{t('Publicar reseña','Post review')}</button>
+    <button type="submit" disabled={state==='sending'} className="inline-flex h-11 items-center rounded-full bg-[#009FD9] px-5 text-[13px] font-bold text-white hover:bg-[#0089bb] disabled:opacity-60">{t('Enviar reseña','Submit review')}</button>
     {error&&<p role="alert" className="text-sm font-semibold text-red-800" data-place-review-error>{error}</p>}
    </form>}
  </section>;

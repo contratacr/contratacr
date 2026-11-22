@@ -4,7 +4,7 @@ import {join} from 'node:path';
 import {collectPageErrors,expectNoHorizontalOverflow,gotoOK} from './helpers';
 import {local,login,origin} from './pro-round2-fixture';
 import {createDisposableAccount,cleanupDisposableAccount,type DisposableAccount} from './disposable-account';
-import {claimByEmail,dirDb,hideSeededPlaces,label,postJson,seedPlace,uid} from './pro-dir-fixture';
+import {openPlaceTab, claimByEmail,dirDb,hideSeededPlaces,label,postJson,seedPlace,uid} from './pro-dir-fixture';
 
 // Launch without Pro (2026-11-18): «Mi negocio» (/dashboard/negocio/*, /api/negocio/*). An account WITHOUT any Pro
 // membership claims a restaurant and uses the free owner tools: contact + hours (shown on the public page), menu editor
@@ -79,7 +79,7 @@ for(const language of ['es','en'] as const)test(`Mi negocio without Pro: profile
   await gotoOK(page,`${prefix}/lugar/${slug}`);
   // «Administrar esta ficha»: only for the owner/managers of this place (a stranger does not see it, checked below).
   await expect(page.locator('[data-place-manage-link]')).toHaveAttribute('href',`${prefix}/dashboard/negocio`);
-  await page.locator('[data-place-manage]').scrollIntoViewIfNeeded();await shot(page,`negocio-ficha-administrar-${language}`,project);
+  await page.locator('[data-place-manage]').scrollIntoViewIfNeeded();await shot(page,`negocio-ficha-administrar-${language}`,project);await openPlaceTab(page,'reviews');
   const editor=page.locator(`[data-owner-reply-editor="${reviewId}"][data-ready]`);await expect(editor).toBeVisible({timeout:45000});
   const replyReq=page.waitForRequest(r=>r.url().endsWith('/api/negocio/respuestas')&&r.method()==='POST');
   await editor.getByRole('button',{name:t('Responder como el negocio','Reply as the business')}).click();

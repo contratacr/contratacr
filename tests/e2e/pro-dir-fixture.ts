@@ -133,3 +133,12 @@ export async function claimByEmail(context:BrowserContext,slug:string,db:Db=dirD
 
 /** HTML of the current page without scripts, for "never shown" checks. */
 export const visibleHtml=(page:Page)=>page.evaluate(()=>document.body.innerText);
+
+/** Opens a tab of the place page («info», «offer», «reviews», «photos», «questions»). The tab bar is hydrated by then. */
+export async function openPlaceTab(page:Page,id:'info'|'offer'|'reviews'|'photos'|'questions'){
+ const tab=page.locator(`[data-place-tab="${id}"]`);
+ await expect(async()=>{
+  await tab.click({timeout:2000});
+  await expect(tab).toHaveAttribute('aria-selected','true',{timeout:1000});
+ }).toPass({timeout:30000});
+}

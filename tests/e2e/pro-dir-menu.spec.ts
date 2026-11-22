@@ -2,7 +2,7 @@ import {test,expect} from 'playwright/test';
 import {collectPageErrors,expectNoHorizontalOverflow,gotoOK} from './helpers';
 import {headersFor,local,login,origin,ownerFixture} from './pro-round2-fixture';
 import {createDisposableAccount,cleanupDisposableAccount} from './disposable-account';
-import {chooseEdition,claimByEmail,hideSeededPlaces,label,seedPlace,uid} from './pro-dir-fixture';
+import {openPlaceTab, chooseEdition,claimByEmail,hideSeededPlaces,label,seedPlace,uid} from './pro-dir-fixture';
 
 // Multivertical P2 (LOCAL Pro): restaurant menu of a CLAIMED place. Owner (edition restaurantes) claims the place
 // with the mock code, creates a section and a dish through /api/pro/menu, the draft stays hidden on
@@ -39,7 +39,7 @@ test('P2: menu editor, drafts hidden until published, final price public',async(
    await expect(item.locator('[data-menu-total]')).toBeVisible();await expect(item.locator('[data-menu-breakdown]')).toBeVisible();
    await expect(page.locator('[data-menu-price-note]')).toBeVisible();
    await expectNoHorizontalOverflow(page);
-   await gotoOK(page,`${prefix}/lugar/${slug}`);
+   await gotoOK(page,`${prefix}/lugar/${slug}`);await openPlaceTab(page,'offer');
    await expect(page.locator('[data-place-menu-link]')).toHaveText(prefix?'See the menu':'Ver el menú');
   }
   // Stale revision → 409 (another tab changed the section).

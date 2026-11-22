@@ -10,6 +10,7 @@ import {SearchResultsLayout} from '@/components/search/search-results-layout';
 import {PlacesMap} from '@/components/maps/places-map';
 import {hrefWith} from './listing-home-parts';
 import {PlaceCard} from './place-card';
+import {kindLabel} from '@/lib/directory/place-verticals';
 import {placeCardExtras} from '@/lib/directory/card-extras';
 import {SearchFilters,sortLabel} from './search-filters';
 import {PlacesFilterChips,PlacesFiltersDrawer,type ChipMenu,type ChipToggle} from './places-search-controls';
@@ -80,7 +81,7 @@ export async function PlacesSectionHome({section,locale,page,basePath,banner}:{s
  const places=items.flatMap(it=>it.kind==='place'?[it]:[]);
  // Yelp result-card model (2026-11-19): cover photo + newest review snippet for the places of this page.
  const extras=await placeCardExtras(places.map(p=>p.slug));
- const points=places.flatMap((p,n)=>p.location?[{id:p.slug,lat:p.location.lat,lng:p.location.lng,label:`${n+1}. ${p.name}`,href:`${en?'/en':''}/lugar/${p.slug}`,rank:n+1}]:[]);
+ const points=places.flatMap((p,n)=>p.location?[{id:p.slug,lat:p.location.lat,lng:p.location.lng,label:`${n+1}. ${p.name}`,href:`${en?'/en':''}/lugar/${p.slug}`,rank:n+1,name:p.name,sub:[en?p.vertical.nameEn:p.vertical.nameEs,kindLabel(p.vertical.id,p.attributes.kind,en)].filter(Boolean).join(' · '),rating:p.rating.average!=null?Number(p.rating.average):null,ratingCount:p.rating.count}]:[]);
  const next=page.ok&&page.result.nextCursor?link({cursor:encodeCursor(page.result.nextCursor)}):null;
  const filtersLabel=t('Filtros','Filters');
  const chips=(variant:'bar'|'sheet')=><PlacesFilterChips variant={variant} menus={menus} toggles={toggles} filtersLabel={filtersLabel} activeFilters={activeFilters} clear={clear} en={en}/>;
