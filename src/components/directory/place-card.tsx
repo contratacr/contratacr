@@ -110,10 +110,15 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
  return <article data-search-item={item.key} data-ranking-reasons={item.ranking_reason.join(' ')}
   className={`${RESULT_CARD} flex flex-col gap-3 text-[#162543] lg:flex-row lg:gap-0`}>
   <div className="flex min-w-0 flex-1 items-start gap-2.5 lg:gap-3">
-   <span aria-hidden="true" className="shrink-0" data-place-thumb={extra?.photo?'photo':'tile'}>
-    <ResultThumb src={extra?.photo?placePhotoSrc(extra.photo,320):null} priority={rank!=null&&rank<=2} rank={rank}
-     fallback={<HeroTile verticalId={item.vertical.id} className="h-full w-full" iconClass="h-6 w-6 lg:h-8 lg:w-8"/>}/>
-   </span>
+   {extra?.photo
+    ?<span aria-hidden="true" className="shrink-0" data-place-thumb="photo">
+     <ResultThumb src={placePhotoSrc(extra.photo,320)} priority={rank!=null&&rank<=2} rank={rank} fallback={null}/>
+    </span>
+    // Without an approved photo the card is text-first: a compact category badge (no photo-sized empty box).
+    :<span aria-hidden="true" className="relative mt-0.5 shrink-0" data-place-thumb="badge">
+     <HeroTile verticalId={item.vertical.id} className="h-10 w-10 rounded-xl lg:h-11 lg:w-11" iconClass="h-5 w-5"/>
+     {rank!=null&&<span className="absolute -left-1.5 -top-1.5 z-10 hidden h-[20px] w-[20px] items-center justify-center rounded-full bg-[#162543] text-[10px] font-bold text-white ring-2 ring-white lg:flex">{rank}</span>}
+    </span>}
    <div className="flex min-w-0 flex-1 flex-col gap-1">
     <div className="flex min-w-0 items-start gap-3 lg:items-center">
      <H className="min-w-0 flex-1 text-[15px] font-bold leading-[1.15] text-[#111827]">

@@ -29,10 +29,14 @@ export function BranchCard({branch,locale,rank,distanceKm,extra}:{branch:BrandBr
  // Same anatomy and spacing as PlaceCard / ProfessionalCard: shell, round thumb (first photo or tile), info, photo strip, action column.
  return <article data-brand-branch={branch.slug} className={`${RESULT_CARD} flex flex-col gap-3 text-[#162543] lg:flex-row lg:gap-0`}>
   <div className="flex min-w-0 flex-1 items-start gap-2.5 lg:gap-3">
-   <span aria-hidden="true" className="shrink-0" data-place-thumb={extra?.photo?'photo':'tile'}>
-    <ResultThumb src={extra?.photo?placePhotoSrc(extra.photo,320):null} rank={rank}
-     fallback={<HeroTile verticalId={branch.vertical} className="h-full w-full" iconClass="h-6 w-6 lg:h-8 lg:w-8"/>}/>
-   </span>
+   {extra?.photo
+    ?<span aria-hidden="true" className="shrink-0" data-place-thumb="photo">
+     <ResultThumb src={placePhotoSrc(extra.photo,320)} rank={rank} fallback={null}/>
+    </span>
+    :<span aria-hidden="true" className="relative mt-0.5 shrink-0" data-place-thumb="badge">
+     <HeroTile verticalId={branch.vertical} className="h-10 w-10 rounded-xl lg:h-11 lg:w-11" iconClass="h-5 w-5"/>
+     {rank!=null&&<span className="absolute -left-1.5 -top-1.5 z-10 hidden h-[20px] w-[20px] items-center justify-center rounded-full bg-[#162543] text-[10px] font-bold text-white ring-2 ring-white lg:flex">{rank}</span>}
+    </span>}
    <div className="flex min-w-0 flex-1 flex-col gap-1">
     <h3 className="min-w-0 text-[15px] font-bold leading-[1.15] text-[#111827]">
      <a href={href} className="relative z-10 break-words transition-colors hover:text-[#009FD9] focus-visible:underline">{branch.name}</a></h3>
