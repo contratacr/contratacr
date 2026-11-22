@@ -57,29 +57,30 @@ export function localGlyphUrl(url: string, origin: string): string | null {
 // paints every street yellow, shows bus/shop icons from zoom 15 and extrudes
 // buildings: our cyan pins got lost. `brandMapStyle()` keeps its colour (green
 // parks and forest, blue water, shaded relief at country zoom, pink hospitals)
-// and makes it read like Google/Yelp: white streets, soft-yellow primary roads,
-// warmer yellow motorways, no third-party POI icons, flat buildings. Only
+// and (2026-11-21) matches the production Google map: light-grey land, aqua water, mint parks, blue-grey
+// streets, no third-party POI icons, flat buildings. Only
 // colours/visibility change, so it needs no extra request; it applies only to
 // the OpenFreeMap liberty style (a custom NEXT_PUBLIC_MAP_STYLE_URL is left as is).
 type StyleLayer = StyleSpecification["layers"][number];
 const BRAND_FILLS: Record<string, string> = {
-  background: "#f5f3ee",
-  water: "#a9d3f2",
-  park: "#cfe8c3",
-  landcover_wood: "hsla(100,40%,74%,0.55)",
-  landcover_grass: "#d3eac4",
-  landuse_residential: "#efede7",
+  background: "#f5f5f5",
+  water: "#83d7ea",
+  park: "#d1f4e0",
+  landcover_wood: "hsla(150,48%,80%,0.6)",
+  landcover_grass: "#d8f3e4",
+  landuse_residential: "#f1f1f1",
   landuse_hospital: "#f8e3e8",
-  building: "#e7e3dc",
+  building: "#e6e8ec",
 };
 const BRAND_WATERWAYS = new Set(["waterway_river", "waterway_other", "waterway_tunnel"]);
 const HIDDEN_LAYER = /^poi_|^building-3d$|one_way_arrow/;
 
 function brandRoadColor(id: string): string | null {
+  // Same blue-grey streets as the production (Google) results map: white streets vanish on its light land.
   const casing = id.includes("casing");
-  if (id.includes("motorway")) return casing ? "#e3b25d" : "#fcd68a";
-  if (id.includes("trunk_primary")) return casing ? "#e6cf96" : "#fff3c4";
-  if (/secondary_tertiary|_link|street|minor|service_track/.test(id)) return casing ? "#dcd8cf" : "#ffffff";
+  if (id.includes("motorway")) return casing ? "#a2b0c2" : "#b4c1d1";
+  if (id.includes("trunk_primary")) return casing ? "#b2bfce" : "#c3cedb";
+  if (/secondary_tertiary|_link|street|minor|service_track/.test(id)) return casing ? "#c3ccd8" : "#d3dbe5";
   return null;
 }
 
@@ -88,7 +89,7 @@ function brandLayer(layer: StyleLayer): StyleLayer | null {
   const fill = BRAND_FILLS[layer.id];
   if (fill && layer.type === "background") return { ...layer, paint: { ...layer.paint, "background-color": fill } };
   if (fill && layer.type === "fill") return { ...layer, paint: { ...layer.paint, "fill-color": fill } };
-  if (layer.type === "line" && BRAND_WATERWAYS.has(layer.id)) return { ...layer, paint: { ...layer.paint, "line-color": "#a9d3f2" } };
+  if (layer.type === "line" && BRAND_WATERWAYS.has(layer.id)) return { ...layer, paint: { ...layer.paint, "line-color": "#83d7ea" } };
   if (layer.type === "line" && layer["source-layer"] === "transportation") {
     const color = brandRoadColor(layer.id);
     if (color) return { ...layer, paint: { ...layer.paint, "line-color": color } };
