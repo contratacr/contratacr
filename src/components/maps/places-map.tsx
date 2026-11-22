@@ -13,6 +13,7 @@ import type { MapLibreModule } from "@/lib/maps/maplibre";
 import { createMap, loadMapLibre, sheetAwarePadding, supportsWebGL } from "@/lib/maps/maplibre";
 // Static on purpose (route CSS, not a runtime <link>): see src/lib/maps/maplibre-runtime.ts.
 import "maplibre-gl/dist/maplibre-gl.css";
+import { PIN_CSS, esc, initials, teardropEl } from "@/lib/maps/pins";
 
 export type PlacesMapPoint = {
   id: string;
@@ -24,53 +25,127 @@ export type PlacesMapPoint = {
   href?: string;
   /** Result number (1..N) mirrored from the list card, drawn on the pin (directory result lists). */
   rank?: number;
+  /** Mini-card data (same card as the professionals map): plain name, «sección · tipo», rating. */
+  name?: string;
+  sub?: string;
+  rating?: number | null;
+  ratingCount?: number;
 };
-
-const PIN =
-  `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="38" viewBox="0 0 24 32" aria-hidden="true" focusable="false">` +
-  `<path d="M12 0C7.03 0 3 4.03 3 9c0 6.75 9 23 9 23s9-16.25 9-23c0-4.97-4.03-9-9-9z" fill="#009FD9" stroke="#ffffff" stroke-width="1.5"/>` +
-  `<circle cx="12" cy="9" r="3.4" fill="#ffffff"/></svg>`;
-
-const CSS =
-  ".ccr-pmap .maplibregl-ctrl-attrib{font:11px/1.4 Inter,system-ui,sans-serif;}" +
-  ".ccr-pmap .maplibregl-ctrl-attrib a{color:#334155;}" +
-  ".ccr-pmark{display:block;width:28px;height:38px;cursor:pointer;filter:drop-shadow(0 2px 3px rgba(15,23,42,.35));}" +
-  ".ccr-pmark svg{display:block;width:28px;height:38px;}" +
-  ".ccr-pmark:hover path,.ccr-pmark:focus-visible path{fill:#162543;}" +
-  ".ccr-pmark:focus-visible{outline:3px solid #162543;outline-offset:2px;border-radius:10px;}" +
-  ".ccr-pmark[role=img]{cursor:default;}" +
-  // Cluster bubble: a real button («12 lugares: acercar»), same brand blue as the pins.
-  ".ccr-pclu{display:grid;place-items:center;min-width:36px;height:36px;padding:0 8px;border-radius:9999px;border:3px solid #fff;background:#009FD9;color:#0b1730;font:800 13px/1 Inter,system-ui,sans-serif;cursor:pointer;box-shadow:0 2px 6px rgba(15,23,42,.35);}" +
-  ".ccr-pclu.is-big{min-width:44px;height:44px;font-size:14px;}" +
-  ".ccr-pclu:hover,.ccr-pclu:focus-visible{background:#162543;color:#fff;}" +
-  ".ccr-pclu:focus-visible{outline:3px solid #162543;outline-offset:2px;}" +
-  // Numbered pin of a result list: the same navy number badge the list card carries (like the professionals map).
-  // Navy like the card badge, so a numbered place never reads as a blue cluster bubble.
-  ".ccr-pmark.is-num{width:28px;height:28px;display:grid;place-items:center;border-radius:9999px;border:2px solid #fff;background:#162543;color:#fff;font:800 12px/1 Inter,system-ui,sans-serif;}" +
-  ".ccr-pmark.is-num:hover,.ccr-pmark.is-num:focus-visible{background:#009FD9;}";
 
 const SOURCE = "ccr-places";
 
-function pointMarker(lib: MapLibreModule, p: PlacesMapPoint): Marker {
-  const el = document.createElement(p.href ? "a" : "div");
-  el.className = p.rank != null ? "ccr-pmark is-num" : "ccr-pmark";
-  if (p.rank != null) el.textContent = String(p.rank);
-  else el.innerHTML = PIN;
-  el.setAttribute("aria-label", p.label);
+// Selection state shared by every pin of this map: id → its pin elements, the open popup and the highlighted card.
+type Ctx = {
+  lib: MapLibreModule;
+  map: MapLibreMap;
+  en: boolean;
+  byId: Map<string, HTMLElement>;
+  popup: Marker | null;
+  popupId: string | null;
+  active: string | null;
+  canHover: boolean;
+};
+
+function highlightCard(id: string, on: boolean, scroll: boolean) {
+  const el = document.querySelector<HTMLElement>(`[data-search-item="p:${CSS.escape(id)}"]`);
+  if (!el) return;
+  el.classList.toggle("ring-2", on);
+  el.classList.toggle("ring-[#008ce0]", on);
+  el.classList.toggle("shadow-lg", on);
+  if (on && scroll) el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+function setActive(ctx: Ctx, id: string | null, on: boolean, scroll = false) {
+  if (!id) return;
+  const el = ctx.byId.get(id);
+  if (el) { el.classList.toggle("is-active", on); el.style.zIndex = on ? "9999" : ""; }
+  highlightCard(id, on, scroll);
+}
+function closePopup(ctx: Ctx) {
+  ctx.popup?.remove();
+  ctx.popup = null;
+  ctx.popupId = null;
+}
+function hidePopup(ctx: Ctx) {
+  if (ctx.active) { setActive(ctx, ctx.active, false); ctx.active = null; }
+  closePopup(ctx);
+}
+
+// The same white mini-card as the professionals map (.ccr-pop), with the place's data.
+function openPopup(ctx: Ctx, p: PlacesMapPoint) {
+  if (ctx.popup && ctx.popupId === p.id) return;
+  closePopup(ctx);
+  ctx.popupId = p.id;
+  const name = p.name ?? p.label;
+  const rate = p.rating != null && (p.ratingCount ?? 0) > 0
+    ? `<div class="ccr-pop-rate"><span class="star">★</span><span class="score">${esc(p.rating.toFixed(1))}</span><span class="count">${esc(`${p.ratingCount} ${ctx.en ? (p.ratingCount === 1 ? "review" : "reviews") : (p.ratingCount === 1 ? "reseña" : "reseñas")}`)}</span></div>`
+    : "";
+  const wrap = document.createElement("div");
+  wrap.className = "ccr-popwrap";
+  wrap.innerHTML =
+    `<div class="ccr-pop">` +
+      `<button type="button" class="ccr-pop-x" aria-label="${ctx.en ? "Close" : "Cerrar"}">×</button>` +
+      `<div class="ccr-pop-top">` +
+        `<div class="ccr-av">${esc(initials(name))}</div>` +
+        `<div style="min-width:0;">` +
+          `<div class="ccr-pop-name"><a href="${esc(p.href ?? "#")}" class="ccr-pop-name-text" style="color:inherit;text-decoration:none">${esc(name)}</a></div>` +
+          (p.sub ? `<div class="ccr-pop-prof"><span>${esc(p.sub)}</span></div>` : "") +
+          rate +
+        `</div>` +
+      `</div>` +
+    `</div>`;
+  wrap.querySelector(".ccr-pop-x")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); hidePopup(ctx); });
+  wrap.querySelector(".ccr-pop")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); if (p.href) window.location.assign(p.href); });
+  ctx.popup = new ctx.lib.Marker({ element: wrap, anchor: "bottom", offset: [0, -46] }).setLngLat([p.lng, p.lat]).addTo(ctx.map);
+  ctx.popup.getElement().style.zIndex = "100000";
+}
+
+// Desktop: the mini-card closes once the cursor leaves the pin+card region (distance based, never flickers on the pin edge).
+function hoverProximity(ctx: Ctx, e: React.MouseEvent) {
+  if (!ctx.popup || !ctx.canHover || !ctx.active) return;
+  const anchor = ctx.byId.get(ctx.active);
+  if (!anchor) return;
+  const m = 14, x = e.clientX, y = e.clientY;
+  const a = anchor.getBoundingClientRect();
+  const pr = ctx.popup.getElement().firstElementChild?.getBoundingClientRect();
+  const inRect = (r: DOMRect, mm: number) => x >= r.left - mm && x <= r.right + mm && y >= r.top - mm && y <= r.bottom + mm;
+  const inBridge = pr ? x >= a.left - m && x <= a.right + m && y >= Math.min(pr.bottom, a.top) - m && y <= a.bottom + m : false;
+  if (!inRect(a, m) && !(pr && inRect(pr, m)) && !inBridge) hidePopup(ctx);
+}
+
+function pointMarker(ctx: Ctx | null, lib: MapLibreModule, p: PlacesMapPoint): Marker {
+  const interactive = !!p.href;
+  const el = teardropEl(p.rank ?? "", p.label, interactive ? "a" : "button");
   el.title = p.label;
   if (p.href) (el as HTMLAnchorElement).href = p.href;
-  else el.setAttribute("role", "img");
-  return new lib.Marker({ element: el, anchor: p.rank != null ? "center" : "bottom" }).setLngLat([p.lng, p.lat]);
+  else { el.setAttribute("role", "img"); el.setAttribute("tabindex", "-1"); }
+  if (p.rank != null) el.style.zIndex = String(1000 - p.rank);
+  if (ctx && interactive) {
+    ctx.byId.set(p.id, el);
+    const show = () => {
+      if (ctx.active && ctx.active !== p.id) setActive(ctx, ctx.active, false);
+      ctx.active = p.id;
+      setActive(ctx, p.id, true, true);
+      openPopup(ctx, p);
+    };
+    if (ctx.canHover) {
+      el.addEventListener("mouseenter", show);
+      el.addEventListener("focus", show);
+    } else {
+      // Phones: the first tap opens the stable mini-card, tapping the card opens the place.
+      el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); show(); });
+    }
+  }
+  return new lib.Marker({ element: el, anchor: "bottom" }).setLngLat([p.lng, p.lat]);
 }
 
 /**
- * Clustered markers for many points (brand branches, list results): a GeoJSON
- * source with `cluster: true` decides what is grouped; both clusters and single
- * points are drawn as HTML markers so they stay focusable links/buttons. A
- * cluster click zooms to the level where it splits. The list on the page
- * remains the accessible fallback for points hidden inside a bubble.
+ * Clustered markers for many points (brand branches, list results): a GeoJSON source with `cluster: true` decides what
+ * is grouped; clusters and single points are drawn as HTML markers with the SAME teardrop (a cluster carries its count,
+ * a place its card number), so they stay focusable links/buttons. A cluster click zooms to the level where it splits.
+ * The list on the page remains the accessible fallback for points hidden inside a pin.
  */
-function addClusteredMarkers(lib: MapLibreModule, map: MapLibreMap, points: PlacesMapPoint[], en: boolean) {
+function addClusteredMarkers(ctx: Ctx, points: PlacesMapPoint[]) {
+  const { lib, map, en } = ctx;
   const byId = new Map(points.map((p) => [p.id, p]));
   map.addSource(SOURCE, {
     type: "geojson",
@@ -98,22 +173,18 @@ function addClusteredMarkers(lib: MapLibreModule, map: MapLibreMap, points: Plac
       if (!marker) {
         if (props.cluster) {
           const count = props.point_count ?? 0;
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.className = `ccr-pclu${count >= 10 ? " is-big" : ""}`;
-          btn.textContent = String(count);
-          btn.setAttribute("aria-label", en ? `${count} places here: zoom in` : `${count} lugares aquí: acercar`);
+          const btn = teardropEl(count, en ? `${count} places here: zoom in` : `${count} lugares aquí: acercar`);
           btn.addEventListener("click", async (e) => {
             e.stopPropagation();
             const source = map.getSource(SOURCE) as GeoJSONSource | undefined;
             const z = await source?.getClusterExpansionZoom(props.cluster_id!).catch(() => null);
             map.easeTo({ center: [lng, lat], zoom: z ?? map.getZoom() + 2 });
           });
-          marker = new lib.Marker({ element: btn, anchor: "center" }).setLngLat([lng, lat]);
+          marker = new lib.Marker({ element: btn, anchor: "bottom" }).setLngLat([lng, lat]);
         } else {
           const point = props.id ? byId.get(props.id) : undefined;
           if (!point) continue;
-          marker = pointMarker(lib, point);
+          marker = pointMarker(ctx, lib, point);
         }
         cache.set(key, marker);
       }
@@ -161,6 +232,8 @@ export function PlacesMap({
   const en = locale === "en";
   const boxRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
+  const ctxRef = useRef<Ctx | null>(null);
+  const mediaCleanup = useRef<() => void>(() => {});
   const [state, setState] = useState<"idle" | "ready" | "failed">("idle");
   const key = points.map((p) => `${p.id}:${p.lat},${p.lng}`).join("|");
 
@@ -184,16 +257,39 @@ export function PlacesMap({
             cooperativeGestures: cooperative,
           });
           mapRef.current = map;
-          map.addControl(new lib.NavigationControl({ showCompass: false }), "top-right");
+          const ctx: Ctx = { lib, map, en, byId: new Map(), popup: null, popupId: null, active: null, canHover: !!window.matchMedia?.("(hover: hover)").matches };
+          ctxRef.current = ctx;
+          // Same controls as the professionals map: zoom (+ fullscreen on the desktop results/branch maps).
+          const nav = new lib.NavigationControl({ showCompass: false });
+          const full = new lib.FullscreenControl();
+          const syncControls = () => {
+            const desktop = !window.matchMedia?.("(max-width: 1023px)").matches;
+            const wantNav = bare ? desktop : true;
+            const wantFull = (bare || cluster) && desktop;
+            for (const [control, want] of [[nav, wantNav], [full, wantFull]] as const) {
+              const added = map.hasControl(control);
+              if (want && !added) map.addControl(control, "top-right");
+              if (!want && added) map.removeControl(control);
+            }
+          };
+          syncControls();
+          const media = window.matchMedia?.("(max-width: 1023px)");
+          media?.addEventListener?.("change", syncControls);
+          mediaCleanup.current = () => media?.removeEventListener?.("change", syncControls);
+          map.on("click", (e) => {
+            const target = e.originalEvent?.target as HTMLElement | null;
+            if (target?.closest?.(".ccr-pin, .ccr-popwrap")) return;
+            hidePopup(ctx);
+          });
           const bounds = new lib.LngLatBounds();
           for (const p of points) bounds.extend([p.lng, p.lat]);
           const clustered = cluster && points.length > 1;
-          if (!clustered) for (const p of points) pointMarker(lib, p).addTo(map);
+          if (!clustered) for (const p of points) pointMarker(ctx, lib, p).addTo(map);
           // The bare map is the results map under the mobile sheet: keep the points above it.
           if (points.length > 1) map.fitBounds(bounds, { padding: bare ? sheetAwarePadding(boxRef.current, 48) : 48, maxZoom: 15, duration: 0 });
           map.once("load", () => {
             if (cancelled) return;
-            if (clustered) addClusteredMarkers(lib, map, points, en);
+            if (clustered) addClusteredMarkers(ctx, points);
             foldAttribution(map.getContainer());
             map.once("idle", () => foldAttribution(map.getContainer()));
             setState("ready");
@@ -211,6 +307,8 @@ export function PlacesMap({
     return () => {
       cancelled = true;
       observer?.disconnect();
+      mediaCleanup.current();
+      ctxRef.current = null;
       mapRef.current?.remove();
       mapRef.current = null;
     };
@@ -218,10 +316,33 @@ export function PlacesMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
+  // Card → pin: hovering a result card highlights its pin (delegated), like the professionals list.
+  useEffect(() => {
+    let current: string | null = null;
+    const cardId = (t: EventTarget | null): string | null => {
+      const c = (t as HTMLElement | null)?.closest?.("[data-search-item^='p:']") as HTMLElement | null;
+      return c ? (c.getAttribute("data-search-item") ?? "").slice(2) : null;
+    };
+    const pin = (id: string | null, on: boolean) => {
+      const el = id ? ctxRef.current?.byId.get(id) : null;
+      if (el) { el.classList.toggle("is-active", on); el.style.zIndex = on ? "9999" : ""; }
+    };
+    const onOver = (e: MouseEvent) => {
+      const id = cardId(e.target);
+      if (id && id !== current) { pin(current, false); current = id; pin(id, true); }
+    };
+    const onOut = (e: MouseEvent) => {
+      if (cardId(e.target) && !cardId(e.relatedTarget)) { pin(current, false); current = null; }
+    };
+    document.addEventListener("mouseover", onOver);
+    document.addEventListener("mouseout", onOut);
+    return () => { document.removeEventListener("mouseover", onOver); document.removeEventListener("mouseout", onOut); };
+  }, []);
+
   if (points.length === 0) return null;
   return (
-    <div className={`ccr-pmap relative overflow-hidden bg-[#eef2f6] ${bare ? "" : "rounded-2xl border border-[#d7e1ea] "}${className}`} data-places-map={points.length} data-map-state={state}>
-      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+    <div className={`ccr-pmap relative overflow-hidden bg-[#eef2f6] ${bare ? "" : "rounded-2xl border border-[#d7e1ea] "}${className}`} data-places-map={points.length} data-map-state={state} onMouseMove={(e) => ctxRef.current && hoverProximity(ctxRef.current, e)} onMouseLeave={() => ctxRef.current && hidePopup(ctxRef.current)}>
+      <style dangerouslySetInnerHTML={{ __html: PIN_CSS }} />
       {/* Inline position: maplibre-gl.css sets `.maplibregl-map{position:relative}`, which beat a Tailwind
           `absolute inset-0` and left the map 0 px tall (clipped by its overflow:hidden). */}
       <div ref={boxRef} style={{ position: "absolute", inset: 0 }} role="region" aria-label={label} />
