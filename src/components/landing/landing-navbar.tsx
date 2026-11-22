@@ -7,7 +7,7 @@ import { DesktopAppMenu } from "./desktop-app-menu";
 import { MobileAppStoreMenuLink } from "@/components/mobile/mobile-app-store-menu-link";
 import { SocialLinks } from "./social-links";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
-import { CategoriesPlacesEntry, CategoriesPlacesPanel, CategoriesMenuFooter, CategoriesDrawerGroup, PLACES_GROUP_ID } from "./directory-nav";
+import { CategoriesPlaceRows, CategoriesMenuFooter, CategoriesDrawerGroup, usePlaceCount } from "./directory-nav";
 import { useSiteFeatures } from "@/components/site-features";
 import { DirectorySuggestionRows, SuggestionGroupLabel } from "@/components/search/directory-suggestions";
 import { directorySectionForQuery, directorySectionHref, suggestDirectorySections, unifiedSearchPlaceholder, withoutPlaceDuplicates, type DirectorySectionSuggestion } from "@/lib/search/directory-search";
@@ -333,6 +333,7 @@ function matchCategories(query: string, limit = 8, locale?: string): CatMatch[] 
 function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
   const t = useTranslations("header");
   const directoryOn = useSiteFeatures().directorySections.length > 0;
+  const placeCount = usePlaceCount();
   const ts = useTranslations("categorySearch");
   const tp = useTranslations("categoriesPage");
   const locale = useLocale();
@@ -351,8 +352,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
   }));
   const matches = matchCategories(q, 18, locale);
   const filtering = q.trim().length > 0;
-  const placesSelected = directoryOn && selectedGroupId === PLACES_GROUP_ID;
-  const selectedGroup = menuGroups.find((group) => group.id === selectedGroupId) ?? (placesSelected ? undefined : menuGroups[0]);
+  const selectedGroup = menuGroups.find((group) => group.id === selectedGroupId) ?? menuGroups[0];
   const groupedMatches = menuGroups
     .map((group) => ({ group, items: matches.filter((match) => match.groupId === group.id) }))
     .filter(({ items }) => items.length > 0)
@@ -502,7 +502,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
           <div className="min-w-0 overflow-y-auto overscroll-contain border-r border-[#eef2f6] bg-white p-2">
             {menuGroups.map((group) => {
               const Icon = getCategoryGroupIcon(group.id, group.iconKey);
-              const selected = !placesSelected && selectedGroup?.id === group.id;
+              const selected = selectedGroup?.id === group.id;
               return (
                 <button
                   key={group.id}
@@ -519,16 +519,14 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-bold leading-snug">{getCategoryGroupLabel(group.id, locale)}</span>
-                    <span className="mt-0.5 block text-[11px] font-medium text-[#68778d]">{ts("optionsCount", { count: group.items.length })}</span>
+                    <span className="mt-0.5 block text-[11px] font-medium text-[#68778d]">{ts("optionsCount", { count: group.items.length + (directoryOn ? placeCount(group.id) : 0) })}</span>
                   </span>
                   <ChevronRight className={cn("h-4 w-4 shrink-0", selected ? "text-[#009FD9]" : "text-[#cbd5e1]")} />
                 </button>
               );
             })}
-            {directoryOn && <CategoriesPlacesEntry locale={locale} selected={placesSelected} onSelect={() => setSelectedGroupId(PLACES_GROUP_ID)} />}
           </div>
           <div className="min-w-0 overflow-y-auto overscroll-contain p-4">
-            {placesSelected && <CategoriesPlacesPanel locale={locale} onNavigate={onNavigate} />}
             {selectedGroup && (
               <section>
                 <div className="mb-3 flex items-end justify-between gap-3">
@@ -536,7 +534,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
                     <p className="text-[11px] font-bold uppercase tracking-wide text-[#8a94a6]">{t("categories")}</p>
                     <h3 className="mt-0.5 truncate text-lg font-extrabold text-[#162543]">{getCategoryGroupLabel(selectedGroup.id, locale)}</h3>
                   </div>
-                  {selectedGroup.items.length > 0 && (
+                  {(selectedGroup.items.length > 0 || (directoryOn && placeCount(selectedGroup.id) > 0)) && (
                     <Link
                       href="/servicios"
                       onClick={onNavigate}
@@ -546,9 +544,10 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
                     </Link>
                   )}
                 </div>
-                {selectedGroup.items.length > 0 ? (
+                {selectedGroup.items.length > 0 || (directoryOn && placeCount(selectedGroup.id) > 0) ? (
                   <div className="grid grid-cols-2 gap-1.5">
-                    {(directoryOn ? curatedGroupItems(selectedGroup.id, selectedGroup.items) : selectedGroup.items).map((item) => (
+                    {directoryOn && <CategoriesPlaceRows groupId={selectedGroup.id} locale={locale} onNavigate={onNavigate} />}
+                    {(directoryOn ? curatedGroupItems(selectedGroup.id, selectedGroup.items, placeCount(selectedGroup.id)) : selectedGroup.items).map((item) => (
                       <button
                         key={item.id}
                         type="button"

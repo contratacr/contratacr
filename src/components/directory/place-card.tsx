@@ -7,7 +7,7 @@ import {directionsLinks} from '@/lib/maps/maplibre';
 import {MapPin,Navigation,Phone} from 'lucide-react';
 import {VerifiedSeal} from '@/components/ui/verified-seal';
 import {HeroTile,RatingLine} from './biz-ui';
-import {RESULT_CARD,ResultThumb,resultChip} from '@/components/search/result-card-parts';
+import {RESULT_CARD,ResultPhotoStrip,ResultThumb,resultChip} from '@/components/search/result-card-parts';
 import {placePriceLevel} from '@/lib/directory/place-amenities';
 import {placePhotoSrc} from '@/lib/directory/place-photos';
 import type {CardExtra} from '@/lib/directory/card-extras';
@@ -84,8 +84,8 @@ const actionPrimary=`${actionBase} bg-[#009FD9] text-white hover:bg-[#0089bb]`;
 const actionSecondary=`${actionBase} border border-[#d7e1ea] bg-white text-[#162543] hover:border-[#b9c8d6] hover:bg-[#f6f9fb]`;
 
 /**
- * Result card of a place, same anatomy as ProfessionalCard (one visual system, owner decision 2026-11-21): square photo (first approved one) or
- * section tile on the left, 96/144 px, carrying the navy rank badge that mirrors its map pin, name + verified seal with the price
+ * Result card of a place, same anatomy as ProfessionalCard (one visual system, owner decision 2026-11-21): round photo (first approved one) or
+ * section tile on the left, 52/64 px, photos 2-4 as a strip under the info, carrying the navy rank badge that mirrors its map pin, name + verified seal with the price
  * level on the right of the name line, tags, rating («5.0 7 reseñas»), location, status chips, and in the right column
  * (below the info on phones) the action pills: «Llamar» takes the place WhatsApp has for professionals, «Cómo llegar»
  * the place of «Contactar por llamada». The whole card opens the place page (stretched low-z link); the name link is the
@@ -112,7 +112,7 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
   <div className="flex min-w-0 flex-1 items-start gap-2.5 lg:gap-3">
    <span aria-hidden="true" className="shrink-0" data-place-thumb={extra?.photo?'photo':'tile'}>
     <ResultThumb src={extra?.photo?placePhotoSrc(extra.photo,320):null} priority={rank!=null&&rank<=2} rank={rank}
-     fallback={<HeroTile verticalId={item.vertical.id} className="h-full w-full" iconClass="h-10 w-10 lg:h-14 lg:w-14"/>}/>
+     fallback={<HeroTile verticalId={item.vertical.id} className="h-full w-full" iconClass="h-6 w-6 lg:h-8 lg:w-8"/>}/>
    </span>
    <div className="flex min-w-0 flex-1 flex-col gap-1">
     <div className="flex min-w-0 items-start gap-3 lg:items-center">
@@ -136,6 +136,7 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
     </ul>
     {item.price&&<PlacePriceLine price={item.price} en={en}/>}
     {extra?.snippet&&<p className="line-clamp-1 text-[12.5px] italic text-[#334155]" data-place-snippet>{'"'}{extra.snippet}{'"'}</p>}
+    <ResultPhotoStrip className="mt-1" photos={(extra?.photos??[]).slice(1,4).map(u=>placePhotoSrc(u,320))}/>
    </div>
   </div>
   {(phone?.kind==='cr'||directions)&&<div className="flex min-w-0 flex-col gap-2 lg:ml-5 lg:w-[240px] lg:shrink-0 lg:justify-center lg:border-l lg:border-[#eef2f6] lg:pl-5" data-place-actions>

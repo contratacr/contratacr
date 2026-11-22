@@ -15,7 +15,7 @@ const FLAG_TEXT:Record<string,[string,string]>={not_this_place:['No es de este l
  copyright:['Es de otra persona (derechos)','Belongs to someone else (copyright)'],spam:['Publicidad o spam','Advertising or spam'],other:['Otro motivo','Other reason']};
 
 /** `mosaic` (2026-11-19, Yelp model): header strip — first photo large, up to four more, «Ver las N fotos» on top. */
-export function PlacePhotoGallery({photos,placeName,en,variant='grid'}:{photos:GalleryPhoto[];placeName:string;en:boolean;variant?:'grid'|'mosaic'}){
+export function PlacePhotoGallery({photos,placeName,en,variant='grid'}:{photos:GalleryPhoto[];placeName:string;en:boolean;variant?:'grid'|'mosaic'|'strip'}){
  const t=(es:string,english:string)=>en?english:es;
  const ready=useSyncExternalStore(noSubscribe,()=>true,()=>false);
  const [open,setOpen]=useState<number|null>(null);const opener=useRef<HTMLButtonElement|null>(null);const dialog=useRef<HTMLDivElement>(null);
@@ -33,7 +33,19 @@ export function PlacePhotoGallery({photos,placeName,en,variant='grid'}:{photos:G
  const alt=(i:number)=>photoAlt(photos[i]?.caption,placeName,i+1,en);
  const cur=open===null?null:photos[open]!;
  return <>
-  {variant==='mosaic'?<div className="relative" data-place-gallery={photos.length} data-ready={ready||undefined}>
+  {variant==='strip'?<div data-place-photo-strip={Math.min(photos.length,5)}>
+   <ul className={`flex snap-x gap-2 overflow-x-auto pb-1 sm:grid sm:h-[280px] sm:gap-2 sm:overflow-hidden sm:pb-0 ${photos.length===1?'sm:grid-cols-1':photos.length===2?'sm:grid-cols-2':'sm:grid-cols-4 sm:grid-rows-2'}`}>
+    {photos.slice(0,5).map((p,i)=><li key={p.url} className={`h-32 w-44 shrink-0 snap-start sm:h-auto sm:min-h-0 sm:w-auto ${i===0&&photos.length>2?'max-sm:h-32 max-sm:w-56 sm:col-span-2 sm:row-span-2':''} ${i>0&&photos.length===3?'sm:col-span-2':''}`}>
+     <button type="button" onClick={e=>{opener.current=e.currentTarget;setOpen(i);}} data-place-strip-thumb={i}
+      aria-label={t(`Ver foto ${i+1} de ${photos.length}: ${alt(i)}`,`View photo ${i+1} of ${photos.length}: ${alt(i)}`)} className={`group relative block h-full w-full overflow-hidden rounded-xl bg-slate-100 ${ring}`}>
+      {/* eslint-disable-next-line @next/next/no-img-element -- same-origin photo route or validated https seed URL */}
+      <img src={placePhotoSrc(p.url,i===0?800:320)} alt={alt(i)} width={i===0?800:320} height={i===0?600:240} loading={i===0?'eager':'lazy'} decoding="async" className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"/>
+      {i===4&&photos.length>5&&<span aria-hidden="true" className="absolute inset-0 grid place-items-center bg-[#162543]/60 text-lg font-bold text-white">+{photos.length-5}</span>}
+     </button></li>)}
+   </ul>
+   <a href="#fotos" data-place-strip-all className={`mt-2 inline-flex min-h-11 items-center text-[13px] font-bold text-[#009FD9] hover:underline ${ring}`}>
+    {photos.length===1?t('Ver la foto','See the photo'):t(`Ver las ${photos.length} fotos`,`See all ${photos.length} photos`)}</a>
+  </div>:variant==='mosaic'?<div className="relative" data-place-gallery={photos.length} data-ready={ready||undefined}>
    <ul className={`grid h-56 gap-1.5 overflow-hidden rounded-3xl sm:h-[360px] ${photos.length===1?'grid-cols-1':photos.length===2?'grid-cols-2':photos.length<5?'grid-cols-3 grid-rows-2':'grid-cols-4 grid-rows-2'}`}>
     {photos.slice(0,5).map((p,i)=><li key={p.url} className={`min-h-0 ${i===0&&photos.length>2?'col-span-2 row-span-2':''} ${i>0&&photos.length>2?'hidden sm:block':''} ${i===0&&photos.length>2?'max-sm:col-span-full max-sm:row-span-full':''}`}>
      <button type="button" onClick={e=>{opener.current=e.currentTarget;setOpen(i);}} data-place-photo-thumb={i}

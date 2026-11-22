@@ -897,7 +897,7 @@
     "privacy": "Política de Privacidad",
     "howWeRank": "Cómo ordenamos",
     "places": {
-      "title": "Lugares"
+      "title": "Categorías"
     }
   },
   "notFound": {
@@ -2886,9 +2886,10 @@
       "intentLugar": "Ver lugares"
     },
     "inicio": {
-      "lugaresTitulo": "Lugares populares",
-      "lugaresSub": "Restaurantes, farmacias, gasolineras y más, con horarios y datos de contacto.",
+      "lugaresTitulo": "Categorías populares",
+      "lugaresSub": "Restaurantes, farmacias, plomería, mecánica y más, con horarios y datos de contacto.",
       "verTodos": "Ver todos los lugares",
+      "verCategorias": "Ver todas las categorías",
       "compararPrecios": "Comparar precios",
       "eventos": "Eventos",
       "destacadosTitulo": "Lugares para empezar",

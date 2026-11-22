@@ -9,7 +9,7 @@ import { getInitials } from "@/lib/utils";
 import { supportsVideoConsultCategory, getCategoryLabel } from "@/lib/data/categories";
 import { primaryPricingLabel, splitPricingLabel, type PricingTier } from "@/lib/pricing";
 import { getProfessionalDisplayName } from "@/lib/display-name";
-import { ResultThumb, RESULT_CARD } from "@/components/search/result-card-parts";
+import { ResultThumb, ResultPhotoStrip, RESULT_CARD } from "@/components/search/result-card-parts";
 import { ResponsiveServiceSummary } from "@/components/professionals/responsive-service-summary";
 
 import { ResponsiveVerifiedName } from "@/components/professionals/responsive-verified-name";
@@ -61,8 +61,8 @@ export type ProfessionalCardData = {
   videoconsulta?: boolean;
   /** Count of "casos de éxito" (portfolio photos) — drives the preview link. */
   portfolioCount?: number;
-  /** Cover photo of the first "caso de éxito" (portfolio_urls[0], already resized); the card falls back to the avatar tile. */
-  coverUrl?: string;
+  /** Up to 3 thumbnails of "casos de éxito" (portfolio_urls, already resized) for the card photo strip. */
+  casePhotos?: string[];
   /** Public follower count for the professional profile. */
   followerCount?: number;
   /** Count of certifications — drives the compact "Ver certificaciones (N)" link. */
@@ -358,26 +358,15 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
       <div className="flex flex-wrap items-start gap-x-2.5 gap-y-1 lg:flex-nowrap lg:gap-x-3">
         <Link href={profileHref} className="relative z-10 shrink-0" data-testid="professional-card-thumb">
           <ResultThumb
-            src={professional.coverUrl}
             alt={professional.fullName}
             rank={rank}
-            priority={rank != null && rank <= 2}
-            more={Math.max(0, portfolioCount - 1)}
-            kind={professional.coverUrl ? "photo" : "tile"}
-            overlay={professional.coverUrl ? (
-              <Avatar className="h-8 w-8 rounded-full ring-2 ring-white lg:h-10 lg:w-10">
-                <AvatarImage src={professional.avatarUrl} alt="" />
-                <AvatarFallback delayMs={0} className="rounded-full bg-[#EBF5FB] text-[11px] font-bold text-[#009FD9] lg:text-[13px]">
-                  {getInitials(professional.fullName)}
-                </AvatarFallback>
-              </Avatar>
-            ) : undefined}
+            kind="tile"
             fallback={
-              <Avatar className="h-full w-full rounded-none">
+              <Avatar className="h-full w-full rounded-full">
                 <AvatarImage src={professional.avatarUrl} alt={professional.fullName} />
                 <AvatarFallback
                   delayMs={0}
-                  className="rounded-none bg-gradient-to-br from-[#EBF5FB] to-[#cfeaf5] text-2xl font-bold text-[#009FD9] lg:text-4xl"
+                  className="rounded-full bg-[#EBF5FB] font-bold text-[#009FD9] data-[delayed-open]:animate-pulse"
                 >
                   {getInitials(professional.fullName)}
                 </AvatarFallback>
@@ -459,6 +448,13 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
           )}
         </div>
       </div>
+      {(professional.casePhotos?.length ?? 0) > 0 && (
+        <ResultPhotoStrip
+          photos={professional.casePhotos ?? []}
+          more={Math.max(0, portfolioCount - (professional.casePhotos?.length ?? 0))}
+          className="mt-1"
+        />
+      )}
     </>
   );
 

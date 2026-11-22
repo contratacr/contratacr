@@ -81,17 +81,43 @@ export const SERVICE_MENU_TOP: Record<string, readonly string[]> = {
   automotriz: ["mecanica", "lavado_vehiculos", "mudanzas", "fletes", "grua", "cambio_llantas", "hojalateria", "electricidad_automotriz", "detailing", "transporte_privado"],
   tecnologia: ["reparacion_computadoras", "reparacion_celulares", "redes_internet", "camaras_seguridad", "desarrollo_web", "soporte_tecnico", "domotica", "reparacion_impresoras", "ciberseguridad", "consultoria_ti"],
   profesional: ["legal", "contabilidad", "bienes_raices", "notaria", "traduccion", "gestoria_tramites", "asesoria_tributaria", "corredor_seguros", "consultoria", "recursos_humanos"],
-  comercios: ["restaurantes_comida", "cafeterias", "panaderias", "farmacias", "gasolineras", "supermercados_minisuper", "ferreterias", "carnicerias_verdulerias", "papelerias_librerias", "tiendas_mascotas"],
+  comercios: ["panaderias", "panaderia", "carnicerias_verdulerias", "papelerias_librerias", "tiendas_mascotas"],
   eventos: ["fotografia_eventos", "organizacion_eventos", "dj_sonido", "catering", "decoracion", "alquiler_mobiliario", "floristeria", "animacion_infantil", "chef", "bartending"],
   educacion: ["tutorias", "idiomas", "matematicas", "preparacion_universitaria", "musica", "clases_manejo", "clases_baile", "clases_cocina", "clases_frances"],
 };
 export const SERVICE_MENU_LIMIT = 10;
 
-/** The services of a group shown in the Categorías menu: the editorial top list (if any), else the first ten. */
-export function curatedGroupItems<T extends { id: string }>(groupId: string, items: readonly T[]): T[] {
-  if (items.length <= SERVICE_MENU_LIMIT) return [...items];
-  const top = (SERVICE_MENU_TOP[groupId] ?? []).map((id) => items.find((i) => i.id === id)).filter((i): i is T => !!i);
-  return (top.length ? top : [...items]).slice(0, SERVICE_MENU_LIMIT);
+/** ONE taxonomy by theme (owner decision 2026-11-22, Yelp style, no standalone "Lugares" entry): each place section of the
+ * curated list lives INSIDE the service group (same ids as the Categorías menu left list) it belongs to by theme. Shown first
+ * in that group's panel, in this order. Ferreterías, pulperías, tours, gimnasios and talleres are not in any group: they stay
+ * reachable from /lugares and the footer. Restaurantes and cafés live in Comercios (no thin "Comida y bebida" group: the
+ * catalogue already keeps food shops there), farmacias with Salud, veterinarias with Mascotas, bancos with Empresas. */
+export const PLACE_MENU_GROUPS: Record<string, readonly string[]> = {
+  comercios: ["restaurantes", "cafes", "supermercados"],
+  salud: ["salud", "farmacias"],
+  automotriz: ["gasolineras"],
+  belleza: ["belleza"],
+  mascotas: ["veterinarias"],
+  turismo: ["hospedaje"],
+  profesional: ["bancos"],
+};
+
+/** Service categories that duplicate a place section of the same group: hidden from the menus (still in /servicios). */
+export const SERVICE_MENU_HIDE: ReadonlySet<string> = new Set(["restaurantes_comida", "cafeterias", "farmacias", "gasolineras", "supermercados_minisuper"]);
+
+/** The enabled place sections that belong to a group, in the group's order. */
+export function groupPlaces(groupId: string, enabled: readonly string[]): { section: string; label: Bilingual }[] {
+  return (PLACE_MENU_GROUPS[groupId] ?? []).filter((s) => enabled.includes(s) && DIRECTORY_SECTION_LABELS[s]).map((s) => ({ section: s, label: DIRECTORY_SECTION_LABELS[s] }));
+}
+
+/** The services of a group shown in the Categorías menu: the editorial top list (if any), else the first ones; at most
+ * SERVICE_MENU_LIMIT minus the places of the group (`reserve`), so the panel never has more than ten rows. */
+export function curatedGroupItems<T extends { id: string }>(groupId: string, items: readonly T[], reserve = 0): T[] {
+  const pool = reserve > 0 || (PLACE_MENU_GROUPS[groupId]?.length ?? 0) > 0 ? items.filter((i) => !SERVICE_MENU_HIDE.has(i.id)) : [...items];
+  const limit = Math.max(0, SERVICE_MENU_LIMIT - reserve);
+  if (pool.length <= limit) return pool;
+  const top = (SERVICE_MENU_TOP[groupId] ?? []).map((id) => pool.find((i) => i.id === id)).filter((i): i is T => !!i);
+  return (top.length ? top : pool).slice(0, limit);
 }
 
 export const pick = (value: Bilingual, locale: string): string => value[idiomaDe(locale)];

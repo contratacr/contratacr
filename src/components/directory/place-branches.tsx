@@ -25,7 +25,7 @@ export function BranchCard({branch,locale,rank,distanceKm}:{branch:BrandBranch;l
  const distance=formatDistance(distanceKm??null,en);
  return <article data-brand-branch={branch.slug} className="group relative flex items-start gap-3 rounded-2xl border border-[#e5e7eb] bg-white p-3 transition-shadow hover:border-[#d7e1ea] hover:shadow-md sm:p-4">
   <span aria-hidden="true" className="shrink-0">
-   <ResultThumb rank={rank} fallback={<HeroTile verticalId={branch.vertical} className="h-full w-full" iconClass="h-10 w-10 lg:h-14 lg:w-14"/>}/>
+   <ResultThumb rank={rank} fallback={<HeroTile verticalId={branch.vertical} className="h-full w-full" iconClass="h-6 w-6 lg:h-8 lg:w-8"/>}/>
   </span>
   <div className="flex min-w-0 flex-1 flex-col gap-1">
    <h3 className="text-[15px] font-bold leading-[1.15] text-[#111827]">

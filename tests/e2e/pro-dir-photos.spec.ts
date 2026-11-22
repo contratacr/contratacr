@@ -61,7 +61,7 @@ test('place photos: owner publishes, customer pending → staff approves → vis
   const anon=await browser.newContext({baseURL:origin});const a=await anon.newPage();const aErrors=collectPageErrors(a);
   try{
    expect((await a.request.get(`/api/fotos-lugar/${userRow.id}?s=320`)).status()).toBe(404);
-   await gotoOK(a,`/lugar/${slug}`);await expect(a.locator('[data-place-photo-thumb]')).toHaveCount(1);
+   await gotoOK(a,`/lugar/${slug}`);await expect(a.locator('[data-place-photo-thumb]')).toHaveCount(1);await expect(a.locator('[data-place-strip-thumb]')).toHaveCount(1);
 
    // Staff approve (the admin queue lists it as pending) → visible.
    const queue=(await db.rpc('dir_admin_photo_queue',{p_filter:'pending',p_limit:200})).data as {id:string;slug:string}[];

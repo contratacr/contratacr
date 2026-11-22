@@ -1,11 +1,11 @@
 "use client";
 import { useState } from "react";
-import { Store, ChevronDown, ChevronRight, Compass, MapPin, type LucideIcon } from "lucide-react";
+import { Store, ChevronDown, ChevronRight, Compass, type LucideIcon } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { useSiteFeatures } from "@/components/site-features";
 import { DIRECTORY_SECTION_LABELS } from "@/lib/search/directory-search";
-import { DIRECTORY_SECTION_ICONS, curatedPlaces, curatedGroupItems, pick } from "@/lib/directory/directory-groups";
+import { DIRECTORY_SECTION_ICONS, groupPlaces, curatedGroupItems, pick } from "@/lib/directory/directory-groups";
 import { getAllCategories, getAllCategoryGroups, getCategoryLabel, getCategoryGroupLabel } from "@/lib/data/categories";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { rutaDeBusqueda } from "@/lib/buscar-url";
@@ -22,10 +22,6 @@ function useSections() {
 }
 
 export { DIRECTORY_GROUPS } from "@/lib/directory/directory-groups";
-function usePlaces() {
-  const { directorySections } = useSiteFeatures();
-  return curatedPlaces(directorySections);
-}
 const TXT = {
   allPlaces: { es: "Ver todos los lugares", en: "See all places" },
   allCategories: { es: "Ver todas las categorías", en: "See all categories" },
@@ -37,66 +33,50 @@ const TXT = {
 };
 const FOOT_LINK = "inline-flex items-center rounded-xl px-2.5 py-1.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]";
 
-/** Id of the "Lugares" entry inside the Categorías left list (it can never clash with a service group id). */
-export const PLACES_GROUP_ID = "__lugares";
+/** Number of curated place sections inside a group (0 while the directory is off or for groups without places). */
+export function usePlaceCount(): (groupId: string) => number {
+  const { directorySections } = useSiteFeatures();
+  return (groupId) => groupPlaces(groupId, directorySections).length;
+}
 
-/** Left-list entry "Lugares" of the desktop Categorías menu, same look as a service group row. Renders nothing while the
- * directory is off. A thin divider and small title separate it from the service groups. */
-export function CategoriesPlacesEntry({ locale, selected, onSelect }: { locale: string; selected: boolean; onSelect: () => void }) {
-  const places = usePlaces();
-  if (!places.length) return null;
+/** Row class shared by place rows and service rows of the desktop Categorías panel: one look, the user cannot tell them apart. */
+export const MENU_ROW_CLASS = "group flex min-h-10 items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#EBF5FB] hover:text-[#0089bb] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/20";
+
+/** The place rows of one group in the desktop panel (children of the same two-column grid as the service rows). */
+export function CategoriesPlaceRows({ groupId, locale, onNavigate }: { groupId: string; locale: string; onNavigate: () => void }) {
+  const { directorySections } = useSiteFeatures();
   return (
-    <div data-nav-places-entry className="mt-1.5 border-t border-[#eef2f6] pt-1.5">
-      <button
-        type="button"
-        onClick={onSelect}
-        onMouseEnter={onSelect}
-        className={cn(
-          "group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/20",
-          selected ? "bg-white text-[#162543] shadow-sm" : "text-[#526173] hover:bg-white/80 hover:text-[#162543]",
-        )}
-      >
-        <span className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-lg", selected ? "bg-[#EAF7FD] text-[#0089bb]" : "bg-white text-[#8a94a6] group-hover:text-[#0089bb]")}>
-          <MapPin className="h-4 w-4" aria-hidden />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm font-bold leading-snug">{pick(TXT.places, locale)}</span>
-          <span className="mt-0.5 block text-[11px] font-medium text-[#68778d]">{pick(TXT.options, locale).replace("{n}", String(places.length))}</span>
-        </span>
-        <ChevronRight className={cn("h-4 w-4 shrink-0", selected ? "text-[#009FD9]" : "text-[#cbd5e1]")} aria-hidden />
-      </button>
-    </div>
+    <>
+      {groupPlaces(groupId, directorySections).map(({ section, label }) => (
+        <Link key={section} href={`/${section}`} onClick={onNavigate} data-nav-directory-section={section} className={MENU_ROW_CLASS}>
+          <span className="min-w-0 [overflow-wrap:anywhere]">{pick(label, locale)}</span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-[#cbd5e1] group-hover:text-[#009FD9]" aria-hidden />
+        </Link>
+      ))}
+    </>
   );
 }
 
-/** Right panel of the Categorías menu for "Lugares": the curated place categories (icon + label, two columns). */
-export function CategoriesPlacesPanel({ locale, onNavigate }: { locale: string; onNavigate: () => void }) {
-  const places = usePlaces();
-  if (!places.length) return null;
-  return (
-    <section data-nav-places aria-label={pick(TXT.places, locale)}>
-      <div className="mb-3 flex items-end justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-[#8a94a6]">{pick(TXT.categories, locale)}</p>
-          <h3 className="mt-0.5 truncate text-lg font-extrabold text-[#162543]">{pick(TXT.places, locale)}</h3>
-        </div>
-        <Link href="/lugares" onClick={onNavigate} data-nav-places-all className="shrink-0 text-xs font-bold text-[#009FD9] hover:underline">{pick(TXT.allPlaces, locale)}</Link>
-      </div>
-      <ul className="grid grid-cols-2 gap-1.5">
-        {places.map(({ section, label }) => {
-          const Icon = DIRECTORY_SECTION_ICONS[section] ?? Store;
-          return (
-            <li key={section}>
-              <Link href={`/${section}`} onClick={onNavigate} data-nav-directory-section={section} className="group flex min-h-10 items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#EBF5FB] hover:text-[#0089bb] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/20">
-                <Icon className="h-4 w-4 shrink-0 text-[#8a94a6] group-hover:text-[#0089bb]" aria-hidden />
-                <span className="min-w-0 [overflow-wrap:anywhere]">{pick(label, locale)}</span>
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-    </section>
-  );
+/** The themes (service groups with their places merged in), each with the rows shown in menus: places first, then services. */
+export type ThemeRow = { key: string; label: string; href: string };
+export type Theme = { id: string; label: string; count: number; rows: ThemeRow[] };
+export function useThemes(locale: string): Theme[] {
+  const { directorySections } = useSiteFeatures();
+  useCustomCategories();
+  const all = getAllCategories();
+  return getAllCategoryGroups().map((g) => {
+    const places = groupPlaces(g.id, directorySections);
+    const services = all.filter((c) => c.groupId === g.id);
+    return {
+      id: g.id,
+      label: getCategoryGroupLabel(g.id, locale),
+      count: services.length + places.length,
+      rows: [
+        ...places.map(({ section, label }) => ({ key: `p-${section}`, label: pick(label, locale), href: `/${section}` })),
+        ...curatedGroupItems(g.id, services, places.length).map((item) => ({ key: item.id, label: getCategoryLabel(item.id, locale), href: rutaDeBusqueda({ categoria: item.id }) })),
+      ],
+    };
+  }).filter((t) => t.rows.length > 0);
 }
 
 /** Footer row of the Categorías menu with the directory on. */
@@ -106,22 +86,18 @@ export function CategoriesMenuFooter({ locale, onNavigate }: { locale: string; o
       <Link href="/servicios" onClick={onNavigate} className="inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-sm font-bold text-[#009FD9] hover:underline">
         <Compass className="h-4 w-4" aria-hidden />{pick(TXT.allCategories, locale)}
       </Link>
-      <Link href="/lugares" onClick={onNavigate} data-nav-places-all className={FOOT_LINK}>{pick(TXT.allPlaces, locale)}</Link>
       <Link href="/precios" onClick={onNavigate} data-nav-places-prices className={FOOT_LINK}>{pick(TXT.prices, locale)}</Link>
       <Link href="/eventos" onClick={onNavigate} className={FOOT_LINK}>{pick(TXT.events, locale)}</Link>
     </div>
   );
 }
 
-/** Mobile drawer accordion "Categorías" (directory on): the service groups (each opens its most demanded services), then a
- * "Lugares" block with the curated place categories and the closing links. */
+/** Mobile drawer accordion "Categorías" (directory on): the same themes as the desktop menu (each opens its places and most
+ * demanded services), then the closing links. */
 export function CategoriesDrawerGroup({ locale, itemClass, textClass, icon, onNavigate }: { locale: string; itemClass: string; textClass: string; icon: React.ReactNode; onNavigate: () => void }) {
-  const places = usePlaces();
   const [open, setOpen] = useState(false);
   const [openGroup, setOpenGroup] = useState<string | null>(null);
-  useCustomCategories();
-  const all = getAllCategories();
-  const groups = getAllCategoryGroups().map((g) => ({ ...g, items: curatedGroupItems(g.id, all.filter((c) => c.groupId === g.id)) })).filter((g) => g.items.length > 0);
+  const themes = useThemes(locale);
   return (
     <div data-nav-services-drawer>
       <button type="button" aria-expanded={open} aria-controls="ccr-drawer-categorias" onClick={() => setOpen((v) => !v)} className={itemClass}>
@@ -131,43 +107,38 @@ export function CategoriesDrawerGroup({ locale, itemClass, textClass, icon, onNa
       </button>
       {open && (
         <div id="ccr-drawer-categorias" className="ccr-menu-sub">
-          {groups.map((g) => (
+          {themes.map((g) => (
             <div key={g.id}>
               <button type="button" aria-expanded={openGroup === g.id} onClick={() => setOpenGroup(openGroup === g.id ? null : g.id)} className="ccr-menu-sub-fila w-full text-left">
-                {getCategoryGroupLabel(g.id, locale)}
+                {g.label}
               </button>
               {openGroup === g.id && (
                 <div className="pl-3">
-                  {g.items.map((item) => (
-                    <Link key={item.id} href={rutaDeBusqueda({ categoria: item.id })} prefetch={false} onClick={onNavigate} className="ccr-menu-sub-fila">{getCategoryLabel(item.id, locale)}</Link>
+                  {g.rows.map((row) => (
+                    <Link key={row.key} href={row.href} prefetch={false} onClick={onNavigate} {...(row.key.startsWith("p-") ? { "data-nav-directory-section": row.key.slice(2) } : {})} className="ccr-menu-sub-fila">{row.label}</Link>
                   ))}
                 </div>
               )}
             </div>
           ))}
           <Link href="/servicios" prefetch={true} onClick={onNavigate} className="ccr-menu-sub-fila font-bold text-[#009FD9]">{pick(TXT.allCategories, locale)}</Link>
-          {places.length > 0 && (
-            <div data-nav-directory-drawer className="mt-2">
-              <p className="pt-2 text-[11px] font-bold uppercase tracking-[0.08em] text-[#7a899d]">{pick(TXT.places, locale)}</p>
-              {places.map(({ section, label }) => (
-                <Link key={section} href={`/${section}`} prefetch={false} onClick={onNavigate} data-nav-directory-section={section} className="ccr-menu-sub-fila">{pick(label, locale)}</Link>
-              ))}
-              <Link href="/lugares" prefetch={false} onClick={onNavigate} className="ccr-menu-sub-fila font-bold text-[#009FD9]">{pick(TXT.allPlaces, locale)}</Link>
-              <Link href="/precios" prefetch={false} onClick={onNavigate} className="ccr-menu-sub-fila">{pick(TXT.prices, locale)}</Link>
-              <Link href="/eventos" prefetch={false} onClick={onNavigate} className="ccr-menu-sub-fila">{pick(TXT.events, locale)}</Link>
-            </div>
-          )}
+          <Link href="/precios" prefetch={false} onClick={onNavigate} className="ccr-menu-sub-fila">{pick(TXT.prices, locale)}</Link>
+          <Link href="/eventos" prefetch={false} onClick={onNavigate} className="ccr-menu-sub-fila">{pick(TXT.events, locale)}</Link>
         </div>
       )}
     </div>
   );
 }
 
-/** Footer column "Lugares": the curated place categories + price comparison + all places. Same accordion on phones as the
- * other footer columns. Renders nothing while the directory is off. */
+/** Footer column "Categorías": one representative entry per top theme (its first place, else its first service; themes have
+ * no page of their own), then all categories and price comparison. Same accordion on phones as the other footer columns.
+ * Renders nothing while the directory is off (the flag-off footer has no such column). */
+export const FOOTER_THEMES: readonly string[] = ["comercios", "hogar", "salud", "automotriz", "belleza", "turismo", "mascotas", "profesional"];
 export function FooterPlacesColumn({ locale, heading, open, onToggle, interactive }: { locale: string; heading: string; open: boolean; onToggle: () => void; interactive: boolean }) {
-  const places = usePlaces();
-  if (!places.length) return null;
+  const themes = useThemes(locale);
+  const { directorySections } = useSiteFeatures();
+  const entries = FOOTER_THEMES.map((id) => themes.find((t) => t.id === id)?.rows[0]).filter((r): r is ThemeRow => !!r);
+  if (!directorySections.length || !entries.length) return null;
   const linkClass = "inline-flex py-2 text-sm leading-5 text-[#162543] hover:text-[#0083b0] transition-colors";
   return (
     <nav data-footer-places aria-label={heading} className="border-b border-[#162543]/10 md:border-0">
@@ -179,11 +150,12 @@ export function FooterPlacesColumn({ locale, heading, open, onToggle, interactiv
         </button>
       </h3>
       <ul id="footer-places" className={cn(open ? "grid" : "hidden", "grid-cols-1 gap-y-1 pb-5 md:grid md:pb-0")}>
-        {places.map(({ section, label }) => (
-          <li key={section}>
-            <Link href={`/${section}`} className={linkClass}>{pick(label, locale)}</Link>
+        {entries.map((row) => (
+          <li key={row.key}>
+            <Link href={row.href} className={linkClass}>{row.label}</Link>
           </li>
         ))}
+        <li><Link href="/servicios" className={linkClass}>{pick(TXT.allCategories, locale)}</Link></li>
         <li><Link href="/precios" className={linkClass}>{pick(TXT.prices, locale)}</Link></li>
         <li><Link href="/lugares" className={linkClass}>{pick(TXT.allPlaces, locale)}</Link></li>
       </ul>

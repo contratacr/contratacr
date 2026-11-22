@@ -28,7 +28,18 @@ for (const language of ["es", "en"] as const) {
   });
 }
 
-test("desktop navbar: Categorias mega-menu has the curated Lugares block and its footer row", async ({ page }, testInfo) => {
+// Place sections live INSIDE the themes (no standalone "Lugares" entry): group name -> sections shown in its panel.
+const PLACES_BY_GROUP: Record<string, string[]> = {
+  Comercios: ["restaurantes", "cafes", "supermercados"],
+  Salud: ["salud", "farmacias"],
+  "Vehículos": ["gasolineras"],
+  Belleza: ["belleza"],
+  Mascotas: ["veterinarias"],
+  Turismo: ["hospedaje"],
+  Empresas: ["bancos"],
+};
+
+test("desktop navbar: Categorias mega-menu merges the places into the themes and has its footer row", async ({ page }, testInfo) => {
   test.skip(isMobileProject(testInfo), "Desktop navigation only");
   await page.setViewportSize({ width: 1366, height: 900 });
   await gotoOK(page, "/");
@@ -37,24 +48,32 @@ test("desktop navbar: Categorias mega-menu has the curated Lugares block and its
   await header.getByRole("button", { name: /^Categorías$/ }).click();
   const menu = page.getByTestId("services-mega-menu");
   await expect(menu).toBeVisible();
-  await menu.locator("[data-nav-places-entry] button").hover();
-  const places = menu.locator("[data-nav-places]");
-  await expect(places).toBeVisible();
-  await expect(places.locator("[data-nav-directory-section]")).toHaveCount(10);
-  await expect(places.locator('[data-nav-directory-section="pulperias"]')).toHaveCount(0);
-  await expect(menu.locator("[data-nav-places-all]").last()).toHaveAttribute("href", "/lugares");
+  await expect(menu.getByRole("button", { name: /^Lugares/ })).toHaveCount(0);
+  await expect(menu.locator("[data-nav-places-entry]")).toHaveCount(0);
+  for (const [group, sections] of Object.entries(PLACES_BY_GROUP)) {
+    await menu.getByRole("button", { name: new RegExp(`^${group}`) }).first().hover();
+    for (const section of sections) await expect(menu.locator(`[data-nav-directory-section="${section}"]`)).toHaveAttribute("href", `/${section}`);
+    await expect(menu.locator("[data-nav-directory-section]")).toHaveCount(sections.length);
+  }
+  for (const out of ["pulperias", "ferreterias", "tours", "gimnasios", "talleres"]) await expect(menu.locator(`[data-nav-directory-section="${out}"]`)).toHaveCount(0);
+  await expect(menu.locator("[data-nav-places-all]")).toHaveCount(0);
   await expect(menu.locator("[data-nav-places-prices]")).toHaveAttribute("href", "/precios");
-  await expect(menu.getByRole("link", { name: "Ver todas las categorías" })).toHaveAttribute("href", "/servicios");
+  await expect(menu.getByRole("link", { name: "Ver todas las categorías" }).last()).toHaveAttribute("href", "/servicios");
   await page.keyboard.press("Escape");
 });
 
-test("mobile drawer: Categorias accordion holds the curated Lugares block", async ({ page }, testInfo) => {
+test("mobile drawer: Categorias accordion has the same themes with the places inside", async ({ page }, testInfo) => {
   test.skip(!isMobileProject(testInfo), "Mobile navigation only");
   await gotoOK(page, "/");
   await page.getByRole("button", { name: /Abrir men[uú]|Open menu/i }).first().click();
   const drawer = page.getByRole("dialog", { name: /Men[uú]|Menu/i });
   await expect(drawer.getByRole("button", { name: /^Categorías$|^Categories$/ })).toBeVisible();
   await drawer.getByRole("button", { name: /^Categorías$|^Categories$/ }).click();
-  await expect(drawer.locator("[data-nav-directory-section]")).toHaveCount(10);
+  await expect(drawer.getByRole("button", { name: /^Lugares$|^Places$/ })).toHaveCount(0);
+  await drawer.getByRole("button", { name: /^Comercios$/ }).click();
+  await expect(drawer.locator("[data-nav-directory-section]")).toHaveCount(3);
+  await drawer.getByRole("button", { name: /^Salud$/ }).click();
+  await expect(drawer.locator('[data-nav-directory-section="salud"]')).toHaveCount(1);
+  await expect(drawer.locator('[data-nav-directory-section="farmacias"]')).toHaveCount(1);
   await expect(drawer.getByRole("link", { name: /Para negocios y profesionales|For businesses and professionals/ })).toHaveAttribute("href", /negocios-y-profesionales/);
 });

@@ -897,7 +897,7 @@
     "privacy": "Privacy Policy",
     "howWeRank": "How we rank",
     "places": {
-      "title": "Places"
+      "title": "Categories"
     }
   },
   "notFound": {
@@ -2886,9 +2886,10 @@
       "intentLugar": "See places"
     },
     "inicio": {
-      "lugaresTitulo": "Popular places",
-      "lugaresSub": "Restaurants, pharmacies, fuel stations and more, with hours and contact details.",
+      "lugaresTitulo": "Popular categories",
+      "lugaresSub": "Restaurants, pharmacies, plumbing, auto repair and more, with hours and contact details.",
       "verTodos": "See all places",
+      "verCategorias": "See all categories",
       "compararPrecios": "Compare prices",
       "eventos": "Events",
       "destacadosTitulo": "Places to start with",

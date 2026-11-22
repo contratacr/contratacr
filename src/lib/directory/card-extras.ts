@@ -2,12 +2,12 @@ import 'server-only';
 import {createAdminClient} from '@/lib/supabase/admin';
 
 /**
- * Result-card extras (2026-11-19, Yelp result-card model): the cover photo (first approved, non-seed photo, same order
- * as the place gallery) and a one-line snippet of the newest published review, for the places of ONE results page
+ * Result-card extras (2026-11-19, Yelp result-card model): up to 4 approved, non-seed photos (same order as the place gallery; `photo` = the first) and a one-line snippet of the newest published review, for the places of ONE results page
  * (≤ ~25 slugs). Three bounded reads with the service client; only public data (approved photos, published reviews)
  * leaves this function. Any error → no extras (the card falls back to the section tile and no snippet).
  */
-export type CardExtra={photo:string|null;snippet:string|null};
+export type CardExtra={photo:string|null;photos:string[];snippet:string|null};
+const MAX_PHOTOS=4;
 export async function placeCardExtras(slugs:string[]):Promise<Record<string,CardExtra>>{
  const out:Record<string,CardExtra>={};
  const list=[...new Set(slugs)].slice(0,40);if(!list.length)return out;
@@ -18,12 +18,12 @@ export async function placeCardExtras(slugs:string[]):Promise<Record<string,Card
   const bySlug=new Map(places.data.map(p=>[p.id as string,p.slug as string]));const ids=[...bySlug.keys()];
   const [media,reviews]=await Promise.all([
    db.from('dir_place_media').select('place_id,url,sort,created_at').in('place_id',ids).eq('kind','photo').eq('status','active').neq('origin','seed')
-    .order('sort',{ascending:true}).order('created_at',{ascending:false}).limit(ids.length*3),
+    .order('sort',{ascending:true}).order('created_at',{ascending:false}).limit(ids.length*MAX_PHOTOS),
    db.from('dir_reviews').select('place_id,comment,created_at').in('place_id',ids).eq('moderation_status','published')
     .order('created_at',{ascending:false}).limit(ids.length*3),
   ]);
-  for(const m of media.data??[]){const s=bySlug.get(m.place_id as string);if(!s)continue;out[s]??={photo:null,snippet:null};out[s].photo??=String(m.url);}
-  for(const r of reviews.data??[]){const s=bySlug.get(r.place_id as string);if(!s)continue;out[s]??={photo:null,snippet:null};out[s].snippet??=String(r.comment);}
+  for(const m of media.data??[]){const s=bySlug.get(m.place_id as string);if(!s)continue;out[s]??={photo:null,photos:[],snippet:null};if(out[s].photos.length>=MAX_PHOTOS)continue;out[s].photos.push(String(m.url));out[s].photo??=String(m.url);}
+  for(const r of reviews.data??[]){const s=bySlug.get(r.place_id as string);if(!s)continue;out[s]??={photo:null,photos:[],snippet:null};out[s].snippet??=String(r.comment);}
  }catch{/* extras are optional */}
  return out;
 }
