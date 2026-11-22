@@ -23,6 +23,8 @@ for (const native of [false, true]) {
     await expect.poll(async()=>Math.round((await menu.boundingBox())!.x)).toBe(0);
     // The download notice must not leave a 76px empty band in the menu.
     expect(await header.evaluate(el=>parseFloat(getComputedStyle(el).paddingTop))).toBeLessThan(20);
+    // Directory on: "Buscar profesionales" lives inside the "Servicios" accordion (first row of the drawer).
+    const services=menu.getByRole('button',{name:'Servicios',exact:true});if(await services.count())await services.click();
     await expect(menu.getByRole('button',{name:'Buscar profesionales',exact:true})).toBeVisible();
     await menu.getByRole('button',{name:'Ayuda y soporte'}).click();
     const top=(await header.boundingBox())!.y;
@@ -55,6 +57,7 @@ for (const native of [false, true]) {
     await expect(menu).toBeHidden();
     if(showsDownloadBanner)await expect(banner).toBeVisible();
     await button.click();
+    const servicesRow=menu.getByRole('button',{name:'Servicios',exact:true});if(await servicesRow.count())await servicesRow.click();
     await menu.getByRole('button',{name:'Buscar profesionales',exact:true}).click();
     await expect(menu).toBeHidden();
     await expect(page.locator('.ccr-native-search-panel')).toBeVisible();

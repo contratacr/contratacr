@@ -167,7 +167,19 @@
     "helpFaq": "Preguntas frecuentes",
     "helpProTips": "Consejos para profesionales",
     "helpContact": "Escribir a soporte",
-    "goToPanel": "Ir a mi panel"
+    "goToPanel": "Ir a mi panel",
+    "places": "Lugares",
+    "more": "Más",
+    "forBusiness": "Para negocios y profesionales",
+    "promotions": "Promociones",
+    "clientRequests": "Solicitudes de clientes",
+    "requests": "Solicitudes",
+    "jobs": "Empleos",
+    "help": "Ayuda",
+    "downloadApp": "Descargar app",
+    "publishRequest": "Publicar solicitud",
+    "findProfessionals": "Buscar profesionales",
+    "freeBadge": "Gratis"
   },
   "home": {
     "accountDeletion": {
@@ -882,7 +894,10 @@
     "rights": "© {year} ContrataCR. Todos los derechos reservados.",
     "terms": "Términos y Condiciones",
     "privacy": "Política de Privacidad",
-    "howWeRank": "Cómo ordenamos"
+    "howWeRank": "Cómo ordenamos",
+    "places": {
+      "title": "Lugares"
+    }
   },
   "notFound": {
     "title": "Página no encontrada",
@@ -2860,7 +2875,30 @@
       "geoFailed": "No pudimos obtener su ubicación. Puede buscar por provincia o cantón.",
       "search": "Buscar",
       "titular": "Encuentre profesionales|*verificados* en Costa Rica.",
-      "titularPc": "Encuentre profesionales *verificados*|en Costa Rica."
+      "titularPc": "Encuentre profesionales *verificados*|en Costa Rica.",
+      "titularLugares": "Encuentre profesionales|y *lugares* en Costa Rica.",
+      "titularLugaresPc": "Encuentre profesionales y *lugares*|en Costa Rica.",
+      "puertasAria": "Qué desea hacer",
+      "puertaServicio": "Contratar un servicio",
+      "puertaLugar": "Encontrar un lugar",
+      "intentServicio": "Contratar un servicio",
+      "intentLugar": "Ver lugares"
+    },
+    "inicio": {
+      "lugaresTitulo": "Lugares populares",
+      "lugaresSub": "Restaurantes, farmacias, gasolineras y más, con horarios y datos de contacto.",
+      "verTodos": "Ver todos los lugares",
+      "compararPrecios": "Comparar precios",
+      "eventos": "Eventos",
+      "destacadosTitulo": "Lugares para empezar",
+      "destacadosVer": "Ver {seccion}",
+      "promoTitulo": "Promociones",
+      "promoTexto": "Ofertas de profesionales y de negocios de Costa Rica, en un solo lugar.",
+      "promoCta": "Ver promociones",
+      "negociosTitulo": "Para negocios y profesionales",
+      "negociosTexto": "Llegue a más clientes: ofrezca sus servicios o reclame la ficha de su negocio.",
+      "ofrecer": "Ofrecer mis servicios",
+      "reclamar": "Reclamar mi negocio"
     },
     "carousel": {
       "titlePre": "Los servicios",
@@ -3873,5 +3911,37 @@
     "signOut": "Salir",
     "services": "Servicios",
     "workPhotos": "Casos de éxito"
+  },
+  "placesHub": {
+    "metaTitle": "Lugares en Costa Rica",
+    "metaDescription": "Restaurantes, comercios, clínicas, gasolineras y más: horarios, fotos, reseñas y datos de contacto en todo Costa Rica.",
+    "breadcrumbLabel": "Ruta de navegación",
+    "home": "Inicio",
+    "title": "Lugares",
+    "intro": "Encuentre restaurantes, comercios, clínicas y más en todo Costa Rica, con horarios, fotos, reseñas y datos de contacto.",
+    "moreTitle": "Más para explorar",
+    "prices": "Comparar precios",
+    "pricesText": "Supermercados y farmacias, comercio por comercio.",
+    "events": "Eventos",
+    "eventsText": "Lo que publican los negocios de su zona."
+  },
+  "businessHub": {
+    "metaTitle": "Para negocios y profesionales",
+    "metaDescription": "Ofrezca sus servicios como profesional o reclame gratis la ficha de su negocio en ContrataCR.",
+    "breadcrumbLabel": "Ruta de navegación",
+    "home": "Inicio",
+    "title": "Para negocios y profesionales",
+    "intro": "Elija cómo quiere que lo encuentren sus clientes.",
+    "proTitle": "Soy profesional: ofrecer mis servicios",
+    "proB1": "Perfil propio con sus servicios y su zona",
+    "proB2": "Solicitudes de clientes que buscan lo que usted hace",
+    "proB3": "Registro gratuito, sin comisiones por contacto",
+    "proCta": "Ofrecer mis servicios",
+    "bizTitle": "Tengo un negocio: reclamar mi ficha gratis",
+    "bizB1": "Corrija horarios, teléfono y fotos de su ficha",
+    "bizB2": "Responda las reseñas de sus clientes",
+    "bizB3": "Reciba reservas y mensajes, sin costo",
+    "bizCta": "Buscar mi negocio",
+    "bizHint": "Encuentre su ficha y pulse \"Reclamar\"."
   }
 }

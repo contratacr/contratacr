@@ -1,0 +1,60 @@
+import { Utensils, Coffee, Fuel, Pill, ShoppingCart, Store, Hammer, BedDouble, Stethoscope, PawPrint, Wrench, Scissors, Dumbbell, Compass, HeartPulse, Car, Plane, Landmark, type LucideIcon } from "lucide-react";
+import { DIRECTORY_SECTION_LABELS } from "@/lib/search/directory-search";
+import { idiomaDe } from "@/lib/prefijo-de-idioma";
+
+// Information architecture of the place directory (owner decision 2026-11-21, "Lugares"): the sections are shown in six
+// groups in the navbar menu, the mobile drawer, the footer and the /lugares hub. ONE list for all of them. A section that
+// is not enabled (useSiteFeatures().directorySections / sitemapSections()) is filtered out and an empty group is hidden.
+// Plain module (no "use client") so server pages (the hub) and client menus can both import it.
+/** Icon of each section (menus, hub, suggestions). */
+export const DIRECTORY_SECTION_ICONS: Record<string, LucideIcon> = {
+  restaurantes: Utensils, cafes: Coffee, supermercados: ShoppingCart, pulperias: Store, farmacias: Pill, ferreterias: Hammer,
+  gasolineras: Fuel, talleres: Wrench, hospedaje: BedDouble, tours: Compass, belleza: Scissors, gimnasios: Dumbbell,
+  veterinarias: PawPrint, salud: Stethoscope, bancos: Landmark,
+};
+export type Bilingual = { es: string; en: string };
+export type DirectoryGroup = { id: string; es: string; en: string; icon: LucideIcon; sections: readonly string[] };
+
+export const DIRECTORY_GROUPS: readonly DirectoryGroup[] = [
+  { id: "comer", es: "Comer y beber", en: "Food and drink", icon: Utensils, sections: ["restaurantes", "cafes"] },
+  { id: "compras", es: "Compras", en: "Shopping", icon: ShoppingCart, sections: ["supermercados", "pulperias", "ferreterias", "farmacias"] },
+  { id: "salud", es: "Salud y bienestar", en: "Health and wellness", icon: HeartPulse, sections: ["salud", "veterinarias", "belleza", "gimnasios"] },
+  { id: "autos", es: "Autos y combustible", en: "Cars and fuel", icon: Car, sections: ["gasolineras", "talleres"] },
+  { id: "viajes", es: "Viajes", en: "Travel", icon: Plane, sections: ["hospedaje", "tours"] },
+  { id: "dinero", es: "Dinero", en: "Money", icon: Landmark, sections: ["bancos"] },
+];
+
+/** One line per section (hub cards). */
+export const DIRECTORY_SECTION_BLURBS: Record<string, Bilingual> = {
+  restaurantes: { es: "Sodas, restaurantes y comida para llevar", en: "Sodas, restaurants and takeout" },
+  cafes: { es: "Cafeterías, panaderías y bares", en: "Coffee shops, bakeries and bars" },
+  supermercados: { es: "Supermercados y precios para comparar", en: "Supermarkets and prices to compare" },
+  pulperias: { es: "Pulperías, minisúper y tiendas de barrio", en: "Corner stores and neighborhood shops" },
+  ferreterias: { es: "Ferreterías y materiales de construcción", en: "Hardware stores and building supplies" },
+  farmacias: { es: "Farmacias y horarios de atención", en: "Pharmacies and opening hours" },
+  salud: { es: "Clínicas, consultorios y laboratorios", en: "Clinics, practices and labs" },
+  veterinarias: { es: "Veterinarias y tiendas para mascotas", en: "Vets and pet shops" },
+  belleza: { es: "Salones, barberías y spas", en: "Salons, barbers and spas" },
+  gimnasios: { es: "Gimnasios y centros deportivos", en: "Gyms and sports centers" },
+  gasolineras: { es: "Gasolineras y precios de combustible", en: "Fuel stations and fuel prices" },
+  talleres: { es: "Talleres mecánicos, lavacar y llantas", en: "Auto repair, car wash and tires" },
+  hospedaje: { es: "Hoteles, cabinas y alojamientos", en: "Hotels, cabins and lodging" },
+  tours: { es: "Tours y actividades turísticas", en: "Tours and tourist activities" },
+  bancos: { es: "Bancos y cajeros automáticos", en: "Banks and ATMs" },
+};
+
+export type ResolvedDirectoryGroup = { id: string; label: Bilingual; icon: LucideIcon; sections: { section: string; label: Bilingual }[] };
+
+/** The groups with only the enabled sections (unknown sections dropped, empty groups hidden). */
+export function enabledDirectoryGroups(enabled: readonly string[]): ResolvedDirectoryGroup[] {
+  return DIRECTORY_GROUPS
+    .map((g) => ({
+      id: g.id,
+      label: { es: g.es, en: g.en },
+      icon: g.icon,
+      sections: g.sections.filter((s) => enabled.includes(s) && DIRECTORY_SECTION_LABELS[s]).map((s) => ({ section: s, label: DIRECTORY_SECTION_LABELS[s] })),
+    }))
+    .filter((g) => g.sections.length > 0);
+}
+
+export const pick = (value: Bilingual, locale: string): string => value[idiomaDe(locale)];

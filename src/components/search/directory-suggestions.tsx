@@ -59,7 +59,7 @@ export function DirectorySuggestionRows({
             </span>
             <span className="min-w-0 flex-1">
               <span className="block truncate text-[16px] font-bold text-[#1A2744]">{item.label}</span>
-              <span className="block truncate text-[12px] font-semibold text-[#6b7280]">{en ? "Places and businesses" : "Lugares y negocios"}</span>
+              <span className="block truncate text-[12px] font-semibold text-[#6b7280]">{en ? "See places" : "Ver lugares"}</span>
             </span>
           </button>
         ) : (
@@ -78,7 +78,7 @@ export function DirectorySuggestionRows({
             </span>
             <span className="min-w-0 flex-1 truncate text-sm font-medium text-[#1a2744]">{item.label}</span>
             {/* The header dropdown is as narrow as its field: the hint only where it fits. */}
-            <span className="hidden shrink-0 text-[11px] text-gray-400 @sm:inline">{en ? "Places and businesses" : "Lugares y negocios"}</span>
+            <span className="hidden shrink-0 text-[11px] text-gray-400 @sm:inline">{en ? "See places" : "Ver lugares"}</span>
           </button>
         );
       })}

@@ -51,6 +51,8 @@ const pageRules = [
   [/^\/\[locale\]\/(?:cafes|pulperias|ferreterias|hospedaje|salud|veterinarias|talleres|belleza|gimnasios|tours|bancos)$/, "pro-dir-verticals.spec.ts"],
   // P3: price comparison (supermarkets and OTC pharmacy products), /precios and /en/precios.
   [/^\/\[locale\]\/precios$/, "pro-dir-prices-compare.spec.ts"],
+  // IA 2026-11-21: the "Lugares" hub and the "Para negocios y profesionales" entry page.
+  [/^\/\[locale\]\/(?:lugares|negocios-y-profesionales)$/, "pro-dir-hubs.spec.ts"],
   [/^\/\[locale\]\/(?:vehiculos|inmuebles)(?:\/|$)/, "pro-dir-listings.spec.ts"],
   [/^\/\[locale\](?:\/|$)/, "public-smoke.spec.ts"],
   [/^\/$/, "public-smoke.spec.ts"],

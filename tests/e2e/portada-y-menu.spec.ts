@@ -280,7 +280,10 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
       };
       requestAnimationFrame(f);
     });
-    await menu.getByRole("link", { name: /^Servicios$/ }).click();
+    // Directory on: "Servicios" is an accordion; its "Ver todos los servicios" link leads to /servicios.
+    const serviciosFila = menu.getByRole("button", { name: /^Servicios$/ });
+    if (await serviciosFila.count()) { await serviciosFila.click(); await menu.getByRole("link", { name: /^Ver todos los servicios$/ }).click(); }
+    else await menu.getByRole("link", { name: /^Servicios$/ }).click();
     await expect(page).toHaveURL(/\/servicios/);
     expect(await page.evaluate(() => (window as unknown as { __vioInicio: boolean }).__vioInicio), "se vio el inicio antes de la sección").toBe(false);
     await expect.poll(() => menu.evaluateAll((es) => es.every((e) => getComputedStyle(e).visibility === "hidden"))).toBe(true);

@@ -167,7 +167,19 @@
     "helpFaq": "FAQ",
     "helpProTips": "Tips for professionals",
     "helpContact": "Contact support",
-    "goToPanel": "Go to my dashboard"
+    "goToPanel": "Go to my dashboard",
+    "places": "Places",
+    "more": "More",
+    "forBusiness": "For businesses and professionals",
+    "promotions": "Promotions",
+    "clientRequests": "Client requests",
+    "requests": "Requests",
+    "jobs": "Jobs",
+    "help": "Help",
+    "downloadApp": "Download app",
+    "publishRequest": "Post a request",
+    "findProfessionals": "Find professionals",
+    "freeBadge": "Free"
   },
   "home": {
     "accountDeletion": {
@@ -882,7 +894,10 @@
     "rights": "© {year} ContrataCR. All rights reserved.",
     "terms": "Terms & Conditions",
     "privacy": "Privacy Policy",
-    "howWeRank": "How we rank"
+    "howWeRank": "How we rank",
+    "places": {
+      "title": "Places"
+    }
   },
   "notFound": {
     "title": "Page not found",
@@ -2860,7 +2875,30 @@
       "geoFailed": "We couldn't get your location. You can search by province or canton.",
       "search": "Search",
       "titular": "Find *verified*|professionals in Costa Rica.",
-      "titularPc": "Find *verified* professionals|in Costa Rica."
+      "titularPc": "Find *verified* professionals|in Costa Rica.",
+      "titularLugares": "Find professionals|and *places* in Costa Rica.",
+      "titularLugaresPc": "Find professionals and *places*|in Costa Rica.",
+      "puertasAria": "What would you like to do",
+      "puertaServicio": "Hire a service",
+      "puertaLugar": "Find a place",
+      "intentServicio": "Hire a service",
+      "intentLugar": "See places"
+    },
+    "inicio": {
+      "lugaresTitulo": "Popular places",
+      "lugaresSub": "Restaurants, pharmacies, fuel stations and more, with hours and contact details.",
+      "verTodos": "See all places",
+      "compararPrecios": "Compare prices",
+      "eventos": "Events",
+      "destacadosTitulo": "Places to start with",
+      "destacadosVer": "See {seccion}",
+      "promoTitulo": "Promotions",
+      "promoTexto": "Offers from professionals and businesses in Costa Rica, in one place.",
+      "promoCta": "See promotions",
+      "negociosTitulo": "For businesses and professionals",
+      "negociosTexto": "Reach more customers: offer your services or claim your business listing.",
+      "ofrecer": "Offer my services",
+      "reclamar": "Claim my business"
     },
     "carousel": {
       "titlePre": "Most searched",
@@ -3873,5 +3911,37 @@
     "signOut": "Sign out",
     "services": "Services",
     "workPhotos": "Success stories"
+  },
+  "placesHub": {
+    "metaTitle": "Places in Costa Rica",
+    "metaDescription": "Restaurants, shops, clinics, fuel stations and more: hours, photos, reviews and contact details across Costa Rica.",
+    "breadcrumbLabel": "Breadcrumb",
+    "home": "Home",
+    "title": "Places",
+    "intro": "Find restaurants, shops, clinics and more across Costa Rica, with hours, photos, reviews and contact details.",
+    "moreTitle": "More to explore",
+    "prices": "Compare prices",
+    "pricesText": "Supermarkets and pharmacies, store by store.",
+    "events": "Events",
+    "eventsText": "What businesses in your area are publishing."
+  },
+  "businessHub": {
+    "metaTitle": "For businesses and professionals",
+    "metaDescription": "Offer your services as a professional or claim your business listing for free on ContrataCR.",
+    "breadcrumbLabel": "Breadcrumb",
+    "home": "Home",
+    "title": "For businesses and professionals",
+    "intro": "Choose how you want customers to find you.",
+    "proTitle": "I am a professional: offer my services",
+    "proB1": "Your own profile with your services and area",
+    "proB2": "Client requests from people looking for what you do",
+    "proB3": "Free sign-up, no commission per contact",
+    "proCta": "Offer my services",
+    "bizTitle": "I have a business: claim my listing for free",
+    "bizB1": "Fix the hours, phone and photos of your listing",
+    "bizB2": "Reply to your customers' reviews",
+    "bizB3": "Receive bookings and messages at no cost",
+    "bizCta": "Find my business",
+    "bizHint": "Find your listing and press \"Claim\"."
   }
 }

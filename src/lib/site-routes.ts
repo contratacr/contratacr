@@ -34,6 +34,8 @@ export const RUTAS_DEL_SITIO = new Set([
   "cafes", "pulperias", "ferreterias", "hospedaje", "salud", "veterinarias", "talleres", "belleza", "gimnasios", "tours", "bancos",
   // P3 (solo desarrollo): comparador de precios de supermercados y farmacias (solo venta libre).
   "precios",
+  // IA 2026-11-21: hub "Lugares" y página "Para negocios y profesionales" (solo con el directorio encendido).
+  "lugares", "negocios-y-profesionales",
   // Ronda de funciones del directorio (2026-11-17, solo desarrollo): agenda de eventos, páginas de marca, mis listas y
   // listas compartidas (/lista/<token>).
   "eventos", "marca", "listas", "lista",

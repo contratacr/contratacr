@@ -7,7 +7,7 @@ import { DesktopAppMenu } from "./desktop-app-menu";
 import { MobileAppStoreMenuLink } from "@/components/mobile/mobile-app-store-menu-link";
 import { SocialLinks } from "./social-links";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
-import { DirectoryExploreMenu, DirectoryDrawerGroup } from "./directory-nav";
+import { PlacesMenuPanel, DirectoryDrawerGroup } from "./directory-nav";
 import { useSiteFeatures } from "@/components/site-features";
 import { DirectorySuggestionRows, SuggestionGroupLabel } from "@/components/search/directory-suggestions";
 import { directorySectionForQuery, directorySectionHref, suggestDirectorySections, unifiedSearchPlaceholder, withoutPlaceDuplicates, type DirectorySectionSuggestion } from "@/lib/search/directory-search";
@@ -20,7 +20,7 @@ import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin, List, Map as MapIcon, ArrowLeft, Share2,
   Briefcase, Compass, Wrench,
   UserRound, UserRoundPlus, LogOut, FileText, Settings, MoreHorizontal,
-  HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Shield, Mail, ClipboardList, Clock, Bookmark, FileUser } from "lucide-react";
+  Smartphone, HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Shield, Mail, ClipboardList, Clock, Bookmark, FileUser } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { readRecentVisits, clearRecentVisits, leerBusquedasRecientesConFecha, guardarBusquedaReciente, olvidarBusquedaReciente, olvidarBusquedasRecientes, removeRecentVisit, type BusquedaReciente, type RecentVisit } from "@/lib/recent-visits";
 import { useLocale, useTranslations } from "next-intl";
@@ -331,6 +331,7 @@ function matchCategories(query: string, limit = 8, locale?: string): CatMatch[] 
    suggest flow + a clean "Ver todos". */
 function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
   const t = useTranslations("header");
+  const pinnedLinks = useSiteFeatures().directorySections.length > 0;
   const ts = useTranslations("categorySearch");
   const tp = useTranslations("categoriesPage");
   const locale = useLocale();
@@ -387,6 +388,17 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
 
   return (
     <div className="flex max-h-[calc(100vh-7rem)] min-h-0 flex-col overflow-hidden">
+      {/* With the directory on, the two ways in are pinned above the list (owner decision 2026-11-21). */}
+      {pinnedLinks && (
+        <div data-nav-services-pinned className="mb-3 flex shrink-0 flex-wrap gap-2">
+          <Link href="/profesionales" onClick={onNavigate} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[#d6dde5] px-4 text-sm font-semibold text-[#162543] transition-colors hover:border-[#009FD9] hover:text-[#009FD9]">
+            <Search className="h-4 w-4" aria-hidden />{t("findProfessionals")}
+          </Link>
+          <Link href="/publicar-solicitud" onClick={onNavigate} className="inline-flex min-h-10 items-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#0088bb]">
+            <ClipboardList className="h-4 w-4" aria-hidden />{t("publishRequest")}
+          </Link>
+        </div>
+      )}
       {/* Search - inline; typing filters the list below IN PLACE (no portal/overlay). */}
       <div className="mb-4 flex h-11 shrink-0 items-center rounded-xl border border-gray-200 bg-white px-3.5 transition-all focus-within:bg-white focus-within:ring-2 focus-within:ring-[#009FD9]/20">
         <Search className="h-4 w-4 shrink-0 text-gray-400" />
@@ -840,6 +852,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileHelpOpen, setMobileHelpOpen] = useState(false);
   const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
+  const [mobileServicesOpen, setMobileServicesOpen] = useState(false);
   const locale = useLocale();
   const pathname = usePathname();
   const currentSearchParams = useParametrosDeBusqueda();
@@ -884,6 +897,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const searchBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const servicesMenuRef = useRef<HTMLDivElement>(null);
   const exploreMenuRef = useRef<HTMLDivElement>(null);
+  const placesMenuRef = useRef<HTMLDivElement>(null);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
   const resourcesMenuRef = useRef<HTMLDivElement>(null);
   const appMenuRef = useRef<HTMLDivElement>(null);
   const drawerTouchStart = useRef<{ x: number; y: number } | null>(null);
@@ -1575,11 +1590,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   }, [isHomePage]);
 
   useEffect(() => {
-    if (openMenu !== "categorias" && openMenu !== "explorar" && openMenu !== "recursos" && openMenu !== "app") return;
+    if (openMenu !== "categorias" && openMenu !== "explorar" && openMenu !== "lugares" && openMenu !== "mas" && openMenu !== "recursos" && openMenu !== "app") return;
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as Node;
       if (openMenu === "categorias" && servicesMenuRef.current?.contains(target)) return;
       if (openMenu === "explorar" && exploreMenuRef.current?.contains(target)) return;
+      if (openMenu === "lugares" && placesMenuRef.current?.contains(target)) return;
+      if (openMenu === "mas" && moreMenuRef.current?.contains(target)) return;
       if (openMenu === "recursos" && resourcesMenuRef.current?.contains(target)) return;
       if (openMenu === "app" && appMenuRef.current?.contains(target)) return;
       setOpenMenu(null);
@@ -2181,6 +2198,89 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     )}
                   </div>
 
+                  {directoryOn ? (
+                    <>
+                      {/* No "relative": the panel anchors to the nav (same left edge as the services panel) so it never leaves the window. */}
+                      <div ref={placesMenuRef}>
+                        <button
+                          type="button"
+                          aria-expanded={openMenu === "lugares"}
+                          data-nav-places-trigger
+                          onClick={() => setOpenMenu(openMenu === "lugares" ? null : "lugares")}
+                          className={cn(
+                            "relative flex items-center gap-1 rounded-xl py-2 text-sm font-medium transition-colors hover:bg-gray-50 hover:text-[#009FD9]",
+                            effectiveMarketplaceDesktop ? "px-2.5" : "px-4",
+                            openMenu === "lugares" ? "text-[#009FD9]" : "text-[#1A2744]",
+                          )}
+                        >
+                          {t("places")}
+                          <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", openMenu === "lugares" && "rotate-180")} />
+                        </button>
+                        {openMenu === "lugares" && (
+                          <div className="absolute left-0 top-full z-50 mt-1.5 overflow-hidden rounded-2xl border border-gray-100 bg-white p-4 shadow-[0_24px_70px_-22px_rgba(15,23,42,0.45)]" style={{ animation: "tab-cards-in 0.15s ease both" }}>
+                            <PlacesMenuPanel locale={locale} onNavigate={() => setOpenMenu(null)} />
+                          </div>
+                        )}
+                      </div>
+                      <Link
+                        href="/promociones"
+                        className={cn(
+                          "relative hidden items-center rounded-xl py-2 text-sm font-medium text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9] xl:flex",
+                          effectiveMarketplaceDesktop ? "px-2.5" : "px-4",
+                        )}
+                      >
+                        {t("promotions")}
+                      </Link>
+                      <div ref={moreMenuRef} className="relative">
+                        <button
+                          type="button"
+                          aria-expanded={openMenu === "mas"}
+                          data-nav-more-trigger
+                          onClick={() => setOpenMenu(openMenu === "mas" ? null : "mas")}
+                          className={cn(
+                            "relative flex items-center gap-1 rounded-xl py-2 text-sm font-medium transition-colors hover:bg-gray-50 hover:text-[#009FD9]",
+                            effectiveMarketplaceDesktop ? "px-2.5" : "px-4",
+                            openMenu === "mas" ? "text-[#009FD9]" : "text-[#1A2744]",
+                          )}
+                        >
+                          {t("more")}
+                          <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", openMenu === "mas" && "rotate-180")} />
+                        </button>
+                        {openMenu === "mas" && (
+                          <div data-nav-more-menu className="absolute left-0 top-full z-50 mt-1.5 w-max min-w-[260px] overflow-hidden rounded-2xl border border-gray-100 bg-white p-3 shadow-[0_24px_70px_-22px_rgba(15,23,42,0.45)]" style={{ animation: "tab-cards-in 0.15s ease both" }}>
+                            {(() => {
+                              const itemClass = "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]";
+                              const close = () => setOpenMenu(null);
+                              return (
+                                <>
+                                  <Link href="/promociones" onClick={close} className={cn(itemClass, "xl:hidden")}><OfferTagPercentIcon className="h-5 w-5" />{t("promotions")}</Link>
+                                  <Link href="/solicitudes" onClick={close} className={itemClass}><ClipboardList className="h-5 w-5 shrink-0" />{t("clientRequests")}</Link>
+                                  {EMPLEOS_VISIBLE && <Link href="/empleos" onClick={close} className={itemClass}><Briefcase className="h-5 w-5 shrink-0" />{t("jobs")}</Link>}
+                                  <Link href="/negocios-y-profesionales" onClick={close} className={cn(itemClass, "xl:hidden")}><Store className="h-5 w-5 shrink-0" />{t("forBusiness")}</Link>
+                                  <div className="mx-3 my-2 h-px bg-gray-100" aria-hidden />
+                                  <p className="px-3 pb-1 pt-0.5 text-[11px] font-bold uppercase tracking-[0.08em] text-[#7a899d]">{t("tools")}</p>
+                                  <Link href="/dashboard/profesional?tab=cv" onClick={close} className={itemClass}><FileUser className="h-5 w-5 shrink-0" />{t("createResume")}</Link>
+                                  <Link href="/dashboard/profesional?tab=carta" onClick={close} className={itemClass}><Mail className="h-5 w-5 shrink-0" />{t("coverLetter")}</Link>
+                                  {!nativeApp && <Link href="/descargar" onClick={close} className={cn(itemClass, "2xl:hidden")}><Smartphone className="h-5 w-5 shrink-0" />{t("downloadApp")}</Link>}
+                                  <div className="mx-3 my-2 h-px bg-gray-100" aria-hidden />
+                                  <p className="px-3 pb-1 pt-0.5 text-[11px] font-bold uppercase tracking-[0.08em] text-[#7a899d]">{t("help")}</p>
+                                  {visibleResourceLinks.map((link) => link.key === "support" ? (
+                                    <SupportLink key={link.href} onNavigate={close} className={cn(itemClass, "w-full text-left")}>
+                                      <ResourceIcon name={link.key} />{t(`resourceLinks.${link.key}`)}
+                                    </SupportLink>
+                                  ) : (
+                                    <Link key={link.href} href={link.href} onClick={close} className={itemClass}>
+                                      <ResourceIcon name={link.key} />{t(`resourceLinks.${link.key}`)}
+                                    </Link>
+                                  ))}
+                                </>
+                              );
+                            })()}
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  ) : (
                   <div ref={exploreMenuRef} className="relative">
                     <button
                       type="button"
@@ -2235,11 +2335,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           <Mail className="h-5 w-5 shrink-0" />
                           {t("coverLetter")}
                         </Link>
-                        {/* Directorio de lugares (2026-11-18): solo las secciones encendidas (DIR_ENABLED). */}
-                        <DirectoryExploreMenu locale={locale} onNavigate={() => setOpenMenu(null)} />
                       </div>
                     )}
                   </div>
+                  )}
 
                 </nav>
 
@@ -2431,7 +2530,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       lo que la gente viene. Con todo adentro no caben 1024 px. */}
                   <div
                     ref={resourcesMenuRef}
-                    className="relative hidden xl:block"
+                    className={cn("relative hidden xl:block", directoryOn && "xl:hidden")}
                   >
                     <button
                       type="button"
@@ -2478,7 +2577,16 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       </div>
                     )}
                   </div>
-                  {!nativeApp && <div ref={appMenuRef}><DesktopAppMenu open={openMenu === "app"} onOpenChange={open => setOpenMenu(open ? "app" : null)} /></div>}
+                  {directoryOn && (
+                    <Link
+                      href="/negocios-y-profesionales"
+                      data-nav-business
+                      className="hidden whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium text-[#009FD9] transition-colors hover:bg-[#EBF5FB] xl:inline-flex"
+                    >
+                      {t("forBusiness")}
+                    </Link>
+                  )}
+                  {!nativeApp && <div ref={appMenuRef} className={cn(directoryOn && "hidden 2xl:block")}><DesktopAppMenu open={openMenu === "app"} onOpenChange={open => setOpenMenu(open ? "app" : null)} /></div>}
                   {authLoading && !user ? (
                     <div className="flex w-[144px] items-center justify-end gap-2" aria-hidden="true">
                       <div className="h-10 w-24 animate-pulse rounded-xl bg-[#eef2f6]" />
@@ -2497,7 +2605,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           búsqueda de dos campos no le dejaba sitio) y justo en
                           Empleos, Promociones y Proyectos es donde un cliente ve
                           a otros ofreciendo y le dan ganas de hacerlo. */}
-                      {(mostrarOfrecerServicios || reservarOfrecerServicios) && (
+                      {!directoryOn && (mostrarOfrecerServicios || reservarOfrecerServicios) && (
                         <Link
                           href="/registro/profesional"
                           aria-hidden={reservarOfrecerServicios || undefined}
@@ -3026,7 +3134,34 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 {/* 1-oct-2026: Buscar profesionales va SIEMPRE, también en la app,
                     aunque la lupa de abajo lleve a lo mismo: es lo principal de
                     ContrataCR y el menú es donde alguien nuevo mira qué puede hacer. */}
-                {(
+                {/* Directory on (owner decision 2026-11-21): Servicios and Lugares are the first two rows, as accordions
+                    with the same weight; then Promociones, Solicitudes, Empleos and the business entry. */}
+                {directoryOn && (
+                  <>
+                    <div data-nav-services-drawer>
+                      <button type="button" aria-expanded={mobileServicesOpen} aria-controls="ccr-drawer-servicios" onClick={() => setMobileServicesOpen((open) => !open)} className={mobileDrawerItemClass}>
+                        <DrawerIcon><Search /></DrawerIcon>
+                        <span className={mobileDrawerTextClass}>{t("categories")}</span>
+                        <ChevronDown className={cn("h-5 w-5 shrink-0 transition-transform duration-200", mobileServicesOpen && "rotate-180")} aria-hidden />
+                      </button>
+                      {mobileServicesOpen && (
+                        <div id="ccr-drawer-servicios" className="ccr-menu-sub">
+                          <button type="button" onClick={() => { if (onWelcomeNavigate) { onWelcomeNavigate("/profesionales"); return; } cerrarCajon(); openNativeSearch(); }} className="ccr-menu-sub-fila w-full text-left">
+                            {t("findProfessionals")}
+                          </button>
+                          <Link href="/publicar-solicitud" prefetch={false} onClick={cerrarCajon} className="ccr-menu-sub-fila">{t("publishRequest")}</Link>
+                          <Link href="/servicios" prefetch={true} onClick={cerrarCajon} className="ccr-menu-sub-fila">{t("viewAllCategories")}</Link>
+                        </div>
+                      )}
+                    </div>
+                    <DirectoryDrawerGroup locale={locale} itemClass={mobileDrawerItemClass} textClass={mobileDrawerTextClass} icon={<DrawerIcon><MapPin /></DrawerIcon>} onNavigate={() => cerrarCajon()} />
+                    <Link href="/promociones" prefetch={true} onClick={(event) => { cerrarCajon(event); navigateNativeMarketplace(event, "/promociones"); }} className={claseCajon("/promociones")}>
+                      <DrawerIcon><OfferTagPercentIcon className="h-5 w-5" /></DrawerIcon>
+                      <span className={mobileDrawerTextClass}>{t("promotions")}</span>
+                    </Link>
+                  </>
+                )}
+                {!directoryOn && (
                   <button
                     type="button"
                     onClick={() => { if (onWelcomeNavigate) { onWelcomeNavigate("/profesionales"); return; } cerrarCajon(); openNativeSearch(); }}
@@ -3045,7 +3180,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Requests" : "Solicitudes"}</span>
                   </Link>
                 )}
-                {(
+                {!directoryOn && (
                   <Link href="/promociones" prefetch={true} onClick={(event) => { cerrarCajon(event); navigateNativeMarketplace(event, "/promociones"); }} className={claseCajon("/promociones")}>
                     <DrawerIcon><OfferTagPercentIcon className="h-5 w-5" /></DrawerIcon>
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Promotions" : "Promociones"}</span>
@@ -3055,6 +3190,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   <Link href="/empleos" prefetch={true} onClick={(event) => { cerrarCajon(event); navigateNativeMarketplace(event, "/empleos"); }} className={claseCajon("/empleos")}>
                     <DrawerIcon><Briefcase /></DrawerIcon>
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Jobs" : "Empleos"}</span>
+                  </Link>
+                )}
+                {directoryOn && (
+                  <Link href="/negocios-y-profesionales" prefetch={false} onClick={cerrarCajon} className={claseCajon("/negocios-y-profesionales")}>
+                    <DrawerIcon><Store /></DrawerIcon>
+                    <span className={mobileDrawerTextClass}>{t("forBusiness")}</span>
                   </Link>
                 )}
                 {/* Herramientas se despliega como «Ayuda y soporte»: cada opción
@@ -3086,12 +3227,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     </div>
                   )}
                 </div>
-                {/* Directorio de lugares (2026-11-18): se despliega con las secciones encendidas (DIR_ENABLED). */}
-                <DirectoryDrawerGroup locale={locale} itemClass={mobileDrawerItemClass} textClass={mobileDrawerTextClass} icon={<DrawerIcon><MapPin /></DrawerIcon>} onNavigate={() => cerrarCajon()} />
-                <Link href="/servicios" prefetch={true} onClick={cerrarCajon} className={claseCajon("/servicios")}>
-                  <DrawerIcon><Compass /></DrawerIcon>
-                  <span className={mobileDrawerTextClass}>{t("categories")}</span>
-                </Link>
+                {!directoryOn && (
+                  <Link href="/servicios" prefetch={true} onClick={cerrarCajon} className={claseCajon("/servicios")}>
+                    <DrawerIcon><Compass /></DrawerIcon>
+                    <span className={mobileDrawerTextClass}>{t("categories")}</span>
+                  </Link>
+                )}
                 {/* El asistente pasó del menú de abajo a este menú (1-oct-2026). Solo en la
                     app: en la web el asistente no responde. */}
                 {nativeHeaderShell && (

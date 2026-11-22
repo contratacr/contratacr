@@ -160,12 +160,21 @@ export function directorySectionHref(section: string, text: string, location: Di
 }
 
 /**
+ * Words that mean BOTH a trade people hire and a place people visit (beauty, vets, workshops, health, gyms,
+ * pharmacies). For these the list keeps the service row AND the place row, each with its intent label
+ * ("Contratar un servicio" / "Ver lugares"), so the person chooses instead of the app guessing.
+ */
+export const AMBIGUOUS_SECTIONS: ReadonlySet<string> = new Set(["belleza", "veterinarias", "talleres", "salud", "gimnasios", "farmacias"]);
+
+/**
  * The professional catalogue also has shop categories (Comercios: «Farmacias»,
  * «Gasolineras»…). When the same name is offered under «Lugares», the service row
- * is dropped so the list does not show «Farmacias» twice.
+ * is dropped so the list does not show «Farmacias» twice, EXCEPT for the sections
+ * that are also a service (AMBIGUOUS_SECTIONS), where both rows stay.
  */
 export function withoutPlaceDuplicates<T>(items: T[], label: (item: T) => string, places: DirectorySectionSuggestion[]): T[] {
-  if (!places.length) return items;
-  const names = new Set(places.map((p) => normalizeIntentText(p.label)));
+  const duplicated = places.filter((p) => !AMBIGUOUS_SECTIONS.has(p.section));
+  if (!duplicated.length) return items;
+  const names = new Set(duplicated.map((p) => normalizeIntentText(p.label)));
   return items.filter((item) => !names.has(normalizeIntentText(label(item))));
 }

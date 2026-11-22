@@ -71,7 +71,8 @@ test.describe("@smoke public routes", () => {
     if (isMobileProject(testInfo)) {
       await page.getByRole("button", { name: /Abrir menu|Abrir men/i }).first().click();
       const navigation = page.getByRole("dialog", { name: /Men[uú]|Menu/i });
-      await expect(page.getByRole("link", { name: /^Servicios$/i }).first()).toBeVisible();
+      // Directory on: "Servicios" is an accordion button instead of a link.
+      await expect(page.getByRole("link", { name: /^Servicios$/i }).or(page.getByRole("button", { name: /^Servicios$/i })).first()).toBeVisible();
       // «Ayuda y soporte» se despliega: adentro, Preguntas frecuentes y soporte.
       await navigation.getByRole("button", { name: /Ayuda y soporte|Help and support/i }).click();
       await expect(navigation.getByRole("link", { name: /Preguntas frecuentes|FAQ/i }).first()).toBeVisible();
@@ -86,9 +87,16 @@ test.describe("@smoke public routes", () => {
     } else {
       const navigation = page.getByRole("banner");
       await expect(navigation.getByRole("button", { name: /^Servicios$/i }).first()).toBeVisible();
-      await expect(navigation.getByRole("button", { name: /^Explorar$/i }).first()).toBeVisible();
+      await expect(navigation.getByRole("button", { name: /^(Explorar|Lugares)$/i }).first()).toBeVisible();
       await expect(navigation.getByRole("link", { name: /Ingresar/i }).first()).toBeVisible();
       const app = navigation.getByRole("button", { name: /^(Descargar app|Download app)$/ }).first();
+      // Directory on: the control only fits from 1536 px; below it, "Descargar app" is a link inside the "Mas" menu.
+      if (!(await app.isVisible())) {
+        await navigation.locator("[data-nav-more-trigger]").click();
+        await expect(page.locator("[data-nav-more-menu]").getByRole("link", { name: /^(Descargar app|Download app)$/ })).toBeVisible();
+        await page.keyboard.press("Escape");
+        return expectHealthyPage(page);
+      }
       await expect(app).toBeVisible();
       await expect(navigation.getByRole("link", { name: /^Registrarme$|^Sign up$/i })).toHaveCount(0);
       await app.click();
@@ -242,7 +250,8 @@ test.describe("@smoke public routes", () => {
 
     if (isMobileProject(testInfo)) {
       await page.getByRole("button", { name: /Abrir menu|Abrir men/i }).first().click();
-      await expect(page.getByRole("link", { name: /^Servicios$/i }).first()).toBeVisible();
+      // Directory on: "Servicios" is an accordion button instead of a link.
+      await expect(page.getByRole("link", { name: /^Servicios$/i }).or(page.getByRole("button", { name: /^Servicios$/i })).first()).toBeVisible();
       await expect(page.locator("body")).not.toContainText(/servicesPage\./i);
       await expectHealthyPage(page);
       return;

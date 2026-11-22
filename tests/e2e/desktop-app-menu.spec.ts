@@ -11,6 +11,16 @@ test("desktop app handoff replaces sign-up, translates and closes accessibly wit
       await waitForInteractivePage(page);
       const header = page.getByTestId("landing-navbar").filter({ visible: true });
       const action = header.getByRole("button", { name: locale === "en" ? "Download app" : "Descargar app", exact: true });
+      // Directory on (owner decision 2026-11-21): the control only fits from 1536 px; below that "Descargar app" lives in the
+      // "Mas" menu, so check that instead and keep the rest of the contract (no overflow, search never below 260 px).
+      if (!(await action.isVisible())) {
+        await header.locator("[data-nav-more-trigger]").click();
+        await expect(page.locator("[data-nav-more-menu]").getByRole("link", { name: locale === "en" ? "Download app" : "Descargar app", exact: true })).toBeVisible();
+        expect((await header.locator("#ccr-marketplace-navbar-slot").boundingBox())!.width).toBeGreaterThanOrEqual(260);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+        await page.keyboard.press("Escape");
+        continue;
+      }
       await expect(action).toBeVisible();
       await expect(header.locator('a[href$="/registro"]')).toHaveCount(0);
       await expect(header.locator('a[href*="/login"]').filter({ visible: true })).toBeVisible();
@@ -44,7 +54,9 @@ test("signed-in desktop keeps app access beside account controls", async ({ page
     await waitForInteractivePage(page);
     const header = page.getByTestId("landing-navbar").filter({ visible: true });
     await expect(header.locator('a[href*="/login"]').filter({ visible: true })).toHaveCount(0);
-    await header.getByRole("button", { name: "Descargar app", exact: true }).click();
+    const appButton = header.getByRole("button", { name: "Descargar app", exact: true });
+    if (!(await appButton.isVisible())) continue; // directory on: below 1536 px the app link lives in "Mas" (see the first test)
+    await appButton.click();
     await expect(header.getByRole("dialog")).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
     await header.getByRole("button", { name: "Cerrar código de la app" }).click();

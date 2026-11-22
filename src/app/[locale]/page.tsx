@@ -4,7 +4,9 @@ import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { prefijoDeIdioma, rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { LandingHero } from "@/components/landing/landing-hero";
 import { FeaturedBrands } from "@/components/landing/featured-brands";
-import { DirectoryHomeSection } from "@/components/landing/directory-nav";
+import { HomePlacesTiles } from "@/components/landing/home-places";
+import { HomeFeaturedPlaces, HomePromoBand, HomeBusinessStrip } from "@/components/landing/home-directory-bands";
+import { sitemapSections } from "@/lib/directory/sitemap-sections";
 import { ProsSection } from "@/components/landing/pros-section";
 import { WhyContratacr } from "@/components/landing/why-contratacr";
 import { FindByZone } from "@/components/landing/find-by-zone";
@@ -81,6 +83,8 @@ export default async function HomePage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  // Directory flag (DIR_ENABLED): with it off the home is exactly the classic one.
+  const directoryOn = sitemapSections().length > 0;
   // Real zone coverage, without fabricated canton counts, for the find-by-zone band.
   const [query, t] = await Promise.all([
     searchParams,
@@ -114,19 +118,26 @@ export default async function HomePage({
             prueba de que ContrataCR ya tiene negocios de verdad. */}
         <FeaturedBrands />
 
-        {/* Directorio de lugares (solo con DIR_ENABLED; las secciones apagadas no aparecen). */}
-        <DirectoryHomeSection locale={locale} />
-
-        {/* Services carousel. */}
+        {/* Servicios más buscados. */}
         <FadeInUp>
           <Suspense fallback={null}><ProsSection /></Suspense>
         </FadeInUp>
 
+        {/* Con el directorio activo: lugares populares, lugares para empezar y promociones. */}
+        {directoryOn && (
+          <>
+            <HomePlacesTiles />
+            <Suspense fallback={null}><HomeFeaturedPlaces /></Suspense>
+            <HomePromoBand />
+          </>
+        )}
 
         {/* How it works + trust, merged into one sticky-phone story. */}
         <FadeInUp>
           <WhyContratacr />
         </FadeInUp>
+
+        {directoryOn && <HomeBusinessStrip />}
 
         {/* Zones: find professionals by province using real coverage. */}
         <div className="ccr-fin-de-portada">

@@ -14,6 +14,7 @@ import { resolveCategoryIntent } from "@/lib/data/categories";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { rutaDeBusqueda } from "@/lib/buscar-url";
 import { RodilloDeEjemplos } from "@/components/landing/rodillo-de-ejemplos";
+import { HomeIntentDoors } from "@/components/landing/home-intent-doors";
 import { useSiteFeatures } from "@/components/site-features";
 import { DirectorySuggestionRows, SuggestionGroupLabel } from "@/components/search/directory-suggestions";
 import { directorySectionForQuery, directorySectionHref, suggestDirectorySections, unifiedSearchPlaceholder, withoutPlaceDuplicates, type DirectorySectionSuggestion } from "@/lib/search/directory-search";
@@ -286,7 +287,9 @@ function SuggestionsDropdown({
           <span className="flex-1 min-w-0">
             <span className="block text-sm leading-snug text-[#162543] break-words">{s.label}</span>
           </span>
-          {!placeRows && (
+          {placeRows ? (
+            <span className="hidden shrink-0 text-[11px] text-gray-400 sm:inline">{t("intentServicio")}</span>
+          ) : (
             <span className="text-[10px] uppercase tracking-wide text-gray-300 shrink-0">
               {t("serviceLabel")}
             </span>
@@ -801,7 +804,7 @@ export function LandingHero() {
           {/* Dos líneas («|» marca el corte) y la palabra entre *asteriscos* en
               celeste: «verificados» es lo que distingue a ContrataCR. */}
           {/* En computadora cabe más: «verificados» sube a la primera línea. */}
-          {[["titular", "lg:hidden"], ["titularPc", "hidden lg:block"]].map(([clave, vista]) => t(clave).split("|").map((tramo, i) => (
+          {(directorySections.length ? [["titularLugares", "lg:hidden"], ["titularLugaresPc", "hidden lg:block"]] : [["titular", "lg:hidden"], ["titularPc", "hidden lg:block"]]).map(([clave, vista]) => t(clave).split("|").map((tramo, i) => (
             <span key={`${clave}-${i}`} className={cn("block whitespace-nowrap", vista)}>
               {tramo.split("*").map((parte, j) => (j % 2 ? <span key={j} className="text-[#7fd3f7]">{parte}</span> : parte))}{" "}
             </span>
@@ -895,6 +898,8 @@ export function LandingHero() {
           </div>
 
         </form>
+        {/* Dos puertas (solo con el directorio activo): contratar un servicio / encontrar un lugar. */}
+        <HomeIntentDoors />
         {/* La otra forma de conseguir quien te ayude, en una línea: pedirlo y que te escriban. */}
         <p className="mt-3 text-center whitespace-nowrap text-[12.5px] font-semibold sm:text-[14px] text-white/90 drop-shadow lg:text-left">
           {t("pidePrefijo")}{" "}

@@ -1,7 +1,7 @@
 "use client";
 
 import { AdvertisingPreferences } from "@/components/privacy/advertising-preferences";
-import { useState, useSyncExternalStore } from "react";
+import { Fragment, useState, useSyncExternalStore } from "react";
 import { ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
@@ -12,6 +12,9 @@ import { SupportLink } from "@/components/support/support-link";
 import { AppStoreFooterLinks } from "./app-download";
 import { SocialLinks } from "./social-links";
 import { useAuth } from "@/hooks/use-auth";
+import { FooterPlacesColumn } from "./directory-nav";
+import { useSiteFeatures } from "@/components/site-features";
+import { useLocale } from "next-intl";
 
 // Labels resolve to footer.<key> at render so they translate per locale.
 // Every href points to a CURRENT, existing page (verified against the app routes).
@@ -65,6 +68,8 @@ const serverReady = () => false;
 export function LandingFooter() {
   const t = useTranslations("footer");
   const { user } = useAuth();
+  const locale = useLocale();
+  const placesOn = useSiteFeatures().directorySections.length > 0;
   const interactive = useSyncExternalStore(subscribeToHydration, clientReady, serverReady);
   const [openGroup, setOpenGroup] = useState<string | null>(null);
     // Un solo panel para todos: `?mode=use` era del modo cliente, que ya no
@@ -77,7 +82,7 @@ export function LandingFooter() {
         <div aria-hidden="true" className="border-t border-[#162543]/10 pt-3 md:pt-10 lg:pt-12" />
 
         {/* Main grid */}
-        <div className="grid grid-cols-1 gap-0 pb-0 md:grid-cols-3 md:gap-x-8 md:gap-y-8 md:pb-7 lg:grid-cols-[1.4fr_1fr_1fr_1fr] lg:gap-10 lg:pb-8">
+        <div className={`grid grid-cols-1 gap-0 pb-0 md:grid-cols-3 md:gap-x-8 md:gap-y-8 md:pb-7 ${placesOn ? "lg:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]" : "lg:grid-cols-[1.4fr_1fr_1fr_1fr]"} lg:gap-10 lg:pb-8`}>
 
           {/* Brand introduction */}
           <div className="order-last pt-8 md:order-first md:col-span-3 md:pt-0 lg:col-span-1">
@@ -91,8 +96,10 @@ export function LandingFooter() {
           </div>
 
           {/* Link columns */}
-          {COLUMNS.map((col) => (
-            <nav key={col.headingKey} aria-label={t(col.headingKey)} className="border-b border-[#162543]/10 md:border-0">
+          {COLUMNS.map((col, index) => (
+            <Fragment key={col.headingKey}>
+            {index === 1 && <FooterPlacesColumn locale={locale} heading={t("places.title")} open={openGroup === "places"} onToggle={() => setOpenGroup(openGroup === "places" ? null : "places")} interactive={interactive} />}
+            <nav aria-label={t(col.headingKey)} className="border-b border-[#162543]/10 md:border-0">
               <h3 className="text-[15px] font-semibold text-[#162543] md:mb-3 md:text-sm md:font-bold">
                 <span className="hidden md:inline">{t(col.headingKey)}</span>
                 <button
@@ -137,6 +144,7 @@ export function LandingFooter() {
                 ))}
               </ul>
             </nav>
+            </Fragment>
           ))}
         </div>
 

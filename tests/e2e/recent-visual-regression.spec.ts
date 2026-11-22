@@ -109,7 +109,7 @@ test.describe("@visual recent bug contracts", () => {
           await navbar.getByRole("button", { name: /Abrir men[uú]|Open menu/i }).click();
           await expect(clientNavigation).toBeVisible();
         }
-        const link = clientNavigation.getByRole("link", { name: /^Ofrecer mis servicios$/i }).filter({ visible: true }).first();
+        const link = clientNavigation.getByRole("link", { name: /^(Ofrecer mis servicios|Para negocios y profesionales)$/i }).filter({ visible: true }).first();
         await expect(link).toBeVisible();
         await expect(link.locator("svg")).toHaveCount(width < 600 ? 1 : 0);
         const style = await link.evaluate((node) => {
