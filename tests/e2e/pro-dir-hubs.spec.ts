@@ -30,12 +30,13 @@ for (const language of ["es", "en"] as const) {
 
 // Place sections live INSIDE the themes (no standalone "Lugares" entry): group name -> sections shown in its panel.
 const PLACES_BY_GROUP: Record<string, string[]> = {
-  Comercios: ["restaurantes", "cafes", "supermercados"],
+  Comercios: ["restaurantes", "cafes", "supermercados", "pulperias", "ferreterias"],
   Salud: ["salud", "farmacias"],
-  "Vehículos": ["gasolineras"],
+  Bienestar: ["gimnasios"],
+  "Vehículos": ["gasolineras", "talleres"],
   Belleza: ["belleza"],
   Mascotas: ["veterinarias"],
-  Turismo: ["hospedaje"],
+  Turismo: ["hospedaje", "tours"],
   Empresas: ["bancos"],
 };
 
@@ -55,7 +56,6 @@ test("desktop navbar: Categorias mega-menu merges the places into the themes and
     for (const section of sections) await expect(menu.locator(`[data-nav-directory-section="${section}"]`)).toHaveAttribute("href", `/${section}`);
     await expect(menu.locator("[data-nav-directory-section]")).toHaveCount(sections.length);
   }
-  for (const out of ["pulperias", "ferreterias", "tours", "gimnasios", "talleres"]) await expect(menu.locator(`[data-nav-directory-section="${out}"]`)).toHaveCount(0);
   await expect(menu.locator("[data-nav-places-all]")).toHaveCount(0);
   await expect(menu.locator("[data-nav-places-prices]")).toHaveAttribute("href", "/precios");
   await expect(menu.getByRole("link", { name: "Ver todas las categorías" }).last()).toHaveAttribute("href", "/servicios");

@@ -129,7 +129,7 @@ export async function PlacesSectionHome({section,locale,page,basePath,banner}:{s
           {activeFilters>0&&<a href={clear!.href} className="mt-4 inline-flex h-11 items-center justify-center rounded-full bg-[#009FD9] px-6 text-sm font-bold text-white hover:bg-[#0089bb]">{t('Limpiar filtros','Clear filters')}</a>}
          </div>
         :<ol className="ccr-search-results-list -mx-4 flex w-[calc(100%+2rem)] min-w-0 flex-col gap-1.5 bg-white lg:mx-0 lg:w-full lg:gap-3 lg:bg-transparent" aria-label={t('Resultados','Results')}>
-          {places.map((item,n)=><li key={item.key} className="min-w-0"><PlaceCard item={item} locale={locale} rank={n+1} extra={extras[item.slug]??null}/></li>)}
+          {places.map((item,n)=><li key={item.key} className="ccr-search-card-slot min-w-0"><PlaceCard item={item} locale={locale} rank={n+1} extra={extras[item.slug]??null}/></li>)}
          </ol>}
       {(next||values.cursor)&&<nav aria-label={t('Más resultados','More results')} className="flex items-center justify-between gap-3 py-4 lg:border-t lg:border-[#e5e7eb] lg:pt-4">
        {values.cursor?<a href={link({cursor:undefined})} className={`${nav} border border-[#d7e2ea] bg-white text-[#1A2744] hover:border-[#009FD9] hover:text-[#009FD9]`}><ChevronLeft className="h-4 w-4" aria-hidden="true"/>{t('Primeros resultados','First results')}</a>:<span/>}

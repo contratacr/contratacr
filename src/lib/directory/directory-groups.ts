@@ -60,7 +60,7 @@ export function enabledDirectoryGroups(enabled: readonly string[]): ResolvedDire
 /** CURATED menu (owner decision 2026-11-22, Yelp style): only the place categories people actually search for appear in the
  * Categorías menu, the mobile drawer, the footer and the home tiles; the rest (pulperias, ferreterias, tours, gimnasios,
  * talleres) stay reachable from /lugares ("Ver todos los lugares"). Order = order shown. */
-export const CURATED_PLACE_SECTIONS: readonly string[] = ["restaurantes", "cafes", "supermercados", "farmacias", "gasolineras", "bancos", "hospedaje", "salud", "veterinarias", "belleza"];
+export const CURATED_PLACE_SECTIONS: readonly string[] = ["restaurantes", "cafes", "supermercados", "pulperias", "ferreterias", "farmacias", "gasolineras", "talleres", "bancos", "hospedaje", "tours", "salud", "gimnasios", "veterinarias", "belleza"];
 
 /** The curated place sections that are enabled, in curated order. */
 export function curatedPlaces(enabled: readonly string[]): { section: string; label: Bilingual }[] {
@@ -93,12 +93,13 @@ export const SERVICE_MENU_LIMIT = 10;
  * reachable from /lugares and the footer. Restaurantes and cafés live in Comercios (no thin "Comida y bebida" group: the
  * catalogue already keeps food shops there), farmacias with Salud, veterinarias with Mascotas, bancos with Empresas. */
 export const PLACE_MENU_GROUPS: Record<string, readonly string[]> = {
-  comercios: ["restaurantes", "cafes", "supermercados"],
+  comercios: ["restaurantes", "cafes", "supermercados", "pulperias", "ferreterias"],
   salud: ["salud", "farmacias"],
-  automotriz: ["gasolineras"],
+  bienestar: ["gimnasios"],
+  automotriz: ["gasolineras", "talleres"],
   belleza: ["belleza"],
   mascotas: ["veterinarias"],
-  turismo: ["hospedaje"],
+  turismo: ["hospedaje", "tours"],
   profesional: ["bancos"],
 };
 
@@ -114,7 +115,9 @@ export function groupPlaces(groupId: string, enabled: readonly string[]): { sect
  * SERVICE_MENU_LIMIT minus the places of the group (`reserve`), so the panel never has more than ten rows. */
 export function curatedGroupItems<T extends { id: string }>(groupId: string, items: readonly T[], reserve = 0): T[] {
   const pool = reserve > 0 || (PLACE_MENU_GROUPS[groupId]?.length ?? 0) > 0 ? items.filter((i) => !SERVICE_MENU_HIDE.has(i.id)) : [...items];
-  const limit = Math.max(0, SERVICE_MENU_LIMIT - reserve);
+  // Every place section of the theme is listed (owner 2026-11-22: Categorías holds everything), so places no longer eat into the services limit.
+  void reserve;
+  const limit = SERVICE_MENU_LIMIT;
   if (pool.length <= limit) return pool;
   const top = (SERVICE_MENU_TOP[groupId] ?? []).map((id) => pool.find((i) => i.id === id)).filter((i): i is T => !!i);
   return (top.length ? top : pool).slice(0, limit);
