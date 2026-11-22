@@ -2804,7 +2804,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 </div>
                   <Link href="/servicios" prefetch={true} onClick={cerrarCajon} className={claseCajon("/servicios")}>
                     <DrawerIcon><Compass /></DrawerIcon>
-                    <span className={mobileDrawerTextClass}>{t("categories")}</span>
+                    <span className={mobileDrawerTextClass}>{directoryOn ? t("categoriesMenu") : t("categories")}</span>
                   </Link>
                 {/* El asistente pasó del menú de abajo a este menú (1-oct-2026). Solo en la
                     app: en la web el asistente no responde. */}
