@@ -2,13 +2,13 @@
   "scope": "Todos los archivos TypeScript de src/app, src/components y src/hooks, controles JSX declarados, pestañas del panel y specs permanentes. No enumera cada elemento dinámico renderizado ni componentes dentro de dependencias.",
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
-    "files": 1154,
-    "controls": 5538,
+    "files": 1155,
+    "controls": 5541,
     "pages": 131,
     "handlers": 356,
-    "components": 600,
+    "components": 601,
     "hooks": 29,
-    "specs": 531
+    "specs": 532
   },
   "dashboardTabs": [
     "pro_tools",
@@ -867,7 +867,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 531,
+          "line": 533,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -875,7 +875,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 660,
+          "line": 674,
           "tag": "Link",
           "label": "{t(\"pagination.prev\")}",
           "handler": "",
@@ -883,7 +883,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 674,
+          "line": 688,
           "tag": "Link",
           "label": "{t(\"pagination.next\")}",
           "handler": "",
@@ -891,7 +891,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 690,
+          "line": 704,
           "tag": "Link",
           "label": "{t(\"pagination.prev\")}",
           "handler": "",
@@ -899,7 +899,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 702,
+          "line": 716,
           "tag": "Link",
           "label": "{t(\"pagination.status\", { page, total: totalPages })}",
           "handler": "",
@@ -907,7 +907,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 708,
+          "line": 722,
           "tag": "Link",
           "label": "{t(\"pagination.next\")}",
           "handler": "",
@@ -915,7 +915,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 718,
+          "line": 732,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -24731,7 +24731,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 116,
+          "line": 120,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -24739,7 +24739,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 125,
+          "line": 129,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -24747,7 +24747,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 131,
+          "line": 135,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -24755,7 +24755,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 132,
+          "line": 136,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -29632,7 +29632,15 @@
       "methods": [],
       "controls": [
         {
-          "line": 392,
+          "line": 379,
+          "tag": "Link",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{(event) => { if (!extra?.loginHref) irA(event, href); }}",
+          "destination": "{extra?.loginHref ?? href}",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 439,
           "tag": "div",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -29640,7 +29648,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 421,
+          "line": 468,
           "tag": "Link",
           "label": "{tNav(\"searchAria\")}",
           "handler": "{(event) => irA(event, \"/profesionales\")}",
@@ -29648,7 +29656,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 427,
+          "line": 474,
           "tag": "Link",
           "label": "{tNav(\"messages\")}",
           "handler": "{(event) => { if (user) irA(event, \"/mensajes\"); }}",
@@ -29656,7 +29664,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 444,
+          "line": 491,
           "tag": "button",
           "label": "{tNav(\"create\")}",
           "handler": "{() => { window.dispatchEvent(new Event(\"ccr:close-native-search\")); setCreateFrom(createDestination); }}",
@@ -29664,7 +29672,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 455,
+          "line": 502,
           "tag": "Link",
           "label": "{tNav(\"notifications\")}",
           "handler": "{(event) => { if (user) irA(event, \"/notificaciones\"); }}",
@@ -29672,7 +29680,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 473,
+          "line": 520,
           "tag": "Link",
           "label": "{tNav(\"panel\")}",
           "handler": "{(event) => irA(event, nativePanelHref)}",
@@ -29680,7 +29688,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 487,
+          "line": 534,
           "tag": "Link",
           "label": "{t(\"login\")}",
           "handler": "",
@@ -67067,6 +67075,52 @@
       "priority": "P1"
     },
     {
+      "file": "src/components/search/cross-result-tabs.tsx",
+      "kind": "Componente",
+      "group": "Búsqueda y profesionales",
+      "route": null,
+      "exports": [
+        "ResultTabsBar",
+        "CrossResultTabs"
+      ],
+      "methods": [],
+      "controls": [
+        {
+          "line": 22,
+          "tag": "Link",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "",
+          "destination": "{services.href}",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 25,
+          "tag": "Link",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "",
+          "destination": "{places.href}",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        }
+      ],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/search-results.spec.ts",
+        "tests/e2e/search-ranking.spec.ts",
+        "tests/e2e/services.spec.ts",
+        "tests/e2e/native-edge-back.spec.ts",
+        "tests/e2e/search-suggestion-confirmation.spec.ts",
+        "tests/e2e/buscar-servicio-y-lugar.spec.ts",
+        "tests/e2e/mobile-search-focus.spec.ts",
+        "tests/e2e/contact-channel-stability.spec.ts",
+        "tests/e2e/search-progressive-loading.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P1"
+    },
+    {
       "file": "src/components/search/directory-suggestions.tsx",
       "kind": "Componente",
       "group": "Búsqueda y profesionales",
@@ -75508,6 +75562,31 @@
         {
           "line": 16,
           "title": "'P2: menu editor, drafts hidden until published, final price public'"
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/pro-dir-mobile-tabs.spec.ts",
+      "cases": [
+        {
+          "line": 22,
+          "title": "!isMobileProject(testInfo)"
+        },
+        {
+          "line": 24,
+          "title": "\"native shell: five tabs with the right hrefs, or the classic bar when the directory is off\""
+        },
+        {
+          "line": 47,
+          "title": "\"native shell: hidden on place pages so it never covers their contact bar\""
+        },
+        {
+          "line": 49,
+          "title": "!(await directoryOn(page))"
+        },
+        {
+          "line": 54,
+          "title": "\"outside the native shell (mobile web) the tabs are never rendered\""
         }
       ]
     },
