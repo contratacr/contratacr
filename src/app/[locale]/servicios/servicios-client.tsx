@@ -28,6 +28,8 @@ import {
 } from "lucide-react";
 import { CABECERA_BOTON, CABECERA_FILA, CABECERA_FILA_CENTRADA, CABECERA_GLIFO, CABECERA_TITULO } from "@/components/layout/cabecera";
 import { rutaDeBusqueda } from "@/lib/buscar-url";
+import { SERVICE_MENU_HIDE } from "@/lib/directory/directory-groups";
+import { CategoriesPlaceRows, usePlaceCount } from "@/components/landing/directory-nav";
 
 export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string | null }) {
   // EL CATÁLOGO COMPLETO, DESDE EL PRIMER PINTADO. Esta página es de cliente y se
@@ -50,6 +52,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
   const { user: usuario, loading: sesionCargando } = useAuth();
   const router = useRouter();
   const customCategories = useCustomCategories();
+  const placeCount = usePlaceCount();
   const [query, setQuery] = useState("");
   const [activeGroupKey, setActiveGroupKey] = useState("hogar");
   const [mobileGroupKey, setMobileGroupKey] = useState<string | null>(null);
@@ -121,7 +124,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
     [visibleGroups],
   );
   const activeGroup = groups.find((group) => group.key === activeGroupKey) ?? groups[0];
-  const activeGroupHasServices = activeGroup.ids.length > 0;
+  const activeGroupHasServices = activeGroup.ids.length + placeCount(activeGroup.key) > 0;
   const mobileGroups = useMemo(() => [...visibleGroups].sort((a, b) => {
     const aOther = isOtherCategoryGroup(a.key, a.label);
     const bOther = isOtherCategoryGroup(b.key, b.label);
@@ -447,7 +450,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
                             <span className="min-w-[130px] flex-1 lg:min-w-0">
                               <span className="block text-sm font-bold leading-tight [overflow-wrap:anywhere]">{group.label}</span>
                               <span className="mt-0.5 block text-[11px] font-medium text-[#68778d]">
-                                {tp("optionsCount", { count: group.ids.length })}
+                                {tp("optionsCount", { count: group.ids.length + placeCount(group.key) })}
                               </span>
                             </span>
                             <ChevronRight className={`h-4 w-4 shrink-0 ${active ? "text-[#009FD9]" : "text-[#cbd5e1]"}`} />
@@ -464,14 +467,15 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
                           {activeGroup.label}
                         </h2>
                         <p className="mt-0.5 text-[11px] font-medium text-[#68778d]">
-                          {tp("optionsCount", { count: activeGroup.ids.length })}
+                          {tp("optionsCount", { count: activeGroup.ids.length + placeCount(activeGroup.key) })}
                         </p>
                       </div>
                     </div>
 
                     {activeGroupHasServices ? (
                       <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                        {activeGroup.ids.map((id) => (
+                        <CategoriesPlaceRows groupId={activeGroup.key} locale={locale} onNavigate={() => {}} />
+                        {activeGroup.ids.filter((id) => !(placeCount(activeGroup.key) > 0 && SERVICE_MENU_HIDE.has(id))).map((id) => (
                           <Link
                             key={id}
                             href={rutaDeBusqueda({ categoria: id })}
