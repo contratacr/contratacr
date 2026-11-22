@@ -32,7 +32,7 @@ test.describe("directory app tabs", () => {
     await expect(tabs).toHaveCount(6);
     await expect(tabs.nth(0)).toHaveAttribute("href", "/");
     await expect(tabs.nth(1)).toHaveAttribute("href", "/profesionales");
-    await expect(tabs.nth(2)).toHaveAttribute("href", "/lugares");
+    await expect(tabs.nth(2)).toHaveAttribute("href", "/servicios");
     await expect(tabs.nth(3)).toHaveAttribute("href", "/solicitudes");
     await expect(tabs.nth(4)).toHaveAttribute("href", /\/login/);
     await expect(tabs.nth(5)).toHaveAttribute("href", /\/login/);

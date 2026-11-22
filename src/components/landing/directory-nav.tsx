@@ -23,7 +23,6 @@ function useSections() {
 
 export { DIRECTORY_GROUPS } from "@/lib/directory/directory-groups";
 const TXT = {
-  allPlaces: { es: "Ver todos los lugares", en: "See all places" },
   allCategories: { es: "Ver todas las categorías", en: "See all categories" },
   prices: { es: "Comparar precios", en: "Compare prices" },
   events: { es: "Eventos", en: "Events" },
@@ -157,7 +156,6 @@ export function FooterPlacesColumn({ locale, heading, open, onToggle, interactiv
         ))}
         <li><Link href="/servicios" className={linkClass}>{pick(TXT.allCategories, locale)}</Link></li>
         <li><Link href="/precios" className={linkClass}>{pick(TXT.prices, locale)}</Link></li>
-        <li><Link href="/lugares" className={linkClass}>{pick(TXT.allPlaces, locale)}</Link></li>
       </ul>
     </nav>
   );

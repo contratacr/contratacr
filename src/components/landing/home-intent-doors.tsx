@@ -1,6 +1,6 @@
 "use client";
 
-import { Hammer, MapPinned } from "lucide-react";
+import { Hammer, LayoutGrid } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { useSiteFeatures } from "@/components/site-features";
@@ -18,8 +18,8 @@ export function HomeIntentDoors() {
         <Hammer className="h-[18px] w-[18px] shrink-0 text-[#009FD9]" aria-hidden />
         <span className="min-w-0 leading-tight">{t("puertaServicio")}</span>
       </Link>
-      <Link href="/lugares" data-home-door="lugar" className={`${door} bg-[#009FD9] text-white hover:bg-[#0089bb]`}>
-        <MapPinned className="h-[18px] w-[18px] shrink-0" aria-hidden />
+      <Link href="/servicios" data-home-door="categorias" className={`${door} bg-[#009FD9] text-white hover:bg-[#0089bb]`}>
+        <LayoutGrid className="h-[18px] w-[18px] shrink-0" aria-hidden />
         <span className="min-w-0 leading-tight">{t("puertaLugar")}</span>
       </Link>
     </nav>

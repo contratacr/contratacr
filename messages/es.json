@@ -2881,7 +2881,7 @@
       "titularLugaresPc": "Encuentre profesionales y *lugares*|en Costa Rica.",
       "puertasAria": "Qué desea hacer",
       "puertaServicio": "Contratar un servicio",
-      "puertaLugar": "Encontrar un lugar",
+      "puertaLugar": "Explorar categorías",
       "intentServicio": "Contratar un servicio",
       "intentLugar": "Ver lugares"
     },
@@ -3065,7 +3065,7 @@
   "bottomNav": {
     "tabHome": "Inicio",
     "tabServices": "Servicios",
-    "tabPlaces": "Lugares",
+    "tabPlaces": "Categorías",
     "tabAccount": "Cuenta",
     "search": "Profesionales",
     "deals": "Promociones",

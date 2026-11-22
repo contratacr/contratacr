@@ -6,7 +6,7 @@ import { esServicioDelCatalogo } from "@/lib/data/categories";
 import { esRutaDeBusqueda } from "@/lib/buscar-url";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Bell, Hammer, House, ClipboardList, MapPinned, MessageSquareText, Plus, Search, UserRound } from "lucide-react";
+import { Bell, Hammer, House, ClipboardList, LayoutGrid, MessageSquareText, Plus, Search, UserRound } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
@@ -367,7 +367,7 @@ export function NativeBottomNav() {
     // Hidden under the full-screen search sheet.
     if (buscadorAbierto) return null;
     const ruta = pathname ?? "";
-    const enLugares = ruta === "/lugares" || sections.some((section) => ruta === `/${section}`);
+    const enLugares = ruta === "/servicios" || ruta === "/lugares" || sections.some((section) => ruta === `/${section}`);
     const activo = asistenteAbierto ? -1
       : ruta === "/" ? 0
       : esRutaDeBusqueda(ruta, esServicioDelCatalogo) ? 1
@@ -400,7 +400,7 @@ export function NativeBottomNav() {
         <div className="ccr-barra-flotante-pastilla pointer-events-auto relative mx-auto flex h-[56px] w-full max-w-[420px] items-stretch rounded-full p-1">
           {tab(0, "/", tNav("tabHome"), House)}
           {tab(1, "/profesionales", tNav("tabServices"), Hammer)}
-          {tab(2, "/lugares", tNav("tabPlaces"), MapPinned)}
+          {tab(2, "/servicios", tNav("tabPlaces"), LayoutGrid)}
           {tab(3, "/solicitudes", tNav("projects"), ClipboardList)}
           {user
             ? tab(4, "/mensajes", tNav("messages"), MessageSquareText, { badge: mensajesPorLeer })
