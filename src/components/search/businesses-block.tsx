@@ -43,7 +43,7 @@ export async function BusinessesBlock({q,sections,locale,location,hasProfessiona
  const {match,href,items,total,extras}=data;
  return <section data-businesses-block={match.section} aria-labelledby="ccr-businesses-title" className="mb-3 min-w-0">
   <div className="flex items-baseline justify-between gap-3 px-4 pb-1.5 pt-3 lg:px-0 lg:pt-0">
-   <h2 id="ccr-businesses-title" className="text-[15px] font-extrabold text-[#162543]">{t('Negocios','Businesses')} <span className="font-semibold text-[#68778d]">· {match.label}</span></h2>
+   <h2 id="ccr-businesses-title" className="text-[15px] font-extrabold text-[#162543]">{t('Empresas','Businesses')} <span className="font-semibold text-[#68778d]">· {match.label}</span></h2>
    {total>items.length&&<Link href={href} className="inline-flex min-h-8 items-center gap-0.5 text-[13px] font-bold text-[#007fae] hover:underline">{t(`Ver los ${total.toLocaleString('es-CR')}`,`See all ${total.toLocaleString('en-US')}`)}<ChevronRight className="h-4 w-4" aria-hidden="true"/></Link>}
   </div>
   <div className="ccr-search-results-list flex min-w-0 flex-col gap-1.5 bg-white lg:gap-3 lg:bg-transparent">

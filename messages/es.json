@@ -85,7 +85,7 @@
     "searchProfessionals": "Buscar profesionales"
   },
   "header": {
-    "searchServicesAndPlaces": "Servicios y negocios",
+    "searchServicesAndPlaces": "Servicios y empresas",
     "searchServiceLabel": "Servicio",
     "searchServicesLabel": "Servicios",
     "tools": "Herramientas",
@@ -2877,22 +2877,22 @@
       "search": "Buscar",
       "titular": "Encuentre profesionales|*verificados* en Costa Rica.",
       "titularPc": "Encuentre profesionales *verificados*|en Costa Rica.",
-      "titularLugares": "Encuentre profesionales|y *negocios* en Costa Rica.",
-      "titularLugaresPc": "Encuentre profesionales y *negocios*|en Costa Rica.",
+      "titularLugares": "Encuentre profesionales|y *empresas* en Costa Rica.",
+      "titularLugaresPc": "Encuentre profesionales y *empresas*|en Costa Rica.",
       "puertasAria": "Qué desea hacer",
       "puertaServicio": "Contratar un servicio",
       "puertaLugar": "Explorar categorías",
       "intentServicio": "Contratar un servicio",
-      "intentLugar": "Ver negocios"
+      "intentLugar": "Ver empresas"
     },
     "inicio": {
       "lugaresTitulo": "Categorías populares",
       "lugaresSub": "Restaurantes, farmacias, plomería, mecánica y más, con horarios y datos de contacto.",
-      "verTodos": "Ver todos los negocios",
+      "verTodos": "Ver todas las empresas",
       "verCategorias": "Ver todas las categorías",
       "compararPrecios": "Comparar precios",
       "eventos": "Eventos",
-      "destacadosTitulo": "Negocios para empezar",
+      "destacadosTitulo": "Empresas para empezar",
       "destacadosVer": "Ver {seccion}",
       "promoTitulo": "Promociones",
       "promoTexto": "Ofertas de profesionales y de negocios de Costa Rica, en un solo lugar.",
@@ -3919,11 +3919,11 @@
     "workPhotos": "Casos de éxito"
   },
   "placesHub": {
-    "metaTitle": "Negocios en Costa Rica",
+    "metaTitle": "Empresas en Costa Rica",
     "metaDescription": "Restaurantes, comercios, clínicas, gasolineras y más: horarios, fotos, reseñas y datos de contacto en todo Costa Rica.",
     "breadcrumbLabel": "Ruta de navegación",
     "home": "Inicio",
-    "title": "Negocios",
+    "title": "Empresas",
     "intro": "Encuentre restaurantes, comercios, clínicas y más en todo Costa Rica, con horarios, fotos, reseñas y datos de contacto.",
     "moreTitle": "Más para explorar",
     "prices": "Comparar precios",
