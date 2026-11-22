@@ -36,7 +36,7 @@ async function loadBlock(q:string|undefined,sections:readonly string[],locale:st
  }catch{return null;}
 }
 
-export async function BusinessesBlock({q,sections,locale,location}:{q:string|undefined;sections:readonly string[];locale:string;location:DirectoryLocation}){
+export async function BusinessesBlock({q,sections,locale,location,hasProfessionals=true}:{q:string|undefined;sections:readonly string[];locale:string;location:DirectoryLocation;hasProfessionals?:boolean}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es;
  const data=await loadBlock(q,sections,locale,location);
  if(!data)return null;
@@ -49,6 +49,6 @@ export async function BusinessesBlock({q,sections,locale,location}:{q:string|und
   <div className="ccr-search-results-list flex min-w-0 flex-col gap-1.5 bg-white lg:gap-3 lg:bg-transparent">
    {items.map((item,i)=><div key={item.key} className="ccr-search-card-slot relative w-full min-w-0 lg:rounded-2xl"><PlaceCard item={item} locale={locale} rank={i+1} extra={extras[item.slug]??null}/></div>)}
   </div>
-  <h2 className="px-4 pb-0 pt-4 text-[15px] font-extrabold text-[#162543] lg:px-0 lg:pt-5">{t('Profesionales','Professionals')}</h2>
+  {hasProfessionals&&<h2 className="px-4 pb-0 pt-4 text-[15px] font-extrabold text-[#162543] lg:px-0 lg:pt-5">{t('Profesionales','Professionals')}</h2>}
  </section>;
 }

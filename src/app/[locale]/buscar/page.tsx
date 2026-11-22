@@ -574,6 +574,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   sections={sitemapSections().map((s) => s.section)}
                   locale={locale}
                   location={{ provinceId: selectedProvinceId, cantonId: selectedCantonId, lat: nearLat, lng: nearLng }}
+                  hasProfessionals={allResults.length > 0}
                 />
               </Suspense>
               {allResults.length === 0 ? (
