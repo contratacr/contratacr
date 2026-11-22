@@ -7,6 +7,7 @@ import { CvProfileDetails } from "@/components/professionals/cv-profile";
 import { hasCv, normalizeCv } from "@/lib/cv/model";
 import { PromotionHistory } from "@/components/pro/promotion-history";
 
+import { nombreDeSaludo } from "@/lib/nombres";
 import { ProfileIdentityName, profileIdentityAvatarClass } from "@/components/professionals/profile-identity-name";
 
 import { sinPrefijoDeIdioma } from "@/lib/prefijo-de-idioma";
@@ -19,12 +20,10 @@ import { useState, useEffect, useLayoutEffect, useCallback, useRef, type ReactNo
 import { useTranslations, useLocale } from "next-intl";
 import { useParams, useSearchParams } from "next/navigation";
 import {
-  MapPin, Shield, ArrowLeft, Briefcase, BadgeCheck, Languages,
+  MapPin, Shield, ArrowLeft, Star, Briefcase, Banknote, BadgeCheck, Languages,
   Flag, SearchX, Globe, BadgePercent, Share2, Link2, ChevronRight, Bookmark,
-  X, Ban, Images, PenLine,
+  X, Ban,
 } from "lucide-react";
-import { BIZ, RatingLine, Stars, ratingNumber, ring } from "@/components/directory/biz-ui";
-import { SelfActionModal } from "@/components/professionals/self-action-modal";
 import { Modal } from "@/components/ui/modal";
 import { VerificationInfo } from "@/components/ui/verification-info";
 import { InstagramIcon, FacebookIcon, TikTokIcon, LinkedInIcon } from "@/components/icons/social-icons";
@@ -186,7 +185,6 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   const t = useTranslations("profile");
   const tMenu = useTranslations("menuFicha");
   const tVolver = useTranslations("marketplaceReturn");
-  const tFoto = useTranslations("clientPage");
   const locale = useLocale();
   const catLabel = (id?: string | null) => id ? getCategoryLabel(id, locale) : "";
   const routeParams = useParams();
@@ -673,46 +671,6 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   const placeAddress = locationText;
 
   const hasCasos = !!professional.portfolioUrls && professional.portfolioUrls.length > 0;
-  // Los casos de éxito, una sola vez: los usa la pestaña y la franja de fotos de
-  // la cabecera. Lee las dos formas guardadas —casos nuevos (con `photos[]`) y
-  // fotos viejas (`{url}`), agrupadas por profesión de tres en tres—.
-  const profsOrder = (professional.professions && professional.professions.length > 0)
-    ? professional.professions
-    : (professional.categoryId ? [professional.categoryId] : []);
-  type Caso = { id: string; profession: string; title?: string; description?: string; recipient?: string; date?: string; photos: string[] };
-  const caseList: Caso[] = (() => {
-    if (!hasCasos) return [];
-    const svcs = professional.services ?? [];
-    const primaryProf = profsOrder[0] ?? "";
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const profOf = (it: any) => casoProfession(it, svcs, primaryProf);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const raw: any[] = (professional.portfolioItems && professional.portfolioItems.length > 0)
-      ? professional.portfolioItems
-      : (professional.portfolioUrls ?? []).map((url) => ({ url }));
-    const lista: Caso[] = [];
-    const legacyByProf = new Map<string, string[]>();
-    for (const it of raw) {
-      if (Array.isArray(it?.photos) && it.id) {
-        lista.push({ id: String(it.id), profession: it.profession ?? primaryProf, title: it.title, description: it.description, recipient: it.recipient, date: it.date, photos: it.photos });
-      } else if (it?.url) {
-        const prof = profOf(it) || primaryProf || "";
-        const arr = legacyByProf.get(prof) ?? []; arr.push(it.url); legacyByProf.set(prof, arr);
-      }
-    }
-    for (const [prof, photos] of legacyByProf) {
-      for (let i = 0; i < photos.length; i += 3) lista.push({ id: `${prof}_${i}`, profession: prof, photos: photos.slice(i, i + 3) });
-    }
-    return lista;
-  })();
-  // LA FRANJA DE FOTOS DE ARRIBA (modelo Yelp, 19-nov-2026): la portada de cada
-  // caso primero —que la franja muestre trabajos distintos— y luego el resto,
-  // hasta cuatro. Sin casos no hay franja: nunca una caja gris vacía.
-  const coverPhotos = (() => {
-    const portadas = caseList.map((c) => c.photos.find((p) => typeof p === "string" && p.trim())).filter((p): p is string => !!p);
-    const resto = caseList.flatMap((c) => c.photos).filter((p) => typeof p === "string" && p.trim() && !portadas.includes(p));
-    return [...new Set([...portadas, ...resto])].slice(0, 4);
-  })();
   const certificationsList = (professional.certifications ?? []).filter((c) => c?.name?.trim());
   const cvProfile = normalizeCv(professional.cvProfile);
   const hasCerts = certificationsList.length > 0 || hasCv(cvProfile) || !!professional.hasCvFile;
@@ -883,26 +841,6 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   // montada en el mismo cuadro en que se elige, sin un cuadro vacío.
   if (!pestanasVisitadas.has(tabEfectiva)) setPestanasVisitadas((previas) => new Set(previas).add(tabEfectiva));
   const montada = (id: string) => id === tabEfectiva || pestanasVisitadas.has(id);
-  // Abrir una sección desde la cabecera (estrellas, «Escribir una reseña», la
-  // franja de fotos): la pestaña se elige y la tira de pestañas sube a la vista.
-  const en = locale === "en";
-  const irASeccion = (tab: Tab) => {
-    setActiveTab(tab);
-    requestAnimationFrame(() => document.getElementById("resenas")?.scrollIntoView({ behavior: "smooth", block: "start" }));
-  };
-  // La zona en la cabecera SOLO cuando el profesional no guardó lugares de
-  // trabajo: entonces es la misma que dice la tarjeta de contacto. Con lugares,
-  // el cantón del perfil puede no ser ninguno de ellos («Atenas» arriba y
-  // «Escazú +5 zonas» al lado): la zona vive completa en la tarjeta.
-  const zonaDeCabecera = professional.workplaces?.length ? "" : locationText;
-  const etiquetasDeServicio = [...new Set(profsOrder.map((id) => catLabel(id)).filter(Boolean))];
-  // Tecla de la fila de acciones: píldora en computadora, ícono sobre el rótulo
-  // en el teléfono (tres iguales a lo ancho). 44 px de alto mínimo en los dos.
-  const accionDeFicha = cn(
-    "inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-full border border-[#cfd9e3] bg-white px-4 text-[14px] font-semibold text-[#162543] transition-colors hover:border-[#162543] hover:bg-[#f7fafc]",
-    "max-sm:min-h-[60px] max-sm:flex-col max-sm:gap-1 max-sm:rounded-xl max-sm:px-1.5 max-sm:py-2 max-sm:text-[12.5px] max-sm:leading-tight",
-    ring,
-  );
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -959,206 +897,146 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
               "Verificado" badge already communicates the unverified state. (The invite to
               verify lives in the pro's own panel.) */}
 
-          {/* ── FRANJA DE FOTOS (modelo Yelp, 19-nov-2026) ── Lo primero que se ve
-              son los trabajos: las portadas de los casos de éxito, a lo ancho, y
-              un solo control que abre la pestaña de casos. Sin casos no se pinta
-              nada (nunca una caja gris vacía): la cabecera arranca con la foto y
-              el nombre, como siempre. En el teléfono va a sangre, sin bordes. */}
-          {coverPhotos.length > 0 && (
-            <button
-              type="button"
-              data-profile-cover={coverPhotos.length}
-              onClick={() => irASeccion("casos")}
-              aria-label={t("biz.coverSeeAll", { count: caseList.length })}
-              className={cn("group relative -mx-4 mb-5 block w-[calc(100%+2rem)] overflow-hidden bg-[#eef2f6] text-left sm:mx-0 sm:mb-7 sm:w-full sm:rounded-2xl lg:mb-8", ring)}
-            >
-              <span className={cn(
-                "grid h-[208px] grid-cols-1 gap-1 sm:h-[260px] lg:h-[300px]",
-                coverPhotos.length === 2 && "sm:grid-cols-2",
-                coverPhotos.length === 3 && "sm:grid-cols-4",
-                coverPhotos.length >= 4 && "sm:grid-cols-4 sm:grid-rows-2",
-              )}>
-                {coverPhotos.map((foto, i) => (
-                  <span
-                    key={foto}
-                    className={cn(
-                      "relative block min-h-0 overflow-hidden",
-                      i > 0 && "hidden sm:block",
-                      coverPhotos.length === 3 && i === 0 && "sm:col-span-2",
-                      coverPhotos.length >= 4 && i === 0 && "sm:col-span-2 sm:row-span-2",
-                      coverPhotos.length >= 4 && i === 1 && "sm:row-span-2",
-                    )}
-                  >
-                    <ProgressiveImage
-                      src={cldLarge(foto, i === 0 ? 1100 : 640)}
-                      alt=""
-                      priority={i === 0}
-                      fit="cover"
-                      wrapperClassName="h-full w-full"
-                      className="transition-transform duration-500 ease-out group-hover:scale-[1.03]"
-                    />
-                  </span>
-                ))}
-              </span>
-              <span aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#0b1628]/45 to-transparent" />
-              <span aria-hidden className="absolute bottom-3 right-4 inline-flex min-h-10 items-center gap-2 rounded-full bg-white/95 px-4 text-[14px] font-semibold text-[#162543] shadow-[0_6px_18px_-8px_rgba(11,22,40,0.6)] transition-colors group-hover:bg-white sm:bottom-4 sm:right-4">
-                <Images className="h-4 w-4 text-[#009FD9]" />
-                {t("biz.coverSeeAll", { count: caseList.length })}
-              </span>
-            </button>
-          )}
-
           {/* Sin items-start: la columna derecha tiene que estirarse a lo alto de la
               fila para que su tarjeta pueda quedarse pegada al bajar. */}
-          <div className="flex flex-col gap-6 lg:flex-row lg:gap-10">
+          <div className="flex flex-col gap-6 lg:flex-row">
 
             {/* ── COLUMNA IZQUIERDA: identidad y secciones ── */}
             <div className="order-1 flex-1 min-w-0">
-            {/* ── CABECERA (modelo Yelp) ── Foto | nombre con su sello, estrellas
-                con el número de reseñas, los servicios como etiquetas y los datos
-                que SÍ existen (zona, años de experiencia: nunca uno inventado).
-                Debajo, la fila de acciones sobre la ficha. Sin tarjeta: es la
-                cabecera de la página, no una caja más. */}
-            <div data-profile-header className="relative mb-2 rounded-2xl">
-              <div className="flex min-w-0 items-start gap-3 sm:gap-5">
-                <ImagePreviewDialog
-                  src={professional.avatarUrl}
-                  alt={professional.fullName}
-                  openLabel={tFoto("viewPhoto")}
-                  closeLabel={t("close")}
-                  className="shrink-0"
-                >
-                  {/* LA FOTO LA PINTA EL SERVIDOR, Y LAS INICIALES SON LAS DEL
-                      NOMBRE QUE SE LEE ARRIBA. Con el avatar de Radix la <img> no
-                      existía hasta que el NAVEGADOR cargaba la imagen: en cada
-                      recarga se veían primero las iniciales («MH» de Mateo
-                      Herrera bajo el título «Redes Bahía») y después la foto. Una
-                      <img> normal viaja en el HTML y las iniciales quedan DETRÁS. */}
-                  <span data-profile-identity-avatar className={`relative grid shrink-0 place-items-center overflow-hidden rounded-full bg-[#EBF5FB] ring-1 ring-[#e3e9ef] ${profileIdentityAvatarClass}`}>
-                    {/* Las iniciales SOLO si no hay foto: detrás de un logo con
-                        fondo transparente se veían por debajo del dibujo. */}
-                    {!professional.avatarUrl && (
-                      <span aria-hidden className="text-xl font-bold text-[#009FD9] sm:text-2xl">{getInitials(displayName.primaryMobile)}</span>
-                    )}
-                    {professional.avatarUrl && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={cldThumb(professional.avatarUrl, 320)}
-                        alt={displayName.primaryMobile}
-                        loading="eager"
-                        fetchPriority="high"
-                        decoding="async"
-                        // `bg-white`: un PNG con fondo transparente no deja
-                        // ver el azul del hueco detrás.
-                        className="absolute inset-0 h-full w-full bg-white object-cover"
-                      />
-                    )}
-                  </span>
-                </ImagePreviewDialog>
-                <div className="min-w-0 flex-1 sm:pt-1">
-                  {/* El «···» va en el MISMO renglón del nombre: el menú es de
-                      ESTA ficha, y la ficha es el nombre. En el teléfono lo
-                      dibuja la barra de arriba. */}
-                  <div className="flex min-w-0 items-start justify-between gap-3">
-                    <div data-verification-owner className="min-w-0">
-                      <ProfileIdentityName testId="professional-profile-name" name={displayName.primaryDesktop}
-                        badge={professional.verificationStatus === "verified" ? <VerificationInfo /> : null} />
-                    </div>
-                    <MenuFicha className="-mt-1.5 hidden shrink-0 sm:block" opciones={opcionesDeLaFicha} />
-                  </div>
-                  <div className="mt-1 sm:mt-1.5">
-                    {professional.reviewCount > 0 ? (
-                      // Toda la línea abre Reseñas: estrellas, promedio y cuántas.
-                      <button
-                        type="button"
-                        onClick={() => irASeccion("resenas")}
-                        aria-label={`${ratingNumber(professional.ratingAvg, en)} · ${t("reviewCountLabel", { count: professional.reviewCount })}`}
-                        data-rating-line={professional.reviewCount}
-                        className={cn("-mx-1 inline-flex min-h-11 flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg px-1 text-left text-[15px]", ring)}
-                      >
-                        <Stars value={professional.ratingAvg} />
-                        <span className="font-bold text-[#162543]">{ratingNumber(professional.ratingAvg, en)}</span>
-                        <span className="text-[#526277] underline-offset-2 hover:underline">({t("reviewCountLabel", { count: professional.reviewCount })})</span>
-                      </button>
-                    ) : (
-                      <div className="flex min-h-11 items-center"><RatingLine average={null} count={0} en={en} /></div>
-                    )}
-                  </div>
-                  {etiquetasDeServicio.length > 0 && (
-                    <ul className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5" data-profile-categories>
-                      {etiquetasDeServicio.slice(0, 3).map((label) => (
-                        <li key={label} className={cn(BIZ.chip, "max-w-full truncate")}>{label}</li>
-                      ))}
-                      {etiquetasDeServicio.length > 3 && (
-                        <li className="text-[13px] font-semibold text-[#526277]">{t("biz.moreCategories", { count: etiquetasDeServicio.length - 3 })}</li>
+            {/* ── CABECERA ── En computadora: foto | nombre, oficio y cifras | acciones.
+                Todo lo del centro arranca en la misma línea (antes las cifras
+                colgaban debajo de la foto y el borde izquierdo quedaba en zigzag)
+                y las dos acciones comparten renglón arriba a la derecha, del
+                ancho de su texto. En el teléfono sigue centrado como estaba. */}
+            <div className="relative mb-6 rounded-2xl border border-[#e5e7eb] bg-white px-4 pb-4 pt-3.5 shadow-sm sm:grid sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-start sm:gap-x-5 sm:p-6 sm:pt-6">
+                {/* En el teléfono: foto a la izquierda, y a su lado el nombre y
+                    las cifras. Centrado ocupaba tres renglones para decir lo
+                    mismo y empujaba los botones de contacto fuera de la
+                    pantalla. En computadora sigue siendo la rejilla de
+                    foto | nombre y cifras | acciones. */}
+                <div className="flex min-w-0 flex-col items-start gap-2 text-left min-[360px]:flex-row min-[360px]:items-center min-[360px]:gap-3 sm:contents sm:gap-0">
+                  <ImagePreviewDialog
+                    src={professional.avatarUrl}
+                    alt={professional.fullName}
+                    openLabel={locale === "en" ? "View profile photo" : "Ver foto de perfil"}
+                    closeLabel={locale === "en" ? "Close" : "Cerrar"}
+                    className="sm:col-start-1 sm:row-start-1 sm:row-span-2 sm:self-center lg:row-span-1"
+                  >
+                    {/* LA FOTO LA PINTA EL SERVIDOR, Y LAS INICIALES SON LAS DEL
+                        NOMBRE QUE SE LEE ARRIBA.
+                        Con el avatar de Radix, la etiqueta <img> no existe hasta
+                        que el NAVEGADOR carga la imagen: medido, el HTML del
+                        servidor no traía la foto. Así que en cada recarga se
+                        veían primero las iniciales y después la foto, siempre.
+                        Y encima eran las del nombre personal —«MH» de Mateo
+                        Herrera— mientras el título decía «Redes Bahía», que es
+                        lo que Isaac reportó como «iniciales que no tienen nada
+                        que ver». Una <img> normal viaja en el HTML y las
+                        iniciales quedan DETRÁS: se ven solo si no hay foto. */}
+                    <span data-profile-identity-avatar className={`relative grid shrink-0 place-items-center overflow-hidden rounded-full bg-[#EBF5FB] ${profileIdentityAvatarClass}`}>
+                      {/* Las iniciales SOLO si no hay foto: detrás de un logo con
+                          fondo transparente se veían por debajo del dibujo. */}
+                      {!professional.avatarUrl && (
+                        <span aria-hidden className="text-xl font-bold text-[#009FD9] sm:text-2xl">{getInitials(displayName.primaryMobile)}</span>
                       )}
-                    </ul>
-                  )}
-                  {(zonaDeCabecera || expYears > 0) && (
-                    <ul className={cn("mt-3 flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1.5 text-[14px] text-[#526277]", expYears <= 0 && "max-lg:hidden")} data-profile-facts>
-                      {zonaDeCabecera && (
-                        // En el teléfono la zona sale justo debajo, en el bloque de
-                        // contacto: aquí solo la repetía.
-                        <li className="inline-flex min-w-0 items-center gap-1.5 max-lg:hidden">
-                          <MapPin aria-hidden className="h-4 w-4 shrink-0 text-[#009FD9]" />
-                          <span className="min-w-0 truncate">{zonaDeCabecera}</span>
-                        </li>
+                      {professional.avatarUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={cldThumb(professional.avatarUrl, 320)}
+                          alt={displayName.primaryMobile}
+                          loading="eager"
+                          fetchPriority="high"
+                          decoding="async"
+                          // `bg-white`: un PNG con fondo transparente no deja
+                          // ver el azul del hueco detrás.
+                          className="absolute inset-0 h-full w-full bg-white object-cover"
+                        />
+                      )}
+                    </span>
+                  </ImagePreviewDialog>
+                  <div className="w-full min-w-0 sm:col-start-2 sm:row-start-1 sm:w-auto lg:col-end-4 lg:self-center">
+                    {/* En computadora el «···» va en el MISMO renglón del nombre
+                        (a la altura del nombre y el sello), al final de la fila. */}
+                    <div className="min-w-0 lg:flex lg:items-center lg:justify-between lg:gap-4">
+                      <div data-verification-owner className="min-w-0">
+                        <ProfileIdentityName testId="professional-profile-name" name={displayName.primaryDesktop}
+                          badge={professional.verificationStatus === "verified" ? <VerificationInfo /> : null} />
+                      </div>
+                      <MenuFicha className="hidden shrink-0 lg:block" opciones={opcionesDeLaFicha} />
+                    </div>
+                    {/* La ubicación NO va aquí: las zonas de trabajo están en la
+                        tarjeta de contacto, completas, y el cantón del perfil
+                        repetía una de ellas a medias. */}
+                  {/* Prueba social en una línea. Los casos de éxito NO van aquí:
+                      tienen su propia pestaña y repetir la cifra gastaba un
+                      renglón sin decir nada nuevo. */}
+                  {/* Una línea, con las dos cifras juntas: a 40 px en computadora
+                      se leían como dos datos sueltos. El ícono de cada una ya
+                      marca dónde empieza la siguiente. */}
+                  {(professional.reviewCount > 0 || expYears > 0) && (
+                    <div className="mt-1.5 flex flex-nowrap items-center gap-x-3 overflow-hidden text-[12.5px] text-[#68778d] sm:mt-3 sm:gap-x-5 sm:text-[13px]">
+                      {/* SIEMPRE una sola línea, en español e inglés: con «años
+                          de experiencia» completo no cabía al lado de las
+                          reseñas y se partía en dos renglones. */}
+                      {professional.reviewCount > 0 && (
+                        // Con etiqueta queda fuera de la regla de 44 px de alto
+                        // mínimo de la app: estiraba el bloque del nombre y ya
+                        // no quedaba centrado con la foto.
+                        <button type="button" onClick={() => setActiveTab("resenas")} aria-label={`${professional.ratingAvg.toFixed(1)} · ${t("reviewCountLabel", { count: professional.reviewCount })}`} className="relative inline-flex min-w-0 items-center gap-1.5 after:absolute after:-inset-2 after:content-['']">
+                          <Star className="h-3.5 w-3.5 shrink-0 fill-[#ff9b32] text-[#ff9b32]" />
+                          <span className="text-[14px] font-bold text-[#162543] sm:text-[15px]">{professional.ratingAvg.toFixed(1)}</span>
+                          <span className="whitespace-nowrap">{t("reviewCountLabel", { count: professional.reviewCount })}</span>
+                        </button>
                       )}
                       {expYears > 0 && (
-                        <li className="inline-flex items-center gap-1.5">
-                          <Briefcase aria-hidden className="h-4 w-4 shrink-0 text-[#009FD9]" />
-                          <span>{t("biz.experienceYears", { count: expYears })}</span>
-                        </li>
+                        <span className="inline-flex min-w-0 items-center gap-1.5">
+                          <Briefcase className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />
+                          <span className="text-[14px] font-bold text-[#162543] sm:text-[15px]">{expYears}</span>
+                          <span className="whitespace-nowrap">{t("statYears")}</span>
+                        </span>
                       )}
-                    </ul>
+                    </div>
                   )}
-                </div>
-              </div>
+                  </div>
 
-              {/* LA FILA DE ACCIONES (modelo Yelp): reseñar, compartir y guardar,
-                  a la vista. Contactar NO va aquí: es la tarjeta de la derecha en
-                  computadora y la franja pegada al fondo en el teléfono. En el
-                  teléfono son tres teclas iguales con el ícono arriba.
-                  Guardar NO lleva `data-save-button`: ese atributo marca «el
-                  botón de guardar de esta pantalla» para el «···» y las pruebas,
-                  y aquí el «···» sigue ofreciendo guardar. */}
-              <div className="mt-4 grid grid-cols-3 gap-2 sm:mt-5 sm:flex sm:flex-wrap" data-profile-actions>
-                <button type="button" onClick={() => irASeccion("resenas")} data-profile-write-review className={cn(accionDeFicha, "sm:border-[#162543] sm:bg-[#162543] sm:text-white sm:hover:border-[#22355c] sm:hover:bg-[#22355c]")}>
-                  <PenLine aria-hidden className="h-[18px] w-[18px] shrink-0" />
-                  <span className="truncate">{t("biz.writeReview")}</span>
-                </button>
-                <button type="button" onClick={shareProfile} className={accionDeFicha}>
-                  <CaraCompartir
-                    dedo={<span className="inline-flex items-center gap-2 max-sm:flex-col max-sm:gap-1"><Share2 aria-hidden className="h-[18px] w-[18px] shrink-0" /><span>{tMenu("share")}</span></span>}
-                    raton={<span className="inline-flex items-center gap-2 max-sm:flex-col max-sm:gap-1"><Link2 aria-hidden className="h-[18px] w-[18px] shrink-0" /><span>{tMenu("copyLink")}</span></span>}
-                  />
-                </button>
-                <button
-                  type="button"
-                  data-profile-save
-                  aria-pressed={guardarPro.guardado}
-                  onClick={(e) => void guardarPro.alternar(e)}
-                  className={cn(accionDeFicha, guardarPro.guardado && "border-[#009FD9] bg-[#eaf7fc] text-[#007fae] hover:border-[#009FD9]")}
-                >
-                  <Bookmark aria-hidden className="h-[18px] w-[18px] shrink-0" fill={guardarPro.guardado ? "currentColor" : "none"} />
-                  <span>{guardarPro.etiqueta}</span>
-                </button>
-              </div>
-              <SelfActionModal open={!!guardarPro.selfMsg} onClose={guardarPro.limpiarSelfMsg} message={guardarPro.selfMsg ?? ""} />
-
-              {/* En el teléfono, contactar vive AQUÍ: precio, zona y los botones
-                  (que se pegan al fondo de la pantalla). En computadora es la
-                  columna de la derecha, siempre a la vista. */}
-              <div className="mt-5 border-t border-[#e8edf2] pt-5 lg:hidden">{bloqueContacto(true)}</div>
+                  </div>
+                {/* En el teléfono, guardar y compartir viven en el «...» de la
+                    barra de arriba, igual que en Empleos, Promociones y
+                    Proyectos: son acciones sobre la ficha, no formas de
+                    contactar, y dentro de la tarjeta le quitaban sitio a lo que
+                    sí contacta. En computadora no hay barra de ficha, así que
+                    siguen discretas arriba a la derecha. */}
+                {/* En el teléfono, contactar vive AQUÍ: arriba, a la vista, sin
+                    pestaña de por medio. En computadora sigue siendo la columna
+                    de la derecha, que ya está siempre visible. */}
+                <div className="mt-4 border-t border-[#eef2f6] pt-4 lg:hidden">{bloqueContacto(true)}</div>
+                {/* EL «···», COMO EN LAS DEMÁS SECCIONES. Aquí «Guardar» y
+                    «Copiar enlace» iban sueltas en la esquina, escritas con su
+                    rótulo: la misma ficha ofrecía sus acciones de dos formas
+                    según la pantalla —menú en el teléfono, botones sueltos en
+                    computadora— y ninguna otra sección lo hace. Mismas
+                    opciones, mismo orden, mismo sitio. */}
+                {/* EN LA FILA, NO EN LA ESQUINA. La tarjeta es una rejilla de
+                    foto | nombre y cifras | acciones, y el «···» es la tercera
+                    columna: flotando en la esquina de arriba quedaba huérfano a
+                    500 px de lo último que hay escrito. Alineado con el nombre
+                    se lee como lo que es —lo que se puede hacer con esta
+                    ficha— y sigue cerrando la fila por la derecha, que es donde
+                    está en Empleos, Promociones y Proyectos.
+                    A LA ALTURA DEL NOMBRE, no del centro del bloque ni de la
+                    esquina de la tarjeta: el menú es de ESTA ficha, y la ficha
+                    es el nombre. Es la misma línea en la que va en Proyectos,
+                    al final del renglón de quien publica. El `-mt-1.5` compensa
+                    el respiro del botón para que el círculo case con el texto. */}
+                {/* En computadora este «···» se esconde: va dentro del renglón
+                    del nombre (ver arriba), con el bloque centrado con la foto. */}
+                <MenuFicha className="hidden sm:col-start-3 sm:row-start-1 sm:-mt-1.5 sm:block sm:self-start lg:hidden" opciones={opcionesDeLaFicha} />
             </div>
             <div id="resenas" className="scroll-mt-24 [.ccr-native-app_&]:scroll-mt-0">
-              {/* Las secciones, sin caja alrededor (modelo Yelp): la tira de
-                  pestañas con su raya y el contenido debajo, a lo ancho de la
-                  columna. */}
-              <div className="bg-white">
+              <div className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
 
                 {/* Tab bar — sticks under the header on the phone so any section is one tap away. */}
-                <div data-profile-tabs="" className="group/carril relative sticky top-16 z-20 -mx-4 border-b border-[#e3e9ef] bg-white sm:mx-0 [.ccr-native-app_&]:top-0 lg:static">
+                <div data-profile-tabs="" className="group/carril relative sticky top-16 z-20 rounded-t-2xl border-b border-[#e5e7eb] bg-white [.ccr-native-app_&]:top-0 lg:static lg:rounded-t-2xl">
                   <FlechasDeCarril carril={carrilPestanasRef} />
                   <div
                     role="tablist"
@@ -1175,13 +1053,13 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                         aria-selected={tabEfectiva === tab.id}
                         onClick={() => setActiveTab(tab.id)}
                         className={cn(
-                          "relative min-h-12 shrink-0 px-4 py-3.5 text-[15px] font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[#009FD9]",
-                          tabEfectiva === tab.id ? "text-[#162543]" : "text-[#526277] hover:text-[#162543]",
+                          "relative shrink-0 px-4 py-4 text-sm font-semibold transition-colors",
                         )}
+                        style={{ color: tabEfectiva === tab.id ? "#009FD9" : "#6b7280" }}
                       >
                         {tab.label}
                         {tabEfectiva === tab.id && (
-                          <span aria-hidden className="absolute inset-x-4 bottom-0 h-[3px] rounded-full bg-[#009FD9]" />
+                          <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#009FD9] rounded-full" />
                         )}
                       </button>
                     ))}
@@ -1189,7 +1067,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                 </div>
 
                 {/* Tab content */}
-                <div className="pt-7 sm:pt-8">
+                <div className="p-6">
 
                   {/* ── TAB: Servicios ── */}
                   {montada("servicios") && <div hidden={tabEfectiva !== "servicios"}>{(() => {
@@ -1209,7 +1087,8 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                       .filter((c, i, a) => a.indexOf(c) === i);
                     return (
                       <div>
-                        <h2 className={cn(BIZ.h2, "mb-5")}>{t("servicesOffered")}</h2>
+                        <h2 className="text-lg font-semibold text-[#162543] mb-1">{t("servicesOffered")}</h2>
+                        <p className="text-sm text-[#68778d] mb-5">{t("servicesOfferedSub")}</p>
                         {cats.length === 0 ? (
                           <FichaVacio icono="servicios" titulo={t("noServices")} />
                         ) : (
@@ -1241,7 +1120,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                               const hasFullDescription = description.length > 150;
                               const priceParts = splitPricingLabel(priceLabel);
                               return (
-                                <article key={cat} className={cn(BIZ.card, "flex flex-col overflow-hidden transition-colors hover:border-[#bdd7e5]")}>
+                                <article key={cat} className="flex flex-col overflow-hidden rounded-2xl sm:min-h-[280px] border border-[#e5e7eb] bg-white shadow-sm transition-colors hover:border-[#bdd7e5]">
                                   {serviceImageUrl && (
                                     <ImagePreviewDialog
                                       src={serviceImageUrl}
@@ -1291,8 +1170,16 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                                         </>
                                       )}
                                     </div>
-                                    {credentialNumber && (
-                                    <div className="mt-3 text-sm">
+                                    <div className="mt-3 space-y-2 text-sm">
+                                      <p className="hidden items-center gap-2 text-[#162543]">
+                                        <Banknote className="h-4 w-4 shrink-0 text-[#009FD9]" />
+                                        <span className="font-bold [overflow-wrap:anywhere]">
+                                          {priceParts.amount}
+                                          {priceParts.unit && <span className="font-semibold text-[#6b7280]"> {priceParts.unit}</span>}
+                                          {priceParts.taxSuffix && <span className="ml-1 text-[10px] font-semibold tracking-wide text-[#68778d]">{priceParts.taxSuffix}</span>}
+                                        </span>
+                                      </p>
+                                      {credentialNumber && (
                                         <p className="flex items-start gap-2 border-t border-[#eef2f6] pt-3 text-xs font-semibold leading-snug text-[#526277]">
                                           <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#009FD9]" />
                                           <span className="min-w-0">
@@ -1301,8 +1188,8 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                                             {credentialIssuer && <span className="text-[#6b7280]"> · {credentialIssuer}</span>}
                                           </span>
                                         </p>
+                                      )}
                                     </div>
-                                    )}
                                   </div>
                                 </article>
                               );
@@ -1321,9 +1208,14 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                   {montada("promociones") && <div hidden={tabEfectiva !== "promociones"}>{(
                     <section className="space-y-5">
                       <div>
-                        <h2 className={BIZ.h2}>
+                        <h2 className="text-lg font-semibold text-[#162543]">
                           {locale === "en" ? "Promotions" : "Promociones"}
                         </h2>
+                        <p className="mt-1 text-sm text-[#68778d]">
+                          {locale === "en"
+                            ? "Active promotions from this professional."
+                            : "Promociones activas de este profesional."}
+                        </p>
                       </div>
                       {/* Una oferta se compra con los ojos: la foto manda, el
                           descuento va sobre ella y el precio se lee grande. La
@@ -1367,9 +1259,14 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                   {montada("empleos") && <div hidden={tabEfectiva !== "empleos"}>{(
                     <section className="space-y-5">
                       <div>
-                        <h2 className={BIZ.h2}>
+                        <h2 className="text-lg font-semibold text-[#162543]">
                           {locale === "en" ? "Jobs" : "Empleos"}
                         </h2>
+                        <p className="mt-1 text-sm text-[#68778d]">
+                          {locale === "en"
+                            ? "Open opportunities published by this professional."
+                            : "Oportunidades abiertas publicadas por este profesional."}
+                        </p>
                       </div>
                       {/* Cada vacante en su tarjeta: el salario, que es lo primero
                           que se mira, en grande, y la modalidad y la zona como
@@ -1404,10 +1301,43 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
 
                   {montada("casos") && <div hidden={tabEfectiva !== "casos"}>{(
                     <div className="flex flex-col gap-6">
-                      <h2 className={BIZ.h2}>{t("tabs.casos")}</h2>
+                      <div>
+                        <h2 className="text-lg font-semibold text-[#162543] mb-1">{t("tabs.casos")}</h2>
+                        <p className="text-sm text-[#68778d]">{t("casosSubtitle", { name: nombreDeSaludo(professional.fullName) })}</p>
+                      </div>
                       {hasCasos ? (
-                        // Client-facing showcase: profession filter + a polished case-card grid.
-                        <CaseShowcase cases={caseList} professions={profsOrder} initialCaseId={searchParamFromUrl("case")} serviceBuscado={activeCategory ?? null} />
+                        (() => {
+                          // NEW per-profession CASE model (sprint 493): each caso has a service title,
+                          // recipient, date and up to 3 photos. Reads BOTH shapes — new cases (have
+                          // `photos[]`) and legacy photos (`{url}`, grouped by profession into cases).
+                          const svcs = professional.services ?? [];
+                          const profsOrder = (professional.professions && professional.professions.length > 0)
+                            ? professional.professions
+                            : (professional.categoryId ? [professional.categoryId] : []);
+                          const primaryProf = profsOrder[0] ?? "";
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          const profOf = (it: any) => casoProfession(it, svcs, primaryProf);
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          const raw: any[] = (professional.portfolioItems && professional.portfolioItems.length > 0)
+                            ? professional.portfolioItems
+                            : (professional.portfolioUrls ?? []).map((url) => ({ url }));
+                          type Caso = { id: string; profession: string; title?: string; description?: string; recipient?: string; date?: string; photos: string[] };
+                          const caseList: Caso[] = [];
+                          const legacyByProf = new Map<string, string[]>();
+                          for (const it of raw) {
+                            if (Array.isArray(it?.photos) && it.id) {
+                              caseList.push({ id: String(it.id), profession: it.profession ?? primaryProf, title: it.title, description: it.description, recipient: it.recipient, date: it.date, photos: it.photos });
+                            } else if (it?.url) {
+                              const prof = profOf(it) || primaryProf || "";
+                              const arr = legacyByProf.get(prof) ?? []; arr.push(it.url); legacyByProf.set(prof, arr);
+                            }
+                          }
+                          for (const [prof, photos] of legacyByProf) {
+                            for (let i = 0; i < photos.length; i += 3) caseList.push({ id: `${prof}_${i}`, profession: prof, photos: photos.slice(i, i + 3) });
+                          }
+                          // Client-facing showcase: profession filter + a polished case-card grid.
+                          return <CaseShowcase cases={caseList} professions={profsOrder} initialCaseId={searchParamFromUrl("case")} serviceBuscado={activeCategory ?? null} />;
+                        })()
                       ) : (
                         <FichaVacio icono="casos" titulo={t("noCasos")} />
                       )}
@@ -1422,7 +1352,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                       hasFile={professional.hasCvFile}
                       value={cvProfile}
                       english={locale === "en"}
-                      title={<h2 className={BIZ.h2}>{t("tabs.certificaciones")}</h2>}
+                      title={<h2 className="text-lg font-semibold text-[#162543]">{t("tabs.certificaciones")}</h2>}
                       legacyEducation={certificationsList.map(c => ({ title: c.name ?? "", organization: c.institution ?? "", period: c.year ?? "", description: "" }))}
                     />
                   )}</div>}
@@ -1473,13 +1403,10 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                     });
                     return (
                       <div className="flex flex-col gap-6">
-                        {/* El título va siempre: sin descripción, los datos quedaban
-                            sueltos, sin nada que dijera de qué sección eran. */}
-                        {!professional.bio && <h2 className={cn(BIZ.h2, "-mb-2")}>{t("tabs.sobre")}</h2>}
                         {professional.bio && (
                           <section>
-                            <h2 className={BIZ.h2}>{t("tabs.sobre")}</h2>
-                            <p className="mt-3 whitespace-pre-line text-[15px] leading-7 text-[#3f4c63] [overflow-wrap:anywhere]">
+                            <h2 className="text-lg font-semibold text-[#162543]">{t("tabs.sobre")}</h2>
+                            <p className="mt-2 whitespace-pre-line text-[15px] leading-7 text-[#3f4c63] [overflow-wrap:anywhere]">
                               {professional.bio}
                             </p>
                           </section>
@@ -1510,11 +1437,8 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
             </div>
 
             {/* ── COLUMNA DERECHA (solo computadora): contacto siempre a la vista ── */}
-            {/* La tarjeta de contacto (modelo Yelp): con su título, pegada al
-                bajar, con sombra suave para que se lea por encima de la página. */}
-            <aside aria-labelledby="perfil-contacto-titulo" className="order-2 hidden w-[360px] shrink-0 lg:block">
-              <div className={cn(BIZ.card, "sticky top-24 p-6 shadow-[0_10px_30px_-18px_rgba(22,37,67,0.35)]")}>
-                <h2 id="perfil-contacto-titulo" className="mb-3 text-[17px] font-extrabold leading-6 text-[#162543]">{t("biz.contactCardTitle")}</h2>
+            <aside className="order-2 hidden w-[352px] shrink-0 lg:block">
+              <div className="sticky top-20 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
                 {bloqueContacto(false)}
               </div>
             </aside>

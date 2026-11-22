@@ -7,13 +7,13 @@ import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PanelEmptyState } from "@/components/ui/content-loading";
+import { StarRating } from "@/components/ui/star-rating";
 import { LeaveReviewModal } from "@/components/professionals/leave-review-modal";
 import { ReportProfileModal } from "@/components/professionals/report-profile-modal";
 import { getInitials, formatRelativeTime } from "@/lib/utils";
 import { nombreCorto } from "@/lib/nombre-corto";
 import { ALL_CATEGORIES, getCategoryLabel } from "@/lib/data/categories";
 import type { Review } from "@/lib/queries/professionals";
-import { BIZ, RatingSummary, Stars } from "@/components/directory/biz-ui";
 
 interface ReviewSectionProps {
   professionalId: string;
@@ -103,18 +103,6 @@ export function ReviewSection({
     return () => { active = false; };
   }, [commentsToTranslate, locale]);
 
-  // Cuántas reseñas hay de cada estrella (5→1, modelo Yelp), con las reseñas
-  // publicadas que la ficha ya trae completas: sin otra consulta.
-  const distribution = useMemo(() => {
-    if (reviews.length === 0) return null;
-    const counts = [0, 0, 0, 0, 0];
-    for (const review of reviews) {
-      const stars = Math.min(5, Math.max(1, Math.round(Number(review.rating) || 0)));
-      counts[stars - 1] += 1;
-    }
-    return counts;
-  }, [reviews]);
-
   const reviewRedirectPath =
     typeof window === "undefined"
       ? `${prefijoDeIdioma(locale)}/profesionales`
@@ -122,15 +110,17 @@ export function ReviewSection({
 
   return (
     <>
-      <h2 className={`${BIZ.h2} mb-5`}>
-        {t("reviewsHeading", { count: reviewCount })}
-      </h2>
-      {/* El resumen de Yelp: el promedio grande y las barras de 5 a 1. */}
-      {reviewCount > 0 && (
-        <div className="mb-6">
-          <RatingSummary average={ratingAvg} count={reviewCount} distribution={distribution} en={locale === "en"} />
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-[#162543]">
+            {t("reviewsHeading", { count: reviewCount })}
+          </h2>
+          <div className="mt-1 flex items-center gap-1 text-sm text-[#374151]">
+            <Star className="h-4 w-4 text-[#ff9b32] fill-[#ff9b32]" />
+            <span className="font-bold text-[#162543]">{ratingAvg.toFixed(1)}</span>
+          </div>
         </div>
-      )}
+      </div>
 
       {/* Dejar o corregir la reseña va ARRIBA: quien entra a esta pestaña con algo
           que decir no debería recorrer toda la lista para encontrar dónde decirlo. */}
@@ -146,34 +136,34 @@ export function ReviewSection({
         />
       </div>
 
-      <div className="flex flex-col divide-y divide-[#e8edf2] border-t border-[#e8edf2]">
+      <div className="flex flex-col gap-5">
         {reviews.map((review) => {
           const clientName = nombreCorto(review.clientName === "Cliente" && locale === "en" ? "Client" : review.clientName);
           const jobTitle = localizedReviewJobTitle(review.jobTitle, locale);
           return (
-            <article key={review.id} className="flex gap-3.5 py-5">
-              <Avatar className="h-11 w-11 shrink-0">
+            <div key={review.id} className="flex gap-3">
+              <Avatar className="h-9 w-9 shrink-0">
                 <AvatarImage src={review.clientAvatarUrl} />
                 <AvatarFallback>{getInitials(clientName)}</AvatarFallback>
               </Avatar>
               <div className="flex-1">
                 {/* Nombre en UNA línea y la fecha junto a las estrellas: la fecha en
                     su propia columna apretaba el nombre y lo partía en dos. */}
-                <span className="block truncate text-[15px] font-bold text-[#162543]">{clientName}</span>
+                <span className="block truncate text-sm font-medium text-[#162543]">{clientName}</span>
                 <div className="my-1 flex items-center gap-2">
-                  <Stars value={review.rating} size="sm" label={t("biz.ratingOutOf", { rating: review.rating })} />
+                  <StarRating rating={review.rating} size="sm" />
                   {/* "editada" is intentionally NOT shown publicly (item 4). */}
                   <span className="text-xs text-[#68778d]">· {formatRelativeTime(review.createdAt, locale)}</span>
                 </div>
                 {jobTitle && (
                   <p className="text-xs text-[#68778d] mt-0.5">{t("reviewOf", { title: jobTitle })}</p>
                 )}
-                <p className="mt-1.5 text-[15px] leading-relaxed text-[#334155] [overflow-wrap:anywhere]">
+                <p className="text-sm text-[#374151] leading-relaxed mt-1">
                   {locale === "en" ? translatedComments[review.id] ?? review.comment : review.comment}
                 </p>
-                <button type="button" className="mt-1 min-h-11 rounded text-xs text-slate-600 underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#009FD9]" onClick={()=>setReportedReview(review.id)}>{tModeration("reportReview")}</button>
+                <button type="button" className="mt-2 min-h-10 text-xs text-slate-600 underline" onClick={()=>setReportedReview(review.id)}>{tModeration("reportReview")}</button>
               </div>
-            </article>
+            </div>
           );
         })}
 

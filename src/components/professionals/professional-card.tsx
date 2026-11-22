@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { Stars } from "@/components/directory/biz-ui";
+import { Star } from "lucide-react";
 import { ProfessionalSchedule, type SearchedPlace } from "@/components/professionals/professional-schedule";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -233,14 +233,17 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
         className={desktopMetricClass}
         aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
       >
-        <Stars value={professional.ratingAvg} size="sm" />
-        <span className="ml-0.5 font-bold tabular-nums text-[#162543]">{professional.ratingAvg.toFixed(1)}</span>
-        <span>({tCard("reviewsCount", { count: professional.reviewCount })})</span>
+        <Star className="h-3.5 w-3.5 shrink-0 fill-current text-[#f59e0b]" />
+        <span className="font-bold tabular-nums text-[#162543]">{professional.ratingAvg.toFixed(1)}</span>
+        <span>{tCard("reviewsCount", { count: professional.reviewCount })}</span>
       </Link>
     );
   })();
 
-  const contactos = professional.contactsThisMonth ?? 0;
+  // "N contactos este mes" oculto por ahora (20-nov-2026, decisión de Isaac): el dato
+  // sigue llegando; para volver a mostrarlo basta cambiar este interruptor.
+  const MOSTRAR_CONTACTOS_DEL_MES = false;
+  const contactos = MOSTRAR_CONTACTOS_DEL_MES ? professional.contactsThisMonth ?? 0 : 0;
   const contactosDelMes = (clase: string) => contactos > 0 ? (
     <span className={clase} data-testid="professional-card-contacts-month">
       <span className="font-bold tabular-nums text-[#162543]">{contactos}</span>
@@ -284,9 +287,9 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
         className={mobileMetricClass}
         aria-label={tCard("reviewsCount", { count: professional.reviewCount })}
       >
-        <Stars value={professional.ratingAvg} size="sm" />
-        <span className="ml-0.5 font-bold tabular-nums text-[#162543]">{professional.ratingAvg.toFixed(1)}</span>
-        <span className="whitespace-nowrap">({tCard("reviewsCount", { count: professional.reviewCount })})</span>
+        <Star className="h-3.5 w-3.5 shrink-0 fill-current text-[#f59e0b]" />
+        <span className="font-bold tabular-nums text-[#162543]">{professional.ratingAvg.toFixed(1)}</span>
+        <span className="whitespace-nowrap">{tCard("reviewsCount", { count: professional.reviewCount })}</span>
       </Link>
     );
   })();
@@ -351,18 +354,20 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
           price clear of the inside top-right bookmark (`lg:pr-0` on desktop). */}
       <div className="flex flex-wrap items-start gap-x-2.5 gap-y-1 lg:flex-nowrap lg:gap-x-3">
         <Link href={profileHref} className="relative z-10 shrink-0">
-          {/* Miniatura cuadrada de esquinas redondas, como la de los lugares
-              (modelo Yelp de resultados): el número del puesto va delante del
-              nombre, no encima de la foto. */}
-          <Avatar className="h-16 w-16 rounded-xl ring-1 ring-[#e3e9ef] lg:h-24 lg:w-24">
-            <AvatarImage src={professional.avatarUrl} alt={professional.fullName} className="rounded-xl bg-white object-cover" />
+          <Avatar className="h-[52px] w-[52px] rounded-full lg:h-16 lg:w-16">
+            <AvatarImage src={professional.avatarUrl} alt={professional.fullName} />
             <AvatarFallback
               delayMs={0}
-              className="rounded-xl bg-[#EBF5FB] text-[#009FD9] font-bold data-[delayed-open]:animate-pulse lg:text-xl"
+              className="rounded-full bg-[#EBF5FB] text-[#009FD9] font-bold data-[delayed-open]:animate-pulse"
             >
               {getInitials(professional.fullName)}
             </AvatarFallback>
           </Avatar>
+          {rank != null && (
+            <span className="absolute -top-1.5 -left-1.5 hidden h-[22px] w-[22px] items-center justify-center rounded-full bg-[#162543] text-[10px] font-bold text-white ring-2 ring-white lg:flex">
+              {rank}
+            </span>
+          )}
         </Link>
         <div className="flex min-w-0 flex-1 flex-col gap-1 lg:pr-0">
           {/* Company-name line + PRICE (right-aligned on THIS line only). */}
@@ -374,8 +379,7 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
                   verified seal right after it. */}
               <div className="flex min-w-0 flex-1 items-start gap-2 pr-8 lg:items-baseline lg:pr-0">
                 <div className="relative z-10 block min-w-0 flex-1">
-                  <h3 title={businessName ? businessName : professional.fullName} className="min-w-0 font-bold text-[#111827] text-[16px] leading-[1.2] hover:text-[#009FD9] transition-colors lg:text-[17px]">
-                    {rank != null && <span className="font-bold text-[#526277]" data-card-rank={rank}>{rank}. </span>}
+                  <h3 title={businessName ? businessName : professional.fullName} className="min-w-0 font-bold text-[#111827] text-[15px] leading-[1.1] hover:text-[#009FD9] transition-colors">
                     <ResponsiveVerifiedName
                       name={displayName.primaryDesktop}
                       href={profileHref}
