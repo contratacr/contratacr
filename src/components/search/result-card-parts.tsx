@@ -45,8 +45,8 @@ export function ResultThumb({src,alt='',fallback,rank,priority=false,kind}:{src?
 export function ResultPhotoStrip({photos,more=0,className=''}:{photos:string[];more?:number;className?:string}){
  const list=photos.filter(Boolean).slice(0,3);
  if(!list.length)return null;
- return <div aria-hidden="true" data-result-photo-strip={list.length} className={`grid w-full max-w-[560px] grid-cols-3 gap-1.5 sm:gap-2 ${className}`}>
-  {list.map((src,i)=><span key={`${i}-${src}`} className="relative block aspect-[4/5] min-w-0 overflow-hidden rounded-xl bg-[#EBF5FB] sm:aspect-[4/3]">
+ return <div aria-hidden="true" data-result-photo-strip={list.length} className={`grid w-full gap-1.5 sm:gap-2 ${list.length===1?"max-w-[360px] grid-cols-1":list.length===2?"max-w-[480px] grid-cols-2":"max-w-[560px] grid-cols-3"} ${className}`}>
+  {list.map((src,i)=><span key={`${i}-${src}`} className={`relative block min-w-0 overflow-hidden rounded-xl bg-[#EBF5FB] ${list.length===1?"aspect-[16/10]":"aspect-[4/5] sm:aspect-[4/3]"}`}>
    {/* eslint-disable-next-line @next/next/no-img-element -- approved photo via the Cloudinary / same-origin helpers */}
    <img src={src} alt="" width={360} height={300} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover"/>
    {i===list.length-1&&more>0&&<span data-result-thumb-more className="absolute inset-0 flex items-center justify-center bg-[#162543]/60 text-[13px] font-bold text-white">+{more}</span>}
