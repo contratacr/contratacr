@@ -108,7 +108,7 @@
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
     "menu": "Menu",
-    "searchProfessionals": "Find services",
+    "searchProfessionals": "Search",
     "account": "Account",
     "favorites": "My favorites",
     "quotes": "Quotes",
@@ -2896,11 +2896,7 @@
       "destacadosVer": "See {seccion}",
       "promoTitulo": "Promotions",
       "promoTexto": "Offers from professionals and businesses in Costa Rica, in one place.",
-      "promoCta": "See promotions",
-      "negociosTitulo": "For businesses and professionals",
-      "negociosTexto": "Reach more customers: offer your services or claim your business listing.",
-      "ofrecer": "Offer my services",
-      "reclamar": "Claim my business"
+      "promoCta": "See promotions"
     },
     "carousel": {
       "titlePre": "Most searched",

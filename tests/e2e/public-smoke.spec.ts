@@ -71,8 +71,8 @@ test.describe("@smoke public routes", () => {
     if (isMobileProject(testInfo)) {
       await page.getByRole("button", { name: /Abrir menu|Abrir men/i }).first().click();
       const navigation = page.getByRole("dialog", { name: /Men[uú]|Menu/i });
-      // Directory on: "Servicios" is renamed "Categorias" and is an accordion button instead of a link.
-      await expect(page.getByRole("link", { name: /^Servicios$/i }).or(page.getByRole("button", { name: /^(Servicios|Categorías)$/i })).first()).toBeVisible();
+      // "Servicios" (or "Categorías" with the directory on) is a plain link to the categories page.
+      await expect(page.getByRole("link", { name: /^(Servicios|Categorías)$/i }).first()).toBeVisible();
       // «Ayuda y soporte» se despliega: adentro, Preguntas frecuentes y soporte.
       await navigation.getByRole("button", { name: /Ayuda y soporte|Help and support/i }).click();
       await expect(navigation.getByRole("link", { name: /Preguntas frecuentes|FAQ/i }).first()).toBeVisible();
@@ -86,7 +86,7 @@ test.describe("@smoke public routes", () => {
       await expect(navigation.getByRole("button", { name: /^English$|^Español$/ })).toBeVisible();
     } else {
       const navigation = page.getByRole("banner");
-      await expect(navigation.getByRole("button", { name: /^(Servicios|Categorías)$/i }).first()).toBeVisible();
+      await expect(navigation.getByRole("link", { name: /^(Servicios|Categorías)$/i }).first()).toBeVisible();
       await expect(navigation.getByRole("button", { name: /^Explorar$/i }).first()).toBeVisible();
       await expect(navigation.getByRole("link", { name: /Ingresar/i }).first()).toBeVisible();
       const app = navigation.getByRole("button", { name: /^(Descargar app|Download app)$/ }).first();
@@ -243,22 +243,17 @@ test.describe("@smoke public routes", () => {
 
     if (isMobileProject(testInfo)) {
       await page.getByRole("button", { name: /Abrir menu|Abrir men/i }).first().click();
-      // Directory on: "Servicios" is renamed "Categorias" and is an accordion button instead of a link.
-      await expect(page.getByRole("link", { name: /^Servicios$/i }).or(page.getByRole("button", { name: /^(Servicios|Categorías)$/i })).first()).toBeVisible();
+      // "Servicios" (or "Categorías" with the directory on) is a plain link to the categories page.
+      await expect(page.getByRole("link", { name: /^(Servicios|Categorías)$/i }).first()).toBeVisible();
       await expect(page.locator("body")).not.toContainText(/servicesPage\./i);
       await expectHealthyPage(page);
       return;
     }
 
-    await page.getByRole("button", { name: /^(Servicios|Categorías)$/i }).first().click();
-    const megaMenu = page.getByTestId("services-mega-menu");
-    await expect(megaMenu).toBeVisible();
-    const menuSearch = megaMenu.getByTestId("services-mega-menu-search");
-    await expect(menuSearch).toBeVisible();
-    await menuSearch.fill("Plomer");
-
-    await expect(megaMenu.getByRole("heading", { name: /^Hogar$/i })).toBeVisible();
-    await expect(page.getByRole("button", { name: /Plomer/i }).first()).toBeVisible();
+    // Desktop: the navbar entry is a plain link to the full categories page (no dropdown).
+    await page.getByRole("banner").getByRole("link", { name: /^(Servicios|Categorías)$/i }).first().click();
+    await expect(page).toHaveURL(/\/servicios$/);
+    await expect(page.getByTestId("services-mega-menu")).toHaveCount(0);
     await expect(page.locator("body")).not.toContainText(/servicesPage\./i);
     await expectHealthyPage(page);
   });
@@ -275,23 +270,6 @@ test.describe("@smoke public routes", () => {
     await expect(page.locator("main").getByText("Diseño y arte", { exact: true }).filter({ visible: true }).first()).toBeVisible();
     await expect(page.locator("body")).not.toContainText(/Diseño\s*\/\s*Arte|Diseno/i);
     await expectHealthyPage(page);
-
-    if (!isMobileProject(testInfo)) {
-      await gotoOK(page, "/");
-      await waitForInteractivePage(page);
-      await page.getByRole("button", { name: /^(Servicios|Categorías)$/i }).first().click();
-      const megaMenu = page.getByTestId("services-mega-menu");
-      await expect(megaMenu).toBeVisible();
-      const menuSearch = megaMenu.getByTestId("services-mega-menu-search");
-      await expect(menuSearch).toBeVisible();
-      await menuSearch.fill("diseño");
-      await megaMenu.getByRole("button",{name:/^Creatividad\b/i}).click();
-      await expect(megaMenu.getByRole("heading",{name:"Creatividad",exact:true})).toBeVisible();
-      await expect(menuSearch).toHaveValue("diseño");
-      await expect(megaMenu.getByRole("button", { name: "Diseño y arte",exact:true })).toBeVisible();
-      await expect(page.locator("body")).not.toContainText(/Diseño\s*\/\s*Arte|Diseno/i);
-      await expectHealthyPage(page);
-    }
   });
 
   test("footer keeps localized resources and safe external destinations", async ({ page }) => {

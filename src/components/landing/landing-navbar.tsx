@@ -7,7 +7,6 @@ import { DesktopAppMenu } from "./desktop-app-menu";
 import { MobileAppStoreMenuLink } from "@/components/mobile/mobile-app-store-menu-link";
 import { SocialLinks } from "./social-links";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
-import { CategoriesPlaceRows, CategoriesMenuFooter, CategoriesDrawerGroup, usePlaceCount } from "./directory-nav";
 import { useSiteFeatures } from "@/components/site-features";
 import { DirectorySuggestionRows, SuggestionGroupLabel } from "@/components/search/directory-suggestions";
 import { directorySectionForQuery, directorySectionHref, suggestDirectorySections, unifiedSearchPlaceholder, withoutPlaceDuplicates, type DirectorySectionSuggestion } from "@/lib/search/directory-search";
@@ -33,7 +32,6 @@ import { canOffer } from "@/lib/auth/capabilities";
 import { useMode } from "@/hooks/use-mode";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { SearchContextSummary } from "@/components/search/search-context-summary";
-import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { SupportLink } from "@/components/support/support-link";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { prefetchDashboardBootstrap } from "@/lib/dashboard-bootstrap-cache";
@@ -41,9 +39,7 @@ import { prefetchConversations } from "@/lib/direct-chat/conversations-cache";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { NativeAppInicial } from "@/hooks/native-app-inicial";
-import { ALL_CATEGORIES, CATEGORY_GROUPS, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel, resolveCategoryIntent, getAllCategories, getAllCategoryGroups, getCategoryGroupId, esServicioDelCatalogo } from "@/lib/data/categories";
-import { getCategoryGroupIcon } from "@/lib/data/category-group-visuals";
-import { curatedGroupItems } from "@/lib/directory/directory-groups";
+import { ALL_CATEGORIES, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel, resolveCategoryIntent, getAllCategories, getAllCategoryGroups, getCategoryGroupId, esServicioDelCatalogo } from "@/lib/data/categories";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { oficiosDeArranque } from "@/lib/data/oficios-de-arranque";
 
@@ -325,273 +321,6 @@ function matchCategories(query: string, limit = 8, locale?: string): CatMatch[] 
     .map((x) => x.item);
 }
 
-/* --- Categorias mega-menu panel ---
-   ONE clean container: the search field FILTERS the curated category list IN PLACE as
-   you type - never a second floating dropdown stacked on top of the mega-menu. Empty ->
-   the curated 3-column grid; typing -> matching categories inline; no match -> the shared
-   suggest flow + a clean "Ver todos". */
-function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
-  const t = useTranslations("header");
-  const directoryOn = useSiteFeatures().directorySections.length > 0;
-  const placeCount = usePlaceCount();
-  const ts = useTranslations("categorySearch");
-  const tp = useTranslations("categoriesPage");
-  const locale = useLocale();
-  const router = useRouter();
-  const [q, setQ] = useState("");
-  const [active, setActive] = useState(0);
-  const [selectedGroupId, setSelectedGroupId] = useState(CATEGORY_GROUPS[0]?.id ?? "");
-  const [searchGroupSelection, setSearchGroupSelection] = useState<{ query: string; id: string } | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  useCustomCategories();
-  const menuCategories = getAllCategories();
-  const menuGroups = getAllCategoryGroups().map((group) => ({
-    id: group.id,
-    iconKey: group.iconKey,
-    items: menuCategories.filter((category) => category.groupId === group.id),
-  }));
-  const matches = matchCategories(q, 18, locale);
-  const filtering = q.trim().length > 0;
-  const selectedGroup = menuGroups.find((group) => group.id === selectedGroupId) ?? menuGroups[0];
-  const groupedMatches = menuGroups
-    .map((group) => ({ group, items: matches.filter((match) => match.groupId === group.id) }))
-    .filter(({ items }) => items.length > 0)
-    .sort((a, b) => {
-      const firstA = Math.min(...a.items.map((item) => matches.findIndex((match) => match.id === item.id)));
-      const firstB = Math.min(...b.items.map((item) => matches.findIndex((match) => match.id === item.id)));
-      return firstA - firstB;
-    });
-  const firstMatchGroupId = groupedMatches[0]?.group.id ?? "";
-  const normalizedSearchQuery = normalizeText(q.trim());
-  const selectedSearchGroupId =
-    searchGroupSelection?.query === normalizedSearchQuery
-      ? searchGroupSelection.id
-      : firstMatchGroupId;
-
-  useEffect(() => { queueMicrotask(() => setActive(0)); }, [q]);
-
-  function go(id?: string) {
-    if (id) router.push(rutaDeBusqueda({ categoria: id }));
-    else if (q.trim()) router.push(`/profesionales?q=${encodeURIComponent(q.trim())}`);
-    else router.push("/profesionales");
-    setQ("");
-    onNavigate();
-  }
-  function onKeyDown(e: React.KeyboardEvent) {
-    if (!filtering || matches.length === 0) {
-      if (e.key === "Enter") { e.preventDefault(); go(); }
-      return;
-    }
-    if (e.key === "ArrowDown") { e.preventDefault(); setActive((a) => Math.min(a + 1, matches.length - 1)); }
-    else if (e.key === "ArrowUp") { e.preventDefault(); setActive((a) => Math.max(a - 1, 0)); }
-    else if (e.key === "Enter") { e.preventDefault(); go(matches[active]?.id); }
-    else if (e.key === "Escape") { setQ(""); }
-  }
-
-  return (
-    <div className="flex max-h-[calc(100vh-7rem)] min-h-0 flex-col overflow-hidden">
-      {/* Search - inline; typing filters the list below IN PLACE (no portal/overlay). */}
-      <div className="mb-4 flex h-11 shrink-0 items-center rounded-xl border border-gray-200 bg-white px-3.5 transition-all focus-within:bg-white focus-within:ring-2 focus-within:ring-[#009FD9]/20">
-        <Search className="h-4 w-4 shrink-0 text-gray-400" />
-        <input
-          data-testid="services-mega-menu-search"
-          ref={inputRef}
-          type="text"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          onKeyDown={onKeyDown}
-          placeholder={t("searchServicePlaceholder")}
-          aria-label={t("searchServiceAria")}
-          className="ml-2 min-w-0 flex-1 bg-transparent text-base sm:text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none"
-        />
-        {q && (
-          <button type="button" onClick={() => { setQ(""); inputRef.current?.focus(); }} className="ml-2 text-gray-400 hover:text-gray-600" aria-label={ts("cancel")}>
-            <X className="h-4 w-4" />
-          </button>
-        )}
-      </div>
-
-      {filtering ? (
-        matches.length > 0 ? (
-          <div className="grid min-h-0 flex-1 grid-cols-[15rem_minmax(0,1fr)] overflow-hidden rounded-2xl border border-[#eef2f6] bg-white shadow-[0_18px_45px_-36px_rgba(15,23,42,0.45)]">
-            <div className="min-w-0 overflow-y-auto overscroll-contain border-r border-[#eef2f6] bg-white p-2">
-              {groupedMatches.map(({ group, items }) => {
-                const Icon = getCategoryGroupIcon(group.id, group.iconKey);
-                const selected = selectedSearchGroupId === group.id;
-                return (
-                  <button
-                    key={group.id}
-                    type="button"
-                    onClick={() => setSearchGroupSelection({ query: normalizedSearchQuery, id: group.id })}
-                    onMouseEnter={() => setSearchGroupSelection({ query: normalizedSearchQuery, id: group.id })}
-                    className={cn(
-                      "group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/20",
-                      selected ? "bg-white text-[#162543] shadow-sm" : "text-[#526173] hover:bg-white/80 hover:text-[#162543]"
-                    )}
-                  >
-                    <span className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-lg", selected ? "bg-[#EAF7FD] text-[#0089bb]" : "bg-white text-[#8a94a6] group-hover:text-[#0089bb]")}>
-                      <Icon className="h-4 w-4" />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-bold leading-snug">{getCategoryGroupLabel(group.id, locale)}</span>
-                      <span className="mt-0.5 block text-[11px] font-medium text-[#68778d]">{ts("optionsCount", { count: items.length })}</span>
-                    </span>
-                    <ChevronRight className={cn("h-4 w-4 shrink-0", selected ? "text-[#009FD9]" : "text-[#cbd5e1]")} />
-                  </button>
-                );
-              })}
-            </div>
-            <div className="min-w-0 overflow-y-auto overscroll-contain p-4">
-              {(() => {
-                const activeGroup = groupedMatches.find(({ group }) => group.id === selectedSearchGroupId) ?? groupedMatches[0];
-                if (!activeGroup) return null;
-                return (
-                  <section>
-                    <div className="mb-3 min-w-0">
-                      <p className="text-[11px] font-bold uppercase tracking-wide text-[#8a94a6]">{t("categories")}</p>
-                      <h3 className="mt-0.5 truncate text-lg font-extrabold text-[#162543]">{getCategoryGroupLabel(activeGroup.group.id, locale)}</h3>
-                      <p className="mt-0.5 text-[11px] font-medium text-[#68778d]">{ts("optionsCount", { count: activeGroup.items.length })}</p>
-                    </div>
-                    <div className={`grid gap-1.5 ${activeGroup.items.length === 1 ? "max-w-[260px] grid-cols-1" : "grid-cols-2"}`}>
-                      {activeGroup.items.map((m) => {
-                        const flatIndex = matches.findIndex((match) => match.id === m.id);
-                        return (
-                          <button
-                            key={m.id}
-                            type="button"
-                            onClick={() => go(m.id)}
-                            onMouseEnter={() => setActive(flatIndex)}
-                            className={cn(
-                              "group flex min-h-10 items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold leading-snug transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/20",
-                              flatIndex === active ? "bg-[#EBF5FB] text-[#0089bb]" : "text-[#374151] hover:bg-[#EBF5FB] hover:text-[#0089bb]"
-                            )}
-                          >
-                            <span className="min-w-0 [overflow-wrap:anywhere]">{getCategoryLabel(m.id, locale)}</span>
-                            <ChevronRight className={cn("h-4 w-4 shrink-0", flatIndex === active ? "text-[#009FD9]" : "text-[#cbd5e1] group-hover:text-[#009FD9]")} />
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </section>
-                );
-              })()}
-            </div>
-          </div>
-        ) : (
-          // No match -> consistent wording + the shared suggest flow, all INSIDE this same
-          // container. The "Ver todos los profesionales" link was removed (sprint 305).
-          <div className="py-2 text-center">
-            <p className="text-sm font-extrabold text-[#162543]">{tp("notListed")}</p>
-            <p className="mx-auto mt-0.5 max-w-sm text-xs leading-relaxed text-[#6b7280]">{tp("suggestDescription")}</p>
-            <div className="mx-auto mt-3 flex justify-center">
-              <CategorySuggestionBox
-                prominent
-                defaultName={q}
-                notListedLabel={tp("suggestCta")}
-                placeholder={tp("suggestPlaceholder")}
-                sendLabel={tp("suggestSend")}
-                sendingLabel={tp("suggestSending")}
-                cancelLabel={ts("cancel")}
-                thanksLabel={tp("suggestThanks")}
-              />
-            </div>
-          </div>
-        )
-      ) : (
-        <div className="grid min-h-0 flex-1 grid-cols-[16.5rem_minmax(0,1fr)] overflow-hidden rounded-2xl border border-[#eef2f6] bg-white shadow-[0_18px_45px_-36px_rgba(15,23,42,0.45)]">
-          <div className="min-w-0 overflow-y-auto overscroll-contain border-r border-[#eef2f6] bg-white p-2">
-            {menuGroups.map((group) => {
-              const Icon = getCategoryGroupIcon(group.id, group.iconKey);
-              const selected = selectedGroup?.id === group.id;
-              return (
-                <button
-                  key={group.id}
-                  type="button"
-                  onClick={() => setSelectedGroupId(group.id)}
-                  onMouseEnter={() => setSelectedGroupId(group.id)}
-                  className={cn(
-                    "group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/20",
-                    selected ? "bg-white text-[#162543] shadow-sm" : "text-[#526173] hover:bg-white/80 hover:text-[#162543]"
-                  )}
-                >
-                  <span className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-lg", selected ? "bg-[#EAF7FD] text-[#0089bb]" : "bg-white text-[#8a94a6] group-hover:text-[#0089bb]")}>
-                    <Icon className="h-4 w-4" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-bold leading-snug">{getCategoryGroupLabel(group.id, locale)}</span>
-                    <span className="mt-0.5 block text-[11px] font-medium text-[#68778d]">{ts("optionsCount", { count: group.items.length + (directoryOn ? placeCount(group.id) : 0) })}</span>
-                  </span>
-                  <ChevronRight className={cn("h-4 w-4 shrink-0", selected ? "text-[#009FD9]" : "text-[#cbd5e1]")} />
-                </button>
-              );
-            })}
-          </div>
-          <div className="min-w-0 overflow-y-auto overscroll-contain p-4">
-            {selectedGroup && (
-              <section>
-                <div className="mb-3 flex items-end justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-bold uppercase tracking-wide text-[#8a94a6]">{t("categories")}</p>
-                    <h3 className="mt-0.5 truncate text-lg font-extrabold text-[#162543]">{getCategoryGroupLabel(selectedGroup.id, locale)}</h3>
-                  </div>
-                  {(selectedGroup.items.length > 0 || (directoryOn && placeCount(selectedGroup.id) > 0)) && (
-                    <Link
-                      href="/servicios"
-                      onClick={onNavigate}
-                      className="shrink-0 text-xs font-bold text-[#009FD9] hover:underline"
-                    >
-                      {t("viewAllCategories")}
-                    </Link>
-                  )}
-                </div>
-                {selectedGroup.items.length > 0 || (directoryOn && placeCount(selectedGroup.id) > 0) ? (
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {directoryOn && <CategoriesPlaceRows groupId={selectedGroup.id} locale={locale} onNavigate={onNavigate} />}
-                    {(directoryOn ? curatedGroupItems(selectedGroup.id, selectedGroup.items, placeCount(selectedGroup.id)) : selectedGroup.items).map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => go(item.id)}
-                        className="group flex min-h-10 items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#EBF5FB] hover:text-[#0089bb] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/20"
-                      >
-                        <span className="min-w-0 [overflow-wrap:anywhere]">{getCategoryLabel(item.id, locale)}</span>
-                        <ChevronRight className="h-4 w-4 shrink-0 text-[#cbd5e1] group-hover:text-[#009FD9]" />
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="rounded-xl border border-[#e5e7eb] bg-white px-3 py-4 text-sm font-medium text-[#8a94a6]">
-                    {locale === "en" ? "This section does not have published services yet." : "Esta sección todavía no tiene servicios publicados."}
-                  </p>
-                )}
-              </section>
-            )}
-          </div>
-        </div>
-      )}
-
-      {directoryOn ? (
-        <CategoriesMenuFooter locale={locale} onNavigate={onNavigate} />
-      ) : (
-        <div className="mt-4 shrink-0 border-t border-gray-100 pt-3">
-          <Link
-            href="/servicios"
-            onClick={onNavigate}
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#009FD9] hover:underline"
-          >
-            <Compass className="h-4 w-4" />
-            {t("viewAllCategories")}
-          </Link>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* --- Account menu (avatar trigger + dropdown) ---
-   Self-contained: owns its open state + tap-away handling, so it can be
-   rendered in BOTH the default header row AND the compact/scrolled row
-   without sharing state. */
 interface AccountMenuProps {
   isPro: boolean;
   isAdmin: boolean;
@@ -2159,35 +1888,18 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
 
                 <nav className={cn("relative z-[70] hidden shrink-0 lg:flex items-center gap-1", effectiveMarketplaceDesktop && "gap-0.5")}>
                 {/* Categorias - mega-menu with autocomplete + curated columns */}
-                  <div
-                    ref={servicesMenuRef}
-                    className="relative"
-                  >
-                    <button
-                      type="button"
-                      aria-expanded={openMenu === "categorias"}
-                      onClick={() => setOpenMenu(openMenu === "categorias" ? null : "categorias")}
-                      className={cn(
-                        "relative flex items-center gap-1 rounded-xl py-2 text-sm font-medium transition-colors after:absolute after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:transition-opacity",
-                        effectiveMarketplaceDesktop ? "px-2.5 after:left-2.5 after:right-2.5" : "px-4 after:left-4 after:right-4",
-                        "text-[#1A2744] after:opacity-0 hover:text-[#009FD9] hover:bg-gray-50"
-                      )}
-                    >
-                      {directoryOn ? t("categoriesMenu") : t("categories")}
-                      <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", openMenu === "categorias" && "rotate-180")} />
-                    </button>
-
-                    {openMenu === "categorias" && (
-                      <div
-                        data-testid="services-mega-menu"
-                        className="absolute top-full left-0 z-50 mt-1.5 flex max-h-[calc(100vh-5rem)] w-[840px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-[0_24px_70px_-22px_rgba(15,23,42,0.45)]"
-                        style={{ animation: "tab-cards-in 0.15s ease both" }}
-                      >
-                        {/* ONE container: typing in the search FILTERS the categories in place. */}
-                        <CategoriesMegaPanel onNavigate={() => setOpenMenu(null)} />
-                      </div>
+                  <Link
+                    href="/servicios"
+                    data-nav-categorias=""
+                    onClick={() => setOpenMenu(null)}
+                    className={cn(
+                      "relative flex items-center gap-1 rounded-xl py-2 text-sm font-medium transition-colors after:absolute after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:transition-opacity",
+                      effectiveMarketplaceDesktop ? "px-2.5 after:left-2.5 after:right-2.5" : "px-4 after:left-4 after:right-4",
+                      "text-[#1A2744] after:opacity-0 hover:text-[#009FD9] hover:bg-gray-50"
                     )}
-                  </div>
+                  >
+                    {directoryOn ? t("categoriesMenu") : t("categories")}
+                  </Link>
 
                   <div ref={exploreMenuRef} className="relative">
                     <button
@@ -2458,14 +2170,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         style={{ animation: "tab-cards-in 0.15s ease both" }}
                       >
                         <ul className="space-y-1">
-                          {directoryOn && (
-                            <li>
-                              <Link href="/negocios-y-profesionales" data-nav-business onClick={() => setOpenMenu(null)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
-                                <Store className="h-5 w-5 shrink-0" />
-                                {t("forBusiness")}
-                              </Link>
-                            </li>
-                          )}
                           {visibleResourceLinks.map((link) => (
                             <li key={link.href}>
                               {link.key === "support" ? (
@@ -3069,12 +2773,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Jobs" : "Empleos"}</span>
                   </Link>
                 )}
-                {directoryOn && (
-                  <Link href="/negocios-y-profesionales" prefetch={false} onClick={cerrarCajon} className={claseCajon("/negocios-y-profesionales")}>
-                    <DrawerIcon><Store /></DrawerIcon>
-                    <span className={mobileDrawerTextClass}>{t("forBusiness")}</span>
-                  </Link>
-                )}
                 {/* Herramientas se despliega como «Ayuda y soporte»: cada opción
                     abre su herramienta directo, sin pasar por la lista del panel. */}
                 <div>
@@ -3104,14 +2802,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     </div>
                   )}
                 </div>
-                {directoryOn ? (
-                  <CategoriesDrawerGroup locale={locale} itemClass={mobileDrawerItemClass} textClass={mobileDrawerTextClass} icon={<DrawerIcon><Compass /></DrawerIcon>} onNavigate={() => cerrarCajon()} />
-                ) : (
                   <Link href="/servicios" prefetch={true} onClick={cerrarCajon} className={claseCajon("/servicios")}>
                     <DrawerIcon><Compass /></DrawerIcon>
                     <span className={mobileDrawerTextClass}>{t("categories")}</span>
                   </Link>
-                )}
                 {/* El asistente pasó del menú de abajo a este menú (1-oct-2026). Solo en la
                     app: en la web el asistente no responde. */}
                 {nativeHeaderShell && (

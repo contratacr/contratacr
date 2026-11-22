@@ -108,7 +108,7 @@
     "openMenu": "Abrir menú",
     "closeMenu": "Cerrar menú",
     "menu": "Menú",
-    "searchProfessionals": "Buscar profesionales",
+    "searchProfessionals": "Buscar",
     "account": "Cuenta",
     "favorites": "Mis favoritos",
     "quotes": "Cotizaciones",
@@ -2896,11 +2896,7 @@
       "destacadosVer": "Ver {seccion}",
       "promoTitulo": "Promociones",
       "promoTexto": "Ofertas de profesionales y de negocios de Costa Rica, en un solo lugar.",
-      "promoCta": "Ver promociones",
-      "negociosTitulo": "Para negocios y profesionales",
-      "negociosTexto": "Llegue a más clientes: ofrezca sus servicios o reclame la ficha de su negocio.",
-      "ofrecer": "Ofrecer mis servicios",
-      "reclamar": "Reclamar mi negocio"
+      "promoCta": "Ver promociones"
     },
     "carousel": {
       "titlePre": "Los servicios",

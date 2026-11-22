@@ -18,13 +18,9 @@ for (const language of ["es", "en"] as const) {
     await expectNoHorizontalOverflow(page);
   });
 
-  test(`/negocios-y-profesionales has the two cards [${language}]`, async ({ page }) => {
-    await gotoOK(page, `${prefix}/negocios-y-profesionales`);
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    await expect(page.locator('[data-business-cta="pro"]')).toHaveAttribute("href", `${prefix}/registro/profesional`);
-    await expect(page.locator('[data-business-cta="business"]')).toHaveAttribute("href", `${prefix}/lugares`);
-    await expect(page.locator("[data-business-card] li")).toHaveCount(6);
-    await expectNoHorizontalOverflow(page);
+  test(`/negocios-y-profesionales no longer exists: old links go to the professional registration [${language}]`, async ({ page }) => {
+    await page.goto(`${prefix}/negocios-y-profesionales`, { waitUntil: "domcontentloaded" });
+    await expect(page).toHaveURL(new RegExp(`${prefix}/registro/profesional$`));
   });
 }
 
@@ -40,40 +36,33 @@ const PLACES_BY_GROUP: Record<string, string[]> = {
   Empresas: ["bancos"],
 };
 
-test("desktop navbar: Categorias mega-menu merges the places into the themes and has its footer row", async ({ page }, testInfo) => {
+test("desktop navbar: Categorías is a link to the full page, with no dropdown and no business entry", async ({ page }, testInfo) => {
   test.skip(isMobileProject(testInfo), "Desktop navigation only");
   await page.setViewportSize({ width: 1366, height: 900 });
   await gotoOK(page, "/");
   const header = page.getByRole("banner");
   await expect(header.getByRole("button", { name: /^Lugares$/ })).toHaveCount(0);
-  await header.getByRole("button", { name: /^Categorías$/ }).click();
-  const menu = page.getByTestId("services-mega-menu");
-  await expect(menu).toBeVisible();
-  await expect(menu.getByRole("button", { name: /^Lugares/ })).toHaveCount(0);
-  await expect(menu.locator("[data-nav-places-entry]")).toHaveCount(0);
+  await expect(header.locator("[data-nav-business]")).toHaveCount(0);
+  const link = header.getByRole("link", { name: /^Categorías$/ });
+  await expect(link).toHaveAttribute("href", "/servicios");
+  await link.click();
+  await expect(page).toHaveURL(/\/servicios$/);
+  await expect(page.getByTestId("services-mega-menu")).toHaveCount(0);
+  // The page itself lists the places inside their themes, next to the services.
   for (const [group, sections] of Object.entries(PLACES_BY_GROUP)) {
-    await menu.getByRole("button", { name: new RegExp(`^${group}`) }).first().hover();
-    for (const section of sections) await expect(menu.locator(`[data-nav-directory-section="${section}"]`)).toHaveAttribute("href", `/${section}`);
-    await expect(menu.locator("[data-nav-directory-section]")).toHaveCount(sections.length);
+    await page.getByTestId("services-group-option").filter({ hasText: new RegExp(`^${group}`) }).first().click();
+    for (const section of sections) await expect(page.locator(`[data-nav-directory-section="${section}"]`)).toHaveAttribute("href", `/${section}`);
+    await expect(page.locator("[data-nav-directory-section]")).toHaveCount(sections.length);
   }
-  await expect(menu.locator("[data-nav-places-all]")).toHaveCount(0);
-  await expect(menu.locator("[data-nav-places-prices]")).toHaveAttribute("href", "/precios");
-  await expect(menu.getByRole("link", { name: "Ver todas las categorías" }).last()).toHaveAttribute("href", "/servicios");
-  await page.keyboard.press("Escape");
 });
 
-test("mobile drawer: Categorias accordion has the same themes with the places inside", async ({ page }, testInfo) => {
+test("mobile drawer: Categorías is a plain link to the full page and there is no business entry", async ({ page }, testInfo) => {
   test.skip(!isMobileProject(testInfo), "Mobile navigation only");
   await gotoOK(page, "/");
   await page.getByRole("button", { name: /Abrir men[uú]|Open menu/i }).first().click();
   const drawer = page.getByRole("dialog", { name: /Men[uú]|Menu/i });
-  await expect(drawer.getByRole("button", { name: /^Categorías$|^Categories$/ })).toBeVisible();
-  await drawer.getByRole("button", { name: /^Categorías$|^Categories$/ }).click();
+  await expect(drawer.getByRole("link", { name: /^Categorías$|^Categories$/ })).toHaveAttribute("href", /\/servicios$/);
+  await expect(drawer.getByRole("button", { name: /^Categorías$|^Categories$/ })).toHaveCount(0);
+  await expect(drawer.getByRole("link", { name: /Para negocios y profesionales|For businesses and professionals/ })).toHaveCount(0);
   await expect(drawer.getByRole("button", { name: /^Lugares$|^Places$/ })).toHaveCount(0);
-  await drawer.getByRole("button", { name: /^Comercios$/ }).click();
-  await expect(drawer.locator("[data-nav-directory-section]")).toHaveCount(3);
-  await drawer.getByRole("button", { name: /^Salud$/ }).click();
-  await expect(drawer.locator('[data-nav-directory-section="salud"]')).toHaveCount(1);
-  await expect(drawer.locator('[data-nav-directory-section="farmacias"]')).toHaveCount(1);
-  await expect(drawer.getByRole("link", { name: /Para negocios y profesionales|For businesses and professionals/ })).toHaveAttribute("href", /negocios-y-profesionales/);
 });

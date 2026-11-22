@@ -5,7 +5,7 @@ import { prefijoDeIdioma, rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { LandingHero } from "@/components/landing/landing-hero";
 import { FeaturedBrands } from "@/components/landing/featured-brands";
 import { HomePlacesTiles } from "@/components/landing/home-places";
-import { HomeFeaturedPlaces, HomePromoBand, HomeBusinessStrip } from "@/components/landing/home-directory-bands";
+import { HomeFeaturedPlaces, HomePromoBand } from "@/components/landing/home-directory-bands";
 import { sitemapSections } from "@/lib/directory/sitemap-sections";
 import { ProsSection } from "@/components/landing/pros-section";
 import { WhyContratacr } from "@/components/landing/why-contratacr";
@@ -136,8 +136,6 @@ export default async function HomePage({
         <FadeInUp>
           <WhyContratacr />
         </FadeInUp>
-
-        {directoryOn && <HomeBusinessStrip />}
 
         {/* Zones: find professionals by province using real coverage. */}
         <div className="ccr-fin-de-portada">

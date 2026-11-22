@@ -83,19 +83,3 @@ export async function HomePromoBand() {
     </section>
   );
 }
-
-export async function HomeBusinessStrip() {
-  const t = await getTranslations("landing.inicio");
-  return (
-    <section data-home-business aria-labelledby="ccr-home-negocios" className="bg-[#1a2744] py-9 text-white sm:py-12">
-      <div className="mx-auto max-w-6xl px-4 text-center sm:px-6 lg:px-8">
-        <h2 id="ccr-home-negocios" className="text-2xl font-extrabold sm:text-3xl">{t("negociosTitulo")}</h2>
-        <p className="mx-auto mt-2 max-w-2xl text-[15px] text-white/85 sm:text-base">{t("negociosTexto")}</p>
-        <div className="mt-5 grid gap-2.5 sm:flex sm:justify-center sm:gap-3">
-          <Link href="/registro/profesional" className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#009FD9] px-6 text-[15px] font-extrabold text-white transition-colors hover:bg-[#0089bb]">{t("ofrecer")}</Link>
-          <Link href="/negocios-y-profesionales" className="inline-flex min-h-12 items-center justify-center rounded-full bg-white px-6 text-[15px] font-extrabold text-[#1a2744] transition-colors hover:bg-[#eaf7fd]">{t("reclamar")}</Link>
-        </div>
-      </div>
-    </section>
-  );
-}
