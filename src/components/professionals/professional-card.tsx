@@ -9,6 +9,7 @@ import { getInitials } from "@/lib/utils";
 import { supportsVideoConsultCategory, getCategoryLabel } from "@/lib/data/categories";
 import { primaryPricingLabel, splitPricingLabel, type PricingTier } from "@/lib/pricing";
 import { getProfessionalDisplayName } from "@/lib/display-name";
+import { ResultThumb, RESULT_CARD } from "@/components/search/result-card-parts";
 import { ResponsiveServiceSummary } from "@/components/professionals/responsive-service-summary";
 
 import { ResponsiveVerifiedName } from "@/components/professionals/responsive-verified-name";
@@ -60,6 +61,8 @@ export type ProfessionalCardData = {
   videoconsulta?: boolean;
   /** Count of "casos de éxito" (portfolio photos) — drives the preview link. */
   portfolioCount?: number;
+  /** Cover photo of the first "caso de éxito" (portfolio_urls[0], already resized); the card falls back to the avatar tile. */
+  coverUrl?: string;
   /** Public follower count for the professional profile. */
   followerCount?: number;
   /** Count of certifications — drives the compact "Ver certificaciones (N)" link. */
@@ -353,21 +356,34 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
           PRICE is right-aligned on the company-name line only. The mobile `pr-8` keeps the
           price clear of the inside top-right bookmark (`lg:pr-0` on desktop). */}
       <div className="flex flex-wrap items-start gap-x-2.5 gap-y-1 lg:flex-nowrap lg:gap-x-3">
-        <Link href={profileHref} className="relative z-10 shrink-0">
-          <Avatar className="h-[52px] w-[52px] rounded-full lg:h-16 lg:w-16">
-            <AvatarImage src={professional.avatarUrl} alt={professional.fullName} />
-            <AvatarFallback
-              delayMs={0}
-              className="rounded-full bg-[#EBF5FB] text-[#009FD9] font-bold data-[delayed-open]:animate-pulse"
-            >
-              {getInitials(professional.fullName)}
-            </AvatarFallback>
-          </Avatar>
-          {rank != null && (
-            <span className="absolute -top-1.5 -left-1.5 hidden h-[22px] w-[22px] items-center justify-center rounded-full bg-[#162543] text-[10px] font-bold text-white ring-2 ring-white lg:flex">
-              {rank}
-            </span>
-          )}
+        <Link href={profileHref} className="relative z-10 shrink-0" data-testid="professional-card-thumb">
+          <ResultThumb
+            src={professional.coverUrl}
+            alt={professional.fullName}
+            rank={rank}
+            priority={rank != null && rank <= 2}
+            more={Math.max(0, portfolioCount - 1)}
+            kind={professional.coverUrl ? "photo" : "tile"}
+            overlay={professional.coverUrl ? (
+              <Avatar className="h-8 w-8 rounded-full ring-2 ring-white lg:h-10 lg:w-10">
+                <AvatarImage src={professional.avatarUrl} alt="" />
+                <AvatarFallback delayMs={0} className="rounded-full bg-[#EBF5FB] text-[11px] font-bold text-[#009FD9] lg:text-[13px]">
+                  {getInitials(professional.fullName)}
+                </AvatarFallback>
+              </Avatar>
+            ) : undefined}
+            fallback={
+              <Avatar className="h-full w-full rounded-none">
+                <AvatarImage src={professional.avatarUrl} alt={professional.fullName} />
+                <AvatarFallback
+                  delayMs={0}
+                  className="rounded-none bg-gradient-to-br from-[#EBF5FB] to-[#cfeaf5] text-2xl font-bold text-[#009FD9] lg:text-4xl"
+                >
+                  {getInitials(professional.fullName)}
+                </AvatarFallback>
+              </Avatar>
+            }
+          />
         </Link>
         <div className="flex min-w-0 flex-1 flex-col gap-1 lg:pr-0">
           {/* Company-name line + PRICE (right-aligned on THIS line only). */}
@@ -452,7 +468,7 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
     // divider; MOBILE stacks them — all owned by ProfessionalSchedule, which holds the
     // schedule state and receives the info above as a slot. The ranking number now rides on
     // the avatar; the favorite bookmark sits inside the card so responsive sheets never clip it.
-    <article className={`group relative flex h-full min-w-0 flex-col bg-white px-4 py-3 shadow-[0_8px_14px_-14px_rgba(15,23,42,0.55)] transition-shadow duration-200 lg:rounded-2xl lg:border lg:border-[#e5e7eb] lg:p-4 lg:shadow-none lg:hover:border-[#d7e1ea] lg:hover:shadow-md ${className ?? ""}`}>
+    <article className={`${RESULT_CARD} flex h-full flex-col ${className ?? ""}`}>
       <ProfessionalSchedule
         info={info}
         professional={professional}

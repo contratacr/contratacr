@@ -4,16 +4,16 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { idiomaDe } from "@/lib/prefijo-de-idioma";
 import { useSiteFeatures } from "@/components/site-features";
-import { enabledDirectoryGroups } from "@/lib/directory/directory-groups";
+import { curatedDirectoryGroups } from "@/lib/directory/directory-groups";
 
-// "Lugares populares" (home, directory on): one tile per group of places (DIRECTORY_GROUPS, shared with the menus and
-// the /lugares hub), with the sections that are on as links. A group without sections on is hidden.
+// "Lugares populares" (home, directory on): one tile per group of places (DIRECTORY_GROUPS, curated: only the ten categories of
+// the menus; the /lugares hub has all), with the sections that are on as links. A group without sections on is hidden.
 
 export function HomePlacesTiles() {
   const t = useTranslations("landing.inicio");
   const l = idiomaDe(useLocale());
   const { directorySections } = useSiteFeatures();
-  const groups = enabledDirectoryGroups(directorySections);
+  const groups = curatedDirectoryGroups(directorySections);
   if (!groups.length) return null;
   return (
     <section data-home-directory aria-labelledby="ccr-home-lugares" className="bg-white py-8 sm:py-12">

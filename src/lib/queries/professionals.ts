@@ -618,6 +618,7 @@ async function searchProfessionalsUncached(
         serviceType: row.service_type ?? null,
         videoconsulta: !!row.videoconsulta,
         portfolioCount: Array.isArray(row.portfolio_urls) ? row.portfolio_urls.length : 0,
+        coverUrl: Array.isArray(row.portfolio_urls) && typeof row.portfolio_urls[0] === "string" && row.portfolio_urls[0] ? cldThumb(row.portfolio_urls[0], 320) : undefined,
         certificationCount: Array.isArray(row.certifications) ? row.certifications.length : 0,
         insuranceNetworks: (row.insurance_networks as string[]) ?? [],
         coverage: buildCoverage(row),

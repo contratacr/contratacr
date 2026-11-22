@@ -7,6 +7,7 @@ import {directionsLinks} from '@/lib/maps/maplibre';
 import {MapPin,Navigation,Phone} from 'lucide-react';
 import {VerifiedSeal} from '@/components/ui/verified-seal';
 import {HeroTile,RatingLine} from './biz-ui';
+import {RESULT_CARD,ResultThumb,resultChip} from '@/components/search/result-card-parts';
 import {placePriceLevel} from '@/lib/directory/place-amenities';
 import {placePhotoSrc} from '@/lib/directory/place-photos';
 import type {CardExtra} from '@/lib/directory/card-extras';
@@ -83,8 +84,8 @@ const actionPrimary=`${actionBase} bg-[#009FD9] text-white hover:bg-[#0089bb]`;
 const actionSecondary=`${actionBase} border border-[#d7e1ea] bg-white text-[#162543] hover:border-[#b9c8d6] hover:bg-[#f6f9fb]`;
 
 /**
- * Result card of a place, same anatomy as ProfessionalCard (one visual system, owner decision 2026-11-21): round logo or
- * section tile on the left carrying the navy rank badge that mirrors its map pin, name + verified seal with the price
+ * Result card of a place, same anatomy as ProfessionalCard (one visual system, owner decision 2026-11-21): square photo (first approved one) or
+ * section tile on the left, 96/144 px, carrying the navy rank badge that mirrors its map pin, name + verified seal with the price
  * level on the right of the name line, tags, rating («5.0 7 reseñas»), location, status chips, and in the right column
  * (below the info on phones) the action pills: «Llamar» takes the place WhatsApp has for professionals, «Cómo llegar»
  * the place of «Contactar por llamada». The whole card opens the place page (stretched low-z link); the name link is the
@@ -103,21 +104,15 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
  const directions=item.location?directionsLinks(item.location.lat,item.location.lng):null;
  const verified=VERIFIED.has(level);
  const priceLevel=placePriceLevel(item.attributes);
- const chip='inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold leading-4';
  const permit=item.vertical.id==='pharmacy'?{...pharmacyLicence(item.verificationLevel,en),attr:'data-pharmacy-license'}:health?{...healthPermit(item.verificationLevel,en),attr:'data-health-permit'}:null;
  const rated=item.rating.count>0&&item.rating.average!=null;
  const tags=[en?item.vertical.nameEn:item.vertical.nameEs,kind,brand].filter(Boolean) as string[];
  return <article data-search-item={item.key} data-ranking-reasons={item.ranking_reason.join(' ')}
-  className="group relative flex min-w-0 flex-col gap-3 bg-white px-4 py-3 text-[#162543] shadow-[0_8px_14px_-14px_rgba(15,23,42,0.55)] transition-shadow duration-200 lg:flex-row lg:gap-0 lg:rounded-2xl lg:border lg:border-[#e5e7eb] lg:p-4 lg:shadow-none lg:hover:border-[#d7e1ea] lg:hover:shadow-md">
+  className={`${RESULT_CARD} flex flex-col gap-3 text-[#162543] lg:flex-row lg:gap-0`}>
   <div className="flex min-w-0 flex-1 items-start gap-2.5 lg:gap-3">
-   <span className="relative z-10 shrink-0" aria-hidden="true" data-place-thumb={extra?.photo?'photo':'tile'}>
-    <span className="relative block h-[52px] w-[52px] overflow-hidden rounded-full bg-[#EBF5FB] lg:h-16 lg:w-16">
-     {extra?.photo
-      // eslint-disable-next-line @next/next/no-img-element -- same-origin photo route (approved uploads only)
-      ?<img src={placePhotoSrc(extra.photo,320)} alt="" loading="lazy" className="h-full w-full bg-white object-cover"/>
-      :<HeroTile verticalId={item.vertical.id} className="h-full w-full" iconClass="h-6 w-6 lg:h-7 lg:w-7"/>}
-    </span>
-    {rank!=null&&<span className="absolute -left-1.5 -top-1.5 hidden h-[22px] w-[22px] items-center justify-center rounded-full bg-[#162543] text-[10px] font-bold text-white ring-2 ring-white lg:flex">{rank}</span>}
+   <span aria-hidden="true" className="shrink-0" data-place-thumb={extra?.photo?'photo':'tile'}>
+    <ResultThumb src={extra?.photo?placePhotoSrc(extra.photo,320):null} priority={rank!=null&&rank<=2} rank={rank}
+     fallback={<HeroTile verticalId={item.vertical.id} className="h-full w-full" iconClass="h-10 w-10 lg:h-14 lg:w-14"/>}/>
    </span>
    <div className="flex min-w-0 flex-1 flex-col gap-1">
     <div className="flex min-w-0 items-start gap-3 lg:items-center">
@@ -132,12 +127,12 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
     {(area||distance)&&<p className="flex min-w-0 items-center gap-1 text-[12.5px] font-medium text-[#68778d]"><MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true"/>
      <span className="truncate">{area}{area&&distance?' · ':''}{distance}</span></p>}
     <ul className="mt-0.5 flex flex-wrap items-center gap-1.5" aria-label={t('Datos del lugar','Place details')}>
-     {item.open24h?<li className={`${chip} bg-emerald-50 text-emerald-800`} data-open="24h">{t('Abierto 24 horas','Open 24 hours')}</li>
-      :item.openNow===true?<li className={`${chip} bg-emerald-50 text-emerald-800`} data-open="now">{t('Abierto ahora','Open now')}</li>
-      :item.openNow===false?<li className={`${chip} bg-red-50 text-red-800`} data-open="closed">{t('Cerrado ahora','Closed now')}</li>:null}
-     {permit&&<li {...{[permit.attr]:permit.state}} className={`${chip} ${permit.state==='verified'?'bg-emerald-50 text-emerald-900':'bg-slate-100 text-slate-700'}`}>{permit.text}</li>}
-     {item.attributes.publicService===true&&<li className={`${chip} bg-slate-100 text-slate-700`} data-public-service>{t('Servicio público','Public service')}</li>}
-     {level==='claimed'&&<li className={`${chip} bg-[#EBF5FB] text-[#00739e]`} data-place-claimed>{VERIFICATION_LABELS.claimed[en?'en':'es']}</li>}
+     {item.open24h?<li className={`${resultChip('ok')}`} data-open="24h">{t('Abierto 24 horas','Open 24 hours')}</li>
+      :item.openNow===true?<li className={`${resultChip('ok')}`} data-open="now">{t('Abierto ahora','Open now')}</li>
+      :item.openNow===false?<li className={`${resultChip('bad')}`} data-open="closed">{t('Cerrado ahora','Closed now')}</li>:null}
+     {permit&&<li {...{[permit.attr]:permit.state}} className={`${resultChip(permit.state==='verified'?'ok':'neutral')}`}>{permit.text}</li>}
+     {item.attributes.publicService===true&&<li className={`${resultChip('neutral')}`} data-public-service>{t('Servicio público','Public service')}</li>}
+     {level==='claimed'&&<li className={`${resultChip('brand')}`} data-place-claimed>{VERIFICATION_LABELS.claimed[en?'en':'es']}</li>}
     </ul>
     {item.price&&<PlacePriceLine price={item.price} en={en}/>}
     {extra?.snippet&&<p className="line-clamp-1 text-[12.5px] italic text-[#334155]" data-place-snippet>{'"'}{extra.snippet}{'"'}</p>}

@@ -4,10 +4,11 @@ import type {BrandBranch,PlaceBrand} from '@/lib/directory/place-features';
 import {directionsLinks} from '@/lib/maps/maplibre';
 import {BIZ,HeroTile,RatingLine,ring} from './biz-ui';
 import {formatDistance} from './place-card';
+import {ResultThumb} from '@/components/search/result-card-parts';
 
 /**
  * Branch cards (2026-11-19, Yelp model) shared by «Otras sucursales» on a branch page and the list of /marca/<slug>:
- * the section tile as thumbnail (no photos in the brand data), numbered name, stars + count, area, distance when known,
+ * the section tile as square thumbnail (no photos in the brand data; same slot as PlaceCard), numbered name, stars + count, area, distance when known,
  * «Cómo llegar». Same visual family as PlaceCard. The whole card opens the branch (stretched link, one tab stop).
  */
 const km=(a:{lat:number;lng:number},b:{lat:number;lng:number})=>{const r=Math.PI/180,dLat=(b.lat-a.lat)*r,dLng=(b.lng-a.lng)*r;
@@ -23,9 +24,8 @@ export function BranchCard({branch,locale,rank,distanceKm}:{branch:BrandBranch;l
  const directions=branch.lat!=null&&branch.lng!=null?directionsLinks(branch.lat,branch.lng):null;
  const distance=formatDistance(distanceKm??null,en);
  return <article data-brand-branch={branch.slug} className="group relative flex items-start gap-3 rounded-2xl border border-[#e5e7eb] bg-white p-3 transition-shadow hover:border-[#d7e1ea] hover:shadow-md sm:p-4">
-  <span className="relative z-10 shrink-0">
-   <HeroTile verticalId={branch.vertical} className="h-[52px] w-[52px] rounded-full lg:h-16 lg:w-16" iconClass="h-6 w-6 lg:h-7 lg:w-7"/>
-   {rank!=null&&<span aria-hidden="true" className="absolute -left-1.5 -top-1.5 hidden h-[22px] w-[22px] items-center justify-center rounded-full bg-[#162543] text-[10px] font-bold text-white ring-2 ring-white lg:flex">{rank}</span>}
+  <span aria-hidden="true" className="shrink-0">
+   <ResultThumb rank={rank} fallback={<HeroTile verticalId={branch.vertical} className="h-full w-full" iconClass="h-10 w-10 lg:h-14 lg:w-14"/>}/>
   </span>
   <div className="flex min-w-0 flex-1 flex-col gap-1">
    <h3 className="text-[15px] font-bold leading-[1.15] text-[#111827]">

@@ -57,4 +57,41 @@ export function enabledDirectoryGroups(enabled: readonly string[]): ResolvedDire
     .filter((g) => g.sections.length > 0);
 }
 
+/** CURATED menu (owner decision 2026-11-22, Yelp style): only the place categories people actually search for appear in the
+ * Categorías menu, the mobile drawer, the footer and the home tiles; the rest (pulperias, ferreterias, tours, gimnasios,
+ * talleres) stay reachable from /lugares ("Ver todos los lugares"). Order = order shown. */
+export const CURATED_PLACE_SECTIONS: readonly string[] = ["restaurantes", "cafes", "supermercados", "farmacias", "gasolineras", "bancos", "hospedaje", "salud", "veterinarias", "belleza"];
+
+/** The curated place sections that are enabled, in curated order. */
+export function curatedPlaces(enabled: readonly string[]): { section: string; label: Bilingual }[] {
+  return CURATED_PLACE_SECTIONS.filter((s) => enabled.includes(s) && DIRECTORY_SECTION_LABELS[s]).map((s) => ({ section: s, label: DIRECTORY_SECTION_LABELS[s] }));
+}
+
+/** Same groups as enabledDirectoryGroups, restricted to the curated place sections (home tiles). */
+export function curatedDirectoryGroups(enabled: readonly string[]): ResolvedDirectoryGroup[] {
+  return enabledDirectoryGroups(enabled.filter((s) => CURATED_PLACE_SECTIONS.includes(s)));
+}
+
+/** Most demanded services per group for the Categorías menu (no per-service counts exist on the client, so this is an
+ * editorial list by search demand in Costa Rica). Groups with 10 or fewer services show all of them; the rest go through
+ * "Ver todos los servicios". */
+export const SERVICE_MENU_TOP: Record<string, readonly string[]> = {
+  hogar: ["plomeria", "electricidad", "pintura", "aire_acondicionado", "carpinteria", "cerrajeria", "jardineria", "techos", "control_plagas", "reparacion_electrodomesticos"],
+  salud: ["psicologia", "odontologia", "nutricion", "fisioterapia", "pediatria", "optometria", "enfermeria", "medicina_domicilio", "cuidado_adultos", "ortodoncia"],
+  automotriz: ["mecanica", "lavado_vehiculos", "mudanzas", "fletes", "grua", "cambio_llantas", "hojalateria", "electricidad_automotriz", "detailing", "transporte_privado"],
+  tecnologia: ["reparacion_computadoras", "reparacion_celulares", "redes_internet", "camaras_seguridad", "desarrollo_web", "soporte_tecnico", "domotica", "reparacion_impresoras", "ciberseguridad", "consultoria_ti"],
+  profesional: ["legal", "contabilidad", "bienes_raices", "notaria", "traduccion", "gestoria_tramites", "asesoria_tributaria", "corredor_seguros", "consultoria", "recursos_humanos"],
+  comercios: ["restaurantes_comida", "cafeterias", "panaderias", "farmacias", "gasolineras", "supermercados_minisuper", "ferreterias", "carnicerias_verdulerias", "papelerias_librerias", "tiendas_mascotas"],
+  eventos: ["fotografia_eventos", "organizacion_eventos", "dj_sonido", "catering", "decoracion", "alquiler_mobiliario", "floristeria", "animacion_infantil", "chef", "bartending"],
+  educacion: ["tutorias", "idiomas", "matematicas", "preparacion_universitaria", "musica", "clases_manejo", "clases_baile", "clases_cocina", "clases_frances"],
+};
+export const SERVICE_MENU_LIMIT = 10;
+
+/** The services of a group shown in the Categorías menu: the editorial top list (if any), else the first ten. */
+export function curatedGroupItems<T extends { id: string }>(groupId: string, items: readonly T[]): T[] {
+  if (items.length <= SERVICE_MENU_LIMIT) return [...items];
+  const top = (SERVICE_MENU_TOP[groupId] ?? []).map((id) => items.find((i) => i.id === id)).filter((i): i is T => !!i);
+  return (top.length ? top : [...items]).slice(0, SERVICE_MENU_LIMIT);
+}
+
 export const pick = (value: Bilingual, locale: string): string => value[idiomaDe(locale)];
