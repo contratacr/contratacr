@@ -1,5 +1,8 @@
 # Registro de cobertura frente a Houzz Pro
 
+> **Estado de base de datos (2026-11-22):** el SQL de Pro ya no es solo local. Está en las migraciones numeradas 292 a 312 de `supabase/migrations`, generadas con `scripts/pro/build-pro-migrations.mjs` desde el manifiesto ordenado, aplicadas a la base de **test** mediante el flujo `Supabase migrations` y reconstruidas desde cero en CI. **Producción no las tiene.** Este registro sigue siendo anterior a varias rondas de código (por ejemplo la biblioteca de códigos y la previsión de presupuesto) y debe revisarse fila por fila.
+
+
 Revisión: 2026-11-10. Checkout Pro, rama `local/pro-suite-no-push`, base `06b70019`. Registro local; no autoriza despliegues, cobros, comunicaciones ni accesos externos nuevos.
 
 El objetivo solicitado incluye **todas las familias**, también diseño, IA, equipo e integraciones. Este inventario no reduce ese objetivo a las funciones que ya existen. Tampoco afirma equivalencia: un prototipo, un archivo con nombre parecido o una aprobación comercial no demuestran el recorrido completo. Las capacidades siguientes son un desglose de seguimiento, no una copia del catálogo ni una enumeración exhaustiva de cada ajuste de Houzz. Disponibilidad, país, plan y plataforma pueden cambiar.
