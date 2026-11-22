@@ -3061,6 +3061,10 @@
     "file": "Archivo"
   },
   "bottomNav": {
+    "tabHome": "Inicio",
+    "tabServices": "Servicios",
+    "tabPlaces": "Lugares",
+    "tabAccount": "Cuenta",
     "search": "Profesionales",
     "deals": "Promociones",
     "assistant": "Asistente",
@@ -3911,6 +3915,11 @@
     "signOut": "Salir",
     "services": "Servicios",
     "workPhotos": "Casos de éxito"
+  },
+  "resultTabs": {
+    "aria": "Tipo de resultado",
+    "services": "Servicios",
+    "places": "Lugares"
   },
   "placesHub": {
     "metaTitle": "Lugares en Costa Rica",

@@ -50,3 +50,17 @@ export function searchProblemText(reason:Extract<DirectorySearchPage,{ok:false}>
   default:return t('Revise los filtros e intente de nuevo.','Please check the filters and try again.');
  }
 }
+
+/** Cheap total of places for a section with the same parameters the section page reads (dir_facets only, no list). null on any problem. */
+export async function countDirectoryPlaces(vertical:SearchVertical,sp:SearchPageParams):Promise<number|null>{
+ try{
+  const params=new URLSearchParams(searchValues(sp) as Record<string,string>);params.set('vertical',vertical);
+  const parsed=parseSearchParams(params,{facets:true});
+  if(!parsed.ok)return null;
+  if(!DIR_HEALTH_ENABLED&&isHealthSearchVertical(parsed.vertical))return null;
+  const {data,error}=await createAdminClient().rpc('dir_facets',{p_vertical:parsed.vertical,p_q:parsed.q,p_filters:parsed.filters,p_lat:parsed.lat,p_lng:parsed.lng,p_radius_km:parsed.radiusKm});
+  if(error)return null;
+  const total=(data as DirectoryFacets|null)?.total;
+  return typeof total==='number'?total:null;
+ }catch{return null;}
+}

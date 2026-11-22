@@ -13,6 +13,8 @@ import {PlaceCard} from './place-card';
 import {kindLabel} from '@/lib/directory/place-verticals';
 import {placeCardExtras} from '@/lib/directory/card-extras';
 import {SearchFilters,sortLabel} from './search-filters';
+import {ResultTabsBar} from '@/components/search/cross-result-tabs';
+import {sitemapSections} from '@/lib/directory/sitemap-sections';
 import {PlacesFilterChips,PlacesFiltersDrawer,type ChipMenu,type ChipToggle} from './places-search-controls';
 
 /**
@@ -104,6 +106,8 @@ export async function PlacesSectionHome({section,locale,page,basePath,banner}:{s
     </div>
    </div>
   </div>
+  {/* Servicios | Lugares when a text query is present and the directory is on (the professionals side has no cheap count here). */}
+  {!!values.q&&sitemapSections().length>0&&<ResultTabsBar services={{href:`/profesionales?q=${encodeURIComponent(values.q)}`,count:null,active:false}} places={{href:link({}),count:total,active:true}}/>}
   <main id="contenido" className="flex-1 bg-white">
    <div className="mx-auto max-w-[1920px] px-0 py-0 lg:px-8 lg:pb-0 lg:pt-0">
     <SearchResultsLayout locale={locale} filters={null} map={map} countLabel={count??undefined}

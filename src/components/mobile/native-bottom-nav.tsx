@@ -6,7 +6,7 @@ import { esServicioDelCatalogo } from "@/lib/data/categories";
 import { esRutaDeBusqueda } from "@/lib/buscar-url";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Bell, MessageSquareText, Plus, Search, UserRound } from "lucide-react";
+import { Bell, Hammer, House, ClipboardList, MapPinned, MessageSquareText, Plus, Search, UserRound } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
@@ -18,6 +18,7 @@ import { HojaDeCrear } from "@/components/mobile/hoja-de-crear";
 import { useAvisosPorVer } from "@/hooks/use-avisos-por-ver";
 import { useDirectMessageUnread } from "@/hooks/use-direct-message-unread";
 import { cn } from "@/lib/utils";
+import { useSiteFeatures } from "@/components/site-features";
 
 // La barra vive en el armazón, montada una sola vez, y NO dentro de cada
 // página: cuando se montaba con la página se desmontaba y volvía a montarse en
@@ -25,6 +26,10 @@ import { cn } from "@/lib/utils";
 // cambia debajo y la barra sigue ahí, quieta, como en Instagram o Facebook.
 export function NativeBottomNav() {
   const nativeApp = useNativeApp();
+  // Directory flag (owner, 2026-11-21): with the directory ON the app bar is Inicio, Servicios, Lugares,
+  // Solicitudes, Cuenta. With it OFF nothing below changes.
+  const sections = useSiteFeatures().directorySections;
+  const directoryOn = sections.length > 0;
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -90,7 +95,8 @@ export function NativeBottomNav() {
   // arranque habían puesto. Esa clase gobierna el relleno inferior de `main` y
   // varias alturas: quitarla y reponerla un cuadro después es un salto de
   // maquetación en CADA arranque, además de la barra apareciendo de la nada.
-  const visible = nativeApp && !sinBarraDeAbajo(pathname);
+  // Directory tabs also stay away from place pages (/lugar/*): they carry their own contact bar at the bottom.
+  const visible = nativeApp && !sinBarraDeAbajo(pathname) && !(directoryOn && /^\/lugar(?:\/|$)/.test(pathname ?? ""));
 
   // Solo una pestaña encendida a la vez: mientras hay una pendiente, manda esa.
   const isActive = useCallback(
@@ -356,6 +362,47 @@ export function NativeBottomNav() {
   }, [permiteRetirarse, pathname, visible]);
 
   if (!visible) return null;
+
+  if (directoryOn) {
+    // Hidden under the full-screen search sheet.
+    if (buscadorAbierto) return null;
+    const ruta = pathname ?? "";
+    const enLugares = ruta === "/lugares" || sections.some((section) => ruta === `/${section}`);
+    const activo = asistenteAbierto ? -1
+      : ruta === "/" ? 0
+      : esRutaDeBusqueda(ruta, esServicioDelCatalogo) ? 1
+      : enLugares ? 2
+      : ruta === "/solicitudes" || ruta.startsWith("/solicitudes/") ? 3
+      : user && ruta.startsWith(panelHref) ? 4
+      : -1;
+    const tab = (i: number, href: string, label: string, Icon: typeof House, extra?: { loginHref?: string }) => (
+      <Link
+        key={href}
+        href={extra?.loginHref ?? href}
+        prefetch={false}
+        data-native-tab={i}
+        aria-current={activo === i ? "page" : undefined}
+        onClick={(event) => { if (!extra?.loginHref) irA(event, href); }}
+        className={cn("relative z-10 flex h-full min-w-[44px] min-h-[44px] flex-1 basis-0 flex-col items-center justify-center gap-0.5 rounded-full text-[#1A2744] transition-colors duration-200 ccr-toque-barra", activo === i && "bg-[#009FD9]/12 text-[#009FD9]")}
+      >
+        <Icon className="h-[22px] w-[22px]" strokeWidth={activo === i ? 2.4 : 2} aria-hidden />
+        <span className="max-w-full truncate text-[10px] font-bold leading-none">{label}</span>
+      </Link>
+    );
+    return (
+      <nav ref={navRef} aria-label={tNav("aria")} data-directory-tabs="" className="ccr-native-bottom-nav ccr-barra-flotante pointer-events-none fixed inset-x-0 bottom-0 z-[90] px-4 lg:hidden">
+        <div className="ccr-barra-flotante-pastilla pointer-events-auto relative mx-auto flex h-[56px] w-full max-w-[420px] items-stretch rounded-full p-1">
+          {tab(0, "/", tNav("tabHome"), House)}
+          {tab(1, "/profesionales", tNav("tabServices"), Hammer)}
+          {tab(2, "/lugares", tNav("tabPlaces"), MapPinned)}
+          {tab(3, "/solicitudes", tNav("projects"), ClipboardList)}
+          {user
+            ? tab(4, nativePanelHref, tNav("tabAccount"), UserRound)
+            : tab(4, "/login", tNav("tabAccount"), UserRound, { loginHref: "/login" })}
+        </div>
+      </nav>
+    );
+  }
 
   // CUÁL ESTÁ ENCENDIDA, para que la pastilla de fondo viaje hasta ella. El «+»
   // no se enciende nunca: abre una hoja encima, no es un lugar.
