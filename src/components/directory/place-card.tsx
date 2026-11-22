@@ -78,7 +78,7 @@ export function PlacePriceLine({price,en}:{price:PlaceSearchPrice;en:boolean}){
 
 const VERIFIED=new Set(['verified','license_verified']);
 // Buttons: same pills as the professional card (ProfessionalSchedule: h-11, full width, 13px bold) in the places' brand colours.
-const actionBase='relative z-10 inline-flex h-11 min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-4 text-[13px] font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9] lg:w-full lg:flex-none';
+const actionBase='relative z-10 inline-flex h-11 w-full min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-4 text-[13px] font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]';
 const actionPrimary=`${actionBase} bg-[#009FD9] text-white hover:bg-[#0089bb]`;
 const actionSecondary=`${actionBase} border border-[#d7e1ea] bg-white text-[#162543] hover:border-[#b9c8d6] hover:bg-[#f6f9fb]`;
 
@@ -122,7 +122,6 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
    <div className="flex min-w-0 flex-1 flex-col gap-1">
     <div className="flex min-w-0 items-start gap-3 lg:items-center">
      <H className="min-w-0 flex-1 text-[15px] font-bold leading-[1.15] text-[#111827]">
-      {rank!=null&&<span className="text-[#68778d] lg:hidden">{rank}. </span>}
       <a className="relative z-10 break-words transition-colors hover:text-[#009FD9] focus-visible:underline" href={href}>{item.name}</a>
       {verified&&<VerifiedSeal className="ml-1 inline h-4 w-4 -translate-y-px align-middle" label={VERIFICATION_LABELS[level][en?'en':'es']}/>}
      </H>
@@ -144,7 +143,7 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
     {extra?.snippet&&<p className="line-clamp-1 text-[12.5px] italic text-[#334155]" data-place-snippet>{'"'}{extra.snippet}{'"'}</p>}
    </div>
   </div>
-  {(phone?.kind==='cr'||directions)&&<div className="flex min-w-0 gap-2 lg:ml-5 lg:w-[240px] lg:shrink-0 lg:flex-col lg:justify-center lg:border-l lg:border-[#eef2f6] lg:pl-5" data-place-actions>
+  {(phone?.kind==='cr'||directions)&&<div className="flex min-w-0 flex-col gap-2 lg:ml-5 lg:w-[240px] lg:shrink-0 lg:justify-center lg:border-l lg:border-[#eef2f6] lg:pl-5" data-place-actions>
    {phone?.kind==='cr'&&<a className={actionPrimary} href={`tel:${phone.tel}`} data-place-phone aria-label={`${t('Llamar','Call')} ${phone.display}`}><Phone className="h-4 w-4 shrink-0" aria-hidden="true"/>{t('Llamar','Call')}</a>}
    {directions&&<a className={phone?.kind==='cr'?actionSecondary:actionPrimary} href={directions.google} rel="noopener noreferrer" target="_blank"><Navigation className="h-4 w-4 shrink-0" aria-hidden="true"/>{t('Cómo llegar','Directions')}</a>}
   </div>}

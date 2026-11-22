@@ -89,7 +89,7 @@ export async function PlacesSectionHome({section,locale,page,basePath,banner}:{s
   label={t(`Mapa de ${points.length} resultados`,`Map of ${points.length} results`)}/>:null;
  const nav='inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full px-5 text-sm font-bold transition-colors';
  return <div className="ccr-buscar-pagina flex min-h-screen flex-col bg-white" data-places-home={section}>
-  <LandingNavbar/>
+  <LandingNavbar forceCompactSearch mobileSearch/>
   <div className="ccr-navbar-spacer hidden h-16 lg:block" aria-hidden/>
   {/* Title row: the same strip as /profesionales (accent bar · H1 · count · chips). Phones carry the title in the sheet. */}
   <div className="hidden bg-white lg:block">
@@ -108,7 +108,7 @@ export async function PlacesSectionHome({section,locale,page,basePath,banner}:{s
    <div className="mx-auto max-w-[1920px] px-0 py-0 lg:px-8 lg:pb-0 lg:pt-0">
     <SearchResultsLayout locale={locale} filters={null} map={map} countLabel={count??undefined}
      limpiar={clear} resetKey={JSON.stringify(values)} sinResultados={items.length===0}
-     quickFilters={<><h1 className="truncate pb-2 text-[15px] font-bold leading-tight text-[#162543]">{c.title[i]}</h1>{chips('sheet')}</>}>
+     quickFilters={<><h1 className="sr-only">{c.title[i]}</h1>{chips('sheet')}</>}>
      <div className="min-w-0 space-y-0 lg:space-y-3 lg:pb-6" data-search-results={section}>
       {banner&&<div className="-mx-4 border-b border-[#eef2f6] px-4 py-3 lg:mx-0 lg:border-0 lg:p-0">{banner}</div>}
       {page.ok&&page.result.priceProduct&&<p className="py-2 text-[13px] text-[#526277] lg:py-0" data-price-product={page.result.priceProduct.slug}>{t('Precios de: ','Prices for: ')}

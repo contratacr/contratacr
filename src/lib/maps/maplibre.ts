@@ -63,17 +63,19 @@ export function localGlyphUrl(url: string, origin: string): string | null {
 // the OpenFreeMap liberty style (a custom NEXT_PUBLIC_MAP_STYLE_URL is left as is).
 type StyleLayer = StyleSpecification["layers"][number];
 const BRAND_FILLS: Record<string, string> = {
-  background: "#f5f5f5",
+  // Production (Google) map: light-mint land everywhere, mint parks, light-grey urban areas, aqua water.
+  background: "#cdf1de",
   water: "#83d7ea",
-  park: "#d1f4e0",
-  landcover_wood: "hsla(150,48%,80%,0.6)",
-  landcover_grass: "#d8f3e4",
-  landuse_residential: "#f1f1f1",
+  park: "#c2e9d2",
+  landcover_wood: "hsla(150,45%,76%,0.45)",
+  landcover_grass: "#c4ecd5",
+  landuse_residential: "#f2f2f2",
   landuse_hospital: "#f8e3e8",
   building: "#e6e8ec",
 };
 const BRAND_WATERWAYS = new Set(["waterway_river", "waterway_other", "waterway_tunnel"]);
-const HIDDEN_LAYER = /^poi_|^building-3d$|one_way_arrow/;
+// natural_earth is the grey shaded-relief raster of the country view: it made the land read grey and hatched.
+const HIDDEN_LAYER = /^poi_|^building-3d$|one_way_arrow|^natural_earth$|^park_outline$/;
 
 function brandRoadColor(id: string): string | null {
   // Same blue-grey streets as the production (Google) results map: white streets vanish on its light land.
@@ -87,8 +89,10 @@ function brandRoadColor(id: string): string | null {
 function brandLayer(layer: StyleLayer): StyleLayer | null {
   if (HIDDEN_LAYER.test(layer.id)) return null;
   const fill = BRAND_FILLS[layer.id];
-  if (fill && layer.type === "background") return { ...layer, paint: { ...layer.paint, "background-color": fill } };
-  if (fill && layer.type === "fill") return { ...layer, paint: { ...layer.paint, "fill-color": fill } };
+  // Land: mint from country to district zoom, easing to the light grey of built-up streets at street zoom (the
+  // production map is grey where it is urban and mint where it is green; parks and grass stay mint on top).
+  if (fill && layer.type === "background") return { ...layer, paint: { ...layer.paint, "background-color": ["interpolate", ["linear"], ["zoom"], 11.5, fill, 13.5, "#f3f4f4"] } };
+  if (fill && layer.type === "fill") return { ...layer, paint: { ...layer.paint, "fill-color": fill, ...(layer.id === "park" ? { "fill-outline-color": "rgba(0,0,0,0)" } : {}) } };
   if (layer.type === "line" && BRAND_WATERWAYS.has(layer.id)) return { ...layer, paint: { ...layer.paint, "line-color": "#83d7ea" } };
   if (layer.type === "line" && layer["source-layer"] === "transportation") {
     const color = brandRoadColor(layer.id);

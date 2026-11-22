@@ -28,7 +28,7 @@ export function BranchCard({branch,locale,rank,distanceKm}:{branch:BrandBranch;l
    {rank!=null&&<span aria-hidden="true" className="absolute -left-1.5 -top-1.5 hidden h-[22px] w-[22px] items-center justify-center rounded-full bg-[#162543] text-[10px] font-bold text-white ring-2 ring-white lg:flex">{rank}</span>}
   </span>
   <div className="flex min-w-0 flex-1 flex-col gap-1">
-   <h3 className="text-[15px] font-bold leading-[1.15] text-[#111827]">{rank!=null&&<span className="text-[#68778d] lg:hidden">{rank}. </span>}
+   <h3 className="text-[15px] font-bold leading-[1.15] text-[#111827]">
     <a href={href} className={`relative z-10 break-words hover:text-[#009FD9] ${ring} rounded`}>{branch.name}</a></h3>
    <RatingLine average={branch.rating} count={branch.ratingCount} en={en} compact/>
    <p data-brand-branch-area className="flex min-w-0 items-center gap-1 text-[12.5px] font-medium text-[#68778d]"><MapPin aria-hidden="true" className="h-3.5 w-3.5 shrink-0"/><span className="truncate">{branch.area}</span></p>
