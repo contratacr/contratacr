@@ -9,7 +9,7 @@ begin;
 -- Accent/case/punctuation-insensitive text used to compare a service with catalogue names.
 create or replace function public.pro_lead_quick_quote_norm(p_text text) returns text
 language sql immutable security invoker set search_path=public,pg_temp as $$
- select btrim(regexp_replace(translate(lower(coalesce(p_text,'')),'áàäâéèëêíìïîóòöôúùüûñç','aaaaeeeeiiiioooouuuunc'),'[^a-z0-9]+',' ','g')) $$;
+ select btrim(regexp_replace(translate(lower(coalesce(p_text,'')),'áàäéèëêíìïîóòöôúùüûñçâ','aaaeeeeiiiioooouuuunca'),'[^a-z0-9]+',' ','g')) $$;
 
 -- Best catalogue match (active items only): exact name 100, one name contains the other 80, otherwise the share
 -- of the service's significant words (4+ letters) found in the name (at least half, up to 70). Services before

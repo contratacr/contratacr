@@ -5,7 +5,7 @@
 -- Modules, in order:
 --   contact-fields-local.sql sha256:3a094b9aa41e
 --   operations-schedule-time-local.sql sha256:c50cf11472d5
---   lead-quick-quote-local.sql sha256:c8d9889fd9c9
+--   lead-quick-quote-local.sql sha256:15bb9e6141d1
 -- ===== contact-fields-local.sql =====
 -- LOCAL PRO ONLY. Ronda F2-B (2026-11-19), Houzz Pro parity row 05 (contact import and organization).
 --  * Company custom fields for customers (pro_clients): text, number, date or select (1-20 options),
@@ -839,7 +839,7 @@ begin;
 -- Accent/case/punctuation-insensitive text used to compare a service with catalogue names.
 create or replace function public.pro_lead_quick_quote_norm(p_text text) returns text
 language sql immutable security invoker set search_path=public,pg_temp as $$
- select btrim(regexp_replace(translate(lower(coalesce(p_text,'')),'áàäâéèëêíìïîóòöôúùüûñç','aaaaeeeeiiiioooouuuunc'),'[^a-z0-9]+',' ','g')) $$;
+ select btrim(regexp_replace(translate(lower(coalesce(p_text,'')),'áàäéèëêíìïîóòöôúùüûñçâ','aaaeeeeiiiioooouuuunca'),'[^a-z0-9]+',' ','g')) $$;
 
 -- Best catalogue match (active items only): exact name 100, one name contains the other 80, otherwise the share
 -- of the service's significant words (4+ letters) found in the name (at least half, up to 70). Services before
