@@ -29532,7 +29532,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 379,
+          "line": 380,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(event) => { if (!extra?.loginHref) irA(event, href); }}",
@@ -29540,7 +29540,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 439,
+          "line": 448,
           "tag": "div",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -29548,7 +29548,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 468,
+          "line": 477,
           "tag": "Link",
           "label": "{tNav(\"searchAria\")}",
           "handler": "{(event) => irA(event, \"/profesionales\")}",
@@ -29556,7 +29556,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 474,
+          "line": 483,
           "tag": "Link",
           "label": "{tNav(\"messages\")}",
           "handler": "{(event) => { if (user) irA(event, \"/mensajes\"); }}",
@@ -29564,7 +29564,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 491,
+          "line": 500,
           "tag": "button",
           "label": "{tNav(\"create\")}",
           "handler": "{() => { window.dispatchEvent(new Event(\"ccr:close-native-search\")); setCreateFrom(createDestination); }}",
@@ -29572,7 +29572,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 502,
+          "line": 511,
           "tag": "Link",
           "label": "{tNav(\"notifications\")}",
           "handler": "{(event) => { if (user) irA(event, \"/notificaciones\"); }}",
@@ -29580,7 +29580,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 520,
+          "line": 529,
           "tag": "Link",
           "label": "{tNav(\"panel\")}",
           "handler": "{(event) => irA(event, nativePanelHref)}",
@@ -29588,7 +29588,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 534,
+          "line": 543,
           "tag": "Link",
           "label": "{t(\"login\")}",
           "handler": "",
@@ -75508,15 +75508,15 @@
           "title": "\"native shell: five tabs with the right hrefs, or the classic bar when the directory is off\""
         },
         {
-          "line": 47,
+          "line": 48,
           "title": "\"native shell: hidden on place pages so it never covers their contact bar\""
         },
         {
-          "line": 49,
+          "line": 50,
           "title": "!(await directoryOn(page))"
         },
         {
-          "line": 54,
+          "line": 55,
           "title": "\"outside the native shell (mobile web) the tabs are never rendered\""
         }
       ]
