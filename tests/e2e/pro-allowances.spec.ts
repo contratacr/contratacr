@@ -110,6 +110,12 @@ for(const language of ['es','en'] as const)test(`Allowances: planned vs. chosen,
   expect((await customer.request.get(origin+api+'?'+new URLSearchParams({workId}),{headers:{'X-Pro-Expected-Actor':client.id}})).status()).toBe(403);
   expect((await other.request.get(origin+api+'?'+new URLSearchParams({requestId}),{headers:{'X-Pro-Expected-Actor':rival.id}})).status()).toBe(404);
   await post({action:'restore',actionId:crypto.randomUUID(),workId,id:lamp!.id,revision:3});
+  // Printable allowances sheet (owner only; no internal notes; never leaks to another account or the customer).
+  const printQuery='?'+new URLSearchParams({workId,lang:'es'});
+  const printed=await page.request.get('/api/pro/allowances-print'+printQuery,{headers:{'X-Pro-Expected-Actor':owner.id}});expect(printed.status()).toBe(200);
+  const printedHtml=await printed.text();expect(printedHtml).toContain('data-allowances-print');expect(printedHtml).toContain('data-allowances-print-total="');
+  expect((await other.request.get(origin+'/api/pro/allowances-print'+printQuery)).status()).toBe(404);
+  expect((await customer.request.get(origin+'/api/pro/allowances-print'+printQuery)).status()).toBe(403);
   // Customer read: off by default.
   const clientRead=async()=>{const r=await customer!.request.get(origin+api+'?'+new URLSearchParams({requestId}),{headers:{'X-Pro-Expected-Actor':client.id}});expect(r.status()).toBe(200);return await r.json() as ClientAllowances;};
   expect(await clientRead()).toEqual({visible:false});

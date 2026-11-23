@@ -15,6 +15,8 @@ function matches(input:TaskTemplateMutation,result:TaskTemplateResult){
  if(input.action!==result.action)return false;
  if(result.action==='apply')return input.action==='apply'&&result.templateId===input.templateId&&result.templateRevision===input.revision&&result.workId===input.workId&&equal(result.taskIds,input.newTaskIds);
  if(result.template.id!==input.templateId||result.template.revision!==input.revision+1||result.template.archived!==(input.action==='archive'))return false;
+ if(input.action==='append')return result.action==='append'&&result.added===input.selected.length&&result.template.count>=input.selected.length;
+ if(input.action==='tags')return equal((result.template.tags??[]).map(t=>t.toLowerCase()).sort(),input.tags.map(t=>t.toLowerCase()).sort());
  if(input.action==='save')return result.template.name===input.name&&result.template.notes===input.notes&&result.template.count===input.rows.length;
  if(input.action==='capture')return result.template.name===input.name&&result.template.notes===input.notes&&result.template.count===input.selected.length;
  return true;

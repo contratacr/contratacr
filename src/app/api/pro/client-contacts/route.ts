@@ -30,7 +30,7 @@ export async function POST(req:Request){
   let input;try{input=contactsInputSchema.parse(await proBoundedJson(req,1048576));}catch{return proFail(400,'Revise los datos del archivo.');}
   if(input.action==='preview'){const r=await a.db.rpc('pro_contacts_preview',{p_owner:a.user.id,p_rows:input.rows});if(r.error)return proDbError(r.error,'Los clientes cambiaron.');return Response.json(contactPreviewSchema.parse(r.data),{headers});}
   const r=await a.db.rpc('pro_contacts_mutate',{p_owner:a.user.id,p_input:input});
-  if(r.error){if(r.error.hint==='pro_contact_merge_records')return Response.json({error:'Ese cliente tiene trabajos, cotizaciones, facturas u oportunidades: consérvelo a él y combine el otro.',reason:'merge_records'},{status:400,headers});return proDbError(r.error,'Los clientes cambiaron en otra pestaña. Recargue y vuelva a revisar.');}
+  if(r.error){if(r.error.hint==='pro_contact_merge_records'){let blockers:unknown[]=[];try{const parsed=JSON.parse(String(r.error.details??'[]'));if(Array.isArray(parsed))blockers=parsed.slice(0,50);}catch{}return Response.json({error:'Ese cliente tiene registros que no se pueden trasladar: consérvelo a él y combine el otro.',reason:'merge_records',blockers},{status:400,headers});}return proDbError(r.error,'Los clientes cambiaron en otra pestaña. Recargue y vuelva a revisar.');}
   return Response.json(r.data,{headers});
  }catch{return proFail(503,'No se pudo guardar. Reintente: no se duplicará.');}
 }

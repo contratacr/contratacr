@@ -59,8 +59,17 @@ for(const language of ['es','en'] as const)test(`Round 10: customers import, boa
   const merged=(await f.db.from('pro_clients').select('id,archived,phone,notes').in('id',[f.clientId,dupId]).eq('user_id',owner)).data!;
   expect(merged.find(c=>c.id===dupId)!.archived).toBe(true);expect(merged.find(c=>c.id===f.clientId)!.phone).toBe('8888-1234');expect(merged.find(c=>c.id===f.clientId)!.notes).toContain('Prefiere WhatsApp');
   await shot(page,`r10-contacts-merge-${language}`,project);
-  // The job's customer keeps its records; refusing to archive it is enforced by the server (400 + reason).
-  const refuse=await page.request.post('/api/pro/client-contacts',{headers:{Origin:origin},data:{action:'merge',actionId:crypto.randomUUID(),revision:rev+2,keepId:created[0].id,mergeId:f.clientId}});expect(refuse.status()).toBe(400);expect((await refuse.json()).reason).toBe('merge_records');
+  // Row 05: a job WITHOUT account movements moves to the kept customer on merge (second duplicate, same e-mail).
+  const dup2='r10-dup2-'+id,rev2=(await f.db.from('pro_workspace_core').select('revision').eq('user_id',owner).single()).data!.revision as number;
+  expect((await f.db.rpc('pro_mutate_catalog',{p_user:owner,p_kind:'clients',p_rows:[{id:dup2,name:'Cliente S. '+id,email:'cliente.s.'+id+'@example.test',phone:'',notes:'',archived:false}],p_revision:rev2,p_movements:[],p_importing:true})).error).toBeNull();
+  const jobId2=crypto.randomUUID();
+  await f.db.from('pro_work').insert({user_id:owner,id:jobId2,client:'Cliente S. '+id,service:'Pintura '+id,stage:'new',start:'',end:'',clientId:dup2,cancelled:false}).throwOnError();
+  const moved=await page.request.post('/api/pro/client-contacts',{headers:{Origin:origin},data:{action:'merge',actionId:crypto.randomUUID(),revision:rev2+1,keepId:f.clientId,mergeId:dup2}});expect(moved.status()).toBe(200);
+  expect((await f.db.from('pro_work').select('clientId').eq('user_id',owner).eq('id',jobId2).single()).data!.clientId).toBe(f.clientId);
+  // A job WITH account movements blocks the merge, and the answer lists what blocked it (nothing moves).
+  await f.db.from('pro_client_entries').insert({user_id:owner,id:crypto.randomUUID(),client_id:f.clientId,work_id:f.workId,kind:'agreement',amount_cents:100000,label:'Acuerdo',request_hash:'r10-'+id}).throwOnError();
+  // A customer with account movements is never archived; refusing to archive it is enforced by the server (400 + reason).
+  const refuse=await page.request.post('/api/pro/client-contacts',{headers:{Origin:origin},data:{action:'merge',actionId:crypto.randomUUID(),revision:rev2+2,keepId:created[0].id,mergeId:f.clientId}});expect(refuse.status()).toBe(400);const refused=await refuse.json();expect(refused.reason).toBe('merge_records');expect(refused.blockers.some((x:{kind:string;reason?:string})=>x.kind==='work'&&x.reason==='entries')).toBe(true);
   // (3) Tags and export (CSV for Excel, filtered by tag).
   await organizer.getByRole('tab',{name:tr('Etiquetas y exportar','Tags and export')}).click();
   await organizer.locator('[data-contacts-export-tag]').fill('vip');const download=page.waitForEvent('download',{timeout:60000}).catch(()=>null);await organizer.locator('[data-contacts-export]').click();

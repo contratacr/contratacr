@@ -51,6 +51,6 @@ export async function POST(req:Request){
   const a=await actor(req);if(a.error)return a.error;
   const limited=await enforceRateLimit(req,'task-templates-'+a.user.id,60,60000);if(limited)return limited;
   let input;try{input=taskTemplateMutationSchema.parse(await bounded(req));}catch(cause){return fail(cause instanceof RangeError?413:400,'Revise la plantilla.');}
-  const result=await a.db.rpc('pro_task_templates_mutate',{p_actor:a.user.id,p_input:input});if(result.error)return dbError(result.error);return Response.json(result.data,{headers});
+  const result=await a.db.rpc(input.action==='append'||input.action==='tags'?'pro_task_template_extend':'pro_task_templates_mutate',{p_actor:a.user.id,p_input:input});if(result.error)return dbError(result.error);return Response.json(result.data,{headers});
  }catch{return fail(503,'No se pudo comprobar el guardado. Reintente la misma operación.');}
 }

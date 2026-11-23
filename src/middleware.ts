@@ -172,7 +172,7 @@ export async function middleware(request: NextRequest) {
     }
     // Private print/file routes own their stricter per-response content policy (Fix 13: every *-print route).
     // MFA errors still receive the ordinary API defaults.
-    return conCabecerasDeSeguridad(mfaResponse ?? roleResponse ?? forward, !mfaResponse && !roleResponse && /^\/api\/pro\/(?:invoice-print|payment-receipt-print|quote-print|work-changes-print|selections-print|contract-print|payment-plan-print|purchase-order-print|client-statement-print|work-files|team-task-discussion|company-files|daily-log-files)\/?$/.test(pathname));
+    return conCabecerasDeSeguridad(mfaResponse ?? roleResponse ?? forward, !mfaResponse && !roleResponse && /^\/api\/pro\/(?:invoice-print|payment-receipt-print|quote-print|work-changes-print|selections-print|allowances-print|contract-print|payment-plan-print|purchase-order-print|client-statement-print|work-files|team-task-discussion|company-files|daily-log-files)\/?$/.test(pathname));
   }
 
   // www.contratacr.com NO SE REDIRIGE (probado y deshecho el 1-oct-2026).

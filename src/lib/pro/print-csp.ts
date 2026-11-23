@@ -5,7 +5,7 @@
  * (it wins over the global table), and the route uses that nonce for its print button. Edge-safe.
  */
 export const PRINT_NONCE_HEADER='x-ccr-print-nonce';
-export const MIDDLEWARE_PRINT_ROUTES=/^\/api\/pro\/(?:quote-print|work-changes-print|selections-print|contract-print|payment-plan-print|purchase-order-print|client-statement-print)\/?$/;
+export const MIDDLEWARE_PRINT_ROUTES=/^\/api\/pro\/(?:quote-print|work-changes-print|selections-print|allowances-print|contract-print|payment-plan-print|purchase-order-print|client-statement-print)\/?$/;
 export const printContentPolicy=(nonce:string)=>`default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'`;
 export const newPrintNonce=()=>crypto.randomUUID().replaceAll('-','');
 /** The nonce the middleware issued for this request (only its own 32-hex format), else a fresh one. */

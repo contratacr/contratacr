@@ -198,7 +198,10 @@ function AllowancesSession({accountId,workId,onStateChange,onOpenChanges}:{accou
   {dialogNode}
   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
    <div className="min-w-0"><h3 className="text-lg font-bold text-[#162543]">{c.title}</h3><p className="mt-1 text-sm text-[#52627a]">{c.intro}</p></div>
-   <Button type="button" className="min-h-11 shrink-0" disabled={busy||conflict||!!form} onClick={()=>open({mode:'create',item:null,draft:emptyDetails,initial:emptyDetails})}>{c.add}</Button>
+   <div className="flex shrink-0 flex-wrap gap-2">
+    {visible.length>0&&<a data-allowances-print href={'/api/pro/allowances-print?'+new URLSearchParams({workId,lang:en?'en':'es'})} target="_blank" rel="noopener" className="inline-flex min-h-11 items-center rounded-xl border border-[#d7e1ea] bg-white px-4 text-sm font-semibold text-[#162543] hover:border-[#008bb5]">{en?'Print allowances':'Imprimir montos previstos'}</a>}
+    <Button type="button" className="min-h-11 shrink-0" disabled={busy||conflict||!!form} onClick={()=>open({mode:'create',item:null,draft:emptyDetails,initial:emptyDetails})}>{c.add}</Button>
+   </div>
   </div>
   <dl data-allowance-totals className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
    <Stat label={c.planned} value={money(t.plannedCents)} id="planned"/>

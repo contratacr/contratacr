@@ -29,6 +29,22 @@ import {ContactFieldsManager} from './client-contact-extras';
 const field='mt-1 min-h-11 w-full rounded-xl border border-[#d7e1ea] bg-white px-3 text-base text-[#162543]';
 const card='min-w-0 rounded-2xl border border-[#d7e1ea] bg-white p-4';
 const MAX_FILE=20*1024*1024;
+type MergeBlocker={kind:string;table?:string;count?:number;id?:string;name?:string;reason?:string};
+const MERGE_TABLE_LABEL:Record<string,[string,string]>={pro_client_entries:['movimientos de cuenta','account movements'],pro_invoice_drafts:['facturas','invoices'],pro_client_fiscal_settings:['datos fiscales propios','own tax details']};
+function mergeBlockedMessage(name:string,blockers:MergeBlocker[],en:boolean){
+ const parts:string[]=[];
+ const works=blockers.filter(b=>b.kind==='work');
+ if(works.length){const names=works.slice(0,3).map(w=>`"${w.name||w.id}"`).join(', ');const more=works.length>3?(en?` and ${works.length-3} more`:` y ${works.length-3} más`):'';
+  parts.push(en?`${works.length===1?'1 job':works.length+' jobs'} that cannot change customer (${names}${more})`:`${works.length===1?'1 trabajo':works.length+' trabajos'} que no se pueden pasar a otro cliente (${names}${more})`);}
+ for(const b of blockers){
+  if(b.kind==='table'){const l=MERGE_TABLE_LABEL[b.table||'']??(en?['other records','other records']:['otros registros','otros registros']);parts.push(`${b.count} ${en?l[1]:l[0]}`);}
+  else if(b.kind==='quotes')parts.push(en?`${b.count} quotes already sent or resolved`:`${b.count} cotizaciones ya enviadas o resueltas`);
+  else if(b.kind==='quote_links')parts.push(en?`${b.count} quote links`:`${b.count} enlaces de cotización`);
+  else if(b.kind==='lead'||b.kind==='lead_other')parts.push(en?`${b.count??1} opportunities`:`${b.count??1} oportunidades`);
+ }
+ const list=parts.length?parts.join('; '):(en?'records that cannot move':'registros que no se pueden trasladar');
+ return en?`"${name}" cannot be merged yet because of: ${list}. Nothing was changed. Keep "${name}" and merge the other customer instead.`:`No se puede combinar "${name}" todavía por: ${list}. No se cambió nada. Conserve a "${name}" y combine al otro cliente.`;
+}
 async function post(url:string,actor:string,body:unknown){const r=await fetch(url,{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json','X-Pro-Expected-Actor':actor},body:JSON.stringify(body)});let data:unknown=null;try{data=await r.json();}catch{}return {status:r.status,ok:r.ok,data:data as Record<string,unknown>|null};}
 async function get(url:string,actor:string){const r=await fetch(url,{cache:'no-store',headers:{'X-Pro-Expected-Actor':actor}});if(!r.ok)throw Error(String(r.status));return r.json();}
 
@@ -62,9 +78,9 @@ export function ContactsOrganizer({actor,onClose,onChanged}:{actor:string;onClos
    setFile(null);setPreview(null);await load();onChanged();}
   catch{setError(t('No se pudo confirmar la importación. Intente de nuevo.','Could not confirm the import. Try again.'));}finally{setBusy(false);}}
  async function merge(keepId:string,mergeId:string,keepName:string,mergeName:string){if(!info||busy)return;
-  if(!(await confirm({title:t(`¿Combinar "${mergeName}" en "${keepName}"?`,`Merge "${mergeName}" into "${keepName}"?`),description:t('El cliente conservado recibe los datos que le falten, las notas y las etiquetas. El otro queda archivado (no se borra) y su historial se conserva.','The kept customer receives the missing details, notes and tags. The other one is archived (not deleted) and its history is kept.'),confirmLabel:t('Combinar','Merge'),cancelLabel:t('Cancelar','Cancel')})).confirmed)return;
+  if(!(await confirm({title:t(`¿Combinar "${mergeName}" en "${keepName}"?`,`Merge "${mergeName}" into "${keepName}"?`),description:t('El cliente conservado recibe los datos que le falten, las notas, las etiquetas, los campos y los teléfonos o correos adicionales, y los trabajos y cotizaciones en borrador del otro (si no tienen movimientos de cuenta). El otro queda archivado (no se borra) y su historial se conserva.','The kept customer receives the missing details, notes, tags, custom fields, additional phones and e-mails, and the jobs and draft quotes of the other one (when they have no account movements). The other one is archived (not deleted) and its history is kept.'),confirmLabel:t('Combinar','Merge'),cancelLabel:t('Cancelar','Cancel')})).confirmed)return;
   setBusy(true);setError('');setNotice('');try{const r=await post('/api/pro/client-contacts',actor,{action:'merge',actionId:crypto.randomUUID(),revision:info.revision,keepId,mergeId});
-   if(r.status===400&&r.data?.reason==='merge_records'){setError(t(`"${mergeName}" tiene trabajos, cotizaciones, facturas o solicitudes: consérvelo a él y combine el otro.`,`"${mergeName}" has jobs, quotes, invoices or leads: keep it and merge the other one.`));return;}
+   if(r.status===400&&r.data?.reason==='merge_records'){setError(mergeBlockedMessage(mergeName,(r.data?.blockers as MergeBlocker[]|undefined)??[],en));return;}
    if(r.status===409){setError(t('Los clientes cambiaron. Se recargó la lista.','Customers changed. The list was reloaded.'));await load();return;}
    if(!r.ok)throw Error();setNotice(t('Clientes combinados.','Customers merged.'));await load();onChanged();}
   catch{setError(t('No se pudo combinar. Reintente.','Could not merge. Try again.'));}finally{setBusy(false);}}
