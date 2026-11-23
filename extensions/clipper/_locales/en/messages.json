@@ -1,0 +1,8 @@
+{
+  "extName": {"message": "ContrataCR Pro · Add to catalog"},
+  "extDescription": {"message": "Sends the open product page to \"Add from link\" in your ContrataCR Pro catalog. You review the data before saving."},
+  "actionTitle": {"message": "Add to my ContrataCR catalog"},
+  "send": {"message": "Add to my catalog"},
+  "needHttps": {"message": "Open a product page (https)."},
+  "note": {"message": "Reads the public data your browser already shows. You review it before saving."}
+}

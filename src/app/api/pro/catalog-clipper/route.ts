@@ -1,7 +1,7 @@
 import {z} from 'zod';
 import {enforceRateLimit} from '@/lib/rate-limit';
 import {proActor,proBoundedJson,proDbError,proFail,proRouteHeaders as headers,proSameOrigin} from '@/lib/pro/route-common';
-import {clipperUrlSchema} from '@/lib/pro/integrations/clipper/parse';
+import {clipMetadataSchema,clipperUrlSchema} from '@/lib/pro/integrations/clipper/parse';
 import {readProductLink} from '@/lib/pro/integrations/clipper/service';
 import {PRO_ENABLED} from '@/lib/pro/enabled';
 
@@ -12,6 +12,8 @@ import {PRO_ENABLED} from '@/lib/pro/enabled';
 const id=z.string().uuid();
 const schema=z.discriminatedUnion('action',[
  z.object({action:z.literal('read'),actionId:id,id,url:clipperUrlSchema,source:z.enum(['app','extension'])}).strict(),
+ // Row 60: data the owner's browser already read (bookmarklet / extension). Nothing is fetched by the server.
+ z.object({action:z.literal('import'),actionId:id,id,url:clipperUrlSchema,source:z.enum(['bookmarklet','extension']),metadata:clipMetadataSchema}).strict(),
  z.object({action:z.literal('review'),id,decision:z.enum(['saved','discarded']),productId:z.string().min(1).max(160).nullable()}).strict(),
 ]);
 export async function GET(req:Request){
@@ -25,8 +27,15 @@ export async function POST(req:Request){
  try{
   const a=await proActor(req);if(a.error)return a.error;
   const limited=await enforceRateLimit(req,'catalog-clipper-'+a.user.id,20,60000);if(limited)return limited;
-  let input;try{input=schema.parse(await proBoundedJson(req,4096));}catch(cause){return Response.json({error:'Pegue un enlace https de una página pública de producto.',reason:'invalid_url'},{status:cause instanceof RangeError?413:400,headers});}
+  let input;try{input=schema.parse(await proBoundedJson(req,16384));}catch(cause){return Response.json({error:'Pegue un enlace https de una página pública de producto.',reason:'invalid_url'},{status:cause instanceof RangeError?413:400,headers});}
   if(input.action==='review'){const result=await a.db.rpc('pro_clip_review',{p_actor:a.user.id,p_input:input});if(result.error)return proDbError(result.error,'El enlace ya se revisó.');return Response.json(result.data,{headers});}
+  if(input.action==='import'){
+   const metadata={...input.metadata,source:'mixed' as const,simulated:false,image:input.metadata.image&&/^https:\/\//i.test(input.metadata.image)?input.metadata.image:null};
+   if(!metadata.name.trim()&&metadata.price===null)return Response.json({error:'La página no publica datos de producto.',reason:'no_data'},{status:422,headers});
+   const result=await a.db.rpc('pro_clip_create',{p_actor:a.user.id,p_input:{actionId:input.actionId,id:input.id,url:input.url,host:new URL(input.url).hostname,source:input.source,mode:'browser',metadata}});
+   if(result.error)return proDbError(result.error,'Ese enlace ya se agregó.');
+   return Response.json(result.data,{headers});
+  }
   const read=await readProductLink(a.db,a.user.id,input.url);
   if(!read.result.ok)return Response.json({error:read.result.reason==='robots'?'Ese sitio no permite leer la página (robots.txt).':read.result.reason==='no_data'?'La página no publica datos de producto (Open Graph / schema.org).':'No se pudo leer la página.',reason:read.result.reason,mode:read.mode},{status:422,headers});
   const result=await a.db.rpc('pro_clip_create',{p_actor:a.user.id,p_input:{actionId:input.actionId,id:input.id,url:input.url,host:new URL(input.url).hostname,source:input.source,mode:read.mode,metadata:read.result.metadata}});

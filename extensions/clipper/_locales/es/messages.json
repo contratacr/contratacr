@@ -1,0 +1,8 @@
+{
+  "extName": {"message": "ContrataCR Pro · Agregar al catálogo"},
+  "extDescription": {"message": "Envía la página de producto abierta a \"Agregar desde enlace\" de su catálogo ContrataCR Pro. Usted revisa los datos antes de guardar."},
+  "actionTitle": {"message": "Agregar a mi catálogo ContrataCR"},
+  "send": {"message": "Agregar a mi catálogo"},
+  "needHttps": {"message": "Abra una página de producto (https)."},
+  "note": {"message": "Se leen los datos públicos que su navegador ya muestra. Usted los revisa antes de guardar."}
+}

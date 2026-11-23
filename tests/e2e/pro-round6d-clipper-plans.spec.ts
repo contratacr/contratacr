@@ -82,9 +82,17 @@ for(const language of ['es','en'] as const)test(`Round 6D: product clipper and f
   // ---- (3) Scan import: OBJ (local parser) and USDZ (simulated parser)
   const obj=['v 0 0 0','v 5 0 0','v 5 0 4','v 0 0 4','v 0 2.6 0','v 5 2.6 0','v 5 2.6 4','v 0 2.6 4'].join('\n');
   await plans.locator('[data-floor-scan-input]').setInputFiles({name:'sala.obj',mimeType:'model/obj',buffer:Buffer.from(obj)});
+  // Row 65: the dimensions are read and shown BEFORE importing; only then the plan is created.
+  await expect(plans.locator('[data-floor-scan-measures]')).toContainText('5',{timeout:60000});await plans.locator('[data-floor-scan-import]').click();
   await expect(plans.locator('[data-floor-total]')).toContainText('20 m²',{timeout:60000});await expect(plans.locator('[data-floor-name]')).toHaveValue('sala');
-  await plans.locator('[data-floor-scan-input]').setInputFiles({name:'cuarto.usdz',mimeType:'model/vnd.usdz+zip',buffer:Buffer.from([0x50,0x4b,0x03,0x04,9,9,9,9])});
-  await expect(plans.locator('[data-floor-scan-note]')).toContainText(t('SIMULADO','SIMULATED'),{timeout:60000});
+  // A real USDZ container holding a binary .usdc (what RoomPlan exports): no crate reader, so it stays SIMULATED and labelled.
+  const entry=Buffer.from('room.usdc'),payload=Buffer.from('PXR-USDC....'),local=Buffer.alloc(30),central=Buffer.alloc(46),eocd=Buffer.alloc(22);
+  local.writeUInt32LE(0x04034b50,0);local.writeUInt32LE(payload.length,18);local.writeUInt32LE(payload.length,22);local.writeUInt16LE(entry.length,26);
+  central.writeUInt32LE(0x02014b50,0);central.writeUInt32LE(payload.length,20);central.writeUInt32LE(payload.length,24);central.writeUInt16LE(entry.length,28);
+  eocd.writeUInt32LE(0x06054b50,0);eocd.writeUInt16LE(1,8);eocd.writeUInt16LE(1,10);eocd.writeUInt32LE(46+entry.length,12);eocd.writeUInt32LE(30+entry.length+payload.length,16);
+  await plans.locator('[data-floor-scan-input]').setInputFiles({name:'cuarto.usdz',mimeType:'model/vnd.usdz+zip',buffer:Buffer.concat([local,entry,payload,central,entry,eocd])});
+  await expect(plans.locator('[data-floor-scan-note]').first()).toContainText(t('SIMULADO','SIMULATED'),{timeout:60000});await plans.locator('[data-floor-scan-import]').click();
+  await expect(plans.locator('[data-floor-scan-note]').first()).toContainText(t('SIMULADO','SIMULATED'),{timeout:60000});
   const scans=(await f.db.from('pro_room_scans').select('format,parser').eq('owner_id',f.owner.id).order('created_at')).data!;expect(scans).toEqual([{format:'obj',parser:'local'},{format:'usdz',parser:'simulado'}]);
   await expectNoHorizontalOverflow(page);await plans.scrollIntoViewIfNeeded();await shot(page,`r6d-floor-scan-${language}`,project);
   expect(errors()).toEqual([]);

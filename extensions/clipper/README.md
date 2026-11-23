@@ -3,16 +3,16 @@
 Ronda 6D (fila 60 del registro de paridad). Andamiaje de una extensión Manifest V3 para Chrome/Edge que envía la
 página de producto abierta a **Empresa › Mis artículos › Agregar desde enlace**.
 
-## Cómo funciona
+## Cómo funciona (v0.2)
 1. El usuario abre una página de producto (https) y pulsa el botón de la extensión.
-2. La extensión **no lee la página** ni llama al API: solo abre `https://contratacr.com/es/dashboard/pro?tab=pro_company&empresa=articulos&clip=<enlace>`.
-3. La aplicación muestra el enlace ya pegado; al pulsar «Leer enlace» (con la sesión normal del usuario, mismo origen) llama al **mismo endpoint** del botón interno,
-   `POST /api/pro/catalog-clipper` con `source:"extension"`. El servidor lee solo datos públicos (Open Graph /
-   schema.org) respetando `robots.txt` (en local devuelve datos de ejemplo marcados «Simulado»).
-4. El dueño revisa y corrige nombre, código, costo y precio, y guarda con el escritor del catálogo.
+2. La extensión lee, **en el navegador del propio usuario** (`chrome.scripting` con `activeTab`, solo al pulsar), las etiquetas Open Graph y el JSON-LD de schema.org que la página ya muestra, con el mismo lector que el marcador (bookmarklet) de la aplicación.
+3. Abre `https://contratacr.com/<es|en>/dashboard/pro?tab=pro_company&empresa=articulos&clip=<enlace>#clipdata=<base64url JSON, máx. 8 KB>`. El **hash nunca llega a ningún servidor**. El idioma (`es`/`en`) sale del idioma del navegador (`_locales/es`, `_locales/en`).
+4. La aplicación valida el hash (`decodeClipData`), muestra los datos con la marca «Capturado desde su navegador, sin lectura del servidor» y, al pulsar «Leer enlace», los guarda con `POST /api/pro/catalog-clipper` acción `import` (mismo origen, sesión normal, `source` extensión/marcador, `mode` navegador). Si no hay hash, la aplicación lee el enlace en el servidor con el lector SSRF-seguro (`product_clipper`, apagado salvo `PRO_CLIPPER_ENABLE_FETCH=1`).
+5. El dueño revisa y corrige nombre, código, costo y precio, y guarda con el escritor del catálogo.
 
-Permisos: solo `activeTab` (leer la URL de la pestaña activa al pulsar). Sin `host_permissions`, sin scripts de
-contenido, sin acceso a cookies. Esto evita CSRF entre orígenes: el endpoint exige mismo origen.
+La extensión **nunca envía nada** por sí misma ni llama al API: solo abre la aplicación. Permisos: `activeTab` y `scripting` (sin `host_permissions`, sin scripts de contenido permanentes, sin cookies).
+
+El marcador (bookmarklet) equivalente está en Empresa › Mis artículos › Agregar desde enlace › «Capturar desde su navegador» y no requiere publicar nada.
 
 ## Probar en local (sin publicar)
 1. Cambie `APP_ORIGIN` en `popup.js` a `http://127.0.0.1:3185`.

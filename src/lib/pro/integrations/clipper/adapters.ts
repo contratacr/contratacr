@@ -31,24 +31,43 @@ export class MockClipper implements ProductClipper{
  }
 }
 type Fetcher=(url:string,init:RequestInit)=>Promise<Response>;
+export const CLIPPER_MAX_REDIRECTS=3;
 export class RemoteClipper implements ProductClipper{
  constructor(private fetcher:Fetcher,private timeoutMs=8000,private agent=CLIPPER_USER_AGENT){}
- private async get(url:string,accept:string){
+ private async once(url:string,accept:string){
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),this.timeoutMs);
   try{return await this.fetcher(url,{headers:{'user-agent':this.agent,accept},redirect:'error',signal:controller.signal,cache:'no-store'});}finally{clearTimeout(timer);}
+ }
+ /** Follows at most CLIPPER_MAX_REDIRECTS redirects; EVERY hop goes through the same (SSRF-guarded) fetcher and must stay on https. */
+ private async get(url:string,accept:string):Promise<{response:Response;finalUrl:string}>{
+  let current=url;
+  for(let hop=0;hop<=CLIPPER_MAX_REDIRECTS;hop++){
+   const response=await this.once(current,accept),location=response.headers.get('location');
+   if(![301,302,303,307,308].includes(response.status)||!location)return {response,finalUrl:current};
+   const next=new URL(location,current);
+   if(next.protocol!=='https:')throw new Error('redirect_scheme');
+   next.hash='';current=next.toString();
+  }
+  throw new Error('redirect_limit');
+ }
+ private async allowed(url:URL){
+  const robots=await this.get(url.origin+'/robots.txt','text/plain').then(r=>r.response);
+  // 4xx robots = no restrictions (RFC 9309 §2.3.1.3); 5xx/unreachable = assume complete disallow.
+  const text=robots.ok?(await robots.text()).slice(0,500000):robots.status>=500?'User-agent: *\nDisallow: /':'';
+  return robotsAllows(text,this.agent,url.pathname+url.search);
  }
  async read(url:string):Promise<ClipResult>{
   const target=new URL(url);
   try{
-   const robots=await this.get(target.origin+'/robots.txt','text/plain');
-   // 4xx robots = no restrictions (RFC 9309 §2.3.1.3); 5xx/unreachable = assume complete disallow.
-   const text=robots.ok?(await robots.text()).slice(0,500000):robots.status>=500?'User-agent: *\nDisallow: /':'';
-   if(!robotsAllows(text,this.agent,target.pathname+target.search))return {ok:false,reason:'robots'};
-   const page=await this.get(url,'text/html');
+   if(!await this.allowed(target))return {ok:false,reason:'robots'};
+   const {response:page,finalUrl}=await this.get(url,'text/html');
+   // A redirect to another origin: the robots.txt of that origin decides too.
+   const final=new URL(finalUrl);
+   if(final.origin!==target.origin&&!await this.allowed(final))return {ok:false,reason:'robots'};
    if(!page.ok)return {ok:false,reason:'http'};
    if(!(page.headers.get('content-type')??'').includes('text/html'))return {ok:false,reason:'not_html'};
    if(Number(page.headers.get('content-length')??0)>1_500_000)return {ok:false,reason:'too_large'};
-   const html=(await page.text()).slice(0,1_500_000),metadata=parseProductPage(html,url,false);
+   const html=(await page.text()).slice(0,1_500_000),metadata=parseProductPage(html,finalUrl,false);
    return metadata.source==='none'?{ok:false,reason:'no_data'}:{ok:true,metadata};
   }catch(error){return {ok:false,reason:error instanceof RangeError?'too_large':'network'};}
  }

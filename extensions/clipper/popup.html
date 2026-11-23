@@ -1,12 +1,12 @@
 <!doctype html>
-<html lang="es">
+<html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>ContrataCR Clipper</title>
-<style>body{font:14px system-ui,sans-serif;color:#162543;width:300px;margin:12px}button{min-height:44px;width:100%;border:0;border-radius:999px;background:#007aa0;color:#fff;font-weight:600;font-size:14px}button:focus-visible{outline:2px solid #008bb5;outline-offset:2px}p{color:#52627a}#url{word-break:break-all;font-size:12px}</style></head>
+<style>body{font:14px system-ui,sans-serif;color:#162543;width:300px;margin:12px}button{min-height:44px;width:100%;border:0;border-radius:999px;background:#007aa0;color:#fff;font-weight:600;font-size:14px}button:disabled{opacity:.5}button:focus-visible{outline:2px solid #008bb5;outline-offset:2px}p{color:#52627a}#url{word-break:break-all;font-size:12px}</style></head>
 <body>
-<h1 style="font-size:16px">Agregar a mi catálogo</h1>
-<p>Se abrirá ContrataCR Pro con este enlace en «Agregar desde enlace». Nada se guarda hasta que usted lo revise.</p>
+<h1 id="title" style="font-size:16px"></h1>
+<p id="note"></p>
 <p id="url"></p>
-<button id="send" type="button">Abrir en ContrataCR Pro</button>
+<button id="send" type="button"></button>
 <script src="popup.js"></script>
 </body>
 </html>
