@@ -8,7 +8,7 @@
     "handlers": 360,
     "components": 604,
     "hooks": 29,
-    "specs": 537
+    "specs": 538
   },
   "dashboardTabs": [
     "pro_tools",
@@ -75249,6 +75249,15 @@
       ]
     },
     {
+      "file": "tests/e2e/pro-contact-merge-transfer.spec.ts",
+      "cases": [
+        {
+          "line": 10,
+          "title": "'Merging customers transfers records, extras, and refuses account movements'"
+        }
+      ]
+    },
+    {
       "file": "tests/e2e/pro-contracts.spec.ts",
       "cases": [
         {
@@ -78661,6 +78670,10 @@
         {
           "line": 75,
           "title": "'Task templates API: literal catalogue paging, preview dates, child-collision rollback and capacity without partial tasks'"
+        },
+        {
+          "line": 91,
+          "title": "'Task templates API (row 78): add a selection to an existing template, tags and tag search'"
         }
       ]
     },
