@@ -81340,11 +81340,11 @@
       "file": "tests/e2e/pro-file-import.spec.ts",
       "cases": [
         {
-          "line": 11,
+          "line": 12,
           "title": "'Drive adapter contract: sandbox, live selection and live protocol with a fake Google'"
         },
         {
-          "line": 40,
+          "line": 41,
           "title": "`Drive import in sandbox mode: batch, per-file result, idempotent retry [${language}]`"
         }
       ]
