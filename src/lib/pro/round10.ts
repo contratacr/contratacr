@@ -87,7 +87,7 @@ export const leadBoardInputSchema=z.discriminatedUnion('action',[
 ]);
 export type LeadBoardInput=z.infer<typeof leadBoardInputSchema>;
 const funnel={received:nint,meeting:nint,estimate:nint,won:nint,lost:nint,converted:nint};
-export const conversionReportSchema=z.object({from:day,to:day,group:z.enum(['channel','campaign']),rows:z.array(z.object({key:z.string(),name:z.string().nullable(),campaignChannel:z.string().nullable(),...funnel,conversionRate:z.number().nullable()})),totals:z.object(funnel),months:z.array(z.object({month:z.string(),received:nint,converted:nint}))});
+export const conversionReportSchema=z.object({from:day,to:day,group:z.enum(['channel','campaign','member']),rows:z.array(z.object({key:z.string(),name:z.string().nullable(),campaignChannel:z.string().nullable(),...funnel,conversionRate:z.number().nullable()})),totals:z.object(funnel),months:z.array(z.object({month:z.string(),received:nint,converted:nint}))});
 export type ConversionReport=z.infer<typeof conversionReportSchema>;
 // ===== Schedule links =====
 export const scheduleLinksSchema=z.object({workId:z.string(),revision:nint,tasks:z.array(z.object({id,title:z.string(),status:z.enum(['open','done']),assignee:z.string(),start:day,end:day,phaseId:id.nullable()})),

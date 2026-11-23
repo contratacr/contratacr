@@ -13,18 +13,18 @@ import {PRO_ENABLED} from '@/lib/pro/enabled';
 const day=z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const query=z.discriminatedUnion('view',[
  z.object({view:z.literal('board'),q:z.string().max(100).optional(),channel:z.string().max(40).optional(),hideLost:z.enum(['0','1']).optional()}).strict(),
- z.object({view:z.literal('conversion'),from:day,to:day,group:z.enum(['channel','campaign']),format:z.literal('csv').optional(),lang:z.enum(['es','en']).optional()}).strict(),
+ z.object({view:z.literal('conversion'),from:day,to:day,group:z.enum(['channel','campaign','member']),format:z.literal('csv').optional(),lang:z.enum(['es','en']).optional()}).strict(),
 ]);
 export async function GET(req:Request){
  if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const raw=proQuery(req),parsed=raw?query.safeParse(raw):null;if(!parsed?.success)return proFail(400,'Consulta inválida.');
   if(parsed.data.view==='board'){const r=await a.db.rpc('pro_lead_board_read',{p_owner:a.user.id,p_query:parsed.data.q??'',p_channel:parsed.data.channel||null,p_hide_lost:parsed.data.hideLost==='1'});if(r.error)return proDbError(r.error,'Las solicitudes cambiaron.');return Response.json(leadBoardSchema.parse(r.data),{headers});}
-  const r=await a.db.rpc('pro_lead_conversion_report',{p_owner:a.user.id,p_from:parsed.data.from,p_to:parsed.data.to,p_group:parsed.data.group});if(r.error)return proDbError(r.error,'Las solicitudes cambiaron.');
+  const r=parsed.data.group==='member'?await a.db.rpc('pro_lead_team_conversion_report',{p_owner:a.user.id,p_from:parsed.data.from,p_to:parsed.data.to}):await a.db.rpc('pro_lead_conversion_report',{p_owner:a.user.id,p_from:parsed.data.from,p_to:parsed.data.to,p_group:parsed.data.group});if(r.error)return proDbError(r.error,'Las solicitudes cambiaron.');
   const report=conversionReportSchema.parse(r.data);
   if(parsed.data.format==='csv'){const en=parsed.data.lang==='en';
-   const head=en?[report.group==='channel'?'Channel':'Campaign','Received','Reached meeting','Reached quote','Won','Lost','Converted to job','Conversion %']:[report.group==='channel'?'Canal':'Campaña','Recibidas','Llegaron a reunión','Llegaron a cotización','Ganadas','Perdidas','Convertidas en trabajo','Conversión %'];
-   const label=(k:string,n:string|null)=>n??(k==='unspecified'?(en?'No channel':'Sin canal'):k==='none'?(en?'No campaign':'Sin campaña'):builtinChannelLabel(k,en)??k);
+   const head=en?[report.group==='channel'?'Channel':report.group==='member'?'Team member':'Campaign','Received','Reached meeting','Reached quote','Won','Lost','Converted to job','Conversion %']:[report.group==='channel'?'Canal':report.group==='member'?'Responsable':'Campaña','Recibidas','Llegaron a reunión','Llegaron a cotización','Ganadas','Perdidas','Convertidas en trabajo','Conversión %'];
+   const label=(k:string,n:string|null)=>n??(k==='unspecified'?(en?'No channel':'Sin canal'):k==='none'?(en?'No campaign':'Sin campaña'):k==='unassigned'?(en?'Unassigned':'Sin responsable'):builtinChannelLabel(k,en)??k);
    const csv=excelCsv(head,[...report.rows.map(x=>[label(x.key,x.name),x.received,x.meeting,x.estimate,x.won,x.lost,x.converted,x.conversionRate===null?'':String(x.conversionRate).replace('.',en?'.':',')]),[en?'Total':'Total',report.totals.received,report.totals.meeting,report.totals.estimate,report.totals.won,report.totals.lost,report.totals.converted,'']]);
    return new Response(csv,{headers:{...headers,'Content-Type':'text/csv; charset=utf-8','Content-Disposition':`attachment; filename="conversion-${report.from}-${report.to}.csv"`}});}
   return Response.json(report,{headers});

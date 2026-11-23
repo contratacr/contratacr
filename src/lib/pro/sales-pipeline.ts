@@ -55,3 +55,13 @@ export const stageRulesInputSchema=z.discriminatedUnion('action',[
 ]);
 export const stageRulesResultSchema=z.object({action:z.enum(['set','clear']),revision:nint,stageId:stageId,followUpDays:z.number().int().min(1).max(90).nullable(),replayed:z.boolean().optional()}).strict();
 export type StageRulesRead=z.infer<typeof stageRulesReadSchema>;
+
+/** Row 07: expected close date per lead and the forecast grouped by close month (Costa Rica). Shared by the route, the UI and the specs. */
+const closeGroup=z.string().regex(/^(overdue|none|\d{4}-\d{2})$/);
+export const closeForecastSchema=z.object({today:day,
+ groups:z.array(z.object({group:closeGroup,count:nint,values:z.array(moneyRow),withoutValue:nint}).strict()).max(400),
+ items:z.array(z.object({kind:z.enum(['manual','request']),id:uuid,title:z.string().max(400),stageId:stageId,probability:z.number().int().min(0).max(100),currency:z.string().length(3).nullable(),
+  revenueCents:z.number().int().nullable(),closeOn:day.nullable(),revision:nint}).strict()).max(200)}).strict();
+export const closeDateInputSchema=z.object({actionId:uuid,kind:z.enum(['manual','request']),id:uuid,revision:nint,closeOn:day.nullable()}).strict();
+export const closeDateResultSchema=z.object({kind:z.enum(['manual','request']),id:uuid,closeOn:day.nullable(),revision:z.number().int().positive(),replayed:z.boolean().optional()}).strict();
+export type CloseForecast=z.infer<typeof closeForecastSchema>;
