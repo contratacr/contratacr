@@ -283,3 +283,12 @@ forzar esa demostración ni se repitieron pruebas de distribución física.
 Este registro modifica solamente un documento de la lista revisada. Se publica
 sin `[skip ci]`: sus planes y resultados deben aprobar y omitir los jobs pesados
 y despliegues, reutilizando la evidencia de aplicación compatible anterior.
+
+## Regresión local de Pro en CI — 23 de noviembre de 2026
+
+Los specs `tests/e2e/pro-*.spec.ts` (fuera de la regresión general) corren con `pro-local-regression.yml`. Su selector
+`scripts/ci/pro-local-plan.mjs` aplica esta política: base = último run exitoso cuyos fragmentos completos pasaron todos y que es
+ancestro del HEAD; solo specs Pro modificados o nuevos ejecutan solo esos specs; migraciones, SQL de Pro, código `pro`, helpers,
+configuración o ausencia de base compatible ejecutan el conjunto completo; un pase focal nunca sirve como base. Detalle y
+comandos en [ci-pro-local-regression.md](pro/ci-pro-local-regression.md). No cambia disparadores ni compuertas existentes.
+

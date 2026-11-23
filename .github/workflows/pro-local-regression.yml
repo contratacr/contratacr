@@ -1,0 +1,308 @@
+name: Pro Local Regression
+run-name: Pro Local Regression · ${{ github.event.inputs.scope || github.event_name }}
+
+# The tests/e2e/pro-*.spec.ts suite is excluded from regression-tests.yml (playwright.config.ts testIgnore):
+# it needs its own dev server on 127.0.0.1:3185 and the loopback Supabase stack (playwright.pro-local.config.ts).
+# This workflow rebuilds that stack the same way regression-tests.yml does and runs the suite in shards.
+# How to run it and what it selects: docs/pro/ci-pro-local-regression.md and docs/test-selection-policy.md.
+on:
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: Every Pro spec in shards, or only the specs named below
+        type: choice
+        default: full
+        options:
+          - full
+          - selected
+      specs:
+        description: 'Scope "selected": Pro spec names separated by spaces (for example pro-projects pro-tasks)'
+        type: string
+        default: ''
+      webkit:
+        description: Also run the webkit-mobile project (slower)
+        type: boolean
+        default: false
+  push:
+    branches:
+      - test
+    paths:
+      - .github/workflows/pro-local-regression.yml
+      - scripts/ci/pro-local-plan.mjs
+      - playwright.pro-local.config.ts
+      - playwright.config.ts
+      - package.json
+      - package-lock.json
+      - supabase/migrations/**
+      - docs/pro/sql/**
+      - scripts/pro/**
+      - src/lib/pro/**
+      - src/components/pro/**
+      - src/app/api/pro/**
+      - src/app/**/pro/**
+      - tests/e2e/pro-*.spec.ts
+      - tests/e2e/pro-local-stable-runtime.ts
+      - tests/e2e/seed.ts
+      - tests/e2e/disposable-account.ts
+      - tests/e2e/helpers.ts
+      - tests/e2e/helpers/**
+
+concurrency:
+  # Own local Supabase stack per job; a separate group keeps queued runs of other workflows from cancelling it.
+  group: contratacr-pro-local-regression
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+# Use the CLI default: official ECR, GHCR and source-image fallback.
+# An explicit registry override disables fallback when that registry throttles.
+
+jobs:
+  plan:
+    name: Select Pro checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      mode: ${{ steps.select.outputs.mode }}
+      run: ${{ steps.select.outputs.run }}
+      matrix: ${{ steps.select.outputs.matrix }}
+      filters: ${{ steps.select.outputs.filters }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Validate the selector
+        run: node --test tests/ci/pro-local-plan.test.mjs
+
+      - name: Find the last compatible successful full run
+        id: baseline
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # A focused pass is not a full pass: only a successful run whose full-suite shards all passed
+          # and whose commit is an ancestor of this one is evidence. Otherwise the selector runs everything.
+          base=""
+          while read -r id sha; do
+            [ -n "$id" ] || continue
+            git cat-file -e "$sha^{commit}" 2>/dev/null || continue
+            git merge-base --is-ancestor "$sha" "${{ github.sha }}" || continue
+            ok=$(gh run view "$id" --json jobs -q '[.jobs[] | select(.name | startswith("Pro local full shard"))] | (length > 0) and all(.conclusion == "success")')
+            if [ "$ok" = "true" ]; then base="$sha"; break; fi
+          done < <(gh run list --workflow=pro-local-regression.yml --branch test --status success --event push --limit 30 --json databaseId,headSha -q '.[] | "\(.databaseId) \(.headSha)"')
+          echo "base=$base" >> "$GITHUB_OUTPUT"
+          echo "Baseline: ${base:-none}"
+
+      - name: Select required Pro specs
+        id: select
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          DISPATCH_SCOPE: ${{ github.event.inputs.scope }}
+          DISPATCH_SPECS: ${{ github.event.inputs.specs }}
+          BASE_SHA: ${{ steps.baseline.outputs.base }}
+          HEAD_SHA: ${{ github.sha }}
+        run: node scripts/ci/pro-local-plan.mjs
+
+  pro-local:
+    needs: plan
+    if: needs.plan.outputs.run == 'true'
+    name: Pro local ${{ matrix.label }}
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    permissions:
+      contents: read
+      actions: read
+      packages: read
+    env:
+      PLAYWRIGHT_BASE_URL: http://127.0.0.1:3185
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: 2.109.0
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Authenticate official Supabase image pulls
+        env:
+          GHCR_TOKEN: ${{ github.token }}
+          GHCR_USER: ${{ github.actor }}
+        run: printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GHCR_USER" --password-stdin
+
+      - name: Start the minimal local Supabase stack
+        run: >-
+          supabase start
+          --exclude imgproxy,postgres-meta,studio,mailpit,edge-runtime,logflare,vector,supavisor
+
+      - name: Rebuild every migration (Pro schema included) from an empty database
+        run: supabase db reset --local --no-seed
+
+      - name: Seed the synthetic foundation and export the Pro test environment
+        env:
+          LOCAL_REGRESSION_PASSWORD: LocalRegression!2026
+        run: |
+          set -euo pipefail
+          supabase status -o env > /tmp/contratacr-local-supabase.env
+          set -a
+          source /tmp/contratacr-local-supabase.env
+          set +a
+          echo "::add-mask::$SERVICE_ROLE_KEY"
+          echo "::add-mask::$ANON_KEY"
+          export NEXT_PUBLIC_SUPABASE_URL="$API_URL"
+          export NEXT_PUBLIC_SUPABASE_ANON_KEY="$ANON_KEY"
+          export SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
+          export LOCAL_REGRESSION_SEED=1
+          [ "$API_URL" = "http://127.0.0.1:54321" ] || { echo "Unexpected Supabase target"; exit 1; }
+          # The *-api specs open native psql against the loopback database (gate in nativeDatabase()).
+          db_user=$(node -e 'console.log(decodeURIComponent(new URL(process.env.DB_URL).username))')
+          db_pass=$(node -e 'console.log(decodeURIComponent(new URL(process.env.DB_URL).password))')
+          echo "::add-mask::$db_pass"
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY"
+            printf '%s=%s\n' "SUPABASE_SERVICE_ROLE_KEY" "$SERVICE_ROLE_KEY"
+            echo "SUPABASE_DB_URL=$DB_URL"
+            echo "LOCAL_REGRESSION_SEED=1"
+            echo "E2E_FIXTURES_READY=1"
+            echo "E2E_LEGACY_SEED=0"
+            echo "E2E_ALLOW_NON_TEST_SUPABASE=1"
+            echo "E2E_TEST_PASSWORD=$LOCAL_REGRESSION_PASSWORD"
+            echo "REGRESSION_TEST_PASSWORD=$LOCAL_REGRESSION_PASSWORD"
+            echo "NEXT_PUBLIC_APP_URL=http://127.0.0.1:3185"
+            echo "PUSH_DELIVERY_ENABLED=false"
+            echo "PRO_LOCAL_PSQL=$(command -v psql)"
+            echo "PGHOST=127.0.0.1"
+            echo "PGPORT=54322"
+            echo "PGDATABASE=postgres"
+            echo "PGUSER=$db_user"
+            echo "PGPASSWORD=$db_pass"
+          } >> "$GITHUB_ENV"
+          psql "$DB_URL" \
+            --set=local_seed_guard=contratacr-local-only \
+            --file=scripts/ci/grant-local-regression-service-role.sql
+          psql "$DB_URL" \
+            --set=local_seed_guard=contratacr-local-only \
+            --set=regression_password="$LOCAL_REGRESSION_PASSWORD" \
+            --file=scripts/ci/seed-local-regression-auth.sql
+          npm run seed:local:regression
+          npm run verify:local:regression
+
+      - name: Install browser engines
+        timeout-minutes: 10
+        run: npx playwright install --with-deps chromium ${{ github.event.inputs.webkit == 'true' && 'webkit' || '' }}
+
+      - name: Start the Pro development server on 127.0.0.1:3185
+        run: |
+          set -euo pipefail
+          # Same server as `npm run dev` (scripts/dev-local-test-env.js) and scripts/pro/dev-lan.cjs; Pro is on in
+          # development (src/lib/pro/enabled.ts). The Playwright config does not start it (PLAYWRIGHT_BASE_URL is set).
+          setsid nohup node scripts/dev-local-test-env.js --webpack --hostname 127.0.0.1 --port 3185 > dev-server.log 2>&1 &
+          for i in $(seq 1 90); do
+            if curl -fsS --max-time 10 http://127.0.0.1:3185/api/health > /dev/null 2>&1; then echo "Dev server ready"; exit 0; fi
+            sleep 2
+          done
+          echo "Dev server did not become ready"; tail -n 80 dev-server.log; exit 1
+
+      - name: Warm the first compilations (does not certify anything)
+        run: node scripts/pro/warm-local-preview.mjs --pro || echo "Warm-up failed; the specs compile what they need."
+
+      - name: Run the Pro specs
+        env:
+          PLAYWRIGHT_WEBKIT: ${{ github.event.inputs.webkit == 'true' && '1' || '0' }}
+          PLAYWRIGHT_JSON_REPORT: test-results/results-${{ matrix.shard }}.json
+          PLAYWRIGHT_OUTPUT_DIR: test-results/shard-${{ matrix.shard }}
+          PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/shard-${{ matrix.shard }}
+          SELECTED_FILTERS: ${{ needs.plan.outputs.filters }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ needs.plan.outputs.mode }}" = "specs" ]; then
+            # Filters are validated, anchored and regex-escaped by scripts/ci/pro-local-plan.mjs; globbing stays off.
+            set -f
+            npx playwright test --config=playwright.pro-local.config.ts $SELECTED_FILTERS
+          else
+            npx playwright test --config=playwright.pro-local.config.ts --shard="${{ matrix.shard }}/${{ matrix.total }}"
+          fi
+
+      - name: Require zero failures, flakies and unexpected skips
+        if: always() && !cancelled()
+        run: PLAYWRIGHT_JSON_REPORT="test-results/results-${{ matrix.shard }}.json" npm run test:e2e:verify-results
+
+      - name: Show the development server and Supabase logs after a failure
+        if: failure()
+        shell: bash
+        run: |
+          echo "::group::dev-server.log (tail)"
+          tail -n 400 dev-server.log || true
+          echo "::endgroup::"
+          for name in $(docker ps --format '{{.Names}}' | grep -E 'supabase_(auth|rest|kong)_' || true); do
+            echo "::group::$name"
+            docker logs --tail 30000 "$name" 2>&1 | grep -v '/realtime/v1/websocket' | tail -8000 || true
+            echo "::endgroup::"
+          done
+
+      - name: Upload Playwright report and server log
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: pro-local-report-${{ matrix.shard }}
+          path: |
+            playwright-report/
+            test-results/
+            dev-server.log
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Stop local Supabase
+        if: always()
+        run: supabase stop --no-backup
+
+  result:
+    name: Pro local result
+    if: always()
+    needs: [plan, pro-local]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require successful selected checks
+        env:
+          PLAN_RESULT: ${{ needs.plan.result }}
+          RUN_SELECTED: ${{ needs.plan.outputs.run }}
+          CHECK_0: ${{ needs.pro-local.result }}
+        run: |
+          test "$PLAN_RESULT" = "success"
+          if [ "$RUN_SELECTED" = "true" ]; then
+            test "$CHECK_0" = "success"
+          else
+            test "$RUN_SELECTED" = "false"
+            test "$CHECK_0" = "skipped"
+          fi
+          echo "Selected Pro checks completed; unselected jobs were not executed." >> "$GITHUB_STEP_SUMMARY"
