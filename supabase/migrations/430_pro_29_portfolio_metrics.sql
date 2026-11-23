@@ -133,7 +133,7 @@ begin
  select coalesce(jsonb_agg(jsonb_build_object('day',to_char(d.day,'YYYY-MM-DD'),
    'views',(select count(*) from public.interaction_events e where e.professional_id=pid and e.event_type='profile_view' and (e.created_at at time zone 'America/Costa_Rica')::date=d.day),
    'requests',(select count(*) from public.pro_lead_center_records r where r.owner_id=p_actor and not r.archived and (r.created_at at time zone 'America/Costa_Rica')::date=d.day)) order by d.day),'[]'::jsonb)
-  into series from generate_series(p_from,least(p_to,p_from+89),interval '1 day') g(day0),lateral(select g.day0::date day) d;
+  into series from generate_series(p_from,least(p_to,p_from+89),interval '1 day') g(day0),lateral(select g.day0::date as day) d;
  return jsonb_build_object('hasProfile',true,'from',to_char(p_from,'YYYY-MM-DD'),'to',to_char(p_to,'YYYY-MM-DD'),'profile',v,'leads',l,'series',series);
 end $$;
 
