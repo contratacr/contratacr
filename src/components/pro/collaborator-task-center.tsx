@@ -14,7 +14,7 @@ type Row={grant:TeamSharedGrant;task:TeamSharedTask};
 const MAX_GRANTS=20,MAX_TASK_PAGES=3;
 const crToday=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Costa_Rica',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 const control='min-h-11 min-w-0 rounded-xl border border-[#d7e1ea] bg-white px-3 text-base';
-export function CollaboratorTaskCenter({accountId,disabled,onOpen}:{accountId:string;disabled:boolean;onOpen:(grant:TeamSharedGrant)=>void}){
+export function CollaboratorTaskCenter({accountId,disabled,onOpen,onDiscuss}:{accountId:string;disabled:boolean;onOpen:(grant:TeamSharedGrant)=>void;onDiscuss:(grant:TeamSharedGrant,task:TeamSharedTask)=>void}){
  const en=useLocale()==='en',t=(es:string,english:string)=>en?english:es;
  const [rows,setRows]=useState<Row[]|null>(null),[truncated,setTruncated]=useState(false),[failed,setFailed]=useState(false);
  const [status,setStatus]=useState<'open'|'done'|'all'>('open'),[timing,setTiming]=useState<'all'|'overdue'|'today'|'upcoming'>('all'),[mine,setMine]=useState(true),[query,setQuery]=useState('');
@@ -65,7 +65,10 @@ export function CollaboratorTaskCenter({accountId,disabled,onOpen}:{accountId:st
     <div className="min-w-0"><p className="break-words font-semibold">{row.task.title}</p>
      <p className="break-words text-sm text-[#52627a]">{row.grant.service} · {row.grant.ownerName}</p>
      <p className="text-sm"><span className={overdue(row)?'font-semibold text-[#9b1c1c]':'text-[#52627a]'}>{row.task.dueDate?(overdue(row)?t('Atrasada · ','Overdue · '):t('Vence ','Due '))+row.task.dueDate:t('Sin fecha','No date')}</span> · {row.task.status==='done'?t('Hecha','Done'):t('Abierta','Open')}{row.task.assignment&&row.task.assignment.grantId===row.grant.id?' · '+t('Asignada a usted','Assigned to you'):row.task.assignment?' · '+row.task.assignment.name:''}</p></div>
-    <button type="button" disabled={disabled} onClick={()=>onOpen(row.grant)} className="min-h-11 shrink-0 rounded-full border border-[#d7e1ea] px-4 text-sm font-semibold hover:bg-[#f6f9fb] disabled:opacity-50">{t('Abrir trabajo','Open job')}</button>
+    <div className="flex shrink-0 flex-wrap gap-2">
+     <button type="button" data-collab-discuss disabled={disabled} onClick={()=>onDiscuss(row.grant,row.task)} className="min-h-11 rounded-full bg-[#009FD9] px-4 text-sm font-semibold text-white hover:bg-[#0089bb] disabled:opacity-50">{t('Comentarios','Comments')}</button>
+     <button type="button" disabled={disabled} onClick={()=>onOpen(row.grant)} className="min-h-11 rounded-full border border-[#d7e1ea] px-4 text-sm font-semibold hover:bg-[#f6f9fb] disabled:opacity-50">{t('Abrir trabajo','Open job')}</button>
+    </div>
    </li>)}</ul>}
   </>}
  </section>;

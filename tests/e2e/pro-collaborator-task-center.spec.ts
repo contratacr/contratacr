@@ -53,7 +53,11 @@ for(const language of ['es','en'] as const)test(`Collaborator task center: one l
   await center.locator('[data-collab-search]').fill('COLLAB_OTHER');
   await expect(center.locator('[data-collab-task]')).toHaveCount(1);await expect(center.locator(`[data-collab-task="${ids.other}"]`)).toBeVisible();
   await expectNoHorizontalOverflow(memberPage);
-  // Opening a task goes to that job's board (the existing view).
+  // Comments open that task's discussion straight from the global list (mentions live there).
+  await center.locator(`[data-collab-task="${ids.other}"] [data-collab-discuss]`).click();
+  await expect(memberPage.locator('[data-team-board]')).toBeVisible({timeout:60000});await expect(memberPage.getByRole('button',{name:tr('Volver a tareas','Back to tasks')})).toBeVisible();
+  await memberPage.getByRole('button',{name:tr('Volver a tareas','Back to tasks')}).click();await memberPage.getByRole('button',{name:tr('Volver a trabajos','Back to jobs')}).click();
+  await expect(center).toBeVisible({timeout:60000});await center.locator('[data-collab-mine]').uncheck();await center.locator('[data-collab-search]').fill('COLLAB_OTHER');
   await center.locator(`[data-collab-task="${ids.other}"]`).getByRole('button',{name:tr('Abrir trabajo','Open job')}).click();
   await expect(memberPage.locator('[data-team-board]')).toBeVisible({timeout:60000});
  }finally{await memberContext.close();await Promise.allSettled([f.cleanup(),...[member,stranger].filter((a):a is DisposableAccount=>!!a).map(a=>cleanupDisposableAccount(a))]);}
