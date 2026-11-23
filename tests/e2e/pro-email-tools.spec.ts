@@ -73,6 +73,6 @@ for(const language of ['es','en'] as const)test(`Email templates and inbox [${la
   await tools.locator(`[data-template-item="${template.id}"] [data-template-archive]`).click();
   await expect(tools.locator(`[data-template-item="${template.id}"]`)).toHaveCount(0,{timeout:60000});
   expect((await read()).templates.find(item=>item.id===template.id)?.archived).toBe(true);
-  expect(errors.filter(error=>!/favicon|Failed to load resource/.test(String(error)))).toHaveLength(0);
+  expect(errors()).toEqual([]);
  }finally{await f.cleanup();}
 });
