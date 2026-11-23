@@ -5,6 +5,8 @@ import {Button} from '@/components/ui/button';
 import {quoteLineDecisionsSchema,type QuoteLine,type QuoteLineDecisions as View} from '@/lib/pro/quote-line-decisions';
 import {privateEstimateMoney} from './private-estimate-preview';
 import {ProposalClosing,ProposalGallery,useProposalPublication} from './estimate-proposal';
+import {QuoteLineResponse} from './quote-line-response';
+import type {LineResponse} from '@/lib/pro/quote-recorded-acceptance';
 
 const api='/api/pro/quote-line-decisions';
 /**
@@ -18,6 +20,7 @@ export function QuoteLineDecisions({actor,publicationId}:{actor:string;publicati
  const en=useLocale()==='en',t=(es:string,english:string)=>en?english:es;
  const proposal=useProposalPublication(actor,publicationId)?.proposal??null,photosOf=(target:'section'|'line',key:string)=>proposal?.images.filter(i=>i.target===target&&i.targetKey===key)??[];
  const [view,setView]=useState<View|null>(null),[error,setError]=useState(''),[failed,setFailed]=useState(false),[busy,setBusy]=useState<string|null>(null),[notes,setNotes]=useState<Record<string,string>>({}),attempts=useRef<Record<string,{key:string;id:string}>>({}),seq=useRef(0);
+ const [response,setResponse]=useState<LineResponse|null>(null);
  const [converted,setConverted]=useState<{title:string;lineCount:number}|null>(null),convertAttempt=useRef<{actionId:string;targetEstimateId:string}|null>(null);
  async function convert(){
   if(busy||!view)return;if(!convertAttempt.current)convertAttempt.current={actionId:crypto.randomUUID(),targetEstimateId:crypto.randomUUID()};
@@ -42,13 +45,14 @@ export function QuoteLineDecisions({actor,publicationId}:{actor:string;publicati
  if(failed&&!view)return <div role="alert" className="space-y-2 rounded-2xl border border-[#d7e1ea] p-3 text-sm"><p>{t('No se pudo cargar la propuesta por partidas.','Could not load the item proposal.')}</p><Button type="button" variant="outline" onClick={()=>void load()}>{t('Reintentar','Retry')}</Button></div>;
  if(!view)return <p role="status" className="text-sm text-[#52627a]">{t('Cargando la propuesta por partidas…','Loading the item proposal…')}</p>;
  if(!view.lines.length)return null;
- const money=(cents:number)=>privateEstimateMoney(cents,view.currency,en),client=view.side==='client';
+ const money=(cents:number)=>privateEstimateMoney(cents,view.currency,en),client=view.side==='client',canDecide=view.canDecide&&!response;
  const qty=(line:QuoteLine)=>new Intl.NumberFormat(en?'en-US':'es-CR',{maximumFractionDigits:3}).format(line.qtyMilli/1000)+(line.unit?' '+line.unit:'');
  const badge=(d:QuoteLine['decision'])=>d==='approved'?<span className="rounded-full bg-[#e7f6ec] px-2 py-0.5 text-xs font-semibold text-[#1f6f43]">{t('Aprobada','Approved')}</span>:d==='declined'?<span className="rounded-full bg-[#fdecec] px-2 py-0.5 text-xs font-semibold text-[#8b1c1c]">{t('No aprobada','Not approved')}</span>:<span className="rounded-full bg-[#eef2f6] px-2 py-0.5 text-xs font-semibold text-[#52627a]">{t('Sin decidir','Not decided')}</span>;
  return <section data-quote-line-decisions={publicationId} aria-labelledby={'qld-'+publicationId} className="@container min-w-0 space-y-3 rounded-2xl border border-[#d7e1ea] bg-white p-3 sm:p-4">
   <div className="space-y-1"><h4 id={'qld-'+publicationId} className="font-bold text-[#162543]">{t('Propuesta por partidas','Item-by-item proposal')}</h4>
-   <p className="text-sm text-[#52627a]">{client?(view.canDecide?t('Apruebe o no cada partida. Su profesional verá su decisión; la respuesta a la cotización completa se da con los botones de la cotización.','Approve or not each item. Your professional will see your decision; the answer to the whole quote is given with the quote buttons.'):t('Esta versión ya no admite decisiones por partida.','This version no longer accepts item decisions.')):t('Lo que el cliente aprobó o no en cada partida de esta versión.','What the customer approved or not on each item of this version.')}</p></div>
+   <p className="text-sm text-[#52627a]">{client?(canDecide?t('Apruebe o no cada partida. Su profesional verá su decisión; la respuesta a la cotización completa se da con los botones de la cotización.','Approve or not each item. Your professional will see your decision; the answer to the whole quote is given with the quote buttons.'):t('Esta versión ya no admite decisiones por partida.','This version no longer accepts item decisions.')):t('Lo que el cliente aprobó o no en cada partida de esta versión.','What the customer approved or not on each item of this version.')}</p></div>
   <p data-quote-line-summary role="status" className="rounded-xl bg-[#f3f8fb] p-2 text-sm text-[#162543]"><strong>{t('Aprobado: ','Approved: ')}{money(view.approvedCents)}</strong>{' · '}{t(`${view.approvedCount} aprobadas, ${view.declinedCount} no aprobadas, ${view.pendingCount} sin decidir`,`${view.approvedCount} approved, ${view.declinedCount} not approved, ${view.pendingCount} not decided`)}{view.totalCents!==null?' · '+t('Total de la versión: ','Version total: ')+money(view.totalCents):''}</p>
+  <QuoteLineResponse actor={actor} publicationId={publicationId} side={view.side} open={view.canDecide} pendingCount={view.pendingCount} approvedCount={view.approvedCount} declinedCount={view.declinedCount} money={money} onResponse={setResponse} onChanged={()=>void load()}/>
   {error&&<p role="alert" className="text-sm text-red-700">{error}</p>}
   {!client&&view.approvedCount>0&&<div data-quote-convert className="space-y-2 rounded-xl border border-[#b9e0c8] bg-[#f4fbf7] p-3">{converted
    ?<p role="status" className="text-sm text-[#175b42]">{t(`Se creó un borrador con ${converted.lineCount} partidas aprobadas${converted.title?' ("'+converted.title+'")':''}. Ábralo en sus cotizaciones privadas para ajustarlo y compartirlo como la siguiente versión.`,`A draft with ${converted.lineCount} approved items was created${converted.title?' ("'+converted.title+'")':''}. Open it in your private quotes to adjust it and share it as the next version.`)}</p>
@@ -61,8 +65,8 @@ export function QuoteLineDecisions({actor,publicationId}:{actor:string;publicati
     {photosOf('line',line.lineId).length>0?null:line.hasImage?<img data-quote-line-image src={api+'?'+new URLSearchParams({publicationId,image:line.lineId})} alt={line.description} loading="lazy" className="h-20 w-20 shrink-0 rounded-lg border border-[#e5e7eb] object-cover"/>:<span aria-hidden="true" className="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg bg-[#f3f8fb] text-xs text-[#68778d]">{t('Sin foto','No photo')}</span>}
     <div className="min-w-0 flex-1 space-y-1"><p className="break-words font-semibold text-[#162543]">{line.description||t('Partida','Item')}</p><p className="text-xs text-[#52627a]">{qty(line)} · {money(line.unitPriceCents)} {t('c/u','each')}</p><p className="text-sm font-bold">{money(line.totalCents)}</p>{badge(line.decision)}</div>
    </div>
-   {line.note&&!(client&&view.canDecide)&&<p className="break-words rounded-lg bg-[#f7f9fc] p-2 text-sm text-[#52627a]">{t('Nota del cliente: ','Customer note: ')}{line.note}</p>}
-   {client&&view.canDecide&&<div className="space-y-2">
+   {line.note&&!(client&&canDecide)&&<p className="break-words rounded-lg bg-[#f7f9fc] p-2 text-sm text-[#52627a]">{t('Nota del cliente: ','Customer note: ')}{line.note}</p>}
+   {client&&canDecide&&<div className="space-y-2">
     <label className="block text-xs font-semibold text-[#162543]">{t('Nota (opcional)','Note (optional)')}<input data-quote-line-note className="mt-1 min-h-11 w-full min-w-0 rounded-xl border border-[#d7e1ea] px-3 text-base font-normal" maxLength={300} value={notes[line.lineId]??line.note} disabled={!!busy} onChange={e=>setNotes({...notes,[line.lineId]:e.target.value})}/></label>
     <div className="flex flex-wrap gap-2"><Button type="button" size="sm" className="min-h-11" data-quote-line-approve aria-pressed={line.decision==='approved'} variant={line.decision==='approved'?'default':'outline'} disabled={!!busy} onClick={()=>void decide(line,'approved')}>{busy===line.lineId?t('Guardando…','Saving…'):t('Aprobar','Approve')}</Button>
      <Button type="button" size="sm" className="min-h-11" data-quote-line-decline aria-pressed={line.decision==='declined'} variant={line.decision==='declined'?'default':'outline'} disabled={!!busy} onClick={()=>void decide(line,'declined')}>{t('No aprobar','Do not approve')}</Button>
