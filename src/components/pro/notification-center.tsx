@@ -3,6 +3,7 @@ import {notificationChannelsSchema} from '@/lib/pro/operations';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {useLocale} from 'next-intl';
 import {Bell} from 'lucide-react';
+import {NotificationSchedule} from './notification-schedule';
 import {Button} from '@/components/ui/button';
 import {navigatePro,openProSection} from '@/lib/pro/navigation';
 import {proMoney} from '@/lib/pro/money';
@@ -14,7 +15,7 @@ import {notificationEvents,notificationPageSchema,type NotificationEvent,type No
  * reminder schedule and an email channel that only stores mock drafts (never sent).
  */
 export const PRO_NOTIFICATIONS_CHANGED='ccr:pro-notifications-changed';
-const eventLabels:Record<NotificationEvent,[string,string]>={task_assigned:['Tarea asignada','Task assigned'],task_due:['Tarea por vencer o vencida','Task due soon or overdue'],client_message:['Mensaje del cliente','Customer message'],quote_accepted:['Cotización aceptada','Quote accepted'],quote_changes:['Cambios pedidos a una cotización','Quote changes requested'],invoice_paid:['Pago registrado en una factura','Invoice payment recorded'],invoice_overdue:['Cuota vencida','Installment overdue'],bid_received:['Oferta de proveedor recibida','Vendor bid received'],daily_log_missing:['Falta la bitácora de ayer','Yesterday’s daily log is missing'],payment_plan_due:['Cuota del plan de pagos por vencer','Payment plan installment due soon']};
+const eventLabels:Record<NotificationEvent,[string,string]>={task_assigned:['Tarea asignada','Task assigned'],task_due:['Tarea por vencer o vencida','Task due soon or overdue'],client_message:['Mensaje del cliente','Customer message'],quote_accepted:['Cotización aceptada','Quote accepted'],quote_changes:['Cambios pedidos a una cotización','Quote changes requested'],invoice_paid:['Pago registrado en una factura','Invoice payment recorded'],invoice_overdue:['Cuota vencida','Installment overdue'],bid_received:['Oferta de proveedor recibida','Vendor bid received'],daily_log_missing:['Falta la bitácora de ayer','Yesterday’s daily log is missing'],payment_plan_due:['Cuota del plan de pagos por vencer','Payment plan installment due soon'],selection_decided:['Decisión del cliente en una selección','Customer decision on a selection']};
 async function send(body:object){const r=await fetch('/api/pro/notifications',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const data=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(Error(data.error||'error'),{status:r.status});window.dispatchEvent(new Event(PRO_NOTIFICATIONS_CHANGED));return data;}
 function openLink(item:NotificationItem,en:boolean){
  const link=item.link,tab=typeof link.tab==='string'?link.tab:'pro_tools',extra:Record<string,string>={};
@@ -58,6 +59,7 @@ export function NotificationCenter(){
   if(item.event==='invoice_paid'&&/^\d+$/.test(item.body))return proMoney(Number(item.body)/100,en);
   if(item.event==='daily_log_missing'){const logDay=typeof item.link.date==='string'?item.link.date:'';return [item.title,logDay?t('Hubo trabajo el ','There was work on ')+new Intl.DateTimeFormat(en?'en-US':'es-CR',{dateStyle:'medium',timeZone:'UTC'}).format(new Date(logDay+'T12:00:00Z'))+t(' y no hay entrada en la bitácora.',' and there is no daily log entry.'):''].filter(Boolean).join(' · ');}
   if(item.event==='task_due'){const due=typeof item.link.due==='string'?item.link.due:'';const label=due?new Intl.DateTimeFormat(en?'en-US':'es-CR',{dateStyle:'medium',timeZone:'UTC'}).format(new Date(due+'T12:00:00Z')):'';return [item.body,item.link.overdue?t('Vencida','Overdue')+(label?' · '+label:''):t('Vence','Due')+(label?' '+label:'')].filter(Boolean).join(' · ');}
+  if(item.event==='selection_decided')return [item.link.decision==='approve'?t('El cliente aprobó una opción','The customer approved an option'):t('El cliente pidió cambios','The customer asked for changes'),item.body].filter(Boolean).join(' · ');
   if(item.event==='payment_plan_due'){const cents=typeof item.link.amountCents==='number'?item.link.amountCents:null;const due=typeof item.link.due==='string'?item.link.due:'';return [item.title,t('Vence','Due')+(due?' '+new Intl.DateTimeFormat(en?'en-US':'es-CR',{dateStyle:'medium',timeZone:'UTC'}).format(new Date(due+'T12:00:00Z')):''),cents!==null?proMoney(cents/100,en):null].filter(Boolean).join(' · ');}
   if(item.event==='invoice_overdue'){const cents=typeof item.link.amountCents==='number'?item.link.amountCents:null;return [t('Vencida','Overdue'),item.body,cents!==null?proMoney(cents/100,en):null].filter(Boolean).join(' · ');}
   return item.body;
@@ -90,6 +92,7 @@ export function NotificationCenter(){
    {notice&&<p role="status" className="text-sm text-[#0f7a3d]">{notice}</p>}
    <div className="flex flex-wrap justify-end gap-2"><Button type="button" variant="secondary" disabled={busy||!changed} onClick={()=>{setDraft(settings);if(channels)setWa(channels.whatsapp);}}>{t('Descartar cambios','Discard changes')}</Button><Button type="button" disabled={busy||!changed} onClick={()=>void save()}>{busy?t('Guardando…','Saving…'):t('Guardar preferencias','Save preferences')}</Button></div>
   </section>}
+  <NotificationSchedule/>
  </section>;
 }
 /** Header bell of the Pro space: unread count (polled every 60 s and on focus); opens Avisos. */
