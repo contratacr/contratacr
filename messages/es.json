@@ -3327,43 +3327,48 @@
     "detalleNoDisponible": "Explore otras publicaciones en ContrataCR.",
     "seccionEmpleos": {
       "etiqueta": "Empleos",
+      "corto": "Vacantes en Costa Rica",
       "titulo": "Vacantes en Costa Rica",
       "detalle": "Explore las vacantes y contacte por WhatsApp a quien las publica.",
       "pie": "Explore oportunidades de empleo en Costa Rica."
     },
     "seccionPromociones": {
       "etiqueta": "Promociones",
+      "corto": "Promociones de profesionales",
       "titulo": "Promociones de profesionales",
       "detalle": "Descubra ofertas de servicios y contacte al profesional por WhatsApp.",
       "pie": "Encuentre ofertas de servicios en Costa Rica."
     },
     "seccionProyectos": {
       "etiqueta": "Solicitudes",
+      "corto": "Solicitudes en Costa Rica",
       "titulo": "Solicitudes de clientes en Costa Rica",
       "detalle": "Encuentre solicitudes y contacte por WhatsApp a quien necesita el servicio.",
       "pie": "Conecte con personas que necesitan sus servicios."
     },
     "seccionProfesionales": {
       "etiqueta": "Profesionales",
+      "corto": "Profesionales en Costa Rica",
       "titulo": "Encuentre profesionales en Costa Rica",
       "detalle": "Busque por servicio y ubicación y contacte directamente por WhatsApp.",
       "pie": "Ofrezca y encuentre servicios en Costa Rica."
     },
     "seccionPublicar": {
       "etiqueta": "Crear solicitud",
+      "corto": "Publique lo que necesita",
       "titulo": "Publique lo que necesita",
       "detalle": "Publique el servicio que necesita para que los profesionales le contacten por WhatsApp.",
       "pie": "Encuentre profesionales para lo que necesita."
     },
     "seccionCotizar": {
       "etiqueta": "Cotizaciones",
+      "corto": "Cotizaciones en minutos",
       "titulo": "Haga una cotización en minutos",
       "detalle": "Cree su cotización y compártala por enlace, PDF o WhatsApp.",
       "pie": "Presente sus servicios con una cotización clara."
     },
     "marca": {
-      "titulo": "Encuentre profesionales de servicios en Costa Rica",
-      "detalle": "Compare perfiles, consulte reseñas y contacte por WhatsApp."
+      "titulo": "Profesionales en Costa Rica"
     }
   },
   "accountPrivacy": {

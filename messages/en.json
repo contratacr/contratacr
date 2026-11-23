@@ -3327,43 +3327,48 @@
     "detalleNoDisponible": "Explore other posts on ContrataCR.",
     "seccionEmpleos": {
       "etiqueta": "Jobs",
+      "corto": "Jobs in Costa Rica",
       "titulo": "Job openings in Costa Rica",
       "detalle": "Browse job openings and contact the person who posted them on WhatsApp.",
       "pie": "Explore job opportunities in Costa Rica."
     },
     "seccionPromociones": {
       "etiqueta": "Promotions",
+      "corto": "Professional promotions",
       "titulo": "Deals from professionals",
       "detalle": "Discover service offers and contact the professional on WhatsApp.",
       "pie": "Find service offers in Costa Rica."
     },
     "seccionProyectos": {
       "etiqueta": "Requests",
+      "corto": "Requests in Costa Rica",
       "titulo": "Client requests in Costa Rica",
       "detalle": "Find requests and contact the person requesting the service on WhatsApp.",
       "pie": "Connect with people who need your services."
     },
     "seccionProfesionales": {
       "etiqueta": "Professionals",
+      "corto": "Professionals in Costa Rica",
       "titulo": "Find professionals in Costa Rica",
       "detalle": "Search by service and location and contact directly on WhatsApp.",
       "pie": "Offer and find services in Costa Rica."
     },
     "seccionPublicar": {
       "etiqueta": "Post a request",
+      "corto": "Post what you need",
       "titulo": "Post what you need",
       "detalle": "Post the service you need so professionals can contact you on WhatsApp.",
       "pie": "Find professionals for what you need."
     },
     "seccionCotizar": {
       "etiqueta": "Quotes",
+      "corto": "Quotes in minutes",
       "titulo": "Make a quote in minutes",
       "detalle": "Create your quote and share it by link, PDF or WhatsApp.",
       "pie": "Present your services with a clear quote."
     },
     "marca": {
-      "titulo": "Find service professionals in Costa Rica",
-      "detalle": "Compare profiles, read reviews and contact on WhatsApp."
+      "titulo": "Professionals in Costa Rica"
     }
   },
   "accountPrivacy": {
