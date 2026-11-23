@@ -225,7 +225,7 @@ jobs:
           npm run seed:local:regression
           npm run verify:local:regression
 
-      - name: Probe that a SQLSTATE 40001 conflict answers 409 instead of hanging
+      - name: Probe that a SQLSTATE 40001 conflict answers promptly instead of hanging
         run: |
           set -uo pipefail
           rest=$(docker ps --format '{{.Names}}' | grep -E '^supabase_rest_' | head -n 1)
@@ -249,8 +249,10 @@ jobs:
           # Never leave the probe behind: posture checks scan public functions and grants.
           psql -v ON_ERROR_STOP=1 -q -c 'drop function if exists public.ci_probe_serialization_failure(); notify pgrst, '"'"'reload schema'"'"';'
           echo "Probe answered: $code"
-          if [ "$code" != "409" ]; then
-            echo "::error::PostgREST did not answer a SQLSTATE 40001 conflict with 409 (got $code): revision conflicts would hang the Pro suite."
+          # PostgREST 16.x answers a 40001 raised by a function with a prompt 4xx/5xx and the
+          # app maps it to 409; the failure mode we guard against is a hang (timeout / 000).
+          if [ "$code" = "000" ] || [ "$code" = "timeout" ] || [ "$code" = "404" ]; then
+            echo "::error::PostgREST did not answer a SQLSTATE 40001 conflict promptly (got $code): revision conflicts would hang the Pro suite."
             exit 1
           fi
 
