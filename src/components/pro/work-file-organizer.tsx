@@ -16,6 +16,7 @@ import {ProDropZone,ProUploadList,postJsonWithProgress,uploadFailureMessage,useP
 import {ProFilePreview,canPreview,type PreviewTarget} from './pro-file-preview';
 import {FileBulkBar,FilePurgePanel,useFileBulk} from './file-bulk';
 import {FileAnnotations} from './file-annotations';
+import {FileConvertButton} from './file-transfers';
 
 /**
  * Round 8 + Ronda F2-D: «Archivos» of a job. Folders and subfolders (up to 5 levels), move (drag a
@@ -110,6 +111,7 @@ export function WorkFileOrganizer({workId}:{workId:string}){
   <div className="ml-auto flex flex-wrap items-center justify-end gap-2">{view==='trash'?<><Button type="button" variant="secondary" disabled={busy} onClick={()=>void mutate({action:'restore_file',subjectId:f.id,revision:f.metaRevision},t('Archivo restaurado.','File restored.'))}>{t('Restaurar','Restore')}</Button>
     <Button type="button" variant="outline" disabled={busy} onClick={()=>void purge('file',f.id,f.metaRevision,f.name)}>{t('Eliminar definitivamente','Delete permanently')}</Button></>:<>
    {previewable&&<Button type="button" variant="secondary" disabled={busy} onClick={()=>setPreview(target)}>{t('Ver','View')}</Button>}
+   <FileConvertButton scope="work" workId={workId} fileId={f.id} mimeType={f.mimeType} disabled={busy} onDone={()=>{window.dispatchEvent(new Event('contratacr:work-files-changed'));void load();}}/>
    {typeof f.sha256==='string'&&<Button type="button" variant="outline" data-annotate-open={f.id} disabled={busy} onClick={()=>setAnnotate({...target,id:f.id})}>{t('Anotar','Annotate')}</Button>}
    <Button type="button" variant="outline" className="h-11 w-11 p-0" aria-pressed={f.favorite} aria-label={f.favorite?t(`Quitar ${f.name} de favoritos`,`Remove ${f.name} from favorites`):t(`Marcar ${f.name} como favorito`,`Mark ${f.name} as favorite`)} disabled={busy} onClick={()=>void mutate({action:'favorite_file',subjectId:f.id,revision:f.metaRevision,on:!f.favorite})}><Star aria-hidden className={'h-4 w-4 '+(f.favorite?'fill-[#f2b705] text-[#c58a00]':'')}/></Button>
    <Button type="button" variant="outline" disabled={busy} aria-label={t(`Enviar ${f.name} a la papelera`,`Move ${f.name} to trash`)} onClick={()=>void mutate({action:'trash_file',subjectId:f.id,revision:f.metaRevision},t('Archivo enviado a la papelera.','File moved to the trash.'))}><Trash2 aria-hidden className="h-4 w-4"/></Button>

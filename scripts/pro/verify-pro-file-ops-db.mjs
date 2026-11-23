@@ -45,8 +45,8 @@ try{
   if(step.file==='memberships-draft.sql')for(const id of [owner,rival])await db.query('select pro_save_workspace($1,$2,0)',[id,emptyDoc('budget-client')]);
  }
  assert.ok(moduleSql,'file-formats-library-local.sql must be in the manifest');
- for(const name of ['414_pro_27_file_bulk_and_purge.sql','415_pro_27_file_annotations.sql','416_pro_27_company_folder_access.sql','417_pro_27_file_imports.sql']){let text;try{text=await readFile(new URL('supabase/migrations/'+name,root),'utf8');}catch(error){if(error.code==='ENOENT')continue;throw error;}try{await db.exec(text);}catch(error){throw new Error('Migration failed: '+name,{cause:error});}}
- for(const name of ['414_pro_27_file_bulk_and_purge.sql','415_pro_27_file_annotations.sql','416_pro_27_company_folder_access.sql','417_pro_27_file_imports.sql']){try{await db.exec(await readFile(new URL('supabase/migrations/'+name,root),'utf8'));}catch(error){if(error.code==='ENOENT')continue;throw new Error('Migration failed: '+name,{cause:error});}}
+ for(const name of ['414_pro_27_file_bulk_and_purge.sql','415_pro_27_file_annotations.sql','416_pro_27_company_folder_access.sql','417_pro_27_file_transfers.sql']){let text;try{text=await readFile(new URL('supabase/migrations/'+name,root),'utf8');}catch(error){if(error.code==='ENOENT')continue;throw error;}try{await db.exec(text);}catch(error){throw new Error('Migration failed: '+name,{cause:error});}}
+ for(const name of ['414_pro_27_file_bulk_and_purge.sql','415_pro_27_file_annotations.sql','416_pro_27_company_folder_access.sql','417_pro_27_file_transfers.sql']){try{await db.exec(await readFile(new URL('supabase/migrations/'+name,root),'utf8'));}catch(error){if(error.code==='ENOENT')continue;throw new Error('Migration failed: '+name,{cause:error});}}
  for(const [id,profile] of [[owner,'30000000-0000-4000-8000-000000000001'],[rival,'30000000-0000-4000-8000-000000000002']]){
   await db.query('insert into professionals(id,profile_id,business_name,slug,is_banned) values($1,$2,$3,$4,false)',[profile,id,'Empresa '+id.slice(-1),'budget-'+id.slice(-1)]);
   await db.query("insert into pro_memberships(user_id,status) values($1,'active')",[id]);
@@ -266,6 +266,28 @@ try{
   for(const [role,yes] of [['anon',false],['authenticated',false],['service_role',true]])assert.equal((await one('select has_function_privilege($1,$2,$3) v',[role,'public.'+fn,'EXECUTE'])).v,yes,role+' '+fn);
  assert.equal((await one("select has_table_privilege('authenticated','public.pro_company_folder_access','SELECT') v")).v,false);
  pass('416 folder permissions: default owner only, view/edit, inheritance, active members only, idempotent grant/revoke with audit, grants');
+ // ---- 417 receipts of the import and conversion adapters ----
+ const rec=async(input,actor=owner)=>(await one('select pro_file_transfer_record($1,$2) v',[actor,{actionId:crypto.randomUUID(),itemKey:'x',kind:'import',mode:'sandbox',name:'a.pdf',provider:'drive',reason:null,scope:'company',sha256:'ab'.repeat(6),sizeBytes:10,sourceFileId:null,status:'done',targetFileId:l1.id,workId:null,...input}])).v;
+ const tid=crypto.randomUUID();
+ let tr1=await rec({actionId:tid,itemKey:'sandbox-plano'});assert.equal(tr1.replayed,false);assert.equal(tr1.receipt.mode,'sandbox');
+ tr1=await rec({actionId:tid,itemKey:'sandbox-plano',name:'otro.pdf'});assert.equal(tr1.replayed,true);assert.equal(tr1.receipt.name,'a.pdf','first receipt wins on retry');
+ await rec({actionId:tid,itemKey:'sandbox-foto',name:'foto.jpg'});
+ await rec({kind:'import',status:'failed',reason:'type',targetFileId:null,itemKey:'sandbox-virus',name:'virus.exe'});
+ await rec({kind:'convert',provider:'office',mode:'simulated',scope:'work',workId:work,sourceFileId:w2.id,targetFileId:w2.id,itemKey:w2.id,name:'dos.pdf'});
+ await assert.rejects(()=>rec({kind:'import',provider:'office'}),code('23514'),'import is always from the drive');
+ await assert.rejects(()=>rec({kind:'convert',provider:'office',mode:'sandbox'}),code('23514'),'convert has its own modes');
+ await assert.rejects(()=>rec({status:'failed',reason:null,targetFileId:null}),code('23514'),'a failure needs a reason');
+ await assert.rejects(()=>rec({status:'done',targetFileId:null}),code('23514'),'a success needs the target file');
+ await assert.rejects(()=>rec({scope:'work',workId:null}),code('22023'),'a job receipt needs the job');
+ await assert.rejects(()=>rec({extra:1}),code('22023'),'unknown fields');
+ await assert.rejects(()=>rec({targetFileId:crypto.randomUUID()}),code('42501'),'unknown target');
+ await assert.rejects(()=>rec({},rival),code('42501'),'another account cannot record on these files');
+ const ti=(await one("select pro_file_transfers_read($1,'import',10) v",[owner])).v.items;assert.equal(ti.length,3);assert.equal((await one("select jsonb_array_length(pro_file_transfers_read($1,'convert',10)->'items') v",[owner])).v,1);
+ assert.equal((await one("select jsonb_array_length(pro_file_transfers_read($1,'import',10)->'items') v",[rival])).v,0);
+ await assert.rejects(()=>db.query("update pro_file_transfers set status='done'"),code('23514'));await assert.rejects(()=>db.query('delete from pro_file_transfers'),code('23514'));
+ for(const fn of ['pro_file_transfer_record(uuid,jsonb)','pro_file_transfers_read(uuid,text,integer)'])
+  for(const [role,yes] of [['anon',false],['authenticated',false],['service_role',true]])assert.equal((await one('select has_function_privilege($1,$2,$3) v',[role,'public.'+fn,'EXECUTE'])).v,yes,role+' '+fn);
+ pass('417 receipts: idempotent import/convert receipts, valid modes only, append only, owner scoped, grants');
  // @@GROUPS@@
 
  console.log(`${checks} file-ops contract groups passed; in-memory PGlite only.`);
