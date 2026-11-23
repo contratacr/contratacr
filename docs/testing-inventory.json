@@ -8,7 +8,7 @@
     "handlers": 367,
     "components": 611,
     "hooks": 29,
-    "specs": 541
+    "specs": 542
   },
   "dashboardTabs": [
     "pro_tools",
@@ -75827,6 +75827,15 @@
         {
           "line": 18,
           "title": "`Client pending requests and expired quotes preserve exact customer matching, navigation and saved data [${language}]`"
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/pro-client-presentation.spec.ts",
+      "cases": [
+        {
+          "line": 10,
+          "title": "'Client presentation: save, conflict, hide documents, weather'"
         }
       ]
     },
