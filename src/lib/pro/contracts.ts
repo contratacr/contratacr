@@ -52,7 +52,9 @@ const language=z.enum(['es','en']);
 export const contractStatuses=['draft','shared','accepted','declined','voided'] as const;
 export type ContractStatus=typeof contractStatuses[number];
 
-export const contractClauseSchema=z.object({id,title:z.string(),body:z.string(),sourceClauseId:id.nullable()}).strict();
+export const contractClauseSchema=z.object({id,title:z.string(),body:z.string(),sourceClauseId:id.nullable(),
+ /** Row 40: library version this clause was inserted from (absent in clauses created before it existed). */
+ sourceVersion:z.number().int().positive().optional()}).strict();
 export type ContractClause=z.infer<typeof contractClauseSchema>;
 export const libraryClauseSchema=z.object({id,title:z.string(),body:z.string(),archived:z.boolean(),revision:z.number().int().positive(),createdAt:stamp,updatedAt:stamp,
  /** Ronda F2-B: number of text versions (present in library reads, absent in write results). */

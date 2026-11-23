@@ -16,6 +16,7 @@ import {
  type PurchaseOrder,type PurchaseOrderBudget,type PurchaseOrderDetail,type PurchaseOrderHistoryEntry,type PurchaseOrderList,type PurchaseOrderMutation,type PurchaseOrderStatus,type PurchaseOrderSummary,
 } from '@/lib/pro/purchase-orders';
 import {useProChildGuard} from './use-pro-child-guard';
+import {PurchaseOrderTracking} from './po-tracking';
 import {pushProParams} from '@/lib/pro/navigation';
 
 /**
@@ -244,7 +245,7 @@ function PurchaseOrdersSession({accountId,workId,onStateChange}:{accountId:strin
   {/* Round 11: prefill a new order from the accepted quote lines, approved selections or budget codes (same writer). */}
   {fromSources&&!form&&!openId&&canWrite&&list&&<PoFromSources actor={accountId} workId={workId} disabled={busy||conflict} onCancel={()=>setFromSources(false)} onUse={lines=>{setFromSources(false);const draft={supplierId:'',supplierName:'',supplierContact:'',title:en?'Order from the job':'Pedido del trabajo',issueDate:list.today,expectedDate:'',notes:'',lines:lines.map(line=>({...newLine(defaultTax),description:line.description,quantity:qtyInput(line.quantity,en),unit:line.unit,price:line.unitCents===null?'':centsToInput(line.unitCents),budgetCodeId:line.budgetCodeId??'',link:line.selectionOptionId?'sel:'+line.selectionOptionId:''}))};open({mode:'create',order:null,draft,initial:{...draft,lines:[]}});}}/>}
   {form&&(form.mode==='create'||form.mode==='edit')?<OrderForm c={c} defaultTax={defaultTax} form={form} refs={refs!} busy={busy||conflict} saving={saving} onChange={draft=>setForm({...form,draft})} onSubmit={submit} onCancel={cancelForm}/>:
-  openId?<OrderDetail c={c} en={en} order={order} history={order&&detail?detail.history:[]} error={detailError} onRetry={()=>void loadDetail(openId)} onBack={()=>{setOpenId(null);setDetail(null);setNotice('');setError('');setForm(null);}}
+  openId?<OrderDetail accountId={accountId} c={c} en={en} order={order} history={order&&detail?detail.history:[]} error={detailError} onRetry={()=>void loadDetail(openId)} onBack={()=>{setOpenId(null);setDetail(null);setNotice('');setError('');setForm(null);}}
    workId={workId} canWrite={canWrite} disabled={busy||conflict||!!form} form={form} saving={saving} today={list.today} refs={refs!}
    onEdit={o=>open({mode:'edit',order:o,draft:draftOf(o,en),initial:draftOf(o,en)})} onIssue={o=>void issue(o)} onCancel={o=>void cancelOrder(o)}
    onReceive={o=>{/* The suggested quantities are the starting point, not a user change: opening the form alone does not block navigation. */const initial={receivedOn:list.today,note:'',quantities:Object.fromEntries(o.lines.map(line=>[line.id,qtyInput(Math.max(0,line.quantity-line.receivedQuantity),en)]))};open({mode:'receive',order:o,draft:initial,initial});}}
@@ -347,8 +348,8 @@ function OrderForm({c,defaultTax='',form,refs,busy,saving,onChange,onSubmit,onCa
  </form>;
 }
 
-function OrderDetail({c,en,order,history,error,onRetry,onBack,workId,canWrite,disabled,form,saving,today,refs,onEdit,onIssue,onCancel,onReceive,onPay,onReverse,onFormChange,onSubmit,onFormCancel}:{
- c:Copy;en:boolean;order:PurchaseOrder|null;history:PurchaseOrderHistoryEntry[];error:boolean;onRetry:()=>void;onBack:()=>void;workId:string;canWrite:boolean;disabled:boolean;form:Form|null;saving:boolean;today:string;refs:PurchaseOrderList['references'];
+function OrderDetail({accountId,c,en,order,history,error,onRetry,onBack,workId,canWrite,disabled,form,saving,today,refs,onEdit,onIssue,onCancel,onReceive,onPay,onReverse,onFormChange,onSubmit,onFormCancel}:{
+ accountId:string;c:Copy;en:boolean;order:PurchaseOrder|null;history:PurchaseOrderHistoryEntry[];error:boolean;onRetry:()=>void;onBack:()=>void;workId:string;canWrite:boolean;disabled:boolean;form:Form|null;saving:boolean;today:string;refs:PurchaseOrderList['references'];
  onEdit:(o:PurchaseOrder)=>void;onIssue:(o:PurchaseOrder)=>void;onCancel:(o:PurchaseOrder)=>void;onReceive:(o:PurchaseOrder)=>void;onPay:(o:PurchaseOrder)=>void;onReverse:(o:PurchaseOrder,paymentId:string)=>void;onFormChange:(form:Form)=>void;onSubmit:(event:FormEvent)=>void;onFormCancel:()=>void}){
  const back=<Button type="button" variant="secondary" className="min-h-11" disabled={!!form&&saving} onClick={onBack}>{c.back}</Button>;
  if(!order)return <div className="space-y-3">{back}{error?<div role="alert" data-purchase-order-detail-error className="space-y-2 rounded-2xl border border-[#d7e1ea] p-4"><p className="text-sm">{c.loadError}</p><Button type="button" variant="secondary" onClick={onRetry}>{c.retry}</Button></div>:<p role="status" className="text-sm text-[#52627a]">{c.loading}</p>}</div>;
@@ -409,6 +410,7 @@ function OrderDetail({c,en,order,history,error,onRetry,onBack,workId,canWrite,di
     <p className="whitespace-nowrap text-right font-bold tabular-nums">{money(line.totalCents)}</p>
    </li>)}</ul>
   </section>
+  {order.status!=='draft'&&order.status!=='cancelled'&&<PurchaseOrderTracking accountId={accountId} workId={workId} orderId={order.id} en={en} canWrite={canWrite} lines={order.lines.map(l=>({id:l.id,description:l.description}))}/>}
   <section data-po-receipts className="space-y-2"><h5 className="font-semibold text-[#162543]">{c.receipts}</h5>
    {order.receipts.length?<ul className="space-y-1 text-sm">{order.receipts.map(entry=><li key={entry.id+entry.lineId} className="break-words">{day(entry.receivedOn,en)} · {lineDesc(entry.lineId)}: {qty(entry.quantity,en)}{entry.note?` · ${entry.note}`:''}</li>)}</ul>:<p className="text-sm text-[#52627a]">{c.noReceipts}</p>}
   </section>

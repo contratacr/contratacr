@@ -35,12 +35,12 @@ export function ContractText({text,className=''}:{text:string;className?:string}
 }
 
 function copy(en:boolean){
- return en?{clauses:'Clauses',empty:'No clauses yet. Add a blank clause or one from your library.',add:'Add clause',fromLibrary:'Add from library',libraryPick:'Clause from your library',noLibrary:'Your clause library is empty. You can create clauses in Company › Templates.',
+ return en?{fromVersion:(n:number)=>`From your library, version ${n}`,fromLibraryNote:'From your library',newerVersion:(n:number)=>`your library now has version ${n}; this contract keeps its text`,clauses:'Clauses',empty:'No clauses yet. Add a blank clause or one from your library.',add:'Add clause',fromLibrary:'Add from library',libraryPick:'Clause from your library',noLibrary:'Your clause library is empty. You can create clauses in Company › Templates.',
   insert:'Insert',clauseTitle:'Clause title',clauseBody:'Clause text',insertField:'Insert merge field',chooseField:'Choose a field…',chooseClause:'Choose a clause…',save:'Save clause',saving:'Saving…',cancel:'Cancel',edit:'Edit',remove:'Remove',up:'Move up',down:'Move down',
   removeConfirm:'Remove this clause?',titleRequired:'Write the clause title.',bodyRequired:'Write the clause text.',unknown:(keys:string)=>`These fields do not exist: ${keys}. Use the field list.`,tooLong:'The clause is too long to save in one step. Split it into two clauses.',
   max:`Up to ${CONTRACT_CLAUSES_MAX} clauses.`,conflict:'This changed in another window. Reload before continuing.',uncertain:'We could not confirm whether it was saved. Retry the same operation; it will not be applied twice.',retrySame:'Retry',failed:'Could not save the clause.',
   chars:(n:number)=>`${n}/${CONTRACT_CLAUSE_MAX}`,position:(n:number,total:number)=>`Clause ${n} of ${total}`}
- :{clauses:'Cláusulas',empty:'Todavía no hay cláusulas. Agregue una en blanco o una de su biblioteca.',add:'Agregar cláusula',fromLibrary:'Agregar desde la biblioteca',libraryPick:'Cláusula de su biblioteca',noLibrary:'Su biblioteca de cláusulas está vacía. Puede crear cláusulas en Empresa › Plantillas.',
+ :{fromVersion:(n:number)=>`De su biblioteca, versión ${n}`,fromLibraryNote:'De su biblioteca',newerVersion:(n:number)=>`su biblioteca ya tiene la versión ${n}; este contrato conserva su texto`,clauses:'Cláusulas',empty:'Todavía no hay cláusulas. Agregue una en blanco o una de su biblioteca.',add:'Agregar cláusula',fromLibrary:'Agregar desde la biblioteca',libraryPick:'Cláusula de su biblioteca',noLibrary:'Su biblioteca de cláusulas está vacía. Puede crear cláusulas en Empresa › Plantillas.',
   insert:'Insertar',clauseTitle:'Título de la cláusula',clauseBody:'Texto de la cláusula',insertField:'Insertar campo combinable',chooseField:'Elija un campo…',chooseClause:'Elija una cláusula…',save:'Guardar cláusula',saving:'Guardando…',cancel:'Cancelar',edit:'Editar',remove:'Quitar',up:'Subir',down:'Bajar',
   removeConfirm:'¿Quitar esta cláusula?',titleRequired:'Escriba el título de la cláusula.',bodyRequired:'Escriba el texto de la cláusula.',unknown:(keys:string)=>`Estos campos no existen: ${keys}. Use la lista de campos.`,tooLong:'La cláusula es demasiado larga para guardarla de una vez. Divídala en dos cláusulas.',
   max:`Hasta ${CONTRACT_CLAUSES_MAX} cláusulas.`,conflict:'Esto cambió en otra ventana. Recargue antes de continuar.',uncertain:'No pudimos confirmar si se guardó. Reintente la misma operación; no se aplicará dos veces.',retrySame:'Reintentar',failed:'No se pudo guardar la cláusula.',
@@ -129,6 +129,10 @@ export function ClauseListEditor({accountId,scope,targetId,revision,clauses,libr
      :<>
       <p className="text-xs font-semibold uppercase tracking-wide text-[#52627a]">{c.position(index+1,clauses.length)}</p>
       <h4 className="mt-1 break-words font-semibold text-[#162543]">{clause.title}</h4>
+      {clause.sourceClauseId&&(()=>{const source=library.find(item=>item.id===clause.sourceClauseId);
+       return <p data-contract-clause-source={clause.sourceVersion??''} className="mt-0.5 text-xs text-[#52627a]">
+        {clause.sourceVersion?c.fromVersion(clause.sourceVersion):c.fromLibraryNote}
+        {source?.version&&clause.sourceVersion&&source.version>clause.sourceVersion?` · ${c.newerVersion(source.version)}`:''}</p>;})()}
       <ContractText text={clause.body} className="mt-1 text-sm text-[#162543]"/>
       {!disabled&&<div className="mt-3 flex flex-wrap gap-2">
        <Button type="button" variant="secondary" className="min-h-11" disabled={locked||editing!==null} onClick={()=>{setError('');setEditing({mode:'edit',clauseId:clause.id});}}>{c.edit}</Button>
