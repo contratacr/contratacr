@@ -2477,3 +2477,22 @@ html[data-pro-role="member"] [data-pro-write="settings.write"],
 html[data-pro-role="member"] [data-pro-write="team.manage"],
 html[data-pro-role="manager"] [data-pro-write="settings.write"],
 html[data-pro-role="manager"] [data-pro-write="team.manage"] { display: none !important; }
+
+/* Row 17 (404): module/action denials of the member's role. html[data-pro-denied] holds "module:action" tokens;
+   controls tagged data-pro-write are hidden when edit is denied for their module (server answers 403 anyway). */
+html[data-pro-denied~="work:edit"] [data-pro-write="work.write"],
+html[data-pro-denied~="lead:edit"] [data-pro-write="lead.write"],
+html[data-pro-denied~="sales:edit"] [data-pro-write="sales.write"],
+html[data-pro-denied~="finance:edit"] [data-pro-write="finance.write"],
+html[data-pro-denied~="company:edit"] [data-pro-write="company.write"],
+html[data-pro-denied~="settings:edit"] [data-pro-write="settings.write"],
+html[data-pro-denied~="inventory:edit"] [data-pro-write="inventory.write"],
+html[data-pro-denied~="listing:edit"] [data-pro-write="listing.publish"],
+html[data-pro-denied~="price:edit"] [data-pro-write="price.write"],
+html[data-pro-denied~="menu:edit"] [data-pro-write="menu.write"],
+html[data-pro-denied~="work:delete"] [data-pro-delete="work"],
+html[data-pro-denied~="sales:delete"] [data-pro-delete="sales"],
+html[data-pro-denied~="finance:delete"] [data-pro-delete="finance"],
+html[data-pro-denied~="work:export"] [data-pro-export="work"],
+html[data-pro-denied~="sales:export"] [data-pro-export="sales"],
+html[data-pro-denied~="finance:export"] [data-pro-export="finance"] { display: none !important; }

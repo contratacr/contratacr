@@ -4,6 +4,7 @@ import {useLocale} from 'next-intl';
 import {Button} from '@/components/ui/button';
 import {useAppDialog} from '@/hooks/use-app-dialog';
 import {CustomRolesPanel} from './custom-roles';
+import {ModulePermissionsPanel} from './module-permissions';
 import {parseTransactionalEmailView,transactionalEmailNotice,type TransactionalEmailView} from '@/lib/pro/transactional-email-copy';
 import {capabilities,capabilityLabel,companyRoles,companyTeamSchema,newCompanyInviteCode,roleLabel,type CompanyRole,type CompanyTeam,type CompanyTeamMutation} from '@/lib/pro/team-roles';
 
@@ -52,6 +53,7 @@ export function CompanyTeamPanel({proShell=false}:{proShell?:boolean}={}){
    {team.invites.length>0&&<div data-company-invites className={card}><h3 className="font-semibold">{en?'Invitations':'Invitaciones'}</h3>{team.invites.map(i=><div key={i.id} className="flex flex-wrap items-center justify-between gap-2 border-t border-[#eef2f6] pt-2"><p className="min-w-0 break-words text-sm">{i.email} · {roleLabel(i.role,en)} · {({pending:en?'Pending':'Pendiente',accepted:en?'Accepted':'Aceptada',cancelled:en?'Cancelled':'Cancelada',expired:en?'Expired':'Vencida'})[i.status]} · {en?'email draft, not sent':'correo en borrador, no enviado'}</p>{i.status==='pending'&&<Button variant="ghost" disabled={busy} onClick={()=>void run({action:'cancel_invite',actionId:crypto.randomUUID(),inviteId:i.id,revision:i.revision})}>{en?'Cancel':'Cancelar'}</Button>}</div>)}</div>}
    <details data-company-matrix className={card}><summary className="cursor-pointer font-semibold">{en?'What each role can do':'Qué puede hacer cada rol'}</summary><div className="overflow-x-auto"><table className="w-full min-w-[34rem] text-left text-sm"><thead><tr><th className="p-2">{en?'Permission':'Permiso'}</th>{companyRoles.map(r=><th key={r} className="p-2">{roleLabel(r,en)}</th>)}</tr></thead><tbody>{capabilities.map(c=><tr key={c} className="border-t border-[#eef2f6]"><td className="p-2">{capabilityLabel(c,en)}</td>{companyRoles.map(r=><td key={r} className="p-2 text-center" aria-label={(team.matrix[r]??[]).includes(c)?(en?'Allowed':'Permitido'):(en?'Not allowed':'No permitido')}>{(team.matrix[r]??[]).includes(c)?'✓':'—'}</td>)}</tr>)}</tbody></table></div></details>
    <CustomRolesPanel/>
+   <ModulePermissionsPanel/>
    {team.activity.length>0&&<details data-company-activity className={card}><summary className="cursor-pointer font-semibold">{en?'Changes made by members':'Cambios hechos por integrantes'}</summary>{team.activity.map((a,n)=><p key={n} className="border-t border-[#eef2f6] pt-2 text-sm">{stamp(a.at,en)} · {a.memberName} ({roleLabel(a.role,en)}) · {capabilityLabel(a.capability,en)}</p>)}</details>}
   </>}
   {proShell&&manages&&<details data-company-join-more className={card}><summary className="cursor-pointer font-semibold">{en?'Join another company':'Unirse a otra empresa'}</summary>{joinForm}</details>}
@@ -62,6 +64,7 @@ export function CompanyTeamPanel({proShell=false}:{proShell?:boolean}={}){
 export function ProWorkspaceBanner(){
  const en=useLocale()==='en',{team}=useCompanyTeam(),[busy,setBusy]=useState(false);
  useEffect(()=>{const role=team?.workspace?.role;if(role)document.documentElement.dataset.proRole=role;else delete document.documentElement.dataset.proRole;return()=>{delete document.documentElement.dataset.proRole;};},[team?.workspace?.role]);
+ useEffect(()=>{const denied=team?.workspace?.denied,tokens=denied?Object.entries(denied).flatMap(([m,acts])=>acts.map(a=>m+':'+a)).join(' '):'';if(tokens)document.documentElement.dataset.proDenied=tokens;else delete document.documentElement.dataset.proDenied;return()=>{delete document.documentElement.dataset.proDenied;};},[team?.workspace?.denied]);
  if(!team?.workspace)return null;
  return <div data-pro-workspace-banner role="status" className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#008fb8] bg-[#eaf7fb] p-3 text-sm text-[#0b3a53]"><p className="min-w-0 break-words">{en?'Working in ':'Trabajando en '}<strong>{team.workspace.ownerName}</strong>{en?' as ':' como '}<strong>{roleLabel(team.workspace.role,en)}</strong>{team.workspace.role==='read_only'?(en?'. You can view, not change.':'. Puede ver, no modificar.'):''}</p><Button variant="outline" disabled={busy} onClick={async()=>{setBusy(true);try{await post({action:'exit'});window.location.reload();}finally{setBusy(false);}}}>{en?'Back to my account':'Volver a mi cuenta'}</Button></div>;
 }

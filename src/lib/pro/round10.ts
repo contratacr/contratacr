@@ -100,6 +100,10 @@ export const scheduleInputSchema=z.discriminatedUnion('action',[
  z.object({action:z.literal('link_set'),actionId:id,workId:z.string().min(1).max(160),taskId:id,predecessorId:id,kind:z.enum(['fs','ss']),lagDays:z.number().int().min(-60).max(365),revision:nint}).strict(),
  z.object({action:z.literal('shift'),actionId:id,workId:z.string().min(1).max(160),taskId:id,start:day,end:day,revision:nint}).strict(),
  z.object({action:z.literal('undo'),actionId:id,workId:z.string().min(1).max(160),shiftId:id,revision:nint}).strict(),
+ // Row 13: the same shift, but pushed tasks start on a working day and keep their length in working days.
+ z.object({action:z.literal('shift_cal'),actionId:id,workId:z.string().min(1).max(160),taskId:id,start:day,end:day,revision:nint}).strict(),
+ // Row 13 / 78 / 79: move tasks that start on a rest day or holiday to the next working day (after applying a template).
+ z.object({action:z.literal('calendarize'),actionId:id,workId:z.string().min(1).max(160),revision:nint}).strict(),
 ]);
 export type ScheduleInput=z.infer<typeof scheduleInputSchema>;
 const dnum=(d:string)=>Math.round(Date.parse(d+'T12:00:00Z')/86400000);
@@ -118,7 +122,7 @@ export const multiScheduleSchema=z.object({from:day,to:day,items:z.array(z.objec
 export type MultiSchedule=z.infer<typeof multiScheduleSchema>;
 // ===== Daily log autofill =====
 export const autofillSchema=z.object({workId:z.string(),date:day,crew:z.object({people:z.array(z.object({key:z.string(),name:z.string(),minutes:nint})),count:nint,minutes:nint}),completed:z.array(z.object({id,title:z.string()})),planned:z.array(z.object({id,title:z.string()})),existing:z.boolean(),
- weather:z.object({condition:z.enum(['clear','cloudy','rain','other']),temperatureC:z.number(),note:z.string(),source:z.literal('mock')})});
+ weather:z.object({condition:z.enum(['clear','cloudy','rain','other']),temperatureC:z.number(),note:z.string(),source:z.enum(['mock','sandbox','open-meteo'])}).nullable()});
 export type Autofill=z.infer<typeof autofillSchema>;
 /**
  * Weather adapter. Only a deterministic MOCK exists (no provider is configured or called): the same

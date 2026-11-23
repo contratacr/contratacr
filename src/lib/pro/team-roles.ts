@@ -9,7 +9,7 @@ export function capabilityLabel(cap:string,en:boolean){return ({read:en?'View ev
 const iso=z.string().min(1);
 export const companyMemberSchema=z.object({id:z.string().uuid(),userId:z.string().uuid(),name:z.string(),email:z.string(),role:z.enum(companyRoles),active:z.boolean(),revision:z.number().int().positive(),since:iso});
 export const companyInviteSchema=z.object({id:z.string().uuid(),email:z.string(),role:z.enum(companyRoles),status:z.enum(['pending','accepted','cancelled','expired']),revision:z.number().int().positive(),expiresAt:iso,delivery:z.literal('draft_not_sent'),draft:z.object({subject:z.string(),body:z.string()}),createdAt:iso});
-export const companyWorkspaceSchema=z.object({ownerId:z.string().uuid(),ownerName:z.string(),role:z.enum(companyRoles),capabilities:z.array(z.enum(capabilities))});
+export const companyWorkspaceSchema=z.object({ownerId:z.string().uuid(),ownerName:z.string(),role:z.enum(companyRoles),capabilities:z.array(z.enum(capabilities)),denied:z.record(z.string(),z.array(z.string())).optional()});
 export const companyTeamSchema=z.object({
  accountId:z.string().uuid(),workspace:companyWorkspaceSchema.nullable(),
  isOwner:z.boolean(),members:z.array(companyMemberSchema),invites:z.array(companyInviteSchema),

@@ -55,6 +55,7 @@ export async function proWorkspaceGate(request:NextRequest):Promise<NextResponse
    if(result.reason==='not_member')return null;
    // F4 team gate (pro-editions-team-gate-local.sql): the owner's edition does not include this route's module.
    if(result.reason==='module_disabled')return NextResponse.json({error:'Este módulo no está activo en la edición de esta empresa.',code:'module_disabled',module:(result as {module?:string}).module??null},{status:403,headers:noStore});
+   if(result.reason==='module_action')return NextResponse.json({error:'Su rol en esta empresa no tiene este permiso en este módulo.',code:'pro_module_permission',module:(result as {module?:string}).module??null,action:(result as {action?:string}).action??null},{status:403,headers:noStore});
    return NextResponse.json({error:'Su rol en esta empresa no permite este cambio.',code:'pro_role',role:result.role??null,capability:result.capability??null},{status:403,headers:noStore});
   }
   const role=String(result.role),signature=await proWorkspaceSignature(owner,member,role);if(!signature)return null;
