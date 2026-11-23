@@ -23,7 +23,7 @@ for (const native of [false, true]) {
     await expect.poll(async()=>Math.round((await menu.boundingBox())!.x)).toBe(0);
     // The download notice must not leave a 76px empty band in the menu.
     expect(await header.evaluate(el=>parseFloat(getComputedStyle(el).paddingTop))).toBeLessThan(20);
-    await expect(menu.getByRole('button',{name:'Buscar profesionales',exact:true})).toBeVisible();
+    await expect(menu.getByRole('button',{name:'Buscar',exact:true})).toBeVisible();
     await menu.getByRole('button',{name:'Ayuda y soporte'}).click();
     const top=(await header.boundingBox())!.y;
     await body.evaluate(el=>{el.scrollTop=el.scrollHeight});
@@ -55,7 +55,7 @@ for (const native of [false, true]) {
     await expect(menu).toBeHidden();
     if(showsDownloadBanner)await expect(banner).toBeVisible();
     await button.click();
-    await menu.getByRole('button',{name:'Buscar profesionales',exact:true}).click();
+    await menu.getByRole('button',{name:'Buscar',exact:true}).click();
     await expect(menu).toBeHidden();
     await expect(page.locator('.ccr-native-search-panel')).toBeVisible();
     await expect(page.locator('.ccr-native-search-panel input').first()).toBeFocused();
