@@ -22,7 +22,7 @@ export async function GET(req:Request){
   if(Object.keys(q).length)return proFail(400,'Consulta inválida.');
   const r=await a.db.rpc('pro_portfolio_read',{p_actor:a.user.id});
   if(r.error)return proDbError(r.error,'Los datos cambiaron.');return Response.json(r.data,{headers});
- }catch{return proFail(503,'No se pudo cargar el portafolio.');}
+ }catch{return proFail(503,'No se pudieron cargar los casos de éxito.');}
 }
 const reasons:Record<string,string>={pro_portfolio_no_profile:'Cree primero su perfil público.',pro_portfolio_not_finished:'Solo puede publicar un trabajo terminado.',pro_portfolio_profession:'Elija una de las profesiones de su perfil.',pro_portfolio_consent:'Registre el consentimiento del cliente.',pro_portfolio_photos:'Elija entre 1 y 5 fotos.',pro_portfolio_limit:'Ya tiene 10 proyectos en esa profesión. Quite uno primero.'};
 export async function POST(req:Request){

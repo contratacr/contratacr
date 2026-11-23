@@ -37,7 +37,7 @@ for(const language of ['es','en'] as const)test(`Round 13: portfolio publication
   expect((after.portfolio_items as {id:string;photos:string[]}[]).map(c=>c.id)).toEqual(['pro-'+id]);expect(after.portfolio_urls).toEqual(photos);
   expect((await f.db.from('pro_portfolio_publications').select('consent_kind,consent_note,photo_count,status').eq('id',id).single()).data).toMatchObject({consent_kind:'client_written',consent_note:'WhatsApp 12/11, Ana',photo_count:2,status:'published'});
   // UI: metrics funnel, published badge and the consent history.
-  await gotoOK(page,`/${language}/dashboard/pro?`+new URLSearchParams({tab:'pro_company',empresa:'portafolio'}));
+  await gotoOK(page,`/${language}/dashboard/pro?`+new URLSearchParams({tab:'pro_company',empresa:'casos'}));
   const view=page.locator('[data-company-portfolio]');await expect(view).toBeVisible({timeout:90000});
   await expect(view.locator('[data-metric="views"]')).toContainText('4');await expect(view.locator('[data-metric="contacts"]')).toContainText('1');
   await expect(view.locator(`[data-portfolio-work="${f.workId}"]`)).toContainText(t('Publicado','Published'));

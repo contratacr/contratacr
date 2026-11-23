@@ -56,6 +56,9 @@ const PROHIBIDO = [
 // Nombres internos: columnas, rutas de API, carpetas de Cloudinary, props. No
 // son rótulos y renombrarlos rompería la base y los enlaces publicados.
 const PERMITIDO = [
+  // Ruta interna de la API de Pro (/api/pro/company-portfolio); no es un rótulo visible.
+  // Rutas, módulos e identificadores internos de la fila 68 (no son rótulos visibles).
+  /\/api\/pro\/company-portfolio|@\/lib\/pro\/portfolio'|'\.\/company-portfolio'|'company-portfolio-'/u,
   /portfolio_urls|portfolio_items|portfolioCount|portfolioLike|portfolio-like|portfolioItems/u,
   /\/promociones\b|"offers"|'offers'|`offers`|offer_type|OFFER_|offerId|offersEnabled/u,
   /data-portfolio|portfolio\.(webp|png|jpg)/u,

@@ -39,7 +39,7 @@ const ProTraining=dynamic(()=>import('./pro-training').then(m=>m.ProTraining),{l
 const ProSupport=dynamic(()=>import('./pro-support').then(m=>m.ProSupport),{loading:ViewLoading});
 const PaymentReconciliation=dynamic(()=>import('./payment-reconciliation').then(m=>m.PaymentReconciliation),{loading:ViewLoading});
 
-export const companyViews=['contactos','proveedores','archivos','plantillas','categorias','articulos','catalogos','perfil','formulario','sitio','correo','insights','anuncios','integraciones','conectores','automatizacion','reuniones','contabilidad','cobros','documentos','facturacion','portafolio','ayuda','formacion','soporte'] as const;
+export const companyViews=['contactos','proveedores','archivos','plantillas','categorias','articulos','catalogos','perfil','formulario','sitio','correo','insights','anuncios','integraciones','conectores','automatizacion','reuniones','contabilidad','cobros','documentos','facturacion','casos','ayuda','formacion','soporte'] as const;
 export type CompanyView=typeof companyViews[number];
 type Copy={es:string;en:string};
 const views:Record<CompanyView,{label:Copy;title:Copy;description:Copy}>={
@@ -62,7 +62,7 @@ const views:Record<CompanyView,{label:Copy;title:Copy;description:Copy}>={
  reuniones:{label:{es:'Reuniones',en:'Meetings'},title:{es:'Reuniones por video',en:'Video meetings'},description:{es:'Prepare reuniones con enlace de videollamada vinculadas a sus proyectos.',en:'Set up meetings with a video call link linked to your projects.'}},
  contabilidad:{label:{es:'Contabilidad',en:'Accounting'},title:{es:'Contabilidad',en:'Accounting'},description:{es:'Sincronice clientes, facturas y pagos con QuickBooks o exporte un CSV para cualquier sistema contable.',en:'Sync customers, invoices and payments with QuickBooks or export a CSV for any accounting system.'}},
  documentos:{label:{es:'Documentos con su marca',en:'Branded documents'},title:{es:'Documentos con su marca',en:'Branded documents'},description:{es:'El color, el logo y los datos de su empresa en las facturas, contratos, estados de cuenta, planes de pagos, recibos y órdenes de compra que imprime.',en:'Your colour, logo and company details on the invoices, contracts, statements, payment plans, receipts and purchase orders you print.'}},
- portafolio:{label:{es:'Portafolio y métricas',en:'Portfolio and metrics'},title:{es:'Portafolio y métricas del perfil',en:'Portfolio and profile metrics'},description:{es:'Publique un trabajo terminado como proyecto de su perfil, con el consentimiento de su cliente, y vea cuántas visitas se vuelven solicitudes y trabajos.',en:'Publish a finished job as a project on your profile, with your customer\'s consent, and see how many visits turn into requests and jobs.'}},
+ casos:{label:{es:'Casos de éxito y métricas',en:'Success stories and metrics'},title:{es:'Casos de éxito y métricas del perfil',en:'Success stories and profile metrics'},description:{es:'Publique un trabajo terminado como proyecto de su perfil, con el consentimiento de su cliente, y vea cuántas visitas se vuelven solicitudes y trabajos.',en:'Publish a finished job as a project on your profile, with your customer\'s consent, and see how many visits turn into requests and jobs.'}},
  ayuda:{label:{es:'Centro de ayuda',en:'Help center'},title:{es:'Centro de ayuda',en:'Help center'},description:{es:'Guías cortas de cada herramienta de Pro, con búsqueda.',en:'Short guides for each Pro tool, with search.'}},
  formacion:{label:{es:'Formación',en:'Training'},title:{es:'Formación',en:'Training'},description:{es:'Lecciones breves con su avance guardado.',en:'Short lessons with your progress saved.'}},
  soporte:{label:{es:'Soporte Pro',en:'Pro support'},title:{es:'Soporte Pro',en:'Pro support'},description:{es:'Escriba a nuestro equipo desde Pro y siga la conversación.',en:'Write to our team from Pro and follow the conversation.'}},
@@ -75,7 +75,7 @@ const groups:{label:Copy;items:CompanyView[]}[]=[
  // Round 7B: «Company files» has one entry, in the Pro side menu (tab pro_files); the
  // company-hub address ?empresa=archivos keeps working for old links.
  {label:{es:'Biblioteca',en:'Library'},items:['plantillas','categorias','articulos','catalogos']},
- {label:{es:'Marketing',en:'Marketing'},items:['perfil','formulario','sitio','correo','insights','anuncios','portafolio']},
+ {label:{es:'Marketing',en:'Marketing'},items:['perfil','formulario','sitio','correo','insights','anuncios','casos']},
  {label:{es:'Ayuda',en:'Help'},items:['ayuda','formacion','soporte']},
  {label:{es:'Configuración',en:'Settings'},items:['facturacion','integraciones','conectores','automatizacion','reuniones','contabilidad','cobros','documentos']},
 ];
@@ -123,7 +123,7 @@ export function CompanyHub({profileSlug,disabled=false}:{profileSlug:string|null
    {view==='cobros'&&user&&<PaymentReconciliation key={user.id}/>}
    {view==='documentos'&&user&&<DocumentBrandingSettings key={user.id}/>}
    {view==='facturacion'&&user&&<CompanyEinvoice key={user.id}/>}
-   {view==='portafolio'&&user&&<CompanyPortfolio key={user.id}/>}
+   {view==='casos'&&user&&<CompanyPortfolio key={user.id}/>}
    {view==='ayuda'&&user&&<ProHelpCenter key={user.id}/>}
    {view==='formacion'&&user&&<ProTraining key={user.id}/>}
    {view==='soporte'&&user&&<ProSupport key={user.id}/>}

@@ -3,7 +3,7 @@ import {useCallback,useEffect,useRef,useState} from 'react';
 import {useLocale} from 'next-intl';
 import {Button} from '@/components/ui/button';
 import {Modal} from '@/components/ui/modal';
-import {folderAccessMineSchema,folderAccessReadSchema,folderAccessResultSchema,type FolderAccessRead} from '@/lib/pro/company-folder-access';
+import {folderAccessMineSchema,folderAccessReadSchema,folderAccessResultSchema,type FolderAccessRead} from '@/lib/pro/company-folder-access-schemas';
 
 /**
  * Row 31 (Ronda F2-E): permissions per folder of the company library. Default: only the owner. The owner picks, for each current

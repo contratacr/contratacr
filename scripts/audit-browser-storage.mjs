@@ -8,6 +8,8 @@ import fs from "node:fs";
 // source of truth. The exact occurrence count makes additions fail CI even inside
 // a previously reviewed file.
 const reviewed = new Map([
+  ["src/components/pro/po-vendor-portal.tsx", { count: 2, reason: "random per-device token for the vendor secure link (no account, no identity); only used to tell this browser apart when answering a purchase order" }],
+  ["src/components/pro/pro-app-support.tsx", { count: 2, reason: "dismissed state of the install/support banner (presentation preference); no account data" }],
   ["src/lib/analytics/native-measurement.ts", { count: 2, reason: "session-scoped 30-minute timestamp deduplication for a closed event catalog; no identity, search text, business payload or account-owned records" }],
   ["src/lib/privacy/optional-consent.ts", { count: 18, reason: "versioned device-local statistics/advertising/AI choices, expiry reads and legacy refusals; no account content. Reviewed additions read remaining lifetime, clear optional attribution/first-use markers, and persist/read/remove a boolean-only HttpOnly cleanup retry marker. Cleanup waits for advertising withdrawal; authenticated explicit choices also persist in the consent ledger" }],
   ["src/components/privacy/optional-choice-recorder.tsx", { count: 4, reason: "short-lived session retry queue scoped to the current user and purpose; removed after the backend acknowledges the explicit action, never treated as a server receipt or inherited by another account" }],
