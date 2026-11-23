@@ -588,7 +588,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             hasActiveFilters={hasActiveFilters}
             mapFocusTarget={mapFocusTarget}
             resetKey={`${currentPage}:${paginationParams.toString()}`}
-            sinResultados={allResults.length === 0}
+            sinResultados={allResults.length === 0 && !businessMix}
             hojaAbiertaAlInicio={enLaApp}
             filters={<Suspense fallback={null}><SearchFilters initialValues={filterInitialValues} /></Suspense>}
             quickFilters={<Suspense fallback={null}><SearchFilters variant="chips" initialValues={filterInitialValues} /></Suspense>}
@@ -598,7 +598,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             {/* Results list */}
             <div className="min-w-0">
               {businessMix && <BusinessMixNote mix={businessMix} locale={locale} />}
-              {allResults.length === 0 ? (
+              {allResults.length === 0 && !businessMix ? (
                 // Tres cosas y en este orden: qué pasó, qué hacer, y la salida,
                 // con el MISMO dibujo que el resto del app en su tamaño
                 // compacto. Sobre el mapa el alto es caro: con el mosaico de
