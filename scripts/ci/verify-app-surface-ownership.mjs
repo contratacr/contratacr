@@ -239,6 +239,9 @@ const handlerRules = [
   // Ronda F2-B (row 35): one-click quote context from a lead.
   [/^\/api\/pro\/lead-quick-quote$/, "pro-sales-contracts-quote.spec.ts"],
   [/^\/api\/pro\/lead-pipeline$/, "pro-sales-pipeline.spec.ts"],
+  [/^\/api\/pro\/lead-pipeline\/rules$/, "pro-lead-stage-rules.spec.ts"],
+  [/^\/api\/pro\/client-contacts\/promote-channel$/, "pro-contact-merge-transfer.spec.ts"],
+  [/^\/api\/pro\/client-presentation(?:\/weather)?$/, "pro-client-presentation.spec.ts"],
   [/^\/api\/pro\/quote-proposals$/, "pro-sales-proposal.spec.ts"],
   [/^\/api\/pro\/work-changes$/, "pro-work-changes.spec.ts"],
   [/^\/api\/pro\/work-client-invitations$/, "pro-round4a.spec.ts"],
