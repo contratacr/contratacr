@@ -100,3 +100,31 @@ test('Schedule templates API: phase-only and milestone-only plans, source captur
   await f.db.from('pro_work_schedule_phases').update({position:999}).eq('owner_id',f.owner.id).eq('work_id',f.otherWorkId).eq('id',newPhase).throwOnError();const capped=await sourceSnapshot(f,f.otherWorkId);expect((await preview(page.context(),phaseTemplate,f.otherWorkId,'2024-02-29')).status()).toBe(409);expect((await mutate(page.context(),f.owner,{...phaseApply,actionId:crypto.randomUUID(),workRevision:2,phaseIds:[crypto.randomUUID()],phaseActionIds:[crypto.randomUUID()]})).status()).toBe(409);expect(await sourceSnapshot(f,f.otherWorkId)).toEqual(capped);expect((await f.db.from('pro_work_task_history').select('*').eq('owner_id',f.owner.id).throwOnError()).data).toEqual([]);expect((await f.db.from('pro_work_task_actions').select('*').eq('actor_id',f.owner.id).throwOnError()).data).toEqual([]);expect(await unchangedBusiness(f)).toEqual(before);
  }finally{await cleanupDisposableAccount(f.owner);}
 });
+test('Schedule templates API (row 79): link rules are saved with the template, survive an edit and are copied to the job on apply',async({page,baseURL})=>{
+ test.setTimeout(240000);assertLocal(baseURL);const f=await fixture(page.context());
+ try{
+  const context=page.context(),templateId=crypto.randomUUID(),a=crypto.randomUUID(),b=crypto.randomUUID();
+  const task=(id:string,title:string,startOffset:number,endOffset:number,dependsOn:string[])=>({id,title,details:'',assignee:'',dueOffset:null,phaseId:null,startOffset,endOffset,dependsOn});
+  const definition={phases:[],tasks:[task(a,'Preparar',0,2,[]),task(b,'Instalar',3,5,[a])],milestones:[]};
+  const save=(revision:number)=>({action:'save',actionId:crypto.randomUUID(),templateId,revision,name:'Con reglas',notes:'',...definition});
+  expect((await mutate(context,f.owner,save(0))).status()).toBe(200);
+  expect((await detail(context,templateId)).rules).toBeUndefined();
+  const rulesInput={action:'rules',actionId:crypto.randomUUID(),templateId,revision:1,rules:[{taskId:b,predecessorId:a,kind:'ss',lagDays:2}]};
+  const ruled=await mutate(context,f.owner,rulesInput);expect(ruled.status()).toBe(200);const ruledBody=await ruled.json();expect(ruledBody).toMatchObject({action:'rules',template:{id:templateId,revision:2}});
+  expect(await (await mutate(context,f.owner,rulesInput)).json()).toEqual(ruledBody);// idempotent replay
+  expect((await mutate(context,f.owner,{...rulesInput,actionId:crypto.randomUUID()})).status()).toBe(409);// stale revision
+  expect((await mutate(context,f.owner,{...rulesInput,actionId:crypto.randomUUID(),revision:2,rules:[{taskId:a,predecessorId:b,kind:'fs',lagDays:0}]})).status()).toBe(400);// no such dependency
+  expect((await mutate(context,f.owner,{...rulesInput,actionId:crypto.randomUUID(),revision:2,rules:[{taskId:b,predecessorId:a,kind:'ss',lagDays:999}]})).status()).toBe(400);
+  expect((await detail(context,templateId)).rules).toEqual([{taskId:b,predecessorId:a,kind:'ss',lagDays:2}]);
+  // Editing the template rewrites its tasks and dependencies; the rules must survive.
+  expect((await mutate(context,f.owner,save(2))).status()).toBe(200);
+  expect((await detail(context,templateId)).rules).toEqual([{taskId:b,predecessorId:a,kind:'ss',lagDays:2}]);
+  // Apply to a job: the rule is copied onto the NEW task ids, in the same transaction.
+  const taskIds=freshIds(2),operation={action:'apply',actionId:crypto.randomUUID(),templateId,revision:3,workId:f.otherWorkId,workRevision:0,startDate:'2025-01-30',phaseIds:[],phaseActionIds:[],taskIds,taskActionIds:freshIds(2),planActionIds:freshIds(2),milestoneIds:[],milestoneActionIds:[]};
+  const applied=await mutate(context,f.owner,operation);expect(applied.status()).toBe(200);
+  const stored=(await f.db.from('pro_schedule_link_rules').select('task_id,predecessor_id,kind,lag_days').eq('owner_id',f.owner.id).eq('work_id',f.otherWorkId).throwOnError()).data;
+  expect(stored).toEqual([{task_id:taskIds[1],predecessor_id:taskIds[0],kind:'ss',lag_days:2}]);
+  expect((await mutate(context,f.owner,operation)).status()).toBe(200);// replay keeps exactly one rule
+  expect(((await f.db.from('pro_schedule_link_rules').select('task_id').eq('owner_id',f.owner.id).eq('work_id',f.otherWorkId).throwOnError()).data??[]).length).toBe(1);
+ }finally{await cleanupDisposableAccount(f.owner);}
+});
