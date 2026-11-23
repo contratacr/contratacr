@@ -86,3 +86,19 @@ Función de referencia: el proveedor invitado responde la licitación desde su p
 - **UI del proveedor** (`bid-vendor-portal.tsx`): logo compartido `ContrataCRLogo`, precios por partida en el formato decimal del idioma (`inputCents` acepta coma o punto), total por partida y de la oferta, plazo, validez y notas; aviso de envío; mensajes ES/EN para enlace usado, vencido, anulado, inválido, sesión cerrada, licitación cerrada, tope de envíos, demasiados intentos y resultado incierto (reintentar el mismo envío o el mismo canje no duplica).
 - **Pruebas**: `$S/secfix-draft/sql-tests/bid-portal-test.sql` (`begin … rollback`, 53 PASS + «ALL BID PORTAL CHECKS PASSED», incluye notas internas ocultas, reintento de creación sin token, canje del mismo dispositivo, tope de 50 envíos, `actionId` derivado (UUID v8 válido) y `uninvite` rechazado; `authenticated`/`anon` → 42501, 0 enlaces tras el rollback); `$S/secfix-draft/sql-tests/bid-portal-pglite.mjs` (29 PASS en PGlite aislado; calcula el id derivado en JS, sin usar el SQL, y comprueba que todo el historial pase `z.uuid()`); spec `tests/e2e/pro-bid-portal.spec.ts` (ES/EN; necesita el servidor dev con `PRO_BID_PORTAL_SECRET`, ver arriba). La spec hace 17 escrituras a `/api/pro/bid-portal` por idioma y el límite por IP es de 40/min en memoria del servidor dev: correrla dos veces seguidas (menos de un minuto entre corridas) puede dar 429 en el reintento idempotente; esperar un minuto o reiniciar el servidor.
 - **Fuera de alcance**: cuenta o directorio público de proveedores, correo/WhatsApp automático, adjuntos del proveedor, preguntas y respuestas, cierre automático por fecha (el envío sí se bloquea pasada la fecha límite).
+
+## Decisión de producto: el proveedor sin cuenta responde con enlace seguro (2026-11-23)
+
+Decisión de Isaac: **el proveedor que no tiene cuenta responde por enlace seguro** (un solo uso, solo el hash con clave en la base, vencimiento, anulable o reemplazable, vista limitada a su propia invitación). **Una cuenta propia de proveedor en ContrataCR no se construye**: el directorio de proveedores sigue siendo el de la empresa (Empresa › Proveedores). La misma decisión rige para el envío y respuesta de las órdenes de compra ([detalle](purchase-orders-local.md)).
+
+Recorrido completo y su cobertura por spec (`playwright.pro-local.config.ts`, sin ejecutar todavía en CI):
+
+| Paso | Spec |
+| --- | --- |
+| Crear licitación, invitar proveedores, abrir | `pro-bids.spec.ts` |
+| Enlace seguro de un solo uso, vencimiento, anulación, oferta del proveedor | `pro-bid-portal.spec.ts` |
+| Adjuntos del proveedor y aviso de adjudicación | `pro-round4b-portal.spec.ts` |
+| Preguntas y respuestas | `pro-bid-questions.spec.ts` |
+| Comparar ofertas, adjudicar por partida, órdenes de compra en borrador | `pro-bids.spec.ts` |
+
+Con esto la fila 53 queda cerrada: no queda un hueco de recorrido sin spec.
