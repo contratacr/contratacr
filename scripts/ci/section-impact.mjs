@@ -8,7 +8,7 @@ const ts = require(process.env.CI_TYPESCRIPT_MODULE || 'typescript');
 // No resolver, setup hooks, engines or executable source imports changed.
 export const reviewedConfiguration = {
   'next.config.ts': '21877a39357bf08af41303110cb1aa76b2d7bf42',
-  'playwright.config.ts': '222b8d6fd13d98030afd527b35e5de1cb4396b02',
+  'playwright.config.ts': 'ec664a347721dbafb8c0f4b5a892e092a041e466',
   'playwright.mobile.config.ts': '965ffec956c9f1833e5e1e83659edc9ec5c999df',
 };
 const configCode = p => /^(?:next|playwright(?:\.mobile)?)\.config\.[cm]?[jt]s$/.test(p);
