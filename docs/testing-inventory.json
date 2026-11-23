@@ -28496,16 +28496,20 @@
       "file": "tests/e2e/imagenes-al-compartir.spec.ts",
       "cases": [
         {
-          "line": 44,
+          "line": 45,
           "title": "\"los logos de la tarjeta (símbolo y nombre) son PNG íntegros\""
         },
         {
-          "line": 61,
+          "line": 62,
           "title": "\"toda imagen de vista previa es un PNG de 1200x630 con contenido, no un lienzo en blanco\""
         },
         {
-          "line": 62,
+          "line": 63,
           "title": "/127\\.0\\.0\\.1:9\\b/.test(baseURL ?? \"\")"
+        },
+        {
+          "line": 76,
+          "title": "\"el texto de la tarjeta se reparte en líneas parejas, sin una palabra sola abajo\""
         }
       ]
     },

@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { inflateSync } from "node:zlib";
 import { expect, test } from "playwright/test";
+import { lineasEquilibradas } from "../../src/lib/seo/tarjeta-de-marca";
 
 /**
  * LA IMAGEN AL COMPARTIR UN ENLACE NO PUEDE SALIR EN BLANCO (21-nov-2026).
@@ -69,5 +70,18 @@ test("toda imagen de vista previa es un PNG de 1200x630 con contenido, no un lie
     expect(cuerpo.length, `${ruta}: debe ser liviana`).toBeLessThan(300_000);
     expect(cuerpo.readUInt32BE(16), ruta).toBe(1200);
     expect(cuerpo.readUInt32BE(20), ruta).toBe(630);
+  }
+});
+
+test("el texto de la tarjeta se reparte en líneas parejas, sin una palabra sola abajo", () => {
+  const promesa = lineasEquilibradas("Encuentre y ofrezca servicios en Costa Rica", 52);
+  expect(promesa.join(" ")).toBe("Encuentre y ofrezca servicios en Costa Rica");
+  expect(promesa.length).toBeLessThanOrEqual(3);
+  expect(promesa.at(-1)!.length, "la última línea no puede ser una palabra suelta").toBeGreaterThan(7);
+  for (const corto of ["Vacantes en Costa Rica", "Solicitudes en Costa Rica", "Cotizaciones en minutos", "Find and offer services in Costa Rica"]) {
+    const lineas = lineasEquilibradas(corto, corto.length > 34 ? 52 : 62);
+    expect(lineas.join(" ")).toBe(corto);
+    expect(lineas.length, corto).toBeLessThanOrEqual(3);
+    if (lineas.length > 1) expect(Math.max(...lineas.map((l) => l.length)) - Math.min(...lineas.map((l) => l.length)), corto).toBeLessThanOrEqual(10);
   }
 });

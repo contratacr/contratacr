@@ -3348,7 +3348,7 @@
     },
     "seccionProfesionales": {
       "etiqueta": "Profesionales",
-      "corto": "Profesionales en Costa Rica",
+      "corto": "Encuentre y ofrezca servicios en Costa Rica",
       "titulo": "Encuentre profesionales en Costa Rica",
       "detalle": "Busque por servicio y ubicación y contacte directamente por WhatsApp.",
       "pie": "Ofrezca y encuentre servicios en Costa Rica."
@@ -3368,7 +3368,7 @@
       "pie": "Presente sus servicios con una cotización clara."
     },
     "marca": {
-      "titulo": "Profesionales en Costa Rica"
+      "titulo": "Encuentre y ofrezca servicios en Costa Rica"
     }
   },
   "accountPrivacy": {
