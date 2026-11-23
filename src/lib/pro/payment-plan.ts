@@ -93,3 +93,18 @@ export function paymentPlanLabels(t:(es:string,en:string)=>string){
  return{status:{pending:t('Pendiente','Pending'),partial:t('Abonada en parte','Partially paid'),paid:t('Pagada','Paid'),overdue:t('Vencida','Overdue')} as Record<PaymentPlanStatus,string>,
   frequency:{weekly:t('Semanal','Weekly'),biweekly:t('Quincenal','Every two weeks'),monthly:t('Mensual','Monthly'),custom:t('Fechas a la medida','Custom dates')} as Record<string,string>};
 }
+
+/** Delinquency (mora) state and reminder log of the installment plans (migration 382). */
+export const moraKinds=['upcoming','late_light','late_moderate','late_severe'] as const;
+export type MoraKind=typeof moraKinds[number];
+export const paymentPlanMoraSchema=z.object({today:day,workId:z.string().nullable(),
+ summary:z.object({lateCount:z.number().int().nonnegative(),lateCents:cents,lateFeeCents:cents,upcomingCount:z.number().int().nonnegative(),upcomingCents:cents,worstDays:z.number().int().nonnegative(),
+  clientCount:z.number().int().nonnegative(),worstLevel:z.enum(['late_light','late_moderate','late_severe']).nullable()}).strict(),
+ rows:z.array(z.object({workId:z.string(),workTitle:z.string().nullable(),clientId:z.string().nullable(),clientName:z.string().nullable(),planId:id,revision:z.number().int().positive(),seq:z.number().int().nonnegative(),
+  itemKind:z.enum(['down','installment']),dueDate:day,daysOverdue:z.number().int().nonnegative(),pendingCents:cents,lateFeeCents:cents,kind:z.enum(moraKinds),hasEmail:z.boolean(),hasPhone:z.boolean()}).strict()).max(500),
+ reminders:z.array(z.object({id:id,workId:z.string(),planId:id,seq:z.number().int().nonnegative(),kind:z.enum(moraKinds),channel:z.enum(['app','email','sms']),status:z.enum(['recorded','queued','sandbox_sent','failed']),
+  dueDate:day,pendingCents:cents,daysOverdue:z.number().int().nonnegative(),createdAt:stamp,sentAt:stamp.nullable(),providerRef:z.string().nullable(),clientName:z.string().nullable()}).strict()).max(50),
+}).strict();
+export type PaymentPlanMora=z.infer<typeof paymentPlanMoraSchema>;
+export const paymentPlanReminderResultSchema=z.object({created:z.number().int().nonnegative(),app:z.number().int().nonnegative(),email:z.number().int().nonnegative(),sms:z.number().int().nonnegative(),
+ withoutContact:z.number().int().nonnegative(),mode:z.enum(['sandbox','live']),sent:z.number().int().nonnegative(),failed:z.number().int().nonnegative()}).strict();

@@ -113,6 +113,15 @@ for(const language of ['es','en'] as const)test(`Credits & retainers: ledger reu
   // ---- API: refund (manual record) and void ----
   const refunded=await post({action:'refund',actionId:crypto.randomUUID(),workId,id:ant1,revision:4,amountCents:50000,refundedOn:today,method:'sinpe',reference:'DEV-1',note:null});
   expect(refunded).toMatchObject({availableCents:150000,refundedCents:50000});expect(refunded!.refunds[0].code).toBe('REE-0001');
+  // ---- API: customer credit ledger (row 50): signed append-only entries, reversal as an inverse entry, reconciled ----
+  const ledgerApi='/api/pro/credit-ledger';
+  const ledgerGet=async(query:Record<string,string>,status=200)=>{const r=await page.request.get(ledgerApi+'?'+new URLSearchParams(query),{headers:{'X-Pro-Expected-Actor':owner.id}});expect(r.status(),JSON.stringify(query)).toBe(status);return status===200?await r.json():null;};
+  const book=await ledgerGet({workId});
+  expect(book.reconciled).toBe(true);expect(book.entries.map((e:{event:string})=>e.event)).toEqual(expect.arrayContaining(['received','apply','unapply','refund']));
+  expect(book.entries.find((e:{event:string})=>e.event==='unapply').deltaCents).toBe(-book.entries.find((e:{event:string})=>e.event==='apply').deltaCents);
+  expect(book.balanceCents).toBe(book.entries[0].balanceCents);expect((await ledgerGet({clientId})).scope).toBe('client');
+  await ledgerGet({},400);await ledgerGet({workId,clientId},400);
+  expect((await page.request.get(ledgerApi+'?workId='+workId,{headers:{'X-Pro-Expected-Actor':rival.id}})).status()).toBe(403);
   const refundTab=await list({tab:'refund'});expect(refundTab.tab).toBe('refund');expect(refundTab.totals.totalCents).toBe(50000);
   // ---- API: overpayment detection from the ledger ----
   await ledger(db,owner.id,{workId,clientId,kind:'payment',amountCents:400000,note:'Pago adicional'});
@@ -185,6 +194,8 @@ for(const language of ['es','en'] as const)test(`Credits & retainers: ledger reu
   await reloaded.locator('[data-credits-tab="overpayment"]').click();await expect(reloaded.locator('[data-credits-detection]')).toContainText(en?'No overpayment detected':'No se detecta sobrepago');
   await reloaded.locator('[data-credits-tab="refund"]').click();await expect(reloaded.locator('[data-credits-empty]')).toContainText(en?'There are no refunds recorded for this project.':'No hay reembolsos registrados en este proyecto.');
   await expectNoHorizontalOverflow(page);await page.screenshot({path:info.outputPath(`credits-tabs-${language}${mobile?'-mobile':''}.png`),fullPage:true});
+  const book2=reloaded.locator('[data-credit-ledger]');await expect(book2).toBeVisible();await expect(book2.locator('[data-ledger-reconciled="yes"]')).toBeVisible();
+  await expect(book2.locator('[data-ledger-entry="received"]').first()).toBeVisible();await expectNoHorizontalOverflow(page);
   const uiList=await list({},uiWorkId);expect(uiList.items[0]).toMatchObject({code:'ANT-0005',status:'available',amountCents:150000,appliedCents:0,availableCents:150000});
   expect(runtime).toEqual([]);
  }finally{await cleanupDisposableAccount(f.owner);await cleanupDisposableAccount(f.rival);}

@@ -7,6 +7,7 @@ import {pushProParams} from '@/lib/pro/navigation';
 import {proMoney} from '@/lib/pro/money';
 import {proCount} from '@/lib/pro/plural';
 import {PaymentLinkPanel} from './payment-link-panel';
+import {PaymentPlanMora} from './payment-plan-mora';
 import {centsToColones,colonesToCents,paymentPlanDue,paymentPlanLabels,paymentPlanReadSchema,paymentPlanSplit,type PaymentPlanFrequency,type PaymentPlanItem,type PaymentPlanRead,type PaymentPlanState} from '@/lib/pro/payment-plan';
 
 /**
@@ -86,6 +87,7 @@ export function WorkPaymentPlan({accountId,workId,disabled=false}:{accountId:str
    </div>
    {data.history.length>0&&<details className="text-sm"><summary className="min-h-11 cursor-pointer py-2 font-semibold">{t('Historial del plan','Plan history')}</summary><ul data-payment-plan-history className="space-y-1 text-xs text-[#52627a]">{data.history.map((entry,index)=><li key={index}>{stampDay(entry.at,en)} · {({create:t('Plan creado','Plan created'),edit:t('Nueva versión','New version'),cancel:t('Plan cancelado','Plan cancelled'),accept:t('Aceptado por el cliente','Accepted by the customer'),invoice:t('Borrador de factura de una cuota','Invoice draft for an installment')} as Record<string,string>)[entry.action]} · {t('versión ','version ')}{entry.revision}</li>)}</ul></details>}
   </div>}
+  {plan&&plan.status==='active'&&<PaymentPlanMora accountId={accountId} workId={workId} disabled={disabled} refreshKey={plan.updatedAt}/>}
   {notice&&<p role="status" className="text-sm text-green-800">{notice}</p>}
   {error&&<p role="alert" className="text-sm text-red-700">{error}</p>}
   {editing&&data&&<PlanEditor accountId={accountId} data={data} onClose={()=>setEditing(false)} onSaved={async message=>{setEditing(false);setNotice(message);await load();}} onConflict={load}/>}

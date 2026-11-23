@@ -37,6 +37,8 @@ async function fixture(context:BrowserContext){
  }catch(error){await cleanupDisposableAccount(owner);if(client)await cleanupDisposableAccount(client);if(rival)await cleanupDisposableAccount(rival);throw error;}
 }
 
+async function shot(page:Page,path:string,full=false){await expectNoHorizontalOverflow(page);await page.screenshot({path,fullPage:full});}
+
 for(const language of ['es','en'] as const)test(`Budget sync: approved change order creates budget codes once [${language}]`,async({page,baseURL},info)=>{
  test.setTimeout(300000);local(baseURL);const en=language==='en',f=await fixture(page.context()),{owner,client,rival,db,workId}=f;
  const mobile=(page.viewportSize()?.width??1366)<1024,out=(name:string)=>info.outputPath(`${name}-${language}${mobile?'-mobile':''}.png`);

@@ -107,3 +107,17 @@ export const creditQuerySchema=z.union([
   .refine(value=>{const tab=value.tab??'retainer',status=value.status??'all';if(status==='all')return true;return tab==='refund'?(refundStatuses as readonly string[]).includes(status):(creditStatuses as readonly string[]).includes(status)&&(tab==='retainer'||status!=='requested');}),
 ]);
 export type CreditQuery=z.infer<typeof creditQuerySchema>;
+
+/** Ledger of what the professional holds in favour of a customer (migration 381). Entries are signed, append-only and reconciled with the credit figures. */
+export const creditLedgerEvents=['received','apply','unapply','apply_void','refund','void_refund','cancel','source_reversed'] as const;
+export type CreditLedgerEvent=typeof creditLedgerEvents[number];
+export const creditLedgerQuerySchema=z.union([z.object({workId}).strict(),z.object({clientId:workId}).strict()]);
+export const creditLedgerSchema=z.object({
+ scope:z.enum(['work','client']),workId:workId.nullable(),client:z.object({id:z.string(),name:z.string(),archived:z.boolean()}).strict(),
+ balanceCents:cents,receivedCents:cents,appliedCents:cents,refundedCents:cents,closedCents:cents,entryCount:count,truncated:z.boolean(),reconciled:z.boolean(),
+ entries:z.array(z.object({seq:z.number().int().positive(),at:stamp,event:z.enum(creditLedgerEvents),creditId:uuid,code:z.string(),kind:z.enum(creditKinds),title:z.string(),
+  workId:z.string(),workTitle:z.string().nullable(),deltaCents:cents,balanceCents:cents,reference:z.string().nullable()}).strict()).max(200),
+ credits:z.array(z.object({creditId:uuid,code:z.string(),title:z.string(),workId:z.string(),status:z.enum(['requested','active','cancelled']),ledgerCents:cents,balanceCents:cents,reconciled:z.boolean()}).strict()),
+ byWork:z.array(z.object({workId:z.string(),title:z.string().nullable(),balanceCents:cents}).strict()),
+}).strict();
+export type CreditLedger=z.infer<typeof creditLedgerSchema>;

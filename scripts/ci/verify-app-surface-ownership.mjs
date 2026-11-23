@@ -175,6 +175,7 @@ const handlerRules = [
   [/^\/api\/pro\/integrations\/webhooks\/tilopay$/, "pro-round6a-integrations.spec.ts"],
   [/^\/api\/pro\/invoice-document-settings$/, "pro-catalog-item-types.spec.ts"],
   [/^\/api\/pro\/invoice-drafts$/, "pro-invoice-drafts.spec.ts"],
+  [/^\/api\/pro\/invoice-delivery$/, "pro-invoice-delivery.spec.ts"],
   [/^\/api\/pro\/invoice-issuer$/, "pro-issuer-settings.spec.ts"],
   [/^\/api\/pro\/invoice-management$/, "pro-invoice-management.spec.ts"],
   [/^\/api\/pro\/invoice-payments$/, "pro-invoice-payments.spec.ts"],

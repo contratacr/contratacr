@@ -187,6 +187,15 @@ for(const language of ['es','en'] as const)test(`Round 5: payment plan API guard
   const retry=await page.request.post(planApi,{headers:h,data:input});expect(await retry.json()).toEqual(await first.json());// idempotent actionId
   const plan=(await first.json()).plan;expect(plan.items.map((item:{amountCents:number})=>item.amountCents)).toEqual([20000000,20000000,20000000]);
   expect(plan.items[0].status).toBe('overdue');// due yesterday (Costa Rica date)
+  // Row 57: mora state and reminders (tray recorded, e-mail/SMS only through the sandbox adapter: nothing is sent).
+  const remindersApi=origin+'/api/pro/payment-plan-reminders';
+  const mora=await (await page.request.get(remindersApi+'?'+new URLSearchParams({workId:f.workId}),{headers:{'X-Pro-Expected-Actor':f.owner.id}})).json();
+  expect(mora.summary).toMatchObject({lateCount:1,worstDays:1,worstLevel:'late_light'});expect(mora.rows[0]).toMatchObject({kind:'late_light',daysOverdue:1});
+  const prepared=await page.request.post(remindersApi,{headers:h,data:{action:'prepare',workId:f.workId}});expect(prepared.status()).toBe(200);
+  const preparedBody=await prepared.json();expect(preparedBody).toMatchObject({mode:'sandbox',failed:0});expect(preparedBody.app).toBeGreaterThan(0);
+  const again=await (await page.request.post(remindersApi,{headers:h,data:{action:'prepare',workId:f.workId}})).json();expect(again.created).toBe(0);
+  expect((await page.request.post(remindersApi,{headers:{'X-Pro-Expected-Actor':f.owner.id},data:{action:'prepare'}})).status()).toBe(403);
+  expect((await page.request.post(remindersApi,{headers:h,data:{action:'prepare',extra:1}})).status()).toBe(400);
   expect((await page.request.post(planApi,{headers:h,data:{...input,actionId:crypto.randomUUID(),planId:crypto.randomUUID()}})).status()).toBe(409);// one active plan
   expect((await page.request.post(planApi,{headers:h,data:{action:'cancel',actionId:crypto.randomUUID(),workId:f.workId,planId:plan.planId,revision:7,reason:'x'}})).status()).toBe(409);// stale revision
   await f.db.from('pro_client_entries').insert(payment).throwOnError();

@@ -1,5 +1,6 @@
 'use client';
 
+import {WorkCreditLedger} from './work-credit-ledger';
 import {useCallback,useEffect,useLayoutEffect,useRef,useState,type FormEvent,type ReactNode} from 'react';
 import {useLocale} from 'next-intl';
 import {useAuth} from '@/hooks/use-auth';
@@ -147,6 +148,7 @@ export function WorkCredits({workId,onStateChange}:{workId:string}&StateCallback
 
 function CreditsSession({accountId,workId,onStateChange}:{accountId:string;workId:string}&StateCallback){
  const en=useLocale()==='en',c=copy(en);
+ const [ledgerKey,setLedgerKey]=useState(0);
  const [list,setList]=useState<CreditList|null>(null),[listStatus,setListStatus]=useState('all'),[loading,setLoading]=useState(true),[loadError,setLoadError]=useState(false);
  const [tab,setTab]=useState<CreditTab>('retainer'),[status,setStatus]=useState('all'),[cursors,setCursors]=useState<Array<number|null>>([null]);
  const [openId,setOpenId]=useState<string|null>(null),[detail,setDetail]=useState<Extract<CreditDetail,{history:unknown}>|null>(null),[detailError,setDetailError]=useState(false);
@@ -189,7 +191,7 @@ function CreditsSession({accountId,workId,onStateChange}:{accountId:string;workI
    if(!response.ok){pending.current=null;setUncertain(false);setError(invalid);return false;}
    const body=creditResultSchema.parse(await response.json());if(body.credit.id!==input.id||body.credit.workId!==workId)throw Error();
    pending.current=null;setUncertain(false);
-   if(active.current){setForm(null);setNotice(c.notices[historyAction(input)]);setOpenId(body.credit.id);if(input.action.startsWith('create_'))setCursors([null]);}
+   if(active.current){setLedgerKey(k=>k+1);setForm(null);setNotice(c.notices[historyAction(input)]);setOpenId(body.credit.id);if(input.action.startsWith('create_'))setCursors([null]);}
    lock.current=false;await Promise.all([load(),loadDetail(body.credit.id)]);return true;
   }catch{setUncertain(true);setError(c.uncertain);return false;}
   finally{lock.current=false;if(active.current)setSaving(false);}
@@ -295,6 +297,7 @@ function CreditsSession({accountId,workId,onStateChange}:{accountId:string;workI
     <Button className="min-h-11" type="button" variant="secondary" disabled={busy||loading||list.nextCursor===null} onClick={()=>{const next=list.nextCursor;if(next!==null)setCursors(value=>[...value,next]);}}>{c.next}</Button>
    </nav>}
   </>}
+  <WorkCreditLedger workId={workId} accountId={accountId} refreshKey={ledgerKey}/>
  </section>;
 }
 
