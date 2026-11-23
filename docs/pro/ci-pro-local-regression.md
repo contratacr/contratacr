@@ -66,3 +66,13 @@ En GitHub: Actions, "Pro Local Regression", Run workflow.
   `FULL_SHARDS` en `scripts/ci/pro-local-plan.mjs` (la matriz sale de ahí).
 - Esta primera versión del workflow no se pudo ejecutar fuera de GitHub (no hay Docker local): el primer run en `test`
   es su validación y puede destapar specs que fallen en el entorno limpio.
+
+## PostgREST fijado en v16.5 (2026-11-23)
+
+La corrida 45236651136 fallo en ~900 specs: con el PostgREST 14.14 que trae el CLI 2.109.0, una funcion que lanza
+SQLSTATE 40001 (conflicto de revision, usado en toda la capa Pro) se reintenta sin fin, la peticion cuelga hasta el
+timeout de 15 s del spec y las transacciones colgadas agotan el pool. El Mac usa v16.5 (`supabase/supabase.lock`), que
+responde 409 al instante. El workflow escribe `supabase/.temp/rest-version` con `v16.5` antes de `supabase start` y un
+paso de sondeo falla en segundos si un 40001 no responde 409. Pendiente para Isaac: comprobar si el PostgREST del
+proyecto alojado de test tiene el mismo reintento; de ser asi, cada conflicto de revision colgaria alli tambien y la
+correccion duradera es un SQLSTATE propio no reintentable en lugar de 40001.

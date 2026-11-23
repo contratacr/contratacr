@@ -158,6 +158,15 @@ jobs:
           GHCR_USER: ${{ github.actor }}
         run: printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GHCR_USER" --password-stdin
 
+      - name: Pin PostgREST to the version the local Pro suite was written against
+        run: |
+          # CLI 2.109.0 defaults to PostgREST 14.14, which retries a transaction that raises SQLSTATE 40001 (the Pro
+          # revision conflicts) until the client gives up: every stale-revision write hung until the 15 s API timeout
+          # and the stuck transactions starved the pool. supabase/supabase.lock (local stack) resolves v16.5, which
+          # answers 409 at once. The CLI reads this file and swaps the tag (apps/cli-go/pkg/config/config.go).
+          mkdir -p supabase/.temp
+          printf 'v16.5' > supabase/.temp/rest-version
+
       - name: Start the minimal local Supabase stack
         run: >-
           supabase start
@@ -216,6 +225,35 @@ jobs:
           npm run seed:local:regression
           npm run verify:local:regression
 
+      - name: Probe that a SQLSTATE 40001 conflict answers 409 instead of hanging
+        run: |
+          set -uo pipefail
+          rest=$(docker ps --format '{{.Names}}' | grep -E '^supabase_rest_' | head -n 1)
+          docker logs "$rest" 2>&1 | grep -m1 'Starting PostgREST' || echo "PostgREST version line not found"
+          psql -v ON_ERROR_STOP=1 -q <<'SQL'
+          create or replace function public.ci_probe_serialization_failure() returns void language plpgsql as $$
+          begin raise exception 'probe' using errcode = '40001'; end $$;
+          revoke all on function public.ci_probe_serialization_failure() from public, anon, authenticated;
+          grant execute on function public.ci_probe_serialization_failure() to service_role;
+          notify pgrst, 'reload schema';
+          SQL
+          code=000
+          for attempt in 1 2 3 4 5; do
+            sleep 2
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 -X POST \
+              -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+              -H 'Content-Type: application/json' -d '{}' \
+              "$NEXT_PUBLIC_SUPABASE_URL/rest/v1/rpc/ci_probe_serialization_failure") || code=timeout
+            [ "$code" = "404" ] || break
+          done
+          # Never leave the probe behind: posture checks scan public functions and grants.
+          psql -v ON_ERROR_STOP=1 -q -c 'drop function if exists public.ci_probe_serialization_failure(); notify pgrst, '"'"'reload schema'"'"';'
+          echo "Probe answered: $code"
+          if [ "$code" != "409" ]; then
+            echo "::error::PostgREST did not answer a SQLSTATE 40001 conflict with 409 (got $code): revision conflicts would hang the Pro suite."
+            exit 1
+          fi
+
       - name: Install browser engines
         timeout-minutes: 10
         run: npx playwright install --with-deps chromium ${{ github.event.inputs.webkit == 'true' && 'webkit' || '' }}
@@ -264,7 +302,7 @@ jobs:
           echo "::group::dev-server.log (tail)"
           tail -n 400 dev-server.log || true
           echo "::endgroup::"
-          for name in $(docker ps --format '{{.Names}}' | grep -E 'supabase_(auth|rest|kong)_' || true); do
+          for name in $(docker ps --format '{{.Names}}' | grep -E 'supabase_(auth|rest|kong|db)_' || true); do
             echo "::group::$name"
             docker logs --tail 30000 "$name" 2>&1 | grep -v '/realtime/v1/websocket' | tail -8000 || true
             echo "::endgroup::"
