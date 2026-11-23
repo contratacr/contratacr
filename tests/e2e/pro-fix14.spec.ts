@@ -184,6 +184,12 @@ for(const language of ['es','en'] as const)test(`Fix 14: «My project» page and
   const ownerWrite=await page.request.post('/api/pro/quote-line-decisions',{headers:{Origin:origin,'X-Pro-Expected-Actor':owner},data:{actionId:crypto.randomUUID(),publicationId,lineId:l1,decision:'declined',note:'',revision:1}});expect(ownerWrite.status()).toBe(403);
   expect((await strangerContext.request.get(origin+'/api/pro/quote-line-decisions?'+new URLSearchParams({publicationId}))).status()).toBe(403);
   const stale=await customerContext.request.post(origin+'/api/pro/quote-line-decisions',{headers:{Origin:origin},data:{actionId:crypto.randomUUID(),publicationId,lineId:l1,decision:'declined',note:'',revision:0}});expect(stale.status()).toBe(409);
+  // Row 39: the owner turns the APPROVED line into a new private estimate draft; replay is idempotent; the customer cannot convert.
+  const convertInput={actionId:crypto.randomUUID(),publicationId,targetEstimateId:crypto.randomUUID()},convertHeaders={Origin:origin,'X-Pro-Expected-Actor':owner};
+  const converted=await page.request.post('/api/pro/quote-line-convert',{headers:convertHeaders,data:convertInput});expect(converted.status(),await converted.text()).toBe(200);
+  const convertedBody=await converted.json() as {action:string;lineCount:number;estimate:{id:string}};expect(convertedBody).toMatchObject({action:'convert_approved',lineCount:1,estimate:{id:convertInput.targetEstimateId}});
+  expect(await (await page.request.post('/api/pro/quote-line-convert',{headers:convertHeaders,data:convertInput})).json()).toEqual(convertedBody);
+  expect((await customerContext.request.post(origin+'/api/pro/quote-line-convert',{headers:{Origin:origin},data:{actionId:crypto.randomUUID(),publicationId,targetEstimateId:crypto.randomUUID()}})).status()).toBe(403);
   expect(custErrors).toEqual([]);
  }finally{for(const c of contexts)await c.close();if(customer)await cleanupDisposableAccount(customer);if(stranger)await cleanupDisposableAccount(stranger);await f.cleanup();}
 });
