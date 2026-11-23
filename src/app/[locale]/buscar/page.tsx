@@ -32,7 +32,12 @@ import { safeGetUser } from "@/lib/supabase/get-user";
 import { recordServerInteraction } from "@/lib/analytics/server-events";
 import { rutaDeBusqueda } from "@/lib/buscar-url";
 import { perfilesBloqueadosPor } from "@/lib/queries/bloqueos";
-import { BusinessesBlock } from "@/components/search/businesses-block";
+import { BusinessMixNote, loadBusinessMix } from "@/components/search/businesses-block";
+import type { MapProfessional } from "@/components/maps/search-map-panel";
+import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
+import { PlaceCard } from "@/components/directory/place-card";
+import type { PlaceSearchItem } from "@/lib/directory/search-schemas";
+import type { CardExtra } from "@/lib/directory/card-extras";
 import { sitemapSections } from "@/lib/directory/sitemap-sections";
 
 interface SearchPageProps {
@@ -141,6 +146,14 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   // base («aire_acondicionado», «sj») apuntaba a una dirección que responde 308,
   // y un canónico que redirige es un canónico que Google descarta.
   return { ...compartir, alternates: { canonical: `${prefijoDeIdioma(locale)}/servicios/${categorySlug(categoria)}${provincia ? `/${provincia.slug}` : ""}${provincia && canton?.slug ? `/${canton.slug}` : ""}` } };
+}
+
+function BusinessMixCard({ item, extra, locale }: { item: PlaceSearchItem; extra: CardExtra | null; locale: string }) {
+  return (
+    <div id={`pro-card-biz-${item.slug}`} data-pro-id={`biz-${item.slug}`} data-business-card="" className="ccr-search-card-slot relative w-full scroll-mt-24 transition-shadow lg:max-w-none lg:rounded-2xl">
+      <PlaceCard item={item} locale={locale} extra={extra} />
+    </div>
+  );
 }
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
@@ -278,7 +291,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   };
   // Every professional with a pin marked on the map shows there, not just the
   // ones already rendered as cards: the map is the overview of the whole search.
-  const mapData = orderedResults.flatMap((pro) => {
+  const mapData: MapProfessional[] = orderedResults.flatMap((pro) => {
     const base = {
       id: pro.id,
       proId: pro.id,
@@ -310,6 +323,22 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   // several pins, every pin repeats that same number.
   const numbering: Record<string, number> = {};
   orderedResults.forEach((pro, index) => { numbering[pro.id] = index + 1; });
+
+  // Businesses named by the search (e.g. "farmacias") are mixed into the SAME list and map (page 1 only):
+  // one business after every two professionals, never ordered by payment.
+  const businessMix = currentPage === 1
+    ? await loadBusinessMix(params.q, sitemapSections().map((s) => s.section), locale, { provinceId: selectedProvinceId, cantonId: selectedCantonId, lat: nearLat, lng: nearLng })
+    : null;
+  if (businessMix) {
+    for (const item of businessMix.items) {
+      if (!item.location) continue;
+      mapData.push({
+        id: `biz-${item.slug}`, proId: `biz-${item.slug}`, slug: item.slug, fullName: item.name,
+        ratingAvg: 0, reviewCount: 0, lat: item.location.lat, lng: item.location.lng,
+        kind: "business", href: rutaConIdioma(locale, `/lugar/${item.slug}`),
+      });
+    }
+  }
 
   // Con ?categoria= viene explícito. Si se buscó escribiendo el servicio, se
   // resuelve desde el texto para que la tarjeta destaque ese y no la lista
@@ -568,15 +597,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
             {/* Results list */}
             <div className="min-w-0">
-              <Suspense fallback={null}>
-                <BusinessesBlock
-                  q={params.q}
-                  sections={sitemapSections().map((s) => s.section)}
-                  locale={locale}
-                  location={{ provinceId: selectedProvinceId, cantonId: selectedCantonId, lat: nearLat, lng: nearLng }}
-                  hasProfessionals={allResults.length > 0}
-                />
-              </Suspense>
+              {businessMix && <BusinessMixNote mix={businessMix} locale={locale} />}
               {allResults.length === 0 ? (
                 // Tres cosas y en este orden: qué pasó, qué hacer, y la salida,
                 // con el MISMO dibujo que el resto del app en su tamaño
@@ -599,7 +620,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       height - one card per row, each grows to its content. */}
                   <div className="ccr-search-results-list -mx-4 flex min-h-full w-[calc(100%+2rem)] min-w-0 max-w-none flex-col gap-1.5 overflow-x-clip bg-white lg:mx-0 lg:min-h-0 lg:w-full lg:gap-3 lg:bg-transparent lg:overflow-visible">
                     <ContactAvailabilityProvider {...initialContacts}>
-                    {results.map((pro, i) => (
+                    {results.flatMap((pro, i) => [
+                      ...(businessMix && i % 2 === 0 && businessMix.items[i / 2]
+                        ? [<BusinessMixCard key={`biz-${businessMix.items[i / 2]!.slug}`} item={businessMix.items[i / 2]!} extra={businessMix.extras[businessMix.items[i / 2]!.slug] ?? null} locale={locale} />]
+                        : []),
+                      (
                       // data-pro-id + scroll-mt let the map highlight/scroll to this
                       // card on pin hover; the number badge matches the map pin.
                       <div key={pro.id} id={`pro-card-${pro.id}`} data-pro-id={pro.id} className="ccr-search-card-slot relative w-full scroll-mt-24 transition-shadow lg:max-w-none lg:rounded-2xl">
@@ -620,7 +645,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                         </SaveableCard>
                         </SearchCardContactBoundary>
                       </div>
-                    ))}
+                    )]).concat(businessMix ? businessMix.items.slice(Math.ceil(results.length / 2)).map((item) => (
+                      <BusinessMixCard key={`biz-${item.slug}`} item={item} extra={businessMix.extras[item.slug] ?? null} locale={locale} />
+                    )) : [])}
                     {/* From here the list grows on its own as the person scrolls. */}
                     {/* `key` con la búsqueda: al buscar otra cosa sin recargar (la
                         barra de arriba navega dentro de la app), React reusaba el

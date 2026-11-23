@@ -50,7 +50,7 @@ export function HomePlacesTiles() {
         </ul>
         <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 sm:mt-7 sm:justify-center">
           <Link href="/servicios" className="inline-flex min-h-11 items-center text-sm font-extrabold text-[#009FD9] hover:underline">{t("verCategorias")} &rarr;</Link>
-          <Link href="/lugares" className="inline-flex min-h-11 items-center text-sm font-bold text-[#1A2744] hover:text-[#009FD9]">{t("verTodos")}</Link>
+          <Link href="/servicios" className="inline-flex min-h-11 items-center text-sm font-bold text-[#1A2744] hover:text-[#009FD9]">{t("verTodos")}</Link>
           <Link href="/precios" className="inline-flex min-h-11 items-center text-sm font-bold text-[#1A2744] hover:text-[#009FD9]">{t("compararPrecios")}</Link>
           <Link href="/eventos" className="inline-flex min-h-11 items-center text-sm font-bold text-[#1A2744] hover:text-[#009FD9]">{t("eventos")}</Link>
         </div>

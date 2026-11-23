@@ -55,7 +55,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Directorio (2026-11-18): las páginas de sección (/restaurantes, /cafes…) mientras DIR_ENABLED esté encendido, sin
   // Salud con DIR_HEALTH_ENABLED apagado. Las fichas van en /sitemap-directorio/sitemap/<sección>.xml (robots.ts las
   // lista). Sin fecha: la lista cambia con cada importación y no hay una fecha honesta por sección.
-  if (sitemapSections().length) for (const p of ["/lugares"]) for (const l of IDIOMAS) out.push({ url: `${APP_URL}${rutaConIdioma(l, p)}`, changeFrequency: "weekly", priority: 0.7 });
   for (const s of sitemapSections()) for (const l of IDIOMAS) out.push({ url: `${APP_URL}${rutaConIdioma(l, `/${s.section}`)}`, changeFrequency: "daily", priority: 0.7 });
 
   try {

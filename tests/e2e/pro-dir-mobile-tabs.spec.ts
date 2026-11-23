@@ -3,7 +3,7 @@ import { isMobileProject } from "./helpers";
 
 // IA 2026-11-21: with the directory ON, the native app bottom bar is Inicio, Servicios, Lugares, Solicitudes, Cuenta
 // (NativeBottomNav, data-directory-tabs). Mobile web never gets it; with the directory OFF the classic icon bar stays.
-// The directory flag is detected from /lugares (404 while DIR_ENABLED is off), so the spec is valid in both setups.
+// The directory flag is detected from /restaurantes (404 while DIR_ENABLED is off), so the spec is valid in both setups.
 async function nativeShell(page: Page, baseURL: string) {
   await page.context().addCookies([{ name: "ccr_platform", value: "native", url: baseURL }]);
   await page.addInitScript(() => {
@@ -16,7 +16,7 @@ async function nativeShell(page: Page, baseURL: string) {
     });
   });
 }
-const directoryOn = async (page: Page) => (await page.request.get("/lugares")).status() === 200;
+const directoryOn = async (page: Page) => (await page.request.get("/restaurantes")).status() === 200;
 
 test.describe("directory app tabs", () => {
   test.beforeEach(({}, testInfo) => { test.skip(!isMobileProject(testInfo), "Mobile projects only"); });

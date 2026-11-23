@@ -50,6 +50,9 @@ export interface MapProfessional {
   provinceName?: string;
   lat?: number | null;
   lng?: number | null;
+  /** "business" = a directory business mixed into the results (own pin colour, opens its page). */
+  kind?: "business";
+  href?: string;
 }
 
 export type MapFocusTarget = {
@@ -79,6 +82,8 @@ const GAM_CENTER: [number, number] = [-84.08, 9.9325];
 const z = (googleZoom: number) => googleZoom - 1;
 
 const MAP_CSS = PIN_CSS;
+// Storefront glyph inside the orange business pin (businesses are told apart from professionals by colour AND shape).
+const BIZ_GLYPH = '<span class="num" aria-hidden="true" style="top:8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-5h15L21 9"/><path d="M4 9v11h16V9"/><path d="M9 20v-6h6v6"/></svg></span>';
 
 function positionFor(pro: MapProfessional): { lat: number; lng: number } | null {
   if (typeof pro.lat === "number" && typeof pro.lng === "number") return { lat: pro.lat, lng: pro.lng };
@@ -364,6 +369,22 @@ export function SearchMapPanel({ professionals, locale = "es", numbering, focusT
         ? (en ? `${num}. ${titleName}, view profile` : `${num}. ${titleName}, ver perfil`)
         : (en ? `${titleName}, view profile` : `${titleName}, ver perfil`);
 
+      if (pro.kind === "business") {
+        const bizLabel = en ? `Business: ${pro.fullName}, view page` : `Empresa: ${pro.fullName}, ver ficha`;
+        const bel = teardropEl("", bizLabel);
+        bel.classList.add("ccr-pin-biz");
+        bel.querySelector(".ccr-pin-body")?.insertAdjacentHTML("beforeend", BIZ_GLYPH);
+        bel.dataset.basez = "1";
+        bel.dataset.proId = proId;
+        const bmarker = new lib.Marker({ element: bel, anchor: "bottom" }).setLngLat([pos.lng, pos.lat]).addTo(map);
+        bel.style.zIndex = "1";
+        pinsByProRef.current.set(proId, [bel]);
+        bel.addEventListener("mouseenter", () => { if (canHover) setActive(proId, true, true); });
+        bel.addEventListener("mouseleave", () => { if (canHover) setActive(proId, false, false); });
+        bel.addEventListener("click", (e) => { e.stopPropagation(); if (pro.href) router.push(pro.href); });
+        markers.push(bmarker);
+        continue;
+      }
       const el = teardropEl(num ?? "", label);
       el.dataset.basez = String(zIndex);
       el.dataset.proId = proId;

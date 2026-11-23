@@ -114,6 +114,7 @@ export async function PlacesSectionHome({section,locale,page,basePath,banner}:{s
      limpiar={clear} resetKey={JSON.stringify(values)} sinResultados={items.length===0}
      quickFilters={<><h1 className="sr-only">{c.title[i]}</h1>{chips('sheet')}</>}>
      <div className="min-w-0 space-y-0 lg:space-y-3 lg:pb-6" data-search-results={section}>
+      {AMBIGUOUS_SECTIONS.has(section)&&<p className="px-4 pb-1 pt-3 lg:hidden" data-related-professionals-mobile=""><a href={`${en?'/en':''}/profesionales?q=${encodeURIComponent(DIRECTORY_SECTION_LABELS[section]?.[en?'en':'es']??'')}`} className="inline-flex min-h-9 items-center rounded-full bg-[#f1f5f9] px-3.5 text-[13px] font-bold text-[#007fae]">{t('Ver también profesionales de este rubro','Also see professionals in this field')}</a></p>}
       {banner&&<div className="-mx-4 border-b border-[#eef2f6] px-4 py-3 lg:mx-0 lg:border-0 lg:p-0">{banner}</div>}
       {page.ok&&page.result.priceProduct&&<p className="py-2 text-[13px] text-[#526277] lg:py-0" data-price-product={page.result.priceProduct.slug}>{t('Precios de: ','Prices for: ')}
        <strong className="text-[#162543]">{page.result.priceProduct.name}{page.result.priceProduct.presentation?` (${page.result.priceProduct.presentation})`:''}</strong>{' · '}

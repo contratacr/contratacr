@@ -7,15 +7,10 @@ import { expectNoHorizontalOverflow, gotoOK, isMobileProject } from "./helpers";
 for (const language of ["es", "en"] as const) {
   const prefix = language === "en" ? "/en" : "";
 
-  test(`/lugares lists the six groups with links to the sections [${language}]`, async ({ page }) => {
-    await gotoOK(page, `${prefix}/lugares`);
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    const groups = page.locator("[data-places-hub-group]");
-    expect(await groups.count()).toBeGreaterThan(0);
-    await expect(page.locator('[data-places-hub-section="restaurantes"]')).toHaveAttribute("href", `${prefix}/restaurantes`);
-    await expect(page.locator("[data-places-hub-prices]")).toHaveAttribute("href", `${prefix}/precios`);
-    await expect(page.locator("[data-places-hub-events]")).toHaveAttribute("href", `${prefix}/eventos`);
-    await expectNoHorizontalOverflow(page);
+  test(`/lugares no longer exists: the old address goes to Categorías [${language}]`, async ({ page }) => {
+    await page.goto(`${prefix}/lugares`, { waitUntil: "domcontentloaded" });
+    await expect(page).toHaveURL(new RegExp(`${prefix}/servicios$`));
+    await expect(page.locator("[data-places-hub-group]")).toHaveCount(0);
   });
 
   test(`/negocios-y-profesionales no longer exists: old links go to the professional registration [${language}]`, async ({ page }) => {

@@ -15,6 +15,7 @@ export const PIN_CSS =
   ".ccr-pin path{transition:fill .15s ease;}" +
   ".ccr-pin .num{position:absolute;top:6px;left:0;right:0;text-align:center;color:#fff;font:700 12px/1 Inter,system-ui,sans-serif;}" +
   ".ccr-pin .num.is-long{font-size:10px;top:7px;}" +
+  ".ccr-pin-biz path{fill:#e8780a;}" +
   ".ccr-pin.is-active .ccr-pin-body,.ccr-pin:hover .ccr-pin-body{transform:scale(1.15);}" +
   ".ccr-pin.is-active path,.ccr-pin:hover path{fill:" + PIN_HOVER + ";}" +
   ".ccr-pin[role=img]{cursor:default;}" +

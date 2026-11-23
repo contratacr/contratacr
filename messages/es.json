@@ -3916,19 +3916,6 @@
     "services": "Servicios",
     "workPhotos": "Casos de éxito"
   },
-  "placesHub": {
-    "metaTitle": "Empresas en Costa Rica",
-    "metaDescription": "Restaurantes, comercios, clínicas, gasolineras y más: horarios, fotos, reseñas y datos de contacto en todo Costa Rica.",
-    "breadcrumbLabel": "Ruta de navegación",
-    "home": "Inicio",
-    "title": "Empresas",
-    "intro": "Encuentre restaurantes, comercios, clínicas y más en todo Costa Rica, con horarios, fotos, reseñas y datos de contacto.",
-    "moreTitle": "Más para explorar",
-    "prices": "Comparar precios",
-    "pricesText": "Supermercados y farmacias, comercio por comercio.",
-    "events": "Eventos",
-    "eventsText": "Lo que publican los negocios de su zona."
-  },
   "businessHub": {
     "metaTitle": "Para negocios y profesionales",
     "metaDescription": "Ofrezca sus servicios como profesional o reclame gratis la ficha de su negocio en ContrataCR.",
