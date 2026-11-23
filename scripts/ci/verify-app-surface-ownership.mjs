@@ -102,6 +102,8 @@ const handlerRules = [
   [/^\/api\/pro\/marketing-unsubscribe\/one-click$/, "pro-round6d-marketing.spec.ts"],
   [/^\/api\/pro\/marketing-confirm$/, "pro-round6d-site.spec.ts"],
   [/^\/api\/pro\/ads-tracking$/, "pro-round6d-site.spec.ts"],
+  // Pro 29 (rows 69, 70): sandbox ad builder with simulated metrics; custom domain with mock DNS verification.
+  [/^\/api\/pro\/(?:company-ad-builder|company-site-domain)$/, "pro-round13-ads-domain.spec.ts"],
   [/^\/api\/pro\/catalog-clipper$/, "pro-round6d-clipper-plans.spec.ts"],
   [/^\/api\/pro\/floor-plans$/, "pro-round6d-clipper-plans.spec.ts"],
   [/^\/api\/pro\/accounting$/, "pro-round6b-accounting.spec.ts"],
@@ -243,6 +245,7 @@ const handlerRules = [
   [/^\/api\/pro\/lead-pipeline$/, "pro-sales-pipeline.spec.ts"],
   [/^\/api\/pro\/lead-pipeline\/rules$/, "pro-lead-stage-rules.spec.ts"],
   [/^\/api\/pro\/lead-pipeline\/close-dates$/, "pro-lead-close-forecast.spec.ts"],
+  [/^\/api\/pro\/work-email-log$/, "pro-email-tools.spec.ts"],
   [/^\/api\/pro\/client-contacts\/promote-channel$/, "pro-contact-merge-transfer.spec.ts"],
   [/^\/api\/pro\/client-presentation(?:\/weather)?$/, "pro-client-presentation.spec.ts"],
   [/^\/api\/pro\/work-file-comparisons$/, "pro-before-after.spec.ts"],
@@ -271,6 +274,9 @@ const handlerRules = [
   [/^\/api\/pro\/(?:payables|cash-flow|income-statement)$/, "pro-payables-cashflow.spec.ts"],
   // Ronda F2-C (rows 13, 15, 17, 20, 22, 24): schedule from quote, saved task views, time clock, crew, channels, custom roles.
   [/^\/api\/pro\/(?:estimate-schedule|task-views|time-clock|daily-log-crew|notification-channels|team-roles\/custom)$/, "pro-operations-schedule.spec.ts"],
+  // Row 17 and 20 (404/405): module x action permissions; daily log weather provider and automatic drafts.
+  [/^\/api\/pro\/team-roles\/modules$/, "pro-module-permissions.spec.ts"],
+  [/^\/api\/pro\/(?:daily-log-settings|daily-log-automation)$/, "pro-daily-log-weather.spec.ts"],
   // Package B (rows 15, 16, 24): notification schedule/sandbox digest and task comments, mentions and job-file links.
   [/^\/api\/pro\/notification-schedule$/, "pro-notification-schedule-api.spec.ts"],
   [/^\/api\/pro\/task-center-detail$/, "pro-task-center-detail-api.spec.ts"],
