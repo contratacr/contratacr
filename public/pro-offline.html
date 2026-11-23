@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>ContrataCR Pro</title>
+<style>:root{color-scheme:light}body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;background:#f7f9fc;color:#162543;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:28rem;background:#fff;border:1px solid #d7e1ea;border-radius:16px;padding:24px}h1{margin:0 0 8px;font-size:1.25rem}p{margin:8px 0;color:#52627a;line-height:1.5}
+button{margin-top:12px;min-height:44px;padding:0 20px;border:0;border-radius:12px;background:#009FD9;color:#fff;font-size:1rem;font-weight:700}[lang=en] .es,[lang=es] .en{display:none}</style></head>
+<body><main><h1><span class="es">Sin conexión</span><span class="en">You are offline</span></h1>
+<p class="es">ContrataCR Pro necesita internet para mostrar y guardar sus datos. No se guardó nada sin conexión: vuelva a intentarlo cuando la señal regrese.</p>
+<p class="en">ContrataCR Pro needs the internet to show and save your data. Nothing is saved while offline: try again when the signal returns.</p>
+<button type="button" id="retry"><span class="es">Reintentar</span><span class="en">Retry</span></button>
+<script>if(/^en\b/i.test(navigator.language)||location.pathname.indexOf('/en/')===0)document.documentElement.lang='en';document.getElementById('retry').onclick=function(){location.reload()};</script></main></body></html>
