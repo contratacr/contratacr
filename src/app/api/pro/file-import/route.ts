@@ -1,7 +1,8 @@
 import {enforceRateLimit} from '@/lib/rate-limit';
 import {proActor,proBoundedJson,proDbError,proFail,proRequestOrigin,proRouteHeaders as headers,proSameOrigin} from '@/lib/pro/route-common';
 import {libraryMemberGuard} from '@/lib/pro/company-folder-access';
-import {ImportAdapterError,driveImportAdapter,importInputSchema,importItemIds,importResultSchema,importStateSchema,type ImportReason} from '@/lib/pro/file-import';
+import {ImportAdapterError,driveImportAdapter,importInputSchema,importResultSchema,importStateSchema,type ImportReason} from '@/lib/pro/file-import';
+import {importItemIds} from '@/lib/pro/file-import-ids';
 import {POST as libraryWrite} from '@/app/api/pro/company-files/route';
 import {PRO_ENABLED} from '@/lib/pro/enabled';
 

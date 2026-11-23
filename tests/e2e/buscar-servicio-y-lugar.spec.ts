@@ -62,7 +62,7 @@ test.beforeAll(async () => {
   const messages = Object.fromEntries(["es", "en"].map(locale => [locale, JSON.parse(readFileSync(`messages/${locale}.json`, "utf8")).landing.hero]));
   const mocks: Record<string, string> = {
     "next-intl": `const messages=${JSON.stringify(messages)};export const useLocale=()=>document.documentElement.lang;export const useTranslations=()=>{const t=key=>messages[document.documentElement.lang][key]??key;t.raw=key=>messages[document.documentElement.lang][key];return t;};`,
-    "@/i18n/navigation": `import React from 'react';const router={prefetch:()=>{},push:href=>{document.getElementById('destination').textContent=href}};export const useRouter=()=>router;export const Link=({prefetch,locale,...props})=><a {...props}/>;`,
+    "@/i18n/navigation": `import React from 'react';const router={prefetch:()=>{},push:href=>{document.getElementById('destination').textContent=href}};export const useRouter=()=>router;export const usePathname=()=>'/';export const Link=({prefetch,locale,...props})=><a {...props}/>;`,
     "@/lib/maps/loader": `export const loadGoogleMaps=async()=>{};`,
     "@/lib/analytics/meta-pixel": `export const trackMetaEvent=()=>{};`,
   };

@@ -1,4 +1,3 @@
-import {createHash} from 'node:crypto';
 import {z} from 'zod';
 import {PRO_FILE_MAX_BYTES} from './file-limit';
 /**
@@ -68,12 +67,6 @@ export function liveDriveAdapter(env:Env,fetchImpl:typeof fetch=fetch):FileImpor
 export function driveImportAdapter(env:Env=process.env,fetchImpl?:typeof fetch):FileImportAdapter{
  return env.PRO_DRIVE_IMPORT_MODE==='live'?liveDriveAdapter(env,fetchImpl):sandboxDriveAdapter();
 }
-/** Deterministic ids for one item of one batch, so a retry of the same batch hits the same upload (idempotent) and never duplicates. */
-export function importItemIds(batchId:string,externalId:string){
- const make=(label:string)=>{const h=createHash('sha256').update(`pro-import:${batchId}:${externalId}:${label}`).digest('hex');return `${h.slice(0,8)}-${h.slice(8,12)}-4${h.slice(13,16)}-8${h.slice(17,20)}-${h.slice(20,32)}`;};
- return{fileId:make('file'),actionId:make('action')};
-}
-
 // ---------------------------------------------------------------- API contracts
 const id=z.string().uuid();
 export const importInputSchema=z.object({action:z.literal('import'),source:z.literal('drive'),actionId:id,folderId:id.nullable(),items:z.array(z.object({externalId:z.string().min(1).max(200)}).strict()).min(1).max(IMPORT_BATCH_MAX)}).strict()

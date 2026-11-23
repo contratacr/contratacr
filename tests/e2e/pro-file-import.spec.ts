@@ -1,7 +1,8 @@
 import {test,expect} from 'playwright/test';
 import {gotoOK,expectNoHorizontalOverflow,collectPageErrors} from './helpers';
 import {origin,proOwner} from './pro-file-ops-harness';
-import {ImportAdapterError,driveImportAdapter,importItemIds,liveDriveAdapter,sandboxDriveAdapter} from '../../src/lib/pro/file-import';
+import {ImportAdapterError,driveImportAdapter,liveDriveAdapter,sandboxDriveAdapter} from '../../src/lib/pro/file-import';
+import {importItemIds} from '../../src/lib/pro/file-import-ids'
 
 // Row 31: import from an external drive behind an adapter. The adapter contract (sandbox, live with a fake Google) is tested
 // without a network; the API and the screen run in sandbox mode. Real Google Drive is NOT exercised: it needs the owner's
