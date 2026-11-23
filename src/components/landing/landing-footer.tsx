@@ -165,7 +165,7 @@ export function LandingFooter() {
             <Link href="/terminos" className="text-xs text-[#162543] hover:text-[#0083b0] transition-colors">{t("terms")}</Link>
             <Link href="/privacidad" className="text-xs text-[#162543] hover:text-[#0083b0] transition-colors">{t("privacy")}</Link>
             <Link href="/como-ordenamos" className="text-xs text-[#162543] hover:text-[#0083b0] transition-colors">{t("howWeRank")}</Link>
-            <AdvertisingPreferences />
+            <AdvertisingPreferences variant="link" />
           </div>
         </div>
       </div>

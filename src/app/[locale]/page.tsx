@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { AppDownloadSection } from "@/components/landing/app-download";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
+import { DirectoryQuickNav } from "@/components/landing/directory-nav";
 import { prefijoDeIdioma, rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { LandingHero } from "@/components/landing/landing-hero";
 import { FeaturedBrands } from "@/components/landing/featured-brands";
@@ -100,6 +101,7 @@ export default async function HomePage({
     <div className="min-h-screen flex flex-col bg-white">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: DATOS_ESTRUCTURADOS(locale) }} />
       <LandingNavbar />
+      <DirectoryQuickNav spacer />
 
       <main className="ccr-portada flex-1">
         {deletionStatus && (

@@ -19,17 +19,10 @@ for (const language of ["es", "en"] as const) {
   });
 }
 
-// Place sections live INSIDE the themes (no standalone "Lugares" entry): group name -> sections shown in its panel.
-const PLACES_BY_GROUP: Record<string, string[]> = {
-  Comercios: ["restaurantes", "cafes", "supermercados", "pulperias", "ferreterias"],
-  Salud: ["salud", "farmacias"],
-  Bienestar: ["gimnasios"],
-  "Vehículos": ["gasolineras", "talleres"],
-  Belleza: ["belleza"],
-  Mascotas: ["veterinarias"],
-  Turismo: ["hospedaje", "tours"],
-  Empresas: ["bancos"],
-};
+// Categorías (2026-11-23, Yelp style): the directory sections are a grid of brand tiles ("Empresas") ABOVE the professional
+// categories, each section once; the professional groups no longer repeat them. A section whose total is a confirmed 0 is
+// not offered, so the tiles asserted are the ones present, never a fixed list.
+const ALL_SECTIONS = ["restaurantes", "cafes", "supermercados", "pulperias", "ferreterias", "farmacias", "gasolineras", "talleres", "bancos", "hospedaje", "tours", "salud", "gimnasios", "veterinarias", "belleza"];
 
 test("desktop navbar: Categorías is a link to the full page, with no dropdown and no business entry", async ({ page }, testInfo) => {
   test.skip(isMobileProject(testInfo), "Desktop navigation only");
@@ -43,12 +36,59 @@ test("desktop navbar: Categorías is a link to the full page, with no dropdown a
   await link.click();
   await expect(page).toHaveURL(/\/servicios$/);
   await expect(page.getByTestId("services-mega-menu")).toHaveCount(0);
-  // The page itself lists the places inside their themes, next to the services.
-  for (const [group, sections] of Object.entries(PLACES_BY_GROUP)) {
-    await page.getByTestId("services-group-option").filter({ hasText: new RegExp(`^${group}`) }).first().click();
-    for (const section of sections) await expect(page.locator(`[data-nav-directory-section="${section}"]`)).toHaveAttribute("href", `/${section}`);
-    await expect(page.locator("[data-nav-directory-section]")).toHaveCount(sections.length);
-  }
+  // The page lists the businesses as tiles on top, once each, and the professional groups below without place rows.
+  const tiles = page.locator("[data-place-tiles] [data-place-tile]");
+  await expect(tiles.first()).toBeVisible();
+  for (const section of ALL_SECTIONS) expect(await page.locator(`[data-place-tile="${section}"]`).count(), section).toBeLessThanOrEqual(1);
+  for (const tile of await tiles.all()) await expect(tile).toHaveAttribute("href", /^\/[a-z]+$/);
+  await expect(page.locator("[data-nav-directory-section]")).toHaveCount(0);
+  await expect(page.getByTestId("services-group-option").first()).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+});
+
+test("quick links row under the navbar: sections, Profesionales and Más, active state, keyboard", async ({ page }, testInfo) => {
+  test.skip(isMobileProject(testInfo), "Desktop: the row also exists on phones but only on pages without their own sheet");
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await gotoOK(page, "/restaurantes");
+  const row = page.getByRole("navigation", { name: /Accesos rápidos|Quick links/ });
+  await expect(row).toBeVisible();
+  await expect(row.locator('[data-quick-nav-link="restaurantes"]')).toHaveAttribute("aria-current", "page");
+  await expect(row.locator('[data-quick-nav-link="farmacias"]')).toHaveAttribute("href", "/farmacias");
+  await expect(row.locator('[data-quick-nav-link="pros"]')).toHaveAttribute("href", "/profesionales");
+  await expect(row.locator('[data-quick-nav-link="more"]')).toHaveAttribute("href", "/servicios");
+  await row.locator('[data-quick-nav-link="farmacias"]').focus();
+  await expect(row.locator('[data-quick-nav-link="farmacias"]')).toBeFocused();
+  await row.locator('[data-quick-nav-link="more"]').click();
+  await expect(page).toHaveURL(/\/servicios$/);
+  await expect(page.getByRole("navigation", { name: /Accesos rápidos|Quick links/ }).locator('[data-quick-nav-link="more"]')).toHaveAttribute("aria-current", "page");
+  // The row is in flow: the fixed bar keeps its height (64px) and the row starts right below it.
+  const bar = await page.getByTestId("landing-navbar").boundingBox();
+  const strip = await page.locator("[data-quick-nav]").boundingBox();
+  expect(bar!.height).toBeLessThanOrEqual(65);
+  expect(Math.abs(strip!.y - (bar!.y + bar!.height))).toBeLessThanOrEqual(1);
+  await expectNoHorizontalOverflow(page);
+});
+
+test("quick links row scrolls sideways on phones without widening the page", async ({ page }, testInfo) => {
+  test.skip(!isMobileProject(testInfo), "Mobile only");
+  await gotoOK(page, "/");
+  const row = page.locator("[data-quick-nav]");
+  await expect(row).toBeVisible();
+  const scroller = row.locator("ul");
+  expect(await scroller.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
+  await expectNoHorizontalOverflow(page);
+});
+
+test("footer: cookie and privacy settings is a discreet link in the legal row", async ({ page }) => {
+  await gotoOK(page, "/");
+  const footer = page.locator("footer.ccr-app-footer");
+  const privacy = footer.getByRole("link", { name: /^Política de Privacidad$/ });
+  const settings = footer.locator("[data-advertising-preferences]");
+  await settings.scrollIntoViewIfNeeded();
+  await expect(settings).toHaveText(/Configurar cookies y privacidad/);
+  expect(await settings.evaluate((el) => getComputedStyle(el).fontSize)).toBe(await privacy.evaluate((el) => getComputedStyle(el).fontSize));
+  expect(await settings.evaluate((el) => getComputedStyle(el).borderTopWidth)).toBe("0px");
+  await expectNoHorizontalOverflow(page);
 });
 
 test("mobile drawer: Categorías is a plain link to the full page and there is no business entry", async ({ page }, testInfo) => {

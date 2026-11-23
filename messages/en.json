@@ -248,6 +248,7 @@
     }
   },
   "search": {
+    "seeBusinesses": "See businesses in {section}",
     "title": {
       "default": "All services",
       "withQuery": "Results for \"{q}\""
@@ -2460,7 +2461,17 @@
     "seguridad": "Security",
     "automotriz": "Vehicles & Mobility"
   },
+  "quickNav": {
+    "label": "Quick links",
+    "professionals": "Professionals",
+    "more": "More"
+  },
   "categoriesPage": {
+    "placesTitle": "Businesses",
+    "prosTitle": "Professionals and services",
+    "placesMatchTitle": "Matching businesses",
+    "businessOne": "business",
+    "businessMany": "businesses",
     "eyebrow": "Services",
     "title": "Find the service you need",
     "subtitle": "",

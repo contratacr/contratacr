@@ -1,4 +1,5 @@
 import { resolveSearchSort } from "@/lib/search/sort";
+import {DirectoryQuickNav} from '@/components/landing/directory-nav';
 import { nearbyContext, nearbyRank } from "@/lib/search/nearby";
 import { SearchCardContactBoundary } from "@/components/search/professional-card-loading";
 import { ContactAvailabilityProvider } from "@/hooks/use-profesional-con-app";
@@ -32,7 +33,8 @@ import { safeGetUser } from "@/lib/supabase/get-user";
 import { recordServerInteraction } from "@/lib/analytics/server-events";
 import { rutaDeBusqueda } from "@/lib/buscar-url";
 import { perfilesBloqueadosPor } from "@/lib/queries/bloqueos";
-import { BusinessMixNote, loadBusinessMix } from "@/components/search/businesses-block";
+import { BusinessMixNote, loadBusinessMix, matchedBusinessSections } from "@/components/search/businesses-block";
+import { directorySectionHref } from "@/lib/search/directory-search";
 import type { MapProfessional } from "@/components/maps/search-map-panel";
 import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { PlaceCard } from "@/components/directory/place-card";
@@ -329,6 +331,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const businessMix = currentPage === 1
     ? await loadBusinessMix(params.q, sitemapSections().map((s) => s.section), locale, { provinceId: selectedProvinceId, cantonId: selectedCantonId, lat: nearLat, lng: nearLng })
     : null;
+  // Sin resultados ni empresas cargadas (falló o tardó la consulta) pero la búsqueda nombra una sección: el camino sigue abierto.
+  const fallbackMatch = !businessMix ? matchedBusinessSections(params.q, sitemapSections().map((s) => s.section), locale)[0] : undefined;
+  const sectionFallback = fallbackMatch
+    ? { section: fallbackMatch.section, label: fallbackMatch.label, href: directorySectionHref(fallbackMatch.section, (params.q ?? "").trim(), { provinceId: selectedProvinceId, cantonId: selectedCantonId, lat: nearLat, lng: nearLng }) }
+    : null;
   if (businessMix) {
     for (const item of businessMix.items) {
       if (!item.location) continue;
@@ -538,6 +545,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           de la pantalla tras hidratar, la columna lo aplastaba a 0 y el mapa
           subía 124px de golpe (salto medido de 0,19 en cada apertura). */}
       <div className="ccr-navbar-spacer hidden h-16 lg:block" aria-hidden />
+      <DirectoryQuickNav className="hidden lg:block"/>
 
       {/* Top bar - title + subtitle. Background MATCHES the page/results area (#f4f7fa)
           and is FLUSH with it: no shadow, divider or raised band, so the title reads as
@@ -604,12 +612,21 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 // compacto. Sobre el mapa el alto es caro: con el mosaico de
                 // 80px que tenía copiado a mano, «Publicar proyecto»
                 // caía bajo el borde de la pantalla.
+                <>
+                {sectionFallback && (
+                  <p data-businesses-fallback={sectionFallback.section} className="px-4 pt-3 text-[13px] text-[#526277] lg:px-0">
+                    <Link href={sectionFallback.href} className="inline-flex min-h-8 items-center gap-1 font-bold text-[#007fae] hover:underline">
+                      {t("seeBusinesses", { section: sectionFallback.label })} &rarr;
+                    </Link>
+                  </p>
+                )}
                 <SearchEmptyState
                   title={t("noResults.title")}
                   description={t("proyectoTarjeta.texto")}
                   cta={t("noResults.publishCta")}
                   href={`/publicar-solicitud?${new URLSearchParams(Object.entries({ categoria: selectedCategory, provincia: selectedProvinceId, canton: selectedCantonId }).filter((e): e is [string, string] => !!e[1])).toString()}`}
                 />
+                </>
               ) : (
                 <>
                   {/* SINGLE vertical column - one card per row. On MOBILE/tablet the card is

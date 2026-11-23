@@ -28,10 +28,12 @@ import {
 } from "lucide-react";
 import { CABECERA_BOTON, CABECERA_FILA, CABECERA_FILA_CENTRADA, CABECERA_GLIFO, CABECERA_TITULO } from "@/components/layout/cabecera";
 import { rutaDeBusqueda } from "@/lib/buscar-url";
-import { SERVICE_MENU_HIDE } from "@/lib/directory/directory-groups";
-import { CategoriesPlaceRows, usePlaceCount } from "@/components/landing/directory-nav";
+import { SERVICE_MENU_HIDE, groupPlaces } from "@/lib/directory/directory-groups";
+import { DirectoryQuickNav } from "@/components/landing/directory-nav";
+import { useSiteFeatures } from "@/components/site-features";
+import { PlaceTiles, useVisiblePlaceSections } from "@/components/directory/place-tiles";
 
-export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string | null }) {
+export function ServiciosClient({ catalogoInicial, placeTotals = {} }: { catalogoInicial: string | null; placeTotals?: Record<string, number | null> }) {
   // EL CATÁLOGO COMPLETO, DESDE EL PRIMER PINTADO. Esta página es de cliente y se
   // pre-renderiza en una capa de módulos donde el registro de servicios está
   // vacío: pintaba el catálogo fijo y, al hidratar, los diez grupos cambiaban de
@@ -52,7 +54,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
   const { user: usuario, loading: sesionCargando } = useAuth();
   const router = useRouter();
   const customCategories = useCustomCategories();
-  const placeCount = usePlaceCount();
+  const { directorySections } = useSiteFeatures();
   const [query, setQuery] = useState("");
   const [activeGroupKey, setActiveGroupKey] = useState("hogar");
   const [mobileGroupKey, setMobileGroupKey] = useState<string | null>(null);
@@ -70,13 +72,18 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
       ids.push(category.id);
       idsByGroup.set(category.groupId, ids);
     }
-    return getAllCategoryGroups().map((group) => ({
-      key: group.id,
-      Icon: getCategoryGroupIcon(group.id, group.iconKey),
-      label: getCategoryGroupLabel(group.id, locale),
-      ids: idsByGroup.get(group.id) ?? [],
-    }));
-  }, [categoryCatalogVersion, locale]);
+    // Los negocios viven en "Empresas" (arriba): aquí solo oficios, sin repetir los que ya son una sección del directorio,
+    // y sin grupos que se quedan vacíos al quitarlos.
+    return getAllCategoryGroups().map((group) => {
+      const hasPlaces = groupPlaces(group.id, directorySections).length > 0;
+      return {
+        key: group.id,
+        Icon: getCategoryGroupIcon(group.id, group.iconKey),
+        label: getCategoryGroupLabel(group.id, locale),
+        ids: (idsByGroup.get(group.id) ?? []).filter((id) => !(hasPlaces && SERVICE_MENU_HIDE.has(id))),
+      };
+    }).filter((group) => group.ids.length > 0);
+  }, [categoryCatalogVersion, directorySections, locale]);
   const categoriesById = useMemo(
     () => {
       void categoryCatalogVersion;
@@ -124,7 +131,12 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
     [visibleGroups],
   );
   const activeGroup = groups.find((group) => group.key === activeGroupKey) ?? groups[0];
-  const activeGroupHasServices = activeGroup.ids.length + placeCount(activeGroup.key) > 0;
+  const placeSectionsShown = useVisiblePlaceSections(placeTotals);
+  const matchedPlaceSections = useVisiblePlaceSections(placeTotals, query);
+  const hasQuery = normalizedQuery.length > 0;
+  const placesTitle = tp("placesTitle");
+  const prosTitle = tp("prosTitle");
+  const placesMatchTitle = tp("placesMatchTitle");
   const mobileGroups = useMemo(() => [...visibleGroups].sort((a, b) => {
     const aOther = isOtherCategoryGroup(a.key, a.label);
     const bOther = isOtherCategoryGroup(b.key, b.label);
@@ -136,7 +148,6 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
     ? mobileGroups.find((group) => group.key === mobileGroupKey) ?? null
     : null;
   const servicesTitle = locale === "en" ? "Services" : "Servicios";
-  const allCategoriesTitle = locale === "en" ? "All services" : "Todos los servicios";
   const serviceSearchPlaceholder = locale === "en" ? "What service are you looking for?" : "¿Qué servicio está buscando?";
   const serviceResultsTitle = locale === "en" ? "Matching services" : "Servicios encontrados";
 
@@ -148,6 +159,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
     }
     const first = searchResults[0]?.id;
     if (first) router.push(rutaDeBusqueda({ categoria: first }));
+    else if (matchedPlaceSections[0]) router.push(`/${matchedPlaceSections[0]}`);
     else router.push("/profesionales");
   }
 
@@ -169,6 +181,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
       <div className="hidden lg:block">
         <LandingNavbar />
         <div className="ccr-navbar-spacer h-16" aria-hidden />
+        <DirectoryQuickNav />
       </div>
       <div className="lg:hidden">
         <LandingNavbar mobileSearch={false} drawerOnly />
@@ -239,7 +252,13 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
             </form>
           </header>
 
-          {query.trim() && resultCount === 0 ? (
+          {hasQuery && matchedPlaceSections.length > 0 && !mobileGroup ? (
+            <section className="mx-4 mt-4" data-testid="services-places-match">
+              <h2 className="mb-2 text-[15px] font-bold text-[#526277]">{placesMatchTitle}</h2>
+              <PlaceTiles sections={matchedPlaceSections} totals={placeTotals} locale={locale} />
+            </section>
+          ) : null}
+          {query.trim() && resultCount === 0 && matchedPlaceSections.length === 0 ? (
             <section className="mx-4 mt-4 rounded-2xl border border-[#e5e7eb] bg-white text-center shadow-sm">
               {/* El MISMO vacío del resto del app; el borde de antes era más
                   oscuro que el de cualquier tarjeta del sitio. */}
@@ -257,7 +276,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
                 />
               </div>
             </section>
-          ) : query.trim() && resultCount > 0 ? (
+          ) : query.trim() && resultCount === 0 ? null : query.trim() && resultCount > 0 ? (
             <section className="mx-4 mt-3 overflow-hidden rounded border border-[#d7e1ea] bg-white">
               <p className="border-b border-[#d7e1ea] px-4 py-3 text-[13px] font-bold uppercase tracking-wide text-[#64748b]">
                 {serviceResultsTitle}
@@ -313,7 +332,13 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
             </section>
           ) : (
             <>
-              <p className="mx-4 mt-4 text-[15px] font-bold text-[#526277]">{allCategoriesTitle}</p>
+              {placeSectionsShown.length > 0 && (
+                <section data-testid="services-places" className="mx-4 mt-4">
+                  <h2 className="mb-2 text-[15px] font-bold text-[#526277]">{placesTitle}</h2>
+                  <PlaceTiles sections={placeSectionsShown} totals={placeTotals} locale={locale} />
+                </section>
+              )}
+              <h2 className="mx-4 mt-6 text-[15px] font-bold text-[#526277]">{prosTitle}</h2>
               <section className="mx-4 mt-2 overflow-hidden rounded border border-[#d7e1ea] bg-white">
                 {mobileGroups.map((group) => {
                   const IconoGrupo = group.Icon;
@@ -371,7 +396,13 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
               </form>
             </div>
 
-            {query.trim() && resultCount === 0 ? (
+            {hasQuery && matchedPlaceSections.length > 0 ? (
+              <section data-testid="services-places-match" className="border-b border-[#eef2f6] p-4">
+                <h2 className="mb-3 text-lg font-extrabold leading-tight text-[#162543]">{placesMatchTitle}</h2>
+                <PlaceTiles sections={matchedPlaceSections} totals={placeTotals} locale={locale} />
+              </section>
+            ) : null}
+            {query.trim() && resultCount === 0 && matchedPlaceSections.length === 0 ? (
               <section className="text-center">
                 <PanelEmptyState plano icon={Search} title={tp("notListed")} description={tp("suggestDescription")} className="min-h-0 pb-0" />
                 <div className="mx-auto flex max-w-xl flex-col items-center px-4 pb-10 sm:px-6">
@@ -387,7 +418,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
                   />
                 </div>
               </section>
-            ) : query.trim() && resultCount > 0 ? (
+            ) : query.trim() && resultCount === 0 ? null : query.trim() && resultCount > 0 ? (
               <section className="scroll-mt-32 lg:min-h-[460px]">
                 <div className="min-w-0 p-4">
                   <div className="mb-3 flex items-end justify-between gap-3">
@@ -421,6 +452,14 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
                 </div>
               </section>
             ) : (
+              <>
+                {placeSectionsShown.length > 0 && (
+                  <section data-testid="services-places" aria-labelledby="ccr-servicios-empresas" className="border-b border-[#eef2f6] p-4">
+                    <h2 id="ccr-servicios-empresas" className="mb-3 text-lg font-extrabold leading-tight text-[#162543]">{placesTitle}</h2>
+                    <PlaceTiles sections={placeSectionsShown} totals={placeTotals} locale={locale} />
+                  </section>
+                )}
+                <h2 className="px-4 pb-1 pt-4 text-lg font-extrabold leading-tight text-[#162543]">{prosTitle}</h2>
                 <section className="grid scroll-mt-32 lg:min-h-[560px] lg:grid-cols-[300px_minmax(0,1fr)]">
                   {/* EN COMPUTADORA LA LISTA SE DESPLAZA POR DENTRO Y SE DESVANECE
                       ABAJO. Medía lo que midiera la columna de al lado y estaba
@@ -450,7 +489,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
                             <span className="min-w-[130px] flex-1 lg:min-w-0">
                               <span className="block text-sm font-bold leading-tight [overflow-wrap:anywhere]">{group.label}</span>
                               <span className="mt-0.5 block text-[11px] font-medium text-[#68778d]">
-                                {tp("optionsCount", { count: group.ids.length + placeCount(group.key) })}
+                                {tp("optionsCount", { count: group.ids.length })}
                               </span>
                             </span>
                             <ChevronRight className={`h-4 w-4 shrink-0 ${active ? "text-[#009FD9]" : "text-[#cbd5e1]"}`} />
@@ -467,15 +506,14 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
                           {activeGroup.label}
                         </h2>
                         <p className="mt-0.5 text-[11px] font-medium text-[#68778d]">
-                          {tp("optionsCount", { count: activeGroup.ids.length + placeCount(activeGroup.key) })}
+                          {tp("optionsCount", { count: activeGroup.ids.length })}
                         </p>
                       </div>
                     </div>
 
-                    {activeGroupHasServices ? (
+                    {activeGroup.ids.length > 0 ? (
                       <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                        <CategoriesPlaceRows groupId={activeGroup.key} locale={locale} onNavigate={() => {}} />
-                        {activeGroup.ids.filter((id) => !(placeCount(activeGroup.key) > 0 && SERVICE_MENU_HIDE.has(id))).map((id) => (
+                        {activeGroup.ids.map((id) => (
                           <Link
                             key={id}
                             href={rutaDeBusqueda({ categoria: id })}
@@ -502,6 +540,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
                     )}
                   </div>
                 </section>
+              </>
             )}
           </div>
           </div>

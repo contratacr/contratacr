@@ -248,6 +248,7 @@
     }
   },
   "search": {
+    "seeBusinesses": "Ver empresas de {section}",
     "title": {
       "default": "Todos los servicios",
       "withQuery": "Resultados para \"{q}\""
@@ -2460,7 +2461,17 @@
     "seguridad": "Seguridad",
     "automotriz": "Vehículos y movilidad"
   },
+  "quickNav": {
+    "label": "Accesos rápidos",
+    "professionals": "Profesionales",
+    "more": "Más"
+  },
   "categoriesPage": {
+    "placesTitle": "Empresas",
+    "prosTitle": "Profesionales y servicios",
+    "placesMatchTitle": "Empresas encontradas",
+    "businessOne": "empresa",
+    "businessMany": "empresas",
     "eyebrow": "Servicios",
     "title": "Encuentre el servicio que necesita",
     "subtitle": "",

@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
-import { Store, ChevronDown, ChevronRight, Compass, type LucideIcon } from "lucide-react";
-import { Link } from "@/i18n/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { Store, ChevronDown, ChevronRight, Compass, Users, MoreHorizontal, type LucideIcon } from "lucide-react";
+import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { useSiteFeatures } from "@/components/site-features";
 import { DIRECTORY_SECTION_LABELS } from "@/lib/search/directory-search";
@@ -194,5 +195,49 @@ export function DirectoryHomeSection({ locale }: { locale: string }) {
         </div>
       </div>
     </section>
+  );
+}
+
+/** Second row under the main bar (Yelp style): quick links to the most used directory sections, "Profesionales" and "Más"
+ * (all categories). In flow (not fixed), so it never changes the navbar height other layouts measure. Renders nothing while
+ * the directory is off. Horizontal scroll on phones (links stay focusable; the browser scrolls the focused one into view). */
+export const QUICK_NAV_SECTIONS: readonly string[] = ["restaurantes", "cafes", "supermercados", "farmacias", "gasolineras", "talleres", "salud", "belleza"];
+/** `spacer`: also reserve the fixed navbar height first (pages whose first block starts under the bar, like the home). */
+export function DirectoryQuickNav({ className, spacer }: { className?: string; spacer?: boolean }) {
+  const { directorySections } = useSiteFeatures();
+  const pathname = usePathname() ?? "/";
+  const locale = useLocale();
+  const t = useTranslations("quickNav");
+  const sections = QUICK_NAV_SECTIONS.filter((s) => directorySections.includes(s) && SECTIONS[s]);
+  if (!sections.length) return null;
+  const items: { key: string; href: string; label: string; icon: LucideIcon; active: boolean }[] = [
+    { key: "pros", href: "/profesionales", label: t("professionals"), icon: Users, active: pathname === "/profesionales" },
+    ...sections.map((s) => ({ key: s, href: `/${s}`, label: pick(SECTIONS[s], locale), icon: SECTIONS[s].icon, active: pathname === `/${s}` })),
+    { key: "more", href: "/servicios", label: t("more"), icon: MoreHorizontal, active: pathname === "/servicios" || pathname === "/lugares" },
+  ];
+  return (
+    <>
+    {spacer && <div className="h-16" aria-hidden />}
+    <nav data-quick-nav aria-label={t("label")} className={cn("border-b border-[#162543]/10 bg-white", className)}>
+      <ul className="mx-auto flex max-w-[1920px] items-center gap-0.5 overflow-x-auto px-3 py-1.5 [scrollbar-width:none] sm:px-6 lg:px-8 [&::-webkit-scrollbar]:hidden">
+        {items.map(({ key, href, label, icon: Icon, active }) => (
+          <li key={key} className="shrink-0">
+            <Link
+              href={href}
+              prefetch={false}
+              aria-current={active ? "page" : undefined}
+              data-quick-nav-link={key}
+              className={cn(
+                "inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-[13px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#009FD9]",
+                active ? "bg-[#eaf7fd] font-bold text-[#0083b0]" : "font-semibold text-[#162543] hover:bg-[#f3f6f9] hover:text-[#0083b0]",
+              )}
+            >
+              <Icon className="h-4 w-4 shrink-0" aria-hidden />{label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
+    </>
   );
 }
