@@ -9,7 +9,7 @@ export const PERMISSION_ACTIONS=['view','edit','delete','export'] as const;
 export type PermissionModule=typeof PERMISSION_MODULES[number];
 export type PermissionAction=typeof PERMISSION_ACTIONS[number];
 const id=z.string().uuid();
-export const moduleDeniesSchema=z.record(z.string(),z.record(z.enum(PERMISSION_MODULES),z.array(z.enum(PERMISSION_ACTIONS)).max(4)));
+export const moduleDeniesSchema=z.record(z.string(),z.partialRecord(z.enum(PERMISSION_MODULES),z.array(z.enum(PERMISSION_ACTIONS)).max(4)));
 export type ModuleDenies=z.infer<typeof moduleDeniesSchema>;
 export const modulePermissionsSchema=z.object({revision:z.number().int().min(0),canManage:z.boolean(),modules:z.array(z.string()),actions:z.array(z.string()),
  subjects:z.array(z.object({key:z.string(),kind:z.enum(['role','custom']),name:z.string()}).strict()),denies:moduleDeniesSchema}).strict();
