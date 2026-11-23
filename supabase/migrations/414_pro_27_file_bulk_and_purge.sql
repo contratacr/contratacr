@@ -79,7 +79,7 @@ begin
   select exists(select 1 from public.pro_estimate_proposal_images where owner_id=p_owner and source='company' and file_id=p_file) into hit;if hit then return true;end if;
  end if;
  if to_regclass('public.pro_file_annotations') is not null then
-  execute 'select exists(select 1 from public.pro_file_annotations where owner_id=$1 and scope=''company'' and file_id=$2)' using p_owner,p_file into hit;if hit then return true;end if;
+  execute 'select exists(select 1 from public.pro_file_annotations where owner_id=$1 and company_file_id=$2)' using p_owner,p_file into hit;if hit then return true;end if;
  end if;
  return false;
 end $$;

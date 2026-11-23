@@ -15,6 +15,7 @@ import {workFileSchema} from '@/lib/pro/work-files';
 import {ProDropZone,ProUploadList,postJsonWithProgress,uploadFailureMessage,useProUploadQueue,type UploadSend} from './pro-upload-queue';
 import {ProFilePreview,canPreview,type PreviewTarget} from './pro-file-preview';
 import {FileBulkBar,FilePurgePanel,useFileBulk} from './file-bulk';
+import {FileAnnotations} from './file-annotations';
 
 /**
  * Round 8 + Ronda F2-D: «Archivos» of a job. Folders and subfolders (up to 5 levels), move (drag a
@@ -36,7 +37,7 @@ export function WorkFileOrganizer({workId}:{workId:string}){
  const [view,setView]=useState<View>('folder'),[folder,setFolder]=useState<string|null>(null),[q,setQ]=useState(''),[query,setQuery]=useState(''),[sort,setSort]=useState<Sort>('recent');
  const [page,setPage]=useState<OrganizerPage|null>(null),[failed,setFailed]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
  const [dialog,setDialog]=useState<{kind:'new_folder'|'rename_folder'|'rename_file'|'move_folder'|'move_file';id?:string;name?:string;revision?:number}|null>(null),[dialogValue,setDialogValue]=useState('');
- const [preview,setPreview]=useState<PreviewTarget|null>(null),[dropTarget,setDropTarget]=useState<string|null>(null);
+ const [annotate,setAnnotate]=useState<(PreviewTarget&{id:string})|null>(null),[preview,setPreview]=useState<PreviewTarget|null>(null),[dropTarget,setDropTarget]=useState<string|null>(null);
  const pending=useRef<{key:string;id:string}|null>(null),uploadFolder=useRef<string|null>(null),{confirm,dialogNode}=useAppDialog();
  const load=useCallback(async()=>{
   try{const params=new URLSearchParams({workId,view});if(view==='folder'&&folder)params.set('folderId',folder);if(view==='search')params.set('q',query);
@@ -109,6 +110,7 @@ export function WorkFileOrganizer({workId}:{workId:string}){
   <div className="ml-auto flex flex-wrap items-center justify-end gap-2">{view==='trash'?<><Button type="button" variant="secondary" disabled={busy} onClick={()=>void mutate({action:'restore_file',subjectId:f.id,revision:f.metaRevision},t('Archivo restaurado.','File restored.'))}>{t('Restaurar','Restore')}</Button>
     <Button type="button" variant="outline" disabled={busy} onClick={()=>void purge('file',f.id,f.metaRevision,f.name)}>{t('Eliminar definitivamente','Delete permanently')}</Button></>:<>
    {previewable&&<Button type="button" variant="secondary" disabled={busy} onClick={()=>setPreview(target)}>{t('Ver','View')}</Button>}
+   {typeof f.sha256==='string'&&<Button type="button" variant="outline" data-annotate-open={f.id} disabled={busy} onClick={()=>setAnnotate({...target,id:f.id})}>{t('Anotar','Annotate')}</Button>}
    <Button type="button" variant="outline" className="h-11 w-11 p-0" aria-pressed={f.favorite} aria-label={f.favorite?t(`Quitar ${f.name} de favoritos`,`Remove ${f.name} from favorites`):t(`Marcar ${f.name} como favorito`,`Mark ${f.name} as favorite`)} disabled={busy} onClick={()=>void mutate({action:'favorite_file',subjectId:f.id,revision:f.metaRevision,on:!f.favorite})}><Star aria-hidden className={'h-4 w-4 '+(f.favorite?'fill-[#f2b705] text-[#c58a00]':'')}/></Button>
    <Button type="button" variant="outline" disabled={busy} aria-label={t(`Enviar ${f.name} a la papelera`,`Move ${f.name} to trash`)} onClick={()=>void mutate({action:'trash_file',subjectId:f.id,revision:f.metaRevision},t('Archivo enviado a la papelera.','File moved to the trash.'))}><Trash2 aria-hidden className="h-4 w-4"/></Button>
    {menu(t(`Opciones de ${f.name}`,`Options for ${f.name}`),<>
@@ -147,6 +149,7 @@ export function WorkFileOrganizer({workId}:{workId:string}){
    :folders.length+files.length===0?<p className="rounded-xl bg-[#f3f8fb] p-4 text-sm text-[#52627a]">{view==='trash'?t('La papelera está vacía.','The trash is empty.'):view==='favorites'?t('Todavía no hay favoritos.','No favorites yet.'):view==='search'?t('No hay archivos con ese nombre.','No files with that name.'):t('Esta carpeta está vacía. Suba archivos o cree una carpeta.','This folder is empty. Upload files or create a folder.')}</p>
    :<ul className="space-y-2">{folders.map(folderItem)}{files.map(fileItem)}</ul>}
   {preview&&<ProFilePreview target={preview} onClose={()=>setPreview(null)}/>}
+  {annotate&&<FileAnnotations scope="work" workId={workId} file={annotate} onClose={()=>setAnnotate(null)}/>}
   {dialog&&<Modal title={dialogTitle} ariaLabel={dialogTitle} onClose={()=>{if(!busy)setDialog(null);}} closeLabel={t('Cerrar','Close')} mobilePresentation="center"
    footer={<><Button type="button" variant="secondary" disabled={busy} onClick={()=>setDialog(null)}>{t('Cancelar','Cancel')}</Button><Button type="button" disabled={busy||(dialog.kind==='new_folder'||dialog.kind.startsWith('rename'))&&!dialogValue.trim()} onClick={()=>void submitDialog()}>{busy?t('Guardando…','Saving…'):t('Guardar','Save')}</Button></>}>
    <form onSubmit={event=>{event.preventDefault();void submitDialog();}} className="space-y-3">

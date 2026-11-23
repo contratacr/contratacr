@@ -180,6 +180,53 @@ try{
  for(const fn of ['pro_company_files_bulk(uuid,jsonb)','pro_work_files_bulk(uuid,jsonb)','pro_company_purge(uuid,jsonb)','pro_work_files_purge_expired(uuid,jsonb)','pro_file_purge_preview(uuid,text,text)','pro_company_file_in_use(uuid,uuid)'])
   for(const [role,yes] of [['anon',false],['authenticated',false],['service_role',true]])assert.equal((await one('select has_function_privilege($1,$2,$3) v',[role,'public.'+fn,'EXECUTE'])).v,yes,role+' '+fn);
  pass('414 grants: service_role only');
+ // ---- 415 annotations: pin and notes as private team comments, immutable, idempotent ----
+ const ann=async(input,actor=owner,member=null)=>(await one('select pro_file_annotation_create($1,$2,$3) v',[actor,member,{action:'create',actionId:crypto.randomUUID(),...input}])).v;
+ const aread=async(scope,file,w=null,actor=owner)=>(await one('select pro_file_annotations_read($1,$2,$3,$4) v',[actor,scope,file,w])).v;
+ const ap=await upload('plano.pdf',PDF),aj=await upload('foto.jpg','image/jpeg');
+ const pinId=crypto.randomUUID();
+ let an=await ann({actionId:pinId,scope:'work',workId:work,fileId:ap.id,kind:'pin',page:3,x:0.25,y:0.75,body:'  Revisar el desagüe aquí '});
+ assert.equal(an.replayed,false);assert.deepEqual([an.annotation.kind,an.annotation.page,an.annotation.x,an.annotation.y,an.annotation.body],['pin',3,0.25,0.75,'Revisar el desagüe aquí']);
+ const replay=await ann({actionId:pinId,scope:'work',workId:work,fileId:ap.id,kind:'pin',page:3,x:0.25,y:0.75,body:'  Revisar el desagüe aquí '});
+ assert.equal(replay.replayed,true);assert.equal(replay.annotation.id,an.annotation.id);
+ await assert.rejects(()=>ann({actionId:pinId,scope:'work',workId:work,fileId:ap.id,kind:'pin',page:3,x:0.5,y:0.75,body:'otro'}),code('22023'),'same action id with another body is refused');
+ await ann({scope:'work',workId:work,fileId:aj.id,kind:'pin',page:1,x:0,y:1,body:'Esquina'});
+ await assert.rejects(()=>ann({scope:'work',workId:work,fileId:aj.id,kind:'pin',page:2,x:0.5,y:0.5,body:'x'}),code('22023'),'a photo has one page');
+ for(const bad of [{x:1.1,y:0.5},{x:-0.1,y:0.5},{x:0.5,y:2}])await assert.rejects(()=>ann({scope:'work',workId:work,fileId:ap.id,kind:'pin',page:1,...bad,body:'x'}),code('22023'));
+ await assert.rejects(()=>ann({scope:'work',workId:work,fileId:ap.id,kind:'pin',page:0,x:0.5,y:0.5,body:'x'}),code('22023'));
+ await assert.rejects(()=>ann({scope:'work',workId:work,fileId:ap.id,kind:'pin',x:0.5,y:0.5,body:'x'}),code('22023'),'a pin needs a page');
+ await assert.rejects(()=>ann({scope:'work',workId:work,fileId:ap.id,kind:'note',body:'   '}),code('22023'));
+ await assert.rejects(()=>ann({scope:'work',workId:work,fileId:ap.id,kind:'note',body:'x'.repeat(1001)}),code('22023'));
+ await assert.rejects(()=>ann({scope:'work',workId:work,fileId:ap.id,kind:'note',body:'x',extra:1}),code('22023'),'unknown fields refused');
+ await assert.rejects(()=>ann({scope:'work',workId:work,fileId:crypto.randomUUID(),kind:'note',body:'x'}),code('42501'),'unknown file');
+ await assert.rejects(()=>ann({scope:'work',workId:work,fileId:ap.id,kind:'note',body:'x'},rival),code('42501'),'another account cannot annotate');
+ const dw=await upload('contrato.docx',DOCX);
+ await assert.rejects(()=>ann({scope:'work',workId:work,fileId:dw.id,kind:'pin',page:1,x:0.5,y:0.5,body:'x'}),code('22023'),'no pin on Word');
+ await ann({scope:'work',workId:work,fileId:dw.id,kind:'note',body:'Nota sobre el contrato'});
+ let ar=await aread('work',ap.id,work);assert.equal(ar.items.length,1);assert.equal(ar.pinnable,true);assert.equal((await aread('work',dw.id,work)).pinnable,false);
+ assert.equal(await aread('work',ap.id,work,rival),null,'another account reads nothing');
+ await assert.rejects(()=>db.query("update pro_file_annotations set body='cambio'"),code('23514'),'immutable: no update');
+ await assert.rejects(()=>db.query('delete from pro_file_annotations'),code('23514'),'immutable: no delete');
+ // an annotated job file is "in use": it cannot be deleted permanently
+ await org({action:'trash_file',subjectId:ap.id,revision:0});
+ const apRev=(await meta(ap.id)).metaRevision;
+ await assert.rejects(()=>org({action:'purge_file',subjectId:ap.id,revision:apRev}),code('22023'),'annotated job file is kept');
+ // library: notes and pins
+ const lf=await libUp('contrato-empresa.pdf'),li=await libUp('foto.jpg','image/jpeg');
+ const cn=await ann({scope:'company',fileId:lf.id,kind:'note',body:'Plantilla vigente 2026'});assert.equal(cn.annotation.scope,'company');
+ await ann({scope:'company',fileId:lf.id,kind:'pin',page:2,x:0.1,y:0.9,body:'Firma aquí'});
+ assert.equal((await aread('company',lf.id)).items.length,2);
+ assert.equal((await one('select pro_company_file_in_use($1,$2) v',[owner,lf.id])).v,true,'annotated library file counts as used');
+ await cbulk({action:'archive',items:await citems([lf.id,li.id])});
+ const rr=await cbulk({action:'purge',items:await citems([lf.id,li.id])});assert.deepEqual([rr.ok,rr.failed],[1,1]);assert.deepEqual(errs(rr),['in_use']);
+ await assert.rejects(()=>ann({scope:'company',workId:work,fileId:lf.id,kind:'note',body:'x'}),code('22023'),'company annotations carry no job');
+ // a member acting as the owner: the author is the member
+ const memberName=(await one("select full_name v from profiles where id=$1",[customer])).v;
+ const byMember=await ann({scope:'company',fileId:lf.id,kind:'note',body:'Del integrante'},owner,customer);assert.equal(byMember.annotation.authorName,memberName);
+ for(const fn of ['pro_file_annotation_create(uuid,uuid,jsonb)','pro_file_annotations_read(uuid,text,uuid,text)','pro_file_annotation_target(uuid,text,uuid,text)'])
+  for(const [role,yes] of [['anon',false],['authenticated',false],['service_role',true]])assert.equal((await one('select has_function_privilege($1,$2,$3) v',[role,'public.'+fn,'EXECUTE'])).v,yes,role+' '+fn);
+ assert.equal((await one("select has_table_privilege('authenticated','public.pro_file_annotations','SELECT') v")).v,false);
+ pass('415 annotations: pins (normalized coordinates, page), notes, private, idempotent, immutable, used files kept, grants');
  // @@GROUPS@@
 
  console.log(`${checks} file-ops contract groups passed; in-memory PGlite only.`);
