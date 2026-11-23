@@ -13,7 +13,10 @@ import {
  type MoodBoard,type MoodBoardDetail,type MoodBoardList,type MoodBoardMutation,type MoodComment,type MoodDraftElement,type MoodHistoryEntry,type MoodPage,type MoodPageFormat,type MoodProduct,
 } from '@/lib/pro/mood-boards';
 import {moodTemplateElements,moodTemplateLabel,moodTemplates,type MoodTemplate} from '@/lib/pro/round12';
+import {MoodImageLibrary} from './mood-board-image-library';
+import {MoodTemplatesPanel} from './mood-board-templates-panel';
 import {MoodCanvas,MoodPresenter,type Box,type CanvasItem} from './mood-board-canvas';
+import {CatalogSpecsLine,useCatalogSpecs} from './catalog-specs-line';
 import {useProChildGuard} from './use-pro-child-guard';
 
 /**
@@ -289,7 +292,7 @@ function BoardEditor({accountId,workId,boardId,c,en,clientVisible,onOpenClientVi
  const [detail,setDetail]=useState<MoodBoardDetail|null>(null),[loading,setLoading]=useState(true),[loadError,setLoadError]=useState(false);
  const [index,setIndex]=useState(0),[draft,setDraft]=useState<PageDraft|null>(null),[past,setPast]=useState<PageDraft[]>([]),[future,setFuture]=useState<PageDraft[]>([]);
  const [drawColor,setDrawColor]=useState('#162543');
- const [selected,setSelected]=useState<string|null>(null),[panel,setPanel]=useState<Panel>(null),[presenting,setPresenting]=useState(false);
+ const [selected,setSelected]=useState<string|null>(null),[panel,setPanel]=useState<Panel>(null),[presenting,setPresenting]=useState(false),[templatesOpen,setTemplatesOpen]=useState(false);
  const [error,setError]=useState(''),[notice,setNotice]=useState(''),[conflict,setConflict]=useState(false),[reply,setReply]=useState('');
  const active=useRef(true),sequence=useRef(0),merge=useRef<string|null>(null);
  const invalidate=useCallback(()=>{sequence.current++;},[]);
@@ -443,11 +446,13 @@ function BoardEditor({accountId,workId,boardId,c,en,clientVisible,onOpenClientVi
   {!readOnly&&<div data-mood-toolbar role="toolbar" aria-label={c.add} className="flex flex-wrap items-center gap-2">
    {(['image','product','swatch','note','text','arrow','drawing'] as const).map(kind=><Button key={kind} type="button" size="sm" variant={panel===kind?'default':'secondary'} aria-expanded={panel===kind} className="min-h-11" data-mood-add={kind}
     disabled={locked||current.elements.length>=MOOD_MAX_ELEMENTS} onClick={()=>setPanel(panel===kind?null:kind)}>{{image:c.addImage,product:c.addProduct,swatch:c.addSwatch,note:c.addNote,text:c.addText,arrow:c.addArrow,drawing:c.addDrawing}[kind]}</Button>)}
+   <Button type="button" size="sm" variant={templatesOpen?'default':'secondary'} aria-expanded={templatesOpen} className="min-h-11" data-mood-templates-toggle disabled={locked} onClick={()=>setTemplatesOpen(open=>!open)}>{en?'Templates':'Plantillas'}</Button>
    <span className="mx-1 hidden h-6 w-px bg-[#d7e1ea] sm:block" aria-hidden="true"/>
    <Button type="button" size="sm" variant="secondary" className="min-h-11" disabled={locked||!past.length} onClick={undo}>{c.undo}</Button>
    <Button type="button" size="sm" variant="secondary" className="min-h-11" disabled={locked||!future.length} onClick={redo}>{c.redo}</Button>
   </div>}
   {current.elements.length>=MOOD_MAX_ELEMENTS&&<p className="text-xs text-[#52627a]">{c.limitElements}</p>}
+  {templatesOpen&&!readOnly&&<MoodTemplatesPanel accountId={accountId} page={current} pageFormat={board.pageFormat} disabled={locked} onClose={()=>setTemplatesOpen(false)} onApply={(background,elements)=>{change({...current,background,elements});setSelected(null);}}/>}
   {panel&&!readOnly&&<AddPanel kind={panel} c={c} accountId={accountId} workId={workId} disabled={locked} onAdd={add} onClose={()=>setPanel(null)} drawColor={drawColor} onDrawColor={setDrawColor}/>}
 
   <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_18rem]">
@@ -531,7 +536,7 @@ function AddPanel({kind,c,accountId,workId,disabled,onAdd,onClose,drawColor,onDr
  const [photos,setPhotos]=useState<WorkFile[]|null>(null),[cursor,setCursor]=useState<string|null>(null),[photosError,setPhotosError]=useState(false),[uploading,setUploading]=useState(false),[uploadError,setUploadError]=useState('');
  const [search,setSearch]=useState(''),[products,setProducts]=useState<MoodProduct[]|null>(null),[productsError,setProductsError]=useState(false),[showPrice,setShowPrice]=useState(true),[productPhoto,setProductPhoto]=useState('');
  const [color,setColor]=useState('#008bb5'),[hex,setHex]=useState('#008bb5'),[label,setLabel]=useState(''),[note,setNote]=useState(''),[message,setMessage]=useState(''),[freeText,setFreeText]=useState(''),[textColor,setTextColor]=useState('#162543'),[arrowColor,setArrowColor]=useState('#d14343'),[direction,setDirection]=useState<'e'|'w'|'s'|'n'|'se'|'ne'>('e');
- const alive=useRef(true),productSeq=useRef(0);
+ const alive=useRef(true),productSeq=useRef(0),productSpecs=useCatalogSpecs(products?.map(item=>item.id)??[]);
  useEffect(()=>{alive.current=true;return()=>{alive.current=false;};},[]);
  const loadPhotos=useCallback(async(after:string|null)=>{
   setPhotosError(false);
@@ -581,6 +586,7 @@ function AddPanel({kind,c,accountId,workId,disabled,onAdd,onClose,drawColor,onDr
     <span className="text-xs text-[#52627a]">{c.uploadHelp} {c.photosHelp}</span>
    </div>
    {uploadError&&<p role="alert" className="text-sm text-[#8a2a1b]">{uploadError}</p>}
+   <MoodImageLibrary accountId={accountId} disabled={disabled||uploading} onPick={upload}/>
    {photoGrid(file=>onAdd({kind:'image',id:crypto.randomUUID(),x:3000,y:2000,w:3500,h:4500,...box,fileId:file.id}))}
   </>}
   {kind==='product'&&<>
@@ -592,7 +598,7 @@ function AddPanel({kind,c,accountId,workId,disabled,onAdd,onClose,drawColor,onDr
    {products&&products.length>0&&<ul className="space-y-1.5">{products.map(item=><li key={item.id}>
     <button type="button" disabled={disabled} data-mood-product={item.id} aria-label={c.addItem(item.name)} onClick={()=>onAdd({kind:'product',id:crypto.randomUUID(),x:3500,y:3000,w:2500,h:productPhoto?4000:2000,...box,productId:item.id,fileId:productPhoto||null,showPrice,name:item.name,unit:item.unit,priceCents:item.priceCents})}
      className="flex min-h-11 w-full min-w-0 items-center justify-between gap-3 rounded-xl border border-[#d7e1ea] bg-white px-3 py-2 text-left text-sm hover:border-[#0089bb]">
-     <span className="min-w-0"><span className="block truncate font-semibold">{item.name}</span>{(item.sku||item.category)&&<span className="block truncate text-xs text-[#52627a]">{[item.sku,item.category].filter(Boolean).join(' · ')}</span>}</span>
+     <span className="min-w-0"><span className="block truncate font-semibold">{item.name}</span>{(item.sku||item.category)&&<span className="block truncate text-xs text-[#52627a]">{[item.sku,item.category].filter(Boolean).join(' · ')}</span>}<CatalogSpecsLine specs={productSpecs[item.id]} className="block truncate text-xs text-[#52627a]"/></span>
      <span className="shrink-0 text-[#52627a]">{proMoney(item.priceCents/100)}{item.unit?` / ${item.unit}`:''}</span>
     </button></li>)}</ul>}
   </>}
