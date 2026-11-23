@@ -26,7 +26,7 @@ export const RUTAS_DEL_SITIO = new Set([
   // Pro local (correcciones post-seguridad): confirmación de la suscripción del formulario del sitio (doble confirmación, solo desarrollo).
   "confirmar-pro",
   // Pro local: vista previa del espacio Pro (solo desarrollo; el middleware ya la reescribe a /es/pro-preview).
-  "pro-preview",
+  "pro-preview", "contratacr-pro",
   // Pro local (directorio multivertical, solo desarrollo): ficha de un lugar (/lugar/<slug>), secciones con búsqueda,
   // anuncios de vehículos e inmuebles. «Cómo ordenamos» (F0) explica la neutralidad del orden.
   "lugar", "restaurantes", "farmacias", "supermercados", "gasolineras", "vehiculos", "inmuebles", "como-ordenamos",

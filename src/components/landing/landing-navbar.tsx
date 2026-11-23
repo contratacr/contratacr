@@ -54,6 +54,7 @@ import { CABECERA_TITULO } from "@/components/layout/cabecera";
 import { esRutaDeBusqueda, rutaDeBusqueda } from "@/lib/buscar-url";
 import { useParametrosDeBusqueda } from "@/hooks/use-parametros-de-busqueda";
 import { getProfessionalDisplayName } from "@/lib/display-name";
+import { PRO_UI_ENABLED } from "@/lib/pro/enabled-client";
 
 /* --- La marca (el cuadrito «CR») ---
  *
@@ -161,6 +162,7 @@ const RESOURCES_LINKS: { key: string; href: string }[] = [
   { key: "helpCenter", href: "/ayuda" },
   { key: "proTips",    href: "/mejorar-mi-perfil" },
   { key: "support",    href: "/soporte" },
+  ...(PRO_UI_ENABLED ? [{ key: "pro", href: "/contratacr-pro" }] : []),
 ];
 
 const CURRENT_LOCATION_STORAGE_KEY = "contratacr_current_location_hint";

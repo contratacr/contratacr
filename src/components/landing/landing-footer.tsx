@@ -15,6 +15,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { FooterPlacesColumn } from "./directory-nav";
 import { useSiteFeatures } from "@/components/site-features";
 import { useLocale } from "next-intl";
+import { PRO_UI_ENABLED } from "@/lib/pro/enabled-client";
 
 // Labels resolve to footer.<key> at render so they translate per locale.
 // Every href points to a CURRENT, existing page (verified against the app routes).
@@ -44,6 +45,7 @@ const COLUMNS = [
       // respeta y el pie lo enlazaba igual.
       ...(EMPLEOS_VISIBLE ? [{ key: "pros.jobs", href: "/empleos" }] : []),
       { key: "pros.attract",      href: "/mejorar-mi-perfil" },
+      ...(PRO_UI_ENABLED ? [{ key: "pros.pro", href: "/contratacr-pro" }] : []),
     ],
   },
   {
