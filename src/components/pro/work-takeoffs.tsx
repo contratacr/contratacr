@@ -19,6 +19,7 @@ import {AiTakeoffSuggestions,type TakeoffDraftItem} from './ai-takeoff-suggestio
 import {workFilesPageSchema,type WorkFile} from '@/lib/pro/work-files';
 import {isPdfFile,openTakeoffPdf,renderTakeoffPdfPage,takeoffPdfCanvasJpeg,takeoffPdfPageName,TakeoffPdfError,type TakeoffPdfDocument,type TakeoffPdfErrorCode} from '@/lib/pro/takeoff-pdf';
 import {PRO_FILE_MAX_BYTES} from '@/lib/pro/file-limit';
+import {detectRoom,toNormalized} from '@/lib/pro/takeoff-detect';
 
 /**
  * Mediciones sobre planos (row 66): plans of the job, a viewer with per-page
@@ -28,7 +29,7 @@ import {PRO_FILE_MAX_BYTES} from '@/lib/pro/file-limit';
 const api='/api/pro/takeoffs',field='mt-1 block min-h-11 w-full min-w-0 rounded-xl border border-[#d7e1ea] bg-white px-3 text-base font-normal text-[#162543]';
 const IMAGE_MAX_BYTES=PRO_FILE_MAX_BYTES;
 type StateCallback={onStateChange?:(state:{dirty:boolean;busy:boolean})=>void};
-type Tool='pan'|'scale'|TakeoffKind;
+type Tool='pan'|'scale'|'detect'|TakeoffKind;
 type MeasurementDraft={kind:TakeoffKind;name:string;categoryId:string;color:string;manual:string;multiplierMode:TakeoffMultiplierMode;multiplier:string;waste:string;productId:string;productName:string;points:TakeoffPoint[]};
 type Form=
  |{kind:'measurement';measurement:TakeoffMeasurement|null;draft:MeasurementDraft;initial:MeasurementDraft}
@@ -55,8 +56,8 @@ function copy(en:boolean){
   open:'Open',close:'Close plan',rename:'Rename',archive:'Archive',restore:'Restore',planTitle:'Plan title',savePlan:'Save title',
   showArchived:(n:number)=>`Show archived (${n})`,hideArchived:'Hide archived',archivedPlans:'Archived plans',archivedMeasurements:'Archived measurements',
   viewer:'Plan viewer',page:(n:number,t:number)=>`Page ${n} of ${t}`,tools:'Measuring tools',
-  toolNames:{pan:'Pan',scale:'Scale',area:'Area',length:'Length',count:'Count'} as Record<Tool,string>,
-  toolHelp:{pan:'Drag or scroll to move around the plan.',scale:'Click both ends of a dimension you know, then type its real length.',area:'Click each corner of the area. Finish when the outline is closed.',length:'Click each point of the line. Finish at the last point.',count:'Click each item to count it.'} as Record<Tool,string>,
+  toolNames:{pan:'Pan',scale:'Scale',detect:'Detect room',area:'Area',length:'Length',count:'Count'} as Record<Tool,string>,
+  toolHelp:{pan:'Drag or scroll to move around the plan.',detect:'Tap inside a room. The outline is proposed as an area you can review, adjust and save. It is an aid: check it against the plan.',scale:'Click both ends of a dimension you know, then type its real length.',area:'Click each corner of the area. Finish when the outline is closed.',length:'Click each point of the line. Finish at the last point.',count:'Click each item to count it.'} as Record<Tool,string>,
   zoomOut:'Zoom out',zoomIn:'Zoom in',fit:'Fit to width',points:(n:number)=>n===1?'1 point':`${n} points`,undo:'Undo last point',finish:'Finish',cancel:'Cancel',
   scaleSet:(v:string)=>`Scale set: the reference line measures ${v}.`,scaleMissing:'No scale yet: set it to measure areas and lengths. Counts and typed values do not need it.',
   calibrationTitle:'Page scale',realLength:'Real length of the line',unit:'Unit',meters:'Meters (m)',feet:'Feet (ft)',saveScale:'Save scale',clearScale:'Remove scale',
@@ -92,8 +93,8 @@ function copy(en:boolean){
   open:'Abrir',close:'Cerrar plano',rename:'Renombrar',archive:'Archivar',restore:'Restaurar',planTitle:'Título del plano',savePlan:'Guardar título',
   showArchived:(n:number)=>`Mostrar archivados (${n})`,hideArchived:'Ocultar archivados',archivedPlans:'Planos archivados',archivedMeasurements:'Mediciones archivadas',
   viewer:'Visor del plano',page:(n:number,t:number)=>`Página ${n} de ${t}`,tools:'Herramientas de medición',
-  toolNames:{pan:'Mover',scale:'Escala',area:'Área',length:'Longitud',count:'Conteo'} as Record<Tool,string>,
-  toolHelp:{pan:'Arrastre o desplace para recorrer el plano.',scale:'Haga clic en los dos extremos de una medida conocida y luego escriba su longitud real.',area:'Haga clic en cada esquina del área. Termine cuando el contorno esté cerrado.',length:'Haga clic en cada punto de la línea. Termine en el último punto.',count:'Haga clic sobre cada elemento para contarlo.'} as Record<Tool,string>,
+  toolNames:{pan:'Mover',scale:'Escala',detect:'Detectar ambiente',area:'Área',length:'Longitud',count:'Conteo'} as Record<Tool,string>,
+  toolHelp:{pan:'Arrastre o desplace para recorrer el plano.',detect:'Toque dentro de un ambiente. El contorno se propone como un área que usted puede revisar, ajustar y guardar. Es una ayuda: verifíquelo contra el plano.',scale:'Haga clic en los dos extremos de una medida conocida y luego escriba su longitud real.',area:'Haga clic en cada esquina del área. Termine cuando el contorno esté cerrado.',length:'Haga clic en cada punto de la línea. Termine en el último punto.',count:'Haga clic sobre cada elemento para contarlo.'} as Record<Tool,string>,
   zoomOut:'Alejar',zoomIn:'Acercar',fit:'Ajustar al ancho',points:(n:number)=>n===1?'1 punto':`${n} puntos`,undo:'Deshacer último punto',finish:'Terminar',cancel:'Cancelar',
   scaleSet:(v:string)=>`Escala definida: la línea de referencia mide ${v}.`,scaleMissing:'Aún no hay escala: defínala para medir áreas y longitudes. Los conteos y los valores escritos no la necesitan.',
   calibrationTitle:'Escala de la página',realLength:'Longitud real de la línea',unit:'Unidad',meters:'Metros (m)',feet:'Pies (ft)',saveScale:'Guardar escala',clearScale:'Quitar escala',
@@ -135,6 +136,9 @@ function TakeoffsSession({accountId,workId,onStateChange}:{accountId:string;work
  const [planId,setPlanId]=useState<string|null>(null),[tool,setTool]=useState<Tool>('pan'),[drawing,setDrawing]=useState<TakeoffPoint[]>([]),[zoom,setZoom]=useState(1);
  // Row 66: draw an opening directly inside an area; once saved it is subtracted from that area (the host id).
  const [openingOf,setOpeningOf]=useState<string|null>(null);
+ // Row 66: assisted detection (tap inside a room). Settings are adjustable; the grey bitmap is cached per plan.
+ const [detectOpts,setDetectOpts]=useState({threshold:140,closeRadius:3}),[detectBusy,setDetectBusy]=useState(false),[detectMsg,setDetectMsg]=useState('');
+ const gray=useRef<{planId:string;data:Uint8ClampedArray;w:number;h:number}|null>(null),lastSeed=useRef<TakeoffPoint|null>(null);
  const [form,setForm]=useState<Form|null>(null),[saving,setSaving]=useState(false),[uncertain,setUncertain]=useState(false),[conflict,setConflict]=useState(false),[uploading,setUploading]=useState(false),[jobFiles,setJobFiles]=useState<WorkFile[]|'loading'|'error'|null>(null);
  const [error,setError]=useState(''),[notice,setNotice]=useState(''),[showArchived,setShowArchived]=useState(false),[sent,setSent]=useState<TakeoffSendResult|null>(null);
  const [selected,setSelected]=useState<Set<string>|null>(null),[target,setTarget]=useState('new');
@@ -260,6 +264,7 @@ function TakeoffsSession({accountId,workId,onStateChange}:{accountId:string;work
  function startOpening(host:TakeoffMeasurement){if(locked||form)return;setDrawing([]);setOpeningOf(host.id);setTool('area');setError('');setNotice('');}
  function addPoint(point:TakeoffPoint){
   if(locked||form||!page||tool==='pan')return;
+  if(tool==='detect'){void runDetect(point,detectOpts);return;}
   if(tool==='scale'){const next=[...drawing,point].slice(-2);setDrawing(next);if(next.length===2)openCalibration(next);return;}
   if(drawing.length>=400)return;setDrawing([...drawing,point]);
  }
@@ -267,11 +272,30 @@ function TakeoffsSession({accountId,workId,onStateChange}:{accountId:string;work
   if(!page)return;const initial={unit:page.unit,length:page.calibration?milliToInput(page.calibration.lengthMilli,en):'',points:page.calibration?.points??[]};
   setForm({kind:'calibration',draft:{...initial,points},initial});
  }
+ async function loadGray(planIdValue:string){
+  if(gray.current?.planId===planIdValue)return gray.current;
+  const response=await fetch(api+'?'+new URLSearchParams({image:planIdValue}),{cache:'no-store'});if(!response.ok)throw Error('image');
+  const bitmap=await createImageBitmap(await response.blob()),scale=Math.min(1,1200/Math.max(bitmap.width,bitmap.height)),w=Math.max(1,Math.round(bitmap.width*scale)),h=Math.max(1,Math.round(bitmap.height*scale));
+  const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;const ctx=canvas.getContext('2d',{willReadFrequently:true});if(!ctx)throw Error('canvas');
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);ctx.drawImage(bitmap,0,0,w,h);bitmap.close();
+  const rgba=ctx.getImageData(0,0,w,h).data,data=new Uint8ClampedArray(w*h);for(let i=0;i<w*h;i++)data[i]=Math.round(0.299*rgba[i*4]!+0.587*rgba[i*4+1]!+0.114*rgba[i*4+2]!);
+  gray.current={planId:planIdValue,data,w,h};return gray.current;
+ }
+ async function runDetect(point:TakeoffPoint,options:{threshold:number;closeRadius:number}){
+  if(!plan)return;lastSeed.current=point;setDetectBusy(true);setDetectMsg('');setError('');
+  try{
+   const image=await loadGray(plan.id),result=detectRoom(image.data,image.w,image.h,[point[0]*image.w,point[1]*image.h],options);
+   if(!result.ok){setDrawing([]);setDetectMsg(result.reason==='on_wall'?(en?'You tapped on a wall. Tap inside the room.':'Tocó una pared. Toque dentro del ambiente.'):result.reason==='leaks'?(en?'The room is not closed (an opening is too wide). Raise "Close doors" or draw the area by hand.':'El ambiente no está cerrado (una abertura es muy ancha). Suba "Cerrar puertas" o dibuje el área a mano.'):(en?'No room could be detected here. Adjust the settings or draw it by hand.':'No se pudo detectar un ambiente aquí. Ajuste la sensibilidad o dibújelo a mano.'));return;}
+   setDrawing(toNormalized(result.polygon,image.w,image.h).slice(0,400) as TakeoffPoint[]);
+   setDetectMsg(en?`Outline proposed with ${result.polygon.length} corners. Review it and press "Finish", or tap again.`:`Contorno propuesto con ${result.polygon.length} esquinas. Revíselo y pulse "Terminar", o toque de nuevo.`);
+  }catch{setDrawing([]);setDetectMsg(en?'The plan image could not be analyzed. Draw the area by hand.':'No se pudo analizar la imagen del plano. Dibuje el área a mano.');}
+  finally{setDetectBusy(false);}
+ }
  function nextName(kind:TakeoffKind){return `${c.kinds[kind]} ${planMeasurements.filter(m=>m.kind===kind).length+1}`;}
  function finishDrawing(){
-  if(tool==='pan'||tool==='scale'||drawing.length<minPoints(tool))return;
+  if(tool==='pan'||tool==='scale')return;const kind:TakeoffKind=tool==='detect'?'area':tool;if(drawing.length<minPoints(kind))return;
   const host=openingOf?planMeasurements.find(m=>m.id===openingOf):null;
-  const draft:MeasurementDraft={kind:tool,name:host?(en?`Opening of ${host.name}`:`Hueco de ${host.name}`).slice(0,120):nextName(tool),categoryId:'',color:takeoffColors[planMeasurements.length%takeoffColors.length],manual:'',multiplierMode:'none',multiplier:'',waste:'',productId:'',productName:'',points:drawing};
+  const draft:MeasurementDraft={kind,name:host?(en?`Opening of ${host.name}`:`Hueco de ${host.name}`).slice(0,120):nextName(kind),categoryId:'',color:takeoffColors[planMeasurements.length%takeoffColors.length],manual:'',multiplierMode:'none',multiplier:'',waste:'',productId:'',productName:'',points:drawing};
   setForm({kind:'measurement',measurement:null,draft,initial:{...draft,points:[]}});
  }
  function openManual(){
@@ -395,14 +419,19 @@ function TakeoffsSession({accountId,workId,onStateChange}:{accountId:string;work
       {page.calibration?c.scaleSet(`${formatMilli(page.calibration.lengthMilli,en)} ${page.unit}`):c.scaleMissing}</p>
      <p className="text-sm text-[#52627a]">{c.toolHelp[tool]}</p>
      {openingOf&&tool==='area'&&<p data-takeoff-opening-banner role="status" className="rounded-xl bg-[#fff6e5] p-3 text-sm text-[#7a4b00]">{en?`Draw the opening inside "${planMeasurements.find(m=>m.id===openingOf)?.name??'the area'}". When you save it, its area is subtracted from that area.`:`Dibuje el hueco dentro de "${planMeasurements.find(m=>m.id===openingOf)?.name??'el área'}". Al guardarlo, su área se resta de esa área.`}</p>}
+     {tool==='detect'&&!form&&<div data-takeoff-detect className="grid min-w-0 gap-3 rounded-xl border border-[#d7e1ea] bg-white p-3 sm:grid-cols-2">
+      <label className="block text-sm font-semibold text-[#162543]">{en?'Wall sensitivity':'Sensibilidad de paredes'}<input data-takeoff-detect-threshold type="range" min={60} max={220} step={5} value={detectOpts.threshold} disabled={detectBusy} className="mt-2 block min-h-11 w-full" onChange={event=>{const next={...detectOpts,threshold:Number(event.target.value)};setDetectOpts(next);if(lastSeed.current)void runDetect(lastSeed.current,next);}}/></label>
+      <label className="block text-sm font-semibold text-[#162543]">{en?'Close doors (px)':'Cerrar puertas (px)'}: {detectOpts.closeRadius}<input data-takeoff-detect-close type="range" min={0} max={10} step={1} value={detectOpts.closeRadius} disabled={detectBusy} className="mt-2 block min-h-11 w-full" onChange={event=>{const next={...detectOpts,closeRadius:Number(event.target.value)};setDetectOpts(next);if(lastSeed.current)void runDetect(lastSeed.current,next);}}/></label>
+      <p role="status" data-takeoff-detect-status className="text-sm text-[#52627a] sm:col-span-2">{detectBusy?(en?'Analyzing plan…':'Analizando el plano…'):detectMsg||(page.calibration?'':(en?'Define the scale first so the area comes out in real units.':'Defina primero la escala para que el área salga en unidades reales.'))}</p>
+     </div>}
      {tool!=='pan'&&tool!=='scale'&&!form&&<div data-takeoff-drawing className="flex flex-wrap items-center gap-2">
       <span className="text-sm font-semibold text-[#162543]" aria-live="polite">{c.points(drawing.length)}</span>
       <Button type="button" variant="secondary" className="min-h-11" disabled={!drawing.length||locked} onClick={()=>setDrawing(drawing.slice(0,-1))}>{c.undo}</Button>
-      <Button type="button" className="min-h-11" disabled={drawing.length<minPoints(tool)||locked} onClick={finishDrawing}>{c.finish}</Button>
+      <Button type="button" className="min-h-11" disabled={drawing.length<minPoints(tool==='detect'?'area':tool)||locked} onClick={finishDrawing}>{c.finish}</Button>
       <Button type="button" variant="ghost" className="min-h-11" disabled={!drawing.length||locked} onClick={()=>setDrawing([])}>{c.cancel}</Button>
      </div>}
      <PlanCanvas c={c} plan={plan} page={page} zoom={zoom} tool={tool} measurements={planMeasurements} drawing={form?.kind==='calibration'?form.draft.points:form?.kind==='measurement'?form.draft.points:drawing}
-      drawingKind={form?.kind==='measurement'?form.draft.kind:form?.kind==='calibration'?'scale':tool} drawingColor={form?.kind==='measurement'?form.draft.color:'#c2255c'} onPoint={addPoint}/>
+      drawingKind={form?.kind==='measurement'?form.draft.kind:form?.kind==='calibration'?'scale':tool==='detect'?'area':tool} drawingColor={form?.kind==='measurement'?form.draft.color:'#c2255c'} onPoint={addPoint}/>
      {form?.kind==='calibration'&&<CalibrationForm c={c} form={form} saving={saving} disabled={locked} canClear={!!page.calibration} onChange={draft=>setForm({...form,draft})} onSubmit={submit} onCancel={cancelForm} onClear={()=>void clearScale()}
       onRedraw={()=>{setForm(null);setDrawing([]);setTool('scale');}}/>}
      {form?.kind==='measurement'&&<MeasurementForm c={c} en={en} form={form} page={page} detail={detail} saving={saving} disabled={locked} onChange={draft=>setForm({...form,draft})} onSubmit={submit} onCancel={cancelForm}/>}
@@ -459,7 +488,7 @@ function PlanList({c,en,plans,archived,showArchived,openId,locked,countFor,form,
 }
 
 function Toolbar({c,tool,zoom,disabled,onTool,onZoom}:{c:Copy;tool:Tool;zoom:number;disabled:boolean;onTool:(tool:Tool)=>void;onZoom:(zoom:number)=>void}){
- const tools:Tool[]=['pan','scale','area','length','count'],levels=[1,1.5,2,3,4],index=levels.indexOf(zoom);
+ const tools:Tool[]=['pan','scale','detect','area','length','count'],levels=[1,1.5,2,3,4],index=levels.indexOf(zoom);
  return <div className="flex flex-wrap items-center justify-between gap-2">
   <div role="toolbar" aria-label={c.tools} className="flex flex-wrap gap-1 rounded-xl bg-[#e9eff5] p-1">
    {tools.map(value=><button key={value} type="button" data-takeoff-tool={value} aria-pressed={tool===value} disabled={disabled} onClick={()=>onTool(value)}

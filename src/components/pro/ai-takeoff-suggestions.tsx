@@ -3,13 +3,14 @@ import {useRef,useState} from 'react';
 import {Button} from '@/components/ui/button';
 import type {AiSuggestion,AiTakeoffOutput} from '@/lib/pro/ai/features';
 import {AiLabel,ConsentHint,aiPost,reviewSuggestion,useAiCopy} from './ai-assistant';
+import {reviewQuantity,type TakeoffReview} from '@/lib/pro/takeoff-review';
 
 /**
  * Round 6C (row 67): «Leer plano con IA». The assistant suggests measurement items (area / length / count) for
  * the open plan page. They appear as an editable DRAFT with a clear disclaimer; only the rows the owner keeps
  * are created, as manual measurements, through the existing takeoffs writer (onAdd). Nothing is saved before.
  */
-export type TakeoffDraftItem={key:string;include:boolean;name:string;kind:'area'|'length'|'count';quantity:string;confidence:'low'|'medium'|'high';note:string};
+export type TakeoffDraftItem={key:string;include:boolean;name:string;kind:'area'|'length'|'count';quantity:string;confidence:'low'|'medium'|'high';note:string;proposed:{name:string;kind:'area'|'length'|'count';quantity:string}};
 const field='block min-h-11 w-full min-w-0 rounded-xl border border-[#d7e1ea] bg-white px-3 text-base';
 export function AiTakeoffSuggestions({workId,planId,pageNumber,unit,disabled,onAdd}:{workId:string;planId:string;pageNumber:number;unit:'m'|'ft';disabled:boolean;onAdd:(items:TakeoffDraftItem[])=>Promise<boolean>}){
  const {en,t,errorText}=useAiCopy();
@@ -27,12 +28,19 @@ export function AiTakeoffSuggestions({workId,planId,pageNumber,unit,disabled,onA
   const body=result.body as unknown as AiSuggestion;
   if(body.status!=='ready'){setError({reason:'provider_failed',text:errorText('provider_failed','')});return;}
   const output=body.output as AiTakeoffOutput;
-  setDraft({id:body.id,warnings:output.warnings,items:output.items.map((item,index)=>({key:body.id+':'+index,include:true,name:item.name,kind:item.kind,quantity:String(Math.round(item.quantity*factor(item.kind)*100)/100),confidence:item.confidence,note:item.note}))});
+  setDraft({id:body.id,warnings:output.warnings,items:output.items.map((item,index)=>({key:body.id+':'+index,include:true,name:item.name,kind:item.kind,quantity:String(Math.round(item.quantity*factor(item.kind)*100)/100),confidence:item.confidence,note:item.note,
+  proposed:{name:item.name,kind:item.kind,quantity:reviewQuantity(Math.round(item.quantity*factor(item.kind)*100)/100)}}))});
  }
  const valid=(item:TakeoffDraftItem)=>item.name.trim().length>0&&/^\d{1,9}(?:[.,]\d{1,3})?$/.test(item.quantity.trim())&&Number(item.quantity.replace(',','.'))>0;
  const chosen=draft?.items.filter(item=>item.include)??[];
  function patch(key:string,values:Partial<TakeoffDraftItem>){setDraft(old=>old?{...old,items:old.items.map(item=>item.key===key?{...item,...values}:item)}:old);}
- async function add(){if(!draft||!chosen.length||chosen.some(item=>!valid(item)))return;if(await onAdd(chosen)){reviewSuggestion(draft.id,'used');setDraft(null);}}
+ // Row 67: the human review is persisted (who kept which rows, proposed vs saved values); best effort, never blocks the owner.
+ function recordReview(outcome:'accepted'|'discarded',kept:TakeoffDraftItem[]){
+  if(!draft)return;const body:TakeoffReview={suggestionId:draft.id,planId,outcome,rows:draft.items.map((item,index)=>({index,include:outcome==='accepted'&&kept.includes(item),proposed:item.proposed,
+   saved:outcome==='accepted'&&kept.includes(item)?{name:item.name.trim().slice(0,120),kind:item.kind,quantity:reviewQuantity(item.quantity)}:null}))};
+  void fetch('/api/pro/ai-takeoff-review',{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).catch(()=>{});
+ }
+ async function add(){if(!draft||!chosen.length||chosen.some(item=>!valid(item)))return;if(await onAdd(chosen)){recordReview('accepted',chosen);reviewSuggestion(draft.id,'used');setDraft(null);}}
  return <section data-ai-takeoff className="min-w-0 space-y-3 rounded-xl border border-[#d9ccff] bg-[#faf8ff] p-3">
   <div className="flex flex-wrap items-center justify-between gap-2"><h5 className="text-sm font-bold text-[#162543]">{t('Sugerencias de medición con IA','AI measurement suggestions')}</h5>
    {!draft&&<Button type="button" variant="secondary" className="min-h-11" data-ai-read-plan disabled={busy||disabled} onClick={()=>void read()}>{busy?t('Leyendo plano…','Reading plan…'):t('✦ Leer plano con IA','✦ Read plan with AI')}</Button>}</div>
@@ -50,7 +58,7 @@ export function AiTakeoffSuggestions({workId,planId,pageNumber,unit,disabled,onA
      {!valid(item)&&item.include&&<p className="text-xs text-red-700">{t('Revise el nombre y la cantidad.','Check the name and quantity.')}</p>}
     </div></li>)}</ul>
    <div className="flex flex-wrap gap-2"><Button type="button" className="min-h-11" data-ai-takeoff-add disabled={disabled||!chosen.length||chosen.some(item=>!valid(item))} onClick={()=>void add()}>{t(`Agregar ${chosen.length} como mediciones`,`Add ${chosen.length} as measurements`)}</Button>
-    <Button type="button" variant="secondary" className="min-h-11" data-ai-discard onClick={()=>{reviewSuggestion(draft.id,'discarded');setDraft(null);}}>{t('Descartar','Discard')}</Button></div>
+    <Button type="button" variant="secondary" className="min-h-11" data-ai-discard onClick={()=>{recordReview('discarded',[]);reviewSuggestion(draft.id,'discarded');setDraft(null);}}>{t('Descartar','Discard')}</Button></div>
   </div>}
  </section>;
 }
