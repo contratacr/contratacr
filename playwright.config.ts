@@ -64,9 +64,10 @@ export default defineConfig({
   // Local focal runs may redirect artifacts to a disposable directory without
   // changing CI's canonical report paths.
   outputDir: process.env.PLAYWRIGHT_OUTPUT_DIR ?? "test-results",
+  // pro-*.spec.ts need their own dev server and local-only Supabase (playwright.pro-local.config.ts).
   // Exhaustive native chat/gesture suites use playwright.mobile.config.ts.
   // Shared web/native inbox contracts run here in web-chat-parity.spec.ts.
-  testIgnore: ["**/.tmp-*.spec.ts", "**/direct-chat.spec.ts", "**/mobile-native-shell.spec.ts"],
+  testIgnore: ["**/.tmp-*.spec.ts", "**/direct-chat.spec.ts", "**/mobile-native-shell.spec.ts", "**/pro-*.spec.ts"],
   globalSetup: "./tests/e2e/global-setup.ts",
   timeout: 60_000,
   expect: { timeout: 12_000 },

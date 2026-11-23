@@ -20,6 +20,7 @@ test("activity API rejects guests and non-admins; MFA admin can inspect guest an
   expect((await result.json()).events.some((e:{key:string})=>e.key==='j:'+ids[0])).toBe(true);
   expect((await page.request.get('/api/admin/analytics/activity?actor=private@example.com')).status()).toBe(400);
   await page.goto('/admin/analitica');
+  await page.getByRole('button',{name:'Actividad detallada'}).click();
   await expect(page.getByRole('heading',{name:'Recorridos y actividad'})).toBeVisible();
   await page.getByLabel('Plataforma de actividad').selectOption('android');
   await expect(page.getByText('Visitante aaaaaaaa',{exact:true}).first()).toBeVisible();
