@@ -88,3 +88,28 @@ test('Task templates API: literal catalogue paging, preview dates, child-collisi
   for(const accessToken of [null,f.token]){const client=createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!,process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,{auth:{persistSession:false,autoRefreshToken:false},...(accessToken?{global:{headers:{Authorization:'Bearer '+accessToken}}}:{})});for(const table of ['pro_task_templates','pro_task_template_rows','pro_task_template_actions'])expect((await client.from(table).select('*')).error?.code).toBe('42501');for(const [rpc,args]of [['pro_task_templates_read',{p_actor:f.owner.id,p_status:'active',p_query:'',p_after:null,p_template:null}],['pro_task_template_preview',{p_actor:f.owner.id,p_template:templateId,p_work:f.otherWorkId,p_start:'2024-02-28'}],['pro_task_templates_mutate',{p_actor:f.owner.id,p_input:apply}],['pro_task_template_action_read',{p_actor:f.owner.id,p_action:apply.actionId}]]as const)expect((await client.rpc(rpc,args)).error?.code).toBe('42501');}
  }finally{await cleanupDisposableAccount(f.owner);}
 });
+test('Task templates API (row 78): add a selection to an existing template, tags and tag search',async({page,baseURL})=>{
+ test.setTimeout(240000);assertLocal(baseURL);const f=await fixture(page.context());
+ try{
+  const first=crypto.randomUUID(),second=crypto.randomUUID(),templateId=crypto.randomUUID(),context=page.context();
+  await f.db.from('pro_work').update({start:'2024-03-01T02:00:00Z',end:'2024-03-01T04:00:00Z'}).eq('user_id',f.owner.id).eq('id',f.workId).throwOnError();
+  await f.db.from('pro_work_tasks').insert([{owner_id:f.owner.id,work_id:f.workId,id:first,title:'Primera tarea',details:'',assignee:'',due_date:'2024-03-02',status:'open',archived:false,revision:1},{owner_id:f.owner.id,work_id:f.workId,id:second,title:'Segunda tarea',details:'',assignee:'',due_date:null,status:'open',archived:false,revision:1}]).throwOnError();
+  const created=await mutate(context,f.owner,{action:'capture',actionId:crypto.randomUUID(),templateId,revision:0,name:'Base',notes:'',selected:[{workId:f.workId,taskId:first,revision:1}]});
+  expect(created.status()).toBe(200);expect(await created.json()).toMatchObject({action:'capture',template:{id:templateId,revision:1,count:1}});
+  // Add a second selection to the SAME template: rows are appended, revision +1, replay returns the same receipt.
+  const appendInput={action:'append',actionId:crypto.randomUUID(),templateId,revision:1,selected:[{workId:f.workId,taskId:second,revision:1}]};
+  const appended=await mutate(context,f.owner,appendInput);expect(appended.status()).toBe(200);const appendedBody=await appended.json();
+  expect(appendedBody).toMatchObject({action:'append',added:1,template:{id:templateId,revision:2,count:2}});
+  expect(await (await mutate(context,f.owner,appendInput)).json()).toEqual(appendedBody);
+  expect((await mutate(context,f.owner,{...appendInput,actionId:crypto.randomUUID()})).status()).toBe(409);// stale revision
+  const detail=await readTemplate(context,f.owner,templateId);expect(detail.rows.map((row:{title:string})=>row.title)).toEqual(['Primera tarea','Segunda tarea']);expect(detail.rows[1].dueOffset).toBeNull();
+  // Tags: stored trimmed, shown in the summary only when present, duplicates (any case) rejected.
+  expect(detail.tags).toBeUndefined();
+  const tagInput={action:'tags',actionId:crypto.randomUUID(),templateId,revision:2,tags:['Cocina','pintura']};
+  const tagged=await mutate(context,f.owner,tagInput);expect(tagged.status()).toBe(200);expect(await tagged.json()).toMatchObject({action:'tags',template:{id:templateId,revision:3,tags:['Cocina','pintura']}});
+  expect((await mutate(context,f.owner,{...tagInput,actionId:crypto.randomUUID(),revision:3,tags:['a','A']})).status()).toBe(400);
+  const list=async(q:string)=>{const r=await context.request.get(origin+templates+'?'+new URLSearchParams({view:'list',status:'active',q}),{headers:{'X-Pro-Expected-Actor':f.owner.id}});expect(r.status()).toBe(200);return (await r.json()) as {items:{id:string;tags?:string[]}[]};};
+  expect((await list('cocin')).items.map(item=>item.id)).toEqual([templateId]);
+  expect((await list('zzz-sin-resultado')).items).toEqual([]);
+ }finally{await cleanupDisposableAccount(f.owner);}
+});
