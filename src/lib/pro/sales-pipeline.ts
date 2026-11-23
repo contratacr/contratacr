@@ -44,3 +44,14 @@ export function durationLabel(h:number|null,locale:'es'|'en'){
  if(h<1)return {es:'menos de 1 hora',en:'under 1 hour'}[locale];
  if(h<24){const v=Math.round(h*10)/10;return `${fmt(v)} ${v===1?words.h[0]:words.h[1]}`;}const d=Math.round(h/24*10)/10;return `${fmt(d)} ${d===1?words.d[0]:words.d[1]}`;
 }
+
+/** Row 07: rules per stage (follow-up N days after a lead enters the stage). Shared by the route, the UI and the specs. */
+export const stageRulesReadSchema=z.object({revision:nint,
+ rules:z.array(z.object({stageId:stageId,followUpDays:z.number().int().min(1).max(90)}).strict()).max(18),
+ due:z.array(z.object({kind:z.enum(['manual','request']),id:uuid,stageId:stageId,title:z.string().max(400),enteredAt:stamp,dueOn:day,daysIn:nint,followUpDays:z.number().int().min(1).max(90)}).strict()).max(100)}).strict();
+export const stageRulesInputSchema=z.discriminatedUnion('action',[
+ z.object({action:z.literal('set'),actionId:uuid,revision:nint,stageId:stageId,days:z.number().int().min(1).max(90)}).strict(),
+ z.object({action:z.literal('clear'),actionId:uuid,revision:nint,stageId:stageId}).strict(),
+]);
+export const stageRulesResultSchema=z.object({action:z.enum(['set','clear']),revision:nint,stageId:stageId,followUpDays:z.number().int().min(1).max(90).nullable(),replayed:z.boolean().optional()}).strict();
+export type StageRulesRead=z.infer<typeof stageRulesReadSchema>;

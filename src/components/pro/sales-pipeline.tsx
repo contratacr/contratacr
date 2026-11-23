@@ -9,6 +9,7 @@ import {durationLabel,leadStageHistorySchema,pipelineForecastSchema,stageColorTo
  type LeadStageHistory,type PipelineForecast,type StageColor,type StageFunnel,type StageSetting,type StageSettings} from '@/lib/pro/sales-pipeline';
 import type {BoardCard} from '@/lib/pro/round10';
 import {LeadBoardView} from './round10-sales';
+import {StageRules} from './stage-rules';
 import {leadStageName} from './lead-stages-editor';
 import {LeadOriginFilter} from './lead-origin-filter';
 import {downloadFile} from './exports';
@@ -75,6 +76,7 @@ export function SalesPipelineBoard({actor,disabled,onOpen,onChanged,onManageStag
    </div>}
    {forecast&&forecast.withoutValue>0&&<p className="mt-2 text-xs text-[#52627a]" data-pipeline-without-value>{c.noValue(forecast.withoutValue)}</p>}
   </section>
+  <StageRules actor={actor} settings={settings} disabled={disabled}/>
   <LeadBoardView actor={actor} disabled={disabled} onOpen={onOpen} stageMeta={meta} onHistory={setHistory} onChanged={()=>{void load();onChanged?.();}}/>
   {styleOpen&&settings&&<StageStyleDialog actor={actor} initial={settings} onClose={()=>setStyleOpen(false)} onSaved={()=>void load()} onManageStages={()=>{setStyleOpen(false);onManageStages();}}/>}
   {history&&settings&&<LeadStageHistoryDialog actor={actor} card={history} settings={settings} onClose={()=>setHistory(null)}/>}
