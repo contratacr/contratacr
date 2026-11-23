@@ -18,7 +18,7 @@ const lib='/api/pro/company-files',work='/api/pro/work-files',convert='/api/pro/
 test('Text preview, size constant, converter adapter: pure contracts',async()=>{
  // TXT and CSV preview helpers.
  const long=Buffer.from('línea ñ\n'.repeat(20000),'utf8');const dec=decodeTextPreview(long.buffer.slice(long.byteOffset,long.byteOffset+long.byteLength) as ArrayBuffer);
- expect(dec.truncated).toBe(true);expect(Buffer.byteLength(dec.text,'utf8')).toBeLessThanOrEqual(TEXT_PREVIEW_MAX_BYTES);expect(dec.text).not.toContain('�');
+ expect(dec.truncated).toBe(true);expect(Buffer.byteLength(dec.text,'utf8')).toBeLessThanOrEqual(TEXT_PREVIEW_MAX_BYTES);expect(dec.text).not.toContain('\uFFFD');
  const odd=Buffer.from('a\u0000b\u0007c\r\nd','utf8');expect(decodeTextPreview(odd.buffer.slice(odd.byteOffset,odd.byteOffset+odd.byteLength) as ArrayBuffer).text).toBe('abc\nd');
  expect(detectDelimiter('a;b;c\n1;2;3')).toBe(';');expect(detectDelimiter('a\tb')).toBe('\t');expect(detectDelimiter('solo')).toBe(',');
  expect(parseCsvPreview('nombre,nota\n"Pérez, Ana","dijo ""hola"""\nLuis,3\n').rows).toEqual([['nombre','nota'],['Pérez, Ana','dijo "hola"'],['Luis','3']]);

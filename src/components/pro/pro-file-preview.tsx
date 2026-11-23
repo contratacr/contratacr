@@ -32,7 +32,7 @@ export function ProFilePreview({target,onClose}:{target:PreviewTarget;onClose:()
    }catch{if(live)setFailed(true);}
   })();
   return()=>{live=false;if(current.current){URL.revokeObjectURL(current.current);current.current=null;}};
- },[target,attempt]);
+ },[target,attempt,kind]);
  const download=<Button asChild variant="secondary"><a href={target.href} download={target.name}>{en?'Download':'Descargar'}</a></Button>;
  return <Modal title={target.name} ariaLabel={target.name} size="xl" onClose={onClose} closeLabel={en?'Close':'Cerrar'} mobilePresentation="fullscreen"
   footer={<>{download}<Button type="button" onClick={onClose}>{en?'Close preview':'Cerrar vista previa'}</Button></>}>

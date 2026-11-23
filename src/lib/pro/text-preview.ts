@@ -11,7 +11,7 @@ export function decodeTextPreview(buffer:ArrayBuffer,maxBytes=TEXT_PREVIEW_MAX_B
  const slice=new Uint8Array(buffer,0,Math.min(buffer.byteLength,maxBytes));
  let text=new TextDecoder('utf-8',{fatal:false}).decode(slice).replace(/^﻿/,'');
  // A cut in the middle of a character leaves a replacement mark at the end: drop it when we truncated.
- const truncated=buffer.byteLength>maxBytes;if(truncated)text=text.replace(/�$/u,'');
+ const truncated=buffer.byteLength>maxBytes;if(truncated)text=text.replace(/\uFFFD$/u,'');
  return{text:text.replace(/\r\n?/g,'\n').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g,''),truncated};
 }
 export function detectDelimiter(sample:string){
