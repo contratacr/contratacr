@@ -8,7 +8,7 @@ test("section links describe their content and preserve individual cards", async
   // La tarjeta de marca (21-nov-2026) se ve ancha (WhatsApp) y recortada al
   // cuadrado central de 630x630 (comentarios de Facebook, ~110 px de lado): el
   // nombre y una línea de texto, grandes, viven dentro de ese cuadrado (lo oscuro
-  // pasa de ~20 000 px) y los costados llevan solo adorno claro.
+  // pasa de ~20 000 px) y los costados son fondo liso, sin adornos.
   expect(symbol.length, "la tarjeta general no puede ser un lienzo casi vacio (~4 KB)").toBeGreaterThan(20_000);
   const zonas = await page.evaluate(async base64 => {
     const image = new Image(); image.src = `data:image/png;base64,${base64}`; await image.decode();

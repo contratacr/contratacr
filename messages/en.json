@@ -3462,7 +3462,7 @@
     },
     "seccionProfesionales": {
       "etiqueta": "Professionals",
-      "corto": "Professionals in Costa Rica",
+      "corto": "Find and offer services in Costa Rica",
       "titulo": "Find professionals in Costa Rica",
       "detalle": "Search by service and location and contact directly on WhatsApp.",
       "pie": "Offer and find services in Costa Rica."
@@ -3482,7 +3482,7 @@
       "pie": "Present your services with a clear quote."
     },
     "marca": {
-      "titulo": "Professionals in Costa Rica"
+      "titulo": "Find and offer services in Costa Rica"
     }
   },
   "accountPrivacy": {
