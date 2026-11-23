@@ -55,6 +55,14 @@ export function dependencyIssues(tasks:readonly GanttDependencyTask[],taskId:str
  return{predecessors,successors,blocking:predecessors.length+successors.length>0};
 }
 
+/** True when making `predecessorId` a predecessor of `taskId` would close a loop (the predecessor already depends on the task, directly or not). */
+export function wouldCreateCycle(tasks:readonly GanttDependencyTask[],predecessorId:string,taskId:string){
+ if(predecessorId===taskId)return true;
+ const byId=new Map(tasks.map(t=>[t.id,t])),seen=new Set<string>(),stack=[predecessorId];
+ while(stack.length){const id=stack.pop()!;if(id===taskId)return true;if(seen.has(id))continue;seen.add(id);for(const dep of byId.get(id)?.dependsOn??[])stack.push(dep);}
+ return false;
+}
+
 /** Assignee filter: '' = everyone, '__none' = unassigned, otherwise a Team grant id. */
 export const UNASSIGNED='__none';
 export function matchesAssignee(taskId:string,assignments:Readonly<Record<string,string|null|undefined>>,filter:string){

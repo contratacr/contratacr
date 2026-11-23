@@ -7,7 +7,7 @@ import {Button} from '@/components/ui/button';
 import {pushProParams} from '@/lib/pro/navigation';
 import {addDays,baselineMutationSchema,baselineResultSchema,clientScheduleSchema,dayDiff,ganttSchema,type ClientSchedule,type Gantt,type GanttMilestone,type GanttPhase,type GanttTask} from '@/lib/pro/project-schedule';
 import {workScheduleMutationSchema,workScheduleResultSchema,workTimelineTaskCreateSchema,type WorkScheduleMutation,type WorkTimelineTaskCreate} from '@/lib/pro/work-schedule';
-import {daysFromPixels,dependencyIssues,keyEdit,matchesAssignee,shiftPeriod,undoState,UNASSIGNED,type GanttEditMode} from '@/lib/pro/gantt-edit';
+import {daysFromPixels,dependencyIssues,keyEdit,matchesAssignee,shiftPeriod,undoState,UNASSIGNED,wouldCreateCycle,type GanttEditMode} from '@/lib/pro/gantt-edit';
 import {useProChildGuard} from './use-pro-child-guard';
 import {EstimateScheduleAction} from './estimate-schedule';
 import {WorkCalendarPanel} from './work-calendar-panel';
@@ -39,7 +39,7 @@ type Creating={kind:'task'|'phase';id:string;actionId:string;planActionId:string
 type Warning={lines:string[];proceed:()=>void;cancel:()=>void};
 type Member={grantId:string;name:string;canAssign:boolean};
 type Assigned={map:Record<string,string|null>;names:Record<string,string>;members:Member[]};
-type EditApi={editable:boolean;preview:Preview|null;onEdit:(task:GanttTask,mode:GanttEditMode,delta:number)=>void;helpId:string};
+type EditApi={editable:boolean;preview:Preview|null;onEdit:(task:GanttTask,mode:GanttEditMode,delta:number)=>void;helpId:string;linkFrom:GanttTask|null;onLinkStart:(task:GanttTask)=>void;onLinkPick:(task:GanttTask)=>void};
 
 /** Company read-only members (Round 7C role on <html>) never get editing affordances. */
 const subscribeRole=(callback:()=>void)=>{const observer=new MutationObserver(callback);observer.observe(document.documentElement,{attributes:true,attributeFilter:['data-pro-role']});return()=>observer.disconnect();};
@@ -69,6 +69,7 @@ function copy(en:boolean){
   createUncertain:'We could not confirm whether the task was created. Press Create again; it will not be duplicated.',partialCreate:'The task was created, but its assignee or dependency could not be saved. Open it in Tasks to review them.',
   filter:'Filter by assignee',everyone:'Everyone',unassigned:'Unassigned',teamMember:'Team member',
   undo:'Undo',undoLabel:(t:string)=>`Undo the last change: ${t}`,undone:'Change undone.',undoChanged:'The task changed afterwards; nothing was undone.',undoMissing:'That item is no longer in the schedule; nothing was undone.',
+  linkStart:(t:string)=>`Create a dependency: "${t}" must finish first`,linkBanner:(t:string)=>`Choose the task that depends on "${t}" (click its bar). Press Escape to cancel.`,linkCancel:'Cancel dependency',linkSaved:(a:string,b:string)=>`"${b}" now starts after "${a}".`,linkExists:'That dependency already exists.',linkMax:'A task can have up to five predecessors.',linkCycle:'That dependency would make the tasks wait for each other.',linkNeedsDates:'Both tasks need planned dates to be linked.',
   depTitle:'Check the dependencies',depPred:(t:string,p:string)=>`"${t}" would start before "${p}" ends.`,depSucc:(t:string,s:string)=>`"${s}" depends on "${t}" and would start before it ends.`,depConfirm:'Save anyway',depCancel:'Keep the previous dates',depCreateCancel:'Back to the form',
   help:'Drag a bar to move it or its edges to change the start or end. Keyboard: focus a bar and use ← → to move it one day, Shift+← → to change the end and Alt+← → to change the start; Enter opens its dates.',
   readOnly:'Read-only',dragging:(a:string,b:string)=>`${a} – ${b}`,
@@ -95,6 +96,7 @@ function copy(en:boolean){
   createUncertain:'No pudimos confirmar si se creó la tarea. Pulse Crear de nuevo; no se duplicará.',partialCreate:'La tarea se creó, pero no se pudo guardar su responsable o su dependencia. Ábrala en Tareas para revisarlos.',
   filter:'Filtrar por responsable',everyone:'Todos',unassigned:'Sin asignar',teamMember:'Miembro del equipo',
   undo:'Deshacer',undoLabel:(t:string)=>`Deshacer el último cambio: ${t}`,undone:'Cambio deshecho.',undoChanged:'La tarea cambió después; no se deshizo nada.',undoMissing:'Ese elemento ya no está en el cronograma; no se deshizo nada.',
+  linkStart:(t:string)=>`Crear dependencia: "${t}" debe terminar primero`,linkBanner:(t:string)=>`Elija la tarea que depende de "${t}" (haga clic en su barra). Escape para cancelar.`,linkCancel:'Cancelar dependencia',linkSaved:(a:string,b:string)=>`"${b}" ahora empieza después de "${a}".`,linkExists:'Esa dependencia ya existe.',linkMax:'Una tarea puede tener hasta cinco predecesoras.',linkCycle:'Esa dependencia haría que las tareas se esperen entre sí.',linkNeedsDates:'Las dos tareas necesitan fechas planificadas para enlazarlas.',
   depTitle:'Revise las dependencias',depPred:(t:string,p:string)=>`"${t}" empezaría antes de que termine "${p}".`,depSucc:(t:string,s:string)=>`"${s}" depende de "${t}" y empezaría antes de que esta termine.`,depConfirm:'Guardar de todos modos',depCancel:'Mantener las fechas anteriores',depCreateCancel:'Volver al formulario',
   help:'Arrastre una barra para moverla o sus bordes para cambiar el inicio o el fin. Con el teclado: enfoque una barra y use ← → para moverla un día, Mayús+← → para cambiar el fin y Alt+← → para cambiar el inicio; Intro abre sus fechas.',
   readOnly:'Solo lectura',dragging:(a:string,b:string)=>`${a} – ${b}`,
@@ -124,6 +126,9 @@ function ScheduleSession({accountId,workId,onStateChange}:{accountId:string;work
  const [data,setData]=useState<Gantt|null>(null),[loading,setLoading]=useState(true),[loadError,setLoadError]=useState(false);
  // Round 10: critical path ids published by the dependency panel of this job (highlight only).
  const [critical,setCritical]=useState<Set<string>>(()=>new Set());
+ // Row 13: drag-free dependency creation: choose the predecessor's handle, then click the dependent task's bar.
+ const [linkFrom,setLinkFrom]=useState<GanttTask|null>(null);
+ useEffect(()=>{if(!linkFrom)return;const onKey=(event:KeyboardEvent)=>{if(event.key==='Escape')setLinkFrom(null);};window.addEventListener('keydown',onKey);return()=>window.removeEventListener('keydown',onKey);},[linkFrom]);
  // Row 13: company work calendar (shading, working-day counts and warnings in the editor). Informational only.
  const [calendar,setCalendar]=useState<WorkCalendar|null>(null);
  const [mode,setMode]=useState<Mode>(()=>typeof window!=='undefined'&&window.matchMedia('(min-width: 768px)').matches?'gantt':'list'),[scale,setScale]=useState<Scale>('day');
@@ -196,6 +201,18 @@ function ScheduleSession({accountId,workId,onStateChange}:{accountId:string;work
   const input=workScheduleMutationSchema.parse({action:'task_plan',actionId:crypto.randomUUID(),workId,revision:data.revision,taskId:task.id,phaseId:task.phaseId,plannedStart:next.start,plannedEnd:next.end,dependsOn:task.dependsOn});
   void send({url:planApi,body:input,kind:'plan',message:c.moved(task.title,fmt(next.start,en),fmt(next.end,en)),done:()=>setLastChange({kind:'dates',taskId:task.id,title:task.title,prevStart,prevEnd,nextStart:next.start,nextEnd:next.end}),revert:()=>setPreview(null)});
  }
+ function startLink(task:GanttTask){if(!canEdit||!idle)return;setError('');setNotice('');setLinkFrom(task);}
+ function pickLink(target:GanttTask){
+  const from=linkFrom;if(!from||!data||!canEdit||!idle)return;
+  if(target.id===from.id){setLinkFrom(null);return;}
+  if(!from.plannedStart||!from.plannedEnd||!target.plannedStart||!target.plannedEnd){setLinkFrom(null);setError(c.linkNeedsDates);return;}
+  if(target.dependsOn.includes(from.id)){setLinkFrom(null);setNotice(c.linkExists);return;}
+  if(target.dependsOn.length>=5){setLinkFrom(null);setError(c.linkMax);return;}
+  if(wouldCreateCycle(data.tasks,from.id,target.id)){setLinkFrom(null);setError(c.linkCycle);return;}
+  setLinkFrom(null);setError('');setNotice('');
+  const input=workScheduleMutationSchema.parse({action:'task_plan',actionId:crypto.randomUUID(),workId,revision:data.revision,taskId:target.id,phaseId:target.phaseId,plannedStart:target.plannedStart,plannedEnd:target.plannedEnd,dependsOn:[...target.dependsOn,from.id]});
+  void send({url:planApi,body:input,kind:'plan',message:c.linkSaved(from.title,target.title)});
+ }
  /** Dependency rule (documented choice): a change that breaks finish-to-start is NOT saved silently;
   *  the chart shows the new position, explains each broken link and asks to confirm or keep the old dates. */
  function editDates(task:GanttTask,editMode:GanttEditMode,delta:number){
@@ -264,7 +281,7 @@ function ScheduleSession({accountId,workId,onStateChange}:{accountId:string;work
  const titles=new Map(data.tasks.map(t=>[t.id,t.title]));
  const empty=!scheduled.length&&!data.milestones.length&&!(canEdit&&data.phases.length);
  const filterOptions=[...new Set([...assigned.members.map(m=>m.grantId),...Object.values(assigned.map).filter((v):v is string=>!!v)])].map(id=>({id,name:assigned.names[id]||c.teamMember})).sort((a,b)=>a.name.localeCompare(b.name));
- const edit:EditApi={editable:canEdit,preview,onEdit:editDates,helpId:'gantt-help-'+workId};
+ const edit:EditApi={editable:canEdit,preview,onEdit:editDates,helpId:'gantt-help-'+workId,linkFrom,onLinkStart:startLink,onLinkPick:pickLink};
  const blockedChart=!idle;
  const undoText=lastChange?(lastChange.kind==='dates'?c.moved(lastChange.title,fmt(lastChange.prevStart,en),fmt(lastChange.prevEnd,en)):lastChange.title):'';
  return <section ref={sectionRef} data-project-schedule data-gantt-editable={canEdit?'true':'false'} data-gantt-busy={busy?'true':'false'} className="min-w-0 max-w-full space-y-4">
@@ -288,6 +305,7 @@ function ScheduleSession({accountId,workId,onStateChange}:{accountId:string;work
    {!!data.tasks.length&&<label className="block min-w-0 text-sm font-semibold sm:ml-auto">{c.filter}<select data-gantt-assignee-filter value={filter} onChange={event=>setFilter(event.target.value)} className={field+' sm:min-w-[12rem]'}><option value="">{c.everyone}</option><option value={UNASSIGNED}>{c.unassigned}</option>{filterOptions.map(o=><option key={o.id} value={o.id}>{o.name}</option>)}</select></label>}
   </div>
   <p data-schedule-share className="flex flex-wrap items-center gap-2 text-sm text-[#52627a]"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${data.showSchedule?'bg-[#eaf5fb] text-[#006e90]':'bg-[#eef2f6] text-[#52627a]'}`}>{data.showSchedule?c.shared:c.notShared}</span>{canEdit&&<button type="button" data-pro-write="work.write" disabled={dirty||busy} onClick={()=>pushProParams({vistaTrabajo:'client'})} className="min-h-11 font-semibold text-[#008bb5] underline-offset-2 hover:underline disabled:opacity-50">{c.configureShare}</button>}</p>
+  {linkFrom&&<div role="status" data-gantt-link-banner className="flex flex-wrap items-center gap-2 rounded-xl border border-[#0089bb] bg-[#f7fbfd] p-3 text-sm"><span className="min-w-0 flex-1">{c.linkBanner(linkFrom.title)}</span><Button type="button" variant="secondary" className="min-h-11" onClick={()=>setLinkFrom(null)}>{c.linkCancel}</Button></div>}
   {notice&&<p role="status" data-gantt-notice className="text-sm text-[#175b42]">{notice}</p>}
   {error&&<div role="alert" data-gantt-error className="space-y-2 rounded-xl border border-[#f1c9bd] bg-[#fff7f4] p-3 text-sm text-[#7a2e16]"><p>{error}</p>{uncertain&&<Button type="button" disabled={saving} onClick={()=>void send()}>{c.retrySame}</Button>}{conflict&&<Button type="button" data-gantt-reload variant="secondary" onClick={()=>{setConflict(false);setError('');setEditor(null);setBaselineDraft(null);setPreview(null);setWarning(null);void load();}}>{c.reload}</Button>}</div>}
   {warning&&<div role="alertdialog" aria-labelledby={'gantt-dep-'+workId} data-gantt-dependency-warning className="space-y-2 rounded-xl border border-[#f0b37e] bg-[#fff8f1] p-3 text-sm text-[#7a3a06]"><p id={'gantt-dep-'+workId} className="font-semibold">{c.depTitle}</p>{warning.lines.map((line,i)=><p key={i} className="break-words">{line}</p>)}<div className="flex flex-wrap justify-end gap-2"><Button type="button" variant="secondary" autoFocus data-gantt-dependency-cancel onClick={warning.cancel}>{creating?c.depCreateCancel:c.depCancel}</Button><Button type="button" data-gantt-dependency-confirm onClick={warning.proceed}>{c.depConfirm}</Button></div></div>}
@@ -400,7 +418,7 @@ function GanttChart({data,scale,c,en,calendar,disabled,critical,visible,filtered
   move(e){if(!drag||e.pointerId!==drag.pointer)return;const delta=daysFromPixels(e.clientX-drag.originX,w);if(delta!==drag.delta)setDrag({...drag,delta});},
   up(e,t,cancelled=false){if(!drag||e.pointerId!==drag.pointer)return;const current=drag;setDrag(null);if(cancelled||current.delta===0||current.id!==t.id)return;suppress.current=true;setTimeout(()=>{suppress.current=false;},0);edit.onEdit(t,current.mode,current.delta);},
   key(e,t){const k=keyEdit(e.key,e);if(!k||!edit.editable)return;e.preventDefault();e.stopPropagation();if(disabled)return;edit.onEdit(t,k.mode,k.delta);},
-  click(t){if(suppress.current){suppress.current=false;return;}if(!disabled)onTask?.(t);},
+  click(t){if(suppress.current){suppress.current=false;return;}if(edit.linkFrom){if(!disabled)edit.onLinkPick(t);return;}if(!disabled)onTask?.(t);},
  };
  const rowIndex=new Map<string,number>();rows.forEach((row,i)=>{if(row.kind==='task')rowIndex.set(row.task.id,i);});
  const taskById=new Map(data.tasks.map(t=>[t.id,t]));
@@ -464,6 +482,7 @@ function GanttRow({row,c,en,x,w,labelWidth,gridWidth,today,disabled,critical,tas
     {handles&&<span data-gantt-resize="end" aria-hidden="true" onPointerDown={e=>bar.down(e,t,'end')} className="absolute inset-y-0 right-0 w-2.5 cursor-ew-resize rounded-r-lg bg-white/25"/>}
    </button>
    :<span role="img" data-schedule-bar={t.id} data-gantt-bar-start={start} data-gantt-bar-end={end} data-schedule-critical={critical.has(t.id)?'true':undefined} aria-label={barLabel} title={text} className={barClass} style={{left:x(start),width:Math.max(w,width)}}>{width>=72&&<span className="truncate">{t.title}</span>}</span>}
+  {editable&&<button type="button" data-gantt-link-handle={t.id} aria-pressed={edit.linkFrom?.id===t.id} aria-disabled={disabled||undefined} aria-label={c.linkStart(t.title)} title={c.linkStart(t.title)} onClick={()=>{if(!disabled)edit.onLinkStart(t);}} className={`absolute !min-h-0 !min-w-0 top-[14px] z-10 h-4 w-4 rounded-full border-2 border-[#0089bb] ${edit.linkFrom?.id===t.id?'bg-[#0089bb]':'bg-white'} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#162543]`} style={{left:x(start)+Math.max(w,width)+4}}/>}
   {dragging&&<span data-gantt-drag-dates aria-live="polite" className="pointer-events-none absolute -top-0.5 z-20 whitespace-nowrap rounded bg-[#162543] px-1.5 text-[11px] font-semibold leading-4 text-white" style={{left:x(start)}}>{c.dragging(fmt(start,en,{day:'numeric',month:'short'}),fmt(end,en,{day:'numeric',month:'short'}))}</span>}
   {t.dueDate&&<span data-schedule-deadline={t.id} data-schedule-deadline-late={late?'true':'false'} aria-hidden="true" title={c.deadline(fmt(t.dueDate,en))+(late?' · '+c.afterDeadline:'')} className={`pointer-events-none absolute inset-y-1 z-[6] w-0.5 rounded-full ${late||overdue?'bg-[#b42318]':'bg-[#162543]'}`} style={{left:x(t.dueDate)+w-1}}><span className={`absolute -left-[3px] top-0 h-2 w-2 rotate-45 ${late||overdue?'bg-[#b42318]':'bg-[#162543]'}`}/></span>}</>);
 }
