@@ -187,3 +187,30 @@ for(const language of ['es','en'] as const)test(`Fix 14: «My project» page and
   expect(custErrors).toEqual([]);
  }finally{for(const c of contexts)await c.close();if(customer)await cleanupDisposableAccount(customer);if(stranger)await cleanupDisposableAccount(stranger);await f.cleanup();}
 });
+
+// Row 66: draw an opening directly inside an area; once saved it is subtracted from that area (gross − opening = net).
+for(const language of ['es','en'] as const)test(`Takeoffs: draw an opening inside an area [${language}]`,async({page},info)=>{
+ test.setTimeout(900000);local(info.project.use.baseURL);const en=language==='en',id=label(language),tr=(es:string,english:string)=>en?english:es,prefix=en?'/en':'/es';
+ const f=await ownerFixture(page.context(),id);
+ try{
+  const headers={Origin:origin,'X-Pro-Expected-Actor':f.owner.id};
+  const fileId=crypto.randomUUID(),up=await page.request.post('/api/pro/work-files',{headers,data:{action:'upload',workId:f.workId,fileId,name:'plano-hueco.png',data:(await planImage()).toString('base64')}});expect(up.status(),await up.text()).toBe(200);
+  const planId=crypto.randomUUID(),created=await page.request.post('/api/pro/takeoffs',{headers,data:{action:'plan_create',actionId:crypto.randomUUID(),workId:f.workId,id:planId,fileId,title:tr('Planta hueco','Opening floor')}});expect(created.status(),await created.text()).toBe(200);
+  const plan=(await created.json()).plan as {revision:number;pages:{revision:number}[]};
+  const scale=await page.request.post('/api/pro/takeoffs',{headers,data:{action:'page_calibrate',actionId:crypto.randomUUID(),workId:f.workId,id:planId,revision:plan.pages[0].revision,pageNumber:1,unit:'m',calibration:{points:[[0.1,0.5],[0.6,0.5]],lengthMilli:12000}}});expect(scale.status(),await scale.text()).toBe(200);
+  const host=crypto.randomUUID(),made=await page.request.post('/api/pro/takeoffs',{headers,data:{action:'measurement_create',actionId:crypto.randomUUID(),workId:f.workId,id:host,planId,pageNumber:1,kind:'area',name:tr('Sala','Living room'),categoryId:null,color:'#0089bb',points:[[0.1,0.1],[0.6,0.1],[0.6,0.9],[0.1,0.9]],manualMilli:null,multiplierMode:'none',multiplierMilli:null,wasteBps:0,productId:null}});expect(made.status(),await made.text()).toBe(200);
+  await openPro(page,`${prefix}/dashboard/pro/trabajo/${encodeURIComponent(f.workId)}/takeoffs`,en);
+  await page.locator(`[data-takeoff-plan="${planId}"]`).getByRole('button',{name:new RegExp(en?'^Open':'^Abrir')}).click({timeout:90000});
+  await page.locator(`[data-takeoff-draw-opening="${host}"]`).click({timeout:90000});
+  await expect(page.locator('[data-takeoff-opening-banner]')).toBeVisible();
+  const canvas=page.locator('[data-takeoff-canvas]');await expect(page.locator('img').first()).toHaveJSProperty('complete',true);
+  const at=async(x:number,y:number)=>{const box=(await canvas.boundingBox())!;await canvas.click({position:{x:box.width*x,y:box.height*y}});};
+  await at(0.2,0.2);await at(0.3,0.2);await at(0.3,0.4);await at(0.2,0.4);
+  await page.getByRole('button',{name:en?'Finish':'Terminar'}).click();
+  const form=page.locator('[data-takeoff-form="measurement"]');await expect(form.locator('[data-takeoff-field="name"]')).toHaveValue(tr('Hueco de Sala','Opening of Living room'));
+  await form.getByRole('button',{name:en?'Save measurement':'Guardar medición'}).click();
+  await expect(page.locator(`[data-takeoff-measurement="${host}"] [data-takeoff-net]`)).toBeVisible({timeout:60000});
+  await expect(page.locator(`[data-takeoff-opening-of="${host}"]`)).toHaveCount(1);
+  await expectNoHorizontalOverflow(page);
+ }finally{await f.cleanup();}
+});

@@ -133,6 +133,8 @@ function TakeoffsSession({accountId,workId,onStateChange}:{accountId:string;work
  const en=useLocale()==='en',c=copy(en),{confirm,dialogNode}=useAppDialog();
  const [detail,setDetail]=useState<TakeoffDetail|null>(null),[loading,setLoading]=useState(true),[loadError,setLoadError]=useState(false);
  const [planId,setPlanId]=useState<string|null>(null),[tool,setTool]=useState<Tool>('pan'),[drawing,setDrawing]=useState<TakeoffPoint[]>([]),[zoom,setZoom]=useState(1);
+ // Row 66: draw an opening directly inside an area; once saved it is subtracted from that area (the host id).
+ const [openingOf,setOpeningOf]=useState<string|null>(null);
  const [form,setForm]=useState<Form|null>(null),[saving,setSaving]=useState(false),[uncertain,setUncertain]=useState(false),[conflict,setConflict]=useState(false),[uploading,setUploading]=useState(false),[jobFiles,setJobFiles]=useState<WorkFile[]|'loading'|'error'|null>(null);
  const [error,setError]=useState(''),[notice,setNotice]=useState(''),[showArchived,setShowArchived]=useState(false),[sent,setSent]=useState<TakeoffSendResult|null>(null);
  const [selected,setSelected]=useState<Set<string>|null>(null),[target,setTarget]=useState('new');
@@ -254,7 +256,8 @@ function TakeoffsSession({accountId,workId,onStateChange}:{accountId:string;work
  const locked=busy||conflict;
  const usedPlanFiles=new Set(detail?.plans.map(row=>row.fileId)??[]),jobFileOptions=Array.isArray(jobFiles)?jobFiles.filter(file=>file.mimeType==='image/jpeg'&&file.ready&&!usedPlanFiles.has(file.id)):[];
 
- function chooseTool(next:Tool){if(locked||form)return;setDrawing([]);setTool(next);setError('');}
+ function chooseTool(next:Tool){if(locked||form)return;setDrawing([]);setOpeningOf(null);setTool(next);setError('');}
+ function startOpening(host:TakeoffMeasurement){if(locked||form)return;setDrawing([]);setOpeningOf(host.id);setTool('area');setError('');setNotice('');}
  function addPoint(point:TakeoffPoint){
   if(locked||form||!page||tool==='pan')return;
   if(tool==='scale'){const next=[...drawing,point].slice(-2);setDrawing(next);if(next.length===2)openCalibration(next);return;}
@@ -267,7 +270,8 @@ function TakeoffsSession({accountId,workId,onStateChange}:{accountId:string;work
  function nextName(kind:TakeoffKind){return `${c.kinds[kind]} ${planMeasurements.filter(m=>m.kind===kind).length+1}`;}
  function finishDrawing(){
   if(tool==='pan'||tool==='scale'||drawing.length<minPoints(tool))return;
-  const draft:MeasurementDraft={kind:tool,name:nextName(tool),categoryId:'',color:takeoffColors[planMeasurements.length%takeoffColors.length],manual:'',multiplierMode:'none',multiplier:'',waste:'',productId:'',productName:'',points:drawing};
+  const host=openingOf?planMeasurements.find(m=>m.id===openingOf):null;
+  const draft:MeasurementDraft={kind:tool,name:host?(en?`Opening of ${host.name}`:`Hueco de ${host.name}`).slice(0,120):nextName(tool),categoryId:'',color:takeoffColors[planMeasurements.length%takeoffColors.length],manual:'',multiplierMode:'none',multiplier:'',waste:'',productId:'',productName:'',points:drawing};
   setForm({kind:'measurement',measurement:null,draft,initial:{...draft,points:[]}});
  }
  function openManual(){
@@ -281,7 +285,7 @@ function TakeoffsSession({accountId,workId,onStateChange}:{accountId:string;work
    multiplier:m.multiplierMilli!==null?milliToInput(m.multiplierMilli,en):'',waste:percentInput(m.wasteBps,en),productId:m.productId??'',productName:m.productName??'',points:m.points};
   setForm({kind:'measurement',measurement:m,draft,initial:draft});setError('');setNotice('');
  }
- function cancelForm(){if(form?.kind==='calibration'||form?.kind==='measurement'&&!form.measurement)setDrawing([]);setForm(null);setError('');}
+ function cancelForm(){if(form?.kind==='calibration'||form?.kind==='measurement'&&!form.measurement)setDrawing([]);setOpeningOf(null);setForm(null);setError('');}
  function measurementInput(draft:MeasurementDraft){
   const manual=draft.points.length===0;
   const manualMilli=manual?parseMilli(draft.manual,1000000000000,en):null,multiplierMilli=draft.multiplierMode==='none'?null:parseMilli(draft.multiplier,100000000,en),wasteBps=parsePercent(draft.waste);
@@ -307,7 +311,13 @@ function TakeoffsSession({accountId,workId,onStateChange}:{accountId:string;work
   const parsed=fields&&takeoffMutationSchema.safeParse(form.measurement?{action:'measurement_update',...base,id:form.measurement.id,revision:form.measurement.revision,...fields}
    :{action:'measurement_create',...base,id:crypto.randomUUID(),planId:plan.id,pageNumber:page.pageNumber,kind:form.draft.kind,...fields});
   if(!parsed||!parsed.success){setError(c.measurementInvalid);return;}
-  void send(parsed.data,c.saved);
+  const hostId=!form.measurement&&form.draft.kind==='area'?openingOf:null;
+  if(!hostId){void send(parsed.data,c.saved);return;}
+  void send(parsed.data,c.saved).then(async result=>{
+   setOpeningOf(null);
+   const created=result&&typeof result==='object'&&'measurement' in result?(result as {measurement:TakeoffMeasurement}).measurement:null;
+   if(created)await send({action:'deduction_set',workId,actionId:crypto.randomUUID(),id:created.id,revision:created.revision,parentId:hostId},c.saved);
+  });
  }
  async function clearScale(){
   if(!plan||!page||locked)return;
@@ -384,6 +394,7 @@ function TakeoffsSession({accountId,workId,onStateChange}:{accountId:string;work
      <p data-takeoff-scale-status={page.calibration?'set':'missing'} className={`rounded-xl p-3 text-sm ${page.calibration?'bg-white text-[#52627a]':'bg-[#fff6e5] text-[#7a4b00]'}`}>
       {page.calibration?c.scaleSet(`${formatMilli(page.calibration.lengthMilli,en)} ${page.unit}`):c.scaleMissing}</p>
      <p className="text-sm text-[#52627a]">{c.toolHelp[tool]}</p>
+     {openingOf&&tool==='area'&&<p data-takeoff-opening-banner role="status" className="rounded-xl bg-[#fff6e5] p-3 text-sm text-[#7a4b00]">{en?`Draw the opening inside "${planMeasurements.find(m=>m.id===openingOf)?.name??'the area'}". When you save it, its area is subtracted from that area.`:`Dibuje el hueco dentro de "${planMeasurements.find(m=>m.id===openingOf)?.name??'el área'}". Al guardarlo, su área se resta de esa área.`}</p>}
      {tool!=='pan'&&tool!=='scale'&&!form&&<div data-takeoff-drawing className="flex flex-wrap items-center gap-2">
       <span className="text-sm font-semibold text-[#162543]" aria-live="polite">{c.points(drawing.length)}</span>
       <Button type="button" variant="secondary" className="min-h-11" disabled={!drawing.length||locked} onClick={()=>setDrawing(drawing.slice(0,-1))}>{c.undo}</Button>
@@ -401,7 +412,7 @@ function TakeoffsSession({accountId,workId,onStateChange}:{accountId:string;work
      onChoose={(id,on)=>{const next=new Set(chosen);if(on)next.add(id);else next.delete(id);setSelected(next);}}
      onManual={openManual} onEdit={openEdit} onArchive={m=>void archiveMeasurement(m)}
      onVisibility={m=>void send({action:'measurement_visibility',workId,actionId:crypto.randomUUID(),id:m.id,revision:m.revision,hidden:!m.hidden},c.saved)}
-     onDeduct={(m,parentId)=>void send(parentId?{action:'deduction_set',workId,actionId:crypto.randomUUID(),id:m.id,revision:m.revision,parentId}:{action:'deduction_clear',workId,actionId:crypto.randomUUID(),id:m.id,revision:m.revision},c.saved)}
+     onDrawOpening={startOpening} onDeduct={(m,parentId)=>void send(parentId?{action:'deduction_set',workId,actionId:crypto.randomUUID(),id:m.id,revision:m.revision,parentId}:{action:'deduction_clear',workId,actionId:crypto.randomUUID(),id:m.id,revision:m.revision},c.saved)}
      onRestore={m=>void send({action:'measurement_restore',workId,actionId:crypto.randomUUID(),id:m.id,revision:m.revision},c.restored)}
      send={<SendPanel c={c} en={en} detail={detail} measurements={planMeasurements} chosen={chosen} target={target} disabled={locked||!!form||drawing.length>0} saving={saving} onTarget={setTarget} onSend={()=>void sendToEstimate()}/>}/>
    </div>
@@ -563,9 +574,9 @@ function MeasurementForm({c,en,form,page,detail,saving,disabled,onChange,onSubmi
  </form>;
 }
 
-function MeasurementPanel({c,en,measurements,archived,chosen,locked,onChoose,onManual,onEdit,onArchive,onVisibility,onDeduct,onRestore,send}:{c:Copy;en:boolean;measurements:TakeoffMeasurement[];archived:TakeoffMeasurement[];
+function MeasurementPanel({c,en,measurements,archived,chosen,locked,onChoose,onManual,onEdit,onArchive,onVisibility,onDrawOpening,onDeduct,onRestore,send}:{c:Copy;en:boolean;measurements:TakeoffMeasurement[];archived:TakeoffMeasurement[];
  chosen:Set<string>;locked:boolean;onChoose:(id:string,on:boolean)=>void;onManual:()=>void;onEdit:(m:TakeoffMeasurement)=>void;onArchive:(m:TakeoffMeasurement)=>void;
- onVisibility:(m:TakeoffMeasurement)=>void;onDeduct:(m:TakeoffMeasurement,parentId:string|null)=>void;onRestore:(m:TakeoffMeasurement)=>void;send:ReactNode}){
+ onVisibility:(m:TakeoffMeasurement)=>void;onDrawOpening:(m:TakeoffMeasurement)=>void;onDeduct:(m:TakeoffMeasurement,parentId:string|null)=>void;onRestore:(m:TakeoffMeasurement)=>void;send:ReactNode}){
  const t=(es:string,english:string)=>en?english:es,nameOf=(id:string|null|undefined)=>measurements.find(x=>x.id===id)?.name??t('otra área','another area');
  // Fix 14 (row 66): areas of the same page that can receive an opening (not openings themselves).
  const hosts=(m:TakeoffMeasurement)=>measurements.filter(x=>x.id!==m.id&&x.kind==='area'&&x.pageNumber===m.pageNumber&&!x.result.deductFrom);
@@ -599,6 +610,7 @@ function MeasurementPanel({c,en,measurements,archived,chosen,locked,onChoose,onM
        <p className="text-sm text-[#162543]">{c.total}: <strong data-takeoff-total data-takeoff-total-milli={m.result.totalMilli??''}>{formatQuantity(m.result.totalMilli,m.result.unit,en)??c.needsScale}</strong></p>
       </div>
      </div>
+     {m.kind==='area'&&!m.result.deductFrom&&!m.hidden&&!locked&&<Button type="button" variant="secondary" data-takeoff-draw-opening={m.id} className="min-h-11 w-full" onClick={()=>onDrawOpening(m)}>{t('Dibujar un hueco dentro de esta área','Draw an opening inside this area')}</Button>}
      {m.kind==='area'&&!m.result.openings&&(hosts(m).length>0||m.result.deductFrom)&&<label className="block text-xs font-semibold text-[#162543]">{t('Restar como hueco de','Subtract as an opening of')}
       <select data-takeoff-deduct={m.id} className="mt-1 min-h-11 w-full min-w-0 rounded-xl border border-[#d7e1ea] bg-white px-3 text-sm font-normal" disabled={locked} value={m.result.deductFrom??''} onChange={event=>onDeduct(m,event.target.value||null)}>
        <option value="">{t('No es un hueco','Not an opening')}</option>{hosts(m).map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select>
