@@ -35,6 +35,8 @@ export async function GET(req:Request){
    return new Response(bytes,{headers:{...headers,'Content-Type':audio.mime,'Content-Length':String(bytes.length),'Content-Disposition':'inline','Content-Security-Policy':"sandbox; default-src 'none'",'Cross-Origin-Resource-Policy':'same-origin','Referrer-Policy':'no-referrer'}});
   }
   const work=workId.safeParse(q.workId);if(!work.success)return proFail(400,'Consulta inválida.');
+  // Row 76: audio retention. Recordings older than the server's limit are deleted (notes and tasks stay).
+  const retention=Number(process.env.PRO_AI_AUDIO_RETENTION_DAYS);await aiRpc(a.db,'pro_ai_recordings_purge',{p_actor:a.user.id,p_days:Number.isInteger(retention)&&retention>=1&&retention<=3650?retention:90});
   return Response.json(await aiRpc(a.db,'pro_ai_meetings_read',{p_actor:a.user.id,p_work:work.data}),{headers});
  }catch(error){return fail(error);}
 }

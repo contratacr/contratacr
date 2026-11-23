@@ -26,13 +26,20 @@ const CompanyVendors=dynamic(()=>import('./company-vendors').then(m=>m.CompanyVe
 const CompanyIntegrations=dynamic(()=>import('./company-integrations').then(m=>m.CompanyIntegrations),{loading:ViewLoading});
 const CompanyEinvoice=dynamic(()=>import('./company-einvoice').then(m=>m.CompanyEinvoice),{loading:ViewLoading});
 const CompanyConnectors=dynamic(()=>import('./company-connectors').then(m=>m.CompanyConnectors),{loading:ViewLoading});
+const CompanyAutomation=dynamic(()=>import('./company-automation').then(m=>m.CompanyAutomation),{loading:ViewLoading});
+const CompanyMeetings=dynamic(()=>import('./company-automation').then(m=>m.CompanyMeetings),{loading:ViewLoading});
 const CompanyAccounting=dynamic(()=>import('./company-accounting').then(m=>m.CompanyAccounting),{loading:ViewLoading});
 const CompanySite=dynamic(()=>import('./company-site').then(m=>m.CompanySite),{loading:ViewLoading});
 const CompanyMarketing=dynamic(()=>import('./company-marketing').then(m=>m.CompanyMarketing),{loading:ViewLoading});
+const CompanyAdBuilder=dynamic(()=>import('./company-ad-builder').then(m=>m.CompanyAdBuilder),{loading:ViewLoading});
 const CompanyAdsTracking=dynamic(()=>import('./company-ads-tracking').then(m=>m.CompanyAdsTracking),{loading:ViewLoading});
+const CompanyPortfolio=dynamic(()=>import('./company-portfolio').then(m=>m.CompanyPortfolio),{loading:ViewLoading});
+const ProHelpCenter=dynamic(()=>import('./pro-help-center').then(m=>m.ProHelpCenter),{loading:ViewLoading});
+const ProTraining=dynamic(()=>import('./pro-training').then(m=>m.ProTraining),{loading:ViewLoading});
+const ProSupport=dynamic(()=>import('./pro-support').then(m=>m.ProSupport),{loading:ViewLoading});
 const PaymentReconciliation=dynamic(()=>import('./payment-reconciliation').then(m=>m.PaymentReconciliation),{loading:ViewLoading});
 
-export const companyViews=['contactos','proveedores','archivos','plantillas','categorias','articulos','catalogos','perfil','formulario','sitio','correo','insights','integraciones','conectores','contabilidad','cobros','documentos','facturacion'] as const;
+export const companyViews=['contactos','proveedores','archivos','plantillas','categorias','articulos','catalogos','perfil','formulario','sitio','correo','insights','anuncios','integraciones','conectores','automatizacion','reuniones','contabilidad','cobros','documentos','facturacion','portafolio','ayuda','formacion','soporte'] as const;
 export type CompanyView=typeof companyViews[number];
 type Copy={es:string;en:string};
 const views:Record<CompanyView,{label:Copy;title:Copy;description:Copy}>={
@@ -47,11 +54,18 @@ const views:Record<CompanyView,{label:Copy;title:Copy;description:Copy}>={
  formulario:{label:{es:'Formulario de contacto',en:'Contact form'},title:{es:'Formulario de contacto',en:'Contact form'},description:{es:'Cómo le llegan las solicitudes de clientes nuevos.',en:'How requests from new customers reach you.'}},
  sitio:{label:{es:'Sitio web',en:'Website'},title:{es:'Sitio web',en:'Website'},description:{es:'Su sitio web con sus servicios, fotos, reseñas y un formulario que crea solicitudes. Se publica por versiones.',en:'Your website with your services, photos, reviews and a form that creates leads. Published in versions.'}},
  correo:{label:{es:'Correo masivo',en:'Email campaigns'},title:{es:'Correo masivo',en:'Email campaigns'},description:{es:'Campañas y automatizaciones por correo, solo a contactos con consentimiento y con enlace de baja.',en:'Email campaigns and automations, only to contacts with consent and with an unsubscribe link.'}},
+ anuncios:{label:{es:'Constructor de anuncios',en:'Ad builder'},title:{es:'Constructor de anuncios',en:'Ad builder'},description:{es:'Planifique anuncios en Meta o Google con segmentación y presupuesto. Modo de prueba: no se publica ni se gasta nada.',en:'Plan Meta or Google ads with targeting and budget. Test mode: nothing is published or spent.'}},
  insights:{label:{es:'Resultados de marketing',en:'Marketing insights'},title:{es:'Resultados de marketing',en:'Marketing insights'},description:{es:'Enlaces de seguimiento (UTM), costos de sus campañas y costo por solicitud con datos reales.',en:'Tracking links (UTM), campaign costs and cost per lead from real data.'}},
  integraciones:{label:{es:'Integraciones',en:'Integrations'},title:{es:'Integraciones',en:'Integrations'},description:{es:'Hacienda, cobros en línea, firma electrónica, Google, Microsoft, QuickBooks, IA, transcripción, correo de campañas, anuncios, lector de enlaces y dominio: modo, estado y prueba de conexión.',en:'Hacienda, online payments, e-signature, Google, Microsoft, QuickBooks, AI, transcription, campaign email, ads, link reader and domain: mode, status and connection test.'}},
  conectores:{label:{es:'Correo y calendario',en:'Email and calendar'},title:{es:'Correo, calendario y archivos',en:'Email, calendar and files'},description:{es:'Conecte Google o Microsoft para enviar correos de proyecto desde su buzón, sincronizar la agenda y adjuntar archivos de Drive u OneDrive.',en:'Connect Google or Microsoft to send project emails from your mailbox, sync your agenda and attach Drive or OneDrive files.'}},
+ automatizacion:{label:{es:'Automatización',en:'Automation'},title:{es:'Automatización con otras herramientas',en:'Automation with other tools'},description:{es:'Eventos firmados (webhooks) hacia Zapier, Make, n8n o su propio sistema, con registro de entregas.',en:'Signed events (webhooks) to Zapier, Make, n8n or your own system, with a delivery log.'}},
+ reuniones:{label:{es:'Reuniones',en:'Meetings'},title:{es:'Reuniones por video',en:'Video meetings'},description:{es:'Prepare reuniones con enlace de videollamada vinculadas a sus proyectos.',en:'Set up meetings with a video call link linked to your projects.'}},
  contabilidad:{label:{es:'Contabilidad',en:'Accounting'},title:{es:'Contabilidad',en:'Accounting'},description:{es:'Sincronice clientes, facturas y pagos con QuickBooks o exporte un CSV para cualquier sistema contable.',en:'Sync customers, invoices and payments with QuickBooks or export a CSV for any accounting system.'}},
  documentos:{label:{es:'Documentos con su marca',en:'Branded documents'},title:{es:'Documentos con su marca',en:'Branded documents'},description:{es:'El color, el logo y los datos de su empresa en las facturas, contratos, estados de cuenta, planes de pagos, recibos y órdenes de compra que imprime.',en:'Your colour, logo and company details on the invoices, contracts, statements, payment plans, receipts and purchase orders you print.'}},
+ portafolio:{label:{es:'Portafolio y métricas',en:'Portfolio and metrics'},title:{es:'Portafolio y métricas del perfil',en:'Portfolio and profile metrics'},description:{es:'Publique un trabajo terminado como proyecto de su perfil, con el consentimiento de su cliente, y vea cuántas visitas se vuelven solicitudes y trabajos.',en:'Publish a finished job as a project on your profile, with your customer\'s consent, and see how many visits turn into requests and jobs.'}},
+ ayuda:{label:{es:'Centro de ayuda',en:'Help center'},title:{es:'Centro de ayuda',en:'Help center'},description:{es:'Guías cortas de cada herramienta de Pro, con búsqueda.',en:'Short guides for each Pro tool, with search.'}},
+ formacion:{label:{es:'Formación',en:'Training'},title:{es:'Formación',en:'Training'},description:{es:'Lecciones breves con su avance guardado.',en:'Short lessons with your progress saved.'}},
+ soporte:{label:{es:'Soporte Pro',en:'Pro support'},title:{es:'Soporte Pro',en:'Pro support'},description:{es:'Escriba a nuestro equipo desde Pro y siga la conversación.',en:'Write to our team from Pro and follow the conversation.'}},
  // Ronda F2-A: electronic invoicing (provider, mode, emisor, branch/terminal, received documents).
  facturacion:{label:{es:'Facturación electrónica',en:'Electronic invoicing'},title:{es:'Facturación electrónica',en:'Electronic invoicing'},description:{es:'Proveedor y modo de la factura electrónica, datos del emisor, sucursal, terminal y actividad, y respuestas a los comprobantes que le envían sus proveedores.',en:'Electronic invoice provider and mode, issuer details, branch, terminal and activity, and answers to the documents your suppliers send you.'}},
  cobros:{label:{es:'Cobros en línea',en:'Online payments'},title:{es:'Cobros en línea',en:'Online payments'},description:{es:'Conciliación de los pagos recibidos por enlace con los estados de cuenta.',en:'Reconciliation of payments received by link against the customer ledgers.'}},
@@ -61,8 +75,9 @@ const groups:{label:Copy;items:CompanyView[]}[]=[
  // Round 7B: «Company files» has one entry, in the Pro side menu (tab pro_files); the
  // company-hub address ?empresa=archivos keeps working for old links.
  {label:{es:'Biblioteca',en:'Library'},items:['plantillas','categorias','articulos','catalogos']},
- {label:{es:'Marketing',en:'Marketing'},items:['perfil','formulario','sitio','correo','insights']},
- {label:{es:'Configuración',en:'Settings'},items:['facturacion','integraciones','conectores','contabilidad','cobros','documentos']},
+ {label:{es:'Marketing',en:'Marketing'},items:['perfil','formulario','sitio','correo','insights','anuncios','portafolio']},
+ {label:{es:'Ayuda',en:'Help'},items:['ayuda','formacion','soporte']},
+ {label:{es:'Configuración',en:'Settings'},items:['facturacion','integraciones','conectores','automatizacion','reuniones','contabilidad','cobros','documentos']},
 ];
 const card='min-w-0 space-y-3 rounded-2xl border border-[#d7e1ea] bg-white p-4 sm:p-5';
 const linkButton='inline-flex min-h-11 items-center justify-center rounded-full border border-[#d7e1ea] bg-white px-5 text-sm font-semibold text-[#007aa0] hover:bg-[#f3f8fb] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#008bb5]';
@@ -99,12 +114,19 @@ export function CompanyHub({profileSlug,disabled=false}:{profileSlug:string|null
    {view==='sitio'&&user&&<CompanySite key={user.id}/>}
    {view==='correo'&&user&&<CompanyMarketing key={user.id}/>}
    {view==='insights'&&user&&<CompanyAdsTracking key={user.id}/>}
+   {view==='anuncios'&&user&&<CompanyAdBuilder key={user.id}/>}
    {view==='integraciones'&&user&&<CompanyIntegrations key={user.id}/>}
    {view==='conectores'&&user&&<CompanyConnectors key={user.id}/>}
+   {view==='automatizacion'&&user&&<CompanyAutomation key={user.id}/>}
+   {view==='reuniones'&&user&&<CompanyMeetings key={user.id}/>}
    {view==='contabilidad'&&user&&<CompanyAccounting key={user.id}/>}
    {view==='cobros'&&user&&<PaymentReconciliation key={user.id}/>}
    {view==='documentos'&&user&&<DocumentBrandingSettings key={user.id}/>}
    {view==='facturacion'&&user&&<CompanyEinvoice key={user.id}/>}
+   {view==='portafolio'&&user&&<CompanyPortfolio key={user.id}/>}
+   {view==='ayuda'&&user&&<ProHelpCenter key={user.id}/>}
+   {view==='formacion'&&user&&<ProTraining key={user.id}/>}
+   {view==='soporte'&&user&&<ProSupport key={user.id}/>}
   </section>
  </div>;
 }

@@ -4,6 +4,7 @@ import {enforceRateLimit,enforceRateLimitKey} from '@/lib/rate-limit';
 import {proBoundedJson,proRequestOrigin,proSameOrigin} from '@/lib/pro/route-common';
 import {siteConsentText,siteSlugSchema,siteSubmitSchema} from '@/lib/pro/site';
 import {PRO_ENABLED} from '@/lib/pro/enabled';
+import {emitProEvent} from '@/lib/pro/integrations/webhooks/service';
 
 // Round 6D (row 69/70): PUBLIC side of a professional website (no account). Visits of a tracking code and the
 // request form (→ customer + lead in the owner's lead center; marketing consent only if ticked, with the exact
@@ -42,6 +43,9 @@ export async function POST(req:Request){
    ...(input.marketingConsent?{confirmBase:proRequestOrigin(req),language:input.language==='en'?'en':'es'}:{})};
   const result=await db.rpc('pro_site_submit',{p_slug:input.slug,p_input:payload});
   if(result.error)return result.error.code==='P0002'?fail(404,'unknown','Este sitio no recibe solicitudes ahora.'):result.error.code==='54000'?fail(429,'limit','Se recibieron demasiadas solicitudes. Intente de nuevo mañana o contacte al negocio por teléfono.'):result.error.code==='22023'?fail(400,'invalid','Revise los datos del formulario.'):fail(503,'unavailable','No se pudo enviar. Reintente: no se duplicará.');
+  // Row 72: tell the owner's automation (sandbox: simulated). Best effort, never blocks the request, no personal data in the event.
+  try{const owner=await db.from('professionals').select('profile_id').eq('slug',input.slug).maybeSingle();
+   if(owner.data?.profile_id)await emitProEvent(db,owner.data.profile_id as string,'lead.created',{source:'site_form',service:input.service??null});}catch{/* ignore */}
   return Response.json(result.data,{headers});
  }catch{return fail(503,'unavailable','No se pudo enviar. Reintente: no se duplicará.');}
 }

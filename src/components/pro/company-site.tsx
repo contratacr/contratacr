@@ -6,6 +6,7 @@ import {useAppDialog} from '@/hooks/use-app-dialog';
 import {siteContentSchema,siteSlugSchema,siteThemeTokens,siteThemes,type PublicSite,type SiteContent,type SiteProfile,type SiteSection,type SiteTheme} from '@/lib/pro/site';
 import {ProModal} from './modal';
 import {SitePage} from './site-page';
+import {CompanySiteDomain} from './company-site-domain';
 
 /**
  * Round 6D (row 69): Company › Marketing › Website. Sections built from the professional's own ContrataCR data
@@ -73,6 +74,7 @@ export function CompanySite(){
     <Button type="button" variant="secondary" disabled={busy||!site} onClick={()=>void post({action:'domain',customDomain:domain},t('Dominio anotado (no conectado).','Domain noted (not connected).'))}>{t('Guardar dominio','Save domain')}</Button>
     {data.versions.length>0&&<div><h4 className="mt-2 text-sm font-bold">{t('Versiones publicadas','Published versions')}</h4><ul data-site-versions className="mt-1 space-y-1 text-sm">{data.versions.map(v=><li key={v.version}>{t('Versión','Version')} {v.version} · {new Date(v.publishedAt).toLocaleString(en?'en-US':'es-CR',{dateStyle:'medium',timeStyle:'short',timeZone:'America/Costa_Rica'})}</li>)}</ul></div>}
    </section>
+   <CompanySiteDomain key={site?.slug??'none'}/>
   </div>
   <section className={card} aria-labelledby="site-sections"><h3 id="site-sections" className="font-bold">{t('Secciones','Sections')}</h3>
    <ol className="space-y-3">{content.sections.map(section=><li key={section.type} data-site-section-editor={section.type} className="rounded-xl border border-[#e3eaf0] p-3">

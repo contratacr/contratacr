@@ -15,6 +15,17 @@ import {useProSearchParams} from './use-pro-search-params';
  * exactly once; a refund books the ledger reversal. Mock mode is a local simulation and says so.
  */
 const api='/api/pro/payment-links';
+/** Row 49: QR of the payment link, made in the browser (no third party sees the link) and downloadable as PNG or SVG. */
+function PaymentLinkQr({url}:{url:string}){
+ const en=useLocale()==='en',t=(es:string,english:string)=>en?english:es,[png,setPng]=useState(''),[failed,setFailed]=useState(false);
+ useEffect(()=>{let alive=true;setPng('');setFailed(false);void import('qrcode').then(m=>m.toDataURL(url,{width:320,margin:2,errorCorrectionLevel:'M'})).then(data=>{if(alive)setPng(data);},()=>{if(alive)setFailed(true);});return()=>{alive=false;};},[url]);
+ async function svg(){const m=await import('qrcode'),text=await m.toString(url,{type:'svg',margin:2,errorCorrectionLevel:'M'}),link=document.createElement('a');link.href=URL.createObjectURL(new Blob([text],{type:'image/svg+xml'}));link.download='qr-cobro.svg';link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);}
+ if(failed)return <p role="alert" className="text-sm text-red-700">{t('No se pudo generar el código QR.','Could not generate the QR code.')}</p>;
+ return <div data-payment-link-qr className="flex min-w-0 flex-wrap items-center gap-3">
+  {png?<img data-payment-link-qr-image src={png} width={160} height={160} alt={t('Código QR del enlace de pago','QR code of the payment link')} className="h-40 w-40 rounded-xl border border-[#d7e1ea] bg-white p-1"/>:<span role="status" className="text-sm text-[#52627a]">{t('Generando QR...','Generating QR...')}</span>}
+  <div className="flex flex-wrap gap-2"><a data-payment-link-qr-png href={png||undefined} download="qr-cobro.png" aria-disabled={!png} className="inline-flex min-h-11 items-center rounded-full border border-[#d7e1ea] bg-white px-4 text-sm font-semibold text-[#007aa0]">{t('Descargar PNG','Download PNG')}</a><Button type="button" variant="secondary" data-payment-link-qr-svg disabled={!png} onClick={()=>void svg()}>{t('Descargar SVG','Download SVG')}</Button></div>
+ </div>;
+}
 export type PaymentLinkTarget={target:'invoice';draftId:string}|{target:'installment';planId:string;planRevision:number;seq:number;amountCents:number};
 const statusStyle:Record<string,string>={active:'bg-[#eaf7fb] text-[#00668a]',paid:'bg-[#e7f5ec] text-[#1d5b33]',cancelled:'bg-[#eef2f6] text-[#38485f]',expired:'bg-[#fff6e0] text-[#7a4b00]'};
 export function PaymentLinkPanel({scope,disabled=false}:{scope:PaymentLinkTarget;disabled?:boolean}){
@@ -67,6 +78,7 @@ export function PaymentLinkPanel({scope,disabled=false}:{scope:PaymentLinkTarget
    {error&&<p role="alert" className="text-sm text-red-700">{error}</p>}{notice&&<p role="status" className="text-sm text-green-800">{notice}</p>}
    {created&&<div data-payment-link-created className="min-w-0 space-y-2 rounded-xl border border-[#9fd8e8] bg-[#f3fbfd] p-3"><label className="block text-sm font-bold">{t('Enlace para su cliente','Link for your customer')}<input data-payment-link-url readOnly value={created.url} onFocus={event=>event.currentTarget.select()} className="mt-1 block min-h-11 w-full min-w-0 rounded-xl border border-[#d7e1ea] bg-white px-3 font-mono text-xs"/></label>
     <div className="flex flex-wrap gap-2"><Button type="button" variant="secondary" onClick={()=>{void navigator.clipboard?.writeText(created.url).then(()=>setCopied(true),()=>setCopied(false));}}>{copied?t('Copiado','Copied'):t('Copiar enlace','Copy link')}</Button><a data-payment-link-open href={created.url} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center rounded-xl border border-[#d7e1ea] px-4 text-sm font-semibold text-[#162543] hover:bg-[#f6f9fb]">{t('Abrir página de pago','Open payment page')}</a></div>
+    <PaymentLinkQr url={created.url}/>
     <p className="text-xs text-[#52627a]">{t('Envíelo usted por WhatsApp o correo. ContrataCR no lo envía.','Send it yourself by WhatsApp or email. ContrataCR does not send it.')}</p></div>}
    {!active&&(scope.target==='installment'||data.hasWork!==false)&&due>0&&<div data-payment-link-new className="min-w-0 space-y-2 rounded-xl border border-[#d7e1ea] p-3">
     <p className="text-sm">{t('Monto a cobrar: ','Amount to collect: ')}<strong data-payment-link-due>{money(due)}</strong></p>
