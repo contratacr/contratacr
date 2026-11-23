@@ -1,5 +1,6 @@
 "use client";
 import {CatalogItemExtras} from './catalog-item-extras';
+import {CatalogItemSpecs} from './catalog-item-specs';
 import {WorkMessages} from './work-messages';
 import {inventoryWriteInputSchema} from "@/lib/pro/inventory-write-recovery";
 import {proPhone} from '@/lib/pro/phone';
@@ -1104,6 +1105,7 @@ export function BusinessPanel({
               {product.price>0&&<p data-product-margin className="text-sm text-[#52627a]">{tr("Margen", "Margin")}: {money(product.price-product.cost)} · {new Intl.NumberFormat(tr("es-CR","en-US"),{maximumFractionDigits:1}).format((product.price-product.cost)/product.price*100)} %</p>}
               {/* Round 7C: image and preferred vendor of the item (Pro space). */}
               {proSpace&&<CatalogItemExtras key={"extras:"+product.id} productId={product.id}/>}
+              {proSpace&&<CatalogItemSpecs key={"specs:"+product.id} productId={product.id}/>}
               {product.cabys&&<details className="rounded-2xl border border-[#e5e7eb] p-4" data-product-detail-fiscal-reference><summary className="cursor-pointer font-bold text-[#162543]">{tr("Referencia fiscal","Tax reference")}</summary><p className="mt-4 break-words text-sm text-[#52627a]">{tr("Código CABYS","CABYS code")}: {product.cabys}</p></details>}
               {!product.archived && product.itemType!=="service" && (
                 <Button
