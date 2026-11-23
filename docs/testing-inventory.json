@@ -2,10 +2,10 @@
   "scope": "Todos los archivos TypeScript de src/app, src/components y src/hooks, controles JSX declarados, pestañas del panel y specs permanentes. No enumera cada elemento dinámico renderizado ni componentes dentro de dependencias.",
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
-    "files": 1166,
-    "controls": 5546,
+    "files": 1167,
+    "controls": 5547,
     "pages": 132,
-    "handlers": 361,
+    "handlers": 362,
     "components": 606,
     "hooks": 29,
     "specs": 539
@@ -11882,6 +11882,28 @@
       "kind": "API / handler",
       "group": "Cotizaciones",
       "route": "/api/pro/quote-create",
+      "exports": [
+        "POST"
+      ],
+      "methods": [
+        "POST"
+      ],
+      "controls": [],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/cotizaciones.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "API + integración BD + autorización/propiedad + idempotencia; smoke solo lectura",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P1"
+    },
+    {
+      "file": "src/app/api/pro/quote-line-convert/route.ts",
+      "kind": "API / handler",
+      "group": "Cotizaciones",
+      "route": "/api/pro/quote-line-convert",
       "exports": [
         "POST"
       ],
@@ -50909,7 +50931,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 33,
+          "line": 42,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{()=>void load()}",
@@ -50917,7 +50939,15 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 54,
+          "line": 55,
+          "tag": "Button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{()=>void convert()}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 66,
           "tag": "input",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{e=>setNotes({...notes,[line.lineId]:e.target.value})}",
@@ -50925,7 +50955,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 55,
+          "line": 67,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{()=>void decide(line,'approved')}",
@@ -50933,7 +50963,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 56,
+          "line": 68,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{()=>void decide(line,'declined')}",
@@ -50941,7 +50971,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 57,
+          "line": 69,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{()=>void decide(line,null)}",
@@ -76291,7 +76321,7 @@
           "title": "`Fix 14: «My project» page and per-item quote approval [${language}]`"
         },
         {
-          "line": 192,
+          "line": 198,
           "title": "`Takeoffs: draw an opening inside an area [${language}]`"
         }
       ]
