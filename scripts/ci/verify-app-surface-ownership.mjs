@@ -270,7 +270,7 @@ const handlerRules = [
   [/^\/api\/pro\/quote-line-decisions$/, "pro-fix14.spec.ts"],
   [/^\/api\/pro\/lead\-pipeline\/rules$/, "pro-lead-stage-rules.spec.ts"],
   [/^\/api\/pro\/company\-email\-tools$/, "pro-email-tools.spec.ts"],
-  [/^\/api\/pro\/client\-presentation\/weather$/, "pro-operations-schedule.spec.ts"],
+  [/^\/api\/pro\/client\-presentation\/weather$/, "pro-client-presentation.spec.ts"],
   [/^\/api\/pro\/client\-presentation$/, "pro-client-presentation.spec.ts"],
   [/^\/api\/pro\/client\-contacts\/promote\-channel$/, "pro-contact-merge-transfer.spec.ts"],
   [/^\/api\/pro\/quote-line-convert$/, "pro-fix14.spec.ts"],
