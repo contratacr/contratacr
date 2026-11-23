@@ -18,6 +18,7 @@ import {AppointmentFinances} from './client-finances';
 import {AppointmentQuotes} from './client-project-quotes';
 import {AppointmentPaymentPlan} from './client-payment-plan';
 import {ClientProjectOverview} from './client-project-overview';
+import {ClientPresentation} from './client-presentation';
 import {clientSectionAnchor} from '@/lib/pro/round12';
 import type {ReactNode} from 'react';
 
@@ -32,6 +33,7 @@ export function ClientWorkSections({requestId,parentBlocked=false,onDailyState,o
  // Round 12: overview first; every section gets an anchor the overview links jump to.
  const at=(section:string,node:ReactNode)=><div id={clientSectionAnchor(requestId,section)} data-client-section={section} className="scroll-mt-24 min-w-0 space-y-4 empty:hidden">{node}</div>;
  return <>
+  <ClientPresentation key={'presentation:'+requestId} requestId={requestId}/>
   <ClientProjectOverview key={'overview:'+requestId} requestId={requestId}/>
   <AppointmentClientDashboard key={'dashboard:'+requestId} requestId={requestId}>{view=><>{/* Round 7C: one Daily Log; only entries marked «Visible al cliente». */}{(view.showUpdates||view.showDailyLogs)&&<ClientJournal key={'journal:'+requestId} requestId={requestId} updates={view.showUpdates} dailyLogs={view.showDailyLogs}/>}{/* Formally shared daily logs keep their versions and conversation. */}{view.showDailyLogs&&<AppointmentDailyLogs key={'daily:'+requestId} requestId={requestId} parentBlocked={parentBlocked} onStateChange={onDailyState}/>}{view.showFiles&&at('files',<><AppointmentFiles key={'files:'+requestId} requestId={requestId}/>{/* Ronda F2-D: folders shared with the customer. */}<AppointmentSharedFolders key={'folders:'+requestId} requestId={requestId}/></>)}</>}</AppointmentClientDashboard>
   {/* Round 7C: messages with the professional of this job (in-app only). */}

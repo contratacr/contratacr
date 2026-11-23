@@ -2,7 +2,7 @@ import {enforceRateLimit} from '@/lib/rate-limit';
 import {createHash} from 'node:crypto';
 import {z} from 'zod';
 import type {createAdminClient} from '@/lib/supabase/admin';
-import {BID_PORTAL_BODY_MAX,bidPortalFileDownloadSchema,bidPortalOwnerFilesQuerySchema,bidPortalOwnerMutationSchema,bidPortalOwnerQuerySchema} from '@/lib/pro/bid-portal';
+import {BID_PORTAL_BODY_MAX,bidPortalAnswerSchema,bidPortalFileDownloadSchema,bidPortalOwnerQuestionsQuerySchema,bidPortalOwnerFilesQuerySchema,bidPortalOwnerMutationSchema,bidPortalOwnerQuerySchema} from '@/lib/pro/bid-portal';
 import {BidPortalConfigError,bidPortalHash,bidPortalNewToken} from '@/lib/pro/bid-portal-server';
 import {proActor,proBoundedJson,proDbError,proFail,proQuery,proRouteHeaders,proSameOrigin} from '@/lib/pro/route-common';
 import {PRO_ENABLED} from '@/lib/pro/enabled';
@@ -39,6 +39,12 @@ export async function GET(req:Request){
    if(result.error)return proDbError(result.error,conflict);
    return result.data?Response.json(result.data,{headers:proRouteHeaders}):proFail(404,'Licitación no disponible.');
   }
+  if(raw.view==='questions'){
+   const questions=bidPortalOwnerQuestionsQuerySchema.safeParse(raw);if(!questions.success)return proFail(400,'Consulta inválida.');
+   const result=await a.db.rpc('pro_bid_questions_owner_read',{p_actor:a.user.id,p_query:{view:'questions',workId:questions.data.workId,id:questions.data.id}});
+   if(result.error)return proDbError(result.error,conflict);
+   return result.data?Response.json(result.data,{headers:proRouteHeaders}):proFail(404,'Licitación no disponible.');
+  }
   const parsed=bidPortalOwnerQuerySchema.safeParse(raw);if(!parsed.success)return proFail(400,'Consulta inválida.');
   const result=await a.db.rpc('pro_bid_portal_owner_read',{p_actor:a.user.id,p_query:parsed.data});
   if(result.error)return proDbError(result.error,conflict);
@@ -51,7 +57,15 @@ export async function POST(req:Request){
  try{
   const a=await proActor(req);if(a.error)return a.error;
   const limited=await enforceRateLimit(req,'bid-portal-links-'+a.user.id,30,60000);if(limited)return limited;
-  let input;try{input=bidPortalOwnerMutationSchema.parse(await proBoundedJson(req,BID_PORTAL_BODY_MAX));}catch(cause){return proFail(cause instanceof RangeError?413:400,'Revise los datos del enlace.');}
+  let body:unknown;try{body=await proBoundedJson(req,BID_PORTAL_BODY_MAX);}catch(cause){return proFail(cause instanceof RangeError?413:400,'Revise los datos enviados.');}
+  // Row 53: the owner answers a vendor question (once). Nothing is e-mailed.
+  if(body&&typeof body==='object'&&(body as {action?:unknown}).action==='answer_question'){
+   const answer=bidPortalAnswerSchema.safeParse(body);if(!answer.success)return proFail(400,'Revise la respuesta.');
+   const answered=await a.db.rpc('pro_bid_question_answer',{p_actor:a.user.id,p_input:answer.data});
+   if(answered.error)return proDbError(answered.error,'La pregunta cambió. Actualice antes de responder.');
+   return Response.json(answered.data,{headers:proRouteHeaders});
+  }
+  let input;try{input=bidPortalOwnerMutationSchema.parse(body);}catch(cause){return proFail(cause instanceof RangeError?413:400,'Revise los datos del enlace.');}
   let token:string|null=null,tokenHash:string|null=null;
   if(input.action==='create_link'){try{token=bidPortalNewToken();tokenHash=bidPortalHash(token,'link');}catch(cause){if(cause instanceof BidPortalConfigError)return notConfigured();throw cause;}}
   const result=await a.db.rpc('pro_bid_portal_owner_mutate',{p_actor:a.user.id,p_input:tokenHash?{...input,tokenHash}:input});

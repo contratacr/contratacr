@@ -13,6 +13,7 @@ import {decodeDeliveryPhotoBase64} from '@/lib/pro/delivery-photo-base64';
 import {canonicalWorkFileName,sharedFoldersSchema,workFileMutationSchema,workFileSchema,WORK_FILE_MAX_BYTES} from '@/lib/pro/work-files';
 import {PRO_FILE_BODY_MAX} from '@/lib/pro/file-limit';
 import {PRO_ENABLED} from '@/lib/pro/enabled';
+import {proHiddenDocuments} from '@/lib/pro/client-hidden';
 const bucketName='pro-work-files',headers={'Cache-Control':'no-store, private','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Content-Security-Policy':"sandbox; default-src 'none'; frame-ancestors 'none'"};
 const fail=(status:number,error:string)=>Response.json({error},{status,headers});
 const dbError=(error:{code?:string})=>fail(error.code==='40001'?409:error.code==='42501'?403:error.code==='54000'?429:['22023','22008','22007','22021','23514','23505','22P02'].includes(error.code||'')?400:503,error.code==='40001'?'El archivo o destinatario cambió. Actualice antes de compartir.':'No se pudo completar la operación.');
@@ -59,7 +60,11 @@ export async function GET(req:Request){
    const reader=await proCustomerReader(a.db,a.user.id,request.data);
    if(q.get('view')==='folders'&&!q.has('sharedFileId')){
     const result=await a.db.rpc('pro_work_file_folders_client_read',{p_actor:reader,p_request:request.data});
-    if(result.error)return dbError(result.error);return result.data?Response.json(sharedFoldersSchema.parse(result.data),{headers}):fail(404,'Cita no disponible.');
+    if(result.error)return dbError(result.error);if(!result.data)return fail(404,'Cita no disponible.');
+    // Row 33: files the professional hid from the customer view (presentation only).
+    const hidden=await proHiddenDocuments(a.db,reader,request.data),shared=sharedFoldersSchema.parse(result.data);
+    if(hidden.file.size)shared.folders=shared.folders.map(fo=>({...fo,files:fo.files.filter(f=>!hidden.file.has(f.id))}));
+    return Response.json(shared,{headers});
    }
    const file=z.string().uuid().safeParse(q.get('sharedFileId'));if(!file.success||q.has('view'))return fail(400,'Consulta inválida.');
    const access=await a.db.rpc('pro_work_file_folder_client_download',{p_actor:reader,p_request:request.data,p_file:file.data});if(access.error)return dbError(access.error);if(!access.data)return fail(404,'Archivo no disponible.');

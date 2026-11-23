@@ -5,6 +5,7 @@ import {Button} from '@/components/ui/button';
 import {useAppDialog} from '@/hooks/use-app-dialog';
 import {bidPortalOwnerFilesSchema,bidPortalOwnerResultSchema,bidPortalOwnerSchema,bidPortalUrl,type BidPortalLink,type BidPortalOwner,type BidPortalOwnerFiles,type BidPortalOwnerMutation} from '@/lib/pro/bid-portal';
 import type {BidPackage} from '@/lib/pro/bids';
+import {BidOwnerQuestions} from './bid-owner-questions';
 
 /**
  * Owner side of the vendor portal (row 53): one single-use invitation link per invited vendor.
@@ -114,5 +115,6 @@ export function BidPortalLinks({accountId,workId,pkg,en,readOnly,onSubmissions}:
      {link&&(link.status==='active'||link.status==='claimed')&&<Button type="button" variant="ghost" className="min-h-11" disabled={saving} onClick={()=>void revoke(link)}>{c.revoke}</Button>}
     </div>}
    </li>;})}</ul>}
+  {data&&<BidOwnerQuestions accountId={accountId} workId={workId} pkg={pkg} en={en} readOnly={readOnly}/>}
  </section>;
 }

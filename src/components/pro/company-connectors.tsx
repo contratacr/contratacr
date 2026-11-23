@@ -6,6 +6,7 @@ import {useAppDialog} from '@/hooks/use-app-dialog';
 import {ProModal as Modal} from './modal';
 import {proCount} from '@/lib/pro/plural';
 import {useProSearchParams} from './use-pro-search-params';
+import {CompanyMailTools,TemplatePicker} from './company-mail-tools';
 
 /**
  * Round 6B: Company › Correo, calendario y archivos. Google / Microsoft OAuth connections (PKCE; tokens only
@@ -71,6 +72,7 @@ export function CompanyConnectors(){
     {mail.attachments.length>0&&<ul className="text-xs">{mail.attachments.map(file=><li key={file.fileId} className="break-all">📎 {file.name}</li>)}</ul>}
    </li>)}</ul>}
   </section>
+  {connected.length>0&&<CompanyMailTools providers={connected} works={data.works}/>}
   {connected.length>0&&<CalendarPanel providers={connected} data={data} busy={busy} post={post} modeOf={id=>data.providers.find(p=>p.id===id)!.resolved.mode}/>}
   {data.history.length>0&&<details className="rounded-xl border border-[#e5e7eb] bg-white p-3 text-xs"><summary className="cursor-pointer text-sm font-semibold">{t('Historial de conexiones','Connection history')}</summary><ul className="mt-2 space-y-0.5">{data.history.map((row,i)=><li key={i}>{when(row.at)} · {row.provider} · {row.action}</li>)}</ul></details>}
   {dialogNode}
@@ -102,6 +104,7 @@ export function Composer({providers,data,busy,post,confirm,onSent,fixedWork}:{pr
    <label className="block min-w-0 text-sm font-bold">{t('Enviar desde','Send from')}<select data-email-field="provider" className={field} value={provider} onChange={e=>{setProvider(e.target.value as Provider);setFiles([]);}}>{providers.map(p=><option key={p} value={p}>{names[p]}</option>)}</select></label>
    {fixedWork?<p className="min-w-0 self-end text-sm"><span className="font-bold">{t('Proyecto: ','Project: ')}</span><span data-email-fixed-work={fixedWork} className="break-words">{data.works.find(w=>w.id===fixedWork)?.label??t('este trabajo','this job')}</span></p>
    :<label className="block min-w-0 text-sm font-bold">{t('Proyecto (opcional)','Project (optional)')}<select data-email-field="work" className={field} value={work} onChange={e=>setWork(e.target.value)}><option value="">{t('Sin proyecto','No project')}</option>{data.works.map(w=><option key={w.id} value={w.id}>{w.label}</option>)}</select></label>}
+   <TemplatePicker workLabel={data.works.find(w=>w.id===work)?.label??''} onPick={(nextSubject,nextBody)=>{setSubject(nextSubject);setBody(nextBody);}}/>
    <label className="block min-w-0 text-sm font-bold sm:col-span-2">{t('Para (separe con comas)','To (comma separated)')}<input data-email-field="to" className={field} required value={to} onChange={e=>setTo(e.target.value)} inputMode="email"/></label>
    <label className="block min-w-0 text-sm font-bold sm:col-span-2">{t('Asunto','Subject')}<input data-email-field="subject" className={field} required maxLength={200} value={subject} onChange={e=>setSubject(e.target.value)}/></label>
    <label className="block min-w-0 text-sm font-bold sm:col-span-2">{t('Mensaje','Message')}<textarea data-email-field="body" className={field+' min-h-32 py-2'} required maxLength={20000} value={body} onChange={e=>setBody(e.target.value)}/></label>

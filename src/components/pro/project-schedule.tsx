@@ -10,6 +10,8 @@ import {workScheduleMutationSchema,workScheduleResultSchema,workTimelineTaskCrea
 import {daysFromPixels,dependencyIssues,keyEdit,matchesAssignee,shiftPeriod,undoState,UNASSIGNED,type GanttEditMode} from '@/lib/pro/gantt-edit';
 import {useProChildGuard} from './use-pro-child-guard';
 import {EstimateScheduleAction} from './estimate-schedule';
+import {WorkCalendarPanel} from './work-calendar-panel';
+import {adjustPeriodToWorkingDays,isWorkingDay,workingDaysBetween,type WorkCalendar} from '@/lib/pro/work-calendar';
 
 // Families 13/79: project schedule (Gantt and chronological list) over the job plan,
 // with immutable baselines and deviation in days. Dates are civil (Costa Rica).
@@ -122,6 +124,8 @@ function ScheduleSession({accountId,workId,onStateChange}:{accountId:string;work
  const [data,setData]=useState<Gantt|null>(null),[loading,setLoading]=useState(true),[loadError,setLoadError]=useState(false);
  // Round 10: critical path ids published by the dependency panel of this job (highlight only).
  const [critical,setCritical]=useState<Set<string>>(()=>new Set());
+ // Row 13: company work calendar (shading, working-day counts and warnings in the editor). Informational only.
+ const [calendar,setCalendar]=useState<WorkCalendar|null>(null);
  const [mode,setMode]=useState<Mode>(()=>typeof window!=='undefined'&&window.matchMedia('(min-width: 768px)').matches?'gantt':'list'),[scale,setScale]=useState<Scale>('day');
  const [editor,setEditor]=useState<Editor|null>(null),[baselineDraft,setBaselineDraft]=useState<string|null>(null);
  const [saving,setSaving]=useState(false),[uncertain,setUncertain]=useState(false),[conflict,setConflict]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
@@ -293,10 +297,11 @@ function ScheduleSession({accountId,workId,onStateChange}:{accountId:string;work
    <p className="text-sm text-[#52627a]">{c.baselineHelp}</p>
    <div className="flex flex-wrap justify-end gap-2"><Button type="button" variant="secondary" disabled={busy} onClick={()=>setBaselineDraft(null)}>{c.cancel}</Button><Button type="submit" disabled={busy||!baselineDraft.trim()}>{saving?c.saving:c.confirmBaseline}</Button></div>
   </form>}
-  {editor&&<EditorForm editor={editor} data={data} c={c} en={en} busy={busy} saving={saving} titles={titles} onChange={setEditor} onSubmit={submitEditor} onCancel={()=>{setEditor(null);setError('');}}/>}
+  <WorkCalendarPanel accountId={accountId} canEdit={canEdit} onLoaded={setCalendar}/>
+  {editor&&<EditorForm editor={editor} data={data} c={c} en={en} calendar={calendar} busy={busy} saving={saving} titles={titles} onChange={setEditor} onSubmit={submitEditor} onCancel={()=>{setEditor(null);setError('');}}/>}
   {mode==='gantt'&&canEdit&&!empty&&<p id={edit.helpId} data-gantt-help className="text-xs text-[#52627a]">{c.help}</p>}
   {empty?<div data-schedule-empty className="space-y-2 rounded-2xl border border-dashed border-[#c9d6e2] bg-[#f7f9fc] p-5 text-sm"><p className="font-semibold text-[#162543]">{c.emptyTitle}</p><p className="text-[#52627a]">{c.empty}</p><Button type="button" variant="secondary" disabled={dirty||busy} onClick={()=>pushProParams({vistaTrabajo:'tasks',vistaTareas:'plan'})}>{c.openPlan}</Button></div>
-   :mode==='gantt'?<GanttChart data={data} scale={scale} c={c} en={en} disabled={blockedChart} critical={critical} visible={visible} filtered={!!filter} edit={edit} onTask={canEdit?openTask:undefined} onMilestone={canEdit?openMilestone:undefined}/>
+   :mode==='gantt'?<GanttChart data={data} scale={scale} c={c} en={en} calendar={calendar} disabled={blockedChart} critical={critical} visible={visible} filtered={!!filter} edit={edit} onTask={canEdit?openTask:undefined} onMilestone={canEdit?openMilestone:undefined}/>
    :<ScheduleList data={data} c={c} en={en} disabled={blockedChart} titles={titles} visible={visible} onTask={canEdit?openTask:undefined} onMilestone={canEdit?openMilestone:undefined}/>}
   {!!unscheduled.length&&<section data-schedule-unscheduled className="space-y-2 rounded-2xl border border-[#d7e1ea] bg-white p-4"><h4 className="font-semibold text-[#162543]">{c.unscheduled} ({unscheduled.length})</h4><ul className="divide-y divide-[#eef2f6]">{unscheduled.map(task=><li key={task.id} className="flex min-w-0 flex-wrap items-center justify-between gap-2 py-2"><span className="min-w-0 break-words text-sm">{task.title}{task.status==='done'&&<span className="ml-2 text-xs text-[#18573a]">{c.done}</span>}</span>{canEdit&&<Button type="button" data-pro-write="work.write" variant="secondary" size="sm" className="min-h-11" disabled={!idle} onClick={()=>openTask(task)}>{c.schedule}</Button>}</li>)}</ul></section>}
   {data.baselines.length>1&&<details className="rounded-2xl border border-[#d7e1ea] bg-white p-3 text-sm"><summary className="min-h-11 cursor-pointer py-2 font-semibold">{c.history} ({data.baselines.length})</summary><ol className="mt-2 space-y-1">{data.baselines.map(b=><li key={b.id} className="break-words text-[#52627a]"><span className="font-semibold text-[#162543]">{b.title}</span> · {new Date(b.capturedAt).toLocaleString(en?'en-US':'es-CR',{timeZone:'America/Costa_Rica',dateStyle:'medium',timeStyle:'short'})}</li>)}</ol></details>}
@@ -329,7 +334,7 @@ function CreateForm({draft,data,c,busy,saving,members,error,onChange,onSubmit,on
  </form>;
 }
 
-function EditorForm({editor,data,c,en,busy,saving,titles,onChange,onSubmit,onCancel}:{editor:Editor;data:Gantt;c:Copy;en:boolean;busy:boolean;saving:boolean;titles:Map<string,string>;onChange:(e:Editor)=>void;onSubmit:(e:FormEvent)=>void;onCancel:()=>void}){
+function EditorForm({editor,data,c,en,calendar,busy,saving,titles,onChange,onSubmit,onCancel}:{editor:Editor;data:Gantt;c:Copy;en:boolean;calendar:WorkCalendar|null;busy:boolean;saving:boolean;titles:Map<string,string>;onChange:(e:Editor)=>void;onSubmit:(e:FormEvent)=>void;onCancel:()=>void}){
  const ref=useRef<HTMLFormElement|null>(null);
  useEffect(()=>{ref.current?.scrollIntoView({block:'nearest'});ref.current?.querySelector<HTMLInputElement>('input')?.focus();},[]);
  if(editor.kind==='task'){
@@ -341,6 +346,10 @@ function EditorForm({editor,data,c,en,busy,saving,titles,onChange,onSubmit,onCan
     <label className="block min-w-0 text-sm font-semibold">{c.end}<input data-schedule-field="end" type="date" required min="1900-01-01" max="2100-12-31" value={editor.end} onChange={e=>onChange({...editor,end:e.target.value})} className={field}/></label>
     <label className="block min-w-0 text-sm font-semibold">{c.phase}<select data-schedule-field="phase" value={editor.phaseId} onChange={e=>onChange({...editor,phaseId:e.target.value})} className={field}><option value="">{c.noPhase}</option>{data.phases.map(p=><option key={p.id} value={p.id}>{p.title}</option>)}</select></label>
    </fieldset>
+   {valid&&calendar&&(()=>{const working=workingDaysBetween(calendar,editor.start,editor.end),off=!isWorkingDay(calendar,editor.start)||!isWorkingDay(calendar,editor.end),adjusted=adjustPeriodToWorkingDays(calendar,editor.start,editor.end);
+    return <p data-schedule-working-days className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[#52627a]"><span>{en?`${working} working day${working===1?'':'s'}`:`${working} ${working===1?'día hábil':'días hábiles'}`}</span>
+     {off&&<span data-schedule-non-working-warning className="font-semibold text-[#7a3a06]">{en?'The start or the end falls on a non-working day.':'El inicio o el fin cae en un día no laborable.'}</span>}
+     {off&&(adjusted.start!==editor.start||adjusted.end!==editor.end)&&<Button type="button" variant="secondary" data-schedule-adjust-working className="min-h-11" disabled={busy} onClick={()=>onChange({...editor,start:adjusted.start,end:adjusted.end})}>{en?'Adjust to working days':'Ajustar a días laborables'}</Button>}</p>;})()}
    <p className="text-sm text-[#52627a]">{valid?c.duration(dayDiff(editor.start,editor.end)+1):c.invalidPeriod}{t.baselineStart&&t.baselineEnd&&<> · {c.baselineWas(fmt(t.baselineStart,en),fmt(t.baselineEnd,en))}{valid&&<> · <VarianceBadge days={dayDiff(t.baselineEnd,editor.end)} c={c}/></>}</>}</p>
    <p className="text-sm"><span className="font-semibold">{c.predecessors}: </span>{t.dependsOn.length?t.dependsOn.map(id=>titles.get(id)??'—').join(', '):c.none}<span className="block text-xs text-[#52627a]">{c.predecessorsHelp}</span></p>
    <div className="flex flex-wrap justify-end gap-2"><Button type="button" variant="secondary" disabled={busy} onClick={onCancel}>{c.cancel}</Button><Button type="submit" disabled={busy||!valid||!isEditorDirty(editor)}>{saving?c.saving:c.saveDates}</Button></div>
@@ -376,12 +385,12 @@ function endOf(value:string,scale:Scale){if(scale==='day')return addDays(value,3
 function todayScroll(box:HTMLElement,gridX:number){const label=box.querySelector<HTMLElement>('[data-schedule-label-col]')?.offsetWidth??0;return Math.max(0,gridX+label/2-box.clientWidth/2);}
 type Drag={id:string;mode:GanttEditMode;pointer:number;originX:number;delta:number};
 type BarApi={drag:Drag|null;down:(e:ReactPointerEvent<HTMLElement>,t:GanttTask,mode:GanttEditMode)=>void;move:(e:ReactPointerEvent<HTMLElement>)=>void;up:(e:ReactPointerEvent<HTMLElement>,t:GanttTask,cancelled?:boolean)=>void;key:(e:ReactKeyboardEvent<HTMLElement>,t:GanttTask)=>void;click:(t:GanttTask)=>void};
-function GanttChart({data,scale,c,en,disabled,critical,visible,filtered,edit,onTask,onMilestone}:{data:Gantt;scale:Scale;c:Copy;en:boolean;disabled:boolean;critical:Set<string>;visible:(t:GanttTask)=>boolean;filtered:boolean;edit:EditApi;onTask?:(t:GanttTask)=>void;onMilestone?:(m:GanttMilestone)=>void}){
+function GanttChart({data,scale,c,en,calendar,disabled,critical,visible,filtered,edit,onTask,onMilestone}:{data:Gantt;scale:Scale;c:Copy;en:boolean;calendar:WorkCalendar|null;disabled:boolean;critical:Set<string>;visible:(t:GanttTask)=>boolean;filtered:boolean;edit:EditApi;onTask?:(t:GanttTask)=>void;onMilestone?:(m:GanttMilestone)=>void}){
  const rows=useMemo(()=>buildRows(data,c,visible,filtered,edit.editable),[data,c,visible,filtered,edit.editable]);
  const preview=edit.preview;
  const range=useMemo(()=>{const days:string[]=[data.today];for(const t of data.tasks){for(const v of [t.plannedStart,t.plannedEnd,t.baselineStart,t.baselineEnd,t.plannedStart&&t.plannedEnd?t.dueDate:null])if(v)days.push(v);}if(preview)days.push(preview.start,preview.end);for(const m of data.milestones){days.push(m.date);if(m.baselineDate)days.push(m.baselineDate);}days.sort();const from=startOf(days[0],scale);let to=endOf(days[days.length-1],scale);if(dayDiff(from,to)>3660)to=addDays(from,3660);return{from,to,days:dayDiff(from,to)+1};},[data,scale,preview]);
  const w=dayWidth[scale],gridWidth=range.days*w,x=(day:string)=>dayDiff(range.from,day)*w,labelWidth='clamp(9rem,32vw,15rem)';
- const ticks=useMemo(()=>{const out:{day:string;label:string;major:boolean;weekend:boolean}[]=[];for(let i=0;i<range.days;i++){const day=addDays(range.from,i),wd=weekday(day),first=day.endsWith('-01');if(scale==='day')out.push({day,label:day.slice(8),major:wd===1,weekend:wd===0||wd===6});else if(scale==='week'){if(wd===1)out.push({day,label:fmt(day,en,{day:'numeric',month:'short'}),major:true,weekend:false});}else if(first)out.push({day,label:fmt(day,en,{month:'short'}),major:true,weekend:false});}return out;},[range,scale,en]);
+ const ticks=useMemo(()=>{const out:{day:string;label:string;major:boolean;weekend:boolean}[]=[];for(let i=0;i<range.days;i++){const day=addDays(range.from,i),wd=weekday(day),first=day.endsWith('-01');if(scale==='day')out.push({day,label:day.slice(8),major:wd===1,weekend:calendar?!isWorkingDay(calendar,day):(wd===0||wd===6)});else if(scale==='week'){if(wd===1)out.push({day,label:fmt(day,en,{day:'numeric',month:'short'}),major:true,weekend:false});}else if(first)out.push({day,label:fmt(day,en,{month:'short'}),major:true,weekend:false});}return out;},[range,scale,en,calendar]);
  const bands=useMemo(()=>{const out:{day:string;label:string}[]=[];for(let i=0;i<range.days;i++){const day=addDays(range.from,i);if(i===0||(scale==='month'?day.endsWith('-01-01'):day.endsWith('-01')))out.push({day,label:scale==='month'?day.slice(0,4):upperFirst(fmt(day,en,{month:'long',year:'numeric'}))});}return out;},[range,scale,en]);
  // Gap 13: pointer drag (mouse, pen and touch) of a bar or one of its edges; whole days only.
  const [drag,setDrag]=useState<Drag|null>(null),suppress=useRef(false);

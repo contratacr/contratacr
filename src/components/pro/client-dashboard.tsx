@@ -10,6 +10,7 @@ import {
  normalizeWelcomeText,type AppointmentDashboard,type ClientDashboardDetail,type ClientDashboardMutation,type ClientDashboardSettings,
 } from '@/lib/pro/client-dashboard';
 import {useProChildGuard} from './use-pro-child-guard';
+import {ClientPresentationEditor} from './client-presentation';
 
 const api='/api/pro/client-dashboard',changedEvent='contratacr:client-dashboard-changed';
 type StateCallback={onStateChange?:(state:{dirty:boolean;busy:boolean})=>void};
@@ -49,7 +50,7 @@ function copy(en:boolean){
 }
 
 /** Owner editor inside the job workspace. */
-export function ClientDashboardEditor({workId,onStateChange,renderPreview}:{workId:string;renderPreview?:(requestId:string)=>ReactNode}&StateCallback){const {user,loading}=useAuth();if(loading||!user)return null;return <EditorSession key={user.id+':'+workId} accountId={user.id} workId={workId} onStateChange={onStateChange} renderPreview={renderPreview}/>;}
+export function ClientDashboardEditor({workId,onStateChange,renderPreview}:{workId:string;renderPreview?:(requestId:string)=>ReactNode}&StateCallback){const {user,loading}=useAuth();if(loading||!user)return null;return <><EditorSession key={user.id+':'+workId} accountId={user.id} workId={workId} onStateChange={onStateChange} renderPreview={renderPreview}/><ClientPresentationEditor key={'presentation:'+user.id+':'+workId} workId={workId}/></>;}
 
 function EditorSession({accountId,workId,onStateChange,renderPreview}:{accountId:string;workId:string;renderPreview?:(requestId:string)=>ReactNode}&StateCallback){
  const en=useLocale()==='en',c=copy(en);

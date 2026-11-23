@@ -23,6 +23,7 @@ import {proCustomerReader,proRequestOrigin} from '@/lib/pro/route-common';
 import {sendTransactionalEmail,settleTransactionalEmail,transactionalAccount,transactionalEmailLocaleOf,transactionalPublicationOwner,type TransactionalEmailReport} from '@/lib/pro/transactional-email';
 import {prefijoDeIdioma} from '@/lib/prefijo-de-idioma';
 import {PRO_ENABLED} from '@/lib/pro/enabled';
+import {proHiddenDocuments} from '@/lib/pro/client-hidden';
 
 const headers = {
   'Cache-Control': 'no-store, private',
@@ -103,7 +104,11 @@ export async function GET(req: Request) {
       const reader = await proCustomerReader(a.db, a.user.id, q.requestId);
       const result = await a.db.rpc('pro_client_project_quotes_read', {p_actor: reader, p_request: q.requestId});
       if (result.error) return databaseError(result.error);
-      return Response.json(privateEstimateProjectQuotesSchema.parse(result.data), {headers});
+      // Row 33: quotes the professional hid from the customer view (presentation only).
+      const hidden = await proHiddenDocuments(a.db, reader, q.requestId);
+      const body = result.data as {items?: {publicationId?: string}[]} | null;
+      if (hidden.quote.size && body && Array.isArray(body.items)) body.items = body.items.filter((item) => !(typeof item.publicationId === 'string' && hidden.quote.has(item.publicationId)));
+      return Response.json(privateEstimateProjectQuotesSchema.parse(body), {headers});
     }
     if (q.view === 'bindings') {
       const result = await a.db.rpc('pro_private_estimate_publication_bindings', {p_actor: a.user.id, p_estimate: q.estimateId, p_after: q.after ?? null});

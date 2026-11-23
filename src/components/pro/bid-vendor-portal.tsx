@@ -7,6 +7,7 @@ import {Button} from '@/components/ui/button';
 import {inputCents} from '@/lib/pro/client-operations';
 import {proMoney} from '@/lib/pro/money';
 import {useReveal} from './use-reveal';
+import {BidVendorQuestions} from './bid-vendor-questions';
 import {BID_PORTAL_FILE_MAX_BYTES,BID_PORTAL_LINK_PARAM,bidPortalViewSchema,type BidPortalFile,type BidPortalView} from '@/lib/pro/bid-portal';
 
 /**
@@ -241,5 +242,6 @@ export function BidVendorPortal(){
    {fileNotice&&<p ref={fileNoticeRef} role="status" data-bid-portal-file-notice className="rounded-xl bg-[#eef8f4] p-3 text-sm text-[#18573a]">{fileNotice}</p>}
    {fileError&&<div className="space-y-2"><p ref={fileErrorRef} role="alert" data-bid-portal-file-error className="rounded-xl bg-[#fff4f2] p-3 text-sm text-[#8a2a1b]">{fileError}</p>{pendingFile&&<Button type="button" variant="secondary" className="min-h-11" disabled={fileBusy} onClick={()=>{if(pendingFile)void sendFile(pendingFile);}}>{c.retryFile}</Button>}</div>}
   </section>
+  <BidVendorQuestions link={link.current} en={en} canAsk={view.attachments.canAsk} questions={view.attachments.questions} onChanged={()=>load(true)} onSession={()=>{setReason('session');setPhase('error');}}/>
  </>);
 }

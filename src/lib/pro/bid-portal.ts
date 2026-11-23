@@ -75,7 +75,17 @@ export type BidPortalFile=z.infer<typeof bidPortalFileSchema>;
 export const bidPortalOutcomeSchema=z.object({status:z.enum(['won','partial','not_selected','cancelled']),decidedAt:stamp.nullable(),lineCount:z.number().int().min(0),totalLineCount:z.number().int().min(0),wonCents:z.number().int().nullable(),
  lines:z.array(z.object({lineId:id,position:z.number().int(),description:z.string(),totalCents:z.number().int()}).strict())}).strict();
 export type BidPortalOutcome=z.infer<typeof bidPortalOutcomeSchema>;
-export const bidPortalVendorExtrasSchema=z.object({canAttach:z.boolean(),files:z.array(bidPortalFileSchema).max(BID_PORTAL_FILE_LIMIT),outcome:bidPortalOutcomeSchema.nullable()}).strict();
+/** Row 53: questions between an invited vendor and the owner of the bid (migration 360). Visible only to the owner and to that invitation. */
+export const BID_PORTAL_QUESTION_LIMIT=20;
+export const bidPortalQuestionSchema=z.object({id,question:z.string().min(1).max(1000),askedAt:stamp,answer:z.string().min(1).max(2000).nullable(),answeredAt:stamp.nullable()}).strict();
+export type BidPortalQuestion=z.infer<typeof bidPortalQuestionSchema>;
+export const bidPortalVendorExtrasSchema=z.object({canAttach:z.boolean(),files:z.array(bidPortalFileSchema).max(BID_PORTAL_FILE_LIMIT),outcome:bidPortalOutcomeSchema.nullable(),
+ canAsk:z.boolean().default(false),questions:z.array(bidPortalQuestionSchema).max(BID_PORTAL_QUESTION_LIMIT).default([])}).strict();
+export const bidPortalQuestionAskSchema=z.object({link:id.optional(),questionId:id,text:z.string().trim().min(1).max(1000).refine(value=>!/[\u0000-\u001f\u007f]/.test(value))}).strict();
+export const bidPortalOwnerQuestionsSchema=z.object({packageId:id,questions:z.array(bidPortalQuestionSchema.extend({supplierId:id})).max(1000)}).strict();
+export type BidPortalOwnerQuestions=z.infer<typeof bidPortalOwnerQuestionsSchema>;
+export const bidPortalOwnerQuestionsQuerySchema=z.object({view:z.literal('questions'),workId,id}).strict();
+export const bidPortalAnswerSchema=z.object({action:z.literal('answer_question'),workId,questionId:id,answer:z.string().trim().min(1).max(2000).refine(value=>!/[\u0000-\u001f\u007f]/.test(value))}).strict();
 export const bidPortalFileMutationSchema=z.discriminatedUnion('action',[
  z.object({action:z.literal('upload'),link:id.optional(),fileId:id,name:z.string().trim().min(1).max(160),data:z.string().min(4).max(4*Math.ceil(BID_PORTAL_FILE_MAX_BYTES/3))}).strict(),
  z.object({action:z.literal('remove'),link:id.optional(),fileId:id}).strict(),

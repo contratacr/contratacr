@@ -3,6 +3,7 @@ import {enforceRateLimit} from '@/lib/rate-limit';
 import {CONTRACT_BODY_MAX,contractClientMutationSchema,contractMutationSchema,contractStarterSchema,isContractClientAction} from '@/lib/pro/contracts';
 import {proActor,proBoundedJson,proDbError,proFail,proQuery,proRouteHeaders as headers,proSameOrigin,proCustomerReader} from '@/lib/pro/route-common';
 import {PRO_ENABLED} from '@/lib/pro/enabled';
+import {proHiddenDocuments} from '@/lib/pro/client-hidden';
 // Row 40: contract templates, clause library, contracts per job and the linked customer's
 // authenticated acceptance. Development only; nothing is sent to anyone.
 const conflict='El contrato cambió. Actualice antes de continuar.';
@@ -17,8 +18,13 @@ export async function GET(req:Request){
   const a=await proActor(req);if(a.error)return a.error;const q=proQuery(req);if(!q)return proFail(400,'Consulta inválida.');const keys=Object.keys(q);
   if(same(keys,['requestId'])){
    const request=uuid.safeParse(q.requestId);if(!request.success)return proFail(400,'Consulta inválida.');
-   const result=await a.db.rpc('pro_contracts_client_read',{p_actor:await proCustomerReader(a.db,a.user.id,request.data),p_request:request.data});
-   if(result.error)return dbError(result.error);return result.data?Response.json(result.data,{headers}):proFail(404,'Cita no disponible.');
+   const reader=await proCustomerReader(a.db,a.user.id,request.data);
+   const result=await a.db.rpc('pro_contracts_client_read',{p_actor:reader,p_request:request.data});
+   if(result.error)return dbError(result.error);if(!result.data)return proFail(404,'Cita no disponible.');
+   // Row 33: contracts the professional hid from the customer view (presentation only).
+   const hidden=await proHiddenDocuments(a.db,reader,request.data);const body=result.data as {contracts?:{id?:string}[]};
+   if(hidden.contract.size&&Array.isArray(body.contracts))body.contracts=body.contracts.filter(c=>!(typeof c.id==='string'&&hidden.contract.has(c.id)));
+   return Response.json(body,{headers});
   }
   if(same(keys,['view'])||same(keys,['view','archived'])){
    if(!['library','templates'].includes(q.view)||'archived' in q&&(q.archived!=='1'||q.view!=='library'))return proFail(400,'Consulta inválida.');
