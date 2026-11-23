@@ -157,6 +157,7 @@ for(const language of ['es','en'] as const)test(`Allowances: planned vs. chosen,
   // Define above the allowance, with a live preview of the difference.
   await card.getByRole('button',{name:en?'Define choice':'Definir elección'}).click();
   const decide=view.locator('[data-allowance-form="decide"]');
+  await expect(decide.locator('[data-allowance-catalog]')).toBeVisible();
   await decide.locator('[data-allowance-field="choice"]').fill(en?'Floating oak vanity':'Mueble flotante de roble');await decide.locator('[data-allowance-field="supplier"]').fill('Maderas del Valle');
   await decide.locator('[data-allowance-field="actual"]').fill('345000');await expect(decide.locator('[data-allowance-preview]')).toContainText(en?'Above the allowance by':'Por encima de lo previsto en');
   await decide.getByRole('button',{name:en?'Save choice':'Guardar elección'}).click();

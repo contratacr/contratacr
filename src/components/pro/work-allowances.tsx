@@ -12,6 +12,7 @@ import {
 } from '@/lib/pro/allowances';
 import {workChangeMutation,type WorkChangesPage} from '@/lib/pro/work-changes';
 import {PRO_SERVICE_REFRESH,useProChildGuard} from './use-pro-child-guard';
+import {CatalogSelect} from './catalog-select';
 
 /**
  * Montos previstos para materiales por elegir (family 75). Owner list per job plus
@@ -35,7 +36,7 @@ function copy(en:boolean){
   add:'New allowance',planned:'Planned',actual:'Defined (actual)',difference:'Difference on defined items',pending:'Still to choose',overdue:'Past due',projected:(value:string)=>`Projected total with current choices: ${value}`,
   name:'Name',namePlaceholder:'E.g. Kitchen faucet',category:'Area or category (optional)',categoryPlaceholder:'E.g. Kitchen',amount:'Allowance amount (₡)',due:'Decision deadline (optional)',notes:'Internal notes (optional)',notesHelp:'Only you can see these notes.',notesLabel:'Internal notes',dueLabel:'Deadline',
   create:'Save allowance',saveEdit:'Save changes',cancel:'Cancel',saving:'Saving…',edit:'Edit',decide:'Define choice',reopen:'Reopen',archive:'Archive',restore:'Restore',
-  choice:'What was chosen',choicePlaceholder:'E.g. Single-handle faucet, brushed steel',supplier:'Supplier or product (optional)',quantity:'Quantity',actualAmount:'Actual total (₡)',saveChoice:'Save choice',
+  choice:'What was chosen',choicePlaceholder:'E.g. Single-handle faucet, brushed steel',fromCatalog:'Fill from the catalog (optional)',fromCatalogHelp:'Fills the name and the actual total (price × quantity). You can edit both before saving.',supplier:'Supplier or product (optional)',quantity:'Quantity',actualAmount:'Actual total (₡)',saveChoice:'Save choice',
   previewOver:(v:string)=>`Above the allowance by ${v}`,previewUnder:(v:string)=>`Below the allowance by ${v}`,previewEqual:'Same as the allowance',
   open:'Open',decided:'Defined',reopened:'Reopened',archived:'Archived',pastDue:'Past due',dueOn:(v:string)=>`Decide by ${v}`,noDue:'No deadline',
   over:(v:string)=>`Above the allowance: ${v}`,under:(v:string)=>`Below the allowance: ${v}`,equal:'Same as the allowance',
@@ -61,7 +62,7 @@ function copy(en:boolean){
   add:'Nuevo monto previsto',planned:'Previsto',actual:'Definido (real)',difference:'Diferencia en lo definido',pending:'Por elegir',overdue:'Vencidas',projected:(value:string)=>`Total proyectado con las elecciones actuales: ${value}`,
   name:'Nombre',namePlaceholder:'Ej.: Grifería de cocina',category:'Área o categoría (opcional)',categoryPlaceholder:'Ej.: Cocina',amount:'Monto previsto (₡)',due:'Fecha límite para decidir (opcional)',notes:'Notas internas (opcional)',notesHelp:'Solo usted ve estas notas.',notesLabel:'Notas internas',dueLabel:'Fecha límite',
   create:'Guardar monto previsto',saveEdit:'Guardar cambios',cancel:'Cancelar',saving:'Guardando…',edit:'Editar',decide:'Definir elección',reopen:'Reabrir',archive:'Archivar',restore:'Restaurar',
-  choice:'Qué se eligió',choicePlaceholder:'Ej.: Grifo monomando, acero cepillado',supplier:'Proveedor o producto (opcional)',quantity:'Cantidad',actualAmount:'Total real (₡)',saveChoice:'Guardar elección',
+  choice:'Qué se eligió',choicePlaceholder:'Ej.: Grifo monomando, acero cepillado',fromCatalog:'Completar desde el catálogo (opcional)',fromCatalogHelp:'Completa el nombre y el total real (precio × cantidad). Puede editar ambos antes de guardar.',supplier:'Proveedor o producto (opcional)',quantity:'Cantidad',actualAmount:'Total real (₡)',saveChoice:'Guardar elección',
   previewOver:(v:string)=>`Por encima de lo previsto en ${v}`,previewUnder:(v:string)=>`Por debajo de lo previsto en ${v}`,previewEqual:'Igual a lo previsto',
   open:'Abierta',decided:'Definida',reopened:'Reabierta',archived:'Archivada',pastDue:'Vencida',dueOn:(v:string)=>`Decidir antes del ${v}`,noDue:'Sin fecha límite',
   over:(v:string)=>`Por encima de lo previsto: ${v}`,under:(v:string)=>`Por debajo de lo previsto: ${v}`,equal:'Igual a lo previsto',
@@ -303,6 +304,9 @@ function ChoiceForm({c,item,draft,busy,saving,onChange,onSubmit,onCancel}:{c:Cop
  const set=(next:Partial<ChoiceDraft>)=>onChange({...draft,...next}),actual=colonesToCents(draft.actual),diff=actual===null?null:actual-item.plannedCents;
  return <form data-allowance-form="decide" onSubmit={onSubmit} className="space-y-3 rounded-2xl border border-[#0089bb] bg-[#f7fbfd] p-4">
   <fieldset disabled={busy} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+   <div data-allowance-catalog className="sm:col-span-2"><CatalogSelect kind="products" label={c.fromCatalog} value="" disabled={busy}
+    onChange={row=>{if(!row)return;const qty=Number(draft.quantity.trim().replace(',','.'));const quantity=Number.isFinite(qty)&&qty>0?qty:1;set({description:row.name.slice(0,300),actual:centsToInput(Math.round(row.price*quantity*100))});}}/>
+    <p className="mt-1 text-xs text-[#52627a]">{c.fromCatalogHelp}</p></div>
    <label className="block text-sm font-semibold sm:col-span-2">{c.choice}<input data-allowance-field="choice" required maxLength={300} value={draft.description} placeholder={c.choicePlaceholder} onChange={e=>set({description:e.target.value})} className={field}/></label>
    <label className="block text-sm font-semibold sm:col-span-2">{c.supplier}<input data-allowance-field="supplier" maxLength={160} value={draft.supplier} onChange={e=>set({supplier:e.target.value})} className={field}/></label>
    <label className="block text-sm font-semibold">{c.quantity}<input data-allowance-field="quantity" required inputMode="decimal" value={draft.quantity} onChange={e=>set({quantity:e.target.value})} className={field}/></label>
