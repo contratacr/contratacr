@@ -107,6 +107,7 @@ const handlerRules = [
   // Pro 29 (rows 69, 70): sandbox ad builder with simulated metrics; custom domain with mock DNS verification.
   [/^\/api\/pro\/(?:company-ad-builder|company-site-domain)$/, "pro-round13-ads-domain.spec.ts"],
   [/^\/api\/pro\/catalog-clipper$/, "pro-round6d-clipper-plans.spec.ts"],
+  [/^\/api\/pro\/mood-board-templates$/, "pro-board-templates.spec.ts"],
   [/^\/api\/pro\/floor-plans$/, "pro-round6d-clipper-plans.spec.ts"],
   [/^\/api\/pro\/floor-object-library$/, "pro-floor-library.spec.ts"],
   [/^\/api\/pro\/ai-takeoff-review$/, "pro-takeoffs.spec.ts"],
