@@ -17,6 +17,7 @@ import {
 } from '@/lib/pro/purchase-orders';
 import {useProChildGuard} from './use-pro-child-guard';
 import {PurchaseOrderTracking} from './po-tracking';
+import {PoDetailTools,PoListTools,poReceiptKindLabel} from './po-extras';
 import {pushProParams} from '@/lib/pro/navigation';
 
 /**
@@ -63,8 +64,8 @@ function copy(en:boolean){
   amount:'Amount (₡)',paidOn:'Payment date',method:'Method',reference:'Reference (optional)',payNote:'Note (optional)',payHelp:'Only records a payment you already made outside ContrataCR. No money is moved.',savePayment:'Save payment',
   methods:{transfer:'Bank transfer',sinpe:'SINPE Móvil',cash:'Cash',card:'Card',check:'Check',other:'Other'} as Record<Method,string>,
   payments:'Payments',noPayments:'No payments recorded.',reverse:'Reverse',reversed:'Reversed',reversal:'Reversal',reverseReason:'Reason for the reversal',saveReverse:'Save reversal',
-  receipts:'Deliveries',noReceipts:'No deliveries recorded.',history:'Change history',historyEmpty:'No changes yet.',
-  actions:{create:'Created',update:'Edited',issue:'Issued',receive:'Delivery recorded',pay:'Payment recorded',reverse_payment:'Payment reversed',cancel:'Cancelled'} as Record<PurchaseOrderHistoryEntry['action'],string>,
+  duplicate:'Duplicate',duplicateCopy:' (copy)',receipts:'Deliveries',noReceipts:'No deliveries recorded.',history:'Change history',historyEmpty:'No changes yet.',
+  actions:{create:'Created',update:'Edited',issue:'Issued',receive:'Delivery recorded',pay:'Payment recorded',reverse_payment:'Payment reversed',cancel:'Cancelled',reverse_receipt:'Delivery reversed',return:'Return recorded'} as Record<PurchaseOrderHistoryEntry['action'],string>,
   invalid:'Complete the supplier, title, issue date and at least one line with description, quantity, unit and a valid cost. The expected date cannot be before the issue date.',
   invalidReceive:'Enter at least one quantity and do not exceed what is pending. The date cannot be before the issue date or in the future.',
   invalidPay:'Enter an amount greater than zero and not above the balance. The date cannot be before the issue date or in the future.',invalidReverse:'Write the reason for the reversal.',
@@ -94,8 +95,8 @@ function copy(en:boolean){
   amount:'Monto (₡)',paidOn:'Fecha del pago',method:'Medio',reference:'Referencia (opcional)',payNote:'Nota (opcional)',payHelp:'Solo registra un pago que usted ya hizo fuera de ContrataCR. No se mueve dinero.',savePayment:'Guardar pago',
   methods:{transfer:'Transferencia',sinpe:'SINPE Móvil',cash:'Efectivo',card:'Tarjeta',check:'Cheque',other:'Otro'} as Record<Method,string>,
   payments:'Pagos',noPayments:'No hay pagos registrados.',reverse:'Reversar',reversed:'Reversado',reversal:'Reverso',reverseReason:'Motivo del reverso',saveReverse:'Guardar reverso',
-  receipts:'Entregas',noReceipts:'No hay entregas registradas.',history:'Historial de cambios',historyEmpty:'Todavía no hay cambios.',
-  actions:{create:'Creada',update:'Editada',issue:'Emitida',receive:'Entrega registrada',pay:'Pago registrado',reverse_payment:'Pago reversado',cancel:'Cancelada'} as Record<PurchaseOrderHistoryEntry['action'],string>,
+  duplicate:'Duplicar',duplicateCopy:' (copia)',receipts:'Entregas',noReceipts:'No hay entregas registradas.',history:'Historial de cambios',historyEmpty:'Todavía no hay cambios.',
+  actions:{create:'Creada',update:'Editada',issue:'Emitida',receive:'Entrega registrada',pay:'Pago registrado',reverse_payment:'Pago reversado',cancel:'Cancelada',reverse_receipt:'Entrega reversada',return:'Devolución registrada'} as Record<PurchaseOrderHistoryEntry['action'],string>,
   invalid:'Complete el proveedor, el título, la fecha de emisión y al menos una línea con descripción, cantidad, unidad y un costo válido. La entrega esperada no puede ser anterior a la emisión.',
   invalidReceive:'Indique al menos una cantidad y no supere lo pendiente. La fecha no puede ser anterior a la emisión ni futura.',
   invalidPay:'Indique un monto mayor que cero y que no supere el saldo. La fecha no puede ser anterior a la emisión ni futura.',invalidReverse:'Escriba el motivo del reverso.',
@@ -251,6 +252,8 @@ function PurchaseOrdersSession({accountId,workId,onStateChange}:{accountId:strin
    onReceive={o=>{/* The suggested quantities are the starting point, not a user change: opening the form alone does not block navigation. */const initial={receivedOn:list.today,note:'',quantities:Object.fromEntries(o.lines.map(line=>[line.id,qtyInput(Math.max(0,line.quantity-line.receivedQuantity),en)]))};open({mode:'receive',order:o,draft:initial,initial});}}
    onPay={o=>{const initial={amount:centsToInput(o.balanceCents),paidOn:list.today,method:'transfer' as Method,reference:'',note:''};open({mode:'pay',order:o,draft:initial,initial});}}
    onReverse={(o,paymentId)=>open({mode:'reverse',order:o,paymentId,draft:{note:''},initial:{note:''}})}
+   onDuplicate={o=>{if(busy)return;const base=draftOf(o,en);const draft={...base,title:(o.title+c.duplicateCopy).slice(0,160),issueDate:list.today,expectedDate:'',lines:base.lines.map(line=>({...line,id:crypto.randomUUID()}))};setOpenId(null);setDetail(null);setForm({mode:'create',order:null,draft,initial:draft});setError('');setNotice('');}}
+   onChanged={message=>{setNotice(message);setBudgetKey(key=>key+1);void Promise.all([load(),loadDetail(openId)]);}}
    onFormChange={next=>setForm(next)} onSubmit={submit} onFormCancel={cancelForm}/>:<>
   <dl data-purchase-order-totals className="grid grid-cols-2 gap-2 sm:grid-cols-4">
    <Stat label={c.total} value={money(t.totalCents)} id="total"/>
@@ -259,6 +262,7 @@ function PurchaseOrdersSession({accountId,workId,onStateChange}:{accountId:strin
    <Stat label={c.overdueStat} value={String(t.overdueCount)} id="overdue" tone={t.overdueCount>0}/>
   </dl>
   <p className="text-sm text-[#52627a]" data-purchase-order-count>{c.count(t.count)}</p>
+  <PoListTools accountId={accountId} workId={workId} en={en} canWrite={canWrite} items={list.items} disabled={busy||conflict} onMerged={message=>{setNotice(message);setCursors([null]);setBudgetKey(key=>key+1);void load();}}/>
   {/* Round 2: on phones the filters start folded behind one button (they took a full screen). */}
   <Button type="button" variant="outline" className="min-h-11 w-full sm:hidden" data-po-filters-toggle aria-expanded={filtersOpen} onClick={()=>setFiltersOpen(value=>!value)}>{c.filters}{filtered?` · ${c.filtersActive}`:''}</Button>
   <div data-purchase-order-filters className={`${filtersOpen?'grid':'hidden'} grid-cols-1 gap-3 rounded-2xl sm:grid border border-[#d7e1ea] bg-[#f7f9fc] p-3 sm:grid-cols-2 lg:grid-cols-4`}>
@@ -348,9 +352,9 @@ function OrderForm({c,defaultTax='',form,refs,busy,saving,onChange,onSubmit,onCa
  </form>;
 }
 
-function OrderDetail({accountId,c,en,order,history,error,onRetry,onBack,workId,canWrite,disabled,form,saving,today,refs,onEdit,onIssue,onCancel,onReceive,onPay,onReverse,onFormChange,onSubmit,onFormCancel}:{
+function OrderDetail({accountId,c,en,order,history,error,onRetry,onBack,workId,canWrite,disabled,form,saving,today,refs,onEdit,onIssue,onCancel,onReceive,onPay,onReverse,onDuplicate,onChanged,onFormChange,onSubmit,onFormCancel}:{
  accountId:string;c:Copy;en:boolean;order:PurchaseOrder|null;history:PurchaseOrderHistoryEntry[];error:boolean;onRetry:()=>void;onBack:()=>void;workId:string;canWrite:boolean;disabled:boolean;form:Form|null;saving:boolean;today:string;refs:PurchaseOrderList['references'];
- onEdit:(o:PurchaseOrder)=>void;onIssue:(o:PurchaseOrder)=>void;onCancel:(o:PurchaseOrder)=>void;onReceive:(o:PurchaseOrder)=>void;onPay:(o:PurchaseOrder)=>void;onReverse:(o:PurchaseOrder,paymentId:string)=>void;onFormChange:(form:Form)=>void;onSubmit:(event:FormEvent)=>void;onFormCancel:()=>void}){
+ onEdit:(o:PurchaseOrder)=>void;onIssue:(o:PurchaseOrder)=>void;onCancel:(o:PurchaseOrder)=>void;onReceive:(o:PurchaseOrder)=>void;onPay:(o:PurchaseOrder)=>void;onReverse:(o:PurchaseOrder,paymentId:string)=>void;onDuplicate:(o:PurchaseOrder)=>void;onChanged:(notice:string)=>void;onFormChange:(form:Form)=>void;onSubmit:(event:FormEvent)=>void;onFormCancel:()=>void}){
  const back=<Button type="button" variant="secondary" className="min-h-11" disabled={!!form&&saving} onClick={onBack}>{c.back}</Button>;
  if(!order)return <div className="space-y-3">{back}{error?<div role="alert" data-purchase-order-detail-error className="space-y-2 rounded-2xl border border-[#d7e1ea] p-4"><p className="text-sm">{c.loadError}</p><Button type="button" variant="secondary" onClick={onRetry}>{c.retry}</Button></div>:<p role="status" className="text-sm text-[#52627a]">{c.loading}</p>}</div>;
  const editable=canWrite&&(order.status==='draft'||order.status==='issued')&&order.receipts.length===0;
@@ -373,6 +377,7 @@ function OrderDetail({accountId,c,en,order,history,error,onRetry,onBack,workId,c
   </dl>
   {canWrite&&!form&&<div className="flex flex-wrap gap-2">
    {editable&&<Button type="button" variant="secondary" className="min-h-11" disabled={disabled} onClick={()=>onEdit(order)}>{c.edit}</Button>}
+   <Button type="button" variant="secondary" className="min-h-11" data-po-duplicate disabled={disabled} onClick={()=>onDuplicate(order)}>{c.duplicate}</Button>
    {order.status==='draft'&&<Button type="button" className="min-h-11" disabled={disabled} onClick={()=>onIssue(order)}>{c.issue}</Button>}
    {(order.status==='issued'||order.status==='partial')&&<Button type="button" className="min-h-11" disabled={disabled} onClick={()=>onReceive(order)}>{c.receive}</Button>}
    {order.status!=='draft'&&order.status!=='cancelled'&&order.balanceCents>0&&<Button type="button" variant="secondary" className="min-h-11" disabled={disabled} onClick={()=>onPay(order)}>{c.pay}</Button>}
@@ -412,8 +417,9 @@ function OrderDetail({accountId,c,en,order,history,error,onRetry,onBack,workId,c
   </section>
   {order.status!=='draft'&&order.status!=='cancelled'&&<PurchaseOrderTracking accountId={accountId} workId={workId} orderId={order.id} en={en} canWrite={canWrite} lines={order.lines.map(l=>({id:l.id,description:l.description}))}/>}
   <section data-po-receipts className="space-y-2"><h5 className="font-semibold text-[#162543]">{c.receipts}</h5>
-   {order.receipts.length?<ul className="space-y-1 text-sm">{order.receipts.map(entry=><li key={entry.id+entry.lineId} className="break-words">{day(entry.receivedOn,en)} · {lineDesc(entry.lineId)}: {qty(entry.quantity,en)}{entry.note?` · ${entry.note}`:''}</li>)}</ul>:<p className="text-sm text-[#52627a]">{c.noReceipts}</p>}
+   {order.receipts.length?<ul className="space-y-1 text-sm">{order.receipts.map(entry=><li key={entry.id+entry.lineId} className="break-words"><span data-po-receipt-kind={entry.kind}>{poReceiptKindLabel(entry.kind,entry.reversed,en)}</span> · {day(entry.receivedOn,en)} · {lineDesc(entry.lineId)}: {entry.kind==='receipt'?'':'−'}{qty(entry.quantity,en)}{entry.note?` · ${entry.note}`:''}</li>)}</ul>:<p className="text-sm text-[#52627a]">{c.noReceipts}</p>}
   </section>
+  <PoDetailTools accountId={accountId} workId={workId} order={order} en={en} canWrite={canWrite} today={today} onChanged={onChanged}/>
   <section data-po-payments className="space-y-2"><h5 className="font-semibold text-[#162543]">{c.payments}</h5>
    {order.payments.length?<ul className="space-y-2">{order.payments.map(payment=><li key={payment.id} data-po-payment={payment.kind} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-[#f7f9fc] p-3 text-sm">
     <span className="min-w-0 break-words">{payment.kind==='reverse'?`${c.reversal} · −`:''}{money(payment.amountCents)} · {day(payment.paidOn,en)} · {c.methods[payment.method]}{payment.reference?` · ${payment.reference}`:''}{payment.note?` · ${payment.note}`:''}{payment.reversed&&<span className="ml-1 font-semibold text-[#a03c1f]">· {c.reversed}</span>}</span>

@@ -72,3 +72,15 @@ Cuando después se registra el gasto real de esa compra y se asigna al mismo có
 ## Copia imprimible en móvil (2026-11-12)
 
 En pantallas de hasta 600 px (solo `@media screen`) cada línea de la tabla se muestra como una tarjeta con etiquetas (`data-label` → `td::before`): Descripción, Cant., Unidad, Costo unitario, **Impuesto**, Total y Recibido. Antes la columna «Impuesto» quedaba recortada a la derecha dentro del carril con desplazamiento. Al imprimir se conserva la tabla normal (el ancho del papel alcanza). `pro-purchase-orders.spec.ts` comprueba que ninguna celda sale del ancho visible y, en móvil, que la celda de impuesto lleva la etiqueta «Impuesto»/«Tax» y está completa en pantalla.
+
+## Cierre de las filas 51 y 52 (2026-11-23, migraciones 410 y 411)
+
+**Decisión de producto:** el proveedor responde por un enlace seguro SIN cuenta de ContrataCR; no se construye cuenta propia de proveedor. Los límites anteriores («sin dirección ni condiciones», «sin duplicar, combinar ni exportar», «entregas sin corrección ni devolución», «sin sincronía con Selecciones») quedan resueltos así:
+
+- **Enlace seguro** (`pro_po_vendor_*`, mismo modelo que el portal de licitaciones): el dueño lo crea en el detalle de una orden emitida o recibida en parte (1-30 días), lo copia y lo envía él mismo (ContrataCR no envía nada); solo se guarda el hash con clave (`po-link`, `po-session`, `po-device`), un solo uso y un dispositivo, cookie httpOnly por enlace, vence, se anula o se reemplaza. Página pública `/orden-proveedor`: confirmar, rechazar o proponer fecha (nota hasta 500). Idempotente por `actionId`; una respuesta a una versión anterior de la orden se marca «versión anterior».
+- **Dirección de entrega y condiciones de pago:** registro propio con revisión (`/api/pro/purchase-order-tools`, vista `terms`); guardar mueve la revisión de la orden. Se ve en el detalle, en el CSV y en la página del proveedor.
+- **Duplicar:** abre el formulario de siempre precargado con líneas nuevas (sin vínculos de recepción ni pagos). **Combinar borradores:** de 2 a 10 borradores en uno nuevo; las originales se cancelan y el historial se conserva.
+- **Exportar:** CSV plano, una fila por línea, con BOM UTF-8, separador `;`, importes con dos decimales y celdas a salvo de fórmulas.
+- **Fila 52:** reverso de entregas y devoluciones (registros nuevos, nada se borra; la devolución no supera lo entregado) y sincronía con Seguimiento de selecciones: el panel compara el seguimiento con lo entregado y «Actualizar seguimiento» solo avanza (pedido → entregado → instalado) con `bulk_track`.
+- Pruebas: `tests/e2e/pro-po-vendor-link.spec.ts` (ES/EN). Escrita y tipada; pendiente de ejecutar con la base local (no había Supabase local en esta sesión). Las migraciones 410/411 no se han aplicado a ningún entorno.
+- Siguen fuera: adjuntos en la orden, firma del proveedor, pagos programados en cuotas y otras monedas.
