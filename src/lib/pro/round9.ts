@@ -31,7 +31,7 @@ export function timeReportCsv(report:TimeReport,en:boolean){
  return '﻿'+lines.join('\r\n')+'\r\n';
 }
 
-export const notificationEvents=['task_assigned','task_due','client_message','quote_accepted','quote_changes','invoice_paid','invoice_overdue','bid_received','daily_log_missing','payment_plan_due'] as const;
+export const notificationEvents=['task_assigned','task_due','client_message','quote_accepted','quote_changes','invoice_paid','invoice_overdue','bid_received','daily_log_missing','payment_plan_due','selection_decided'] as const;
 export type NotificationEvent=typeof notificationEvents[number];
 const pref=z.object({inApp:z.boolean(),email:z.boolean()}).strict();
 export const notificationSettingsSchema=z.object({revision:z.number().int().min(0),dueSoonDays:z.number().int().min(0).max(14),overdueGraceDays:z.number().int().min(0).max(30),prefs:z.record(z.enum(notificationEvents),pref)});

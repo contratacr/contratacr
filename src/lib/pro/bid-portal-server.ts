@@ -21,7 +21,7 @@ function portalKey(){
 }
 /** True when the portal secret is configured (the owner UI explains it otherwise). */
 export function bidPortalConfigured(){try{portalKey();return true;}catch{return false;}}
-type Kind='link'|'session'|'device';
+type Kind='link'|'session'|'device'|'po-link'|'po-session'|'po-device';
 /** Keyed hash (hex) of a portal token; only this value reaches the database. */
 export const bidPortalHash=(token:string,kind:Kind)=>createHmac('sha256',portalKey()).update(`ccr-bid-portal:${kind}:v2:${token}`,'utf8').digest('hex');
 /** New random link or session token (base64url of 32 bytes). Checks the secret first. */
