@@ -1,6 +1,7 @@
 import {enforceRateLimit} from '@/lib/rate-limit';
 import {proActor,proBoundedJson,proDbError,proFail,proRouteHeaders as headers,proSameOrigin} from '@/lib/pro/route-common';
 import {templateApplyMappedSchema} from '@/lib/pro/round10';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 /**
  * Round 10 (row 78): apply a task template with an assignee mapping in ONE transaction: the existing
@@ -8,7 +9,7 @@ import {templateApplyMappedSchema} from '@/lib/pro/round10';
  * (task history kept), with its own receipt (replay-safe). Role gate: company.write (task-templates).
  */
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;const limited=await enforceRateLimit(req,'task-templates-apply-'+a.user.id,30,60000);if(limited)return limited;

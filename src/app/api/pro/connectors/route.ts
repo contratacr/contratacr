@@ -5,6 +5,7 @@ import {mockDriveFiles} from '@/lib/pro/integrations/workspace/adapters';
 import {autoSyncTick,resolveCalendar,sendProjectEmail,simulateCalendarChange,syncCalendar} from '@/lib/pro/integrations/workspace/service';
 import {connectionMode,OAuthError,revokeConnection,startConnection} from '@/lib/pro/integrations/oauth/service';
 import {oauthProviders} from '@/lib/pro/integrations/oauth/providers';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Round 6B: Company › Correo, calendario y archivos (Google / Microsoft) and the OAuth connect/disconnect of
 // QuickBooks. GET never returns token envelopes (only «encrypted: true»). POST: connect (→ consent URL),
@@ -19,7 +20,7 @@ const fail=(error:unknown)=>{
  return proFail(503,'No se pudo comprobar la operación. Reintente la misma acción.');
 };
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const raw=proQuery(req);
   // Round 6C: «?autosync=1» = only the automatic-sync settings (used by the in-app scheduler).
@@ -34,7 +35,7 @@ export async function GET(req:Request){
  }catch(error){return fail(error);}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;

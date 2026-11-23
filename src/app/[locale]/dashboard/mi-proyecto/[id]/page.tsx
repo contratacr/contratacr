@@ -7,6 +7,7 @@ import {isClientProjectId} from '@/lib/pro/client-project-route';
 import {ClientProjectPage} from '@/components/pro/client-project-page';
 import {prefijoDeIdioma} from '@/lib/prefijo-de-idioma';
 import {getTranslations} from 'next-intl/server';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 export const dynamic='force-dynamic';
 export async function generateMetadata({params}:{params:Promise<{locale:string}>}):Promise<Metadata>{const {locale}=await params;const t=await getTranslations({locale,namespace:'ProRouteCopy'});return{title:t('myProjectTitle'),robots:{index:false,follow:false},referrer:'no-referrer'};}
 /**
@@ -16,7 +17,7 @@ export async function generateMetadata({params}:{params:Promise<{locale:string}>
  * (the professional, another account, a disabled account) gets a 404, never the customer's data.
  */
 export default async function ClientProject({params}:{params:Promise<{locale:string;id:string}>}){
- if(process.env.NODE_ENV!=='development')notFound();
+ if(!PRO_ENABLED)notFound();
  const {locale,id}=await params,prefix=prefijoDeIdioma(locale);
  let requestId:string;try{requestId=decodeURIComponent(id);}catch{notFound();}
  if(!isClientProjectId(requestId))notFound();

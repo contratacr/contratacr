@@ -14,9 +14,10 @@ import {
   privateEstimateResultSchema,
   privateEstimateSalesPageSchema,
 } from '@/lib/pro/private-estimates';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 const headers={'Cache-Control':'no-store, private','X-Content-Type-Options':'nosniff'};
-const local=()=>process.env.NODE_ENV==='development'&&['http://127.0.0.1:54321','http://127.0.0.1:54321/'].includes(process.env.NEXT_PUBLIC_SUPABASE_URL??'');
+const local=()=>PRO_ENABLED;
 const fail=(status:number,code:string,error:string)=>Response.json({code,error},{status,headers});
 function databaseError(error:{code?:string}){
   if(['40001','23505'].includes(error.code??''))return fail(409,'conflict','Los datos cambiaron. Revise antes de guardar.');

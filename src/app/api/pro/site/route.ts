@@ -3,6 +3,7 @@ import {enforceRateLimit} from '@/lib/rate-limit';
 import {proActor,proBoundedJson,proDbError,proFail,proRouteHeaders as headers,proSameOrigin} from '@/lib/pro/route-common';
 import {defaultSiteContent,siteContentSchema,siteSlugSchema,siteThemes,slugify,type SiteProfile} from '@/lib/pro/site';
 import {resolveMode,storedMode} from '@/lib/pro/integrations/server';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Round 6D (row 69): owner side of the website builder. Draft (CAS + actionId), publish = immutable version,
 // unpublish, custom domain request (stored only; the site_domain provider is not active).
@@ -13,7 +14,7 @@ const mutationSchema=z.discriminatedUnion('action',[
  z.object({action:z.literal('domain'),actionId:id,revision,customDomain:z.union([z.literal(''),z.string().trim().toLowerCase().regex(/^([a-z0-9-]{1,63}\.)+[a-z]{2,24}$/)])}).strict(),
 ]);
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;
   const result=await a.db.rpc('pro_site_read',{p_actor:a.user.id});if(result.error)return proDbError(result.error,'El sitio cambió.');
@@ -23,7 +24,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudo cargar el sitio. Reintente.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;

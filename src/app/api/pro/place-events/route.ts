@@ -4,6 +4,7 @@ import {proBoundedJson,proSameOrigin} from '@/lib/pro/route-common';
 import {eventMutationSchema,orderLinkSchema} from '@/lib/directory/place-features';
 import {managedPlaces,proPlaceContext} from '@/lib/directory/pro-place-route';
 import {dirDbError,dirFail,dirOk} from '@/lib/directory/public-route';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // LOCAL PRO ONLY (place features round, development only): events and the «Pedir» button of a claimed place,
 // /api/pro/place-events. Public-facing, so the SQL requires listing.publish for company members (admin/manager);
@@ -14,7 +15,7 @@ import {dirDbError,dirFail,dirOk} from '@/lib/directory/public-route';
 //  POST {op:'order',input}  → dir_order_link_mutate (own WhatsApp / https order page / phone only; link-out, no orders).
 const postSchema=z.discriminatedUnion('op',[z.object({op:z.literal('event'),input:eventMutationSchema}).strict(),z.object({op:z.literal('order'),input:orderLinkSchema}).strict()]);
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404});
+ if(!PRO_ENABLED)return new Response(null,{status:404});
  const c=await proPlaceContext(req);if(c.error)return c.error;const {db,actor,member}=c.ctx;
  const placeId=new URL(req.url).searchParams.get('placeId');
  if(!placeId)return dirOk({places:(await managedPlaces(db,actor)).filter(p=>p.vertical!=='banking')});
@@ -24,7 +25,7 @@ export async function GET(req:Request){
  return dirOk({events:events.data,order:order.data});
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404});
+ if(!PRO_ENABLED)return new Response(null,{status:404});
  if(!proSameOrigin(req))return dirFail(403,'origin','Origen no autorizado.');
  const c=await proPlaceContext(req);if(c.error)return c.error;const {db,actor,member}=c.ctx;
  const limited=await enforceRateLimit(req,'dir-place-events-'+actor,60,60_000);if(limited)return limited;

@@ -8,6 +8,7 @@ import {canonicalWorkFileName} from '@/lib/pro/work-files';
 import {BID_PORTAL_FILE_BODY_MAX,bidPortalFileDownloadSchema,bidPortalFileMutationSchema,bidPortalFileSchema} from '@/lib/pro/bid-portal';
 import {BidPortalConfigError,bidPortalBucket,bidPortalHash,bidPortalSession} from '@/lib/pro/bid-portal-server';
 import {proBoundedJson,proSameOrigin} from '@/lib/pro/route-common';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Round 4B: PUBLIC vendor side of the bid portal attachments (development only, no ContrataCR
 // account). Lives under /api/pro/bid-portal so the vendor's httpOnly session cookie (path
@@ -26,7 +27,7 @@ function dbFailure(error:{code?:string;hint?:string}){
  return fail(503,'unavailable','No se pudo comprobar el adjunto. Reintente la misma operación.');
 }
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  const limited=noStore(await enforceRateLimit(req,'bid-portal-file-read',60,60000));if(limited)return limited;
  const q=new URL(req.url).searchParams;
  for(const key of q.keys())if(!['fileId','link'].includes(key))return fail(400,'invalid','Consulta inválida.');
@@ -49,7 +50,7 @@ export async function GET(req:Request){
  }catch(cause){return cause instanceof BidPortalConfigError?fail(503,'unavailable','El portal de proveedores no está disponible en este servidor.'):fail(503,'unavailable','No se pudo abrir el adjunto. Reintente.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return fail(403,'origin','Origen no autorizado.');
  const limited=noStore(await enforceRateLimit(req,'bid-portal-file-write',30,60000));if(limited)return limited;
  let input;try{input=bidPortalFileMutationSchema.parse(await proBoundedJson(req,BID_PORTAL_FILE_BODY_MAX));}catch(cause){return fail(cause instanceof RangeError?413:400,'invalid','Use una foto JPG, PNG o WebP, o un PDF de hasta 20 MB.');}

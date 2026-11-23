@@ -6,13 +6,14 @@ import {createAdminClient} from '@/lib/supabase/admin';
 import {proPlaceHubState} from '@/lib/directory/pro-place-hub';
 import {PlaceModuleNav} from '@/components/pro/place-module-nav';
 import {proPageWorkspace} from '@/lib/pro/page-workspace';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // LOCAL PRO ONLY (place features round, development only): owner bookings screen of a claimed restaurant/café.
 // Module 'table_reservations' (edition restaurantes) and team roles are enforced by /api/pro/table-reservations (workspace
 // gate + SQL): a company member working in the owner's company manages bookings; read_only only reads.
 export const dynamic='force-dynamic';
 export default async function TableReservationsRoute({params}:{params:Promise<{locale:string}>}){
- if(process.env.NODE_ENV!=='development')notFound();
+ if(!PRO_ENABLED)notFound();
  const {locale}=await params,en=locale==='en',prefix=en?'/en':'';
  const user=await safeGetUser(await createClient());
  if(!user)redirect(prefix+'/login?redirect='+encodeURIComponent(prefix+'/dashboard/pro/reservas-mesa'));

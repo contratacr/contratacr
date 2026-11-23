@@ -1,11 +1,12 @@
 import {z} from 'zod';
 import {proActor,proDbError,proFail,proInternalFinanceAllowed,proQuery,proRouteHeaders} from '@/lib/pro/route-common';
 import {workOverviewParts,workOverviewSchemas} from '@/lib/pro/work-overview';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Round 4A: job overview widgets (owner only, read-only).
 const query=z.object({workId:z.string().trim().min(1).max(160),part:z.enum(workOverviewParts)}).strict();
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers:proRouteHeaders});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers:proRouteHeaders});
  try{
   const a=await proActor(req);if(a.error)return a.error;const raw=proQuery(req);const q=raw?query.safeParse(raw):null;
   if(!q?.success)return proFail(400,'Consulta inválida.');

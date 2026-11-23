@@ -4,12 +4,13 @@ import {enforceRateLimit} from '@/lib/rate-limit';
 import {punchMutationSchema} from '@/lib/pro/work-punchlist';
 import {proActor,proBoundedJson,proDbError,proFail,proQuery,proRouteHeaders as headers,proSameOrigin,proCustomerReader} from '@/lib/pro/route-common';
 import {PRO_FILE_MAX_BYTES} from '@/lib/pro/file-limit';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 // Family 15: owner punch list, the linked customer's opt-in list, and item photos
 // served from the existing private job files bucket (reauthorized per request).
 const conflict='El pendiente cambió. Actualice antes de guardar.',fileBucket='pro-work-files',uuid=z.string().uuid();
 const imageSchema=z.object({objectPath:z.string().regex(/^[a-f0-9-]{36}\/[a-f0-9-]{36}\.jpg$/),mimeType:z.literal('image/jpeg'),sizeBytes:z.number().int().positive().max(PRO_FILE_MAX_BYTES),sha256:z.string().regex(/^[a-f0-9]{64}$/)}).strict();
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const q=proQuery(req);if(!q)return proFail(400,'Consulta inválida.');const keys=Object.keys(q).sort().join(',');
   if(keys==='image'||keys==='image,requestId'){
@@ -33,7 +34,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudieron cargar los pendientes finales.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;

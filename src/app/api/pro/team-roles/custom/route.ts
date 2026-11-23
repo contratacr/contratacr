@@ -6,6 +6,7 @@ import {enforceRateLimit} from '@/lib/rate-limit';
 import {proBoundedJson,proDbError,proFail,proQuery,proRouteHeaders as headers,proSameOrigin} from '@/lib/pro/route-common';
 import {PRO_WS_COOKIE} from '@/lib/pro/workspace-gate';
 import {customRoleMutationSchema,customRoleResultSchema,customRolesSchema} from '@/lib/pro/operations';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 /**
  * Ronda F2-C (row 17): permission matrix and custom roles (a copy of a base role that can only remove
@@ -24,7 +25,7 @@ async function session(req:Request){
  return{user,db,company,error:null} as const;
 }
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const raw=proQuery(req);if(!raw||Object.keys(raw).length)return proFail(400,'Consulta inválida.');
   const a=await session(req);if(a.error)return a.error;
@@ -33,7 +34,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudieron cargar los roles.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await session(req);if(a.error)return a.error;const limited=await enforceRateLimit(req,'team-custom-roles-'+a.user.id,40,60000);if(limited)return limited;

@@ -1,6 +1,7 @@
 import {z} from 'zod';
 import {proActor,proBoundedJson,proDbError,proFail,proQuery,proRouteHeaders as headers,proSameOrigin,proAccountRateLimit} from '@/lib/pro/route-common';
 import {estimateScheduleApplySchema,estimateScheduleResultSchema,estimateScheduleSourceSchema} from '@/lib/pro/operations';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 /**
  * Ronda F2-C (row 13, "cotización a cronograma"): proposal of phases (quote sections) and tasks (quote lines)
@@ -9,7 +10,7 @@ import {estimateScheduleApplySchema,estimateScheduleResultSchema,estimateSchedul
  */
 const query=z.object({workId:z.string().min(1).max(160)}).strict();
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;
   const parsed=query.safeParse(proQuery(req));if(!parsed.success)return proFail(400,'Consulta inválida.');
@@ -19,7 +20,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudieron cargar las cotizaciones del trabajo.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;

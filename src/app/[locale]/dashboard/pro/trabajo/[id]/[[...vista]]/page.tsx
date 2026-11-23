@@ -3,6 +3,7 @@ import {ProSpace} from '@/components/pro/pro-space';
 import {proSpaceProfile} from '@/lib/pro/pro-space-profile';
 import {JOB_SECTIONS,validJobId} from '@/lib/pro/job-route';
 import {prefijoDeIdioma} from '@/lib/prefijo-de-idioma';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 export const dynamic='force-dynamic';
 /**
  * Round 9: the job page is its own route and document — /dashboard/pro/trabajo/<id>[/<section>] (ES/EN).
@@ -11,7 +12,7 @@ export const dynamic='force-dynamic';
  * Data access is unchanged: the job is read through the same authorized /api/pro routes.
  */
 export default async function JobPage({params,searchParams}:{params:Promise<{locale:string;id:string;vista?:string[]}>;searchParams:Promise<Record<string,string|string[]|undefined>>}){
- if(process.env.NODE_ENV!=='development')notFound();
+ if(!PRO_ENABLED)notFound();
  const {locale,id,vista}=await params,query=await searchParams;
  let job:string;try{job=decodeURIComponent(id);}catch{notFound();}
  if(!validJobId(job)||(vista?.length??0)>1)notFound();

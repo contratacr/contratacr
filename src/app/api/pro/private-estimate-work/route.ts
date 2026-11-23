@@ -10,9 +10,10 @@ import {
   privateEstimateWorkReceiptSchema, privateEstimateWorkResultSchema,
   type PrivateEstimateWorkInput, type PrivateEstimateWorkResult,
 } from '@/lib/pro/private-estimate-work';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 const headers={'Cache-Control':'no-store, private','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'};
-const local=()=>process.env.NODE_ENV==='development'&&['http://127.0.0.1:54321','http://127.0.0.1:54321/'].includes(process.env.NEXT_PUBLIC_SUPABASE_URL??'');
+const local=()=>PRO_ENABLED;
 const fail=(status:number,code:string,error:string)=>Response.json({code,error},{status,headers});
 const id=z.string().uuid(),workId=z.string().min(1).max(160);
 const query=z.union([

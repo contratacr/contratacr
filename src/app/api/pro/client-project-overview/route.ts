@@ -1,12 +1,13 @@
 import {z} from 'zod';
 import {proActor,proDbError,proFail,proQuery,proRouteHeaders,proCustomerReader} from '@/lib/pro/route-common';
 import {clientProjectOverviewSchema} from '@/lib/pro/round12';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Round 12: overview of the customer's project (linked customer, or the owner's «Customer view» preview).
 // Read-only. When the real customer opens it, the professional's payment plan reminders for THIS
 // customer are brought up to date in the customer's in-app bell (idempotent; push suppressed; never sent).
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers:proRouteHeaders});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers:proRouteHeaders});
  try{
   const a=await proActor(req);if(a.error)return a.error;const q=proQuery(req);
   if(!q||Object.keys(q).join()!=='requestId')return proFail(400,'Consulta inválida.');

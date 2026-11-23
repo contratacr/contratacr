@@ -4,6 +4,7 @@ import {proWorkspaceMember} from '@/lib/pro/workspace-user';
 import {proActor,proBoundedJson,proDbError,proFail,proInternalFinanceDenied,proQuery,proRouteHeaders as headers,proSameOrigin} from '@/lib/pro/route-common';
 import {contactPreviewSchema} from '@/lib/pro/round10';
 import {contactExtrasExportSchema,contactExtrasReadSchema,contactExtrasRowSchema,contactFieldsInputSchema,contactFieldsReadSchema,contactFieldsResultSchema,definitionActions} from '@/lib/pro/contact-fields';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 /**
  * Ronda F2-B (row 05): customer custom fields (company definitions), values and additional phones/e-mails
@@ -27,7 +28,7 @@ function dbError(error:{code?:string;hint?:string},conflict:string){
  return proDbError(error,conflict);
 }
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const raw=proQuery(req),parsed=raw?query.safeParse(raw):null;if(!parsed?.success)return proFail(400,'Consulta inválida.');
   if(parsed.data.view==='fields'){const r=await a.db.rpc('pro_contact_fields_read',{p_owner:a.user.id});if(r.error)return dbError(r.error,'Los campos cambiaron.');return Response.json(contactFieldsReadSchema.parse(r.data),{headers});}
@@ -38,7 +39,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudieron cargar los campos de clientes.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;const limited=await enforceRateLimit(req,'client-contact-fields-'+a.user.id,60,60000);if(limited)return limited;

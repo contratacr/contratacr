@@ -4,6 +4,7 @@ import {proActor,proBoundedJson,proFail,proQuery,proRequestOrigin,proRouteHeader
 import {paymentLinkMutationSchema,paymentLinksReadSchema,reconciliationSchema} from '@/lib/pro/integrations/payments/api';
 import {PaymentError,deliver,linkTokenFor,linkTokenHash,logCharge,payRpc,paymentLinkUrl,paymentsMode,processorFor,retryDueWebhooks} from '@/lib/pro/integrations/payments/service';
 import {providerConfig} from '@/lib/pro/integrations/registry';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Round 6A: owner side of online payments. GET ?draftId= | ?planId= (links, attempts, bookings)
 // · GET ?view=reconciliation[&filter=exceptions]. POST create | cancel | refund. The link URL (token in
@@ -22,7 +23,7 @@ async function context(db:Parameters<typeof paymentsMode>[0],owner:string){
  return {mode:mode.mode,modeStatus:mode.status,sinpePhone:String(providerConfig('tilopay',tilopay?.config).sinpePhone??'')};
 }
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const raw=proQuery(req);if(!raw)return proFail(400,'Consulta inválida.');
   const recon=reconQuery.safeParse(raw);
@@ -34,7 +35,7 @@ export async function GET(req:Request){
  }catch(error){return failure(error);}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;

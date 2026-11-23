@@ -2,6 +2,7 @@ import {z} from 'zod';
 import {enforceRateLimit} from '@/lib/rate-limit';
 import {fileMentionMutationSchema} from '@/lib/pro/file-mentions';
 import {proActor,proBoundedJson,proDbError,proFail,proQuery,proRouteHeaders as headers,proSameOrigin} from '@/lib/pro/route-common';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 // Fila 30: @mentions of the job team in the private team thread of a job file, and the
 // member's isolated in-app inbox. The comment is created by the same SQL writer as
 // /api/pro/file-versions (one transaction with its mentions). Nothing is sent: no e-mail,
@@ -10,7 +11,7 @@ import {proActor,proBoundedJson,proDbError,proFail,proQuery,proRouteHeaders as h
 const conflict='Un integrante mencionado cambió su acceso. Actualice la lista y vuelva a intentarlo.',uuid=z.string().uuid(),workId=z.string().trim().min(1).max(160);
 const ids=z.string().max(20*37).transform(value=>value.split(',')).pipe(z.array(uuid).min(1).max(20));
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const q=proQuery(req);if(!q)return proFail(400,'Consulta inválida.');const keys=Object.keys(q).sort().join(',');
   if(q.view==='targets'&&keys==='view,workId'){
@@ -33,7 +34,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudieron cargar las menciones. Reintente.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;

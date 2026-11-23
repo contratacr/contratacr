@@ -6,6 +6,7 @@ import {getApiAdmin} from '@/lib/auth/admin';
 import {enforceRateLimit} from '@/lib/rate-limit';
 import {proInternalFinanceDenied} from '@/lib/pro/route-common';
 import {purchaseOrderListQuerySchema,purchaseOrderMutationSchema} from '@/lib/pro/purchase-orders';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 // Families 51/52/54: owner purchase orders per job, receipts, manual payments and budget commitments.
 const headers={'Cache-Control':'no-store, private','X-Content-Type-Options':'nosniff'};
 const fail=(status:number,error:string)=>Response.json({error},{status,headers});
@@ -26,7 +27,7 @@ async function bounded(req:Request){
 }
 const single=z.object({workId:z.string().trim().min(1).max(160)});
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await actor(req);if(a.error)return a.error;
   // Closing round (security review M2): purchase-order lines carry the internal cost.
@@ -42,7 +43,7 @@ export async function GET(req:Request){
  }catch{return fail(503,'No se pudieron cargar las órdenes de compra. Reintente.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(req.headers.get('origin')!==`${new URL(req.url).protocol}//${req.headers.get('host')||new URL(req.url).host}`)return fail(403,'Origen no autorizado.');
  try{
   const a=await actor(req);if(a.error)return a.error;

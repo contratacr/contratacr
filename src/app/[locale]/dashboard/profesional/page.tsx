@@ -58,6 +58,7 @@ import { SaveStatusProvider } from "@/components/dashboard/save-status-context";
 import { VerificationPanel } from "@/components/dashboard/pro/verification-panel";
 import { ClientActivity, fetchClientProjects } from "@/components/dashboard/client-activity";
 import { ClientConnections } from "@/components/dashboard/client-connections";
+import {PRO_UI_ENABLED} from '@/lib/pro/enabled-client';
 import { applyPendingSavedPro } from "@/components/professionals/save-button";
 import { BasicProfileSection } from "@/components/dashboard/basic-profile-section";
 import { isValidId } from "@/lib/cedula";
@@ -121,7 +122,7 @@ const ALL_TABS = new Set<Tab>([
 ]);
 
 const PRO_SALES_TABS = new Set<Tab>(["quotes","pro_billing","pro_payments"]);
-const LOCAL_APPOINTMENT_TABS=process.env.NODE_ENV==='development'?['appointments']:[];
+const LOCAL_APPOINTMENT_TABS=PRO_UI_ENABLED?['appointments']:[];
 
 const TAB_ICONS: Record<Tab, React.ReactNode> = {
   pro_tools: <Wrench className="h-4 w-4" />,

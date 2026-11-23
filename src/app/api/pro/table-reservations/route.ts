@@ -6,6 +6,7 @@ import {proReservationPostSchema} from '@/lib/directory/place-features';
 import {managedPlaces,proPlaceContext} from '@/lib/directory/pro-place-route';
 import {sendReservationNoticeMock,type ReservationNotice} from '@/lib/directory/reservation-notify';
 import {dirDbError,dirFail,dirOk} from '@/lib/directory/public-route';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // LOCAL PRO ONLY (place features round, development only): owner side of table reservations, /api/pro/table-reservations.
 // Module 'table_reservations' (edition restaurantes; already mapped by pro_route_module, so the team gate also checks it).
@@ -18,7 +19,7 @@ import {dirDbError,dirFail,dirOk} from '@/lib/directory/public-route';
 //                                  destination.
 const SECTIONS=['restaurant','cafe_bar'] as const;
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404});
+ if(!PRO_ENABLED)return new Response(null,{status:404});
  const c=await proPlaceContext(req);if(c.error)return c.error;const {db,actor,member}=c.ctx;
  if(!await proHasModule(db,actor,'table_reservations'))return dirFail(403,'module_unavailable');
  const q=new URL(req.url).searchParams,placeId=q.get('placeId'),day=q.get('day');
@@ -28,7 +29,7 @@ export async function GET(req:Request){
  return r.error?dirDbError(r.error):dirOk(r.data);
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404});
+ if(!PRO_ENABLED)return new Response(null,{status:404});
  if(!proSameOrigin(req))return dirFail(403,'origin','Origen no autorizado.');
  const c=await proPlaceContext(req);if(c.error)return c.error;const {db,actor,member}=c.ctx;
  const limited=await enforceRateLimit(req,'dir-table-res-'+actor,120,60_000);if(limited)return limited;

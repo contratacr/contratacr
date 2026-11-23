@@ -1,10 +1,11 @@
 import {z} from 'zod';
 import {proActor,proDbError,proFail,proQuery,proRouteHeaders as headers} from '@/lib/pro/route-common';
 import {workSidebarSchema} from '@/lib/pro/round8';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 /** Round 8: right column of the job page (status, location, customer, collaborators, meetings, tags). Read only. */
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;
   const raw=proQuery(req);const parsed=raw&&z.object({workId:z.string().trim().min(1).max(160)}).strict().safeParse(raw);if(!parsed||!parsed.success)return proFail(400,'Consulta inválida.');

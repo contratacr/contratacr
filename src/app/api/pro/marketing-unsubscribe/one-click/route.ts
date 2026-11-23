@@ -2,6 +2,7 @@ import {createAdminClient} from '@/lib/supabase/admin';
 import {enforceRateLimit,enforceRateLimitKey} from '@/lib/rate-limit';
 import {proBoundedForm,proQuery,proSameOrigin} from '@/lib/pro/route-common';
 import {isOneClickBody} from '@/lib/pro/integrations/marketing/unsubscribe-links';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Post-security fixes (2026-11-13): RFC 8058 ONE-CLICK unsubscribe of a professional's campaign email. The mailbox
 // provider POSTs `List-Unsubscribe=One-Click` (form-encoded) to the `List-Unsubscribe` URI, without cookies or
@@ -13,12 +14,12 @@ const headers={'Cache-Control':'no-store, private','X-Content-Type-Options':'nos
 const done=()=>new Response('OK',{status:200,headers:{...headers,'Content-Type':'text/plain; charset=utf-8'}});
 const tokenOf=(req:Request)=>{const q=proQuery(req);return q&&Object.keys(q).length===1&&/^[a-f0-9]{64}$/.test(q.t??'')?q.t!:null;};
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  const token=tokenOf(req);
  return new Response(null,{status:303,headers:{...headers,Location:token?'/baja-pro#t='+token:'/baja-pro'}});
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  const limited=await enforceRateLimit(req,'marketing-one-click',60,60000);if(limited){for(const [k,v] of Object.entries(headers))limited.headers.set(k,v);return limited;}
  let oneClick=false;
  try{oneClick=isOneClickBody(await proBoundedForm(req,{maxBytes:512,maxFiles:0,fields:['List-Unsubscribe'],types:['application/x-www-form-urlencoded','multipart/form-data']}));}catch{oneClick=false;}

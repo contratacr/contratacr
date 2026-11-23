@@ -3,6 +3,7 @@ import {proActor,proBoundedJson,proDbError,proFail,proQuery,proRouteHeaders as h
 import {proWorkspaceMember} from '@/lib/pro/workspace-user';
 import {paymentToday} from '@/lib/pro/invoice-payments';
 import {notificationInputSchema,notificationPageSchema,notificationQuerySchema} from '@/lib/pro/round9';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 /**
  * Round 9: notification center per person (owner, or a company member: id ONLY from the signed gate
@@ -11,7 +12,7 @@ import {notificationInputSchema,notificationPageSchema,notificationQuerySchema} 
  */
 async function person(){return (await proWorkspaceMember())?.memberId??null;}
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const raw=proQuery(req),parsed=raw?notificationQuerySchema.safeParse(raw):null;if(!parsed?.success)return proFail(400,'Consulta inválida.');
   const who=(await person())??a.user.id,today=paymentToday();
@@ -24,7 +25,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudieron cargar los avisos.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;const limited=await enforceRateLimit(req,'notifications-'+a.user.id,60,60000);if(limited)return limited;

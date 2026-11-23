@@ -1,10 +1,11 @@
 import {proAccountRateLimit,proActor,proDbError,proFail,proInternalFinanceDenied,proQuery,proRouteHeaders} from '@/lib/pro/route-common';
 import {proReportQuerySchema,proReportSchema} from '@/lib/pro/reports';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Round 7B: financial (invoiced, collected, outstanding by age, job profitability) and jobs
 // reports for the owner. Read-only; the CSV is built in the browser from this same answer.
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers:proRouteHeaders});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers:proRouteHeaders});
  try{
   const a=await proActor(req);if(a.error)return a.error;const denied=await proInternalFinanceDenied();if(denied)return denied;const limited=await proAccountRateLimit('reports',a.user.id,30,60000);if(limited)return limited;const raw=proQuery(req);const q=raw?proReportQuerySchema.safeParse(raw):null;
   if(!q?.success)return proFail(400,'Consulta inválida.');

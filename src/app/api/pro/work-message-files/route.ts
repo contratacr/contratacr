@@ -8,6 +8,7 @@ import {normalizeCompanyFile} from '@/lib/pro/company-file-normalize';
 import {canonicalWorkFileName} from '@/lib/pro/work-files';
 import {PRO_FILE_BODY_MAX} from '@/lib/pro/file-limit';
 import {readBoundedBody} from '@/lib/pro/bounded-body';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 /**
  * Round 8: attachments of the job messages (Round 7C) — photos (PNG/WebP become JPG) and PDF up to
@@ -22,7 +23,7 @@ const uuid=z.string().uuid();
 const meta=z.object({objectPath:z.string().regex(/^[a-f0-9-]{36}\/[a-f0-9-]{36}\/[a-f0-9-]{36}\.(jpg|pdf)$/),name:z.string().min(1).max(160),mimeType:z.enum(['image/jpeg','application/pdf']),sizeBytes:z.number().int().positive(),sha256:z.string().regex(/^[a-f0-9]{64}$/)}).strict();
 const upload=z.object({requestId:uuid,actionId:uuid,body:z.string().max(2000),name:z.string().trim().min(1).max(160),base64:z.string().min(4)}).strict();
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const raw=proQuery(req);if(!raw)return proFail(400,'Consulta inválida.');
   if(Object.keys(raw).length===1&&raw.fileId){
@@ -42,7 +43,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudieron cargar los adjuntos.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;const limited=await enforceRateLimit(req,'work-message-files-'+a.user.id,20,60000);if(limited)return limited;

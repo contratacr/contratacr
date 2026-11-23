@@ -3,12 +3,13 @@ import {createHash} from 'node:crypto';
 import {quoteLineDecideSchema} from '@/lib/pro/quote-line-decisions';
 import {proWorkspaceMember} from '@/lib/pro/workspace-user';
 import {proAccountRateLimit,proActor,proBoundedJson,proDbError,proFail,proQuery,proRouteHeaders as headers,proSameOrigin} from '@/lib/pro/route-common';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 // Fix 14 (row 39): per-line customer approval of a shared quote version. Reads for the owner or the
 // version's recipient; writes only for the recipient while the version is open (checked in SQL).
 const conflict='Esta partida cambió. Se recargó la propuesta; revísela e intente de nuevo.';
 const imageSchema=z.object({objectPath:z.string().regex(/^[a-f0-9-]{36}\/[a-f0-9-]{36}\.jpg$/),sha256:z.string().regex(/^[a-f0-9]{64}$/),sizeBytes:z.number().int().positive(),imageId:z.string().uuid()}).strict();
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const q=proQuery(req);if(!q)return proFail(400,'Consulta inválida.');
   const publication=z.string().uuid().safeParse(q.publicationId);if(!publication.success||Object.keys(q).some(k=>!['publicationId','image','v'].includes(k)))return proFail(400,'Consulta inválida.');
@@ -25,7 +26,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudo cargar la propuesta. Reintente.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;

@@ -2,6 +2,7 @@ import {z} from 'zod';
 import {enforceRateLimit} from '@/lib/rate-limit';
 import {proAccountRateLimit,proActor,proBoundedJson,proDbError,proFail,proQuery,proRouteHeaders as headers,proSameOrigin} from '@/lib/pro/route-common';
 import {multiScheduleSchema,scheduleInputSchema,scheduleLinksSchema,shiftPreviewSchema} from '@/lib/pro/round10';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 /**
  * Round 10 (row 13): dependency rules (FS/SS + lag) of the job plan, preview/apply/undo of a date change
@@ -16,7 +17,7 @@ const query=z.discriminatedUnion('view',[
  z.object({view:z.literal('multi'),from:day,to:day}).strict(),
 ]);
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const raw=proQuery(req),parsed=raw?query.safeParse(raw):null;if(!parsed?.success)return proFail(400,'Consulta inválida.');
   const q=parsed.data;
@@ -27,7 +28,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudo cargar el cronograma.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;const limited=await enforceRateLimit(req,'schedule-links-'+a.user.id,60,60000);if(limited)return limited;

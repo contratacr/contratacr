@@ -7,12 +7,13 @@ import {safeGetUser} from '@/lib/pro/workspace-user';
 import {createAdminClient} from '@/lib/supabase/admin';
 import {selectionPrintSchema} from '@/lib/pro/round10';
 import {selectionsPrintHtml} from '@/lib/pro/round10-print';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 // Round 10: printable selections sheet with the company branding (no internal cost or margin). Owner only (company members through the gate as the owner, GET = read). Never sends or stores anything.
 const headers={'Cache-Control':'private, no-store, max-age=0','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff','X-Robots-Tag':'noindex, nofollow','Content-Security-Policy':"default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'"};
 const fail=(status:number,error:string)=>Response.json({error},{status,headers});
 const query=z.object({workId:z.string().trim().min(1).max(160),lang:z.enum(['es','en']).optional(),preview:z.literal('1').optional()}).strict();
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  const params=new URL(req.url).searchParams,keys=[...params.keys()];
  const parsed=query.safeParse(Object.fromEntries(params.entries()));if(!parsed.success||new Set(keys).size!==keys.length)return fail(400,'Consulta inválida.');
  try{

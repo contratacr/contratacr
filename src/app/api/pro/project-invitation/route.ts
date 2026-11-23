@@ -3,6 +3,7 @@ import {enforceRateLimit,enforceRateLimitKey} from '@/lib/rate-limit';
 import {WORK_INVITE_BODY_MAX,workInviteClientMutationSchema} from '@/lib/pro/work-client-invitations';
 import {workInviteHash} from '@/lib/pro/work-client-invitations-server';
 import {proActor,proBoundedJson,proFail,proQuery,proRouteHeaders,proSameOrigin} from '@/lib/pro/route-common';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Round 1: customer side (development only, signed-in account). Preview and accept a job
 // invitation; consent to join the job of an estimate accepted by code; list linked jobs.
@@ -24,7 +25,7 @@ function dbError(error:{code?:string;hint?:string}){
  return proFail(code==='40001'||code==='23505'?409:code==='42501'?403:['22023','23514','22P02','P0002'].includes(code)?400:503,code==='40001'?'La invitación cambió. Reintente.':'No se pudo completar la operación.');
 }
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers:proRouteHeaders});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers:proRouteHeaders});
  try{
   const a=await proActor(req);if(a.error)return a.error;
   const raw=proQuery(req);if(!raw)return proFail(400,'Consulta inválida.');
@@ -37,7 +38,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudieron cargar sus proyectos. Reintente.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers:proRouteHeaders});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers:proRouteHeaders});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;

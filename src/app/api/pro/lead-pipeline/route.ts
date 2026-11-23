@@ -4,6 +4,7 @@ import {proWorkspaceMember} from '@/lib/pro/workspace-user';
 import {proActor,proBoundedJson,proDbError,proFail,proQuery,proRouteHeaders as headers,proSameOrigin} from '@/lib/pro/route-common';
 import {excelCsv} from '@/lib/pro/round10';
 import {leadStageHistorySchema,pipelineForecastSchema,stageFunnelSchema,stageSettingsInputSchema,stageSettingsResultSchema,stageSettingsSchema} from '@/lib/pro/sales-pipeline';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 /**
  * Ronda F2-B (rows 07, 08): stage colour and win probability, weighted forecast, time in stage per lead and
@@ -21,7 +22,7 @@ const query=z.discriminatedUnion('view',[
 const csvHead={es:['Etapa','Llegaron','% desde el inicio','% desde la etapa anterior','Ahora en la etapa','Tiempo promedio (días)','Tiempo mediano (días)'],
  en:['Stage','Reached','% from start','% from previous stage','Currently in stage','Average time (days)','Median time (days)']};
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const raw=proQuery(req),parsed=raw?query.safeParse(raw):null;if(!parsed?.success)return proFail(400,'Consulta inválida.');
   const q=parsed.data;
@@ -39,7 +40,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudieron cargar las solicitudes.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;const limited=await enforceRateLimit(req,'lead-pipeline-'+a.user.id,120,60000);if(limited)return limited;

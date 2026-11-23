@@ -6,11 +6,12 @@ import {getApiAdmin} from '@/lib/auth/admin';
 import {enforceRateLimit} from '@/lib/rate-limit';
 import {proInternalFinanceDenied} from '@/lib/pro/route-common';
 import {costCodeLibrarySchema,costCodeMutationSchema,costCodeResultSchema,costCodeStarterSchema} from '@/lib/pro/cost-codes';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Row 54 (Ronda F1-B): owner-private company cost-code library (codes, groups, default unit/VAT/markup) and its
 // starter set. Costs and markups are internal: owner, Administrator and Manager only (proInternalFinanceDenied).
 const headers={'Cache-Control':'no-store, private','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'};
-const local=()=>process.env.NODE_ENV==='development'&&['http://127.0.0.1:54321','http://127.0.0.1:54321/'].includes(process.env.NEXT_PUBLIC_SUPABASE_URL??'');
+const local=()=>PRO_ENABLED;
 const fail=(status:number,code:string,error:string)=>Response.json({code,error},{status,headers});
 const id=z.string().uuid();
 const query=z.union([

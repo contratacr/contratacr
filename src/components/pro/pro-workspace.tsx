@@ -14,9 +14,10 @@ import { Button } from '@/components/ui/button';
 import { SectionHeadline } from '@/components/dashboard/section-headline';
 import { businessSchema, emptyBusiness, saveClient, saveProduct, moveStock, saveQuote, saveAppointment, quoteTotal, costaRicaDate, type Business } from '@/lib/pro/business';
 import { exportWork } from '@/lib/pro/workspace';
+import {PRO_UI_ENABLED} from '@/lib/pro/enabled-client';
 /** The local test view (/pro-preview) exists only in development builds and keeps its fictitious data in
  * memory: nothing is persisted in the browser, and production builds refuse to run without the server. */
-const localPreviewAllowed=process.env.NODE_ENV==='development';
+const localPreviewAllowed=PRO_UI_ENABLED;
 const localPreviewUnavailable='La vista local de pruebas solo existe en desarrollo.';
 const tabs=['Agenda','Clientes','Cotizaciones','Inventario'] as const;
 type Tab=typeof tabs[number]|'Redes'|'Facturación'|'Gastos';

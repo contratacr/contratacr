@@ -8,6 +8,7 @@ import {leadOriginChannelIdSchema} from '@/lib/pro/lead-origins';
 import {requestPipelineStageIdSchema} from '@/lib/pro/request-pipeline';
 import {taskDueDate} from '@/lib/pro/work-tasks';
 import {LeadImportFileError,leadImportPreviewSchema,leadImportRequestSchema,leadImportResultSchema,leadImportsPageSchema,leadInboxFunnelSchema,leadInboxPageSchema,leadInboxReceiptSchema,leadSnoozeMutationSchema,leadSnoozeReadSchema,leadSnoozeResultSchema,parseLeadImportCsv} from '@/lib/pro/lead-inboxes';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 const headers={'Cache-Control':'no-store, private','X-Content-Type-Options':'nosniff'};
 const fail=(status:number,error:string,extra:Record<string,unknown>={})=>Response.json({error,...extra},{status,headers});
@@ -34,7 +35,7 @@ const query=z.discriminatedUnion('view',[
  z.object({view:z.literal('snooze'),kind,id}).strict(),
  z.object({view:z.literal('action'),actionId:id}).strict(),
 ]);
-const local=()=>process.env.NODE_ENV==='development'&&['http://127.0.0.1:54321','http://127.0.0.1:54321/'].includes(process.env.NEXT_PUBLIC_SUPABASE_URL??'');
+const local=()=>PRO_ENABLED;
 export async function GET(req:Request){
  if(!local())return new Response(null,{status:404,headers});
  try{const a=await actor(req);if(a.error)return a.error;const raw:Record<string,string>={};for(const[k,v]of new URL(req.url).searchParams){if(k in raw)return fail(400,'Consulta inválida.');raw[k]=v;}const parsed=query.safeParse(raw);if(!parsed.success)return fail(400,'Consulta inválida.');const q=parsed.data;

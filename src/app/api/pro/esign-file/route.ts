@@ -2,6 +2,7 @@ import {z} from 'zod';
 import {proActor,proQuery} from '@/lib/pro/route-common';
 import {EsignError,esignRpc} from '@/lib/pro/integrations/esign/service';
 import {originalPdf,type Snapshot} from '@/lib/pro/integrations/esign/document';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Round 6B: files of a signature request (owner only, read-only): the PDF that was sent («original», rendered
 // again from the frozen snapshot — byte-identical), and once signed the stored signed PDF and audit certificate.
@@ -10,7 +11,7 @@ const fail=(status:number,error:string)=>Response.json({error},{status,headers})
 const query=z.object({id:z.string().uuid(),kind:z.enum(['original','signed_pdf','certificate'])}).strict();
 const fileName=(label:string,suffix:string)=>(label.normalize('NFD').replace(/[^\w .-]+/g,'').replace(/\s+/g,'-').slice(0,80)||'documento')+suffix+'.pdf';
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;
   const raw=proQuery(req),parsed=raw?query.safeParse(raw):null;if(!parsed?.success)return fail(400,'Consulta inválida.');

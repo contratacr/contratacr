@@ -10,6 +10,7 @@ import {enforceRateLimit} from '@/lib/rate-limit';
 import {deliveryMutationSchema} from '@/lib/pro/work-delivery';
 import {DELIVERY_PHOTO_LIMIT} from '@/lib/pro/delivery-photo-recovery';
 import {decodeDeliveryPhotoBase64} from '@/lib/pro/delivery-photo-base64';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 const headers={'Cache-Control':'no-store, private','X-Content-Type-Options':'nosniff'};
 const fail=(status:number,error:string)=>Response.json({error},{status,headers});
 const dbError=(error:{code?:string})=>fail(error.code==='40001'?409:error.code==='42501'?403:error.code==='54000'?429:['22023','23514','23505','22P02'].includes(error.code||'')?400:503,error.code==='40001'?'El informe cambió. Actualice antes de guardar.':'No se pudo completar. Revise los datos y vuelva a intentar.');
@@ -24,7 +25,7 @@ function expectedActor(req:Request,actorId:string){
 }
 async function bounded(req:Request){if(!req.headers.get('content-type')?.toLowerCase().startsWith('application/json'))throw Error();const reader=req.body?.getReader();if(!reader)throw Error();let length=0;const chunks:Uint8Array[]=[];try{while(true){const part=await reader.read();if(part.done)break;length+=part.value.byteLength;if(length>4300000){await reader.cancel();throw Error();}chunks.push(part.value);}}finally{reader.releaseLock();}const bytes=new Uint8Array(length);let offset=0;for(const part of chunks){bytes.set(part,offset);offset+=part.length;}return JSON.parse(new TextDecoder().decode(bytes));}
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{const a=await actor();if(a.error)return a.error;const scopeError=expectedActor(req,a.user.id);if(scopeError)return scopeError;const q=new URL(req.url).searchParams;
   if(q.has('photo')){const id=z.string().uuid().parse(q.get('photo')),path=await a.db.rpc('pro_work_delivery_photo_path',{p_actor:a.user.id,p_id:id});if(path.error)return dbError(path.error);if(!path.data)return fail(404,'Fotografía no disponible.');const file=await a.db.storage.from('pro-work-delivery').download(path.data);if(file.error||!file.data)return fail(503,'No se pudo abrir la fotografía.');return new Response(new Uint8Array(await file.data.arrayBuffer()),{headers:{...headers,'Content-Type':'image/jpeg','Content-Security-Policy':"default-src 'none'"}});}
   const requestId=q.has('requestId')?z.string().uuid().parse(q.get('requestId')):null,workId=requestId?null:z.string().min(1).max(160).parse(q.get('workId')),after=q.has('after')?z.coerce.number().int().positive().parse(q.get('after')):null;
@@ -32,7 +33,7 @@ export async function GET(req:Request){
  }catch{return fail(400,'Consulta inválida.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(req.headers.get('origin')!==`${new URL(req.url).protocol}//${req.headers.get('host')||new URL(req.url).host}`)return fail(403,'Origen no autorizado.');
  try{const a=await actor();if(a.error)return a.error;const scopeError=expectedActor(req,a.user.id);if(scopeError)return scopeError;const limited=await enforceRateLimit(req,'work-delivery-'+a.user.id,60,60000);if(limited)return limited;
   let input;try{input=deliveryMutationSchema.parse(await bounded(req));}catch{return fail(400,'Revise el informe o la fotografía.');}

@@ -1,12 +1,13 @@
 import {proAccountRateLimit,proActor,proDbError,proFail,proInternalFinanceDenied,proQuery,proRouteHeaders as headers} from '@/lib/pro/route-common';
 import {incomeQuerySchema} from '@/lib/pro/payables';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 /**
  * Round F1-A (row 55): simple income statement per period and per job (invoiced without IVA vs expenses, recorded hours and PO supplier bills). Management report, not a tax filing.
  * Read-only; owner, Administrator and Manager. Regression owner: tests/e2e/pro-payables-cashflow.spec.ts.
  */
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const denied=await proInternalFinanceDenied();if(denied)return denied;
   const limited=await proAccountRateLimit('income-statement',a.user.id,30,60000);if(limited)return limited;

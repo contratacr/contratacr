@@ -9,6 +9,7 @@ import {privateEstimateDetailSchema} from '@/lib/pro/private-estimates';
 import {quotePrintHtml,quotePublicationPrintHtml} from '@/lib/pro/round10-print';
 import {privateEstimatePublicationDetailSchema} from '@/lib/pro/private-estimate-publications';
 import {getApiAdmin} from '@/lib/auth/admin';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 // Round F2-D: `publicationId` prints a shared (published) version with the company branding of its owner, for the
 // owner (and company members as the owner) or its customer, re-authorized by pro_private_estimate_publication_read
 // (same visibility as the shared-quotes view: immutable published content only, never cost, margins or private notes).
@@ -18,7 +19,7 @@ const fail=(status:number,error:string)=>Response.json({error},{status,headers})
 const options={lang:z.enum(['es','en']).optional(),preview:z.literal('1').optional()};
 const query=z.union([z.object({estimateId:z.string().uuid(),...options}).strict(),z.object({publicationId:z.string().uuid(),...options}).strict()]);
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  const params=new URL(req.url).searchParams,keys=[...params.keys()];
  const parsed=query.safeParse(Object.fromEntries(params.entries()));if(!parsed.success||new Set(keys).size!==keys.length)return fail(400,'Consulta inválida.');
  try{

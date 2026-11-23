@@ -8,6 +8,7 @@ import {getApiAdmin} from '@/lib/auth/admin';
 import {enforceRateLimit} from '@/lib/rate-limit';
 import {selectionClientMutationSchema,selectionMutationSchema} from '@/lib/pro/selections';
 import {PRO_FILE_MAX_BYTES} from '@/lib/pro/file-limit';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 // Family 62: owner selections per job, the linked customer's view and decisions,
 // and option images served from the existing private job files bucket.
 const headers={'Cache-Control':'no-store, private','X-Content-Type-Options':'nosniff'};
@@ -34,7 +35,7 @@ async function bounded(req:Request){
  const bytes=new Uint8Array(length);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length;}return JSON.parse(new TextDecoder().decode(bytes));
 }
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await actor(req);if(a.error)return a.error;const q=new URL(req.url).searchParams,keys=[...q.keys()];
   if(keys.length!==1||new Set(keys).size!==keys.length)return fail(400,'Consulta inválida.');
@@ -66,7 +67,7 @@ export async function GET(req:Request){
  }catch{return fail(503,'No se pudieron cargar las selecciones. Reintente.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(req.headers.get('origin')!==`${new URL(req.url).protocol}//${req.headers.get('host')||new URL(req.url).host}`)return fail(403,'Origen no autorizado.');
  try{
   const a=await actor(req);if(a.error)return a.error;

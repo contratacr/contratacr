@@ -4,9 +4,10 @@ import {createClient} from '@/lib/supabase/server';
 import {createAdminClient} from '@/lib/supabase/admin';
 import {getApiAdmin} from '@/lib/auth/admin';
 import {requestQuoteDto,requestQuoteFailure} from '@/lib/pro/request-quotes';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 const headers={'Cache-Control':'no-store, private'};
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  const user=await safeGetUser(await createClient());if(!user)return Response.json({error:'Inicie sesión.'},{status:401,headers});
  const db=createAdminClient(),profile=await db.from('profiles').select('role,is_disabled').eq('id',user.id).maybeSingle();
  if(profile.error)return requestQuoteFailure(profile.error);

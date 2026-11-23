@@ -1,9 +1,10 @@
 import {z} from 'zod';
 import {proActor,proDbError,proFail,proQuery,proRouteHeaders} from '@/lib/pro/route-common';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Round 1: derived phase and plan range of one job for the job header (read only, development only).
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers:proRouteHeaders});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers:proRouteHeaders});
  try{
   const a=await proActor(req);if(a.error)return a.error;
   const raw=proQuery(req);const parsed=raw&&z.object({workId:z.string().trim().min(1).max(160)}).strict().safeParse(raw);if(!parsed||!parsed.success)return proFail(400,'Consulta inválida.');

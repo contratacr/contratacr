@@ -2,6 +2,7 @@ import {z} from 'zod';
 import {proActor,proQuery} from '@/lib/pro/route-common';
 import {EinvoiceError,documentFull,receiverFull} from '@/lib/pro/integrations/hacienda/service';
 import {einvoicePrintHtml} from '@/lib/pro/integrations/hacienda/print';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Round 6A: files of an emitted document (owner only): signed XML «clave.xml», Hacienda's answer
 // «clave_respuesta.xml» and the printable representation (print / save as PDF). Read-only.
@@ -9,7 +10,7 @@ const headers={'Cache-Control':'private, no-store, max-age=0','Referrer-Policy':
 const fail=(status:number,error:string)=>Response.json({error},{status,headers});
 const query=z.object({id:z.string().uuid(),kind:z.enum(['xml','response','print','receiver_xml','receiver_response']),lang:z.enum(['es','en']).optional()}).strict();
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;
   const raw=proQuery(req),parsed=raw?query.safeParse(raw):null;if(!parsed?.success)return fail(400,'Consulta inválida.');

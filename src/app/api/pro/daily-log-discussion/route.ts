@@ -5,6 +5,7 @@ import {createAdminClient} from '@/lib/supabase/admin';
 import {getApiAdmin} from '@/lib/auth/admin';
 import {enforceRateLimit} from '@/lib/rate-limit';
 import {dailyLogDiscussionScopeSchema,dailyLogDiscussionPageSchema,dailyLogCommentMutationSchema,dailyLogCommentResultSchema,dailyLogCommentReceiptSchema,dailyLogDiscussionVersionsSchema} from '@/lib/pro/daily-log-discussion';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 const headers={'Cache-Control':'no-store, private','X-Content-Type-Options':'nosniff'};
 const fail=(status:number,error:string)=>Response.json({error},{status,headers});
 const dbError=(error:{code?:string})=>fail(['40001','54000','23505'].includes(error.code||'')?409:error.code==='42501'?403:error.code==='P0002'?404:['22023','22007','22008','22021','23514','22P02'].includes(error.code||'')?400:503,error.code==='40001'?'El acceso o la conversación cambió. Vuelva a abrirla.':'No se pudo completar la operación.');
@@ -31,7 +32,7 @@ const querySchema=z.union([
  z.object({view:z.literal('versions'),workId,logId:id,afterVersion:queryVersion.optional()}).strict(),
 ]);
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await actor(req);if(a.error)return a.error;
   const raw:Record<string,string>={};for(const[k,v]of new URL(req.url).searchParams){if(k in raw)return fail(400,'Consulta inválida.');raw[k]=v;}const parsed=querySchema.safeParse(raw);if(!parsed.success)return fail(400,'Consulta inválida.');const q=parsed.data;
@@ -41,7 +42,7 @@ export async function GET(req:Request){
  }catch{return fail(503,'No se pudo cargar la conversación.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(req.headers.get('origin')!==`${new URL(req.url).protocol}//${req.headers.get('host')||new URL(req.url).host}`)return fail(403,'Origen no autorizado.');
  try{
   const a=await actor(req);if(a.error)return a.error;const limited=await enforceRateLimit(req,'daily-log-discussion-'+a.user.id,60,60000);if(limited)return limited;

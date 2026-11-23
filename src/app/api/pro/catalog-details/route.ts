@@ -6,6 +6,7 @@ import {proActor,proBoundedJson,proDbError,proFail,proQuery,proRouteHeaders as h
 import {decodeDeliveryPhotoBase64} from '@/lib/pro/delivery-photo-base64';
 import {WORK_FILE_MAX_BYTES} from '@/lib/pro/work-files';
 import {productDetailMutationSchema,productDetailSchema} from '@/lib/pro/catalog-details';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 /**
  * Round 7C: catalog item image and preferred vendor. Image: JSON base64 body (same bounded pattern
@@ -15,7 +16,7 @@ import {productDetailMutationSchema,productDetailSchema} from '@/lib/pro/catalog
  */
 const bucket='pro-catalog-images';
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const q=proQuery(req);if(!q)return proFail(400,'Consulta inválida.');
   if(q.view==='image'){
@@ -31,7 +32,7 @@ export async function GET(req:Request){
  }catch{return proFail(400,'Consulta inválida.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  const a=await proActor(req);if(a.error)return a.error;const limited=await enforceRateLimit(req,'catalog-details-'+a.user.id,30,60000);if(limited)return limited;
  let input;try{input=productDetailMutationSchema.parse(await proBoundedJson(req,Math.ceil(WORK_FILE_MAX_BYTES*4/3)+8192));}catch{return proFail(400,'Revise la imagen o el proveedor (máximo '+Math.round(WORK_FILE_MAX_BYTES/1048576)+' MB).');}

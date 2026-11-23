@@ -2,12 +2,13 @@ import {z} from 'zod';
 import {enforceRateLimit} from '@/lib/rate-limit';
 import {COMPANY_FILE_VERSIONS_BODY_MAX,companyFileFamilySchema,companyFileVersionIndexSchema,companyFileVersionMutationSchema,companyFileVersionQuerySchema,companyFileVersionResultSchema} from '@/lib/pro/company-file-versions';
 import {proActor,proBoundedJson,proDbError,proFail,proQuery,proRouteHeaders,proSameOrigin} from '@/lib/pro/route-common';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Row 30: versions of company library files (owner only, development only). Uploading the bytes
 // uses /api/pro/company-files; this route attaches, lists and restores versions. Never shared.
 const conflict='Las versiones cambiaron. Actualice antes de continuar.';
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers:proRouteHeaders});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers:proRouteHeaders});
  try{
   const a=await proActor(req);if(a.error)return a.error;
   const raw=proQuery(req);if(!raw)return proFail(400,'Consulta inválida.');
@@ -22,7 +23,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudieron cargar las versiones. Reintente.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers:proRouteHeaders});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers:proRouteHeaders});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;

@@ -1,10 +1,11 @@
 'use client';
 import {useCallback,useEffect,useMemo,useState} from 'react';
+import {PRO_UI_ENABLED} from '@/lib/pro/enabled-client';
 type Scope={userId:string|undefined;attempt:number};
 type Result={scope:Scope;status:'checked';enabled:boolean}|{scope:Scope;status:'error'};
 /** Development-only access probe. Network failure is not an authorization denial. */
 export function useLocalProAccess(userId:string|undefined){
- const local=process.env.NODE_ENV==='development';
+ const local=PRO_UI_ENABLED;
  const [attempt,setAttempt]=useState(0),[result,setResult]=useState<Result|null>(null);
  const scope=useMemo<Scope>(()=>({userId,attempt}),[userId,attempt]);
  const retry=useCallback(()=>setAttempt(value=>value+1),[]);

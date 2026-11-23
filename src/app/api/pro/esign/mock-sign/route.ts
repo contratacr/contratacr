@@ -3,6 +3,7 @@ import {enforceRateLimit} from '@/lib/rate-limit';
 import {ProBodyError,proBoundedForm,proSameOrigin} from '@/lib/pro/route-common';
 import {EsignError,esignRpc,mockSignerAction,signerTokenHash} from '@/lib/pro/integrations/esign/service';
 import {moneyText} from '@/lib/pro/integrations/esign/document';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Round 6B: signer page of the MOCK signature provider (development only; plays the role of the DocuSign
 // signing ceremony). Opening it records «viewed»; the form records «signed» (typed name + consent) or
@@ -35,7 +36,7 @@ ${open?`<form method="post" data-mock-sign-form><input type="hidden" name="t" va
 }
 async function view(token:string){return esignRpc<View|null>(createAdminClient(),'pro_esign_signer_view',{p_token_hash:signerTokenHash(token)});}
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  const limited=await enforceRateLimit(req,'esign-mock-sign',120,60000);if(limited)return limited;
  const token=new URL(req.url).searchParams.get('t');
  if(!tokenOk(token))return new Response(page(null,'',null,false),{status:404,headers});
@@ -46,7 +47,7 @@ export async function GET(req:Request){
  }catch{return new Response(page(null,'','No disponible',false),{status:503,headers});}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return new Response('Origen no autorizado',{status:403,headers});
  const limited=await enforceRateLimit(req,'esign-mock-sign-post',30,60000);if(limited)return limited;
  try{

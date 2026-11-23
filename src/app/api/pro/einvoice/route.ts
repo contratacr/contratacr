@@ -7,6 +7,7 @@ import {buildFromDraft,blankEmisor,type EmisorSettings} from '@/lib/pro/integrat
 import {EinvoiceError,creditNote,documentFull,emitFromDraft,haciendaMode,loadDraft,pollDocument,readForDraft,saveSettings} from '@/lib/pro/integrations/hacienda/service';
 import {prefijoDeIdioma} from '@/lib/prefijo-de-idioma';
 import {getTranslations} from 'next-intl/server';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Round 6A: Hacienda electronic invoices from a draft. GET ?draftId= (documents, validation per type, mode)
 // · GET ?view=settings (emisor data). POST emit | poll | credit_note | save_settings. Mock by default; the
@@ -26,7 +27,7 @@ function failure(error:unknown){
  return proFail(503,'No se pudo comprobar la emisión. Reintente la misma operación: no se duplicará.');
 }
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const raw=proQuery(req);if(!raw)return proFail(400,'Consulta inválida.');
   if(settingsQuery.safeParse(raw).success){
@@ -48,7 +49,7 @@ export async function GET(req:Request){
  }catch(error){return failure(error);}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;

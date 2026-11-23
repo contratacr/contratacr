@@ -7,6 +7,7 @@ import {enforceRateLimit} from '@/lib/rate-limit';
 import {leadOriginMutationSchema,leadOriginResultSchema,leadOriginReceiptSchema,leadOriginChannelIdSchema,leadOriginChannelDetailSchema,leadOriginChannelsPageSchema,leadOriginContextSchema,leadOriginHistoryPageSchema,leadOriginBatchSchema,leadOriginPageSchema,leadOriginMetricsSchema} from '@/lib/pro/lead-origins';
 import {requestPipelineStageIdSchema} from '@/lib/pro/request-pipeline';
 import {taskDueDate} from '@/lib/pro/work-tasks';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 const headers={'Cache-Control':'no-store, private','X-Content-Type-Options':'nosniff'};
 const fail=(status:number,error:string)=>Response.json({error},{status,headers});
 const dbError=(error:{code?:string})=>fail(['40001','54000','23505'].includes(error.code||'')?409:error.code==='42501'?403:error.code==='P0002'?404:['22023','22007','22008','22021','23514','22P02'].includes(error.code||'')?400:503,error.code==='40001'?'La atribución o el canal cambió. Actualice antes de continuar.':'No se pudo completar el cambio.');
@@ -37,7 +38,7 @@ const query=z.discriminatedUnion('view',[
  z.object({view:z.literal('metrics'),...filters,from:taskDueDate.unwrap().optional(),to:taskDueDate.unwrap().optional(),after:z.union([z.literal('unspecified'),channel]).optional(),atSnapshot:token.optional()}).strict(),
 ]);
 const refsSchema=z.array(z.object({kind,id}).strict()).max(20).refine(v=>new Set(v.map(i=>i.kind+':'+i.id)).size===v.length);
-const local=()=>process.env.NODE_ENV==='development'&&['http://127.0.0.1:54321','http://127.0.0.1:54321/'].includes(process.env.NEXT_PUBLIC_SUPABASE_URL??'');
+const local=()=>PRO_ENABLED;
 export async function GET(req:Request){
  if(!local())return new Response(null,{status:404,headers});
  try{const a=await actor(req);if(a.error)return a.error;const raw:Record<string,string>={};for(const[k,v]of new URL(req.url).searchParams){if(k in raw)return fail(400,'Consulta inválida.');raw[k]=v;}const parsed=query.safeParse(raw);if(!parsed.success)return fail(400,'Consulta inválida.');const q=parsed.data;

@@ -22,6 +22,7 @@ import {
 import {proCustomerReader,proRequestOrigin} from '@/lib/pro/route-common';
 import {sendTransactionalEmail,settleTransactionalEmail,transactionalAccount,transactionalEmailLocaleOf,transactionalPublicationOwner,type TransactionalEmailReport} from '@/lib/pro/transactional-email';
 import {prefijoDeIdioma} from '@/lib/prefijo-de-idioma';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 const headers = {
   'Cache-Control': 'no-store, private',
@@ -29,8 +30,7 @@ const headers = {
   'Referrer-Policy': 'no-referrer',
 };
 const uuid = z.string().uuid();
-const local = () => process.env.NODE_ENV === 'development'
-  && ['http://127.0.0.1:54321', 'http://127.0.0.1:54321/'].includes(process.env.NEXT_PUBLIC_SUPABASE_URL ?? '');
+const local = () => PRO_ENABLED;
 const fail = (status: number, code: string, error: string) => Response.json({code, error}, {status, headers});
 const sha256 = (value: string) => createHash('sha256').update(value).digest('hex');
 

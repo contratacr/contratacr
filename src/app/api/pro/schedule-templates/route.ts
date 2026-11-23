@@ -5,6 +5,7 @@ import {createAdminClient} from '@/lib/supabase/admin';
 import {getApiAdmin} from '@/lib/auth/admin';
 import {enforceRateLimit} from '@/lib/rate-limit';
 import {scheduleTemplateMutationSchema} from '@/lib/pro/schedule-templates';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 const headers={'Cache-Control':'no-store, private','X-Content-Type-Options':'nosniff'};
 const fail=(status:number,error:string)=>Response.json({error},{status,headers});
 const dbError=(error:{code?:string})=>fail(error.code==='40001'?409:error.code==='42501'?403:error.code==='54000'?429:['22023','22007','22008','23514','23505','22P02'].includes(error.code||'')?400:503,error.code==='40001'?'Los datos cambiaron. Actualice antes de guardar.':'No se pudo completar la operación.');
@@ -25,7 +26,7 @@ const querySchema=z.discriminatedUnion('view',[
  z.object({view:z.literal('action'),actionId:id}).strict(),
 ]);
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await actor(req);if(a.error)return a.error;
   const raw:Record<string,string>={};for(const[key,value]of new URL(req.url).searchParams){if(key in raw)return fail(400,'Consulta inválida.');raw[key]=value;}
@@ -44,7 +45,7 @@ async function bounded(req:Request){
  const bytes=new Uint8Array(length);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length;}return JSON.parse(new TextDecoder().decode(bytes));
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(req.headers.get('origin')!==`${new URL(req.url).protocol}//${req.headers.get('host')||new URL(req.url).host}`)return fail(403,'Origen no autorizado.');
  try{
   const a=await actor(req);if(a.error)return a.error;

@@ -2,6 +2,7 @@ import {enforceRateLimit} from '@/lib/rate-limit';
 import {proActor,proBoundedJson,proFail,proQuery,proRequestOrigin,proRouteHeaders as headers,proSameOrigin} from '@/lib/pro/route-common';
 import {esignMutationSchema,esignQuerySchema} from '@/lib/pro/integrations/esign/api';
 import {cancelRequest,createAndSend,EsignError,esignMode,esignRpc,mockSignerToken,mockSignerUrl,retrySend,type EsignRequest} from '@/lib/pro/integrations/esign/service';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Round 6B: electronic signature requests of one document (contract version, quote publication or change
 // order). GET lists them (expired ones are closed first) with the resolved mode; in mock mode a live request
@@ -10,7 +11,7 @@ const messages:Record<string,string>={missing_keys:'Faltan las claves del provee
  pro_esign_not_signable:'Comparta primero el documento (contrato compartido, cotización publicada o cambio propuesto).',pro_esign_open:'Ya hay una solicitud de firma abierta para este documento.',pro_esign_final:'La solicitud ya terminó.'};
 const fail=(error:unknown)=>error instanceof EsignError?Response.json({error:messages[error.reason]??(error.status===409?'La solicitud cambió. Actualice y vuelva a intentarlo.':error.status===404?'Documento no encontrado.':'No se pudo completar la operación.'),reason:error.reason},{status:error.status,headers}):proFail(503,'No se pudo comprobar la operación. Reintente la misma acción.');
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;
   const raw=proQuery(req),parsed=raw?esignQuerySchema.safeParse(raw):null;if(!parsed?.success)return proFail(400,'Consulta inválida.');
@@ -23,7 +24,7 @@ export async function GET(req:Request){
  }catch(error){return fail(error);}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;

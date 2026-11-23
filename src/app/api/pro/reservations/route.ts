@@ -6,6 +6,7 @@ import {safeGetUser} from '@/lib/pro/workspace-user';
 import { hasProAccess } from '@/lib/pro/access';
 import { businessSchema,  emptyBusiness } from '@/lib/pro/business';
 import { openReservationSlots, reserveSlot } from '@/lib/pro/reservations';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 const headers = { 'Cache-Control': 'no-store' };
 // Deliberately unavailable outside local development; this is not a production launch.
 async function provider(id: string) {
@@ -20,7 +21,7 @@ async function provider(id: string) {
     return preference.data?.enabled?{db,owner:p.profile_id}:null;
 }
 export async function GET(req: Request) {
-    if (process.env.NODE_ENV !== 'development')
+    if (!PRO_ENABLED)
         return new Response(null, { status: 404 });
     const id = new URL(req.url).searchParams.get('professional');
     if (!id || !z.string().uuid().safeParse(id).success)
@@ -39,7 +40,7 @@ export async function GET(req: Request) {
     }
 }
 export async function POST(req: Request) {
-    if (process.env.NODE_ENV !== 'development')
+    if (!PRO_ENABLED)
         return new Response(null, { status: 404 });
     const origin = `${new URL(req.url).protocol}//${req.headers.get('host') || new URL(req.url).host}`;
     if (req.headers.get('origin') !== origin)

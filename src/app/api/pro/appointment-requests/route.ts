@@ -6,6 +6,7 @@ import {getApiAdmin} from '@/lib/auth/admin';
 import {hasProAccess} from '@/lib/pro/access';
 import {appointmentMutationSchema,appointmentStatuses} from '@/lib/pro/appointment-requests';
 import {enforceRateLimit} from '@/lib/rate-limit';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 const headers={'Cache-Control':'no-store, private'};
 const uuid=z.string().uuid();
@@ -50,7 +51,7 @@ async function body(req:Request){
  return JSON.parse(new TextDecoder().decode(bytes));
 }
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const params=new URL(req.url).searchParams,view=params.get('view')||'client';
   if(view==='slots'||view==='calendar'){
@@ -81,7 +82,7 @@ export async function GET(req:Request){
  }catch{return failure(400,'Revise los datos de la consulta.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  const origin=`${new URL(req.url).protocol}//${req.headers.get('host')||new URL(req.url).host}`;
  if(req.headers.get('origin')!==origin)return failure(403,'Origen no autorizado.');
  const access=await actor();if(access.error)return access.error;

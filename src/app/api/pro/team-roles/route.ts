@@ -9,6 +9,7 @@ import {PRO_WS_COOKIE} from '@/lib/pro/workspace-gate';
 import {companyTeamMutationSchema,companyTeamSchema,normalizeCompanyInviteCode} from '@/lib/pro/team-roles';
 import {sendTransactionalEmail,settleTransactionalEmail,transactionalBusinessName} from '@/lib/pro/transactional-email';
 import {prefijoDeIdioma} from '@/lib/prefijo-de-idioma';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 /**
  * Round 7C: company team roles. Always runs as the signed-in account (never substituted by the
@@ -30,7 +31,7 @@ async function workspaceOf(db:ReturnType<typeof createAdminClient>,member:string
  return r.error||!r.data?null:r.data as {ownerId:string;ownerName:string;role:string;capabilities:string[]};
 }
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  const q=proQuery(req);if(!q||Object.keys(q).some(k=>k!=='view')||(q.view??'me')!=='me')return proFail(400,'Consulta inválida.');
  const a=await session(req);if(a.error)return a.error;
  const workspace=await workspaceOf(a.db,a.user.id);
@@ -41,7 +42,7 @@ export async function GET(req:Request){
  return Response.json(companyTeamSchema.parse({...team.data,memberships:own?.memberships??[],accountId:a.user.id,workspace}),{headers});
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  const a=await session(req);if(a.error)return a.error;
  const limited=await enforceRateLimit(req,'team-roles-'+a.user.id,40,60000);if(limited)return limited;

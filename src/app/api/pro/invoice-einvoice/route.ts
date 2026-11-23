@@ -6,6 +6,7 @@ import {buildFromDraft} from '@/lib/pro/integrations/hacienda/document';
 import {EinvoiceError,creditNote,debitNote,documentFull,emitFromDraft,haciendaMode,loadDraft,pipelineInfo,pollDocument,readForDraft,receiverList,receiverMessage,receiverPoll} from '@/lib/pro/integrations/hacienda/service';
 import {prefijoDeIdioma} from '@/lib/prefijo-de-idioma';
 import {getTranslations} from 'next-intl/server';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Ronda F2-A: electronic-invoice pipeline behind the provider adapter (src/lib/pro/einvoice). Owner, Administrador and
 // Gerente only (finance.write in the team gate + proInternalFinanceDenied). GET ?draftId= (documents, validation,
@@ -27,7 +28,7 @@ function failure(error:unknown){
  }
  return proFail(503,'No se pudo comprobar la emisión. Reintente la misma operación: no se duplicará.');
 }
-const devOnly=()=>process.env.NODE_ENV!=='development'?new Response(null,{status:404,headers}):null;
+const devOnly=()=>!PRO_ENABLED?new Response(null,{status:404,headers}):null;
 export async function GET(req:Request){
  const off=devOnly();if(off)return off;
  try{

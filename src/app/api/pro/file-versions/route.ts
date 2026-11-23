@@ -2,6 +2,7 @@ import {z} from 'zod';
 import {enforceRateLimit} from '@/lib/rate-limit';
 import {fileVersionMutationSchema} from '@/lib/pro/file-versions';
 import {proActor,proBoundedJson,proDbError,proFail,proQuery,proRouteHeaders as headers,proSameOrigin} from '@/lib/pro/route-common';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 // Fila 30: versions and per-file discussion for Archivos del trabajo. Bytes never pass
 // through here: uploads and downloads keep using /api/pro/work-files (same bucket,
 // normalization, hash and reauthorization), and «Compartir esta versión» is the existing
@@ -10,7 +11,7 @@ import {proActor,proBoundedJson,proDbError,proFail,proQuery,proRouteHeaders as h
 const conflict='La versión o el comentario cambió. Actualice antes de guardar.',uuid=z.string().uuid(),workId=z.string().trim().min(1).max(160);
 const ids=z.string().max(20*37).transform(value=>value.split(',')).pipe(z.array(uuid).min(1).max(20));
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const q=proQuery(req);if(!q)return proFail(400,'Consulta inválida.');const keys=Object.keys(q).sort().join(',');
   if(keys==='fileId,requestId'||keys==='after,fileId,requestId'){
@@ -39,7 +40,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudieron cargar las versiones. Reintente.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;

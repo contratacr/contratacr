@@ -4,6 +4,7 @@ import {WORK_INVITE_BODY_MAX,workInviteLink,workInviteOwnerMutationSchema,workIn
 import {workInviteHash,workInviteNewToken} from '@/lib/pro/work-client-invitations-server';
 import {proActor,proBoundedJson,proFail,proQuery,proRequestOrigin,proRouteHeaders,proSameOrigin} from '@/lib/pro/route-common';
 import {sendTransactionalEmail,settleTransactionalEmail,transactionalBusinessName,transactionalEmailLocaleOf,transactionalWorkClient} from '@/lib/pro/transactional-email';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Round 1: owner side of "Invitar al cliente al proyecto" (development only). The token is returned
 // once to the owner, who copies it (launch fix I5: also e-mailed to the job customer, mock/sandbox only). A replayed create returns no token.
@@ -20,7 +21,7 @@ function dbError(error:{code?:string;hint?:string}){
  return proFail(code==='40001'||code==='23505'?409:code==='42501'?403:code==='54000'?429:['22023','23514','22P02','P0002'].includes(code)?400:503,code==='40001'||code==='23505'?'La invitación cambió. Actualice antes de continuar.':'No se pudo completar la operación.');
 }
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers:proRouteHeaders});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers:proRouteHeaders});
  try{
   const a=await proActor(req);if(a.error)return a.error;
   const raw=proQuery(req);
@@ -37,7 +38,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudo cargar el acceso del cliente. Reintente.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers:proRouteHeaders});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers:proRouteHeaders});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;

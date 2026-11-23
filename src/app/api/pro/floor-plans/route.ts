@@ -4,6 +4,7 @@ import {enforceRateLimit} from '@/lib/rate-limit';
 import {proActor,proBoundedJson,proDbError,proFail,proQuery,proRouteHeaders as headers,proSameOrigin} from '@/lib/pro/route-common';
 import {floorPlanContentSchema} from '@/lib/pro/floor-plan';
 import {SCAN_MAX_BYTES,parseScanJson,parseScanObj,parseScanUsdzSimulated} from '@/lib/pro/room-scan';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Round 6D (rows 64/65): 2D floor plans per job (CAS + actionId + immutable history; area/perimeter computed in
 // SQL), link of room areas to Measurements, and room-scan import (JSON / OBJ parsed here, USDZ by the SIMULATED
@@ -17,7 +18,7 @@ const mutationSchema=z.discriminatedUnion('action',[
  z.object({action:z.literal('import_scan'),actionId:id,id,workId,name,unit,scanId:id,fileName:z.string().trim().min(1).max(160),format:z.enum(['json','obj','usdz','native']),data:z.string().min(1).max(Math.ceil(SCAN_MAX_BYTES*4/3)+8),language:z.enum(['es','en'])}).strict(),
 ]);
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const q=proQuery(req);if(!q||Object.keys(q).length!==1)return proFail(400,'Consulta inválida.');
   if(q.history){const plan=id.safeParse(q.history);if(!plan.success)return proFail(400,'Consulta inválida.');const r=await a.db.rpc('pro_floor_plan_history_read',{p_actor:a.user.id,p_plan:plan.data});if(r.error)return proDbError(r.error,'El plano cambió.');return Response.json({history:r.data},{headers});}
@@ -27,7 +28,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudieron cargar los planos. Reintente.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;

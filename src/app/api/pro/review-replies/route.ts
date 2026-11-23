@@ -3,6 +3,7 @@ import {proActor,proBoundedJson,proSameOrigin} from '@/lib/pro/route-common';
 import {proWorkspaceMember} from '@/lib/pro/workspace-user';
 import {reviewReplyWriteSchema} from '@/lib/directory/moderation-schemas';
 import {dirDbError,dirFail,dirOk} from '@/lib/directory/public-route';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // LOCAL PRO ONLY (multivertical M1, development only): public reply of the business to a review of its place.
 //  POST {actionId, reviewId, reply, replyRevision} → dir_review_reply_write. One reply per review; editing sends the
@@ -11,7 +12,7 @@ import {dirDbError,dirFail,dirOk} from '@/lib/directory/public-route';
 // through the workspace gate (the effective account becomes the owner's); the SQL then requires the member's role to
 // allow listing.publish (admin/manager), like publishing prices. Pro is NOT required for the owner themself.
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404});
+ if(!PRO_ENABLED)return new Response(null,{status:404});
  if(!proSameOrigin(req))return dirFail(403,'origin','Origen no autorizado.');
  const limited=await enforceRateLimit(req,'dir-review-reply',20,60_000);if(limited)return limited;
  const a=await proActor(req);if(a.error)return a.error.status===401?dirFail(401,'login','Inicie sesión.'):a.error;

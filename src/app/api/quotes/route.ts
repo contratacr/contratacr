@@ -14,6 +14,7 @@ import { randomBytes } from "node:crypto";
 import { quoteTotals, sanitizeQuoteItems, type QuoteTaxMode } from "@/lib/quotes";
 import { invitarAResenaAhora } from "@/lib/notifications/invitar-ahora";
 import { quoteValidUntil } from "@/lib/quote-validity";
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 /**
  * Cotizaciones: el profesional las crea desde su sección (a cualquier cliente,
@@ -137,7 +138,7 @@ export async function POST(req: NextRequest) {
     // WhatsApp, y la cotizacion se manda a la cuenta del cliente.
     clientId = p.client_id ?? null; contextTitle = p.title ?? "";
   }
-  if(process.env.NODE_ENV==='development'&&body.proProjectContext===true){
+  if(PRO_ENABLED&&body.proProjectContext===true){
     const access=await proApiAccess(req);if(access.error)return access.error;
     const professional=await me.admin.from('professionals').select('is_banned').eq('id',me.proId).maybeSingle();if(professional.error||!professional.data||professional.data.is_banned)return NextResponse.json({error:'Sin acceso'},{status:403});
     const project=projectId?await me.admin.from('projects').select('status,allow_direct_contact,client_id').eq('id',projectId).maybeSingle():null;
@@ -150,7 +151,7 @@ export async function POST(req: NextRequest) {
 
   // A request-backed quote is a local-only, causal transaction, never an email/name match.
   if(body.sourceRequestId!==undefined){
-    if(process.env.NODE_ENV!=='development')return NextResponse.json({error:'No disponible'},{status:404});
+    if(!PRO_ENABLED)return NextResponse.json({error:'No disponible'},{status:404});
     if(projectId||body.proProjectContext===true)return NextResponse.json({error:'No mezcle una solicitud con un proyecto.'},{status:400});
     const access=await proApiAccess(req);if(access.error)return access.error;
     const parsed=requestQuoteCreateSchema.safeParse({sourceRequestId:body.sourceRequestId,clientActionId:body.clientActionId,clientName,clientPhone,clientCedula,clientEmail,title,items,taxMode,notes,validDays});
@@ -220,7 +221,7 @@ export async function PATCH(req: NextRequest) {
   const { data: q, error } = await me.admin.from("quotes").select(SELECT).eq("id", id).is("deleted_at", null).maybeSingle();
   if (error || !q) return NextResponse.json({ error: mensajeDeError(req, { es: "Cotización no encontrada.", en: "Quote not found." }) }, { status: 404 });
 
-  if(process.env.NODE_ENV==='development'){
+  if(PRO_ENABLED){
     const linked=await isRequestQuote(me.admin,id);
     if(linked.error&&!['42P01','PGRST205'].includes(linked.error.code))return requestQuoteFailure(linked.error);
     if(linked.data&&q.status==='accepted'&&q.professional_id===me.proId&&['withdraw','delete'].includes(action))return NextResponse.json({error:mensajeDeError(req,{es:'La cotización ya fue aceptada y se conserva como parte del acuerdo. Proponga los cambios desde la cita.',en:'This quote has been accepted and is kept as part of the agreement. Propose changes from the appointment.'})},{status:409});
@@ -236,7 +237,7 @@ export async function PATCH(req: NextRequest) {
     }
   }
 
-  const localProjectResponse=process.env.NODE_ENV==='development'&&!!q.project_id&&['accept','decline'].includes(action);
+  const localProjectResponse=PRO_ENABLED&&!!q.project_id&&['accept','decline'].includes(action);
   if(localProjectResponse){
     const profile=await me.admin.from('profiles').select('is_disabled').eq('id',me.user.id).maybeSingle();if(profile.error)return NextResponse.json({error:'No disponible'},{status:503});if(!profile.data||profile.data.is_disabled)return NextResponse.json({error:'Sin acceso'},{status:403});
     if(q.client_id!==me.user.id)return NextResponse.json({error:mensajeDeError(req,{es:'Solo el cliente puede responder la cotización.',en:'Only the client can answer the quote.'})},{status:403});
@@ -247,7 +248,7 @@ export async function PATCH(req: NextRequest) {
 
   // Local Pro choice quotes must be answered against their immutable version.
   // The production and ordinary quote paths retain their existing behavior.
-  if (process.env.NODE_ENV === "development" && ["accept", "decline"].includes(action)) {
+  if (PRO_ENABLED && ["accept", "decline"].includes(action)) {
     const choices = await me.admin.from("pro_quote_choices").select("quote_id").eq("quote_id", id).maybeSingle();
     if (choices.error && !["42P01", "PGRST205"].includes(choices.error.code)) return NextResponse.json({ error: "No se pudo comprobar la versión de la cotización." }, { status: 503 });
     if (choices.data) return NextResponse.json({ error: "Revise y responda los complementos desde Citas antes de aceptar esta cotización." }, { status: 409 });
@@ -273,7 +274,7 @@ export async function PATCH(req: NextRequest) {
     if (q.professional_id !== me.proId) return NextResponse.json({ error: "Solo quien la hizo puede quitarla." }, { status: 403 });
     const patch = { project_id: null, proposal_id: null, client_id: null, updated_at: new Date().toISOString() };
     let update=me.admin.from("quotes").update(patch).eq("id", id);
-  if(process.env.NODE_ENV==='development'&&q.project_id)update=update.eq('status',q.status).eq('project_id',q.project_id).is('deleted_at',null);
+  if(PRO_ENABLED&&q.project_id)update=update.eq('status',q.status).eq('project_id',q.project_id).is('deleted_at',null);
   const { data: updated, error: upErr } = await update.select(SELECT).maybeSingle();
   if(!upErr&&!updated)return NextResponse.json({error:mensajeDeError(req,{es:'La cotización cambió. Actualice antes de responder.',en:'The quote changed. Refresh before responding.'})},{status:409});
     if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 });
@@ -293,7 +294,7 @@ export async function PATCH(req: NextRequest) {
     if (!clientId) return NextResponse.json({ error: "Ese trabajo no tiene una cuenta de cliente a la que enviarle la cotización." }, { status: 400 });
     const patch = { project_id: projectId, client_id: clientId, updated_at: new Date().toISOString() };
     let update=me.admin.from("quotes").update(patch).eq("id", id);
-  if(process.env.NODE_ENV==='development'&&q.project_id)update=update.eq('status',q.status).eq('project_id',q.project_id).is('deleted_at',null);
+  if(PRO_ENABLED&&q.project_id)update=update.eq('status',q.status).eq('project_id',q.project_id).is('deleted_at',null);
   const { data: updated, error: upErr } = await update.select(SELECT).maybeSingle();
   if(!upErr&&!updated)return NextResponse.json({error:mensajeDeError(req,{es:'La cotización cambió. Actualice antes de responder.',en:'The quote changed. Refresh before responding.'})},{status:409});
     if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 });
@@ -311,7 +312,7 @@ export async function PATCH(req: NextRequest) {
     patch = action === "accept" ? { status: "accepted", accepted_at: now, updated_at: now } : { status: "declined", declined_at: now, updated_at: now };
   }
   let update=me.admin.from("quotes").update(patch).eq("id", id);
-  if(process.env.NODE_ENV==='development'&&q.project_id)update=update.eq('status',q.status).eq('project_id',q.project_id).is('deleted_at',null);
+  if(PRO_ENABLED&&q.project_id)update=update.eq('status',q.status).eq('project_id',q.project_id).is('deleted_at',null);
   const { data: updated, error: upErr } = await update.select(SELECT).maybeSingle();
   if(!upErr&&!updated)return NextResponse.json({error:mensajeDeError(req,{es:'La cotización cambió. Actualice antes de responder.',en:'The quote changed. Refresh before responding.'})},{status:409});
   if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 });

@@ -7,6 +7,7 @@ import {enforceRateLimit} from '@/lib/rate-limit';
 import {leadCenterMutationSchema,leadCenterResultSchema,leadCenterReceiptSchema,leadCenterPageSchema,leadCenterDetailSchema,leadCenterHistoryPageSchema} from '@/lib/pro/lead-center';
 import {requestPipelineStageIdSchema} from '@/lib/pro/request-pipeline';
 import {leadAssignMutationSchema,leadAssigneeSchema} from '@/lib/pro/team-roles';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 const headers={'Cache-Control':'no-store, private','X-Content-Type-Options':'nosniff'};
 const fail=(status:number,error:string)=>Response.json({error},{status,headers});
 const dbError=(error:{code?:string})=>fail(['40001','54000','23505'].includes(error.code||'')?409:error.code==='42501'?403:error.code==='P0002'?404:['22023','22007','22008','22021','23514','22P02'].includes(error.code||'')?400:503,error.code==='40001'?'Las solicitudes o etapas cambiaron. Actualice antes de continuar.':'No se pudo completar el cambio.');
@@ -34,7 +35,7 @@ const querySchema=z.discriminatedUnion('view',[
  z.object({view:z.literal('list'),status:z.enum(['active','archived']).optional(),stageId:requestPipelineStageIdSchema.optional(),q:z.string().max(100).optional(),after:z.string().regex(/^(manual|request):[a-f0-9-]{36}$/).optional(),atSnapshot:z.string().regex(/^[a-f0-9]{32}$/).optional()}).strict().refine(v=>!v.after||!!v.atSnapshot),
 ]);
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{const a=await actor(req);if(a.error)return a.error;const raw:Record<string,string>={};for(const[k,v]of new URL(req.url).searchParams){if(k in raw)return fail(400,'Consulta inválida.');raw[k]=v;}if(!raw.view)raw.view='list';const p=querySchema.safeParse(raw);if(!p.success)return fail(400,'Consulta inválida.');const q=p.data;
   if(q.view==='action'){const r=await a.db.rpc('pro_lead_center_action_read',{p_actor:a.user.id,p_action:q.actionId});if(r.error)return dbError(r.error);return Response.json(leadCenterReceiptSchema.parse(r.data),{headers});}
   if(q.view==='detail'){const r=await a.db.rpc('pro_lead_center_detail',{p_actor:a.user.id,p_kind:q.kind,p_id:q.id});if(r.error)return dbError(r.error);const detail=leadCenterDetailSchema.parse(r.data);if(detail.item.kind!==q.kind||detail.item.id!==q.id)return fail(503,'No se pudo comprobar el origen de la solicitud.');return Response.json(detail,{headers});}
@@ -44,7 +45,7 @@ export async function GET(req:Request){
  }catch{return fail(503,'No se pudieron cargar las solicitudes.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(req.headers.get('origin')!==`${new URL(req.url).protocol}//${req.headers.get('host')||new URL(req.url).host}`)return fail(403,'Origen no autorizado.');
  try{const a=await actor(req);if(a.error)return a.error;const limited=await enforceRateLimit(req,'lead-center-'+a.user.id,30,60000);if(limited)return limited;
   let body;try{body=await bounded(req);}catch(cause){return fail(cause instanceof RangeError?413:400,'Revise la solicitud.');}

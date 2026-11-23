@@ -8,12 +8,13 @@ import {createAdminClient} from '@/lib/supabase/admin';
 import {purchaseOrderDetailSchema} from '@/lib/pro/purchase-orders';
 import {purchaseOrderPrintHtml} from '@/lib/pro/purchase-order-print';
 import {proInternalFinanceAllowed} from '@/lib/pro/route-common';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 // Printable copy of one purchase order (owner only). Never sends or stores anything.
 const headers={'Cache-Control':'private, no-store, max-age=0','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff','X-Robots-Tag':'noindex, nofollow','Content-Security-Policy':"default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'"};
 const fail=(status:number,error:string)=>Response.json({error},{status,headers});
 const query=z.object({workId:z.string().trim().min(1).max(160),id:z.string().uuid(),lang:z.enum(['es','en']).optional(),preview:z.literal('1').optional()}).strict();
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  const params=new URL(req.url).searchParams,keys=[...params.keys()];
  const parsed=query.safeParse(Object.fromEntries(params.entries()));if(!parsed.success||new Set(keys).size!==keys.length)return fail(400,'Consulta inválida.');
  try{

@@ -4,11 +4,12 @@ import {createAdminClient} from '@/lib/supabase/admin';
 import {getApiAdmin} from '@/lib/auth/admin';
 import {taskCenterJobsQuerySchema,taskCenterQuerySchema,taskCenterPlanningQuerySchema} from '@/lib/pro/task-center';
 import {z} from 'zod';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 const headers={'Cache-Control':'no-store, private','X-Content-Type-Options':'nosniff'};
 const fail=(status:number,error:string)=>Response.json({error},{status,headers});
 const dbError=(error:{code?:string})=>fail(error.code==='42501'?403:error.code==='22023'?400:503,error.code==='22023'?'La lista cambió. Actualice los resultados.':'No se pudo cargar la lista.');
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const user=await safeGetUser(await createClient());if(!user)return fail(401,'Inicie sesión.');
   const expected=req.headers.get('x-pro-expected-actor');if(expected!==null&&(!z.string().uuid().safeParse(expected).success||expected!==user.id))return fail(403,'La cuenta cambió.');

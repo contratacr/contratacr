@@ -5,12 +5,13 @@ import {z} from 'zod';
 import {proActor,proQuery} from '@/lib/pro/route-common';
 import {paymentPlanReadSchema} from '@/lib/pro/payment-plan';
 import {paymentPlanPrintHtml} from '@/lib/pro/payment-plan-print';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 // Round 5: printable payment plan of one job (owner only). Never sends or stores anything.
 const headers={'Cache-Control':'private, no-store, max-age=0','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff','X-Robots-Tag':'noindex, nofollow'};
 const fail=(status:number,error:string)=>Response.json({error},{status,headers});
 const query=z.object({workId:z.string().trim().min(1).max(160),lang:z.enum(['es','en']).optional(),preview:z.literal('1').optional()}).strict();
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;
   const raw=proQuery(req),parsed=raw?query.safeParse(raw):null;if(!parsed?.success)return fail(400,'Consulta inválida.');

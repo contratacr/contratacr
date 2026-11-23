@@ -5,9 +5,10 @@
 //
 // Central gates that read it: the middleware (src/middleware.ts, PRO_ROUTE_PREFIXES → 404 for pages and APIs),
 // proApiAccess (src/lib/pro/api-access.ts) and the public entry points (claim benefits, /eventos, the professional
-// dashboard card, the admin shell). The per-route `NODE_ENV!=='development'` locks inside the Pro files are kept as a
-// second lock: with them, a production build keeps Pro closed even if PRO_ENABLED=true until the owner decides to launch
-// Pro (that switch is a mechanical replace of those locks by PRO_ENABLED).
+// dashboard card, the admin shell) and by every Pro route and page: the former per-route development-only locks were replaced
+// by this flag (2026-11-22). Client components read the build-time mirror NEXT_PUBLIC_PRO_ENABLED (src/lib/pro/enabled-client.ts).
+// ON only in the isolated test Worker (cloudflare-compatibility.yml: EFFECTIVE_PRO_ENABLED); production stays OFF.
+// Still closed on purpose: routes tied to a local-only database (appointment reminders) and directory classified listings.
 export const PRO_ENABLED=process.env.PRO_ENABLED==='true'||(process.env.PRO_ENABLED!=='false'&&process.env.NODE_ENV==='development');
 
 /** Path prefixes (without the /en locale prefix) that belong only to Pro. */

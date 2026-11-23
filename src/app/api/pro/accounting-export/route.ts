@@ -2,6 +2,7 @@ import {z} from 'zod';
 import {proAccountRateLimit,proActor,proInternalFinanceDenied,proQuery} from '@/lib/pro/route-common';
 import {accountingCsv} from '@/lib/pro/integrations/accounting/csv';
 import type {Sources} from '@/lib/pro/integrations/accounting/model';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Round 6B: CSV export for any accounting system (owner only, read-only). Invoices («emitted» or all),
 // payments and customers, in Costa Rica Excel format («;», decimal comma, BOM) or standard CSV.
@@ -10,7 +11,7 @@ const fail=(status:number,error:string)=>Response.json({error},{status,headers})
 const day=z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const query=z.object({kind:z.enum(['invoices','payments','customers']),format:z.enum(['cr','standard']),scope:z.enum(['emitted','all']).optional(),from:day.optional(),to:day.optional(),lang:z.enum(['es','en']).optional()}).strict();
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;
   // Closing round (security review M1): customers (with ID numbers), invoices and payments are for the owner,

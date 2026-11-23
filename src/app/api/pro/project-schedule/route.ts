@@ -2,10 +2,11 @@ import {z} from 'zod';
 import {enforceRateLimit} from '@/lib/rate-limit';
 import {baselineMutationSchema} from '@/lib/pro/project-schedule';
 import {proActor,proBoundedJson,proDbError,proFail,proQuery,proRouteHeaders as headers,proSameOrigin,proCustomerReader} from '@/lib/pro/route-common';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 // Families 13/79: owner Gantt with baselines, and the linked customer's opt-in schedule.
 const conflict='El cronograma cambió. Actualice antes de guardar.';
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const q=proQuery(req);
   if(!q||Object.keys(q).length!==1)return proFail(400,'Consulta inválida.');
@@ -20,7 +21,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudo cargar el cronograma.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;

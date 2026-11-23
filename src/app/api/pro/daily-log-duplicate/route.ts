@@ -7,6 +7,7 @@ import {createHash} from 'node:crypto';
 import {enforceRateLimit} from '@/lib/rate-limit';
 import {dailyLogDuplicateMutationSchema,dailyLogDuplicateAttemptSchema,dailyLogDuplicateReceiptSchema,dailyLogDuplicateResponseSchema,dailyLogDuplicateRetireInputSchema,dailyLogDuplicateRetireReceiptSchema,dailyLogDuplicatePendingPageSchema} from '@/lib/pro/daily-log-duplicate';
 import {PRO_FILE_MAX_BYTES} from '@/lib/pro/file-limit';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 const headers={'Cache-Control':'no-store, private','X-Content-Type-Options':'nosniff'};
 const fail=(status:number,error:string)=>Response.json({error},{status,headers});
 const dbError=(error:{code?:string})=>fail(['40001','54000','23505'].includes(error.code||'')?409:error.code==='42501'?403:error.code==='P0002'?404:['22023','22007','22008','22021','23514','22P02'].includes(error.code||'')?400:503,error.code==='40001'?'El archivo cambió. Actualice antes de continuar.':'No se pudo completar la comprobación.');
@@ -26,13 +27,13 @@ async function bounded(req:Request){
 }
 const query=z.discriminatedUnion('view',[z.object({view:z.enum(['action','retirement']),actionId:z.string().uuid()}).strict(),z.object({view:z.literal('pending'),workId:z.string().min(1).max(160),after:z.string().regex(/^[a-f0-9-]{36}:[a-f0-9-]{36}$/).optional()}).strict()]);
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{const a=await actor(req);if(a.error)return a.error;const raw:Record<string,string>={};for(const[k,v]of new URL(req.url).searchParams){if(k in raw)return fail(400,'Consulta inválida.');raw[k]=v;}const q=query.safeParse(raw);if(!q.success)return fail(400,'Consulta inválida.');if(q.data.view==='pending'){const r=await a.db.rpc('pro_daily_log_duplicate_pending',{p_actor:a.user.id,p_work:q.data.workId,p_after:q.data.after??null});if(r.error)return dbError(r.error);return Response.json(dailyLogDuplicatePendingPageSchema.parse(r.data),{headers});}
  const r=await a.db.rpc(q.data.view==='retirement'?'pro_daily_log_duplicate_retire_read':'pro_daily_log_duplicate_read',{p_actor:a.user.id,p_action:q.data.actionId});if(r.error)return dbError(r.error);return Response.json((q.data.view==='retirement'?dailyLogDuplicateRetireReceiptSchema:dailyLogDuplicateReceiptSchema).parse(r.data),{headers});}catch{return fail(503,'No se pudo comprobar la copia.');}
 }
 const stageSchema=z.object({attempt:dailyLogDuplicateAttemptSchema,objects:z.array(z.object({fileId:z.string().uuid(),sourcePath:z.string(),targetPath:z.string(),file:z.object({sizeBytes:z.number().int().positive().max(PRO_FILE_MAX_BYTES),sha256:z.string(),mimeType:z.enum(['image/jpeg','application/pdf']),ownerId:z.string().uuid(),id:z.string().uuid()}).passthrough()}).strict()).max(20)}).strict();
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(req.headers.get('origin')!==`${new URL(req.url).protocol}//${req.headers.get('host')||new URL(req.url).host}`)return fail(403,'Origen no autorizado.');
  try{
   const a=await actor(req);if(a.error)return a.error;const limit=await enforceRateLimit(req,'daily-log-duplicate-'+a.user.id,30,60000);if(limit)return limit;

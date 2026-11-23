@@ -2,6 +2,7 @@ import {z} from 'zod';
 import {enforceRateLimit} from '@/lib/rate-limit';
 import {proAccountRateLimit,proActor,proBoundedJson,proDbError,proFail,proInternalFinanceDenied,proQuery,proRouteHeaders as headers,proSameOrigin} from '@/lib/pro/route-common';
 import {contactExportSchema,contactPreviewSchema,contactsInputSchema,contactsReadSchema} from '@/lib/pro/round10';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 /**
  * Round 10 (row 05): customer import with mapping preview and duplicate check, tags, duplicate groups,
@@ -11,7 +12,7 @@ import {contactExportSchema,contactPreviewSchema,contactsInputSchema,contactsRea
  */
 const query=z.discriminatedUnion('view',[z.object({view:z.literal('read')}).strict(),z.object({view:z.literal('export'),tag:z.string().max(40).optional(),group:z.string().max(80).optional(),archived:z.enum(['0','1']).optional()}).strict()]);
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const raw=proQuery(req),parsed=raw?query.safeParse(raw):null;if(!parsed?.success)return proFail(400,'Consulta inválida.');
   if(parsed.data.view==='read'){const r=await a.db.rpc('pro_contacts_read',{p_owner:a.user.id});if(r.error)return proDbError(r.error,'Los clientes cambiaron.');return Response.json(contactsReadSchema.parse(r.data),{headers});}
@@ -22,7 +23,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudieron cargar los clientes.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;const limited=await enforceRateLimit(req,'client-contacts-'+a.user.id,60,60000);if(limited)return limited;

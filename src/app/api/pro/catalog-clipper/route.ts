@@ -3,6 +3,7 @@ import {enforceRateLimit} from '@/lib/rate-limit';
 import {proActor,proBoundedJson,proDbError,proFail,proRouteHeaders as headers,proSameOrigin} from '@/lib/pro/route-common';
 import {clipperUrlSchema} from '@/lib/pro/integrations/clipper/parse';
 import {readProductLink} from '@/lib/pro/integrations/clipper/service';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Round 6D (row 60): «Agregar desde enlace». The server reads the link with the product_clipper adapter (mock
 // fixture locally; the real reader is inactive) and stores a CLIP for review. Nothing is written to the catalog
@@ -14,12 +15,12 @@ const schema=z.discriminatedUnion('action',[
  z.object({action:z.literal('review'),id,decision:z.enum(['saved','discarded']),productId:z.string().min(1).max(160).nullable()}).strict(),
 ]);
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{const a=await proActor(req);if(a.error)return a.error;const result=await a.db.rpc('pro_clip_read',{p_actor:a.user.id});if(result.error)return proDbError(result.error,'Los datos cambiaron.');return Response.json(result.data,{headers});}
  catch{return proFail(503,'No se pudieron cargar los enlaces.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;

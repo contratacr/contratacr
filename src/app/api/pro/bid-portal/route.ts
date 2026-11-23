@@ -4,6 +4,7 @@ import {BID_PORTAL_BODY_MAX,BID_PORTAL_COOKIE_PATH,bidPortalCookieLink,bidPortal
 import {BidPortalConfigError,bidPortalBucket,bidPortalHash,bidPortalNewToken} from '@/lib/pro/bid-portal-server';
 import {proBoundedJson,proSameOrigin} from '@/lib/pro/route-common';
 import {z} from 'zod';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Row 53: PUBLIC vendor side of the bid portal (development only, no ContrataCR account).
 // The link token is single use: claiming it opens a vendor session kept in an httpOnly cookie
@@ -31,7 +32,7 @@ function secure(req:Request){return new URL(req.url).protocol==='https:'||req.he
 function cookie(req:Request,link:string,value:string,maxAge:number){return `${bidPortalCookieName(link)}=${value}; Path=${BID_PORTAL_COOKIE_PATH}; HttpOnly; SameSite=Strict; Max-Age=${Math.max(0,Math.floor(maxAge))}${secure(req)?'; Secure':''}`;}
 const noStore=(limited:Response|null)=>{if(limited)for(const [k,v] of Object.entries(headers))limited.headers.set(k,v);return limited;};
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  const limited=noStore(await enforceRateLimit(req,'bid-portal-view',60,60000));if(limited)return limited;
  const param=new URL(req.url).searchParams.getAll('link');if(param.length>1||param[0]!==undefined&&!linkId.safeParse(param[0]).success)return fail(400,'invalid','Consulta inválida.');
  const token=session(req,param[0]);if(!token)return fail(401,'session','Abra el enlace de invitación que recibió.');
@@ -48,7 +49,7 @@ export async function GET(req:Request){
  }catch(cause){return cause instanceof BidPortalConfigError?unavailable(cause):fail(503,'unavailable','No se pudo cargar la invitación. Reintente.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return fail(403,'origin','Origen no autorizado.');
  const limited=noStore(await enforceRateLimit(req,'bid-portal-write',40,60000));if(limited)return limited;
  let input;try{input=bidPortalPublicSchema.parse(await proBoundedJson(req,BID_PORTAL_BODY_MAX));}catch(cause){return fail(cause instanceof RangeError?413:400,'invalid','Revise los datos enviados.');}

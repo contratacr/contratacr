@@ -5,6 +5,7 @@ import {proBoundedJson,proRequestOrigin,proSameOrigin} from '@/lib/pro/route-com
 import {paymentPublicSchema,paymentPublicViewSchema,sinpeCodeFrom} from '@/lib/pro/integrations/payments/api';
 import type {ChargeResult} from '@/lib/pro/integrations/payments/processor';
 import {PaymentError,deliver,linkTokenHash,logCharge,payRpc,processorFor} from '@/lib/pro/integrations/payments/service';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Round 6A: PUBLIC side of a payment link (hosted page /pagar#enlace=…, development only, no account).
 // The token travels in the body (never in a URL); only its SHA-256 reaches the database. Card numbers go
@@ -20,7 +21,7 @@ async function view(db:ReturnType<typeof createAdminClient>,hash:string){
  return paymentPublicViewSchema.parse({...rest,sinpe:(rest as {methods:string[]}).methods.includes('sinpe')?{phone:sinpePhone||'',code:sinpeCodeFrom(hash)}:null});
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return fail(403,'origin','Origen no autorizado.');
  const limited=await enforceRateLimit(req,'pay-public',30,60000);if(limited){for(const [k,v] of Object.entries(headers))limited.headers.set(k,v);return limited;}
  let input;try{const parsed=paymentPublicSchema.safeParse(await proBoundedJson(req,4096));if(!parsed.success)return fail(400,'invalid','Revise los datos.');input=parsed.data;}catch{return fail(400,'invalid','Revise los datos.');}

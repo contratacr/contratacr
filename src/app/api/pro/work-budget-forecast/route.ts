@@ -6,12 +6,13 @@ import {getApiAdmin} from '@/lib/auth/admin';
 import {enforceRateLimit} from '@/lib/rate-limit';
 import {proCustomerReader,proInternalFinanceDenied} from '@/lib/pro/route-common';
 import {budgetExtrasMutationSchema,budgetExtrasResultSchema,budgetForecastSchema,clientBudgetSummarySchema} from '@/lib/pro/cost-codes';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Row 54 (Ronda F1-B): budget forecast with markup/VAT per line (owner, internal finance roles only), the owner's
 // explicit share/revoke of a client summary and the linked customer's read of that summary (?requestId=), which
 // only ever carries groups and sale totals.
 const headers={'Cache-Control':'no-store, private','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'};
-const local=()=>process.env.NODE_ENV==='development'&&['http://127.0.0.1:54321','http://127.0.0.1:54321/'].includes(process.env.NEXT_PUBLIC_SUPABASE_URL??'');
+const local=()=>PRO_ENABLED;
 const fail=(status:number,code:string,error:string)=>Response.json({code,error},{status,headers});
 const id=z.string().uuid();
 const query=z.union([z.object({workId:z.string().min(1).max(160)}).strict(),z.object({requestId:id}).strict()]);

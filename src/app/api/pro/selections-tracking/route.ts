@@ -1,6 +1,7 @@
 import {z} from 'zod';
 import {proAccountRateLimit,proActor,proBoundedJson,proDbError,proFail,proInternalFinanceAllowed,proQuery,proRouteHeaders as headers,proSameOrigin} from '@/lib/pro/route-common';
 import {selectionTrackingInputSchema,selectionTrackingSchema} from '@/lib/pro/round10';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 /**
  * Round 10 (row 62): order/delivery tracking per selection, internal cost and margin per option (owner),
@@ -10,7 +11,7 @@ import {selectionTrackingInputSchema,selectionTrackingSchema} from '@/lib/pro/ro
  */
 const query=z.object({workId:z.string().trim().min(1).max(160)}).strict();
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const raw=proQuery(req),parsed=raw?query.safeParse(raw):null;if(!parsed?.success)return proFail(400,'Consulta inválida.');
   const r=await a.db.rpc('pro_work_selection_tracking_read',{p_owner:a.user.id,p_work:parsed.data.workId});if(r.error)return proDbError(r.error,'Las selecciones cambiaron.');
@@ -22,7 +23,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudo cargar el seguimiento.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;const limited=await proAccountRateLimit('selections-tracking',a.user.id,60,60000);if(limited)return limited;

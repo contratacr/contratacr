@@ -7,6 +7,7 @@ import {createHash} from 'node:crypto';
 import {enforceRateLimit} from '@/lib/rate-limit';
 import {dailyLogFilesPageSchema} from '@/lib/pro/daily-log-files';
 import {dailyLogFileReconciliationMutationSchema,dailyLogFileReconciliationAttemptSchema,dailyLogFileReconciliationReceiptSchema,dailyLogFileReconciliationResponseSchema,dailyLogFileReconciliationHistorySchema} from '@/lib/pro/daily-log-file-reconciliation';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 const headers={'Cache-Control':'no-store, private','X-Content-Type-Options':'nosniff'};
 const fail=(status:number,error:string)=>Response.json({error},{status,headers});
 const dbError=(error:{code?:string})=>fail(['40001','54000','23505'].includes(error.code||'')?409:error.code==='42501'?403:error.code==='P0002'?404:['22023','22007','22008','22021','23514','22P02'].includes(error.code||'')?400:503,error.code==='40001'?'El archivo cambió. Actualice antes de continuar.':'No se pudo completar la comprobación.');
@@ -30,7 +31,7 @@ const querySchema=z.discriminatedUnion('view',[
  z.object({view:z.enum(['pending','history']),workId,logId:id,after:id.optional()}).strict(),
 ]);
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await actor(req);if(a.error)return a.error;const raw:Record<string,string>={};for(const[k,v]of new URL(req.url).searchParams){if(k in raw)return fail(400,'Consulta inválida.');raw[k]=v;}const parsed=querySchema.safeParse(raw);if(!parsed.success)return fail(400,'Consulta inválida.');const q=parsed.data;
   if(q.view==='action'){const result=await a.db.rpc('pro_daily_file_reconcile_read',{p_actor:a.user.id,p_action:q.actionId});if(result.error)return dbError(result.error);return Response.json(dailyLogFileReconciliationReceiptSchema.parse(result.data),{headers});}
@@ -42,7 +43,7 @@ export async function GET(req:Request){
 const reservationSchema=z.object({attempt:dailyLogFileReconciliationAttemptSchema,objectPath:z.string().regex(new RegExp('^[a-f0-9-]{36}/[a-f0-9-]{36}[.](jpg|pdf)$'))}).strict();
 function responseFor(attempt:z.infer<typeof dailyLogFileReconciliationAttemptSchema>){return Response.json(dailyLogFileReconciliationResponseSchema.parse(attempt.result?{state:'confirmed',result:attempt.result,attempt}:{state:'pending',reason:attempt.reason,attempt}),{headers});}
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(req.headers.get('origin')!==`${new URL(req.url).protocol}//${req.headers.get('host')||new URL(req.url).host}`)return fail(403,'Origen no autorizado.');
  try{
   const a=await actor(req);if(a.error)return a.error;const limited=await enforceRateLimit(req,'daily-log-file-reconciliation-'+a.user.id,30,60000);if(limited)return limited;

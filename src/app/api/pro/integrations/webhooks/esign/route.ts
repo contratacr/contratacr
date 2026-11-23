@@ -4,6 +4,7 @@ import {SIGNATURE_HEADER} from '@/lib/pro/integrations/webhook';
 import {providerSecrets} from '@/lib/pro/integrations/server';
 import {receiveEvent,receiveMockEvent,type EsignEvent} from '@/lib/pro/integrations/esign/service';
 import {connectStatus,DocusignClient,verifyConnectHmac} from '@/lib/pro/integrations/esign/docusign';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Round 6B: webhook inbox of the electronic signature provider (development only).
 // · Mock events: X-CCR-Signature (HMAC-SHA256 over «t.body», ±5 min), idempotent by event id.
@@ -12,7 +13,7 @@ import {connectStatus,DocusignClient,verifyConnectHmac} from '@/lib/pro/integrat
 //   downloaded from DocuSign and stored with the status change. Bad signatures are counted apart.
 const headers={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'};
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  const limited=await enforceRateLimit(req,'webhook-esign',120,60000);if(limited)return limited;
  if(Number(req.headers.get('content-length')||'0')>262144)return Response.json({status:'rejected',reason:'size'},{status:413,headers});
  const body=await req.text();if(body.length>262144)return Response.json({status:'rejected',reason:'size'},{status:413,headers});

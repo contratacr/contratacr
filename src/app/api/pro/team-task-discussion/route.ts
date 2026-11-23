@@ -10,6 +10,7 @@ import {enforceRateLimit} from '@/lib/rate-limit';
 import {decodeDeliveryPhotoBase64} from '@/lib/pro/delivery-photo-base64';
 import {canonicalTeamTaskFileName,teamTaskDiscussionMutationSchema,teamTaskFileManageSchema,teamTaskFileSchema,TEAM_TASK_FILE_MAX_BYTES} from '@/lib/pro/team-task-discussion';
 import {PRO_FILE_BODY_MAX,PRO_FILE_MAX_BYTES} from '@/lib/pro/file-limit';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 const bucketName='pro-team-task-files',headers={'Cache-Control':'no-store, private','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Content-Security-Policy':"sandbox; default-src 'none'; frame-ancestors 'none'"};
 const fail=(status:number,error:string)=>Response.json({error},{status,headers});
 const dbError=(error:{code?:string})=>fail(error.code==='40001'?409:error.code==='42501'?403:error.code==='54000'?429:['22023','22021','23514','23505','22P02'].includes(error.code||'')?400:503,'No se pudo completar la operación.');
@@ -51,7 +52,7 @@ const querySchema=z.union([
  z.object({grantId:id,taskId:id,fileId:id}).strict(),
 ]);
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await actor(req);if(a.error)return a.error;
   const raw:Record<string,string>={};for(const[key,value]of new URL(req.url).searchParams){if(key in raw)return fail(400,'Consulta inválida.');raw[key]=value;}
@@ -73,7 +74,7 @@ export async function GET(req:Request){
  }catch{return fail(503,'No se pudo cargar la conversación.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(req.headers.get('origin')!==`${new URL(req.url).protocol}//${req.headers.get('host')||new URL(req.url).host}`)return fail(403,'Origen no autorizado.');
  try{
   const a=await actor(req);if(a.error)return a.error;

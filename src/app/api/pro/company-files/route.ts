@@ -12,6 +12,7 @@ import {PRO_DOC_MIMES,PRO_DOC_PATH,proDocExtension,type ProDocMime} from '@/lib/
 import {ProDocRejected,proDocRejectedMessage,sniffProDocument} from '@/lib/pro/file-sniff';
 import {companyFileMutationSchema,companyFileResultSchema,companyFileReceiptSchema,companyFileDetailSchema,companyFilesPageSchema,companyFileSchema,canonicalCompanyFileInput} from '@/lib/pro/company-files';
 import {PRO_FILE_BODY_MAX} from '@/lib/pro/file-limit';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 const bucketName='pro-company-files',headers={'Cache-Control':'no-store, private','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Content-Security-Policy':"sandbox; default-src 'none'; frame-ancestors 'none'"};
 const fail=(status:number,error:string)=>Response.json({error},{status,headers});
 const dbError=(error:{code?:string})=>fail(['40001','54000'].includes(error.code||'')?409:error.code==='42501'?403:['22023','22008','22007','22021','23514','23505','22P02'].includes(error.code||'')?400:503,error.code==='40001'?'Los datos cambiaron. Actualice antes de continuar.':'No se pudo completar la operación.');
@@ -39,7 +40,7 @@ const querySchema=z.discriminatedUnion('view',[
  z.object({view:z.literal('action'),actionId:id}).strict(),
 ]);
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await actor(req);if(a.error)return a.error;
   const raw:Record<string,string>={};for(const[k,v]of new URL(req.url).searchParams){if(k in raw)return fail(400,'Consulta inválida.');raw[k]=v;}
@@ -56,7 +57,7 @@ export async function GET(req:Request){
  }catch{return fail(503,'No se pudo cargar la biblioteca.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(req.headers.get('origin')!==`${new URL(req.url).protocol}//${req.headers.get('host')||new URL(req.url).host}`)return fail(403,'Origen no autorizado.');
  try{
   const a=await actor(req);if(a.error)return a.error;const limited=await enforceRateLimit(req,'company-files-'+a.user.id,60,60000);if(limited)return limited;

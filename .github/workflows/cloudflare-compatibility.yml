@@ -59,6 +59,8 @@ jobs:
       EFFECTIVE_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'deploy-preview' }}
       EFFECTIVE_WORKER_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.worker_name || (github.ref_name == 'main' && 'contratacr' || 'contratacr-preview') }}
       EFFECTIVE_TARGET_ENVIRONMENT: ${{ github.event_name == 'workflow_dispatch' && inputs.target_environment || (github.ref_name == 'main' && 'production' || 'test') }}
+      # ContrataCR Pro (PRO_ENABLED) is ON only in the isolated test Worker; production and every other target stay OFF.
+      EFFECTIVE_PRO_ENABLED: ${{ ((github.event_name == 'workflow_dispatch' && inputs.target_environment || (github.ref_name == 'main' && 'production' || 'test')) == 'test' && (github.event_name == 'workflow_dispatch' && inputs.worker_name || (github.ref_name == 'main' && 'contratacr' || 'contratacr-preview')) == 'contratacr-preview') && 'true' || 'false' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -125,7 +127,8 @@ jobs:
           # Mismas banderas que "vars" en wrangler.jsonc: las páginas que se
           # generan al compilar deben ver el directorio encendido y Pro apagado.
           DIR_ENABLED: "true"
-          PRO_ENABLED: "false"
+          PRO_ENABLED: ${{ env.EFFECTIVE_PRO_ENABLED }}
+          NEXT_PUBLIC_PRO_ENABLED: ${{ env.EFFECTIVE_PRO_ENABLED }}
         run: npm run cloudflare:build
 
       - name: Smoke public pages in the Worker runtime
@@ -146,7 +149,7 @@ jobs:
         if: ${{ env.EFFECTIVE_MODE == 'deploy-preview' }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: npx wrangler deploy --name "$EFFECTIVE_WORKER_NAME"
+        run: npx wrangler deploy --name "$EFFECTIVE_WORKER_NAME" --var "PRO_ENABLED:$EFFECTIVE_PRO_ENABLED"
 
       - name: Sync Worker runtime secrets
         if: ${{ env.EFFECTIVE_MODE == 'deploy-preview' && ((env.EFFECTIVE_TARGET_ENVIRONMENT == 'production' && env.EFFECTIVE_WORKER_NAME == 'contratacr') || (env.EFFECTIVE_TARGET_ENVIRONMENT == 'test' && env.EFFECTIVE_WORKER_NAME == 'contratacr-preview')) }}
@@ -270,7 +273,7 @@ jobs:
           # desplegar deja la última versión en línea y el segundo intento pasa.
           if ! npx wrangler secret bulk worker-secrets.json --name "$EFFECTIVE_WORKER_NAME"; then
             echo "Los secretos no entraron; se vuelve a desplegar la última versión y se reintenta."
-            npx wrangler deploy --name "$EFFECTIVE_WORKER_NAME"
+            npx wrangler deploy --name "$EFFECTIVE_WORKER_NAME" --var "PRO_ENABLED:$EFFECTIVE_PRO_ENABLED"
             npx wrangler secret bulk worker-secrets.json --name "$EFFECTIVE_WORKER_NAME"
           fi
 

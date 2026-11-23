@@ -4,6 +4,7 @@ import {createHash} from 'node:crypto';
 import {enforceRateLimit} from '@/lib/rate-limit';
 import {proActor,proBoundedJson,proDbError,proFail,proQuery,proRouteHeaders as headers,proSameOrigin} from '@/lib/pro/route-common';
 import {subCode,subPortalInputSchema} from '@/lib/pro/round8';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 /**
  * Round 8: subcontractor portal. Always the account's own identity (excluded from the company
@@ -16,7 +17,7 @@ const fileHeaders={'Cache-Control':'no-store, private','X-Content-Type-Options':
 // Ronda F2-D: job files can be any accepted document format (file-formats.ts).
 const meta=z.object({objectPath:z.string().regex(PRO_DOC_PATH),name:z.string().min(1).max(160),mimeType:z.enum(PRO_DOC_MIMES)}).strict();
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const raw=proQuery(req);if(!raw)return proFail(400,'Consulta inválida.');
   if(Object.keys(raw).length){
@@ -30,7 +31,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudieron cargar sus trabajos.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;const limited=await enforceRateLimit(req,'sub-portal-'+a.user.id,30,60000);if(limited)return limited;

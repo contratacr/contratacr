@@ -2,6 +2,7 @@ import {z} from 'zod';
 import {enforceRateLimit} from '@/lib/rate-limit';
 import {CONTRACT_BODY_MAX,contractClientMutationSchema,contractMutationSchema,contractStarterSchema,isContractClientAction} from '@/lib/pro/contracts';
 import {proActor,proBoundedJson,proDbError,proFail,proQuery,proRouteHeaders as headers,proSameOrigin,proCustomerReader} from '@/lib/pro/route-common';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 // Row 40: contract templates, clause library, contracts per job and the linked customer's
 // authenticated acceptance. Development only; nothing is sent to anyone.
 const conflict='El contrato cambió. Actualice antes de continuar.';
@@ -11,7 +12,7 @@ const same=(keys:string[],expected:string[])=>keys.length===expected.length&&[..
 const dbError=(error:{code?:string})=>error.code==='P0002'?proFail(404,'Contrato no disponible.'):proDbError(error,conflict);
 
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const q=proQuery(req);if(!q)return proFail(400,'Consulta inválida.');const keys=Object.keys(q);
   if(same(keys,['requestId'])){
@@ -53,7 +54,7 @@ export async function GET(req:Request){
 }
 
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;

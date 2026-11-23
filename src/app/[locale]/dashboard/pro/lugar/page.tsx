@@ -6,6 +6,7 @@ import {createAdminClient} from '@/lib/supabase/admin';
 import {proPlaceHubState} from '@/lib/directory/pro-place-hub';
 import {PlaceModuleNav} from '@/components/pro/place-module-nav';
 import {proPageWorkspace} from '@/lib/pro/page-workspace';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // LOCAL PRO ONLY (place features round, development only): tools of a claimed place in the Pro dashboard — events
 // (public /eventos, staff-moderated), the «Pedir» link-out (own WhatsApp / order page / phone) and, for an approved
@@ -13,7 +14,7 @@ import {proPageWorkspace} from '@/lib/pro/page-workspace';
 // active manager of the claimed place; company members need listing.publish to publish).
 export const dynamic='force-dynamic';
 export default async function PlaceToolsRoute({params}:{params:Promise<{locale:string}>}){
- if(process.env.NODE_ENV!=='development')notFound();
+ if(!PRO_ENABLED)notFound();
  const {locale}=await params,en=locale==='en',prefix=en?'/en':'';
  const user=await safeGetUser(await createClient());
  if(!user)redirect(prefix+'/login?redirect='+encodeURIComponent(prefix+'/dashboard/pro/lugar'));

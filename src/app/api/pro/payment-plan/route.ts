@@ -2,6 +2,7 @@ import {z} from 'zod';
 import {enforceRateLimit} from '@/lib/rate-limit';
 import {proActor,proBoundedJson,proCustomerReader,proDbError,proFail,proQuery,proRouteHeaders as headers,proSameOrigin} from '@/lib/pro/route-common';
 import {clientPaymentPlanBodySchema,clientPaymentPlanSchema,paymentPlanAcceptSchema,paymentPlanMutationSchema,paymentPlanNoticesSchema,paymentPlanReadSchema} from '@/lib/pro/payment-plan';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Round 5: «Plan de pagos» (the professional's own installment plan; no lender, no interest, nothing sent or charged).
 // GET ?workId= (owner) · ?workId=&part=notices (owner, overview) · ?requestId= (linked customer, or the owner's preview).
@@ -14,7 +15,7 @@ function planError(error:{code?:string;hint?:string}){
  return proDbError(error,conflict);
 }
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const raw=proQuery(req);if(!raw)return proFail(400,'Consulta inválida.');
   if('requestId' in raw){
@@ -35,7 +36,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudo cargar el plan de pagos. Reintente.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;

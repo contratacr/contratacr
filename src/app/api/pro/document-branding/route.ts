@@ -8,6 +8,7 @@ import {decodeDeliveryPhotoBase64} from '@/lib/pro/delivery-photo-base64';
 import {normalizeCompanyFile} from '@/lib/pro/company-file-normalize';
 import {documentBrandingInputSchema,documentBrandingSchema} from '@/lib/pro/document-branding';
 import {DOCUMENT_LOGO_BUCKET} from '@/lib/pro/document-branding-server';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 /**
  * Round 9: company branding of printed documents (theme, header/footer lines, logo). GET reads (and
@@ -15,7 +16,7 @@ import {DOCUMENT_LOGO_BUCKET} from '@/lib/pro/document-branding-server';
  * gate). The logo is normalised to JPG (≤ 1 MiB) and stored privately; prints embed it.
  */
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const raw=proQuery(req);if(!raw||Object.keys(raw).some(k=>k!=='logo')||raw.logo!==undefined&&raw.logo!=='1')return proFail(400,'Consulta inválida.');
   const r=await a.db.rpc('pro_document_branding_read',{p_actor:a.user.id});if(r.error)return proDbError(r.error,'La marca cambió.');
@@ -29,7 +30,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudo cargar la marca de sus documentos.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;const limited=await enforceRateLimit(req,'document-branding-'+a.user.id,20,60000);if(limited)return limited;

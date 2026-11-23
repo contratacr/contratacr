@@ -3,6 +3,7 @@ import {enforceRateLimit} from '@/lib/rate-limit';
 import {proActor,proBoundedJson,proDbError,proFail,proQuery,proRouteHeaders as headers,proSameOrigin} from '@/lib/pro/route-common';
 import {proWorkspaceMember} from '@/lib/pro/workspace-user';
 import {timeClockMutationSchema,timeClockOptionsSchema,timesheetDecisionResultSchema,timesheetSchema} from '@/lib/pro/operations';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 /**
  * Ronda F2-C (row 22): time clock and weekly timesheets. Clock in = the existing person timer plus optional task
@@ -13,7 +14,7 @@ import {timeClockMutationSchema,timeClockOptionsSchema,timesheetDecisionResultSc
 async function person(){return (await proWorkspaceMember())?.memberId??null;}
 const query=z.union([z.object({week:z.string().regex(/^\d{4}-\d{2}-\d{2}$/)}).strict(),z.object({workId:z.string().min(1).max(160)}).strict()]);
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const parsed=query.safeParse(proQuery(req));if(!parsed.success)return proFail(400,'Consulta inválida.');
   const who=(await person())??a.user.id;
@@ -23,7 +24,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudo cargar la hoja de horas.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;const limited=await enforceRateLimit(req,'time-clock-'+a.user.id,60,60000);if(limited)return limited;

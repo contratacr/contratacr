@@ -3,6 +3,7 @@ import {createHash,randomBytes} from 'node:crypto';
 import {enforceRateLimit} from '@/lib/rate-limit';
 import {proActor,proBoundedJson,proDbError,proFail,proQuery,proRouteHeaders as headers,proSameOrigin} from '@/lib/pro/route-common';
 import {subCode,subOwnerInputSchema} from '@/lib/pro/round8';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 /**
  * Round 8: owner side of subcontractor access. Invite a vendor of the directory to a job (one-use
@@ -13,7 +14,7 @@ import {subCode,subOwnerInputSchema} from '@/lib/pro/round8';
 const alphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function newCode(){const bytes=randomBytes(12);let out='';for(const b of bytes)out+=alphabet[b%alphabet.length];return out;}
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const raw=proQuery(req);const parsed=raw&&z.object({workId:z.string().trim().min(1).max(160)}).strict().safeParse(raw);if(!parsed||!parsed.success)return proFail(400,'Consulta inválida.');
   const r=await a.db.rpc('pro_sub_owner_read',{p_actor:a.user.id,p_work:parsed.data.workId});if(r.error)return proDbError(r.error,'Los accesos cambiaron.');
@@ -21,7 +22,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudieron cargar los subcontratistas.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;const limited=await enforceRateLimit(req,'subcontractors-'+a.user.id,60,60000);if(limited)return limited;

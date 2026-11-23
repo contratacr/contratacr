@@ -3,6 +3,7 @@ import {enforceRateLimit} from '@/lib/rate-limit';
 import {proActor,proBoundedJson,proRouteHeaders,proSameOrigin} from '@/lib/pro/route-common';
 import {proWorkspaceMember} from '@/lib/pro/workspace-user';
 import {editionChoiceSchema,editionSettingsView} from '@/lib/pro/edition-choice';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // LOCAL PRO ONLY (gaps round 2026-11-17, development only): /api/pro/editions — the self-service edition picker.
 //  GET  → {ownerId, edition, active, implicit, revision, paywallEnabled, entitled, canChoose, role, modules}
@@ -26,7 +27,7 @@ async function context(req:Request){
  return {db:a.db,owner:a.user.id,person,error:null} as const;
 }
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers:proRouteHeaders});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers:proRouteHeaders});
  if([...new URL(req.url).searchParams.keys()].length)return fail(400,'invalid','Consulta inválida.');
  try{
   const c=await context(req);if(c.error)return c.error;
@@ -40,7 +41,7 @@ export async function GET(req:Request){
  }catch{return fail(503,'unavailable','No se pudo cargar la edición. Reintente.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers:proRouteHeaders});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers:proRouteHeaders});
  if(!proSameOrigin(req))return fail(403,'origin','Origen no autorizado.');
  try{
   const c=await context(req);if(c.error)return c.error;

@@ -1,5 +1,6 @@
 import {proAccountRateLimit,proActor,proBoundedJson,proDbError,proFail,proInternalFinanceDenied,proQuery,proRouteHeaders as headers,proSameOrigin} from '@/lib/pro/route-common';
 import {payableMutationSchema,payablesQuerySchema} from '@/lib/pro/payables';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 /**
  * Round F1-A (row 55): accounts payable for the owner, Administrator and Manager. Payables are the existing
@@ -15,7 +16,7 @@ const reasons:Record<string,[string,string]>={
  pro_payable_balance:['El pago supera el saldo pendiente.','balance'],
 };
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const denied=await proInternalFinanceDenied();if(denied)return denied;
   const limited=await proAccountRateLimit('payables',a.user.id,60,60000);if(limited)return limited;
@@ -27,7 +28,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudieron cargar las cuentas por pagar. Reintente.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;const denied=await proInternalFinanceDenied();if(denied)return denied;

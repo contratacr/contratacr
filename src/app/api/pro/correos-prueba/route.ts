@@ -4,6 +4,7 @@ import {safeGetUser} from '@/lib/supabase/get-user';
 import {enforceRateLimit} from '@/lib/rate-limit';
 import {proFail,proQuery,proRouteHeaders as headers} from '@/lib/pro/route-common';
 import {transactionalEmailMode,transactionalMockOutbox} from '@/lib/pro/transactional-email';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // LOCAL PRO ONLY (launch fix I5, development only: 404 in any other build). «Test mailbox» of the Pro transactional
 // e-mails recorded by the MOCK mode (src/lib/pro/transactional-email.ts): lets a developer or the E2E assert «an
@@ -14,7 +15,7 @@ const querySchema=z.object({
  to:z.string().trim().toLowerCase().email().max(254).optional(),
 }).strict();
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  const limited=await enforceRateLimit(req,'pro-test-mailbox',60,60_000);if(limited)return limited;
  const raw=proQuery(req);const q=raw&&querySchema.safeParse(raw);if(!q||!q.success)return proFail(400,'Consulta inválida.');
  const user=await safeGetUser(await createClient());if(!user)return proFail(401,'Inicie sesión.');

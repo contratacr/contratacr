@@ -3,6 +3,7 @@ import {createAdminClient} from '@/lib/supabase/admin';
 import {enforceRateLimit,enforceRateLimitKey} from '@/lib/rate-limit';
 import {proBoundedJson,proRequestOrigin,proSameOrigin} from '@/lib/pro/route-common';
 import {siteConsentText,siteSlugSchema,siteSubmitSchema} from '@/lib/pro/site';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Round 6D (row 69/70): PUBLIC side of a professional website (no account). Visits of a tracking code and the
 // request form (→ customer + lead in the owner's lead center; marketing consent only if ticked, with the exact
@@ -12,7 +13,7 @@ const fail=(status:number,reason:string,error:string)=>Response.json({error,reas
 const visitSchema=z.object({action:z.literal('visit'),slug:siteSlugSchema,code:z.string().regex(/^[a-z0-9]{6,16}$/)}).strict();
 const submitSchema=siteSubmitSchema.extend({action:z.literal('submit'),slug:siteSlugSchema});
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  const url=new URL(req.url);if(url.searchParams.get('sitemap')!=='1'||[...url.searchParams.keys()].length!==1)return fail(400,'invalid','Consulta inválida.');
  const limited=await enforceRateLimit(req,'site-sitemap',30,60000);if(limited)return limited;
  const result=await createAdminClient().rpc('pro_site_published_slugs');if(result.error)return fail(503,'unavailable','No disponible.');
@@ -21,7 +22,7 @@ export async function GET(req:Request){
  return new Response(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">${rows}</urlset>`,{headers:{'Content-Type':'application/xml; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return fail(403,'origin','Origen no autorizado.');
  const limited=await enforceRateLimit(req,'site-public',30,60000);if(limited){for(const [k,v] of Object.entries(headers))limited.headers.set(k,v);return limited;}
  let raw:unknown;try{raw=await proBoundedJson(req,8192);}catch{return fail(400,'invalid','Revise los datos.');}

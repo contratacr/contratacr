@@ -3,6 +3,7 @@ import {enforceRateLimit} from '@/lib/rate-limit';
 import {ProBodyError,proActor,proBoundedForm,proBoundedJson,proFail,proQuery,proRouteHeaders as headers,proSameOrigin,sniffAudio} from '@/lib/pro/route-common';
 import {AI_AUDIO_MAX_BYTES,aiAudioTypes,aiErrorCopy,baseMime,meetingConsentText} from '@/lib/pro/ai/features';
 import {AiError,aiRpc,meetingFromRecording} from '@/lib/pro/ai/service';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Round 6C: meeting / call recordings of a job (row 76). Upload only with the explicit «all parties informed
 // and consented» confirmation (stored with the recording). Audio is private to the owner (other owners 404,
@@ -24,7 +25,7 @@ const fail=(error:unknown)=>{
  return proFail(503,'No se pudo comprobar la operación. Reintente la misma acción.');
 };
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const q=proQuery(req);if(!q||Object.keys(q).length!==1)return proFail(400,'Consulta inválida.');
   if('audio' in q){
@@ -38,7 +39,7 @@ export async function GET(req:Request){
  }catch(error){return fail(error);}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;

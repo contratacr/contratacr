@@ -1,11 +1,12 @@
 import {proAccountRateLimit,proActor,proDbError,proFail,proQuery,proRouteHeaders} from '@/lib/pro/route-common';
 import {proWorkspaceMember} from '@/lib/pro/workspace-user';
 import {workActivityPageSchema,workActivityQuerySchema} from '@/lib/pro/work-activity';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Per-job «Actividad» history (read-only; docs/pro/sql/pro-work-activity-local.sql). The owner, or a company
 // member whose role allows reading (the gate already ran; the SQL checks the role again with the member id).
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers:proRouteHeaders});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers:proRouteHeaders});
  try{
   const a=await proActor(req);if(a.error)return a.error;const raw=proQuery(req);const q=raw?workActivityQuerySchema.safeParse(raw):null;
   if(!q?.success)return proFail(400,'Consulta inválida.');

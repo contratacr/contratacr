@@ -5,12 +5,13 @@ import {createClient} from '@/lib/supabase/server';
 import {createAdminClient} from '@/lib/supabase/admin';
 import {getApiAdmin} from '@/lib/auth/admin';
 import {quoteChoiceMutationSchema} from '@/lib/pro/quote-choices';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 const headers={'Cache-Control':'no-store, private'};
 const fail=(status:number,error:string)=>Response.json({error},{status,headers});
 function dbError(error:{code?:string}){return fail(error.code==='42501'?403:error.code==='P0002'?404:error.code==='40001'||error.code==='23514'?409:error.code==='22023'||error.code==='22P02'?400:503,'No se pudo completar. Revise la cotización y actualice antes de continuar.');}
 async function actor(){const user=await safeGetUser(await createClient());if(!user)return {error:fail(401,'Inicie sesión.')};const db=createAdminClient(),p=await db.from('profiles').select('role,is_disabled').eq('id',user.id).maybeSingle();if(p.error)return {error:fail(503,'No se pudo verificar la cuenta.')};if(!p.data||p.data.is_disabled||p.data.role==='admin'&&!await getApiAdmin())return {error:fail(403,'Sin acceso.')};return {user,db};}
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{const access=await actor();if(access.error)return access.error;const params=new URL(req.url).searchParams;
  if(params.get('view')==='client'||params.has('requestId')){const request=params.has('requestId')?z.string().uuid().parse(params.get('requestId')):null,after=params.get('after')?z.string().uuid().parse(params.get('after')):null;const r=await access.db.rpc('pro_quote_choice_page',{p_actor:await proCustomerReader(access.db,access.user.id,request),p_after:after,p_request:request});return r.error?dbError(r.error):Response.json(r.data,{headers});}
  const quote=z.string().uuid().parse(params.get('quoteId')),after=params.get('after')?z.coerce.number().int().positive().max(Number.MAX_SAFE_INTEGER).parse(params.get('after')):null;
@@ -18,7 +19,7 @@ export async function GET(req:Request){
  }catch{return fail(400,'Consulta inválida.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  const expected=`${new URL(req.url).protocol}//${req.headers.get('host')||new URL(req.url).host}`;if(req.headers.get('origin')!==expected)return fail(403,'Origen no autorizado.');
  try{const access=await actor();if(access.error)return access.error;
  if(!req.headers.get('content-type')?.startsWith('application/json'))return fail(400,'Datos inválidos.');

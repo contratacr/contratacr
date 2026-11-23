@@ -3,6 +3,7 @@ import {createHash} from 'node:crypto';
 import {enforceRateLimit} from '@/lib/rate-limit';
 import {proActor,proBoundedJson,proDbError,proFail,proQuery,proRouteHeaders as headers,proSameOrigin} from '@/lib/pro/route-common';
 import {proposalDesignSchema,proposalFileRefSchema,proposalFilesSchema,proposalInputSchema,proposalPublicationSchema,proposalResultSchema,proposalSources} from '@/lib/pro/estimate-proposals';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 /**
  * Ronda F2-B (row 39): visual proposal of a private estimate. Owner: design (cover, introduction, closing, photos
@@ -24,7 +25,7 @@ async function jpeg(db:Awaited<ReturnType<typeof proActor>>['db'],raw:unknown){
  return new Response(bytes,{headers:{...headers,'Content-Type':'image/jpeg','Content-Length':String(bytes.length),'Content-Security-Policy':"sandbox; default-src 'none'",'Cross-Origin-Resource-Policy':'same-origin'}});
 }
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const raw=proQuery(req),parsed=raw?query.safeParse(raw):null;if(!parsed?.success)return proFail(400,'Consulta inválida.');const q=parsed.data;
   if(q.view==='design'||q.view==='files'){
@@ -44,7 +45,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudo cargar la propuesta. Reintente.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;const limited=await enforceRateLimit(req,'quote-proposals-'+a.user.id,120,60000);if(limited)return limited;

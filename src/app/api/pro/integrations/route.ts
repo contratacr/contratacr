@@ -6,6 +6,7 @@ import {testHacienda} from '@/lib/pro/integrations/hacienda/service';
 import {MockProcessor,MOCK_CARDS} from '@/lib/pro/integrations/payments/mock';
 import {logOutbound} from '@/lib/pro/integrations/server';
 import {testRound6bProvider,testRound6cProvider,testRound6dProvider} from '@/lib/pro/integrations/self-test';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Round 6A: Company › Integraciones. GET: providers, stored mode, resolved status (env names + present flag
 // only, never values), recent redacted request log and webhook inbox. POST: set_mode (production refused
@@ -19,7 +20,7 @@ function integrationError(error:{code?:string;hint?:string}){
  return proDbError(error,conflict);
 }
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const raw=proQuery(req);if(!raw||Object.keys(raw).length)return proFail(400,'Consulta inválida.');
   const result=await a.db.rpc('pro_integration_read',{p_actor:a.user.id});if(result.error)return integrationError(result.error);
@@ -33,7 +34,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudieron cargar las integraciones. Reintente.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;

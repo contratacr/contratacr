@@ -19,8 +19,9 @@ import {AppointmentReschedule} from './appointment-reschedule';
 import {AppointmentDuration} from './appointment-duration';
 import {RequestFollowup} from './request-followup';
 import {clientProjectPagePath,markClientProjectFromApp} from '@/lib/pro/client-project-route';
+import {PRO_UI_ENABLED} from '@/lib/pro/enabled-client';
 // Fix 14: the customer's project page exists only where the Pro suite runs (development, like the job page).
-const clientProjectPageEnabled=process.env.NODE_ENV==='development';
+const clientProjectPageEnabled=PRO_UI_ENABLED;
 const api='/api/pro/appointment-requests';
 export function AppointmentRequestsWorkspace({side,compactEmpty=false}:{side:'provider'|'client';compactEmpty?:boolean}){
  const router=useRouter();

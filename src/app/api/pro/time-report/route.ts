@@ -1,5 +1,6 @@
 import {proActor,proInternalFinanceAllowed,proWithoutInternalCost,proDbError,proFail,proQuery,proRouteHeaders as headers} from '@/lib/pro/route-common';
 import {timeReportCsv,timeReportQuerySchema,timeReportSchema} from '@/lib/pro/round9';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 /**
  * Round 9: global hours across jobs (read only): period, job, person and billable filters, totals by
@@ -8,7 +9,7 @@ import {timeReportCsv,timeReportQuerySchema,timeReportSchema} from '@/lib/pro/ro
  * (GET = read): company members read the owner's hours.
  */
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;
   const raw=proQuery(req),parsed=raw?timeReportQuerySchema.safeParse(raw):null;if(!parsed?.success)return proFail(400,'Revise el período y los filtros.');

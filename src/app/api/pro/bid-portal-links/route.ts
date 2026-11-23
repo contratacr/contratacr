@@ -5,6 +5,7 @@ import type {createAdminClient} from '@/lib/supabase/admin';
 import {BID_PORTAL_BODY_MAX,bidPortalFileDownloadSchema,bidPortalOwnerFilesQuerySchema,bidPortalOwnerMutationSchema,bidPortalOwnerQuerySchema} from '@/lib/pro/bid-portal';
 import {BidPortalConfigError,bidPortalHash,bidPortalNewToken} from '@/lib/pro/bid-portal-server';
 import {proActor,proBoundedJson,proDbError,proFail,proQuery,proRouteHeaders,proSameOrigin} from '@/lib/pro/route-common';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Row 53: owner side of the vendor portal (development only). Links are copied by the owner;
 // nothing is e-mailed. The token is random, returned to the owner once and only its keyed hash
@@ -26,7 +27,7 @@ async function ownerDownload(db:ReturnType<typeof createAdminClient>,actor:strin
  return new Response(bytes,{headers:{...proRouteHeaders,'Content-Type':meta.mimeType,'Content-Length':String(bytes.length),'Content-Disposition':`attachment; filename="file${extension}"; filename*=UTF-8''${encoded}`,'Content-Security-Policy':"sandbox; default-src 'none'; frame-ancestors 'none'",'Cross-Origin-Resource-Policy':'same-origin','X-Frame-Options':'DENY','Referrer-Policy':'no-referrer'}});
 }
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers:proRouteHeaders});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers:proRouteHeaders});
  try{
   const a=await proActor(req);if(a.error)return a.error;
   const raw=proQuery(req);if(!raw)return proFail(400,'Consulta inválida.');
@@ -45,7 +46,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudieron cargar los enlaces. Reintente.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers:proRouteHeaders});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers:proRouteHeaders});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;

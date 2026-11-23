@@ -1,12 +1,13 @@
 import {enforceRateLimit} from '@/lib/rate-limit';
 import {creditMutationSchema,creditQuerySchema} from '@/lib/pro/credits-retainers';
 import {proActor,proBoundedJson,proDbError,proFail,proQuery,proRouteHeaders,proSameOrigin} from '@/lib/pro/route-common';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Family 50: retainers, credit notes, overpayments and refunds per project. Internal,
 // non-fiscal records: no charges, no money movement, no Hacienda documents.
 const conflict='El crédito cambió. Actualice antes de guardar.';
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers:proRouteHeaders});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers:proRouteHeaders});
  try{
   const a=await proActor(req);if(a.error)return a.error;
   const raw=proQuery(req);if(!raw)return proFail(400,'Consulta inválida.');
@@ -18,7 +19,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudieron cargar los créditos. Reintente.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers:proRouteHeaders});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers:proRouteHeaders});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;

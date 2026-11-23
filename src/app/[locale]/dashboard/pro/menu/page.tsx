@@ -10,6 +10,7 @@ import {memberCan,proPlaceHubState} from '@/lib/directory/pro-place-hub';
 import {PlaceModuleNav} from '@/components/pro/place-module-nav';
 import {ClaimPlaceNextStep,EditionNextStep} from '@/components/pro/place-next-step';
 import {proPageWorkspace} from '@/lib/pro/page-workspace';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // LOCAL PRO ONLY (P2, development only): menu editor of a claimed restaurant the account manages.
 // ?lugar=<slug> picks the place when the account manages more than one. Gaps round (2026-11-17): a company member
@@ -18,7 +19,7 @@ import {proPageWorkspace} from '@/lib/pro/page-workspace';
 // writes go through /api/pro/menu (same SQL authorization: active manager of a claimed restaurant).
 export const dynamic='force-dynamic';
 export default async function MenuRoute({params,searchParams}:{params:Promise<{locale:string}>;searchParams:Promise<{lugar?:string}>}){
- if(process.env.NODE_ENV!=='development')notFound();
+ if(!PRO_ENABLED)notFound();
  const {locale}=await params,{lugar}=await searchParams,en=locale==='en',prefix=en?'/en':'',t=(es:string,english:string)=>en?english:es;
  const user=await safeGetUser(await createClient());
  if(!user)redirect(prefix+'/login?redirect='+encodeURIComponent(prefix+'/dashboard/pro/menu'));

@@ -3,6 +3,7 @@ import {z} from 'zod';
 import {enforceRateLimit} from '@/lib/rate-limit';
 import {proActor,proBoundedJson,proCustomerReader,proDbError,proFail,proQuery,proRouteHeaders as headers,proSameOrigin} from '@/lib/pro/route-common';
 import {clientJournalSchema,workJournalMutationSchema,workJournalSchema} from '@/lib/pro/work-journal';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 /**
  * Round 7C: Daily Log («Bitácora»). Owner: journal fields per entry (visible to the customer,
@@ -16,7 +17,7 @@ const query=z.discriminatedUnion('view',[
  z.object({view:z.literal('photo'),requestId:id,fileId:id}).strict(),
 ]);
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const raw=proQuery(req);const parsed=raw&&query.safeParse(raw);if(!parsed||!parsed.success)return proFail(400,'Consulta inválida.');const q=parsed.data;
   if(q.view==='owner'){const r=await a.db.rpc('pro_work_journal_read',{p_actor:a.user.id,p_work:q.workId});if(r.error)return proDbError(r.error,'La bitácora cambió.');if(!r.data)return proFail(404,'Trabajo no disponible.');return Response.json(workJournalSchema.parse(r.data),{headers});}
@@ -30,7 +31,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudo cargar la bitácora.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;const limited=await enforceRateLimit(req,'work-journal-'+a.user.id,60,60000);if(limited)return limited;

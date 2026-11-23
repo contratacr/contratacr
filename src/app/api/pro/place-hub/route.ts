@@ -2,6 +2,7 @@ import {enforceRateLimit} from '@/lib/rate-limit';
 import {proPlaceContext} from '@/lib/directory/pro-place-route';
 import {proPlaceHubState} from '@/lib/directory/pro-place-hub';
 import {dirOk} from '@/lib/directory/public-route';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // LOCAL PRO ONLY (pending fixes round, development only): GET /api/pro/place-hub → {menu, reservations, place}, the
 // directory entries the Pro hub shows («Menú», «Reservas de mesa», «Mi lugar»). Read-only (any team role can read: the
@@ -9,7 +10,7 @@ import {dirOk} from '@/lib/directory/public-route';
 // hub has to show).
 const NONE={menu:false,reservations:false,place:false};
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404});
+ if(!PRO_ENABLED)return new Response(null,{status:404});
  const limited=await enforceRateLimit(req,'pro-place-hub',60,60_000);if(limited)return limited;
  const c=await proPlaceContext(req);
  if(c.error)return c.error.status===403?dirOk(NONE):c.error;

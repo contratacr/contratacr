@@ -3,6 +3,7 @@ import {enforceRateLimit} from '@/lib/rate-limit';
 import {proWorkspaceMember} from '@/lib/pro/workspace-user';
 import {proActor,proBoundedJson,proDbError,proFail,proQuery,proRouteHeaders as headers,proSameOrigin} from '@/lib/pro/route-common';
 import {builtinChannelLabel,conversionReportSchema,excelCsv,leadBoardInputSchema,leadBoardSchema} from '@/lib/pro/round10';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 /**
  * Round 10 (rows 07, 08): pipeline board (Kanban) over the existing lead sources, moving cards through
@@ -15,7 +16,7 @@ const query=z.discriminatedUnion('view',[
  z.object({view:z.literal('conversion'),from:day,to:day,group:z.enum(['channel','campaign']),format:z.literal('csv').optional(),lang:z.enum(['es','en']).optional()}).strict(),
 ]);
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const raw=proQuery(req),parsed=raw?query.safeParse(raw):null;if(!parsed?.success)return proFail(400,'Consulta inválida.');
   if(parsed.data.view==='board'){const r=await a.db.rpc('pro_lead_board_read',{p_owner:a.user.id,p_query:parsed.data.q??'',p_channel:parsed.data.channel||null,p_hide_lost:parsed.data.hideLost==='1'});if(r.error)return proDbError(r.error,'Las solicitudes cambiaron.');return Response.json(leadBoardSchema.parse(r.data),{headers});}
@@ -30,7 +31,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudieron cargar las solicitudes.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;const limited=await enforceRateLimit(req,'lead-board-'+a.user.id,120,60000);if(limited)return limited;

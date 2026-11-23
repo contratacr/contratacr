@@ -3,6 +3,7 @@ import {enforceRateLimit} from '@/lib/rate-limit';
 import {taskDueDate} from '@/lib/pro/work-tasks';
 import {timeMutationSchema,type TimeMutation} from '@/lib/pro/time-tracking';
 import {proInternalFinanceAllowed,proWithoutInternalCost,proActor,proBoundedJson,proDbError,proFail,proQuery,proRouteHeaders as headers,proSameOrigin} from '@/lib/pro/route-common';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 // Families 21/22: own timer and time entries; stopped entries become job-cost lines.
 const conflict='Las horas cambiaron. Actualice antes de continuar.';
 const querySchema=z.object({workId:z.string().trim().min(1).max(160),from:taskDueDate.unwrap(),to:taskDueDate.unwrap()}).strict();
@@ -18,7 +19,7 @@ async function inactiveJob(db:Awaited<ReturnType<typeof proActor>>['db'],owner:s
  }catch{return false;}
 }
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const raw=proQuery(req);const q=raw?querySchema.safeParse(raw):null;if(!q?.success)return proFail(400,'Consulta inválida.');
   const result=await a.db.rpc('pro_time_read',{p_actor:a.user.id,p_work:q.data.workId,p_from:q.data.from,p_to:q.data.to});
@@ -31,7 +32,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudieron cargar las horas.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;

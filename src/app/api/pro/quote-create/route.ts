@@ -2,10 +2,11 @@ import {randomBytes} from 'node:crypto';
 import {proApiAccess} from '@/lib/pro/api-access';
 import {directProjectQuoteSchema,directProjectQuoteDto,directProjectPublicCode} from '@/lib/pro/direct-project-quotes';
 import {writeSourceColumns} from '@/lib/security/write-guard';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 const headers={'Cache-Control':'private, no-store'};
 const fail=(status:number,error:string)=>Response.json({error},{status,headers});
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development'||!/^http:\/\/127\.0\.0\.1:54321\/?$/.test(process.env.NEXT_PUBLIC_SUPABASE_URL??''))return fail(404,'unavailable');
+ if(!PRO_ENABLED)return fail(404,'unavailable');
  try{
   const access=await proApiAccess(req);if(access.error)return access.error;
   if(req.headers.get('content-type')?.split(';')[0].trim()!=='application/json')return fail(400,'invalid_input');

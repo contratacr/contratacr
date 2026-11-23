@@ -9,6 +9,7 @@ import { actualizarCotizacion, agregarCotizacion, cargarCotizaciones, useCotizac
 import { QuoteEditorModal } from "@/components/quotes/quote-editor-modal";
 import { QuoteChoiceDetail } from "@/components/pro/quote-choices";
 import { QuoteDetailModal } from "@/components/quotes/quote-detail-modal";
+import {PRO_UI_ENABLED} from '@/lib/pro/enabled-client';
 
 /**
  * Lo que ve cada parte dentro de una cita o un proyecto: la última cotización
@@ -49,7 +50,7 @@ export function QuoteBlock({ projectId, role, canCreate = false, defaultTitle, p
   const [choiceId,setChoiceId]=useState<string|null>(null);
   const key = projectId ?? "";
   async function openQuote(quote:Quote){
-    if(role!=='client'||process.env.NODE_ENV!=='development'||!projectId){setDetail(quote);return;}
+    if(role!=='client'||!PRO_UI_ENABLED||!projectId){setDetail(quote);return;}
     if(opening.current)return;opening.current=true;const sequence=++detailSequence.current;setChecking(true);setDetailError(false);
     try{const response=await fetch('/api/quotes?'+new URLSearchParams({projectId}),{cache:'no-store'}),body=await response.json(),fresh=(body.quotes as Quote[]|undefined)?.find(row=>row.id===quote.id&&row.project_id===projectId);if(!response.ok||!fresh)throw Error();const choices=await fetch('/api/pro/quote-choices?'+new URLSearchParams({quoteId:fresh.id}),{cache:'no-store'});if(!choices.ok&&choices.status!==404)throw Error();const state=choices.ok?await choices.json():null;if(state&&(state.quoteId!==fresh.id||state.side!=='client'))throw Error();if(sequence===detailSequence.current){if(state?.configured)setChoiceId(fresh.id);else setDetail(fresh);}}
     catch{if(sequence===detailSequence.current)setDetailError(true);}
@@ -95,7 +96,7 @@ export function QuoteBlock({ projectId, role, canCreate = false, defaultTitle, p
   if (!ultima && role === "client") return null;
   if (!ultima && !canCreate) return null;
 
-  const resolvedStatus = conNombre && process.env.NODE_ENV === "development" && conNombre.project_id && ["accepted", "declined"].includes(conNombre.status)
+  const resolvedStatus = conNombre && PRO_UI_ENABLED && conNombre.project_id && ["accepted", "declined"].includes(conNombre.status)
     ? `${t("blockTitle")} · ${projectCopy(conNombre.status === "accepted" ? "accepted" : "declined")}`
     : null;
 

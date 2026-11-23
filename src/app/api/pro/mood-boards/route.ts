@@ -4,6 +4,7 @@ import {enforceRateLimit} from '@/lib/rate-limit';
 import {MOOD_BODY_MAX,moodBoardMutationSchema,moodClientMutationSchema} from '@/lib/pro/mood-boards';
 import {proActor,proBoundedJson,proDbError,proFail,proQuery,proRouteHeaders as headers,proSameOrigin,proCustomerReader} from '@/lib/pro/route-common';
 import {PRO_FILE_MAX_BYTES} from '@/lib/pro/file-limit';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 // Row 61: idea boards per job, the linked customer's published copy and comments.
 // Images are the existing private job files (bucket pro-work-files), reauthorized
 // on every request and never exposed as public or signed URLs. Photos are uploaded
@@ -14,7 +15,7 @@ const uuid=z.string().uuid(),work=z.string().trim().min(1).max(160);
 const same=(keys:string[],expected:string[])=>keys.length===expected.length&&[...keys].sort().join()===[...expected].sort().join();
 
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const q=proQuery(req);if(!q)return proFail(400,'Consulta inválida.');const keys=Object.keys(q);
   if(same(keys,['image'])||same(keys,['publication','page','element'])){
@@ -53,7 +54,7 @@ export async function GET(req:Request){
 }
 
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;

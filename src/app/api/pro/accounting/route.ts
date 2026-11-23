@@ -3,6 +3,7 @@ import {proActor,proBoundedJson,proFail,proQuery,proRouteHeaders as headers,proS
 import {accountingMutationSchema,mappingGaps,type Sources} from '@/lib/pro/integrations/accounting/model';
 import {quickbooksFor,resolveQuickbooks,simulateRemoteEdit,syncQuickbooks,type AccountingRead} from '@/lib/pro/integrations/accounting/sync';
 import {connectionMode,OAuthError} from '@/lib/pro/integrations/oauth/service';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Round 6B: Company › Contabilidad. GET: mode, mapping (accounts and IVA codes), QuickBooks options (when
 // connected), links/conflicts, what would be synced. POST: save_mapping (CAS + idempotent), sync, resolve
@@ -11,7 +12,7 @@ const messages:Record<string,string>={missing_keys:'Faltan variables de entorno 
  not_connected:'Conecte QuickBooks primero.',no_conflict:'Ese conflicto ya se resolvió.',mock_only:'Solo disponible en simulación.',not_synced:'Sincronice primero ese registro.',remote_deleted:'El registro ya no existe en QuickBooks: conserve la versión de ContrataCR.'};
 const fail=(error:unknown)=>error instanceof OAuthError?Response.json({error:messages[error.reason]??(error.status===409?'Los datos cambiaron. Actualice y reintente.':'No se pudo completar la operación.'),reason:error.reason},{status:error.status,headers}):proFail(503,'No se pudo comprobar la operación. Reintente la misma acción.');
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const raw=proQuery(req);if(!raw||Object.keys(raw).length)return proFail(400,'Consulta inválida.');
   const resolved=await connectionMode(a.db,a.user.id,'quickbooks');
@@ -26,7 +27,7 @@ export async function GET(req:Request){
  }catch(error){return fail(error);}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;

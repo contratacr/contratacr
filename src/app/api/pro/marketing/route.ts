@@ -2,13 +2,14 @@ import {enforceRateLimit} from '@/lib/rate-limit';
 import {proActor,proBoundedJson,proDbError,proFail,proRequestOrigin,proRouteHeaders as headers,proSameOrigin} from '@/lib/pro/route-common';
 import {marketingMutationSchema} from '@/lib/pro/marketing';
 import {resolveMode,storedMode} from '@/lib/pro/integrations/server';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // Round 6D (row 71): email campaigns and automations to consenting contacts. Mode comes from the marketing_email
 // provider (mock by default → every message is «simulado» in the outbox; nothing leaves the machine). In a real
 // mode the queued messages would be delivered by BrevoCampaignSender (inactive: no keys exist).
 async function mode(db:Parameters<typeof storedMode>[0],owner:string){const resolved=resolveMode('marketing_email',await storedMode(db,owner,'marketing_email'));return resolved.status==='ready'?resolved.mode:null;}
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;
   const result=await a.db.rpc('pro_mkt_read',{p_actor:a.user.id});if(result.error)return proDbError(result.error,'Los datos cambiaron.');
@@ -16,7 +17,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudo cargar el correo masivo. Reintente.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;

@@ -5,6 +5,7 @@ import {enforceRateLimit} from '@/lib/rate-limit';
 import {takeoffDeductionSchema,takeoffMutationSchema} from '@/lib/pro/takeoffs';
 import {proActor,proBoundedJson,proDbError,proFail,proQuery,proRouteHeaders as headers,proSameOrigin} from '@/lib/pro/route-common';
 import {PRO_FILE_MAX_BYTES} from '@/lib/pro/file-limit';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 // Row 66: plan measurements per job. Plan images are the existing private job files
 // (bucket pro-work-files), served only to their owner and reauthorized per request.
 const bucket='pro-work-files',conflict='Las mediciones cambiaron. Actualice antes de guardar.';
@@ -16,7 +17,7 @@ async function storedBytes(db:Db,meta:z.infer<typeof storedSchema>){
  const bytes=new Uint8Array(await download.data.arrayBuffer());return createHash('sha256').update(bytes).digest('hex')===meta.sha256?bytes:null;
 }
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const q=proQuery(req),keys=q?Object.keys(q):[];
   if(!q||keys.length!==1)return proFail(400,'Consulta inválida.');
@@ -35,7 +36,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudieron cargar las mediciones. Reintente.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;

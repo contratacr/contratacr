@@ -12,6 +12,7 @@ import {enforceRateLimit} from '@/lib/rate-limit';
 import {decodeDeliveryPhotoBase64} from '@/lib/pro/delivery-photo-base64';
 import {canonicalWorkFileName,sharedFoldersSchema,workFileMutationSchema,workFileSchema,WORK_FILE_MAX_BYTES} from '@/lib/pro/work-files';
 import {PRO_FILE_BODY_MAX} from '@/lib/pro/file-limit';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 const bucketName='pro-work-files',headers={'Cache-Control':'no-store, private','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Content-Security-Policy':"sandbox; default-src 'none'; frame-ancestors 'none'"};
 const fail=(status:number,error:string)=>Response.json({error},{status,headers});
 const dbError=(error:{code?:string})=>fail(error.code==='40001'?409:error.code==='42501'?403:error.code==='54000'?429:['22023','22008','22007','22021','23514','23505','22P02'].includes(error.code||'')?400:503,error.code==='40001'?'El archivo o destinatario cambió. Actualice antes de compartir.':'No se pudo completar la operación.');
@@ -35,7 +36,7 @@ async function bounded(req:Request){
 // Ronda F2-D: every accepted format (file-formats.ts); the bytes decide the stored type.
 async function normalize(raw:Buffer,sourceName:string){return sniffProDocument(raw,sourceName);}
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await actor(req);if(a.error)return a.error;const q=new URL(req.url).searchParams;
   if(q.has('fileId')&&q.size===1){
@@ -83,7 +84,7 @@ export async function GET(req:Request){
  }catch{return fail(503,'No se pudieron cargar los archivos. Reintente.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(req.headers.get('origin')!==`${new URL(req.url).protocol}//${req.headers.get('host')||new URL(req.url).host}`)return fail(403,'Origen no autorizado.');
  try{
   const a=await actor(req);if(a.error)return a.error;

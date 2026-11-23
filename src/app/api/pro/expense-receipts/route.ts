@@ -6,6 +6,7 @@ import {normalizeCompanyFile} from '@/lib/pro/company-file-normalize';
 import {canonicalWorkFileName,workFileNameSchema,WORK_FILE_MAX_BYTES} from '@/lib/pro/work-files';
 import {proActor,proBoundedJson,proDbError,proFail,proQuery,proRouteHeaders,proSameOrigin} from '@/lib/pro/route-common';
 import {PRO_FILE_BODY_MAX} from '@/lib/pro/file-limit';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 // Round 4B: one receipt (photo or PDF, same limits/normalization as job files) per internal expense.
 // Private bucket; every download is reauthorized in SQL (owner only) and never returns a storage URL.
 const bucketName='pro-expense-receipts';
@@ -19,7 +20,7 @@ const mutationSchema=z.discriminatedUnion('action',[
 ]);
 const metadataSchema=z.object({objectPath:z.string().regex(/^[a-f0-9-]{36}\/[a-f0-9-]{36}\.(jpg|pdf)$/),name:z.string().min(1).max(160),mimeType:z.enum(['image/jpeg','application/pdf']),sizeBytes:z.number().int().positive().max(WORK_FILE_MAX_BYTES),sha256:z.string().regex(/^[a-f0-9]{64}$/)}).strict();
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  try{
   const a=await proActor(req);if(a.error)return a.error;const raw=proQuery(req);const receipt=raw&&Object.keys(raw).length===1?id.safeParse(raw.receiptId):null;
   if(!receipt?.success)return proFail(400,'Comprobante inválido.');
@@ -33,7 +34,7 @@ export async function GET(req:Request){
  }catch{return proFail(503,'No se pudo abrir el comprobante.');}
 }
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;

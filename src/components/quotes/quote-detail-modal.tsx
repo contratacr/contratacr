@@ -12,6 +12,7 @@ import { desgloseQuote, isQuoteExpired, numeroCotizacion, type Quote } from "@/l
 import { Button } from "@/components/ui/button";
 import { MenuFicha } from "@/components/ui/menu-ficha";
 import { BotonCompartirCotizacion, BotonDescargarCotizacion, QuoteShare } from "@/components/quotes/quote-share";
+import {PRO_UI_ENABLED} from '@/lib/pro/enabled-client';
 
 const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
 
@@ -53,11 +54,11 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
   const responseListener=useRef(onResponseStateChange);
   useEffect(()=>{responseListener.current=onResponseStateChange;},[onResponseStateChange]);
   useEffect(()=>{responseListener.current?.({dirty:false,busy:busy||uncertain});return()=>responseListener.current?.({dirty:false,busy:false});},[busy,uncertain]);
-  const requestQuote=process.env.NODE_ENV==='development'&&!!quote.source_request_id&&!!quote.updated_at;
+  const requestQuote=PRO_UI_ENABLED&&!!quote.source_request_id&&!!quote.updated_at;
   const expirada = isQuoteExpired(quote);
   // La cotización es un documento: no hay nada que "esperar". Solo se avisa
   // cuando ya no sirve (vencida) o cuando el profesional la retiró.
-  const estado = expirada ? t("statusExpired") : quote.status === "withdrawn" ? t("statusWithdrawn") : process.env.NODE_ENV==='development'&&["accepted","declined"].includes(quote.status)?projectCopy(quote.status==='accepted'?'accepted':'declined'):null;
+  const estado = expirada ? t("statusExpired") : quote.status === "withdrawn" ? t("statusWithdrawn") : PRO_UI_ENABLED&&["accepted","declined"].includes(quote.status)?projectCopy(quote.status==='accepted'?'accepted':'declined'):null;
   const fecha = quote.valid_until ? new Date(`${quote.valid_until}T12:00:00`).toLocaleDateString(DATE_LOCALE[locale] ?? "es-CR", { day: "numeric", month: "long" }) : null;
 
   async function actuar(action: "withdraw" | "delete") {
@@ -134,7 +135,7 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
         // mientras la franja blanca de abajo se quedaba vacia.
         footer={role === "pro" && abierta ? (
           <BotonCompartirCotizacion quote={quote} proName={proName ?? quote.professional_name ?? ""} proSlug={proSlug} className="min-w-0 flex-1 sm:w-auto sm:flex-none" />
-        ) : role === "client" && process.env.NODE_ENV==='development' && (quote.project_id||requestQuote) && (abierta||uncertain) ? (
+        ) : role === "client" && PRO_UI_ENABLED && (quote.project_id||requestQuote) && (abierta||uncertain) ? (
           <div className="flex w-full flex-wrap gap-2">{uncertain?<><p role="alert" className="w-full text-sm">{qc("responseUnverified")}</p><Button disabled={busy} onClick={()=>void respond(pendingResponse.current?.action??'accept')}>{qc("checkSavedResult")}</Button></>:<><Button disabled={busy} onClick={()=>void respond('accept')}>{t("accept")}</Button><Button variant="secondary" disabled={busy} onClick={()=>void respond('decline')}>{t("decline")}</Button></>}</div>
         ) : role === "client" ? (
           <BotonDescargarCotizacion quote={quote} proName={quote.professional_name ?? ""} className="w-full sm:w-auto" />
@@ -173,7 +174,7 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
               <p className="mt-0.5 whitespace-pre-line text-[14px] leading-6 text-[#52627a]">{quote.notes}</p>
             </div>
           )}
-          {process.env.NODE_ENV==='development'&&<fieldset disabled={busy||uncertain}><QuoteChangeRequests key={quote.id} quoteId={quote.id}/></fieldset>}
+          {PRO_UI_ENABLED&&<fieldset disabled={busy||uncertain}><QuoteChangeRequests key={quote.id} quoteId={quote.id}/></fieldset>}
           {/* Mandarla vive en el pie. Aquí solo queda el aviso de a qué cita o
               proyecto está pegada, si lo está. */}
           {role === "pro" && abierta && <QuoteShare quote={quote} onChanged={onChanged} />}

@@ -8,6 +8,7 @@ import {derivedId} from '@/lib/pro/integrations/ids';
 import {MENU_ERROR_HINTS,menuImportReviewSchema,menuMutationSchema} from '@/lib/directory/menu-schemas';
 import {MENU_IMPORT_MAX_BYTES,MockMenuExtractor,menuImportImageTypes,normalizeMenuExtraction} from '@/lib/directory/menu-import';
 import {proHasModule} from '@/lib/pro/api-access-module';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 // LOCAL PRO ONLY (P2, development only): Pro menu of a claimed restaurant, /api/pro/menu. The segment «menu» is
 // already mapped by the F4 SQL: pro_role_route_capability → menu.write and pro_route_module → menu (team gate).
@@ -44,7 +45,7 @@ async function context(req:Request){
 }
 
 export async function GET(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers:proRouteHeaders});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers:proRouteHeaders});
  try{
   const c=await context(req);if(c.error)return c.error;
   const q=new URL(req.url).searchParams;if([...q.keys()].length!==1)return fail(400,'invalid','Consulta inválida.');
@@ -56,7 +57,7 @@ export async function GET(req:Request){
 }
 
 export async function POST(req:Request){
- if(process.env.NODE_ENV!=='development')return new Response(null,{status:404,headers:proRouteHeaders});
+ if(!PRO_ENABLED)return new Response(null,{status:404,headers:proRouteHeaders});
  if(!proSameOrigin(req))return fail(403,'origin','Origen no autorizado.');
  try{
   const c=await context(req);if(c.error)return c.error;

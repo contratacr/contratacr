@@ -5,6 +5,7 @@ import {createAdminClient} from '@/lib/supabase/admin';
 import {getApiAdmin} from '@/lib/auth/admin';
 import {enforceRateLimit} from '@/lib/rate-limit';
 import {leadOriginCreateInputSchema,leadOriginCreateResultSchema,leadOriginCreateReceiptSchema,leadOriginCreateCurrentSchema} from '@/lib/pro/lead-origin-create';
+import {PRO_ENABLED} from '@/lib/pro/enabled';
 const headers={'Cache-Control':'no-store, private','X-Content-Type-Options':'nosniff'};
 const fail=(status:number,error:string)=>Response.json({error},{status,headers});
 const dbError=(error:{code?:string})=>fail(['40001','54000','23505'].includes(error.code||'')?409:error.code==='42501'?403:error.code==='P0002'?404:['22023','22007','22008','22021','23514','22P02'].includes(error.code||'')?400:503,error.code==='40001'?'La solicitud, el cliente o el canal cambió. Actualice antes de continuar.':'No se pudo completar el cambio.');
@@ -24,7 +25,7 @@ async function bounded(req:Request){
 }
 const id=z.string().uuid();
 const query=z.discriminatedUnion('view',[z.object({view:z.literal('action'),actionId:id}).strict(),z.object({view:z.literal('current'),leadId:id}).strict()]);
-const local=()=>process.env.NODE_ENV==='development'&&['http://127.0.0.1:54321','http://127.0.0.1:54321/'].includes(process.env.NEXT_PUBLIC_SUPABASE_URL??'');
+const local=()=>PRO_ENABLED;
 export async function GET(req:Request){
  if(!local())return new Response(null,{status:404,headers});
  try{const a=await actor(req);if(a.error)return a.error;const raw:Record<string,string>={};for(const[k,v]of new URL(req.url).searchParams){if(k in raw)return fail(400,'Consulta inválida.');raw[k]=v;}const parsed=query.safeParse(raw);if(!parsed.success)return fail(400,'Consulta inválida.');const q=parsed.data;
