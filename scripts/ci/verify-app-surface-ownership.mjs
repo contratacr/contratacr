@@ -144,6 +144,7 @@ const handlerRules = [
   [/^\/api\/pro\/company-daily-log-files$/, "pro-company-daily-log-files-api.spec.ts"],
   [/^\/api\/pro\/company-file-versions$/, "pro-company-file-versions.spec.ts"],
   [/^\/api\/pro\/(?:company-file-bulk|work-file-bulk|file-purge)$/, "pro-file-bulk.spec.ts"],
+  [/^\/api\/pro\/file-annotations$/, "pro-file-annotations.spec.ts"],
   [/^\/api\/pro\/company-file-tags$/, "pro-files-library.spec.ts"],
   [/^\/api\/pro\/company-files$/, "pro-company-files.spec.ts"],
   [/^\/api\/pro\/company-vendors$/, "pro-bid-portal.spec.ts"],
