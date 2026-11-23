@@ -9,7 +9,7 @@ import {PRO_ENABLED} from '@/lib/pro/enabled';
 /**
  * Ronda F2-E (row 29): bulk operations on the company library (move, favorites, archive, restore, add or remove tags and
  * permanent delete), 1 to 50 files per call. Owner only: a team member working in the company gets 403 (the
- * library is private to the owner unless the owner grants a folder, see /api/pro/company-folder-access).
+ * library is private to the owner; folder grants of /api/pro/company-folder-access give members view or edit of one folder, never bulk or permanent delete).
  * Permanent delete takes only archived files that were never used (copied into a job, used in a daily log or a proposal,
  * several versions, annotations); the others are kept and reported. One immutable receipt per batch.
  */

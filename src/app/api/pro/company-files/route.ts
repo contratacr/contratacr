@@ -13,6 +13,7 @@ import {ProDocRejected,proDocRejectedMessage,sniffProDocument} from '@/lib/pro/f
 import {companyFileMutationSchema,companyFileResultSchema,companyFileReceiptSchema,companyFileDetailSchema,companyFilesPageSchema,companyFileSchema,canonicalCompanyFileInput} from '@/lib/pro/company-files';
 import {PRO_FILE_BODY_MAX} from '@/lib/pro/file-limit';
 import {PRO_ENABLED} from '@/lib/pro/enabled';
+import {libraryMemberGuard} from '@/lib/pro/company-folder-access';
 const bucketName='pro-company-files',headers={'Cache-Control':'no-store, private','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Content-Security-Policy':"sandbox; default-src 'none'; frame-ancestors 'none'"};
 const fail=(status:number,error:string)=>Response.json({error},{status,headers});
 const dbError=(error:{code?:string})=>fail(['40001','54000'].includes(error.code||'')?409:error.code==='42501'?403:['22023','22008','22007','22021','23514','23505','22P02'].includes(error.code||'')?400:503,error.code==='40001'?'Los datos cambiaron. Actualice antes de continuar.':'No se pudo completar la operación.');
@@ -45,6 +46,8 @@ export async function GET(req:Request){
   const a=await actor(req);if(a.error)return a.error;
   const raw:Record<string,string>={};for(const[k,v]of new URL(req.url).searchParams){if(k in raw)return fail(400,'Consulta inválida.');raw[k]=v;}
   const parsed=querySchema.safeParse(raw);if(!parsed.success)return fail(400,'Consulta inválida.');const q=parsed.data;
+  // Row 31: a team member sees only the folders the owner shared (default: nothing).
+  const denied=await libraryMemberGuard(a.db,a.user.id,q.view==='list'?(q.scope==='folder'&&q.folderId?{folders:[q.folderId]}:{ownerOnly:true}):q.view==='action'?{ownerOnly:true}:{files:[q.fileId]});if(denied)return denied;
   if(q.view==='binary'){
    const access=await a.db.rpc('pro_company_file_download',{p_actor:a.user.id,p_file:q.fileId});if(access.error)return dbError(access.error);if(!access.data)return fail(404,'Archivo no disponible.');const meta=binarySchema.parse(access.data),expected=a.user.id+'/'+q.fileId+proDocExtension(meta.mimeType);if(meta.objectPath!==expected||canonicalWorkFileName(meta.name,meta.mimeType)!==meta.name)return fail(503,'No se pudo comprobar el archivo.');
    const object=await a.db.storage.from(bucketName).download(expected);if(object.error||!object.data||object.data.size!==meta.sizeBytes)return fail(503,'No se pudo descargar el archivo.');const bytes=new Uint8Array(await object.data.arrayBuffer());if(digest(bytes)!==meta.sha256)return fail(503,'No se pudo comprobar el archivo.');
@@ -62,6 +65,9 @@ export async function POST(req:Request){
  try{
   const a=await actor(req);if(a.error)return a.error;const limited=await enforceRateLimit(req,'company-files-'+a.user.id,60,60000);if(limited)return limited;
   let input;try{input=companyFileMutationSchema.parse(await bounded(req));}catch(cause){return fail(cause instanceof RangeError?413:400,'Revise los datos del archivo.');}
+  // Row 31: writes need "edit" on every folder involved (copy to a job only needs "view"); the root is the owner's.
+  const involved=input.action==='upload'?{folders:input.folderId?[input.folderId]:[],root:!input.folderId}:input.action==='folder_save'?{folders:[...input.revision>0?[input.folderId]:[],...input.parentId?[input.parentId]:[]],root:!input.parentId}:input.action==='file_update'?{folders:input.folderId?[input.folderId]:[],files:[input.fileId],root:!input.folderId}:input.action==='folder_archive'||input.action==='folder_restore'?{folders:[input.folderId]}:'fileId' in input?{files:[input.fileId]}:{root:true};
+  const denied=await libraryMemberGuard(a.db,a.user.id,{folders:'folders' in involved?involved.folders:[],files:'files' in involved?involved.files:[],level:input.action==='copy'?'view':'edit',ownerOnly:'root' in involved&&involved.root});if(denied)return denied;
   const inputHash=digest(canonicalCompanyFileInput(input));let internal:Record<string,unknown>={...input};let uploadBytes:Buffer|undefined;
   if(input.action==='upload'){
    try{const raw=decodeDeliveryPhotoBase64(input.data),canonical=await sniffProDocument(raw,input.name);uploadBytes=canonical.bytes;internal={action:'upload',actionId:input.actionId,fileId:input.fileId,folderId:input.folderId,sourceName:input.name,name:canonicalWorkFileName(input.name,canonical.mimeType),mimeType:canonical.mimeType,rawSha256:digest(raw),sha256:digest(canonical.bytes),sizeBytes:canonical.bytes.length};}catch(cause){return Response.json({error:proDocRejectedMessage(cause),reason:cause instanceof ProDocRejected?cause.reason:'type'},{status:400,headers});}

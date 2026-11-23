@@ -227,6 +227,45 @@ try{
   for(const [role,yes] of [['anon',false],['authenticated',false],['service_role',true]])assert.equal((await one('select has_function_privilege($1,$2,$3) v',[role,'public.'+fn,'EXECUTE'])).v,yes,role+' '+fn);
  assert.equal((await one("select has_table_privilege('authenticated','public.pro_file_annotations','SELECT') v")).v,false);
  pass('415 annotations: pins (normalized coordinates, page), notes, private, idempotent, immutable, used files kept, grants');
+ // ---- 416 folder permissions for current team members (default: only the owner) ----
+ const hasMembers=(await one("select to_regclass('public.pro_company_members') is not null v")).v;
+ assert.ok(hasMembers,'pro_company_members must exist (migration 307 / team roles)');
+ for(const id of [customer])await db.query("insert into pro_company_members(owner_id,member_user_id,member_name,member_email,role,active) values($1,$2,'Ana Integrante','ana@example.com','member',true) on conflict do nothing",[owner,id]);
+ const acc=async(input,actor=owner)=>(await one('select pro_company_folder_access_mutate($1,$2) v',[actor,{actionId:crypto.randomUUID(),...input}])).v;
+ const gate=async(folders,files,level,member=customer)=>(await one('select pro_company_folder_gate($1,$2,$3,$4,$5) v',[owner,member,folders,files,level])).v;
+ const top=await cfolder('Proyectos'),sub=await cfolder('Planos',top),other=await cfolder('Finanzas'),subsub=await cfolder('Detalle',sub);
+ const rf=await libUp('plano-1.pdf'),of2=await libUp('balance.pdf');
+ await cbulk({action:'move',folderId:sub,items:await citems([rf.id])});await cbulk({action:'move',folderId:other,items:await citems([of2.id])});
+ assert.equal(await gate([top],[],'view'),false,'default: the member sees nothing');assert.equal(await gate([],[rf.id],'view'),false);
+ let g=await acc({action:'grant',folderId:top,memberUserId:customer,level:'view'});assert.equal(g.replayed,false);
+ assert.equal(await gate([top],[],'view'),true);assert.equal(await gate([sub,subsub],[rf.id],'view'),true,'a grant covers subfolders and files');
+ assert.equal(await gate([top],[],'edit'),false,'view is not edit');assert.equal(await gate([other],[],'view'),false,'other folders stay closed');assert.equal(await gate([],[of2.id],'view'),false);
+ assert.equal(await gate([],[],'view'),false,'nothing requested is denied');assert.equal(await gate([crypto.randomUUID()],[],'view'),false,'unknown folder');
+ const aid=crypto.randomUUID();await acc({actionId:aid,action:'grant',folderId:sub,memberUserId:customer,level:'edit'});
+ assert.equal((await one('select (pro_company_folder_access_mutate($1,$2)->>$3)::boolean v',[owner,{action:'grant',actionId:aid,folderId:sub,memberUserId:customer,level:'edit'},'replayed'])).v,true,'idempotent replay');
+ await assert.rejects(()=>acc({actionId:aid,action:'grant',folderId:sub,memberUserId:customer,level:'view'}),code('22023'),'action id reused');
+ assert.equal(await gate([sub,subsub],[rf.id],'edit'),true);assert.equal(await gate([top],[],'edit'),false,'the child grant does not open the parent');
+ const rd=(await one('select pro_company_folder_access_read($1,$2) v',[owner,sub])).v;assert.equal(rd.members.length,1);assert.deepEqual([rd.members[0].level,rd.members[0].effective],['edit','edit']);
+ const rsub=(await one('select pro_company_folder_access_read($1,$2) v',[owner,subsub])).v;assert.deepEqual([rsub.members[0].level,rsub.members[0].effective],[null,'edit'],'inherited');
+ const mine=(await one('select pro_company_folder_access_mine($1,$2) v',[owner,customer])).v;assert.deepEqual(mine.folders.map(f=>f.name).sort(),['Planos','Proyectos']);
+ await assert.rejects(()=>acc({action:'grant',folderId:sub,memberUserId:stranger,level:'view'}),code('42501'),'only members of the company');
+ await assert.rejects(()=>acc({action:'grant',folderId:crypto.randomUUID(),memberUserId:customer,level:'view'}),code('42501'),'unknown folder');
+ await assert.rejects(()=>acc({action:'grant',folderId:sub,memberUserId:customer,level:'admin'}),code('22023'));
+ await assert.rejects(()=>acc({action:'grant',folderId:sub,memberUserId:customer,level:'view',extra:1}),code('22023'));
+ assert.equal((await one('select pro_company_folder_access_read($1,$2) v',[rival,sub])).v,null,'another account sees nothing');
+ await assert.rejects(()=>acc({action:'revoke',folderId:sub,memberUserId:customer},rival),code('42501'));
+ await acc({action:'revoke',folderId:sub,memberUserId:customer});assert.equal(await gate([sub],[],'edit'),false);assert.equal(await gate([sub],[rf.id],'view'),true,'the parent grant still applies');
+ // a deactivated member loses access at once, grants are kept
+ await db.query("update pro_company_members set active=false where owner_id=$1 and member_user_id=$2",[owner,customer]);
+ assert.equal(await gate([top],[],'view'),false,'inactive member');assert.deepEqual((await one('select pro_company_folder_access_mine($1,$2) v',[owner,customer])).v.folders,[]);
+ await db.query("update pro_company_members set active=true where owner_id=$1 and member_user_id=$2",[owner,customer]);assert.equal(await gate([top],[],'view'),true,'reactivated member keeps the grant');
+ assert.equal(await gate([top],[],'view',owner),false,'the owner is not a member here');
+ await assert.rejects(()=>db.query("update pro_company_folder_access_actions set level='view'"),code('23514'));
+ assert.equal((await one('select count(*)::int v from pro_company_folder_access_actions where owner_id=$1',[owner])).v,3,'audit trail');
+ for(const fn of ['pro_company_folder_gate(uuid,uuid,uuid[],uuid[],text)','pro_company_folder_access_mutate(uuid,jsonb)','pro_company_folder_access_read(uuid,uuid)','pro_company_folder_access_mine(uuid,uuid)','pro_company_folder_level(uuid,uuid,uuid)'])
+  for(const [role,yes] of [['anon',false],['authenticated',false],['service_role',true]])assert.equal((await one('select has_function_privilege($1,$2,$3) v',[role,'public.'+fn,'EXECUTE'])).v,yes,role+' '+fn);
+ assert.equal((await one("select has_table_privilege('authenticated','public.pro_company_folder_access','SELECT') v")).v,false);
+ pass('416 folder permissions: default owner only, view/edit, inheritance, active members only, idempotent grant/revoke with audit, grants');
  // @@GROUPS@@
 
  console.log(`${checks} file-ops contract groups passed; in-memory PGlite only.`);
