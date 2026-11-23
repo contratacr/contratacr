@@ -22,6 +22,12 @@ export function floorObjectCorners(o:{x:number;y:number;w:number;d:number;rotati
 const coord=z.number().finite().min(-10000).max(10000);
 const point=z.tuple([coord,coord]);
 const shortId=z.string().regex(/^[A-Za-z0-9_-]{1,40}$/);
+const floorObjectSchema=z.object({id:shortId,kind:z.enum([...floorObjectKinds,'custom']),x:coord,y:coord,w:z.number().min(0.1).max(50),d:z.number().min(0.1).max(50),rotation:z.union([z.literal(0),z.literal(90),z.literal(180),z.literal(270)]),
+ h:z.number().min(0.05).max(20).optional(),label:z.string().trim().min(1).max(60).optional(),libraryId:z.string().uuid().optional(),color:z.string().regex(/^#[0-9a-fA-F]{6}$/).optional()}).strict()
+ .superRefine((o,context)=>{if(o.kind==='custom'){if(o.h===undefined||o.label===undefined)context.addIssue({code:'custom',message:'custom object'});}else if(o.h!==undefined||o.label!==undefined||o.libraryId!==undefined||o.color!==undefined)context.addIssue({code:'custom',message:'catalog object'});});
+export type FloorObject=z.infer<typeof floorObjectSchema>;
+/** Label of any object: catalogue kinds use the table, custom (library) objects carry their own name. */
+export const floorObjectName=(o:{kind:FloorObjectKind|'custom';label?:string},en:boolean)=>o.kind==='custom'?(o.label??''):floorObjectLabel(o.kind,en);
 export const floorPlanContentSchema=z.object({
  walls:z.array(z.object({id:shortId,a:point,b:point,thickness:z.number().min(0.01).max(2)}).strict()).max(500),
  openings:z.array(z.object({id:shortId,wallId:shortId,kind:z.enum(['door','window']),offset:z.number().min(0).max(10000),width:z.number().min(0.1).max(20)}).strict()).max(300),
@@ -30,7 +36,8 @@ export const floorPlanContentSchema=z.object({
  wallHeight:z.number().min(1).max(20),
  // Round 12 (row 63): optional level of the building this plan draws, and furniture/fixture objects.
  level:z.object({name:z.string().trim().min(1).max(60),order:z.number().int().min(-5).max(50)}).strict().optional(),
- objects:z.array(z.object({id:shortId,kind:z.enum(floorObjectKinds),x:coord,y:coord,w:z.number().min(0.1).max(50),d:z.number().min(0.1).max(50),rotation:z.union([z.literal(0),z.literal(90),z.literal(180),z.literal(270)])}).strict()).max(300).optional(),
+ // Row 63 (library): kind 'custom' = an object of the owner's library: own name, height, optional colour and library entry.
+ objects:z.array(floorObjectSchema).max(300).optional(),
 }).strict().superRefine((value,context)=>{const walls=new Set(value.walls.map(w=>w.id));if(value.openings.some(o=>!walls.has(o.wallId)))context.addIssue({code:'custom',message:'opening wall'});});
 export type FloorPlanContent=z.infer<typeof floorPlanContentSchema>;
 export type FloorPlanSummary={rooms:{id:string;name:string;area:number;perimeter:number}[];totalArea:number;wallLength:number;doors:number;windows:number};
@@ -68,7 +75,7 @@ export function floorPlanSvg(plan:{name:string;unit:'m'|'ft';content:FloorPlanCo
  const X=(x:number)=>((x-b.minX+pad)*scale).toFixed(1),Y=(y:number)=>((y-b.minY+pad)*scale+40).toFixed(1);
  const parts:string[]=[`<svg xmlns="http://www.w3.org/2000/svg" width="${widthPx}" height="${heightPx}" viewBox="0 0 ${widthPx} ${heightPx}" font-family="Helvetica, Arial, sans-serif">`,`<rect width="100%" height="100%" fill="#ffffff"/>`,`<text x="16" y="28" font-size="20" font-weight="700" fill="#162543">${xml(plan.content.level?plan.name+' · '+plan.content.level.name:plan.name)}</text>`];
  for(const room of plan.content.rooms){const c=centroid(room.points);parts.push(`<polygon points="${room.points.map(p=>X(p[0])+','+Y(p[1])).join(' ')}" fill="#eaf7fb" stroke="#9fc9da" stroke-width="1"/>`,`<text x="${X(c[0])}" y="${Y(c[1])}" text-anchor="middle" font-size="16" fill="#162543">${xml(room.name)}</text>`,`<text x="${X(c[0])}" y="${(Number(Y(c[1]))+20).toFixed(1)}" text-anchor="middle" font-size="14" fill="#52627a">${xml(areaLabel(polygonArea(room.points),plan.unit,en))}</text>`);}
- for(const object of plan.content.objects??[]){const c=floorObjectCorners(object);parts.push(`<polygon points="${c.map(p=>X(p[0])+','+Y(p[1])).join(' ')}" fill="#fff7e6" stroke="#b7791f" stroke-width="1.5"/>`,`<text x="${X(object.x)}" y="${(Number(Y(object.y))+4).toFixed(1)}" text-anchor="middle" font-size="11" fill="#7a4f0b">${xml(floorObjectLabel(object.kind,en))}</text>`);}
+ for(const object of plan.content.objects??[]){const c=floorObjectCorners(object);parts.push(`<polygon points="${c.map(p=>X(p[0])+','+Y(p[1])).join(' ')}" fill="#fff7e6" stroke="#b7791f" stroke-width="1.5"/>`,`<text x="${X(object.x)}" y="${(Number(Y(object.y))+4).toFixed(1)}" text-anchor="middle" font-size="11" fill="#7a4f0b">${xml(floorObjectName(object,en))}</text>`);}
  for(const wall of plan.content.walls)parts.push(`<line x1="${X(wall.a[0])}" y1="${Y(wall.a[1])}" x2="${X(wall.b[0])}" y2="${Y(wall.b[1])}" stroke="#162543" stroke-width="${Math.max(2,wall.thickness*scale).toFixed(1)}" stroke-linecap="square"/>`);
  for(const opening of plan.content.openings){const seg=openingSegment(plan.content,opening);if(!seg)continue;parts.push(`<line x1="${X(seg[0][0])}" y1="${Y(seg[0][1])}" x2="${X(seg[1][0])}" y2="${Y(seg[1][1])}" stroke="${opening.kind==='door'?'#d9480f':'#1c7ed6'}" stroke-width="${opening.kind==='door'?6:4}"/>`);}
  for(const dim of plan.content.dimensions){const m:Point=[(dim.a[0]+dim.b[0])/2,(dim.a[1]+dim.b[1])/2];parts.push(`<line x1="${X(dim.a[0])}" y1="${Y(dim.a[1])}" x2="${X(dim.b[0])}" y2="${Y(dim.b[1])}" stroke="#7048e8" stroke-width="1.5" stroke-dasharray="6 4"/>`,`<text x="${X(m[0])}" y="${(Number(Y(m[1]))-6).toFixed(1)}" text-anchor="middle" font-size="13" fill="#7048e8">${xml(lengthLabel(distance(dim.a,dim.b),plan.unit,en))}</text>`);}
@@ -83,7 +90,7 @@ export function floorPlanPdf(plan:{name:string;unit:'m'|'ft';content:FloorPlanCo
  const text=(x:number|string,y:number|string,size:number,t:string,bold=false)=>`BT /${bold?'F2':'F1'} ${size} Tf ${x} ${y} Td (${esc(t)}) Tj ET`;
  const ops:string[]=['0.09 0.15 0.26 rg',text(M,H-M-14,16,plan.content.level?plan.name+' · '+plan.content.level.name:plan.name,true),'0.32 0.38 0.48 rg',text(M,H-M-30,9,workLabel+' · '+(en?'Scale':'Escala')+` 1 ${unitLabel(plan.unit)} = ${(s/72*25.4).toFixed(1)} mm`)];
  for(const r of plan.content.rooms){ops.push('0.92 0.97 0.98 rg',r.points.map((p,i)=>`${X(p[0])} ${Y(p[1])} ${i?'l':'m'}`).join(' ')+' h f');}
- for(const ob of plan.content.objects??[]){const c=floorObjectCorners(ob);ops.push('1 0.97 0.9 rg 0.72 0.47 0.12 RG 0.8 w',c.map((p,i)=>`${X(p[0])} ${Y(p[1])} ${i?'l':'m'}`).join(' ')+' h B','0.48 0.31 0.04 rg',text((Number(X(ob.x))-12).toFixed(2),(Number(Y(ob.y))-3).toFixed(2),6,floorObjectLabel(ob.kind,en)));}
+ for(const ob of plan.content.objects??[]){const c=floorObjectCorners(ob);ops.push('1 0.97 0.9 rg 0.72 0.47 0.12 RG 0.8 w',c.map((p,i)=>`${X(p[0])} ${Y(p[1])} ${i?'l':'m'}`).join(' ')+' h B','0.48 0.31 0.04 rg',text((Number(X(ob.x))-12).toFixed(2),(Number(Y(ob.y))-3).toFixed(2),6,floorObjectName(ob,en)));}
  ops.push('0.09 0.15 0.26 RG');for(const w of plan.content.walls)ops.push(`${Math.max(1,w.thickness*s).toFixed(2)} w ${X(w.a[0])} ${Y(w.a[1])} m ${X(w.b[0])} ${Y(w.b[1])} l S`);
  for(const o of plan.content.openings){const seg=openingSegment(plan.content,o);if(seg)ops.push(`${o.kind==='door'?'0.85 0.28 0.06':'0.11 0.49 0.84'} RG 3 w ${X(seg[0][0])} ${Y(seg[0][1])} m ${X(seg[1][0])} ${Y(seg[1][1])} l S`);}
  ops.push('0.44 0.28 0.91 RG 0.8 w [4 3] 0 d');for(const d of plan.content.dimensions)ops.push(`${X(d.a[0])} ${Y(d.a[1])} m ${X(d.b[0])} ${Y(d.b[1])} l S`);ops.push('[] 0 d');
@@ -104,7 +111,9 @@ export function floorPlanPdf(plan:{name:string;unit:'m'|'ft';content:FloorPlanCo
 /** 3D: each wall extruded to the wall height as a box; returns quads projected with a simple orbit camera. */
 /** Row 63: height in metres of each furniture/fixture box in the 3D view (footprint comes from the plan). */
 export const floorObjectHeight:Record<FloorObjectKind,number>={bed:0.55,sofa:0.85,table:0.75,chair:0.9,desk:0.75,wardrobe:2,cabinet:0.9,stove:0.9,fridge:1.8,sink:0.9,toilet:0.45,shower:0.1,bathtub:0.55,washer:0.85,stairs:1.2};
-export type Face={points:[number,number][];depth:number;shade:number;kind:'wall'|'floor'|'object'};
+/** 3D height of an object: custom ones carry their own (in plan units), catalogue ones use the table (metres). */
+export const floorObjectHeightOf=(o:{kind:FloorObjectKind|'custom';h?:number})=>o.kind==='custom'?(o.h??0.5):floorObjectHeight[o.kind];
+export type Face={points:[number,number][];depth:number;shade:number;kind:'wall'|'floor'|'object';color?:string};
 export function extrudedFaces(content:FloorPlanContent,yaw:number,pitch:number,size:{w:number;h:number},opts?:{z0?:number;frame?:ReturnType<typeof bounds>}):Face[]{
  const z0=opts?.z0??0,b=opts?.frame??bounds(content),cx=(b.minX+b.maxX)/2,cy=(b.minY+b.maxY)/2,span=Math.max(b.maxX-b.minX,b.maxY-b.minY,1),k=Math.min(size.w,size.h)/(span*1.6);
  const cosY=Math.cos(yaw),sinY=Math.sin(yaw),cosP=Math.cos(pitch),sinP=Math.sin(pitch);
@@ -120,10 +129,10 @@ export function extrudedFaces(content:FloorPlanContent,yaw:number,pitch:number,s
  }
  // Furniture and fixtures: each footprint extruded to its own height (four sides and a lid), lit like the walls.
  for(const o of content.objects??[]){
-  const base=floorObjectCorners(o),hgt=Math.min(floorObjectHeight[o.kind],content.wallHeight);
+  const base=floorObjectCorners(o),hgt=Math.min(floorObjectHeightOf(o),content.wallHeight);
   const quads:[number,number,number][][]=[[0,1],[1,2],[2,3],[3,0]].map(([i,j])=>[[...base[i!]!,0],[...base[j!]!,0],[...base[j!]!,hgt],[...base[i!]!,hgt]] as [number,number,number][]);
   quads.push(base.map(p=>[p[0],p[1],hgt] as [number,number,number]));
-  for(const [index,quad] of quads.entries()){const pts=quad.map(p=>project(p[0],p[1],p[2]));faces.push({points:pts.map(p=>[p[0],p[1]]),depth:pts.reduce((sum,p)=>sum+p[2],0)/4+0.0001,shade:index===4?0.8:0.55+0.25*Math.abs(Math.cos(yaw+index*Math.PI/2)),kind:'object'});}
+  for(const [index,quad] of quads.entries()){const pts=quad.map(p=>project(p[0],p[1],p[2]));faces.push({points:pts.map(p=>[p[0],p[1]]),depth:pts.reduce((sum,p)=>sum+p[2],0)/4+0.0001,shade:index===4?0.8:0.55+0.25*Math.abs(Math.cos(yaw+index*Math.PI/2)),kind:'object',...(o.color?{color:o.color}:{})});}
  }
  return faces.sort((a,b2)=>a.depth-b2.depth);
 }

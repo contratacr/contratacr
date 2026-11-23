@@ -3,8 +3,11 @@ import {useCallback,useEffect,useMemo,useRef,useState,type PointerEvent as React
 import {useLocale} from 'next-intl';
 import {Button} from '@/components/ui/button';
 import {useAppDialog} from '@/hooks/use-app-dialog';
-import {areaLabel,bounds,centroid,distance,emptyFloorPlan,extrudedFaces,extrudedStack,floorObjectCorners,floorObjectKinds,floorObjectLabel,floorObjectSize,floorPlanPdf,floorPlanSvg,lengthLabel,openingSegment,round3,snap,summarize,type FloorObjectKind,type FloorPlan,type FloorPlanContent,type Point} from '@/lib/pro/floor-plan';
-import {SCAN_MAX_BYTES,scanFormatOf} from '@/lib/pro/room-scan';
+import {areaLabel,bounds,centroid,distance,emptyFloorPlan,extrudedFaces,extrudedStack,floorObjectCorners,floorObjectKinds,floorObjectName,floorObjectSize,floorPlanPdf,floorPlanSvg,lengthLabel,openingSegment,round3,snap,summarize,type FloorObjectKind,type FloorPlan,type FloorPlanContent,type Point} from '@/lib/pro/floor-plan';
+import {SCAN_MAX_BYTES,scanFormatOf,type ScanMeasures,type ScanUnit,type ScanUpAxis} from '@/lib/pro/room-scan';
+import type {FloorLibraryItem} from '@/lib/pro/floor-library';
+import {floorPlanObj,walkStart,walkStep,walkthroughFaces,type WalkCamera} from '@/lib/pro/floor-walk';
+import {FloorObjectLibrary} from './floor-object-library';
 import {nativeRoomScanAvailable,RoomScan} from '@/lib/pro/room-scan-native';
 import {takeoffColors} from '@/lib/pro/takeoffs';
 
@@ -27,6 +30,7 @@ async function svgToBlob(svg:string,type:'image/png'|'image/jpeg'){
   return await new Promise<Blob>((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(Error('blob')),type,0.9));}
  finally{URL.revokeObjectURL(url);}
 }
+function shadeHex(hex:string,shade:number){const n=parseInt(hex.slice(1),16),f=Math.min(1,shade+0.15);return `rgb(${Math.round((n>>16&255)*f)},${Math.round((n>>8&255)*f)},${Math.round((n&255)*f)})`;}
 function download(blob:Blob,name:string){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 /** Decimal field shown with the interface's decimal separator (2,4 in Spanish, 2.4 in English); accepts either while typing. */
 function DecimalInput({value,onValue,locale,min,max,className,...rest}:{value:number;onValue:(value:number)=>void;locale:string;min:number;max:number;className:string;'data-floor-height'?:boolean}){
@@ -39,8 +43,8 @@ export function WorkFloorPlans({workId}:{workId:string}){
  const [data,setData]=useState<Read|null>(null),[failed,setFailed]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
  const [planId,setPlanId]=useState<string|null>(null),[name,setName]=useState(''),[unit,setUnit]=useState<'m'|'ft'>('m'),[content,setContent]=useState<FloorPlanContent>(emptyFloorPlan),[dirty,setDirty]=useState(false);
  const [tool,setTool]=useState<Tool>('select'),[grid,setGrid]=useState(0.25),[zoom,setZoom]=useState(1),[pending,setPending]=useState<Point[]>([]),[selected,setSelected]=useState<Selection>(null),[view3d,setView3d]=useState(false),[thickness,setThickness]=useState(0.15);
- const [stackLevels,setStackLevels]=useState(false);
- const [objectKind,setObjectKind]=useState<FloorObjectKind>('bed'),[rect,setRect]=useState({name:'',width:'4',depth:'3',x:'0',y:'0'}),[native,setNative]=useState(false),[scanNotes,setScanNotes]=useState<string[]>([]);
+ const [stackLevels,setStackLevels]=useState(false),[walk,setWalk]=useState(false);
+ const [objectKind,setObjectKind]=useState<string>('bed'),[library,setLibrary]=useState<FloorLibraryItem[]>([]),[pendingScan,setPendingScan]=useState<{file:File;unit:ScanUnit;upAxis:ScanUpAxis;measures:ScanMeasures|null;notes:string[]}|null>(null),[rect,setRect]=useState({name:'',width:'4',depth:'3',x:'0',y:'0'}),[native,setNative]=useState(false),[scanNotes,setScanNotes]=useState<string[]>([]);
  // Closing round: every user edit bumps `edits`; a reload that started before an edit (e.g. the one that
  // follows «Guardar plano») refreshes the list but no longer replaces what the user is drawing now.
  const edits=useRef(0),markDirty=()=>{edits.current++;setDirty(true);};
@@ -81,7 +85,9 @@ export function WorkFloorPlans({workId}:{workId:string}){
   if(tool==='dimension'){if(!pending.length){setPending([p]);return;}change({...content,dimensions:[...content.dimensions,{id:newId('d'),a:pending[0]!,b:p}]});setPending([]);return;}
   if(tool==='room'){if(pending.length>=3&&distance(pending[0]!,p)<0.3){finishRoom();return;}setPending([...pending,p]);return;}
   // Round 12 (row 63): furniture/fixture footprint centred on the tap, default size in the plan unit.
-  if(tool==='object'){const [w,d]=floorObjectSize[objectKind],k=unit==='ft'?3.28084:1;const id=newId('o');change({...content,objects:[...(content.objects??[]),{id,kind:objectKind,x:p[0],y:p[1],w:round3(w*k),d:round3(d*k),rotation:0}]});setSelected({kind:'object',id});return;}
+  if(tool==='object'){const k=unit==='ft'?3.28084:1,id=newId('o'),lib=objectKind.startsWith('lib:')?library.find(i=>'lib:'+i.id===objectKind):undefined;
+   if(lib){change({...content,objects:[...(content.objects??[]),{id,kind:'custom',label:lib.name,libraryId:lib.id,color:lib.color,x:p[0],y:p[1],w:round3(Math.min(50,lib.w*k)),d:round3(Math.min(50,lib.d*k)),h:round3(Math.min(20,lib.h*k)),rotation:0}]});setSelected({kind:'object',id});return;}
+   const kind=objectKind as FloorObjectKind,[w,d]=floorObjectSize[kind];change({...content,objects:[...(content.objects??[]),{id,kind,x:p[0],y:p[1],w:round3(w*k),d:round3(d*k),rotation:0}]});setSelected({kind:'object',id});return;}
   if(tool==='door'||tool==='window'){const w=nearestWall(p);if(!w){setError(t('Haga clic sobre una pared.','Click on a wall.'));return;}const width=tool==='door'?0.9:1.2;change({...content,openings:[...content.openings,{id:newId(tool[0]!),wallId:w.id,kind:tool,offset:round3(Math.max(0,w.offset-width/2)),width}]});return;}
   setSelected(null);
  }
@@ -125,12 +131,22 @@ export function WorkFloorPlans({workId}:{workId:string}){
   }catch{setError(t('No se pudo completar el envío. Reintente: no se duplicará.','Could not complete the transfer. Retry: it will not be duplicated.'));}finally{setBusy(false);}
  }
  // ---- scan import
- async function importScan(file:File){
-  const format=scanFormatOf(file.name);if(!format){setError(t('Use un archivo .json, .obj o .usdz.','Use a .json, .obj or .usdz file.'));return;}
+ async function scanData(file:File,format:'json'|'obj'|'usdz'){return format==='usdz'?base64(new Uint8Array(await file.arrayBuffer())):await file.text();}
+ /** Row 65: reads the dimensions of the file (nothing is stored) so the owner can check unit and axis before importing. */
+ async function previewScan(file:File,scanUnit:ScanUnit,upAxis:ScanUpAxis){
+  const format=scanFormatOf(file.name);if(!format||format==='native'){setError(t('Use un archivo .json, .obj o .usdz.','Use a .json, .obj or .usdz file.'));return;}
   if(file.size>SCAN_MAX_BYTES){setError(t('El archivo supera 10 MB.','The file exceeds 10 MB.'));return;}
-  const data=format==='usdz'?base64(new Uint8Array(await file.arrayBuffer())):await file.text();
-  const result=await api({action:'import_scan',actionId:crypto.randomUUID(),id:crypto.randomUUID(),scanId:crypto.randomUUID(),workId,name:file.name.replace(/\.[^.]+$/,'').slice(0,120)||t('Escaneo','Scan'),unit:'m',fileName:file.name.slice(0,160),format,data,language:en?'en':'es'},t('Escaneo importado como plano nuevo.','Scan imported as a new plan.'));
-  if(result){setScanNotes(result.notes??[]);await load(result.plan.id);}
+  setBusy(true);setError('');setNotice('');
+  try{const response=await fetch('/api/pro/floor-plans',{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'scan_preview',fileName:file.name.slice(0,160),format,data:await scanData(file,format),language:en?'en':'es',options:{unit:scanUnit,upAxis}})});
+   const json=await response.json().catch(()=>({})) as {measures?:ScanMeasures|null;notes?:string[];error?:string;reason?:string};
+   if(!response.ok){setPendingScan(null);setError(json.reason==='invalid'?t('Las dimensiones del archivo no son plausibles. Revise la unidad y el eje vertical.','The file dimensions are not plausible. Check the unit and the up axis.'):json.reason==='format'?t('Formato no reconocido. Use JSON de plano o RoomPlan, OBJ o USDZ.','Unrecognized format. Use plan or RoomPlan JSON, OBJ or USDZ.'):t('El archivo no tiene paredes ni ambientes que importar.','The file has no walls or rooms to import.'));return;}
+   setPendingScan({file,unit:scanUnit,upAxis,measures:json.measures??null,notes:json.notes??[]});
+  }catch{setError(t('No se pudo leer el archivo. Reintente.','Could not read the file. Retry.'));}finally{setBusy(false);}
+ }
+ async function importScan(file:File,scanUnit:ScanUnit,upAxis:ScanUpAxis){
+  const format=scanFormatOf(file.name);if(!format||format==='native')return;
+  const result=await api({action:'import_scan',actionId:crypto.randomUUID(),id:crypto.randomUUID(),scanId:crypto.randomUUID(),workId,name:file.name.replace(/\.[^.]+$/,'').slice(0,120)||t('Escaneo','Scan'),unit:'m',fileName:file.name.slice(0,160),format,data:await scanData(file,format),language:en?'en':'es',options:{unit:scanUnit,upAxis}},t('Escaneo importado como plano nuevo.','Scan imported as a new plan.'));
+  if(result){setPendingScan(null);setScanNotes(result.notes??[]);await load(result.plan.id);}
  }
  async function nativeScan(){try{const scan=await RoomScan.startScan({unit,language:en?'en':'es'});const result=await api({action:'import_scan',actionId:crypto.randomUUID(),id:crypto.randomUUID(),scanId:crypto.randomUUID(),workId,name:t('Escaneo del dispositivo','Device scan'),unit,fileName:scan.fileName.slice(0,160)||'roomplan.json',format:'native',data:scan.data,language:en?'en':'es'},t('Escaneo importado.','Scan imported.'));if(result){setScanNotes(result.notes??[]);await load(result.plan.id);}}catch{setError(t('El escaneo se canceló o no está disponible.','The scan was cancelled or is not available.'));}}
  if(failed)return <section className="rounded-2xl border border-[#d7e1ea] bg-white p-4"><div role="alert" className="flex flex-wrap items-center gap-2 text-sm text-red-700"><span>{t('No se pudieron cargar los planos.','Could not load the floor plans.')}</span><Button type="button" variant="secondary" onClick={()=>void load()}>{t('Reintentar','Retry')}</Button></div></section>;
@@ -147,9 +163,17 @@ export function WorkFloorPlans({workId}:{workId:string}){
   <div className="flex flex-wrap items-center justify-between gap-2"><h2 id="floor-plans-title" className="text-lg font-bold text-[#162543]">{t('Planos de planta y vista 3D','Floor plans and 3D view')}</h2>
    <div className="flex flex-wrap gap-2">{active.length>0&&<label className="text-sm font-medium"><span className="sr-only">{t('Plano','Plan')}</span><select data-floor-select className={field+' mt-0'} value={planId??''} onChange={e=>void load(e.target.value)}>{active.toSorted((x,y)=>(x.content.level?.order??0)-(y.content.level?.order??0)).map(p=><option key={p.id} value={p.id}>{p.content.level?p.content.level.name+' · ':''}{p.name}{p.source==='scan'?t(' (escaneo)',' (scan)'):''}</option>)}</select></label>}
     <Button type="button" variant="secondary" data-floor-new disabled={busy} onClick={()=>void newPlan()}>{t('Plano nuevo','New plan')}</Button>
-    <label className={'inline-flex min-h-11 cursor-pointer items-center rounded-full border border-[#d7e1ea] bg-white px-4 text-sm font-semibold '+(busy?'pointer-events-none opacity-50':'')}>{t('Importar escaneo','Import scan')}<input type="file" data-floor-scan-input accept=".json,.obj,.usdz,application/json,model/obj,model/vnd.usdz+zip" className="sr-only" disabled={busy} onChange={e=>{const f=e.target.files?.[0];e.target.value='';if(f)void importScan(f);}}/></label>
+    <label className={'inline-flex min-h-11 cursor-pointer items-center rounded-full border border-[#d7e1ea] bg-white px-4 text-sm font-semibold '+(busy?'pointer-events-none opacity-50':'')}>{t('Importar escaneo','Import scan')}<input type="file" data-floor-scan-input accept=".json,.obj,.usdz,application/json,model/obj,model/vnd.usdz+zip" className="sr-only" disabled={busy} onChange={e=>{const f=e.target.files?.[0];e.target.value='';if(f)void previewScan(f,'m','y');}}/></label>
     {native&&<Button type="button" variant="secondary" data-floor-native-scan disabled={busy} onClick={()=>void nativeScan()}>{t('Escanear con el teléfono','Scan with the phone')}</Button>}</div></div>
   <p className="text-sm text-[#52627a]">{t('Dibuje paredes, puertas, ventanas y ambientes; el área y el perímetro se calculan solos. Es un dibujo de referencia para cotizar, no un plano estructural.','Draw walls, doors, windows and rooms; area and perimeter are computed automatically. It is a reference drawing for quoting, not a structural plan.')}</p>
+  {pendingScan&&<div data-floor-scan-preview className="space-y-2 rounded-xl border border-[#d7e1ea] bg-[#f7fafc] p-3 text-sm">
+   <p className="font-semibold">{t('Escaneo: ','Scan: ')}{pendingScan.file.name}</p>
+   {scanFormatOf(pendingScan.file.name)!=='json'&&<div className="flex flex-wrap items-center gap-2"><label>{t('Unidad del archivo','File unit')} <select data-floor-scan-unit className="min-h-11 rounded-xl border border-[#d7e1ea] px-2" value={pendingScan.unit} disabled={busy} onChange={e=>void previewScan(pendingScan.file,e.target.value as ScanUnit,pendingScan.upAxis)}>{(['m','cm','mm','in','ft'] as const).map(u=><option key={u} value={u}>{u}</option>)}</select></label>
+    <label>{t('Eje vertical','Up axis')} <select data-floor-scan-up className="min-h-11 rounded-xl border border-[#d7e1ea] px-2" value={pendingScan.upAxis} disabled={busy} onChange={e=>void previewScan(pendingScan.file,pendingScan.unit,e.target.value as ScanUpAxis)}><option value="y">{t('Y arriba','Y up')}</option><option value="z">{t('Z arriba','Z up')}</option></select></label></div>}
+   {pendingScan.measures&&<ul data-floor-scan-measures className="grid gap-1 sm:grid-cols-2"><li>{t('Ancho','Width')}: <strong>{pendingScan.measures.width.toLocaleString(en?'en-US':'es-CR')} m</strong></li><li>{t('Fondo','Depth')}: <strong>{pendingScan.measures.depth.toLocaleString(en?'en-US':'es-CR')} m</strong></li><li>{t('Altura','Height')}: <strong>{pendingScan.measures.height.toLocaleString(en?'en-US':'es-CR')} m</strong></li><li>{t('Área de planta','Footprint area')}: <strong>{pendingScan.measures.footprintArea.toLocaleString(en?'en-US':'es-CR')} m²</strong></li><li className="sm:col-span-2">{t('Largo de cada pared','Length of each wall')}: {pendingScan.measures.wallLengths.map(v=>v.toLocaleString(en?'en-US':'es-CR')).join(' · ')} m</li></ul>}
+   {pendingScan.notes.map((n,i)=><p key={i} data-floor-scan-note className={'rounded-xl p-2 text-xs '+(/SIMUL/.test(n)?'bg-[#fff6e5] text-[#8a5300]':'bg-[#eaf7fb] text-[#38485f]')}>{n}</p>)}
+   <div className="flex flex-wrap gap-2"><Button type="button" data-floor-scan-import disabled={busy} onClick={()=>void importScan(pendingScan.file,pendingScan.unit,pendingScan.upAxis)}>{t('Importar como plano nuevo','Import as a new plan')}</Button><Button type="button" variant="ghost" disabled={busy} onClick={()=>setPendingScan(null)}>{t('Cancelar','Cancel')}</Button></div>
+  </div>}
   {scanNotes.map((n,i)=><p key={i} data-floor-scan-note className={'rounded-xl p-2 text-xs '+(/SIMUL/.test(n)?'bg-[#fff6e5] text-[#8a5300]':'bg-[#f3f8fb] text-[#38485f]')}>{n}</p>)}
   {notice&&<p role="status" data-floor-notice className="text-sm text-[#175b42]">{notice}</p>}{error&&<p role="alert" data-floor-error className="text-sm text-red-700">{error}</p>}
   {!editing?<p className="text-sm text-[#52627a]">{t('Este trabajo todavía no tiene planos.','This job has no plans yet.')}</p>:<>
@@ -165,7 +189,7 @@ export function WorkFloorPlans({workId}:{workId:string}){
    </div>
    <div role="toolbar" aria-label={t('Herramientas del plano','Plan tools')} className="flex flex-wrap items-center gap-2">
     {tools.map(([id,label])=><button key={id} type="button" data-floor-tool={id} aria-pressed={tool===id} disabled={view3d} onClick={()=>{setTool(id);setPending([]);}} className={'min-h-11 rounded-xl px-3 text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#008bb5] '+(tool===id?'bg-[#eaf7fb] text-[#007aa0]':'text-[#52627a] hover:bg-[#f3f8fb]')}>{label}</button>)}
-    {tool==='object'&&<label className="text-sm">{t('Objeto','Object')} <select data-floor-object-kind className="min-h-11 rounded-xl border border-[#d7e1ea] px-2" value={objectKind} onChange={e=>setObjectKind(e.target.value as FloorObjectKind)}>{floorObjectKinds.map(k=><option key={k} value={k}>{floorObjectLabel(k,en)}</option>)}</select></label>}
+    {tool==='object'&&<label className="text-sm">{t('Objeto','Object')} <select data-floor-object-kind className="min-h-11 rounded-xl border border-[#d7e1ea] px-2" value={objectKind} onChange={e=>setObjectKind(e.target.value)}>{floorObjectKinds.map(k=><option key={k} value={k}>{floorObjectName({kind:k},en)}</option>)}{library.filter(i=>!i.archived).length>0&&<optgroup label={t('Mi biblioteca','My library')}>{library.filter(i=>!i.archived).map(i=><option key={i.id} value={'lib:'+i.id}>{i.name}</option>)}</optgroup>}</select></label>}
     {tool==='wall'&&pending.length>0&&<Button type="button" variant="secondary" onClick={()=>setPending([])}>{t('Terminar','Finish')}</Button>}
     {tool==='room'&&pending.length>=3&&<Button type="button" variant="secondary" data-floor-close-room onClick={finishRoom}>{t('Cerrar ambiente','Close room')}</Button>}
     <Button type="button" variant="ghost" disabled={!history.current.length} onClick={undo}>{t('Deshacer','Undo')}</Button>
@@ -173,16 +197,18 @@ export function WorkFloorPlans({workId}:{workId:string}){
     <label className="text-sm">{t('Grosor de pared','Wall thickness')} <select className="min-h-11 rounded-xl border border-[#d7e1ea] px-2" value={thickness} onChange={e=>setThickness(Number(e.target.value))}>{[0.1,0.12,0.15,0.2,0.3].map(g=><option key={g} value={g}>{g.toLocaleString(en?'en-US':'es-CR')}</option>)}</select></label>
     <Button type="button" variant="ghost" aria-label={t('Alejar','Zoom out')} onClick={()=>setZoom(z=>Math.max(0.25,z/1.25))}>−</Button><Button type="button" variant="ghost" aria-label={t('Acercar','Zoom in')} onClick={()=>setZoom(z=>Math.min(4,z*1.25))}>+</Button>
     <Button type="button" variant={view3d?'default':'secondary'} data-floor-3d aria-pressed={view3d} onClick={()=>setView3d(v=>!v)}>{view3d?t('Ver en 2D','Show 2D'):t('Vista 3D','3D view')}</Button>
-    {view3d&&canStack&&<label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" data-floor-stack checked={stackLevels} onChange={e=>setStackLevels(e.target.checked)} className="h-5 w-5 accent-[#008bb5]"/>{t('Apilar todos los niveles','Stack all levels')}</label>}
+    {view3d&&<Button type="button" variant={walk?'default':'secondary'} data-floor-walk aria-pressed={walk} onClick={()=>setWalk(v=>!v)}>{walk?t('Vista orbital','Orbit view'):t('Recorrido','Walkthrough')}</Button>}
+    {view3d&&<Button type="button" variant="secondary" data-floor-obj onClick={()=>download(new Blob([floorPlanObj({name:name||t('Plano','Plan'),unit,content})],{type:'text/plain'}),fileBase+'.obj')}>{t('Exportar OBJ (3D)','Export OBJ (3D)')}</Button>}
+    {view3d&&!walk&&canStack&&<label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" data-floor-stack checked={stackLevels} onChange={e=>setStackLevels(e.target.checked)} className="h-5 w-5 accent-[#008bb5]"/>{t('Apilar todos los niveles','Stack all levels')}</label>}
    </div>
    {!view3d&&<p className="text-xs text-[#52627a]" aria-live="polite">{hint}</p>}
    <div className="min-w-0 overflow-hidden rounded-xl border border-[#d7e1ea] bg-[#fbfdfe]">
-    {view3d?<FloorPlan3D content={content} levels={stackedLevels} en={en}/>:
+    {view3d?(walk?<FloorWalkthrough content={content} en={en} fileBase={fileBase}/>:<FloorPlan3D content={content} levels={stackedLevels} en={en}/>):
     <svg ref={svgRef} data-floor-canvas role="img" aria-label={t(`Plano ${name}: ${content.rooms.length} ambientes, ${content.walls.length} paredes`,`Plan ${name}: ${content.rooms.length} rooms, ${content.walls.length} walls`)} viewBox={`${viewMin[0]} ${viewMin[1]} ${viewSize[0]} ${viewSize[1]}`} className="block h-[360px] w-full touch-none sm:h-[460px]" onPointerDown={click}>
      <defs><pattern id="floor-grid" width={grid} height={grid} patternUnits="userSpaceOnUse"><path d={`M ${grid} 0 L 0 0 0 ${grid}`} fill="none" stroke="#e3edf3" strokeWidth={0.01}/></pattern></defs>
      <rect x={viewMin[0]} y={viewMin[1]} width={viewSize[0]} height={viewSize[1]} fill="url(#floor-grid)"/>
      {content.rooms.map(r=>{const c=centroid(r.points),on=sel?.kind==='room'&&sel.id===r.id;return <g key={r.id} data-floor-room={r.name} onPointerDown={e=>{if(tool==='select'){e.stopPropagation();setSelected({kind:'room',id:r.id});}}}><polygon points={r.points.map(p=>p.join(',')).join(' ')} fill={on?'#cdeefa':'#eaf7fb'} stroke="#9fc9da" strokeWidth={0.03}/><text x={c[0]} y={c[1]} fontSize={0.32} textAnchor="middle" fill="#162543">{r.name}</text><text x={c[0]} y={c[1]+0.4} fontSize={0.26} textAnchor="middle" fill="#52627a">{areaLabel(summary.rooms.find(x=>x.id===r.id)?.area??0,unit,en)}</text></g>;})}
-     {(content.objects??[]).map(o=>{const c=floorObjectCorners(o),on=sel?.kind==='object'&&sel.id===o.id;return <g key={o.id} data-floor-object={o.kind} onPointerDown={e=>{if(tool==='select'){e.stopPropagation();setSelected({kind:'object',id:o.id});}}}><polygon points={c.map(p=>p.join(',')).join(' ')} fill={on?'#ffe8b8':'#fff7e6'} stroke={on?'#8a5300':'#b7791f'} strokeWidth={0.03}/><text x={o.x} y={o.y+0.08} textAnchor="middle" fontSize={0.2} fill="#7a4f0b">{floorObjectLabel(o.kind,en)}</text></g>;})}
+     {(content.objects??[]).map(o=>{const c=floorObjectCorners(o),on=sel?.kind==='object'&&sel.id===o.id;return <g key={o.id} data-floor-object={o.kind} onPointerDown={e=>{if(tool==='select'){e.stopPropagation();setSelected({kind:'object',id:o.id});}}}><polygon points={c.map(p=>p.join(',')).join(' ')} fill={on?'#ffe8b8':'#fff7e6'} stroke={on?'#8a5300':'#b7791f'} strokeWidth={0.03}/><text x={o.x} y={o.y+0.08} textAnchor="middle" fontSize={0.2} fill="#7a4f0b">{floorObjectName(o,en)}</text></g>;})}
      {content.walls.map(w=><line key={w.id} data-floor-wall={w.id} x1={w.a[0]} y1={w.a[1]} x2={w.b[0]} y2={w.b[1]} stroke={sel?.kind==='wall'&&sel.id===w.id?'#007aa0':'#162543'} strokeWidth={Math.max(0.06,w.thickness)} strokeLinecap="square" onPointerDown={e=>{if(tool==='select'){e.stopPropagation();setSelected({kind:'wall',id:w.id});}}}/>)}
      {content.openings.map(o=>{const seg=openingSegment(content,o);return seg?<line key={o.id} data-floor-opening={o.kind} x1={seg[0][0]} y1={seg[0][1]} x2={seg[1][0]} y2={seg[1][1]} stroke={o.kind==='door'?'#d9480f':'#1c7ed6'} strokeWidth={o.kind==='door'?0.12:0.09} onPointerDown={e=>{if(tool==='select'){e.stopPropagation();setSelected({kind:'opening',id:o.id});}}}/>:null;})}
      {content.dimensions.map(d=>{const m:Point=[(d.a[0]+d.b[0])/2,(d.a[1]+d.b[1])/2];return <g key={d.id} data-floor-dimension onPointerDown={e=>{if(tool==='select'){e.stopPropagation();setSelected({kind:'dimension',id:d.id});}}}><line x1={d.a[0]} y1={d.a[1]} x2={d.b[0]} y2={d.b[1]} stroke="#7048e8" strokeWidth={0.03} strokeDasharray="0.15 0.1"/><text x={m[0]} y={m[1]-0.12} fontSize={0.26} textAnchor="middle" fill="#7048e8">{lengthLabel(distance(d.a,d.b),unit,en)}</text></g>;})}
@@ -195,12 +221,13 @@ export function WorkFloorPlans({workId}:{workId:string}){
     {selRoom&&<label className="block text-sm font-medium">{t('Nombre del ambiente','Room name')}<input data-floor-room-name className={field} maxLength={80} value={selRoom.name} onChange={e=>change({...content,rooms:content.rooms.map(r=>r.id===selRoom.id?{...r,name:e.target.value.slice(0,80)||r.name}:r)})}/></label>}
     {selOpening&&<label className="block text-sm font-medium">{t('Ancho','Width')}<input inputMode="decimal" className={field} defaultValue={selOpening.width} onBlur={e=>{const v=Number(e.target.value.replace(',','.'));if(v>=0.1&&v<=20)change({...content,openings:content.openings.map(o=>o.id===selOpening.id?{...o,width:v}:o)});}}/></label>}
     {selWall&&<p>{t('Largo','Length')}: {lengthLabel(distance(selWall.a,selWall.b),unit,en)}</p>}
-    {selObject&&<><label className="block text-sm font-medium">{t('Objeto','Object')}<select data-floor-object-edit-kind className={field} value={selObject.kind} onChange={e=>setObject({kind:e.target.value as FloorObjectKind})}>{floorObjectKinds.map(k=><option key={k} value={k}>{floorObjectLabel(k,en)}</option>)}</select></label>
+    {selObject&&<>{selObject.kind==='custom'?<><label className="block text-sm font-medium">{t('Nombre','Name')}<input data-floor-object-label className={field} maxLength={60} value={selObject.label??''} onChange={e=>setObject({label:e.target.value.slice(0,60)||selObject.label})}/></label><label className="block text-sm font-medium">{t('Alto','Height')} ({unit})<DecimalInput className={field} locale={en?'en-US':'es-CR'} value={selObject.h??0.5} min={0.05} max={20} onValue={v=>setObject({h:round3(v)})}/></label></>:<label className="block text-sm font-medium">{t('Objeto','Object')}<select data-floor-object-edit-kind className={field} value={selObject.kind} onChange={e=>setObject({kind:e.target.value as FloorObjectKind})}>{floorObjectKinds.map(k=><option key={k} value={k}>{floorObjectName({kind:k},en)}</option>)}</select></label>}
      <label className="block text-sm font-medium">{t('Ancho','Width')} ({unit})<DecimalInput className={field} locale={en?'en-US':'es-CR'} value={selObject.w} min={0.1} max={50} onValue={v=>setObject({w:round3(v)})}/></label>
      <label className="block text-sm font-medium">{t('Fondo','Depth')} ({unit})<DecimalInput className={field} locale={en?'en-US':'es-CR'} value={selObject.d} min={0.1} max={50} onValue={v=>setObject({d:round3(v)})}/></label>
      <Button type="button" variant="secondary" data-floor-object-rotate onClick={()=>setObject({rotation:((selObject.rotation+90)%360) as 0|90|180|270})}>{t('Girar 90°','Rotate 90°')}</Button></>}
     <Button type="button" variant="ghost" data-floor-delete onClick={remove}>{t('Eliminar','Delete')}</Button>
    </div>}
+   <FloorObjectLibrary items={library} onItems={setLibrary}/>
    <details className="rounded-xl border border-[#e3eaf0] p-3" open={!content.rooms.length}><summary className="cursor-pointer text-sm font-semibold text-[#007aa0]">{t('Agregar ambiente rectangular por medidas','Add a rectangular room by measurements')}</summary>
     <div className="mt-2 grid gap-2 sm:grid-cols-5">
      <label className="block text-sm font-medium sm:col-span-2">{t('Nombre','Name')}<input data-floor-rect="name" className={field} maxLength={80} value={rect.name} onChange={e=>setRect({...rect,name:e.target.value})}/></label>
@@ -235,11 +262,29 @@ function FloorPlan3D({content,levels,en}:{content:FloorPlanContent;levels:FloorP
  useEffect(()=>{const canvas=ref.current;if(!canvas)return;const ratio=window.devicePixelRatio||1,w=canvas.clientWidth||600,h=canvas.clientHeight||360;canvas.width=w*ratio;canvas.height=h*ratio;const ctx=canvas.getContext('2d');if(!ctx)return;ctx.setTransform(ratio,0,0,ratio,0,0);ctx.fillStyle='#f3f8fb';ctx.fillRect(0,0,w,h);
   for(const face of levels?extrudedStack(levels,angle.yaw,angle.pitch,{w,h}):extrudedFaces(content,angle.yaw,angle.pitch,{w,h})){ctx.beginPath();face.points.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.closePath();
    if(face.kind==='floor'){ctx.fillStyle='rgba(0,139,181,0.16)';ctx.fill();ctx.strokeStyle='#9fc9da';ctx.stroke();continue;}
-   if(face.kind==='object'){const v=Math.round(255*face.shade);ctx.fillStyle=`rgb(${v},${Math.round(v*0.78)},${Math.round(v*0.5)})`;ctx.fill();ctx.strokeStyle='#7a4b00';ctx.lineWidth=0.6;ctx.stroke();continue;}
+   if(face.kind==='object'){const v=Math.round(255*face.shade);ctx.fillStyle=face.color?shadeHex(face.color,face.shade):`rgb(${v},${Math.round(v*0.78)},${Math.round(v*0.5)})`;ctx.fill();ctx.strokeStyle='#7a4b00';ctx.lineWidth=0.6;ctx.stroke();continue;}
    const v=Math.round(255*face.shade);ctx.fillStyle=`rgb(${Math.round(v*0.86)},${Math.round(v*0.9)},${v})`;ctx.fill();ctx.strokeStyle='#162543';ctx.lineWidth=0.6;ctx.stroke();}
  },[content,levels,angle]);
  const t=(es:string,english:string)=>en?english:es;
  return <div className="relative"><canvas ref={ref} data-floor-3d-canvas role="img" aria-label={t('Vista 3D de las paredes y el mobiliario','3D view of the walls and furniture')} className="block h-[360px] w-full touch-none sm:h-[460px]"
   onPointerDown={e=>{drag.current={x:e.clientX,y:e.clientY,...angle};(e.target as HTMLCanvasElement).setPointerCapture(e.pointerId);}} onPointerMove={e=>{const d=drag.current;if(!d)return;setAngle({yaw:d.yaw+(e.clientX-d.x)*0.01,pitch:Math.max(0.15,Math.min(1.45,d.pitch+(e.clientY-d.y)*0.01))});}} onPointerUp={()=>{drag.current=null;}}/>
   <div className="absolute bottom-2 right-2 flex gap-1"><Button type="button" variant="secondary" aria-label={t('Girar a la izquierda','Rotate left')} onClick={()=>setAngle(a=>({...a,yaw:a.yaw-0.3}))}>⟲</Button><Button type="button" variant="secondary" aria-label={t('Girar a la derecha','Rotate right')} onClick={()=>setAngle(a=>({...a,yaw:a.yaw+0.3}))}>⟳</Button></div></div>;
+}
+/**
+ * Row 64: first-person walkthrough (eye height 1.6, doors passable, walls block). Keys: arrows or WASD to walk and turn,
+ * and on-screen buttons for touch. «Guardar imagen» exports the current view as a PNG render (canvas, no server).
+ */
+function FloorWalkthrough({content,en,fileBase}:{content:FloorPlanContent;en:boolean;fileBase:string}){
+ const ref=useRef<HTMLCanvasElement|null>(null),t=(es:string,english:string)=>en?english:es,[camera,setCamera]=useState<WalkCamera>(()=>walkStart(content));
+ const move=useCallback((forward:number,turn:number)=>setCamera(c=>{const heading=c.heading+turn,step=forward*0.35;return walkStep(content,{...c,heading},Math.cos(heading)*step,Math.sin(heading)*step);}),[content]);
+ useEffect(()=>{const canvas=ref.current;if(!canvas)return;const ratio=window.devicePixelRatio||1,w=canvas.clientWidth||600,h=canvas.clientHeight||360;canvas.width=w*ratio;canvas.height=h*ratio;const ctx=canvas.getContext('2d');if(!ctx)return;ctx.setTransform(ratio,0,0,ratio,0,0);
+  const sky=ctx.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#dff3fb');sky.addColorStop(0.5,'#f3f8fb');sky.addColorStop(0.5,'#d9dfe5');sky.addColorStop(1,'#bfc8d1');ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
+  for(const face of walkthroughFaces(content,camera,{w,h})){ctx.beginPath();face.points.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.closePath();const v=Math.round(255*face.shade);
+   ctx.fillStyle=face.kind==='floor'?'#e8f1f5':face.kind==='door'?`rgb(${Math.round(v*0.7)},${Math.round(v*0.4)},${Math.round(v*0.25)})`:face.kind==='window'?`rgb(${Math.round(v*0.6)},${Math.round(v*0.8)},${v})`:face.kind==='object'?(face.color?shadeHex(face.color,face.shade):`rgb(${v},${Math.round(v*0.78)},${Math.round(v*0.5)})`):`rgb(${Math.round(v*0.9)},${Math.round(v*0.92)},${v})`;ctx.fill();ctx.strokeStyle=face.kind==='floor'?'#c3d6df':'#52627a';ctx.lineWidth=0.5;ctx.stroke();}
+ },[content,camera]);
+ return <div className="relative"><canvas ref={ref} tabIndex={0} data-floor-walk-canvas role="img" aria-label={t('Recorrido en primera persona. Flechas o WASD para caminar y girar.','First-person walkthrough. Arrow keys or WASD to walk and turn.')} className="block h-[360px] w-full touch-none bg-[#f3f8fb] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#008bb5] sm:h-[460px]"
+  onKeyDown={e=>{const k=e.key.toLowerCase();const m:Record<string,[number,number]>={arrowup:[1,0],w:[1,0],arrowdown:[-1,0],s:[-1,0],arrowleft:[0,-0.15],a:[0,-0.15],arrowright:[0,0.15],d:[0,0.15]};const v=m[k];if(v){e.preventDefault();move(v[0],v[1]);}}}/>
+  <div className="absolute bottom-2 left-2 right-2 flex flex-wrap items-center justify-between gap-1">
+   <div className="flex gap-1"><Button type="button" variant="secondary" data-floor-walk-turn="left" aria-label={t('Girar a la izquierda','Turn left')} onClick={()=>move(0,-0.3)}>⟲</Button><Button type="button" variant="secondary" data-floor-walk-move="forward" aria-label={t('Avanzar','Move forward')} onClick={()=>move(1,0)}>↑</Button><Button type="button" variant="secondary" data-floor-walk-move="back" aria-label={t('Retroceder','Move back')} onClick={()=>move(-1,0)}>↓</Button><Button type="button" variant="secondary" data-floor-walk-turn="right" aria-label={t('Girar a la derecha','Turn right')} onClick={()=>move(0,0.3)}>⟳</Button></div>
+   <div className="flex gap-1"><Button type="button" variant="secondary" data-floor-walk-reset onClick={()=>setCamera(walkStart(content))}>{t('Volver al inicio','Back to start')}</Button><Button type="button" variant="secondary" data-floor-walk-render onClick={()=>ref.current?.toBlob(b=>{if(b)download(b,fileBase+'-recorrido.png');},'image/png')}>{t('Guardar imagen','Save image')}</Button></div></div></div>;
 }
