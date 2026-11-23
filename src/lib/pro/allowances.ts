@@ -86,3 +86,16 @@ export function quantityToInput(value:number,en:boolean,decimals=3){const text=S
 /** Read-only quantity: no padding zeros («1», «1,5» / «1.5»); thousands never use «.» in Spanish output. */
 export function formatQuantity(value:number|string,en:boolean,decimals=3){const n=typeof value==='number'?value:Number(String(value).trim());if(!Number.isFinite(n))return String(value);return new Intl.NumberFormat(en?'en-US':'es-CR',{maximumFractionDigits:decimals}).format(n);}
 export function parseQuantity(value:string,en:boolean){const clean=normalizeQuantityInput(value,en);if(!/^\d{1,7}(\.\d{1,2})?$/.test(clean))return null;const n=Number(clean);return n>=0.01&&n<=1000000?n:null;}
+
+/** Row 75: positive difference of a defined allowance sent to a DRAFT estimate of the same job as a surcharge line. */
+export const surchargeSendSchema=z.object({
+ action:z.literal('send_to_estimate'),actionId:uuid,workId,id:uuid,revision,estimateId:uuid,estimateRevision:revision,lineId:uuid,taxBps:z.number().int().min(0).max(10000),
+}).strict();
+export type SurchargeSend=z.infer<typeof surchargeSendSchema>;
+export const surchargeResultSchema=z.object({allowanceId:uuid,estimateId:uuid,estimateRevision:revision,lineId:uuid,amountCents:z.number().int().positive(),taxBps:z.number().int(),estimateTotalCents:z.number().int()}).strict();
+export const surchargeDetailSchema=z.object({
+ workId,
+ estimates:z.array(z.object({id:uuid,title:z.string(),revision,totalCents:z.number().int(),lineCount:z.number().int()}).strict()).max(200),
+ links:z.array(z.object({allowanceId:uuid,estimateId:uuid,estimateTitle:z.string(),lineId:uuid,amountCents:z.number().int(),taxBps:z.number().int(),sentAt:stamp,present:z.boolean()}).strict()).max(200),
+}).strict();
+export type SurchargeDetail=z.infer<typeof surchargeDetailSchema>;

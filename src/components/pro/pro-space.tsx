@@ -1,6 +1,7 @@
 'use client';
 
 import {useEffect,type ReactNode} from 'react';
+import {ProAppSupport} from './pro-app-support';
 import dynamic from 'next/dynamic';
 import {useLocale} from 'next-intl';
 import {useAuth} from '@/hooks/use-auth';
@@ -86,6 +87,7 @@ export function ProFrame({tab,labels,subtitle,navigating,jobRoute=false,children
   {/* Gaps round: one content width at 1440 px for the hub, its sections and the job page (was 80rem vs 90rem). */}
   <main className="mx-auto w-full max-w-[90rem] flex-1 space-y-5 px-4 py-5 sm:px-6">
    <ProWorkspaceBanner/>
+   <ProAppSupport/>
    {!jobRoute&&<><div className="flex flex-wrap items-center justify-between gap-3"><div>{subtitle&&<p className="text-sm text-[#52627a]">{subtitle}</p>}<div className="flex items-center gap-3"><h1 className="text-2xl font-bold">{labels[tab]}</h1>{tab==='pro_files'&&<div id="pro-company-file-actions" className="h-11 w-11 shrink-0"/>}{tab==='pro_leads'&&<div id="pro-lead-actions" className="h-11 w-11 shrink-0"/>}{tab==='quotes'&&<div id="pro-estimate-actions" className="h-11 w-11 shrink-0"/>}</div></div>
     {tab!=='pro_tools'&&<Button variant="secondary" disabled={navigating} onClick={()=>backPro(base)}>{en?'Back':'Volver'}</Button>}
    </div>

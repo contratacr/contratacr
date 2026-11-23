@@ -13,6 +13,7 @@ import {
 import {workChangeMutation,type WorkChangesPage} from '@/lib/pro/work-changes';
 import {PRO_SERVICE_REFRESH,useProChildGuard} from './use-pro-child-guard';
 import {CatalogSelect} from './catalog-select';
+import {AllowanceSurcharge} from './allowance-surcharge';
 
 /**
  * Montos previstos para materiales por elegir (family 75). Owner list per job plus
@@ -224,7 +225,7 @@ function AllowancesSession({accountId,workId,onStateChange,onOpenChanges}:{accou
     <ItemCard c={c} en={en} item={item} changeStatus={item.changeId?detail.changeStatuses[item.changeId]??null:null} disabled={busy||conflict||!!form} canOpenChanges={!!onOpenChanges} onOpenChanges={onOpenChanges}
      onEdit={()=>open({mode:'edit',item,draft:detailsOf(item),initial:detailsOf(item)})}
      onDecide={()=>{const initial={description:'',supplier:'',quantity:'1',actual:''};open({mode:'decide',item,draft:initial,initial});}}
-     onReopen={()=>void act(item,'reopen')} onArchive={()=>void act(item,'archive')} onExtra={()=>void proposeExtra(item)}
+     onReopen={()=>void act(item,'reopen')} onArchive={()=>void act(item,'archive')} onExtra={()=>void proposeExtra(item)} surcharge={item.status==='decided'&&(item.differenceCents??0)>0?<AllowanceSurcharge accountId={accountId} workId={workId} item={item} disabled={busy||conflict||!!form}/>:null}
      decide={editingId===item.id&&form?.mode==='decide'?<ChoiceForm c={c} item={item} draft={form.draft} busy={busy||conflict} saving={saving} onChange={draft=>setForm({...form,draft})} onSubmit={submit} onCancel={cancel}/>:null}/>}
   </li>)}</ul>}
   {!!archived.length&&<div className="space-y-2">
@@ -257,7 +258,7 @@ function StatusBadge({item,c}:{item:AllowanceItem;c:Copy}){
  return <span data-allowance-status={item.status} className={`rounded-full px-2.5 py-1 text-xs font-semibold ${tone}`}>{c[item.status]}</span>;
 }
 
-function ItemCard({c,en,item,changeStatus,disabled,decide,canOpenChanges,onOpenChanges,onEdit,onDecide,onReopen,onArchive,onExtra}:{c:Copy;en:boolean;item:AllowanceItem;changeStatus:AllowanceChangeStatus|null;disabled:boolean;decide:ReactNode;canOpenChanges:boolean;onOpenChanges?:()=>void;onEdit:()=>void;onDecide:()=>void;onReopen:()=>void;onArchive:()=>void;onExtra:()=>void}){
+function ItemCard({surcharge,c,en,item,changeStatus,disabled,decide,canOpenChanges,onOpenChanges,onEdit,onDecide,onReopen,onArchive,onExtra}:{surcharge?:ReactNode;c:Copy;en:boolean;item:AllowanceItem;changeStatus:AllowanceChangeStatus|null;disabled:boolean;decide:ReactNode;canOpenChanges:boolean;onOpenChanges?:()=>void;onEdit:()=>void;onDecide:()=>void;onReopen:()=>void;onArchive:()=>void;onExtra:()=>void}){
  const decided=item.status==='decided'&&item.choice,diff=item.differenceCents??0;
  return <article data-allowance-item={item.id} className="space-y-3 rounded-2xl border border-[#d7e1ea] bg-white p-4">
   <div className="flex flex-wrap items-start justify-between gap-2">
@@ -277,6 +278,7 @@ function ItemCard({c,en,item,changeStatus,disabled,decide,canOpenChanges,onOpenC
   </div>}
   {item.notes&&<p className="whitespace-pre-wrap break-words text-sm text-[#52627a]"><span className="font-semibold">{c.notesLabel}: </span>{item.notes}</p>}
   {decide}
+  {!decide&&surcharge}
   {!decide&&<div className="flex flex-wrap gap-2">
    {item.status!=='decided'&&<><Button type="button" disabled={disabled} onClick={onDecide}>{c.decide}</Button><Button type="button" variant="secondary" disabled={disabled} onClick={onEdit}>{c.edit}</Button></>}
    {item.status==='decided'&&<Button type="button" variant="secondary" disabled={disabled} onClick={onReopen}>{c.reopen}</Button>}
