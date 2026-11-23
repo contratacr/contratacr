@@ -48,7 +48,7 @@ function copy(en:boolean){
 }
 
 /** Title + text editor with a merge-field picker that inserts {{field}} at the cursor. */
-export function ClauseForm({initial,disabled,saving,submitLabel,onSubmit,onCancel,onDirty,error,aiWorkId=null}:{initial:{title:string;body:string};disabled?:boolean;saving:boolean;submitLabel?:string;onSubmit:(value:{title:string;body:string})=>void;onCancel:()=>void;onDirty?:(dirty:boolean)=>void;error?:string;aiWorkId?:string|null}){
+export function ClauseForm({initial,disabled,saving,submitLabel,onSubmit,onCancel,onDirty,error,aiWorkId=null,otherClauses=[]}:{initial:{title:string;body:string};disabled?:boolean;saving:boolean;submitLabel?:string;onSubmit:(value:{title:string;body:string})=>void;onCancel:()=>void;onDirty?:(dirty:boolean)=>void;error?:string;aiWorkId?:string|null;otherClauses?:string[]}){
  const en=useLocale()==='en',c=copy(en),labels=contractFieldLabels(en),id=useId(),bodyRef=useRef<HTMLTextAreaElement>(null),caret=useRef<{start:number;end:number}|null>(null);
  const [title,setTitle]=useState(initial.title),[body,setBody]=useState(initial.body),[problem,setProblem]=useState('');
  const dirty=title!==initial.title||body!==initial.body;
@@ -80,6 +80,7 @@ export function ClauseForm({initial,disabled,saving,submitLabel,onSubmit,onCance
   <div className="flex flex-wrap items-end justify-between gap-2"><label className={label} htmlFor={id+'-body'}>{c.clauseBody}</label><span className="text-xs text-[#52627a]" aria-live="polite">{c.chars(body.length)}</span></div>
   <textarea id={id+'-body'} ref={bodyRef} data-contract-field="clause-body" rows={6} className={field+' !mt-0 min-h-32'} value={body} maxLength={CONTRACT_CLAUSE_MAX} disabled={disabled||saving} onChange={event=>{setBody(event.target.value);caret.current={start:event.target.selectionStart,end:event.target.selectionEnd};}} onSelect={remember} onKeyUp={remember} onMouseUp={remember} onBlur={remember}/>
   <AiDraftAssist feature="contract_clause" workId={aiWorkId} disabled={disabled||saving} getInput={()=>({title,current:body})} onUse={text=>setBody(text.slice(0,CONTRACT_CLAUSE_MAX))}/>
+  {otherClauses.length>0&&<AiDraftAssist feature="contract_draft" workId={aiWorkId} disabled={disabled||saving} label={en?'✦ Draft from the other clauses with AI':'✦ Redactar a partir de las otras cláusulas con IA'} getInput={()=>({title,current:body,lines:otherClauses})} onUse={text=>setBody(text.slice(0,CONTRACT_CLAUSE_MAX))}/>}
   <label className={label}>{c.insertField}
    <select data-contract-field="insert-field" className={field} value="" disabled={disabled||saving} onChange={event=>{if(event.target.value)insertField(event.target.value);}}>
     <option value="">{c.chooseField}</option>{CONTRACT_FIELD_KEYS.map(key=><option key={key} value={key}>{labels[key]} — {`{{${key}}}`}</option>)}
@@ -124,7 +125,7 @@ export function ClauseListEditor({accountId,scope,targetId,revision,clauses,libr
   <ol className="space-y-3">
    {clauses.map((clause,index)=><li key={clause.id} data-contract-clause={index+1} className="min-w-0 rounded-xl border border-[#d7e1ea] bg-white p-3">
     {editing?.mode==='edit'&&editing.clauseId===clause.id
-     ?<ClauseForm aiWorkId={aiWorkId} initial={{title:clause.title,body:clause.body}} saving={saving} onDirty={setFormDirty} error={error} onCancel={()=>{setEditing(null);setError('');}}
+     ?<ClauseForm aiWorkId={aiWorkId} otherClauses={clauses.filter(x=>x.id!==clause.id).map(x=>(x.title+': '+x.body).slice(0,300))} initial={{title:clause.title,body:clause.body}} saving={saving} onDirty={setFormDirty} error={error} onCancel={()=>{setEditing(null);setError('');}}
        onSubmit={value=>void run({...base('clause_put'),clauseId:clause.id,position:index+1,...value} as ContractMutation)}/>
      :<>
       <p className="text-xs font-semibold uppercase tracking-wide text-[#52627a]">{c.position(index+1,clauses.length)}</p>
@@ -143,7 +144,7 @@ export function ClauseListEditor({accountId,scope,targetId,revision,clauses,libr
      </>}
    </li>)}
   </ol>
-  {editing?.mode==='new'&&<ClauseForm aiWorkId={aiWorkId} initial={{title:'',body:''}} saving={saving} onDirty={setFormDirty} error={error} onCancel={()=>{setEditing(null);setError('');}}
+  {editing?.mode==='new'&&<ClauseForm aiWorkId={aiWorkId} otherClauses={clauses.map(x=>(x.title+': '+x.body).slice(0,300))} initial={{title:'',body:''}} saving={saving} onDirty={setFormDirty} error={error} onCancel={()=>{setEditing(null);setError('');}}
    onSubmit={value=>void run({...base('clause_put'),clauseId:crypto.randomUUID(),position:editing.position,...value} as ContractMutation)}/>}
   {!disabled&&editing===null&&<div className="space-y-3">
    <div className="flex flex-wrap gap-2"><Button type="button" className="min-h-11" disabled={locked||full} onClick={()=>{setError('');setEditing({mode:'new',position:clauses.length+1});}}>{c.add}</Button></div>

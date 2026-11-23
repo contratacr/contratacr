@@ -62,6 +62,11 @@ for(const language of ['es','en'] as const)test(`Email templates and inbox [${la
   await expect(tools.getByText(tr('Vínculo guardado.','Link saved.'))).toBeVisible({timeout:60000});
   expect((await read()).inbox.filter(message=>message.workId===f.workId)).toHaveLength(1);
   expect((await post({action:'inbox_link',provider:'google',remoteId:'mock-inbox-google-1',workId:'no-existe-'+label})).status()).toBe(404);
+  // Conversation log of the job: the linked received message is readable per job (row 10); another job and a missing job give nothing.
+  const log=await page.request.get(api.replace('company-email-tools','work-email-log')+'?workId='+encodeURIComponent(f.workId));
+  expect(log.status()).toBe(200);expect(((await log.json()) as {messages:{workId:string}[]}).messages.map(message=>message.workId)).toEqual([f.workId]);
+  expect((await page.request.get(api.replace('company-email-tools','work-email-log')+'?workId=no-existe-'+label)).status()).toBe(404);
+  expect((await page.request.get(api.replace('company-email-tools','work-email-log'))).status()).toBe(400);
 
   // (5) The project-email form offers the templates and fills subject and message.
   const composer=root.locator('[data-email-composer]');await expect(composer).toBeVisible();

@@ -6,7 +6,7 @@ import {expensePaymentMethods} from '../expenses';
  * Every AI result is a SUGGESTION: it is stored apart (pro_ai_suggestions, immutable) and only reaches a job
  * record when the owner reviews/edits it and saves it through the existing editor. Nothing here writes data.
  */
-export const aiDraftFeatures=['quote_line','contract_clause','daily_log','client_update'] as const;
+export const aiDraftFeatures=['quote_line','contract_clause','daily_log','client_update','quote_scope','contract_draft','proposal_intro','change_order'] as const;
 export type AiDraftFeature=typeof aiDraftFeatures[number];
 export const aiFeatures=[...aiDraftFeatures,'takeoff','expense_receipt','expense_voice','meeting'] as const;
 export type AiFeature=typeof aiFeatures[number];

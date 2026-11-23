@@ -35,10 +35,14 @@ function jobBlock(job:JobContext|null){
  return untrusted('job',[`Service: ${job.service}`,`Stage: ${job.stage}`,`Dates: ${job.start??'-'} → ${job.end??'-'}`,`Customer first name: ${job.clientFirstName||'-'}`,
   `Recent daily logs:\n${job.recentLogs.map(line=>'- '+line).join('\n')||'-'}`,`Open tasks:\n${job.openTasks.map(line=>'- '+line).join('\n')||'-'}`,`Recent updates:\n${job.recentUpdates.map(line=>'- '+line).join('\n')||'-'}`].join('\n'));
 }
-const draftInstructions:Record<'quote_line'|'contract_clause'|'daily_log'|'client_update',string>={
+const draftInstructions:Record<'quote_line'|'contract_clause'|'daily_log'|'client_update'|'quote_scope'|'contract_draft'|'proposal_intro'|'change_order',string>={
  quote_line:'Draft ONE clear quote line description (1–3 sentences, max 400 characters): what is included, materials and scope. No prices or quantities unless they are in the data. Return {"text": ...}.',
  contract_clause:'Draft ONE contract clause body for the clause title given (plain language, max 1200 characters). You may use merge fields exactly like {{client_name}}, {{work_service}}, {{total}} only if they make sense. Add no legal guarantees beyond the data; the professional and a lawyer must review it. Return {"text": ...}.',
  daily_log:'Write the daily log summary for today from the notes and job data (what was done, issues, next steps; max 800 characters, no invented facts). Return {"text": ...}.',
+ quote_scope:'Draft the SCOPE OF WORK note of a quote (max 1500 characters): what is included, what is excluded, work sequence and the assumptions the professional should confirm. Base it only on the quote title and lines given. No prices, quantities or dates that are not in the data. Return {"text": ...}.',
+ contract_draft:'Draft ONE additional contract clause body (max 1500 characters) that complements the other clauses listed, keeping the same tone and avoiding repeating them. Use only the clause title given and the job data. Add no legal guarantees; the professional and a lawyer must review it. Return {"text": ...}.',
+ proposal_intro:'Write the introduction of a visual proposal addressed to the customer (2 short paragraphs, max 1200 characters): thank them, summarise the proposed work from the quote lines and explain how to approve each item. Do not invent prices, dates or guarantees. Return {"text": ...}.',
+ change_order:'Write the reason for a change order (max 450 characters): what changes with respect to the agreed scope and why, in neutral and factual words. Use only the notes and lines given. Do not state amounts that are not in the data. Return {"text": ...}.',
  client_update:'Write a short, friendly progress message to the customer (max 700 characters) from the job data and notes. Do not promise dates or prices not in the data. Return {"text": ...}.',
 };
 export function draftPrompt(feature:keyof typeof draftInstructions,language:'es'|'en',input:{title:string;current:string;notes:string;lines:string[]},job:JobContext|null){

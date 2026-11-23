@@ -67,6 +67,12 @@ for(const language of ['es','en'] as const)test(`Round 6B: electronic signature 
   await expect(row.locator('[data-esign-events] li')).toHaveText(en?[/Created/,/Sent, waiting/,/Opened by the signer/,/Signed/]:[/Creada/,/Enviada, esperando/,/Abierta por quien firma/,/Firmada/]);
   await expect(row.locator('[data-esign-download="signed_pdf"]')).toBeVisible();await expect(row.locator('[data-esign-download="certificate"]')).toBeVisible();
   await expect(row.locator('[data-esign-signer-link]')).toHaveCount(0);
+  // Evidence package (row 41): JSON manifest with hashes, timeline and artifacts; it states no signer IP or user agent is captured.
+  await expect(row.locator('[data-esign-download="evidence"]')).toBeVisible();
+  const evidence=await page.request.get(origin+'/api/pro/esign-file?'+new URLSearchParams({id:current.id,kind:'evidence'}));expect(evidence.status()).toBe(200);
+  const manifest=await evidence.json() as {format:string;request:{document_hash:string;status:string;mode:string};events:{status:string}[];artifacts:{kind:string;sha256:string}[];capturedFromSigner:{ipAddress:boolean}};
+  expect(manifest.format).toBe('contratacr-esign-evidence-v1');expect(manifest.request).toMatchObject({status:'signed',mode:'mock'});expect(manifest.request.document_hash).toMatch(/^[a-f0-9]{64}$/);
+  expect(manifest.events.map(event=>event.status)).toEqual(['created','sent','viewed','signed']);expect(manifest.artifacts.map(item=>item.kind).sort()).toEqual(['certificate','signed_pdf']);expect(manifest.capturedFromSigner.ipAddress).toBe(false);
   await expectNoHorizontalOverflow(page);await row.scrollIntoViewIfNeeded();await shot(page,`r6b-esign-signed-${language}`,project);
   current=(await esign('contract',contractId)).requests[0]!;
   // (3) Stored evidence: signed PDF and certificate, served byte-identical with their SHA-256.

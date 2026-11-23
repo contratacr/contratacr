@@ -1,4 +1,5 @@
 'use client';
+import {AiDraftAssist} from './ai-assistant';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {useLocale} from 'next-intl';
 import {Button} from '@/components/ui/button';
@@ -88,7 +89,7 @@ export function ProposalClosing({actor,publicationId}:{actor:string;publicationI
 
 // ===================== Designer (owner) =====================
 function ProposalDesigner({actor,estimateId,focusPublicationId,onClose}:{actor:string;estimateId:string;focusPublicationId:string;onClose:()=>void}){
- const c=useCopy();
+ const c=useCopy(),aiEn=useLocale()==='en';
  const [design,setDesign]=useState<ProposalDesign|null>(null),[texts,setTexts]=useState({coverTitle:'',intro:'',closing:''}),[dirty,setDirty]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[picker,setPicker]=useState<{target:ProposalImage['target'];targetKey:string;label:string}|null>(null),[failed,setFailed]=useState(false);
  const pending=useRef<{key:string;id:string}|null>(null);
  const load=useCallback(async()=>{try{setFailed(false);const r=await fetch(api+'?'+new URLSearchParams({view:'design',estimateId}),{cache:'no-store',headers:{'X-Pro-Expected-Actor':actor}});if(!r.ok)throw Error();const d=proposalDesignSchema.parse(await r.json());setDesign(d);setTexts({coverTitle:d.coverTitle,intro:d.intro,closing:d.closing});setDirty(false);}catch{setFailed(true);}},[actor,estimateId]);
@@ -123,6 +124,7 @@ function ProposalDesigner({actor,estimateId,focusPublicationId,onClose}:{actor:s
     <div className="space-y-3 rounded-2xl border border-[#d7e1ea] p-3 sm:p-4">
      <label className="block text-sm font-semibold">{c.coverTitle}<input data-proposal-cover-title className={field+' min-h-11'} maxLength={120} value={texts.coverTitle} onChange={e=>{setTexts({...texts,coverTitle:e.target.value});setDirty(true);}}/></label>
      <label className="block text-sm font-semibold">{c.intro}<textarea data-proposal-intro-input className={field} rows={4} maxLength={4000} value={texts.intro} onChange={e=>{setTexts({...texts,intro:e.target.value});setDirty(true);}}/></label>
+     <AiDraftAssist feature="proposal_intro" label={aiEn?'✦ Suggest introduction with AI':'✦ Sugerir introducción con IA'} getInput={()=>({title:texts.coverTitle,current:texts.intro,lines:design.lines.map(l=>l.description)})} onUse={text=>{setTexts({...texts,intro:text.slice(0,4000)});setDirty(true);}}/>
      <label className="block text-sm font-semibold">{c.closing}<textarea data-proposal-closing-input className={field} rows={2} maxLength={2000} value={texts.closing} onChange={e=>{setTexts({...texts,closing:e.target.value});setDirty(true);}}/></label>
      <Button type="button" data-proposal-save disabled={busy||!dirty} onClick={()=>void send({action:'save',...texts},()=>{setDirty(false);setNotice(c.saved);})}>{c.save}</Button></div>
     <div className="space-y-2"><h4 className="font-semibold">{c.coverPhoto}</h4>{slot('cover','',c.coverPhoto,1)}</div>
