@@ -5,27 +5,32 @@ test("section links describe their content and preserve individual cards", async
   const generic = await request.get("/es/opengraph-image");
   expect(generic.ok()).toBeTruthy();
   const symbol = await generic.body();
-  const bounds = await page.evaluate(async base64 => {
+  // La tarjeta de marca (21-nov-2026) se ve ancha (WhatsApp) y recortada al
+  // cuadrado central de 630x630 (comentarios de Facebook): lo oscuro (marca y
+  // texto) vive dentro de ese cuadrado y los costados llevan solo adorno claro.
+  expect(symbol.length, "la tarjeta general no puede ser un lienzo casi vacio (~4 KB)").toBeGreaterThan(20_000);
+  const zonas = await page.evaluate(async base64 => {
     const image = new Image(); image.src = `data:image/png;base64,${base64}`; await image.decode();
     const canvas = document.createElement("canvas"); canvas.width = image.width; canvas.height = image.height;
     const context = canvas.getContext("2d")!; context.drawImage(image, 0, 0);
     const {data} = context.getImageData(0, 0, canvas.width, canvas.height);
-    let left=canvas.width, right=0, top=canvas.height, bottom=0;
+    let izquierda = 0, centro = 0, derecha = 0;
     for (let y=0; y<canvas.height; y++) for(let x=0; x<canvas.width; x++) {
       const i=(y*canvas.width+x)*4;
-      if (Math.min(data[i],data[i+1],data[i+2])<235) {left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y);}
+      if (data[i] < 70 && data[i+1] < 80 && data[i+2] < 110) { if (x < 285) izquierda++; else if (x > 915) derecha++; else centro++; }
     }
-    return {left,right,top,bottom};
+    return {width: canvas.width, height: canvas.height, izquierda, centro, derecha};
   }, symbol.toString("base64"));
-  expect(Math.abs((bounds.left+bounds.right)/2-600)).toBeLessThan(12);
-  expect(Math.abs((bounds.top+bounds.bottom)/2-315)).toBeLessThan(12);
-  expect(bounds.left).toBeGreaterThan(300); expect(bounds.right).toBeLessThan(900);
-  expect(bounds.top).toBeGreaterThan(60); expect(bounds.bottom).toBeLessThan(570);
-  for (const section of ["profesionales", "empleos", "promociones", "proyectos", "publicar-solicitud", "cotizar"]) {
+  expect(zonas.width).toBe(1200); expect(zonas.height).toBe(630);
+  expect(zonas.centro).toBeGreaterThan(4000);
+  expect(zonas.izquierda).toBe(0); expect(zonas.derecha).toBe(0);
+  for (const section of ["profesionales", "empleos", "promociones", "solicitudes", "publicar-solicitud", "cotizar"]) {
     const image = await request.get(`/es/${section}/opengraph-image`);
     expect(image.ok(), section).toBeTruthy();
     expect(image.headers()["content-type"]).toContain("image/png");
-    expect((await image.body()).equals(symbol), section).toBe(section === "profesionales");
+    const cuerpo = await image.body();
+    expect(cuerpo.length, `${section}: una tarjeta en blanco pesa ~4 KB`).toBeGreaterThan(20_000);
+    expect(cuerpo.equals(symbol), section).toBe(false);
   }
   for (const path of [`/es/profesionales/${E2E_USERS.professional.slug}/opengraph-image`, "/es/empleos/d4000000-0000-4000-8000-000000000005/opengraph-image"]) {
     const image = await request.get(path);

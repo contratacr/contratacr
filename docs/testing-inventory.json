@@ -8,7 +8,7 @@
     "handlers": 120,
     "components": 294,
     "hooks": 28,
-    "specs": 203
+    "specs": 204
   },
   "dashboardTabs": [
     "home",
@@ -20403,7 +20403,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 265,
+          "line": 268,
           "tag": "Link",
           "label": "{casesLabel}",
           "handler": "",
@@ -20411,7 +20411,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 282,
+          "line": 285,
           "tag": "Link",
           "label": "{tCard(\"reviewsCount\", { count: professional.reviewCount })}",
           "handler": "",
@@ -20419,7 +20419,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 353,
+          "line": 356,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -20427,7 +20427,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 474,
+          "line": 477,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -28489,6 +28489,23 @@
         {
           "line": 90,
           "title": "'root error home recovery works even when the app stylesheet failed'"
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/imagenes-al-compartir.spec.ts",
+      "cases": [
+        {
+          "line": 44,
+          "title": "\"los logos de la tarjeta (símbolo y nombre) son PNG íntegros\""
+        },
+        {
+          "line": 61,
+          "title": "\"toda imagen de vista previa es un PNG de 1200x630 con contenido, no un lienzo en blanco\""
+        },
+        {
+          "line": 62,
+          "title": "/127\\.0\\.0\\.1:9\\b/.test(baseURL ?? \"\")"
         }
       ]
     },
