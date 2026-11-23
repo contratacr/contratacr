@@ -137,6 +137,7 @@ const handlerRules = [
   [/^\/api\/pro\/company-files$/, "pro-company-files.spec.ts"],
   [/^\/api\/pro\/company-vendors$/, "pro-bid-portal.spec.ts"],
   [/^\/api\/pro\/connectors$/, "pro-round6b-connectors.spec.ts"],
+  [/^\/api\/pro\/company-(?:automation|meetings)$/, "pro-round13-webhooks-meetings.spec.ts"],
   [/^\/api\/pro\/contract-print$/, "pro-contracts.spec.ts"],
   [/^\/api\/pro\/contracts$/, "pro-contracts.spec.ts"],
   [/^\/api\/pro\/credits-retainers$/, "pro-credits-retainers.spec.ts"],
@@ -234,14 +235,17 @@ const handlerRules = [
   [/^\/api\/pro\/work-budget$/, "pro-purchase-orders.spec.ts"],
   // Row 54 (Ronda F1-B): company cost-code library, budget markup/VAT, forecast and the client summary.
   [/^\/api\/pro\/(?:cost-codes|work-budget-forecast)$/, "pro-cost-codes.spec.ts"],
+  [/^\/api\/pro\/work-budget-sync$/, "pro-budget-sync.spec.ts"],
   // Ronda F2-B (row 05): customer custom fields and additional phones/e-mails.
   [/^\/api\/pro\/client-contacts\/fields$/, "pro-sales-contact-fields.spec.ts"],
   // Ronda F2-B (row 35): one-click quote context from a lead.
   [/^\/api\/pro\/lead-quick-quote$/, "pro-sales-contracts-quote.spec.ts"],
   [/^\/api\/pro\/lead-pipeline$/, "pro-sales-pipeline.spec.ts"],
   [/^\/api\/pro\/lead-pipeline\/rules$/, "pro-lead-stage-rules.spec.ts"],
+  [/^\/api\/pro\/lead-pipeline\/close-dates$/, "pro-lead-close-forecast.spec.ts"],
   [/^\/api\/pro\/client-contacts\/promote-channel$/, "pro-contact-merge-transfer.spec.ts"],
   [/^\/api\/pro\/client-presentation(?:\/weather)?$/, "pro-client-presentation.spec.ts"],
+  [/^\/api\/pro\/work-file-comparisons$/, "pro-before-after.spec.ts"],
   [/^\/api\/pro\/quote-proposals$/, "pro-sales-proposal.spec.ts"],
   [/^\/api\/pro\/work-changes$/, "pro-work-changes.spec.ts"],
   [/^\/api\/pro\/work-client-invitations$/, "pro-round4a.spec.ts"],
@@ -267,6 +271,9 @@ const handlerRules = [
   [/^\/api\/pro\/(?:payables|cash-flow|income-statement)$/, "pro-payables-cashflow.spec.ts"],
   // Ronda F2-C (rows 13, 15, 17, 20, 22, 24): schedule from quote, saved task views, time clock, crew, channels, custom roles.
   [/^\/api\/pro\/(?:estimate-schedule|task-views|time-clock|daily-log-crew|notification-channels|team-roles\/custom)$/, "pro-operations-schedule.spec.ts"],
+  // Package B (rows 15, 16, 24): notification schedule/sandbox digest and task comments, mentions and job-file links.
+  [/^\/api\/pro\/notification-schedule$/, "pro-notification-schedule-api.spec.ts"],
+  [/^\/api\/pro\/task-center-detail$/, "pro-task-center-detail-api.spec.ts"],
   [/^\/api\/pro\/work-calendar$/, "pro-work-calendar.spec.ts"],
   [/^\/api\/pro\/(?:client-project-overview|getting-started)$/, "pro-round12-features.spec.ts"],
   // Fix 14 (local Pro): per-item customer approval of a shared quote version (row 39).

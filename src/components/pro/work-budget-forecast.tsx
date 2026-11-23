@@ -7,6 +7,8 @@ import {Button} from '@/components/ui/button';
 import {proMoney} from '@/lib/pro/money';
 import {navigatePro,pushProParams} from '@/lib/pro/navigation';
 import {ProModal as Modal} from './modal';
+import {WorkProfitability} from './work-profitability';
+import {WorkBudgetSync} from './work-budget-sync';
 import {ProRoleCostNotice,useProInternalFinance} from './company-team';
 import {useProSearchParams} from './use-pro-search-params';
 import {
@@ -145,6 +147,7 @@ function ForecastSession({accountId,workId,blocked}:{accountId:string;workId:str
    <div className="flex w-full flex-wrap gap-2 sm:w-auto"><Button type="button" data-budget-apply-library disabled={!writable||busy} className="w-full sm:w-auto" onClick={()=>void openPicker()}>{c.apply}</Button>
     <Button type="button" variant="secondary" className="w-full sm:w-auto" disabled={busy} onClick={()=>pushProParams({vistaTrabajo:'costs'})}>{c.editCodes}</Button></div>
   </header>
+  <WorkBudgetSync workId={workId} accountId={accountId} writable={writable} refreshKey={data.budgetRevision} onApplied={message=>{if(message)setNotice(message);void load();}}/>
   {notice&&<p role="status" data-budget-notice className="rounded-xl border border-[#b9e2cf] bg-[#eef8f4] p-3 text-sm font-semibold text-[#18573a]">{notice}</p>}
   {error&&<div role="alert" data-budget-error className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#f1c7b8] bg-[#fdf3ef] p-3 text-sm text-[#a03c1f]"><span className="min-w-0 break-words">{error}</span>{uncertain&&<Button type="button" variant="secondary" disabled={busy} onClick={()=>void retry()}>{c.retry}</Button>}</div>}
   <dl data-budget-kpis className="grid grid-cols-2 gap-2 lg:grid-cols-4">
@@ -162,6 +165,7 @@ function ForecastSession({accountId,workId,blocked}:{accountId:string;workId:str
    {t.watchCount>0&&<li data-budget-warning="watch" className="rounded-xl border border-[#f2d9a0] bg-[#fff8e8] p-3 text-sm font-semibold text-[#7a4b00]">{c.watchBanner(t.watchCount)}</li>}
    {incomplete&&<li data-budget-warning="incomplete" className="rounded-xl border border-[#bfe3f2] bg-[#eef8fc] p-3 text-sm text-[#0b3a53]">{c.incompleteBanner}</li>}
   </ul>}
+  <WorkProfitability key={workId+':'+data.revision+':'+data.budgetRevision+':'+t.actualCents+':'+t.committedCents} accountId={accountId} workId={workId}/>
   <section data-budget-lines className="min-w-0 space-y-3 rounded-2xl border border-[#d7e1ea] bg-white p-4">
    <div className="flex flex-wrap items-center justify-between gap-2">
     <div role="group" aria-label={c.title} className="inline-flex rounded-xl bg-[#e9eff5] p-1">{(['sale','forecast'] as Tab[]).map(value=><button key={value} type="button" data-budget-tab={value} aria-pressed={tab===value} onClick={()=>setTab(value)} className={`min-h-10 rounded-lg px-3 text-sm font-semibold ${tab===value?'bg-white text-[#162543] shadow-sm':'text-[#52627a]'}`}>{value==='sale'?c.tabSale:c.tabForecast}</button>)}</div>

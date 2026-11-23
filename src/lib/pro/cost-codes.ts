@@ -100,6 +100,18 @@ export const clientBudgetSummarySchema=z.union([
   groups:z.array(z.object({code:costCodeText,title:z.string(),saleCents:cents}).strict()).max(500),
   otherSaleCents:cents.nullable(),saleCents:cents,taxCents:cents,totalCents:cents}).strict(),
 ]);
+/** Budget synchronisation from an accepted quote / accepted change orders (migration 380). */
+export const budgetSyncSourceSchema=z.object({kind:z.enum(['estimate','change']),id:z.string().min(1).max(80),title:z.string().nullable(),at:stamp.nullable(),
+ reason:z.enum(['currency','unavailable']).nullable(),groupCount:z.number().int().nonnegative(),itemCount:z.number().int().nonnegative(),
+ plannedCents:cents,saleCents:cents,unallocatedCents:cents,applied:z.boolean(),appliedAt:stamp.nullable(),createdCodes:z.number().int().nonnegative().nullable()}).strict();
+export const budgetSyncSchema=z.object({work:z.object({id:workId,clientId:workId,title:z.string().nullable()}).strict(),currency:z.literal('CRC'),canWrite:z.boolean(),
+ budgetRevision:revision,sources:z.array(budgetSyncSourceSchema).max(600)}).strict();
+export const budgetSyncMutationSchema=z.object({action:z.literal('apply'),actionId:uuid,workId,revision,sourceKind:z.enum(['estimate','change']),sourceId:z.string().min(1).max(80)}).strict();
+export const budgetSyncResultSchema=z.object({action:z.literal('apply'),workId,sourceKind:z.enum(['estimate','change']),sourceId:z.string(),revision,
+ created:z.number().int().nonnegative(),plannedCents:cents,unallocatedCents:cents}).strict();
+export type BudgetSync=z.infer<typeof budgetSyncSchema>;
+export type BudgetSyncSource=z.infer<typeof budgetSyncSourceSchema>;
+export type BudgetSyncMutation=z.infer<typeof budgetSyncMutationSchema>;
 export type CostCodeRow=z.infer<typeof costCodeRowSchema>;
 export type CostCodeLibrary=z.infer<typeof costCodeLibrarySchema>;
 export type CostCodeStarter=z.infer<typeof costCodeStarterSchema>;
