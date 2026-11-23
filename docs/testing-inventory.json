@@ -8,7 +8,7 @@
     "handlers": 367,
     "components": 611,
     "hooks": 29,
-    "specs": 542
+    "specs": 543
   },
   "dashboardTabs": [
     "pro_tools",
@@ -75667,6 +75667,15 @@
         {
           "line": 24,
           "title": "`Bid vendor portal: single-use link, vendor-only view, offers until closing, revocation [${language}]`"
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/pro-bid-questions.spec.ts",
+      "cases": [
+        {
+          "line": 24,
+          "title": "`Bid questions: vendor asks, owner answers once, private to the invitation, closed with the bid [${language}]`"
         }
       ]
     },
