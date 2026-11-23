@@ -2,13 +2,13 @@
   "scope": "Todos los archivos TypeScript de src/app, src/components y src/hooks, controles JSX declarados, pestañas del panel y specs permanentes. No enumera cada elemento dinámico renderizado ni componentes dentro de dependencias.",
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
-    "files": 1163,
-    "controls": 5536,
+    "files": 1165,
+    "controls": 5540,
     "pages": 132,
-    "handlers": 360,
-    "components": 604,
+    "handlers": 361,
+    "components": 605,
     "hooks": 29,
-    "specs": 538
+    "specs": 539
   },
   "dashboardTabs": [
     "pro_tools",
@@ -10732,6 +10732,28 @@
       "kind": "API / handler",
       "group": "Otros: clasificación manual pendiente",
       "route": "/api/pro/lead-pipeline",
+      "exports": [
+        "GET",
+        "POST"
+      ],
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "controls": [],
+      "testIds": [],
+      "relatedSpecs": [],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "API + integración BD + autorización/propiedad + idempotencia; smoke solo lectura",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P1"
+    },
+    {
+      "file": "src/app/api/pro/lead-pipeline/rules/route.ts",
+      "kind": "API / handler",
+      "group": "Otros: clasificación manual pendiente",
+      "route": "/api/pro/lead-pipeline/rules",
       "exports": [
         "GET",
         "POST"
@@ -52033,7 +52055,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 68,
+          "line": 69,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{()=>setStyleOpen(true)}",
@@ -52041,7 +52063,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 69,
+          "line": 70,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{()=>void load()}",
@@ -52049,7 +52071,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 78,
+          "line": 80,
           "tag": "LeadBoardView",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -52057,7 +52079,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 101,
+          "line": 103,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{onManageStages}",
@@ -52065,7 +52087,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 108,
+          "line": 110,
           "tag": "button",
           "label": "{colorNames[lang][k]}",
           "handler": "{()=>setDrafts(v=>({...v,[s.id]:{...d,color:k}}))}",
@@ -52073,7 +52095,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 110,
+          "line": 112,
           "tag": "input",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{e=>setDrafts(v=>({...v,[s.id]:{...d,probability:e.target.value.replace(/[^0-9]/g,'').slice(0,3)}}))}",
@@ -52081,7 +52103,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 112,
+          "line": 114,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{()=>void save(s)}",
@@ -52089,7 +52111,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 113,
+          "line": 115,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{()=>void save(s,true)}",
@@ -52097,7 +52119,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 129,
+          "line": 131,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{()=>void load()}",
@@ -52105,7 +52127,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 155,
+          "line": 157,
           "tag": "input",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{e=>setFrom(e.target.value)}",
@@ -52113,7 +52135,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 156,
+          "line": 158,
           "tag": "input",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{e=>setTo(e.target.value)}",
@@ -52121,7 +52143,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 157,
+          "line": 159,
           "tag": "LeadOriginFilter",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{setChannel}",
@@ -52129,7 +52151,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 158,
+          "line": 160,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{()=>void load()}",
@@ -52137,7 +52159,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 172,
+          "line": 174,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{()=>void csv()}",
@@ -53107,6 +53129,57 @@
       ],
       "methods": [],
       "controls": [],
+      "testIds": [],
+      "relatedSpecs": [],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P1"
+    },
+    {
+      "file": "src/components/pro/stage-rules.tsx",
+      "kind": "Componente",
+      "group": "Otros: clasificación manual pendiente",
+      "route": null,
+      "exports": [
+        "StageRules"
+      ],
+      "methods": [],
+      "controls": [
+        {
+          "line": 46,
+          "tag": "Button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{()=>void load()}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 53,
+          "tag": "input",
+          "label": "{c.none}",
+          "handler": "{e=>{setDrafts({...drafts,[s.id]:e.target.value});if(bad===s.id)setBad('');}}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 55,
+          "tag": "Button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{()=>void save(s.id)}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 56,
+          "tag": "Button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{()=>void save(s.id,true)}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        }
+      ],
       "testIds": [],
       "relatedSpecs": [],
       "directReferences": [],
@@ -76721,6 +76794,15 @@
         {
           "line": 41,
           "title": "`Private quote capability journey: forged actor and external return cannot become a registration return action (${language})`"
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/pro-lead-stage-rules.spec.ts",
+      "cases": [
+        {
+          "line": 10,
+          "title": "'Stage rules: set, retry, conflict, due list and clear'"
         }
       ]
     },
