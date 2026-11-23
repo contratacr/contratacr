@@ -3,7 +3,7 @@
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
     "files": 1157,
-    "controls": 5515,
+    "controls": 5512,
     "pages": 132,
     "handlers": 356,
     "components": 602,
@@ -867,7 +867,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 533,
+          "line": 562,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -875,7 +875,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 672,
+          "line": 699,
           "tag": "Link",
           "label": "{t(\"pagination.prev\")}",
           "handler": "",
@@ -883,7 +883,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 686,
+          "line": 713,
           "tag": "Link",
           "label": "{t(\"pagination.next\")}",
           "handler": "",
@@ -891,7 +891,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 702,
+          "line": 729,
           "tag": "Link",
           "label": "{t(\"pagination.prev\")}",
           "handler": "",
@@ -899,7 +899,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 714,
+          "line": 741,
           "tag": "Link",
           "label": "{t(\"pagination.status\", { page, total: totalPages })}",
           "handler": "",
@@ -907,7 +907,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 720,
+          "line": 747,
           "tag": "Link",
           "label": "{t(\"pagination.next\")}",
           "handler": "",
@@ -915,7 +915,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 730,
+          "line": 757,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -2904,44 +2904,10 @@
       "group": "Shell, portada y utilidades compartidas",
       "route": "/[locale]/lugares",
       "exports": [
-        "generateMetadata",
-        "PlacesHubPage"
+        "PlacesHubRedirect"
       ],
       "methods": [],
-      "controls": [
-        {
-          "line": 51,
-          "tag": "Link",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "",
-          "destination": "\"/\"",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 74,
-          "tag": "Link",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "",
-          "destination": "{`/${section}`}",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 92,
-          "tag": "Link",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "",
-          "destination": "\"/precios\"",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 101,
-          "tag": "Link",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "",
-          "destination": "\"/eventos\"",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        }
-      ],
+      "controls": [],
       "testIds": [],
       "relatedSpecs": [
         "tests/e2e/public-smoke.spec.ts",
@@ -24778,7 +24744,15 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 120,
+          "line": 117,
+          "tag": "a",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "",
+          "destination": "{`${en?'/en':''}/profesionales?q=${encodeURIComponent(DIRECTORY_SECTION_LABELS[section]?.[en?'en':'es']??'')}`}",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 121,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -24786,7 +24760,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 129,
+          "line": 130,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -24794,7 +24768,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 135,
+          "line": 136,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -24802,7 +24776,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 136,
+          "line": 137,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -27366,7 +27340,7 @@
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
-          "destination": "\"/lugares\"",
+          "destination": "\"/servicios\"",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
@@ -28738,7 +28712,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 505,
+          "line": 526,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{searchThisArea}",
@@ -66905,16 +66879,17 @@
       "route": null,
       "exports": [
         "matchedBusinessSections",
-        "BusinessesBlock"
+        "loadBusinessMix",
+        "BusinessMixNote"
       ],
       "methods": [],
       "controls": [
         {
-          "line": 47,
+          "line": 48,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
-          "destination": "{href}",
+          "destination": "{mix.href}",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         }
       ],
@@ -75332,26 +75307,26 @@
       "cases": [
         {
           "line": 10,
-          "title": "`/lugares lists the six groups with links to the sections [${language}]`"
+          "title": "`/lugares no longer exists: the old address goes to Categorías [${language}]`"
         },
         {
-          "line": 21,
+          "line": 16,
           "title": "`/negocios-y-profesionales no longer exists: old links go to the professional registration [${language}]`"
         },
         {
-          "line": 39,
+          "line": 34,
           "title": "\"desktop navbar: Categorías is a link to the full page, with no dropdown and no business entry\""
         },
         {
-          "line": 40,
+          "line": 35,
           "title": "isMobileProject(testInfo)"
         },
         {
-          "line": 59,
+          "line": 54,
           "title": "\"mobile drawer: Categorías is a plain link to the full page and there is no business entry\""
         },
         {
-          "line": 60,
+          "line": 55,
           "title": "!isMobileProject(testInfo)"
         }
       ]
@@ -79497,8 +79472,8 @@
       "file": "tests/e2e/search-mixed-results.spec.ts",
       "cases": [
         {
-          "line": 6,
-          "title": "\"la búsqueda no separa profesionales y negocios en pestañas\""
+          "line": 7,
+          "title": "\"la búsqueda mezcla empresas y profesionales en una sola lista\""
         }
       ]
     },
