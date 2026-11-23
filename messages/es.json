@@ -3474,6 +3474,10 @@
       "titulo": "Haga una cotización en minutos",
       "detalle": "Cree su cotización y compártala por enlace, PDF o WhatsApp.",
       "pie": "Presente sus servicios con una cotización clara."
+    },
+    "marca": {
+      "titulo": "Encuentre profesionales de servicios en Costa Rica",
+      "detalle": "Compare perfiles, consulte reseñas y contacte por WhatsApp."
     }
   },
   "accountPrivacy": {

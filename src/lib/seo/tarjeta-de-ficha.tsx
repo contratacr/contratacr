@@ -13,7 +13,7 @@ import { LOGO_PALABRA } from "../og-logos";
 export const OG_TAMANO = { width: 1200, height: 630 };
 export const OG_TIPO = "image/png";
 
-function recortar(texto: string, max: number) {
+export function recortar(texto: string, max: number) {
   const limpio = texto.replace(/\s+/gu, " ").trim();
   return limpio.length > max ? `${limpio.slice(0, max - 1).trim()}…` : limpio;
 }
@@ -31,7 +31,7 @@ async function cargarFuentes() {
   };
   return Promise.all([una(600), una(800)]);
 }
-function fuentesDeLaTarjeta() {
+export function fuentesDeLaTarjeta() {
   fuentes ??= cargarFuentes().catch(() => { fuentes = null; return []; });
   return fuentes;
 }
