@@ -10,7 +10,7 @@ import {stabilizeLocalProRuntime} from './pro-local-stable-runtime';
 // Row 40: contratos por proyecto (templates, clause library, merge fields, immutable shared version
 // and the linked customer's authenticated acceptance — NOT a certified e-signature, row 41 stays E).
 // Local types on purpose: this spec must type-check before phase 2 copies src/lib/pro/contracts.ts.
-type Clause={id:string;title:string;body:string;sourceClauseId:string|null};
+type Clause={id:string;title:string;body:string;sourceClauseId:string|null;sourceVersion?:number};
 type Response_={action:'accept'|'decline';typedName:string|null;reason:string|null;contentHash:string;at:string;atCostaRica:string};
 type Contract={id:string;workId:string;number:number;code:string;title:string;language:'es'|'en';estimateId:string|null;depositPercent:number|null;status:'draft'|'shared'|'accepted'|'declined'|'voided';latestVersion:number|null;clauseCount:number;response:Response_|null;revision:number;clauses?:Clause[]};
 type Version={id:string;version:number;contentHash:string;content:{code:string;title:string;clauses:Array<{position:number;title:string;body:string}>;estimate:{code:string;totalCents:number}|null};response:Response_|null};
@@ -85,6 +85,7 @@ for(const language of ['es','en'] as const)test(`Contracts: templates, merge fie
   const templateId=uuid();
   const template=(await post({action:'template_create',actionId:uuid(),id:templateId,title:en?'Remodeling':'Remodelación',description:null,depositPercent:30,libraryClauseIds:[clause.clause!.id,depositClause.clause!.id]}))!.template!;
   expect(template.clauses.map(c=>c.sourceClauseId)).toEqual([clause.clause!.id,depositClause.clause!.id]);
+  expect(template.clauses.map(c=>c.sourceVersion)).toEqual([1,1]);// row 40: the library version each clause was inserted from is recorded
   await post({action:'template_update',actionId:uuid(),id:templateId,revision:template.revision,title:'R',description:null,depositPercent:100.5},400);
   // Contracts: numbering per account without gaps, estimate of THIS project only.
   const create=(id:string,extra:Record<string,unknown>={})=>({action:'contract_create',actionId:uuid(),workId,id,templateId,title:null,language,estimateId,depositPercent:null,...extra});
