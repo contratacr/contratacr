@@ -6,8 +6,9 @@ test("section links describe their content and preserve individual cards", async
   expect(generic.ok()).toBeTruthy();
   const symbol = await generic.body();
   // La tarjeta de marca (21-nov-2026) se ve ancha (WhatsApp) y recortada al
-  // cuadrado central de 630x630 (comentarios de Facebook): lo oscuro (marca y
-  // texto) vive dentro de ese cuadrado y los costados llevan solo adorno claro.
+  // cuadrado central de 630x630 (comentarios de Facebook, ~110 px de lado): el
+  // nombre y una línea de texto, grandes, viven dentro de ese cuadrado (lo oscuro
+  // pasa de ~20 000 px) y los costados llevan solo adorno claro.
   expect(symbol.length, "la tarjeta general no puede ser un lienzo casi vacio (~4 KB)").toBeGreaterThan(20_000);
   const zonas = await page.evaluate(async base64 => {
     const image = new Image(); image.src = `data:image/png;base64,${base64}`; await image.decode();
@@ -22,7 +23,7 @@ test("section links describe their content and preserve individual cards", async
     return {width: canvas.width, height: canvas.height, izquierda, centro, derecha};
   }, symbol.toString("base64"));
   expect(zonas.width).toBe(1200); expect(zonas.height).toBe(630);
-  expect(zonas.centro).toBeGreaterThan(4000);
+  expect(zonas.centro).toBeGreaterThan(12000);
   expect(zonas.izquierda).toBe(0); expect(zonas.derecha).toBe(0);
   for (const section of ["profesionales", "empleos", "promociones", "solicitudes", "publicar-solicitud", "cotizar"]) {
     const image = await request.get(`/es/${section}/opengraph-image`);
