@@ -43,3 +43,11 @@ Solo checkout Pro, rama `local/pro-suite-no-push`. Sin push, despliegue, envíos
 - El mensaje aparece debajo de los datos de la cita, no en una cabecera propia como en Houzz.
 - Faltan los widgets de vídeo y clima, la portada y la tarjeta de empresa, ocultar documentos individuales, el aviso cuando el cliente abre la vista, el menú lateral por función y mensajes dentro de la vista.
 - La estructura observada en Houzz está en `houzz-live-structure-2026-11-10.md`.
+
+## Comparación visual antes y después (2026-11-23, fila 33)
+
+- Dueño: en «Vista del cliente» del trabajo, bloque «Comparación antes y después»: elige dos fotos JPG de los Archivos del trabajo, título y leyenda opcionales, hasta 20 activas; edita, archiva y restaura; historial inmutable (`pro_work_file_comparison_events`, migración 412).
+- «Visible para el cliente» es solo presentación (como las carpetas compartidas): respeta «Archivos y fotos» y no concede ni revoca accesos; archivar la deja no visible.
+- Cliente y vista previa «como cliente»: sección «Antes y después» con visor deslizador accesible (control nativo: teclado, ratón, táctil) y modo «Lado a lado». Cada imagen y descarga sale de `/api/pro/work-file-comparisons` y se reautoriza en cada lectura (sin URL pública); foto en papelera, oculta individualmente, «Archivos y fotos» apagado o comparación archivada la retiran al instante.
+- Una foto usada en una comparación no se elimina definitivamente (el organizador la conserva en la papelera).
+- Spec: `tests/e2e/pro-before-after.spec.ts` (necesita Supabase local; aún no corrido en este Mac).
