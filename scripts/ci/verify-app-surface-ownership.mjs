@@ -147,6 +147,7 @@ const handlerRules = [
   [/^\/api\/pro\/file-annotations$/, "pro-file-annotations.spec.ts"],
   [/^\/api\/pro\/company-folder-access$/, "pro-company-folder-access.spec.ts"],
   [/^\/api\/pro\/file-import$/, "pro-file-import.spec.ts"],
+  [/^\/api\/pro\/file-convert$/, "pro-file-formats-preview.spec.ts"],
   [/^\/api\/pro\/company-file-tags$/, "pro-files-library.spec.ts"],
   [/^\/api\/pro\/company-files$/, "pro-company-files.spec.ts"],
   [/^\/api\/pro\/company-vendors$/, "pro-bid-portal.spec.ts"],

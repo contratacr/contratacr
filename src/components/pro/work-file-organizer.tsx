@@ -9,7 +9,7 @@ import {useAppDialog} from '@/hooks/use-app-dialog';
 import {Button} from '@/components/ui/button';
 import {Modal} from '@/components/ui/modal';
 import {proFileSize} from '@/lib/pro/file-size';
-import {proDocBadge,proDocKindLabel} from '@/lib/pro/file-formats';
+import {proDocKindLabel} from '@/lib/pro/file-formats';
 import {organizerPageSchema,type OrganizerPage} from '@/lib/pro/round8';
 import {workFileSchema} from '@/lib/pro/work-files';
 import {ProDropZone,ProUploadList,postJsonWithProgress,uploadFailureMessage,useProUploadQueue,type UploadSend} from './pro-upload-queue';
@@ -17,6 +17,7 @@ import {ProFilePreview,canPreview,type PreviewTarget} from './pro-file-preview';
 import {FileBulkBar,FilePurgePanel,useFileBulk} from './file-bulk';
 import {FileAnnotations} from './file-annotations';
 import {FileConvertButton} from './file-transfers';
+import {FileTypeIcon} from './file-type-icon';
 
 /**
  * Round 8 + Ronda F2-D: «Archivos» of a job. Folders and subfolders (up to 5 levels), move (drag a
@@ -104,7 +105,7 @@ export function WorkFileOrganizer({workId}:{workId:string}){
  </li>;
  const fileItem=(f:FileRow)=>{const previewable=canPreview(f.mimeType)&&typeof f.sha256==='string';const target={name:f.name,mimeType:f.mimeType,sizeBytes:f.sizeBytes,sha256:String(f.sha256??''),href:fileHref(f.id)};
   return <li key={f.id} data-organizer-file={f.id} draggable={view==='folder'&&!busy} onDragStart={event=>{event.dataTransfer.setData(DRAG_TYPE,JSON.stringify({id:f.id,revision:f.metaRevision,folderId:f.folderId,name:f.name}));event.dataTransfer.effectAllowed='move';}} className="flex flex-wrap items-center gap-3 rounded-xl border border-[#d7e1ea] bg-white p-3">
-  <div className="flex min-w-0 flex-1 basis-full items-center gap-3 sm:basis-0"><input type="checkbox" data-bulk-select={f.id} className="h-5 w-5 shrink-0 accent-[#009FD9]" aria-label={t(`Seleccionar ${f.name}`,`Select ${f.name}`)} checked={!!bulk.selected[f.id]} disabled={busy} onChange={()=>bulk.toggle(f.id,f.metaRevision,f.name)}/>{f.mimeType==='image/jpeg'?<img src={fileHref(f.id)} alt="" loading="lazy" className="h-14 w-14 shrink-0 rounded-lg bg-[#f3f8fb] object-cover"/>:<span aria-hidden className={'flex h-14 w-14 shrink-0 items-center justify-center rounded-lg text-xs font-bold '+(f.mimeType==='application/pdf'?'bg-[#fdecec] text-[#b42318]':f.mimeType.startsWith('video/')?'bg-[#ede9fe] text-[#5b3cc4]':'bg-[#e8f1fb] text-[#1d4f91]')}>{proDocBadge(f.mimeType)}</span>}
+  <div className="flex min-w-0 flex-1 basis-full items-center gap-3 sm:basis-0"><input type="checkbox" data-bulk-select={f.id} className="h-5 w-5 shrink-0 accent-[#009FD9]" aria-label={t(`Seleccionar ${f.name}`,`Select ${f.name}`)} checked={!!bulk.selected[f.id]} disabled={busy} onChange={()=>bulk.toggle(f.id,f.metaRevision,f.name)}/>{f.mimeType==='image/jpeg'?<img src={fileHref(f.id)} alt="" loading="lazy" className="h-14 w-14 shrink-0 rounded-lg bg-[#f3f8fb] object-cover"/>:<FileTypeIcon mimeType={f.mimeType}/>}
   <div className="min-w-0 flex-1"><a data-organizer-file-name href={fileHref(f.id)} download={f.name} className="block break-words font-semibold underline">{f.name}</a>
    <p className="text-xs text-[#52627a]">{proDocKindLabel(f.mimeType,en)} · {proFileSize(f.sizeBytes,en)} · {stamp(f.createdAt,en)}{f.name!==f.originalName?' · '+t('Original: ','Original: ')+f.originalName:''}{f.publishedAt?' · '+t('Compartido con el cliente','Shared with the customer'):''}</p>
    {view==='trash'&&f.restoreUntil&&<p className="text-xs text-[#52627a]">{t('Se puede restaurar hasta el ','Can be restored until ')+day(f.restoreUntil,en)}</p>}</div></div>

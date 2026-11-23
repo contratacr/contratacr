@@ -28,3 +28,21 @@ export async function proOwner(page:Page,prefix:string){
  const cleanStorage=async()=>{for(const [table,bucket] of [['pro_company_files','pro-company-files'],['pro_work_files','pro-work-files']] as const){const paths=(await db.from(table).select('object_path').eq('owner_id',owner.id).throwOnError()).data!.map(row=>row.object_path as string);if(paths.length)expect((await db.storage.from(bucket).remove(paths)).error).toBeNull();}};
  return{db,owner,workId,clientId,headers,post,cleanStorage,cleanup:async()=>{await cleanStorage().catch(()=>{});await cleanupDisposableAccount(owner);}};
 }
+
+/** Minimal stored (uncompressed) zip: enough for the server's OOXML check (same helper as pro-files-library.spec.ts). */
+const crcTable=Array.from({length:256},(_,n)=>{let c=n;for(let k=0;k<8;k++)c=c&1?0xedb88320^(c>>>1):c>>>1;return c>>>0;});
+const crc32=(data:Buffer)=>{let c=0xffffffff;for(const b of data)c=crcTable[(c^b)&0xff]^(c>>>8);return (c^0xffffffff)>>>0;};
+export function zip(entries:Record<string,string>){
+ const locals:Buffer[]=[],centrals:Buffer[]=[];let offset=0;
+ for(const [name,text] of Object.entries(entries)){
+  const data=Buffer.from(text,'utf8'),file=Buffer.from(name,'utf8'),crc=crc32(data);
+  const local=Buffer.alloc(30);local.writeUInt32LE(0x04034b50,0);local.writeUInt16LE(20,4);local.writeUInt32LE(crc,14);local.writeUInt32LE(data.length,18);local.writeUInt32LE(data.length,22);local.writeUInt16LE(file.length,26);
+  const central=Buffer.alloc(46);central.writeUInt32LE(0x02014b50,0);central.writeUInt16LE(20,4);central.writeUInt16LE(20,6);central.writeUInt32LE(crc,16);central.writeUInt32LE(data.length,20);central.writeUInt32LE(data.length,24);central.writeUInt16LE(file.length,28);central.writeUInt32LE(offset,42);
+  locals.push(local,file,data);centrals.push(central,file);offset+=30+file.length+data.length;
+ }
+ const dir=Buffer.concat(centrals),end=Buffer.alloc(22);end.writeUInt32LE(0x06054b50,0);end.writeUInt16LE(Object.keys(entries).length,8);end.writeUInt16LE(Object.keys(entries).length,10);end.writeUInt32LE(dir.length,12);end.writeUInt32LE(offset,16);
+ return Buffer.concat([...locals,dir,end]);
+}
+const types='<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"/>';
+export const DOCX='application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+export const docx=()=>zip({'[Content_Types].xml':types,'word/document.xml':'<w:document/>'});

@@ -1,4 +1,5 @@
 'use client';
+import {PRO_FILE_MAX_BYTES} from '@/lib/pro/file-limit';
 import {useCallback,useEffect,useRef,useState,type PointerEvent as ReactPointerEvent} from 'react';
 import {useLocale} from 'next-intl';
 import {Button} from '@/components/ui/button';
@@ -28,7 +29,7 @@ import {ContactFieldsManager} from './client-contact-extras';
  */
 const field='mt-1 min-h-11 w-full rounded-xl border border-[#d7e1ea] bg-white px-3 text-base text-[#162543]';
 const card='min-w-0 rounded-2xl border border-[#d7e1ea] bg-white p-4';
-const MAX_FILE=20*1024*1024;
+const MAX_FILE=PRO_FILE_MAX_BYTES;
 type MergeBlocker={kind:string;table?:string;count?:number;id?:string;name?:string;reason?:string};
 const MERGE_TABLE_LABEL:Record<string,[string,string]>={pro_client_entries:['movimientos de cuenta','account movements'],pro_invoice_drafts:['facturas','invoices'],pro_client_fiscal_settings:['datos fiscales propios','own tax details']};
 function mergeBlockedMessage(name:string,blockers:MergeBlocker[],en:boolean){

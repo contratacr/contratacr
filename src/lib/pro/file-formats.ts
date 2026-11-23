@@ -7,7 +7,7 @@ import {PRO_FILE_MAX_BYTES,PRO_FILE_MAX_MB} from './file-limit';
  * (src/lib/pro/file-sniff.ts): the browser type and extension only choose the family.
  * Photos JPG/PNG/WebP are re-encoded as JPG (EXIF/GPS removed); HEIC is converted to JPG when the
  * image library can decode it and otherwise kept as HEIC (download only). Office/CAD/text files are
- * download only; PDF, photos and short videos have an in-app preview.
+ * download only; PDF, photos, short videos (with duration and poster) and CSV/TXT (first 64 KB as plain text, CSV as a small grid) have an in-app preview.
  */
 export const PRO_DOC_FORMATS={
  'image/jpeg':{ext:'jpg',kind:'image',preview:'image'},
@@ -15,8 +15,8 @@ export const PRO_DOC_FORMATS={
  'application/vnd.openxmlformats-officedocument.wordprocessingml.document':{ext:'docx',kind:'word',preview:null},
  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':{ext:'xlsx',kind:'sheet',preview:null},
  'application/vnd.openxmlformats-officedocument.presentationml.presentation':{ext:'pptx',kind:'slides',preview:null},
- 'text/csv':{ext:'csv',kind:'sheet',preview:null},
- 'text/plain':{ext:'txt',kind:'text',preview:null},
+ 'text/csv':{ext:'csv',kind:'sheet',preview:'text'},
+ 'text/plain':{ext:'txt',kind:'text',preview:'text'},
  'image/vnd.dwg':{ext:'dwg',kind:'cad',preview:null},
  'image/vnd.dxf':{ext:'dxf',kind:'cad',preview:null},
  'image/heic':{ext:'heic',kind:'image',preview:null},

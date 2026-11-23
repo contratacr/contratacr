@@ -1,4 +1,5 @@
 import {z} from 'zod';
+import {PRO_FILE_MAX_BYTES} from './file-limit';
 
 /**
  * Ronda F2-B (row 39): visual proposal of a private estimate (cover, introduction, closing, photos from the
@@ -26,7 +27,7 @@ const designCore=proposalDesignSchema.omit({lines:true,publications:true});
 export const proposalResultSchema=z.object({action:z.enum(['save','add_image','remove_image','move_image','publish']),revision:nint,proposal:designCore,publicationId:uuid.optional(),seq:z.number().int().positive().optional(),replayed:z.literal(true).optional()}).strict();
 export const proposalPublicationSchema=z.object({publicationId:uuid,side:z.enum(['owner','client']),proposal:z.object({seq:z.number().int().positive(),at:z.string().min(10),coverTitle:z.string().max(120),intro:z.string().max(4000),closing:z.string().max(2000),
  images:z.array(z.object({imageId:uuid,target:z.enum(proposalTargets),targetKey:z.string().max(80),caption:z.string().max(160)}).strict()).max(60)}).strict().nullable()}).strict();
-export const proposalFileRefSchema=z.object({bucket:z.enum(['pro-company-files','pro-work-files']),objectPath:z.string().regex(/^[a-f0-9-]{36}\/[a-f0-9-]{36}\.jpg$/),sha256:z.string().regex(/^[a-f0-9]{64}$/),sizeBytes:z.number().int().positive().max(20971520)}).strict();
+export const proposalFileRefSchema=z.object({bucket:z.enum(['pro-company-files','pro-work-files']),objectPath:z.string().regex(/^[a-f0-9-]{36}\/[a-f0-9-]{36}\.jpg$/),sha256:z.string().regex(/^[a-f0-9]{64}$/),sizeBytes:z.number().int().positive().max(PRO_FILE_MAX_BYTES)}).strict();
 export type ProposalDesign=z.infer<typeof proposalDesignSchema>;
 export type ProposalImage=z.infer<typeof proposalImageSchema>;
 export type ProposalInput=z.infer<typeof proposalInputSchema>;
