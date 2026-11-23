@@ -34,6 +34,8 @@ const pageRules = [
   // Round 6D (local Pro): professional website and campaign unsubscribe page.
   [/^\/\[locale\]\/sitio(?:\/|$)/, "pro-round6d-site.spec.ts"],
   [/^\/\[locale\]\/baja-pro$/, "pro-round6d-marketing.spec.ts"],
+  // Rows 51-53 (local Pro): public vendor page of a purchase order link (no ContrataCR account).
+  [/^\/\[locale\]\/orden-proveedor$/, "pro-po-vendor-link.spec.ts"],
   // Post-security fixes: confirmation page of the site-form subscription (double opt-in).
   [/^\/\[locale\]\/confirmar-pro$/, "pro-round6d-site.spec.ts"],
   // Multivertical directory (local Pro): place page + public menu, sections with search, listings, how we rank (F0).
@@ -140,6 +142,7 @@ const handlerRules = [
   [/^\/api\/pro\/client-statement-print$/, "pro-round4a.spec.ts"],
   [/^\/api\/pro\/company-daily-log-files$/, "pro-company-daily-log-files-api.spec.ts"],
   [/^\/api\/pro\/company-file-versions$/, "pro-company-file-versions.spec.ts"],
+  [/^\/api\/pro\/(?:company-file-bulk|work-file-bulk|file-purge)$/, "pro-file-bulk.spec.ts"],
   [/^\/api\/pro\/company-file-tags$/, "pro-files-library.spec.ts"],
   [/^\/api\/pro\/company-files$/, "pro-company-files.spec.ts"],
   [/^\/api\/pro\/company-vendors$/, "pro-bid-portal.spec.ts"],
@@ -215,6 +218,7 @@ const handlerRules = [
   [/^\/api\/pro\/promotions$/, "pro-local-integration.spec.ts"],
   [/^\/api\/pro\/catalog-specs$/, "pro-catalog-specs.spec.ts"],
   [/^\/api\/pro\/purchase-order-tracking$/, "pro-po-tracking.spec.ts"],
+  [/^\/api\/pro\/(?:purchase-order-vendor-links|po-portal|purchase-order-tools)$/, "pro-po-vendor-link.spec.ts"],
   [/^\/api\/pro\/purchase-order-print$/, "pro-purchase-orders.spec.ts"],
   [/^\/api\/pro\/purchase-orders$/, "pro-purchase-orders.spec.ts"],
   [/^\/api\/pro\/quote-change-requests$/, "pro-quote-change-requests.spec.ts"],

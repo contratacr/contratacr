@@ -14,6 +14,7 @@ import {organizerPageSchema,type OrganizerPage} from '@/lib/pro/round8';
 import {workFileSchema} from '@/lib/pro/work-files';
 import {ProDropZone,ProUploadList,postJsonWithProgress,uploadFailureMessage,useProUploadQueue,type UploadSend} from './pro-upload-queue';
 import {ProFilePreview,canPreview,type PreviewTarget} from './pro-file-preview';
+import {FileBulkBar,FilePurgePanel,useFileBulk} from './file-bulk';
 
 /**
  * Round 8 + Ronda F2-D: «Archivos» of a job. Folders and subfolders (up to 5 levels), move (drag a
@@ -42,6 +43,8 @@ export function WorkFileOrganizer({workId}:{workId:string}){
    const r=await fetch('/api/pro/work-file-organizer?'+params,{cache:'no-store'});if(r.status===404&&folder){setFolder(null);return;}if(!r.ok)throw Error();setPage(organizerPageSchema.parse(await r.json()));setFailed(false);}catch{setFailed(true);}
  },[workId,view,folder,query]);
  useEffect(()=>{const timer=setTimeout(()=>void load(),0);return()=>clearTimeout(timer);},[load]);
+ // Row 29: multi-selection (1 to 50) with move, favorites, trash, restore and permanent delete.
+ const bulk=useFileBulk({scope:'work',workId,onDone:()=>{window.dispatchEvent(new Event('contratacr:work-files-changed'));void load();}});
  async function mutate(body:Record<string,unknown>,done?:string){
   const key=JSON.stringify(body);if(pending.current?.key!==key)pending.current={key,id:crypto.randomUUID()};setBusy(true);setError('');setNotice('');
   try{const r=await fetch('/api/pro/work-file-organizer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...body,workId,actionId:pending.current.id})});const data=await r.json().catch(()=>({}));
@@ -99,7 +102,7 @@ export function WorkFileOrganizer({workId}:{workId:string}){
  </li>;
  const fileItem=(f:FileRow)=>{const previewable=canPreview(f.mimeType)&&typeof f.sha256==='string';const target={name:f.name,mimeType:f.mimeType,sizeBytes:f.sizeBytes,sha256:String(f.sha256??''),href:fileHref(f.id)};
   return <li key={f.id} data-organizer-file={f.id} draggable={view==='folder'&&!busy} onDragStart={event=>{event.dataTransfer.setData(DRAG_TYPE,JSON.stringify({id:f.id,revision:f.metaRevision,folderId:f.folderId,name:f.name}));event.dataTransfer.effectAllowed='move';}} className="flex flex-wrap items-center gap-3 rounded-xl border border-[#d7e1ea] bg-white p-3">
-  <div className="flex min-w-0 flex-1 basis-full items-center gap-3 sm:basis-0">{f.mimeType==='image/jpeg'?<img src={fileHref(f.id)} alt="" loading="lazy" className="h-14 w-14 shrink-0 rounded-lg bg-[#f3f8fb] object-cover"/>:<span aria-hidden className={'flex h-14 w-14 shrink-0 items-center justify-center rounded-lg text-xs font-bold '+(f.mimeType==='application/pdf'?'bg-[#fdecec] text-[#b42318]':f.mimeType.startsWith('video/')?'bg-[#ede9fe] text-[#5b3cc4]':'bg-[#e8f1fb] text-[#1d4f91]')}>{proDocBadge(f.mimeType)}</span>}
+  <div className="flex min-w-0 flex-1 basis-full items-center gap-3 sm:basis-0"><input type="checkbox" data-bulk-select={f.id} className="h-5 w-5 shrink-0 accent-[#009FD9]" aria-label={t(`Seleccionar ${f.name}`,`Select ${f.name}`)} checked={!!bulk.selected[f.id]} disabled={busy} onChange={()=>bulk.toggle(f.id,f.metaRevision,f.name)}/>{f.mimeType==='image/jpeg'?<img src={fileHref(f.id)} alt="" loading="lazy" className="h-14 w-14 shrink-0 rounded-lg bg-[#f3f8fb] object-cover"/>:<span aria-hidden className={'flex h-14 w-14 shrink-0 items-center justify-center rounded-lg text-xs font-bold '+(f.mimeType==='application/pdf'?'bg-[#fdecec] text-[#b42318]':f.mimeType.startsWith('video/')?'bg-[#ede9fe] text-[#5b3cc4]':'bg-[#e8f1fb] text-[#1d4f91]')}>{proDocBadge(f.mimeType)}</span>}
   <div className="min-w-0 flex-1"><a data-organizer-file-name href={fileHref(f.id)} download={f.name} className="block break-words font-semibold underline">{f.name}</a>
    <p className="text-xs text-[#52627a]">{proDocKindLabel(f.mimeType,en)} · {proFileSize(f.sizeBytes,en)} · {stamp(f.createdAt,en)}{f.name!==f.originalName?' · '+t('Original: ','Original: ')+f.originalName:''}{f.publishedAt?' · '+t('Compartido con el cliente','Shared with the customer'):''}</p>
    {view==='trash'&&f.restoreUntil&&<p className="text-xs text-[#52627a]">{t('Se puede restaurar hasta el ','Can be restored until ')+day(f.restoreUntil,en)}</p>}</div></div>
@@ -136,6 +139,8 @@ export function WorkFileOrganizer({workId}:{workId:string}){
   {view==='folder'&&<nav aria-label={t('Ubicación','Location')} className="flex flex-wrap items-center gap-1 text-sm"><button type="button" data-drop-folder="" onDragOver={onDragOverFolder} onDragLeave={onDragLeaveFolder} onDrop={onDropFolder} data-drop-target={dropTarget==='root'?'':undefined} className={'flex min-h-11 items-center gap-1 rounded-lg px-2 font-semibold text-[#008bb5] underline '+(dropTarget==='root'?'bg-[#e8f6fc]':'')} onClick={()=>setFolder(null)}><FolderOpen aria-hidden className="h-4 w-4"/>{t('Inicio','Home')}</button>{crumbs.map(c=><span key={c.id} className="flex items-center gap-1"><span aria-hidden>/</span><button type="button" data-drop-folder={c.id} onDragOver={onDragOverFolder} onDragLeave={onDragLeaveFolder} onDrop={onDropFolder} className="min-h-11 rounded-lg px-2 font-semibold text-[#008bb5] underline" aria-current={c.id===folder?'page':undefined} onClick={()=>setFolder(c.id)}>{c.name}</button></span>)}</nav>}
   {view==='folder'&&files.length>0&&<p className="hidden text-xs text-[#52627a] lg:block">{t('Consejo: arrastre un archivo sobre una carpeta (o sobre "Inicio") para moverlo.','Tip: drag a file onto a folder (or onto "Home") to move it.')}</p>}
   {view==='trash'&&<p data-organizer-retention className="rounded-xl bg-[#fff7e6] p-3 text-sm text-[#6b4e00]">{t('Los elementos de la papelera se pueden restaurar durante 30 días. Lo que ya compartió con el cliente sigue compartido. "Eliminar definitivamente" borra el archivo para siempre.','Items in the trash can be restored for 30 days. Anything already shared with the customer stays shared. "Delete permanently" erases the file forever.')}</p>}
+  {view==='trash'&&<FilePurgePanel scope="work" workId={workId} onDone={()=>void load()}/>}
+  {files.length>0&&<FileBulkBar bulk={bulk} scope="work" view={view==='trash'?'trash':'active'} all={files.map(f=>({id:f.id,revision:f.metaRevision,name:f.name}))} folders={folderOptions()} onSelectAll={()=>bulk.replace(files.map(f=>({id:f.id,revision:f.metaRevision,name:f.name})))}/>}
   {notice&&<p role="status" className="text-sm text-green-800">{notice}</p>}
   {error&&<p role="alert" className="text-sm text-red-700">{error}</p>}
   {!page?(failed?<div role="alert" className="space-y-2"><p>{t('No se pudieron cargar los archivos.','Could not load the files.')}</p><Button type="button" variant="secondary" onClick={()=>void load()}>{t('Reintentar','Retry')}</Button></div>:<p role="status">{t('Cargando archivos…','Loading files…')}</p>)
