@@ -102,11 +102,13 @@ export function floorPlanPdf(plan:{name:string;unit:'m'|'ft';content:FloorPlanCo
  const bytes=new Uint8Array(out.length);for(let i=0;i<out.length;i++)bytes[i]=out.charCodeAt(i)&0xff;return bytes;
 }
 /** 3D: each wall extruded to the wall height as a box; returns quads projected with a simple orbit camera. */
-export type Face={points:[number,number][];depth:number;shade:number;kind:'wall'|'floor'};
-export function extrudedFaces(content:FloorPlanContent,yaw:number,pitch:number,size:{w:number;h:number}):Face[]{
- const b=bounds(content),cx=(b.minX+b.maxX)/2,cy=(b.minY+b.maxY)/2,span=Math.max(b.maxX-b.minX,b.maxY-b.minY,1),k=Math.min(size.w,size.h)/(span*1.6);
+/** Row 63: height in metres of each furniture/fixture box in the 3D view (footprint comes from the plan). */
+export const floorObjectHeight:Record<FloorObjectKind,number>={bed:0.55,sofa:0.85,table:0.75,chair:0.9,desk:0.75,wardrobe:2,cabinet:0.9,stove:0.9,fridge:1.8,sink:0.9,toilet:0.45,shower:0.1,bathtub:0.55,washer:0.85,stairs:1.2};
+export type Face={points:[number,number][];depth:number;shade:number;kind:'wall'|'floor'|'object'};
+export function extrudedFaces(content:FloorPlanContent,yaw:number,pitch:number,size:{w:number;h:number},opts?:{z0?:number;frame?:ReturnType<typeof bounds>}):Face[]{
+ const z0=opts?.z0??0,b=opts?.frame??bounds(content),cx=(b.minX+b.maxX)/2,cy=(b.minY+b.maxY)/2,span=Math.max(b.maxX-b.minX,b.maxY-b.minY,1),k=Math.min(size.w,size.h)/(span*1.6);
  const cosY=Math.cos(yaw),sinY=Math.sin(yaw),cosP=Math.cos(pitch),sinP=Math.sin(pitch);
- const project=(x:number,y:number,z:number):[number,number,number]=>{const px=x-cx,py=y-cy,rx=px*cosY-py*sinY,ry=px*sinY+py*cosY,ty=ry*cosP-z*sinP,tz=ry*sinP+z*cosP;return [size.w/2+rx*k,size.h/2+ty*k,tz];};
+ const project=(x:number,y:number,zz:number):[number,number,number]=>{const z=zz+z0,px=x-cx,py=y-cy,rx=px*cosY-py*sinY,ry=px*sinY+py*cosY,ty=ry*cosP-z*sinP,tz=ry*sinP+z*cosP;return [size.w/2+rx*k,size.h/2+ty*k,tz];};
  const faces:Face[]=[];
  for(const r of content.rooms){const pts=r.points.map(p=>project(p[0],p[1],0));faces.push({points:pts.map(p=>[p[0],p[1]]),depth:pts.reduce((s,p)=>s+p[2],0)/pts.length-1000,shade:0.94,kind:'floor'});}
  for(const w of content.walls){
@@ -116,5 +118,21 @@ export function extrudedFaces(content:FloorPlanContent,yaw:number,pitch:number,s
   quads.push(base.map(p=>[p[0],p[1],hgt] as [number,number,number]));
   for(const [index,quad] of quads.entries()){const pts=quad.map(p=>project(p[0],p[1],p[2]));const lightAngle=index===4?1:Math.abs(Math.cos(Math.atan2(ny,nx)+yaw+(index%2?Math.PI/2:0)));faces.push({points:pts.map(p=>[p[0],p[1]]),depth:pts.reduce((s,p)=>s+p[2],0)/4,shade:index===4?0.55:0.45+0.4*lightAngle,kind:'wall'});}
  }
+ // Furniture and fixtures: each footprint extruded to its own height (four sides and a lid), lit like the walls.
+ for(const o of content.objects??[]){
+  const base=floorObjectCorners(o),hgt=Math.min(floorObjectHeight[o.kind],content.wallHeight);
+  const quads:[number,number,number][][]=[[0,1],[1,2],[2,3],[3,0]].map(([i,j])=>[[...base[i!]!,0],[...base[j!]!,0],[...base[j!]!,hgt],[...base[i!]!,hgt]] as [number,number,number][]);
+  quads.push(base.map(p=>[p[0],p[1],hgt] as [number,number,number]));
+  for(const [index,quad] of quads.entries()){const pts=quad.map(p=>project(p[0],p[1],p[2]));faces.push({points:pts.map(p=>[p[0],p[1]]),depth:pts.reduce((sum,p)=>sum+p[2],0)/4+0.0001,shade:index===4?0.8:0.55+0.25*Math.abs(Math.cos(yaw+index*Math.PI/2)),kind:'object'});}
+ }
  return faces.sort((a,b2)=>a.depth-b2.depth);
+}
+
+/** Row 63: several levels of one building in the same 3D canvas, each one raised by the wall height of the levels below it. */
+export function extrudedStack(levels:readonly FloorPlanContent[],yaw:number,pitch:number,size:{w:number;h:number}):Face[]{
+ if(!levels.length)return [];
+ const boxes=levels.map(level=>bounds(level)),frame={minX:Math.min(...boxes.map(b=>b.minX)),minY:Math.min(...boxes.map(b=>b.minY)),maxX:Math.max(...boxes.map(b=>b.maxX)),maxY:Math.max(...boxes.map(b=>b.maxY))};
+ const faces:Face[]=[];let z0=0;
+ for(const level of levels){faces.push(...extrudedFaces(level,yaw,pitch,size,{z0,frame}));z0+=level.wallHeight;}
+ return faces.sort((a,b)=>a.depth-b.depth);
 }

@@ -3,7 +3,7 @@ import {useCallback,useEffect,useMemo,useRef,useState,type PointerEvent as React
 import {useLocale} from 'next-intl';
 import {Button} from '@/components/ui/button';
 import {useAppDialog} from '@/hooks/use-app-dialog';
-import {areaLabel,bounds,centroid,distance,emptyFloorPlan,extrudedFaces,floorObjectCorners,floorObjectKinds,floorObjectLabel,floorObjectSize,floorPlanPdf,floorPlanSvg,lengthLabel,openingSegment,round3,snap,summarize,type FloorObjectKind,type FloorPlan,type FloorPlanContent,type Point} from '@/lib/pro/floor-plan';
+import {areaLabel,bounds,centroid,distance,emptyFloorPlan,extrudedFaces,extrudedStack,floorObjectCorners,floorObjectKinds,floorObjectLabel,floorObjectSize,floorPlanPdf,floorPlanSvg,lengthLabel,openingSegment,round3,snap,summarize,type FloorObjectKind,type FloorPlan,type FloorPlanContent,type Point} from '@/lib/pro/floor-plan';
 import {SCAN_MAX_BYTES,scanFormatOf} from '@/lib/pro/room-scan';
 import {nativeRoomScanAvailable,RoomScan} from '@/lib/pro/room-scan-native';
 import {takeoffColors} from '@/lib/pro/takeoffs';
@@ -39,6 +39,7 @@ export function WorkFloorPlans({workId}:{workId:string}){
  const [data,setData]=useState<Read|null>(null),[failed,setFailed]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
  const [planId,setPlanId]=useState<string|null>(null),[name,setName]=useState(''),[unit,setUnit]=useState<'m'|'ft'>('m'),[content,setContent]=useState<FloorPlanContent>(emptyFloorPlan),[dirty,setDirty]=useState(false);
  const [tool,setTool]=useState<Tool>('select'),[grid,setGrid]=useState(0.25),[zoom,setZoom]=useState(1),[pending,setPending]=useState<Point[]>([]),[selected,setSelected]=useState<Selection>(null),[view3d,setView3d]=useState(false),[thickness,setThickness]=useState(0.15);
+ const [stackLevels,setStackLevels]=useState(false);
  const [objectKind,setObjectKind]=useState<FloorObjectKind>('bed'),[rect,setRect]=useState({name:'',width:'4',depth:'3',x:'0',y:'0'}),[native,setNative]=useState(false),[scanNotes,setScanNotes]=useState<string[]>([]);
  // Closing round: every user edit bumps `edits`; a reload that started before an edit (e.g. the one that
  // follows «Guardar plano») refreshes the list but no longer replaces what the user is drawing now.
@@ -135,6 +136,9 @@ export function WorkFloorPlans({workId}:{workId:string}){
  if(failed)return <section className="rounded-2xl border border-[#d7e1ea] bg-white p-4"><div role="alert" className="flex flex-wrap items-center gap-2 text-sm text-red-700"><span>{t('No se pudieron cargar los planos.','Could not load the floor plans.')}</span><Button type="button" variant="secondary" onClick={()=>void load()}>{t('Reintentar','Retry')}</Button></div></section>;
  if(!data)return <p role="status" aria-busy="true" className="text-sm text-[#52627a]">{t('Cargando planos…','Loading floor plans…')}</p>;
  const active=data.plans.filter(p=>!p.archived),editing=planId!==null||dirty;
+ // Row 63: when two or more active plans name a level, the 3D view can stack them (lowest order first); the open plan uses its live content.
+ const leveled=active.filter(p=>p.content.level),canStack=leveled.length>=2;
+ const stackedLevels=stackLevels&&canStack?leveled.slice().sort((x,y)=>x.content.level!.order-y.content.level!.order).map(p=>p.id===planId?content:p.content):null;
  const tools:[Tool,string][]=[['select',t('Seleccionar','Select')],['wall',t('Pared','Wall')],['door',t('Puerta','Door')],['window',t('Ventana','Window')],['room',t('Ambiente','Room')],['dimension',t('Cota','Dimension')],['object',t('Objeto','Object')]];
  const hint={select:t('Toque un elemento para seleccionarlo.','Tap an element to select it.'),wall:t('Toque el inicio y luego cada esquina. "Terminar" corta la pared.','Tap the start and then each corner. "Finish" ends the wall.'),door:t('Toque una pared para poner una puerta de 0,9.','Tap a wall to place a 0.9 door.'),window:t('Toque una pared para poner una ventana de 1,2.','Tap a wall to place a 1.2 window.'),room:t('Toque cada esquina; toque la primera (o "Cerrar ambiente") para terminar.','Tap each corner; tap the first one (or "Close room") to finish.'),dimension:t('Toque los dos extremos de la cota.','Tap both ends of the dimension.'),object:t('Elija el objeto y toque donde va su centro.','Choose the object and tap where its centre goes.')}[tool];
  const sel=selected,selRoom=sel?.kind==='room'?content.rooms.find(r=>r.id===sel.id):undefined,selOpening=sel?.kind==='opening'?content.openings.find(o=>o.id===sel.id):undefined,selWall=sel?.kind==='wall'?content.walls.find(w=>w.id===sel.id):undefined,selObject=sel?.kind==='object'?content.objects?.find(o=>o.id===sel.id):undefined;
@@ -169,10 +173,11 @@ export function WorkFloorPlans({workId}:{workId:string}){
     <label className="text-sm">{t('Grosor de pared','Wall thickness')} <select className="min-h-11 rounded-xl border border-[#d7e1ea] px-2" value={thickness} onChange={e=>setThickness(Number(e.target.value))}>{[0.1,0.12,0.15,0.2,0.3].map(g=><option key={g} value={g}>{g.toLocaleString(en?'en-US':'es-CR')}</option>)}</select></label>
     <Button type="button" variant="ghost" aria-label={t('Alejar','Zoom out')} onClick={()=>setZoom(z=>Math.max(0.25,z/1.25))}>−</Button><Button type="button" variant="ghost" aria-label={t('Acercar','Zoom in')} onClick={()=>setZoom(z=>Math.min(4,z*1.25))}>+</Button>
     <Button type="button" variant={view3d?'default':'secondary'} data-floor-3d aria-pressed={view3d} onClick={()=>setView3d(v=>!v)}>{view3d?t('Ver en 2D','Show 2D'):t('Vista 3D','3D view')}</Button>
+    {view3d&&canStack&&<label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" data-floor-stack checked={stackLevels} onChange={e=>setStackLevels(e.target.checked)} className="h-5 w-5 accent-[#008bb5]"/>{t('Apilar todos los niveles','Stack all levels')}</label>}
    </div>
    {!view3d&&<p className="text-xs text-[#52627a]" aria-live="polite">{hint}</p>}
    <div className="min-w-0 overflow-hidden rounded-xl border border-[#d7e1ea] bg-[#fbfdfe]">
-    {view3d?<FloorPlan3D content={content} en={en}/>:
+    {view3d?<FloorPlan3D content={content} levels={stackedLevels} en={en}/>:
     <svg ref={svgRef} data-floor-canvas role="img" aria-label={t(`Plano ${name}: ${content.rooms.length} ambientes, ${content.walls.length} paredes`,`Plan ${name}: ${content.rooms.length} rooms, ${content.walls.length} walls`)} viewBox={`${viewMin[0]} ${viewMin[1]} ${viewSize[0]} ${viewSize[1]}`} className="block h-[360px] w-full touch-none sm:h-[460px]" onPointerDown={click}>
      <defs><pattern id="floor-grid" width={grid} height={grid} patternUnits="userSpaceOnUse"><path d={`M ${grid} 0 L 0 0 0 ${grid}`} fill="none" stroke="#e3edf3" strokeWidth={0.01}/></pattern></defs>
      <rect x={viewMin[0]} y={viewMin[1]} width={viewSize[0]} height={viewSize[1]} fill="url(#floor-grid)"/>
@@ -224,16 +229,17 @@ export function WorkFloorPlans({workId}:{workId:string}){
   {data.plans.some(p=>p.archived)&&<details className="text-sm"><summary className="cursor-pointer font-semibold text-[#52627a]">{t('Planos archivados','Archived plans')}</summary><ul className="mt-1 space-y-1">{data.plans.filter(p=>p.archived).map(p=><li key={p.id} className="flex items-center gap-2">{p.name}<Button type="button" variant="ghost" disabled={busy} onClick={()=>void api({action:'restore',actionId:crypto.randomUUID(),id:p.id,revision:p.revision},t('Plano restaurado.','Plan restored.')).then(r=>{if(r)void load(p.id);})}>{t('Restaurar','Restore')}</Button></li>)}</ul></details>}
  </section>;
 }
-/** Extruded walls drawn on a 2D canvas (painter's algorithm). Drag to orbit; buttons for keyboard users. */
-function FloorPlan3D({content,en}:{content:FloorPlanContent;en:boolean}){
+/** Extruded walls and furniture drawn on a 2D canvas (painter's algorithm). Drag to orbit; buttons for keyboard users. */
+function FloorPlan3D({content,levels,en}:{content:FloorPlanContent;levels:FloorPlanContent[]|null;en:boolean}){
  const ref=useRef<HTMLCanvasElement|null>(null),[angle,setAngle]=useState({yaw:0.6,pitch:0.9}),drag=useRef<{x:number;y:number;yaw:number;pitch:number}|null>(null);
  useEffect(()=>{const canvas=ref.current;if(!canvas)return;const ratio=window.devicePixelRatio||1,w=canvas.clientWidth||600,h=canvas.clientHeight||360;canvas.width=w*ratio;canvas.height=h*ratio;const ctx=canvas.getContext('2d');if(!ctx)return;ctx.setTransform(ratio,0,0,ratio,0,0);ctx.fillStyle='#f3f8fb';ctx.fillRect(0,0,w,h);
-  for(const face of extrudedFaces(content,angle.yaw,angle.pitch,{w,h})){ctx.beginPath();face.points.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.closePath();
+  for(const face of levels?extrudedStack(levels,angle.yaw,angle.pitch,{w,h}):extrudedFaces(content,angle.yaw,angle.pitch,{w,h})){ctx.beginPath();face.points.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.closePath();
    if(face.kind==='floor'){ctx.fillStyle='rgba(0,139,181,0.16)';ctx.fill();ctx.strokeStyle='#9fc9da';ctx.stroke();continue;}
+   if(face.kind==='object'){const v=Math.round(255*face.shade);ctx.fillStyle=`rgb(${v},${Math.round(v*0.78)},${Math.round(v*0.5)})`;ctx.fill();ctx.strokeStyle='#7a4b00';ctx.lineWidth=0.6;ctx.stroke();continue;}
    const v=Math.round(255*face.shade);ctx.fillStyle=`rgb(${Math.round(v*0.86)},${Math.round(v*0.9)},${v})`;ctx.fill();ctx.strokeStyle='#162543';ctx.lineWidth=0.6;ctx.stroke();}
- },[content,angle]);
+ },[content,levels,angle]);
  const t=(es:string,english:string)=>en?english:es;
- return <div className="relative"><canvas ref={ref} data-floor-3d-canvas role="img" aria-label={t('Vista 3D de las paredes extruidas','3D view of the extruded walls')} className="block h-[360px] w-full touch-none sm:h-[460px]"
+ return <div className="relative"><canvas ref={ref} data-floor-3d-canvas role="img" aria-label={t('Vista 3D de las paredes y el mobiliario','3D view of the walls and furniture')} className="block h-[360px] w-full touch-none sm:h-[460px]"
   onPointerDown={e=>{drag.current={x:e.clientX,y:e.clientY,...angle};(e.target as HTMLCanvasElement).setPointerCapture(e.pointerId);}} onPointerMove={e=>{const d=drag.current;if(!d)return;setAngle({yaw:d.yaw+(e.clientX-d.x)*0.01,pitch:Math.max(0.15,Math.min(1.45,d.pitch+(e.clientY-d.y)*0.01))});}} onPointerUp={()=>{drag.current=null;}}/>
   <div className="absolute bottom-2 right-2 flex gap-1"><Button type="button" variant="secondary" aria-label={t('Girar a la izquierda','Rotate left')} onClick={()=>setAngle(a=>({...a,yaw:a.yaw-0.3}))}>⟲</Button><Button type="button" variant="secondary" aria-label={t('Girar a la derecha','Rotate right')} onClick={()=>setAngle(a=>({...a,yaw:a.yaw+0.3}))}>⟳</Button></div></div>;
 }

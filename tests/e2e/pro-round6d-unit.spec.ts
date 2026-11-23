@@ -6,7 +6,7 @@ import {BrevoCampaignSender} from '../../src/lib/pro/integrations/marketing/brev
 import {NotActiveAdImporter,microsToCents} from '../../src/lib/pro/integrations/ads/stubs';
 import {CloudflareCustomHostnames} from '../../src/lib/pro/integrations/domain/cloudflare';
 import {integrationProviders,providerConfig,providerRegistry} from '../../src/lib/pro/integrations/registry';
-import {extrudedFaces,floorPlanContentSchema,floorPlanPdf,floorPlanSvg,polygonArea,polygonPerimeter,summarize,type FloorPlanContent} from '../../src/lib/pro/floor-plan';
+import {floorObjectHeight,extrudedFaces,extrudedStack,floorPlanContentSchema,floorPlanPdf,floorPlanSvg,polygonArea,polygonPerimeter,summarize,type FloorPlanContent} from '../../src/lib/pro/floor-plan';
 import {convexHull,parseScanJson,parseScanObj,parseScanUsdzSimulated,scanFormatOf} from '../../src/lib/pro/room-scan';
 import {defaultSiteContent,siteConsentText,siteContentSchema,siteSlugSchema,siteSubmitSchema,slugify} from '../../src/lib/pro/site';
 import {readUtm,trackingUrl} from '../../src/lib/pro/ads-tracking';
@@ -116,4 +116,26 @@ test('Round 6D: site content from profile data, slug, consent text, submit schem
  expect(readUtm(new URLSearchParams('cc=BAD!')).code).toBeNull();expect(trackingUrl('x',{landing:'site',code:'ab12cd34',utm:{source:'a',medium:'b',campaign:'c'}},null,null)).toBeNull();
  expect(simulatedMetrics(10)).toEqual({simulated:true,delivered:10,opened:4,clicked:1,unsubscribed:0});
  expect(marketingMutationSchema.safeParse({action:'contact_consent',actionId:crypto.randomUUID(),email:'x@y.co',name:'',clientId:null,consentText:'corto',evidence:'verbal',note:''}).success).toBe(false);
+});
+
+test('Row 63: furniture and fixtures are extruded in the 3D view (five faces each, own height, finite coordinates)',()=>{
+ const content=floorPlanContentSchema.parse({walls:[{id:'w1',a:[0,0],b:[4,0],thickness:0.15}],openings:[],rooms:[],dimensions:[],wallHeight:2.4,
+  objects:[{id:'o1',kind:'bed',x:2,y:2,w:1.6,d:2,rotation:0},{id:'o2',kind:'fridge',x:3.5,y:0.6,w:0.8,d:0.75,rotation:90}]});
+ const faces=extrudedFaces(content,0.6,0.9,{w:600,h:400});
+ expect(faces.filter(face=>face.kind==='wall')).toHaveLength(5);expect(faces.filter(face=>face.kind==='object')).toHaveLength(10);
+ for(const face of faces)for(const [x,y] of face.points)expect(Number.isFinite(x)&&Number.isFinite(y)).toBe(true);
+ expect(floorObjectHeight.fridge).toBeGreaterThan(floorObjectHeight.bed);
+ // A plan without objects keeps exactly its walls.
+ expect(extrudedFaces({...content,objects:undefined},0.6,0.9,{w:600,h:400}).every(face=>face.kind!=='object')).toBe(true);
+});
+
+test('Row 63: several levels stack in one 3D canvas, each one above the wall height of the one below',()=>{
+ const level=(name:string,order:number)=>floorPlanContentSchema.parse({walls:[{id:'w1',a:[0,0],b:[4,0],thickness:0.15},{id:'w2',a:[4,0],b:[4,3],thickness:0.15}],openings:[],rooms:[],dimensions:[],wallHeight:2.4,level:{name,order}});
+ const ground=level('Planta baja',0),upper=level('Planta alta',1),size={w:600,h:400};
+ const single=extrudedFaces(ground,0.6,0.9,size),stack=extrudedStack([ground,upper],0.6,0.9,size);
+ expect(stack).toHaveLength(single.length*2);
+ const top=(faces:{points:[number,number][]}[])=>Math.min(...faces.flatMap(face=>face.points.map(point=>point[1])));
+ expect(top(stack)).toBeLessThan(top(single)-1);
+ for(const face of stack)for(const [x,y] of face.points)expect(Number.isFinite(x)&&Number.isFinite(y)).toBe(true);
+ expect(extrudedStack([],0.6,0.9,size)).toEqual([]);
 });
