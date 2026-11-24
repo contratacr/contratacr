@@ -10,6 +10,7 @@ import {proCsv,csvAmount,proReportSchema,type ProReport,type ProReportJob} from 
 import {FinanceReportTabs} from './round11-finance';
 import {ExtraReportTabs} from './pro-reports-extra';
 import {LedgerReportTabs} from './payables-cashflow';
+import {SavedReports} from './saved-reports';
 
 /** Round 7B (Houzz parity: Reports): financial and jobs reports with CSV export. Read-only. */
 const stages:Record<string,{es:string;en:string}>={new:{es:'Nuevo',en:'New'},quoting:{es:'Cotizando',en:'Quoting'},scheduled:{es:'Programado',en:'Scheduled'},completed:{es:'Finalizado',en:'Completed'}};
@@ -55,6 +56,7 @@ function ReportsSession({actor}:{actor:string}){
    <label className="block min-w-0 text-sm font-semibold">{t('Hasta','To')}<input type="date" aria-label={t('Hasta','To')} min="2000-01-01" max="2100-12-31" value={to} onChange={event=>{const v=event.target.value;if(!v||!from||v>=from)setTo(v);}} className={field}/></label>
    {(tab==='financial'||tab==='jobs')&&<Button type="button" variant="outline" data-pro-report-export disabled={!data||loading} onClick={tab==='financial'?exportFinancial:exportJobs}>{t('Exportar CSV','Export CSV')}</Button>}
   </div>
+  {!denied&&<SavedReports actor={actor} en={en} tab={tab} from={from} to={to} today={new Date().toLocaleDateString('en-CA')} labels={{financial:t('Financiero','Financial'),customers:t('Por cliente','By customer'),payments:t('Pagos recibidos','Payments received'),vat:t('IVA','VAT'),payables:t('Cuentas por pagar','Payables'),cashflow:t('Flujo de caja','Cash flow'),income:t('Estado de resultados','Income statement'),jobs:t('Trabajos','Jobs'),timeMember:t('Horas por miembro','Time by member'),timeProject:t('Horas por proyecto','Time by project'),selections:t('Seguimiento de selecciones','Selections tracker')}} onApply={(nextTab,nextFrom,nextTo)=>{setTab(nextTab);setFrom(nextFrom);setTo(nextTo);}}/>}
   {denied?<p role="status" data-pro-report-denied className="text-sm text-[#52627a]">{t('Su rol en esta empresa no permite ver reportes financieros. Pídale acceso a un Administrador.','Your role in this company does not allow financial reports. Ask an Administrator for access.')}</p>
   :error?<div role="alert" className="space-y-2 text-sm"><p>{t('No se pudo cargar el reporte.','Could not load the report.')}</p><Button type="button" variant="secondary" onClick={()=>void load()}>{t('Reintentar','Retry')}</Button></div>
   :!data?<p role="status" className="text-sm text-[#52627a]">{t('Cargando reporte…','Loading report…')}</p>

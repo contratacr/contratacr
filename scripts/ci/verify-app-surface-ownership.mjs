@@ -254,6 +254,7 @@ const handlerRules = [
   [/^\/api\/pro\/selections$/, "pro-selections.spec.ts"],
   [/^\/api\/pro\/(?:selection-boards|selection-board-templates|selection-tracker-views|selections-global)$/, "pro-selection-boards.spec.ts"],
   [/^\/api\/pro\/marketing-lists$/, "pro-email-lists.spec.ts"],
+  [/^\/api\/pro\/saved-reports$/, "pro-saved-reports.spec.ts"],
   [/^\/api\/pro\/meeting-types$/, "pro-meeting-types.spec.ts"],
   [/^\/api\/pro\/service-packages$/, "pro-service-packages-english.spec.ts"],
   [/^\/api\/pro\/social$/, "pro-local-integration.spec.ts"],
