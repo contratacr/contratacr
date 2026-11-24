@@ -81,3 +81,12 @@ export function mergeExceptions(current:readonly WorkCalendarException[],extra:r
  const taken=new Set(current.map(e=>e.day));
  return [...current,...extra.filter(e=>!taken.has(e.day))].sort((x,y)=>x.day<y.day?-1:1).slice(0,200);
 }
+
+/** Row 13: working weekdays per person (0 = Sunday ... 6 = Saturday). `workDays` null = follows the company calendar. */
+export const personWorkdaysSchema=z.object({people:z.array(z.object({personId:z.string().uuid(),name:z.string().min(1).max(160),workDays:z.array(z.number().int().min(0).max(6)).min(1).max(7).nullable(),revision:z.number().int().min(0)}).strict()).max(300)}).strict();
+export type PersonWorkdays=z.infer<typeof personWorkdaysSchema>;
+export const personWorkdaysMutationSchema=z.union([
+ z.object({action:z.literal('set'),personId:z.string().uuid(),revision:z.number().int().min(0),workDays:z.array(z.number().int().min(0).max(6)).min(1).max(7).refine(d=>new Set(d).size===d.length)}).strict(),
+ z.object({action:z.literal('clear'),personId:z.string().uuid(),revision:z.number().int().min(1)}).strict(),
+]);
+export const personWorkdaysResultSchema=z.object({personId:z.string().uuid(),revision:z.number().int().min(0)}).strict();

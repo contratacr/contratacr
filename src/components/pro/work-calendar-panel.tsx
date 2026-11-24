@@ -3,6 +3,7 @@ import {useCallback,useEffect,useState,type FormEvent} from 'react';
 import {useLocale} from 'next-intl';
 import {X} from 'lucide-react';
 import {Button} from '@/components/ui/button';
+import {PersonWorkdaysPanel} from './person-workdays';
 import {crHolidaySuggestions,defaultWorkCalendar,mergeExceptions,workCalendarResultSchema,workCalendarSchema,type WorkCalendar,type WorkCalendarException} from '@/lib/pro/work-calendar';
 
 /**
@@ -65,6 +66,7 @@ export function WorkCalendarPanel({accountId,canEdit,onLoaded}:{accountId:string
    {canEdit&&<div className="flex flex-wrap justify-end gap-2"><Button type="button" variant="ghost" className="min-h-11" disabled={busy||!dirty} onClick={()=>{setDraft(saved);setError('');}}>{t('Descartar cambios','Discard changes')}</Button><Button type="button" data-work-calendar-save className="min-h-11" disabled={busy||!dirty} onClick={()=>void save()}>{busy?t('Guardando…','Saving…'):t('Guardar calendario','Save calendar')}</Button></div>}
    {!canEdit&&<p className="text-xs text-[#68778d]">{t('Solo el propietario puede cambiar el calendario.','Only the owner can change the calendar.')}</p>}
    {error&&<p role="alert" className="text-sm text-red-700">{error}</p>}{notice&&<p role="status" className="text-sm text-[#0b6b3a]">{notice}</p>}
+   <PersonWorkdaysPanel accountId={accountId} canEdit={canEdit}/>
   </div>}
  </details>;
 }

@@ -299,6 +299,7 @@ const handlerRules = [
   [/^\/api\/pro\/notification-schedule$/, "pro-notification-schedule-api.spec.ts"],
   [/^\/api\/pro\/task-center-detail$/, "pro-task-center-detail-api.spec.ts"],
   [/^\/api\/pro\/work-calendar$/, "pro-work-calendar.spec.ts"],
+  [/^\/api\/pro\/person-workdays$/, "pro-person-workdays.spec.ts"],
   [/^\/api\/pro\/(?:client-project-overview|getting-started)$/, "pro-round12-features.spec.ts"],
   // Round 13 (rows 68 and 74): portfolio publication and profile metrics; training progress and Pro support.
   [/^\/api\/pro\/company-portfolio$/, "pro-round13-portfolio.spec.ts"],
