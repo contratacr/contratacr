@@ -78567,7 +78567,11 @@
           "title": "`ficha de ${section}: botones por categoría sin botones muertos [${locale}]`"
         },
         {
-          "line": 53,
+          "line": 52,
+          "title": "true"
+        },
+        {
+          "line": 55,
           "title": "true"
         }
       ]
