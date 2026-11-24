@@ -113,6 +113,11 @@ for(const language of ['es','en'] as const){
    await page.reload();await expect(panel).toBeVisible({timeout:60000});
    await expect(panel.locator('[data-lead-task]')).toHaveCount(1);await expect(panel.locator('[data-lead-plan]')).toHaveCount(1);
    await expectNoHorizontalOverflow(page);
+   // Lead sources are grouped (Referral, Digital media, Traditional media, Other).
+   await page.locator('[data-lead-origin-editor]').getByRole('button',{name:en?'Edit channel':'Editar canal'}).click();
+   await expect(page.locator('[data-lead-origin-form] optgroup')).toHaveCount(4);
+   await expect(page.locator('[data-lead-origin-form] optgroup[data-lead-source-group="digital"]')).toHaveAttribute('label',en?'Digital media':'Medios digitales');
+   await page.reload();await expect(panel).toBeVisible({timeout:60000});
    await page.evaluate(()=>{(window as unknown as {__printed:number}).__printed=0;window.print=()=>{(window as unknown as {__printed:number}).__printed++;};});
    await panel.locator('[data-lead-more]').click();await page.locator('[data-lead-print]').click();
    await expect.poll(()=>page.evaluate(()=>(window as unknown as {__printed:number}).__printed)).toBe(1);
