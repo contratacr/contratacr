@@ -1,5 +1,7 @@
 import {test,expect,type BrowserContext,type Page} from 'playwright/test';
 import {mkdirSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
 import {randomBytes} from 'node:crypto';
 import {ownerFixture,local,origin,login,headersFor,type Owner} from './pro-round2-fixture';
 import {createDisposableAccount,cleanupDisposableAccount,type DisposableAccount} from './disposable-account';
@@ -12,7 +14,7 @@ import type {WorkActivityPage} from '../../src/lib/pro/work-activity';
 // Real events through the existing APIs (quote shared, change order, file, tasks), newest first, keyset pages,
 // «Cargar más», outsider 403, Read-only company member reads. Disposable accounts, loopback only; e-mail is the
 // local mock outbox, nothing is sent, charged or issued.
-const shots='/private/tmp/claude-501/-Users-contratacr/856767fe-101a-4aaa-8927-aa0cf5e87baa/scratchpad/gaps-shots';
+const shots=join(tmpdir(),'ccr-activity-shots');
 const api='/api/pro/work-activity';
 const pdf=Buffer.from('%PDF-1.4\n% LOCAL_ACTIVITY_TEST_ONLY\n1 0 obj\n<< /Type /Catalog >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF\n');
 async function activity(context:BrowserContext,workId:string,cursor?:{before:string;beforeId:string}|null,headers?:Record<string,string>){

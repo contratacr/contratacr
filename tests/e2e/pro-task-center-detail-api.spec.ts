@@ -27,6 +27,7 @@ test('task center detail: comment, mention notice, link and unlink existing job 
   const after=await (await page.request.get(url+q)).json();expect(after.comments.length).toBe(1);expect(after.comments[0].mentions[0].personId).toBe(member.id);
   expect((await db.from('pro_notifications').select('id').eq('owner_id',owner).eq('person_id',member.id).like('source_key','mention:%').throwOnError()).data!.length).toBe(1);
   expect((await db.from('pro_task_center_comments').update({body:'x'}).eq('owner_id',owner)).error).not.toBeNull();
+  expect((await db.from('pro_task_center_comments').delete().eq('owner_id',owner)).error).not.toBeNull();
   const link={kind:'file',action:'link',actionId:crypto.randomUUID(),workId:f.workId,taskId,fileId};
   expect((await page.request.post(url,{headers,data:{...link,actionId:crypto.randomUUID(),fileId:pendingFile}})).status()).toBe(400);
   expect((await page.request.post(url,{headers,data:link})).status()).toBe(200);

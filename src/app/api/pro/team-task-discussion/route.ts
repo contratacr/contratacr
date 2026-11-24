@@ -93,7 +93,10 @@ export async function POST(req:Request){
   if(reservation.objectPath.split('/')[1]!==input.fileId+extension||file.id!==input.fileId||file.taskId!==input.taskId||file.actorId!==a.user.id||file.name!==name||file.mimeType!==canonical.mimeType||file.sha256!==sha256||file.sizeBytes!==canonical.bytes.length)return fail(503,'No se pudo comprobar la reserva.');
   const bucket=a.db.storage.from(bucketName),uploaded=await bucket.upload(reservation.objectPath,canonical.bytes,{contentType:canonical.mimeType,upsert:false,cacheControl:'0'});
   if(uploaded.error&&String((uploaded.error as {statusCode?:string|number}).statusCode)!=='409')return fail(503,'No se pudo completar la subida. Reintente el mismo archivo.');
-  const stored=await bucket.download(reservation.objectPath);if(stored.error||!stored.data||stored.data.size!==canonical.bytes.length)return fail(503,'No se pudo comprobar la subida.');
+  // A twin request with the same file id loses the upload race (409) while the winner is still writing the object: wait briefly for it instead of failing an exact retry.
+  let stored=await bucket.download(reservation.objectPath);
+  for(let attempt=0;attempt<8&&uploaded.error&&(stored.error||!stored.data||stored.data.size!==canonical.bytes.length);attempt++){await new Promise(resolve=>setTimeout(resolve,250));stored=await bucket.download(reservation.objectPath);}
+  if(stored.error||!stored.data||stored.data.size!==canonical.bytes.length)return fail(503,'No se pudo comprobar la subida.');
   if(digest(new Uint8Array(await stored.data.arrayBuffer()))!==sha256)return fail(503,'El archivo almacenado no coincide.');
   const ready=await a.db.rpc('pro_team_task_file_ready',{p_actor:a.user.id,p_grant:input.grantId,p_task:input.taskId,p_file:input.fileId,p_sha256:sha256});if(ready.error)return dbError(ready.error);
   return Response.json(ready.data,{headers});

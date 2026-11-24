@@ -121,6 +121,19 @@ do $$ declare t record; r text; op text; begin
   end loop;
 end $$;
 
+-- Pro tables whose policies are read-only (migrations grant authenticated SELECT only) must not keep the blanket
+-- write privileges either: hosted, a write answers permission denied (42501); with the blanket grant an UPDATE or
+-- DELETE silently matched zero rows under RLS and the denial contract could not be observed.
+do $$ declare t record; begin
+  for t in
+    select c.relname from pg_class c join pg_namespace n on n.oid=c.relnamespace
+     where n.nspname='public' and c.relkind in ('r','p') and c.relrowsecurity and c.relname like 'pro\_%'
+       and not exists (select 1 from pg_policies p where p.schemaname='public' and p.tablename=c.relname and p.cmd in ('INSERT','UPDATE','DELETE','ALL'))
+  loop
+    execute format('revoke insert, update, delete, truncate on table public.%I from public, anon, authenticated', t.relname);
+  end loop;
+end $$;
+
 -- Moderation/chat records never inherit blanket local bootstrap permissions.
 do $$ declare t text; begin
   foreach t in array array['admin_chat_reviewers','admin_chat_access_log','moderation_actions','moderation_holds','moderation_restrictions','moderation_files','moderation_photo_holds','admin_staff_permissions','moderation_retention_state'] loop

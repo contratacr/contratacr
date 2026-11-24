@@ -78,7 +78,7 @@ for(const language of ['es','en'] as const)test(`Work profitability: projection,
   // ---- UI ----
   await page.setViewportSize(info.project.name.includes('mobile')?{width:390,height:844}:{width:1366,height:900});
   await page.context().addCookies([{name:'NEXT_LOCALE',value:language,url:origin}]);
-  await gotoOK(page,origin+'/dashboard/profesional?'+new URLSearchParams({tab:'pro_agenda',cita:uiWorkId,vistaTrabajo:'budget'}));
+  await gotoOK(page,`/${language}/dashboard/pro?`+new URLSearchParams({tab:'pro_agenda',cita:uiWorkId,vistaTrabajo:'budget'}));
   const box=page.locator('[data-work-profitability]');await expect(box).toBeVisible({timeout:60000});
   await expect(box.locator('[data-profit-figure="margin-projected"]')).toContainText('99');
   await expect(box.locator('[data-profit-alert="low_margin"]')).toBeVisible();

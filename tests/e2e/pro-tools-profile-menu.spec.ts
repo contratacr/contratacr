@@ -27,10 +27,11 @@ for(const language of ['es','en'] as const)test(`Tools uses profile menu rows an
   // rows (Centro de empresa, Equipo, Archivos de la empresa, Proyectos, Solicitudes, Tareas). Round 2: the cards
   // and the sidebar share one list (lib/pro/hub-sections), adding Citas and Borradores de facturación to Gestión: 4/3/10 = 17.
   // Round 9 (intentional, QA «Ronda 9»): «Horas» (hours of all jobs) joins Gestión → 4/3/11 = 18.
+  // Gaps round (2026-11-17): «Edición de Pro» joins Empresa → 5/3/11 = 19.
   const tools=page.locator('[data-pro-tools]'),nav=tools.getByRole('navigation');
-  await expect(nav.getByRole('button')).toHaveCount(18);
+  await expect(nav.getByRole('button')).toHaveCount(19);
   for(const name of language==='en'?['Company','Library','Management']:['Empresa','Biblioteca','Gestión'])await expect(nav.getByRole('heading',{name,exact:true})).toBeVisible();
-  await expect(nav.getByRole('region',{name:language==='en'?'Company':'Empresa',exact:true}).getByRole('button')).toHaveCount(4);
+  await expect(nav.getByRole('region',{name:language==='en'?'Company':'Empresa',exact:true}).getByRole('button')).toHaveCount(5);
   await expect(nav.getByRole('region',{name:language==='en'?'Library':'Biblioteca',exact:true}).getByRole('button')).toHaveCount(3);
   await expect(nav.getByRole('region',{name:language==='en'?'Management':'Gestión',exact:true}).getByRole('button')).toHaveCount(11);
   await expect(tools.locator('[data-pro-record-card]')).toHaveCount(0);
