@@ -38,7 +38,7 @@ export function FinanceTable<T extends {id:string}>({id,columns,rows,rowAttrs,on
    <legend className="px-1 text-sm font-semibold text-[#162543]">{en?'Show columns':'Mostrar columnas'}</legend>
    {columns.map((c,index)=><label key={c.key} className="flex min-h-11 items-center gap-2 text-sm text-[#162543]"><input type="checkbox" className="h-5 w-5" data-finance-column-option={c.key} checked={visible.includes(c.key)} disabled={index===0} onChange={()=>toggle(c.key)}/>{c.label}</label>)}
   </fieldset>}
-  <div className="max-w-full overflow-x-auto rounded-xl border border-[#d7e1ea] bg-white">
+  <div className="relative max-w-full overflow-x-auto rounded-xl border border-[#d7e1ea] bg-white">
    <table className="w-full min-w-max border-collapse text-left text-sm">
     <caption className="sr-only">{caption}</caption>
     <thead className="bg-[#f7f9fc] text-xs uppercase tracking-wide text-[#52627a]"><tr>

@@ -8,7 +8,7 @@ export const floorLibraryItemSchema=z.object({
 });
 export type FloorLibraryItem=z.infer<typeof floorLibraryItemSchema>;
 const base={id:z.string().uuid(),name:z.string().trim().min(1).max(60),w:dim(0.05,50),d:dim(0.05,50),h:dim(0.05,20),color:color.optional()};
-export const floorLibraryMutationSchema=z.discriminatedUnion('action',[
+export const floorLibraryMutationSchema=z.union([
  z.object({action:z.literal('create'),...base,source:z.literal('manual')}).strict(),
  z.object({action:z.literal('create'),...base,source:z.literal('obj'),fileSha256:z.string().regex(/^[a-f0-9]{64}$/)}).strict(),
  z.object({action:z.literal('create'),...base,source:z.literal('catalog'),productId:z.string().min(1).max(160)}).strict(),

@@ -14,7 +14,7 @@ for(const language of ['es','en'] as const)test(`Invoices table view [${language
   await warmLocalRoutes(page,['/api/pro/work-invoices?workId='+f.workId]);
   const ok=await page.request.get(origin+'/api/pro/work-invoices?workId='+f.workId);expect(ok.status(),await ok.text()).toBe(200);
   const body=await ok.json();expect(body.items[0]).toMatchObject({linkedDocs:0,updatedAt:expect.any(String)});
-  await page.addInitScript(()=>{try{window.localStorage.removeItem('pro-finance-view:invoices');window.localStorage.removeItem('pro-finance-columns:invoices');}catch{/* private window */}});
+  await page.addInitScript(()=>{try{if(window.sessionStorage.getItem('finance-table-spec-reset'))return;window.sessionStorage.setItem('finance-table-spec-reset','1');window.localStorage.removeItem('pro-finance-view:invoices');window.localStorage.removeItem('pro-finance-columns:invoices');}catch{/* private window */}});
   await gotoOK(page,`/${language}/dashboard/pro?`+new URLSearchParams({tab:'pro_agenda',cita:f.workId,vistaTrabajo:'invoices'}));
   const view=page.locator('[data-work-invoices]');await expect(view).toBeVisible({timeout:90000});
   await expect(view.locator('[data-work-invoice]')).toHaveCount(2);
