@@ -27,11 +27,22 @@ for(const language of ['es','en'] as const)test(`Email lists [${language}]`,asyn
   const ok=await save('list:'+listId);expect(ok.status(),await ok.text()).toBe(200);
   const overview=await (await page.request.get(origin+'/api/pro/marketing')).json() as {campaigns:{id:string;segment:string;audience:number}[]};
   expect(overview.campaigns.find(c=>c.id===campaign)).toMatchObject({segment:'list:'+listId,audience:1});
+  // Vendors system list: consented contacts whose email matches an active vendor of the owner.
+  const vid=crypto.randomUUID(),vendorMail=`proveedor.${label}@example.test`;
+  const vendorCreate=await page.request.post(origin+'/api/pro/company-vendors',{headers:h,data:{action:'create',actionId:crypto.randomUUID(),id:vid,name:'Ferretería '+label,kind:'supplier',trade:null,contactName:null,email:vendorMail,phone:'',identification:'',notes:null,address:null}});
+  expect(vendorCreate.status(),await vendorCreate.text()).toBe(200);
+  let sys=(await lists()).system;expect(sys).toMatchObject({vendors:0,vendorsWithEmail:1});
+  expect((await page.request.post(origin+'/api/pro/marketing',{headers:h,data:{action:'contact_consent',actionId:crypto.randomUUID(),email:vendorMail,name:'Ferretería',clientId:null,consentText:'La persona aceptó recibir novedades por correo.',evidence:'written'}})).status()).toBe(200);
+  sys=(await lists()).system;expect(sys).toMatchObject({all:3,vendors:1,vendorsWithEmail:1});
+  const vcamp=crypto.randomUUID(),vsave=await page.request.post(origin+'/api/pro/marketing',{headers:h,data:{action:'campaign_save',actionId:crypto.randomUUID(),id:vcamp,revision:0,name:'Para proveedores',subject:'Hola',body:'Texto',segment:'vendors'}});
+  expect(vsave.status(),await vsave.text()).toBe(200);
+  expect(((await (await page.request.get(origin+'/api/pro/marketing')).json()) as {campaigns:{id:string;audience:number}[]}).campaigns.find(c=>c.id===vcamp)).toMatchObject({audience:1});
   const anonymous=await page.context().browser()!.newContext({baseURL:origin});expect((await anonymous.request.get(origin+'/api/pro/marketing-lists')).status()).toBe(401);await anonymous.close();
 
   await gotoOK(page,`/${language}/dashboard/pro?`+new URLSearchParams({tab:'pro_company',empresa:'correo'}));
   const root=page.locator('[data-mkt-lists]');await expect(root).toBeVisible({timeout:90000});
-  await expect(root.locator('[data-mkt-system-list="all"] [data-mkt-list-count]')).toHaveText('2');
+  await expect(root.locator('[data-mkt-system-list="all"] [data-mkt-list-count]')).toHaveText('3');
+  await expect(root.locator('[data-mkt-system-list="vendors"] [data-mkt-list-count]')).toHaveText('1');
   await expect(root.locator(`[data-mkt-list="${listId}"] [data-mkt-list-audience]`)).toContainText('1');
   await root.locator('[data-mkt-list-name]').fill('Segunda '+label);await root.locator('[data-mkt-list-create]').click();
   await expect(root.locator('[data-mkt-list]')).toHaveCount(2,{timeout:60000});

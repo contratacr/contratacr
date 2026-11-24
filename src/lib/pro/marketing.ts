@@ -7,7 +7,7 @@ import {z} from 'zod';
  */
 const id=z.string().uuid(),revision=z.number().int().min(0).max(2147483646);
 const body=z.string().trim().min(1).max(8000),subject=z.string().trim().min(1).max(160),name=z.string().trim().min(1).max(120);
-export const marketingSegments=['all','clients','leads'] as const;
+export const marketingSegments=['all','clients','leads','vendors'] as const;
 /** System segments plus a custom email list (area E): 'list:<uuid>'. */
 export const marketingSegmentSchema=z.union([z.enum(marketingSegments),z.string().regex(/^list:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/)]);
 export const consentEvidence=['verbal','written','form','other'] as const;
@@ -45,7 +45,7 @@ export function simulatedMetrics(recipients:number){
 export const marketingPlaceholders=['{{nombre}}','{{negocio}}','{{enlace}}'] as const;
 
 export const marketingListsSchema=z.object({
- system:z.object({all:z.number().int(),clients:z.number().int(),leads:z.number().int()}),
+ system:z.object({all:z.number().int(),clients:z.number().int(),leads:z.number().int(),vendors:z.number().int(),vendorsWithEmail:z.number().int()}),
  lists:z.array(z.object({id:z.string().uuid(),name:z.string(),contactIds:z.array(z.string().uuid()),audience:z.number().int()})),
  contacts:z.array(z.object({id:z.string().uuid(),name:z.string(),email:z.string()})),
 });
