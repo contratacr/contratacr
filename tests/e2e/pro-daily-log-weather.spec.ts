@@ -2,6 +2,7 @@ import {test,expect} from 'playwright/test';
 import {createDisposableAccount,cleanupDisposableAccount} from './disposable-account';
 import {regressionAdminClient} from './seed';
 import {conditionFromWmo,openMeteoProvider,readWeather,resolveWeatherProvider,sandboxProvider} from '../../src/lib/pro/weather';
+import {emptyBusiness} from '../../src/lib/pro/business';
 import {dailyLogSettingsSaveSchema} from '../../src/lib/pro/daily-log-automation';
 
 // Row 20 (migration 405): weather provider adapter and automatic daily log drafts. Adapter specs never touch the
@@ -55,7 +56,10 @@ test('daily log settings and automatic private drafts (SQL, local)',async()=>{
   // Out of the lookback window.
   expect(((await db.rpc('pro_daily_log_auto_create',{p_owner:owner.id,p_today:today,p_input:{workId,date:'2026-11-10',title:'x',summary:'y',minutes:null,weather:null}})).data)).toMatchObject({created:false,reason:'out_of_window'});
   // A real job with a stopped time entry yesterday becomes a candidate and one private draft, only once.
-  await db.from('pro_work').insert({user_id:owner.id,id:workId,client_id:null,client:'Cliente',service:'Obra de prueba',stage:'scheduled',start:'2026-11-20T09:00:00-06:00',end:'2026-11-22T11:00:00-06:00'}).throwOnError();
+  // pro_work needs its workspace row and a customer (normalized storage), so create them through the workspace document.
+  const document=emptyBusiness();document.clients=[{id:'autolog-customer',name:'Cliente',email:'',phone:'',notes:'',archived:false}];
+  document.work=[{id:workId,clientId:'autolog-customer',client:'Cliente',service:'Obra de prueba',stage:'scheduled',start:'2026-11-20T09:00:00-06:00',end:'2026-11-22T11:00:00-06:00',cancelled:false}];
+  await db.from('pro_workspaces').insert({user_id:owner.id,document,revision:1}).throwOnError();
   const cand=await db.rpc('pro_daily_log_auto_candidates',{p_owner:owner.id,p_today:today});expect(cand.error).toBeNull();expect((cand.data as {items:unknown[]}).items.length).toBeGreaterThanOrEqual(0);
   const make=()=>db.rpc('pro_daily_log_auto_create',{p_owner:owner.id,p_today:today,p_input:{workId,date:'2026-11-22',title:'Borrador automático: Obra de prueba',summary:'Borrador automático',minutes:120,weather:{condition:'rain',temperatureC:22,note:'Clima del proveedor de pruebas'}}});
   const first=await make();expect(first.error).toBeNull();expect(first.data).toMatchObject({created:true});
