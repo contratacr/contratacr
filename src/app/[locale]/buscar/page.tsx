@@ -22,7 +22,7 @@ import { ProfessionalCard } from "@/components/professionals/professional-card";
 import { SaveableCard } from "@/components/professionals/save-button";
 import type { ProService } from "@/lib/queries/professionals";
 import { primaryPricingLabel } from "@/lib/pricing";
-import { categorySlug, getAllCategories, getAllCategoryGroups, getCategoryGroupLabel, getCategoryLabel, isHealthCategory, normalizeText, supportsVideoConsultCategory } from "@/lib/data/categories";
+import { categorySlug, getAllCategories, getCategoryGroupId, getAllCategoryGroups, getCategoryGroupLabel, getCategoryLabel, isHealthCategory, normalizeText, supportsVideoConsultCategory } from "@/lib/data/categories";
 import { haversineKm, PROVINCES } from "@/lib/data/cr-geography";
 import { SearchResultsLayout } from "@/components/search/search-results-layout";
 import { SearchResultsInfinite } from "@/components/search/search-results-infinite";
@@ -41,6 +41,9 @@ import { PlaceCard } from "@/components/directory/place-card";
 import type { PlaceSearchItem } from "@/lib/directory/search-schemas";
 import type { CardExtra } from "@/lib/directory/card-extras";
 import { sitemapSections } from "@/lib/directory/sitemap-sections";
+import { loadPlaceResults, PlaceResultsMobile, type PlaceFilters } from "@/components/directory/place-results";
+import { FiltersIconChip, ResultChips, ServiceChipExtras } from "@/components/directory/result-chips";
+import { ServiceAssistantCard } from "@/components/search/service-assistant-card";
 
 interface SearchPageProps {
   searchParams: Promise<{
@@ -64,6 +67,12 @@ interface SearchPageProps {
     e?: string;
     w?: string;
     page?: string;
+    // App results (phones, directory on): place chips and the entry-screen shortcut.
+    orden?: string;
+    abierto?: string;
+    nivel?: string;
+    llevar?: string;
+    mod?: string;
     /** Regression-only cache bypass; ignored unless isolated fixtures are enabled. */
     regression?: string;
   }>;
@@ -211,6 +220,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const [viewer, resolvedSearch] = await Promise.all([viewerPromise, resolveSearchResults(params)]);
   const allResults = resolvedSearch.ordered;
   const viewerProfileId = viewer?.id;
+  const assistantFirstName = (() => {
+    const meta = (viewer?.user_metadata ?? {}) as { full_name?: unknown; name?: unknown };
+    const full = typeof meta.full_name === "string" ? meta.full_name : typeof meta.name === "string" ? meta.name : "";
+    return full.trim().split(/\s+/)[0] || null;
+  })();
 
   // Lo de un usuario bloqueado no se muestra (6-oct-2026, regla 1.2 de Apple).
   const bloqueadosPorMi = await perfilesBloqueadosPor(viewerProfileId);
@@ -330,6 +344,20 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   // one business after every two professionals, never ordered by payment.
   const businessMix = currentPage === 1
     ? await loadBusinessMix(params.q, sitemapSections().map((s) => s.section), locale, { provinceId: selectedProvinceId, cantonId: selectedCantonId, lat: nearLat, lng: nearLng })
+    : null;
+  // App results on phones: a search that names a place section ("restaurantes", "farmacias en Heredia") shows the places
+  // as the Yelp list (rows, place chips). Desktop keeps the mixed list below; services keep the professional cards.
+  const appEnglish = locale === "en";
+  const directorySectionIds = sitemapSections().map((s) => s.section as string);
+  const directoryOn = directorySectionIds.length > 0;
+  const placeFilters: PlaceFilters = {
+    abierto: params.abierto === "1" || params.mod === "open",
+    nivel: (params.nivel ?? "").split(",").map(Number).filter((n) => n >= 1 && n <= 4),
+    llevar: params.llevar === "1" || params.mod === "takeout",
+    orden: params.orden === "rating" || params.orden === "distance" || params.orden === "reviews" ? params.orden : "relevance",
+  };
+  const placeResults = directoryOn && !selectedCategory && !selectedGroupId
+    ? await loadPlaceResults(params.q, directorySectionIds, locale, { provinceId: selectedProvinceId, cantonId: selectedCantonId, lat: nearLat, lng: nearLng }, placeFilters)
     : null;
   // Sin resultados ni empresas cargadas (falló o tardó la consulta) pero la búsqueda nombra una sección: el camino sigue abierto.
   const fallbackMatch = !businessMix ? matchedBusinessSections(params.q, sitemapSections().map((s) => s.section), locale)[0] : undefined;
@@ -593,7 +621,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             apiKey={MAPS_API_KEY}
             locale={locale}
             numbering={numbering}
-            countLabel={subtitle}
+            countLabel={placeResults ? (placeResults.items.length > 0 ? (appEnglish ? `${placeResults.total} places` : `${placeResults.total} lugares`) : undefined) : subtitle}
             limpiar={hayFiltrosDePastilla ? { href: sinFiltrosHref, label: t("filters.clearAll") } : undefined}
             hasActiveFilters={hasActiveFilters}
             mapFocusTarget={mapFocusTarget}
@@ -601,12 +629,27 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             sinResultados={allResults.length === 0 && !businessMix}
             hojaAbiertaAlInicio={enLaApp}
             filters={<Suspense fallback={null}><SearchFilters initialValues={filterInitialValues} /></Suspense>}
-            quickFilters={<Suspense fallback={null}><SearchFilters variant="chips" initialValues={filterInitialValues} /></Suspense>}
+            quickFilters={placeResults
+              ? <Suspense fallback={null}><ResultChips /></Suspense>
+              : directoryOn
+                ? <Suspense fallback={null}><SearchFilters variant="chips" initialValues={filterInitialValues} leadingChips={<FiltersIconChip />} trailingChips={<ServiceChipExtras auto={!!activeCategoryId && getCategoryGroupId(activeCategoryId) === "automotriz"} videoOk={videoCompatibleSearch} />} /></Suspense>
+                : <Suspense fallback={null}><SearchFilters variant="chips" initialValues={filterInitialValues} /></Suspense>}
+            titleRow={directoryOn ? { title: placeResults?.label ?? pageTitle, subtitle: areaName ?? "Costa Rica", mapLabel: appEnglish ? "Map" : "Mapa", listLabel: appEnglish ? "List" : "Lista" } : undefined}
             drawerFilters={<Suspense fallback={null}><SearchFilters closable initialValues={filterInitialValues} /></Suspense>}
           >
 
+            {/* Phones, place search: the Yelp-style list of places (the mixed list below stays for lg and up). */}
+            {placeResults && (
+              <div className="lg:hidden" data-app-place-results>
+                <PlaceResultsMobile results={placeResults} locale={locale} query={queryText} nearText={typeof areaName === "string" ? areaName : null} />
+              </div>
+            )}
+            {/* Phones, services: the assistant card above the professionals. */}
+            {directoryOn && !placeResults && (
+              <div className="px-0 lg:hidden"><ServiceAssistantCard firstName={assistantFirstName} category={activeCategoryId ? catLabel(activeCategoryId) : null} auto={!!activeCategoryId && getCategoryGroupId(activeCategoryId) === "automotriz"} /></div>
+            )}
             {/* Results list */}
-            <div className="min-w-0">
+            <div className={placeResults ? "hidden min-w-0 lg:block" : "min-w-0"}>
               {businessMix && <BusinessMixNote mix={businessMix} locale={locale} />}
               {allResults.length === 0 && !businessMix ? (
                 // Tres cosas y en este orden: qué pasó, qué hacer, y la salida,

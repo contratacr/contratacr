@@ -4,7 +4,7 @@ import { useNativeApp } from "@/hooks/use-native-app";
 import { PantallaFija } from "@/components/util/pantalla-fija";
 import { Link } from "@/i18n/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Loader2, RefreshCw } from "lucide-react";
+import { Loader2, Map as MapIcon, RefreshCw } from "lucide-react";
 import { SearchMapPanel, type MapFocusTarget, type MapProfessional } from "@/components/maps/search-map-panel";
 import { APP_RESUME_EVENT } from "@/lib/app-events";
 
@@ -36,6 +36,9 @@ interface SearchResultsLayoutProps {
   /** En la app, la pestaña «Profesionales» tiene que abrir la BÚSQUEDA —la
    *  barra y la lista—, no el mapa: el mapa queda un gesto más abajo. */
   hojaAbiertaAlInicio?: boolean;
+  /** Mobile title row of the sheet header (Yelp app model): bold category, grey place and a Map/List toggle that
+   *  moves the sheet between its lowest and highest stops. */
+  titleRow?: { title: string; subtitle?: string; mapLabel: string; listLabel: string };
 }
 
 // Three mobile snap points: map-first, one-card browsing, and expanded.
@@ -114,7 +117,7 @@ function snapIndex(value: number, points = mobileSheetSnapPoints()) {
  *  DESKTOP is unchanged (same `lg:` classes). The bottom-sheet wrapper is `lg:contents`, so on
  *  desktop it dissolves and the card column (`lg:order-2`) drops into the 3-column flex shell.
  */
-export function SearchResultsLayout({ children, filters, quickFilters, drawerFilters, countLabel, limpiar, mapData = [], apiKey = "", map, locale, numbering, mapFocusTarget = null, resetKey, sinResultados = false, hojaAbiertaAlInicio = false }: SearchResultsLayoutProps) {
+export function SearchResultsLayout({ children, filters, quickFilters, drawerFilters, countLabel, limpiar, mapData = [], apiKey = "", map, locale, numbering, mapFocusTarget = null, resetKey, sinResultados = false, hojaAbiertaAlInicio = false, titleRow }: SearchResultsLayoutProps) {
   const [showFilters, setShowFilters] = useState(false); // full-filter drawer (mobile + lg-xl)
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
@@ -637,6 +640,22 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
             >
               <span className="h-1.5 w-10 rounded-full bg-[#d1d5db]" />
             </div>
+            {titleRow && (
+              <div data-results-title-row className="flex items-center gap-3 px-4 pb-1 pt-0.5">
+                <p className="min-w-0 flex-1 truncate text-[17px] font-extrabold leading-6 text-[#162543]">{titleRow.title}{titleRow.subtitle && <span className="ml-2 text-[14px] font-semibold text-[#6b7280]">{titleRow.subtitle}</span>}</p>
+                <button
+                  type="button"
+                  data-results-map-toggle
+                  onClick={() => {
+                    const points = mobileSheetSnapPoints();
+                    setHeightFr(heightFr > points[0] + 0.05 ? points[0] : points[points.length - 1]);
+                  }}
+                  className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-[#d7e1ea] bg-white px-3.5 text-[13px] font-bold text-[#162543] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#009FD9]"
+                >
+                  <MapIcon className="h-4 w-4 text-[#009FD9]" aria-hidden />{heightFr > MAP_PEEK + 0.05 ? titleRow.mapLabel : titleRow.listLabel}
+                </button>
+              </div>
+            )}
             {quickFilters && (
               <div className={`px-4 pb-2 pt-1 ${sheetFullyExpanded ? "ccr-search-filter-arrows-down" : "ccr-search-filter-arrows-up"}`}>
                 {quickFilters}

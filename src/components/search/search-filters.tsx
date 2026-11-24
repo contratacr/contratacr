@@ -377,6 +377,9 @@ type SearchFiltersProps = {
   hideHeader?: boolean;
   closable?: boolean;
   initialValues?: SearchFiltersInitialValues;
+  /** Chips variant only: extra chips before / after the existing ones, inside the same scrolling row (app results). */
+  leadingChips?: React.ReactNode;
+  trailingChips?: React.ReactNode;
 };
 
 // «Cerca de mí» sin preguntar, solo si la persona YA dio permiso de ubicación
@@ -394,7 +397,7 @@ function cercaAutomaticaYaIntentada() {
   try { return sessionStorage.getItem(CERCA_AUTOMATICA) === "1"; } catch { return false; }
 }
 
-export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHeader = false, closable = false, initialValues }: SearchFiltersProps = {}) {
+export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHeader = false, closable = false, initialValues, leadingChips, trailingChips }: SearchFiltersProps = {}) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useParametrosDeBusqueda();
@@ -1013,6 +1016,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     return (
       <Carril className="scrollbar-none flex w-full min-w-0 items-center gap-1 overflow-x-auto overflow-y-visible pb-0.5">
         <div className="flex w-max min-w-full items-center justify-start gap-1">
+          {leadingChips}
           <button type="button" onPointerDown={anclarEn} onClick={alTocarChip(() => setOpenChip("sort"))} className={pill}>
             <span className="min-w-0 whitespace-nowrap">{sortLabel}</span><ChevronDown className="h-3 w-3 shrink-0 min-[390px]:h-3.5 min-[390px]:w-3.5" />
           </button>
@@ -1026,6 +1030,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
           <button data-testid="mobile-language-filter" type="button" onPointerDown={anclarEn} onClick={alTocarChip(() => setOpenChip("language"))} className={pill}>
             <span className="min-w-0 whitespace-nowrap">{languageText}</span><ChevronDown className="h-3 w-3 shrink-0 min-[390px]:h-3.5 min-[390px]:w-3.5" />
           </button>
+          {trailingChips}
           {/* UNA FILA DE FILTROS NECESITA SALIDA. Con el orden, el precio, el
               idioma y la modalidad puestos, volver al principio pedía abrir
               cuatro paneles y desmarcarlos uno por uno. Sale SOLO cuando hay
