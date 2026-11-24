@@ -19,7 +19,7 @@ async function fixture(context:BrowserContext){
   client=await createDisposableAccount({prefix:'inbox-client'});
   const professional=(await db.from('professionals').insert({profile_id:owner.id,category_id:'desarrollo_web',business_name:'Bandejas local',slug:'inbox-'+owner.id,whatsapp:'',provincia_id:'al',canton_id:'al-at',verification_status:'pending',is_banned:false,is_available:true}).select('id').single().throwOnError()).data!;
   const workId=crypto.randomUUID(),requestId=crypto.randomUUID(),day=crTodayISO(),linked='reservation-'+client.id,document=emptyBusiness();
-  document.clients=[{id:'cli-ana',name:'Ana Local',email:'ana@example.test',phone:'8888-1111',notes:'',archived:false},{id:'cli-beto',name:'Beto Local',email:'beto@example.test',phone:'',notes:'',archived:false},{id:linked,name:'Cliente vinculado',email:'',phone:'',notes:'',archived:false}];
+  document.clients=[{id:'cli-ana',name:'Ana Local',email:'ana@example.test',phone:'8888-1111',notes:'',archived:false},{id:'cli-beto',name:'Beto Local',email:'beto@example.test',phone:'',address:'Avenida 2, San Jose',notes:'',archived:false},{id:linked,name:'Cliente vinculado',email:'',phone:'',notes:'',archived:false}];
   document.work=[{id:workId,clientId:linked,client:'Cliente vinculado',service:'Electricidad',stage:'scheduled',start:day+'T11:00:00-06:00',end:day+'T12:00:00-06:00',cancelled:false,bookingClientId:client.id}];
   await db.from('pro_workspaces').insert({user_id:owner.id,document,revision:1}).throwOnError();await login(context,owner);await warm(context);
   expect((await context.request.get(origin+'/api/pro/client-operations?'+new URLSearchParams({workId,clientId:linked}),{timeout:45000})).status()).toBe(200);
@@ -125,6 +125,28 @@ for(const language of ['es','en'] as const){
    await page.getByRole('button',{name:en?/Archive 1 leads/:/Archivar 1 solicitudes/}).click();
    await expect(bulk.locator('[data-lead-table-row]')).toHaveCount(before-1,{timeout:45000});
    await expect(bulk.locator(`[data-lead-table-row="${f.roof}"]`)).toHaveCount(0);
+   await expectNoHorizontalOverflow(page);
+   expect(errors).toEqual([]);
+  }finally{await page.goto('about:blank').catch(()=>{});await cleanup(f);}
+ });
+}
+
+for(const language of ['es','en'] as const){
+ test(`${language}: new lead copies the customer address by default and lets you change it`,async({page,baseURL}:{page:Page;baseURL:string|undefined})=>{
+  test.setTimeout(240000);local(baseURL);const en=language==='en',f=await fixture(page.context()),errors:string[]=[];onAppPageError(page,message=>errors.push(message));
+  try{
+   await openLeads(page,language);
+   const add=page.getByRole('button',{name:en?'+ Add lead':'+ Agregar solicitud',exact:true});await expect(add).toBeEnabled({timeout:45000});await add.click();
+   const dialog=page.getByRole('dialog',{name:en?'Add lead':'Agregar solicitud',exact:true}),form=dialog.locator('[data-manual-lead-form]'),customer=form.getByLabel(en?'Customer':'Cliente',{exact:true});
+   await expect(customer.locator('option[value="cli-beto"]')).toHaveCount(1,{timeout:45000});
+   await customer.selectOption('cli-ana');
+   await form.locator('summary').click();
+   const address=form.getByLabel(en?'Address (optional)':'Dirección (opcional)',{exact:true}),same=form.locator('[data-lead-same-address]');
+   await expect(same).toHaveCount(0);await expect(address).toHaveValue('');
+   await customer.selectOption('cli-beto');
+   await expect(same).toBeChecked();await expect(address).toHaveValue('Avenida 2, San Jose');await expect(address).toBeDisabled();
+   await same.uncheck();await expect(address).toBeEnabled();await address.fill('Otra calle 5');
+   await same.check();await expect(address).toHaveValue('Avenida 2, San Jose');
    await expectNoHorizontalOverflow(page);
    expect(errors).toEqual([]);
   }finally{await page.goto('about:blank').catch(()=>{});await cleanup(f);}
