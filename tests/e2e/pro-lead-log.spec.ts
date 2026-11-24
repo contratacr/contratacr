@@ -153,7 +153,7 @@ for(const language of ['es','en'] as const){
    const dialog=page.getByRole('dialog',{name:en?'Add lead':'Agregar solicitud',exact:true}),form=dialog.locator('[data-manual-lead-form]'),customer=form.getByLabel(en?'Customer':'Cliente',{exact:true});
    await expect(customer.locator('option[value="cli-beto"]')).toHaveCount(1,{timeout:45000});
    await customer.selectOption('cli-ana');
-   await form.locator('summary').click();
+   await form.locator('summary').filter({hasText:en?'More details':'Más datos'}).click();
    const address=form.getByLabel(en?'Address (optional)':'Dirección (opcional)',{exact:true}),same=form.locator('[data-lead-same-address]');
    await expect(same).toHaveCount(0);await expect(address).toHaveValue('');
    await customer.selectOption('cli-beto');

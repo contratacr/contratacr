@@ -14,7 +14,7 @@ export type LeadLogEntry=z.infer<typeof leadLogEntrySchema>;
 export const leadLogSchema=z.object({kind,leadId:id,items:z.array(leadLogEntrySchema).max(200),tags:z.array(z.string().min(1).max(40)).max(20)}).strict();
 export type LeadLog=z.infer<typeof leadLogSchema>;
 const body=z.string().max(2000).refine(v=>!/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(v));
-export const leadLogInputSchema=z.discriminatedUnion('action',[
+export const leadLogInputSchema=z.union([
  z.object({action:z.literal('add'),actionId:id,id,kind,leadId:id,entry:z.literal('note'),outcome:z.null(),body:body.refine(v=>v.trim().length>0)}).strict(),
  z.object({action:z.literal('add'),actionId:id,id,kind,leadId:id,entry:z.literal('call'),outcome:z.enum(leadCallOutcomes),body}).strict(),
  z.object({action:z.literal('edit'),actionId:id,id,kind,leadId:id,revision:rev,body}).strict(),

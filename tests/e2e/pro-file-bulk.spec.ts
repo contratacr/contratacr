@@ -38,7 +38,7 @@ for(const language of ['es','en'] as const)test(`File bulk operations, permanent
   r=await post(libBulk,{batchId,action:'purge',items:await items(ids)});expect([r.ok,r.failed]).toEqual([1,2]);const bad=r.items.filter((i:{ok:boolean})=>!i.ok).map((i:{error:string})=>i.error);expect(bad).toHaveLength(2);expect(bad).toContain('in_use');
   expect((await db.from('pro_company_files').select('id').eq('owner_id',owner.id).eq('id',ids[0])).data).toEqual([]);
   expect((await db.from('pro_company_files').select('id').eq('owner_id',owner.id).in('id',[ids[1],ids[2]])).data).toHaveLength(2);
-  expect((await db.from('pro_file_purge_receipts').select('id').eq('owner_id',owner.id).eq('scope','company')).data).toHaveLength(1);
+  expect((await db.from('pro_file_purge_receipts').select('action_id').eq('owner_id',owner.id).eq('scope','company')).data).toHaveLength(1);
   // Replay of the same batch returns the stored result and creates no second receipt.
   await post(libBulk,{batchId,action:'purge',items:await items(ids.slice(1))});
   // Receipts are immutable.

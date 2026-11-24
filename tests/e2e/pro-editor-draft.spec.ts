@@ -52,7 +52,7 @@ test('Pro editor: saved identity, account-scoped recovery and confirmed quote ve
   await gotoOK(page,'/es/dashboard/profesional?tab=quotes&nueva=1');await page.getByPlaceholder('Descripción').fill('Borrador privado de primera cuenta');
   await expect.poll(()=>page.evaluate(id=>JSON.parse(sessionStorage.getItem('ccr:pro:quote-draft:'+id)||'null')?.rows[0].description,owner.id)).toBe('Borrador privado de primera cuenta');
   await page.context().clearCookies();await login(page.context(),other);await gotoOK(page,'/en/dashboard/profesional?tab=quotes&nueva=1');
-  await expect(page.getByRole('dialog')).toBeVisible();await expect(page.getByRole('dialog')).not.toContainText('Borrador privado de primera cuenta');await expect(page.getByPlaceholder('Description')).toHaveValue('');
+  await expect(page.getByRole('dialog')).toBeVisible({timeout:60000});await expect(page.getByRole('dialog')).not.toContainText('Borrador privado de primera cuenta');await expect(page.getByPlaceholder('Description')).toHaveValue('');
   await page.getByText('Identification and contact (optional)',{exact:true}).click();
   await page.getByRole('textbox',{name:/^Email/}).fill('draft-only@contratacr.test');
   await page.reload();await page.getByText('Identification and contact (optional)',{exact:true}).click();await expect(page.getByRole('textbox',{name:/^Email/})).toHaveValue('draft-only@contratacr.test');

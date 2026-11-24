@@ -9,7 +9,7 @@ for(const language of ['es','en'] as const)test(`Email lists [${language}]`,asyn
  const f=await ownerFixture(page.context(),label),h=headersFor(f.owner);
  try{
   const mail=`lista.${label}@example.test`,other=`otra.${label}@example.test`;
-  for(const [email,name] of [[mail,'Ana Lista'],[other,'Beto Otra']])expect((await page.request.post(origin+'/api/pro/marketing',{headers:h,data:{action:'contact_consent',actionId:crypto.randomUUID(),email,name,clientId:null,consentText:'La persona aceptó recibir novedades por correo.',evidence:'written'}})).status()).toBe(200);
+  for(const [email,name] of [[mail,'Ana Lista'],[other,'Beto Otra']])expect((await page.request.post(origin+'/api/pro/marketing',{headers:h,data:{action:'contact_consent',actionId:crypto.randomUUID(),email,name,clientId:null,consentText:'La persona aceptó recibir novedades por correo.',evidence:'written',note:''}})).status()).toBe(200);
   const lists=()=>page.request.get(origin+'/api/pro/marketing-lists').then(r=>r.json());
   const post=(data:Record<string,unknown>)=>page.request.post(origin+'/api/pro/marketing-lists',{headers:h,data});
   const base=await lists();expect(base.system.all).toBe(2);expect(base.lists).toEqual([]);expect(base.contacts).toHaveLength(2);
@@ -32,7 +32,7 @@ for(const language of ['es','en'] as const)test(`Email lists [${language}]`,asyn
   const vendorCreate=await page.request.post(origin+'/api/pro/company-vendors',{headers:h,data:{action:'create',actionId:crypto.randomUUID(),id:vid,name:'Ferretería '+label,kind:'supplier',trade:null,contactName:null,email:vendorMail,phone:'',identification:'',notes:null,address:null}});
   expect(vendorCreate.status(),await vendorCreate.text()).toBe(200);
   let sys=(await lists()).system;expect(sys).toMatchObject({vendors:0,vendorsWithEmail:1});
-  expect((await page.request.post(origin+'/api/pro/marketing',{headers:h,data:{action:'contact_consent',actionId:crypto.randomUUID(),email:vendorMail,name:'Ferretería',clientId:null,consentText:'La persona aceptó recibir novedades por correo.',evidence:'written'}})).status()).toBe(200);
+  expect((await page.request.post(origin+'/api/pro/marketing',{headers:h,data:{action:'contact_consent',actionId:crypto.randomUUID(),email:vendorMail,name:'Ferretería',clientId:null,consentText:'La persona aceptó recibir novedades por correo.',evidence:'written',note:''}})).status()).toBe(200);
   sys=(await lists()).system;expect(sys).toMatchObject({all:3,vendors:1,vendorsWithEmail:1});
   const vcamp=crypto.randomUUID(),vsave=await page.request.post(origin+'/api/pro/marketing',{headers:h,data:{action:'campaign_save',actionId:crypto.randomUUID(),id:vcamp,revision:0,name:'Para proveedores',subject:'Hola',body:'Texto',segment:'vendors'}});
   expect(vsave.status(),await vsave.text()).toBe(200);

@@ -27,7 +27,7 @@ function money(cents:number,currency:string,en:boolean){return currency==='USD'?
 export function CloseDateForecast({actor,settings,disabled}:{actor:string;settings:StageSettings|null;disabled:boolean}){
  const lang=useLocale()==='en'?'en':'es',c=COPY[lang],en=lang==='en';
  const [data,setData]=useState<CloseForecast|null>(null),[error,setError]=useState(false),[drafts,setDrafts]=useState<Record<string,string>>({}),[busy,setBusy]=useState(''),[msg,setMsg]=useState(''),[bad,setBad]=useState(''),seq=useRef(0),pending=useRef<Record<string,{key:string;actionId:string}>>({});
- const load=useCallback(async()=>{const n=++seq.current;try{setError(false);const r=closeForecastSchema.parse(await get(actor));if(n===seq.current){setData(r);setDrafts({});}}catch{if(n===seq.current)setError(true);}},[actor]);
+ const load=useCallback(async(settled?:string)=>{const n=++seq.current;try{setError(false);const r=closeForecastSchema.parse(await get(actor));if(n===seq.current){setData(r);setDrafts(d=>{if(!settled)return {};const rest={...d};delete rest[settled];return rest;});}}catch{if(n===seq.current)setError(true);}},[actor]);
  useEffect(()=>{const timer=setTimeout(()=>void load(),0);return()=>clearTimeout(timer);},[load]);
  const stageName=(id:string)=>{const s=settings?.stages.find(x=>x.id===id);return s?leadStageName({id:s.id,builtin:s.builtin,name:s.name,position:s.position,hidden:s.hidden,reassignToId:null},en):id;};
  const monthLabel=(g:string)=>g==='overdue'?c.overdue:g==='none'?c.none:new Intl.DateTimeFormat(en?'en-US':'es-CR',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(g+'-15T12:00:00Z'));
@@ -38,8 +38,8 @@ export function CloseDateForecast({actor,settings,disabled}:{actor:string;settin
   if(pending.current[key0]?.key!==key)pending.current[key0]={key,actionId:crypto.randomUUID()};
   setBusy(key0);setMsg('');
   try{const r=await post(actor,{...body,actionId:pending.current[key0].actionId});
-   if(r.status===409){delete pending.current[key0];setMsg(c.changed);await load();return;}if(!r.ok)throw Error();
-   closeDateResultSchema.parse(r.data);delete pending.current[key0];setMsg(clear?c.cleared:c.saved);await load();}
+   if(r.status===409){delete pending.current[key0];await load(key0);setMsg(c.changed);return;}if(!r.ok)throw Error();
+   closeDateResultSchema.parse(r.data);delete pending.current[key0];await load(key0);setMsg(clear?c.cleared:c.saved);}
   catch{setMsg(c.failed);}finally{setBusy('');}}
  return <section data-close-forecast aria-label={c.title} className="min-w-0 rounded-2xl border border-[#d7e1ea] bg-white p-4">
   <h3 className="text-base font-bold text-[#162543]">{c.title}</h3><p className="mt-0.5 max-w-prose text-xs text-[#52627a]">{c.intro}</p>
