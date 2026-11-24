@@ -25,6 +25,11 @@ for(const language of ['es','en'] as const)test(`Marketing insights pages [${lan
   await root.locator('[data-insights-tab="website"]').click();await expect(root.locator('[data-insights-check="published"]')).toHaveAttribute('data-done','false',{timeout:60000});
   await root.locator('[data-insights-tab="exposure"]').click();await expect(root.locator('[data-insights-kpi="submissions"]')).toHaveText('0',{timeout:60000});
   await root.locator('[data-insights-tab="leads"]').click();await expect(root.locator('[data-lead-origin-metrics]')).toBeVisible({timeout:60000});
+  // Row 19: lead insights (periods, comparison, sources, funnel, honest note, request box).
+  await expect(root.locator('[data-lead-insights]')).toBeVisible({timeout:60000});await expect(root.locator('[data-lead-insights-kpi="total"]')).toBeVisible({timeout:60000});
+  await expect(root.locator('[data-lead-insights-funnel] [data-lead-insights-stage]').first()).toBeVisible();await expect(root.locator('[data-lead-insights-note]')).toBeVisible();
+  await root.locator('[data-lead-insights-range="1y"]').click();await expect(root.locator('[data-lead-insights-period]')).toBeVisible({timeout:60000});
+  await root.locator('[data-lead-insights-request-text]').fill('Quiero ver el costo por solicitud');await root.locator('[data-lead-insights-request-send]').click();await expect(root.locator('[data-lead-insights-request-sent]')).toBeVisible({timeout:60000});
   await root.locator('[data-insights-tab="campaigns"]').click();await expect(page.locator('[data-company-ads]')).toBeVisible({timeout:60000});
   await expectNoHorizontalOverflow(page);
  }finally{await f.cleanup();}

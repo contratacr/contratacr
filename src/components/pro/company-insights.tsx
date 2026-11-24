@@ -7,6 +7,7 @@ import {insightsChecklist,insightsPages,photoTips,websiteChecks,type InsightsPag
 import {useProSearchParams} from './use-pro-search-params';
 import {CompanyAdsTracking} from './company-ads-tracking';
 import {LeadOriginMetrics} from './lead-origin-metrics';
+import {CompanyLeadInsights} from './company-lead-insights';
 
 /**
  * Area E: Marketing insights with sub-pages (Online exposure, Profile and reviews, Photos, Website, Leads, Campaigns).
@@ -27,7 +28,7 @@ export function CompanyInsights(){
  const link=(label:string,tab:string,extra?:Record<string,string>)=><Button type="button" variant="secondary" className="min-h-11" onClick={()=>navigatePro('pro_company',{empresa:tab,...extra})}>{label}</Button>;
  let body:React.ReactNode;
  if(page==='campaigns')body=<CompanyAdsTracking/>;
- else if(page==='leads')body=<section className={card} data-insights-leads aria-labelledby="ins-leads"><h3 id="ins-leads" className="font-bold">{t('Solicitudes por canal','Leads by channel')}</h3><p className="text-sm text-[#52627a]">{t('Total, ganadas y canal de origen de sus solicitudes, con el período que elija.','Total, won and source channel of your leads, for the period you choose.')}</p><LeadOriginMetrics/></section>;
+ else if(page==='leads')body=<div className="min-w-0 space-y-4"><CompanyLeadInsights/><section className={card} data-insights-leads aria-labelledby="ins-leads"><h3 id="ins-leads" className="font-bold">{t('Solicitudes por canal','Leads by channel')}</h3><p className="text-sm text-[#52627a]">{t('Total, ganadas y canal de origen de sus solicitudes, con el período que elija.','Total, won and source channel of your leads, for the period you choose.')}</p><LeadOriginMetrics/></section></div>;
  else if(loader)body=loader;
  else{
   const d=data!,list=insightsChecklist(d,en),done=list.filter(x=>x.done).length;
