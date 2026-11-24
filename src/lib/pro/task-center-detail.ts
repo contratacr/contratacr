@@ -12,6 +12,10 @@ export const taskCommentChangeSchema=z.union([z.object({action:z.literal('edit')
 export const taskDetailMutationSchema=z.union([z.object({kind:z.literal('comment-change')}).extend({action:z.enum(['edit','delete']),actionId:id,workId,taskId:id,commentId:id,text:z.string().trim().min(1).max(1000).optional()}).strict().refine(v=>v.action==='edit'?!!v.text:v.text===undefined),z.object({kind:z.literal('comment')}).extend(taskCommentSchema.shape).strict(),z.object({kind:z.literal('file')}).extend(taskFileLinkSchema.shape).strict()]);
 /** CSV of task rows (row 15). Semicolon separator and BOM for Excel in es-CR; formula injection neutralised. */
 export type TaskCsvRow={title:string;job:string;customer:string;dueDate:string|null;status:'open'|'done';assignee:string;phase?:string|null;plannedStart?:string|null;plannedEnd?:string|null};
+export function taskRowsMatrix(rows:TaskCsvRow[],english:boolean):string[][]{
+ const head=english?['Task','Job','Customer','Due date','Status','Assignee','Phase','Planned start','Planned end']:['Tarea','Trabajo','Cliente','Fecha límite','Estado','Responsable','Fase','Inicio previsto','Fin previsto'];
+ return [head,...rows.map(r=>[r.title,r.job,r.customer,r.dueDate??'',r.status==='done'?(english?'Completed':'Completada'):(english?'Pending':'Pendiente'),r.assignee,r.phase??'',r.plannedStart??'',r.plannedEnd??''])];
+}
 export function taskRowsCsv(rows:TaskCsvRow[],english:boolean):string{
  const q=(v:string|null|undefined)=>{const s=String(v??'');const danger=/^[=+\-@\t\r]/.test(s);const t=danger?"'"+s:s;return /[";\n\r]/.test(t)?'"'+t.replace(/"/g,'""')+'"':t;};
  const head=english?['Task','Job','Customer','Due date','Status','Assignee','Phase','Planned start','Planned end']:['Tarea','Trabajo','Cliente','Fecha límite','Estado','Responsable','Fase','Inicio previsto','Fin previsto'];

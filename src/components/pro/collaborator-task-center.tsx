@@ -1,7 +1,7 @@
 'use client';
 import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {useLocale} from 'next-intl';
-import {taskRowsCsv} from '@/lib/pro/task-center-detail';
+import {taskRowsCsv,taskRowsMatrix} from '@/lib/pro/task-center-detail';
 import {teamSharedPageSchema,teamTasksPageSchema,type TeamSharedGrant,type TeamSharedTask} from '@/lib/pro/team';
 
 /**
@@ -50,6 +50,9 @@ export function CollaboratorTaskCenter({accountId,disabled,onOpen,onDiscuss}:{ac
    .sort((a,b)=>(sort==='job'?(a.grant.service+a.grant.ownerName).localeCompare(b.grant.service+b.grant.ownerName):0)||(a.task.dueDate??'9999-12-31').localeCompare(b.task.dueDate??'9999-12-31')||a.task.title.localeCompare(b.task.title));
  },[rows,status,timing,mine,query,today,job,sort]);
  const jobs=useMemo(()=>{const seen=new Map<string,TaskGrantLabel>();for(const{grant}of rows??[])seen.set(grant.id,{id:grant.id,label:grant.service+' · '+grant.ownerName});return[...seen.values()].sort((a,b)=>a.label.localeCompare(b.label));},[rows]);
+ async function exportXlsx(){
+  try{const {xlsxFromRows,XLSX_MIME}=await import('@/lib/pro/xlsx-lite');const data=xlsxFromRows(taskRowsMatrix(shown.map(({grant,task})=>({title:task.title,job:grant.service,customer:grant.ownerName,dueDate:task.dueDate,status:task.status,assignee:task.assignment?.name??''})),en),en?'My tasks':'Mis tareas');const {saveFile}=await import('@/lib/file-download');await saveFile(new Blob([data as BlobPart],{type:XLSX_MIME}),(en?'contratacr-my-tasks-':'contratacr-mis-tareas-')+crToday()+'.xlsx');}catch{setCsvError(true);}
+ }
  async function exportCsv(){
   setCsvError(false);
   try{const csv=taskRowsCsv(shown.map(({grant,task})=>({title:task.title,job:grant.service,customer:grant.ownerName,dueDate:task.dueDate,status:task.status,assignee:task.assignment?.name??''})),en);const {saveFile}=await import('@/lib/file-download');await saveFile(new Blob([csv],{type:'text/csv;charset=utf-8'}),(en?'contratacr-my-tasks-':'contratacr-mis-tareas-')+crToday()+'.csv');}catch{setCsvError(true);}
@@ -68,7 +71,7 @@ export function CollaboratorTaskCenter({accountId,disabled,onOpen,onDiscuss}:{ac
     <label className="block text-sm font-semibold">{t('Ordenar por','Sort by')}<select data-collab-sort value={sort} onChange={e=>setSort(e.target.value as typeof sort)} className={control+' block w-full'}><option value="due">{t('Fecha límite','Due date')}</option><option value="job">{t('Trabajo','Job')}</option></select></label>
     <label className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold"><input data-collab-mine type="checkbox" checked={mine} onChange={e=>setMine(e.target.checked)} className="h-5 w-5"/>{t('Solo las mías','Only mine')}</label>
    </div>
-   <div className="flex flex-wrap items-center gap-3"><button type="button" data-collab-csv disabled={!shown.length} onClick={()=>void exportCsv()} className="min-h-11 rounded-full border border-[#d7e1ea] px-4 text-sm font-semibold hover:bg-[#f6f9fb] disabled:opacity-50">{t('Exportar CSV','Export CSV')}</button>{csvError&&<p role="alert" className="text-sm text-red-700">{t('No se pudo preparar el CSV.','Could not prepare the CSV.')}</p>}</div>
+   <div className="flex flex-wrap items-center gap-3"><button type="button" data-collab-csv disabled={!shown.length} onClick={()=>void exportCsv()} className="min-h-11 rounded-full border border-[#d7e1ea] px-4 text-sm font-semibold hover:bg-[#f6f9fb] disabled:opacity-50">{t('Exportar CSV','Export CSV')}</button><button type="button" data-collab-xlsx disabled={!shown.length} onClick={()=>void exportXlsx()} className="min-h-11 rounded-full border border-[#d7e1ea] px-4 text-sm font-semibold hover:bg-[#f6f9fb] disabled:opacity-50">{t('Exportar Excel','Export Excel')}</button>{csvError&&<p role="alert" className="text-sm text-red-700">{t('No se pudo preparar el CSV.','Could not prepare the CSV.')}</p>}</div>
    <p role="status" className="text-sm text-[#52627a]">{shown.length===1?t('1 tarea','1 task'):`${shown.length} ${t('tareas','tasks')}`}{truncated?' · '+t('Se muestran las primeras de cada trabajo; abra el trabajo para ver todas.','The first ones of each job are shown; open the job to see them all.'):''}</p>
    {shown.length===0?<p className="rounded-2xl border border-dashed border-[#c9d6e2] bg-[#f7f9fc] p-4 text-sm text-[#52627a]">{mine?t('No tiene tareas asignadas con estos filtros. Quite "Solo las mías" para ver todas las de sus trabajos.','You have no assigned tasks with these filters. Clear "Only mine" to see every task of your jobs.'):t('No hay tareas con estos filtros.','No tasks match these filters.')}</p>
    :<ul className="space-y-2">{shown.map(row=><li key={row.grant.id+':'+row.task.id} data-collab-task={row.task.id} className="flex min-w-0 flex-col gap-2 rounded-2xl border border-[#d7e1ea] bg-white p-3 sm:flex-row sm:items-center sm:justify-between">
