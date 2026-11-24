@@ -41,6 +41,8 @@ const PUBLIC_PREFIXES = [
   "/licitacion-proveedor",
   // Pro local (row 51): public vendor page of a purchase order link (development-only route).
   "/orden-proveedor",
+  // Pro local (leads area): public page of a published contact form.
+  "/formulario-contacto",
   // Pro local (Round 6A): public hosted page of a payment link (development-only route).
   "/pagar",
   // Pro local (Round 6D): professional website and campaign unsubscribe page (development-only routes).

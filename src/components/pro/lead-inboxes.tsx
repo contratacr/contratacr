@@ -10,6 +10,7 @@ import type {RequestPipelineCatalog} from '@/lib/pro/request-pipeline';
 import {leadImportPreviewSchema,leadImportResultSchema,leadImportsPageSchema,leadImportTemplateHeaders,leadInboxFunnelSchema,leadSnoozeReadSchema,leadSnoozeResultSchema,type LeadImport,type LeadImportErrorCode,type LeadImportPreview,type LeadInboxCounts,type LeadInboxFunnel,type LeadSnooze} from '@/lib/pro/lead-inboxes';
 import {leadStageName} from './lead-stages-editor';
 import {LeadOriginMetrics} from './lead-origin-metrics';
+import {ContactFormBuilder} from './contact-form-builder';
 import {businessCsv,downloadFile} from './exports';
 
 export const leadInboxApi='/api/pro/lead-inboxes';
@@ -200,12 +201,20 @@ export function LeadInsightsDialog({actor,onClose}:{actor:string;onClose:()=>voi
 }
 
 /** The public profile request form already creates leads here; this explains and links it. */
-export function LeadContactFormDialog({slug,onClose,onOpenAgenda}:{slug:string|null;onClose:()=>void;onOpenAgenda:()=>void}){
- const en=useLocale()==='en',path=slug?(en?'/en':'')+'/profesionales/'+encodeURIComponent(slug):null;
+export function LeadContactFormDialog({actor,slug,onClose,onOpenAgenda}:{actor:string;slug:string|null;onClose:()=>void;onOpenAgenda:()=>void}){
+ const en=useLocale()==='en',path=slug?(en?'/en':'')+'/profesionales/'+encodeURIComponent(slug):null,[building,setBuilding]=useState(false),[existing,setExisting]=useState<boolean|null>(null);
+ useEffect(()=>{if(building)return;let alive=true;void fetch('/api/pro/contact-form',{cache:'no-store',headers:{'X-Pro-Expected-Actor':actor}}).then(async r=>{if(!r.ok)return;const body=await r.json() as {form:unknown};if(alive)setExisting(body.form!==null);}).catch(()=>undefined);return()=>{alive=false;};},[actor,building]);
+ if(building)return <ContactFormBuilder actor={actor} onClose={()=>setBuilding(false)}/>;
  return <Modal manageFocus title={en?'Contact form':'Formulario de contacto'} onClose={onClose} closeLabel={en?'Close':'Cerrar'} size="md" mobilePresentation="sheet-compact">
   <div data-lead-contact-form className="space-y-3 text-sm">
-   <p>{en?'Your public ContrataCR profile already has a request form. Every request a customer sends there arrives in this section as a ContrataCR lead, in the New stage, with its own history.':'Su perfil público de ContrataCR ya tiene un formulario de solicitud. Cada solicitud que un cliente envía ahí llega a esta sección como solicitud de ContrataCR, en la etapa Nueva y con su propio historial.'}</p>
-   <p>{en?'Customers sign in with a free account to send it. To receive requests, turn on "Receive appointment requests" in Appointments → Calendar.':'El cliente inicia sesión con una cuenta gratuita para enviarla. Para recibir solicitudes, active "Recibir solicitudes de citas" en Citas → Calendario.'}</p>
+   <h3 className="text-base font-semibold">{en?'Capture new leads from any website or link':'Capture nuevas solicitudes desde cualquier sitio o enlace'}</h3>
+   <ul className="list-disc space-y-1 pl-5">
+    <li>{en?'Customize the fields: order, required answers and your own questions.':'Personalice los campos: orden, respuestas obligatorias y sus propias preguntas.'}</li>
+    <li>{en?'Publish in minutes and share the link by email, WhatsApp or social media.':'Publique en minutos y comparta el enlace por correo, WhatsApp o redes sociales.'}</li>
+    <li>{en?'Every submission arrives in Leads with the Website channel and the answers it gave.':'Cada envío llega a Solicitudes con el canal Sitio web y las respuestas que dio.'}</li>
+   </ul>
+   <div><Button type="button" data-contact-builder-open onClick={()=>setBuilding(true)}>{existing?(en?'Edit form':'Editar formulario'):(en?'Create form':'Crear formulario')}</Button></div>
+   <p className="text-[#52627a]">{en?'Your public ContrataCR profile also has its own request form. Customers sign in with a free account to send it, and each request arrives here as a ContrataCR lead. To receive them, turn on "Receive appointment requests" in Appointments → Calendar.':'Su perfil público de ContrataCR también tiene su propio formulario de solicitud. El cliente inicia sesión con una cuenta gratuita para enviarlo y cada solicitud llega aquí como solicitud de ContrataCR. Para recibirlas, active "Recibir solicitudes de citas" en Citas → Calendario.'}</p>
    <div className="flex flex-wrap gap-2">
     {path?<a href={path} target="_blank" rel="noopener" className="inline-flex min-h-11 items-center rounded-xl border border-[#d7e1ea] px-4 font-semibold text-[#008bb5]">{en?'Open my public profile':'Abrir mi perfil público'}</a>:<p className="text-[#52627a]">{en?'You do not have a public profile yet. Leads you add or import still work.':'Todavía no tiene perfil público. Las solicitudes que agregue o importe funcionan igual.'}</p>}
     <Button type="button" variant="outline" onClick={onOpenAgenda}>{en?'Open Appointments':'Abrir Citas'}</Button>

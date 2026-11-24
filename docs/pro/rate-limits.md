@@ -142,6 +142,10 @@ Window is fixed from the first hit.
 | `/api/pro/company-files` | `company-files-<user>` | IP | 60 | 1 min | open |
 | `/api/pro/company-vendors` | `company-vendors-<user>` | IP | 60 | 1 min | open |
 | `/api/pro/connectors` | `connectors-<user>` | IP | 60 | 1 min | open |
+| `/api/pro/contact-form-public` | `contact-form-public-send` | IP | 8 | 10 min | closed |
+| `/api/pro/contact-form-public` | `contact-form-public-day:<form>:<day>` | form id | 200 | 1 day | closed |
+| `/api/pro/contact-form-public` | `contact-form-public-view` | IP | 60 | 1 min | closed |
+| `/api/pro/contact-form` | `contact-form-<user>` | IP | 60 | 1 min | open |
 | `/api/pro/contracts` | `contracts-<user>` | IP | 120 | 1 min | open |
 | `/api/pro/credits-retainers` | `credits-retainers-<user>` | IP | 120 | 1 min | open |
 | `/api/pro/daily-log-autofill` | `daily-autofill` | account+member | 30 | 1 min | closed |

@@ -2,6 +2,7 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {useLocale} from 'next-intl';
 import {Button} from '@/components/ui/button';
+import {ContactFormAnswers} from './contact-form-answers';
 import {leadCallOutcomes,leadLogSchema,type LeadLog,type LeadLogInput} from '@/lib/pro/lead-log';
 
 /**
@@ -36,6 +37,7 @@ export function LeadLogPanel({actor,kind,leadId,disabled=false}:{actor:string;ki
  const items=(log?.items??[]).filter(i=>filter==='all'||i.entry===filter);
  const when=(v:string)=>new Intl.DateTimeFormat(en?'en-US':'es-CR',{dateStyle:'medium',timeStyle:'short',timeZone:'America/Costa_Rica'}).format(new Date(v));
  return <section data-lead-log className="min-w-0 space-y-3 rounded-xl border border-[#d7e1ea] bg-white p-3">
+  {kind==='manual'&&<ContactFormAnswers actor={actor} leadId={leadId}/>}
   <h3 className="font-semibold">{t('Notas, llamadas y etiquetas','Notes, calls and tags')}</h3>
   <p className="text-xs text-[#52627a]">{t('Es un registro privado: no se envía nada a la persona cliente.','This is a private record: nothing is sent to the customer.')}</p>
   {error&&<p role="alert" className="text-sm text-[#b42318]">{error}</p>}

@@ -18,7 +18,7 @@ export const RUTAS_DEL_SITIO = new Set([
   "resena-google", "reset-password", "verificacion-de-identidad", "baja-correos",
   "servicio-no-disponible", "servicios", "soporte", "terminos",
   // Pro local: página pública del proveedor invitado a una licitación (solo desarrollo).
-  "licitacion-proveedor", "orden-proveedor",
+  "licitacion-proveedor", "orden-proveedor", "formulario-contacto",
   // Pro local (Ronda 6A): página pública de un enlace de pago (solo desarrollo).
   "pagar",
   // Pro local (Ronda 6D): sitio web del profesional (/sitio/<slug>) y baja de sus campañas de correo (solo desarrollo).

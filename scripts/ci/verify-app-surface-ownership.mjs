@@ -36,6 +36,7 @@ const pageRules = [
   [/^\/\[locale\]\/baja-pro$/, "pro-round6d-marketing.spec.ts"],
   // Rows 51-53 (local Pro): public vendor page of a purchase order link (no ContrataCR account).
   [/^\/\[locale\]\/orden-proveedor$/, "pro-po-vendor-link.spec.ts"],
+  [/^\/\[locale\]\/formulario-contacto\/\[id\]$/, "pro-contact-form.spec.ts"],
   // Post-security fixes: confirmation page of the site-form subscription (double opt-in).
   [/^\/\[locale\]\/confirmar-pro$/, "pro-round6d-site.spec.ts"],
   // Multivertical directory (local Pro): place page + public menu, sections with search, listings, how we rank (F0).
@@ -201,6 +202,7 @@ const handlerRules = [
   [/^\/api\/pro\/lead-private-work$/, "pro-lead-commercial-progress-api.spec.ts"],
   [/^\/api\/pro\/lead-plans$/, "pro-lead-plan-templates.spec.ts"],
   [/^\/api\/pro\/lead-log$/, "pro-lead-log.spec.ts"],
+  [/^\/api\/pro\/contact-form(?:-public)?$/, "pro-contact-form.spec.ts"],
   [/^\/api\/pro\/lead-work$/, "pro-lead-work.spec.ts"],
   [/^\/api\/pro\/lead-files$/, "pro-lead-work.spec.ts"],
   [/^\/api\/pro\/lead-delete$/, "pro-lead-work.spec.ts"],
