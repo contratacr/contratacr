@@ -21,9 +21,9 @@ test('API access refuses anonymous, expired Pro, invalid origin and admin withou
  // Isolated compiled module; no credentials or network.
  const fixture={user:null as null|{id:string},profile:{role:'professional',is_disabled:false},grant:null as null|{status:string,expires_at:null},mfa:false};
  const globals=globalThis as typeof globalThis & {proFixture?:typeof fixture};globals.proFixture=fixture;
- const compiled={exports:{}};new Function('module','exports','require',bundle.outputFiles[0].text)(compiled,compiled.exports,()=>({}));
- const api=(compiled.exports as {proApiAccess:(r:Request,a?:boolean)=>Promise<{error?:Response}>}).proApiAccess;
- const before=process.env.NODE_ENV;Object.assign(process.env,{NODE_ENV:'development'});
+ // PRO_ENABLED is a module constant read when the bundle loads, so each load fixes the flag it is evaluated under.
+ const load=(flag:string)=>{const before=process.env.PRO_ENABLED;process.env.PRO_ENABLED=flag;try{const compiled={exports:{}};new Function('module','exports','require',bundle.outputFiles[0].text)(compiled,compiled.exports,()=>({}));return (compiled.exports as {proApiAccess:(r:Request,a?:boolean)=>Promise<{error?:Response}>}).proApiAccess;}finally{if(before===undefined)delete process.env.PRO_ENABLED;else process.env.PRO_ENABLED=before;}};
+ const api=load('true'),apiOff=load('false');
  try{
  const req=()=>new Request('http://localhost/api/pro/workspace');
  expect((await api(req())).error?.status).toBe(401);fixture.user={id:'u'};
@@ -31,8 +31,8 @@ test('API access refuses anonymous, expired Pro, invalid origin and admin withou
  expect((await api(new Request('http://localhost/api/pro/workspace',{method:'PUT',headers:{origin:'https://evil.example'}}))).error?.status).toBe(403);
  expect((await api(new Request('http://localhost:3185/api/pro/workspace',{method:'PUT',headers:{host:'127.0.0.1:3185',origin:'http://127.0.0.1:3185'}}))).error).toBeUndefined();
  expect((await api(req(),true)).error?.status).toBe(403);fixture.profile.role='admin';expect((await api(req(),true)).error?.status).toBe(403);fixture.mfa=true;expect((await api(req(),true)).error).toBeUndefined();
- Object.assign(process.env,{NODE_ENV:'production'});expect((await api(req())).error?.status).toBe(404);
- }finally{Object.assign(process.env,{NODE_ENV:before});delete globals.proFixture;}
+ expect((await apiOff(req())).error?.status).toBe(404);// Pro closed: no account is even read
+ }finally{delete globals.proFixture;}
 });
 test('account-backed workspace loads, saves revision and shows conflict without discarding draft',async({page})=>{
  const bundle=await build({stdin:{contents:`import React from 'react';import{createRoot}from'react-dom/client';import{ProWorkspace}from'./src/components/pro/pro-workspace';createRoot(document.getElementById('root')).render(<ProWorkspace server/>);`,resolveDir:process.cwd(),loader:'tsx'},bundle:true,write:false,define:{'process.env':JSON.stringify({NODE_ENV:'test'})},platform:'browser',format:'iife',jsx:'automatic'});

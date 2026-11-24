@@ -247,7 +247,7 @@ for(const language of ['es','en'] as const)test(`Plan measurements: plans, scale
   // Send to a new draft estimate and open it.
   const sendPanel=reloaded.locator('[data-takeoff-send]');await expect(sendPanel.locator('[data-takeoff-send-button]')).toHaveText(en?'Send 4 measurements':'Enviar 4 mediciones');
   await sendPanel.locator('[data-takeoff-send-button]').click();
-  await expect(page.locator('[data-takeoff-notice]')).toContainText(en?'4 lines sent to «Ampliación de cocina».':'Se enviaron 4 partidas a «Ampliación de cocina».');
+  await expect(page.locator('[data-takeoff-notice]')).toContainText(en?'4 lines sent to "Ampliación de cocina".':'Se enviaron 4 partidas a "Ampliación de cocina".');
   await expect(sendPanel.locator('[data-takeoff-target]')).not.toHaveValue('new');
   await page.locator('[data-takeoff-panel]').scrollIntoViewIfNeeded();await expectNoHorizontalOverflow(page);await page.screenshot({path:info.outputPath(`takeoffs-sent-${suffix}.png`),fullPage:true});
   const uiEstimates=(await db.from('pro_private_estimates').select('id').eq('owner_id',owner.id).neq('id',sentResult.estimateId).throwOnError()).data!;expect(uiEstimates).toHaveLength(1);
