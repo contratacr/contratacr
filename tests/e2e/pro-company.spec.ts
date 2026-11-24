@@ -84,7 +84,7 @@ for(const language of ['es','en'] as const)test(`Company hub: vendor API, isolat
   await expect(page.getByRole('heading',{level:1,name:tr('Empresa','Company'),exact:true})).toBeVisible();
   await expect(hub.getByRole('heading',{level:2,name:tr('Proveedores y subcontratistas','Suppliers and subcontractors'),exact:true})).toBeVisible();
   await expect(page.locator('[data-company-vendors-empty]')).toContainText(tr('Todavía no tiene proveedores.','You have no suppliers yet.'));
-  if(desktop(page)){const nav=page.getByRole('navigation',{name:tr('Secciones de Empresa','Company sections'),exact:true});for(const g of en?['Collaborators','Library','Marketing','Settings']:['Colaboradores','Biblioteca','Marketing','Configuración'])await expect(nav.getByRole('group',{name:g,exact:true})).toBeVisible();await expect(nav.getByRole('button')).toHaveCount(16);await expect(nav.getByRole('button',{name:tr('Proveedores','Suppliers'),exact:true})).toHaveAttribute('aria-current','page');}
+  if(desktop(page)){const nav=page.getByRole('navigation',{name:tr('Secciones de Empresa','Company sections'),exact:true});for(const g of en?['Collaborators','Library','Marketing','Help','Settings']:['Colaboradores','Biblioteca','Marketing','Ayuda','Configuración'])await expect(nav.getByRole('group',{name:g,exact:true})).toBeVisible();await expect(nav.getByRole('button')).toHaveCount(24);await expect(nav.getByRole('button',{name:tr('Proveedores','Suppliers'),exact:true})).toHaveAttribute('aria-current','page');}
   else await expect(page.getByLabel(tr('Sección de Empresa','Company section'),{exact:true})).toHaveValue('proveedores');
   await expectNoHorizontalOverflow(page);await shot(page,info,'vendors-empty-'+language);
   let failNext=true;await page.route(url=>url.pathname===api,async route=>{if(failNext&&route.request().method()==='GET'){failNext=false;await route.fulfill({status:503,contentType:'application/json',body:'{"error":"x"}'});}else await route.fallback();});
@@ -262,7 +262,7 @@ for(const language of ['es','en'] as const)test(`Company hub: vendor API, isolat
   // Round 6D: email campaigns now exist in simulation mode (nothing is sent; only consenting contacts).
   await expect(page.locator('[data-company-marketing]')).toHaveAttribute('data-company-marketing','mock',{timeout:45000});await expect(page.locator('[data-company-marketing] [data-simulated]').first()).toBeVisible();
   await goView(page,en,tr('Formulario de contacto','Contact form'),'formulario');
-  await expect(page.locator('[data-company-contact-form]').getByRole('link',{name:tr('Ver el formulario en mi perfil','See the form on my profile')})).toHaveAttribute('href',(en?'/en':'')+'/profesionales/company-'+owner.id);
+  await expect(page.locator('[data-company-contact-form]').getByRole('link',{name:tr('Ver el formulario en mi perfil','See the form on my profile')})).toHaveAttribute('href',(en?'/en':'')+'/profesionales/'+(await db.from('professionals').select('slug').eq('profile_id',owner.id).single().throwOnError()).data!.slug);// assign_business_profile_slug (migration 256) derives the slug from the business name
   await expectNoHorizontalOverflow(page);await shot(page,info,'contact-form-'+language);
   // Overview entry exists in the independent Pro space.
   await gotoOK(page,`/${language}/dashboard/pro?tab=pro_tools`);await page.locator('[data-pro-tools]').getByRole('button',{name:tr('Centro de empresa','Company hub'),exact:true}).click();await expect(page.locator('[data-company-hub="contactos"]')).toBeVisible({timeout:45000});
