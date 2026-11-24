@@ -115,6 +115,16 @@ for(const language of ['es','en'] as const){
    await expect(log.locator('[data-lead-log-entry]')).toHaveCount(1);
    await page.reload();await expect(log).toBeVisible({timeout:45000});
    await expect(log.locator('[data-lead-tags] li')).toHaveCount(1);
+   // Bulk select and bulk archive in the table view.
+   await page.locator('[data-lead-view="table"]').click();
+   const bulk=page.locator('[data-lead-table-view]');await expect(bulk.locator('[data-lead-bulk-bar]')).toHaveCount(0);
+   const before=await bulk.locator('[data-lead-table-row]').count();
+   await bulk.locator(`[data-lead-select="${f.roof}"]`).check();
+   await expect(bulk.locator('[data-lead-bulk-count]')).toContainText('1');
+   await bulk.locator('[data-lead-bulk-archive]').click();
+   await page.getByRole('button',{name:en?/Archive 1 leads/:/Archivar 1 solicitudes/}).click();
+   await expect(bulk.locator('[data-lead-table-row]')).toHaveCount(before-1,{timeout:45000});
+   await expect(bulk.locator(`[data-lead-table-row="${f.roof}"]`)).toHaveCount(0);
    await expectNoHorizontalOverflow(page);
    expect(errors).toEqual([]);
   }finally{await page.goto('about:blank').catch(()=>{});await cleanup(f);}
