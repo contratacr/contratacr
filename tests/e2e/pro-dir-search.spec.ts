@@ -81,7 +81,8 @@ test('F6: national ARESEP fuel price banner on /gasolineras',async({page},info)=
   await expect(page.locator('[data-national-fuel]')).toContainText('the same at every station');
  }finally{await restore();}
  await gotoOK(page,'/gasolineras');
- await expect(page.locator('[data-national-fuel]')).not.toContainText(ref);
+ // Without an official set in the local database the banner is gone altogether; with one it must not show the synthetic reference.
+ await expect(page.locator('[data-national-fuel]').filter({hasText:ref})).toHaveCount(0);
 });
 
 test('F6: search and facets APIs expose public data only',async({request},info)=>{

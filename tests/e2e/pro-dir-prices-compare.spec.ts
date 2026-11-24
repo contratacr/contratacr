@@ -1,7 +1,7 @@
 import {test,expect} from 'playwright/test';
 import {collectPageErrors,expectNoHorizontalOverflow,gotoOK} from './helpers';
 import {local} from './pro-round2-fixture';
-import {dirDb,hideSeededPlaces,visibleHtml} from './pro-dir-fixture';
+import {dirDb,hideSeededPlaces,seedSyntheticFuel,visibleHtml} from './pro-dir-fixture';
 import {pricesShot,seedPriceComparison} from './pro-dir-prices-fixture';
 
 // Multivertical P3 (LOCAL Pro): /precios and /en/precios. Search by name or barcode, compare one product across stores:
@@ -16,6 +16,8 @@ for(const language of ['es','en'] as const)test(`P3: price comparison, neutral o
  test.setTimeout(240000);local(info.project.use.baseURL);
  const en=language==='en',t=(es:string,english:string)=>en?english:es,prefix=en?'/en':'',db=dirDb();
  const seed=await seedPriceComparison(db);
+ // The landing shows the national ARESEP set; the local stack has no official one, so record a synthetic set (taken down in the finally).
+ const fuel=await seedSyntheticFuel(db);
  const errors=collectPageErrors(page);
  try{
   // Search page: the product is found by a word of its name; the Rx product is not.
@@ -97,7 +99,7 @@ for(const language of ['es','en'] as const)test(`P3: price comparison, neutral o
   await gotoOK(page,`${prefix}/precios?orden=pagado`);
   await expect(page.getByRole('alert').filter({hasText:t('Revise la búsqueda','Please check your search')})).toHaveCount(1);
   expect(errors()).toEqual([]);
- }finally{await seed.cleanup();}
+ }finally{await fuel.restore();await seed.cleanup();}
  // After cleanup the synthetic product is no longer searchable.
  expect(((await db.rpc('public_price_search',{p_q:`arroz ${seed.tag}`,p_vertical:null,p_limit:5})).data as {items:unknown[]}).items).toEqual([]);
 });

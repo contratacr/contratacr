@@ -76,6 +76,19 @@ export async function syntheticFuelSet(db:Db,staff:string,ref:string,prices:{ite
  };
 }
 
+/** Creates the three national fuel items when missing (never renames real ones) and records a short synthetic ARESEP set. */
+export async function seedSyntheticFuel(db:Db){
+ const staff=uid(),year=new Date().getFullYear();
+ for(const [slug,name] of [['fuel-regular','Gasolina regular'],['fuel-super','Gasolina súper'],['fuel-diesel','Diésel']] as const){
+  if((await db.from('price_items').select('slug').eq('slug',slug).maybeSingle()).data)continue;
+  const r=await db.rpc('price_item_upsert',{p_actor:staff,p_input:{actionId:uid(),slug,kind:'fuel',name,unitBase:'l',unitQty:1}});
+  if(r.error&&r.error.code!=='22023')throw r.error;
+ }
+ const ref=`RE-${String(Math.floor(Math.random()*9000)+1000)}-IE-${year}`;
+ const restore=await syntheticFuelSet(db,staff,ref,[{itemSlug:'fuel-regular',price:701.5},{itemSlug:'fuel-super',price:722.25},{itemSlug:'fuel-diesel',price:655}]);
+ return {ref,restore};
+}
+
 const hex64=()=>(uid()+uid()).replace(/-/g,'');
 const photo=()=>{const id=uid();return {id,sha256:hex64(),width:1600,height:1067,path1600:`dir-listings/${id}/1600.webp`,path800:`dir-listings/${id}/800.webp`,path320:`dir-listings/${id}/320.webp`,exifStripped:true};};
 export async function vehicleModel(db:Db,make='toyota',model='hilux'){

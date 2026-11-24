@@ -3,7 +3,7 @@ import {mkdirSync} from 'node:fs';
 import {join} from 'node:path';
 import {collectPageErrors,expectNoHorizontalOverflow,gotoOK} from './helpers';
 import {local} from './pro-round2-fixture';
-import {dirDb,hideSeededPlaces,label,seedPlace,uid,type Db} from './pro-dir-fixture';
+import {dirDb,hideSeededPlaces,label,seedPlace,seedSyntheticFuel,uid,type Db} from './pro-dir-fixture';
 import {seedPriceComparison} from './pro-dir-prices-fixture';
 
 // 2026-11-19: the places sections use the /profesionales layout; the complete GET form lives in the «Filtros» drawer
@@ -133,6 +133,9 @@ test('2026-11-17: fuel stations have no price filter nor price sort (national AR
  test.setTimeout(180000);local(info.project.use.baseURL);
  const db=dirDb(),tag=label(),errors=collectPageErrors(page);
  await seedPlace(db,{slug:`bomba-precio-${tag}`,vertical:'fuel',name:`Bomba Precio ${tag}`,adminArea1:'Heredia'});
+ // The national ARESEP price comes from an official set; the local stack has none, so record a synthetic one (taken down at the end).
+ const fuel=await seedSyntheticFuel(db);
+ try{
  for(const prefix of ['','/en']){
   await gotoOK(page,`${prefix}/gasolineras?q=${encodeURIComponent('Bomba Precio '+tag)}`);
   await expect(page.locator(`[data-search-item="p:bomba-precio-${tag}"]`)).toBeVisible();
@@ -145,4 +148,5 @@ test('2026-11-17: fuel stations have no price filter nor price sort (national AR
   await gotoOK(page,`${prefix}/gasolineras?sort=price_asc`);await expect(page.locator('[data-search-problem="sort"]')).toBeVisible();
  }
  expect(errors()).toEqual([]);
+ }finally{await fuel.restore();}
 });
