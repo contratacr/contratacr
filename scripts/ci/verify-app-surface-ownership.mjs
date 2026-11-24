@@ -339,6 +339,7 @@ const handlerRules = [
   [/^\/api\/internal\/verificacion(?:\/|$)/, "verificacion-repesca.spec.ts"],
   [/^\/api\/internal\/resena-google(?:\/|$)/, "resena-google.spec.ts"],
   [/^\/api\/internal\/resumen-semanal(?:\/|$)/, "resumen-semanal.spec.ts"],
+  [/^\/api\/internal\/pro\/digest-tick$/, "pro-digest-scheduler.spec.ts"],
   [/^\/api\/internal\/meta(?:\/|$)/, "meta-growth-runtime.spec.ts"],
   [/^\/api\/internal\/email(?:\/|$)/, "email-delivery.spec.ts"],
   [/^\/api\/internal\/campaigns(?:\/|$)/, "lifecycle-email-policy.spec.ts"],
