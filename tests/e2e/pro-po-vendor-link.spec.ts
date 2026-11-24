@@ -97,7 +97,7 @@ for(const language of ['es','en'] as const)test(`Purchase order journey: terms, 
   const thief=await browser.newContext({locale:en?'en-US':'es-CR'});await stabilizeLocalProRuntime(thief,origin);const thiefPage=await thief.newPage();await thiefPage.goto(url);
   await expect(thiefPage.locator('[data-po-portal-error]')).toBeVisible({timeout:60000});await thief.close();
   await expectNoHorizontalOverflow(vendorPage);await vendorPage.screenshot({path:info.outputPath(`po-vendor-open-${suffix}.png`),fullPage:true});
-  for(const input of await root.locator('input,button,select,textarea').all())if(await input.isVisible())expect((await input.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  for(const input of await root.locator('input,button,select,textarea').all())if(await input.isVisible()){const radio=(await input.getAttribute('type'))==='radio';/* a radio's touch target is its wrapping label */const target=radio?input.locator('xpath=ancestor::label[1]'):input;expect((await target.boundingBox())!.height).toBeGreaterThanOrEqual(44);}
   // Propose a date (a past date is refused on the page), then confirm. Both answers are kept; the last one is current.
   await root.locator('[data-po-portal-choice="propose_date"]').check();await root.locator('[data-po-portal-send]').click();await expect(root.locator('[data-po-portal-form-error]')).toBeVisible();
   const proposed=new Date(Date.now()+5*86400000).toISOString().slice(0,10);await root.locator('[data-po-portal-date]').fill(proposed);await root.locator('[data-po-portal-note]').fill('Llega con el proximo lote');
