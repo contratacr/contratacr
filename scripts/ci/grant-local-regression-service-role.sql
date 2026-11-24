@@ -82,6 +82,20 @@ begin
   end if;
 end $$;
 
+-- Pro tables that migrations lock behind RLS with no policy at all (access only
+-- through the service role or SECURITY DEFINER RPCs) keep that contract after the
+-- blanket grant above: browser roles get a permission-denied error (42501), not an
+-- empty result. Tables with at least one policy keep the blanket grants (RLS rules).
+do $$ declare t record; begin
+  for t in
+    select c.relname from pg_class c join pg_namespace n on n.oid=c.relnamespace
+     where n.nspname='public' and c.relkind in ('r','p') and c.relrowsecurity and c.relname like 'pro\_%'
+       and not exists (select 1 from pg_policies p where p.schemaname='public' and p.tablename=c.relname)
+  loop
+    execute format('revoke all on table public.%I from public, anon, authenticated', t.relname);
+  end loop;
+end $$;
+
 -- Moderation/chat records never inherit blanket local bootstrap permissions.
 do $$ declare t text; begin
   foreach t in array array['admin_chat_reviewers','admin_chat_access_log','moderation_actions','moderation_holds','moderation_restrictions','moderation_files','moderation_photo_holds','admin_staff_permissions','moderation_retention_state'] loop
