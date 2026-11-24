@@ -200,6 +200,7 @@ const handlerRules = [
   [/^\/api\/pro\/lead-private-stages$/, "pro-private-stages-api.spec.ts"],
   [/^\/api\/pro\/lead-private-work$/, "pro-lead-commercial-progress-api.spec.ts"],
   [/^\/api\/pro\/lead-plans$/, "pro-lead-plan-templates.spec.ts"],
+  [/^\/api\/pro\/lead-log$/, "pro-lead-log.spec.ts"],
   [/^\/api\/pro\/manual-lead-quotes$/, "pro-manual-lead-quotes-api.spec.ts"],
   [/^\/api\/pro\/manual-lead-work$/, "pro-manual-lead-work-api.spec.ts"],
   [/^\/api\/pro\/mood-boards$/, "pro-mood-boards.spec.ts"],

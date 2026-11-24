@@ -6,8 +6,7 @@ import {createDisposableAccount,cleanupDisposableAccount,type DisposableAccount}
 // Directory app, Me (Yo) tab + Mis listas tabs + notifications list (WS4). Anonymous /yo goes to login; a signed-in person sees the
 // sections of /yo in order, the share fallback («Copiar enlace»), the QR sheet, dismissible «Comparta su experiencia» cards (also
 // with localStorage blocked) and /listas with He estado | Quiero ir | Listas and the exact empty-state copy.
-test('anónimo: /yo lleva a iniciar sesión',async({page},info)=>{
- local(info.project.use.baseURL);
+test('anónimo: /yo lleva a iniciar sesión',async({page})=>{
  const r=await page.goto('/yo',{waitUntil:'domcontentloaded'});
  if(r&&r.status()===404){test.skip(true,'directorio apagado en este entorno');return;}
  await expect(page).toHaveURL(/\/login\?redirect=/);
