@@ -137,7 +137,7 @@ for(const language of ['es','en'] as const)test(`F5: reviews with account, and g
   await expect(page.locator('[data-place-review-sent]')).toBeVisible();
   await page.reload();await openPlaceTab(page,'reviews');
   await expect(page.locator('[data-place-review]')).toHaveCount(1);
-  await expect(page.locator('[data-place-reviews]')).toContainText(en?'4.5 / 5':'4,5 / 5');
+  await expect(page.locator('[data-place-reviews]')).toContainText('4.5 / 5');// the rating uses one decimal with a point in both languages, like the professional profile (biz-ui ratingNumber)
   // Links are refused by the shared review rules.
   const bad=await postJson(context,`/api/lugar/${slug}/resenas`,{actionId:uid(),rating:5,comment:'Vean https://ejemplo.com'});expect(bad.status).toBe(400);
  }finally{await cleanupDisposableAccount(user);}
