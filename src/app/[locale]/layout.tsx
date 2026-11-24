@@ -36,6 +36,7 @@ import { CampaignAppLinks } from "@/components/mobile/campaign-app-links";
 import { MobileAppBridge } from "@/components/mobile/mobile-app-bridge";
 import { NativeFirstRunOnboarding } from "@/components/mobile/native-first-run-onboarding";
 import { AppIntlProvider } from "@/components/app-intl-provider";
+import { ProApiErrorLocalizer } from "@/components/pro/api-error-localizer";
 import { SiteFeaturesProvider } from "@/components/site-features";
 import { sitemapSections } from "@/lib/directory/sitemap-sections";
 import { SombrasAlDesplazar } from "@/components/util/sombras-al-desplazar";
@@ -207,6 +208,7 @@ export default async function LocaleLayout({
       <RouteScrollReset />
       <AuthProvider initialUser={initialUser} initialAvatarUrl={initialAvatarUrl} initialAccountName={initialAccountName} initialNotificationUnread={initialNotificationUnread} initialHasProfessionalProfile={initialHasProfessionalProfile} initialSavedKeys={initialSavedKeys}>
         <DocumentLocale locale={locale} />
+        <ProApiErrorLocalizer locale={locale} />
         <OptionalChoiceRecorder />
         <CookiePreferences />
         <ViewportEnvironment />
