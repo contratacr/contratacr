@@ -14,6 +14,8 @@ import { FindByZone } from "@/components/landing/find-by-zone";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { FadeInUp } from "@/components/landing/fade-in-up";
 import { getZoneCoverage } from "@/lib/queries/professionals";
+import { AppHome } from "@/components/directory/app-home";
+import { loadTopPlaces } from "@/components/directory/app-home-data";
 import { CheckCircle2 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
@@ -71,6 +73,11 @@ const DATOS_ESTRUCTURADOS = (locale: string) => JSON.stringify([
   },
 ]);
 
+// Mobile app home (directory on): the Search tab of the Yelp-style app. Streams in so the desktop landing never waits for it.
+async function HomeAppMobile() {
+  return <AppHome topPlaces={await loadTopPlaces()} />;
+}
+
 async function HomeZoneCoverage() {
   const coverage = await getZoneCoverage();
   return <FindByZone coverage={coverage} />;
@@ -101,7 +108,7 @@ export default async function HomePage({
     <div className="min-h-screen flex flex-col bg-white">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: DATOS_ESTRUCTURADOS(locale) }} />
       <LandingNavbar />
-      <DirectoryQuickNav spacer />
+      <DirectoryQuickNav spacer className="max-lg:hidden" />
 
       <main className="ccr-portada flex-1">
         {deletionStatus && (
@@ -113,6 +120,13 @@ export default async function HomePage({
             </div>
           </div>
         )}
+        {/* Directory on: phones get the app home (search tab); lg and up keep the landing below, unchanged. */}
+        {directoryOn && (
+          <div className="lg:hidden" data-app-home-slot>
+            <Suspense fallback={null}><HomeAppMobile /></Suspense>
+          </div>
+        )}
+        <div className={directoryOn ? "hidden lg:block" : undefined}>
         {/* Hero: rotating headline + primary search. */}
         <LandingHero />
 
@@ -150,10 +164,12 @@ export default async function HomePage({
             __html: `try{document.querySelectorAll(".fade-in-up").forEach(function(e){if(e.getBoundingClientRect().top<innerHeight)e.classList.add("visible")})}catch(e){}`,
           }}
         />
+        </div>
 
       </main>
 
-      <AppDownloadSection />
+      {/* On phones with the directory on the home is the app itself: no "download the app" band. */}
+      <div className={directoryOn ? "hidden lg:block" : undefined}><AppDownloadSection /></div>
       <LandingFooter />
     </div>
   );
