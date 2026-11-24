@@ -21,6 +21,7 @@ function copy(en:boolean){
   project:'Project',customer:'Customer',dates:'Dates',view:'Customer view',open:'Open project',noDates:'Not scheduled',
   linked:'Customer has access',notLinked:'No linked customer',custom:'Customized',quote:'Quote',
   empty:'There are no projects with this filter.',emptyAll:'You have no projects yet. Create the first one with "Create project". Jobs from Appointments also appear here.',
+  listView:'List view',boardView:'Board view',viewMode:'Project view',noneInColumn:'No projects.',
   newJob:'Create project',loading:'Loading projects…',updating:'Updating projects…',error:'Could not load projects.',moreError:'Could not load more projects.',retry:'Retry',more:'Show more projects',total:(n:number)=>`${n} project${n===1?'':'s'} in total`,totalSearch:(n:number)=>`${n} project${n===1?'':'s'} in total · the search only filters the list`,
  }:{
   search:'Buscar proyectos',searchHint:'Nombre del proyecto o del cliente',status:'Estado',
@@ -30,6 +31,7 @@ function copy(en:boolean){
   project:'Proyecto',customer:'Cliente',dates:'Fechas',view:'Vista del cliente',open:'Abrir proyecto',noDates:'Sin programar',
   linked:'Cliente con acceso',notLinked:'Sin cliente vinculado',custom:'Personalizada',quote:'Cotización',
   empty:'No hay proyectos con este filtro.',emptyAll:'Aún no tiene proyectos. Cree el primero con "Crear proyecto". Los trabajos de Citas también aparecen aquí.',
+  listView:'Vista de lista',boardView:'Vista de tablero',viewMode:'Vista de proyectos',noneInColumn:'Sin proyectos.',
   newJob:'Crear proyecto',loading:'Cargando proyectos…',updating:'Actualizando proyectos…',error:'No se pudieron cargar los proyectos.',moreError:'No se pudieron cargar más proyectos.',retry:'Reintentar',more:'Ver más proyectos',total:(n:number)=>`${n} proyecto${n===1?'':'s'} en total`,totalSearch:(n:number)=>`${n} proyecto${n===1?'':'s'} en total · la búsqueda solo filtra la lista`,
  };
 }
@@ -51,7 +53,7 @@ export function ProjectsWorkspace({disabled=false}:{disabled?:boolean}){const {u
 function ProjectsSession({accountId,disabled}:{accountId:string;disabled:boolean}){
  const en=useLocale()==='en',c=copy(en);
  const [status,setStatus]=useState<ProjectFilter>('active'),[typeFilter,setTypeFilter]=useState(''),[tagFilter,setTagFilter]=useState(''),[search,setSearch]=useState(''),[query,setQuery]=useState('');
- const [page,setPage]=useState<ProjectHubPage|null>(null),[loading,setLoading]=useState<false|'page'|'more'>('page'),[error,setError]=useState<false|{after?:number}>(false),active=useRef(true),sequence=useRef(0);
+ const [mode,setMode]=useState<'list'|'board'>('list'),[page,setPage]=useState<ProjectHubPage|null>(null),[loading,setLoading]=useState<false|'page'|'more'>('page'),[error,setError]=useState<false|{after?:number}>(false),active=useRef(true),sequence=useRef(0);
  const invalidate=useCallback(()=>{sequence.current++;},[]);
  const load=useCallback(async(after?:number)=>{
   const id=++sequence.current;setLoading(after?'more':'page');setError(false);
@@ -89,12 +91,18 @@ function ProjectsSession({accountId,disabled}:{accountId:string;disabled:boolean
    <label className="block text-sm font-semibold">{c.typeFilter}<select data-projects-type disabled={disabled} value={typeFilter} onChange={event=>setTypeFilter(event.target.value)} className={field}><option value="">{c.anyType}</option>{page.filters.types.filter(type=>!type.archived||type.id===typeFilter).map(type=><option key={type.id} value={type.id}>{projectTypeLabel(type,en)}</option>)}</select></label>
    {(page.filters.tags.length>0||tagFilter)&&<label className="block text-sm font-semibold">{c.tagFilter}<select data-projects-tag disabled={disabled} value={tagFilter} onChange={event=>setTagFilter(event.target.value)} className={field}><option value="">{c.anyTag}</option>{page.filters.tags.map(tag=><option key={tag.id} value={tag.id}>{tag.name}</option>)}</select></label>}
   </div>}
+  <div role="group" aria-label={c.viewMode} data-projects-view-toggle className="flex flex-wrap gap-2">{(['list','board'] as const).map(kind=><button key={kind} type="button" data-projects-view={kind} aria-pressed={mode===kind} onClick={()=>setMode(kind)} className={`min-h-11 rounded-xl border px-4 text-sm font-semibold ${mode===kind?'border-[#008bb5] bg-[#eaf7fb] text-[#006f93]':'border-[#d7e1ea] bg-white text-[#52627a]'}`}>{kind==='list'?c.listView:c.boardView}</button>)}</div>
   {counts&&<p data-projects-total className="text-sm text-[#52627a]">{query?c.totalSearch(counts.all):c.total(counts.all)}</p>}
   {error&&!error.after&&retryBox(c.error,undefined)}
   {/* A filter or search change keeps the previous rows (dimmed) and says it is updating. */}
   {loading==='page'&&<p role="status" data-projects-loading className="text-sm text-[#52627a]">{page?c.updating:c.loading}</p>}
   {page&&!page.items.length&&<p data-projects-empty className="rounded-2xl border border-dashed border-[#d7e1ea] bg-white p-6 text-sm text-[#52627a]">{counts?.all?c.empty:c.emptyAll}</p>}
   {page&&page.items.length>0&&<div aria-busy={loading==='page'} className={loading==='page'?'opacity-60 transition-opacity':'transition-opacity'}>
+   {mode==='board'&&<div data-projects-board className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{(Object.keys(c.states) as ProjectStatus[]).map(state=>{const column=page.items.filter(project=>project.status===state);
+    return <section key={state} data-projects-column={state} aria-label={c.states[state]} className="min-w-0 space-y-2 rounded-2xl border border-[#e5e7eb] bg-[#f7f9fc] p-3"><h2 className="flex items-center justify-between text-sm font-bold"><span className={`rounded-full px-2 py-1 text-xs font-semibold ${badge[state]}`}>{c.states[state]}</span><span data-projects-column-count>{column.length}</span></h2>
+     {column.length===0?<p className="text-sm text-[#52627a]">{c.noneInColumn}</p>:<ul className="space-y-2">{column.map(project=><li key={project.id} data-project-board-card={project.id}><button type="button" disabled={disabled} onClick={()=>open(project)} className="block w-full min-w-0 rounded-xl border border-[#e5e7eb] bg-white p-3 text-left"><span className="sr-only">{c.open}: </span><span className="block break-words font-semibold"><ProjectSwatch project={project} en={en}/>{project.name||c.project}</span><span className="mt-1 block break-words text-sm">{project.client}</span>{project.code&&<span className="block break-words text-xs text-[#52627a]">{c.code}: {project.code}</span>}<span className="mt-1 block text-xs text-[#52627a]">{period(project)}</span></button></li>)}</ul>}
+    </section>;})}</div>}
+   {mode==='list'&&<>
    <div className="hidden overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white lg:block">
     <table className="w-full table-fixed text-left text-sm">
      <thead className="bg-[#f7f9fc] text-xs uppercase tracking-wide text-[#52627a]"><tr><th className="w-[26%] px-4 py-3">{c.project}</th><th className="w-[17%] px-4 py-3">{c.customer}</th><th className="w-[19%] px-4 py-3">{c.typeTags}</th><th className="w-[12%] px-4 py-3">{c.status}</th><th className="w-[14%] px-4 py-3">{c.dates}</th><th className="w-[12%] px-4 py-3">{c.view}</th></tr></thead>
@@ -118,7 +126,7 @@ function ProjectsSession({accountId,disabled}:{accountId:string;disabled:boolean
      <span className="mt-1 block text-sm text-[#52627a]">{period(project)}</span>
      <span className="mt-2 block text-xs text-[#52627a]">{project.linkedCustomer?c.linked:c.notLinked}{project.customView?' · '+c.custom:''}</span>
     </button>
-   </li>)}</ul>
+   </li>)}</ul></>}
    {error&&error.after&&<div className="mt-3">{retryBox(c.moreError,error.after)}</div>}
    {page.nextCursor!==null&&!(error&&error.after)&&<Button type="button" variant="secondary" className="mt-3" disabled={disabled||!!loading} onClick={()=>void load(page.nextCursor!)}>{loading==='more'?c.loading:c.more}</Button>}
   </div>}

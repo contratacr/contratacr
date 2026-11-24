@@ -42,6 +42,7 @@ const EditionSettings=dynamic(()=>import('./edition-settings').then(module=>modu
 import {ProWorkspaceBanner} from './company-team';
 import {RunningTimerIndicator} from './work-timer';
 import {NotificationBell} from './notification-center';
+import {ProQuickMenus} from './pro-quick-menus';
 import {ProBlockedNavigationNotice} from './pro-blocked-navigation-notice';
 /** Titles of the Pro space sections (also the mobile section picker). */
 export function proSectionLabels(en:boolean):Record<string,string>{return en?{pro_tools:'Overview',pro_company:'Company',pro_projects:'Projects',pro_files:'Company files',pro_tasks:'Tasks',pro_hours:'Timesheets',pro_notifications:'Notifications',pro_leads:'Leads',pro_agenda:'Appointments',pro_clients:'Customers',quotes:'Quotes',pro_inventory:'Products and services',pro_expenses:'Expenses',pro_payments:'Payments',statistics:'Statistics',pro_billing:'Invoice drafts',pro_team:'Team',pro_editions:'Pro edition'}:{pro_tools:'Inicio',pro_company:'Empresa',pro_projects:'Proyectos',pro_files:'Archivos de la empresa',pro_tasks:'Tareas',pro_hours:'Horas',pro_notifications:'Avisos',pro_leads:'Solicitudes',pro_agenda:'Citas',pro_clients:'Clientes',quotes:'Cotizaciones',pro_inventory:'Productos y servicios',pro_expenses:'Gastos',pro_payments:'Pagos',statistics:'Estadísticas',pro_billing:'Borradores de facturación',pro_team:'Equipo',pro_editions:'Edición de Pro'};}
@@ -82,7 +83,7 @@ export function ProFrame({tab,labels,subtitle,navigating,jobRoute=false,children
  return <div data-independent-pro className="flex min-h-screen flex-col bg-[#f7f9fc] text-[#162543]">
   <header style={{paddingTop:"var(--ccr-safe-top, env(safe-area-inset-top))"}} className="border-b border-[#e5e7eb] bg-white"><div className="mx-auto flex max-w-[90rem] flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
    <div className="flex items-center gap-3"><ContrataCRLogo/><span className="rounded-lg bg-[#eaf7fb] px-2 py-1 text-sm font-bold text-[#008bb5]">Pro</span></div>
-   <div className="flex flex-wrap items-center gap-2"><RunningTimerIndicator/><NotificationBell/><ProBlockedNavigationNotice/><Button variant="secondary" disabled={navigating} onClick={exit}>{en?'Back to My panel':'Volver a Mi panel'}</Button></div>
+   <div className="flex flex-wrap items-center gap-2"><ProQuickMenus/><RunningTimerIndicator/><NotificationBell/><ProBlockedNavigationNotice/><Button variant="secondary" disabled={navigating} onClick={exit}>{en?'Back to My panel':'Volver a Mi panel'}</Button></div>
   </div></header>
   {/* Gaps round: one content width at 1440 px for the hub, its sections and the job page (was 80rem vs 90rem). */}
   <main className="mx-auto w-full max-w-[90rem] flex-1 space-y-5 px-4 py-5 sm:px-6">
