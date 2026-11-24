@@ -62,6 +62,14 @@ type Notification = {
 // su regreso con un parámetro propio —el panel `returnTo`, el chat `back`, las
 // fichas `from`— y sin él caía en la lista general de su sección: se abría una
 // promoción desde una notificación y la flecha llevaba a Promociones.
+// Color del cuadro de icono por familia de aviso (paleta propia: cian, azul marino, verde y ámbar).
+function colorDeCategoria(type: string): string {
+  if (type === "review_received" || type === "resena_google" || type === "pide_resenas") return "bg-[#fff4d6] text-[#a16207]";
+  if (type.startsWith("verification") || type.startsWith("suggestion")) return "bg-[#e3f4ee] text-[#17795a]";
+  if (type === "direct_message" || type === "support_reply") return "bg-[#e8ecf4] text-[#162543]";
+  return "bg-[#e6f6fc] text-[#0089bb]";
+}
+
 function conRegresoANotificaciones(href: string) {
   const ruta = href.replace(/^\/(?:es|en)(?=\/|$)/u, "");
   const clave = ruta.startsWith("/dashboard/") ? "returnTo"
@@ -754,35 +762,31 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
                     notificationActionHref(n, role, locale) ? "cursor-pointer hover:bg-[#f9fafb]" : "cursor-default",
                   )}
                 >
-                  {/* Icono del tipo; lo no leído va con un punto azul a la derecha. */}
-                  <div className="flex items-start gap-3">
-                    <div className="relative shrink-0">
-                      {fotoDe(n) ? (
-                        // eslint-disable-next-line @next/next/no-img-element -- miniatura fija; el optimizador no actúa en Cloudflare
-                        <img
-                          src={fotoDe(n) as string}
-                          alt=""
-                          className="h-9 w-9 rounded-full object-cover"
-                        />
-                      ) : (
-                        <span className="flex h-9 w-9 items-center justify-center rounded-full ccr-caja-icono-plana">
-                          {notificationActorInitials(n) || <NotificationSourceIcon type={n.type} className="h-4 w-4" />}
-                        </span>
-                      )}
-                    </div>
+                  {/* Fila al estilo de la app: cuadro de color por categoría, título en negrita, mensaje de 1-2 líneas
+                      y la antigüedad a la derecha. Lo no leído va con un punto azul. */}
+                  <div className="flex items-start gap-3" data-notification-row={n.type}>
+                    {fotoDe(n) ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- miniatura fija; el optimizador no actúa en Cloudflare
+                      <img src={fotoDe(n) as string} alt="" className="h-11 w-11 shrink-0 rounded-xl object-cover" />
+                    ) : (
+                      <span className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-xl", colorDeCategoria(n.type))}>
+                        {notificationActorInitials(n) ? <span className="text-sm font-extrabold">{notificationActorInitials(n)}</span> : <NotificationSourceIcon type={n.type} className="h-5 w-5" />}
+                      </span>
+                    )}
                     <div className="min-w-0 flex-1">
-                      {/* Una fila = un hecho: el mensaje manda y la hora va al
-                          final. El título del tipo no distinguía nada y el icono
-                          ya dice de qué se trata. */}
-                      <p className={cn(
-                        "whitespace-pre-line text-sm leading-snug [overflow-wrap:anywhere] break-words",
-                        !esNueva(n) ? "font-medium text-[#374151]" : "font-semibold text-[#162543]",
-                      )}>
-                        {message || notificationTitle(n)}
-                      </p>
-                      <p className={cn("mt-0.5 text-[12px] font-semibold", !esNueva(n) ? "text-[#94a3b8]" : "text-[#0089bb]")}>
-                        {notificationTime(n)}
-                      </p>
+                      <div className="flex items-baseline justify-between gap-2">
+                        <p className={cn("min-w-0 truncate text-[15px] leading-snug", !esNueva(n) ? "font-bold text-[#374151]" : "font-extrabold text-[#162543]")}>
+                          {notificationTitle(n)}
+                        </p>
+                        <p className={cn("shrink-0 text-[12px] font-semibold", !esNueva(n) ? "text-[#94a3b8]" : "text-[#0089bb]")}>
+                          {notificationTime(n)}
+                        </p>
+                      </div>
+                      {message && message !== notificationTitle(n) && (
+                        <p className="mt-0.5 line-clamp-2 whitespace-pre-line text-sm leading-snug text-[#52627a] [overflow-wrap:anywhere]">
+                          {message}
+                        </p>
+                      )}
                     </div>
                   </div>
                   {esNueva(n) && (

@@ -27,7 +27,8 @@ export function MyListsTabs({locale,initial,origin,suggestions}:{locale:string;i
  const sys=(n:string)=>lists.find(l=>l.name===n);
  const been=sys(BEEN_NAME),want=sys(WANT_NAME);
  const count=been?.count??0,left=Math.max(0,BEEN_GOAL-count);
- const places=(tab==='want'?want:been)?.places??[];
+ const source=tab==='want'?want:been;
+ const places=useMemo(()=>source?.places??[],[source]);
  const shown=useMemo(()=>{
   const f=q.trim().toLowerCase(),p=places.filter(x=>!f||x.name.toLowerCase().includes(f)||x.area.toLowerCase().includes(f));
   return alpha?[...p].sort((a,b)=>a.name.localeCompare(b.name,locale)):p;

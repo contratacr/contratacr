@@ -28,7 +28,7 @@ export function SaveToList({slug,locale,signedIn,loginHref,name,area,image,varia
  },[slug,name,area,image,variant]);
  useEffect(()=>{if(!open)return;closeRef.current?.focus();const k=(e:KeyboardEvent)=>{if(e.key==='Escape')setOpen(false);};window.addEventListener('keydown',k);return()=>window.removeEventListener('keydown',k);},[open]);
  // The button shows «Guardado» as soon as the person is known to have the place somewhere: load once on mount.
- useEffect(()=>{if(signedIn)void load();},[signedIn]);// eslint-disable-line react-hooks/exhaustive-deps
+ useEffect(()=>{if(signedIn&&variant==='pill')void load();},[signedIn,variant]);// eslint-disable-line react-hooks/exhaustive-deps
  if(!signedIn)return loginHref?<a data-save-login className={variant==='icon'?`grid h-10 w-10 place-items-center rounded-full border border-[#d7e1ea] bg-white text-[#162543] ${ring}`:`${secondary} bg-white`} href={loginHref} aria-label={t('Guardar','Save')}><Bookmark aria-hidden="true" className="h-4 w-4"/>{variant==='icon'?null:t('Guardar','Save')}</a>:null;
  async function load(){const l=await fetchLists(slug);setLists(l??[]);if(l)rememberBeenHereCount(l);}
  const fail=(reason?:string)=>setMsg({ok:false,text:featureReasonText(reason,en)});
