@@ -188,3 +188,22 @@ Conexión adicional pendiente dentro de 13/35/46: [cotización a cronograma](htt
 | C-09 | Actividades y tarifas por proyecto | E | Sin construir: guardar una tarifa por proyecto sin que el escritor de horas la aplique seria un dato muerto; requiere cambiar el escritor SQL de horas. |
 
 Todas las filas C quedan en P/E: ninguna es V hasta que `pro-local-regression` pase en CI. Las pruebas unitarias puras se ejecutaron en local; las de API/SQL no (no hay Supabase local).
+
+## Barra global, lista de proyectos y ajustes de empresa (area A, 2026-11-24). Evidencia pendiente de CI (pro-local-regression)
+
+| # | Fila | Estado | Evidencia |
+|---|---|---|---|
+| A-02/03/04 | Menus Buscar, Ayuda y Ajustes en el encabezado | P | `pro-quick-menus.tsx`, `quick-menus.ts`, spec `pro-quick-menus-unit.spec.ts`. |
+| A-05 | Menu Mensajes del encabezado (ultimos mensajes y respuestas de clientes) | P | `messages-flyout.tsx`, `pro-quick-menus.tsx`; spec `pro-notification-tabs.spec.ts` (API simulada). Brecha: lista avisos de mensajes de clientes, no hilos de conversacion por proyecto. |
+| A-06 | Avisos: pestanas General y Comentarios, Marcar todo como leido | P | `notification-center.tsx`, `notification-tabs.ts`; spec `pro-notification-tabs.spec.ts`. Las pestanas filtran los avisos ya cargados de la pagina. |
+| A-11 | Filtro de estado con casillas y boton Aplicar | P | `projects-workspace.tsx`, `/api/pro/projects-hub`, migracion 461 (`pro_projects_page_v3`); spec `pro-projects-hub.spec.ts` y `pro-projects.spec.ts`. |
+| A-13 | Filtro de responsables y asignacion de responsables por proyecto | P | Migracion 461 (`pro_project_managers`, colaboradores activos del dueno), `projects-hub-parts.tsx`; spec `pro-projects-hub.spec.ts`. |
+| A-15 | Columnas Visto, Creado, Ubicacion y Responsables, orden por columna, seleccion de filas y anclar | P | Migracion 461 (`pro_project_hub_state`; "Creado" solo existe para proyectos creados despues de la migracion, los anteriores muestran un guion); spec `pro-projects-hub.spec.ts`. |
+| A-17 | Kanban: personalizar estados (crear, renombrar, color, orden, eliminar) y mover proyectos | P | Migracion 461 (`pro_project_statuses`), `StatusManager`; spec `pro-projects-hub.spec.ts`. |
+| A-20 | Actividades y tarifas: recargo (%) e impuesto por defecto | P | Migracion 463, `/api/pro/time-activity-defaults`, `time-tracking.tsx`; spec `pro-time-activity-defaults.spec.ts`. Brecha: permisos de equipo por actividad (requiere cambiar el escritor SQL de horas para hacerlos cumplir). |
+| A-21 | Matriz de avisos por evento con En la app, Correo, WhatsApp, Resumen diario y Push | P | Migracion 462, `/api/pro/notification-extras`, `notification-center.tsx`; spec `pro-notification-extras.spec.ts`. Resumen y Push se guardan; no se envia nada fuera de la app. |
+| A-26 | Contactos: importar/exportar CSV (ya existia) y administrar etiquetas (renombrar, eliminar) | P | Migracion 464, `/api/pro/client-contacts` (acciones `tag_rename`, `tag_delete`), `round10-sales.tsx`; spec `pro-contact-tags-manage.spec.ts`. |
+| A-27 | Archivos de empresa: papelera, etiquetas, versiones y filtro de destacados | P | `company-files.tsx` (filtro `starred`), spec `pro-company-files-api.spec.ts`. |
+
+Ninguna fila A pasa a V hasta que `pro-local-regression` pase en CI. Las pruebas de API/SQL no se ejecutaron en local (no hay Supabase local).
+
