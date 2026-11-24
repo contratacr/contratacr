@@ -38,7 +38,9 @@ export function CompanyInsights(){
     <div className="mt-2 flex flex-wrap gap-2">{link(t('Pedir reseñas por correo','Request reviews by email'),'correo')}</div></div></section>;
   else if(page==='photos')body=<section className={card} data-insights-photos aria-labelledby="ins-photos"><h3 id="ins-photos" className="font-bold">{t('Resumen de fotos','Photo summary')}</h3>
    {d.profile.photos.length?<><p data-insights-photo-count className="text-sm text-[#52627a]">{t(`Su perfil tiene ${d.profile.photos.length} fotos.`,`Your profile has ${d.profile.photos.length} photos.`)}</p>
-    <ul className="grid grid-cols-3 gap-2 sm:grid-cols-6">{d.profile.photos.slice(0,12).map((url,i)=><li key={url}>{/* eslint-disable-next-line @next/next/no-img-element -- the professional's own public profile photo */}<img src={url} alt={t(`Foto ${i+1} de su perfil`,`Profile photo ${i+1}`)} className="aspect-square w-full rounded-lg object-cover"/></li>)}</ul></>
+    <ul className="grid grid-cols-3 gap-2 sm:grid-cols-6">{d.profile.photos.slice(0,12).map((url,i)=><li key={url}>
+{/* eslint-disable-next-line @next/next/no-img-element -- the professional's own public profile photo */}
+<img src={url} alt={t(`Foto ${i+1} de su perfil`,`Profile photo ${i+1}`)} className="aspect-square w-full rounded-lg object-cover"/></li>)}</ul></>
    :<p data-insights-photo-empty className="rounded-2xl border border-dashed border-[#d7e1ea] bg-[#f7f9fc] p-4 text-sm text-[#52627a]">{t('Muestre fotos de sus proyectos terminados en su perfil.','Show photos of your completed projects on your profile.')}</p>}
    <div><p className="text-sm font-bold">{t('Mejore la calidad de sus fotos','Improve your photo quality')}</p><ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-[#52627a]">{photoTips(en).map(x=><li key={x}>{x}</li>)}</ul></div>
    <p className="text-xs text-[#52627a]">{t('ContrataCR no mide cuántas veces se guarda o se ve cada foto, por eso no hay estadísticas por foto.','ContrataCR does not measure how often each photo is saved or viewed, so there are no per-photo statistics.')}</p>
