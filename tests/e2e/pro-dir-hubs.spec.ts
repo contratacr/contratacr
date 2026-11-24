@@ -1,9 +1,17 @@
 import { test, expect } from "playwright/test";
-import { expectNoHorizontalOverflow, gotoOK, isMobileProject } from "./helpers";
+import { expectNoHorizontalOverflow, gotoOK, isMobileProject, waitForInteractivePage } from "./helpers";
+import { dirDb, hideSeededPlaces, label, seedPlace } from "./pro-dir-fixture";
 
 // IA 2026-11-21 (owner decision): "Lugares" hub, "Para negocios y profesionales" page and the Categorias menu.
 // Owner of those two pages in verify-app-surface-ownership.mjs. Needs the directory ON (DIR_ENABLED): without it the
 // hubs answer 404 and the navbar keeps the classic "Explorar" menu (covered by public-smoke).
+// The Categorías page offers a business tile only for a section whose total is above 0 (the total is cached on the server for
+// ten minutes). The local stack has no OSM seed, so one synthetic published place is created before any test visits /servicios.
+test.beforeAll(async () => {
+  await seedPlace(dirDb(), { slug: `e2e-hubs-${label()}`, vertical: "restaurant", name: `E2E Hubs ${label()}`, adminArea1: "Heredia" });
+});
+test.afterAll(() => hideSeededPlaces());
+
 for (const language of ["es", "en"] as const) {
   const prefix = language === "en" ? "/en" : "";
 
@@ -62,7 +70,7 @@ test("quick links row under the navbar: sections, Profesionales and Más, active
   await expect(page).toHaveURL(/\/servicios$/);
   await expect(page.getByRole("navigation", { name: /Accesos rápidos|Quick links/ }).locator('[data-quick-nav-link="more"]')).toHaveAttribute("aria-current", "page");
   // The row is in flow: the fixed bar keeps its height (64px) and the row starts right below it.
-  const bar = await page.getByTestId("landing-navbar").boundingBox();
+  const bar = await page.getByTestId("landing-navbar").filter({ visible: true }).boundingBox();
   const strip = await page.locator("[data-quick-nav]").boundingBox();
   expect(bar!.height).toBeLessThanOrEqual(65);
   expect(Math.abs(strip!.y - (bar!.y + bar!.height))).toBeLessThanOrEqual(1);
@@ -94,7 +102,8 @@ test("footer: cookie and privacy settings is a discreet link in the legal row", 
 test("mobile drawer: Categorías is a plain link to the full page and there is no business entry", async ({ page }, testInfo) => {
   test.skip(!isMobileProject(testInfo), "Mobile navigation only");
   await gotoOK(page, "/");
-  await page.getByRole("button", { name: /Abrir men[uú]|Open menu/i }).first().click();
+  await waitForInteractivePage(page);
+  await page.getByRole("button", { name: /Abrir men[uú]|Open menu/i }).filter({ visible: true }).first().click();
   const drawer = page.getByRole("dialog", { name: /Men[uú]|Menu/i });
   await expect(drawer.getByRole("link", { name: /^Categorías$|^Categories$/ })).toHaveAttribute("href", /\/servicios$/);
   await expect(drawer.getByRole("button", { name: /^Categorías$|^Categories$/ })).toHaveCount(0);
