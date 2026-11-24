@@ -202,6 +202,7 @@ export function BusinessPanel({
     [quotes, setQuotes] = useState<Quote[]>([]),
     [quoteError, setQuoteError] = useState("");
   const [visible, setVisible] = useState(20);
+  const [sortKey,setSortKey]=useState<'default'|'name'|'cost'|'price'|'stock'>('default'),[sortDir,setSortDir]=useState<'asc'|'desc'>('asc');
   const sentinel = useRef<HTMLDivElement>(null);
   const [localDay,setLocalDay]=useState(crTodayISO);
   const calendarDay=agenda?.day??localDay,setCalendarDay=agenda?.setDay??setLocalDay;
@@ -683,12 +684,18 @@ export function BusinessPanel({
   const work = agenda ? agenda.ids.map(id=>data.work.find(work=>work.id===id)).filter((work):work is Business["work"][number]=>!!work) : [...data.work]
     .sort((a,b)=>Date.parse(a.start)-Date.parse(b.start)||a.id.localeCompare(b.id))
     .filter(work=>Date.parse(work.start)<Date.parse(`${calendarDay}T00:00:00-06:00`)+86400000&&Date.parse(work.end)>Date.parse(`${calendarDay}T00:00:00-06:00`));
-  const list = catalog ? catalog.ids.map(id=>source.find(r=>r.id===id)).filter((r):r is NonNullable<typeof r>=>!!r) :
+  const baseList = catalog ? catalog.ids.map(id=>source.find(r=>r.id===id)).filter((r):r is NonNullable<typeof r>=>!!r) :
     section === "Clientes"
       ? clients
       : section === "Inventario"
         ? products
         : work;
+  // Area D: sortable columns on the price book. Orders the rows already loaded (the server keeps its own order for paging).
+  const list = section==="Inventario"&&sortKey!=="default"?[...baseList].sort((a,b)=>{
+    const x=a as Business["products"][number],y=b as Business["products"][number];
+    const value=sortKey==="name"?x.name.localeCompare(y.name,'es'):sortKey==="cost"?x.cost-y.cost:sortKey==="price"?x.price-y.price:x.stock-y.stock;
+    return (sortDir==="asc"?value:-value)||x.id.localeCompare(y.id);
+  }):baseList;
   const labels =
     section === "Clientes"
       ? { all: tr("Activos", "Active"), archived: tr("Archivados", "Archived") }
@@ -857,7 +864,7 @@ export function BusinessPanel({
             </>}
           </>}
           {section !== "Agenda" && <>
-          {section==="Inventario"?<div className="space-y-2"><label className="block text-[13px] font-bold text-[#162543]">{ux("showProducts")}<select aria-label={ux("showProducts")} value={filter} onChange={event=>{setFilter(event.target.value);setVisible(20);}} className={field}>{Object.entries(labels).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>{filter==="low"&&<p className="text-sm text-[#68778d]">{ux("replenishHint")}</p>}</div>:<StatusFilterTabs
+          {section==="Inventario"?<div className="space-y-2"><label className="block text-[13px] font-bold text-[#162543]">{ux("showProducts")}<select aria-label={ux("showProducts")} value={filter} onChange={event=>{setFilter(event.target.value);setVisible(20);}} className={field}>{Object.entries(labels).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>{filter==="low"&&<p className="text-sm text-[#68778d]">{ux("replenishHint")}</p>}{proSpace&&<div data-catalog-sort className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2"><label className="block text-[13px] font-bold text-[#162543]">{tr("Ordenar por","Sort by")}<select aria-label={tr("Ordenar por","Sort by")} value={sortKey} onChange={event=>{setSortKey(event.target.value as typeof sortKey);setVisible(20);}} className={field}><option value="default">{tr("Orden original","Default order")}</option><option value="name">{tr("Nombre","Name")}</option><option value="cost">{tr("Costo","Cost")}</option><option value="price">{tr("Precio","Price")}</option><option value="stock">{tr("Existencias","Stock")}</option></select></label><button type="button" data-catalog-sort-dir disabled={sortKey==="default"} aria-label={tr("Invertir orden","Reverse order")} aria-pressed={sortDir==="desc"} onClick={()=>setSortDir(d=>d==="asc"?"desc":"asc")} className="min-h-11 rounded-xl border border-[#d7e1ea] bg-white px-3 text-sm font-semibold text-[#162543] disabled:opacity-50">{sortDir==="asc"?tr("Ascendente","Ascending"):tr("Descendente","Descending")}</button></div>}</div>:<StatusFilterTabs
             tabs={Object.keys(labels).map((id) => ({ id }))}
             value={filter}
             onChange={(v) => {

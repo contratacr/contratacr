@@ -1,6 +1,7 @@
 'use client';
 import {fetchProjectDefaultVat,projectVatInput} from '@/lib/pro/project-default-vat';
 import {AiDraftAssist} from './ai-assistant';
+import {readQuoteStartPayload,clearQuoteStartPayload} from '@/lib/pro/quote-start-payload';
 import {useCallback,useEffect,useLayoutEffect,useRef,useState,type ReactNode} from 'react';
 import {useLocale} from 'next-intl';
 import {z} from 'zod';
@@ -46,6 +47,14 @@ export function PrivateEstimateEditor({actor,id,ownerName,estimate,prefillProduc
   const fillText=(text:string)=>{try{const parsed=JSON.parse(text) as PrivateEstimateEditorDraft,next=fill(parsed);return next===parsed?text:JSON.stringify(next);}catch{return text;}};
   if(memory.current)memory.current=fill(memory.current);initialRef.current=fillText(initialRef.current);setInitial(fillText);setDraft(fill);});return()=>controller.abort();},[vatWorkId,actor,en]);
  const restore=useCallback(()=>{try{if(memory.current){const text=JSON.stringify({version:1,accountId:actor,draft:memory.current,initial:initialRef.current});sessionStorage.setItem(privateEstimateDraftKey(actor,id),text);if(sessionStorage.getItem(privateEstimateDraftKey(actor,id))!==text)throw Error();}else{const text=sessionStorage.getItem(privateEstimateDraftKey(actor,id));if(text){if(text.length>4*1024*1024)throw Error();const stored=z.object({version:z.literal(1),accountId:z.literal(actor),draft:privateEstimateEditorDraftSchema,initial:z.string().max(2*1024*1024)}).strict().parse(JSON.parse(text));if(stored.draft.id!==id||stored.draft.returnActor!==actor||stored.draft.baseline&&stored.draft.baseline.ownerId!==actor)throw Error();const base=privateEstimateEditorDraftSchema.parse(JSON.parse(stored.initial));if(base.id!==id||base.returnActor!==actor)throw Error();issuerInitialized.current=true;memory.current=stored.draft;setDraft(stored.draft);initialRef.current=JSON.stringify(base);setInitial(initialRef.current);setContextLoaded(!!stored.draft.client&&!!stored.draft.clientFingerprint);}}setReady(true);setStorageError(false);}catch{setStorageError(true);setReady(true);}},[actor,id]);useEffect(()=>{const timer=setTimeout(restore,0);return()=>clearTimeout(timer);},[restore]);
+ // Area D: "Create with AI" / "Import from file" leave a one-time payload (title, notes, lines) that fills a NEW blank draft once; the draft is then unsaved, like any edit.
+ const imported=useRef(false);
+ useEffect(()=>{if(!ready||estimate||imported.current)return;imported.current=true;
+  try{const payload=readQuoteStartPayload(actor,id);if(!payload)return;clearQuoteStartPayload(actor,id);
+   const value=memory.current??initialValue,only=value.lines.length===1?value.lines[0]:null;if(!only||only.description||only.price||only.catalogProductId)return;
+   retain({...value,title:value.title||payload.title,notes:value.notes||payload.notes,lines:payload.lines.length?payload.lines.map(line=>({...blankLine(only.tax||PRIVATE_ESTIMATE_DEFAULT_VAT),description:line.description,quantity:line.quantity,price:line.price})):value.lines});}catch{/* a bad payload leaves the blank draft */}
+ // eslint-disable-next-line react-hooks/exhaustive-deps -- once per new draft
+ },[ready,estimate,actor,id]);
  // Ronda F2-B (row 35): "Cotizar" from a lead pre-fills the single blank first line of a NEW draft with the matched
  // catalogue item (its own name, unit and price), once, after the draft and its customer context are ready.
  const prefilled=useRef(false);
