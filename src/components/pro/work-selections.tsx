@@ -1,7 +1,8 @@
 'use client';
 import {ClientBulkApprove} from './round10-selections';
+import {SelectionsTrackerPro} from './selections-tracker-pro';
 
-import {useCallback,useEffect,useLayoutEffect,useMemo,useRef,useState,type FormEvent,type ReactNode} from 'react';
+import {useCallback,useEffect,useLayoutEffect,useRef,useState,type FormEvent,type ReactNode} from 'react';
 import {useLocale} from 'next-intl';
 import {useAuth} from '@/hooks/use-auth';
 import {useAppDialog} from '@/hooks/use-app-dialog';
@@ -258,7 +259,7 @@ function SelectionsSession({accountId,workId,onStateChange,onOpenClientView}:{ac
   {error&&<div role="alert" data-selection-error className="space-y-2 rounded-xl bg-[#fff4f2] p-3 text-sm text-[#8a2a1b]"><p>{error}</p>
    {uncertain&&<Button type="button" variant="secondary" disabled={saving} onClick={()=>pending.current&&void post(pending.current.url,pending.current.body,pending.current.notice)}>{c.retrySame}</Button>}
    {conflict&&<Button type="button" variant="secondary" disabled={loading||saving} onClick={()=>{setForm(null);setError('');void load();}}>{c.reload}</Button>}</div>}
-  {mode==='tracker'?<Tracker c={c} en={en} areas={detail.areas} items={items}/>:<div data-selections-board className="space-y-5">
+  {mode==='tracker'?<SelectionsTrackerPro accountId={accountId} workId={workId} en={en} areas={detail.areas} items={items} stateBadge={(state,wrap)=><StateBadge state={state} c={c} wrap={wrap}/>} onOpenBoard={()=>setMode('board')}/>:<div data-selections-board className="space-y-5">
    {formNode('area',null)}
    {!areas.length&&!(form?.kind==='area')&&<div data-selections-empty className="rounded-2xl border border-dashed border-[#d7e1ea] bg-[#f7f9fc] p-5 text-center"><p className="font-semibold text-[#162543]">{c.emptyAreas}</p><p className="mt-1 text-sm text-[#52627a]">{c.emptyAreasHelp}</p></div>}
    {areas.map(area=>{const areaItems=items.filter(item=>item.areaId===area.id);return <section key={area.id} data-selection-area={area.id} aria-label={area.name} className="space-y-3 rounded-2xl border border-[#d7e1ea] bg-[#f7f9fc] p-3 sm:p-4">
@@ -365,38 +366,6 @@ function OptionCard({c,en,option,recommended,approved,children}:{c:Copy;en:boole
  </div>;
 }
 
-function Tracker({c,en,areas,items}:{c:Copy;en:boolean;areas:SelectionArea[];items:SelectionItem[]}){
- const [state,setState]=useState<SelectionState|'all'>('all'),[area,setArea]=useState('all'),[overdue,setOverdue]=useState(false);
- const areaName=useMemo(()=>new Map(areas.map(row=>[row.id,row.name])),[areas]);
- const rows=items.filter(item=>(state==='all'||item.state===state)&&(area==='all'||item.areaId===area)&&(!overdue||item.overdue));
- const approvedOf=(item:SelectionItem)=>item.options.find(option=>option.id===item.approvedOptionId)??null;
- const usedAreas=areas.filter(row=>items.some(item=>item.areaId===row.id));
- return <div data-selections-tracker className="space-y-3">
-  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 sm:items-end">
-   <label className="block text-sm font-semibold">{c.filterState}<select data-tracker-filter="state" value={state} onChange={e=>setState(e.target.value as SelectionState|'all')} className={field}><option value="all">{c.all}</option>{(['no_options','draft','pending_client','approved','changes_requested'] as const).map(value=><option key={value} value={value}>{c.states[value]}</option>)}</select></label>
-   <label className="block text-sm font-semibold">{c.filterArea}<select data-tracker-filter="area" value={area} onChange={e=>setArea(e.target.value)} className={field}><option value="all">{c.all}</option>{usedAreas.map(row=><option key={row.id} value={row.id}>{row.name}</option>)}</select></label>
-   <label className="flex min-h-11 items-center gap-2 text-sm font-semibold"><input type="checkbox" data-tracker-filter="overdue" checked={overdue} onChange={e=>setOverdue(e.target.checked)} className="h-5 w-5 accent-[#0089bb]"/>{c.onlyOverdue}</label>
-  </div>
-  {!rows.length?<p data-tracker-empty className="rounded-2xl border border-dashed border-[#d7e1ea] bg-[#f7f9fc] p-5 text-center text-sm text-[#52627a]">{c.noRows}</p>:<>
-   <div className="hidden overflow-hidden rounded-2xl border border-[#d7e1ea] md:block">
-    <table className="w-full table-fixed text-left text-sm">
-     <thead className="bg-[#f7f9fc] text-xs font-bold uppercase tracking-wide text-[#52627a]"><tr><th className="w-[16%] px-3 py-2">{c.col.area}</th><th className="w-[20%] px-3 py-2">{c.col.item}</th><th className="w-[17%] px-3 py-2">{c.col.state}</th><th className="w-[19%] px-3 py-2">{c.col.option}</th><th className="w-[13%] px-3 py-2 text-right">{c.col.total}</th><th className="w-[15%] px-3 py-2">{c.col.due}</th></tr></thead>
-     <tbody>{rows.map(item=>{const approved=approvedOf(item);return <tr key={item.id} data-tracker-row={item.id} className="border-t border-[#e5e7eb] align-top">
-      <td className="break-words px-3 py-2 text-[#52627a]">{areaName.get(item.areaId)??c.none}</td><td className="break-words px-3 py-2 font-semibold text-[#162543]">{item.name}</td>
-      <td className="px-3 py-2"><StateBadge state={item.state} c={c} wrap/></td><td className="break-words px-3 py-2">{approved?.name??c.none}</td>
-      <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums">{approved?money(approved.totalCents):c.none}</td>
-      <td className="px-3 py-2">{item.dueDate?day(item.dueDate,en):c.none}{item.overdue&&<span data-tracker-overdue className="mt-1 block text-xs font-semibold text-[#8a2a1b]">{c.pastDue}</span>}</td>
-     </tr>;})}</tbody>
-    </table>
-   </div>
-   <ul className="space-y-2 md:hidden">{rows.map(item=>{const approved=approvedOf(item);return <li key={item.id} data-tracker-card={item.id} className="space-y-1 rounded-xl border border-[#d7e1ea] bg-white p-3 text-sm">
-    <div className="flex flex-wrap items-start justify-between gap-2"><p className="min-w-0 break-words font-semibold text-[#162543]">{item.name}<span className="font-normal text-[#52627a]"> · {areaName.get(item.areaId)??c.none}</span></p><StateBadge state={item.state} c={c}/></div>
-    <p className="break-words"><span className="text-[#52627a]">{c.col.option}: </span>{approved?`${approved.name} · ${money(approved.totalCents)}`:c.none}</p>
-    <p><span className="text-[#52627a]">{c.col.due}: </span>{item.dueDate?day(item.dueDate,en):c.none}{item.overdue&&<span data-tracker-overdue className="font-semibold text-[#8a2a1b]"> · {c.pastDue}</span>}</p>
-   </li>;})}</ul>
-  </>}
- </div>;
-}
 
 function AreaForm({c,form,busy,saving,onChange,onSubmit,onCancel}:{c:Copy;form:Extract<Form,{kind:'area'}>;busy:boolean;saving:boolean;onChange:(draft:AreaDraft)=>void;onSubmit:(event:FormEvent)=>void;onCancel:()=>void}){
  return <form data-selection-form="area" onSubmit={onSubmit} className="space-y-3 rounded-2xl border border-[#0089bb] bg-[#f7fbfd] p-4">
