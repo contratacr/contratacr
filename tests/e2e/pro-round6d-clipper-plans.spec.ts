@@ -93,7 +93,8 @@ for(const language of ['es','en'] as const)test(`Round 6D: product clipper and f
   await plans.locator('[data-floor-scan-input]').setInputFiles({name:'cuarto.usdz',mimeType:'model/vnd.usdz+zip',buffer:Buffer.concat([local,entry,payload,central,entry,eocd])});
   await expect(plans.locator('[data-floor-scan-note]').first()).toContainText(t('SIMULADO','SIMULATED'),{timeout:60000});await plans.locator('[data-floor-scan-import]').click();
   await expect(plans.locator('[data-floor-scan-note]').first()).toContainText(t('SIMULADO','SIMULATED'),{timeout:60000});
-  const scans=(await f.db.from('pro_room_scans').select('format,parser').eq('owner_id',f.owner.id).order('created_at')).data!;expect(scans).toEqual([{format:'obj',parser:'local'},{format:'usdz',parser:'simulado'}]);
+  // The note is already visible before the import request finishes, so wait for the stored row instead of reading it once.
+  await expect.poll(async()=>(await f.db.from('pro_room_scans').select('format,parser').eq('owner_id',f.owner.id).order('created_at')).data,{timeout:30000}).toEqual([{format:'obj',parser:'local'},{format:'usdz',parser:'simulado'}]);
   await expectNoHorizontalOverflow(page);await plans.scrollIntoViewIfNeeded();await shot(page,`r6d-floor-scan-${language}`,project);
   expect(errors()).toEqual([]);
  }finally{await f.cleanup();}

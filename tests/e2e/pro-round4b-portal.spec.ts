@@ -46,7 +46,7 @@ for(const language of ['es','en'] as const)test(`Round 4B portal: vendor attachm
   await expect(section).toContainText(en?'Only the professional who invited you sees them.':'Solo los ve el profesional que lo invitó.');
   // Nothing about awards in the vendor view before a decision.
   const before=await (await v1Context.request.get(origin+portal)).json() as {attachments:Extras};
-  expect(before.attachments).toEqual({canAttach:true,files:[],outcome:null});expect(JSON.stringify(before)).not.toMatch(/award|Maderas/);
+  expect(before.attachments).toEqual({canAttach:true,canAsk:true,questions:[],files:[],outcome:null});expect(JSON.stringify(before)).not.toMatch(/award|Maderas/);
   // Upload through the real control: a PDF and a PNG photo (saved as JPG).
   const input=section.getByLabel(en?'Add attachment':'Agregar adjunto');
   await input.setInputFiles({name:'cotización-ferretería.pdf',mimeType:'application/pdf',buffer:PDF});
