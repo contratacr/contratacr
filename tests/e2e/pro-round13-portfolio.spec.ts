@@ -50,6 +50,6 @@ for(const language of ['es','en'] as const)test(`Round 13: portfolio publication
   // A job that is not finished cannot be published, and another account cannot read this portfolio.
   await f.db.from('pro_work').update({stage:'scheduled'}).eq('user_id',f.owner.id).eq('id',f.workId).throwOnError();
   expect((await page.request.post(api,{headers:h,data:body()})).status()).toBe(400);
-  expect(errors).toEqual([]);
+  expect(errors()).toEqual([]);
  }finally{await f.cleanup();}
 });

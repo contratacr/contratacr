@@ -58,6 +58,6 @@ for(const language of ['es','en'] as const)test(`Round 13: help center, training
   // Validation and the open-ticket cap.
   expect((await page.request.post(origin+'/api/pro/company-support',{headers:h,data:{subject:'x',message:'hola',priority:'normal'}})).status()).toBe(400);
   expect((await page.request.post(origin+'/api/pro/company-support',{headers:h,data:{subject:'Asunto válido',message:'Mensaje válido',priority:'high'}})).status()).toBe(400);
-  expect(errors).toEqual([]);
+  expect(errors()).toEqual([]);
  }finally{await f.cleanup();}
 });

@@ -46,6 +46,6 @@ for(const language of ['es','en'] as const)test(`Round 13: payment link QR, down
   await expectNoHorizontalOverflow(page);
   // After a reload the secret link (and its QR) is not shown again: only the hash is stored.
   await page.reload();await expect(panel.locator('[data-payment-link="active"]')).toBeVisible({timeout:90000});await expect(panel.locator('[data-payment-link-qr]')).toHaveCount(0);
-  expect(errors).toEqual([]);
+  expect(errors()).toEqual([]);
  }finally{await f.cleanup();}
 });
