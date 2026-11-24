@@ -8,10 +8,13 @@ for(const locale of ['es','en'])test(`Public profile routes preserve the profile
  await stabilizeLocalProRuntime(page.context(),baseURL!);
  test.setTimeout(120000);
  expect(process.env.NEXT_PUBLIC_SUPABASE_URL).toBe('http://127.0.0.1:54321');
- const actor=await createDisposableAccount({prefix:'profile-routes'}),db=regressionAdminClient(),slug='profile-routes-'+actor.id,name='Perfil de rutas local '+locale;
+ const actor=await createDisposableAccount({prefix:'profile-routes'}),db=regressionAdminClient(),name='Perfil de rutas local '+locale;
  try{
   expect((await db.from('profiles').update({role:'professional',is_provider:true}).eq('id',actor.id)).error).toBeNull();
-  expect((await db.from('professionals').insert({profile_id:actor.id,category_id:'desarrollo_web',business_name:name,slug,whatsapp:'',provincia_id:'al',canton_id:'al-at',verification_status:'pending',is_available:true,is_banned:false})).error).toBeNull();
+  // A database trigger derives the public slug from the trade name; read it back instead of assuming the one inserted.
+  const created=await db.from('professionals').insert({profile_id:actor.id,category_id:'desarrollo_web',business_name:name,slug:'profile-routes-'+actor.id,whatsapp:'',provincia_id:'al',canton_id:'al-at',verification_status:'pending',is_available:true,is_banned:false}).select('slug').single();
+  expect(created.error).toBeNull();
+  const slug=created.data!.slug as string;
   const prefix=locale==='en'?'/en':'';
   for(const path of [`/${locale}/profesionales/${slug}`,`${prefix}/${slug}`,`${prefix}/@${slug}`]){
    await page.goto(path+'?routingProbe=preserved');
