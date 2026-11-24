@@ -7,6 +7,7 @@ import {useWorkMessagesUnread} from './work-messages';
 import {useProSearchParams} from './use-pro-search-params';
 import {JobChecklistSummary} from './job-checklist-summary';
 import {WorkTasksSummary} from './work-tasks';
+import {WorkUpcoming} from './work-upcoming';
 import {WorkUpdatesSummary} from './work-updates';
 import {WorkActivity,WorkActivitySummary} from './work-activity';
 
@@ -63,7 +64,8 @@ export function JobWorkspace({aside,files,subs,overview,summary,contracts,estima
   {(notes!=null||details!=null)&&<div data-job-workspace-header role="group" aria-label={en?'Project log and details':'Bitácora y detalles del proyecto'} className="flex flex-wrap justify-end gap-2">
    {(['notes','details'] as View[]).filter(view=>available.includes(view)).map(view=><button key={view} type="button" aria-current={view===active?'page':undefined} aria-controls={`${id}-${view}`} disabled={blocked&&view!==active} onClick={()=>pushProParams({vistaTrabajo:view===active?null:view})} className={`min-h-11 min-w-0 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors disabled:opacity-50 ${view===active?'border-[#008bb5] bg-white text-[#008bb5] shadow-sm':'border-[#d7e1ea] bg-white text-[#52627a] hover:text-[#162543]'}`}>{labels[view]}</button>)}
   </div>}
-  {views.map(view=>(visited.has(view)||view===active)&&<div key={view} id={`${id}-${view}`} hidden={view!==active} role="region" aria-label={labels[view]}>{view==='summary'?<div className="space-y-4">{overview}{active==='summary'&&workId&&tasks!=null&&<WorkTasksSummary workId={workId} blocked={blocked}/>}
+  {views.map(view=>(visited.has(view)||view===active)&&<div key={view} id={`${id}-${view}`} hidden={view!==active} role="region" aria-label={labels[view]}>{view==='summary'?<div className="space-y-4">{overview}{active==='summary'&&workId&&schedule!=null&&<WorkUpcoming workId={workId} blocked={blocked}/>}
+{active==='summary'&&workId&&tasks!=null&&<WorkTasksSummary workId={workId} blocked={blocked}/>}
 {active==='summary'&&workId&&updates!=null&&<WorkUpdatesSummary workId={workId} blocked={blocked}/>}
 {active==='summary'&&workId&&overview!=null&&<WorkActivitySummary workId={workId} blocked={blocked}/>}
 {active==='summary'&&workId&&delivery!=null&&<JobChecklistSummary workId={workId} blocked={blocked} hideEmpty={tasks!=null}/>}{panels[view]}</div>:panels[view]}</div>)}

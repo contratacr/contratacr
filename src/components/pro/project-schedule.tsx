@@ -10,6 +10,8 @@ import {workScheduleMutationSchema,workScheduleResultSchema,workTimelineTaskCrea
 import {daysFromPixels,dependencyIssues,keyEdit,matchesAssignee,shiftPeriod,undoState,UNASSIGNED,wouldCreateCycle,type GanttEditMode} from '@/lib/pro/gantt-edit';
 import {useProChildGuard} from './use-pro-child-guard';
 import {EstimateScheduleAction} from './estimate-schedule';
+import {ScheduleCalendar} from './schedule-calendar';
+import {matchesStatus,statusFilters,type StatusFilter} from '@/lib/pro/schedule-views';
 import {WorkCalendarPanel} from './work-calendar-panel';
 import {adjustPeriodToWorkingDays,isWorkingDay,workingDaysBetween,type WorkCalendar} from '@/lib/pro/work-calendar';
 
@@ -26,7 +28,7 @@ const api='/api/pro/project-schedule',planApi='/api/pro/work-schedule',tasksApi=
 const field='mt-1 block min-h-11 w-full min-w-0 max-w-full appearance-none rounded-xl border border-[#d7e1ea] bg-white px-3 py-2 text-base font-normal';
 type StateCallback={onStateChange?:(state:{dirty:boolean;busy:boolean})=>void};
 type Scale='day'|'week'|'month';
-type Mode='gantt'|'list';
+type Mode='gantt'|'list'|'calendar';
 const dayWidth:Record<Scale,number>={day:32,week:14,month:6};
 // Round 2: a middle row in the header holds the «Hoy» flag, so it no longer covers the month name.
 const rowHeight=44,headerHeight=68;
@@ -48,7 +50,7 @@ const readOnlyRole=()=>document.documentElement.dataset.proRole==='read_only';
 function copy(en:boolean){
  return en?{
   title:'Schedule',intro:'Timeline of the job with its phases, tasks and key dates. Drag a bar to move it or its edges to change the dates, or open it to edit the dates; nothing is sent to anyone.',introReadOnly:'Timeline of the job with its phases, tasks and key dates. Read-only: you cannot change the schedule.',
-  gantt:'Gantt',list:'List',viewLabel:'Schedule view',scaleLabel:'Time scale',day:'Days',week:'Weeks',month:'Months',today:'Today',todayMarker:'Today',
+  gantt:'Gantt',list:'List',calendar:'Calendar',viewLabel:'Schedule view',scaleLabel:'Time scale',day:'Days',week:'Weeks',month:'Months',today:'Today',todayMarker:'Today',
   period:'Planned period',noPeriod:'No planned dates yet',baseline:'Baseline',noBaseline:'No baseline saved. Save one to compare later changes.',comparing:(t:string,d:string)=>`Comparing with "${t}" (${d})`,
   saveBaseline:'Save baseline',baselineTitle:'Baseline name',baselineHelp:'Stores an unchangeable copy of today’s planned dates. Later changes show as days late or early.',baselineDefault:(d:string)=>`Baseline ${d}`,
   confirmBaseline:'Save copy of dates',cancel:'Cancel',saving:'Saving…',baselineSaved:'Baseline saved.',history:'Saved baselines',
@@ -75,7 +77,7 @@ function copy(en:boolean){
   readOnly:'Read-only',dragging:(a:string,b:string)=>`${a} – ${b}`,
  }:{
   title:'Cronograma',intro:'Línea de tiempo del trabajo con sus fases, tareas y fechas clave. Arrastre una barra para moverla o sus bordes para cambiar las fechas, o ábrala para editar las fechas; no se envía nada a nadie.',introReadOnly:'Línea de tiempo del trabajo con sus fases, tareas y fechas clave. Solo lectura: usted no puede cambiar el cronograma.',
-  gantt:'Gantt',list:'Lista',viewLabel:'Vista del cronograma',scaleLabel:'Escala de tiempo',day:'Días',week:'Semanas',month:'Meses',today:'Hoy',todayMarker:'Hoy',
+  gantt:'Gantt',list:'Lista',calendar:'Calendario',viewLabel:'Vista del cronograma',scaleLabel:'Escala de tiempo',day:'Días',week:'Semanas',month:'Meses',today:'Hoy',todayMarker:'Hoy',
   period:'Período previsto',noPeriod:'Todavía no hay fechas previstas',baseline:'Línea base',noBaseline:'No hay línea base guardada. Guarde una para comparar los cambios posteriores.',comparing:(t:string,d:string)=>`Comparando con "${t}" (${d})`,
   saveBaseline:'Guardar línea base',baselineTitle:'Nombre de la línea base',baselineHelp:'Guarda una copia que no se puede modificar de las fechas previstas de hoy. Los cambios posteriores se muestran como días de atraso o de adelanto.',baselineDefault:(d:string)=>`Línea base ${d}`,
   confirmBaseline:'Guardar copia de fechas',cancel:'Cancelar',saving:'Guardando…',baselineSaved:'Línea base guardada.',history:'Líneas base guardadas',
@@ -136,7 +138,7 @@ function ScheduleSession({accountId,workId,onStateChange}:{accountId:string;work
  const [saving,setSaving]=useState(false),[uncertain,setUncertain]=useState(false),[conflict,setConflict]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
  // Gap 13: Gantt editing state.
  const [preview,setPreview]=useState<Preview|null>(null),[lastChange,setLastChange]=useState<LastChange|null>(null),[warning,setWarning]=useState<Warning|null>(null),[creating,setCreating]=useState<Creating|null>(null),[createError,setCreateError]=useState('');
- const [filter,setFilter]=useState(''),[assigned,setAssigned]=useState<Assigned>({map:{},names:{},members:[]}),[assignToken,setAssignToken]=useState(0);
+ const [statusFilter,setStatusFilter]=useState<StatusFilter>('all'),[filter,setFilter]=useState(''),[assigned,setAssigned]=useState<Assigned>({map:{},names:{},members:[]}),[assignToken,setAssignToken]=useState(0);
  const active=useRef(true),sequence=useRef(0),pending=useRef<Pending|null>(null),lock=useRef(false),sectionRef=useRef<HTMLElement|null>(null);
  const dirty=!!editor&&isEditorDirty(editor)||baselineDraft!==null||!!warning||!!creating&&!!creating.title.trim(),busy=saving||uncertain;
  useProChildGuard(!onStateChange&&(dirty||busy),useCallback(()=>setError(c.leave),[c.leave]));
@@ -282,7 +284,7 @@ function ScheduleSession({accountId,workId,onStateChange}:{accountId:string;work
  if(loading&&!data)return <p role="status" className="text-sm text-[#52627a]">{c.loading}</p>;
  if(loadError&&!data)return <div role="alert" data-schedule-error className="space-y-2 rounded-2xl border border-[#d7e1ea] bg-white p-4"><p className="text-sm">{c.loadError}</p><Button type="button" variant="secondary" disabled={loading} onClick={()=>void load()}>{c.retry}</Button></div>;
  if(!data)return null;
- const visible=(t:GanttTask)=>matchesAssignee(t.id,assigned.map,filter);
+ const visible=(t:GanttTask)=>matchesAssignee(t.id,assigned.map,filter)&&matchesStatus(t,statusFilter);
  const scheduled=data.tasks.filter(t=>t.plannedStart&&t.plannedEnd),unscheduled=data.tasks.filter(t=>!t.plannedStart&&visible(t));
  const titles=new Map(data.tasks.map(t=>[t.id,t.title]));
  const empty=!scheduled.length&&!data.milestones.length&&!(canEdit&&data.phases.length);
@@ -297,7 +299,7 @@ function ScheduleSession({accountId,workId,onStateChange}:{accountId:string;work
    <div data-schedule-baseline className="rounded-2xl border border-[#d7e1ea] bg-white p-3 text-sm"><p className="text-xs font-semibold uppercase tracking-wide text-[#52627a]">{c.baseline}</p>{data.baseline?<><p className="mt-1 break-words text-[#162543]">{c.comparing(data.baseline.title,new Date(data.baseline.capturedAt).toLocaleDateString(en?'en-US':'es-CR',{timeZone:'America/Costa_Rica',dateStyle:'medium'}))}</p><p className="mt-1 flex flex-wrap items-center gap-2"><span className="text-[#52627a]">{c.projectVariance}:</span><VarianceBadge days={data.endVarianceDays} c={c}/></p></>:<p className="mt-1 text-[#52627a]">{c.noBaseline}</p>}</div>
   </div>
   <div className="flex min-w-0 flex-wrap items-center gap-2">
-   <div role="group" aria-label={c.viewLabel} className="inline-grid grid-cols-2 gap-1 rounded-2xl bg-[#e9eff5] p-1">{(['gantt','list'] as const).map(value=><button key={value} type="button" data-schedule-mode={value} aria-pressed={mode===value} onClick={()=>setMode(value)} className={`min-h-11 rounded-xl px-4 text-sm font-semibold ${mode===value?'bg-white text-[#008bb5] shadow-sm':'text-[#52627a]'}`}>{c[value]}</button>)}</div>
+   <div role="group" aria-label={c.viewLabel} className="inline-grid grid-cols-3 gap-1 rounded-2xl bg-[#e9eff5] p-1">{(['gantt','list','calendar'] as const).map(value=><button key={value} type="button" data-schedule-mode={value} aria-pressed={mode===value} onClick={()=>setMode(value)} className={`min-h-11 rounded-xl px-4 text-sm font-semibold ${mode===value?'bg-white text-[#008bb5] shadow-sm':'text-[#52627a]'}`}>{c[value]}</button>)}</div>
    {mode==='gantt'&&!empty&&<div role="group" aria-label={c.scaleLabel} className="inline-grid grid-cols-3 gap-1 rounded-2xl bg-[#e9eff5] p-1">{(['day','week','month'] as const).map(value=><button key={value} type="button" data-schedule-scale={value} aria-pressed={scale===value} onClick={()=>setScale(value)} className={`min-h-11 rounded-xl px-3 text-sm font-semibold ${scale===value?'bg-white text-[#008bb5] shadow-sm':'text-[#52627a]'}`}>{c[value]}</button>)}</div>}
    {mode==='gantt'&&!empty&&<Button type="button" variant="secondary" className="min-h-11" onClick={scrollToday}>{c.today}</Button>}
    {canEdit&&<Button type="button" data-schedule-baseline-open data-pro-write="work.write" className="min-h-11 sm:ml-auto" disabled={!idle||empty||!scheduled.length&&!data.milestones.length} onClick={()=>{setBaselineDraft(c.baselineDefault(fmt(data.today,en)));setError('');setNotice('');}}>{c.saveBaseline}</Button>}
@@ -308,7 +310,8 @@ function ScheduleSession({accountId,workId,onStateChange}:{accountId:string;work
     <Button type="button" data-gantt-new="phase" data-pro-write="work.write" variant="secondary" className="min-h-11" disabled={!idle} onClick={()=>openCreate('phase')}>{c.newPhase}</Button>
     <Button type="button" data-gantt-undo data-pro-write="work.write" variant="secondary" className="min-h-11" disabled={!lastChange||!idle} aria-label={lastChange?c.undoLabel(undoText):c.undo} title={lastChange?c.undoLabel(undoText):undefined} onClick={undo}>{c.undo}</Button>
     <EstimateScheduleAction workId={workId} accountId={accountId} disabled={!idle} onApplied={message=>{void load().then(()=>setNotice(message));}}/></>}
-   {!!data.tasks.length&&<label className="block min-w-0 text-sm font-semibold sm:ml-auto">{c.filter}<select data-gantt-assignee-filter value={filter} onChange={event=>setFilter(event.target.value)} className={field+' sm:min-w-[12rem]'}><option value="">{c.everyone}</option><option value={UNASSIGNED}>{c.unassigned}</option>{filterOptions.map(o=><option key={o.id} value={o.id}>{o.name}</option>)}</select></label>}
+   {!!data.tasks.length&&<label className="block min-w-0 text-sm font-semibold sm:ml-auto">{en?'Status':'Estado'}<select data-schedule-status-filter value={statusFilter} onChange={event=>setStatusFilter(event.target.value as StatusFilter)} className={field+' sm:min-w-[10rem]'}>{statusFilters.map(v=><option key={v} value={v}>{v==='all'?(en?'All items':'Todos'):v==='open'?(en?'Open':'Abiertos'):(en?'Completed':'Completados')}</option>)}</select></label>}
+   {!!data.tasks.length&&<label className="block min-w-0 text-sm font-semibold">{c.filter}<select data-gantt-assignee-filter value={filter} onChange={event=>setFilter(event.target.value)} className={field+' sm:min-w-[12rem]'}><option value="">{c.everyone}</option><option value={UNASSIGNED}>{c.unassigned}</option>{filterOptions.map(o=><option key={o.id} value={o.id}>{o.name}</option>)}</select></label>}
   </div>
   <p data-schedule-share className="flex flex-wrap items-center gap-2 text-sm text-[#52627a]"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${data.showSchedule?'bg-[#eaf5fb] text-[#006e90]':'bg-[#eef2f6] text-[#52627a]'}`}>{data.showSchedule?c.shared:c.notShared}</span>{canEdit&&<button type="button" data-pro-write="work.write" disabled={dirty||busy} onClick={()=>pushProParams({vistaTrabajo:'client'})} className="min-h-11 font-semibold text-[#008bb5] underline-offset-2 hover:underline disabled:opacity-50">{c.configureShare}</button>}</p>
   {linkFrom&&<div role="status" data-gantt-link-banner className="flex flex-wrap items-center gap-2 rounded-xl border border-[#0089bb] bg-[#f7fbfd] p-3 text-sm"><span className="min-w-0 flex-1">{c.linkBanner(linkFrom.title)}</span><Button type="button" variant="secondary" className="min-h-11" onClick={()=>setLinkFrom(null)}>{c.linkCancel}</Button></div>}
@@ -325,7 +328,8 @@ function ScheduleSession({accountId,workId,onStateChange}:{accountId:string;work
   {editor&&<EditorForm editor={editor} data={data} c={c} en={en} calendar={calendar} busy={busy} saving={saving} titles={titles} onChange={setEditor} onSubmit={submitEditor} onCancel={()=>{setEditor(null);setError('');}}/>}
   {mode==='gantt'&&canEdit&&!empty&&<p id={edit.helpId} data-gantt-help className="text-xs text-[#52627a]">{c.help}</p>}
   {empty?<div data-schedule-empty className="space-y-2 rounded-2xl border border-dashed border-[#c9d6e2] bg-[#f7f9fc] p-5 text-sm"><p className="font-semibold text-[#162543]">{c.emptyTitle}</p><p className="text-[#52627a]">{c.empty}</p><Button type="button" variant="secondary" disabled={dirty||busy} onClick={()=>pushProParams({vistaTrabajo:'tasks',vistaTareas:'plan'})}>{c.openPlan}</Button></div>
-   :mode==='gantt'?<GanttChart data={data} scale={scale} c={c} en={en} calendar={calendar} disabled={blockedChart} critical={critical} visible={visible} filtered={!!filter} edit={edit} onTask={canEdit?openTask:undefined} onMilestone={canEdit?openMilestone:undefined}/>
+   :mode==='gantt'?<GanttChart data={data} scale={scale} c={c} en={en} calendar={calendar} disabled={blockedChart} critical={critical} visible={visible} filtered={!!filter||statusFilter!=='all'} edit={edit} onTask={canEdit?openTask:undefined} onMilestone={canEdit?openMilestone:undefined}/>
+   :mode==='calendar'?<ScheduleCalendar data={data} en={en} disabled={blockedChart} visible={visible} onTask={canEdit?openTask:undefined} onMilestone={canEdit?openMilestone:undefined}/>
    :<ScheduleList data={data} c={c} en={en} disabled={blockedChart} titles={titles} visible={visible} onTask={canEdit?openTask:undefined} onMilestone={canEdit?openMilestone:undefined}/>}
   {!!unscheduled.length&&<section data-schedule-unscheduled className="space-y-2 rounded-2xl border border-[#d7e1ea] bg-white p-4"><h4 className="font-semibold text-[#162543]">{c.unscheduled} ({unscheduled.length})</h4><ul className="divide-y divide-[#eef2f6]">{unscheduled.map(task=><li key={task.id} className="flex min-w-0 flex-wrap items-center justify-between gap-2 py-2"><span className="min-w-0 break-words text-sm">{task.title}{task.status==='done'&&<span className="ml-2 text-xs text-[#18573a]">{c.done}</span>}</span>{canEdit&&<Button type="button" data-pro-write="work.write" variant="secondary" size="sm" className="min-h-11" disabled={!idle} onClick={()=>openTask(task)}>{c.schedule}</Button>}</li>)}</ul></section>}
   {data.baselines.length>1&&<details className="rounded-2xl border border-[#d7e1ea] bg-white p-3 text-sm"><summary className="min-h-11 cursor-pointer py-2 font-semibold">{c.history} ({data.baselines.length})</summary><ol className="mt-2 space-y-1">{data.baselines.map(b=><li key={b.id} className="break-words text-[#52627a]"><span className="font-semibold text-[#162543]">{b.title}</span> · {new Date(b.capturedAt).toLocaleString(en?'en-US':'es-CR',{timeZone:'America/Costa_Rica',dateStyle:'medium',timeStyle:'short'})}</li>)}</ol></details>}
