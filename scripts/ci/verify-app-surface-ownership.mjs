@@ -45,6 +45,8 @@ const pageRules = [
   [/^\/\[locale\]\/eventos$/, "pro-dir-events.spec.ts"],
   [/^\/\[locale\]\/marca\/\[slug\]$/, "pro-dir-brands.spec.ts"],
   [/^\/\[locale\]\/(?:listas|lista\/\[token\])$/, "pro-dir-lists.spec.ts"],
+  // Directory app Me tab (WS4): /yo.
+  [/^\/\[locale\]\/yo$/, "directory-app-me-lists.spec.ts"],
   // Pending fixes round (2026-11-17): the customer's private reservation link and «Mis reservas».
   [/^\/\[locale\]\/(?:reserva\/\[token\]|mis-reservas)$/, "pro-dir-reservations.spec.ts"],
   [/^\/\[locale\]\/(?:restaurantes|farmacias|supermercados|gasolineras|como-ordenamos)$/, "pro-dir-search.spec.ts"],
