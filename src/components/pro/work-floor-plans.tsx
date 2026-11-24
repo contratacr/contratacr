@@ -8,6 +8,7 @@ import {SCAN_MAX_BYTES,scanFormatOf,type ScanMeasures,type ScanUnit,type ScanUpA
 import type {FloorLibraryItem} from '@/lib/pro/floor-library';
 import {floorPlanObj,walkStart,walkStep,walkthroughFaces,type WalkCamera} from '@/lib/pro/floor-walk';
 import {FloorObjectLibrary} from './floor-object-library';
+import {floorTemplate,floorTemplateKeys,floorTemplateName,type FloorTemplateKey} from '@/lib/pro/floor-templates';
 import {nativeRoomScanAvailable,RoomScan} from '@/lib/pro/room-scan-native';
 import {takeoffColors} from '@/lib/pro/takeoffs';
 
@@ -75,6 +76,21 @@ export function WorkFloorPlans({workId}:{workId:string}){
   if(result){setDirty(false);await load(result.plan.id);}
  }
  async function newPlan(){if(dirty&&!(await confirm({title:t('¿Descartar cambios?','Discard changes?'),description:t('Los cambios sin guardar se perderán.','Unsaved changes will be lost.'),confirmLabel:t('Descartar','Discard'),cancelLabel:t('Cancelar','Cancel')})).confirmed)return;setPlanId(null);setName(t('Planta principal','Main floor'));setContent(emptyFloorPlan());markDirty();setSelected(null);history.current=[];}
+ /** Row 15: start from a room template (nothing is saved until the owner presses Save). */
+ async function startFromTemplate(key:FloorTemplateKey){if(dirty&&!(await confirm({title:t('¿Descartar cambios?','Discard changes?'),description:t('Los cambios sin guardar se perderán.','Unsaved changes will be lost.'),confirmLabel:t('Descartar','Discard'),cancelLabel:t('Cancelar','Cancel')})).confirmed)return;setPlanId(null);setName(floorTemplateName(key,en));setContent(floorTemplate(key,unit,en));markDirty();setSelected(null);setView3d(false);history.current=[];setNotice(t('Plantilla cargada. Ajuste las medidas y guarde el plano.','Template loaded. Adjust the measurements and save the plan.'));}
+ /** Row 15: duplicate the open plan as a new one (same content, new name). */
+ async function duplicatePlan(){
+  if(!plan||dirty)return;const copyName=(t('Copia de ','Copy of ')+plan.name).slice(0,120);
+  const result=await api({action:'create',actionId:crypto.randomUUID(),id:crypto.randomUUID(),workId,name:copyName,unit:plan.unit,content:plan.content},t('Plano duplicado.','Plan duplicated.'));
+  if(result)await load(result.plan.id);
+ }
+ /** Row 15: print the plan (hidden frame, no pop-up) from the same SVG used for the exports. */
+ function printPlan(){
+  const frame=document.createElement('iframe');frame.setAttribute('aria-hidden','true');frame.style.cssText='position:fixed;width:0;height:0;border:0;right:0;bottom:0';
+  frame.srcdoc='<!doctype html><meta charset="utf-8"><title>'+(name||t('Plano','Plan')).replace(/[<>&]/g,'')+'</title><style>@page{margin:12mm}body{margin:0}svg{width:100%;height:auto}</style>'+floorPlanSvg({name:name||t('Plano','Plan'),unit,content},en);
+  frame.onload=()=>{try{frame.contentWindow?.focus();frame.contentWindow?.print();}catch{setError(t('No se pudo imprimir.','Could not print.'));}setTimeout(()=>frame.remove(),60000);};
+  document.body.append(frame);
+ }
  // ---- pointer editing in plan units
  const b=bounds(content),viewMin:Point=[Math.min(b.minX,0)-1,Math.min(b.minY,0)-1],viewSize:Point=[Math.max(b.maxX-viewMin[0]+1,12)/zoom,Math.max(b.maxY-viewMin[1]+1,8)/zoom];
  const toPlan=(event:ReactPointerEvent<SVGSVGElement>):Point=>{const svg=svgRef.current!,pt=svg.createSVGPoint();pt.x=event.clientX;pt.y=event.clientY;const m=svg.getScreenCTM();const p=m?pt.matrixTransform(m.inverse()):pt;return [round3(snap(p.x,grid)),round3(snap(p.y,grid))];};
@@ -178,6 +194,11 @@ export function WorkFloorPlans({workId}:{workId:string}){
     <label className={'inline-flex min-h-11 cursor-pointer items-center rounded-full border border-[#d7e1ea] bg-white px-4 text-sm font-semibold '+(busy?'pointer-events-none opacity-50':'')}>{t('Importar escaneo','Import scan')}<input type="file" data-floor-scan-input accept=".json,.obj,.usdz,application/json,model/obj,model/vnd.usdz+zip" className="sr-only" disabled={busy} onChange={e=>{const f=e.target.files?.[0];e.target.value='';if(f)void previewScan(f,'m','y');}}/></label>
     {native&&<Button type="button" variant="secondary" data-floor-native-scan disabled={busy} onClick={()=>void nativeScan()}>{t('Escanear con el teléfono','Scan with the phone')}</Button>}</div></div>
   <p className="text-sm text-[#52627a]">{t('Dibuje paredes, puertas, ventanas y ambientes; el área y el perímetro se calculan solos. Es un dibujo de referencia para cotizar, no un plano estructural.','Draw walls, doors, windows and rooms; area and perimeter are computed automatically. It is a reference drawing for quoting, not a structural plan.')}</p>
+  <details data-floor-templates open={!editing} className="rounded-xl border border-[#e3eaf0] p-3"><summary className="cursor-pointer text-sm font-semibold text-[#007aa0]">{t('Empezar desde una plantilla','Start from a template')}</summary>
+   <p className="mt-2 text-xs text-[#52627a]">{t('Cada plantilla trae paredes, una puerta, una ventana y el mobiliario habitual; ajústela a las medidas reales.','Each template comes with walls, a door, a window and the usual furniture; adjust it to the real measurements.')}</p>
+   <ul className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">{floorTemplateKeys.map(key=><li key={key}><button type="button" data-floor-template={key} disabled={busy} onClick={()=>void startFromTemplate(key)} className="min-h-11 w-full rounded-xl border border-[#d7e1ea] bg-white px-3 py-2 text-sm font-semibold text-[#162543] hover:border-[#008bb5] disabled:opacity-50">{floorTemplateName(key,en)}</button></li>)}</ul></details>
+  {active.length>0&&<details data-floor-list className="rounded-xl border border-[#e3eaf0] p-3"><summary className="cursor-pointer text-sm font-semibold text-[#007aa0]">{t(`Mis planos (${active.length})`,`My floor plans (${active.length})`)}</summary>
+   <ul className="mt-2 space-y-1">{active.map(p=><li key={p.id} data-floor-list-item={p.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-[#f7f9fc] p-2 text-sm"><span className="min-w-0 break-words"><strong>{p.name}</strong><span className="block text-xs text-[#52627a]">{t('Última modificación','Last modified')}: {new Intl.DateTimeFormat(en?'en-US':'es-CR',{dateStyle:'long',timeZone:'America/Costa_Rica'}).format(new Date(p.updatedAt))}</span></span><Button type="button" size="sm" variant="secondary" className="min-h-11" disabled={busy||p.id===planId} onClick={()=>void load(p.id)}>{p.id===planId?t('Abierto','Current'):t('Abrir','Open')}</Button></li>)}</ul></details>}
   {pendingScan&&<div data-floor-scan-preview className="space-y-2 rounded-xl border border-[#d7e1ea] bg-[#f7fafc] p-3 text-sm">
    <p className="font-semibold">{t('Escaneo: ','Scan: ')}{pendingScan.file.name}</p>
    {scanFormatOf(pendingScan.file.name)!=='json'&&<div className="flex flex-wrap items-center gap-2"><label>{t('Unidad del archivo','File unit')} <select data-floor-scan-unit className="min-h-11 rounded-xl border border-[#d7e1ea] px-2" value={pendingScan.unit} disabled={busy} onChange={e=>void previewScan(pendingScan.file,e.target.value as ScanUnit,pendingScan.upAxis)}>{(['m','cm','mm','in','ft'] as const).map(u=><option key={u} value={u}>{u}</option>)}</select></label>
@@ -259,6 +280,8 @@ export function WorkFloorPlans({workId}:{workId:string}){
     <div className="flex flex-wrap content-start gap-2">
      <Button type="button" data-floor-save disabled={busy||!dirty} onClick={()=>void save()}>{busy?t('Guardando…','Saving…'):t('Guardar plano','Save plan')}</Button>
      <Button type="button" variant="secondary" data-floor-png disabled={busy} onClick={()=>void exportPng()}>{t('Exportar PNG','Export PNG')}</Button>
+     <Button type="button" variant="secondary" data-floor-print disabled={busy||!content.walls.length} onClick={printPlan}>{t('Imprimir','Print')}</Button>
+     <Button type="button" variant="secondary" data-floor-duplicate disabled={busy||!plan||dirty} onClick={()=>void duplicatePlan()}>{t('Duplicar plano','Duplicate plan')}</Button>
      <Button type="button" variant="secondary" data-floor-pdf disabled={busy} onClick={exportPdf}>{t('Exportar PDF','Export PDF')}</Button>
      <Button type="button" variant="secondary" data-floor-send disabled={busy||!plan||dirty||!content.rooms.length} onClick={()=>void sendToTakeoffs()}>{t('Enviar áreas a Mediciones','Send areas to Measurements')}</Button>
      <Button type="button" variant="secondary" data-floor-estimate disabled={busy||!plan||dirty||!plan?.takeoffLink} onClick={()=>void convertToEstimate()}>{t('Convertir en cotización','Convert to quote')}</Button>
