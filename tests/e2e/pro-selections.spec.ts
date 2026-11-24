@@ -237,7 +237,8 @@ for(const language of ['es','en'] as const)test(`Selections: board, publication,
   await expect(view.locator('[data-selections-client-off]')).toBeVisible();// section still off in the customer view
   await card.scrollIntoViewIfNeeded();await expectNoHorizontalOverflow(page);await page.screenshot({path:info.outputPath(`selections-board-${suffix}.png`),fullPage:true});
   // Tracker with filters.
-  await view.locator('[data-selections-mode="tracker"]').click();await expect(view.locator('[data-selections-mode="tracker"]')).toHaveAttribute('aria-pressed','true');await expect(view.locator('[data-selections-mode="board"]')).toHaveAttribute('aria-pressed','false');await expect(view.locator('[role="tablist"]:has([data-selections-mode])')).toHaveCount(0);// the mode switch is not ARIA tabs (the tracker's own saved views are)const tracker=view.locator('[data-selections-tracker]');
+  await view.locator('[data-selections-mode="tracker"]').click();await expect(view.locator('[data-selections-mode="tracker"]')).toHaveAttribute('aria-pressed','true');await expect(view.locator('[data-selections-mode="board"]')).toHaveAttribute('aria-pressed','false');await expect(view.locator('[role="tablist"]:has([data-selections-mode])')).toHaveCount(0);// the mode switch is not ARIA tabs (the tracker's own saved views are)
+  const tracker=view.locator('[data-selections-tracker]');
   const rowSel=mobile?'[data-tracker-card]':'[data-tracker-row]';
   await expect(tracker.locator(rowSel)).toHaveCount(1);await expect(tracker.locator(rowSel).first()).toContainText(en?'Waiting for customer':'Pendiente del cliente');
   await expect(tracker.locator(`${rowSel} [data-tracker-overdue]`)).toBeVisible();
