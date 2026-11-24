@@ -118,7 +118,9 @@ for(const language of ['es','en'] as const)test(`Credits & retainers: ledger reu
   const ledgerGet=async(query:Record<string,string>,status=200)=>{const r=await page.request.get(ledgerApi+'?'+new URLSearchParams(query),{headers:{'X-Pro-Expected-Actor':owner.id}});expect(r.status(),JSON.stringify(query)).toBe(status);return status===200?await r.json():null;};
   const book=await ledgerGet({workId});
   expect(book.reconciled).toBe(true);expect(book.entries.map((e:{event:string})=>e.event)).toEqual(expect.arrayContaining(['received','apply','unapply','refund']));
-  expect(book.entries.find((e:{event:string})=>e.event==='unapply').deltaCents).toBe(-book.entries.find((e:{event:string})=>e.event==='apply').deltaCents);
+  {const forAnticipo=(event:string)=>book.entries.find((e:{event:string;creditId:string})=>e.event===event&&e.creditId===ant1);
+  // The credit note applied above is a separate credit: pair the reversal with the application of the same credit (ant1).
+  expect(forAnticipo('unapply').deltaCents).toBe(-forAnticipo('apply').deltaCents);}
   expect(book.balanceCents).toBe(book.entries[0].balanceCents);expect((await ledgerGet({clientId})).scope).toBe('client');
   await ledgerGet({},400);await ledgerGet({workId,clientId},400);
   expect((await page.request.get(ledgerApi+'?workId='+workId,{headers:{'X-Pro-Expected-Actor':rival.id}})).status()).toBe(403);
