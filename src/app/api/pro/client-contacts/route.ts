@@ -29,6 +29,8 @@ export async function POST(req:Request){
   const a=await proActor(req);if(a.error)return a.error;const limited=await enforceRateLimit(req,'client-contacts-'+a.user.id,60,60000);if(limited)return limited;
   let input;try{input=contactsInputSchema.parse(await proBoundedJson(req,1048576));}catch{return proFail(400,'Revise los datos del archivo.');}
   if(input.action==='preview'){const r=await a.db.rpc('pro_contacts_preview',{p_owner:a.user.id,p_rows:input.rows});if(r.error)return proDbError(r.error,'Los clientes cambiaron.');return Response.json(contactPreviewSchema.parse(r.data),{headers});}
+  // Area A: tag manager (rename or delete a tag for every customer).
+  if(input.action==='tag_rename'||input.action==='tag_delete'){const t=await a.db.rpc('pro_contact_tags_manage',{p_actor:a.user.id,p_input:input});if(t.error)return proDbError(t.error,'Las etiquetas cambiaron.');return Response.json(t.data,{headers});}
   const r=await a.db.rpc('pro_contacts_mutate',{p_owner:a.user.id,p_input:input});
   if(r.error){if(r.error.hint==='pro_contact_merge_records'){let blockers:unknown[]=[];try{const parsed=JSON.parse(String(r.error.details??'[]'));if(Array.isArray(parsed))blockers=parsed.slice(0,50);}catch{}return Response.json({error:'Ese cliente tiene registros que no se pueden trasladar: consérvelo a él y combine el otro.',reason:'merge_records',blockers},{status:400,headers});}return proDbError(r.error,'Los clientes cambiaron en otra pestaña. Recargue y vuelva a revisar.');}
   return Response.json(r.data,{headers});

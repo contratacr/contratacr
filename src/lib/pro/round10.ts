@@ -29,6 +29,8 @@ export const contactsInputSchema=z.discriminatedUnion('action',[
  z.object({action:z.literal('preview'),rows:z.array(contactRowInput).min(1).max(500)}).strict(),
  z.object({action:z.literal('import'),actionId:id,revision:nint,fileName:z.string().trim().min(1).max(160),format:z.enum(['csv','vcard']),rows:z.array(contactRowInput).min(1).max(500)}).strict(),
  z.object({action:z.literal('tags'),actionId:id,clientId:z.string().min(1).max(160),tags:z.array(z.string().trim().min(1).max(40)).max(10)}).strict(),
+ z.object({action:z.literal('tag_rename'),tag:z.string().trim().min(1).max(40),name:z.string().trim().min(1).max(40).regex(/^[^\u0000-\u001f;,]+$/)}).strict(),
+ z.object({action:z.literal('tag_delete'),tag:z.string().trim().min(1).max(40)}).strict(),
  z.object({action:z.literal('merge'),actionId:id,revision:nint,keepId:z.string().min(1).max(160),mergeId:z.string().min(1).max(160)}).strict(),
 ]);
 export type ContactsInput=z.infer<typeof contactsInputSchema>;
