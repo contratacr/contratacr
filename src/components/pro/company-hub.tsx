@@ -1,4 +1,5 @@
 'use client';
+import {templatePartCount} from '@/lib/pro/template-parts';
 import {DocumentBrandingSettings} from './document-branding';
 import {useCallback,useEffect,useRef,useState,type ReactNode} from 'react';
 import dynamic from 'next/dynamic';
@@ -143,7 +144,7 @@ function usePreview(url:string,parse:(body:unknown)=>{items:PreviewItem[];more:b
  },[url,user,attempt]);
  return {state,retry:useCallback(()=>{setState(null);setAttempt(value=>value+1);},[])};
 }
-const named=(body:unknown)=>{const page=body as {items?:{name?:unknown;recordCount?:unknown}[];nextCursor?:unknown};if(!Array.isArray(page.items))throw Error();return {items:page.items.map(row=>({name:String(row.name??''),count:typeof row.recordCount==='number'?row.recordCount:undefined})).filter(row=>row.name),more:!!page.nextCursor};};
+const named=(body:unknown)=>{const page=body as {items?:{name?:unknown;recordCount?:unknown;count?:unknown;phaseCount?:unknown;taskCount?:unknown;milestoneCount?:unknown;lines?:unknown}[];nextCursor?:unknown};if(!Array.isArray(page.items))throw Error();return {items:page.items.map(row=>({name:String(row.name??''),count:templatePartCount(row)})).filter(row=>row.name),more:!!page.nextCursor};};
 
 function PreviewList({state,retry,empty,unit}:{state:PreviewState;retry:()=>void;empty:string;unit?:(n:number)=>string}){
  const en=useLocale()==='en';
@@ -154,7 +155,7 @@ function PreviewList({state,retry,empty,unit}:{state:PreviewState;retry:()=>void
 }
 
 function CompanyTemplates(){
- const en=useLocale()==='en';
+ const en=useLocale()==='en',parts=(n:number)=>en?(n===1?'1 part':`${n} parts`):(n===1?'1 parte':`${n} partes`);
  const tasks=usePreview('/api/pro/task-templates?view=list&status=active&q=',named,'ccr:pro-company-templates-changed');
  const plans=usePreview('/api/pro/schedule-templates?view=list&status=active',named);
  const services=usePreview('/api/pro/service-packages?filter=active',named,'ccr:pro-company-templates-changed');
@@ -167,15 +168,15 @@ function CompanyTemplates(){
  useEffect(()=>{if(servicesOpen||discountsOpen||taskState.busy){wasOpen.current=true;return;}if(wasOpen.current){wasOpen.current=false;window.dispatchEvent(new Event('ccr:pro-company-templates-changed'));}},[servicesOpen,discountsOpen,taskState.busy]);
  return <div data-company-templates className="grid min-w-0 gap-4 lg:grid-cols-2">
   <section className={card} aria-labelledby="company-task-templates"><h3 id="company-task-templates" className="font-bold">{en?'Task templates':'Plantillas de tareas'}</h3><p className="text-sm text-[#52627a]">{en?'Task lists with relative due dates that you add to a project in one step.':'Listas de tareas con fechas relativas que agrega a un proyecto en un solo paso.'}</p>
-   <PreviewList {...tasks} empty={en?'You have no task templates yet.':'Todavía no tiene plantillas de tareas.'}/>
+   <PreviewList {...tasks} unit={parts} empty={en?'You have no task templates yet.':'Todavía no tiene plantillas de tareas.'}/>
    <TaskTemplates selected={[]} onStateChange={onTaskState} onApplied={()=>window.dispatchEvent(new Event('ccr:pro-company-templates-changed'))}/>
   </section>
   <section className={card} aria-labelledby="company-plan-templates"><h3 id="company-plan-templates" className="font-bold">{en?'Work plan templates':'Plantillas de plan de trabajo'}</h3><p className="text-sm text-[#52627a]">{en?'Phases, tasks, dependencies and milestones. You create, edit and apply them from a project’s plan, because they use that project’s dates.':'Fases, tareas, dependencias y fechas clave. Se crean, editan y aplican desde el plan de un proyecto, porque usan sus fechas.'}</p>
-   <PreviewList {...plans} empty={en?'You have no work plan templates yet.':'Todavía no tiene plantillas de plan de trabajo.'}/>
+   <PreviewList {...plans} unit={parts} empty={en?'You have no work plan templates yet.':'Todavía no tiene plantillas de plan de trabajo.'}/>
    <Button type="button" variant="secondary" onClick={()=>navigatePro('pro_projects')}>{en?'Open projects':'Abrir proyectos'}</Button>
   </section>
   <section className={card} aria-labelledby="company-service-templates"><h3 id="company-service-templates" className="font-bold">{en?'Frequent services':'Servicios frecuentes'}</h3><p className="text-sm text-[#52627a]">{en?'One service or a set of lines that you add to quotes and invoice drafts.':'Un servicio o un conjunto de líneas que agrega a cotizaciones y borradores de facturación.'}</p>
-   <PreviewList {...services} empty={en?'You have no frequent services yet.':'Todavía no tiene servicios frecuentes.'}/>
+   <PreviewList {...services} unit={parts} empty={en?'You have no frequent services yet.':'Todavía no tiene servicios frecuentes.'}/>
    <Button type="button" variant="secondary" onClick={()=>pushProParams({plantillaServicios:'1'})}>{en?'Manage frequent services':'Administrar servicios frecuentes'}</Button>
   </section>
   <section className={card} aria-labelledby="company-discount-templates"><h3 id="company-discount-templates" className="font-bold">{en?'Saved discounts':'Descuentos guardados'}</h3><p className="text-sm text-[#52627a]">{en?'Discounts with a reason that you apply to invoice draft lines.':'Descuentos con motivo que aplica a las líneas de los borradores de facturación.'}</p>
