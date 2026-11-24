@@ -12,7 +12,7 @@ const ring='focus-visible:outline focus-visible:outline-2 focus-visible:outline-
 const noSubscribe=()=>()=>{};
 const button=`inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 text-[15px] font-semibold ${ring}`;
 // Same look as the other secondary actions of the header bar (biz-ui BIZ.secondary).
-const secondary=`${button} border border-[#cfd9e3] text-[#162543] hover:border-[#162543]`;
+const secondary=`${button} !min-h-0 h-11 !px-5 !text-[13px] !font-bold border border-[#d7e1ea] text-[#162543] hover:border-[#b9c8d6]`;
 export function SaveToList({slug,locale,signedIn,loginHref}:{slug:string;locale:string;signedIn:boolean;loginHref:string|null}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es,prefix=en?'/en':'';
  const [open,setOpen]=useState(false),[lists,setLists]=useState<SavedList[]|null>(null),[msg,setMsg]=useState<{ok:boolean;text:string}|null>(null),[busy,setBusy]=useState(false);

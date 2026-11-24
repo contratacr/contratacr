@@ -58,6 +58,6 @@ export function PlaceBranches({brand,branches,locale,extras}:{brand:PlaceBrand;b
    <h2 id="place-branches" className={BIZ.h2}>{t('Otras sucursales','Other branches')}</h2>
    <a className={`text-sm ${BIZ.link}`} href={`${en?'/en':''}/marca/${brand.slug}`}>{t(`Ver las ${brand.branches} sucursales de ${brand.name}`,`See all ${brand.branches} ${brand.name} branches`)}</a>
   </div>
-  <ul className="grid gap-3">{branches.map(b=><li key={b.slug}><BranchCard branch={b} locale={locale} distanceKm={b.distanceKm} extra={extras?.[b.slug]}/></li>)}</ul>
+  <ul className="grid grid-cols-[minmax(0,1fr)] gap-3">{branches.map(b=><li key={b.slug} className="min-w-0"><BranchCard branch={b} locale={locale} distanceKm={b.distanceKm} extra={extras?.[b.slug]}/></li>)}</ul>
  </section>;
 }
