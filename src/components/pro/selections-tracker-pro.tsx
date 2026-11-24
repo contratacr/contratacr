@@ -3,6 +3,7 @@ import {useEffect,useMemo,useState} from 'react';
 import {Button} from '@/components/ui/button';
 import {proMoney} from '@/lib/pro/money';
 import {proCsv} from '@/lib/pro/reports';
+import {trackerViewSchema,trackerViewsSchema} from '@/lib/pro/selection-boards';
 import {selectionTrackingSchema,type SelectionTracking} from '@/lib/pro/round10';
 import type {SelectionArea,SelectionItem,SelectionState} from '@/lib/pro/selections';
 import {
@@ -33,8 +34,24 @@ export function SelectionsTrackerPro({accountId,workId,en,areas,items,stateBadge
  },[accountId,workId]);
  const costsHidden=!!(tracking as (SelectionTracking&{costsHidden?:boolean})|null)?.costsHidden;
  const [panel,setPanel]=useState<'table'|'rooms'>('table'),[view,setView]=useState<string>('planning'),[custom,setCustom]=useState<CustomView[]>([]),[choosing,setChoosing]=useState(false),[draftColumns,setDraftColumns]=useState<TrackerColumn[]>([]),[viewName,setViewName]=useState('');
- useEffect(()=>{const timer=setTimeout(()=>{try{setCustom(parseCustomViews(window.localStorage.getItem(trackerCustomViewKey)));}catch{/* storage unavailable */}},0);return()=>clearTimeout(timer);},[]);
- function saveCustom(next:CustomView[]){setCustom(next);try{window.localStorage.setItem(trackerCustomViewKey,JSON.stringify(next));}catch{/* kept in memory only */}}
+ useEffect(()=>{let live=true;const timer=setTimeout(()=>{
+  void (async()=>{
+   try{const r=await fetch('/api/pro/selection-tracker-views',{cache:'no-store',headers:{'X-Pro-Expected-Actor':accountId}});if(!r.ok)throw Error();const body=trackerViewsSchema.parse(await r.json());if(live)setCustom(parseCustomViews(JSON.stringify(body.views)));}
+   catch{try{if(live)setCustom(parseCustomViews(window.localStorage.getItem(trackerCustomViewKey)));}catch{/* storage unavailable */}}
+  })();},0);return()=>{live=false;clearTimeout(timer);};},[accountId]);
+ /** Views are stored on the account (server); new ones get their real id from the answer, edited ones are replaced, removed ones deleted. */
+ function saveCustom(next:CustomView[]){
+  const previous=custom,uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;setCustom(next);
+  void (async()=>{
+   const send=(body:object)=>fetch('/api/pro/selection-tracker-views',{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json','X-Pro-Expected-Actor':accountId},body:JSON.stringify(body)});
+   try{
+    for(const row of previous){const kept=next.find(r=>r.id===row.id);if(!kept||kept.columns.join()!==row.columns.join()||kept.name!==row.name)if(uuid.test(row.id))await send({action:'delete',id:row.id});}
+    const saved=new Map<string,CustomView>();
+    for(const row of next){const old=previous.find(r=>r.id===row.id);if(old&&old.columns.join()===row.columns.join()&&old.name===row.name&&uuid.test(row.id))continue;const r=await send({action:'save',name:row.name,columns:row.columns});if(r.ok){const v=trackerViewSchema.parse((await r.json()).view);saved.set(row.id,{id:v.id,name:v.name,columns:row.columns});}}
+    if(saved.size){setCustom(cur=>cur.map(r=>saved.get(r.id)??r));setView(cur=>saved.get(cur)?.id??cur);}
+   }catch{/* kept in memory until the next load */}
+  })();
+ }
  const [filters,setFilters]=useState<TrackerFilters>({query:'',state:'all',area:'all',order:'all',overdue:false}),[sort,setSort]=useState<TrackerSort>('custom'),[descending,setDescending]=useState(false),[group,setGroup]=useState<TrackerGroup>('none'),[roomSort,setRoomSort]=useState<RoomSort>('custom'),[roomQuery,setRoomQuery]=useState('');
  const active=custom.find(row=>row.id===view),viewColumns:TrackerColumn[]=(active?active.columns:trackerViewColumns[view as keyof typeof trackerViewColumns]??trackerViewColumns.planning).filter(column=>!(costsHidden&&(column==='cost'||column==='margin')));
  const columns=trackerColumns.filter(column=>viewColumns.includes(column));
@@ -93,7 +110,7 @@ export function SelectionsTrackerPro({accountId,workId,en,areas,items,stateBadge
   {choosing&&<fieldset data-tracker-chooser className="space-y-3 rounded-2xl border border-[#d7e1ea] bg-white p-4"><legend className="px-1 text-sm font-bold">{t('Columnas visibles','Visible columns')}</legend>
    {trackerColumnGroups.map(g=><div key={g.key}><p className="text-xs font-bold uppercase tracking-wide text-[#52627a]">{g[l]}</p><div className="flex flex-wrap gap-x-4">{g.columns.filter(column=>!(costsHidden&&(column==='cost'||column==='margin'))).map(column=><label key={column} className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={draftColumns.includes(column)} onChange={event=>setDraftColumns(prev=>event.target.checked?[...prev,column]:prev.filter(value=>value!==column))} className="h-5 w-5 accent-[#0089bb]"/>{label(column)}</label>)}</div></div>)}
    <label className="block text-sm font-semibold">{t('Nombre de la vista (opcional)','View name (optional)')}<input value={viewName} maxLength={40} onChange={event=>setViewName(event.target.value)} className={field}/></label>
-   <p className="text-xs text-[#52627a]">{t('Las vistas propias se guardan solo en este navegador.','Your own views are saved only in this browser.')}</p>
+   <p className="text-xs text-[#52627a]">{t('Las vistas propias se guardan en su cuenta.','Your own views are saved to your account.')}</p>
    <div className="flex flex-wrap gap-2"><Button type="button" disabled={!draftColumns.length||(!!viewName.trim()&&custom.length>=8)} onClick={()=>{const name=viewName.trim();if(name){const row={id:'v'+Date.now().toString(36),name,columns:draftColumns};saveCustom([...custom,row].slice(0,8));setView(row.id);}else if(active){saveCustom(custom.map(r=>r.id===active.id?{...r,columns:draftColumns}:r));}else{const row={id:'v'+Date.now().toString(36),name:t('Mi vista','My view'),columns:draftColumns};saveCustom([...custom,row].slice(0,8));setView(row.id);}setChoosing(false);}}>{t('Aplicar','Apply')}</Button><Button type="button" variant="secondary" onClick={()=>setChoosing(false)}>{t('Cancelar','Cancel')}</Button>{active&&<Button type="button" variant="secondary" onClick={()=>{saveCustom(custom.filter(r=>r.id!==active.id));setView('planning');setChoosing(false);}}>{t('Quitar esta vista','Remove this view')}</Button>}</div></fieldset>}
   {!rows.length?<p data-tracker-empty className="rounded-2xl border border-dashed border-[#d7e1ea] bg-[#f7f9fc] p-5 text-center text-sm text-[#52627a]">{items.length?t('Ningún ítem coincide con los filtros.','No item matches the filters.'):t('Su proyecto en un vistazo: cuando agregue ítems verá aquí productos, costos y estado del pedido.','Your project at a glance: once you add items you will see products, costs and order status here.')}</p>:<>
    <div className="hidden overflow-x-auto rounded-2xl border border-[#d7e1ea] md:block">

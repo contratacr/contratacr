@@ -1,6 +1,8 @@
 'use client';
 import {ClientBulkApprove} from './round10-selections';
 import {SelectionsTrackerPro} from './selections-tracker-pro';
+import {SelectionsGlobalTracker} from './selections-global-tracker';
+import {BoardTemplatesPanel,RoomBudgetBar,useRoomMeta} from './selection-rooms-extra';
 
 import {useCallback,useEffect,useLayoutEffect,useRef,useState,type FormEvent,type ReactNode} from 'react';
 import {useLocale} from 'next-intl';
@@ -137,7 +139,7 @@ function SelectionsSession({accountId,workId,onStateChange,onOpenClientView}:{ac
  const en=useLocale()==='en',c=copy(en),{confirm,dialogNode}=useAppDialog();
  const [detail,setDetail]=useState<SelectionDetail|null>(null),[loading,setLoading]=useState(true),[loadError,setLoadError]=useState(false);
  const [form,setForm]=useState<Form|null>(null),[saving,setSaving]=useState(false),[uncertain,setUncertain]=useState(false),[conflict,setConflict]=useState(false);
- const [error,setError]=useState(''),[notice,setNotice]=useState(''),[mode,setMode]=useState<'board'|'tracker'>('board'),[showArchived,setShowArchived]=useState(false);
+ const [error,setError]=useState(''),[notice,setNotice]=useState(''),[mode,setMode]=useState<'board'|'tracker'|'global'>('board'),[showArchived,setShowArchived]=useState(false);
  const [files,setFiles]=useState<WorkFile[]|null>(null),[filesError,setFilesError]=useState(false);
  const active=useRef(true),sequence=useRef(0),lock=useRef(false),pending=useRef<Pending|null>(null);
  const dirty=!!form&&!same(form.draft,form.initial),busy=saving||uncertain;
@@ -154,6 +156,7 @@ function SelectionsSession({accountId,workId,onStateChange,onOpenClientView}:{ac
  },[accountId,workId]);
  const invalidate=useCallback(()=>{sequence.current++;},[]);
  useEffect(()=>{active.current=true;const timer=setTimeout(()=>void load(),0);return()=>{active.current=false;invalidate();clearTimeout(timer);};},[load,invalidate]);
+ const rooms=useRoomMeta(accountId,workId,detail);
  const loadFiles=useCallback(async()=>{
   setFilesError(false);
   try{const response=await fetch('/api/pro/work-files?'+new URLSearchParams({workId}),{cache:'no-store',headers:{'X-Pro-Expected-Actor':accountId}});if(!response.ok)throw Error();const body=workFilesPageSchema.parse(await response.json());if(active.current)setFiles(body.items.filter(file=>file.ready&&file.mimeType==='image/jpeg'));}
@@ -252,14 +255,15 @@ function SelectionsSession({accountId,workId,onStateChange,onOpenClientView}:{ac
   {!detail.clientVisible&&items.some(item=>item.published)&&<div data-selections-client-off className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-[#fff6e5] p-3 text-sm text-[#7a4b00]"><p className="min-w-0">{c.clientOff}</p>{onOpenClientView&&<Button type="button" variant="secondary" disabled={locked} onClick={onOpenClientView}>{c.openClientView}</Button>}</div>}
   {/* Segmented view switch (not ARIA tabs: there is no tabpanel/arrow-key model). */}
   <div role="group" aria-label={c.title} className="inline-flex rounded-xl bg-[#e9eff5] p-1">
-   {(['board','tracker'] as const).map(value=><button key={value} type="button" aria-pressed={mode===value} data-selections-mode={value} onClick={()=>setMode(value)} className={`min-h-11 rounded-lg px-4 text-sm font-semibold ${mode===value?'bg-white text-[#008bb5] shadow-sm':'text-[#52627a]'}`}>{value==='board'?c.board:c.tracker}</button>)}
+   {(['board','tracker','global'] as const).map(value=><button key={value} type="button" aria-pressed={mode===value} data-selections-mode={value} onClick={()=>setMode(value)} className={`min-h-11 rounded-lg px-4 text-sm font-semibold ${mode===value?'bg-white text-[#008bb5] shadow-sm':'text-[#52627a]'}`}>{value==='board'?c.board:value==='tracker'?c.tracker:(en?'All jobs':'Todos los trabajos')}</button>)}
   </div>
   {notice&&<p role="status" className="rounded-xl bg-[#eef8f4] p-3 text-sm text-[#18573a]">{notice}</p>}
   {loadError&&<div role="alert" className="space-y-2 text-sm"><p>{c.loadError}</p><Button type="button" variant="secondary" disabled={loading||saving} onClick={()=>void load()}>{c.retry}</Button></div>}
   {error&&<div role="alert" data-selection-error className="space-y-2 rounded-xl bg-[#fff4f2] p-3 text-sm text-[#8a2a1b]"><p>{error}</p>
    {uncertain&&<Button type="button" variant="secondary" disabled={saving} onClick={()=>pending.current&&void post(pending.current.url,pending.current.body,pending.current.notice)}>{c.retrySame}</Button>}
    {conflict&&<Button type="button" variant="secondary" disabled={loading||saving} onClick={()=>{setForm(null);setError('');void load();}}>{c.reload}</Button>}</div>}
-  {mode==='tracker'?<SelectionsTrackerPro accountId={accountId} workId={workId} en={en} areas={detail.areas} items={items} stateBadge={(state,wrap)=><StateBadge state={state} c={c} wrap={wrap}/>} onOpenBoard={()=>setMode('board')}/>:<div data-selections-board className="space-y-5">
+  {mode==='global'?<SelectionsGlobalTracker accountId={accountId} en={en}/>:mode==='tracker'?<SelectionsTrackerPro accountId={accountId} workId={workId} en={en} areas={detail.areas} items={items} stateBadge={(state,wrap)=><StateBadge state={state} c={c} wrap={wrap}/>} onOpenBoard={()=>setMode('board')}/>:<div data-selections-board className="space-y-5">
+   <BoardTemplatesPanel accountId={accountId} workId={workId} en={en} areas={areas} items={items} locked={locked} onCreated={()=>void load()}/>
    {formNode('area',null)}
    {!areas.length&&!(form?.kind==='area')&&<div data-selections-empty className="rounded-2xl border border-dashed border-[#d7e1ea] bg-[#f7f9fc] p-5 text-center"><p className="font-semibold text-[#162543]">{c.emptyAreas}</p><p className="mt-1 text-sm text-[#52627a]">{c.emptyAreasHelp}</p></div>}
    {areas.map(area=>{const areaItems=items.filter(item=>item.areaId===area.id);return <section key={area.id} data-selection-area={area.id} aria-label={area.name} className="space-y-3 rounded-2xl border border-[#d7e1ea] bg-[#f7f9fc] p-3 sm:p-4">
@@ -271,6 +275,7 @@ function SelectionsSession({accountId,workId,onStateChange,onOpenClientView}:{ac
       {!areaItems.length&&<Button type="button" size="sm" variant="ghost" className="min-h-11" disabled={locked} onClick={()=>areaAction(area,'area_archive')}>{c.archive}</Button>}
      </div>
     </div>}
+    <RoomBudgetBar accountId={accountId} areaId={area.id} en={en} room={rooms.meta.get(area.id)} onSaved={rooms.set} locked={locked}/>
     {formNode('item','new:'+area.id)}
     {!areaItems.length&&!(form?.kind==='item'&&!form.item&&form.initial.areaId===area.id)&&<p className="text-sm text-[#52627a]">{c.emptyItems}</p>}
     {areaItems.map(item=>form?.kind==='item'&&form.item?.id===item.id?<div key={item.id}>{formNode('item',item.id)}</div>:
