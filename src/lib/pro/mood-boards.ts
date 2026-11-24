@@ -21,10 +21,10 @@ export const MOOD_COMMENT_MAX=1000;
 // Round 7C: drawings and arrows carry points, so a page body may be larger (still bounded).
 export const MOOD_BODY_MAX=65536;
 export const MOOD_POINTS_MAX=120;
-export const moodPageFormats=['wide','a4'] as const;
+export const moodPageFormats=['wide','a4','standard','letter','tabloid','a3'] as const;
 export type MoodPageFormat=(typeof moodPageFormats)[number];
-/** Height / width of each page format: 16:9 and A4 landscape (210 × 297 mm). */
-export const moodPageRatio:Record<MoodPageFormat,number>={wide:9/16,a4:210/297};
+/** Height / width of each page format: 16:9, 4:3, A4, A3, US Letter and US Tabloid, all landscape. */
+export const moodPageRatio:Record<MoodPageFormat,number>={wide:9/16,a4:210/297,standard:3/4,letter:8.5/11,tabloid:11/17,a3:297/420};
 export const moodRotations=[0,90,180,270] as const;
 export type MoodRotation=(typeof moodRotations)[number];
 

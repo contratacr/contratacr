@@ -9,7 +9,7 @@ import {proMoney} from '@/lib/pro/money';
 import {WORK_FILE_MAX_BYTES,workFilesPageSchema,type WorkFile} from '@/lib/pro/work-files';
 import {
  MOOD_BODY_MAX,MOOD_COMMENT_MAX,MOOD_LABEL_MAX,MOOD_MAX_BOARDS,MOOD_MAX_ELEMENTS,MOOD_MAX_PAGES,MOOD_NAME_MAX,MOOD_NOTE_MAX,MOOD_PAGE_NAME_MAX,
- clampBox,moodBoardDetailSchema,moodBoardListSchema,moodBoardMutationSchema,moodBoardResultSchema,moodElementInput,moodOwnerImageUrl,moodProductsSchema,nextRotation,
+ clampBox,moodPageFormats,moodBoardDetailSchema,moodBoardListSchema,moodBoardMutationSchema,moodBoardResultSchema,moodElementInput,moodOwnerImageUrl,moodProductsSchema,nextRotation,
  type MoodBoard,type MoodBoardDetail,type MoodBoardList,type MoodBoardMutation,type MoodComment,type MoodDraftElement,type MoodHistoryEntry,type MoodPage,type MoodPageFormat,type MoodProduct,
 } from '@/lib/pro/mood-boards';
 import {moodTemplateElements,moodTemplateLabel,moodTemplates,type MoodTemplate} from '@/lib/pro/round12';
@@ -43,7 +43,7 @@ function copy(en:boolean){
   title:'Idea boards',intro:'Gather photos, items, colors and notes on pages to agree on the look of each room. Share a copy with your customer when it is ready.',
   newBoard:'New board',active:'Active',archived:'Archived',empty:'No boards yet. Create the first one for a room or area of this job.',emptyArchived:'No archived boards.',
   loading:'Loading boards…',loadError:'Could not load the boards.',retry:'Retry',name:'Board name',room:'Room or area (optional)',roomHint:'For example: Kitchen, Main bathroom, Facade.',
-  format:'Page size',formatWide:'Screen (16:9)',formatA4:'A4 landscape',create:'Create board',saveBoard:'Save changes',cancel:'Cancel',editBoard:'Rename',
+  format:'Page size',formatWide:'Screen (16:9)',formatA4:'A4 landscape',formatStandard:'Presentation (4:3)',formatLetter:'US Letter landscape',formatTabloid:'US Tabloid landscape',formatA3:'A3 landscape',create:'Create board',saveBoard:'Save changes',cancel:'Cancel',editBoard:'Rename',
   open:'Open',duplicate:'Duplicate',archive:'Archive',restore:'Restore',back:'Back',modified:(d:string)=>`Modified ${d}`,pages:(n:number)=>n===1?'1 page':`${n} pages`,
   shared:(v:number)=>`Shared · version ${v}`,notShared:'Not shared',comments:(n:number)=>n===1?'1 comment':`${n} comments`,
   duplicateTitle:'Duplicate board',duplicateText:'The copy keeps the pages and starts private, without comments.',copyName:(name:string)=>`${name} (copy)`.slice(0,MOOD_NAME_MAX),
@@ -86,7 +86,7 @@ function copy(en:boolean){
   title:'Tableros de ideas',intro:'Reúna fotos, artículos, colores y notas en páginas para acordar el estilo de cada espacio. Comparta una copia con su cliente cuando esté lista.',
   newBoard:'Nuevo tablero',active:'Activos',archived:'Archivados',empty:'Todavía no hay tableros. Cree el primero para una habitación o área de este trabajo.',emptyArchived:'No hay tableros archivados.',
   loading:'Cargando tableros…',loadError:'No se pudieron cargar los tableros.',retry:'Reintentar',name:'Nombre del tablero',room:'Habitación o área (opcional)',roomHint:'Por ejemplo: Cocina, Baño principal, Fachada.',
-  format:'Tamaño de página',formatWide:'Pantalla (16:9)',formatA4:'A4 horizontal',create:'Crear tablero',saveBoard:'Guardar cambios',cancel:'Cancelar',editBoard:'Renombrar',
+  format:'Tamaño de página',formatWide:'Pantalla (16:9)',formatA4:'A4 horizontal',formatStandard:'Presentación (4:3)',formatLetter:'Carta (US Letter) horizontal',formatTabloid:'Tabloide (US Tabloid) horizontal',formatA3:'A3 horizontal',create:'Crear tablero',saveBoard:'Guardar cambios',cancel:'Cancelar',editBoard:'Renombrar',
   open:'Abrir',duplicate:'Duplicar',archive:'Archivar',restore:'Restaurar',back:'Volver',modified:(d:string)=>`Modificado: ${d}`,pages:(n:number)=>n===1?'1 página':`${n} páginas`,
   shared:(v:number)=>`Compartido · versión ${v}`,notShared:'Sin compartir',comments:(n:number)=>n===1?'1 comentario':`${n} comentarios`,
   duplicateTitle:'Duplicar tablero',duplicateText:'La copia conserva las páginas y empieza privada, sin comentarios.',copyName:(name:string)=>`${name} (copia)`.slice(0,MOOD_NAME_MAX),
@@ -278,7 +278,7 @@ function BoardFormView({c,form,busy,saving,onChange,onSubmit,onCancel}:{c:Copy;f
    <label className="block text-sm font-semibold sm:col-span-2">{c.name}<input data-mood-field="name" required maxLength={MOOD_NAME_MAX} value={d.name} onChange={e=>onChange({...d,name:e.target.value})} className={field}/></label>
    <label className="block text-sm font-semibold">{c.room}<input data-mood-field="room" maxLength={MOOD_NAME_MAX} value={d.room} onChange={e=>onChange({...d,room:e.target.value})} className={field}/><span className="mt-1 block text-xs font-normal text-[#52627a]">{c.roomHint}</span></label>
    {!form.board&&<label className="block text-sm font-semibold sm:col-span-2">{en?'Start with':'Empezar con'}<select data-mood-field="template" value={d.template??'none'} onChange={e=>onChange({...d,template:e.target.value as MoodTemplate|'none'})} className={field}>{(['none',...moodTemplates] as const).map(k=><option key={k} value={k}>{moodTemplateLabel(k,en)}</option>)}</select><span className="mt-1 block text-xs font-normal text-[#52627a]">{en?'A template adds a title, color swatches and notes you can edit or delete.':'Una plantilla agrega título, muestras de color y notas que puede editar o eliminar.'}</span></label>}
-   <label className="block text-sm font-semibold">{c.format}<select data-mood-field="format" value={d.pageFormat} onChange={e=>onChange({...d,pageFormat:e.target.value==='a4'?'a4':'wide'})} className={field}><option value="wide">{c.formatWide}</option><option value="a4">{c.formatA4}</option></select></label>
+   <label className="block text-sm font-semibold">{c.format}<select data-mood-field="format" value={d.pageFormat} onChange={e=>onChange({...d,pageFormat:(moodPageFormats.find(v=>v===e.target.value)??'wide')})} className={field}><option value="wide">{c.formatWide}</option><option value="standard">{c.formatStandard}</option><option value="a4">{c.formatA4}</option><option value="a3">{c.formatA3}</option><option value="letter">{c.formatLetter}</option><option value="tabloid">{c.formatTabloid}</option></select></label>
   </fieldset>
   <div className="flex flex-wrap justify-end gap-2"><Button type="button" variant="secondary" className="min-h-11" disabled={saving} onClick={onCancel}>{c.cancel}</Button><Button type="submit" className="min-h-11" disabled={busy}>{saving?c.saving:form.board?c.saveBoard:c.create}</Button></div>
  </form>;
