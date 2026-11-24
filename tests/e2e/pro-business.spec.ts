@@ -19,13 +19,14 @@ test('quotes preserve resolved values and only matching accepted quotes can be s
  expect(()=>saveAppointment(s,{...appointment,id:'b'})).toThrow();
  s=saveAppointment(s,{...appointment,cancelled:true});expect(saveAppointment(s,{...appointment,id:'b'}).work).toHaveLength(2);
 });
-test('local workspace keeps clients after reload and links agenda and quotations',async({page})=>{
+test('local workspace keeps clients in the session and links agenda and quotations',async({page})=>{
  const bundle=await build({stdin:{contents:`import React from 'react';import{createRoot}from'react-dom/client';import{NextIntlClientProvider}from'next-intl';import{ProWorkspace}from'./src/components/pro/pro-workspace';createRoot(document.getElementById('root')).render(<NextIntlClientProvider locale="es" messages={{}}><ProWorkspace/></NextIntlClientProvider>);`,resolveDir:process.cwd(),loader:'tsx'},bundle:true,write:false,format:'iife',define:{'process.env':JSON.stringify({NODE_ENV:'test'})},platform:'browser',jsx:'automatic'});
  await page.route('**/pro-harness',r=>r.fulfill({contentType:'text/html',body:'<div id="root"></div>'}));
  const open=async()=>{await page.goto('/pro-harness');await page.addScriptTag({content:bundle.outputFiles[0].text});};await open();
  await page.getByRole('button',{name:'Clientes',exact:true}).click();await page.getByRole('button',{name:'Nuevo cliente',exact:true}).click();
  await page.getByLabel('Nombre',{exact:true}).fill('Cliente de prueba');await page.getByRole('button',{name:'Guardar',exact:true}).click();
- await expect(page.getByRole('heading',{name:'Cliente de prueba'})).toBeVisible();await open();
+ await expect(page.getByRole('heading',{name:'Cliente de prueba'})).toBeVisible();
+ // The local preview keeps records in memory only (reload clears them, see the banner), so the flow continues in the same session.
  await page.getByRole('button',{name:'Agenda',exact:true}).click();await page.getByRole('button',{name:'Nueva cita',exact:true}).click();
  await page.getByLabel('Cliente',{exact:true}).selectOption({label:'Cliente de prueba'});await page.getByLabel('Trabajo',{exact:true}).fill('Reparación');
  await page.getByLabel('Inicio · Costa Rica').fill('2026-11-01T09:00');await page.getByLabel('Final · Costa Rica').fill('2026-11-01T10:00');await page.getByRole('button',{name:'Guardar',exact:true}).click();

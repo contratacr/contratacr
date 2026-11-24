@@ -18,18 +18,19 @@ export const IMPORT_BATCH_MAX=10;
 
 // ---------------------------------------------------------------- sandbox
 const PDF_TEXT='%PDF-1.4\n% Plano de ejemplo (sandbox)\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF\n';
-const JPEG_1PX=Buffer.from('/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k=','base64');
-const SANDBOX:Array<{id:string;name:string;mimeType:string;bytes:Buffer}>=[
+const jpeg1px=()=>Buffer.from('/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k=','base64');
+// Lazy: a client component imports this module, so nothing here may touch Node's Buffer at load time.
+const sandboxFiles=():Array<{id:string;name:string;mimeType:string;bytes:Buffer}>=>[
  {id:'sandbox-plano',name:'Plano de ejemplo.pdf',mimeType:'application/pdf',bytes:Buffer.from(PDF_TEXT,'latin1')},
- {id:'sandbox-foto',name:'Foto de ejemplo.jpg',mimeType:'image/jpeg',bytes:JPEG_1PX},
+ {id:'sandbox-foto',name:'Foto de ejemplo.jpg',mimeType:'image/jpeg',bytes:jpeg1px()},
  {id:'sandbox-notas',name:'Notas de ejemplo.txt',mimeType:'text/plain',bytes:Buffer.from('Notas de obra de ejemplo\nSegunda linea\n','utf8')},
  // A file the library must refuse: shows the per-file error path without touching anything.
  {id:'sandbox-instalador',name:'instalador.exe',mimeType:'application/x-msdownload',bytes:Buffer.from('MZ\u0090\u0000\u0003\u0000\u0000\u0000','latin1')},
 ];
 export function sandboxDriveAdapter():FileImportAdapter{
  return{provider:'drive',mode:'sandbox',
-  async list(){return SANDBOX.map(f=>({id:f.id,name:f.name,mimeType:f.mimeType,sizeBytes:f.bytes.length,modifiedAt:'2026-01-15T12:00:00.000Z'}));},
-  async fetch(id){const f=SANDBOX.find(x=>x.id===id);if(!f)throw new ImportAdapterError('not_found');return{name:f.name,bytes:Buffer.from(f.bytes)};}};
+  async list(){return sandboxFiles().map(f=>({id:f.id,name:f.name,mimeType:f.mimeType,sizeBytes:f.bytes.length,modifiedAt:'2026-01-15T12:00:00.000Z'}));},
+  async fetch(id){const f=sandboxFiles().find(x=>x.id===id);if(!f)throw new ImportAdapterError('not_found');return{name:f.name,bytes:Buffer.from(f.bytes)};}};
 }
 
 // ---------------------------------------------------------------- live (Google Drive v3)
