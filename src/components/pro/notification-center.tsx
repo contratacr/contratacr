@@ -8,6 +8,8 @@ import {Button} from '@/components/ui/button';
 import {navigatePro,openProSection} from '@/lib/pro/navigation';
 import {proMoney} from '@/lib/pro/money';
 import {proCount} from '@/lib/pro/plural';
+import {inNotificationTab,notificationTabLabels,notificationTabs,type NotificationTab} from '@/lib/pro/notification-tabs';
+import {useProSearchParams} from './use-pro-search-params';
 import {notificationEvents,notificationPageSchema,type NotificationEvent,type NotificationItem,type NotificationSettings} from '@/lib/pro/round9';
 
 /**
@@ -17,13 +19,14 @@ import {notificationEvents,notificationPageSchema,type NotificationEvent,type No
 export const PRO_NOTIFICATIONS_CHANGED='ccr:pro-notifications-changed';
 const eventLabels:Record<NotificationEvent,[string,string]>={task_assigned:['Tarea asignada','Task assigned'],task_due:['Tarea por vencer o vencida','Task due soon or overdue'],client_message:['Mensaje del cliente','Customer message'],quote_accepted:['Cotización aceptada','Quote accepted'],quote_changes:['Cambios pedidos a una cotización','Quote changes requested'],invoice_paid:['Pago registrado en una factura','Invoice payment recorded'],invoice_overdue:['Cuota vencida','Installment overdue'],bid_received:['Oferta de proveedor recibida','Vendor bid received'],daily_log_missing:['Falta la bitácora de ayer','Yesterday’s daily log is missing'],payment_plan_due:['Cuota del plan de pagos por vencer','Payment plan installment due soon'],selection_decided:['Decisión del cliente en una selección','Customer decision on a selection']};
 async function send(body:object){const r=await fetch('/api/pro/notifications',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const data=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(Error(data.error||'error'),{status:r.status});window.dispatchEvent(new Event(PRO_NOTIFICATIONS_CHANGED));return data;}
-function openLink(item:NotificationItem,en:boolean){
+export function openNotification(item:NotificationItem,en:boolean){
  const link=item.link,tab=typeof link.tab==='string'?link.tab:'pro_tools',extra:Record<string,string>={};
  for(const key of ['cita','vistaTrabajo','estimacionPrivada'])if(typeof link[key]==='string')extra[key]=link[key] as string;
  openProSection(tab,extra,en);
 }
 export function NotificationCenter(){
  const en=useLocale()==='en',t=(es:string,english:string)=>en?english:es;
+ const params=useProSearchParams(),[tab,setTab]=useState<NotificationTab>(()=>{const value=params.get('pestana');return value==='comments'||value==='general'?value:'all';});
  const [view,setView]=useState<'unread'|'all'>('unread'),[items,setItems]=useState<NotificationItem[]>([]),[next,setNext]=useState<{at:string;id:string}|null>(null);
  const [unread,setUnread]=useState(0),[settings,setSettings]=useState<NotificationSettings|null>(null),[draft,setDraft]=useState<NotificationSettings|null>(null);
  const [loading,setLoading]=useState(true),[error,setError]=useState(''),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false),sequence=useRef(0);
@@ -43,7 +46,7 @@ export function NotificationCenter(){
  async function mark(ids:string[],action:'read'|'unread'|'read_all'){
   setBusy(true);setNotice('');try{await send(action==='read_all'?{action,actionId:crypto.randomUUID()}:{action,actionId:crypto.randomUUID(),ids});await load();}catch{setError(t('No se pudo actualizar. Intente de nuevo.','Could not update. Retry: it will not duplicate.'));}finally{setBusy(false);}
  }
- async function open(item:NotificationItem){if(!item.read){try{await send({action:'read',actionId:crypto.randomUUID(),ids:[item.id]});}catch{}}openLink(item,en);}
+ async function open(item:NotificationItem){if(!item.read){try{await send({action:'read',actionId:crypto.randomUUID(),ids:[item.id]});}catch{}}openNotification(item,en);}
  async function save(){
   if(!draft)return;setBusy(true);setNotice('');setError('');
   try{if(channels){const prefs=Object.fromEntries(Object.keys(channels.whatsapp).map(event=>[event,{inApp:draft.prefs[event as NotificationEvent]?.inApp??true,email:draft.prefs[event as NotificationEvent]?.email??false,whatsapp:wa[event]??false}]));
@@ -54,6 +57,7 @@ export function NotificationCenter(){
   catch(e){setError((e as {status?:number}).status===409?t('Sus preferencias cambiaron en otra pestaña. Recargue antes de guardar.','Your preferences changed in another tab. Reload before saving.'):t('No se pudieron guardar las preferencias.','Preferences could not be saved.'));}
   finally{setBusy(false);}
  }
+ const shownItems=items.filter(item=>inNotificationTab(item.event,tab));
  const date=(value:string)=>new Intl.DateTimeFormat(en?'en-US':'es-CR',{dateStyle:'medium',timeStyle:'short',timeZone:'America/Costa_Rica'}).format(new Date(value));
  const detail=(item:NotificationItem)=>{
   if(item.event==='invoice_paid'&&/^\d+$/.test(item.body))return proMoney(Number(item.body)/100,en);
@@ -70,10 +74,11 @@ export function NotificationCenter(){
    <div role="group" aria-label={t('Mostrar avisos','Show notifications')} className="flex gap-1 rounded-2xl bg-[#e9eff5] p-1.5">{(['unread','all'] as const).map(value=><button key={value} type="button" aria-pressed={view===value} onClick={()=>setView(value)} className={`min-h-11 rounded-xl px-4 text-sm font-semibold ${view===value?'bg-white text-[#008bb5] shadow-sm':'text-[#52627a]'}`}>{value==='unread'?t('Sin leer','Unread')+(unread?` (${unread})`:''):t('Todos','All')}</button>)}</div>
    <Button type="button" variant="secondary" disabled={busy||!unread} onClick={()=>void mark([],'read_all')}>{t('Marcar todo como leído','Mark all as read')}</Button>
   </div>
+  <div role="group" aria-label={t('Tipo de aviso','Notification type')} data-notification-tabs className="flex flex-wrap gap-2">{notificationTabs.map(value=>{const count=items.filter(item=>!item.read&&inNotificationTab(item.event,value)).length;return <button key={value} type="button" data-notification-tab={value} aria-pressed={tab===value} onClick={()=>setTab(value)} className={`min-h-11 rounded-xl border px-4 text-sm font-semibold ${tab===value?'border-[#008bb5] bg-[#eaf7fb] text-[#006f93]':'border-[#d7e1ea] bg-white text-[#52627a]'}`}>{notificationTabLabels[value][en?1:0]}{count>0&&<span data-notification-tab-count className="ml-2 rounded-full bg-[#008bb5] px-2 py-0.5 text-xs text-white">{count}</span>}</button>;})}</div>
   {error&&<p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error} <Button type="button" variant="secondary" onClick={()=>void load()}>{t('Reintentar','Retry')}</Button></p>}
   {loading&&!items.length&&<p role="status">{t('Cargando avisos…','Loading notifications…')}</p>}
-  {!loading&&!items.length&&!error&&<p data-notification-empty className="rounded-2xl border border-dashed border-[#d7e1ea] bg-white p-6 text-center text-[#52627a]">{view==='unread'?t('No tiene avisos sin leer.','You have no unread notifications.'):t('Todavía no hay avisos.','No notifications yet.')}</p>}
-  <ul data-notification-list className="min-w-0 space-y-2">{items.map(item=><li key={item.id} data-notification={item.event} data-notification-read={item.read?'':undefined} className={`flex min-w-0 flex-wrap items-start gap-3 rounded-2xl border p-4 ${item.read?'border-[#e5e7eb] bg-white':'border-[#9fd9ea] bg-[#f3fbfe]'}`}>
+  {!loading&&!shownItems.length&&!error&&<p data-notification-empty className="rounded-2xl border border-dashed border-[#d7e1ea] bg-white p-6 text-center text-[#52627a]">{view==='unread'?t('No tiene avisos sin leer.','You have no unread notifications.'):t('Todavía no hay avisos.','No notifications yet.')}</p>}
+  <ul data-notification-list className="min-w-0 space-y-2">{shownItems.map(item=><li key={item.id} data-notification={item.event} data-notification-read={item.read?'':undefined} className={`flex min-w-0 flex-wrap items-start gap-3 rounded-2xl border p-4 ${item.read?'border-[#e5e7eb] bg-white':'border-[#9fd9ea] bg-[#f3fbfe]'}`}>
    <span aria-hidden="true" className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${item.read?'bg-transparent':'bg-[#008bb5]'}`}/>
    <button type="button" onClick={()=>void open(item)} className="min-w-0 flex-1 text-left"><span className="block text-xs font-bold uppercase tracking-wide text-[#68778d]">{eventLabels[item.event][en?1:0]}</span><span className="block break-words font-semibold text-[#162543]">{item.title}</span>{detail(item)&&<span className="block break-words text-sm text-[#52627a]">{detail(item)}</span>}<span className="mt-1 block text-xs text-[#68778d]">{date(item.createdAt)}{item.emailDraft?' · '+t('Borrador de correo guardado (no enviado)','Email draft saved (not sent)'):''}</span></button>
    <Button type="button" variant="secondary" disabled={busy} onClick={()=>void mark([item.id],item.read?'unread':'read')}>{item.read?t('Marcar sin leer','Mark unread'):t('Marcar como leído','Mark as read')}</Button>
