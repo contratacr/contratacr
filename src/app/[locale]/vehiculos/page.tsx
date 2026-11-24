@@ -15,7 +15,7 @@ export async function generateMetadata({params}:{params:Promise<{locale:string}>
  const {locale}=await params,en=locale==='en',path='/vehiculos';
  const title=en?'Vehicles in Costa Rica':'Vehículos en Costa Rica';
  const description=en?'Cars and motorcycles from dealers and private sellers in Costa Rica.':'Carros y motos de agencias y particulares en Costa Rica.';
- return {title,description,alternates:{canonical:(en?'/en':'')+path,languages:{es:path,en:'/en'+path}},openGraph:{title,description,type:'website'}};
+ return {title:`${title} | ContrataCR`,description,alternates:{canonical:(en?'/en':'')+path,languages:{es:path,en:'/en'+path}},openGraph:{title,description,type:'website'}};
 }
 export default async function VehiclesRoute({params,searchParams}:{params:Promise<{locale:string}>;searchParams:Promise<SearchPageParams>}){
  // Classified listings are OFF by owner decision (feature-flags.ts): 404 while the flag is off.

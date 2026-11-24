@@ -256,6 +256,7 @@
     "resultsIn": "{count, plural, one {# profesional} other {# profesionales}} en {location}",
     "thisArea": "esta área",
     "resultsInCR": "{count, plural, one {# profesional} other {# profesionales}} en Costa Rica",
+    "resultsBusinessesOnly": "Empresas y negocios en Costa Rica",
     "list": "Lista",
     "map": "Mapa",
     "close": "Cerrar",

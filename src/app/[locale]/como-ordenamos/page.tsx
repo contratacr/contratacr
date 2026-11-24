@@ -51,7 +51,7 @@ export async function generateMetadata({params}:{params:Promise<{locale:string}>
  const {locale}=await params,en=locale==='en';
  const title=en?'How we rank results':'Cómo ordenamos los resultados';
  const description=en?'ContrataCR never orders results by payment. See the criteria we use for professionals, businesses and listings.':'ContrataCR nunca ordena los resultados por pagos. Vea los criterios que usamos para profesionales, negocios y anuncios.';
- return {title,description,alternates:alternativasDeIdioma(locale,'/como-ordenamos'),openGraph:{title,description,type:'article'}};
+ return {title:`${title} | ContrataCR`,description,alternates:alternativasDeIdioma(locale,'/como-ordenamos'),openGraph:{title,description,type:'article'}};
 }
 export default async function HowWeRankPage({params}:{params:Promise<{locale:string}>}){
  const {locale}=await params,en=locale==='en',i=en?1:0;

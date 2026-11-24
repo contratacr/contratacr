@@ -22,7 +22,7 @@ export async function generateMetadata({params}:{params:Promise<{locale:string;s
  const path=`/lugar/${slug}/menu`,title=`${en?'Menu':'Menú'} · ${menu.name}`;
  const description=en?`Menu and final prices (IVA and service included) of ${menu.name}.`:`Menú y precios finales (con IVA y servicio) de ${menu.name}.`;
  const empty=menu.sections.length===0;
- return {title,description,alternates:{canonical:(en?'/en':'')+path,languages:{es:path,en:'/en'+path}},
+ return {title:`${title} | ContrataCR`,description,alternates:{canonical:(en?'/en':'')+path,languages:{es:path,en:'/en'+path}},
   openGraph:{title,description,type:'website'},robots:{index:!empty,follow:!empty}};
 }
 export default async function PlaceMenuRoute({params}:{params:Promise<{locale:string;slug:string}>}){

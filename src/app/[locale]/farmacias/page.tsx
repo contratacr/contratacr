@@ -13,7 +13,7 @@ export async function generateMetadata({params,searchParams}:{params:Promise<{lo
  const title=en?'Pharmacies in Costa Rica':'Farmacias en Costa Rica',description=en?'Pharmacies in Costa Rica with hours, location, licence status and over-the-counter prices.':'Farmacias de Costa Rica con horario, ubicación, estado del permiso y precios de venta libre.';
  // Search/filter results (any query parameter: province, open now, page…) stay out of the index; the plain section is indexed.
  const filtered=Object.keys(await searchParams).length>0;
- return {title,description,...(filtered?{robots:{index:false,follow:true}}:{}),alternates:{canonical:(en?'/en':'')+path,languages:{es:path,en:'/en'+path}},openGraph:{title,description,type:'website'}};
+ return {title:`${title} | ContrataCR`,description,...(filtered?{robots:{index:false,follow:true}}:{}),alternates:{canonical:(en?'/en':'')+path,languages:{es:path,en:'/en'+path}},openGraph:{title,description,type:'website'}};
 }
 export default async function SectionRoute({params,searchParams}:{params:Promise<{locale:string}>;searchParams:Promise<SearchPageParams>}){
  if(!DIR_ENABLED)notFound();

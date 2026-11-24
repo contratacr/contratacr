@@ -256,6 +256,7 @@
     "resultsIn": "{count, plural, one {# professional} other {# professionals}} in {location}",
     "thisArea": "this area",
     "resultsInCR": "{count, plural, one {# professional} other {# professionals}} in Costa Rica",
+    "resultsBusinessesOnly": "Businesses in Costa Rica",
     "list": "List",
     "map": "Map",
     "close": "Close",

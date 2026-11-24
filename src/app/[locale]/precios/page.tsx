@@ -19,7 +19,7 @@ export async function generateMetadata({params}:{params:Promise<{locale:string}>
  const {locale}=await params,en=locale==='en',path='/precios';
  const title=en?'Compare prices in Costa Rica':'Comparar precios en Costa Rica';
  const description=en?'Supermarket and over-the-counter pharmacy prices by store and province, with source and date.':'Precios de supermercado y farmacia (venta libre) por comercio y provincia, con fuente y fecha.';
- return {title,description,alternates:{canonical:(en?'/en':'')+path,languages:{es:path,en:'/en'+path}},robots:{index:false,follow:true},openGraph:{title,description,type:'website'}};
+ return {title:`${title} | ContrataCR`,description,alternates:{canonical:(en?'/en':'')+path,languages:{es:path,en:'/en'+path}},robots:{index:false,follow:true},openGraph:{title,description,type:'website'}};
 }
 export default async function PricesRoute({params,searchParams}:{params:Promise<{locale:string}>;searchParams:Promise<SP>}){
  if(!DIR_ENABLED)notFound();

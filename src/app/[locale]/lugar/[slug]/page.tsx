@@ -89,7 +89,7 @@ export async function generateMetadata({params}:{params:Promise<{locale:string;s
  // Indexing rule (feature-flags.ts placeIndexable, DIR_INDEX_IMPORTED): claimed/verified places are indexed; imported
  // unclaimed ones only with a phone, opening hours or a website. Permanently closed places stay out of the index.
  const index=place.status==='published'&&placeIndexable({verificationLevel:place.verificationLevel,hasPhone:!!place.phone,hasHours:place.hours.length>0,hasWebsite:!!place.website});
- return {title:place.name,description,alternates:{canonical:(en?'/en':'')+path,languages:{es:path,en:'/en'+path}},
+ return {title:`${place.name} | ContrataCR`,description,alternates:{canonical:(en?'/en':'')+path,languages:{es:path,en:'/en'+path}},
   openGraph:{title:place.name,description,type:'website'},robots:{index,follow:index}};
 }
 export default async function PlaceRoute({params}:{params:Promise<{locale:string;slug:string}>}){

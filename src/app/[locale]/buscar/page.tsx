@@ -436,7 +436,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   // Area-aware count label: exact map bounds -> "esta area"; otherwise canton
   // (most specific) -> province -> generic "en Costa Rica".
   const areaName = mapBounds ? t("thisArea") : nearReference?.canton.name ?? params.ubicacion ?? activeCanton?.name ?? activeProvince?.name;
-  const subtitle = areaName
+  const subtitle = allResults.length === 0 && businessMix
+    ? t("resultsBusinessesOnly")
+    : areaName
     ? t("resultsIn", { count: allResults.length, location: areaName })
     : t("resultsInCR", { count: allResults.length });
   const filterInitialValues = {

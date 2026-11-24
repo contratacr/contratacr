@@ -13,7 +13,7 @@ export async function generateMetadata({params}:{params:Promise<{locale:string}>
  const {locale}=await params,en=locale==='en',path='/inmuebles';
  const title=en?'Real estate in Costa Rica':'Inmuebles en Costa Rica';
  const description=en?'Houses, apartments and lots for sale or rent in Costa Rica.':'Casas, apartamentos y lotes en venta o alquiler en Costa Rica.';
- return {title,description,alternates:{canonical:(en?'/en':'')+path,languages:{es:path,en:'/en'+path}},openGraph:{title,description,type:'website'}};
+ return {title:`${title} | ContrataCR`,description,alternates:{canonical:(en?'/en':'')+path,languages:{es:path,en:'/en'+path}},openGraph:{title,description,type:'website'}};
 }
 export default async function PropertiesRoute({params,searchParams}:{params:Promise<{locale:string}>;searchParams:Promise<SearchPageParams>}){
  // Classified listings are OFF by owner decision (feature-flags.ts): 404 while the flag is off.

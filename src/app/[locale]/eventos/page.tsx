@@ -22,7 +22,7 @@ export async function generateMetadata({params}:{params:Promise<{locale:string}>
  const {locale}=await params,en=locale==='en',path='/eventos';
  const title=en?'Local events in Costa Rica':'Eventos locales en Costa Rica';
  const description=en?'Events published by businesses on ContrataCR: music, markets, workshops and more, by date and province.':'Eventos que publican los negocios en ContrataCR: música, ferias, talleres y más, por fecha y provincia.';
- return {title,description,alternates:{canonical:(en?'/en':'')+path,languages:{es:path,en:'/en'+path}},robots:{index:false,follow:true},openGraph:{title,description,type:'website'}};
+ return {title:`${title} | ContrataCR`,description,alternates:{canonical:(en?'/en':'')+path,languages:{es:path,en:'/en'+path}},robots:{index:false,follow:true},openGraph:{title,description,type:'website'}};
 }
 export default async function EventsRoute({params,searchParams}:{params:Promise<{locale:string}>;searchParams:Promise<SP>}){
  if(!DIR_ENABLED)notFound();
