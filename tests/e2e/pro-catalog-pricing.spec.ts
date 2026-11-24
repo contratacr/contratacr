@@ -33,6 +33,11 @@ for(const language of ['es','en'] as const)test(`Catalog item pricing [${languag
   await expect(panel.locator('[data-pricing-saved]')).toContainText(tr('Datos guardados.','Details saved.'),{timeout:60000});
   await panel.locator('[data-pricing-field="url"]').fill('ftp://x');await panel.locator('[data-pricing-save]').click();
   await expect(panel.getByRole('alert')).toContainText(tr('El enlace debe comenzar','The link must start'));
+  await gotoOK(page,`/${language}/dashboard/pro?tab=pro_inventory`);
+  const chips=page.locator('[data-catalog-list-chips]').first();await expect(chips).toBeVisible({timeout:90000});
+  await expect(chips.locator('[data-chip="favorite"]')).toHaveText(tr('Favorito','Favorite'));
+  await expect(chips.locator('[data-chip="costType"]')).toHaveText(tr('Mano de obra','Labor'));
+  await expect(chips.locator('[data-chip="msrp"]')).toContainText('52');
   await expectNoHorizontalOverflow(page);
  }finally{await f.cleanup();}
 });

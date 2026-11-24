@@ -3,6 +3,7 @@ import {CatalogItemExtras} from './catalog-item-extras';
 import {CatalogItemSpecs} from './catalog-item-specs';
 import {CatalogItemPricing} from './catalog-item-pricing';
 import {CatalogItemKind} from './catalog-item-kind';
+import {CatalogListChips} from './catalog-list-chips';
 import {WorkMessages} from './work-messages';
 import {inventoryWriteInputSchema} from "@/lib/pro/inventory-write-recovery";
 import {proPhone} from '@/lib/pro/phone';
@@ -952,7 +953,7 @@ export function BusinessPanel({
                   );
                 return <ProRecordCard
                   key={item.id} icon={Icon} title={title} subtitle={subtitle}
-                  meta={c?.identification || (w ? (w.cancelled ? tr("Cancelada","Cancelled") : w.stage === "completed" ? tr("Finalizada","Completed") : tr("Agendada","Scheduled")) : undefined)}
+                  meta={p&&proSpace?<CatalogListChips productId={p.id}/>:c?.identification || (w ? (w.cancelled ? tr("Cancelada","Cancelled") : w.stage === "completed" ? tr("Finalizada","Completed") : tr("Agendada","Scheduled")) : undefined)}
                   onOpen={() => void openDetail(item.id)}
                   openLabel={c ? tr("Ver cliente","View customer") : p ? (p.itemType === "service" ? tr("Ver servicio","View service") : tr("Ver producto","View product")) : tr("Ver cita","View appointment")}
                   onEdit={() => openEdit(item.id)} editLabel={tr("Editar","Edit")}

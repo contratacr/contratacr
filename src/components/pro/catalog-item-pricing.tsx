@@ -3,6 +3,7 @@ import {useCallback,useEffect,useState} from 'react';
 import {useLocale} from 'next-intl';
 import {z} from 'zod';
 import {Button} from '@/components/ui/button';
+import {forgetCatalogChips} from './catalog-list-chips';
 import {COST_TYPES,COST_TYPE_LABELS,productPricingSchema,type ProductPricing} from '@/lib/pro/catalog-pricing';
 
 /** Area D (price book): cost type, suggested retail price (MSRP), product link and favorite of one catalog item (Pro space). */
@@ -34,7 +35,7 @@ export function CatalogItemPricing({productId,disabled=false}:{productId:string;
    const response=await fetch('/api/pro/catalog-pricing',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
    if(response.status===409){setError(t('El artículo cambió. Recargue antes de guardar.','The item changed. Reload before saving.'));return;}
    if(!response.ok)throw Error();
-   const body=z.object({pricing:productPricingSchema}).parse(await response.json());setPricing(body.pricing);setDraft(toDraft(body.pricing,en));setSaved(true);
+   const body=z.object({pricing:productPricingSchema}).parse(await response.json());forgetCatalogChips(productId);setPricing(body.pricing);setDraft(toDraft(body.pricing,en));setSaved(true);
   }catch{setError(t('No se pudo guardar. Reintente.','Could not save. Try again.'));}
   finally{setBusy(false);}
  }
