@@ -8,6 +8,7 @@ import {proMoney} from '@/lib/pro/money';
 import {proCount} from '@/lib/pro/plural';
 import {proCsv,csvAmount,proReportSchema,type ProReport,type ProReportJob} from '@/lib/pro/reports';
 import {FinanceReportTabs} from './round11-finance';
+import {ExtraReportTabs} from './pro-reports-extra';
 import {LedgerReportTabs} from './payables-cashflow';
 
 /** Round 7B (Houzz parity: Reports): financial and jobs reports with CSV export. Read-only. */
@@ -15,7 +16,7 @@ const stages:Record<string,{es:string;en:string}>={new:{es:'Nuevo',en:'New'},quo
 export function ProReports(){const {user}=useAuth();if(!user)return null;return <ReportsSession key={user.id} actor={user.id}/>;}
 function ReportsSession({actor}:{actor:string}){
  const en=useLocale()==='en',t=(es:string,english:string)=>en?english:es,money=(cents:number|null)=>cents===null?'—':proMoney(cents/100,en);
- const [from,setFrom]=useState(''),[to,setTo]=useState(''),[data,setData]=useState<ProReport|null>(null),[loading,setLoading]=useState(true),[error,setError]=useState(false),[denied,setDenied]=useState(false),[tab,setTab]=useState<'financial'|'customers'|'payments'|'vat'|'payables'|'cashflow'|'income'|'jobs'>('financial');
+ const [from,setFrom]=useState(''),[to,setTo]=useState(''),[data,setData]=useState<ProReport|null>(null),[loading,setLoading]=useState(true),[error,setError]=useState(false),[denied,setDenied]=useState(false),[tab,setTab]=useState<'financial'|'customers'|'payments'|'vat'|'payables'|'cashflow'|'income'|'jobs'|'timeMember'|'timeProject'|'selections'>('financial');
  /* Round 11: the result next to «Costs and committed» subtracts both (falls back to the cost-only result for older answers). */
  const result=(job:ProReportJob)=>job.resultWithCommittedCents!==undefined?job.resultWithCommittedCents:job.resultCents;
  const sequence=useRef(0);
@@ -48,7 +49,7 @@ function ReportsSession({actor}:{actor:string}){
  const field='mt-1 block min-h-11 w-full min-w-0 rounded-xl border border-[#d7e1ea] bg-white px-3 font-normal';
  return <section data-pro-reports className="min-w-0 space-y-4">
   <div className="flex flex-wrap items-end justify-between gap-3"><div className="min-w-0"><h2 className="text-lg font-semibold">{t('Reportes','Reports')}</h2><p className="text-sm text-[#52627a]">{t('Facturado, cobrado, pendiente por antigüedad y resultado de cada trabajo. Montos en colones, con los mismos cálculos de cada trabajo.','Invoiced, collected, outstanding by age and the result of each job. Amounts in colones, with the same figures as each job.')}</p></div>
-   <div role="tablist" aria-label={t('Tipo de reporte','Report type')} className="flex max-w-full gap-1 overflow-x-auto rounded-xl bg-[#e9eff5] p-1 sm:flex-wrap">{(['financial','customers','payments','vat','payables','cashflow','income','jobs'] as const).map(value=><button key={value} type="button" role="tab" aria-selected={tab===value} data-pro-report-tab={value} onClick={()=>setTab(value)} className={`min-h-11 shrink-0 whitespace-nowrap rounded-lg px-3 text-sm font-semibold ${tab===value?'bg-white text-[#008bb5] shadow-sm':'text-[#52627a]'}`}>{({financial:t('Financiero','Financial'),customers:t('Por cliente','By customer'),payments:t('Pagos recibidos','Payments received'),vat:t('IVA','VAT'),payables:t('Cuentas por pagar','Payables'),cashflow:t('Flujo de caja','Cash flow'),income:t('Estado de resultados','Income statement'),jobs:t('Trabajos','Jobs')})[value]}</button>)}</div></div>
+   <div role="tablist" aria-label={t('Tipo de reporte','Report type')} className="flex max-w-full gap-1 overflow-x-auto rounded-xl bg-[#e9eff5] p-1 sm:flex-wrap">{(['financial','customers','payments','vat','payables','cashflow','income','jobs','timeMember','timeProject','selections'] as const).map(value=><button key={value} type="button" role="tab" aria-selected={tab===value} data-pro-report-tab={value} onClick={()=>setTab(value)} className={`min-h-11 shrink-0 whitespace-nowrap rounded-lg px-3 text-sm font-semibold ${tab===value?'bg-white text-[#008bb5] shadow-sm':'text-[#52627a]'}`}>{({financial:t('Financiero','Financial'),customers:t('Por cliente','By customer'),payments:t('Pagos recibidos','Payments received'),vat:t('IVA','VAT'),payables:t('Cuentas por pagar','Payables'),cashflow:t('Flujo de caja','Cash flow'),income:t('Estado de resultados','Income statement'),jobs:t('Trabajos','Jobs'),timeMember:t('Horas por miembro','Time by member'),timeProject:t('Horas por proyecto','Time by project'),selections:t('Seguimiento de selecciones','Selections tracker')})[value]}</button>)}</div></div>
   <div className="grid min-w-0 gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
    <label className="block min-w-0 text-sm font-semibold">{t('Desde','From')}<input type="date" aria-label={t('Desde','From')} min="2000-01-01" max="2100-12-31" value={from} onChange={event=>{const v=event.target.value;if(!v||!to||v<=to)setFrom(v);}} className={field}/></label>
    <label className="block min-w-0 text-sm font-semibold">{t('Hasta','To')}<input type="date" aria-label={t('Hasta','To')} min="2000-01-01" max="2100-12-31" value={to} onChange={event=>{const v=event.target.value;if(!v||!from||v>=from)setTo(v);}} className={field}/></label>
@@ -59,7 +60,7 @@ function ReportsSession({actor}:{actor:string}){
   :!data?<p role="status" className="text-sm text-[#52627a]">{t('Cargando reporte…','Loading report…')}</p>
   :<>
    {tab!=='cashflow'&&tab!=='income'&&<p className="text-xs text-[#52627a]">{t('Período','Period')}: {period}{data.truncated?' · '+t('Se muestran los 200 trabajos más recientes.','Showing the 200 most recent jobs.'):''}</p>}
-   {tab==='payables'||tab==='cashflow'||tab==='income'?<LedgerReportTabs actor={actor} tab={tab} from={from} to={to}/>:tab==='customers'||tab==='payments'||tab==='vat'?<FinanceReportTabs actor={actor} tab={tab} from={from} to={to}/>:tab==='financial'?<div className="space-y-4">
+   {tab==='timeMember'||tab==='timeProject'||tab==='selections'?<ExtraReportTabs actor={actor} tab={tab} from={from} to={to} en={en}/>:tab==='payables'||tab==='cashflow'||tab==='income'?<LedgerReportTabs actor={actor} tab={tab} from={from} to={to}/>:tab==='customers'||tab==='payments'||tab==='vat'?<FinanceReportTabs actor={actor} tab={tab} from={from} to={to}/>:tab==='financial'?<div className="space-y-4">
     <div className="grid min-w-0 gap-3 sm:grid-cols-3">
      <div className={tile} data-pro-report-invoiced><p className="text-sm text-[#52627a]">{t('Facturado','Invoiced')}</p><p className="text-xl font-bold">{money(data.invoicedCents)}</p></div>
      <div className={tile} data-pro-report-collected><p className="text-sm text-[#52627a]">{t('Cobrado','Collected')}</p><p className="text-xl font-bold">{money(data.collectedCents)}</p></div>
