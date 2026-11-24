@@ -84,7 +84,7 @@ for(const language of ['es','en'] as const)test(`Projects hub: derived status, c
   await expectNoHorizontalOverflow(page);await page.screenshot({path:info.outputPath(`projects-${language}.png`),fullPage:true});
   await hub.locator('[data-projects-search]').fill('zzz-sin-resultados');await expect(hub.locator('[data-projects-empty]')).toHaveText(en?'There are no projects with this filter.':'No hay proyectos con este filtro.');
   await hub.locator('[data-projects-search]').fill('cocina');
-  await (mobile?entry('p-progress').getByRole('button'):entry('p-progress').getByRole('button',{name:'Remodelación de cocina'})).click();
+  await (mobile?entry('p-progress').getByRole('button'):entry('p-progress').getByRole('button',{name:'Remodelación de cocina',exact:true})).click();
   await expect(page).toHaveURL(/tab=pro_agenda|\/dashboard\/pro\/trabajo\//);expect((new URL(page.url()).searchParams.get('cita')??(decodeURIComponent(new URL(page.url()).pathname.split('/trabajo/')[1]?.split('/')[0]??'')||null))).toBe('p-progress');
   const nav=page.getByRole('navigation',{name:en?'Job workspace':'Gestión del trabajo'});await expect(nav).toBeVisible({timeout:60000});
   // Planning was added after Overview (project-planning-local.md): four groups.

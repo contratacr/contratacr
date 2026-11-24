@@ -57,7 +57,7 @@ test('Quote agreement: formal partial response, direct conversion and acceptance
 
   // ---- (b) Acceptance recorded outside the platform (a different job: a fresh work) ----
   const work2=crypto.randomUUID();
-  expect((await f.db.from('pro_work').insert({user_id:owner,id:work2,clientId:f.clientId,client:'Cliente '+id,service:'Cocina externa '+id,stage:'new',cancelled:false})).error).toBeNull();
+  expect((await f.db.from('pro_work').insert({user_id:owner,id:work2,clientId:f.clientId,client:'Cliente '+id,service:'Cocina externa '+id,stage:'new',start:'',end:'',cancelled:false})).error).toBeNull();
   const ctx2=(await f.db.rpc('pro_private_estimate_context',{p_actor:owner,p_client:null,p_kind:'work',p_id:work2})).data as typeof ctx;
   const est2=crypto.randomUUID();
   const saved2=await f.db.rpc('pro_private_estimate_mutate',{p_actor:owner,p_input:{action:'save',actionId:crypto.randomUUID(),estimateId:est2,revision:0,clientId:ctx2.client.id,refreshClient:false,clientFingerprint:ctx2.clientFingerprint,source:ctx2.source,issuer:{...ctx2.issuer,issuerName:'Constructora QA'},title:'Cocina '+id,notes:'',currency:'CRC',validUntil:null,

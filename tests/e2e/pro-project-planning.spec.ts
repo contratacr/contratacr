@@ -100,7 +100,7 @@ for(const language of ['es','en'] as const)test(`Project planning UI: create pro
   const hub=page.locator('[data-projects-workspace]');await ready(page,hub,en);
   const entry=(id:string)=>hub.locator(mobile?`[data-project-card="${id}"]`:`[data-project-row="${id}"]`);
   await expect(entry(f.workId)).toBeVisible({timeout:60000});
-  await (mobile?entry(f.workId).getByRole('button'):entry(f.workId).getByRole('button',{name:'Trabajo existente sin programar'})).click();
+  await (mobile?entry(f.workId).getByRole('button'):entry(f.workId).getByRole('button',{name:'Trabajo existente sin programar',exact:true})).click();
   await expect.poll(()=>(new URL(page.url()).searchParams.get('cita')??(decodeURIComponent(new URL(page.url()).pathname.split('/trabajo/')[1]?.split('/')[0]??'')||null))).toBe(f.workId);expect(new URL(page.url()).searchParams.get('volverProyectos')).toContain('tab=pro_projects');
   const nav=page.getByRole('navigation',{name:en?'Job workspace':'Gestión del trabajo'});await expect(nav).toBeVisible({timeout:60000});
   await expect(nav.locator('[data-job-workspace-group]')).toHaveCount(4);
