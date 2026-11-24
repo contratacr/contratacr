@@ -13,7 +13,7 @@ import {z} from 'zod';
 /**
  * Project "Activities and Rates": per-project override of the company activity rates (cost rate, markup %, billable
  * rate, taxable, billable). Stored in pro_work_extras kind 'activity' (key = activity id). Billable rate, billable and
- * the timer cost are applied by the database when a time entry of this project is created (migration 494); markup and
+ * the timer cost are applied by the database when a time entry of this project is created (migration 520); markup and
  * taxable start the "Record time" form. Blank money = use the company activity value.
  */
 const field='block min-h-11 w-full min-w-0 rounded-xl border border-[#d7e1ea] bg-white px-3 py-2 text-base font-normal text-[#162543]';
