@@ -1,6 +1,7 @@
 import {test,expect} from 'playwright/test';
 import {randomBytes,randomUUID} from 'node:crypto';
 import {parseTags,markupCents,parseExtrasData,statusesExtrasSchema} from '../../src/lib/pro/project-extras';
+import {csvCell,daysBetween,scheduleCsv} from '../../src/lib/pro/schedule-views';
 import {emptyFileFilters,fileFiltersActive,filterFiles} from '../../src/lib/pro/file-filters';
 import {expenseKpis} from '../../src/components/pro/expense-extras';
 import {ownerFixture,local,origin,headersFor} from './pro-round2-fixture';
@@ -55,4 +56,12 @@ test('Project files: filters by date range and type',()=>{
  expect(filterFiles(rows,{...emptyFileFilters,from:'2026-11-20'})).toEqual([rows[2]]);
  expect(filterFiles(rows,{...emptyFileFilters,to:'2026-11-19',type:'all'})).toEqual([rows[0],rows[1]]);
  expect(fileFiltersActive(emptyFileFilters)).toBe(false);expect(fileFiltersActive({...emptyFileFilters,type:'image'})).toBe(true);
+});
+
+test('Schedule actions: CSV export and date offset',()=>{
+ expect(csvCell('=SUM(A1)')).toBe("'=SUM(A1)");expect(csvCell('a;b')).toBe('"a;b"');expect(csvCell('di "x"')).toBe('"di ""x"""');
+ expect(daysBetween('2026-11-01','2026-11-10')).toBe(9);expect(daysBetween('2026-03-01','2026-02-01')).toBe(-28);
+ const csv=scheduleCsv({phases:[{id:'p',title:'Obra'}],tasks:[{id:'t',title:'=Cmd',status:'open',phaseId:'p',plannedStart:'2026-11-01',plannedEnd:'2026-11-03'} as never],milestones:[{id:'m',title:'Entrega',date:'2026-11-30'} as never]},false);
+ expect(csv.startsWith('﻿Tipo;Fase;Título;Inicio;Fin;Estado\r\n')).toBe(true);
+ expect(csv).toContain("Elemento;Obra;'=Cmd;2026-11-01;2026-11-03;Abierto");expect(csv).toContain('Fecha clave;;Entrega;2026-11-30;2026-11-30;');
 });

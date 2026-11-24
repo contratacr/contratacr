@@ -7,6 +7,7 @@ import {Button} from '@/components/ui/button';
 import {pushProParams} from '@/lib/pro/navigation';
 import {addDays,baselineMutationSchema,baselineResultSchema,clientScheduleSchema,dayDiff,ganttSchema,type ClientSchedule,type Gantt,type GanttMilestone,type GanttPhase,type GanttTask} from '@/lib/pro/project-schedule';
 import {workScheduleMutationSchema,workScheduleResultSchema,workTimelineTaskCreateSchema,type WorkScheduleMutation,type WorkTimelineTaskCreate} from '@/lib/pro/work-schedule';
+import {ScheduleActions} from './schedule-actions';
 import {daysFromPixels,dependencyIssues,keyEdit,matchesAssignee,shiftPeriod,undoState,UNASSIGNED,wouldCreateCycle,type GanttEditMode} from '@/lib/pro/gantt-edit';
 import {useProChildGuard} from './use-pro-child-guard';
 import {EstimateScheduleAction} from './estimate-schedule';
@@ -304,6 +305,7 @@ function ScheduleSession({accountId,workId,onStateChange}:{accountId:string;work
    {mode==='gantt'&&!empty&&<Button type="button" variant="secondary" className="min-h-11" onClick={scrollToday}>{c.today}</Button>}
    {canEdit&&<Button type="button" data-schedule-baseline-open data-pro-write="work.write" className="min-h-11 sm:ml-auto" disabled={!idle||empty||!scheduled.length&&!data.milestones.length} onClick={()=>{setBaselineDraft(c.baselineDefault(fmt(data.today,en)));setError('');setNotice('');}}>{c.saveBaseline}</Button>}
   </div>
+  <ScheduleActions data={data} workId={workId} accountId={accountId} disabled={!idle} canEdit={canEdit} onChanged={()=>void load()}/>
   {/* Gap 13: editing toolbar (create, undo) and the assignee filter. */}
   <div data-gantt-toolbar className="flex min-w-0 flex-wrap items-end gap-2">
    {canEdit&&<><Button type="button" data-gantt-new="task" data-pro-write="work.write" className="min-h-11" disabled={!idle} onClick={()=>openCreate('task')}>{c.newTask}</Button>

@@ -70,3 +70,17 @@ export function upcomingItems(today:string,tasks:GanttTask[],milestones:GanttMil
 export function inRange(items:UpcomingItem[],bounds:{from:string;to:string},type:UpcomingType){
  return items.filter(item=>item.date>=bounds.from&&item.date<=bounds.to&&(type==='all'||item.type===type));
 }
+
+/** CSV cell safe against spreadsheet formulas (leading = + - @ tab/CR) and quotes. */
+export function csvCell(value:string){const safe=/^[=+\-@\t\r]/.test(value)?"'"+value:value;return /[";\n\r]/.test(safe)?'"'+safe.replace(/"/g,'""')+'"':safe;}
+/** Schedule export: phases, items and key dates, separator ";" and BOM like the other Pro exports. */
+export function scheduleCsv(data:{phases:{id:string;title:string}[];tasks:GanttTask[];milestones:GanttMilestone[]},en:boolean){
+ const head=en?['Type','Phase','Title','Start','End','Status']:['Tipo','Fase','Título','Inicio','Fin','Estado'];
+ const phase=new Map(data.phases.map(p=>[p.id,p.title])),done=en?'Completed':'Completado',open=en?'Open':'Abierto';
+ const rows:string[][]=[head];
+ for(const t of data.tasks)rows.push([en?'Item':'Elemento',t.phaseId?phase.get(t.phaseId)??'':'',t.title,t.plannedStart??'',t.plannedEnd??'',t.status==='done'?done:open]);
+ for(const m of data.milestones)rows.push([en?'Key date':'Fecha clave','',m.title,m.date,m.date,'']);
+ return '﻿'+rows.map(r=>r.map(csvCell).join(';')).join('\r\n')+'\r\n';
+}
+/** Days between two civil dates (b - a). */
+export function daysBetween(a:string,b:string){return Math.round((toUtc(b)-toUtc(a))/MS);}
