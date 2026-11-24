@@ -1,6 +1,7 @@
 'use client';
 import {useRef,useState,useSyncExternalStore} from 'react';
 import {featureReasonText,type SavedList} from '@/lib/directory/place-features';
+import {isSystemList,announceListsChanged} from '@/components/saved/lists-client';
 
 /**
  * LOCAL PRO ONLY (place features round, 2026-11-17): «Mis listas» (/listas). Create, rename, delete, remove places and
@@ -13,10 +14,10 @@ const noSubscribe=()=>()=>{};
 const field='min-h-11 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 text-base text-[#162543]';
 export function SavedListsManager({locale,initial,origin}:{locale:string;initial:SavedList[];origin:string}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es,prefix=en?'/en':'';
- const [lists,setLists]=useState(initial),[msg,setMsg]=useState<{ok:boolean;text:string}|null>(null),[busy,setBusy]=useState(false),[editing,setEditing]=useState<string|null>(null);
+ const [lists,setLists]=useState(()=>initial.filter(l=>!isSystemList(l.name))),[msg,setMsg]=useState<{ok:boolean;text:string}|null>(null),[busy,setBusy]=useState(false),[editing,setEditing]=useState<string|null>(null);
  const actions=useRef(new Map<string,{id:string;body:string}>());
  const ready=useSyncExternalStore(noSubscribe,()=>true,()=>false);
- const load=async()=>{const r=await fetch('/api/listas',{cache:'no-store'});const j=await r.json().catch(()=>({}));if(r.ok)setLists(j.items as SavedList[]);};
+ const load=async()=>{const r=await fetch('/api/listas',{cache:'no-store'});const j=await r.json().catch(()=>({}));if(r.ok){setLists((j.items as SavedList[]).filter(l=>!isSystemList(l.name)));announceListsChanged();}};
  const mutate=async(key:string,body:Record<string,unknown>,ok:string)=>{
   const k=JSON.stringify(body);let a=actions.current.get(key);if(!a||a.body!==k){a={id:crypto.randomUUID(),body:k};actions.current.set(key,a);}
   setBusy(true);setMsg(null);
@@ -29,12 +30,13 @@ export function SavedListsManager({locale,initial,origin}:{locale:string;initial
  };
  return <div className="space-y-6" data-lists-manager data-ready={ready||undefined}>
   <form data-lists-create className="flex gap-2" onSubmit={async e=>{e.preventDefault();const el=e.currentTarget,name=String(new FormData(el).get('name')??'').trim();if(!name)return;
+    if(isSystemList(name)){setMsg({ok:false,text:t('Ese nombre está reservado. Elija otro.','That name is reserved. Choose another one.')});return;}
     if(await mutate('create:'+name,{action:'create',listId:crypto.randomUUID(),name},t('Lista creada.','List created.')))el.reset();}}>
    <label className="sr-only" htmlFor="lists-new">{t('Nombre de la nueva lista','New list name')}</label>
    <input id="lists-new" name="name" maxLength={80} placeholder={t('Nueva lista, p. ej. "Sodas para el almuerzo"','New list, e.g. "Lunch spots"')} className={field}/>
    <button type="submit" disabled={busy} className={`${btn} bg-[#162543] text-white`}>{t('Crear','Create')}</button></form>
   {msg&&<p role={msg.ok?'status':'alert'} data-lists-msg={msg.ok?'ok':'error'} className={`text-sm font-semibold ${msg.ok?'text-emerald-800':'text-red-800'}`}>{msg.text}</p>}
-  {lists.length===0?<p data-lists-empty className="rounded-2xl bg-slate-50 p-5 text-slate-700">{t('Todavía no tiene listas. Use "Guardar" en la página de un lugar.','You have no lists yet. Use "Save" on a place page.')}</p>
+  {lists.length===0?<p data-lists-empty className="rounded-2xl bg-slate-50 p-5 text-slate-700">{t('Todavía no tiene listas propias. Cree una arriba o use "Guardar" en la página de un lugar.','You have no lists of your own yet. Create one above or use "Save" on a place page.')}</p>
    :<ul className="space-y-4">{lists.map(l=>{const share=l.shareToken?`${origin}${prefix}/lista/${l.shareToken}`:null;return <li key={l.listId} data-list={l.name} className="space-y-3 rounded-2xl border border-[#d7e1ea] p-4">
     {editing===l.listId?<form className="flex gap-2" onSubmit={async e=>{e.preventDefault();const name=String(new FormData(e.currentTarget).get('name')??'').trim();
       if(name&&name!==l.name&&await mutate('rename:'+l.listId,{action:'rename',listId:l.listId,revision:l.revision,name},t('Nombre actualizado.','Name updated.')))setEditing(null);}}>

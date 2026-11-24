@@ -6,7 +6,7 @@ import { esServicioDelCatalogo } from "@/lib/data/categories";
 import { esRutaDeBusqueda } from "@/lib/buscar-url";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Bell, Hammer, House, ClipboardList, LayoutGrid, MessageSquareText, Plus, Search, UserRound } from "lucide-react";
+import { Bell, MessageSquareText, Plus, Search, UserRound } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
@@ -19,6 +19,7 @@ import { useAvisosPorVer } from "@/hooks/use-avisos-por-ver";
 import { useDirectMessageUnread } from "@/hooks/use-direct-message-unread";
 import { cn } from "@/lib/utils";
 import { useSiteFeatures } from "@/components/site-features";
+import { DirectoryTabs, directoryActiveTab } from "@/components/mobile/directory-tabs";
 
 // La barra vive en el armazón, montada una sola vez, y NO dentro de cada
 // página: cuando se montaba con la página se desmontaba y volvía a montarse en
@@ -65,7 +66,7 @@ export function NativeBottomNav() {
     const id = window.setTimeout(() => setTocada(null), 4000);
     return () => window.clearTimeout(id);
   }, [tocada]);
-  const avisosPorVer = useAvisosPorVer(nativeApp);
+  const avisosPorVer = useAvisosPorVer(nativeApp || directoryOn);
 
   // El estado real de la ventana del asistente, anunciado por ella misma. El
   // marcado por "pendiente" se limpiaba con cualquier navegación de fondo y la
@@ -96,7 +97,8 @@ export function NativeBottomNav() {
   // varias alturas: quitarla y reponerla un cuadro después es un salto de
   // maquetación en CADA arranque, además de la barra apareciendo de la nada.
   // Directory tabs also stay away from place pages (/lugar/*): they carry their own contact bar at the bottom.
-  const visible = nativeApp && !sinBarraDeAbajo(pathname) && !(directoryOn && /^\/lugar(?:\/|$)/.test(pathname ?? ""));
+  // With the directory ON the 5-tab bar also shows on mobile web (<lg), not only in the app; it stays away from sign-in screens there.
+  const visible = (nativeApp || (directoryOn && !/^\/(?:login|registro|olvide-contrasena|reset-password|onboarding|completar-perfil)(?:\/|$)/.test(pathname ?? ""))) && !sinBarraDeAbajo(pathname) && !(directoryOn && /^\/lugar(?:\/|$)/.test(pathname ?? ""));
 
   // Solo una pestaña encendida a la vez: mientras hay una pendiente, manda esa.
   const isActive = useCallback(
@@ -215,9 +217,11 @@ export function NativeBottomNav() {
   // cuadro con lo de la anterior (barra de abajo, cabecera) y luego cambiaba.
   useLayoutEffect(() => {
     const roots = [document.documentElement, document.body];
-    roots.forEach((root) => root.classList.toggle("ccr-native-bottom-nav-visible", visible));
-    return () => roots.forEach((root) => root.classList.remove("ccr-native-bottom-nav-visible"));
-  }, [visible]);
+    // On mobile web (no native app) the native-only CSS must not apply: it gets its own class and padding below.
+    const clase = nativeApp ? "ccr-native-bottom-nav-visible" : "ccr-dir-tabs-visible";
+    roots.forEach((root) => root.classList.toggle(clase, visible));
+    return () => roots.forEach((root) => root.classList.remove(clase));
+  }, [visible, nativeApp]);
 
   // La barra real ya montó: se retira la franja provisional del arranque.
   useEffect(() => {
@@ -366,50 +370,12 @@ export function NativeBottomNav() {
   if (directoryOn) {
     // Hidden under the full-screen search sheet.
     if (buscadorAbierto) return null;
-    const ruta = pathname ?? "";
-    const enLugares = ruta === "/servicios" || ruta === "/lugares" || sections.some((section) => ruta === `/${section}`);
-    const activo = asistenteAbierto ? -1
-      : ruta === "/" ? 0
-      : esRutaDeBusqueda(ruta, esServicioDelCatalogo) ? 1
-      : enLugares ? 2
-      : ruta === "/solicitudes" || ruta.startsWith("/solicitudes/") ? 3
-      : ruta === "/mensajes" || ruta.startsWith("/mensajes/") ? 4
-      : user && ruta.startsWith(panelHref) ? 5
-      : -1;
-    const tab = (i: number, href: string, label: string, Icon: typeof House, extra?: { loginHref?: string; badge?: number }) => (
-      <Link
-        key={href}
-        href={extra?.loginHref ?? href}
-        prefetch={false}
-        data-native-tab={i}
-        aria-current={activo === i ? "page" : undefined}
-        onClick={(event) => { if (!extra?.loginHref) irA(event, href); }}
-        className={cn("relative z-10 flex h-full min-w-[44px] min-h-[44px] flex-1 basis-0 flex-col items-center justify-center gap-0.5 rounded-full text-[#1A2744] transition-colors duration-200 ccr-toque-barra", activo === i && "bg-[#009FD9]/12 text-[#009FD9]")}
-      >
-        <span className="relative">
-          <Icon className="h-[22px] w-[22px]" strokeWidth={activo === i ? 2.4 : 2} aria-hidden />
-          {!!extra?.badge && extra.badge > 0 && (
-            <span className="absolute -right-2 -top-1.5 flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">{extra.badge > 9 ? "9+" : extra.badge}</span>
-          )}
-        </span>
-        <span className="max-w-full truncate text-[10px] font-bold leading-none">{label}</span>
-      </Link>
-    );
+    const activa = asistenteAbierto ? null : directoryActiveTab(pathname, sections, esRutaDeBusqueda(pathname, esServicioDelCatalogo));
     return (
-      <nav ref={navRef} aria-label={tNav("aria")} data-directory-tabs="" className="ccr-native-bottom-nav ccr-barra-flotante pointer-events-none fixed inset-x-0 bottom-0 z-[90] px-4 lg:hidden">
-        <div className="ccr-barra-flotante-pastilla pointer-events-auto relative mx-auto flex h-[56px] w-full max-w-[420px] items-stretch rounded-full p-1">
-          {tab(0, "/", tNav("tabHome"), House)}
-          {tab(1, "/profesionales", tNav("tabServices"), Hammer)}
-          {tab(2, "/servicios", tNav("tabPlaces"), LayoutGrid)}
-          {tab(3, "/solicitudes", tNav("projects"), ClipboardList)}
-          {user
-            ? tab(4, "/mensajes", tNav("messages"), MessageSquareText, { badge: mensajesPorLeer })
-            : tab(4, "/mensajes", tNav("messages"), MessageSquareText, { loginHref: "/login?redirect=%2Fmensajes" })}
-          {user
-            ? tab(5, nativePanelHref, tNav("tabAccount"), UserRound, { badge: avisosPorVer })
-            : tab(5, "/login", tNav("tabAccount"), UserRound, { loginHref: "/login" })}
-        </div>
-      </nav>
+      <>
+        {!nativeApp && <style>{"@media (max-width:1023px){body.ccr-dir-tabs-visible{padding-bottom:calc(var(--ccr-native-bottom-nav-height,76px) + 12px)}}"}</style>}
+        <DirectoryTabs navRef={navRef} ariaLabel={tNav("aria")} locale={locale} active={activa} loggedIn={!!user} badge={avisosPorVer + mensajesPorLeer} onTabClick={irA} />
+      </>
     );
   }
 

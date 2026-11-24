@@ -44,7 +44,7 @@ import { AppTooltip } from "@/components/ui/app-tooltip";
 
 const subscribeHydration = () => () => {};
 
-type ResultCard = {
+export type ResultCard = {
   id: string;
   name: string;
   avatarUrl: string | null;
@@ -60,7 +60,7 @@ type ResultCard = {
   actionLabel: string;
 };
 
-type MessageAction = { label: string; href: string; kind?: string | null };
+export type MessageAction = { label: string; href: string; kind?: string | null };
 function topicIcon(icon: GuidedTopic["icon"]) {
   const className = "h-[18px] w-[18px]";
   if (icon === "search") return <Search className={className} />;
@@ -74,7 +74,7 @@ function topicIcon(icon: GuidedTopic["icon"]) {
 }
 
 type GuidedTopic = { label: string; example: string; prompt: string; icon: "search" | "request" | "offer" | "jobs" | "deal" | "service" | "how" | "support" };
-type ChatMessage = {
+export type ChatMessage = {
   role: "assistant" | "user";
   body: string;
   createdAt?: string;
@@ -294,6 +294,140 @@ function ProfessionalResult({ result, copy, onNavigate, nativeApp, lang }: {
   );
 }
 
+export function AssistantMessageBubble({ message, index, copy, lang, nativeApp, suggestingIndex, onNavigate, onSuggest }: {
+  message: ChatMessage; index: number; copy: typeof COPY.es | typeof COPY.en; lang: "es" | "en"; nativeApp: boolean;
+  suggestingIndex: number | null; onNavigate: (href: string) => void; onSuggest: (index: number, name: string) => void;
+}) {
+  return (
+            <div className={cn("flex items-end gap-2 sm:items-start sm:gap-3", message.role === "user" && "justify-end")}>
+              {message.role === "assistant" && <div className="mb-5 h-9 w-9 shrink-0 overflow-hidden rounded-full border border-[#cce4f5] bg-white shadow-sm sm:mb-0 sm:mt-1 sm:h-11 sm:w-11"><Image unoptimized loading="eager" src="/brand/ai-assistant-robot.webp" alt="" width={56} height={56} className="h-full w-full scale-125 object-contain" /></div>}
+              <div className={cn("min-w-0 max-w-[82%] space-y-2.5", message.role === "user" && "flex flex-col items-end")}>
+                <div className={cn(
+                  "whitespace-pre-line rounded-[22px] px-4 py-3.5 text-[15px] leading-relaxed shadow-[0_8px_24px_-18px_rgba(15,45,80,0.55)]",
+                  message.role === "user"
+                    ? "rounded-br-md bg-[linear-gradient(135deg,#176eea_0%,#0789f4_100%)] font-medium text-white"
+                    : "rounded-bl-md border border-[#dbe7f0] bg-white text-[#173052]",
+                )}>
+                  {message.role === "assistant" ? straightDoubleQuotes(message.body) : message.body}
+                </div>
+
+                {/* A card made for the conversation: the essentials and two actions that
+                    leave the assistant (profile, availability or message). The full
+                    search card did not fit here and its own schedule flow locked the sheet. */}
+                {message.professionals?.map((result) => (
+                  <ProfessionalResult key={result.id} result={result} copy={copy} onNavigate={onNavigate} nativeApp={nativeApp} lang={lang} />
+                ))}
+
+                {message.action && (
+                  <button type="button" onClick={() => onNavigate(message.action!.href)} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#009FD9] bg-[#eef9fd] px-4 py-2.5 text-center text-sm font-extrabold text-[#008dbf] transition hover:bg-[#dff5fc] active:scale-[0.99]">
+                    {straightDoubleQuotes(message.action.label)}{actionIcon(message.action.kind)}
+                  </button>
+                )}
+
+                {message.suggestedService && (
+                  <button
+                    type="button"
+                    disabled={message.suggestionSent || suggestingIndex === index}
+                    onClick={() => onSuggest(index, message.suggestedService!)}
+                    className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#009FD9] px-3 text-xs font-extrabold text-white transition hover:bg-[#008fca] disabled:bg-[#dce8ed] disabled:text-[#718096]"
+                  >
+                    {suggestingIndex === index ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : message.suggestionSent ? <BadgeCheck className="h-3.5 w-3.5" /> : <Sparkles className="h-3.5 w-3.5" />}
+                    {message.suggestionSent ? copy.suggested : suggestingIndex === index ? copy.suggesting : copy.suggest}
+                  </button>
+                )}
+                <span className={cn("flex items-center gap-1 text-[11px] font-medium text-[#7b8da7]", message.role === "user" && "pr-1")}>
+                  {messageTime(message.createdAt)}
+                  {message.role === "user" && <CheckCheck className="h-4 w-4 text-[#087df0]" />}
+                </span>
+              </div>
+            </div>
+  );
+}
+
+/** Núcleo de la conversación (mensajes, envío, sugerir servicio): lo comparten la ventana flotante y la pantalla /asistente. */
+export function useAssistantChat() {
+  const locale = useLocale();
+  const pathname = usePathname();
+  const { user } = useAuth();
+  const nativeApp = useNativeApp();
+  const lang = language(locale);
+  const copy = COPY[lang];
+  const [loading, setLoading] = useState(false);
+  const [conversationId, setConversationId] = useState("");
+  const [suggestingIndex, setSuggestingIndex] = useState<number | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+
+  async function ask(prefilled: string) {
+    const text = prefilled.trim();
+    if (!text || loading) return;
+    const previous = messages;
+    setMessages([...previous, { role: "user", body: text, createdAt: new Date().toISOString() }]);
+    setLoading(true);
+    try {
+      const latestResults = [...previous].reverse().find((message) => message.professionals?.length)?.professionals ?? [];
+      const response = await fetch("/api/ai-assistant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: text,
+          locale,
+          pagePath: pathname,
+          authenticated: !!user,
+          platform: nativeApp ? "native" : "web",
+          history: previous.slice(-8).map((message) => ({
+            role: message.role,
+            content: `${message.role === "assistant" ? straightDoubleQuotes(message.body) : message.body}${message.professionals?.length ? `\nResultados mostrados: ${message.professionals.map((result, index) => `${index + 1}. ${result.name}`).join("; ")}` : ""}`,
+            serviceId: message.serviceId ?? null,
+          })),
+        }),
+      });
+      const payload = await response.json();
+      if (!response.ok || !payload?.answer) throw new Error(payload?.error || "assistant_failed");
+      const selectedIndex = Number(payload.selectedResultIndex);
+      const selectedProfessional = Number.isInteger(selectedIndex) && selectedIndex > 0 ? latestResults[selectedIndex - 1] : null;
+      setMessages((current) => [...current, {
+        role: "assistant",
+        body: payload.answer,
+        action: payload.searchHref && payload.ctaLabel ? { href: payload.searchHref, label: payload.ctaLabel, kind: payload.action } : null,
+        professionals: selectedProfessional ? [selectedProfessional] : Array.isArray(payload.professionals) ? payload.professionals : [],
+        suggestedService: payload.suggestedService,
+        provider: payload.aiProvider,
+        serviceId: typeof payload.serviceId === "string" ? payload.serviceId : null,
+        createdAt: new Date().toISOString(),
+      }]);
+    } catch {
+      setMessages((current) => [...current, { role: "assistant", body: copy.error, createdAt: new Date().toISOString() }]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function suggestService(messageIndex: number, name: string) {
+    if (suggestingIndex != null) return;
+    setSuggestingIndex(messageIndex);
+    try {
+      const response = await fetch("/api/categories/suggest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, locale }),
+      });
+      if (!response.ok) throw new Error("suggest_failed");
+      setMessages((current) => current.map((message, index) => index === messageIndex ? { ...message, suggestionSent: true } : message));
+    } catch {
+      setMessages((current) => [...current, { role: "assistant", body: copy.error, createdAt: new Date().toISOString() }]);
+    } finally {
+      setSuggestingIndex(null);
+    }
+  }
+
+  function resetConversation() {
+    setConversationId(crypto.randomUUID());
+    setMessages([]);
+  }
+
+  return { loading, conversationId, setConversationId, suggestingIndex, messages, setMessages, ask, suggestService, resetConversation };
+}
+
 export function AiConcierge(props: { embedded?: boolean; onBack?: () => void } = {}) {
   return <Suspense fallback={null}><AiConciergeContent {...props} /></Suspense>;
 }
@@ -314,13 +448,10 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
   const copy = COPY[lang];
   const [open, setOpen] = useState(embedded);
   const [sessionHydrated, setSessionHydrated] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [conversationId, setConversationId] = useState("");
-  const [suggestingIndex, setSuggestingIndex] = useState<number | null>(null);
   const [compactViewport, setCompactViewport] = useState(false);
   const hidratado = useSyncExternalStore(subscribeHydration, () => true, () => false);
+  const { loading, conversationId, setConversationId, suggestingIndex, messages, setMessages, ask, suggestService, resetConversation } = useAssistantChat();
   const [draft, setDraft] = useState("");
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const sessionHydratedRef = useRef(false);
   const [navigating, startNavigation] = useTransition();
@@ -461,75 +592,12 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
     return () => cancelAnimationFrame(frame);
   }, [messages, loading, open]);
 
-  async function ask(prefilled: string) {
-    const text = prefilled.trim();
-    if (!text || loading) return;
-    const previous = messages;
-    setMessages([...previous, { role: "user", body: text, createdAt: new Date().toISOString() }]);
-    setLoading(true);
-    try {
-      const latestResults = [...previous].reverse().find((message) => message.professionals?.length)?.professionals ?? [];
-      const response = await fetch("/api/ai-assistant", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: text,
-          locale,
-          pagePath: pathname,
-          authenticated: !!user,
-          platform: nativeApp ? "native" : "web",
-          history: previous.slice(-8).map((message) => ({
-            role: message.role,
-            content: `${message.role === "assistant" ? straightDoubleQuotes(message.body) : message.body}${message.professionals?.length ? `\nResultados mostrados: ${message.professionals.map((result, index) => `${index + 1}. ${result.name}`).join("; ")}` : ""}`,
-            serviceId: message.serviceId ?? null,
-          })),
-        }),
-      });
-      const payload = await response.json();
-      if (!response.ok || !payload?.answer) throw new Error(payload?.error || "assistant_failed");
-      const selectedIndex = Number(payload.selectedResultIndex);
-      const selectedProfessional = Number.isInteger(selectedIndex) && selectedIndex > 0 ? latestResults[selectedIndex - 1] : null;
-      setMessages((current) => [...current, {
-        role: "assistant",
-        body: payload.answer,
-        action: payload.searchHref && payload.ctaLabel ? { href: payload.searchHref, label: payload.ctaLabel, kind: payload.action } : null,
-        professionals: selectedProfessional ? [selectedProfessional] : Array.isArray(payload.professionals) ? payload.professionals : [],
-        suggestedService: payload.suggestedService,
-        provider: payload.aiProvider,
-        serviceId: typeof payload.serviceId === "string" ? payload.serviceId : null,
-        createdAt: new Date().toISOString(),
-      }]);
-    } catch {
-      setMessages((current) => [...current, { role: "assistant", body: copy.error, createdAt: new Date().toISOString() }]);
-    } finally {
-      setLoading(false);
-    }
-  }
-
   function submitDraft(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const text = draft.trim();
     if (!text || loading) return;
     setDraft("");
     void ask(text);
-  }
-
-  async function suggestService(messageIndex: number, name: string) {
-    if (suggestingIndex != null) return;
-    setSuggestingIndex(messageIndex);
-    try {
-      const response = await fetch("/api/categories/suggest", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, locale }),
-      });
-      if (!response.ok) throw new Error("suggest_failed");
-      setMessages((current) => current.map((message, index) => index === messageIndex ? { ...message, suggestionSent: true } : message));
-    } catch {
-      setMessages((current) => [...current, { role: "assistant", body: copy.error, createdAt: new Date().toISOString() }]);
-    } finally {
-      setSuggestingIndex(null);
-    }
   }
 
   function navigate(href: string) {
@@ -567,11 +635,6 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
     // A same-page action has no route commit to dismiss the overlay for us.
     if (!embedded && destination.split("#")[0] === `${window.location.pathname}${window.location.search}`) setOpen(false);
     startNavigation(() => routerDeNext.push(destination));
-  }
-
-  function resetConversation() {
-    setConversationId(crypto.randomUUID());
-    setMessages([]);
   }
 
   const insideDashboard = pathname.startsWith("/dashboard/") || pathname.includes("/dashboard/");
@@ -703,48 +766,7 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
 
         <div ref={scrollRef} data-ai-concierge-messages className="min-h-0 flex-1 space-y-5 overflow-y-auto bg-[linear-gradient(180deg,#fbfdff_0%,#ffffff_100%)] px-4 py-5 overscroll-contain sm:px-6">
           {messages.map((message, index) => (
-            <div key={`${message.role}-${index}`} className={cn("flex items-end gap-2 sm:items-start sm:gap-3", message.role === "user" && "justify-end")}>
-              {message.role === "assistant" && <div className="mb-5 h-9 w-9 shrink-0 overflow-hidden rounded-full border border-[#cce4f5] bg-white shadow-sm sm:mb-0 sm:mt-1 sm:h-11 sm:w-11"><Image unoptimized loading="eager" src="/brand/ai-assistant-robot.webp" alt="" width={56} height={56} className="h-full w-full scale-125 object-contain" /></div>}
-              <div className={cn("min-w-0 max-w-[82%] space-y-2.5", message.role === "user" && "flex flex-col items-end")}>
-                <div className={cn(
-                  "whitespace-pre-line rounded-[22px] px-4 py-3.5 text-[15px] leading-relaxed shadow-[0_8px_24px_-18px_rgba(15,45,80,0.55)]",
-                  message.role === "user"
-                    ? "rounded-br-md bg-[linear-gradient(135deg,#176eea_0%,#0789f4_100%)] font-medium text-white"
-                    : "rounded-bl-md border border-[#dbe7f0] bg-white text-[#173052]",
-                )}>
-                  {message.role === "assistant" ? straightDoubleQuotes(message.body) : message.body}
-                </div>
-
-                {/* A card made for the conversation: the essentials and two actions that
-                    leave the assistant (profile, availability or message). The full
-                    search card did not fit here and its own schedule flow locked the sheet. */}
-                {message.professionals?.map((result) => (
-                  <ProfessionalResult key={result.id} result={result} copy={copy} onNavigate={navigate} nativeApp={nativeApp} lang={lang} />
-                ))}
-
-                {message.action && (
-                  <button type="button" onClick={() => navigate(message.action!.href)} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#009FD9] bg-[#eef9fd] px-4 py-2.5 text-center text-sm font-extrabold text-[#008dbf] transition hover:bg-[#dff5fc] active:scale-[0.99]">
-                    {straightDoubleQuotes(message.action.label)}{actionIcon(message.action.kind)}
-                  </button>
-                )}
-
-                {message.suggestedService && (
-                  <button
-                    type="button"
-                    disabled={message.suggestionSent || suggestingIndex === index}
-                    onClick={() => void suggestService(index, message.suggestedService!)}
-                    className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#009FD9] px-3 text-xs font-extrabold text-white transition hover:bg-[#008fca] disabled:bg-[#dce8ed] disabled:text-[#718096]"
-                  >
-                    {suggestingIndex === index ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : message.suggestionSent ? <BadgeCheck className="h-3.5 w-3.5" /> : <Sparkles className="h-3.5 w-3.5" />}
-                    {message.suggestionSent ? copy.suggested : suggestingIndex === index ? copy.suggesting : copy.suggest}
-                  </button>
-                )}
-                <span className={cn("flex items-center gap-1 text-[11px] font-medium text-[#7b8da7]", message.role === "user" && "pr-1")}>
-                  {messageTime(message.createdAt)}
-                  {message.role === "user" && <CheckCheck className="h-4 w-4 text-[#087df0]" />}
-                </span>
-              </div>
-            </div>
+            <AssistantMessageBubble key={`${message.role}-${index}`} message={message} index={index} copy={copy} lang={lang} nativeApp={nativeApp} suggestingIndex={suggestingIndex} onNavigate={navigate} onSuggest={suggestService} />
           ))}
 
           {/* Guided index, shown only while the thread is empty: each row states what
