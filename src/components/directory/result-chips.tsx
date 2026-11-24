@@ -36,7 +36,7 @@ function useParamWriter(){
 function Sheet({title,onClose,children,footer}:{title:string;onClose:()=>void;children:ReactNode;footer?:ReactNode}){
  const locale=useLocale(),en=locale==='en';
  return <div className="fixed inset-0 z-[100] flex items-end bg-black/45" onClick={onClose} role="dialog" aria-modal="true" aria-label={title}>
-  <div onClick={e=>e.stopPropagation()} className="max-h-[85dvh] w-full overflow-y-auto rounded-t-3xl bg-white px-5 pb-[calc(env(safe-area-inset-bottom)+20px)] pt-4 text-[#162543]" data-chip-sheet>
+  <div onClick={e=>e.stopPropagation()} className="max-h-[85dvh] w-full overflow-y-auto rounded-t-3xl bg-white px-5 pb-[calc(env(safe-area-inset-bottom)+88px)] pt-4 text-[#162543]" data-chip-sheet>
    <div className="mb-2 flex items-center justify-between"><h2 className="text-[18px] font-extrabold">{title}</h2>
     <button type="button" onClick={onClose} aria-label={en?'Close':'Cerrar'} className="inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-[#f4f7fa]"><X className="h-5 w-5" aria-hidden="true"/></button></div>
    {children}{footer}

@@ -105,7 +105,7 @@ export function SearchEntry({ onClose, initialText = "", autoVoice = false }: { 
         </div>
       </form>
 
-      <div className="mx-auto w-full max-w-xl px-4 pb-12 pt-3">
+      <div className="mx-auto w-full max-w-xl px-4 pb-28 pt-3">
         {suggestions.length > 0 ? (
           <div data-search-suggestions>
             <ul>
