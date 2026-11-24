@@ -8,7 +8,8 @@ export const dynamic='force-dynamic';
 
 export async function generateMetadata({params}:{params:Promise<{locale:string}>}):Promise<Metadata>{
  const {locale}=await params;
- return {title:locale==='en'?'Assistant | ContrataCR':'Asistente | ContrataCR',robots:{index:false,follow:false}};
+ const names:Record<string,string>={es:'Asistente',en:'Assistant'};
+ return {title:`${names[locale]??names.es} | ContrataCR`,robots:{index:false,follow:false}};
 }
 
 export default function AssistantRoute(){

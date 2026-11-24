@@ -170,12 +170,8 @@ function AssistantScreenContent() {
   useEffect(() => {
     if (!conversationId || messages.length === 0) return;
     const titulo = (messages.find((m) => m.role === "user")?.body ?? t.sinTitulo).slice(0, 60);
-    setHistorial((actual) => {
-      const resto = actual.filter((c) => c.id !== conversationId);
-      const siguiente = [{ id: conversationId, titulo, actualizada: Date.now(), mensajes: messages.slice(-30) }, ...resto].slice(0, MAX_CONVERSACIONES);
-      escribirHistorial(siguiente);
-      return siguiente;
-    });
+    const resto = leerHistorial().filter((c) => c.id !== conversationId);
+    escribirHistorial([{ id: conversationId, titulo, actualizada: Date.now(), mensajes: messages.slice(-30) }, ...resto]);
   }, [messages, conversationId, t.sinTitulo]);
 
   useEffect(() => {
@@ -253,7 +249,7 @@ function AssistantScreenContent() {
   return (
     <div data-assistant-screen className="fixed inset-0 z-[70] flex flex-col bg-white text-[#162543] lg:static lg:mx-auto lg:h-dvh lg:max-w-[720px] lg:border-x lg:border-[#e8eef3]">
       <header className="relative flex min-h-14 shrink-0 items-center justify-between border-b border-[#e8eef3] bg-white px-2">
-        <button type="button" onClick={() => setPanel(true)} aria-label={t.historial} data-assistant-history
+        <button type="button" onClick={() => { setHistorial(leerHistorial()); setPanel(true); }} aria-label={t.historial} data-assistant-history
           className="grid h-11 w-11 place-items-center rounded-full hover:bg-[#eef7fb] active:scale-95"><Menu className="h-6 w-6" /></button>
         <h1 className="text-[18px] font-extrabold">{t.titulo}</h1>
         <div className="flex items-center">

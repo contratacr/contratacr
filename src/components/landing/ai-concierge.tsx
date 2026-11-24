@@ -527,7 +527,7 @@ function AiConciergeContent({ embedded = false, onBack }: { embedded?: boolean; 
       setSessionHydrated(true);
     });
     return () => cancelAnimationFrame(frame);
-  }, [embedded, lang]);
+  }, [embedded, lang, setConversationId, setMessages]);
 
   useEffect(() => {
     if (!sessionHydratedRef.current) return;
