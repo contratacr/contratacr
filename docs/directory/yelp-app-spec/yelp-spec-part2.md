@@ -1,0 +1,73 @@
+# Yelp iOS app - spec part 2 (sheets 09-17)
+
+Format: EN label (exact, as seen) -> ES (usted). "not visible" = not shown in the video. Our own colors/icons only (the red CTA, red guaranteed shield, etc. must be our brand palette and our own icons).
+Time of recording 11:06-11:07. Sheets are ordered in time.
+
+## Global chrome seen on every screen
+Bottom floating pill tab bar (5 tabs, icon over label, active tab has a gray rounded highlight): Search (Buscar), Projects (Proyectos), Assistant (Asistente), My Lists (Mis listas), Me (Yo / Mi cuenta). Always visible over content (content scrolls beneath, translucent blur). Tapping "Me" highlights it in red briefly (touch feedback, screen not shown).
+
+## S1. Search results list for a SERVICE category (query "Plumbers", New York, NY) - sheets 09-13
+Reached: Home category tile "Plumbers" (or search) -> results. Map fills the top; a bottom sheet (drag handle at top) holds the list; sheet scrolls up over the map.
+Top to bottom:
+1. Top bar (white card over map): back arrow; bold query "Plumbers" + gray location "New York, NY"; right icon = map-pin-in-frame (map/list toggle or location; not tested). Tap the text area opens S4 (search edit).
+2. Horizontally scrolling filter chips (outlined pills): [cut-off chip on left "...b"], "Fast-responding", "Request a Quote", "More Filters" (More Filters opens full filter sheet, not visible). ES: "Respuesta rápida", "Solicitar cotización", "Más filtros".
+3. Sponsored carousel section 1 (in this recording appears at the top of the scroll, before All Results): heading "Work backed by a guarantee" + gray "Sponsored (i)" (info icon). ES: "Trabajo con garantía" / "Patrocinado (i)".
+   Horizontal cards (about 1.3 visible): photo (square, rounded), business name bold, star rating bar (5 stars, rating number, "(303 Reviews)"), category line truncated (e.g. "Plumbing, Water Heater Inst...", "General Contractors, Inte..."), then a gray button "Request a quote" or "Request a consultation" (varies per business), and under it small gray text "Responds in ~10 minutes" / "Responds in ~2 hours" / "~1 hour" / "~3 hours". ES: "Solicitar cotización" / "Solicitar consulta" ; "Responde en ~10 minutos".
+   A few cards show a flame badge + "New on Yelp" (ES "Nuevo en [marca]") under the name instead of reviews, and no star rating ("No reviews" on one card: "Verrico & Palmer ... No reviews" -> "Sin reseñas").
+4. Sponsored carousel section 2: heading "Deals & free estimates" + "Sponsored (i)" (ES "Ofertas y estimaciones gratis" / "Patrocinado"). Same card layout (photo, name, rating or "New on Yelp", category, "Request a quote"/"Request a consultation", "Responds in ...").
+   Order observed: "Work backed by a guarantee" and "Deals & free estimates" repeat (the page was scrolled up and down; first sponsored block appears above both). Exact initial order not fully visible; sheet09 shows list rows ABOVE the carousels (Five Star Bath, NY Domestic Plumbing, DC Piping rows) so sponsored carousels are interleaved between organic/ad rows.
+5. Section heading "All Results" (ES "Todos los resultados").
+6. Result row (repeating), top to bottom:
+   - Business name (bold, wraps to 2 lines), thumbnail photo at right (small square, rounded).
+   - Star bar (5 red stars filled proportionally) + rating number + "(173 reviews)".
+   - Location line with pin icon: neighborhood only ("Crown Heights", "Chelsea", "White Plains") when no distance, OR distance + address ("4.5 mi • 460 Montgomery St, Cro..."). ES "4,5 mi".
+   - Badge "Yelp Guaranteed" (red shield icon + red bold text). ES e.g. "Garantizado por [marca]" - we need our own equivalent (e.g. "Verificado ContrataCR").
+   - Optional attribute lines with small icon (some rows): "Certified professionals (i)" (blue badge icon) -> "Profesionales certificados"; "15 years in business (i)" / "25 years in business" / "5 years in business" -> "15 años en el negocio"; "Locally owned (i)" -> "Negocio local"; "Free estimates (i)" -> "Estimaciones gratis"/"Cotización gratis"; ad rows also show a descriptive line "At Five Star Bath Solutions of Westchester County, we only use the highest quality produ... Read more" (business-supplied blurb).
+   - Review snippet line with speech-bubble icon: quoted text, bold keyword matching the search ("plumbing service"), truncated with teal link "Read more" (ES "Leer más").
+   - Response line with lightning icon: "Response time 10 mins • Response rate 100%" (values bold). ES "Tiempo de respuesta 10 min • Tasa de respuesta 100 %". Variants seen: "1 day / 70%", "2 hrs / 95%", "20 mins / 80%".
+   - Full-width red pill CTA "Get pricing & availability" (ES "Ver precios y disponibilidad"). Tapping opens the request-quote flow (not visible).
+   - Ad/sponsored rows (top of sheet09/10: Five Star Bath Solutions, NY Domestic Plumbing, DC Piping & Heating Corp) look the same, but: some have a red CTA, others a GRAY "Contact" button (ES "Contactar"), and show "Excellent responses • Response time 10 mins" (green icon; ES "Respuestas excelentes • Tiempo de respuesta 10 min"). Red CTA "Get pricing & availability" vs gray "Contact" appears to depend on the advertiser plan/quote-enabled; reason not visible.
+   - Thin divider between rows. List continues infinitely (many plumbers; no pagination control visible; no end state visible).
+Rows seen in order after "All Results": Sam's Plumbing Services, Dov Sewer & Drain, PRO P&H Mechanical, Michael Donahue Plumbing & Heating, ASAP Solutions, Pipe Monkeys, NYC Emergency Repairs, Bullseye Mechanical Corp., Hub Plumbing & Heating, S & S Handyman (all with red "Get pricing & availability").
+Interaction notes: filter chips and header stay pinned while the sheet scrolls; sort is not exposed as a chip for services (only Fast-responding / Request a Quote / More Filters). Row tap -> business page (not visible in my sheets). Photo carousels swipe horizontally.
+
+## S2. Home / Search tab (Yelp home) - end of sheet13 / start of sheet14 (reached by back arrow from S1)
+1. Category icon row (horizontally 6 tiles, icon in gray rounded square + label under): Restaurants, Auto Repair, Movers, Plumbers, Cleaning, More ("..." tile -> all categories, not visible). ES: Restaurantes, Taller mecánico, Mudanzas, Plomeros, Limpieza, Más.
+2. Search field (pill, red round magnifier icon at left, placeholder "Search for " + rotating bold example: "auto repair" / "handyman"; mic icon at right). ES: "Buscar " + "plomeros"/"taller mecánico"; mic = voice search.
+3. Promo card with warm gradient background: title "Unlock your top 10 list" with lock emoji (marquee text repeats), arrow-in-circle button at right, info "(i)" icon, subtext "For this list, Yelp analyzed submissions, ratings, review volume, and community input." ES: "Desbloquee su lista top 10" / "Para esta lista analizamos aportes, calificaciones, volumen de reseñas y opiniones de la comunidad."
+   Horizontal cards numbered with a scalloped red number badge 10, 9, 8...: first = real business (photo, bookmark/save icon, name "Uncle Af's", stars 4.8 (951)); next cards are locked (dark overlay, lock icon, "Add 5 more to your 'Been here' list" -> ES "Agregue 5 más a su lista 'He estado aquí'"). Gamified: user must mark places as visited to unlock.
+4. Below: gray placeholder block (content still loading; not visible).
+Bottom bar as above with Search active.
+
+## S3. Search edit screen (tap on the query bar) - sheet14
+Reached: tap the top bar from results/home. Two fields in a card: back arrow + text field (with selected text "Restaurants" and clear "x" button) and a second row with pin icon for location: placeholder "neighborhood, city, state or zip code" (ES "barrio, ciudad, provincia o código postal"). Keyboard open (iOS, Spanish layout with ñ, blue search key).
+State A (focus on "what" field): suggestion list under it: first row pin "Current Location" (blue; ES "Ubicación actual"), then magnifier rows: "Restaurants", "Restaurants - Delivery", "Restaurants - Takeout", "Restaurants - Outdoor Seating", "Restaurants - Burgers", "Restaurants - Chinese", "Restaurants - Indian", ... (ES: Restaurantes, - A domicilio, - Para llevar, - Terraza, - Hamburguesas, - Chinos, - Hindús).
+Typing "Plumbers" produced: "Plumbers - Pricing and Availability" (row with a distinct service icon; ES "Plomeros - Precios y disponibilidad"), "Plumbers", "Plumbers - Water Heater Installation/Repair", "Plumbers - Open 24 Hours", "Plumbers - Sewer System Installation/Repair", "Plumbers - Septic Tank Inspection/Repair", "Plumbers - Drain Cleaning", "Plumbers - Gas Line Installation/Repair", "Plumbers - Backflow Testing", "Plumbers - Rooter Service", "Plumbers - Leak Detection/Repair". Suggestions are category-specific sub-services + attributes.
+State B (focus on location field): placeholder text; suggestions: "Current Location" (blue arrow icon), "New York, NY" (recent, arrow icon), "Arenas Valley, NM" (arrow icon, accidental/auto). Submit = blue search key on keyboard.
+
+## S4. Search results - zero results state (Restaurants, "Current Location") - sheet14 frame 2
+Same top bar: "Restaurants" + "Current Location" (ES "Ubicación actual"). Filter row: filter-sliders icon button, "Sort v", "Open Now", "Price v", "Offers Takeout" (cut off, more chips scroll right). Body: card "Notice something missing here?" with illustration and outlined button "Add business" (ES "Agregar negocio"); heading "No results for: Restaurants"; "Near:" blank (location unresolved); text "Try using different or fewer keywords, or move the map and redo your search." ES "Pruebe con otras palabras clave o menos, o mueva el mapa y repita la búsqueda."
+
+## S5. Search results for a RESTAURANT category (Restaurants, New York, NY) - sheets 14-17
+Top bar same; filter chips (restaurant-specific): [sliders icon = all filters] , "Sort v" (ES "Ordenar"), "Open Now" (ES "Abierto ahora"), "Price v" (ES "Precio"), "Offers Takeout" (ES "Ofrece comida para llevar"), more chips offscreen (not visible). Map top shows place labels (Hackensack) with a small route-number marker.
+Order of sections:
+1. "Affordable Options" + "Sponsored (i)" (ES "Opciones económicas" / "Patrocinado"): horizontal carousel of tall cards: photo, name, stars + rating + "(652 Reviews)" (capitalized R in this block), cuisine/category line, and gray button "View Business" (ES "Ver negocio"). Some cards have "Directions" (ES "Cómo llegar") instead of "View Business"; Inwood Bar and Grill/The Spaniard/Nan Xiang: "View Business"/"Directions" differ per card (e.g. The Spaniard = "Directions", Roy Bean = "View Business"). Cards: Inwood Bar and Grill, East Village Pizza, Renaissance Bistro, Judge Roy Bean Public House, The Spaniard, Nan Xiang Soup Dumplings.
+2. "Sponsored Results (i)" (larger bold heading; ES "Resultados patrocinados"): carousel of 2-photo cards but each card is a full listing: photos strip (swipe), then: name (bold), stars + "4.1 (699 reviews)", line: pin + neighborhood • price "$" • "Open until 4:00 AM" (green bold "Open") or "Closed until 5:00 PM" (red "Closed") (ES "Abierto hasta las 4:00 a. m." / "Cerrado hasta las 5:00 p. m."), attribute line with icon: "Grab-and-go (i)", "Private events (i)", "Sports on TV (i)" (ES "Para llevar", "Eventos privados", "Deportes en TV"), review snippet (bubble icon) with "Read more", category chips (outlined pills: "Italian", "Pizza", "Mediterranean", "Venues & Event Spaces", "Sports Bars"), and ONE red pill button at the right of the chips row whose label depends on the business.
+   Primary red button observed by business: East Village Pizza (pizza) = "Order" (ES "Pedir"); Meduza Mediterranean (restaurant, no online ordering) = "Call" (ES "Llamar"); Inwood Bar and Grill (sports bar) = "Contact" (ES "Contactar"). So the button is chosen by capability: Order if ordering/delivery enabled, Call if only phone, Contact if bar/venue with inquiry form. Reservation/menu buttons not visible.
+   Price: "$", "$$", "$$$$" shown as $ run next to neighborhood.
+3. "Top Results" (ES "Mejores resultados"): numbered organic list: "1. Fish Cheeks" with photo strip (two photos, caption overlays e.g. "Coconut crab curry" on photo), stars "4.4 (2.1k reviews)", "NoHo • $$ • Closed until Noon", snippet with "Read more", chips "Seafood", "Thai", "Live/Raw Food", red "Order" button. Later "4.7 (43 reviews)" row begins (cut). Numbering continues 2., 3...
+Ordering observed: Affordable Options -> Sponsored Results -> Top Results.
+Tapping photo/name -> business page (not visible). Chips: likely refine search to that category (not visible).
+
+## Category-dependent differences (visible only)
+- Service categories (Plumbers): chips Fast-responding / Request a Quote / More Filters; rows show years in business, certified professionals, locally owned, response time/rate; CTA = "Get pricing & availability" (red) or "Contact" (gray) in rows; "Request a quote"/"Request a consultation" (gray) in sponsored carousels.
+- Restaurants: chips filters/Sort/Open Now/Price/Offers Takeout...; rows show price level, open/closed time, attribute (Grab-and-go, Private events, Sports on TV), category chips, CTA = Order / Call / Contact; carousels use "View Business"/"Directions".
+- Auto repair, gas station, pharmacy: not visible in my sheets (only icon in home row: Auto Repair).
+- Reservation, menu buttons: not visible.
+
+## 5-line summary
+1. Results screen = map on top + draggable bottom sheet, header "Query + Location", pinned horizontal chip row that changes by category (services: Fast-responding/Request a Quote/More Filters; restaurants: filters icon/Sort/Open Now/Price/Offers Takeout).
+2. Service rows are lead-gen: stars, neighborhood or "x mi • address", guarantee badge, attribute lines (years in business, certified, locally owned), quoted review + "Read more", "Response time • Response rate", red full-width "Get pricing & availability" (some gray "Contact").
+3. Restaurant rows: photo strip, rating, price, "Open/Closed until", attributes, category chips, and a category-dependent red button (Order / Call / Contact); carousels use "View Business" / "Directions".
+4. Section order: sponsored carousels ("Work backed by a guarantee", "Deals & free estimates", "Affordable Options", "Sponsored Results") then "All Results"/"Top Results" (numbered for restaurants).
+5. Home: category icon row (Restaurants, Auto Repair, Movers, Plumbers, Cleaning, More), rotating-placeholder search with mic, gamified "Unlock your top 10 list" card; search-edit screen has category sub-service suggestions + "Current Location"; empty state has "Add business"; floating 5-tab bar (Search, Projects, Assistant, My Lists, Me).
