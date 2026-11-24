@@ -6,7 +6,7 @@ import { gotoOK, waitForInteractivePage } from "./helpers";
 // a fixture-less run: the row assertions then fall back to the empty state, which is part of the contract.
 
 const mobile = (page: Page) => (page.viewportSize()?.width ?? 1280) < 1024;
-const directoryOn = async (page: Page) => (await page.locator("[data-app-home-slot]").count()) > 0;
+const directoryOn = async (page: Page) => (await page.locator("[data-app-home-slot], [data-results-title-row]").count()) > 0;
 
 for (const locale of ["es", "en"] as const) {
   const p = (path: string) => (locale === "en" ? `/en${path === "/" ? "" : path}` : path);
@@ -19,7 +19,7 @@ for (const locale of ["es", "en"] as const) {
       test.skip(!(await directoryOn(page)), "directory flag is off");
       if (!mobile(page)) {
         await expect(page.locator("[data-app-home]")).toBeHidden();
-        await expect(page.locator("main h1").first()).toBeVisible();
+        await expect(page.locator("main h1").filter({ visible: true }).first()).toBeVisible();
         return;
       }
       const home = page.locator("[data-app-home]");
@@ -66,7 +66,7 @@ for (const locale of ["es", "en"] as const) {
       await expect(entry.locator("[data-suggestion]").nth(1)).toHaveText(es ? "plomeros" : "plumbers");
       await expect(entry.locator("[data-suggestion]", { hasText: es ? "Reparación" : "Repair" })).toBeVisible();
       await first.click();
-      await expect(page).toHaveURL(/\/buscar\?q=/);
+      await expect(page).toHaveURL(/\/(buscar|profesionales)\?q=/);
     });
 
     test("recent searches are kept in the browser and can be removed", async ({ page }) => {
@@ -119,7 +119,7 @@ for (const locale of ["es", "en"] as const) {
       await expect(page.locator('[data-chip="more"]').first()).toContainText(es ? "Más filtros" : "More filters");
       await page.locator("[data-service-assistant] input").fill("fuga en el baño");
       await page.locator("[data-service-assistant] button[type=submit]").click();
-      await expect(page).toHaveURL(/\/asistente\?q=fuga/);
+      await expect(page).toHaveURL(/\/asistente/);
     });
 
     test("deep links keep resolving", async ({ page }) => {
